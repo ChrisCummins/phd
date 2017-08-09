@@ -1,3 +1,5 @@
+%%% LISTINGS 
+
 \newsavebox{\IntelSizetIntReduced}
 \begin{lrbox}{\IntelSizetIntReduced}
   \hspace{1.5em}
@@ -66,7 +68,7 @@
   \end{lstlisting}
 \end{lrbox}
 % Another 3± hang:
-% __kernel void A(__global const char* a, __global char* b, __global char* c) {
+% kernel void A(global const char* a, global char* b, global char* c) {
 %   int d = get_global_id(0);
 %   c[d] = get_global_id(0) + c;
 % }
@@ -142,6 +144,15 @@
 % HAND REDUCED:
 %
 %   kernel void A(constant int2* a, global int* b) { A(b, a); }
+\newsavebox{\NvidiaRecursionSegfaultReduced}
+\begin{lrbox}{\NvidiaRecursionSegfaultReduced}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    kernel void B(constant int2* a, global int* b) {
+      A(b, a);
+    }
+  \end{lstlisting}
+\end{lrbox}
 
 \newsavebox{\BeignetScalarizeInsert}
 \begin{lrbox}{\BeignetScalarizeInsert}
@@ -339,6 +350,122 @@
   \end{lstlisting}
 \end{lrbox}
 
+\newsavebox{\IntelGtDoubleAssertion}
+\begin{lrbox}{\IntelGtDoubleAssertion}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    kernel void A(read_only image2d_t a, global double2* b) {
+      b[0] = get_global_id(0);
+    }
+  \end{lstlisting}
+\end{lrbox}
+
+\newsavebox{\IntelDeclDoesntDeclareAnything}
+\begin{lrbox}{\IntelDeclDoesntDeclareAnything}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    kernel void A() {
+      char a;
+      int b;
+      int const;
+    }
+  \end{lstlisting}
+\end{lrbox}
+
+%%% FIGURES
+
+\begin{figure}
+  \centering %
+  \subfloat[Testbeds $1\pm$, $2\pm$ segementation fault.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaRecursionSegfault}}}%
+    \label{lst:nvidia-recursion-segfault}
+  }\\%
+%  \subfloat[Reduced version of Figure~\ref{lst:nvidia-recursion-segfault}.]{%
+%    \noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaRecursionSegfaultReduced}}}%
+%    \label{lst:nvidia-recursion-segfault}
+%  }\\%
+  \subfloat[Testbed $10\pm$ assertion \emph{Uncorrected typos!} during semantic analysis.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\OclgrindSemaAssertion}}}%
+    \label{lst:oclgrind-sema-assertion}
+  }\\%
+  \subfloat[Testbed $10\pm$ assertion \emph{Uncorrected typos!} during semantic analysis.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\OclgrindUncorrectedTypos}}}%
+    \label{lst:oclgrind-uncorrected-typos}
+  }\\%
+  \subfloat[Of the 10 compilers we tested, 6 crash with segfault when compiling this kernel.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\AlmostEverythingCrash}}}%
+    \label{lst:almost-everything-crash}
+  }\\%
+  \subfloat[Testbeds $3\pm$ assertion \emph{sel.hasDoubleType()} during code generation.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelGtDoubleAssertion}}}%
+    \label{lst:intel-gt2-double-assertion}
+  }\\%
+  \subfloat[Testbeds $3\pm$ assertion \emph{scalarizeInsert} during code generation.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\BeignetScalarizeInsert}}}%
+    \label{lst:oclgrind-uncorrected-typos}
+  }\\%
+  \subfloat[Testbeds $1\pm$ segmentation fault.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaCompileSegfault}}}%
+    \label{lst:nvidia-compile-segfault}
+  }\\%
+  \subfloat[Testbeds $7\pm$ segmentation fault.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\XeonPhiSegfault}}}%
+    \label{lst:xeon-phi-segfault}
+  }\\%
+  \caption{Example kernels which crash compilers.}%
+\end{figure}
+
+\begin{figure}
+  \centering
+  \subfloat[Testbeds $5\pm$ crash during vectorizer pass.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelVectorizerSegfault}}}%
+    \label{lst:intel-vectorizer-segfault}
+  }\\%
+  \caption{Example kernels which crash Intel vectorizer pass.}%
+\end{figure}
+
+
+\begin{figure}
+  \centering %
+  \subfloat[Testbed $3\pm$ rejects automatic variables with address-space qualifiers.]{%
+    TODO
+    \label{lst:beignet-automatic-var}
+  }\\%
+  
+  \subfloat[Testbeds $4\pm$, $6\pm$ error \emph{declaration doesn't declare anything}. All other testbeds compile, some with a warning.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelDeclDoesntDeclareAnything}}}%
+    \label{lst:intel-decl-doesnt-declare-anything}
+  }\\%
+  \caption{Well-formed kernels which do not compile.}%
+\end{figure}
+
+
+\begin{figure}
+  \centering %
+  \subfloat[Testbeds $4+$, $5+$, $6+$, $7+$ hang during optimization of kernels with non-terminating loops.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelOptLoopHang}}}%
+    \label{lst:intel-inf-loop}
+  }\\%
+  \subfloat[Pointer to integer causes Testbeds $3\pm$ to loop indefinitely, consuming more memory, until the entire system memory is used and the process crashes. All other Testbeds compile in < 1s.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\BeignetPtrIntSpin}}}%
+    \label{lst:oclgrind-uncorrected-typos}
+  }\\%
+% Testbed 3± ptr-int spin:
+%  \subfloat[]{%
+%    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelPtrCompilerHang}}}%
+%    \label{lst:gt2-compiler-hang}
+%  }\\%
+  \subfloat[Testbed $1+$ hangs during optimization of kernels with large loop bounds. Testbeds $1-$ and $2\pm$ compile in under 1 second.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaOptLoopHang}}}%
+    \label{lst:nvidia-opt-loop-hang}
+  }\\%
+  \subfloat[Testbeds $7\pm$ stuck in infinite loop during code generation, consuming 100\% CPU usage.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\XeonPhiSpin}}}%
+    \label{lst:xeon-phi-spin}
+  }\\%
+  \caption{Example kernels which hang compilers.}%
+  \label{lst:compiler-hangs}%
+\end{figure}
 
 
 \section{Evaluation}%
@@ -356,125 +483,37 @@ Unless stated otherwise, all code listings are presented verbatim as generated b
 
 We found numerous cases where kernels trigger a crash in the compiler (and as a result, the host process), or the compiler to loop indefinitely.
 
-\begin{figure}
-  \centering %
-  \subfloat[Testbeds $10\pm$ compiler assertion during semantic analysis.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\OclgrindSemaAssertion}}}%
-    \label{lst:oclgrind-sema-assertion}
-  }\\%
-  \caption{Syntactically incorrect codes which crash compilers.}
-  \label{lst:bad-syntax}
-\end{figure}
-
-
-\paragraph{Syntax errors} Figure~\ref{lst:oclgrind-sema-assertion}.
-
-\begin{figure}
-  \centering
-  \subfloat[Testbeds $1\pm$, $2\pm$ segementation fault.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaRecursionSegfault}}}%
-    \label{lst:nvidia-recursion-segfault}
-  }\\%
-  \subfloat[Testbeds $3\pm$ assertion \emph{scalarizeInsert} during code generation.]{%
-      \noindent\mbox{\parbox{\columnwidth}{\usebox{\BeignetScalarizeInsert}}}%
-      \label{lst:oclgrind-uncorrected-typos}
-    }\\%
-  \subfloat[Testbeds $10\pm$ assertion \emph{Uncorrected typos!} during semantic analysis.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\OclgrindUncorrectedTypos}}}%
-    \label{lst:oclgrind-uncorrected-typos}
-  }\\%
-  \subfloat[Invalid pointer to integer conversion spins Testbeds $3\pm$ at 100\% CPU usage and consuming more memory, until the entire system memory is used and the process crashes.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\BeignetPtrIntSpin}}}%
-    \label{lst:oclgrind-uncorrected-typos}
-  }\\%
-  \caption{Kernels with type errors which crash compilers.}
-  \label{}
-\end{figure}
-
-
+\cc{Many of the causes can be attributed to improper error handling}
 
 % \texttt{kernel void A(global float* a) { (float4)(a); }}
 
 
-\begin{figure}
-  \centering
-  \subfloat[Testbeds $5\pm$ crash during vectorizer pass.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelVectorizerSegfault}}}%
-    \label{lst:intel-vectorizer-segfault}
-  }\\%
-  \caption{Example kernels which crash vectorizers.}%
-  \label{lst:vectorizer-crashes}%
-\end{figure}
 
-\newsavebox{\IntelGtDoubleAssertion}
-\begin{lrbox}{\IntelGtDoubleAssertion}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(read_only image2d_t a, global double2* b) {
-      b[0] = get_global_id(0);
-    }
-  \end{lstlisting}
-\end{lrbox}
 
-\begin{figure}
-  \centering %
-  \subfloat[Testbeds $3\pm$ assertion \emph{sel.hasDoubleType()} during code generation.]{%
-      \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelGtDoubleAssertion}}}%
-      \label{lst:intel-gt2-double-assertion}
-    }\\%
-  \subfloat[Testbeds $1\pm$ segmentation fault.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaCompileSegfault}}}%
-    \label{lst:nvidia-compile-segfault}
-  }\\%
-  \subfloat[Of the 10 compilers we tested, 6 crash with segfault when compiling this kernel.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\AlmostEverythingCrash}}}%
-    \label{lst:almost-everything-crash}
-  }\\%
-  \subfloat[Testbeds $7\pm$ segmentation fault.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\XeonPhiSegfault}}}%
-    \label{lst:xeon-phi-segfault}
-  }\\%
-  \caption{Example kernels which crash compilers.}%
-  \label{lst:compiler-crashes}%
-\end{figure}
 
-\paragraph{Improper Error Handling} Figure~\ref{lst:oclgrind-sema-assertion} raises an assertion in the compiler frontend during semantic analysis of the AST for testbeds $10\pm$. Though the code \emph{plausibly} looks correct, it is ill-formed as the identifiers \texttt{d} and \texttt{f} are undefined; all other testbeds raise a build failure. Such test cases (in which the code \emph{looks} right, but contains errors) are extremely unlikely through random token enumeration, and impossible through grammar-based tools. Testbeds $3\pm$ hang while assigning a value from a pointer address.
+\paragraph{Semantic Analysis Failures} %
 
 Figure~\ref{lst:nvidia-recursion-segfault} induces an error in handling of global to constant address qualifiers.
+
+Figures~\ref{lst:oclgrind-sema-assertion} and~\ref{lst:oclgrind-uncorrected-typos} raise an assertions in the compiler frontend during semantic analysis of the AST of testbed $10\pm$. Though the code \emph{plausibly} looks correct, it is ill-formed as the identifiers \texttt{d} and \texttt{f} are undefined; all other testbeds raise a build failure. Such test cases (in which the code \emph{looks} right, but contains errors) are extremely unlikely through random token enumeration, and impossible through grammar-based tools. 
+
+% \paragraph{Type Errors}
+Testbed $3\pm$ hangs while assigning a value from a pointer address.
 
 Figure~\ref{lst:almost-everything-crash} crashes 6 of the 10 compilers we tested crashed with segmentation faults.
 
 We believe that our approach contributes a significant improvement for generating plausibly-erroneous code over prior random-enumeration approaches.
 
-\paragraph{Vectorizer Crashes} Figure~\ref{lst:intel-vectorizer-segfault} segfaults during vectorization. \cc{How many? Is there a pattern?}
+
+\paragraph{Pass Failures} The vectorizer pass of Intel compilers was a frequent source of compile-time crashes. Figure~\ref{lst:intel-vectorizer-segfault} segfaults during vectorization.
 
 
 \paragraph{Code generation} Figures~\ref{lst:intel-llvm-assertion} and~\ref{lst:intel-scalartype-assertion} cause failures in the LLVM code generator backend.
 
 
-\paragraph{Optimizer Hangs} Most compiler crashes are optimization insensitive. \cc{However, we found that optimizers did cause problems} Figure~\ref{lst:nvidia-opt-loop-hang} Testbeds $1+$ and $2+$ hang on large loop bounds \cc{how large does the loop bound have to be?}. Figure~\ref{lst:intel-inf-loop} All Intel compilers (testbeds $4+$, $5+$, $6+$, $7+$) hang during optimization of non-terminating while loops.
+\paragraph{Optimizer Hangs} Some compiler crashes are optimization sensitive. Testbeds $1+$ and $2+$ hang on large loop bounds, shown in Figure~\ref{lst:nvidia-opt-loop-hang} \cc{how large does the loop bound have to be?}.
 
-\begin{figure}
-  \centering %
-  \subfloat[Implicit pointer to integer conversion hangs Testbeds $3\pm$. All other Testbeds compile in < 1s.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelPtrCompilerHang}}}%
-    \label{lst:gt2-compiler-hang}
-  }\\%
-  \subfloat[\cc{TODO wrong figure} Testbed $1+$ hangs during optimization of kernels with large loop bounds. Testbeds $1-$, $2\pm$ compile in under 1 second.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaOptLoopHang}}}%
-    \label{lst:nvidia-opt-loop-hang}
-  }\\%
-  \subfloat[\cc{TODO wrong figure} Testbeds $7\pm$ stuck in infinite loop during code generation, consuming 100\% CPU usage.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\XeonPhiSpin}}}%
-    \label{lst:xeon-phi-spin}
-  }\\%
-  \subfloat[Testbeds $4+$, $5+$, $6+$, $7+$ hang during optimization \cc{why?}.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelOptLoopHang}}}%
-    \label{lst:intel-inf-loop}
-  }\\%
-  \caption{Example kernels which hang during optimization.}%
-  \label{lst:compiler-hangs}%
-\end{figure}
+Figure~\ref{lst:intel-inf-loop} All commericial Intel compilers we tested (testbeds $4+$, $5+$, $6+$, $7+$) hang during optimization of non-terminating loops.
 
 
 \paragraph{Unreachable code} To date we have identified 207 distinct cases which trigger unreachable code failures. \cc{How many *distinct* traces?}
@@ -483,17 +522,15 @@ We believe that our approach contributes a significant improvement for generatin
 \paragraph{Silent crashes} 110 distinct test cases which crash testbed $9\pm$ during compilation, all silently.
 
 
-\paragraph{Build failures} Some compilers are more permissive then others. Testbed~$3\pm$ rejects address space qualifiers on automatic variables. Testbeds $1\pm$, $2\pm$ reject \texttt{size\_t} kernel arguments (this is right - OpenCL doesn't allow sizet parameters).
+\paragraph{Build Failures} Some compilers are more permissive then others. Figure~\ref{lst:intel-decl-doesnt-declare-anything} is rejected by some. Testbeds $1\pm$, $2\pm$, $3\pm$ rejects address space qualifiers on automatic variables.
 
+Testbeds~$4\pm$, $6\pm$, $9\pm$ reject out-of-range literal values e.g. \texttt{int i = 0xFFFFFFFFFFFFFFFFFFFFFFFF}, whilst testbeds $3\pm$, $5\pm$, $7\pm$, $8\pm$, and $10\pm$ interpret the literal as an \texttt{unsigned long long} and implicitly cast to an integer value (-1); testbeds $1\pm$, $2\pm$ omit no warning.
 
-\paragraph{Comparison of Clang Front-ends}%
-% \label{subsec:clangs}
+% T3± mad24() result ID: 891687
+On Testbed~$3\pm$, the statment \texttt{int n = mad24(a, (32), get\_global\_size(0));} is rejected as ambiguous.
 
-Many compilers use a common Clang frontend. Perhaps that's why Figure~\ref{lst:almost-everything-crash} fails on so many testbeds.
+% Testbeds $1\pm$, $2\pm$ reject \texttt{size\_t} kernel arguments (this is right - OpenCL doesn't allow sizet parameters).
 
-We found numerous crash bugs in compiler frontends. Because DeepSmith generates syntactically incorrect code, some test cases do not make it past the lexer, parser, and typechecker. This biases DeepSmith towards discovering bugs in compiler front-ends. Many compilers use Clang frontend.
-
-TODO: Using the clang frontend (debug + assert build), compile 75,000 DeepSmith kernels (frontend only, no code generation). Figure~\ref{fig:clangs}.
 
 \begin{figure}
   \centering %
@@ -503,10 +540,6 @@ TODO: Using the clang frontend (debug + assert build), compile 75,000 DeepSmith 
   }%
   \label{fig:clangs} %
 \end{figure}
-
-TODO: Progress is good. Figure~\ref{fig:clangs} shows a nearly tenfold decrease in crash rate in 2 years. Report the 5 distinct crashes in LLVM trunk. What programs crash all versions? What programs are regressions?
-
-Table~\ref{tab:clangs} shows whether each of 7 distinct assertions were raised. Assertion 1 is raised on all compiler versions. See Figure~\ref{lst:oclgrind-uncorrected-typos} for an example.
 
 \begin{table}
   \scriptsize %
@@ -519,9 +552,21 @@ Table~\ref{tab:clangs} shows whether each of 7 distinct assertions were raised. 
 \end{table}
 
 
-\subsection{Runtime Defects}
+\paragraph{Comparison of Clang Front-ends}%
+% \label{subsec:clangs}
 
-EMI/CSmith/SPE extensive stress-test.
+Many compilers use a common Clang frontend. Perhaps that's why Figure~\ref{lst:almost-everything-crash} fails on so many testbeds.
+
+We found numerous crash bugs in compiler frontends. Because DeepSmith generates syntactically incorrect code, some test cases do not make it past the lexer, parser, and typechecker. This biases DeepSmith towards discovering bugs in compiler front-ends.
+
+Using debug + assert builds over every LLVM release in the past 24 months, compile 75,000 DeepSmith kernels using clang frontend (no code generation). Figure~\ref{fig:clangs}.
+
+TODO: Progress is good. Figure~\ref{fig:clangs} shows a nearly tenfold decrease in crash rate in 2 years. Report the 5 distinct crashes in LLVM trunk. What programs crash all versions? What programs are regressions?
+
+Table~\ref{tab:clangs} shows whether each of 7 distinct assertions were raised. Assertion 1 is raised on all compiler versions. See Figure~\ref{lst:oclgrind-uncorrected-typos} for an example.
+
+
+\subsection{Runtime Defects}
 
 \begin{figure}
   \centering %
@@ -529,14 +574,14 @@ EMI/CSmith/SPE extensive stress-test.
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelSizetIntUnreduced}}}%
     \label{lst:intel-size_t-int-unreduced}
   }\\%
-  \subfloat[Testbed $3\pm$ doesn't execute any of the ternary ops \cc{what is the cause? Seems to be something to do with the inputs, which CLSmith doesn't have}.]{%
+  \subfloat[A race condition in \texttt{switch} statement evaluation causes $10\pm$ to sporadically crash when executed with a global size $> 1$.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\OclgrindRaceSwitch}}}%
+    \label{lst:oclgrind-race-switch}
+  }\\%
+  \subfloat[Testbed $3\pm$ silently miscompiles ternary ops in which the operands are global buffers \cc{double check the cause}.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\BeignetTernary}}}%
     \label{lst:pocl-undefined-symbols}
   }\\%
-  \subfloat[A race condition in \texttt{switch} statement evaluation causes $10\pm$ to sporadically crash when executed with a global size $> 1$.]{%
-      \noindent\mbox{\parbox{\columnwidth}{\usebox{\OclgrindRaceSwitch}}}%
-      \label{lst:oclgrind-race-switch}
-    }\\%
   \subfloat[Compilation should fail due to call to undefined function \texttt{B()}; Testbeds $6\pm$ silently succeed then crash upon kernel execution.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\PoclUndefinedSymbols}}}%
     \label{lst:pocl-undefined-symbols}
@@ -546,13 +591,14 @@ EMI/CSmith/SPE extensive stress-test.
 %    \label{lst:beignet-cast-error}
 %  }\\%
   \caption{Example kernels which are miscompiled.}%
-  \label{lst:wrong-code}%
 \end{figure}
 
 
+This is the class of bugs which EMI/CSmith/SPE extensively stress-test.
+
 \paragraph{Thread-dependent flow control} CLSmith does not support this (because of the risk of barrier divergence).
 
-A common pattern in OpenCL is to obtain the thread identity, often as an \texttt{int}, and to compare this against some fixed value to determine whether or not to complete a unit of work. DeepSmith, having modeled the frequency with which this pattern occurs in real handwritten code, generates many programs containing permutations of this pattern. And in doing so, exposed an error in the optimizer of two Testbeds $4+$, $6+$ which causes the \texttt{if} statement of Figure~\ref{lst:intel-size_t-int-reduced} to be executed when the kernel is compiled with optimizations enabled.
+A common pattern in OpenCL is to obtain the thread identity, often as an \texttt{int}, and to compare this against some fixed value to determine whether or not to complete a unit of work. DeepSmith, having modeled the frequency with which this pattern occurs in real handwritten code, generates many programs containing permutations of this pattern. And in doing so, exposed an error in the optimizer of two Testbeds $4+$, $6+$ which causes the \texttt{if} statement of Figure~\ref{lst:intel-size_t-int-unreduced} to be executed when the kernel is compiled with optimizations enabled.
 %
 % cd ~/data/kernels/github-pp
 % ls | xargs egrep -l 'int [A-Z]+ = get_global_id\(' -- | wc -l
@@ -563,9 +609,11 @@ A common pattern in OpenCL is to obtain the thread identity, often as an \texttt
 
 Figure~\ref{lst:oclgrind-race-switch} shows a simple program in which thread identity determines the program output. We found that this test case would sporadically crash Testbeds~$10\pm$, an OpenCL device simulator and debugger. Upon reporting to the developers, the underlying cause was quickly diagnosed as a race condition in \texttt{switch} statement evaluation, and fixed within a week.
 
+\paragraph{Ternary operations} Figure~\ref{lst:pocl-undefined-symbols}.
+
 \paragraph{Latent compilation errors} Figure~\ref{lst:pocl-undefined-symbols} exposes a bug in in which a kernel containing an undefined symbol will successfully compile without warning, then crash the program when attempting to run the kernel. \cc{TODO: CLSmith does not catch this class of bugs (undefined symbols}.
 
-\paragraph{Type conversion} Figure~\ref{lst:beignet-cast-error}. The code performs int and float addition, casting the result to a char, then storing in float. Changing any one of those makes the problem go away.
+% \paragraph{Type conversion} Figure~\ref{lst:beignet-cast-error}. The code performs int and float addition, casting the result to a char, then storing in float. Changing any one of those makes the problem go away.
 
 
 %\subsection{Gray Areas and False Positives}
@@ -606,7 +654,7 @@ In this section we compare DeepSmith to CLSmith~\cite{Lidbury2015a}, the state-o
 
 \paragraph{Experimental Setup}
 
-We ran each program generator using its default configuration for 48 hours on each of the 10 testbeds of Table~\ref{tab:platforms}. We ran the tests twice, first with optimizations disabled ($-$), then with optimizations enabled ($+$). Total runtime for a test case consists of the generation time, and the time to execute the test case. For DeepSmith, the time to generate test-harness is included.
+We ran each program generator using its default configuration for 48 hours on each of the 10 testbeds of Table~\ref{tab:platforms}. We ran the tests twice, first with optimizations disabled ($-$), then with optimizations enabled ($+$). Total runtime for a test case consists of the generation time, and the time to execute the test case.
 
 
 \paragraph{Results Overview}
@@ -621,19 +669,26 @@ We ran each program generator using its default configuration for 48 hours on ea
   \label{tab:megatable}
 \end{table*}
 
-%\begin{table*}
-%  \scriptsize %
-%  \centering %
-%  \input{build/tab/outcomes}
-%  \caption{%
-%    Results from 48 hours of testing using CLSmith and DeepSmith. Testbed \#. as per Table~\ref{tab:platforms}. $\pm$ denotes optimizations off ($-$) vs on ($+$). The remaining columns denote build failure (\textbf{bf}), build crash (\textbf{bc}), build timeout (\textbf{bto}), runtime crash (\textbf{c}), timeout (\textbf{to}), and passed (\textbf{\cmark}) outcomes for CLSmith and DeepSmith, respectively.%
-%  }
-%  \label{tab:outcomes}
-%\end{table*}
+\begin{figure}
+  \centering %
+  \includegraphics[width=\columnwidth]{build/img/vs-clsmith}%
+  \vspace{-1em}
+  \caption{%
+    Comparison of (a) runtimes and (b) test case sizes. DeepSmith test cases are on average evaluated $3.03\times$ faster than CLSmith ($2.45\times$, and $4.46\times$ for generation and execution, respectively), and are two orders of magnitude smaller.
+    % Runtimes, excluding timeouts. .%
+%    Total speedup is 3.03x
+%    CLgen generation is 2.45x faster than CLSmith
+%    CLgen execution is 4.46x faster than CLSmith
+%    CLgen reduction is 66.54x faster than CLSmith
+  }%
+  \label{fig:vs-clsmith} %
+\end{figure}
 
 Table~\ref{tab:megatable} shows the results of 48 hours of consecutive testing for each of the platforms from Table~\ref{tab:platforms}.
 
-An average of XX CLSmith and XX DeepSmith test cases were evaluated on each device, with an average time per test case of XX and XX respectively. The XX-fold increase in testing throughput achieved by DeepSmith is a result of XXX. Figure~\ref{fig:runtimes} shows the times taken to generate and execute test cases. DeepSmith generation time is proportional to program length. For Clsmith, generation time depends on the number of rejections which are required before production of statically verified code is correct \cc{ldots}.
+% Total CLSmith test cases ran: 285077
+% Total DeepSmith test cases ran: 1821311
+An average of 29k CLSmith and 182k DeepSmith test cases were evaluated on each device, with an average time per test case of 12.1s and 1.90s respectively. The XX-fold increase in testing throughput achieved by DeepSmith is a result of XXX. Figure~\ref{fig:vs-clsmith}a shows the times taken to generate and execute test cases, excluding timeouts. DeepSmith generation time is proportional to program length. For Clsmith, generation time depends on the number of rejections which are required before production of statically verified code is correct \cc{ldots}.
 
 Optimization level generally does not affect testing throughput significantly, with the exception of testbed $7+$, in which the slow compilation of kernels containing structs greatly reduces the number of test cases evaluated. This is a result of CLSmith's heavy reliance on structs, and is a known issue --- in XX the authors omit testing on this testbed for this reason. ``Compilation for the Xeon Phi co-processor is prohibitively slow when relatively large structs are used with op- timizations enabled.''
 
@@ -734,21 +789,6 @@ DeepSmith also triggered \emph{unreachable!} compiler errors in 180 distinct tes
 
 \cc{What is the bug rate per line of code?}
 
-
-\begin{figure}
-  \centering %
-  \includegraphics[width=\columnwidth]{build/img/vs-clsmith}%
-  \vspace{-1em}
-  \caption{%
-    Comparison of (a) runtimes and (b) test case sizes. DeepSmith test cases are on average evaluated $3.03\times$ faster than CLSmith ($2.45\times$, and $4.46\times$ for generation and execution, respectively), and are two orders of magnitude smaller.
-    % Runtimes, excluding timeouts. .%
-%    Total speedup is 3.03x
-%    CLgen generation is 2.45x faster than CLSmith
-%    CLgen execution is 4.46x faster than CLSmith
-%    CLgen reduction is 66.54x faster than CLSmith
-  }%
-  \label{fig:runtimes} %
-\end{figure}
 
 The 2357 \textbf{abf} results for CLSmith on Testbeds $4\pm$ and $6\pm$ are all a result of compilers rejecting empty declarations, (e.g. \texttt{int;}) which CLSmith occasionally emits. This is a known CLSmith issue which will likely be addressed.
 % https://github.com/ChrisLidbury/CLSmith/issues/7
