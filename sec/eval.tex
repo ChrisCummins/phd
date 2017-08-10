@@ -574,13 +574,13 @@ Compilers are expected to produce informative diagnostics when processing semant
 Since the expressiveness of our approach is bounded only by the handwritten programs we train on, DeepSmith will occasionally emit compiler-specific code, such as invoking compiler builtins. We found the quality of error handling on these builtins to vary wildly. For example, Figure~\ref{lst:almost-everything-crash} silently crashes 6 of the 10 compilers.
 
 % \paragraph{Code Generation} %
-Occasionally incorrect program semantics will go undetected. Both Figures~\ref{lst:intel-gt2-double-assertion} and~\ref{lst:beignet-scalarize-insert} cause failures during code generation.
+Occasionally incorrect program semantics will go undetected until late in the compilation process. Both Figures~\ref{lst:intel-gt2-double-assertion} and~\ref{lst:beignet-scalarize-insert} cause failures during code generation.
 
 % CLgen result ID 994
 % TODO: Testbed $3\pm$ assertion in \emph{gbe::GenEncoder::handleDouble}
 
 \paragraph{Parser Failures} %
-Parser development is a mature and well understood practice. To our surprise, we uncovered parser errors. The following three code samples each induce crash errors during parsing of compound statements in Testbeds $5\pm$ and $7\pm$:
+Parser development is a mature and well understood practice. To our surprise, we uncovered parser errors in several compilers. The following three code samples each induce crash errors during parsing of compound statements in Testbeds $5\pm$ and $7\pm$:
 
 \begin{enumerate}
 % Hand reduction of a 40 line kernel:
