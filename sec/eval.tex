@@ -993,11 +993,13 @@ CLSmith generated 33 programs with wrong-outputs. DeepSmith generated 30. Over t
 \paragraph{How many interesting test cases?} \cc{Estimating the number of test cases of interest:}
 \begin{itemize}
 \item CLSmith produced 47 distinct wrong-output test cases. Conservatively, let's assume they'll all interesting. DeepSmith produced 35 distinct wrong-output programs. Conservatively, let's assume that only the bug reports we've submitted are interesting (3).
-\item CLSmith generated 1 unique build failure stderrs (empty declaration). DeepSmith generated 6 unique build failure stderrs.
-\item CLSmith generated 3800 silent build crashes. CLgen generated 1023 silent build crashes. Let's ignore these, since we can't be sure of the cause.
-\item CLSmith triggered 2 distinct assertions. DeepSmith triggered 31.
-\item CLSmith triggered 0 distinct unreachables. DeepSmith triggered 3.
-\item CLSmith triggered 4 distinct stackdumps (4 Intel passes). DeepSmith triggered 11 (10 Intel passes, and multiple parser crashes).
+\item CLSmith generated 1 unique build failure (empty declaration). DeepSmith generated 6 unique build failures (including the same empty declaration as CLSmith).
+\item CLSmith generated 3800 silent build crashes. CLgen generated 1023 silent build crashes. Lets ignore these, since we can't be sure of the cause.
+\item CLSmith triggered 2 distinct compiler assertions. DeepSmith triggered 31.
+\item CLSmith triggered 0 distinct compiler ``unreachable'' errors. DeepSmith triggered 3.
+\item CLSmith triggered 4 distinct stackdumps (all from Intel passes). DeepSmith triggered 11 (10 from Intel passes, and multiple parser crashes).
+\item CLSmith triggered 2 distinct crashes. DeepSmith triggered 2. Both produced silent crashes where we can't be sure of the cause.
+\item \cc{TODO: build timeouts}
 \end{itemize}
 
 \paragraph{Bug Diversity}
