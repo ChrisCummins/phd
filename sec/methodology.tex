@@ -1,7 +1,8 @@
-\section{Experimental Methodology}
+\section{Experimental Setup}
 
-\hl{Add this somewhere, it comes from old 2.2: Our harness takes as input the kernel code and runs it using both a single thread and 2048 threads.}
-\subsection{Experimental Setup}
+In this section we describe the particular experimental parameters used.
+
+\subsection{Platforms}
 
 \begin{table*}[t!]
   \scriptsize %
@@ -9,13 +10,14 @@
   % \rowcolors{2}{white}{gray!25}
   \input{build/tab/platforms}
   \caption{%
-    OpenCL testbeds, the time spent in automated testing, and the number of bug reports submitted to date. \cc{refresh bugs submitted}%
+    OpenCL platforms, the time spent in automated testing, and the number of bug reports submitted to date. \cc{refresh bugs submitted}%
   }
   \label{tab:platforms}
 \end{table*}
 
-We conducted testing of 10 OpenCL testbeds, summarized in Table~\ref{tab:platforms}. Each testbed consists of a \emph{<device, driver>} pair. We covered a broad range of hardware: 3 GPUs, 4 CPUs, a co-processor, and an emulator. 7 of the compilers tested are commercial products, 3 of them are open source. Our suite of testbeds includes both combinations of different drivers for the same device, and different devices using the same driver.
+We conducted testing of 10 OpenCL platforms, summarized in Table~\ref{tab:platforms}. Each testbed consists of a \emph{<device, driver>} pair. We covered a broad range of hardware: 3 GPUs, 4 CPUs, a co-processor, and an emulator. 7 of the compilers tested are commercial products, 3 of them are open source. Our suite of platforms includes both combinations of different drivers for the same device, and different devices using the same driver.
 
-\subsection{Methodology}
-
-We run each generated test case twice, once with a single thread, and one with 2048 threads. We also run with and without compiler optimizations. All machines were otherwise unloaded.
+\subsection{Testbeds}
+%HJL - Not sure if this is correct - if it is, ain't in the tables. So probably not.}
+\hl{For each platform, we create multiple testbeds by various combinations of the following settings: running with or without compiler optimizations; running with a single thread or running with 2048 threads.}
+%HJL alt- For each platform, we create two testbeds by either running with or without compiler optimizations.
