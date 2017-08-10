@@ -127,8 +127,34 @@ def get_assertions(session: session_t, tables: Tableset) -> None:
 
     for stderr in ProgressBar(max_value=stderrs.count())(stderrs):
         assertion = util.get_assertion(session, tables.assertions, stderr.stderr,
-                                       clang_assertion=False)
-        stderr.assertion = assertion
+                                       clang_assertion=False, strip=True)
+        stderr.assertion_id = assertion.id
+
+
+def get_stack_dumps(session: session_t, tables: Tableset) -> None:
+    print(f"Recording {tables.name} stack dumps ...")
+    stderrs = session.query(tables.stderrs)\
+        .join(tables.results)\
+        .filter(tables.results.status != 0,
+                tables.stderrs.stderr.like("%stack dump%"))\
+        .distinct()
+
+    for stderr in ProgressBar(max_value=stderrs.count())(stderrs):
+        stack_dump = util.get_stack_dump(session, StackDump, stderr.stderr)
+        stderr.stackdump_id = stack_dump.id
+
+
+def get_unreachables(session: session_t, tables: Tableset) -> None:
+    print(f"Recording {tables.name} unreachables ...")
+    stderrs = session.query(tables.stderrs)\
+        .join(tables.results)\
+        .filter(tables.results.status != 0,
+                tables.stderrs.stderr.like("%unreachable%"))\
+        .distinct()
+
+    for stderr in ProgressBar(max_value=stderrs.count())(stderrs):
+        unreachable = util.get_unreachable(session, tables.unreachables, stderr.stderr)
+        stderr.unreachable_id = unreachable.id
 
 
 if __name__ == "__main__":
@@ -156,3 +182,6 @@ if __name__ == "__main__":
             set_metas(s, tableset)
             set_majorities(s, tableset)
             get_assertions(s, tableset)
+            get_stack_dumps(s, tableset)
+            get_unreachables(s, tableset)
+            s.commit()

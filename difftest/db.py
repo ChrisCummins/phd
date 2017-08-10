@@ -457,10 +457,12 @@ class CLSmithStderr(Base):
     stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
     assertion_id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithAssertions.id"))
     unreachable_id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithUnreachables.id"))
+    stackdump_id = sql.Column(sql.Integer, sql.ForeignKey("StackDumps.id"))
 
     result = sql.orm.relationship("CLSmithResult", back_populates="stderr")
     assertion = sql.orm.relationship("CLSmithAssertion", back_populates="stderr")
     unreachable = sql.orm.relationship("CLSmithUnreachable", back_populates="stderr")
+    stackdump = sql.orm.relationship("StackDump")
 
 
 class CLSmithAssertion(Base):
@@ -601,10 +603,12 @@ class CLgenStderr(Base):
     stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
     assertion_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenAssertions.id"))
     unreachable_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenUnreachables.id"))
+    stackdump_id = sql.Column(sql.Integer, sql.ForeignKey("StackDumps.id"))
 
     result = sql.orm.relationship("CLgenResult", back_populates="stderr")
     assertion = sql.orm.relationship("CLgenAssertion", back_populates="stderr")
     unreachable = sql.orm.relationship("CLgenUnreachable", back_populates="stderr")
+    stackdump = sql.orm.relationship("StackDump")
 
 
 class CLgenAssertion(Base):
@@ -884,6 +888,13 @@ class cl_launcherCLgenResult(Base):
 # Miscellaneous ###############################################################
 
 
+class StackDump(Base):
+    __tablename__ = "StackDumps"
+    id = sql.Column(sql.Integer, primary_key=True)
+    hash = sql.Column(sql.String(40), nullable=False, index=True)
+    stackdump = sql.Column(sql.UnicodeText(length=1024), nullable=False)
+
+
 class BugReport(Base):
     __tablename__ = "BugReports"
     id = sql.Column(sql.Integer, primary_key=True)
@@ -950,6 +961,7 @@ Tableset = namedtuple('Tableset', [
         'stderrs',
         'majorities',
         'assertions',
+        'unreachables',
         'clangs',
         'clang_stderrs',
         'clang_assertions',
@@ -964,6 +976,7 @@ CLSMITH_TABLES = Tableset(name="CLSmith",
     meta=CLSmithMeta, classifications=CLSmithClassification,
     stdouts=CLSmithStdout, stderrs=CLSmithStderr,
     majorities=CLSmithMajority, assertions=CLSmithAssertion,
+    unreachables=CLSmithUnreachable,
     clangs=None, clang_stderrs=None,
     clang_assertions=None,
     clang_unreachables=None,
@@ -975,6 +988,7 @@ CLGEN_TABLES = Tableset(name="CLgen",
     meta=CLgenMeta, classifications=CLgenClassification,
     stdouts=CLgenStdout, stderrs=CLgenStderr,
     majorities=CLgenMajority, assertions=CLgenAssertion,
+    unreachables=CLgenUnreachable,
     clangs=CLgenClangResult, clang_stderrs=CLgenClangStderr,
     clang_assertions=CLgenClangAssertion,
     clang_unreachables=CLgenClangUnreachable,

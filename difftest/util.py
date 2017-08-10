@@ -1,6 +1,8 @@
 """
 Shared utility code for Jupyter notebooks.
 """
+import re
+
 from collections import Counter, namedtuple
 from labm8 import crypto
 from progressbar import ETA, ProgressBar
@@ -111,10 +113,23 @@ def escape_stderr(stderr):
                      if "no version information available" not in line)
 
 
-def get_assertion(s: session_t, table, stderr: str, clang_assertion: bool=True):
+def get_assertion(s: session_t, table, stderr: str, clang_assertion: bool=True,
+                  strip: bool=False):
     for line in stderr.split('\n'):
         if "assertion" in line.lower():
-            if clang_assertion:
+            if strip:
+                if line.startswith("cldrive-harness"):
+                    msg = ":".join(line.split(":")[1:])
+                else:
+                    msg = line
+                msg = re.sub(r"^ *:[0-9]+: ", "", msg)
+                if "Assertion `(null)' failed." in msg:
+                    msg = "Assertion `(null)' failed."
+                elif "Assertion `' failed." in msg:
+                    msg = "Assertion `' failed."
+                elif "Assertion `' failed." in msg:
+                    msg = "Assertion `' failed."
+            elif clang_assertion:
                 msg = ":".join(line.split(":")[3:])
             else:
                 msg = line
@@ -127,9 +142,9 @@ def get_assertion(s: session_t, table, stderr: str, clang_assertion: bool=True):
             return assertion
 
 
-def get_unreachable(s: session_t, tables, stderr: str):
+def get_unreachable(s: session_t, table, stderr: str):
     for line in stderr.split('\n'):
-        if "unreachable executed at" in line.lower():
+        if "unreachable" in line.lower():
             unreachable = get_or_create(
                 s, table,
                 hash=crypto.sha1_str(line),
@@ -149,3 +164,23 @@ def get_terminate(s: session_t, tables, stderr: str):
             s.add(terminate)
             s.flush()
             return terminate
+
+
+def get_stack_dump(s: session_t, table, stderr: str):
+    in_stackdump = False
+    stackdump = []
+    for line in stderr.split('\n'):
+        if in_stackdump:
+            if line and line[0].isdigit():
+                stackdump.append(line)
+            else:
+                stackdump_ = "\n".join(stackdump)
+                stackdump = get_or_create(
+                    s, table,
+                    hash=crypto.sha1_str(stackdump_),
+                    stackdump=stackdump_)
+                s.add(stackdump)
+                s.flush()
+                return stackdump
+        elif "stack dump:" in line.lower():
+            in_stackdump = True
