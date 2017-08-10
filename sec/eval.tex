@@ -990,6 +990,15 @@ CLSmith generated 33 programs with wrong-outputs. DeepSmith generated 30. Over t
 % Average GitHub charchounts: 1451
 % Average GitHub linecounts: 53
 
+\paragraph{How many interesting test cases?} \cc{Estimating the number of test cases of interest:}
+\begin{itemize}
+\item CLSmith produced 47 distinct wrong-output test cases. Conservatively, let's assume they'll all interesting. DeepSmith produced 35 distinct wrong-output programs. Conservatively, let's assume that only the bug reports we've submitted are interesting (3).
+\item CLSmith generated 1 unique build failure stderrs (empty declaration). DeepSmith generated 6 unique build failure stderrs.
+\item CLSmith generated 3800 silent build crashes. CLgen generated 1023 silent build crashes. Let's ignore these, since we can't be sure of the cause.
+\item CLSmith triggered 2 distinct assertions. DeepSmith triggered 31.
+\item CLSmith triggered 0 distinct unreachables. DeepSmith triggered 3.
+\item CLSmith triggered 4 distinct stackdumps (4 Intel passes). DeepSmith triggered 11 (10 Intel passes, and multiple parser crashes).
+\end{itemize}
 
 \paragraph{Bug Diversity}
 
