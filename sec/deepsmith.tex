@@ -24,7 +24,7 @@ Generating test cases for compilers is hard because their inputs are highly stru
 
 \paragraph{Encoder} The textual representation of program codes must be encoded as numeric sequences for feeding as input to the machine learning model. Prior works in have used character-level encodings, token-level encodings, or fixed length feature vectors. We extend the hybrid character/token-level encoding of~\cite{Cummins2017b}, in which language keywords and common names are treated as individual tokens while the rest of the text is encoded on a character basis. This approach hits a balance between compressing the input text and keeping the token number low. 
 
-\paragraph{Neural Network} We use the Long Short-Term Memory (LSTM) architecture of Recurrent Neural Network to model program code~\cite{Hochreiter1997}. In the LSTM architecture activations are learned with respect no just to their current inputs but to previous inputs in a sequence 
+\paragraph{Neural Network} We use the Long Short-Term Memory (LSTM) architecture of Recurrent Neural Network to model program code~\cite{Hochreiter1997}. In the LSTM architecture activations are learned with respect no just to their current inputs but to previous inputs in a sequence. This 
 
 
 provides an efficient way for learning long-range dependencies in sequences, necessary 
