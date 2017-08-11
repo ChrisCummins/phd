@@ -4,7 +4,7 @@ DeepSmith\footnote{DeepSmith available at: \emph{[URL redacted for double-blind 
 
 \begin{figure}
   \centering
-  \includegraphics[width=.80\columnwidth]{img/deepsmith} %
+  \includegraphics[width=\columnwidth]{img/deepsmith} %
   % \vspace{-2em}%
   \caption{%
     DeepSmith system overview.
@@ -104,10 +104,10 @@ As in prior work, voting on the output of programs across compilers has been use
 %	\item \textbf{\cmark} \emph{Completion} The program terminates gracefully and produces an output.
 %\end{enumerate}
 
-When evaluating the outcomes of test cases, build crash and build timeout outcomes are of immediate interest, indicative of erroneous compiler behavior (examples may be found in Section~\ref{subsec:compile-time-defects}). For all other outcomes, \emph{differential tests} are required to confirm anomalous behavior. We look for testcases where there is a majority outcome -- i.e. for which some fraction of the testbeds behave the same -- but some testbed deviates. We use the presence of the majority increasing the likelihood that there is a `correct' behavior for the test case. In this work, we choose the majority fraction to be $\ceil{\frac{2}{3}n}$, where $n$ is the number of testbeds.
+When evaluating the outcomes of test cases, build crash (\bc) and build timeout (\bto) outcomes are of immediate interest, indicative of erroneous compiler behavior (examples may be found in Section~\ref{subsec:compile-time-defects}). For all other outcomes, \emph{differential tests} are required to confirm anomalous behavior. We look for test cases where there is a majority outcome -- i.e. for which some fraction of the testbeds behave the same -- but some testbed deviates. We use the presence of the majority increasing the likelihood that there is a `correct' behavior for the test case. In this work, we choose the majority fraction to be $\ceil{\frac{2}{3}n}$, where $n$ is the number of testbeds.
 
-An \emph{anomalous build failure} or \emph{anomalous runtime crash} occurs if, for a given test case, the majority of testbeds execute successfully, and a testbed yields compilation error or runtime crash.
-An \emph{anomalous wrong-output} occurs if, for a given test case, the majority of testbeds execute successfully, producing the same output values, and a testbed yields a result which differs from this majority output. Anomalous wrong-output results are indicative of \emph{miscompilations}, a particularly hard to detect class of bug in which the compiler silently emits wrong code. CSmith is designed specifically to target this class of bug.
+An \emph{anomalous build failure} (\abf) or \emph{anomalous runtime crash} (\arc) occurs if, for a given test case, the majority of testbeds execute successfully, and a testbed yields a compilation error or runtime crash.
+An \emph{anomalous wrong-output} (\awo) occurs if, for a given test case, the majority of testbeds execute successfully, producing the same output values, and a testbed yields a result which differs from this majority output. Anomalous wrong-output results are indicative of \emph{miscompilations}, a particularly hard to detect class of bug in which the compiler silently emits wrong code. CSmith is designed specifically to target this class of bug.
 
 % Only 2.3\% of CLSmith programs with anomalous outputs are insensitive to optimization level.
 
@@ -128,7 +128,7 @@ An \emph{anomalous wrong-output} occurs if, for a given test case, the majority 
 %Our sequence-to-sequence approach to program generation greatly simplifies the implementation --- targeting a new language requires only a corpus of example programs and a test harness for generated codes. The generative model itself contains no language-specific code, and is implemented in less than 200 lines of Python --- a small fraction of that of prior approaches. The trade-off of this makes significantly reduces the cost of development, but we provide no guarantees on generated program correctness. \cc{not well formed, not well typed, and not free from undefined behavior}
 
 \paragraph{False Positives for Anomalous Runtime Behavior}\label{subsec:discussions}
-Generated programs may contain undefined or non-deterministic behavior which will incorrectly be labeled as anomalous. CSmith circumvents this problem mostly by not generating such code in the first place and performing certain static and dynamic analyses during generation to filter out the more complex cases. Although similar analyses could be created as filters for our system, we take a simpler approach, filtering only the few types of non-deterministic behavior we have actually observed. 
+Generated programs may contain undefined or non-deterministic behavior which will incorrectly be labeled as anomalous. CSmith circumvents this problem mostly by not generating such code in the first place and performing certain static and dynamic analyses during generation to filter out the more complex cases. Although similar analyses could be created as filters for our system, we take a simpler approach, filtering only the few types of non-deterministic behavior we have actually observed to happen in practice. 
 
 We filter data races and out-of-bounds accesses with GPUverify~\cite{Betts2012} and Oclgrind. Some compiler warnings provide strong indication of non-deterministic behavior (e.g. comparison between pointer and integer) -- we check for these warnings and filter accordingly.
 
