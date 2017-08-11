@@ -433,9 +433,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.29364777"
-     inkscape:cx="1673.5712"
-     inkscape:cy="1267.9608"
+     inkscape:zoom="0.41528066"
+     inkscape:cx="1464.195"
+     inkscape:cy="1346.4248"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -463,7 +463,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -514,25 +514,25 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:60px;line-height:125%;font-family:sans-serif;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       x="552.82153"
-       y="843.9657"
+       x="920.60907"
+       y="854.18201"
        id="text4152"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan4154"
-         x="552.82153"
-         y="843.9657">yes</tspan></text>
+         x="920.60907"
+         y="854.18201">yes</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:60px;line-height:125%;font-family:sans-serif;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       x="948.02197"
-       y="843.9657"
+       x="563.20721"
+       y="854.18201"
        id="text4156"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan4158"
-         x="948.02197"
-         y="843.9657">no</tspan></text>
+         x="563.20721"
+         y="854.18201">no</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:75px;line-height:125%;font-family:sans-serif;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
@@ -683,7 +683,7 @@
            height="340"
            x="540"
            y="1172.3622" /></flowRegion><flowPara
-         id="flowPara4283"></flowPara></flowRoot>    <rect
+         id="flowPara4283" /></flowRoot>    <rect
        ry="90"
        y="-387.63782"
        x="591.49542"
