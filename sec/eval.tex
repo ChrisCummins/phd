@@ -276,7 +276,7 @@
       a[-1] = 2;
       a[0] = 3;
     }
-  \end{lstlisting}
+  \end{lstlisting}\cc{TODO:}
 \end{lrbox}
 
 \newsavebox{\UninitRead}
@@ -603,8 +603,7 @@ Type errors were an occasional cause of compile-time defect. Figure~\ref{lst:nvi
 Occasionally incorrect program semantics will remain undetected until late in the compilation process. Both Figures~\ref{lst:intel-gt2-double-assertion} and~\ref{lst:beignet-scalarize-insert} pass the type checker and semantic analysis, but trigger compiler assertions during code generation.
 
 % \paragraph{Compiler-specific Code} %
-We found an interesting yet unintended byproduct of having trained DeepSmith on thousands of real world 
-examples is that the model learned to occasionally generate compiler-specific code, such as invoking compiler builtins. We found the quality of error handling on these builtins to vary wildly. For example, Figure~\ref{lst:almost-everything-crash} silently crashes 6 of the 10 compilers.
+An interesting yet unintended byproduct of having trained DeepSmith on thousands of real world examples is that the model learned to occasionally generate compiler-specific code, such as invoking compiler builtins. We found the quality of error handling on these builtins to vary wildly. For example, Figure~\ref{lst:almost-everything-crash} silently crashes 6 of the 10 compilers.
 
 % Since the expressiveness of our approach is bounded only by the handwritten programs we train on, DeepSmith will occasionally emit compiler-specific code
 
@@ -700,6 +699,7 @@ On Testbed~$3\pm$, the statement \texttt{int n = mad24(a, (32), get\_global\_siz
 
 
 \subsection{Runtime Defects}
+\label{subsec:runtime-defects}
 
 \begin{figure}
   \centering %
@@ -726,7 +726,7 @@ On Testbed~$3\pm$, the statement \texttt{int n = mad24(a, (32), get\_global\_siz
   \caption{Example kernels which are miscompiled.}%
 \end{figure}
 
-Prior work on compiler test case generation has focused on extensive stress-testing of compiler middle-ends to uncover miscompilations~\cite{Chen2014a}. CLSmith, the state-of-the-art in OpenCL compiler fuzzing, specifically targets this class of bugs. Grammar based enumeration is highly effective at this task, yet is bounded by the expressiveness of the grammar. Here we provide examples of bugs which cannot currently be discovered by the state-of-the-art.
+Prior work on compiler test case generation has focused on extensive stress-testing of compiler middle-ends to uncover miscompilations~\cite{Chen2014a}. CLSmith, the state-of-the-art in OpenCL compiler fuzzing, specifically targets this class of bugs. Grammar based enumeration is highly effective at this task, yet is bounded by the expressiveness of the grammar. Here we provide examples of bugs which cannot currently be discovered by CLSmith.
 
 %
 % cd ~/data/kernels/github-pp
@@ -776,8 +776,6 @@ Figure~\ref{lst:pocl-undefined-symbols} exposes a bug in which a kernel containi
 
 In this section we quantitatively compare the bug-finding capabilities of DeepSmith to CLSmith~\cite{Lidbury2015a}, the state-of-the-art in OpenCL compiler testing.
 
-\paragraph{Experimental Setup} \hl{I've moved this to Section 3}
-
 \paragraph{Results Overview}
 
 \begin{table*}
@@ -797,7 +795,7 @@ In this section we quantitatively compare the bug-finding capabilities of DeepSm
   \includegraphics[width=\columnwidth]{build/img/vs-clsmith}%
   \vspace{-1em}
   \caption{%
-    Comparison of runtimes and test case sizes. DeepSmith test cases are on average evaluated $3.03\times$ faster than CLSmith ($2.45\times$, and $4.46\times$ for generation and execution, respectively), and are two orders of magnitude smaller.
+    Comparison of runtimes (a) and test case sizes (b). DeepSmith test cases are on average evaluated $3.03\times$ faster than CLSmith ($2.45\times$, and $4.46\times$ for generation and execution, respectively), and are two orders of magnitude smaller. Timings do not include the cost of timeouts which would increase the performance gains of DeepSmith by nearly a factor of two.
     % Runtimes, excluding timeouts. .%
 %    Total speedup is 3.03x
 %    CLgen generation is 2.45x faster than CLSmith
@@ -807,9 +805,9 @@ In this section we quantitatively compare the bug-finding capabilities of DeepSm
   \label{fig:vs-clsmith} %
 \end{figure}
 
-Table~\ref{tab:megatable} shows the results of 48 hours of consecutive testing for all Testbeds. An average of 29k CLSmith and 182k DeepSmith test cases were evaluated on each Testbed, an average time per test case of 12.1s and 1.90s respectively. There are three significant factors providing the sixfold increase in testing throughput achieved by DeepSmith: test cases are faster to generate, test cases are less likely to timeout, and the test cases which do not timeout execute faster.
+Table~\ref{tab:megatable} shows the results of 48 hours of consecutive testing for all Testbeds. An average of 15k CLSmith and 91k DeepSmith test cases were evaluated on each Testbed, an average time per test case of 12.1s and 1.90s respectively. There are three significant factors providing the sixfold increase in testing throughput achieved by DeepSmith: test cases are faster to generate, test cases are less likely to timeout, and the test cases which do not timeout execute faster.
 
-Figure~\ref{fig:vs-clsmith}a shows the generation and execution times of DeepSmith and CLSmith test cases, excluding timeouts. DeepSmith generation time grows linearly with program length, and is on average $2.45\times$ faster than CLSmith. Test case execution is on average $4.46\times$ faster than CLSmith.
+Figure~\ref{fig:vs-clsmith}a shows the generation and execution times of DeepSmith and CLSmith test cases, excluding timeouts\footnote{If timeouts are included then the performance improvement of DeepSmith is $6.5\times$ with the execution times being $11\times$ faster. However, this number grows as we change the arbitrary timeout threshold, so for fairness we have chosen to exclude it.}. DeepSmith generation time grows linearly with program length, and is on average $2.45\times$ faster than CLSmith. Test case execution is on average $4.46\times$ faster than CLSmith.
 
 Optimization level generally does not affect testing throughput significantly, with the exception of Testbed $7+$. Optimization of large structs is expensive on testbed $7+$, and CLSmith test cases use global structs extensively. This is a known issue --- in~\cite{Lidbury2015a} the authors omit large-scale testing on this device for this reason. The use of structs in real life OpenCL is comparatively rare --- only 7.1\% of kernels on GitHub use them.
 
@@ -817,7 +815,7 @@ Optimization level generally does not affect testing throughput significantly, w
 
 
 \paragraph{Comparison of Test Cases} %
-The average CLSmith program is 1189 lines long (excluding headers). CLSmith test cases require reduction in order to expose the underlying bug. An automated approach to OpenCL test case reduction is presented in~\cite{Pflanzer2016}, though it requires on average 100 minutes for each test case using a parallelized implementations (and over 6 hours if this parallelization is not available); the authors also suggest a final manual pass after automated reduction. In contrast, DeepSmith learned to program from humans, and humans do not typically write very large kernel functions. The average DeepSmith kernel is 20 lines long, which is interpretable without reduction, either manual or automatic. \cc{}
+The average CLSmith program is 1189 lines long (excluding headers). CLSmith test cases require reduction in order to expose the underlying bug. An automated approach to OpenCL test case reduction is presented in~\cite{Pflanzer2016}, though it requires on average 100 minutes for each test case using a parallelized implementations (and over 6 hours if this parallelization is not available); the authors also suggest a final manual pass after automated reduction. In contrast, DeepSmith learned to program from humans, and humans do not typically write such large kernel functions. The average DeepSmith kernel is 20 lines long, which is interpretable without reduction, either manual or automatic. 
 
 % CLSmith program sizes:
 %+--------+-----------+--------+
@@ -841,9 +839,13 @@ The average CLSmith program is 1189 lines long (excluding headers). CLSmith test
 \paragraph{Comparison of Results} %
 Both testing systems found anomalous results of all types.
 
-In 48 hours of testing, CLSmith discovered compile-time crashes (\textbf{bc}) in 8 of the 20 testbeds, DeepSmith crashed all of them. DeepSmith triggered 14 distinct compiler assertions, CLSmith 2. Both of the assertions triggered by CLSmith were also triggered by CLgen. DeepSmith also triggered \emph{unreachable!} compile-time crashes in 180 distinct test cases, CLSmith triggered 0.
+% bc column:
+% CLSmith generated 3800 silent build crashes. CLgen generated 1023 silent build crashes. Lets ignore these, since we can't be sure of the cause.
+% CLSmith triggered 2 distinct compiler assertions. DeepSmith triggered 31.
+% CLSmith triggered 0 distinct compiler ``unreachable'' errors. DeepSmith triggered 3.
+In 48 hours of testing, CLSmith discovered compile-time crashes (\textbf{bc}) in 8 of the 20 testbeds, DeepSmith crashed all of them. DeepSmith triggered 31 distinct compiler assertions, CLSmith 2. Both of the assertions triggered by CLSmith were also triggered by CLgen. DeepSmith also triggered 3 distinct \emph{unreachable!} compile-time crashes, CLSmith triggered 0.
 
-The Intel compilers we tested would occasionally emit a stack trace upon crashing, identifying the failure point in a specific pass. CLSmith triggered crashes in 4 distinct passes. DeepSmith triggered crashes in 10 distinct passes, including 3 of the 4 which CLSmith. Figure~\ref{lst:intel-passes} provides examples.
+The Intel CPU testbeds (Testbeds 4--7) would occasionally emit a stack trace upon crashing, identifying the failure point in a specific pass. CLSmith triggered crashes in 4 distinct passes. DeepSmith triggered crashes in 10 distinct passes, including 3 of the 4 which CLSmith did. Figure~\ref{lst:intel-passes} provides examples. Many of these crashes are optimization sensitive. CLSmith was able to induce a crash in only one of the Intel testbeds with optimizations disabled. DeepSmith crashed all of the compilers with both optimizations enabled and disabled.
 
 % DeepSmith triggered crashes in ten Intel passes, including three of the four which CLSmith triggered (the one missing one is \emph{Paketize function}).
 
@@ -912,7 +914,11 @@ The Intel compilers we tested would occasionally emit a stack trace upon crashin
   \label{lst:intel-passes}
 \end{figure}
 
-CLSmith produced many \textbf{bto} results across 13 Testbeds. Given the large kernel size, it is unclear how many of those are indefinite loops or simply a result of slow compilation of large kernels. The average size of CLSmith \textbf{bto} kernels is XX lines. Automated test case reduction --- in which thousands of permutations of a program are executed --- may be prohibitively expensive for test cases with very long runtimes. DeepSmith produced \textbf{bto} results across 11 Testbeds and with an average kernel size of XX lines, allowing for rapid identification of the underlying problem.
+% bto column:
+
+% CLSmith triggered 4 distinct stack dumps (all from Intel passes). DeepSmith triggered 11 (10 from Intel passes, and multiple parser crashes).
+
+CLSmith produced many \textbf{bto} results across 13 Testbeds. Given the large kernel size, it is unclear how many of those are infinite loops or simply a result of slow compilation of large kernels. The average size of CLSmith \textbf{bto} kernels is XX lines. Automated test case reduction --- in which thousands of permutations of a program are executed --- may be prohibitively expensive for test cases with very long runtimes. DeepSmith produced \textbf{bto} results across 11 Testbeds and with an average kernel size of XX lines, allowing for rapid identification of the underlying problem.
 
 
 \begin{figure}
@@ -934,57 +940,34 @@ The integrated GPU Testbed ($3\pm$) frequently failed to compile CLSmith kernels
 % SELECT stderr,COUNT(*) FROM CLSmithResults LEFT JOIN CLSmithMetas ON CLSmithResults.id=CLSmithMetas.id WHERE testbed_id=13 AND CLSmithResults.outcome='bc' AND cumtime < 48 * 3600 GROUP BY CLSmithResults.stderr;
 Of the build crashes, 68\% failed silently, and the remainder were caused by the same two compiler assertions for which DeepSmith generated 4 line test cases, shown in Figure~\ref{lst:beig-assertions}. DeepSmith also triggered silent build crashes in Testbed $3\pm$, and a further 8 distinct compiler assertions.
 
-% 622 total bc
-Testbeds $4$, $5$, $6$, and $7$ have a number CLSmith bc outcomes when optimizations are enabled. Of the non-silent crashes, the cause is the OpenCL vectorizer pass, same as Figure~\ref{lst:intel-vectorizer-segfault}. \cc{check this}
-
-The 4719 \textbf{bf} results for CLSmith on Testbeds $4\pm$ and $6\pm$ are all a result of compilers rejecting empty declarations, (e.g. \texttt{int;}) which CLSmith occasionally emits. This is a known CLSmith issue which will likely be addressed. DeepSmith also generated these statements, but with a much lower probability, given that it is an unusual construct. Only XX DeepSmith programs  contain empty declarations.
+% bf column: CLSmith generated 1 unique build failure (empty declaration). DeepSmith generated 6 unique build failures (including the same empty declaration as CLSmith).
+The 4719 \textbf{bf} results for CLSmith on Testbeds $4\pm$ and $6\pm$ are all a result of compilers rejecting empty declarations, (e.g. \texttt{int;}) which CLSmith occasionally emits. DeepSmith also generated these statements, but with a much lower probability (only XX programs) given that it is an unusual construct.
 % https://github.com/ChrisLidbury/CLSmith/issues/7
-Similarly, Intel Testbeds 4--7 reject DeepSmith kernels which omit a type specified (e.g. \texttt{\_\_global* a}), whereas all other Testbeds (including 3) emit and warning and default to \texttt{int} type.
+Similarly, Testbeds 4--7 reject DeepSmith kernels which omit a type specified (e.g. \texttt{\_\_global* a}), whereas all other Testbeds emit a warning and default to \texttt{int} type.
 
-CLSmith generated 33 programs with wrong-outputs. DeepSmith generated 30. Over the course of testing, a combined $3.39 \times 10^8$ of CLSmith code was evaluated, compared to $3.76 \times 10^6$ lines of DeepSmith code. This provides CLSmith a greater potential to trigger miscompilations. For this reason, we believe our approach to be complimentary, with CLSmith providing targeted middle-end stress-testing, and DeepSmith providing a broader class of bugs.
+% c column
 
-%\paragraph{Test case Reduction} We used a modified version of C-Reduce which supports OpenCL to perform automatic test case, using the default settings. The available implementation supports reduction only of anomalous-output test cases, though this could be extended to support other outcomes (we did not do this). Test case reduction is a time-consuming process, even with the parallelized implementation. Figure~\ref{fig:kernel-sizes} shows the runtimes of reductions, and Figure~\cc{TODO} shows the test case sizes before and after reduction. For CLSmith-generated kernels, test case reduction is necessary to expose the problematic code from within the hundreds of lines of generated program. DeepSmith kernels are on average an order of magnitude smaller. We found that reduction \ldots
+\cc{TODO: CLSmith Testbed $8-$ crashes, Testbed $2-$ crashes} Both CLSmith and DeepSmith cause Testbed $9\pm$ to crash silently during kernel execution. We suspect that this is \cc{latent build crash. ComputeAorta defers kernel compilation so that it can perform optimizations dependent on runtime parameters}
 
-% Average GitHub charchounts: 1451
-% Average GitHub linecounts: 53
+% CLSmith triggered 2 distinct crashes. DeepSmith triggered 2. Both produced silent crashes where we can't be sure of the cause.
 
-\paragraph{How many interesting test cases?} \cc{Estimating the number of test cases of interest:}
-\begin{itemize}
-\item CLSmith produced 51 distinct wrong-output test cases. Conservatively, let's assume they'll all interesting. DeepSmith produced 69 distinct wrong-output test cases. Conservatively, let's assume that only the bug reports we've submitted are interesting (3).
-\item CLSmith generated 1 unique build failure (empty declaration). DeepSmith generated 6 unique build failures (including the same empty declaration as CLSmith).
-\item CLSmith generated 3800 silent build crashes. CLgen generated 1023 silent build crashes. Lets ignore these, since we can't be sure of the cause.
-\item CLSmith triggered 2 distinct compiler assertions. DeepSmith triggered 31.
-\item CLSmith triggered 0 distinct compiler ``unreachable'' errors. DeepSmith triggered 3.
-\item CLSmith triggered 4 distinct stack dumps (all from Intel passes). DeepSmith triggered 11 (10 from Intel passes, and multiple parser crashes).
-\item CLSmith triggered 2 distinct crashes. DeepSmith triggered 2. Both produced silent crashes where we can't be sure of the cause.
-\item \cc{TODO: build timeouts}
-% CLSmith: 60
-% DeepSmith: 56
-\end{itemize}
+% w column: CLSmith produced 51 distinct wrong-output test cases. Conservatively, let's assume they'll all interesting. DeepSmith produced 69 distinct wrong-output test cases. Conservatively, let's assume that only the bug reports we've submitted are interesting (3).
+Over the course of testing, a combined $3.4 \times 10^8$ lines of CLSmith code was evaluated, compared to $3.8 \times 10^6$ lines of DeepSmith code. This provides CLSmith a greater potential to trigger miscompilations. CLSmith generated 33 programs with wrong-outputs. DeepSmith generated 30. 
+%For this reason, we believe our approach to be complimentary, with CLSmith providing targeted middle-end stress-testing, and DeepSmith providing a broader class of bugs. \cc{Hugh, Pavlos, do you agree?}\hl{Don't think we need to draw such conclusions here.} However, as shown in Section~\ref{subsec:runtime-defects}, DeepSmith is capable of discovering miscompilations which CLSmith cannot. \cc{I'm not sure what we have to say about miscompilations. We didn't reduce CLSmith's, so there may be duplicates, and we definitely have false-positives in the 'w' column.}
 
-\paragraph{Bug Diversity}
 
-Hard to quantify, but our results suggest the value of our approach.
+%\paragraph{Bug Diversity} %
+%
+%\hl{ditch.}
+%The design of CLSmith biases the system towards identifying miscompilations. %
+% esp. struct miscompilations, though only 7.1\% of OpenCL kernels on GitHub use them
+%Our results indicate that our system is capable of detecting a broader range of compiler defects, including miscompilations which CLSmith is unable to produce test cases for. For example, Oclgrind was resilient to CLSmith testing, yet we identified both compile-time and runtime defects.
+%
+%Our approach is biased towards identifying bugs in compiler front-ends, since not all generated programs are well formed/well typed. Overall, we believe the two systems to be complimentary, with CLSmith providing targeted middle-end stress-testing.
 
-% How many GitHub kernels contain 'struct's?
-% $ ls | xargs grep -l struct -- | wc -l
-% 331
-CLSmith is biased towards identifying struct miscompilations, though only 7.1\% of OpenCL kernels on GitHub use them. \cc{is this supported in the data?}
 
-Our approach is biased towards identifying bugs in compiler front-ends, since not all generated programs are well formed/well typed. Results suggest we cover more areas of the compiler, E.g. compiler crashes, compiler timeouts, etc.
-
-Oclgrind was resilient to CLSmith testing, yet we identify both compile-time and runtime defects.
-
-Overall, CLSmith is better at finding miscompilations. We believe our approach to be complimentary.
-
-%\begin{figure}
-%	\centering %
-%	\includegraphics[width=\columnwidth]{build/img/total-tests}%
-%	\caption{%
-%		Test cases. \cc{TODO: Replot with the fastest and slowest device for each}%
-%	}%
-%	\label{fig:total-tests} %
-%\end{figure}
+\subsection{Compiler Stability over Time}%
+\label{subsec:clangs}
 
 \begin{figure}
   \centering %
@@ -1005,11 +988,7 @@ Overall, CLSmith is better at finding miscompilations. We believe our approach t
   \label{tab:clangs}
 \end{table}
 
-
-\subsection{Compiler Stability over Time}%
-% \label{subsec:clangs}
-
-Clang front-ends are common across many compilers, which in turn causes Clang-related bugs to affect multiple compiler, for example the one in Figure~\ref{lst:almost-everything-crash}. To evaluate this impact of Clang, we used debug+assert builds of every LLVM release in the past 24 months and processed 75,000 DeepSmith kernels through the Clang front-end (no code generation, just lexer, parser, and type checker).
+The Clang front-end to LLVM supports OpenCL, and is commonly used in OpenCL drivers. This in turn causes Clang-related defects to potentially affect multiple compilers, for example the one in Figure~\ref{lst:almost-everything-crash}. To evaluate the impact of Clang, we used debug+assert builds of every LLVM release in the past 24 months and processed 75,000 DeepSmith kernels through the Clang front-end (this includes the lexer, parser, and type checker, but not code generation).
 
 Figure~\ref{fig:clangs} shows that the crash rate of Clang front-ends is almost steadily decreasing over time. The number of failing DeepSmith kernels decreased tenfold between 3.6.2 and 6.0.0. \cc{Does that suggest that DeepSmith is finding bugs which developers are interested in fixing?} \pp{We do find interesting bugs, but the important question is whether we are more likely to find interesting bugs than CLSmith.}
 Table~\ref{tab:clangs} shows the 7 distinct assertions triggered during this experiment. Assertion 1 (uncorrected typos) is raised on all compiler versions --- see Figure~\ref{lst:oclgrind-uncorrected-typos} for an example. This shows that compiler validation is a moving target. Release 6.0.0 has the second lowest crash rate, but is joint first in terms of the number of unique assertions. Assertions 3 and 4 where triggered by some kernels under version 6.0.0 but not under any other tested Clang version. This indicates that changes introduced in the latest version of Clang were not sufficiently tested.  %Neither metric is perfect.
