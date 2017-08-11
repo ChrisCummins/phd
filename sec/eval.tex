@@ -511,6 +511,28 @@
 \end{lrbox}
 
 
+\newsavebox{\BeigPtrAssertion}
+\begin{lrbox}{\BeigPtrAssertion}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    kernel void A(global int* a, global int* b, global int* c) {
+      a[get_global_id(0)] = a[get_global_id(0)] > b;
+    }
+  \end{lstlisting}
+\end{lrbox}
+
+\newsavebox{\BeigIterAssertion}
+\begin{lrbox}{\BeigIterAssertion}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    kernel void A(global int* a) {
+      global int* b = ((void*)0);
+      b[0] = a;
+    }
+  \end{lstlisting}
+\end{lrbox}
+
+
 \section{Evaluation}%
 \label{sec:eval}
 
@@ -889,37 +911,29 @@ The Intel compilers we tested would occasionally emit a stack trace upon crashin
 CLSmith produced many \textbf{bto} results across 13 Testbeds. Given the large kernel size, it is unclear how many of those are indefinite loops or simply a result of slow compilation of large kernels. The average size of CLSmith bto kernels is XX lines. Automated test case reduction --- in which thousands of permutations of a program are executed --- may be prohibitively expensive for test cases with very long runtimes. DeepSmith produced \textbf{bto} results across 11 Testbeds and with an average kernel size of XX lines, allowing for rapid identification of the underlying problem.
 
 
-% kernel void A(global int* a, global int* b, global int* c) {
-%   a[get_global_id(0)] = a[get_global_id(0)] > b;
-% }
-
-% kernel void A(global int* a) {
-%   global int* b = ((void*)0);
-%   b[0] = a;
-% }
-
 \begin{figure}
   \centering %
   \subfloat[Assertion \emph{storing/loading pointers only support private array}.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelPtrAssertion}}}%
-    \label{lst:beignet-ptr-assertion}
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\BeigPtrAssertion}}}%
+    \label{lst:beig-ptr-assertion}
   }\\%
-  \subfloat[Assertion in scalar type code generation.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelScalarAssertion}}}%
-    \label{lst:intel-scalar-assertion}
+  \subfloat[Assertion \emph{iter != pointerOrigMap.end()}.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\BeigIterAssertion}}}%
+    \label{lst:beig-iter-assertion}
   }\\%
-  \caption{Kernels which trigger compiler assertions which both CLSmith and DeepSmith exposed.}%
+  \caption{Example kernels which trigger compiler assertions which both CLSmith and DeepSmith exposed.}%
+  \label{lst:beig-assertions}
 \end{figure}
 
 The integrated GPU Testbed ($3\pm$) frequently failed to compile CLSmith kernels, resulting in over 10k \textbf{bc} and \textbf{bto} results.
 % 10,318
 % SELECT stderr,COUNT(*) FROM CLSmithResults LEFT JOIN CLSmithMetas ON CLSmithResults.id=CLSmithMetas.id WHERE testbed_id=13 AND CLSmithResults.outcome='bc' AND cumtime < 48 * 3600 GROUP BY CLSmithResults.stderr;
-Of the build crashes, 68\% failed silently, and the remainder were caused by the same two compiler assertions for which DeepSmith generated 4 line test cases, shown in Figures~\ref{} and~\ref{}. DeepSmith also triggered silent build crashes in Testbed $3\pm$, and a further 8 distinct compiler assertions.
+Of the build crashes, 68\% failed silently, and the remainder were caused by the same two compiler assertions for which DeepSmith generated 4 line test cases, shown in Figure~\ref{lst:beig-assertions}. DeepSmith also triggered silent build crashes in Testbed $3\pm$, and a further 8 distinct compiler assertions.
 
 % 622 total bc
 Testbeds $4$, $5$, $6$, and $7$ have a number CLSmith bc outcomes when optimizations are enabled. Of the non-silent crashes, the cause is the OpenCL vectorizer pass, same as Figure~\ref{lst:intel-vectorizer-segfault}. \cc{check this}
 
-In 48 hours of testing, DeepSmith triggered 9 distinct compiler assertions, CLSmith 2. Both of the assertions triggered by CLSmith were also triggered by CLgen.
+In 48 hours of testing, DeepSmith triggered 14 distinct compiler assertions, CLSmith 2. Both of the assertions triggered by CLSmith were also triggered by CLgen.
 % Test case sizes:
 %
 % SELECT assertion, AVG(linecount)
