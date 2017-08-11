@@ -1,540 +1,7 @@
-%%% LISTINGS 
-
-\newsavebox{\IntelSizetIntReduced}
-\begin{lrbox}{\IntelSizetIntReduced}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(global double* a) {
-      int b = get_global_id(0);
-      if (b < -1)
-        a[b] = 1;
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\OclgrindRaceSwitch}
-\begin{lrbox}{\OclgrindRaceSwitch}
-  \hspace{1.5em}
-  \begin{lstlisting}
-  kernel void A(global int* a, global int* b) {
-    switch (get_global_id(0)) {
-      case 0:
-        a[get_global_id(0)] = b[get_global_id(0) + 13];
-        break;
-      case 2:
-        a[get_global_id(0)] = b[get_global_id(0) + 11];
-        break;
-      case 6:
-        a[get_global_id(0)] = b[get_global_id(0) + 128];
-    }
-    barrier(2);
-  }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\AlmostEverythingCrash}
-\begin{lrbox}{\AlmostEverythingCrash}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A() {
-      __builtin_astype(d, uint4);
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\OclgrindSemaAssertion}
-\begin{lrbox}{\OclgrindSemaAssertion}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(global unsigned char* a, global unsigned char* b) {
-      unsigned long c = get_global_id(0);
-      d[0] = (mad24(f, (int)(a[0], b[get_global_id(0)])) % (d * (d + 3)) + (c / 2))] * a[c + 1];
-    }
-  \end{lstlisting}
-\end{lrbox}
-% This has been forwarded to the LLVM folks https://bugs.llvm.org/show_bug.cgi?id=33897
-% __kernel void A(__global float* b) {
-%	(float4)(b);
-% }
-
-\newsavebox{\IntelPtrCompilerHang}
-\begin{lrbox}{\IntelPtrCompilerHang}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(global ulong* a) {
-      a[get_global_id(0)] = (ulong)(a + 1);
-    }
-  \end{lstlisting}
-\end{lrbox}
-% Another 3± hang:
-% kernel void A(global const char* a, global char* b, global char* c) {
-%   int d = get_global_id(0);
-%   c[d] = get_global_id(0) + c;
-% }
-
-% Another 3± hang:
-% __kernel void A(global int* a) {
-%   local int b[4][3][4][5];
-%   b[1][2][3][3] = b[3];
-% }
-
-\newsavebox{\NvidiaOptLoopHang}
-\begin{lrbox}{\NvidiaOptLoopHang}
-  \hspace{1.5em}
-  % CLgenProgram.id = 6992
-  \begin{lstlisting}
-    kernel void A(global float* a, global float* b, global float* c) {
-      int d, e, f;
-      d = get_local_id(0);
-      for (int g = 0; g < 100000; g++)
-        barrier(1);
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\XeonPhiSpin}
-\begin{lrbox}{\XeonPhiSpin}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(global unsigned char* a, unsigned b) {
-      a[get_global_id(0)] %= 42;
-      barrier(1);
-    }
-  \end{lstlisting}
-\end{lrbox}
-% LLVM ERROR: LLVM2PIL: Cannot yet select: 0x7f72a45a7ed0: i8,i8 = umul_lohi 0x7f72a45a87d0, 0x7f72a45a88d0 [ORD=16] [ID=22]
-% 0x7f72a45a87d0: i8 = srl 0x7f72a45a7dd0, 0x7f72a42fff90 [ORD=16] [ID=21]
-% 0x7f72a45a7dd0: i8,ch = load 0x7f72a41d9438, 0x7f72a4300790, 0x7f72a4300590<LD1[%scevgep2]> [ORD=15] [ID=20]
-% 0x7f72a4300790: i64 = add 0x7f72a45a83d0, 0x7f72a45a80d0 [ORD=14] [ID=17]
-% 0x7f72a45a83d0: i64,ch = CopyFromReg 0x7f72a41d9438, 0x7f72a45a86d0 [ORD=14] [ID=13]
-% 0x7f72a45a86d0: i64 = Register %vreg1 [ID=1]
-% 0x7f72a45a80d0: i64,ch = CopyFromReg 0x7f72a41d9438, 0x7f72a45a81d0 [ORD=14] [ID=14]
-% 0x7f72a45a81d0: i64 = Register %vreg2 [ID=2]
-% 0x7f72a4300590: i64 = undef [ID=3]
-% 0x7f72a42fff90: i8 = Constant<1> [ID=9]
-% 0x7f72a45a88d0: i8 = Constant<49> [ID=10]
-
-\newsavebox{\IntelOptLoopHang}
-\begin{lrbox}{\IntelOptLoopHang}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(global int* a) {
-      int b = get_global_id(0);
-      while (b < 512) { }
-    }
-  \end{lstlisting}
-\end{lrbox}
-% Another example:
-%   kernel void A(long a, long b) {
-%     while (a > 273444) { }
-%   }
-
-
-\newsavebox{\NvidiaRecursionSegfault}
-\begin{lrbox}{\NvidiaRecursionSegfault}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(float4 a, global float4* b, global float4* c, unsigned int d, global double* e, global int2* f, global int4* g, constant int* h, constant int* i) {
-      A(a, b, c, d, d, e, f, g, h);
-    }
-  \end{lstlisting}
-\end{lrbox}
-% HAND REDUCED:
-%
-%   kernel void A(constant int2* a, global int* b) { A(b, a); }
-\newsavebox{\NvidiaRecursionSegfaultReduced}
-\begin{lrbox}{\NvidiaRecursionSegfaultReduced}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void B(constant int2* a, global int* b) {
-      A(b, a);
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\BeignetScalarizeInsert}
-\begin{lrbox}{\BeignetScalarizeInsert}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(global float4* a) {
-      a[get_local_id(0) / 8][get_local_id(0)] = get_local_id(0);
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\OclgrindUncorrectedTypos}
-\begin{lrbox}{\OclgrindUncorrectedTypos}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(global float* a, global float* b) {
-      a[0] = max(a[c], b[2]);
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\BeignetPtrIntSpin}
-\begin{lrbox}{\BeignetPtrIntSpin}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(global int* a) {
-      int b = get_global_id(0);
-      a[b] = (6 * 32) + 4 * (32 / 32) + a;
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\NvidiaCompileSegfault}
-\begin{lrbox}{\NvidiaCompileSegfault}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(global float* a, local float* b, local float* c, int d, int e) {
-      int f, g;
-      int h = get_local_id(0);
-      int i = get_local_id(1);
-      int j = get_global_id(0);
-      global char* k = c + f * g + f;
-      if (f + 1 < h)
-        b[f * d + g * h + g] = g * f;
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\XeonPhiSegfault}
-\begin{lrbox}{\XeonPhiSegfault}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(void) {
-      global int* a;
-      unsigned int* b;
-      b = a[0];
-      a[0] = b;
-      a[0] = b;
-      barrier(1);
-      if (get_global_id(0) == 0)
-        *a = 0;
-      a[get_local_id(0)] = 0;
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\IntelVectorizerSegfault}
-\begin{lrbox}{\IntelVectorizerSegfault}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A() {
-      while (true) {
-        barrier(1);
-      }
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\IntelSizetIntUnreduced}
-\begin{lrbox}{\IntelSizetIntUnreduced}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(global double* a, global double* b, global double* c, int d, int e) {
-      double f;
-      int g = get_global_id(0);
-      if (g < e - d - 1)
-        c[g] = (((e) / d) % 5) % (e + d);
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\PoclUndefinedSymbols}
-\begin{lrbox}{\PoclUndefinedSymbols}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(local int* a) {
-      for (int b = 0; b < 100; b++)
-        B(a);
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-
-\newsavebox{\BeignetCastError}
-\begin{lrbox}{\BeignetCastError}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(global float* a, global float* b, global float* c, const int d) {
-      int e = get_global_id(0);
-      if (e < d)
-        c[e] = a[e] + b[e];
-      b[e] = (char)(c[e] + d);
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\XeonPhiInvalidWrite}
-\begin{lrbox}{\XeonPhiInvalidWrite}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(global int* a) {
-      a[0] = 1;
-      a[-1] = 2;
-      a[0] = 3;
-    }
-  \end{lstlisting}\cc{TODO:}
-\end{lrbox}
-
-\newsavebox{\UninitRead}
-\begin{lrbox}{\UninitRead}
-  \hspace{1.5em}
-  \begin{lstlisting}
-      kernel void A(global int* a, global int* b) {
-        int c[16];
-        int d = get_global_id(0);
-        a[d] = b[d] + c[d];
-      }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\IntelPtrAssertion}
-\begin{lrbox}{\IntelPtrAssertion}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(global int* a, global int* b) {
-      int c = (int)get_global_id(0);
-      a[c] += b;
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\IntelScalarAssertion}
-\begin{lrbox}{\IntelScalarAssertion}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(global float* a, global float* b, global float* c, local float* d, unsigned int e, unsigned int f) {
-      for (unsigned int g = get_local_id(0) + get_local_size(0); g < get_local_size(0); g += get_local_size(0))
-        a[2 * get_local_id(0) + 1] = get_local_id(0);
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\BeignetTernary}
-\begin{lrbox}{\BeignetTernary}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(global int* a, global int* b, global int* c) {
-      c[0] = (a[0] > b[0]) ? a[0] : 0;
-      c[2] = (a[3] <= b[3]) ? a[4] : b[5];
-      c[4] = (a[4] <= b[5]) ? a[7] : b[7];
-      c[7] = (a[7] < b[0]) ? a[0] : (a[0] > b[1]);
-    }
-  \end{lstlisting}
-\end{lrbox}
-% HAND REDUCED:
-%
-%   kernel void A(global int* a, global int* b, global int* c) {
-%     c[0] = 100;
-%     c[1] = (a[3] <= b[4]) ? a[4] : b[5];
-%   }
-
-\newsavebox{\BeignetTernarySmaller}
-\begin{lrbox}{\BeignetTernarySmaller}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(global int* a, global int* b, global int* c) {
-      c[0] = (a[0] > 0) ? a[0] : b[1];
-      c[1] = (a[1] <= b[1]) ? a[0] : b[0];
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\IntelGtDoubleAssertion}
-\begin{lrbox}{\IntelGtDoubleAssertion}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(read_only image2d_t a, global double2* b) {
-      b[0] = get_global_id(0);
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\IntelDeclDoesntDeclareAnything}
-\begin{lrbox}{\IntelDeclDoesntDeclareAnything}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A() {
-      char a;
-      int b;
-      int const;
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\AddressQualifiedAutoVar}
-\begin{lrbox}{\AddressQualifiedAutoVar}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(global float4* a, global float4* b, global float4* c, global float4* d, global float4* e, float f) {
-      unsigned int g = get_global_id(0);
-      int h = get_global_size(0);
-      constant sampler_t i = 0x0000 | 0x0004 | 0x0000;
-      unsigned int j = g * (1 << ((h % 4) - (2)));
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\NvidiaLocalGlobalSegfault}
-\begin{lrbox}{\NvidiaLocalGlobalSegfault}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(global int* a) {
-      local int b[2][3][4][5];
-      if (get_global_id(0) == 0)
-        a = b[0];
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\NvidiaLocalSegfault}
-\begin{lrbox}{\NvidiaLocalSegfault}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(global uchar4* a, const int b) {
-      local int c[16];
-      local float8* d = a + 133;
-      atomic_cmpxchg(c, 10, 13);
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-
-% Program ID: 35612
-\newsavebox{\IntelPostDominanceFrontier}
-\begin{lrbox}{\IntelPostDominanceFrontier}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A() {
-      while (true)
-        barrier(1);
-    }
-  \end{lstlisting}
-\end{lrbox}
-% Another:
-% kernel void A(local int* a) {
-%   while (1) {
-%   }
-% }
-%
-% And another:
-%    kernel void A(global int* a) {
-%      bool b;
-%      int c;
-%      for (b = 0; b < 100; b++)
-%        a[c] += a[c];
-%    }
-%
-% One more:
-%   kernel void A(global int* a, global int* b) {
-%     int c = get_global_id(0);
-%     int d = 0;
-%     while (d < 1024)
-%       a[c] = d;
-%   }
-
-\newsavebox{\IntelPredicator}
-\begin{lrbox}{\IntelPredicator}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(global int* a) {
-      int b = get_global_id(0);
-      while (b < *a)
-        if (a[0] < 0)
-          a[1] = b / b * get_local_id(0);
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\IntelPrepareKernelArgs}
-\begin{lrbox}{\IntelPrepareKernelArgs}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(int a, global int* b) {
-      int c = get_global_id(0);
-      int d = work_group_scan_inclusive_max(c);
-      b[c] = c;
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\IntelDAGInstrSelection}
-\begin{lrbox}{\IntelDAGInstrSelection}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(global half* a, global int* b, global bool* c, int d, int e) {
-      int f = get_global_id(0);
-      int g = get_global_id(1) * e;
-      if (f < e)
-        a[f] = b[f];
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\IntelSPIRMetadata}
-\begin{lrbox}{\IntelSPIRMetadata}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A() {
-      local float a;
-      A(a);
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\IntelRemoveDupeBarrier}
-\begin{lrbox}{\IntelRemoveDupeBarrier}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A() {
-      local int a[10];
-      local int b[16][16];
-      a[1024 + (2 * get_local_id(1) + get_local_id(0)) + get_local_id(0)] = 6;
-      barrier(b);
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\IntelCombineRedundant}
-\begin{lrbox}{\IntelCombineRedundant}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(global float* a, global float* b, global float* c, const int d) {
-      for (unsigned int e = get_global_id(0); e < d; e += get_global_size(0))
-        for (unsigned f = 0; f < d; ++f)
-          e += a[f];
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-
-\newsavebox{\BeigPtrAssertion}
-\begin{lrbox}{\BeigPtrAssertion}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(global int* a, global int* b, global int* c) {
-      a[get_global_id(0)] = a[get_global_id(0)] > b;
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\BeigIterAssertion}
-\begin{lrbox}{\BeigIterAssertion}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(global int* a) {
-      global int* b = ((void*)0);
-      b[0] = a;
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-
 \section{Evaluation}%
 \label{sec:eval}
+
+\input{lst/samples}
 
 %We report on the results of extensive DeepSmith testing of the 20 testbeds from Table~\ref{tab:platforms} over four months. 
 We report on the results of DeepSmith testing of the 20 testbeds from Table~\ref{tab:platforms}, in which each ran for 48 hours.
@@ -546,7 +13,7 @@ Unless stated otherwise, DeepSmith code listings are presented verbatim, with on
 
 % We use a shorthand to refer to specific testbed configurations. $1+$ means Testbed 1 with optimizations enabled, $2-$ means Testbed 2 with optimizations disabled, and $3\pm$ means Testbed 3 with either optimizations enabled or disabled.
 
-For the remainder of the paper we identify testbeds using the OpenCL system number from from Table~\ref{tab:platforms}, suffixed with $+$, $-$ or $\pm$ to denote optimizations on, off, or either, respectively.
+For the remainder of the paper we identify testbeds using the OpenCL system number from from Table~\ref{tab:platforms}, suffixed with $+$, $-$, or $\pm$ to denote optimizations on, off, or either, respectively.
 
 \subsection{Compile-time Defects}%
 \label{subsec:compile-time-defects}
@@ -597,7 +64,7 @@ Compilers should produce meaningful diagnostics when inputs are invalid, yet we 
 
 The use of undeclared identifiers is a core error diagnostic which one would expect to be robust in a mature compiler. Surprisingly, DeepSmith discovered cases in which an undeclared identifier crashes Testbed $10\pm$. For example, the undeclared identifier \texttt{c} in Figure~\ref{lst:oclgrind-uncorrected-typos} raises an assertion during semantic analysis of the AST when used as an array index.
 
-Type errors were an occasional cause of compile-time defect. Figure~\ref{lst:nvidia-recursion-segfault} induces an error in NVIDIA compilers due to implicit global to constant address qualifiers. Worse, we found that Testbed $3\pm$ would loop indefinitely on some kernels containing implicit conversions from a pointer to an integer, as shown in Figure~\ref{lst:beignet-ptr-int-spin}. While spinning, the compiler would consume an increasing amount of host memory until the entire system memory is depleted and the process crashes. % This would be a nice one to have fixed.
+Type errors were an occasional cause of compile-time defect. Figure~\ref{lst:nvidia-recursion-segfault} induces an error in NVIDIA compilers due to an implicit conversion between global to constant address qualifiers. Worse, we found that Testbed $3\pm$ would loop indefinitely on some kernels containing implicit conversions from a pointer to an integer, as shown in Figure~\ref{lst:beignet-ptr-int-spin}. While spinning, the compiler would consume an increasing amount of host memory until the entire system memory is depleted and the process crashes. % This would be a nice one to have fixed.
 
 % \paragraph{Code Generation} %
 Occasionally incorrect program semantics will remain undetected until late in the compilation process. Both Figures~\ref{lst:intel-gt2-double-assertion} and~\ref{lst:beignet-scalarize-insert} pass the type checker and semantic analysis, but trigger compiler assertions during code generation.
@@ -611,20 +78,22 @@ An interesting yet unintended byproduct of having trained DeepSmith on thousands
 % TODO: Testbed $3\pm$ assertion in \emph{gbe::GenEncoder::handleDouble}
 
 \paragraph{Parser Failures} %
-Parser development is a mature and well understood practice. We uncovered parser errors in several compilers. Each of the following three code samples induce crash errors during parsing of compound statements in both Testbeds $5\pm$ and $7\pm$:
+Parser development is a mature and well understood practice. We uncovered parser errors in several compilers. Each of the code samples in Figure~\ref{lst:parser-crashes} induce crash errors during parsing of compound statements in both Testbeds $5\pm$ and $7\pm$. The code fragments were hand-reduced from 40, 52, and 68 line DeepSmith samples, respectively. It took about 10 minutes to perform all three reductions by hand, producing these minimal code samples which we have reported to Intel. In total, we have generated 100 distinct programs which crash compilers during parsing.
 
-\hl{Should be as figures?
-\begin{enumerate}
-% Hand reduction of a 40 line kernel:
-\item \texttt{void A() \{ (global a*)()}
-% Hand reduction of a 52 line kernel:
-\item \texttt{void A() \{ void* a; uint4 b = 0; b = (b > b) ? a : a}
-% 68 line kernel:
-\item \texttt{void A() \{ double2 k; return (float4)(k, k, k, k)}
-\end{enumerate}
-}
-
-The code fragments were hand-reduced from 40, 52, and 68 line DeepSmith samples, respectively. It took about 10 minutes to perform all three reductions by hand, producing these minimal code samples which we have reported to Intel. In total, we have generated 100 distinct programs which crash compilers during parsing.
+\begin{figure}
+  \centering %
+  \subfloat[Reduced from 48 line kernel.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\ParserFailOne}}}%
+  }\\%
+  \subfloat[Reduced from 52 line kernel.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\ParserFailTwo}}}%
+  }\\%
+  \subfloat[Reduced from 68 line kernel.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\ParserFailThree}}}%
+  }\\%
+  \caption{Example codes which crash parsers.}%
+  \label{lst:parser-crashes}%
+\end{figure}
 
 \begin{figure}
   \centering %
@@ -947,7 +416,9 @@ Similarly, Testbeds 4--7 reject DeepSmith kernels which omit a type specified (e
 
 % c column
 
-\cc{TODO: CLSmith Testbed $8-$ crashes, Testbed $2-$ crashes} Both CLSmith and DeepSmith cause Testbed $9\pm$ to crash silently during kernel execution. We suspect that this is \cc{latent build crash. ComputeAorta defers kernel compilation so that it can perform optimizations dependent on runtime parameters}
+% \cc{TODO: CLSmith Testbed $8-$ crashes, Testbed $2-$ crashes}
+
+ComputeAorta defers kernel compilation so that it can perform optimizations dependent on runtime parameters. This may contribute to the relatively large number of \textbf{c} results and few \textbf{bc} results of Testbeds $9\pm$. Only DeepSmith was able to expose compile-time defects of this compiler.
 
 % CLSmith triggered 2 distinct crashes. DeepSmith triggered 2. Both produced silent crashes where we can't be sure of the cause.
 
@@ -978,8 +449,14 @@ Over the course of testing, a combined $3.4 \times 10^8$ lines of CLSmith code w
   \label{fig:clangs} %
 \end{figure}
 
+The Clang front-end to LLVM supports OpenCL, and is commonly used in OpenCL drivers. This in turn causes Clang-related defects to potentially affect multiple compilers, for example the one in Figure~\ref{lst:almost-everything-crash}. To evaluate the impact of Clang, we used debug+assert builds of every LLVM release in the past 24 months and processed 75,000 DeepSmith kernels through the Clang front-end (this includes the lexer, parser, and type checker, but not code generation).
+
+Figure~\ref{fig:clangs} shows that the crash rate of Clang front-ends is, for the most part, steadily decreasing over time. The number of failing compiler crashes decreased tenfold between 3.6.2 and 6.0.0.
+%\cc{Does that suggest that DeepSmith is finding bugs which developers are interested in fixing?} \pp{We do find interesting bugs, but the important question is whether we are more likely to find interesting bugs than CLSmith.}
+Table~\ref{tab:clangs} shows the 7 distinct assertions triggered during this experiment. Assertion 1 (uncorrected typos) is raised on all compiler versions --- see Figure~\ref{lst:oclgrind-uncorrected-typos} for an example. The overall rate at which the assertion is triggered has decreased markedly, although there are slight increases between releases. Release 6.0.0 has the second lowest crash rate, but is joint first in terms of the number of unique assertions. Assertions 3 and 4 where triggered by some kernels under version 6.0.0 but not under any other tested Clang version. We have submitted bug reports for each of the three assertions in LLVM 6.0.0, and two distinct unreachables.
+
 \begin{table}
-  \scriptsize %
+  \footnotesize %
   \centering %
   \input{build/tab/clang-assert-counts}
   \caption{%
@@ -987,11 +464,5 @@ Over the course of testing, a combined $3.4 \times 10^8$ lines of CLSmith code w
   }
   \label{tab:clangs}
 \end{table}
-
-The Clang front-end to LLVM supports OpenCL, and is commonly used in OpenCL drivers. This in turn causes Clang-related defects to potentially affect multiple compilers, for example the one in Figure~\ref{lst:almost-everything-crash}. To evaluate the impact of Clang, we used debug+assert builds of every LLVM release in the past 24 months and processed 75,000 DeepSmith kernels through the Clang front-end (this includes the lexer, parser, and type checker, but not code generation).
-
-Figure~\ref{fig:clangs} shows that the crash rate of Clang front-ends is, for the most part, steadily decreasing over time. The number of failing compiler crashes decreased tenfold between 3.6.2 and 6.0.0.
-%\cc{Does that suggest that DeepSmith is finding bugs which developers are interested in fixing?} \pp{We do find interesting bugs, but the important question is whether we are more likely to find interesting bugs than CLSmith.}
-Table~\ref{tab:clangs} shows the 7 distinct assertions triggered during this experiment. Assertion 1 (uncorrected typos) is raised on all compiler versions --- see Figure~\ref{lst:oclgrind-uncorrected-typos} for an example. The overall rate at which the assertion is triggered has decreased markedly, although there are slight increases between releases. Release 6.0.0 has the second lowest crash rate, but is joint first in terms of the number of unique assertions. Assertions 3 and 4 where triggered by some kernels under version 6.0.0 but not under any other tested Clang version. We have submitted bug reports for each of the three assertions in LLVM 6.0.0, and two distinct unreachables.
 
 The results emphasize that compiler validation is a moving target. Every change and feature addition has the potential to introduce regressions or new failure cases. \cc{If we could use this to leverage the case for low cost fuzzer development, I think this would be a nice closer.}
