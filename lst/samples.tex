@@ -575,11 +575,14 @@
 
 \newsavebox{\SimplifyTheCFGPass}
 \begin{lrbox}{\SimplifyTheCFGPass}
-kernel void A(global float* a, global float* b, const int c) {
-  for (int d = 0; d < 512; d++)
-    for (d = 0; d < a; d += 32)
-      b[d] = 0;
-}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    kernel void A(global float* a, global float* b,
+                  const int c) {
+      for (int d = 0; d < c; d++)
+        for (d = 0; d < a; d += 32)
+          b[d] = 0;
+    }
   \end{lstlisting}
 \end{lrbox}
 

@@ -242,7 +242,7 @@ Figure~\ref{lst:pocl-undefined-symbols} exposes a bug in which a kernel containi
 \subsection{Comparison to State-of-the-art}%
 \label{subsec:vs_clsmith}
 
-In this section provide a quantitative comparison of the bug-finding capabilities of DeepSmith and CLSmith~\cite{Lidbury2015a}, the state-of-the-art in OpenCL compiler testing.
+In this section, we provide a quantitative comparison of the bug-finding capabilities of DeepSmith and CLSmith~\cite{Lidbury2015a}, the state-of-the-art in OpenCL compiler testing.
 
 \paragraph{Results Overview}
 
@@ -277,7 +277,7 @@ Table~\ref{tab:megatable} shows the results of 48 hours of consecutive testing f
 
 Figure~\ref{fig:vs-clsmith}a shows the generation and execution times of DeepSmith and CLSmith test cases, excluding timeouts\footnote{If timeouts are included then the performance improvement of DeepSmith is $6.5\times$ with the execution times being $11\times$ faster. However, this number grows as we change the arbitrary timeout threshold, so for fairness we have chosen to exclude it.}. DeepSmith generation time grows linearly with program length, and is on average $2.45\times$ faster than CLSmith. Test case execution is on average $4.46\times$ faster than CLSmith.
 
-Optimization level generally does not affect testing throughput significantly, with the exception of Testbed $7+$. Optimization of large structs is expensive on Testbed $7+$, and CLSmith test cases use global structs extensively. This is a known issue --- in~\cite{Lidbury2015a} the authors omit large-scale testing on this device for this reason. The use of structs in real life OpenCL is comparatively rare --- only 7.1\% of kernels on GitHub use them.
+The optimization level generally does not affect testing throughput significantly, with the exception of Testbed $7+$. Optimization of large structs is expensive on Testbed $7+$, and CLSmith test cases use global structs extensively. This is a known issue --- in~\cite{Lidbury2015a} the authors omit large-scale testing on this device for this reason. The use of structs in real life OpenCL is comparatively rare --- only 7.1\% of kernels on GitHub use them.
 
 \paragraph{Comparison of Test Cases} %
 The average CLSmith program is 1189 lines long (excluding headers). CLSmith test cases require reduction in order to expose the underlying bug. An automated approach to OpenCL test case reduction is presented in~\cite{Pflanzer2016}, though it requires on average 100 minutes for each test case using a parallelized implementation (and over 6 hours if this parallelization is not available); the authors also suggest a final manual pass after automated reduction. In contrast, DeepSmith learned to program from humans, and humans do not typically write such large kernel functions. The average DeepSmith kernel is 20 lines long, which is interpretable without reduction, either manual or automatic. 
@@ -359,6 +359,9 @@ The Intel CPU testbeds (Testbeds 4--7) would occasionally emit a stack trace upo
   }\\%
   \subfloat[\emph{X86 DAG->DAG Instruction Selection} pass.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\DagPass}}}%
+  }\\%
+  \subfloat[\emph{Simplify the CFG} pass.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\SimplifyTheCFGPass}}}%
   }\\%
   \caption{Example kernels which crash Intel compiler passes.}%
   \label{lst:intel-passes}
