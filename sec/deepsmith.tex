@@ -37,14 +37,14 @@ The source code is then rewritten to remove trivial syntactic differences betwee
 
 %\cc{reword - a single test harness accepts a string as input and generates input data}
 
-OpenCL is an embedded compute kernel language, requiring host code to compile, execute, and transfer data between the host and device. For the purpose of compiler fuzzing, this requires a \emph{test harness} to run the generated OpenCL programs. We found the test harness of CLSmith to be inadequate for our purposes. It assumes a kernel with no input and a \texttt{ulong} buffer as its single argument where the result is written. Only 0.2\% of the GitHub kernels share this structure. 
+OpenCL is an embedded compute kernel language, requiring host code to compile, execute, and transfer data between the host and device. For the purpose of compiler fuzzing, this requires a \emph{test harness} to run the generated OpenCL programs. At first, we used the test harness of CLSmith. The harness assumes a kernel with no input and a \texttt{ulong} buffer as its single argument where the result is written. Only 0.2\% of the GitHub kernels share this structure. We desired a more flexible harness so as to test a more expressive range of programs, capable of support multi-argument kernels and generating data to use as inputs.
 
 %At first, we used the test harness of CLSmith. CLSmith kernels accept no input, and each thread computes the same value which is stored in a \texttt{ulong} buffer. The fixed function prototype means that they have a single re-usable test harness which may compile any CLSmith kernel, run it, and prints the output. We found this fixed harness to be too inflexible for our needs. This prototype is not a common OpenCL use case (only 5.6\% of GitHub kernels accept a single argument, and 0.2\% a single \texttt{ulong}).
 % $ grep -E '^__global (.*)\* A$' github-arguments.txt | wc -l     -> 294
 % $ grep '^__global ulong\* A$' ~/src/project_b/difftest/github-arguments.txt | wc -l     -> 10
 %To test a more expressive range of kernels, we created a test harness capable of driving arbitrary OpenCL kernels.
 
-Our harness first determines the expected arguments from the function prototype and we generate host data for them. At the moment, we support scalars and arrays of all OpenCL primitive and vector types. Buffers of size $n$ are allocated for pointer arguments, and populated with values {$[1 \ldots n]$}; scalar inputs are given value $n$, since we observe that most kernels use these for specifying buffer sizes. 
+We developed a harness which first determines the expected arguments from the function prototype and generates host data for them. At the moment, we support scalars and arrays of all OpenCL primitive and vector types. Buffers of size $n$ are allocated for pointer arguments, and populated with values {$[1 \ldots n]$}; scalar inputs are given value $n$, since we observe that most kernels use these for specifying buffer sizes. 
 
 The training programs from which the generative model is created are real programs, and as such do not share the argument type restrictions. The model, therefore, may generate correct programs for which our driver cannot create example inputs. In this case, a ``compile-only'' stub is generated, which only compiles the kernel, without generating input data or executing the compiled kernel. 
 

@@ -17,13 +17,13 @@
   kernel void A(global int* a, global int* b) {
     switch (get_global_id(0)) {
     case 0:
-      a[get_global_id(0)] = b[get_global_id(0) + 13];
+      a[get_global_id(0)]=b[get_global_id(0)+13];
       break;
     case 2:
-      a[get_global_id(0)] = b[get_global_id(0) + 11];
+      a[get_global_id(0)]=b[get_global_id(0)+11];
       break;
     case 6:
-      a[get_global_id(0)] = b[get_global_id(0) + 128];
+      a[get_global_id(0)]=b[get_global_id(0)+128];
     }
     barrier(2);
   }
@@ -233,7 +233,8 @@
 \begin{lrbox}{\IntelSizetIntUnreduced}
   \hspace{1.5em}
   \begin{lstlisting}
-    kernel void A(global double* a, global double* b, global double* c, int d, int e) {
+    kernel void A(global double* a, global double* b,
+                  global double* c, int d, int e) {
       double f;
       int g = get_global_id(0);
       if (g < e - d - 1)
