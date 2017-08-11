@@ -814,7 +814,7 @@ The average CLSmith program is 1189 lines long (excluding headers). CLSmith test
 
 \begin{figure}
   \centering %
-  \subfloat[Testbeds $3\pm$ assertion during code generation for pointer assignment.]{%
+  \subfloat[Testbeds $3\pm$ assertion \emph{storing/loading pointers only support private array} during code generation.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelPtrAssertion}}}%
     \label{lst:beignet-ptr-assertion}
   }\\%
@@ -900,14 +900,12 @@ The Intel compilers we tested would occasionally emit a stack trace upon crashin
   \label{lst:intel-passes}
 \end{figure}
 
-CLSmith produced many \textbf{bto} results across 13 Testbeds. Given the large kernel size, it is unclear how many of those are indefinite loops or simply a result of slow compilation of large kernels. The average size of CLSmith bto kernels is XX lines. DeepSmith produced \textbf{bto} results across 11  bto results is XX lines, allowing for rapid identification of the underlying problem.
+CLSmith produced many \textbf{bto} results across 13 Testbeds. Given the large kernel size, it is unclear how many of those are indefinite loops or simply a result of slow compilation of large kernels. The average size of CLSmith bto kernels is XX lines. Automated test case reduction --- in which thousands of permutations of a program are executed --- may be prohibitively expensive for test cases with very long runtimes. DeepSmith produced \textbf{bto} results across 11 Testbeds and with an average kernel size of XX lines, allowing for rapid identification of the underlying problem.
 
-CLSmith test case compilation timed out (\textbf{bto}) in 13 testbeds, DeepSmith in 11. The CLSmith kernel which caused a build timeout is XX lines long. Automated test case reduction of programs with very long or indefinite compile times may be prohibitively expensive.
-
-The integrated GPU Testbed ($3\pm$) frequently failed to compile CLSmith kernels, resulting in over 10k compiler crashes and timeouts.
+The integrated GPU Testbed ($3\pm$) frequently failed to compile CLSmith kernels, resulting in over 10k \textbf{bc} and \textbf{bto} results.
 % 10,318
 % SELECT stderr,COUNT(*) FROM CLSmithResults LEFT JOIN CLSmithMetas ON CLSmithResults.id=CLSmithMetas.id WHERE testbed_id=13 AND CLSmithResults.outcome='bc' AND cumtime < 48 * 3600 GROUP BY CLSmithResults.stderr;
-Of the build crashes, 68\% failed silently, and the remainder were caused by the same pointer assignment assertion for which DeepSmith generated a 4 line test case in Figure~\ref{}. DeepSmith also generated silent build crashes, but with an average line count of XX, versus CLSmith's line count of XX.
+Of the build crashes, 68\% failed silently, and the remainder were caused by a single assertion  pointer assignment assertion for which DeepSmith generated a 4 line test case in Figure~\ref{}. DeepSmith also generated silent build crashes, but with an average line count of XX, versus CLSmith's line count of XX.
 
 % 622 total bc
 Testbeds $4$, $5$, $6$, and $7$ have a number CLSmith bc outcomes when optimizations are enabled. Of the non-silent crashes, the cause is the OpenCL vectorizer pass, same as Figure~\ref{lst:intel-vectorizer-segfault}. \cc{check this}
