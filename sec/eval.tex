@@ -614,7 +614,7 @@ examples is that the model learned to occasionally generate compiler-specific co
 \paragraph{Parser Failures} %
 Parser development is a mature and well understood practice. We uncovered parser errors in several compilers. Each of the following three code samples induce crash errors during parsing of compound statements in both Testbeds $5\pm$ and $7\pm$:
 
-\hl{Should be as figures?}
+\hl{Should be as figures?
 \begin{enumerate}
 % Hand reduction of a 40 line kernel:
 \item \texttt{void A() \{ (global a*)()}
@@ -652,7 +652,7 @@ The code fragments were hand-reduced from 40, 52, and 68 line DeepSmith samples,
 \paragraph{Compiler Hangs} %
 As expected, some compiler behavior is optimization sensitive. Testbeds $1+$ and $2+$ hang on large loop bounds, shown in Figure~\ref{lst:nvidia-opt-loop-hang} \cc{how large does the loop bound have to be?}. All commercial Intel compilers we tested hang during optimization of non-terminating loops (Figure~\ref{lst:intel-inf-loop}).
 
-Testbed $7\pm$, bizarrely, loops indefinitely during compilation of the simple kernel in Figure~\ref{lst:xeon-phi-spin}.
+Testbed $7\pm$, loops indefinitely during compilation of the simple kernel in Figure~\ref{lst:xeon-phi-spin}.
 
 \paragraph{Other errors} %
 

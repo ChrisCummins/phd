@@ -12,13 +12,13 @@ Random program generation --- fuzzing --- is an effective technique for discover
 % A novel approach for the rapid development of broad, undirected fuzzers
 We introduce DeepSmith, a novel approach which takes advantage of state-of-the-art deep learning techniques to automate and accelerate compiler validation. Our approach constructs a learned model of the structure of real world code based on a large corpus of open source code. Then, it uses the model to automatically generate tens of thousands of realistic programs. Finally, it applies established differential testing methodologies on them to expose bugs in compilers.
 
-We test our approach on OpenCL, automatically exposing bugs in OpenCL compilers with little effort on our side. In over 1,500 hours of automated testing of commercial and open source compilers, we discover bugs in all of them, %
+We apply our approach to the OpenCL programming language, automatically exposing bugs in OpenCL compilers with little effort on our side. In over 1,500 hours of automated testing of commercial and open source compilers, we discover bugs in all of them, %
 %
 % made up of XX interesting test cases, compared to a similar XX for the state of the art technique given the same time.
 %
 submitting XX bug reports.
 %
-Our test cases are on average two orders of magnitude smaller than the state-of-the-art, require $3.03\times$ less time to generate and evaluate, and expose bugs which have not been found using existing techniques. Our random program generator, comprising only 500 lines of code, took 14 hours to train for OpenCL versus the state-of-the-art taking 9 man months to port from a generator for C totaling 50,000 lines of code.
+Our test cases are on average two orders of magnitude smaller than the state-of-the-art, require $3.03\times$ less time to generate and evaluate, and expose bugs which have not been found using existing techniques. Our random program generator, comprising only 500 lines of code, took 14 hours to train for OpenCL versus the state-of-the-art taking 9 man months to port from a generator for C and 50,000 lines of code.
 % find CLSmith/src -name '*.cpp' -o '*.h' | xargs wc -l  # 49775
 
 %Compilers should produce correct code for valid inputs, and produce meaningful errors when inputs are invalid. Fixed test-suites and formal verification techniques cannot ensure these properties over the enormous range of possible inputs and complexity of optimizing compilers, leading to the development of random program generators that attempt to find compiler bugs by comparing the outputs of programs across compilers.
