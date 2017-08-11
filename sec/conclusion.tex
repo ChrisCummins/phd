@@ -1,9 +1,7 @@
 \section{Conclusions}\label{sec:conclusion}
 
-We present a new approach for the generation of compiler fuzzers. By posing the generation of random programs as an unsupervised machine learning problem, we dramatically reduce the cost and human effort required to engineer a compiler fuzzer. Large parts of the stack are program language-agnostic, requiring only a corpus of example programs and a test harness to target a new programming language.
+We present a new approach for the generation of compiler fuzzers. By posing the generation of random programs as an unsupervised machine learning problem, we dramatically reduce the cost and human effort required to engineer a random program generator. Large parts of the stack are program language-agnostic, requiring only a corpus of example programs and a test harness to target a new programming language.
 
 We demonstrated our approach by targeting the challenging many-core domain of OpenCL. Our implementation, DeepSmith, has uncovered dozens of bugs in commercial and open source OpenCL implementations, covering many distinct parts of compilers. We have exposed bugs in parts of the compiler which current approaches have not, for example in missing error handling. Our test cases are small, two orders of magnitude shorter than the state-of-the-art, and easily interpretable.
 
-Furture work: Grammar variational autoencoder - Using masking to ensure sampling only from valid production rules. Both the grammars and the generated sequences are small, it's unclear if it would scale. For arithmetic expressions, the grammar includes not just the structure of equations, but it enumerates all the valid inteegr values. \cc{could be used for middle-end targeting?}~\cite{Kusner2017}.
-
-Selective sampling to test isolated features.
+\cc{TODO:} Future work in targeted fuzzing. Either re-train the models on a corpus in which all programs match some property of interest (i.e. programs containing volatile), or by selective sampling to test isolated features. A grammar based implementation of that~\cite{Kusner2017} uses masking to ensure sampling only from valid production rules.
