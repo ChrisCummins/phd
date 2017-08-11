@@ -134,7 +134,11 @@
 \begin{lrbox}{\NvidiaRecursionSegfault}
   \hspace{1.5em}
   \begin{lstlisting}
-    kernel void A(float4 a, global float4* b, global float4* c, unsigned int d, global double* e, global int2* f, global int4* g, constant int* h, constant int* i) {
+    kernel void A(float4 a, global float4* b,
+                  global float4* c, unsigned int d,
+                  global double* e, global int2* f, 
+                  global int4* g, constant int* h, 
+                  constant int* i) {
       A(a, b, c, d, d, e, f, g, h);
     }
   \end{lstlisting}
@@ -157,7 +161,8 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(global float4* a) {
-      a[get_local_id(0) / 8][get_local_id(0)] = get_local_id(0);
+      a[get_local_id(0) / 8][get_local_id(0)] = 
+          get_local_id(0);
     }
   \end{lstlisting}
 \end{lrbox}
@@ -349,7 +354,8 @@
 \begin{lrbox}{\IntelGtDoubleAssertion}
   \hspace{1.5em}
   \begin{lstlisting}
-    kernel void A(read_only image2d_t a, global double2* b) {
+    kernel void A(read_only image2d_t a, 
+                  global double2* b) {
       b[0] = get_global_id(0);
     }
   \end{lstlisting}
