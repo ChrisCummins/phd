@@ -126,7 +126,7 @@ Testbeds $7\pm$, loop indefinitely during compilation of the simple kernel in Fi
 
 Some compilers are more permissive then others. Testbeds~$4\pm$, $6\pm$, $9\pm$ reject out-of-range literal values e.g. \texttt{int i = 0xFFFFFFFFFFFFFFFFFFFFFFFF}, whilst Testbeds $3\pm$, $5\pm$, $7\pm$, $8\pm$, and $10\pm$ interpret the literal as an \texttt{unsigned long long} and implicitly cast to an integer value of \texttt{-1}. Testbeds $1\pm$, $2\pm$ omit no warning.
 
-Testbeds~$1\pm$, $2\pm$, $3\pm$ anomalously rejected address space qualifiers on automatic variables.
+Testbeds~$1\pm$, $2\pm$, $3\pm$ rejected address space qualifiers on automatic variables.
 
 On Testbeds~$3\pm$, the statement \texttt{int n = mad24(a, (32), get\_global\_size(0));} (a call to a math builtin with mixed types) is rejected as ambiguous.
 
@@ -338,6 +338,9 @@ The Intel CPU testbeds (Testbeds 4--7) would occasionally emit a stack trace upo
   \subfloat[\emph{Post-Dominance Frontier Construction} pass.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelPostDominanceFrontier}}}%
   }\\%
+  \subfloat[\emph{Simplify the CFG} pass.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\SimplifyTheCFGPass}}}%
+  }\\%
   % Program id: 31656
   \subfloat[\emph{Predicator} pass.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelPredicator}}}%
@@ -359,9 +362,6 @@ The Intel CPU testbeds (Testbeds 4--7) would occasionally emit a stack trace upo
   }\\%
   \subfloat[\emph{X86 DAG->DAG Instruction Selection} pass.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\DagPass}}}%
-  }\\%
-  \subfloat[\emph{Simplify the CFG} pass.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\SimplifyTheCFGPass}}}%
   }\\%
   \caption{Example kernels which crash Intel compiler passes.}%
   \label{lst:intel-passes}
