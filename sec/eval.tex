@@ -785,7 +785,7 @@ In this section we quantitatively compare the bug-finding capabilities of DeepSm
   \caption{%
     % CLSmith total ``interesting'': 19415
     % DeepSmith total ``interesting'': 8272
-    Results from 48 hours of testing using CLSmith and DeepSmith. Testbed \#. as per Table~\ref{tab:platforms}. $\pm$ denotes optimizations off ($-$) vs on ($+$). The remaining columns denote the number of build crash (\textbf{bc}), build timeout (\textbf{bto}), build failure (\textbf{bf}), runtime crash (\textbf{c}), wrong-output (\textbf{w}), and pass (\textbf{\cmark}) results. \cc{remove ``Total'' row for submission}%
+    Results from 48 hours of testing using CLSmith and DeepSmith. Testbed \#. as per Table~\ref{tab:platforms}. $\pm$ denotes optimizations off ($-$) vs on ($+$). The remaining columns denote the number of build crash (\bc), build timeout (\bto), build failure (\abf), runtime crash (\arc), wrong-output (\awo), and pass (\textbf{\cmark}) results. \cc{remove ``Total'' row for submission}%
   }
   \label{tab:megatable}
 \end{table*}
@@ -843,7 +843,7 @@ Both testing systems found anomalous results of all types.
 % CLSmith generated 3800 silent build crashes. CLgen generated 1023 silent build crashes. Lets ignore these, since we can't be sure of the cause.
 % CLSmith triggered 2 distinct compiler assertions. DeepSmith triggered 31.
 % CLSmith triggered 0 distinct compiler ``unreachable'' errors. DeepSmith triggered 3.
-In 48 hours of testing, CLSmith discovered compile-time crashes (\textbf{bc}) in 8 of the 20 testbeds, DeepSmith crashed all of them. DeepSmith triggered 31 distinct compiler assertions, CLSmith 2. Both of the assertions triggered by CLSmith were also triggered by CLgen. DeepSmith also triggered 3 distinct \emph{unreachable!} compile-time crashes, CLSmith triggered 0.
+In 48 hours of testing, CLSmith discovered compile-time crashes (\bc) in 8 of the 20 testbeds, DeepSmith crashed all of them. DeepSmith triggered 31 distinct compiler assertions, CLSmith 2. Both of the assertions triggered by CLSmith were also triggered by CLgen. DeepSmith also triggered 3 distinct \emph{unreachable!} compile-time crashes, CLSmith triggered 0.
 
 The Intel CPU testbeds (Testbeds 4--7) would occasionally emit a stack trace upon crashing, identifying the failure point in a specific pass. CLSmith triggered crashes in 4 distinct passes. DeepSmith triggered crashes in 10 distinct passes, including 3 of the 4 which CLSmith did. Figure~\ref{lst:intel-passes} provides examples. Many of these crashes are optimization sensitive. CLSmith was able to induce a crash in only one of the Intel testbeds with optimizations disabled. DeepSmith crashed all of the compilers with both optimizations enabled and disabled.
 
@@ -918,7 +918,7 @@ The Intel CPU testbeds (Testbeds 4--7) would occasionally emit a stack trace upo
 
 % CLSmith triggered 4 distinct stack dumps (all from Intel passes). DeepSmith triggered 11 (10 from Intel passes, and multiple parser crashes).
 
-CLSmith produced many \textbf{bto} results across 13 Testbeds. Given the large kernel size, it is unclear how many of those are infinite loops or simply a result of slow compilation of large kernels. The average size of CLSmith \textbf{bto} kernels is XX lines. Automated test case reduction --- in which thousands of permutations of a program are executed --- may be prohibitively expensive for test cases with very long runtimes. DeepSmith produced \textbf{bto} results across 11 Testbeds and with an average kernel size of XX lines, allowing for rapid identification of the underlying problem.
+CLSmith produced many \bto results across 13 Testbeds. Given the large kernel size, it is unclear how many of those are infinite loops or simply a result of slow compilation of large kernels. The average size of CLSmith \bto kernels is XX lines. Automated test case reduction --- in which thousands of permutations of a program are executed --- may be prohibitively expensive for test cases with very long runtimes. DeepSmith produced \bto results across 11 Testbeds and with an average kernel size of XX lines, allowing for rapid identification of the underlying problem.
 
 
 \begin{figure}
@@ -935,13 +935,13 @@ CLSmith produced many \textbf{bto} results across 13 Testbeds. Given the large k
   \label{lst:beig-assertions}
 \end{figure}
 
-The integrated GPU Testbed ($3\pm$) frequently failed to compile CLSmith kernels, resulting in over 10k \textbf{bc} and \textbf{bto} results.
+The integrated GPU Testbed ($3\pm$) frequently failed to compile CLSmith kernels, resulting in over 10k \bc and \bto results.
 % 10,318
 % SELECT stderr,COUNT(*) FROM CLSmithResults LEFT JOIN CLSmithMetas ON CLSmithResults.id=CLSmithMetas.id WHERE testbed_id=13 AND CLSmithResults.outcome='bc' AND cumtime < 48 * 3600 GROUP BY CLSmithResults.stderr;
 Of the build crashes, 68\% failed silently, and the remainder were caused by the same two compiler assertions for which DeepSmith generated 4 line test cases, shown in Figure~\ref{lst:beig-assertions}. DeepSmith also triggered silent build crashes in Testbed $3\pm$, and a further 8 distinct compiler assertions.
 
 % bf column: CLSmith generated 1 unique build failure (empty declaration). DeepSmith generated 6 unique build failures (including the same empty declaration as CLSmith).
-The 4719 \textbf{bf} results for CLSmith on Testbeds $4\pm$ and $6\pm$ are all a result of compilers rejecting empty declarations, (e.g. \texttt{int;}) which CLSmith occasionally emits. DeepSmith also generated these statements, but with a much lower probability (only XX programs) given that it is an unusual construct.
+The 4719 \abf results for CLSmith on Testbeds $4\pm$ and $6\pm$ are all a result of compilers rejecting empty declarations, (e.g. \texttt{int;}) which CLSmith occasionally emits. DeepSmith also generated these statements, but with a much lower probability (only XX programs) given that it is an unusual construct.
 % https://github.com/ChrisLidbury/CLSmith/issues/7
 Similarly, Testbeds 4--7 reject DeepSmith kernels which omit a type specified (e.g. \texttt{\_\_global* a}), whereas all other Testbeds emit a warning and default to \texttt{int} type.
 

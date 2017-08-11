@@ -69,7 +69,7 @@ Unlike the generative model, this test harness is language-specific and the desi
 % 21.5\% of test cases are compile-only stubs.
 
 
-% We classify the result of executing a test case into one of six classifications: build failure (\textbf{bf}), build crash (\textbf{bc}), runtime crash (\textbf{c}), or pass (\textbf{\cmark}). A \textbf{bf} occurs when compilation of a kernel fails, usually accompanied by an error message. A \textbf{bc} outcome occurs when the compiler crashes. A \textbf{c} outcome occurs when the program crashes during execution. The \textbf{bto} and \textbf{to} outcomes occur when the program compilation or execution time out, respectively.
+% We classify the result of executing a test case into one of six classifications: build failure (\abf), build crash (\bc), runtime crash (\arc), or pass (\textbf{\cmark}). A \abf occurs when compilation of a kernel fails, usually accompanied by an error message. A \bc outcome occurs when the compiler crashes. A \arc outcome occurs when the program crashes during execution. The \bto and \textbf{to} outcomes occur when the program compilation or execution time out, respectively.
 
 \paragraph*{Test Harness Output Classes}
 \begin{figure}
@@ -96,10 +96,10 @@ As in prior work, voting on the output of programs across compilers has been use
 
 %
 %\begin{enumerate}
-%	\item \emph{Build failure} (\textbf{bf}) Online compilation of the OpenCL kernel fails, usually accompanied by an error diagnostic.
-%	\item \emph{Build crash} (\textbf{bc}) The compiler crashes during online compilation of the OpenCL kernel.
-%	\item \emph{Build timeout} (\textbf{bto}) Online compilation of the OpenCL kernel exceeds the timeout of 60 seconds.
-%	\item \emph{Runtime crash} (\textbf{c}) Compilation of the OpenCL kernel succeeds gracefully, but the program crashes during kernel execution.
+%	\item \emph{Build failure} (\abf) Online compilation of the OpenCL kernel fails, usually accompanied by an error diagnostic.
+%	\item \emph{Build crash} (\bc) The compiler crashes during online compilation of the OpenCL kernel.
+%	\item \emph{Build timeout} (\bto) Online compilation of the OpenCL kernel exceeds the timeout of 60 seconds.
+%	\item \emph{Runtime crash} (\arc) Compilation of the OpenCL kernel succeeds gracefully, but the program crashes during kernel execution.
 %	\item \emph{Runtime timeout} (\textbf{to}) Compilation of the OpenCL kernel succeeds gracefully, but program execution exceeds the timeout of 60 second.
 %	\item \textbf{\cmark} \emph{Completion} The program terminates gracefully and produces an output.
 %\end{enumerate}
@@ -113,9 +113,9 @@ An \emph{anomalous wrong-output} occurs if, for a given test case, the majority 
 
 %
 %\begin{enumerate}
-%	\item \textbf{w} \emph{Wrong code} Program terminates gracefully, but computes a result which differs from the majority output. For a DeepSmith result to be classified with \emph{wrong-code}, we require first that the program passes verification using GPUVerify~\cite{Betts2012}, and that a reference run with Oclgrind~\cite{Price2015} produces no warnings. \cc{Vote on compiler warnings, and optimization sensitivity. This means we way miss bugs which optimization level insensitive, though our experiences testing with CLSmith revealed only discovered 2 such cases}.
-%	\item \textbf{bf} \emph{Build failure} Online compilation of OpenCL program fails, whereas the majority of testbeds produce a binary. \cc{TODO: with voting to exclude programs which rely on OpenCL 2.0 / compiler specific features}
-%	\item \textbf{c} \emph{Runtime crash} One or more OpenCL API calls return an error status during the program execution, or the program crashes.
+%	\item \awo \emph{Wrong code} Program terminates gracefully, but computes a result which differs from the majority output. For a DeepSmith result to be classified with \emph{wrong-code}, we require first that the program passes verification using GPUVerify~\cite{Betts2012}, and that a reference run with Oclgrind~\cite{Price2015} produces no warnings. \cc{Vote on compiler warnings, and optimization sensitivity. This means we way miss bugs which optimization level insensitive, though our experiences testing with CLSmith revealed only discovered 2 such cases}.
+%	\item \abf \emph{Build failure} Online compilation of OpenCL program fails, whereas the majority of testbeds produce a binary. \cc{TODO: with voting to exclude programs which rely on OpenCL 2.0 / compiler specific features}
+%	\item \arc \emph{Runtime crash} One or more OpenCL API calls return an error status during the program execution, or the program crashes.
 %	\item \textbf{to} \emph{Runtime timeout} Program execution exceeds the timeout of 60 second, whereas the majority of testbeds produce an output.
 %\end{enumerate}
 
@@ -143,7 +143,7 @@ The last type of undefined behavior we observed comes from division by zero and 
 
 %\paragraph{OpenCL Versions and Extensions} OpenCL is a fast evolving language, with six standard revisions in eight years. Vendor support for standard versions is inconsistent, as is the support for optional language extensions. Since we do not version the GitHub corpus on which we built the DeepSmith models, this has the potential to lead to false-positive results for programs which depend upon features which are not supported by a testbed. For example, not all testbeds support the optional \texttt{cl\_khr\_fp64} extension which provides support for double-precision floating point. We found that such results were trivially detectable through compiler error messages, and used to prevent false-positives for anomalous build failures.
 
-%\paragraph{Floating Points} Floating point operations in OpenCL can be imprecise within bounds. Since errors propagate, the same correct code can produce significantly different output on different testbeds. For this reason, CSmith and CLSmith do not support floating point operations. This restriction is artificially limiting, since floating point computations are dominant in the common uses of OpenCL. Instead, we generate, compile, and execute floating point kernels, we just do not subject their outputs to differential testing so we cannot detect a \textbf{w} result. 
+%\paragraph{Floating Points} Floating point operations in OpenCL can be imprecise within bounds. Since errors propagate, the same correct code can produce significantly different output on different testbeds. For this reason, CSmith and CLSmith do not support floating point operations. This restriction is artificially limiting, since floating point computations are dominant in the common uses of OpenCL. Instead, we generate, compile, and execute floating point kernels, we just do not subject their outputs to differential testing so we cannot detect a \awo result. 
 % $ ls | xargs grep -E -l '(float|double)' -- | wc -l  # 2245
 % 48\% of GitHub kernels use floating points.
 
