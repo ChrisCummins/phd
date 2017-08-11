@@ -62,12 +62,12 @@
 %
 % no border around links
 \usepackage{xcolor}
-\hypersetup{
-   colorlinks,
-   linkcolor={black},
-   citecolor={black},
-   urlcolor={black}
-}
+%\hypersetup{
+%   colorlinks,
+%   linkcolor={black},
+%   citecolor={black},
+%   urlcolor={black}
+%}
 
 % Author comments:
 \usepackage{color}
@@ -75,7 +75,9 @@
 \newcommand{\hl}[1]{{\color{blue}{\emph{(HL)} #1}}}
 \newcommand{\pp}[1]{{\color{cyan}{\emph{(PP)} #1}}}
 \newcommand{\am}[1]{{\color{purple}{\emph{(AM)} #1}}}
-\newcommand{\todo}[1]{{\color{red}{\textbf{#1}}}}
+
+% \newcommand{\todo}[1]{{\color{red}{\textbf{#1}}}}
+\newcommand{\todo}[1]{#1}
 
 % Tables.
 \usepackage{booktabs}
