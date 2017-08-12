@@ -1,0 +1,48 @@
+syntax = "proto3";
+package dsmith;
+
+message TestCase {
+    string program_id = 1;
+    string params_id = 2;
+    int32 input_seed = 3;
+    uint32 timeout = 4;
+}
+
+message Testbed {
+    string cl_platform = 1;
+    string cl_device = 2;
+    string cl_driver = 3;
+    string cl_devtype = 4;
+    string host = 5;
+}
+
+message Program {
+    string src = 1;
+}
+
+message Params {
+    int32 gsize_x = 1;
+    int32 gsize_y = 2;
+    int32 gsize_z = 3;
+    int32 lsize_x = 4;
+    int32 lsize_y = 5;
+    int32 lsize_z = 6;
+}
+
+message Stdout {
+    string stdout = 1;
+}
+
+message Stderr {
+    string stderr = 1;
+}
+
+message Result {
+    string testbed_id = 1;
+    string testcase_id = 2;
+    int64 date = 3;
+    float runtime = 4;
+    int32 returncode = 5;
+    string stdout_id = 6;
+    string stderr_id = 7;
+}
