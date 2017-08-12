@@ -1,48 +1,48 @@
-syntax = "proto3";
+syntax = "proto2";
 package dsmith;
 
 message TestCase {
-    string program_id = 1;
-    string params_id = 2;
-    int32 input_seed = 3;
-    uint32 timeout = 4;
+    required string program_id = 1;
+    required string params_id = 2;
+    required int32 input_seed = 3;
+    required uint32 timeout = 4;
 }
 
 message Testbed {
-    string cl_platform = 1;
-    string cl_device = 2;
-    string cl_driver = 3;
-    string cl_devtype = 4;
-    string host = 5;
+    required string cl_platform = 1;
+    required string cl_device = 2;
+    required string cl_driver = 3;
+    required string cl_devtype = 4;
+    required string host = 5;
 }
 
 message Program {
-    string src = 1;
+    required string src = 1;
 }
 
 message Params {
-    int32 gsize_x = 1;
-    int32 gsize_y = 2;
-    int32 gsize_z = 3;
-    int32 lsize_x = 4;
-    int32 lsize_y = 5;
-    int32 lsize_z = 6;
+    required int32 gsize_x = 1;
+    required int32 gsize_y = 2;
+    required int32 gsize_z = 3;
+    required int32 lsize_x = 4;
+    required int32 lsize_y = 5;
+    required int32 lsize_z = 6;
 }
 
 message Stdout {
-    string stdout = 1;
+    required string stdout = 1;
 }
 
 message Stderr {
-    string stderr = 1;
+    required string stderr = 1;
 }
 
 message Result {
-    string testbed_id = 1;
-    string testcase_id = 2;
-    int64 date = 3;
-    float runtime = 4;
-    int32 returncode = 5;
-    string stdout_id = 6;
-    string stderr_id = 7;
+    required string testbed_id = 1;
+    required string testcase_id = 2;
+    required int64 date = 3;
+    required float runtime = 4;
+    required int32 returncode = 5;
+    required string stdout_id = 6;
+    required string stderr_id = 7;
 }
