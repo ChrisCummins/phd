@@ -1,7 +1,0 @@
-__kernel void A(__global double* a, __global double* b, __global double* c, int d, int e) {
-  double f;
-  int g = get_global_id(0);
-  if (g < e - d - 1) {
-    c[g] = (((e) / d) % 5) % (e + d);
-  }
-}

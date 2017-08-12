@@ -1,7 +1,0 @@
-__kernel void A(__global float* a, __global float* b) {
-  __local float c[64 * c + 0];
-  int d = get_global_id(0) + get_global_id(1) * 16;
-  a[d + 3] = (a[4 * d + 1] + c[1 * 60] + 10244 * c + d) / read_imageui(a, Ga, (float2)(d1, e).x * d * b);
-  a[d + (5 * 32 + d)] = b[4 * c + b];
-  b[(5 * d + 1) * b + (get_group_id(0) + 3], c = (float4)(b));
-}
