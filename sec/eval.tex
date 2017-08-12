@@ -57,7 +57,7 @@ Type errors were an occasional cause of compile-time defect. Figure~\ref{lst:nvi
 Occasionally, incorrect program semantics will remain undetected until late in the compilation process. Both Figures~\ref{lst:intel-gt2-double-assertion} and~\ref{lst:beignet-scalarize-insert} pass the type checker and semantic analysis, but trigger compiler assertions during code generation.
 
 % \paragraph{Compiler-specific Code} %
-An interesting yet unintended byproduct of having trained DeepSmith on thousands of real world examples is that the model learned to occasionally generate compiler-specific code, such as invoking compiler builtins. We found the quality of error handling on these builtins to vary wildly. For example, Figure~\ref{lst:almost-everything-crash} silently crashes 6 of the 10 compilers, making DeepSmith the first random program generator to induce defects through exploiting compiler-specific code.
+An interesting yet unintended byproduct of having trained DeepSmith on thousands of real world examples is that the model learned to occasionally generate compiler-specific code, such as invoking compiler builtins. We found the quality of error handling on these builtins to vary wildly. For example, Figure~\ref{lst:almost-everything-crash} silently crashes 6 of the 10 compilers, making DeepSmith the first random program generator to induce a defect through exploiting compiler-specific functionality.
 
 % Since the expressiveness of our approach is bounded only by the handwritten programs we train on, DeepSmith will occasionally emit compiler-specific code
 
