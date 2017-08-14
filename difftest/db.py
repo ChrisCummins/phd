@@ -3,6 +3,7 @@ import datetime
 import enum
 import sqlalchemy as sql
 import os
+import deepsmith_pb2 as pb
 
 from collections import namedtuple
 from configparser import ConfigParser
@@ -150,6 +151,11 @@ class CLSmithProgram(Base):
     def __repr__(self):
         return self.id
 
+    def toProtobuf(self):
+        return pb.Result.TestCase.Program(
+            src=self.src,
+            generation_time=self.runtime)
+
 
 class CLgenProgram(Base):
     """ programs """
@@ -177,6 +183,11 @@ class CLgenProgram(Base):
 
     def __repr__(self) -> str:
         return self.id
+
+    def toProtobuf(self):
+        return pb.Result.TestCase.Program(
+            src=self.src,
+            generation_time=self.runtime)
 
 
 class CLgenHandcheck(Base):
@@ -228,6 +239,15 @@ class cl_launcherParams(Base):
     def __repr__(self) -> str:
         return " ".join(self.to_flags())
 
+    def toProtobuf(self):
+        return pb.Result.TestCase.Params(
+            gsize_x = self.gsize_x,
+            gsize_y = self.gsize_y,
+            gsize_z = self.gsize_z,
+            lsize_x = self.lsize_x,
+            lsize_y = self.lsize_y,
+            lsize_z = self.lsize_z)
+
 
 class cldriveParams(Base):
     """ params used by cldrive to run kernel """
@@ -275,6 +295,15 @@ class cldriveParams(Base):
 
     def __repr__(self):
         return " ".join(self.to_flags())
+
+    def toProtobuf(self):
+        return pb.Result.TestCase.Params(
+            gsize_x = self.gsize_x,
+            gsize_y = self.gsize_y,
+            gsize_z = self.gsize_z,
+            lsize_x = self.lsize_x,
+            lsize_y = self.lsize_y,
+            lsize_z = self.lsize_z)
 
 
 # Testcases ###################################################################
@@ -397,6 +426,14 @@ class Testbed(Base):
 
         raise KeyError(f"device {self.device} not found")
 
+    def toProtobuf(self):
+        return pb.Result.Testbed.Platform(
+            cl_platform=self.platform,
+            cl_device=self.device,
+            cl_driver=self.driver,
+            cl_devtype=self.devtype,
+            host_os=self.host)
+
 
 class TestbedConfig(Base):
     __tablename__ = 'Configurations'
@@ -441,6 +478,25 @@ class CLSmithResult(Base):
         return (f"result: {self.id} testbed: {self.testbed.device}, " +
                 f"program: {self.program_id}, params: {self.params}, " +
                 f"status: {self.status}, runtime: {self.runtime:.2f}s")
+
+    def toProtobuf(self):
+        testbed = pb.Result.Testbed(
+            platform=self.testbed.toProtobuf(),
+            cl_opt=self.testcase.params.optimizations)
+
+        testcase = pb.Result.TestCase(
+            program=self.testcase.program.toProtobuf(),
+            params=self.testcase.params.toProtobuf(),
+            timeout=60)
+
+        return pb.Result(
+            testbed=testbed,
+            testcase=testcase,
+            date=int(self.date.strftime("%s")),
+            runtime=self.runtime,
+            returncode=self.status,
+            stdout=self.stdout.stdout,
+            stderr=self.stderr.stderr)
 
 
 class CLSmithStdout(Base):
@@ -563,6 +619,25 @@ class CLgenResult(Base):
 
     def __repr__(self):
         return (f"result: {self.id}")
+
+    def toProtobuf(self):
+        testbed = pb.Result.Testbed(
+            platform=self.testbed.toProtobuf(),
+            cl_opt=self.testcase.params.optimizations)
+
+        testcase = pb.Result.TestCase(
+            program=self.testcase.program.toProtobuf(),
+            params=self.testcase.params.toProtobuf(),
+            timeout=60)
+
+        return pb.Result(
+            testbed=testbed,
+            testcase=testcase,
+            date=int(self.date.strftime("%s")),
+            runtime=self.runtime,
+            returncode=self.status,
+            stdout=self.stdout.stdout,
+            stderr=self.stderr.stderr)
 
 
 class CLgenTimeoutRerun(Base):
@@ -718,11 +793,30 @@ class CLgenClangResult(Base):
     runtime = sql.Column(sql.Float, nullable=False)
     stderr_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenClangStderrs.id"), nullable=False)
 
+    program = sql.orm.relationship("CLgenProgram")
     stderr = sql.orm.relationship("CLgenClangStderr", back_populates="result")
 
     __table_args__ = (
         sql.UniqueConstraint('program_id', 'clang', name='program_clang_pair'),
     )
+
+    def toProtobuf(self):
+        platform = pb.Result.Testbed.Platform(
+            cl_platform="clang",
+            cl_driver=self.clang)
+
+        testbed = pb.Result.Testbed(platform=platform)
+
+        testcase = pb.Result.TestCase(
+            program=self.program.toProtobuf(),
+            timeout=60)
+
+        return pb.Result(
+            testbed=testbed,
+            testcase=testcase,
+            runtime=self.runtime,
+            returncode=self.status,
+            stderr=self.stderr.stderr)
 
 
 class CLgenClangStderr(Base):
