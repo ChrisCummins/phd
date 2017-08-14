@@ -1025,121 +1025,90 @@ class BugReport(Base):
 def get_testbed(session: session_t, platform: str, device: str) -> Testbed:
     """
     Get the testbed for the specified hardware.
+
+    Arguments:
+        platform (str): Name of the OpenCL platform.
+        device (str): Name of the OpenCL device.
+
+    Returns:
+        Testbed: If no testbed already exists, create one.
     """
     import pyopencl as cl
     import cldrive
 
     env = cldrive.make_env(platform=platform, device=device)
 
-    return get_or_create(session, Testbed,
-                         platform=platform,
-                         device=device,
-                         driver=env.driver_version,
-                         host=cldrive.host_os(),
-                         opencl=env.opencl_version,
-                         devtype=env.device_type)
+    return get_or_create(
+        session, Testbed,
+        platform=platform,
+        device=device,
+        driver=env.driver_version,
+        host=cldrive.host_os(),
+        opencl=env.opencl_version,
+        devtype=env.device_type)
 
 
 # Tablesets ###################################################################
 Tableset = namedtuple('Tableset', [
-        'name',
-        'results',
-        'testcases',
-        'programs',
-        'harnesses',
-        'params',
-        'reductions',
-        'meta',
-        'classifications',
-        'stdouts',
-        'stderrs',
-        'majorities',
         'assertions',
-        'unreachables',
-        'clangs',
-        'clang_stderrs',
         'clang_assertions',
-        'clang_unreachables',
+        'clang_stderrs',
         'clang_terminates',
+        'clang_unreachables',
+        'clangs',
+        'classifications',
+        'harnesses',
+        'majorities',
+        'meta',
+        'name',
+        'params',
+        'programs',
+        'reductions',
+        'results',
+        'stderrs',
+        'stdouts',
+        'testcases',
+        'unreachables',
     ])
 
 CLSMITH_TABLES = Tableset(name="CLSmith",
-    results=CLSmithResult, testcases=CLSmithTestCase,
-    programs=CLSmithProgram, harnesses=None,
-    params=cl_launcherParams, reductions=CLSmithReduction,
-    meta=CLSmithMeta, classifications=CLSmithClassification,
-    stdouts=CLSmithStdout, stderrs=CLSmithStderr,
-    majorities=CLSmithMajority, assertions=CLSmithAssertion,
-    unreachables=CLSmithUnreachable,
-    clangs=None, clang_stderrs=None,
+    assertions=CLSmithAssertion,
     clang_assertions=None,
+    clang_stderrs=None,
+    clang_terminates=None
     clang_unreachables=None,
-    clang_terminates=None)
+    clangs=None,
+    classifications=CLSmithClassification,
+    harnesses=None,
+    majorities=CLSmithMajority,
+    meta=CLSmithMeta,
+    params=cl_launcherParams,
+    programs=CLSmithProgram,
+    reductions=CLSmithReduction,
+    results=CLSmithResult,
+    stderrs=CLSmithStderr,
+    stdouts=CLSmithStdout,
+    testcases=CLSmithTestCase,
+    unreachables=CLSmithUnreachable,
+)
+
 CLGEN_TABLES = Tableset(name="CLgen",
-    results=CLgenResult, testcases=CLgenTestCase,
-    programs=CLgenProgram, harnesses=CLgenHarness,
-    params=cldriveParams, reductions=CLgenReduction,
-    meta=CLgenMeta, classifications=CLgenClassification,
-    stdouts=CLgenStdout, stderrs=CLgenStderr,
-    majorities=CLgenMajority, assertions=CLgenAssertion,
-    unreachables=CLgenUnreachable,
-    clangs=CLgenClangResult, clang_stderrs=CLgenClangStderr,
+    assertions=CLgenAssertion,
     clang_assertions=CLgenClangAssertion,
+    clang_stderrs=CLgenClangStderr,
+    clang_terminates=CLgenClangTerminate
     clang_unreachables=CLgenClangUnreachable,
-    clang_terminates=CLgenClangTerminate)
-
-
-class InsufficientDataError(ValueError):
-    """ raised if not enough results """
-    pass
-
-
-def results_in_order(session, tables: Tableset, testbed_id: int,
-                     no_opt: bool, *return_values, reverse=False):
-    if not len(return_values):
-        return_values = (tables.results,)
-
-    optimizations = not no_opt
-    param_ids = session.query(tables.params.id)\
-        .filter(tables.params.optimizations == optimizations)
-
-    q = session.query(*return_values)\
-        .join(tables.meta)\
-        .join(tables.testcases)\
-        .outerjoin(tables.classifications)\
-        .filter(tables.results.testbed_id == testbed_id,
-                tables.testcases.params_id.in_(param_ids))
-
-    if reverse:
-        q = q.order_by(tables.meta.cumtime.desc())
-    else:
-        q = q.order_by(tables.meta.cumtime)
-
-    return q
-
-
-def results_in_timelimit(session, tables: Tableset, testbed_id: int,
-                         no_opt: bool, time_limit: int,
-                         *return_values, filter=None):
-    """
-    Raises:
-        InsufficientDataError: If run out of results before time_limit is
-            reached.
-    """
-    q = results_in_order(session, tables, testbed_id, no_opt, *return_values, tables.meta.cumtime)
-
-    if filter is not None:
-        q = q.filter(filter)
-
-    vals = [0]
-    for vals in q:
-        if vals[-1] > time_limit:
-            break
-        yield vals[:-1]
-    else:
-        # Didn't reach time limit
-        import util
-        total_hours = vals[-1] / 3600
-        testbed = session.query(Testbed).filter(Testbed.id == testbed_id).first()
-        devname = util.device_str(testbed.device)
-        raise InsufficientDataError(f"insufficient {tables.results.__tablename__} for {devname} {no_opt} ({total_hours:.1f} hs)")
+    clangs=CLgenClangResult
+    classifications=CLgenClassification,
+    harnesses=CLgenHarness,
+    majorities=CLgenMajority
+    meta=CLgenMeta
+    params=cldriveParams
+    programs=CLgenProgram
+    reductions=CLgenReduction,
+    results=CLgenResult
+    stderrs=CLgenStderr,
+    stdouts=CLgenStdout
+    testcases=CLgenTestCase,
+    unreachables=CLgenUnreachable,
+)
