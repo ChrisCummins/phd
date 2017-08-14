@@ -18,45 +18,52 @@ _sym_db = _symbol_database.Default()
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='deepsmith.proto',
   package='dsmith',
-  serialized_pb=_b('\n\x0f\x64\x65\x65psmith.proto\x12\x06\x64smith\"V\n\x08TestCase\x12\x12\n\nprogram_id\x18\x01 \x02(\t\x12\x11\n\tparams_id\x18\x02 \x02(\t\x12\x12\n\ninput_seed\x18\x03 \x02(\x05\x12\x0f\n\x07timeout\x18\x04 \x02(\r\"f\n\x07Testbed\x12\x13\n\x0b\x63l_platform\x18\x01 \x02(\t\x12\x11\n\tcl_device\x18\x02 \x02(\t\x12\x11\n\tcl_driver\x18\x03 \x02(\t\x12\x12\n\ncl_devtype\x18\x04 \x02(\t\x12\x0c\n\x04host\x18\x05 \x02(\t\"\x16\n\x07Program\x12\x0b\n\x03src\x18\x01 \x02(\t\"n\n\x06Params\x12\x0f\n\x07gsize_x\x18\x01 \x02(\x05\x12\x0f\n\x07gsize_y\x18\x02 \x02(\x05\x12\x0f\n\x07gsize_z\x18\x03 \x02(\x05\x12\x0f\n\x07lsize_x\x18\x04 \x02(\x05\x12\x0f\n\x07lsize_y\x18\x05 \x02(\x05\x12\x0f\n\x07lsize_z\x18\x06 \x02(\x05\"\x18\n\x06Stdout\x12\x0e\n\x06stdout\x18\x01 \x02(\t\"\x18\n\x06Stderr\x12\x0e\n\x06stderr\x18\x01 \x02(\t\"\x8a\x01\n\x06Result\x12\x12\n\ntestbed_id\x18\x01 \x02(\t\x12\x13\n\x0btestcase_id\x18\x02 \x02(\t\x12\x0c\n\x04\x64\x61te\x18\x03 \x02(\x03\x12\x0f\n\x07runtime\x18\x04 \x02(\x02\x12\x12\n\nreturncode\x18\x05 \x02(\x05\x12\x11\n\tstdout_id\x18\x06 \x02(\t\x12\x11\n\tstderr_id\x18\x07 \x02(\t')
+  serialized_pb=_b('\n\x0f\x64\x65\x65psmith.proto\x12\x06\x64smith\"\x8b\x05\n\x06Result\x12\'\n\x07testbed\x18\x01 \x01(\x0b\x32\x16.dsmith.Result.Testbed\x12)\n\x08testcase\x18\x02 \x01(\x0b\x32\x17.dsmith.Result.TestCase\x12\x0c\n\x04\x64\x61te\x18\x03 \x01(\x03\x12\x0f\n\x07runtime\x18\x04 \x01(\x02\x12\x12\n\nreturncode\x18\x05 \x01(\x05\x12\x0e\n\x06stdout\x18\x06 \x01(\t\x12\x0e\n\x06stderr\x18\x07 \x01(\t\x1a\xb8\x01\n\x07Testbed\x12\x31\n\x08platform\x18\x01 \x01(\x0b\x32\x1f.dsmith.Result.Testbed.Platform\x12\x0e\n\x06\x63l_opt\x18\x02 \x01(\x08\x1aj\n\x08Platform\x12\x13\n\x0b\x63l_platform\x18\x01 \x01(\t\x12\x11\n\tcl_device\x18\x02 \x01(\t\x12\x11\n\tcl_driver\x18\x03 \x01(\t\x12\x12\n\ncl_devtype\x18\x04 \x01(\t\x12\x0f\n\x07host_os\x18\x05 \x01(\t\x1a\x9e\x02\n\x08TestCase\x12\x30\n\x07program\x18\x01 \x01(\x0b\x32\x1f.dsmith.Result.TestCase.Program\x12.\n\x06params\x18\x02 \x01(\x0b\x32\x1e.dsmith.Result.TestCase.Params\x12\x0f\n\x07timeout\x18\x04 \x01(\r\x1a/\n\x07Program\x12\x0b\n\x03src\x18\x01 \x01(\t\x12\x17\n\x0fgeneration_time\x18\x02 \x01(\x02\x1an\n\x06Params\x12\x0f\n\x07gsize_x\x18\x01 \x01(\x05\x12\x0f\n\x07gsize_y\x18\x02 \x01(\x05\x12\x0f\n\x07gsize_z\x18\x03 \x01(\x05\x12\x0f\n\x07lsize_x\x18\x04 \x01(\x05\x12\x0f\n\x07lsize_y\x18\x05 \x01(\x05\x12\x0f\n\x07lsize_z\x18\x06 \x01(\x05')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 
 
 
-_TESTCASE = _descriptor.Descriptor(
-  name='TestCase',
-  full_name='dsmith.TestCase',
+_RESULT_TESTBED_PLATFORM = _descriptor.Descriptor(
+  name='Platform',
+  full_name='dsmith.Result.Testbed.Platform',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='program_id', full_name='dsmith.TestCase.program_id', index=0,
-      number=1, type=9, cpp_type=9, label=2,
+      name='cl_platform', full_name='dsmith.Result.Testbed.Platform.cl_platform', index=0,
+      number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='params_id', full_name='dsmith.TestCase.params_id', index=1,
-      number=2, type=9, cpp_type=9, label=2,
+      name='cl_device', full_name='dsmith.Result.Testbed.Platform.cl_device', index=1,
+      number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='input_seed', full_name='dsmith.TestCase.input_seed', index=2,
-      number=3, type=5, cpp_type=1, label=2,
-      has_default_value=False, default_value=0,
+      name='cl_driver', full_name='dsmith.Result.Testbed.Platform.cl_driver', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='timeout', full_name='dsmith.TestCase.timeout', index=3,
-      number=4, type=13, cpp_type=3, label=2,
-      has_default_value=False, default_value=0,
+      name='cl_devtype', full_name='dsmith.Result.Testbed.Platform.cl_devtype', index=3,
+      number=4, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='host_os', full_name='dsmith.Result.Testbed.Platform.host_os', index=4,
+      number=5, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -71,57 +78,35 @@ _TESTCASE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=27,
-  serialized_end=113,
+  serialized_start=284,
+  serialized_end=390,
 )
 
-
-_TESTBED = _descriptor.Descriptor(
+_RESULT_TESTBED = _descriptor.Descriptor(
   name='Testbed',
-  full_name='dsmith.Testbed',
+  full_name='dsmith.Result.Testbed',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='cl_platform', full_name='dsmith.Testbed.cl_platform', index=0,
-      number=1, type=9, cpp_type=9, label=2,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
+      name='platform', full_name='dsmith.Result.Testbed.platform', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='cl_device', full_name='dsmith.Testbed.cl_device', index=1,
-      number=2, type=9, cpp_type=9, label=2,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='cl_driver', full_name='dsmith.Testbed.cl_driver', index=2,
-      number=3, type=9, cpp_type=9, label=2,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='cl_devtype', full_name='dsmith.Testbed.cl_devtype', index=3,
-      number=4, type=9, cpp_type=9, label=2,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='host', full_name='dsmith.Testbed.host', index=4,
-      number=5, type=9, cpp_type=9, label=2,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
+      name='cl_opt', full_name='dsmith.Result.Testbed.cl_opt', index=1,
+      number=2, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
   ],
   extensions=[
   ],
-  nested_types=[],
+  nested_types=[_RESULT_TESTBED_PLATFORM, ],
   enum_types=[
   ],
   options=None,
@@ -129,22 +114,28 @@ _TESTBED = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=115,
-  serialized_end=217,
+  serialized_start=206,
+  serialized_end=390,
 )
 
-
-_PROGRAM = _descriptor.Descriptor(
+_RESULT_TESTCASE_PROGRAM = _descriptor.Descriptor(
   name='Program',
-  full_name='dsmith.Program',
+  full_name='dsmith.Result.TestCase.Program',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='src', full_name='dsmith.Program.src', index=0,
-      number=1, type=9, cpp_type=9, label=2,
+      name='src', full_name='dsmith.Result.TestCase.Program.src', index=0,
+      number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='generation_time', full_name='dsmith.Result.TestCase.Program.generation_time', index=1,
+      number=2, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -159,56 +150,55 @@ _PROGRAM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=219,
-  serialized_end=241,
+  serialized_start=520,
+  serialized_end=567,
 )
 
-
-_PARAMS = _descriptor.Descriptor(
+_RESULT_TESTCASE_PARAMS = _descriptor.Descriptor(
   name='Params',
-  full_name='dsmith.Params',
+  full_name='dsmith.Result.TestCase.Params',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='gsize_x', full_name='dsmith.Params.gsize_x', index=0,
-      number=1, type=5, cpp_type=1, label=2,
+      name='gsize_x', full_name='dsmith.Result.TestCase.Params.gsize_x', index=0,
+      number=1, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='gsize_y', full_name='dsmith.Params.gsize_y', index=1,
-      number=2, type=5, cpp_type=1, label=2,
+      name='gsize_y', full_name='dsmith.Result.TestCase.Params.gsize_y', index=1,
+      number=2, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='gsize_z', full_name='dsmith.Params.gsize_z', index=2,
-      number=3, type=5, cpp_type=1, label=2,
+      name='gsize_z', full_name='dsmith.Result.TestCase.Params.gsize_z', index=2,
+      number=3, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='lsize_x', full_name='dsmith.Params.lsize_x', index=3,
-      number=4, type=5, cpp_type=1, label=2,
+      name='lsize_x', full_name='dsmith.Result.TestCase.Params.lsize_x', index=3,
+      number=4, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='lsize_y', full_name='dsmith.Params.lsize_y', index=4,
-      number=5, type=5, cpp_type=1, label=2,
+      name='lsize_y', full_name='dsmith.Result.TestCase.Params.lsize_y', index=4,
+      number=5, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='lsize_z', full_name='dsmith.Params.lsize_z', index=5,
-      number=6, type=5, cpp_type=1, label=2,
+      name='lsize_z', full_name='dsmith.Result.TestCase.Params.lsize_z', index=5,
+      number=6, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -224,29 +214,42 @@ _PARAMS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=243,
-  serialized_end=353,
+  serialized_start=569,
+  serialized_end=679,
 )
 
-
-_STDOUT = _descriptor.Descriptor(
-  name='Stdout',
-  full_name='dsmith.Stdout',
+_RESULT_TESTCASE = _descriptor.Descriptor(
+  name='TestCase',
+  full_name='dsmith.Result.TestCase',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='stdout', full_name='dsmith.Stdout.stdout', index=0,
-      number=1, type=9, cpp_type=9, label=2,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
+      name='program', full_name='dsmith.Result.TestCase.program', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='params', full_name='dsmith.Result.TestCase.params', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='timeout', full_name='dsmith.Result.TestCase.timeout', index=2,
+      number=4, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
   ],
   extensions=[
   ],
-  nested_types=[],
+  nested_types=[_RESULT_TESTCASE_PROGRAM, _RESULT_TESTCASE_PARAMS, ],
   enum_types=[
   ],
   options=None,
@@ -254,40 +257,9 @@ _STDOUT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=355,
-  serialized_end=379,
+  serialized_start=393,
+  serialized_end=679,
 )
-
-
-_STDERR = _descriptor.Descriptor(
-  name='Stderr',
-  full_name='dsmith.Stderr',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='stderr', full_name='dsmith.Stderr.stderr', index=0,
-      number=1, type=9, cpp_type=9, label=2,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=381,
-  serialized_end=405,
-)
-
 
 _RESULT = _descriptor.Descriptor(
   name='Result',
@@ -297,50 +269,50 @@ _RESULT = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='testbed_id', full_name='dsmith.Result.testbed_id', index=0,
-      number=1, type=9, cpp_type=9, label=2,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
+      name='testbed', full_name='dsmith.Result.testbed', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='testcase_id', full_name='dsmith.Result.testcase_id', index=1,
-      number=2, type=9, cpp_type=9, label=2,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
+      name='testcase', full_name='dsmith.Result.testcase', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
       name='date', full_name='dsmith.Result.date', index=2,
-      number=3, type=3, cpp_type=2, label=2,
+      number=3, type=3, cpp_type=2, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
       name='runtime', full_name='dsmith.Result.runtime', index=3,
-      number=4, type=2, cpp_type=6, label=2,
+      number=4, type=2, cpp_type=6, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
       name='returncode', full_name='dsmith.Result.returncode', index=4,
-      number=5, type=5, cpp_type=1, label=2,
+      number=5, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='stdout_id', full_name='dsmith.Result.stdout_id', index=5,
-      number=6, type=9, cpp_type=9, label=2,
+      name='stdout', full_name='dsmith.Result.stdout', index=5,
+      number=6, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='stderr_id', full_name='dsmith.Result.stderr_id', index=6,
-      number=7, type=9, cpp_type=9, label=2,
+      name='stderr', full_name='dsmith.Result.stderr', index=6,
+      number=7, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -348,7 +320,7 @@ _RESULT = _descriptor.Descriptor(
   ],
   extensions=[
   ],
-  nested_types=[],
+  nested_types=[_RESULT_TESTBED, _RESULT_TESTCASE, ],
   enum_types=[
   ],
   options=None,
@@ -356,66 +328,68 @@ _RESULT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=408,
-  serialized_end=546,
+  serialized_start=28,
+  serialized_end=679,
 )
 
-DESCRIPTOR.message_types_by_name['TestCase'] = _TESTCASE
-DESCRIPTOR.message_types_by_name['Testbed'] = _TESTBED
-DESCRIPTOR.message_types_by_name['Program'] = _PROGRAM
-DESCRIPTOR.message_types_by_name['Params'] = _PARAMS
-DESCRIPTOR.message_types_by_name['Stdout'] = _STDOUT
-DESCRIPTOR.message_types_by_name['Stderr'] = _STDERR
+_RESULT_TESTBED_PLATFORM.containing_type = _RESULT_TESTBED
+_RESULT_TESTBED.fields_by_name['platform'].message_type = _RESULT_TESTBED_PLATFORM
+_RESULT_TESTBED.containing_type = _RESULT
+_RESULT_TESTCASE_PROGRAM.containing_type = _RESULT_TESTCASE
+_RESULT_TESTCASE_PARAMS.containing_type = _RESULT_TESTCASE
+_RESULT_TESTCASE.fields_by_name['program'].message_type = _RESULT_TESTCASE_PROGRAM
+_RESULT_TESTCASE.fields_by_name['params'].message_type = _RESULT_TESTCASE_PARAMS
+_RESULT_TESTCASE.containing_type = _RESULT
+_RESULT.fields_by_name['testbed'].message_type = _RESULT_TESTBED
+_RESULT.fields_by_name['testcase'].message_type = _RESULT_TESTCASE
 DESCRIPTOR.message_types_by_name['Result'] = _RESULT
 
-TestCase = _reflection.GeneratedProtocolMessageType('TestCase', (_message.Message,), dict(
-  DESCRIPTOR = _TESTCASE,
-  __module__ = 'deepsmith_pb2'
-  # @@protoc_insertion_point(class_scope:dsmith.TestCase)
-  ))
-_sym_db.RegisterMessage(TestCase)
-
-Testbed = _reflection.GeneratedProtocolMessageType('Testbed', (_message.Message,), dict(
-  DESCRIPTOR = _TESTBED,
-  __module__ = 'deepsmith_pb2'
-  # @@protoc_insertion_point(class_scope:dsmith.Testbed)
-  ))
-_sym_db.RegisterMessage(Testbed)
-
-Program = _reflection.GeneratedProtocolMessageType('Program', (_message.Message,), dict(
-  DESCRIPTOR = _PROGRAM,
-  __module__ = 'deepsmith_pb2'
-  # @@protoc_insertion_point(class_scope:dsmith.Program)
-  ))
-_sym_db.RegisterMessage(Program)
-
-Params = _reflection.GeneratedProtocolMessageType('Params', (_message.Message,), dict(
-  DESCRIPTOR = _PARAMS,
-  __module__ = 'deepsmith_pb2'
-  # @@protoc_insertion_point(class_scope:dsmith.Params)
-  ))
-_sym_db.RegisterMessage(Params)
-
-Stdout = _reflection.GeneratedProtocolMessageType('Stdout', (_message.Message,), dict(
-  DESCRIPTOR = _STDOUT,
-  __module__ = 'deepsmith_pb2'
-  # @@protoc_insertion_point(class_scope:dsmith.Stdout)
-  ))
-_sym_db.RegisterMessage(Stdout)
-
-Stderr = _reflection.GeneratedProtocolMessageType('Stderr', (_message.Message,), dict(
-  DESCRIPTOR = _STDERR,
-  __module__ = 'deepsmith_pb2'
-  # @@protoc_insertion_point(class_scope:dsmith.Stderr)
-  ))
-_sym_db.RegisterMessage(Stderr)
-
 Result = _reflection.GeneratedProtocolMessageType('Result', (_message.Message,), dict(
+
+  Testbed = _reflection.GeneratedProtocolMessageType('Testbed', (_message.Message,), dict(
+
+    Platform = _reflection.GeneratedProtocolMessageType('Platform', (_message.Message,), dict(
+      DESCRIPTOR = _RESULT_TESTBED_PLATFORM,
+      __module__ = 'deepsmith_pb2'
+      # @@protoc_insertion_point(class_scope:dsmith.Result.Testbed.Platform)
+      ))
+    ,
+    DESCRIPTOR = _RESULT_TESTBED,
+    __module__ = 'deepsmith_pb2'
+    # @@protoc_insertion_point(class_scope:dsmith.Result.Testbed)
+    ))
+  ,
+
+  TestCase = _reflection.GeneratedProtocolMessageType('TestCase', (_message.Message,), dict(
+
+    Program = _reflection.GeneratedProtocolMessageType('Program', (_message.Message,), dict(
+      DESCRIPTOR = _RESULT_TESTCASE_PROGRAM,
+      __module__ = 'deepsmith_pb2'
+      # @@protoc_insertion_point(class_scope:dsmith.Result.TestCase.Program)
+      ))
+    ,
+
+    Params = _reflection.GeneratedProtocolMessageType('Params', (_message.Message,), dict(
+      DESCRIPTOR = _RESULT_TESTCASE_PARAMS,
+      __module__ = 'deepsmith_pb2'
+      # @@protoc_insertion_point(class_scope:dsmith.Result.TestCase.Params)
+      ))
+    ,
+    DESCRIPTOR = _RESULT_TESTCASE,
+    __module__ = 'deepsmith_pb2'
+    # @@protoc_insertion_point(class_scope:dsmith.Result.TestCase)
+    ))
+  ,
   DESCRIPTOR = _RESULT,
   __module__ = 'deepsmith_pb2'
   # @@protoc_insertion_point(class_scope:dsmith.Result)
   ))
 _sym_db.RegisterMessage(Result)
+_sym_db.RegisterMessage(Result.Testbed)
+_sym_db.RegisterMessage(Result.Testbed.Platform)
+_sym_db.RegisterMessage(Result.TestCase)
+_sym_db.RegisterMessage(Result.TestCase.Program)
+_sym_db.RegisterMessage(Result.TestCase.Params)
 
 
 # @@protoc_insertion_point(module_scope)

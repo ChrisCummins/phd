@@ -1,48 +1,56 @@
+/*
+ * Protocol specification for OpenCL fuzztesting results.
+ */
 syntax = "proto2";
 package dsmith;
 
-message TestCase {
-    required string program_id = 1;
-    required string params_id = 2;
-    required int32 input_seed = 3;
-    required uint32 timeout = 4;
-}
 
-message Testbed {
-    required string cl_platform = 1;
-    required string cl_device = 2;
-    required string cl_driver = 3;
-    required string cl_devtype = 4;
-    required string host = 5;
-}
-
-message Program {
-    required string src = 1;
-}
-
-message Params {
-    required int32 gsize_x = 1;
-    required int32 gsize_y = 2;
-    required int32 gsize_z = 3;
-    required int32 lsize_x = 4;
-    required int32 lsize_y = 5;
-    required int32 lsize_z = 6;
-}
-
-message Stdout {
-    required string stdout = 1;
-}
-
-message Stderr {
-    required string stderr = 1;
-}
-
+// A single result.
 message Result {
-    required string testbed_id = 1;
-    required string testcase_id = 2;
-    required int64 date = 3;
-    required float runtime = 4;
-    required int32 returncode = 5;
-    required string stdout_id = 6;
-    required string stderr_id = 7;
+    optional Testbed testbed = 1;
+    optional TestCase testcase = 2;
+    optional int64 date = 3;
+    optional float runtime = 4;
+    optional int32 returncode = 5;
+    optional string stdout = 6;
+    optional string stderr = 7;
+
+    message Testbed {
+        optional Platform platform = 1;
+        optional bool cl_opt = 2;
+
+        message Platform {
+            optional string cl_platform = 1;
+            optional string cl_device = 2;
+            optional string cl_driver = 3;
+            optional string cl_devtype = 4;
+            optional string host_os = 5;
+        }
+    }
+
+    message TestCase {
+        optional Program program = 1;
+        optional Params params = 2;
+        optional uint32 timeout = 4;
+
+        message Program {
+            optional string src = 1;
+            optional float generation_time = 2;
+        }
+
+        message Params {
+            optional int32 gsize_x = 1;
+            optional int32 gsize_y = 2;
+            optional int32 gsize_z = 3;
+            optional int32 lsize_x = 4;
+            optional int32 lsize_y = 5;
+            optional int32 lsize_z = 6;
+        }
+    }
+}
+
+
+// Concatenated array of results.
+message Results {
+    repeated Result results = 1;
 }
