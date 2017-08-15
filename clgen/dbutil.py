@@ -673,10 +673,7 @@ def _dump_db(db, out_path: str, gh: bool=False, fileid: bool=False,
 
     if dir:
         log.info('writing to directory ', out_path, '/', sep='')
-        if os.path.exists(out_path):
-            if len(fs.ls(out_path)):
-                raise clgen.UserError('directory already exists!')
-        else:
+        if not os.path.exists(out_path):
             os.makedirs(out_path)
         for row in rows:
             id, contents = row
