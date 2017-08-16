@@ -300,7 +300,7 @@ _apt_get_install() {
     # warning: debian packages are not verioned
 
     if ! dpkg -s "$package" &>/dev/null ; then
-        echo_ok "apt-get install $Package"
+        echo_ok "apt-get install $package"
         sudo apt-get install -y "$package"
     fi
 }
@@ -662,7 +662,9 @@ install_gpustat() {
 
 
 install_iotop() {
-    _apt_get_install iotop
+    if [[ "$(uname)" != "Darwin" ]]; then
+        _apt_get_install iotop
+    fi
 }
 
 
