@@ -631,11 +631,11 @@ install_server_scripts() {
     esac
 
     if [[ "$hostname" == "diana" ]]; then
-        symlink "$dotfiles/servers/push_photo_library_to_mary.sh" ~/.local/bin/push_photo_library_to_mary
+        symlink "$dotfiles/servers/ryan_gosling_have_my_photos.sh" ~/.local/bin/ryan_gosling_have_my_photos
     fi
 
     if [[ "$hostname" == "florence" ]]; then
-        symlink "$dotfiles/servers/push_music_library_to_mary.sh" ~/.local/bin/push_music_library_to_mary
+        symlink "$dotfiles/servers/ryan_gosling_have_my_music.sh" ~/.local/bin/ryan_gosling_have_my_music
     fi
 }
 
