@@ -20,5 +20,5 @@ if [[ -z "${1:-}" ]]; then
     $LMK "$0 --porcelain"
 else
     cd "$PLEXPY_DIR"
-    sudo "$PLEXPY"
+    "$PLEXPY"
 fi
