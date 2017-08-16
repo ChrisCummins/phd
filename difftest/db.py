@@ -1,84 +1,51 @@
-import clgen
 import datetime
-import enum
-import sqlalchemy as sql
+import multiprocessing
 import os
-import deepsmith_pb2 as pb
+import sqlalchemy as sql
 
 from collections import namedtuple
-from configparser import ConfigParser
 from contextlib import contextmanager
-from labm8 import system
-from labm8 import fs
-from sqlalchemy.ext.declarative import declarative_base
+from enum import Enum
+from labm8 import crypto, fs, system
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.declarative import declarative_base
 from typing import Dict, List, Tuple
 
-Base = declarative_base()
+import cfg
+import deepsmith_pb2 as pb
 
-# must call init() first
+# Global state to manage database connections. Must call init() before
+# creating sessions.
+Base = declarative_base()
 engine = None
 make_session = None
 
 
-OUTCOMES = {
-    1: "bf",
-    2: "bc",
-    3: "bto",
-    4: "c",
-    5: "to",
-    6: "pass",
-}
-
-OUTCOMES_TO_INT = {
-    "bf": 1,
-    "bc": 2,
-    "bto": 3,
-    "c": 4,
-    "to": 5,
-    "pass": 6,
-}
-
-CLASSIFICATIONS = {
-    1: "w",
-    2: "bf",
-    3: "bc",
-    4: "bto",
-    5: "c",
-    6: "to",
-    7: "pass",
-}
-
-CLASSIFICATIONS_TO_INT = {
-    "w": 1,
-    "bf": 2,
-    "bc": 3,
-    "bto": 4,
-    "c": 5,
-    "to": 6,
-    "pass": 7,
-}
+session_t = sql.orm.session.Session
 
 
-def get_mysql_creds() -> Tuple[str, str]:
-    """ read default MySQL credentials in ~/.my.cnf """
-    config = ConfigParser()
-    config.read(fs.path("~/.my.cnf"))
-    return config['mysql']['user'], config['mysql']['password']
+def init(hostname: str, echo: bool=False) -> str:
+    """
+    Initialize database engine.
 
+    Must be called before attempt to create a database connection.
 
-def init(hostname: str) -> str:
-    """ must be called before using anything """
+    Arguments:
+        hostname (str): Hostname of machine running MySQL database.
+
+    Returns:
+        str: URI of database.
+    """
     global engine
     global make_session
-    username, password = get_mysql_creds()
-    table = "project_b"
-    port = "3306"
+    username, password = cfg.get_mysql_creds()
+    table = cfg.DATABASE
+    port = str(cfg.PORT)
 
     # Use UTF-8 encoding (default is latin-1) when connecting to MySQL.
     # See: https://stackoverflow.com/a/16404147/1318051
     uri = f"mysql+mysqldb://{username}:{password}@{hostname}:{port}/{table}?charset=utf8"
-    echo = True if os.environ.get("ECHO") else False
+    echo = True if echo else True if os.environ.get("ECHO") else False
     engine = sql.create_engine(uri, encoding="utf-8", echo=echo)
 
     Base.metadata.create_all(engine)
@@ -88,12 +55,8 @@ def init(hostname: str) -> str:
     return "mysql://{hostname}:{port}/{table}".format(**vars())
 
 
-# session type
-session_t = sql.orm.session.Session
-
-
 @contextmanager
-def Session(commit: bool=True) -> session_t:
+def Session(commit: bool=False) -> session_t:
     """Provide a transactional scope around a series of operations."""
     session = make_session()
     try:
@@ -115,7 +78,8 @@ def get_or_create(session: sql.orm.session.Session, model,
     """
     instance = session.query(model).filter_by(**kwargs).first()
     if not instance:
-        params = dict((k, v) for k, v in kwargs.items() if not isinstance(v, sql.sql.expression.ClauseElement))
+        params = dict((k, v) for k, v in kwargs.items()
+                      if not isinstance(v, sql.sql.expression.ClauseElement))
         params.update(defaults or {})
         instance = model(**params)
         session.add(instance)
@@ -123,110 +87,100 @@ def get_or_create(session: sql.orm.session.Session, model,
     return instance
 
 
-# Programs & Harnesses ########################################################
+def get_or_add(session: sql.orm.session.Session, model,
+                  defaults: Dict[str, object]=None, **kwargs) -> object:
+    """
+    Instantiate a mapped database object. If the object is not in the database,
+    add it.
+    """
+    instance = session.query(model).filter_by(**kwargs).first()
+    if not instance:
+        params = dict((k, v) for k, v in kwargs.items()
+                      if not isinstance(v, sql.sql.expression.ClauseElement))
+        params.update(defaults or {})
+        instance = model(**params)
+        session.add(instance)
+        session.flush()
+
+    return instance
 
 
-class CLSmithProgram(Base):
-    """ programs """
-    __tablename__ = 'CLSmithPrograms'
-    id = sql.Column(sql.Integer, primary_key=True)
-    hash = sql.Column(sql.String(40), nullable=False, unique=True, index=True)
+# Programs ####################################################################
 
+
+class Generators:
+    type = int
+    column_t = sql.SmallInteger
+
+    CLSMITH = 0
+    DSMITH = 1
+
+
+class Program(Base):
+    id_t = sql.Integer
+
+    __tablename__ = 'programs'
+    id = sql.Column(id_t, primary_key=True)
+    generator = sql.Column(Generators.column_t, nullable=False)
+    sha1 = sql.Column(sql.String(40), nullable=False)
     date = sql.Column(sql.DateTime, nullable=False, default=datetime.datetime.utcnow)
-
-    # additional flags passed to CLSmith
-    flags = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-
-    # time taken to produce program (in seconds).
-    runtime = sql.Column(sql.Float, nullable=False)
-
-    # production output
-    src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    generation_time = sql.Column(sql.Float, nullable=False)
     linecount = sql.Column(sql.Integer, nullable=False)
-    size = sql.Column(sql.Integer, nullable=False)
+    charcount = sql.Column(sql.Integer, nullable=False)
+    src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
-    # relation back to results:
-    testcases = sql.orm.relationship("CLSmithTestCase", back_populates="program")
+    __table_args__ = (
+        sql.UniqueConstraint('generator', 'sha1', name='uniq_program'),
+    )
+
+    testcases = sql.orm.relationship("Testcase", back_populates="program")
 
     def __repr__(self):
-        return self.id
-
-    def toProtobuf(self):
-        return pb.Result.TestCase.Program(
-            src=self.src,
-            generation_time=self.runtime)
+        return f"program[{self.id}] = {{ generator = {self.generator}, sha1 = {self.sha1} }}"
 
 
-class CLgenProgram(Base):
-    """ programs """
-    __tablename__ = 'CLgenPrograms'
-    id = sql.Column(sql.Integer, primary_key=True)
-    hash = sql.Column(sql.String(40), nullable=False, unique=True, index=True)
+class ClsmithProgramMeta(Base):
+    id_t = Program.id_t
 
-    date_added = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
+    __tablename__ = "clsmith_program_metas"
+    id = sql.Column(id_t, sql.ForeignKey("programs.id"), primary_key=True)
+    flags = sql.Column(sql.String(80), nullable=False, default="")
 
-    # time taken to produce program (in seconds).
-    runtime = sql.Column(sql.Float, nullable=False)
-
-    # production output
-    src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-    linecount = sql.Column(sql.Integer, nullable=False)
-    size = sql.Column(sql.Integer, nullable=False)
-
-    # stats
-    cl_launchable = sql.Column(sql.Boolean)
-    gpuverified = sql.Column(sql.Boolean)
-    throws_warnings = sql.Column(sql.Boolean)
-
-    # relations:
-    testcases = sql.orm.relationship("CLgenTestCase", back_populates="program")
-
-    def __repr__(self) -> str:
-        return self.id
-
-    def toProtobuf(self):
-        return pb.Result.TestCase.Program(
-            src=self.src,
-            generation_time=self.runtime)
+    program = sql.orm.relationship("Program")
 
 
-class CLgenHandcheck(Base):
-    __tablename__ = "CLgenHandchecks"
-    id = sql.Column(sql.Integer, sql.ForeignKey("CLgenPrograms.id"), primary_key=True)
-    handchecked = sql.Column(sql.Boolean)
+class DsmithProgramMeta(Base):
+    id_t = Program.id_t
+
+    __tablename__ = "dsmith_program_metas"
+    id = sql.Column(id_t, sql.ForeignKey("programs.id"), primary_key=True)
+    contains_floats = sql.Column(sql.Boolean)
+    compiler_warnings = sql.Column(sql.Boolean)
+
+    program = sql.orm.relationship("Program")
 
 
 # Parameters ##################################################################
 
 
-class cl_launcherParams(Base):
-    """ params used by cl_launcher to run kernel """
-    __tablename__ = "cl_launcherParams"
-    id = sql.Column(sql.Integer, primary_key=True)
-    optimizations = sql.Column(sql.Boolean, nullable=False)
+class Threads(Base):
+    id_t = sql.SmallInteger
+
+    __tablename__ = "threads"
+    id = sql.Column(id_t, primary_key=True)
     gsize_x = sql.Column(sql.Integer, nullable=False)
     gsize_y = sql.Column(sql.Integer, nullable=False)
     gsize_z = sql.Column(sql.Integer, nullable=False)
     lsize_x = sql.Column(sql.Integer, nullable=False)
     lsize_y = sql.Column(sql.Integer, nullable=False)
     lsize_z = sql.Column(sql.Integer, nullable=False)
-    # unique combination of values:
+
     __table_args__ = (sql.UniqueConstraint(
-        'optimizations', 'gsize_x', 'gsize_y', 'gsize_z',
-        'lsize_x', 'lsize_y', 'lsize_z', name='_uid'),)
+        'gsize_x', 'gsize_y', 'gsize_z',
+        'lsize_x', 'lsize_y', 'lsize_z',
+        name='unique_thread_size'),)
 
-    def to_flags(self) -> List[str]:
-        flags = [
-            "-g", "{self.gsize_x},{self.gsize_y},{self.gsize_z}".format(**vars()),
-            "-l", "{self.lsize_x},{self.lsize_y},{self.lsize_z}".format(**vars())
-        ]
-        if not self.optimizations:
-            flags.append("---disable_opts")
-        return flags
-
-    @property
-    def optimizations_on_off(self) -> str:
-        return "on" if self.optimizations else "off"
+    testcases = sql.orm.relationship("Testcase", back_populates="threads")
 
     @property
     def gsize(self) -> Tuple[int, int, int]:
@@ -239,167 +193,111 @@ class cl_launcherParams(Base):
     def __repr__(self) -> str:
         return " ".join(self.to_flags())
 
-    def toProtobuf(self):
-        return pb.Result.TestCase.Params(
-            gsize_x = self.gsize_x,
-            gsize_y = self.gsize_y,
-            gsize_z = self.gsize_z,
-            lsize_x = self.lsize_x,
-            lsize_y = self.lsize_y,
-            lsize_z = self.lsize_z)
-
-
-class cldriveParams(Base):
-    """ params used by cldrive to run kernel """
-    __tablename__ = "cldriveParams"
-    id = sql.Column(sql.Integer, primary_key=True)
-    size = sql.Column(sql.Integer, nullable=False)
-    generator = sql.Column(sql.String(12), nullable=False)
-    scalar_val = sql.Column(sql.Integer)
-    gsize_x = sql.Column(sql.Integer, nullable=False)
-    gsize_y = sql.Column(sql.Integer, nullable=False)
-    gsize_z = sql.Column(sql.Integer, nullable=False)
-    lsize_x = sql.Column(sql.Integer, nullable=False)
-    lsize_y = sql.Column(sql.Integer, nullable=False)
-    lsize_z = sql.Column(sql.Integer, nullable=False)
-    optimizations = sql.Column(sql.Boolean, nullable=False)
-    # unique combination of values:
-    __table_args__ = (sql.UniqueConstraint(
-        'size', 'generator', 'scalar_val', 'gsize_x', 'gsize_y', 'gsize_z',
-        'lsize_x', 'lsize_y', 'lsize_z', 'optimizations', name='_uid'),)
-
-    def to_flags(self):
-        flags = [
-            "-s", f"{self.size}",
-            "-i", f"{self.generator}",
+    def to_flags(self) -> List[str]:
+        return [
             "-g", f"{self.gsize_x},{self.gsize_y},{self.gsize_z}",
-            "-l", f"{self.lsize_x},{self.lsize_y},{self.lsize_z}"
+            "-l", f"{self.lsize_x},{self.lsize_y},{self.lsize_z}",
         ]
-        if self.scalar_val is not None:
-            flags.append(f"--scalar-val={self.scalar_val}")
-        if not self.optimizations:
-            flags.append("--no-opts")
-        return flags
-
-    @property
-    def optimizations_on_off(self):
-        return "on" if self.optimizations else "off"
-
-    @property
-    def gsize(self):
-        return (self.gsize_x, self.gsize_y, self.gsize_z)
-
-    @property
-    def lsize(self):
-        return (self.lsize_x, self.lsize_y, self.lsize_z)
-
-    def __repr__(self):
-        return " ".join(self.to_flags())
-
-    def toProtobuf(self):
-        return pb.Result.TestCase.Params(
-            gsize_x = self.gsize_x,
-            gsize_y = self.gsize_y,
-            gsize_z = self.gsize_z,
-            lsize_x = self.lsize_x,
-            lsize_y = self.lsize_y,
-            lsize_z = self.lsize_z)
 
 
 # Testcases ###################################################################
 
 
-class CLSmithTestCase(Base):
-    __tablename__ = "CLSmithTestCases"
-    id = sql.Column(sql.Integer, primary_key=True)
-    program_id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithPrograms.id"),
-                            nullable=False)
-    params_id = sql.Column(sql.Integer, sql.ForeignKey("cl_launcherParams.id"),
-                           nullable=False)
+class Harnesses(object):
+    column_t = sql.SmallInteger
 
-    oclverified = sql.Column(sql.Boolean)
+    COMPILE_ONLY = -1
+    CL_LAUNCHER = 0
+    DSMITH = 1
+
+
+class Testcase(Base):
+    id_t = sql.Integer
+
+    __tablename__ = "testcases"
+    id = sql.Column(id_t, primary_key=True)
+    program_id = sql.Column(Program.id_t, sql.ForeignKey("programs.id"), nullable=False)
+    threads_id = sql.Column(Threads.id_t, sql.ForeignKey("threads.id"), nullable=False)
+    harness = sql.Column(Harnesses.column_t, nullable=False)
+    input_seed = sql.Column(sql.Integer, nullable=False)
+    timeout = sql.Column(sql.Integer, nullable=False)
 
     __table_args__ = (
-        sql.UniqueConstraint("program_id", "params_id", name="_uid"),)
+        sql.UniqueConstraint("program_id", "threads_id", "harness",
+                             "input_seed", "timeout", name="unique_testcase"),
+    )
 
-    program = sql.orm.relationship("CLSmithProgram", back_populates="testcases")
-    params = sql.orm.relationship("cl_launcherParams")
-    results = sql.orm.relationship("CLSmithResult", back_populates="testcase")
-    majority = sql.orm.relationship("CLSmithMajority", back_populates="testcase")
+    program = sql.orm.relationship("Program", back_populates="testcases")
+    threads = sql.orm.relationship("Threads", back_populates="testcases")
+    results = sql.orm.relationship("Result", back_populates="testcase")
+    majority = sql.orm.relationship("Majority", back_populates="testcase")
+    clsmith_meta = sql.orm.relationship("ClsmithTestcaseMeta", back_populates="testcase")
+    dsmith_meta = sql.orm.relationship("DsmithTestcaseMeta", back_populates="testcase")
 
     def __repr__(self):
-        return f"testcase {self.id} = {{program: {self.program_id}, params: {self.params_id} }}"
+        return f"testcase {self.id} = {{program: {self.program_id}, threads: {self.threads} }}"
 
 
-class CLgenTestCase(Base):
-    __tablename__ = "CLgenTestCases"
-    id = sql.Column(sql.Integer, primary_key=True)
-    program_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenPrograms.id"),
-                            nullable=False)
-    params_id = sql.Column(sql.Integer, sql.ForeignKey("cldriveParams.id"),
-                           nullable=False)
+class ClsmithTestcaseMeta(Base):
+    id_t = Testcase.id_t
 
+    __tablename__ = "clsmith_testcase_metas"
+    id = sql.Column(id_t, sql.ForeignKey("testcases.id"), primary_key=True)
+    oclverified = sql.Column(sql.Boolean)
+
+    testcase = sql.orm.relationship("Testcase", back_populates="clsmith_meta")
+
+    def get_oclverified():
+        raise NotImplementedError
+
+
+class DsmithTestcaseMeta(Base):
+    id_t = Testcase.id_t
+
+    __tablename__ = "dsmith_testcase_metas"
+    id = sql.Column(id_t, sql.ForeignKey("testcases.id"), primary_key=True)
     gpuverified = sql.Column(sql.Boolean)
     oclverified = sql.Column(sql.Boolean)
-    contains_floats = sql.Column(sql.Boolean)
-    compiler_warnings = sql.Column(sql.Boolean)
 
-    __table_args__ = (
-        sql.UniqueConstraint("program_id", "params_id", name="_uid"),)
+    testcase = sql.orm.relationship("Testcase", back_populates="dsmith_meta")
 
-    program = sql.orm.relationship("CLgenProgram", back_populates="testcases")
-    params = sql.orm.relationship("cldriveParams")
-    harness = sql.orm.relationship("CLgenHarness", back_populates="testcase")
-    results = sql.orm.relationship("CLgenResult", back_populates="testcase")
-    majority = sql.orm.relationship("CLgenMajority", back_populates="testcase")
+    def get_oclverified():
+        raise NotImplementedError
 
+    def get_gpuverified():
+        raise NotImplementedError
 
-class CLgenHarness(Base):
-    """ cldrive-generated test harnesses for CLgen programs """
-    __tablename__ = 'CLgenHarnesses'
-    id = sql.Column(sql.Integer, sql.ForeignKey("CLgenTestCases.id"),
-                    primary_key=True)
+    def get_oclverified():
+        raise NotImplementedError
 
-    date = sql.Column(sql.DateTime, nullable=False, default=datetime.datetime.utcnow)
+    def get_contains_floats():
+        raise NotImplementedError
 
-    # cldrive version which generated harness
-    cldrive_version = sql.Column(sql.String(12))
-    src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-    compile_only = sql.Column(sql.Boolean)
-
-    # time taken to create harness
-    generation_time = sql.Column(sql.Float, nullable=False)
-    compile_time = sql.Column(sql.Float, nullable=False)
-
-    # relations:
-    testcase = sql.orm.relationship("CLgenTestCase", back_populates="harness")
-
-    def __repr__(self) -> str:
-        return self.id
+    def get_compiler_warnings():
+        raise NotImplementedError
 
 
-# Testbeds ####################################################################
+# Experimental Platforms ######################################################
 
 
-class Testbed(Base):
-    """ devices """
-    __tablename__ = 'Testbeds'
-    id = sql.Column(sql.Integer, primary_key=True)
+class Platform(Base):
+    id_t = sql.SmallInteger
+
+    __tablename__ = 'platforms'
+    id = sql.Column(id_t, primary_key=True)
     platform = sql.Column(sql.String(255), nullable=False)  # CL_PLATFORM_NAME
     device = sql.Column(sql.String(255), nullable=False)  # CL_DEVICE_NAME
     driver = sql.Column(sql.String(255), nullable=False)  # CL_DRIVER_VERSION
-    host = sql.Column(sql.String(255), nullable=False)
     opencl = sql.Column(sql.String(8), nullable=False)  # CL_PLATFORM_VERSION
     devtype = sql.Column(sql.String(12), nullable=False)  # CL_DEVICE_TYPE
-    open_source = sql.Column(sql.Boolean)
+    host = sql.Column(sql.String(255), nullable=False)
 
     __table_args__ = (
-        sql.UniqueConstraint('platform', 'device', 'driver', 'host',
-                             'opencl', 'devtype', name='_uid'),)
+        sql.UniqueConstraint('platform', 'device', 'driver', 'opencl',
+                             'devtype', 'host', name='unique_platform'),
+    )
 
-    clsmith_results = sql.orm.relationship("CLSmithResult", back_populates="testbed")
-    clgen_results = sql.orm.relationship("CLgenResult", back_populates="testbed")
-    bug_reports = sql.orm.relationship("BugReport", back_populates="testbed")
+    testbeds = sql.orm.relationship("Testbed", back_populates="platform")
 
     def __repr__(self) -> str:
         return (f"Platform: {self.platform}, Device: {self.device}, " +
@@ -426,597 +324,290 @@ class Testbed(Base):
 
         raise KeyError(f"device {self.device} not found")
 
-    def toProtobuf(self):
-        return pb.Result.Testbed.Platform(
-            cl_platform=self.platform,
-            cl_device=self.device,
-            cl_driver=self.driver,
-            cl_devtype=self.devtype,
-            host_os=self.host)
 
+class Testbed(Base):
+    id_t = sql.SmallInteger
 
-class TestbedConfig(Base):
-    __tablename__ = 'Configurations'
-    id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"),
-                    primary_key=True)
-    num = sql.Column(sql.Integer, nullable=False, unique=True)
+    __tablename__ = 'testbeds'
+    id = sql.Column(id_t, primary_key=True)
+    platform_id = sql.Column(Platform.id_t, sql.ForeignKey("platforms.id"), nullable=False)
+    optimizations = sql.Column(sql.Boolean, nullable=False)
 
-
-# CLSmith Results #############################################################
-
-
-class CLSmithResult(Base):
-    __tablename__ = "CLSmithResults"
-    id = sql.Column(sql.Integer, primary_key=True)
-    testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"), nullable=False, index=True)
-    testcase_id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithTestCases.id"), nullable=False, index=True)
-
-    # stats
-    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow, nullable=False, index=True)
-    status = sql.Column(sql.Integer, nullable=False)
-    runtime = sql.Column(sql.Float, nullable=False)
-
-    # output
-    stdout_id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithStdouts.id"), nullable=False)
-    stderr_id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithStderrs.id"), nullable=False)
-
-    outcome = sql.Column(sql.Integer, index=True, nullable=False)
-
-    # unique
     __table_args__ = (
-        sql.UniqueConstraint('testbed_id', 'testcase_id', name='_uid'),)
+        sql.UniqueConstraint('platform_id', 'optimizations', name='unique_testbed'),
+    )
 
-    # relations:
-    meta = sql.orm.relation("CLSmithMeta", back_populates="result")
-    classification = sql.orm.relation("CLSmithClassification", back_populates="result")
-    testbed = sql.orm.relationship("Testbed", back_populates="clsmith_results")
-    testcase = sql.orm.relationship("CLSmithTestCase", back_populates="results")
-    stdout = sql.orm.relationship("CLSmithStdout")
-    stderr = sql.orm.relationship("CLSmithStderr")
+    platform = sql.orm.relationship("Platform", back_populates="testbeds")
 
-    def __repr__(self):
-        return (f"result: {self.id} testbed: {self.testbed.device}, " +
-                f"program: {self.program_id}, params: {self.params}, " +
-                f"status: {self.status}, runtime: {self.runtime:.2f}s")
-
-    def toProtobuf(self):
-        testbed = pb.Result.Testbed(
-            platform=self.testbed.toProtobuf(),
-            cl_opt=self.testcase.params.optimizations)
-
-        testcase = pb.Result.TestCase(
-            program=self.testcase.program.toProtobuf(),
-            params=self.testcase.params.toProtobuf(),
-            timeout=60)
-
-        return pb.Result(
-            testbed=testbed,
-            testcase=testcase,
-            date=int(self.date.strftime("%s")),
-            runtime=self.runtime,
-            returncode=self.status,
-            stdout=self.stdout.stdout,
-            stderr=self.stderr.stderr)
+    def __repr__(self) -> str:
+        return f"Platform: {self.platform}, Optimizations: {self.optimizations}"
 
 
-class CLSmithStdout(Base):
-    __tablename__ = "CLSmithStdouts"
-    id = sql.Column(sql.Integer, primary_key=True)
-    hash = sql.Column(sql.String(40), nullable=False, unique=True)
+class Stdout(Base):
+    id_t = sql.Integer
+
+    __tablename__ = "stdouts"
+    id = sql.Column(id_t, primary_key=True)
+    sha1 = sql.Column(sql.String(40), nullable=False, unique=True, index=True)
     stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
 
-class CLSmithStderr(Base):
-    __tablename__ = "CLSmithStderrs"
-    id = sql.Column(sql.Integer, primary_key=True)
-    hash = sql.Column(sql.String(40), nullable=False, unique=True)
+class CompilerError(object):
+    id_t = sql.Integer
+
+    @sql.ext.declarative.declared_attr
+    def __tablename__(cls):
+        return f"{cls.__name__}s"
+
+    id = sql.Column(id_t, primary_key=True)
+    hash = sql.Column(sql.String(40), nullable=False, unique=True, index=True)
+    stackdump = sql.Column(sql.UnicodeText(length=1024), nullable=False)
+
+
+class StackDump(CompilerError, Base):
+    stderrs = sql.orm.relationship("Stderr", back_populates="stackdump")
+
+
+class Assertion(CompilerError, Base):
+    stderrs = sql.orm.relationship("Stderr", back_populates="assertion")
+
+
+class Unreachable(CompilerError, Base):
+    stderrs = sql.orm.relationship("Stderr", back_populates="unreachable")
+
+
+class Stderr(Base):
+    id_t = sql.Integer
+
+    __tablename__ = "stderrs"
+    id = sql.Column(id_t, primary_key=True)
+    sha1 = sql.Column(sql.String(40), nullable=False, unique=True, index=True)
+    assertion_id = sql.Column(Assertion.id_t, sql.ForeignKey("assertions.id"))
+    unreachable_id = sql.Column(Unreachable.id_t, sql.ForeignKey("unreachables.id"))
+    stackdump_id = sql.Column(StackDump.id_t, sql.ForeignKey("stackdumps.id"))
     stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-    assertion_id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithAssertions.id"))
-    unreachable_id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithUnreachables.id"))
-    stackdump_id = sql.Column(sql.Integer, sql.ForeignKey("StackDumps.id"))
 
-    result = sql.orm.relationship("CLSmithResult", back_populates="stderr")
-    assertion = sql.orm.relationship("CLSmithAssertion", back_populates="stderr")
-    unreachable = sql.orm.relationship("CLSmithUnreachable", back_populates="stderr")
-    stackdump = sql.orm.relationship("StackDump")
+    assertion = sql.orm.relationship("Assertion", back_populates="stderrs")
+    unreachable = sql.orm.relationship("Unreachable", back_populates="stderrs")
+    stackdump = sql.orm.relationship("StackDump", back_populates="stderrs")
 
 
-class CLSmithAssertion(Base):
-    __tablename__ = "CLSmithAssertions"
-    id = sql.Column(sql.Integer, primary_key=True)
-    hash = sql.Column(sql.String(40), nullable=False, index=True)
-    assertion = sql.Column(sql.UnicodeText(length=1024), nullable=False)
+class Outcomes:
+    type = int
+    column_t = sql.SmallInteger
 
-    stderr = sql.orm.relationship("CLSmithStderr", back_populates="assertion")
-
-
-class CLSmithUnreachable(Base):
-    __tablename__ = "CLSmithUnreachables"
-    id = sql.Column(sql.Integer, primary_key=True)
-    hash = sql.Column(sql.String(40), nullable=False, index=True)
-    unreachable = sql.Column(sql.UnicodeText(length=1024), nullable=False)
-
-    stderr = sql.orm.relationship("CLSmithStderr", back_populates="unreachable")
+    BF = 1
+    BC = 2
+    BTO = 3
+    C = 4
+    TO = 5
+    PASS = 6
 
 
-class CLSmithMeta(Base):
-    __tablename__ = "CLSmithMetas"
-    id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithResults.id"),
-                    primary_key=True)
+class Result(Base):
+    id_t = sql.Integer
+
+    __tablename__ = "results"
+    id = sql.Column(id_t, primary_key=True)
+    testbed_id = sql.Column(Testbed.id_t, sql.ForeignKey("testbeds.id"), nullable=False, index=True)
+    testcase_id = sql.Column(Testcase.id_t, sql.ForeignKey("testcases.id"), nullable=False, index=True)
+    date = sql.Column(sql.DateTime, nullable=False, index=True, default=datetime.datetime.utcnow)
+    returncode = sql.Column(sql.SmallInteger, nullable=False)
+    outcome = sql.Column(Outcomes.column_t, nullable=False, index=True)
+    runtime = sql.Column(sql.Float, nullable=False)
+    stdout_id = sql.Column(Stdout.id_t, sql.ForeignKey("stdouts.id"), nullable=False)
+    stderr_id = sql.Column(Stderr.id_t, sql.ForeignKey("stderrs.id"), nullable=False)
+
+    __table_args__ = (
+        sql.UniqueConstraint('testbed_id', 'testcase_id', name='unique_result_triple'),
+    )
+
+    meta = sql.orm.relation("ResultMeta", back_populates="result")
+    classification = sql.orm.relation("Classification", back_populates="result")
+    reduction = sql.orm.relationship("Reduction", back_populates="result")
+    testbed = sql.orm.relationship("Testbed")
+    testcase = sql.orm.relationship("Testcase")
+    stdout = sql.orm.relationship("Stdout")
+    stderr = sql.orm.relationship("Stderr")
+
+    # FIXME:
+    # def __repr__(self):
+    #     return (f"result[{self.id}] = {{ {self.testbed.platform.device}, " +
+    #             f"testcase: {self.testcase.id}, returncode: {self.returncode}, runtime: {self.runtime:.2}s }}")
+
+
+class ClsmithResult(Result):
+    @staticmethod
+    def get_outcome(returncode: int, stderr: str, runtime: float, timeout: int) -> int:
+        """
+        Given a cl_launcher result, determine and set it's outcome.
+
+        See OUTCOMES for list of possible outcomes.
+        """
+        def crash_or_build_failure():
+            return Outcomes.C if "Compilation terminated successfully..." in stderr else Outcomes.BF
+        def crash_or_build_crash():
+            return Outcomes.C if "Compilation terminated successfully..." in stderr else Outcomes.BC
+        def timeout_or_build_timeout():
+            return Outcomes.TO if "Compilation terminated successfully..." in stderr else Outcomes.BTO
+
+        if returncode == 0:
+            return Outcomes.PASS
+        # 139 is SIGSEV
+        elif returncode == 139 or returncode == -11:
+            returncode = 139
+            return crash_or_build_crash()
+        # SIGTRAP
+        elif returncode == -5:
+            return crash_or_build_crash()
+        # SIGKILL
+        elif returncode == -9 and runtime >= timeout:
+            return timeout_or_build_timeout()
+        elif returncode == -9:
+            print(f"SIGKILL, but only ran for {runtime:.2f}s")
+            return crash_or_build_crash()
+        # SIGILL
+        elif returncode == -4:
+            return crash_or_build_crash()
+        # SIGABRT
+        elif returncode == -6:
+            return crash_or_build_crash()
+        # SIGFPE
+        elif returncode == -8:
+            return crash_or_build_crash()
+        # SIGBUS
+        elif returncode == -7:
+            return crash_or_build_crash()
+        # cl_launcher error
+        elif returncode == 1:
+            return crash_or_build_failure()
+        else:
+            print(result)
+            try:
+                print(Signals(-returncode).name)
+            except ValueError:
+                print(returncode)
+            raise LookupError(f"failed to determine outcome of ClsmithResult {returncode} with stderr: {stderr}")
+
+
+class DsmithResult(Result):
+    @staticmethod
+    def get_outcome(returncode: int, stderr: str, runtime: float, timeout: int) -> int:
+        def crash_or_build_failure():
+            return Outcomes.C if "[cldrive] Kernel: " in stderr else Outcomes.BF
+        def crash_or_build_crash():
+            return Outcomes.C if "[cldrive] Kernel: " in stderr else Outcomes.BC
+        def timeout_or_build_timeout():
+            return Outcomes.TO if "[cldrive] Kernel: " in stderr else Outcomes.BTO
+
+        if returncode == 0:
+            return Outcomes.PASS
+        # 139 is SIGSEV
+        elif returncode == 139 or returncode == -11:
+            returncode = 139
+            return crash_or_build_crash()
+        # SIGTRAP
+        elif returncode == -5:
+            return crash_or_build_crash()
+        # SIGKILL
+        elif returncode == -9 and runtime >= 60:
+            return timeout_or_build_timeout()
+        elif returncode == -9:
+            print(f"SIGKILL, but only ran for {runtime:.2f}s")
+            return crash_or_build_crash()
+        # SIGILL
+        elif returncode == -4:
+            return crash_or_build_crash()
+        # SIGFPE
+        elif returncode == -8:
+            return crash_or_build_crash()
+        # SIGBUS
+        elif returncode == -7:
+            return crash_or_build_crash()
+        # SIGABRT
+        elif returncode == -6:
+            return crash_or_build_crash()
+        # cldrive error
+        elif returncode == 1 and runtime >= 60:
+            return timeout_or_build_timeout()
+        elif returncode == 1:
+            return crash_or_build_failure()
+        # file not found (check the stderr on this one):
+        elif returncode == 127:
+            return crash_or_build_failure()
+        else:
+            print(result)
+            try:
+                print(Signals(-returncode).name)
+            except ValueError:
+                print(returncode)
+            raise LookupError(f"failed to determine outcome of cldrive returncode {returncode} with stderr: {stderr}")
+
+
+class ResultMeta(Base):
+    id_t = Result.id_t
+
+    __tablename__ = "results_metas"
+    id = sql.Column(id_t, sql.ForeignKey("results.id"), primary_key=True)
     total_time = sql.Column(sql.Float, nullable=False)  # time to generate and run test case
-    cumtime = sql.Column(sql.Float, nullable=False)  # culumative time for this device and optimization level
+    cumtime = sql.Column(sql.Float, nullable=False)  # culumative time for this testbed time
 
-    # relations:
-    result = sql.orm.relationship("CLSmithResult", back_populates="meta")
+    result = sql.orm.relationship("Result", back_populates="meta")
 
     def __repr__(self):
         return (f"result: {self.id} total_time: {self.total_time:.3f}s, " +
                 f"cumtime: {self.cumtime:.1f}s")
 
 
-class CLSmithClassification(Base):
-    __tablename__ = "CLSmithClassifications"
-    id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithResults.id"),
-                    primary_key=True)
-    classification = sql.Column(sql.Integer, nullable=False)
+class Classifications:
+    type = int
+    column_t = sql.SmallInteger
 
-    result = sql.orm.relationship("CLSmithResult", back_populates="classification")
-
-    @property
-    def label(self):
-        return INT_TO_CLASSIFICATIONS[self.classification]
-
-
-class CLSmithMajority(Base):
-    __tablename__ = "CLSmithMajorities"
-    id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithTestCases.id"),
-                    primary_key=True)
-
-    maj_outcome = sql.Column(sql.Integer, nullable=False)
-    outcome_majsize = sql.Column(sql.Integer, nullable=False)
-
-    maj_stdout_id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithStdouts.id"),
-                               nullable=False)
-    stdout_majsize = sql.Column(sql.Integer, nullable=False)
-
-    testcase = sql.orm.relationship("CLSmithTestCase", back_populates="majority")
-    stdout = sql.orm.relationship("CLSmithStdout")
+    BC = 1
+    BTO = 2
+    ABF = 3
+    ARC = 4
+    AWO = 5
+    PASS = 6
 
 
-# CLgen Results ###############################################################
+class Classification(Base):
+    id_t = Result.id_t
+
+    __tablename__ = "classifications"
+    id = sql.Column(id_t, sql.ForeignKey("results.id"), primary_key=True)
+    classification = sql.Column(Classifications.column_t, nullable=False)
+
+    result = sql.orm.relationship("Result", back_populates="classification")
 
 
-class CLgenResult(Base):
-    __tablename__ = "CLgenResults"
-    id = sql.Column(sql.Integer, primary_key=True)
-    testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"), nullable=False)
-    testcase_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenTestCases.id"), nullable=False)
+class Majority(Base):
+    id_t = Testcase.id_t
 
-    # stats
-    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow, nullable=False, index=True)
-    status = sql.Column(sql.Integer, nullable=False)
-    runtime = sql.Column(sql.Float, nullable=False)
+    __tablename__ = "majorities"
+    id = sql.Column(id_t, sql.ForeignKey("testcases.id"), primary_key=True)
+    maj_outcome = sql.Column(Outcomes.column_t, nullable=False)
+    outcome_majsize = sql.Column(sql.SmallInteger, nullable=False)
+    maj_stdout_id = sql.Column(Stdout.id_t, sql.ForeignKey("stdouts.id"), nullable=False)
+    stdout_majsize = sql.Column(sql.SmallInteger, nullable=False)
 
-    # output
-    stdout_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenStdouts.id"), nullable=False)
-    stderr_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenStderrs.id"), nullable=False)
-
-    outcome = sql.Column(sql.Integer, index=True, nullable=False)
-
-    __table_args__ = (
-        sql.UniqueConstraint('testbed_id', 'testcase_id', name='_uid'),
-        sql.Index('testcase_outcome', 'testcase_id', 'outcome')
-    )
-
-    # relations:
-    meta = sql.orm.relationship("CLgenMeta", back_populates="result")
-    timeout_rerun = sql.orm.relationship("CLgenTimeoutRerun", back_populates="result")
-    classification = sql.orm.relation("CLgenClassification", back_populates="result")
-    testcase = sql.orm.relationship("CLgenTestCase", back_populates="results")
-    testbed = sql.orm.relationship("Testbed", back_populates="clgen_results")
-    stdout = sql.orm.relationship("CLgenStdout")
-    stderr = sql.orm.relationship("CLgenStderr")
-
-    def __repr__(self):
-        return (f"result: {self.id}")
-
-    def toProtobuf(self):
-        testbed = pb.Result.Testbed(
-            platform=self.testbed.toProtobuf(),
-            cl_opt=self.testcase.params.optimizations)
-
-        testcase = pb.Result.TestCase(
-            program=self.testcase.program.toProtobuf(),
-            params=self.testcase.params.toProtobuf(),
-            timeout=60)
-
-        return pb.Result(
-            testbed=testbed,
-            testcase=testcase,
-            date=int(self.date.strftime("%s")),
-            runtime=self.runtime,
-            returncode=self.status,
-            stdout=self.stdout.stdout,
-            stderr=self.stderr.stderr)
+    testcase = sql.orm.relationship("Testcase", back_populates="majority")
+    maj_stdout = sql.orm.relationship("Stdout")
 
 
-class CLgenTimeoutRerun(Base):
-    __tablename__ = "CLgenTimeoutReruns"
-    id = sql.Column(sql.Integer, sql.ForeignKey("CLgenResults.id"), primary_key=True)
+class Reduction(Base):
+    id_t = Result.id_t
 
-    # stats
-    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow, nullable=False, index=True)
-    status = sql.Column(sql.Integer, nullable=False)
-    runtime = sql.Column(sql.Float, nullable=False)
-
-    # output
-    stdout_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenStdouts.id"), nullable=False)
-    stderr_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenStderrs.id"))
-
-    outcome = sql.Column(sql.Integer, index=True, nullable=False)
-
-    # relations:
-    result = sql.orm.relationship("CLgenResult", back_populates="timeout_rerun")
-    stdout = sql.orm.relationship("CLgenStdout")
-    stderr = sql.orm.relationship("CLgenStderr")
-
-    def __repr__(self):
-        return (f"result: {self.id}")
-
-
-class CLgenStdout(Base):
-    __tablename__ = "CLgenStdouts"
-    id = sql.Column(sql.Integer, primary_key=True)
-    hash = sql.Column(sql.String(40), nullable=False, unique=True)
-    stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-
-
-class CLgenStderr(Base):
-    __tablename__ = "CLgenStderrs"
-    id = sql.Column(sql.Integer, primary_key=True)
-    hash = sql.Column(sql.String(40), nullable=False, unique=True)
-    stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-    assertion_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenAssertions.id"))
-    unreachable_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenUnreachables.id"))
-    stackdump_id = sql.Column(sql.Integer, sql.ForeignKey("StackDumps.id"))
-
-    result = sql.orm.relationship("CLgenResult", back_populates="stderr")
-    assertion = sql.orm.relationship("CLgenAssertion", back_populates="stderr")
-    unreachable = sql.orm.relationship("CLgenUnreachable", back_populates="stderr")
-    stackdump = sql.orm.relationship("StackDump")
-
-
-class CLgenAssertion(Base):
-    __tablename__ = "CLgenAssertions"
-    id = sql.Column(sql.Integer, primary_key=True)
-    hash = sql.Column(sql.String(40), nullable=False, index=True)
-    assertion = sql.Column(sql.UnicodeText(length=1024), nullable=False)
-
-    stderr = sql.orm.relationship("CLgenStderr", back_populates="assertion")
-
-
-class CLgenUnreachable(Base):
-    __tablename__ = "CLgenUnreachables"
-    id = sql.Column(sql.Integer, primary_key=True)
-    hash = sql.Column(sql.String(40), nullable=False, index=True)
-    unreachable = sql.Column(sql.UnicodeText(length=1024), nullable=False)
-
-    stderr = sql.orm.relationship("CLgenStderr", back_populates="unreachable")
-
-
-class CLgenMeta(Base):
-    __tablename__ = "CLgenMetas"
-    id = sql.Column(sql.Integer, sql.ForeignKey("CLgenResults.id"),
-                    primary_key=True)
-    total_time = sql.Column(sql.Float, nullable=False)  # time to generate and run test case
-    cumtime = sql.Column(sql.Float, nullable=False)  # culumative time for this device and optimization level
-
-    # relations:
-    result = sql.orm.relationship("CLgenResult", back_populates="meta")
-
-    def __repr__(self):
-        return ("result: {self.id} "
-                "total_time: {self.total_time:.3f}s, "
-                "cumtime: {self.cumtime:.1f}s, "
-                .format(**vars()))
-
-
-class CLgenClassification(Base):
-    __tablename__ = "CLgenClassifications"
-    id = sql.Column(sql.Integer, sql.ForeignKey("CLgenResults.id"),
-                    primary_key=True)
-    classification = sql.Column(sql.Integer, nullable=False)
-
-    result = sql.orm.relationship("CLgenResult", back_populates="classification")
-
-    @property
-    def label(self):
-        return INT_TO_CLASSIFICATIONS[self.classification]
-
-
-class CLgenMajority(Base):
-    __tablename__ = "CLgenMajorities"
-    id = sql.Column(sql.Integer, sql.ForeignKey("CLgenTestCases.id"),
-                    primary_key=True)
-
-    maj_outcome = sql.Column(sql.Integer, nullable=False)
-    outcome_majsize = sql.Column(sql.Integer, nullable=False)
-
-    maj_stdout_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenStdouts.id"),
-                               nullable=False)
-    stdout_majsize = sql.Column(sql.Integer, nullable=False)
-
-    testcase = sql.orm.relationship("CLgenTestCase", back_populates="majority")
-    stdout = sql.orm.relationship("CLgenStdout")
-
-
-# Reductions ##################################################################
-
-
-class CLSmithReduction(Base):
-    __tablename__ = "CLSmithReductions"
-    id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithResults.id"), primary_key=True)
+    __tablename__ = "reductions"
+    id = sql.Column(id_t, sql.ForeignKey("results.id"), primary_key=True)
     date = sql.Column(sql.DateTime, nullable=False, default=datetime.datetime.utcnow)
     status = sql.Column(sql.Integer, nullable=False)
     runtime = sql.Column(sql.Float, nullable=False)
-
-    src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    reduced_src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
     linecount = sql.Column(sql.Integer, nullable=False)
     log = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
-    result = sql.orm.relationship("CLSmithResult")
-
-
-class CLgenReduction(Base):
-    __tablename__ = "CLgenReductions"
-    id = sql.Column(sql.Integer, sql.ForeignKey("CLgenResults.id"), primary_key=True)
-    date = sql.Column(sql.DateTime, nullable=False, default=datetime.datetime.utcnow)
-    status = sql.Column(sql.Integer, nullable=False)
-    runtime = sql.Column(sql.Float, nullable=False)
-
-    src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-    linecount = sql.Column(sql.Integer, nullable=False)
-    log = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-
-    result = sql.orm.relationship("CLgenResult")
-
-
-# Clang-compile test ##########################################################
-
-class CLgenClangResult(Base):
-    """ params used by compile-only """
-    __tablename__ = "CLgenClangResults"
-    id = sql.Column(sql.Integer, primary_key=True)
-    program_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenPrograms.id"), nullable=False, index=True)
-    clang = sql.Column(sql.String(12), nullable=False, index=True)
-    status = sql.Column(sql.Integer, nullable=False, index=True)
-    runtime = sql.Column(sql.Float, nullable=False)
-    stderr_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenClangStderrs.id"), nullable=False)
-
-    program = sql.orm.relationship("CLgenProgram")
-    stderr = sql.orm.relationship("CLgenClangStderr", back_populates="result")
-
-    __table_args__ = (
-        sql.UniqueConstraint('program_id', 'clang', name='program_clang_pair'),
-    )
-
-    def toProtobuf(self):
-        platform = pb.Result.Testbed.Platform(
-            cl_platform="clang",
-            cl_driver=self.clang)
-
-        testbed = pb.Result.Testbed(platform=platform)
-
-        testcase = pb.Result.TestCase(
-            program=self.program.toProtobuf(),
-            timeout=60)
-
-        return pb.Result(
-            testbed=testbed,
-            testcase=testcase,
-            runtime=self.runtime,
-            returncode=self.status,
-            stderr=self.stderr.stderr)
-
-
-class CLgenClangStderr(Base):
-    __tablename__ = "CLgenClangStderrs"
-    id = sql.Column(sql.Integer, primary_key=True)
-    hash = sql.Column(sql.String(40), nullable=False, unique=True)
-    stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-    assertion_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenClangAssertions.id"))
-    unreachable_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenClangUnreachables.id"))
-    terminate_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenClangTerminates.id"))
-
-    result = sql.orm.relationship("CLgenClangResult", back_populates="stderr")
-    assertion = sql.orm.relationship("CLgenClangAssertion", back_populates="stderr")
-    unreachable = sql.orm.relationship("CLgenClangUnreachable", back_populates="stderr")
-    terminate = sql.orm.relationship("CLgenClangTerminate", back_populates="stderr")
-
-
-class CLgenClangAssertion(Base):
-    __tablename__ = "CLgenClangAssertions"
-    id = sql.Column(sql.Integer, primary_key=True)
-    hash = sql.Column(sql.String(40), nullable=False, unique=True)
-    assertion = sql.Column(sql.UnicodeText(length=1024), nullable=False)
-
-    stderr = sql.orm.relationship("CLgenClangStderr", back_populates="assertion")
-
-
-class CLgenClangUnreachable(Base):
-    __tablename__ = "CLgenClangUnreachables"
-    id = sql.Column(sql.Integer, primary_key=True)
-    hash = sql.Column(sql.String(40), nullable=False, unique=True)
-    unreachable = sql.Column(sql.UnicodeText(length=1024), nullable=False)
-
-    stderr = sql.orm.relationship("CLgenClangStderr", back_populates="unreachable")
-
-
-class CLgenClangTerminate(Base):
-    __tablename__ = "CLgenClangTerminates"
-    id = sql.Column(sql.Integer, primary_key=True)
-    hash = sql.Column(sql.String(40), nullable=False, unique=True)
-    terminate = sql.Column(sql.UnicodeText(length=1024), nullable=False)
-
-    stderr = sql.orm.relationship("CLgenClangStderr", back_populates="terminate")
-
-
-# Compile-only tests ##########################################################
-
-
-class coParams(Base):
-    """ params used by compile-only """
-    __tablename__ = "coParams"
-    id = sql.Column(sql.Integer, primary_key=True)
-    optimizations = sql.Column(sql.Boolean, nullable=False)
-    build_kernel = sql.Column(sql.Boolean, nullable=False)
-
-    # unique combination of values:
-    __table_args__ = (sql.UniqueConstraint(
-        'optimizations', 'build_kernel', name='_uid'),)
-    # relation back to results:
-    clgen_results = sql.orm.relationship("coCLgenResult", back_populates="params")
-
-    def to_flags(self) -> List[str]:
-        flags = ['--emit-c', '--compile-only']
-        if self.build_kernel:
-            flags.append("--with-kernel")
-        if not self.optimizations:
-            flags.append("--no-opts")
-        return flags
-
-    @property
-    def optimizations_on_off(self) -> str:
-        return "on" if self.optimizations else "off"
-
-    def __repr__(self) -> str:
-        return " ".join(self.to_flags())
-
-
-class coCLgenResult(Base):
-    """ CLgen programs ran using --compile-only """
-    __tablename__ = "coCLgenResults"
-    id = sql.Column(sql.Integer, primary_key=True)
-    program_id = sql.Column(sql.String(40), sql.ForeignKey("CLgenPrograms.id"),
-                            nullable=False)
-    testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"),
-                            nullable=False)
-    params_id = sql.Column(sql.Integer, sql.ForeignKey("coParams.id"),
-                           nullable=False)
-    date = sql.Column(sql.DateTime, nullable=False, default=datetime.datetime.utcnow)
-    status = sql.Column(sql.Integer, nullable=False)
-    runtime = sql.Column(sql.Float, nullable=False)
-    stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-    stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-    outcome = sql.Column(sql.String(255))
-    classification = sql.Column(sql.String(16))
-    submitted = sql.Column(sql.Boolean)
-    dupe = sql.Column(sql.Integer, sql.ForeignKey("coCLgenResults.id"))
-
-    program = sql.orm.relationship("CLgenProgram")
-    testbed = sql.orm.relationship("Testbed")
-    params = sql.orm.relationship("coParams")
-
-    def __repr__(self):
-        return ("program: {self.program_id}, "
-                "testbed: {self.testbed_id}, "
-                "params: {self.params_id}, "
-                "status: {self.status}, "
-                "runtime: {self.runtime:.2f}s"
-                .format(**vars()))
-
-
-# GitHub tests ################################################################
-
-
-class GitHubProgram(Base):
-    """ programs """
-    __tablename__ = 'GitHubPrograms'
-    id = sql.Column(sql.String(255), primary_key=True)
-    date_added = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
-
-    src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-    status = sql.Column(sql.Integer)
-
-    def __repr__(self) -> str:
-        return self.id
-
-
-# cl_launcher tests ###########################################################
-
-
-class cl_launcherCLgenResult(Base):
-    """ CLgen programs ran using cl_launcher """
-    __tablename__ = "cl_launcherCLgenResults"
-    id = sql.Column(sql.Integer, primary_key=True)
-    program_id = sql.Column(sql.String(40), sql.ForeignKey("CLgenPrograms.id"),
-                            nullable=False)
-    testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"),
-                            nullable=False)
-    params_id = sql.Column(sql.Integer, sql.ForeignKey("cl_launcherParams.id"),
-                           nullable=False)
-    date = sql.Column(sql.DateTime, nullable=False, default=datetime.datetime.utcnow)
-    flags = sql.Column(sql.String(255), nullable=False)
-    status = sql.Column(sql.Integer, nullable=False)
-    runtime = sql.Column(sql.Float, nullable=False)
-    stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-    stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-    outcome = sql.Column(sql.String(255))
-    classification = sql.Column(sql.String(16))
-    submitted = sql.Column(sql.Boolean)
-    dupe = sql.Column(sql.Boolean)
-
-    program = sql.orm.relationship("CLgenProgram")
-    testbed = sql.orm.relationship("Testbed")
-    params = sql.orm.relationship("cl_launcherParams")
-
-    def __repr__(self):
-        return ("program: {self.program_id}, "
-                "testbed: {self.testbed_id}, "
-                "params: {self.params_id}, "
-                "status: {self.status}, "
-                "runtime: {self.runtime:.2f}s"
-                .format(**vars()))
-
-
-# Miscellaneous ###############################################################
-
-
-class StackDump(Base):
-    __tablename__ = "StackDumps"
-    id = sql.Column(sql.Integer, primary_key=True)
-    hash = sql.Column(sql.String(40), nullable=False, index=True)
-    stackdump = sql.Column(sql.UnicodeText(length=1024), nullable=False)
-
-
-class BugReport(Base):
-    __tablename__ = "BugReports"
-    id = sql.Column(sql.Integer, primary_key=True)
-    testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"),
-                            nullable=False)
-    classification = sql.Column(sql.String(12))
-
-    testcase_url = sql.Column(sql.String(255))
-    reported_url = sql.Column(sql.String(255))
-    notes = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-
-    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow,
-                      nullable=False)
-    rejected = sql.Column(sql.Boolean)
-    fixed = sql.Column(sql.Boolean)
-
-    testbed = sql.orm.relationship("Testbed", back_populates="bug_reports")
-
-    __table_args__ = (
-        sql.UniqueConstraint('testbed_id', 'testcase_url', name='_uid'),)
-
-    def __repr__(self) -> str:
-        return ("report: {self.id}, "
-                "testbed: {self.testbed_id}, "
-                "url: {self.url}, "
-                "rejected: {self.rejected}, "
-                "fixed: {self.fixed}"
-                .format(**vars()))
+    result = sql.orm.relationship("Result", back_populates="reduction")
 
 
 # Utility #####################################################################
@@ -1038,7 +629,7 @@ def get_testbed(session: session_t, platform: str, device: str) -> Testbed:
 
     env = cldrive.make_env(platform=platform, device=device)
 
-    return get_or_create(
+    return get_or_add(
         session, Testbed,
         platform=platform,
         device=device,
@@ -1046,69 +637,3 @@ def get_testbed(session: session_t, platform: str, device: str) -> Testbed:
         host=cldrive.host_os(),
         opencl=env.opencl_version,
         devtype=env.device_type)
-
-
-# Tablesets ###################################################################
-Tableset = namedtuple('Tableset', [
-        'assertions',
-        'clang_assertions',
-        'clang_stderrs',
-        'clang_terminates',
-        'clang_unreachables',
-        'clangs',
-        'classifications',
-        'harnesses',
-        'majorities',
-        'meta',
-        'name',
-        'params',
-        'programs',
-        'reductions',
-        'results',
-        'stderrs',
-        'stdouts',
-        'testcases',
-        'unreachables',
-    ])
-
-CLSMITH_TABLES = Tableset(name="CLSmith",
-    assertions=CLSmithAssertion,
-    clang_assertions=None,
-    clang_stderrs=None,
-    clang_terminates=None
-    clang_unreachables=None,
-    clangs=None,
-    classifications=CLSmithClassification,
-    harnesses=None,
-    majorities=CLSmithMajority,
-    meta=CLSmithMeta,
-    params=cl_launcherParams,
-    programs=CLSmithProgram,
-    reductions=CLSmithReduction,
-    results=CLSmithResult,
-    stderrs=CLSmithStderr,
-    stdouts=CLSmithStdout,
-    testcases=CLSmithTestCase,
-    unreachables=CLSmithUnreachable,
-)
-
-CLGEN_TABLES = Tableset(name="CLgen",
-    assertions=CLgenAssertion,
-    clang_assertions=CLgenClangAssertion,
-    clang_stderrs=CLgenClangStderr,
-    clang_terminates=CLgenClangTerminate
-    clang_unreachables=CLgenClangUnreachable,
-    clangs=CLgenClangResult
-    classifications=CLgenClassification,
-    harnesses=CLgenHarness,
-    majorities=CLgenMajority
-    meta=CLgenMeta
-    params=cldriveParams
-    programs=CLgenProgram
-    reductions=CLgenReduction,
-    results=CLgenResult
-    stderrs=CLgenStderr,
-    stdouts=CLgenStdout
-    testcases=CLgenTestCase,
-    unreachables=CLgenUnreachable,
-)
