@@ -9,7 +9,7 @@ from enum import Enum
 from labm8 import crypto, fs, system
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.declarative import declarative_base
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 import cfg
 import deepsmith_pb2 as pb
@@ -109,7 +109,7 @@ def get_or_add(session: sql.orm.session.Session, model,
 
 
 class Generators:
-    type = int
+    value_t = int
     column_t = sql.SmallInteger
 
     CLSMITH = 0
@@ -204,11 +204,27 @@ class Threads(Base):
 
 
 class Harnesses(object):
+    value_t = int
     column_t = sql.SmallInteger
 
     COMPILE_ONLY = -1
-    CL_LAUNCHER = 0
+    CLSMITH = 0
     DSMITH = 1
+
+    @staticmethod
+    def to_str(harness: 'Harnesses.value_t') -> str:
+        return {
+            Harnesses.COMPILE_ONLY: "compile only",
+            Harnesses.CLSMITH: "CLsmith",
+            Harnesses.DSMITH: "DeepSmith",
+        }[harness]
+
+    @staticmethod
+    def result_t(harness: "Harnesses.value_t") -> Union[ClsmithResult, DsmithResult]
+        return {
+            Harnesses.CLSMITH: ClsmithResult,
+            Harnesses.DSMITH: DsmithResult,
+        }[harness]
 
 
 class Testcase(Base):
@@ -324,6 +340,60 @@ class Platform(Base):
 
         raise KeyError(f"device {self.device} not found")
 
+    @property
+    def device_name(self):
+        return {
+            "Codeplay Software Ltd. - host CPU": "ComputeAorta (Intel E5-2620)",
+            "Intel(R) Core(TM) i5-4570 CPU @ 3.20GHz": "Intel i5-4570",
+            "Intel(R) HD Graphics Haswell GT2 Desktop": "Intel HD Haswell GT2",
+            "Intel(R) Many Integrated Core Acceleration Card": "Intel Xeon Phi",
+            "Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz": "Intel E5-2620 v4",
+            "Intel(R) Xeon(R) CPU E5-2650 v2 @ 2.60GHz": "Intel E5-2650 v2",
+            "pthread-Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz": "POCL (Intel E5-2620)",
+        }.get(self.device.strip(), self.device.strip())
+
+    @property
+    def num(self):
+        return {
+            "ComputeAorta (Intel E5-2620)": 9,
+            "GeForce GTX 1080": 1,
+            "GeForce GTX 780": 2,
+            "Intel E5-2620 v4": 4,
+            "Intel E5-2650 v2": 5,
+            "Intel HD Haswell GT2": 3,
+            "Intel i5-4570": 6,
+            "Intel Xeon Phi": 7,
+            "Olcgrind Simulator": 10,
+            "POCL (Intel E5-2620)": 8,
+        }.get(self.device_name, -1)
+
+    @property
+    def platform_name(self):
+        return {
+            "Intel Gen OCL Driver": "Beignet",
+            "Intel(R) OpenCL": "Intel OpenCL",
+            "Portable Computing Language": "POCL",
+        }.get(self.platform.strip(), self.platform.strip())
+
+    @property
+    def driver_name(self):
+        return {
+            "Oclgrind 16.10": "16.10",
+        }.get(self.driver.strip(), self.driver.strip())
+
+    @property
+    def devtype_name(self):
+        return {
+            "3": "CPU",
+            "ACCELERATOR": "Accelerator",
+        }.get(self.devtype.strip(), self.devtype.strip())
+
+    @property
+    def host_name(self):
+        return {
+            "CentOS Linux 7.1.1503 64bit": "CentOS 7.1 64bit"
+        }.get(self.host.strip(), self.host.strip())
+
 
 class Testbed(Base):
     id_t = sql.SmallInteger
@@ -340,7 +410,17 @@ class Testbed(Base):
     platform = sql.orm.relationship("Platform", back_populates="testbeds")
 
     def __repr__(self) -> str:
-        return f"Platform: {self.platform}, Optimizations: {self.optimizations}"
+        return self.num
+
+    @property
+    def num(self) -> str:
+        p = self.platform.platform_name if self.platform.num == -1 else self.platform.num
+        return f"{p}{self.plus_minus}"
+
+    @property
+    def plus_minus(self) -> str:
+        return "+" if self.optimizations else "-"
+
 
 
 class Stdout(Base):
@@ -351,13 +431,21 @@ class Stdout(Base):
     sha1 = sql.Column(sql.String(40), nullable=False, unique=True, index=True)
     stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
+    @staticmethod
+    def escape(string):
+        """ filter noise from test harness stdout """
+        return '\n'.join(line for line in stdout.split('\n')
+                         if line != "ADL Escape failed."
+                         and line != "WARNING:endless loop detected!"
+                         and line != "One module without kernel function!")
+
 
 class CompilerError(object):
     id_t = sql.Integer
 
     @sql.ext.declarative.declared_attr
     def __tablename__(cls):
-        return f"{cls.__name__}s"
+        return cls.__name__.lower() + "s"
 
     id = sql.Column(id_t, primary_key=True)
     hash = sql.Column(sql.String(40), nullable=False, unique=True, index=True)
@@ -365,15 +453,15 @@ class CompilerError(object):
 
 
 class StackDump(CompilerError, Base):
-    stderrs = sql.orm.relationship("Stderr", back_populates="stackdump")
+    pass
 
 
 class Assertion(CompilerError, Base):
-    stderrs = sql.orm.relationship("Stderr", back_populates="assertion")
+    pass
 
 
 class Unreachable(CompilerError, Base):
-    stderrs = sql.orm.relationship("Stderr", back_populates="unreachable")
+    pass
 
 
 class Stderr(Base):
@@ -387,21 +475,40 @@ class Stderr(Base):
     stackdump_id = sql.Column(StackDump.id_t, sql.ForeignKey("stackdumps.id"))
     stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
-    assertion = sql.orm.relationship("Assertion", back_populates="stderrs")
-    unreachable = sql.orm.relationship("Unreachable", back_populates="stderrs")
-    stackdump = sql.orm.relationship("StackDump", back_populates="stderrs")
+    assertion = sql.orm.relationship("Assertion")
+    unreachable = sql.orm.relationship("Unreachable")
+    stackdump = sql.orm.relationship("StackDump")
+
+    @staticmethod
+    def escape(string):
+        """ filter noise from test harness stderr """
+        return '\n'.join(line for line in stderr.split('\n')
+                         if "no version information available" not in line)
 
 
 class Outcomes:
     type = int
     column_t = sql.SmallInteger
 
+    TODO = -1
     BF = 1
     BC = 2
     BTO = 3
     C = 4
     TO = 5
     PASS = 6
+
+    @staticmethod
+    def to_str(outcomes: 'Outcomes.value_t') -> str:
+        return {
+            Outcomes.TODO: "unknown",
+            Outcomes.BF: "build failure",
+            Outcomes.BC: "build crash",
+            Outcomes.BTO: "build timeout",
+            Outcomes.C: "runtime crash",
+            Outcomes.TO: "timeout",
+            Outcomes.PASS: "pass",
+        }[outcomes]
 
 
 class Result(Base):
@@ -586,6 +693,7 @@ class Majority(Base):
 
     __tablename__ = "majorities"
     id = sql.Column(id_t, sql.ForeignKey("testcases.id"), primary_key=True)
+    num_results = sql.Column(sql.SmallInteger, nullable=False)
     maj_outcome = sql.Column(Outcomes.column_t, nullable=False)
     outcome_majsize = sql.Column(sql.SmallInteger, nullable=False)
     maj_stdout_id = sql.Column(Stdout.id_t, sql.ForeignKey("stdouts.id"), nullable=False)

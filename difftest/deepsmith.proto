@@ -24,6 +24,7 @@ message Result {
             optional string cl_device = 2;
             optional string cl_driver = 3;
             optional string cl_devtype = 4;
+            optional string cl_version = 6;
             optional string host_os = 5;
         }
     }
@@ -31,6 +32,7 @@ message Result {
     message TestCase {
         optional Program program = 1;
         optional Params params = 2;
+        optional int32 inputs = 3;
         optional uint32 timeout = 4;
 
         message Program {

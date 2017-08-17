@@ -9,6 +9,7 @@ import sys
 import sqlalchemy as sql
 import subprocess
 
+from collections import namedtuple
 from itertools import product
 from argparse import ArgumentParser
 from labm8 import fs
@@ -19,7 +20,6 @@ from typing import List, Tuple
 from tempfile import NamedTemporaryFile
 
 import db
-import clgen_mkharness
 from db import *
 
 
@@ -27,53 +27,44 @@ class HarnessCompilationError(ValueError):
     pass
 
 
-def mkharness_src(env: cldrive.OpenCLEnvironment, testcase: CLgenTestCase) -> Tuple[float, bool, str]:
+harness_t = namedtuple('harness_t', ['generation_time', 'compile_only', 'src'])
+
+
+def mkharness_src(testcase: Testcase) -> harness_t:
     """ generate a self-contained C program for the given test case """
     program = testcase.program
-    params = testcase.params
+    threads = testcase.threads
 
-    data_generator = cldrive.Generator.from_str(params.generator)
-    gsize = cldrive.NDRange(params.gsize_x, params.gsize_y, params.gsize_z)
-    lsize = cldrive.NDRange(params.lsize_x, params.lsize_y, params.lsize_z)
+    gsize = cldrive.NDRange(threads.gsize_x, threads.gsize_y, threads.gsize_z)
+    lsize = cldrive.NDRange(threads.lsize_x, threads.lsize_y, threads.lsize_z)
+    size = max(gsize.product * 2, 256)
     compile_only = False
 
     try:
-        # generate the full test harness
+        # generate a compile-and-execute test harness
         start_time = time()
-        inputs = cldrive.make_data(
-            src=program.src, size=params.size,
-            data_generator=data_generator, scalar_val=params.scalar_val)
-
         src = cldrive.emit_c(
-            env, src=program.src, inputs=inputs, gsize=gsize, lsize=lsize,
-            optimizations=params.optimizations)
+            src=program.src, size=size, start_at=1,# TODO: testcase.input_seed
+            gsize=gsize, lsize=lsize,
+            scalar_val=size)
     except Exception:
-        try:
-            # could not generate the full test harness, try and create a kernel
-            start_time = time()
-            compile_only = True
-            src = cldrive.emit_c(
-                env, src=program.src, inputs=[], gsize=gsize, lsize=lsize,
-                optimizations=params.optimizations, compile_only=True,
-                create_kernel=True)
-        except Exception:
-            # could not create a kernel, so create a compile-only stub
-            start_time = time()
-            src = cldrive.emit_c(env, src=program.src, inputs=[], gsize=gsize, lsize=lsize,
-                optimizations=params.optimizations, compile_only=True,
-                create_kernel=False)
+        # create a compile-only stub if not possible
+        start_time = time()
+        src = cldrive.emit_c(
+            src=program.src, size=0, start_at=1,# TODO: testcase.input_seed
+            gsize=gsize, lsize=lsize, compile_only=True)
 
     generation_time = time() - start_time
 
-    return generation_time, compile_only, src
+    return harness_t(generation_time, compile_only, src)
 
 
-def mkharness(s, env: cldrive.OpenCLEnvironment, testcase: CLgenTestCase) -> CLgenHarness:
+def mkharness(testcase: Testcase) -> harness_t:
     """ generate a self-contained C program for the given test case and add it to the database """
-    if testcase.harness:
-        return testcase.harness[0]
+    # if testcase.harness:
+    #     return testcase.harness[0]
 
-    generation_time, compile_only, src = mkharness_src(env, testcase)
+    generation_time, compile_only, src = mkharness_src(testcase)
 
     try:
         with NamedTemporaryFile(prefix='cldrive-harness-') as tmpfile:
@@ -81,18 +72,18 @@ def mkharness(s, env: cldrive.OpenCLEnvironment, testcase: CLgenTestCase) -> CLg
             compile_harness(src, tmpfile.name)
             compile_time = time() - start_time
 
-        harness = CLgenHarness(
-            id=testcase.id,
-            cldrive_version=cldrive.__version__,
-            src=src,
-            compile_only=compile_only,
-            generation_time=generation_time,
-            compile_time=compile_time)
+        # harness = CLgenHarness(
+        #     id=testcase.id,
+        #     cldrive_version=cldrive.__version__,
+        #     src=src,
+        #     compile_only=compile_only,
+        #     generation_time=generation_time,
+        #     compile_time=compile_time)
 
-        s.add(harness)
-        s.flush()
+        # s.add(harness)
+        # s.flush()
 
-        return harness
+        # return harness
     except ValueError:
         print("\nharness compilation for testcase {testcase.id} failed!", file=sys.stderr)
         print(src, file=sys.stderr)
@@ -130,13 +121,13 @@ if __name__ == "__main__":
 
     with Session() as s:
         if args.program_id:
-            q = s.query(CLgenTestCase)\
-                    .filter(CLgenTestCase.program_id == args.program_id)
+            q = s.query(Testcase)\
+                    .filter(Testcase.program_id == args.program_id)
         else:
-            done = s.query(CLgenHarness.id)
-            q = s.query(CLgenTestCase).filter(~CLgenTestCase.id.in_(done))
+            #done = s.query(CLgenHarness.id)
+            q = s.query(Testcase).filter(Testcase.harness == 1) #.filter(~Testcase.id.in_(done))
 
         for testcase in ProgressBar(max_value=q.count())(q):
-            mkharness(s, env, testcase)
+            mkharness(testcase)
 
     print("done.")

@@ -10,178 +10,214 @@ import db
 from db import *
 
 
-def set_metas_for_device(session: session_t, tables: Tableset, testbed: Testbed, optimizations: int):
-    devname = util.device_str(testbed.device)
-    print(f"{tables.name} Metas for {devname}", "opt" if optimizations else "no-opt", "...")
-
-    # Check if there's anything to do:
-    param_ids = session.query(tables.params.id)\
-        .filter(tables.params.optimizations == optimizations)
-
-    if tables.name == "CLSmith":
-        session.execute(f"""
-    INSERT INTO {tables.meta.__tablename__} (id, total_time, cumtime)
-    SELECT CLSmithResults.id,
-           CLSmithResults.runtime + CLSmithPrograms.runtime AS total_time,
-           @cumtime := @cumtime + CLSmithResults.runtime + CLSmithPrograms.runtime AS cumtime
-       FROM CLSmithResults
-       LEFT JOIN CLSmithTestCases ON CLSmithResults.testcase_id=CLSmithTestCases.id
-       LEFT JOIN CLSmithPrograms ON CLSmithTestCases.program_id=CLSmithPrograms.id
-       JOIN (SELECT @cumtime := 0) r
-            WHERE CLSmithResults.testbed_id={testbed.id}
-            AND CLSmithTestCases.params_id IN (SELECT id FROM cl_launcherParams WHERE optimizations = {optimizations})
-    ORDER BY CLSmithResults.date""")
-    else:
-        # CLgen has harness creation time too
-        session.execute(f"""
-    INSERT INTO {tables.meta.__tablename__} (id, total_time, cumtime)
-    SELECT CLgenResults.id,
-           CLgenResults.runtime + CLgenPrograms.runtime + CLgenHarnesses.generation_time AS total_time,
-           @cumtime := @cumtime + CLgenResults.runtime + CLgenPrograms.runtime + CLgenHarnesses.generation_time AS cumtime
-       FROM CLgenResults
-       LEFT JOIN CLgenTestCases ON CLgenResults.testcase_id=CLgenTestCases.id
-       LEFT JOIN CLgenHarnesses ON CLgenResults.testcase_id=CLgenHarnesses.id
-       LEFT JOIN CLgenPrograms ON CLgenTestCases.program_id=CLgenPrograms.id
-       JOIN (SELECT @cumtime := 0) r
-            WHERE CLgenResults.testbed_id={testbed.id}
-            AND CLgenTestCases.params_id IN (SELECT id FROM cldriveParams WHERE optimizations = {optimizations})
-    ORDER BY CLgenResults.date""")
-
-    session.commit()
-
-
-def set_metas(session:session_t, tables: Tableset):
+def set_results_outcomes(s: session_t) -> None:
     """
+    Determine the `outcome` column of results which have been marked with the
+    "todo" outcome value.
     """
-    num_results = session.query(sql.sql.func.count(tables.results.id)).scalar()
-    num_metas = session.query(sql.sql.func.count(tables.meta.id)).scalar()
+    total_todo = s.query(sql.sql.func.count(Result.id))\
+        .filter(Result.outcome == Outcomes.TODO).scalar()
+
+    if not total_todo:
+        return
+
+    for harness in [Harnesses.CL_LAUNCHER, Harnesses.DSMITH]:
+        result_t = Harnesses.result_t(harness)
+
+        # Determine if there are any results for which we haven't yet determined
+        # the outcome.
+        num_todo = s.query(sql.sql.func.count(Result.id))\
+            .join(Testcase)\
+            .filter(Testcase.harness == harness,
+                    Result.outcome == Outcomes.TODO).scalar()
+        if not num_todo:
+            continue
+
+        print("determining outcomes of", Harnesses.to_str(harness), "results ...")
+        q = s.query(Result, Testcase.timeout, Stderr.stderr)\
+            .join(Testcase)\
+            .join(Stderr)\
+            .filter(Testcase.harness == harness,
+                    Result.outcome == Outcomes.TODO)
+
+        for i, (result, timeout, stderr) in enumerate(ProgressBar(max_value=q.count())(q)):
+            result.outcome = result_t.get_outcome(
+                result.returncode, stderr, result.runtime, timeout)
+
+        s.commit()
+
+        # Keep going if there are still more harnesses to process.
+        total_todo -= num_todo
+        if not total_todo:
+            continue
+
+
+def set_stderr_assertions(s: session_t) -> None:
+    print("extracting compiler assertions ...")
+    stderrs = s.query(Stderr)\
+        .join(Result)\
+        .filter(Result.status != 0,
+                Stderr.assertion_id == None,
+                Stderr.stderr.like("%assertion%"))\
+        .distinct()
+
+    for stderr in ProgressBar(max_value=stderrs.count())(stderrs):
+        if not stderr.get_assertion():
+            raise LookupError("no assertion found in stderr #{stderr.id}")
+    s.commit()
+
+
+def set_stderr_unreachables(s: session_t) -> None:
+    print("extracting unreachables ...")
+    stderrs = s.query(Stderr)\
+        .join(Result)\
+        .filter(Result.status != 0,
+                Stderr.unreachable_id == None
+                Stderr.stderr.like("%unreachable%"))\
+        .distinct()
+
+    for stderr in ProgressBar(max_value=stderrs.count())(stderrs):
+        if not stderr.get_unreachable():
+            raise LookupError("no unreachable found in stderr #{stderr.id}")
+    s.commit()
+
+
+def set_stderr_stackdumps(s: session_t) -> None:
+    print("extracting stack dumps ...")
+    stderrs = s.query(Stderr)\
+        .join(Result)\
+        .filter(Result.status != 0,
+                Stderr.stackdump_id == None
+                Stderr.stderr.like("%stack dump%"))\
+        .distinct()
+
+    for stderr in ProgressBar(max_value=stderrs.count())(stderrs):
+        if not stderr.get_stackdump():
+            raise LookupError("no stackdump found in stderr #{stderr.id}")
+    s.commit()
+
+
+def set_results_metas(s: session_t):
+    """
+    Create total time and cumulative time for each test case evaluated on each
+    testbed using each harness.
+    """
+    num_results = s.query(sql.sql.func.count(Result.id)).scalar()
+    num_metas = s.query(sql.sql.func.count(ResultMeta.id)).scalar()
 
     if num_results == num_metas:
         return
 
-    # start from scratch
-    print(f"Resetting {tables.name} metas ...")
-    session.execute(f"DELETE FROM {tables.meta.__tablename__}")
-    for testbed in session.query(Testbed):
-        set_metas_for_device(session, tables, testbed, 0)
-        set_metas_for_device(session, tables, testbed, 1)
+    print("creating results metas ...")
+    s.execute(f"DELETE FROM {ResultMeta.__tablename__}")
+    testbeds_harnesses = s.query(Result.testbed_id, Testcase.harness)\
+        .join(Testcase)\
+        .group_by(Result.testbed_id, Testcase.harness)\
+        .order_by(Testcase.harness, Result.testbed_id).all()
+
+    for testbed_id, harness in ProgressBar()(testbeds_harnesses):
+        testbed = s.query(Testbed).filter(Testbed.id == testbed_id).scalar()
+
+        s.execute(f"""
+INSERT INTO {ResultMeta.__tablename__} (id, total_time, cumtime)
+SELECT  results.id,
+        results.runtime + programs.generation_time AS total_time,
+        @cumtime := @cumtime + results.runtime + programs.generation_time AS cumtime
+FROM {Result.__tablename__} results
+INNER JOIN {Testcase.__tablename__} testcases ON results.testcase_id = testcases.id
+INNER JOIN {Program.__tablename__} programs ON testcases.program_id = programs.id
+JOIN (SELECT @cumtime := 0) r
+WHERE results.testbed_id = {testbed.id}
+AND testcases.harness = {harness}
+ORDER BY programs.date, testcases.threads_id""")
+        s.commit()
 
 
-def set_majorities(session, tables: Tableset) -> None:
+def set_majorities(s: session_t) -> None:
     """
     Majority vote on testcase outcomes and outputs.
     """
-    print(f"Resetting {tables.name} test case majorities ...")
-    session.execute(f"DELETE FROM {tables.majorities.__tablename__}")
+    # We require at least this many results in order for there to be a majority:
+    min_results_for_majority = 3
 
-    print(f"Voting on {tables.name} test case majorities ...")
+    print(f"voting on test case majorities ...")
+    s.execute(f"DELETE FROM {Majority.__tablename__}")
+
     # Note we have to insert ignore here because there may be ties in the
     # majority outcome or output. E.g. there could be a test case with an even
     # split of 5 '1' outcomes and 5 '3' outcomes. Since there is only a single
     # majority outcome, we order results by outcome number, so that '1' (build
     # failure) will over-rule '6' (pass).
-    session.execute(f"""
-INSERT IGNORE INTO {tables.majorities.__tablename__}
-SELECT t1.testcase_id, t1.maj_outcome, t1.outcome_majsize, t2.maj_stdout_id, t2.stdout_majsize
+    s.execute(f"""
+INSERT IGNORE INTO {Majority.__tablename__}
+    (id, num_results, maj_outcome, outcome_majsize, maj_stdout_it, stdout_majsize)
+SELECT  result_counts.testcase_id,
+        result_count.num_results,
+        outcome_majs.maj_outcome,
+        outcome_majs.outcome_majsize,
+        stdout_majs.maj_stdout_id,
+        stdout_majs.stdout_majsize
 FROM (
-    SELECT l.testcase_id,s.outcome as maj_outcome,s.outcome_count AS outcome_majsize
+    SELECT testcase_id, num_results FROM (
+        SELECT testcase_id, COUNT(*) AS num_results
+        FROM {Result.__tablename__}
+        GROUP BY testcase_id
+    ) s
+    WHERE num_results >= {min_results_for_majority}
+) result_counts
+JOIN (
+    SELECT l.testcase_id, s.outcome as maj_outcome, s.outcome_count AS outcome_majsize
     FROM (
-        SELECT testcase_id,MAX(outcome_count) as max_count FROM (
+        SELECT testcase_id, MAX(outcome_count) as max_count
+        FROM (
             SELECT testcase_id,COUNT(*) as outcome_count
-            FROM {tables.results.__tablename__}
+            FROM {Result.__tablename__}
             GROUP BY testcase_id, outcome
         ) r
         GROUP BY testcase_id
-    ) l INNER JOIN (
-        SELECT testcase_id,outcome,COUNT(*) as outcome_count
-        FROM {tables.results.__tablename__}
+    ) l
+    INNER JOIN (
+        SELECT testcase_id, outcome, COUNT(*) as outcome_count
+        FROM {Result.__tablename__}
         GROUP BY testcase_id, outcome
     ) s ON l.testcase_id = s.testcase_id AND l.max_count = s.outcome_count
-) t1 JOIN (
+) outcome_majs ON result_counts.testcase_id = outcome_majs.testcase_id
+JOIN (
     SELECT l.testcase_id, s.stdout_id as maj_stdout_id, s.stdout_count AS stdout_majsize
     FROM (
-        SELECT testcase_id,MAX(stdout_count) as max_count FROM (
-            SELECT testcase_id,COUNT(*) as stdout_count
-            FROM {tables.results.__tablename__}
+        SELECT testcase_id, MAX(stdout_count) as max_count
+        FROM (
+            SELECT testcase_id, COUNT(*) as stdout_count
+            FROM {Result.__tablename__}
             GROUP BY testcase_id, stdout_id
         ) r
         GROUP BY testcase_id
-    ) l INNER JOIN (
-        SELECT testcase_id,stdout_id,COUNT(*) as stdout_count
-        FROM {tables.results.__tablename__}
+    ) l
+    INNER JOIN (
+        SELECT testcase_id, stdout_id, COUNT(*) as stdout_count
+        FROM {Result.__tablename__}
         GROUP BY testcase_id, stdout_id
     ) s ON l.testcase_id = s.testcase_id AND l.max_count = s.stdout_count
-) t2 ON t1.testcase_id = t2.testcase_id
-ORDER BY t1.maj_outcome DESC
+) stdout_majs ON outcome_majs.testcase_id = stdout_majs.testcase_id
+ORDER BY outcome_majs.maj_outcome DESC
 """)
-    session.commit()
-
-
-def get_assertions(session: session_t, tables: Tableset) -> None:
-    print(f"Recording {tables.name} compiler assertions ...")
-    stderrs = session.query(tables.stderrs)\
-        .join(tables.results)\
-        .filter(tables.results.status != 0,
-                tables.stderrs.stderr.like("%assertion%"))\
-        .distinct()
-
-    for stderr in ProgressBar(max_value=stderrs.count())(stderrs):
-        assertion = util.get_assertion(session, tables.assertions, stderr.stderr,
-                                       clang_assertion=False, strip=True)
-        stderr.assertion_id = assertion.id
-
-
-def get_stack_dumps(session: session_t, tables: Tableset) -> None:
-    print(f"Recording {tables.name} stack dumps ...")
-    stderrs = session.query(tables.stderrs)\
-        .join(tables.results)\
-        .filter(tables.results.status != 0,
-                tables.stderrs.stderr.like("%stack dump%"))\
-        .distinct()
-
-    for stderr in ProgressBar(max_value=stderrs.count())(stderrs):
-        stack_dump = util.get_stack_dump(session, StackDump, stderr.stderr)
-        stderr.stackdump_id = stack_dump.id
-
-
-def get_unreachables(session: session_t, tables: Tableset) -> None:
-    print(f"Recording {tables.name} unreachables ...")
-    stderrs = session.query(tables.stderrs)\
-        .join(tables.results)\
-        .filter(tables.results.status != 0,
-                tables.stderrs.stderr.like("%unreachable%"))\
-        .distinct()
-
-    for stderr in ProgressBar(max_value=stderrs.count())(stderrs):
-        unreachable = util.get_unreachable(session, tables.unreachables, stderr.stderr)
-        stderr.unreachable_id = unreachable.id
+    s.commit()
 
 
 if __name__ == "__main__":
     parser = ArgumentParser(description="Collect difftest results for a device")
     parser.add_argument("-H", "--hostname", type=str, default="cc1",
                         help="MySQL database hostname")
-    parser.add_argument("--clsmith", action="store_true",
-                        help="Only run CLSmith test cases")
-    parser.add_argument("--clgen", action="store_true",
-                        help="Only run CLgen test cases")
     args = parser.parse_args()
 
-    # Connect to database
     db_hostname = args.hostname
     print("connected to", db.init(db_hostname))
 
-    tables = []
-    if not args.clgen:
-        tables.append(CLSMITH_TABLES)
-    if not args.clsmith:
-        tables.append(CLGEN_TABLES)
-
-    with Session(commit=True) as s:
-        for tableset in tables:
-            set_metas(s, tableset)
-            set_majorities(s, tableset)
-            get_assertions(s, tableset)
-            get_stack_dumps(s, tableset)
-            get_unreachables(s, tableset)
-            s.commit()
+    with Session() as s:
+        set_results_outcomes(s)
+        set_stderr_assertions(s, tableset)
+        set_stderr_unreachables(s, tableset)
+        set_stderr_stackdumps(s, tableset)
+        set_results_metas(s)
+        set_majorities(s, tableset)
+    print("done.")
