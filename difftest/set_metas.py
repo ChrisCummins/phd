@@ -5,7 +5,6 @@ from argparse import ArgumentParser
 from labm8 import crypto
 from progressbar import ProgressBar
 
-import util
 import db
 from db import *
 
@@ -53,46 +52,58 @@ def set_results_outcomes(s: session_t) -> None:
 
 
 def set_stderr_assertions(s: session_t) -> None:
-    print("extracting compiler assertions ...")
     stderrs = s.query(Stderr)\
         .join(Result)\
-        .filter(Result.status != 0,
+        .filter(Result.returncode != 0,
                 Stderr.assertion_id == None,
                 Stderr.stderr.like("%assertion%"))\
-        .distinct()
+        .distinct()\
+        .all()
 
-    for stderr in ProgressBar(max_value=stderrs.count())(stderrs):
-        if not stderr.get_assertion():
+    if not len(stderrs):
+        return
+
+    print("extracting compiler assertions ...")
+    for stderr in ProgressBar()(stderrs):
+        if not stderr.get_assertion(s):
             raise LookupError("no assertion found in stderr #{stderr.id}")
     s.commit()
 
 
 def set_stderr_unreachables(s: session_t) -> None:
-    print("extracting unreachables ...")
     stderrs = s.query(Stderr)\
         .join(Result)\
-        .filter(Result.status != 0,
-                Stderr.unreachable_id == None
+        .filter(Result.returncode != 0,
+                Stderr.unreachable_id == None,
                 Stderr.stderr.like("%unreachable%"))\
-        .distinct()
+        .distinct()\
+        .all()
 
-    for stderr in ProgressBar(max_value=stderrs.count())(stderrs):
-        if not stderr.get_unreachable():
+    if not len(stderrs):
+        return
+
+    print("extracting unreachables ...")
+    for stderr in ProgressBar()(stderrs):
+        if not stderr.get_unreachable(s):
             raise LookupError("no unreachable found in stderr #{stderr.id}")
     s.commit()
 
 
 def set_stderr_stackdumps(s: session_t) -> None:
-    print("extracting stack dumps ...")
     stderrs = s.query(Stderr)\
         .join(Result)\
-        .filter(Result.status != 0,
-                Stderr.stackdump_id == None
+        .filter(Result.returncode != 0,
+                Stderr.stackdump_id == None,
                 Stderr.stderr.like("%stack dump%"))\
-        .distinct()
+        .distinct()\
+        .all()
 
-    for stderr in ProgressBar(max_value=stderrs.count())(stderrs):
-        if not stderr.get_stackdump():
+    if not len(stderrs):
+        return
+
+    print("extracting stack dumps ...")
+    for stderr in ProgressBar()(stderrs):
+        if not stderr.get_stackdump(s):
             raise LookupError("no stackdump found in stderr #{stderr.id}")
     s.commit()
 
@@ -150,9 +161,9 @@ def set_majorities(s: session_t) -> None:
     # failure) will over-rule '6' (pass).
     s.execute(f"""
 INSERT IGNORE INTO {Majority.__tablename__}
-    (id, num_results, maj_outcome, outcome_majsize, maj_stdout_it, stdout_majsize)
+    (id, num_results, maj_outcome, outcome_majsize, maj_stdout_id, stdout_majsize)
 SELECT  result_counts.testcase_id,
-        result_count.num_results,
+        result_counts.num_results,
         outcome_majs.maj_outcome,
         outcome_majs.outcome_majsize,
         stdout_majs.maj_stdout_id,
@@ -215,9 +226,9 @@ if __name__ == "__main__":
 
     with Session() as s:
         set_results_outcomes(s)
-        set_stderr_assertions(s, tableset)
-        set_stderr_unreachables(s, tableset)
-        set_stderr_stackdumps(s, tableset)
+        set_stderr_assertions(s)
+        set_stderr_unreachables(s)
+        set_stderr_stackdumps(s)
         set_results_metas(s)
-        set_majorities(s, tableset)
+        set_majorities(s)
     print("done.")

@@ -4,7 +4,7 @@ Generate CLSmith programs:
 $ ./clsmith_mkprogram.py -n 1000
 ```
 
-Generate CLgen programs:
+Generate DeepSmith programs:
 
 ```sh
 # train and sample model
@@ -18,19 +18,19 @@ $ ./clgen_fetch.py /tmp/export --delete
 Collect results for a device:
 
 ```sh
-$ ./run_programs.py 0 0 [--clgen|--clsmith] [--t6h] [--opt|--no-opt]
+$ ./runner.py [--verbose] [--only <testbed_ids>] [--exclude <testbed_ids>] [--batch-size <int>] [--host <hostname>]
 ```
 
 Prepare results for analysis:
 
 ```sh
-$ ./set_metas.sh
+$ ./set_metas.py
 ```
 
 Analyze results:
 
 ```sh
-$ ./analyze.py [--clgen|--clsmith] [--prune]
+$ ./analyze.py [--prune]
 ```
 
 Run automated reductions:

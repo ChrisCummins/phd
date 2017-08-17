@@ -220,7 +220,7 @@ class Harnesses(object):
         }[harness]
 
     @staticmethod
-    def result_t(harness: "Harnesses.value_t") -> Union[ClsmithResult, DsmithResult]
+    def result_t(harness: "Harnesses.value_t") -> Union["ClsmithResult", "DsmithResult"]:
         return {
             Harnesses.CLSMITH: ClsmithResult,
             Harnesses.DSMITH: DsmithResult,
@@ -341,18 +341,6 @@ class Platform(Base):
         raise KeyError(f"device {self.device} not found")
 
     @property
-    def device_name(self):
-        return {
-            "Codeplay Software Ltd. - host CPU": "ComputeAorta (Intel E5-2620)",
-            "Intel(R) Core(TM) i5-4570 CPU @ 3.20GHz": "Intel i5-4570",
-            "Intel(R) HD Graphics Haswell GT2 Desktop": "Intel HD Haswell GT2",
-            "Intel(R) Many Integrated Core Acceleration Card": "Intel Xeon Phi",
-            "Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz": "Intel E5-2620 v4",
-            "Intel(R) Xeon(R) CPU E5-2650 v2 @ 2.60GHz": "Intel E5-2650 v2",
-            "pthread-Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz": "POCL (Intel E5-2620)",
-        }.get(self.device.strip(), self.device.strip())
-
-    @property
     def num(self):
         return {
             "ComputeAorta (Intel E5-2620)": 9,
@@ -374,6 +362,18 @@ class Platform(Base):
             "Intel(R) OpenCL": "Intel OpenCL",
             "Portable Computing Language": "POCL",
         }.get(self.platform.strip(), self.platform.strip())
+
+    @property
+    def device_name(self):
+        return {
+            "Codeplay Software Ltd. - host CPU": "ComputeAorta (Intel E5-2620)",
+            "Intel(R) Core(TM) i5-4570 CPU @ 3.20GHz": "Intel i5-4570",
+            "Intel(R) HD Graphics Haswell GT2 Desktop": "Intel HD Haswell GT2",
+            "Intel(R) Many Integrated Core Acceleration Card": "Intel Xeon Phi",
+            "Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz": "Intel E5-2620 v4",
+            "Intel(R) Xeon(R) CPU E5-2650 v2 @ 2.60GHz": "Intel E5-2650 v2",
+            "pthread-Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz": "POCL (Intel E5-2620)",
+        }.get(self.device.strip(), self.device.strip())
 
     @property
     def driver_name(self):
@@ -422,7 +422,6 @@ class Testbed(Base):
         return "+" if self.optimizations else "-"
 
 
-
 class Stdout(Base):
     id_t = sql.Integer
 
@@ -448,20 +447,19 @@ class CompilerError(object):
         return cls.__name__.lower() + "s"
 
     id = sql.Column(id_t, primary_key=True)
-    hash = sql.Column(sql.String(40), nullable=False, unique=True, index=True)
-    stackdump = sql.Column(sql.UnicodeText(length=1024), nullable=False)
+    sha1 = sql.Column(sql.String(40), nullable=False, unique=True, index=True)
 
 
 class StackDump(CompilerError, Base):
-    pass
+    stackdump = sql.Column(sql.UnicodeText(length=1024), nullable=False)
 
 
 class Assertion(CompilerError, Base):
-    pass
+    assertion = sql.Column(sql.UnicodeText(length=1024), nullable=False)
 
 
 class Unreachable(CompilerError, Base):
-    pass
+    unreachable = sql.Column(sql.UnicodeText(length=1024), nullable=False)
 
 
 class Stderr(Base):
@@ -485,6 +483,64 @@ class Stderr(Base):
         return '\n'.join(line for line in stderr.split('\n')
                          if "no version information available" not in line)
 
+    def get_assertion(self, s: session_t):
+        # TODO:
+        clang_assertion = False
+        strip = False
+
+        for line in self.stderr.split('\n'):
+            if "assertion" in line.lower():
+                if strip:
+                    if line.startswith("cldrive-harness"):
+                        msg = ":".join(line.split(":")[1:])
+                    else:
+                        msg = line
+                    msg = re.sub(r"^ *:[0-9]+: ", "", msg)
+                    if "Assertion `(null)' failed." in msg:
+                        msg = "Assertion `(null)' failed."
+                    elif "Assertion `' failed." in msg:
+                        msg = "Assertion `' failed."
+                    elif "Assertion `' failed." in msg:
+                        msg = "Assertion `' failed."
+                elif clang_assertion:
+                    msg = ":".join(line.split(":")[3:])
+                else:
+                    msg = line
+                assertion = get_or_create(
+                    s, Assertion,
+                    sha1=crypto.sha1_str(msg), assertion=msg)
+                s.flush()
+                self.assertion = assertion
+                return assertion
+
+    def get_unreachable(self, s: session_t):
+        for line in self.stderr.split('\n'):
+            if "unreachable" in line.lower():
+                unreachable = get_or_create(
+                    s, Unreachable,
+                    sha1=crypto.sha1_str(line), unreachable=line)
+                s.flush()
+                self.unreachable = unreachable
+                return unreachable
+
+    def get_stackdump(self, s: session_t):
+        in_stackdump = False
+        stackdump = []
+        for line in self.stderr.split('\n'):
+            if in_stackdump:
+                if line and line[0].isdigit():
+                    stackdump.append(line)
+                else:
+                    stackdump_ = "\n".join(stackdump)
+                    stackdump = get_or_create(
+                        s, StackDump,
+                        sha1=crypto.sha1_str(stackdump_), stackdump=stackdump_)
+                    s.flush()
+                    self.stackdump = stackdump
+                    return stackdump
+            elif "stack dump:" in line.lower():
+                in_stackdump = True
+
 
 class Outcomes:
     type = int
@@ -494,7 +550,7 @@ class Outcomes:
     BF = 1
     BC = 2
     BTO = 3
-    C = 4
+    RC = 4
     TO = 5
     PASS = 6
 
@@ -505,7 +561,7 @@ class Outcomes:
             Outcomes.BF: "build failure",
             Outcomes.BC: "build crash",
             Outcomes.BTO: "build timeout",
-            Outcomes.C: "runtime crash",
+            Outcomes.RC: "runtime crash",
             Outcomes.TO: "timeout",
             Outcomes.PASS: "pass",
         }[outcomes]
@@ -552,9 +608,9 @@ class ClsmithResult(Result):
         See OUTCOMES for list of possible outcomes.
         """
         def crash_or_build_failure():
-            return Outcomes.C if "Compilation terminated successfully..." in stderr else Outcomes.BF
+            return Outcomes.RC if "Compilation terminated successfully..." in stderr else Outcomes.BF
         def crash_or_build_crash():
-            return Outcomes.C if "Compilation terminated successfully..." in stderr else Outcomes.BC
+            return Outcomes.RC if "Compilation terminated successfully..." in stderr else Outcomes.BC
         def timeout_or_build_timeout():
             return Outcomes.TO if "Compilation terminated successfully..." in stderr else Outcomes.BTO
 
@@ -601,9 +657,9 @@ class DsmithResult(Result):
     @staticmethod
     def get_outcome(returncode: int, stderr: str, runtime: float, timeout: int) -> int:
         def crash_or_build_failure():
-            return Outcomes.C if "[cldrive] Kernel: " in stderr else Outcomes.BF
+            return Outcomes.RC if "[cldrive] Kernel: " in stderr else Outcomes.BF
         def crash_or_build_crash():
-            return Outcomes.C if "[cldrive] Kernel: " in stderr else Outcomes.BC
+            return Outcomes.RC if "[cldrive] Kernel: " in stderr else Outcomes.BC
         def timeout_or_build_timeout():
             return Outcomes.TO if "[cldrive] Kernel: " in stderr else Outcomes.BTO
 
@@ -667,7 +723,7 @@ class ResultMeta(Base):
 
 
 class Classifications:
-    type = int
+    value_t = int
     column_t = sql.SmallInteger
 
     BC = 1
@@ -676,6 +732,17 @@ class Classifications:
     ARC = 4
     AWO = 5
     PASS = 6
+
+    @staticmethod
+    def to_str(outcomes: 'Classifications.value_t') -> str:
+        return {
+            Classifications.BC: "build crash",
+            Classifications.BTO: "build timeout",
+            Classifications.ABF: "anomylous build failure",
+            Classifications.ARC: "anomylous runtime crash",
+            Classifications.AWO: "anomylous wrong output",
+            Classifications.PASS: "pass",
+        }[outcomes]
 
 
 class Classification(Base):

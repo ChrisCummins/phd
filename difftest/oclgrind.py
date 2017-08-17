@@ -38,35 +38,35 @@ def oclgrind_verify(cmd):
     return True
 
 
-def verify_clsmith_testcase(testcase: CLSmithTestCase):
-    with NamedTemporaryFile(prefix='clsmith-kernel-', delete=False) as tmpfile:
-        src_path = tmpfile.name
-    try:
-        with open(src_path, "w") as outfile:
-            print(testcase.program.src, file=outfile)
+# def verify_clsmith_testcase(testcase: CLSmithTestCase):
+#     with NamedTemporaryFile(prefix='clsmith-kernel-', delete=False) as tmpfile:
+#         src_path = tmpfile.name
+#     try:
+#         with open(src_path, "w") as outfile:
+#             print(testcase.program.src, file=outfile)
 
-        return oclgrind_verify(clsmith.cl_launcher_cli(src_path, 0, 0, timeout=None))
-    finally:
-        fs.rm(src_path)
-
-
-def verify_clgen_testcase(testcase: CLgenTestCase):
-    with NamedTemporaryFile(prefix='oclgrind-harness-', delete=False) as tmpfile:
-        binary_path = tmpfile.name
-    try:
-        clgen_mkharness.compile_harness(testcase.harness[0].src, binary_path, platform_id=0, device_id=0)
-
-        return oclgrind_verify([binary_path])
-    finally:
-        fs.rm(binary_path)
+#         return oclgrind_verify(clsmith.cl_launcher_cli(src_path, 0, 0, timeout=None))
+#     finally:
+#         fs.rm(src_path)
 
 
-def verify_testcase(session: session_t, tables: Tableset, testcase) -> bool:
-    if testcase.oclverified == None:
-        if tables.name == "CLSmith":
-            testcase.oclverified = verify_clsmith_testcase(testcase)
-        else:
-            testcase.oclverified = verify_clgen_testcase(testcase)
-        session.commit()
+# def verify_clgen_testcase(testcase: CLgenTestCase):
+#     with NamedTemporaryFile(prefix='oclgrind-harness-', delete=False) as tmpfile:
+#         binary_path = tmpfile.name
+#     try:
+#         clgen_mkharness.compile_harness(testcase.harness[0].src, binary_path, platform_id=0, device_id=0)
 
-    return testcase.oclverified
+#         return oclgrind_verify([binary_path])
+#     finally:
+#         fs.rm(binary_path)
+
+
+# def verify_testcase(session: session_t, tables: Tableset, testcase) -> bool:
+#     if testcase.oclverified == None:
+#         if tables.name == "CLSmith":
+#             testcase.oclverified = verify_clsmith_testcase(testcase)
+#         else:
+#             testcase.oclverified = verify_clgen_testcase(testcase)
+#         session.commit()
+
+#     return testcase.oclverified
