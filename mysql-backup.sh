@@ -1,5 +1,5 @@
 host=cc1
-db=project_b
+db=DeepSmith_1
 dstdir=~/src/project_b/data
 
 set -eux
