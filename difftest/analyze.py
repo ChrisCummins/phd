@@ -78,43 +78,13 @@ AND stdout_id <> maj_stdout_id
 
 
 def verify_w_testcase(s: session_t) -> None:
-
-    # CLgen-specific analysis. We can omit these checks for CLSmith, as they
-    # will always pass.
-    if tables.name == "CLgen":
-        if testcase.contains_floats == None:
-            testcase.contains_floats = "float" in testcase.program.src
-
-        if testcase.contains_floats:
-            print(f"testcase {testcase.id}: contains floats")
+    # TODO:
+    for arg in cldrive.extract_args(testcase.program.src):
+        if arg.is_vector:
+            # An error in my implementation of vector types:
+            print(f"testcase {testcase.id}: contains vector types")
             return fail()
 
-        if testcase_raises_compiler_warnings(session, tables, testcase):
-            print(f"testcase {testcase.id}: redflag compiler warnings")
-            return fail()
-
-        for arg in cldrive.extract_args(testcase.program.src):
-            if arg.is_vector:
-                # An error in my implementation of vector types:
-                print(f"testcase {testcase.id}: contains vector types")
-                return fail()
-
-        # Run GPUverify on kernel
-        if testcase.gpuverified == None:
-            try:
-                clgen.gpuverify(testcase.program.src, ["--local_size=64", "--num_groups=128"])
-                testcase.gpuverified = 1
-            except clgen.GPUVerifyException:
-                testcase.gpuverified = 0
-
-        if not testcase.gpuverified:
-            print(f"testcase {testcase.id}: failed GPUVerify check")
-            return fail()
-
-    # Check that program runs with Oclgrind without error:
-    if not oclgrind.verify_testcase(session, tables, testcase):
-        print(f"testcase {testcase.id}: failed OCLgrind verification")
-        return fail()
 
 
 # def verify_optimization_sensitive(session: session_t, tables: Tableset, result) -> None:
@@ -152,6 +122,23 @@ def verify_w_testcase(s: session_t) -> None:
 #         print(f"no complement result for result {result.id}")
 
 
+def retract_testcase_classifications(s: session_t, testcase: Testcase,
+                                     classification: Classifications.value_t) -> None:
+    q = s.query(Result.id)\
+        .join(Classification)\
+        .filter(Result.testcase_id == testcase.id,
+                Classification.classification == classification)
+    ids_to_update = [x[0] for x in q.all()]
+    n = len(ids_to_update)
+    assert n > 0
+    ids_str = ",".join(str(x) for x in ids_to_update)
+    print("retracting", Classifications.to_str(classification),
+          f"classifications on {n} results: {ids_str}")
+    s.query(Classification)\
+        .filter(Classification.id.in_(ids_to_update))\
+        .delete(synchronize_session=False)
+
+
 def prune_w_classifications(s: session_t) -> None:
     print(f"Verifying w-classified testcases ...", file=sys.stderr)
     q = s.query(Result.testcase_id)\
@@ -165,18 +152,7 @@ def prune_w_classifications(s: session_t) -> None:
 
     for testcase in ProgressBar()(testcases_to_verify):
         if not testcase.verify_awo(s):
-            q = s.query(Result.id)\
-                .join(Classification)\
-                .filter(Result.testcase_id == testcase.id,
-                        Classification.classification == Classifications.AWO)
-            ids_to_update = [x[0] for x in q.all()]
-            n = len(ids_to_update)
-            assert n > 0
-            ids_str = ",".join(str(x) for x in ids_to_update)
-            print(f"retracting awo-classification on {n} results: {ids_str}")
-            s.query(Classification)\
-                .filter(Classification.id.in_(ids_to_update))\
-                .delete(synchronize_session=False)
+            retract_testcase_classifications(s, testcase, Classifications.AWO)
 
 
 # def verify_opencl_version(session: session_t, tables: Tableset, testcase) -> None:
@@ -299,18 +275,6 @@ def prune_w_classifications(s: session_t) -> None:
 #             print(f"testcase {testcase.id}: redflag compiler warnings")
 #             return fail()
 
-#         # Run GPUverify on kernel
-#         if testcase.gpuverified == None:
-#             try:
-#                 clgen.gpuverify(testcase.program.src, ["--local_size=64", "--num_groups=128"])
-#                 testcase.gpuverified = 1
-#             except clgen.GPUVerifyException:
-#                 testcase.gpuverified = 0
-
-#         if not testcase.gpuverified:
-#             print(f"testcase {testcase.id}: failed GPUVerify check")
-#             return fail()
-
 #     # Check that program runs with Oclgrind without error:
 #     if not oclgrind.verify_testcase(session, tables, testcase):
 #         print(f"testcase {testcase.id}: failed OCLgrind verification")
@@ -363,7 +327,7 @@ if __name__ == "__main__":
     print("connected to", db.init(db_hostname), file=sys.stderr)
 
     with Session(commit=True) as s:
-        # set_classifications(s)
+        set_classifications(s)
         prune_w_classifications(s)
         # prune_bf_classifications(s)
         # prune_c_classifications(s)

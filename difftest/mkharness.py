@@ -61,32 +61,14 @@ def mkharness_src(testcase: Testcase) -> harness_t:
 
 def mkharness(testcase: Testcase) -> harness_t:
     """ generate a self-contained C program for the given test case and add it to the database """
-    # if testcase.harness:
-    #     return testcase.harness[0]
-
     generation_time, compile_only, src = mkharness_src(testcase)
 
-    try:
-        with NamedTemporaryFile(prefix='cldrive-harness-') as tmpfile:
-            start_time = time()
-            compile_harness(src, tmpfile.name)
-            compile_time = time() - start_time
+    with NamedTemporaryFile(prefix='cldrive-harness-') as tmpfile:
+        start_time = time()
+        compile_harness(src, tmpfile.name)
+        compile_time = time() - start_time
 
-        # harness = CLgenHarness(
-        #     id=testcase.id,
-        #     cldrive_version=cldrive.__version__,
-        #     src=src,
-        #     compile_only=compile_only,
-        #     generation_time=generation_time,
-        #     compile_time=compile_time)
-
-        # s.add(harness)
-        # s.flush()
-
-        # return harness
-    except ValueError:
-        print("\nharness compilation for testcase {testcase.id} failed!", file=sys.stderr)
-        print(src, file=sys.stderr)
+    return harness_t(generation_time, compile_only, src)
 
 
 def compile_harness(src: str, path: str='a.out', platform_id=None,

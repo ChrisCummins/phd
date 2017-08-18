@@ -1,3 +1,4 @@
+import clgen
 import datetime
 import multiprocessing
 import os
@@ -284,11 +285,22 @@ class ClsmithTestcaseMeta(Base):
 
     testcase = sql.orm.relationship("Testcase", back_populates="clsmith_meta")
 
-    def get_oclverified():
-        raise NotImplementedError
+    def get_oclverified(self, s: session_t) -> bool:
+        if self.oclverified == None:
+            import oclgrind
+
+            testcase = s.query(Testcase)\
+                .filter(Testcase.id == self.id)\
+                .scalar()
+
+            self.oclverified = oclgrind.verify_clsmith_testcase(testcase)
+
+        return self.oclverified
 
     def verify_awo(self, s: session_t):
-        # TODO: gpuverified, oclverified
+        # TODO: why not gpuverify too?
+        if not self.get_oclverified(s):
+            return False
 
         return True
 
@@ -305,21 +317,42 @@ class DsmithTestcaseMeta(Base):
 
     testcase = sql.orm.relationship("Testcase", back_populates="dsmith_meta")
 
-    def get_oclverified(self, s: session_t) -> bool:
-        raise NotImplementedError
-
     def get_gpuverified(self, s: session_t) -> bool:
-        raise NotImplementedError
+        if self.gpuverified == None:
+            src = s.query(Program.src)\
+                .join(Testcase)\
+                .filter(Testcase.id == self.id)\
+                .scalar()
+
+            try:
+                clgen.gpuverify(src, ["--local_size=64", "--num_groups=128"])
+                self.gpuverified = True
+            except clgen.GPUVerifyException:
+                self.gpuverified = False
+
+        return self.gpuverified
 
     def get_oclverified(self, s: session_t) -> bool:
-        raise NotImplementedError
+        if self.oclverified == None:
+            import oclgrind
+
+            testcase = s.query(Testcase)\
+                .filter(Testcase.id == self.id)\
+                .scalar()
+
+            self.oclverified = oclgrind.verify_dsmith_testcase(testcase)
+
+        return self.oclverified
 
     def get_contains_floats(self, s: session_t) -> bool:
         if self.contains_floats == None:
             self.contains_floats = False
-            src = self.testcase.program.src
-            if "float" in src or "double" in src:
-                self.contains_floats = True
+            q = s.query(sql.sql.func.count(Program.id))\
+                .join(Testcase)\
+                .filter(Testcase.id == self.id,
+                        (Program.src.like("%float%") | Program.src.like("%double%")))\
+                .scalar()
+            self.contains_floats = True if q else False
 
         return self.contains_floats
 
@@ -330,19 +363,19 @@ class DsmithTestcaseMeta(Base):
                 .join(Result)\
                 .filter(
                     Result.testcase_id == self.id,
-                    sql.sql.func.or_(
-                        Stderr.stderr.like("%incompatible pointer to integer conversion%"),
-                        Stderr.stderr.like("%comparison between pointer and integer%"),
-                        Stderr.stderr.like("%warning: incompatible%"),
-                        Stderr.stderr.like("%warning: division by zero is undefined%"),
-                        Stderr.stderr.like("%warning: comparison of distinct pointer types%"),
-                        Stderr.stderr.like("%is past the end of the array%"),
-                        Stderr.stderr.like("%warning: comparison between pointer and%"),
-                        Stderr.stderr.like("%warning: array index%"),
-                        Stderr.stderr.like("%warning: implicit conversion from%"),
-                        Stderr.stderr.like("%array index -1 is before the beginning of the array%"),
-                        Stderr.stderr.like("%incompatible pointer%"),
-                        Stderr.stderr.like("%incompatible integer to pointer %")))\
+                    (Stderr.stderr.like("%incompatible pointer to integer conversion%") |
+                     Stderr.stderr.like("%comparison between pointer and integer%") |
+                     Stderr.stderr.like("%warning: incompatible%") |
+                     Stderr.stderr.like("%warning: division by zero is undefined%") |
+                     Stderr.stderr.like("%warning: comparison of distinct pointer types%") |
+                     Stderr.stderr.like("%is past the end of the array%") |
+                     Stderr.stderr.like("%warning: comparison between pointer and%") |
+                     Stderr.stderr.like("%warning: array index%") |
+                     Stderr.stderr.like("%warning: implicit conversion from%") |
+                     Stderr.stderr.like("%array index -1 is before the beginning of the array%") |
+                     Stderr.stderr.like("%incompatible pointer%") |
+                     Stderr.stderr.like("%incompatible integer to pointer %"))
+                )\
                 .scalar()
             self.compiler_warnings = True if q else False
 
@@ -350,8 +383,10 @@ class DsmithTestcaseMeta(Base):
 
     def verify_awo(self, s: session_t):
         # TODO: gpuverified, oclverified
-        return (self.get_contains_floats(s) or
-                self.get_compiler_warnings(s)):
+        if (self.get_contains_floats(s) or
+            self.get_compiler_warnings(s) or
+            not self.get_gpuverified(s) or
+            not self.get_oclverified(s)):
             return False
 
         return True
