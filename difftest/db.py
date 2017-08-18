@@ -266,9 +266,15 @@ class Testcase(Base):
     def meta(self, s: session_t):
         return get_or_create(s, self.meta_t, id=self.id)
 
+    def verify_arc(self, s: session_t):
+        """
+        Verify that a test case is sensible.
+        """
+        return self.meta(s).verify_arc(s)
+
     def verify_awo(self, s: session_t):
         """
-        Verify that a testcase is sensible.
+        Verify that a test case is sensible.
 
         On first run, this is time consuming, though results are cached for
         later re-use.
@@ -297,11 +303,16 @@ class ClsmithTestcaseMeta(Base):
 
         return self.oclverified
 
+    def verify_arc(self, s: session_t):
+        # TODO: why not gpuverify too?
+        if not self.get_oclverified(s):
+            return False
+        return True
+
     def verify_awo(self, s: session_t):
         # TODO: why not gpuverify too?
         if not self.get_oclverified(s):
             return False
-
         return True
 
 
@@ -381,8 +392,16 @@ class DsmithTestcaseMeta(Base):
 
         return self.compiler_warnings
 
+    def verify_arc(self, s: session_t):
+        if (self.get_compiler_warnings(s) or
+            not self.get_gpuverified(s) or
+            not self.get_oclverified(s)):
+            return False
+
+        return True
+
     def verify_awo(self, s: session_t):
-        # TODO: gpuverified, oclverified
+        # TODO: prune vector types
         if (self.get_contains_floats(s) or
             self.get_compiler_warnings(s) or
             not self.get_gpuverified(s) or
