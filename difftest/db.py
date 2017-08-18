@@ -1,3 +1,4 @@
+import cldrive
 import clgen
 import datetime
 import multiprocessing
@@ -7,7 +8,7 @@ import sqlalchemy as sql
 from collections import namedtuple
 from contextlib import contextmanager
 from enum import Enum
-from labm8 import crypto, fs, system
+from labm8 import crypto, fs, prof, system
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.declarative import declarative_base
 from typing import Dict, List, Tuple, Union
@@ -52,6 +53,10 @@ def init(hostname: str, echo: bool=False) -> str:
     Base.metadata.create_all(engine)
     Base.metadata.bind = engine
     make_session = sql.orm.sessionmaker(bind=engine)
+
+    profile = True if os.environ.get("PROF") else False
+    if profile:
+        prof.enable()
 
     return "mysql://{hostname}:{port}/{table}".format(**vars())
 
@@ -293,6 +298,7 @@ class ClsmithTestcaseMeta(Base):
 
     def get_oclverified(self, s: session_t) -> bool:
         if self.oclverified == None:
+            prof.start("clsmith oclgrind")
             import oclgrind
 
             testcase = s.query(Testcase)\
@@ -300,6 +306,8 @@ class ClsmithTestcaseMeta(Base):
                 .scalar()
 
             self.oclverified = oclgrind.verify_clsmith_testcase(testcase)
+            s.commit()
+            prof.stop("clsmith oclgrind")
 
         return self.oclverified
 
@@ -328,33 +336,6 @@ class DsmithTestcaseMeta(Base):
 
     testcase = sql.orm.relationship("Testcase", back_populates="dsmith_meta")
 
-    def get_gpuverified(self, s: session_t) -> bool:
-        if self.gpuverified == None:
-            src = s.query(Program.src)\
-                .join(Testcase)\
-                .filter(Testcase.id == self.id)\
-                .scalar()
-
-            try:
-                clgen.gpuverify(src, ["--local_size=64", "--num_groups=128"])
-                self.gpuverified = True
-            except clgen.GPUVerifyException:
-                self.gpuverified = False
-
-        return self.gpuverified
-
-    def get_oclverified(self, s: session_t) -> bool:
-        if self.oclverified == None:
-            import oclgrind
-
-            testcase = s.query(Testcase)\
-                .filter(Testcase.id == self.id)\
-                .scalar()
-
-            self.oclverified = oclgrind.verify_dsmith_testcase(testcase)
-
-        return self.oclverified
-
     def get_contains_floats(self, s: session_t) -> bool:
         if self.contains_floats == None:
             self.contains_floats = False
@@ -366,6 +347,14 @@ class DsmithTestcaseMeta(Base):
             self.contains_floats = True if q else False
 
         return self.contains_floats
+
+    def contains_vector_inputs(self, s: session_t) -> bool:
+        for arg in cldrive.extract_args(testcase.program.src):
+            if arg.is_vector:
+                # An error in my implementation of vector types:
+                print(f"testcase {testcase.id}: contains vector types")
+                return True
+        return False
 
     def get_compiler_warnings(self, s: session_t) -> bool:
         """ check for red-flag compiler warnings """
@@ -392,22 +381,56 @@ class DsmithTestcaseMeta(Base):
 
         return self.compiler_warnings
 
-    def verify_arc(self, s: session_t):
-        if (self.get_compiler_warnings(s) or
-            not self.get_gpuverified(s) or
-            not self.get_oclverified(s)):
-            return False
+    def get_gpuverified(self, s: session_t) -> bool:
+        if self.gpuverified == None:
+            prof.start("dsmith gpuverify")
+            src = s.query(Program.src)\
+                .join(Testcase)\
+                .filter(Testcase.id == self.id)\
+                .scalar()
 
+            try:
+                clgen.gpuverify(src, ["--local_size=64", "--num_groups=128"])
+                self.gpuverified = True
+            except clgen.GPUVerifyException:
+                self.gpuverified = False
+            s.commit()
+            prof.stop("dsmith gpuverify")
+
+        return self.gpuverified
+
+    def get_oclverified(self, s: session_t) -> bool:
+        if self.oclverified == None:
+            prof.start("dsmith oclgrind")
+            import oclgrind
+
+            testcase = s.query(Testcase)\
+                .filter(Testcase.id == self.id)\
+                .scalar()
+
+            self.oclverified = oclgrind.verify_dsmith_testcase(testcase)
+            s.commit()
+            prof.stop("dsmith oclgrind")
+
+        return self.oclverified
+
+    def verify_arc(self, s: session_t):
+        if self.get_compiler_warnings(s):
+            return False
+        if not self.get_oclverified(s):
+            return False
         return True
 
     def verify_awo(self, s: session_t):
         # TODO: prune vector types
-        if (self.get_contains_floats(s) or
-            self.get_compiler_warnings(s) or
-            not self.get_gpuverified(s) or
-            not self.get_oclverified(s)):
+        if self.get_contains_floats(s):
             return False
-
+        if self.get_compiler_warnings(s):
+            return False
+        if not self.get_gpuverified(s):
+            return False
+        if not self.get_oclverified(s):
+            return False
         return True
 
 
@@ -918,7 +941,6 @@ def get_testbed(session: session_t, platform: str, device: str) -> Testbed:
         Testbed: If no testbed already exists, create one.
     """
     import pyopencl as cl
-    import cldrive
 
     env = cldrive.make_env(platform=platform, device=device)
 

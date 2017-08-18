@@ -10,6 +10,7 @@ import sqlalchemy as sql
 
 from argparse import ArgumentParser
 from collections import Counter
+from labm8 import prof
 from signal import Signals
 from progressbar import ProgressBar
 
@@ -75,15 +76,6 @@ AND stdout_majsize >= CEILING((2 * outcome_majsize) / 3)
 AND stdout_id <> maj_stdout_id
 """)
     s.commit()
-
-
-def verify_w_testcase(s: session_t) -> None:
-    # TODO:
-    for arg in cldrive.extract_args(testcase.program.src):
-        if arg.is_vector:
-            # An error in my implementation of vector types:
-            print(f"testcase {testcase.id}: contains vector types")
-            return fail()
 
 
 # def verify_optimization_sensitive(session: session_t, tables: Tableset, result) -> None:
@@ -154,15 +146,16 @@ def prune_awo_classifications(s: session_t) -> None:
             retract_testcase_classifications(s, testcase, Classifications.AWO)
 
 
-def verify_opencl_version(s: session_t, testcase) -> None:
+def verify_opencl_version(s: session_t, testcase: Testcase) -> None:
     """
     OpenCL 2.0
     """
-    opencl_2_0_testbeds = s.query(Testbed.id).filter(Testbed.opencl == "2.0")
+    opencl_2_0_platforms = s.query(Platform.id).filter(Platform.opencl == "2.0")
 
     passes_2_0 = s.query(sql.sql.func.count(Result.id))\
+        .join(Testbed)\
         .filter(Result.testcase_id == testcase.id,
-                Result.testbed_id.in_(opencl_2_0_testbeds),
+                Testbed.platform_id.in_(opencl_2_0_platforms),
                 Result.outcome != Outcomes.BF)\
         .scalar()
 
@@ -171,8 +164,9 @@ def verify_opencl_version(s: session_t, testcase) -> None:
         return
 
     passes_1_2 = s.query(sql.sql.func.count(Result.id))\
+        .join(Testbed)\
         .filter(Result.testcase_id == testcase.id,
-                ~Result.testbed_id.in_(opencl_2_0_testbeds),
+                ~Testbed.platform_id.in_(opencl_2_0_platforms),
                 Result.outcome == Outcomes.PASS)\
         .scalar()
 
@@ -180,19 +174,7 @@ def verify_opencl_version(s: session_t, testcase) -> None:
         # If it *did* build on OpenCL 1.2, we're done.
         return
 
-    q = s.query(Result.id)\
-        .join(Classification)\
-        .filter(Result.testcase_id == testcase.id,
-                ~Result.testbed_id.in_(opencl_2_0_testbeds),
-                Classification.classification == Classifications.ABF).all()
-    ids_to_update = [x[0] for x in q]
-    n = len(ids_to_update)
-    if n:
-        ids_str = ",".join(str(x) for x in ids_to_update)
-        print(f"retracting bf-classification for testcase {testcase.id} - only passes on OpenCL 2.0. {n} results: {ids_str}")
-        s.query(Classification)\
-            .filter(Classification.id.in_(ids_to_update))\
-            .delete(synchronize_session=False)
+    retract_testcase_classifications(s, testcase, Classifications.ABF)
 
 
 def prune_abf_classifications(s: session_t) -> None:
@@ -227,8 +209,9 @@ def prune_abf_classifications(s: session_t) -> None:
     q = s.query(Result.testcase_id)\
         .join(Classification)\
         .join(Testbed)\
+        .join(Platform)\
         .filter(Classification.classification == Classifications.ABF,
-                Testbed.opencl == "1.2")\
+                Platform.opencl == "1.2")\
         .distinct()
     testcases_to_verify = s.query(Testcase)\
         .filter(Testcase.id.in_(q))\
@@ -290,7 +273,7 @@ if __name__ == "__main__":
     print("connected to", db.init(db_hostname), file=sys.stderr)
 
     with Session(commit=True) as s:
-        set_classifications(s)
-        # prune_abf_classifications(s)
+        # set_classifications(s)
+        prune_abf_classifications(s)
         prune_arc_classifications(s)
         prune_awo_classifications(s)
