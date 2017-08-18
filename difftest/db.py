@@ -253,6 +253,27 @@ class Testcase(Base):
     def __repr__(self):
         return f"testcase {self.id} = {{program: {self.program_id}, threads: {self.threads} }}"
 
+    @property
+    def meta_t(self):
+        if self.harness == Harnesses.CLSMITH:
+            return ClsmithTestcaseMeta
+        elif self.harness == Harnesses.DSMITH:
+            return DsmithTestcaseMeta
+        else:
+            raise LookupError(f"unknown harness {self.harness}")
+
+    def meta(self, s: session_t):
+        return get_or_create(s, self.meta_t, id=self.id)
+
+    def verify_awo(self, s: session_t):
+        """
+        Verify that a testcase is sensible.
+
+        On first run, this is time consuming, though results are cached for
+        later re-use.
+        """
+        return self.meta(s).verify_awo(s)
+
 
 class ClsmithTestcaseMeta(Base):
     id_t = Testcase.id_t
@@ -266,6 +287,11 @@ class ClsmithTestcaseMeta(Base):
     def get_oclverified():
         raise NotImplementedError
 
+    def verify_awo(self, s: session_t):
+        # TODO: gpuverified, oclverified
+
+        return True
+
 
 class DsmithTestcaseMeta(Base):
     id_t = Testcase.id_t
@@ -274,23 +300,61 @@ class DsmithTestcaseMeta(Base):
     id = sql.Column(id_t, sql.ForeignKey("testcases.id"), primary_key=True)
     gpuverified = sql.Column(sql.Boolean)
     oclverified = sql.Column(sql.Boolean)
+    contains_floats = sql.Column(sql.Boolean)
+    compiler_warnings = sql.Column(sql.Boolean)
 
     testcase = sql.orm.relationship("Testcase", back_populates="dsmith_meta")
 
-    def get_oclverified():
+    def get_oclverified(self, s: session_t) -> bool:
         raise NotImplementedError
 
-    def get_gpuverified():
+    def get_gpuverified(self, s: session_t) -> bool:
         raise NotImplementedError
 
-    def get_oclverified():
+    def get_oclverified(self, s: session_t) -> bool:
         raise NotImplementedError
 
-    def get_contains_floats():
-        raise NotImplementedError
+    def get_contains_floats(self, s: session_t) -> bool:
+        if self.contains_floats == None:
+            self.contains_floats = False
+            src = self.testcase.program.src
+            if "float" in src or "double" in src:
+                self.contains_floats = True
 
-    def get_compiler_warnings():
-        raise NotImplementedError
+        return self.contains_floats
+
+    def get_compiler_warnings(self, s: session_t) -> bool:
+        """ check for red-flag compiler warnings """
+        if self.compiler_warnings == None:
+            q = s.query(sql.sql.func.count(Stderr.id))\
+                .join(Result)\
+                .filter(
+                    Result.testcase_id == self.id,
+                    sql.sql.func.or_(
+                        Stderr.stderr.like("%incompatible pointer to integer conversion%"),
+                        Stderr.stderr.like("%comparison between pointer and integer%"),
+                        Stderr.stderr.like("%warning: incompatible%"),
+                        Stderr.stderr.like("%warning: division by zero is undefined%"),
+                        Stderr.stderr.like("%warning: comparison of distinct pointer types%"),
+                        Stderr.stderr.like("%is past the end of the array%"),
+                        Stderr.stderr.like("%warning: comparison between pointer and%"),
+                        Stderr.stderr.like("%warning: array index%"),
+                        Stderr.stderr.like("%warning: implicit conversion from%"),
+                        Stderr.stderr.like("%array index -1 is before the beginning of the array%"),
+                        Stderr.stderr.like("%incompatible pointer%"),
+                        Stderr.stderr.like("%incompatible integer to pointer %")))\
+                .scalar()
+            self.compiler_warnings = True if q else False
+
+        return self.compiler_warnings
+
+    def verify_awo(self, s: session_t):
+        # TODO: gpuverified, oclverified
+        return (self.get_contains_floats(s) or
+                self.get_compiler_warnings(s)):
+            return False
+
+        return True
 
 
 # Experimental Platforms ######################################################
@@ -351,7 +415,7 @@ class Platform(Base):
             "Intel HD Haswell GT2": 3,
             "Intel i5-4570": 6,
             "Intel Xeon Phi": 7,
-            "Olcgrind Simulator": 10,
+            "Oclgrind Simulator": 10,
             "POCL (Intel E5-2620)": 8,
         }.get(self.device_name, -1)
 

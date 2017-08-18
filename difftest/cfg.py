@@ -13,3 +13,7 @@ def get_mysql_creds() -> Tuple[str, str]:
     config = ConfigParser()
     config.read(fs.path("~/.my.cnf"))
     return config['mysql']['user'], config['mysql']['password']
+
+
+TIME_LIMIT = 48 * 3600
+TIMEOUT = 60

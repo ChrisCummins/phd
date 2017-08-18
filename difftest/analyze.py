@@ -22,12 +22,11 @@ def set_classifications(s: session_t) -> None:
     """
     Determine anomalous results.
     """
-    print(f"resetting classifications ...", file=sys.stderr)
     s.execute(f"DELETE FROM {Classification.__tablename__}")
 
     min_majsize = 7
 
-    print(f"Setting {{bc,bto}} classifications ...", file=sys.stderr)
+    print(f"setting {{bc,bto}} classifications ...", file=sys.stderr)
     s.execute(f"""
 INSERT INTO {Classification.__tablename__}
 SELECT results.id, {Classifications.BC}
@@ -41,179 +40,87 @@ FROM {Result.__tablename__} results
 WHERE outcome = {Outcomes.BTO}
 """)
 
-    print(f"Determining {tables.name} wrong-code classifications ...", file=sys.stderr)
+    print(f"determining anomalous build-failures ...", file=sys.stderr)
     s.execute(f"""
 INSERT INTO {Classification.__tablename__}
-SELECT results.id, {Classifications.W}
+SELECT results.id, {Classifications.ABF}
 FROM {Result.__tablename__} results
-LEFT JOIN {Testcase.__tablename__} testcases ON results.testcase_id = testcases.id
-LEFT JOIN {Majority.__tablename__} majorities ON results.testcase_id = majorities.id
+INNER JOIN {Majority.__tablename__} majorities ON results.testcase_id = majorities.id
+WHERE outcome = {Outcomes.BF}
+AND outcome_majsize >= {min_majsize}
+AND maj_outcome = {Outcomes.PASS}
+""")
+
+    print(f"determining anomalous runtime crashes ...", file=sys.stderr)
+    s.execute(f"""
+INSERT INTO {Classification.__tablename__}
+SELECT {Result.__tablename__}.id, {Classifications.ARC}
+FROM {Result.__tablename__}
+INNER JOIN {Majority.__tablename__} majorities ON results.testcase_id = majorities.id
+WHERE outcome = {Outcomes.RC}
+AND outcome_majsize >= {min_majsize}
+AND maj_outcome = {Outcomes.PASS}
+""")
+
+    print(f"determining anomylous wrong output classifications ...", file=sys.stderr)
+    s.execute(f"""
+INSERT INTO {Classification.__tablename__}
+SELECT results.id, {Classifications.AWO}
+FROM {Result.__tablename__} results
+INNER JOIN {Majority.__tablename__} majorities ON results.testcase_id = majorities.id
 WHERE outcome = {Outcomes.PASS}
 AND maj_outcome = {Outcomes.PASS}
 AND outcome_majsize >= {min_majsize}
 AND stdout_majsize >= CEILING((2 * outcome_majsize) / 3)
 AND stdout_id <> maj_stdout_id
 """)
-
-#     print(f"Determining {tables.name} anomalous build-failures ...", file=sys.stderr)
-#     s.execute(f"""
-# INSERT INTO {Classification.__tablename__}
-# SELECT results.id, {Classifications.BF}
-# FROM {Result.__tablename__} results
-# LEFT JOIN {Testcase.__tablename__} ON results.testcase_id = {Testcase.__tablename__}.id
-# LEFT JOIN {Majority.__tablename__} ON results.testcase_id = {Majority.__tablename__}.id
-# WHERE outcome = {Outcomes.BF}
-# AND outcome_majsize >= {min_majsize}
-# AND maj_outcome = {Outcomes.PASS}
-# """)
-
-#     print(f"Determining {tables.name} anomalous crashes ...", file=sys.stderr)
-#     s.execute(f"""
-# INSERT INTO {Classification.__tablename__}
-# SELECT {Result.__tablename__}.id, {Classifications.["c"]}
-# FROM {Result.__tablename__}
-# LEFT JOIN {Testcase.__tablename__} ON {Result.__tablename__}.testcase_id={Testcase.__tablename__}.id
-# LEFT JOIN {Majority.__tablename__} ON {Testcase.__tablename__}.id={Majority.__tablename__}.id
-# WHERE outcome = {Outcomes.["c"]}
-# AND outcome_majsize >= {min_majsize}
-# AND maj_outcome = {Outcomes.PASS}
-# """)
     s.commit()
 
 
-# def testcase_raises_compiler_warnings(session: session_t, tables: Tableset, testcase) -> bool:
-#     # Check for red-flag compiler warnings. We can't do this for CLSmith
-#     # because cl_launcher doesn't print build logs.
-#     if testcase.compiler_warnings == None:
-#         stderrs = [
-#             x[0] for x in
-#             s.query(tables.stderrs.stderr)\
-#                 .join(Result)\
-#                 .filter(Result.testcase_id == testcase.id)
-#         ]
-#         testcase.compiler_warnings = False
-#         for stderr in stderrs:
-#             if "incompatible pointer to integer conversion" in stderr:
-#                 print(f"testcase {testcase.id}: incompatible pointer to to integer conversion")
-#                 testcase.compiler_warnings = True
-#                 break
-#             elif "comparison between pointer and integer" in stderr:
-#                 print(f"testcase {testcase.id}: comparison between pointer and integer")
-#                 testcase.compiler_warnings = True
-#                 break
-#             elif "warning: incompatible" in stderr:
-#                 print(f"testcase {testcase.id}: incompatible warning")
-#                 testcase.compiler_warnings = True
-#                 break
-#             elif "warning: division by zero is undefined" in stderr:
-#                 print(f"testcase {testcase.id}: division by zero is undefined")
-#                 testcase.compiler_warnings = True
-#                 break
-#             elif "warning: comparison of distinct pointer types" in stderr:
-#                 print(f"testcase {testcase.id}: comparison of distinct pointer types")
-#                 testcase.compiler_warnings = True
-#                 break
-#             elif "is past the end of the array" in stderr:
-#                 print(f"testcase {testcase.id}: is past the end of the array")
-#                 testcase.compiler_warnings = True
-#                 break
-#             elif "warning: comparison between pointer and" in stderr:
-#                 print(f"testcase {testcase.id}: comparison between pointer and")
-#                 testcase.compiler_warnings = True
-#                 break
-#             elif "warning: array index" in stderr:
-#                 print(f"testcase {testcase.id}: array index")
-#                 testcase.compiler_warnings = True
-#                 break
-#             elif "warning: implicit conversion from" in stderr:
-#                 print(f"testcase {testcase.id}: implicit conversion")
-#                 testcase.compiler_warnings = True
-#                 break
-#             elif "array index -1 is before the beginning of the array" in stderr:
-#                 print(f"testcase {testcase.id}: negative array index")
-#                 testcase.compiler_warnings = True
-#                 break
-#             elif "incompatible pointer" in stderr:
-#                 print(f"testcase {testcase.id}: negative array index")
-#                 testcase.compiler_warnings = True
-#                 break
-#             elif "incompatible integer to pointer " in stderr:
-#                 print(f"testcase {testcase.id}: incompatible integer to pointer")
-#                 testcase.compiler_warnings = True
-#                 break
-#             elif "warning" in stderr:
-#                 print(f"\n UNRECOGNIZED WARNINGS in testcase {testcase.id}:")
-#                 print("\n".join(f">> {line}" for line in stderr.split("\n")))
+def verify_w_testcase(s: session_t) -> None:
 
-#     return testcase.compiler_warnings
+    # CLgen-specific analysis. We can omit these checks for CLSmith, as they
+    # will always pass.
+    if tables.name == "CLgen":
+        if testcase.contains_floats == None:
+            testcase.contains_floats = "float" in testcase.program.src
 
+        if testcase.contains_floats:
+            print(f"testcase {testcase.id}: contains floats")
+            return fail()
 
-# def verify_w_testcase(session: session_t, tables: Tableset, testcase) -> None:
-#     """
-#     Verify that a testcase is sensible.
+        if testcase_raises_compiler_warnings(session, tables, testcase):
+            print(f"testcase {testcase.id}: redflag compiler warnings")
+            return fail()
 
-#     On first run, this is time consuming, though results are cached for later
-#     re-use.
-#     """
+        for arg in cldrive.extract_args(testcase.program.src):
+            if arg.is_vector:
+                # An error in my implementation of vector types:
+                print(f"testcase {testcase.id}: contains vector types")
+                return fail()
 
-#     def fail():
-#         ids_to_update = [
-#             x[0] for x in
-#             s.query(Result.id)\
-#                 .join(Classification)\
-#                 .filter(Result.testcase_id == testcase.id,
-#                         Classification.classification == Classifications.["w"]).all()
-#         ]
-#         n = len(ids_to_update)
-#         assert n > 0
-#         ids_str = ",".join(str(x) for x in ids_to_update)
-#         print(f"retracting w-classification on {n} results: {ids_str}")
-#         s.query(Classification)\
-#             .filter(Classification.id.in_(ids_to_update))\
-#             .delete(synchronize_session=False)
+        # Run GPUverify on kernel
+        if testcase.gpuverified == None:
+            try:
+                clgen.gpuverify(testcase.program.src, ["--local_size=64", "--num_groups=128"])
+                testcase.gpuverified = 1
+            except clgen.GPUVerifyException:
+                testcase.gpuverified = 0
 
-#     # CLgen-specific analysis. We can omit these checks for CLSmith, as they
-#     # will always pass.
-#     if tables.name == "CLgen":
-#         if testcase.contains_floats == None:
-#             testcase.contains_floats = "float" in testcase.program.src
+        if not testcase.gpuverified:
+            print(f"testcase {testcase.id}: failed GPUVerify check")
+            return fail()
 
-#         if testcase.contains_floats:
-#             print(f"testcase {testcase.id}: contains floats")
-#             return fail()
-
-#         if testcase_raises_compiler_warnings(session, tables, testcase):
-#             print(f"testcase {testcase.id}: redflag compiler warnings")
-#             return fail()
-
-#         for arg in cldrive.extract_args(testcase.program.src):
-#             if arg.is_vector:
-#                 # An error in my implementation of vector types:
-#                 print(f"testcase {testcase.id}: contains vector types")
-#                 return fail()
-
-#         # Run GPUverify on kernel
-#         if testcase.gpuverified == None:
-#             try:
-#                 clgen.gpuverify(testcase.program.src, ["--local_size=64", "--num_groups=128"])
-#                 testcase.gpuverified = 1
-#             except clgen.GPUVerifyException:
-#                 testcase.gpuverified = 0
-
-#         if not testcase.gpuverified:
-#             print(f"testcase {testcase.id}: failed GPUVerify check")
-#             return fail()
-
-#     # Check that program runs with Oclgrind without error:
-#     if not oclgrind.verify_testcase(session, tables, testcase):
-#         print(f"testcase {testcase.id}: failed OCLgrind verification")
-#         return fail()
+    # Check that program runs with Oclgrind without error:
+    if not oclgrind.verify_testcase(session, tables, testcase):
+        print(f"testcase {testcase.id}: failed OCLgrind verification")
+        return fail()
 
 
 # def verify_optimization_sensitive(session: session_t, tables: Tableset, result) -> None:
 #     """
-#     Check if a wrong-code result is optimization-sensitive, and ignore it
-#     if not.
+#     Check if an anomylous wrong output result is optimization-sensitive, and
+#     ignore it if not.
 #     """
 #     params = result.testcase.params
 #     complement_params_id = s.query(tables.params.id)\
@@ -236,40 +143,40 @@ AND stdout_id <> maj_stdout_id
 
 #     if q:
 #         complement_id, complement_classification = q
-#         if complement_classification == Classifications.["w"]:
-#             print(f"retracting w-classification on 2 {tables.name} results {{{result.id},{complement_id}}} - optimization insensitive")
+#         if complement_classification == Classifications.AWO:
+#             print(f"retracting w-classification on 2 results {{{result.id},{complement_id}}} - optimization insensitive")
 #             s.query(Classification)\
 #                 .filter(Classification.id.in_([result.id, complement_id]))\
 #                 .delete(synchronize_session=False)
 #     else:
-#         print(f"no complement result for {tables.name} result {result.id}")
+#         print(f"no complement result for result {result.id}")
 
 
-# def prune_w_classifications(session: session_t, tables: Tableset) -> None:
+def prune_w_classifications(s: session_t) -> None:
+    print(f"Verifying w-classified testcases ...", file=sys.stderr)
+    q = s.query(Result.testcase_id)\
+        .join(Classification)\
+        .filter(Classification.classification == Classifications.AWO)\
+        .distinct()
+    testcases_to_verify = s.query(Testcase)\
+        .filter(Testcase.id.in_(q))\
+        .distinct()\
+        .all()
 
-#     print(f"Verifying {tables.name} w-classified testcases ...", file=sys.stderr)
-#     q = s.query(Result.testcase_id)\
-#             .join(Classification)\
-#             .filter(Classification.classification == Classifications.["w"])\
-#             .distinct()
-#     testcases_to_verify = s.query(Testcase)\
-#             .filter(Testcase.id.in_(q))\
-#             .distinct()\
-#             .all()
-
-#     for testcase in ProgressBar()(testcases_to_verify):
-#         verify_w_testcase(session, tables, testcase)
-
-#     # print(f"Verifying {tables.name} w-classified optimization sensitivity ...", file=sys.stderr)
-#     # results_to_verify = s.query(Result)\
-#     #         .join(Classification)\
-#     #         .filter(Classification.classification == Classifications.["w"])\
-#     #         .all()
-
-#     # for result in ProgressBar()(results_to_verify):
-#     #     verify_optimization_sensitive(session, tables, result)
-
-#     # TODO: Do any of the other results for this testcase crash?
+    for testcase in ProgressBar()(testcases_to_verify):
+        if not testcase.verify_awo(s):
+            q = s.query(Result.id)\
+                .join(Classification)\
+                .filter(Result.testcase_id == testcase.id,
+                        Classification.classification == Classifications.AWO)
+            ids_to_update = [x[0] for x in q.all()]
+            n = len(ids_to_update)
+            assert n > 0
+            ids_str = ",".join(str(x) for x in ids_to_update)
+            print(f"retracting awo-classification on {n} results: {ids_str}")
+            s.query(Classification)\
+                .filter(Classification.id.in_(ids_to_update))\
+                .delete(synchronize_session=False)
 
 
 # def verify_opencl_version(session: session_t, tables: Tableset, testcase) -> None:
@@ -304,7 +211,7 @@ AND stdout_id <> maj_stdout_id
 #             .join(Classification)\
 #             .filter(Result.testcase_id == testcase.id,
 #                     ~Result.testbed_id.in_(opencl_2_0_testbeds),
-#                     Classification.classification == Classifications.BF).all()
+#                     Classification.classification == Classifications.ABF).all()
 #     ]
 #     n = len(ids_to_update)
 #     if n:
@@ -321,12 +228,12 @@ AND stdout_id <> maj_stdout_id
 #         ids_to_delete = [x[0] for x in s.query(Result.id)\
 #             .join(Classification)\
 #             .join(tables.stderrs)\
-#             .filter(Classification.classification == Classifications.BF,
+#             .filter(Classification.classification == Classifications.ABF,
 #                     tables.stderrs.stderr.like(f"%{like}%"))]
 
 #         n = len(ids_to_delete)
 #         if n:
-#             print(f"retracting {n} bf-classified {tables.name} results with msg {like[:30]}")
+#             print(f"retracting {n} bf-classified results with msg {like[:30]}")
 #             s.query(Classification)\
 #                 .filter(Classification.id.in_(ids_to_delete))\
 #                 .delete(synchronize_session=False)
@@ -348,7 +255,7 @@ AND stdout_id <> maj_stdout_id
 #     q = s.query(Result.testcase_id)\
 #         .join(Classification)\
 #         .join(Testbed)\
-#         .filter(Classification.classification == Classifications.BF,
+#         .filter(Classification.classification == Classifications.ABF,
 #                 Testbed.opencl == "1.2")\
 #         .distinct()
 #     testcases_to_verify = s.query(Testcase)\
@@ -356,7 +263,7 @@ AND stdout_id <> maj_stdout_id
 #         .distinct()\
 #         .all()
 
-#     print(f"Verifying {tables.name} bf-classified testcases ...", file=sys.stderr)
+#     print(f"Verifying bf-classified testcases ...", file=sys.stderr)
 #     for testcase in ProgressBar()(testcases_to_verify):
 #         verify_opencl_version(session, tables, testcase)
 
@@ -374,7 +281,7 @@ AND stdout_id <> maj_stdout_id
 #             s.query(Result.id)\
 #                 .join(Classification)\
 #                 .filter(Result.testcase_id == testcase.id,
-#                         Classification.classification == Classifications.["c"])\
+#                         Classification.classification == Classifications.ARC)\
 #                 .all()
 #         ]
 #         n = len(ids_to_update)
@@ -416,12 +323,12 @@ AND stdout_id <> maj_stdout_id
 #         ids_to_delete = [x[0] for x in s.query(Result.id)\
 #             .join(Classification)\
 #             .join(tables.stderrs)\
-#             .filter(Classification.classification == Classifications.["c"],
+#             .filter(Classification.classification == Classifications.ARC,
 #                     tables.stderrs.stderr.like(f"%{like}%"))]
 
 #         n = len(ids_to_delete)
 #         if n:
-#             print(f"retracting {n} c-classified {tables.name} results with msg {like[:30]}")
+#             print(f"retracting {n} c-classified results with msg {like[:30]}")
 #             s.query(Classification)\
 #                 .filter(Classification.id.in_(ids_to_delete))\
 #                 .delete(synchronize_session=False)
@@ -431,14 +338,14 @@ AND stdout_id <> maj_stdout_id
 #     # Verify testcases
 #     q = s.query(Result.testcase_id)\
 #             .join(Classification)\
-#             .filter(Classification.classification == Classifications.["c"])\
+#             .filter(Classification.classification == Classifications.ARC)\
 #             .distinct()
 #     testcases_to_verify = s.query(Testcase)\
 #             .filter(Testcase.id.in_(q))\
 #             .distinct()\
 #             .all()
 
-#     print(f"Verifying {tables.name} c-classified testcases ...", file=sys.stderr)
+#     print(f"Verifying c-classified testcases ...", file=sys.stderr)
 #     for testcase in ProgressBar()(testcases_to_verify):
 #         verify_c_testcase(session, tables, testcase)
 
@@ -456,7 +363,7 @@ if __name__ == "__main__":
     print("connected to", db.init(db_hostname), file=sys.stderr)
 
     with Session(commit=True) as s:
-        set_classifications(s)
-        # prune_w_classifications(s)
+        # set_classifications(s)
+        prune_w_classifications(s)
         # prune_bf_classifications(s)
         # prune_c_classifications(s)
