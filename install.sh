@@ -623,7 +623,7 @@ install_omnifocus() {
 
 install_server_scripts() {
     case "$hostname" in
-      florence | diana | mary | plod)
+      florence | diana | ryangosling | mary | plod)
         # server scripts
         symlink "$dotfiles/servers/mary" ~/.local/bin/mary
         symlink "$dotfiles/servers/diana" ~/.local/bin/diana

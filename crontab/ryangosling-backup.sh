@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Backup mary server.
+# Backup server.
 #
 # ****************************************************************************
 # *                               Configuration                              *
@@ -32,7 +32,7 @@ else
     mkdir -pv ~/.local/etc
     crontab -l > $CRONTAB_BACKUP
 
-    sudo $RM_DSSTORE /home/maria
+    sudo $RM_DSSTORE /home/cec
 
     # create log directory, and delete old logs
     sudo mkdir -pv "$EMU_LOGDIR"
