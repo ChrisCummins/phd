@@ -161,9 +161,54 @@ class DsmithProgramMeta(Base):
     __tablename__ = "dsmith_program_metas"
     id = sql.Column(id_t, sql.ForeignKey("programs.id"), primary_key=True)
     contains_floats = sql.Column(sql.Boolean)
+    vector_inputs = sql.Column(sql.Boolean)
     compiler_warnings = sql.Column(sql.Boolean)
 
     program = sql.orm.relationship("Program")
+
+    def get_contains_floats(self, s: session_t) -> bool:
+        if self.contains_floats == None:
+            q = s.query(sql.sql.func.count(Program.id))\
+                .filter(Program.id == self.id,
+                        (Program.src.like("%float%") | Program.src.like("%double%")))\
+                .scalar()
+            self.contains_floats = True if q else False
+
+        return self.contains_floats
+
+    def get_vector_inputs(self, s: session_t) -> bool:
+        if self.vector_inputs == None:
+            for arg in cldrive.extract_args(self.program.src):
+                if arg.is_vector:
+                    self.vector_inputs = True
+                    break
+
+        return self.vector_inputs
+
+    def get_compiler_warnings(self, s: session_t) -> bool:
+        """ check for red-flag compiler warnings """
+        if self.compiler_warnings == None:
+            q = s.query(sql.sql.func.count(Stderr.id))\
+                .join(Result)\
+                .filter(
+                    Result.testcase_id == self.id,
+                    (Stderr.stderr.like("%incompatible pointer to integer conversion%") |
+                     Stderr.stderr.like("%comparison between pointer and integer%") |
+                     Stderr.stderr.like("%warning: incompatible%") |
+                     Stderr.stderr.like("%warning: division by zero is undefined%") |
+                     Stderr.stderr.like("%warning: comparison of distinct pointer types%") |
+                     Stderr.stderr.like("%is past the end of the array%") |
+                     Stderr.stderr.like("%warning: comparison between pointer and%") |
+                     Stderr.stderr.like("%warning: array index%") |
+                     Stderr.stderr.like("%warning: implicit conversion from%") |
+                     Stderr.stderr.like("%array index -1 is before the beginning of the array%") |
+                     Stderr.stderr.like("%incompatible pointer%") |
+                     Stderr.stderr.like("%incompatible integer to pointer %"))
+                )\
+                .scalar()
+            self.compiler_warnings = True if q else False
+
+        return self.compiler_warnings
 
 
 # Parameters ##################################################################
@@ -286,6 +331,25 @@ class Testcase(Base):
         """
         return self.meta(s).verify_awo(s)
 
+    def retract_classifications(self, s: session_t,
+                                classification: "Classifications.value_t") -> None:
+        """
+        Remove classifications for the testcase.
+        """
+        q = s.query(Result.id)\
+            .join(Classification)\
+            .filter(Result.testcase_id == self.id,
+                    Classification.classification == classification)
+        ids_to_update = [x[0] for x in q.all()]
+        n = len(ids_to_update)
+        assert n > 0
+        ids_str = ",".join(str(x) for x in ids_to_update)
+        print("retracting", Classifications.to_str(classification),
+              f"classifications on {n} results: {ids_str}")
+        s.query(Classification)\
+            .filter(Classification.id.in_(ids_to_update))\
+            .delete(synchronize_session=False)
+
 
 class ClsmithTestcaseMeta(Base):
     id_t = Testcase.id_t
@@ -331,55 +395,19 @@ class DsmithTestcaseMeta(Base):
     id = sql.Column(id_t, sql.ForeignKey("testcases.id"), primary_key=True)
     gpuverified = sql.Column(sql.Boolean)
     oclverified = sql.Column(sql.Boolean)
-    contains_floats = sql.Column(sql.Boolean)
-    compiler_warnings = sql.Column(sql.Boolean)
 
     testcase = sql.orm.relationship("Testcase", back_populates="dsmith_meta")
 
-    def get_contains_floats(self, s: session_t) -> bool:
-        if self.contains_floats == None:
-            self.contains_floats = False
-            q = s.query(sql.sql.func.count(Program.id))\
-                .join(Testcase)\
-                .filter(Testcase.id == self.id,
-                        (Program.src.like("%float%") | Program.src.like("%double%")))\
-                .scalar()
-            self.contains_floats = True if q else False
+    def get_program_meta(self, s: session_t) -> DsmithProgramMeta:
+        program_meta = s.query(DsmithProgramMeta)\
+            .filter(DsmithProgramMeta.id == self.testcase.program_id)\
+            .scalar()
+        if not program_meta:
+            program_meta = get_or_create(s, DsmithProgramMeta,
+                                         id=self.testcase.program_id)
+            s.flush()
 
-        return self.contains_floats
-
-    def contains_vector_inputs(self, s: session_t) -> bool:
-        for arg in cldrive.extract_args(testcase.program.src):
-            if arg.is_vector:
-                # An error in my implementation of vector types:
-                print(f"testcase {testcase.id}: contains vector types")
-                return True
-        return False
-
-    def get_compiler_warnings(self, s: session_t) -> bool:
-        """ check for red-flag compiler warnings """
-        if self.compiler_warnings == None:
-            q = s.query(sql.sql.func.count(Stderr.id))\
-                .join(Result)\
-                .filter(
-                    Result.testcase_id == self.id,
-                    (Stderr.stderr.like("%incompatible pointer to integer conversion%") |
-                     Stderr.stderr.like("%comparison between pointer and integer%") |
-                     Stderr.stderr.like("%warning: incompatible%") |
-                     Stderr.stderr.like("%warning: division by zero is undefined%") |
-                     Stderr.stderr.like("%warning: comparison of distinct pointer types%") |
-                     Stderr.stderr.like("%is past the end of the array%") |
-                     Stderr.stderr.like("%warning: comparison between pointer and%") |
-                     Stderr.stderr.like("%warning: array index%") |
-                     Stderr.stderr.like("%warning: implicit conversion from%") |
-                     Stderr.stderr.like("%array index -1 is before the beginning of the array%") |
-                     Stderr.stderr.like("%incompatible pointer%") |
-                     Stderr.stderr.like("%incompatible integer to pointer %"))
-                )\
-                .scalar()
-            self.compiler_warnings = True if q else False
-
-        return self.compiler_warnings
+        return program_meta
 
     def get_gpuverified(self, s: session_t) -> bool:
         if self.gpuverified == None:
@@ -415,17 +443,22 @@ class DsmithTestcaseMeta(Base):
         return self.oclverified
 
     def verify_arc(self, s: session_t):
-        if self.get_compiler_warnings(s):
+        program_meta = self.get_program_meta(s)
+
+        if program_meta.get_compiler_warnings(s):
             return False
         if not self.get_oclverified(s):
             return False
         return True
 
     def verify_awo(self, s: session_t):
-        # TODO: prune vector types
-        if self.get_contains_floats(s):
+        program_meta = self.get_program_meta(s)
+
+        if program_meta.get_contains_floats(s):
             return False
-        if self.get_compiler_warnings(s):
+        if program_meta.get_vector_inputs(s):
+            return False
+        if program_meta.get_compiler_warnings(s):
             return False
         if not self.get_gpuverified(s):
             return False
