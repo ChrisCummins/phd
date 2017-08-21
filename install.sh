@@ -632,9 +632,11 @@ install_server_scripts() {
 
     if [[ "$hostname" == "diana" ]]; then
         symlink "$dotfiles/servers/ryan_gosling_have_my_photos.sh" ~/.local/bin/ryan_gosling_have_my_photos
+        symlink "$dotfiles/servers/ryan_gosling_have_my_photos.sh" ~/.local/bin/ryan_gosling_have_my_photos
     fi
 
     if [[ "$hostname" == "florence" ]]; then
+        symlink "$dotfiles/servers/ryan_gosling_have_my_photos.sh" ~/.local/bin/ryan_gosling_have_my_photos
         symlink "$dotfiles/servers/ryan_gosling_have_my_music.sh" ~/.local/bin/ryan_gosling_have_my_music
     fi
 }

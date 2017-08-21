@@ -6,23 +6,23 @@ test -z "$1" || { usage; exit 1; }
 
 set -eu
 
-if [[ ! -d /Volumes/Photo\ Library/ ]]; then
-    echo "fatal: '/Volumes/Photo Library' not mounted" >&2
+src="/Volumes/Orange/Photo Library/"
+dst="/Volumes/Photo Library/"
+
+if [[ ! -d "$src" ]]; then
+    echo "fatal: '$src' not found" >&2
+    exit 1
+fi
+
+if [[ ! -d "$dst" ]]; then
+    echo "fatal: '$dst' not found" >&2
     exit 1
 fi
 
 set -x
 
-# transfer photo library
-rm-dsstore /Volumes/Data/Photo\ Library/
-rsync -avh --delete \
-        /Volumes/Data/Photo\ Library/ /Volumes/Photo\ Library/ \
-        --exclude "/Lightroom/*"
-
-# transfer Lightroom catalogue
-rm-dsstore /Users/cec/Dropbox/Pictures/Lightroom/
-rsync -avh /Users/cec/Dropbox/Pictures/Lightroom/ /Volumes/Photo\ Library/Lightroom/ \
---exclude "/Backups" \
-        --exclude "/Mobile Downloads.lrdata" \
-        --exclude "/Photo Library Previews.lrdata" \
-        --exclude "/Photo Library Smart Previews.lrdata"
+rm-dsstore "$src"
+rsync -avh --delete "$src" "$dst" \
+    --exclude "/Lightroom/Mobile Downloads.lrdata" \
+    --exclude "/Lightroom/Photo Library Previews.lrdata" \
+    --exclude "/Lightroom/Photo Library Smart Previews.lrdata"
