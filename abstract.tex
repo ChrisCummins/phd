@@ -6,7 +6,7 @@
 Compilers should produce correct code for valid inputs, and meaningful errors for invalid inputs. Failure to do so can hinder software development or even cause catastrophic runtime errors. Still, properly testing compilers is hard. Manually assembled test suites cannot cover the enormous range of possible inputs. %
 %
 % Random program generators come close to it but they require extensive development effort for every language supported by the compiler, and often leave parts of the language space untested. A better way for testing compilers is needed.
-% 
+%
 Random program generation --- fuzzing --- is an effective technique for discovering bugs in compilers but successful program generators require extensive development effort for every language supported by the compiler, and often leave parts of the language space untested. A better way for testing compilers is needed.
 
 % A novel approach for the rapid development of broad, undirected fuzzers
@@ -18,7 +18,7 @@ We apply our approach to the OpenCL programming language, automatically exposing
 %
 submitting \factcheck{67} bug reports.
 %
-Our test cases are on average two orders of magnitude smaller than the state-of-the-art, require $3.03\times$ less time to generate and evaluate, and expose bugs which have not been found using existing techniques. Our random program generator, comprising only \factcheck{500} lines of code, took 14 hours to train for OpenCL versus the state-of-the-art taking 9 man months to port from a generator for C and 50,000 lines of code.
+Our test cases are on average two orders of magnitude smaller than the state-of-the-art, require $3.03\times$ less time to generate and evaluate, and expose bugs which have not been found using existing techniques. Our random program generator, comprising only \factcheck{500} lines of code, took 12 hours to train for OpenCL versus the state-of-the-art taking 9 man months to port from a generator for C and 50,000 lines of code.
 % find CLSmith/src -name '*.cpp' -o '*.h' | xargs wc -l  # 49775
 
 %Compilers should produce correct code for valid inputs, and produce meaningful errors when inputs are invalid. Fixed test-suites and formal verification techniques cannot ensure these properties over the enormous range of possible inputs and complexity of optimizing compilers, leading to the development of random program generators that attempt to find compiler bugs by comparing the outputs of programs across compilers.
