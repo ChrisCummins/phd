@@ -1,0 +1,44 @@
+\chapter{Background}
+
+Notation: $\odot$ point-wise multiplication of tensors.
+
+\section{Neural Networks}
+
+\subsection{Long Short-Term Memory}
+
+LSTM variants review~\cite{Greff2015}.
+
+$\bm{x}^t$ is the input vector at time $t$; $\bm{W}$ are input weight matrices; $\bm{R}$ are recurrent weight matrices; $\bm{p}$ are peephole weight vectors; $\bm{b}$ are bias vectors; functions $g$, $h$, and $\sigma$ are point-wise nonlinear activation functions.
+
+block input:
+\[ \bm{z}^{t} = g \left( \bm{W}_z \bm{x}^t + \bm{R}_z \bm{y}^{t - 1} + \bm{b}_z \right) \]
+
+input gate:
+\[ \bm{i}^{t} = \sigma \left( \bm{W}_i \bm{x}^t + \bm{R}_i \bm{y}^{t-1} + \bm{p}_i \odot c^{t-1} + \bm{b}_i \right) \]
+
+forget gate:
+\[ \bm{f}^{t} = \sigma \left( \bm{W}_f \bm{x}^t + \bm{R}_f \bm{y}^{t-1} + \bm{p}_f \odot c^{t-1} + \bm{b}_f \right) \]
+
+cell state:
+\[ \bm{c}^t = \bm{i}^t \odot \bm{z}^t + \bm{f}^t \odot \bm{c}^{t-1} \]
+
+output gate:
+\[ \bm{o}^{t} = \sigma \left( \bm{W}_i \bm{x}^t + \bm{R}_o \bm{y}^{t - 1} + \bm{p}_o \odot c^{t-1} + \bm{b}_o \right) \]
+
+block output:
+\[ \bm{y}^t = \bm{o}^t \odot h(\bm{c}^t) \]
+
+Number of params = \todo{\ldots}
+
+
+\subsection{Generative Adversarial Networks}
+
+The Generative Adversarial Network (GAN) is a means to estimate a generative model~\cite{Goodfellow2014}. It uses an adversarial process in which two models are simultaneously trained: a generator model $G$ that captures the data distribution, and a discriminative model $D$ that estimates the probability that a sample came from the training data rather than $G$. The training procedure for $G$ is to maximize the probability of $D$ making a mistake.
+
+If both models are neural networks: learn a generator's distribution $p_g$ over data $\bm{x}$. Define a prior on input noise variables $p_z(\bm{z})$. Generator $G(\bm{z}; \Theta_g)$, using parameters $\Theta_g$. Discriminator $D(\bm{x}; \Theta_d)$ outputs a scalar, the probability that $\bm{x}$ came from the data rather than $p_g$. 
+
+Simultaneously train $D$ to maximize the probability of assigning the correct label to both training examples and samples from $G$, and train $G$ to minimize $\log (1 - D(G(\bm{z})))$. $D$ and $G$ play the two-player minimax game with value function $V(G, D)$:
+
+\[ \min_G \max_D V(D, G) = \mathbb{E}_{\bm{x} \sim  p_{data}(\bm{x})} [ \log D(\bm{x}) ] + \mathbb{E}_{\bm{z} \sim p_z(\bm{z})} [ \log (1 - D(G(\bm{z}))) ] \]
+
+Challenge: there may not be sufficient gradient for $G$ to learn well. Early in learning, when $G$ is poor, $D$ can reject samples with high confidence because they are clearly different from the training data.
