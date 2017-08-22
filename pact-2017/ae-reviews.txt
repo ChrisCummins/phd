@@ -1,0 +1,146 @@
+----------------------- REVIEW 1 ---------------------
+PAPER: 2
+TITLE: End-to-end Deep Learning of Optimization Heuristics
+AUTHORS: Chris Cummins, Pavlos Petoumenos, Zheng Wang and Hugh Leather
+
+Overall score: 0 (met expectations)
+
+----------- Overall score -----------
+# Artifacts publicly available (if applicable): 0
+
+
+# Package complete: 0
+The package has all the codes for conducting the experiments in the paper.
+
+
+# Well documented: 0
+The artifact description is clear.
+It will be better if the authors can provide more detailed descriptions of
+software dependences and what the two scripts "bootstrap.sh" and "configure" do.
+
+
+# Exercisable: 0
+There are some small problems for installing the package on a computer without
+GPU. After the problems fixed, the programs get run successfully.
+
+
+# Consistent: 0
+The artifact is relevant to the associated paper and its main results.
+
+
+# Artifacts functional: 0
+The artifact can be used to perform the experiments in the paper.
+
+
+# Artifacts customizable and reusable: 0
+The Jupyter notebooks are easy to interact with.
+
+
+# Results replicated (if applicable): 0
+Most of the results are consistent to the paper, except:
+the accuracy for Rodinia in Figure 6a is different from what the artifact
+generated where Grewe's method shows higher accuracy.
+
+
+# Results reproduced (if applicable): 0
+The results are reproducible.
+
+
+################################################################
+
+# Overall score: 0
+
+----------------------- REVIEW 2 ---------------------
+PAPER: 2
+TITLE: End-to-end Deep Learning of Optimization Heuristics
+AUTHORS: Chris Cummins, Pavlos Petoumenos, Zheng Wang and Hugh Leather
+
+Overall score: 1 (exceeded expectations)
+
+----------- Overall score -----------
+# Artifacts publicly available (if applicable): 1
+
+I can get the code and the data from GitHub. There is no problem to obtain all
+artifacts related to this paper.
+
+
+# Package complete: 1
+
+All code and data are in the package from Github. The authors also provide a
+script to get the prerequisites for building the code. However, I need to
+install some Linux packages to build and execute the program on the CentOS Linux
+machine, because the provided script can use only on the Ubuntu Linux machine.
+
+
+# Well documented: 1
+
+The authors provide a document file. The document is enough to execute and
+evaluate their code.
+
+
+# Exercisable: -1
+
+The program run on the Python virtual environment. The provided code contains
+all scripts to build and execute the program. The evaluation is automatically
+performed by the included scripts.
+
+There are two cases for the evaluation. The authors provide a cached data to
+avoid DNN training that takes a long time. I don’t have any problem for the both
+case A and case B with the provided cached data.
+
+For case B evaluation without the cached data, however, the errors that are
+“OpenBLAS blas_thread_init: pthread_create: Resource temporarily unavailable
+OpenBLAS blas_thread_init: RLIMIT_NPROC 4096 current, 2062700 max” occur. I
+think a lot of threads are created for DNN training by the case B execution.
+
+
+# Consistent: 1
+
+The artifacts reproduce most of all the experimental results in the paper. The
+reproduced results are same in the paper.
+
+
+# Artifacts functional: 0
+
+The scripts in the provided package are very helpful to install and evaluate the
+program. The scripts automatically perform all installation and evaluation.
+Moreover, the scripts generate graphs in the paper. The only thing I was
+uncomfortable with it is the script to install the prerequisites is only support
+Ubuntu. However, it is not a problem if users use Ubuntu OS.
+
+
+# Artifacts customizable and reusable: 0
+
+I evaluate the program using a machine with a NVIDIA P100 GPU and two Intel Xeon
+CPUs. There is no problem for the program to run on the machine. However, the
+data set in the package only supports some platforms. (AMD Tahiti 7970 and
+NVIDIA GTX 970 for case A and AMD Radeon HD 5900, AMD Tahiti 7970, NVIDIA GTX
+480, and NVIDIA Tesla K20c for case B) If users want to get the result of the
+other platforms, the other data set are necessary.
+
+
+# Results replicated (if applicable): 1
+
+I can get all experimental results such as accuracy and speedup in the paper
+with the provided artifacts. The results are same in the paper.
+
+
+# Results reproduced (if applicable): 1
+
+The provided code and scripts can reproduce same results in the paper.
+
+
+################################################################
+
+# Overall score: 1
+
+The artifacts and results match authors’ description. It can reproduce all of
+the experimental results in the paper. The reproduced results are same the
+results in the paper.
+
+The authors provide the script to help installation and evaluation. I easily
+installed and evaluated the provided artifact using the scripts.
+
+Is it possible, the authors provide a document or a script to get the
+experimental results for another platform like NVIDIA GTX 1080? It is wonderful
+if this program can get the results for the other platforms.

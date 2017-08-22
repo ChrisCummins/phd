@@ -1,0 +1,76 @@
+We thank the reviewers for the positive feedback and insightful comments.
+
+# Review #47A
+
+A.1. Yes, "complete automation" is an overstatement. A tokenizer and driver
+must be made for each language, but otherwise it is language agnostic.
+Auxiliary inputs must be provided for any runtime feature, but compile time
+features are automatic. We will reword.
+
+A.2. Case Study A is binary, but Case Study B selects from one-of-six choices.
+We will clarify.
+
+A.3. We believe DeepTune is generally applicable. We are currently porting
+DeepTune for C and examining other heuristics: loop unrolling and compiler
+flags.
+
+# Review #47B
+
+B.1. Omitting auxiliary inputs for Case Study A causes a notable drop in
+accuracy, although performance remains net-positive. The auxiliary inputs are
+important for making good decisions. We will add numbers in the paper.
+
+B.2. Learning a cross-device model for Case Study B using auxiliary inputs is a
+great suggestion, thanks. We will look into this.
+
+# Review #76C
+
+C.1. We only used 17 benchmarks for Case Study B since we replicated the
+experimental setup of the paper that we compare against. We will make this
+clear in the paper.
+
+C.2. We chose conservative values for DeepTune's parameters, based on values
+commonly used in other ML domains, e.g. natural language processing. It did
+well without fine tuning. We will clarify in the paper. We are examining if
+tuning provides improved performance and/or can reduce model size.
+
+C.3. For Case Study A, we randomly batched kernels across programs and
+benchmark suites. For Case Study B, we performed leave-one-out over each
+kernel. We will clarify.
+
+C.4. Comparing on 2 similar code variants is a very interesting idea and would
+help explore the capabilities of the system. We believe we have suitable
+results already from Case Study A. We will discuss in the paper, thank you for
+the suggestion.
+
+C.5. Good catch, thanks. We will make those minor corrections.
+
+# Review #76D
+
+D.1. Yes, the two problems are similar, both being on OpenCL kernels. We are
+currently porting DeepTune for C and examining other heuristics: loop unrolling
+and compiler flags. We do think, though, that the two problems we examine are
+different performance-wise in some important respects: the state-of-the-art for
+both use different features (static+dynamic vs. PCA over static), different
+model architectures (decision tree vs. neural network), and different
+approaches to classification (binary choice vs. cascading model).
+
+D.2. We will add a discussion on expected applicability and limitations.
+
+D.3. We think our approach is quite general; it is language agnostic and not
+tied to particular heuristics. To prove this we are currently porting DeepTune
+for C and examining other heuristics: loop unrolling and compiler flags. It is
+looking good, but we also have to implement prior state of the art to compare
+to and will sadly not be ready for this paper.
+
+# Review #47E
+
+E.1. Using geomean marginally reduces performance of both the state-of-the-art
+and DeepTune, though the relative trends and conclusions remain unchanged. We
+will add numbers in the paper.
+
+E.2. We will add a legend to Figure 6a.
+
+E.3. We will add a discussion on applying DeepTune to other domains, and our
+public release of the DeepTune code will include documentation on
+extensibility. See also response D.3.

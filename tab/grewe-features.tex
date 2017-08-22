@@ -1,0 +1,42 @@
+\begin{table}
+  \rowcolors{2}{white}{gray!25}
+  \scriptsize%
+  \centering%
+  \subfloat[Feature values]{
+    \begin{tabular}{l L{4.5cm}}
+      \toprule
+      \textbf{Name} & \textbf{Description} \\
+      \midrule
+      \texttt{F1: data size/(comp+mem)} & commun.-computation ratio \\
+      \texttt{F2: coalesced/mem} & \% coalesced memory accesses \\
+      \texttt{F3: (localmem/mem)$\times$wgsize} & ratio local to global mem accesses \\
+      \rowcolor{gray!25}
+      & $\times$ \#.\ work-items \\
+      \rowcolor{white}
+      \texttt{F4: comp/mem} & computation-mem ratio\\
+      \bottomrule
+    \end{tabular}%
+    \label{tab:grewe-features-final}%
+  }\\ %
+  \subfloat[Values used in feature computation]{%
+    \rowcolors{2}{white}{gray!25}
+    \begin{tabular}{l c l}
+      \toprule
+      \textbf{Name} & \textbf{Type} & \textbf{Description} \\
+      \midrule
+      \texttt{comp} & static & \#.\ compute operations \\
+      \texttt{mem} & static & \#.\ accesses to global memory \\
+      \texttt{localmem} & static & \#.\ accesses to local memory \\
+      \texttt{coalesced} & static & \#.\ coalesced memory accesses \\
+      \texttt{data size} & dynamic & size of data transfers \\
+      \texttt{workgroup size} & dynamic & \#.\ work-items per kernel \\
+      \bottomrule
+    \end{tabular}%
+    \label{tab:grewe-features-raw}%
+  }
+  \caption{%
+    Features used by Grewe \emph{et al.\ }to predict heterogeneous device
+    mappings for OpenCL kernels.%
+  } %
+  \label{tab:grewe-features} %
+\end{table}

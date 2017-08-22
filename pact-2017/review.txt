@@ -1,0 +1,234 @@
+===========================================================================
+                           PACT 2017 Review #47A
+---------------------------------------------------------------------------
+      Paper #47: End-to-end Deep Learning of Optimization Heuristics
+---------------------------------------------------------------------------
+
+                      Overall merit: 4. Accept
+                 Reviewer expertise: 3. Knowledgeable
+
+                         ===== Paper summary =====
+
+With advances in machine learning, one can expect more powerful or more
+automated optimizations. This paper focuses on use of deep learning for
+``automating''  feature extraction and training.
+
+                      ===== Comments for author =====
+
+This is a very timely and well-written study. Nevertheless, a few concerns.
+First, the authors seem to overstate the claim of complete automation, since
+they do need a specific language model, and can choose auxillary inputs
+(essentially features they did not obtain automatically).
+
+Second, the work has been applied so far to two binary optimization problems.
+Most optimization problems for compilers are more complex than that. Authors
+should consider adding another case study that does not involve binary
+decisions.
+
+===========================================================================
+                           PACT 2017 Review #47B
+---------------------------------------------------------------------------
+      Paper #47: End-to-end Deep Learning of Optimization Heuristics
+---------------------------------------------------------------------------
+
+                      Overall merit: 5. Strong accept
+                 Reviewer expertise: 3. Knowledgeable
+
+                         ===== Paper summary =====
+
+This paper proposes a deep learning framework DeepTune to automatically
+construct optimization heuristics. DeepTune takes raw code as inputs and
+outputs predicted heuristics. It has two main components: a language model and
+a heuristic model. The language model characterizes the code sequence. It
+performs code rewriting, encoding, embedding on the source code and uses a 2
+layer LSTM network to give a fixed length output vector. This vector, together
+with optional auxiliary inputs, are passed to the heuristic model. The
+heuristic model is a two layer fully connected neural network. It outputs the
+predicted optimization heuristic. The authors apply their framework to two
+tasks (predicting optimal mapping for heterogeneous parallelism and GPU thread
+coarsening factors) and show that DeepTune could give similar or better
+predicting results comparing to the baseline and the state of art predictive
+model.
+
+                      ===== Comments for author =====
+
+The framework presented in this paper is interesting and it can be very useful.
+Instead of manually selecting features as the state of art predictive models,
+DeepTune learns features automatically during the training. According to the
+experiment results, its performance is comparative or even better on most of
+the benchmarks compared to the state of art predictive model. That means it may
+be able to learn even better characterizing features while saving a lot of
+human work. The reviewer enjoys reading the set of techniques used in the paper
+for normalizing source code and deriving from the code the key features of the
+inputs through the Recurrent Neural Networks.
+
+Also, it is a good practice to use pre-trained model from other datasets or
+other tasks to initialize a model which has insufficient training data. For the
+second case study, 17 training examples are not enough to obtain a good
+training results given the neural network it uses. The authors choose to use
+the weights learned from the first case to initialize the LSTM part. In this
+way, they are able to improve the performance for some benchmarks. It makes
+DeepTune more promising when applying to other tasks other than the two
+described in this paper.
+
+Overall, the paper is well presented. It clearly describes the design of
+DeepTune and is easy to follow. I especially like the part where it visualizes
+the internal state of DeepTune when working on one benchmark. It helps people
+better understanding how DeepTune works. Also, it shows the output or learned
+activations of each components which make the predicting results more
+meaningful.
+
+One thing I would like to know is how much effect the optional auxiliary inputs
+have on the predicting results. When performing experiments, for example, on
+the second study case, I see you use 4 different GPUs. I wonder if you could
+use the GPU characteristics (GPU frequency, memory and driver) as auxiliary
+inputs? Instead of training 4 models for each of the GPUs separately, you only
+need to train 1 model and predict for different GPUs by changing the auxiliary
+input values. In this way, you could have more training examples for one model
+and features learned from different GPUs may be useful for each other. I wonder
+if this could help improving the performance of DeepTune.
+
+Overall, the paper makes some nice contributions. It is also very timely,
+opening the many possibilities for the rapidly advanced DNN techniques to
+benefit the field of program optimizations and high performance computing. With
+it being published, we could possibly see a lot of research that could get
+inspirations from it.
+
+===========================================================================
+                           PACT 2017 Review #47C
+---------------------------------------------------------------------------
+      Paper #47: End-to-end Deep Learning of Optimization Heuristics
+---------------------------------------------------------------------------
+
+                      Overall merit: 4. Accept
+                 Reviewer expertise: 3. Knowledgeable
+
+                         ===== Paper summary =====
+
+This paper presents a deep learning system for compiler optimization that
+directly uses the source code as the input feature. The system is applied to 2
+optimization problems on GPU-based heterogeneous systems, and the efficacy of
+the prediction is shown to be better than prior work that uses deep learning
+for the same problems. Further, the paper shows how learned models can be
+transferred and re-used across optimization problems.
+
+The approach taken in the paper is novel and interesting, and the experimental
+results are positive.
+
+                      ===== Comments for author =====
+
+- Why were more benchmarks/kernels not used in Case Study B?
+- Can you comment on the choice of your network architectures (number of
+  layers, number of neurons)? How did you end up choosing the configuration
+  used in the experiments?
+- How were the training examples batched (particularly for Case Study A)?
+  Batching similar examples (e.g. kernels from the same program, or programs
+  from the same benchmark suite) can potentially help training. Did you use a
+  specific strategy for this?
+- It would be good to see data on some targeted experiments to test the models
+  using variants of the same code, e.g. 2 code versions differing in only one
+  access being coalesced or not, or 2 code versions running on vastly different
+  input data sizes.
+
+Minor:
+- Figs 7 and 8: Can you fix the labels on the y-axis for slowdowns?
+- Fig 9(g): The predicted CF for NVIDIA GTX 480 should be 4?
+
+===========================================================================
+                           PACT 2017 Review #47D
+---------------------------------------------------------------------------
+      Paper #47: End-to-end Deep Learning of Optimization Heuristics
+---------------------------------------------------------------------------
+
+                      Overall merit: 4. Accept
+                 Reviewer expertise: 3. Knowledgeable
+
+                         ===== Paper summary =====
+
+Machine Learning has been shown in a number of recent studies to be effective
+in performance optimization.  A number of training sets are used in training a
+machine learning model, with key features (such as tile sizes, degree of
+unrolling, thread coarsening factors etc.) that are important, and the
+performance achieved for various combinations of values for those key features,
+are provided to train the model. The choice of appropriate features to train a
+Machine Learning model is crucial. Prior studies have required manual
+identification of features to be used for the machine learning model.
+
+In this paper, an automated approach called DeepTune is presented to machine
+learning for performance optimization. Instead of the previous practice of
+requiring manual identification of pertinent features, this paper uses a fully
+automated approach by using program code directly in the learning process. This
+is done by encoding source code as a sequence of integers for interpretation by
+neural networks, where each integer is an index into a predetermined vocabulary
+that includes various language keywords. Program variables are systematically
+rewritten before input to the ML system to match predetermined strings.
+
+The DeepTune system is evaluated on two optimization scenarios that have been
+previously explored using ML: 1) Heterogeneous system mapping: determine
+whether a given OpenCL program is better executed on a CPU or GPU, and 2)
+OpenCL Thread Coarsening Factor: automatically determine the optimal degree of
+thread coarsening for a given OpenCL program for execution on GPUs. The results
+obtained with these two use cases are extremely impressive: even better success
+rate in identifying the optimal choice than the previous ML models with
+manually identified features.
+
+Strengths:
+(+) Addresses important problem of automated development of ML models for
+    performance optimization
+(+) Very impressive experimental results for the two case studies
+
+Weakness:
+(-) The two problems addressed are quite similar in terms of factors that
+    affect performance. The scope of expected applicability and limitations
+    are not discussed.
+
+                      ===== Comments for author =====
+
+Question for Rebuttal:
+
+Besides these two case studies, where the key learning task is to relate
+performance to grid parameters, what other kinds of compiler/runtime
+optimization tasks can DeepTune accomplish?
+
+===========================================================================
+                           PACT 2017 Review #47E
+---------------------------------------------------------------------------
+      Paper #47: End-to-end Deep Learning of Optimization Heuristics
+---------------------------------------------------------------------------
+
+                      Overall merit: 4. Accept
+                 Reviewer expertise: 3. Knowledgeable
+
+                         ===== Paper summary =====
+
+This paper builds a predictive model (DeepTune) that is evaluated in two case
+studies: heterogeneous device mapping and GPU thread coarsening. DeepTune is
+deep neural networks based and compared to state-of-the-art predictive models.
+DeepTune eliminated the need for human experts to select features by taking
+source code of programs as input, encoding source code into sequences, and
+using its language model to utilize LSTM to automatically extract feature
+vectors for training. DeepTune outperforms existing approach by 16% for device
+(GPU/CPU) mapping and 12% improvement for predicting threads coarsening,
+without human engineering of feature selection.
+
+                      ===== Comments for author =====
+
+In general, the idea seems novel and the attempt to extract features
+automatically is valuable research and could be influential. The paper is well
+motivated, well organized, and presented clearly. The reviewer especially likes
+case study 2 by using trained parameters obtained in case study 1. The research
+into the inner workings of deep neural networks is appreciated.
+
+I just have a few questions/suggestions:
+
+1) In many predictive model papers, both arithmetic and geometric means are
+   reported. Is the paper still looking as good as just reporting arithmetic
+   average for Figure 6, 7, and 8?  Please also add geometric mean to these
+   figures
+
+2) Might be picky here but I prefer Figure 6a) also having legends.
+
+3) It would be better if the authors could add discussions about how the
+   proposed work could be applied to other predictive models (e.g. predicting
+   the best optimization flag etc). Perhaps in related work session, to show
+   the generality of the proposed work (automatic feature extraction).

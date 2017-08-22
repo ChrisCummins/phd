@@ -1,0 +1,33 @@
+\begin{table}[t!]
+  \scriptsize %
+  \centering %
+  \subfloat[Case Study A: OpenCL Heterogeneous Mapping]{%
+    \rowcolors{2}{white}{gray!25}
+    \begin{tabular}{l l l l}
+      \toprule
+      & \textbf{Frequency} & \textbf{Memory} & \textbf{Driver} \\
+      \midrule
+      \textbf{Intel Core i7-3820} & 3.6 GHz & 8GB & AMD 1526.3 \\
+      \textbf{AMD Tahiti 7970} & 1000 MHz & 3GB & AMD 1526.3 \\
+      \textbf{NVIDIA GTX 970} & 1050 MHz & 4GB & NVIDIA 361.42 \\
+      \bottomrule
+    \end{tabular}
+    \label{tab:cgo-platforms}
+  }\\*
+  \subfloat[Case Study B: OpenCL Thread Coarsening Factor]{%
+    \rowcolors{2}{white}{gray!25}
+      \begin{tabular}{l l l l}
+      \toprule
+      & \textbf{Frequency} & \textbf{Memory} & \textbf{Driver} \\
+      \midrule
+      \textbf{AMD HD 5900} & 725 MHz & 2GB & AMD 1124.2 \\
+      \textbf{AMD Tahiti 7970} & 1000 MHz & 3GB & AMD 1084.4 \\
+      \textbf{NVIDIA GTX 480} & 700 MHz & 1536 MB & NVIDIA 304.54 \\
+      \textbf{NVIDIA K20c} & 706 MHz & 5GB & NVIDIA 331.20 \\
+      \bottomrule
+    \end{tabular}
+    \label{tab:pact-platforms}
+  }
+  \caption{Experimental platforms.}
+  \label{tab:platforms}
+\end{table}

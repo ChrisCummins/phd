@@ -1,0 +1,109 @@
+\documentclass[10pt,conference,compsocconf]{IEEEtran}
+
+\usepackage[T1]{fontenc}
+
+\usepackage[%
+    backend=biber,
+    style=numeric-comp,
+    sorting=none,        % nty,nyt,nyvt,anyt,anyvt,ynt,ydnt,none
+    sortcites=true,      % sort \cite{b a d c}: true,false
+    block=none,          % space between blocks: none,space,par,nbpar,ragged
+    indexing=false,      % indexing options: true,false,cite,bib
+    citereset=none,      % don't reset cites
+    isbn=false,          % print ISBN?
+    url=true,            % print URL?
+    doi=false,           % print DOI?
+    natbib=true,         % natbib compatability
+    maxbibnames=99       % no 'et-al' condensing author names in biliography
+  ]{biblatex}
+\addbibresource{./refs.bib}
+\renewcommand{\bibfont}{\small}
+
+\usepackage{csquotes}
+\usepackage{subfig}
+\usepackage{graphicx}
+
+\usepackage[normalem]{ulem}
+
+% Required for full page-width tables.
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{hhline}
+\usepackage{xspace}
+\usepackage[table,x11names,dvipsnames,table]{xcolor}
+
+% Define column types L, C, R with known text justification and fixed widths:
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+% needed for \upgammar
+\usepackage{upgreek}
+
+% source code listings:
+\usepackage{listings}
+\lstset{%
+  basicstyle=\scriptsize,%
+  numbers=left,%
+  xleftmargin=2em,
+  framexleftmargin=2em,
+  escapeinside={@|}{|@},
+  frame=b,%
+  breaklines=true,%
+  postbreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\color{red}\hookrightarrow\space}},%
+  % red arrow at line breaks
+  captionpos=b%
+}
+
+% OpenCL listings
+%
+% From:
+% http://gpumodeling.blogspot.com/2011/06/opencl-programs-in-latex-listings.html
+\lstdefinelanguage[OpenCL]{C}[ANSI]{C}
+{morekeywords={__kernel,kernel,__local,local,__global,global,%
+    __constant,constant,__private,private,%
+    char2,char3,char4,char8,char16,%
+    uchar2,uchar3,uchar4,uchar8,uchar16,%
+    short2,short3,short4,short8,short16,%
+    ushort2,ushort3,ushort4,ushort8,ushort16,%
+    int2,int3,int4,int8,int16,%
+    uint2,uint3,uint4,uint8,uint16,%
+    long2,long3,long4,long8,long16,%
+    ulong2,ulong3,ulong4,ulong8,ulong16,%
+    float2,float3,float4,float8,float16,%
+    image2d_t,image3d_t,sampler_t,event_t,size_t,%
+    bool2,bool3,bool4,bool8,bool16,%
+    half2,half3,half4,half8,half16,%
+    quad,quad2,quad3,quad4,quad8,quad16,%
+    complex,imaginary},%
+}%
+
+% Pseudo-code listings.
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+\usepackage[american]{babel}
+
+% math
+\usepackage{amssymb}
+\usepackage{bm}
+\usepackage{amsmath}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+% balance columns on last page
+\usepackage{balance}
+\usepackage{flushend}
+
+% Artifact Evaluation stamp
+\usepackage[firstpage]{draftwatermark}
+\SetWatermarkText{\hspace*{5.85in}\raisebox{8.8in}{\includegraphics[]{img/ae-pact.pdf}}}
+\SetWatermarkAngle{0}
+
+% Squeeze caption sizes
+\usepackage{caption}
+\DeclareCaptionFont{mysize}{\fontsize{9}{9}\selectfont}
+\captionsetup{font=mysize}
+\captionsetup[table]{font={mysize}}
+\captionsetup[figure]{font={mysize}}

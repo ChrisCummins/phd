@@ -1,0 +1,35 @@
+\begin{table}
+  \rowcolors{2}{white}{gray!25}
+  \scriptsize%
+  \centering%
+    \begin{tabular}{l L{4.6cm}}
+      \toprule
+      \textbf{Name} & \textbf{Description} \\
+      \midrule
+      \texttt{BasicBlocks} & \#.\ basic blocks \\
+      \texttt{Branches} & \#.\ branches \\
+      \texttt{DivInsts} & \#.\ divergent instructions \\
+      \texttt{DivRegionInsts} & \#.\ instructions in divergent regions \\
+      \texttt{DivRegionInstsRatio} & \#.\ instr. in divergent regions / total instructions \\
+      \texttt{DivRegions} & \#.\ divergent regions \\
+      \texttt{TotInsts} & \#.\ instructions \\
+      \texttt{FPInsts} & \#.\ floating point instructions \\
+      \texttt{ILP} & average ILP / basic block \\
+      \texttt{Int/FP Inst Ratio} & \#.\ branches \\
+      \texttt{IntInsts} & \#.\ integer instructions \\
+      \texttt{MathFunctions} & \#.\ match builtin functions \\
+      \texttt{MLP} & average MLP / basic block \\
+      \texttt{Loads} & \#.\ loads \\
+      \texttt{Stores} & \#.\ stores \\
+      \texttt{UniformLoads} & \#.\ loads unaffected by coarsening direction \\
+      \texttt{Barriers} & \#.\ barriers \\
+      \bottomrule
+    \end{tabular}%
+    \label{tab:features-pact14-raw}%
+  \caption{%
+    Candidate features used by Magni \emph{et al.\ }for predicting thread
+    coarsening. From these values, they compute relative deltas for each
+    iteration of coarsening, then use PCA for selection.%
+  }%
+  \label{tab:magni-features} %
+\end{table}

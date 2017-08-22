@@ -1,0 +1,54 @@
+\section{Experimental Methodology}\label{sec:methodology}
+
+We apply DeepTune to two heterogeneous compiler-based machine learning tasks and compare its performance to state-of-the-art approaches that use expert selected features.
+
+
+\subsection{Case Study A: OpenCL Heterogeneous Mapping} \label{subsec:case-study-a}
+
+\input{tab/grewe-features}
+
+OpenCL provides a platform-agnostic framework for heterogeneous parallelism. This allows a program written in OpenCL to execute transparently across a range of different devices, from CPUs to GPUs and FPGAs. Given a program and a choice of execution devices, the question then is on which device should we execute the program to maximize performance?
+
+\paragraph{State-of-the-art} In~\cite{Grewe2013}, Grewe \emph{et al.} develop a predictive model for mapping OpenCL kernels to the optimal device in CPU/GPU heterogeneous systems. They use supervised learning to construct decision trees, using a combination of static and dynamic kernel features. The static program features are extracted using a custom LLVM pass; the dynamic features are taken from the OpenCL runtime.
+
+\paragraph{Expert Chosen Features} Table~\ref{tab:grewe-features-final} shows the features used by their work. Each feature is an expression built upon the code and runtime metrics given in Table~\ref{tab:grewe-features-raw}.
+
+\paragraph{Experimental Setup} We replicate the predictive model of Grewe \emph{et al.}~\cite{Grewe2013}. We replicated the experimental setup of~\cite{Cummins2017a} in which the experiments are extended to a larger set of 71 programs, summarized in Table~\ref{tab:cgo-benchmarks}. The programs were evaluated on two CPU-GPU platforms, detailed in Table~\ref{tab:cgo-platforms}.
+
+\paragraph{DeepTune Configuration} Figure~\ref{fig:nn}a shows the neural network configuration of DeepTune for the task of predicting optimal device mapping. We use the OpenCL kernel source code as input, and the two dynamic values \emph{workgroup size} and \emph{data size} available to the OpenCL runtime.
+
+\paragraph{Model Evaluation} We use \emph{stratified 10-fold cross-validation} to evaluate the quality of the predictive models~\cite{Han2011}. Each program is randomly allocated into one of 10 equally-sized sets; the sets are balanced to maintain a distribution of instances from each class consistent with the full set. A model is trained on the programs from all but one of the sets, then tested on the programs of the unseen set. This process is repeated for each of the 10 sets, to construct a complete prediction over the whole dataset.
+
+\input{tab/benchmarks}
+\input{tab/platforms}
+\input{fig/nn}
+
+
+\subsection{Case Study B: OpenCL Thread Coarsening Factor} \label{subsec:case-study-b}
+
+\input{fig/cf}
+
+Thread coarsening is an optimization for parallel programs in which the operations of two or more threads are fused together. This optimization can prove beneficial on certain combinations of programs and architectures, for example programs with a large potential for Instruction Level Parallelism on Very Long Instruction Word architectures.
+
+\paragraph{State-of-the-art} Magni \emph{et al.\ }present a predictive model for OpenCL thread coarsening in~\cite{Magni2014}. They implement an iterative heuristic which determines whether a given program would benefit from coarsening. If yes, then the program is coarsened, and the process repeats, allowing further coarsening. In this manner, the problem is reduced from a multi-label classification problem into a series of binary decisions, shown in Figure~\ref{fig:cf-magni}. They select from one of six possible coarsening factors: $(1, 2, 4, 8, 16, 32)$, divided into 5 binary choices.
+
+\input{tab/magni-features}
+
+\paragraph{Expert Chosen Features} Magni \emph{et al.\ }followed a very comprehensive feature engineering process. 17 candidate features were assembled from previous studies of performance counters and computed theoretical values~\cite{Magni2,Sim2012}. For each candidate feature they compute its coarsening \emph{delta}, reflecting the change in each feature value caused by coarsening: $f_{\Delta} = (f_{after} - f_{before}) / f_{before}$, adding it to the feature set. Then they use Principle Component Analysis (PCA) on the 34 candidates and selected the first 7 principle components, accounting for 95\% of variance in the space.
+
+\paragraph{Experimental Setup} We replicate the experimental setup of Magni \emph{et al.}~\cite{Magni2014}. The thread coarsening optimization is evaluated on 17 programs, listed in Table~\ref{tab:pact-benchmarks}. Four different GPU architectures are used, listed in Table~\ref{tab:pact-platforms}.
+
+\paragraph{DeepTune Configuration} Figure~\ref{fig:nn}b shows the neural network configuration. We use the OpenCL kernel as input, and directly predict the coarsening factor.
+
+\paragraph{Model Evaluation} Compared to Case Study A, the size of the evaluation is small. We use \emph{leave-one-out cross-validation} to evaluate the models. For each program, a model is trained on data from all other programs and used to predict the coarsening factor of the excluded program.
+
+Because~\cite{Magni2014} does not describe the parameters of the neural network, we perform an additional, \emph{nested} cross-validation process to find the optimal model parameters. For every program in the training set, we evaluate 48 combinations of network parameters. We select the best performing configuration from these 768 results to train a model for prediction on the excluded program. This nested cross-validation is repeated for each of the training sets. We do not perform this tuning of hyper-parameters for DeepTune.
+
+
+\subsection{Comparison of Case Studies}
+
+\input{tab/nn-size}
+
+For the two different optimization heuristics, the authors arrived at very different predictive model designs, with very different features. By contrast, we take exactly the same approach for both problems. None of DeepTune's parameters were tuned for the case studies presented above. Their settings represent conservative choices expected to work reasonably well for most scenarios.
+
+Table~\ref{tab:nn-size} shows the similarity of our models. The only difference between our network design is the auxiliary inputs for Case Study A and the different number of optimization decisions. The differences between DeepTune configurations is only two lines of code: the first, adding the two auxiliary inputs; the second, increasing the size of the output layer for Case Study B from two neurons to six. The description of these differences is larger than the differences themselves.

@@ -1,0 +1,37 @@
+\begin{table}
+\scriptsize%
+\centering%
+\rowcolors{2}{white}{gray!25}
+\subfloat[Case Study A: OpenCL Heterogeneous Mapping]{%
+  \begin{tabular}{l r r r}
+    \toprule
+    & \textbf{Version} & \textbf{\#. benchmarks} & \textbf{\#. kernels}\\
+    \midrule
+    \textbf{NPB (SNU~\cite{Seo2011})} & 1.0.3 & 7 & 114 \\
+    \textbf{Rodinia~\cite{Che2009}} & 3.1 & 14 & 31 \\
+    \textbf{NVIDIA SDK} & 4.2 & 6 & 12 \\
+    \textbf{AMD SDK} & 3.0 & 12 & 16 \\
+    \textbf{Parboil~\cite{Stratton2012}} & 0.2 & 6 & 8 \\
+    \textbf{PolyBench~\cite{Grauer-Gray2012}} & 1.0 & 14 & 27 \\
+    \textbf{SHOC~\cite{Danalis2010}} & 1.1.5 & 12 & 48 \\
+    \textbf{Total} & - & 71 & 256 \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:cgo-benchmarks}
+}\\*
+\subfloat[Case Study B: OpenCL Thread Coarsening Factor]{%
+  \begin{tabular}{l r r r}
+    \toprule
+    & \textbf{Version} & \textbf{\#. benchmarks} & \textbf{\#. kernels}\\
+    \midrule
+    \textbf{NVIDIA SDK} & 4.2 & 3 & 3 \\
+    \textbf{AMD SDK} & 3.0 & 10 & 10 \\
+    \textbf{Parboil~\cite{Stratton2012}} & 0.2 & 4 & 4 \\
+    \textbf{Total} & - & 17 & 17 \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:pact-benchmarks}
+}\\*
+\caption{Benchmark programs.} %
+\label{tab:benchmarks} %
+\end{table}

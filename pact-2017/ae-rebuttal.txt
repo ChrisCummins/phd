@@ -1,0 +1,26 @@
+We thank the reviewers for the positive feedback and their time in evaluating
+our artifact.
+
+# Review 1
+
+1.1. We have updated the GitHub repository with further information describing
+     our installation scripts. Please see: https://goo.gl/RVdDVf
+
+1.2. We will look into the discrepancy you observed between Rodinia in Fig 6a
+     and the artifact. Thanks for pointing this out.
+
+# Review 2
+
+2.1. We wrote our scripts for Ubuntu as this is what we use, however we
+     acknowledge that not everyone uses it. We have updated our build scripts to
+     support CentOS, Ubuntu, and Arch Linux. Please see: https://goo.gl/sS8LVv
+
+2.2. Sorry to hear about your problems running Case Study B. The ML backend
+     uses OpenBLAS when compiled for CPU. We suspect the problems arises from
+     there, but this dependency is buried deep in the TensorFlow stack. If you
+     would like, send me an email at chrisc.101@gmail.com with the details of
+     your system and I can try to replicate the problem.
+
+2.3. We use author-provided data sets for benchmark runtimes. For Case Study A,
+     new benchmark runtimes may be collected on other architectures using the
+     artifact from the publication: https://goo.gl/ZT8ZHH
