@@ -54,7 +54,8 @@ We support an arbitrary number of additional real valued \emph{auxiliary inputs}
 
 The heuristic model takes the learned representations of the source code and auxiliary inputs (if present), and uses these values to make the final optimization prediction.
 
-We first normalize the values. Normalization is necessary because the auxiliary inputs can have any values, whereas the language model activations are in the range [0,1]. If we did not normalize, then scaling the auxiliary inputs could affect the training of the heuristic model. Normalization occurs in batches. We use the normalization method of ~\cite{Ioffe2015a}, in which each scalar of the heuristic model's inputs $x_1 \ldots x_n$ is normalized to a mean 0 and standard deviation of 1:
+We first normalize the values. Normalization is necessary because the auxiliary inputs can have any values, whereas the language model activations are in the range [0,1]. If we did not normalize, then scaling the auxiliary inputs could affect the training of the heuristic model. Normalization occurs in batches. We use the normalization method of%~\cite{Ioffe2015a}
+, in which each scalar of the heuristic model's inputs $x_1 \ldots x_n$ is normalized to a mean 0 and standard deviation of 1:
 %
 \begin{equation}
 x_i' = \upgamma_i \frac{x_i - E(x_i)}{\sqrt{Var(x_i)}} + \beta_i
