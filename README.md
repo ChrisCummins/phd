@@ -83,6 +83,10 @@ A self-contained, monolothic repository for (almost) everything I have done whil
    Thurs 14th Jan, 2016. CArD talk, University of Edinburgh.
    [[files]](/talks/2016-01-hlpgpu).
    [[pdf]](https://github.com/ChrisCummins/phd/raw/master/talks/2016-01-hlpgpu/2016-01-hlpgpu.pdf).
+1. Chris Cummins. "**Deep Learning in Compilers**", Wed 14th Jun,
+   2017. The University of Edinburgh, Scotland.
+   [[files]](/talks/2017-06-ppar).
+   [[pdf]](https://github.com/ChrisCummins/phd/raw/master/talks/2017-06-ppar/2017-06-ppar.pdf). [[transcript]](https://chriscummins.cc/2017/deep-learning-in-compilers/).
 
 
 ## Misc
