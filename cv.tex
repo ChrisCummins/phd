@@ -7,6 +7,9 @@
 %
 \documentclass[a4paper,11pt,hidelinks]{scrartcl}
 
+\usepackage{enumitem}
+\setlist{leftmargin=2.5em}
+
 % Hide the date:
 \date{}
 
@@ -76,10 +79,10 @@
 {\spacedallcaps{Chris Cummins}} %
 
 \begin{flushright}
-\vspace{-3.1em}
-\hfill \noindent \href{mailto:chrisc.101@gmail.com}{\textsc{chrisc.101@gmail.com}}\\%
-\vspace{-.35em}
+\vspace{-2.9em}
 \hfill \noindent \href{http://chriscummins.cc}{\textsc{http://chriscummins.cc}}\\%
+\vspace{-.35em}
+\hfill \noindent \href{mailto:chrisc.101@gmail.com}{\textsc{chrisc.101@gmail.com}}\\%
 \end{flushright}
 \vspace{-1em}
 
@@ -90,20 +93,24 @@
 
 \Description{\MarginText{2019\\(expected)}\textbf{Ph.D, Informatics}
   \newline University of Edinburgh, School of Informatics
-  \newline\vspace{-.8em}
+  \newline\vspace{-1.8em}
 
   \noindent %
   \begin{itemize}
-    \setlength\itemsep{.2em}
-    \item Introduced deep learning over program code.
+    \setlength\itemsep{-.4em}
+    \item Applied Deep Learning to compilers.
+    % \item Introduced deep learning over program code.
     \item Demonstrated three applications, each published in top-tier conferences:
+    % program generation (CGO’17), optimization heuristic construction (PACT’17), and compiler testing (ASPLOS’18).
+    \vspace{-.6em}
     \begin{itemize}
-      \item Program generation (CGO’17)
-      \item Optimization heuristic construction (PACT’17)
-      \item Compiler testing (ASPLOS’18)
+      \setlength\itemsep{-.4em}
+      \item program generation (CGO'17)
+      \item optimization heuristic construction (PACT'17)
+      \item compiler testing (ASPLOS'18)
     \end{itemize}
     \item Won two best paper awards.
-    \item Freely published all research code and data on GitHub: \url{http://github.com/ChrisCummins}.
+    \item All code and data published on GitHub: \url{https://chriscummins.cc/phd}.
   \end{itemize}
 }
 
@@ -112,21 +119,108 @@
   \newline University of Edinburgh, School of Informatics
   \newline Thesis: \textit{Autotuning Stencil Codes with Algorithmic
     Skeletons} (grade: 85\%)
-  \newline\vspace{-.8em}
+  \newline\vspace{-1.8em}
 
   \noindent %
-  Runtime adaptive tuning for heterogeneous parallel systems, targeting a high level DSL for multi-GPU stencil programs. Machine learning over distributed training sets.%
+  \begin{itemize}
+    \setlength\itemsep{-.4em}
+    \item Novel adaptive tuning for heterogeneous parallel systems.
+    \item $3.79\times$ speedup of multi-GPU stencil programs using machine learning.
+  \end{itemize}
 }
 
 \Description{\MarginText{2014}\textbf{MEng Electronic Engineering \& Computer Science}
   \textit{(First Class Honours)}
   \newline Aston University, School of Engineering \& Applied Science
   \newline Thesis: \textit{Protein Isoelectric Point Database} (grade: 90\%)
-  \newline\vspace{-.8em}
+  \newline\vspace{-1.8em}
 
   \noindent %
-  Created a novel search engine for molecular biochemistry data. Integrated BLAST search tools, a publicly accessible API, and tooling to generate synthetic payloads from confidential datasets for whitebox systems testing. Released open source.%
+  \begin{itemize}
+    \setlength\itemsep{-.4em}
+    \item Created a search engine for molecular biochemistry research.
+    \item Released open source: \url{http://pip-db.org}. Published in bioinformatics journal.
+  \end{itemize}
 }
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PROFESSIONAL EXPERIENCE %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\vspace{-1em}
+\Title{Professional Experience}
+% Format: \Job{dates}{employer}{title}{description}
+% Format: \ShortJob{dates}{employer}{title}
+
+\Description{\MarginText{2018}\textbf{Google}
+  \newline Software Engineer Intern
+  \newline\vspace{-1.8em}
+
+  \noindent %
+  \begin{itemize}
+    \setlength\itemsep{-.4em}
+    \item Did a thing.
+    \item And another thing.
+    \item Final thing.
+  \end{itemize}
+}
+
+\Description{\MarginText{2016}\textbf{Codeplay Software}
+  \newline Software Engineer Intern, Eigen SYCL Interface
+  \newline\vspace{-1.8em}
+
+  \noindent %
+  \begin{itemize}
+    \setlength\itemsep{-.4em}
+    \item Developing OpenCL port of TensorFlow.
+    \item Implemented GPU memory management for Eigen.
+    \item Proposed and designed Python interface for VisionCpp as lead developer.
+    \item Extensive C++ meta-programming.
+  \end{itemize}
+  % \noindent %
+  % Developing OpenCL port of Tensorflow. Implemented GPU memory management for Eigen. Compile time scheduling and kernel fusion for expression trees on GPUs. Proposed and designed a Python interface for VisionCpp as lead developer. Extensive C++ meta-programming.%
+}
+
+\Description{\MarginText{2012--2013}\textbf{Intel Corporation}
+  \newline Open Source Developer Intern
+  \newline\vspace{-1.8em}
+
+  \noindent %
+  \begin{itemize}
+    \setlength\itemsep{-.4em}
+    \item Patched \texttt{ioctl} subsystem in Linux kernel.
+    \item Developed a novel SIMD register visualisation tool for Intel GPUs.
+    \item Contributed to GTK+ support for Wayland display server.
+    \item Fixed numerous bugs in GNOME desktop applications.
+  \end{itemize}
+  % Patched \texttt{ioctl} subsystem in Linux kernel. Developed a novel SIMD register visualisation tool for Intel GPU assembly programming. Implemented GTK+ support for Wayland display server. Fixed memory and usability bugs in GNOME desktop applications. Developed particle effects engine for a 3D rendering program. Rapid prototyping of Android applications. Numerous contributions to open source projects.%
+}
+
+\Description{\MarginText{2010--2017}\textbf{Freelance Web Developer}
+  \newline\vspace{-1.8em}
+
+  \noindent %
+  \begin{itemize}
+    \setlength\itemsep{-.4em}
+    \item Full-stack development, and UI/UX design.
+    \item Clients included independent publishers, a computer science conference, musicians, and beauty parlour.
+  \end{itemize}
+  % Full-stack development for small businesses, including graphic design and branding.
+  % Front-end experience with JavaScript; back-end development using Clojure, Node.js, PHP, MySQL, PostgreSQL, and Jekyll.%
+
+  % Clients:
+  %
+  % CGO'18
+  % The Beauty Rooms
+  % Barthelemy Jusselme
+  % Myrmidon Books
+  % Border Scripts
+  % Greystones Press
+}
+
+
+\newpage
+
 
 %%%%%%%%%%%%%%%%
 % PUBLICATIONS %
@@ -134,13 +228,22 @@
 \Title{Publications}
 % Format: \Publication{year}{authors}{title}{location}{url}
 
+\Description{\MarginText{\textit{2018}}C.\ \textsc{Cummins}, P.\
+  \textsc{Petoumenos}, A.\ \textsc{Murray}, H.\
+  \textsc{Leather}. \textbf{Compiler Fuzzing through Deep Learning}. ASPLOS'18 (XX\% acceptance rate), XX, XX.\@
+  \newline\vspace{-.8em}
+
+  \noindent %
+  Foo.%
+}
+
 \Description{\MarginText{\textit{2017}}C.\ \textsc{Cummins}, P.\
   \textsc{Petoumenos}, Z.\ \textsc{Wang}, H.\
   \textsc{Leather}. \textbf{End-to-end Deep Learning of Compiler Heuristics}. PACT'17 (23\% acceptance rate), Portland, Oregon.\@
   \newline\vspace{-.8em}
 
   \noindent %
-  Learning optimization heuristics directly from raw source code, without the need for feature extraction. Exceeds performance of state-of-the art predictive models using hand crafted features, and can transfer knowledge gained from one optimization task to another, even if the learned tasks are dissimilar.%
+  Learning optimization heuristics directly from raw source code, without the need for feature extraction. 12\% and 14\% performance improvements over state-of-the art, and greatly reduced development costs. % Can transfer knowledge gained from one optimization task to another, even if the learned tasks are dissimilar.%
 }
 
 \Description{\MarginText{2017}C.\ \textsc{Cummins}, P.\
@@ -194,53 +297,6 @@
 }
 
 
-\newpage
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% PROFESSIONAL EXPERIENCE %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\Title{Professional Experience}
-% Format: \Job{dates}{employer}{title}{description}
-% Format: \ShortJob{dates}{employer}{title}
-
-\Description{\MarginText{2016}\textbf{Codeplay Software}
-  \newline Software Engineer Intern, Eigen SYCL Interface
-  \newline\vspace{-.8em}
-
-  \noindent %
-  Developing OpenCL port of Tensorflow. Implemented GPU memory management for Eigen. Compile time scheduling and kernel fusion for expression trees on GPUs. Proposed and designed a Python interface for VisionCpp as lead developer. Extensive C++ meta-programming.%
-}
-
-\Description{\MarginText{2012--2013}\textbf{Intel Corporation}
-  \newline Open Source Developer Intern
-  \newline\vspace{-.8em}
-
-  \noindent %
-  Patched \texttt{ioctl} subsystem in Linux kernel. Developed a novel SIMD register visualisation tool for Intel GPU assembly programming. Implemented GTK+ support for Wayland display server. Fixed memory and usability bugs in GNOME desktop applications. Developed particle effects engine for a 3D rendering program. Rapid prototyping of Android applications. Numerous contributions to open source projects.%
-}
-
-\Description{\MarginText{2010--2014}\textbf{Freelance}
-  \newline Web Developer
-  \newline\vspace{-.8em}
-
-  \noindent %
-  Full-stack development for small businesses, including graphic design and branding. Front-end experience with JavaScript; back-end development using Clojure, Node.js, PHP, MySQL, PostgreSQL, and Jekyll.%
-
-  % Clients:
-  %
-  % CGO'18
-  % The Beauty Rooms
-  % Barthelemy Jusselme
-  % Myrmidon Books
-  % Border Scripts
-  % Greystones Press
-}
-
-\Description{\MarginText{2008}\textbf{Rolls Royce Holdings plc}
-  \newline Work placement in the Design Methods \& Improvements team.%
-}
-
-
 %%%%%%%%%%
 % AWARDS %
 %%%%%%%%%%
@@ -248,9 +304,6 @@
 % Format: \Award{year}{title}
 
 \Description{\MarginText{2017}\textbf{Best Paper Winner, CGO'17} \newline\vspace{-1.8em}}
-
-\Description{\MarginText{2015}\textbf{PhD studentship, EPSRC grant
-    EP/L01503X/1} \newline\vspace{-1.8em}}
 
 \Description{\MarginText{2014}\textbf{Institute of Engineering \&
     Technology Prize}
@@ -276,44 +329,44 @@
 \Description{\MarginText{2008}\textbf{AESSEAL Design Innovation Award}
   \newline\vspace{-.8em}
 
-  % \noindent Cash prize for first place in an industrial 3D CAD competition.%
+  \noindent Cash prize for first place in an industrial 3D CAD competition.%
 }
 
-%%%%%%%%%%%%%%%%%%%%%%%
-% ACADEMIC ACTIVITIES %
-%%%%%%%%%%%%%%%%%%%%%%%
-\Title{Academic Activities}
-
-\Description{%
-  \MarginText{\textbf{Invited Talks}}%
-  SPLS 2017, %
-  Codeplay Software 2016, %
-  Ocado Technology 2016, %
-  Amazon Development Center 2016.%
-  \vspace{-.8em}}
-
-\Description{%
-  \MarginText{\textbf{Posters}}%
-  Google 2016, %
-  ACACES 2016, %
-  PLDI 2016, %
-  HiPEAC 2016, %
-  Google 2015, %
-  PPar 2015.%
-  \vspace{-.8em}}
-
-\Description{%
-  \MarginText{\textbf{Peer reviews}}%
-  ACM TACO 2016, %
-  LCTES 2016, %
-  CGO 2016.%
-  \vspace{-.8em}}
-
-% \Description{\MarginText{\textbf{Volunteering}}%
-%   ParCo 2015.%
-%   \vspace{-.8em}}
-
-\vspace{.8em}
+%%%%%%%%%%%%%%%%%%%%%%%%
+%% ACADEMIC ACTIVITIES %
+%%%%%%%%%%%%%%%%%%%%%%%%
+%\Title{Academic Activities}
+%
+%\Description{%
+%  \MarginText{\textbf{Invited Talks}}%
+%  SPLS 2017, %
+%  Codeplay Software 2016, %
+%  Ocado Technology 2016, %
+%  Amazon Development Center 2016.%
+%  \vspace{-.8em}}
+%
+%\Description{%
+%  \MarginText{\textbf{Posters}}%
+%  Google 2016, %
+%  ACACES 2016, %
+%  PLDI 2016, %
+%  HiPEAC 2016, %
+%  Google 2015, %
+%  PPar 2015.%
+%  \vspace{-.8em}}
+%
+%\Description{%
+%  \MarginText{\textbf{Peer reviews}}%
+%  ACM TACO 2016, %
+%  LCTES 2016, %
+%  CGO 2016.%
+%  \vspace{-.8em}}
+%
+%% \Description{\MarginText{\textbf{Volunteering}}%
+%%   ParCo 2015.%
+%%   \vspace{-.8em}}
+%
+%\vspace{.8em}
 
 
 %%%%%%%%%%%%%%%%%%%%
@@ -321,13 +374,13 @@
 %%%%%%%%%%%%%%%%%%%%
 \Title{Technical Skills}
 
-\Description{\MarginText{\textbf{Expert}}%
-  C++, Python, git, GNU/Linux, bash.%
+\Description{\MarginText{\textbf{Languages}}%
+  C / C++, Python, SQL, Bash, JavaScript, OpenCL, various LISP dialects.%
   \vspace{-.8em}%
 }
 
-\Description{\MarginText{\textbf{Advanced}}%
-  C, JavaScript, OpenCL, SQL, \LaTeX, TensorFlow.%
+\Description{\MarginText{\textbf{Tools}}%
+  Git, GNU/Linux, \LaTeX, TensorFlow, Bazel.%
   % GNU autotools, gdb
   \vspace{-.8em}%
 }
