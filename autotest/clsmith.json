@@ -1,0 +1,18 @@
+{
+    "tester": "opencl",
+    "generator": {
+        "exec": "../lib/CLSmith/build/CLSmith"
+    },
+    "preflight_checks": [
+
+    ],
+    "duts": [
+    ],
+    "comparator": {
+
+    },
+    "postflight_checks": [
+    ],
+    "reducer": {
+    }
+}
