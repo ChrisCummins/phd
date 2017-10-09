@@ -10,20 +10,33 @@ from labm8 import crypto
 import autotest
 
 
+class Testcase(object):
+    def __init__(self, path: Path):
+        self.path = path
+
+    @property
+    def src(self):
+        with open(self.path) as infile:
+            return infile.read()
+
+    def __repr__(self):
+        return self.src
+
+
 class CLSmithGenerator(autotest.Generator):
     def __init__(self, exec: Path):
-        self.clsmith = exec
+        self.cmd = exec
 
-        exec_checksum = crypto.sha1_file(self.clsmith)
+        exec_checksum = crypto.sha1_file(self.cmd[0])
+        logging.debug(f"CLSmith binary '{self.cmd[0]}' {exec_checksum}")
 
-        logging.debug(f"using CLSmith '{self.clsmith}' {exec_checksum}")
-
-    def next_batch(self) -> List[autotest.testcase_t]:
-        pass
+    def next_batch(self, batch_size: int) -> List[autotest.testcase_t]:
+        for _ in range(batch_size):
+            logging.debug(" ".join(self.cmd))
 
 
 class DeviceUnderTest(object):
-    def __init__(self):
+    def __init__(self, device, platform):
         pass
 
     def run(self, testcase: autotest.testcase_t) -> autotest.output_t:

@@ -1,15 +1,18 @@
 {
     "tester": "opencl",
     "generator": {
-        "exec": "../lib/CLSmith/build/CLSmith"
+        "exec": ["../lib/CLSmith/build/CLSmith"]
     },
     "preflight_checks": [
 
     ],
     "duts": [
+        {
+            "platform": "intel",
+            "device": "foobar"
+        }
     ],
     "comparator": {
-
     },
     "postflight_checks": [
     ],

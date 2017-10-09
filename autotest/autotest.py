@@ -56,7 +56,7 @@ def autotest(num_batches: int, generator: Generator,
 
     for i in range(1, num_batches + 1):
         logging.info(f"generating batch {i} of {num_batches}")
-        testcases = generator.next_batch()
+        testcases = generator.next_batch(1)
 
         for testcase in testcases:
             # Do all the pre-flight checks before running:
