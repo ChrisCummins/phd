@@ -8,7 +8,15 @@
     ],
     "duts": [
         {
+            "platform": "oclgrind",
+            "device": "foobar"
+        },
+        {
             "platform": "intel",
+            "device": "foobar"
+        },
+        {
+            "platform": "computeaorta",
             "device": "foobar"
         }
     ],

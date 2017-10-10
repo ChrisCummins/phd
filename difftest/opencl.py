@@ -63,7 +63,6 @@ class CLSmithGenerator(autotest.Generator):
         return outbox
 
 
-
 class DeviceUnderTest(object):
     def __init__(self, device, platform):
         pass
@@ -77,14 +76,6 @@ class StaticAnalyzer(object):
         pass
 
     def is_valid(self, testcase: autotest.testcase_t) -> bool:
-        pass
-
-
-class Comparator(object):
-    def __init__(self):
-        pass
-
-    def all_equal(self, outputs: List[autotest.output_t]) -> bool:
         pass
 
 
@@ -122,7 +113,7 @@ def main(args):
     preflight_checks = [
         StaticAnalyzer(**x) for x in json_config["preflight_checks"]]
     duts = [DeviceUnderTest(**x) for x in json_config["duts"]]
-    comparator = Comparator(**json_config["comparator"])
+    comparator = autotest.Comparator(**json_config["comparator"])
     postflight_checks = [
         DynamicAnalyzer(**x) for x in json_config["postflight_checks"]]
     reducer = Reducer(**json_config["reducer"])
