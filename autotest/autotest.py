@@ -1,11 +1,13 @@
 import logging
 
 from collections import namedtuple
+from pathlib import Path
 from typing import List, NewType
 
 testcase_t = NewType('testcase_t', object)
 output_t = NewType('output_t', object)
-outbox_t = namedtuple('outbox_x', ['testcase', 'dut', 'output'])
+reduced_t = namedtuple('reduced_t', ['reduced', 'expected', 'actual'])
+outbox_t = namedtuple('outbox_x', ['dut', 'testcase'])
 
 class GeneratorError(Exception): pass
 class DeviceUnderTestError(Exception): pass
@@ -21,6 +23,9 @@ class Generator(object):
 
 class DeviceUnderTest(object):
     def run(self, testcase: testcase_t) -> output_t:
+        raise NotImplementedError("abstract class")
+
+    def to_json(self):
         raise NotImplementedError("abstract class")
 
 
@@ -42,8 +47,27 @@ class DynamicAnalyzer(object):
 
 
 class Reducer(object):
-    def reduce(self, testcase: testcase_t, dut: DeviceUnderTest) -> output_t:
+    def reduce(self, testcase: testcase_t, dut: DeviceUnderTest) -> reduced_t:
         raise NotImplementedError("abstract class")
+
+
+def export_outbox(outbox: List[reduced_t], path: Path):
+    """
+    Write interesting reduced testcases to file.
+
+    Arguments:
+        outbox: The list of interesting reduced testcases.
+        path: Path to write file to.
+    """
+    blob = [{
+        'dut': o['dut'].to_json(),
+        'testcase': o['testcase']['reduced'],
+        'expected_output': o['testcase']['expected'],
+        'actual_output': o['testcase']['actual']
+    } for o in outbox]
+
+    with open(path, "w") as outfile:
+        json.dumps(blob, outfile)
 
 
 def autotest(num_batches: int, generator: Generator,
@@ -57,6 +81,8 @@ def autotest(num_batches: int, generator: Generator,
     for i in range(1, num_batches + 1):
         logging.info(f"generating batch {i} of {num_batches}")
         testcases = generator.next_batch(1)
+
+        assert len(testcases)
 
         for testcase in testcases:
             # Do all the pre-flight checks before running:
@@ -85,9 +111,9 @@ def autotest(num_batches: int, generator: Generator,
             for j in range(len(outputs)):
                 if comparator.is_interesting(outputs, j):
                     logging.info("reducing output")
-                    reduced = reducer.reduce(testcase, duts[j], outputs[j])
+                    reduced, expected, actual = reducer.reduce(
+                        testcase, duts[j], outputs[j])
                     logging.info("-> reduced output from device")
-                    outbox.append(outbox_t(testcase, duts[j], reduced))
+                    outbox.append(outbox_t(duts[j], reduced_t))
 
-    for item in outbox:
-        print(item)
+    export_outbox(outbox, "outbox.json")
