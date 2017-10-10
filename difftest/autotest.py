@@ -108,6 +108,7 @@ def autotest(num_batches: int, generator: Generator,
             if majority_size == num_devices:
                 logging.info("-> testcase outcomes are all equal")
                 continue
+            # TODO: take config size as constructor argument
             elif majority_size < math.ceil(2 * num_devices / 3):
                 logging.info("-> majority size of {majority_size}, no consensus")
                 continue
