@@ -14,11 +14,11 @@ cl_launcher_path = fs.path("../lib/CLSmith/build/cl_launcher")
 include_path = fs.path("../lib/CLSmith/runtime")
 
 
-def clsmith_cli(*args, timeout: int=60) -> List[str]:
+def clsmith_cli(*args, timeout: int=60, exec_path=exec_path) -> List[str]:
     return ["timeout", "--signal=9", str(timeout), exec_path] + list(args)
 
 
-def clsmith(*args) -> return_t:
+def clsmith(*args, exec_path=exec_path) -> return_t:
     """
         Returns:
             return_t: A named tuple consisting of runtime (float),

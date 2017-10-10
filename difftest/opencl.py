@@ -8,9 +8,10 @@ from pathlib import Path
 from labm8 import crypto
 
 import autotest
+import clsmith
 
 
-class Testcase(object):
+class OpenCLTestcase(object):
     def __init__(self, path: Path):
         self.path = path
 
@@ -25,14 +26,42 @@ class Testcase(object):
 
 class CLSmithGenerator(autotest.Generator):
     def __init__(self, exec: Path):
-        self.cmd = exec
+        self.exec = exec
+        exec_checksum = crypto.sha1_file(self.exec)
+        logging.debug(f"CLSmith binary '{self.exec}' {exec_checksum}")
 
-        exec_checksum = crypto.sha1_file(self.cmd[0])
-        logging.debug(f"CLSmith binary '{self.cmd[0]}' {exec_checksum}")
 
-    def next_batch(self, batch_size: int) -> List[autotest.testcase_t]:
-        for _ in range(batch_size):
-            logging.debug(" ".join(self.cmd))
+    def _clsmith(self, path: Path, *flags, attempt_num=1) -> Path:
+        """ Generate a program using CLSmith """
+        if attempt_num >= 1000:
+            raise autotest.GeneratorError(
+                f"failed to generate a program using CLSmith after {attempt_num} attempts")
+
+        flags = ['-o', path, *flags]
+        logging.debug(" ".join([self.exec] + flags))
+
+        _, returncode, stdout, stderr = clsmith.clsmith(
+            *flags, exec_path=self.exec)
+
+        # A non-zero returncode of clsmith implies that no program was
+        # generated. Try again
+        if returncode:
+            logging.debug(f"CLSmith call failed with returncode {returncode}:")
+            logging.debug(stdout)
+            self._clsmith(path, *flags, attempt_num=attempt_num + 1)
+
+        return path
+
+
+    def next_batch(self, batch_size: int) -> List[OpenCLTestcase]:
+        outbox = []
+
+        for i in range(batch_size):
+            generated_kernel = self._clsmith(f"clsmith-{i}.cl")
+            outbox.append(OpenCLTestcase(generated_kernel))
+
+        return outbox
+
 
 
 class DeviceUnderTest(object):

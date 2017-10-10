@@ -1,3 +1,4 @@
+import json
 import logging
 
 from collections import namedtuple
@@ -67,7 +68,7 @@ def export_outbox(outbox: List[reduced_t], path: Path):
     } for o in outbox]
 
     with open(path, "w") as outfile:
-        json.dumps(blob, outfile)
+        json.dump(blob, outfile)
 
 
 def autotest(num_batches: int, generator: Generator,
@@ -75,23 +76,26 @@ def autotest(num_batches: int, generator: Generator,
              duts: List[DeviceUnderTest],
              comparator: Comparator,
              postflight_checks: List[DynamicAnalyzer],
-             reducer: Reducer) -> None:
+             reducer: Reducer, batch_size=1) -> None:
+    num_devices = len(duts)
+    assert num_devices > 2
     outbox = []
 
     for i in range(1, num_batches + 1):
-        logging.info(f"generating batch {i} of {num_batches}")
-        testcases = generator.next_batch(1)
+        logging.info(f"generating batch {i} of {num_batches}, {batch_size} testcases")
+        testcases = generator.next_batch(batch_size)
 
         assert len(testcases)
 
         for testcase in testcases:
             # Do all the pre-flight checks before running:
-            logging.info("running static analysis on testcase")
-            if not all(checker.is_valid(testcase) for checker in preflight_checks):
-                logging.info("-> testcase failed static analysis")
-                continue
+            if len(preflight_checks):
+                logging.info("running static analysis on testcase")
+                if not all(checker.is_valid(testcase) for checker in preflight_checks):
+                    logging.info("-> testcase failed static analysis")
+                    continue
 
-            logging.info("running testcases on devices")
+            logging.info(f"running testcase on {num_devices} devices")
             outputs = [dut.run(testcase) for dut in duts]
 
             # Check if outputs are interesting:
