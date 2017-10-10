@@ -1,4 +1,4 @@
-# Plausible Test Case Generation for Compiler and Runtime Bug Discovery
+# Compiler Fuzzing through Deep Learning
 
 
 ## Requirements
