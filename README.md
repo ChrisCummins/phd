@@ -1,4 +1,4 @@
-# Compiler Fuzzing through Deep Learning
+# DeepSmith: Compiler Fuzzing through Deep Learning
 
 
 ## Requirements
@@ -52,3 +52,11 @@ Launch the Jupyter server:
 ```
 $ make run
 ```
+
+
+## License
+
+Copyright 2017 Chris Cummins <chrisc.101@gmail.com>.
+
+Released under the terms of the GPLv3 license. See [LICENSE.txt](/LICENSE.txt)
+for details.
