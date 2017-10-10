@@ -43,17 +43,17 @@ clreduce: lib/clreduce/build_creduce/creduce/creduce
 lib/clreduce/build_creduce/creduce/creduce:
 	cd lib/clreduce && make
 
-jupyter: $(venv_dir)/bin/jupyter ~/.ipython/kernels/project_b/kernel.json
+jupyter: $(venv_dir)/bin/jupyter ~/.ipython/kernels/dsmith/kernel.json
 
 $(venv_dir)/bin/jupyter: $(venv_activate)
 	$(venv) pip install -r requirements.txt
 
-~/.ipython/kernels/project_b/kernel.json: .ipython/kernels/project_b/kernel.json
+~/.ipython/kernels/dsmith/kernel.json: build/ipython/kernels/dsmith/kernel.json
 	mkdir -p ~/.ipython/kernels
-	cp -Rv .ipython/kernels/project_b ~/.ipython/kernels
+	cp -Rv build/ipython/kernels/dsmith ~/.ipython/kernels
 
 # make Jupyter kernel
-.ipython/kernels/project_b/kernel.json: .ipython/kernels/project_b/kernel.json.template
+build/ipython/kernels/dsmith/kernel.json: build/ipython/kernels/dsmith/kernel.json.template
 	cp $< $@
 	sed "s,@PYTHON@,$(PWD)/$(python)," -i $@
 
