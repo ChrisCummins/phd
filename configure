@@ -22,7 +22,8 @@ import subprocess
 import sys
 
 from argparse import ArgumentParser
-
+from configparser import ConfigParser
+from labm8 import fs
 
 def yes_no(question, default="no"):
     """Ask a yes/no question and return user's answer.
@@ -61,6 +62,29 @@ def yes_no(question, default="no"):
                              "(or 'y' or 'n').\n")
 
 
+def textinput(question, default=None):
+    """Ask a question and return user's answer.
+
+    "question" is a string that is presented to the user.
+    "default" is the presumed answer if the user just hits <Enter>.
+    """
+    if default is None:
+        prompt = " "
+    else:
+        prompt = f" [default: {default}] "
+
+    sys.stdout.write(question + prompt)
+    if sys.version_info >= (3, 0):
+        choice = input()
+    else:
+        choice = raw_input()
+
+    if default is not None and choice == '':
+        return default
+    else:
+        return choice
+
+
 def to_make(val):
     return str(int(val))
 
@@ -73,13 +97,19 @@ def to_text(val):
     return "yes" if val else "no"
 
 
+default_rc = "~/.dsmithrc"
+
+
 def main():
     parser = ArgumentParser(description="Configure DeepSmith build.")
     parser.add_argument("-r", "--reconfigure", action="store_true",
                         help="re-run configuraiton using previous settings")
     parser.add_argument("-b", "--batch", action="store_true",
-                        help="defaults all options to 'no'. Override with:")
-    parser.add_argument("--with-cuda", action="store_true")
+                        help="defaults all options to defaults. Override with:")
+    parser.add_argument("--with-cuda", action="store_true",
+                        help="build with CUDA support")
+    parser.add_argument("--rc", metavar="<path>", default=None,
+                        help=f"path to configuration file (default: {default_rc})")
     args = parser.parse_args()
 
     if args.reconfigure:
@@ -93,13 +123,17 @@ def main():
     else:
         cfg = {
             "cuda": args.with_cuda,
+            "rc": args.rc,
             "version": "0.4.0.dev0",
         }
 
     # get input from user
     if not args.batch:
-        if not cfg["cuda"]:
+        if "cuda" not in args:
             cfg["cuda"] = yes_no("Enable CUDA support?")
+        if not args.rc:
+            cfg["rc"] = textinput("Path to configuration file",
+                                  default=default_rc)
 
     # generate JSON config file
     with open(".config.json", "w") as outfile:
@@ -124,6 +158,19 @@ def main():
     else:
         requirements_files += ['requirements.tensorflow.cpu.txt']
 
+    # Test that configuration file exists and is parsable
+    cfg["rc"] = fs.abspath(fs.path(cfg["rc"]))
+    if not os.path.exists(cfg["rc"]):
+        print(f"warning: file '{cfg['rc']} does not exist", file=sys.stderr)
+    try:
+        config = ConfigParser()
+        config.read(fs.path(cfg["rc"]))
+    except:
+        print(f"error: file '{cfg['rc']}' is invalid",
+              file=sys.stderr)
+        sys.exit(1)
+
+
     with open("requirements.txt", "w") as outfile:
         for name in requirements_files:
             with open(os.path.join("build", "requirements", name)) as infile:
@@ -138,11 +185,12 @@ def main():
     except subprocess.CalledProcessError:
         print("error!", file=sys.stderr)
 
-    print("DSmith {version} configured:".format(version=cfg["version"]))
+    print("DeepSmith {version} configured:".format(version=cfg["version"]))
     print()
-    print("    CUDA support:    " + to_text(cfg["cuda"]))
+    print("    CUDA support:       " + to_text(cfg["cuda"]))
+    print("    Configuration path: " + cfg["rc"])
     print()
-    print("You may now build DSmith by running 'make'.")
+    print("You may now build DeepSmith by running 'make'.")
 
 
 if __name__ == "__main__":
