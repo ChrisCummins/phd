@@ -20,8 +20,7 @@ from tempfile import TemporaryDirectory
 from time import sleep
 from typing import List
 
-# FIXME: get port and mysql credentials
-from dsmith import cfg
+import dsmith
 
 
 # Global state to manage database connections. Must call init() before
@@ -90,9 +89,9 @@ def init(hostname: str, echo: bool=False) -> str:
     """
     global engine
     global make_session
-    username, password = cfg.get_mysql_creds()
+    username, password = dsmith.MYSQL_CREDENTIALS
     schema = "GitHub_C"
-    port = str(cfg.PORT)
+    port = str(dsmith.PORT)
 
     # Use UTF-8 encoding (default is latin-1) when connecting to MySQL.
     # See: https://stackoverflow.com/a/16404147/1318051
@@ -253,7 +252,7 @@ def run_worker(worker: threading.Thread, title):
 
 
 if __name__ == "__main__":
-    init(cfg.HOSTNAME)
+    init(dsmith.MYSQL_HOSTNAME)
 
     clone_dir = "miner/repos"
     file_extensions = [".c"]

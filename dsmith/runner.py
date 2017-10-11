@@ -9,7 +9,6 @@ Usage:
 from typing import List, Union, Deque
 
 import dsmith
-from dsmith import cfg
 from dsmith import db
 from dsmith.db import *
 
@@ -61,7 +60,7 @@ from dsmith.db import *
 
 # if __name__ == "__main__":
 #     parser = ArgumentParser()
-#     parser.add_argument("-H", "--hostname", type=str, default=cfg.HOSTNAME,
+#     parser.add_argument("-H", "--hostname", type=str, default=dsmith.MYSQL_HOSTNAME,
 #                         help="MySQL database hostname")
 #     parser.add_argument("--verbose", action="store_true", help="Verbose execution")
 #     args = parser.parse_args()
