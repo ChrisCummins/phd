@@ -58,7 +58,7 @@ all: $(jupyter) $(clgen) $(cldrive) $(clsmith) $(clreduce)
 
 # run tests
 .PHONY: test
-test: install
+test:
 	dsmith test
 
 
