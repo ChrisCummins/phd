@@ -5,6 +5,7 @@ DeepSmith is a novel approach to automate and accelerate compiler validation whi
 ## Requirements
 
 * GNU / Linux (we recommend Ubuntu 16.04).
+* Clang
 * OpenCL
 * GNU Make
 
