@@ -24,27 +24,29 @@ from dsmith import test as tests
 from dsmith import cli
 
 
-def _mymethod(a, b):
+def mymethod(a, b):
     c = a // b
     print("{a} / {b} = {c}".format(**vars()))
     return c
 
 
-@pytest.mark.xfail(reason="FIXME: cli.run() returning None")
+# @pytest.mark.xfail(reason="FIXME: cli.run() returning None")
 def test_run():
-    assert cli.run(_mymethod, 4, 2) == 2
+    assert cli.run(mymethod, 4, 2) == 2
 
 
 def test_run_exception_handler():
+    # When DEBUG env variable set, exception is caught and system exits
     os.environ["DEBUG"] = ""
     with pytest.raises(SystemExit):
-        cli.run(_mymethod, 1, 0)
+        cli.run(mymethod, 1, 0)
 
 
 def test_run_exception_debug():
+    # When DEBUG env variable set, exception is not caught
     os.environ["DEBUG"] = "1"
     with pytest.raises(ZeroDivisionError):
-        cli.run(_mymethod, 1, 0)
+        cli.run(mymethod, 1, 0)
 
 
 def test_cli_version():

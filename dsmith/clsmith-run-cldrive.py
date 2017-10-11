@@ -70,111 +70,111 @@ def verify_params(platform: str, device: str, optimizations: bool,
             return
 
 
-def get_num_progs_to_run(session: db.session_t,
-                         testbed: Testbed, params: cldriveParams):
-    subquery = session.query(cldriveCLSmithResult.program_id).filter(
-        cldriveCLSmithResult.testbed == testbed, cldriveCLSmithResult.params == params)
-    num_ran = session.query(CLSmithProgram.id).filter(CLSmithProgram.id.in_(subquery)).count()
-    subquery = session.query(cldriveCLSmithResult.program_id).filter(
-        cldriveCLSmithResult.testbed == testbed)
-    total = session.query(CLSmithProgram.id).count()
-    return num_ran, total
+# def get_num_progs_to_run(session: db.session_t,
+#                          testbed: Testbed, params: cldriveParams):
+#     subquery = session.query(cldriveCLSmithResult.program_id).filter(
+#         cldriveCLSmithResult.testbed == testbed, cldriveCLSmithResult.params == params)
+#     num_ran = session.query(CLSmithProgram.id).filter(CLSmithProgram.id.in_(subquery)).count()
+#     subquery = session.query(cldriveCLSmithResult.program_id).filter(
+#         cldriveCLSmithResult.testbed == testbed)
+#     total = session.query(CLSmithProgram.id).count()
+#     return num_ran, total
 
 
-if __name__ == "__main__":
-    parser = ArgumentParser()
-    parser.add_argument(
-        "-H", "--hostname", type=str, default="cc1",
-        help="MySQL database hostname")
-    parser.add_argument(
-        "platform", metavar="<platform name>", help="OpenCL platform name")
-    parser.add_argument(
-        "device", metavar="<device name>", help="OpenCL device name")
-    parser.add_argument(
-        "--no-opts", action="store_true",
-        help="Disable OpenCL optimizations (on by default)")
-    parser.add_argument(
-        "-s", "--size", metavar="<size>", type=int, default=64,
-        help="size of input arrays to generate (default: 64)")
-    parser.add_argument(
-        "-i", "--generator", metavar="<{rand,arange,zeros,ones}>", default="arange",
-        help="input generator to use, one of: {rand,arange,zeros,ones} (default: arange)")
-    parser.add_argument(
-        "--scalar-val", metavar="<float>", type=float, default=None,
-        help="values to assign to scalar inputs (default: <size> argumnent)")
-    parser.add_argument(
-        "-g", "--gsize", type=str, default="128,16,1",
-        help="Comma separated global sizes (default: 128,16,1)")
-    parser.add_argument(
-        "-l", "--lsize", type=str, default="32,1,1",
-        help="Comma separated global sizes (default: 32,1,1)")
-    args = parser.parse_args()
+# if __name__ == "__main__":
+#     parser = ArgumentParser()
+#     parser.add_argument(
+#         "-H", "--hostname", type=str, default="cc1",
+#         help="MySQL database hostname")
+#     parser.add_argument(
+#         "platform", metavar="<platform name>", help="OpenCL platform name")
+#     parser.add_argument(
+#         "device", metavar="<device name>", help="OpenCL device name")
+#     parser.add_argument(
+#         "--no-opts", action="store_true",
+#         help="Disable OpenCL optimizations (on by default)")
+#     parser.add_argument(
+#         "-s", "--size", metavar="<size>", type=int, default=64,
+#         help="size of input arrays to generate (default: 64)")
+#     parser.add_argument(
+#         "-i", "--generator", metavar="<{rand,arange,zeros,ones}>", default="arange",
+#         help="input generator to use, one of: {rand,arange,zeros,ones} (default: arange)")
+#     parser.add_argument(
+#         "--scalar-val", metavar="<float>", type=float, default=None,
+#         help="values to assign to scalar inputs (default: <size> argumnent)")
+#     parser.add_argument(
+#         "-g", "--gsize", type=str, default="128,16,1",
+#         help="Comma separated global sizes (default: 128,16,1)")
+#     parser.add_argument(
+#         "-l", "--lsize", type=str, default="32,1,1",
+#         help="Comma separated global sizes (default: 32,1,1)")
+#     args = parser.parse_args()
 
-    gsize = cldrive.NDRange.from_str(args.gsize)
-    lsize = cldrive.NDRange.from_str(args.lsize)
+#     gsize = cldrive.NDRange.from_str(args.gsize)
+#     lsize = cldrive.NDRange.from_str(args.lsize)
 
-    db.init(args.hostname)  # initialize db engine
+#     db.init(args.hostname)  # initialize db engine
 
-    with Session(commit=False) as session:
-        testbed = get_testbed(session, args.platform, args.device)
+#     with Session(commit=False) as session:
+#         testbed = get_testbed(session, args.platform, args.device)
 
-        params = db.get_or_create(
-            session, cldriveParams, size=args.size, generator=args.generator,
-            scalar_val=args.scalar_val, gsize_x=gsize.x, gsize_y=gsize.y,
-            gsize_z=gsize.z, lsize_x=lsize.x, lsize_y=lsize.y, lsize_z=lsize.z,
-            optimizations=not args.no_opts)
-        flags = params.to_flags()
-        cli = cldrive_cli(args.platform, args.device, *flags)
+#         params = db.get_or_create(
+#             session, cldriveParams, size=args.size, generator=args.generator,
+#             scalar_val=args.scalar_val, gsize_x=gsize.x, gsize_y=gsize.y,
+#             gsize_z=gsize.z, lsize_x=lsize.x, lsize_y=lsize.y, lsize_z=lsize.z,
+#             optimizations=not args.no_opts)
+#         flags = params.to_flags()
+#         cli = cldrive_cli(args.platform, args.device, *flags)
 
-        print(testbed)
-        print(" ".join(cli))
+#         print(testbed)
+#         print(" ".join(cli))
 
-        # progress bar
-        num_ran, num_to_run = get_num_progs_to_run(session, testbed, params)
-        bar = progressbar.ProgressBar(init_value=num_ran, max_value=num_to_run)
+#         # progress bar
+#         num_ran, num_to_run = get_num_progs_to_run(session, testbed, params)
+#         bar = progressbar.ProgressBar(init_value=num_ran, max_value=num_to_run)
 
-        # main execution loop:
-        while True:
-            # get the next program to run
-            subquery = session.query(cldriveCLSmithResult.program_id).filter(
-                cldriveCLSmithResult.testbed == testbed, cldriveCLSmithResult.params == params)
-            program = session.query(CLSmithProgram).filter(
-                ~CLSmithProgram.id.in_(subquery)).order_by(CLSmithProgram.id).first()
+#         # main execution loop:
+#         while True:
+#             # get the next program to run
+#             subquery = session.query(cldriveCLSmithResult.program_id).filter(
+#                 cldriveCLSmithResult.testbed == testbed, cldriveCLSmithResult.params == params)
+#             program = session.query(CLSmithProgram).filter(
+#                 ~CLSmithProgram.id.in_(subquery)).order_by(CLSmithProgram.id).first()
 
-            # we have no program to run
-            if not program:
-                break
+#             # we have no program to run
+#             if not program:
+#                 break
 
-            start_time = time()
-            try:
-                src = cldrive.preprocess(
-                    program.src, include_dirs=["~/src/CLSmith/runtime"])
-                status, stdout, stderr = drive(cli, src)
-            except cldrive.OpenCLPreprocessError:
-                status = 1024  # preprocess error
-                stdout = ''.encode('utf-8')
-                stderr = 'OpenCLPreprocessError'
-            runtime = time() - start_time
+#             start_time = time()
+#             try:
+#                 src = cldrive.preprocess(
+#                     program.src, include_dirs=["~/src/CLSmith/runtime"])
+#                 status, stdout, stderr = drive(cli, src)
+#             except cldrive.OpenCLPreprocessError:
+#                 status = 1024  # preprocess error
+#                 stdout = ''.encode('utf-8')
+#                 stderr = 'OpenCLPreprocessError'
+#             runtime = time() - start_time
 
-            # assert that executed params match expected
-            verify_params(platform=args.platform, device=args.device,
-                          optimizations=params.optimizations,
-                          global_size=params.gsize, local_size=params.lsize,
-                          stderr=stderr)
+#             # assert that executed params match expected
+#             verify_params(platform=args.platform, device=args.device,
+#                           optimizations=params.optimizations,
+#                           global_size=params.gsize, local_size=params.lsize,
+#                           stderr=stderr)
 
-            # create new result
-            result = cldriveCLSmithResult(
-                program=program, params=params, testbed=testbed,
-                cli=" ".join(cli), status=status, runtime=runtime,
-                stdout=stdout, stderr=stderr)
+#             # create new result
+#             result = cldriveCLSmithResult(
+#                 program=program, params=params, testbed=testbed,
+#                 cli=" ".join(cli), status=status, runtime=runtime,
+#                 stdout=stdout, stderr=stderr)
 
-            # record result
-            session.add(result)
-            session.commit()
+#             # record result
+#             session.add(result)
+#             session.commit()
 
-            # update progress bar
-            num_ran, num_to_run = get_num_progs_to_run(session, testbed, params)
-            bar.max_value = num_to_run
-            bar.update(min(num_ran, num_to_run))
+#             # update progress bar
+#             num_ran, num_to_run = get_num_progs_to_run(session, testbed, params)
+#             bar.max_value = num_to_run
+#             bar.update(min(num_ran, num_to_run))
 
-    print("done.")
+#     print("done.")

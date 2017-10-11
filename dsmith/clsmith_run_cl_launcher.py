@@ -15,7 +15,6 @@ from typing import Dict, List, Tuple
 
 import dsmith
 from dsmith import clsmith
-from dsmith import analyze
 from dsmith import db
 from dsmith.db import *
 from dsmith.lib import *

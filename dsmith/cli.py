@@ -72,18 +72,13 @@ def run(method, *args, **kwargs):
 
     If environmental variable DEBUG=1, then exception is not caught.
 
-    Parameters
-    ----------
-    method : function
-        Function to execute.
-    *args
-        Arguments for method.
-    **kwargs
-        Keyword arguments for method.
+    Arguments:
+        method (function): Function to execute.
+        *args: Arguments for method.
+        **kwargs: Keyword arguments for method.
 
-    Returns
-    -------
-    method(*args, **kwargs)
+    Returns:
+        method(*args, **kwargs): Method return value.
     """
     def _user_message(exception):
         logging.critical("""\
@@ -131,7 +126,7 @@ Please report bugs at <https://github.com/ChrisCummins/dsmith/issues>\
 
     try:
         def runctx():
-            method(*args, **kwargs)
+            return method(*args, **kwargs)
 
         if prof.is_enabled() and logging.is_verbose():
             return cProfile.runctx('runctx()', None, locals(), sort='tottime')

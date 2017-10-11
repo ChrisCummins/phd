@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import cldrive
 import progressbar
 import re
 import subprocess
@@ -12,8 +13,6 @@ from time import time, strftime
 from typing import Dict, List, Tuple, NewType
 
 import dsmith
-from dsmith import cldrive
-from dsmith import clgen_mkharness
 from dsmith import db
 from dsmith.db import *
 from dsmith.lib import *
@@ -62,179 +61,179 @@ def verify_params(platform: str, device: str, optimizations: bool,
             return
 
 
-def drive_testcase(s: db.session_t, testcase: CLgenTestCase,
-                   env: cldrive.OpenCLEnvironment, platform_id: int,
-                   device_id: int, timeout: int=60) -> return_t:
-    """ run CLgen program test harness """
-    harness = clgen_mkharness.mkharness(s, env, testcase)
+# def drive_testcase(s: db.session_t, testcase: CLgenTestCase,
+#                    env: cldrive.OpenCLEnvironment, platform_id: int,
+#                    device_id: int, timeout: int=60) -> return_t:
+#     """ run CLgen program test harness """
+#     harness = clgen_mkharness.mkharness(s, env, testcase)
 
-    with NamedTemporaryFile(prefix='cldrive-harness-', delete=False) as tmpfile:
-        path = tmpfile.name
-    try:
-        clgen_mkharness.compile_harness(
-            harness.src, path, platform_id=platform_id, device_id=device_id)
+#     with NamedTemporaryFile(prefix='cldrive-harness-', delete=False) as tmpfile:
+#         path = tmpfile.name
+#     try:
+#         clgen_mkharness.compile_harness(
+#             harness.src, path, platform_id=platform_id, device_id=device_id)
 
-        cmd = ['timeout', '-s9', str(timeout), tmpfile.name]
+#         cmd = ['timeout', '-s9', str(timeout), tmpfile.name]
 
-        start_time = time()
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = proc.communicate()
-        try:
-            stdout = stdout.decode('utf-8')
-        except UnicodeError as e:
-            stdout = '<-- UTF-ERROR -->'
+#         start_time = time()
+#         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+#         stdout, stderr = proc.communicate()
+#         try:
+#             stdout = stdout.decode('utf-8')
+#         except UnicodeError as e:
+#             stdout = '<-- UTF-ERROR -->'
 
-        try:
-            stderr = stderr.decode('utf-8')
-        except UnicodeError as e:
-            stderr = '<-- UTF-ERROR -->'
-        runtime = time() - start_time
+#         try:
+#             stderr = stderr.decode('utf-8')
+#         except UnicodeError as e:
+#             stderr = '<-- UTF-ERROR -->'
+#         runtime = time() - start_time
 
-        return return_t(
-            runtime=runtime, status=status_t(proc.returncode),
-            stdout=stdout, stderr=stderr)
-    finally:
-        fs.rm(path)
-
-
-def get_num_to_run(session: db.session_t, testbed: Testbed, optimizations: int=None):
-    num_ran = session.query(sql.sql.func.count(CLgenResult.id))\
-                .filter(CLgenResult.testbed_id == testbed.id)
-    total = session.query(sql.sql.func.count(CLgenTestCase.id))
-
-    if optimizations is not None:
-        num_ran = num_ran.join(CLgenTestCase).join(cldriveParams)\
-            .filter(cldriveParams.optimizations == optimizations)
-        total = total.join(cldriveParams)\
-            .filter(cldriveParams.optimizations == optimizations)
-
-    return num_ran.scalar(), total.scalar()
+#         return return_t(
+#             runtime=runtime, status=status_t(proc.returncode),
+#             stdout=stdout, stderr=stderr)
+#     finally:
+#         fs.rm(path)
 
 
-if __name__ == "__main__":
-    parser = ArgumentParser()
-    parser.add_argument(
-        "-H", "--hostname", type=str, default="cc1",
-        help="MySQL database hostname")
-    parser.add_argument(
-        "platform", metavar="<platform name>", help="OpenCL platform name")
-    parser.add_argument(
-        "device", metavar="<device name>", help="OpenCL device name")
-    parser.add_argument(
-        "--opt", action="store_true", help="Only test with optimizations on")
-    parser.add_argument(
-        "--no-opt", action="store_true", help="Only test with optimizations disabled")
-    args = parser.parse_args()
+# def get_num_to_run(session: db.session_t, testbed: Testbed, optimizations: int=None):
+#     num_ran = session.query(sql.sql.func.count(CLgenResult.id))\
+#                 .filter(CLgenResult.testbed_id == testbed.id)
+#     total = session.query(sql.sql.func.count(CLgenTestCase.id))
 
-    env = cldrive.make_env(platform=args.platform, device=args.device)
-    platform_id, device_id = env.ids()
+#     if optimizations is not None:
+#         num_ran = num_ran.join(CLgenTestCase).join(cldriveParams)\
+#             .filter(cldriveParams.optimizations == optimizations)
+#         total = total.join(cldriveParams)\
+#             .filter(cldriveParams.optimizations == optimizations)
 
-    optimizations = None
-    if args.opt and args.no_opt:
-        pass  # both flags
-    elif args.opt:
-        optimizations = 1
-    elif args.no_opt:
-        optimizations = 0
+#     return num_ran.scalar(), total.scalar()
 
-    db.init(args.hostname)  # initialize db engine
 
-    with Session(commit=False) as session:
-        testbed = get_testbed(session, args.platform, args.device)
-        devname = util.device_str(testbed.device)
+# if __name__ == "__main__":
+#     parser = ArgumentParser()
+#     parser.add_argument(
+#         "-H", "--hostname", type=str, default="cc1",
+#         help="MySQL database hostname")
+#     parser.add_argument(
+#         "platform", metavar="<platform name>", help="OpenCL platform name")
+#     parser.add_argument(
+#         "device", metavar="<device name>", help="OpenCL device name")
+#     parser.add_argument(
+#         "--opt", action="store_true", help="Only test with optimizations on")
+#     parser.add_argument(
+#         "--no-opt", action="store_true", help="Only test with optimizations disabled")
+#     args = parser.parse_args()
 
-        # progress bar
-        num_ran, num_to_run = get_num_to_run(session, testbed, optimizations)
-        bar = progressbar.ProgressBar(init_value=num_ran, max_value=num_to_run)
+#     env = cldrive.make_env(platform=args.platform, device=args.device)
+#     platform_id, device_id = env.ids()
 
-        # testcases to run
-        inbox = deque()
+#     optimizations = None
+#     if args.opt and args.no_opt:
+#         pass  # both flags
+#     elif args.opt:
+#         optimizations = 1
+#     elif args.no_opt:
+#         optimizations = 0
 
-        def next_batch():
-            """
-            Fill the inbox with jobs to run.
-            """
-            BATCH_SIZE = 100
-            print(f"\nnext CLgen batch for {devname} at", strftime("%H:%M:%S"))
-            # update the counters
-            num_ran, num_to_run = get_num_to_run(session, testbed, optimizations)
-            bar.max_value = num_to_run
-            bar.update(min(num_ran, num_to_run))
+#     db.init(args.hostname)  # initialize db engine
 
-            # fill inbox
-            done = session.query(CLgenResult.testcase_id).filter(
-                CLgenResult.testbed_id == testbed.id)
-            if optimizations is not None:
-                done = done.join(CLgenTestCase).join(cldriveParams)\
-                        .filter(cldriveParams.optimizations == optimizations)
+#     with Session(commit=False) as session:
+#         testbed = get_testbed(session, args.platform, args.device)
+#         devname = util.device_str(testbed.device)
 
-            todo = session.query(CLgenTestCase)\
-                .filter(~CLgenTestCase.id.in_(done))\
-                .order_by(CLgenTestCase.id)\
+#         # progress bar
+#         num_ran, num_to_run = get_num_to_run(session, testbed, optimizations)
+#         bar = progressbar.ProgressBar(init_value=num_ran, max_value=num_to_run)
 
-            if optimizations is not None:
-                todo = todo.join(cldriveParams)\
-                    .filter(cldriveParams.optimizations == optimizations)
+#         # testcases to run
+#         inbox = deque()
 
-            todo = todo.limit(BATCH_SIZE)
-            for testcase in todo:
-                inbox.append(testcase)
+#         def next_batch():
+#             """
+#             Fill the inbox with jobs to run.
+#             """
+#             BATCH_SIZE = 100
+#             print(f"\nnext CLgen batch for {devname} at", strftime("%H:%M:%S"))
+#             # update the counters
+#             num_ran, num_to_run = get_num_to_run(session, testbed, optimizations)
+#             bar.max_value = num_to_run
+#             bar.update(min(num_ran, num_to_run))
 
-        try:
-            while True:
-                # get the next batch of programs to run
-                if not len(inbox):
-                    next_batch()
-                # we have no programs to run
-                if not len(inbox):
-                    break
+#             # fill inbox
+#             done = session.query(CLgenResult.testcase_id).filter(
+#                 CLgenResult.testbed_id == testbed.id)
+#             if optimizations is not None:
+#                 done = done.join(CLgenTestCase).join(cldriveParams)\
+#                         .filter(cldriveParams.optimizations == optimizations)
 
-                # get next program to run
-                testcase = inbox.popleft()
+#             todo = session.query(CLgenTestCase)\
+#                 .filter(~CLgenTestCase.id.in_(done))\
+#                 .order_by(CLgenTestCase.id)\
 
-                # drive the testcase
-                try:
-                    runtime, status, stdout, stderr = drive_testcase(
-                        session, testcase, env, platform_id, device_id)
+#             if optimizations is not None:
+#                 todo = todo.join(cldriveParams)\
+#                     .filter(cldriveParams.optimizations == optimizations)
 
-                    # assert that executed params match expected
-                    if stderr != '<-- UTF-ERROR -->':
-                        verify_params(platform=args.platform, device=args.device,
-                                      optimizations=testcase.params.optimizations,
-                                      global_size=testcase.params.gsize, local_size=testcase.params.lsize,
-                                      stderr=stderr)
+#             todo = todo.limit(BATCH_SIZE)
+#             for testcase in todo:
+#                 inbox.append(testcase)
 
-                    # create new result
-                    stdout_ = util.escape_stdout(stdout)
-                    stdout = get_or_create(
-                        session, CLgenStdout,
-                        hash=crypto.sha1_str(stdout_), stdout=stdout_)
+#         try:
+#             while True:
+#                 # get the next batch of programs to run
+#                 if not len(inbox):
+#                     next_batch()
+#                 # we have no programs to run
+#                 if not len(inbox):
+#                     break
 
-                    stderr_ = util.escape_stderr(stderr)
-                    stderr = get_or_create(
-                        session, CLgenStderr,
-                        hash=crypto.sha1_str(stderr_), stderr=stderr_)
-                    session.flush()
+#                 # get next program to run
+#                 testcase = inbox.popleft()
 
-                    result = CLgenResult(
-                        testbed_id=testbed.id,
-                        testcase_id=testcase.id,
-                        status=status,
-                        runtime=runtime,
-                        stdout_id=stdout.id,
-                        stderr_id=stderr.id,
-                        outcome=analyze.get_cldrive_outcome(status, runtime, stderr_))
+#                 # drive the testcase
+#                 try:
+#                     runtime, status, stdout, stderr = drive_testcase(
+#                         session, testcase, env, platform_id, device_id)
 
-                    session.add(result)
-                    session.commit()
+#                     # assert that executed params match expected
+#                     if stderr != '<-- UTF-ERROR -->':
+#                         verify_params(platform=args.platform, device=args.device,
+#                                       optimizations=testcase.params.optimizations,
+#                                       global_size=testcase.params.gsize, local_size=testcase.params.lsize,
+#                                       stderr=stderr)
 
-                    # update progress bar
-                    num_ran += 1
-                    bar.update(min(num_ran, num_to_run))
-                except clgen_mkharness.HarnessCompilationError:
-                    print("harness for program failed to compile:", program.id)
-        finally:
-            # flush any remaining results
-            s.commit()
+#                     # create new result
+#                     stdout_ = util.escape_stdout(stdout)
+#                     stdout = get_or_create(
+#                         session, CLgenStdout,
+#                         hash=crypto.sha1_str(stdout_), stdout=stdout_)
 
-    print("done.")
+#                     stderr_ = util.escape_stderr(stderr)
+#                     stderr = get_or_create(
+#                         session, CLgenStderr,
+#                         hash=crypto.sha1_str(stderr_), stderr=stderr_)
+#                     session.flush()
+
+#                     result = CLgenResult(
+#                         testbed_id=testbed.id,
+#                         testcase_id=testcase.id,
+#                         status=status,
+#                         runtime=runtime,
+#                         stdout_id=stdout.id,
+#                         stderr_id=stderr.id,
+#                         outcome=analyze.get_cldrive_outcome(status, runtime, stderr_))
+
+#                     session.add(result)
+#                     session.commit()
+
+#                     # update progress bar
+#                     num_ran += 1
+#                     bar.update(min(num_ran, num_to_run))
+#                 except clgen_mkharness.HarnessCompilationError:
+#                     print("harness for program failed to compile:", program.id)
+#         finally:
+#             # flush any remaining results
+#             s.commit()
+
+#     print("done.")
