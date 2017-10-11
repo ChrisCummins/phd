@@ -58,7 +58,7 @@ test:
 
 # python packages
 python_packages = $(clgen) $(cldrive) $(jupyter)
-python: $(python_packages) $(venv_activate)
+python: $(venv_activate) $(python_packages) $(protobuf)
 	./configure -r >/dev/null
 	$(venv) pip install --only-binary=numpy '$(shell grep numpy requirements.txt)'
 	$(venv) pip install -r requirements.txt
@@ -68,10 +68,10 @@ python: $(python_packages) $(venv_activate)
 
 # protocol buffers
 protobuf = dsmith/dsmith_pb2.py
-protobuf: $(protobuf)
+protobuf: $(python_packages) $(protobuf)
 
 dsmith/dsmith_pb2.py: dsmith/protobuf/dsmith.proto python
-	$(venv) protoc dsmith/protobuf/dsmith.proto --python_out=dsmith
+	cd dsmith/protobuf && $(venv) protoc dsmith.proto --python_out=..
 
 
 # run tests

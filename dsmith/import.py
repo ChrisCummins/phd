@@ -12,7 +12,7 @@ from progressbar import ProgressBar
 
 import dsmith
 from dsmith import db
-from dsmith import deepsmith_pb2 as pb
+from dsmith import dsmith_pb2 as pb
 from dsmith.db import *
 
 
