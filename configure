@@ -123,7 +123,7 @@ def main():
     else:
         cfg = {
             "cuda": args.with_cuda,
-            "rc": args.rc,
+            "rc_path": args.rc,
             "version": "0.4.0.dev0",
         }
 
@@ -132,8 +132,8 @@ def main():
         if "cuda" not in args:
             cfg["cuda"] = yes_no("Enable CUDA support?")
         if not args.rc:
-            cfg["rc"] = textinput("Path to configuration file",
-                                  default=default_rc)
+            cfg["rc_path"] = textinput("Path to configuration file",
+                                       default=default_rc)
 
     # generate JSON config file
     with open(".config.json", "w") as outfile:
@@ -143,11 +143,13 @@ def main():
     with open(".config.make", "w") as outfile:
         print("USE_CUDA := " + to_make(cfg["cuda"]), file=outfile)
         print("DSMITH_VERSION := " + cfg["version"], file=outfile)
+        print("RC_PATH := '{}'".format(cfg["rc_path"]), file=outfile)
 
     # generate python config file
     with open(os.path.join("dsmith", "_config.py"), "w") as outfile:
         print("USE_CUDA = " + to_python(cfg["cuda"]), file=outfile)
         print("VERSION = '{}'".format(cfg["version"]), file=outfile)
+        print("RC_PATH = '{}'".format(cfg["rc_path"]), file=outfile)
 
     # generate python requirements file
     requirements_files = ['requirements.txt']
@@ -158,17 +160,28 @@ def main():
     else:
         requirements_files += ['requirements.tensorflow.cpu.txt']
 
-    # Test that configuration file exists and is parsable
-    cfg["rc"] = fs.abspath(fs.path(cfg["rc"]))
-    if not os.path.exists(cfg["rc"]):
-        print(f"warning: file '{cfg['rc']} does not exist", file=sys.stderr)
-    try:
-        config = ConfigParser()
-        config.read(fs.path(cfg["rc"]))
-    except:
-        print(f"error: file '{cfg['rc']}' is invalid",
-              file=sys.stderr)
-        sys.exit(1)
+
+    cfg["rc_path"] = fs.abspath(fs.path(cfg["rc_path"]))
+    if os.path.exists(cfg["rc_path"]):
+        # Test that configuration file is parsable
+        try:
+            config = ConfigParser()
+            config.read(fs.path(cfg["rc_path"]))
+        except:
+            print(f"error: file '{cfg['rc']}' is invalid",
+                  file=sys.stderr)
+            sys.exit(1)
+    else:
+        # Prompt user for config values
+        with open(cfg["rc_path"], 'w') as outfile:
+            config = ConfigParser()
+            config['mysql'] = {
+                "hostname": textinput("Hostname of MySQL Server", default="localhost"),
+                "port": int(textinput("MySQL Server port", default="3306")),
+                "username": textinput("MySQL username:"),
+                "password": textinput("MySQL password:"),
+            }
+            config.write(outfile)
 
 
     with open("requirements.txt", "w") as outfile:
@@ -188,7 +201,7 @@ def main():
     print("DeepSmith {version} configured:".format(version=cfg["version"]))
     print()
     print("    CUDA support:       " + to_text(cfg["cuda"]))
-    print("    Configuration path: " + cfg["rc"])
+    print("    Configuration path: " + cfg["rc_path"])
     print()
     print("You may now build DeepSmith by running 'make'.")
 

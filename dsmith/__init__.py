@@ -20,11 +20,19 @@ Compiler fuzzing through deep learning.
 
 Attributes:
     __version__ (str): PEP 440 compliant version string.
-    version_info: Tuple with 'major', 'minor', 'micro', 'releaselevel'
-        components.
+    version_info (Tuple[int, int, int, str]): Major, minor, micro, and
+        releaselevel version components.
+    MYSQL_HOSTNAME (str): MySQL Server hostname.
+    MYSQL_PORT (int): MySQL Server port.
+    MYSQL_DATABASE (str): MySQL database name.
+    MYSQL_CREDENTIALS (Tuple[str, str]): MySQL username and password.
 """
 from collections import namedtuple
+from configparser import ConfigParser
+from labm8 import fs
+from pathlib import Path
 from pkg_resources import resource_filename, resource_string, require
+from typing import Tuple
 
 from dsmith._config import *
 
@@ -45,6 +53,15 @@ _releaselevel = __version__.split('.')[3] if len(__version__.split('.')) > 3 els
 
 version_info_t = namedtuple('version_info_t', ['major', 'minor', 'micro', 'releaselevel'])
 version_info = version_info_t(_major, _minor, _micro, _releaselevel)
+
+
+# Parse user configuration file
+_config = ConfigParser()
+_config.read(fs.path(RC_PATH))
+MYSQL_HOSTNAME = _config['mysql']['hostname']
+MYSQL_PORT = _config['mysql']['port']
+MYSQL_DATABASE = _config['mysql']['database']
+MYSQL_CREDENTIALS = _config['mysql']['user'], _config['mysql']['password']
 
 
 class DSmithError(Exception):

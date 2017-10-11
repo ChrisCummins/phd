@@ -14,7 +14,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from typing import Dict, List, Tuple, Union
 
 import dsmith
-from dsmith import cfg
 from dsmith import dsmith_pb2 as pb
 
 # Global state to manage database connections. Must call init() before
@@ -41,9 +40,9 @@ def init(hostname: str, echo: bool=False) -> str:
     """
     global engine
     global make_session
-    username, password = cfg.get_mysql_creds()
-    table = cfg.DATABASE
-    port = str(cfg.PORT)
+    username, password = dsmith.MYSQL_CREDENTIALS
+    table = dsmith.MYSQL_DATABASE
+    port = str(dsmith.MYSQL_PORT)
 
     # Use UTF-8 encoding (default is latin-1) when connecting to MySQL.
     # See: https://stackoverflow.com/a/16404147/1318051

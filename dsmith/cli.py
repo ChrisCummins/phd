@@ -241,8 +241,7 @@ For information about a specific command, run `dsmith <command> --help`.
 
     # options whch override the normal argument parsing process.
     if args.version:
-        version = dsmith.version()
-        print(f"dsmith {version} made with \033[1;31m♥\033[0;0m by "
+        print(f"dsmith {dsmith.__version__} made with \033[1;31m♥\033[0;0m by "
               "Chris Cummins <chrisc.101@gmail.com>.")
     else:
         # strip the arguments from the top-level parser
