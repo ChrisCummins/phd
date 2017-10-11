@@ -1,6 +1,6 @@
 host=cc1
 db=DeepSmith_1
-dstdir=~/src/project_b/data
+dstdir=~/src/dsmith/data
 
 set -eux
 
