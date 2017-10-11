@@ -20,7 +20,7 @@ from tempfile import TemporaryDirectory
 from time import sleep
 from typing import List
 
-import dsmith
+# FIXME: get port and mysql credentials
 from dsmith import cfg
 
 
