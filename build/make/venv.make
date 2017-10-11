@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with DeepSmith.  If not, see <http://www.gnu.org/licenses/>.
 #
-venv_dir := $(root)/build/python3.6
+venv_dir := $(root)/build/dsmith
 venv_activate := $(venv_dir)/bin/activate
 venv := source $(venv_activate) &&
 

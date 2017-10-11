@@ -198,6 +198,7 @@ def testsuite():
             else:
                 args.append("--cov-report=")
 
+            print("ARGS:", " ".join(args))
             ret = pytest.main(args)
 
             assert os.path.exists(coverage_report_path())

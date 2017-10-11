@@ -31,7 +31,7 @@ message Result {
 
     message TestCase {
         optional Program program = 1;
-        optional Params params = 2;
+        optional Threads threads = 2;
         optional int32 inputs = 3;
         optional uint32 timeout = 4;
 
@@ -40,10 +40,11 @@ message Result {
             optional float generation_time = 2;
         }
 
-        message Params {
+        message Threads {
             optional int32 gsize_x = 1;
             optional int32 gsize_y = 2;
             optional int32 gsize_z = 3;
+
             optional int32 lsize_x = 4;
             optional int32 lsize_y = 5;
             optional int32 lsize_z = 6;

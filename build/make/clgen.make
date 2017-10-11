@@ -26,9 +26,10 @@ ifeq ($(USE_CUDA),1)
 clgen_cuda_flag := --with-cuda
 endif
 
-$(venv_dir)/bin/clgen: $(venv_activate)
+$(clgen): $(venv_activate)
 	$(venv) cd $(clgen_dir) && ./configure -b $(clgen_cuda_flag)
 	$(venv) cd $(clgen_dir) && make
+	$(venv) cd $(clgen_dir) && make install
 
 
 .PHONY: disttest-clgen

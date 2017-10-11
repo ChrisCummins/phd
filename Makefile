@@ -48,7 +48,17 @@ include build/make/clreduce.make
 python_version = 3.6
 python = $(venv_dir)/bin/python$(python_version)
 
-all: $(jupyter) $(clgen) $(cldrive) $(clsmith) $(clreduce)
+all: $(clsmith) $(clreduce) python protobuf
+
+# run tests
+.PHONY: test
+test:
+	dsmith test
+
+
+# python packages
+python_packages = $(clgen) $(cldrive) $(jupyter)
+python: $(python_packages) $(venv_activate)
 	./configure -r >/dev/null
 	$(venv) pip install --only-binary=numpy '$(shell grep numpy requirements.txt)'
 	$(venv) pip install -r requirements.txt
@@ -56,10 +66,12 @@ all: $(jupyter) $(clgen) $(cldrive) $(clsmith) $(clreduce)
 	$(venv) python ./setup.py install
 
 
-# run tests
-.PHONY: test
-test:
-	dsmith test
+# protocol buffers
+protobuf = dsmith/dsmith_pb2.py
+protobuf: $(protobuf)
+
+dsmith/dsmith_pb2.py: dsmith/protobuf/dsmith.proto python
+	$(venv) protoc dsmith/protobuf/dsmith.proto --python_out=dsmith
 
 
 # run tests
