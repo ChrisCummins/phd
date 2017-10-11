@@ -91,3 +91,16 @@ class Filesystem404(InternalError):
     Path not found.
     """
     pass
+
+
+def data_path(*path) -> str:
+    """
+    Path to data file.
+
+    Arguments:
+    *path (List[str]): Path components.
+
+    Returns:
+        str: Path.
+    """
+    return resource_filename(__name__, fs.path("data", *path))

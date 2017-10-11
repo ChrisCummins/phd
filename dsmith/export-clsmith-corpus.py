@@ -27,7 +27,7 @@ def main():
         x[0] for x in session.query(sql.distinct(CLSmithResult.program_id))\
             .filter(CLSmithResult.classification == args.classification).all()]
 
-    header = fs.read_file("clsmith.h")
+    header = fs.read_file(dsmith.data_path("include", "clsmith.h"))
 
     fs.mkdir(args.outdir)
 

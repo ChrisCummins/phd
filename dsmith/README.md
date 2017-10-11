@@ -1,10 +1,12 @@
-Generate CLSmith programs:
+## Generate testcases
+
+Generate testcases using CLSmith:
 
 ```sh
 $ ./clsmith_mkprogram.py -n 1000
 ```
 
-Generate DeepSmith programs:
+Generate testcases using DeepSmith:
 
 ```sh
 # train and sample model
@@ -15,11 +17,15 @@ $ clgen db dump $(clgen --sampler-dir model.json sampler.json)/kernels.json -d /
 $ ./clgen_fetch.py /tmp/export --delete
 ```
 
+## Run testcases
+
 Collect results for a device:
 
 ```sh
 $ ./runner.py [--verbose] [--only <testbed_ids>] [--exclude <testbed_ids>] [--batch-size <int>] [--host <hostname>]
 ```
+
+## Differential test
 
 Prepare results for analysis:
 
@@ -33,11 +39,15 @@ Analyze results:
 $ ./analyze.py [--prune]
 ```
 
+### Reduce interesting testcases
+
 Run automated reductions:
 
 ```sh
 $ ./run_reductions 0 0 [--clgen|--clsmith]
 ```
+
+### Prepare interesting testcases for reports
 
 Generate bug reports:
 
@@ -46,9 +56,3 @@ $ ./report.py
 ```
 
 Submit bug reports by hand.
-
-Record submitted bug report:
-
-```sh
-$ ./submit.py <testbed-id> <testcase_url> --reported <report_url> [--fixed]
-```

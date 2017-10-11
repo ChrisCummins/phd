@@ -1,8 +1,0 @@
-HOSTNAME = "cc1"
-
-DATABASE = "DeepSmith_1"
-
-PORT = 3306
-
-TIME_LIMIT = 48 * 3600
-TIMEOUT = 60
