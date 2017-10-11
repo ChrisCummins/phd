@@ -35,6 +35,10 @@ distclean_targets =
 PYTHON ?= python3
 PIP ?= pip3
 
+# We are using $(llvm-config --cxxflags) to include LLVM headers, which outputs
+# clang-specific cflags, e.g. -fcolor-diagnostics.
+CXX := clang++
+
 # modules
 include make/remote.make
 include make/cmake.make
@@ -61,7 +65,6 @@ endif
 data_bin = \
 	$(root)/clgen/data/bin/clgen-features \
 	$(root)/clgen/data/bin/clgen-rewriter
-
 
 # build everything
 all: $(data_symlinks) $(data_bin)

@@ -31,8 +31,7 @@ each for each of the following requirements:
 
 -  `Python <https://www.python.org/>`_ >= 3.6.
 -  `Mono <http://www.mono-project.com/>`_.
--  `GCC <https://gcc.gnu.org/>`_ >= 4.8.2 or
-   `clang <http://llvm.org/releases/download.html>`_ >= 3.1.
+-  `clang <http://llvm.org/releases/download.html>`_ >= 3.1.
 -  `GNU Make <http://savannah.gnu.org/projects/make>`_ > 3.79.
 -  `glibc <https://www.gnu.org/software/libc/>`_ >= 2.16.
 -  `libhdf5 <https://support.hdfgroup.org/HDF5/release/obtainsrc.html>`_ >=
