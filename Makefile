@@ -38,51 +38,17 @@ include build/make/wget.make
 include build/make/tar.make
 include build/make/cmake.make
 include build/make/ninja.make
-include build/make/clsmith.make
+include build/make/venv.make
+include build/make/jupyter.make
+include build/make/clgen.make
 include build/make/cldrive.make
-
-venv_dir := $(root)/build/python3.6
-venv_activate := $(venv_dir)/bin/activate
-venv := source $(venv_activate) &&
+include build/make/clsmith.make
+include build/make/clreduce.make
 
 python_version = 3.6
 python = $(venv_dir)/bin/python$(python_version)
 
-all: jupyter clgen $(cldrive) $(clsmith) clreduce
-
-clgen: $(venv_dir)/bin/clgen
-
-# If CUDA is not available, build with NO_CUDA=1
-ifeq ($(NO_CUDA),)
-clgen_cuda_flag := --with-cuda
-endif
-
-$(venv_dir)/bin/clgen: $(venv_activate)
-	$(venv) cd lib/clgen && ./configure -b $(clgen_cuda_flag)
-	$(venv) cd lib/clgen && make
-	$(venv) cd lib/clgen && make test
-
-clreduce: lib/clreduce/build_creduce/creduce/creduce
-
-lib/clreduce/build_creduce/creduce/creduce:
-	cd lib/clreduce && make
-
-jupyter: $(venv_dir)/bin/jupyter ~/.ipython/kernels/dsmith/kernel.json
-
-$(venv_dir)/bin/jupyter: $(venv_activate)
-	$(venv) pip install -r requirements.txt
-
-~/.ipython/kernels/dsmith/kernel.json: build/ipython/kernels/dsmith/kernel.json
-	mkdir -p ~/.ipython/kernels
-	cp -Rv build/ipython/kernels/dsmith ~/.ipython/kernels
-
-# make Jupyter kernel
-build/ipython/kernels/dsmith/kernel.json: build/ipython/kernels/dsmith/kernel.json.template
-	cp $< $@
-	sed "s,@PYTHON@,$(PWD)/$(python)," -i $@
-
-$(root)/build/python3.6/bin/activate:
-	virtualenv -p python3.6 build/python3.6
+all: $(jupyter) $(clgen) $(cldrive) $(clsmith) $(clreduce)
 
 
 # install
