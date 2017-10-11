@@ -49,11 +49,6 @@ python_version = 3.6
 python = $(venv_dir)/bin/python$(python_version)
 
 all: $(jupyter) $(clgen) $(cldrive) $(clsmith) $(clreduce)
-
-
-# install
-.PHONY: install
-install:
 	./configure -r >/dev/null
 	$(venv) pip install --only-binary=numpy '$(shell grep numpy requirements.txt)'
 	$(venv) pip install -r requirements.txt
@@ -103,4 +98,4 @@ distclean: $(distclean_targets)
 # help text
 .PHONY: help
 help:
-	@echo "make {all,install,test,run,clean,distclean}"
+	@echo "make {all,test,run,clean,distclean}"
