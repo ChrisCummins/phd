@@ -118,7 +118,8 @@ def main():
             with open(".config.json") as infile:
                 cfg = json.loads(infile.read())
         except FileNotFoundError:
-            print("you must run ./configure first", file=sys.stderr)
+            print("You must run ./configure first before you can use "
+                  "the `-r` flag.", file=sys.stderr)
             sys.exit(1)
     else:
         cfg = {
@@ -168,12 +169,18 @@ def main():
             config = ConfigParser()
             config.read(fs.path(cfg["rc_path"]))
         except:
-            print(f"error: file '{cfg['rc']}' is invalid",
+            print(f"""\
+Oops! We tried to parse the file and failed. Please see the documentation
+for instructions on how to set it up:
+<https://github.com/ChrisCummins/dsmith>.""",
                   file=sys.stderr)
             sys.exit(1)
     else:
         # Prompt user for config values
         with open(cfg["rc_path"], 'w') as outfile:
+            print("""\
+It looks like that file does not exist.
+The following questions will create it for you:""")
             config = ConfigParser()
             config['mysql'] = {
                 "hostname": textinput("Hostname of MySQL Server", default="localhost"),
@@ -196,7 +203,7 @@ def main():
         # TODO: Pipe output into bash shell:
         subprocess.check_call(['bash', os.path.join('build', 'install-deps.sh')])
     except subprocess.CalledProcessError:
-        print("error!", file=sys.stderr)
+        print("💩 Something went wrong.", file=sys.stderr)
 
     print("DeepSmith {version} configured:".format(version=cfg["version"]))
     print()
