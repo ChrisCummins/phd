@@ -35,9 +35,9 @@ from typing import BinaryIO, List, TextIO
 import dsmith
 
 
-# TODO: Append '<http://chriscummins.cc/dsmith>' to __help_epilog__
 __help_epilog__ = """
 Copyright (C) 2017 Chris Cummins <chrisc.101@gmail.com>.
+<https://github.com/ChrisCummins/dsmith/>
 """
 
 def getself(func):
@@ -89,7 +89,7 @@ def run(method, *args, **kwargs):
         logging.critical("""\
 {err} ({type})
 
-Please report bugs to <chrisc.101@gmail.com>\
+Please report bugs at <https://github.com/ChrisCummins/dsmith/issues>\
 """.format(err=e, type=type(e).__name__))
         sys.exit(1)
 
@@ -117,7 +117,7 @@ Please report bugs to <chrisc.101@gmail.com>\
   stacktrace:
 {stack_trace}
 
-Please report bugs to <chrisc.101@gmail.com>\
+Please report bugs at <https://github.com/ChrisCummins/dsmith/issues>\
 """.format(err=e, type=type(e).__name__, stack_trace=message))
         sys.exit(1)
 

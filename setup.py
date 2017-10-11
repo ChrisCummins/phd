@@ -76,7 +76,7 @@ setup(
     name='dsmith',
     version='0.4.0.dev0',
     description='Compiler Fuzzing through Deep Learning',
-    # TODO: url='',
+    url='https://github.com/ChrisCummins/dsmith',
     author='Chris Cummins',
     author_email='chrisc.101@gmail.com',
     license='GNU General Public License, Version 3',
