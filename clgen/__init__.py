@@ -51,7 +51,7 @@ from clgen._config import *
 
 
 __author__ = "Chris Cummins"
-__copyright__ = "Copyright 2017, Chris Cummins"
+__copyright__ = "Copyright 2016, 2017 Chris Cummins"
 __license__ = "GPL v3"
 __version__ = require("clgen")[0].version
 __maintainer__ = __author__
