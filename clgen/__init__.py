@@ -71,15 +71,15 @@ version_info = version_info_t(_major, _minor, _micro, _releaselevel)
 
 class CLgenError(Exception):
     """
-    Module error.
+    Top level error. Never directly thrown.
     """
     pass
 
 
 class InternalError(CLgenError):
     """
-    An internal module error. This class of errors should not leak outside
-    of the module into user code.
+    An internal module error. This class of errors should not leak outside of
+    the module into user code.
     """
     pass
 
