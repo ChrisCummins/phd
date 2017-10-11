@@ -9,9 +9,9 @@ from labm8 import crypto, fs
 from progressbar import ProgressBar
 from typing import List
 
-import clgen_mkharness
-import db
-from db import *
+import dsmith
+from dsmith import db
+from dsmith.db import *
 
 # Benchmarked CLgen inference rate (characters per second):
 CLGEN_INFERENCE_CPS = 465

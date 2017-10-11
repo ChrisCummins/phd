@@ -1,21 +1,21 @@
 """
 Code for compile-only experiments.
 """
-import re
-from argparse import ArgumentParser
-from collections import namedtuple
-from subprocess import Popen, PIPE
-from time import time
-from typing import Dict, List, Tuple, NewType
-from tempfile import NamedTemporaryFile
-
 import cldrive
 import progressbar
-from labm8 import fs
+import re
 
-import db
-from db import *
-from lib import *
+from argparse import ArgumentParser
+from collections import namedtuple
+from labm8 import fs
+from subprocess import Popen, PIPE
+from tempfile import NamedTemporaryFile
+from time import time
+from typing import Dict, List, Tuple, NewType
+
+from dsmith import db
+from dsmith.db import *
+from dsmith.lib import *
 
 
 status_t = NewType('status_t', int)

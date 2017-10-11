@@ -5,8 +5,9 @@ from argparse import ArgumentParser
 from labm8 import crypto
 from progressbar import ProgressBar
 
-import db
-from db import *
+import dsmith
+from dsmith import db
+from dsmith.db import *
 
 
 def set_results_outcomes(s: session_t) -> None:

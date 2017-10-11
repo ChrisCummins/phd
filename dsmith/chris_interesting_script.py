@@ -7,7 +7,8 @@ import time
 import argparse
 import logging
 
-import clsmith
+import dsmith
+from dsmith import clsmith
 
 LAUNCHER = clsmith.cl_launcher_path
 LAUNCHER_OPTS = ["-l", "1,1,1", "-g", "1,1,1"]

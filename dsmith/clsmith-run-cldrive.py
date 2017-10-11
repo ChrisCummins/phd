@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
+import cldrive
 import os
+import progressbar
 import re
+
 from argparse import ArgumentParser
 from collections import namedtuple
+from labm8 import fs
 from subprocess import Popen, PIPE
 from time import time
 from typing import Dict, List, Tuple, NewType
 
-import cldrive
-import progressbar
-from labm8 import fs
-
-import db
-from db import *
-from lib import *
+import dsmith
+from dsmith import db
+from dsmith.db import *
+from dsmith.lib import *
 
 
 status_t = NewType('status_t', int)

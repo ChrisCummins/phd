@@ -19,8 +19,9 @@ from time import time
 from typing import List, Tuple
 from tempfile import NamedTemporaryFile
 
-import db
-from db import *
+import dsmith
+from dsmith import db
+from dsmith.db import *
 
 
 class HarnessCompilationError(ValueError):

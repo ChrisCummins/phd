@@ -16,12 +16,11 @@ from typing import Dict, List, Tuple, NewType, Union
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from progressbar import ProgressBar
 
-import clgen_mkharness
-import analyze
-import db
-import util
-from db import *
-from lib import *
+import dsmith
+from dsmith import analyze
+from dsmith import db
+from dsmith.db import *
+from dsmith.lib import *
 
 
 def get_num_programs_to_build(session: db.session_t, tables: Tableset, clang: str):

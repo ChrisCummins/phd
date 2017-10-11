@@ -12,12 +12,12 @@ from argparse import ArgumentParser
 from itertools import product
 from subprocess import Popen
 
-import util
-import db
-from db import *
+import dsmith
+from dsmith import db
+from dsmith.db import *
 
-from clsmith import *
-from clgen_run_cl_launcher import *
+from dsmith.clsmith import *
+from dsmith.clgen_run_cl_launcher import *
 
 
 def cl_launcher(src: str, platform_id: int, device_id: int,

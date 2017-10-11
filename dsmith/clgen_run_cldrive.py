@@ -2,6 +2,7 @@
 import progressbar
 import re
 import subprocess
+
 from argparse import ArgumentParser
 from collections import deque, namedtuple
 from labm8 import crypto, fs
@@ -10,13 +11,12 @@ from tempfile import NamedTemporaryFile
 from time import time, strftime
 from typing import Dict, List, Tuple, NewType
 
-import analyze
-import cldrive
-import clgen_mkharness
-import util
-import db
-from db import *
-from lib import *
+import dsmith
+from dsmith import cldrive
+from dsmith import clgen_mkharness
+from dsmith import db
+from dsmith.db import *
+from dsmith.lib import *
 
 status_t = NewType('status_t', int)
 return_t = namedtuple('return_t', ['runtime', 'status', 'stdout', 'stderr'])

@@ -7,9 +7,10 @@ from labm8 import crypto
 from labm8 import fs
 from tempfile import NamedTemporaryFile
 
-import clsmith
-import db
-from db import *
+import dsmith
+from dsmith import clsmith
+from dsmith import db
+from dsmith.db import *
 
 
 def get_num_progs(session: session_t) -> int:

@@ -20,7 +20,8 @@ from tempfile import TemporaryDirectory
 from time import sleep
 from typing import List
 
-import cfg
+import dsmith
+from dsmith import cfg
 
 
 # Global state to manage database connections. Must call init() before

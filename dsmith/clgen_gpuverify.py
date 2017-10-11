@@ -12,8 +12,9 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from progressbar import ProgressBar
 
-import db
-from db import *
+import dsmith
+from dsmith import db
+from dsmith.db import *
 
 
 if __name__ == "__main__":

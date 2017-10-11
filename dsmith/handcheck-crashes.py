@@ -10,8 +10,9 @@ from argparse import ArgumentParser
 from itertools import product
 from subprocess import Popen
 
-import db
-from db import *
+import dsmith
+from dsmith import db
+from dsmith.db import *
 
 
 def yes_no_or_skip(question, default="skip"):

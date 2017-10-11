@@ -24,7 +24,6 @@ from tempfile import NamedTemporaryFile
 
 import analyze
 import db
-import util
 import clgen_mkharness
 from db import *
 

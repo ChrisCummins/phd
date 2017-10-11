@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
+import cldrive
 import os
 import platform
 import progressbar
 import pyopencl as cl
 import re
+
 from collections import deque, namedtuple
 from argparse import ArgumentParser
 from labm8 import crypto, fs
@@ -11,14 +13,12 @@ from tempfile import NamedTemporaryFile
 from time import time, strftime
 from typing import Dict, List, Tuple
 
-import clsmith
-import cldrive
-
-import analyze
-import util
-import db
-from db import *
-from lib import *
+import dsmith
+from dsmith import clsmith
+from dsmith import analyze
+from dsmith import db
+from dsmith.db import *
+from dsmith.lib import *
 
 
 def get_platform_name(platform_id):

@@ -3,16 +3,17 @@
 Fetch OpenCL kernels from file system
 """
 import os
+import sqlalchemy as sql
+
 from argparse import ArgumentParser
 from pathlib import Path
 from random import shuffle
-
-import sqlalchemy as sql
 from labm8 import fs
 from progressbar import ProgressBar
 
-import db
-from db import *
+import dsmith
+from dsmith import db
+from dsmith.db import *
 
 
 if __name__ == "__main__":

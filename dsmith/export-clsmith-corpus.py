@@ -6,8 +6,9 @@ from argparse import ArgumentParser
 from progressbar import ProgressBar
 from labm8 import fs
 
-import db
-from db import *
+import dsmith
+from dsmith import db
+from dsmith.db import *
 
 __description__ = """ Export a CLSmith program codes for assembling CLgen
 training corpuses. This requires inlining CLSmith headers.

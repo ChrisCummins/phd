@@ -36,10 +36,10 @@ from labm8 import fs
 from pathlib import Path
 from progressbar import ProgressBar
 
-import db
-from db import *
-from lib import *
-from util import *
+import dsmith
+from dsmith import db
+from dsmith.db import *
+from dsmith.lib import *
 
 def reproduce_clgen_build_failures(result):
     import analyze

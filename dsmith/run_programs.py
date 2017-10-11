@@ -8,8 +8,9 @@ from argparse import ArgumentParser
 from itertools import product
 from subprocess import Popen
 
-import db
-from db import *
+import dsmith
+from dsmith import db
+from dsmith.db import *
 
 def get_platform_name(platform_id):
     platform = cl.get_platforms()[platform_id]

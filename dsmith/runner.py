@@ -8,69 +8,70 @@ Usage:
 """
 from typing import List, Union, Deque
 
-import cfg
-import db
-from db import *
+import dsmith
+from dsmith import cfg
+from dsmith import db
+from dsmith.db import *
 
-result_t = Union[ClsmithResult, DsmithResult]
-testcase_t = Union[ClsmithTestcase, DsmithTestcase]
-
-
-def push_testcase_results(s: session_t, outbox: List[result_t]):
-    while not outbox.empty():
-        result = outbox.popleft()
-        result.push(s)
+# result_t = Union[ClsmithResult, DsmithResult]
+# testcase_t = Union[ClsmithTestcase, DsmithTestcase]
 
 
-def fetch_testcase_batch(s: session_t, testbed_ids: List[Testbed.id_t],
-                         tablesets: List[Tableset],
-                         batch_size: int) -> Deque[testcase_t]:
-    inbox = deque()
-
-    for tables in tablesets:
-        done = s.query(tables.results.testcase_id)\
-            .filter(tables.results.testbed_id.in_(testbed_ids))
-
-        todo = session.query(tables.testcases)\
-            .filter(~tables.testcases.id.in_(done))\
-            .order_by(tables.testcases.id)
-
-        for testcase in todo:
-            inbox.append(testcase.toProtobuf())
-
-    return inbox
+# def push_testcase_results(s: session_t, outbox: List[result_t]):
+#     while not outbox.empty():
+#         result = outbox.popleft()
+#         result.push(s)
 
 
-def runner(tested_ids: List[Testbed.id_t], tablesets: List[Tableset],
-           batch_size: int=1000):
-    outbox = deque()
+# def fetch_testcase_batch(s: session_t, testbed_ids: List[Testbed.id_t],
+#                          tablesets: List[Tableset],
+#                          batch_size: int) -> Deque[testcase_t]:
+#     inbox = deque()
 
-    while True:
-        with Session() as s:
-            push_testcase_results(s, outbox)
-            assert not len(outbox)
-            inbox = fetch_testcase_batch(s, testbed_ids, tablesets, batch_size)
+#     for tables in tablesets:
+#         done = s.query(tables.results.testcase_id)\
+#             .filter(tables.results.testbed_id.in_(testbed_ids))
 
-        if not len(inbox):
-            return
+#         todo = session.query(tables.testcases)\
+#             .filter(~tables.testcases.id.in_(done))\
+#             .order_by(tables.testcases.id)
 
-        for testcase in inbox:
-            result = testcase.run()
-            outbox.append(result)
+#         for testcase in todo:
+#             inbox.append(testcase.toProtobuf())
 
-if __name__ == "__main__":
-    parser = ArgumentParser()
-    parser.add_argument("-H", "--hostname", type=str, default=cfg.HOSTNAME,
-                        help="MySQL database hostname")
-    parser.add_argument("--verbose", action="store_true", help="Verbose execution")
-    args = parser.parse_args()
+#     return inbox
 
-    # Initialize database and logging engines:
-    db.init(args.hostname)
-    # TODO: init logging enging
 
-    testbed_ids = [] # TODO
-    tablesets = [] # TODO
+# def runner(tested_ids: List[Testbed.id_t], tablesets: List[Tableset],
+#            batch_size: int=1000):
+#     outbox = deque()
 
-    runner(testbed_ids, tablesets, args.batch_size)
-    print("done")
+#     while True:
+#         with Session() as s:
+#             push_testcase_results(s, outbox)
+#             assert not len(outbox)
+#             inbox = fetch_testcase_batch(s, testbed_ids, tablesets, batch_size)
+
+#         if not len(inbox):
+#             return
+
+#         for testcase in inbox:
+#             result = testcase.run()
+#             outbox.append(result)
+
+# if __name__ == "__main__":
+#     parser = ArgumentParser()
+#     parser.add_argument("-H", "--hostname", type=str, default=cfg.HOSTNAME,
+#                         help="MySQL database hostname")
+#     parser.add_argument("--verbose", action="store_true", help="Verbose execution")
+#     args = parser.parse_args()
+
+#     # Initialize database and logging engines:
+#     db.init(args.hostname)
+#     # TODO: init logging enging
+
+#     testbed_ids = [] # TODO
+#     tablesets = [] # TODO
+
+#     runner(testbed_ids, tablesets, args.batch_size)
+#     print("done")

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import cldrive
 import os
 import platform
 import progressbar
@@ -10,12 +11,11 @@ from labm8 import fs
 from tempfile import NamedTemporaryFile
 from typing import Dict, List, Tuple
 
-import clsmith
-import cldrive
-
-import db
-from db import *
-from lib import *
+import dsmith
+from dsmith import clsmith
+from dsmith import db
+from dsmith.db import *
+from dsmith.lib import *
 
 
 def get_platform_name(platform_id):
@@ -106,15 +106,15 @@ def parse_ndrange(ndrange: str) -> Tuple[int, int, int]:
     return (int(components[0]), int(components[1]), int(components[2]))
 
 
-def get_num_progs_to_run(session: db.session_t,
-                         testbed: Testbed, params: cl_launcherParams):
-    subquery = session.query(cl_launcherCLgenResult.program_id).filter(
-        cl_launcherCLgenResult.testbed_id == testbed.id,
-        cl_launcherCLgenResult.params_id == params.id)
-    num_ran = session.query(CLgenProgram.id).filter(CLgenProgram.id.in_(subquery)).count()
-    total = session.query(CLgenProgram.id).filter(
-        CLgenProgram.cl_launchable == 1).count()
-    return num_ran, total
+# FIXME: def get_num_progs_to_run(session: db.session_t,
+#                          testbed: Testbed, threads: Threads):
+#     subquery = session.query(cl_launcherCLgenResult.program_id).filter(
+#         cl_launcherCLgenResult.testbed_id == testbed.id,
+#         cl_launcherCLgenResult.params_id == params.id)
+#     num_ran = session.query(CLgenProgram.id).filter(CLgenProgram.id.in_(subquery)).count()
+#     total = session.query(CLgenProgram.id).filter(
+#         CLgenProgram.cl_launchable == 1).count()
+#     return num_ran, total
 
 
 if __name__ == "__main__":
@@ -151,8 +151,7 @@ if __name__ == "__main__":
     with Session() as session:
         testbed = get_testbed(session, platform_name, device_name)
 
-        params = db.get_or_create(session, cl_launcherParams,
-            optimizations = optimizations,
+        params = db.get_or_create(session, threads_id,
             gsize_x = gsize[0], gsize_y = gsize[1], gsize_z = gsize[2],
             lsize_x = lsize[0], lsize_y = lsize[1], lsize_z = lsize[2])
         flags = params.to_flags()

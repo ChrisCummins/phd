@@ -7,8 +7,9 @@ from typing import List, NewType
 from pathlib import Path
 from labm8 import crypto
 
-import autotest
-import clsmith
+import dsmith
+from dsmith import autotest
+from dsmith import clsmith
 
 
 class OpenCLTestcase(object):

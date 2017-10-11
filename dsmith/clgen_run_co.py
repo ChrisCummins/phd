@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
+import cldrive
 import re
 import sqlalchemy as sql
 import sys
+import progressbar
 
 from argparse import ArgumentParser
 from collections import namedtuple
 from subprocess import Popen, PIPE
 from time import time
 from typing import Dict, List, Tuple, NewType
-
-import cldrive
-import progressbar
 from labm8 import fs
 
-import co
-import db
-from db import *
-from lib import *
+import dsmith
+from dsmith import co
+from dsmith import db
+from dsmith.db import *
+from dsmith.lib import *
 
 
 def get_num_progs_to_run(session: db.session_t,

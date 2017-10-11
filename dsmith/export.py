@@ -1,17 +1,18 @@
 #!/usr/bin/env python
+import datetime
 import gzip
 import sqlalchemy as sql
 import sys
+
 from argparse import ArgumentParser
 from labm8 import fs, crypto
 from pathlib import Path
 from progressbar import ProgressBar
 
-import datetime
-import util
-import db
-import deepsmith_pb2 as pb
-from db import *
+import dsmith
+from dsmith import db
+from dsmith import deepsmith_pb2 as pb
+from dsmith.db import *
 
 
 def export_todir(s: session_t, table, dir: Path) -> None:

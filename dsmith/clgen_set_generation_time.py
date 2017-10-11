@@ -2,9 +2,10 @@
 from argparse import ArgumentParser
 from progressbar import ProgressBar
 
-import clgen_fetch
-import db
-from db import CLgenProgram, Session
+import dsmith
+from dsmith import clgen_fetch
+from dsmith import db
+from dsmith.db import CLgenProgram, Session
 
 
 if __name__ == "__main__":

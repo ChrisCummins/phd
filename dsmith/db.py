@@ -13,8 +13,9 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.declarative import declarative_base
 from typing import Dict, List, Tuple, Union
 
-import cfg
-import deepsmith_pb2 as pb
+import dsmith
+from dsmith import cfg
+from dsmith import deepsmith_pb2 as pb
 
 # Global state to manage database connections. Must call init() before
 # creating sessions.

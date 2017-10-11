@@ -2,12 +2,13 @@ import subprocess
 from labm8 import fs
 from tempfile import NamedTemporaryFile
 
-import clsmith
-import mkharness
-from db import *
+import dsmith
+from dsmith import clsmith
+from dsmith import mkharness
+from dsmith.db import *
 
-OCLGRIND = "../lib/clgen/native/oclgrind/c3760d07365b74ccda04cd361e1b567a6d99dd8c/install/bin/oclgrind"
-assert fs.isexe(OCLGRIND)
+OCLGRIND = "oclgrind"
+# FIXME: put oclgrind in data folder: assert fs.isexe(OCLGRIND)
 
 
 def oclgrind_cli(timeout=60):
