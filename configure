@@ -18,6 +18,7 @@
 #
 import json
 import os
+import subprocess
 import sys
 
 from argparse import ArgumentParser
@@ -127,6 +128,15 @@ def main():
         for name in requirements_files:
             with open(os.path.join("build", "requirements", name)) as infile:
                 outfile.write(infile.read())
+
+    try:
+        # Recursive checkout all git submodules:
+        subprocess.check_call(['git', 'submodule', 'update', '--init', '--recursive'])
+        # Install any required system-wide dependencies:
+        # TODO: Pipe output into bash shell:
+        subprocess.check_call(['bash', os.path.join('build', 'install-deps.sh')])
+    except subprocess.CalledProcessError:
+        print("error!", file=sys.stderr)
 
     print("DSmith {version} configured:".format(version=cfg["version"]))
     print()
