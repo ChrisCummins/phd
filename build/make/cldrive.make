@@ -1,4 +1,4 @@
-# Makefile module for CLSmith. Requires $(cmake) and $(ninja) modules.
+# Makefile module for cldrive. Requires $(venv) modules.
 #
 # Copyright 2017 Chris Cummins <chrisc.101@gmail.com>.
 #
@@ -16,15 +16,16 @@
 # You should have received a copy of the GNU General Public License along with
 # DeepSmith.  If not, see <http://www.gnu.org/licenses/>.
 #
-clsmith_dir := $(root)/lib/clsmith
-clsmith := $(clsmith_dir)/build/bin/cl_launcher
+cldrive_dir := $(root)/lib/cldrive
+cldrive := $(venv_dir)/bin/cldrive
 
-# add this target as a prerequisite for rules which require CLSmith
-clsmith: $(clsmith)
+# add this target as a prerequisite for rules which require cldrive
+cldrive: $(cldrive)
 
-$(clsmith): $(cmake) $(ninja)
-	mkdir -pv $(clsmith_dir)/build
-	cd $(clsmith_dir)/build && $(cmake) .. -G Ninja
-	cd $(clsmith_dir)/build && $(ninja)
-	cp -v $(clsmith_dir)/runtime/*.h $(clsmith_dir)/build/
-	cp -v $(clsmith_dir)/build/*.h $(clsmith_dir)/runtime/
+$(cldrive): $(venv_activate)
+	$(venv) cd $(cldrive_dir) && make install
+
+.PHONY: disttest-cldrive
+disttest-cldrive: install
+	$(venv) cd $(cldrive_dir) && make test
+disttest_targets += disttest-cldrive

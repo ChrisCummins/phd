@@ -73,7 +73,7 @@ def all_module_data_files(module, datadir="data", excludes=[]):
 
 
 setup(
-    name='DeepSmith',
+    name='dsmith',
     version='0.4.0.dev0',
     description='Compiler Fuzzing through Deep Learning',
     # TODO: url='',
@@ -90,7 +90,7 @@ setup(
             'data/cache',
         ]),
     },
-    entry_points={'console_scripts': ['clgen=clgen.cli:main']},
+    entry_points={'console_scripts': ['dsmith=dsmith.cli:main']},
     install_requires=read_requirements('requirements.txt'),
     cmdclass={'test': DsmithTestCommand},
     data_files=[],

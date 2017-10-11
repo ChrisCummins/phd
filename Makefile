@@ -31,6 +31,7 @@ UNAME := $(shell uname)
 SHELL := /bin/bash
 clean_targets =
 distclean_targets =
+disttest_targets =
 
 # modules
 include build/make/wget.make
@@ -38,6 +39,7 @@ include build/make/tar.make
 include build/make/cmake.make
 include build/make/ninja.make
 include build/make/clsmith.make
+include build/make/cldrive.make
 
 venv_dir := $(root)/build/python3.6
 venv_activate := $(venv_dir)/bin/activate
@@ -46,7 +48,7 @@ venv := source $(venv_activate) &&
 python_version = 3.6
 python = $(venv_dir)/bin/python$(python_version)
 
-all: jupyter clgen cldrive $(clsmith) clreduce
+all: jupyter clgen $(cldrive) $(clsmith) clreduce
 
 clgen: $(venv_dir)/bin/clgen
 
@@ -59,12 +61,6 @@ $(venv_dir)/bin/clgen: $(venv_activate)
 	$(venv) cd lib/clgen && ./configure -b $(clgen_cuda_flag)
 	$(venv) cd lib/clgen && make
 	$(venv) cd lib/clgen && make test
-
-cldrive: $(venv_dir)/bin/cldrive
-
-$(venv_dir)/bin/cldrive: $(venv_activate)
-	$(venv) cd lib/cldrive && make install
-	$(venv) cd lib/cldrive && make test
 
 clreduce: lib/clreduce/build_creduce/creduce/creduce
 
@@ -87,6 +83,28 @@ build/ipython/kernels/dsmith/kernel.json: build/ipython/kernels/dsmith/kernel.js
 
 $(root)/build/python3.6/bin/activate:
 	virtualenv -p python3.6 build/python3.6
+
+
+# install
+.PHONY: install
+install:
+	./configure -r >/dev/null
+	$(venv) pip install --only-binary=numpy '$(shell grep numpy requirements.txt)'
+	$(venv) pip install -r requirements.txt
+	$(venv) pip install '$(shell grep tensorflow requirements.txt)'
+	$(venv) python ./setup.py install
+
+
+# run tests
+.PHONY: test
+test: install
+	dsmith test
+
+
+# run tests
+.PHONY: distest disttest
+distest disttest: test $(disttest_targets)
+	true
 
 
 # launch Jupyter server
@@ -119,4 +137,4 @@ distclean: $(distclean_targets)
 # help text
 .PHONY: help
 help:
-	@echo "make {all,test,run,clean,distclean}"
+	@echo "make {all,install,test,run,clean,distclean}"
