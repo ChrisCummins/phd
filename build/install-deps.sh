@@ -53,6 +53,14 @@ main() {
             echo '# install libhdf5-dev:'
             echo 'sudo apt-get install -y libhdf5-dev'
         fi
+
+        if dpkg -s clang &>/dev/null ; then
+            echo '# clang: installed'
+        else
+            echo '#install clang:'
+            echo 'sudo apt-get install -y clang'
+        fi
+
     elif python -mplatform | grep -qi CentOS ; then
         echo '# guessed distribution: CentOS'
 
@@ -65,6 +73,9 @@ main() {
 
         echo '# install libhdf5'
         echo 'sudo yum -y install hdf5 hdf5-devel'
+
+        echo '#install clang:'
+        echo 'sudo yum -y clang'
     elif python -mplatform | grep -qi Arch ; then
         echo '# guessed distribution: Arch Linux'
 
@@ -76,9 +87,11 @@ main() {
         echo 'sudo yaourt -Syy'
         echo 'sudo yaourt -S libhdf5'
 
+        echo '# install clang:'
+        echo 'sudo pacman -S clang'
     else
         echo '# warning: Unsupported OS detected!'
-        echo '#          Please ensure you have python3.6 and libhdf5 installed'
+        echo '# Please ensure you have python3.6, libhdf5, and clang installed'
     fi
 }
 main $@
