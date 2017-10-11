@@ -31,7 +31,6 @@ def _mymethod(a, b):
     return c
 
 
-@pytest.mark.xfail(reason="FIXME: cli.run() returning None")
 def test_run():
     assert cli.run(_mymethod, 4, 2) == 2
 

@@ -130,7 +130,7 @@ Please report bugs at <https://github.com/ChrisCummins/clgen/issues>\
 
     try:
         def runctx():
-            method(*args, **kwargs)
+            return method(*args, **kwargs)
 
         if prof.is_enabled() and log.is_verbose():
             return cProfile.runctx('runctx()', None, locals(), sort='tottime')
