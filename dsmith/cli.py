@@ -82,6 +82,7 @@ def run(method, *args, **kwargs):
     """
     def _user_message(exception):
         logging.critical("""\
+💩 Fatal error!
 {err} ({type})
 
 Please report bugs at <https://github.com/ChrisCummins/dsmith/issues>\
@@ -107,6 +108,7 @@ Please report bugs at <https://github.com/ChrisCummins/dsmith/issues>\
         message = "\n".join(_msg(*r) for r in enumerate(trace))
 
         logging.critical("""\
+💩 Fatal error!
 {err} ({type})
 
   stacktrace:
