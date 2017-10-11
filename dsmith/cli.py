@@ -33,6 +33,7 @@ from sys import exit
 from typing import BinaryIO, List, TextIO
 
 import dsmith
+from dsmith.repl import repl
 
 
 __help_epilog__ = """
@@ -246,6 +247,9 @@ For information about a specific command, run `dsmith <command> --help`.
         print(f"dsmith {dsmith.__version__} made with \033[1;31m♥\033[0;0m by "
               "Chris Cummins <chrisc.101@gmail.com>.")
     else:
+        if "dispatch_func" not in args:
+            repl()
+
         # strip the arguments from the top-level parser
         dispatch_func = args.dispatch_func
         opts = vars(args)
