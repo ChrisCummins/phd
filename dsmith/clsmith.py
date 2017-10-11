@@ -9,9 +9,9 @@ status_t = NewType('status_t', int)
 return_t = namedtuple('return_t', ['runtime', 'status', 'stdout', 'stderr'])
 
 # set these variables to your local CLSmith build:
-exec_path = fs.path("../lib/CLSmith/build/CLSmith")
-cl_launcher_path = fs.path("../lib/CLSmith/build/cl_launcher")
-include_path = fs.path("../lib/CLSmith/runtime")
+exec_path = fs.path("../lib/clsmith/build/CLSmith")
+cl_launcher_path = fs.path("../lib/clsmith/build/cl_launcher")
+include_path = fs.path("../lib/clsmith/runtime")
 
 
 def clsmith_cli(*args, timeout: int=60, exec_path=exec_path) -> List[str]:

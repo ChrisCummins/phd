@@ -25,16 +25,28 @@ $(error Please run ./configure first)
 endif
 include .config.make
 
-SHELL = /bin/bash
+root := $(PWD)
+cache := $(root)/.cache
+UNAME := $(shell uname)
+SHELL := /bin/bash
+clean_targets =
+distclean_targets =
 
-venv_dir := env/python3.6
+# modules
+include build/make/wget.make
+include build/make/tar.make
+include build/make/cmake.make
+include build/make/ninja.make
+include build/make/clsmith.make
+
+venv_dir := $(root)/build/python3.6
 venv_activate := $(venv_dir)/bin/activate
 venv := source $(venv_activate) &&
 
 python_version = 3.6
 python = $(venv_dir)/bin/python$(python_version)
 
-all: jupyter clgen cldrive CLSmith clreduce
+all: jupyter clgen cldrive $(clsmith) clreduce
 
 clgen: $(venv_dir)/bin/clgen
 
@@ -53,15 +65,6 @@ cldrive: $(venv_dir)/bin/cldrive
 $(venv_dir)/bin/cldrive: $(venv_activate)
 	$(venv) cd lib/cldrive && make install
 	$(venv) cd lib/cldrive && make test
-
-CLSmith: lib/CLSmith/build/bin/cl_launcher
-
-lib/CLSmith/build/bin/cl_launcher:
-	mkdir -pv lib/CLSmith/build
-	cd lib/CLSmith/build && cmake .. -G Ninja
-	cd lib/CLSmith/build && ninja
-	cp -v lib/CLSmith/runtime/*.h lib/CLSmith/build/
-	cp -v lib/CLSmith/build/*.h lib/CLSmith/runtime/
 
 clreduce: lib/clreduce/build_creduce/creduce/creduce
 
@@ -82,24 +85,38 @@ build/ipython/kernels/dsmith/kernel.json: build/ipython/kernels/dsmith/kernel.js
 	cp $< $@
 	sed "s,@PYTHON@,$(PWD)/$(python)," -i $@
 
-env/python3.6/bin/activate:
-	virtualenv -p python3.6 env/python3.6
+$(root)/build/python3.6/bin/activate:
+	virtualenv -p python3.6 build/python3.6
 
-.PHONY: clean
-clean:
-	$(venv) cd lib/clgen && make clean
-	rm -rfv \
-		$(venv_dir)/bin/clgen \
-		$(venv_dir)/bin/jupyter \
-		$(venv_dir)/bin/cldrive \
-		$(NONE)
 
+# launch Jupyter server
 .PHONY: run
 run: all
 	$(venv) jupyter-notebook
 
+
+# clean compiled files
+.PHONY: clean
+clean: $(clean_targets)
+	$(venv) cd lib/clgen && make clean
+
+
+# clean everything
+.PHONY: distclean
+distclean: $(distclean_targets)
+	rm -rfv \
+		$(venv_dir)/bin/cldrive \
+		$(venv_dir)/bin/clgen \
+		$(venv_dir)/bin/jupyter \
+		.cache \
+		.config.json \
+		.config.make \
+		clgen/_config.py \
+		requirements.txt \
+		$(NONE)
+
+
+# help text
 .PHONY: help
 help:
-	@echo "make {all,clean,run}"
-	@echo
-	@echo "If CUDA is not available, set NO_CUDA=1"
+	@echo "make {all,test,run,clean,distclean}"

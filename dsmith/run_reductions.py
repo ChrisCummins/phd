@@ -28,7 +28,7 @@ from lib import *
 CLREDUCE_DIR = fs.abspath('..', 'lib', 'clreduce')
 CLSMITH_DIR = fs.abspath('..', 'lib', 'CLSmith', 'build')
 
-CL_LAUNCHER = fs.abspath('../lib/CLSmith/build/cl_launcher')
+CL_LAUNCHER = fs.abspath('../lib/clsmith/build/cl_launcher')
 CLSMITH_HEADERS = [path for path in fs.ls(CLSMITH_DIR, abspaths=True) if path.endswith('.h')]
 CLSMITH_RUNTIME_DIR = fs.abspath('..', 'lib', 'CLSmith', 'runtime')
 CREDUCE = fs.abspath(CLREDUCE_DIR, 'build_creduce', 'creduce', 'creduce')

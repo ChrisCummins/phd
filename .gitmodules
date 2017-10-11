@@ -1,5 +1,5 @@
 [submodule "lib/CLSmith"]
-	path = lib/CLSmith
+	path = lib/clsmith
 	url = https://github.com/ChrisCummins/CLSmith.git
 [submodule "lib/clreduce"]
 	path = lib/clreduce
