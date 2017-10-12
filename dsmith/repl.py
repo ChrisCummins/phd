@@ -22,14 +22,15 @@ Attributes:
     __help__ (str): REPL help string.
     __available_commands__ (str): Help string for available commands.
 """
-import random
-import math
 import datetime
-import logging
 import humanize
+import logging
+import math
+import os
+import progressbar
+import random
 import re
 import sys
-import os
 
 from collections import namedtuple
 
@@ -100,6 +101,10 @@ class UnrecognizedInput(ValueError):
     pass
 
 
+def _hello_func(file=sys.stdout):
+    print("Hi there!", file=file)
+
+
 def _help_func(file=sys.stdout):
     print(__help__, file=file)
 
@@ -131,7 +136,13 @@ def _describe_programs_func(lang, file=sys.stdout):
     for generator in lang.generators:
         num = humanize.intword(generator.num_programs)
         sloc = humanize.intword(generator.sloc_total)
-        print(f"You have {num} {generator.__name__} programs, total {sloc} SLOC")
+        print(f"You have {Colors.BOLD}{num} {generator.__name__}{Colors.END} "
+              f"programs, total {Colors.BOLD}{sloc}{Colors.END} SLOC",
+              file=file)
+
+
+def _make_programs(lang, generator, number, file=sys.stdout):
+    generator.generate(n=number)
 
 
 def _make_testcases(lang, generator):
@@ -152,7 +163,6 @@ class ParsedStatement(object):
     """
     def __init__(self, statement: str):
         self.statement = statement
-        self.msg = None
         self.func = None
         self.args = []
         self.kwargs = dict()
@@ -177,7 +187,7 @@ def parse(statement: str) -> ParsedStatement:
         return parsed
 
     if len(components) == 1 and re.match(r'(hi|hello|hey)', components[0]):
-        parsed.msg = "Hi there!"
+        parsed.func = _hello_func
 
     elif len(components) == 1 and re.match(r'(exit|quit)', components[0]):
         parsed.func = _exit_func
@@ -212,7 +222,8 @@ def parse(statement: str) -> ParsedStatement:
             lang = langs.mklang(programs_match.group("lang"))
             generator = lang.mkgenerator(programs_match.group("generator"))
 
-            parsed.msg = f"number = {number}, lang = {lang}, generator = {generator}"
+            parsed.func = _make_programs
+            parsed.kwargs = {"lang": lang, "generator": generator, "number": number}
         elif testcases_match:
             lang = testcases_match.group("lang")
             generator = testcases_match.group("generator")
@@ -247,9 +258,6 @@ def run_command(command: str, file=sys.stdout) -> None:
                           f"args = [{args}], " +
                           f"kwargs = {{{kwargs}}}")
             parsed.func(*parsed.args, file=file, **parsed.kwargs)
-
-        if parsed.msg:
-            print(parsed.msg, file=file)
 
     except UnrecognizedInput as e:
         print("😕  I don't understand. "

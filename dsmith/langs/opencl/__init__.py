@@ -18,6 +18,8 @@
 """
 The OpenCL programming language.
 """
+import math
+
 from sqlalchemy.sql import func
 
 import dsmith
@@ -47,9 +49,9 @@ class CLSmith(Generator):
     def num_programs(self, session: session_t=None) -> int:
         """ return the number of generated programs in the database """
         with ReuseSession(session) as s:
-            return s.query(Program)\
+            return s.query(func.count(Program.id))\
                 .filter(Program.generator == Generators.CLSMITH)\
-                .count()
+                .scalar()
 
     @property
     def sloc_total(self, session: session_t=None) -> int:
@@ -58,6 +60,11 @@ class CLSmith(Generator):
             return s.query(func.sum(Program.linecount))\
                 .filter(Program.generator == Generators.CLSMITH)\
                 .scalar()
+
+    def generate(self, n: int=math.inf, max: int=math.inf) -> None:
+        """ generate 'n' new programs, until 'max' exist in db """
+        pass
+
 
 
 class DSmith(Generator):
@@ -72,9 +79,9 @@ class DSmith(Generator):
     def num_programs(self, session: session_t=None) -> int:
         """ return the number of generated programs in the database """
         with ReuseSession(session) as s:
-            return s.query(Program)\
+            return s.query(func.count(Program.id))\
                 .filter(Program.generator == Generators.DSMITH)\
-                .count()
+                .scalar()
 
     @property
     def sloc_total(self, session: session_t=None) -> int:

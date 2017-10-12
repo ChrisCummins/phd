@@ -21,6 +21,8 @@ Programming language.
 Attributes:
     __languages__ (Dict[str, Language]): List of all available languages.
 """
+import math
+
 from collections import namedtuple
 
 
@@ -56,6 +58,10 @@ class Generator(object):
     @property
     def sloc_total(self) -> int:
         """ return the total linecount of generated programs """
+        raise NotImplementedError("abstract class")
+
+    def generate(self, n: int=math.inf, max: int=math.inf) -> None:
+        """ generate 'n' new programs, until 'max' exist in db """
         raise NotImplementedError("abstract class")
 
 
