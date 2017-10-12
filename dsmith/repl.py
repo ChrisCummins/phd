@@ -23,6 +23,7 @@ Attributes:
     __available_commands__ (str): Help string for available commands.
 """
 import random
+import math
 import datetime
 import logging
 import re
@@ -74,6 +75,9 @@ programs,testcases,results}}{Colors.END}
   {Colors.BOLD}difftest {_lang_str} [{_generator_str}] results{Colors.END}
     Compare results across devices.
 
+  {Colors.BOLD}help{Colors.END}
+    Print version information.
+
   {Colors.BOLD}exit{Colors.END}
     End the session.\
 """
@@ -85,6 +89,51 @@ This is the DeepSmith interactive session. The following commands are available:
 {__available_commands__}
 """
 
+class Language(object):
+    pass
+
+class OpenCL(Language):
+    __name__ = "opencl"
+
+LANGUAGES = {
+    "opencl": OpenCL,
+}
+
+
+def mklang(string: str) -> Language:
+    lang = LANGUAGES.get(string)
+    if not lang:
+        raise UnrecognizedInput("Unknown language")
+    return lang()
+
+
+class Generator(object):
+    pass
+
+
+class CLSmith(Generator):
+    __name__ = "clsmith"
+
+
+class DSmith(Generator):
+    __name__ = "dsmith"
+
+
+GENERATORS = {
+    "opencl": {
+        None: DSmith,
+        "dsmith": DSmith,
+        "clsmith": CLSmith,
+    }
+}
+
+
+def mkgenerator(string: str, lang: Language) -> Generator:
+    generator = GENERATORS[lang.__name__].get(string)
+    if not generator:
+        raise UnrecognizedInput("Unknown generator")
+    return generator()
+
 
 class UnrecognizedInput(ValueError):
     pass
@@ -93,6 +142,11 @@ class UnrecognizedInput(ValueError):
 def _help_func(*args, **kwargs):
     file = kwargs.pop("file", sys.stdout)
     print(__help__, file=file)
+
+
+def _version_func(*args, **kwargs):
+    file = kwargs.pop("file", sys.stdout)
+    print(dsmith.__version_str__, file=file)
 
 
 def _exit_func(*args, **kwargs):
@@ -113,7 +167,7 @@ def _describe_func(*args, **kwargs):
     raise NotImplementedError
 
 
-def _make_func(*args, **kwargs):
+def _make_testcases(lang, generator):
     raise NotImplementedError
 
 
@@ -159,12 +213,30 @@ def parse(statement: str) -> ParsedStatement:
     elif len(components) < 3 and components[0] == "help":
         parsed.func = _help_func
         parsed.args = components[1:]
+    elif len(components) == 1 and components[0] == "version":
+        parsed.func = _version_func
     elif components[0] == "describe":
         parsed.func = _describe_func
         parsed.args = components[1:]
     elif components[0] == "make":
-        parsed.func = _make_func
-        parsed.args = components[1:]
+        programs_match = re.match(r'make ((?P<number>\d+) )?(?P<lang>\w+) programs( using (?P<generator>\w+))?', statement)
+        testcases_match = re.match(r'make (?P<lang>\w+) ((?P<generator>\w+) )?testcases', statement)
+
+        if programs_match:
+            number = programs_match.group("number") or math.inf
+            lang = mklang(programs_match.group("lang"))
+            generator = mkgenerator(programs_match.group("generator"), lang)
+
+            parsed.msg = f"number = {number}, lang = {lang}, generator = {generator}"
+        elif testcases_match:
+            lang = testcases_match.group("lang")
+            generator = testcases_match.group("generator")
+
+            parsed.func = _make_testcases
+            parsed.kwargs = {"lang": language, "generator": generator}
+        else:
+            raise UnrecognizedInput
+
     elif components[0] == "run":
         parsed.func = _run_func
         parsed.args = components[1:]
@@ -172,10 +244,31 @@ def parse(statement: str) -> ParsedStatement:
         parsed.func = _difftest_func
         parsed.args = components[1:]
     else:
-        raise UnrecognizedInput("😕  I don't understand. "
-                                "Type 'help' for available commands.")
+        raise UnrecognizedInput
 
     return parsed
+
+
+def run_command(command: str, file=sys.stdout) -> None:
+    try:
+        parsed = parse(command)
+
+        if parsed.msg:
+            print(parsed.msg, file=file)
+
+        if parsed.func:
+            args = ", ".join(f"'{x}'" for x in parsed.args)
+            kwargs = ""
+
+            logging.debug(f"func = {parsed.func.__name__}, " +
+                          f"args = [{args}], " +
+                          f"kwargs = {{{kwargs}}}")
+            parsed.func(*parsed.args, **parsed.kwargs)
+    except UnrecognizedInput as e:
+        print("😕  I don't understand. "
+              "Type 'help' for available commands.", file=file)
+    except NotImplementedError:
+        print("🤔  I don't know how to do that (yet).", file=file)
 
 
 def repl(file=sys.stdout) -> None:
@@ -196,24 +289,7 @@ def repl(file=sys.stdout) -> None:
             sys.stdout.write(Colors.END)
             sys.stdout.flush()
 
-            try:
-                parsed = parse(choice)
-
-                if parsed.msg:
-                    print(parsed.msg, file=file)
-
-                if parsed.func:
-                    args = ", ".join(f"'{x}'" for x in parsed.args)
-                    kwargs = ""
-
-                    logging.debug(f"func = {parsed.func.__name__},",
-                                  f"args = [{args}],",
-                                  f"kwargs = {{{kwargs}}}")
-                    parsed.func(*parsed.args, **parsed.kwargs)
-            except UnrecognizedInput as e:
-                print(e, file=file)
-            except NotImplementedError:
-                print("🤔  I don't know how to do that (yet).", file=file)
+            run_command(choice, file=file)
 
     except KeyboardInterrupt:
         print("", file=file)

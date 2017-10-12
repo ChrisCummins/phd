@@ -33,7 +33,7 @@ from sys import exit
 from typing import BinaryIO, List, TextIO
 
 import dsmith
-from dsmith.repl import repl
+from dsmith.repl import repl, run_command
 
 
 __help_epilog__ = """
@@ -213,15 +213,9 @@ For information about a specific command, run `dsmith <command> --help`.
         "--profile", action="store_true",
         help=("enable internal API profiling. When combined with --verbose, "
               "prints a complete profiling trace"))
-
-    subparser = parser.add_subparsers(title="available commands")
-
-    subparsers = [
-        _register_test_parser
-    ]
-
-    for register_fn in subparsers:
-        register_fn(subparser)
+    parser.add_argument("command", metavar="<command>", nargs="*",
+                        help=("command to run. If not given, run an "
+                              "interactive prompt"))
 
     args = parser.parse_args(args)
 
@@ -244,21 +238,11 @@ For information about a specific command, run `dsmith <command> --help`.
 
     # options whch override the normal argument parsing process.
     if args.version:
-        print(f"dsmith {dsmith.__version__} made with \033[1;31m♥\033[0;0m by "
-              "Chris Cummins <chrisc.101@gmail.com>.")
+        print(dsmith.__version_str__)
     else:
-        if "dispatch_func" not in args:
+        if len(args.command):
+            # if a command was given, run it
+            run_command(" ".join(args.command))
+        else:
+            # fallback to interactive prompt
             repl()
-
-        # strip the arguments from the top-level parser
-        dispatch_func = args.dispatch_func
-        opts = vars(args)
-        del opts["version"]
-        del opts["verbose"]
-        del opts["debug"]
-        del opts["profile"]
-        del opts["dispatch_func"]
-
-        # TODO: Handle case where no argument provided: if not len(opts):
-
-        run(dispatch_func, **opts)

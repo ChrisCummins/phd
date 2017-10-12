@@ -44,6 +44,9 @@ __maintainer__ = __author__
 __email__ = "chrisc.101@gmail.com"
 __status__ = "Prototype"
 
+__version_str__ = (f"dsmith {__version__} made with \033[1;31m♥\033[0;0m by "
+                   "Chris Cummins <chrisc.101@gmail.com>.")
+
 
 # version_info tuple
 _major = int(__version__.split(".")[0])
