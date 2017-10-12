@@ -48,7 +48,7 @@ include build/make/clreduce.make
 python_version = 3.6
 python = $(venv_dir)/bin/python$(python_version)
 
-all: $(clsmith) $(clreduce) python protobuf
+all install: $(clsmith) $(clreduce) python protobuf
 
 # run tests
 .PHONY: test
