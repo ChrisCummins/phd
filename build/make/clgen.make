@@ -32,7 +32,7 @@ $(clgen): $(venv_activate)
 	$(venv) cd $(clgen_dir) && make install
 
 
-.PHONY: disttest-clgen
-disttest-clgen:
+.PHONY: test-clgen
+test-clgen:
 	$(venv) cd $(clgen_dir) && make test
-disttest_targets += disttest-clgen
+test_targets += test-clgen

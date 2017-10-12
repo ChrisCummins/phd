@@ -31,7 +31,7 @@ UNAME := $(shell uname)
 SHELL := /bin/bash
 clean_targets =
 distclean_targets =
-disttest_targets =
+test_targets =
 
 # modules
 include build/make/wget.make
@@ -52,7 +52,7 @@ all: $(clsmith) $(clreduce) python protobuf
 
 # run tests
 .PHONY: test
-test:
+test: $(test_targets)
 	dsmith test
 
 
@@ -72,12 +72,6 @@ protobuf: $(python_packages) $(protobuf)
 
 dsmith/dsmith_pb2.py: dsmith/protobuf/dsmith.proto python
 	cd dsmith/protobuf && $(venv) protoc dsmith.proto --python_out=..
-
-
-# run tests
-.PHONY: distest disttest
-distest disttest: test $(disttest_targets)
-	true
 
 
 # launch Jupyter server
