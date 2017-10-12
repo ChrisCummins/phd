@@ -48,23 +48,6 @@ def getself(func):
     return wrapper
 
 
-class ReadableFilesOrDirectories(argparse.Action):
-    """
-    Adapted from @mgilson http://stackoverflow.com/a/11415816
-    """
-
-    def __call__(self, parser, namespace, values, option_string=None) -> None:
-        for path in values:
-            if not os.path.isdir(path) and not os.path.isfile(path):
-                raise argparse.ArgumentTypeError(
-                    f"ReadableFilesOrDirectories:{path} not found")
-            if not os.access(path, os.R_OK):
-                raise argparse.ArgumentTypeError(
-                    f"ReadableFilesOrDirectories:{path} is not readable")
-
-        setattr(namespace, self.dest, [Path(path) for path in values])
-
-
 def run(method, *args, **kwargs):
     """
     Runs the given method as the main entrypoint to a program.
@@ -149,41 +132,6 @@ Please report bugs at <https://github.com/ChrisCummins/dsmith/issues>\
         _user_message(e)
     except Exception as e:
         _user_message_with_stacktrace(e)
-
-
-@getself
-def _register_test_parser(self, parent: ArgumentParser) -> None:
-    """
-    Run the test suite.
-    """
-
-    def _main(cache_path: bool, coveragerc_path: bool,
-              coverage_path: bool) -> None:
-        import dsmith.test
-
-        if cache_path:
-            print(dsmith.test.test_cache_path())
-            sys.exit(0)
-        elif coveragerc_path:
-            print(dsmith.test.coveragerc_path())
-            sys.exit(0)
-        elif coverage_path:
-            print(dsmith.test.coverage_report_path())
-            sys.exit(0)
-
-        sys.exit(dsmith.test.testsuite())
-
-    parser = parent.add_parser("test", help="run the testsuite",
-                               description=inspect.getdoc(self),
-                               epilog=__help_epilog__)
-    parser.set_defaults(dispatch_func=_main)
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument("--cache-path", action="store_true",
-                       help="print path to test cache")
-    group.add_argument("--coveragerc-path", action="store_true",
-                       help="print path to coveragerc file")
-    group.add_argument("--coverage-path", action="store_true",
-                       help="print path to coverage file")
 
 
 @getself

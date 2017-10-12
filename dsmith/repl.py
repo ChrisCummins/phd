@@ -76,7 +76,10 @@ programs,testcases,results}}{Colors.END}
   {Colors.BOLD}difftest {_lang_str} [{_generator_str}] results{Colors.END}
     Compare results across devices.
 
-  {Colors.BOLD}help{Colors.END}
+  {Colors.BOLD}test{Colors.END}
+    Run the self-test suite.
+
+  {Colors.BOLD}version{Colors.END}
     Print version information.
 
   {Colors.BOLD}exit{Colors.END}
@@ -103,6 +106,11 @@ def _help_func(*args, **kwargs):
 def _version_func(*args, **kwargs):
     file = kwargs.pop("file", sys.stdout)
     print(dsmith.__version_str__, file=file)
+
+
+def _test_func(*args, **kwargs):
+    import dsmith.test
+    dsmith.test.testsuite()
 
 
 def _exit_func(*args, **kwargs):
@@ -171,6 +179,8 @@ def parse(statement: str) -> ParsedStatement:
         parsed.args = components[1:]
     elif len(components) == 1 and components[0] == "version":
         parsed.func = _version_func
+    elif len(components) == 1 and components[0] == "test":
+        parsed.func = _test_func
     elif components[0] == "describe":
         parsed.func = _describe_func
         parsed.args = components[1:]
