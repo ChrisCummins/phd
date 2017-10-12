@@ -50,20 +50,4 @@ def test_run_exception_debug():
 
 
 def test_cli_version():
-    with pytest.raises(SystemExit):
-        cli.main("--version")
-
-
-def test_cli_test_cache_path():
-    with pytest.raises(SystemExit):
-        cli.main("test --cache-path".split())
-
-
-def test_cli_test_coverage_path():
-    with pytest.raises(SystemExit):
-        cli.main("test --coverage-path".split())
-
-
-def test_cli_test_coveragerc_path():
-    with pytest.raises(SystemExit):
-        cli.main("test --coveragerc-path".split())
+    cli.main("--version")
