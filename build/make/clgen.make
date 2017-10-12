@@ -33,6 +33,6 @@ $(clgen): $(venv_activate)
 
 
 .PHONY: disttest-clgen
-disttest-clgen: install
+disttest-clgen:
 	$(venv) cd $(clgen_dir) && make test
 disttest_targets += disttest-clgen
