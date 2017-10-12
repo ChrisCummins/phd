@@ -205,9 +205,10 @@ def repl(file=sys.stdout) -> None:
                 if parsed.func:
                     args = ", ".join(f"'{x}'" for x in parsed.args)
                     kwargs = ""
-                    debug_msg = f"func = {parsed.func.__name__}, args = [{args}], kwargs = {{{kwargs}}}"
 
-                    logging.debug(debug_msg)
+                    logging.debug(f"func = {parsed.func.__name__},",
+                                  f"args = [{args}],",
+                                  f"kwargs = {{{kwargs}}}")
                     parsed.func(*parsed.args, **parsed.kwargs)
             except UnrecognizedInput as e:
                 print(e, file=file)
