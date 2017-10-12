@@ -150,7 +150,10 @@ def main(self, args: List[str]=sys.argv[1:]):
         help="increase output verbosity")
     parser.add_argument(
         "--debug", action="store_true",
-        help="maximum output verbosity")
+        help="debugging output verbosity")
+    parser.add_argument(
+        "--db-debug", action="store_true",
+        help="additional database debugging output")
     parser.add_argument(
         "--version", action="store_true",
         help="show version information and exit")
@@ -176,6 +179,10 @@ def main(self, args: List[str]=sys.argv[1:]):
         loglvl = logging.INFO
     else:
         loglvl = logging.WARNING
+
+    # set database log level
+    if args.db_debug:
+        os.environ["DB_DEBUG"] = "1"
 
     # configure logger
     logging.basicConfig(format='%(asctime)s [%(levelname)s] %(message)s',

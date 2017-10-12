@@ -1,4 +1,5 @@
 import cldrive
+import logging
 import clgen
 import datetime
 import multiprocessing
@@ -44,8 +45,11 @@ def init() -> str:
 
     # Use UTF-8 encoding (default is latin-1) when connecting to MySQL.
     # See: https://stackoverflow.com/a/16404147/1318051
+    public_uri = f"mysql://{username}@{hostname}:{port}/{table}?charset=utf8".format(**vars())
     uri = f"mysql+mysqldb://{username}:{password}@{hostname}:{port}/{table}?charset=utf8"
-    echo = True if os.environ.get("DEBUG") else False
+    echo = True if os.environ.get("DB_DEBUG", None) else False
+
+    logging.debug(f"connecting to {public_uri}")
     engine = sql.create_engine(uri, encoding="utf-8", echo=echo)
 
     Base.metadata.create_all(engine)
@@ -56,7 +60,7 @@ def init() -> str:
     if profile:
         prof.enable()
 
-    return "mysql://{hostname}:{port}/{table}".format(**vars())
+    return public_uri
 
 
 @contextmanager
