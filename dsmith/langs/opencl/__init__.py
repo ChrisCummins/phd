@@ -19,15 +19,47 @@
 The OpenCL programming language.
 """
 import dsmith
-from dsmith.langs import Generator, Language
+import dsmith.langs.opencl.db
+
+from dsmith.langs import Driver, Generator, Language
+from dsmith.langs.opencl.db import *
+
+db.init()
+
+class Cldrive(Driver):
+    __name__ = "cldrive"
+
+
+class Cl_launcher(Driver):
+    __name__ = "cl_launcher"
 
 
 class CLSmith(Generator):
     __name__ = "clsmith"
 
+    __drivers__ = {
+        None: Cl_launcher,
+        "cl_launcher": Cl_launcher,
+    }
+
+    @property
+    def num_programs(self) -> int:
+        """ return the number of generated programs in the database """
+        return 20
+
 
 class DSmith(Generator):
     __name__ = "dsmith"
+
+    __drivers__ = {
+        None: Cldrive,
+        "cldrive": Cldrive,
+    }
+
+    @property
+    def num_programs(self) -> int:
+        """ return the number of generated programs in the database """
+        return 10
 
 
 class OpenCL(Language):
@@ -38,6 +70,10 @@ class OpenCL(Language):
         "dsmith": DSmith,
         "clsmith": CLSmith,
     }
+
+    def __init__(self):
+        if db.engine is None:
+            db.init()
 
     def mkgenerator(self, name: str) -> Generator:
         generator = self.__generators__.get(name)

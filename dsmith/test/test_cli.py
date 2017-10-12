@@ -50,4 +50,4 @@ def test_run_exception_debug():
 
 
 def test_cli_version():
-    cli.main("--version")
+    cli.main(["--version"])

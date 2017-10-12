@@ -21,10 +21,36 @@ Programming language.
 Attributes:
     __languages__ (Dict[str, Language]): List of all available languages.
 """
+from collections import namedtuple
+
+
+class Driver(object):
+    """
+    Abstract interface for a driver.
+
+    Attributes:
+        process_result_t (Tuple[float, int, str, str]): Process result.
+        __name__ (str): Driver name.
+    """
+    process_result_t = namedtuple('result_t', ['runtime', 'returncode', 'stdout', 'stderr'])
+
+    def drive(self, testcase, **params) -> process_result_t:
+        """ drive a testcase """
+        raise NotImplementedError("abstract class")
+
 
 class Generator(object):
+    """
+    Abstract interface for a program generator.
+
+    Attributes:
+        __name__ (str): Generator name.
+        __drivers__ (List[Generator]): List of available drivers.
+    """
+
     @property
     def num_programs(self) -> int:
+        """ return the number of generated programs in the database """
         raise NotImplementedError("abstract class")
 
 
@@ -33,13 +59,18 @@ class Language(object):
     Abstract interface for a programming language.
 
     Attributes:
+        __name__ (str): Language name.
         __generators__ (List[Generator]): List of available generators.
     """
-    def __init__(self):
-        raise NotImplementedError("abstract class")
-
     def mkgenerator(self, name: str) -> Generator:
         raise NotImplementedError("abstract class")
+
+    @property
+    def generators(self):
+        names = (name for name in self.__generators__ if name)
+        return (self.__generators__[name]() for name in names)
+
+
 
 # Deferred importing of languages, since the modules may need to import this
 # file.
@@ -49,9 +80,10 @@ __languages__ = {
     "opencl": OpenCL,
 }
 
+
 def mklang(name: str) -> Language:
     """
-
+    Instantiate language from name.
     """
     lang = __languages__.get(name)
     if not lang:

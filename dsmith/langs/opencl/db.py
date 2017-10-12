@@ -26,14 +26,11 @@ make_session = None
 session_t = sql.orm.session.Session
 
 
-def init(hostname: str, echo: bool=False) -> str:
+def init() -> str:
     """
     Initialize database engine.
 
     Must be called before attempt to create a database connection.
-
-    Arguments:
-        hostname (str): Hostname of machine running MySQL database.
 
     Returns:
         str: URI of database.
@@ -41,13 +38,14 @@ def init(hostname: str, echo: bool=False) -> str:
     global engine
     global make_session
     username, password = dsmith.MYSQL_CREDENTIALS
+    hostname = dsmith.MYSQL_HOSTNAME
     table = dsmith.MYSQL_DATABASE
     port = str(dsmith.MYSQL_PORT)
 
     # Use UTF-8 encoding (default is latin-1) when connecting to MySQL.
     # See: https://stackoverflow.com/a/16404147/1318051
     uri = f"mysql+mysqldb://{username}:{password}@{hostname}:{port}/{table}?charset=utf8"
-    echo = True if echo else True if os.environ.get("ECHO") else False
+    echo = True if os.environ.get("DEBUG") else False
     engine = sql.create_engine(uri, encoding="utf-8", echo=echo)
 
     Base.metadata.create_all(engine)

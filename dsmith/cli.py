@@ -168,6 +168,10 @@ def main(self, args: List[str]=sys.argv[1:]):
     if args.debug:
         loglvl = logging.DEBUG
         os.environ["DEBUG"] = "1"
+
+        # verbose stack traces. see: https://pymotw.com/2/cgitb/
+        import cgitb
+        cgitb.enable(format='text')
     elif args.verbose:
         loglvl = logging.INFO
     else:

@@ -28,6 +28,7 @@ import datetime
 import logging
 import re
 import sys
+import os
 
 from collections import namedtuple
 
@@ -98,17 +99,15 @@ class UnrecognizedInput(ValueError):
     pass
 
 
-def _help_func(*args, **kwargs):
-    file = kwargs.pop("file", sys.stdout)
+def _help_func(file=sys.stdout):
     print(__help__, file=file)
 
 
-def _version_func(*args, **kwargs):
-    file = kwargs.pop("file", sys.stdout)
+def _version_func(file=sys.stdout):
     print(dsmith.__version_str__, file=file)
 
 
-def _test_func(*args, **kwargs):
+def _test_func(file=sys.stdout):
     import dsmith.test
     dsmith.test.testsuite()
 
@@ -127,8 +126,9 @@ def _exit_func(*args, **kwargs):
     sys.exit()
 
 
-def _describe_func(*args, **kwargs):
-    raise NotImplementedError
+def _describe_programs_func(lang, file=sys.stdout):
+    for generator in lang.generators:
+        print(generator.__name__, generator.num_programs)
 
 
 def _make_testcases(lang, generator):
@@ -152,10 +152,13 @@ class ParsedStatement(object):
         self.msg = None
         self.func = None
         self.args = []
-        self.kwargs = {}
+        self.kwargs = dict()
 
 
 def parse(statement: str) -> ParsedStatement:
+    """
+    Pseudo-natural language command parsing.
+    """
     if not isinstance(statement, str): raise TypeError
 
     parsed = ParsedStatement(statement)
@@ -172,18 +175,31 @@ def parse(statement: str) -> ParsedStatement:
 
     if len(components) == 1 and re.match(r'(hi|hello|hey)', components[0]):
         parsed.msg = "Hi there!"
+
     elif len(components) == 1 and re.match(r'(exit|quit)', components[0]):
         parsed.func = _exit_func
+
     elif len(components) < 3 and components[0] == "help":
         parsed.func = _help_func
         parsed.args = components[1:]
+
     elif len(components) == 1 and components[0] == "version":
         parsed.func = _version_func
+
     elif len(components) == 1 and components[0] == "test":
         parsed.func = _test_func
+
     elif components[0] == "describe":
-        parsed.func = _describe_func
-        parsed.args = components[1:]
+        programs_match = re.match(r'describe ((?P<lang>\w+) )?programs', statement)
+
+        if programs_match:
+            lang = langs.mklang(programs_match.group("lang"))
+
+            parsed.func = _describe_programs_func
+            parsed.kwargs = {"lang": lang}
+        else:
+            raise UnrecognizedInput
+
     elif components[0] == "make":
         programs_match = re.match(r'make ((?P<number>\d+) )?(?P<lang>\w+) programs( using (?P<generator>\w+))?', statement)
         testcases_match = re.match(r'make (?P<lang>\w+) ((?P<generator>\w+) )?testcases', statement)
@@ -206,9 +222,11 @@ def parse(statement: str) -> ParsedStatement:
     elif components[0] == "run":
         parsed.func = _run_func
         parsed.args = components[1:]
+
     elif components[0] == "difftest":
         parsed.func = _difftest_func
         parsed.args = components[1:]
+
     else:
         raise UnrecognizedInput
 
@@ -218,23 +236,28 @@ def parse(statement: str) -> ParsedStatement:
 def run_command(command: str, file=sys.stdout) -> None:
     try:
         parsed = parse(command)
-
-        if parsed.msg:
-            print(parsed.msg, file=file)
-
         if parsed.func:
-            args = ", ".join(f"'{x}'" for x in parsed.args)
-            kwargs = ""
+            args = ", ".join(str(x) for x in parsed.args)
+            kwargs = ", ".join(f"{k}: {parsed.kwargs[k]}" for k in parsed.kwargs)
 
             logging.debug(f"func = {parsed.func.__name__}, " +
                           f"args = [{args}], " +
                           f"kwargs = {{{kwargs}}}")
-            parsed.func(*parsed.args, **parsed.kwargs)
+            parsed.func(*parsed.args, file=file, **parsed.kwargs)
+
+        if parsed.msg:
+            print(parsed.msg, file=file)
+
     except UnrecognizedInput as e:
         print("😕  I don't understand. "
               "Type 'help' for available commands.", file=file)
-    except NotImplementedError:
+        if os.environ.get("DEBUG"):
+            raise e
+    except NotImplementedError as e:
         print("🤔  I don't know how to do that (yet).", file=file)
+
+        if os.environ.get("DEBUG"):
+            raise e
 
 
 def repl(file=sys.stdout) -> None:
@@ -257,6 +280,7 @@ def repl(file=sys.stdout) -> None:
 
             # Strip '#' command, and split ';' separated commands
             commands = choice.split("#")[0].split(";")
+            print("COMMANDS:", commands)
 
             for command in commands:
                 run_command(command, file=file)
