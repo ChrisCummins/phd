@@ -17,7 +17,7 @@
 # DeepSmith.  If not, see <http://www.gnu.org/licenses/>.
 #
 clsmith_dir := $(root)/lib/clsmith
-clsmith := $(clsmith_dir)/build/bin/cl_launcher
+clsmith := $(clsmith_dir)/build/cl_launcher
 
 # add this target as a prerequisite for rules which require CLSmith
 clsmith: $(clsmith)
@@ -28,3 +28,8 @@ $(clsmith): $(cmake) $(ninja)
 	cd $(clsmith_dir)/build && $(ninja)
 	cp -v $(clsmith_dir)/runtime/*.h $(clsmith_dir)/build/
 	cp -v $(clsmith_dir)/build/*.h $(clsmith_dir)/runtime/
+
+.PHONY: distclean-clsmith
+distclean-clsmith:
+	rm -rfv $(clsmith_dir)/build
+distclean_targets += distclean-clsmith
