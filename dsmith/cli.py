@@ -194,10 +194,7 @@ def main(self, args: List[str]=sys.argv[1:]):
     parser = ArgumentParser(
         prog="dsmith",
         description=inspect.getdoc(self),
-        epilog="""
-For information about a specific command, run `dsmith <command> --help`.
-
-""" + __help_epilog__,
+        epilog=__help_epilog__,
         formatter_class=RawDescriptionHelpFormatter)
 
     parser.add_argument(

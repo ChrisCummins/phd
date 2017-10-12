@@ -289,7 +289,11 @@ def repl(file=sys.stdout) -> None:
             sys.stdout.write(Colors.END)
             sys.stdout.flush()
 
-            run_command(choice, file=file)
+            # Strip '#' command, and split ';' separated commands
+            commands = choice.split("#")[0].split(";")
+
+            for command in commands:
+                run_command(command, file=file)
 
     except KeyboardInterrupt:
         print("", file=file)
