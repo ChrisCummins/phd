@@ -26,6 +26,6 @@ $(cldrive): $(venv_activate)
 	$(venv) cd $(cldrive_dir) && make install
 
 .PHONY: test-cldrive
-test-cldrive: install
+test-cldrive:
 	$(venv) cd $(cldrive_dir) && make test
 test_targets += test-cldrive
