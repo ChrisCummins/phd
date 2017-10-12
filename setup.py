@@ -82,6 +82,8 @@ setup(
     license='GNU General Public License, Version 3',
     packages=[
         'dsmith',
+        'dsmith.langs',
+        'dsmith.langs.opencl',
         'dsmith.test',
     ],
     package_data={
