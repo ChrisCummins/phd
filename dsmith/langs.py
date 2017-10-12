@@ -60,8 +60,8 @@ class Generator(object):
         """ return the total linecount of generated programs """
         raise NotImplementedError("abstract class")
 
-    def generate(self, n: int=math.inf, max: int=math.inf) -> None:
-        """ generate 'n' new programs, until 'max' exist in db """
+    def generate(self, n: int=math.inf, up_to: int=math.inf) -> None:
+        """ generate 'n' new programs 'up_to' this many exist in db """
         raise NotImplementedError("abstract class")
 
 
@@ -85,7 +85,7 @@ class Language(object):
 
 # Deferred importing of languages, since the modules may need to import this
 # file.
-from dsmith.langs.opencl import OpenCL
+from dsmith.opencl import OpenCL
 
 __languages__ = {
     "opencl": OpenCL,

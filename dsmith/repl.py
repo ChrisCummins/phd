@@ -31,8 +31,10 @@ import progressbar
 import random
 import re
 import sys
+import traceback
 
 from collections import namedtuple
+from labm8 import fs
 
 import dsmith
 from dsmith import langs
@@ -65,8 +67,9 @@ programs,testcases,results}}{Colors.END}
     Provide details about available generators, testbeds, generated
     programs, testcases, or results.
 
-  {Colors.BOLD}make [{_num_str}] {_lang_str} programs [using {_generator_str}]{Colors.END}
-    Generate programs. If no generator is specified, default to dsmith.
+  {Colors.BOLD}make [[up to] {_num_str}] {_lang_str} programs [using {_generator_str}]{Colors.END}
+    Generate the specified number of programs. If no generator is specified,
+    default to dsmith.
 
   {Colors.BOLD}make {_lang_str} [{_generator_str}] testcases{Colors.END}
     Prepare testcases from programs.
@@ -141,8 +144,11 @@ def _describe_programs_func(lang, file=sys.stdout):
               file=file)
 
 
-def _make_programs(lang, generator, number, file=sys.stdout):
-    generator.generate(n=number)
+def _make_programs(lang: langs.Language, generator: langs.Generator,
+                   n: int, up_to: bool=False, file=sys.stdout):
+    up_to = n if up_to else math.inf
+    n = n if n else math.inf
+    generator.generate(n=n, up_to=up_to)
 
 
 def _make_testcases(lang, generator):
@@ -164,8 +170,7 @@ class ParsedStatement(object):
     def __init__(self, statement: str):
         self.statement = statement
         self.func = None
-        self.args = []
-        self.kwargs = dict()
+        self.args = dict()
 
 
 def parse(statement: str) -> ParsedStatement:
@@ -192,9 +197,8 @@ def parse(statement: str) -> ParsedStatement:
     elif len(components) == 1 and re.match(r'(exit|quit)', components[0]):
         parsed.func = _exit_func
 
-    elif len(components) < 3 and components[0] == "help":
+    elif len(components) == 1 and components[0] == "help":
         parsed.func = _help_func
-        parsed.args = components[1:]
 
     elif len(components) == 1 and components[0] == "version":
         parsed.func = _version_func
@@ -209,12 +213,12 @@ def parse(statement: str) -> ParsedStatement:
             lang = langs.mklang(programs_match.group("lang"))
 
             parsed.func = _describe_programs_func
-            parsed.kwargs = {"lang": lang}
+            parsed.args["lang"] = lang
         else:
             raise UnrecognizedInput
 
     elif components[0] == "make":
-        programs_match = re.match(r'make ((?P<number>\d+) )?(?P<lang>\w+) programs( using (?P<generator>\w+))?', statement)
+        programs_match = re.match(r'make ((?P<up_to>up to )?(?P<number>\d+) )?(?P<lang>\w+) programs( using (?P<generator>\w+))?', statement)
         testcases_match = re.match(r'make (?P<lang>\w+) ((?P<generator>\w+) )?testcases', statement)
 
         if programs_match:
@@ -223,23 +227,27 @@ def parse(statement: str) -> ParsedStatement:
             generator = lang.mkgenerator(programs_match.group("generator"))
 
             parsed.func = _make_programs
-            parsed.kwargs = {"lang": lang, "generator": generator, "number": number}
+            parsed.args["lang"] = lang
+            parsed.args["generator"] = generator
+            parsed.args["n"] = number
+            parsed.args["up_to"] = True if programs_match.group("up_to") else False
+
         elif testcases_match:
             lang = testcases_match.group("lang")
             generator = testcases_match.group("generator")
 
             parsed.func = _make_testcases
-            parsed.kwargs = {"lang": language, "generator": generator}
+            parsed.args["lang"] = language
+            parsed.args["generator"] = generator
+
         else:
             raise UnrecognizedInput
 
     elif components[0] == "run":
         parsed.func = _run_func
-        parsed.args = components[1:]
 
     elif components[0] == "difftest":
         parsed.func = _difftest_func
-        parsed.args = components[1:]
 
     else:
         raise UnrecognizedInput
@@ -247,17 +255,45 @@ def parse(statement: str) -> ParsedStatement:
     return parsed
 
 
+def _user_message_with_stacktrace(exception):
+        # get limited stack trace
+        def _msg(i, x):
+            n = i + 1
+
+            filename = fs.basename(x[0])
+            lineno = x[1]
+            fnname = x[2]
+
+            loc = "{filename}:{lineno}".format(**vars())
+            return "      #{n}  {loc: <18} {fnname}()".format(**vars())
+
+        _, _, tb = sys.exc_info()
+        NUM_ROWS = 5  # number of rows in traceback
+
+        trace = reversed(traceback.extract_tb(tb, limit=NUM_ROWS+1)[1:])
+        stack_trace = "\n".join(_msg(*r) for r in enumerate(trace))
+        typename = type(exception).__name__
+
+        print(f"""
+======================================================================
+💩  Fatal error!
+{exception} ({typename})
+
+  stacktrace:
+{stack_trace}
+
+Please report bugs at <https://github.com/ChrisCummins/dsmith/issues>\
+""", file=sys.stderr)
+
+
 def run_command(command: str, file=sys.stdout) -> None:
     try:
         parsed = parse(command)
         if parsed.func:
-            args = ", ".join(str(x) for x in parsed.args)
-            kwargs = ", ".join(f"{k}: {parsed.kwargs[k]}" for k in parsed.kwargs)
+            args = ", ".join(f"{k}={parsed.args[k]}" for k in parsed.args)
 
-            logging.debug(f"func = {parsed.func.__name__}, " +
-                          f"args = [{args}], " +
-                          f"kwargs = {{{kwargs}}}")
-            parsed.func(*parsed.args, file=file, **parsed.kwargs)
+            logging.debug(f"{parsed.func.__name__}(" + args + ")")
+            parsed.func(file=file, **parsed.args)
 
     except UnrecognizedInput as e:
         print("😕  I don't understand. "
@@ -266,7 +302,10 @@ def run_command(command: str, file=sys.stdout) -> None:
             raise e
     except NotImplementedError as e:
         print("🤔  I don't know how to do that (yet).", file=file)
-
+        if os.environ.get("DEBUG"):
+            raise e
+    except Exception as e:
+        _user_message_with_stacktrace(e)
         if os.environ.get("DEBUG"):
             raise e
 
@@ -291,7 +330,6 @@ def repl(file=sys.stdout) -> None:
 
             # Strip '#' command, and split ';' separated commands
             commands = choice.split("#")[0].split(";")
-            print("COMMANDS:", commands)
 
             for command in commands:
                 run_command(command, file=file)

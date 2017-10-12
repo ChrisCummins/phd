@@ -23,10 +23,10 @@ import math
 from sqlalchemy.sql import func
 
 import dsmith
-import dsmith.langs.opencl.db
+import dsmith.opencl.db
 
 from dsmith.langs import Driver, Generator, Language
-from dsmith.langs.opencl.db import *
+from dsmith.opencl.db import *
 
 
 class Cldrive(Driver):
@@ -61,9 +61,9 @@ class CLSmith(Generator):
                 .filter(Program.generator == Generators.CLSMITH)\
                 .scalar()
 
-    def generate(self, n: int=math.inf, max: int=math.inf) -> None:
-        """ generate 'n' new programs, until 'max' exist in db """
-        pass
+    def generate(self, n: int=math.inf, up_to: int=math.inf) -> None:
+        """ generate 'n' new programs 'up_to' this many exist in db """
+        print("CLSMITH GENERATE")
 
 
 
