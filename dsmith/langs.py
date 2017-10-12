@@ -61,7 +61,7 @@ class Generator(object):
         raise NotImplementedError("abstract class")
 
     def generate(self, n: int=math.inf, up_to: int=math.inf) -> None:
-        """ generate 'n' new programs 'up_to' this many exist in db """
+        """ generate 'n' new programs, until 'max' exist in db """
         raise NotImplementedError("abstract class")
 
 

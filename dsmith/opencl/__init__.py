@@ -63,7 +63,7 @@ class CLSmith(Generator):
 
     def generate(self, n: int=math.inf, up_to: int=math.inf) -> None:
         """ generate 'n' new programs 'up_to' this many exist in db """
-        print("CLSMITH GENERATE")
+        print(f"CLSMITH GENERATE {n} {up_to}")
 
 
 

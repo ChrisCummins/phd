@@ -148,7 +148,9 @@ def _make_programs(lang: langs.Language, generator: langs.Generator,
                    n: int, up_to: bool=False, file=sys.stdout):
     up_to = n if up_to else math.inf
     n = n if n else math.inf
-    generator.generate(n=n, up_to=up_to)
+    import inspect
+    print(inspect.getsourcelines(generator.generate)[0])
+    generator.generate(n=n)
 
 
 def _make_testcases(lang, generator):
