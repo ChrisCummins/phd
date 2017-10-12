@@ -59,7 +59,7 @@ test: $(test_targets)
 # python packages
 python_packages = $(clgen) $(cldrive) $(jupyter)
 python: $(venv_activate) $(python_packages) $(protobuf)
-	./configure -r >/dev/null
+	$(venv) ./configure -r >/dev/null
 	$(venv) pip install --only-binary=numpy '$(shell grep numpy requirements.txt)'
 	$(venv) pip install -r requirements.txt
 	$(venv) pip install '$(shell grep tensorflow requirements.txt)'
