@@ -18,13 +18,14 @@
 """
 The OpenCL programming language.
 """
+from sqlalchemy.sql import func
+
 import dsmith
 import dsmith.langs.opencl.db
 
 from dsmith.langs import Driver, Generator, Language
 from dsmith.langs.opencl.db import *
 
-db.init()
 
 class Cldrive(Driver):
     __name__ = "cldrive"
@@ -43,9 +44,20 @@ class CLSmith(Generator):
     }
 
     @property
-    def num_programs(self) -> int:
+    def num_programs(self, session: session_t=None) -> int:
         """ return the number of generated programs in the database """
-        return 20
+        with ReuseSession(session) as s:
+            return s.query(Program)\
+                .filter(Program.generator == Generators.CLSMITH)\
+                .count()
+
+    @property
+    def sloc_total(self, session: session_t=None) -> int:
+        """ return the total linecount of generated programs """
+        with ReuseSession(session) as s:
+            return s.query(func.sum(Program.linecount))\
+                .filter(Program.generator == Generators.CLSMITH)\
+                .scalar()
 
 
 class DSmith(Generator):
@@ -57,9 +69,21 @@ class DSmith(Generator):
     }
 
     @property
-    def num_programs(self) -> int:
+    def num_programs(self, session: session_t=None) -> int:
         """ return the number of generated programs in the database """
-        return 10
+        with ReuseSession(session) as s:
+            return s.query(Program)\
+                .filter(Program.generator == Generators.DSMITH)\
+                .count()
+
+    @property
+    def sloc_total(self, session: session_t=None) -> int:
+        """ return the total linecount of generated programs """
+        with ReuseSession(session) as s:
+            return s.query(func.sum(Program.linecount))\
+                .filter(Program.generator == Generators.DSMITH)\
+                .scalar()
+
 
 
 class OpenCL(Language):

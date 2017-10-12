@@ -53,6 +53,11 @@ class Generator(object):
         """ return the number of generated programs in the database """
         raise NotImplementedError("abstract class")
 
+    @property
+    def sloc_total(self) -> int:
+        """ return the total linecount of generated programs """
+        raise NotImplementedError("abstract class")
+
 
 class Language(object):
     """

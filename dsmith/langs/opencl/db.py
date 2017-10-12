@@ -78,6 +78,25 @@ def Session(commit: bool=False) -> session_t:
         session.close()
 
 
+@contextmanager
+def ReuseSession(session: session_t=None, commit: bool=False) -> session_t:
+    """
+    Acts the same as Session(), except if called with an existing `session`,
+    it will use that rather than creating a new one.
+    """
+    s = session or make_session()
+    try:
+        yield s
+        if commit:
+            s.commit()
+    except:
+        s.rollback()
+        raise
+    finally:
+        if session is None:
+            s.close()
+
+
 def get_or_create(session: sql.orm.session.Session, model,
                   defaults: Dict[str, object]=None, **kwargs) -> object:
     """

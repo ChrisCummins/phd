@@ -26,6 +26,7 @@ import random
 import math
 import datetime
 import logging
+import humanize
 import re
 import sys
 import os
@@ -128,7 +129,9 @@ def _exit_func(*args, **kwargs):
 
 def _describe_programs_func(lang, file=sys.stdout):
     for generator in lang.generators:
-        print(generator.__name__, generator.num_programs)
+        num = humanize.intword(generator.num_programs)
+        sloc = humanize.intword(generator.sloc_total)
+        print(f"You have {num} {generator.__name__} programs, total {sloc} SLOC")
 
 
 def _make_testcases(lang, generator):
