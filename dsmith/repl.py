@@ -37,19 +37,7 @@ from collections import namedtuple
 from labm8 import fs
 
 import dsmith
-from dsmith import langs
-
-class Colors:
-   PURPLE = '\033[95m'
-   CYAN = '\033[96m'
-   DARKCYAN = '\033[36m'
-   BLUE = '\033[94m'
-   GREEN = '\033[92m'
-   YELLOW = '\033[93m'
-   RED = '\033[91m'
-   BOLD = '\033[1m'
-   UNDERLINE = '\033[4m'
-   END = '\033[0m'
+from dsmith import Colors, langs
 
 _lang_str = f"{Colors.RED}<lang>{Colors.END}{Colors.BOLD}"
 _generator_str = f"{Colors.GREEN}<generator>{Colors.END}{Colors.BOLD}"
@@ -137,8 +125,8 @@ def _exit_func(*args, **kwargs):
 
 def _describe_programs_func(lang, file=sys.stdout):
     for generator in lang.generators:
-        num = humanize.intword(generator.num_programs)
-        sloc = humanize.intword(generator.sloc_total)
+        num = humanize.intword(generator.num_programs())
+        sloc = humanize.intword(generator.sloc_total())
         print(f"You have {Colors.BOLD}{num} {generator.__name__}{Colors.END} "
               f"programs, total {Colors.BOLD}{sloc}{Colors.END} SLOC",
               file=file)
@@ -147,10 +135,8 @@ def _describe_programs_func(lang, file=sys.stdout):
 def _make_programs(lang: langs.Language, generator: langs.Generator,
                    n: int, up_to: bool=False, file=sys.stdout):
     up_to = n if up_to else math.inf
-    n = n if n else math.inf
-    import inspect
-    print(inspect.getsourcelines(generator.generate)[0])
-    generator.generate(n=n)
+    n = math.inf if up_to else n
+    generator.generate(n=n, up_to=up_to)
 
 
 def _make_testcases(lang, generator):
@@ -224,7 +210,7 @@ def parse(statement: str) -> ParsedStatement:
         testcases_match = re.match(r'make (?P<lang>\w+) ((?P<generator>\w+) )?testcases', statement)
 
         if programs_match:
-            number = programs_match.group("number") or math.inf
+            number = int(programs_match.group("number") or 0) or math.inf
             lang = langs.mklang(programs_match.group("lang"))
             generator = lang.mkgenerator(programs_match.group("generator"))
 

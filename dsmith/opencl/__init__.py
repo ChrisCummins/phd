@@ -18,13 +18,15 @@
 """
 The OpenCL programming language.
 """
+import humanize
 import math
-
+import progressbar
 from sqlalchemy.sql import func
 
 import dsmith
 import dsmith.opencl.db
 
+from dsmith import Colors
 from dsmith.langs import Driver, Generator, Language
 from dsmith.opencl.db import *
 
@@ -39,31 +41,62 @@ class Cl_launcher(Driver):
 
 class CLSmith(Generator):
     __name__ = "clsmith"
+    generator_t = Generators.CLSMITH
 
     __drivers__ = {
         None: Cl_launcher,
         "cl_launcher": Cl_launcher,
     }
 
-    @property
     def num_programs(self, session: session_t=None) -> int:
         """ return the number of generated programs in the database """
         with ReuseSession(session) as s:
             return s.query(func.count(Program.id))\
-                .filter(Program.generator == Generators.CLSMITH)\
+                .filter(Program.generator == self.generator_t)\
                 .scalar()
 
-    @property
     def sloc_total(self, session: session_t=None) -> int:
         """ return the total linecount of generated programs """
         with ReuseSession(session) as s:
             return s.query(func.sum(Program.linecount))\
-                .filter(Program.generator == Generators.CLSMITH)\
+                .filter(Program.generator == self.generator_t)\
+                .scalar()
+
+    def generation_time(self, session: session_t=None) -> float:
+        """ return the total generation time of all programs """
+        with ReuseSession(session) as s:
+            return s.query(func.sum(Program.generation_time))\
+                .filter(Program.generator == self.generator_t)\
                 .scalar()
 
     def generate(self, n: int=math.inf, up_to: int=math.inf) -> None:
         """ generate 'n' new programs 'up_to' this many exist in db """
-        print(f"CLSMITH GENERATE {n} {up_to}")
+
+        with Session(commit=False) as s:
+            num_progs = self.num_programs(s)
+
+            if n == math.inf and up_to == math.inf:
+                max_value = progressbar.UnknownLength
+            elif n == math.inf:
+                max_value = up_to
+            else:
+                max_value = num_progs + n
+
+            if num_progs >= max_value:
+                print(f"There are already {Colors.BOLD}{num_progs}{Colors.END} "
+                      "programs in the database. Nothing to be done.")
+
+            num_to_generate = max_value - num_progs
+            estimated_time = (self.generation_time(s) / num_progs) * num_to_generate
+            eta = humanize.naturaldelta(datetime.timedelta(seconds=estimated_time))
+            print(f"{Colors.BOLD}{num_to_generate}{Colors.END} programs are "
+                  "to be generated. Estimated generation time: " +
+                  f"{Colors.BOLD}{eta}{Colors.END}.")
+
+            bar = progressbar.ProgressBar(initial_value=num_progs,
+                                          max_value=max_value)
+
+            print(f"CLSMITH GENERATE {num_progs} {max_value}")
 
 
 
@@ -75,7 +108,6 @@ class DSmith(Generator):
         "cldrive": Cldrive,
     }
 
-    @property
     def num_programs(self, session: session_t=None) -> int:
         """ return the number of generated programs in the database """
         with ReuseSession(session) as s:
@@ -83,7 +115,6 @@ class DSmith(Generator):
                 .filter(Program.generator == Generators.DSMITH)\
                 .scalar()
 
-    @property
     def sloc_total(self, session: session_t=None) -> int:
         """ return the total linecount of generated programs """
         with ReuseSession(session) as s:
@@ -91,6 +122,9 @@ class DSmith(Generator):
                 .filter(Program.generator == Generators.DSMITH)\
                 .scalar()
 
+    def generate(self, n: int=math.inf, up_to: int=math.inf) -> None:
+        """ generate 'n' new programs 'up_to' this many exist in db """
+        raise NotImplementedError
 
 
 class OpenCL(Language):
