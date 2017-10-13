@@ -58,7 +58,7 @@ class Generator(object):
         """ return the total linecount of generated programs """
         raise NotImplementedError("abstract class")
 
-    def generation_time(self, session: session_t=None) -> float:
+    def generation_time(self) -> float:
         """ return the total generation time of all programs """
         raise NotImplementedError("abstract class")
 

@@ -37,7 +37,8 @@ from collections import namedtuple
 from labm8 import fs
 
 import dsmith
-from dsmith import Colors, langs
+from dsmith import Colors
+from dsmith.langs import Generator, Language, mklang
 
 _lang_str = f"{Colors.RED}<lang>{Colors.END}{Colors.BOLD}"
 _generator_str = f"{Colors.GREEN}<generator>{Colors.END}{Colors.BOLD}"
@@ -123,7 +124,13 @@ def _exit_func(*args, **kwargs):
     sys.exit()
 
 
-def _describe_programs_func(lang, file=sys.stdout):
+def _describe_generators_func(lang: Language, file=sys.stdout):
+    gen = ", ".join(f"{Colors.BOLD}{generator.__name__}{Colors.END}"
+                    for generator in lang.generators)
+    print(f"The following {lang.__name__} generators are available: {gen}.")
+
+
+def _describe_programs_func(lang: Language, file=sys.stdout):
     for generator in lang.generators:
         num = humanize.intword(generator.num_programs())
         sloc = humanize.intword(generator.sloc_total())
@@ -132,7 +139,7 @@ def _describe_programs_func(lang, file=sys.stdout):
               file=file)
 
 
-def _make_programs(lang: langs.Language, generator: langs.Generator,
+def _make_programs(lang: Language, generator: Generator,
                    n: int, up_to: bool=False, file=sys.stdout):
     up_to_val = n if up_to else math.inf
     n = math.inf if up_to else n
@@ -178,7 +185,7 @@ def execute(statement: str, file=sys.stdout) -> None:
     csv = ", ".join(f"'{x}'" for x in components)
     logging.debug(f"parsing input [{csv}]")
 
-    # Commands parser:
+    # Full command parser:
     if len(components) == 1 and re.match(r'(hi|hello|hey)', components[0]):
         return _hello_func(file=file)
 
@@ -195,10 +202,15 @@ def execute(statement: str, file=sys.stdout) -> None:
         return _test_func(file=file)
 
     if components[0] == "describe":
-        programs_match = re.match(r'describe ((?P<lang>\w+) )?programs', statement)
+        generators_match = re.match(r'describe (?P<lang>\w+) generators', statement)
+        programs_match = re.match(r'describe (?P<lang>\w+) programs', statement)
 
-        if programs_match:
-            lang = langs.mklang(programs_match.group("lang"))
+        if generators_match:
+            lang = mklang(generators_match.group("lang"))
+
+            return _describe_generators_func(lang=lang, file=file)
+        elif programs_match:
+            lang = mklang(programs_match.group("lang"))
 
             return _describe_programs_func(lang=lang, file=file)
         else:
@@ -210,7 +222,7 @@ def execute(statement: str, file=sys.stdout) -> None:
 
         if programs_match:
             number = int(programs_match.group("number") or 0) or math.inf
-            lang = langs.mklang(programs_match.group("lang"))
+            lang = mklang(programs_match.group("lang"))
             generator = lang.mkgenerator(programs_match.group("generator"))
 
             return _make_programs(
