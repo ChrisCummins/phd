@@ -151,61 +151,60 @@ def _difftest_func(*args, **kwargs):
     raise NotImplementedError
 
 
-class ParsedStatement(object):
-    """
-    A parsed statement.
-    """
-    def __init__(self, statement: str):
-        self.statement = statement
-        self.func = None
-        self.args = dict()
-
-
-def parse(statement: str) -> ParsedStatement:
+def execute(statement: str, file=sys.stdout) -> None:
     """
     Pseudo-natural language command parsing.
     """
     if not isinstance(statement, str): raise TypeError
 
-    parsed = ParsedStatement(statement)
-
     # parsing is case insensitive
     statement = re.sub("\s+", " ", statement.strip().lower())
     components = statement.split(" ")
 
+    if not statement:
+        return
+
+    # Parse command modifiers:
+    if components[0] == "debug":
+        statement = re.sub(r'^debug ', '', statement)
+        with dsmith.debug_scope():
+            return execute(statement, file=file)
+    elif components[0] == "verbose":
+        components = components[1:]
+        statement = re.sub(r'^verbose ', '', statement)
+        logging.basicConfig(format='%(asctime)s [%(levelname)s] %(message)s',
+                            level=logging.INFO)
+
     csv = ", ".join(f"'{x}'" for x in components)
     logging.debug(f"parsing input [{csv}]")
 
-    if not statement:
-        return parsed
-
+    # Commands parser:
     if len(components) == 1 and re.match(r'(hi|hello|hey)', components[0]):
-        parsed.func = _hello_func
+        return _hello_func(file=file)
 
-    elif len(components) == 1 and re.match(r'(exit|quit)', components[0]):
-        parsed.func = _exit_func
+    if len(components) == 1 and re.match(r'(exit|quit)', components[0]):
+        return _exit_func(file=file)
 
-    elif len(components) == 1 and components[0] == "help":
-        parsed.func = _help_func
+    if len(components) == 1 and components[0] == "help":
+        return _help_func(file=file)
 
-    elif len(components) == 1 and components[0] == "version":
-        parsed.func = _version_func
+    if len(components) == 1 and components[0] == "version":
+        return _version_func(file=file)
 
-    elif len(components) == 1 and components[0] == "test":
-        parsed.func = _test_func
+    if len(components) == 1 and components[0] == "test":
+        return _test_func(file=file)
 
-    elif components[0] == "describe":
+    if components[0] == "describe":
         programs_match = re.match(r'describe ((?P<lang>\w+) )?programs', statement)
 
         if programs_match:
             lang = langs.mklang(programs_match.group("lang"))
 
-            parsed.func = _describe_programs_func
-            parsed.args["lang"] = lang
+            return _describe_programs_func(lang=lang, file=file)
         else:
             raise UnrecognizedInput
 
-    elif components[0] == "make":
+    if components[0] == "make":
         programs_match = re.match(r'make ((?P<up_to>up to )?(?P<number>\d+) )?(?P<lang>\w+) program(s)?( using (?P<generator>\w+))?', statement)
         testcases_match = re.match(r'make (?P<lang>\w+) ((?P<generator>\w+) )?testcases', statement)
 
@@ -214,33 +213,27 @@ def parse(statement: str) -> ParsedStatement:
             lang = langs.mklang(programs_match.group("lang"))
             generator = lang.mkgenerator(programs_match.group("generator"))
 
-            parsed.func = _make_programs
-            parsed.args["lang"] = lang
-            parsed.args["generator"] = generator
-            parsed.args["n"] = number
-            parsed.args["up_to"] = True if programs_match.group("up_to") else False
+            return _make_programs(
+                lang=lang, generator=generator, n=number,
+                up_to=True if programs_match.group("up_to") else False,
+                file=file)
 
         elif testcases_match:
             lang = testcases_match.group("lang")
             generator = testcases_match.group("generator")
 
-            parsed.func = _make_testcases
-            parsed.args["lang"] = language
-            parsed.args["generator"] = generator
+            return _make_testcases(lang=language, generator=generator, file=file)
 
         else:
             raise UnrecognizedInput
 
-    elif components[0] == "run":
-        parsed.func = _run_func
+    if components[0] == "run":
+        return _run_func(file=file)
 
-    elif components[0] == "difftest":
-        parsed.func = _difftest_func
+    if components[0] == "difftest":
+        return _difftest_func(file=file)
 
-    else:
-        raise UnrecognizedInput
-
-    return parsed
+    raise UnrecognizedInput
 
 
 def _user_message_with_stacktrace(exception):
@@ -276,13 +269,7 @@ Please report bugs at <https://github.com/ChrisCummins/dsmith/issues>\
 
 def run_command(command: str, file=sys.stdout) -> None:
     try:
-        parsed = parse(command)
-        if parsed.func:
-            args = ", ".join(f"{k}={parsed.args[k]}" for k in parsed.args)
-
-            logging.debug(f"{parsed.func.__name__}(" + args + ")")
-            parsed.func(file=file, **parsed.args)
-
+        execute(command, file=file)
     except UnrecognizedInput as e:
         print("😕  I don't understand. "
               "Type 'help' for available commands.", file=file)

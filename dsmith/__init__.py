@@ -27,8 +27,12 @@ Attributes:
     MYSQL_DATABASE (str): MySQL database name.
     MYSQL_CREDENTIALS (Tuple[str, str]): MySQL username and password.
 """
+import logging
+import os
+
 from collections import namedtuple
 from configparser import ConfigParser
+from contextlib import contextmanager
 from labm8 import fs
 from pathlib import Path
 from pkg_resources import resource_filename, resource_string, require
@@ -120,3 +124,31 @@ def data_path(*path) -> str:
         str: Path.
     """
     return resource_filename(__name__, fs.path("data", *path))
+
+
+@contextmanager
+def debug_scope() -> None:
+    """ Provide a scope for running operations with debugging output. """
+    old_debug_level = logging.getLogger('').level
+    old_debug_env = os.environ.get("DEBUG", "")
+
+    logging.getLogger('').setLevel(logging.DEBUG)
+    os.environ["DEBUG"] = "1"
+
+    try:
+        yield
+    finally:
+        logging.getLogger('').setLevel(old_debug_level)
+        os.environ["DEBUG"] = old_debug_env
+
+@contextmanager
+def verbose_scope() -> None:
+    """ Provide a scope for running operations with verbose output. """
+    old_debug_level = logging.getLogger('').level
+
+    logging.getLogger('').setLevel(logging.INFO)
+
+    try:
+        yield
+    finally:
+        logging.getLogger('').setLevel(old_debug_level)

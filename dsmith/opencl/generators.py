@@ -132,7 +132,7 @@ class CLSmith(Generator):
                 estimated_time = (self.generation_time(s) / num_progs) * num_to_generate
                 eta = humanize.naturaldelta(datetime.timedelta(seconds=estimated_time))
                 print(f"{Colors.BOLD}{num_to_generate}{Colors.END} programs are "
-                      "to be generated. Estimated generation time: " +
+                      "to be generated. Estimated generation time is " +
                       f"{Colors.BOLD}{eta}{Colors.END}.")
             else:
                 print(f"Generating programs {Colors.BOLD}forever{Colors.END} ...")
