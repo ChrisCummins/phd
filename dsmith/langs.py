@@ -58,6 +58,10 @@ class Generator(object):
         """ return the total linecount of generated programs """
         raise NotImplementedError("abstract class")
 
+    def generation_time(self, session: session_t=None) -> float:
+        """ return the total generation time of all programs """
+        raise NotImplementedError("abstract class")
+
     def generate(self, n: int=math.inf, up_to: int=math.inf) -> None:
         """ generate 'n' new programs, until 'up_to' exist in db """
         raise NotImplementedError("abstract class")
