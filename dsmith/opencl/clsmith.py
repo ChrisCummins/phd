@@ -1,15 +1,39 @@
+#
+# Copyright 2017 Chris Cummins <chrisc.101@gmail.com>.
+#
+# This file is part of DeepSmith.
+#
+# DeepSmith is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# DeepSmith is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# DeepSmith.  If not, see <http://www.gnu.org/licenses/>.
+#
+"""
+Interface to CLSmith binaries
+"""
+import logging
+
 from labm8 import fs
 from collections import namedtuple
 from subprocess import Popen, PIPE, STDOUT
 from time import time
 from typing import Dict, List, Tuple, NewType
 
+import dsmith
+
 runtime_t = NewType('runtime_t', float)
 status_t = NewType('status_t', int)
 return_t = namedtuple('return_t', ['runtime', 'status', 'stdout', 'stderr'])
 
 # set these variables to your local CLSmith build:
-exec_path = fs.path("../lib/clsmith/build/CLSmith")
+exec_path = dsmith.data_path("CLSmith")
 cl_launcher_path = fs.path("../lib/clsmith/build/cl_launcher")
 include_path = fs.path("../lib/clsmith/runtime")
 
@@ -27,6 +51,7 @@ def clsmith(*args, exec_path=exec_path) -> return_t:
     start_time = time()
 
     cli = clsmith_cli(*args)
+    logging.debug("$ " + " ".join(cli))
     process = Popen(cli, stdout=PIPE, stderr=PIPE)
     stdout, stderr = process.communicate()
 

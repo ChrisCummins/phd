@@ -15,36 +15,11 @@
 # You should have received a copy of the GNU General Public License along with
 # DeepSmith.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""
-The OpenCL programming language.
-"""
-import math
-from sqlalchemy.sql import func
+from dsmith.langs import Driver
 
-import dsmith
-import dsmith.opencl.db
-
-from dsmith import Colors
-from dsmith.langs import Driver, Generator, Language
-from dsmith.opencl.db import *
-from dsmith.opencl.generators import CLSmith, DSmith
+class Cl_launcher(Driver):
+    __name__ = "cl_launcher"
 
 
-class OpenCL(Language):
-    __name__ = "opencl"
-
-    __generators__ = {
-        None: DSmith,
-        "dsmith": DSmith,
-        "clsmith": CLSmith,
-    }
-
-    def __init__(self):
-        if db.engine is None:
-            db.init()
-
-    def mkgenerator(self, name: str) -> Generator:
-        generator = self.__generators__.get(name)
-        if not generator:
-            raise ValueError("Unknown generator")
-        return generator()
+class Cldrive(Driver):
+    __name__ = "cldrive"

@@ -134,9 +134,9 @@ def _describe_programs_func(lang, file=sys.stdout):
 
 def _make_programs(lang: langs.Language, generator: langs.Generator,
                    n: int, up_to: bool=False, file=sys.stdout):
-    up_to = n if up_to else math.inf
+    up_to_val = n if up_to else math.inf
     n = math.inf if up_to else n
-    generator.generate(n=n, up_to=up_to)
+    generator.generate(n=n, up_to=up_to_val)
 
 
 def _make_testcases(lang, generator):
@@ -206,7 +206,7 @@ def parse(statement: str) -> ParsedStatement:
             raise UnrecognizedInput
 
     elif components[0] == "make":
-        programs_match = re.match(r'make ((?P<up_to>up to )?(?P<number>\d+) )?(?P<lang>\w+) programs( using (?P<generator>\w+))?', statement)
+        programs_match = re.match(r'make ((?P<up_to>up to )?(?P<number>\d+) )?(?P<lang>\w+) program(s)?( using (?P<generator>\w+))?', statement)
         testcases_match = re.match(r'make (?P<lang>\w+) ((?P<generator>\w+) )?testcases', statement)
 
         if programs_match:
