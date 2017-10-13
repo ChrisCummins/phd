@@ -15,11 +15,15 @@
 # You should have received a copy of the GNU General Public License along with
 # DeepSmith.  If not, see <http://www.gnu.org/licenses/>.
 #
-from dsmith.langs import Driver
+"""
+OpenCL test harnesses.
+"""
+from dsmith.langs import Harness
 
-class Cl_launcher(Driver):
+
+class Cl_launcher(Harness):
     __name__ = "cl_launcher"
 
 
-class Cldrive(Driver):
+class Cldrive(Harness):
     __name__ = "cldrive"

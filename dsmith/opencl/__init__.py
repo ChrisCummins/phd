@@ -25,7 +25,7 @@ import dsmith
 import dsmith.opencl.db
 
 from dsmith import Colors
-from dsmith.langs import Driver, Generator, Language
+from dsmith.langs import Harness, Generator, Language
 from dsmith.opencl.db import *
 from dsmith.opencl.generators import CLSmith, DSmith
 
@@ -73,6 +73,6 @@ class OpenCL(Language):
 
                     todo = s.query(Program)\
                         .filter(~Program.id.in_(already_exists))
-                    print(threads, q.count())
+                    print(threads, todo.count())
                 return
                 # print(testcases.count(), bar_max, testcases.count() / bar_max)

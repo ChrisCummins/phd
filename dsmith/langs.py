@@ -26,18 +26,18 @@ import math
 from collections import namedtuple
 
 
-class Driver(object):
+class Harness(object):
     """
-    Abstract interface for a driver.
+    Abstract interface for a test harness.
 
     Attributes:
         process_result_t (Tuple[float, int, str, str]): Process result.
-        __name__ (str): Driver name.
+        __name__ (str): Harness name.
     """
     process_result_t = namedtuple('result_t', ['runtime', 'returncode', 'stdout', 'stderr'])
 
-    def drive(self, testcase, **params) -> process_result_t:
-        """ drive a testcase """
+    def run(self, testcase, **params) -> process_result_t:
+        """ run a testcase """
         raise NotImplementedError("abstract class")
 
 
@@ -47,7 +47,7 @@ class Generator(object):
 
     Attributes:
         __name__ (str): Generator name.
-        __drivers__ (List[Generator]): List of available drivers.
+        __harnesses__ (List[Generator]): List of available harnesses.
     """
 
     def num_programs(self) -> int:
@@ -69,6 +69,12 @@ class Generator(object):
     def generate(self, n: int=math.inf, up_to: int=math.inf) -> None:
         """ generate 'n' new programs, until 'up_to' exist in db """
         raise NotImplementedError("abstract class")
+
+    @property
+    def harnesses(self):
+        names = (name for name in self.__harnesses__ if name)
+        return (self.__harnesses__[name]() for name in names)
+
 
 
 class Language(object):
