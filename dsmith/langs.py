@@ -62,6 +62,10 @@ class Generator(object):
         """ return the total generation time of all programs """
         raise NotImplementedError("abstract class")
 
+    def num_testcases(self) -> int:
+        """ return the total number of testcases """
+        raise NotImplementedError("abstract class")
+
     def generate(self, n: int=math.inf, up_to: int=math.inf) -> None:
         """ generate 'n' new programs, until 'up_to' exist in db """
         raise NotImplementedError("abstract class")

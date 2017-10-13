@@ -104,6 +104,14 @@ class CLSmith(Generator):
                 .filter(Program.generator == self.generator_t)\
                 .scalar()
 
+    def num_testcases(self, session: session_t=None) -> int:
+        """ return the total number of testcases """
+        with ReuseSession(session) as s:
+            return s.query(func.count(Testcase.id))\
+                .join(Program)\
+                .filter(Program.generator == self.generator_t)\
+                .scalar()
+
     def generate(self, n: int=math.inf, up_to: int=math.inf) -> None:
         """ generate 'n' new programs 'up_to' this many exist in db """
         with Session(commit=False) as s:
@@ -155,6 +163,7 @@ class CLSmith(Generator):
 
 class DSmith(Generator):
     __name__ = "dsmith"
+    generator_t = Generators.DSMITH
 
     __drivers__ = {
         None: Cldrive,
@@ -173,6 +182,14 @@ class DSmith(Generator):
         with ReuseSession(session) as s:
             return s.query(func.sum(Program.linecount))\
                 .filter(Program.generator == Generators.DSMITH)\
+                .scalar()
+
+    def num_testcases(self, session: session_t=None) -> int:
+        """ return the total number of testcases """
+        with ReuseSession(session) as s:
+            return s.query(func.count(Testcase.id))\
+                .join(Program)\
+                .filter(Program.generator == self.generator_t)\
                 .scalar()
 
     def generate(self, n: int=math.inf, up_to: int=math.inf) -> None:

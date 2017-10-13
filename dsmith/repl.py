@@ -135,15 +135,17 @@ def _describe_generators(lang: Language, file=sys.stdout):
 
 def _describe_programs(lang: Language, file=sys.stdout):
     for generator in lang.generators:
-        num = humanize.intword(generator.num_programs())
-        sloc = humanize.intword(generator.sloc_total())
+        num = humanize.intcomma(generator.num_programs())
+        sloc = humanize.intcomma(generator.sloc_total())
         print(f"You have {Colors.BOLD}{num} {generator.__name__}{Colors.END} "
-              f"programs, total {Colors.BOLD}{sloc}{Colors.END} SLOC",
+              f"programs, total {Colors.BOLD}{sloc}{Colors.END} SLOC.",
               file=file)
 
 
-def _describe_testcases(lang: Language, file=sys.stdout):
-    pass
+def _describe_testcases(lang: Language, generator: Generator, file=sys.stdout):
+    num = humanize.intcomma(generator.num_testcases())
+    print(f"There are {Colors.BOLD}{num} {generator.__name__}{Colors.END} "
+          "testcases.", file=file)
 
 
 def _make_programs(lang: Language, generator: Generator,
@@ -211,15 +213,24 @@ def execute(statement: str, file=sys.stdout) -> None:
     if components[0] == "describe":
         generators_match = re.match(r'describe (?P<lang>\w+) generators', statement)
         programs_match = re.match(r'describe (?P<lang>\w+) programs', statement)
+        testcases_match = re.match(r'describe (?P<lang>\w+) ((?P<generator>\w+) )?testcases', statement)
 
         if generators_match:
             lang = mklang(generators_match.group("lang"))
-
             return _describe_generators(lang=lang, file=file)
         elif programs_match:
             lang = mklang(programs_match.group("lang"))
-
             return _describe_programs(lang=lang, file=file)
+        elif testcases_match:
+            lang = mklang(testcases_match.group("lang"))
+            gen = testcases_match.group("generator")
+            if gen:
+                generator = lang.mkgenerator(gen)
+                return _describe_testcases(lang=lang, generator=generator, file=file)
+            else:
+                for generator in lang.generators:
+                    _describe_testcases(lang=lang, generator=generator, file=file)
+                return
         else:
             raise UnrecognizedInput
 
