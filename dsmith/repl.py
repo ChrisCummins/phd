@@ -93,24 +93,24 @@ class UnrecognizedInput(ValueError):
     pass
 
 
-def _hello_func(file=sys.stdout):
+def _hello(file=sys.stdout):
     print("Hi there!", file=file)
 
 
-def _help_func(file=sys.stdout):
+def _help(file=sys.stdout):
     print(__help__, file=file)
 
 
-def _version_func(file=sys.stdout):
+def _version(file=sys.stdout):
     print(dsmith.__version_str__, file=file)
 
 
-def _test_func(file=sys.stdout):
+def _test(file=sys.stdout):
     import dsmith.test
     dsmith.test.testsuite()
 
 
-def _exit_func(*args, **kwargs):
+def _exit(*args, **kwargs):
     file = kwargs.pop("file", sys.stdout)
 
     farewell = random.choice([
@@ -124,13 +124,13 @@ def _exit_func(*args, **kwargs):
     sys.exit()
 
 
-def _describe_generators_func(lang: Language, file=sys.stdout):
+def _describe_generators(lang: Language, file=sys.stdout):
     gen = ", ".join(f"{Colors.BOLD}{generator.__name__}{Colors.END}"
                     for generator in lang.generators)
     print(f"The following {lang.__name__} generators are available: {gen}.")
 
 
-def _describe_programs_func(lang: Language, file=sys.stdout):
+def _describe_programs(lang: Language, file=sys.stdout):
     for generator in lang.generators:
         num = humanize.intword(generator.num_programs())
         sloc = humanize.intword(generator.sloc_total())
@@ -150,11 +150,11 @@ def _make_testcases(lang, generator):
     raise NotImplementedError
 
 
-def _run_func(*args, **kwargs):
+def _run(*args, **kwargs):
     raise NotImplementedError
 
 
-def _difftest_func(*args, **kwargs):
+def _difftest(*args, **kwargs):
     raise NotImplementedError
 
 
@@ -187,19 +187,19 @@ def execute(statement: str, file=sys.stdout) -> None:
 
     # Full command parser:
     if len(components) == 1 and re.match(r'(hi|hello|hey)', components[0]):
-        return _hello_func(file=file)
+        return _hello(file=file)
 
     if len(components) == 1 and re.match(r'(exit|quit)', components[0]):
-        return _exit_func(file=file)
+        return _exit(file=file)
 
     if len(components) == 1 and components[0] == "help":
-        return _help_func(file=file)
+        return _help(file=file)
 
     if len(components) == 1 and components[0] == "version":
-        return _version_func(file=file)
+        return _version(file=file)
 
     if len(components) == 1 and components[0] == "test":
-        return _test_func(file=file)
+        return _test(file=file)
 
     if components[0] == "describe":
         generators_match = re.match(r'describe (?P<lang>\w+) generators', statement)
@@ -208,11 +208,11 @@ def execute(statement: str, file=sys.stdout) -> None:
         if generators_match:
             lang = mklang(generators_match.group("lang"))
 
-            return _describe_generators_func(lang=lang, file=file)
+            return _describe_generators(lang=lang, file=file)
         elif programs_match:
             lang = mklang(programs_match.group("lang"))
 
-            return _describe_programs_func(lang=lang, file=file)
+            return _describe_programs(lang=lang, file=file)
         else:
             raise UnrecognizedInput
 
@@ -240,10 +240,10 @@ def execute(statement: str, file=sys.stdout) -> None:
             raise UnrecognizedInput
 
     if components[0] == "run":
-        return _run_func(file=file)
+        return _run(file=file)
 
     if components[0] == "difftest":
-        return _difftest_func(file=file)
+        return _difftest(file=file)
 
     raise UnrecognizedInput
 
@@ -323,4 +323,4 @@ def repl(file=sys.stdout) -> None:
 
     except KeyboardInterrupt:
         print("", file=file)
-        _exit_func(file=file)
+        _exit(file=file)
