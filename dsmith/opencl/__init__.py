@@ -44,7 +44,35 @@ class OpenCL(Language):
             db.init()
 
     def mkgenerator(self, name: str) -> Generator:
+        """ Instantiate generator from string """
         generator = self.__generators__.get(name)
         if not generator:
             raise ValueError("Unknown generator")
         return generator()
+
+    def mktestcases(self, generator: Generator=None) -> None:
+        """ Generate testcases, optionally for a specific generator """
+        with Session(commit=True) as s:
+            all_threads = s.query(Threads).all()
+
+            while True:
+                programs = s.query(Program.id)
+                testcases = s.query(Testcase)
+                # if generator:
+                #     programs = programs\
+                #         .filter(Program.generator == generator.generator_t)
+                #     testcases = testcases\
+                #         .join(Program)\
+                #         .filter(Program.generator == generator.generator_t)
+                bar_max = programs.count() * len(all_threads)
+
+                for threads in all_threads:
+                    already_exists = s.query(Program.id)\
+                        .join(Testcase)\
+                        .filter(Testcase.threads_id == threads.id)
+
+                    todo = s.query(Program)\
+                        .filter(~Program.id.in_(already_exists))
+                    print(threads, q.count())
+                return
+                # print(testcases.count(), bar_max, testcases.count() / bar_max)

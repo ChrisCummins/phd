@@ -155,8 +155,8 @@ def _make_programs(lang: Language, generator: Generator,
     generator.generate(n=n, up_to=up_to_val)
 
 
-def _make_testcases(lang, generator):
-    raise NotImplementedError
+def _make_testcases(lang, generator: Generator, file=sys.stdout):
+    lang.mktestcases(generator=generator)
 
 
 def _run(*args, **kwargs):
@@ -249,10 +249,10 @@ def execute(statement: str, file=sys.stdout) -> None:
                 file=file)
 
         elif testcases_match:
-            lang = testcases_match.group("lang")
-            generator = testcases_match.group("generator")
+            lang = mklang(testcases_match.group("lang"))
+            generator = lang.mkgenerator(testcases_match.group("generator"))
 
-            return _make_testcases(lang=language, generator=generator, file=file)
+            return _make_testcases(lang=lang, generator=generator, file=file)
 
         else:
             raise UnrecognizedInput

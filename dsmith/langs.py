@@ -80,6 +80,11 @@ class Language(object):
         __generators__ (List[Generator]): List of available generators.
     """
     def mkgenerator(self, name: str) -> Generator:
+        """ Instantiate generator from string """
+        raise NotImplementedError("abstract class")
+
+    def mktestcases(self, generator: Generator=None) -> None:
+        """ Generate testcases, optionally for a specific generator """
         raise NotImplementedError("abstract class")
 
     @property
