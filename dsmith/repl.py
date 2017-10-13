@@ -172,8 +172,8 @@ def execute(statement: str, file=sys.stdout) -> None:
     elif components[0] == "verbose":
         components = components[1:]
         statement = re.sub(r'^verbose ', '', statement)
-        logging.basicConfig(format='%(asctime)s [%(levelname)s] %(message)s',
-                            level=logging.INFO)
+        with dsmith.verbose_scope():
+            return execute(statement, file=file)
 
     csv = ", ".join(f"'{x}'" for x in components)
     logging.debug(f"parsing input [{csv}]")
