@@ -49,12 +49,15 @@ __available_commands__ = f"""\
   {Colors.BOLD}describe [all]{Colors.END}
     Provide an overview of stored data.
 
-  {Colors.BOLD}describe {_lang_str} {{\
-{Colors.GREEN}generators{Colors.END}{Colors.BOLD},\
-{Colors.PURPLE}testbeds{Colors.END},\
-programs,testcases,results}}{Colors.END}
-    Provide details about available generators, testbeds, generated
-    programs, testcases, or results.
+  {Colors.BOLD}describe {_lang_str} {{{Colors.GREEN}generators{Colors.END}{Colors.BOLD},programs}}{Colors.END}
+    Provide details about generators, or generated programs.
+
+  {Colors.BOLD}describe {_lang_str} [{{available,all}}] {Colors.PURPLE}testbeds{Colors.END}
+    Provide details about the available testbeds, or all the testbeds in
+    the database.
+
+  {Colors.BOLD}describe {_lang_str} [{_generator_str}] {{testcases,results}}{Colors.END}
+    Provide details about testcases, or results.
 
   {Colors.BOLD}make [[up to] {_num_str}] {_lang_str} programs [using {_generator_str}]{Colors.END}
     Generate the specified number of programs. If no generator is specified,
@@ -137,6 +140,10 @@ def _describe_programs(lang: Language, file=sys.stdout):
         print(f"You have {Colors.BOLD}{num} {generator.__name__}{Colors.END} "
               f"programs, total {Colors.BOLD}{sloc}{Colors.END} SLOC",
               file=file)
+
+
+def _describe_testcases(lang: Language, file=sys.stdout):
+    pass
 
 
 def _make_programs(lang: Language, generator: Generator,
