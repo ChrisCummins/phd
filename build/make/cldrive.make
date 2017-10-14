@@ -29,3 +29,8 @@ $(cldrive): $(venv_activate)
 test-cldrive:
 	$(venv) cd $(cldrive_dir) && make test
 test_targets += test-cldrive
+
+.PHONY: clean-cldrive
+clean-cldrive:
+	$(venv) cd $(cldrive_dir) && make clean
+clean_targets += clean-cldrive

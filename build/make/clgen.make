@@ -36,3 +36,8 @@ $(clgen): $(venv_activate)
 test-clgen:
 	$(venv) cd $(clgen_dir) && make test
 test_targets += test-clgen
+
+.PHONE: clean-clgen
+clean-clgen:
+	$(venv) cd $(clgen_dir) && make clean
+clean_targets += clean-clgen
