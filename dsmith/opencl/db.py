@@ -619,7 +619,7 @@ class Testbed(Base):
     platform = sql.orm.relationship("Platform", back_populates="testbeds")
 
     def __repr__(self) -> str:
-        return f"{Colors.BOLD}{self.num}{Colors.END} {self.platform}"
+        return f"{Colors.BOLD}{Colors.PURPLE}{self.num}{Colors.END} {self.platform}"
 
     @property
     def num(self) -> str:

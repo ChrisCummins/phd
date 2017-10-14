@@ -68,11 +68,11 @@ __available_commands__ = f"""\
   {Colors.BOLD}make {_lang_str} [{_generator_str}:{_harness_str}] testcases{Colors.END}
     Prepare testcases from programs.
 
-  {Colors.BOLD}run {_lang_str} [{_generator_str}] testcases [on {_testbed_str}]{Colors.END}
+  {Colors.BOLD}run {_lang_str} [{_generator_str}:{_harness_str}] testcases [on {_testbed_str}]{Colors.END}
     Run testcases. If no generator is specified, run testcases from all
     generators. If no testbed is specified, use all available testbeds.
 
-  {Colors.BOLD}difftest {_lang_str} [{_generator_str}] results{Colors.END}
+  {Colors.BOLD}difftest {_lang_str} [{_generator_str}:{_harness_str}] results{Colors.END}
     Compare results across devices.
 
   {Colors.BOLD}test{Colors.END}
