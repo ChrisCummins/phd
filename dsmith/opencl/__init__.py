@@ -55,6 +55,7 @@ class OpenCL(Language):
         with Session(commit=True) as s:
             all_threads = s.query(Threads).all()
 
+            print(all_threads)
             while True:
                 programs = s.query(Program.id)
                 testcases = s.query(Testcase)
@@ -74,5 +75,25 @@ class OpenCL(Language):
                     todo = s.query(Program)\
                         .filter(~Program.id.in_(already_exists))
                     print(threads, todo.count())
+
+                    harness = TODO
+                    seed = SEED
+                    timeout = TIMEOUT
+
+                    testcases = [
+                        Testcase(
+                            program=program,
+                            threads=threads,
+                            harness=harness,
+                            input_seed=seed,
+                            timeout=timeout,
+                        ) for program in todo
+                    ]
                 return
                 # print(testcases.count(), bar_max, testcases.count() / bar_max)
+
+    # program_id = sql.Column(Program.id_t, sql.ForeignKey("programs.id"), nullable=False)
+    # threads_id = sql.Column(Threads.id_t, sql.ForeignKey("threads.id"), nullable=False)
+    # harness = sql.Column(Harnesses.column_t, nullable=False)
+    # input_seed = sql.Column(sql.Integer, nullable=False)
+    # timeout = sql.Column(sql.Integer, nullable=False)
