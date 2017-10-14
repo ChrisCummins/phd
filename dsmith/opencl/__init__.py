@@ -23,6 +23,7 @@ import logging
 import math
 
 from sqlalchemy.sql import func
+from typing import List
 
 import dsmith
 import dsmith.opencl.db
@@ -94,20 +95,32 @@ class OpenCL(Language):
                 ])
                 s.commit()
 
+    def mktestbeds(self, string: str) -> List[Testbed]:
+        """ Instantiate testbed(s) by name """
+        with Session() as s:
+            return [str(testbed) for testbed in Testbed.from_num(string, session=s)]
+
+    def run_testcases(self, testbeds: List[str], generators: List[Generator],
+                      harnesses: List[Harness]) -> None:
+        for harness in harnesses:
+            for generator in generators:
+                for testbed in testbeds:
+                    print("running", harness, generator, testbed)
+
     @property
     def testbeds(self):
         """ Return all testbeds in data store """
         with Session() as s:
-            return s.query(Testbed)
+            return [str(testbed) for testbed in s.query(Testbed)]
+
 
     @property
     def available_testbeds(self):
         """ Return all testbeds on the current machine """
+        testbeds = []
+
         with Session() as s:
-            testbeds = []
-
             for env in cldrive.all_envs():
-                testbeds += Testbed.from_env(env, session=s)
+                testbeds += [str(testbed) for testbed in Testbed.from_env(env, session=s)]
 
-            # not "yield from", since we need the session to hang around
-            yield from testbeds
+        return testbeds

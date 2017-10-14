@@ -34,10 +34,8 @@ class Harness(object):
         process_result_t (Tuple[float, int, str, str]): Process result.
         __name__ (str): Harness name.
     """
-    process_result_t = namedtuple('result_t', ['runtime', 'returncode', 'stdout', 'stderr'])
-
-    def run(self, testbed, testcase) -> process_result_t:
-        """ execute a testcase """
+    def run(self, testbed, testcase) -> None:
+        """ execute a testcase and record the result """
         raise NotImplementedError("abstract class")
 
 

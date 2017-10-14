@@ -33,6 +33,10 @@ class Cl_launcher(Harness):
             return s.query(Threads)\
                 .filter(Threads.gsize_x > 0).all()
 
+    def run(self, testbed, testcase):
+        """ execute a testcase """
+        raise NotImplementedError("abstract class")
+
 
 class Cldrive(Harness):
     __name__ = "cldrive"

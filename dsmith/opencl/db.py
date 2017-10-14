@@ -643,19 +643,34 @@ class Testbed(Base):
             ]
 
     @staticmethod
-    def from_num(number: str, session: session_t=None) -> 'Testbed':
-        """ instantiate testbed from shorthand number, e.g. '1+', '5-', etc. """
-        if number[-1] != "+" and number[-1] != "-":
-            raise ValueError
+    def from_num(number: str, session: session_t=None) -> List['Testbed']:
+        """ instantiate testbed(s) from shorthand number, e.g. '1+', '5±', etc. """
+        if number[-1] != "+" and number[-1] != "-" and number[-1] != "±":
+            raise ValueError(f"Invalid testbed number '{number}'")
 
         with ReuseSession(session) as s:
             for env in cldrive.all_envs():
                 platform = Platform.from_env(env, session=s)
                 if str(platform.num) == number[:-1]:
-                    return get_or_add(
-                        s, Testbed,
-                        platform_id=platform.id,
-                        optimizations=True if number[-1] == "+" else False)
+                    if number[-1] == "±":
+                        return [
+                            get_or_add(
+                                s, Testbed,
+                                platform_id=platform.id,
+                                optimizations=True),
+                            get_or_add(
+                                s, Testbed,
+                                platform_id=platform.id,
+                                optimizations=False)
+                        ]
+                    else:
+                        return [
+                            get_or_add(
+                                s, Testbed,
+                                platform_id=platform.id,
+                                optimizations=True if number[-1] == "+" else False)
+                            ]
+            raise LookupError(f"Testbed {number} not available on machine")
 
 
 class Stdout(Base):

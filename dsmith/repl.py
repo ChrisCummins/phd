@@ -35,7 +35,7 @@ import traceback
 
 from collections import namedtuple
 from labm8 import fs
-from typing import Tuple
+from typing import List, Tuple
 
 import dsmith
 from dsmith import Colors
@@ -179,10 +179,6 @@ def _make_testcases(lang, generator_harness: Tuple[Generator, Harness]=None,
     print("All done!")
 
 
-def _run(*args, **kwargs):
-    raise NotImplementedError
-
-
 def _difftest(*args, **kwargs):
     raise NotImplementedError
 
@@ -228,10 +224,10 @@ def _execute(statement: str, file=sys.stdout) -> None:
         return _test(file=file)
 
     if components[0] == "describe":
-        generators_match = re.match(r'describe (?P<lang>\w+) generators', statement)
-        testbeds_match = re.match(r'describe (?P<lang>\w+) testbeds', statement)
-        programs_match = re.match(r'describe (?P<lang>\w+) programs', statement)
-        testcases_match = re.match(r'describe (?P<lang>\w+) ((?P<generator>\w+) )?testcases', statement)
+        generators_match = re.match(r'describe (?P<lang>\w+) generators$', statement)
+        testbeds_match = re.match(r'describe (?P<lang>\w+) testbeds$', statement)
+        programs_match = re.match(r'describe (?P<lang>\w+) programs$', statement)
+        testcases_match = re.match(r'describe (?P<lang>\w+) ((?P<generator>\w+) )?testcases$', statement)
 
         if generators_match:
             lang = mklang(generators_match.group("lang"))
@@ -256,8 +252,8 @@ def _execute(statement: str, file=sys.stdout) -> None:
             raise UnrecognizedInput
 
     if components[0] == "make":
-        programs_match = re.match(r'make ((?P<up_to>up to )?(?P<number>\d+) )?(?P<lang>\w+) program(s)?( using (?P<generator>\w+))?', statement)
-        testcases_match = re.match(r'make (?P<lang>\w+) ((?P<generator>\w+):(?P<harness>\w+) )?testcases', statement)
+        programs_match = re.match(r'make ((?P<up_to>up to )?(?P<number>\d+) )?(?P<lang>\w+) program(s)?( using (?P<generator>\w+))?$', statement)
+        testcases_match = re.match(r'make (?P<lang>\w+) ((?P<generator>\w+):(?P<harness>\w+) )?testcases$', statement)
 
         if programs_match:
             number = int(programs_match.group("number") or 0) or math.inf
@@ -285,7 +281,27 @@ def _execute(statement: str, file=sys.stdout) -> None:
             raise UnrecognizedInput
 
     if components[0] == "run":
-        return _run(file=file)
+        match = re.match(r'run (?P<lang>\w+) ((?P<generator>\w+):(?P<harness>\w+) )?testcases( on (?P<testbed>[\w+-±]+))?$', statement)
+        if match:
+            lang = mklang(match.group("lang"))
+
+            if match.group("generator"):
+                generators = [lang.mkgenerator(match.group("generator"))]
+                harnesses = [generators[0].mkharness(match.group("harness"))]
+            else:
+                generators = list(lang.generators)
+                harnesses = []
+                for generator in generators:
+                    harnesses += generator.harnesses
+
+            if match.group("testbed"):
+                testbeds = lang.mktestbeds(match.group("testbed"))
+            else:
+                testbeds = list(lang.available_testbeds)
+
+            return lang.run_testcases(testbeds, generators, harnesses)
+        else:
+            raise UnrecognizedInput
 
     if components[0] == "difftest":
         return _difftest(file=file)
