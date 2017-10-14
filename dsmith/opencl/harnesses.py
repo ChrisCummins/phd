@@ -44,3 +44,7 @@ class Cldrive(Harness):
         with ReuseSession(session) as s:
             return s.query(Threads)\
                 .filter(Threads.gsize_x > 0).all()
+
+
+class CompileOnly(Harness):
+    __name__ = "clang"

@@ -80,7 +80,7 @@ class OpenCL(Language):
                       "testcases with threads "
                       f"{Colors.BOLD}{threads}{Colors.END}")
 
-                # Bulk insert new testcases
+                # Bulk insert new testcases:
                 s.add_all([
                     Testcase(
                         program_id=program.id,

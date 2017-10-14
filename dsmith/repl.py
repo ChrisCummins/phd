@@ -54,7 +54,7 @@ __available_commands__ = f"""\
   {Colors.BOLD}describe {_lang_str} {{{Colors.GREEN}generators{Colors.END}{Colors.BOLD},programs}}{Colors.END}
     Provide details about generators, or generated programs.
 
-  {Colors.BOLD}describe {_lang_str} [{{available,all}}] {Colors.PURPLE}testbeds{Colors.END}
+  {Colors.BOLD}describe {_lang_str} {Colors.PURPLE}testbeds{Colors.END}
     Provide details about the available testbeds, or all the testbeds in
     the database.
 
@@ -133,6 +133,10 @@ def _describe_generators(lang: Language, file=sys.stdout):
     gen = ", ".join(f"{Colors.BOLD}{generator.__name__}{Colors.END}"
                     for generator in lang.generators)
     print(f"The following {lang.__name__} generators are available: {gen}.")
+
+
+def _describe_testbeds(lang: Language, file=sys.stdout):
+    print("all testbeds")
 
 
 def _describe_programs(lang: Language, file=sys.stdout):
@@ -222,12 +226,16 @@ def execute(statement: str, file=sys.stdout) -> None:
 
     if components[0] == "describe":
         generators_match = re.match(r'describe (?P<lang>\w+) generators', statement)
+        testbeds_match = re.match(r'describe (?P<lang>\w+) testbeds', statement)
         programs_match = re.match(r'describe (?P<lang>\w+) programs', statement)
         testcases_match = re.match(r'describe (?P<lang>\w+) ((?P<generator>\w+) )?testcases', statement)
 
         if generators_match:
             lang = mklang(generators_match.group("lang"))
             return _describe_generators(lang=lang, file=file)
+        elif testbeds_match:
+            lang = mklang(testbeds_match.group("lang"))
+            return _describe_testbeds(lang=lang, file=file)
         elif programs_match:
             lang = mklang(programs_match.group("lang"))
             return _describe_programs(lang=lang, file=file)
