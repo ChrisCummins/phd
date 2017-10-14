@@ -132,11 +132,18 @@ def _exit(*args, **kwargs):
 def _describe_generators(lang: Language, file=sys.stdout):
     gen = ", ".join(f"{Colors.BOLD}{generator.__name__}{Colors.END}"
                     for generator in lang.generators)
-    print(f"The following {lang.__name__} generators are available: {gen}.")
+    print(f"The following {lang.__name__} generators are available: {gen}.",
+          file=file)
 
 
 def _describe_testbeds(lang: Language, file=sys.stdout):
-    print("all testbeds")
+    print(f"The following Testbeds are in the database:", file=file)
+    for testbed in lang.testbeds:
+        print("    ", testbed, file=file)
+
+    print("\nThe following Testbeds are available on this machine:", file=file)
+    for testbed in lang.available_testbeds:
+        print("    ", testbed, file=file)
 
 
 def _describe_programs(lang: Language, file=sys.stdout):

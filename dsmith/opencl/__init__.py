@@ -91,3 +91,21 @@ class OpenCL(Language):
                     ) for program in todo
                 ])
                 s.commit()
+
+    @property
+    def testbeds(self):
+        with Session() as s:
+            return s.query(Testbed)
+
+    @property
+    def available_testbeds(self):
+        import cldrive
+
+        with Session() as s:
+            testbeds = []
+
+            for env in cldrive.all_envs():
+                testbeds += Testbed.from_env(env, session=s)
+
+            # not "yield from", since we need the session to hang around
+            yield from testbeds

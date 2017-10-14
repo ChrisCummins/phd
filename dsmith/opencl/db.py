@@ -589,6 +589,19 @@ class Platform(Base):
             "CentOS Linux 7.1.1503 64bit": "CentOS 7.1 64bit"
         }.get(self.host.strip(), self.host.strip())
 
+    @staticmethod
+    def from_env(env: cldrive.OpenCLEnvironment,
+                 session: session_t=None) -> 'Testbed':
+        with ReuseSession(session) as s:
+            return get_or_add(
+                s, Platform,
+                platform=env.platform,
+                device=env.device,
+                driver=env.driver_version,
+                opencl=env.opencl_version,
+                devtype=env.device_type,
+                host=cldrive.host_os())
+
 
 class Testbed(Base):
     id_t = sql.SmallInteger
@@ -615,6 +628,18 @@ class Testbed(Base):
     @property
     def plus_minus(self) -> str:
         return "+" if self.optimizations else "-"
+
+    @staticmethod
+    def from_env(env: cldrive.OpenCLEnvironment,
+                 session: session_t=None) -> 'Testbed':
+        with ReuseSession(session) as s:
+            platform = Platform.from_env(env, session=s)
+            s.flush()
+
+            return [
+                get_or_add(s, Testbed, platform_id=platform.id, optimizations=False),
+                get_or_add(s, Testbed, platform_id=platform.id, optimizations=True)
+            ]
 
 
 class Stdout(Base):
@@ -983,7 +1008,7 @@ class Reduction(Base):
 # Utility #####################################################################
 
 
-def get_testbed(session: session_t, platform: str, device: str) -> Testbed:
+def mktestbed(name: str, session: session_t=None) -> Testbed:
     """
     Get the testbed for the specified hardware.
 
@@ -994,15 +1019,6 @@ def get_testbed(session: session_t, platform: str, device: str) -> Testbed:
     Returns:
         Testbed: If no testbed already exists, create one.
     """
-    import pyopencl as cl
-
-    env = cldrive.make_env(platform=platform, device=device)
-
-    return get_or_add(
-        session, Testbed,
-        platform=platform,
-        device=device,
-        driver=env.driver_version,
-        host=cldrive.host_os(),
-        opencl=env.opencl_version,
-        devtype=env.device_type)
+    with ReuseSession(session) as s:
+        # FIXME:
+        env = cldrive.make_env(platform=platform, device=device)
