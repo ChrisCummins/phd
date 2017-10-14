@@ -31,9 +31,12 @@ install:
 	$(PIP) install -r requirements.txt
 	$(PYTHON) ./setup.py install
 
-test: install
+test:
 	$(PYTHON) ./setup.py test
 
 docs: install
 	$(PIP) install -r docs/requirements.txt
 	$(MAKE) -C docs html
+
+clean:
+	rm -rfv lib/cldrive/build
