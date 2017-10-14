@@ -125,5 +125,5 @@ def mklang(name: str) -> Language:
     """
     lang = __languages__.get(name)
     if not lang:
-        raise ValueError("Unknown language")
+        raise ValueError(f"Unknown language '{name}'")
     return lang()
