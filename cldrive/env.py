@@ -420,7 +420,7 @@ def all_envs(devtype: str='all') -> Iterator[OpenCLEnvironment]:
     for cl_platform in cl_platforms:
         platform_str = cl_platform.get_info(cl.platform_info.NAME)
 
-        cl_devices = cl.get_devices()
+        cl_devices = cl_platform.get_devices()
         cl_devices = [d for d in cl_devices if _devtype_matches(d, cl_devtype)]
 
         for cl_device in cl_devices:
