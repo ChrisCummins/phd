@@ -25,7 +25,7 @@ from dsmith.opencl.db import *
 class Cl_launcher(Harness):
     __name__ = "cl_launcher"
     id = Harnesses.CLSMITH
-    default_seed = 1
+    default_seed = None
     default_timeout = 60
 
     def all_threads(self, session: session_t=None):
@@ -37,7 +37,7 @@ class Cl_launcher(Harness):
 class Cldrive(Harness):
     __name__ = "cldrive"
     id = Harnesses.DSMITH
-    default_seed = 1
+    default_seed = None
     default_timeout = 60
 
     def all_threads(self, session: session_t=None):
@@ -46,5 +46,13 @@ class Cldrive(Harness):
                 .filter(Threads.gsize_x > 0).all()
 
 
-class CompileOnly(Harness):
+class Clang(Harness):
     __name__ = "clang"
+    id = Harnesses.COMPILE_ONLY
+    default_seed = None
+    default_timeout = 60
+
+    def all_threads(self, session: session_t=None):
+        with ReuseSession(session) as s:
+            return s.query(Threads)\
+                .filter(Threads.gsize_x == 0).all()
