@@ -108,6 +108,15 @@ class Language(object):
             raise ValueError(f"Unknown {self.__name__} generator '{generator}'")
         return generator()
 
+    @property
+    def testbeds(self):
+        """ Return all testbeds in data store """
+        raise NotImplementedError("abstract class")
+
+    @property
+    def available_testbeds(self):
+        """ Return all testbeds on the current machine """
+        raise NotImplementedError("abstract class")
 
 
 # Deferred importing of languages, since the modules may need to import this

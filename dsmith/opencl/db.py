@@ -1,20 +1,17 @@
 import cldrive
-import logging
 import clgen
 import datetime
-import multiprocessing
+import logging
 import os
 import sqlalchemy as sql
 
-from collections import namedtuple
 from contextlib import contextmanager
-from enum import Enum
 from labm8 import crypto, fs, prof, system
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.declarative import declarative_base
 from typing import Dict, List, Tuple, Union
 
 import dsmith
+from dsmith import Colors
 from dsmith import dsmith_pb2 as pb
 
 # Global state to manage database connections. Must call init() before
@@ -511,8 +508,10 @@ class Platform(Base):
     testbeds = sql.orm.relationship("Testbed", back_populates="platform")
 
     def __repr__(self) -> str:
-        return (f"Platform: {self.platform}, Device: {self.device}, " +
-                f"Driver: {self.driver}, Host: {self.host}")
+        if self.device_name.startswith(self.platform_name):
+            return (f"{self.device_name} {self.driver_name} on {self.host_name}")
+        else:
+            return (f"{self.platform_name} {self.device_name} {self.driver_name} on {self.host_name}")
 
     def platform_id(self):
         """ return OpenCL platform index, or KeyError if platform not found """
@@ -586,7 +585,9 @@ class Platform(Base):
     @property
     def host_name(self):
         return {
-            "CentOS Linux 7.1.1503 64bit": "CentOS 7.1 64bit"
+            "CentOS Linux 7.1.1503 64bit": "CentOS 7.1 x64",
+            "openSUSE  13.1 64bit": "openSUSE 13.1 x64",
+            "Ubuntu 16.04 64bit": "Ubuntu 16.04 x64",
         }.get(self.host.strip(), self.host.strip())
 
     @staticmethod
@@ -618,7 +619,7 @@ class Testbed(Base):
     platform = sql.orm.relationship("Platform", back_populates="testbeds")
 
     def __repr__(self) -> str:
-        return self.num
+        return f"{Colors.BOLD}{self.num}{Colors.END} {self.platform}"
 
     @property
     def num(self) -> str:
@@ -640,6 +641,21 @@ class Testbed(Base):
                 get_or_add(s, Testbed, platform_id=platform.id, optimizations=False),
                 get_or_add(s, Testbed, platform_id=platform.id, optimizations=True)
             ]
+
+    @staticmethod
+    def from_num(number: str, session: session_t=None) -> 'Testbed':
+        """ instantiate testbed from shorthand number, e.g. '1+', '5-', etc. """
+        if number[-1] != "+" and number[-1] != "-":
+            raise ValueError
+
+        with ReuseSession(session) as s:
+            for env in cldrive.all_envs():
+                platform = Platform.from_env(env, session=s)
+                if str(platform.num) == number[:-1]:
+                    return get_or_add(
+                        s, Testbed,
+                        platform_id=platform.id,
+                        optimizations=True if number[-1] == "+" else False)
 
 
 class Stdout(Base):
@@ -1003,22 +1019,3 @@ class Reduction(Base):
     log = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
     result = sql.orm.relationship("Result", back_populates="reduction")
-
-
-# Utility #####################################################################
-
-
-def mktestbed(name: str, session: session_t=None) -> Testbed:
-    """
-    Get the testbed for the specified hardware.
-
-    Arguments:
-        platform (str): Name of the OpenCL platform.
-        device (str): Name of the OpenCL device.
-
-    Returns:
-        Testbed: If no testbed already exists, create one.
-    """
-    with ReuseSession(session) as s:
-        # FIXME:
-        env = cldrive.make_env(platform=platform, device=device)

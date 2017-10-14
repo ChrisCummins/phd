@@ -18,8 +18,10 @@
 """
 The OpenCL programming language.
 """
+import cldrive
 import logging
 import math
+
 from sqlalchemy.sql import func
 
 import dsmith
@@ -94,13 +96,13 @@ class OpenCL(Language):
 
     @property
     def testbeds(self):
+        """ Return all testbeds in data store """
         with Session() as s:
             return s.query(Testbed)
 
     @property
     def available_testbeds(self):
-        import cldrive
-
+        """ Return all testbeds on the current machine """
         with Session() as s:
             testbeds = []
 
