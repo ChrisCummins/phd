@@ -84,6 +84,7 @@ run: all
 .PHONY: clean
 clean: $(clean_targets)
 	$(venv) cd lib/clgen && make clean
+	rm -rfv build/lib/dsmith build/dsmith/lib/python*/site-packages/dsmith-*
 
 
 # clean everything
