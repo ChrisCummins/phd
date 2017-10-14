@@ -18,8 +18,77 @@
 """
 OpenCL test harnesses.
 """
+from labm8 import crypto, fs
+from tempfile import NamedTemporaryFile
+
+
+import dsmith
+from dsmith import clsmith
 from dsmith.langs import Harness
 from dsmith.opencl.db import *
+
+
+def _cl_launcher(src: str, platform_id: int, device_id: int,
+                 *args, timeout: float=60) -> Tuple[float, int, str, str]:
+    """ Invoke cl launcher on source """
+    with NamedTemporaryFile(prefix='cl_launcher-', suffix='.cl') as tmp:
+        tmp.write(src.encode('utf-8'))
+        tmp.flush()
+
+        return clsmith.cl_launcher(tmp.name, platform_id, device_id, *args,
+                                   timeout=timeout)
+
+
+def _verify_cl_launcher_run(platform: str, device: str, optimizations: bool,
+                            global_size: tuple, local_size: tuple,
+                            stderr: str) -> None:
+    """ verify that expected params match actual as reported by CLsmith """
+    optimizations = "on" if optimizations else "off"
+
+    actual_platform = None
+    actual_device = None
+    actual_optimizations = None
+    actual_global_size = None
+    actual_local_size = None
+    for line in stderr.split('\n'):
+        if line.startswith("Platform: "):
+            actual_platform_name = re.sub(r"^Platform: ", "", line).rstrip()
+        elif line.startswith("Device: "):
+            actual_device_name = re.sub(r"^Device: ", "", line).rstrip()
+        elif line.startswith("OpenCL optimizations: "):
+            actual_optimizations = re.sub(r"^OpenCL optimizations: ", "", line).rstrip()
+
+        # global size
+        match = re.match('^3-D global size \d+ = \[(\d+), (\d+), (\d+)\]', line)
+        if match:
+            actual_global_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
+        match = re.match('^2-D global size \d+ = \[(\d+), (\d+)\]', line)
+        if match:
+            actual_global_size = (int(match.group(1)), int(match.group(2)), 0)
+        match = re.match('^1-D global size \d+ = \[(\d+)\]', line)
+        if match:
+            actual_global_size = (int(match.group(1)), 0, 0)
+
+        # local size
+        match = re.match('^3-D local size \d+ = \[(\d+), (\d+), (\d+)\]', line)
+        if match:
+            actual_local_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
+        match = re.match('^2-D local size \d+ = \[(\d+), (\d+)\]', line)
+        if match:
+            actual_local_size = (int(match.group(1)), int(match.group(2)), 0)
+        match = re.match('^1-D local size \d+ = \[(\d+)\]', line)
+        if match:
+            actual_local_size = (int(match.group(1)), 0, 0)
+
+        # check if we've collected everything:
+        if (actual_platform and actual_device and actual_optimizations and
+            actual_global_size and actual_local_size):
+            assert(actual_platform == platform)
+            assert(actual_device == device)
+            assert(actual_optimizations == optimizations)
+            assert(actual_global_size == global_size)
+            assert(actual_local_size == local_size)
+            return
 
 
 class Cl_launcher(Harness):
@@ -33,9 +102,47 @@ class Cl_launcher(Harness):
             return s.query(Threads)\
                 .filter(Threads.gsize_x > 0).all()
 
-    def run(self, testbed, testcase):
+    def run(self, testbed, testcase, session: session_t=None):
         """ execute a testcase """
-        raise NotImplementedError("abstract class")
+        with ReuseSession(session) as s:
+            platform_id, device_id = testbed.ids
+
+            runtime, status, stdout, stderr = _cl_launcher(
+                    testcase.program.src, platform_id, device_id, *flags)
+
+            # assert that executed params match expected
+            _verify_cl_launcher_run(platform=testbed.platform.name,
+                                    device=testbed.platform.device,
+                                    optimizations=testbed.optimizations,
+                                    global_size=testcase.threads.gsize,
+                                    local_size=testcase.threads.lsize,
+                                    stderr=stderr)
+
+            # create new result
+            stdout_ = stdout  # util.escape_stdout(stdout)
+            stdout = get_or_create(
+                s, Stdout,
+                sha1=crypto.sha1_str(stdout_),
+                stdout=stdout_)
+
+            stderr_ = stderr  # util.escape_stderr(stderr)
+            stderr = get_or_create(
+                s, Stderr,
+                sha1=crypto.sha1_str(stderr_),
+                stderr=stderr_)
+            session.flush()
+
+            result = CLSmithResult(
+                testbed_id=testbed.id,
+                testcase_id=testcase.id,
+                returncode=returncode,
+                # FIXME: outcome=analyze.get_cl_launcher_outcome(status, runtime, stderr_)
+                runtime=runtime,
+                stdout_id=stdout.id,
+                stderr_id=stderr.id)
+
+            session.add(result)
+            session.commit()
 
 
 class Cldrive(Harness):
@@ -50,13 +157,13 @@ class Cldrive(Harness):
                 .filter(Threads.gsize_x > 0).all()
 
 
-class Clang(Harness):
-    __name__ = "clang"
-    id = Harnesses.COMPILE_ONLY
-    default_seed = None
-    default_timeout = 60
+# class Clang(Harness):
+#     __name__ = "clang"
+#     id = Harnesses.COMPILE_ONLY
+#     default_seed = None
+#     default_timeout = 60
 
-    def all_threads(self, session: session_t=None):
-        with ReuseSession(session) as s:
-            return s.query(Threads)\
-                .filter(Threads.gsize_x == 0).all()
+#     def all_threads(self, session: session_t=None):
+#         with ReuseSession(session) as s:
+#             return s.query(Threads)\
+#                 .filter(Threads.gsize_x == 0).all()

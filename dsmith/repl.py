@@ -129,9 +129,9 @@ def _exit(*args, **kwargs):
 
 
 def _describe_generators(lang: Language, file=sys.stdout):
-    gen = ", ".join(f"{Colors.BOLD}{generator.__name__}{Colors.END}"
+    gen = ", ".join(f"{Colors.BOLD}{generator}{Colors.END}"
                     for generator in lang.generators)
-    print(f"The following {lang.__name__} generators are available: {gen}.",
+    print(f"The following {lang} generators are available: {gen}.",
           file=file)
 
 
@@ -149,14 +149,14 @@ def _describe_programs(lang: Language, file=sys.stdout):
     for generator in lang.generators:
         num = humanize.intcomma(generator.num_programs())
         sloc = humanize.intcomma(generator.sloc_total())
-        print(f"You have {Colors.BOLD}{num} {generator.__name__}{Colors.END} "
+        print(f"You have {Colors.BOLD}{num} {generator}{Colors.END} "
               f"programs, total {Colors.BOLD}{sloc}{Colors.END} SLOC.",
               file=file)
 
 
 def _describe_testcases(lang: Language, generator: Generator, file=sys.stdout):
     num = humanize.intcomma(generator.num_testcases())
-    print(f"There are {Colors.BOLD}{num} {generator.__name__}{Colors.END} "
+    print(f"There are {Colors.BOLD}{num} {generator}{Colors.END} "
           "testcases.", file=file)
 
 
@@ -286,20 +286,22 @@ def _execute(statement: str, file=sys.stdout) -> None:
             lang = mklang(match.group("lang"))
 
             if match.group("generator"):
-                generators = [lang.mkgenerator(match.group("generator"))]
-                harnesses = [generators[0].mkharness(match.group("harness"))]
+                generator = lang.mkgenerator(match.group("generator"))
+                harness = generator.mkharness(match.group("harness"))
+                pairs = [(generator, harness)]
             else:
                 generators = list(lang.generators)
-                harnesses = []
+                pairs = []
                 for generator in generators:
-                    harnesses += generator.harnesses
+                    for harness in generator.harnesses:
+                        pairs.append((generator, harness))
 
             if match.group("testbed"):
                 testbeds = lang.mktestbeds(match.group("testbed"))
             else:
                 testbeds = list(lang.available_testbeds)
 
-            return lang.run_testcases(testbeds, generators, harnesses)
+            return lang.run_testcases(testbeds, pairs)
         else:
             raise UnrecognizedInput
 

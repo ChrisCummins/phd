@@ -23,7 +23,7 @@ Attributes:
 """
 import math
 
-from collections import namedtuple
+from typing import List, Tuple
 
 
 class Harness(object):
@@ -34,6 +34,9 @@ class Harness(object):
         process_result_t (Tuple[float, int, str, str]): Process result.
         __name__ (str): Harness name.
     """
+    def __repr__(self):
+        return self.__name__
+
     def run(self, testbed, testcase) -> None:
         """ execute a testcase and record the result """
         raise NotImplementedError("abstract class")
@@ -47,6 +50,8 @@ class Generator(object):
         __name__ (str): Generator name.
         __harnesses__ (List[Generator]): List of available harnesses.
     """
+    def __repr__(self):
+        return self.__name__
 
     def num_programs(self) -> int:
         """ return the number of generated programs in the database """
@@ -89,6 +94,8 @@ class Language(object):
         __name__ (str): Language name.
         __generators__ (List[Generator]): List of available generators.
     """
+    def __repr__(self):
+        return self.__name__
 
     def mktestcases(self, generator: Generator=None) -> None:
         """ Generate testcases, optionally for a specific generator """
@@ -107,13 +114,18 @@ class Language(object):
         return generator()
 
     @property
-    def testbeds(self):
+    def testbeds(self) -> List['Testbed']:
         """ Return all testbeds in data store """
         raise NotImplementedError("abstract class")
 
     @property
-    def available_testbeds(self):
+    def available_testbeds(self) -> List['Testbed']:
         """ Return all testbeds on the current machine """
+        raise NotImplementedError("abstract class")
+
+    def run_testcases(self, testbeds: List['Testbed'],
+                      pairs: List[Tuple[Generator, Harness]]) -> None:
+        """ Run testcases """
         raise NotImplementedError("abstract class")
 
 

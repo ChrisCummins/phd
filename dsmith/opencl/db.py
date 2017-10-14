@@ -1,3 +1,4 @@
+import re
 import cldrive
 import clgen
 import datetime
@@ -630,6 +631,15 @@ class Testbed(Base):
     def plus_minus(self) -> str:
         return "+" if self.optimizations else "-"
 
+    @property
+    def ids(self) -> Tuple[int, int]:
+        try:
+            return self._ids
+        except AttributeError:
+            # TODO:
+            raise NotImplementedError
+
+
     @staticmethod
     def from_env(env: cldrive.OpenCLEnvironment,
                  session: session_t=None) -> 'Testbed':
@@ -671,6 +681,12 @@ class Testbed(Base):
                                 optimizations=True if number[-1] == "+" else False)
                             ]
             raise LookupError(f"Testbed {number} not available on machine")
+
+    @staticmethod
+    def from_str(string: str, session: session_t=None) -> 'Testbed':
+        with ReuseSession(session) as s:
+            num = re.sub(r'\x1b[^m]*m', '', string.split(" ")[0])
+            return Testbed.from_num(num, session=s)[0]
 
 
 class Stdout(Base):

@@ -33,7 +33,7 @@ from dsmith import Colors
 from dsmith.langs import Generator
 from dsmith.opencl.db import *
 from dsmith.opencl import clsmith
-from dsmith.opencl.harnesses import Clang, Cldrive, Cl_launcher
+from dsmith.opencl.harnesses import *
 
 
 def _make_clsmith_program(session: session_t, *flags, depth=1) -> None:
@@ -58,13 +58,13 @@ def _make_clsmith_program(session: session_t, *flags, depth=1) -> None:
     # Check if the program is a duplicate. If so, try again:
     sha1 = crypto.sha1_str(src)
     is_dupe = session.query(Program.id)\
-        .filter(Program.generator == CLSmith.generator_t,
+        .filter(Program.generator == CLSmith.id,
                 Program.sha1 == sha1).first()
     if is_dupe:
         return _make_clsmith_program(session, *flags, depth=depth + 1)
 
     program = Program(
-        generator=CLSmith.generator_t,
+        generator=CLSmith.id,
         sha1=sha1,
         generation_time=runtime,
         linecount=len(src.split("\n")),
@@ -76,33 +76,33 @@ def _make_clsmith_program(session: session_t, *flags, depth=1) -> None:
 
 class CLSmith(Generator):
     __name__ = "clsmith"
-    generator_t = Generators.CLSMITH
+    id = Generators.CLSMITH
 
     __harnesses__ = {
         None: Cl_launcher,
         "cl_launcher": Cl_launcher,
-        "clang": Clang,
+        # "clang": Clang,
     }
 
     def num_programs(self, session: session_t=None) -> int:
         """ return the number of generated programs in the database """
         with ReuseSession(session) as s:
             return s.query(func.count(Program.id))\
-                .filter(Program.generator == self.generator_t)\
+                .filter(Program.generator == self.id)\
                 .scalar()
 
     def sloc_total(self, session: session_t=None) -> int:
         """ return the total linecount of generated programs """
         with ReuseSession(session) as s:
             return s.query(func.sum(Program.linecount))\
-                .filter(Program.generator == self.generator_t)\
+                .filter(Program.generator == self.id)\
                 .scalar()
 
     def generation_time(self, session: session_t=None) -> float:
         """ return the total generation time of all programs """
         with ReuseSession(session) as s:
             return s.query(func.sum(Program.generation_time))\
-                .filter(Program.generator == self.generator_t)\
+                .filter(Program.generator == self.id)\
                 .scalar()
 
     def num_testcases(self, session: session_t=None) -> int:
@@ -110,7 +110,7 @@ class CLSmith(Generator):
         with ReuseSession(session) as s:
             return s.query(func.count(Testcase.id))\
                 .join(Program)\
-                .filter(Program.generator == self.generator_t)\
+                .filter(Program.generator == self.id)\
                 .scalar()
 
     def generate(self, n: int=math.inf, up_to: int=math.inf) -> None:
@@ -164,12 +164,12 @@ class CLSmith(Generator):
 
 class DSmith(Generator):
     __name__ = "dsmith"
-    generator_t = Generators.DSMITH
+    id = Generators.DSMITH
 
     __harnesses__ = {
         None: Cldrive,
         "cldrive": Cldrive,
-        "clang": Clang,
+        # "clang": Clang,
     }
 
     def num_programs(self, session: session_t=None) -> int:
@@ -191,7 +191,7 @@ class DSmith(Generator):
         with ReuseSession(session) as s:
             return s.query(func.count(Testcase.id))\
                 .join(Program)\
-                .filter(Program.generator == self.generator_t)\
+                .filter(Program.generator == self.id)\
                 .scalar()
 
     def generate(self, n: int=math.inf, up_to: int=math.inf) -> None:

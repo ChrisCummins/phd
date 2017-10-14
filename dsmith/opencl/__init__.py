@@ -19,8 +19,11 @@
 The OpenCL programming language.
 """
 import cldrive
+import datetime
+import humanize
 import logging
 import math
+import progressbar
 
 from sqlalchemy.sql import func
 from typing import List
@@ -100,12 +103,62 @@ class OpenCL(Language):
         with Session() as s:
             return [str(testbed) for testbed in Testbed.from_num(string, session=s)]
 
-    def run_testcases(self, testbeds: List[str], generators: List[Generator],
-                      harnesses: List[Harness]) -> None:
-        for harness in harnesses:
-            for generator in generators:
-                for testbed in testbeds:
-                    print("running", harness, generator, testbed)
+
+    def _run_testcases(self, testbed: Testbed, generator: Generator,
+                       harness: Harness, session: session_t=None):
+        with ReuseSession(session) as s:
+            already_done = s.query(Result.testcase_id)\
+                .join(Testcase)\
+                .join(Program)\
+                .filter(Result.testbed_id == testbed.id,
+                        Testcase.harness == harness.id,
+                        Program.generator == generator.id)
+
+            todo = s.query(Testcase)\
+                .filter(~Testcase.id.in_(already_done))
+
+            ndone = already_done.count()
+            ntodo = todo.count()
+
+            # Break early if we have nothing to do
+            if not ntodo:
+                return
+
+            runtime = s.query(func.sum(Result.runtime))\
+                .join(Testcase)\
+                .join(Program)\
+                .filter(Result.testbed_id == testbed.id,
+                        Testcase.harness == harness.id,
+                        Program.generator == generator.id)\
+                .scalar()
+
+            estimated_time = (runtime / ndone) * ntodo
+            eta = humanize.naturaldelta(datetime.timedelta(seconds=estimated_time))
+
+            print(f"Running {Colors.BOLD}{ntodo} "
+                  f"{Colors.GREEN}{generator}{Colors.END}"
+                  f":{Colors.BOLD}{Colors.YELLOW}{harness}{Colors.END} "
+                  "testcases "
+                  f"on {Colors.BOLD}{Colors.PURPLE}{testbed.num}{Colors.END}. "
+                  f"Estimated runtime is {Colors.BOLD}{eta}{Colors.END}.")
+
+            bar = progressbar.ProgressBar(initial_value=ndone,
+                                          max_value=ndone + ntodo,
+                                          redirect_stdout=True)
+
+            for testcase in todo:
+                harness.run(testbed, testcase, s)
+                ndone = already_done.count()
+                bar.update(ndone)
+
+
+    def run_testcases(self, testbeds: List[str],
+                      pairs: List[Tuple[Generator, Harness]]) -> None:
+        with Session() as s:
+            for generator, harness in pairs:
+                for testbed_name in testbeds:
+                    testbed = Testbed.from_str(testbed_name, session=s)
+                    self._run_testcases(testbed, generator, harness, s)
 
     @property
     def testbeds(self):
