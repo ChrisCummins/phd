@@ -187,10 +187,7 @@ def _difftest(*args, **kwargs):
     raise NotImplementedError
 
 
-def execute(statement: str, file=sys.stdout) -> None:
-    """
-    Pseudo-natural language command parsing.
-    """
+def _execute(statement: str, file=sys.stdout) -> None:
     if not isinstance(statement, str): raise TypeError
 
     # parsing is case insensitive
@@ -204,12 +201,12 @@ def execute(statement: str, file=sys.stdout) -> None:
     if components[0] == "debug":
         statement = re.sub(r'^debug ', '', statement)
         with dsmith.debug_scope():
-            return execute(statement, file=file)
+            return _execute(statement, file=file)
     elif components[0] == "verbose":
         components = components[1:]
         statement = re.sub(r'^verbose ', '', statement)
         with dsmith.verbose_scope():
-            return execute(statement, file=file)
+            return _execute(statement, file=file)
 
     csv = ", ".join(f"'{x}'" for x in components)
     logging.debug(f"parsing input [{csv}]")
@@ -328,8 +325,11 @@ Please report bugs at <https://github.com/ChrisCummins/dsmith/issues>\
 
 
 def run_command(command: str, file=sys.stdout) -> None:
+    """
+    Pseudo-natural language command parsing.
+    """
     try:
-        execute(command, file=file)
+        _execute(command, file=file)
     except UnrecognizedInput as e:
         print("😕  I don't understand. "
               "Type 'help' for available commands.", file=file)

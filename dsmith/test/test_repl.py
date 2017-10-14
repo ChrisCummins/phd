@@ -18,28 +18,22 @@
 import pytest
 
 from dsmith import test
-from dsmith import parser
+from dsmith import repl
 
 
-def test_type_error():
+def test_execute_type_error():
     with pytest.raises(TypeError):
-        parser.parse(2.5)
+        repl._execute(2.5)
 
 
-def test_unrecognized():
+def test_execute_unrecognized():
     with pytest.raises(ValueError):
-        parser.parse("__ unrecognized input ___")
+        repl._execute("__ unrecognized input ___")
 
-    with pytest.raises(parser.UnrecognizedInput):
-        parser.parse("__ unrecognized input ___")
-
-
-def test_empty():
-    assert parser.parse("").msg == None
-    assert parser.parse("").func == None
+    with pytest.raises(repl.UnrecognizedInput):
+        repl._execute("__ unrecognized input ___")
 
 
-def test_hello():
-    assert parser.parse(" Hi").msg == "Hi there!"
-    assert parser.parse("hello").msg == "Hi there!"
-    assert parser.parse("hello").func == None
+def test_run_command_type_error():
+    with pytest.raises(TypeError):
+        repl.run_command(2.5)
