@@ -18,6 +18,7 @@
 """
 The OpenCL programming language.
 """
+import logging
 import math
 from sqlalchemy.sql import func
 
@@ -43,57 +44,50 @@ class OpenCL(Language):
         if db.engine is None:
             db.init()
 
-    def mkgenerator(self, name: str) -> Generator:
-        """ Instantiate generator from string """
-        generator = self.__generators__.get(name)
-        if not generator:
-            raise ValueError("Unknown generator")
-        return generator()
 
-    def mktestcases(self, generator: Generator=None) -> None:
+    def mktestcases(self, generator: Generator, harness: Harness,
+                    session: session_t=None) -> None:
         """ Generate testcases, optionally for a specific generator """
-        with Session(commit=True) as s:
-            all_threads = s.query(Threads).all()
+        with ReuseSession(session) as s:
+            all_threads = harness.all_threads(s)
 
-            print(all_threads)
-            while True:
-                programs = s.query(Program.id)
-                testcases = s.query(Testcase)
-                # if generator:
-                #     programs = programs\
-                #         .filter(Program.generator == generator.generator_t)
-                #     testcases = testcases\
-                #         .join(Program)\
-                #         .filter(Program.generator == generator.generator_t)
-                bar_max = programs.count() * len(all_threads)
+            for threads in all_threads:
+                # Make a list of programs which already have matching testcases
+                already_exists = s.query(Program.id)\
+                    .join(Testcase)\
+                    .filter(Program.generator == generator.generator_t,
+                            Testcase.threads_id == threads.id,
+                            Testcase.harness == harness.id)
 
-                for threads in all_threads:
-                    already_exists = s.query(Program.id)\
-                        .join(Testcase)\
-                        .filter(Testcase.threads_id == threads.id)
+                # The list of testcases to make is the compliment of the above:
+                todo = s.query(Program)\
+                    .filter(Program.generator == generator.generator_t,
+                            ~Program.id.in_(already_exists))
 
-                    todo = s.query(Program)\
-                        .filter(~Program.id.in_(already_exists))
-                    print(threads, todo.count())
+                # Determine how many, if any, testcases need to be made:
+                nexist = already_exists.count()
+                ntodo = todo.count()
+                ntotal = nexist + ntodo
+                logging.debug(f"{generator.__name__}:{harness.__name__} {threads} testcases = {nexist} / {ntotal}")
 
-                    harness = TODO
-                    seed = SEED
-                    timeout = TIMEOUT
+                # Break early if there's nothing to do:
+                if not ntodo:
+                    return
 
-                    testcases = [
-                        Testcase(
-                            program=program,
-                            threads=threads,
-                            harness=harness,
-                            input_seed=seed,
-                            timeout=timeout,
-                        ) for program in todo
-                    ]
-                return
-                # print(testcases.count(), bar_max, testcases.count() / bar_max)
+                print(f"Generating {Colors.BOLD}{ntodo}{Colors.END} "
+                      f"{Colors.BOLD}{Colors.GREEN}{generator.__name__}{Colors.END}:"
+                      f"{Colors.BOLD}{Colors.YELLOW}{harness.__name__}{Colors.END} "
+                      "testcases with threads "
+                      f"{Colors.BOLD}{threads}{Colors.END}")
 
-    # program_id = sql.Column(Program.id_t, sql.ForeignKey("programs.id"), nullable=False)
-    # threads_id = sql.Column(Threads.id_t, sql.ForeignKey("threads.id"), nullable=False)
-    # harness = sql.Column(Harnesses.column_t, nullable=False)
-    # input_seed = sql.Column(sql.Integer, nullable=False)
-    # timeout = sql.Column(sql.Integer, nullable=False)
+                # Bulk insert new testcases
+                s.add_all([
+                    Testcase(
+                        program_id=program.id,
+                        threads_id=threads.id,
+                        harness=harness.id,
+                        input_seed=harness.default_seed,
+                        timeout=harness.default_timeout,
+                    ) for program in todo
+                ])
+                s.commit()

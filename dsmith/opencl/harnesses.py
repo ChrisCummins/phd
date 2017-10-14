@@ -19,11 +19,28 @@
 OpenCL test harnesses.
 """
 from dsmith.langs import Harness
+from dsmith.opencl.db import *
 
 
 class Cl_launcher(Harness):
     __name__ = "cl_launcher"
+    id = Harnesses.CLSMITH
+    default_seed = 1
+    default_timeout = 60
+
+    def all_threads(self, session: session_t=None):
+        with ReuseSession(session) as s:
+            return s.query(Threads)\
+                .filter(Threads.gsize_x > 0).all()
 
 
 class Cldrive(Harness):
     __name__ = "cldrive"
+    id = Harnesses.DSMITH
+    default_seed = 1
+    default_timeout = 60
+
+    def all_threads(self, session: session_t=None):
+        with ReuseSession(session) as s:
+            return s.query(Threads)\
+                .filter(Threads.gsize_x > 0).all()

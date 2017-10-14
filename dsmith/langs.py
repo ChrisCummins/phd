@@ -36,8 +36,8 @@ class Harness(object):
     """
     process_result_t = namedtuple('result_t', ['runtime', 'returncode', 'stdout', 'stderr'])
 
-    def run(self, testcase, **params) -> process_result_t:
-        """ run a testcase """
+    def run(self, testbed, testcase) -> process_result_t:
+        """ execute a testcase """
         raise NotImplementedError("abstract class")
 
 
@@ -75,6 +75,12 @@ class Generator(object):
         names = (name for name in self.__harnesses__ if name)
         return (self.__harnesses__[name]() for name in names)
 
+    def mkharness(self, name: str) -> Harness:
+        """ Instantiate harness from string """
+        harness = self.__harnesses__.get(name)
+        if not harness:
+            raise ValueError(f"Unknown {self.__name__} harness '{name}'")
+        return harness()
 
 
 class Language(object):
@@ -85,9 +91,6 @@ class Language(object):
         __name__ (str): Language name.
         __generators__ (List[Generator]): List of available generators.
     """
-    def mkgenerator(self, name: str) -> Generator:
-        """ Instantiate generator from string """
-        raise NotImplementedError("abstract class")
 
     def mktestcases(self, generator: Generator=None) -> None:
         """ Generate testcases, optionally for a specific generator """
@@ -97,6 +100,13 @@ class Language(object):
     def generators(self):
         names = (name for name in self.__generators__ if name)
         return (self.__generators__[name]() for name in names)
+
+    def mkgenerator(self, name: str) -> Generator:
+        """ Instantiate generator from string """
+        generator = self.__generators__.get(name)
+        if not generator:
+            raise ValueError(f"Unknown {self.__name__} generator '{generator}'")
+        return generator()
 
 
 

@@ -35,13 +35,15 @@ import traceback
 
 from collections import namedtuple
 from labm8 import fs
+from typing import Tuple
 
 import dsmith
 from dsmith import Colors
-from dsmith.langs import Generator, Language, mklang
+from dsmith.langs import Generator, Harness, Language, mklang
 
 _lang_str = f"{Colors.RED}<lang>{Colors.END}{Colors.BOLD}"
 _generator_str = f"{Colors.GREEN}<generator>{Colors.END}{Colors.BOLD}"
+_harness_str = f"{Colors.YELLOW}<harness>{Colors.END}{Colors.BOLD}"
 _testbed_str = f"{Colors.PURPLE}<testbed>{Colors.END}{Colors.BOLD}"
 _num_str = f"{Colors.BLUE}<number>{Colors.END}{Colors.BOLD}"
 
@@ -63,7 +65,7 @@ __available_commands__ = f"""\
     Generate the specified number of programs. If no generator is specified,
     default to dsmith.
 
-  {Colors.BOLD}make {_lang_str} [{_generator_str}] testcases{Colors.END}
+  {Colors.BOLD}make {_lang_str} [{_generator_str}:{_harness_str}] testcases{Colors.END}
     Prepare testcases from programs.
 
   {Colors.BOLD}run {_lang_str} [{_generator_str}] testcases [on {_testbed_str}] [{{with,without}} optimizations]{Colors.END}
@@ -155,8 +157,16 @@ def _make_programs(lang: Language, generator: Generator,
     generator.generate(n=n, up_to=up_to_val)
 
 
-def _make_testcases(lang, generator: Generator, file=sys.stdout):
-    lang.mktestcases(generator=generator)
+def _make_testcases(lang, generator_harness: Tuple[Generator, Harness]=None,
+                    file=sys.stdout):
+    if generator_harness:
+        lang.mktestcases(*generator_harness)
+    else:
+        # Make testcases for all generators / harnesses
+        for generator in lang.generators:
+            for harness in generator.harnesses:
+                lang.mktestcases(generator, harness)
+    print("All done!")
 
 
 def _run(*args, **kwargs):
@@ -236,7 +246,7 @@ def execute(statement: str, file=sys.stdout) -> None:
 
     if components[0] == "make":
         programs_match = re.match(r'make ((?P<up_to>up to )?(?P<number>\d+) )?(?P<lang>\w+) program(s)?( using (?P<generator>\w+))?', statement)
-        testcases_match = re.match(r'make (?P<lang>\w+) ((?P<generator>\w+) )?testcases', statement)
+        testcases_match = re.match(r'make (?P<lang>\w+) ((?P<generator>\w+):(?P<harness>\w+) )?testcases', statement)
 
         if programs_match:
             number = int(programs_match.group("number") or 0) or math.inf
@@ -250,9 +260,15 @@ def execute(statement: str, file=sys.stdout) -> None:
 
         elif testcases_match:
             lang = mklang(testcases_match.group("lang"))
-            generator = lang.mkgenerator(testcases_match.group("generator"))
+            if testcases_match.group("generator"):
+                generator = lang.mkgenerator(testcases_match.group("generator"))
+                harness = generator.mkharness(testcases_match.group("harness"))
+                generator_harness = (generator, harness)
+            else:
+                generator_harness = None
 
-            return _make_testcases(lang=lang, generator=generator, file=file)
+            return _make_testcases(lang=lang, generator_harness=generator_harness,
+                                   file=file)
 
         else:
             raise UnrecognizedInput
