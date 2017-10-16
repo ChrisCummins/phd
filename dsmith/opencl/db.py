@@ -1,4 +1,4 @@
-#
+.#
 # Copyright 2017 Chris Cummins <chrisc.101@gmail.com>.
 #
 # This file is part of DeepSmith.
@@ -702,7 +702,7 @@ class Testbed(Base):
                         bar.update(ndone)
                         break
                     except IntegrityError:
-                        logging.info("Database integrity error!")
+                        logging.warning("database integrity error")
                 else:
                     raise OSError("100 consecutive database integrity errors")
 
