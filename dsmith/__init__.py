@@ -68,7 +68,7 @@ _config.read(fs.path(RC_PATH))
 MYSQL_HOSTNAME = _config['mysql']['hostname']
 MYSQL_PORT = _config['mysql']['port']
 MYSQL_DATABASE = _config['mysql']['database']
-MYSQL_CREDENTIALS = _config['mysql']['user'], _config['mysql']['password']
+MYSQL_CREDENTIALS = _config['mysql']['username'], _config['mysql']['password']
 
 
 class DSmithError(Exception):
