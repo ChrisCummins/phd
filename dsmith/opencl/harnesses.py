@@ -131,24 +131,29 @@ class Cl_launcher(Harness):
                 s, Stderr,
                 sha1=crypto.sha1_str(stderr_),
                 stderr=stderr_)
-            session.flush()
+            session.flush()  # required to get IDs
 
+            # determine result outcome
+            outcome = ClsmithResult.get_outcome(
+                returncode, stderr_, runtime, testcase.timeout)
+
+            outcome_name = Outcomes.to_str(outcome)
             return_color = Colors.RED if returncode else Colors.GREEN
-            logging.debug(f"↳  {Colors.BOLD}{return_color}{returncode}{Colors.END} "
-                          f"after {Colors.BOLD}{runtime:.2f}{Colors.END} seconds")
+            logging.debug(f"↳  {Colors.BOLD}{return_color}{returncode} "
+                          f"{outcome_name}{Colors.END} after "
+                          f"{Colors.BOLD}{runtime:.2f}{Colors.END} seconds")
 
-            result = Result(
+            result = ClsmithResult(
                 testbed_id=testbed.id,
                 testcase_id=testcase.id,
                 returncode=returncode,
-                # FIXME: outcome=analyze.get_cl_launcher_outcome(returncode, runtime, stderr_)
+                outcome=outcome,
                 runtime=runtime,
                 stdout_id=stdout.id,
                 stderr_id=stderr.id)
 
-            print(result)
-            # session.add(result)
-            # session.commit()
+            session.add(result)
+            session.commit()
 
 
 class Cldrive(Harness):

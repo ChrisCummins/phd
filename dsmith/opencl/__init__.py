@@ -146,6 +146,7 @@ class OpenCL(Language):
             bar = progressbar.ProgressBar(initial_value=ndone,
                                           max_value=ndone + ntodo,
                                           redirect_stdout=True)
+            bar.update(ndone)
 
             for testcase in todo:
                 harness.run(testbed, testcase, s)

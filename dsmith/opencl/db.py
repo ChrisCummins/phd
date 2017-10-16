@@ -1024,7 +1024,6 @@ class Classifications:
     ABF = 3
     ARC = 4
     AWO = 5
-    PASS = 6
 
     @staticmethod
     def to_str(outcomes: 'Classifications.value_t') -> str:
@@ -1034,7 +1033,6 @@ class Classifications:
             Classifications.ABF: "anomylous build failure",
             Classifications.ARC: "anomylous runtime crash",
             Classifications.AWO: "anomylous wrong output",
-            Classifications.PASS: "pass",
         }[outcomes]
 
 
