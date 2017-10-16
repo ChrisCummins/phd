@@ -54,7 +54,7 @@ __available_commands__ = f"""\
   {Colors.BOLD}describe {_lang_str} {{{Colors.GREEN}generators{Colors.END}{Colors.BOLD},programs}}{Colors.END}
     Provide details about generators, or generated programs.
 
-  {Colors.BOLD}describe {_lang_str} {Colors.PURPLE}testbeds{Colors.END}
+  {Colors.BOLD}describe {_lang_str} [{_harness_str}] {Colors.PURPLE}testbeds{Colors.END}
     Provide details about the available testbeds, or all the testbeds in
     the database.
 
@@ -65,14 +65,14 @@ __available_commands__ = f"""\
     Generate the specified number of programs. If no generator is specified,
     default to dsmith.
 
-  {Colors.BOLD}make {_lang_str} [{_generator_str}:{_harness_str}] testcases{Colors.END}
+  {Colors.BOLD}make {_lang_str} [[{_harness_str}]:[{_generator_str}]] testcases{Colors.END}
     Prepare testcases from programs.
 
-  {Colors.BOLD}run {_lang_str} [{_generator_str}:{_harness_str}] testcases [on {_testbed_str}]{Colors.END}
+  {Colors.BOLD}run {_lang_str} [[{_harness_str}]:[{_generator_str}]] testcases [on {_testbed_str}]{Colors.END}
     Run testcases. If no generator is specified, run testcases from all
     generators. If no testbed is specified, use all available testbeds.
 
-  {Colors.BOLD}difftest {_lang_str} [{_generator_str}:{_harness_str}] results{Colors.END}
+  {Colors.BOLD}difftest {_lang_str} [[{_harness_str}]:[{_generator_str}]] results{Colors.END}
     Compare results across devices.
 
   {Colors.BOLD}test{Colors.END}
@@ -158,18 +158,6 @@ def _make_programs(lang: Language, generator: Generator,
     generator.generate(n=n, up_to=up_to_val)
 
 
-def _make_testcases(lang, generator_harness: Tuple[Generator, Harness]=None,
-                    file=sys.stdout):
-    if generator_harness:
-        lang.mktestcases(*generator_harness)
-    else:
-        # Make testcases for all generators / harnesses
-        for generator in lang.generators:
-            for harness in generator.harnesses:
-                lang.mktestcases(generator, harness)
-    print("All done!")
-
-
 def _difftest(*args, **kwargs):
     raise NotImplementedError
 
@@ -248,7 +236,7 @@ def _execute(statement: str, file=sys.stdout) -> None:
 
     if components[0] == "make":
         programs_match = re.match(r'make ((?P<up_to>up to )?(?P<number>\d+) )?(?P<lang>\w+) program(s)?( using (?P<generator>\w+))?$', statement)
-        testcases_match = re.match(r'make (?P<lang>\w+) ((?P<generator>\w+):(?P<harness>\w+) )?testcases$', statement)
+        testcases_match = re.match(r'make (?P<lang>\w+) ((?P<harness>\w+):(?P<generator>\w+)? )?testcases$', statement)
 
         if programs_match:
             number = int(programs_match.group("number") or 0) or math.inf
@@ -262,41 +250,54 @@ def _execute(statement: str, file=sys.stdout) -> None:
 
         elif testcases_match:
             lang = mklang(testcases_match.group("lang"))
-            if testcases_match.group("generator"):
-                generator = lang.mkgenerator(testcases_match.group("generator"))
-                harness = generator.mkharness(testcases_match.group("harness"))
-                generator_harness = (generator, harness)
+            if testcases_match.group("harness"):
+                harness = lang.mkharness(testcases_match.group("harness"))
+                if testcases_match.group("generator"):
+                    generators = [lang.mkgenerator(testcases_match.group("generator"))]
+                else:
+                    # No generator specified, use all:
+                    generators = list(harness.generators)
+
+                for generator in generators:
+                    harness.make_testcases(generator)
             else:
-                generator_harness = None
-
-            return _make_testcases(lang=lang, generator_harness=generator_harness,
-                                   file=file)
-
+                # No harness specified, use all:
+                for harness in lang.harnesses:
+                    for generator in harness.generators:
+                        harness.make_testcases(generator)
+            return
         else:
             raise UnrecognizedInput
 
     if components[0] == "run":
-        match = re.match(r'run (?P<lang>\w+) ((?P<generator>\w+):(?P<harness>\w+) )?testcases( on (?P<testbed>[\w+-±]+))?$', statement)
+        match = re.match(r'run (?P<lang>\w+) ((?P<harness>\w+):(?P<generator>\w+)? )?testcases( on (?P<testbed>[\w+-±]+))?$', statement)
         if match:
             lang = mklang(match.group("lang"))
 
-            if match.group("generator"):
-                generator = lang.mkgenerator(match.group("generator"))
-                harness = generator.mkharness(match.group("harness"))
-                pairs = [(generator, harness)]
+            if match.group("harness"):
+                harness = lang.mkharness(match.group("harness"))
+                if match.group("generator"):
+                    generators = [lang.mkgenerator(match.group("generator"))]
+                else:
+                    # No generator specified, use all:
+                    generators = list(harness.generators)
+
+                pairs = [(harness, generator) for generator in generators]
             else:
-                generators = list(lang.generators)
                 pairs = []
-                for generator in generators:
-                    for harness in generator.harnesses:
-                        pairs.append((generator, harness))
+                # No harness specified, use all:
+                for harness in lang.harnesses:
+                    pairs += [(harness, generator) for generator in harness.generators]
 
             if match.group("testbed"):
                 testbeds = lang.mktestbeds(match.group("testbed"))
             else:
                 testbeds = list(lang.available_testbeds())
 
-            return lang.run_testcases(testbeds, pairs)
+            for harness, generator in pairs:
+                for testbed in harness.available_testbeds():
+                    testbed.run_testcases(harness, generator)
+            return
         else:
             raise UnrecognizedInput
 

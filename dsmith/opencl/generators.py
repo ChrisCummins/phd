@@ -33,7 +33,6 @@ from dsmith import Colors
 from dsmith.langs import Generator
 from dsmith.opencl.db import *
 from dsmith.opencl import clsmith
-from dsmith.opencl.harnesses import *
 
 
 def _make_clsmith_program(session: session_t, *flags, depth=1) -> None:
@@ -79,9 +78,9 @@ class CLSmith(Generator):
     id = Generators.CLSMITH
 
     __harnesses__ = {
-        None: Cl_launcher,
-        "cl_launcher": Cl_launcher,
-        "clang": Clang,
+        # None: harnesses.Cl_launcher,
+        # "cl_launcher": harnesses.Cl_launcher,
+        # "clang": harnesses.Clang,
     }
 
     def num_programs(self, session: session_t=None) -> int:
@@ -167,9 +166,9 @@ class DSmith(Generator):
     id = Generators.DSMITH
 
     __harnesses__ = {
-        None: Cldrive,
-        "cldrive": Cldrive,
-        "clang": Clang,
+        # None: harnesses.Cldrive,
+        # "cldrive": harnesses.Cldrive,
+        # "clang": harnesses.Clang,
     }
 
     def num_programs(self, session: session_t=None) -> int:

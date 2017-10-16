@@ -18,14 +18,99 @@
 """
 OpenCL test harnesses.
 """
+import cldrive
+
 from labm8 import crypto, fs
 from tempfile import NamedTemporaryFile
 from sqlalchemy.sql import func
+from typing import List
 
 import dsmith
 from dsmith.langs import Generator, Harness
-from dsmith.opencl import clsmith
+from dsmith.opencl import clsmith, generators
 from dsmith.opencl.db import *
+
+
+def _non_zero_threads(session: session_t=None):
+    with ReuseSession(session) as s:
+        return s.query(Threads)\
+                    .filter(Threads.gsize_x > 0).all()
+
+
+def _zero_threads(session: session_t=None):
+    with ReuseSession(session) as s:
+        return s.query(Threads)\
+                    .filter(Threads.gsize_x == 0).all()
+
+
+class OpenCLHarness(Harness):
+    def make_testcases(self, generator: Generator):
+        """ Generate testcases, optionally for a specific generator """
+        if generator.__name__ not in self.__generators__:
+            raise ValueError(f"incompatible combination {self}:{generator}")
+
+        with Session() as s:
+            all_threads = self.all_threads(s)
+
+            for threads in all_threads:
+                # Make a list of programs which already have matching testcases
+                already_exists = s.query(Program.id)\
+                    .join(Testcase)\
+                    .filter(Program.generator == generator.id,
+                            Testcase.threads_id == threads.id,
+                            Testcase.harness == self.id)
+
+                # The list of testcases to make is the compliment of the above:
+                todo = s.query(Program)\
+                    .filter(Program.generator == generator.id,
+                            ~Program.id.in_(already_exists))
+
+                # Determine how many, if any, testcases need to be made:
+                nexist = already_exists.count()
+                ntodo = todo.count()
+                ntotal = nexist + ntodo
+                logging.debug(f"{self}:{generator} {threads} testcases = {nexist} / {ntotal}")
+
+                # Break early if there's nothing to do:
+                if not ntodo:
+                    return
+
+                print(f"Generating {Colors.BOLD}{ntodo}{Colors.END} "
+                      f"{self}:{generator} testcases with threads "
+                      f"{Colors.BOLD}{threads}{Colors.END}")
+
+                # Bulk insert new testcases:
+                s.add_all([
+                    Testcase(
+                        program_id=program.id,
+                        threads_id=threads.id,
+                        harness=self.id,
+                        input_seed=self.default_seed,
+                        timeout=self.default_timeout,
+                    ) for program in todo
+                ])
+                s.commit()
+
+    def testbeds(self) -> List[TestbedProxy]:
+        with Session() as s:
+            if self.id == Harnesses.COMPILE_ONLY:
+                q = s.query(Testbed)\
+                    .join(Platform)\
+                    .filter(Platform.platform == "clang")
+                return sorted(TestbedProxy(testbed) for testbed in q)
+            else:
+                q = s.query(Testbed)\
+                    .join(Platform)\
+                    .filter(Platform.platform != "clang")
+                return sorted(TestbedProxy(testbed) for testbed in q)
+
+    def available_testbeds(self) -> List[TestbedProxy]:
+        testbeds = []
+        with Session() as s:
+            for env in cldrive.all_envs():
+                testbeds += [TestbedProxy(testbed) for testbed in Testbed.from_env(env, session=s)]
+
+        return sorted(testbeds)
 
 
 def _cl_launcher(src: str, platform_id: int, device_id: int, timeout: int,
@@ -91,20 +176,12 @@ def _verify_cl_launcher_run(platform: str, device: str, optimizations: bool,
             return
 
 
-def _non_zero_threads(session: session_t=None):
-    with ReuseSession(session) as s:
-        return s.query(Threads)\
-                    .filter(Threads.gsize_x > 0).all()
-
-
-def _zero_threads(session: session_t=None):
-    with ReuseSession(session) as s:
-        return s.query(Threads)\
-                    .filter(Threads.gsize_x == 0).all()
-
-
-class Cl_launcher(Harness):
+class Cl_launcher(OpenCLHarness):
     __name__ = "cl_launcher"
+    __generators__ = {
+        "clsmith": generators.CLSmith,
+    }
+
     id = Harnesses.CLSMITH
     default_seed = None
     default_timeout = 60
@@ -124,7 +201,7 @@ class Cl_launcher(Harness):
                 .scalar()
             return n
 
-    def run(self, testbed, testcase, session: session_t=None):
+    def run(self, testcase: Testcase, testbed: Testbed, session: session_t=None):
         """ execute a testcase """
         with ReuseSession(session) as s:
             platform_id, device_id = testbed.ids
@@ -177,8 +254,12 @@ class Cl_launcher(Harness):
             session.commit()
 
 
-class Cldrive(Harness):
+class Cldrive(OpenCLHarness):
     __name__ = "cldrive"
+    __generators__ = {
+        "dsmith": generators.DSmith,
+    }
+
     id = Harnesses.DSMITH
     default_seed = None
     default_timeout = 60
@@ -199,8 +280,13 @@ class Cldrive(Harness):
             return n
 
 
-class Clang(Harness):
+class Clang(OpenCLHarness):
     __name__ = "clang"
+    __generators__ = {
+        "clsmith": generators.CLSmith,
+        "dsmith": generators.DSmith,
+    }
+
     id = Harnesses.COMPILE_ONLY
     default_seed = None
     default_timeout = 60

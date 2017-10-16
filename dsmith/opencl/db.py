@@ -1,14 +1,38 @@
-import re
+#
+# Copyright 2017 Chris Cummins <chrisc.101@gmail.com>.
+#
+# This file is part of DeepSmith.
+#
+# DeepSmith is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# DeepSmith is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# DeepSmith.  If not, see <http://www.gnu.org/licenses/>.
+#
+"""
+OpenCL database backend.
+"""
 import cldrive
 import clgen
 import datetime
+import humanize
 import logging
 import os
+import progressbar
+import re
 import sqlalchemy as sql
 
 from contextlib import contextmanager
 from labm8 import crypto, fs, prof, system
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.sql import func
 from typing import Dict, List, Tuple, Union
 
 import dsmith
@@ -187,7 +211,7 @@ class DsmithProgramMeta(Base):
 
     def get_contains_floats(self, s: session_t) -> bool:
         if self.contains_floats == None:
-            q = s.query(sql.sql.func.count(Program.id))\
+            q = s.query(func.count(Program.id))\
                 .filter(Program.id == self.id,
                         (Program.src.like("%float%") | Program.src.like("%double%")))\
                 .scalar()
@@ -207,7 +231,7 @@ class DsmithProgramMeta(Base):
     def get_compiler_warnings(self, s: session_t) -> bool:
         """ check for red-flag compiler warnings """
         if self.compiler_warnings == None:
-            q = s.query(sql.sql.func.count(Stderr.id))\
+            q = s.query(func.count(Stderr.id))\
                 .join(Result)\
                 .filter(
                     Result.testcase_id == self.id,
@@ -625,6 +649,64 @@ class Testbed(Base):
     def __repr__(self) -> str:
         return f"{Colors.BOLD}{Colors.PURPLE}{self.num}{Colors.END}"
 
+    def run_testcases(self, harness, generator, session: session_t=None):
+        with ReuseSession(session) as s:
+            already_done = s.query(Result.testcase_id)\
+                .join(Testcase)\
+                .join(Program)\
+                .filter(Result.testbed_id == self.id,
+                        Testcase.harness == harness.id,
+                        Program.generator == generator.id)
+
+            todo = s.query(Testcase)\
+                .join(Program)\
+                .filter(Testcase.harness == harness.id,
+                        Program.generator == generator.id,
+                        ~Testcase.id.in_(already_done))
+
+            ndone = already_done.count()
+            ntodo = todo.count()
+
+            # Break early if we have nothing to do
+            if not ntodo:
+                return
+
+            runtime = s.query(func.sum(Result.runtime))\
+                .join(Testcase)\
+                .join(Program)\
+                .filter(Result.testbed_id == self.id,
+                        Testcase.harness == harness.id,
+                        Program.generator == generator.id)\
+                .scalar()
+
+            estimated_time = (runtime / ndone) * ntodo
+            eta = humanize.naturaldelta(datetime.timedelta(seconds=estimated_time))
+
+            words_ntodo = humanize.intcomma(ntodo)
+            print(f"Running {Colors.BOLD}{words_ntodo} "
+                  f"{Colors.GREEN}{generator}{Colors.END}"
+                  f":{Colors.BOLD}{Colors.YELLOW}{harness}{Colors.END} "
+                  "testcases "
+                  f"on {Colors.BOLD}{Colors.PURPLE}{self.num}{Colors.END}. "
+                  f"Estimated runtime is {Colors.BOLD}{eta}{Colors.END}.")
+
+            bar = progressbar.ProgressBar(initial_value=ndone,
+                                          max_value=ndone + ntodo,
+                                          redirect_stdout=True)
+
+            for testcase in todo:
+                for i in range(100):
+                    try:
+                        harness.run(testcase, self, s)
+                        ndone = already_done.count()
+                        bar.update(ndone)
+                        break
+                    except IntegrityError:
+                        logging.info("Database integrity error!")
+                else:
+                    raise OSError("100 consecutive database integrity errors")
+
+
     @property
     def num(self) -> str:
         p = self.platform.platform_name if self.platform.num == -1 else self.platform.num
@@ -713,6 +795,47 @@ class Testbed(Base):
                                 optimizations=True if string[-1] == "+" else False)
                             ]
             raise LookupError(f"Testbed '{string}' not found in database")
+
+
+class TestbedProxy(object):
+    """
+    A testbed proxy which does not need to be bound to the lifetime of a
+    database session.
+    """
+    def __init__(self, testbed: Testbed):
+        self.repr = str(testbed)
+        self.platform = str(testbed.platform)
+        self.id = testbed.id
+
+    def testbed(self, session: session_t):
+        """ Return a """
+        return session.query(Testbed).filter(Testbed.id == self.id).scalar()
+
+    def run_testcases(self, harness, generator):
+        with Session() as s:
+            testbed_ = self.testbed(s)
+            testbed_.run_testcases(harness, generator)
+
+    def __repr__(self):
+        return self.repr
+
+    def __lt__(self, other):
+        return str(self) < str(other)
+
+    def __le__(self, other):
+        return str(self) <= str(other)
+
+    def __eq__(self, other):
+        return str(self) == str(other)
+
+    def __ne__(self, other):
+        return str(self) != str(other)
+
+    def __gt__(self, other):
+        return str(self) > str(other)
+
+    def __ge__(self, other):
+        return str(self) >= str(other)
 
 
 class Stdout(Base):

@@ -24,7 +24,7 @@ Attributes:
 import math
 import sys
 
-from typing import List, Tuple
+from typing import Iterable, List, Tuple
 
 from dsmith import Colors
 
@@ -36,17 +36,31 @@ class Harness(object):
     Attributes:
         process_result_t (Tuple[float, int, str, str]): Process result.
         __name__ (str): Harness name.
+        __generators__ (List[Generator]): List of compatible generators.
     """
     # Abstract methods (must be implemented):
 
-    def run(self, testbed, testcase) -> None:
-        """ execute a testcase and record the result """
+    def run_testcases(self, testbeds: Iterable['Testbed']) -> None:
+        """ execute testcases on the specified testbeds and record the results """
         raise NotImplementedError("abstract class")
+
+    def testbeds(self) -> Iterable['Testbed']:
+        """ return all testbeds in the data store """
+        pass
+
+    def available_testbeds(self) -> Iterable['Testbed']:
+        """ return testbeds available on this machine """
+        pass
 
     # Default methods (may be overriden):
 
     def __repr__(self):
         return f"{Colors.BOLD}{Colors.YELLOW}{self.__name__}{Colors.END}"
+
+    @property
+    def generators(self):
+        names = (name for name in self.__generators__ if name)
+        return (self.__generators__[name]() for name in names)
 
 
 class Generator(object):
@@ -55,25 +69,26 @@ class Generator(object):
 
     Attributes:
         __name__ (str): Generator name.
-        __harnesses__ (List[Generator]): List of available harnesses.
+        __harnesses__ (List[Generator]): List of compatible harnesses.
     """
     # Abstract methods (must be implemented):
 
-    def num_programs(self) -> int:
-        """ return the number of generated programs in the database """
-        raise NotImplementedError("abstract class")
+    # TODO: refactor these away
+    # def num_programs(self) -> int:
+    #     """ return the number of generated programs in the database """
+    #     raise NotImplementedError("abstract class")
 
-    def sloc_total(self) -> int:
-        """ return the total linecount of generated programs """
-        raise NotImplementedError("abstract class")
+    # def sloc_total(self) -> int:
+    #     """ return the total linecount of generated programs """
+    #     raise NotImplementedError("abstract class")
 
-    def generation_time(self) -> float:
-        """ return the total generation time of all programs """
-        raise NotImplementedError("abstract class")
+    # def generation_time(self) -> float:
+    #     """ return the total generation time of all programs """
+    #     raise NotImplementedError("abstract class")
 
-    def num_testcases(self) -> int:
-        """ return the total number of testcases """
-        raise NotImplementedError("abstract class")
+    # def num_testcases(self) -> int:
+    #     """ return the total number of testcases """
+    #     raise NotImplementedError("abstract class")
 
     def generate(self, n: int=math.inf, up_to: int=math.inf) -> None:
         """ generate 'n' new programs, until 'up_to' exist in db """
@@ -103,34 +118,36 @@ class Language(object):
 
     Attributes:
         __name__ (str): Language name.
-        __generators__ (List[Generator]): List of available generators.
+        __generators__ (Iterable[Generator]): List of available generators.
+        __harnesses__ (Iterable[Harness]): List of available harnesses.
     """
     # Abstract methods (must be implemented):
 
-    def describe_testbeds(self, file=sys.stdout) -> None:
-        """ describe testbeds """
-        raise NotImplementedError("abstract class")
+    # TODO: refactor these away
+    # def describe_testbeds(self, file=sys.stdout) -> None:
+    #     """ describe testbeds """
+    #     raise NotImplementedError("abstract class")
 
-    def describe_results(self, file=sys.stdout) -> None:
-        """ describe results """
-        raise NotImplementedError("abstract class")
+    # def describe_results(self, file=sys.stdout) -> None:
+    #     """ describe results """
+    #     raise NotImplementedError("abstract class")
 
-    def mktestcases(self, generator: Generator=None) -> None:
-        """ Generate testcases, optionally for a specific generator """
-        raise NotImplementedError("abstract class")
+    # def mktestcases(self, generator: Generator=None) -> None:
+    #     """ Generate testcases, optionally for a specific generator """
+    #     raise NotImplementedError("abstract class")
 
-    def testbeds(self) -> List['Testbed']:
-        """ Return all testbeds in data store """
-        raise NotImplementedError("abstract class")
+    # def testbeds(self) -> List['Testbed']:
+    #     """ Return all testbeds in data store """
+    #     raise NotImplementedError("abstract class")
 
-    def available_testbeds(self) -> List['Testbed']:
-        """ Return all testbeds on the current machine """
-        raise NotImplementedError("abstract class")
+    # def available_testbeds(self) -> List['Testbed']:
+    #     """ Return all testbeds on the current machine """
+    #     raise NotImplementedError("abstract class")
 
-    def run_testcases(self, testbeds: List['Testbed'],
-                      pairs: List[Tuple[Generator, Harness]]) -> None:
-        """ Run testcases """
-        raise NotImplementedError("abstract class")
+    # def run_testcases(self, testbeds: List['Testbed'],
+    #                   pairs: List[Tuple[Generator, Harness]]) -> None:
+    #     """ Run testcases """
+    #     raise NotImplementedError("abstract class")
 
     # Default methods (may be overriden):
 
@@ -142,12 +159,24 @@ class Language(object):
         names = (name for name in self.__generators__ if name)
         return (self.__generators__[name]() for name in names)
 
+    @property
+    def harnesses(self):
+        names = (name for name in self.__harnesses__ if name)
+        return (self.__harnesses__[name]() for name in names)
+
     def mkgenerator(self, name: str) -> Generator:
         """ Instantiate generator from string """
         generator = self.__generators__.get(name)
         if not generator:
-            raise ValueError(f"Unknown {self.__name__} generator '{generator}'")
+            raise ValueError(f"Unknown {self} generator '{name}'")
         return generator()
+
+    def mkharness(self, name: str) -> Generator:
+        """ Instantiate harness from string """
+        harness = self.__harnesses__.get(name)
+        if not harness:
+            raise ValueError(f"Unknown {self} harness '{name}'")
+        return harness()
 
 
 # Deferred importing of languages, since the modules may need to import this
