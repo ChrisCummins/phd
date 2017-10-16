@@ -86,9 +86,22 @@ clean-symlinks:
 clean_targets += $(clean-symlinks)
 
 
+# header files
+headers = \
+	$(root)/dsmith/data/include/CLSmith.h
+
+$(root)/dsmith/data/include/CLSmith.h: $(clsmith_include_dir)
+	cp -v $</*.h $(dir $@)
+
+.PHONY: clean-headers
+clean-headers:
+	rm -fv $(headers)
+clean_targets += $(clean-headers)
+
+
 # python packages
 python_packages = $(clgen) $(cldrive) $(jupyter)
-python: $(venv_activate) $(python_packages) $(protobuf) $(data_symlinks)
+python: $(venv_activate) $(python_packages) $(protobuf) $(data_symlinks) $(headers)
 	$(venv) ./configure -r >/dev/null
 	$(venv) pip install --only-binary=numpy '$(shell grep numpy requirements.txt)'
 	$(venv) pip install -r requirements.txt

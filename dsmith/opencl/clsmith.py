@@ -35,11 +35,12 @@ return_t = namedtuple('return_t', ['runtime', 'status', 'stdout', 'stderr'])
 # set these variables to your local CLSmith build:
 exec_path = dsmith.data_path("bin", "CLSmith")
 cl_launcher_path = dsmith.data_path("bin", "cl_launcher")
-include_path = fs.path("../lib/clsmith/runtime")
+include_path = dsmith.data_path("include")
 
 # sanity checks
 assert fs.isexe(exec_path)
 assert fs.isexe(cl_launcher_path)
+assert fs.isfile(fs.path(include_path, "CLSmith.h"))
 
 
 def clsmith_cli(*args, timeout: int=60, exec_path=exec_path) -> List[str]:

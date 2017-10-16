@@ -19,6 +19,7 @@
 clsmith_dir := $(root)/lib/clsmith
 clsmith := $(clsmith_dir)/build/CLSmith
 cl_launcher := $(clsmith_dir)/build/cl_launcher
+clsmith_include_dir := $(clsmith_dir)/runtime
 
 # add this target as a prerequisite for rules which require CLSmith
 clsmith: $(clsmith)
