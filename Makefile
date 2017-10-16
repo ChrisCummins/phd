@@ -56,22 +56,44 @@ test: $(test_targets)
 	dsmith test
 
 
+# protocol buffers
+protobuf = dsmith/dsmith_pb2.py
+protobuf: $(python_packages) $(protobuf)
+
+dsmith/dsmith_pb2.py: dsmith/protobuf/dsmith.proto $(venv_activate)
+	cd dsmith/protobuf && $(venv) protoc dsmith.proto --python_out=..
+
+
+# data symlinks
+data_symlinks = \
+	$(root)/dsmith/data/bin/cl_launcher \
+	$(root)/dsmith/data/bin/CLSmith \
+	$(NULL)
+
+$(root)/dsmith/data/bin/cl_launcher: $(clsmith)
+	mkdir -p $(dir $@)
+	ln -sf $< $@
+	touch $@
+
+$(root)/dsmith/data/bin/CLSmith: $(clsmith)
+	mkdir -p $(dir $@)
+	ln -sf $< $@
+	touch $@
+
+.PHONY: clean-symlinks
+clean-symlinks:
+	rm -fv $(data_symlinks)
+clean_targets += $(clean-symlinks)
+
+
 # python packages
 python_packages = $(clgen) $(cldrive) $(jupyter)
-python: $(venv_activate) $(python_packages) $(protobuf)
+python: $(venv_activate) $(python_packages) $(protobuf) $(data_symlinks)
 	$(venv) ./configure -r >/dev/null
 	$(venv) pip install --only-binary=numpy '$(shell grep numpy requirements.txt)'
 	$(venv) pip install -r requirements.txt
 	$(venv) pip install '$(shell grep tensorflow requirements.txt)'
 	$(venv) python ./setup.py install
-
-
-# protocol buffers
-protobuf = dsmith/dsmith_pb2.py
-protobuf: $(python_packages) $(protobuf)
-
-dsmith/dsmith_pb2.py: dsmith/protobuf/dsmith.proto python
-	cd dsmith/protobuf && $(venv) protoc dsmith.proto --python_out=..
 
 
 # launch Jupyter server

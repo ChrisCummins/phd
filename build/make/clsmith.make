@@ -17,7 +17,8 @@
 # DeepSmith.  If not, see <http://www.gnu.org/licenses/>.
 #
 clsmith_dir := $(root)/lib/clsmith
-clsmith := $(clsmith_dir)/build/cl_launcher
+clsmith := $(clsmith_dir)/build/CLSmith
+cl_launcher := $(clsmith_dir)/build/cl_launcher
 
 # add this target as a prerequisite for rules which require CLSmith
 clsmith: $(clsmith)

@@ -23,8 +23,8 @@ from tempfile import NamedTemporaryFile
 
 
 import dsmith
-from dsmith import clsmith
 from dsmith.langs import Harness
+from dsmith.opencl import clsmith
 from dsmith.opencl.db import *
 
 
