@@ -537,6 +537,9 @@ class Platform(Base):
 
     @property
     def num(self):
+        if self.platform == "clang":
+            return f"{self.platform}-{self.driver}"
+
         return {
             "ComputeAorta (Intel E5-2620)": 9,
             "GeForce GTX 1080": 1,
@@ -620,7 +623,7 @@ class Testbed(Base):
     platform = sql.orm.relationship("Platform", back_populates="testbeds")
 
     def __repr__(self) -> str:
-        return f"{Colors.BOLD}{Colors.PURPLE}{self.num}{Colors.END} {self.platform}"
+        return f"{Colors.BOLD}{Colors.PURPLE}{self.num}{Colors.END}"
 
     @property
     def num(self) -> str:
@@ -679,40 +682,37 @@ class Testbed(Base):
             ]
 
     @staticmethod
-    def from_num(number: str, session: session_t=None) -> List['Testbed']:
-        """ instantiate testbed(s) from shorthand number, e.g. '1+', '5±', etc. """
-        if number[-1] != "+" and number[-1] != "-" and number[-1] != "±":
-            raise ValueError(f"Invalid testbed number '{number}'")
+    def from_str(string: str, session: session_t=None) -> List['Testbed']:
+        """ instantiate testbed(s) from shorthand string, e.g. '1+', '5±', etc. """
+        # strip formatting
+        string = re.sub(r'\x1b[^m]*m', '', string.split(" ")[0])
+
+        # check format
+        if string[-1] != "+" and string[-1] != "-" and string[-1] != "±":
+            raise ValueError(f"Invalid testbed string '{string}'")
 
         with ReuseSession(session) as s:
-            for env in cldrive.all_envs():
-                platform = Platform.from_env(env, session=s)
-                if str(platform.num) == number[:-1]:
-                    if number[-1] == "±":
+            for testbed in s.query(Testbed):
+                if str(testbed.platform.num) == string[:-1]:
+                    if string[-1] == "±":
                         return [
                             get_or_add(
                                 s, Testbed,
-                                platform_id=platform.id,
+                                platform_id=testbed.platform.id,
                                 optimizations=True),
                             get_or_add(
                                 s, Testbed,
-                                platform_id=platform.id,
+                                platform_id=testbed.platform.id,
                                 optimizations=False)
                         ]
                     else:
                         return [
                             get_or_add(
                                 s, Testbed,
-                                platform_id=platform.id,
-                                optimizations=True if number[-1] == "+" else False)
+                                platform_id=testbed.platform.id,
+                                optimizations=True if string[-1] == "+" else False)
                             ]
-            raise LookupError(f"Testbed {number} not available on machine")
-
-    @staticmethod
-    def from_str(string: str, session: session_t=None) -> 'Testbed':
-        with ReuseSession(session) as s:
-            num = re.sub(r'\x1b[^m]*m', '', string.split(" ")[0])
-            return Testbed.from_num(num, session=s)[0]
+            raise LookupError(f"Testbed '{string}' not found in database")
 
 
 class Stdout(Base):

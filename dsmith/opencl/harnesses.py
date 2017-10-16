@@ -20,10 +20,10 @@ OpenCL test harnesses.
 """
 from labm8 import crypto, fs
 from tempfile import NamedTemporaryFile
-
+from sqlalchemy.sql import func
 
 import dsmith
-from dsmith.langs import Harness
+from dsmith.langs import Generator, Harness
 from dsmith.opencl import clsmith
 from dsmith.opencl.db import *
 
@@ -91,6 +91,18 @@ def _verify_cl_launcher_run(platform: str, device: str, optimizations: bool,
             return
 
 
+def _non_zero_threads(session: session_t=None):
+    with ReuseSession(session) as s:
+        return s.query(Threads)\
+                    .filter(Threads.gsize_x > 0).all()
+
+
+def _zero_threads(session: session_t=None):
+    with ReuseSession(session) as s:
+        return s.query(Threads)\
+                    .filter(Threads.gsize_x == 0).all()
+
+
 class Cl_launcher(Harness):
     __name__ = "cl_launcher"
     id = Harnesses.CLSMITH
@@ -98,9 +110,19 @@ class Cl_launcher(Harness):
     default_timeout = 60
 
     def all_threads(self, session: session_t=None):
+        return _non_zero_threads(session=session)
+
+    def num_results(self, generator: Generator, testbed: str, session: session_t=None):
         with ReuseSession(session) as s:
-            return s.query(Threads)\
-                .filter(Threads.gsize_x > 0).all()
+            testbed_ = Testbed.from_str(testbed, session=s)[0]
+            n = s.query(func.count(Result.id))\
+                .join(Testcase)\
+                .join(Program)\
+                .filter(Result.testbed_id == testbed_.id,
+                        Program.generator == generator,
+                        Testcase.harness == self.id)\
+                .scalar()
+            return n
 
     def run(self, testbed, testcase, session: session_t=None):
         """ execute a testcase """
@@ -139,9 +161,8 @@ class Cl_launcher(Harness):
 
             outcome_name = Outcomes.to_str(outcome)
             return_color = Colors.RED if returncode else Colors.GREEN
-            logging.debug(f"↳  {Colors.BOLD}{return_color}{returncode} "
-                          f"{outcome_name}{Colors.END} after "
-                          f"{Colors.BOLD}{runtime:.2f}{Colors.END} seconds")
+            logging.info(f"↳  {Colors.BOLD}{return_color}{outcome_name}{Colors.END} "
+                         f"after {Colors.BOLD}{runtime:.2f}{Colors.END} seconds")
 
             result = ClsmithResult(
                 testbed_id=testbed.id,
@@ -163,18 +184,38 @@ class Cldrive(Harness):
     default_timeout = 60
 
     def all_threads(self, session: session_t=None):
+        return _non_zero_threads(session=session)
+
+    def num_results(self, generator: Generator, testbed: str, session: session_t=None):
         with ReuseSession(session) as s:
-            return s.query(Threads)\
-                .filter(Threads.gsize_x > 0).all()
+            testbed_ = Testbed.from_str(testbed, session=s)[0]
+            n = s.query(func.count(Result.id))\
+                .join(Testcase)\
+                .join(Program)\
+                .filter(Result.testbed_id == testbed_.id,
+                        Program.generator == generator,
+                        Testcase.harness == self.id)\
+                .scalar()
+            return n
 
 
-# class Clang(Harness):
-#     __name__ = "clang"
-#     id = Harnesses.COMPILE_ONLY
-#     default_seed = None
-#     default_timeout = 60
+class Clang(Harness):
+    __name__ = "clang"
+    id = Harnesses.COMPILE_ONLY
+    default_seed = None
+    default_timeout = 60
 
-#     def all_threads(self, session: session_t=None):
-#         with ReuseSession(session) as s:
-#             return s.query(Threads)\
-#                 .filter(Threads.gsize_x == 0).all()
+    def all_threads(self, session: session_t=None):
+        return _zero_threads(session=session)
+
+    def num_results(self, generator: Generator, testbed: str, session: session_t=None):
+        with ReuseSession(session) as s:
+            testbed_ = Testbed.from_str(testbed, session=s)[0]
+            n = s.query(func.count(Result.id))\
+                .join(Testcase)\
+                .join(Program)\
+                .filter(Result.testbed_id == testbed_.id,
+                        Program.generator == generator,
+                        Testcase.harness == self.id)\
+                .scalar()
+            return n

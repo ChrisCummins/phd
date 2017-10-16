@@ -24,6 +24,8 @@ import humanize
 import logging
 import math
 import progressbar
+import re
+import sys
 
 from sqlalchemy.sql import func
 from typing import List
@@ -101,7 +103,7 @@ class OpenCL(Language):
     def mktestbeds(self, string: str) -> List[Testbed]:
         """ Instantiate testbed(s) by name """
         with Session() as s:
-            return [str(testbed) for testbed in Testbed.from_num(string, session=s)]
+            return [str(testbed) for testbed in Testbed.from_str(string, session=s)]
 
 
     def _run_testcases(self, testbed: Testbed, generator: Generator,
@@ -115,7 +117,10 @@ class OpenCL(Language):
                         Program.generator == generator.id)
 
             todo = s.query(Testcase)\
-                .filter(~Testcase.id.in_(already_done))
+                .join(Program)\
+                .filter(Testcase.harness == harness.id,
+                        Program.generator == generator.id,
+                        ~Testcase.id.in_(already_done))
 
             ndone = already_done.count()
             ntodo = todo.count()
@@ -146,36 +151,55 @@ class OpenCL(Language):
             bar = progressbar.ProgressBar(initial_value=ndone,
                                           max_value=ndone + ntodo,
                                           redirect_stdout=True)
-            bar.update(ndone)
 
             for testcase in todo:
                 harness.run(testbed, testcase, s)
                 ndone = already_done.count()
                 bar.update(ndone)
 
-
     def run_testcases(self, testbeds: List[str],
                       pairs: List[Tuple[Generator, Harness]]) -> None:
         with Session() as s:
             for generator, harness in pairs:
                 for testbed_name in testbeds:
-                    testbed = Testbed.from_str(testbed_name, session=s)
+                    testbed = Testbed.from_str(testbed_name, session=s)[0]
                     self._run_testcases(testbed, generator, harness, s)
 
-    @property
-    def testbeds(self):
-        """ Return all testbeds in data store """
+    def describe_testbeds(self, file=sys.stdout) -> None:
+        print(f"The following {self} testbeds are in the database:", file=file)
         with Session() as s:
-            return [str(testbed) for testbed in s.query(Testbed)]
+            for testbed in self.testbeds(session=s):
+                testbed_ = Testbed.from_str(testbed, session=s)[0]
+                print("    ", testbed, testbed_.platform, file=file)
 
+            print(f"\nThe following {self} testbeds are available on this machine:",
+                  file=file)
+            for testbed in self.available_testbeds(session=s):
+                testbed_ = Testbed.from_str(testbed, session=s)[0]
+                print("    ", testbed, testbed_.platform, file=file)
 
-    @property
-    def available_testbeds(self):
+    def describe_results(self, file=sys.stdout) -> None:
+        with Session() as s:
+            for generator in self.generators:
+                for harness in generator.harnesses:
+                    for testbed in self.testbeds(session=s):
+                        num_results = harness.num_results(generator, testbed)
+                        if num_results:
+                            word_num = humanize.intcomma(num_results)
+                            print(f"There are {Colors.BOLD}{word_num}{Colors.END} "
+                                  f"{generator}:{harness} "
+                                  f"results on {testbed}.", file=file)
+
+    def testbeds(self, session: session_t=None):
+        """ Return all testbeds in data store """
+        with ReuseSession(session) as s:
+            return sorted([str(testbed) for testbed in s.query(Testbed)])
+
+    def available_testbeds(self, session: session_t=None):
         """ Return all testbeds on the current machine """
         testbeds = []
-
-        with Session() as s:
+        with ReuseSession(session) as s:
             for env in cldrive.all_envs():
                 testbeds += [str(testbed) for testbed in Testbed.from_env(env, session=s)]
 
-        return testbeds
+        return sorted(testbeds)

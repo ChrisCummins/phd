@@ -81,7 +81,7 @@ class CLSmith(Generator):
     __harnesses__ = {
         None: Cl_launcher,
         "cl_launcher": Cl_launcher,
-        # "clang": Clang,
+        "clang": Clang,
     }
 
     def num_programs(self, session: session_t=None) -> int:
@@ -169,7 +169,7 @@ class DSmith(Generator):
     __harnesses__ = {
         None: Cldrive,
         "cldrive": Cldrive,
-        # "clang": Clang,
+        "clang": Clang,
     }
 
     def num_programs(self, session: session_t=None) -> int:

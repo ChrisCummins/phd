@@ -22,8 +22,11 @@ Attributes:
     __languages__ (Dict[str, Language]): List of all available languages.
 """
 import math
+import sys
 
 from typing import List, Tuple
+
+from dsmith import Colors
 
 
 class Harness(object):
@@ -34,12 +37,16 @@ class Harness(object):
         process_result_t (Tuple[float, int, str, str]): Process result.
         __name__ (str): Harness name.
     """
-    def __repr__(self):
-        return self.__name__
+    # Abstract methods (must be implemented):
 
     def run(self, testbed, testcase) -> None:
         """ execute a testcase and record the result """
         raise NotImplementedError("abstract class")
+
+    # Default methods (may be overriden):
+
+    def __repr__(self):
+        return f"{Colors.BOLD}{Colors.YELLOW}{self.__name__}{Colors.END}"
 
 
 class Generator(object):
@@ -50,8 +57,7 @@ class Generator(object):
         __name__ (str): Generator name.
         __harnesses__ (List[Generator]): List of available harnesses.
     """
-    def __repr__(self):
-        return self.__name__
+    # Abstract methods (must be implemented):
 
     def num_programs(self) -> int:
         """ return the number of generated programs in the database """
@@ -72,6 +78,11 @@ class Generator(object):
     def generate(self, n: int=math.inf, up_to: int=math.inf) -> None:
         """ generate 'n' new programs, until 'up_to' exist in db """
         raise NotImplementedError("abstract class")
+
+    # Default methods (may be overriden):
+
+    def __repr__(self):
+        return f"{Colors.BOLD}{Colors.GREEN}{self.__name__}{Colors.END}"
 
     @property
     def harnesses(self):
@@ -94,12 +105,37 @@ class Language(object):
         __name__ (str): Language name.
         __generators__ (List[Generator]): List of available generators.
     """
-    def __repr__(self):
-        return self.__name__
+    # Abstract methods (must be implemented):
+
+    def describe_testbeds(self, file=sys.stdout) -> None:
+        """ describe testbeds """
+        raise NotImplementedError("abstract class")
+
+    def describe_results(self, file=sys.stdout) -> None:
+        """ describe results """
+        raise NotImplementedError("abstract class")
 
     def mktestcases(self, generator: Generator=None) -> None:
         """ Generate testcases, optionally for a specific generator """
         raise NotImplementedError("abstract class")
+
+    def testbeds(self) -> List['Testbed']:
+        """ Return all testbeds in data store """
+        raise NotImplementedError("abstract class")
+
+    def available_testbeds(self) -> List['Testbed']:
+        """ Return all testbeds on the current machine """
+        raise NotImplementedError("abstract class")
+
+    def run_testcases(self, testbeds: List['Testbed'],
+                      pairs: List[Tuple[Generator, Harness]]) -> None:
+        """ Run testcases """
+        raise NotImplementedError("abstract class")
+
+    # Default methods (may be overriden):
+
+    def __repr__(self):
+        return f"{Colors.BOLD}{Colors.RED}{self.__name__}{Colors.END}"
 
     @property
     def generators(self):
@@ -112,21 +148,6 @@ class Language(object):
         if not generator:
             raise ValueError(f"Unknown {self.__name__} generator '{generator}'")
         return generator()
-
-    @property
-    def testbeds(self) -> List['Testbed']:
-        """ Return all testbeds in data store """
-        raise NotImplementedError("abstract class")
-
-    @property
-    def available_testbeds(self) -> List['Testbed']:
-        """ Return all testbeds on the current machine """
-        raise NotImplementedError("abstract class")
-
-    def run_testcases(self, testbeds: List['Testbed'],
-                      pairs: List[Tuple[Generator, Harness]]) -> None:
-        """ Run testcases """
-        raise NotImplementedError("abstract class")
 
 
 # Deferred importing of languages, since the modules may need to import this

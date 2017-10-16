@@ -135,16 +135,6 @@ def _describe_generators(lang: Language, file=sys.stdout):
           file=file)
 
 
-def _describe_testbeds(lang: Language, file=sys.stdout):
-    print(f"The following Testbeds are in the database:", file=file)
-    for testbed in lang.testbeds:
-        print("    ", testbed, file=file)
-
-    print("\nThe following Testbeds are available on this machine:", file=file)
-    for testbed in lang.available_testbeds:
-        print("    ", testbed, file=file)
-
-
 def _describe_programs(lang: Language, file=sys.stdout):
     for generator in lang.generators:
         num = humanize.intcomma(generator.num_programs())
@@ -155,9 +145,10 @@ def _describe_programs(lang: Language, file=sys.stdout):
 
 
 def _describe_testcases(lang: Language, generator: Generator, file=sys.stdout):
-    num = humanize.intcomma(generator.num_testcases())
-    print(f"There are {Colors.BOLD}{num} {generator}{Colors.END} "
-          "testcases.", file=file)
+    for harness in generator.harnesses:
+        num = humanize.intcomma(generator.num_testcases())
+        print(f"There are {Colors.BOLD}{num} {generator}:{harness} "
+              "testcases.", file=file)
 
 
 def _make_programs(lang: Language, generator: Generator,
@@ -228,13 +219,14 @@ def _execute(statement: str, file=sys.stdout) -> None:
         testbeds_match = re.match(r'describe (?P<lang>\w+) testbeds$', statement)
         programs_match = re.match(r'describe (?P<lang>\w+) programs$', statement)
         testcases_match = re.match(r'describe (?P<lang>\w+) ((?P<generator>\w+) )?testcases$', statement)
+        results_match = re.match(r'describe (?P<lang>\w+) results$', statement)
 
         if generators_match:
             lang = mklang(generators_match.group("lang"))
             return _describe_generators(lang=lang, file=file)
         elif testbeds_match:
             lang = mklang(testbeds_match.group("lang"))
-            return _describe_testbeds(lang=lang, file=file)
+            return lang.describe_testbeds(file=file)
         elif programs_match:
             lang = mklang(programs_match.group("lang"))
             return _describe_programs(lang=lang, file=file)
@@ -248,6 +240,9 @@ def _execute(statement: str, file=sys.stdout) -> None:
                 for generator in lang.generators:
                     _describe_testcases(lang=lang, generator=generator, file=file)
                 return
+        elif results_match:
+            lang = mklang(results_match.group("lang"))
+            return lang.describe_results(file=file)
         else:
             raise UnrecognizedInput
 
@@ -299,7 +294,7 @@ def _execute(statement: str, file=sys.stdout) -> None:
             if match.group("testbed"):
                 testbeds = lang.mktestbeds(match.group("testbed"))
             else:
-                testbeds = list(lang.available_testbeds)
+                testbeds = list(lang.available_testbeds())
 
             return lang.run_testcases(testbeds, pairs)
         else:
@@ -357,6 +352,9 @@ def run_command(command: str, file=sys.stdout) -> None:
         print("🤔  I don't know how to do that (yet).", file=file)
         if os.environ.get("DEBUG"):
             raise e
+    except KeyboardInterrupt:
+        print("", file=file)
+        _exit(file=file)
     except Exception as e:
         _user_message_with_stacktrace(e)
         if os.environ.get("DEBUG"):
@@ -374,19 +372,14 @@ def repl(file=sys.stdout) -> None:
 
     print(greeting, "Type 'help' for available commands.", file=file)
 
-    try:
-        while True:
-            sys.stdout.write(f"{Colors.BOLD}> ")
-            choice = input()
-            sys.stdout.write(Colors.END)
-            sys.stdout.flush()
+    while True:
+        sys.stdout.write(f"{Colors.BOLD}> ")
+        choice = input()
+        sys.stdout.write(Colors.END)
+        sys.stdout.flush()
 
-            # Strip '#' command, and split ';' separated commands
-            commands = choice.split("#")[0].split(";")
+        # Strip '#' command, and split ';' separated commands
+        commands = choice.split("#")[0].split(";")
 
-            for command in commands:
-                run_command(command, file=file)
-
-    except KeyboardInterrupt:
-        print("", file=file)
-        _exit(file=file)
+        for command in commands:
+            run_command(command, file=file)
