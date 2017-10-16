@@ -19,6 +19,7 @@
 Interface to CLSmith binaries
 """
 import logging
+import re
 
 from tempfile import NamedTemporaryFile
 from labm8 import fs

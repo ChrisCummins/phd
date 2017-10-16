@@ -58,6 +58,7 @@ class OpenCLHarness(Harness):
 
     def make_testcases(self, generator: Generator):
         """ Generate testcases, optionally for a specific generator """
+        # Sanity check
         if generator.__name__ not in self.__generators__:
             raise ValueError(f"incompatible combination {self}:{generator}")
 

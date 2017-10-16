@@ -670,8 +670,12 @@ class Testbed(Base):
 
     def run_testcases(self, harness, generator, session: session_t=None):
         """ run tests on testbed """
+        # Sanity check
+        if generator.__name__ not in harness.__generators__:
+            raise ValueError(f"incompatible combination {harness}:{generator}")
+
         class Worker(threading.Thread):
-            """ Worker thread to run testcases """
+            """ worker thread to run testcases asynchronously """
             def __init__(self, harness, generator, testbed_id):
                 self.harness = harness
                 self.generator = generator
@@ -732,6 +736,7 @@ class Testbed(Base):
                   f"on {Colors.BOLD}{Colors.PURPLE}{self.num}{Colors.END}. "
                   f"Estimated runtime is {Colors.BOLD}{eta}{Colors.END}.")
 
+            # asynchronously run testcases, updating progress bar
             bar = progressbar.ProgressBar(initial_value=ndone,
                                           max_value=ndone + ntodo,
                                           redirect_stdout=True)
