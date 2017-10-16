@@ -187,6 +187,7 @@ The following questions will create it for you:""")
                 "port": int(textinput("MySQL Server port", default="3306")),
                 "username": textinput("MySQL username:"),
                 "password": textinput("MySQL password:"),
+                "database": "DeepSmith_1",
             }
             config.write(outfile)
 
