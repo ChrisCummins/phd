@@ -44,7 +44,7 @@ def _zero_threads(session: session_t=None):
 def _log_outcome(outcome: Outcomes, runtime: float):
     """ verbose logging output """
     outcome_name = Outcomes.to_str(outcome)
-    return_color = Colors.RED if returncode else Colors.GREEN
+    return_color = Colors.GREEN if outcome == Outcomes.PASS else Colors.RED
     logging.info(f"↳  {Colors.BOLD}{return_color}{outcome_name}{Colors.END} "
                  f"after {Colors.BOLD}{runtime:.2f}{Colors.END} seconds")
 
@@ -173,7 +173,7 @@ class Cl_launcher(OpenCLHarness):
         # stdout / stderr
         stdout = Stdout.from_str(session, stdout_)
         stderr = Stderr.from_str(session, stderr_)
-        s.flush()  # required to get IDs
+        session.flush()  # required to get IDs
 
         # outcome
         outcome = ClsmithResult.get_outcome(
