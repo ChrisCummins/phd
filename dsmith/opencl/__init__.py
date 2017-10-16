@@ -61,7 +61,7 @@ class OpenCL(Language):
     def mktestbeds(self, string: str) -> List[Testbed]:
         """ Instantiate testbed(s) by name """
         with Session() as s:
-            return [str(testbed) for testbed in Testbed.from_str(string, session=s)]
+            return [TestbedProxy(testbed) for testbed in Testbed.from_str(string, session=s)]
 
     def run_testcases(self, testbeds: List[str],
                       pairs: List[Tuple[Generator, Harness]]) -> None:
@@ -72,17 +72,17 @@ class OpenCL(Language):
                     self._run_testcases(testbed, generator, harness, s)
 
     def describe_testbeds(self, file=sys.stdout) -> None:
-        print(f"The following {self} testbeds are in the database:", file=file)
         with Session() as s:
-            for testbed in self.testbeds(session=s):
-                testbed_ = Testbed.from_str(testbed, session=s)[0]
-                print("    ", testbed, testbed_.platform, file=file)
+            print(f"The following {self} testbeds are in the data store:", file=file)
+            for harness in self.harnesses:
+                for testbed in harness.testbeds():
+                    print(f"    {harness} {testbed} {testbed.platform}", file=file)
 
             print(f"\nThe following {self} testbeds are available on this machine:",
                   file=file)
-            for testbed in self.available_testbeds(session=s):
-                testbed_ = Testbed.from_str(testbed, session=s)[0]
-                print("    ", testbed, testbed_.platform, file=file)
+            for harness in self.harnesses:
+                for testbed in harness.testbeds():
+                    print(f"    {harness} {testbed} {testbed.platform}", file=file)
 
     def describe_results(self, file=sys.stdout) -> None:
         with Session() as s:
@@ -95,17 +95,3 @@ class OpenCL(Language):
                             print(f"There are {Colors.BOLD}{word_num}{Colors.END} "
                                   f"{generator}:{harness} "
                                   f"results on {testbed}.", file=file)
-
-    def testbeds(self, session: session_t=None):
-        """ Return all testbeds in data store """
-        with ReuseSession(session) as s:
-            return sorted([str(testbed) for testbed in s.query(Testbed)])
-
-    def available_testbeds(self, session: session_t=None):
-        """ Return all testbeds on the current machine """
-        testbeds = []
-        with ReuseSession(session) as s:
-            for env in cldrive.all_envs():
-                testbeds += [str(testbed) for testbed in Testbed.from_env(env, session=s)]
-
-        return sorted(testbeds)

@@ -91,8 +91,8 @@ class OpenCLHarness(Harness):
                 ])
                 s.commit()
 
-    def testbeds(self) -> List[TestbedProxy]:
-        with Session() as s:
+    def testbeds(self, session: session_t=None) -> List[TestbedProxy]:
+        with ReuseSession(session) as s:
             if self.id == Harnesses.COMPILE_ONLY:
                 q = s.query(Testbed)\
                     .join(Platform)\
@@ -104,9 +104,9 @@ class OpenCLHarness(Harness):
                     .filter(Platform.platform != "clang")
                 return sorted(TestbedProxy(testbed) for testbed in q)
 
-    def available_testbeds(self) -> List[TestbedProxy]:
+    def available_testbeds(self, session: session_t=None) -> List[TestbedProxy]:
         testbeds = []
-        with Session() as s:
+        with ReuseSession(session) as s:
             for env in cldrive.all_envs():
                 testbeds += [TestbedProxy(testbed) for testbed in Testbed.from_env(env, session=s)]
 

@@ -289,13 +289,13 @@ def _execute(statement: str, file=sys.stdout) -> None:
                 for harness in lang.harnesses:
                     pairs += [(harness, generator) for generator in harness.generators]
 
-            if match.group("testbed"):
-                testbeds = lang.mktestbeds(match.group("testbed"))
-            else:
-                testbeds = list(lang.available_testbeds())
-
             for harness, generator in pairs:
-                for testbed in harness.available_testbeds():
+                if match.group("testbed"):
+                    testbeds = lang.mktestbeds(match.group("testbed"))
+                else:
+                    testbeds = harness.available_testbeds()
+
+                for testbed in testbeds:
                     testbed.run_testcases(harness, generator)
             return
         else:
