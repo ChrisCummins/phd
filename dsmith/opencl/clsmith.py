@@ -20,10 +20,12 @@ Interface to CLSmith binaries
 """
 import logging
 
+from tempfile import NamedTemporaryFile
 from labm8 import fs
 from collections import namedtuple
 from subprocess import Popen, PIPE, STDOUT
 from time import time
+from pathlib import Path
 from typing import Dict, List, Tuple, NewType
 
 import dsmith
@@ -77,7 +79,7 @@ def cl_launcher_cli(program_path: str, platform_id: int, device_id: int,
                   '--include_path', include_path] + list(args)
 
 
-def cl_launcher(program_path: str, platform_id: int, device_id: int,
+def cl_launcher(program_path: Path, platform_id: int, device_id: int,
                 *args, **kwargs) -> return_t:
     """
         Returns:
@@ -96,3 +98,66 @@ def cl_launcher(program_path: str, platform_id: int, device_id: int,
     return return_t(
         runtime=runtime, status=status_t(process.returncode),
         stdout=stdout.decode('utf-8'), stderr=stderr.decode('utf-8'))
+
+
+def cl_launcher_str(src: str, platform_id: int, device_id: int, timeout: int,
+                    *args) -> Tuple[float, int, str, str]:
+    """ Invoke cl launcher on source """
+    with NamedTemporaryFile(prefix='cl_launcher-', suffix='.cl') as tmp:
+        tmp.write(src.encode('utf-8'))
+        tmp.flush()
+
+        return cl_launcher(tmp.name, platform_id, device_id, *args,
+                           timeout=timeout)
+
+
+def verify_cl_launcher_run(platform: str, device: str, optimizations: bool,
+                           global_size: tuple, local_size: tuple,
+                           stderr: str) -> None:
+    """ verify that expected params match actual as reported by CLsmith """
+    optimizations = "on" if optimizations else "off"
+
+    actual_platform = None
+    actual_device = None
+    actual_optimizations = None
+    actual_global_size = None
+    actual_local_size = None
+    for line in stderr.split('\n'):
+        if line.startswith("Platform: "):
+            actual_platform_name = re.sub(r"^Platform: ", "", line).rstrip()
+        elif line.startswith("Device: "):
+            actual_device_name = re.sub(r"^Device: ", "", line).rstrip()
+        elif line.startswith("OpenCL optimizations: "):
+            actual_optimizations = re.sub(r"^OpenCL optimizations: ", "", line).rstrip()
+
+        # global size
+        match = re.match('^3-D global size \d+ = \[(\d+), (\d+), (\d+)\]', line)
+        if match:
+            actual_global_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
+        match = re.match('^2-D global size \d+ = \[(\d+), (\d+)\]', line)
+        if match:
+            actual_global_size = (int(match.group(1)), int(match.group(2)), 0)
+        match = re.match('^1-D global size \d+ = \[(\d+)\]', line)
+        if match:
+            actual_global_size = (int(match.group(1)), 0, 0)
+
+        # local size
+        match = re.match('^3-D local size \d+ = \[(\d+), (\d+), (\d+)\]', line)
+        if match:
+            actual_local_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
+        match = re.match('^2-D local size \d+ = \[(\d+), (\d+)\]', line)
+        if match:
+            actual_local_size = (int(match.group(1)), int(match.group(2)), 0)
+        match = re.match('^1-D local size \d+ = \[(\d+)\]', line)
+        if match:
+            actual_local_size = (int(match.group(1)), 0, 0)
+
+        # check if we've collected everything:
+        if (actual_platform and actual_device and actual_optimizations and
+            actual_global_size and actual_local_size):
+            assert(actual_platform == platform)
+            assert(actual_device == device)
+            assert(actual_optimizations == optimizations)
+            assert(actual_global_size == global_size)
+            assert(actual_local_size == local_size)
+            return

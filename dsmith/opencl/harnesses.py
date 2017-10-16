@@ -20,8 +20,6 @@ OpenCL test harnesses.
 """
 import cldrive
 
-from labm8 import crypto, fs
-from tempfile import NamedTemporaryFile
 from sqlalchemy.sql import func
 from typing import List
 
@@ -43,7 +41,21 @@ def _zero_threads(session: session_t=None):
                     .filter(Threads.gsize_x == 0).all()
 
 
+def _log_outcome(outcome: Outcomes, runtime: float):
+    """ verbose logging output """
+    outcome_name = Outcomes.to_str(outcome)
+    return_color = Colors.RED if returncode else Colors.GREEN
+    logging.info(f"↳  {Colors.BOLD}{return_color}{outcome_name}{Colors.END} "
+                 f"after {Colors.BOLD}{runtime:.2f}{Colors.END} seconds")
+
+
 class OpenCLHarness(Harness):
+    """ Common superclass for OpenCL test harnesses """
+
+    def run(self, session: session_t, testcase: Testcase, testbed: Testbed):
+        """ execute a testcase """
+        raise NotImplementedError
+
     def make_testcases(self, generator: Generator):
         """ Generate testcases, optionally for a specific generator """
         if generator.__name__ not in self.__generators__:
@@ -112,71 +124,23 @@ class OpenCLHarness(Harness):
 
         return sorted(testbeds)
 
-
-def _cl_launcher(src: str, platform_id: int, device_id: int, timeout: int,
-                 *args) -> Tuple[float, int, str, str]:
-    """ Invoke cl launcher on source """
-    with NamedTemporaryFile(prefix='cl_launcher-', suffix='.cl') as tmp:
-        tmp.write(src.encode('utf-8'))
-        tmp.flush()
-
-        return clsmith.cl_launcher(tmp.name, platform_id, device_id, *args,
-                                   timeout=timeout)
-
-
-def _verify_cl_launcher_run(platform: str, device: str, optimizations: bool,
-                            global_size: tuple, local_size: tuple,
-                            stderr: str) -> None:
-    """ verify that expected params match actual as reported by CLsmith """
-    optimizations = "on" if optimizations else "off"
-
-    actual_platform = None
-    actual_device = None
-    actual_optimizations = None
-    actual_global_size = None
-    actual_local_size = None
-    for line in stderr.split('\n'):
-        if line.startswith("Platform: "):
-            actual_platform_name = re.sub(r"^Platform: ", "", line).rstrip()
-        elif line.startswith("Device: "):
-            actual_device_name = re.sub(r"^Device: ", "", line).rstrip()
-        elif line.startswith("OpenCL optimizations: "):
-            actual_optimizations = re.sub(r"^OpenCL optimizations: ", "", line).rstrip()
-
-        # global size
-        match = re.match('^3-D global size \d+ = \[(\d+), (\d+), (\d+)\]', line)
-        if match:
-            actual_global_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
-        match = re.match('^2-D global size \d+ = \[(\d+), (\d+)\]', line)
-        if match:
-            actual_global_size = (int(match.group(1)), int(match.group(2)), 0)
-        match = re.match('^1-D global size \d+ = \[(\d+)\]', line)
-        if match:
-            actual_global_size = (int(match.group(1)), 0, 0)
-
-        # local size
-        match = re.match('^3-D local size \d+ = \[(\d+), (\d+), (\d+)\]', line)
-        if match:
-            actual_local_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
-        match = re.match('^2-D local size \d+ = \[(\d+), (\d+)\]', line)
-        if match:
-            actual_local_size = (int(match.group(1)), int(match.group(2)), 0)
-        match = re.match('^1-D local size \d+ = \[(\d+)\]', line)
-        if match:
-            actual_local_size = (int(match.group(1)), 0, 0)
-
-        # check if we've collected everything:
-        if (actual_platform and actual_device and actual_optimizations and
-            actual_global_size and actual_local_size):
-            assert(actual_platform == platform)
-            assert(actual_device == device)
-            assert(actual_optimizations == optimizations)
-            assert(actual_global_size == global_size)
-            assert(actual_local_size == local_size)
-            return
+    def num_results(self, generator: Generator, testbed: str, session: session_t=None):
+        with ReuseSession(session) as s:
+            testbed_ = Testbed.from_str(testbed, session=s)[0]
+            n = s.query(func.count(Result.id))\
+                .join(Testcase)\
+                .join(Program)\
+                .filter(Result.testbed_id == testbed_.id,
+                        Program.generator == generator,
+                        Testcase.harness == self.id)\
+                .scalar()
+            return n
 
 
 class Cl_launcher(OpenCLHarness):
+    """
+    cl_launcher, the CLSmith test harness.
+    """
     __name__ = "cl_launcher"
     __generators__ = {
         "clsmith": generators.CLSmith,
@@ -189,72 +153,49 @@ class Cl_launcher(OpenCLHarness):
     def all_threads(self, session: session_t=None):
         return _non_zero_threads(session=session)
 
-    def num_results(self, generator: Generator, testbed: str, session: session_t=None):
-        with ReuseSession(session) as s:
-            testbed_ = Testbed.from_str(testbed, session=s)[0]
-            n = s.query(func.count(Result.id))\
-                .join(Testcase)\
-                .join(Program)\
-                .filter(Result.testbed_id == testbed_.id,
-                        Program.generator == generator,
-                        Testcase.harness == self.id)\
-                .scalar()
-            return n
+    def run(self, session: session_t, testcase: Testcase, testbed: Testbed):
+        """ execute a testcase using cl_launcher """
+        # run testcase
+        platform_id, device_id = testbed.ids
+        runtime, returncode, stdout_, stderr_ = clsmith.cl_launcher_str(
+                testcase.program.src, platform_id, device_id,
+                testcase.timeout)
 
-    def run(self, testcase: Testcase, testbed: Testbed, session: session_t=None):
-        """ execute a testcase """
-        with ReuseSession(session) as s:
-            platform_id, device_id = testbed.ids
+        # assert that executed params match expected
+        clsmith.verify_cl_launcher_run(platform=testbed.platform.platform,
+                                       device=testbed.platform.device,
+                                       optimizations=testbed.optimizations,
+                                       global_size=testcase.threads.gsize,
+                                       local_size=testcase.threads.lsize,
+                                       stderr=stderr_)
 
-            runtime, returncode, stdout, stderr = _cl_launcher(
-                    testcase.program.src, platform_id, device_id,
-                    testcase.timeout)
+        # stdout / stderr
+        stdout = Stdout.from_str(session, stdout_)
+        stderr = Stderr.from_str(session, stderr_)
+        s.flush()  # required to get IDs
 
-            # assert that executed params match expected
-            _verify_cl_launcher_run(platform=testbed.platform.platform,
-                                    device=testbed.platform.device,
-                                    optimizations=testbed.optimizations,
-                                    global_size=testcase.threads.gsize,
-                                    local_size=testcase.threads.lsize,
-                                    stderr=stderr)
+        # outcome
+        outcome = ClsmithResult.get_outcome(
+            returncode, stderr_, runtime, testcase.timeout)
+        _log_outcome(outcome, runtime)
 
-            # create new result
-            stdout_ = stdout  # util.escape_stdout(stdout)
-            stdout = get_or_create(
-                s, Stdout,
-                sha1=crypto.sha1_str(stdout_),
-                stdout=stdout_)
-
-            stderr_ = stderr  # util.escape_stderr(stderr)
-            stderr = get_or_create(
-                s, Stderr,
-                sha1=crypto.sha1_str(stderr_),
-                stderr=stderr_)
-            session.flush()  # required to get IDs
-
-            # determine result outcome
-            outcome = ClsmithResult.get_outcome(
-                returncode, stderr_, runtime, testcase.timeout)
-
-            outcome_name = Outcomes.to_str(outcome)
-            return_color = Colors.RED if returncode else Colors.GREEN
-            logging.info(f"↳  {Colors.BOLD}{return_color}{outcome_name}{Colors.END} "
-                         f"after {Colors.BOLD}{runtime:.2f}{Colors.END} seconds")
-
-            result = ClsmithResult(
-                testbed_id=testbed.id,
-                testcase_id=testcase.id,
-                returncode=returncode,
-                outcome=outcome,
-                runtime=runtime,
-                stdout_id=stdout.id,
-                stderr_id=stderr.id)
-
-            session.add(result)
-            session.commit()
+        # create result
+        result = ClsmithResult(
+            testbed_id=testbed.id,
+            testcase_id=testcase.id,
+            returncode=returncode,
+            outcome=outcome,
+            runtime=runtime,
+            stdout_id=stdout.id,
+            stderr_id=stderr.id)
+        session.add(result)
+        session.commit()
 
 
 class Cldrive(OpenCLHarness):
+    """
+    cldrive test harness.
+    """
     __name__ = "cldrive"
     __generators__ = {
         "dsmith": generators.DSmith,
@@ -267,20 +208,11 @@ class Cldrive(OpenCLHarness):
     def all_threads(self, session: session_t=None):
         return _non_zero_threads(session=session)
 
-    def num_results(self, generator: Generator, testbed: str, session: session_t=None):
-        with ReuseSession(session) as s:
-            testbed_ = Testbed.from_str(testbed, session=s)[0]
-            n = s.query(func.count(Result.id))\
-                .join(Testcase)\
-                .join(Program)\
-                .filter(Result.testbed_id == testbed_.id,
-                        Program.generator == generator,
-                        Testcase.harness == self.id)\
-                .scalar()
-            return n
-
 
 class Clang(OpenCLHarness):
+    """
+    Frontend-only clang harness.
+    """
     __name__ = "clang"
     __generators__ = {
         "clsmith": generators.CLSmith,
@@ -293,15 +225,3 @@ class Clang(OpenCLHarness):
 
     def all_threads(self, session: session_t=None):
         return _zero_threads(session=session)
-
-    def num_results(self, generator: Generator, testbed: str, session: session_t=None):
-        with ReuseSession(session) as s:
-            testbed_ = Testbed.from_str(testbed, session=s)[0]
-            n = s.query(func.count(Result.id))\
-                .join(Testcase)\
-                .join(Program)\
-                .filter(Result.testbed_id == testbed_.id,
-                        Program.generator == generator,
-                        Testcase.harness == self.id)\
-                .scalar()
-            return n

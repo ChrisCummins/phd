@@ -34,7 +34,7 @@ from labm8 import crypto, fs, prof, system
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
-from typing import Dict, List, Tuple, Union
+from typing import Dict, Iterable, List, Tuple, Union
 
 import dsmith
 from dsmith import Colors
@@ -694,7 +694,7 @@ class Testbed(Base):
                     for testcase in todo:
                         for _ in range(100):
                             try:
-                                harness.run(testcase, testbed, s)
+                                harness.run(s, testcase, testbed)
                                 self.ndone = already_done.count()
                                 break
                             except IntegrityError:
@@ -719,9 +719,9 @@ class Testbed(Base):
                 .filter(Result.testbed_id == self.id,
                         Testcase.harness == harness.id,
                         Program.generator == generator.id)\
-                .scalar()
+                .scalar() or 0
 
-            estimated_time = (runtime / ndone) * ntodo
+            estimated_time = (runtime / max(ndone, 1)) * ntodo
             eta = humanize.naturaldelta(datetime.timedelta(seconds=estimated_time))
 
             words_ntodo = humanize.intcomma(ntodo)
@@ -885,12 +885,26 @@ class Stdout(Base):
     stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
     @staticmethod
-    def escape(string):
+    def _escape(string: str) -> str:
         """ filter noise from test harness stdout """
-        return '\n'.join(line for line in stdout.split('\n')
+        return '\n'.join(line for line in string.split('\n')
                          if line != "ADL Escape failed."
                          and line != "WARNING:endless loop detected!"
                          and line != "One module without kernel function!")
+
+    @staticmethod
+    def from_str(session: session_t, string: str) -> str:
+        """
+        Instantiate a Stdout object
+        """
+        # Strip the noise
+        string = Stdout._escape(string)
+
+        stdout = get_or_create(
+            session, Stdout,
+            sha1=crypto.sha1_str(string),
+            stdout=string)
+        return stdout
 
 
 class CompilerError(object):
@@ -932,17 +946,17 @@ class Stderr(Base):
     stackdump = sql.orm.relationship("StackDump")
 
     @staticmethod
-    def escape(string):
+    def _escape(string: str) -> str:
         """ filter noise from test harness stderr """
-        return '\n'.join(line for line in stderr.split('\n')
+        return '\n'.join(line for line in string.split('\n')
                          if "no version information available" not in line)
 
-    def get_assertion(self, s: session_t):
-        # TODO:
+    @staticmethod
+    def _get_assertion(session: session_t, lines: Iterable[str]) -> Union[None, Assertion]:
         clang_assertion = False
         strip = False
 
-        for line in self.stderr.split('\n'):
+        for line in lines:
             if "assertion" in line.lower():
                 if strip:
                     if line.startswith("cldrive-harness"):
@@ -960,40 +974,66 @@ class Stderr(Base):
                     msg = ":".join(line.split(":")[3:])
                 else:
                     msg = line
+
                 assertion = get_or_create(
-                    s, Assertion,
+                    session, Assertion,
                     sha1=crypto.sha1_str(msg), assertion=msg)
-                s.flush()
-                self.assertion = assertion
                 return assertion
 
-    def get_unreachable(self, s: session_t):
-        for line in self.stderr.split('\n'):
+    @staticmethod
+    def _get_unreachable(session: session_t, lines: Iterable[str]) -> Union[None, Unreachable]:
+        for line in lines:
             if "unreachable" in line.lower():
                 unreachable = get_or_create(
-                    s, Unreachable,
+                    session, Unreachable,
                     sha1=crypto.sha1_str(line), unreachable=line)
-                s.flush()
-                self.unreachable = unreachable
                 return unreachable
 
-    def get_stackdump(self, s: session_t):
+    @staticmethod
+    def _get_stackdump(session: session_t, lines: Iterable[str]) -> Union[None, StackDump]:
         in_stackdump = False
         stackdump = []
-        for line in self.stderr.split('\n'):
+        for line in lines:
             if in_stackdump:
                 if line and line[0].isdigit():
                     stackdump.append(line)
                 else:
                     stackdump_ = "\n".join(stackdump)
                     stackdump = get_or_create(
-                        s, StackDump,
+                        session, StackDump,
                         sha1=crypto.sha1_str(stackdump_), stackdump=stackdump_)
-                    s.flush()
-                    self.stackdump = stackdump
                     return stackdump
             elif "stack dump:" in line.lower():
                 in_stackdump = True
+
+    @staticmethod
+    def from_str(session: session_t, string: str) -> 'Stderr':
+        # Strip the noise:
+        string = Stderr._escape(string)
+
+        # Get metadata:
+        lines = string.split('\n')
+        assertion = Stderr._get_assertion(session, lines)
+        unreachable = Stderr._get_unreachable(session, lines)
+        stackdump = Stderr._get_stackdump(session, lines)
+        session.flush()
+
+        # Sanity check:
+        errs = sum(1 if x else 0 for x in [assertion, unreachable, stackdump])
+        if errs > 1:
+            raise LookupError(f"Multiple errors types found in: {stderr}\n\n" +
+                              f"Assertion: {assertion}\n" +
+                              f"Unreachable: {unreachable}\n" +
+                              f"Stackdump: {stackdump}")
+
+        stderr = get_or_create(
+            session, Stderr,
+            sha1=crypto.sha1_str(string),
+            assertion=assertion,
+            unreachable=unreachable,
+            stackdump=stackdump,
+            stderr=string)
+        return stderr
 
 
 class Outcomes:
