@@ -70,7 +70,7 @@ data_symlinks = \
 	$(root)/dsmith/data/bin/CLSmith \
 	$(NULL)
 
-$(root)/dsmith/data/bin/cl_launcher: $(clsmith)
+$(root)/dsmith/data/bin/cl_launcher: $(cl_launcher)
 	mkdir -p $(dir $@)
 	ln -sf $< $@
 	touch $@
@@ -83,7 +83,7 @@ $(root)/dsmith/data/bin/CLSmith: $(clsmith)
 .PHONY: clean-symlinks
 clean-symlinks:
 	rm -fv $(data_symlinks)
-clean_targets += $(clean-symlinks)
+clean_targets += clean-symlinks
 
 
 # header files
@@ -96,7 +96,7 @@ $(root)/dsmith/data/include/CLSmith.h: $(clsmith_include_dir)
 .PHONY: clean-headers
 clean-headers:
 	rm -fv $(headers)
-clean_targets += $(clean-headers)
+clean_targets += clean-headers
 
 
 # python packages
