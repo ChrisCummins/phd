@@ -27,6 +27,7 @@ from time import time
 from typing import Dict, List, Tuple, NewType
 
 import dsmith
+from dsmith import Colors
 
 runtime_t = NewType('runtime_t', float)
 status_t = NewType('status_t', int)
@@ -56,7 +57,7 @@ def clsmith(*args, exec_path=exec_path) -> return_t:
     start_time = time()
 
     cli = clsmith_cli(*args)
-    logging.debug("$ " + " ".join(cli))
+    logging.debug(f"{Colors.BOLD}${Colors.END} " + " ".join(cli))
     process = Popen(cli, stdout=PIPE, stderr=PIPE)
     stdout, stderr = process.communicate()
 
@@ -86,6 +87,7 @@ def cl_launcher(program_path: str, platform_id: int, device_id: int,
     start_time = time()
 
     cli = cl_launcher_cli(program_path, platform_id, device_id, *args, **kwargs)
+    logging.debug(f"{Colors.BOLD}${Colors.END} " + " ".join(cli))
     process = Popen(cli, stdout=PIPE, stderr=PIPE)
     stdout, stderr = process.communicate()
 

@@ -135,7 +135,8 @@ class OpenCL(Language):
             estimated_time = (runtime / ndone) * ntodo
             eta = humanize.naturaldelta(datetime.timedelta(seconds=estimated_time))
 
-            print(f"Running {Colors.BOLD}{ntodo} "
+            words_ntodo = humanize.intcomma(ntodo)
+            print(f"Running {Colors.BOLD}{words_ntodo} "
                   f"{Colors.GREEN}{generator}{Colors.END}"
                   f":{Colors.BOLD}{Colors.YELLOW}{harness}{Colors.END} "
                   "testcases "

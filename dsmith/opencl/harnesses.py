@@ -28,8 +28,8 @@ from dsmith.opencl import clsmith
 from dsmith.opencl.db import *
 
 
-def _cl_launcher(src: str, platform_id: int, device_id: int,
-                 *args, timeout: float=60) -> Tuple[float, int, str, str]:
+def _cl_launcher(src: str, platform_id: int, device_id: int, timeout: int,
+                 *args) -> Tuple[float, int, str, str]:
     """ Invoke cl launcher on source """
     with NamedTemporaryFile(prefix='cl_launcher-', suffix='.cl') as tmp:
         tmp.write(src.encode('utf-8'))
@@ -107,11 +107,12 @@ class Cl_launcher(Harness):
         with ReuseSession(session) as s:
             platform_id, device_id = testbed.ids
 
-            runtime, status, stdout, stderr = _cl_launcher(
-                    testcase.program.src, platform_id, device_id, *flags)
+            runtime, returncode, stdout, stderr = _cl_launcher(
+                    testcase.program.src, platform_id, device_id,
+                    testcase.timeout)
 
             # assert that executed params match expected
-            _verify_cl_launcher_run(platform=testbed.platform.name,
+            _verify_cl_launcher_run(platform=testbed.platform.platform,
                                     device=testbed.platform.device,
                                     optimizations=testbed.optimizations,
                                     global_size=testcase.threads.gsize,
@@ -132,17 +133,22 @@ class Cl_launcher(Harness):
                 stderr=stderr_)
             session.flush()
 
-            result = CLSmithResult(
+            return_color = Colors.RED if returncode else Colors.GREEN
+            logging.debug(f"↳  {Colors.BOLD}{return_color}{returncode}{Colors.END} "
+                          f"after {Colors.BOLD}{runtime:.2f}{Colors.END} seconds")
+
+            result = Result(
                 testbed_id=testbed.id,
                 testcase_id=testcase.id,
                 returncode=returncode,
-                # FIXME: outcome=analyze.get_cl_launcher_outcome(status, runtime, stderr_)
+                # FIXME: outcome=analyze.get_cl_launcher_outcome(returncode, runtime, stderr_)
                 runtime=runtime,
                 stdout_id=stdout.id,
                 stderr_id=stderr.id)
 
-            session.add(result)
-            session.commit()
+            print(result)
+            # session.add(result)
+            # session.commit()
 
 
 class Cldrive(Harness):

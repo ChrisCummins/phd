@@ -636,9 +636,35 @@ class Testbed(Base):
         try:
             return self._ids
         except AttributeError:
-            # TODO:
-            raise NotImplementedError
+            self._set_ids()
+            return self._ids
 
+    def _set_ids(self):
+        import pyopencl as cl
+        # match platform ID:
+        for j, platform in enumerate(cl.get_platforms()):
+            platform_name = platform.get_info(cl.platform_info.NAME)
+            if platform_name == self.platform.platform:
+                logging.debug(f"trying to match '{self.platform.platform}' to '{platform_name}'")
+                # match device ID:
+                for i, device in enumerate(platform.get_devices()):
+                    logging.debug(f"matched platform '{platform_name}'")
+
+                    device_name = device.get_info(cl.device_info.NAME)
+                    device_driver = device.get_info(cl.device_info.DRIVER_VERSION)
+
+                    logging.debug(f"trying to match '{self.platform.device} "
+                                  f"{self.platform.driver}' to '{device_name} "
+                                  f"{device_driver}'")
+                    if (device_name == self.platform.device
+                        and device_driver == self.platform.driver):
+                        logging.debug(f"matched device '{device_name}'")
+                        self._ids = j, i
+                        return
+
+        # after iterating over all OpenCL platforms and devices, no match found:
+        raise LookupError("unable to determine OpenCL IDs of "
+                          f"'{self.platform.platform}' '{self.platform.device}'")
 
     @staticmethod
     def from_env(env: cldrive.OpenCLEnvironment,
