@@ -1,4 +1,4 @@
-.#
+#
 # Copyright 2017 Chris Cummins <chrisc.101@gmail.com>.
 #
 # This file is part of DeepSmith.
@@ -27,6 +27,7 @@ import os
 import progressbar
 import re
 import sqlalchemy as sql
+import threading
 
 from contextlib import contextmanager
 from labm8 import crypto, fs, prof, system
@@ -47,6 +48,7 @@ make_session = None
 
 
 session_t = sql.orm.session.Session
+query_t = sql.orm.query.Query
 
 
 def init() -> str:
@@ -649,20 +651,60 @@ class Testbed(Base):
     def __repr__(self) -> str:
         return f"{Colors.BOLD}{Colors.PURPLE}{self.num}{Colors.END}"
 
-    def run_testcases(self, harness, generator, session: session_t=None):
-        with ReuseSession(session) as s:
-            already_done = s.query(Result.testcase_id)\
-                .join(Testcase)\
-                .join(Program)\
-                .filter(Result.testbed_id == self.id,
-                        Testcase.harness == harness.id,
-                        Program.generator == generator.id)
+    def _testcase_ids_ran(self, session: session_t, harness, generator) -> query_t:
+        """ return IDs of testcases with results """
+        return session.query(Result.testcase_id)\
+            .join(Testcase)\
+            .join(Program)\
+            .filter(Result.testbed_id == self.id,
+                    Testcase.harness == harness.id,
+                    Program.generator == generator.id)
 
-            todo = s.query(Testcase)\
-                .join(Program)\
-                .filter(Testcase.harness == harness.id,
-                        Program.generator == generator.id,
-                        ~Testcase.id.in_(already_done))
+    def _testcases_to_run(self, session: session_t, harness, generator) -> query_t:
+        """ return testcases which do not have results """
+        return  session.query(Testcase)\
+            .join(Program)\
+            .filter(Testcase.harness == harness.id,
+                    Program.generator == generator.id,
+                    ~Testcase.id.in_(self._testcase_ids_ran(session, harness, generator)))
+
+    def run_testcases(self, harness, generator, session: session_t=None):
+        """ run tests on testbed """
+        class Worker(threading.Thread):
+            """ Worker thread to run testcases """
+            def __init__(self, harness, generator, testbed_id):
+                self.harness = harness
+                self.generator = generator
+                self.testbed_id = testbed_id
+                self.ndone = 0
+                super(Worker, self).__init__()
+
+            def run(self):
+                with Session() as s:
+                    testbed = Testbed.from_id(s, self.testbed_id)
+
+                    already_done = testbed._testcase_ids_ran(
+                        s, self.harness, self.generator)
+                    todo = testbed._testcases_to_run(
+                        s, self.harness, self.generator)
+
+                    ndone = already_done.count()
+                    ntodo = todo.count()
+
+                    for testcase in todo:
+                        for _ in range(100):
+                            try:
+                                harness.run(testcase, testbed, s)
+                                self.ndone = already_done.count()
+                                break
+                            except IntegrityError:
+                                logging.warning("database integrity error")
+                        else:
+                            raise OSError("100 consecutive database integrity errors")
+
+        with ReuseSession(session) as s:
+            already_done = self._testcase_ids_ran(s, harness, generator)
+            todo = self._testcases_to_run(s, harness, generator)
 
             ndone = already_done.count()
             ntodo = todo.count()
@@ -693,19 +735,11 @@ class Testbed(Base):
             bar = progressbar.ProgressBar(initial_value=ndone,
                                           max_value=ndone + ntodo,
                                           redirect_stdout=True)
-
-            for testcase in todo:
-                for i in range(100):
-                    try:
-                        harness.run(testcase, self, s)
-                        ndone = already_done.count()
-                        bar.update(ndone)
-                        break
-                    except IntegrityError:
-                        logging.warning("database integrity error")
-                else:
-                    raise OSError("100 consecutive database integrity errors")
-
+            worker = Worker(harness, generator, self.id)
+            worker.start()
+            while worker.is_alive():
+                bar.update(worker.ndone)
+                worker.join(0.5)
 
     @property
     def num(self) -> str:
@@ -795,6 +829,10 @@ class Testbed(Base):
                                 optimizations=True if string[-1] == "+" else False)
                             ]
             raise LookupError(f"Testbed '{string}' not found in database")
+
+    @staticmethod
+    def from_id(session: session_t, id: int) -> 'Testbed':
+        return session.query(Testbed).filter(Testbed.id == id).scalar()
 
 
 class TestbedProxy(object):
