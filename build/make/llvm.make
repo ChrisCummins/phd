@@ -29,6 +29,11 @@ clang_trunk := $(llvm_dir)/trunk/build/bin/clang
 clangs := \
 	$(clang_362) \
 	$(clang_371) \
+	$(clang_381) \
+	$(clang_391) \
+	$(clang_401) \
+	$(clang_500) \
+	$(clang_trunk) \
 	$(NULL)
 
 clangs: $(clangs)

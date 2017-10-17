@@ -113,7 +113,7 @@ $(root)/dsmith/data/bin/clang-4.0.1: $(clang_401)
 	ln -sf $< $@
 	touch $@
 
-$(root)/dsmith/data/bin/clang-5.0.1: $(clang_501)
+$(root)/dsmith/data/bin/clang-5.0.0: $(clang_500)
 	mkdir -p $(dir $@)
 	ln -sf $< $@
 	touch $@
