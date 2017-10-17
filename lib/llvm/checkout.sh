@@ -7,10 +7,13 @@ checkout() {
 
     cd $dest
     git checkout $release
+    rm -rf .git
     cd tools/clang
     git checkout $release
+    rm -rf .git
     cd ../../projects/compiler-rt
     git checkout $release
+    rm -rf .git
 }
 
 checkout $@

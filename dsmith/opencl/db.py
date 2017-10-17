@@ -303,23 +303,24 @@ class Harnesses(object):
     value_t = int
     column_t = sql.SmallInteger
 
-    COMPILE_ONLY = -1
-    CLSMITH = 0
-    DSMITH = 1
+    CLANG = -1
+    CL_LAUNCHER = 0
+    CLDRIVE = 1
 
     @staticmethod
     def to_str(harness: 'Harnesses.value_t') -> str:
         return {
-            Harnesses.COMPILE_ONLY: "compile only",
-            Harnesses.CLSMITH: "CLsmith",
-            Harnesses.DSMITH: "DeepSmith",
+            Harnesses.CLDRIVE: "cldrive",
+            Harnesses.CL_LAUNCHER: "cl_launcher",
+            Harnesses.CLANG: "clang",
         }[harness]
 
     @staticmethod
-    def result_t(harness: "Harnesses.value_t") -> Union["ClsmithResult", "DsmithResult"]:
+    def result_t(harness: "Harnesses.value_t") -> Union["Cl_launcherResult", "CldriveResult"]:
         return {
-            Harnesses.CLSMITH: ClsmithResult,
-            Harnesses.DSMITH: DsmithResult,
+            Harnesses.CLDRIVE: CldriveResult,
+            Harnesses.CL_LAUNCHER: Cl_launcherResult,
+            Harnesses.CLANG: ClangResult,
         }[harness]
 
 
@@ -351,9 +352,9 @@ class Testcase(Base):
 
     @property
     def meta_t(self):
-        if self.harness == Harnesses.CLSMITH:
+        if self.harness == Harnesses.CL_LAUNCHER:
             return ClsmithTestcaseMeta
-        elif self.harness == Harnesses.DSMITH:
+        elif self.harness == Harnesses.CLDRIVE:
             return DsmithTestcaseMeta
         else:
             raise LookupError(f"unknown harness {self.harness}")
@@ -1098,12 +1099,11 @@ class Result(Base):
     #             f"testcase: {self.testcase.id}, returncode: {self.returncode}, runtime: {self.runtime:.2}s }}")
 
 
-class ClsmithResult(Result):
+class Cl_launcherResult(Result):
     @staticmethod
-    def get_outcome(returncode: int, stderr: str, runtime: float, timeout: int) -> int:
+    def get_outcome(returncode: int, stderr: str, runtime: float, timeout: int) -> Outcomes.type:
         """
-        Given a cl_launcher result, determine and set it's outcome.
-
+        Given a cl_launcher result, determine its outcome.
         See OUTCOMES for list of possible outcomes.
         """
         def crash_or_build_failure():
@@ -1126,7 +1126,7 @@ class ClsmithResult(Result):
         elif returncode == -9 and runtime >= timeout:
             return timeout_or_build_timeout()
         elif returncode == -9:
-            print(f"SIGKILL, but only ran for {runtime:.2f}s")
+            logging.warn(f"SIGKILL, but only ran for {runtime:.2f}s")
             return crash_or_build_crash()
         # SIGILL
         elif returncode == -4:
@@ -1149,12 +1149,16 @@ class ClsmithResult(Result):
                 print(Signals(-returncode).name)
             except ValueError:
                 print(returncode)
-            raise LookupError(f"failed to determine outcome of ClsmithResult {returncode} with stderr: {stderr}")
+            raise LookupError(f"failed to determine outcome of Cl_launcherResult {returncode} with stderr: {stderr}")
 
 
-class DsmithResult(Result):
+class CldriveResult(Result):
     @staticmethod
-    def get_outcome(returncode: int, stderr: str, runtime: float, timeout: int) -> int:
+    def get_outcome(returncode: int, stderr: str, runtime: float, timeout: int) -> Outcomes.type:
+        """
+        Given a cldrive result, determine its outcome.
+        See OUTCOMES for list of possible outcomes.
+        """
         def crash_or_build_failure():
             return Outcomes.RC if "[cldrive] Kernel: " in stderr else Outcomes.BF
         def crash_or_build_crash():
@@ -1175,7 +1179,7 @@ class DsmithResult(Result):
         elif returncode == -9 and runtime >= 60:
             return timeout_or_build_timeout()
         elif returncode == -9:
-            print(f"SIGKILL, but only ran for {runtime:.2f}s")
+            logging.warn(f"SIGKILL, but only ran for {runtime:.2f}s")
             return crash_or_build_crash()
         # SIGILL
         elif returncode == -4:
@@ -1204,6 +1208,29 @@ class DsmithResult(Result):
             except ValueError:
                 print(returncode)
             raise LookupError(f"failed to determine outcome of cldrive returncode {returncode} with stderr: {stderr}")
+
+
+class ClangResult(Result):
+    @staticmethod
+    def get_outcome(returncode: int, stderr: str, runtime: float, timeout: int) -> Outcomes.type:
+        """
+        Given a clang result, determine its outcome.
+        See Outcomes for list of possible outcomes.
+        """
+        def crash_or_build_failure():
+            return Outcomes.RC if "Compilation terminated successfully..." in stderr else Outcomes.BF
+        def crash_or_build_crash():
+            return Outcomes.RC if "Compilation terminated successfully..." in stderr else Outcomes.BC
+        def timeout_or_build_timeout():
+            return Outcomes.TO if "Compilation terminated successfully..." in stderr else Outcomes.BTO
+
+        if returncode == 0:
+            return Outcomes.PASS
+        elif returncode == -9 and runtime >= timeout:
+            return Outcomes.BTO
+        elif returncode == -9:
+            logging.warn(f"SIGKILL, but only ran for {runtime:.2f}s")
+        return Outcomes.BC
 
 
 class ResultMeta(Base):

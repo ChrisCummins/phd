@@ -40,7 +40,7 @@ def _make_clsmith_program(session: session_t, *flags, depth=1) -> None:
     Arguments:
         *flags: Additional flags to CLSmith.
     """
-    with NamedTemporaryFile(prefix='clsmith-', suffix='.cl') as tmp:
+    with NamedTemporaryFile(prefix='dsmith-clsmith-', suffix='.cl') as tmp:
         runtime, status, _, stderr = clsmith.clsmith('-o', tmp.name, *flags)
 
         # A non-zero exit status of clsmith implies that no program was

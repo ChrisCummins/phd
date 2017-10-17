@@ -19,8 +19,12 @@
 OpenCL test harnesses.
 """
 import cldrive
+import subprocess
+import sys
 
 from sqlalchemy.sql import func
+from tempfile import NamedTemporaryFile
+from time import time
 from typing import List
 
 import dsmith
@@ -106,7 +110,7 @@ class OpenCLHarness(Harness):
 
     def testbeds(self, session: session_t=None) -> List[TestbedProxy]:
         with ReuseSession(session) as s:
-            if self.id == Harnesses.COMPILE_ONLY:
+            if self.id == Harnesses.CLANG:
                 q = s.query(Testbed)\
                     .join(Platform)\
                     .filter(Platform.platform == "clang")
@@ -147,7 +151,7 @@ class Cl_launcher(OpenCLHarness):
         "clsmith": generators.CLSmith,
     }
 
-    id = Harnesses.CLSMITH
+    id = Harnesses.CL_LAUNCHER
     default_seed = None
     default_timeout = 60
 
@@ -176,12 +180,12 @@ class Cl_launcher(OpenCLHarness):
         session.flush()  # required to get IDs
 
         # outcome
-        outcome = ClsmithResult.get_outcome(
+        outcome = Cl_launcherResult.get_outcome(
             returncode, stderr_, runtime, testcase.timeout)
         _log_outcome(outcome, runtime)
 
         # create result
-        result = ClsmithResult(
+        result = Cl_launcherResult(
             testbed_id=testbed.id,
             testcase_id=testcase.id,
             returncode=returncode,
@@ -202,7 +206,7 @@ class Cldrive(OpenCLHarness):
         "dsmith": generators.DSmith,
     }
 
-    id = Harnesses.DSMITH
+    id = Harnesses.CLDRIVE
     default_seed = None
     default_timeout = 60
 
@@ -219,10 +223,71 @@ class Clang(OpenCLHarness):
         "clsmith": generators.CLSmith,
         "dsmith": generators.DSmith,
     }
+    __clangs__ = {
+        "3.6.2": dsmith.data_path("bin", "clang-3.6.2"),
+    }
 
-    id = Harnesses.COMPILE_ONLY
+    id = Harnesses.CLANG
     default_seed = None
     default_timeout = 60
 
     def all_threads(self, session: session_t=None):
         return _zero_threads(session=session)
+
+    def run(self, session: session_t, testcase: Testcase, testbed: Testbed):
+        """ compile a testcase using clang frontend """
+        # Sanity checks
+        if not testbed.optimizations:
+            raise ValueError("Clang testbed requires optimizations enables")
+        if testbed.platform.platform != "clang":
+            raise ValueError(f"Platform {testbed.platform} is not clang")
+
+        clang = self.__clangs__.get(testbed.platform.driver)
+        if not clang:
+            raise LookupError(f"clang version '{clang}' does not exist")
+        if not fs.isexe(clang):
+            raise OSError(f"clang binary '{clang}' not found")
+
+        # Run clang frontend
+        with NamedTemporaryFile(prefix='dsmith-', delete=False) as tmpfile:
+            src_path = tmpfile.name
+        try:
+            with open(src_path, "w") as outfile:
+                print(testcase.program.src, file=outfile)
+
+            cmd = ['timeout', '-s9', str(testcase.timeout), clang, '-cc1', '-xcl', src_path]
+            logging.debug("{Colors.BOLD}${Colors.END} " + " ".join(cmd))
+
+            start_time = time()
+            process = subprocess.Popen(
+                cmd, universal_newlines=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            _, stderr_ = process.communicate()
+
+            returncode = process.returncode
+            runtime = time() - start_time
+            stderr_ = stderr_.strip()
+        finally:
+            fs.rm(src_path)
+
+        # stdout / stderr
+        stdout = Stdout.from_str(session, "")
+        stderr = Stderr.from_str(session, stderr_)
+        session.flush()  # required to get IDs
+
+        # outcome
+        outcome = Cl_launcherResult.get_outcome(
+            returncode, stderr_, runtime, testcase.timeout)
+        _log_outcome(outcome, runtime)
+
+        # create result
+        result = Cl_launcherResult(
+            testbed_id=testbed.id,
+            testcase_id=testcase.id,
+            returncode=returncode,
+            outcome=outcome,
+            runtime=runtime,
+            stdout_id=stdout.id,
+            stderr_id=stderr.id)
+        session.add(result)
+        session.commit()

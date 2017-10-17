@@ -44,6 +44,7 @@ include build/make/clgen.make
 include build/make/cldrive.make
 include build/make/clsmith.make
 include build/make/clreduce.make
+include build/make/llvm.make
 
 python_version = 3.6
 python = $(venv_dir)/bin/python$(python_version)
@@ -68,6 +69,13 @@ dsmith/dsmith_pb2.py: dsmith/protobuf/dsmith.proto $(venv_activate)
 data_symlinks = \
 	$(root)/dsmith/data/bin/cl_launcher \
 	$(root)/dsmith/data/bin/CLSmith \
+	$(root)/dsmith/data/bin/clang-3.6.2 \
+	$(root)/dsmith/data/bin/clang-3.7.1 \
+	$(root)/dsmith/data/bin/clang-3.8.1 \
+	$(root)/dsmith/data/bin/clang-3.9.1 \
+	$(root)/dsmith/data/bin/clang-4.0.1 \
+	$(root)/dsmith/data/bin/clang-5.0.0 \
+	$(root)/dsmith/data/bin/clang-trunk \
 	$(NULL)
 
 $(root)/dsmith/data/bin/cl_launcher: $(cl_launcher)
@@ -76,6 +84,41 @@ $(root)/dsmith/data/bin/cl_launcher: $(cl_launcher)
 	touch $@
 
 $(root)/dsmith/data/bin/CLSmith: $(clsmith)
+	mkdir -p $(dir $@)
+	ln -sf $< $@
+	touch $@
+
+$(root)/dsmith/data/bin/clang-3.6.2: $(clang_362)
+	mkdir -p $(dir $@)
+	ln -sf $< $@
+	touch $@
+
+$(root)/dsmith/data/bin/clang-3.7.1: $(clang_371)
+	mkdir -p $(dir $@)
+	ln -sf $< $@
+	touch $@
+
+$(root)/dsmith/data/bin/clang-3.8.1: $(clang_381)
+	mkdir -p $(dir $@)
+	ln -sf $< $@
+	touch $@
+
+$(root)/dsmith/data/bin/clang-3.9.1: $(clang_391)
+	mkdir -p $(dir $@)
+	ln -sf $< $@
+	touch $@
+
+$(root)/dsmith/data/bin/clang-4.0.1: $(clang_401)
+	mkdir -p $(dir $@)
+	ln -sf $< $@
+	touch $@
+
+$(root)/dsmith/data/bin/clang-5.0.1: $(clang_501)
+	mkdir -p $(dir $@)
+	ln -sf $< $@
+	touch $@
+
+$(root)/dsmith/data/bin/clang-trunk: $(clang_trunk)
 	mkdir -p $(dir $@)
 	ln -sf $< $@
 	touch $@

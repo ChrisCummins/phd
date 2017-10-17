@@ -104,7 +104,7 @@ def cl_launcher(program_path: Path, platform_id: int, device_id: int,
 def cl_launcher_str(src: str, platform_id: int, device_id: int, timeout: int,
                     *args) -> Tuple[float, int, str, str]:
     """ Invoke cl launcher on source """
-    with NamedTemporaryFile(prefix='cl_launcher-', suffix='.cl') as tmp:
+    with NamedTemporaryFile(prefix='dsmith-cl_launcher-', suffix='.cl') as tmp:
         tmp.write(src.encode('utf-8'))
         tmp.flush()
 
