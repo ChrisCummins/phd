@@ -716,6 +716,7 @@ class Testbed(Base):
                                 break
                             except IntegrityError:
                                 logging.warning("database integrity error")
+                                s.rollback()
                         else:
                             raise OSError("100 consecutive database integrity errors")
 
