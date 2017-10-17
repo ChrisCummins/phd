@@ -33,10 +33,10 @@ import dsmith
 import dsmith.opencl.db
 
 from dsmith import Colors
-from dsmith.langs import Harness, Generator, Language
+from dsmith.langs import Language, Generator, Harness
 from dsmith.opencl.db import *
-from dsmith.opencl.harnesses import *
-from dsmith.opencl.generators import *
+from dsmith.opencl.harnesses import Cldrive, Cl_launcher, Clang
+from dsmith.opencl.generators import DSmith, CLSmith
 
 
 class OpenCL(Language):
