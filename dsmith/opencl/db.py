@@ -31,7 +31,7 @@ import threading
 
 from contextlib import contextmanager
 from labm8 import crypto, fs, prof, system
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
 from typing import Dict, Iterable, List, Tuple, Union
@@ -713,7 +713,12 @@ class Testbed(Base):
                     ntodo = todo.count()
 
                     for testcase in todo:
-                        for _ in range(100):
+                        # There is a potential race condition when multiple
+                        # harnesses are adding database records with unique key
+                        # constraints. Rather than figure out a proper
+                        # serialization strategy, I find it's easier just to
+                        # retry a few times. I'm a terrible person.
+                        for _ in range(10):
                             try:
                                 harness.run(s, testcase, testbed)
                                 self.ndone = already_done.count()
@@ -722,8 +727,12 @@ class Testbed(Base):
                                 logging.debug(e)
                                 logging.warning("database integrity error, rolling back")
                                 s.rollback()
+                            except OperationalError as e:
+                                logging.debug(e)
+                                logging.warning("database operational error, rolling back")
+                                s.rollback()
                         else:
-                            raise OSError("100 consecutive database integrity errors")
+                            raise OSError("10 consecutive database errors, aborting")
 
         with ReuseSession(session) as s:
             already_done = self._testcase_ids_ran(s, harness, generator)
