@@ -237,8 +237,18 @@ class Clang(OpenCLHarness):
     default_seed = None
     default_timeout = 60
 
+    _clsmith_header = fs.read_file(dsmith.data_path("include", "clsmith.h"))
+
     def all_threads(self, session: session_t=None):
         return _zero_threads(session=session)
+
+    def _inline_clsmith_header(self, program: Program) -> str:
+        """ inline CLSmith header if required and return src """
+        if program.generator == Generators.CLSMITH:
+            pre, post = program.src.split('#include "CLSmith.h"')
+            return pre + self._clsmith_header + post
+        else:
+            return program.src
 
     def run(self, session: session_t, testcase: Testcase, testbed: Testbed):
         """ compile a testcase using clang frontend """
@@ -255,15 +265,17 @@ class Clang(OpenCLHarness):
             raise OSError(f"clang binary '{clang}' not found")
 
         # Run clang frontend
-        with NamedTemporaryFile(prefix='dsmith-', delete=False) as tmpfile:
+        with NamedTemporaryFile(prefix='dsmith-clang-', delete=False) as tmpfile:
             src_path = tmpfile.name
         try:
+            # Dump source code to file
             with open(src_path, "w") as outfile:
-                print(testcase.program.src, file=outfile)
+                print(self._inline_clsmith_header(testcase.program), file=outfile)
 
-            # FIXME: Include CLgen headers
+            # Construct compile command
             cmd = ['timeout', '-s9', str(testcase.timeout), clang, '-cc1', '-xcl', src_path]
-            logging.debug("{Colors.BOLD}${Colors.END} " + " ".join(cmd))
+
+            logging.debug(f"{Colors.BOLD}${Colors.END} " + " ".join(cmd))
 
             start_time = time()
             process = subprocess.Popen(
@@ -297,4 +309,4 @@ class Clang(OpenCLHarness):
             stdout_id=stdout.id,
             stderr_id=stderr.id)
         session.add(result)
-        # session.commit()
+        session.commit()
