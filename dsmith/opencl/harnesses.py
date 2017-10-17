@@ -225,6 +225,12 @@ class Clang(OpenCLHarness):
     }
     __clangs__ = {
         "3.6.2": dsmith.data_path("bin", "clang-3.6.2"),
+        "3.7.1": dsmith.data_path("bin", "clang-3.7.1"),
+        "3.8.1": dsmith.data_path("bin", "clang-3.8.1"),
+        "3.9.1": dsmith.data_path("bin", "clang-3.9.1"),
+        "4.0.1": dsmith.data_path("bin", "clang-4.0.1"),
+        "5.0.0": dsmith.data_path("bin", "clang-5.0.0"),
+        "trunk": dsmith.data_path("bin", "clang-trunk"),
     }
 
     id = Harnesses.CLANG
@@ -255,6 +261,7 @@ class Clang(OpenCLHarness):
             with open(src_path, "w") as outfile:
                 print(testcase.program.src, file=outfile)
 
+            # FIXME: Include CLgen headers
             cmd = ['timeout', '-s9', str(testcase.timeout), clang, '-cc1', '-xcl', src_path]
             logging.debug("{Colors.BOLD}${Colors.END} " + " ".join(cmd))
 
@@ -290,4 +297,4 @@ class Clang(OpenCLHarness):
             stdout_id=stdout.id,
             stderr_id=stderr.id)
         session.add(result)
-        session.commit()
+        # session.commit()
