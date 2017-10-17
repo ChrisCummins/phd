@@ -23,7 +23,7 @@ import sys
 
 from argparse import ArgumentParser
 from configparser import ConfigParser
-from labm8 import fs
+
 
 def yes_no(question, default="no"):
     """Ask a yes/no question and return user's answer.
@@ -168,12 +168,12 @@ def main():
         requirements_files += ['requirements.tensorflow.cpu.txt']
 
 
-    cfg["rc_path"] = fs.abspath(fs.path(cfg["rc_path"]))
+    cfg["rc_path"] = os.path.abspath(os.path.expanduser(cfg["rc_path"]))
     if os.path.exists(cfg["rc_path"]):
         # Test that configuration file is parsable
         try:
             config = ConfigParser()
-            config.read(fs.path(cfg["rc_path"]))
+            config.read(cfg["rc_path"])
         except:
             print(f"""\
 Oops! We tried to parse the file and failed. Please see the documentation
