@@ -105,8 +105,8 @@ def Session(commit: bool=False) -> session_t:
 @contextmanager
 def ReuseSession(session: session_t=None, commit: bool=False) -> session_t:
     """
-    Acts the same as Session(), except if called with an existing `session`,
-    it will use that rather than creating a new one.
+    Same as Session(), except if called with an existing `session` object, it
+    will use that rather than creating a new one.
     """
     s = session or make_session()
     try:
@@ -121,28 +121,14 @@ def ReuseSession(session: session_t=None, commit: bool=False) -> session_t:
             s.close()
 
 
-def get_or_create(session: sql.orm.session.Session, model,
-                  defaults: Dict[str, object]=None, **kwargs) -> object:
-    """
-    Instantiate a mapped database object. If the object is not in the database,
-    add it.
-    """
-    instance = session.query(model).filter_by(**kwargs).first()
-    if not instance:
-        params = dict((k, v) for k, v in kwargs.items()
-                      if not isinstance(v, sql.sql.expression.ClauseElement))
-        params.update(defaults or {})
-        instance = model(**params)
-        session.add(instance)
-
-    return instance
-
-
 def get_or_add(session: sql.orm.session.Session, model,
-                  defaults: Dict[str, object]=None, **kwargs) -> object:
+               defaults: Dict[str, object]=None, **kwargs) -> object:
     """
     Instantiate a mapped database object. If the object is not in the database,
     add it.
+
+    Note that no change is written to disk until commit() is called on the
+    session.
     """
     instance = session.query(model).filter_by(**kwargs).first()
     if not instance:
@@ -151,7 +137,6 @@ def get_or_add(session: sql.orm.session.Session, model,
         params.update(defaults or {})
         instance = model(**params)
         session.add(instance)
-        session.flush()
 
     return instance
 
@@ -163,14 +148,16 @@ class Generators:
     value_t = int
     column_t = sql.SmallInteger
 
+    # Magic numbers
     CLSMITH = 0
     DSMITH = 1
 
 
 class Program(Base):
     id_t = sql.Integer
-
     __tablename__ = 'programs'
+
+    # Fields
     id = sql.Column(id_t, primary_key=True)
     generator = sql.Column(Generators.column_t, nullable=False)
     sha1 = sql.Column(sql.String(40), nullable=False)
@@ -180,10 +167,12 @@ class Program(Base):
     charcount = sql.Column(sql.Integer, nullable=False)
     src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
+    # Constraints
     __table_args__ = (
         sql.UniqueConstraint('generator', 'sha1', name='uniq_program'),
     )
 
+    # Relationships
     testcases = sql.orm.relationship("Testcase", back_populates="program")
 
     def __repr__(self):
@@ -192,23 +181,27 @@ class Program(Base):
 
 class ClsmithProgramMeta(Base):
     id_t = Program.id_t
-
     __tablename__ = "clsmith_program_metas"
+
+    # Fields
     id = sql.Column(id_t, sql.ForeignKey("programs.id"), primary_key=True)
     flags = sql.Column(sql.String(80), nullable=False, default="")
 
+    # Relationships
     program = sql.orm.relationship("Program")
 
 
 class DsmithProgramMeta(Base):
     id_t = Program.id_t
-
     __tablename__ = "dsmith_program_metas"
+
+    # Fields
     id = sql.Column(id_t, sql.ForeignKey("programs.id"), primary_key=True)
     contains_floats = sql.Column(sql.Boolean)
     vector_inputs = sql.Column(sql.Boolean)
     compiler_warnings = sql.Column(sql.Boolean)
 
+    # Relationships
     program = sql.orm.relationship("Program")
 
     def get_contains_floats(self, s: session_t) -> bool:
@@ -261,8 +254,9 @@ class DsmithProgramMeta(Base):
 
 class Threads(Base):
     id_t = sql.SmallInteger
-
     __tablename__ = "threads"
+
+    # Fields
     id = sql.Column(id_t, primary_key=True)
     gsize_x = sql.Column(sql.Integer, nullable=False)
     gsize_y = sql.Column(sql.Integer, nullable=False)
@@ -271,11 +265,15 @@ class Threads(Base):
     lsize_y = sql.Column(sql.Integer, nullable=False)
     lsize_z = sql.Column(sql.Integer, nullable=False)
 
-    __table_args__ = (sql.UniqueConstraint(
-        'gsize_x', 'gsize_y', 'gsize_z',
-        'lsize_x', 'lsize_y', 'lsize_z',
-        name='unique_thread_size'),)
+    # Constraints
+    __table_args__ = (
+        sql.UniqueConstraint(
+            'gsize_x', 'gsize_y', 'gsize_z',
+            'lsize_x', 'lsize_y', 'lsize_z',
+            name='unique_thread_size'),
+    )
 
+    # Relationships
     testcases = sql.orm.relationship("Testcase", back_populates="threads")
 
     @property
@@ -303,6 +301,7 @@ class Harnesses(object):
     value_t = int
     column_t = sql.SmallInteger
 
+    # Magic numbers
     CLANG = -1
     CL_LAUNCHER = 0
     CLDRIVE = 1
@@ -326,8 +325,9 @@ class Harnesses(object):
 
 class Testcase(Base):
     id_t = sql.Integer
-
     __tablename__ = "testcases"
+
+    # Fields
     id = sql.Column(id_t, primary_key=True)
     program_id = sql.Column(Program.id_t, sql.ForeignKey("programs.id"), nullable=False)
     threads_id = sql.Column(Threads.id_t, sql.ForeignKey("threads.id"), nullable=False)
@@ -335,11 +335,13 @@ class Testcase(Base):
     input_seed = sql.Column(sql.Integer, nullable=False)
     timeout = sql.Column(sql.Integer, nullable=False)
 
+    # Constraints
     __table_args__ = (
         sql.UniqueConstraint("program_id", "threads_id", "harness",
                              "input_seed", "timeout", name="unique_testcase"),
     )
 
+    # Relationships
     program = sql.orm.relationship("Program", back_populates="testcases")
     threads = sql.orm.relationship("Threads", back_populates="testcases")
     results = sql.orm.relationship("Result", back_populates="testcase")
@@ -360,7 +362,7 @@ class Testcase(Base):
             raise LookupError(f"unknown harness {self.harness}")
 
     def meta(self, s: session_t):
-        return get_or_create(s, self.meta_t, id=self.id)
+        return get_or_add(s, self.meta_t, id=self.id)
 
     def verify_arc(self, s: session_t):
         """
@@ -399,11 +401,13 @@ class Testcase(Base):
 
 class ClsmithTestcaseMeta(Base):
     id_t = Testcase.id_t
-
     __tablename__ = "clsmith_testcase_metas"
+
+    # Fields
     id = sql.Column(id_t, sql.ForeignKey("testcases.id"), primary_key=True)
     oclverified = sql.Column(sql.Boolean)
 
+    # Relationships
     testcase = sql.orm.relationship("Testcase", back_populates="clsmith_meta")
 
     def get_oclverified(self, s: session_t) -> bool:
@@ -436,12 +440,14 @@ class ClsmithTestcaseMeta(Base):
 
 class DsmithTestcaseMeta(Base):
     id_t = Testcase.id_t
-
     __tablename__ = "dsmith_testcase_metas"
+
+    # Fields
     id = sql.Column(id_t, sql.ForeignKey("testcases.id"), primary_key=True)
     gpuverified = sql.Column(sql.Boolean)
     oclverified = sql.Column(sql.Boolean)
 
+    # Relationships
     testcase = sql.orm.relationship("Testcase", back_populates="dsmith_meta")
 
     def get_program_meta(self, s: session_t) -> DsmithProgramMeta:
@@ -449,7 +455,7 @@ class DsmithTestcaseMeta(Base):
             .filter(DsmithProgramMeta.id == self.testcase.program_id)\
             .scalar()
         if not program_meta:
-            program_meta = get_or_create(s, DsmithProgramMeta,
+            program_meta = get_or_add(s, DsmithProgramMeta,
                                          id=self.testcase.program_id)
             s.flush()
 
@@ -518,8 +524,9 @@ class DsmithTestcaseMeta(Base):
 
 class Platform(Base):
     id_t = sql.SmallInteger
-
     __tablename__ = 'platforms'
+
+    # Fields
     id = sql.Column(id_t, primary_key=True)
     platform = sql.Column(sql.String(255), nullable=False)  # CL_PLATFORM_NAME
     device = sql.Column(sql.String(255), nullable=False)  # CL_DEVICE_NAME
@@ -528,11 +535,13 @@ class Platform(Base):
     devtype = sql.Column(sql.String(12), nullable=False)  # CL_DEVICE_TYPE
     host = sql.Column(sql.String(255), nullable=False)
 
+    # Constraints
     __table_args__ = (
         sql.UniqueConstraint('platform', 'device', 'driver', 'opencl',
                              'devtype', 'host', name='unique_platform'),
     )
 
+    # Relationships
     testbeds = sql.orm.relationship("Testbed", back_populates="platform")
 
     def __repr__(self) -> str:
@@ -637,16 +646,19 @@ class Platform(Base):
 
 class Testbed(Base):
     id_t = sql.SmallInteger
-
     __tablename__ = 'testbeds'
+
+    # Fields
     id = sql.Column(id_t, primary_key=True)
     platform_id = sql.Column(Platform.id_t, sql.ForeignKey("platforms.id"), nullable=False)
     optimizations = sql.Column(sql.Boolean, nullable=False)
 
+    # Constraints
     __table_args__ = (
         sql.UniqueConstraint('platform_id', 'optimizations', name='unique_testbed'),
     )
 
+    # Relationships
     platform = sql.orm.relationship("Platform", back_populates="testbeds")
 
     def __repr__(self) -> str:
@@ -884,8 +896,9 @@ class TestbedProxy(object):
 
 class Stdout(Base):
     id_t = sql.Integer
-
     __tablename__ = "stdouts"
+
+    # Fields
     id = sql.Column(id_t, primary_key=True)
     sha1 = sql.Column(sql.String(40), nullable=False, unique=True, index=True)
     stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
@@ -906,7 +919,7 @@ class Stdout(Base):
         # Strip the noise
         string = Stdout._escape(string)
 
-        stdout = get_or_create(
+        stdout = get_or_add(
             session, Stdout,
             sha1=crypto.sha1_str(string),
             stdout=string)
@@ -938,8 +951,9 @@ class Unreachable(CompilerError, Base):
 
 class Stderr(Base):
     id_t = sql.Integer
-
     __tablename__ = "stderrs"
+
+    # Fields
     id = sql.Column(id_t, primary_key=True)
     sha1 = sql.Column(sql.String(40), nullable=False, unique=True, index=True)
     assertion_id = sql.Column(Assertion.id_t, sql.ForeignKey("assertions.id"))
@@ -947,6 +961,7 @@ class Stderr(Base):
     stackdump_id = sql.Column(StackDump.id_t, sql.ForeignKey("stackdumps.id"))
     stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
+    # Relationships
     assertion = sql.orm.relationship("Assertion")
     unreachable = sql.orm.relationship("Unreachable")
     stackdump = sql.orm.relationship("StackDump")
@@ -981,7 +996,7 @@ class Stderr(Base):
                 else:
                     msg = line
 
-                assertion = get_or_create(
+                assertion = get_or_add(
                     session, Assertion,
                     sha1=crypto.sha1_str(msg), assertion=msg)
                 return assertion
@@ -990,7 +1005,7 @@ class Stderr(Base):
     def _get_unreachable(session: session_t, lines: Iterable[str]) -> Union[None, Unreachable]:
         for line in lines:
             if "unreachable" in line.lower():
-                unreachable = get_or_create(
+                unreachable = get_or_add(
                     session, Unreachable,
                     sha1=crypto.sha1_str(line), unreachable=line)
                 return unreachable
@@ -1005,7 +1020,7 @@ class Stderr(Base):
                     stackdump.append(line)
                 else:
                     stackdump_ = "\n".join(stackdump)
-                    stackdump = get_or_create(
+                    stackdump = get_or_add(
                         session, StackDump,
                         sha1=crypto.sha1_str(stackdump_), stackdump=stackdump_)
                     return stackdump
@@ -1032,7 +1047,7 @@ class Stderr(Base):
                               f"Unreachable: {unreachable}\n" +
                               f"Stackdump: {stackdump}")
 
-        stderr = get_or_create(
+        stderr = get_or_add(
             session, Stderr,
             sha1=crypto.sha1_str(string),
             assertion=assertion,
@@ -1043,9 +1058,13 @@ class Stderr(Base):
 
 
 class Outcomes:
+    """
+    A summary of the result of running a testcase on a testbed.
+    """
     type = int
     column_t = sql.SmallInteger
 
+    # Magic numbers:
     TODO = -1
     BF = 1
     BC = 2
@@ -1056,6 +1075,7 @@ class Outcomes:
 
     @staticmethod
     def to_str(outcomes: 'Outcomes.value_t') -> str:
+        """ convert to long-form string """
         return {
             Outcomes.TODO: "unknown",
             Outcomes.BF: "build failure",
@@ -1068,9 +1088,13 @@ class Outcomes:
 
 
 class Result(Base):
+    """
+    The result of running a testcase on a testbed.
+    """
     id_t = sql.Integer
-
     __tablename__ = "results"
+
+    # Fields
     id = sql.Column(id_t, primary_key=True)
     testbed_id = sql.Column(Testbed.id_t, sql.ForeignKey("testbeds.id"), nullable=False, index=True)
     testcase_id = sql.Column(Testcase.id_t, sql.ForeignKey("testcases.id"), nullable=False, index=True)
@@ -1081,10 +1105,12 @@ class Result(Base):
     stdout_id = sql.Column(Stdout.id_t, sql.ForeignKey("stdouts.id"), nullable=False)
     stderr_id = sql.Column(Stderr.id_t, sql.ForeignKey("stderrs.id"), nullable=False)
 
+    # Constraints
     __table_args__ = (
         sql.UniqueConstraint('testbed_id', 'testcase_id', name='unique_result_triple'),
     )
 
+    # Relationships
     meta = sql.orm.relation("ResultMeta", back_populates="result")
     classification = sql.orm.relation("Classification", back_populates="result")
     reduction = sql.orm.relationship("Reduction", back_populates="result")
@@ -1093,10 +1119,8 @@ class Result(Base):
     stdout = sql.orm.relationship("Stdout")
     stderr = sql.orm.relationship("Stderr")
 
-    # FIXME:
-    # def __repr__(self):
-    #     return (f"result[{self.id}] = {{ {self.testbed.platform.device}, " +
-    #             f"testcase: {self.testcase.id}, returncode: {self.returncode}, runtime: {self.runtime:.2}s }}")
+    def __repr__(self):
+        return str(self.id)
 
 
 class Cl_launcherResult(Result):
