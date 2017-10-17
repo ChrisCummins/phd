@@ -139,8 +139,7 @@ def get_or_add(session: sql.orm.session.Session, model,
         session.add(instance)
 
         # logging
-        name = type(model).__name__
-        logging.debug(f"new {name} record")
+        logging.debug(f"new {model.__name__} record")
 
     return instance
 
@@ -1280,12 +1279,14 @@ class ClangResult(Result):
 
 class ResultMeta(Base):
     id_t = Result.id_t
-
     __tablename__ = "results_metas"
+
+    # Fields
     id = sql.Column(id_t, sql.ForeignKey("results.id"), primary_key=True)
     total_time = sql.Column(sql.Float, nullable=False)  # time to generate and run test case
     cumtime = sql.Column(sql.Float, nullable=False)  # culumative time for this testbed time
 
+    # Relationships
     result = sql.orm.relationship("Result", back_populates="meta")
 
     def __repr__(self):
@@ -1297,6 +1298,7 @@ class Classifications:
     value_t = int
     column_t = sql.SmallInteger
 
+    # Magic numbers
     BC = 1
     BTO = 2
     ABF = 3
@@ -1316,18 +1318,21 @@ class Classifications:
 
 class Classification(Base):
     id_t = Result.id_t
-
     __tablename__ = "classifications"
+
+    # Fields
     id = sql.Column(id_t, sql.ForeignKey("results.id"), primary_key=True)
     classification = sql.Column(Classifications.column_t, nullable=False)
 
+    # Relationships
     result = sql.orm.relationship("Result", back_populates="classification")
 
 
 class Majority(Base):
     id_t = Testcase.id_t
-
     __tablename__ = "majorities"
+
+    # Fields
     id = sql.Column(id_t, sql.ForeignKey("testcases.id"), primary_key=True)
     num_results = sql.Column(sql.SmallInteger, nullable=False)
     maj_outcome = sql.Column(Outcomes.column_t, nullable=False)
@@ -1335,14 +1340,16 @@ class Majority(Base):
     maj_stdout_id = sql.Column(Stdout.id_t, sql.ForeignKey("stdouts.id"), nullable=False)
     stdout_majsize = sql.Column(sql.SmallInteger, nullable=False)
 
+    # Relationships
     testcase = sql.orm.relationship("Testcase", back_populates="majority")
     maj_stdout = sql.orm.relationship("Stdout")
 
 
 class Reduction(Base):
     id_t = Result.id_t
-
     __tablename__ = "reductions"
+
+    # Fields
     id = sql.Column(id_t, sql.ForeignKey("results.id"), primary_key=True)
     date = sql.Column(sql.DateTime, nullable=False, default=datetime.datetime.utcnow)
     status = sql.Column(sql.Integer, nullable=False)
@@ -1351,4 +1358,5 @@ class Reduction(Base):
     linecount = sql.Column(sql.Integer, nullable=False)
     log = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
+    # Relationships
     result = sql.orm.relationship("Result", back_populates="reduction")
