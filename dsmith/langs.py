@@ -179,20 +179,18 @@ class Language(object):
         return harness()
 
 
-# Deferred importing of languages, since the modules may need to import this
-# file.
-from dsmith.opencl import OpenCL
-
-__languages__ = {
-    "opencl": OpenCL,
-}
-
-
 def mklang(name: str) -> Language:
     """
     Instantiate language from name.
     """
-    lang = __languages__.get(name)
+    # Deferred importing of languages to break circular dependencies from
+    # language modules which require this file.
+    from dsmith.opencl import OpenCL
+
+    # Global table of available languages
+    lang = {
+        "opencl": OpenCL,
+    }.get(name)
     if not lang:
-        raise ValueError(f"Unknown language '{name}'")
+        raise LookupError(f"Unknown language '{name}'")
     return lang()
