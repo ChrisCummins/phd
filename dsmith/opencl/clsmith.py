@@ -37,9 +37,9 @@ status_t = NewType('status_t', int)
 return_t = namedtuple('return_t', ['runtime', 'status', 'stdout', 'stderr'])
 
 # set these variables to your local CLSmith build:
-exec_path = dsmith.data_path("bin", "CLSmith")
-cl_launcher_path = dsmith.data_path("bin", "cl_launcher")
-include_path = dsmith.data_path("include")
+exec_path = dsmith.root_path("lib", "clsmith", "build", "CLSmith")
+cl_launcher_path = dsmith.root_path("lib", "clsmith", "build", "cl_launcher")
+include_path = dsmith.root_path("lib", "clsmith", "runtime")
 
 # sanity checks
 assert fs.isexe(exec_path)

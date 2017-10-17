@@ -224,13 +224,13 @@ class Clang(OpenCLHarness):
         "dsmith": generators.DSmith,
     }
     __clangs__ = {
-        "3.6.2": dsmith.data_path("bin", "clang-3.6.2"),
-        "3.7.1": dsmith.data_path("bin", "clang-3.7.1"),
-        "3.8.1": dsmith.data_path("bin", "clang-3.8.1"),
-        "3.9.1": dsmith.data_path("bin", "clang-3.9.1"),
-        "4.0.1": dsmith.data_path("bin", "clang-4.0.1"),
-        "5.0.0": dsmith.data_path("bin", "clang-5.0.0"),
-        "trunk": dsmith.data_path("bin", "clang-trunk"),
+        "3.6.2": dsmith.root_path("lib", "llvm", "3.6.2", "build", "bin", "clang"),
+        "3.7.1": dsmith.root_path("lib", "llvm", "3.7.1", "build", "bin", "clang"),
+        "3.8.1": dsmith.root_path("lib", "llvm", "3.8.1", "build", "bin", "clang"),
+        "3.9.1": dsmith.root_path("lib", "llvm", "3.9.1", "build", "bin", "clang"),
+        "4.0.1": dsmith.root_path("lib", "llvm", "4.0.1", "build", "bin", "clang"),
+        "5.0.0": dsmith.root_path("lib", "llvm", "5.0.0", "build", "bin", "clang"),
+        "trunk": dsmith.root_path("lib", "llvm", "trunk", "build", "bin", "clang"),
     }
 
     id = Harnesses.CLANG

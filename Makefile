@@ -33,6 +33,10 @@ clean_targets =
 distclean_targets =
 test_targets =
 
+ifneq ($(root),$(ROOT))
+$(error Directory moved from $(ROOT) to $(root). Please rerun ./configure)
+endif
+
 # modules
 include build/make/wget.make
 include build/make/tar.make
@@ -65,86 +69,9 @@ dsmith/opencl/opencl_pb2.py: dsmith/opencl/opencl.proto $(venv_activate)
 	cd $(dir $@) && $(venv) protoc $(notdir $<) --python_out=.
 
 
-# data symlinks
-data_symlinks = \
-	$(root)/dsmith/data/bin/cl_launcher \
-	$(root)/dsmith/data/bin/CLSmith \
-	$(root)/dsmith/data/bin/clang-3.6.2 \
-	$(root)/dsmith/data/bin/clang-3.7.1 \
-	$(root)/dsmith/data/bin/clang-3.8.1 \
-	$(root)/dsmith/data/bin/clang-3.9.1 \
-	$(root)/dsmith/data/bin/clang-4.0.1 \
-	$(root)/dsmith/data/bin/clang-5.0.0 \
-	$(root)/dsmith/data/bin/clang-trunk \
-	$(NULL)
-
-$(root)/dsmith/data/bin/cl_launcher: $(cl_launcher)
-	mkdir -p $(dir $@)
-	ln -sf $< $@
-	touch $@
-
-$(root)/dsmith/data/bin/CLSmith: $(clsmith)
-	mkdir -p $(dir $@)
-	ln -sf $< $@
-	touch $@
-
-$(root)/dsmith/data/bin/clang-3.6.2: $(clang_362)
-	mkdir -p $(dir $@)
-	ln -sf $< $@
-	touch $@
-
-$(root)/dsmith/data/bin/clang-3.7.1: $(clang_371)
-	mkdir -p $(dir $@)
-	ln -sf $< $@
-	touch $@
-
-$(root)/dsmith/data/bin/clang-3.8.1: $(clang_381)
-	mkdir -p $(dir $@)
-	ln -sf $< $@
-	touch $@
-
-$(root)/dsmith/data/bin/clang-3.9.1: $(clang_391)
-	mkdir -p $(dir $@)
-	ln -sf $< $@
-	touch $@
-
-$(root)/dsmith/data/bin/clang-4.0.1: $(clang_401)
-	mkdir -p $(dir $@)
-	ln -sf $< $@
-	touch $@
-
-$(root)/dsmith/data/bin/clang-5.0.0: $(clang_500)
-	mkdir -p $(dir $@)
-	ln -sf $< $@
-	touch $@
-
-$(root)/dsmith/data/bin/clang-trunk: $(clang_trunk)
-	mkdir -p $(dir $@)
-	ln -sf $< $@
-	touch $@
-
-.PHONY: clean-symlinks
-clean-symlinks:
-	rm -fv $(data_symlinks)
-clean_targets += clean-symlinks
-
-
-# header files
-headers = \
-	$(root)/dsmith/data/include/CLSmith.h
-
-$(root)/dsmith/data/include/CLSmith.h: $(clsmith_include_dir)
-	cp -v $</*.h $(dir $@)
-
-.PHONY: clean-headers
-clean-headers:
-	rm -fv $(headers)
-clean_targets += clean-headers
-
-
 # python packages
 python_packages = $(clgen) $(cldrive) $(jupyter)
-python: $(venv_activate) $(python_packages) $(protobuf) $(data_symlinks) $(headers)
+python: $(venv_activate) $(python_packages) $(protobuf)
 	$(venv) ./configure -r >/dev/null
 	$(venv) pip install --only-binary=numpy '$(shell grep numpy requirements.txt)'
 	$(venv) pip install -r requirements.txt

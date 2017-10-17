@@ -113,17 +113,30 @@ class Colors:
    END = '\033[0m'
 
 
-def data_path(*path) -> str:
+def data_path(*path) -> Path:
     """
     Path to data file.
 
     Arguments:
-    *path (List[str]): Path components.
+        *path (List[str]): Path components.
 
     Returns:
-        str: Path.
+        Path: Path.
     """
     return resource_filename(__name__, fs.path("data", *path))
+
+
+def root_path(*path) -> Path:
+    """
+    Path relative to dsmith source respository.
+
+    Arguments:
+        *path (List[str]): Path components.
+
+    Returns:
+        Path: Path.
+    """
+    return fs.path(ROOT, *path)
 
 
 @contextmanager

@@ -112,6 +112,9 @@ def main():
                         help=f"path to configuration file (default: {default_rc})")
     args = parser.parse_args()
 
+    # Directory containing this respository
+    pwd = os.path.dirname(os.path.realpath(__file__))
+
     if args.reconfigure:
         args.batch = True
         try:
@@ -126,6 +129,7 @@ def main():
             "cuda": args.with_cuda,
             "rc_path": args.rc,
             "version": "0.4.0.dev0",
+            "dsmith_dir": pwd,
         }
 
     # get input from user
@@ -142,15 +146,17 @@ def main():
 
     # generate make config file
     with open(".config.make", "w") as outfile:
-        print("USE_CUDA := " + to_make(cfg["cuda"]), file=outfile)
+        print(f"ROOT := {cfg['dsmith_dir']}", file=outfile)
+        print("RC_PATH := {}".format(cfg["rc_path"]), file=outfile)
         print("DSMITH_VERSION := " + cfg["version"], file=outfile)
-        print("RC_PATH := '{}'".format(cfg["rc_path"]), file=outfile)
+        print("USE_CUDA := " + to_make(cfg["cuda"]), file=outfile)
 
     # generate python config file
     with open(os.path.join("dsmith", "_config.py"), "w") as outfile:
-        print("USE_CUDA = " + to_python(cfg["cuda"]), file=outfile)
-        print("VERSION = '{}'".format(cfg["version"]), file=outfile)
+        print(f"ROOT = '{cfg['dsmith_dir']}'", file=outfile)
         print("RC_PATH = '{}'".format(cfg["rc_path"]), file=outfile)
+        print("VERSION = '{}'".format(cfg["version"]), file=outfile)
+        print("USE_CUDA = " + to_python(cfg["cuda"]), file=outfile)
 
     # generate python requirements file
     requirements_files = ['requirements.txt']
@@ -208,8 +214,9 @@ The following questions will create it for you:""")
 
     print("DeepSmith {version} configured:".format(version=cfg["version"]))
     print()
-    print("    CUDA support:       " + to_text(cfg["cuda"]))
+    print("    Root path:          " + cfg["dsmith_dir"])
     print("    Configuration path: " + cfg["rc_path"])
+    print("    CUDA support:       " + to_text(cfg["cuda"]))
     print()
     print("You may now build DeepSmith by running 'make'.")
 
