@@ -1,4 +1,4 @@
-# Makefile module for clreduce.
+# Makefile module for clreduce. Requires $(cmake) and $(ninja).
 #
 # Copyright 2017 Chris Cummins <chrisc.101@gmail.com>.
 #
@@ -23,4 +23,9 @@ clreduce := $(clreduce_dir)/build_creduce/creduce/creduce
 clreduce: $(clreduce)
 
 $(clreduce):
-	cd $(clreduce_dir) && make
+	cd $(clreduce_dir) && PATH=$(dir $(ninja)):$$PATH make CMAKE=$(cmake)
+
+.PHONY: distclean-clreduce
+distclean-clreduce:
+	cd $(clreduce_dir) && make clean
+distclean_targets += distclean-clreduce
