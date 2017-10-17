@@ -77,5 +77,8 @@ $(clang_trunk): $(llvm_scripts)
 
 .PHONE: distclean-llvm
 distclean-llvm:
-	rm -rfv $(root)/lib/llvm/3.6.2/build
+	rm -rfv $(llvm_dir)/3.* \
+		$(llvm_dir)/4.* \
+		$(llvm_dir)/5.* \
+		$(llvm_dir)/trunk
 distclean_targets += distclean-llvm
