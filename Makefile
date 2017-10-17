@@ -58,11 +58,11 @@ test: $(test_targets)
 
 
 # protocol buffers
-protobuf = dsmith/dsmith_pb2.py
+protobuf = dsmith/opencl/opencl_pb2.py
 protobuf: $(python_packages) $(protobuf)
 
-dsmith/dsmith_pb2.py: dsmith/protobuf/dsmith.proto $(venv_activate)
-	cd dsmith/protobuf && $(venv) protoc dsmith.proto --python_out=..
+dsmith/opencl/opencl_pb2.py: dsmith/opencl/opencl.proto $(venv_activate)
+	cd $(dir $@) && $(venv) protoc $(notdir $<) --python_out=.
 
 
 # data symlinks

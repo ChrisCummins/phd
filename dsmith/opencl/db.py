@@ -38,7 +38,7 @@ from typing import Dict, Iterable, List, Tuple, Union
 
 import dsmith
 from dsmith import Colors
-from dsmith import dsmith_pb2 as pb
+from dsmith.opencl import opencl_pb2 as pb
 
 # Global state to manage database connections. Must call init() before
 # creating sessions.

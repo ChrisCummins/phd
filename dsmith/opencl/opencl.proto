@@ -32,22 +32,35 @@ message Result {
     message TestCase {
         optional Program program = 1;
         optional Threads threads = 2;
-        optional int32 inputs = 3;
-        optional uint32 timeout = 4;
+        optional Harness harness = 3;
+        optional int32 input_seed = 4;
+        optional float timeout = 5;
 
         message Program {
             optional string src = 1;
-            optional float generation_time = 2;
+            optional Generator generator = 2;
+            optional float generation_time = 3;
+
+            enum Generator {
+                DSMITH = 0;
+                CLSMITH = 1;
+            }
         }
 
         message Threads {
-            optional int32 gsize_x = 1;
-            optional int32 gsize_y = 2;
-            optional int32 gsize_z = 3;
+            optional uint32 gsize_x = 1;
+            optional uint32 gsize_y = 2;
+            optional uint32 gsize_z = 3;
 
-            optional int32 lsize_x = 4;
-            optional int32 lsize_y = 5;
-            optional int32 lsize_z = 6;
+            optional uint32 lsize_x = 4;
+            optional uint32 lsize_y = 5;
+            optional uint32 lsize_z = 6;
+        }
+
+        enum Harness {
+            CLDRIVE = 0;
+            CL_LAUNCHER = 1;
+            CLANG = 2;
         }
     }
 }
