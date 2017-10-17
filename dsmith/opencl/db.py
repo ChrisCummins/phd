@@ -144,6 +144,21 @@ def get_or_add(session: sql.orm.session.Session, model,
     return instance
 
 
+def paginate(query: query_t, page_size: int=1000):
+    """
+    Paginate query results.
+    """
+    offset = 0
+    while True:
+        r = False
+        for elem in query.limit(page_size).offset(offset):
+           r = True
+           yield elem
+        offset += page_size
+        if not r:
+            break
+
+
 # Programs ####################################################################
 
 
