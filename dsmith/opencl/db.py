@@ -138,6 +138,10 @@ def get_or_add(session: sql.orm.session.Session, model,
         instance = model(**params)
         session.add(instance)
 
+        # logging
+        name = type(model).__name__
+        logging.debug(f"new {name} record")
+
     return instance
 
 
@@ -714,8 +718,9 @@ class Testbed(Base):
                                 harness.run(s, testcase, testbed)
                                 self.ndone = already_done.count()
                                 break
-                            except IntegrityError:
-                                logging.warning("database integrity error")
+                            except IntegrityError as e:
+                                logging.debug(e)
+                                logging.warning("database integrity error, rolling back")
                                 s.rollback()
                         else:
                             raise OSError("100 consecutive database integrity errors")
@@ -937,6 +942,9 @@ class CompilerError(object):
     id = sql.Column(id_t, primary_key=True)
     sha1 = sql.Column(sql.String(40), nullable=False, unique=True, index=True)
 
+    def __repr__(self):
+        return self.sha1
+
 
 class StackDump(CompilerError, Base):
     stackdump = sql.Column(sql.UnicodeText(length=1024), nullable=False)
@@ -966,6 +974,9 @@ class Stderr(Base):
     assertion = sql.orm.relationship("Assertion")
     unreachable = sql.orm.relationship("Unreachable")
     stackdump = sql.orm.relationship("StackDump")
+
+    def __repr__(self):
+        return self.sha1
 
     @staticmethod
     def _escape(string: str) -> str:
