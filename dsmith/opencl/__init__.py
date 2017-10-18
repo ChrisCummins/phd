@@ -73,17 +73,20 @@ class OpenCL(Language):
                     testbed = Testbed.from_str(testbed_name, session=s)[0]
                     self._run_testcases(testbed, generator, harness, s)
 
-    def describe_testbeds(self, file=sys.stdout) -> None:
+    def describe_testbeds(self, available_only: bool=False, file=sys.stdout) -> None:
         with Session() as s:
-            print(f"The following {self} testbeds are in the data store:", file=file)
-            for harness in self.harnesses:
-                for testbed in harness.testbeds():
-                    print(f"    {harness} {testbed} {testbed.platform}", file=file)
+            if not available_only:
+                print(f"The following {self} testbeds are in the data store:", file=file)
+                for harness in self.harnesses:
+                    for testbed in harness.testbeds():
+                        print(f"    {harness} {testbed} {testbed.platform} on {testbed.host}",
+                              file=file)
+                print(file=file)
 
-            print(f"\nThe following {self} testbeds are available on this machine:",
+            print(f"The following {self} testbeds are available on this machine:",
                   file=file)
             for harness in self.harnesses:
-                for testbed in harness.testbeds():
+                for testbed in harness.available_testbeds():
                     print(f"    {harness} {testbed} {testbed.platform}", file=file)
 
     def describe_results(self, file=sys.stdout) -> None:

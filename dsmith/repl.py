@@ -54,7 +54,7 @@ __available_commands__ = f"""\
   {Colors.BOLD}describe {_lang_str} {{{Colors.GREEN}generators{Colors.END}{Colors.BOLD},programs}}{Colors.END}
     Provide details about generators, or generated programs.
 
-  {Colors.BOLD}describe {_lang_str} [{_harness_str}] {Colors.PURPLE}testbeds{Colors.END}
+  {Colors.BOLD}describe [available] {_lang_str} [{_harness_str}] {Colors.PURPLE}testbeds{Colors.END}
     Provide details about the available testbeds, or all the testbeds in
     the database.
 
@@ -204,7 +204,7 @@ def _execute(statement: str, file=sys.stdout) -> None:
 
     if components[0] == "describe":
         generators_match = re.match(r'describe (?P<lang>\w+) generators$', statement)
-        testbeds_match = re.match(r'describe (?P<lang>\w+) testbeds$', statement)
+        testbeds_match = re.match(r'describe (?P<available>available )?(?P<lang>\w+) testbeds$', statement)
         programs_match = re.match(r'describe (?P<lang>\w+) programs$', statement)
         testcases_match = re.match(r'describe (?P<lang>\w+) ((?P<generator>\w+) )?testcases$', statement)
         results_match = re.match(r'describe (?P<lang>\w+) results$', statement)
@@ -214,7 +214,8 @@ def _execute(statement: str, file=sys.stdout) -> None:
             return _describe_generators(lang=lang, file=file)
         elif testbeds_match:
             lang = mklang(testbeds_match.group("lang"))
-            return lang.describe_testbeds(file=file)
+            available_only = True if testbeds_match.group("available") else False
+            return lang.describe_testbeds(available_only=available_only, file=file)
         elif programs_match:
             lang = mklang(programs_match.group("lang"))
             return _describe_programs(lang=lang, file=file)

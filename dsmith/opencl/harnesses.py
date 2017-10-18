@@ -122,12 +122,18 @@ class OpenCLHarness(Harness):
                 return sorted(TestbedProxy(testbed) for testbed in q)
 
     def available_testbeds(self, session: session_t=None) -> List[TestbedProxy]:
-        testbeds = []
         with ReuseSession(session) as s:
-            for env in cldrive.all_envs():
-                testbeds += [TestbedProxy(testbed) for testbed in Testbed.from_env(env, session=s)]
-
-        return sorted(testbeds)
+            if self.id == Harnesses.CLANG:
+                q = s.query(Testbed)\
+                    .join(Platform)\
+                    .filter(Platform.platform == "clang")
+                return sorted(TestbedProxy(testbed) for testbed in q)
+            else:
+                testbeds = []
+                for env in cldrive.all_envs():
+                    testbeds += [TestbedProxy(testbed) for testbed in
+                                 Testbed.from_env(env, session=s)]
+                return sorted(testbeds)
 
     def num_results(self, generator: Generator, testbed: str, session: session_t=None):
         with ReuseSession(session) as s:
@@ -207,41 +213,41 @@ class Cldrive(OpenCLHarness):
     def _verify_params(platform: str, device: str, optimizations: bool,
                        global_size: Tuple[int, int, int],
                        local_size: Tuple[int, int, int], stderr: str) -> None:
-    """ verify that expected params match actual as reported by cldrive """
-    optimizations = "on" if optimizations else "off"
+        """ verify that expected params match actual as reported by cldrive """
+        optimizations = "on" if optimizations else "off"
 
-    actual_platform = None
-    actual_device = None
-    actual_optimizations = None
-    actual_global_size = None
-    actual_local_size = None
-    for line in stderr.split('\n'):
-        if line.startswith("[cldrive] Platform: "):
-            actual_platform_name = re.sub(r"^\[cldrive\] Platform: ", "", line).rstrip()
-        elif line.startswith("[cldrive] Device: "):
-            actual_device_name = re.sub(r"^\[cldrive\] Device: ", "", line).rstrip()
-        elif line.startswith("[cldrive] OpenCL optimizations: "):
-            actual_optimizations = re.sub(r"^\[cldrive\] OpenCL optimizations: ", "", line).rstrip()
+        actual_platform = None
+        actual_device = None
+        actual_optimizations = None
+        actual_global_size = None
+        actual_local_size = None
+        for line in stderr.split('\n'):
+            if line.startswith("[cldrive] Platform: "):
+                actual_platform_name = re.sub(r"^\[cldrive\] Platform: ", "", line).rstrip()
+            elif line.startswith("[cldrive] Device: "):
+                actual_device_name = re.sub(r"^\[cldrive\] Device: ", "", line).rstrip()
+            elif line.startswith("[cldrive] OpenCL optimizations: "):
+                actual_optimizations = re.sub(r"^\[cldrive\] OpenCL optimizations: ", "", line).rstrip()
 
-        # global size
-        match = re.match('^\[cldrive\] 3-D global size \d+ = \[(\d+), (\d+), (\d+)\]', line)
-        if match:
-            actual_global_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
+            # global size
+            match = re.match('^\[cldrive\] 3-D global size \d+ = \[(\d+), (\d+), (\d+)\]', line)
+            if match:
+                actual_global_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
 
-        # local size
-        match = re.match('^\[cldrive\] 3-D local size \d+ = \[(\d+), (\d+), (\d+)\]', line)
-        if match:
-            actual_local_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
+            # local size
+            match = re.match('^\[cldrive\] 3-D local size \d+ = \[(\d+), (\d+), (\d+)\]', line)
+            if match:
+                actual_local_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
 
-        # check if we've collected everything:
-        if (actual_platform and actual_device and actual_optimizations and
-            actual_global_size and actual_local_size):
-            assert(actual_platform == platform)
-            assert(actual_device == device)
-            assert(actual_optimizations == optimizations)
-            assert(actual_global_size == global_size)
-            assert(actual_local_size == local_size)
-            return
+            # check if we've collected everything:
+            if (actual_platform and actual_device and actual_optimizations and
+                actual_global_size and actual_local_size):
+                assert(actual_platform == platform)
+                assert(actual_device == device)
+                assert(actual_optimizations == optimizations)
+                assert(actual_global_size == global_size)
+                assert(actual_local_size == local_size)
+                return
 
     def all_threads(self, session: session_t=None):
         return _non_zero_threads(session=session)

@@ -607,9 +607,11 @@ class Platform(Base):
 
     def __repr__(self) -> str:
         if self.device_name.startswith(self.platform_name):
-            return (f"{self.device_name} {self.driver_name} on {self.host_name}")
+            return (f"{self.device_name} {self.driver_name}")
+        elif self.device_name:
+            return (f"{self.platform_name} {self.device_name} {self.driver_name}")
         else:
-            return (f"{self.platform_name} {self.device_name} {self.driver_name} on {self.host_name}")
+            return (f"{self.platform_name} {self.driver_name}")
 
     def platform_id(self):
         """ return OpenCL platform index, or KeyError if platform not found """
@@ -634,8 +636,10 @@ class Platform(Base):
 
     @property
     def num(self):
+        if self.platform == "clang" and self.driver == "6.0.0":
+            return "clang-trunk"
         if self.platform == "clang":
-            return f"{self.platform}-{self.driver}"
+            return f"clang-{self.driver}"
 
         return {
             "ComputeAorta (Intel E5-2620)": 9,
@@ -940,6 +944,7 @@ class TestbedProxy(Proxy):
     def __init__(self, testbed: Testbed):
         self.repr = str(testbed)
         self.platform = str(testbed.platform)
+        self.host = testbed.platform.host_name
         self.id = testbed.id
 
     def to_record(self, session: session_t) -> Testbed:
