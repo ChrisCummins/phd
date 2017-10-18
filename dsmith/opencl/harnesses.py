@@ -20,6 +20,7 @@ OpenCL test harnesses.
 """
 import cldrive
 import subprocess
+import progressbar
 import sys
 
 from sqlalchemy.sql import func
@@ -78,15 +79,15 @@ class OpenCLHarness(Harness):
                             Testcase.harness == self.id)
 
                 # The list of testcases to make is the compliment of the above:
-                todo = s.query(Program)\
+                todo = s.query(Program.id)\
                     .filter(Program.generator == generator.id,
                             ~Program.id.in_(already_exists))
 
                 # Determine how many, if any, testcases need to be made:
-                nexist = already_exists.count()
+                ndone = already_exists.count()
                 ntodo = todo.count()
-                ntotal = nexist + ntodo
-                logging.debug(f"{self}:{generator} {threads} testcases = {nexist} / {ntotal}")
+                ntotal = ndone + ntodo
+                logging.debug(f"{self}:{generator} {threads} testcases = {ndone} / {ntotal}")
 
                 # Break early if there's nothing to do:
                 if not ntodo:
@@ -97,16 +98,15 @@ class OpenCLHarness(Harness):
                       f"{Colors.BOLD}{threads}{Colors.END}")
 
                 # Bulk insert new testcases:
-                s.add_all([
-                    Testcase(
-                        program_id=program.id,
-                        threads_id=threads.id,
-                        harness=self.id,
-                        input_seed=self.default_seed,
-                        timeout=self.default_timeout,
-                    ) for program in todo
-                ])
+                s.add_all(Testcase(
+                    program_id=program.id,
+                    threads_id=threads.id,
+                    harness=self.id,
+                    input_seed=self.default_seed,
+                    timeout=self.default_timeout,
+                ) for program in todo)
                 s.commit()
+
 
     def testbeds(self, session: session_t=None) -> List[TestbedProxy]:
         with ReuseSession(session) as s:
