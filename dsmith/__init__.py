@@ -155,6 +155,7 @@ def debug_scope() -> None:
         logging.getLogger('').setLevel(old_debug_level)
         os.environ["DEBUG"] = old_debug_env
 
+
 @contextmanager
 def verbose_scope() -> None:
     """ Provide a scope for running operations with verbose output. """
@@ -166,3 +167,26 @@ def verbose_scope() -> None:
         yield
     finally:
         logging.getLogger('').setLevel(old_debug_level)
+
+
+class ReprComparable(object):
+    """
+    An abstract class which may be inherited from in order to enable __repr__.
+    """
+    def __lt__(self, other):
+        return str(self) < str(other)
+
+    def __le__(self, other):
+        return str(self) <= str(other)
+
+    def __eq__(self, other):
+        return str(self) == str(other)
+
+    def __ne__(self, other):
+        return str(self) != str(other)
+
+    def __gt__(self, other):
+        return str(self) > str(other)
+
+    def __ge__(self, other):
+        return str(self) >= str(other)

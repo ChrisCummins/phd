@@ -936,7 +936,7 @@ class Testbed(Base):
         return session.query(Testbed).filter(Testbed.id == id).scalar()
 
 
-class TestbedProxy(Proxy):
+class TestbedProxy(Proxy, dsmith.ReprComparable):
     """
     A testbed proxy which does not need to be bound to the lifetime of a
     database session.
@@ -957,24 +957,6 @@ class TestbedProxy(Proxy):
 
     def __repr__(self):
         return self.repr
-
-    def __lt__(self, other):
-        return str(self) < str(other)
-
-    def __le__(self, other):
-        return str(self) <= str(other)
-
-    def __eq__(self, other):
-        return str(self) == str(other)
-
-    def __ne__(self, other):
-        return str(self) != str(other)
-
-    def __gt__(self, other):
-        return str(self) > str(other)
-
-    def __ge__(self, other):
-        return str(self) >= str(other)
 
 
 class Stdout(Base):

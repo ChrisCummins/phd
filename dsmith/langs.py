@@ -26,10 +26,11 @@ import sys
 
 from typing import Iterable, List, Tuple
 
+import dsmith
 from dsmith import Colors
 
 
-class Harness(object):
+class Harness(dsmith.ReprComparable):
     """
     Abstract interface for a test harness.
 
@@ -63,7 +64,7 @@ class Harness(object):
         return (self.__generators__[name]() for name in names)
 
 
-class Generator(object):
+class Generator(dsmith.ReprComparable):
     """
     Abstract interface for a program generator.
 
@@ -112,7 +113,7 @@ class Generator(object):
         return harness()
 
 
-class Language(object):
+class Language(dsmith.ReprComparable):
     """
     Abstract interface for a programming language.
 
@@ -123,10 +124,9 @@ class Language(object):
     """
     # Abstract methods (must be implemented):
 
-    # TODO: refactor these away
-    # def describe_testbeds(self, file=sys.stdout) -> None:
-    #     """ describe testbeds """
-    #     raise NotImplementedError("abstract class")
+    def describe_testbeds(self, available_only: bool=False, file=sys.stdout) -> None:
+        """ describe testbeds """
+        raise NotImplementedError("abstract class")
 
     # def describe_results(self, file=sys.stdout) -> None:
     #     """ describe results """

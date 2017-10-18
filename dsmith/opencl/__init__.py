@@ -77,16 +77,16 @@ class OpenCL(Language):
         with Session() as s:
             if not available_only:
                 print(f"The following {self} testbeds are in the data store:", file=file)
-                for harness in self.harnesses:
-                    for testbed in harness.testbeds():
+                for harness in sorted(self.harnesses):
+                    for testbed in sorted(harness.testbeds()):
                         print(f"    {harness} {testbed} {testbed.platform} on {testbed.host}",
                               file=file)
                 print(file=file)
 
             print(f"The following {self} testbeds are available on this machine:",
                   file=file)
-            for harness in self.harnesses:
-                for testbed in harness.available_testbeds():
+            for harness in sorted(self.harnesses):
+                for testbed in sorted(harness.available_testbeds()):
                     print(f"    {harness} {testbed} {testbed.platform}", file=file)
 
     def describe_results(self, file=sys.stdout) -> None:
