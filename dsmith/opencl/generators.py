@@ -43,7 +43,7 @@ class OpenCLGenerator(Generator):
     Common baseclass for OpenCL program generators.
     """
     # Abstract methods (must be implemented):
-    def _generate_one(self, session: session_t) -> Program:
+    def _generate_one(self) -> ProgramProxy:
         """ Generate a single program. """
         raise NotImplementedError("abstract class")
 
@@ -119,15 +119,19 @@ class OpenCLGenerator(Generator):
                                           redirect_stdout=True)
 
             # The actual generation loop:
-            while num_to_generate > 0:
-                program = self._generate_one(s)
-                s.add(program)
-                s.commit()
+            buf = []
+            while num_progs < max_value:
+                buf.append(self._generate_one())
 
                 # Update progress bar
-                num_progs = self.num_programs(s)
+                num_progs += 1
                 bar.update(num_progs)
-                num_to_generate = max_value - num_progs
+
+                if len(buf) >= dsmith.MYSQL_BATCH_SIZE:
+                    _save_proxies(s, buf)
+                    num_progs = self.num_programs(s)
+                    buf = []
+            _save_proxies(s, buf)
         print(f"All done! You now have {Colors.BOLD}{num_progs}{Colors.END} "
               "{self} programs in the database")
 
@@ -136,7 +140,8 @@ class CLSmith(OpenCLGenerator):
     __name__ = "clsmith"
     id = Generators.CLSMITH
 
-    def _generate_one(self, session: session_t, depth: int=1) -> Program:
+    def _generate_one(self, attempt: int=1,
+                      max_attempts: int=10) -> ProgramProxy:
         """ Generate a single CLSmith program. """
         with NamedTemporaryFile(prefix='dsmith-clsmith-', suffix='.cl') as tmp:
             runtime, status, _, stderr = clsmith.clsmith('-o', tmp.name, *flags)
@@ -144,36 +149,25 @@ class CLSmith(OpenCLGenerator):
             # A non-zero exit status of clsmith implies that no program was
             # generated. Try again:
             if status:
-                if depth > 100:
+                if attempt > max_attempts:
                     logging.error(stderr)
-                    raise OSError(f"Failed to produce {self} program after 100 attempts")
+                    raise OSError(f"Failed to produce {self} program after "
+                                  f"{max_attempts} attempts")
                 else:
-                    return self._generate_one(session, depth=depth + 1)
+                    return self._generate_one(attempt=attempt + 1,
+                                              max_attempts=max_attempts)
 
             src = fs.read_file(tmp.name)
 
-        # Check if the program is a duplicate. If so, try again:
-        sha1 = crypto.sha1_str(src)
-        is_dupe = session.query(Program.id)\
-            .filter(Program.generator == CLSmith.id,
-                    Program.sha1 == sha1).first()
-        if is_dupe:
-            return self._generate_one(session, depth=depth + 1)
-
-        return Program(
-            generator=self.id,
-            sha1=crypto.sha1_str(src),
-            generation_time=runtime,
-            linecount=len(src.split("\n")),
-            charcount=len(src),
-            src=src)
+        return ProgramProxy(generator=self.id, generation_time=runtime,
+                            src=src)
 
 
 class DSmith(OpenCLGenerator):
     __name__ = "dsmith"
     id = Generators.DSMITH
 
-    def _generate_one(self, session: session_t) -> Program:
+    def _generate_one(self) -> ProgramProxy:
         """ Generate a single program. """
         raise NotImplementedError
 
@@ -190,7 +184,7 @@ class RandChar(OpenCLGenerator):
     # (after preprocessing).
     charcount_range = (33, 451563)
 
-    def _generate_one(self, session: session_t, depth: int=1) -> Program:
+    def _generate_one(self) -> ProgramProxy:
         """ Generate a single program. """
         if depth > 100:
             raise OSError(f"Failed to produce {self} program after 100 attempts")
@@ -200,27 +194,14 @@ class RandChar(OpenCLGenerator):
         src = ''.join(random.choices(string.printable, k=charcount))
         runtime = time() - start_time
 
-        # Check if the program is a duplicate. If so, try again:
-        sha1 = crypto.sha1_str(src)
-        is_dupe = session.query(Program.id)\
-            .filter(Program.generator == CLSmith.id,
-                    Program.sha1 == sha1).first()
-        if is_dupe:
-            return self._generate_one(session, depth=depth + 1)
-
-        return Program(
-            generator=self.id,
-            sha1=crypto.sha1_str(src),
-            generation_time=runtime,
-            linecount=len(src.split("\n")),
-            charcount=len(src),
-            src=src)
+        return ProgramProxy(generator=self.id, generation_time=runtime,
+                            src=src)
 
 
 class RandTok(OpenCLGenerator):
     __name__ = "randtok"
     id = Generators.RANDTOK
 
-    def _generate_one(self, session: session_t) -> Program:
+    def _generate_one(self) -> Program:
         """ Generate a single program. """
         raise NotImplementedError

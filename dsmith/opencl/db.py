@@ -34,6 +34,7 @@ from labm8 import crypto, fs, prof, system
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
+from time import time
 from typing import Dict, Iterable, List, Tuple, Union
 
 import dsmith
@@ -198,6 +199,45 @@ class Program(Base):
 
     def __repr__(self):
         return f"program[{self.id}] = {{ generator = {self.generator}, sha1 = {self.sha1} }}"
+
+
+class Proxy(object):
+    """
+    A proxy object is used to store all of the information required to create a
+    database record, without needing to be bound to the lifetime of a database
+    session.
+    """
+    def to_record(self, session: session_t) -> Base:
+        """
+        Instantiate a database record from this proxy.
+        """
+        raise NotImplementedError("abstract class")
+
+
+class ProgramProxy(Proxy):
+    """
+    A program proxy which does not need to be bound to the lifetime of a
+    database session.
+    """
+    def __init__(self, generator: Generators.column_t, generation_time: float,
+                 src: str):
+        self.generator = generator
+        self.sha1 = crypto.sha1_str(src)
+        self.date = datetime.datetime.utcnow()
+        self.generation_time = generation_time
+        self.linecount = len(src.split("\n"))
+        self.charcount = len(src)
+        self.src = src
+
+    def to_record(self, session: session_t) -> Program:
+        return Program(
+            generator=self.generator,
+            sha1=self.sha1,
+            date=self.date,
+            generation_time=self.generation_time,
+            linecount=self.linecount,
+            charcount=self.charcount,
+            src=self.src)
 
 
 class ClsmithProgramMeta(Base):
@@ -718,6 +758,7 @@ class Testbed(Base):
                 super(Worker, self).__init__()
 
             def run(self):
+                """ main loop"""
                 with Session() as s:
                     testbed = Testbed.from_id(s, self.testbed_id)
 
@@ -726,30 +767,23 @@ class Testbed(Base):
                     todo = testbed._testcases_to_run(
                         s, self.harness, self.generator)
 
-                    ndone = already_done.count()
+                    self.ndone = already_done.count()
                     ntodo = todo.count()
 
-                    for testcase in todo:
-                        # There is a potential race condition when multiple
-                        # harnesses are adding database records with unique key
-                        # constraints. Rather than figure out a proper
-                        # serialization strategy, I find it's easier just to
-                        # retry a few times. I'm a terrible person.
-                        for _ in range(10):
-                            try:
-                                harness.run(s, testcase, testbed)
+                    buf = []
+                    try:
+                        for testcase in todo:
+                            buf.append(harness.run(s, testcase, testbed))
+                            self.ndone += 1
+
+                            # flush the buffer
+                            if len(buf) >= dsmith.MYSQL_BATCH_SIZE:
+                                _save_proxies(s, buf)
+                                buf = []
+                                # update results count with actual
                                 self.ndone = already_done.count()
-                                break
-                            except IntegrityError as e:
-                                logging.debug(e)
-                                logging.warning("database integrity error, rolling back")
-                                s.rollback()
-                            except OperationalError as e:
-                                logging.debug(e)
-                                logging.warning("database operational error, rolling back")
-                                s.rollback()
-                        else:
-                            raise OSError("10 consecutive database errors, aborting")
+                    finally:
+                        _save_proxies(s, buf)
 
         with ReuseSession(session) as s:
             already_done = self._testcase_ids_ran(s, harness, generator)
@@ -885,7 +919,7 @@ class Testbed(Base):
         return session.query(Testbed).filter(Testbed.id == id).scalar()
 
 
-class TestbedProxy(object):
+class TestbedProxy(Proxy):
     """
     A testbed proxy which does not need to be bound to the lifetime of a
     database session.
@@ -895,13 +929,12 @@ class TestbedProxy(object):
         self.platform = str(testbed.platform)
         self.id = testbed.id
 
-    def testbed(self, session: session_t):
-        """ Return a """
+    def to_record(self, session: session_t) -> Testbed:
         return session.query(Testbed).filter(Testbed.id == self.id).scalar()
 
-    def run_testcases(self, harness, generator):
+    def run_testcases(self, harness, generator) -> None:
         with Session() as s:
-            testbed_ = self.testbed(s)
+            testbed_ = self.to_record(s)
             testbed_.run_testcases(harness, generator)
 
     def __repr__(self):
@@ -985,6 +1018,14 @@ class Unreachable(CompilerError, Base):
 
 
 class Stderr(Base):
+    """
+    Result stderr output.
+
+    Stderr output may have *UP TO ONE* of the following associated metadata:
+        * assertion
+        * unreachable
+        * stackdump
+    """
     id_t = sql.Integer
     __tablename__ = "stderrs"
 
@@ -1073,14 +1114,28 @@ class Stderr(Base):
         # Get metadata:
         lines = string.split('\n')
         assertion = Stderr._get_assertion(session, lines)
-        unreachable = Stderr._get_unreachable(session, lines)
-        stackdump = Stderr._get_stackdump(session, lines)
+        if assertion:
+            unreachable = None
+            stackdump = None
+        else:
+            unreachable = Stderr._get_unreachable(session, lines)
+            if unreachable:
+                stackdump = None
+            else:
+                stackdump = Stderr._get_stackdump(session, lines)
         session.flush()
 
         # Sanity check:
         errs = sum(1 if x else 0 for x in [assertion, unreachable, stackdump])
         if errs > 1:
-            raise LookupError(f"Multiple errors types found in: {stderr}\n\n" +
+            logging.error("Stderr: " + string)
+            if assertion:
+                logging.error("Assertion: " + assertion.assertion)
+            if unreachable:
+                logging.error("Assertion: " + unreachable.unreachable)
+            if stackdump:
+                logging.error("Stackdump: " + stackdump.stackdump)
+            raise LookupError(f"Multiple errors types found in stderr:\n\n" +
                               f"Assertion: {assertion}\n" +
                               f"Unreachable: {unreachable}\n" +
                               f"Stackdump: {stackdump}")
@@ -1159,6 +1214,96 @@ class Result(Base):
 
     def __repr__(self):
         return str(self.id)
+
+
+class ResultProxy(object):
+    """
+    A result proxy which does not need to be bound to the lifetime of a
+    database session.
+    """
+    def __init__(self, testbed_id: Testbed.id_t, testcase_id: Testcase.id_t,
+                 returncode: int, outcome: Outcomes.type, runtime: float,
+                 stdout: str, stderr: str):
+        self.testbed_id = testbed_id
+        self.testcase_id = testcase_id
+        self.returncode = returncode
+        self.outcome = outcome
+        self.runtime = runtime
+        self.stdout = stdout
+        self.stderr = stderr
+        self.date = datetime.datetime.utcnow()  # default value
+
+    def to_record(self, session: session_t) -> Result:
+        # stdout / stderr
+        stdout = Stdout.from_str(session, self.stdout)
+        stderr = Stderr.from_str(session, self.stderr)
+        session.flush()  # required to get IDs
+
+        return Result(
+            testbed_id=self.testbed_id,
+            testcase_id=self.testcase_id,
+            returncode=self.returncode,
+            outcome=self.outcome,
+            runtime=self.runtime,
+            stdout=stdout,
+            stderr=stderr,
+            date=self.date)
+
+
+def _save_proxies(session: session_t, proxies: List[Proxy],
+                  max_attempts: int=3, attempt: int=1,
+                  exception=None) -> None:
+    """
+    Convert a set of proxy objects in to database records and save them.
+
+    Raises:
+        OSError: In case of error importing proxies.
+    """
+    # There is a potential race condition when multiple
+    # harnesses are adding database records with unique key
+    # constraints. Rather than figure out a proper
+    # serialization strategy, I find it's easier just to
+    # retry a few times. I'm a terrible person.
+    max_attempts = 3
+
+    # break early if there's nothing to import
+    nproxies = len(proxies)
+    if not nproxies:
+        return
+
+    if attempt > max_attempts:
+        # Fallback to sequential import of all proxies. Ignore all errors, this
+        # is just trying to minimize information lost. Try and get as many
+        # proxies in the database as possible before error-ing:
+        for proxy in proxies:
+            try:
+                session.add(proxy.to_record(session))
+                session.commit()
+            except:
+                pass
+
+        msg = f"{max_attempts} consecutive database errors, aborting"
+        if exception:
+            raise OSError(msg) from exception
+        else:
+            raise OSError(msg)
+
+    logging.debug(f"flushing {nproxies} records")
+    try:
+        start_time = time()
+        session.add_all(proxy.to_record(session) for proxy in proxies)
+        runtime = time() - start_time
+        logging.info(f"flushed {nproxies} records in {runtime:.2} seconds")
+    except IntegrityError as e:
+        logging.debug(e)
+        logging.warning("database integrity error, rolling back")
+        session.rollback()
+        _save_proxies(session, proxies, max_attempts, attempt + 1, e)
+    except OperationalError as e:
+        logging.debug(e)
+        logging.warning("database operational error, rolling back")
+        session.rollback()
+        _save_proxies(session, proxies, max_attempts, attempt + 1, e)
 
 
 class Cl_launcherResult(Result):
@@ -1288,6 +1433,8 @@ class ClangResult(Result):
 
         if returncode == 0:
             return Outcomes.PASS
+        elif returncode == 1:
+            return Outcomes.BF
         elif returncode == -9 and runtime >= timeout:
             return Outcomes.BTO
         elif returncode == -9:

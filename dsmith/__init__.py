@@ -69,6 +69,7 @@ MYSQL_HOSTNAME = _config['mysql']['hostname']
 MYSQL_PORT = _config['mysql']['port']
 MYSQL_DATABASE = _config['mysql']['database']
 MYSQL_CREDENTIALS = _config['mysql']['username'], _config['mysql']['password']
+MYSQL_BATCH_SIZE = int(_config['mysql']['batch_size'])
 
 
 class DSmithError(Exception):

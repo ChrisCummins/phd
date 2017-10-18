@@ -57,7 +57,8 @@ def _log_outcome(outcome: Outcomes, runtime: float):
 class OpenCLHarness(Harness):
     """ Common superclass for OpenCL test harnesses """
 
-    def run(self, session: session_t, testcase: Testcase, testbed: Testbed):
+    def run(self, session: session_t, testcase: Testcase,
+            testbed: Testbed) -> ResultProxy:
         """ execute a testcase """
         raise NotImplementedError
 
@@ -158,11 +159,12 @@ class Cl_launcher(OpenCLHarness):
     def all_threads(self, session: session_t=None):
         return _non_zero_threads(session=session)
 
-    def run(self, session: session_t, testcase: Testcase, testbed: Testbed):
+    def run(self, session: session_t, testcase: Testcase,
+            testbed: Testbed) -> ResultProxy:
         """ execute a testcase using cl_launcher """
         # run testcase
         platform_id, device_id = testbed.ids
-        runtime, returncode, stdout_, stderr_ = clsmith.cl_launcher_str(
+        runtime, returncode, stdout, stderr = clsmith.cl_launcher_str(
                 testcase.program.src, platform_id, device_id,
                 testcase.timeout)
 
@@ -172,29 +174,21 @@ class Cl_launcher(OpenCLHarness):
                                        optimizations=testbed.optimizations,
                                        global_size=testcase.threads.gsize,
                                        local_size=testcase.threads.lsize,
-                                       stderr=stderr_)
-
-        # stdout / stderr
-        stdout = Stdout.from_str(session, stdout_)
-        stderr = Stderr.from_str(session, stderr_)
-        session.flush()  # required to get IDs
+                                       stderr=stderr)
 
         # outcome
         outcome = Cl_launcherResult.get_outcome(
-            returncode, stderr_, runtime, testcase.timeout)
+            returncode, stderr, runtime, testcase.timeout)
         _log_outcome(outcome, runtime)
 
-        # create result
-        result = Cl_launcherResult(
+        return ResultProxy(
             testbed_id=testbed.id,
             testcase_id=testcase.id,
             returncode=returncode,
             outcome=outcome,
             runtime=runtime,
-            stdout_id=stdout.id,
-            stderr_id=stderr.id)
-        session.add(result)
-        session.commit()
+            stdout=stdout,
+            stderr=stderr)
 
 
 class Cldrive(OpenCLHarness):
@@ -252,7 +246,8 @@ class Clang(OpenCLHarness):
         else:
             return program.src
 
-    def run(self, session: session_t, testcase: Testcase, testbed: Testbed):
+    def run(self, session: session_t, testcase: Testcase,
+            testbed: Testbed) -> ResultProxy:
         """ compile a testcase using clang frontend """
         # Sanity checks
         if not testbed.optimizations:
@@ -283,32 +278,24 @@ class Clang(OpenCLHarness):
             process = subprocess.Popen(
                 cmd, universal_newlines=True,
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            _, stderr_ = process.communicate()
+            _, stderr = process.communicate()
 
             returncode = process.returncode
             runtime = time() - start_time
-            stderr_ = stderr_.strip()
+            stderr = stderr.strip()
         finally:
             fs.rm(src_path)
 
-        # stdout / stderr
-        stdout = Stdout.from_str(session, "")
-        stderr = Stderr.from_str(session, stderr_)
-        session.flush()  # required to get IDs
-
         # outcome
-        outcome = Cl_launcherResult.get_outcome(
-            returncode, stderr_, runtime, testcase.timeout)
+        outcome = ClangResult.get_outcome(
+            returncode, stderr, runtime, testcase.timeout)
         _log_outcome(outcome, runtime)
 
-        # create result
-        result = Cl_launcherResult(
+        return ResultProxy(
             testbed_id=testbed.id,
             testcase_id=testcase.id,
             returncode=returncode,
             outcome=outcome,
             runtime=runtime,
-            stdout_id=stdout.id,
-            stderr_id=stderr.id)
-        session.add(result)
-        session.commit()
+            stdout="",
+            stderr=stderr)
