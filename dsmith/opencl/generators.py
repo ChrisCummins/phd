@@ -43,7 +43,7 @@ class OpenCLGenerator(Generator):
     Common baseclass for OpenCL program generators.
     """
     # Abstract methods (must be implemented):
-    def _generate_one(self) -> ProgramProxy:
+    def generate_one(self, session: session_t) -> ProgramProxy:
         """ Generate a single program. """
         raise NotImplementedError("abstract class")
 
@@ -121,7 +121,7 @@ class OpenCLGenerator(Generator):
             # The actual generation loop:
             buf = []
             while num_progs < max_value:
-                buf.append(self._generate_one())
+                buf.append(self.generate_one(s))
 
                 # Update progress bar
                 num_progs += 1
@@ -140,8 +140,8 @@ class CLSmith(OpenCLGenerator):
     __name__ = "clsmith"
     id = Generators.CLSMITH
 
-    def _generate_one(self, attempt: int=1,
-                      max_attempts: int=10) -> ProgramProxy:
+    def generate_one(self, session: session_t, attempt: int=1,
+                     max_attempts: int=10) -> ProgramProxy:
         """ Generate a single CLSmith program. """
         with NamedTemporaryFile(prefix='dsmith-clsmith-', suffix='.cl') as tmp:
             runtime, status, _, stderr = clsmith.clsmith('-o', tmp.name, *flags)
@@ -154,8 +154,8 @@ class CLSmith(OpenCLGenerator):
                     raise OSError(f"Failed to produce {self} program after "
                                   f"{max_attempts} attempts")
                 else:
-                    return self._generate_one(attempt=attempt + 1,
-                                              max_attempts=max_attempts)
+                    return self.generate_one(session, attempt=attempt + 1,
+                                             max_attempts=max_attempts)
 
             src = fs.read_file(tmp.name)
 
@@ -167,7 +167,7 @@ class DSmith(OpenCLGenerator):
     __name__ = "dsmith"
     id = Generators.DSMITH
 
-    def _generate_one(self) -> ProgramProxy:
+    def generate_one(self, session: session_t) -> ProgramProxy:
         """ Generate a single program. """
         raise NotImplementedError
 
@@ -184,7 +184,7 @@ class RandChar(OpenCLGenerator):
     # (after preprocessing).
     charcount_range = (33, 451563)
 
-    def _generate_one(self) -> ProgramProxy:
+    def generate_one(self, session: session_t) -> ProgramProxy:
         """ Generate a single program. """
         if depth > 100:
             raise OSError(f"Failed to produce {self} program after 100 attempts")
@@ -202,6 +202,6 @@ class RandTok(OpenCLGenerator):
     __name__ = "randtok"
     id = Generators.RANDTOK
 
-    def _generate_one(self) -> Program:
+    def generate_one(self, session: session_t) -> Program:
         """ Generate a single program. """
         raise NotImplementedError
