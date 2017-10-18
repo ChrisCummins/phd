@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Create test harnesses for CLgen programs using cldrive.
+Create test harnesses for cldrive programs.
 """
 import cldrive
 import clgen
@@ -29,9 +29,10 @@ class HarnessCompilationError(ValueError):
 
 
 harness_t = namedtuple('harness_t', ['generation_time', 'compile_only', 'src'])
+default_cflags = ["-std=c99", "-Wno-deprecated-declarations", "-lOpenCL"]
 
 
-def mkharness_src(testcase: Testcase) -> harness_t:
+def mkharness(testcase: Testcase) -> harness_t:
     """ generate a self-contained C program for the given test case """
     program = testcase.program
     threads = testcase.threads
@@ -60,21 +61,9 @@ def mkharness_src(testcase: Testcase) -> harness_t:
     return harness_t(generation_time, compile_only, src)
 
 
-def mkharness(testcase: Testcase) -> harness_t:
-    """ generate a self-contained C program for the given test case and add it to the database """
-    generation_time, compile_only, src = mkharness_src(testcase)
-
-    with NamedTemporaryFile(prefix='cldrive-harness-') as tmpfile:
-        start_time = time()
-        compile_harness(src, tmpfile.name)
-        compile_time = time() - start_time
-
-    return harness_t(generation_time, compile_only, src)
-
-
 def compile_harness(src: str, path: str='a.out', platform_id=None,
                     device_id=None, cc: str='gcc',
-                    flags: List[str]=["-std=c99", "-Wno-deprecated-declarations", "-lOpenCL"],
+                    flags: List[str]=default_cflags,
                     timeout: int=60) -> None:
     """ compile harness binary from source """
     cmd = ['timeout', '-s9', str(timeout), cc, '-xc', '-', '-o', str(path)] + flags
@@ -86,31 +75,6 @@ def compile_harness(src: str, path: str='a.out', platform_id=None,
     proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
     proc.communicate(src.encode('utf-8'))
     if not proc.returncode == 0:
-        raise HarnessCompilationError(f'harness compilation failed with returncode {proc.returncode}')
+        raise HarnessCompilationError(
+            f'harness compilation failed with returncode {proc.returncode}')
     return path
-
-
-if __name__ == "__main__":
-    parser = ArgumentParser(description=__doc__)
-    parser.add_argument("-H", "--hostname", type=str, default="cc1",
-                        help="MySQL database hostname")
-    parser.add_argument("-p", "--program-id", type=int,
-                        help="Program ID to generate test harnesses for")
-    args = parser.parse_args()
-
-    db.init(args.hostname)
-
-    env = cldrive.make_env()
-
-    with Session() as s:
-        if args.program_id:
-            q = s.query(Testcase)\
-                    .filter(Testcase.program_id == args.program_id)
-        else:
-            #done = s.query(CLgenHarness.id)
-            q = s.query(Testcase).filter(Testcase.harness == 1) #.filter(~Testcase.id.in_(done))
-
-        for testcase in ProgressBar(max_value=q.count())(q):
-            mkharness(testcase)
-
-    print("done.")

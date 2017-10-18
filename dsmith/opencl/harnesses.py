@@ -26,7 +26,7 @@ import sys
 from sqlalchemy.sql import func
 from tempfile import NamedTemporaryFile
 from time import time
-from typing import List
+from typing import List, Tuple
 
 import dsmith
 from dsmith.langs import Generator, Harness
@@ -107,7 +107,6 @@ class OpenCLHarness(Harness):
                     timeout=self.default_timeout,
                 ) for program in todo)
                 s.commit()
-
 
     def testbeds(self, session: session_t=None) -> List[TestbedProxy]:
         with ReuseSession(session) as s:
@@ -204,8 +203,85 @@ class Cldrive(OpenCLHarness):
     default_seed = None
     default_timeout = 60
 
+    @staticmethod
+    def _verify_params(platform: str, device: str, optimizations: bool,
+                       global_size: Tuple[int, int, int],
+                       local_size: Tuple[int, int, int], stderr: str) -> None:
+    """ verify that expected params match actual as reported by cldrive """
+    optimizations = "on" if optimizations else "off"
+
+    actual_platform = None
+    actual_device = None
+    actual_optimizations = None
+    actual_global_size = None
+    actual_local_size = None
+    for line in stderr.split('\n'):
+        if line.startswith("[cldrive] Platform: "):
+            actual_platform_name = re.sub(r"^\[cldrive\] Platform: ", "", line).rstrip()
+        elif line.startswith("[cldrive] Device: "):
+            actual_device_name = re.sub(r"^\[cldrive\] Device: ", "", line).rstrip()
+        elif line.startswith("[cldrive] OpenCL optimizations: "):
+            actual_optimizations = re.sub(r"^\[cldrive\] OpenCL optimizations: ", "", line).rstrip()
+
+        # global size
+        match = re.match('^\[cldrive\] 3-D global size \d+ = \[(\d+), (\d+), (\d+)\]', line)
+        if match:
+            actual_global_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
+
+        # local size
+        match = re.match('^\[cldrive\] 3-D local size \d+ = \[(\d+), (\d+), (\d+)\]', line)
+        if match:
+            actual_local_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
+
+        # check if we've collected everything:
+        if (actual_platform and actual_device and actual_optimizations and
+            actual_global_size and actual_local_size):
+            assert(actual_platform == platform)
+            assert(actual_device == device)
+            assert(actual_optimizations == optimizations)
+            assert(actual_global_size == global_size)
+            assert(actual_local_size == local_size)
+            return
+
     def all_threads(self, session: session_t=None):
         return _non_zero_threads(session=session)
+
+    def run(self, session: session_t, testcase: Testcase,
+            testbed: Testbed) -> ResultProxy:
+        """ run cldrive testcase """
+        platform_id, device_id = testbed.ids
+        harness = cldrive_mkharness.mkharness(session, testbed.env, testcase)
+
+        with NamedTemporaryFile(prefix='dsmith-cldrive-', delete=False) as tmpfile:
+            path = tmpfile.name
+        try:
+            cldrive_mkharness.compile_harness(
+                harness.src, path, platform_id=platform_id, device_id=device_id)
+
+            cmd = ['timeout', '-s9', str(testcase.timeout), tmpfile.name]
+
+            logging.debug(f"{Colors.BOLD}${Colors.END} " + " ".join(cmd))
+
+            start_time = time()
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                    universal_newlines=True)
+            stdout, stderr = proc.communicate()
+            runtime = time() - start_time
+            returncode = proc.returncode
+        finally:
+            fs.rm(path)
+
+        outcome = CldriveResult.get_outcome(returncode, stderr, runtime,
+                                            testcase.timeout)
+
+        return ResultProxy(
+            testbed_id=testbed.id,
+            testcase_id=testcase.id,
+            returncode=returncode,
+            outcome=outcome,
+            runtime=runtime,
+            stdout=stdout,
+            stderr=stderr)
 
 
 class Clang(OpenCLHarness):

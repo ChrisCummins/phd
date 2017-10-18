@@ -842,7 +842,7 @@ class Testbed(Base):
             self._set_ids()
             return self._ids
 
-    def _set_ids(self):
+    def _set_ids(self) -> None:
         import pyopencl as cl
         # match platform ID:
         for j, platform in enumerate(cl.get_platforms()):
@@ -868,6 +868,19 @@ class Testbed(Base):
         # after iterating over all OpenCL platforms and devices, no match found:
         raise LookupError("unable to determine OpenCL IDs of "
                           f"'{self.platform.platform}' '{self.platform.device}'")
+
+    @property
+    def env(self) -> cldrive.OpenCLEnvironment:
+        try:
+            return self._env
+        except AttributeError:
+            self._set_env()
+            return self._ids
+
+    def _set_env(self) -> None:
+        self._env = cldrive.OpenCLEnvironment(self.platform.platform,
+                                              self.platform.device)
+
 
     @staticmethod
     def from_env(env: cldrive.OpenCLEnvironment,
