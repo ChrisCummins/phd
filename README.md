@@ -47,76 +47,48 @@ DeepSmith is installed in a virtual environment. Activate it using:
 $ source build/dsmith/bin/activate
 ```
 
-When you are done using DeepSmith, you can deactivate the virtual environment using:
+Interactive prompt:
+
+```
+(dsmith) $ dsmith
+Good evening. Type 'help' for available commands.
+```
+
+**Step 1:** Generate programs:
+
+```
+> make 1000 opencl programs using dsmith
+```
+
+**Step 2:** Generate test cases:
+
+```
+> make opencl testcases
+```
+
+**Step 3:** Run test cases:
+
+```
+> describe available opencl testbeds
+```
+
+```
+> run opencl testcases on 1±
+```
+
+**Step 4:** Differential test results:
+
+```
+> difftest opencl results
+```
+
+When you are done using DeepSmith, exit the interactive prompt and deactivate the virtual environment using:
 
 ```sh
+> exit
+God speed.
 (dsmith) $ deactivate
 ```
-
-Testing compilers using DeepSmith is a three step process:
-1. **Generate testcases** using a random program generator
-1. **Evaluate testcases** by executing them on multiple devices
-1. **Differential test** results by comparing the results across devices
-
-#### 1. Generate testcases
-
-Generate testcases using CLSmith:
-
-```sh
-(dsmith) $ ./clsmith_mkprogram.py -n 1000
-```
-
-Generate testcases using DeepSmith:
-
-```sh
-# train and sample model
-(dsmith) $ clgen sample model.json sampler.json
-# export samples
-(dsmith) $ clgen db dump $(clgen --sampler-dir model.json sampler.json)/kernels.json -d /tmp/export
-# import samples
-(dsmith) $ ./clgen_fetch.py /tmp/export --delete
-```
-
-#### 2. Evaluate testcases
-
-Collect results for an OpenCL device:
-
-```sh
-(dsmith) $ ./runner.py [--verbose] [--only <testbed_ids>] [--exclude <testbed_ids>] [--batch-size <int>]
-```
-
-#### 3. Differential testing results
-
-Prepare results for analysis:
-
-```sh
-(dsmith) $ ./set_metas.py
-```
-
-Analyze results:
-
-```sh
-(dsmith) $ ./analyze.py [--prune]
-```
-
-
-##### 3.1 Reduce interesting testcases
-
-Run automated reductions:
-
-```sh
-(dsmith) $ ./run_reductions 0 0 [--clgen|--clsmith]
-```
-
-##### 3.2 Prepare interesting testcases for reports
-
-Generate bug reports:
-
-```sh
-(dsmith) $ ./report.py
-```
-
-Submit bug reports by hand.
 
 ## License
 
