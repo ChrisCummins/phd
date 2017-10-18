@@ -18,13 +18,14 @@
 # along with DeepSmith.  If not, see <http://www.gnu.org/licenses/>.
 #
 jupyter = $(venv_dir)/bin/jupyter
+ipython = ~/.ipython/kernels/dsmith/kernel.json
 
-jupyter: $(jupyter) ~/.ipython/kernels/dsmith/kernel.json
+jupyter: $(jupyter)
 
-$(jupyter): $(venv_activate)
+$(jupyter): $(venv_activate) $(ipython)
 	$(venv) pip install -r requirements.txt
 
-~/.ipython/kernels/dsmith/kernel.json: build/ipython/kernels/dsmith/kernel.json
+$(ipython): build/ipython/kernels/dsmith/kernel.json
 	mkdir -p ~/.ipython/kernels
 	cp -Rv build/ipython/kernels/dsmith ~/.ipython/kernels
 
