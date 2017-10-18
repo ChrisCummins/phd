@@ -1,134 +1,61 @@
-#!/usr/bin/env python
-import sqlalchemy as sql
-import sys
-from argparse import ArgumentParser
-from labm8 import crypto
-from progressbar import ProgressBar
-
+#
+# Copyright 2017 Chris Cummins <chrisc.101@gmail.com>.
+#
+# This file is part of DeepSmith.
+#
+# DeepSmith is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# DeepSmith is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# DeepSmith.  If not, see <http://www.gnu.org/licenses/>.
+#
+"""
+Differential test results.
+"""
 import dsmith
-from dsmith import db
-from dsmith.db import *
+
+from dsmith import Colors
+from dsmith.opencl.db import *
 
 
-def set_results_outcomes(s: session_t) -> None:
-    """
-    Determine the `outcome` column of results which have been marked with the
-    "todo" outcome value.
-    """
-    total_todo = s.query(sql.sql.func.count(Result.id))\
-        .filter(Result.outcome == Outcomes.TODO).scalar()
-
-    if not total_todo:
-        return
-
-    for harness in [Harnesses.CL_LAUNCHER, Harnesses.DSMITH]:
-        result_t = Harnesses.result_t(harness)
-
-        # Determine if there are any results for which we haven't yet determined
-        # the outcome.
-        num_todo = s.query(sql.sql.func.count(Result.id))\
-            .join(Testcase)\
-            .filter(Testcase.harness == harness,
-                    Result.outcome == Outcomes.TODO).scalar()
-        if not num_todo:
-            continue
-
-        print("determining outcomes of", Harnesses.to_str(harness),
-              "results ...", file=sys.stderr)
-        q = s.query(Result, Testcase.timeout, Stderr.stderr)\
-            .join(Testcase)\
-            .join(Stderr)\
-            .filter(Testcase.harness == harness,
-                    Result.outcome == Outcomes.TODO)
-
-        for i, (result, timeout, stderr) in enumerate(ProgressBar(max_value=q.count())(q)):
-            result.outcome = result_t.get_outcome(
-                result.returncode, stderr, result.runtime, timeout)
-
-        s.commit()
-
-        # Keep going if there are still more harnesses to process.
-        total_todo -= num_todo
-        if not total_todo:
-            continue
+def difftest():
+    with Session() as s:
+        create_results_metas(s)
+        create_majorities(s)
+        create_classifications(s)
+        prune_abf_classifications(s)
+        prune_arc_classifications(s)
+        prune_awo_classifications(s)
 
 
-def set_stderr_assertions(s: session_t) -> None:
-    stderrs = s.query(Stderr)\
-        .join(Result)\
-        .filter(Result.returncode != 0,
-                Stderr.assertion_id == None,
-                Stderr.stderr.like("%assertion%"))\
-        .distinct()\
-        .all()
-
-    if not len(stderrs):
-        return
-
-    print("extracting compiler assertions ...", file=sys.stderr)
-    for stderr in ProgressBar()(stderrs):
-        if not stderr.get_assertion(s):
-            raise LookupError("no assertion found in stderr #{stderr.id}")
-    s.commit()
-
-
-def set_stderr_unreachables(s: session_t) -> None:
-    stderrs = s.query(Stderr)\
-        .join(Result)\
-        .filter(Result.returncode != 0,
-                Stderr.unreachable_id == None,
-                Stderr.stderr.like("%unreachable%"))\
-        .distinct()\
-        .all()
-
-    if not len(stderrs):
-        return
-
-    print("extracting unreachables ...", file=sys.stderr)
-    for stderr in ProgressBar()(stderrs):
-        if not stderr.get_unreachable(s):
-            raise LookupError("no unreachable found in stderr #{stderr.id}")
-    s.commit()
-
-
-def set_stderr_stackdumps(s: session_t) -> None:
-    stderrs = s.query(Stderr)\
-        .join(Result)\
-        .filter(Result.returncode != 0,
-                Stderr.stackdump_id == None,
-                Stderr.stderr.like("%stack dump%"))\
-        .distinct()\
-        .all()
-
-    if not len(stderrs):
-        return
-
-    print("extracting stack dumps ...", file=sys.stderr)
-    for stderr in ProgressBar()(stderrs):
-        if not stderr.get_stackdump(s):
-            raise LookupError("no stackdump found in stderr #{stderr.id}")
-    s.commit()
-
-
-def set_results_metas(s: session_t):
+def create_results_metas(s: session_t):
     """
     Create total time and cumulative time for each test case evaluated on each
     testbed using each harness.
     """
-    num_results = s.query(sql.sql.func.count(Result.id)).scalar()
-    num_metas = s.query(sql.sql.func.count(ResultMeta.id)).scalar()
+    num_results = s.query(func.count(Result.id)).scalar()
+    num_metas = s.query(func.count(ResultMeta.id)).scalar()
 
+    # break early if we can
     if num_results == num_metas:
         return
 
-    print("creating results metas ...", file=sys.stderr)
+    print("creating results metas ...")
     s.execute(f"DELETE FROM {ResultMeta.__tablename__}")
     testbeds_harnesses = s.query(Result.testbed_id, Testcase.harness)\
         .join(Testcase)\
         .group_by(Result.testbed_id, Testcase.harness)\
-        .order_by(Testcase.harness, Result.testbed_id).all()
+        .order_by(Testcase.harness, Result.testbed_id)\
+        .all()
 
-    for testbed_id, harness in ProgressBar()(testbeds_harnesses):
+    bar = progressbar.ProgressBar()
+    for testbed_id, harness in bar(testbeds_harnesses):
         testbed = s.query(Testbed).filter(Testbed.id == testbed_id).scalar()
 
         s.execute(f"""
@@ -146,14 +73,14 @@ ORDER BY programs.date, testcases.threads_id""")
         s.commit()
 
 
-def set_majorities(s: session_t) -> None:
+def create_majorities(s: session_t) -> None:
     """
     Majority vote on testcase outcomes and outputs.
     """
     # We require at least this many results in order for there to be a majority:
     min_results_for_majority = 3
 
-    print(f"voting on test case majorities ...", file=sys.stderr)
+    print("voting on test case majorities ...")
     s.execute(f"DELETE FROM {Majority.__tablename__}")
 
     # Note we have to insert ignore here because there may be ties in the
@@ -217,7 +144,7 @@ ORDER BY outcome_majs.maj_outcome DESC
     s.commit()
 
 
-def set_classifications(s: session_t) -> None:
+def create_classifications(s: session_t) -> None:
     """
     Determine anomalous results.
     """
@@ -225,7 +152,7 @@ def set_classifications(s: session_t) -> None:
 
     min_majsize = 7
 
-    print(f"setting {{bc,bto}} classifications ...", file=sys.stderr)
+    print("setting {{bc,bto}} classifications ...")
     s.execute(f"""
 INSERT INTO {Classification.__tablename__}
 SELECT results.id, {Classifications.BC}
@@ -239,7 +166,7 @@ FROM {Result.__tablename__} results
 WHERE outcome = {Outcomes.BTO}
 """)
 
-    print(f"determining anomalous build-failures ...", file=sys.stderr)
+    print("determining anomalous build-failures ...")
     s.execute(f"""
 INSERT INTO {Classification.__tablename__}
 SELECT results.id, {Classifications.ABF}
@@ -250,7 +177,7 @@ AND outcome_majsize >= {min_majsize}
 AND maj_outcome = {Outcomes.PASS}
 """)
 
-    print(f"determining anomalous runtime crashes ...", file=sys.stderr)
+    print("determining anomalous runtime crashes ...")
     s.execute(f"""
 INSERT INTO {Classification.__tablename__}
 SELECT {Result.__tablename__}.id, {Classifications.ARC}
@@ -261,7 +188,7 @@ AND outcome_majsize >= {min_majsize}
 AND maj_outcome = {Outcomes.PASS}
 """)
 
-    print(f"determining anomylous wrong output classifications ...", file=sys.stderr)
+    print("determining anomylous wrong output classifications ...")
     s.execute(f"""
 INSERT INTO {Classification.__tablename__}
 SELECT results.id, {Classifications.AWO}
@@ -277,7 +204,7 @@ AND stdout_id <> maj_stdout_id
 
 
 def prune_awo_classifications(s: session_t) -> None:
-    print(f"Verifying awo-classified testcases ...", file=sys.stderr)
+    print("Verifying awo-classified testcases ...")
     q = s.query(Result.testcase_id)\
         .join(Classification)\
         .filter(Classification.classification == Classifications.AWO)\
@@ -364,7 +291,7 @@ def prune_abf_classifications(s: session_t) -> None:
         .distinct()\
         .all()
 
-    print(f"Verifying abf-classified testcases ...", file=sys.stderr)
+    print("Verifying abf-classified testcases ...")
     for testcase in ProgressBar()(testcases_to_verify):
         verify_opencl_version(s, testcase)
 
@@ -400,33 +327,9 @@ def prune_arc_classifications(s: session_t) -> None:
         .distinct()\
         .all()
 
-    print(f"Verifying arc-classified testcases ...", file=sys.stderr)
+    print("Verifying arc-classified testcases ...")
     for testcase in ProgressBar()(testcases_to_verify):
         if not testcase.verify_arc(s):
             testcase.retract_classifications(s, Classifications.ARC)
 
     s.commit()
-
-
-if __name__ == "__main__":
-    parser = ArgumentParser(description="Collect difftest results for a device")
-    parser.add_argument("-H", "--hostname", type=str, default="cc1",
-                        help="MySQL database hostname")
-    args = parser.parse_args()
-
-    db_hostname = args.hostname
-    print("connected to", db.init(db_hostname), file=sys.stderr)
-
-    with Session() as s:
-        set_results_outcomes(s)
-        set_stderr_assertions(s)
-        set_stderr_unreachables(s)
-        set_stderr_stackdumps(s)
-        set_results_metas(s)
-        set_majorities(s)
-        set_classifications(s)
-        prune_abf_classifications(s)
-        prune_arc_classifications(s)
-        prune_awo_classifications(s)
-
-    print("done.", file=sys.stderr)

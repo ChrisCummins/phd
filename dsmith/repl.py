@@ -158,10 +158,6 @@ def _make_programs(lang: Language, generator: Generator,
     generator.generate(n=n, up_to=up_to_val)
 
 
-def _difftest(*args, **kwargs):
-    raise NotImplementedError
-
-
 def _execute(statement: str, file=sys.stdout) -> None:
     if not isinstance(statement, str): raise TypeError
 
@@ -303,7 +299,11 @@ def _execute(statement: str, file=sys.stdout) -> None:
             raise UnrecognizedInput
 
     if components[0] == "difftest":
-        return _difftest(file=file)
+        match = re.match(r'difftest (?P<lang>\w+) results$', statement)
+        lang = mklang(match.group("lang"))
+
+        return lang.difftest()
+
 
     raise UnrecognizedInput
 

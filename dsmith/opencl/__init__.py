@@ -30,13 +30,14 @@ from sqlalchemy.sql import func
 from typing import List
 
 import dsmith
-import dsmith.opencl.db
 
 from dsmith import Colors
+from dsmith import difftest
 from dsmith.langs import Language, Generator, Harness
+from dsmith.opencl import db
 from dsmith.opencl.db import *
-from dsmith.opencl.harnesses import Cldrive, Cl_launcher, Clang
 from dsmith.opencl.generators import DSmith, CLSmith, RandChar, RandTok
+from dsmith.opencl.harnesses import Cldrive, Cl_launcher, Clang
 
 
 class OpenCL(Language):
@@ -100,3 +101,6 @@ class OpenCL(Language):
                             print(f"There are {Colors.BOLD}{word_num}{Colors.END} "
                                   f"{generator}:{harness} "
                                   f"results on {testbed}.", file=file)
+
+    def difftest(self) -> None:
+        difftest.difftest()
