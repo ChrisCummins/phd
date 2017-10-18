@@ -20,9 +20,12 @@ CLSmith.
 """
 import humanize
 import logging
+import random
+import string
 import progressbar
 import math
 
+from time import time
 from labm8 import crypto, fs
 from sqlalchemy.sql import func
 from tempfile import NamedTemporaryFile
@@ -35,53 +38,19 @@ from dsmith.opencl.db import *
 from dsmith.opencl import clsmith
 
 
-def _make_clsmith_program(session: session_t, *flags, depth=1) -> None:
+class OpenCLGenerator(Generator):
     """
-    Arguments:
-        *flags: Additional flags to CLSmith.
+    Common baseclass for OpenCL program generators.
     """
-    with NamedTemporaryFile(prefix='dsmith-clsmith-', suffix='.cl') as tmp:
-        runtime, status, _, stderr = clsmith.clsmith('-o', tmp.name, *flags)
+    # Abstract methods (must be implemented):
+    def _generate_one(self, session: session_t) -> Program:
+        """ Generate a single program. """
+        raise NotImplementedError("abstract class")
 
-        # A non-zero exit status of clsmith implies that no program was
-        # generated. Try again:
-        if status:
-            if depth > 100:
-                logging.error(stderr)
-                raise OSError("Failed to produce CLSmith program after 100 attempts")
-            else:
-                return _make_clsmith_program(session, *flags, depth=depth + 1)
+    # Default methods (may be overriden):
 
-        src = fs.read_file(tmp.name)
-
-    # Check if the program is a duplicate. If so, try again:
-    sha1 = crypto.sha1_str(src)
-    is_dupe = session.query(Program.id)\
-        .filter(Program.generator == CLSmith.id,
-                Program.sha1 == sha1).first()
-    if is_dupe:
-        return _make_clsmith_program(session, *flags, depth=depth + 1)
-
-    program = Program(
-        generator=CLSmith.id,
-        sha1=sha1,
-        generation_time=runtime,
-        linecount=len(src.split("\n")),
-        charcount=len(src),
-        src=src)
-    session.add(program)
-    session.commit()
-
-
-class CLSmith(Generator):
-    __name__ = "clsmith"
-    id = Generators.CLSMITH
-
-    __harnesses__ = {
-        # None: harnesses.Cl_launcher,
-        # "cl_launcher": harnesses.Cl_launcher,
-        # "clang": harnesses.Clang,
-    }
+    def __repr__(self):
+        return f"{Colors.BOLD}{Colors.GREEN}{self.__name__}{Colors.END}"
 
     def num_programs(self, session: session_t=None) -> int:
         """ return the number of generated programs in the database """
@@ -102,7 +71,7 @@ class CLSmith(Generator):
         with ReuseSession(session) as s:
             return s.query(func.sum(Program.generation_time))\
                 .filter(Program.generator == self.id)\
-                .scalar()
+                .scalar() or 0
 
     def num_testcases(self, session: session_t=None) -> int:
         """ return the total number of testcases """
@@ -114,7 +83,7 @@ class CLSmith(Generator):
 
     def generate(self, n: int=math.inf, up_to: int=math.inf) -> None:
         """ generate 'n' new programs 'up_to' this many exist in db """
-        with Session(commit=False) as s:
+        with Session() as s:
             num_progs = self.num_programs(s)
 
             # Determine the termination criteria:
@@ -137,7 +106,7 @@ class CLSmith(Generator):
             # Print a preamble message:
             num_to_generate = max_value - num_progs
             if num_to_generate < math.inf:
-                estimated_time = (self.generation_time(s) / num_progs) * num_to_generate
+                estimated_time = (self.generation_time(s) / max(num_progs, 1)) * num_to_generate
                 eta = humanize.naturaldelta(datetime.timedelta(seconds=estimated_time))
                 print(f"{Colors.BOLD}{num_to_generate}{Colors.END} programs are "
                       "to be generated. Estimated generation time is " +
@@ -151,48 +120,107 @@ class CLSmith(Generator):
 
             # The actual generation loop:
             while num_to_generate > 0:
-                _make_clsmith_program(s)
+                program = self._generate_one(s)
+                s.add(program)
+                s.commit()
 
                 # Update progress bar
                 num_progs = self.num_programs(s)
                 bar.update(num_progs)
                 num_to_generate = max_value - num_progs
         print(f"All done! You now have {Colors.BOLD}{num_progs}{Colors.END} "
-              "programs in the database")
+              "{self} programs in the database")
 
 
-class DSmith(Generator):
+class CLSmith(OpenCLGenerator):
+    __name__ = "clsmith"
+    id = Generators.CLSMITH
+
+    def _generate_one(self, session: session_t, depth: int=1) -> Program:
+        """ Generate a single CLSmith program. """
+        with NamedTemporaryFile(prefix='dsmith-clsmith-', suffix='.cl') as tmp:
+            runtime, status, _, stderr = clsmith.clsmith('-o', tmp.name, *flags)
+
+            # A non-zero exit status of clsmith implies that no program was
+            # generated. Try again:
+            if status:
+                if depth > 100:
+                    logging.error(stderr)
+                    raise OSError(f"Failed to produce {self} program after 100 attempts")
+                else:
+                    return self._generate_one(session, depth=depth + 1)
+
+            src = fs.read_file(tmp.name)
+
+        # Check if the program is a duplicate. If so, try again:
+        sha1 = crypto.sha1_str(src)
+        is_dupe = session.query(Program.id)\
+            .filter(Program.generator == CLSmith.id,
+                    Program.sha1 == sha1).first()
+        if is_dupe:
+            return self._generate_one(session, depth=depth + 1)
+
+        return Program(
+            generator=self.id,
+            sha1=crypto.sha1_str(src),
+            generation_time=runtime,
+            linecount=len(src.split("\n")),
+            charcount=len(src),
+            src=src)
+
+
+class DSmith(OpenCLGenerator):
     __name__ = "dsmith"
     id = Generators.DSMITH
 
-    __harnesses__ = {
-        # None: harnesses.Cldrive,
-        # "cldrive": harnesses.Cldrive,
-        # "clang": harnesses.Clang,
-    }
+    def _generate_one(self, session: session_t) -> Program:
+        """ Generate a single program. """
+        raise NotImplementedError
 
-    def num_programs(self, session: session_t=None) -> int:
-        """ return the number of generated programs in the database """
-        with ReuseSession(session) as s:
-            return s.query(func.count(Program.id))\
-                .filter(Program.generator == Generators.DSMITH)\
-                .scalar()
 
-    def sloc_total(self, session: session_t=None) -> int:
-        """ return the total linecount of generated programs """
-        with ReuseSession(session) as s:
-            return s.query(func.sum(Program.linecount))\
-                .filter(Program.generator == Generators.DSMITH)\
-                .scalar()
+class RandChar(OpenCLGenerator):
+    """
+    This generator produces a uniformly random sequence of ASCII characters, of
+    a random length.
+    """
+    __name__ = "randchar"
+    id = Generators.RANDCHAR
 
-    def num_testcases(self, session: session_t=None) -> int:
-        """ return the total number of testcases """
-        with ReuseSession(session) as s:
-            return s.query(func.count(Testcase.id))\
-                .join(Program)\
-                .filter(Program.generator == self.id)\
-                .scalar()
+    # This is the hardcoded range of kernel lengths found in the GitHub corpus
+    # (after preprocessing).
+    charcount_range = (33, 451563)
 
-    def generate(self, n: int=math.inf, up_to: int=math.inf) -> None:
-        """ generate 'n' new programs 'up_to' this many exist in db """
+    def _generate_one(self, session: session_t, depth: int=1) -> Program:
+        """ Generate a single program. """
+        if depth > 100:
+            raise OSError(f"Failed to produce {self} program after 100 attempts")
+
+        start_time = time()
+        charcount = random.randint(*self.charcount_range)
+        src = ''.join(random.choices(string.printable, k=charcount))
+        runtime = time() - start_time
+
+        # Check if the program is a duplicate. If so, try again:
+        sha1 = crypto.sha1_str(src)
+        is_dupe = session.query(Program.id)\
+            .filter(Program.generator == CLSmith.id,
+                    Program.sha1 == sha1).first()
+        if is_dupe:
+            return self._generate_one(session, depth=depth + 1)
+
+        return Program(
+            generator=self.id,
+            sha1=crypto.sha1_str(src),
+            generation_time=runtime,
+            linecount=len(src.split("\n")),
+            charcount=len(src),
+            src=src)
+
+
+class RandTok(OpenCLGenerator):
+    __name__ = "randtok"
+    id = Generators.RANDTOK
+
+    def _generate_one(self, session: session_t) -> Program:
+        """ Generate a single program. """
         raise NotImplementedError

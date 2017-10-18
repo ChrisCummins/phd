@@ -167,8 +167,11 @@ class Generators:
     column_t = sql.SmallInteger
 
     # Magic numbers
+    HANDWRITTEN = -1
     CLSMITH = 0
     DSMITH = 1
+    RANDCHAR = 2
+    RANDTOK = 3
 
 
 class Program(Base):
