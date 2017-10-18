@@ -368,6 +368,13 @@ install_lmk() {
 }
 
 
+install_dsmith() {
+    if [[ -d "$private/dsmith" ]]; then
+        symlink "$private/dsmith/dsmithrc" ~/.dsmithrc
+    fi
+}
+
+
 install_ssh() {
     if [[ -d "$private/ssh" ]]; then
         chmod 600 "$private"/ssh/*
@@ -770,6 +777,7 @@ main() {
     install_node
     install_zsh
     install_lmk
+    install_dsmith
     install_git
     install_tmux
     install_atom
