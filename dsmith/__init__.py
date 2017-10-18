@@ -29,6 +29,7 @@ Attributes:
 """
 import logging
 import os
+import re
 
 from collections import namedtuple
 from configparser import ConfigParser
@@ -167,6 +168,11 @@ def verbose_scope() -> None:
         yield
     finally:
         logging.getLogger('').setLevel(old_debug_level)
+
+
+def unformat(string: str) -> str:
+    """ strip shell formatting escape codes """
+    return re.sub(r'\x1b[^m]*m', '', string.split(" ")[0])
 
 
 class ReprComparable(object):

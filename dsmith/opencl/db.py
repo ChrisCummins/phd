@@ -901,8 +901,7 @@ class Testbed(Base):
     @staticmethod
     def from_str(string: str, session: session_t=None) -> List['Testbed']:
         """ instantiate testbed(s) from shorthand string, e.g. '1+', '5±', etc. """
-        # strip formatting
-        string = re.sub(r'\x1b[^m]*m', '', string.split(" ")[0])
+        string = dsmith.unformat(string)
 
         # check format
         if string[-1] != "+" and string[-1] != "-" and string[-1] != "±":
