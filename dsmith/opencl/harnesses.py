@@ -222,6 +222,8 @@ class Clang(OpenCLHarness):
     __generators__ = {
         "clsmith": generators.CLSmith,
         "dsmith": generators.DSmith,
+        "randchar": generators.RandChar,
+        "randtok": generators.RandTok,
     }
     __clangs__ = {
         "3.6.2": dsmith.root_path("lib", "llvm", "3.6.2", "build", "bin", "clang"),
