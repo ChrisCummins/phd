@@ -32,9 +32,9 @@ from typing import List
 import dsmith
 
 from dsmith import Colors
-from dsmith import difftest
 from dsmith.langs import Language, Generator, Harness
 from dsmith.opencl import db
+from dsmith.opencl import difftest
 from dsmith.opencl.db import *
 from dsmith.opencl.generators import DSmith, CLSmith, RandChar, RandTok
 from dsmith.opencl.harnesses import Cldrive, Cl_launcher, Clang
