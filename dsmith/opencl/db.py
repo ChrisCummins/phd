@@ -17,6 +17,12 @@
 #
 """
 OpenCL database backend.
+
+Some notes on schema portability:
+    * SQLite auto incrementing requires that integral indices be integers.
+      As a result, we use the with_variant() method to case non-integer id_t
+      to integers on sqlite. See:
+        http://docs.sqlalchemy.org/en/latest/dialects/sqlite.html#sqlite-auto-incrementing-behavior
 """
 import cldrive
 import clgen
@@ -322,7 +328,7 @@ class DsmithProgramMeta(Base):
 
 
 class Threads(Base):
-    id_t = sql.SmallInteger
+    id_t = sql.SmallInteger().with_variant(sql.Integer, "sqlite")
     __tablename__ = "threads"
 
     # Fields
@@ -401,7 +407,7 @@ class Testcase(Base):
     program_id = sql.Column(Program.id_t, sql.ForeignKey("programs.id"), nullable=False)
     threads_id = sql.Column(Threads.id_t, sql.ForeignKey("threads.id"), nullable=False)
     harness = sql.Column(Harnesses.column_t, nullable=False)
-    input_seed = sql.Column(sql.Integer, nullable=False)
+    input_seed = sql.Column(sql.Integer)
     timeout = sql.Column(sql.Integer, nullable=False)
 
     # Constraints
@@ -590,7 +596,7 @@ class DsmithTestcaseMeta(Base):
 
 
 class Platform(Base):
-    id_t = sql.SmallInteger
+    id_t = sql.SmallInteger().with_variant(sql.Integer, "sqlite")
     __tablename__ = 'platforms'
 
     # Fields
@@ -744,7 +750,7 @@ class Platform(Base):
 
 
 class Testbed(Base):
-    id_t = sql.SmallInteger
+    id_t = sql.SmallInteger().with_variant(sql.Integer, "sqlite")
     __tablename__ = 'testbeds'
 
     # Fields
