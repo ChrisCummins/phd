@@ -119,30 +119,18 @@ class OpenCLHarness(Harness):
 
     def testbeds(self, session: session_t=None) -> List[TestbedProxy]:
         with ReuseSession(session) as s:
-            if self.id == Harnesses.CLANG:
-                q = s.query(Testbed)\
-                    .join(Platform)\
-                    .filter(Platform.platform == "clang")
-                return sorted(TestbedProxy(testbed) for testbed in q)
-            else:
-                q = s.query(Testbed)\
-                    .join(Platform)\
-                    .filter(Platform.platform != "clang")
-                return sorted(TestbedProxy(testbed) for testbed in q)
+            q = s.query(Testbed)\
+                .join(Platform)\
+                .filter(Platform.platform != "clang")
+            return sorted(TestbedProxy(testbed) for testbed in q)
 
     def available_testbeds(self, session: session_t=None) -> List[TestbedProxy]:
         with ReuseSession(session) as s:
-            if self.id == Harnesses.CLANG:
-                q = s.query(Testbed)\
-                    .join(Platform)\
-                    .filter(Platform.platform == "clang")
-                return sorted(TestbedProxy(testbed) for testbed in q)
-            else:
-                testbeds = []
-                for env in cldrive.all_envs():
-                    testbeds += [TestbedProxy(testbed) for testbed in
-                                 Testbed.from_env(env, session=s)]
-                return sorted(testbeds)
+            testbeds = []
+            for env in cldrive.all_envs():
+                testbeds += [TestbedProxy(testbed) for testbed in
+                             Testbed.from_env(env, session=s)]
+            return sorted(testbeds)
 
     def num_results(self, generator: Generator, testbed: str, session: session_t=None):
         with ReuseSession(session) as s:
@@ -337,6 +325,36 @@ class Clang(OpenCLHarness):
             return pre + self._clsmith_header + post
         else:
             return program.src
+
+    def _make_testbed(self, session: session_t, clang_version: str) -> Testbed:
+        """ create a clang testbed """
+        assert clang_version in self.__clangs__
+        platform = get_or_add(session, Platform,
+                              platform="clang",
+                              device="",
+                              driver=clang_version,
+                              opencl="",
+                              devtype="Compiler",
+                              host=cldrive.host_os())
+        session.flush()
+        testbed = get_or_add(session, Testbed,
+                             platform_id=platform.id,
+                             optimizations=True)
+        session.commit()
+        logging.debug(f"Added new Testbed {testbed}")
+        return testbed
+
+    def testbeds(self, session: session_t=None) -> List[TestbedProxy]:
+        with ReuseSession(session) as s:
+            q = s.query(Testbed)\
+                    .join(Platform)\
+                    .filter(Platform.platform == "clang")
+            return sorted(TestbedProxy(testbed) for testbed in q)
+
+    def available_testbeds(self, session: session_t=None) -> List[TestbedProxy]:
+        with ReuseSession(session) as s:
+            return sorted(TestbedProxy(self._make_testbed(s, clang))
+                          for clang in self.__clangs__)
 
     def run(self, session: session_t, testcase: Testcase,
             testbed: Testbed) -> ResultProxy:
