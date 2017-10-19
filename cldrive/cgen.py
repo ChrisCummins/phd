@@ -91,7 +91,7 @@ def gen_data_blocks(args: List[KernelArg], inputs: np.array):
     )
 
 
-def emit_c(env: OpenCLEnvironment, src: str, inputs: np.array,
+def emit_c(src: str, inputs: np.array,
            gsize: NDRange, lsize: NDRange, timeout: int=-1,
            optimizations: bool=True, profiling: bool=False,
            debug: bool=False, compile_only: bool=False,
@@ -152,7 +152,6 @@ def emit_c(env: OpenCLEnvironment, src: str, inputs: np.array,
 
     clBuildProgram_opts = "NULL" if optimizations else '"-cl-opt-disable"'
 
-    ids = env.ids()
     c = f"""
 /*
  * Usage:

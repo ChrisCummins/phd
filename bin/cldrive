@@ -126,7 +126,6 @@ suitable device, and prints the outputs. Copyright (C) 2017 Chris Cummins \
                            scalar_val=args.scalar_val)
 
     drive_args = {
-        "env": env,
         "src": src,
         "inputs": inputs,
         "gsize": gsize,
@@ -145,7 +144,7 @@ suitable device, and prints the outputs. Copyright (C) 2017 Chris Cummins \
 
         print(emit_c(**drive_args, **emit_c_args))
     else:
-        outputs = drive(**drive_args)
+        outputs = drive(**drive_args, env=env)
 
         # print result
         if args.binary:
