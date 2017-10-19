@@ -22,10 +22,11 @@ Attributes:
     __version__ (str): PEP 440 compliant version string.
     version_info (Tuple[int, int, int, str]): Major, minor, micro, and
         releaselevel version components.
-    MYSQL_HOSTNAME (str): MySQL Server hostname.
-    MYSQL_PORT (int): MySQL Server port.
-    MYSQL_DATABASE (str): MySQL database name.
-    MYSQL_CREDENTIALS (Tuple[str, str]): MySQL username and password.
+    DB_HOSTNAME (str): Hostname of database server.
+    DB_PORT (int): Database server port.
+    DB_SCHEMA (str): Database name.
+    DB_CREDENTIALS (Tuple[str, str]): Database username and password.
+    DB_BUF_SIZE (int): Number of records to buffer before adding to database.
 """
 import logging
 import os
@@ -66,11 +67,12 @@ version_info = version_info_t(_major, _minor, _micro, _releaselevel)
 # Parse user configuration file
 _config = ConfigParser()
 _config.read(fs.path(RC_PATH))
-MYSQL_HOSTNAME = _config['mysql']['hostname']
-MYSQL_PORT = _config['mysql']['port']
-MYSQL_DATABASE = _config['mysql']['database']
-MYSQL_CREDENTIALS = _config['mysql']['username'], _config['mysql']['password']
-MYSQL_BATCH_SIZE = int(_config['mysql']['batch_size'])
+DB_ENGINE = _config['database']['engine'].lower()
+DB_HOSTNAME = _config['database']['hostname']
+DB_PORT = _config['database']['port']
+DB_SCHEMA = _config['database']['schema']
+DB_CREDENTIALS = _config['database']['username'], _config['database']['password']
+DB_BUF_SIZE = int(_config['database']['buffer_size'])
 
 
 class DSmithError(Exception):

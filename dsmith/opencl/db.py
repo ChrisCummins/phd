@@ -65,15 +65,21 @@ def init() -> str:
     """
     global engine
     global make_session
-    username, password = dsmith.MYSQL_CREDENTIALS
-    hostname = dsmith.MYSQL_HOSTNAME
-    table = dsmith.MYSQL_DATABASE
-    port = str(dsmith.MYSQL_PORT)
+    username, password = dsmith.DB_CREDENTIALS
+    hostname = dsmith.DB_HOSTNAME
+    schema = dsmith.DB_SCHEMA
+    port = str(dsmith.DB_PORT)
 
-    # Use UTF-8 encoding (default is latin-1) when connecting to MySQL.
-    # See: https://stackoverflow.com/a/16404147/1318051
-    public_uri = f"mysql://{username}@{hostname}:{port}/{table}?charset=utf8".format(**vars())
-    uri = f"mysql+mysqldb://{username}:{password}@{hostname}:{port}/{table}?charset=utf8"
+    if dsmith.DB_ENGINE == "mysql":
+        # Use UTF-8 encoding (default is latin-1) when connecting to MySQL.
+        # See: https://stackoverflow.com/a/16404147/1318051
+        public_uri = f"mysql://{username}@{hostname}:{port}/{schema}?charset=utf8".format(**vars())
+        uri = f"mysql+mysqldb://{username}:{password}@{hostname}:{port}/{schema}?charset=utf8"
+    elif dsmith.DB_ENGINE == "sqlite":
+        uri = f"sqlite:///test.db"
+        public_uri = uri
+    else:
+        raise ValueError(f"unsupported database engine {dsmith.DB_ENGINE}")
     echo = True if os.environ.get("DB_DEBUG", None) else False
 
     logging.debug(f"connecting to {public_uri}")

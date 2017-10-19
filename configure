@@ -188,12 +188,14 @@ for instructions on how to set it up:
 It looks like that file does not exist.
 The following questions will create it for you:""")
             config = ConfigParser()
-            config['mysql'] = {
-                "hostname": textinput("Hostname of MySQL Server", default="localhost"),
-                "port": int(textinput("MySQL Server port", default="3306")),
-                "username": textinput("MySQL username:"),
-                "password": textinput("MySQL password:"),
-                "database": "DeepSmith_1",
+            config['database'] = {
+                "engine": "mysql",
+                "schema": "dsmith_04_opencl",
+                "buffer_size": 250,
+                "hostname": textinput("Hostname of database Server", default="localhost"),
+                "port": int(textinput("Database server port", default="3306")),
+                "username": textinput("Database username:"),
+                "password": textinput("Database password:"),
             }
             config.write(outfile)
 
