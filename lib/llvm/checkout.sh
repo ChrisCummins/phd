@@ -23,13 +23,13 @@ checkout() {
     local release=$2
 
     cd $dest
-    git checkout $release
+    test -d .git && git checkout $release
     rm -rf .git
     cd tools/clang
-    git checkout $release
+    test -d .git && git checkout $release
     rm -rf .git
     cd ../../projects/compiler-rt
-    git checkout $release
+    test -d .git && git checkout $release
     rm -rf .git
 }
 
