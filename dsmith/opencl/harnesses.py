@@ -34,16 +34,25 @@ from dsmith.opencl import clsmith, generators
 from dsmith.opencl.db import *
 
 
-def _non_zero_threads(session: session_t=None):
+def _non_zero_threads(session: session_t=None) -> List[Threads]:
     with ReuseSession(session) as s:
-        return s.query(Threads)\
-                    .filter(Threads.gsize_x > 0).all()
+        return [
+            get_or_add(s, Threads,
+                       gsize_x=1, gsize_y=1, gsize_z=1,
+                       lsize_x=1, lsize_y=1, lsize_z=1),
+            get_or_add(s, Threads,
+                       gsize_x=128, gsize_y=16, gsize_z=1,
+                       lsize_x=32, lsize_y=1, lsize_z=1),
+        ]
 
 
-def _zero_threads(session: session_t=None):
+def _zero_threads(session: session_t=None) -> List[Threads]:
     with ReuseSession(session) as s:
-        return s.query(Threads)\
-                    .filter(Threads.gsize_x == 0).all()
+        return [
+            get_or_add(s, Threads,
+                       gsize_x=0, gsize_y=0, gsize_z=0,
+                       lsize_x=0, lsize_y=0, lsize_z=0)
+        ]
 
 
 def _log_outcome(outcome: Outcomes, runtime: float):
