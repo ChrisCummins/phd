@@ -39,6 +39,7 @@ from typing import Dict, Iterable, List, Tuple, Union
 
 import dsmith
 from dsmith import Colors
+from dsmith.opencl import oclgrind
 from dsmith.opencl import opencl_pb2 as pb
 
 
@@ -473,9 +474,6 @@ class ClsmithTestcaseMeta(Base):
     testcase = sql.orm.relationship("Testcase", back_populates="clsmith_meta")
 
     def get_oclverified(self, s: session_t) -> bool:
-        # deferred import because of circular dependency
-        from dsmith.opencl import oclgrind
-
         if self.oclverified == None:
             prof.start("clsmith oclgrind")
 
@@ -544,9 +542,6 @@ class DsmithTestcaseMeta(Base):
         return self.gpuverified
 
     def get_oclverified(self, s: session_t) -> bool:
-        # deferred import because of circular dependency
-        from dsmith.opencl import oclgrind
-
         if self.oclverified == None:
             prof.start("dsmith oclgrind")
 

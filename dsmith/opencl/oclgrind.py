@@ -26,7 +26,6 @@ from typing import List
 import dsmith
 from dsmith.opencl import clsmith
 from dsmith.opencl import cldrive_mkharness as mkharness
-from dsmith.opencl.db import *
 
 # build paths
 OCLGRIND = dsmith.root_path("lib", "clreduce", "build_oclgrind", "oclgrind")
@@ -63,7 +62,7 @@ def oclgrind_verify(cmd: List[str]) -> bool:
     return True
 
 
-def verify_clsmith_testcase(testcase: Testcase) -> bool:
+def verify_clsmith_testcase(testcase: 'Testcase') -> bool:
     with NamedTemporaryFile(prefix='dsmith-oclgrind-', delete=False) as tmpfile:
         src_path = tmpfile.name
     try:
@@ -74,7 +73,7 @@ def verify_clsmith_testcase(testcase: Testcase) -> bool:
         fs.rm(src_path)
 
 
-def verify_dsmith_testcase(testcase: Testcase) -> bool:
+def verify_dsmith_testcase(testcase: 'Testcase') -> bool:
     with NamedTemporaryFile(prefix='dsmith-oclgrind-', delete=False) as tmpfile:
         binary_path = tmpfile.name
     try:

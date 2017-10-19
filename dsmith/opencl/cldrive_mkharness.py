@@ -19,10 +19,6 @@ from time import time
 from typing import List, Tuple
 from tempfile import NamedTemporaryFile
 
-import dsmith
-from dsmith import db
-from dsmith.db import *
-
 
 class HarnessCompilationError(ValueError):
     pass
@@ -32,7 +28,7 @@ harness_t = namedtuple('harness_t', ['generation_time', 'compile_only', 'src'])
 default_cflags = ["-std=c99", "-Wno-deprecated-declarations", "-lOpenCL"]
 
 
-def mkharness(testcase: Testcase) -> harness_t:
+def mkharness(testcase: 'Testcase') -> harness_t:
     """ generate a self-contained C program for the given test case """
     program = testcase.program
     threads = testcase.threads
