@@ -144,7 +144,7 @@ class CLSmith(OpenCLGenerator):
                      max_attempts: int=10) -> ProgramProxy:
         """ Generate a single CLSmith program. """
         with NamedTemporaryFile(prefix='dsmith-clsmith-', suffix='.cl') as tmp:
-            runtime, status, _, stderr = clsmith.clsmith('-o', tmp.name, *flags)
+            runtime, status, _, stderr = clsmith.clsmith('-o', tmp.name)
 
             # A non-zero exit status of clsmith implies that no program was
             # generated. Try again:
