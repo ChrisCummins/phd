@@ -31,6 +31,7 @@ from typing import List, Tuple
 import dsmith
 from dsmith.langs import Generator, Harness
 from dsmith.opencl import clsmith, generators
+from dsmith.opencl import cldrive_mkharness
 from dsmith.opencl.db import *
 
 
