@@ -68,7 +68,8 @@ def verify_clsmith_testcase(testcase: 'Testcase') -> bool:
     try:
         with open(src_path, "w") as outfile:
             print(testcase.program.src, file=outfile)
-        return oclgrind_verify(clsmith.cl_launcher_cli(src_path, 0, 0, timeout=None))
+        return oclgrind_verify(clsmith.cl_launcher_cli(
+            src_path, 0, 0, optimizations=True, timeout=None))
     finally:
         fs.rm(src_path)
 
