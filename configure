@@ -210,7 +210,8 @@ The following questions will create it for you:""")
         # TODO: Pipe output into bash shell:
         subprocess.check_call(['bash', os.path.join('build', 'install-deps.sh')])
     except subprocess.CalledProcessError:
-        print("💩 Something went wrong.", file=sys.stderr)
+        print("💩  Something went wrong.", file=sys.stderr)
+        sys.exit(1)
 
     print("DeepSmith {version} configured:".format(version=cfg["version"]))
     print()
