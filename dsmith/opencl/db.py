@@ -68,6 +68,9 @@ def init() -> str:
 
     Returns:
         str: URI of database.
+
+    Raises:
+        ValueError: In case of error.
     """
     global engine
     global make_session
@@ -82,13 +85,19 @@ def init() -> str:
         public_uri = f"mysql://{username}@{hostname}:{port}/{schema}?charset=utf8".format(**vars())
         uri = f"mysql+mysqldb://{username}:{password}@{hostname}:{port}/{schema}?charset=utf8"
     elif dsmith.DB_ENGINE == "sqlite":
-        uri = f"sqlite:///test.db"
+        if dsmith.DB_PATH:
+            uri = f"sqlite:///{dsmith.DB_PATH}"
+        else:
+            # In-memory database:
+            uri = "sqlite://"
         public_uri = uri
     else:
         raise ValueError(f"unsupported database engine {dsmith.DB_ENGINE}")
+
+    # Determine whether to enable logging of SQL statements:
     echo = True if os.environ.get("DB_DEBUG", None) else False
 
-    logging.debug(f"connecting to {public_uri}")
+    logging.debug(f"connecting to database {Colors.BOLD}{public_uri}{Colors.END}")
     engine = sql.create_engine(uri, encoding="utf-8", echo=echo)
 
     Base.metadata.create_all(engine)

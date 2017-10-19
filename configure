@@ -100,6 +100,10 @@ def to_text(val):
 default_rc = "~/.dsmithrc"
 
 
+def _abspath(path: str) -> str:
+    return os.path.abspath(os.path.expanduser(path))
+
+
 def main():
     parser = ArgumentParser(description="Configure DeepSmith build.")
     parser.add_argument("-r", "--reconfigure", action="store_true",
@@ -168,7 +172,7 @@ def main():
         requirements_files += ['requirements.tensorflow.cpu.txt']
 
 
-    cfg["rc_path"] = os.path.abspath(os.path.expanduser(cfg["rc_path"]))
+    cfg["rc_path"] = _abspath(cfg["rc_path"])
     if os.path.exists(cfg["rc_path"]):
         # Test that configuration file is parsable
         try:
@@ -183,11 +187,20 @@ for instructions on how to set it up:
             sys.exit(1)
     else:
         # Prompt user for config values
-        with open(cfg["rc_path"], 'w') as outfile:
-            print("""\
+        print("""\
 It looks like that file does not exist.
 The following questions will create it for you:""")
-            config = ConfigParser()
+        config = ConfigParser()
+
+        engine = textinput("Select database engine: {sqlite,mysql}", default="mysql")
+        if engine == "sqlite":
+            config['database'] = {
+                "engine": "sqlite",
+                "path": _abspath(textinput("Path to database file",
+                                           default="~/.dsmith.db")),
+                "buffer_size": 250,
+            }
+        elif engine == "mysql":
             config['database'] = {
                 "engine": "mysql",
                 "schema": "dsmith_04_opencl",
@@ -197,6 +210,12 @@ The following questions will create it for you:""")
                 "username": textinput("Database username:"),
                 "password": textinput("Database password:"),
             }
+        else:
+            print("💩  I'm sorry, that is not a valid database engine",
+                  file=sys.stderr)
+            sys.exit(1)
+
+        with open(cfg["rc_path"], 'w') as outfile:
             config.write(outfile)
 
 

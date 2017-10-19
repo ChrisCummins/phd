@@ -68,10 +68,12 @@ version_info = version_info_t(_major, _minor, _micro, _releaselevel)
 _config = ConfigParser()
 _config.read(fs.path(RC_PATH))
 DB_ENGINE = _config['database']['engine'].lower()
-DB_HOSTNAME = _config['database']['hostname']
-DB_PORT = _config['database']['port']
-DB_SCHEMA = _config['database']['schema']
-DB_CREDENTIALS = _config['database']['username'], _config['database']['password']
+DB_HOSTNAME = _config['database'].get('hostname', "")
+DB_PORT = _config['database'].get('port', "")
+DB_SCHEMA = _config['database'].get('schema', "")
+DB_CREDENTIALS = (_config['database'].get('username', ""),
+                  _config['database'].get('password', ""))
+DB_PATH = _config['database'].get("path", "")
 DB_BUF_SIZE = int(_config['database']['buffer_size'])
 
 
