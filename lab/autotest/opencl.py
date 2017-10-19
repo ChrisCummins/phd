@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import cldrive
 import logging
 import json
 import sys
@@ -66,11 +67,21 @@ class CLSmithGenerator(autotest.Generator):
 
 
 class DeviceUnderTest(object):
-    def __init__(self, device, platform):
-        pass
+    def __init__(self, platform: str, device: str, flags: List[str]):
+        self.device = device
+        self.platform = platform
+        self.flags = flags
+        self.env = cldrive.make_env(self.platform, self.device)
+        self.ids = self.env.ids()
 
     def run(self, testcase: autotest.testcase_t) -> autotest.output_t:
-        pass
+        runtime, returncode, stdout, stderr = clsmith.cl_launcher(
+            testcase.path, *self.ids, *self.flags)
+
+        print(runtime)
+        print(returncode)
+        print(stdout[:200])
+        print(stderr[:200])
 
 
 class StaticAnalyzer(object):
