@@ -89,7 +89,7 @@ ORDER BY programs.date, testcases.threads_id""")
     worker = Worker(testbeds_harnesses)
     worker.start()
     while worker.is_alive():
-        bar.update(worker.ndone)
+        bar.update(min(worker.ndone, len(testbeds_harnesses)))
         worker.join(0.5)
 
 
@@ -256,7 +256,7 @@ def prune_awo_classifications(s: session_t) -> None:
     worker = Worker()
     worker.start()
     while worker.is_alive():
-        bar.update(worker.ndone)
+        bar.update(min(worker.ndone, ntodo))
         worker.join(0.5)
 
 
@@ -353,7 +353,7 @@ def prune_abf_classifications(s: session_t) -> None:
     worker = Worker()
     worker.start()
     while worker.is_alive():
-        bar.update(worker.ndone)
+        bar.update(min(worker.ndone, ntodo))
         worker.join(0.5)
 
 
@@ -408,7 +408,7 @@ def prune_arc_classifications(s: session_t) -> None:
     worker = Worker()
     worker.start()
     while worker.is_alive():
-        bar.update(worker.ndone)
+        bar.update(min(worker.ndone, ntodo))
         worker.join(0.5)
 
     s.commit()
