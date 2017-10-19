@@ -72,19 +72,17 @@ def clsmith(*args, exec_path=exec_path) -> return_t:
 
 
 def cl_launcher_cli(program_path: str, platform_id: int, device_id: int,
-                    *args, timeout=60, optimizations: bool,
-                    cl_launcher_path=cl_launcher_path,
-                    include_path=include_path) -> str:
-    return (["timeout", "--signal=9", str(timeout)] if timeout else []
-            + [cl_launcher_path, '---debug', '-f', program_path,
-               '-p', str(platform_id), '-d', str(device_id),
-               '--include_path', include_path]
-            + [] if optimizations else ['---disable_opts']
-            + list(args))
+                    optimizations: bool, timeout: int) -> str:
+    cmd = ["timeout", "--signal=9", str(timeout)] if timeout else []
+    cmd += [cl_launcher_path, '---debug', '-f', program_path,
+            '-p', str(platform_id), '-d', str(device_id),
+            '--include_path', include_path]
+    if not optimizations:
+        cmd += ['---disable_opts']
+    return cmd
 
 
-def cl_launcher(program_path: Path, platform_id: int, device_id: int,
-                *args, **kwargs) -> return_t:
+def cl_launcher(*args, **kwargs) -> return_t:
     """
         Returns:
             return_t: A named tuple consisting of runtime (float),
@@ -92,7 +90,7 @@ def cl_launcher(program_path: Path, platform_id: int, device_id: int,
     """
     start_time = time()
 
-    cli = cl_launcher_cli(program_path, platform_id, device_id, *args, **kwargs)
+    cli = cl_launcher_cli(*args, **kwargs)
     logging.debug(f"{Colors.BOLD}${Colors.END} " + " ".join(cli))
     process = Popen(cli, stdout=PIPE, stderr=PIPE)
     stdout, stderr = process.communicate()
@@ -104,16 +102,21 @@ def cl_launcher(program_path: Path, platform_id: int, device_id: int,
         stdout=stdout.decode('utf-8'), stderr=stderr.decode('utf-8'))
 
 
-def cl_launcher_str(src: str, platform_id: int, device_id: int,
-                    optimizations: bool, timeout: int,
-                    *args) -> Tuple[float, int, str, str]:
-    """ Invoke cl launcher on source """
+def cl_launcher_str(src: str, *args, **kwargs) -> Tuple[float, int, str, str]:
+    """
+    Invoke cl launcher on program source.
+
+    Arguments:
+        same as cl_launcher_cli()
+
+    Returns:
+        same as cl_launcher()
+    """
     with NamedTemporaryFile(prefix='dsmith-cl_launcher-', suffix='.cl') as tmp:
         tmp.write(src.encode('utf-8'))
         tmp.flush()
 
-        return cl_launcher(tmp.name, platform_id, device_id,
-                           *args, optimizations=optimizations, timeout=timeout)
+        return cl_launcher(tmp.name, *args, **kwargs)
 
 
 def verify_cl_launcher_run(platform: str, device: str, optimizations: bool,

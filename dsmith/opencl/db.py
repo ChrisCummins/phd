@@ -39,6 +39,7 @@ from contextlib import contextmanager
 from labm8 import crypto, fs, prof, system
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.ext.declarative import declarative_base
+from signal import Signals
 from sqlalchemy.sql import func
 from time import time
 from typing import Dict, Iterable, List, Tuple, Union
@@ -1003,8 +1004,8 @@ class TestbedProxy(Proxy, dsmith.ReprComparable):
         testbed = get_or_add(session, Testbed,
                              platform_id=platform.id,
                              optimizations=self._optimizations)
-        logging.debug(f"Added new Testbed {testbed}")
         session.commit()
+        logging.debug(f"Added new Testbed {testbed}")
         return testbed
 
     def run_testcases(self, harness, generator) -> None:
@@ -1409,12 +1410,13 @@ class Cl_launcherResult(Result):
         elif returncode == 1:
             return crash_or_build_failure()
         else:
-            print(result)
+            logging.error("Stderr: " + stderr[:200])
+            logging.error(f"Runtime: {runtime:.1f}s (timeout = {timeout:.0f}s)")
             try:
-                print(Signals(-returncode).name)
+                logging.error("Signal: " + str(Signals(-returncode).name))
             except ValueError:
-                print(returncode)
-            raise LookupError(f"failed to determine outcome of Cl_launcherResult {returncode} with stderr: {stderr}")
+                logging.error("Returncode: " + str(returncode))
+            raise LookupError(f"failed to determine outcome of Cl_launcherResult")
 
 
 class CldriveResult(Result):
@@ -1467,12 +1469,13 @@ class CldriveResult(Result):
         elif returncode == 127:
             return crash_or_build_failure()
         else:
-            print(result)
+            logging.error("Stderr: " + stderr[:200])
+            logging.error(f"Runtime: {runtime:.1f}s (timeout = {timeout:.0f}s)")
             try:
-                print(Signals(-returncode).name)
+                logging.error("Signal: " + str(Signals(-returncode).name))
             except ValueError:
-                print(returncode)
-            raise LookupError(f"failed to determine outcome of cldrive returncode {returncode} with stderr: {stderr}")
+                logging.error("Returncode: " + str(returncode))
+            raise LookupError(f"failed to determine outcome of CldriveResult")
 
 
 class ClangResult(Result):

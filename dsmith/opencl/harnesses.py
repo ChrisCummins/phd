@@ -179,8 +179,9 @@ class Cl_launcher(OpenCLHarness):
         # run testcase
         platform_id, device_id = testbed.ids
         runtime, returncode, stdout, stderr = clsmith.cl_launcher_str(
-                testcase.program.src, platform_id, device_id,
-                testcase.timeout)
+                src=testcase.program.src, platform_id=platform_id,
+                device_id=device_id, optimizations=testbed.optimizations,
+                timeout=testcase.timeout)
 
         # assert that executed params match expected
         clsmith.verify_cl_launcher_run(platform=testbed.platform.platform,
