@@ -821,13 +821,13 @@ class Testbed(Base):
                             self.ndone += 1
 
                             # flush the buffer
-                            if len(buf) >= dsmith.MYSQL_BATCH_SIZE:
-                                _save_proxies(s, buf)
+                            if len(buf) >= dsmith.DB_BUF_SIZE:
+                                save_proxies(s, buf)
                                 buf = []
                                 # update results count with actual
                                 self.ndone = already_done.count()
                     finally:
-                        _save_proxies(s, buf)
+                        save_proxies(s, buf)
 
         with ReuseSession(session) as s:
             already_done = self._testcase_ids_ran(s, harness, generator)
@@ -1264,9 +1264,9 @@ class ResultProxy(object):
             date=self.date)
 
 
-def _save_proxies(session: session_t, proxies: List[Proxy],
-                  max_attempts: int=3, attempt: int=1,
-                  exception=None) -> None:
+def save_proxies(session: session_t, proxies: List[Proxy],
+                 max_attempts: int=3, attempt: int=1,
+                 exception=None) -> None:
     """
     Convert a set of proxy objects in to database records and save them.
 
@@ -1306,18 +1306,19 @@ def _save_proxies(session: session_t, proxies: List[Proxy],
     try:
         start_time = time()
         session.add_all(proxy.to_record(session) for proxy in proxies)
+        session.commit()
         runtime = time() - start_time
         logging.info(f"flushed {nproxies} records in {runtime:.2} seconds")
     except IntegrityError as e:
         logging.debug(e)
         logging.warning("database integrity error, rolling back")
         session.rollback()
-        _save_proxies(session, proxies, max_attempts, attempt + 1, e)
+        save_proxies(session, proxies, max_attempts, attempt + 1, e)
     except OperationalError as e:
         logging.debug(e)
         logging.warning("database operational error, rolling back")
         session.rollback()
-        _save_proxies(session, proxies, max_attempts, attempt + 1, e)
+        save_proxies(session, proxies, max_attempts, attempt + 1, e)
 
 
 class Cl_launcherResult(Result):

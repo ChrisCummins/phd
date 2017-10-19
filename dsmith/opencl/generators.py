@@ -127,11 +127,11 @@ class OpenCLGenerator(Generator):
                 num_progs += 1
                 bar.update(num_progs)
 
-                if len(buf) >= dsmith.MYSQL_BATCH_SIZE:
-                    _save_proxies(s, buf)
+                if len(buf) >= dsmith.DB_BUF_SIZE:
+                    save_proxies(s, buf)
                     num_progs = self.num_programs(s)
                     buf = []
-            _save_proxies(s, buf)
+            save_proxies(s, buf)
         print(f"All done! You now have {Colors.BOLD}{num_progs}{Colors.END} "
               "{self} programs in the database")
 
