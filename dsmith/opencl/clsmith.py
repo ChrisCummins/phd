@@ -72,12 +72,15 @@ def clsmith(*args, exec_path=exec_path) -> return_t:
 
 
 def cl_launcher_cli(program_path: str, platform_id: int, device_id: int,
-                    *args, timeout=60, cl_launcher_path=cl_launcher_path,
+                    *args, timeout=60, optimizations: bool,
+                    cl_launcher_path=cl_launcher_path,
                     include_path=include_path) -> str:
-    cmd = ["timeout", "--signal=9", str(timeout)] if timeout else []
-    return cmd + [cl_launcher_path, '---debug', '-f', program_path,
-                  '-p', str(platform_id), '-d', str(device_id),
-                  '--include_path', include_path] + list(args)
+    return (["timeout", "--signal=9", str(timeout)] if timeout else []
+            + [cl_launcher_path, '---debug', '-f', program_path,
+               '-p', str(platform_id), '-d', str(device_id),
+               '--include_path', include_path]
+            + [] if optimizations else ['---disable_opts']
+            + list(args))
 
 
 def cl_launcher(program_path: Path, platform_id: int, device_id: int,
@@ -101,15 +104,16 @@ def cl_launcher(program_path: Path, platform_id: int, device_id: int,
         stdout=stdout.decode('utf-8'), stderr=stderr.decode('utf-8'))
 
 
-def cl_launcher_str(src: str, platform_id: int, device_id: int, timeout: int,
+def cl_launcher_str(src: str, platform_id: int, device_id: int,
+                    optimizations: bool, timeout: int,
                     *args) -> Tuple[float, int, str, str]:
     """ Invoke cl launcher on source """
     with NamedTemporaryFile(prefix='dsmith-cl_launcher-', suffix='.cl') as tmp:
         tmp.write(src.encode('utf-8'))
         tmp.flush()
 
-        return cl_launcher(tmp.name, platform_id, device_id, *args,
-                           timeout=timeout)
+        return cl_launcher(tmp.name, platform_id, device_id,
+                           *args, optimizations=optimizations, timeout=timeout)
 
 
 def verify_cl_launcher_run(platform: str, device: str, optimizations: bool,
