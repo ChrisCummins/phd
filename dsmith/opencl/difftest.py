@@ -152,7 +152,7 @@ def create_classifications(s: session_t) -> None:
 
     min_majsize = 7
 
-    print("setting {{bc,bto}} classifications ...")
+    print("creating {bc,bto} classifications ...")
     s.execute(f"""
 INSERT INTO {Classification.__tablename__}
 SELECT results.id, {Classifications.BC}
@@ -214,7 +214,7 @@ def prune_awo_classifications(s: session_t) -> None:
         .distinct()\
         .all()
 
-    for testcase in ProgressBar()(testcases_to_verify):
+    for testcase in progressbar.ProgressBar()(testcases_to_verify):
         if not testcase.verify_awo(s):
             testcase.retract_classifications(s, Classifications.AWO)
 
@@ -262,7 +262,7 @@ def prune_abf_classifications(s: session_t) -> None:
 
         n = len(ids_to_delete)
         if n:
-            print(f"retracting {n} bf-classified results with msg {like[:30]}")
+            print(f'retracting {n} bf-classified results with msg "{like[:40]}"')
             s.query(Classification)\
                 .filter(Classification.id.in_(ids_to_delete))\
                 .delete(synchronize_session=False)
@@ -292,7 +292,7 @@ def prune_abf_classifications(s: session_t) -> None:
         .all()
 
     print("Verifying abf-classified testcases ...")
-    for testcase in ProgressBar()(testcases_to_verify):
+    for testcase in progressbar.ProgressBar()(testcases_to_verify):
         verify_opencl_version(s, testcase)
 
     s.commit()
@@ -328,7 +328,7 @@ def prune_arc_classifications(s: session_t) -> None:
         .all()
 
     print("Verifying arc-classified testcases ...")
-    for testcase in ProgressBar()(testcases_to_verify):
+    for testcase in progressbar.ProgressBar()(testcases_to_verify):
         if not testcase.verify_arc(s):
             testcase.retract_classifications(s, Classifications.ARC)
 

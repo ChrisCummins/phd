@@ -1,24 +1,48 @@
+#
+# Copyright 2017 Chris Cummins <chrisc.101@gmail.com>.
+#
+# This file is part of DeepSmith.
+#
+# DeepSmith is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# DeepSmith is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# DeepSmith.  If not, see <http://www.gnu.org/licenses/>.
+#
+"""
+Oclgrind module
+"""
 import subprocess
 from labm8 import fs
 from tempfile import NamedTemporaryFile
+from typing import List
 
 import dsmith
-from dsmith import clsmith
-from dsmith import mkharness
-from dsmith.db import *
+from dsmith.opencl import clsmith
+from dsmith.opencl import cldrive_mkharness as mkharness
+from dsmith.opencl.db import *
 
-OCLGRIND = "oclgrind"
-# FIXME: put oclgrind in data folder: assert fs.isexe(OCLGRIND)
+# build paths
+OCLGRIND = dsmith.root_path("lib", "clreduce", "build_oclgrind", "oclgrind")
+
+# sanity checks
+assert fs.isexe(OCLGRIND)
 
 
-def oclgrind_cli(timeout=60):
+def oclgrind_cli(timeout: int=60) -> List[str]:
     """ runs the given path using oclgrind """
     return ['timeout', '-s9', str(timeout), OCLGRIND, '--max-errors', '1',
             '--uninitialized', '--data-races', '--uniform-writes',
             '--uniform-writes']
 
 
-def oclgrind_verify(cmd):
+def oclgrind_verify(cmd: List[str]) -> bool:
     cmd = oclgrind_cli() + cmd
 
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -40,7 +64,7 @@ def oclgrind_verify(cmd):
 
 
 def verify_clsmith_testcase(testcase: Testcase) -> bool:
-    with NamedTemporaryFile(prefix='clsmith-kernel-', delete=False) as tmpfile:
+    with NamedTemporaryFile(prefix='dsmith-oclgrind-', delete=False) as tmpfile:
         src_path = tmpfile.name
     try:
         with open(src_path, "w") as outfile:
@@ -51,7 +75,7 @@ def verify_clsmith_testcase(testcase: Testcase) -> bool:
 
 
 def verify_dsmith_testcase(testcase: Testcase) -> bool:
-    with NamedTemporaryFile(prefix='oclgrind-harness-', delete=False) as tmpfile:
+    with NamedTemporaryFile(prefix='dsmith-oclgrind-', delete=False) as tmpfile:
         binary_path = tmpfile.name
     try:
         _, _, harness = mkharness.mkharness(testcase)

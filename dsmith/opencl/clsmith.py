@@ -36,7 +36,7 @@ runtime_t = NewType('runtime_t', float)
 status_t = NewType('status_t', int)
 return_t = namedtuple('return_t', ['runtime', 'status', 'stdout', 'stderr'])
 
-# set these variables to your local CLSmith build:
+# build paths
 exec_path = dsmith.root_path("lib", "clsmith", "build", "CLSmith")
 cl_launcher_path = dsmith.root_path("lib", "clsmith", "build", "cl_launcher")
 include_path = dsmith.root_path("lib", "clsmith", "runtime")

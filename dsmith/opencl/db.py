@@ -41,6 +41,7 @@ import dsmith
 from dsmith import Colors
 from dsmith.opencl import opencl_pb2 as pb
 
+
 # Global state to manage database connections. Must call init() before
 # creating sessions.
 Base = declarative_base()
@@ -472,9 +473,11 @@ class ClsmithTestcaseMeta(Base):
     testcase = sql.orm.relationship("Testcase", back_populates="clsmith_meta")
 
     def get_oclverified(self, s: session_t) -> bool:
+        # deferred import because of circular dependency
+        from dsmith.opencl import oclgrind
+
         if self.oclverified == None:
             prof.start("clsmith oclgrind")
-            import oclgrind
 
             testcase = s.query(Testcase)\
                 .filter(Testcase.id == self.id)\
@@ -541,9 +544,11 @@ class DsmithTestcaseMeta(Base):
         return self.gpuverified
 
     def get_oclverified(self, s: session_t) -> bool:
+        # deferred import because of circular dependency
+        from dsmith.opencl import oclgrind
+
         if self.oclverified == None:
             prof.start("dsmith oclgrind")
-            import oclgrind
 
             testcase = s.query(Testcase)\
                 .filter(Testcase.id == self.id)\
@@ -708,6 +713,34 @@ class Platform(Base):
                 devtype=env.device_type,
                 host=cldrive.host_os())
 
+    @staticmethod
+    def _get_ids(platform: str, device: str, driver: str) -> Tuple[int, int]:
+        import pyopencl as cl
+        # match platform ID:
+        for j, cl_platform in enumerate(cl.get_platforms()):
+            platform_name = cl_platform.get_info(cl.platform_info.NAME)
+            if platform_name == platform:
+                logging.debug(f"trying to match '{platform}' to '{platform_name}'")
+                # match device ID:
+                for i, cl_device in enumerate(cl_platform.get_devices()):
+                    logging.debug(f"matched platform '{platform_name}'")
+
+                    device_name = cl_device.get_info(cl.device_info.NAME)
+                    device_driver = cl_device.get_info(cl.device_info.DRIVER_VERSION)
+
+                    logging.debug(f"trying to match '{device} "
+                                  f"{driver}' to '{device_name} "
+                                  f"{device_driver}'")
+                    if (device_name == device
+                        and device_driver == driver):
+                        logging.debug(f"matched device '{device_name}'")
+                        self._ids = j, i
+                        return
+
+        # after iterating over all OpenCL platforms and devices, no match found:
+        raise LookupError("unable to determine OpenCL IDs of "
+                          f"'{platform}' '{device}'")
+
 
 class Testbed(Base):
     id_t = sql.SmallInteger
@@ -843,35 +876,10 @@ class Testbed(Base):
         try:
             return self._ids
         except AttributeError:
-            self._set_ids()
+            self._ids = Platform._get_ids(self.platform.platform,
+                                          self.platform.device,
+                                          self.platform.driver)
             return self._ids
-
-    def _set_ids(self) -> None:
-        import pyopencl as cl
-        # match platform ID:
-        for j, platform in enumerate(cl.get_platforms()):
-            platform_name = platform.get_info(cl.platform_info.NAME)
-            if platform_name == self.platform.platform:
-                logging.debug(f"trying to match '{self.platform.platform}' to '{platform_name}'")
-                # match device ID:
-                for i, device in enumerate(platform.get_devices()):
-                    logging.debug(f"matched platform '{platform_name}'")
-
-                    device_name = device.get_info(cl.device_info.NAME)
-                    device_driver = device.get_info(cl.device_info.DRIVER_VERSION)
-
-                    logging.debug(f"trying to match '{self.platform.device} "
-                                  f"{self.platform.driver}' to '{device_name} "
-                                  f"{device_driver}'")
-                    if (device_name == self.platform.device
-                        and device_driver == self.platform.driver):
-                        logging.debug(f"matched device '{device_name}'")
-                        self._ids = j, i
-                        return
-
-        # after iterating over all OpenCL platforms and devices, no match found:
-        raise LookupError("unable to determine OpenCL IDs of "
-                          f"'{self.platform.platform}' '{self.platform.device}'")
 
     @property
     def env(self) -> cldrive.OpenCLEnvironment:
