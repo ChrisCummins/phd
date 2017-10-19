@@ -43,7 +43,7 @@ def create_results_metas(s: session_t):
     """
     class Worker(threading.Thread):
         """ worker thread to run testcases asynchronously """
-        def __init__(self, testbeds_harnesses: List[Tuple[Testbed.id_t, Harnesses.column_t]]):
+        def __init__(self, testbeds_harnesses: List[Tuple['Testbed.id_t', 'Harnesses.column_t']]):
             self.ndone = 0
             self.testbeds_harnesses = testbeds_harnesses
             super(Worker, self).__init__()
@@ -55,6 +55,7 @@ def create_results_metas(s: session_t):
                     self.ndone += 1
                     testbed = s.query(Testbed).filter(Testbed.id == testbed_id).scalar()
 
+                    # FIXME: @cumtime variable is not supported by SQLite.
                     s.execute(f"""
 INSERT INTO {ResultMeta.__tablename__} (id, total_time, cumtime)
 SELECT  results.id,
@@ -108,8 +109,9 @@ def create_majorities(s: session_t) -> None:
     # split of 5 '1' outcomes and 5 '3' outcomes. Since there is only a single
     # majority outcome, we order results by outcome number, so that '1' (build
     # failure) will over-rule '6' (pass).
+    insert_ignore = "INSERT IGNORE" if dsmith.DB_ENGINE == "mysql" else "INSERT OR IGNORE"
     s.execute(f"""
-INSERT IGNORE INTO {Majority.__tablename__}
+{insert_ignore} INTO {Majority.__tablename__}
     (id, num_results, maj_outcome, outcome_majsize, maj_stdout_id, stdout_majsize)
 SELECT  result_counts.testcase_id,
         result_counts.num_results,
@@ -217,7 +219,7 @@ INNER JOIN {Majority.__tablename__} majorities ON results.testcase_id = majoriti
 WHERE outcome = {Outcomes.PASS}
 AND maj_outcome = {Outcomes.PASS}
 AND outcome_majsize >= {min_majsize}
-AND stdout_majsize >= CEILING((2 * outcome_majsize) / 3)
+AND stdout_majsize >= CAST((2 * outcome_majsize / 3) + 0.5 AS INT)
 AND stdout_id <> maj_stdout_id
 """)
     s.commit()
