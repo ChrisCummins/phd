@@ -44,35 +44,42 @@ $(clang_362): $(llvm_scripts)
 	cd $(llvm_dir) && ./clone.sh 3.6.2
 	cd $(llvm_dir) && ./checkout.sh 3.6.2 release_36
 	cd $(llvm_dir) && ./build.sh 3.6.2 3.6.2/build $(cmake) $(ninja)
+	touch $@
 
 $(clang_371): $(llvm_scripts)
 	cd $(llvm_dir) && ./clone.sh 3.7.1
 	cd $(llvm_dir) && ./checkout.sh 3.7.1 release_37
 	cd $(llvm_dir) && ./build.sh 3.7.1 3.7.1/build $(cmake) $(ninja)
+	touch $@
 
 $(clang_381): $(llvm_scripts)
 	cd $(llvm_dir) && ./clone.sh 3.8.1
 	cd $(llvm_dir) && ./checkout.sh 3.8.1 release_38
 	cd $(llvm_dir) && ./build.sh 3.8.1 3.8.1/build $(cmake) $(ninja)
+	touch $@
 
 $(clang_391): $(llvm_scripts)
 	cd $(llvm_dir) && ./clone.sh 3.9.1
 	cd $(llvm_dir) && ./checkout.sh 3.9.1 release_39
 	cd $(llvm_dir) && ./build.sh 3.9.1 3.9.1/build $(cmake) $(ninja)
+	touch $@
 
 $(clang_401): $(llvm_scripts)
 	cd $(llvm_dir) && ./clone.sh 4.0.1
 	cd $(llvm_dir) && ./checkout.sh 4.0.1 release_40
 	cd $(llvm_dir) && ./build.sh 4.0.1 4.0.1/build $(cmake) $(ninja)
+	touch $@
 
 $(clang_500): $(llvm_scripts)
 	cd $(llvm_dir) && ./clone.sh 5.0.0
 	cd $(llvm_dir) && ./checkout.sh 5.0.0 release_50
 	cd $(llvm_dir) && ./build.sh 5.0.0 5.0.0/build $(cmake) $(ninja)
+	touch $@
 
 $(clang_trunk): $(llvm_scripts)
 	cd $(llvm_dir) && ./clone.sh trunk
 	cd $(llvm_dir) && ./build.sh trunk trunk/build $(cmake) $(ninja)
+	touch $@
 
 
 .PHONE: distclean-llvm
