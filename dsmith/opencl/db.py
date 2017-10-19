@@ -750,8 +750,7 @@ class Platform(Base):
                     if (device_name == device
                         and device_driver == driver):
                         logging.debug(f"matched device '{device_name}'")
-                        self._ids = j, i
-                        return
+                        return j, i
 
         # after iterating over all OpenCL platforms and devices, no match found:
         raise LookupError("unable to determine OpenCL IDs of "
@@ -912,7 +911,7 @@ class Testbed(Base):
 
     @staticmethod
     def from_env(env: cldrive.OpenCLEnvironment,
-                 session: session_t=None) -> 'Testbed':
+                 session: session_t=None) -> List['Testbed']:
         with ReuseSession(session) as s:
             platform = Platform.from_env(env, session=s)
             s.flush()
@@ -925,14 +924,8 @@ class Testbed(Base):
     @staticmethod
     def from_str(string: str, session: session_t=None) -> List['Testbed']:
         """ instantiate testbed(s) from shorthand string, e.g. '1+', '5±', etc. """
-        string = dsmith.unformat(string)
-
-        # check format
-        if string[-1] != "+" and string[-1] != "-" and string[-1] != "±":
-            raise ValueError(f"Invalid testbed string '{string}'")
-
-        with ReuseSession(session) as s:
-            for testbed in s.query(Testbed):
+        def try_and_match(string: str, testbeds: Iterable[Testbed]) -> Union[None, List[Testbed]]:
+            for testbed in testbeds:
                 if str(testbed.platform.num) == string[:-1]:
                     if string[-1] == "±":
                         return [
@@ -952,7 +945,30 @@ class Testbed(Base):
                                 platform_id=testbed.platform.id,
                                 optimizations=True if string[-1] == "+" else False)
                             ]
-            raise LookupError(f"Testbed '{string}' not found in database")
+
+        # Strip shell formatting
+        string = dsmith.unformat(string)
+
+        # check format
+        if string[-1] != "+" and string[-1] != "-" and string[-1] != "±":
+            raise ValueError(f"Invalid testbed string '{string}'")
+
+        with ReuseSession(session) as s:
+            # Try and match string against an existing record in the database:
+            in_db = try_and_match(string, s.query(Testbed))
+            if in_db:
+                return in_db
+
+            # Else try and match against all testbeds on the current machine:
+            testbeds = []
+            for env in cldrive.all_envs():
+                testbeds += Testbed.from_env(env, session=s)
+            from_env = try_and_match(string, testbeds)
+            if from_env:
+                return from_env
+
+            # Nothing worked.
+            raise LookupError(f"Testbed '{string}' not found")
 
     @staticmethod
     def from_id(session: session_t, id: int) -> 'Testbed':
@@ -970,8 +986,26 @@ class TestbedProxy(Proxy, dsmith.ReprComparable):
         self.host = testbed.platform.host_name
         self.id = testbed.id
 
+        # Attributes required by to_record() to construct a new Testbed record:
+        self._platform = testbed.platform.platform
+        self._device = testbed.platform.device
+        self._optimizations = testbed.optimizations
+
     def to_record(self, session: session_t) -> Testbed:
-        return session.query(Testbed).filter(Testbed.id == self.id).scalar()
+        record = session.query(Testbed).filter(Testbed.id == self.id).scalar()
+        if record:
+            return record
+
+        # If there wasn't a record in the database, we need to create a new one:
+        env = cldrive.make_env(self._platform, self._device)
+        platform = Platform.from_env(env, session=session)
+        session.flush()
+        testbed = get_or_add(session, Testbed,
+                             platform_id=platform.id,
+                             optimizations=self._optimizations)
+        logging.debug(f"Added new Testbed {testbed}")
+        session.commit()
+        return testbed
 
     def run_testcases(self, harness, generator) -> None:
         with Session() as s:
