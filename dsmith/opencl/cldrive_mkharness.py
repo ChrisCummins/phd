@@ -41,16 +41,27 @@ def mkharness(testcase: 'Testcase') -> harness_t:
     try:
         # generate a compile-and-execute test harness
         start_time = time()
-        src = cldrive.emit_c(
-            src=program.src, size=size, start_at=1,# TODO: testcase.input_seed
-            gsize=gsize, lsize=lsize,
+        # TODO: use testcase.input_seed to set start of ARANGE
+        inputs = cldrive.make_data(
+            src=src, size=size,
+            data_generator=cldrive.Generator.ARANGE,
             scalar_val=size)
+        src = cldrive.emit_c(
+            src=program.src, inputs=inputs, gsize=gsize, lsize=lsize)
     except Exception:
         # create a compile-only stub if not possible
-        start_time = time()
-        src = cldrive.emit_c(
-            src=program.src, size=0, start_at=1,# TODO: testcase.input_seed
-            gsize=gsize, lsize=lsize, compile_only=True)
+        compile_only = True
+        try:
+            start_time = time()
+            src = cldrive.emit_c(
+                src=program.src, inputs=None, gsize=gsize, lsize=lsize,
+                compile_only=True)
+        except Exception:
+            # create a compiler-only stub without creating kernel
+            start_time = time()
+            src = cldrive.emit_c(
+                src=program.src, inputs=None, gsize=gsize, lsize=lsize,
+                compile_only=True, create_kernel=False)
 
     generation_time = time() - start_time
 

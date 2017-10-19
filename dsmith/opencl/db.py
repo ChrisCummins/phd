@@ -518,7 +518,7 @@ class DsmithTestcaseMeta(Base):
             .scalar()
         if not program_meta:
             program_meta = get_or_add(s, DsmithProgramMeta,
-                                         id=self.testcase.program_id)
+                                      id=self.testcase.program_id)
             s.flush()
 
         return program_meta
