@@ -1,23 +1,20 @@
 {
     "tester": "opencl",
     "generator": {
-        "exec": "../lib/clsmith/build/CLSmith"
     },
     "preflight_checks": [
 
     ],
     "duts": [
         {
-            "platform": "oclgrind",
-            "device": "foobar"
+            "platform": "Intel(R) OpenCL",
+            "device": "Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz",
+            "flags": []
         },
         {
-            "platform": "intel",
-            "device": "foobar"
-        },
-        {
-            "platform": "computeaorta",
-            "device": "foobar"
+            "platform": "ComputeAorta",
+            "device": "Codeplay Software Ltd. - host CPU",
+            "flags": [],,
         }
     ],
     "comparator": {

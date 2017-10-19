@@ -8,8 +8,9 @@ from pathlib import Path
 from labm8 import crypto
 
 import dsmith
-from dsmith import autotest
-from dsmith import clsmith
+from dsmith.opencl import clsmith
+
+import autotest
 
 
 class OpenCLTestcase(object):
@@ -110,7 +111,7 @@ def main(args):
         logging.debug(f"parsed config file '{args[0]}'")
     num_batches = int(args[1])
 
-    generator = CLSmithGenerator(**json_config["generator"])
+    generator = CLSmithGenerator(clsmith.exec_path)
     preflight_checks = [
         StaticAnalyzer(**x) for x in json_config["preflight_checks"]]
     duts = [DeviceUnderTest(**x) for x in json_config["duts"]]

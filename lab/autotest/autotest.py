@@ -6,6 +6,9 @@ from collections import Counter, namedtuple
 from pathlib import Path
 from typing import List, NewType
 
+import dsmith
+from dsmith import Colors
+
 testcase_t = NewType('testcase_t', object)
 output_t = NewType('output_t', object)
 reduced_t = namedtuple('reduced_t', ['reduced', 'expected', 'actual'])
