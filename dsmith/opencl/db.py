@@ -862,10 +862,7 @@ class Testbed(Base):
 
             words_ntodo = humanize.intcomma(ntodo)
             print(f"Running {Colors.BOLD}{words_ntodo} "
-                  f"{Colors.GREEN}{generator}{Colors.END}"
-                  f":{Colors.BOLD}{Colors.YELLOW}{harness}{Colors.END} "
-                  "testcases "
-                  f"on {Colors.BOLD}{Colors.PURPLE}{self.num}{Colors.END}. "
+                  f"{harness}:{generator} testcases on {self}"
                   f"Estimated runtime is {Colors.BOLD}{eta}{Colors.END}.")
 
             # asynchronously run testcases, updating progress bar
