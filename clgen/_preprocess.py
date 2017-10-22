@@ -668,8 +668,47 @@ def preprocess_opencl(src: str, id: str='anon', use_shim: bool=True,
     return src
 
 
-def preprocess_solidity(src: str, id: str='anon') -> str:
-    raise Exception("Solidity!")
+def _strip_comments(text: str):
+    """
+    Strip C/C++ style comments.
+
+    written by @markus-jarderot https://stackoverflow.com/a/241506/1318051
+    """
+    def replacer(match):
+        s = match.group(0)
+        if s.startswith('/'):
+            return " " # note: a space and not an empty string
+        else:
+            return s
+    pattern = re.compile(
+        r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
+        re.DOTALL | re.MULTILINE
+    )
+    return re.sub(pattern, replacer, text)
+
+
+def _remove_duplicate_empty_lines(text: str):
+    """
+    Truncate blank lines.
+    """
+    last_line = None
+    lines = []
+    for line in text.split("\n"):
+        line = line.rstrip()
+        if line or last_line:
+            lines.append(line)
+        last_line = line
+    return "\n".join(lines)
+
+
+def preprocess_solidity(src: str, id: str='anon', **kwargs) -> str:
+    """
+    Preprocess a solidity source.
+    """
+    src = _strip_comments(src)
+    src = _remove_duplicate_empty_lines(src)
+    src = clangformat_ocl(src)
+    return src
 
 
 def preprocess(src: str, id: str="anon", lang: str="opencl",
@@ -688,10 +727,6 @@ def preprocess(src: str, id: str="anon", lang: str="opencl",
         The source code as a string.
     id : str, optional
         An identifying name for the source code (used in exception messages).
-    use_shim : bool, optional
-        Inject shim header.
-    use_gpuverify : bool, optional
-        Whether to run GPUVerify on the code.
 
     Returns
     -------
@@ -890,8 +925,9 @@ def _preprocess_db(db_path: str, max_num_workers: int=cpu_count(),
     # create jobs
     jobs = [{
         "id": kid,
-        "src": dbutil.get_kernel(db_path, kid, "ContentFiles"),
-        "preprocess_opts": preprocess_opts
+        "src": dbutil.get_inlined_kernel(db_path, kid,
+                                         lang=preprocess_opts["lang"]),
+        "preprocess_opts": preprocess_opts,
     } for kid in todo]
 
     random.shuffle(jobs)

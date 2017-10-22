@@ -19,6 +19,7 @@
 """
 CLgen sqlite3 database utilities
 """
+import editdistance
 import os
 import re
 import sys
@@ -221,6 +222,82 @@ def get_kernel(path: str, kid: str, table: str="PreprocessedFiles") -> str:
     db.close()
 
     return src
+
+
+def get_inlined_kernel(path: str, kid: str, lang: str="opencl",
+                       stack: List[str]=None) -> str:
+    """
+    Retrieve a kernel from a database and inline any includes.
+
+    Parameters
+    ----------
+    path : str
+        Path to database.
+    kid : str
+        Kernel ID.
+    lang : str
+        Programming language.
+
+    Returns
+    -------
+    str
+        Source code.
+    """
+    if stack is None:
+        stack = []
+
+    db = sqlite3.connect(path)
+    c = db.cursor()
+    c.execute(f"SELECT contents FROM ContentFiles WHERE id=?", (kid,))
+    src = c.fetchone()[0]
+
+    c.execute("SELECT path, repo_url FROM ContentMeta WHERE id=?", (kid,))
+    repo_path, repo = c.fetchone()
+    stack.append(repo_path)
+
+    include_re = {
+        "opencl": re.compile(r'\w*#include ["<](?P<path>.*)[">]'),
+        "solidity": re.compile(r'\w*import ["<](\./)?(?P<path>.*)[">];')
+    }[lang]
+
+    outlines = []
+    for line in src.split('\n'):
+        match = re.match(include_re, line)
+        if match:
+            include_name = match.group("path")
+
+            # try and resolve relative paths
+            include_name = include_name.replace('../', '').replace('./', '')
+
+            c.execute(f"SELECT path FROM contentmeta WHERE repo_url=? AND path LIKE '%{include_name}%'", (repo, ))
+            repo_paths = [row[0] for row in c.fetchall()]
+
+            if len(repo_paths):
+                distances = [editdistance.eval(include_name, path) for path in repo_paths]
+                closest_match = repo_paths[distances.index(min(distances))]
+
+                if closest_match in stack:
+                    outlines.append('// [FETCH] ignored recursive include: ' +
+                                    include_name)
+                else:
+                    log.verbose("closest match to", include_name, "is", closest_match)
+
+                    c.execute("SELECT id FROM contentmeta WHERE path=?", (closest_match,))
+                    closest_kid = c.fetchone()[0]
+
+                    include_src = get_inlined_kernel(path, closest_kid, lang, stack)
+                    outlines.append('// [FETCH] include: ' + include_name)
+                    outlines.append(include_src)
+                    outlines.append('// [FETCH] eof(' + include_name + ')')
+            else:
+                outlines.append('// [FETCH] 404 not found: ' + include_name)
+        else:
+            outlines.append(line)
+
+    c.close()
+    db.close()
+
+    return "\n".join(outlines)
 
 
 def set_version_meta(path: str, version: str=clgen.version()) -> None:
