@@ -163,6 +163,71 @@ _include_re = re.compile('\w*#include ["<](.*)[">]')
 _sol_include_re = re.compile('\w*import ["<](\./)?(.*)[">];')
 
 
+def _download_opencl_file(github_token: str, repo, url: str,
+                          stack: List[str]) -> str:
+    """
+    Fetch file from GitHub.
+    Recursively downloads and inlines headers.
+
+    Parameters
+    ----------
+    github_token : str
+        Authorization.
+    repo
+        Repository.
+    url : str
+        Path.
+    stack : List[str]
+        URL stack.
+
+    Returns
+    -------
+    str
+        File contents.
+    """
+    # Recursion stack
+    stack.append(url)
+
+    response = json.loads(requests.get(
+        url,
+        headers={
+            'Authorization': 'token ' + str(github_token)
+        }
+    ).content.decode('utf-8'))
+    src = b64decode(response['content']).decode('utf-8')
+
+    outlines = []
+    for line in src.split('\n'):
+        match = re.match(_include_re, line)
+        if match:
+            include_name = match.group(1)
+
+            # Try and resolve relative paths
+            include_name = include_name.replace('../', '')
+
+            branch = repo.default_branch
+            tree_iterator = repo.get_git_tree(branch, recursive=True).tree
+            include_url = ''
+            for f in tree_iterator:
+                if f.path.endswith(include_name):
+                    include_url = f.url
+                    break
+
+            if include_url and include_url not in stack:
+                include_src = _download_opencl_file(
+                    github_token, repo, include_url)
+                outlines.append(include_src)
+            else:
+                if not include_url:
+                    outlines.append('// [FETCH] didnt find: ' + line)
+                else:
+                    outlines.append('// [FETCH] skipped: ' + line)
+        else:
+            outlines.append(line)
+
+    return '\n'.join(outlines)
+
+
 def _download_file(github_token: str, repo, url: str) -> str:
     """
     Fetch file from GitHub.
@@ -190,7 +255,8 @@ def _download_file(github_token: str, repo, url: str) -> str:
     return b64decode(response['content']).decode('utf-8')
 
 
-def _process_file(g, github_token: str, db, repo, file) -> bool:
+def _process_file(g, github_token: str, db, repo, file,
+                  download_file_cb) -> bool:
     """
     GitHub file handler.
 
@@ -233,7 +299,7 @@ def _process_file(g, github_token: str, db, repo, file) -> bool:
         return False
 
     repo_url = repo.url
-    contents = _download_file(github_token, repo, file.url)
+    contents = download_file_cb(github_token, repo, file.url)
     size = file.size
 
     c.execute("DELETE FROM ContentFiles WHERE id=?", (url,))
@@ -254,7 +320,8 @@ def _process_file(g, github_token: str, db, repo, file) -> bool:
 
 def _scrape_github_for_files(db_path: str, github_username: str,
                              github_pw: str, github_token: str,
-                             query_terms: List[str], file_is_intetesting):
+                             query_terms: List[str], file_is_intetesting,
+                             download_file_cb):
     global errors_counter
 
     g = Github(github_username, github_pw)
@@ -283,7 +350,8 @@ def _scrape_github_for_files(db_path: str, github_username: str,
                 for f in tree_iterator:
                     if file_is_intetesting(f):
                         try:
-                            _process_file(g, github_token, db, repo, f)
+                            _process_file(g, github_token, db, repo, f,
+                                          download_file_cb)
                         except Exception as e:
                             print(e)
                             sys.exit(1)
@@ -324,6 +392,7 @@ def fetch_github(db_path: str, github_username: str, github_pw: str,
         Authorization.
     """
     if lang == "opencl":
+        download_file_cb = _download_opencl_file
         file_is_intetesting = is_opencl_path
         query_terms = [
             'opencl',
@@ -337,6 +406,7 @@ def fetch_github(db_path: str, github_username: str, github_pw: str,
             'heterogeneous'
         ]
     elif lang == "solidity":
+        download_file_cb = _download_file
         file_is_intetesting = is_solidity_path
         query_terms = [
             'solidity',
@@ -348,7 +418,8 @@ def fetch_github(db_path: str, github_username: str, github_pw: str,
 
     return _scrape_github_for_files(db_path, github_username, github_pw,
                                     github_token, query_terms,
-                                    file_is_intetesting)
+                                    file_is_intetesting,
+                                    download_file_cb)
 
 
 def inline_fs_headers(path: str, stack: List[str]) -> str:
