@@ -615,8 +615,8 @@ def sanitize_prototype(src: str) -> str:
         return src
 
 
-def preprocess(src: str, id: str='anon', use_shim: bool=True,
-               use_gpuverify: bool=False) -> str:
+def preprocess_opencl(src: str, id: str='anon', use_shim: bool=True,
+                      use_gpuverify: bool=False) -> str:
     """
     Preprocess an OpenCL source. There are three possible outcomes:
 
@@ -666,6 +666,53 @@ def preprocess(src: str, id: str='anon', use_shim: bool=True,
         gpuverify(src)
 
     return src
+
+
+def preprocess_solidity(src: str, id: str='anon') -> str:
+    raise Exception("Solidity!")
+
+
+def preprocess(src: str, id: str="anon", lang: str="opencl",
+               **lang_opts) -> str:
+    """
+    Preprocess a file. There are three possible outcomes:
+
+    1. Good. Code is preprocessed and ready to be put into a training set.
+    2. Bad. Code can't be preprocessed (i.e. it's "bad" code).
+    3. Ugly. Code can be preprocessed but isn't useful for training
+       (e.g. it's an empty file).
+
+    Parameters
+    ----------
+    src : str
+        The source code as a string.
+    id : str, optional
+        An identifying name for the source code (used in exception messages).
+    use_shim : bool, optional
+        Inject shim header.
+    use_gpuverify : bool, optional
+        Whether to run GPUVerify on the code.
+
+    Returns
+    -------
+    str
+        Preprocessed source code as a string.
+
+    Raises
+    ------
+    BadCodeException
+        If code is bad (see above).
+    UglyCodeException
+        If code is ugly (see above).
+    clgen.InternalException
+        In case of some other error.
+    """
+    if lang == "opencl":
+        return preprocess_opencl(src, id, **lang_opts)
+    elif lang == "solidity":
+        return preprocess_solidity(src, id, **lang_opts)
+    else:
+        raise ValueError(f"unsuporrted language '{lang}'")
 
 
 def preprocess_for_db(src: str, **preprocess_opts) -> Tuple[int, str]:

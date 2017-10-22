@@ -298,7 +298,8 @@ def _register_fetch_parser(self, parent: ArgumentParser) -> None:
                 log.fatal('environment variable {} not set'.format(e))
 
             try:
-                clgen.fetch_github(db_file.name, username, password, token)
+                clgen.fetch_github(db_file.name, username, password, token,
+                                   lang="opencl")
             except BadCredentialsException as e:
                 log.fatal("bad GitHub credentials")
 
@@ -548,7 +549,8 @@ def _register_preprocess_parser(self, parent: ArgumentParser) -> None:
                     dbutil.remove_preprocessed(path)
                     print("done.")
                 else:
-                    if clgen.preprocess_db(path, use_gpuverify=gpuverify):
+                    if clgen.preprocess_db(path, lang="opencl",
+                                           use_gpuverify=gpuverify):
                         print("done.")
                     else:
                         print("nothing to be done.")
