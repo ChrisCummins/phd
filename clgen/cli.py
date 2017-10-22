@@ -298,7 +298,7 @@ def _register_fetch_parser(self, parent: ArgumentParser) -> None:
                 log.fatal('environment variable {} not set'.format(e))
 
             try:
-                fetch_github(db_file.name, username, password, token)
+                clgen.fetch_github(db_file.name, username, password, token)
             except BadCredentialsException as e:
                 log.fatal("bad GitHub credentials")
 
