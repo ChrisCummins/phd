@@ -348,6 +348,11 @@ class SampleConsumer(Thread):
 class Sampler(clgen.CLgenObject):
     """
     CLgen sampler for models.
+
+    Please note sampler instances should be treated as immutable. Upon
+    instantiation, a sampler's properties are used to determine its hash. If you
+    modify a property after instantiation, the hash will be out of date, which
+    can lead to bad things happening.
     """
     def __init__(self, sampler_opts: dict, kernel_opts: dict):
         """

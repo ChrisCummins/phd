@@ -73,6 +73,11 @@ class ModelError(clgen.CLgenError):
 class Model(clgen.CLgenObject):
     """
     A CLgen Model.
+
+    Please note model instances should be treated as immutable. Upon
+    instantiation, a model's properties are used to determine its hash. If you
+    modify a property after instantiation, the hash will be out of date, which
+    can lead to bad things happening.
     """
     def __init__(self, corpus: clgen.Corpus, **opts):
         """

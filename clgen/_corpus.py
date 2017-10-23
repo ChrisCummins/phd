@@ -198,6 +198,11 @@ def encode_kernels_db(kernels_db: str, encoding: str) -> None:
 class Corpus(clgen.CLgenObject):
     """
     Representation of a training corpus.
+
+    Please note corpus instances should be treated as immutable. Upon
+    instantiation, a corpus's properties are used to determine its hash. If you
+    modify a property after instantiation, the hash will be out of date, which
+    can lead to bad things happening.
     """
     def __init__(self, contentid: str, path: str=None, **opts):
         """
