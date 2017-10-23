@@ -24,7 +24,7 @@ from labm8 import fs
 import clgen
 from clgen import test as tests
 
-TINY_HASH = '1fd1cf76b997b4ae163fd7b2cd3e3d94beb281ff'
+TINY_HASH = '2693c0db1566c52cc3fd33c1a2f9abb99097a251'
 
 
 def test_path():

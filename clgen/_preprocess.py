@@ -43,7 +43,6 @@ from typing import Dict, List, Tuple
 
 
 import clgen
-from clgen import clutil
 from clgen import dbutil
 from clgen import log
 from clgen import native
@@ -922,11 +921,22 @@ def _preprocess_db(db_path: str, max_num_workers: int=cpu_count(),
 
     log.verbose("creating jobs")
 
+    # Determine if we need to inline kernels when creating jobs
+    db = sqlite3.connect(db_path)
+    c = db.cursor()
+    c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='ContentMeta';")
+    meta_table = c.fetchone()
+    c.close()
+    db.close()
+    if meta_table:
+        get_kernel = lambda kid: dbutil.get_inlined_kernel(db_path, kid, lang=preprocess_opts["lang"])
+    else:
+        get_kernel = lambda kid: dbutil.get_kernel(db_path, kid, table="ContentFiles")
+
     # create jobs
     jobs = [{
         "id": kid,
-        "src": dbutil.get_inlined_kernel(db_path, kid,
-                                         lang=preprocess_opts["lang"]),
+        "src": get_kernel(kid),
         "preprocess_opts": preprocess_opts,
     } for kid in todo]
 

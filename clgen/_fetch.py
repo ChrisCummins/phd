@@ -38,7 +38,6 @@ from time import sleep
 from typing import List
 
 import clgen
-from clgen import clutil
 from clgen import dbutil
 from clgen import log
 

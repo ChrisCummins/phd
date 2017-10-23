@@ -32,6 +32,7 @@ from labm8 import fs
 from labm8 import jsonutil
 from labm8 import lockfile
 from labm8 import prof
+from labm8 import text
 from labm8 import tar
 from labm8 import types
 from labm8.dirhashcache import DirHashCache
@@ -134,6 +135,76 @@ def get_kernel_features(code: str, **kwargs) -> np.array:
     return f[0]
 
 
+def get_cl_kernel_end_idx(src: str, start_idx: int=0, max_len: int=5000) -> int:
+    """
+    Return the index of the character after the end of the OpenCL
+    kernel.
+
+    Parameters
+    ----------
+    src : str
+        OpenCL source.
+    start_idx : int, optional
+        Start index.
+    max_len : int, optional
+        Maximum kernel length.
+
+    Returns
+    -------
+    int
+        Index of end of OpenCL kernel.
+    """
+    i = src.find('{', start_idx) + 1
+    d = 1  # depth
+    while i < min(len(src), start_idx + max_len) and d > 0:
+        if src[i] == '{':
+            d += 1
+        elif src[i] == '}':
+            d -= 1
+        i += 1
+    return i
+
+
+def get_cl_kernel(src: str, start_idx: int, max_len: int=5000) -> str:
+    """
+    Return the OpenCL kernel.
+
+    Parameters
+    ----------
+    src : str
+        OpenCL source.
+    start_idx : int, optional
+        Start index.
+    max_len : int, optional
+        Maximum kernel length.
+
+    Returns
+    -------
+    str
+        OpenCL kernel.
+    """
+    return src[start_idx:get_cl_kernel_end_idx(src, start_idx)]
+
+
+def get_cl_kernels(src: str) -> List[str]:
+    """
+    Return OpenCL kernels.
+
+    Parameters
+    ----------
+    src : str
+        OpenCL source.
+
+    Returns
+    -------
+    List[str]
+        OpenCL kernels.
+    """
+    idxs = text.get_substring_idxs('__kernel', src)
+    kernels = [get_cl_kernel(src, i) for i in idxs]
+    return kernels
+
+
 def encode_kernels_db(kernels_db: str, encoding: str) -> None:
     """
     Encode a kernels database.
@@ -156,7 +227,7 @@ def encode_kernels_db(kernels_db: str, encoding: str) -> None:
         for row in list(c.fetchall()):
             id, contents = row
             c.execute("DELETE FROM PreprocessedFiles WHERE id=?", (id,))
-            for i, kernel in enumerate(clutil.get_cl_kernels(contents)):
+            for i, kernel in enumerate(get_cl_kernels(contents)):
                 features = get_kernel_features(kernel)
                 kid = "{}-{}".format(id, i)
                 if len(features) == 8:
@@ -579,43 +650,6 @@ class Corpus(clgen.CLgenObject):
         query = c.execute("SELECT Contents FROM ContentFiles")
         for row in query.fetchall():
             yield row[0]
-
-    def most_common_prototypes(self, n: int) -> Tuple[List[Tuple[float, str]], int]:
-        """
-        Return the n most frequently occuring prototypes.
-
-        Parameters
-        ----------
-        c : Corpus
-            Corpus.
-        n : int
-            Number of prototypes to return:
-
-        Returns
-        -------
-        Tuple[List[Tuple[float, str]], int]
-            Tuple of list of prototypes, and the number of prototypes.
-        """
-        from clgen import clutil
-
-        prototypes = []
-        for kernel in self.preprocessed():
-            try:
-                prototype = clutil.KernelPrototype.from_source(kernel)
-                if prototype.is_synthesizable:
-                    prototypes.append(", ".join(str(x) for x in prototype.args))
-            except clutil.PrototypeException:
-                pass
-
-        # Convert frequency into ratios
-        counter = Counter(prototypes)
-        results = []
-        for row in counter.most_common(n):
-            prototype, freq = row
-            ratio = freq / len(prototypes)
-            results.append((ratio, prototype))
-
-        return results, len(prototypes)
 
     def __repr__(self) -> str:
         nf = dbutil.num_good_kernels(self.contentcache['kernels.db'])

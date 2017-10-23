@@ -40,7 +40,6 @@ from time import time
 from typing import List, Union
 
 import clgen
-from clgen import clutil
 from clgen import dbutil
 from clgen import log
 
@@ -295,7 +294,7 @@ class SampleConsumer(Thread):
                 sample_time = time()
                 sample = self.queue.get(timeout=60)
 
-                kernels = clutil.get_cl_kernels(sample)
+                kernels = corpus.get_cl_kernels(sample)
                 ids = [crypto.sha1_str(k) for k in kernels]
 
                 if self.sampler_opts["static_checker"]:
