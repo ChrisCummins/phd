@@ -294,7 +294,7 @@ class SampleConsumer(Thread):
                 sample_time = time()
                 sample = self.queue.get(timeout=60)
 
-                kernels = corpus.get_cl_kernels(sample)
+                kernels = clgen.get_cl_kernels(sample)
                 ids = [crypto.sha1_str(k) for k in kernels]
 
                 if self.sampler_opts["static_checker"]:
