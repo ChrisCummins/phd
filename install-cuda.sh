@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# One-liner to install CLgen 0.3.13.dev0.
+# One-liner to install CLgen 0.4.0.
 #
 # Copyright 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
 #
@@ -20,7 +20,7 @@
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
 set -ex
-wget https://github.com/ChrisCummins/clgen/archive/0.3.13.dev0.tar.gz -O clgen-0.3.13.dev0.tar.gz || {
+wget https://github.com/ChrisCummins/clgen/archive/0.4.0.tar.gz -O clgen-0.4.0.tar.gz || {
     set +x
     echo >&2
     echo 'failed to fetch clgen archive.' >&2
@@ -29,9 +29,9 @@ wget https://github.com/ChrisCummins/clgen/archive/0.3.13.dev0.tar.gz -O clgen-0
     echo '  <https://chriscummins.cc/clgen/>' >&2
     exit 1
 }
-tar xf clgen-0.3.13.dev0.tar.gz
-rm clgen-0.3.13.dev0.tar.gz
-cd clgen-0.3.13.dev0
+tar xf clgen-0.4.0.tar.gz
+rm clgen-0.4.0.tar.gz
+cd clgen-0.4.0
 ./configure --batch --with-cuda
 make
 
@@ -40,12 +40,12 @@ if [[ -n "$VIRTUAL_ENV" ]]; then
     make all
     make test
     cd ..
-    rm -rf clgen-0.3.13.dev0
+    rm -rf clgen-0.4.0
 else
     # system-wide - use sudo
     sudo -H make all
     sudo -H make test
     cd ..
-    sudo rm -rf clgen-0.3.13.dev0
+    sudo rm -rf clgen-0.4.0
 fi
-echo "==> CLgen 0.3.13.dev0 installed"
+echo "==> CLgen 0.4.0 installed"

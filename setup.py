@@ -70,7 +70,7 @@ def all_module_data_files(module, datadir="data", excludes=[]):
 
 setup(
     name='CLgen',
-    version='0.3.13.dev0',
+    version='0.4.0',
     description='Deep Learning program generator',
     url='https://github.com/ChrisCummins/clgen',
     author='Chris Cummins',
