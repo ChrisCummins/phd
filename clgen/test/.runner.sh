@@ -36,8 +36,7 @@ main() {
 
         set -x
         ./configure -b
-        make
-        make install
+        make all
         make test
 }
 main $@

@@ -37,13 +37,13 @@ make
 
 if [[ -n "$VIRTUAL_ENV" ]]; then
     # virtualen - no sudo required
-    make install
+    make all
     make test
     cd ..
     rm -rf clgen-0.3.13.dev0
 else
     # system-wide - use sudo
-    sudo -H make install
+    sudo -H make all
     sudo -H make test
     cd ..
     sudo rm -rf clgen-0.3.13.dev0

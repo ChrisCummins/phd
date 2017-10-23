@@ -63,7 +63,6 @@ install:  # cache cold (runs build in 30min chunks, restart job until complete)
 # install:  # cache hot
 #   - ./configure -b
 #   - make all
-#   - make install
 #   - pip freeze  # python package versions
 
 script:

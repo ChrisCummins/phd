@@ -14,11 +14,10 @@ Install the build requirements using:
 $ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.3.13.dev0/install-deps.sh | bash
 ```
 
-Configure and compile CLgen using:
+Configure CLgen using:
 
 ```sh
 $ ./configure
-$ make all
 ```
 
 Installation - Virtualenv
@@ -39,7 +38,7 @@ $ source ~/clgen-dev/bin/activate
 Install CLgen in the virtualenv environment:
 
 ```sh
-(clgen-dev)$ make install
+(clgen-dev)$ make all
 ```
 
 (Optional) Run the test suite:
@@ -73,7 +72,7 @@ Installation - System-wide
 Install CLgen system-wide using:
 
 ```sh
-$ sudo -H make install
+$ sudo -H make all
 ```
 
 (Optional) Run the test suite:

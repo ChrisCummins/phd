@@ -67,7 +67,11 @@ data_bin = \
 	$(root)/clgen/data/bin/clgen-rewriter
 
 # build everything
-all: $(data_symlinks) $(data_bin)
+all install: $(data_symlinks) $(data_bin)
+	./configure -r >/dev/null
+	$(PIP) install --only-binary=numpy '$(shell grep numpy requirements.txt)'
+	$(PIP) install -r requirements.txt
+	$(PYTHON) ./setup.py install
 
 $(root)/clgen/data/bin/llvm-config: $(llvm)
 	mkdir -p $(dir $@)
@@ -130,14 +134,6 @@ clean: $(clean_targets)
 distclean: $(distclean_targets)
 	rm -f requirements.txt .config.json .config.make clgen/_config.py
 
-# install CLgen
-.PHONY: install
-install:
-	./configure -r >/dev/null
-	$(PIP) install --only-binary=numpy '$(shell grep numpy requirements.txt)'
-	$(PIP) install -r requirements.txt
-	$(PYTHON) ./setup.py install
-
 # autogenerate documentation
 .PHONY: docs-modules
 docs-modules:
@@ -174,7 +170,6 @@ docs: docs-modules
 .PHONY: help
 help:
 	@echo "make all        build CLgen"
-	@echo "make install    install CLgen"
 	@echo "make test       run test suite (requires install)"
 	@echo "make docs       build documentation (requires install)"
 	@echo "make clean      remove compiled files"
