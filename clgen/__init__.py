@@ -142,6 +142,9 @@ class Language(Enum):
             raise UserError(f"unknown language '{string}'")
         return lang
 
+    def __repr__(self):
+        return self.name.lower()
+
 
 def cachepath(*relative_path_components: list) -> str:
     """

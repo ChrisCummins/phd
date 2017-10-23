@@ -1,3 +1,4 @@
+editdistance==0.3.1
 humanize>=0.5.1
 labm8>=0.1.2
 numpy>=1.10.4
