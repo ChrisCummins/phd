@@ -192,6 +192,7 @@ def mklang(name: str) -> Language:
     lang = {
         "opencl": OpenCL,
         "sol": Solidity,
+        "solidity": Solidity,
     }.get(name)
     if not lang:
         raise LookupError(f"Unknown language '{name}'")

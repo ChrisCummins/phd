@@ -562,9 +562,15 @@ class Stderr(Base):
     id_t = sql.Integer
     __tablename__ = "stderrs"
 
+    # The maximum number of characters to keep before truncating
+    max_chars = 64000
+
     # Fields
     id = sql.Column(id_t, primary_key=True)
     sha1 = sql.Column(sql.String(40), nullable=False, unique=True, index=True)
+    linecount = sql.Column(sql.Integer, nullable=False)
+    charcount = sql.Column(sql.Integer, nullable=False)
+    truncated = sql.Column(sql.Boolean, nullable=False)
     stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
     def __repr__(self):

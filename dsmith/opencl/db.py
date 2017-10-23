@@ -1030,12 +1030,18 @@ class Stderr(Base):
     id_t = sql.Integer
     __tablename__ = "stderrs"
 
+    # The maximum number of characters to keep. Everything else is truncated.
+    max_chars = 64000
+
     # Fields
     id = sql.Column(id_t, primary_key=True)
     sha1 = sql.Column(sql.String(40), nullable=False, unique=True, index=True)
     assertion_id = sql.Column(Assertion.id_t, sql.ForeignKey("assertions.id"))
     unreachable_id = sql.Column(Unreachable.id_t, sql.ForeignKey("unreachables.id"))
     stackdump_id = sql.Column(StackDump.id_t, sql.ForeignKey("stackdumps.id"))
+    linecount = sql.Column(sql.Integer, nullable=False)
+    charcount = sql.Column(sql.Integer, nullable=False)
+    truncated = sql.Column(sql.Boolean, nullable=False)
     stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
     # Relationships
@@ -1147,7 +1153,10 @@ class Stderr(Base):
             assertion=assertion,
             unreachable=unreachable,
             stackdump=stackdump,
-            stderr=string)
+            linecount=len(lines),
+            charcount=len(string),
+            truncated=len(string) > Stderr.max_chars,
+            stderr=string[:Stderr.max_chars])
         return stderr
 
 
