@@ -93,7 +93,6 @@ class SampleProducer(Thread):
         self.start_text = start_text
         self.queue = queue
         self.stop_signal = Event()
-        self.language = clgen.Language.from_str(kernel_opts.get("language"))
         self.kernel_opts = kernel_opts
 
     def run(self) -> None:
@@ -411,6 +410,8 @@ class Sampler(clgen.CLgenObject):
                                         kernel_opts)
 
         self.hash = _hash(self.sampler_opts, self.kernel_opts)
+
+        self.language = clgen.Language.from_str(kernel_opts.get("language"))
 
         self.start_text = _start_text(self.kernel_opts["language"], self.kernel_opts["args"])
 

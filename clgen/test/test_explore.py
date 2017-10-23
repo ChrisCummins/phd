@@ -24,6 +24,7 @@ from clgen import test as tests
 
 def test_explore():
     c = clgen.Corpus.from_json({
+        "language": "opencl",
         "path": tests.data_path("tiny", "corpus", exists=False)
     })
     clgen.explore(c.contentcache["kernels.db"])

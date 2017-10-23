@@ -4,6 +4,7 @@
     "date": "2017-05-18 12:00:00"
   },
   "corpus": {
+    "language": "opencl",
     "path": "corpus",
     "vocabulary": "greedy"
   },

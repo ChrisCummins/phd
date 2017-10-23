@@ -1,5 +1,6 @@
 {
   "kernels": {
+    "language": "opencl",
     "max_length": 100
   },
   "sampler": {

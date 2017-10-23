@@ -4,6 +4,7 @@
     "date": "2017-05-15 12:00:00"  # str
   },
   "corpus": {
+    "language": "opencl",
     "path": "corpus",  # directory containing kernel files
     "preserve_order": false,  # if false, shuffle kernels during training
     "eof": false,  # if True, insert markers between kernels during training

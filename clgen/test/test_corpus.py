@@ -117,10 +117,26 @@ __kernel void B(__global float* a) {}"""
         clgen.get_kernel_features(code)
 
 
+def test_no_language():
+    with pytest.raises(clgen.UserError):
+        clgen.Corpus.from_json({
+            "path": tests.archive("tiny", "corpus"),
+        })
+
+
+def test_bad_language():
+    with pytest.raises(clgen.UserError):
+        clgen.Corpus.from_json({
+            "language": "NOTALANG",
+            "path": tests.archive("tiny", "corpus"),
+        })
+
+
 @pytest.mark.xfail(reason="FIXME: UserError not raised")
 def test_bad_option():
     with pytest.raises(clgen.UserError):
         clgen.Corpus.from_json({
+            "language": "opencl",
             "path": tests.archive("tiny", "corpus"),
             "not_a_real_option": False
         })
@@ -130,6 +146,7 @@ def test_bad_option():
 def test_bad_vocab():
     with pytest.raises(clgen.UserError):
         clgen.Corpus.from_json({
+            "language": "opencl",
             "path": tests.archive("tiny", "corpus"),
             "vocab": "INVALID_VOCAB"
         })
@@ -139,6 +156,7 @@ def test_bad_vocab():
 def test_bad_encoding():
     with pytest.raises(clgen.UserError):
         clgen.Corpus.from_json({
+            "language": "opencl",
             "path": tests.archive("tiny", "corpus"),
             "encoding": "INVALID_ENCODING"
         })
@@ -146,14 +164,17 @@ def test_bad_encoding():
 
 def test_eq():
     c1 = clgen.Corpus.from_json({
+        "language": "opencl",
         "path": tests.archive("tiny", "corpus"),
         "eof": False
     })
     c2 = clgen.Corpus.from_json({
+        "language": "opencl",
         "path": tests.archive("tiny", "corpus"),
         "eof": False
     })
     c3 = clgen.Corpus.from_json({
+        "language": "opencl",
         "path": tests.archive("tiny", "corpus"),
         "eof": True
     })
@@ -165,6 +186,7 @@ def test_eq():
 
 def test_preprocessed():
     c1 = clgen.Corpus.from_json({
+        "language": "opencl",
         "path": tests.archive("tiny", "corpus")
     })
     assert len(list(c1.preprocessed())) == 187
@@ -174,6 +196,7 @@ def test_preprocessed():
 
 def test_contentfiles():
     c1 = clgen.Corpus.from_json({
+        "language": "opencl",
         "path": tests.archive("tiny", "corpus")
     })
     assert len(list(c1.contentfiles())) == 250
@@ -181,6 +204,7 @@ def test_contentfiles():
 
 def test_to_json():
     c1 = clgen.Corpus.from_json({
+        "language": "opencl",
         "path": tests.archive("tiny", "corpus")
     })
     c2 = clgen.Corpus.from_json(c1.to_json())

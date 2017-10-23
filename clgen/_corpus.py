@@ -303,13 +303,13 @@ class Corpus(clgen.CLgenObject):
         self.opts["id"] = contentid
 
         # check that contentid exists
+        self.language = clgen.Language.from_str(opts.get("language"))
         if (path is None and
-            not fs.isdir(clgen.cachepath("contentfiles", contentid))):
-            raise clgen.UserError("corpus {contentid} not found"
+            not fs.isdir(clgen.cachepath("contentfiles", f"{self.language}-{contentid}"))):
+            raise clgen.UserError("corpus {self.language}-{contentid} not found"
                                   .format(**vars()))
 
         self.contentid = contentid
-        self.language = clgen.Language.from_str(opts.get("language"))
         self.contentcache = clgen.mkcache("contentfiles", f"{self.language}-{contentid}")
         self.kernels_db = self.contentcache.keypath('kernels.db')
 

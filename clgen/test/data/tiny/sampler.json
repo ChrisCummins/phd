@@ -1,5 +1,6 @@
 {
   "kernels": {
+    "language": "opencl",
     "args": [
       "__global float*",
       "__global float*",
