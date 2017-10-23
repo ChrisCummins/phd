@@ -574,12 +574,16 @@ class Stderr(Base):
 
     @staticmethod
     def from_str(session: session_t, string: str) -> 'Stderr':
-        # Strip the noise and keep the first 1 million characters:
-        string = Stderr._escape(string)[:1000000]
+        # Strip the noise and keep only the first 1 million characters:
+        string = Stderr._escape(string)
+        sha1 = crypto.sha1_str(string)
+        # Note we truncate the string *AFTER* we've computed the hash. Even if
+        # two truncated strings are identical, we don't want their hashes to
+        # collide unless they were identical before truncation:
+        string = string[:1000000]
 
         stderr = get_or_add(
-            session, Stderr,
-            sha1=crypto.sha1_str(string), stderr=string)
+            session, Stderr, sha1=sha1, stderr=string)
         return stderr
 
 
