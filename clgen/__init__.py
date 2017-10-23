@@ -206,7 +206,8 @@ def mkcache(*relative_path_components: list) -> cache.FSCache:
     labm8.FSCache
         Filesystem cache.
     """
-    return cache.FSCache(*relative_path_components, escape_key=cache.escape_path)
+    return cache.FSCache(cachepath(*relative_path_components),
+                         escape_key=cache.escape_path)
 
 
 def must_exist(*path_components : str, **kwargs) -> str:
