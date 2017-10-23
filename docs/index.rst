@@ -21,7 +21,7 @@ CLgen requirements automatically:
 
 ::
 
-    $ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.4.0/install-deps.sh | bash
+    $ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.4.0.dev0/install-deps.sh | bash
 
 Note that on Ubuntu, sudo privileges are required to install these requirements
 - you may be prompted for your password.
@@ -76,9 +76,9 @@ Install the latest release of CLgen:
 ::
 
     # if you have an NVIDIA GPU with CUDA 8.0 and cuDNN:
-    (clgen)$ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.4.0/install-cuda.sh | bash
+    (clgen)$ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.4.0.dev0/install-cuda.sh | bash
     # CPU only:
-    (clgen)$ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.4.0/install-cpu.sh | bash
+    (clgen)$ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.4.0.dev0/install-cpu.sh | bash
 
 When you are done using CLgen, deactivate the virtualenv environment:
 
@@ -106,9 +106,9 @@ Install the latest release of CLgen:
 ::
 
     # if you have an NVIDIA GPU with CUDA 8.0 and cuDNN:
-    $ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.4.0/install-cuda.sh | bash
+    $ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.4.0.dev0/install-cuda.sh | bash
     # CPU only:
-    $ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.4.0/install-cpu.sh | bash
+    $ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.4.0.dev0/install-cpu.sh | bash
 
 
 Contents
@@ -130,7 +130,7 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-.. |Documentation Status| image:: https://img.shields.io/badge/docs-0.4.0-brightgreen.svg?style=flat
+.. |Documentation Status| image:: https://img.shields.io/badge/docs-0.4.0.dev0-brightgreen.svg?style=flat
    :target: http://chriscummins.cc/clgen/
 
 .. |Build Status| image:: https://img.shields.io/travis/ChrisCummins/clgen/master.svg?style=flat
@@ -139,7 +139,7 @@ Indices and tables
 .. |Coverage Status| image:: https://img.shields.io/coveralls/ChrisCummins/clgen/master.svg?style=flat
    :target: https://coveralls.io/github/ChrisCummins/clgen?branch=master
 
-.. |Release Version| image:: https://img.shields.io/badge/release-0.4.0-blue.svg?style=flat
+.. |Release Version| image:: https://img.shields.io/badge/release-0.4.0.dev0-blue.svg?style=flat
    :target: https://github.com/ChrisCummins/clgen/releases
 
 .. |License Badge| image:: https://img.shields.io/badge/license-GNU%20GPL%20v3-blue.svg?style=flat
