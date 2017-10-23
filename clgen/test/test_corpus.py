@@ -132,7 +132,6 @@ def test_bad_language():
         })
 
 
-@pytest.mark.xfail(reason="FIXME: UserError not raised")
 def test_bad_option():
     with pytest.raises(clgen.UserError):
         clgen.Corpus.from_json({
@@ -142,7 +141,6 @@ def test_bad_option():
         })
 
 
-@pytest.mark.xfail(reason="FIXME: UserError not raised")
 def test_bad_vocab():
     with pytest.raises(clgen.UserError):
         clgen.Corpus.from_json({
