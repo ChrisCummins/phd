@@ -83,6 +83,7 @@ setup(
     packages=[
         'dsmith',
         'dsmith.opencl',
+        'dsmith.sol',
         'dsmith.test',
     ],
     package_data={

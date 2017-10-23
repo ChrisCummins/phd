@@ -186,10 +186,12 @@ def mklang(name: str) -> Language:
     # Deferred importing of languages to break circular dependencies from
     # language modules which require this file.
     from dsmith.opencl import OpenCL
+    from dsmith.sol import Solidity
 
     # Global table of available languages
     lang = {
         "opencl": OpenCL,
+        "sol": Solidity,
     }.get(name)
     if not lang:
         raise LookupError(f"Unknown language '{name}'")
