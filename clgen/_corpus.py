@@ -61,7 +61,7 @@ DEFAULT_CORPUS_OPTS = {
     "vocabulary": "char",
     "encoding": "default",
     "preserve_order": False,
-    "language": "opencl",
+    "language": None,   # Note no explicit default language.
 }
 
 
@@ -309,11 +309,12 @@ class Corpus(clgen.CLgenObject):
                                   .format(**vars()))
 
         self.contentid = contentid
-        self.contentcache = clgen.mkcache("contentfiles", contentid)
+        self.language = clgen.Language.from_str(opts.get("language"))
+        self.contentcache = clgen.mkcache("contentfiles", f"{self.language}-{contentid}")
         self.kernels_db = self.contentcache.keypath('kernels.db')
 
         self.hash = self._hash(contentid, self.opts)
-        self.cache = clgen.mkcache("corpus", self.hash)
+        self.cache = clgen.mkcache("corpus", f"{self.language}-{self.hash}")
 
         log.debug("contentfiles {self.contentid}".format(**vars()))
         log.debug("corpus {hash}".format(hash=self.hash))
@@ -375,7 +376,7 @@ class Corpus(clgen.CLgenObject):
             preprocess_time = time()
             encoding = self.opts["encoding"]
             if clgen.preprocess_db(self.contentcache["kernels.db"],
-                                   lang=self.opts["language"]):
+                                   lang=str(self.language)):
                 modified = True
                 encode_kernels_db(self.contentcache["kernels.db"], encoding)
         except Exception as e:
@@ -688,6 +689,7 @@ class Corpus(clgen.CLgenObject):
         """
         path = corpus_json.pop("path", None)
         uid = corpus_json.pop("id", None)
+        language = clgen.Language.from_str(corpus_json.get("language"))
 
         if path:
             path = unpack_directory_if_needed(fs.abspath(path))
@@ -698,7 +700,7 @@ class Corpus(clgen.CLgenObject):
             dirhashcache = DirHashCache(clgen.cachepath("dirhash.db"), 'sha1')
             uid = prof.profile(dirhashcache.dirhash, path)
         elif uid:
-            cache_path = clgen.mkcache("contentfiles", uid).path
+            cache_path = clgen.mkcache("contentfiles", f"{language}-{uid}").path
             if not fs.isdir(cache_path):
                 raise clgen.UserError("Corpus content {} not found".format(uid))
         else:

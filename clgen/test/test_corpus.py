@@ -29,7 +29,11 @@ TINY_HASH = '2693c0db1566c52cc3fd33c1a2f9abb99097a251'
 
 def test_path():
     path = tests.archive("tiny", "corpus")
-    c = clgen.Corpus.from_json({"id": TINY_HASH, "path": path})
+    c = clgen.Corpus.from_json({
+        "language": "opencl",
+        "id": TINY_HASH,
+        "path": path
+    })
     assert TINY_HASH == c.hash
 
 
@@ -43,6 +47,7 @@ def test_from_archive():
     fs.rm(tests.data_path("tiny", "corpus", exists=False))
 
     c = clgen.Corpus.from_json({
+        "language": "opencl",
         "path": tests.data_path("tiny", "corpus", exists=False)
     })
     assert TINY_HASH == c.hash
@@ -53,6 +58,7 @@ def test_from_archive_path():
     fs.rm(tests.data_path("tiny", "corpus", exists=False))
 
     c = clgen.Corpus.from_json({
+        "language": "opencl",
         "path": tests.data_path("tiny", "corpus.tar.bz2")
     })
     assert TINY_HASH == c.hash
@@ -60,17 +66,20 @@ def test_from_archive_path():
 
 def test_hash():
     c1 = clgen.Corpus.from_json({
+        "language": "opencl",
         "path": tests.archive("tiny", "corpus")
     })
 
     # same as c1, with explicit default opt:
     c2 = clgen.Corpus.from_json({
+        "language": "opencl",
         "path": tests.archive("tiny", "corpus"),
         "eof": False
     })
 
     # different opt value:
     c3 = clgen.Corpus.from_json({
+        "language": "opencl",
         "path": tests.archive("tiny", "corpus"),
         "eof": True
     })

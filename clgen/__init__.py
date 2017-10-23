@@ -142,6 +142,9 @@ class Language(Enum):
             raise UserError(f"unknown language '{string}'")
         return lang
 
+    def __str__(self):
+        return repr(self)
+
     def __repr__(self):
         return self.name.lower()
 
@@ -185,7 +188,7 @@ def get_default_author() -> str:
         "{user}@{host}".format(user=system.USERNAME, host=system.HOSTNAME))
 
 
-def mkcache(lang: Language, *relative_path_components: list) -> cache.FSCache:
+def mkcache(*relative_path_components: list) -> cache.FSCache:
     """
     Instantiae a file system cache.
 
@@ -203,11 +206,7 @@ def mkcache(lang: Language, *relative_path_components: list) -> cache.FSCache:
     labm8.FSCache
         Filesystem cache.
     """
-    if not isinstance(lang, Language):
-        raise TypeError
-
-    return cache.FSCache(cachepath(lang.name.lower(), *relative_path_components),
-                         escape_key=cache.escape_path)
+    return cache.FSCache(*relative_path_components, escape_key=cache.escape_path)
 
 
 def must_exist(*path_components : str, **kwargs) -> str:

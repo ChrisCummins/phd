@@ -25,6 +25,7 @@ from clgen import dbutil
 def _get_test_model():
     return clgen.Model.from_json({
         "corpus": {
+            "language": "opencl",
             "path": tests.data_path("tiny", "corpus"),
         },
         "architecture": {
@@ -49,6 +50,7 @@ def test_sample():
     ]
     s = clgen.Sampler.from_json({
         "kernels": {
+            "language": "opencl",
             "args": argspec,
             "max_length": 300,
         },
@@ -79,6 +81,7 @@ def test_sample():
 def test_eq():
     s1 = clgen.Sampler.from_json({
         "kernels": {
+            "language": "opencl",
             "args": [
                 '__global float*',
                 '__global float*',
@@ -88,6 +91,7 @@ def test_eq():
     })
     s2 = clgen.Sampler.from_json({
         "kernels": {
+            "language": "opencl",
             "args": [
                 '__global float*',
                 '__global float*',
@@ -97,6 +101,7 @@ def test_eq():
     })
     s3 = clgen.Sampler.from_json({
         "kernels": {
+            "language": "opencl",
             "args": [
                 'int'
             ]
@@ -112,6 +117,7 @@ def test_eq():
 def test_to_json():
     s1 = clgen.Sampler.from_json({
         "kernels": {
+            "language": "opencl",
             "args": [
                 '__global float*',
                 '__global float*',

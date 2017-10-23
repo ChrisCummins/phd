@@ -31,6 +31,7 @@ from clgen import cache
 def get_test_model(vocab="char"):
     return clgen.Model.from_json({
         "corpus": {
+            "language": "opencl",
             "path": tests.data_path("tiny", "corpus"),
             "vocabulary": vocab
         },
@@ -47,6 +48,7 @@ def get_test_model(vocab="char"):
 def test_model_hash():
     m1 = clgen.Model.from_json({
         "corpus": {
+            "language": "opencl",
             "path": tests.data_path("tiny", "corpus")
         }
     })
@@ -54,6 +56,7 @@ def test_model_hash():
     # same as m1, with explicit default opt:
     m2 = clgen.Model.from_json({
         "corpus": {
+            "language": "opencl",
             "path": tests.data_path("tiny", "corpus")
         },
         "train_opts": {
@@ -64,6 +67,7 @@ def test_model_hash():
     # different opt value:
     m3 = clgen.Model.from_json({
         "corpus": {
+            "language": "opencl",
             "path": tests.data_path("tiny", "corpus")
         },
         "train_opts": {
@@ -82,6 +86,7 @@ def test_model_checkpoint_path_untrained():
 def test_model_eq():
     m1 = clgen.Model.from_json({
         "corpus": {
+            "language": "opencl",
             "path": tests.data_path("tiny", "corpus")
         },
         "train_opts": {
@@ -90,6 +95,7 @@ def test_model_eq():
     })
     m2 = clgen.Model.from_json({
         "corpus": {
+            "language": "opencl",
             "path": tests.data_path("tiny", "corpus")
         },
         "train_opts": {
@@ -98,6 +104,7 @@ def test_model_eq():
     })
     m3 = clgen.Model.from_json({
         "corpus": {
+            "language": "opencl",
             "path": tests.data_path("tiny", "corpus")
         },
         "train_opts": {
@@ -113,6 +120,7 @@ def test_model_eq():
 def test_model_to_json():
     m1 = clgen.Model.from_json({
         "corpus": {
+            "language": "opencl",
             "path": tests.data_path("tiny", "corpus")
         },
         "train_opts": {

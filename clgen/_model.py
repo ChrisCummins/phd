@@ -110,7 +110,7 @@ class Model(clgen.CLgenObject):
         self.opts = types.update(deepcopy(DEFAULT_MODEL_OPTS), opts)
         self.corpus = corpus
         self.hash = _hash(self.corpus, self.opts)
-        self.cache = clgen.mkcache("model", self.hash)
+        self.cache = clgen.mkcache("model", f"{corpus.language}-{self.hash}")
 
         log.debug("model", self.hash)
 

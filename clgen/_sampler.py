@@ -46,7 +46,7 @@ from clgen import log
 # Default options used for sampler. Any values provided by the user will
 # override these defaults.
 DEFAULT_KERNELS_OPTS = {
-    "language": "opencl",
+    "language": None,  # note language must be explicitly provided
     "args": None,
     "max_length": 10000,
     "seed": None,
@@ -93,6 +93,7 @@ class SampleProducer(Thread):
         self.start_text = start_text
         self.queue = queue
         self.stop_signal = Event()
+        self.language = clgen.Language.from_str(kernel_opts.get("language"))
         self.kernel_opts = kernel_opts
 
     def run(self) -> None:
@@ -434,7 +435,7 @@ class Sampler(clgen.CLgenObject):
         """
         sampler_model_hash = crypto.sha1_str(self.hash + model.hash)
 
-        cache = clgen.mkcache("sampler", sampler_model_hash)
+        cache = clgen.mkcache("sampler", f"{self.language}-{sampler_model_hash}")
 
         # validate metadata against cache
         self.stats = {
