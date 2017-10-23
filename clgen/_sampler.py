@@ -37,7 +37,7 @@ from labm8 import types
 from queue import Queue
 from threading import Event, Thread
 from time import time
-from typing import List
+from typing import List, Union
 
 import clgen
 from clgen import clutil
@@ -47,6 +47,7 @@ from clgen import log
 # Default options used for sampler. Any values provided by the user will
 # override these defaults.
 DEFAULT_KERNELS_OPTS = {
+    "language": "opencl",
     "args": None,
     "max_length": 10000,
     "seed": None,
@@ -65,7 +66,7 @@ DEFAULT_SAMPLER_OPTS = {
 }
 
 
-def serialize_argspec(args: List[str]) -> str:
+def serialize_opencl_argspec(args: List[str]) -> str:
     """
     Serializes an argument spec to a kernel prototype.
 
@@ -372,11 +373,16 @@ class Sampler(clgen.CLgenObject):
             string = "".join([str(x) for x in checksum_data])
             return crypto.sha1_str(string)
 
-        def _start_text(args):
-            if args is None:
-                return "__kernel void A("
+        def _start_text(lang: str, args: Union[List[str], None]):
+            if lang == "opencl":
+                if args is None:
+                    return "__kernel void A("
+                else:
+                    return serialize_opencl_argspec(args)
+            elif lang == "solidity":
+                return "contract "
             else:
-                return serialize_argspec(args)
+                raise ValueError(f"unsupported sampler language '{lang}'")
 
         assert(type(sampler_opts) is dict)
         assert(type(kernel_opts) is dict)
@@ -401,7 +407,7 @@ class Sampler(clgen.CLgenObject):
 
         self.hash = _hash(self.sampler_opts, self.kernel_opts)
 
-        self.start_text = _start_text(self.kernel_opts["args"])
+        self.start_text = _start_text(self.kernel_opts["language"], self.kernel_opts["args"])
 
         # options to pass to preprocess_db()
         self.preprocess_opts = {

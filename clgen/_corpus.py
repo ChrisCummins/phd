@@ -60,6 +60,7 @@ DEFAULT_CORPUS_OPTS = {
     "vocabulary": "char",
     "encoding": "default",
     "preserve_order": False,
+    "language": "opencl",
 }
 
 
@@ -297,7 +298,8 @@ class Corpus(clgen.CLgenObject):
             modified = False
             preprocess_time = time()
             encoding = self.opts["encoding"]
-            if clgen.preprocess_db(self.contentcache["kernels.db"]):
+            if clgen.preprocess_db(self.contentcache["kernels.db"],
+                                   lang=self.opts["language"]):
                 modified = True
                 encode_kernels_db(self.contentcache["kernels.db"], encoding)
         except Exception as e:
