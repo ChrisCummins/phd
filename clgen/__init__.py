@@ -39,6 +39,7 @@ import tarfile
 from collections import namedtuple
 from contextlib import contextmanager
 from copy import deepcopy
+from enum import Enum
 from hashlib import sha1
 from labm8 import cache
 from labm8 import fs
@@ -124,6 +125,24 @@ def version() -> str:
     return __version__
 
 
+class Language(Enum):
+    OPENCL = 1
+    SOLIDITY = 2
+
+    @staticmethod
+    def from_str(string: str) -> 'Language':
+        if not string:
+            raise UserError(f"no language specified!")
+        lang = {
+            "opencl": Language.OPENCL,
+            "sol": Language.SOLIDITY,
+            "solidity": Language.SOLIDITY
+        }.get(string.lower(), None)
+        if not lang:
+            raise UserError(f"unknown language '{string}'")
+        return lang
+
+
 def cachepath(*relative_path_components: list) -> str:
     """
     Return path to file system cache.
@@ -163,7 +182,7 @@ def get_default_author() -> str:
         "{user}@{host}".format(user=system.USERNAME, host=system.HOSTNAME))
 
 
-def mkcache(*relative_path_components: list) -> cache.FSCache:
+def mkcache(lang: Language, *relative_path_components: list) -> cache.FSCache:
     """
     Instantiae a file system cache.
 
@@ -171,6 +190,8 @@ def mkcache(*relative_path_components: list) -> cache.FSCache:
 
     Parameters
     ----------
+    lang
+        Programming language.
     *relative_path_components
         Relative path of cache.
 
@@ -179,7 +200,10 @@ def mkcache(*relative_path_components: list) -> cache.FSCache:
     labm8.FSCache
         Filesystem cache.
     """
-    return cache.FSCache(cachepath(*relative_path_components),
+    if not isinstance(lang, Language):
+        raise TypeError
+
+    return cache.FSCache(cachepath(lang.name.lower(), *relative_path_components),
                          escape_key=cache.escape_path)
 
 
