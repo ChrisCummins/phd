@@ -17,12 +17,6 @@
 #
 """
 OpenCL database backend.
-
-Some notes on schema portability:
-    * SQLite auto incrementing requires that integral indices be integers.
-      As a result, we use the with_variant() method to case non-integer id_t
-      to integers on sqlite. See:
-        http://docs.sqlalchemy.org/en/latest/dialects/sqlite.html#sqlite-auto-incrementing-behavior
 """
 import cldrive
 import clgen
@@ -46,6 +40,8 @@ from typing import Dict, Iterable, List, Tuple, Union
 
 import dsmith
 from dsmith import Colors
+from dsmith import db_base
+from dsmith.db_base import *
 from dsmith.opencl import oclgrind
 from dsmith.opencl import opencl_pb2 as pb
 
@@ -55,10 +51,6 @@ from dsmith.opencl import opencl_pb2 as pb
 Base = declarative_base()
 engine = None
 make_session = None
-
-
-session_t = sql.orm.session.Session
-query_t = sql.orm.query.Query
 
 
 def init() -> str:
@@ -77,7 +69,7 @@ def init() -> str:
     global make_session
     username, password = dsmith.DB_CREDENTIALS
     hostname = dsmith.DB_HOSTNAME
-    schema = dsmith.DB_SCHEMA
+    schema = f"dsmith_{dsmith.version_info.major}{dsmith.version_info.minor}_opencl"
     port = str(dsmith.DB_PORT)
 
     if dsmith.DB_ENGINE == "mysql":
@@ -146,44 +138,6 @@ def ReuseSession(session: session_t=None, commit: bool=False) -> session_t:
             s.close()
 
 
-def get_or_add(session: sql.orm.session.Session, model,
-               defaults: Dict[str, object]=None, **kwargs) -> object:
-    """
-    Instantiate a mapped database object. If the object is not in the database,
-    add it.
-
-    Note that no change is written to disk until commit() is called on the
-    session.
-    """
-    instance = session.query(model).filter_by(**kwargs).first()
-    if not instance:
-        params = dict((k, v) for k, v in kwargs.items()
-                      if not isinstance(v, sql.sql.expression.ClauseElement))
-        params.update(defaults or {})
-        instance = model(**params)
-        session.add(instance)
-
-        # logging
-        logging.debug(f"new {model.__name__} record")
-
-    return instance
-
-
-def paginate(query: query_t, page_size: int=1000):
-    """
-    Paginate query results.
-    """
-    offset = 0
-    while True:
-        r = False
-        for elem in query.limit(page_size).offset(offset):
-           r = True
-           yield elem
-        offset += page_size
-        if not r:
-            break
-
-
 # Programs ####################################################################
 
 
@@ -223,19 +177,6 @@ class Program(Base):
 
     def __repr__(self):
         return f"program[{self.id}] = {{ generator = {self.generator}, sha1 = {self.sha1} }}"
-
-
-class Proxy(object):
-    """
-    A proxy object is used to store all of the information required to create a
-    database record, without needing to be bound to the lifetime of a database
-    session.
-    """
-    def to_record(self, session: session_t) -> Base:
-        """
-        Instantiate a database record from this proxy.
-        """
-        raise NotImplementedError("abstract class")
 
 
 class ProgramProxy(Proxy):
@@ -1303,63 +1244,6 @@ class ResultProxy(object):
             stdout=stdout,
             stderr=stderr,
             date=self.date)
-
-
-def save_proxies(session: session_t, proxies: List[Proxy],
-                 max_attempts: int=3, attempt: int=1,
-                 exception=None) -> None:
-    """
-    Convert a set of proxy objects in to database records and save them.
-
-    Raises:
-        OSError: In case of error importing proxies.
-    """
-    # There is a potential race condition when multiple
-    # harnesses are adding database records with unique key
-    # constraints. Rather than figure out a proper
-    # serialization strategy, I find it's easier just to
-    # retry a few times. I'm a terrible person.
-    max_attempts = 3
-
-    # break early if there's nothing to import
-    nproxies = len(proxies)
-    if not nproxies:
-        return
-
-    if attempt > max_attempts:
-        # Fallback to sequential import of all proxies. Ignore all errors, this
-        # is just trying to minimize information lost. Try and get as many
-        # proxies in the database as possible before error-ing:
-        for proxy in proxies:
-            try:
-                session.add(proxy.to_record(session))
-                session.commit()
-            except:
-                pass
-
-        msg = f"{max_attempts} consecutive database errors, aborting"
-        if exception:
-            raise OSError(msg) from exception
-        else:
-            raise OSError(msg)
-
-    logging.debug(f"flushing {nproxies} records")
-    try:
-        start_time = time()
-        session.add_all(proxy.to_record(session) for proxy in proxies)
-        session.commit()
-        runtime = time() - start_time
-        logging.info(f"flushed {nproxies} records in {runtime:.2} seconds")
-    except IntegrityError as e:
-        logging.debug(e)
-        logging.warning("database integrity error, rolling back")
-        session.rollback()
-        save_proxies(session, proxies, max_attempts, attempt + 1, e)
-    except OperationalError as e:
-        logging.debug(e)
-        logging.warning("database operational error, rolling back")
-        session.rollback()
-        save_proxies(session, proxies, max_attempts, attempt + 1, e)
 
 
 class Cl_launcherResult(Result):

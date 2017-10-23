@@ -17,7 +17,6 @@ from pathlib import Path
 from progressbar import ProgressBar
 from time import time
 from typing import List, Tuple
-from tempfile import NamedTemporaryFile
 
 
 class HarnessCompilationError(ValueError):
