@@ -60,6 +60,7 @@ DEFAULT_CORPUS_OPTS = {
     "seq_length": 50,
     "vocabulary": "char",
     "encoding": "default",
+    "preprocess": True,
     "preserve_order": False,
     "language": None,   # Note no explicit default language.
 }
