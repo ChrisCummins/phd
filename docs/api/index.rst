@@ -21,6 +21,13 @@ clgen._config
    :members:
    :undoc-members:
 
+clgen._contentdb
+-----------------
+
+.. automodule:: clgen._contentdb
+   :members:
+   :undoc-members:
+
 clgen._corpus
 --------------
 
