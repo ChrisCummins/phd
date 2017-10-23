@@ -326,7 +326,10 @@ class Testbed(Base):
             .join(Program)\
             .filter(Testcase.harness == harness.id,
                     Program.generator == generator.id,
-                    ~Testcase.id.in_(self._testcase_ids_ran(session, harness, generator)))
+                    ~Testcase.id.in_(self._testcase_ids_ran(session, harness, generator)))\
+            .order_by(Program.date,
+                      Program.id,
+                      Testcase.timeout.desc())
 
     def run_testcases(self, harness, generator, session: session_t=None):
         """ run tests on testbed """
