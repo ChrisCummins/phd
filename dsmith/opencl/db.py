@@ -763,6 +763,8 @@ class Testbed(Base):
             ndone = already_done.count()
             ntodo = todo.count()
 
+            logging.debug(f"run {ntodo} {harness}:{generator} testcases on {self}, {ndone} done")
+
             # Break early if we have nothing to do
             if not ntodo:
                 return
