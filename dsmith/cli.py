@@ -33,6 +33,7 @@ from sys import exit
 from typing import BinaryIO, List, TextIO
 
 import dsmith
+from dsmith import Colors
 from dsmith.repl import repl, run_command
 
 
@@ -146,6 +147,9 @@ def main(self, args: List[str]=sys.argv[1:]):
         formatter_class=RawDescriptionHelpFormatter)
 
     parser.add_argument(
+        "--config", metavar="<path>", type=FileType("r"), dest="rc_path",
+        help=f"path to configuration file (default: '{dsmith.RC_PATH}')")
+    parser.add_argument(
         "-v", "--verbose", action="store_true",
         help="increase output verbosity")
     parser.add_argument(
@@ -192,6 +196,12 @@ def main(self, args: List[str]=sys.argv[1:]):
     if args.profile:
         prof.enable()
 
+    # load custom config:
+    if args.rc_path:
+        path = fs.abspath(args.rc_path.name)
+        logging.debug(f"loading configuration file '{Colors.BOLD}{path}{Colors.END}'")
+        dsmith.init_globals(args.rc_path.name)
+
     # options whch override the normal argument parsing process.
     if args.version:
         print(dsmith.__version_str__)
@@ -200,5 +210,5 @@ def main(self, args: List[str]=sys.argv[1:]):
             # if a command was given, run it
             run_command(" ".join(args.command))
         else:
-            # fallback to interactive prompt
+            # no command was given, fallback to interactive prompt
             repl()

@@ -62,17 +62,35 @@ _releaselevel = __version__.split('.')[3] if len(__version__.split('.')) > 3 els
 version_info_t = namedtuple('version_info_t', ['major', 'minor', 'micro', 'releaselevel'])
 version_info = version_info_t(_major, _minor, _micro, _releaselevel)
 
+# set by init_globals()
+DB_ENGINE = None
+DB_HOSTNAME = None
+DB_PORT = None
+DB_CREDENTIALS = None
+DB_DIR = None
+DB_BUF_SIZE = None
 
-# Parse user configuration file
-_config = ConfigParser()
-_config.read(fs.path(RC_PATH))
-DB_ENGINE = _config['database']['engine'].lower()
-DB_HOSTNAME = _config['database'].get('hostname', "")
-DB_PORT = _config['database'].get('port', "")
-DB_CREDENTIALS = (_config['database'].get('username', ""),
-                  _config['database'].get('password', ""))
-DB_DIR = _config['database'].get("dir", "")
-DB_BUF_SIZE = int(_config['database']['buffer_size'])
+def init_globals(rc_path: Path) -> None:
+    global DB_ENGINE
+    global DB_HOSTNAME
+    global DB_PORT
+    global DB_CREDENTIALS
+    global DB_DIR
+    global DB_BUF_SIZE
+
+    path = fs.abspath(rc_path)
+
+    _config = ConfigParser()
+    _config.read(path)
+    DB_ENGINE = _config['database']['engine'].lower()
+    DB_HOSTNAME = _config['database'].get('hostname', "")
+    DB_PORT = _config['database'].get('port', "")
+    DB_CREDENTIALS = (_config['database'].get('username', ""),
+                      _config['database'].get('password', ""))
+    DB_DIR = _config['database'].get("dir", "")
+    DB_BUF_SIZE = int(_config['database']['buffer_size'])
+
+init_globals(RC_PATH)
 
 
 class DSmithError(Exception):
