@@ -28,8 +28,7 @@ endif
 
 $(clgen): $(venv_activate)
 	$(venv) cd $(clgen_dir) && ./configure -b $(clgen_cuda_flag)
-	$(venv) cd $(clgen_dir) && make
-	$(venv) cd $(clgen_dir) && make install
+	$(venv) cd $(clgen_dir) && make all
 
 
 .PHONY: test-clgen
