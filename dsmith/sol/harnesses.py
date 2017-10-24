@@ -96,8 +96,11 @@ class SolidityHarness(Harness):
 
     def available_testbeds(self, session: session_t=None) -> List[TestbedProxy]:
         with ReuseSession(session) as s:
-            return sorted(TestbedProxy(testbed)
-                          for testbed in Testbed.from_bin("solc", session=s))
+            testbeds = []
+            # TODO: determine if solc / solcjs is installed in path
+            testbeds += Testbed.from_bin("solc", session=s)
+            testbeds += Testbed.from_bin("solcjs", session=s)
+            return sorted(TestbedProxy(testbed) for testbed in testbeds)
 
     def num_results(self, generator: Generator, testbed: str, session: session_t=None):
         with ReuseSession(session) as s:

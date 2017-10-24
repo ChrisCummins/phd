@@ -392,14 +392,22 @@ class Testbed(Base):
         return "+" if self.optimizations else "-"
 
     @staticmethod
-    def _get_version(path: Path):
+    def _get_version(path: Path) -> str:
+        """
+        Fetch the version string.
+
+        solcjs output looks like this:
+          $ solcjs --version
+          0.4.18+commit.9cf6e910.Emscripten.clang
+
+        solc output looks like this:
+          $ solc --version
+          solc, the solidity compiler commandline interface
+          Version: 0.4.18+commit.9cf6e910.Linux.g++
+        """
         output = subprocess.check_output([path, '--version'], universal_newlines=True)
         line = output.split("\n")[-2]
-        match = re.match(r"Version: (?P<version>.*)", line)
-        if match:
-            return match.group("version")
-        else:
-            raise OSError(output)
+        return re.sub(r'^Version: +', '', line)
 
     @staticmethod
     def from_bin(path: Path="solc", session: session_t=None) -> List['Testbed']:
