@@ -20,12 +20,12 @@
 llvm_dir := $(root)/lib/llvm
 
 clang_362 := $(llvm_dir)/3.6.2/bin/clang
-clang_371 := $(llvm_dir)/3.7.1/build/bin/clang
-clang_381 := $(llvm_dir)/3.8.1/build/bin/clang
-clang_391 := $(llvm_dir)/3.9.1/build/bin/clang
-clang_401 := $(llvm_dir)/4.0.1/build/bin/clang
-clang_500 := $(llvm_dir)/5.0.0/build/bin/clang
-clang_trunk := $(llvm_dir)/trunk/build/bin/clang
+clang_371 := $(llvm_dir)/3.7.1/bin/clang
+clang_381 := $(llvm_dir)/3.8.1/bin/clang
+clang_391 := $(llvm_dir)/3.9.1/bin/clang
+clang_401 := $(llvm_dir)/4.0.1/bin/clang
+clang_500 := $(llvm_dir)/5.0.0/bin/clang
+clang_trunk := $(llvm_dir)/trunk/bin/clang
 clangs := \
 	$(clang_362) \
 	$(clang_371) \
