@@ -19,7 +19,7 @@
 #
 llvm_dir := $(root)/lib/llvm
 
-clang_362 := $(llvm_dir)/3.6.2/build/bin/clang
+clang_362 := $(llvm_dir)/3.6.2/bin/clang
 clang_371 := $(llvm_dir)/3.7.1/build/bin/clang
 clang_381 := $(llvm_dir)/3.8.1/build/bin/clang
 clang_391 := $(llvm_dir)/3.9.1/build/bin/clang
@@ -38,47 +38,106 @@ clangs := \
 
 clangs: $(clangs)
 
-llvm_scripts = $(llvm_dir)/clone.sh $(llvm_dir)/checkout.sh $(llvm_dir)/build.sh
-
-$(clang_362): $(llvm_scripts)
-	cd $(llvm_dir) && ./clone.sh 3.6.2
-	cd $(llvm_dir) && ./checkout.sh 3.6.2 release_36
-	cd $(llvm_dir) && ./build.sh 3.6.2 3.6.2/build $(cmake) $(ninja)
+$(clang_362):
+	mkdir -pv $(llvm_dir)/.build
+	git clone http://llvm.org/git/llvm.git $(llvm_dir)/.build/3.6.2
+	git clone http://llvm.org/git/clang.git $(llvm_dir)/.build/3.6.2/tools/clang
+	git clone http://llvm.org/git/compiler-rt.git $(llvm_dir)/.build/3.6.2/projects/compiler-rt
+	cd $(llvm_dir)/.build/3.6.2 && git checkout release_36
+	cd $(llvm_dir)/.build/3.6.2/tools/clang && git checkout release_36
+	cd $(llvm_dir)/.build/3.6.2/projects/compiler-rt && git checkout release_36
+	mkdir -pv $(llvm_dir)/.build/3.6.2/build
+	cd $(llvm_dir)/.build/3.6.2/build && $(cmake) -G Ninja -DLLVM_TARGETS_TO_BUILD="X86" ..
+	cd $(llvm_dir)/.build/3.6.2/build && $(ninja)
+	cd $(llvm_dir)/.build/3.6.2/build && $(cmake) -DCMAKE_INSTALL_PREFIX=$(llvm_dir)/3.6.2 -P cmake_install.cmake
+	rm -rf $(llvm_dir)/.build/3.6.2
 	touch $@
 
-$(clang_371): $(llvm_scripts)
-	cd $(llvm_dir) && ./clone.sh 3.7.1
-	cd $(llvm_dir) && ./checkout.sh 3.7.1 release_37
-	cd $(llvm_dir) && ./build.sh 3.7.1 3.7.1/build $(cmake) $(ninja)
+$(clang_371):
+	mkdir -pv $(llvm_dir)/.build
+	git clone http://llvm.org/git/llvm.git $(llvm_dir)/.build/3.7.1
+	git clone http://llvm.org/git/clang.git $(llvm_dir)/.build/3.7.1/tools/clang
+	git clone http://llvm.org/git/compiler-rt.git $(llvm_dir)/.build/3.7.1/projects/compiler-rt
+	cd $(llvm_dir)/.build/3.7.1 && git checkout release_37
+	cd $(llvm_dir)/.build/3.7.1/tools/clang && git checkout release_37
+	cd $(llvm_dir)/.build/3.7.1/projects/compiler-rt && git checkout release_37
+	mkdir -pv $(llvm_dir)/.build/3.7.1/build
+	cd $(llvm_dir)/.build/3.7.1/build && $(cmake) -G Ninja -DLLVM_TARGETS_TO_BUILD="X86" ..
+	cd $(llvm_dir)/.build/3.7.1/build && $(ninja)
+	cd $(llvm_dir)/.build/3.7.1/build && $(cmake) -DCMAKE_INSTALL_PREFIX=$(llvm_dir)/3.7.1 -P cmake_install.cmake
+	rm -rf $(llvm_dir)/.build/3.7.1
 	touch $@
 
-$(clang_381): $(llvm_scripts)
-	cd $(llvm_dir) && ./clone.sh 3.8.1
-	cd $(llvm_dir) && ./checkout.sh 3.8.1 release_38
-	cd $(llvm_dir) && ./build.sh 3.8.1 3.8.1/build $(cmake) $(ninja)
+$(clang_381):
+	mkdir -pv $(llvm_dir)/.build
+	git clone http://llvm.org/git/llvm.git $(llvm_dir)/.build/3.8.1
+	git clone http://llvm.org/git/clang.git $(llvm_dir)/.build/3.8.1/tools/clang
+	git clone http://llvm.org/git/compiler-rt.git $(llvm_dir)/.build/3.8.1/projects/compiler-rt
+	cd $(llvm_dir)/.build/3.8.1 && git checkout release_36
+	cd $(llvm_dir)/.build/3.8.1/tools/clang && git checkout release_36
+	cd $(llvm_dir)/.build/3.8.1/projects/compiler-rt && git checkout release_36
+	mkdir -pv $(llvm_dir)/.build/3.8.1/build
+	cd $(llvm_dir)/.build/3.8.1/build && $(cmake) -G Ninja -DLLVM_TARGETS_TO_BUILD="X86" ..
+	cd $(llvm_dir)/.build/3.8.1/build && $(ninja)
+	cd $(llvm_dir)/.build/3.8.1/build && $(cmake) -DCMAKE_INSTALL_PREFIX=$(llvm_dir)/3.8.1 -P cmake_install.cmake
+	rm -rf $(llvm_dir)/.build/3.8.1
 	touch $@
 
-$(clang_391): $(llvm_scripts)
-	cd $(llvm_dir) && ./clone.sh 3.9.1
-	cd $(llvm_dir) && ./checkout.sh 3.9.1 release_39
-	cd $(llvm_dir) && ./build.sh 3.9.1 3.9.1/build $(cmake) $(ninja)
+$(clang_391):
+	mkdir -pv $(llvm_dir)/.build
+	git clone http://llvm.org/git/llvm.git $(llvm_dir)/.build/3.9.1
+	git clone http://llvm.org/git/clang.git $(llvm_dir)/.build/3.9.1/tools/clang
+	git clone http://llvm.org/git/compiler-rt.git $(llvm_dir)/.build/3.9.1/projects/compiler-rt
+	cd $(llvm_dir)/.build/3.9.1 && git checkout release_39
+	cd $(llvm_dir)/.build/3.9.1/tools/clang && git checkout release_39
+	cd $(llvm_dir)/.build/3.9.1/projects/compiler-rt && git checkout release_39
+	mkdir -pv $(llvm_dir)/.build/3.9.1/build
+	cd $(llvm_dir)/.build/3.9.1/build && $(cmake) -G Ninja -DLLVM_TARGETS_TO_BUILD="X86" ..
+	cd $(llvm_dir)/.build/3.9.1/build && $(ninja)
+	cd $(llvm_dir)/.build/3.9.1/build && $(cmake) -DCMAKE_INSTALL_PREFIX=$(llvm_dir)/3.9.1 -P cmake_install.cmake
+	rm -rf $(llvm_dir)/.build/3.9.1
 	touch $@
 
-$(clang_401): $(llvm_scripts)
-	cd $(llvm_dir) && ./clone.sh 4.0.1
-	cd $(llvm_dir) && ./checkout.sh 4.0.1 release_40
-	cd $(llvm_dir) && ./build.sh 4.0.1 4.0.1/build $(cmake) $(ninja)
+$(clang_401):
+	mkdir -pv $(llvm_dir)/.build
+	git clone http://llvm.org/git/llvm.git $(llvm_dir)/.build/4.0.1
+	git clone http://llvm.org/git/clang.git $(llvm_dir)/.build/4.0.1/tools/clang
+	git clone http://llvm.org/git/compiler-rt.git $(llvm_dir)/.build/4.0.1/projects/compiler-rt
+	cd $(llvm_dir)/.build/4.0.1 && git checkout release_40
+	cd $(llvm_dir)/.build/4.0.1/tools/clang && git checkout release_40
+	cd $(llvm_dir)/.build/4.0.1/projects/compiler-rt && git checkout release_40
+	mkdir -pv $(llvm_dir)/.build/4.0.1/build
+	cd $(llvm_dir)/.build/4.0.1/build && $(cmake) -G Ninja -DLLVM_TARGETS_TO_BUILD="X86" ..
+	cd $(llvm_dir)/.build/4.0.1/build && $(ninja)
+	cd $(llvm_dir)/.build/4.0.1/build && $(cmake) -DCMAKE_INSTALL_PREFIX=$(llvm_dir)/4.0.1 -P cmake_install.cmake
+	rm -rf $(llvm_dir)/.build/4.0.1
 	touch $@
 
-$(clang_500): $(llvm_scripts)
-	cd $(llvm_dir) && ./clone.sh 5.0.0
-	cd $(llvm_dir) && ./checkout.sh 5.0.0 release_50
-	cd $(llvm_dir) && ./build.sh 5.0.0 5.0.0/build $(cmake) $(ninja)
+$(clang_500):
+	mkdir -pv $(llvm_dir)/.build
+	git clone http://llvm.org/git/llvm.git $(llvm_dir)/.build/5.0.0
+	git clone http://llvm.org/git/clang.git $(llvm_dir)/.build/5.0.0/tools/clang
+	git clone http://llvm.org/git/compiler-rt.git $(llvm_dir)/.build/5.0.0/projects/compiler-rt
+	cd $(llvm_dir)/.build/5.0.0 && git checkout release_50
+	cd $(llvm_dir)/.build/5.0.0/tools/clang && git checkout release_50
+	cd $(llvm_dir)/.build/5.0.0/projects/compiler-rt && git checkout release_50
+	mkdir -pv $(llvm_dir)/.build/5.0.0/build
+	cd $(llvm_dir)/.build/5.0.0/build && $(cmake) -G Ninja -DLLVM_TARGETS_TO_BUILD="X86" ..
+	cd $(llvm_dir)/.build/5.0.0/build && $(ninja)
+	cd $(llvm_dir)/.build/5.0.0/build && $(cmake) -DCMAKE_INSTALL_PREFIX=$(llvm_dir)/5.0.0 -P cmake_install.cmake
+	rm -rf $(llvm_dir)/.build/5.0.0
 	touch $@
 
-$(clang_trunk): $(llvm_scripts)
-	cd $(llvm_dir) && ./clone.sh trunk
-	cd $(llvm_dir) && ./build.sh trunk trunk/build $(cmake) $(ninja)
+$(clang_trunk):
+	mkdir -pv $(llvm_dir)/.build
+	git clone http://llvm.org/git/llvm.git $(llvm_dir)/.build/trunk
+	git clone http://llvm.org/git/clang.git $(llvm_dir)/.build/trunk/tools/clang
+	git clone http://llvm.org/git/compiler-rt.git $(llvm_dir)/.build/trunk/projects/compiler-rt
+	mkdir -pv $(llvm_dir)/.build/trunk/build
+	cd $(llvm_dir)/.build/trunk/build && $(cmake) -G Ninja -DLLVM_TARGETS_TO_BUILD="X86" ..
+	cd $(llvm_dir)/.build/trunk/build && $(ninja)
+	cd $(llvm_dir)/.build/trunk/build && $(cmake) -DCMAKE_INSTALL_PREFIX=$(llvm_dir)/trunk -P cmake_install.cmake
+	rm -rf $(llvm_dir)/.build/trunk
 	touch $@
 
 

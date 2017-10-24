@@ -301,13 +301,13 @@ class Clang(OpenCLHarness):
         "randtok": generators.RandTok,
     }
     __clangs__ = {
-        "3.6.2": dsmith.root_path("lib", "llvm", "3.6.2", "build", "bin", "clang"),
-        "3.7.1": dsmith.root_path("lib", "llvm", "3.7.1", "build", "bin", "clang"),
-        "3.8.1": dsmith.root_path("lib", "llvm", "3.8.1", "build", "bin", "clang"),
-        "3.9.1": dsmith.root_path("lib", "llvm", "3.9.1", "build", "bin", "clang"),
-        "4.0.1": dsmith.root_path("lib", "llvm", "4.0.1", "build", "bin", "clang"),
-        "5.0.0": dsmith.root_path("lib", "llvm", "5.0.0", "build", "bin", "clang"),
-        "trunk": dsmith.root_path("lib", "llvm", "trunk", "build", "bin", "clang"),
+        "3.6.2": dsmith.root_path("lib", "llvm", "3.6.2", "bin", "clang"),
+        "3.7.1": dsmith.root_path("lib", "llvm", "3.7.1", "bin", "clang"),
+        "3.8.1": dsmith.root_path("lib", "llvm", "3.8.1", "bin", "clang"),
+        "3.9.1": dsmith.root_path("lib", "llvm", "3.9.1", "bin", "clang"),
+        "4.0.1": dsmith.root_path("lib", "llvm", "4.0.1", "bin", "clang"),
+        "5.0.0": dsmith.root_path("lib", "llvm", "5.0.0", "bin", "clang"),
+        "trunk": dsmith.root_path("lib", "llvm", "trunk", "bin", "clang"),
     }
 
     id = Harnesses.CLANG
