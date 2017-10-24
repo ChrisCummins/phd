@@ -196,8 +196,8 @@ The following questions will create it for you:""")
         if engine == "sqlite":
             config['database'] = {
                 "engine": "sqlite",
-                "path": _abspath(textinput("Path to database file",
-                                           default="~/.dsmith.db")),
+                "dir": _abspath(textinput("Directory for database files",
+                                          default="~/.cache/dsmith/db")),
                 "buffer_size": 250,
             }
         elif engine == "mysql":

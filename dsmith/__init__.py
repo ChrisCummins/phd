@@ -24,7 +24,6 @@ Attributes:
         releaselevel version components.
     DB_HOSTNAME (str): Hostname of database server.
     DB_PORT (int): Database server port.
-    DB_SCHEMA (str): Database name.
     DB_CREDENTIALS (Tuple[str, str]): Database username and password.
     DB_BUF_SIZE (int): Number of records to buffer before adding to database.
 """
@@ -72,7 +71,7 @@ DB_HOSTNAME = _config['database'].get('hostname', "")
 DB_PORT = _config['database'].get('port', "")
 DB_CREDENTIALS = (_config['database'].get('username', ""),
                   _config['database'].get('password', ""))
-DB_PATH = _config['database'].get("path", "")
+DB_DIR = _config['database'].get("dir", "")
 DB_BUF_SIZE = int(_config['database']['buffer_size'])
 
 

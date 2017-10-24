@@ -67,39 +67,11 @@ def init() -> str:
     """
     global engine
     global make_session
-    username, password = dsmith.DB_CREDENTIALS
-    hostname = dsmith.DB_HOSTNAME
-    schema = f"dsmith_{dsmith.version_info.major}{dsmith.version_info.minor}_opencl"
-    port = str(dsmith.DB_PORT)
 
-    if dsmith.DB_ENGINE == "mysql":
-        # Use UTF-8 encoding (default is latin-1) when connecting to MySQL.
-        # See: https://stackoverflow.com/a/16404147/1318051
-        public_uri = f"mysql://{username}@{hostname}:{port}/{schema}?charset=utf8".format(**vars())
-        uri = f"mysql+mysqldb://{username}:{password}@{hostname}:{port}/{schema}?charset=utf8"
-    elif dsmith.DB_ENGINE == "sqlite":
-        if dsmith.DB_PATH:
-            uri = f"sqlite:///{dsmith.DB_PATH}"
-        else:
-            # In-memory database:
-            uri = "sqlite://"
-        public_uri = uri
-    else:
-        raise ValueError(f"unsupported database engine {dsmith.DB_ENGINE}")
-
-    # Determine whether to enable logging of SQL statements:
-    echo = True if os.environ.get("DB_DEBUG", None) else False
-
-    logging.debug(f"connecting to database {Colors.BOLD}{public_uri}{Colors.END}")
-    engine = sql.create_engine(uri, encoding="utf-8", echo=echo)
-
+    engine, public_uri = db_base.make_engine("sol")
     Base.metadata.create_all(engine)
     Base.metadata.bind = engine
     make_session = sql.orm.sessionmaker(bind=engine)
-
-    profile = True if os.environ.get("PROF") else False
-    if profile:
-        prof.enable()
 
     return public_uri
 
