@@ -35,16 +35,14 @@ def yes_no(question, default="no"):
 
     The "answer" return value is True for "yes" or False for "no".
     """
-    valid = {"yes": True, "y": True, "ye": True,
-             "no": False, "n": False}
+    valid = {"yes": True, "y": True, "ye": True, True: True,
+             "no": False, "n": False, False: False}
     if default is None:
         prompt = " [y/n] "
-    elif default == "yes":
+    elif default:
         prompt = " [Y/n] "
-    elif default == "no":
-        prompt = " [y/N] "
     else:
-        raise ValueError("invalid default answer: '%s'" % default)
+        prompt = " [y/N] "
 
     while True:
         sys.stdout.write(question + prompt)
@@ -112,6 +110,20 @@ def main():
                         help="defaults all options to defaults. Override with:")
     parser.add_argument("--with-cuda", action="store_true",
                         help="build with CUDA support")
+    parser.add_argument("--with-llvm-trunk", action="store_true",
+                        help="build with LLVM trunk testbed")
+    parser.add_argument("--with-llvm-5.0", action="store_true", dest="with_llvm_50",
+                        help="build with LLVM 5.0 testbed")
+    parser.add_argument("--with-llvm-4.0", action="store_true", dest="with_llvm_40",
+                        help="build with LLVM 4.0 testbed")
+    parser.add_argument("--with-llvm-3.9", action="store_true", dest="with_llvm_39",
+                        help="build with LLVM 3.9 testbed")
+    parser.add_argument("--with-llvm-3.8", action="store_true", dest="with_llvm_38",
+                        help="build with LLVM 3.8 testbed")
+    parser.add_argument("--with-llvm-3.7", action="store_true", dest="with_llvm_37",
+                        help="build with LLVM 3.7 testbed")
+    parser.add_argument("--with-llvm-3.6", action="store_true", dest="with_llvm_36",
+                        help="build with LLVM 3.6 testbed")
     parser.add_argument("--rc", metavar="<path>", default=None,
                         help=f"path to configuration file (default: {default_rc})")
     args = parser.parse_args()
@@ -129,20 +141,24 @@ def main():
                   "the `-r` flag.", file=sys.stderr)
             sys.exit(1)
     else:
+        print(args)
         cfg = {
             "cuda": args.with_cuda,
-            "rc_path": args.rc,
             "version": "0.4.0.dev0",
             "dsmith_dir": pwd,
         }
 
     # get input from user
     if not args.batch:
-        if "cuda" not in args:
-            cfg["cuda"] = yes_no("Enable CUDA support?")
-        if not args.rc:
-            cfg["rc_path"] = textinput("Path to configuration file",
-                                       default=default_rc)
+        cfg["cuda"] = yes_no("Enable CUDA support?", default=args.with_cuda)
+        cfg["llvm_trunk"] = yes_no("Build LLMV trunk testbed?", default=args.with_llvm_trunk)
+        cfg["llvm_50"] = yes_no("Build LLMV 5.0 testbed?", default=args.with_llvm_50)
+        cfg["llvm_40"] = yes_no("Build LLMV 4.0 testbed?", default=args.with_llvm_40)
+        cfg["llvm_39"] = yes_no("Build LLMV 3.9 testbed?", default=args.with_llvm_39)
+        cfg["llvm_38"] = yes_no("Build LLMV 3.8 testbed?", default=args.with_llvm_38)
+        cfg["llvm_37"] = yes_no("Build LLMV 3.7 testbed?", default=args.with_llvm_37)
+        cfg["llvm_36"] = yes_no("Build LLMV 3.6 testbed?", default=args.with_llvm_36)
+        cfg["rc_path"] = textinput("Path to configuration file", default=args.rc or default_rc)
 
     # generate JSON config file
     with open(".config.json", "w") as outfile:
@@ -154,6 +170,10 @@ def main():
         print("RC_PATH := {}".format(cfg["rc_path"]), file=outfile)
         print("DSMITH_VERSION := " + cfg["version"], file=outfile)
         print("USE_CUDA := " + to_make(cfg["cuda"]), file=outfile)
+        for llvm in ["trunk", "50", "40", "39", "38", "37", "36"]:
+            key = llvm.upper()
+            print(f"WITH_LLVM_{key} := " + to_make(cfg[f"llvm_{llvm}"]), file=outfile)
+
 
     # generate python config file
     with open(os.path.join("dsmith", "_config.py"), "w") as outfile:
@@ -234,11 +254,15 @@ The following questions will create it for you:""")
         print("💩  Something went wrong.", file=sys.stderr)
         sys.exit(1)
 
+    llvms = ["trunk", "50", "40", "39", "38", "37", "36"]
+    llvms = [v for v in llvms if cfg[f"llvm_{v}"]] or ["none"]
+
     print("DeepSmith {version} configured:".format(version=cfg["version"]))
     print()
     print("    Root path:          " + cfg["dsmith_dir"])
-    print("    Configuration path: " + cfg["rc_path"])
     print("    CUDA support:       " + to_text(cfg["cuda"]))
+    print("    LLVM testbeds:      " + ", ".join(llvms))
+    print("    Configuration path: " + cfg["rc_path"])
     print()
     print("You may now build DeepSmith by running 'make'.")
 

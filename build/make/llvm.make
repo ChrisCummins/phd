@@ -26,15 +26,29 @@ clang_391 := $(llvm_dir)/3.9.1/bin/clang
 clang_401 := $(llvm_dir)/4.0.1/bin/clang
 clang_500 := $(llvm_dir)/5.0.0/bin/clang
 clang_trunk := $(llvm_dir)/trunk/bin/clang
-clangs := \
-	$(clang_362) \
-	$(clang_371) \
-	$(clang_381) \
-	$(clang_391) \
-	$(clang_401) \
-	$(clang_500) \
-	$(clang_trunk) \
-	$(NULL)
+
+clangs = $(NULL)
+ifeq ($(WITH_LLVM_36),1)
+clangs += $(clang_362)
+endif
+ifeq ($(WITH_LLVM_37),1)
+clangs += $(clang_371)
+endif
+ifeq ($(WITH_LLVM_38),1)
+clangs += $(clang_381)
+endif
+ifeq ($(WITH_LLVM_39),1)
+clangs += $(clang_391)
+endif
+ifeq ($(WITH_LLVM_40),1)
+clangs += $(clang_401)
+endif
+ifeq ($(WITH_LLVM_50),1)
+clangs += $(clang_500)
+endif
+ifeq ($(WITH_LLVM_TRUNK),1)
+clangs += $(clang_trunk)
+endif
 
 clangs: $(clangs)
 
