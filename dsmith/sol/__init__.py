@@ -35,7 +35,7 @@ from dsmith import Colors
 from dsmith.langs import Language, Generator, Harness
 from dsmith.sol import db
 from dsmith.sol.db import *
-from dsmith.sol.generators import RandChar
+from dsmith.sol.generators import RandChar, GitHub
 from dsmith.sol.harnesses import Solc
 
 
@@ -45,6 +45,7 @@ class Solidity(Language):
     __generators__ = {
         None: RandChar,
         "randchar": RandChar,
+        "github": GitHub,
     }
 
     __harnesses__ = {

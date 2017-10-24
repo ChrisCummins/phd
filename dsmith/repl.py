@@ -65,6 +65,9 @@ __available_commands__ = f"""\
     Generate the specified number of programs. If no generator is specified,
     default to dsmith.
 
+  {Colors.BOLD}import {_generator_str} {_lang_str} programs from {Colors.BOLD}{Colors.BLUE}<dir>{Colors.END}
+    Import programs from a directory.
+
   {Colors.BOLD}make {_lang_str} [[{_harness_str}]:[{_generator_str}]] testcases{Colors.END}
     Prepare testcases from programs.
 
@@ -263,6 +266,20 @@ def _execute(statement: str, file=sys.stdout) -> None:
                     for generator in harness.generators:
                         harness.make_testcases(generator)
             return
+        else:
+            raise UnrecognizedInput
+
+    if components[0] == "import":
+        match = re.match(r'import (?P<generator>\w+) (?P<lang>\w+) program(s)? from (?P<path>.+)$', statement)
+
+        if match:
+            lang = mklang(match.group("lang"))
+            generator = lang.mkgenerator(match.group("generator"))
+            path = fs.abspath(match.group("path"))
+            if not fs.isdir(path):
+                raise ValueError(f"'{path}' is not a directory")
+
+            return generator.import_from_dir(path)
         else:
             raise UnrecognizedInput
 

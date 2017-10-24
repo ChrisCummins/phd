@@ -119,6 +119,7 @@ class Solc(SolidityHarness):
     __name__ = "solc"
     __generators__ = {
         "randchar": generators.RandChar,
+        "github": generators.GitHub,
     }
 
     id = Harnesses.SOLC

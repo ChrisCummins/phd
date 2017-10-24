@@ -120,7 +120,7 @@ class Generators:
     column_t = sql.SmallInteger
 
     # Magic numbers
-    HANDWRITTEN = -1
+    GITHUB = -1
     DSMITH = 1
     RANDCHAR = 2
 

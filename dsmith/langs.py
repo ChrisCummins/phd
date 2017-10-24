@@ -24,6 +24,7 @@ Attributes:
 import math
 import sys
 
+from pathlib import Path
 from typing import Iterable, List, Tuple
 
 import dsmith
@@ -93,6 +94,10 @@ class Generator(dsmith.ReprComparable):
 
     def generate(self, n: int=math.inf, up_to: int=math.inf) -> None:
         """ generate 'n' new programs, until 'up_to' exist in db """
+        raise NotImplementedError("abstract class")
+
+    def import_from_dir(self, indir: Path) -> None:
+        """ import program sources from a directory """
         raise NotImplementedError("abstract class")
 
     # Default methods (may be overriden):

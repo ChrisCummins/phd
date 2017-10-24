@@ -29,6 +29,7 @@ from time import time
 from labm8 import crypto, fs
 from sqlalchemy.sql import func
 from tempfile import NamedTemporaryFile
+from pathlib import Path
 
 import dsmith.opencl.db
 
@@ -45,6 +46,10 @@ class OpenCLGenerator(Generator):
     # Abstract methods (must be implemented):
     def generate_one(self, session: session_t) -> ProgramProxy:
         """ Generate a single program. """
+        raise NotImplementedError("abstract class")
+
+    def import_from_file(self, session: session_t, path: Path) -> ProgramProxy:
+        """ Import a program from a file. """
         raise NotImplementedError("abstract class")
 
     # Default methods (may be overriden):
@@ -135,6 +140,40 @@ class OpenCLGenerator(Generator):
         print(f"All done! You now have {Colors.BOLD}{num_progs}{Colors.END} "
               "{self} programs in the database")
 
+    def import_from_dir(self, indir: Path) -> None:
+        """ import program sources from a directory """
+        with Session() as s:
+            num_progs = self.num_programs(s)
+
+            # Print a preamble message:
+            paths = fs.ls(indir, abspaths=True)
+            num_to_import = len(paths)
+            print(f"{Colors.BOLD}{num_to_import}{Colors.END} programs are "
+                  "to be imported.")
+            bar_max = num_progs + num_to_import
+
+            bar = progressbar.ProgressBar(initial_value=num_progs,
+                                          max_value=bar_max,
+                                          redirect_stdout=True)
+
+            # The actual import loop:
+            buf = []
+            for i, path in enumerate(paths):
+                buf.append(self.import_from_file(s, path))
+
+                # Update progress bar
+                num_progs += 1
+                bar.update(num_progs)
+
+                if len(buf) >= dsmith.DB_BUF_SIZE:
+                    save_proxies(s, buf)
+                    num_progs = self.num_programs(s)
+                    buf = []
+            save_proxies(s, buf)
+        print(f"All done! Imported {Colors.BOLD}{num_to_import}{Colors.END} "
+              f"programs. You now have {Colors.BOLD}{num_progs}{Colors.END} "
+              "{self} programs in the database")
+
 
 class CLSmith(OpenCLGenerator):
     __name__ = "clsmith"
@@ -169,6 +208,10 @@ class DSmith(OpenCLGenerator):
 
     def generate_one(self, session: session_t) -> ProgramProxy:
         """ Generate a single program. """
+        raise NotImplementedError
+
+    def import_from_file(self, session: session_t, path: Path) -> ProgramProxy:
+        """ Import a program from a file. """
         raise NotImplementedError
 
 

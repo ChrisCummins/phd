@@ -133,33 +133,70 @@ class Proxy(object):
 
 
 def save_proxies(session: session_t, proxies: List[Proxy],
-                 max_attempts: int=3, attempt: int=1,
-                 exception=None) -> None:
+                 max_attempts: int=3) -> None:
     """
     Convert a set of proxy objects in to database records and save them.
 
     Raises:
         OSError: In case of error importing proxies.
     """
-    # There is a potential race condition when multiple
-    # harnesses are adding database records with unique key
-    # constraints. Rather than figure out a proper
-    # serialization strategy, I find it's easier just to
-    # retry a few times. I'm a terrible person.
-    max_attempts = 3
+    return save_records(
+        session, [proxy.to_record(session) for proxy in proxies], max_attempts)
 
+
+def save_proxies_uniq_on(session: session_t, proxies: List[Proxy], uniq_on: str,
+                         max_attempts: int=3) -> int:
+    return save_records_uniq_on(
+        session, [proxy.to_record(session) for proxy in proxies], uniq_on, max_attempts)
+
+
+def save_records_uniq_on(session: session_t, records: List["Base"], uniq_on: str,
+                         max_attempts: int=3) -> int:
+    """ Save records which are unique on some column value. """
+    # Break early if possible
+    if not len(records):
+        return
+
+    # Filter duplicates in the list of new records:
+    records = list(dict((getattr(record, uniq_on), record) for record in records).values())
+
+    # Fetch a list of dupe keys already in the database:
+    keys = [getattr(record, uniq_on) for record in records]
+    table_col = getattr(type(records[0]), uniq_on)
+    dupes = set(x[0] for x in session.query(table_col).filter(table_col.in_(keys)))
+
+    # Filter the list of records to import, excluding dupes:
+    uniq = [record for record in records if getattr(record, uniq_on) not in dupes]
+
+    # Import those suckas:
+    nprog, nuniq = len(records), len(uniq)
+    save_records(session, uniq, max_attempts)
+
+    logging.info(f"imported {nuniq} of {nprog} unique programs")
+    return nuniq
+
+
+def save_records(session: session_t, records: List['Base'],
+                 max_attempts: int=3, attempt: int=1,
+                 exception=None) -> None:
+    """
+    Save a list of database records.
+
+    Raises:
+        OSError: In case of error importing proxies.
+    """
     # break early if there's nothing to import
-    nproxies = len(proxies)
-    if not nproxies:
+    nrecords = len(records)
+    if not nrecords:
         return
 
     if attempt > max_attempts:
-        # Fallback to sequential import of all proxies. Ignore all errors, this
+        # Fallback to sequential import of all records. Ignore all errors, this
         # is just trying to minimize information lost. Try and get as many
-        # proxies in the database as possible before error-ing:
-        for proxy in proxies:
+        # records in the database as possible before error-ing:
+        for record in records:
             try:
-                session.add(proxy.to_record(session))
+                session.add(record)
                 session.commit()
             except:
                 pass
@@ -170,20 +207,22 @@ def save_proxies(session: session_t, proxies: List[Proxy],
         else:
             raise OSError(msg)
 
-    logging.debug(f"flushing {nproxies} records")
+    logging.debug(f"flushing {nrecords} records")
     try:
         start_time = time()
-        session.add_all(proxy.to_record(session) for proxy in proxies)
+        session.add_all(records)
         session.commit()
         runtime = time() - start_time
-        logging.info(f"flushed {nproxies} records in {runtime:.2} seconds")
+        logging.info(f"flushed {nrecords} records in {runtime:.2} seconds")
     except IntegrityError as e:
         logging.debug(e)
         logging.warning("database integrity error, rolling back")
+        logging.warning(e)
         session.rollback()
-        save_proxies(session, proxies, max_attempts, attempt + 1, e)
+        save_records(session, records, max_attempts, attempt + 1, e)
     except OperationalError as e:
         logging.debug(e)
         logging.warning("database operational error, rolling back")
+        logging.warning(e)
         session.rollback()
-        save_proxies(session, proxies, max_attempts, attempt + 1, e)
+        save_records(session, records, max_attempts, attempt + 1, e)

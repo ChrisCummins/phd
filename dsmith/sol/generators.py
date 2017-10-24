@@ -29,6 +29,8 @@ from time import time
 from labm8 import crypto, fs
 from sqlalchemy.sql import func
 from tempfile import NamedTemporaryFile
+from pathlib import Path
+from typing import Union
 
 import dsmith.opencl.db
 
@@ -127,12 +129,77 @@ class SolidityGenerator(Generator):
                 bar.update(num_progs)
 
                 if len(buf) >= dsmith.DB_BUF_SIZE:
-                    save_proxies(s, buf)
+                    save_proxies_uniq_on(s, buf, "sha1")
                     num_progs = self.num_programs(s)
                     buf = []
-            save_proxies(s, buf)
+            save_proxies_uniq_on(s, buf, "sha1")
         print(f"All done! You now have {Colors.BOLD}{num_progs}{Colors.END} "
-              "{self} programs in the database")
+              f"{self} programs in the database")
+
+    def import_from_dir(self, indir: Path) -> None:
+        """ import program sources from a directory """
+        with Session() as s:
+            start_num_progs = self.num_programs(s)
+
+            def _save(proxies):
+                # Create records from proxies:
+                programs = [proxy.to_record(s) for proxy in proxies]
+
+                logging.warning(getattr(type(programs[0]), "sha1"))
+
+                import sys
+                sys.exit(0)
+
+                # Filter duplicates in the set of new records:
+                programs = dict((program.sha1, program) for program in programs).values()
+
+                # Fetch a list of dupe keys already in the database:
+                sha1s = [program.sha1 for program in programs]
+                dupes = set(x[0] for x in s.query(Program.sha1).filter(Program.sha1.in_(sha1s)))
+
+                # Filter the list of records to import, excluding dupes:
+                uniq = [program for program in programs if program.sha1 not in dupes]
+
+                # Import those suckas:
+                s.add_all(uniq)
+                s.commit()
+
+                nprog, nuniq = len(programs), len(uniq)
+                logging.info(f"imported {nuniq} of {nprog} unique programs")
+
+            num_progs = self.num_programs(s)
+
+            # Print a preamble message:
+            paths = fs.ls(indir, abspaths=True)
+            num_to_import = humanize.intcomma(len(paths))
+            print(f"{Colors.BOLD}{num_to_import}{Colors.END} files are "
+                  "to be imported.")
+
+            bar = progressbar.ProgressBar(redirect_stdout=True)
+
+            # The actual import loop:
+            buf = []
+            for i, path in enumerate(bar(paths)):
+                buf.append(self.import_from_file(s, path))
+
+                if len(buf) >= dsmith.DB_BUF_SIZE:
+                    save_proxies_uniq_on(s, buf, "sha1")
+                    buf = []
+            save_proxies_uniq_on(s, buf, "sha1")
+
+        num_imported = humanize.intcomma(self.num_programs(s) - start_num_progs)
+        num_progs = humanize.intcomma(self.num_programs(s))
+        print(f"All done! Imported {Colors.BOLD}{num_imported}{Colors.END} "
+              f"new {self} programs. You now have "
+              f"{Colors.BOLD}{num_progs}{Colors.END} {self} programs in the "
+              "database")
+
+    def import_from_file(self, session: session_t, path: Path) -> Union[None, ProgramProxy]:
+        """ Import a program from a file. """
+        # logging.debug(f"importing '{path}'")
+        # Simply ignore non-ASCII chars:
+        src = ''.join([i if ord(i) < 128 else '' for i in fs.read_file(path).strip()])
+        return ProgramProxy(generator=self.id, generation_time=0, src=src)
 
 
 class RandChar(SolidityGenerator):
@@ -155,3 +222,11 @@ class RandChar(SolidityGenerator):
 
         return ProgramProxy(generator=self.id, generation_time=runtime,
                             src=src)
+
+
+class GitHub(SolidityGenerator):
+    """
+    Programs mined from GitHub.
+    """
+    __name__ = "github"
+    id = Generators.GITHUB
