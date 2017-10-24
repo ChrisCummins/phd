@@ -67,6 +67,8 @@ def make_engine(language: str) -> sql.engine.Engine:
         public_uri = f"mysql://{username}@{hostname}:{port}/{schema}?charset=utf8".format(**vars())
         uri = f"mysql+mysqldb://{username}:{password}@{hostname}:{port}/{schema}?charset=utf8"
     elif dsmith.DB_ENGINE == "sqlite":
+        if not dsmith.DB_DIR:
+            raise ValueError(f"no database directory specified")
         fs.mkdir(dsmith.DB_DIR)  # create directory if it doesn't already exist
         path = fs.path(dsmith.DB_DIR, f"{language}.db")
         uri = f"sqlite:///{path}"

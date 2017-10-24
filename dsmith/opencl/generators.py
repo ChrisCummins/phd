@@ -229,9 +229,6 @@ class RandChar(OpenCLGenerator):
 
     def generate_one(self, session: session_t) -> ProgramProxy:
         """ Generate a single program. """
-        if depth > 100:
-            raise OSError(f"Failed to produce {self} program after 100 attempts")
-
         start_time = time()
         charcount = random.randint(*self.charcount_range)
         src = ''.join(random.choices(string.printable, k=charcount))

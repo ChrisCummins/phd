@@ -68,7 +68,7 @@ def init() -> str:
     global engine
     global make_session
 
-    engine, public_uri = db_base.make_engine("sol")
+    engine, public_uri = db_base.make_engine("opencl")
     Base.metadata.create_all(engine)
     Base.metadata.bind = engine
     make_session = sql.orm.sessionmaker(bind=engine)
