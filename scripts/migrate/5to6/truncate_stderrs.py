@@ -11,7 +11,8 @@ from dsmith.opencl.db import *
 
 
 if __name__ == "__main__":
-    # dsmith.langs.mklang("solidity")
+    import logging
+    logging.getLogger().setLevel(logging.DEBUG)
     dsmith.langs.mklang("opencl")
 
     with Session() as s:
@@ -19,14 +20,13 @@ if __name__ == "__main__":
         bar = progressbar.ProgressBar(max_value=s.query(Stderr).count(),
                                       redirect_stdout=True)
 
-        for i, stderr in enumerate(s.query(Stderr).yield_per(2000)):
-            bar.update(i)
+        try:
+            for i, stderr in enumerate(s.query(Stderr).yield_per(2000)):
+                bar.update(i)
 
-            stderr.linecount = len(stderr.stderr.split('\n'))
-            stderr.charcount = len(stderr.stderr)
-            stderr.truncated = stderr.charcount > stderr.max_chars
-            stderr.stderr = stderr.stderr[:stderr.max_chars]
-
-            # if not i % 2000:
-            #     s.commit()
-        s.commit()
+                stderr.linecount = len(stderr.stderr.split('\n'))
+                stderr.charcount = len(stderr.stderr)
+                stderr.truncated = stderr.charcount > stderr.max_chars
+                stderr.stderr = stderr.stderr.rstrip()[:stderr.max_chars]
+        finally:
+            s.commit()
