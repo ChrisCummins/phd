@@ -230,3 +230,8 @@ class GitHub(SolidityGenerator):
     """
     __name__ = "github"
     id = Generators.GITHUB
+
+
+class DSmith(SolidityGenerator):
+    __name__ = "dsmith"
+    id = Generators.DSMITH
