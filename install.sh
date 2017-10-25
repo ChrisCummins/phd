@@ -195,7 +195,7 @@ _brew_list_cache="$dotfiles/.brew-list.txt"
 _npm_list_cache="$dotfiles/.npm-list.txt"
 _brew_cask_list_cache="$dotfiles/.brew-cask-list.txt"
 _cache_cleanup() {
-    rm $dotfiles/.*-freeze.txt
+    rm -f $dotfiles/.*-freeze.txt
     rm -f \
         "$_npm_list_cache" \
         "$_brew_list_cache" \
