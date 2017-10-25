@@ -6,7 +6,7 @@ test -z "$1" || { usage; exit 1; }
 
 set -eu
 
-src="/Volumes/Orange/Photo Library/"
+src="/Volumes/Orange/"
 dst="/Volumes/Photo Library/"
 
 if [[ ! -d "$src" ]]; then
@@ -21,8 +21,25 @@ fi
 
 set -x
 
-rm-dsstore "$src"
+# rm-dsstore "$src"
 rsync -avh --delete "$src" "$dst" \
-    --exclude "/Lightroom/Mobile Downloads.lrdata" \
-    --exclude "/Lightroom/Photo Library Previews.lrdata" \
-    --exclude "/Lightroom/Photo Library Smart Previews.lrdata"
+    --exclude "._.DS_Store" \
+    --exclude ".DS_Store" \
+    --exclude ".sync.ffs_db" \
+    --exclude "/.fseventsd" \
+    --exclude "/.Spotlight-V100" \
+    --exclude "/.TemporaryItems" \
+    --exclude "/.Trashes" \
+    --exclude "/.VolumeIcon.icns" \
+    --exclude "/.VolumeIcon.ico" \
+    --exclude "/autorun.inf" \
+    --exclude "/Lightroom Catalogue/Mobile Downloads.lrdata" \
+    --exclude "/Lightroom Catalogue/Photo Library Previews.lrdata" \
+    --exclude "/Lightroom Catalogue/Photo Library Smart Previews.lrdata" \
+    --exclude "/Lightroom Catalogue/Photo Library.lrcat-journal" \
+    --exclude "/Lightroom Catalogue/Photo Library.lrcat.lock" \
+    --exclude "/Naughty/Lightroom Catalogue/Mobile Downloads.lrdata" \
+    --exclude "/Naughty/Lightroom Catalogue/Photo Library Previews.lrdata" \
+    --exclude "/Naughty/Lightroom Catalogue/Photo Library Smart Previews.lrdata" \
+    --exclude "/Naughty/Lightroom Catalogue/Photo Library.lrcat-journal" \
+    --exclude "/Naughty/Lightroom Catalogue/Photo Library.lrcat.lock" \
