@@ -23,6 +23,9 @@ set -x
 
 # rm-dsstore "$src"
 rsync -avh --delete "$src" "$dst" \
+    --exclude "*.lrcat-journal" \
+    --exclude "*.lrcat.lock" \
+    --exclude "*.lrdata" \
     --exclude "._.DS_Store" \
     --exclude ".DS_Store" \
     --exclude ".sync.ffs_db" \
@@ -33,13 +36,4 @@ rsync -avh --delete "$src" "$dst" \
     --exclude "/.VolumeIcon.icns" \
     --exclude "/.VolumeIcon.ico" \
     --exclude "/autorun.inf" \
-    --exclude "/Lightroom Catalogue/Mobile Downloads.lrdata" \
-    --exclude "/Lightroom Catalogue/Photo Library Previews.lrdata" \
-    --exclude "/Lightroom Catalogue/Photo Library Smart Previews.lrdata" \
-    --exclude "/Lightroom Catalogue/Photo Library.lrcat-journal" \
-    --exclude "/Lightroom Catalogue/Photo Library.lrcat.lock" \
-    --exclude "/Naughty/Lightroom Catalogue/Mobile Downloads.lrdata" \
-    --exclude "/Naughty/Lightroom Catalogue/Photo Library Previews.lrdata" \
-    --exclude "/Naughty/Lightroom Catalogue/Photo Library Smart Previews.lrdata" \
-    --exclude "/Naughty/Lightroom Catalogue/Photo Library.lrcat-journal" \
-    --exclude "/Naughty/Lightroom Catalogue/Photo Library.lrcat.lock" \
+    --exclude "Mobile Downloads.lrdata"
