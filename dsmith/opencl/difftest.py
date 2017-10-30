@@ -219,7 +219,7 @@ INNER JOIN {Majority.__tablename__} majorities ON results.testcase_id = majoriti
 WHERE outcome = {Outcomes.PASS}
 AND maj_outcome = {Outcomes.PASS}
 AND outcome_majsize >= {min_majsize}
-AND stdout_majsize >= CAST((2 * outcome_majsize / 3) + 0.5 AS INT)
+AND stdout_majsize >= CEILING(2 * outcome_majsize / 3)
 AND stdout_id <> maj_stdout_id
 """)
     s.commit()
