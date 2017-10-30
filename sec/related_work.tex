@@ -1,12 +1,12 @@
 \section{Related Work}\label{sec:rw}
 
-\cc{Compiler validation problem is that exhaustive testing is infeasible, so how do we enumerate a subset of ``meaningful'' test cases}
+\cc{TODO: ASPLOS reviewer suggestions~\cite{Wang2013b,Godefroid2017,Yan2017}.}
+
+\cc{TODO: TreeFuzz~\cite{Patra2016}.}
 
 The random generation of test cases is a well established approach to the compiler validation problem. Prior approaches are surveyed in~\cite{Kossatchev2005,Boujarwah1997} and empirically contrasted in~\cite{Chen2014a}. The main question of interest is in how to efficiently generate codes which trigger bugs. There are two main approaches: \emph{program generation}, in which inputs are synthesized from scratch, typically by stochastic enumeration of a grammar; and \emph{program mutation}, in which existing codes are modified and mutated so as to identify anomalous behavior.
 
 \paragraph{Program Generation}
-
-\cc{TODO: cite TreeFuzz!!!1}
 
 In the foundational work on differential testing for compilers, McKeeman \emph{et al.\ }present generators capable of enumerating programs of a range of qualities, from random ASCII sequences to C model conforming programs~\cite{McKeeman1998}. Subsequent works have presented increasingly complex generators which improve on the prior in some metric of interest, generally expressiveness or probability of correctness. CSmith~\cite{Yang2011} is a widely known and effective generator which enumerates programs by pairing infrequently combined language features. In doing so, it produce correct programs with clearly defined behavior but very unlikely functionality, increasing the chances of triggering a bug. Achieving this required extensive engineering work, most of it not portable across languages, and ignoring some language features. Subsequent generators influenced by CSmith, like Orange3~\cite{Nagai2013}, focus on features and bug types beyond the scope of CSmith, arithmetic bugs in the case of Orange3. \cc{+1 more example}
 
