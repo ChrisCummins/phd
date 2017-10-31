@@ -49,6 +49,7 @@ include build/make/cldrive.make
 include build/make/clsmith.make
 include build/make/clreduce.make
 include build/make/llvm.make
+include build/make/glsl.make
 
 python_version = 3.6
 python = $(venv_dir)/bin/python$(python_version)
@@ -71,7 +72,7 @@ dsmith/opencl/opencl_pb2.py: dsmith/opencl/opencl.proto $(venv_activate)
 
 # python packages
 python_packages = $(clgen) $(cldrive) $(jupyter)
-python: $(venv_activate) $(python_packages) $(protobuf) $(clangs)
+python: $(venv_activate) $(python_packages) $(protobuf) $(clangs) $(glsl)
 	$(venv) ./configure -r >/dev/null
 	$(venv) pip install --only-binary=numpy '$(shell grep numpy requirements.txt)'
 	$(venv) pip install -r requirements.txt
