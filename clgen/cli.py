@@ -310,6 +310,24 @@ def _register_fetch_parser(self, parent: ArgumentParser) -> None:
         parser.add_argument("db_file", metavar="<db>", type=FileType('rb'),
                             help='path to SQL dataset')
 
+    @getself
+    def _register_repos_parser(self, parent: ArgumentParser) -> None:
+        """
+        Imports files from a directory of cloned git repositories.
+        """
+
+        def _main(db_file: BinaryIO, indir: Path) -> None:
+            clgen.fetch_repos(db_file.name, indir, lang=clgen.Language.GLSL)
+
+        parser = parent.add_parser("repos", help="import from directory of repositories",
+                                   description=inspect.getdoc(self),
+                                   epilog=__help_epilog__)
+        parser.set_defaults(dispatch_func=_main)
+        parser.add_argument("db_file", metavar="<db>", type=FileType('rb'),
+                            help='path to SQL dataset')
+        parser.add_argument("indir", metavar="<dir>",
+                            help='directory containing repositories')
+
     fetch = parent.add_parser("fetch", aliases=["f", "fe"],
                               help="gather training data",
                               description=inspect.getdoc(self),
@@ -319,6 +337,7 @@ def _register_fetch_parser(self, parent: ArgumentParser) -> None:
     subparsers = [
         _register_fs_parser,
         _register_github_parser,
+        _register_repos_parser,
     ]
 
     for register_fn in subparsers:

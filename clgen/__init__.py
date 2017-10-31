@@ -40,13 +40,9 @@ from collections import namedtuple
 from contextlib import contextmanager
 from copy import deepcopy
 from enum import Enum
-from hashlib import sha1
-from labm8 import cache
-from labm8 import fs
-from labm8 import jsonutil
-from labm8 import system
-from labm8 import system
+from labm8 import cache, fs, jsonutil, system
 from pkg_resources import resource_filename, resource_string, require
+from typing import List
 
 from clgen._config import *
 
@@ -149,6 +145,22 @@ class Language(Enum):
 
     def __repr__(self):
         return self.name.lower()
+
+
+def file_extensions(lang: Language) -> List[str]:
+    """ Returns list of file extensions for sources in the given language. """
+    return {
+        Language.OPENCL: ['.cl', '.ocl'],
+        Language.SOLIDITY: ['.sol'],
+        Language.GLSL: ['.glsl', '.frag', '.vert', '.tesc', '.tese', '.geom', '.comp'],
+    }[lang]
+
+def format_as_comment(lang: Language, msg: str) -> str:
+    return {
+        Language.OPENCL: lambda msg: f'// {msg}',
+        Language.SOLIDITY: lambda msg: f'// {msg}',
+        Language.GLSL: lambda msg: f'// {msg}',
+    }[lang](msg)
 
 
 def cachepath(*relative_path_components: list) -> str:

@@ -257,8 +257,9 @@ def get_inlined_kernel(path: str, kid: str,
     stack.append(repo_path)
 
     include_re = {
+        clgen.Language.GLSL: re.compile(r'\w*#include ["<](?P<path>.*)[">]'),
         clgen.Language.OPENCL: re.compile(r'\w*#include ["<](?P<path>.*)[">]'),
-        clgen.Language.SOLIDITY: re.compile(r'\w*import ["<](\./)?(?P<path>.*)[">];')
+        clgen.Language.SOLIDITY: re.compile(r'\w*import ["<](\./)?(?P<path>.*)[">];'),
     }[lang]
 
     outlines = []

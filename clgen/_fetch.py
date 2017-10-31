@@ -19,12 +19,15 @@
 """
 Fetch OpenCL files
 """
+import dateutil
+import dateutil.parser
 import json
 import os
 import re
 import requests
-import sys
 import sqlite3
+import subprocess
+import sys
 
 from base64 import b64decode
 from functools import partial
@@ -33,7 +36,7 @@ from hashlib import sha1
 from io import open
 from labm8 import crypto
 from labm8 import fs
-from subprocess import Popen
+from pathlib import Path
 from time import sleep
 from typing import List
 
@@ -158,10 +161,6 @@ def _process_repo(g, db, repo) -> bool:
     return True
 
 
-_include_re = re.compile('\w*#include ["<](.*)[">]')
-_sol_include_re = re.compile('\w*import ["<](\./)?(.*)[">];')
-
-
 def _download_opencl_file(github_token: str, repo, url: str,
                           stack: List[str]) -> str:
     """
@@ -197,7 +196,7 @@ def _download_opencl_file(github_token: str, repo, url: str,
 
     outlines = []
     for line in src.split('\n'):
-        match = re.match(_include_re, line)
+        match = re.match(include_re, line)
         if match:
             include_name = match.group(1)
 
@@ -374,6 +373,72 @@ def is_solidity_path(file) -> bool:
     return file.path.endswith('.sol')
 
 
+def fetch_repos(db_path: Path, indir: Path, lang: clgen.Language) -> None:
+    db = dbutil.connect(db_path)
+
+    if not dbutil.is_github(db):
+        raise clgen.UserError("not a GitHub database")
+
+    c = db.cursor()
+
+    for directory in fs.ls(indir, abspaths=True):
+        # hacky hardcoded interpretation of `git remote -v`
+        gitdir = fs.path(directory, ".git")
+        output = subprocess.check_output(
+            ["git", "--git-dir", gitdir, "remote", "-v"],
+            universal_newlines=True)
+        url = output.split("\n")[0].split("\t")[1].split(" ")[0]
+        name = fs.basename(directory)
+
+        output = subprocess.check_output(
+            f"git --git-dir {gitdir} rev-list --format=format:'%ai' " +
+            f"--max-count=1 $(git --git-dir {gitdir} rev-parse HEAD) | tail -n1",
+            shell=True, universal_newlines=True)
+        try:
+            updated_at = dateutil.parser.parse(output)
+        except ValueError:
+            log.error(f"failed to process {name} {url}")
+            continue
+
+        c.execute("SELECT updated_at FROM Repositories WHERE url=?", (url,))
+        cached_updated_at = c.fetchone()
+
+        # Do nothing unless updated timestamps don't match
+        # if cached_updated_at and cached_updated_at[0] >= updated_at:
+        #     log.verbose(name, "already in database")
+        #     continue
+
+        c.execute("DELETE FROM Repositories WHERE url=?", (url,))
+        c.execute("INSERT INTO Repositories VALUES(?,?,?,?,?,?,?,?,?)",
+              (url, "<unknown>", name, 0, 0, 0, 0, updated_at, updated_at))
+
+        name_str = " -o ".join([f"-name '*{ext}'" for ext in clgen.file_extensions(lang)])
+        output = subprocess.check_output(
+            f"find {directory} -type f {name_str} | grep -v '.git/' || true",
+            shell=True, universal_newlines=True)
+        files = [x.strip() for x in output.split("\n") if x.strip()]
+
+        # nothing to import
+        if not len(files):
+            # log.verbose("no files in", name)
+            continue
+
+        log.verbose("processing", len(files), "files in", name)
+        for path in files:
+            relpath = path[len(directory) + 1:]
+            try:
+                contents = inline_fs_headers(path, [], lang=lang)
+                sha = crypto.sha1_str(contents)
+                c.execute('INSERT OR IGNORE INTO ContentFiles VALUES(?,?)',
+                          (sha, contents))
+                c.execute("INSERT OR IGNORE INTO ContentMeta VALUES(?,?,?,?,?)",
+                          (sha, relpath, url, sha, len(contents)))
+            except UnicodeDecodeError:
+                log.warning("non UTF-8 file", path)
+
+        db.commit()
+        c = db.cursor()
+
 def fetch_github(db_path: str, github_username: str, github_pw: str,
                  github_token: str, lang: clgen.Language=clgen.Language.OPENCL) -> None:
     """
@@ -421,7 +486,8 @@ def fetch_github(db_path: str, github_username: str, github_pw: str,
                                     download_file_cb)
 
 
-def inline_fs_headers(path: str, stack: List[str]) -> str:
+def inline_fs_headers(path: str, stack: List[str],
+                      lang: clgen.Language=clgen.Language.OPENCL) -> str:
     """
     Recursively inline headers in file.
 
@@ -439,12 +505,18 @@ def inline_fs_headers(path: str, stack: List[str]) -> str:
     """
     stack.append(path)
 
-    with open(path) as infile:
+    include_re = {
+        clgen.Language.GLSL: re.compile(r'\w*#include ["<](?P<path>.*)[">]'),
+        clgen.Language.OPENCL: re.compile(r'\w*#include ["<](?P<path>.*)[">]'),
+        clgen.Language.SOLIDITY: re.compile(r'\w*import ["<](\./)?(?P<path>.*)[">];'),
+    }[lang]
+
+    with open(path, encoding="utf-8") as infile:
         src = infile.read()
 
     outlines = []
     for line in src.split('\n'):
-        match = re.match(_include_re, line)
+        match = re.match(include_re, line)
         if match:
             include_name = match.group(1)
 
@@ -455,16 +527,16 @@ def inline_fs_headers(path: str, stack: List[str]) -> str:
 
             if os.path.exists(include_path) and include_path not in stack:
                 include_src = inline_fs_headers(include_path, stack)
-                outlines.append('// [FETCH] include: ' + include_path)
                 outlines.append(include_src)
-                outlines.append('// [FETCH] eof(' + include_path + ')')
+                outlines.append(clgen.format_as_comment(
+                    lang, '[FETCH] eof(' + include_path + ')'))
             else:
                 if include_path in stack:
-                    outlines.append('// [FETCH] ignored recursive include: ' +
-                                    include_path)
+                    outlines.append(clgen.format_as_comment(
+                        lang, '[FETCH] ignored recursive include: ' + include_path))
                 else:
-                    outlines.append('// [FETCH] 404 not found: ' +
-                                    include_path)
+                    outlines.append(clgen.format_as_comment(
+                        lang, '[FETCH] 404 not found: ' + include_path))
         else:
             outlines.append(line)
 
