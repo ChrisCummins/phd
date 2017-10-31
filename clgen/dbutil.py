@@ -224,7 +224,8 @@ def get_kernel(path: str, kid: str, table: str="PreprocessedFiles") -> str:
     return src
 
 
-def get_inlined_kernel(path: str, kid: str, lang: str="opencl",
+def get_inlined_kernel(path: str, kid: str,
+                       lang: clgen.Language=clgen.Language.OPENCL,
                        stack: List[str]=None) -> str:
     """
     Retrieve a kernel from a database and inline any includes.
@@ -235,7 +236,7 @@ def get_inlined_kernel(path: str, kid: str, lang: str="opencl",
         Path to database.
     kid : str
         Kernel ID.
-    lang : str
+    lang : clgen.Language
         Programming language.
 
     Returns
@@ -256,8 +257,8 @@ def get_inlined_kernel(path: str, kid: str, lang: str="opencl",
     stack.append(repo_path)
 
     include_re = {
-        "opencl": re.compile(r'\w*#include ["<](?P<path>.*)[">]'),
-        "solidity": re.compile(r'\w*import ["<](\./)?(?P<path>.*)[">];')
+        clgen.Language.OPENCL: re.compile(r'\w*#include ["<](?P<path>.*)[">]'),
+        clgen.Language.SOLIDITY: re.compile(r'\w*import ["<](\./)?(?P<path>.*)[">];')
     }[lang]
 
     outlines = []

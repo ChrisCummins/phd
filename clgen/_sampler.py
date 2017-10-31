@@ -378,8 +378,8 @@ class Sampler(clgen.CLgenObject):
             string = "".join([str(x) for x in checksum_data])
             return crypto.sha1_str(string)
 
-        def _start_text(lang: str, args: Union[List[str], None], start_text: str):
-            if lang == "opencl":
+        def _start_text(lang: clgen.Language, args: Union[List[str], None], start_text: str):
+            if lang == clgen.Language.OPENCL:
                 if args is None:
                     return "__kernel void A("
                 else:
@@ -412,9 +412,11 @@ class Sampler(clgen.CLgenObject):
 
         self.language = clgen.Language.from_str(kernel_opts.get("language"))
 
-        self.start_text = _start_text(self.kernel_opts["language"],
+        self.start_text = _start_text(self.language,
                                       self.kernel_opts.get("args", []),
                                       self.kernel_opts.get("start_text", ""))
+        # pop "start_text" option
+        del self.kernel_opts["start_text"]
 
         # options to pass to preprocess_db()
         self.preprocess_opts = {

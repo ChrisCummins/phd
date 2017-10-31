@@ -717,7 +717,7 @@ def preprocess_glsl(src: str, id: str='anon', **kwargs) -> str:
     return src
 
 
-def preprocess(src: str, id: str="anon", lang: str="opencl",
+def preprocess(src: str, id: str="anon", lang: clgen.Language=clgen.Language.OPENCL,
                **lang_opts) -> str:
     """
     Preprocess a file. There are three possible outcomes:
@@ -748,11 +748,11 @@ def preprocess(src: str, id: str="anon", lang: str="opencl",
     clgen.InternalException
         In case of some other error.
     """
-    if lang == "opencl":
+    if lang == clgen.Language.OPENCL:
         return preprocess_opencl(src, id, **lang_opts)
-    elif lang == "solidity":
+    elif lang == clgen.Language.SOLIDITY:
         return preprocess_solidity(src, id, **lang_opts)
-    elif lang == "glsl":
+    elif lang == clgen.Language.GLSL:
         return preprocess_glsl(src, id, **lang_opts)
     else:
         raise ValueError(f"unsuporrted language '{lang}'")

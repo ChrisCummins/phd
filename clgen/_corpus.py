@@ -377,7 +377,7 @@ class Corpus(clgen.CLgenObject):
             preprocess_time = time()
             encoding = self.opts["encoding"]
             if clgen.preprocess_db(self.contentcache["kernels.db"],
-                                   lang=str(self.language)):
+                                   lang=self.language):
                 modified = True
                 encode_kernels_db(self.contentcache["kernels.db"], encoding)
         except Exception as e:

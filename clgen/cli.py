@@ -299,7 +299,7 @@ def _register_fetch_parser(self, parent: ArgumentParser) -> None:
 
             try:
                 clgen.fetch_github(db_file.name, username, password, token,
-                                   lang="opencl")
+                                   lang=clgen.Language.OPENCL)
             except BadCredentialsException as e:
                 log.fatal("bad GitHub credentials")
 
@@ -549,7 +549,7 @@ def _register_preprocess_parser(self, parent: ArgumentParser) -> None:
                     dbutil.remove_preprocessed(path)
                     print("done.")
                 else:
-                    if clgen.preprocess_db(path, lang="opencl", use_gpuverify=gpuverify):
+                    if clgen.preprocess_db(path, lang=clgen.Language.OPENCL, use_gpuverify=gpuverify):
                         print("done.")
                     else:
                         print("nothing to be done.")
@@ -749,6 +749,10 @@ For information about a specific command, run `clgen <command> --help`.
 """ + __help_epilog__,
         formatter_class=RawDescriptionHelpFormatter)
 
+    # TODO:
+    # parser.add_argument(
+    #     "-l", "--lang", metavar="<language>",
+    #     help="programming language (default: OpenCL)")
     parser.add_argument(
         "-v", "--verbose", action="store_true",
         help="increase output verbosity")

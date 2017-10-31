@@ -375,7 +375,7 @@ def is_solidity_path(file) -> bool:
 
 
 def fetch_github(db_path: str, github_username: str, github_pw: str,
-                 github_token: str, lang: str="opencl") -> None:
+                 github_token: str, lang: clgen.Language=clgen.Language.OPENCL) -> None:
     """
     Download all of the Solidity on GitHub (!)
 
@@ -390,7 +390,7 @@ def fetch_github(db_path: str, github_username: str, github_pw: str,
     github_token : str
         Authorization.
     """
-    if lang == "opencl":
+    if lang == clgen.Language.OPENCL:
         download_file_cb = _download_opencl_file
         file_is_intetesting = is_opencl_path
         query_terms = [
@@ -404,7 +404,7 @@ def fetch_github(db_path: str, github_username: str, github_pw: str,
             'nvidia',
             'heterogeneous'
         ]
-    elif lang == "solidity":
+    elif lang == clgen.Language.SOLIDITY:
         download_file_cb = _download_file
         file_is_intetesting = is_solidity_path
         query_terms = [
