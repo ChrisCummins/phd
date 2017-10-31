@@ -51,9 +51,11 @@ class Octopus(threading.Thread):
 
     def run(self):
         page = self.next_page()
+        fs.mkdir(self.clonedir)
 
         while True:
-            remaining = max(self.n - self.i, 0)
+            num_cloned = len(fs.ls(self.clonedir))
+            remaining = max(self.n - num_cloned, 0)
             repos = list(page)[:remaining]
 
             # empty page implies no more results
