@@ -549,8 +549,7 @@ def _register_preprocess_parser(self, parent: ArgumentParser) -> None:
                     dbutil.remove_preprocessed(path)
                     print("done.")
                 else:
-                    if clgen.preprocess_db(path, lang="solidity",
-                                           use_gpuverify=gpuverify):
+                    if clgen.preprocess_db(path, lang="opencl", use_gpuverify=gpuverify):
                         print("done.")
                     else:
                         print("nothing to be done.")

@@ -710,6 +710,13 @@ def preprocess_solidity(src: str, id: str='anon', **kwargs) -> str:
     return src
 
 
+def preprocess_glsl(src: str, id: str='anon', **kwargs) -> str:
+    src = _strip_comments(src)
+    src = _remove_duplicate_empty_lines(src)
+    src = clangformat_ocl(src)
+    return src
+
+
 def preprocess(src: str, id: str="anon", lang: str="opencl",
                **lang_opts) -> str:
     """
@@ -745,6 +752,8 @@ def preprocess(src: str, id: str="anon", lang: str="opencl",
         return preprocess_opencl(src, id, **lang_opts)
     elif lang == "solidity":
         return preprocess_solidity(src, id, **lang_opts)
+    elif lang == "glsl":
+        return preprocess_glsl(src, id, **lang_opts)
     else:
         raise ValueError(f"unsuporrted language '{lang}'")
 

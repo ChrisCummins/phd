@@ -128,6 +128,7 @@ def version() -> str:
 class Language(Enum):
     OPENCL = 1
     SOLIDITY = 2
+    GLSL = 3
 
     @staticmethod
     def from_str(string: str) -> 'Language':
@@ -136,7 +137,8 @@ class Language(Enum):
         lang = {
             "opencl": Language.OPENCL,
             "sol": Language.SOLIDITY,
-            "solidity": Language.SOLIDITY
+            "solidity": Language.SOLIDITY,
+            "glsl": Language.GLSL,
         }.get(string.lower(), None)
         if not lang:
             raise UserError(f"unknown language '{string}'")

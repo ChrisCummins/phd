@@ -48,6 +48,7 @@ from clgen import log
 DEFAULT_KERNELS_OPTS = {
     "language": None,  # note language must be explicitly provided
     "args": None,
+    "start_text": None,
     "max_length": 10000,
     "seed": None,
     "temperature": 1
@@ -377,16 +378,14 @@ class Sampler(clgen.CLgenObject):
             string = "".join([str(x) for x in checksum_data])
             return crypto.sha1_str(string)
 
-        def _start_text(lang: str, args: Union[List[str], None]):
+        def _start_text(lang: str, args: Union[List[str], None], start_text: str):
             if lang == "opencl":
                 if args is None:
                     return "__kernel void A("
                 else:
                     return serialize_opencl_argspec(args)
-            elif lang == "solidity":
-                return "contract "
             else:
-                raise ValueError(f"unsupported sampler language '{lang}'")
+                return start_text or ""
 
         assert(type(sampler_opts) is dict)
         assert(type(kernel_opts) is dict)
@@ -413,7 +412,9 @@ class Sampler(clgen.CLgenObject):
 
         self.language = clgen.Language.from_str(kernel_opts.get("language"))
 
-        self.start_text = _start_text(self.kernel_opts["language"], self.kernel_opts["args"])
+        self.start_text = _start_text(self.kernel_opts["language"],
+                                      self.kernel_opts.get("args", []),
+                                      self.kernel_opts.get("start_text", ""))
 
         # options to pass to preprocess_db()
         self.preprocess_opts = {
