@@ -187,18 +187,25 @@ class Language(dsmith.ReprComparable):
 def mklang(name: str) -> Language:
     """
     Instantiate language from name.
-    """
-    # Deferred importing of languages to break circular dependencies from
-    # language modules which require this file.
-    from dsmith.opencl import OpenCL
-    from dsmith.sol import Solidity
 
+    Raises:
+        LookupError: If language is not found.
+    """
     # Global table of available languages
-    lang = {
-        "opencl": OpenCL,
-        "sol": Solidity,
-        "solidity": Solidity,
-    }.get(name)
+    langs = dict()
+
+    if dsmith.WITH_OPENCL:
+        # Deferred importing of languages to break circular dependencies from
+        # language modules which require this file.
+        from dsmith.opencl import OpenCL
+        langs["opencl"] = OpenCL
+
+    if dsmith.WITH_SOLIDITY:
+        from dsmith.sol import Solidity
+        langs["solidity"] = Solidity
+        langs["sol"] = Solidity
+
+    lang = langs.get(name)
     if not lang:
         raise LookupError(f"Unknown language '{name}'")
     return lang()

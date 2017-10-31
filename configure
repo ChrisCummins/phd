@@ -108,8 +108,12 @@ def main():
                         help="re-run configuraiton using previous settings")
     parser.add_argument("-b", "--batch", action="store_true",
                         help="defaults all options to defaults. Override with:")
-    parser.add_argument("--with-cuda", action="store_true",
+    parser.add_argument("--with-cuda-backend", action="store_true",
                         help="build with CUDA support")
+    parser.add_argument("--with-opencl", action="store_true",
+                        help="enable OpenCL fuzzing")
+    parser.add_argument("--with-solidity", action="store_true",
+                        help="enable Solidity fuzzing")
     parser.add_argument("--with-llvm-trunk", action="store_true",
                         help="build with LLVM trunk testbed")
     parser.add_argument("--with-llvm-5.0", action="store_true", dest="with_llvm_50",
@@ -141,23 +145,54 @@ def main():
                   "the `-r` flag.", file=sys.stderr)
             sys.exit(1)
     else:
-        print(args)
         cfg = {
-            "cuda": args.with_cuda,
+            "cuda": args.with_cuda_backend,
             "version": "0.4.0.dev0",
             "dsmith_dir": pwd,
         }
 
     # get input from user
     if not args.batch:
-        cfg["cuda"] = yes_no("Enable CUDA support?", default=args.with_cuda)
-        cfg["llvm_trunk"] = yes_no("Build LLMV trunk testbed?", default=args.with_llvm_trunk)
-        cfg["llvm_50"] = yes_no("Build LLMV 5.0 testbed?", default=args.with_llvm_50)
-        cfg["llvm_40"] = yes_no("Build LLMV 4.0 testbed?", default=args.with_llvm_40)
-        cfg["llvm_39"] = yes_no("Build LLMV 3.9 testbed?", default=args.with_llvm_39)
-        cfg["llvm_38"] = yes_no("Build LLMV 3.8 testbed?", default=args.with_llvm_38)
-        cfg["llvm_37"] = yes_no("Build LLMV 3.7 testbed?", default=args.with_llvm_37)
-        cfg["llvm_36"] = yes_no("Build LLMV 3.6 testbed?", default=args.with_llvm_36)
+        cfg["cuda"] = yes_no("Enable CUDA backend? (requires CUDA)", default=args.with_cuda_backend)
+
+        # OpenCL settings:
+        cfg["opencl"] = yes_no("Enable OpenCL fuzzing? (requires OpenCL)", default=args.with_opencl)
+        if cfg["opencl"]:
+            if yes_no("Build all OpenCL LLVM testbeds?", default=(
+                args.with_llvm_trunk and
+                args.with_llvm_50 and
+                args.with_llvm_40 and
+                args.with_llvm_39 and
+                args.with_llvm_38 and
+                args.with_llvm_37 and
+                args.with_llvm_36)):
+                cfg["llvm_trunk"] = True
+                cfg["llvm_50"] = True
+                cfg["llvm_40"] = True
+                cfg["llvm_39"] = True
+                cfg["llvm_38"] = True
+                cfg["llvm_37"] = True
+                cfg["llvm_36"] = True
+            else:
+                cfg["llvm_trunk"] = yes_no("Build OpenCL LLMV trunk testbed?", default=args.with_llvm_trunk)
+                cfg["llvm_50"] = yes_no("Build OpenCL LLMV 5.0 testbed?", default=args.with_llvm_50)
+                cfg["llvm_40"] = yes_no("Build OpenCL LLMV 4.0 testbed?", default=args.with_llvm_40)
+                cfg["llvm_39"] = yes_no("Build OpenCL LLMV 3.9 testbed?", default=args.with_llvm_39)
+                cfg["llvm_38"] = yes_no("Build OpenCL LLMV 3.8 testbed?", default=args.with_llvm_38)
+                cfg["llvm_37"] = yes_no("Build OpenCL LLMV 3.7 testbed?", default=args.with_llvm_37)
+                cfg["llvm_36"] = yes_no("Build OpenCL LLMV 3.6 testbed?", default=args.with_llvm_36)
+        else:
+            cfg["llvm_trunk"] = False
+            cfg["llvm_50"] = False
+            cfg["llvm_40"] = False
+            cfg["llvm_39"] = False
+            cfg["llvm_38"] = False
+            cfg["llvm_37"] = False
+            cfg["llvm_36"] = False
+
+        # Solidity settings:
+        cfg["solidity"] = yes_no("Enable Solidity fuzzing? (requires solc)", default=args.with_solidity)
+
         cfg["rc_path"] = textinput("Path to configuration file", default=args.rc or default_rc)
 
     # generate JSON config file
@@ -170,9 +205,11 @@ def main():
         print("RC_PATH := {}".format(cfg["rc_path"]), file=outfile)
         print("DSMITH_VERSION := " + cfg["version"], file=outfile)
         print("USE_CUDA := " + to_make(cfg["cuda"]), file=outfile)
+        print("WITH_OPENCL := " + to_make(cfg["opencl"]), file=outfile)
+        print("WITH_SOLIDITY := " + to_make(cfg["solidity"]), file=outfile)
         for llvm in ["trunk", "50", "40", "39", "38", "37", "36"]:
             key = llvm.upper()
-            print(f"WITH_LLVM_{key} := " + to_make(cfg[f"llvm_{llvm}"]), file=outfile)
+            print(f"WITH_LLVM_{key} := " + to_make(cfg.get(f"llvm_{llvm}", False)), file=outfile)
 
 
     # generate python config file
@@ -259,10 +296,12 @@ The following questions will create it for you:""")
 
     print("DeepSmith {version} configured:".format(version=cfg["version"]))
     print()
-    print("    Root path:          " + cfg["dsmith_dir"])
-    print("    CUDA support:       " + to_text(cfg["cuda"]))
-    print("    LLVM testbeds:      " + ", ".join(llvms))
-    print("    Configuration path: " + cfg["rc_path"])
+    print("    Root path:            " + cfg["dsmith_dir"])
+    print("    CUDA backend:         " + to_text(cfg["cuda"]))
+    print("    OpenCL support:       " + to_text(cfg["opencl"]))
+    print("    LLVM OpenCL testbeds: " + ", ".join(llvms))
+    print("    Solidity support:     " + to_text(cfg["solidity"]))
+    print("    Configuration path:   " + cfg["rc_path"])
     print()
     print("You may now build DeepSmith by running 'make'.")
 
