@@ -28,3 +28,4 @@ $(glsl):
 	wget $(binary_url) -O $@
 	chmod +x $@
 	touch $@
+all_targets += $(glsl)

@@ -52,6 +52,8 @@ endif
 
 clangs: $(clangs)
 
+all_targets += $(clangs)
+
 $(clang_362):
 	mkdir -pv $(llvm_dir)/.build
 	git clone http://llvm.org/git/llvm.git $(llvm_dir)/.build/3.6.2

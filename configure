@@ -112,8 +112,6 @@ def main():
                         help="build with CUDA support")
     parser.add_argument("--with-opencl", action="store_true",
                         help="enable OpenCL fuzzing")
-    parser.add_argument("--with-solidity", action="store_true",
-                        help="enable Solidity fuzzing")
     parser.add_argument("--with-llvm-trunk", action="store_true",
                         help="build with LLVM trunk testbed")
     parser.add_argument("--with-llvm-5.0", action="store_true", dest="with_llvm_50",
@@ -128,6 +126,10 @@ def main():
                         help="build with LLVM 3.7 testbed")
     parser.add_argument("--with-llvm-3.6", action="store_true", dest="with_llvm_36",
                         help="build with LLVM 3.6 testbed")
+    parser.add_argument("--with-solidity", action="store_true",
+                        help="enable Solidity fuzzing")
+    parser.add_argument("--with-glsl", action="store_true",
+                        help="enable GLSL fuzzing")
     parser.add_argument("--rc", metavar="<path>", default=None,
                         help=f"path to configuration file (default: {default_rc})")
     args = parser.parse_args()
@@ -193,6 +195,9 @@ def main():
         # Solidity settings:
         cfg["solidity"] = yes_no("Enable Solidity fuzzing? (requires solc)", default=args.with_solidity)
 
+        # GLSL settings
+        cfg["glsl"] = yes_no("Enable GLSL fuzzing?", default=args.with_glsl)
+
         cfg["rc_path"] = textinput("Path to configuration file", default=args.rc or default_rc)
 
     # generate JSON config file
@@ -207,6 +212,7 @@ def main():
         print("USE_CUDA := " + to_make(cfg["cuda"]), file=outfile)
         print("WITH_OPENCL := " + to_make(cfg["opencl"]), file=outfile)
         print("WITH_SOLIDITY := " + to_make(cfg["solidity"]), file=outfile)
+        print("WITH_GLSL := " + to_make(cfg["glsl"]), file=outfile)
         for llvm in ["trunk", "50", "40", "39", "38", "37", "36"]:
             key = llvm.upper()
             print(f"WITH_LLVM_{key} := " + to_make(cfg.get(f"llvm_{llvm}", False)), file=outfile)
@@ -218,6 +224,9 @@ def main():
         print("RC_PATH = '{}'".format(cfg["rc_path"]), file=outfile)
         print("VERSION = '{}'".format(cfg["version"]), file=outfile)
         print("USE_CUDA = " + to_python(cfg["cuda"]), file=outfile)
+        print("WITH_OPENCL = " + to_python(cfg["opencl"]), file=outfile)
+        print("WITH_SOLIDITY = " + to_python(cfg["solidity"]), file=outfile)
+        print("WITH_GLSL = " + to_python(cfg["glsl"]), file=outfile)
 
     # generate python requirements file
     requirements_files = ['requirements.txt']

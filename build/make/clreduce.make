@@ -24,6 +24,7 @@ clreduce: $(clreduce)
 
 $(clreduce):
 	cd $(clreduce_dir) && PATH=$(dir $(ninja)):$$PATH make CMAKE=$(cmake)
+all_targets += $(clreduce)
 
 .PHONY: distclean-clreduce
 distclean-clreduce:

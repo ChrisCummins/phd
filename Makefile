@@ -29,6 +29,7 @@ root := $(PWD)
 cache := $(root)/.cache
 UNAME := $(shell uname)
 SHELL := /bin/bash
+all_targets =
 clean_targets =
 distclean_targets =
 test_targets =
@@ -45,16 +46,22 @@ include build/make/ninja.make
 include build/make/venv.make
 include build/make/jupyter.make
 include build/make/clgen.make
+
+ifeq ($(WITH_OPENCL),1)
 include build/make/cldrive.make
 include build/make/clsmith.make
 include build/make/clreduce.make
 include build/make/llvm.make
+endif
+
+ifeq ($(WITH_GLSL),1)
 include build/make/glsl.make
+endif
 
 python_version = 3.6
 python = $(venv_dir)/bin/python$(python_version)
 
-all install: $(clsmith) $(clreduce) python protobuf
+all install: $(all_targets) python
 
 # run tests
 .PHONY: test
@@ -72,7 +79,7 @@ dsmith/opencl/opencl_pb2.py: dsmith/opencl/opencl.proto $(venv_activate)
 
 # python packages
 python_packages = $(clgen) $(cldrive) $(jupyter)
-python: $(venv_activate) $(python_packages) $(protobuf) $(clangs) $(glsl)
+python: $(venv_activate) $(python_packages) $(protobuf)
 	$(venv) ./configure -r >/dev/null
 	$(venv) pip install --only-binary=numpy '$(shell grep numpy requirements.txt)'
 	$(venv) pip install -r requirements.txt
