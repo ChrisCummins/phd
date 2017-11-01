@@ -150,16 +150,25 @@ class Language(Enum):
 def file_extensions(lang: Language) -> List[str]:
     """ Returns list of file extensions for sources in the given language. """
     return {
+        Language.GLSL: ['.glsl', '.frag', '.vert', '.tesc', '.tese', '.geom', '.comp'],
         Language.OPENCL: ['.cl', '.ocl'],
         Language.SOLIDITY: ['.sol'],
-        Language.GLSL: ['.glsl', '.frag', '.vert', '.tesc', '.tese', '.geom', '.comp'],
     }[lang]
+
+
+def include_regexp(lang: Language) -> 'SRE_Pattern':
+    return {
+        Language.GLSL: re.compile(r'\w*#include ["<](?P<path>.*)([^:].*)?[">]'),
+        Language.OPENCL: re.compile(r'\w*#include ["<](?P<path>.*)[">]'),
+        Language.SOLIDITY: re.compile(r'\w*import ["<](\./)?(?P<path>.*)[">];'),
+    }[lang]
+
 
 def format_as_comment(lang: Language, msg: str) -> str:
     return {
+        Language.GLSL: lambda msg: f'// {msg}',
         Language.OPENCL: lambda msg: f'// {msg}',
         Language.SOLIDITY: lambda msg: f'// {msg}',
-        Language.GLSL: lambda msg: f'// {msg}',
     }[lang](msg)
 
 

@@ -174,6 +174,36 @@ def clang_cl_args(target: str=CLANG_CL_TARGETS[0],
     return args
 
 
+def strip_preprocessor_lines(src: str) -> str:
+    lines = src.split('\n')
+
+    # Strip all the includes:
+    for i, line in enumerate(lines):
+        if line == '# 1 "<stdin>" 2':
+            break
+    lines = lines[i + 1:]
+
+    # Strip lines beginning with '#' (that's preprocessor
+    # stuff):
+    src = '\n'.join([line for line in lines if not line.startswith('#')])
+
+    return src
+
+
+def compiler_preprocess(src: str, compiler_args: List[str], id: str='anon'):
+    cmd = [native.CLANG] + compiler_args + [
+        '-E', '-c', '-', '-o', '-'
+    ]
+    process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    stdout, stderr = process.communicate(src.encode('utf-8'))
+    if process.returncode != 0:
+        raise ClangException(stderr.decode('utf-8'))
+
+    src = stdout.decode('utf-8')
+
+    return strip_preprocessor_lines(src)
+
+
 def compiler_preprocess_cl(src: str, id: str='anon',
                            use_shim: bool=True) -> str:
     """
@@ -200,30 +230,7 @@ def compiler_preprocess_cl(src: str, id: str='anon',
     ClangException
         If compiler errors.
     """
-    cmd = [native.CLANG] + clang_cl_args(use_shim=use_shim) + [
-        '-E', '-c', '-', '-o', '-'
-    ]
-    process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    stdout, stderr = process.communicate(src.encode('utf-8'))
-
-    if process.returncode != 0:
-        raise ClangException(stderr.decode('utf-8'))
-
-    src = stdout.decode('utf-8')
-    lines = src.split('\n')
-
-    # Strip all the includes:
-    for i, line in enumerate(lines):
-        if line == '# 1 "<stdin>" 2':
-            break
-    src = '\n'.join(lines[i + 1:]).strip()
-
-    # Strip lines beginning with '#' (that's preprocessor
-    # stuff):
-    src = '\n'.join([line for line in src.split('\n')
-                     if not line.startswith('#')])
-
-    return src
+    return compiler_preprocess(src, clang_cl_args(use_shim=use_shim), id)
 
 
 def rewrite_cl(src: str, id: str='anon', use_shim: bool=True) -> str:
@@ -491,16 +498,16 @@ clangformat_config = {
 }
 
 
-def clangformat_ocl(src: str, id: str='anon') -> str:
+def clangformat(src: str, id: str='anon') -> str:
     """
-    Enforce code style on OpenCL file.
+    Enforce code style on source file.
 
     Parameters
     ----------
     src : str
-        OpenCL source.
+        Source code.
     id : str, optional
-        Name of OpenCL source.
+        Name of source file.
 
     Returns
     -------
@@ -614,6 +621,39 @@ def sanitize_prototype(src: str) -> str:
         return src
 
 
+def strip_comments(text: str):
+    """
+    Strip C/C++ style comments.
+
+    written by @markus-jarderot https://stackoverflow.com/a/241506/1318051
+    """
+    def replacer(match):
+        s = match.group(0)
+        if s.startswith('/'):
+            return " " # note: a space and not an empty string
+        else:
+            return s
+    pattern = re.compile(
+        r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
+        re.DOTALL | re.MULTILINE
+    )
+    return re.sub(pattern, replacer, text)
+
+
+def remove_duplicate_empty_lines(text: str):
+    """
+    Truncate blank lines.
+    """
+    last_line = None
+    lines = []
+    for line in text.split("\n"):
+        line = line.rstrip()
+        if line or last_line:
+            lines.append(line)
+        last_line = line
+    return "\n".join(lines)
+
+
 def preprocess_opencl(src: str, id: str='anon', use_shim: bool=True,
                       use_gpuverify: bool=False) -> str:
     """
@@ -634,20 +674,6 @@ def preprocess_opencl(src: str, id: str='anon', use_shim: bool=True,
         Inject shim header.
     use_gpuverify : bool, optional
         Whether to run GPUVerify on the code.
-
-    Returns
-    -------
-    str
-        Preprocessed source code as a string.
-
-    Raises
-    ------
-    BadCodeException
-        If code is bad (see above).
-    UglyCodeException
-        If code is ugly (see above).
-    clgen.InternalException
-        In case of some other error.
     """
     # Compile to bytecode and verify features:
     bc = compile_cl_bytecode(src, id, use_shim)
@@ -657,7 +683,7 @@ def preprocess_opencl(src: str, id: str='anon', use_shim: bool=True,
     # Rewrite and format source:
     src = compiler_preprocess_cl(src, id, use_shim)
     src = rewrite_cl(src, id, use_shim)
-    src = clangformat_ocl(src, id).strip()
+    src = clangformat(src, id).strip()
     src = ensure_has_code(src)
     src = sanitize_prototype(src)
 
@@ -667,53 +693,23 @@ def preprocess_opencl(src: str, id: str='anon', use_shim: bool=True,
     return src
 
 
-def _strip_comments(text: str):
-    """
-    Strip C/C++ style comments.
-
-    written by @markus-jarderot https://stackoverflow.com/a/241506/1318051
-    """
-    def replacer(match):
-        s = match.group(0)
-        if s.startswith('/'):
-            return " " # note: a space and not an empty string
-        else:
-            return s
-    pattern = re.compile(
-        r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
-        re.DOTALL | re.MULTILINE
-    )
-    return re.sub(pattern, replacer, text)
-
-
-def _remove_duplicate_empty_lines(text: str):
-    """
-    Truncate blank lines.
-    """
-    last_line = None
-    lines = []
-    for line in text.split("\n"):
-        line = line.rstrip()
-        if line or last_line:
-            lines.append(line)
-        last_line = line
-    return "\n".join(lines)
-
-
 def preprocess_solidity(src: str, id: str='anon', **kwargs) -> str:
     """
     Preprocess a solidity source.
     """
-    src = _strip_comments(src)
-    src = _remove_duplicate_empty_lines(src)
-    src = clangformat_ocl(src)
+    src = strip_comments(src)
+    src = remove_duplicate_empty_lines(src)
+    src = clangformat(src)
     return src
 
 
 def preprocess_glsl(src: str, id: str='anon', **kwargs) -> str:
-    src = _strip_comments(src)
-    src = _remove_duplicate_empty_lines(src)
-    src = clangformat_ocl(src)
+    """
+    Process a GLSL source.
+    """
+    src = compiler_preprocess(src, [], id)
+    src = remove_duplicate_empty_lines(src)
+    src = clangformat(src)
     return src
 
 

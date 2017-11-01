@@ -21,6 +21,7 @@ Fetch OpenCL files
 """
 import dateutil
 import dateutil.parser
+import editdistance
 import json
 import os
 import re
@@ -486,8 +487,9 @@ def fetch_github(db_path: str, github_username: str, github_pw: str,
                                     download_file_cb)
 
 
-def inline_fs_headers(path: str, stack: List[str],
-                      lang: clgen.Language=clgen.Language.OPENCL) -> str:
+def inline_fs_headers(path: Path, stack: List[str],
+                      lang: clgen.Language=clgen.Language.OPENCL,
+                      topdir: Path=None) -> str:
     """
     Recursively inline headers in file.
 
@@ -497,6 +499,8 @@ def inline_fs_headers(path: str, stack: List[str],
         File.
     stack : List[str]
         File stack.
+    topdir : Path
+        The top level directory to stop searching for includes in.
 
     Returns
     -------
@@ -505,11 +509,12 @@ def inline_fs_headers(path: str, stack: List[str],
     """
     stack.append(path)
 
-    include_re = {
-        clgen.Language.GLSL: re.compile(r'\w*#include ["<](?P<path>.*)[">]'),
-        clgen.Language.OPENCL: re.compile(r'\w*#include ["<](?P<path>.*)[">]'),
-        clgen.Language.SOLIDITY: re.compile(r'\w*import ["<](\./)?(?P<path>.*)[">];'),
-    }[lang]
+    if topdir is None:
+        topdir = fs.dirname(path)
+    # shell escaped top directory
+    escp_topdir = topdir.replace('"', '\\"')
+
+    include_re = clgen.include_regexp(lang)
 
     with open(path, encoding="utf-8") as infile:
         src = infile.read()
@@ -518,25 +523,55 @@ def inline_fs_headers(path: str, stack: List[str],
     for line in src.split('\n'):
         match = re.match(include_re, line)
         if match:
-            include_name = match.group(1)
+            # We have an import to inline!
+            include = match.group("path")
 
-            # try and resolve relative paths
-            include_name = include_name.replace('../', '')
+            # Search for files with that name in the repository
+            include_basename = fs.basename(include)
+            esc_basename = include_basename.replace('"', '\\"')
+            candidates = [x for x in
+                subprocess.check_output(
+                    f'find "{escp_topdir}" -type f -name {esc_basename}',
+                    shell=True, universal_newlines=True)\
+                    .split('\n')
+                if x]
 
-            include_path = os.path.join(os.path.dirname(path), include_name)
-
-            if os.path.exists(include_path) and include_path not in stack:
-                include_src = inline_fs_headers(include_path, stack)
-                outlines.append(include_src)
-                outlines.append(clgen.format_as_comment(
-                    lang, '[FETCH] eof(' + include_path + ')'))
+            # Select which file to inline:
+            if len(candidates) == 1:
+                # If there's exactly one match, then we're done:
+                file_to_inline = candidates[0]
+            elif len(candidates) > 1:
+                # We have multiple candidates to inline, so we'll compare the
+                # full paths (relative to the top directory) to select the one
+                # whose name is the closest match:
+                rel_matches = [match[len(topdir) + 1:] for match in candidates]
+                distances = [editdistance.eval(include, path) for path in rel_matches]
+                min_distance = min(distances)
+                file_to_inline = candidates[distances.index(min_distance)]
+                log.debug(f"Inferred include '{file_to_inline}' from '{line}' with distance {min_distance}")
             else:
-                if include_path in stack:
-                    outlines.append(clgen.format_as_comment(
-                        lang, '[FETCH] ignored recursive include: ' + include_path))
-                else:
-                    outlines.append(clgen.format_as_comment(
-                        lang, '[FETCH] 404 not found: ' + include_path))
+                # We didn't find anything suitable:
+                file_to_inline = None
+
+            # Process the inline file:
+            if file_to_inline in stack:
+                # We've already inlined this file, so ignore it:
+                outlines.append(clgen.format_as_comment(
+                    lang, f'[FETCH] ignored_include({line})'))
+            elif file_to_inline:
+                # Inline the file by recursively expanding its contents:
+                outlines.append(clgen.format_as_comment(
+                    lang, f'[FETCH] begin_include({line})'))
+                inline_src = inline_fs_headers(file_to_inline, stack)
+                outlines.append(inline_src)
+                outlines.append(clgen.format_as_comment(
+                    lang, f'[FETCH] end_include({line})'))
+            else:
+                # We didn't find anything suitable, so keep the original
+                # include:
+                outlines.append(clgen.format_as_comment(
+                    lang, f'[FETCH] not_found({line})'))
+                outlines.append(line)
         else:
             outlines.append(line)
 
