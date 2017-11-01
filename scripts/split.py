@@ -18,7 +18,7 @@ if __name__ == "__main__":
     with open(inpath) as infile:
         text = infile.read()
 
-    kernels = text.split("/* ==== START SAMPLE ==== */")
+    kernels = text.split("// ==== START SAMPLE ====")
     kernels = [kernel.strip() for kernel in kernels if kernel.strip()]
     print(len(kernels), "kernels")
 
