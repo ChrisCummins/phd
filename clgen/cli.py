@@ -246,6 +246,7 @@ def _register_fetch_parser(self, parent: ArgumentParser) -> None:
     then preprocessed and assembled into corpuses. This program acts as the front
     end, assembling files from the file system into a database for preprocessing.
     """
+    # FIXME(polyglot):
 
     @getself
     def _register_fs_parser(self, parent: ArgumentParser) -> None:
@@ -549,6 +550,7 @@ def _register_preprocess_parser(self, parent: ArgumentParser) -> None:
     Preprocessing is computationally demanding and highly paralellised.
     Expect high resource contention during preprocessing.
     """
+    # FIXME(polyglot):
 
     def _main(inputs: List[TextIO], inputs_are_files: bool, inplace: bool,
               gpuverify: bool, remove_bad_preprocessed: bool,
@@ -607,6 +609,7 @@ def _register_features_parser(self, parent: ArgumentParser) -> None:
         Grewe, D., Wang, Z., & O'Boyle, M. F. P. M. (2013). Portable Mapping of
         Data Parallel Programs to OpenCL for Heterogeneous Systems. In CGO. IEEE.
     """
+    # FIXME(polyglot):
 
     def _main(infiles: List[TextIO], dir_mode: bool, summarise: bool,
               fatal_errors: bool, use_shum: bool, quiet: bool,
@@ -662,6 +665,7 @@ def _register_atomize_parser(self, parent: ArgumentParser) -> None:
     """
     Extract and print corpus vocabulary.
     """
+    # FIXME(polyglot):
 
     def _main(infile: TextIO, vocab: str, size: bool) -> None:
         atoms = corpus.atomize(infile.read(), vocab=vocab)

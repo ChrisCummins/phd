@@ -128,12 +128,14 @@ class GPUVerifyTimeoutException(GPUVerifyException):
     pass
 
 
+# FIXME(polyglot):
 CLANG_CL_TARGETS = [
     'nvptx64-nvidia-nvcl',
     'spir64'
 ]
 
 
+# FIXME(polyglot):
 def clang_cl_args(target: str=CLANG_CL_TARGETS[0],
                   use_shim: bool=True, error_limit: int=0) -> List[str]:
     """

@@ -61,6 +61,7 @@ DEFAULT_SAMPLER_OPTS = {
     },
     "min_samples": -1,
     "min_kernels": -1,
+    # FIXME(polyglot): remove static checker and gpuverify
     "static_checker": True,
     "gpuverify": False
 }
@@ -130,6 +131,7 @@ class SampleProducer(Thread):
                 s = np.sum(weights)
                 return int(np.searchsorted(t, np.random.rand(1) * s))
 
+            # FIXME(polyglot): add a sample terminate option
             def update_bracket_depth(text, started: bool=False, depth: int=0):
                 """ calculate function block depth """
                 for char in text:
@@ -158,6 +160,7 @@ class SampleProducer(Thread):
 
                 buf.write(self.start_text)
                 if log.is_verbose():
+                    # FIXME(polyglot): format_as_comment()
                     sys.stdout.write("\n\n/* ==== START SAMPLE ==== */\n\n")
                     sys.stdout.write(self.start_text)
                     sys.stdout.flush()
@@ -298,6 +301,7 @@ class SampleConsumer(Thread):
                 kernels = clgen.get_cl_kernels(sample)
                 ids = [crypto.sha1_str(k) for k in kernels]
 
+                # FIXME(polyglot): no static checking
                 if self.sampler_opts["static_checker"]:
                     preprocess_opts = {
                         "use_shim": False,
@@ -378,6 +382,7 @@ class Sampler(clgen.CLgenObject):
             string = "".join([str(x) for x in checksum_data])
             return crypto.sha1_str(string)
 
+        # FIXME(polyglot):
         def _start_text(lang: clgen.Language, args: Union[List[str], None], start_text: str):
             if lang == clgen.Language.OPENCL:
                 if args is None:

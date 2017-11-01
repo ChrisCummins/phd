@@ -97,6 +97,7 @@ def to_np_arrays(paths: List[str], **kwargs):
     return flatten([_process_file(path, **kwargs) for path in paths])
 
 
+# FIXME(polyglot):
 def features(path: str, file=sys.stdout, fatal_errors: bool=False,
              use_shim: bool=False, quiet: bool=False) -> None:
     """

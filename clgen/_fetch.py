@@ -440,6 +440,7 @@ def fetch_repos(db_path: Path, indir: Path, lang: clgen.Language) -> None:
         db.commit()
         c = db.cursor()
 
+
 def fetch_github(db_path: str, github_username: str, github_pw: str,
                  github_token: str, lang: clgen.Language=clgen.Language.OPENCL) -> None:
     """
