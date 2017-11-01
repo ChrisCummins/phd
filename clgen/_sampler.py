@@ -299,36 +299,19 @@ class SampleConsumer(Thread):
         try:
             while True:
                 sample_time = time()
-                sample = self.queue.get(timeout=120)
 
-                kernels = clgen.get_cl_kernels(sample)
-                ids = [crypto.sha1_str(k) for k in kernels]
+                # Block while waiting for a new sample to come in:
+                sample = self.queue.get(timeout=120).strip()
 
-                # FIXME(polyglot): no static checking
-                if self.sampler_opts["static_checker"]:
-                    preprocess_opts = {
-                        "use_shim": False,
-                        "use_gpuverify": self.sampler_opts["gpuverify"]
-                    }
-                    pp = [clgen.preprocess_for_db(k, **preprocess_opts)
-                          for k in kernels]
+                # Compute the sample ID:
+                kid = crypto.sha1_str(sample)
 
+                # Add the new sample to the database:
                 db = dbutil.connect(self.db_path)
                 c = db.cursor()
-
-                # insert raw samples
-                for kid, src in zip(ids, kernels):
-                    dbutil.sql_insert_dict(c, "ContentFiles",
-                                           {"id": kid, "contents": src},
-                                           ignore_existing=True)
-
-                # insert preprocessed samples
-                if self.sampler_opts["static_checker"]:
-                    for kid, (status, src) in zip(ids, pp):
-                        dbutil.sql_insert_dict(c, "PreprocessedFiles", {
-                            "id": kid, "status": status, "contents": src
-                        }, ignore_existing=True)
-
+                dbutil.sql_insert_dict(c, "ContentFiles",
+                                       {"id": kid, "contents": sample},
+                                       ignore_existing=True)
                 c.close()
                 db.commit()
                 db.close()
