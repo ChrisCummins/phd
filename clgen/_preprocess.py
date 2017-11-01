@@ -192,8 +192,9 @@ def strip_preprocessor_lines(src: str) -> str:
     return src
 
 
-def compiler_preprocess(src: str, compiler_args: List[str], id: str='anon'):
-    cmd = [native.CLANG] + compiler_args + [
+def compiler_preprocess(src: str, compiler_args: List[str], id: str='anon',
+                        timeout: int=60):
+    cmd = ["timeout", "-s9", str(timeout), native.CLANG] + compiler_args + [
         '-E', '-c', '-', '-o', '-'
     ]
     process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
@@ -235,7 +236,8 @@ def compiler_preprocess_cl(src: str, id: str='anon',
     return compiler_preprocess(src, clang_cl_args(use_shim=use_shim), id)
 
 
-def rewrite_cl(src: str, id: str='anon', use_shim: bool=True) -> str:
+def rewrite_cl(src: str, id: str='anon', use_shim: bool=True,
+               timeout: int=60) -> str:
     """
     Rewrite OpenCL sources.
 
@@ -264,7 +266,7 @@ def rewrite_cl(src: str, id: str='anon', use_shim: bool=True) -> str:
     with NamedTemporaryFile('w', suffix='.cl') as tmp:
         tmp.write(src)
         tmp.flush()
-        cmd = ([native.CLGEN_REWRITER, tmp.name] +
+        cmd = (["timeout", "-s9", str(timeout), native.CLGEN_REWRITER, tmp.name] +
                ['-extra-arg=' + x
                 for x in clang_cl_args(use_shim=use_shim)] + ['--'])
 
@@ -285,7 +287,8 @@ def rewrite_cl(src: str, id: str='anon', use_shim: bool=True) -> str:
     return stdout.decode('utf-8')
 
 
-def compile_cl_bytecode(src: str, id: str='anon', use_shim: bool=True) -> str:
+def compile_cl_bytecode(src: str, id: str='anon', use_shim: bool=True,
+                        timeout: int=60) -> str:
     """
     Compile OpenCL kernel to LLVM bytecode.
 
@@ -308,7 +311,7 @@ def compile_cl_bytecode(src: str, id: str='anon', use_shim: bool=True) -> str:
     ClangException
         If compiler errors.
     """
-    cmd = [native.CLANG] + clang_cl_args(use_shim=use_shim) + [
+    cmd = ["timeout", "-s9", str(timeout), native.CLANG] + clang_cl_args(use_shim=use_shim) + [
         '-emit-llvm', '-S', '-c', '-', '-o', '-'
     ]
 
@@ -320,7 +323,7 @@ def compile_cl_bytecode(src: str, id: str='anon', use_shim: bool=True) -> str:
     return stdout
 
 
-def gpuverify(src: str, args: list, id: str='anon', timeout=60) -> str:
+def gpuverify(src: str, args: list, id: str='anon', timeout: int=60) -> str:
     """
     Run GPUverify over kernel.
 
@@ -446,7 +449,7 @@ def instcounts2ratios(counts: Dict[str, int]) -> Dict[str, float]:
     return ratios
 
 
-def bytecode_features(bc: str, id: str='anon') -> Dict[str, float]:
+def bytecode_features(bc: str, id: str='anon', timeout: int=60) -> Dict[str, float]:
     """
     Extract features from bytecode.
 
@@ -467,7 +470,7 @@ def bytecode_features(bc: str, id: str='anon') -> Dict[str, float]:
     OptException
         If LLVM opt pass errors.
     """
-    cmd = [native.OPT, '-analyze', '-stats', '-instcount', '-']
+    cmd = ["timeout", "-s9", str(timeout), native.OPT, '-analyze', '-stats', '-instcount', '-']
 
     # LLVM pass output pritns to stderr, so we'll pipe stderr to
     # stdout.
@@ -500,7 +503,7 @@ clangformat_config = {
 }
 
 
-def clangformat(src: str, id: str='anon') -> str:
+def clangformat(src: str, id: str='anon', timeout: int=60) -> str:
     """
     Enforce code style on source file.
 
@@ -521,7 +524,7 @@ def clangformat(src: str, id: str='anon') -> str:
     ClangFormatException
         If formatting errors.
     """
-    cmd = [native.CLANG_FORMAT, '-style={}'.format(
+    cmd = ["timeout", "-s9", str(timeout), native.CLANG_FORMAT, '-style={}'.format(
         json.dumps(clangformat_config))]
     process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
     stdout, stderr = process.communicate(src.encode('utf-8'))
@@ -972,10 +975,10 @@ def _preprocess_db(db_path: str, max_num_workers: int=cpu_count(),
         for i in progressbar.ProgressBar()(range(ntodo)):
             # pull a fresh result from the queue (block if necessary)
             try:
-                result = queue.get(timeout=60)
+                result = queue.get(timeout=90)
             except QueueEmpty as e:
                 raise TimeoutError(
-                    'failed to fetch result after 60 seconds. '
+                    'failed to fetch result after 90 seconds. '
                     'something went wrong') from e
 
             # insert result into database
