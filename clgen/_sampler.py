@@ -299,7 +299,7 @@ class SampleConsumer(Thread):
         try:
             while True:
                 sample_time = time()
-                sample = self.queue.get(timeout=60)
+                sample = self.queue.get(timeout=120)
 
                 kernels = clgen.get_cl_kernels(sample)
                 ids = [crypto.sha1_str(k) for k in kernels]
