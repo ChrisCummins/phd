@@ -80,7 +80,7 @@ class CloneWorker(object):
 
     def __call__(self, repo):
         clonedir = fs.path(self.clonedir, repo.name)
-        if not os.path.exists(clonedir):
+        if not os.path.exists(fs.path(clonedir, ".git")):
             try:
                 # shallow clone of repository
                 subprocess.check_call(
