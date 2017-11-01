@@ -96,9 +96,12 @@ class SampleProducer(Thread):
         self.queue = queue
         self.stop_signal = Event()
         self.kernel_opts = kernel_opts
+        self.sample_header = "\n\n" + clgen.format_as_comment(
+            model.corpus.language, "==== START SAMPLE ====") + "\n\n"
 
     def run(self) -> None:
         model = self.model
+        batch_size = self.model.corpus.batch_size
         max_length = self.kernel_opts["max_length"]
         temperature = self.kernel_opts["temperature"]
 
@@ -131,69 +134,69 @@ class SampleProducer(Thread):
                 s = np.sum(weights)
                 return int(np.searchsorted(t, np.random.rand(1) * s))
 
-            # FIXME(polyglot): add a sample terminate option
-            def update_bracket_depth(text, started: bool=False, depth: int=0):
+            def get_bracket_depth(text: str, depth: int=0) -> int:
                 """ calculate function block depth """
-                for char in text:
-                    if char == '{':
-                        depth += 1
-                        started = True
-                    elif char == '}':
-                        depth -= 1
-
+                # FIXME(polyglot): support multiple sample termination criteria
+                depth += text.count("{")
+                started = depth > 0
+                depth -= text.count("}")
                 return started, depth
 
-            init_started, init_depth = update_bracket_depth(self.start_text)
+            init_started, init_depth = get_bracket_depth(self.start_text)
+            atomize = model.corpus.atomizer.atomize
+            deatomize = model.corpus.atomizer.deatomize
 
             while not self.stop_requested:
-                buf = StringIO()
-                started, depth = init_started, init_depth
+                buf = [StringIO() for _ in range(batch_size)]
+                depth = [init_depth] * batch_size
+                started = [init_started] * batch_size
+                running = [True] * batch_size
 
-                state = sess.run(model.cell.zero_state(1, tf.float32))
+                state = sess.run(model.cell.zero_state(batch_size, tf.float32))
+                indices = np.zeros((batch_size, 1))
 
-                seed_tensor = model.corpus.atomizer.atomize(self.start_text)
-                for index in seed_tensor[:-1]:
-                    x = np.zeros((1, 1))
-                    x[0, 0] = index
-                    feed = {model.input_data: x, model.initial_state: state}
+                seed_tensor = atomize(self.start_text)
+                for symbol in seed_tensor[:-1]:
+                    indices[:] = symbol
+                    feed = {model.input_data: indices, model.initial_state: state}
                     [state] = sess.run([model.final_state], feed)
 
-                buf.write(self.start_text)
-                if log.is_verbose():
-                    # FIXME(polyglot): format_as_comment()
-                    sys.stdout.write("\n\n/* ==== START SAMPLE ==== */\n\n")
-                    sys.stdout.write(self.start_text)
-                    sys.stdout.flush()
+                for item in range(batch_size):
+                    buf[item].write(self.start_text)
 
-                index = seed_tensor[-1]
+                indices[:] = seed_tensor[-1]
 
                 for _ in range(max_length):
-                    x = np.zeros((1, 1))
-                    x[0, 0] = index
-                    feed = {model.input_data: x, model.initial_state: state}
-                    [probs, state] = sess.run([model.probs, model.final_state],
-                                              feed)
-                    p = probs[0]
+                    feed = {model.input_data: indices, model.initial_state: state}
+                    [probs, state] = sess.run([model.probs, model.final_state], feed)
 
-                    # sample distribution to pick next:
-                    index = weighted_pick(p, temperature)
-                    # alternatively, select most probable:
-                    # index = np.argmax(p)
+                    # sample distribution to pick next symbol:
+                    indices[:,0] = [weighted_pick(p, temperature) for p in probs]
 
-                    atom = model.corpus.atomizer.deatomize([index])
-                    buf.write(atom)
-                    if log.is_verbose():
-                        sys.stdout.write(atom)
+                    for item in range(batch_size):
+                        if not running[item]:
+                            continue
+                        atom = deatomize([indices[item,0]])
+                        buf[item].write(atom)
+                        # update function block depth
+                        _started, depth[item] = get_bracket_depth(atom, depth=depth[item])
+                        started[item] |= _started  # you can't "unset" the started state
+                        # determine whether to keep sampling:
+                        _running = not started[item] or (started[item] and depth[item] > 0)
+                        running[item] = _running
 
-                    # update function block depth
-                    started, depth = update_bracket_depth(atom, started, depth)
+                        # submit sample to processing queue
+                        if not _running:
+                            text = buf[item].getvalue()
+                            self.queue.put(text)
+                            if log.is_verbose():
+                                sys.stdout.write(self.sample_header)
+                                sys.stdout.write(text)
+                                sys.stdout.flush()
 
-                    # stop sampling if depth <= 0
-                    if started and depth <= 0:
+                    # start a new batch if there's nothing left running
+                    if not any(running):
                         break
-
-                # submit sample to processing queue
-                self.queue.put(buf.getvalue())
 
             if log.is_verbose():
                 sys.stdout.write('\n\n')

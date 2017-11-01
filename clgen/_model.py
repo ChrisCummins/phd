@@ -188,7 +188,7 @@ class Model(clgen.CLgenObject):
         tf.reset_default_graph()
 
         # corpus info:
-        batch_size = 1 if infer else self.corpus.batch_size
+        batch_size = self.corpus.batch_size
         seq_length = 1 if infer else self.corpus.seq_length
         vocab_size = self.corpus.vocab_size
 
