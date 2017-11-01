@@ -31,7 +31,6 @@ import labm8
 import os
 import platform
 import psutil
-import re
 import six
 import sys
 import tarfile
