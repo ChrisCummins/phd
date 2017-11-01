@@ -24,7 +24,7 @@ import clgen.test as test
 
 
 def test_CharacterAtomizer_from_text():
-    c = clgen.CharacterAtomizer.from_text('abcabc')
+    c = clgen.CharacterAtomizer.from_text(clgen.Language.OPENCL, 'abcabc')
 
     assert c.indices == [0, 1, 2]
     assert c.atoms == ['a', 'b', 'c']
@@ -53,7 +53,7 @@ __kernel void A(__global float* a, const int b, const double c) {
     a[d] *= (float)c;
 }
 """
-    c = clgen.CharacterAtomizer.from_text(text)
+    c = clgen.CharacterAtomizer.from_text(clgen.Language.OPENCL, text)
     assert c.deatomize(c.atomize(text)) == text
 
 # Greedy
@@ -101,7 +101,7 @@ __kernel void A(__global float* a, __global float* b, const int c) {
         ' ', '*', ' ', '1', '0', '.', '0', 'f', ';', '\n', '  ', '}', '\n',
         '}'
     ]
-    c = clgen.GreedyAtomizer.from_text(test_in)
+    c = clgen.GreedyAtomizer.from_text(clgen.Language.OPENCL, test_in)
     assert c.tokenize(test_in) == test_out
 
 def test_GreedyAtomizer_deatomize():
@@ -113,7 +113,7 @@ __kernel void A(__global float* a, __global float* b, const int c) {
   }
 }\
 """
-    c = clgen.GreedyAtomizer.from_text(test_in)
+    c = clgen.GreedyAtomizer.from_text(clgen.Language.OPENCL, test_in)
     a = c.atomize(test_in)
     assert c.deatomize(a) == test_in
 
@@ -131,6 +131,6 @@ __kernel void A(__global float* a, __global float* b, const int c) {
         'b', 'const', 'int', 'c', '{', '}', '  ', 'd', 'get_global_id',
         ';', 'if', '<', '[', ']', 'f', '.', '1', '\n', '=', ',', 'void'
     ]
-    c = clgen.GreedyAtomizer.from_text(test_in)
+    c = clgen.GreedyAtomizer.from_text(clgen.Language.OPENCL, test_in)
     assert sorted(c.atoms) == sorted(tokens)
     assert c.vocab_size == len(tokens)

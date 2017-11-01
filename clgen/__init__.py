@@ -39,7 +39,6 @@ import tarfile
 from collections import namedtuple
 from contextlib import contextmanager
 from copy import deepcopy
-from enum import Enum
 from labm8 import cache, fs, jsonutil, system
 from pkg_resources import resource_filename, resource_string, require
 from typing import List
@@ -119,57 +118,6 @@ def version() -> str:
         Version string.
     """
     return __version__
-
-
-class Language(Enum):
-    OPENCL = 1
-    SOLIDITY = 2
-    GLSL = 3
-
-    @staticmethod
-    def from_str(string: str) -> 'Language':
-        if not string:
-            raise UserError(f"no language specified!")
-        lang = {
-            "opencl": Language.OPENCL,
-            "sol": Language.SOLIDITY,
-            "solidity": Language.SOLIDITY,
-            "glsl": Language.GLSL,
-        }.get(string.lower(), None)
-        if not lang:
-            raise UserError(f"unknown language '{string}'")
-        return lang
-
-    def __str__(self):
-        return repr(self)
-
-    def __repr__(self):
-        return self.name.lower()
-
-
-def file_extensions(lang: Language) -> List[str]:
-    """ Returns list of file extensions for sources in the given language. """
-    return {
-        Language.GLSL: ['.glsl', '.frag', '.vert', '.tesc', '.tese', '.geom', '.comp'],
-        Language.OPENCL: ['.cl', '.ocl'],
-        Language.SOLIDITY: ['.sol'],
-    }[lang]
-
-
-def include_regexp(lang: Language) -> 'SRE_Pattern':
-    return {
-        Language.GLSL: re.compile(r'\w*#include ["<](?P<path>.*)([^:].*)?[">]'),
-        Language.OPENCL: re.compile(r'\w*#include ["<](?P<path>.*)[">]'),
-        Language.SOLIDITY: re.compile(r'\w*import ["<](\./)?(?P<path>.*)[">];'),
-    }[lang]
-
-
-def format_as_comment(lang: Language, msg: str) -> str:
-    return {
-        Language.GLSL: lambda msg: f'// {msg}',
-        Language.OPENCL: lambda msg: f'// {msg}',
-        Language.SOLIDITY: lambda msg: f'// {msg}',
-    }[lang](msg)
 
 
 def cachepath(*relative_path_components: list) -> str:
@@ -430,6 +378,7 @@ def platform_info(printfn=print) -> None:
 
 
 # package level imports
+from clgen._langs import *
 from clgen._fetch import *
 from clgen._explore import *
 from clgen._atomizer import *

@@ -28,120 +28,6 @@ from typing import Dict, List
 import clgen
 
 
-# Taken from the C99 spec, OpenCL spec 1.2, and bag-of-words analysis of
-# GitHub corpus:
-OPENCL_ATOMS = set([
-    '  ',
-    '__assert',
-    '__attribute',
-    '__builtin_astype',
-    '__clc_fabs',
-    '__clc_fma',
-    '__constant',
-    '__global',
-    '__inline',
-    '__kernel',
-    '__local',
-    '__private',
-    '__read_only',
-    '__read_write',
-    '__write_only',
-    '*/',
-    '/*',
-    '//',
-    'abs',
-    'alignas',
-    'alignof',
-    'atomic_add',
-    'auto',
-    'barrier',
-    'bool',
-    'break',
-    'case',
-    'char',
-    'clamp',
-    'complex',
-    'const',
-    'constant',
-    'continue',
-    'default',
-    'define',
-    'defined',
-    'do',
-    'double',
-    'elif',
-    'else',
-    'endif',
-    'enum',
-    'error',
-    'event_t',
-    'extern',
-    'fabs',
-    'false',
-    'float',
-    'for',
-    'get_global_id',
-    'get_global_size',
-    'get_local_id',
-    'get_local_size',
-    'get_num_groups',
-    'global',
-    'goto',
-    'half',
-    'if',
-    'ifdef',
-    'ifndef',
-    'image1d_array_t',
-    'image1d_buffer_t',
-    'image1d_t',
-    'image2d_array_t',
-    'image2d_t',
-    'image3d_t',
-    'imaginary',
-    'include',
-    'inline',
-    'int',
-    'into',
-    'kernel',
-    'line',
-    'local',
-    'long',
-    'noreturn',
-    'pragma',
-    'private',
-    'quad',
-    'read_only',
-    'read_write',
-    'register',
-    'restrict',
-    'return',
-    'sampler_t',
-    'short',
-    'shuffle',
-    'signed',
-    'size_t',
-    'sizeof',
-    'sqrt',
-    'static',
-    'struct',
-    'switch',
-    'true',
-    'typedef',
-    'u32',
-    'uchar',
-    'uint',
-    'ulong',
-    'undef',
-    'union',
-    'unsigned',
-    'void',
-    'volatile',
-    'while',
-    'wide',
-    'write_only',
-])
-
-
 class VocabError(clgen.CLgenError):
     """A character sequence is not in the atomizer's vocab"""
     pass
@@ -249,7 +135,7 @@ class Atomizer(clgen.CLgenObject):
             raise VocabError
 
     @staticmethod
-    def from_text(text: str) -> 'Atomizer':
+    def from_text(lang: clgen.Language, text: str) -> 'Atomizer':
         """
         Instantiate and specialize an atomizer from a corpus text.
 
@@ -265,7 +151,7 @@ class Atomizer(clgen.CLgenObject):
 
         Examples
         --------
-        >>> a = CharacterAtomizer.from_text('abcdefg')
+        >>> a = CharacterAtomizer.from_text(clgen.Language.OPENCL, 'abcdefg')
         >>> b = a.atomize('abcd')
         >>> len(b)
         4
@@ -292,7 +178,7 @@ class CharacterAtomizer(Atomizer):
         return "CharacterAtomizer[{n} chars]".format(n=self.vocab_size)
 
     @staticmethod
-    def from_text(text: str) -> 'CharacterAtomizer':
+    def from_text(lang: clgen.Language, text: str) -> 'CharacterAtomizer':
         counter = Counter(text)
         count_pairs = sorted(counter.items(), key=lambda x: -x[1])
         atoms, _ = zip(*count_pairs)
@@ -360,7 +246,9 @@ class GreedyAtomizer(Atomizer):
         return "GreedyAtomizer[{n} tokens]".format(n=self.vocab_size)
 
     @staticmethod
-    def from_text(text: str, atoms=OPENCL_ATOMS) -> 'GreedyAtomizer':
+    def from_text(lang: clgen.Language, text: str) -> 'GreedyAtomizer':
+        atoms = clgen.atoms_for_lang(lang)
+
         # Instantiate a greedy atomizer using the full vocabulary.
         full_vocab = dict(zip(atoms, range(len(atoms))))
         c = GreedyAtomizer(full_vocab, determine_chars=True)

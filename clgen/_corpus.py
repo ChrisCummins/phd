@@ -475,7 +475,7 @@ class Corpus(clgen.CLgenObject):
                     "Supported values: {good}".format(
                         bad=vocab, good=", ".join(sorted(atomizers.keys()))))
             else:
-                return atomizerclass.from_text(corpus_txt)
+                return atomizerclass.from_text(self.language, corpus_txt)
 
         log.debug("creating vocab file")
         data = self._read_txt()
