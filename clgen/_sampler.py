@@ -38,6 +38,7 @@ from queue import Queue
 from threading import Event, Thread
 from time import time
 from typing import List, Union
+from tensorflow.python.framework.errors import InvalidArgumentError as TensorFlowInvalidArgumentError
 
 import clgen
 from clgen import dbutil
@@ -168,7 +169,12 @@ class SampleProducer(Thread):
 
                 for _ in range(max_length):
                     feed = {model.input_data: indices, model.initial_state: state}
-                    [probs, state] = sess.run([model.probs, model.final_state], feed)
+
+                    try:
+                        [probs, state] = sess.run([model.probs, model.final_state], feed)
+                    except TensorFlowInvalidArgumentError:
+                        log.warning("sampling error")
+                        self.run()
 
                     # sample distribution to pick next symbol:
                     indices[:,0] = [weighted_pick(p, temperature) for p in probs]
@@ -176,7 +182,14 @@ class SampleProducer(Thread):
                     for item in range(batch_size):
                         if not running[item]:
                             continue
-                        atom = deatomize([indices[item,0]])
+
+                        # In case of decoding error, start sampling again:
+                        try:
+                            atom = deatomize([indices[item,0]])
+                        except clgen.VocabError:
+                            log.warning("deatomizing error")
+                            self.run()
+
                         buf[item].write(atom)
                         # update function block depth
                         _started, depth[item] = get_bracket_depth(atom, depth=depth[item])
