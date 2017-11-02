@@ -419,5 +419,12 @@ Table~\ref{tab:clangs} shows the 7 distinct assertions triggered during this exp
 
 The results emphasize that compiler validation is a moving target. Every change and feature addition has the potential to introduce regressions or new failure cases. Since LLVM will not release unless their compiler passes their own extensive test suites, this also reinforces the case for compiler fuzzing. We believe our approach provides an effective means for the generation of such fuzzers, at a fraction of the cost of existing techniques.
 
-\subsection{Extensibility: Solidity}
 
+\section{Language Extensibility}
+
+
+\subsection{Solidity}
+
+Solidity, the programming language of the Ethereum Blockchain. Syntax based on JavaScript. Reference compiler \texttt{solc}.
+
+\paragraph{Assembling the corpus} Scraped GitHub for solidity sources. Recursively inlined imported modules in a manner similar to~\cite{Cummins2017a}. No preprocessor (Solidity doesn't have one).
