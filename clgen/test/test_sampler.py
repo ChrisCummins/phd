@@ -64,18 +64,14 @@ def test_sample():
     # sample a single kernel:
     s.sample(m)
     num_contentfiles = dbutil.num_rows_in(s.cache(m)["kernels.db"], "ContentFiles")
-    num_preprocessed = dbutil.num_rows_in(s.cache(m)["kernels.db"], "PreProcessedFiles")
     assert num_contentfiles >= 1
-    assert num_preprocessed >= 1
 
     s.sample(m)
     num_contentfiles2 = dbutil.num_rows_in(s.cache(m)["kernels.db"], "ContentFiles")
-    num_preprocessed2 = dbutil.num_rows_in(s.cache(m)["kernels.db"], "PreProcessedFiles")
     diff = num_contentfiles2 - num_contentfiles
     # if sample is the same as previous, then there will still only be a
     # single sample in db:
     assert diff >= 1
-    assert num_preprocessed2 - num_preprocessed == diff
 
 
 def test_eq():
