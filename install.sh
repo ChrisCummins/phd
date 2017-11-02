@@ -637,7 +637,7 @@ install_server_scripts() {
     esac
 
     if [[ "$hostname" == "diana" ]]; then
-        symlink "$dotfiles/servers/diana_pull_orange.sh" ~/.local/bin/diana_pull_orange
+        symlink "$dotfiles/servers/orange.sh" ~/.local/bin/orange
         symlink "$dotfiles/servers/ryan_gosling_have_my_photos.sh" ~/.local/bin/ryan_gosling_have_my_photos
         symlink "$dotfiles/servers/ryan_gosling_have_my_photos.sh" ~/.local/bin/ryan_gosling_have_my_photos
     fi
