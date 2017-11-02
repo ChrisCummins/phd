@@ -205,6 +205,10 @@ def mklang(name: str) -> Language:
         langs["solidity"] = Solidity
         langs["sol"] = Solidity
 
+    if dsmith.WITH_GLSL:
+        from dsmith.glsl import Glsl
+        langs["glsl"] = Glsl
+
     lang = langs.get(name)
     if not lang:
         raise LookupError(f"Unknown language '{name}'")
