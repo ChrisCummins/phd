@@ -633,16 +633,17 @@ install_server_scripts() {
       florence | diana | ryangosling | mary | plod)
         # server scripts
         symlink "$dotfiles/servers/mary" ~/.local/bin/mary
-        symlink "$dotfiles/servers/diana" ~/.local/bin/diana
         ;;
     esac
 
     if [[ "$hostname" == "diana" ]]; then
+        symlink "$dotfiles/servers/diana_pull_orange.sh" ~/.local/bin/diana_pull_orange
         symlink "$dotfiles/servers/ryan_gosling_have_my_photos.sh" ~/.local/bin/ryan_gosling_have_my_photos
         symlink "$dotfiles/servers/ryan_gosling_have_my_photos.sh" ~/.local/bin/ryan_gosling_have_my_photos
     fi
 
     if [[ "$hostname" == "florence" ]]; then
+        symlink "$dotfiles/servers/diana" ~/.local/bin/diana
         symlink "$dotfiles/servers/ryan_gosling_have_my_photos.sh" ~/.local/bin/ryan_gosling_have_my_photos
         symlink "$dotfiles/servers/ryan_gosling_have_my_music.sh" ~/.local/bin/ryan_gosling_have_my_music
     fi
