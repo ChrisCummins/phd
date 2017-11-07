@@ -38,7 +38,7 @@ else
     mkdir -pv ~/.local/etc
     crontab -l > $CRONTAB_BACKUP
 
-    sudo $RM_DSSTORE "/home/$USER"
+    # sudo $RM_DSSTORE "/home/$USER"
 
     # create new backup
     cd /
