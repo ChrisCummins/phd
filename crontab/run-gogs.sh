@@ -21,4 +21,4 @@ set -x
 cd "$GOGS_DIR"
 "$GOGS" web
 ret=$?
-echo "exited with returncode $ret" | $LMK
+echo "exited with returncode $ret" | $LMK -
