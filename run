@@ -39,6 +39,7 @@ def get_tasks():
 
         for dep in deps:
             if dep not in set(type(task) for task in ordered):
+                print('punt', task, 'for', dep())
                 queue.append(task)
                 break
         else:
