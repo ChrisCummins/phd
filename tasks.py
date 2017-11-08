@@ -354,6 +354,16 @@ class DiffSoFancy(Task):
         Node().npm_install("diff-so-fancy", self.VERSION)
 
 
+class GhArchiver(Task):
+    VERSION = "0.0.6"
+
+    __platforms__ = ['linux', 'osx']
+    __deps__ = [Python]
+
+    def run(self):
+        Python().pip_install("gh-archiver", self.VERSION, pip="python3.6 -m pip")
+
+
 class Tmux(Task):
     __platforms__ = ['linux', 'osx']
 
@@ -471,4 +481,61 @@ class Ncdu(Task):
         Homebrew().install("ncdu")
 
     def run_ubuntu(self):
-        pass
+        Apt().install("ncdu")
+
+
+class HTop(Task):
+    __platforms__ = ['linux', 'osx']
+    __osx_deps__ = [Homebrew]
+
+    def run_osx(self):
+        Homebrew().install("htop")
+
+    def run_ubuntu(self):
+        Apt().install("htop")
+
+
+class Emu(Task):
+    VERSION = "0.2.5"
+
+    __platforms__ = ['linux', 'osx']
+    __deps__ = [Python]
+
+    def run(self):
+        Python().pip_install("emu", self.VERSION, sudo=True)
+
+
+class JsonUtil(Task):
+    JSONLINT_VERSION = "1.6.2"
+
+    __platforms__ = ['linux', 'osx']
+    __osx_deps__ = [Homebrew]
+
+    def run_osx(self):
+        Homebrew().install("jq")
+        self._run_common()
+
+    def run_ubuntu(self):
+        Apt().install("jq")
+        self._run_common()
+
+    def _run_common(self):
+        Node().npm_install("jsonlint", self.JSONLINT_VERSION)
+
+
+class Scripts(Task):
+    __platforms__ = ['linux', 'osx']
+
+    def run(self):
+        symlink(os.path.join(DOTFILES, "media", "mkepisodal.py"),
+               "~/.local/bin/mkepisodal")
+
+        if HOSTNAME in ["florence", "diana", "ryangosling", "mary", "plod"]:
+            symlink(os.path.join(DOTFILES, "servers", "mary"), "~/.local/bin/mary")
+            symlink(os.path.join(DOTFILES, "servers", "diana"), "~/.local/bin/diana")
+
+        if HOSTNAME in ["florence", "diana"]:
+            symlink(os.path.join(DOTFILES, "servers", "ryan_gosling_have_my_photos.sh"),
+                    "~/.local/bin/ryan_gosling_have_my_photos")
+            symlink(os.path.join(DOTFILES, "servers", "ryan_gosling_have_my_music.sh"),
+                    "~/.local/bin/ryan_gosling_have_my_music")

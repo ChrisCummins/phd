@@ -1,20 +1,21 @@
 #!/usr/bin/env python2.7
 from __future__ import print_function
 
+import errno
+import inspect
+import json
+import logging
+import os
+import platform
+import shutil
+import socket
+import subprocess
+import sys
+
 from argparse import ArgumentParser
 from collections import deque
 from distutils.spawn import find_executable
 from time import time
-
-import errno
-import json
-import logging
-import inspect
-import platform
-import shutil
-import sys
-import subprocess
-import os
 
 LINUX_DISTROS = ['ubuntu']
 
@@ -28,6 +29,7 @@ def get_platform():
         return distro[0].lower()
 
 PLATFORM = get_platform()
+HOSTNAME = socket.gethostname()
 DOTFILES = os.path.expanduser("~/.dotfiles")
 PRIVATE = os.path.expanduser("~/Dropbox/Shared")
 
@@ -309,6 +311,9 @@ def main(*args):
 
             print("{:.3f}s".format(runtime))
             sys.stdout.flush()
+    except KeyboardInterrupt:
+        print("\ninterrupt")
+        errored = True
     except Exception as e:
         print(Colors.BOLD + Colors.RED + type(e).__name__)
         print(e, Colors.END)
