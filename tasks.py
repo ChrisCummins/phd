@@ -352,7 +352,7 @@ class Git(Task):
     __platforms__ = ['linux', 'osx']
 
     def run(self):
-        symlink(".dotfiles/git/gitconfig", "~/.gitconfig")
+        symlink(os.path.join(DOTFILES, "git", "gitconfig"), "~/.gitconfig")
 
         if os.path.isdir(os.path.join(PRIVATE, "git")):
             symlink(os.path.join(PRIVATE, "git", "githubrc"), "~/.githubrc")
