@@ -49,8 +49,9 @@ def main(*args):
     # Parse arguments
     parser = ArgumentParser()
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('--verbose', action='store_true')
-    group.add_argument('--debug', action='store_true')
+    group.add_argument('-v', '--verbose', action='store_true')
+    group.add_argument('-D', '--debug', action='store_true')
+    parser.add_argument('-d', '--describe', action="store_true")
     args = parser.parse_args(args)
 
     # Configure logger
@@ -67,10 +68,26 @@ def main(*args):
     queue = get_tasks()
     done = set()
     ntasks = len(queue)
-    print("Running " + Colors.BOLD + str(ntasks) + Colors.END +
-          " tasks on", PLATFORM + ":")
+
+    # --describe flag prints a description of the work to be done:
+    if args.describe:
+        print("There are " + Colors.BOLD + str(ntasks) + Colors.END +
+              " tasks to run on " + PLATFORM + ":")
+        for i, task in enumerate(queue):
+            description = task.__doc__ or ""
+            print("  [{:2d}/{:2d}]".format(i + 1, ntasks) + Colors.BOLD,
+                  str(task), Colors.END + "... " + description)
+            # build a list of generated files
+            genfiles = getattr(task, "__genfiles__", [])
+            genfiles += getattr(task, "__" + PLATFORM + "_tmpfiles__", [])
+            for file in genfiles:
+                print("   ", os.path.abspath(os.path.expanduser(file)))
+
+        return 0
 
     # Run the tasks
+    print("Running " + Colors.BOLD + str(ntasks) + Colors.END +
+          " tasks on", PLATFORM + ":")
     errored = False
     try:
         for i, task in enumerate(queue):
@@ -83,7 +100,7 @@ def main(*args):
 
             # Resolve and run run() method:
             print("  [{:2d}/{:2d}]".format(i + 1, ntasks) + Colors.BOLD,
-                  type(task).__name__, Colors.END + "...", end=" ")
+                  str(task), Colors.END + "...", end=" ")
             if logging.getLogger().level <= logging.INFO:
                 print()
             sys.stdout.flush()
