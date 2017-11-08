@@ -187,7 +187,7 @@ class Dropbox(Task):
 
     def run_linux(self):
         if not os.path.exists(os.path.expanduser("~/.dropbox-dist/dropboxd")):
-            shell('cd - && wget -O - "{self.UBUNTU_URL}" | tar xzf -')
+            shell('cd - && wget -O - "{self.UBUNTU_URL}" | tar xzf -'.format(**vars()))
             self.installed = True
         self._run_common()
 
