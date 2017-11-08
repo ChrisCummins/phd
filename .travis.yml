@@ -9,7 +9,7 @@ before_install:
   - uname -a
 
 script:
-  - ./dotfiles.py --debug
+  - ./run --debug
 
 notifications:
   email:
