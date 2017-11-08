@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-from dotfiles import *
+from util import *
 
 
 class Homebrew(Task):

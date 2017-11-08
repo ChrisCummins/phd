@@ -21,6 +21,9 @@ def get_platform():
         return distro[0].lower()
 
 
+DOTFILES = os.path.expanduser("~/.dotfiles")
+PRIVATE = os.path.expanduser("~/Dropbox/Shared")
+
 LINUX_DISTROS = ['ubuntu']
 
 PLATFORM = get_platform()
