@@ -298,7 +298,7 @@ class Autoenv(Task):
 
 class OhMyZsh(Task):
     __platforms__ = ['linux', 'osx']
-    __deps__ = [ZSH]
+    __deps__ = [Zsh]
 
     def run(self):
         clone_git_repo("git@github.com:robbyrussell/oh-my-zsh.git",
