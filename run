@@ -106,6 +106,15 @@ def main(*args):
             sys.stdout.flush()
             start_time = time()
             get_task_method(task, "run")()
+            # build a list of generated files
+            genfiles = getattr(task, "__genfiles__", [])
+            genfiles += getattr(task, "__" + PLATFORM + "_genfiles__", [])
+            for file in set(genfiles):
+                file = os.path.abspath(os.path.expanduser(file))
+                if not (os.path.exists(file) or
+                        shell_ok("sudo test -f '{file}'".format(**vars())) or
+                        shell_ok("sudo test -d '{file}'".format(**vars()))):
+                    raise InvalidTaskError('genfile "{file}" not created'.format(**vars()))
             runtime = time() - start_time
 
             print("{:.3f}s".format(runtime))
