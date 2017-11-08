@@ -250,3 +250,10 @@ def get_task_method(task, method_name):
     if fn is None:
         raise InvalidTaskError
     return fn
+
+
+class Apt(object):
+    def install(self, package):
+        """ install a package using apt-get """
+        if not shell_ok("dpkg -s '{package}' &>/dev/null".format(**vars())):
+            shell("sudo apt-get install -y '{package}'".format(**vars()))

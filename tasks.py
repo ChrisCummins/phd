@@ -6,6 +6,7 @@ from util import *
 
 
 class Homebrew(Task):
+    """ install homebrew package manager """
     PKG_LIST = os.path.abspath(".brew-list.txt")
     CASK_LIST = os.path.abspath(".brew-cask-list.txt")
 
@@ -37,13 +38,6 @@ class Homebrew(Task):
 
         if not shell_ok("grep '^{package}$' <{self.CASK_LIST} >/dev/null".format(**vars())):
             shell("brew cask install {package} >/dev/null".format(**vars()))
-
-
-class Apt(object):
-    def install(self, package):
-        """ install a package using apt-get """
-        if not shell_ok("dpkg -s '{package}' &>/dev/null".format(**vars())):
-            shell("sudo apt-get install -y '{package}'".format(**vars()))
 
 
 class HomebrewCaskOutdated(Task):
@@ -350,6 +344,7 @@ class DSmith(Task):
 
 class Git(Task):
     __platforms__ = ['linux', 'osx']
+    __genfiles__ = ['~/.gitconfig']
 
     def run(self):
         symlink(os.path.join(DOTFILES, "git", "gitconfig"), "~/.gitconfig")
@@ -364,6 +359,7 @@ class DiffSoFancy(Task):
 
     __platforms__ = ['linux', 'osx']
     __deps__ = [Git, Node]
+    __genfiles__ = ['/usr/local/bin/diff-so-fancy']
 
     def run(self):
         Node().npm_install("diff-so-fancy", self.VERSION)
@@ -374,6 +370,7 @@ class GhArchiver(Task):
 
     __platforms__ = ['linux', 'osx']
     __deps__ = [Python]
+    __genfiles__ = ['/usr/local/bin/gh-archiver']
 
     def run(self):
         Python().pip_install("gh-archiver", self.VERSION, pip="python3.6 -m pip")
@@ -381,6 +378,7 @@ class GhArchiver(Task):
 
 class Tmux(Task):
     __platforms__ = ['linux', 'osx']
+    __genfiles__ = ['~/.tmux.conf']
 
     def run(self):
         symlink(".dotfiles/tmux/tmux.conf", "~/.tmux.conf")
@@ -390,6 +388,7 @@ class Vim(Task):
     VUNDLE_VERSION = "6497e37694cd2134ccc3e2526818447ee8f20f92"
 
     __platforms__ = ['linux', 'osx']
+    __genfiles__ = ['~/.vimrc', '~/.vim/bundle/Vundle.vim']
 
     def run(self):
         symlink(os.path.join(DOTFILES, "vim", "vimrc"), "~/.vimrc")
@@ -404,25 +403,29 @@ class Vim(Task):
 class Sublime(Task):
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = [Homebrew]
+    __genfiles__ = ['/usr/local/bin/rsub']
+    __osx_genfiles__ = ['/usr/local/bin/subl']
 
     def run_osx(self):
+        self.run()
         Homebrew().cask_install("sublime-text")
+
+        # Put sublime text in PATH
+        symlink("/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl",
+                "/usr/local/bin/subl", sudo=True)
 
         if os.path.isdir(os.path.join(PRIVATE, "subl")):
             symlink("Library/Application Support/Sublime Text 3", "~/.subl")
             symlink(os.path.join(PRIVATE, "subl", "User"), "~/.subl/Packages/User")
             symlink(os.path.join(PRIVATE, "subl", "INI"), "~/.subl/Packages/INI")
 
-            # subl
-            symlink("/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl",
-                    "/usr/local/bin/subl", sudo=True)
-
     def run(self):
-        shell('sudo ln -sf "{df}/subl/rsub" /usr/local/bin'.format(df=DOTFILES))
+        shell('sudo ln -sf "{df}/subl/rsub" /usr/local/bin/rsub'.format(df=DOTFILES))
 
 
 class Ssmtp(Task):
     __platforms__ = ['ubuntu']
+    __genfiles__ = ["/usr/bin/ssmtp"]
 
     def run_ubuntu(self):
         Apt().install("ssmtp")
@@ -434,6 +437,7 @@ class Ssmtp(Task):
 
 class MySQL(Task):
     __platforms__ = ['linux', 'osx']
+    __genfiles__ = ["~/.my.cnf"]
 
     def run(self):
         if os.path.isdir(os.path.join(PRIVATE, "mysql")):
@@ -442,6 +446,7 @@ class MySQL(Task):
 
 class OmniFocus(Task):
     __platforms__ = ['linux', 'osx']
+    __genfiles__ = ["/usr/local/bin/omni"]
 
     def run(self):
         shell('sudo ln -sf "{df}/omnifocus/omni" /usr/local/bin'.format(df=DOTFILES))
@@ -450,6 +455,7 @@ class OmniFocus(Task):
 class LaTeX(Task):
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = [Homebrew]
+    __genfiles__ = ["~/.local/bin/autotex", "~/.local/bin/cleanbib"]
 
     def run_osx(self):
         Homebrew().cask_install("mactex")
@@ -526,6 +532,7 @@ class GpuStat(Task):
 
 class IOTop(Task):
     __platforms__ = ['ubuntu']
+    __genfiles__ = ['/usr/bin/iotop']
 
     def run_ubuntu(self):
         Apt().install("iotop")
@@ -534,6 +541,8 @@ class IOTop(Task):
 class Ncdu(Task):
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = [Homebrew]
+    __osx_genfiles__ = ['/usr/local/bin/ncdu']
+    __linux_genfiles__ = ['/usr/bin/ncdu']
 
     def run_osx(self):
         Homebrew().install("ncdu")
@@ -545,6 +554,8 @@ class Ncdu(Task):
 class HTop(Task):
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = [Homebrew]
+    __osx_genfiles__ = ['/usr/local/bin/htop']
+    __linux_genfiles__ = ['/usr/bin/htop']
 
     def run_osx(self):
         Homebrew().install("htop")
@@ -555,12 +566,14 @@ class HTop(Task):
 
 class Emu(Task):
     VERSION = "0.2.5"
+    PIP = "pip3"
 
     __platforms__ = ['linux', 'osx']
     __deps__ = [Python]
+    __genfiles__ = ['/usr/local/bin/emu']
 
     def run(self):
-        Python().pip_install("emu", self.VERSION, sudo=True)
+        Python().pip_install("emu", self.VERSION, pip=self.PIP, sudo=True)
 
 
 class JsonUtil(Task):
@@ -568,6 +581,8 @@ class JsonUtil(Task):
 
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = [Homebrew]
+    __osx_genfiles__ = ['/usr/local/bin/jq']
+    __linux_genfiles__ = ['/usr/bin/jq']
 
     def run_osx(self):
         Homebrew().install("jq")
@@ -583,6 +598,7 @@ class JsonUtil(Task):
 
 class Scripts(Task):
     __platforms__ = ['linux', 'osx']
+    __genfiles__ = ['~/.local/bin/mkepisodal']
 
     def run(self):
         symlink(os.path.join(DOTFILES, "media", "mkepisodal.py"),
