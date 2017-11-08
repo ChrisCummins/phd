@@ -196,7 +196,7 @@ class Dropbox(Task):
             print("    $ ~/.dropbox-dist/dropboxd")
 
 
-class FluidApps(Task):
+class Fluid(Task):
     __platforms__ = ['osx']
     __deps__ = [Dropbox]
     __osx_deps__ = [Homebrew]
@@ -447,6 +447,11 @@ class OmniFocus(Task):
 
 class LaTeX(Task):
     __platforms__ = ['linux', 'osx']
+    __osx_deps__ = [Homebrew]
+
+    def run_osx(self):
+        Homebrew().cask_install("mactex")
+        self.run()
 
     def run(self):
         if which("pdflatex"):
@@ -466,6 +471,44 @@ class MacOSConfig(Task):
         # disable "Last Login ..." messages on terminal
         if not os.path.exists(self.HUSHLOGIN):
             shell("touch " + self.HUSHLOGIN)
+
+
+class MacOSApps(Task):
+    CASKS = [
+        'alfred',
+        'anki',
+        'bartender',
+        'caffeine',
+        'cmake',
+        'disk-inventory-x',
+        'fantastical',
+        'flux',
+        'google-drive',
+        'google-earth-pro',
+        'google-nik-collection',
+        'google-photos-backup-and-sync',
+        'istat-menus',
+        'iterm2',
+        'mendeley-desktop',
+        'omnifocus',
+        'omnigraffle',
+        'omnioutliner',
+        'omnipresence',
+        'plex-media-player',
+        'steam',
+        'sublime-text',
+        'texstudio',
+        'transmission',
+        'tunnelblick',
+        'vlc',
+    ]
+
+    __platforms__ = ['osx']
+    __deps__ = [Homebrew]
+
+    def run(self):
+        for cask in self.CASKS:
+            Homebrew().cask_install(cask)
 
 
 class GpuStat(Task):
