@@ -34,28 +34,38 @@ class Task(object):
     """
     A Task is a unit of work.
 
-    Each task consists of a run() method
-
-    {setup,run,teardown}_<platform>()
-
     Attributes:
         __platforms__ (List[str], optional): A list of platforms which the
             task may be run on. Any platform not in this list will not
             execute the task.
         __deps__ (List[Task], optional): A list of tasks which must be executed
-            before this task may be run.
-        __genfiles__ (List[str], optional): A list of permanent files generated
-            during execution of this task.
-        __tmpfiles__ (List[str], optional): A list of files generated during
+            before the task may be run.
+        __<platform>_deps__ (List[Task], optional): A list of platform-specific
+            tasks which must be executed before the task may be run.
+        __genfiles__ (List[str], optional): A list of files generated during
             execution of this task.
+        __<platform>_genfiles__ (List[str], optional): A platform-specific list
+            of files generated during execution of this task.
+        __tmpfiles__ (List[str], optional): A list of temporary files generated
+            during execution of this task. These files are automatically
+            removed after execution.
+        __<platform>_tmpfiles__ (List[str], optional): A list of
+            platform-specific temporary files generated during execution of
+            this task. These files are automatically removed after execution.
 
     Methods:
         setup():
+        setup_<platform>():
         run():
+        run_<platform>():
         teardown():
-        run_osx()
-    run()
+        teardown_<platform>():
     """
+    __platforms__ = []
+    __deps__ = []
+    __genfiles__ = []
+    __tmpfiles__ = []
+
     def setup(self):
         pass
 
@@ -68,6 +78,9 @@ class Task(object):
 
     def __repr__(self):
         return type(self).__name__
+
+
+class InvalidTaskError(Exception): pass
 
 
 class Colors:
