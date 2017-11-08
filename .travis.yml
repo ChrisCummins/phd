@@ -9,8 +9,7 @@ before_install:
   - uname -a
 
 script:
-  - ./install.sh
-  - ./install.sh
+  - ./dotfiles.py --debug
 
 notifications:
   email:
