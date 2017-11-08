@@ -247,8 +247,11 @@ class Netdata(Task):
 
 
 class Node(Task):
+    PKG_LIST = os.path.abspath(".npm-list.txt")
+
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = [Homebrew]
+    __tmpfiles__ = [PKG_LIST]
 
     def run_osx(self):
         Homebrew().install("node")
@@ -257,6 +260,15 @@ class Node(Task):
         Apt().install("nodejs")
         Apt().install("npm")
         symlink("/usr/bin/nodejs", "/usr/bin/node", sudo=True)
+
+    def npm_install(self, package, version):
+        """ install a package using npm """
+        # Create the list of npm packages
+        if not os.path.isfile(self.PKG_LIST):
+            shell("npm list -g > {self.PKG_LIST}".format(**vars()))
+
+        if not shell_ok("grep '{package}@{version}' <{self.PKG_LIST} >/dev/null".format(**vars())):
+            shell("sudo npm install -g {package}@{version}".format(**vars()))
 
 
 class ZSH(Task):
@@ -281,3 +293,182 @@ class Autoenv(Task):
 
     def run(self):
         Python().pip_install("autoenv", "1.0.0")
+
+
+class OhMyZsh(Task):
+    __platforms__ = ['linux', 'osx']
+    __deps__ = [ZSH]
+
+    def run(self):
+        clone_git_repo("git@github.com:robbyrussell/oh-my-zsh.git",
+                       "~/.oh-my-zsh",
+                       "66bae5a5deb7a053adfb05b38a93fe47295841eb")
+
+        # syntax highlighting
+        clone_git_repo("git@github.com:zsh-users/zsh-syntax-highlighting.git",
+                       "~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting",
+                       "ad522a091429ba180c930f84b2a023b40de4dbcc")
+
+        # oh-my-zsh config
+        symlink("~/.zsh/cec.zsh-theme", "~/.oh-my-zsh/custom/cec.zsh-theme")
+
+
+class Lmk(Task):
+    LMK_VERSION = "0.0.13"
+
+    __platforms__ = ['linux', 'osx']
+    __deps__ = [Python]
+
+    def run(self):
+        Python().pip_install("lmk", self.LMK_VERSION)
+        if os.path.isdir(os.path.join(PRIVATE, "lmk")):
+            symlink(os.path.join(PRIVATE, "lmk", "lmkrc"), "~/.lmkrc")
+
+
+class DSmith(Task):
+    __platforms__ = ['ubuntu']
+
+    def run(self):
+        if os.path.isdir(os.path.join(PRIVATE, "dsmith")):
+            symlink(os.path.join(PRIVATE, "dsmith", "dsmithrc"), "~/.dsmithrc")
+
+
+class Git(Task):
+    __platforms__ = ['linux', 'osx']
+
+    def run(self):
+        symlink(".dotfiles/git/gitconfig", "~/.gitconfig")
+
+        if os.path.isdir(os.path.join(PRIVATE, "git")):
+            symlink(os.path.join(PRIVATE, "git", "githubrc"), "~/.githubrc")
+            symlink(os.path.join(PRIVATE, "git", "gogsrc"), "~/.gogsrc")
+
+
+class DiffSoFancy(Task):
+    VERSION = "0.11.4"
+
+    __platforms__ = ['linux', 'osx']
+    __deps__ = [Git, Node]
+
+    def run(self):
+        Node().npm_install("diff-so-fancy", self.VERSION)
+
+
+class Tmux(Task):
+    __platforms__ = ['linux', 'osx']
+
+    def run(self):
+        symlink(".dotfiles/tmux/tmux.conf", "~/.tmux.conf")
+
+
+class Vim(Task):
+    VUNDLE_VERSION = "6497e37694cd2134ccc3e2526818447ee8f20f92"
+
+    __platforms__ = ['linux', 'osx']
+
+    def run(self):
+        symlink(os.path.join(DOTFILES, "vim", "vimrc"), "~/.vimrc")
+
+        # Vundle
+        clone_git_repo("git@github.com:VundleVim/Vundle.vim.git",
+                       "~/.vim/bundle/Vundle.vim",
+                       self.VUNDLE_VERSION)
+        shell("vim +PluginInstall +qall")
+
+
+class Sublime(Task):
+    __platforms__ = ['linux', 'osx']
+    __osx_deps__ = [Homebrew]
+
+    def run_osx(self):
+        Homebrew().cask_install("sublime-text")
+
+        if os.path.isdir(os.path.join(PRIVATE, "subl")):
+            symlink("Library/Application Support/Sublime Text 3", "~/.subl")
+            symlink(os.path.join(PRIVATE, "subl", "User"), "~/.subl/Packages/User")
+            symlink(os.path.join(PRIVATE, "subl", "INI"), "~/.subl/Packages/INI")
+
+            # subl
+            symlink("/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl",
+                    "/usr/local/bin/subl", sudo=True)
+
+    def run(self):
+        shell('sudo ln -sf "{df}/subl/rsub" /usr/local/bin'.format(df=DOTFILES))
+
+
+class Ssmtp(Task):
+    __platforms__ = ['ubuntu']
+
+    def run_ubuntu(self):
+        Apt().install("ssmtp")
+
+        if os.path.isdir(os.path.join(PRIVATE, "ssmtp")):
+            symlink(os.path.join(PRIVATE, "ssmtp", "ssmtp.conf"),
+                    "/etc/ssmtp/ssmtp.conf", sudo=True)
+
+
+class MySQL(Task):
+    __platforms__ = ['linux', 'osx']
+
+    def run(self):
+        if os.path.isdir(os.path.join(PRIVATE, "mysql")):
+            symlink(os.path.join(PRIVATE, "mysql", ".my.cnf"), "~/.my.cnf")
+
+
+class OmniFocus(Task):
+    __platforms__ = ['linux', 'osx']
+
+    def run(self):
+        shell('sudo ln -sf "{df}/omnifocus/omni" /usr/local/bin'.format(df=DOTFILES))
+
+
+class LaTeX(Task):
+    __platforms__ = ['linux', 'osx']
+
+    def run(self):
+        if which("pdflatex"):
+            mkdir("~/.local/bin")
+            symlink(os.path.join(DOTFILES, "tex", "autotex"), "~/.local/bin/autotex")
+            symlink(os.path.join(DOTFILES, "tex", "cleanbib"), "~/.local/bin/cleanbib")
+
+
+class MacOSConfig(Task):
+    """ macOS specific stuff """
+    HUSHLOGIN = os.path.expanduser("~/.hushlogin")
+
+    __platforms__ = ["osx"]
+    __genfiles__ = [HUSHLOGIN]
+
+    def run_osx(self):
+        # disable "Last Login ..." messages on terminal
+        if not os.path.exists(self.HUSHLOGIN):
+            shell("touch " + self.HUSHLOGIN)
+
+
+class GpuStat(Task):
+    VERSION = "0.3.1"
+
+    __platforms__ = ['linux', 'osx']
+    __deps__ = [Python]
+
+    def run(self):
+        if which("nvidia-smi"):
+            Python().pip_install("gpustat", self.VERSION)
+
+
+class IOTop(Task):
+    __platforms__ = ['ubuntu']
+
+    def run_ubuntu(self):
+        Apt().install("iotop")
+
+
+class Ncdu(Task):
+    __platforms__ = ['linux', 'osx']
+    __osx_deps__ = [Homebrew]
+
+    def run_osx(self):
+        Homebrew().install("ncdu")
+
+    def run_ubuntu(self):
+        pass

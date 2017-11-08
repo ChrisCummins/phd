@@ -180,6 +180,31 @@ def copy(src, dst):
     shutil.copyfile(src, dst)
 
 
+def clone_git_repo(url, destination, version):
+    destination = os.path.abspath(os.path.expanduser(destination))
+
+    # clone repo if necessary
+    if not os.path.isdir(destination):
+        shell('git clone --recursive "{url}" "{destination}"'.format(**vars()))
+
+    if not os.path.isdir(os.path.join(destination, ".git")):
+        raise OSError('directory "' + os.path.join(destination, ".git") +
+                      '" does not exist')
+
+    # set revision
+    pwd = os.getcwd()
+    os.chdir(destination)
+    target_hash = shell_output("git rev-parse {version} 2>/dev/null".format(**vars()))
+    current_hash = shell_output("git rev-parse HEAD".format(**vars()))
+
+    if current_hash != target_hash:
+        logging.info("setting repo version {destination} to {version}".format(**vars()))
+        shell("git fetch --all")
+        shell("git reset --hard '{version}'".format(**vars()))
+
+    os.chdir(pwd)
+
+
 def is_runnable_task(obj):
     """ returns true if object is a task for the current platform """
     if not (inspect.isclass(obj) and  issubclass(obj, Task) and obj != Task):
@@ -220,6 +245,19 @@ def get_tasks():
     return ordered
 
 
+def get_task_method(task, method_name):
+    """ resolve task method. First try and match <method>_<platform>(),
+        then <method>() """
+    fn = getattr(task, method_name + "_" + PLATFORM, None)
+    if fn is None and PLATFORM in LINUX_DISTROS:
+        fn = getattr(task, method_name + "_linux", None)
+    if fn is None:
+        fn = getattr(task, method_name, None)
+    if fn is None:
+        raise InvalidTaskError
+    return fn
+
+
 def main(*args):
     """ main dotfiles method """
 
@@ -255,29 +293,18 @@ def main(*args):
             logging.debug(type(task).__name__ + " setup")
 
             # Resolve and run setup() method:
-            setup = getattr(task, "setup_" + PLATFORM, None)
-            if setup is None:
-                setup = getattr(task, "setup", None)
-            if setup is None:
-                raise InvalidTaskError
-            setup()
+            get_task_method(task, "setup")()
 
             done.add(task)
 
             # Resolve and run run() method:
-            run = getattr(task, "run_" + PLATFORM, None)
-            if run is None:
-                run = getattr(task, "run", None)
-            if run is None:
-                raise InvalidTaskError
-
             print("  [{:2d}/{:2d}]".format(i + 1, ntasks) + Colors.BOLD,
                   type(task).__name__, Colors.END + "...", end=" ")
             if logging.getLogger().level <= logging.INFO:
                 print()
             sys.stdout.flush()
             start_time = time()
-            run()
+            get_task_method(task, "run")()
             runtime = time() - start_time
 
             print("{:.3f}s".format(runtime))
@@ -293,7 +320,7 @@ def main(*args):
         logging.debug("")
         for task in done:
             logging.debug("  " + Colors.BOLD + type(task).__name__ + " teardown" + Colors.END)
-            task.teardown()
+            get_task_method(task, "teardown")()
 
             # remove any temporary files
             for file in getattr(task, "__tmpfiles__", []):
