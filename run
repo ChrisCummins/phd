@@ -1,7 +1,6 @@
 #!/usr/bin/env python2.7
 from __future__ import print_function
 
-import json
 import logging
 import os
 import socket
@@ -35,7 +34,7 @@ def get_tasks():
 
         for dep in deps:
             if dep not in set(type(task) for task in ordered):
-                print('punt', task, 'for', dep())
+                logging.debug('punt ' + str(task) + ' for ' + str(dep()))
                 queue.append(task)
                 break
         else:
