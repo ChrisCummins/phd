@@ -74,7 +74,7 @@ def main(*args):
         print("There are " + Colors.BOLD + str(ntasks) + Colors.END +
               " tasks to run on " + PLATFORM + ":")
         for i, task in enumerate(queue):
-            description = task.__doc__ or ""
+            description = (task.__doc__ or "").strip()
             print("  [{:2d}/{:2d}]".format(i + 1, ntasks) + Colors.BOLD,
                   str(task), Colors.END + "... " + description)
             # build a list of generated files
