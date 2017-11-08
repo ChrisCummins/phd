@@ -234,8 +234,9 @@ class Netdata(Task):
         self.installed = False
 
     def run_linux(self):
-        shell("bash <(curl -Ss https://my-netdata.io/kickstart.sh) --dont-wait")
-        self.installed = True
+        if not os.path.isfile("/usr/sbin/netdata"):
+            shell("bash <(curl -Ss https://my-netdata.io/kickstart.sh) --dont-wait")
+            self.installed = True
 
     def teardown(self):
         if self.installed:
@@ -271,7 +272,7 @@ class Node(Task):
             shell("sudo npm install -g {package}@{version}".format(**vars()))
 
 
-class ZSH(Task):
+class Zsh(Task):
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = [Homebrew]
 

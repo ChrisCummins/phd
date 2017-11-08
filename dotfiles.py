@@ -121,12 +121,15 @@ def _shell(*args, **kwargs):
 
     logging.debug("$ " + "".join(*args))
     if stdout:
-        return subprocess.check_output(*args, shell=shell, universal_newlines=True)
+        return subprocess.check_output(*args, shell=shell, universal_newlines=True,
+                                       stderr=subprocess.PIPE)
     elif error:
-        return subprocess.check_call(*args, shell=shell)
+        return subprocess.check_call(*args, shell=shell, stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE)
     else:
         try:
-            subprocess.check_call(*args, shell=shell)
+            subprocess.check_call(*args, shell=shell, stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE)
             return True
         except subprocess.CalledProcessError:
             return False
@@ -153,20 +156,28 @@ def symlink(src, dst, sudo=False):
         src_abs = os.path.dirname(dst) + "/" + src
 
     # Symlink already exists
-    if os.path.islink(dst) and os.path.realpath(dst) == src_abs:
-        return
+    use_sudo = "sudo -H " if sudo else ""
+    if shell_ok("{use_sudo}test -f '{dst}'".format(**vars())):
+        linkdest = shell_output("{use_sudo}readlink {dst}".format(**vars())).rstrip()
+        if linkdest.startswith("/"):
+            linkdest_abs = linkdest
+        else:
+            linkdest_abs = os.path.dirname(dst) + "/" + linkdest
+        if linkdest_abs == src_abs:
+            return
 
-    if not os.path.exists(src_abs):
+    if not (shell_ok("{use_sudo}test -f '{src_abs}'".format(**vars())) or
+            shell_ok("{use_sudo}test -d '{src_abs}'".format(**vars()))):
         raise OSError("symlink source '{src}' does not exist".format(**vars()))
-    if os.path.isdir(dst):
-        raise OSError("symlink destination '{dst}' is a directory".format(**vars()))
+    # if shell_ok("{use_sudo}test -d '{dst}'".format(**vars())):
+    #     raise OSError("symlink destination '{dst}' is a directory".format(**vars()))
 
     # Make a backup of existing file:
-    if os.path.exists(dst):
-        os.rename(dst, dst + ".backup")
+    if shell_ok("{use_sudo}test -f '{dst}'".format(**vars())):
+        shell("{use_sudo}mv {dst} {dst}.backup".format(**vars()))
 
     # Create the symlink:
-    shell("sudo " if sudo else "" + "ln -s {src} {dst}".format(**vars()))
+    shell("{use_sudo}ln -s {src} {dst}".format(**vars()))
 
 
 def copy(src, dst):
