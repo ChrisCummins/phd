@@ -158,10 +158,15 @@ class Curl(Task):
 
 
 class Dropbox(Task):
+    UBUNTU_URL = "https://www.dropbox.com/download?plat=lnx.x86_64"
+
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = [Homebrew]
 
     __genfiles__ = ["~/.local/bin/dropbox-find-conflicts"]
+
+    def __init__(self):
+        self.installed = False
 
     def _run_common(self):
         mkdir("~/.local/bin")
@@ -179,9 +184,16 @@ class Dropbox(Task):
         self._run_common()
 
     def run_linux(self):
-        if not which("dropbox"):
-            raise OSError("dropbox must be installed manually")
+        if not os.path.exists(os.path.expanduser("~/.dropbox-dist/dropboxd")):
+            shell('cd - && wget -O - "{self.UBUNTU_URL}" | tar xzf -')
+            self.installed = True
         self._run_common()
+
+    def teardown(self):
+        if self.installed:
+            print("NOTE: manual step required to complete dropbox installation:")
+            print()
+            print("    $ ~/.dropbox-dist/dropboxd")
 
 
 class FluidApps(Task):
