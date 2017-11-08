@@ -12,6 +12,7 @@ class Homebrew(Task):
 
     __platforms__ = ['osx']
     __deps__ = []
+    __genfiles__ = ['/usr/local/bin/brew']
     __tmpfiles__ = [PKG_LIST, CASK_LIST]
 
     def run(self):
@@ -41,13 +42,14 @@ class Homebrew(Task):
 
 
 class HomebrewCaskOutdated(Task):
+    """ brew-cask-outdated script """
     VERSION = "2f08b5a76605fbfa9ab0caeb4868a29ef7e69bb1"
     BINPATH = "~/.local/bin/brew-cask-outdated"
     REMOTE_URL = "https://raw.githubusercontent.com/bgandon/brew-cask-outdated/" + VERSION + "/brew-cask-outdated.sh"
 
     __platforms__ = ['osx']
     __deps__ = [Homebrew]
-    __installfiles__ = []
+    __genfiles__ = ['~/.local/bin/brew-cask-outdated']
 
     def run(self):
         if not which('brew-cask-outdated'):
@@ -56,6 +58,7 @@ class HomebrewCaskOutdated(Task):
 
 
 class Python(Task):
+    """ python2 and pip """
     PIP_VERSION = "9.0.1"
     PYP_IRC = "~/.pypirc"
     PIP_LIST = ".pip-freeze.json"
@@ -63,6 +66,8 @@ class Python(Task):
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = [Homebrew]
     __genfiles__ = [PYP_IRC]
+    __osx_genfiles__ = ['/usr/local/bin/pip2']
+    __linux_genfiles__ = ['~/.local/bin/pip2']
     __tmpfiles__ = [PIP_LIST]
 
     def run_osx(self):
@@ -115,17 +120,21 @@ class Python(Task):
 
 
 class Unzip(Task):
+    """ unzip pacakge """
     __platforms__ = ['ubuntu']
+    __genfiles__ = ['/usr/bin/unzip']
 
     def run_ubuntu(self):
         Apt().install("unzip")
 
 
 class Ruby(Task):
+    """ ruby environment """
     RUBY_VERSION = "2.4.1"
 
     __platforms__ = ['osx']
     __osx_deps__ = [Homebrew]
+    __genfiles__ = ['~/.rbenv']
 
     def run_osx(self):
         Homebrew().install("rbenv")
@@ -143,8 +152,10 @@ class Ruby(Task):
 
 
 class Curl(Task):
+    """ curl command """
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = [Homebrew]
+    __genfiles__ = ['/usr/bin/curl']
 
     def run_osx(self):
         Homebrew().install("curl")
@@ -154,12 +165,15 @@ class Curl(Task):
 
 
 class Dropbox(Task):
+    """ dropbox """
     UBUNTU_URL = "https://www.dropbox.com/download?plat=lnx.x86_64"
 
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = [Homebrew]
-
-    __genfiles__ = ["~/.local/bin/dropbox-find-conflicts"]
+    __genfiles__ = [
+        "~/.local/bin/dropbox",
+        "~/.local/bin/dropbox-find-conflicts"
+    ]
 
     def __init__(self):
         self.installed = False
@@ -193,9 +207,10 @@ class Dropbox(Task):
 
 
 class Fluid(Task):
+    """ standalone web apps """
     __platforms__ = ['osx']
-    __deps__ = [Dropbox]
-    __osx_deps__ = [Homebrew]
+    __deps__ = [Homebrew, Dropbox]
+    __genfiles__ = ['/Applications/Fluid.app']
 
     def run_osx(self):
         Homebrew().cask_install("fluid")
@@ -207,6 +222,7 @@ class Fluid(Task):
 
 
 class SSH(Task):
+    """ ssh configuration """
     __platforms__ = ['linux', 'osx']
     __deps__ = [Dropbox]
     __genfiles__ = [
@@ -236,7 +252,9 @@ class SSH(Task):
 
 
 class Netdata(Task):
+    """ realtime server monitoring """
     __platforms__ = ['ubuntu']
+    __genfiles__ = ['/usr/sbin/netdata']
 
     def __init__(self):
         self.installed = False
@@ -256,10 +274,13 @@ class Netdata(Task):
 
 
 class Node(Task):
+    """ nodejs and npm """
     PKG_LIST = os.path.abspath(".npm-list.txt")
 
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = [Homebrew]
+    __osx_genfiles__ = ['/usr/local/bin/node', '/usr/local/bin/npm']
+    __linux_genfiles__ = ['/usr/bin/node', '/usr/bin/npm']
     __tmpfiles__ = [PKG_LIST]
 
     def run_osx(self):
@@ -281,8 +302,12 @@ class Node(Task):
 
 
 class Zsh(Task):
+    """ zsh and config files """
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = [Homebrew]
+    __genfiles__ = ['~/.zshrc', '~/.zsh']
+    __osx_genfiles__ = ['/usr/local/bin/zsh']
+    __linux_genfiles__ = ['/usr/bin/zsh']
 
     def run_osx(self):
         Homebrew().install("zsh")
@@ -297,16 +322,24 @@ class Zsh(Task):
 
 
 class Autoenv(Task):
+    """ 'cd' wrapper """
     __platforms__ = ['linux', 'osx']
     __deps__ = [Python]
+    __genfiles__ = ['/usr/local/bin/activate.sh']
 
     def run(self):
         Python().pip_install("autoenv", "1.0.0")
 
 
 class OhMyZsh(Task):
+    """ oh-my-zsh shell framework """
     __platforms__ = ['linux', 'osx']
     __deps__ = [Zsh]
+    __genfiles__ = [
+        '~/.oh-my-zsh',
+        '~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting',
+        '~/.zsh/cec.zsh-theme'
+    ]
 
     def run(self):
         clone_git_repo("git@github.com:robbyrussell/oh-my-zsh.git",
@@ -323,10 +356,12 @@ class OhMyZsh(Task):
 
 
 class Lmk(Task):
+    """ let-me-know """
     LMK_VERSION = "0.0.13"
 
     __platforms__ = ['linux', 'osx']
     __deps__ = [Python]
+    __genfiles__ = ['/usr/local/bin/lmk']
 
     def run(self):
         Python().pip_install("lmk", self.LMK_VERSION)
@@ -335,7 +370,9 @@ class Lmk(Task):
 
 
 class DSmith(Task):
+    """ dsmith config """
     __platforms__ = ['ubuntu']
+    __genfiles__ = ['~/.dsmithrc']
 
     def run(self):
         if os.path.isdir(os.path.join(PRIVATE, "dsmith")):
@@ -343,8 +380,18 @@ class DSmith(Task):
 
 
 class Git(Task):
+    """ git config """
     __platforms__ = ['linux', 'osx']
+    __osx_deps__ = [Homebrew]
     __genfiles__ = ['~/.gitconfig']
+
+    def run_ubuntu(self):
+        Apt().install('git')
+        self.run()
+
+    def run_osx(self):
+        Homebrew().install('git')
+        self.run()
 
     def run(self):
         symlink(os.path.join(DOTFILES, "git", "gitconfig"), "~/.gitconfig")
@@ -355,6 +402,7 @@ class Git(Task):
 
 
 class DiffSoFancy(Task):
+    """ nice diff pager """
     VERSION = "0.11.4"
 
     __platforms__ = ['linux', 'osx']
@@ -366,6 +414,7 @@ class DiffSoFancy(Task):
 
 
 class GhArchiver(Task):
+    """ github archiver """
     VERSION = "0.0.6"
 
     __platforms__ = ['linux', 'osx']
@@ -377,6 +426,7 @@ class GhArchiver(Task):
 
 
 class Tmux(Task):
+    """ tmux config """
     __platforms__ = ['linux', 'osx']
     __genfiles__ = ['~/.tmux.conf']
 
@@ -385,10 +435,22 @@ class Tmux(Task):
 
 
 class Vim(Task):
+    """ vim configuration """
     VUNDLE_VERSION = "6497e37694cd2134ccc3e2526818447ee8f20f92"
 
     __platforms__ = ['linux', 'osx']
+    __osx_deps__ = [Homebrew]
     __genfiles__ = ['~/.vimrc', '~/.vim/bundle/Vundle.vim']
+    __osx_genfiles__ = ['/usr/local/bin/vim']
+    __linux_genfiles__ = ['/usr/bin/vim']
+
+    def run_osx(self):
+        Homebrew().install('vim')
+        self.run()
+
+    def run_ubuntu(self):
+        Apt().install('vim')
+        self.run()
 
     def run(self):
         symlink(os.path.join(DOTFILES, "vim", "vimrc"), "~/.vimrc")
@@ -401,10 +463,11 @@ class Vim(Task):
 
 
 class Sublime(Task):
+    """ sublime text """
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = [Homebrew]
     __genfiles__ = ['/usr/local/bin/rsub']
-    __osx_genfiles__ = ['/usr/local/bin/subl']
+    __osx_genfiles__ = ['/usr/local/bin/subl', '/Applications/Sublime Text.app']
 
     def run_osx(self):
         self.run()
@@ -424,6 +487,7 @@ class Sublime(Task):
 
 
 class Ssmtp(Task):
+    """ mail server and config """
     __platforms__ = ['ubuntu']
     __genfiles__ = ["/usr/bin/ssmtp"]
 
@@ -436,6 +500,7 @@ class Ssmtp(Task):
 
 
 class MySQL(Task):
+    """ mysql configuration """
     __platforms__ = ['linux', 'osx']
     __genfiles__ = ["~/.my.cnf"]
 
@@ -453,9 +518,11 @@ class OmniFocus(Task):
 
 
 class LaTeX(Task):
+    """ pdflatex and helper scripts """
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = [Homebrew]
     __genfiles__ = ["~/.local/bin/autotex", "~/.local/bin/cleanbib"]
+    __osx_genfiles__ = ['/Library/TeX/Distributions/.DefaultTeX/Contents/Programs/texbin/pdflatex']
 
     def run_osx(self):
         Homebrew().cask_install("mactex")
@@ -473,53 +540,54 @@ class MacOSConfig(Task):
     HUSHLOGIN = os.path.expanduser("~/.hushlogin")
 
     __platforms__ = ["osx"]
-    __genfiles__ = [HUSHLOGIN]
+    __genfiles__ = ['~/.hushlogin']
 
     def run_osx(self):
         # disable "Last Login ..." messages on terminal
-        if not os.path.exists(self.HUSHLOGIN):
-            shell("touch " + self.HUSHLOGIN)
+        if not os.path.exists(os.path.expanduser("~/.hushlogin")):
+            shell("touch " + os.path.expanduser("~/.hushlogin"))
 
 
 class MacOSApps(Task):
-    CASKS = [
-        'alfred',
-        'anki',
-        'bartender',
-        'caffeine',
-        'cmake',
-        'disk-inventory-x',
-        'fantastical',
-        'flux',
-        'google-drive',
-        'google-earth-pro',
-        'google-nik-collection',
-        'google-photos-backup-and-sync',
-        'istat-menus',
-        'iterm2',
-        'mendeley-desktop',
-        'omnifocus',
-        'omnigraffle',
-        'omnioutliner',
-        'omnipresence',
-        'plex-media-player',
-        'steam',
-        'sublime-text',
-        'texstudio',
-        'transmission',
-        'tunnelblick',
-        'vlc',
-    ]
+    """ macOS applications """
+    CASKS = {
+        'alfred': '/Applications/Alfred 3.app',
+        'anki': '/Applications/Anki.app',
+        'bartender': '/Applications/Bartender 3.app',
+        'caffeine': '/Applications/Caffeine.app',
+        'cmake': '/Applications/CMake.app',
+        'disk-inventory-x': '/Applications/Disk Inventory X.app',
+        'fantastical': '/Applications/Fantastical 2.app',
+        'flux': '/Applications/Flux.app',
+        'google-earth-pro': '/Applications/Google Earth Pro.app',
+        'google-nik-collection': '/Applications/Nik Collection',
+        'google-photos-backup-and-sync': '/Applications/Backup and Sync.app',
+        'istat-menus': '/Applications/iStat Menus.app',
+        'iterm2': '/Applications/iTerm.app',
+        'mendeley-desktop': '/Applications/Mendeley Desktop.app',
+        'omnifocus': '/Applications/OmniFocus.app',
+        'omnigraffle': '/Applications/OmniGraffle.app',
+        'omnioutliner': '/Applications/OmniOutliner.app',
+        'omnipresence': '/Applications/OmniPresence.app',
+        'plex-media-player': '/Applications/Plex Media Player.app',
+        'steam': '/Applications/Steam.app',
+        'texstudio': '/Applications/texstudio.app',
+        'transmission': '/Applications/Transmission.app',
+        'tunnelblick': '/Applications/Tunnelblick.app',
+        'vlc': '/Applications/VLC.app',
+    }
 
     __platforms__ = ['osx']
     __deps__ = [Homebrew]
+    __genfiles__ = list(CASKS.values())
 
     def run(self):
-        for cask in self.CASKS:
+        for cask in self.CASKS.keys():
             Homebrew().cask_install(cask)
 
 
 class GpuStat(Task):
+    """ nice nvidia-smi wrapper """
     VERSION = "0.3.1"
 
     __platforms__ = ['linux', 'osx']
@@ -531,6 +599,7 @@ class GpuStat(Task):
 
 
 class IOTop(Task):
+    """ I/O monitor """
     __platforms__ = ['ubuntu']
     __genfiles__ = ['/usr/bin/iotop']
 
@@ -539,6 +608,7 @@ class IOTop(Task):
 
 
 class Ncdu(Task):
+    """ cli disk space analyzer """
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = [Homebrew]
     __osx_genfiles__ = ['/usr/local/bin/ncdu']
@@ -552,6 +622,7 @@ class Ncdu(Task):
 
 
 class HTop(Task):
+    """ cli activity monitor """
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = [Homebrew]
     __osx_genfiles__ = ['/usr/local/bin/htop']
@@ -577,10 +648,12 @@ class Emu(Task):
 
 
 class JsonUtil(Task):
+    """ json cli utils """
     JSONLINT_VERSION = "1.6.2"
 
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = [Homebrew]
+    __genfiles__ = ['/usr/local/bin/jsonlint']
     __osx_genfiles__ = ['/usr/local/bin/jq']
     __linux_genfiles__ = ['/usr/bin/jq']
 
@@ -597,6 +670,7 @@ class JsonUtil(Task):
 
 
 class Scripts(Task):
+    """ scripts and utils """
     __platforms__ = ['linux', 'osx']
     __genfiles__ = ['~/.local/bin/mkepisodal']
 

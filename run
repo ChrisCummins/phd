@@ -79,9 +79,9 @@ def main(*args):
                   str(task), Colors.END + "... " + description)
             # build a list of generated files
             genfiles = getattr(task, "__genfiles__", [])
-            genfiles += getattr(task, "__" + PLATFORM + "_tmpfiles__", [])
-            for file in genfiles:
-                print("   ", os.path.abspath(os.path.expanduser(file)))
+            genfiles += getattr(task, "__" + PLATFORM + "_genfiles__", [])
+            for file in sorted(set(genfiles)):
+                logging.info("    " + os.path.abspath(os.path.expanduser(file)))
 
         return 0
 
