@@ -636,7 +636,8 @@ class HTop(Task):
 
 
 class Emu(Task):
-    VERSION = "0.2.5"
+    """ backup software """
+    VERSION = "0.3.0"
     PIP = "pip3"
 
     __platforms__ = ['linux', 'osx']
