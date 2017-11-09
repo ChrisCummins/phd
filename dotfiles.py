@@ -489,7 +489,7 @@ class Sublime(Task):
 class Ssmtp(Task):
     """ mail server and config """
     __platforms__ = ['ubuntu']
-    __genfiles__ = ["/usr/bin/ssmtp"]
+    __genfiles__ = ["/usr/sbin/ssmtp"]
 
     def run_ubuntu(self):
         Apt().install("ssmtp")
@@ -521,15 +521,17 @@ class LaTeX(Task):
     """ pdflatex and helper scripts """
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = [Homebrew]
-    __genfiles__ = ["~/.local/bin/autotex", "~/.local/bin/cleanbib"]
-    __osx_genfiles__ = ['/Library/TeX/Distributions/.DefaultTeX/Contents/Programs/texbin/pdflatex']
 
     def run_osx(self):
+        self.__osx_genfiles__ = [
+            '/Library/TeX/Distributions/.DefaultTeX/Contents/Programs/texbin/pdflatex'
+        ]
         Homebrew().cask_install("mactex")
         self.run()
 
     def run(self):
         if which("pdflatex"):
+            self.__genfiles__ = ["~/.local/bin/autotex", "~/.local/bin/cleanbib"]
             mkdir("~/.local/bin")
             symlink(os.path.join(DOTFILES, "tex", "autotex"), "~/.local/bin/autotex")
             symlink(os.path.join(DOTFILES, "tex", "cleanbib"), "~/.local/bin/cleanbib")
@@ -601,7 +603,7 @@ class GpuStat(Task):
 class IOTop(Task):
     """ I/O monitor """
     __platforms__ = ['ubuntu']
-    __genfiles__ = ['/usr/bin/iotop']
+    __genfiles__ = ['/usr/sbin/iotop']
 
     def run_ubuntu(self):
         Apt().install("iotop")
