@@ -196,7 +196,8 @@ class Dropbox(Task):
         self._run_common()
 
     def run_linux(self):
-        if not os.path.exists(os.path.expanduser("~/.dropbox-dist/dropboxd")):
+        if (not os.path.exists(os.path.expanduser("~/.dropbox-dist/dropboxd"))
+            and not os.environ.get("TRAVIS", False)):  # skip on Travis CI:
             shell('cd - && wget -O - "{self.UBUNTU_URL}" | tar xzf -'.format(**vars()))
             self.installed = True
         self._run_common()
@@ -211,7 +212,7 @@ class Dropbox(Task):
 class Fluid(Task):
     """ standalone web apps """
     __platforms__ = ['osx']
-    __deps__ = [Homebrew, Dropbox]
+    __deps__ = [Homebrew]
     __genfiles__ = ['/Applications/Fluid.app']
 
     def run_osx(self):
@@ -226,7 +227,6 @@ class Fluid(Task):
 class SSH(Task):
     """ ssh configuration """
     __platforms__ = ['linux', 'osx']
-    __deps__ = [Dropbox]
     __genfiles__ = []
 
     def run(self):
