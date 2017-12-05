@@ -53,6 +53,7 @@ class HomebrewCaskOutdated(Task):
 
     def run(self):
         if not which('brew-cask-outdated'):
+            shell("mkdir -p ~/.local/bin")
             shell("curl {self.REMOTE_URL} 2>/dev/null > {self.BINPATH}".format(**vars()))
             shell('chmod +x {self.BINPATH}'.format(**vars()))
 
