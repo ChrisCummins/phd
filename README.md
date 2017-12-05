@@ -43,6 +43,10 @@ A self-contained, monolothic repository for (almost) everything I have done whil
 
 ## Talks
 
+1. Chris Cummins. "**End-to-end Deep Learning of Optimization Heuristics**",  4th Oct,
+   2017. The University of Edinburgh, Scotland.
+   [[files]](/talks/2017-10-ppar).
+   [[slides]](https://speakerdeck.com/chriscummins/end-to-end-deep-learning-of-optimization-heuristics-pact-17).
 1. Chris Cummins. "**End-to-end Deep Learning of Optimization Heuristics**",  12th Sep,
    2017. International Conference on Parallel Architectures and Compilation Techniques (PACT), Portland, Oregon, USA.
    [[files]](/talks/2017-09-pact).
@@ -88,7 +92,7 @@ A self-contained, monolothic repository for (almost) everything I have done whil
    [[pdf]](https://github.com/ChrisCummins/phd/raw/master/talks/2016-01-adapt/2016-01-adapt.pdf).
 1. Chris Cummins.
    "**Towards Collaborative Performance Tuning of Algorithmic Skeletons**",
-   Thurs 14th Jan, 2016. CArD talk, University of Edinburgh.
+   Thurs 14th Jan, 2016. The University of Edinburgh, Scotland.
    [[files]](/talks/2016-01-hlpgpu).
    [[pdf]](https://github.com/ChrisCummins/phd/raw/master/talks/2016-01-hlpgpu/2016-01-hlpgpu.pdf).
 
