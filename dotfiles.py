@@ -566,7 +566,7 @@ class MacOSApps(Task):
         'google-photos-backup-and-sync': '/Applications/Backup and Sync.app',
         'istat-menus': '/Applications/iStat Menus.app',
         'iterm2': '/Applications/iTerm.app',
-        'mendeley-desktop': '/Applications/Mendeley Desktop.app',
+        'mendeley': '/Applications/Mendeley Desktop.app',
         'omnifocus': '/Applications/OmniFocus.app',
         'omnigraffle': '/Applications/OmniGraffle.app',
         'omnioutliner': '/Applications/OmniOutliner.app',
