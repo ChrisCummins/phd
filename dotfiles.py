@@ -170,10 +170,8 @@ class Dropbox(Task):
 
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = [Homebrew]
-    __genfiles__ = [
-        "~/.local/bin/dropbox",
-        "~/.local/bin/dropbox-find-conflicts"
-    ]
+    __genfiles__ = ["~/.local/bin/dropbox"]
+    __linux_genfiles__ = ["~/.dropbox-dist/dropboxd"]
 
     def __init__(self):
         self.installed = False
@@ -182,10 +180,13 @@ class Dropbox(Task):
         mkdir("~/.local/bin")
         symlink("{df}/dropbox/dropbox.py".format(df=DOTFILES), "~/.local/bin/dropbox")
 
-        if not os.path.isdir(os.path.expanduser("~/Dropbox/Inbox")):
+        if (os.path.isdir(os.path.expanduser("~/Dropbox/Inbox")) and not 
+            os.path.isdir(os.path.expanduser("~/Dropbox/Inbox"))):
+            self.__genfiles__.append("~/Inbox")
             symlink("Dropbox/Inbox", "~/Inbox")
 
         if os.path.isdir(os.path.expanduser("~/Dropbox")):
+            self.__genfiles__.append("~/.local/bin/dropbox-find-conflicts")
             symlink("{df}/dropbox/dropbox-find-conflicts.sh".format(df=DOTFILES),
                     "~/.local/bin/dropbox-find-conflicts")
 
@@ -225,30 +226,32 @@ class SSH(Task):
     """ ssh configuration """
     __platforms__ = ['linux', 'osx']
     __deps__ = [Dropbox]
-    __genfiles__ = [
-        "~/.ssh/authorized_keys",
-        "~/.ssh/known_hosts",
-        "~/.ssh/config",
-        "~/.ssh/id_rsa.ppk",
-        "~/.ssh/id_rsa.pub",
-        "~/.ssh/id_rsa",
-    ]
+    __genfiles__ = []
 
     def run(self):
         if os.path.isdir(PRIVATE + "/ssh"):
+            self.__genfiles__ += [
+                "~/.ssh/authorized_keys",
+                "~/.ssh/known_hosts",
+                "~/.ssh/config",
+                "~/.ssh/id_rsa.ppk",
+                "~/.ssh/id_rsa.pub",
+                "~/.ssh/id_rsa",
+            ]
+
             shell('chmod 600 "' + PRIVATE + '"/ssh/*')
             mkdir("~/.ssh")
 
-        for file in ['authorized_keys', 'known_hosts', 'config', 'id_rsa.ppk', 'id_rsa.pub']:
-            src = os.path.join(PRIVATE, "ssh", file)
-            dst = os.path.join("~/.ssh", file)
+            for file in ['authorized_keys', 'known_hosts', 'config', 'id_rsa.ppk', 'id_rsa.pub']:
+                src = os.path.join(PRIVATE, "ssh", file)
+                dst = os.path.join("~/.ssh", file)
 
-            if shell_ok("test $(stat -c %U '{src}') = $USER".format(**vars())):
-                symlink(src, dst)
-            else:
-                copy(src, dst)
+                if shell_ok("test $(stat -c %U '{src}') = $USER".format(**vars())):
+                    symlink(src, dst)
+                else:
+                    copy(src, dst)
 
-        copy(os.path.join(PRIVATE, "ssh", "id_rsa"), "~/.ssh/id_rsa")
+            copy(os.path.join(PRIVATE, "ssh", "id_rsa"), "~/.ssh/id_rsa")
 
 
 class Netdata(Task):
@@ -318,6 +321,7 @@ class Zsh(Task):
         symlink(os.path.join(DOTFILES, "zsh"), "~/.zsh")
         symlink(".zsh/zshrc", "~/.zshrc")
         if os.path.isdir(os.path.join(PRIVATE, "zsh")):
+            self.__genfiles__ += ["~/.zsh/private"]
             symlink(os.path.join(PRIVATE, "zsh"), "~/.zsh/private")
 
 
@@ -366,16 +370,18 @@ class Lmk(Task):
     def run(self):
         Python().pip_install("lmk", self.LMK_VERSION)
         if os.path.isdir(os.path.join(PRIVATE, "lmk")):
+            self.__genfiles__ += ["~/.lmkrc"]
             symlink(os.path.join(PRIVATE, "lmk", "lmkrc"), "~/.lmkrc")
 
 
 class DSmith(Task):
     """ dsmith config """
     __platforms__ = ['ubuntu']
-    __genfiles__ = ['~/.dsmithrc']
+    __genfiles__ = []
 
     def run(self):
         if os.path.isdir(os.path.join(PRIVATE, "dsmith")):
+            self.__genfiles__ += ['~/.dsmithrc']
             symlink(os.path.join(PRIVATE, "dsmith", "dsmithrc"), "~/.dsmithrc")
 
 
@@ -397,6 +403,7 @@ class Git(Task):
         symlink(os.path.join(DOTFILES, "git", "gitconfig"), "~/.gitconfig")
 
         if os.path.isdir(os.path.join(PRIVATE, "git")):
+            self.__genfiles__ += ['~/.githubrc', '~/.gogsrc']
             symlink(os.path.join(PRIVATE, "git", "githubrc"), "~/.githubrc")
             symlink(os.path.join(PRIVATE, "git", "gogsrc"), "~/.gogsrc")
 
@@ -478,6 +485,7 @@ class Sublime(Task):
                 "/usr/local/bin/subl", sudo=True)
 
         if os.path.isdir(os.path.join(PRIVATE, "subl")):
+            self.__genfiles__ += ["~/.subl", "~/.subl/Packages/User", "~/.subl/Packages/INI"]
             symlink("Library/Application Support/Sublime Text 3", "~/.subl")
             symlink(os.path.join(PRIVATE, "subl", "User"), "~/.subl/Packages/User")
             symlink(os.path.join(PRIVATE, "subl", "INI"), "~/.subl/Packages/INI")
@@ -495,6 +503,7 @@ class Ssmtp(Task):
         Apt().install("ssmtp")
 
         if os.path.isdir(os.path.join(PRIVATE, "ssmtp")):
+            self.__genfiles__ += ["/etc/ssmtp/ssmtp.conf"]
             symlink(os.path.join(PRIVATE, "ssmtp", "ssmtp.conf"),
                     "/etc/ssmtp/ssmtp.conf", sudo=True)
 
@@ -502,10 +511,11 @@ class Ssmtp(Task):
 class MySQL(Task):
     """ mysql configuration """
     __platforms__ = ['linux', 'osx']
-    __genfiles__ = ["~/.my.cnf"]
+    __genfiles__ = []
 
     def run(self):
         if os.path.isdir(os.path.join(PRIVATE, "mysql")):
+            self.__genfiles__ += ["~/.my.cnf"]
             symlink(os.path.join(PRIVATE, "mysql", ".my.cnf"), "~/.my.cnf")
 
 
@@ -521,6 +531,7 @@ class LaTeX(Task):
     """ pdflatex and helper scripts """
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = [Homebrew]
+    __genfiles__ = []
 
     def run_osx(self):
         self.__osx_genfiles__ = [
@@ -531,7 +542,7 @@ class LaTeX(Task):
 
     def run(self):
         if which("pdflatex"):
-            self.__genfiles__ = ["~/.local/bin/autotex", "~/.local/bin/cleanbib"]
+            self.__genfiles__ += ["~/.local/bin/autotex", "~/.local/bin/cleanbib"]
             mkdir("~/.local/bin")
             symlink(os.path.join(DOTFILES, "tex", "autotex"), "~/.local/bin/autotex")
             symlink(os.path.join(DOTFILES, "tex", "cleanbib"), "~/.local/bin/cleanbib")
@@ -682,10 +693,15 @@ class Scripts(Task):
                "~/.local/bin/mkepisodal")
 
         if HOSTNAME in ["florence", "diana", "ryangosling", "mary", "plod"]:
+            self.__genfiles__ += ["~/.local/bin/mary", "~/.local/bin/diana"]
             symlink(os.path.join(DOTFILES, "servers", "mary"), "~/.local/bin/mary")
             symlink(os.path.join(DOTFILES, "servers", "diana"), "~/.local/bin/diana")
 
         if HOSTNAME in ["florence", "diana"]:
+            self.__genfiles__ += [
+                "~/.local/bin/ryan_gosling_have_my_photos",
+                "~/.local/bin/ryan_gosling_have_my_music"
+            ]
             symlink(os.path.join(DOTFILES, "servers", "ryan_gosling_have_my_photos.sh"),
                     "~/.local/bin/ryan_gosling_have_my_photos")
             symlink(os.path.join(DOTFILES, "servers", "ryan_gosling_have_my_music.sh"),
