@@ -1,0 +1,155 @@
+#!/usr/bin/env python2.7
+from __future__ import print_function
+
+import logging
+import os
+import socket
+import sys
+
+from argparse import ArgumentParser
+from collections import deque
+from time import time
+
+from util import *
+from dotfiles import *
+
+
+def get_tasks():
+    """ generate the list of tasks to run, respecting dependencies """
+    tasks = [x[1]() for x in inspect.getmembers(sys.modules[__name__], is_runnable_task)]
+    tasks = sorted(tasks, key=lambda task: type(task).__name__)
+
+    queue = deque(tasks)
+    scheduled = deque()
+    while len(queue):
+        task = queue.popleft()
+
+        # Build a list of dependencies:
+        deps = getattr(task, "__deps__", [])
+        deps += getattr(task, "__" + PLATFORM + "_deps__", [])
+
+        # Check that all dependencies have already been scheduled:
+        for dep in deps:
+            if dep not in set(type(task) for task in scheduled):
+                # If a dependent task has not yet been scheduled, push the
+                # current task to the back of the queue:
+                logging.debug('punt ' + str(task) + ' for ' + str(dep()))
+                queue.append(task)
+                break
+        else:
+            # If all dependencies have been scheduled, schedule this task:
+            scheduled.append(task)
+
+    return scheduled
+
+
+def main(*args):
+    """ main dotfiles method """
+
+    # Parse arguments
+    parser = ArgumentParser()
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-v', '--verbose', action='store_true')
+    group.add_argument('-D', '--debug', action='store_true')
+    parser.add_argument('-d', '--describe', action="store_true")
+    args = parser.parse_args(args)
+
+    # Configure logger
+    if args.debug:
+        logging.getLogger().setLevel(logging.DEBUG)
+    elif args.verbose:
+        logging.getLogger().setLevel(logging.INFO)
+    else:
+        logging.getLogger().setLevel(logging.WARNING)
+    logging.basicConfig(format="%(message)s")
+
+    # Get the list of tasks to run
+    logging.debug("creating tasks list ...")
+    queue = get_tasks()
+    done = set()
+    ntasks = len(queue)
+
+    # --describe flag prints a description of the work to be done:
+    if args.describe:
+        print("There are " + Colors.BOLD + str(ntasks) + Colors.END +
+              " tasks to run on " + PLATFORM + ":")
+        for i, task in enumerate(queue):
+            description = (task.__doc__ or "").strip()
+            print("  [{:2d}/{:2d}]".format(i + 1, ntasks) + Colors.BOLD,
+                  str(task), Colors.END + "... " + description)
+            # build a list of generated files
+            genfiles = getattr(task, "__genfiles__", [])
+            genfiles += getattr(task, "__" + PLATFORM + "_genfiles__", [])
+            for file in sorted(set(genfiles)):
+                logging.info("    " + os.path.abspath(os.path.expanduser(file)))
+
+        return 0
+
+    # Run the tasks
+    print("Running " + Colors.BOLD + str(ntasks) + Colors.END +
+          " tasks on", PLATFORM + ":")
+    errored = False
+    try:
+        for i, task in enumerate(queue):
+            # Task setup
+            logging.debug(type(task).__name__ + " setup")
+
+            # Resolve and run setup() method:
+            get_task_method(task, "setup")()
+            done.add(task)
+
+            # Resolve and run run() method:
+            print("  [{:2d}/{:2d}]".format(i + 1, ntasks) + Colors.BOLD,
+                  str(task), Colors.END + "...", end=" ")
+            if logging.getLogger().level <= logging.INFO:
+                print()
+            sys.stdout.flush()
+            start_time = time()
+            get_task_method(task, "run")()
+            # build a list of generated files
+            genfiles = getattr(task, "__genfiles__", [])
+            genfiles += getattr(task, "__" + PLATFORM + "_genfiles__", [])
+            for file in set(genfiles):
+                file = os.path.abspath(os.path.expanduser(file))
+                if not (os.path.exists(file) or
+                        shell_ok("sudo test -f '{file}'".format(**vars())) or
+                        shell_ok("sudo test -d '{file}'".format(**vars()))):
+                    raise InvalidTaskError('genfile "{file}" not created'.format(**vars()))
+            runtime = time() - start_time
+
+            print("{:.3f}s".format(runtime))
+            sys.stdout.flush()
+    except KeyboardInterrupt:
+        print("\ninterrupt")
+        errored = True
+    except Exception as e:
+        print(Colors.BOLD + Colors.RED + type(e).__name__)
+        print(e, Colors.END)
+        errored = True
+        if logging.getLogger().level <= logging.DEBUG:
+            raise
+    finally:
+        # Task teardowm
+        logging.debug("")
+        for task in done:
+            logging.debug("  " + Colors.BOLD + type(task).__name__ + " teardown" + Colors.END)
+            get_task_method(task, "teardown")()
+
+            # build a list of temporary files
+            tmpfiles = getattr(task, "__tmpfiles__", [])
+            tmpfiles += getattr(task, "__" + PLATFORM + "_tmpfiles__", [])
+
+            # remove any temporary files
+            for file in tmpfiles:
+                file = os.path.abspath(os.path.expanduser(file))
+                if os.path.exists(file):
+                    logging.debug("rm {file}".format(**vars()))
+                    os.remove(file)
+
+    if not errored:
+        print("done")
+    return 1 if errored else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(*sys.argv[1:]))

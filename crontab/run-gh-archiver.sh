@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #
-# Run gh-archiver.
+<<<<<<< HEAD
+# Clone and update my GitHub repos locally.
 #
 # ****************************************************************************
 # *                               Configuration                              *
@@ -11,8 +12,7 @@ export LMK_TO="chrisc.101@gmail.com"
 
 export GH_ARCHIVER="gh-archiver"
 export GH_USERNAME="ChrisCummins"
-export GOGS_CLONE_DIR="/home/cec/git/cec"
-
+export GOGS_CLONE_DIR="$HOME/git/cec"
 
 # ****************************************************************************
 # *                                  Program                                 *

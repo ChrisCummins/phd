@@ -9,8 +9,8 @@ before_install:
   - uname -a
 
 script:
-  - ./install.sh
-  - ./install.sh
+  - ./run --debug
+  - ./run --debug
 
 notifications:
   email:
