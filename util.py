@@ -1,5 +1,8 @@
+from __future__ import print_function
+
 import errno
 import inspect
+import json
 import logging
 import os
 import platform
@@ -21,8 +24,15 @@ def get_platform():
         return distro[0].lower()
 
 
-DOTFILES = os.path.expanduser("~/.dotfiles")
-PRIVATE = os.path.expanduser("~/Dropbox/Shared")
+try:
+    with open(".config.json") as infile:
+        _CFG = json.loads(infile.read())
+except:
+    print("Error! Must run ./configure first")
+    sys.exit(1)
+
+DOTFILES = _CFG["dotfiles"]
+PRIVATE = _CFG["private"]
 
 LINUX_DISTROS = ['ubuntu']
 
