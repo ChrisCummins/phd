@@ -179,7 +179,7 @@ class Dropbox(Task):
 
     def _run_common(self):
         mkdir("~/.local/bin")
-        symlink("{df}/dropbox/dropbox.py".format(df=DOTFILES), "~/.local/bin/dropbox")
+        symlink(usr_share("Dropbox/dropbox.py"), "~/.local/bin/dropbox")
 
         if (os.path.isdir(os.path.expanduser("~/Dropbox/Inbox")) and not 
             os.path.isdir(os.path.expanduser("~/Dropbox/Inbox"))):
@@ -188,7 +188,7 @@ class Dropbox(Task):
 
         if os.path.isdir(os.path.expanduser("~/Dropbox")):
             self.__genfiles__.append("~/.local/bin/dropbox-find-conflicts")
-            symlink("{df}/dropbox/dropbox-find-conflicts.sh".format(df=DOTFILES),
+            symlink(usr_share("Dropbox/dropbox-find-conflicts.sh"),
                     "~/.local/bin/dropbox-find-conflicts")
 
     def run_osx(self):

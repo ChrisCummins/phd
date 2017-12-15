@@ -265,6 +265,14 @@ def get_task_method(task, method_name):
     return fn
 
 
+def usr_share(*components, **kwargs):
+    must_exist = kwargs.get("must_exist", True)
+    path = os.path.join(DOTFILES, "usr", "share", *components)
+    if must_exist and not os.path.exists(path):
+        raise OSError(str(path) + " not found")
+    return path
+
+
 class Apt(object):
     def install(self, package):
         """ install a package using apt-get """
