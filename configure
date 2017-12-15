@@ -7,7 +7,6 @@ import subprocess
 import sys
 
 from argparse import ArgumentParser
-from configparser import ConfigParser
 
 
 DEFAULT_DOTFILES = os.path.dirname(os.path.realpath(__file__))
