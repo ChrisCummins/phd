@@ -10,6 +10,7 @@ before_install:
 
 script:
   - ./configure -b
+  - ./run --describe
   - ./run --debug
   - ./run --debug
 
