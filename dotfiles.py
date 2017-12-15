@@ -221,7 +221,10 @@ class Fluid(Task):
         if os.path.isdir(PRIVATE + "/fluid.apps"):
             for app in os.listdir(PRIVATE + "/fluid.apps"):
                 if app.endswith(".app"):
-                    symlink(PRIVATE + "/fluid.apps/" + app, "/Applications/" + os.path.basename(app))
+                    if not os.path.exists("/Applications/" + os.path.basename(app)):
+                        shell("cp -r '{}' '{}'".format(
+                                PRIVATE + "/fluid.apps/" + app,
+                                "/Applications/" + os.path.basename(app)))
 
 
 class SSH(Task):
