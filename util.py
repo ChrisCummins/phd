@@ -172,8 +172,7 @@ def symlink(src, dst, sudo=False):
 
     # Symlink already exists
     use_sudo = "sudo -H " if sudo else ""
-    if (os.path.exists(dst) or
-        shell_ok("{use_sudo}test -f '{dst}'".format(**vars())) or
+    if (shell_ok("{use_sudo}test -f '{dst}'".format(**vars())) or
         shell_ok("{use_sudo}test -d '{dst}'".format(**vars()))):
         linkdest = shell_output("{use_sudo}readlink {dst}".format(**vars())).rstrip()
         if linkdest.startswith("/"):
@@ -183,18 +182,19 @@ def symlink(src, dst, sudo=False):
         if linkdest_abs == src_abs:
             return
 
-    if not (os.path.exists(src_abs) or
-            shell_ok("{use_sudo}test -f '{src_abs}'".format(**vars())) or
+    if not (shell_ok("{use_sudo}test -f '{src_abs}'".format(**vars())) or
             shell_ok("{use_sudo}test -d '{src_abs}'".format(**vars()))):
         raise OSError("symlink source '{src}' does not exist".format(**vars()))
     # if shell_ok("{use_sudo}test -d '{dst}'".format(**vars())):
     #     raise OSError("symlink destination '{dst}' is a directory".format(**vars()))
 
     # Make a backup of existing file:
-    if (os.path.exists(dst) or
-        shell_ok("{use_sudo}test -f '{dst}'".format(**vars())) or
+    if (shell_ok("{use_sudo}test -f '{dst}'".format(**vars())) or
         shell_ok("{use_sudo}test -d '{dst}'".format(**vars()))):
         shell("{use_sudo}mv '{dst}' '{dst}'.backup".format(**vars()))
+
+    # in case of broken symlink
+    shell("{use_sudo}rm -f '{dst}'".format(**vars()))
 
     # Create the symlink:
     shell("{use_sudo}ln -s '{src}' '{dst}'".format(**vars()))

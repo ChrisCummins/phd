@@ -319,8 +319,8 @@ class Zsh(Task):
 
     def run(self):
         # install config files
-        symlink(os.path.join(DOTFILES, "zsh"), "~/.zsh")
-        symlink(".zsh/zshrc", "~/.zshrc")
+        symlink(usr_share("Zsh"), "~/.zsh")
+        symlink(usr_share("Zsh/zshrc"), "~/.zshrc")
         if os.path.isdir(os.path.join(PRIVATE, "zsh")):
             self.__genfiles__ += ["~/.zsh/private"]
             symlink(os.path.join(PRIVATE, "zsh"), "~/.zsh/private")
@@ -401,7 +401,7 @@ class Git(Task):
         self.run()
 
     def run(self):
-        symlink(os.path.join(DOTFILES, "git", "gitconfig"), "~/.gitconfig")
+        symlink(usr_share("git/gitconfig"), "~/.gitconfig")
 
         if os.path.isdir(os.path.join(PRIVATE, "git")):
             self.__genfiles__ += ['~/.githubrc', '~/.gogsrc']
@@ -439,7 +439,7 @@ class Tmux(Task):
     __genfiles__ = ['~/.tmux.conf']
 
     def run(self):
-        symlink(".dotfiles/tmux/tmux.conf", "~/.tmux.conf")
+        symlink(usr_share("tmux/tmux.conf"), "~/.tmux.conf")
 
 
 class Vim(Task):
@@ -461,7 +461,7 @@ class Vim(Task):
         self.run()
 
     def run(self):
-        symlink(os.path.join(DOTFILES, "vim", "vimrc"), "~/.vimrc")
+        symlink(usr_share("Vim/vimrc"), "~/.vimrc")
 
         # Vundle
         clone_git_repo("git@github.com:VundleVim/Vundle.vim.git",
@@ -492,7 +492,7 @@ class Sublime(Task):
             symlink(os.path.join(PRIVATE, "subl", "INI"), "~/.subl/Packages/INI")
 
     def run(self):
-        shell('sudo ln -sf "{df}/subl/rsub" /usr/local/bin/rsub'.format(df=DOTFILES))
+        shell('sudo ln -sf "{}" /usr/local/bin/rsub'.format(usr_share("Sublime Text/rsub")))
 
 
 class Ssmtp(Task):
@@ -525,7 +525,7 @@ class OmniFocus(Task):
     __genfiles__ = ["/usr/local/bin/omni"]
 
     def run(self):
-        shell('sudo ln -sf "{df}/omnifocus/omni" /usr/local/bin'.format(df=DOTFILES))
+        shell('sudo ln -sf "{}" /usr/local/bin'.format(usr_share("OmniFocus/omni")))
 
 
 class LaTeX(Task):
@@ -545,8 +545,8 @@ class LaTeX(Task):
         if which("pdflatex"):
             self.__genfiles__ += ["~/.local/bin/autotex", "~/.local/bin/cleanbib"]
             mkdir("~/.local/bin")
-            symlink(os.path.join(DOTFILES, "tex", "autotex"), "~/.local/bin/autotex")
-            symlink(os.path.join(DOTFILES, "tex", "cleanbib"), "~/.local/bin/cleanbib")
+            symlink(usr_share("LaTeX", "autotex"), "~/.local/bin/autotex")
+            symlink(usr_share("LaTeX", "cleanbib"), "~/.local/bin/cleanbib")
 
 
 class MacOSConfig(Task):
@@ -690,20 +690,22 @@ class Scripts(Task):
     __genfiles__ = ['~/.local/bin/mkepisodal']
 
     def run(self):
-        symlink(os.path.join(DOTFILES, "media", "mkepisodal.py"),
-               "~/.local/bin/mkepisodal")
+        symlink(usr_share("media/mkepisodal.py"), "~/.local/bin/mkepisodal")
 
         if HOSTNAME in ["florence", "diana", "ryangosling", "mary", "plod"]:
             self.__genfiles__ += ["~/.local/bin/mary", "~/.local/bin/diana"]
-            symlink(os.path.join(DOTFILES, "servers", "mary"), "~/.local/bin/mary")
-            symlink(os.path.join(DOTFILES, "servers", "diana"), "~/.local/bin/diana")
+            symlink(usr_share("servers/mary"), "~/.local/bin/mary")
+            symlink(usr_share("servers/diana"), "~/.local/bin/diana")
 
         if HOSTNAME in ["florence", "diana"]:
             self.__genfiles__ += [
                 "~/.local/bin/ryan_gosling_have_my_photos",
-                "~/.local/bin/ryan_gosling_have_my_music"
+                "~/.local/bin/ryan_gosling_have_my_music",
+                "~/.local/bin/orange",
             ]
-            symlink(os.path.join(DOTFILES, "servers", "ryan_gosling_have_my_photos.sh"),
+            symlink(usr_share("servers/ryan_gosling_have_my_photos.sh"),
                     "~/.local/bin/ryan_gosling_have_my_photos")
-            symlink(os.path.join(DOTFILES, "servers", "ryan_gosling_have_my_music.sh"),
+            symlink(usr_share("servers/ryan_gosling_have_my_music.sh"),
                     "~/.local/bin/ryan_gosling_have_my_music")
+            symlink(usr_share("servers/orange.sh"),
+                    "~/.local/bin/orange")
