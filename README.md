@@ -34,3 +34,6 @@
  :::::::::            ::::::::::::::::  ::::::::::::::::   ::::::::::::::
  :::::::::            ::::::::::::::::    ::::::::::::::    :::::::::::
 ```
+<a href="https://travis-ci.org/ChrisCummins/dotfiles" target="_blank">
+  <img src="https://img.shields.io/travis/ChrisCummins/dotfiles/master.svg?style=flat">
+</a>
