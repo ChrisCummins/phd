@@ -197,7 +197,7 @@ class Dropbox(Task):
 
     def run_linux(self):
         if (not os.path.exists(os.path.expanduser("~/.dropbox-dist/dropboxd"))
-            and not os.environ.get("TRAVIS", False)):  # skip on Travis CI:
+            and not IS_TRAVIS_CI):  # skip on Travis CI:
             shell('cd - && wget -O - "{self.UBUNTU_URL}" | tar xzf -'.format(**vars()))
             self.installed = True
         self._run_common()
@@ -401,7 +401,8 @@ class Git(Task):
         self.run()
 
     def run(self):
-        symlink(usr_share("git/gitconfig"), "~/.gitconfig")
+        if not IS_TRAVIS_CI:
+            symlink(usr_share("git/gitconfig"), "~/.gitconfig")
 
         if os.path.isdir(os.path.join(PRIVATE, "git")):
             self.__genfiles__ += ['~/.githubrc', '~/.gogsrc']

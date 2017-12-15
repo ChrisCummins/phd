@@ -33,6 +33,7 @@ except:
 
 DOTFILES = _CFG["dotfiles"]
 PRIVATE = _CFG["private"]
+IS_TRAVIS_CI = os.environ.get("TRAVIS", False)
 
 LINUX_DISTROS = ['ubuntu']
 
