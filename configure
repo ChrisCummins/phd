@@ -118,7 +118,7 @@ def main():
             print("You must run ./configure first before you can use "
                   "the `-r` flag.", file=sys.stderr)
             sys.exit(1)
-    else:
+    elif not args.batch:
         # get input from user
         cfg["dotfiles"] = dirinput("Path to dotfiles directory", cfg["dotfiles"])
         cfg["private"] = dirinput("Path to private dotfiles directory", cfg["private"])
