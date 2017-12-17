@@ -19,34 +19,32 @@ def json_to_stream(blob, stream):
     print("", file=stream)
 
 
+DEFAULTS = {
+    "dotfiles": os.path.dirname(os.path.realpath(__file__)),
+    "private": os.path.expanduser("~/Dropbox/Shared"),
+    "apple_id": None,
+}
+
+
 def main():
-    parser = ArgumentParser(description="Configure DeepSmith build.")
-    parser.add_argument("-r", "--reconfigure", action="store_true",
-                        help="re-run configuraiton using previous settings")
-    cwd = os.path.dirname(os.path.realpath(__file__))
-    parser.add_argument("--dotfiles", metavar="<path>", default=cwd,
-                        help="path to dotfiles directory (default: {})".format(cwd))
-    default_private = os.path.expanduser("~/Dropbox/Shared")
-    parser.add_argument("--private", metavar="<path>", default=default_private,
-                        help="path to private directory (default: {})".format(default_private))
-    parser.add_argument("--apple-id", metavar="<email>",
+    parser = ArgumentParser(description="Configure dotfiles install.")
+    parser.add_argument("--dotfiles", metavar="<path>", default=DEFAULTS["dotfiles"],
+                        help="path to dotfiles directory (default: {})".format(DEFAULTS["dotfiles"]))
+    parser.add_argument("--private", metavar="<path>", default=DEFAULTS["private"],
+                        help="path to private directory (default: {})".format(DEFAULTS["private"]))
+    parser.add_argument("--apple-id", metavar="<email>", default=DEFAULTS["apple_id"],
                         help="Apple ID (e.g. example@email.com)")
     args = parser.parse_args()
 
-    cfg = {
-        "dotfiles": args.dotfiles,
-        "private": args.private,
-        "apple_id": args.apple_id,
-    }
+    if os.path.exists("config.json"):
+        with open("config.json") as infile:
+            cfg = json.loads(infile.read())
+    else:
+        cfg = {}
 
-    if args.reconfigure and os.path.exists(os.path.join(cfg["dotfiles"], ".config.json")):
-        try:
-            with open(os.path.join(cfg["dotfiles"], ".config.json")) as infile:
-                cfg = json.loads(infile.read())
-        except OSError:
-            print("You must run ./configure first before you can use "
-                  "the `-r` flag.", file=sys.stderr)
-            sys.exit(1)
+    cfg["dotfiles"] = args.dotfiles if args.dotfiles else cfg["dotfiles"]
+    cfg["private"] = args.private if args.private else cfg["private"]
+    cfg["apple_id"] = args.apple_id if args.apple_id else cfg["apple_id"]
 
     # generate JSON config file
     with open(os.path.join(cfg["dotfiles"], "config.json"), "w") as outfile:

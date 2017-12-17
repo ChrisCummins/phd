@@ -99,8 +99,8 @@ def main(*args):
             done.add(task)
 
             # Resolve and run run() method:
-            print("  [{:2d}/{:2d}]".format(i + 1, ntasks) + Colors.BOLD,
-                  str(task), Colors.END + "...", end=" ")
+            print("[{:2d}/{:2d}]".format(i + 1, ntasks) + Colors.BOLD,
+                  str(task), Colors.END + "...")
             if logging.getLogger().level <= logging.INFO:
                 print()
             sys.stdout.flush()
@@ -117,7 +117,7 @@ def main(*args):
                     raise InvalidTaskError('genfile "{file}" not created'.format(**vars()))
             runtime = time() - start_time
 
-            print("{:.3f}s".format(runtime))
+            # print("{:.3f}s".format(runtime))
             sys.stdout.flush()
     except KeyboardInterrupt:
         print("\ninterrupt")
@@ -146,8 +146,6 @@ def main(*args):
                     logging.debug("rm {file}".format(**vars()))
                     os.remove(file)
 
-    if not errored:
-        print("done")
     return 1 if errored else 0
 
 

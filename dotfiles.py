@@ -18,7 +18,7 @@ class Homebrew(Task):
 
     def run(self):
         if not which('brew'):
-            logging.info("installing homebrew")
+            task_print("Installing Homebrew")
             shell('/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"')
             shell('brew update')
             shell('brew doctore')
@@ -29,8 +29,9 @@ class Homebrew(Task):
         if not os.path.isfile(self.PKG_LIST):
             shell("brew list > {self.PKG_LIST}".format(**vars()))
 
-        if not shell_ok("grep '^{package}$' <{self.PKG_LIST} >/dev/null".format(**vars())):
-            shell("brew install {package} >/dev/null".format(**vars()))
+        if not shell_ok("grep '^{package}$' <{self.PKG_LIST}".format(**vars())):
+            task_print("brew install " + package)
+            shell("brew install {package}".format(**vars()))
 
     def cask_install(self, package):
         """ install a homebrew cask """
@@ -38,8 +39,9 @@ class Homebrew(Task):
         if not os.path.isfile(self.CASK_LIST):
             shell("brew cask list > {self.CASK_LIST}".format(**vars()))
 
-        if not shell_ok("grep '^{package}$' <{self.CASK_LIST} >/dev/null".format(**vars())):
-            shell("brew cask install {package} >/dev/null".format(**vars()))
+        if not shell_ok("grep '^{package}$' <{self.CASK_LIST}".format(**vars())):
+            task_print("brew cask install " + package)
+            shell("brew cask install {package}".format(**vars()))
 
 
 class HomebrewCaskOutdated(Task):
@@ -54,7 +56,8 @@ class HomebrewCaskOutdated(Task):
 
     def run(self):
         if not which('brew-cask-outdated'):
-            shell("mkdir -p ~/.local/bin")
+            task_print("Installing brew-cask-outdated")
+            mkdir("~/.local/bin")
             shell("curl {self.REMOTE_URL} 2>/dev/null > {self.BINPATH}".format(**vars()))
             shell('chmod +x {self.BINPATH}'.format(**vars()))
 
@@ -80,8 +83,10 @@ class Python(Task):
         Apt().install("python-pip")
         Apt().install("software-properties-common")  # provides add-apt-repository
         if not shell_ok("dpkg -s python3.6 &>/dev/null"):
+            task_print("adding python-3.6 repository")
             shell("sudo add-apt-repository -y ppa:jonathonf/python-3.6")
             shell("sudo apt-get update")
+            task_print("apt-get install python3.6 python3.6-venv python3.6-dev python3-pip")
             shell("sudo apt-get install -y python3.6 python3.6-venv python3.6-dev python3-pip")
 
         self._run_common()
@@ -89,11 +94,11 @@ class Python(Task):
     def _run_common(self):
         assert which("pip2")
 
-        if os.path.exists("{private}/python/.pypirc".format(private=PRIVATE)):
-            symlink("{private}/python/.pypirc".format(private=PRIVATE), "~/.pypirc")
+        symlink("{private}/python/.pypirc".format(private=PRIVATE), "~/.pypirc")
 
         # install pip
         if not shell_ok("test $(pip2 --version | awk '{{print $2}}') = {self.PIP_VERSION}".format(**vars())):
+            task_print("pip2 install --upgrade 'pip=={self.PIP_VERSION}'".format(**vars()))
             shell("pip2 install --upgrade 'pip=={self.PIP_VERSION}'".format(**vars()))
         # same again as root
         if not shell_ok("test $(sudo pip2 --version | awk '{{print $2}}') = {self.PIP_VERSION}".format(**vars())):
@@ -118,6 +123,7 @@ class Python(Task):
 
         pkg_str = package + '==' + version
         if pkg_str not in data[pip]:
+            task_print("pip install {package}=={version}".format(**vars()))
             shell("{use_sudo} {pip} install {package}=={version}".format(**vars()))
 
 
@@ -149,7 +155,8 @@ class Ruby(Task):
         shell('rbenv install --skip-existing "{self.RUBY_VERSION}"'.format(**vars()))
         shell('rbenv global "{self.RUBY_VERSION}"'.format(**vars()))
 
-        if not shell_ok("gem list --local | grep bundler >/dev/null"):
+        if not shell_ok("gem list --local | grep bundler"):
+            task_print("Installing bundler")
             shell("gem install bundler")
 
 
@@ -199,6 +206,7 @@ class Dropbox(Task):
     def run_linux(self):
         if (not os.path.exists(os.path.expanduser("~/.dropbox-dist/dropboxd"))
             and not IS_TRAVIS_CI):  # skip on Travis CI:
+            task_print("Installing Dropbox")
             shell('cd - && wget -O - "{self.UBUNTU_URL}" | tar xzf -'.format(**vars()))
             self.installed = True
         self._run_common()
@@ -222,10 +230,11 @@ class Fluid(Task):
         if os.path.isdir(PRIVATE + "/fluid.apps"):
             for app in os.listdir(PRIVATE + "/fluid.apps"):
                 if app.endswith(".app"):
+                    appname = os.path.basename(app)
                     if not os.path.exists("/Applications/" + os.path.basename(app)):
-                        shell("cp -r '{}' '{}'".format(
-                                PRIVATE + "/fluid.apps/" + app,
-                                "/Applications/" + os.path.basename(app)))
+                        task_print("Installing {app}".format(**vars()))
+                        shell("cp -r '{}/fluid.apps/{}' '/Applications/{}'"
+                              .format(PRIVATE, app, app))
 
 
 class SSH(Task):
@@ -254,9 +263,9 @@ class SSH(Task):
                 if shell_ok("test $(stat -c %U '{src}') = $USER".format(**vars())):
                     symlink(src, dst)
                 else:
-                    copy(src, dst)
+                    copy_file(src, dst)
 
-            copy(os.path.join(PRIVATE, "ssh", "id_rsa"), "~/.ssh/id_rsa")
+            copy_file(os.path.join(PRIVATE, "ssh", "id_rsa"), "~/.ssh/id_rsa")
 
 
 class Netdata(Task):
@@ -269,6 +278,7 @@ class Netdata(Task):
 
     def run_linux(self):
         if not os.path.isfile("/usr/sbin/netdata"):
+            task_print("Installing netdata")
             shell("bash <(curl -Ss https://my-netdata.io/kickstart.sh) --dont-wait")
             self.installed = True
 
@@ -278,7 +288,7 @@ class Netdata(Task):
             print()
             print("    $ crontab -e")
             print("    # append the following line to the end and save:")
-            print("    @reboot ~/.dotfiles/crontab/start-netdata.sh")
+            print("    @reboot ~/.dotfiles/usr/share/crontab/start-netdata.sh")
 
 
 class Node(Task):
@@ -305,7 +315,8 @@ class Node(Task):
         if not os.path.isfile(self.PKG_LIST):
             shell("npm list -g > {self.PKG_LIST}".format(**vars()))
 
-        if not shell_ok("grep '{package}@{version}' <{self.PKG_LIST} >/dev/null".format(**vars())):
+        if not shell_ok("grep '{package}@{version}' <{self.PKG_LIST}".format(**vars())):
+            task_print("npm install -g {package}@{version}".format(**vars()))
             shell("sudo npm install -g {package}@{version}".format(**vars()))
 
 
@@ -491,13 +502,17 @@ class Sublime(Task):
                 "/usr/local/bin/subl", sudo=True)
 
         if os.path.isdir(os.path.join(PRIVATE, "subl")):
-            self.__genfiles__ += ["~/.subl", "~/.subl/Packages/User", "~/.subl/Packages/INI"]
-            symlink("Library/Application Support/Sublime Text 3", "~/.subl")
+            self.__genfiles__ += [
+                "~/.subl", 
+                "~/.subl/Packages/User", 
+                "~/.subl/Packages/INI"
+            ]
+            symlink("~/Library/Application Support/Sublime Text 3", "~/.subl")
             symlink(os.path.join(PRIVATE, "subl", "User"), "~/.subl/Packages/User")
             symlink(os.path.join(PRIVATE, "subl", "INI"), "~/.subl/Packages/INI")
 
     def run(self):
-        shell('sudo ln -sf "{}" /usr/local/bin/rsub'.format(usr_share("Sublime Text/rsub")))
+        symlink(usr_share("Sublime Text/rsub"), "/usr/local/bin/rsub", sudo=True)
 
 
 class Ssmtp(Task):
@@ -530,7 +545,7 @@ class OmniFocus(Task):
     __genfiles__ = ["/usr/local/bin/omni"]
 
     def run(self):
-        shell('sudo ln -sf "{}" /usr/local/bin'.format(usr_share("OmniFocus/omni")))
+        symlink(usr_share("OmniFocus/omni"), "/usr/local/bin/omni", sudo=True)
 
 
 class LaTeX(Task):
@@ -564,6 +579,7 @@ class MacOSConfig(Task):
     def run_osx(self):
         # disable "Last Login ..." messages on terminal
         if not os.path.exists(os.path.expanduser("~/.hushlogin")):
+            task_print("Creating ~/.hushlogin")
             shell("touch " + os.path.expanduser("~/.hushlogin"))
 
 
@@ -630,6 +646,7 @@ class AppStore(Task):
 
     def install(self, package_id, package_dest):
         if not os.path.exists(package_dest):
+            task_print("mas install", os.path.basename(package_dest)[:-4])
             shell("mas install {package_id}".format(package_id=package_id))
 
 
@@ -751,6 +768,7 @@ class Scripts(Task):
     __genfiles__ = ['~/.local/bin/mkepisodal']
 
     def run(self):
+        mkdir("~/.local/bin")
         symlink(usr_share("media/mkepisodal.py"), "~/.local/bin/mkepisodal")
 
         if HOSTNAME in ["florence", "diana", "ryangosling", "mary", "plod"]:

@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import errno
+import hashlib
 import inspect
 import json
 import logging
@@ -24,12 +25,40 @@ def get_platform():
         return distro[0].lower()
 
 
-try:
-    with open("config.json") as infile:
-        _CFG = json.loads(infile.read())
-except:
-    print("Error! Must run ./configure first")
-    sys.exit(1)
+def _shell(*args, **kwargs):
+    error = kwargs.get("error", True)
+    stdout = kwargs.get("stdout", False)
+
+    logging.debug("$ " + "".join(*args))
+    if stdout:
+        return subprocess.check_output(*args, shell=shell, universal_newlines=True,
+                                       stderr=subprocess.PIPE)
+    elif error:
+        return subprocess.check_call(*args, shell=shell, stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE)
+    else:
+        try:
+            subprocess.check_call(*args, shell=shell, stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE)
+            return True
+        except subprocess.CalledProcessError:
+            return False
+
+def shell(*args):
+    return _shell(*args)
+
+
+def shell_ok(*args):
+    return _shell(*args, error=False)
+
+
+def shell_output(*args):
+    return _shell(*args, stdout=True)
+
+
+shell("./configure")
+with open("config.json") as infile:
+    _CFG = json.loads(infile.read())
 
 DOTFILES = _CFG["dotfiles"]
 PRIVATE = _CFG["private"]
@@ -108,6 +137,13 @@ class Colors:
    END = '\033[0m'
 
 
+def task_print(*msg, **kwargs):
+    sep = kwargs.get("sep", " ")
+    text = sep.join(msg)
+    indented = "\n        > ".join(text.split("\n"))
+    print(Colors.GREEN, "        > ", indented, Colors.END, sep="")
+
+
 def is_compatible(a, b):
     """ return if platforms a and b are compatible """
     if b == "linux":
@@ -130,37 +166,6 @@ def mkdir(path):
             pass
         else:
             raise
-
-
-def _shell(*args, **kwargs):
-    error = kwargs.get("error", True)
-    stdout = kwargs.get("stdout", False)
-
-    logging.debug("$ " + "".join(*args))
-    if stdout:
-        return subprocess.check_output(*args, shell=shell, universal_newlines=True,
-                                       stderr=subprocess.PIPE)
-    elif error:
-        return subprocess.check_call(*args, shell=shell, stdout=subprocess.PIPE,
-                                     stderr=subprocess.PIPE)
-    else:
-        try:
-            subprocess.check_call(*args, shell=shell, stdout=subprocess.PIPE,
-                                  stderr=subprocess.PIPE)
-            return True
-        except subprocess.CalledProcessError:
-            return False
-
-def shell(*args):
-    return _shell(*args)
-
-
-def shell_ok(*args):
-    return _shell(*args, error=False)
-
-
-def shell_output(*args):
-    return _shell(*args, stdout=True)
 
 
 def symlink(src, dst, sudo=False):
@@ -199,10 +204,19 @@ def symlink(src, dst, sudo=False):
     shell("{use_sudo}rm -f '{dst}'".format(**vars()))
 
     # Create the symlink:
+    task_print("Creating symlink {dst}".format(**vars()))
     shell("{use_sudo}ln -s '{src}' '{dst}'".format(**vars()))
 
 
-def copy(src, dst):
+def checksum_file(path):
+    hash_fn = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_fn.update(chunk)
+    return hash_fn.hexdigest()
+
+
+def copy_file(src, dst):
     src = os.path.expanduser(src)
     dst = os.path.expanduser(dst)
 
@@ -212,7 +226,12 @@ def copy(src, dst):
         raise OSError("copy destination '{dst}' is a directory".format(**vars()))
 
     logging.debug("$ cp '{src}' '{dst}'".format(**vars()))
-    shutil.copyfile(src, dst)
+
+    src_checksum = checksum_file(src)
+    dst_checksum = checksum_file(dst)
+    if src_checksum != dst_checksum:
+        task_print("cp", src, dst)
+        shutil.copyfile(src, dst)
 
 
 def clone_git_repo(url, destination, version):
@@ -220,6 +239,7 @@ def clone_git_repo(url, destination, version):
 
     # clone repo if necessary
     if not os.path.isdir(destination):
+        task_print("Cloning git repository to {destination}".format(**vars()))
         shell('git clone --recursive "{url}" "{destination}"'.format(**vars()))
 
     if not os.path.isdir(os.path.join(destination, ".git")):
@@ -233,7 +253,6 @@ def clone_git_repo(url, destination, version):
     current_hash = shell_output("git rev-parse HEAD".format(**vars()))
 
     if current_hash != target_hash:
-        logging.info("setting repo version {destination} to {version}".format(**vars()))
         shell("git fetch --all")
         shell("git reset --hard '{version}'".format(**vars()))
 
