@@ -9,7 +9,7 @@ before_install:
   - uname -a
 
 script:
-  - ./configure -b
+  - ./configure
   - ./run --describe
   - ./run --debug
   - ./run --debug

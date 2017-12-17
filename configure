@@ -9,105 +9,34 @@ import sys
 from argparse import ArgumentParser
 
 
-DEFAULT_DOTFILES = os.path.dirname(os.path.realpath(__file__))
-DEFAULT_PRIVATE = os.path.expanduser("~/Dropbox/Shared")
-
-
-def yes_no(question, default="no"):
-    """Ask a yes/no question and return user's answer.
-
-    "question" is a string that is presented to the user.
-    "default" is the presumed answer if the user just hits <Enter>.
-        It must be "yes" (the default), "no" or None (meaning
-        an answer is required of the user).
-
-    The "answer" return value is True for "yes" or False for "no".
-    """
-    valid = {"yes": True, "y": True, "ye": True, True: True,
-             "no": False, "n": False, False: False}
-    if default is None:
-        prompt = " [y/n] "
-    elif default:
-        prompt = " [Y/n] "
-    else:
-        prompt = " [y/N] "
-
-    while True:
-        sys.stdout.write(question + prompt)
-        if sys.version_info >= (3, 0):
-            choice = input().lower()
-        else:
-            choice = raw_input().lower()
-
-        if default is not None and choice == '':
-            return valid[default]
-        elif choice in valid:
-            return valid[choice]
-        else:
-            sys.stdout.write("Please respond with 'yes' or 'no' "
-                             "(or 'y' or 'n').\n")
-
-
-def textinput(question, default=None):
-    """Ask a question and return user's answer.
-
-    "question" is a string that is presented to the user.
-    "default" is the presumed answer if the user just hits <Enter>.
-    """
-    if default is None:
-        prompt = " "
-    else:
-        prompt = " [default: {default}] ".format(default=default)
-
-    sys.stdout.write(question + prompt)
-    if sys.version_info >= (3, 0):
-        choice = input()
-    else:
-        choice = raw_input()
-
-    if default is not None and choice == '':
-        return default
-    else:
-        return choice
-
-
-def dirinput(question, default, mustexist=True):
-    path = textinput(question, default=default)
-    exist = os.path.isdir(path)
-    if mustexist and not exist:
-        print("Error: Directory does not exist!")
-        return dirinput(question, default, mustexist)
-    else:
-        return path
-
-
-def to_python(val):
-    return "True" if val else "False"
-
-
 def to_text(val):
     return "yes" if val else "no"
 
 
-def _abspath(path):
-    return os.path.abspath(os.path.expanduser(path))
+def json_to_stream(blob, stream):
+    json.dump(blob, stream, sort_keys=True, indent=4,
+              separators=(',', ': '))
+    print("", file=stream)
 
 
 def main():
     parser = ArgumentParser(description="Configure DeepSmith build.")
     parser.add_argument("-r", "--reconfigure", action="store_true",
                         help="re-run configuraiton using previous settings")
-    parser.add_argument("-b", "--batch", action="store_true",
-                        help="defaults all options to defaults. Override with:")
-    parser.add_argument("--dotfiles", metavar="<path>", default=DEFAULT_DOTFILES,
-                        help="path to dotfiles directory (default: {})".format(DEFAULT_DOTFILES))
-    parser.add_argument("--private", metavar="<path>", default=DEFAULT_PRIVATE,
-                        help="path to private directory (default: {})".format(DEFAULT_PRIVATE))
+    cwd = os.path.dirname(os.path.realpath(__file__))
+    parser.add_argument("--dotfiles", metavar="<path>", default=cwd,
+                        help="path to dotfiles directory (default: {})".format(cwd))
+    default_private = os.path.expanduser("~/Dropbox/Shared")
+    parser.add_argument("--private", metavar="<path>", default=default_private,
+                        help="path to private directory (default: {})".format(default_private))
+    parser.add_argument("--apple-id", metavar="<email>",
+                        help="Apple ID (e.g. example@email.com)")
     args = parser.parse_args()
 
     cfg = {
         "dotfiles": args.dotfiles,
-        "private": args.private
+        "private": args.private,
+        "apple_id": args.apple_id,
     }
 
     if args.reconfigure and os.path.exists(os.path.join(cfg["dotfiles"], ".config.json")):
@@ -118,14 +47,13 @@ def main():
             print("You must run ./configure first before you can use "
                   "the `-r` flag.", file=sys.stderr)
             sys.exit(1)
-    elif not args.batch:
-        # get input from user
-        cfg["dotfiles"] = dirinput("Path to dotfiles directory", cfg["dotfiles"])
-        cfg["private"] = dirinput("Path to private dotfiles directory", cfg["private"])
 
     # generate JSON config file
-    with open(os.path.join(cfg["dotfiles"], ".config.json"), "w") as outfile:
-        json.dump(cfg, outfile)
+    with open(os.path.join(cfg["dotfiles"], "config.json"), "w") as outfile:
+        json_to_stream(cfg, outfile)
+
+    # print configuration
+    json_to_stream(cfg, sys.stdout)
 
 
 if __name__ == "__main__":

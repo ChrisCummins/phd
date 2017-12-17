@@ -25,7 +25,7 @@ def get_platform():
 
 
 try:
-    with open(".config.json") as infile:
+    with open("config.json") as infile:
         _CFG = json.loads(infile.read())
 except:
     print("Error! Must run ./configure first")
@@ -33,6 +33,7 @@ except:
 
 DOTFILES = _CFG["dotfiles"]
 PRIVATE = _CFG["private"]
+APPLE_ID = _CFG["apple_id"]
 IS_TRAVIS_CI = os.environ.get("TRAVIS", False)
 
 LINUX_DISTROS = ['ubuntu']
