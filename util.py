@@ -234,7 +234,7 @@ def copy_file(src, dst):
         shutil.copyfile(src, dst)
 
 
-def clone_git_repo(url, destination, version):
+def clone_git_repo(url, destination, version=None):
     destination = os.path.abspath(os.path.expanduser(destination))
 
     # clone repo if necessary
@@ -246,17 +246,18 @@ def clone_git_repo(url, destination, version):
         raise OSError('directory "' + os.path.join(destination, ".git") +
                       '" does not exist')
 
-    # set revision
-    pwd = os.getcwd()
-    os.chdir(destination)
-    target_hash = shell_output("git rev-parse {version} 2>/dev/null".format(**vars()))
-    current_hash = shell_output("git rev-parse HEAD".format(**vars()))
+    if version:
+        # set revision
+        pwd = os.getcwd()
+        os.chdir(destination)
+        target_hash = shell_output("git rev-parse {version} 2>/dev/null".format(**vars()))
+        current_hash = shell_output("git rev-parse HEAD".format(**vars()))
 
-    if current_hash != target_hash:
-        shell("git fetch --all")
-        shell("git reset --hard '{version}'".format(**vars()))
+        if current_hash != target_hash:
+            shell("git fetch --all")
+            shell("git reset --hard '{version}'".format(**vars()))
 
-    os.chdir(pwd)
+        os.chdir(pwd)
 
 
 def is_runnable_task(obj):

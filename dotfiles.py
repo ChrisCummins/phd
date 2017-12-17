@@ -891,3 +891,12 @@ class Scripts(Task):
                     "~/.local/bin/ryan_gosling_have_my_music")
             symlink(usr_share("servers/orange.sh"),
                     "~/.local/bin/orange")
+
+
+class Phd(Task):
+    """ phd repo """
+    __platforms__ = ['linux', 'osx']
+    __genfiles__ = ['~/phd']
+
+    def run(self):
+        clone_git_repo("git@github.com:ChrisCummins/phd.git", "~/phd")
