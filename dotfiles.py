@@ -621,6 +621,7 @@ class HomebrewCasks(Task):
         'bartender': '/Applications/Bartender 3.app',
         'bettertouchtool': '/Applications/BetterTouchTool.app',
         'caffeine': '/Applications/Caffeine.app',
+        'dash': '/Applications/Dash.app',
         'disk-inventory-x': '/Applications/Disk Inventory X.app',
         'fantastical': '/Applications/Fantastical 2.app',
         'fluid': '/Applications/Fluid.app',
