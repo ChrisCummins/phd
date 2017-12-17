@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import json
+import subprocess
 
 from util import *
 
@@ -566,8 +567,8 @@ class MacOSConfig(Task):
             shell("touch " + os.path.expanduser("~/.hushlogin"))
 
 
-class MacOSApps(Task):
-    """ macOS applications """
+class HomebrewCasks(Task):
+    """ macOS homebrew binaries """
     CASKS = {
         'alfred': '/Applications/Alfred 3.app',
         'anki': '/Applications/Anki.app',
@@ -602,6 +603,62 @@ class MacOSApps(Task):
     def run(self):
         for cask in self.CASKS.keys():
             Homebrew().cask_install(cask)
+
+
+class AppStore(Task):
+    """ install mas app store command line """
+    __platforms__ = ['osx']
+    __deps__ = [Homebrew]
+
+    def run(self):
+        if not which('mas'):
+            Homebrew().install('mas')
+
+        # Check that dotfiles was configured with Apple ID
+        if not APPLE_ID:
+            print("\nerror: Apple ID not set! Run ./configure --apple-id <email>",
+                  file=sys.stderr)
+            sys.exit(1)
+
+        # Sign in to App Store using Apple ID. Note that if the user is
+        # already signed in, this process will fail. We catch and ignore this
+        # failure
+        try:
+            shell("mas signin --dialog " + APPLE_ID)
+        except subprocess.CalledProcessError:
+            pass
+
+    def install(self, package_id, package_dest):
+        if not os.path.exists(package_dest):
+            shell("mas install {package_id}".format(package_id=package_id))
+
+
+class AppStoreApps(Task):
+    """ install macOS apps from App Store """
+    APPS = {
+        1026566364: '/Applications/GoodNotes.app',
+        425424353: '/Applications/The Unarchiver.app',
+        409183694: '/Applications/Keynote.app',
+        967004861: '/Applications/HP Easy Scan.app',
+        443987910: '/Applications/1Password.app',
+        823766827: '/Applications/OneDrive.app',
+        668208984: '/Applications/GIPHY CAPTURE.app',
+        410628904: '/Applications/Wunderlist.app',
+        563362017: '/Applications/CloudClip Manager.app',
+        425264550: '/Applications/Blackmagic Disk Speed Test.app',
+        420212497: '/Applications/Byword.app',
+        1147396723: '/Applications/WhatsApp.app',
+        409201541: '/Applications/Pages.app',
+        961632517: '/Applications/Be Focused Pro.app',
+    }
+
+    __platforms__ = ['osx']
+    __deps__ = [AppStore]
+    __genfiles__ = list(APPS.values())
+
+    def run(self):
+        for app_id in self.APPS.keys():
+            AppStore().install(app_id, self.APPS[app_id])
 
 
 class GpuStat(Task):
