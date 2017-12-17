@@ -364,12 +364,12 @@ class OhMyZsh(Task):
     def run(self):
         clone_git_repo("git@github.com:robbyrussell/oh-my-zsh.git",
                        "~/.oh-my-zsh",
-                       "66bae5a5deb7a053adfb05b38a93fe47295841eb")
+                       "c3b072eace1ce19a48e36c2ead5932ae2d2e06d9")
 
         # syntax highlighting
         clone_git_repo("git@github.com:zsh-users/zsh-syntax-highlighting.git",
                        "~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting",
-                       "ad522a091429ba180c930f84b2a023b40de4dbcc")
+                       "b07ada1255b74c25fbc96901f2b77dc4bd81de1a")
 
         # oh-my-zsh config
         symlink("~/.zsh/cec.zsh-theme", "~/.oh-my-zsh/custom/cec.zsh-theme")
@@ -425,6 +425,24 @@ class Git(Task):
             symlink(os.path.join(PRIVATE, "git", "gogsrc"), "~/.gogsrc")
 
 
+class GnuCoreutils(Task):
+    """ replace BSD utils with GNU """
+    __platforms__ = ['osx']
+    __genfiles__ = [    
+        '/usr/local/opt/coreutils/libexec/gnubin/cp',
+        '/usr/local/opt/gnu-sed/libexec/gnubin/sed',
+        '/usr/local/opt/gnu-tar/libexec/gnubin/tar',
+    ]
+
+    def run(self):
+        Homebrew().install('coreutils')
+        Homebrew().install('gnu-indent')
+        Homebrew().install('gnu-sed')
+        Homebrew().install('gnu-tar')
+        Homebrew().install('gnu-time')
+        Homebrew().install('gnu-which')
+
+
 class DiffSoFancy(Task):
     """ nice diff pager """
     VERSION = "0.11.4"
@@ -453,14 +471,24 @@ class Tmux(Task):
     """ tmux config """
     __platforms__ = ['linux', 'osx']
     __genfiles__ = ['~/.tmux.conf']
+    __osx_genfiles__ = ['/usr/local/bin/tmux']
+    __linux_genfiles__ = ['/usr/bin/tmux']
 
-    def run(self):
+    def run_osx(self):
+        Homebrew().install("tmux")
+        self.run_common()
+
+    def run_ubuntu(self):
+        Apt().install("tmux")
+        self.run_common()
+
+    def run_common(self):
         symlink(usr_share("tmux/tmux.conf"), "~/.tmux.conf")
 
 
 class Vim(Task):
     """ vim configuration """
-    VUNDLE_VERSION = "6497e37694cd2134ccc3e2526818447ee8f20f92"
+    VUNDLE_VERSION = "fcc204205e3305c4f86f07e09cd756c7d06f0f00"
 
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = [Homebrew]
@@ -553,12 +581,14 @@ class LaTeX(Task):
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = [Homebrew]
     __genfiles__ = []
+    __osx_genfiles__ = [
+        '/Library/TeX/Distributions/.DefaultTeX/Contents/Programs/texbin/pdflatex',
+        '/Applications/texstudio.app',
+    ]
 
     def run_osx(self):
-        self.__osx_genfiles__ = [
-            '/Library/TeX/Distributions/.DefaultTeX/Contents/Programs/texbin/pdflatex'
-        ]
         Homebrew().cask_install("mactex")
+        Homebrew().cask_install("texstudio")
         self.run()
 
     def run(self):
@@ -589,27 +619,34 @@ class HomebrewCasks(Task):
         'alfred': '/Applications/Alfred 3.app',
         'anki': '/Applications/Anki.app',
         'bartender': '/Applications/Bartender 3.app',
+        'bettertouchtool': '/Applications/BetterTouchTool.app',
         'caffeine': '/Applications/Caffeine.app',
-        'cmake': '/Applications/CMake.app',
         'disk-inventory-x': '/Applications/Disk Inventory X.app',
         'fantastical': '/Applications/Fantastical 2.app',
+        'fluid': '/Applications/Fluid.app',
         'flux': '/Applications/Flux.app',
+        'google-drive': '/Applications/Backup and Sync.app',
         'google-earth-pro': '/Applications/Google Earth Pro.app',
         'google-nik-collection': '/Applications/Nik Collection',
-        'google-photos-backup-and-sync': '/Applications/Backup and Sync.app',
+        'hipchat': '/Applications/HipChat.app',
+        'imageoptim': '/Applications/ImageOptim.app',
         'istat-menus': '/Applications/iStat Menus.app',
         'iterm2': '/Applications/iTerm.app',
+        'java': '/usr/bin/java',
         'mendeley': '/Applications/Mendeley Desktop.app',
+        'microsoft-office': '/Applications/Microsoft Word.app',
+        'mysqlworkbench': '/Applications/MySQLWorkbench.app',
         'omnifocus': '/Applications/OmniFocus.app',
         'omnigraffle': '/Applications/OmniGraffle.app',
         'omnioutliner': '/Applications/OmniOutliner.app',
         'omnipresence': '/Applications/OmniPresence.app',
         'plex-media-player': '/Applications/Plex Media Player.app',
+        'skype': '/Applications/Skype.app',
         'steam': '/Applications/Steam.app',
-        'texstudio': '/Applications/texstudio.app',
         'transmission': '/Applications/Transmission.app',
         'tunnelblick': '/Applications/Tunnelblick.app',
         'vlc': '/Applications/VLC.app',
+        'wacom-intuos-tablet': '/Applications/Wacom Tablet.localized',
     }
 
     __platforms__ = ['osx']
@@ -725,6 +762,72 @@ class HTop(Task):
 
     def run_ubuntu(self):
         Apt().install("htop")
+
+
+class Bazel(Task):
+    """ bazel build system """
+    __platforms__ = ['linux', 'osx']
+    __osx_deps__ = [Homebrew]
+    __osx_genfiles__ = ['/usr/local/bin/bazel']
+    __linux_genfiles__ = ['/usr/bin/bazel']
+
+    def run_osx(self):
+        Homebrew().install('bazel')
+
+    def run_ubuntu(self):
+        Apt().install("bazel")
+
+
+class CMake(Task):
+    """ cmake build system """
+    __platforms__ = ['linux', 'osx']
+    __osx_deps__ = [Homebrew]
+    __osx_genfiles__ = ['/usr/local/bin/cmake']
+    __linux_genfiles__ = ['/usr/bin/cmake']
+
+    def run_osx(self):
+        Homebrew().install('cmake')
+
+    def run_ubuntu(self):
+        Apt().install("cmake")
+
+
+class Wget(Task):
+    """ wget """
+    __platforms__ = ['osx']
+    __deps__ = [Homebrew]
+    __genfiles__ = ['/usr/local/bin/wget']
+
+    def run(self):
+        Homebrew().install('wget')
+
+
+class Protobuf(Task):
+    """ protocol buffers """
+    __platforms__ = ['linux', 'osx']
+    __osx_deps__ = [Homebrew]
+    __osx_genfiles__ = ['/usr/local/bin/protoc']
+    __linux_genfiles__ = ['/usr/bin/protoc']
+
+    def run_osx(self):
+        Homebrew().install('protobuf')
+
+    def run_ubuntu(self):
+        Apt().install("protobuf")
+
+
+class Sloccount(Task):
+    """ source line count """
+    __platforms__ = ['linux', 'osx']
+    __osx_deps__ = [Homebrew]
+    __osx_genfiles__ = ['/usr/local/bin/sloccount']
+    __linux_genfiles__ = ['/usr/bin/sloccount']
+
+    def run_osx(self):
+        Homebrew().install('sloccount')
+
+    def run_ubuntu(self):
+        Apt().install("sloccount")
 
 
 class Emu(Task):
