@@ -432,6 +432,7 @@ class Git(Task):
 class GnuCoreutils(Task):
     """ replace BSD utils with GNU """
     __platforms__ = ['osx']
+    __deps__ = [Homebrew]
     __genfiles__ = [
         '/usr/local/opt/coreutils/libexec/gnubin/cp',
         '/usr/local/opt/gnu-sed/libexec/gnubin/sed',
