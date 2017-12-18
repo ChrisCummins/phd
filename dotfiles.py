@@ -614,10 +614,11 @@ class AdobeCreativeCloud(Task):
     __deps__ = [Homebrew]
 
     def run(self):
-        if not os.path.exists('/Applications/Adobe\ Lightroom\ Classic\ CC/Adobe\ Lightroom\ Classic\ CC.app'):
+        self.installed = False
+        if not os.path.exists('/Applications/Adobe Lightroom Classic CC/Adobe Lightroom Classic CC.app'):
             Homebrew().cask_install('adobe-creative-cloud')
             self.installed = True
-        if not os.path.exists('/Application/Nik Collection'):
+        if not os.path.exists('/Applications/Nik Collection'):
             Homebrew().cask_install('google-nik-collection')
             self.installed = True
 
