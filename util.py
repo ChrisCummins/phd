@@ -228,7 +228,7 @@ def copy_file(src, dst):
     logging.debug("$ cp '{src}' '{dst}'".format(**vars()))
 
     src_checksum = checksum_file(src)
-    dst_checksum = checksum_file(dst)
+    dst_checksum = checksum_file(dst) if os.path.exists(dst) else None
     if src_checksum != dst_checksum:
         task_print("cp", src, dst)
         shutil.copyfile(src, dst)
