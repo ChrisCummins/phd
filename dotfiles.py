@@ -19,7 +19,7 @@ class Homebrew(Task):
     def run(self):
         if not which('brew'):
             task_print("Installing Homebrew")
-            shell('/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"')
+            shell('yes '' | /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"')
             shell('brew update')
             shell('brew doctore')
 
