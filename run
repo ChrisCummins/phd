@@ -14,33 +14,46 @@ from util import *
 from dotfiles import *
 
 
-def get_tasks():
-    """ generate the list of tasks to run, respecting dependencies """
-    tasks = [x[1]() for x in inspect.getmembers(sys.modules[__name__], is_runnable_task)]
-    tasks = sorted(tasks, key=lambda task: type(task).__name__)
+def schedule_task(task, schedule, all_tasks):
+    # Build a list of dependencies:
+    deps = getattr(task, "__deps__", [])
+    deps += getattr(task, "__" + PLATFORM + "_deps__", [])
 
-    queue = deque(tasks)
-    scheduled = deque()
-    while len(queue):
-        task = queue.popleft()
+    # Check that all dependencies have already been scheduled:
+    for dep in deps:
+        dep = dep()
+        if dep not in schedule:
+            schedule_task(dep, schedule, all_tasks)
 
-        # Build a list of dependencies:
-        deps = getattr(task, "__deps__", [])
-        deps += getattr(task, "__" + PLATFORM + "_deps__", [])
+    if type(task) not in set(type(x) for x in schedule):
+        schedule.append(task)
 
-        # Check that all dependencies have already been scheduled:
-        for dep in deps:
-            if dep not in set(type(task) for task in scheduled):
-                # If a dependent task has not yet been scheduled, push the
-                # current task to the back of the queue:
-                logging.debug('punt ' + str(task) + ' for ' + str(dep()))
-                queue.append(task)
-                break
-        else:
-            # If all dependencies have been scheduled, schedule this task:
-            scheduled.append(task)
 
-    return scheduled
+def get_tasks_to_run(*task_names):
+    """ generate the list of tasks to run """
+    task_names = set(task_names)
+    all_tasks = set([x[1]() for x in inspect.getmembers(sys.modules[__name__], is_runnable_task)])
+
+    # Determine the tasks which need scheduling:
+    if len(task_names):
+        to_schedule = [x for x in all_tasks if type(x).__name__ in task_names]
+        if len(task_names) != len(to_schedule):
+            unknown = set(task_names) - set(type(x).__name__ for x in all_tasks)
+            print("error! unrecognized task(s):", ", ".join(unknown),
+                  file=sys.stderr)
+            sys.exit(1)
+    else:
+        # default to all tasks if none are specified:
+        to_schedule = all_tasks
+
+    # Build the schedule
+    to_schedule = deque(sorted(to_schedule, key=lambda t: type(t).__name__))
+    schedule = []
+    while len(to_schedule):
+        task = to_schedule.popleft()
+        schedule_task(task, schedule, all_tasks)
+
+    return deque(schedule)
 
 
 def main(*args):
@@ -48,6 +61,8 @@ def main(*args):
 
     # Parse arguments
     parser = ArgumentParser()
+    parser.add_argument('tasks', metavar='<task>', nargs='*',
+                        help="the name of tasks to run (default: all)")
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-v', '--verbose', action='store_true')
     group.add_argument('-D', '--debug', action='store_true')
@@ -65,7 +80,7 @@ def main(*args):
 
     # Get the list of tasks to run
     logging.debug("creating tasks list ...")
-    queue = get_tasks()
+    queue = get_tasks_to_run(*args.tasks)
     done = set()
     ntasks = len(queue)
 
