@@ -617,7 +617,7 @@ class AdobeCreativeCloud(Task):
 
     def run(self):
         self.installed = False
-        if not os.path.exists('/Applications/Adobe Creative Cloud/Adobe Creative Cloud'):
+        if not os.path.exists('/Applications/Adobe Lightroom CC/Adobe Lightroom CC.app'):
             Homebrew().cask_install('adobe-creative-cloud')
             self.installed = True
         if not os.path.exists('/Applications/Nik Collection'):
