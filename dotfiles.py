@@ -522,7 +522,6 @@ class Sublime(Task):
     __osx_genfiles__ = ['/usr/local/bin/subl', '/Applications/Sublime Text.app']
 
     def run_osx(self):
-        self.run()
         Homebrew().cask_install("sublime-text")
 
         # Put sublime text in PATH
@@ -538,6 +537,8 @@ class Sublime(Task):
             symlink("~/Library/Application Support/Sublime Text 3", "~/.subl")
             symlink(os.path.join(PRIVATE, "subl", "User"), "~/.subl/Packages/User")
             symlink(os.path.join(PRIVATE, "subl", "INI"), "~/.subl/Packages/INI")
+
+        self.run()
 
     def run(self):
         symlink(usr_share("Sublime Text/rsub"), "/usr/local/bin/rsub", sudo=True)
