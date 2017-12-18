@@ -156,8 +156,8 @@ class Ruby(Task):
         shell('rbenv global "{self.RUBY_VERSION}"'.format(**vars()))
 
         if not shell_ok("gem list --local | grep bundler"):
-            task_print("Installing bundler")
-            shell("gem install bundler")
+            task_print("gem install bundler")
+            shell("sudo gem install bundler")
 
 
 class Curl(Task):
