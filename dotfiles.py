@@ -602,6 +602,24 @@ class LaTeX(Task):
             symlink(usr_share("LaTeX", "cleanbib"), "~/.local/bin/cleanbib")
 
 
+class AdobeCreativeCloud(Task):
+    """ adobe creative cloud """
+    __platforms__ = ['osx']
+    __genfiles__ = [
+        '/usr/local/Caskroom/adobe-creative-cloud/latest/Creative Cloud Installer.app'
+    ]
+    __deps__ = [Homebrew]
+
+    def run(self):
+        Homebrew().cask_install('adobe-creative-cloud')
+
+    def teardown(self):
+        if self.installed:
+            print("NOTE: manual step required to complete creative cloud installation:")
+            print()
+            print("    $ open /usr/local/Caskroom/adobe-creative-cloud/latest/Creative Cloud Installer.app")
+
+
 class MacOSConfig(Task):
     """ macOS specific stuff """
     HUSHLOGIN = os.path.expanduser("~/.hushlogin")
