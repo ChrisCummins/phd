@@ -14,8 +14,7 @@ def to_text(val):
 
 
 def json_to_stream(blob, stream):
-    json.dump(blob, stream, sort_keys=True, indent=4,
-              separators=(',', ': '))
+    json.dump(blob, stream, sort_keys=True, indent=4, separators=(',', ': '))
     print("", file=stream)
 
 
@@ -28,12 +27,15 @@ DEFAULTS = {
 
 def main():
     parser = ArgumentParser(description="Configure dotfiles install.")
-    parser.add_argument("--dotfiles", metavar="<path>", default=DEFAULTS["dotfiles"],
-                        help="path to dotfiles directory (default: {})".format(DEFAULTS["dotfiles"]))
-    parser.add_argument("--private", metavar="<path>", default=DEFAULTS["private"],
-                        help="path to private directory (default: {})".format(DEFAULTS["private"]))
-    parser.add_argument("--apple-id", metavar="<email>", default=DEFAULTS["apple_id"],
-                        help="Apple ID (e.g. example@email.com)")
+    parser.add_argument(
+        "--dotfiles", metavar="<path>", default=DEFAULTS["dotfiles"],
+        help="path to dotfiles directory (default: {})".format(DEFAULTS["dotfiles"]))
+    parser.add_argument(
+        "--private", metavar="<path>", default=DEFAULTS["private"],
+        help="path to private directory (default: {})".format(DEFAULTS["private"]))
+    parser.add_argument(
+        "--apple-id", metavar="<email>", default=DEFAULTS["apple_id"],
+        help="Apple ID (e.g. example@email.com)")
     args = parser.parse_args()
 
     if os.path.exists("config.json"):
