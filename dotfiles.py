@@ -850,6 +850,7 @@ class JsonUtil(Task):
     JSONLINT_VERSION = "1.6.2"
 
     __platforms__ = ['linux', 'osx']
+    __deps__ = [Node]
     __osx_deps__ = [Homebrew]
     __genfiles__ = ['/usr/local/bin/jsonlint']
     __osx_genfiles__ = ['/usr/local/bin/jq']
