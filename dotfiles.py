@@ -217,7 +217,8 @@ class Dropbox(Task):
         if self.installed:
             print("NOTE: manual step required to complete dropbox installation:")
             print()
-            print("    $ ~/.dropbox-dist/dropboxd")
+            print("    $ " + Colors.BOLD + Colors.RED +
+                  "~/.dropbox-dist/dropboxd" + Colors.END)
 
 
 class Fluid(Task):
@@ -290,7 +291,7 @@ class Netdata(Task):
         if self.installed:
             print("NOTE: manual steps required to complete netdata installation:")
             print()
-            print("    $ crontab -e")
+            print("    $ " + Colors.BOLD + Colors.RED + "crontab -e" + Colors.END)
             print("    # append the following line to the end and save:")
             print("    @reboot ~/.dotfiles/usr/share/crontab/start-netdata.sh")
 
@@ -627,8 +628,12 @@ class AdobeCreativeCloud(Task):
         if self.installed:
             print("NOTE: manual step required to complete creative cloud installation:")
             print()
-            print("    $ open '/usr/local/Caskroom/adobe-creative-cloud/latest/Creative Cloud Installer.app'")
-            print("    $ open '/usr/local/Caskroom/google-nik-collection/1.2.11/Nik Collection.app'")
+            print("    $ " + Colors.BOLD + Colors.RED +
+                  "open '/usr/local/Caskroom/adobe-creative-cloud/latest/Creative Cloud Installer.app'" +
+                  Colors.END)
+            print("    $ " + Colors.BOLD + Colors.RED +
+                  "open '/usr/local/Caskroom/google-nik-collection/1.2.11/Nik Collection.app'" +
+                  Colors.END)
 
 
 class MacOSConfig(Task):
@@ -713,7 +718,8 @@ class AppStore(Task):
 
     def install(self, package_id, package_dest):
         if not os.path.exists(package_dest):
-            task_print("mas install", os.path.basename(package_dest)[:-4])
+            package_stub = os.path.basename(package_dest)[:-4]
+            task_print("mas install '{package_stub}'".format(**vars()))
             shell("mas install {package_id}".format(package_id=package_id))
 
 
