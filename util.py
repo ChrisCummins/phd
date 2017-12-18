@@ -300,3 +300,7 @@ class Apt(object):
         """ install a package using apt-get """
         if not shell_ok("dpkg -s '{package}' &>/dev/null".format(**vars())):
             shell("sudo apt-get install -y '{package}'".format(**vars()))
+
+    def update(self):
+        """ update package information """
+        shell("sudo apt-get update")

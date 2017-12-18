@@ -800,18 +800,38 @@ class HTop(Task):
         Apt().install("htop")
 
 
+class Java(Task):
+    """ java runtime and compiler """
+    __platforms__ = ['linux', 'osx']
+    __osx_deps__ = [Homebrew]
+
+    def run_osx(self):
+        Homebrew().cask_install('caskroom/versions/java8')
+
+    def run_ubuntu(self):
+        Apt().install("openjdk-8-jdk")
+
+
+
 class Bazel(Task):
     """ bazel build system """
     __platforms__ = ['linux', 'osx']
-    __osx_deps__ = [Homebrew]
+    __osx_deps__ = [Homebrew, Java]
     __osx_genfiles__ = ['/usr/local/bin/bazel']
     __linux_genfiles__ = ['/usr/bin/bazel']
 
     def run_osx(self):
-        Homebrew().cask_install('caskroom/versions/java8')
         Homebrew().install('bazel')
 
     def run_ubuntu(self):
+        # See: https://docs.bazel.build/versions/master/install-ubuntu.html
+
+        # Add Bazel distribution URY
+        shell('echo "deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list')
+        shell('curl https://bazel.build/bazel-release.pub.gpg | sudo apt-key add -')
+
+        # Install and update Bazel
+        Apt().update()
         Apt().install("bazel")
 
 
