@@ -606,18 +606,25 @@ class AdobeCreativeCloud(Task):
     """ adobe creative cloud """
     __platforms__ = ['osx']
     __genfiles__ = [
-        '/usr/local/Caskroom/adobe-creative-cloud/latest/Creative Cloud Installer.app'
+        '/usr/local/Caskroom/adobe-creative-cloud/latest/Creative Cloud Installer.app',
+        '/usr/local/Caskroom/google-nik-collection/1.2.11/Nik Collection.app',
     ]
     __deps__ = [Homebrew]
 
     def run(self):
-        Homebrew().cask_install('adobe-creative-cloud')
+        if not os.path.exists('/Applications/Adobe\ Lightroom\ Classic\ CC/Adobe\ Lightroom\ Classic\ CC.app'):
+            Homebrew().cask_install('adobe-creative-cloud')
+            self.installed = True
+        if not os.path.exists('/Application/Nik Collection'):
+            Homebrew().cask_install('google-nik-collection')
+            self.installed = True
 
     def teardown(self):
         if self.installed:
             print("NOTE: manual step required to complete creative cloud installation:")
             print()
-            print("    $ open /usr/local/Caskroom/adobe-creative-cloud/latest/Creative Cloud Installer.app")
+            print("    $ open '/usr/local/Caskroom/adobe-creative-cloud/latest/Creative Cloud Installer.app'")
+            print("    $ open '/usr/local/Caskroom/google-nik-collection/1.2.11/Nik Collection.app'")
 
 
 class MacOSConfig(Task):
@@ -649,7 +656,7 @@ class HomebrewCasks(Task):
         'flux': '/Applications/Flux.app',
         'google-drive': '/Applications/Backup and Sync.app',
         'google-earth-pro': '/Applications/Google Earth Pro.app',
-        'google-nik-collection': '/Applications/Nik Collection',
+        'google-photos-backup-and-sync': '/Applications/Backup and Sync.app',
         'hipchat': '/Applications/HipChat.app',
         'imageoptim': '/Applications/ImageOptim.app',
         'istat-menus': '/Applications/iStat Menus.app',
