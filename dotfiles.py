@@ -693,6 +693,20 @@ class HomebrewCasks(Task):
             Homebrew().cask_install(cask)
 
 
+class Trash(Task):
+    VERSION = '1.4.0'
+
+    __platforms__ = ['linux', 'osx']
+    __deps__ = [Node]
+    __genfiles__ = ['/usr/local/bin/trash']
+
+    def run(self):
+        Node().npm_install('trash-cli', self.VERSION)
+
+    def trash(self, path):
+        shell("trash {path}".format(**vars()))
+
+
 class AppStore(Task):
     """ install mas app store command line """
     __platforms__ = ['osx']
