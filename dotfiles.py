@@ -21,7 +21,7 @@ class Homebrew(Task):
             task_print("Installing Homebrew")
             shell('yes '' | /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"')
             shell('brew update')
-            shell('brew doctore')
+            shell('brew doctor')
 
     def install(self, package):
         """ install a package using homebrew """
