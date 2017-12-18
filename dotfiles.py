@@ -255,8 +255,8 @@ class SSH(Task):
                 "~/.ssh/id_rsa",
             ]
 
-            shell('chmod 600 "' + PRIVATE + '"/ssh/*')
             mkdir("~/.ssh")
+            shell('chmod 600 "' + PRIVATE + '"/ssh/*')
 
             for file in ['authorized_keys', 'known_hosts', 'config', 'id_rsa.ppk', 'id_rsa.pub']:
                 src = os.path.join(PRIVATE, "ssh", file)
@@ -266,8 +266,10 @@ class SSH(Task):
                     symlink(src, dst)
                 else:
                     copy_file(src, dst)
+                    shell("chmod 600 {dst}".format(**vars()))
 
             copy_file(os.path.join(PRIVATE, "ssh", "id_rsa"), "~/.ssh/id_rsa")
+            shell("chmod 600 ~/.ssh/id_rsa")
 
 
 class Netdata(Task):
