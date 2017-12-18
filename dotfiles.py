@@ -815,9 +815,11 @@ class HTop(Task):
 
 
 class Java(Task):
-    """ java runtime and compiler """
+    """ java8 runtime and compiler """
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = [Homebrew]
+    __osx_genfiles__ = ['/usr/local/Caskroom/java8']
+    __linux_genfiles__ = ['/usr/bin/java']
 
     def run_osx(self):
         Homebrew().cask_install('caskroom/versions/java8')
@@ -830,7 +832,8 @@ class Java(Task):
 class Bazel(Task):
     """ bazel build system """
     __platforms__ = ['linux', 'osx']
-    __osx_deps__ = [Homebrew, Java]
+    __deps__ = [Java]
+    __osx_deps__ = [Homebrew]
     __osx_genfiles__ = ['/usr/local/bin/bazel']
     __linux_genfiles__ = ['/usr/bin/bazel']
 
