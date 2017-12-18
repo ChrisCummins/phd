@@ -10,7 +10,7 @@ Compilers should produce correct code for valid inputs, and meaningful errors fo
 Random program generation --- fuzzing --- is an effective technique for discovering bugs in compilers but successful program generators require extensive development effort for every language supported by the compiler, and often leave parts of the language space untested. A better way for testing compilers is needed.
 
 % A novel approach for the rapid development of broad, undirected fuzzers
-We introduce DeepSmith, a novel approach which takes advantage of state-of-the-art deep learning techniques to automate and accelerate compiler validation. Our approach constructs a learned model of the structure of real world code based on a large corpus of open source code. Then, it uses the model to automatically generate tens of thousands of realistic programs. Finally, it applies established differential testing methodologies on them to expose bugs in compilers.
+We introduce DeepSmith, a novel approach which employs state-of-the-art deep learning techniques to automate and accelerate compiler validation. Our approach constructs a learned model of the structure of real world code based on a large corpus of open source code. Then, it uses the model to automatically generate tens of thousands of realistic programs. Finally, it applies established differential testing methodologies on them to expose bugs in compilers.
 
 We apply our approach to the OpenCL programming language, automatically exposing bugs in OpenCL compilers with little effort on our side. In 1,000 hours of automated testing of commercial and open source compilers, we discover bugs in all of them, %
 %
