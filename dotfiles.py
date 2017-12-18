@@ -78,6 +78,7 @@ class Python(Task):
 
     def run_osx(self):
         Homebrew().install("python")
+        Homebrew().install("python3")
         self._run_common()
 
     def run_ubuntu(self):
