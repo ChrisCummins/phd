@@ -191,7 +191,7 @@ class Dropbox(Task):
         mkdir("~/.local/bin")
         symlink(usr_share("Dropbox/dropbox.py"), "~/.local/bin/dropbox")
 
-        if (os.path.isdir(os.path.expanduser("~/Dropbox/Inbox")) and not 
+        if (os.path.isdir(os.path.expanduser("~/Dropbox/Inbox")) and not
             os.path.isdir(os.path.expanduser("~/Dropbox/Inbox"))):
             self.__genfiles__.append("~/Inbox")
             symlink("Dropbox/Inbox", "~/Inbox")
@@ -430,7 +430,7 @@ class Git(Task):
 class GnuCoreutils(Task):
     """ replace BSD utils with GNU """
     __platforms__ = ['osx']
-    __genfiles__ = [    
+    __genfiles__ = [
         '/usr/local/opt/coreutils/libexec/gnubin/cp',
         '/usr/local/opt/gnu-sed/libexec/gnubin/sed',
         '/usr/local/opt/gnu-tar/libexec/gnubin/tar',
@@ -532,8 +532,8 @@ class Sublime(Task):
 
         if os.path.isdir(os.path.join(PRIVATE, "subl")):
             self.__genfiles__ += [
-                "~/.subl", 
-                "~/.subl/Packages/User", 
+                "~/.subl",
+                "~/.subl/Packages/User",
                 "~/.subl/Packages/INI"
             ]
             symlink("~/Library/Application Support/Sublime Text 3", "~/.subl")
@@ -717,19 +717,19 @@ class AppStoreApps(Task):
     """ install macOS apps from App Store """
     APPS = {
         1026566364: '/Applications/GoodNotes.app',
-        425424353: '/Applications/The Unarchiver.app',
-        409183694: '/Applications/Keynote.app',
-        967004861: '/Applications/HP Easy Scan.app',
-        443987910: '/Applications/1Password.app',
-        823766827: '/Applications/OneDrive.app',
-        668208984: '/Applications/GIPHY CAPTURE.app',
-        410628904: '/Applications/Wunderlist.app',
-        563362017: '/Applications/CloudClip Manager.app',
-        425264550: '/Applications/Blackmagic Disk Speed Test.app',
-        420212497: '/Applications/Byword.app',
         1147396723: '/Applications/WhatsApp.app',
+        409183694: '/Applications/Keynote.app',
         409201541: '/Applications/Pages.app',
+        410628904: '/Applications/Wunderlist.app',
+        420212497: '/Applications/Byword.app',
+        425264550: '/Applications/Blackmagic Disk Speed Test.app',
+        425424353: '/Applications/The Unarchiver.app',
+        443987910: '/Applications/1Password.app',
+        563362017: '/Applications/CloudClip Manager.app',
+        668208984: '/Applications/GIPHY CAPTURE.app',
+        823766827: '/Applications/OneDrive.app',
         961632517: '/Applications/Be Focused Pro.app',
+        967004861: '/Applications/HP Easy Scan.app',
     }
 
     __platforms__ = ['osx']
