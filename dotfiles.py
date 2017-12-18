@@ -636,7 +636,6 @@ class HomebrewCasks(Task):
         'imageoptim': '/Applications/ImageOptim.app',
         'istat-menus': '/Applications/iStat Menus.app',
         'iterm2': '/Applications/iTerm.app',
-        'java': '/usr/bin/java',
         'mendeley': '/Applications/Mendeley Desktop.app',
         'microsoft-office': '/Applications/Microsoft Word.app',
         'mysqlworkbench': '/Applications/MySQLWorkbench.app',
@@ -775,6 +774,7 @@ class Bazel(Task):
     __linux_genfiles__ = ['/usr/bin/bazel']
 
     def run_osx(self):
+        Homebrew().cask_install('caskroom/versions/java8')
         Homebrew().install('bazel')
 
     def run_ubuntu(self):
