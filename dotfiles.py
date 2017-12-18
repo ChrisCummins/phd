@@ -654,7 +654,6 @@ class HomebrewCasks(Task):
         'fantastical': '/Applications/Fantastical 2.app',
         'fluid': '/Applications/Fluid.app',
         'flux': '/Applications/Flux.app',
-        'google-drive': '/Applications/Backup and Sync.app',
         'google-earth-pro': '/Applications/Google Earth Pro.app',
         'google-photos-backup-and-sync': '/Applications/Backup and Sync.app',
         'hipchat': '/Applications/HipChat.app',
