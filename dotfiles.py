@@ -39,7 +39,8 @@ class Homebrew(Task):
         if not os.path.isfile(self.CASK_LIST):
             shell("brew cask list > {self.CASK_LIST}".format(**vars()))
 
-        if not shell_ok("grep '^{package}$' <{self.CASK_LIST}".format(**vars())):
+        package_stump = package.split('/')[-1]
+        if not shell_ok("grep '^{package_stump}$' <{self.CASK_LIST}".format(**vars())):
             task_print("brew cask install " + package)
             shell("brew cask install {package}".format(**vars()))
 
