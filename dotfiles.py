@@ -720,20 +720,20 @@ class AppStore(Task):
 class AppStoreApps(Task):
     """ install macOS apps from App Store """
     APPS = {
-        1026566364: '/Applications/GoodNotes.app',
-        1147396723: '/Applications/WhatsApp.app',
-        409183694: '/Applications/Keynote.app',
-        409201541: '/Applications/Pages.app',
-        410628904: '/Applications/Wunderlist.app',
-        420212497: '/Applications/Byword.app',
-        425264550: '/Applications/Blackmagic Disk Speed Test.app',
-        425424353: '/Applications/The Unarchiver.app',
         443987910: '/Applications/1Password.app',
+        961632517: '/Applications/Be Focused Pro.app',
+        425264550: '/Applications/Blackmagic Disk Speed Test.app',
+        420212497: '/Applications/Byword.app',
         563362017: '/Applications/CloudClip Manager.app',
         668208984: '/Applications/GIPHY CAPTURE.app',
+        1026566364: '/Applications/GoodNotes.app',
+        409183694: '/Applications/Keynote.app',
+        784801555: '/Applications/Microsoft OneNote.app',
         823766827: '/Applications/OneDrive.app',
-        961632517: '/Applications/Be Focused Pro.app',
-        967004861: '/Applications/HP Easy Scan.app',
+        409201541: '/Applications/Pages.app',
+        425424353: '/Applications/The Unarchiver.app',
+        1147396723: '/Applications/WhatsApp.app',
+        410628904: '/Applications/Wunderlist.app',
     }
 
     __platforms__ = ['osx']
