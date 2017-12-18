@@ -648,7 +648,6 @@ class HomebrewCasks(Task):
         'transmission': '/Applications/Transmission.app',
         'tunnelblick': '/Applications/Tunnelblick.app',
         'vlc': '/Applications/VLC.app',
-        'wacom-intuos-tablet': '/Applications/Wacom Tablet.localized',
     }
 
     __platforms__ = ['osx']
