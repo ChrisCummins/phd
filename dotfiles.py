@@ -366,10 +366,19 @@ class Node(Task):
 
 
 class Zsh(Task):
-    """ zsh and config files """
+    """ zsh shell and config files """
+    OH_MY_ZSH_VERSION = 'c3b072eace1ce19a48e36c2ead5932ae2d2e06d9'
+    SYNTAX_HIGHLIGHTING_VERSION = 'b07ada1255b74c25fbc96901f2b77dc4bd81de1a'
+
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = [Homebrew]
-    __genfiles__ = ['~/.zshrc', '~/.zsh']
+    __genfiles__ = [
+        '~/.oh-my-zsh',
+        '~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting',
+        '~/.zsh',
+        '~/.zsh/cec.zsh-theme',
+        '~/.zshrc',
+    ]
     __osx_genfiles__ = ['/usr/local/bin/zsh']
     __linux_genfiles__ = ['/usr/bin/zsh']
 
@@ -385,6 +394,16 @@ class Zsh(Task):
             self.__genfiles__ += ["~/.zsh/private"]
             symlink(os.path.join(PRIVATE, "zsh"), "~/.zsh/private")
 
+        # oh-my-zsh
+        clone_git_repo("git@github.com:robbyrussell/oh-my-zsh.git",
+                       "~/.oh-my-zsh", self.OH_MY_ZSH_VERSION)
+        symlink("~/.zsh/cec.zsh-theme", "~/.oh-my-zsh/custom/cec.zsh-theme")
+
+        # syntax highlighting module
+        clone_git_repo("git@github.com:zsh-users/zsh-syntax-highlighting.git",
+                       "~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting",
+                       self.SYNTAX_HIGHLIGHTING_VERSION)
+
 
 class Autoenv(Task):
     """ 'cd' wrapper """
@@ -394,30 +413,6 @@ class Autoenv(Task):
 
     def run(self):
         Python().pip_install("autoenv", "1.0.0")
-
-
-class OhMyZsh(Task):
-    """ oh-my-zsh shell framework """
-    __platforms__ = ['linux', 'osx']
-    __deps__ = [Zsh]
-    __genfiles__ = [
-        '~/.oh-my-zsh',
-        '~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting',
-        '~/.zsh/cec.zsh-theme'
-    ]
-
-    def run(self):
-        clone_git_repo("git@github.com:robbyrussell/oh-my-zsh.git",
-                       "~/.oh-my-zsh",
-                       "c3b072eace1ce19a48e36c2ead5932ae2d2e06d9")
-
-        # syntax highlighting
-        clone_git_repo("git@github.com:zsh-users/zsh-syntax-highlighting.git",
-                       "~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting",
-                       "b07ada1255b74c25fbc96901f2b77dc4bd81de1a")
-
-        # oh-my-zsh config
-        symlink("~/.zsh/cec.zsh-theme", "~/.oh-my-zsh/custom/cec.zsh-theme")
 
 
 class Lmk(Task):
