@@ -235,12 +235,15 @@ def copy_file(src, dst):
 
 
 def clone_git_repo(url, destination, version=None):
+    """ clone a git repo, returns True if cloned """
     destination = os.path.abspath(os.path.expanduser(destination))
+    cloned = False
 
     # clone repo if necessary
     if not os.path.isdir(destination):
         task_print("Cloning git repository to {destination}".format(**vars()))
         shell('git clone --recursive "{url}" "{destination}"'.format(**vars()))
+        cloned = True
 
     if not os.path.isdir(os.path.join(destination, ".git")):
         raise OSError('directory "' + os.path.join(destination, ".git") +
@@ -258,6 +261,8 @@ def clone_git_repo(url, destination, version=None):
             shell("git reset --hard '{version}'".format(**vars()))
 
         os.chdir(pwd)
+
+    return cloned
 
 
 def is_runnable_task(obj):
