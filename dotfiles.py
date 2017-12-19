@@ -430,6 +430,28 @@ class Lmk(Task):
             symlink(os.path.join(PRIVATE, "lmk", "lmkrc"), "~/.lmkrc")
 
 
+class Emacs(Task):
+    """ emacs text editor and config """
+    PRELUDE_VERSION = 'f7d5d68d432319bb66a5f9410d2e4eadd584f498'
+
+    __platforms__ = ['linux', 'osx']
+    __osx_deps__ = [Homebrew]
+
+    def run_osx(self):
+        Homebrew().install_cask('emacs')
+        self._run_common()
+
+    def run_ubuntu(self):
+        Apt().install_package('emacs')
+        self._run_common()
+
+    def _run_common(self):
+        if clone_git_repo("git@github.com:bbatsov/prelude.git",
+                          "~/.emacs.d", self.PRELUDE_VERSION):
+            # prelude requires there be no ~/.emacs file on first run
+            Trash().trash('~/.emacs')
+
+
 class DSmith(Task):
     """ dsmith config """
     __platforms__ = ['ubuntu']
