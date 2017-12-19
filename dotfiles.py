@@ -227,8 +227,8 @@ class Dropbox(Task):
 
     def teardown(self):
         if self.installed:
-            print("NOTE: manual step required to complete dropbox installation:")
             print()
+            print("NOTE: manual step required to complete dropbox installation:")
             print("    $ " + Colors.BOLD + Colors.RED +
                   "~/.dropbox-dist/dropboxd" + Colors.END)
 
@@ -301,8 +301,8 @@ class Netdata(Task):
 
     def teardown(self):
         if self.installed:
-            print("NOTE: manual steps required to complete netdata installation:")
             print()
+            print("NOTE: manual steps required to complete netdata installation:")
             print("    $ " + Colors.BOLD + Colors.RED + "crontab -e" + Colors.END)
             print("    # append the following line to the end and save:")
             print("    @reboot ~/.dotfiles/usr/share/crontab/start-netdata.sh")
@@ -637,8 +637,10 @@ class AdobeCreativeCloud(Task):
     ]
     __deps__ = [Homebrew]
 
-    def run(self):
+    def __init__(self):
         self.installed = False
+
+    def run(self):
         if not os.path.exists('/Applications/Adobe Lightroom CC/Adobe Lightroom CC.app'):
             Homebrew().install_cask('adobe-creative-cloud')
             self.installed = True
@@ -648,8 +650,8 @@ class AdobeCreativeCloud(Task):
 
     def teardown(self):
         if self.installed:
-            print("NOTE: manual step required to complete creative cloud installation:")
             print()
+            print("NOTE: manual step required to complete creative cloud installation:")
             print("    $ " + Colors.BOLD + Colors.RED +
                   "open '/usr/local/Caskroom/adobe-creative-cloud/latest/Creative Cloud Installer.app'" +
                   Colors.END)
