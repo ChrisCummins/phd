@@ -465,6 +465,24 @@ class Git(Task):
             symlink(os.path.join(PRIVATE, "git", "gogsrc"), "~/.gogsrc")
 
 
+class Wallpaper(Task):
+    """ set desktop background """
+    WALLPAPERS = {
+        "diana": "~/Dropbox/Pictures/desktops/diana/Manhattan.jpg",
+        "florence": "~/Dropbox/Pictures/desktops/florence/Uluru.jpg",
+    }
+
+    __platforms__ = ['osx']
+
+    def run_osx(self):
+        if HOSTNAME in self.WALLPAPERS:
+            path = os.path.expanduser(self.WALLPAPERS[HOSTNAME])
+            if os.path.exists(path):
+                shell("osascript -e 'tell application \"Finder\" to set " +
+                      "desktop picture to POSIX file \"{path}\"'"
+                      .format(**vars()))
+
+
 class GnuCoreutils(Task):
     """ replace BSD utils with GNU """
     __platforms__ = ['osx']
