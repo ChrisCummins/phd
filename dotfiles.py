@@ -1039,6 +1039,7 @@ class Scripts(Task):
                 "~/.local/bin/ryan_gosling_have_my_photos",
                 "~/.local/bin/ryan_gosling_have_my_music",
                 "~/.local/bin/orange",
+                "~/.local/bin/orange_you_glad_you_backup",
             ]
             symlink(usr_share("servers/ryan_gosling_have_my_photos.sh"),
                     "~/.local/bin/ryan_gosling_have_my_photos")
@@ -1046,6 +1047,8 @@ class Scripts(Task):
                     "~/.local/bin/ryan_gosling_have_my_music")
             symlink(usr_share("servers/orange.sh"),
                     "~/.local/bin/orange")
+            symlink(usr_share("servers/orange_you_glad_you_backup.sh"),
+                    "~/.local/bin/orange_you_glad_you_backup")
 
 
 class Phd(Task):
