@@ -308,6 +308,16 @@ class Netdata(Task):
             print("    @reboot ~/.dotfiles/usr/share/crontab/start-netdata.sh")
 
 
+class WacomDriver(Task):
+    """ wacom tablet driver """
+    __platforms__ = ['osx']
+    __deps__ = [Homebrew]
+    __genfiles__ = []
+
+    def run(self):
+        Homebrew().install_cask('caskroom/drivers/wacom-intuos-tablet')
+
+
 class Node(Task):
     """ nodejs and npm """
     PKG_LIST = os.path.abspath(".npm-list.txt")
