@@ -6,6 +6,18 @@ import subprocess
 from util import *
 
 
+class Apt(object):
+    """ debian package manager """
+    def install_package(self, package):
+        """ install a package using apt-get """
+        if not shell_ok("dpkg -s '{package}' &>/dev/null".format(**vars())):
+            shell("sudo apt-get install -y '{package}'".format(**vars()))
+
+    def update(self):
+        """ update package information """
+        shell("sudo apt-get update")
+
+
 class Homebrew(Task):
     """ install homebrew package manager """
     PKG_LIST = os.path.abspath(".brew-list.txt")
@@ -23,7 +35,7 @@ class Homebrew(Task):
             shell('brew update')
             shell('brew doctor')
 
-    def install(self, package):
+    def install_package(self, package):
         """ install a package using homebrew """
         # Create the list of homebrew packages
         if not os.path.isfile(self.PKG_LIST):
@@ -33,7 +45,7 @@ class Homebrew(Task):
             task_print("brew install " + package)
             shell("brew install {package}".format(**vars()))
 
-    def cask_install(self, package):
+    def install_cask(self, package):
         """ install a homebrew cask """
         # Create the list of homebrew casks
         if not os.path.isfile(self.CASK_LIST):
@@ -77,13 +89,13 @@ class Python(Task):
     __tmpfiles__ = [PIP_LIST]
 
     def run_osx(self):
-        Homebrew().install("python")
-        Homebrew().install("python3")
+        Homebrew().install_package("python")
+        Homebrew().install_package("python3")
         self._run_common()
 
     def run_ubuntu(self):
-        Apt().install("python-pip")
-        Apt().install("software-properties-common")  # provides add-apt-repository
+        Apt().install_package("python-pip")
+        Apt().install_package("software-properties-common")  # provides add-apt-repository
         if not shell_ok("dpkg -s python3.6 &>/dev/null"):
             task_print("adding python-3.6 repository")
             shell("sudo add-apt-repository -y ppa:jonathonf/python-3.6")
@@ -135,7 +147,7 @@ class Unzip(Task):
     __genfiles__ = ['/usr/bin/unzip']
 
     def run_ubuntu(self):
-        Apt().install("unzip")
+        Apt().install_package("unzip")
 
 
 class Ruby(Task):
@@ -147,7 +159,7 @@ class Ruby(Task):
     __genfiles__ = ['~/.rbenv']
 
     def run_osx(self):
-        Homebrew().install("rbenv")
+        Homebrew().install_package("rbenv")
 
         # initialize rbenv if required
         if shell_ok("which rbenv &>/dev/null"):
@@ -169,10 +181,10 @@ class Curl(Task):
     __genfiles__ = ['/usr/bin/curl']
 
     def run_osx(self):
-        Homebrew().install("curl")
+        Homebrew().install_package("curl")
 
     def run_ubuntu(self):
-        Apt().install("curl")
+        Apt().install_package("curl")
 
 
 class Dropbox(Task):
@@ -202,7 +214,7 @@ class Dropbox(Task):
                     "~/.local/bin/dropbox-find-conflicts")
 
     def run_osx(self):
-        Homebrew().cask_install("dropbox")
+        Homebrew().install_cask("dropbox")
         self._run_common()
 
     def run_linux(self):
@@ -228,7 +240,7 @@ class Fluid(Task):
     __genfiles__ = ['/Applications/Fluid.app']
 
     def run_osx(self):
-        Homebrew().cask_install("fluid")
+        Homebrew().install_cask("fluid")
 
         if os.path.isdir(PRIVATE + "/fluid.apps"):
             for app in os.listdir(PRIVATE + "/fluid.apps"):
@@ -307,11 +319,11 @@ class Node(Task):
     __tmpfiles__ = [PKG_LIST]
 
     def run_osx(self):
-        Homebrew().install("node")
+        Homebrew().install_package("node")
 
     def run_ubuntu(self):
-        Apt().install("nodejs")
-        Apt().install("npm")
+        Apt().install_package("nodejs")
+        Apt().install_package("npm")
         symlink("/usr/bin/nodejs", "/usr/bin/node", sudo=True)
 
     def npm_install(self, package, version):
@@ -334,7 +346,7 @@ class Zsh(Task):
     __linux_genfiles__ = ['/usr/bin/zsh']
 
     def run_osx(self):
-        Homebrew().install("zsh")
+        Homebrew().install_package("zsh")
         self.run()
 
     def run(self):
@@ -413,11 +425,11 @@ class Git(Task):
     __genfiles__ = ['~/.gitconfig']
 
     def run_ubuntu(self):
-        Apt().install('git')
+        Apt().install_package('git')
         self.run()
 
     def run_osx(self):
-        Homebrew().install('git')
+        Homebrew().install_package('git')
         self.run()
 
     def run(self):
@@ -441,12 +453,12 @@ class GnuCoreutils(Task):
     ]
 
     def run(self):
-        Homebrew().install('coreutils')
-        Homebrew().install('gnu-indent')
-        Homebrew().install('gnu-sed')
-        Homebrew().install('gnu-tar')
-        Homebrew().install('gnu-time')
-        Homebrew().install('gnu-which')
+        Homebrew().install_package('coreutils')
+        Homebrew().install_package('gnu-indent')
+        Homebrew().install_package('gnu-sed')
+        Homebrew().install_package('gnu-tar')
+        Homebrew().install_package('gnu-time')
+        Homebrew().install_package('gnu-which')
 
 
 class DiffSoFancy(Task):
@@ -481,11 +493,11 @@ class Tmux(Task):
     __linux_genfiles__ = ['/usr/bin/tmux']
 
     def run_osx(self):
-        Homebrew().install("tmux")
+        Homebrew().install_package("tmux")
         self.run_common()
 
     def run_ubuntu(self):
-        Apt().install("tmux")
+        Apt().install_package("tmux")
         self.run_common()
 
     def run_common(self):
@@ -503,11 +515,11 @@ class Vim(Task):
     __linux_genfiles__ = ['/usr/bin/vim']
 
     def run_osx(self):
-        Homebrew().install('vim')
+        Homebrew().install_package('vim')
         self.run()
 
     def run_ubuntu(self):
-        Apt().install('vim')
+        Apt().install_package('vim')
         self.run()
 
     def run(self):
@@ -528,7 +540,7 @@ class Sublime(Task):
     __osx_genfiles__ = ['/usr/local/bin/subl', '/Applications/Sublime Text.app']
 
     def run_osx(self):
-        Homebrew().cask_install("sublime-text")
+        Homebrew().install_cask("sublime-text")
 
         # Put sublime text in PATH
         symlink("/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl",
@@ -556,7 +568,7 @@ class Ssmtp(Task):
     __genfiles__ = ["/usr/sbin/ssmtp"]
 
     def run_ubuntu(self):
-        Apt().install("ssmtp")
+        Apt().install_package("ssmtp")
 
         if os.path.isdir(os.path.join(PRIVATE, "ssmtp")):
             self.__genfiles__ += ["/etc/ssmtp/ssmtp.conf"]
@@ -594,8 +606,8 @@ class LaTeX(Task):
     ]
 
     def run_osx(self):
-        Homebrew().cask_install("mactex")
-        Homebrew().cask_install("texstudio")
+        Homebrew().install_cask("mactex")
+        Homebrew().install_cask("texstudio")
         self.run()
 
     def run(self):
@@ -618,10 +630,10 @@ class AdobeCreativeCloud(Task):
     def run(self):
         self.installed = False
         if not os.path.exists('/Applications/Adobe Lightroom CC/Adobe Lightroom CC.app'):
-            Homebrew().cask_install('adobe-creative-cloud')
+            Homebrew().install_cask('adobe-creative-cloud')
             self.installed = True
         if not os.path.exists('/Applications/Nik Collection'):
-            Homebrew().cask_install('google-nik-collection')
+            Homebrew().install_cask('google-nik-collection')
             self.installed = True
 
     def teardown(self):
@@ -690,7 +702,7 @@ class HomebrewCasks(Task):
 
     def run(self):
         for cask in self.CASKS.keys():
-            Homebrew().cask_install(cask)
+            Homebrew().install_cask(cask)
 
 
 class Trash(Task):
@@ -714,7 +726,7 @@ class AppStore(Task):
 
     def run(self):
         if not which('mas'):
-            Homebrew().install('mas')
+            Homebrew().install_package('mas')
 
         # Check that dotfiles was configured with Apple ID
         if not APPLE_ID:
@@ -730,7 +742,7 @@ class AppStore(Task):
         except subprocess.CalledProcessError:
             pass
 
-    def install(self, package_id, package_dest):
+    def install_package(self, package_id, package_dest):
         if not os.path.exists(package_dest):
             package_stub = os.path.basename(package_dest)[:-4]
             task_print("mas install '{package_stub}'".format(**vars()))
@@ -762,7 +774,7 @@ class AppStoreApps(Task):
 
     def run(self):
         for app_id in self.APPS.keys():
-            AppStore().install(app_id, self.APPS[app_id])
+            AppStore().install_package(app_id, self.APPS[app_id])
 
 
 class GpuStat(Task):
@@ -783,7 +795,7 @@ class IOTop(Task):
     __genfiles__ = ['/usr/sbin/iotop']
 
     def run_ubuntu(self):
-        Apt().install("iotop")
+        Apt().install_package("iotop")
 
 
 class Ncdu(Task):
@@ -794,10 +806,10 @@ class Ncdu(Task):
     __linux_genfiles__ = ['/usr/bin/ncdu']
 
     def run_osx(self):
-        Homebrew().install("ncdu")
+        Homebrew().install_package("ncdu")
 
     def run_ubuntu(self):
-        Apt().install("ncdu")
+        Apt().install_package("ncdu")
 
 
 class HTop(Task):
@@ -808,10 +820,10 @@ class HTop(Task):
     __linux_genfiles__ = ['/usr/bin/htop']
 
     def run_osx(self):
-        Homebrew().install("htop")
+        Homebrew().install_package("htop")
 
     def run_ubuntu(self):
-        Apt().install("htop")
+        Apt().install_package("htop")
 
 
 class Java(Task):
@@ -822,10 +834,10 @@ class Java(Task):
     __linux_genfiles__ = ['/usr/bin/java']
 
     def run_osx(self):
-        Homebrew().cask_install('caskroom/versions/java8')
+        Homebrew().install_cask('caskroom/versions/java8')
 
     def run_ubuntu(self):
-        Apt().install("openjdk-8-jdk")
+        Apt().install_package("openjdk-8-jdk")
 
 
 
@@ -838,7 +850,7 @@ class Bazel(Task):
     __linux_genfiles__ = ['/usr/bin/bazel']
 
     def run_osx(self):
-        Homebrew().install('bazel')
+        Homebrew().install_package('bazel')
 
     def run_ubuntu(self):
         # See: https://docs.bazel.build/versions/master/install-ubuntu.html
@@ -849,7 +861,7 @@ class Bazel(Task):
 
         # Install and update Bazel
         Apt().update()
-        Apt().install("bazel")
+        Apt().install_package("bazel")
 
 
 class CMake(Task):
@@ -860,10 +872,10 @@ class CMake(Task):
     __linux_genfiles__ = ['/usr/bin/cmake']
 
     def run_osx(self):
-        Homebrew().install('cmake')
+        Homebrew().install_package('cmake')
 
     def run_ubuntu(self):
-        Apt().install("cmake")
+        Apt().install_package("cmake")
 
 
 class Wget(Task):
@@ -873,7 +885,7 @@ class Wget(Task):
     __genfiles__ = ['/usr/local/bin/wget']
 
     def run(self):
-        Homebrew().install('wget')
+        Homebrew().install_package('wget')
 
 
 class Protobuf(Task):
@@ -884,10 +896,10 @@ class Protobuf(Task):
     __linux_genfiles__ = ['/usr/bin/protoc']
 
     def run_osx(self):
-        Homebrew().install('protobuf')
+        Homebrew().install_package('protobuf')
 
     def run_ubuntu(self):
-        Apt().install("protobuf")
+        Apt().install_package("protobuf")
 
 
 class Sloccount(Task):
@@ -898,10 +910,10 @@ class Sloccount(Task):
     __linux_genfiles__ = ['/usr/bin/sloccount']
 
     def run_osx(self):
-        Homebrew().install('sloccount')
+        Homebrew().install_package('sloccount')
 
     def run_ubuntu(self):
-        Apt().install("sloccount")
+        Apt().install_package("sloccount")
 
 
 class Emu(Task):
@@ -929,11 +941,11 @@ class JsonUtil(Task):
     __linux_genfiles__ = ['/usr/bin/jq']
 
     def run_osx(self):
-        Homebrew().install("jq")
+        Homebrew().install_package("jq")
         self._run_common()
 
     def run_ubuntu(self):
-        Apt().install("jq")
+        Apt().install_package("jq")
         self._run_common()
 
     def _run_common(self):

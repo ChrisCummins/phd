@@ -293,14 +293,3 @@ def usr_share(*components, **kwargs):
     if must_exist and not os.path.exists(path):
         raise OSError(str(path) + " not found")
     return path
-
-
-class Apt(object):
-    def install(self, package):
-        """ install a package using apt-get """
-        if not shell_ok("dpkg -s '{package}' &>/dev/null".format(**vars())):
-            shell("sudo apt-get install -y '{package}'".format(**vars()))
-
-    def update(self):
-        """ update package information """
-        shell("sudo apt-get update")
