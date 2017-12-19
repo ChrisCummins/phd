@@ -288,6 +288,7 @@ def get_task_method(task, method_name):
 
 
 def usr_share(*components, **kwargs):
+    """ fetch path to repo data """
     must_exist = kwargs.get("must_exist", True)
     path = os.path.join(DOTFILES, "usr", "share", *components)
     if must_exist and not os.path.exists(path):
