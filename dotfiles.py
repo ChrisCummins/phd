@@ -316,10 +316,23 @@ class WacomDriver(Task):
     """ wacom tablet driver """
     __platforms__ = ['osx']
     __deps__ = [Homebrew]
-    __genfiles__ = []
+    __genfiles__ = ['/Applications/Wacom Tablet.localized']
+
+    def __init__(self):
+        self.installed = False
 
     def run(self):
-        Homebrew().install_cask('caskroom/drivers/wacom-intuos-tablet')
+        if Homebrew().install_cask('caskroom/drivers/wacom-intuos-tablet'):
+            self.installed = True
+
+    def teardown(self):
+        if self.installed:
+            print()
+            print("NOTE: manual steps required to complete Wacom driver setup:")
+            print("    " + Colors.BOLD + Colors.RED +
+                  "Enable Wacom kernel extension in System Preferences > Security & Privacy" +
+                  Colors.END)
+
 
 
 class Node(Task):
