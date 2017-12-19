@@ -759,7 +759,8 @@ class Trash(Task):
         Node().npm_install('trash-cli', self.VERSION)
 
     def trash(self, path):
-        shell("trash {path}".format(**vars()))
+        path = os.path.expanduser(path)
+        shell("trash '{path}'".format(**vars()))
 
 
 class AppStore(Task):
