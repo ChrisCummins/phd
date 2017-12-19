@@ -7,11 +7,12 @@ from util import *
 
 
 class Apt(object):
-    """ debian package manager """
+    """ debian package manager, return True if installed """
     def install_package(self, package):
         """ install a package using apt-get """
         if not shell_ok("dpkg -s '{package}' &>/dev/null".format(**vars())):
             shell("sudo apt-get install -y '{package}'".format(**vars()))
+            return True
 
     def update(self):
         """ update package information """
@@ -36,7 +37,7 @@ class Homebrew(Task):
             shell('brew doctor')
 
     def install_package(self, package):
-        """ install a package using homebrew """
+        """ install a package using homebrew, return True if installed """
         # Create the list of homebrew packages
         if not os.path.isfile(self.PKG_LIST):
             shell("brew list > {self.PKG_LIST}".format(**vars()))
@@ -44,9 +45,10 @@ class Homebrew(Task):
         if not shell_ok("grep '^{package}$' <{self.PKG_LIST}".format(**vars())):
             task_print("brew install " + package)
             shell("brew install {package}".format(**vars()))
+            return True
 
     def install_cask(self, package):
-        """ install a homebrew cask """
+        """ install a homebrew cask, return True if installed """
         # Create the list of homebrew casks
         if not os.path.isfile(self.CASK_LIST):
             shell("brew cask list > {self.CASK_LIST}".format(**vars()))
@@ -55,6 +57,7 @@ class Homebrew(Task):
         if not shell_ok("grep '^{package_stump}$' <{self.CASK_LIST}".format(**vars())):
             task_print("brew cask install " + package)
             shell("brew cask install {package}".format(**vars()))
+            return True
 
 
 class HomebrewCaskOutdated(Task):
@@ -119,7 +122,7 @@ class Python(Task):
             shell("sudo -H pip2 install --upgrade 'pip=={self.PIP_VERSION}'".format(**vars()))
 
     def pip_install(self, package, version, pip="pip2", sudo=False):
-        """ install a package using pip """
+        """ install a package using pip, return True if installed """
         use_sudo = "sudo -H " if sudo else ""
 
         # Create the list of pip packages
@@ -139,6 +142,7 @@ class Python(Task):
         if pkg_str not in data[pip]:
             task_print("pip install {package}=={version}".format(**vars()))
             shell("{use_sudo} {pip} install {package}=={version}".format(**vars()))
+            return True
 
 
 class Unzip(Task):
@@ -197,7 +201,7 @@ class Dropbox(Task):
     __linux_genfiles__ = ["~/.dropbox-dist/dropboxd"]
 
     def __init__(self):
-        self.installed = False
+        self.installed_on_ubuntu = False
 
     def _run_common(self):
         mkdir("~/.local/bin")
@@ -222,11 +226,11 @@ class Dropbox(Task):
             and not IS_TRAVIS_CI):  # skip on Travis CI:
             task_print("Installing Dropbox")
             shell('cd - && wget -O - "{self.UBUNTU_URL}" | tar xzf -'.format(**vars()))
-            self.installed = True
+            self.installed_on_ubuntu = True
         self._run_common()
 
     def teardown(self):
-        if self.installed:
+        if self.installed_on_ubuntu:
             print()
             print("NOTE: manual step required to complete dropbox installation:")
             print("    $ " + Colors.BOLD + Colors.RED +
@@ -337,7 +341,7 @@ class Node(Task):
         symlink("/usr/bin/nodejs", "/usr/bin/node", sudo=True)
 
     def npm_install(self, package, version):
-        """ install a package using npm """
+        """ install a package using npm, return True if installed """
         # Create the list of npm packages
         if not os.path.isfile(self.PKG_LIST):
             shell("npm list -g > {self.PKG_LIST}".format(**vars()))
@@ -345,6 +349,7 @@ class Node(Task):
         if not shell_ok("grep '{package}@{version}' <{self.PKG_LIST}".format(**vars())):
             task_print("npm install -g {package}@{version}".format(**vars()))
             shell("sudo npm install -g {package}@{version}".format(**vars()))
+            return True
 
 
 class Zsh(Task):
@@ -754,11 +759,13 @@ class AppStore(Task):
         except subprocess.CalledProcessError:
             pass
 
-    def install_package(self, package_id, package_dest):
+    def install_app(self, package_id, package_dest):
+        """ install package from App Store, return True if installed """
         if not os.path.exists(package_dest):
             package_stub = os.path.basename(package_dest)[:-4]
             task_print("mas install '{package_stub}'".format(**vars()))
             shell("mas install {package_id}".format(package_id=package_id))
+            return True
 
 
 class AppStoreApps(Task):
@@ -786,7 +793,7 @@ class AppStoreApps(Task):
 
     def run(self):
         for app_id in self.APPS.keys():
-            AppStore().install_package(app_id, self.APPS[app_id])
+            AppStore().install_app(app_id, self.APPS[app_id])
 
 
 class GpuStat(Task):
