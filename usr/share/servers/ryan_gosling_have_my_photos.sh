@@ -21,7 +21,7 @@ fi
 
 set -x
 
-# rm-dsstore "$src"
+# copy from source to dest, excluding Lightroom Previews:
 rsync -avh --delete "$src" "$dst" \
     --exclude "*.lrcat-journal" \
     --exclude "*.lrcat.lock" \
@@ -35,5 +35,4 @@ rsync -avh --delete "$src" "$dst" \
     --exclude "/.Trashes" \
     --exclude "/.VolumeIcon.icns" \
     --exclude "/.VolumeIcon.ico" \
-    --exclude "/autorun.inf" \
-    --exclude "Mobile Downloads.lrdata"
+    --exclude "/autorun.inf"

@@ -32,7 +32,6 @@ echo "================================================================="
 rsync -avh --delete "$src/" "$dst/" \
     --exclude "*.lrcat-journal" \
     --exclude "*.lrcat.lock" \
-    --exclude "*.lrdata" \
     --exclude "._.DS_Store" \
     --exclude ".DS_Store" \
     --exclude ".sync.ffs_db" \
@@ -42,8 +41,7 @@ rsync -avh --delete "$src/" "$dst/" \
     --exclude "/.Trashes" \
     --exclude "/.VolumeIcon.icns" \
     --exclude "/.VolumeIcon.ico" \
-    --exclude "/autorun.inf" \
-    --exclude "Mobile Downloads.lrdata"
+    --exclude "/autorun.inf"
 echo "================================================================="
 echo
 stats
