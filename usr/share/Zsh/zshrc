@@ -355,6 +355,10 @@ alias pingg='ping -c 3 www.google.com'
 # Print a table of all defined aliases.
 alias ls_alias="alias | sed 's/=/\t/' | sed -r 's/'"'"(.*)"'"'/\1/' | column -t -s$'\t'"
 
+# Open an emacs terminal to magit in the current directory
+alias magit="emacs -nw --eval '(progn (magit-status) (delete-other-windows))'"
+alias mg=magit
+
 
 # --------------------------------------------------------------------------
 # OS-specific configuration.
