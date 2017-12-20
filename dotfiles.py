@@ -836,6 +836,12 @@ class AppStoreApps(Task):
         410628904: '/Applications/Wunderlist.app',
     }
 
+    HOST_APPS = {
+        "diana": {
+            883878097: '/Applications/Server.app'
+        },
+    }
+
     __platforms__ = ['osx']
     __deps__ = [AppStore]
     __genfiles__ = list(APPS.values())
@@ -843,6 +849,9 @@ class AppStoreApps(Task):
     def install(self):
         for app_id in self.APPS.keys():
             AppStore().install_app(app_id, self.APPS[app_id])
+
+        for app_id in self.HOST_APPS.get(HOSTNAME, dict()):
+            AppStore().install_app(app_id, self.HOST_APPS[HOSTNAME][app_id])
 
 
 class GpuStat(Task):
