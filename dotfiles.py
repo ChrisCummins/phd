@@ -29,7 +29,7 @@ class Homebrew(Task):
     __genfiles__ = ['/usr/local/bin/brew']
     __tmpfiles__ = [PKG_LIST, CASK_LIST]
 
-    def run(self):
+    def install(self):
         if not which('brew'):
             task_print("Installing Homebrew")
             shell('yes '' | /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"')
@@ -70,7 +70,7 @@ class HomebrewCaskOutdated(Task):
     __deps__ = [Homebrew]
     __genfiles__ = ['~/.local/bin/brew-cask-outdated']
 
-    def run(self):
+    def install(self):
         if not which('brew-cask-outdated'):
             task_print("Installing brew-cask-outdated")
             mkdir("~/.local/bin")
@@ -91,12 +91,12 @@ class Python(Task):
     __linux_genfiles__ = ['~/.local/bin/pip2']
     __tmpfiles__ = [PIP_LIST]
 
-    def run_osx(self):
+    def install_osx(self):
         Homebrew().install_package("python")
         Homebrew().install_package("python3")
-        self._run_common()
+        self._install_common()
 
-    def run_ubuntu(self):
+    def install_ubuntu(self):
         Apt().install_package("python-pip")
         Apt().install_package("software-properties-common")  # provides add-apt-repository
         if not shell_ok("dpkg -s python3.6 &>/dev/null"):
@@ -106,9 +106,9 @@ class Python(Task):
             task_print("apt-get install python3.6 python3.6-venv python3.6-dev python3-pip")
             shell("sudo apt-get install -y python3.6 python3.6-venv python3.6-dev python3-pip")
 
-        self._run_common()
+        self._install_common()
 
-    def _run_common(self):
+    def _install_common(self):
         assert which("pip2")
 
         symlink("{private}/python/.pypirc".format(private=PRIVATE), "~/.pypirc")
@@ -150,7 +150,7 @@ class Unzip(Task):
     __platforms__ = ['ubuntu']
     __genfiles__ = ['/usr/bin/unzip']
 
-    def run_ubuntu(self):
+    def install_ubuntu(self):
         Apt().install_package("unzip")
 
 
@@ -162,7 +162,7 @@ class Ruby(Task):
     __osx_deps__ = [Homebrew]
     __genfiles__ = ['~/.rbenv']
 
-    def run_osx(self):
+    def install_osx(self):
         Homebrew().install_package("rbenv")
 
         # initialize rbenv if required
@@ -184,10 +184,10 @@ class Curl(Task):
     __osx_deps__ = [Homebrew]
     __genfiles__ = ['/usr/bin/curl']
 
-    def run_osx(self):
+    def install_osx(self):
         Homebrew().install_package("curl")
 
-    def run_ubuntu(self):
+    def install_ubuntu(self):
         Apt().install_package("curl")
 
 
@@ -203,7 +203,7 @@ class Dropbox(Task):
     def __init__(self):
         self.installed_on_ubuntu = False
 
-    def _run_common(self):
+    def _install_common(self):
         mkdir("~/.local/bin")
         symlink(usr_share("Dropbox/dropbox.py"), "~/.local/bin/dropbox")
 
@@ -217,17 +217,17 @@ class Dropbox(Task):
             symlink(usr_share("Dropbox/dropbox-find-conflicts.sh"),
                     "~/.local/bin/dropbox-find-conflicts")
 
-    def run_osx(self):
+    def install_osx(self):
         Homebrew().install_cask("dropbox")
-        self._run_common()
+        self._install_common()
 
-    def run_linux(self):
+    def install_linux(self):
         if (not os.path.exists(os.path.expanduser("~/.dropbox-dist/dropboxd"))
             and not IS_TRAVIS_CI):  # skip on Travis CI:
             task_print("Installing Dropbox")
             shell('cd - && wget -O - "{self.UBUNTU_URL}" | tar xzf -'.format(**vars()))
             self.installed_on_ubuntu = True
-        self._run_common()
+        self._install_common()
 
     def teardown(self):
         if self.installed_on_ubuntu:
@@ -243,7 +243,7 @@ class Fluid(Task):
     __deps__ = [Homebrew]
     __genfiles__ = ['/Applications/Fluid.app']
 
-    def run_osx(self):
+    def install_osx(self):
         Homebrew().install_cask("fluid")
 
         if os.path.isdir(PRIVATE + "/fluid.apps"):
@@ -261,7 +261,7 @@ class SSH(Task):
     __platforms__ = ['linux', 'osx']
     __genfiles__ = []
 
-    def run(self):
+    def install(self):
         if os.path.isdir(PRIVATE + "/ssh"):
             self.__genfiles__ += [
                 "~/.ssh/authorized_keys",
@@ -297,7 +297,7 @@ class Netdata(Task):
     def __init__(self):
         self.installed = False
 
-    def run_linux(self):
+    def install_linux(self):
         if not os.path.isfile("/usr/sbin/netdata"):
             task_print("Installing netdata")
             shell("bash <(curl -Ss https://my-netdata.io/kickstart.sh) --dont-wait")
@@ -321,7 +321,7 @@ class WacomDriver(Task):
     def __init__(self):
         self.installed = False
 
-    def run(self):
+    def install(self):
         if Homebrew().install_cask('caskroom/drivers/wacom-intuos-tablet'):
             self.installed = True
 
@@ -345,10 +345,10 @@ class Node(Task):
     __linux_genfiles__ = ['/usr/bin/node', '/usr/bin/npm']
     __tmpfiles__ = [PKG_LIST]
 
-    def run_osx(self):
+    def install_osx(self):
         Homebrew().install_package("node")
 
-    def run_ubuntu(self):
+    def install_ubuntu(self):
         Apt().install_package("nodejs")
         Apt().install_package("npm")
         symlink("/usr/bin/nodejs", "/usr/bin/node", sudo=True)
@@ -382,11 +382,11 @@ class Zsh(Task):
     __osx_genfiles__ = ['/usr/local/bin/zsh']
     __linux_genfiles__ = ['/usr/bin/zsh']
 
-    def run_osx(self):
+    def install_osx(self):
         Homebrew().install_package("zsh")
-        self.run()
+        self.install()
 
-    def run(self):
+    def install(self):
         # install config files
         symlink(usr_share("Zsh"), "~/.zsh")
         symlink(usr_share("Zsh/zshrc"), "~/.zshrc")
@@ -411,7 +411,7 @@ class Autoenv(Task):
     __deps__ = [Python]
     __genfiles__ = ['/usr/local/bin/activate.sh']
 
-    def run(self):
+    def install(self):
         Python().pip_install("autoenv", "1.0.0")
 
 
@@ -423,7 +423,7 @@ class Lmk(Task):
     __deps__ = [Python]
     __genfiles__ = ['/usr/local/bin/lmk']
 
-    def run(self):
+    def install(self):
         Python().pip_install("lmk", self.LMK_VERSION)
         if os.path.isdir(os.path.join(PRIVATE, "lmk")):
             self.__genfiles__ += ["~/.lmkrc"]
@@ -437,15 +437,15 @@ class Emacs(Task):
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = [Homebrew]
 
-    def run_osx(self):
+    def install_osx(self):
         Homebrew().install_cask('emacs')
-        self._run_common()
+        self._install_common()
 
-    def run_ubuntu(self):
+    def install_ubuntu(self):
         Apt().install_package('emacs')
-        self._run_common()
+        self._install_common()
 
-    def _run_common(self):
+    def _install_common(self):
         if clone_git_repo("git@github.com:bbatsov/prelude.git",
                           "~/.emacs.d", self.PRELUDE_VERSION):
             # prelude requires there be no ~/.emacs file on first run
@@ -457,7 +457,7 @@ class DSmith(Task):
     __platforms__ = ['ubuntu']
     __genfiles__ = []
 
-    def run(self):
+    def install(self):
         if os.path.isdir(os.path.join(PRIVATE, "dsmith")):
             self.__genfiles__ += ['~/.dsmithrc']
             symlink(os.path.join(PRIVATE, "dsmith", "dsmithrc"), "~/.dsmithrc")
@@ -469,15 +469,15 @@ class Git(Task):
     __osx_deps__ = [Homebrew]
     __genfiles__ = ['~/.gitconfig']
 
-    def run_ubuntu(self):
+    def install_ubuntu(self):
         Apt().install_package('git')
-        self.run()
+        self.install()
 
-    def run_osx(self):
+    def install_osx(self):
         Homebrew().install_package('git')
-        self.run()
+        self.install()
 
-    def run(self):
+    def install(self):
         if not IS_TRAVIS_CI:
             symlink(usr_share("git/gitconfig"), "~/.gitconfig")
 
@@ -496,7 +496,7 @@ class Wallpaper(Task):
 
     __platforms__ = ['osx']
 
-    def run_osx(self):
+    def install_osx(self):
         if HOSTNAME in self.WALLPAPERS:
             path = os.path.expanduser(self.WALLPAPERS[HOSTNAME])
             if os.path.exists(path):
@@ -515,7 +515,7 @@ class GnuCoreutils(Task):
         '/usr/local/opt/gnu-tar/libexec/gnubin/tar',
     ]
 
-    def run(self):
+    def install(self):
         Homebrew().install_package('coreutils')
         Homebrew().install_package('gnu-indent')
         Homebrew().install_package('gnu-sed')
@@ -532,7 +532,7 @@ class DiffSoFancy(Task):
     __deps__ = [Git, Node]
     __genfiles__ = ['/usr/local/bin/diff-so-fancy']
 
-    def run(self):
+    def install(self):
         Node().npm_install("diff-so-fancy", self.VERSION)
 
 
@@ -544,7 +544,7 @@ class GhArchiver(Task):
     __deps__ = [Python]
     __genfiles__ = ['/usr/local/bin/gh-archiver']
 
-    def run(self):
+    def install(self):
         Python().pip_install("gh-archiver", self.VERSION, pip="python3.6 -m pip")
 
 
@@ -555,15 +555,15 @@ class Tmux(Task):
     __osx_genfiles__ = ['/usr/local/bin/tmux']
     __linux_genfiles__ = ['/usr/bin/tmux']
 
-    def run_osx(self):
+    def install_osx(self):
         Homebrew().install_package("tmux")
-        self.run_common()
+        self._install_common()
 
-    def run_ubuntu(self):
+    def install_ubuntu(self):
         Apt().install_package("tmux")
-        self.run_common()
+        self._install_common()
 
-    def run_common(self):
+    def _install_common(self):
         symlink(usr_share("tmux/tmux.conf"), "~/.tmux.conf")
 
 
@@ -577,15 +577,15 @@ class Vim(Task):
     __osx_genfiles__ = ['/usr/local/bin/vim']
     __linux_genfiles__ = ['/usr/bin/vim']
 
-    def run_osx(self):
+    def install_osx(self):
         Homebrew().install_package('vim')
-        self.run()
+        self.install()
 
-    def run_ubuntu(self):
+    def install_ubuntu(self):
         Apt().install_package('vim')
-        self.run()
+        self.install()
 
-    def run(self):
+    def install(self):
         symlink(usr_share("Vim/vimrc"), "~/.vimrc")
 
         # Vundle
@@ -602,7 +602,7 @@ class Sublime(Task):
     __genfiles__ = ['/usr/local/bin/rsub']
     __osx_genfiles__ = ['/usr/local/bin/subl', '/Applications/Sublime Text.app']
 
-    def run_osx(self):
+    def install_osx(self):
         Homebrew().install_cask("sublime-text")
 
         # Put sublime text in PATH
@@ -619,9 +619,9 @@ class Sublime(Task):
             symlink(os.path.join(PRIVATE, "subl", "User"), "~/.subl/Packages/User")
             symlink(os.path.join(PRIVATE, "subl", "INI"), "~/.subl/Packages/INI")
 
-        self.run()
+        self.install()
 
-    def run(self):
+    def install(self):
         symlink(usr_share("Sublime Text/rsub"), "/usr/local/bin/rsub", sudo=True)
 
 
@@ -630,7 +630,7 @@ class Ssmtp(Task):
     __platforms__ = ['ubuntu']
     __genfiles__ = ["/usr/sbin/ssmtp"]
 
-    def run_ubuntu(self):
+    def install_ubuntu(self):
         Apt().install_package("ssmtp")
 
         if os.path.isdir(os.path.join(PRIVATE, "ssmtp")):
@@ -644,7 +644,7 @@ class MySQL(Task):
     __platforms__ = ['linux', 'osx']
     __genfiles__ = []
 
-    def run(self):
+    def install(self):
         if os.path.isdir(os.path.join(PRIVATE, "mysql")):
             self.__genfiles__ += ["~/.my.cnf"]
             symlink(os.path.join(PRIVATE, "mysql", ".my.cnf"), "~/.my.cnf")
@@ -654,7 +654,7 @@ class OmniFocus(Task):
     __platforms__ = ['linux', 'osx']
     __genfiles__ = ["/usr/local/bin/omni"]
 
-    def run(self):
+    def install(self):
         symlink(usr_share("OmniFocus/omni"), "/usr/local/bin/omni", sudo=True)
 
 
@@ -668,12 +668,12 @@ class LaTeX(Task):
         '/Applications/texstudio.app',
     ]
 
-    def run_osx(self):
+    def install_osx(self):
         Homebrew().install_cask("mactex")
         Homebrew().install_cask("texstudio")
-        self.run()
+        self.install()
 
-    def run(self):
+    def install(self):
         if which("pdflatex"):
             self.__genfiles__ += ["~/.local/bin/autotex", "~/.local/bin/cleanbib"]
             mkdir("~/.local/bin")
@@ -693,7 +693,7 @@ class AdobeCreativeCloud(Task):
     def __init__(self):
         self.installed = False
 
-    def run(self):
+    def install(self):
         if not os.path.exists('/Applications/Adobe Lightroom CC/Adobe Lightroom CC.app'):
             Homebrew().install_cask('adobe-creative-cloud')
             self.installed = True
@@ -720,7 +720,7 @@ class MacOSConfig(Task):
     __platforms__ = ["osx"]
     __genfiles__ = ['~/.hushlogin']
 
-    def run_osx(self):
+    def install_osx(self):
         # disable "Last Login ..." messages on terminal
         if not os.path.exists(os.path.expanduser("~/.hushlogin")):
             task_print("Creating ~/.hushlogin")
@@ -765,7 +765,7 @@ class HomebrewCasks(Task):
     __deps__ = [Homebrew]
     __genfiles__ = list(CASKS.values())
 
-    def run(self):
+    def install(self):
         for cask in self.CASKS.keys():
             Homebrew().install_cask(cask)
 
@@ -777,7 +777,7 @@ class Trash(Task):
     __deps__ = [Node]
     __genfiles__ = ['/usr/local/bin/trash']
 
-    def run(self):
+    def install(self):
         Node().npm_install('trash-cli', self.VERSION)
 
     def trash(self, path):
@@ -790,7 +790,7 @@ class AppStore(Task):
     __platforms__ = ['osx']
     __deps__ = [Homebrew]
 
-    def run(self):
+    def install(self):
         if not which('mas'):
             Homebrew().install_package('mas')
 
@@ -840,7 +840,7 @@ class AppStoreApps(Task):
     __deps__ = [AppStore]
     __genfiles__ = list(APPS.values())
 
-    def run(self):
+    def install(self):
         for app_id in self.APPS.keys():
             AppStore().install_app(app_id, self.APPS[app_id])
 
@@ -852,7 +852,7 @@ class GpuStat(Task):
     __platforms__ = ['linux', 'osx']
     __deps__ = [Python]
 
-    def run(self):
+    def install(self):
         if which("nvidia-smi"):
             Python().pip_install("gpustat", self.VERSION)
 
@@ -862,7 +862,7 @@ class IOTop(Task):
     __platforms__ = ['ubuntu']
     __genfiles__ = ['/usr/sbin/iotop']
 
-    def run_ubuntu(self):
+    def install_ubuntu(self):
         Apt().install_package("iotop")
 
 
@@ -873,10 +873,10 @@ class Ncdu(Task):
     __osx_genfiles__ = ['/usr/local/bin/ncdu']
     __linux_genfiles__ = ['/usr/bin/ncdu']
 
-    def run_osx(self):
+    def install_osx(self):
         Homebrew().install_package("ncdu")
 
-    def run_ubuntu(self):
+    def install_ubuntu(self):
         Apt().install_package("ncdu")
 
 
@@ -887,10 +887,10 @@ class HTop(Task):
     __osx_genfiles__ = ['/usr/local/bin/htop']
     __linux_genfiles__ = ['/usr/bin/htop']
 
-    def run_osx(self):
+    def install_osx(self):
         Homebrew().install_package("htop")
 
-    def run_ubuntu(self):
+    def install_ubuntu(self):
         Apt().install_package("htop")
 
 
@@ -901,10 +901,10 @@ class Java(Task):
     __osx_genfiles__ = ['/usr/local/Caskroom/java8']
     __linux_genfiles__ = ['/usr/bin/java']
 
-    def run_osx(self):
+    def install_osx(self):
         Homebrew().install_cask('caskroom/versions/java8')
 
-    def run_ubuntu(self):
+    def install_ubuntu(self):
         Apt().install_package("openjdk-8-jdk")
 
 
@@ -917,10 +917,10 @@ class Bazel(Task):
     __osx_genfiles__ = ['/usr/local/bin/bazel']
     __linux_genfiles__ = ['/usr/bin/bazel']
 
-    def run_osx(self):
+    def install_osx(self):
         Homebrew().install_package('bazel')
 
-    def run_ubuntu(self):
+    def install_ubuntu(self):
         # See: https://docs.bazel.build/versions/master/install-ubuntu.html
 
         # Add Bazel distribution URY
@@ -939,10 +939,10 @@ class CMake(Task):
     __osx_genfiles__ = ['/usr/local/bin/cmake']
     __linux_genfiles__ = ['/usr/bin/cmake']
 
-    def run_osx(self):
+    def install_osx(self):
         Homebrew().install_package('cmake')
 
-    def run_ubuntu(self):
+    def install_ubuntu(self):
         Apt().install_package("cmake")
 
 
@@ -952,7 +952,7 @@ class Wget(Task):
     __deps__ = [Homebrew]
     __genfiles__ = ['/usr/local/bin/wget']
 
-    def run(self):
+    def install(self):
         Homebrew().install_package('wget')
 
 
@@ -963,10 +963,10 @@ class Protobuf(Task):
     __osx_genfiles__ = ['/usr/local/bin/protoc']
     __linux_genfiles__ = ['/usr/bin/protoc']
 
-    def run_osx(self):
+    def install_osx(self):
         Homebrew().install_package('protobuf')
 
-    def run_ubuntu(self):
+    def install_ubuntu(self):
         Apt().install_package("protobuf")
 
 
@@ -977,10 +977,10 @@ class Sloccount(Task):
     __osx_genfiles__ = ['/usr/local/bin/sloccount']
     __linux_genfiles__ = ['/usr/bin/sloccount']
 
-    def run_osx(self):
+    def install_osx(self):
         Homebrew().install_package('sloccount')
 
-    def run_ubuntu(self):
+    def install_ubuntu(self):
         Apt().install_package("sloccount")
 
 
@@ -993,7 +993,7 @@ class Emu(Task):
     __deps__ = [Python]
     __genfiles__ = ['/usr/local/bin/emu']
 
-    def run(self):
+    def install(self):
         Python().pip_install("emu", self.VERSION, pip=self.PIP, sudo=True)
 
 
@@ -1008,15 +1008,15 @@ class JsonUtil(Task):
     __osx_genfiles__ = ['/usr/local/bin/jq']
     __linux_genfiles__ = ['/usr/bin/jq']
 
-    def run_osx(self):
+    def install_osx(self):
         Homebrew().install_package("jq")
-        self._run_common()
+        self._install_common()
 
-    def run_ubuntu(self):
+    def install_ubuntu(self):
         Apt().install_package("jq")
-        self._run_common()
+        self._install_common()
 
-    def _run_common(self):
+    def _install_common(self):
         Node().npm_install("jsonlint", self.JSONLINT_VERSION)
 
 
@@ -1028,7 +1028,7 @@ class Scripts(Task):
         '~/.local/bin/rm-dsstore',
     ]
 
-    def run(self):
+    def install(self):
         mkdir("~/.local/bin")
         symlink(usr_share("scripts/mkepisodal.py"), "~/.local/bin/mkepisodal")
         symlink(usr_share("scripts/rm-dsstore.sh"), "~/.local/bin/rm-dsstore")
@@ -1057,5 +1057,5 @@ class Phd(Task):
     __platforms__ = ['linux', 'osx']
     __genfiles__ = ['~/phd']
 
-    def run(self):
+    def install(self):
         clone_git_repo("git@github.com:ChrisCummins/phd.git", "~/phd")

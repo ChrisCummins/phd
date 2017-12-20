@@ -106,22 +106,16 @@ def main(*args):
     errored = False
     try:
         for i, task in enumerate(queue):
-            # Task setup
-            logging.debug(type(task).__name__ + " setup")
-
-            # Resolve and run setup() method:
-            get_task_method(task, "setup")()
-            done.add(task)
-
-            # Resolve and run run() method:
+            # Resolve and run install() method:
             print("[{:2d}/{:2d}]".format(i + 1, ntasks) + Colors.BOLD,
                   str(task), Colors.END + "...")
             if logging.getLogger().level <= logging.INFO:
                 print()
             sys.stdout.flush()
             start_time = time()
-            get_task_method(task, "run")()
-            # build a list of generated files
+            get_task_method(task, "install")()
+            done.add(task)
+            # build a list of generated files:
             genfiles = getattr(task, "__genfiles__", [])
             genfiles += getattr(task, "__" + PLATFORM + "_genfiles__", [])
             for file in set(genfiles):

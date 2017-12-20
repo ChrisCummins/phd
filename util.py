@@ -95,10 +95,8 @@ class Task(object):
             this task. These files are automatically removed after execution.
 
     Methods:
-        setup():
-        setup_<platform>():
-        run():
-        run_<platform>():
+        install():
+        install_<platform>():
         teardown():
         teardown_<platform>():
     """
