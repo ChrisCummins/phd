@@ -1023,32 +1023,33 @@ class JsonUtil(Task):
 class Scripts(Task):
     """ scripts and utils """
     __platforms__ = ['linux', 'osx']
-    __genfiles__ = ['~/.local/bin/mkepisodal']
+    __genfiles__ = [
+        '~/.local/bin/mkepisodal',
+        '~/.local/bin/rm-dsstore',
+    ]
 
     def run(self):
         mkdir("~/.local/bin")
-        symlink(usr_share("media/mkepisodal.py"), "~/.local/bin/mkepisodal")
+        symlink(usr_share("scripts/mkepisodal.py"), "~/.local/bin/mkepisodal")
+        symlink(usr_share("scripts/rm-dsstore.sh"), "~/.local/bin/rm-dsstore")
 
-        if HOSTNAME in ["florence", "diana", "ryangosling", "mary", "plod"]:
-            self.__genfiles__ += ["~/.local/bin/mary", "~/.local/bin/diana"]
-            symlink(usr_share("servers/mary"), "~/.local/bin/mary")
-            symlink(usr_share("servers/diana"), "~/.local/bin/diana")
-
-        if HOSTNAME in ["florence", "diana"]:
+        if HOSTNAME == "florence":
             self.__genfiles__ += [
-                "~/.local/bin/ryan_gosling_have_my_photos",
-                "~/.local/bin/ryan_gosling_have_my_music",
-                "~/.local/bin/orange",
                 "~/.local/bin/orange_you_glad_you_backup",
+                "~/.local/bin/ryan_gosling_have_my_music",
+                "~/.local/bin/ryan_gosling_have_my_photos",
             ]
-            symlink(usr_share("servers/ryan_gosling_have_my_photos.sh"),
-                    "~/.local/bin/ryan_gosling_have_my_photos")
-            symlink(usr_share("servers/ryan_gosling_have_my_music.sh"),
-                    "~/.local/bin/ryan_gosling_have_my_music")
-            symlink(usr_share("servers/orange.sh"),
-                    "~/.local/bin/orange")
-            symlink(usr_share("servers/orange_you_glad_you_backup.sh"),
+            symlink(usr_share("scripts/orange_you_glad_you_backup.sh"),
                     "~/.local/bin/orange_you_glad_you_backup")
+            symlink(usr_share("scripts/ryan_gosling_have_my_photos.sh"),
+                    "~/.local/bin/ryan_gosling_have_my_photos")
+            symlink(usr_share("scripts/ryan_gosling_have_my_music.sh"),
+                    "~/.local/bin/ryan_gosling_have_my_music")
+
+        if HOSTNAME == "diana":
+            self.__genfiles__ += ["~/.local/bin/orange"]
+            symlink(usr_share("scripts/orange.sh"), "~/.local/bin/orange")
+
 
 
 class Phd(Task):
