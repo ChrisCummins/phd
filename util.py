@@ -297,3 +297,13 @@ def usr_share(*components, **kwargs):
     if must_exist and not os.path.exists(path):
         raise OSError(str(path) + " not found")
     return path
+
+
+def get_version_name(version=None)
+    """ return the name for a version """
+    if version is None:
+        version = shell_output('git rev-parse HEAD')
+    with open('names.txt') as infile:
+        names = infile.readlines()
+    index = hash(version) % len(names)
+    return names[index]
