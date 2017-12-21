@@ -1,8 +1,10 @@
 \section{Related Work}\label{sec:rw}
 
+\cc{TODO: Machine learning for input generation is very recent~\cite{Patra2016,Godefroid2017}. \citeauthor{Godefroid2017}'s work is proof of concept for PDFs. \citeauthor{Patra2016}'s work doesn't find any dynamic bugs. TODO: Deep Learning to Find Bugs~\cite{Pradel2017}.}
+
 \cc{TODO: ASPLOS reviewer suggestions~\cite{Wang2013b,Godefroid2017,Yan2017}.}
 
-\cc{TODO: TreeFuzz~\cite{Patra2016}, interesting recent work on Ocaml~\cite{Midtgaard2017}, jsfunfuzz, AFL, libFuzzer.}
+\cc{TODO: Interesting recent work on Ocaml~\cite{Midtgaard2017}, jsfunfuzz, AFL, libFuzzer.}
 
 The random generation of test cases is a well established approach to the compiler validation problem. \cc{TODO: Reword as invisible grammar elements rather than nouns}~Prior approaches are surveyed in~\cite{Kossatchev2005,Boujarwah1997} and empirically contrasted in~\cite{Chen2014a}. The main question of interest is in how to efficiently generate codes which trigger bugs. There are two main approaches: \emph{program generation}, in which inputs are synthesized from scratch, typically by stochastic enumeration of a grammar; and \emph{program mutation}, in which existing codes are modified and mutated so as to identify anomalous behavior.
 
