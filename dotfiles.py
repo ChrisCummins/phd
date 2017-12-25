@@ -1102,19 +1102,26 @@ class DefaultApps(Task):
 
     # run `duti -x <extension>` to show associated app
     FILE_ASSOCIATIONS = {
+        "7z": "cx.c3.theunarchiver",
         "avi": "org.videolan.vlc",
         "c": "com.sublimetext.3",
         "cpp": "com.sublimetext.3",
         "cxx": "com.sublimetext.3",
+        "gz": "cx.c3.theunarchiver",
+        "markdown": "com.sublimetext.3",
         "md": "com.sublimetext.3",
         "mkv": "org.videolan.vlc",
         "mov": "org.videolan.vlc",
         "nfo": "com.sublimetext.3",
         "py": "com.sublimetext.3",
         "py": "com.sublimetext.3",
+        "rar": "cx.c3.theunarchiver",
         "tex": "texstudio",
+        "text": "com.sublimetext.3",
         "torrent": "org.m0k.transmission",
         "txt": "com.sublimetext.3",
+        "xml": "com.sublimetext.3",
+        "zip": "cx.c3.theunarchiver",
     }
 
     def install(self):
