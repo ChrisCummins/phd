@@ -1134,6 +1134,7 @@ class DefaultApps(Task):
     """ set default applications for file extensions """
     __platforms__ = ['osx']
     __deps__ = [
+        AppStoreApps,
         Homebrew,
         HomebrewCasks,
         LaTeX,
