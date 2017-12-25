@@ -36,6 +36,17 @@ class Homebrew(Task):
             shell('brew update')
             shell('brew doctor')
 
+    def upgrade(self, package=None):
+        task_print("brew update")
+        shell('brew update')
+
+        if package is None:
+            package=''
+
+        task_print("brew upgrade {package}".format(**vars()))
+        shell("brew upgrade {package}".format(**vars()))
+
+
     def install_package(self, package):
         """ install a package using homebrew, return True if installed """
         # Create the list of homebrew packages
@@ -76,6 +87,10 @@ class HomebrewCaskOutdated(Task):
             mkdir("~/.local/bin")
             shell("curl {self.REMOTE_URL} 2>/dev/null > {self.BINPATH}".format(**vars()))
             shell('chmod +x {self.BINPATH}'.format(**vars()))
+
+    def upgrade(self):
+        task_print('brew-cask-upgrade')
+        shell("brew-cask-outdated | awk '{print $1}' | xargs brew cask install --force")
 
 
 class Python(Task):
