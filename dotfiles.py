@@ -1060,6 +1060,9 @@ class Scripts(Task):
             self.__genfiles__ += ["~/.local/bin/orange"]
             symlink(usr_share("scripts/orange.sh"), "~/.local/bin/orange")
 
+    def uninstall(self):
+        self.install()  # run to resolve dynamic genfiles
+        Trash().trash(*self.__genfiles__)
 
 
 class Phd(Task):

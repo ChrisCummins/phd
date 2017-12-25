@@ -100,9 +100,11 @@ def main(*args):
 
         return 0
 
+    task_type = "install"
+
     # Run the tasks
-    print("Running " + Colors.BOLD + str(ntasks) + Colors.END +
-          " tasks on", PLATFORM + ":")
+    print("Running " + Colors.BOLD + str(ntasks) + " " + task_type +
+          Colors.END + " tasks on", PLATFORM + ":")
     errored = False
     try:
         for i, task in enumerate(queue):
@@ -113,7 +115,7 @@ def main(*args):
                 print()
             sys.stdout.flush()
             start_time = time()
-            get_task_method(task, "install")()
+            get_task_method(task, task_type)()
             done.add(task)
             # build a list of generated files:
             genfiles = getattr(task, "__genfiles__", [])

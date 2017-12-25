@@ -97,6 +97,8 @@ class Task(object):
     Methods:
         install():
         install_<platform>():
+        uninstall():
+        uninstall_<platform>():
         teardown():
         teardown_<platform>():
     """
