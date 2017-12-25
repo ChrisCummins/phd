@@ -63,10 +63,13 @@ def main(*args):
     parser = ArgumentParser()
     parser.add_argument('tasks', metavar='<task>', nargs='*',
                         help="the name of tasks to run (default: all)")
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument('-v', '--verbose', action='store_true')
-    group.add_argument('-D', '--debug', action='store_true')
-    parser.add_argument('-d', '--describe', action="store_true")
+    type_group = parser.add_mutually_exclusive_group()
+    type_group.add_argument('-d', '--describe', action="store_true")
+    type_group.add_argument('-u', '--upgrade', action='store_true')
+    type_group.add_argument('-r', '--remove', action='store_true')
+    verbosity_group = parser.add_mutually_exclusive_group()
+    verbosity_group.add_argument('-v', '--verbose', action='store_true')
+    verbosity_group.add_argument('-D', '--debug', action='store_true')
     args = parser.parse_args(args)
 
     # Configure logger
@@ -100,7 +103,12 @@ def main(*args):
 
         return 0
 
-    task_type = "install"
+    if args.upgrade:
+        task_type = "upgrade"
+    elif args.remove:
+        task_type = "uninstall"
+    else:
+        task_type = "install"
 
     # Run the tasks
     print("Running " + Colors.BOLD + str(ntasks) + " " + task_type +
@@ -120,12 +128,14 @@ def main(*args):
             # build a list of generated files:
             genfiles = getattr(task, "__genfiles__", [])
             genfiles += getattr(task, "__" + PLATFORM + "_genfiles__", [])
-            for file in set(genfiles):
-                file = os.path.abspath(os.path.expanduser(file))
-                if not (os.path.exists(file) or
-                        shell_ok("sudo test -f '{file}'".format(**vars())) or
-                        shell_ok("sudo test -d '{file}'".format(**vars()))):
-                    raise InvalidTaskError('genfile "{file}" not created'.format(**vars()))
+
+            if task_type == "install":
+                for file in set(genfiles):
+                    file = os.path.abspath(os.path.expanduser(file))
+                    if not (os.path.exists(file) or
+                            shell_ok("sudo test -f '{file}'".format(**vars())) or
+                            shell_ok("sudo test -d '{file}'".format(**vars()))):
+                        raise InvalidTaskError('genfile "{file}" not created'.format(**vars()))
             runtime = time() - start_time
 
             # print("{:.3f}s".format(runtime))

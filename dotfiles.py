@@ -1062,6 +1062,7 @@ class Scripts(Task):
 
     def uninstall(self):
         self.install()  # run to resolve dynamic genfiles
+        task_print("Removing scripts")
         Trash().trash(*self.__genfiles__)
 
 

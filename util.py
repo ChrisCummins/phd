@@ -99,6 +99,8 @@ class Task(object):
         install_<platform>():
         uninstall():
         uninstall_<platform>():
+        upgrade():
+        upgrade_<platform>():
         teardown():
         teardown_<platform>():
     """
@@ -115,6 +117,12 @@ class Task(object):
         raise NotImplementedError
 
     def teardown(self):
+        pass
+
+    def upgrade(self):
+        pass
+
+    def uninstall(self):
         pass
 
     def __repr__(self):
