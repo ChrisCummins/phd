@@ -309,7 +309,7 @@ def usr_share(*components, **kwargs):
     return path
 
 
-def get_version_name(version=None)
+def get_version_name(version=None):
     """ return the name for a version """
     if version is None:
         version = shell_output('git rev-parse HEAD')

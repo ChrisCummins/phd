@@ -58,16 +58,29 @@ class Homebrew(Task):
             shell("brew install {package}".format(**vars()))
             return True
 
-    def install_cask(self, package):
-        """ install a homebrew cask, return True if installed """
-        # Create the list of homebrew casks
+    def _create_cask_list(self):
+        """ Create the list of homebrew casks """
         if not os.path.isfile(self.CASK_LIST):
             shell("brew cask list > {self.CASK_LIST}".format(**vars()))
+
+    def install_cask(self, package):
+        """ install a homebrew cask, return True if installed """
+        self._create_cask_list()
 
         package_stump = package.split('/')[-1]
         if not shell_ok("grep '^{package_stump}$' <{self.CASK_LIST}".format(**vars())):
             task_print("brew cask install " + package)
             shell("brew cask install {package}".format(**vars()))
+            return True
+
+    def uninstall_cask(self, package):
+        """ remove a homebrew cask, return True if uninstalled """
+        self._create_cask_list()
+
+        package_stump = package.split('/')[-1]
+        if shell_ok("grep '^{package_stump}$' <{self.CASK_LIST}".format(**vars())):
+            task_print("brew cask remove " + package)
+            shell("brew cask remove " + package)
             return True
 
 
@@ -768,7 +781,6 @@ class HomebrewCasks(Task):
         'omnigraffle': '/Applications/OmniGraffle.app',
         'omnioutliner': '/Applications/OmniOutliner.app',
         'omnipresence': '/Applications/OmniPresence.app',
-        'plex-media-player': '/Applications/Plex Media Player.app',
         'skype': '/Applications/Skype.app',
         'steam': '/Applications/Steam.app',
         'transmission': '/Applications/Transmission.app',
@@ -783,6 +795,34 @@ class HomebrewCasks(Task):
     def install(self):
         for cask in self.CASKS.keys():
             Homebrew().install_cask(cask)
+
+
+class Plex(Task):
+    """ plex media server and player """
+    __platforms__ = ['osx']
+    __deps__ = [Homebrew]
+    __genfiles__ = [
+        '/Applications/Plex Media Player.app',
+        '/Applications/Plex Media Server.app',
+    ]
+
+    def __init__(self):
+        self.installed_server = False
+
+    def install(self):
+        Homebrew().install_cask('plex-media-player')
+        self.installed_server = Homebrew().install_cask('plex-media-server')
+
+    def uninstall(self):
+        Homebrew().uninstall_cask('plrex-media-player')
+        Homebrew().uninstall_cask('plrex-media-server')
+
+    def teardown(self):
+        if self.installed_server:
+            print()
+            print("NOTE: manual step required to configure Plex Media Server:")
+            print("    $ " + Colors.BOLD + Colors.RED +
+                  "open http://127.0.0.1:32400" + Colors.END)
 
 
 class Trash(Task):
