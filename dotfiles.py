@@ -610,7 +610,7 @@ class Vim(Task):
         shell("vim +PluginInstall +qall")
 
 
-class Sublime(Task):
+class SublimeText(Task):
     """ sublime text """
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = [Homebrew]
@@ -1088,3 +1088,37 @@ class Phd(Task):
 
     def install(self):
         clone_git_repo("git@github.com:ChrisCummins/phd.git", "~/phd")
+
+
+class DefaultApps(Task):
+    """ set default applications for file extensions """
+    __platforms__ = ['osx']
+    __deps__ = [
+        Homebrew,
+        HomebrewCasks,
+        LaTeX,
+        SublimeText
+    ]
+
+    # run `duti -x <extension>` to show associated app
+    FILE_ASSOCIATIONS = {
+        "avi": "org.videolan.vlc",
+        "c": "com.sublimetext.3",
+        "cpp": "com.sublimetext.3",
+        "cxx": "com.sublimetext.3",
+        "md": "com.sublimetext.3",
+        "mkv": "org.videolan.vlc",
+        "mov": "org.videolan.vlc",
+        "nfo": "com.sublimetext.3",
+        "py": "com.sublimetext.3",
+        "py": "com.sublimetext.3",
+        "tex": "texstudio",
+        "torrent": "org.m0k.transmission",
+        "txt": "com.sublimetext.3",
+    }
+
+    def install(self):
+        Homebrew().install_package('duti')
+        for extension in self.FILE_ASSOCIATIONS:
+            app = self.FILE_ASSOCIATIONS[extension]
+            shell('duti -s {app} .{extension} all'.format(**vars()))
