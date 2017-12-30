@@ -1102,6 +1102,7 @@ class Scripts(Task):
         if HOSTNAME == "florence":
             self.__genfiles__ += [
                 "~/.local/bin/orange_you_glad_you_backup",
+                "~/.local/bin/ryan_gosling_have_my_movies",
                 "~/.local/bin/ryan_gosling_have_my_music",
                 "~/.local/bin/ryan_gosling_have_my_photos",
             ]
@@ -1109,6 +1110,8 @@ class Scripts(Task):
                     "~/.local/bin/orange_you_glad_you_backup")
             symlink(usr_share("scripts/ryan_gosling_have_my_photos.sh"),
                     "~/.local/bin/ryan_gosling_have_my_photos")
+            symlink(usr_share("scripts/ryan_gosling_have_my_movies.sh"),
+                    "~/.local/bin/ryan_gosling_have_my_movies")
             symlink(usr_share("scripts/ryan_gosling_have_my_music.sh"),
                     "~/.local/bin/ryan_gosling_have_my_music")
 
