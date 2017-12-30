@@ -25,7 +25,7 @@ rsync -avh \
     --exclude ".localized"
 
 rsync -avh \
-    /Users/cec/TV Shows/ /Volumes/TV Shows/ \
+    /Users/cec/TV\ Shows/ /Volumes/TV\ Shows/ \
     --exclude "._.DS_Store" \
     --exclude ".DS_Store" \
     --exclude ".localized"
