@@ -33,8 +33,10 @@ rsync -avh --delete "$src/" "$dst/" \
     --exclude "*.lrcat-journal" \
     --exclude "*.lrcat.lock" \
     --exclude "._.DS_Store" \
+    --exclude ".com.apple.timemachine.supported" \
     --exclude ".DS_Store" \
     --exclude ".sync.ffs_db" \
+    --exclude "/.DocumentRevisions-V100" \
     --exclude "/.fseventsd" \
     --exclude "/.Spotlight-V100" \
     --exclude "/.TemporaryItems" \
