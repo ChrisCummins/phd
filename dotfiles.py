@@ -179,8 +179,12 @@ class Python(Task):
 
 class Unzip(Task):
     """ unzip pacakge """
-    __platforms__ = ['ubuntu']
+    __platforms__ = ['osx', 'ubuntu']
     __genfiles__ = ['/usr/bin/unzip']
+    __osx_deps__ = [Homebrew]
+
+    def install_osx(self):
+        Homebrew().install_package("unzip")
 
     def install_ubuntu(self):
         Apt().install_package("unzip")
