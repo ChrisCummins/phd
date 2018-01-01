@@ -276,20 +276,20 @@ path_dirs=( \
     ~/.gem/*/ruby/*/bin \
     /Library/TeX/Distributions/.DefaultTeX/Contents/Programs/texbin \
     /usr/local/opt/coreutils/libexec/gnubin \
-    /usr/local/opt/gnu-sed/libexec/gnubin/ \
-    /usr/local/opt/gnu-tar/libexec/gnubin/ \
+    /usr/local/opt/gnu-sed/libexec/gnubin \
+    /usr/local/opt/gnu-tar/libexec/gnubin \
     /usr/local/bin \
     /usr/contrib/bin \
     /usr/local/cuda/bin \
     /opt/bin \
-    /opt/local/bin/ \
-    /opt/local/sbin/ \
+    /opt/local/bin \
+    /opt/local/sbin \
     /bin \
     /usr/bin \
     /usr/bin/core_perl \
     /usr/bin/vendor_perl \
     /usr/local/mysql/bin \
-    /usr/sbin/ \
+    /usr/sbin \
     /usr/texbin \
     /sbin \
 )
