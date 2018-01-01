@@ -279,6 +279,8 @@ path_dirs=( \
     /usr/local/opt/gnu-sed/libexec/gnubin \
     /usr/local/opt/gnu-tar/libexec/gnubin \
     /usr/local/opt/python/bin \
+    /usr/local/opt/unzip/bin \
+    /usr/local/opt/ofexport/bin \
     /usr/local/bin \
     /usr/contrib/bin \
     /usr/local/cuda/bin \

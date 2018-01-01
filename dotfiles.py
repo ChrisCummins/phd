@@ -686,14 +686,6 @@ class MySQL(Task):
             symlink(os.path.join(PRIVATE, "mysql", ".my.cnf"), "~/.my.cnf")
 
 
-class OmniFocus(Task):
-    __platforms__ = ['linux', 'osx']
-    __genfiles__ = ["/usr/local/bin/omni"]
-
-    def install(self):
-        symlink(usr_share("OmniFocus/omni"), "/usr/local/bin/omni", sudo=True)
-
-
 class LaTeX(Task):
     """ pdflatex and helper scripts """
     __platforms__ = ['linux', 'osx']
@@ -786,7 +778,6 @@ class HomebrewCasks(Task):
         'mendeley': '/Applications/Mendeley Desktop.app',
         'microsoft-office': '/Applications/Microsoft Word.app',
         'mysqlworkbench': '/Applications/MySQLWorkbench.app',
-        'omnifocus': '/Applications/OmniFocus.app',
         'omnigraffle': '/Applications/OmniGraffle.app',
         'omnioutliner': '/Applications/OmniOutliner.app',
         'omnipresence': '/Applications/OmniPresence.app',
@@ -981,6 +972,40 @@ class Java(Task):
     def install_ubuntu(self):
         Apt().install_package("openjdk-8-jdk")
 
+
+class OmniFocus(Task):
+    """ task manager and utilities """
+    OFEXPORT2_VERSION = "1.0.20"
+    OFEXPORT2_URL = "https://github.com/psidnell/ofexport2/archive/ofexport-v2-" + OFEXPORT2_VERSION + ".zip"
+
+    __platforms__ = ['linux', 'osx']
+    __osx_deps__ = [Homebrew]  # FIXME: Add Java dependency
+    __genfiles__ = ["/usr/local/bin/omni"]
+    __osx_genfiles__ = [
+        "/Applications/OmniFocus.app",
+        "/usr/local/opt/ofexport/bin/of2",
+    ]
+
+    def install_osx(self):
+        Homebrew().install_cask('omnifocus')
+
+        # Check that of2 is installed and is the correct version
+        if (not os.path.exists("/usr/local/opt/ofexport/bin/of2") or
+            shell_output("of2 -h").split("\n")[2] != "Version: " + self.OFEXPORT2_VERSION):
+            task_print("Downloading ofexport")
+            shell("rm -rf /usr/local/opt/ofexport")
+            url, ver = self.OFEXPORT2_URL, self.OFEXPORT2_VERSION
+            shell("wget {url} -O /tmp/ofexport.zip".format(**vars()))
+            task_print("Installing ofexport")
+            shell("unzip -o /tmp/ofexport.zip")
+            shell("rm -f /tmp/ofexport.zip")
+            shell("mv ofexport2-ofexport-v2-{ver} /usr/local/opt/ofexport".format(**vars()))
+
+        # Run common-install commands:
+        self.install()
+
+    def install(self):
+        symlink(usr_share("OmniFocus/omni"), "/usr/local/bin/omni", sudo=True)
 
 
 class Bazel(Task):
