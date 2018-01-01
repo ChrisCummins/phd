@@ -109,6 +109,7 @@ class HomebrewCaskOutdated(Task):
 class Python(Task):
     """ python2 and pip """
     PIP_VERSION = "9.0.1"
+    VIRTUALENV_VERSION = "15.1.0"
     PYP_IRC = "~/.pypirc"
     PIP_LIST = ".pip-freeze.json"
 
@@ -148,6 +149,9 @@ class Python(Task):
         # same again as root
         if not shell_ok("test $(sudo pip2 --version | awk '{{print $2}}') = {self.PIP_VERSION}".format(**vars())):
             shell("sudo -H pip2 install --upgrade 'pip=={self.PIP_VERSION}'".format(**vars()))
+
+        # install virtualenv
+        self.pip_install("virtualenv", self.VIRTUALENV_VERSION)
 
     def pip_install(self, package, version, pip="pip2", sudo=False):
         """ install a package using pip, return True if installed """
