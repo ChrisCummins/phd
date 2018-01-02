@@ -4,7 +4,7 @@ with open('./requirements.txt') as infile:
     requirements = [x.strip() for x in infile.readlines() if x.strip()]
 
 setup(name="me.csv",
-      version="0.0.1",
+      version="0.0.1.dev1",
       description="Aggregate time and health tracking data",
       url="https://github.com/ChrisCummins/me.csv",
       author="Chris Cummins",
