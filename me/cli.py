@@ -9,9 +9,10 @@ from argparse import ArgumentParser, FileType
 from tempfile import TemporaryDirectory
 
 import me
+import me.aggregate
 import me.healthkit
 import me.omnifocus
-import me.aggregate
+import me.toggl
 
 
 def get_config(path):
@@ -48,11 +49,14 @@ def _main():
     # Sources options:
     healthkit_path = os.path.expanduser(config["sources"]["healthkit"]["export_path"])
     of2_path = os.path.expanduser(config["sources"]["omnifocus"]["of2_path"])
+    toggl_keypath = os.path.expanduser(config["sources"]["toggl"]["keypath"])
+    toggl_workspace = config["sources"]["toggl"]["workspace"]
+    toggl_start = config["sources"]["toggl"]["start_date"]
 
     # Export options:
     csv_path = os.path.expanduser(config["exports"]["csv"]["path"])
     spreadsheet_name = config["exports"]["gsheet"]["name"]
-    keypath = os.path.expanduser(config["exports"]["gsheet"]["keypath"])
+    google_keypath = os.path.expanduser(config["exports"]["gsheet"]["keypath"])
     share_with = config["exports"]["gsheet"]["share_with"]
 
     # Create and process OmniFocus data:
@@ -62,8 +66,11 @@ def _main():
     with open(healthkit_path) as infile:
         me.healthkit.process_archive(infile, csv_path)
 
+    # Create and process Toggl data:
+    me.toggl.export_csvs(f"{csv_path}/Toggl", toggl_keypath, toggl_workspace, toggl_start)
+
     # Aggregate data:
-    me.aggregate.aggregate(csv_path, spreadsheet_name, keypath, share_with)
+    me.aggregate.aggregate(csv_path, spreadsheet_name, google_keypath, share_with)
 
 
 def main():

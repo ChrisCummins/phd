@@ -2,6 +2,7 @@
 me - Aggregate health and time tracking data.
 """
 import datetime
+import os
 
 
 def daterange(start_date, end_date, reverse=False):
@@ -11,3 +12,11 @@ def daterange(start_date, end_date, reverse=False):
             yield end_date - datetime.timedelta(n)
         else:
             yield start_date + datetime.timedelta(n)
+
+
+def mkdir(path):
+    """ make directory if it does not already exist """
+    try:
+        os.mkdir(path)
+    except FileExistsError:
+        pass
