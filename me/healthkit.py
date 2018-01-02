@@ -288,10 +288,7 @@ def process_file(infile, outdir):
 
 
 def process_archive(infile, outdir):
-    try:
-        os.mkdir(outdir)
-    except FileExistsError:
-        pass
+    me.mkdir(outdir)
 
     with TemporaryDirectory(prefix="me.csv.") as unzipdir:
         logging.debug(f"Unpacking healthkit archive to {unzipdir}")
