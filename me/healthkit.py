@@ -196,12 +196,12 @@ def _process_height(typename, records, outdir):
 
 
 def _process_dietary_fat_total(typename, records, outdir):
-    create_sum_csv(records, "Total Fat Consumed (g)", "g",
+    create_sum_csv(records, "Total Fat (g)", "g",
                    f"{outdir}/Total Fat.csv")
 
 
 def _process_dietary_fat_saturated(typename, records, outdir):
-    create_sum_csv(records, "Total Saturated Fat Consumed (g)", "g",
+    create_sum_csv(records, "Saturated Fat (g)", "g",
                    f"{outdir}/Sat Fat.csv")
 
 

@@ -37,8 +37,8 @@ def get_row(data, date):
 def aggregate(outdir, keypath, share_with):
     csvs = [
         "Step Count.csv",
-        "Heart Rate.csv",
         "Distance.csv",
+        "Heart Rate.csv",
         "Calories Burned.csv",
         "Calories Consumed.csv",
         "Water.csv",
