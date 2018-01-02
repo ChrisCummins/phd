@@ -69,7 +69,7 @@ def aggregate(outdir, spreadsheet_name, keypath, share_with):
 
     # Get the earlest reading date
     start_date = min(x[1][0] for x in csv_data)
-    end_date = max(x[1][0] for x in csv_data)
+    end_date = max(x[1][0] for x in csv_data) + datetime.timedelta(1)
     nrecords = sum(len(x) - 1 for x in csv_data)
     logging.info(f'Aggregating {nrecords} records from {start_date} to {end_date} in "{outdir}/me.csv"')
 
