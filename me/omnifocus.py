@@ -88,7 +88,7 @@ def process_json(infile, outdir):
         writer = csv.writer(outfile, delimiter=",", quoting=csv.QUOTE_MINIMAL)
 
         # Write header
-        writer.writerow(["Date", "Total Incomplete", "Total Complete",
+        writer.writerow(["Date", "Incomplete Tasks", "Complete Tasks",
                          "Tasks Added", "Tasks Completed", "Tasks Delta"])
 
         last_incomplete, last_complete = 0, 0
