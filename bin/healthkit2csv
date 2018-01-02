@@ -1,9 +1,11 @@
 #!/usr/bin/env python3.6
 
 import csv
+import datetime
 import logging
 import os
 import re
+import spreadsheet
 
 from argparse import ArgumentParser, FileType
 from collections import defaultdict
@@ -12,13 +14,26 @@ from zipfile import ZipFile
 from xml.dom import minidom
 
 
-def process_records(typename, records, outdir):
-    # build a list of attributes names (columns)
+def get_all_atributes(records, excludes=[]):
     attributes = set()
     for record in records:
         for attr in record.keys():
             attributes.add(attr)
-    attributes = sorted([x for x in attributes if x != "type"])
+    attributes = sorted([x for x in attributes if x not in excludes])
+    return attributes
+
+
+def parse_datetime(string):
+    return datetime.datetime.strptime(str(string), "%Y-%m-%d %H:%M:%S %z")
+
+
+def parse_date(string):
+    return parse_datetime(string).date()
+
+
+def _process_records_generic(typename, records, outdir):
+    # build a list of attributes names (columns)
+    attributes = get_all_atributes(records, ["type"])
 
     # Create CSV file
     with open(f"{outdir}/{typename}.csv", "w") as outfile:
@@ -40,6 +55,72 @@ def process_records(typename, records, outdir):
 
         nrows = len(records)
         logging.info(f"Exported {nrows} records for \"{typename}\"")
+
+
+def sum_values_by_day(records, value_attr: str='value', date_attr: str='endDate',
+                      filter_fn=None):
+    rows = []
+    for r in records:
+        if filter_fn and not filter_fn(r):
+            rows.append((parse_date(r[date_attr].value),
+                         float(r[value_attr].value)))
+    rows = sorted(rows, key=lambda x: x[0])
+
+    rows2 = []
+    last_date = None
+    aggr = 0
+    for row in rows:
+        date, value = row
+        if date != last_date:
+            if last_date:
+                rows2.append((last_date, aggr))
+            last_date = date
+            aggr = value
+        else:
+            aggr += value
+    rows2.append((last_date, aggr))
+
+    return rows2
+
+
+def _process_step_count(typename, records, outdir):
+
+    def _attr_filter(record):
+        assert(record['unit'].value == 'count')
+
+    attributes = get_all_atributes(records)
+
+    startdate = sorted(records, key=lambda x: x['endDate'].value)[0]['endDate'].value
+    startdate = parse_date(startdate)
+
+    with open(f"{outdir}/{typename}.csv", "w") as outfile:
+        logging.debug(f"Creating CSV file {outfile.name}")
+        writer = csv.writer(outfile, delimiter=",", quoting=csv.QUOTE_MINIMAL)
+
+        writer.writerow(("Date", "Step Count"))
+        rows = sum_values_by_day(records, filter_fn=_attr_filter)
+        for row in rows:
+            writer.writerow(row)
+
+    nrows = len(rows)
+    logging.info(f"Exported {nrows} records to \"{outfile.name}\"")
+
+    logging.info(f'Updating worksheet "data:{typename}"')
+    gc = spreadsheet.get_connection()
+    sh = spreadsheet.get_or_create_spreadsheet(gc, "me.csv")
+    worksheet = spreadsheet.get_or_create_worksheet(sh, f"data:{typename}")
+    with open(f"{outdir}/{typename}.csv") as infile:
+        reader = csv.reader(infile)
+        rows = [row for row in reader]
+        spreadsheet.csv_to_worksheet(worksheet, rows)
+
+
+def process_records(typename, records, outdir):
+    handler = {
+        "Step Count": _process_step_count,
+    }.get(typename, _process_records_generic)
+
+    return handler(typename, records, outdir)
 
 
 def process_file(infile, outdir):
