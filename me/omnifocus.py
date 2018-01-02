@@ -119,6 +119,6 @@ def export_csvs(of2path, outpath):
         pwd = os.getcwd()
         os.chdir(tmpdir)
         jsonpath = me.omnifocus.generate_json(of2path, "omnifocus.json")
-        os.chdir(pwd)
         with open(jsonpath) as infile:
             me.omnifocus.process_json(infile, outpath)
+        os.chdir(pwd)
