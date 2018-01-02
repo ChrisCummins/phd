@@ -35,8 +35,7 @@ def csv_to_worksheet(worksheet, list_of_lists):
 
     worksheet.resize(nrows, ncols)
 
-    endcolumn = char_index(ncols - 1)
-    cell_list = worksheet.range(f"A1:{endcolumn}{nrows}")
+    cell_list = worksheet.range(1, 1, nrows, ncols)
 
     for i, cell in enumerate(cell_list):
         cell.value = list_of_lists[i // ncols][i % ncols]

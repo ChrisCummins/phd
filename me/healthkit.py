@@ -182,12 +182,62 @@ def _process_body_mass_index(typename, records, outdir):
 
 
 def _process_distance_walking_running(typename, records, outdir):
-    create_sum_csv(records, "Distance Walking + Running (km)", "km", f"{outdir}/Distance.csv")
+    create_sum_csv(records, "Distance Walking + Running (km)", "km",
+                   f"{outdir}/Distance.csv")
 
 
 def _process_heart_rate(typename, records, outdir):
     create_avg_csv(records, "Heart Rate (bmp)", "count/min",
                    f"{outdir}/Heart Rate.csv", min_max=True)
+
+
+def _process_height(typename, records, outdir):
+    create_avg_csv(records, "Height (cm)", "cm", f"{outdir}/Height.csv")
+
+
+def _process_dietary_fat_total(typename, records, outdir):
+    create_sum_csv(records, "Total Fat Consumed (g)", "g",
+                   f"{outdir}/Total Fat.csv")
+
+
+def _process_dietary_fat_saturated(typename, records, outdir):
+    create_sum_csv(records, "Total Saturated Fat Consumed (g)", "g",
+                   f"{outdir}/Sat Fat.csv")
+
+
+def _process_dietary_cholesterol(typename, records, outdir):
+    create_sum_csv(records, "Cholesterol (mg)", "mg",
+                   f"{outdir}/Cholesterol.csv")
+
+
+def _process_dietary_sodium(typename, records, outdir):
+    create_sum_csv(records, "Sodium (mg)", "mg",
+                   f"{outdir}/Sodium.csv")
+
+
+def _process_dietary_carbohydrates(typename, records, outdir):
+    create_sum_csv(records, "Carbohydrates (g)", "g",
+                   f"{outdir}/Carbohydrates.csv")
+
+
+def _process_dietary_fiber(typename, records, outdir):
+    create_sum_csv(records, "Fiber (g)", "g",
+                   f"{outdir}/Fiber.csv")
+
+
+def _process_dietary_sugar(typename, records, outdir):
+    create_sum_csv(records, "Sugar (g)", "g",
+                   f"{outdir}/Sugar.csv")
+
+
+def _process_dietary_protein(typename, records, outdir):
+    create_sum_csv(records, "Protein (g)", "g",
+                   f"{outdir}/Protein.csv")
+
+
+def _process_dietary_potassium(typename, records, outdir):
+    create_sum_csv(records, "Potassium (mg)", "mg",
+                   f"{outdir}/Potassium.csv")
 
 
 def process_records(typename, records, outdir):
@@ -201,6 +251,16 @@ def process_records(typename, records, outdir):
         "Distance Walking Running": _process_distance_walking_running,
         "Heart Rate": _process_heart_rate,
         "Step Count": _process_step_count,
+        "Height": _process_height,
+        "Dietary Fat Total": _process_dietary_fat_total,
+        "Dietary Fat Saturated": _process_dietary_fat_saturated,
+        "Dietary Cholesterol": _process_dietary_cholesterol,
+        "Dietary Sodium": _process_dietary_sodium,
+        "Dietary Carbohydrates": _process_dietary_carbohydrates,
+        "Dietary Fiber": _process_dietary_fiber,
+        "Dietary Sugar": _process_dietary_sugar,
+        "Dietary Protein": _process_dietary_protein,
+        "Dietary Potassium": _process_dietary_potassium,
     }.get(typename, _process_records_generic)
 
     return handler(typename, records, outdir)
