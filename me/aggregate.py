@@ -7,6 +7,7 @@ import re
 import me
 import me.spreadsheet
 
+
 def parse_date(string):
     return datetime.datetime.strptime(str(string), "%Y-%m-%d").date()
 
@@ -36,6 +37,12 @@ def get_row(data, date):
 
 def aggregate(outdir, spreadsheet_name, keypath, share_with):
     csvs = [
+        "Toggl/Academic Work.csv",
+        "Toggl/Paid Work.csv",
+        "Toggl/Personal Projects.csv",
+        "Toggl/Play Time.csv",
+        "Toggl/Admin.csv",
+        "Toggl/Exercise.csv",
         "Step Count.csv",
         "Distance.csv",
         "Heart Rate.csv",

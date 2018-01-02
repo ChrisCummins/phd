@@ -10,6 +10,8 @@ from tempfile import TemporaryDirectory
 from zipfile import ZipFile
 from xml.dom import minidom
 
+import me
+
 
 def get_all_atributes(records, excludes=[]):
     attributes = set()
