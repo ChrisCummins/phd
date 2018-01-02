@@ -1,14 +1,11 @@
-#!/usr/bin/env python3.6
-
 import csv
 import datetime
 import logging
 import os
 import re
-import spreadsheet
 
-from argparse import ArgumentParser, FileType
-
+import me
+import me.spreadsheet
 
 def parse_date(string):
     return datetime.datetime.strptime(str(string), "%Y-%m-%d").date()
@@ -26,14 +23,6 @@ def read_csv(path):
             else:
                 rows.append([parse_date(row[0])] + row[1:])
     return rows
-
-
-def daterange(start_date, end_date, reverse=False):
-    for n in range(int((end_date - start_date).days)):
-        if reverse:
-            yield end_date - datetime.timedelta(n)
-        else:
-            yield start_date + datetime.timedelta(n)
 
 
 def get_row(data, date):
@@ -73,38 +62,17 @@ def aggregate(outdir):
         for data in csv_data:
             header += data[0][1:]
         writer.writerow(['Date'] + header)
-        for date in daterange(start_date, end_date, reverse=True):
+        for date in me.daterange(start_date, end_date, reverse=True):
             row = []
             for data in csv_data:
                 row += get_row(data, date)
             writer.writerow([date] + row)
 
     logging.info(f'Updating worksheet "Data"')
-    gc = spreadsheet.get_connection()
-    sh = spreadsheet.get_or_create_spreadsheet(gc, "me.csv")
-    worksheet = spreadsheet.get_or_create_worksheet(sh, f"Data")
+    gc = me.spreadsheet.get_connection()
+    sh = me.spreadsheet.get_or_create_spreadsheet(gc, "me.csv")
+    worksheet = me.spreadsheet.get_or_create_worksheet(sh, f"Data")
     with open(f"{outdir}/me.csv") as infile:
         reader = csv.reader(infile)
         rows = [row for row in reader]
-        spreadsheet.csv_to_worksheet(worksheet, rows)
-
-
-def main():
-    parser = ArgumentParser()
-    parser.add_argument("outdir", metavar="<dir>",
-                        help="Path to CSV directory")
-    parser.add_argument("-v", "--verbose", action="store_true",
-                        help="enable more verbose logging output")
-    args = parser.parse_args()
-
-    if args.verbose:
-        logging.getLogger().setLevel(logging.DEBUG)
-    else:
-        logging.getLogger().setLevel(logging.INFO)
-    logging.basicConfig(format="%(message)s")
-
-    aggregate(args.outdir)
-
-
-if __name__ == "__main__":
-    main()
+        me.spreadsheet.csv_to_worksheet(worksheet, rows)

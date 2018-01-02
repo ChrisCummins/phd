@@ -1,6 +1,4 @@
-#!/usr/bin/env python3.6
-
-import spreadsheet
+import me
 
 import csv
 import datetime
@@ -58,11 +56,6 @@ def get_tasks(data):
     return tasks
 
 
-def daterange(start_date, end_date):
-    for n in range(int((end_date - start_date).days)):
-        yield start_date + datetime.timedelta(n)
-
-
 def task_count(tasks, date, completed: bool):
     count = 0
     for task in tasks:
@@ -99,7 +92,7 @@ def process_json(infile, outdir):
 
         last_incomplete, last_complete = 0, 0
 
-        for date in daterange(start, today):
+        for date in me.daterange(start, today):
             incomplete = task_count(tasks, date, completed=False)
             complete = task_count(tasks, date, completed=True)
             delta_added = incomplete - last_incomplete
@@ -112,26 +105,3 @@ def process_json(infile, outdir):
 
         nrows = len(tasks)
         logging.info(f"Exported {nrows} records to \"{outfile.name}\"")
-
-
-def main():
-    parser = ArgumentParser()
-    parser.add_argument("infile", metavar="<json>", type=FileType('r'),
-                        help="Path to JSON OmniFocus export")
-    parser.add_argument("outdir", metavar="<dir>",
-                        help="Path to output CSV files")
-    parser.add_argument("-v", "--verbose", action="store_true",
-                        help="enable more verbose logging output")
-    args = parser.parse_args()
-
-    if args.verbose:
-        logging.getLogger().setLevel(logging.DEBUG)
-    else:
-        logging.getLogger().setLevel(logging.INFO)
-    logging.basicConfig(format="%(message)s")
-
-    process_json(args.infile, args.outdir)
-
-
-if __name__ == "__main__":
-    main()
