@@ -95,7 +95,7 @@ def process_json(infile, outdir):
 
         # Write header
         writer.writerow(["Date", "Total Incomplete", "Total Complete",
-                         "Tasks Added", "Tasks Completed", "Delta"])
+                         "Tasks Added", "Tasks Completed", "Tasks Delta"])
 
         last_incomplete, last_complete = 0, 0
 
