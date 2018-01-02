@@ -114,17 +114,6 @@ def process_json(infile, outdir):
         logging.info(f"Exported {nrows} records to \"{outfile.name}\"")
 
 
-def export_to_web(outdir):
-    logging.info('Updating worksheet "data:OmniFocus Tasks"')
-    gc = spreadsheet.get_connection()
-    sh = spreadsheet.get_or_create_spreadsheet(gc, "me.csv")
-    worksheet = spreadsheet.get_or_create_worksheet(sh, "data:OmniFocus Tasks")
-    with open(f"{outdir}/OmniFocus Tasks.csv") as infile:
-        reader = csv.reader(infile)
-        rows = [row for row in reader]
-        spreadsheet.csv_to_worksheet(worksheet, rows)
-
-
 def main():
     parser = ArgumentParser()
     parser.add_argument("infile", metavar="<json>", type=FileType('r'),
@@ -142,7 +131,6 @@ def main():
     logging.basicConfig(format="%(message)s")
 
     process_json(args.infile, args.outdir)
-    export_to_web(args.outdir)
 
 
 if __name__ == "__main__":
