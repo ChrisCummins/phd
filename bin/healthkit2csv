@@ -138,15 +138,6 @@ def _process_step_count(typename, records, outdir):
     nrows = len(rows)
     logging.info(f"Exported {nrows} records to \"{outfile.name}\"")
 
-    # logging.info(f'Updating worksheet "data:{typename}"')
-    # gc = spreadsheet.get_connection()
-    # sh = spreadsheet.get_or_create_spreadsheet(gc, "me.csv")
-    # worksheet = spreadsheet.get_or_create_worksheet(sh, f"data:{typename}")
-    # with open(f"{outdir}/{typename}.csv") as infile:
-    #     reader = csv.reader(infile)
-    #     rows = [row for row in reader]
-    #     spreadsheet.csv_to_worksheet(worksheet, rows)
-
 
 def _process_body_mass(typename, records, outdir):
 
