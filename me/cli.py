@@ -44,11 +44,15 @@ def _main():
 
     # Get and parse config file:
     config = get_config(args.config)
-    csv_path = os.path.expanduser(config["paths"]["csv"])
-    healthkit_path = os.path.expanduser(config["paths"]["health_kit_export"])
-    of2_path = os.path.expanduser(config["paths"]["of2"])
-    keypath = os.path.expanduser(config["keypath"])
-    share_with = config["share_with"]
+
+    # Sources options:
+    healthkit_path = os.path.expanduser(config["sources"]["healthkit"]["export_path"])
+    of2_path = os.path.expanduser(config["sources"]["omnifocus"]["of2_path"])
+
+    # Export options:
+    csv_path = os.path.expanduser(config["exports"]["csv"]["path"])
+    keypath = os.path.expanduser(config["exports"]["gsheet"]["keypath"])
+    share_with = config["exports"]["gsheet"]["share_with"]
 
     # Create and process OmniFocus data:
     me.omnifocus.export_csvs(of2_path, csv_path)
