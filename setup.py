@@ -10,7 +10,10 @@ setup(name="me.csv",
       author="Chris Cummins",
       author_email="chrisc.101@gmail.com",
       license="MIT License",
-      packages=["me"],
+      packages=[
+            "me",
+            "TogglPy"
+      ],
       entry_points={'console_scripts': ['me.csv=me.cli:main']},
       test_suite="nose.collector",
       tests_require=["nose"],
