@@ -57,8 +57,8 @@ def _process_records_generic(typename, records, outdir):
         logging.info(f"Exported {nrows} records for \"{typename}\"")
 
 
-def sum_values_by_day(records, value_attr: str='value', date_attr: str='endDate',
-                      filter_fn=None):
+def sum_values_by_day(records, value_attr: str='value',
+                      date_attr: str='endDate', filter_fn=None):
     rows = []
     for r in records:
         if filter_fn and not filter_fn(r):
@@ -83,15 +83,48 @@ def sum_values_by_day(records, value_attr: str='value', date_attr: str='endDate'
     return rows2
 
 
+def avg_values_by_day(records, value_attr: str='value',
+                      date_attr: str='endDate', filter_fn=None,
+                      min_max: bool=False):
+    rows = []
+    for r in records:
+        if filter_fn and not filter_fn(r):
+            rows.append((parse_date(r[date_attr].value),
+                         float(r[value_attr].value)))
+    rows = sorted(rows, key=lambda x: x[0])
+
+    rows2 = []
+    last_date = None
+    aggr = []
+    for row in rows:
+        date, value = row
+        if date != last_date:
+            if last_date:
+                if min_max:
+                    rows2.append((last_date, min(aggr), sum(aggr) / len(aggr), max(aggr)))
+                else:
+                    rows2.append((last_date, sum(aggr) / len(aggr)))
+            last_date = date
+            aggr = [value]
+        else:
+            aggr.append(value)
+    if min_max:
+        rows2.append((last_date, min(aggr), sum(aggr) / len(aggr), max(aggr)))
+    else:
+        rows2.append((last_date, sum(aggr) / len(aggr)))
+
+    return rows2
+
+
+def get_records_start_date(records):
+    startdate = sorted(records, key=lambda x: x['endDate'].value)[0]['endDate'].value
+    return parse_date(startdate)
+
+
 def _process_step_count(typename, records, outdir):
 
     def _attr_filter(record):
         assert(record['unit'].value == 'count')
-
-    attributes = get_all_atributes(records)
-
-    startdate = sorted(records, key=lambda x: x['endDate'].value)[0]['endDate'].value
-    startdate = parse_date(startdate)
 
     with open(f"{outdir}/{typename}.csv", "w") as outfile:
         logging.debug(f"Creating CSV file {outfile.name}")
@@ -105,19 +138,172 @@ def _process_step_count(typename, records, outdir):
     nrows = len(rows)
     logging.info(f"Exported {nrows} records to \"{outfile.name}\"")
 
-    logging.info(f'Updating worksheet "data:{typename}"')
-    gc = spreadsheet.get_connection()
-    sh = spreadsheet.get_or_create_spreadsheet(gc, "me.csv")
-    worksheet = spreadsheet.get_or_create_worksheet(sh, f"data:{typename}")
-    with open(f"{outdir}/{typename}.csv") as infile:
-        reader = csv.reader(infile)
-        rows = [row for row in reader]
-        spreadsheet.csv_to_worksheet(worksheet, rows)
+    # logging.info(f'Updating worksheet "data:{typename}"')
+    # gc = spreadsheet.get_connection()
+    # sh = spreadsheet.get_or_create_spreadsheet(gc, "me.csv")
+    # worksheet = spreadsheet.get_or_create_worksheet(sh, f"data:{typename}")
+    # with open(f"{outdir}/{typename}.csv") as infile:
+    #     reader = csv.reader(infile)
+    #     rows = [row for row in reader]
+    #     spreadsheet.csv_to_worksheet(worksheet, rows)
+
+
+def _process_body_mass(typename, records, outdir):
+
+    def _attr_filter(record):
+        assert(record['unit'].value == 'kg')
+
+    with open(f"{outdir}/Weight.csv", "w") as outfile:
+        logging.debug(f"Creating CSV file {outfile.name}")
+        writer = csv.writer(outfile, delimiter=",", quoting=csv.QUOTE_MINIMAL)
+
+        writer.writerow(("Date", "Weight (kg)"))
+        rows = avg_values_by_day(records, filter_fn=_attr_filter)
+        for row in rows:
+            writer.writerow(row)
+
+    nrows = len(rows)
+    logging.info(f"Exported {nrows} records to \"{outfile.name}\"")
+
+
+def _process_dietary_energy_consumer(typename, records, outdir):
+
+    def _attr_filter(record):
+        assert(record['unit'].value == 'kcal')
+
+    with open(f"{outdir}/Calories In.csv", "w") as outfile:
+        logging.debug(f"Creating CSV file {outfile.name}")
+        writer = csv.writer(outfile, delimiter=",", quoting=csv.QUOTE_MINIMAL)
+
+        writer.writerow(("Date", "Calories In (kcal)"))
+        rows = sum_values_by_day(records, filter_fn=_attr_filter)
+        for row in rows:
+            writer.writerow(row)
+
+    nrows = len(rows)
+    logging.info(f"Exported {nrows} records to \"{outfile.name}\"")
+
+
+def _process_active_energy_burned(typename, records, outdir):
+
+    def _attr_filter(record):
+        assert(record['unit'].value == 'kcal')
+
+    with open(f"{outdir}/Calories Out.csv", "w") as outfile:
+        logging.debug(f"Creating CSV file {outfile.name}")
+        writer = csv.writer(outfile, delimiter=",", quoting=csv.QUOTE_MINIMAL)
+
+        writer.writerow(("Date", "Calories Out (kcal)"))
+        rows = sum_values_by_day(records, filter_fn=_attr_filter)
+        for row in rows:
+            writer.writerow(row)
+
+    nrows = len(rows)
+    logging.info(f"Exported {nrows} records to \"{outfile.name}\"")
+
+
+def _process_dietary_water(typename, records, outdir):
+
+    def _attr_filter(record):
+        assert(record['unit'].value == 'mL')
+
+    with open(f"{outdir}/Water.csv", "w") as outfile:
+        logging.debug(f"Creating CSV file {outfile.name}")
+        writer = csv.writer(outfile, delimiter=",", quoting=csv.QUOTE_MINIMAL)
+
+        writer.writerow(("Date", "Water (mL)"))
+        rows = sum_values_by_day(records, filter_fn=_attr_filter)
+        for row in rows:
+            writer.writerow(row)
+
+    nrows = len(rows)
+    logging.info(f"Exported {nrows} records to \"{outfile.name}\"")
+
+
+def _process_dietary_caffeine(typename, records, outdir):
+
+    def _attr_filter(record):
+        assert(record['unit'].value == 'mg')
+
+    with open(f"{outdir}/Caffeine.csv", "w") as outfile:
+        logging.debug(f"Creating CSV file {outfile.name}")
+        writer = csv.writer(outfile, delimiter=",", quoting=csv.QUOTE_MINIMAL)
+
+        writer.writerow(("Date", "Caffeine (mg)"))
+        rows = sum_values_by_day(records, filter_fn=_attr_filter)
+        for row in rows:
+            writer.writerow(row)
+
+    nrows = len(rows)
+    logging.info(f"Exported {nrows} records to \"{outfile.name}\"")
+
+
+def _process_body_mass_index(typename, records, outdir):
+
+    def _attr_filter(record):
+        assert(record['unit'].value == 'count')
+
+    with open(f"{outdir}/BMI.csv", "w") as outfile:
+        logging.debug(f"Creating CSV file {outfile.name}")
+        writer = csv.writer(outfile, delimiter=",", quoting=csv.QUOTE_MINIMAL)
+
+        writer.writerow(("Date", "Body Mass Index"))
+        rows = sum_values_by_day(records, filter_fn=_attr_filter)
+        for row in rows:
+            writer.writerow(row)
+
+    nrows = len(rows)
+    logging.info(f"Exported {nrows} records to \"{outfile.name}\"")
+
+
+def _process_distance_walking_running(typename, records, outdir):
+
+    def _attr_filter(record):
+        assert(record['unit'].value == 'km')
+
+    with open(f"{outdir}/Distance.csv", "w") as outfile:
+        logging.debug(f"Creating CSV file {outfile.name}")
+        writer = csv.writer(outfile, delimiter=",", quoting=csv.QUOTE_MINIMAL)
+
+        writer.writerow(("Date", "Distance Walking + Running (km)"))
+        rows = sum_values_by_day(records, filter_fn=_attr_filter)
+        for row in rows:
+            writer.writerow(row)
+
+    nrows = len(rows)
+    logging.info(f"Exported {nrows} records to \"{outfile.name}\"")
+
+
+def _process_heart_rate(typename, records, outdir):
+
+    def _attr_filter(record):
+        assert(record['unit'].value == 'count/min')
+
+    with open(f"{outdir}/Heart Rate.csv", "w") as outfile:
+        logging.debug(f"Creating CSV file {outfile.name}")
+        writer = csv.writer(outfile, delimiter=",", quoting=csv.QUOTE_MINIMAL)
+
+        writer.writerow(("Date", "Min Heart Rate (bpm)", "Avg Heart Rate (bpm)",
+                         "Max Heart Rate (bpm)"))
+        rows = avg_values_by_day(records, filter_fn=_attr_filter, min_max=True)
+        for row in rows:
+            writer.writerow(row)
+
+    nrows = len(rows)
+    logging.info(f"Exported {nrows} records to \"{outfile.name}\"")
 
 
 def process_records(typename, records, outdir):
     handler = {
+        "Body Mass": _process_body_mass,
         "Step Count": _process_step_count,
+        "Dietary Energy Consumed": _process_dietary_energy_consumer,
+        "Active Energy Burned": _process_active_energy_burned,
+        "Dietary Water": _process_dietary_water,
+        "Dietary Caffeine": _process_dietary_caffeine,
+        "Distance Walking Running": _process_distance_walking_running,
+        "Body Mass Index": _process_body_mass_index,
+        "Heart Rate": _process_heart_rate,
     }.get(typename, _process_records_generic)
 
     return handler(typename, records, outdir)
