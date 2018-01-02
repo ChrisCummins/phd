@@ -1,8 +1,12 @@
 #!/usr/bin/env python3.6
 
+import json
 import logging
+import os
+import sys
 
 from argparse import ArgumentParser, FileType
+from tempfile import TemporaryDirectory
 
 import me
 import me.healthkit
@@ -10,26 +14,55 @@ import me.omnifocus
 import me.aggregate
 
 
-def main():
-    parser = ArgumentParser()
-    parser.add_argument("-v", "--verbose", action="store_true",
-                        help="enable more verbose logging output")
-    args = parser.parse_args()
+def get_config(path):
+    """ read config file """
+    with open(path) as infile:
+        data = json.load(infile)
+    return data
 
-    if args.verbose:
+
+def init_logging(verbose: bool=False):
+    """ set logging verbosity """
+    if verbose:
         logging.getLogger().setLevel(logging.DEBUG)
     else:
         logging.getLogger().setLevel(logging.INFO)
     logging.basicConfig(format="%(message)s")
 
-    with open("omnifocus.json") as infile:
-        me.omnifocus.process_json(infile, "csv")
 
-    with open("/Users/cec/Documents/me.csv/export.zip") as infile:
-        me.healthkit.process_archive(infile, "csv")
+def _main():
+    parser = ArgumentParser()
+    parser.add_argument("-c", "--config", metavar="<path>",
+                        default=os.path.expanduser("~/.me.json"),
+                        help="path to config file (default: ~/.me.json)")
+    parser.add_argument("-v", "--verbose", action="store_true",
+                        help="enable more verbose logging output")
+    args = parser.parse_args()
 
-    me.aggregate.aggregate("csv")
+    # Initialize logging engine:
+    init_logging(args.verbose)
+
+    # Get and parse config file:
+    config = get_config(args.config)
+    csv_path = os.path.expanduser(config["paths"]["csv"])
+    healthkit_path = os.path.expanduser(config["paths"]["health_kit_export"])
+    of2_path = os.path.expanduser(config["paths"]["of2"])
+    keypath = os.path.expanduser(config["keypath"])
+    share_with = config["share_with"]
+
+    # Create and process OmniFocus data:
+    me.omnifocus.export_csvs(of2_path, csv_path)
+
+    # Process Healthkit data:
+    with open(healthkit_path) as infile:
+        me.healthkit.process_archive(infile, csv_path)
+
+    # Aggregate data:
+    me.aggregate.aggregate(csv_path, keypath, share_with)
 
 
-if __name__ == "__main__":
-    main()
+def main():
+    try:
+        _main()
+    except KeyboardInterrupt:
+        print("interrupt", file=sys.stderr)

@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import re
+import subprocess
 
 from argparse import ArgumentParser, FileType
 from collections import defaultdict
@@ -105,3 +106,19 @@ def process_json(infile, outdir):
 
         nrows = len(tasks)
         logging.info(f"Exported {nrows} records to \"{outfile.name}\"")
+
+
+def generate_json(of2path, outpath):
+    logging.debug(f"Exporting OmniFocus database to JSON")
+    subprocess.check_output([of2path, '-o', outpath])
+    return outpath
+
+
+def export_csvs(of2path, outpath):
+    with TemporaryDirectory(prefix="me.csv-") as tmpdir:
+        pwd = os.getcwd()
+        os.chdir(tmpdir)
+        jsonpath = me.omnifocus.generate_json(of2path, "omnifocus.json")
+        os.chdir(pwd)
+        with open(jsonpath) as infile:
+            me.omnifocus.process_json(infile, outpath)

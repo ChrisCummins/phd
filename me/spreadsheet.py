@@ -1,7 +1,6 @@
 #!/usr/bin/env python3.6
 
 import gspread
-import json
 import os
 
 from oauth2client.service_account import ServiceAccountCredentials
@@ -45,20 +44,14 @@ def csv_to_worksheet(worksheet, list_of_lists):
     worksheet.update_cells(cell_list)
 
 
-def get_or_create_spreadsheet(gc, name):
+def get_or_create_spreadsheet(gc, name, share_with):
     """ return spreadsheet by name, creating it if necessary """
     try:
         sh = gc.open(name)
     except SpreadsheetNotFound:
         sh = gc.create(name)
-        sh.share(get_config["share_with"], perm_type='user', role='writer')
+        sh.share(share_with, perm_type='user', role='writer')
     return sh
-
-
-def get_config():
-    with open("config.json") as infile:
-        data = json.load(infile)
-        return data
 
 
 def get_or_create_worksheet(sh, name):
@@ -69,11 +62,11 @@ def get_or_create_worksheet(sh, name):
         return sh.add_worksheet(title=name, rows=1, cols=1)
 
 
-def get_connection():
+def get_connection(keypath):
     scope = ['https://spreadsheets.google.com/feeds',
              'https://www.googleapis.com/auth/drive']
 
     credentials = ServiceAccountCredentials.from_json_keyfile_name(
-        os.path.expanduser(get_config()["keypath"]), scope)
+        os.path.expanduser(keypath), scope)
 
     return gspread.authorize(credentials)
