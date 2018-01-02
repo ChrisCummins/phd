@@ -1,5 +1,7 @@
 #!/usr/bin/env python3.6
 
+import spreadsheet
+
 import csv
 import datetime
 import json
@@ -88,41 +90,39 @@ def process_json(infile, outdir):
     start = tasks[0][0].date()
     today = datetime.date.today()
 
-    with open(f"{outdir}/OmniFocus Task Counts.csv", "w") as outfile:
+    with open(f"{outdir}/OmniFocus Tasks.csv", "w") as outfile:
         writer = csv.writer(outfile, delimiter=",", quoting=csv.QUOTE_MINIMAL)
 
         # Write header
-        writer.writerow(["Date", "Incomplete", "Complete"])
+        writer.writerow(["Date", "Total Incomplete", "Total Complete",
+                         "Tasks Added", "Tasks Completed", "Delta"])
 
-        for date in daterange(start, today):
-            incomplete = task_count(tasks, date, completed=False)
-            complete = task_count(tasks, date, completed=True)
-            writer.writerow([date, incomplete, complete])
+        last_incomplete, last_complete = 0, 0
 
-        nrows = len(tasks)
-        logging.info(f"Exported {nrows} records to \"{outfile.name}\"")
-
-
-    with open(f"{outdir}/OmniFocus Deltas.csv", "w") as outfile:
-        writer = csv.writer(outfile, delimiter=",", quoting=csv.QUOTE_MINIMAL)
-
-        # Write header
-        writer.writerow(["Date", "Tasks Added", "Tasks Completed", "Delta"])
-
-        last_incomplete = 0
-        last_complete = 0
         for date in daterange(start, today):
             incomplete = task_count(tasks, date, completed=False)
             complete = task_count(tasks, date, completed=True)
             delta_added = incomplete - last_incomplete
             delta_completed = complete - last_complete
             delta = delta_added - delta_completed
-            writer.writerow([date, delta_added, delta_completed, delta])
+            writer.writerow([date, incomplete, complete,
+                             delta_added, delta_completed, delta])
             last_incomplete = incomplete
             last_complete = complete
 
         nrows = len(tasks)
         logging.info(f"Exported {nrows} records to \"{outfile.name}\"")
+
+
+def export_to_web(outdir):
+    logging.info('Updating worksheet "data:OmniFocus Tasks"')
+    gc = spreadsheet.get_connection()
+    sh = spreadsheet.get_or_create_spreadsheet(gc, "me.csv")
+    worksheet = spreadsheet.get_or_create_worksheet(sh, "data:OmniFocus Tasks")
+    with open(f"{outdir}/OmniFocus Tasks.csv") as infile:
+        reader = csv.reader(infile)
+        rows = [row for row in reader]
+        spreadsheet.csv_to_worksheet(worksheet, rows)
 
 
 def main():
@@ -142,6 +142,7 @@ def main():
     logging.basicConfig(format="%(message)s")
 
     process_json(args.infile, args.outdir)
+    export_to_web(args.outdir)
 
 
 if __name__ == "__main__":
