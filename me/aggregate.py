@@ -34,7 +34,7 @@ def get_row(data, date):
     return [''] * (len(data[0]) - 1)
 
 
-def aggregate(outdir, keypath, share_with):
+def aggregate(outdir, spreadsheet_name, keypath, share_with):
     csvs = [
         "Step Count.csv",
         "Distance.csv",
@@ -78,10 +78,10 @@ def aggregate(outdir, keypath, share_with):
                 row += get_row(data, date)
             writer.writerow([date] + row)
 
-    logging.info(f'Updating worksheet "Data"')
+    logging.info(f'Updating worksheet "Daily Aggregates"')
     gc = me.spreadsheet.get_connection(keypath)
-    sh = me.spreadsheet.get_or_create_spreadsheet(gc, "me.csv", share_with)
-    worksheet = me.spreadsheet.get_or_create_worksheet(sh, f"Data")
+    sh = me.spreadsheet.get_or_create_spreadsheet(gc, spreadsheet_name, share_with)
+    worksheet = me.spreadsheet.get_or_create_worksheet(sh, f"Daily Aggregates")
     with open(f"{outdir}/me.csv") as infile:
         reader = csv.reader(infile)
         rows = [row for row in reader]

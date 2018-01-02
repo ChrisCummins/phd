@@ -51,6 +51,7 @@ def _main():
 
     # Export options:
     csv_path = os.path.expanduser(config["exports"]["csv"]["path"])
+    spreadsheet_name = config["exports"]["gsheet"]["name"]
     keypath = os.path.expanduser(config["exports"]["gsheet"]["keypath"])
     share_with = config["exports"]["gsheet"]["share_with"]
 
@@ -62,7 +63,7 @@ def _main():
         me.healthkit.process_archive(infile, csv_path)
 
     # Aggregate data:
-    me.aggregate.aggregate(csv_path, keypath, share_with)
+    me.aggregate.aggregate(csv_path, spreadsheet_name, keypath, share_with)
 
 
 def main():
