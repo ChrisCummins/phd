@@ -8,23 +8,6 @@ from gspread.exceptions import WorksheetNotFound
 from typing import List
 
 
-def set_column_vals(worksheet, column: chr, startindex: int, values: List[object]) -> None:
-    """ write a column of values to a worksheet """
-    endindex = startindex + len(values)
-
-    cell_list = worksheet.range(f"{column}{startindex}:{column}{endindex}")
-    for value, cell in zip(values, cell_list):
-        cell.value = value
-
-    worksheet.update_cells(cell_list)
-
-
-def char_index(i: int) -> chr:
-    """ convert zero-base index into a character """
-    # TODO: Wrap around to 'AA' after 'Z'
-    return chr(ord("A") + i)
-
-
 def csv_to_worksheet(worksheet, list_of_lists):
     """ set worksheet values from list of lists """
     nrows = len(list_of_lists)
