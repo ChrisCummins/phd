@@ -160,7 +160,7 @@ def _process_step_count(typename, records, outdir):
 
 
 def _process_body_mass(typename, records, outdir):
-    create_sum_csv(records, "Weight (kg)", "kg", f"{outdir}/Weight.csv")
+    create_avg_csv(records, "Weight (kg)", "kg", f"{outdir}/Weight.csv")
 
 
 def _process_dietary_energy_consumed(typename, records, outdir):
