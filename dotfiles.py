@@ -686,6 +686,17 @@ class MySQL(Task):
             symlink(os.path.join(PRIVATE, "mysql", ".my.cnf"), "~/.my.cnf")
 
 
+class MeCsv(Task):
+    """ me.csv health and time tracking """
+    __platforms__ = ['osx']
+    __genfiles__ = []
+
+    def install_osx(self):
+        if os.path.isdir(os.path.join(PRIVATE, "me.csv")):
+            self.__genfiles__ += ["~/.me.json"]
+            symlink(os.path.join(PRIVATE, "me.csv", "me.json"), "~/.me.json")
+
+
 class LaTeX(Task):
     """ pdflatex and helper scripts """
     __platforms__ = ['linux', 'osx']
