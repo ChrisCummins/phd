@@ -7,7 +7,7 @@ Compilers should produce correct code for valid inputs, and meaningful errors fo
 %
 % Random program generators come close to it but they require extensive development effort for every language supported by the compiler, and often leave parts of the language space untested. A better way for testing compilers is needed.
 %
-Random program generation --- fuzzing --- is an effective technique for discovering bugs in compilers but successful program generators require extensive development effort for every language supported by the compiler, and often leave parts of the language space untested. A better way for testing compilers is needed.
+Random program generation --- fuzzing --- is an effective technique for discovering bugs in compilers but successful program generators require extensive development effort for every language supported by the compiler, and often leave parts of the language space untested. A better way for testing compilers is needed. \cc{Reword for ISSTA audience: they already know that test suites are unsuitable. The grammar of generative models is complex, as is mutation testing.}
 
 % A novel approach for the rapid development of broad, undirected fuzzers
 We introduce DeepSmith, a novel approach which employs state-of-the-art deep learning techniques to automate and accelerate compiler validation. Our approach constructs a learned model of the structure of real world code based on a large corpus of open source code. Then, it uses the model to automatically generate tens of thousands of realistic programs. Finally, it applies established differential testing methodologies on them to expose bugs in compilers.

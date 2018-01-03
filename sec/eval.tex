@@ -424,11 +424,18 @@ Table~\ref{tab:clangs} shows the 7 distinct assertions triggered during this exp
 The results emphasize that compiler validation is a moving target. Every change and feature addition has the potential to introduce regressions or new failure cases. Since LLVM will not release unless their compiler passes their own extensive test suites, this also reinforces the case for compiler fuzzing. We believe our approach provides an effective means for the generation of such fuzzers, at a fraction of the cost of existing techniques.
 
 
-\section{Language Extensibility}
+\section{Extensibility}
 
+\cc{Staging ground for notes on extensibility:}
 
-\subsection{Solidity}
+\paragraph{Solidity}
 
-\cc{TODO\ldots} Solidity, the programming language of the Ethereum Blockchain. Syntax based on JavaScript. Reference compiler \texttt{solc}.
+Solidity, the programming language of the Ethereum Blockchain. Very young language, little time to develop tooling (yet still very important - money is involved!). Syntax based on JavaScript.
 
-\paragraph{Assembling the corpus} Scraped GitHub for solidity sources. Recursively inlined imported modules in a manner similar to~\cite{Cummins2017a}. No preprocessor (Solidity doesn't have one).
+Method: Scraped GitHub for solidity sources. Recursively inlined imported modules in a manner similar to~\cite{Cummins2017a}. No preprocessor (Solidity doesn't have one), just code formatting using clangformat. Encoded corpus using list of keywords from language (required no more language expertise than a syntax highlighter). Trained model in the same manner as OpenCL. Simple compile-only test harness for reference compiler \texttt{solc}.
+
+Results: Found a compiler crash caused by missing error handling of language features.
+
+\subsection{Other Notes on Extensibility}
+
+This approach could be combined with symbolic execution to drive more complex structured inputs~\cite{Braione2017}.
