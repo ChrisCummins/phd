@@ -168,7 +168,11 @@ def _process_dietary_energy_consumed(typename, records, outdir):
 
 
 def _process_active_energy_burned(typename, records, outdir):
-    create_sum_csv(records, "Calories Burned (kcal)", "kcal", f"{outdir}/Calories Burned.csv")
+    create_sum_csv(records, "Active Energy (kcal)", "kcal", f"{outdir}/Active Energy.csv")
+
+
+def _process_basal_energy_burned(typename, records, outdir):
+    create_sum_csv(records, "Resting Energy (kcal)", "kcal", f"{outdir}/Resting Energy.csv")
 
 
 def _process_dietary_water(typename, records, outdir):
@@ -245,6 +249,7 @@ def _process_dietary_potassium(typename, records, outdir):
 def process_records(typename, records, outdir):
     handler = {
         "Active Energy Burned": _process_active_energy_burned,
+        "Basal Energy Burned": _process_basal_energy_burned,
         "Body Mass Index": _process_body_mass_index,
         "Body Mass": _process_body_mass,
         "Dietary Caffeine": _process_dietary_caffeine,
