@@ -35,37 +35,8 @@ def get_row(data, date):
     return [''] * (len(data[0]) - 1)
 
 
-def aggregate(outdir, spreadsheet_name, keypath, share_with):
-    csvs = [
-        "Toggl/Academic.csv",
-        "Toggl/Professional.csv",
-        "Toggl/Personal.csv",
-        "Toggl/Play.csv",
-        "Toggl/Admin.csv",
-        "Step Count.csv",
-        "Distance.csv",
-        "Calories Consumed.csv",
-        "Active Energy.csv",
-        "Resting Energy.csv",
-        "Heart Rate.csv",
-        "Water.csv",
-        "Caffeine.csv",
-        "Total Fat.csv",
-        "Sat Fat.csv",
-        "Cholesterol.csv",
-        "Sodium.csv",
-        "Carbohydrates.csv",
-        "Fiber.csv",
-        "Sugar.csv",
-        "Protein.csv",
-        "Potassium.csv",
-        "Height.csv",
-        "Weight.csv",
-        "BMI.csv",
-        "OmniFocus Tasks.csv",
-    ]
-
-    csv_data = [read_csv(f"{outdir}/{x}") for x in csvs]
+def aggregate(outdir, csvs, spreadsheet_name, keypath, share_with):
+    csv_data = [read_csv(x) for x in csvs]
 
     # Get the earlest reading date
     start_date = min(x[1][0] for x in csv_data)

@@ -68,11 +68,8 @@ def task_count(tasks, date, completed: bool):
     return count
 
 
-def process_json(infile, outdir):
-    try:
-        os.mkdir(outdir)
-    except FileExistsError:
-        pass
+def process_json(infile, outpath):
+    me.mkdir(os.path.dirname(outpath))
 
     logging.debug(f"Parsing {infile.name}")
     data = json.load(infile)
@@ -84,7 +81,7 @@ def process_json(infile, outdir):
     start = tasks[0][0].date()
     today = datetime.date.today()
 
-    with open(f"{outdir}/OmniFocus Tasks.csv", "w") as outfile:
+    with open(outpath, "w") as outfile:
         writer = csv.writer(outfile, delimiter=",", quoting=csv.QUOTE_MINIMAL)
 
         # Write header
@@ -120,5 +117,5 @@ def export_csvs(of2path, outpath):
         os.chdir(tmpdir)
         jsonpath = me.omnifocus.generate_json(of2path, "omnifocus.json")
         with open(jsonpath) as infile:
-            me.omnifocus.process_json(infile, outpath)
+            me.omnifocus.process_json(infile, f"{outpath}/Tasks.csv")
         os.chdir(pwd)
