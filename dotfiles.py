@@ -686,17 +686,6 @@ class MySQL(Task):
             symlink(os.path.join(PRIVATE, "mysql", ".my.cnf"), "~/.my.cnf")
 
 
-class MeCsv(Task):
-    """ me.csv health and time tracking """
-    __platforms__ = ['osx']
-    __genfiles__ = []
-
-    def install_osx(self):
-        if os.path.isdir(os.path.join(PRIVATE, "me.csv")):
-            self.__genfiles__ += ["~/.me.json"]
-            symlink(os.path.join(PRIVATE, "me.csv", "me.json"), "~/.me.json")
-
-
 class LaTeX(Task):
     """ pdflatex and helper scripts """
     __platforms__ = ['linux', 'osx']
@@ -1017,6 +1006,28 @@ class OmniFocus(Task):
 
     def install(self):
         symlink(usr_share("OmniFocus/omni"), "/usr/local/bin/omni", sudo=True)
+
+
+class Toggl(Task):
+    """ time tracking app """
+    __platforms__ = ['osx']
+    __osx_genfiles__ = ['/Applications/TogglDesktop.app']
+    __osx_deps__ = [AppStore]
+
+    def install_osx(self):
+        AppStore().install_app('957734279', '/Applications/TogglDesktop.app')
+
+
+class MeCsv(Task):
+    """ me.csv health and time tracking """
+    __platforms__ = ['osx']
+    __genfiles__ = []
+    __osx_deps__ = []  # FIXME: OmniFocus, Toggl
+
+    def install_osx(self):
+        if os.path.isdir(os.path.join(PRIVATE, "me.csv")):
+            self.__genfiles__ += ["~/.me.json"]
+            symlink(os.path.join(PRIVATE, "me.csv", "me.json"), "~/.me.json")
 
 
 class Bazel(Task):
