@@ -16,7 +16,7 @@
 # DeepSmith.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-CLSmith.
+OpenCL program generators.
 """
 import humanize
 import logging

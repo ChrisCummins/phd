@@ -43,7 +43,7 @@ class Solidity(Language):
     __name__ = "solidity"
 
     __generators__ = {
-        None: RandChar,
+        None: RandChar,  # default
         "randchar": RandChar,
         "dsmith": DSmith,
         "github": GitHub,

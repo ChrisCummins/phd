@@ -44,7 +44,7 @@ class OpenCL(Language):
     __name__ = "opencl"
 
     __generators__ = {
-        None: DSmith,
+        None: DSmith,  # default
         "dsmith": DSmith,
         "clsmith": CLSmith,
         "randchar": RandChar,
