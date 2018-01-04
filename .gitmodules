@@ -4,3 +4,12 @@
 [submodule "lib/cldrive"]
 	path = lib/cldrive
 	url = https://github.com/ChrisCummins/cldrive.git
+[submodule "lib/clgen"]
+	path = lib/clgen
+	url = https://github.com/ChrisCummins/clgen.git
+[submodule "lib/clreduce"]
+	path = lib/clreduce
+	url = https://github.com/ChrisCummins/clreduce.git
+[submodule "lib/CLSmith"]
+	path = lib/CLSmith
+	url = https://github.com/ChrisCummins/CLSmith.git
