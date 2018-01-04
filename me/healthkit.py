@@ -34,8 +34,8 @@ def sum_values_by_day(records, value_attr: str='value',
     rows = []
     for r in records:
         if filter_fn and not filter_fn(r):
-            rows.append((parse_date(r[date_attr].value),
-                         float(r[value_attr].value)))
+            rows.append((parse_date(r[date_attr]),
+                         float(r[value_attr])))
     rows = sorted(rows, key=lambda x: x[0])
 
     rows2 = []
@@ -59,7 +59,7 @@ def sum_durations_by_day(records, filter_fn=None):
     rows = []
     for r in records:
         if filter_fn and not filter_fn(r):
-            rows.append((parse_date(r['startDate'].value),
+            rows.append((parse_date(r['startDate']),
                          parse_datetime(r['endDate']) - parse_datetime(r['startDate'])))
     rows = sorted(rows, key=lambda x: x[0])
 
@@ -86,8 +86,8 @@ def avg_values_by_day(records, value_attr: str='value',
     rows = []
     for r in records:
         if filter_fn and not filter_fn(r):
-            rows.append((parse_date(r[date_attr].value),
-                         float(r[value_attr].value)))
+            rows.append((parse_date(r[date_attr]),
+                         float(r[value_attr])))
     rows = sorted(rows, key=lambda x: x[0])
 
     rows2 = []
@@ -116,7 +116,7 @@ def avg_values_by_day(records, value_attr: str='value',
 def create_sum_csv(records, name, unit, outpath):
 
     def _attr_filter(record):
-        assert(record['unit'].value == unit)
+        assert(record['unit'] == unit)
 
     header = ("Date", name)
     rows = sum_values_by_day(records, filter_fn=_attr_filter)
@@ -126,7 +126,7 @@ def create_sum_csv(records, name, unit, outpath):
 def create_avg_csv(records, name, unit, outpath, min_max: bool=False):
 
     def _attr_filter(record):
-        assert(record['unit'].value == unit)
+        assert(record['unit'] == unit)
 
     if min_max:
         header = ("Date", f"Min {name}", f"Avg {name}", f"Max {name}")
@@ -137,13 +137,11 @@ def create_avg_csv(records, name, unit, outpath, min_max: bool=False):
 
 
 def create_stand_hour_csv(records, outpath):
-    records = sorted(records, key=lambda r: r['startDate'].value)
-
     rows = [("Date", "Stand Hours", "Idle Hours")]
     last_date = None
     counts = [0, 0]
     for r in records:
-        date = parse_date(r['startDate'].value)
+        date = parse_date(r['startDate'])
 
         if date != last_date:
             if last_date:
@@ -151,12 +149,12 @@ def create_stand_hour_csv(records, outpath):
             last_date = date
             counts = [1, 1]
         else:
-            if r['value'].value == "HKCategoryValueAppleStandHourStood":
+            if r['value'] == "HKCategoryValueAppleStandHourStood":
                 counts[0] += 1
-            elif r['value'].value == "HKCategoryValueAppleStandHourIdle":
+            elif r['value'] == "HKCategoryValueAppleStandHourIdle":
                 counts[1] += 1
             else:
-                raise ValueError("unrecognized value " + str(r['value'].value))
+                raise ValueError("unrecognized value " + str(r['value']))
 
     rows.append([last_date] + counts)
     me.create_csv(rows, outpath)
@@ -174,12 +172,35 @@ def _process_records_generic(typename, records, outdir):
         row = []
         for attr in attributes:
             try:
-                row.append(record[attr].value)
+                row.append(record[attr])
             except:
                 row.append('')
         rows.append(row)
 
     me.create_csv([header] + rows, outpath)
+
+
+def parse_xml(records):
+    """ returns a list of dictionaries from healthkit XML records """
+    # Convert XML to dictionaries:
+    rows = []
+    for r in records:
+        rows.append(dict([(x, r[x].value) for x in r.keys()]))
+
+    # Strip unwanted columns:
+    for r in records:
+        for col in ['creationDate', 'device', 'sourceName', 'sourceVersion']:
+            if col in r:
+                del r[col]
+
+    # Create a dictionary of unique values:
+    data = {}
+    for r in rows:
+        rid = hash(frozenset(r.items()))
+        data[rid] = r
+
+    # Sort by start date
+    return sorted(data.values(), key=lambda r: r['startDate'])
 
 
 def process_records(typename, records, outdir):
@@ -342,6 +363,8 @@ def process_records(typename, records, outdir):
             "min_max": True
         },
     }.get(typename)
+
+    records = parse_xml(records)
 
     if handler:
         csv_fn = handler.pop("fn")
