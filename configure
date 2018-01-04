@@ -213,7 +213,7 @@ def main():
 
     # generate make config file
     with open(".config.make", "w") as outfile:
-        print("ROOT := {cfg['dsmith_dir']}".format(**vars()), file=outfile)
+        print("ROOT := " + str(cfg['dsmith_dir']), file=outfile)
         print("RC_PATH := {}".format(cfg["rc_path"]), file=outfile)
         print("DSMITH_VERSION := " + cfg["version"], file=outfile)
         print("USE_CUDA := " + to_make(cfg["cuda"]), file=outfile)
@@ -227,7 +227,7 @@ def main():
 
     # generate python config file
     with open(os.path.join("dsmith", "_config.py"), "w") as outfile:
-        print("ROOT = '{cfg['dsmith_dir']}'".format(**vars()), file=outfile)
+        print("ROOT = '" + cfg['dsmith_dir'] + "'", file=outfile)
         print("RC_PATH = '{}'".format(cfg["rc_path"]), file=outfile)
         print("VERSION = '{}'".format(cfg["version"]), file=outfile)
         print("USE_CUDA = " + to_python(cfg["cuda"]), file=outfile)
