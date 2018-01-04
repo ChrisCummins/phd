@@ -859,10 +859,10 @@ class Emacs(Task):
         self._install_common()
 
     def _install_common(self):
-        if clone_git_repo("git@github.com:bbatsov/prelude.git",
-                          "~/.emacs.d", self.PRELUDE_VERSION):
-            # prelude requires there be no ~/.emacs file on first run
-            Trash().trash('~/.emacs')
+        clone_git_repo("git@github.com:bbatsov/prelude.git",
+                       "~/.emacs.d", self.PRELUDE_VERSION)
+        # prelude requires there be no ~/.emacs file on first run
+        Trash().trash('~/.emacs')
 
 
 class AppStore(Task):
