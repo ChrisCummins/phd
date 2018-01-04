@@ -1213,6 +1213,7 @@ class DefaultApps(Task):
         "mkv": "org.videolan.vlc",
         "mov": "org.videolan.vlc",
         "mp4": "org.videolan.vlc",
+        "mpg": "org.videolan.vlc",
         "nfo": "com.sublimetext.3",
         "py": "com.sublimetext.3",
         "py": "com.sublimetext.3",
