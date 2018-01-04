@@ -839,7 +839,7 @@ class Trash(Task):
     def trash(self, *paths):
         for path in paths:
             path = os.path.expanduser(path)
-            shell("trash '{path}'".format(**vars()))
+            shell("/usr/local/bin/trash '{path}'".format(**vars()))
 
 
 class Emacs(Task):
