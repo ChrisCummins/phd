@@ -25,7 +25,7 @@ from argparse import ArgumentParser
 from configparser import ConfigParser
 
 
-def yes_no(question, default="no"):
+def yes_no(batch, question, default="no"):
     """Ask a yes/no question and return user's answer.
 
     "question" is a string that is presented to the user.
@@ -37,6 +37,10 @@ def yes_no(question, default="no"):
     """
     valid = {"yes": True, "y": True, "ye": True, True: True,
              "no": False, "n": False, False: False}
+
+    if batch:
+        return valid[default]
+
     if default is None:
         prompt = " [y/n] "
     elif default:
@@ -60,14 +64,18 @@ def yes_no(question, default="no"):
                              "(or 'y' or 'n').\n")
 
 
-def textinput(question, default=None):
+def textinput(batch, question, default=None):
     """Ask a question and return user's answer.
 
     "question" is a string that is presented to the user.
     "default" is the presumed answer if the user just hits <Enter>.
     """
+    if batch:
+        return default
+
     if default is None:
         prompt = " "
+        default = ""
     else:
         prompt = f" [default: {default}] "
 
@@ -137,8 +145,9 @@ def main():
     # Directory containing this respository
     pwd = os.path.dirname(os.path.realpath(__file__))
 
+    batch = args.batch
     if args.reconfigure:
-        args.batch = True
+        batch = True
         try:
             with open(".config.json") as infile:
                 cfg = json.loads(infile.read())
@@ -153,52 +162,50 @@ def main():
             "dsmith_dir": pwd,
         }
 
-    # get input from user
-    if not args.batch:
-        cfg["cuda"] = yes_no("Enable CUDA backend? (requires CUDA)", default=args.with_cuda_backend)
+    cfg["cuda"] = yes_no(batch, "Enable CUDA backend? (requires CUDA)", default=args.with_cuda_backend)
 
-        # OpenCL settings:
-        cfg["opencl"] = yes_no("Enable OpenCL fuzzing? (requires OpenCL)", default=args.with_opencl)
-        if cfg["opencl"]:
-            if yes_no("Build all OpenCL LLVM testbeds?", default=(
-                args.with_llvm_trunk and
-                args.with_llvm_50 and
-                args.with_llvm_40 and
-                args.with_llvm_39 and
-                args.with_llvm_38 and
-                args.with_llvm_37 and
-                args.with_llvm_36)):
-                cfg["llvm_trunk"] = True
-                cfg["llvm_50"] = True
-                cfg["llvm_40"] = True
-                cfg["llvm_39"] = True
-                cfg["llvm_38"] = True
-                cfg["llvm_37"] = True
-                cfg["llvm_36"] = True
-            else:
-                cfg["llvm_trunk"] = yes_no("Build OpenCL LLMV trunk testbed?", default=args.with_llvm_trunk)
-                cfg["llvm_50"] = yes_no("Build OpenCL LLMV 5.0 testbed?", default=args.with_llvm_50)
-                cfg["llvm_40"] = yes_no("Build OpenCL LLMV 4.0 testbed?", default=args.with_llvm_40)
-                cfg["llvm_39"] = yes_no("Build OpenCL LLMV 3.9 testbed?", default=args.with_llvm_39)
-                cfg["llvm_38"] = yes_no("Build OpenCL LLMV 3.8 testbed?", default=args.with_llvm_38)
-                cfg["llvm_37"] = yes_no("Build OpenCL LLMV 3.7 testbed?", default=args.with_llvm_37)
-                cfg["llvm_36"] = yes_no("Build OpenCL LLMV 3.6 testbed?", default=args.with_llvm_36)
+    # OpenCL settings:
+    cfg["opencl"] = yes_no(batch, "Enable OpenCL fuzzing? (requires OpenCL)", default=args.with_opencl)
+    if cfg["opencl"]:
+        if yes_no(batch, "Build all OpenCL LLVM testbeds?", default=(
+            args.with_llvm_trunk and
+            args.with_llvm_50 and
+            args.with_llvm_40 and
+            args.with_llvm_39 and
+            args.with_llvm_38 and
+            args.with_llvm_37 and
+            args.with_llvm_36)):
+            cfg["llvm_trunk"] = True
+            cfg["llvm_50"] = True
+            cfg["llvm_40"] = True
+            cfg["llvm_39"] = True
+            cfg["llvm_38"] = True
+            cfg["llvm_37"] = True
+            cfg["llvm_36"] = True
         else:
-            cfg["llvm_trunk"] = False
-            cfg["llvm_50"] = False
-            cfg["llvm_40"] = False
-            cfg["llvm_39"] = False
-            cfg["llvm_38"] = False
-            cfg["llvm_37"] = False
-            cfg["llvm_36"] = False
+            cfg["llvm_trunk"] = yes_no(batch, "Build OpenCL LLMV trunk testbed?", default=args.with_llvm_trunk)
+            cfg["llvm_50"] = yes_no(batch, "Build OpenCL LLMV 5.0 testbed?", default=args.with_llvm_50)
+            cfg["llvm_40"] = yes_no(batch, "Build OpenCL LLMV 4.0 testbed?", default=args.with_llvm_40)
+            cfg["llvm_39"] = yes_no(batch, "Build OpenCL LLMV 3.9 testbed?", default=args.with_llvm_39)
+            cfg["llvm_38"] = yes_no(batch, "Build OpenCL LLMV 3.8 testbed?", default=args.with_llvm_38)
+            cfg["llvm_37"] = yes_no(batch, "Build OpenCL LLMV 3.7 testbed?", default=args.with_llvm_37)
+            cfg["llvm_36"] = yes_no(batch, "Build OpenCL LLMV 3.6 testbed?", default=args.with_llvm_36)
+    else:
+        cfg["llvm_trunk"] = False
+        cfg["llvm_50"] = False
+        cfg["llvm_40"] = False
+        cfg["llvm_39"] = False
+        cfg["llvm_38"] = False
+        cfg["llvm_37"] = False
+        cfg["llvm_36"] = False
 
-        # Solidity settings:
-        cfg["solidity"] = yes_no("Enable Solidity fuzzing? (requires solc)", default=args.with_solidity)
+    # Solidity settings:
+    cfg["solidity"] = yes_no(batch, "Enable Solidity fuzzing? (requires solc)", default=args.with_solidity)
 
-        # GLSL settings
-        cfg["glsl"] = yes_no("Enable GLSL fuzzing?", default=args.with_glsl)
+    # GLSL settings
+    cfg["glsl"] = yes_no(batch, "Enable GLSL fuzzing?", default=args.with_glsl)
 
-        cfg["rc_path"] = textinput("Path to configuration file", default=args.rc or default_rc)
+    cfg["rc_path"] = textinput(batch, "Path to configuration file", default=args.rc or default_rc)
 
     # generate JSON config file
     with open(".config.json", "w") as outfile:
@@ -258,11 +265,11 @@ It looks like that file does not exist.
 The following questions will create it for you:""")
         config = ConfigParser()
 
-        engine = textinput("Select database engine: {sqlite,mysql}", default="mysql")
+        engine = textinput(batch, "Select database engine: {sqlite,mysql}", default="mysql")
         if engine == "sqlite":
             config['database'] = {
                 "engine": "sqlite",
-                "dir": _abspath(textinput("Directory for database files",
+                "dir": _abspath(textinput(batch, "Directory for database files",
                                           default="~/.cache/dsmith/db")),
                 "buffer_size": 250,
             }
@@ -271,10 +278,10 @@ The following questions will create it for you:""")
                 "engine": "mysql",
                 "schema": "dsmith_04_opencl",
                 "buffer_size": 250,
-                "hostname": textinput("Hostname of database Server", default="localhost"),
-                "port": int(textinput("Database server port", default="3306")),
-                "username": textinput("Database username:"),
-                "password": textinput("Database password:"),
+                "hostname": textinput(batch, "Hostname of database Server", default="localhost"),
+                "port": int(textinput(batch, "Database server port", default="3306")),
+                "username": textinput(batch, "Database username:"),
+                "password": textinput(batch, "Database password:"),
             }
         else:
             print("💩  I'm sorry, that is not a valid database engine",
