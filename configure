@@ -18,6 +18,13 @@ def json_to_stream(blob, stream):
     print("", file=stream)
 
 
+def merge_dicts(a, b):
+    """ returns a copy of 'a' with values updated by 'b' """
+    dst = a.copy()
+    dst.update(b)
+    return dst
+
+
 DEFAULTS = {
     "dotfiles": os.path.dirname(os.path.realpath(__file__)),
     "private": os.path.expanduser("~/Dropbox/Shared"),
@@ -40,9 +47,10 @@ def main():
 
     if os.path.exists("config.json"):
         with open("config.json") as infile:
-            cfg = json.loads(infile.read())
+            # Merge existing values into defaults
+            cfg = merge_dicts(DEFAULTS, json.loads(infile.read()))
     else:
-        cfg = {}
+        cfg = DEFAULTS
 
     cfg["dotfiles"] = args.dotfiles if args.dotfiles else cfg["dotfiles"]
     cfg["private"] = args.private if args.private else cfg["private"]
