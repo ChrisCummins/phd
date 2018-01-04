@@ -92,9 +92,10 @@ class OpenCL(Language):
 
     def describe_results(self, file=sys.stdout) -> None:
         with Session() as s:
-            for generator in self.generators:
-                for harness in generator.harnesses:
-                    for testbed in self.testbeds(session=s):
+            for harness in self.harnesses:
+                for generator in harness.generators:
+                    for testbed in harness.testbeds():
+                        testbed = str(testbed)
                         num_results = harness.num_results(generator, testbed)
                         if num_results:
                             word_num = humanize.intcomma(num_results)

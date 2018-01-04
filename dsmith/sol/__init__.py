@@ -87,7 +87,17 @@ class Solidity(Language):
                     print(f"    {harness} {testbed} {testbed.platform}", file=file)
 
     def describe_results(self, file=sys.stdout) -> None:
-        raise NotImplementedError
+        with Session() as s:
+            for harness in self.harnesses:
+                for generator in harness.generators:
+                    for testbed in harness.testbeds():
+                        testbed = str(testbed)
+                        num_results = harness.num_results(generator, testbed)
+                        if num_results:
+                            word_num = humanize.intcomma(num_results)
+                            print(f"There are {Colors.BOLD}{word_num}{Colors.END} "
+                                  f"{generator}:{harness} "
+                                  f"results on {testbed}.", file=file)
 
     def difftest(self) -> None:
         raise NotImplementedError
