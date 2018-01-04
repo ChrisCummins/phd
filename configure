@@ -139,7 +139,7 @@ def main():
     parser.add_argument("--with-glsl", action="store_true",
                         help="enable GLSL fuzzing")
     parser.add_argument("--rc", metavar="<path>", default=None,
-                        help="path to configuration file (default: {default_rc})".format(**vars()))
+                        help="path to configuration file (default: " + default_rc + ")")
     args = parser.parse_args()
 
     # Directory containing this respository
