@@ -155,6 +155,8 @@ class Python(Task):
 
     def pip_install(self, package, version, pip="pip2", sudo=False):
         """ install a package using pip, return True if installed """
+        # Ubuntu requires sudo permission for pip install
+        sudo = True if get_platform() == "ubuntu" else sudo
         use_sudo = "sudo -H " if sudo else ""
 
         # Create the list of pip packages
