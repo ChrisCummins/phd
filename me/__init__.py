@@ -1,7 +1,9 @@
 """
 me - Aggregate health and time tracking data.
 """
+import csv
 import datetime
+import logging
 import os
 
 
@@ -21,3 +23,15 @@ def mkdir(path):
         os.mkdir(path)
     except FileExistsError:
         pass
+
+
+def create_csv(rows, outpath):
+    with open(outpath, "w") as outfile:
+        logging.debug(f"Creating CSV file {outfile.name}")
+
+        writer = csv.writer(outfile, delimiter=",", quoting=csv.QUOTE_MINIMAL)
+        for row in rows:
+            writer.writerow(row)
+
+    nrows = len(rows) - 1
+    logging.info(f"Exported {nrows} records to '{outpath}'")
