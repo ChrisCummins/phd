@@ -22,7 +22,7 @@ clreduce := $(clreduce_dir)/build_creduce/creduce/creduce
 
 clreduce: $(clreduce)
 
-$(clreduce):
+$(clreduce): cmake
 	cd $(clreduce_dir) && PATH=$(dir $(ninja)):$$PATH make CMAKE=$(cmake)
 all_targets += $(clreduce)
 
