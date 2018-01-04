@@ -1,6 +1,3 @@
-[submodule "lib/-f"]
-	path = lib/-f
-	url = https://github.com/ChrisCummins/cldrive.git
 [submodule "lib/cldrive"]
 	path = lib/cldrive
 	url = https://github.com/ChrisCummins/cldrive.git
