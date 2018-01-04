@@ -34,6 +34,7 @@ import dsmith
 from dsmith import Colors
 from dsmith.langs import Language, Generator, Harness
 from dsmith.sol import db
+from dsmith.sol import difftest
 from dsmith.sol.db import *
 from dsmith.sol.generators import DSmith, RandChar, GitHub
 from dsmith.sol.harnesses import Solc
@@ -100,4 +101,4 @@ class Solidity(Language):
                                   f"results on {testbed}.", file=file)
 
     def difftest(self) -> None:
-        raise NotImplementedError
+        difftest.difftest()

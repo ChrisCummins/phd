@@ -16,7 +16,7 @@
 # DeepSmith.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-Differential test results.
+Differential test OpenCL results.
 """
 import threading
 
