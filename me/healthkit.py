@@ -1,5 +1,6 @@
 import datetime
 import logging
+import numpy as np
 import os
 import re
 
@@ -33,9 +34,10 @@ def sum_values_by_day(records, value_attr: str='value',
                       date_attr: str='endDate', filter_fn=None):
     rows = []
     for r in records:
-        if filter_fn and not filter_fn(r):
-            rows.append((parse_date(r[date_attr]),
-                         float(r[value_attr])))
+        if filter_fn and filter_fn(r):
+            continue
+        rows.append((parse_date(r[date_attr]),
+                     float(r[value_attr])))
     rows = sorted(rows, key=lambda x: x[0])
 
     rows2 = []
@@ -58,9 +60,10 @@ def sum_values_by_day(records, value_attr: str='value',
 def sum_durations_by_day(records, filter_fn=None):
     rows = []
     for r in records:
-        if filter_fn and not filter_fn(r):
-            rows.append((parse_date(r['startDate']),
-                         parse_datetime(r['endDate']) - parse_datetime(r['startDate'])))
+        if filter_fn and filter_fn(r):
+            continue
+        rows.append((parse_date(r['startDate']),
+                     parse_datetime(r['endDate']) - parse_datetime(r['startDate'])))
     rows = sorted(rows, key=lambda x: x[0])
 
     rows2 = []
@@ -85,32 +88,52 @@ def avg_values_by_day(records, value_attr: str='value',
                       min_max: bool=False):
     rows = []
     for r in records:
-        if filter_fn and not filter_fn(r):
-            rows.append((parse_date(r[date_attr]),
-                         float(r[value_attr])))
+        if filter_fn and filter_fn(r):
+            continue
+        rows.append((parse_date(r[date_attr]),
+                     float(r[value_attr])))
     rows = sorted(rows, key=lambda x: x[0])
 
     rows2 = []
     last_date = None
-    aggr = []
+    samples = []
     for row in rows:
         date, value = row
         if date != last_date:
             if last_date:
                 if min_max:
-                    rows2.append((last_date, min(aggr), sum(aggr) / len(aggr), max(aggr)))
+                    rows2.append((last_date, min(samples), np.median(samples), max(samples)))
                 else:
-                    rows2.append((last_date, sum(aggr) / len(aggr)))
+                    rows2.append((last_date, sum(samples) / len(samples)))
             last_date = date
-            aggr = [value]
+            samples = [value]
         else:
-            aggr.append(value)
+            samples.append(value)
+
     if min_max:
-        rows2.append((last_date, min(aggr), sum(aggr) / len(aggr), max(aggr)))
+        rows2.append((last_date, min(samples), np.median(samples), max(samples)))
     else:
-        rows2.append((last_date, sum(aggr) / len(aggr)))
+        rows2.append((last_date, sum(samples) / len(samples)))
 
     return rows2
+
+
+def count_by_day(records):
+    rows = []
+    last_date = None
+    count = 0
+    for r in records:
+        date = parse_date(r['startDate'])
+        if date != last_date:
+            if last_date:
+                rows.append((last_date, count))
+            last_date = date
+            count = 1
+        else:
+            count += 1
+    rows.append((last_date, count))
+
+    return rows
 
 
 def create_sum_csv(records, name, unit, outpath):
@@ -129,10 +152,22 @@ def create_avg_csv(records, name, unit, outpath, min_max: bool=False):
         assert(record['unit'] == unit)
 
     if min_max:
-        header = ("Date", f"Min {name}", f"Avg {name}", f"Max {name}")
+        header = ("Date", f"Min {name}", f"Median {name}", f"Max {name}")
     else:
         header = ("Date", name)
     rows = avg_values_by_day(records, filter_fn=_attr_filter, min_max=min_max)
+    me.create_csv([header] + rows, outpath)
+
+
+def create_sum_duration_csv(records, name, outpath):
+    header = ("Date", name)
+    rows = sum_durations_by_day(records)
+    me.create_csv([header] + rows, outpath)
+
+
+def create_count_csv(records, name, outpath):
+    header = ("Date", name)
+    rows = count_by_day(records)
     me.create_csv([header] + rows, outpath)
 
 
@@ -188,7 +223,7 @@ def parse_xml(records):
         rows.append(dict([(x, r[x].value) for x in r.keys()]))
 
     # Strip unwanted columns:
-    for r in records:
+    for r in rows:
         for col in ['creationDate', 'device', 'sourceName', 'sourceVersion']:
             if col in r:
                 del r[col]
@@ -333,34 +368,51 @@ def process_records(typename, records, outdir):
             "fn": create_avg_csv,
             "name": "Heart Rate (bmp)",
             "unit": "count/min",
-            "dest": "Heart Rate.csv",
-            "min_max": True
+            "dest": "Heart Rate",
+            "min_max": True,
+        },
+        "Heart Rate Variability S D N N": {
+            "fn": create_avg_csv,
+            "name": "Heart Rate Variability (ms)",
+            "unit": "ms",
+            "dest": "Heart Rate Variability",
+            "min_max": True,
         },
         "Height": {
             "fn": create_avg_csv,
             "name": "Height (cm)",
             "unit": "cm",
-            "dest": "Height"
+            "dest": "Height",
+        },
+        "Mindful Session": {
+            "fn": create_sum_duration_csv,
+            "name": "Mindful Sessions",
+            "dest": "Mindful Sessions",
         },
         "Resting Heart Rate": {
             "fn": create_avg_csv,
             "name": "Resting Heart Rate (bmp)",
             "unit": "count/min",
-            "dest": "Resting Heart Rate.csv",
-            "min_max": True
+            "dest": "Resting Heart Rate",
+            "min_max": True,
+        },
+        "Sexual Activity": {
+            "fn": create_count_csv,
+            "name": "Sex",
+            "dest": "Sex",
         },
         "Step Count": {
             "fn": create_sum_csv,
             "name": "Step Count",
             "unit": "count",
-            "dest": "Step Count"
+            "dest": "Step Count",
         },
         "Walking Heart Rate Average": {
             "fn": create_avg_csv,
             "name": "Walking Heart Rate (bmp)",
             "unit": "count/min",
-            "dest": "Walking Heart Rate.csv",
-            "min_max": True
+            "dest": "Walking Heart Rate",
+            "min_max": True,
         },
     }.get(typename)
 
@@ -369,8 +421,9 @@ def process_records(typename, records, outdir):
     if handler:
         csv_fn = handler.pop("fn")
         outpath = f"{outdir}/" + handler.pop("dest") + ".csv"
-        csv_fn(records=records, outpath=outpath, **handler)
+        return csv_fn(records=records, outpath=outpath, **handler)
     else:
+        logging.warn(f"warning: no handler for HealthKit data '{typename}'")
         return _process_records_generic(typename, records, outdir)
 
 
