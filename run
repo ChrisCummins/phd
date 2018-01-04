@@ -10,48 +10,63 @@ from argparse import ArgumentParser
 from collections import deque
 from time import time
 
+import dotfiles
 from util import *
 from dotfiles import *
 
 
-def schedule_task(task, schedule, all_tasks):
+class SchedulingError(Exception): pass
+
+
+def schedule_task(task_name, schedule, all_tasks, depth=1):
+    # Sanity check for scheduling errors:
+    if depth > 1000:
+        raise SchedulingError("failed to resolve schedule for task '" +
+                              task_name + "' after 1000 tries")
+        sys.exit(1)
+
+    # Instantiate the task class:
+    if not hasattr(dotfiles, task_name):
+        raise SchedulingError("task '" + task_name + "' not found!")
+    task = getattr(dotfiles, task_name)()
+
     # Build a list of dependencies:
-    deps = getattr(task, "__deps__", [])
-    deps += getattr(task, "__" + PLATFORM + "_deps__", [])
+    deps = get_task_deps(task)
 
     # Check that all dependencies have already been scheduled:
-    for dep in deps:
-        dep = dep()
-        if dep not in schedule:
-            schedule_task(dep, schedule, all_tasks)
+    for dep_name in deps:
+        if dep_name == task_name:
+            raise SchedulingError("task '" + task_name + "' depends on itself")
 
-    if type(task) not in set(type(x) for x in schedule):
-        schedule.append(task)
+        if dep_name not in schedule:
+            schedule_task(dep_name, schedule, all_tasks, depth + 1)
+
+    # Schedule the task if necessary:
+    if task_name not in schedule:
+        schedule.append(task_name)
 
 
 def get_tasks_to_run(*task_names):
-    """ generate the list of tasks to run """
+    """ generate the list of task names to run """
+    # Remove duplicate task names:
     task_names = set(task_names)
-    all_tasks = set([x[1]() for x in inspect.getmembers(sys.modules[__name__], is_runnable_task)])
+
+    # Build a list of available task names:
+    all_tasks = set([type(x[1]()).__name__ for x in inspect.getmembers(sys.modules[__name__], is_runnable_task)])
 
     # Determine the tasks which need scheduling:
-    if len(task_names):
-        to_schedule = [x for x in all_tasks if type(x).__name__ in task_names]
-        if len(task_names) != len(to_schedule):
-            unknown = set(task_names) - set(type(x).__name__ for x in all_tasks)
-            print("error! unrecognized task(s):", ", ".join(unknown),
-                  file=sys.stderr)
-            sys.exit(1)
-    else:
-        # default to all tasks if none are specified:
-        to_schedule = all_tasks
+    to_schedule = task_names if len(task_names) else list(all_tasks)
 
-    # Build the schedule
-    to_schedule = deque(sorted(to_schedule, key=lambda t: type(t).__name__))
+    # Build the schedule:
+    to_schedule = deque(sorted(to_schedule))
     schedule = []
-    while len(to_schedule):
-        task = to_schedule.popleft()
-        schedule_task(task, schedule, all_tasks)
+    try:
+        while len(to_schedule):
+            task = to_schedule.popleft()
+            schedule_task(task, schedule, all_tasks)
+    except SchedulingError as e:
+        print("fatal:", e, file=sys.stderr)
+        sys.exit(1)
 
     return deque(schedule)
 
@@ -91,7 +106,8 @@ def main(*args):
     if args.describe:
         print("There are " + Colors.BOLD + str(ntasks) + Colors.END +
               " tasks to run on " + PLATFORM + ":")
-        for i, task in enumerate(queue):
+        for i, task_name in enumerate(queue):
+            task = getattr(dotfiles, task_name)()
             description = (task.__doc__ or "").strip()
             print("  [{:2d}/{:2d}]".format(i + 1, ntasks) + Colors.BOLD,
                   str(task), Colors.END + "... " + description)
@@ -115,7 +131,9 @@ def main(*args):
           Colors.END + " tasks on", PLATFORM + ":")
     errored = False
     try:
-        for i, task in enumerate(queue):
+        for i, task_name in enumerate(queue):
+            task = getattr(dotfiles, task_name)()
+
             # Resolve and run install() method:
             print("[{:2d}/{:2d}]".format(i + 1, ntasks) + Colors.BOLD,
                   str(task), Colors.END + "...")

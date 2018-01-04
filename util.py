@@ -79,8 +79,8 @@ class Task(object):
         __platforms__ (List[str], optional): A list of platforms which the
             task may be run on. Any platform not in this list will not
             execute the task.
-        __deps__ (List[Task], optional): A list of tasks which must be executed
-            before the task may be run.
+        __deps__ (List[str], optional): A list of task classes which must be
+            executed before the task may be run.
         __<platform>_deps__ (List[Task], optional): A list of platform-specific
             tasks which must be executed before the task may be run.
         __genfiles__ (List[str], optional): A list of files generated during
@@ -124,6 +124,9 @@ class Task(object):
 
     def uninstall(self):
         pass
+
+    def __eq__(self, a):
+        return type(self).__name__ == type(a).__name__
 
     def __repr__(self):
         return type(self).__name__
@@ -296,8 +299,19 @@ def get_task_method(task, method_name):
     if fn is None:
         fn = getattr(task, method_name, None)
     if fn is None:
-        raise InvalidTaskError
+        raise InvalidTaskError("failed to resolve {method_name} method of Task {task}".format(**vars()))
     return fn
+
+
+def get_task_deps(task):
+    """ resolve list of dependencies for task """
+    deps = []
+    if hasattr(task, "__deps__"):
+        deps += getattr(task, "__deps__")
+    if hasattr(task, "__" + get_platform() + "_deps__"):
+        deps += getattr(task, "__" + get_platform() + "_deps__")
+
+    return sorted(list(set(deps)))
 
 
 def usr_share(*components, **kwargs):

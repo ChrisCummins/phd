@@ -91,7 +91,7 @@ class HomebrewCaskOutdated(Task):
     REMOTE_URL = "https://raw.githubusercontent.com/bgandon/brew-cask-outdated/" + VERSION + "/brew-cask-outdated.sh"
 
     __platforms__ = ['osx']
-    __deps__ = [Homebrew]
+    __deps__ = ['Homebrew']
     __genfiles__ = ['~/.local/bin/brew-cask-outdated']
 
     def install(self):
@@ -114,7 +114,7 @@ class Python(Task):
     PIP_LIST = ".pip-freeze.json"
 
     __platforms__ = ['linux', 'osx']
-    __osx_deps__ = [Homebrew]
+    __osx_deps__ = ['Homebrew']
     __genfiles__ = [PYP_IRC]
     __osx_genfiles__ = ['/usr/local/bin/pip2']
     __linux_genfiles__ = ['~/.local/bin/pip2']
@@ -183,7 +183,7 @@ class Unzip(Task):
     """ unzip pacakge """
     __platforms__ = ['osx', 'ubuntu']
     __genfiles__ = ['/usr/bin/unzip']
-    __osx_deps__ = [Homebrew]
+    __osx_deps__ = ['Homebrew']
 
     def install_osx(self):
         Homebrew().install_package("unzip")
@@ -197,7 +197,7 @@ class Ruby(Task):
     RUBY_VERSION = "2.4.1"
 
     __platforms__ = ['osx']
-    __osx_deps__ = [Homebrew]
+    __osx_deps__ = ['Homebrew']
     __genfiles__ = ['~/.rbenv']
 
     def install_osx(self):
@@ -219,7 +219,7 @@ class Ruby(Task):
 class Curl(Task):
     """ curl command """
     __platforms__ = ['linux', 'osx']
-    __osx_deps__ = [Homebrew]
+    __osx_deps__ = ['Homebrew']
     __genfiles__ = ['/usr/bin/curl']
 
     def install_osx(self):
@@ -234,7 +234,7 @@ class Dropbox(Task):
     UBUNTU_URL = "https://www.dropbox.com/download?plat=lnx.x86_64"
 
     __platforms__ = ['linux', 'osx']
-    __osx_deps__ = [Homebrew]
+    __osx_deps__ = ['Homebrew']
     __genfiles__ = ["~/.local/bin/dropbox"]
     __linux_genfiles__ = ["~/.dropbox-dist/dropboxd"]
 
@@ -278,7 +278,7 @@ class Dropbox(Task):
 class Fluid(Task):
     """ standalone web apps """
     __platforms__ = ['osx']
-    __deps__ = [Homebrew]
+    __deps__ = ['Homebrew']
     __genfiles__ = ['/Applications/Fluid.app']
 
     def install_osx(self):
@@ -353,7 +353,7 @@ class Netdata(Task):
 class WacomDriver(Task):
     """ wacom tablet driver """
     __platforms__ = ['osx']
-    __deps__ = [Homebrew]
+    __deps__ = ['Homebrew']
     __genfiles__ = ['/Applications/Wacom Tablet.localized']
 
     def __init__(self):
@@ -378,7 +378,7 @@ class Node(Task):
     PKG_LIST = os.path.abspath(".npm-list.txt")
 
     __platforms__ = ['linux', 'osx']
-    __osx_deps__ = [Homebrew]
+    __osx_deps__ = ['Homebrew']
     __osx_genfiles__ = ['/usr/local/bin/node', '/usr/local/bin/npm']
     __linux_genfiles__ = ['/usr/bin/node', '/usr/bin/npm']
     __tmpfiles__ = [PKG_LIST]
@@ -409,7 +409,7 @@ class Zsh(Task):
     SYNTAX_HIGHLIGHTING_VERSION = 'b07ada1255b74c25fbc96901f2b77dc4bd81de1a'
 
     __platforms__ = ['linux', 'osx']
-    __osx_deps__ = [Homebrew]
+    __osx_deps__ = ['Homebrew']
     __genfiles__ = [
         '~/.oh-my-zsh',
         '~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting',
@@ -446,7 +446,7 @@ class Zsh(Task):
 class Autoenv(Task):
     """ 'cd' wrapper """
     __platforms__ = ['linux', 'osx']
-    __deps__ = [Python]
+    __deps__ = ['Python']
     __genfiles__ = ['/usr/local/bin/activate.sh']
 
     def install(self):
@@ -458,7 +458,7 @@ class Lmk(Task):
     LMK_VERSION = "0.0.13"
 
     __platforms__ = ['linux', 'osx']
-    __deps__ = [Python]
+    __deps__ = ['Python']
     __genfiles__ = ['/usr/local/bin/lmk']
 
     def install(self):
@@ -482,7 +482,7 @@ class DSmith(Task):
 class Git(Task):
     """ git config """
     __platforms__ = ['linux', 'osx']
-    __osx_deps__ = [Homebrew]
+    __osx_deps__ = ['Homebrew']
     __genfiles__ = ['~/.gitconfig']
 
     def install_ubuntu(self):
@@ -524,7 +524,7 @@ class Wallpaper(Task):
 class GnuCoreutils(Task):
     """ replace BSD utils with GNU """
     __platforms__ = ['osx']
-    __deps__ = [Homebrew]
+    __deps__ = ['Homebrew']
     __genfiles__ = [
         '/usr/local/opt/coreutils/libexec/gnubin/cp',
         '/usr/local/opt/gnu-sed/libexec/gnubin/sed',
@@ -545,7 +545,7 @@ class DiffSoFancy(Task):
     VERSION = "0.11.4"
 
     __platforms__ = ['linux', 'osx']
-    __deps__ = [Git, Node]
+    __deps__ = ['Git', 'Node']
     __genfiles__ = ['/usr/local/bin/diff-so-fancy']
 
     def install(self):
@@ -557,7 +557,7 @@ class GhArchiver(Task):
     VERSION = "0.0.6"
 
     __platforms__ = ['linux', 'osx']
-    __deps__ = [Python]
+    __deps__ = ['Python']
     __genfiles__ = ['/usr/local/bin/gh-archiver']
 
     def install(self):
@@ -588,7 +588,7 @@ class Vim(Task):
     VUNDLE_VERSION = "fcc204205e3305c4f86f07e09cd756c7d06f0f00"
 
     __platforms__ = ['linux', 'osx']
-    __osx_deps__ = [Homebrew]
+    __osx_deps__ = ['Homebrew']
     __genfiles__ = ['~/.vimrc', '~/.vim/bundle/Vundle.vim']
     __osx_genfiles__ = ['/usr/local/bin/vim']
     __linux_genfiles__ = ['/usr/bin/vim']
@@ -614,7 +614,7 @@ class Vim(Task):
 class SublimeText(Task):
     """ sublime text """
     __platforms__ = ['linux', 'osx']
-    __osx_deps__ = [Homebrew]
+    __osx_deps__ = ['Homebrew']
     __genfiles__ = ['/usr/local/bin/rsub']
     __osx_genfiles__ = ['/usr/local/bin/subl', '/Applications/Sublime Text.app']
 
@@ -669,7 +669,7 @@ class MySQL(Task):
 class LaTeX(Task):
     """ pdflatex and helper scripts """
     __platforms__ = ['linux', 'osx']
-    __osx_deps__ = [Homebrew]
+    __osx_deps__ = ['Homebrew']
     __genfiles__ = []
     __osx_genfiles__ = [
         '/Library/TeX/Distributions/.DefaultTeX/Contents/Programs/texbin/pdflatex',
@@ -696,7 +696,7 @@ class AdobeCreativeCloud(Task):
         '/usr/local/Caskroom/adobe-creative-cloud/latest/Creative Cloud Installer.app',
         '/usr/local/Caskroom/google-nik-collection/1.2.11/Nik Collection.app',
     ]
-    __deps__ = [Homebrew]
+    __deps__ = ['Homebrew']
 
     def __init__(self):
         self.installed = False
@@ -769,7 +769,7 @@ class HomebrewCasks(Task):
     }
 
     __platforms__ = ['osx']
-    __deps__ = [Homebrew]
+    __deps__ = ['Homebrew']
     __genfiles__ = list(CASKS.values())
 
     def install(self):
@@ -780,7 +780,7 @@ class HomebrewCasks(Task):
 class Plex(Task):
     """ plex media server and player """
     __platforms__ = ['osx']
-    __deps__ = [Homebrew]
+    __deps__ = ['Homebrew']
     __genfiles__ = [
         '/Applications/Plex Media Player.app',
         '/Applications/Plex Media Server.app',
@@ -809,7 +809,7 @@ class Trash(Task):
     VERSION = '1.4.0'
 
     __platforms__ = ['linux', 'osx']
-    __deps__ = [Node]
+    __deps__ = ['Node']
     __genfiles__ = ['/usr/local/bin/trash']
 
     def install(self):
@@ -826,8 +826,8 @@ class Emacs(Task):
     PRELUDE_VERSION = 'f7d5d68d432319bb66a5f9410d2e4eadd584f498'
 
     __platforms__ = ['linux', 'osx']
-    __deps__ = [Trash]
-    __osx_deps__ = [Homebrew]
+    __deps__ = ['Trash']
+    __osx_deps__ = ['Homebrew']
 
     def install_osx(self):
         Homebrew().install_cask('emacs')
@@ -847,7 +847,7 @@ class Emacs(Task):
 class AppStore(Task):
     """ install mas app store command line """
     __platforms__ = ['osx']
-    __deps__ = [Homebrew]
+    __deps__ = ['Homebrew']
 
     def install(self):
         if not which('mas'):
@@ -902,7 +902,7 @@ class AppStoreApps(Task):
     }
 
     __platforms__ = ['osx']
-    __deps__ = [AppStore]
+    __deps__ = ['AppStore']
     __genfiles__ = list(APPS.values())
 
     def install(self):
@@ -918,7 +918,7 @@ class GpuStat(Task):
     VERSION = "0.3.1"
 
     __platforms__ = ['linux', 'osx']
-    __deps__ = [Python]
+    __deps__ = ['Python']
 
     def install(self):
         if which("nvidia-smi"):
@@ -937,7 +937,7 @@ class IOTop(Task):
 class Ncdu(Task):
     """ cli disk space analyzer """
     __platforms__ = ['linux', 'osx']
-    __osx_deps__ = [Homebrew]
+    __osx_deps__ = ['Homebrew']
     __osx_genfiles__ = ['/usr/local/bin/ncdu']
     __linux_genfiles__ = ['/usr/bin/ncdu']
 
@@ -951,7 +951,7 @@ class Ncdu(Task):
 class HTop(Task):
     """ cli activity monitor """
     __platforms__ = ['linux', 'osx']
-    __osx_deps__ = [Homebrew]
+    __osx_deps__ = ['Homebrew']
     __osx_genfiles__ = ['/usr/local/bin/htop']
     __linux_genfiles__ = ['/usr/bin/htop']
 
@@ -965,7 +965,7 @@ class HTop(Task):
 class Java(Task):
     """ java8 runtime and compiler """
     __platforms__ = ['linux', 'osx']
-    __osx_deps__ = [Homebrew]
+    __osx_deps__ = ['Homebrew']
     __osx_genfiles__ = ['/usr/local/Caskroom/java8']
     __linux_genfiles__ = ['/usr/bin/java']
 
@@ -982,7 +982,7 @@ class OmniFocus(Task):
     OFEXPORT2_URL = "https://github.com/psidnell/ofexport2/archive/ofexport-v2-" + OFEXPORT2_VERSION + ".zip"
 
     __platforms__ = ['linux', 'osx']
-    __osx_deps__ = [Homebrew]  # FIXME: Add Java dependency
+    __osx_deps__ = ['Homebrew', 'Java']
     __genfiles__ = ["/usr/local/bin/omni"]
     __osx_genfiles__ = [
         "/Applications/OmniFocus.app",
@@ -1015,7 +1015,7 @@ class Toggl(Task):
     """ time tracking app """
     __platforms__ = ['osx']
     __osx_genfiles__ = ['/Applications/TogglDesktop.app']
-    __osx_deps__ = [AppStore]
+    __osx_deps__ = ['AppStore']
 
     def install_osx(self):
         AppStore().install_app('957734279', '/Applications/TogglDesktop.app')
@@ -1025,7 +1025,7 @@ class MeCsv(Task):
     """ me.csv health and time tracking """
     __platforms__ = ['osx']
     __genfiles__ = []
-    __osx_deps__ = []  # FIXME: OmniFocus, Toggl
+    __osx_deps__ = ['OmniFocus', 'Toggl']
 
     def install_osx(self):
         if os.path.isdir(os.path.join(PRIVATE, "me.csv")):
@@ -1036,8 +1036,8 @@ class MeCsv(Task):
 class Bazel(Task):
     """ bazel build system """
     __platforms__ = ['linux', 'osx']
-    __deps__ = [Java]
-    __osx_deps__ = [Homebrew]
+    __deps__ = ['Java']
+    __osx_deps__ = ['Homebrew']
     __osx_genfiles__ = ['/usr/local/bin/bazel']
     __linux_genfiles__ = ['/usr/bin/bazel']
 
@@ -1059,7 +1059,7 @@ class Bazel(Task):
 class CMake(Task):
     """ cmake build system """
     __platforms__ = ['linux', 'osx']
-    __osx_deps__ = [Homebrew]
+    __osx_deps__ = ['Homebrew']
     __osx_genfiles__ = ['/usr/local/bin/cmake']
     __linux_genfiles__ = ['/usr/bin/cmake']
 
@@ -1073,7 +1073,7 @@ class CMake(Task):
 class Wget(Task):
     """ wget """
     __platforms__ = ['osx']
-    __deps__ = [Homebrew]
+    __deps__ = ['Homebrew']
     __genfiles__ = ['/usr/local/bin/wget']
 
     def install(self):
@@ -1083,7 +1083,7 @@ class Wget(Task):
 class Protobuf(Task):
     """ protocol buffers """
     __platforms__ = ['linux', 'osx']
-    __osx_deps__ = [Homebrew]
+    __osx_deps__ = ['Homebrew']
     __osx_genfiles__ = ['/usr/local/bin/protoc']
     __linux_genfiles__ = ['/usr/bin/protoc']
 
@@ -1097,7 +1097,7 @@ class Protobuf(Task):
 class Sloccount(Task):
     """ source line count """
     __platforms__ = ['linux', 'osx']
-    __osx_deps__ = [Homebrew]
+    __osx_deps__ = ['Homebrew']
     __osx_genfiles__ = ['/usr/local/bin/sloccount']
     __linux_genfiles__ = ['/usr/bin/sloccount']
 
@@ -1114,7 +1114,7 @@ class Emu(Task):
     PIP = "pip3"
 
     __platforms__ = ['linux', 'osx']
-    __deps__ = [Python]
+    __deps__ = ['Python']
     __genfiles__ = ['/usr/local/bin/emu']
 
     def install(self):
@@ -1126,8 +1126,8 @@ class JsonUtil(Task):
     JSONLINT_VERSION = "1.6.2"
 
     __platforms__ = ['linux', 'osx']
-    __deps__ = [Node]
-    __osx_deps__ = [Homebrew]
+    __deps__ = ['Node']
+    __osx_deps__ = ['Homebrew']
     __genfiles__ = ['/usr/local/bin/jsonlint']
     __osx_genfiles__ = ['/usr/local/bin/jq']
     __linux_genfiles__ = ['/usr/bin/jq']
@@ -1196,11 +1196,11 @@ class DefaultApps(Task):
     """ set default applications for file extensions """
     __platforms__ = ['osx']
     __deps__ = [
-        AppStoreApps,
-        Homebrew,
-        HomebrewCasks,
-        LaTeX,
-        SublimeText
+        'AppStoreApps',
+        'Homebrew',
+        'HomebrewCasks',
+        'LaTeX',
+        'SublimeText',
     ]
 
     # run `duti -x <extension>` to show associated app
