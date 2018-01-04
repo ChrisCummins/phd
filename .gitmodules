@@ -7,6 +7,3 @@
 [submodule "lib/clgen"]
 	path = lib/clgen
 	url = git@github.com:ChrisCummins/clgen.git
-[submodule "lib/cldrive"]
-	path = lib/cldrive
-	url = git@github.com:ChrisCummins/cldrive.git
