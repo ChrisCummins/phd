@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3
 #
 # Copyright 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
 #
@@ -77,7 +77,7 @@ def textinput(batch, question, default=None):
         prompt = " "
         default = ""
     else:
-        prompt = f" [default: {default}] "
+        prompt = " [default: {default}] ".format(**vars())
 
     sys.stdout.write(question + prompt)
     if sys.version_info >= (3, 0):
@@ -139,7 +139,7 @@ def main():
     parser.add_argument("--with-glsl", action="store_true",
                         help="enable GLSL fuzzing")
     parser.add_argument("--rc", metavar="<path>", default=None,
-                        help=f"path to configuration file (default: {default_rc})")
+                        help="path to configuration file (default: {default_rc})".format(**vars()))
     args = parser.parse_args()
 
     # Directory containing this respository
@@ -213,7 +213,7 @@ def main():
 
     # generate make config file
     with open(".config.make", "w") as outfile:
-        print(f"ROOT := {cfg['dsmith_dir']}", file=outfile)
+        print("ROOT := {cfg['dsmith_dir']}".format(**vars()), file=outfile)
         print("RC_PATH := {}".format(cfg["rc_path"]), file=outfile)
         print("DSMITH_VERSION := " + cfg["version"], file=outfile)
         print("USE_CUDA := " + to_make(cfg["cuda"]), file=outfile)
@@ -222,12 +222,12 @@ def main():
         print("WITH_GLSL := " + to_make(cfg["glsl"]), file=outfile)
         for llvm in ["trunk", "50", "40", "39", "38", "37", "36"]:
             key = llvm.upper()
-            print(f"WITH_LLVM_{key} := " + to_make(cfg.get(f"llvm_{llvm}", False)), file=outfile)
+            print("WITH_LLVM_{key} := ".format(**vars()) + to_make(cfg.get("llvm_{llvm}".format(**vars()), False)), file=outfile)
 
 
     # generate python config file
     with open(os.path.join("dsmith", "_config.py"), "w") as outfile:
-        print(f"ROOT = '{cfg['dsmith_dir']}'", file=outfile)
+        print("ROOT = '{cfg['dsmith_dir']}'".format(**vars()), file=outfile)
         print("RC_PATH = '{}'".format(cfg["rc_path"]), file=outfile)
         print("VERSION = '{}'".format(cfg["version"]), file=outfile)
         print("USE_CUDA = " + to_python(cfg["cuda"]), file=outfile)
@@ -252,10 +252,10 @@ def main():
             config = ConfigParser()
             config.read(cfg["rc_path"])
         except:
-            print(f"""\
+            print("""\
 Oops! We tried to parse the file and failed. Please see the documentation
 for instructions on how to set it up:
-<https://github.com/ChrisCummins/dsmith>.""",
+<https://github.com/ChrisCummins/dsmith>.""".format(**vars()),
                   file=sys.stderr)
             sys.exit(1)
     else:
@@ -308,7 +308,7 @@ The following questions will create it for you:""")
         sys.exit(1)
 
     llvms = ["trunk", "50", "40", "39", "38", "37", "36"]
-    llvms = [v for v in llvms if cfg[f"llvm_{v}"]] or ["none"]
+    llvms = [v for v in llvms if cfg["llvm_{v}".format(**vars())]] or ["none"]
 
     print("DeepSmith {version} configured:".format(version=cfg["version"]))
     print()
