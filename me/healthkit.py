@@ -188,13 +188,23 @@ def _process_body_mass_index(typename, records, outdir):
 
 
 def _process_distance_walking_running(typename, records, outdir):
-    create_sum_csv(records, "Distance Walking + Running (km)", "km",
-                   f"{outdir}/Distance.csv")
+    create_sum_csv(records, "Distance on Foot (km)", "km",
+                   f"{outdir}/Distance on Foot.csv")
 
 
 def _process_heart_rate(typename, records, outdir):
     create_avg_csv(records, "Heart Rate (bmp)", "count/min",
                    f"{outdir}/Heart Rate.csv", min_max=True)
+
+
+def _process_resting_heart_rate(typename, records, outdir):
+    create_avg_csv(records, "Resting Heart Rate (bmp)", "count/min",
+                   f"{outdir}/Resting Heart Rate.csv", min_max=True)
+
+
+def _process_walking_heart_rate_average(typename, records, outdir):
+    create_avg_csv(records, "Walking Heart Rate (bmp)", "count/min",
+                   f"{outdir}/Walking Heart Rate.csv", min_max=True)
 
 
 def _process_height(typename, records, outdir):
@@ -246,9 +256,25 @@ def _process_dietary_potassium(typename, records, outdir):
                    f"{outdir}/Potassium.csv")
 
 
+def _process_flights_climbed(typename, records, outdir):
+    create_sum_csv(records, "Flights Climbed", "count",
+                   f"{outdir}/Flights Climbed.csv")
+
+
+def _process_apple_exercise_time(typename, records, outdir):
+    create_sum_csv(records, "Exercise Time", "min",
+                   f"{outdir}/Exercise Time.csv")
+
+
+def _process_distance_cycling(typename, records, outdir):
+    create_sum_csv(records, "Distance Cycling (km)", "km",
+                   f"{outdir}/Distance Cycling.csv")
+
+
 def process_records(typename, records, outdir):
     handler = {
         "Active Energy Burned": _process_active_energy_burned,
+        "Apple Exercise Time": _process_apple_exercise_time,
         "Basal Energy Burned": _process_basal_energy_burned,
         "Body Mass Index": _process_body_mass_index,
         "Body Mass": _process_body_mass,
@@ -264,10 +290,14 @@ def process_records(typename, records, outdir):
         "Dietary Sodium": _process_dietary_sodium,
         "Dietary Sugar": _process_dietary_sugar,
         "Dietary Water": _process_dietary_water,
+        "Distance Cycling": _process_distance_cycling,
         "Distance Walking Running": _process_distance_walking_running,
+        "Flights Climbed": _process_flights_climbed,
         "Heart Rate": _process_heart_rate,
         "Height": _process_height,
+        "Resting Heart Rate": _process_resting_heart_rate,
         "Step Count": _process_step_count,
+        "Walking Heart Rate Average": _process_walking_heart_rate_average,
     }.get(typename, _process_records_generic)
 
     return handler(typename, records, outdir)
