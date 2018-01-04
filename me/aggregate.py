@@ -38,9 +38,10 @@ def get_row(data, date):
 def aggregate(outdir, csvs, spreadsheet_name, keypath, share_with):
     csv_data = [read_csv(x) for x in csvs]
 
-    # Get the earlest reading date
+    # Date range:
     start_date = min(x[1][0] for x in csv_data)
-    end_date = max(x[1][0] for x in csv_data)
+    end_date = datetime.datetime.today().date()
+
     nrecords = sum(len(x) - 1 for x in csv_data)
     logging.info(f'Aggregating {nrecords} records from {start_date} to {end_date} in "{outdir}/me.csv"')
 
