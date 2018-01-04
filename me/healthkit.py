@@ -137,8 +137,29 @@ def create_avg_csv(records, name, unit, outpath, min_max: bool=False):
 
 
 def create_stand_hour_csv(records, outpath):
-    # TODO
-    pass
+    records = sorted(records, key=lambda r: r['startDate'].value)
+
+    rows = [("Date", "Stand Hours", "Idle Hours")]
+    last_date = None
+    counts = [0, 0]
+    for r in records:
+        date = parse_date(r['startDate'].value)
+
+        if date != last_date:
+            if last_date:
+                rows.append([last_date] + counts)
+            last_date = date
+            counts = [1, 1]
+        else:
+            if r['value'].value == "HKCategoryValueAppleStandHourStood":
+                counts[0] += 1
+            elif r['value'].value == "HKCategoryValueAppleStandHourIdle":
+                counts[1] += 1
+            else:
+                raise ValueError("unrecognized value " + str(r['value'].value))
+
+    rows.append([last_date] + counts)
+    me.create_csv(rows, outpath)
 
 
 def _process_records_generic(typename, records, outdir):
