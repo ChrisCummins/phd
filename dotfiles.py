@@ -257,6 +257,7 @@ class Dropbox(Task):
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = ['Homebrew']
     __genfiles__ = ["~/.local/bin/dropbox"]
+    __osx_genfiles__ = ["/Applications/Dropbox.app"]
     __linux_genfiles__ = ["~/.dropbox-dist/dropboxd"]
 
     def __init__(self):
