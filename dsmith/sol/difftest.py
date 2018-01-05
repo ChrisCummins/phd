@@ -176,28 +176,3 @@ WHERE outcome = {Outcomes.BF}
 AND outcome_majsize >= {min_majsize}
 AND maj_outcome = {Outcomes.PASS}
 """)
-
-    print("determining anomalous runtime crashes ...")
-    s.execute(f"""
-INSERT INTO {Classification.__tablename__}
-SELECT {Result.__tablename__}.id, {Classifications.ARC}
-FROM {Result.__tablename__}
-INNER JOIN {Majority.__tablename__} majorities ON results.testcase_id = majorities.id
-WHERE outcome = {Outcomes.RC}
-AND outcome_majsize >= {min_majsize}
-AND maj_outcome = {Outcomes.PASS}
-""")
-
-    print("determining anomylous stderr classifications ...")
-    s.execute(f"""
-INSERT INTO {Classification.__tablename__}
-SELECT results.id, {Classifications.AWO}
-FROM {Result.__tablename__} results
-INNER JOIN {Majority.__tablename__} majorities ON results.testcase_id = majorities.id
-WHERE outcome = {Outcomes.PASS}
-AND maj_outcome = {Outcomes.PASS}
-AND outcome_majsize >= {min_majsize}
-AND stderr_majsize >= CEILING(2 * outcome_majsize / 3)
-AND stderr_id <> maj_stderr_id
-""")
-    s.commit()
