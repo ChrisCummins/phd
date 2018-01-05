@@ -8,5 +8,5 @@
 	path = lib/clreduce
 	url = https://github.com/ChrisCummins/clreduce.git
 [submodule "lib/CLSmith"]
-	path = lib/CLSmith
+	path = lib/clsmith
 	url = https://github.com/ChrisCummins/CLSmith.git
