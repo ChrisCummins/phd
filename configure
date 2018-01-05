@@ -158,23 +158,34 @@ def main():
     else:
         cfg = {
             "cuda": args.with_cuda_backend,
+            "opencl": args.with_opencl,
             "version": "0.4.0.dev0",
             "dsmith_dir": pwd,
+            "llvm_trunk": args.with_llvm_trunk,
+            "llvm_50": args.with_llvm_50,
+            "llvm_40": args.with_llvm_40,
+            "llvm_39": args.with_llvm_39,
+            "llvm_38": args.with_llvm_38,
+            "llvm_37": args.with_llvm_37,
+            "llvm_36": args.with_llvm_36,
+            "solidity": args.with_solidity,
+            "glsl": args.with_glsl,
+            "rc": default_rc,
         }
 
-    cfg["cuda"] = yes_no(batch, "Enable CUDA backend? (requires CUDA)", default=args.with_cuda_backend)
+    cfg["cuda"] = yes_no(batch, "Enable CUDA backend? (requires CUDA)", default=cfg["cuda"])
 
     # OpenCL settings:
-    cfg["opencl"] = yes_no(batch, "Enable OpenCL fuzzing? (requires OpenCL)", default=args.with_opencl)
+    cfg["opencl"] = yes_no(batch, "Enable OpenCL fuzzing? (requires OpenCL)", default=cfg["opencl"])
     if cfg["opencl"]:
         if yes_no(batch, "Build all OpenCL LLVM testbeds?", default=(
-            args.with_llvm_trunk and
-            args.with_llvm_50 and
-            args.with_llvm_40 and
-            args.with_llvm_39 and
-            args.with_llvm_38 and
-            args.with_llvm_37 and
-            args.with_llvm_36)):
+            cfg["llvm_trunk"] and
+            cfg["llvm_50"] and
+            cfg["llvm_40"] and
+            cfg["llvm_39"] and
+            cfg["llvm_38"] and
+            cfg["llvm_37"] and
+            cfg["llvm_36"])):
             cfg["llvm_trunk"] = True
             cfg["llvm_50"] = True
             cfg["llvm_40"] = True
@@ -200,16 +211,18 @@ def main():
         cfg["llvm_36"] = False
 
     # Solidity settings:
-    cfg["solidity"] = yes_no(batch, "Enable Solidity fuzzing? (requires solc)", default=args.with_solidity)
+    cfg["solidity"] = yes_no(batch, "Enable Solidity fuzzing? (requires solc)", default=cfg["solidity"])
 
     # GLSL settings
-    cfg["glsl"] = yes_no(batch, "Enable GLSL fuzzing?", default=args.with_glsl)
+    cfg["glsl"] = yes_no(batch, "Enable GLSL fuzzing?", default=cfg["glsl"])
 
-    cfg["rc_path"] = textinput(batch, "Path to configuration file", default=args.rc or default_rc)
+    cfg["rc_path"] = textinput(batch, "Path to configuration file", default=cfg["rc"])
 
     # generate JSON config file
     with open(".config.json", "w") as outfile:
-        json.dump(cfg, outfile)
+        json.dump(cfg, outfile, sort_keys=True,
+                  indent=4, separators=(',', ': '))
+        print(file=outfile)
 
     # generate make config file
     with open(".config.make", "w") as outfile:
