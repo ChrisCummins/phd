@@ -544,8 +544,12 @@ class Stderr(Base):
     id_t = sql.Integer
     __tablename__ = "stderrs"
 
+    # The regular expression to match source files in compiler output:
+    FILENAME_RE = re.compile(r'/tmp/dsmith-solc-[^.]+\.sol')
+    # The replacement text for the source files in compiler output:
+    FILENAME_PLACEHOLDER = '@FILE@'
     # The maximum number of characters to keep before truncating
-    max_chars = 64000
+    MAX_CHARS = 64000
 
     # Fields
     id = sql.Column(id_t, primary_key=True)
@@ -561,6 +565,7 @@ class Stderr(Base):
     @staticmethod
     def _escape(string: str) -> str:
         """ filter noise from test harness stderr """
+        string = Stderr.FILENAME_RE.sub(Stderr.FILENAME_PLACEHOLDER, string)
         return string
 
     @staticmethod
@@ -573,8 +578,8 @@ class Stderr(Base):
             sha1=sha1,
             linecount=len(string.split("\n")),
             charcount=len(string),
-            truncated=len(string) > Stderr.max_chars,
-            stderr=string[:Stderr.max_chars])
+            truncated=len(string) > Stderr.MAX_CHARS,
+            stderr=string[:Stderr.MAX_CHARS])
         return stderr
 
 
