@@ -29,6 +29,8 @@ from dsmith.sol.db import *
 def difftest():
     with Session() as s:
         create_results_metas(s)
+        create_majorities(s)
+        create_classifications(s)
 
 
 def create_results_metas(s: session_t):
@@ -67,3 +69,135 @@ WHERE results.testbed_id = {testbed_id}
 AND testcases.harness = {harness}
 ORDER BY programs.date"""))
         s.commit()
+
+
+def create_majorities(s: session_t) -> None:
+    """
+    Majority vote on testcase outcomes and outputs.
+    """
+    # We require at least this many results in order for there to be a majority:
+    min_results_for_majority = 1
+
+    print("voting on test case majorities ...")
+    s.execute(f"DELETE FROM {Majority.__tablename__}")
+
+    # Note we have to insert ignore here because there may be ties in the
+    # majority outcome or output. E.g. there could be a test case with an even
+    # split of 5 '1' outcomes and 5 '3' outcomes. Since there is only a single
+    # majority outcome, we order results by outcome number, so that '1' (build
+    # failure) will over-rule '6' (pass).
+    insert_ignore = "INSERT IGNORE" if dsmith.DB_ENGINE == "mysql" else "INSERT OR IGNORE"
+    s.execute(f"""
+{insert_ignore} INTO {Majority.__tablename__}
+    (id, num_results, maj_outcome, outcome_majsize, maj_stderr_id, stderr_majsize)
+SELECT  result_counts.testcase_id,
+        result_counts.num_results,
+        outcome_majs.maj_outcome,
+        outcome_majs.outcome_majsize,
+        stderr_majs.maj_stderr_id,
+        stderr_majs.stderr_majsize
+FROM (
+    SELECT testcase_id, num_results FROM (
+        SELECT testcase_id, COUNT(*) AS num_results
+        FROM {Result.__tablename__}
+        GROUP BY testcase_id
+    ) s
+    WHERE num_results >= {min_results_for_majority}
+) result_counts
+JOIN (
+    SELECT l.testcase_id, s.outcome as maj_outcome, s.outcome_count AS outcome_majsize
+    FROM (
+        SELECT testcase_id, MAX(outcome_count) as max_count
+        FROM (
+            SELECT testcase_id,COUNT(*) as outcome_count
+            FROM {Result.__tablename__}
+            GROUP BY testcase_id, outcome
+        ) r
+        GROUP BY testcase_id
+    ) l
+    INNER JOIN (
+        SELECT testcase_id, outcome, COUNT(*) as outcome_count
+        FROM {Result.__tablename__}
+        GROUP BY testcase_id, outcome
+    ) s ON l.testcase_id = s.testcase_id AND l.max_count = s.outcome_count
+) outcome_majs ON result_counts.testcase_id = outcome_majs.testcase_id
+JOIN (
+    SELECT l.testcase_id, s.stderr_id as maj_stderr_id, s.stderr_count AS stderr_majsize
+    FROM (
+        SELECT testcase_id, MAX(stderr_count) as max_count
+        FROM (
+            SELECT testcase_id, COUNT(*) as stderr_count
+            FROM {Result.__tablename__}
+            GROUP BY testcase_id, stderr_id
+        ) r
+        GROUP BY testcase_id
+    ) l
+    INNER JOIN (
+        SELECT testcase_id, stderr_id, COUNT(*) as stderr_count
+        FROM {Result.__tablename__}
+        GROUP BY testcase_id, stderr_id
+    ) s ON l.testcase_id = s.testcase_id AND l.max_count = s.stderr_count
+) stderr_majs ON outcome_majs.testcase_id = stderr_majs.testcase_id
+ORDER BY outcome_majs.maj_outcome DESC
+""")
+    s.commit()
+
+
+def create_classifications(s: session_t) -> None:
+    """
+    Determine anomalous results.
+    """
+    s.execute(f"DELETE FROM {Classification.__tablename__}")
+
+    # We require at least this many results in order to vote on the majority:
+    min_majsize = 1
+
+    print("creating {bc,bto} classifications ...")
+    s.execute(f"""
+INSERT INTO {Classification.__tablename__}
+SELECT results.id, {Classifications.BC}
+FROM {Result.__tablename__} results
+WHERE outcome = {Outcomes.BC}
+""")
+    s.execute(f"""
+INSERT INTO {Classification.__tablename__}
+SELECT results.id, {Classifications.BTO}
+FROM {Result.__tablename__} results
+WHERE outcome = {Outcomes.BTO}
+""")
+
+    print("determining anomalous build-failures ...")
+    s.execute(f"""
+INSERT INTO {Classification.__tablename__}
+SELECT results.id, {Classifications.ABF}
+FROM {Result.__tablename__} results
+INNER JOIN {Majority.__tablename__} majorities ON results.testcase_id = majorities.id
+WHERE outcome = {Outcomes.BF}
+AND outcome_majsize >= {min_majsize}
+AND maj_outcome = {Outcomes.PASS}
+""")
+
+    print("determining anomalous runtime crashes ...")
+    s.execute(f"""
+INSERT INTO {Classification.__tablename__}
+SELECT {Result.__tablename__}.id, {Classifications.ARC}
+FROM {Result.__tablename__}
+INNER JOIN {Majority.__tablename__} majorities ON results.testcase_id = majorities.id
+WHERE outcome = {Outcomes.RC}
+AND outcome_majsize >= {min_majsize}
+AND maj_outcome = {Outcomes.PASS}
+""")
+
+    print("determining anomylous stderr classifications ...")
+    s.execute(f"""
+INSERT INTO {Classification.__tablename__}
+SELECT results.id, {Classifications.AWO}
+FROM {Result.__tablename__} results
+INNER JOIN {Majority.__tablename__} majorities ON results.testcase_id = majorities.id
+WHERE outcome = {Outcomes.PASS}
+AND maj_outcome = {Outcomes.PASS}
+AND outcome_majsize >= {min_majsize}
+AND stderr_majsize >= CEILING(2 * outcome_majsize / 3)
+AND stderr_id <> maj_stderr_id
+""")
+    s.commit()

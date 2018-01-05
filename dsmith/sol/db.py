@@ -752,6 +752,8 @@ class Majority(Base):
     num_results = sql.Column(sql.SmallInteger, nullable=False)
     maj_outcome = sql.Column(Outcomes.column_t, nullable=False)
     outcome_majsize = sql.Column(sql.SmallInteger, nullable=False)
+    maj_stderr_id = sql.Column(Stderr.id_t, nullable=False)
+    stderr_majsize = sql.Column(sql.SmallInteger, nullable=False)
 
     # Relationships
     testcase = sql.orm.relationship("Testcase", back_populates="majority")
