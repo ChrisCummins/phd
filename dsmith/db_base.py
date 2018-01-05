@@ -228,3 +228,8 @@ def save_records(session: session_t, records: List['Base'],
         logging.warning(e)
         session.rollback()
         save_records(session, records, max_attempts, attempt + 1, e)
+
+
+def sql_query(*query):
+    """ flatten an SQL query into a single line of text """
+    return " ".join(" ".join(query).strip().split("\n"))
