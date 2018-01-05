@@ -1050,8 +1050,12 @@ class MeCsv(Task):
 
     def install_osx(self):
         if os.path.isdir(os.path.join(PRIVATE, "me.csv")):
-            self.__genfiles__ += ["~/.me.json"]
-            symlink(os.path.join(PRIVATE, "me.csv", "me.json"), "~/.me.json")
+            self.__genfiles__ += [
+                "~/.me.json",
+                "~/me.csv"
+            ]
+            symlink(os.path.join(PRIVATE, "me.csv", "config.json"), "~/.me.json")
+            symlink(os.path.join(PRIVATE, "me.csv", "data"), "~/me.csv")
 
 
 class Bazel(Task):
