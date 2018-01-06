@@ -131,29 +131,6 @@ class Homebrew(Task):
             shell("brew cask remove " + cask)
             return True
 
-
-class HomebrewCaskOutdated(Task):
-    """ brew-cask-outdated script """
-    VERSION = "2f08b5a76605fbfa9ab0caeb4868a29ef7e69bb1"
-    BINPATH = "~/.local/bin/brew-cask-outdated"
-    REMOTE_URL = "https://raw.githubusercontent.com/bgandon/brew-cask-outdated/" + VERSION + "/brew-cask-outdated.sh"
-
-    __platforms__ = ['osx']
-    __deps__ = ['Homebrew']
-    __genfiles__ = ['~/.local/bin/brew-cask-outdated']
-
-    def install(self):
-        if not which('brew-cask-outdated'):
-            task_print("Installing brew-cask-outdated")
-            mkdir("~/.local/bin")
-            shell("curl {self.REMOTE_URL} 2>/dev/null > {self.BINPATH}".format(**vars()))
-            shell('chmod +x {self.BINPATH}'.format(**vars()))
-
-    def upgrade(self):
-        task_print('brew-cask-upgrade')
-        shell("brew-cask-outdated | awk '{print $1}' | xargs brew cask install --force")
-
-
 class Python(Task):
     """ python2 and pip """
     PIP_VERSION = "9.0.1"
