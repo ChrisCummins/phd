@@ -201,6 +201,10 @@ class Python(Task):
         # install virtualenv
         self.pip_install("virtualenv", self.VIRTUALENV_VERSION)
 
+    def upgrade_osx(self):
+        Homebrew().upgrade_package("python")
+        Homebrew().upgrade_package("python3")
+
     def pip_install(self, package, version, pip="pip2", sudo=False):
         """ install a package using pip, return True if installed """
         # Ubuntu requires sudo permission for pip install
@@ -238,6 +242,9 @@ class Unzip(Task):
 
     def install_ubuntu(self):
         Apt().install_package("unzip")
+
+    def upgrade_osx(self):
+        Homebrew().upgrade_package("unzip")
 
 
 class Ruby(Task):
@@ -278,6 +285,9 @@ class Curl(Task):
 
     def install_ubuntu(self):
         Apt().install_package("curl")
+
+    def upgrade_osx(self):
+        Homebrew().upgrade_package("curl")
 
 
 class Dropbox(Task):
@@ -452,6 +462,9 @@ class Node(Task):
         Apt().install_package("npm")
         symlink("/usr/bin/nodejs", "/usr/bin/node", sudo=True)
 
+    def upgrade_osx(self):
+        Homebrew().upgrade_package("node")
+
     def npm_install(self, package, version):
         """ install a package using npm, return True if installed """
         # Create the list of npm packages
@@ -502,6 +515,9 @@ class Zsh(Task):
         clone_git_repo("git@github.com:zsh-users/zsh-syntax-highlighting.git",
                        "~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting",
                        self.SYNTAX_HIGHLIGHTING_VERSION)
+
+    def upgrade_osx(self):
+        Homebrew().upgrade_package("zsh")
 
 
 class Autoenv(Task):
@@ -563,6 +579,9 @@ class Git(Task):
             symlink(os.path.join(PRIVATE, "git", "githubrc"), "~/.githubrc")
             symlink(os.path.join(PRIVATE, "git", "gogsrc"), "~/.gogsrc")
 
+    def upgrade_osx(self):
+        Homebrew().upgrade_package("git")
+
 
 class Wallpaper(Task):
     """ set desktop background """
@@ -599,6 +618,14 @@ class GnuCoreutils(Task):
         Homebrew().install_package('gnu-tar')
         Homebrew().install_package('gnu-time')
         Homebrew().install_package('gnu-which')
+
+    def upgrade(self):
+        Homebrew().upgrade_package("coreutils")
+        Homebrew().upgrade_package('gnu-indent')
+        Homebrew().upgrade_package('gnu-sed')
+        Homebrew().upgrade_package('gnu-tar')
+        Homebrew().upgrade_package('gnu-time')
+        Homebrew().upgrade_package('gnu-which')
 
 
 class DiffSoFancy(Task):
@@ -643,6 +670,9 @@ class Tmux(Task):
     def _install_common(self):
         symlink(usr_share("tmux/tmux.conf"), "~/.tmux.conf")
 
+    def upgrade_osx(self):
+        Homebrew().upgrade_package("tmux")
+
 
 class Vim(Task):
     """ vim configuration """
@@ -670,6 +700,9 @@ class Vim(Task):
                        "~/.vim/bundle/Vundle.vim",
                        self.VUNDLE_VERSION)
         shell("vim +PluginInstall +qall")
+
+    def upgrade_osx(self):
+        Homebrew().upgrade_package("vim")
 
 
 class SublimeText(Task):
@@ -924,7 +957,7 @@ class Emacs(Task):
         Trash().trash('~/.emacs')
 
     def upgrade_osx(self):
-        Homebrew().upgrade_package('emacs')
+        Homebrew().upgrade_cask('emacs')
 
 
 class AppStore(Task):
@@ -933,8 +966,7 @@ class AppStore(Task):
     __deps__ = ['Homebrew']
 
     def install(self):
-        if not which('mas'):
-            Homebrew().install_package('mas')
+        Homebrew().install_package('mas')
 
         # Check that dotfiles was configured with Apple ID
         if not APPLE_ID:
@@ -949,6 +981,9 @@ class AppStore(Task):
             shell("mas signin --dialog " + APPLE_ID)
         except subprocess.CalledProcessError:
             pass
+
+    def upgrade(self):
+        Homebrew().upgrade_package("mas")
 
     def install_app(self, package_id, package_dest):
         """ install package from App Store, return True if installed """
@@ -1030,6 +1065,9 @@ class Ncdu(Task):
     def install_ubuntu(self):
         Apt().install_package("ncdu")
 
+    def upgrade_osx(self):
+        Homebrew().upgrade_package("ncdue")
+
 
 class HTop(Task):
     """ cli activity monitor """
@@ -1043,6 +1081,9 @@ class HTop(Task):
 
     def install_ubuntu(self):
         Apt().install_package("htop")
+
+    def upgrade_osx(self):
+        Homebrew().upgrade_package("htop")
 
 
 class Java(Task):
@@ -1148,6 +1189,9 @@ class Bazel(Task):
         Apt().update()
         Apt().install_package("bazel")
 
+    def upgrade_osx(self):
+        Homebrew().upgrade_package("bazel")
+
 
 class CMake(Task):
     """ cmake build system """
@@ -1162,6 +1206,9 @@ class CMake(Task):
     def install_ubuntu(self):
         Apt().install_package("cmake")
 
+    def upgrade_osx(self):
+        Homebrew().upgrade_package("cmake")
+
 
 class Wget(Task):
     """ wget """
@@ -1171,6 +1218,9 @@ class Wget(Task):
 
     def install(self):
         Homebrew().install_package('wget')
+
+    def upgrade_osx(self):
+        Homebrew().upgrade_package("wget")
 
 
 class Protobuf(Task):
@@ -1186,6 +1236,9 @@ class Protobuf(Task):
     def install_ubuntu(self):
         Apt().install_package("protobuf")
 
+    def upgrade_osx(self):
+        Homebrew().upgrade_package("protobuf")
+
 
 class Sloccount(Task):
     """ source line count """
@@ -1199,6 +1252,9 @@ class Sloccount(Task):
 
     def install_ubuntu(self):
         Apt().install_package("sloccount")
+
+    def upgrade_osx(self):
+        Homebrew().upgrade_package("sloccount")
 
 
 class Emu(Task):
@@ -1235,6 +1291,9 @@ class JsonUtil(Task):
 
     def _install_common(self):
         Node().npm_install("jsonlint", self.JSONLINT_VERSION)
+
+    def upgrade_osx(self):
+        Homebrew().upgrade_package("jq")
 
 
 class Scripts(Task):
@@ -1327,3 +1386,6 @@ class DefaultApps(Task):
         for extension in self.FILE_ASSOCIATIONS:
             app = self.FILE_ASSOCIATIONS[extension]
             shell('duti -s {app} .{extension} all'.format(**vars()))
+
+    def upgrade(self):
+        Homebrew().upgrade_package("duti")
