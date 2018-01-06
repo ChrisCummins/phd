@@ -1016,7 +1016,7 @@ class OmniFocus(Task):
 
         # Check that of2 is installed and is the correct version
         if (not os.path.exists("/usr/local/opt/ofexport/bin/of2") and
-            shell_output("of2 -h").split("\n")[2] != "Version: " + self.OFEXPORT2_VERSION):
+            shell_output("/usr/local/opt/ofexport/bin/of2 -h").split("\n")[2] != "Version: " + self.OFEXPORT2_VERSION):
             task_print("Downloading ofexport")
             shell("rm -rf /usr/local/opt/ofexport")
             url, ver = self.OFEXPORT2_URL, self.OFEXPORT2_VERSION
