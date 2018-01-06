@@ -76,7 +76,9 @@ class Homebrew(Task):
     def package_is_outdated(self, package):
         """ returns True if package is outdated """
         if not self.package_is_installed(package):
-            return False
+            raise InvalidTaskError(
+                "homebrew package '{package}' cannot be upgraded as it is not installed"
+                .format(**vars()))
 
         if not os.path.isfile(self.OUTDATED_PKG_LIST):
             shell("brew outdated | awk '{{print $1}}' >{self.OUTDATED_PKG_LIST}"
@@ -110,7 +112,9 @@ class Homebrew(Task):
     def cask_is_outdated(self, cask):
         """ returns True if cask is outdated """
         if not self.cask_is_installed(cask):
-            return False
+            raise InvalidTaskError(
+                "homebrew cask '{package}' cannot be upgraded as it is not installed"
+               .format(**vars()))
 
         if not os.path.isfile(self.OUTDATED_CASK_LIST):
             shell("brew cask outdated | awk '{{print $1}}' >{self.OUTDATED_CASK_LIST}"
@@ -882,8 +886,8 @@ class Plex(Task):
         self.installed_server = Homebrew().install_cask('plex-media-server')
 
     def upgrade(self):
-        Homebrew().upgrade_package('plex-media-player')
-        Homebrew().upgrade_package('plex-media-server')
+        Homebrew().upgrade_cask('plex-media-player')
+        Homebrew().upgrade_cask('plex-media-server')
 
     def uninstall(self):
         Homebrew().uninstall_cask('plrex-media-player')
@@ -1045,7 +1049,7 @@ class Ncdu(Task):
         Apt().install_package("ncdu")
 
     def upgrade_osx(self):
-        Homebrew().upgrade_package("ncdue")
+        Homebrew().upgrade_package("ncdu")
 
 
 class HTop(Task):
