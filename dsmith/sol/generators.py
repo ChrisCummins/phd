@@ -32,8 +32,6 @@ from tempfile import NamedTemporaryFile
 from pathlib import Path
 from typing import Union
 
-import dsmith.opencl.db
-
 from dsmith import Colors
 from dsmith.langs import Generator
 from dsmith.sol.db import *

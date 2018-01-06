@@ -257,6 +257,8 @@ def main():
     else:
         requirements_files += ['requirements.tensorflow.cpu.txt']
 
+    if cfg["opencl"]:
+        requirements_files += ['requirements.opencl.txt']
 
     cfg["rc_path"] = _abspath(cfg["rc_path"])
     if os.path.exists(cfg["rc_path"]):

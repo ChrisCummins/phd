@@ -18,7 +18,6 @@
 """
 OpenCL test harnesses.
 """
-import cldrive
 import subprocess
 import progressbar
 import sys

@@ -18,7 +18,6 @@
 """
 Solidity database backend.
 """
-import cldrive
 import clgen
 import datetime
 import humanize
@@ -44,8 +43,6 @@ import dsmith
 from dsmith import Colors
 from dsmith import db_base
 from dsmith.db_base import *
-from dsmith.opencl import oclgrind
-from dsmith.opencl import opencl_pb2 as pb
 
 
 # Global state to manage database connections. Must call init() before
@@ -410,14 +407,32 @@ class Testbed(Base):
         return re.sub(r'^Version: +', '', line)
 
     @staticmethod
-    def from_bin(path: Path="solc", session: session_t=None) -> List['Testbed']:
-        import cldrive
+    def host_os() -> str:
+        """
+        Get the type and version of the host operating system.
 
+        Returns:
+            str: Formatted <system> <release> <arch>, where <system> is the
+                 operating system type, <release> is the release version, and
+                 <arch> is 32 or 64 bit.
+        """
+        if sys.platform == "linux" or sys.platform == "linux2":
+            dist = platform.linux_distribution()
+            system, release = dist[0], dist[1]
+        else:
+            system, release = platform.system(), platform.release()
+
+        arch = platform.architecture()[0]
+
+        return f"{system} {release} {arch}"
+
+    @staticmethod
+    def from_bin(path: Path="solc", session: session_t=None) -> List['Testbed']:
         with ReuseSession(session) as s:
             basename = fs.basename(path)
             version = Testbed._get_version(path)
             platform = get_or_add(s, Platform, platform=basename, version=version,
-                                  host=cldrive.host_os())
+                                  host=Testbed.host_os())
             s.flush()
             return [
                 get_or_add(s, Testbed,
