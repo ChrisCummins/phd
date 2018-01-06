@@ -73,9 +73,9 @@ class Homebrew(Task):
             shell("brew install {package}".format(**vars()))
             return True
 
-    def package_is_outdated(self, cask):
+    def package_is_outdated(self, package):
         """ returns True if package is outdated """
-        if not self.package_is_installed(cask):
+        if not self.package_is_installed(package):
             return False
 
         if not os.path.isfile(self.OUTDATED_PKG_LIST):
@@ -262,6 +262,9 @@ class Ruby(Task):
         if not shell_ok("gem list --local | grep bundler"):
             task_print("gem install bundler")
             shell("sudo gem install bundler")
+
+    def upgrade_osx(self):
+        Homebrew().upgrade_package("rbenv")
 
 
 class Curl(Task):
