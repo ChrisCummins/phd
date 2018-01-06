@@ -68,16 +68,28 @@ class Homebrew(Task):
 
     def install_package(self, package):
         """ install a package using homebrew, return True if installed """
-        # Create the list of homebrew packages
         if not self.package_is_installed(package):
             task_print("brew install " + package)
             shell("brew install {package}".format(**vars()))
             return True
 
+    def package_is_outdated(self, cask):
+        """ returns True if package is outdated """
+        if not self.package_is_installed(cask):
+            return False
+
+        if not os.path.isfile(self.OUTDATED_PKG_LIST):
+            shell("brew outdated >{self.OUTDATED_PKG_LIST}".format(**vars()))
+
+        package_stump = package.split('/')[-1]
+        return shell_ok("grep '^{package_stump}' <{self.OUTDATED_PKG_LIST}".format(**vars()))
+
     def upgrade_package(self, package):
-        if self.package_is_installed(package):
+        """ upgrade package, return True if upgraded """
+        if self.package_is_outdated(package):
             task_print("brew upgrade {package}".format(**vars()))
             shell("brew upgrade {package}".format(**vars()))
+            return True
 
     def cask_is_installed(self, cask):
         """ return True if cask is installed """
@@ -95,8 +107,8 @@ class Homebrew(Task):
             return True
 
     def cask_is_outdated(self, cask):
+        """ returns True if cask is outdated """
         if not self.cask_is_installed(cask):
-            print("NOT INSTALLED")
             return False
 
         if not os.path.isfile(self.OUTDATED_CASK_LIST):
@@ -110,6 +122,7 @@ class Homebrew(Task):
         if self.cask_is_outdated(cask):
             task_print("brew cask upgrade {cask}".format(**vars()))
             shell("brew cask upgrade {cask}".format(**vars()))
+            return True
 
     def uninstall_cask(self, cask):
         """ remove a homebrew cask, return True if uninstalled """
