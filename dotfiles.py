@@ -1015,7 +1015,7 @@ class OmniFocus(Task):
         Homebrew().install_cask('omnifocus')
 
         # Check that of2 is installed and is the correct version
-        if (not os.path.exists("/usr/local/opt/ofexport/bin/of2") or
+        if (not os.path.exists("/usr/local/opt/ofexport/bin/of2") and
             shell_output("of2 -h").split("\n")[2] != "Version: " + self.OFEXPORT2_VERSION):
             task_print("Downloading ofexport")
             shell("rm -rf /usr/local/opt/ofexport")
