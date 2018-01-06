@@ -319,6 +319,9 @@ class Dropbox(Task):
             self.installed_on_ubuntu = True
         self._install_common()
 
+    def upgrade_osx(self):
+        Homebrew().upgrade_cask("dropbox")
+
     def teardown(self):
         if self.installed_on_ubuntu:
             print()
@@ -344,6 +347,9 @@ class Fluid(Task):
                         task_print("Installing {app}".format(**vars()))
                         shell("cp -r '{}/fluid.apps/{}' '/Applications/{}'"
                               .format(PRIVATE, app, app))
+
+    def upgrade_osx(self):
+        Homebrew().upgrade_cask("fluid")
 
 
 class SSH(Task):
@@ -414,6 +420,9 @@ class WacomDriver(Task):
     def install(self):
         if Homebrew().install_cask('caskroom/drivers/wacom-intuos-tablet'):
             self.installed = True
+
+    def upgrade(self):
+        Homebrew().upgrade_cask("wacom-intuos-tablet")
 
     def teardown(self):
         if self.installed:
@@ -743,6 +752,10 @@ class LaTeX(Task):
             symlink(usr_share("LaTeX", "autotex"), "~/.local/bin/autotex")
             symlink(usr_share("LaTeX", "cleanbib"), "~/.local/bin/cleanbib")
 
+    def upgrade(self):
+        Homebrew().upgrade_cask("mactex")
+        Homebrew().upgrade_cask("texstudio")
+
 
 class AdobeCreativeCloud(Task):
     """ adobe creative cloud """
@@ -763,6 +776,10 @@ class AdobeCreativeCloud(Task):
         if not os.path.exists('/Applications/Nik Collection'):
             Homebrew().install_cask('google-nik-collection')
             self.installed = True
+
+    def upgrade(self):
+        Homebrew().upgrade_cask("adobe-creative-cloud")
+        Homebrew().upgrade_cask("google-nik-collection")
 
     def teardown(self):
         if self.installed:
@@ -852,6 +869,10 @@ class Plex(Task):
         Homebrew().install_cask('plex-media-player')
         self.installed_server = Homebrew().install_cask('plex-media-server')
 
+    def upgrade(self):
+        Homebrew().upgrade_package('plex-media-player')
+        Homebrew().upgrade_package('plex-media-server')
+
     def uninstall(self):
         Homebrew().uninstall_cask('plrex-media-player')
         Homebrew().uninstall_cask('plrex-media-server')
@@ -901,6 +922,9 @@ class Emacs(Task):
                        "~/.emacs.d", self.PRELUDE_VERSION)
         # prelude requires there be no ~/.emacs file on first run
         Trash().trash('~/.emacs')
+
+    def upgrade_osx(self):
+        Homebrew().upgrade_package('emacs')
 
 
 class AppStore(Task):
@@ -1033,6 +1057,9 @@ class Java(Task):
 
     def install_ubuntu(self):
         Apt().install_package("openjdk-8-jdk")
+
+    def upgrade_osx(self):
+        Homebrew().upgrade_cask('java8')
 
 
 class OmniFocus(Task):
