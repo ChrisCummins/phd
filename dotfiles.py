@@ -1071,19 +1071,11 @@ class Ncdu(Task):
 
 class HTop(Task):
     """ cli activity monitor """
-    __platforms__ = ['linux', 'osx']
-    __osx_deps__ = ['Homebrew']
-    __osx_genfiles__ = ['/usr/local/bin/htop']
-    __linux_genfiles__ = ['/usr/bin/htop']
-
-    def install_osx(self):
-        Homebrew().install_package("htop")
+    __platforms__ = ['linux']
+    __genfiles__ = ['/usr/bin/htop']
 
     def install_ubuntu(self):
         Apt().install_package("htop")
-
-    def upgrade_osx(self):
-        Homebrew().upgrade_package("htop")
 
 
 class Java(Task):
