@@ -23,10 +23,12 @@ import datetime
 import humanize
 import logging
 import os
+import platform
 import progressbar
 import re
 import sqlalchemy as sql
 import subprocess
+import sys
 import threading
 
 from contextlib import contextmanager
