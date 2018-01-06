@@ -137,7 +137,7 @@ class Solc(SolidityHarness):
             tmp.flush()
             path = tmp.name
 
-        cmd = [testbed.platform.platform, path]
+        cmd = [testbed.platform.platform, '--bin', path]
         if testbed.optimizations:
             cmd.append('--optimize')
         logging.debug(f"{Colors.BOLD}${Colors.END} " + " ".join(cmd))
