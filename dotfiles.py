@@ -43,13 +43,14 @@ class Apt(object):
 class Homebrew(Task):
     """ install homebrew package manager """
     # Temporary files for caching list of installed packages and casks
-    PKG_LIST = os.path.abspath(".brew-list.txt")
-    CASK_LIST = os.path.abspath(".brew-cask-list.txt")
-
+    PKG_LIST = os.path.abspath(".brew-pkgs.txt")
+    CASK_LIST = os.path.abspath(".brew-casks.txt")
+    OUTDATED_PKG_LIST = os.path.abspath(".brew-pkgs-outdated.txt")
+    OUTDATED_CASK_LIST = os.path.abspath(".brew-casks-outdated.txt")
     __platforms__ = ['osx']
     __deps__ = []
     __genfiles__ = ['/usr/local/bin/brew']
-    __tmpfiles__ = [PKG_LIST, CASK_LIST]
+    __tmpfiles__ = [PKG_LIST, CASK_LIST, OUTDATED_PKG_LIST, OUTDATED_CASK_LIST]
 
     def install(self):
         if not which('brew'):
@@ -93,9 +94,20 @@ class Homebrew(Task):
             shell("brew cask install {cask}".format(**vars()))
             return True
 
+    def cask_is_outdated(self, cask):
+        if not self.cask_is_installed(cask):
+            print("NOT INSTALLED")
+            return False
+
+        if not os.path.isfile(self.OUTDATED_CASK_LIST):
+            shell("brew cask outdated >{self.OUTDATED_CASK_LIST}".format(**vars()))
+
+        cask_stump = cask.split('/')[-1]
+        return shell_ok("grep '^{cask_stump}' <{self.OUTDATED_CASK_LIST}".format(**vars()))
+
     def upgrade_cask(self, cask):
         """ upgrade a homebrew cask. does nothing if cask not installed """
-        if self.cask_is_installed(cask):
+        if self.cask_is_outdated(cask):
             task_print("brew cask upgrade {cask}".format(**vars()))
             shell("brew cask upgrade {cask}".format(**vars()))
 
@@ -664,6 +676,9 @@ class SublimeText(Task):
     def install(self):
         symlink(usr_share("Sublime Text/rsub"), "/usr/local/bin/rsub", sudo=True)
 
+    def upgrade_osx(self):
+        Homebrew().upgrade_cask("sublime-text")
+
 
 class Ssmtp(Task):
     """ mail server and config """
@@ -799,6 +814,10 @@ class HomebrewCasks(Task):
     def install(self):
         for cask in self.CASKS.keys():
             Homebrew().install_cask(cask)
+
+    def upgrade(self):
+        for cask in self.CASKS.keys():
+            Homebrew().upgrade_cask(cask)
 
 
 class Plex(Task):
@@ -1033,6 +1052,9 @@ class OmniFocus(Task):
 
     def install(self):
         symlink(usr_share("OmniFocus/omni"), "/usr/local/bin/omni", sudo=True)
+
+    def upgrade_osx(self):
+        Homebrew().upgrade_cask('omnifocus')
 
 
 class Toggl(Task):
