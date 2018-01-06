@@ -42,6 +42,7 @@ class Apt(object):
 
 class Homebrew(Task):
     """ install homebrew package manager """
+    # Temporary files for caching list of installed packages and casks
     PKG_LIST = os.path.abspath(".brew-list.txt")
     CASK_LIST = os.path.abspath(".brew-cask-list.txt")
 
@@ -57,51 +58,52 @@ class Homebrew(Task):
             shell('brew update')
             shell('brew doctor')
 
-    def upgrade(self, package=None):
-        task_print("brew update")
-        shell('brew update')
+    def package_is_installed(self, package):
+        """ return True if package is installed """
+        if not os.path.isfile(self.PKG_LIST):
+            shell("brew list > {self.PKG_LIST}".format(**vars()))
 
-        if package is None:
-            package=''
-
-        task_print("brew upgrade {package}".format(**vars()))
-        shell("brew upgrade {package}".format(**vars()))
-
+        return shell_ok("grep '^{package}$' <{self.PKG_LIST}".format(**vars()))
 
     def install_package(self, package):
         """ install a package using homebrew, return True if installed """
         # Create the list of homebrew packages
-        if not os.path.isfile(self.PKG_LIST):
-            shell("brew list > {self.PKG_LIST}".format(**vars()))
-
-        if not shell_ok("grep '^{package}$' <{self.PKG_LIST}".format(**vars())):
+        if not self.package_is_installed(package):
             task_print("brew install " + package)
             shell("brew install {package}".format(**vars()))
             return True
 
-    def _create_cask_list(self):
-        """ Create the list of homebrew casks """
+    def upgrade_package(self, package):
+        if self.package_is_installed(package):
+            task_print("brew upgrade {package}".format(**vars()))
+            shell("brew upgrade {package}".format(**vars()))
+
+    def cask_is_installed(self, cask):
+        """ return True if cask is installed """
         if not os.path.isfile(self.CASK_LIST):
             shell("brew cask list > {self.CASK_LIST}".format(**vars()))
 
-    def install_cask(self, package):
-        """ install a homebrew cask, return True if installed """
-        self._create_cask_list()
+        cask_stump = cask.split('/')[-1]
+        return shell_ok("grep '^{cask_stump}$' <{self.CASK_LIST}".format(**vars()))
 
-        package_stump = package.split('/')[-1]
-        if not shell_ok("grep '^{package_stump}$' <{self.CASK_LIST}".format(**vars())):
-            task_print("brew cask install " + package)
-            shell("brew cask install {package}".format(**vars()))
+    def install_cask(self, cask):
+        """ install a homebrew cask, return True if installed """
+        if not self.cask_is_installed(cask):
+            task_print("brew cask install " + cask)
+            shell("brew cask install {cask}".format(**vars()))
             return True
 
-    def uninstall_cask(self, package):
-        """ remove a homebrew cask, return True if uninstalled """
-        self._create_cask_list()
+    def upgrade_cask(self, cask):
+        """ upgrade a homebrew cask. does nothing if cask not installed """
+        if self.cask_is_installed(cask):
+            task_print("brew cask upgrade {cask}".format(**vars()))
+            shell("brew cask upgrade {cask}".format(**vars()))
 
-        package_stump = package.split('/')[-1]
-        if shell_ok("grep '^{package_stump}$' <{self.CASK_LIST}".format(**vars())):
-            task_print("brew cask remove " + package)
-            shell("brew cask remove " + package)
+    def uninstall_cask(self, cask):
+        """ remove a homebrew cask, return True if uninstalled """
+        if self.cask_is_installed(cask):
+            task_print("brew cask remove " + cask)
+            shell("brew cask remove " + cask)
             return True
 
 
