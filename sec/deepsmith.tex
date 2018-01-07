@@ -14,11 +14,15 @@ DeepSmith\footnote{DeepSmith available at: \emph{[URL redacted for double-blind 
 
 \subsection{Generative Model}
 
-Generating test cases for compilers is hard because their inputs are highly structured. Producing text with the right structure requires expert knowledge and a significant engineering effort, which has to be repeated from scratch for each new language. Instead, we treat the problem as an unsupervised machine learning task, employing state-of-the-art deep learning techniques to build models for how humans write programs, \cc{TODO: rephrase this} extending prior work on synthetic benchmark generation~\cite{Cummins2017a} and lifting it to the compiler testing domain. Contrary to existing tools, this approach is language agnostic, is only a few hundred lines of code, and requires little effort to design.
+Generating test cases for compilers is hard because their inputs are highly structured. Producing text with the right structure requires expert knowledge and a significant engineering effort, which has to be repeated from scratch for each new language. Instead, we treat the problem as an unsupervised machine learning task, employing state-of-the-art deep learning techniques to build models for how humans write programs. Contrary to existing tools, our approach does not require expert knowledge of the target language, is only a few hundred lines of code, and requires little effort to design.
+
+% Contrary to existing tools, this approach is language agnostic, is only a few hundred lines of code, and requires little effort to design.
 
 \paragraph{Training Programs} The generative model needs to be trained on a set of OpenCL kernels. The authors of~\cite{Cummins2017a} provided us with a corpus of approximately 10k OpenCL kernels, mined from GitHub. These millions of lines of code are a representative sample of OpenCL code. Those authors had already preprocessed the kernels to be more suited to model training. This included the following steps.
 
-An \emph{oracle compiler} (LLVM 3.9) is used to statically check the source files, discarding files that are not well-formed. The main purpose of this step is to remove the need to manually check that each file selected from GitHub does indeed contain OpenCL. A downside is that any training candidate which triggers a bug in the LLVM 3.9's front end will not be included. However, this did not prevent our system from uncovering errors in that compiler.
+An \emph{oracle compiler} (LLVM 3.9) is used to statically check the source files, discarding files that are not well-formed. The main purpose of this step is to remove the need to manually check that each file selected from GitHub does indeed contain OpenCL. A downside is that any training candidate which triggers a bug in the LLVM 3.9's front end will not be included. However, this did not prevent our system from uncovering errors in that compiler (Section~\ref{subsec:clangs}).
+
+\cc{TODO: We employed semantic-preserving transformations to simplify the training programs.}
 
 The source code is then rewritten to remove trivial syntactic differences between training programs. First, each source file is preprocessed to expand macros and remove conditional compilation and comments. Then, all user-declared identifiers are renamed using an arbitrary, but consistent pattern based on their order of declaration: $\{a,\allowbreak b,\allowbreak c,\allowbreak \ldots,\allowbreak aa,\allowbreak ab,\allowbreak ac,\allowbreak \ldots\}$ for variables and $\{A,\allowbreak B,\allowbreak C,\allowbreak \ldots,\allowbreak AA,\allowbreak AB,\allowbreak AC,\allowbreak \ldots\}$ for functions. This ensures a consistent naming convention, without modifying program behavior. Finally, a uniform code style is enforced to ensure consistent use of braces, parentheses, and white space. These rewriting simplifications give more opportunities for the model to learn the structure and deeper aspects of the language and speed up the learning. On the other hand, some bugs in the preprocessor or front-end might no longer be discoverable. We reason that this is an acceptable trade-off. For languages where the corpus can be many orders of magnitude larger, for example, C or Java, models can be generated without these modifications.
 
@@ -65,7 +69,7 @@ Unlike the generative model, this test harness is language-specific and the desi
 \paragraph*{Test Harness Output Classes}
 \begin{figure}
   \centering %
-  \includegraphics[width=\columnwidth]{img/testprocess-long}%
+  \includegraphics[width=.8\columnwidth]{img/testprocess-long}%
   \caption{%
  	  Test case execution, and possible results.%
      \vspace{-1.1em}
