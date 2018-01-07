@@ -20,6 +20,10 @@ def escape_path(path: str):
 def mkepisodal(show_name: str, season_num: int, directory: Path,
                start_at: int=1):
     files = sorted(list(directory.iterdir()), key=lambda s: s.name.lower())
+
+    # Ignore files that begin with a "." (i.e. hidden):
+    files = [x for x in files if not str(x).startswith(".")]
+
     for i, episode in enumerate(files):
         episode_num = i + start_at
         ext = episode.suffix
