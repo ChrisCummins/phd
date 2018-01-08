@@ -1364,3 +1364,14 @@ class DefaultApps(Task):
 
     def upgrade(self):
         Homebrew().upgrade_package("duti")
+
+
+class GoogleChrome(Task):
+    __platforms__ = ['osx']
+    __deps__ = [Homebrew]
+
+    def install_osx(self):
+        Homebrew().install_cask('google-chrome')
+
+    def upgrade_osx(self):
+        Homebrew().upgrade_cask('google-chrome')
