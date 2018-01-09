@@ -10,9 +10,9 @@ before_install:
 
 script:
   - ./configure --exclude AppStore
-  - ./run --describe
-  - ./run --debug
-  - ./run --debug
+  - ./run --describe --verbose
+  - ./run --verbose
+  - ./run --verbose
 
 notifications:
   email:
