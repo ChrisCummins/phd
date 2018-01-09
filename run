@@ -119,12 +119,12 @@ def main(*args):
 
     # Configure logger
     if args.debug:
-        logging.getLogger().setLevel(logging.DEBUG)
+        loglevel = logging.DEBUG
     elif args.verbose:
-        logging.getLogger().setLevel(logging.INFO)
+        loglevel = logging.INFO
     else:
-        logging.getLogger().setLevel(logging.WARNING)
-    logging.basicConfig(format="%(message)s")
+        loglevel = logging.WARNING
+    logging.basicConfig(level=loglevel, format="%(message)s")
 
     # Get the list of tasks to run
     logging.debug("creating tasks list ...")

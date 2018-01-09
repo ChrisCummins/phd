@@ -50,7 +50,9 @@ def _shell(*args, **kwargs):
     error = kwargs.get("error", True)
     stdout = kwargs.get("stdout", False)
 
-    logging.debug("$ " + "".join(*args))
+    if logging.getLogger().level <= logging.INFO:
+        logging.debug("$ " + "".join(*args))
+
     if stdout:
         return subprocess.check_output(*args, shell=shell, universal_newlines=True,
                                        stderr=subprocess.PIPE)
