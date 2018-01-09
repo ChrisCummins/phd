@@ -701,6 +701,7 @@ class Linters(Task):
         '/usr/local/bin/cpplint',
         '/usr/local/bin/csslint',
         '/usr/local/bin/pycodestyle',
+        '~/.config/pycodestyle',
     ]
 
     def install_osx(self):
@@ -709,9 +710,8 @@ class Linters(Task):
         Python().pip_install("pycodestyle", version=self.PYCODESTYLE_VERSION,
                              pip="pip3.6")
 
-        if os.path.isdir(PRIVATE + "/linters"):
-            self.__genfiles__ += ['~/.config/pycodestyle']
-            symlink(PRIVATE + "/linters/pycodestyle", "~/.config/pycodestyle")
+        mkdir("~/.config")
+        symlink(usr_share("linters/pycodestyle"), "~/.config/pycodestyle")
 
 
 class SublimeText(Task):
