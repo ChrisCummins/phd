@@ -9,6 +9,9 @@ before_install:
   - uname -a
 
 script:
+  - dpkg -s nodejs || true
+  - dpkg -s npm || true
+  - which npm || true
   - ./configure --exclude AppStore
   - ./run --describe --verbose
   - ./run Tmux --verbose
