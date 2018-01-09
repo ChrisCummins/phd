@@ -44,37 +44,53 @@ def get_platform():
         return distro[0].lower()
 
 
-def _shell(*args, **kwargs):
-    error = kwargs.get("error", True)
-    stdout = kwargs.get("stdout", False)
+class CalledProcessError(Exception):
+    pass
 
+
+def _shell(action, *args):
     if logging.getLogger().level <= logging.INFO:
         logging.debug("$ " + "".join(*args))
 
-    if stdout:
-        return subprocess.check_output(*args, shell=shell, universal_newlines=True,
-                                       stderr=subprocess.PIPE)
-    elif error:
-        return subprocess.check_call(*args, shell=shell, stdout=subprocess.PIPE,
-                                     stderr=subprocess.PIPE)
-    else:
+    if action == "shell":
+        p = subprocess.Popen(*args, shell=True, stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT, universal_newlines=True)
+        stdout, _ = p.communicate()
+        if p.returncode:
+            stdout = stdout.rstrip()
+            cmd = " ".join(args)
+            msg = ("""\
+Command '{cmd}' failed with returncode {p.returncode} and output:
+{stdout}""".format(**vars()))
+            raise CalledProcessError(msg)
+    elif action == "shell_ok":
         try:
-            subprocess.check_call(*args, shell=shell, stdout=subprocess.PIPE,
+            subprocess.check_call(*args, shell=True, stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE)
             return True
         except subprocess.CalledProcessError:
             return False
+    elif action == "shell_output":
+        return subprocess.check_output(*args, shell=True,
+                                       universal_newlines=True,
+                                       stderr=subprocess.STDOUT)
+    else:
+        raise ValueError("unknown _shell() action " + str(action))
+
 
 def shell(*args):
-    return _shell(*args)
+    """ run a shell command """
+    return _shell("shell", *args)
 
 
 def shell_ok(*args):
-    return _shell(*args, error=False)
+    """ run a shell command and return False if error """
+    return _shell("shell_ok", *args)
 
 
 def shell_output(*args):
-    return _shell(*args, stdout=True)
+    """ run a shell command and return it's output """
+    return _shell("shell_output", *args)
 
 
 shell("./configure")

@@ -20,7 +20,6 @@
 # SOFTWARE.
 #
 import json
-import subprocess
 
 from util import *
 
@@ -987,7 +986,7 @@ class AppStore(Task):
         # failure
         try:
             shell("mas signin --dialog " + APPLE_ID)
-        except subprocess.CalledProcessError:
+        except CalledProcessError:
             pass
 
     def upgrade(self):
