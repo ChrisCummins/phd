@@ -143,9 +143,7 @@ def main(*args):
             msg = "[{j:2d}/{ntasks:2d}] {fmt_bld}{task}{fmt_end} ...".format(**vars())
             logging.info(msg)
             # build a list of generated files
-            genfiles = getattr(task, "__genfiles__", [])
-            genfiles += getattr(task, "__" + PLATFORM + "_genfiles__", [])
-            for file in sorted(set(genfiles)):
+            for file in task.genfiles:
                 logging.info("    " + os.path.abspath(os.path.expanduser(file)))
 
         return 0
@@ -186,12 +184,11 @@ def main(*args):
             # Resolve and run install() method:
             get_task_method(task, task_type)()
             done.add(task)
-            # build a list of generated files:
-            genfiles = getattr(task, "__genfiles__", [])
-            genfiles += getattr(task, "__" + PLATFORM + "_genfiles__", [])
 
+            # Ensure that genfiles have been generated:
             if task_type == "install":
-                for file in set(genfiles):
+                print("genfiles", task.genfiles)
+                for file in task.genfiles:
                     file = os.path.abspath(os.path.expanduser(file))
                     if not (os.path.exists(file) or
                             shell_ok("sudo test -f '{file}'".format(**vars())) or

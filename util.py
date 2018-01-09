@@ -169,6 +169,19 @@ class Task(object):
     def __repr__(self):
         return type(self).__name__
 
+    @property
+    def genfiles(self):
+        """ return a platform-specific list of genfiles """
+        if hasattr(self, "__genfiles__"):
+            ret = self.__genfiles__
+        else:
+            ret = []
+
+        if hasattr(self, "__" + get_platform() + "_genfiles__"):
+            ret += getattr(self, "__" + get_platform() + "_genfiles__")
+
+        return list(sorted(set(ret)))
+
 
 class InvalidTaskError(Exception): pass
 
