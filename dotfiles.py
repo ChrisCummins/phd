@@ -430,10 +430,16 @@ class Node(Task):
     """ nodejs and npm """
     PKG_LIST = os.path.abspath(".npm-list.txt")
 
+    NPM_BINARY = {
+        "osx": "/usr/local/bin/npm",
+        "linux": "/usr/bin/npm"
+    }
+
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = ['Homebrew']
-    __osx_genfiles__ = ['/usr/local/bin/node', '/usr/local/bin/npm']
-    __linux_genfiles__ = ['/usr/bin/node', '/usr/bin/npm']
+    __genfiles__ = [NPM_BINARY[PLATFORM]]
+    __osx_genfiles__ = ['/usr/local/bin/node']
+    __linux_genfiles__ = ['/usr/bin/node']
     __tmpfiles__ = [PKG_LIST]
 
     def install_osx(self):
@@ -451,13 +457,15 @@ class Node(Task):
 
     def npm_install(self, package, version):
         """ install a package using npm, return True if installed """
+        npm = self.NPM_BINARY[PLATFORM]
+
         # Create the list of npm packages
         if not os.path.isfile(self.PKG_LIST):
-            shell("npm list -g > {self.PKG_LIST}".format(**vars()))
+            shell("{npm} list -g > {self.PKG_LIST}".format(**vars()))
 
         if not shell_ok("grep '{package}@{version}' <{self.PKG_LIST}".format(**vars())):
             task_print("npm install -g {package}@{version}".format(**vars()))
-            shell("sudo npm install -g {package}@{version}".format(**vars()))
+            shell("sudo {npm} install -g {package}@{version}".format(**vars()))
             return True
 
 
