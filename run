@@ -139,7 +139,7 @@ def main(*args):
             task = getattr(dotfiles, task_name)()
             description = (task.__doc__ or "").strip()
             j = i + 1
-            msg = "[{j:2d}/{j:2d}] {fmt_bld}{task}{fmt_end} ...".format(**vars())
+            msg = "[{j:2d}/{ntasks:2d}] {fmt_bld}{task}{fmt_end} ...".format(**vars())
             logging.info(msg)
             # build a list of generated files
             genfiles = getattr(task, "__genfiles__", [])
@@ -167,7 +167,7 @@ def main(*args):
             task = getattr(dotfiles, task_name)()
 
             j = i + 1
-            msg = "[{j:2d}/{j:2d}] {fmt_bld}{task}{fmt_end} ...".format(**vars())
+            msg = "[{j:2d}/{ntasks:2d}] {fmt_bld}{task}{fmt_end} ...".format(**vars())
             logging.info(msg)
 
             start_time = time()
