@@ -171,7 +171,9 @@ class Python(Task):
     def _install_common(self):
         assert which("pip2")
 
-        symlink("{private}/python/.pypirc".format(private=PRIVATE), "~/.pypirc")
+        if os.path.isdir(PRIVATE):
+            symlink("{private}/python/.pypirc".format(private=PRIVATE),
+                    "~/.pypirc")
 
         # install pip
         if not shell_ok("test $(pip2 --version | awk '{{print $2}}') = {self.PIP_VERSION}".format(**vars())):
