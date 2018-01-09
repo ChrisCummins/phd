@@ -175,6 +175,11 @@ class Python(Task):
 
         self._install_common()
 
+    def _pip_version_is(self, pip, version):
+        return shell_ok(
+            "test $({pip} --version | awk '{{print $2}}') = {version}"
+            .format(**vars()))
+
     def _install_common(self):
         assert which("pip2")
 
@@ -184,21 +189,19 @@ class Python(Task):
                     "~/.pypirc")
 
         # install pip
-        pip_version = self.__versions__["pip"]
-
-        if not shell_ok("test $(pip2 --version | awk '{{print $2}}') = {pip_version}".format(**vars())):
+        if not self._pip_version_is("pip2", self.__versions__["pip"]):
             task_print("pip2 install --upgrade 'pip=={pip_version}'".format(**vars()))
             shell("pip2 install --upgrade 'pip=={pip_version}'".format(**vars()))
         # same again as root
-        if not shell_ok("test $(sudo pip2 --version | awk '{{print $2}}') = {pip_version}".format(**vars())):
+        if not self._pip_version_is("sudo pip2", self.__versions__["pip"]):
             shell("sudo -H pip2 install --upgrade 'pip=={pip_version}'".format(**vars()))
 
         # install pip
-        if not shell_ok("test $(pip3 --version | awk '{{print $2}}') = {pip_version}".format(**vars())):
+        if not self._pip_version_is("pip3", self.__versions__["pip"]):
             task_print("pip3 install --upgrade 'pip=={pip_version}'".format(**vars()))
             shell("pip3 install --upgrade 'pip=={pip_version}'".format(**vars()))
         # same again as root
-        if not shell_ok("test $(sudo pip3 --version | awk '{{print $2}}') = {pip_version}".format(**vars())):
+        if not self._pip_version_is("sudo pip3", self.__versions__["pip"]):
             shell("sudo -H pip3 install --upgrade 'pip=={pip_version}'".format(**vars()))
 
         # install virtualenv
