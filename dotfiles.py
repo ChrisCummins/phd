@@ -144,18 +144,24 @@ class Python(Task):
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = ['Homebrew']
     __genfiles__ = []
-    __osx_genfiles__ = ['/usr/local/bin/pip2']
-    __linux_genfiles__ = ['~/.local/bin/pip2']
+    __osx_genfiles__ = [
+        '/usr/local/bin/pip2',
+        '/usr/local/bin/pip3',
+    ]
+    __linux_genfiles__ = [
+        '/usr/bin/pip3',
+        '~/.local/bin/pip2',
+    ]
     __tmpfiles__ = [PIP_LIST]
 
     def install_osx(self):
         Homebrew().install_package("python")
         Homebrew().install_package("python3")
-        Homebrew().install_package("python3-pip")
         self._install_common()
 
     def install_ubuntu(self):
         Apt().install_package("python-pip")
+        Apt().install_package("python3-pip")
         Apt().install_package("software-properties-common")  # provides add-apt-repository
         if not shell_ok("dpkg -s python3.6 &>/dev/null"):
             task_print("adding python-3.6 repository")
@@ -181,6 +187,14 @@ class Python(Task):
         # same again as root
         if not shell_ok("test $(sudo pip2 --version | awk '{{print $2}}') = {self.PIP_VERSION}".format(**vars())):
             shell("sudo -H pip2 install --upgrade 'pip=={self.PIP_VERSION}'".format(**vars()))
+
+        # install pip
+        if not shell_ok("test $(pip3 --version | awk '{{print $2}}') = {self.PIP_VERSION}".format(**vars())):
+            task_print("pip3 install --upgrade 'pip=={self.PIP_VERSION}'".format(**vars()))
+            shell("pip3 install --upgrade 'pip=={self.PIP_VERSION}'".format(**vars()))
+        # same again as root
+        if not shell_ok("test $(sudo pip3 --version | awk '{{print $2}}') = {self.PIP_VERSION}".format(**vars())):
+            shell("sudo -H pip3 install --upgrade 'pip=={self.PIP_VERSION}'".format(**vars()))
 
         # install virtualenv
         self.pip_install("virtualenv", self.VIRTUALENV_VERSION)
