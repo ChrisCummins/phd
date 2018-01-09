@@ -317,7 +317,7 @@ class Dropbox(Task):
 
     def teardown(self):
         if self.installed_on_ubuntu:
-            logging.info()
+            logging.info("")
             logging.info("NOTE: manual step required to complete dropbox installation:")
             logging.info("    $ " + Colors.BOLD + Colors.RED +
                          "~/.dropbox-dist/dropboxd" + Colors.END)
@@ -394,7 +394,7 @@ class Netdata(Task):
 
     def teardown(self):
         if self.installed:
-            logging.info()
+            logging.info("")
             logging.info("NOTE: manual steps required to complete netdata installation:")
             logging.info("    $ " + Colors.BOLD + Colors.RED + "crontab -e" + Colors.END)
             logging.info("    # append the following line to the end and save:")
@@ -419,7 +419,7 @@ class WacomDriver(Task):
 
     def teardown(self):
         if self.installed:
-            logging.info()
+            logging.info("")
             logging.info("NOTE: manual steps required to complete Wacom driver setup:")
             logging.info("    " + Colors.BOLD + Colors.RED +
                          "Enable Wacom kernel extension in System Preferences > Security & Privacy" +
@@ -832,7 +832,7 @@ class AdobeCreativeCloud(Task):
 
     def teardown(self):
         if self.installed:
-            logging.info()
+            logging.info("")
             logging.info("NOTE: manual step required to complete creative cloud installation:")
             logging.info("    $ " + Colors.BOLD + Colors.RED +
                          "open '/usr/local/Caskroom/adobe-creative-cloud/latest/Creative Cloud Installer.app'" +
@@ -928,7 +928,7 @@ class Plex(Task):
 
     def teardown(self):
         if self.installed_server:
-            logging.info()
+            logging.info("")
             logging.info("NOTE: manual step required to configure Plex Media Server:")
             logging.info("    $ " + Colors.BOLD + Colors.RED +
                          "open http://127.0.0.1:32400" + Colors.END)
