@@ -448,9 +448,7 @@ class Node(Task):
     def install_ubuntu(self):
         Apt().install_package("nodejs")
         Apt().install_package("npm")
-        if (not os.path.exists("/usr/bin/node") and
-            os.path.exists("/usr/bin/nodejs")):
-            symlink("/usr/bin/nodejs", "/usr/bin/node", sudo=True)
+        symlink("/usr/bin/nodejs", "/usr/bin/node", sudo=True)
 
     def upgrade_osx(self):
         Homebrew().upgrade_package("node")
