@@ -18,5 +18,5 @@ script:
 
 notifications:
   email:
-    on_success: always # [always|never|change]
-    on_failure: always # [always|never|change]
+    on_success: change # [always|never|change]
+    on_failure: change # [always|never|change]
