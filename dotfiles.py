@@ -146,7 +146,7 @@ class Python(Task):
 
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = ['Homebrew']
-    __genfiles__ = [PYP_IRC]
+    __genfiles__ = []
     __osx_genfiles__ = ['/usr/local/bin/pip2']
     __linux_genfiles__ = ['~/.local/bin/pip2']
     __tmpfiles__ = [PIP_LIST]
@@ -172,6 +172,7 @@ class Python(Task):
         assert which("pip2")
 
         if os.path.isdir(PRIVATE):
+            self.__genfiles__ += [self.PYP_IRC]
             symlink("{private}/python/.pypirc".format(private=PRIVATE),
                     "~/.pypirc")
 
