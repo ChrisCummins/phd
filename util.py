@@ -56,8 +56,12 @@ def _shell(action, *args):
         p = subprocess.Popen(*args, shell=True, stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT, universal_newlines=True)
         stdout, _ = p.communicate()
+
+        stdout = stdout.rstrip()
+        if logging.getLogger().level <= logging.INFO and len(stdout):
+            logging.debug(stdout)
+
         if p.returncode:
-            stdout = stdout.rstrip()
             cmd = " ".join(args)
             msg = ("""\
 Command '{cmd}' failed with returncode {p.returncode} and output:
