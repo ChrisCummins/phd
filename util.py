@@ -108,6 +108,13 @@ PLATFORM = get_platform()
 HOSTNAME = socket.gethostname()
 
 
+def merge_dicts(a, b):
+    """ returns a copy of 'a' with values updated by 'b' """
+    dst = a.copy()
+    dst.update(b)
+    return dst
+
+
 class Task(object):
     """
     A Task is a unit of work.
@@ -171,16 +178,36 @@ class Task(object):
 
     @property
     def genfiles(self):
-        """ return a platform-specific list of genfiles """
+        """ return list of genfiles """
+        ret = []
         if hasattr(self, "__genfiles__"):
-            ret = self.__genfiles__
-        else:
-            ret = []
+            ret += self.__genfiles__
 
         if hasattr(self, "__" + get_platform() + "_genfiles__"):
             ret += getattr(self, "__" + get_platform() + "_genfiles__")
 
         return list(sorted(set(ret)))
+
+    @property
+    def deps(self):
+        """ return list of dependencies """
+        _deps = []
+        if hasattr(self, "__deps__"):
+            _deps += self.__deps__
+        if hasattr(self, "__" + get_platform() + "_deps__"):
+            _deps += getattr(self, "__" + get_platform() + "_deps__")
+
+        return sorted(list(set(_deps)))
+
+    @property
+    def versions(task):
+        """ return list of versions """
+        _versions = dict()
+        if hasattr(task, "__versions__"):
+            _versions = merge_dicts(_versions, getattr(task, "__versions__"))
+        if hasattr(task, "__" + get_platform() + "_version__"):
+            _versions = merge_dicts(_versions, getattr(task, "__" + get_platform() + "_version__"))
+        return versions
 
 
 class InvalidTaskError(Exception): pass
@@ -361,38 +388,6 @@ def get_task_method(task, method_name):
     if fn is None:
         raise InvalidTaskError("failed to resolve {method_name} method of Task {task}".format(**vars()))
     return fn
-
-
-def merge_dicts(a, b):
-    """ returns a copy of 'a' with values updated by 'b' """
-    dst = a.copy()
-    dst.update(b)
-    return dst
-
-
-def _get_task_attrs(task, attr):
-    attrs = []
-    if hasattr(task, "__" + attr + "__"):
-        attrs += getattr(task, "__" + attr + "__")
-    if hasattr(task, "__" + get_platform() + "_" + attr + "__"):
-        attrs += getattr(task, "__" + get_platform() + "_" + attr + "__")
-
-    return sorted(list(set(attrs)))
-
-
-def get_task_deps(task):
-    """ resolve list of dependencies for task """
-    return _get_task_attrs(task, "deps")
-
-
-def get_task_versions(task):
-    """ resolve task versions """
-    versions = dict()
-    if hasattr(task, "__versions__"):
-        versions = merge_dicts(versions, getattr(task, "__versions__"))
-    if hasattr(task, "__" + get_platform() + "_version__"):
-        versions = merge_dicts(versions, getattr(task, "__" + get_platform() + "_version__"))
-    return versions
 
 
 def usr_share(*components, **kwargs):

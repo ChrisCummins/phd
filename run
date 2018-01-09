@@ -56,11 +56,8 @@ def schedule_task(task_name, schedule, all_tasks, depth=1):
 
     task = task_class()
 
-    # Build a list of dependencies:
-    deps = get_task_deps(task)
-
     # Check that all dependencies have already been scheduled:
-    for dep_name in deps:
+    for dep_name in task.deps:
         if dep_name == task_name:
             raise SchedulingError("task '" + task_name + "' depends on itself")
 
@@ -152,9 +149,8 @@ def main(*args):
     if args.versions:
         for i, task_name in enumerate(queue):
             task = getattr(dotfiles, task_name)()
-            versions = get_task_versions(task)
-            for name in sorted(versions.keys()):
-                version = versions[name]
+            for name in sorted(task.versions.keys()):
+                version = task.versions[name]
                 logging.info("{task_name}:{name}=={version}".format(**vars()))
         return 0
 
@@ -187,7 +183,6 @@ def main(*args):
 
             # Ensure that genfiles have been generated:
             if task_type == "install":
-                print("genfiles", task.genfiles)
                 for file in task.genfiles:
                     file = os.path.abspath(os.path.expanduser(file))
                     if not (os.path.exists(file) or
