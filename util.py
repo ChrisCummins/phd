@@ -173,7 +173,7 @@ def task_print(*msg, **kwargs):
     sep = kwargs.get("sep", " ")
     text = sep.join(msg)
     indented = "\n        > ".join(text.split("\n"))
-    logging.info(Colors.GREEN, "        > ", indented, Colors.END, sep="")
+    logging.info(Colors.GREEN + "        > " + indented + Colors.END)
 
 
 def is_compatible(a, b):
