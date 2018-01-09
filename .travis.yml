@@ -9,9 +9,10 @@ before_install:
   - uname -a
 
 script:
-  - dpkg -s nodejs || true
-  - dpkg -s npm || true
-  - which npm || true
+  - apt-get install -y nodejs
+  - apt-get install -y npm
+  - test -f /usr/bin/npm && echo "exists" || echo "not exist"
+  - test -f /usr/bin/node && echo "exists" || echo "not exist"
   - ./configure --exclude AppStore
   - ./run --describe --verbose
   - ./run Tmux --verbose
