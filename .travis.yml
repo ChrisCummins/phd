@@ -9,6 +9,7 @@ before_install:
   - uname -a
 
 script:
+  - sudo npm install -g diff-so-fancy@0.11.4
   - ./configure --exclude AppStore
   - ./run --describe --verbose
   - ./run --verbose
