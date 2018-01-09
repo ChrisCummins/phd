@@ -688,10 +688,25 @@ class Vim(Task):
         Homebrew().upgrade_package("vim")
 
 
+class Linters(Task):
+    CPPLINT_VERSION = "1.3.0"
+    CSSLINT_VERSION = "1.0.5"
+    PYCODESTYLE_VERSION = "2.3.1"
+
+    __platforms__ = ['osx']
+    __osx_deps__ = ['Node', 'Python']
+
+    def install_osx(self):
+        Python().pip_install("cpplint", version=self.CPPLINT_VERSION)
+        Node().npm_install("csslint", version=self.CSSLINT_VERSION)
+        Python().pip_install("pycodestyle", version=self.PYCODESTYLE_VERSION,
+                             pip="pip3.6")
+
+
 class SublimeText(Task):
     """ sublime text """
     __platforms__ = ['linux', 'osx']
-    __osx_deps__ = ['Homebrew']
+    __osx_deps__ = ['Homebrew', 'Linters']
     __genfiles__ = ['/usr/local/bin/rsub']
     __osx_genfiles__ = ['/usr/local/bin/subl', '/Applications/Sublime Text.app']
 
