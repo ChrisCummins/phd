@@ -50,6 +50,7 @@ DEFAULTS = {
     "dotfiles": os.path.dirname(os.path.realpath(__file__)),
     "private": os.path.expanduser("~/Dropbox/Shared"),
     "apple_id": None,
+    "excludes": [],
 }
 
 
