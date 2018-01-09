@@ -133,11 +133,10 @@ class Task(object):
     def setup(self):
         pass
 
-    def run(self):
-        """ """
-        raise NotImplementedError
-
     def teardown(self):
+        pass
+
+    def install(self):
         pass
 
     def upgrade(self):
