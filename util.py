@@ -48,66 +48,48 @@ class CalledProcessError(Exception):
     pass
 
 
-def _shell(action, *args):
+def _log_shell(*args):
     if logging.getLogger().level <= logging.INFO:
         logging.debug("$ " + "".join(*args))
 
-    if action == "shell":
-        p = subprocess.Popen(*args, shell=True, stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT, universal_newlines=True)
-        stdout, _ = p.communicate()
 
-        stdout = stdout.rstrip()
-        if logging.getLogger().level <= logging.INFO and len(stdout):
+def _log_shell_output(stdout):
+    if logging.getLogger().level <= logging.INFO and len(stdout):
             logging.debug(stdout)
-
-        if p.returncode:
-            cmd = " ".join(args)
-            msg = ("""\
-Command '{cmd}' failed with returncode {p.returncode} and output:
-{stdout}""".format(**vars()))
-            raise CalledProcessError(msg)
-    elif action == "shell_ok":
-        try:
-            subprocess.check_call(*args, shell=True, stdout=subprocess.PIPE,
-                                  stderr=subprocess.PIPE)
-            return True
-        except subprocess.CalledProcessError:
-            return False
-    elif action == "shell_output":
-        p = subprocess.Popen(*args, shell=True, stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT, universal_newlines=True)
-        stdout, _ = p.communicate()
-
-        stdout = stdout.rstrip()
-        if logging.getLogger().level <= logging.INFO and len(stdout):
-            logging.debug(stdout)
-
-        if p.returncode:
-            cmd = " ".join(args)
-            msg = ("""\
-Command '{cmd}' failed with returncode {p.returncode} and output:
-{stdout}""".format(**vars()))
-            raise CalledProcessError(msg)
-        else:
-            return stdout
-    else:
-        raise ValueError("unknown _shell() action " + str(action))
 
 
 def shell(*args):
-    """ run a shell command """
-    return _shell("shell", *args)
+    """ run a shell command and return its output. Raises CalledProcessError
+        if fails """
+    _log_shell(*args)
+    p = subprocess.Popen(*args, shell=True, stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT, universal_newlines=True)
+    stdout, _ = p.communicate()
+
+    stdout = stdout.rstrip()
+    _log_shell_output(stdout)
+
+    if p.returncode:
+        cmd = " ".join(args)
+        msg = ("""\
+Command '{cmd}' failed with returncode {p.returncode} and output:
+{stdout}""".format(**vars()))
+        raise CalledProcessError(msg)
+    else:
+        return stdout
 
 
 def shell_ok(*args):
     """ run a shell command and return False if error """
-    return _shell("shell_ok", *args)
-
-
-def shell_output(*args):
-    """ run a shell command and return it's output """
-    return _shell("shell_output", *args)
+    _log_shell(*args)
+    try:
+        subprocess.check_call(*args, shell=True, stdout=subprocess.PIPE,
+                              stderr=subprocess.PIPE)
+        _log_shell_output("-> 0")
+        return True
+    except subprocess.CalledProcessError as e:
+        _log_shell_output("-> " + str(e.returncode))
+        return False
 
 
 shell("./configure")
@@ -246,7 +228,7 @@ def symlink(src, dst, sudo=False):
     use_sudo = "sudo -H " if sudo else ""
     if (shell_ok("{use_sudo}test -f '{dst}'".format(**vars())) or
         shell_ok("{use_sudo}test -d '{dst}'".format(**vars()))):
-        linkdest = shell_output("{use_sudo}readlink {dst}".format(**vars())).rstrip()
+        linkdest = shell("{use_sudo}readlink {dst}".format(**vars())).rstrip()
         if linkdest.startswith("/"):
             linkdest_abs = linkdest
         else:
@@ -318,8 +300,8 @@ def clone_git_repo(url, destination, version=None):
         # set revision
         pwd = os.getcwd()
         os.chdir(destination)
-        target_hash = shell_output("git rev-parse {version} 2>/dev/null".format(**vars()))
-        current_hash = shell_output("git rev-parse HEAD".format(**vars()))
+        target_hash = shell("git rev-parse {version} 2>/dev/null".format(**vars()))
+        current_hash = shell("git rev-parse HEAD".format(**vars()))
 
         if current_hash != target_hash:
             shell("git fetch --all")
@@ -366,15 +348,36 @@ def get_task_method(task, method_name):
     return fn
 
 
+def merge_dicts(a, b):
+    """ returns a copy of 'a' with values updated by 'b' """
+    dst = a.copy()
+    dst.update(b)
+    return dst
+
+
+def _get_task_attrs(task, attr):
+    attrs = []
+    if hasattr(task, "__" + attr + "__"):
+        attrs += getattr(task, "__" + attr + "__")
+    if hasattr(task, "__" + get_platform() + "_" + attr + "__"):
+        attrs += getattr(task, "__" + get_platform() + "_" + attr + "__")
+
+    return sorted(list(set(attrs)))
+
+
 def get_task_deps(task):
     """ resolve list of dependencies for task """
-    deps = []
-    if hasattr(task, "__deps__"):
-        deps += getattr(task, "__deps__")
-    if hasattr(task, "__" + get_platform() + "_deps__"):
-        deps += getattr(task, "__" + get_platform() + "_deps__")
+    return _get_task_attrs(task, "deps")
 
-    return sorted(list(set(deps)))
+
+def get_task_versions(task):
+    """ resolve task versions """
+    versions = dict()
+    if hasattr(task, "__versions__"):
+        versions = merge_dicts(versions, getattr(task, "__versions__"))
+    if hasattr(task, "__" + get_platform() + "_version__"):
+        versions = merge_dicts(versions, getattr(task, "__" + get_platform() + "_version__"))
+    return versions
 
 
 def usr_share(*components, **kwargs):
@@ -389,7 +392,7 @@ def usr_share(*components, **kwargs):
 def get_version_name(version=None):
     """ return the name for a version """
     if version is None:
-        version = shell_output('git rev-parse HEAD')
+        version = shell('git rev-parse HEAD')
     with open('names.txt') as infile:
         names = infile.readlines()
     index = hash(version) % len(names)

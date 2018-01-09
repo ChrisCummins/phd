@@ -134,10 +134,9 @@ class Homebrew(Task):
             shell("brew cask remove " + cask)
             return True
 
+
 class Python(Task):
     """ python2 and pip """
-    PIP_VERSION = "9.0.1"
-    VIRTUALENV_VERSION = "15.1.0"
     PYP_IRC = "~/.pypirc"
     PIP_LIST = ".pip-freeze.json"
 
@@ -153,6 +152,10 @@ class Python(Task):
         '~/.local/bin/pip2',
     ]
     __tmpfiles__ = [PIP_LIST]
+    __versions__ = {
+        "pip": "9.0.1",
+        "virtualenv": "15.1.0",
+    }
 
     def install_osx(self):
         Homebrew().install_package("python")
@@ -181,23 +184,25 @@ class Python(Task):
                     "~/.pypirc")
 
         # install pip
-        if not shell_ok("test $(pip2 --version | awk '{{print $2}}') = {self.PIP_VERSION}".format(**vars())):
-            task_print("pip2 install --upgrade 'pip=={self.PIP_VERSION}'".format(**vars()))
-            shell("pip2 install --upgrade 'pip=={self.PIP_VERSION}'".format(**vars()))
+        pip_version = self.__versions__["pip"]
+
+        if not shell_ok("test $(pip2 --version | awk '{{print $2}}') = {pip_version}".format(**vars())):
+            task_print("pip2 install --upgrade 'pip=={pip_version}'".format(**vars()))
+            shell("pip2 install --upgrade 'pip=={pip_version}'".format(**vars()))
         # same again as root
-        if not shell_ok("test $(sudo pip2 --version | awk '{{print $2}}') = {self.PIP_VERSION}".format(**vars())):
-            shell("sudo -H pip2 install --upgrade 'pip=={self.PIP_VERSION}'".format(**vars()))
+        if not shell_ok("test $(sudo pip2 --version | awk '{{print $2}}') = {pip_version}".format(**vars())):
+            shell("sudo -H pip2 install --upgrade 'pip=={pip_version}'".format(**vars()))
 
         # install pip
-        if not shell_ok("test $(pip3 --version | awk '{{print $2}}') = {self.PIP_VERSION}".format(**vars())):
-            task_print("pip3 install --upgrade 'pip=={self.PIP_VERSION}'".format(**vars()))
-            shell("pip3 install --upgrade 'pip=={self.PIP_VERSION}'".format(**vars()))
+        if not shell_ok("test $(pip3 --version | awk '{{print $2}}') = {pip_version}".format(**vars())):
+            task_print("pip3 install --upgrade 'pip=={pip_version}'".format(**vars()))
+            shell("pip3 install --upgrade 'pip=={pip_version}'".format(**vars()))
         # same again as root
-        if not shell_ok("test $(sudo pip3 --version | awk '{{print $2}}') = {self.PIP_VERSION}".format(**vars())):
-            shell("sudo -H pip3 install --upgrade 'pip=={self.PIP_VERSION}'".format(**vars()))
+        if not shell_ok("test $(sudo pip3 --version | awk '{{print $2}}') = {pip_version}".format(**vars())):
+            shell("sudo -H pip3 install --upgrade 'pip=={pip_version}'".format(**vars()))
 
         # install virtualenv
-        self.pip_install("virtualenv", self.VIRTUALENV_VERSION)
+        self.pip_install("virtualenv", self.__versions__["virtualenv"])
 
     def upgrade_osx(self):
         Homebrew().upgrade_package("python")
@@ -217,7 +222,7 @@ class Python(Task):
             data = {}
 
         if pip not in data:
-            freeze = shell_output("{use_sudo} {pip} freeze 2>/dev/null".format(**vars()))
+            freeze = shell("{use_sudo} {pip} freeze 2>/dev/null".format(**vars()))
             data[pip] = freeze.strip().split("\n")
             with open(self.PIP_LIST, "w") as outfile:
                 json.dump(data, outfile)
@@ -1141,7 +1146,7 @@ class OmniFocus(Task):
 
         # Check that of2 is installed and is the correct version
         if (not os.path.exists("/usr/local/opt/ofexport/bin/of2") and
-            shell_output("/usr/local/opt/ofexport/bin/of2 -h").split("\n")[2] != "Version: " + self.OFEXPORT2_VERSION):
+            shell("/usr/local/opt/ofexport/bin/of2 -h").split("\n")[2] != "Version: " + self.OFEXPORT2_VERSION):
             task_print("Downloading ofexport")
             shell("rm -rf /usr/local/opt/ofexport")
             url, ver = self.OFEXPORT2_URL, self.OFEXPORT2_VERSION
