@@ -741,7 +741,7 @@ class Linters(Task):
     def install_osx(self):
         Python().pip_install("cpplint", version=self.__versions__["cpplint"])
         Node().npm_install("csslint", version=self.__versions__["csslint"])
-        Python().pip_install("pycodestyle", version=self.__versions__["2.3.1"],
+        Python().pip_install("pycodestyle", version=self.__versions__["pycodestyle"],
                              pip="pip3.6")
 
         mkdir("~/.config")
