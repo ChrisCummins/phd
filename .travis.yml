@@ -9,7 +9,13 @@ before_install:
   - uname -a
 
 script:
+  - sudo apt-get install -y tmux
+  - dpkg -s 'tmux'
   - ./configure --exclude AppStore
+  - ./run --verbose Git
+  - ./run --verbose Unzip
+  - ./run --verbose Curl
+  - ./run --verbose Python
   - ./run --verbose Node
   - ./run --describe --verbose
   - ./run Tmux --verbose
