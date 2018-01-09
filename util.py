@@ -19,8 +19,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from __future__ import print_function
-
 import errno
 import hashlib
 import inspect
@@ -175,7 +173,7 @@ def task_print(*msg, **kwargs):
     sep = kwargs.get("sep", " ")
     text = sep.join(msg)
     indented = "\n        > ".join(text.split("\n"))
-    print(Colors.GREEN, "        > ", indented, Colors.END, sep="")
+    logging.info(Colors.GREEN, "        > ", indented, Colors.END, sep="")
 
 
 def is_compatible(a, b):

@@ -19,8 +19,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from __future__ import print_function
-
 import json
 import subprocess
 
@@ -320,10 +318,10 @@ class Dropbox(Task):
 
     def teardown(self):
         if self.installed_on_ubuntu:
-            print()
-            print("NOTE: manual step required to complete dropbox installation:")
-            print("    $ " + Colors.BOLD + Colors.RED +
-                  "~/.dropbox-dist/dropboxd" + Colors.END)
+            logging.info()
+            logging.info("NOTE: manual step required to complete dropbox installation:")
+            logging.info("    $ " + Colors.BOLD + Colors.RED +
+                         "~/.dropbox-dist/dropboxd" + Colors.END)
 
 
 class Fluid(Task):
@@ -397,11 +395,11 @@ class Netdata(Task):
 
     def teardown(self):
         if self.installed:
-            print()
-            print("NOTE: manual steps required to complete netdata installation:")
-            print("    $ " + Colors.BOLD + Colors.RED + "crontab -e" + Colors.END)
-            print("    # append the following line to the end and save:")
-            print("    @reboot ~/.dotfiles/usr/share/crontab/start-netdata.sh")
+            logging.info()
+            logging.info("NOTE: manual steps required to complete netdata installation:")
+            logging.info("    $ " + Colors.BOLD + Colors.RED + "crontab -e" + Colors.END)
+            logging.info("    # append the following line to the end and save:")
+            logging.info("    @reboot ~/.dotfiles/usr/share/crontab/start-netdata.sh")
 
 
 class WacomDriver(Task):
@@ -422,11 +420,11 @@ class WacomDriver(Task):
 
     def teardown(self):
         if self.installed:
-            print()
-            print("NOTE: manual steps required to complete Wacom driver setup:")
-            print("    " + Colors.BOLD + Colors.RED +
-                  "Enable Wacom kernel extension in System Preferences > Security & Privacy" +
-                  Colors.END)
+            logging.info()
+            logging.info("NOTE: manual steps required to complete Wacom driver setup:")
+            logging.info("    " + Colors.BOLD + Colors.RED +
+                         "Enable Wacom kernel extension in System Preferences > Security & Privacy" +
+                         Colors.END)
 
 
 
@@ -817,14 +815,14 @@ class AdobeCreativeCloud(Task):
 
     def teardown(self):
         if self.installed:
-            print()
-            print("NOTE: manual step required to complete creative cloud installation:")
-            print("    $ " + Colors.BOLD + Colors.RED +
-                  "open '/usr/local/Caskroom/adobe-creative-cloud/latest/Creative Cloud Installer.app'" +
-                  Colors.END)
-            print("    $ " + Colors.BOLD + Colors.RED +
-                  "open '/usr/local/Caskroom/google-nik-collection/1.2.11/Nik Collection.app'" +
-                  Colors.END)
+            logging.info()
+            logging.info("NOTE: manual step required to complete creative cloud installation:")
+            logging.info("    $ " + Colors.BOLD + Colors.RED +
+                         "open '/usr/local/Caskroom/adobe-creative-cloud/latest/Creative Cloud Installer.app'" +
+                         Colors.END)
+            logging.info("    $ " + Colors.BOLD + Colors.RED +
+                         "open '/usr/local/Caskroom/google-nik-collection/1.2.11/Nik Collection.app'" +
+                         Colors.END)
 
 
 class MacOSConfig(Task):
@@ -913,10 +911,10 @@ class Plex(Task):
 
     def teardown(self):
         if self.installed_server:
-            print()
-            print("NOTE: manual step required to configure Plex Media Server:")
-            print("    $ " + Colors.BOLD + Colors.RED +
-                  "open http://127.0.0.1:32400" + Colors.END)
+            logging.info()
+            logging.info("NOTE: manual step required to configure Plex Media Server:")
+            logging.info("    $ " + Colors.BOLD + Colors.RED +
+                         "open http://127.0.0.1:32400" + Colors.END)
 
 
 class Trash(Task):
@@ -971,8 +969,7 @@ class AppStore(Task):
 
         # Check that dotfiles was configured with Apple ID
         if not APPLE_ID:
-            print("\nerror: Apple ID not set! Run ./configure --apple-id <email>",
-                  file=sys.stderr)
+            logging.critical("\nerror: Apple ID not set! Run ./configure --apple-id <email>")
             sys.exit(1)
 
         # Sign in to App Store using Apple ID. Note that if the user is

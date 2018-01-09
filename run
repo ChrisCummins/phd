@@ -20,8 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from __future__ import print_function
-
 import logging
 import os
 import socket
@@ -95,7 +93,7 @@ def get_tasks_to_run(*task_names):
             task = to_schedule.popleft()
             schedule_task(task, schedule, all_tasks)
     except SchedulingError as e:
-        print("fatal:", e, file=sys.stderr)
+        logging.critical("fatal: " + str(e))
         sys.exit(1)
 
     return deque(schedule)
@@ -114,16 +112,13 @@ def main(*args):
     type_group.add_argument('-r', '--remove', action='store_true')
     verbosity_group = parser.add_mutually_exclusive_group()
     verbosity_group.add_argument('-v', '--verbose', action='store_true')
-    verbosity_group.add_argument('-D', '--debug', action='store_true')
     args = parser.parse_args(args)
 
     # Configure logger
-    if args.debug:
+    if args.verbose:
         loglevel = logging.DEBUG
-    elif args.verbose:
-        loglevel = logging.INFO
     else:
-        loglevel = logging.WARNING
+        loglevel = logging.INFO
     logging.basicConfig(level=loglevel, format="%(message)s")
 
     # Get the list of tasks to run
@@ -132,15 +127,20 @@ def main(*args):
     done = set()
     ntasks = len(queue)
 
+    fmt_bld, fmt_end, fmt_red = Colors.BOLD, Colors.END, Colors.RED
+    platform = PLATFORM
+
     # --describe flag prints a description of the work to be done:
     if args.describe:
-        print("There are " + Colors.BOLD + str(ntasks) + Colors.END +
-              " tasks to run on " + PLATFORM + ":")
+        msg = ("There are {fmt_bld}{ntasks}{fmt_end} tasks to run on {platform}:"
+               .format(**vars()))
+        logging.info(msg)
         for i, task_name in enumerate(queue):
             task = getattr(dotfiles, task_name)()
             description = (task.__doc__ or "").strip()
-            print("  [{:2d}/{:2d}]".format(i + 1, ntasks) + Colors.BOLD,
-                  str(task), Colors.END + "... " + description)
+            j = i + 1
+            msg = "[{j:2d}/{j:2d}] {fmt_bld}{task}{fmt_end} ...".format(**vars())
+            logging.info(msg)
             # build a list of generated files
             genfiles = getattr(task, "__genfiles__", [])
             genfiles += getattr(task, "__" + PLATFORM + "_genfiles__", [])
@@ -156,21 +156,23 @@ def main(*args):
     else:
         task_type = "install"
 
+    msg = ("Running {fmt_bld}{ntasks} {task_type}{fmt_end} tasks on {platform}:"
+           .format(**vars()))
+    logging.info(msg)
+
     # Run the tasks
-    print("Running " + Colors.BOLD + str(ntasks) + " " + task_type +
-          Colors.END + " tasks on", PLATFORM + ":")
     errored = False
     try:
         for i, task_name in enumerate(queue):
             task = getattr(dotfiles, task_name)()
 
-            # Resolve and run install() method:
-            print("[{:2d}/{:2d}]".format(i + 1, ntasks) + Colors.BOLD,
-                  str(task), Colors.END + "...")
-            if logging.getLogger().level <= logging.INFO:
-                print()
-            sys.stdout.flush()
+            j = i + 1
+            msg = "[{j:2d}/{j:2d}] {fmt_bld}{task}{fmt_end} ...".format(**vars())
+            logging.info(msg)
+
             start_time = time()
+
+            # Resolve and run install() method:
             get_task_method(task, task_type)()
             done.add(task)
             # build a list of generated files:
@@ -186,14 +188,15 @@ def main(*args):
                         raise InvalidTaskError('genfile "{file}" not created'.format(**vars()))
             runtime = time() - start_time
 
-            # print("{:.3f}s".format(runtime))
+            logging.debug("{task} task completed in {runtime:.3f}s".format(**vars()))
             sys.stdout.flush()
     except KeyboardInterrupt:
-        print("\ninterrupt")
+        logging.info("\ninterrupt")
         errored = True
     except Exception as e:
-        print(Colors.BOLD + Colors.RED + type(e).__name__)
-        print(e, Colors.END)
+        e_name = type(e).__name__
+        logging.error("{fmt_bld}{fmt_red}fatal error: {e_name}".format(**vars()))
+        logging.error(str(e) + Colors.END)
         errored = True
         if logging.getLogger().level <= logging.DEBUG:
             raise
