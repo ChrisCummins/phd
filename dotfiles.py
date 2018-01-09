@@ -697,12 +697,21 @@ class Linters(Task):
 
     __platforms__ = ['osx']
     __osx_deps__ = ['Node', 'Python']
+    __osx_genfiles__ = [
+        '/usr/local/bin/cpplint',
+        '/usr/local/bin/csslint',
+        '/usr/local/bin/pycodestyle',
+    ]
 
     def install_osx(self):
         Python().pip_install("cpplint", version=self.CPPLINT_VERSION)
         Node().npm_install("csslint", version=self.CSSLINT_VERSION)
         Python().pip_install("pycodestyle", version=self.PYCODESTYLE_VERSION,
                              pip="pip3.6")
+
+        if os.path.isdir(PRIVATE + "/linters"):
+            self.__genfiles__ += ['~/.config/pycodestyle']
+            symlink(PRIVATE + "/linters/pycodestyle", "~/.config/pycodestyle")
 
 
 class SublimeText(Task):
