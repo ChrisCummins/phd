@@ -151,6 +151,7 @@ class Python(Task):
     def install_osx(self):
         Homebrew().install_package("python")
         Homebrew().install_package("python3")
+        Homebrew().install_package("python3-pip")
         self._install_common()
 
     def install_ubuntu(self):
