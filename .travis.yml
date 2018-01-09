@@ -55,15 +55,15 @@ before_install:
 # the project by restarting the job. The workaround is to kill the build after
 # a time limit and then restart the job by hand:
 #
-# install:  # cache cold (runs build in 30min chunks, restart job until complete)
-#   - ./configure -b
-#   - timeout 1800 make all || true
-#   - touch NORUN
-#
-install:  # cache hot
+install:  # cache cold (runs build in 30min chunks, restart job until complete)
   - ./configure -b
-  - make all
-  - pip freeze  # python package versions
+  - timeout 1800 make all || true
+  - touch NORUN
+#
+# install:  # cache hot
+#   - ./configure -b
+#   - make all
+#   - pip freeze  # python package versions
 
 script:
   - test -f NORUN || which clgen
