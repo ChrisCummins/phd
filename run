@@ -106,10 +106,11 @@ def main(*args):
     parser = ArgumentParser()
     parser.add_argument('tasks', metavar='<task>', nargs='*',
                         help="the name of tasks to run (default: all)")
-    type_group = parser.add_mutually_exclusive_group()
-    type_group.add_argument('-d', '--describe', action="store_true")
-    type_group.add_argument('-u', '--upgrade', action='store_true')
-    type_group.add_argument('-r', '--remove', action='store_true')
+    action_group = parser.add_mutually_exclusive_group()
+    action_group.add_argument('-d', '--describe', action="store_true")
+    action_group.add_argument('-u', '--upgrade', action='store_true')
+    action_group.add_argument('-r', '--remove', action='store_true')
+    action_group.add_argument('--versions', action="store_true")
     verbosity_group = parser.add_mutually_exclusive_group()
     verbosity_group.add_argument('-v', '--verbose', action='store_true')
     args = parser.parse_args(args)
@@ -147,6 +148,16 @@ def main(*args):
             for file in sorted(set(genfiles)):
                 logging.info("    " + os.path.abspath(os.path.expanduser(file)))
 
+        return 0
+
+    # --versions flag prints the specific task versions:
+    if args.versions:
+        for i, task_name in enumerate(queue):
+            task = getattr(dotfiles, task_name)()
+            versions = get_task_versions(task)
+            for name in sorted(versions.keys()):
+                version = versions[name]
+                logging.info("{task_name}:{name}=={version}".format(**vars()))
         return 0
 
     if args.upgrade:

@@ -130,6 +130,8 @@ class Task(object):
         __<platform>_tmpfiles__ (List[str], optional): A list of
             platform-specific temporary files generated during execution of
             this task. These files are automatically removed after execution.
+        __<platform>_versions__ (Dict[str, str], optional): A dictionary mapping
+            installed specific versions of packages.
 
     Methods:
         install():

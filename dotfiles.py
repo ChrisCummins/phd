@@ -252,11 +252,12 @@ class Unzip(Task):
 
 class Ruby(Task):
     """ ruby environment """
-    RUBY_VERSION = "2.4.1"
-
     __platforms__ = ['osx']
     __osx_deps__ = ['Homebrew']
     __genfiles__ = ['~/.rbenv']
+    __versions__ = {
+        "ruby": "2.4.1"
+    }
 
     def install_osx(self):
         Homebrew().install_package("rbenv")
@@ -266,8 +267,9 @@ class Ruby(Task):
             shell('eval "$(rbenv init -)"')
 
         # install ruby and set as global version
-        shell('rbenv install --skip-existing "{self.RUBY_VERSION}"'.format(**vars()))
-        shell('rbenv global "{self.RUBY_VERSION}"'.format(**vars()))
+        ruby_version = self.__versions__["ruby"]
+        shell('rbenv install --skip-existing "{ruby_version}"'.format(**vars()))
+        shell('rbenv global "{ruby_version}"'.format(**vars()))
 
         if not shell_ok("gem list --local | grep bundler"):
             task_print("gem install bundler")
@@ -489,9 +491,6 @@ class Node(Task):
 
 class Zsh(Task):
     """ zsh shell and config files """
-    OH_MY_ZSH_VERSION = 'c3b072eace1ce19a48e36c2ead5932ae2d2e06d9'
-    SYNTAX_HIGHLIGHTING_VERSION = 'b07ada1255b74c25fbc96901f2b77dc4bd81de1a'
-
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = ['Homebrew']
     __genfiles__ = [
@@ -503,6 +502,10 @@ class Zsh(Task):
     ]
     __osx_genfiles__ = ['/usr/local/bin/zsh']
     __linux_genfiles__ = ['/usr/bin/zsh']
+    __versions__ = {
+        "oh-my-zsh": "c3b072eace1ce19a48e36c2ead5932ae2d2e06d9",
+        "zsh-syntax-highlighting": "b07ada1255b74c25fbc96901f2b77dc4bd81de1a",
+    }
 
     def install_osx(self):
         Homebrew().install_package("zsh")
@@ -518,13 +521,13 @@ class Zsh(Task):
 
         # oh-my-zsh
         clone_git_repo("git@github.com:robbyrussell/oh-my-zsh.git",
-                       "~/.oh-my-zsh", self.OH_MY_ZSH_VERSION)
+                       "~/.oh-my-zsh", self.__versions__["oh-my-zsh"])
         symlink("~/.zsh/cec.zsh-theme", "~/.oh-my-zsh/custom/cec.zsh-theme")
 
         # syntax highlighting module
         clone_git_repo("git@github.com:zsh-users/zsh-syntax-highlighting.git",
                        "~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting",
-                       self.SYNTAX_HIGHLIGHTING_VERSION)
+                       self.__versions__["zsh-syntax-highlighting"])
 
     def upgrade_osx(self):
         Homebrew().upgrade_package("zsh")
@@ -542,14 +545,15 @@ class Autoenv(Task):
 
 class Lmk(Task):
     """ let-me-know """
-    LMK_VERSION = "0.0.13"
-
     __platforms__ = ['linux', 'osx']
     __deps__ = ['Python']
     __genfiles__ = ['/usr/local/bin/lmk']
+    __versions__ = {
+        "lmk": "0.0.13"
+    }
 
     def install(self):
-        Python().pip_install("lmk", self.LMK_VERSION)
+        Python().pip_install("lmk", self.__versions__["lmk"])
         if os.path.isdir(os.path.join(PRIVATE, "lmk")):
             self.__genfiles__ += ["~/.lmkrc"]
             symlink(os.path.join(PRIVATE, "lmk", "lmkrc"), "~/.lmkrc")
@@ -686,13 +690,14 @@ class Tmux(Task):
 
 class Vim(Task):
     """ vim configuration """
-    VUNDLE_VERSION = "fcc204205e3305c4f86f07e09cd756c7d06f0f00"
-
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = ['Homebrew']
     __genfiles__ = ['~/.vimrc', '~/.vim/bundle/Vundle.vim']
     __osx_genfiles__ = ['/usr/local/bin/vim']
     __linux_genfiles__ = ['/usr/bin/vim']
+    __versions__ = {
+        "vundle": "fcc204205e3305c4f86f07e09cd756c7d06f0f00",
+    }
 
     def install_osx(self):
         Homebrew().install_package('vim')
@@ -708,7 +713,7 @@ class Vim(Task):
         # Vundle
         clone_git_repo("git@github.com:VundleVim/Vundle.vim.git",
                        "~/.vim/bundle/Vundle.vim",
-                       self.VUNDLE_VERSION)
+                       self.__versions__["vundle"])
         shell("vim +PluginInstall +qall")
 
     def upgrade_osx(self):
@@ -716,10 +721,6 @@ class Vim(Task):
 
 
 class Linters(Task):
-    CPPLINT_VERSION = "1.3.0"
-    CSSLINT_VERSION = "1.0.5"
-    PYCODESTYLE_VERSION = "2.3.1"
-
     __platforms__ = ['osx']
     __osx_deps__ = ['Node', 'Python']
     __osx_genfiles__ = [
@@ -728,11 +729,16 @@ class Linters(Task):
         '/usr/local/bin/pycodestyle',
         '~/.config/pycodestyle',
     ]
+    __versions__ = {
+        "cpplint": "1.3.0",
+        "csslint": "1.0.5",
+        "pycodestyle": "2.3.1",
+    }
 
     def install_osx(self):
-        Python().pip_install("cpplint", version=self.CPPLINT_VERSION)
-        Node().npm_install("csslint", version=self.CSSLINT_VERSION)
-        Python().pip_install("pycodestyle", version=self.PYCODESTYLE_VERSION,
+        Python().pip_install("cpplint", version=self.__versions__["cpplint"])
+        Node().npm_install("csslint", version=self.__versions__["csslint"])
+        Python().pip_install("pycodestyle", version=self.__versions__["2.3.1"],
                              pip="pip3.6")
 
         mkdir("~/.config")
@@ -970,11 +976,12 @@ class Trash(Task):
 
 class Emacs(Task):
     """ emacs text editor and config """
-    PRELUDE_VERSION = 'f7d5d68d432319bb66a5f9410d2e4eadd584f498'
-
     __platforms__ = ['linux', 'osx']
     __deps__ = ['Trash']
     __osx_deps__ = ['Homebrew']
+    __versions__ = {
+        "prelude": "f7d5d68d432319bb66a5f9410d2e4eadd584f498",
+    }
 
     def install_osx(self):
         Homebrew().install_cask('emacs')
@@ -986,7 +993,7 @@ class Emacs(Task):
 
     def _install_common(self):
         clone_git_repo("git@github.com:bbatsov/prelude.git",
-                       "~/.emacs.d", self.PRELUDE_VERSION)
+                       "~/.emacs.d", self.__versions__["prelude"])
         # prelude requires there be no ~/.emacs file on first run
         Trash().trash('~/.emacs')
 
@@ -1130,16 +1137,18 @@ class Java(Task):
 
 class OmniFocus(Task):
     """ task manager and utilities """
-    OFEXPORT2_VERSION = "1.0.20"
-    OFEXPORT2_URL = "https://github.com/psidnell/ofexport2/archive/ofexport-v2-" + OFEXPORT2_VERSION + ".zip"
-
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = ['Homebrew', 'Java']
     __genfiles__ = ["/usr/local/bin/omni"]
     __osx_genfiles__ = [
         "/Applications/OmniFocus.app",
         "/usr/local/opt/ofexport/bin/of2",
-    ]
+    ],
+    __versions__ = {
+        "ofexport": "1.0.20"
+    }
+
+    OFEXPORT_URL = "https://github.com/psidnell/ofexport2/archive/ofexport-v2-" + __versions__["ofexport"] + ".zip"
 
     def install_osx(self):
         Homebrew().install_cask('omnifocus')
@@ -1149,7 +1158,7 @@ class OmniFocus(Task):
             shell("/usr/local/opt/ofexport/bin/of2 -h").split("\n")[2] != "Version: " + self.OFEXPORT2_VERSION):
             task_print("Downloading ofexport")
             shell("rm -rf /usr/local/opt/ofexport")
-            url, ver = self.OFEXPORT2_URL, self.OFEXPORT2_VERSION
+            url, ver = self.OFEXPORT_URL, self.__versions__["ofexport"]
             shell("wget {url} -O /tmp/ofexport.zip".format(**vars()))
             task_print("Installing ofexport")
             shell("unzip -o /tmp/ofexport.zip")
@@ -1297,14 +1306,15 @@ class Emu(Task):
 
 class JsonUtil(Task):
     """ json cli utils """
-    JSONLINT_VERSION = "1.6.2"
-
     __platforms__ = ['linux', 'osx']
     __deps__ = ['Node']
     __osx_deps__ = ['Homebrew']
     __genfiles__ = ['/usr/local/bin/jsonlint']
     __osx_genfiles__ = ['/usr/local/bin/jq']
     __linux_genfiles__ = ['/usr/bin/jq']
+    __versions__ = {
+        "jsonlint": "1.6.2",
+    }
 
     def install_osx(self):
         Homebrew().install_package("jq")
@@ -1315,7 +1325,7 @@ class JsonUtil(Task):
         self._install_common()
 
     def _install_common(self):
-        Node().npm_install("jsonlint", self.JSONLINT_VERSION)
+        Node().npm_install("jsonlint", self.__versions__["jsonlint"])
 
     def upgrade_osx(self):
         Homebrew().upgrade_package("jq")
