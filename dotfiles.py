@@ -432,7 +432,7 @@ class Node(Task):
 
     NPM_BINARY = {
         "osx": "/usr/local/bin/npm",
-        "linux": "/usr/bin/npm"
+        "ubuntu": "/usr/bin/npm"
     }
 
     __platforms__ = ['linux', 'osx']
