@@ -68,12 +68,22 @@ Command '{cmd}' failed with returncode {p.returncode} and output:
 {stdout}""".format(**vars()))
             raise CalledProcessError(msg)
     elif action == "shell_ok":
-        try:
-            subprocess.check_call(*args, shell=True, stdout=subprocess.PIPE,
-                                  stderr=subprocess.PIPE)
-            return True
-        except subprocess.CalledProcessError:
-            return False
+        p = subprocess.Popen(*args, shell=True, stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT, universal_newlines=True)
+        stdout, _ = p.communicate()
+
+        stdout = stdout.rstrip()
+        if logging.getLogger().level <= logging.INFO and len(stdout):
+            logging.debug(stdout)
+
+        if p.returncode:
+            cmd = " ".join(args)
+            msg = ("""\
+Command '{cmd}' failed with returncode {p.returncode} and output:
+{stdout}""".format(**vars()))
+            raise CalledProcessError(msg)
+        else:
+            return stdout
     elif action == "shell_output":
         return subprocess.check_output(*args, shell=True,
                                        universal_newlines=True,
