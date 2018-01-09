@@ -12,7 +12,8 @@ script:
   - sudo apt-get install -y nodejs
   - sudo apt-get install -y npm
   - test -f /usr/bin/npm && echo "exists" || echo "not exist"
-  - test -f /usr/bin/node && echo "exists" || echo "not exist"
+  - test -f /usr/bin/nodejs && echo "exists" || echo "not exist"
+  - ls /usr/bin
   - ./configure --exclude AppStore
   - ./run --describe --verbose
   - ./run Tmux --verbose
