@@ -1146,9 +1146,9 @@ class OmniFocus(Task):
     __osx_genfiles__ = [
         "/Applications/OmniFocus.app",
         "/usr/local/opt/ofexport/bin/of2",
-    ],
+    ]
     __versions__ = {
-        "ofexport": "1.0.20"
+        "ofexport": "1.0.20",
     }
 
     OFEXPORT_URL = "https://github.com/psidnell/ofexport2/archive/ofexport-v2-" + __versions__["ofexport"] + ".zip"
@@ -1158,7 +1158,7 @@ class OmniFocus(Task):
 
         # Check that of2 is installed and is the correct version
         if (not os.path.exists("/usr/local/opt/ofexport/bin/of2") and
-            shell("/usr/local/opt/ofexport/bin/of2 -h").split("\n")[2] != "Version: " + self.OFEXPORT2_VERSION):
+            shell("/usr/local/opt/ofexport/bin/of2 -h").split("\n")[2] != "Version: " + self.__versions__["ofexport"]):
             task_print("Downloading ofexport")
             shell("rm -rf /usr/local/opt/ofexport")
             url, ver = self.OFEXPORT_URL, self.__versions__["ofexport"]
