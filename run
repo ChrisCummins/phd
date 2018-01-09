@@ -40,6 +40,7 @@ class SchedulingError(Exception): pass
 
 
 def schedule_task(task_name, schedule, all_tasks, depth=1):
+    """ recursively schedule a task and its dependencies """
     # Sanity check for scheduling errors:
     if depth > 1000:
         raise SchedulingError("failed to resolve schedule for task '" +
@@ -49,7 +50,13 @@ def schedule_task(task_name, schedule, all_tasks, depth=1):
     # Instantiate the task class:
     if not hasattr(dotfiles, task_name):
         raise SchedulingError("task '" + task_name + "' not found!")
-    task = getattr(dotfiles, task_name)()
+
+    # If the task is not runnable, schedule nothing.
+    task_class = getattr(dotfiles, task_name)
+    if not is_runnable_task(task_class):
+        return True
+
+    task = task_class()
 
     # Build a list of dependencies:
     deps = get_task_deps(task)
@@ -60,7 +67,9 @@ def schedule_task(task_name, schedule, all_tasks, depth=1):
             raise SchedulingError("task '" + task_name + "' depends on itself")
 
         if dep_name not in schedule:
-            schedule_task(dep_name, schedule, all_tasks, depth + 1)
+            # If any of the dependencies are not runnable, schedule nothing.
+            if schedule_task(dep_name, schedule, all_tasks, depth + 1):
+                return True
 
     # Schedule the task if necessary:
     if task_name not in schedule:

@@ -84,6 +84,7 @@ with open("config.json") as infile:
 DOTFILES = _CFG["dotfiles"]
 PRIVATE = _CFG["private"]
 APPLE_ID = _CFG["apple_id"]
+EXCLUDES = _CFG.get("excludes", [])
 IS_TRAVIS_CI = os.environ.get("TRAVIS", False)
 
 LINUX_DISTROS = ['ubuntu']
@@ -298,13 +299,22 @@ def clone_git_repo(url, destination, version=None):
 
 def is_runnable_task(obj):
     """ returns true if object is a task for the current platform """
-    if not (inspect.isclass(obj) and  issubclass(obj, Task) and obj != Task):
+    # Check that object is a class and inherits from 'Task':
+    if not (inspect.isclass(obj) and issubclass(obj, Task) and obj != Task):
         return False
 
     task = obj()
+    # Check that task is compatible with platform:
     platforms = getattr(task, "__platforms__", [])
     if not any(is_compatible(PLATFORM, x) for x in platforms):
-        logging.debug("skipping " + type(task).__name__ + " on platform " + PLATFORM)
+        msg = "skipping " + type(task).__name__ + " on platform " + PLATFORM
+        logging.debug(msg)
+        return False
+
+    # Check that task is not excluded:
+    if type(task).__name__ in EXCLUDES:
+        msg = "skipping " + type(task).__name__ + " as it is excluded"
+        logging.debug(msg)
         return False
 
     return True

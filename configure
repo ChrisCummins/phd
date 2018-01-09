@@ -64,6 +64,9 @@ def main():
     parser.add_argument(
         "--apple-id", metavar="<email>", default=DEFAULTS["apple_id"],
         help="Apple ID (e.g. example@email.com)")
+    parser.add_argument(
+        "-e", "--excludes", metavar="<tasks>", default="",
+        help="comma separated list of tasks to ignore")
     args = parser.parse_args()
 
     if os.path.exists("config.json"):
@@ -76,6 +79,7 @@ def main():
     cfg["dotfiles"] = args.dotfiles if args.dotfiles else cfg["dotfiles"]
     cfg["private"] = args.private if args.private else cfg["private"]
     cfg["apple_id"] = args.apple_id if args.apple_id else cfg["apple_id"]
+    cfg["excludes"] = args.excludes.split(",") if args.excludes else cfg["excludes"]
 
     # generate JSON config file
     with open(os.path.join(cfg["dotfiles"], "config.json"), "w") as outfile:
