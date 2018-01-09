@@ -13,7 +13,7 @@ script:
   - ./run --describe --verbose
   - ./run Tmux --verbose
   - ./run --verbose
-  - ./run --verbose
+  - ./run
 
 notifications:
   email:
