@@ -135,13 +135,14 @@ def main(*args):
         logging.info(msg)
         for i, task_name in enumerate(queue):
             task = getattr(dotfiles, task_name)()
-            description = (task.__doc__ or "").strip()
             j = i + 1
-            msg = "[{j:2d}/{ntasks:2d}] {fmt_bld}{task}{fmt_end} ...".format(**vars())
+            desc = (task.__doc__ or "").strip()
+            msg = ("[{j:2d}/{ntasks:2d}] {fmt_bld}{task}{fmt_end} ... {desc}"
+                   .format(**vars()))
             logging.info(msg)
             # build a list of generated files
             for file in task.genfiles:
-                logging.info("    " + os.path.abspath(os.path.expanduser(file)))
+                logging.debug("    " + os.path.abspath(os.path.expanduser(file)))
 
         return 0
 
