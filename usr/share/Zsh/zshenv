@@ -1,0 +1,165 @@
+#!/usr/bin/env zsh
+
+# --------------------------------------------------------------------------
+# Shell environment.
+# --------------------------------------------------------------------------
+
+# Development environment.
+export USE_CCACHE=1
+
+# Don't modify prompt when activating Python virtualenv environments.
+# This is because our zsh prompt includes this information.
+#
+# See: https://virtualenv.pypa.io/en/stable/reference/#envvar-VIRTUAL_ENV_DISABLE_PROMPT
+export VIRTUAL_ENV_DISABLE_PROMPT=1
+
+# travis tab completion
+[ -f ~/.travis/travis.sh ] && source ~/.travis/travis.sh
+
+# torch environment
+[ -f ~/torch/install/bin/torch-activate ] && source ~/torch/install/bin/torch-activate
+
+# rbenv shims. https://github.com/sstephenson/rbenv#how-it-works
+if [[ -x $(which rbenv) ]]; then
+    eval "$(rbenv init -)"
+fi
+
+# Pagers and editors.
+export VIEW=/usr/bin/elinks
+export PAGER="less"
+export LESS="--ignore-case --LONG-PROMPT --QUIET --chop-long-lines -Sm \
+             --RAW-CONTROL-CHARS --quit-if-one-screen --no-init"
+if [[ -x $(which lesspipe.sh) ]]; then
+    export LESSOPEN="| lesspipe.sh %s"
+fi
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+
+export EDITOR='vim'
+# sublime for local shell, rsub if on a remote machine
+# arguments: --wait block until closed, -n open a new window
+# if [[ -f /usr/local/bin/subl ]]; then
+#     export EDITOR='subl -n --wait'
+# else
+#     export EDITOR='rsub -n --wait'
+# fi
+export ALTERNATE_EDITOR=''
+export USE_EDITOR=$EDITOR
+export VISUAL=$EDITOR
+
+# OpenCL vendor installation.
+[ -d /etc/OpenCL/vendors/ ] && export OPENCL_VENDOR_PATH=/etc/OpenCL/vendors/
+
+
+# --------------------------------------------------------------------------
+# Paths.
+# --------------------------------------------------------------------------
+
+# Accepts an array of directories and returns a colon separated path
+# of all of the directories that exist, in order.  Example usage:
+#
+#    dirs=("/usr/local/bin" /usr/bin "/not a real path")
+#    unset FOO
+#    FOO=$(build_path "${dirs[@]}")
+#    echo $FOO
+#    # Outputs: /usr/local/bin:/usr/bin
+build_path() {
+    local _dir=""
+    local _path=""
+
+    for _dir in "$@"
+    do
+        if [ -d $_dir ]; then
+            _path=$_path:$_dir
+        fi
+    done
+
+    _path=${_path:1}
+    echo $_path
+}
+
+export NODE_PATH=/usr/local/lib/node_modules
+
+setopt nullglob # Globs which don't match anything expand to nothing.
+
+pkg_config_path_dirs=( \
+    /usr/local/lib/pkgconfig \
+    /usr/lib/pkgconfig \
+)
+export PKG_CONFIG_PATH=$(build_path "${pkg_config_path_dirs[@]}")
+
+ld_library_path_dirs=( \
+    /usr/lib \
+    /usr/lib32 \
+    /usr/local/lib \
+    /usr/local/cuda/lib64 \
+)
+export LD_LIBRARY_PATH=$(build_path "${ld_library_path_dirs[@]}")
+
+path_dirs=( \
+    ~/bin \
+    ~/.rbenv/shims \
+    ~/.local/bin \
+    ~/.gem/*/*/bin \
+    ~/.gem/*/ruby/*/bin \
+    /Library/TeX/Distributions/.DefaultTeX/Contents/Programs/texbin \
+    /usr/local/opt/coreutils/libexec/gnubin \
+    /usr/local/opt/gnu-sed/libexec/gnubin \
+    /usr/local/opt/gnu-tar/libexec/gnubin \
+    /usr/local/opt/python/bin \
+    /usr/local/opt/unzip/bin \
+    /usr/local/opt/ofexport/bin \
+    /usr/local/bin \
+    /usr/contrib/bin \
+    /usr/local/cuda/bin \
+    /opt/bin \
+    /opt/local/bin \
+    /opt/local/sbin \
+    /bin \
+    /usr/bin \
+    /usr/bin/core_perl \
+    /usr/bin/vendor_perl \
+    /usr/local/mysql/bin \
+    /usr/sbin \
+    /usr/texbin \
+    /sbin \
+)
+export PATH=$(build_path "${path_dirs[@]}")
+
+manpath_dirs=( \
+    /Library/TeX/Distributions/.DefaultTeX/Contents/Man/ \
+    /usr/local/opt/coreutils/libexec/gnuman \
+    /usr/local/opt/gnu-sed/libexec/gnuman \
+    /usr/local/opt/gnu-tar/libexec/gnuman \
+)
+export MANPATH=$(build_path "${manpath_dirs[@]}")
+
+
+# --------------------------------------------------------------------------
+# External files.
+# --------------------------------------------------------------------------
+
+
+# Load bash profiles from /etc/profile.d
+if test -d /etc/profile.d/; then
+    for profile in /etc/profile.d/*.sh; do
+        test -r "$profile" && . "$profile"
+    done
+    unset profile
+fi
+
+
+unsetopt nullglob # Globs which don't match anything expand to nothing.
+
+
+# Enable pretty colors.
+if $(which dircolors &>/dev/null); then
+    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" \
+        || eval "$(dircolors -b)"
+
+    alias ls='ls --color=auto'
+    alias dir='dir --color=auto'
+    alias egrep='egrep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias grep='grep --color=auto'
+    alias vdir='vdir --color=auto'
+fi

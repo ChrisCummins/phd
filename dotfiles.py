@@ -501,6 +501,7 @@ class Zsh(Task):
         '~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting',
         '~/.zsh',
         '~/.zsh/cec.zsh-theme',
+        '~/.zshenv',
         '~/.zshrc',
     ]
     __osx_genfiles__ = ['/usr/local/bin/zsh']
@@ -518,6 +519,7 @@ class Zsh(Task):
         # install config files
         symlink(usr_share("Zsh"), "~/.zsh")
         symlink(usr_share("Zsh/zshrc"), "~/.zshrc")
+        symlink(usr_share("Zsh/zshenv"), "~/.zshenv")
         if os.path.isdir(os.path.join(PRIVATE, "zsh")):
             self.__genfiles__ += ["~/.zsh/private"]
             symlink(os.path.join(PRIVATE, "zsh"), "~/.zsh/private")
