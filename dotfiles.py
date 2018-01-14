@@ -879,6 +879,38 @@ class MacOSConfig(Task):
     __genfiles__ = ['~/.hushlogin']
 
     def install_osx(self):
+        # Based on: https://github.com/holman/dotfiles/blob/master/macos/set-defaults.sh
+
+        # Disable press-and-hold for keys in favor of key repeat.
+        shell("defaults write -g ApplePressAndHoldEnabled -bool false")
+
+        # Use AirDrop over every interface.
+        shell("defaults write com.apple.NetworkBrowser BrowseAllInterfaces 1")
+
+        # Always open everything in Finder's list view. This is important.
+        shell("defaults write com.apple.Finder FXPreferredViewStyle Nlsv")
+
+        # Show the ~/Library folder.
+        shell("chflags nohidden ~/Library")
+
+        # Set a really fast key repeat.
+        shell("defaults write NSGlobalDomain KeyRepeat -int 1")
+
+        # Set the Finder prefs for showing a few different volumes on the Desktop.
+        shell("defaults write com.apple.finder ShowExternalHardDrivesOnDesktop -bool false")
+        shell("defaults write com.apple.finder ShowRemovableMediaOnDesktop -bool false")
+
+        # Run the screensaver if we're in the bottom-left hot corner.
+        shell("defaults write com.apple.dock wvous-bl-corner -int 5")
+        shell("defaults write com.apple.dock wvous-bl-modifier -int 0")
+
+        # Set up Safari for development.
+        shell("defaults write com.apple.Safari IncludeInternalDebugMenu -bool true")
+        shell("defaults write com.apple.Safari IncludeDevelopMenu -bool true")
+        shell("defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true")
+        shell('defaults write com.apple.Safari "com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled" -bool true')
+        shell("defaults write NSGlobalDomain WebKitDeveloperExtras -bool true")
+
         # disable "Last Login ..." messages on terminal
         if not os.path.exists(os.path.expanduser("~/.hushlogin")):
             task_print("Creating ~/.hushlogin")
