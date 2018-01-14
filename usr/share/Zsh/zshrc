@@ -255,6 +255,18 @@ catmd() {
     done
 }
 
+# Recursively change file extensions
+# Extended from: https://github.com/thoughtbot/dotfiles
+function change-extension() {
+  test -n "$1" || { echo "Usage: change-extension <current-extension> <new-extension>" >&2; return 1; }
+
+  setopt nullglob
+  foreach f (**/*.$1)
+    mv -v $f $f:r.$2
+  end
+  unsetopt nullglob
+}
+
 # Lookup tldr page, but use man as a fallback
 help() {
     tldr "$@" 2>/dev/null || { echo "No tldr entry for $1 (try tldr --update)"; man "$@" }
