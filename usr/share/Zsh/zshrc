@@ -414,7 +414,7 @@ todo() {
     test -n "$1" && dir="$1"
 
     for f in $(find "$dir" -type f 2>/dev/null | grep -v .git); do
-        grep -iHn 'TODO\|FIXME' "$f" 2>/dev/null
+        grep -Hn 'TODO\|FIXME' "$f" 2>/dev/null
     done
 
     return 0
