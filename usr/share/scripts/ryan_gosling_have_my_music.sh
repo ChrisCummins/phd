@@ -1,21 +1,37 @@
 #!/usr/bin/env bash
 usage() {
-    echo "usage: $(basename $0)"
+    echo "usage: $(basename $0) <rsync-args>"
 }
-test -z "$1" || { usage; exit 1; }
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    usage
+    exit 1
+fi
 
 set -eu
 
-if [[ ! -d /Volumes/Music\ Library/ ]]; then
+src="/Users/cec/Music/Music Library/"
+
+local_dst="/Volumes/Music Library/"
+remote_dst="ryangosling.wan:audio/library/"
+
+if [[ ! -d "$src" ]]; then
     echo "fatal: '/Volumes/Music Library' not mounted" >&2
     exit 1
 fi
 
+# Select between locally mounted network share or SSH:
+if [[ -d "$local_dst" ]]; then
+    dst="$local_dst"
+else
+    dst="$remote_dst"
+fi
+echo "pushing to $dst"
+
 set -x
 
-rm-dsstore /Users/cec/Music/Music\ Library/
-rsync -avh --delete \
-        /Users/cec/Music/Music\ Library/ /Volumes/Music\ Library/ \
+rsync -avh --delete "$src" "$dst" $@ \
+        --exclude "._.DS_Store" \
+        --exclude ".DS_Store" \
         --exclude ".iTunes Preferences.plist" \
         --exclude "Automatically Add to iTunes.localized" \
         --exclude "Downloads" \

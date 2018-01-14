@@ -1,28 +1,36 @@
 #!/usr/bin/env bash
 usage() {
-    echo "usage: $(basename $0)"
+    echo "usage: $(basename $0) <rsync-args>"
 }
-test -z "$1" || { usage; exit 1; }
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    usage
+    exit 1
+fi
 
 set -eu
 
+local_dst="/Volumes/Photo Library/"
+remote_dst="ryangosling.wan:img/photos/"
+
 src="/Volumes/Orange/"
-dst="/Volumes/Photo Library/"
 
 if [[ ! -d "$src" ]]; then
     echo "fatal: '$src' not found" >&2
     exit 1
 fi
 
-if [[ ! -d "$dst" ]]; then
-    echo "fatal: '$dst' not found" >&2
-    exit 1
+# Select between locally mounted network share or SSH:
+if [[ -d "$local_dst" ]]; then
+    dst="$local_dst"
+else
+    dst="$remote_dst"
 fi
+echo "pushing to $dst"
 
 set -x
 
 # copy from source to dest, excluding Lightroom Previews:
-rsync -avh --delete "$src" "$dst" \
+rsync -avh --delete "$src" "$dst" $@ \
     --exclude "*.lrcat-journal" \
     --exclude "*.lrcat.lock" \
     --exclude "*.lrdata" \
