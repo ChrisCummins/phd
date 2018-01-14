@@ -1,18 +1,31 @@
-alias g='git'
-alias gA='git add'
-alias gAp='git add -p'
-alias gC='git commit'
-alias gCa='git commit --amend'
-alias gD='git diff'
-alias gDc='git diff --cached'
-alias gF='git pull'
-alias gFr='git pull --rebase'
-alias gL='git log'
-alias gLp='git log -p'
-alias gP='git push'
-alias gS='git status'
-alias gZ='git fetch'
-alias gZa='git fetch --all'
+# Git configuration
+
+# No arguments: `git status`. With arguments: acts like `git`
+# Extended from: https://github.com/thoughtbot/dotfiles
+g() {
+    GIT=/usr/local/bin/git
+    test -f /usr/bin/git && GIT=/usr/bin/git
+
+    if [ -n "$1" ]; then
+        $GIT "$@"
+    else
+        $GIT status
+    fi
+}
+
+alias ga='git add'
+alias gap='git add -p'
+alias gc='git commit -v'
+alias gca='git commit --amend'
+alias gd='git diff'
+alias gdc='git diff --cached'
+alias gf='git pull'
+alias gfr='git pull --rebase'
+alias gl='git log'
+alias glp='git log -p'
+alias gp='git push'
+alias gz='git fetch'
+alias gza='git fetch --all'
 
 # "git + hub = github" wrapper.
 [ -x /usr/local/bin/hub ] && alias git='hub'
