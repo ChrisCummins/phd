@@ -1414,6 +1414,7 @@ class Phd(Task):
 
     def install(self):
         clone_git_repo("git@github.com:ChrisCummins/phd.git", "~/phd")
+        shell("~/phd/tools/bootstrap.sh | bash")
 
 
 class DefaultApps(Task):
