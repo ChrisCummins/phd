@@ -186,6 +186,7 @@ def main(*args):
             if task_type == "install":
                 for file in task.genfiles:
                     file = os.path.abspath(os.path.expanduser(file))
+                    logging.debug("assert exists: '{file}'".format(**vars()))
                     if not (os.path.exists(file) or
                             shell_ok("sudo test -f '{file}'".format(**vars())) or
                             shell_ok("sudo test -d '{file}'".format(**vars()))):
