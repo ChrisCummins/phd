@@ -52,12 +52,13 @@ class CalledProcessError(Exception):
 
 def _log_shell(*args):
     if logging.getLogger().level <= logging.INFO:
-        logging.debug("$ " + "".join(*args))
+        logging.debug(Colors.PURPLE + "    $ " + "".join(*args) + Colors.END)
 
 
 def _log_shell_output(stdout):
     if logging.getLogger().level <= logging.INFO and len(stdout):
-            logging.debug(stdout)
+        indented = '    ' + '\n    '.join(stdout.rstrip().split('\n'))
+        logging.debug(Colors.YELLOW + indented + Colors.END)
 
 
 def shell(*args):
