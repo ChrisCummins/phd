@@ -207,9 +207,8 @@ def main(*args):
             raise
     finally:
         # Task teardowm
-        logging.debug("")
+        logging.debug(Colors.BOLD + "Running teardowns" + Colors.END)
         for task in done:
-            logging.debug("  " + Colors.BOLD + type(task).__name__ + " teardown" + Colors.END)
             get_task_method(task, "teardown")()
 
             # build a list of temporary files
