@@ -82,7 +82,7 @@ ifeq ($(UNAME),Darwin)
 llvm_components += libcxx libcxxabi
 endif
 
-llvm_url_base := http://releases-origin.llvm.org/$(llvm_version)/
+llvm_url_base := http://releases.llvm.org/$(llvm_version)/
 llvm_url_suffix := -$(llvm_version).src.tar.xz
 llvm_tars = $(addprefix $(cache)/,$(addsuffix $(llvm_url_suffix),$(llvm_components)))
 
