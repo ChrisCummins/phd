@@ -728,6 +728,7 @@ class Linters(Task):
         Node().npm_install("csslint", version=self.__versions__["csslint"])
         Python().pip_install("pycodestyle", version=self.__versions__["pycodestyle"],
                              pip="pip3.6")
+        Homebrew().install_package("tidy-html5")
 
         mkdir("~/.config")
         symlink(usr_share("linters/pycodestyle"), "~/.config/pycodestyle")
