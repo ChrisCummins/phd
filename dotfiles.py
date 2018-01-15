@@ -44,17 +44,23 @@ class Homebrew(Task):
     CASK_LIST = os.path.abspath(".brew-casks.txt")
     OUTDATED_PKG_LIST = os.path.abspath(".brew-pkgs-outdated.txt")
     OUTDATED_CASK_LIST = os.path.abspath(".brew-casks-outdated.txt")
-    __platforms__ = ['osx']
+
+    __platforms__ = ['linux', 'osx']
     __deps__ = []
-    __genfiles__ = ['/usr/local/bin/brew']
+    __osx_genfiles__ = ['/usr/local/bin/brew']
+    __linux_genfiles__ = ['/home/linuxbrew/.linuxbrew/bin/brew']
     __tmpfiles__ = [PKG_LIST, CASK_LIST, OUTDATED_PKG_LIST, OUTDATED_CASK_LIST]
 
-    def install(self):
+    def install_osx(self):
         if not which('brew'):
             task_print("Installing Homebrew")
-            shell('yes '' | /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"')
+            shell('yes | /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"')
             shell('brew update')
             shell('brew doctor')
+
+    def install_ubuntu(self):
+        if not os.path.exists('/home/linuxbrew/.linuxbrew/bin/brew'):
+            shell('yes | sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"')
 
     def package_is_installed(self, package):
         """ return True if package is installed """
@@ -111,7 +117,7 @@ class Homebrew(Task):
         if not self.cask_is_installed(cask):
             raise InvalidTaskError(
                 "homebrew cask '{package}' cannot be upgraded as it is not installed"
-               .format(**vars()))
+                .format(**vars()))
 
         if not os.path.isfile(self.OUTDATED_CASK_LIST):
             shell("brew cask outdated | awk '{{print $1}}' >{self.OUTDATED_CASK_LIST}"
@@ -146,10 +152,14 @@ class Python(Task):
     __osx_genfiles__ = [
         '/usr/local/bin/pip2',
         '/usr/local/bin/pip3',
+        '/usr/local/bin/python2',
+        '/usr/local/bin/python3',
     ]
     __linux_genfiles__ = [
-        '/usr/bin/pip3',
-        '~/.local/bin/pip2',
+        '/home/linuxbrew/.linuxbrew/bin/pip2',
+        '/home/linuxbrew/.linuxbrew/bin/pip3',
+        '/home/linuxbrew/.linuxbrew/bin/python2',
+        '/home/linuxbrew/.linuxbrew/bin/python3',
     ]
     __tmpfiles__ = [PIP_LIST]
     __versions__ = {
@@ -157,30 +167,10 @@ class Python(Task):
         "virtualenv": "15.1.0",
     }
 
-    def install_osx(self):
+    def install(self):
         Homebrew().install_package("python")
         Homebrew().install_package("python3")
-        self._install_common()
 
-    def install_ubuntu(self):
-        Apt().install_package("python-pip")
-        Apt().install_package("python3-pip")
-        Apt().install_package("software-properties-common")  # provides add-apt-repository
-        if not shell_ok("dpkg -s python3.6 &>/dev/null"):
-            task_print("adding python-3.6 repository")
-            shell("sudo add-apt-repository -y ppa:jonathonf/python-3.6")
-            shell("sudo apt-get update")
-            task_print("apt-get install python3.6 python3.6-venv python3.6-dev python3-pip")
-            shell("sudo apt-get install -y python3.6 python3.6-venv python3.6-dev python3-pip")
-
-        self._install_common()
-
-    def _pip_version_is(self, pip, version):
-        return shell_ok(
-            "test $({pip} --version | awk '{{print $2}}') = {version}"
-            .format(**vars()))
-
-    def _install_common(self):
         assert which("pip2")
 
         if os.path.isdir(PRIVATE):
@@ -207,7 +197,12 @@ class Python(Task):
         # install virtualenv
         self.pip_install("virtualenv", self.__versions__["virtualenv"])
 
-    def upgrade_osx(self):
+    def _pip_version_is(self, pip, version):
+        return shell_ok(
+            "test $({pip} --version | awk '{{print $2}}') = {version}"
+            .format(**vars()))
+
+    def upgrade(self):
         Homebrew().upgrade_package("python")
         Homebrew().upgrade_package("python3")
 
@@ -457,7 +452,8 @@ class Node(Task):
 
     NPM_BINARY = {
         "osx": "/usr/local/bin/npm",
-        "ubuntu": "/usr/bin/npm"
+        "ubuntu": "/usr/bin/npm",
+        "debian": "/usr/bin/npm",
     }
 
     __platforms__ = ['linux', 'osx']
