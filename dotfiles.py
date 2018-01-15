@@ -241,6 +241,7 @@ class Unzip(Task):
 
     def install(self):
         Homebrew().install_package("unzip")
+        shell("brew link unzip --force")
 
     def upgrade(self):
         Homebrew().upgrade_package("unzip")
@@ -283,6 +284,7 @@ class Curl(Task):
 
     def install(self):
         Homebrew().install_package("curl")
+        shell("brew link curl --force")
 
     def upgrade(self):
         Homebrew().upgrade_package("curl")
