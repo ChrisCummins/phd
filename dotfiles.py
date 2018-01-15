@@ -149,10 +149,10 @@ class Homebrew(Task):
 
     @staticmethod
     def bin(name):
-        if get_platform() != 'osx':
-            return '/home/linuxbrew/.linuxbrew/bin/{name}'.format(name=name)
-        else:
+        if get_platform() == 'osx':
             return '/usr/local/bin/{name}'.format(name=name)
+        else:
+            return '/home/linuxbrew/.linuxbrew/bin/{name}'.format(name=name)
 
 
 class Python(Task):
