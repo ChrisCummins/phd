@@ -147,26 +147,33 @@ class Homebrew(Task):
             shell("brew cask remove " + cask)
             return True
 
+    @staticmethod
+    def bin(name):
+        if get_platform() != 'osx':
+            return '/home/linuxbrew/.linuxbrew/bin/{name}'.format(name=name)
+        else:
+            return '/usr/local/bin/{name}'.format(name=name)
+
 
 class Python(Task):
     """ python2 and pip """
     PYP_IRC = "~/.pypirc"
     PIP_LIST = ".pip-freeze.json"
 
+    PIP2_BINARY = Homebrew.bin('pip2')
+    PIP3_BINARY = Homebrew.bin('pip3')
+    PYTHON2_BINARY = Homebrew.bin('python2')
+    PYTHON3_BINARY = Homebrew.bin('python3')
+
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = ['Homebrew']
     __genfiles__ = []
-    __osx_genfiles__ = [
-        '/usr/local/bin/pip2',
-        '/usr/local/bin/pip3',
-        '/usr/local/bin/python2',
-        '/usr/local/bin/python3',
-    ]
-    __linux_genfiles__ = [
-        '/home/linuxbrew/.linuxbrew/bin/pip2',
-        '/home/linuxbrew/.linuxbrew/bin/pip3',
-        '/home/linuxbrew/.linuxbrew/bin/python2',
-        '/home/linuxbrew/.linuxbrew/bin/python3',
+    __genfiles__ = [
+        PIP2_BINARY,
+        PIP3_BINARY,
+        PYTHON2_BINARY,
+        PYTHON3_BINARY,
+        Homebrew.bin('virtualenv'),
     ]
     __tmpfiles__ = [PIP_LIST]
     __versions__ = {
@@ -178,45 +185,32 @@ class Python(Task):
         Homebrew().install_package("python")
         Homebrew().install_package("python3")
 
-        assert which("pip2")
-
+        # Install pythonirc config file
         if os.path.isdir(PRIVATE):
             self.__genfiles__ += [self.PYP_IRC]
             symlink("{private}/python/.pypirc".format(private=PRIVATE),
                     "~/.pypirc")
 
         # install pip
-        if not self._pip_version_is("pip2", self.__versions__["pip"]):
-            task_print("pip2 install --upgrade 'pip=={pip_version}'".format(**vars()))
-            shell("pip2 install --upgrade 'pip=={pip_version}'".format(**vars()))
-        # same again as root
-        if not self._pip_version_is("sudo pip2", self.__versions__["pip"]):
-            shell("sudo -H pip2 install --upgrade 'pip=={pip_version}'".format(**vars()))
-
-        # install pip
-        if not self._pip_version_is("pip3", self.__versions__["pip"]):
-            task_print("pip3 install --upgrade 'pip=={pip_version}'".format(**vars()))
-            shell("pip3 install --upgrade 'pip=={pip_version}'".format(**vars()))
-        # same again as root
-        if not self._pip_version_is("sudo pip3", self.__versions__["pip"]):
-            shell("sudo -H pip3 install --upgrade 'pip=={pip_version}'".format(**vars()))
+        self._install_pip_version(self.PIP2_BINARY, self.__versions__["pip"])
+        self._install_pip_version(self.PIP3_BINARY, self.__versions__["pip"])
 
         # install virtualenv
         self.pip_install("virtualenv", self.__versions__["virtualenv"])
 
-    def _pip_version_is(self, pip, version):
-        return shell_ok(
-            "test $({pip} --version | awk '{{print $2}}') = {version}"
-            .format(**vars()))
+    def _install_pip_version(self, pip, version):
+        if not shell_ok("test $({pip} --version | awk '{{print $2}}') = {version}".format(**vars())):
+            basename = os.path.basename(pip)
+            task_print("{basename} install --upgrade 'pip=={version}'".format(**vars()))
+            shell("{pip} install --upgrade 'pip=={version}'".format(**vars()))
 
     def upgrade(self):
         Homebrew().upgrade_package("python")
         Homebrew().upgrade_package("python3")
 
-    def pip_install(self, package, version, pip="pip2", sudo=False):
+    def pip_install(self, package, version, pip=PIP2_BINARY, sudo=False):
         """ install a package using pip, return True if installed """
         # Ubuntu requires sudo permission for pip install
-        sudo = True if get_platform() == "ubuntu" else sudo
         use_sudo = "sudo -H " if sudo else ""
 
         # Create the list of pip packages
@@ -242,16 +236,13 @@ class Python(Task):
 class Unzip(Task):
     """ unzip pacakge """
     __platforms__ = ['osx', 'ubuntu']
-    __genfiles__ = ['/usr/bin/unzip']
-    __osx_deps__ = ['Homebrew']
+    __deps__ = ['Homebrew']
+    __genfiles__ = [Homebrew.bin('unzip')]
 
-    def install_osx(self):
+    def install(self):
         Homebrew().install_package("unzip")
 
-    def install_ubuntu(self):
-        Apt().install_package("unzip")
-
-    def upgrade_osx(self):
+    def upgrade(self):
         Homebrew().upgrade_package("unzip")
 
 
@@ -287,16 +278,13 @@ class Ruby(Task):
 class Curl(Task):
     """ curl command """
     __platforms__ = ['linux', 'osx']
-    __osx_deps__ = ['Homebrew']
-    __genfiles__ = ['/usr/bin/curl']
+    __deps__ = ['Homebrew']
+    __genfiles__ = [Homebrew.bin('curl')]
 
-    def install_osx(self):
+    def install(self):
         Homebrew().install_package("curl")
 
-    def install_ubuntu(self):
-        Apt().install_package("curl")
-
-    def upgrade_osx(self):
+    def upgrade(self):
         Homebrew().upgrade_package("curl")
 
 
@@ -456,42 +444,32 @@ class WacomDriver(Task):
 class Node(Task):
     """ nodejs and npm """
     PKG_LIST = os.path.abspath(".npm-list.txt")
-
-    NPM_BINARY = {
-        "osx": "/usr/local/bin/npm",
-        "ubuntu": "/usr/bin/npm",
-        "debian": "/usr/bin/npm",
-    }
+    NPM_BINARY = Homebrew.bin('npm')
+    NODE_BINARY = Homebrew.bin('node')
 
     __platforms__ = ['linux', 'osx']
-    __osx_deps__ = ['Homebrew']
-    __genfiles__ = [NPM_BINARY[PLATFORM]]
-    __osx_genfiles__ = ['/usr/local/bin/node']
-    __linux_genfiles__ = ['/usr/bin/node']
+    __deps__ = ['Homebrew']
+    __genfiles__ = [
+        NPM_BINARY,
+        NODE_BINARY,
+    ]
     __tmpfiles__ = [PKG_LIST]
 
-    def install_osx(self):
+    def install(self):
         Homebrew().install_package("node")
 
-    def install_ubuntu(self):
-        Apt().install_package("nodejs")
-        Apt().install_package("npm")
-        symlink("/usr/bin/nodejs", "/usr/bin/node", sudo=True)
-
-    def upgrade_osx(self):
+    def upgrade(self):
         Homebrew().upgrade_package("node")
 
     def npm_install(self, package, version):
         """ install a package using npm, return True if installed """
-        npm = self.NPM_BINARY[PLATFORM]
-
         # Create the list of npm packages
         if not os.path.isfile(self.PKG_LIST):
-            shell("{npm} list -g > {self.PKG_LIST}".format(**vars()))
+            shell("{self.NPM_BINARY} list -g > {self.PKG_LIST}".format(**vars()))
 
         if not shell_ok("grep '{package}@{version}' <{self.PKG_LIST}".format(**vars())):
             task_print("npm install -g {package}@{version}".format(**vars()))
-            shell("sudo {npm} install -g {package}@{version}".format(**vars()))
+            shell("{self.NPM_BINARY} install -g {package}@{version}".format(**vars()))
             return True
 
 
