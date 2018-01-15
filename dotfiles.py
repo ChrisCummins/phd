@@ -859,6 +859,15 @@ class MacOSConfig(Task):
     __platforms__ = ["osx"]
     __genfiles__ = ['~/.hushlogin']
 
+    def add_login_item(self, path, hidden):
+        """ add a program as a login item """
+        path = os.path.abspath(path)
+        hidden = "true" if hidden else "false"
+
+        shell("osascript -e 'tell application \"System Events\" to make login "
+              "item at end with properties {{path:\"{path}\", hidden:{hidden}}}'"
+              .format(**vars()))
+
     def install_osx(self):
         # Based on: https://github.com/holman/dotfiles/blob/master/macos/set-defaults.sh
 
@@ -898,6 +907,19 @@ class MacOSConfig(Task):
             shell("touch " + os.path.expanduser("~/.hushlogin"))
 
 
+class Caffeine(Task):
+    __platforms__ = ['osx']
+    __deps__ = ['Homebrew', 'MacOSConfig']
+    __osx_genfiles__ = ['/Applications/Caffeine.app']
+
+    def install(self):
+        Homebrew().install_cask('caffeine')
+        MacOSConfig().add_login_item('/Applications/Caffeine.app', hidden=False)
+
+    def upgrade(self):
+        Homebrew().upgrade_cask('caffeine')
+
+
 class HomebrewCasks(Task):
     """ macOS homebrew binaries """
     CASKS = {
@@ -905,7 +927,6 @@ class HomebrewCasks(Task):
         'anki': '/Applications/Anki.app',
         'bartender': '/Applications/Bartender 3.app',
         'bettertouchtool': '/Applications/BetterTouchTool.app',
-        'caffeine': '/Applications/Caffeine.app',
         'calibre': '/Applications/calibre.app',
         'dash': '/Applications/Dash.app',
         'disk-inventory-x': '/Applications/Disk Inventory X.app',
