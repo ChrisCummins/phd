@@ -26,7 +26,7 @@ def regression(data):
     a = 0.05
 
     # Initial cost.
-    j = cost(*h, data)
+    j = cost(*h, data=data)
 
     # Threshold to stop iterations.
     j0 = 0.0000001
@@ -44,7 +44,7 @@ def regression(data):
         h[1] -= a * g1
 
         # Update cost.
-        j = cost(*h, data)
+        j = cost(*h, data=data)
 
         # print("i = {i}, h = ({h0:.3f}, {h1:.3f}), J = {j:.3f}, "
         #       "g = ({g0:.3f}, {g1:.3f})"
@@ -68,4 +68,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
