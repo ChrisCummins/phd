@@ -41,7 +41,9 @@ def get_platform():
             "darwin": "osx",
         }.get(sys.platform, sys.platform)
     else:
-        return distro[0].lower()
+        return {
+            "debian": "ubuntu",
+        }.get(distro[0].lower(), distro[0].lower())
 
 
 class CalledProcessError(Exception):
@@ -102,7 +104,7 @@ APPLE_ID = _CFG["apple_id"]
 EXCLUDES = _CFG.get("excludes", [])
 IS_TRAVIS_CI = os.environ.get("TRAVIS", False)
 
-LINUX_DISTROS = ['ubuntu']
+LINUX_DISTROS = ['debian', 'ubuntu']
 
 PLATFORM = get_platform()
 HOSTNAME = socket.gethostname()

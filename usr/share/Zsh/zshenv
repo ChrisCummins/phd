@@ -101,6 +101,8 @@ path_dirs=( \
     ~/.local/bin \
     ~/.gem/*/*/bin \
     ~/.gem/*/ruby/*/bin \
+    /home/linuxbrew/.linuxbrew/bin \
+    /home/linuxbrew/.linuxbrew/sbin \
     /Library/TeX/Distributions/.DefaultTeX/Contents/Programs/texbin \
     /usr/local/opt/coreutils/libexec/gnubin \
     /usr/local/opt/gnu-sed/libexec/gnubin \
