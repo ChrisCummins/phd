@@ -4,10 +4,12 @@
 #
 # Usage:
 #
-#     ./boostrap.sh
+#     ./boostrap.sh | bash
 #
 set -eu
 
+# Directory of this script.
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 main() {
     # header
@@ -40,11 +42,12 @@ main() {
     fi
 
     # git hook
-    if [[ -f ".git/hooks/pre-push" ]]; then
+    if [[ -f "$DIR/../.git/hooks/pre-push" ]]; then
         echo '# git hook: installed'
     else
         echo '# git hook:'
-        echo 'cp -v tools/pre-push .git/hooks/pre-push'
+        echo "cp -v $DIR/pre-push $DIR/../.git/hooks/pre-push"
+        echo "chmod +x $DIR/../.git/hooks/pre-push"
         echo
     fi
 
