@@ -4,6 +4,7 @@
 build --compilation_mode opt
 build --cxxopt='-std=c++14'
 build --cxxopt='-Wc++1z-extensions'
+build --cxxopt='-Wno-unused-command-line-argument'
 build --ignore_unsupported_sandboxing
 build --verbose_failures
 
