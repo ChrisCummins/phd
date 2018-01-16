@@ -10,4 +10,5 @@ cc_test(
         '-Iexternal/benchmark/include',
     ],
     deps = ['//src/phd:main'],
+    size = 'small',
 )

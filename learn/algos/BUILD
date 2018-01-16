@@ -9,11 +9,13 @@ cc_test(
         "breadth_first_search.cc",
         "graph.h",
     ],
+    size = 'small',
 )
 
 sh_test(
     name = "bts_rotate",
     srcs = ["bts_rotate.py"],
+    size = 'small',
 )
 
 cc_test(
@@ -22,16 +24,19 @@ cc_test(
         "depth_first_search.cc",
         "graph.h",
     ],
+    size = 'small',
 )
 
 sh_test(
     name = "graph",
     srcs = ["graph.py"],
+    size = 'small',
 )
 
 sh_test(
     name = "search",
     srcs = ["search.py"],
+    size = 'small',
 )
 
 cc_test(
@@ -43,4 +48,5 @@ cc_test(
     deps = [
         "@gtest//:main",
     ],
+    size = 'small',
 )

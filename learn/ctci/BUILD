@@ -15,12 +15,14 @@ cc_test(
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
+    size = 'small',
 )
 
 py_test(
     name =  '0101-unique-chars-in-string-py',
     srcs = ['0101-unique-chars-in-string.py'],
     main =  '0101-unique-chars-in-string.py',
+    size = 'small',
 )
 
 cc_test(
@@ -31,6 +33,7 @@ cc_test(
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
+    size = 'small',
 )
 
 cc_test(
@@ -41,12 +44,14 @@ cc_test(
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
+    size = 'small',
 )
 
 py_test(
     name =  '0103-permutations-py',
     srcs = ['0103-permutations.py'],
     main =  '0103-permutations.py',
+    size = 'small',
 )
 
 cc_test(
@@ -57,12 +62,14 @@ cc_test(
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
+    size = 'small',
 )
 
 py_test(
     name =  '0104-escape-string-py',
     srcs = ['0104-escape-string.py'],
     main =  '0104-escape-string.py',
+    size = 'small',
 )
 
 cc_test(
@@ -73,6 +80,7 @@ cc_test(
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
+    size = 'small',
 )
 
 cc_test(
@@ -83,6 +91,7 @@ cc_test(
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
+    size = 'small',
 )
 
 cc_test(
@@ -93,6 +102,7 @@ cc_test(
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
+    size = 'small',
 )
 
 cc_test(
@@ -103,12 +113,14 @@ cc_test(
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
+    size = 'small',
 )
 
 py_test(
     name =  "0201-list-remove-dups-py",
     srcs = ["0201-list-remove-dups.py"],
     main =  '0201-list-remove-dups.py',
+    size = 'small',
 )
 
 cc_test(
@@ -119,6 +131,7 @@ cc_test(
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
+    size = 'small',
 )
 
 cc_test(
@@ -129,6 +142,7 @@ cc_test(
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
+    size = 'small',
 )
 
 cc_test(
@@ -139,6 +153,7 @@ cc_test(
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
+    size = 'small',
 )
 
 cc_test(
@@ -149,6 +164,7 @@ cc_test(
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
+    size = 'small',
 )
 
 cc_test(
@@ -159,6 +175,7 @@ cc_test(
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
+    size = 'small',
 )
 
 cc_test(
@@ -169,6 +186,7 @@ cc_test(
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
+    size = 'small',
 )
 
 cc_test(
@@ -179,6 +197,7 @@ cc_test(
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
+    size = 'small',
 )
 
 cc_test(
@@ -189,6 +208,7 @@ cc_test(
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
+    size = 'small',
 )
 
 cc_test(
@@ -199,6 +219,7 @@ cc_test(
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
+    size = 'small',
 )
 
 cc_test(
@@ -209,6 +230,7 @@ cc_test(
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
+    size = 'small',
 )
 
 cc_test(
@@ -219,6 +241,7 @@ cc_test(
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
+    size = 'small',
 )
 
 cc_test(
@@ -229,6 +252,7 @@ cc_test(
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
+    size = 'small',
 )
 
 cc_test(
@@ -239,6 +263,7 @@ cc_test(
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
+    size = 'small',
 )
 
 cc_test(
@@ -249,6 +274,7 @@ cc_test(
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
+    size = 'small',
 )
 
 # FIXME: this is broken
@@ -271,6 +297,7 @@ cc_test(
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
+    size = 'small',
 )
 
 cc_test(
@@ -281,4 +308,5 @@ cc_test(
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
+    size = 'small',
 )

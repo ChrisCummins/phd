@@ -16,6 +16,7 @@ cc_test(
     srcs = ['constructors.cc'],
     copts = ['-Iexternal/gtest/include'],
     deps = ['@gtest//:main'],
+    size = 'small',
 )
 
 cc_binary(
@@ -52,6 +53,7 @@ cc_binary(
 cc_test(
     name = 'meta',
     srcs = ['meta.cc'],
+    size = 'small',
 )
 
 cc_binary(

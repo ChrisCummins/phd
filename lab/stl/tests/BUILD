@@ -15,6 +15,7 @@ cc_test(
         '//lab/stl:main',
         '//src/phd:main',
     ],
+    size = 'small',
 )
 
 cc_test(
@@ -34,6 +35,7 @@ cc_test(
         '//lab/stl:main',
         '//src/phd:main',
     ],
+    size = 'small',
 )
 
 cc_test(
@@ -53,6 +55,7 @@ cc_test(
         '//lab/stl:main',
         '//src/phd:main',
     ],
+    size = 'small',
 )
 
 cc_test(
@@ -72,6 +75,7 @@ cc_test(
         '//lab/stl:main',
         '//src/phd:main',
     ],
+    size = 'small',
 )
 
 cc_test(
@@ -91,6 +95,7 @@ cc_test(
         '//lab/stl:main',
         '//src/phd:main',
     ],
+    size = 'small',
 )
 
 cc_test(
@@ -110,6 +115,7 @@ cc_test(
         '//lab/stl:main',
         '//src/phd:main',
     ],
+    size = 'small',
 )
 
 cc_test(
@@ -129,6 +135,7 @@ cc_test(
         '//lab/stl:main',
         '//src/phd:main',
     ],
+    size = 'small',
 )
 
 cc_test(
@@ -148,6 +155,7 @@ cc_test(
         '//lab/stl:main',
         '//src/phd:main',
     ],
+    size = 'small',
 )
 
 cc_test(
@@ -167,6 +175,7 @@ cc_test(
         '//lab/stl:main',
         '//src/phd:main',
     ],
+    size = 'small',
 )
 
 cc_test(
@@ -186,4 +195,5 @@ cc_test(
         '//lab/stl:main',
         '//src/phd:main',
     ],
+    size = 'small',
 )

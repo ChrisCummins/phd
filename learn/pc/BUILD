@@ -9,6 +9,7 @@ cc_test(
         "@gtest//:main",
         "@benchmark//:main",
     ],
+    size = 'small',
 )
 
 cc_test(
@@ -22,6 +23,7 @@ cc_test(
         "@gtest//:main",
         "@benchmark//:main",
     ],
+    size = 'small',
 )
 
 cc_test(
@@ -33,6 +35,7 @@ cc_test(
         "-Iexternal/benchmark/include",
     ],
     deps = ["//src/phd:main"],
+    size = 'small',
 )
 
 cc_test(
@@ -44,6 +47,7 @@ cc_test(
         "-Iexternal/benchmark/include",
     ],
     deps = ["//src/phd:main"],
+    size = 'small',
 )
 
 cc_binary(

@@ -15,4 +15,5 @@ cc_test(
         '//lab/lm:main',
         '//src/phd:main',
     ],
+    size = 'small',
 )

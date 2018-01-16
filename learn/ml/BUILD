@@ -3,4 +3,5 @@ py_test(
     srcs = ['batch_linear_regression.py'],
     srcs_version = 'PY3',
     default_python_version = 'PY3',
+    size = 'small',
 )

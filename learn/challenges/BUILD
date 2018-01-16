@@ -9,6 +9,7 @@ cc_test(
         "@gtest//:main",
         "@benchmark//:main",
     ],
+    size = 'small',
 )
 
 cc_binary(
@@ -25,6 +26,7 @@ cc_test(
     deps = [
         "@gtest//:main",
     ],
+    size = 'small',
 )
 
 cc_test(
@@ -38,6 +40,7 @@ cc_test(
         "@gtest//:main",
         "@benchmark//:main",
     ],
+    size = 'small',
 )
 
 cc_test(
@@ -51,6 +54,7 @@ cc_test(
     deps = [
         "//src/phd:main",
     ],
+    size = 'small',
 )
 
 cc_test(
@@ -62,6 +66,7 @@ cc_test(
         '//conditions:default': ['-lOpenCL'],
     }),
     deps = ["//:opencl"],
+    size = 'small',
 )
 
 cc_test(
@@ -75,62 +80,72 @@ cc_test(
     deps = [
         "//src/phd:main",
     ],
+    size = 'small',
 )
 
 cc_test(
     name =  "014-palindrome",
     srcs = ["014-palindrome.c"],
     args = ['abcdefedcba'],  # palindrome
+    size = 'small',
 )
 
 cc_test(
     name =  "015-longest-path-matrix",
-    srcs = ["015-longest-path-matrix.cc"]
+    srcs = ["015-longest-path-matrix.cc"],
+    size = 'small',
 )
 
 sh_test(
     name = "016-min-hops",
-    srcs = ["016-min-hops.py"]
+    srcs = ["016-min-hops.py"],
+    size = 'small',
 )
 
 sh_test(
     name = "017-longest-substrings",
-    srcs = ["017-longest-substrings.py"]
+    srcs = ["017-longest-substrings.py"],
+    size = 'small',
 )
 
 sh_test(
     name = "018-list-binary-tree",
-    srcs = ["018-list-binary-tree.py"]
+    srcs = ["018-list-binary-tree.py"],
+    size = 'small',
 )
 
 sh_test(
     name = "019-validate-bst",
-    srcs = ["019-validate-bst.py"]
+    srcs = ["019-validate-bst.py"],
+    size = 'small',
 )
 
 sh_test(
     name = "020-highest-product",
-    srcs = ["020-highest-product.py"]
+    srcs = ["020-highest-product.py"],
+    size = 'small',
 )
 
 cc_test(
     name = "021-string-reverse-cpp",
-    srcs = ["021-string-reverse.cc"]
+    srcs = ["021-string-reverse.cc"],
+    size = 'small',
 )
 
 sh_test(
     name = "021-string-reverse-py",
-    srcs = ["021-string-reverse.py"]
+    srcs = ["021-string-reverse.py"],
+    size = 'small',
 )
 
 sh_binary(
     name = "022-multiplication-table",
-    srcs = ["022-multiplication-table.py"]
+    srcs = ["022-multiplication-table.py"],
 )
 
 sh_binary(
     name = "023-all-subsets",
-    srcs = ["023-all-subsets.py"]
+    srcs = ["023-all-subsets.py"],
 )
 
 cc_test(
@@ -142,19 +157,21 @@ cc_test(
     deps = [
         "@gtest//:main",
     ],
+    size = 'small',
 )
 
 sh_binary(
     name = "025-first-nonrepeated-char",
-    srcs = ["025-first-nonrepeated-char.py"]
+    srcs = ["025-first-nonrepeated-char.py"],
 )
 
 cc_binary(
     name = "026-remove-dupes",
-    srcs = ["026-remove-dupes.cc"]
+    srcs = ["026-remove-dupes.cc"],
 )
 
 sh_test(
     name = "027-missing-number",
-    srcs = ["027-missing-number.py"]
+    srcs = ["027-missing-number.py"],
+    size = 'small',
 )
