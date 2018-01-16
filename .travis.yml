@@ -48,15 +48,7 @@ script:
   - source .env
   - echo $CC && $CC --version   # c compiler
   - echo $CXX && $CXX --version  # c++ compiler
+  - bazel query //... | grep -v -f .travisignore  # test targets
   - |
-    bazel \
-      test \
-        --verbose_failures \
-        --sandbox_debug \
-        --test_output=errors \
-        --test_strategy=standalone \
-        --spawn_strategy=standalone \
-        --genrule_strategy=standalone \
-        --test_verbose_timeout_warnings \
-        --local_resources=400,1,1.0 \
+    bazel test --local_resources=400,1,1.0 \
         $(bazel query //... | grep -v -f .travisignore)

@@ -1,6 +1,17 @@
 # See: https://bazel.build/versions/master/docs/bazel-user-manual.html#flag--compilation_mode
-build --compilation_mode opt
 
+# Build options:
+build --compilation_mode opt
 build --cxxopt='-std=c++14'
+build --cxxopt='-Wc++1z-extensions'
 build --ignore_unsupported_sandboxing
 build --verbose_failures
+
+# Test options:
+test --genrule_strategy=standalone
+test --sandbox_debug
+test --spawn_strategy=standalone
+test --test_output=errors
+test --test_strategy=standalone
+test --test_verbose_timeout_warnings
+test --verbose_failures
