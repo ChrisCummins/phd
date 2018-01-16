@@ -292,52 +292,29 @@ class Curl(Task):
 
 class Dropbox(Task):
     """ dropbox """
-    UBUNTU_URL = "https://www.dropbox.com/download?plat=lnx.x86_64"
-
     __platforms__ = ['linux', 'osx']
-    __osx_deps__ = ['Homebrew']
-    __genfiles__ = ["~/.local/bin/dropbox"]
+    __deps__ = ['Homebrew']
+    __genfiles__ = [
+        "~/.local/bin/dropbox",
+        "~/.local/bin/dropbox-find-conflicts",
+    ]
     __osx_genfiles__ = ["/Applications/Dropbox.app"]
-    __linux_genfiles__ = ["~/.dropbox-dist/dropboxd"]
+    __linux_genfiles__ = [Homebrew.bin("dropbox")]
 
-    def __init__(self):
-        self.installed_on_ubuntu = False
+    def install(self):
+        Homebrew().install_cask("dropbox")
 
-    def _install_common(self):
         mkdir("~/.local/bin")
         symlink(usr_share("Dropbox/dropbox.py"), "~/.local/bin/dropbox")
+        symlink(usr_share("Dropbox/dropbox-find-conflicts.sh"),
+                "~/.local/bin/dropbox-find-conflicts")
 
-        if (os.path.isdir(os.path.expanduser("~/Dropbox/Inbox")) and not
-            os.path.isdir(os.path.expanduser("~/Dropbox/Inbox"))):
+        if os.path.isdir(os.path.expanduser("~/Dropbox/Inbox")):
             self.__genfiles__.append("~/Inbox")
             symlink("Dropbox/Inbox", "~/Inbox")
 
-        if os.path.isdir(os.path.expanduser("~/Dropbox")):
-            self.__genfiles__.append("~/.local/bin/dropbox-find-conflicts")
-            symlink(usr_share("Dropbox/dropbox-find-conflicts.sh"),
-                    "~/.local/bin/dropbox-find-conflicts")
-
-    def install_osx(self):
-        Homebrew().install_cask("dropbox")
-        self._install_common()
-
-    def install_linux(self):
-        if (not os.path.exists(os.path.expanduser("~/.dropbox-dist/dropboxd"))
-            and not IS_TRAVIS_CI):  # skip on Travis CI:
-            task_print("Installing Dropbox")
-            shell('cd - && wget -O - "{self.UBUNTU_URL}" | tar xzf -'.format(**vars()))
-            self.installed_on_ubuntu = True
-        self._install_common()
-
-    def upgrade_osx(self):
+    def upgrade(self):
         Homebrew().upgrade_cask("dropbox")
-
-    def teardown(self):
-        if self.installed_on_ubuntu:
-            logging.info("")
-            logging.info("NOTE: manual step required to complete dropbox installation:")
-            logging.info("    $ " + Colors.BOLD + Colors.RED +
-                         "~/.dropbox-dist/dropboxd" + Colors.END)
 
 
 class Fluid(Task):

@@ -9,7 +9,7 @@ before_install:
   - uname -a
 
 script:
-  - ./configure --exclude AppStore,Node
+  - ./configure --exclude AppStore,Node,Dropbox
   - ./run --describe --verbose
   - ./run Git --verbose
   - ./run --verbose
