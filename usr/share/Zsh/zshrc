@@ -202,7 +202,7 @@ alias M='mkdir'
 alias p='ipython'
 alias q='which'
 alias T='tail'
-alias t='touch'
+alias t='timer'
 alias v='vim'
 alias wg='wget'
 

@@ -1227,6 +1227,16 @@ class Toggl(Task):
         AppStore().install_app('957734279', '/Applications/TogglDesktop.app')
 
 
+class Timer(Task):
+    """ time tracking CLI """
+    __platforms__ = ['linux', 'osx']
+    __genfiles__ = ['~/.local/bin/timer']
+
+    def install(self):
+        mkdir("~/.local/bin")
+        symlink(usr_share("timer", "timer.py"), "~/.local/bin/timer")
+
+
 class MeCsv(Task):
     """ me.csv health and time tracking """
     __platforms__ = ['osx']
