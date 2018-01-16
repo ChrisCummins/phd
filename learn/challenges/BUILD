@@ -175,3 +175,11 @@ sh_test(
     srcs = ["027-missing-number.py"],
     size = 'small',
 )
+
+cc_test(
+    name = '029-unique-substrings',
+    srcs = ['029-unique-substrings.cc'],
+    size = 'small',
+    copts = ['-Iexternal/gtest/include'],
+    deps = ['@gtest//:main'],
+)
