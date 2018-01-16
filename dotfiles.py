@@ -166,7 +166,7 @@ class Python(Task):
     PYTHON3_BINARY = Homebrew.bin('python3')
 
     __platforms__ = ['linux', 'osx']
-    __osx_deps__ = ['Homebrew']
+    __deps__ = ['Homebrew']
     __genfiles__ = []
     __genfiles__ = [
         PIP2_BINARY,
