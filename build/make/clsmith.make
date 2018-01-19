@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License along with
 # DeepSmith.  If not, see <http://www.gnu.org/licenses/>.
 #
-clsmith_dir := $(root)/lib/clsmith
+clsmith_dir := $(root)/third_party/clsmith
 clsmith := $(clsmith_dir)/build/CLSmith
 cl_launcher := $(clsmith_dir)/build/cl_launcher
 clsmith_include_dir := $(clsmith_dir)/runtime

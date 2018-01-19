@@ -18,7 +18,7 @@
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
 cmake_version := 3.5.0
-cmake_dir := $(root)/lib/cmake/$(cmake_version)
+cmake_dir := $(root)/third_party/cmake/$(cmake_version)
 cmake := $(cmake_dir)/bin/cmake
 
 cmake_tar := $(cache)/cmake.$(cmake_version).tar.gz

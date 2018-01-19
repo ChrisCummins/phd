@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with DeepSmith.  If not, see <http://www.gnu.org/licenses/>.
 #
-llvm_dir := $(root)/lib/llvm
+llvm_dir := $(root)/third_party/llvm
 
 clang_362 := $(llvm_dir)/3.6.2/bin/clang
 clang_371 := $(llvm_dir)/3.7.1/bin/clang

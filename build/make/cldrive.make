@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License along with
 # DeepSmith.  If not, see <http://www.gnu.org/licenses/>.
 #
-cldrive_dir := $(root)/lib/cldrive
+cldrive_dir := $(root)/third_party/cldrive
 cldrive := $(venv_dir)/bin/cldrive
 
 # add this target as a prerequisite for rules which require cldrive

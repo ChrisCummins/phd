@@ -1,12 +1,12 @@
-[submodule "lib/cldrive"]
-	path = lib/cldrive
+[submodule "third_party/cldrive"]
+	path = third_party/cldrive
 	url = https://github.com/ChrisCummins/cldrive.git
-[submodule "lib/clgen"]
-	path = lib/clgen
+[submodule "third_party/clgen"]
+	path = third_party/clgen
 	url = https://github.com/ChrisCummins/clgen.git
-[submodule "lib/clreduce"]
-	path = lib/clreduce
+[submodule "third_party/clreduce"]
+	path = third_party/clreduce
 	url = https://github.com/ChrisCummins/clreduce.git
-[submodule "lib/CLSmith"]
-	path = lib/clsmith
+[submodule "third_party/CLSmith"]
+	path = third_party/clsmith
 	url = https://github.com/ChrisCummins/CLSmith.git

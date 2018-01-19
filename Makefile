@@ -96,7 +96,7 @@ run: all
 # clean compiled files
 .PHONY: clean
 clean: $(clean_targets)
-	rm -rfv build/lib/dsmith build/dsmith/lib/python*/site-packages/dsmith-*
+	rm -rfv build/third_party/dsmith build/dsmith/third_party/python*/site-packages/dsmith-*
 
 
 # clean everything

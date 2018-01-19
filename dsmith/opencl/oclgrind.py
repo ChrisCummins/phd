@@ -28,7 +28,7 @@ from dsmith.opencl import clsmith
 from dsmith.opencl import cldrive_mkharness as mkharness
 
 # build paths
-OCLGRIND = dsmith.root_path("lib", "clreduce", "build_oclgrind", "oclgrind")
+OCLGRIND = dsmith.root_path("third_party", "clreduce", "build_oclgrind", "oclgrind")
 
 # sanity checks
 assert fs.isexe(OCLGRIND)

@@ -19,7 +19,7 @@
 #
 binary_url := https://cvs.khronos.org/svn/repos/ogl/trunk/ecosystem/public/sdk/tools/glslang/Install/Linux/glslangValidator
 
-glsl := lib/glsl/bin/glslang
+glsl := third_party/glsl/bin/glslang
 
 glsl: $(glsl)
 

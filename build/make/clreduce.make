@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with DeepSmith.  If not, see <http://www.gnu.org/licenses/>.
 #
-clreduce_dir := $(root)/lib/clreduce
+clreduce_dir := $(root)/third_party/clreduce
 clreduce := $(clreduce_dir)/build_creduce/creduce/creduce
 
 clreduce: $(clreduce)

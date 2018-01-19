@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with DeepSmith.  If not, see <http://www.gnu.org/licenses/>.
 #
-clgen_dir := $(root)/lib/clgen
+clgen_dir := $(root)/third_party/clgen
 clgen := $(venv_dir)/bin/clgen
 clgen: $(clgen)
 

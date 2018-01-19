@@ -37,9 +37,9 @@ status_t = NewType('status_t', int)
 return_t = namedtuple('return_t', ['runtime', 'status', 'stdout', 'stderr'])
 
 # build paths
-exec_path = dsmith.root_path("lib", "clsmith", "build", "CLSmith")
-cl_launcher_path = dsmith.root_path("lib", "clsmith", "build", "cl_launcher")
-include_path = dsmith.root_path("lib", "clsmith", "runtime")
+exec_path = dsmith.root_path("third_party", "clsmith", "build", "CLSmith")
+cl_launcher_path = dsmith.root_path("third_party", "clsmith", "build", "cl_launcher")
+include_path = dsmith.root_path("third_party", "clsmith", "runtime")
 
 # sanity checks
 assert fs.isexe(exec_path)

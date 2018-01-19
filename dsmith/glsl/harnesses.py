@@ -137,7 +137,7 @@ class GlslFrag(GlslHarness):
             tmp.flush()
             path = tmp.name
 
-        cmd = [testbed.platform.platform, dsmith.root_path("lib", "glsl", "my.conf"), path]
+        cmd = [testbed.platform.platform, dsmith.root_path("third_party", "glsl", "my.conf"), path]
         # TODO: testbed.optimizations
         logging.debug(f"{Colors.BOLD}${Colors.END} " + " ".join(cmd))
 

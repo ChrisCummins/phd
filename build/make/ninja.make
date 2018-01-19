@@ -18,7 +18,7 @@
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
 ninja_version := 1.7.1
-ninja_dir := $(root)/lib/ninja/$(ninja_version)
+ninja_dir := $(root)/third_party/ninja/$(ninja_version)
 ninja := $(ninja_dir)/ninja
 
 ninja_tar := $(cache)/ninja.$(ninja_version).tar.gz
