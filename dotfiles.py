@@ -25,9 +25,9 @@ from util import *
 
 
 class Apt(object):
-    """ debian package manager, return True if installed """
+    """ debian package manager """
     def install_package(self, package):
-        """ install a package using apt-get """
+        """ install a package using apt-get, return True if installed """
         if not shell_ok("dpkg -s '{package}' &>/dev/null".format(**vars())):
             shell("sudo apt-get install -y '{package}'".format(**vars()))
             return True
@@ -38,7 +38,7 @@ class Apt(object):
 
 
 class Homebrew(Task):
-    """ install homebrew package manager """
+    """ homebrew package manager """
     # Temporary files for caching list of installed packages and casks
     PKG_LIST = os.path.abspath(".brew-pkgs.txt")
     CASK_LIST = os.path.abspath(".brew-casks.txt")
