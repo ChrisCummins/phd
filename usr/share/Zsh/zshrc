@@ -195,7 +195,6 @@ alias E='exit'
 alias f='file'
 alias ff='find'
 alias H='head'
-alias l='less'
 alias ll='ls -lh'
 alias m='make'
 alias M='mkdir'
@@ -311,6 +310,22 @@ eel() {
             exit $ret
         fi
     done
+}
+
+# List file and directory contents.
+unalias l
+l() {
+    if [ -z "$1" ]; then
+        ls -l
+    else
+        for var in "$@"; do
+            if [ -d "$var" ]; then
+                ls -l "$var"
+            else
+                less "$var"
+            fi
+        done
+    fi
 }
 
 # For convenient file searching.
