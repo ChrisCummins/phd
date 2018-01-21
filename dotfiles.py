@@ -490,12 +490,12 @@ class Zsh(Task):
             symlink(os.path.join(PRIVATE, "zsh"), "~/.zsh/private")
 
         # oh-my-zsh
-        clone_git_repo("git@github.com:robbyrussell/oh-my-zsh.git",
+        clone_git_repo(github_repo("robbyrussell", "oh-my-zsh"),
                        "~/.oh-my-zsh", self.__versions__["oh-my-zsh"])
         symlink("~/.zsh/cec.zsh-theme", "~/.oh-my-zsh/custom/cec.zsh-theme")
 
         # syntax highlighting module
-        clone_git_repo("git@github.com:zsh-users/zsh-syntax-highlighting.git",
+        clone_git_repo(github_repo("zsh-users", "zsh-syntax-highlighting"),
                        "~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting",
                        self.__versions__["zsh-syntax-highlighting"])
 
@@ -681,7 +681,7 @@ class Vim(Task):
         symlink(usr_share("Vim/vimrc"), "~/.vimrc")
 
         # Vundle
-        clone_git_repo("git@github.com:VundleVim/Vundle.vim.git",
+        clone_git_repo(github_repo("VundleVim", "Vundle.vim"),
                        "~/.vim/bundle/Vundle.vim",
                        self.__versions__["vundle"])
         shell("vim +PluginInstall +qall")
@@ -1016,7 +1016,7 @@ class Emacs(Task):
         self._install_common()
 
     def _install_common(self):
-        clone_git_repo("git@github.com:bbatsov/prelude.git",
+        clone_git_repo(github_repo("bbatsov", "prelude"),
                        "~/.emacs.d", self.__versions__["prelude"])
         # prelude requires there be no ~/.emacs file on first run
         Trash().trash('~/.emacs')
@@ -1410,7 +1410,7 @@ class Phd(Task):
     __genfiles__ = ['~/phd']
 
     def install(self):
-        clone_git_repo("git@github.com:ChrisCummins/phd.git", "~/phd")
+        clone_git_repo(github_repo("ChrisCummins", "phd.git"), "~/phd")
         shell("~/phd/tools/bootstrap.sh | bash")
 
 

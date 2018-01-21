@@ -357,6 +357,14 @@ def clone_git_repo(url, destination, version=None):
     return cloned
 
 
+def github_repo(user, repo):
+    """ get GitHub remote URL """
+    if os.path.exists(os.path.expanduser("~/.ssh/id_rsa")):
+        return "git@github.com:{user}/{repo}.git".format(**vars())
+    else:
+        return "https://github.com/{user}/{repo}.git".format(**vars())
+
+
 def is_runnable_task(obj):
     """ returns true if object is a task for the current platform """
     # Check that object is a class and inherits from 'Task':
