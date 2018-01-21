@@ -10,7 +10,7 @@ fi
 set -eu
 
 local_dst="/Volumes/Photo Library/"
-remote_dst="ryangosling.wan:img/photos/"
+remote_dst="ryangosling:img/photos/"
 
 src="/Volumes/Orange/"
 

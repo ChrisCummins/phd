@@ -12,7 +12,7 @@ set -eu
 src="/Users/cec/Music/Music Library/"
 
 local_dst="/Volumes/Music Library/"
-remote_dst="ryangosling.wan:audio/library/"
+remote_dst="ryangosling:audio/library/"
 
 if [[ ! -d "$src" ]]; then
     echo "fatal: '/Volumes/Music Library' not mounted" >&2

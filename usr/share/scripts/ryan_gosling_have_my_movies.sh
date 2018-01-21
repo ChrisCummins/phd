@@ -11,11 +11,11 @@ set -eu
 
 movies_src="$HOME/Movies/"
 local_movies_dst="/Volumes/Movies/"
-remote_movies_dst="ryangosling.wan:video/library/movies/"
+remote_movies_dst="ryangosling:video/library/movies/"
 
 tv_src="$HOME/TV Shows/"
 local_tv_dst="/Volumes/TV Shows/"
-remote_tv_dst="ryangosling.wan:video/library/tv/"
+remote_tv_dst="ryangosling:video/library/tv/"
 
 # Select between locally mounted network share or SSH:
 if [[ -d "$local_movies_dst" ]]; then
