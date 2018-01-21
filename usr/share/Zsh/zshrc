@@ -161,20 +161,7 @@ zstyle ':completion:*:cd:*' ignore-parents parent pwd
 zstyle ':completion:*' use-cache on
 zstyle ':completion:*' cache-path /usr/share/zsh/cache
 
-# Basically type '...' to get '../..' with successive .'s adding /..
-function rationalise-dot {
-    local MATCH
-    if [[ $LBUFFER =~ '(^|/| |      |'$'\n''|\||;|&)\.\.$' ]]; then
-        LBUFFER+=/
-        zle self-insert
-        zle self-insert
-    else
-        zle self-insert
-    fi
-}
-zle -N rationalise-dot
-bindkey . rationalise-dot
-bindkey -M isearch . self-insert
+
 
 export ZSH=~/.oh-my-zsh
 source ~/.oh-my-zsh/oh-my-zsh.sh
@@ -466,3 +453,8 @@ if test -d ~/.zsh; then
 fi
 
 unsetopt nullglob
+
+
+# Expand '...' into '../..'
+autoload -Uz manydots-magic
+manydots-magic
