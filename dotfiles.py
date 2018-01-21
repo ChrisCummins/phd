@@ -700,11 +700,14 @@ class Linters(Task):
         '/usr/local/bin/pycodestyle',
         '~/.config/pycodestyle',
         '~/go/bin/protoc-gen-lint',
+        '/usr/local/bin/write-good',
+        '/usr/local/bin/writegood',
     ]
     __versions__ = {
         "cpplint": "1.3.0",
         "csslint": "1.0.5",
         "pycodestyle": "2.3.1",
+        "write-good": "0.11.3",
     }
 
     def install_osx(self):
@@ -714,6 +717,7 @@ class Linters(Task):
                              pip="pip3.6")
         Homebrew().install_package("tidy-html5")
         Go().get('github.com/ckaznocha/protoc-gen-lint')
+        Node().npm_install("write-good", version=self.__versions__["write-good"])
 
         mkdir("~/.config")
         symlink(usr_share("linters/pycodestyle"), "~/.config/pycodestyle")
