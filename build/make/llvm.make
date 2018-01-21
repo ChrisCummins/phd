@@ -63,7 +63,7 @@ $(clang_362):
 	cd $(llvm_dir)/.build/3.6.2/tools/clang && git checkout release_36
 	cd $(llvm_dir)/.build/3.6.2/projects/compiler-rt && git checkout release_36
 	mkdir -pv $(llvm_dir)/.build/3.6.2/build
-	cd $(llvm_dir)/.build/3.6.2/build && $(cmake) -G Ninja -DLLVM_TARGETS_TO_BUILD="X86" ..
+	cd $(llvm_dir)/.build/3.6.2/build && $(cmake) -G Ninja -DCMAKE_MAKE_PROGRAM=$(ninja) -DLLVM_TARGETS_TO_BUILD="X86" ..
 	cd $(llvm_dir)/.build/3.6.2/build && $(ninja)
 	cd $(llvm_dir)/.build/3.6.2/build && $(cmake) -DCMAKE_INSTALL_PREFIX=$(llvm_dir)/3.6.2 -P cmake_install.cmake
 	rm -rf $(llvm_dir)/.build/3.6.2
@@ -78,7 +78,7 @@ $(clang_371):
 	cd $(llvm_dir)/.build/3.7.1/tools/clang && git checkout release_37
 	cd $(llvm_dir)/.build/3.7.1/projects/compiler-rt && git checkout release_37
 	mkdir -pv $(llvm_dir)/.build/3.7.1/build
-	cd $(llvm_dir)/.build/3.7.1/build && $(cmake) -G Ninja -DLLVM_TARGETS_TO_BUILD="X86" ..
+	cd $(llvm_dir)/.build/3.7.1/build && $(cmake) -G Ninja -DCMAKE_MAKE_PROGRAM=$(ninja) -DLLVM_TARGETS_TO_BUILD="X86" ..
 	cd $(llvm_dir)/.build/3.7.1/build && $(ninja)
 	cd $(llvm_dir)/.build/3.7.1/build && $(cmake) -DCMAKE_INSTALL_PREFIX=$(llvm_dir)/3.7.1 -P cmake_install.cmake
 	rm -rf $(llvm_dir)/.build/3.7.1
@@ -93,7 +93,7 @@ $(clang_381):
 	cd $(llvm_dir)/.build/3.8.1/tools/clang && git checkout release_36
 	cd $(llvm_dir)/.build/3.8.1/projects/compiler-rt && git checkout release_36
 	mkdir -pv $(llvm_dir)/.build/3.8.1/build
-	cd $(llvm_dir)/.build/3.8.1/build && $(cmake) -G Ninja -DLLVM_TARGETS_TO_BUILD="X86" ..
+	cd $(llvm_dir)/.build/3.8.1/build && $(cmake) -G Ninja -DCMAKE_MAKE_PROGRAM=$(ninja) -DLLVM_TARGETS_TO_BUILD="X86" ..
 	cd $(llvm_dir)/.build/3.8.1/build && $(ninja)
 	cd $(llvm_dir)/.build/3.8.1/build && $(cmake) -DCMAKE_INSTALL_PREFIX=$(llvm_dir)/3.8.1 -P cmake_install.cmake
 	rm -rf $(llvm_dir)/.build/3.8.1
@@ -108,7 +108,7 @@ $(clang_391):
 	cd $(llvm_dir)/.build/3.9.1/tools/clang && git checkout release_39
 	cd $(llvm_dir)/.build/3.9.1/projects/compiler-rt && git checkout release_39
 	mkdir -pv $(llvm_dir)/.build/3.9.1/build
-	cd $(llvm_dir)/.build/3.9.1/build && $(cmake) -G Ninja -DLLVM_TARGETS_TO_BUILD="X86" ..
+	cd $(llvm_dir)/.build/3.9.1/build && $(cmake) -G Ninja -DCMAKE_MAKE_PROGRAM=$(ninja) -DLLVM_TARGETS_TO_BUILD="X86" ..
 	cd $(llvm_dir)/.build/3.9.1/build && $(ninja)
 	cd $(llvm_dir)/.build/3.9.1/build && $(cmake) -DCMAKE_INSTALL_PREFIX=$(llvm_dir)/3.9.1 -P cmake_install.cmake
 	rm -rf $(llvm_dir)/.build/3.9.1
@@ -123,7 +123,7 @@ $(clang_401):
 	cd $(llvm_dir)/.build/4.0.1/tools/clang && git checkout release_40
 	cd $(llvm_dir)/.build/4.0.1/projects/compiler-rt && git checkout release_40
 	mkdir -pv $(llvm_dir)/.build/4.0.1/build
-	cd $(llvm_dir)/.build/4.0.1/build && $(cmake) -G Ninja -DLLVM_TARGETS_TO_BUILD="X86" ..
+	cd $(llvm_dir)/.build/4.0.1/build && $(cmake) -G Ninja -DCMAKE_MAKE_PROGRAM=$(ninja) -DLLVM_TARGETS_TO_BUILD="X86" ..
 	cd $(llvm_dir)/.build/4.0.1/build && $(ninja)
 	cd $(llvm_dir)/.build/4.0.1/build && $(cmake) -DCMAKE_INSTALL_PREFIX=$(llvm_dir)/4.0.1 -P cmake_install.cmake
 	rm -rf $(llvm_dir)/.build/4.0.1
@@ -138,7 +138,7 @@ $(clang_500):
 	cd $(llvm_dir)/.build/5.0.0/tools/clang && git checkout release_50
 	cd $(llvm_dir)/.build/5.0.0/projects/compiler-rt && git checkout release_50
 	mkdir -pv $(llvm_dir)/.build/5.0.0/build
-	cd $(llvm_dir)/.build/5.0.0/build && $(cmake) -G Ninja -DLLVM_TARGETS_TO_BUILD="X86" ..
+	cd $(llvm_dir)/.build/5.0.0/build && $(cmake) -G Ninja -DCMAKE_MAKE_PROGRAM=$(ninja) -DLLVM_TARGETS_TO_BUILD="X86" ..
 	cd $(llvm_dir)/.build/5.0.0/build && $(ninja)
 	cd $(llvm_dir)/.build/5.0.0/build && $(cmake) -DCMAKE_INSTALL_PREFIX=$(llvm_dir)/5.0.0 -P cmake_install.cmake
 	rm -rf $(llvm_dir)/.build/5.0.0
@@ -150,7 +150,7 @@ $(clang_trunk):
 	git clone http://llvm.org/git/clang.git $(llvm_dir)/.build/trunk/tools/clang
 	git clone http://llvm.org/git/compiler-rt.git $(llvm_dir)/.build/trunk/projects/compiler-rt
 	mkdir -pv $(llvm_dir)/.build/trunk/build
-	cd $(llvm_dir)/.build/trunk/build && $(cmake) -G Ninja -DLLVM_TARGETS_TO_BUILD="X86" ..
+	cd $(llvm_dir)/.build/trunk/build && $(cmake) -G Ninja -DCMAKE_MAKE_PROGRAM=$(ninja) -DLLVM_TARGETS_TO_BUILD="X86" ..
 	cd $(llvm_dir)/.build/trunk/build && $(ninja)
 	cd $(llvm_dir)/.build/trunk/build && $(cmake) -DCMAKE_INSTALL_PREFIX=$(llvm_dir)/trunk -P cmake_install.cmake
 	rm -rf $(llvm_dir)/.build/trunk

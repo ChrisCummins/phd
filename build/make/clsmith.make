@@ -24,9 +24,9 @@ clsmith_include_dir := $(clsmith_dir)/runtime
 # add this target as a prerequisite for rules which require CLSmith
 clsmith: $(clsmith)
 
-$(clsmith): $(cmake) $(ninja)
+$(clsmith): cmake ninja
 	mkdir -pv $(clsmith_dir)/build
-	cd $(clsmith_dir)/build && $(cmake) .. -G Ninja
+	cd $(clsmith_dir)/build && $(cmake) .. -G Ninja -DCMAKE_MAKE_PROGRAM=$(ninja)
 	cd $(clsmith_dir)/build && $(ninja)
 	cp -v $(clsmith_dir)/runtime/*.h $(clsmith_dir)/build/
 	cp -v $(clsmith_dir)/build/*.h $(clsmith_dir)/runtime/
