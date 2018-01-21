@@ -244,8 +244,8 @@ class Unzip(Task):
 
     def install(self):
         Homebrew().install_package("unzip")
-        brew = Homebrew.BINARY_PATH
-        shell("{brew} link unzip --force")
+        brew = Homebrew.BREW_BINARY
+        shell("{brew} link unzip --force".format(**vars()))
 
     def upgrade(self):
         Homebrew().upgrade_package("unzip")
@@ -288,8 +288,8 @@ class Curl(Task):
 
     def install(self):
         Homebrew().install_package("curl")
-        brew = Homebrew.BINARY_PATH
-        shell("{brew} link curl --force")
+        brew = Homebrew.BREW_BINARY
+        shell("{brew} link curl --force".format(**vars()))
 
     def upgrade(self):
         Homebrew().upgrade_package("curl")
