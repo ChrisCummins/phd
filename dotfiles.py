@@ -699,6 +699,7 @@ class Linters(Task):
         '/usr/local/bin/csslint',
         '/usr/local/bin/pycodestyle',
         '~/.config/pycodestyle',
+        '~/go/bin/protoc-gen-lint',
     ]
     __versions__ = {
         "cpplint": "1.3.0",
@@ -712,6 +713,7 @@ class Linters(Task):
         Python().pip_install("pycodestyle", version=self.__versions__["pycodestyle"],
                              pip="pip3.6")
         Homebrew().install_package("tidy-html5")
+        Go().get('github.com/ckaznocha/protoc-gen-lint')
 
         mkdir("~/.config")
         symlink(usr_share("linters/pycodestyle"), "~/.config/pycodestyle")
@@ -1158,6 +1160,22 @@ class Java(Task):
 
     def upgrade_osx(self):
         Homebrew().upgrade_cask('java8')
+
+
+class Go(Task):
+    """ go compiler """
+    __platforms__ = ['linux', 'osx']
+    __deps__ = ['Homebrew']
+    __genfiles__ = ['/usr/local/bin/go']
+
+    def install(self):
+        Homebrew().install_package('go')
+
+    def upgrade(self):
+        Homebrew().upgrade_package('go')
+
+    def get(self, package):
+        shell("cd ~ && go get {package}".format(**vars()))
 
 
 class OmniFocus(Task):
