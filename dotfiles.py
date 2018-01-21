@@ -71,6 +71,7 @@ class Homebrew(Task):
 
         if not os.path.exists('/home/linuxbrew/.linuxbrew/bin/brew'):
             shell('yes | sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"')
+            shell('{brew} update'.format(brew=self.BREW_BINARY))
 
     def package_is_installed(self, package):
         """ return True if package is installed """
