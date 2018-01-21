@@ -109,6 +109,7 @@ $(llvm_src)/include/llvm/CMakeLists.txt: $(llvm_tars)
 	$(call unpack-llvm-tar,projects/libcxx,libcxx)
 	$(call unpack-llvm-tar,projects/libcxxabi,libcxxabi)
 	patch -p0 < make/patches/llvm/$(llvm_version)/FindAllSymbolsMain.cpp.patch
+	mkdir -pv $(dir $@)
 	touch $@
 else
 $(llvm_src)/include/llvm/CMakeLists.txt: $(llvm_tars)
@@ -116,6 +117,7 @@ $(llvm_src)/include/llvm/CMakeLists.txt: $(llvm_tars)
 	$(call unpack-llvm-tar,tools/clang,cfe)
 	$(call unpack-llvm-tar,tools/clang/tools/extra,clang-tools-extra)
 	patch -p0 < make/patches/llvm/$(llvm_version)/FindAllSymbolsMain.cpp.patch
+	mkdir -pv $(dir $@)
 	touch $@
 endif
 
@@ -130,6 +132,7 @@ $(llvm): $(llvm_src)/include/llvm/CMakeLists.txt $(cmake) $(ninja)
 	mkdir -p $(llvm_build)
 	cd $(llvm_build) && $(cmake) $(llvm_src) $(llvm_cmake_flags)
 	cd $(llvm_build) && $(ninja)
+	mkdir -pv $(dir $@)
 	touch $@
 
 .PHONY: distclean-llvm
