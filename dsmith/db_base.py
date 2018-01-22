@@ -51,27 +51,31 @@ session_t = sql.orm.session.Session
 query_t = sql.orm.query.Query
 
 
-def make_engine(language: str, engine: str=dsmith.DB_ENGINE) -> sql.engine.Engine:
+def make_engine(**kwargs) -> sql.engine.Engine:
     """
     Raises:
         ValueError: If DB_ENGINE config value is invalid.
     """
-    name = f"dsmith_{dsmith.version_info.major}{dsmith.version_info.minor}"
+    prefix = kwargs.get("prefix", "")
+    engine = kwargs.get("engine", dsmith.DB_ENGINE)
+
+    name = f"{prefix}dsmith_{dsmith.version_info.major}{dsmith.version_info.minor}"
 
     if engine == "mysql":
-        username, password = dsmith.DB_CREDENTIALS
-        hostname = dsmith.DB_HOSTNAME
-        port = str(dsmith.DB_PORT)
+        username, password = kwargs.get("credentials", dsmith.DB_CREDENTIALS)
+        hostname = kwargs.get("hostname", dsmith.DB_HOSTNAME)
+        port = str(kwargs.get("port", dsmith.DB_PORT))
 
         # Use UTF-8 encoding (default is latin-1) when connecting to MySQL.
         # See: https://stackoverflow.com/a/16404147/1318051
         public_uri = f"mysql://{username}@{hostname}:{port}/{name}?charset=utf8".format(**vars())
         uri = f"mysql+mysqldb://{username}:{password}@{hostname}:{port}/{name}?charset=utf8"
     elif engine == "sqlite":
-        if not dsmith.DB_DIR:
+        db_dir = kwargs.get("db_dir", dsmith.DB_DIR)
+        if not db_dir:
             raise ValueError(f"no database directory specified")
-        fs.mkdir(dsmith.DB_DIR)  # create directory if it doesn't already exist
-        path = fs.path(dsmith.DB_DIR, f"{name}.db")
+        fs.mkdir(db_dir)  # create directory if it doesn't already exist
+        path = fs.path(db_dir, f"{name}.db")
         uri = f"sqlite:///{path}"
         public_uri = uri
     else:

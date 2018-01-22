@@ -1,0 +1,94 @@
+syntax = "proto3";
+
+message Timing {
+  string client = 1;  // name of the client. E.g. $HOSTNAME.
+  string event = 2;
+  float time = 3;
+}
+
+message Testcase {
+  // string id = 1;
+  string generator = 2;
+  string input = 3;
+  repeated string opts = 4;
+  repeated Timing timings = 5;
+}
+
+message Harness {
+  // string id = 1;
+  string name = 2;
+  string version = 3;
+}
+
+message Testbed {
+  // string id = 1;
+  string lang = 2;
+  string name = 3;
+  string version = 4;
+  // repeated string opt = 5;
+}
+
+message Result {
+  // string id = 1;
+  Testcase testcase = 2;
+  Testbed testbed = 3;
+  Harness harness = 4;
+  int32 returncode = 5;
+  string stdout = 6;
+  string stderr = 7;
+  repeated Timing timings = 9;
+}
+
+message ResultsBatch {
+  message Result {
+    Testcase testcase = 1;
+    int32 returncode = 2;
+    string stdout = 3;
+    string stderr = 4;
+  }
+
+  Testbed testbed = 2;
+  Harness harness = 3;
+  repeated Result results = 4;
+}
+
+
+//
+// RPCs
+//
+
+// SubmitTestcases
+
+message SubmitTestcasesRequest {
+  repeated Testcase testcases = 2;
+}
+
+message SubmitTestcasesResponse {
+}
+
+// GetTestcases
+
+message GetTestcaseRequest {
+  string client = 1;  // name of the client. E.g. $HOSTNAME.
+  Harness harness = 2;
+  Testbed testbed = 3;
+}
+
+message GetTestcaseResponse {
+  repeated Testcase testcases = 1;
+}
+
+// SubmitTestcases
+
+message SubmitResultsRequest {
+  ResultsBatch results = 1;
+}
+
+message SubmitResultsResponse {
+}
+
+service TestingService {
+  rpc SubmitTestcases (SubmitTestcasesRequest) returns (SubmitTestcasesResponse);
+  rpc GetTestCases (GetTestcaseRequest) returns (GetTestcaseResponse);
+  rpc SubmitResults (SubmitResultsRequest) returns (SubmitResultsResponse);
+}
