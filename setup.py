@@ -74,7 +74,7 @@ def all_module_data_files(module, datadir="data", excludes=[]):
 
 setup(
     name='dsmith',
-    version='0.4.0.dev0',
+    version='1.0.0',
     description='Compiler Fuzzing through Deep Learning',
     url='https://github.com/ChrisCummins/dsmith',
     author='Chris Cummins',
