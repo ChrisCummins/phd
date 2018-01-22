@@ -159,7 +159,7 @@ def main():
         cfg = {
             "cuda": args.with_cuda_backend,
             "opencl": args.with_opencl,
-            "version": "1.0.0",
+            "version": "1.0.0.dev0",
             "dsmith_dir": pwd,
             "llvm_trunk": args.with_llvm_trunk,
             "llvm_50": args.with_llvm_50,
