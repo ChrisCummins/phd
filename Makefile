@@ -70,11 +70,18 @@ test: $(test_targets)
 
 
 # protocol buffers
-protobuf = dsmith/opencl/opencl_pb2.py
+protobuf = \
+	dsmith/opencl/opencl_pb2.py \
+	dsmith/dsmith_pb2.py \
+	dsmith/dsmith_pb2_grpc.py
+
 protobuf: $(python_packages) $(protobuf)
 
 dsmith/opencl/opencl_pb2.py: dsmith/opencl/opencl.proto $(venv_activate)
 	cd $(dir $@) && $(venv) protoc $(notdir $<) --python_out=.
+
+dsmith/dsmith_pb2.py dsmith/dsmith_pb2_grpc.py: dsmith/protos/dsmith.proto
+	$(venv) python -m grpc_tools.protoc -Idsmith/protos --python_out=dsmith --grpc_python_out=dsmith $<
 
 
 # python packages
