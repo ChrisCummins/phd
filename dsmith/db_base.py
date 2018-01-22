@@ -82,6 +82,7 @@ def make_engine(**kwargs) -> sql.engine.Engine:
         raise ValueError(f"unsupported database engine {engine}")
 
     # Determine whether to enable logging of SQL statements:
+    print("echo", os.environ.get("DB_DEBUG", False))
     echo = True if os.environ.get("DB_DEBUG", None) else False
 
     logging.debug(f"connecting to database {Colors.BOLD}{public_uri}{Colors.END}")

@@ -31,6 +31,7 @@ from sqlalchemy import PrimaryKeyConstraint
 from sqlalchemy import SmallInteger
 from sqlalchemy import String
 from sqlalchemy import UnicodeText
+from sqlalchemy import UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import sessionmaker
@@ -49,8 +50,6 @@ from dsmith.db_base import *
 # Global state to manage database connections. Must call init() before
 # creating sessions.
 Base = declarative_base()
-engine = None
-make_session = None
 
 now = datetime.datetime.utcnow
 
@@ -67,19 +66,16 @@ def init(**kwargs) -> str:
     Raises:
         ValueError: In case of error.
     """
-    global engine
-    global make_session
-
-    engine, public_uri = db_base.make_engine(**kwargs)
+    engine, _ = db_base.make_engine(**kwargs)
     Base.metadata.create_all(engine)
     Base.metadata.bind = engine
     make_session = sessionmaker(bind=engine)
 
-    return public_uri
+    return make_session
 
 
 @contextmanager
-def Session(commit: bool=False) -> session_t:
+def Session(make_session, commit: bool=False) -> session_t:
     """Provide a transactional scope around a series of operations."""
     session = make_session()
     try:
@@ -93,6 +89,25 @@ def Session(commit: bool=False) -> session_t:
         session.close()
 
 
+@contextmanager
+def ReuseSession(make_session, session: session_t=None, commit: bool=False) -> session_t:
+    """
+    Same as Session(), except if called with an existing `session` object, it
+    will use that rather than creating a new one.
+    """
+    s = session or make_session()
+    try:
+        yield s
+        if commit:
+            s.commit()
+    except:
+        s.rollback()
+        raise
+    finally:
+        if session is None:
+            s.close()
+
+
 # Tables ######################################################################
 
 
@@ -103,7 +118,7 @@ class Client(Base):
     # Columns:
     id: int = Column(id_t, primary_key=True)
     date_added: datetime = Column(DateTime, nullable=False, default=now)
-    client: str = Column(String(512), nullable=False)
+    client: str = Column(String(512), nullable=False, unique=True)
 
     # Relationships:
     events: List['Event'] = relationship("Event", back_populates="client")
@@ -130,7 +145,7 @@ class Generator(Base):
     # Columns:
     id: int = Column(id_t, primary_key=True)
     date_added: datetime = Column(DateTime, nullable=False, default=now)
-    generator: str = Column(String(128), nullable=False)
+    generator: str = Column(String(128), nullable=False, unique=True)
 
     # Relationships:
     testcases: List['Testcase'] = relationship("Testcase", back_populates="generator")
@@ -143,6 +158,7 @@ class TestcaseInput(Base):
     # Columns:
     id: int = Column(id_t, primary_key=True)
     date_added: datetime = Column(DateTime, nullable=False, default=now)
+    sha1: str = Column(String(40), nullable=False, unique=True, index=True)
     input: str = Column(UnicodeText(length=2**31), nullable=False)
 
     # Relationships:
@@ -163,12 +179,17 @@ class Testcase(Base):
     generator: "Generator" = relationship("Generator", back_populates="testcases")
     input: "TestcaseInput" = relationship("TestcaseInput", back_populates="testcases")
     opts: "TestcaseOpt" = relationship("TestcaseOpt", back_populates="testcases")
-    results: List["Result"] = relationship("Result", back_populates="testcase")
-    timings: List["TimingTiming"] = relationship("TestcaseTiming", back_populates="testcase")
     opts = relationship(
         "TestcaseOpt", secondary="testcase_opt_associations",
         primaryjoin="TestcaseOptAssociation.testcase_id == Testcase.id",
         secondaryjoin="TestcaseOptAssociation.opt_id == TestcaseOpt.id")
+    timings: List["TimingTiming"] = relationship("TestcaseTiming", back_populates="testcase")
+    results: List["Result"] = relationship("Result", back_populates="testcase")
+
+    # Constraints:
+    __table_args__ = (
+        UniqueConstraint('generator_id', 'input_id', name='uniq_testcases'),
+    )
 
 
 class TestcaseOpt(Base):
@@ -178,7 +199,7 @@ class TestcaseOpt(Base):
     # Columns:
     id: int = Column(id_t, primary_key=True)
     date_added: datetime = Column(DateTime, nullable=False, default=now)
-    opt: str = Column(String(1024), nullable=False)
+    opt: str = Column(String(1024), nullable=False, unique=True)
 
     # Relationships:
     # testcases: List["Testcase"] = relationship("Testcase", back_populates="opts")
@@ -194,6 +215,10 @@ class TestcaseOptAssociation(Base):
     __table_args__ = (
         PrimaryKeyConstraint('testcase_id', 'opt_id', name='_uid'),)
 
+    # Relationships:
+    testcase: Testcase = relationship("Testcase")
+    opt: TestcaseOpt = relationship("TestcaseOpt")
+
 
 class TestcaseTiming(Base):
     id_t = Integer
@@ -208,6 +233,12 @@ class TestcaseTiming(Base):
 
     # Relationships:
     testcase: Testcase = relationship("Testcase", back_populates="timings")
+    event: Event = relationship("Event")
+
+    # Constraints:
+    __table_args__ = (
+        UniqueConstraint('testcase_id', 'event_id', name='unique_testcase_timing'),
+    )
 
 
 class Harness(Base):
@@ -223,6 +254,11 @@ class Harness(Base):
     # Relationships:
     results: List["Result"] = relationship("Result", back_populates="harness")
 
+    # Constraints:
+    __table_args__ = (
+        UniqueConstraint('name', 'version', name='unique_harness'),
+    )
+
 
 class Language(Base):
     id_t = Integer
@@ -231,7 +267,7 @@ class Language(Base):
     # Columns:
     id: int = Column(id_t, primary_key=True)
     date_added: datetime = Column(DateTime, nullable=False, default=now)
-    name: str = Column(String(256), nullable=False)
+    name: str = Column(String(256), nullable=False, unique=True)
 
     # Relationships:
     testbeds: List["Testbed"] = relationship("Testbed", back_populates="lang")
@@ -251,6 +287,11 @@ class Testbed(Base):
     # Relationships:
     lang: Language = relationship("Language", back_populates="testbeds")
     results: List["Result"] = relationship("Result", back_populates="testbed")
+
+    # Constraints:
+    __table_args__ = (
+        UniqueConstraint('lang_id', 'name', 'version', name='unique_testbed'),
+    )
 
 
 class Stdout(Base):
@@ -301,3 +342,8 @@ class Result(Base):
     harness: Harness = relationship("Harness", back_populates="results")
     stdout: Stdout = relationship("Stdout", back_populates="results")
     stderr: Stderr = relationship("Stderr", back_populates="results")
+
+    # Constraints:
+    __table_args__ = (
+        UniqueConstraint('testcase_id', 'testbed_id', 'harness_id', name='unique_result'),
+    )
