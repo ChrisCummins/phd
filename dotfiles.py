@@ -1458,7 +1458,7 @@ class Phd(Task):
     __genfiles__ = ['~/phd']
 
     def install(self):
-        clone_git_repo(github_repo("ChrisCummins", "phd.git"), "~/phd")
+        clone_git_repo(github_repo("ChrisCummins", "phd"), "~/phd")
         shell("~/phd/tools/bootstrap.sh | bash")
 
 
