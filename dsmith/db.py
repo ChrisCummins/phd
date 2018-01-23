@@ -41,7 +41,6 @@ from typing import Tuple
 from typing import Union
 
 import dsmith
-from dsmith import Colors
 
 
 # Type aliases:

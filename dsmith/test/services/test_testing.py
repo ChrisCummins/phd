@@ -23,7 +23,7 @@ from dsmith import test as tests
 from dsmith import datastore
 from dsmith import db
 from dsmith import dsmith_pb2 as pb
-from dsmith import server
+from dsmith.services import testing as testing_service
 
 
 @pytest.fixture
@@ -33,7 +33,7 @@ def ds():
 
 
 def test_service_empty(ds):
-    service = server.TestingService(ds)
+    service = testing_service.TestingService(ds)
     request = pb.SubmitTestcasesRequest(testcases=[])
     response = service.SubmitTestcases(request, None)
     assert type(response) == pb.SubmitTestcasesResponse
@@ -48,7 +48,7 @@ def test_service_empty(ds):
 
 
 def test_service_add_one(ds):
-    service = server.TestingService(ds)
+    service = testing_service.TestingService(ds)
     testcases = [
         pb.Testcase(
             generator="foo",
@@ -74,7 +74,7 @@ def test_service_add_one(ds):
 
 
 def test_service_add_two(ds):
-    service = server.TestingService(ds)
+    service = testing_service.TestingService(ds)
     testcases = [
         pb.Testcase(
             generator="foo",
@@ -110,7 +110,7 @@ def test_service_add_two(ds):
 
 
 def test_service_add_duplicate(ds):
-    service = server.TestingService(ds)
+    service = testing_service.TestingService(ds)
     testcases = [
         pb.Testcase(generator="foo", input="input"),
         pb.Testcase(generator="foo", input="input"),

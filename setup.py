@@ -82,6 +82,7 @@ setup(
     license='GNU General Public License, Version 3',
     packages=[
         'dsmith',
+        'dsmith.services',
         'dsmith.glsl',
         'dsmith.opencl',
         'dsmith.sol',
