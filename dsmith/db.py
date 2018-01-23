@@ -34,7 +34,6 @@ from sqlalchemy import UnicodeText
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from sqlalchemy.orm import sessionmaker
 from typing import Dict
 from typing import Iterable
 from typing import List
@@ -52,60 +51,6 @@ from dsmith.db_base import *
 Base = declarative_base()
 
 now = datetime.datetime.utcnow
-
-
-def init(**kwargs) -> str:
-    """
-    Initialize database engine.
-
-    Must be called before attempt to create a database connection.
-
-    Returns:
-        str: URI of database.
-
-    Raises:
-        ValueError: In case of error.
-    """
-    engine, _ = db_base.make_engine(**kwargs)
-    Base.metadata.create_all(engine)
-    Base.metadata.bind = engine
-    make_session = sessionmaker(bind=engine)
-
-    return make_session
-
-
-@contextmanager
-def Session(make_session, commit: bool=False) -> session_t:
-    """Provide a transactional scope around a series of operations."""
-    session = make_session()
-    try:
-        yield session
-        if commit:
-            session.commit()
-    except:
-        session.rollback()
-        raise
-    finally:
-        session.close()
-
-
-@contextmanager
-def ReuseSession(make_session, session: session_t=None, commit: bool=False) -> session_t:
-    """
-    Same as Session(), except if called with an existing `session` object, it
-    will use that rather than creating a new one.
-    """
-    s = session or make_session()
-    try:
-        yield s
-        if commit:
-            s.commit()
-    except:
-        s.rollback()
-        raise
-    finally:
-        if session is None:
-            s.close()
 
 
 # Tables ######################################################################

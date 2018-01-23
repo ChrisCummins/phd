@@ -29,21 +29,21 @@ from dsmith import dsmith_pb2_grpc as rpc
 
 class TestingService(rpc.TestingServiceServicer):
     """ """
+    def __init__(self, ds: datastore.DataStore):
+        self.ds = ds
+
     def SubmitTestcases(self, request: pb.SubmitTestcasesRequest,
                         context) -> pb.SubmitTestcasesResponse:
         """ Submit test cases. """
-        with db.Session(db.init()) as session:
-            for testcase in request.testcases:
-                datastore.add_testcase(session, testcase)
-            session.commit()
-
+        self.ds.add_testcases(request.testcases)
         return pb.SubmitTestcasesResponse()
 
 
-def serve(port: int=50051):
+def main(port: int=50051):
     """ Spool up a local server. """
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    rpc.add_TestingServiceServicer_to_server(TestingService(), server)
+    service = TestingService(db.DatabaseContext())
+    rpc.add_TestingServiceServicer_to_server(service, server)
     server.add_insecure_port(f"[::]:{port}")
     server.start()
 
@@ -55,4 +55,4 @@ def serve(port: int=50051):
 
 
 if __name__ == '__main__':
-    serve()
+    main()
