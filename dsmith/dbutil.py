@@ -43,12 +43,9 @@ from time import time
 from typing import Dict, Iterable, List, Tuple, Union
 
 import dsmith
+from dsmith import db
 from dsmith import Colors
 from dsmith.langs import Language
-
-
-session_t = sql.orm.session.Session
-query_t = sql.orm.query.Query
 
 
 def make_engine(**kwargs) -> sql.engine.Engine:
@@ -112,7 +109,7 @@ def get_or_add(session: sql.orm.session.Session, model,
     return instance
 
 
-def paginate(query: query_t, page_size: int=1000):
+def paginate(query: db.query_t, page_size: int=1000):
     """
     Paginate query results.
     """
@@ -133,14 +130,14 @@ class Proxy(object):
     database record, without needing to be bound to the lifetime of a database
     session.
     """
-    def to_record(self, session: session_t) -> 'Base':
+    def to_record(self, session: db.session_t) -> 'Base':
         """
         Instantiate a database record from this proxy.
         """
         raise NotImplementedError("abstract class")
 
 
-def save_proxies(session: session_t, proxies: List[Proxy],
+def save_proxies(session: db.session_t, proxies: List[Proxy],
                  max_attempts: int=3) -> None:
     """
     Convert a set of proxy objects in to database records and save them.
@@ -152,13 +149,13 @@ def save_proxies(session: session_t, proxies: List[Proxy],
         session, [proxy.to_record(session) for proxy in proxies], max_attempts)
 
 
-def save_proxies_uniq_on(session: session_t, proxies: List[Proxy], uniq_on: str,
+def save_proxies_uniq_on(session: db.session_t, proxies: List[Proxy], uniq_on: str,
                          max_attempts: int=3) -> int:
     return save_records_uniq_on(
         session, [proxy.to_record(session) for proxy in proxies], uniq_on, max_attempts)
 
 
-def save_records_uniq_on(session: session_t, records: List["Base"], uniq_on: str,
+def save_records_uniq_on(session: db.session_t, records: List["Base"], uniq_on: str,
                          max_attempts: int=3) -> int:
     """ Save records which are unique on some column value. """
     # Break early if possible
@@ -184,7 +181,7 @@ def save_records_uniq_on(session: session_t, records: List["Base"], uniq_on: str
     return nuniq
 
 
-def save_records(session: session_t, records: List['Base'],
+def save_records(session: db.session_t, records: List['Base'],
                  max_attempts: int=3, attempt: int=1,
                  exception=None) -> None:
     """

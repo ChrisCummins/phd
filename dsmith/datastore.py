@@ -25,21 +25,21 @@ from sqlalchemy.orm import sessionmaker
 import dsmith
 
 from dsmith import db
-from dsmith import db_base
+from dsmith import dbutil
 from dsmith import dsmith_pb2 as pb
-from dsmith.db_base import get_or_add
 
 
 class DataStore(object):
+    """ The centralized data store. """
     def __init__(self, **db_opts):
         self.opts = db_opts
-        self._engine, _ = db_base.make_engine(**self.opts)
+        self._engine, _ = dbutil.make_engine(**self.opts)
         db.Base.metadata.create_all(self._engine)
         db.Base.metadata.bind = self._engine
         self._make_session = sessionmaker(bind=self._engine)
 
     @contextmanager
-    def session(self, commit: bool=False) -> db_base.session_t:
+    def session(self, commit: bool=False) -> db.session_t:
         session = self._make_session()
         try:
             yield session
@@ -52,31 +52,34 @@ class DataStore(object):
             session.close()
 
     def add_testcases(self, testcases: List[pb.Testcase]) -> None:
+        """
+        Add a sequence of testcases to the datastore.
+
+        TODO: Optimize to reduce the number of SQL queries by batching lookups/inserts.
+        """
         with self.session(commit=True) as session:
             for testcase in testcases:
-                self._add_testcase(session, testcase)
+                self._add_one_testcase(session, testcase)
 
-    def _add_testcase(self, session: db_base.session_t, testcase_pb: pb.Testcase) -> None:
+    def _add_one_testcase(self, session: db.session_t, testcase_pb: pb.Testcase) -> None:
         # Add generator:
-        generator = db_base.get_or_add(session, db.Generator, generator=testcase_pb.generator)
+        generator = dbutil.get_or_add(session, db.Generator, generator=testcase_pb.generator)
 
         # Add input:
         sha1 = crypto.sha1_str(testcase_pb.input)
-        input = db_base.get_or_add(
-            session, db.TestcaseInput, sha1=sha1, input=testcase_pb.input)
+        input = dbutil.get_or_add(session, db.TestcaseInput, sha1=sha1, input=testcase_pb.input)
 
         # Add testcase:
-        testcase = db_base.get_or_add(
-            session, db.Testcase, generator=generator, input=input)
+        testcase = dbutil.get_or_add(session, db.Testcase, generator=generator, input=input)
 
         # Add options:
         for opt_ in testcase_pb.opts:
-            opt = db_base.get_or_add(session, db.TestcaseOpt, opt=opt_)
-            get_or_add(session, db.TestcaseOptAssociation, testcase=testcase, opt=opt)
+            opt = dbutil.get_or_add(session, db.TestcaseOpt, opt=opt_)
+            dbutil.get_or_add(session, db.TestcaseOptAssociation, testcase=testcase, opt=opt)
 
         # Add timings:
         for timings_ in testcase_pb.timings:
-            client = db_base.get_or_add(session, db.Client, client=timings_.client)
-            event = db_base.get_or_add(session, db.Event, event=timings_.event, client=client)
-            timing = db_base.get_or_add(session, db.TestcaseTiming, testcase=testcase,
-                                        event=event, time=timings_.time)
+            client = dbutil.get_or_add(session, db.Client, client=timings_.client)
+            event = dbutil.get_or_add(session, db.Event, event=timings_.event, client=client)
+            timing = dbutil.get_or_add(session, db.TestcaseTiming, testcase=testcase,
+                                       event=event, time=timings_.time)

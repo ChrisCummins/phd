@@ -18,7 +18,7 @@
 """
 Database backend.
 """
-import sqlalchemy
+import sqlalchemy as sql
 
 from contextlib import contextmanager
 from datetime import datetime
@@ -42,15 +42,17 @@ from typing import Union
 
 import dsmith
 from dsmith import Colors
-from dsmith import db_base
-from dsmith.db_base import *
 
 
-# Global state to manage database connections. Must call init() before
-# creating sessions.
+# Type aliases:
+session_t = sql.orm.session.Session
+query_t = sql.orm.query.Query
+
+# SQLAlchemy:
 Base = declarative_base()
 
-now = datetime.datetime.utcnow
+# Shorthand:
+now = datetime.utcnow
 
 
 # Tables ######################################################################
