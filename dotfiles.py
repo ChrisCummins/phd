@@ -1013,19 +1013,21 @@ class Plex(Task):
 
 
 class Trash(Task):
-    VERSION = '1.4.0'
+    TRASH_BIN = Homebrew.bin('trash')
 
     __platforms__ = ['linux', 'osx']
     __deps__ = ['Node']
-    __genfiles__ = ['/usr/local/bin/trash']
+    __genfiles__ = [TRASH_BIN]
+    __versions__ = {"trash-cli": "1.4.0"}
 
     def install(self):
-        Node().npm_install('trash-cli', self.VERSION)
+        Node().npm_install('trash-cli', self.__versions__["trash-cli"])
 
     def trash(self, *paths):
         for path in paths:
+            trash_bin = self.TRASH_BIN
             path = os.path.expanduser(path)
-            shell("/usr/local/bin/trash '{path}'".format(**vars()))
+            shell("{trash_bin} '{path}'".format(**vars()))
 
 
 class Emacs(Task):
@@ -1193,7 +1195,7 @@ class Go(Task):
     """ go compiler """
     __platforms__ = ['linux', 'osx']
     __deps__ = ['Homebrew']
-    __genfiles__ = ['/usr/local/bin/go']
+    __genfiles__ = [Homebrew.bin("go")]
 
     def install(self):
         Homebrew().install_package('go')
