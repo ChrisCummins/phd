@@ -97,6 +97,29 @@ class Generator(Base):
     testcases: List['Testcase'] = relationship("Testcase", back_populates="generator")
 
 
+class Testcase(Base):
+    id_t = Integer
+    __tablename__ = "testcases"
+
+    # Columns:
+    id: int = Column(id_t, primary_key=True)
+    date_added: datetime = Column(DateTime, nullable=False, default=now)
+    generator_id: int = Column(Generator.id_t, ForeignKey("generators.id"), nullable=False)
+
+    # Relationships:
+    generator: "Generator" = relationship("Generator", back_populates="testcases")
+    inputs = relationship(
+        "TestcaseInput", secondary="testcase_input_associations",
+        primaryjoin="TestcaseInputAssociation.testcase_id == Testcase.id",
+        secondaryjoin="TestcaseInputAssociation.input_id == TestcaseInput.id")
+    opts = relationship(
+        "TestcaseOpt", secondary="testcase_opt_associations",
+        primaryjoin="TestcaseOptAssociation.testcase_id == Testcase.id",
+        secondaryjoin="TestcaseOptAssociation.opt_id == TestcaseOpt.id")
+    timings: List["TimingTiming"] = relationship("TestcaseTiming", back_populates="testcase")
+    results: List["Result"] = relationship("Result", back_populates="testcase")
+
+
 class TestcaseInput(Base):
     id_t = Integer
     __tablename__ = "testcase_inputs"
@@ -107,35 +130,19 @@ class TestcaseInput(Base):
     sha1: str = Column(String(40), nullable=False, unique=True, index=True)
     input: str = Column(UnicodeText(length=2**31), nullable=False)
 
-    # Relationships:
-    testcases: List['Testcase'] = relationship("Testcase", back_populates="input")
 
-
-class Testcase(Base):
-    id_t = Integer
-    __tablename__ = "testcases"
+class TestcaseInputAssociation(Base):
+    __tablename__ = "testcase_input_associations"
 
     # Columns:
-    id: int = Column(id_t, primary_key=True)
-    date_added: datetime = Column(DateTime, nullable=False, default=now)
-    generator_id: int = Column(Generator.id_t, ForeignKey("generators.id"), nullable=False)
+    testcase_id: int = Column(Testcase.id_t, ForeignKey("testcases.id"), nullable=False)
     input_id: int = Column(TestcaseInput.id_t, ForeignKey("testcase_inputs.id"), nullable=False)
+    __table_args__ = (
+        PrimaryKeyConstraint('testcase_id', 'input_id', name='unique_testcase_input'),)
 
     # Relationships:
-    generator: "Generator" = relationship("Generator", back_populates="testcases")
-    input: "TestcaseInput" = relationship("TestcaseInput", back_populates="testcases")
-    opts: "TestcaseOpt" = relationship("TestcaseOpt", back_populates="testcases")
-    opts = relationship(
-        "TestcaseOpt", secondary="testcase_opt_associations",
-        primaryjoin="TestcaseOptAssociation.testcase_id == Testcase.id",
-        secondaryjoin="TestcaseOptAssociation.opt_id == TestcaseOpt.id")
-    timings: List["TimingTiming"] = relationship("TestcaseTiming", back_populates="testcase")
-    results: List["Result"] = relationship("Result", back_populates="testcase")
-
-    # Constraints:
-    __table_args__ = (
-        UniqueConstraint('generator_id', 'input_id', name='uniq_testcases'),
-    )
+    testcase: Testcase = relationship("Testcase")
+    input: TestcaseInput = relationship("TestcaseInput")
 
 
 class TestcaseOpt(Base):
@@ -152,7 +159,6 @@ class TestcaseOpt(Base):
 
 
 class TestcaseOptAssociation(Base):
-    id_t = Integer
     __tablename__ = "testcase_opt_associations"
 
     # Columns:
@@ -175,7 +181,8 @@ class TestcaseTiming(Base):
     date_added: datetime = Column(DateTime, nullable=False, default=now)
     testcase_id: int = Column(Testcase.id_t, ForeignKey("testcases.id"), nullable=False)
     event_id: int = Column(Event.id_t, ForeignKey("events.id"), nullable=False)
-    time: float = Column(Float, nullable=False)
+    duration: float = Column(Float, nullable=False)
+    date: datetime = Column(DateTime, nullable=False)
 
     # Relationships:
     testcase: Testcase = relationship("Testcase", back_populates="timings")
@@ -240,34 +247,6 @@ class Testbed(Base):
     )
 
 
-class Stdout(Base):
-    id_t = Integer
-    __tablename__ = "stdouts"
-
-    # Columns:
-    id: int = Column(id_t, primary_key=True)
-    date_added: datetime = Column(DateTime, nullable=False, default=now)
-    sha1: str = Column(String(40), nullable=False, unique=True, index=True)
-    stdout: str = Column(UnicodeText(length=2**31), nullable=False)
-
-    # Relationships:
-    results: List["Result"] = relationship("Result", back_populates="stdout")
-
-
-class Stderr(Base):
-    id_t = Integer
-    __tablename__ = "stderrs"
-
-    # Columns:
-    id: int = Column(id_t, primary_key=True)
-    date_added: datetime = Column(DateTime, nullable=False, default=now)
-    sha1: str = Column(String(40), nullable=False, unique=True, index=True)
-    stderr: str = Column(UnicodeText(length=2**31), nullable=False)
-
-    # Relationships:
-    results: List["Result"] = relationship("Result", back_populates="stderr")
-
-
 class Result(Base):
     id_t = Integer
     __tablename__ = "results"
@@ -279,17 +258,65 @@ class Result(Base):
     testbed_id: int = Column(Testbed.id_t, ForeignKey("testbeds.id"), nullable=False)
     harness_id: int = Column(Harness.id_t, ForeignKey("harnesses.id"), nullable=False)
     returncode: int = Column(SmallInteger, nullable=False)
-    stdout_id: int = Column(Stdout.id_t, ForeignKey("stdouts.id"), nullable=False)
-    stderr_id: int = Column(Stderr.id_t, ForeignKey("stderrs.id"), nullable=False)
 
     # Relationships:
     testcase: Testcase = relationship("Testcase", back_populates="results")
     testbed: Testbed = relationship("Testbed", back_populates="results")
     harness: Harness = relationship("Harness", back_populates="results")
-    stdout: Stdout = relationship("Stdout", back_populates="results")
-    stderr: Stderr = relationship("Stderr", back_populates="results")
+    outputs = relationship(
+        "ResultOutput", secondary="result_output_associations",
+        primaryjoin="ResultOutputAssociation.result_id == Result.id",
+        secondaryjoin="ResultOutputAssociation.output_id == ResultOutput.id")
+    timings: List["ResultTiming"] = relationship("ResultTiming", back_populates="result")
 
     # Constraints:
     __table_args__ = (
         UniqueConstraint('testcase_id', 'testbed_id', 'harness_id', name='unique_result'),
+    )
+
+
+class ResultOutput(Base):
+    id_t = Integer
+    __tablename__ = "result_outputs"
+
+    # Columns:
+    id: int = Column(id_t, primary_key=True)
+    date_added: datetime = Column(DateTime, nullable=False, default=now)
+    sha1: str = Column(String(40), nullable=False, unique=True, index=True)
+    output: str = Column(UnicodeText(length=2**31), nullable=False)
+
+
+class ResultOutputAssociation(Base):
+    __tablename__ = "result_output_associations"
+
+    # Columns:
+    result_id: int = Column(Result.id_t, ForeignKey("results.id"), nullable=False)
+    output_id: int = Column(ResultOutput.id_t, ForeignKey("result_outputs.id"), nullable=False)
+    __table_args__ = (
+        PrimaryKeyConstraint('result_id', 'output_id', name='unique_result_output'),)
+
+    # Relationships:
+    result: Testcase = relationship("Result")
+    output: ResultOutput = relationship("ResultOutput")
+
+
+class ResultTiming(Base):
+    id_t = Integer
+    __tablename__ = "result_timings"
+
+    # Columns:
+    id: int = Column(id_t, primary_key=True)
+    date_added: datetime = Column(DateTime, nullable=False, default=now)
+    result_id: int = Column(Result.id_t, ForeignKey("results.id"), nullable=False)
+    event_id: int = Column(Event.id_t, ForeignKey("events.id"), nullable=False)
+    duration: float = Column(Float, nullable=False)
+    date: datetime = Column(DateTime, nullable=False)
+
+    # Relationships:
+    result: Result = relationship("Result", back_populates="timings")
+    event: Event = relationship("Event")
+
+    # Constraints:
+    __table_args__ = (
+        UniqueConstraint('result_id', 'event_id', name='unique_result_timing'),
     )
