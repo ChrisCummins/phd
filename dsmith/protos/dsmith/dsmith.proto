@@ -1,17 +1,20 @@
 syntax = "proto3";
 
 message Timing {
-  string client = 1;  // name of the client. E.g. $HOSTNAME.
-  string event = 2;
-  float time = 3;
+  string client = 2;  // name of the client. E.g. $HOSTNAME.
+  string event = 3;
+  float duration = 4;
+  // Seconds since the epoch of the timing.
+  int64 date_unix_seconds = 5;
 }
 
 message Testcase {
   // string id = 1;
   string generator = 2;
-  string input = 3;
-  repeated string opts = 4;
-  repeated Timing timings = 5;
+  repeated string inputs = 3;
+  Harness harness = 4;
+  repeated string opts = 5;
+  repeated Timing timings = 6;
 }
 
 message Harness {
@@ -25,26 +28,24 @@ message Testbed {
   string lang = 2;
   string name = 3;
   string version = 4;
-  // repeated string opt = 5;
+  repeated string opts = 5;
 }
 
 message Result {
   // string id = 1;
   Testcase testcase = 2;
   Testbed testbed = 3;
-  Harness harness = 4;
-  int32 returncode = 5;
-  string stdout = 6;
-  string stderr = 7;
-  repeated Timing timings = 9;
+  int32 returncode = 4;
+  repeated string outputs = 5;
+  repeated Timing timings = 6;
 }
 
 message ResultsBatch {
   message Result {
-    Testcase testcase = 1;
-    int32 returncode = 2;
-    string stdout = 3;
-    string stderr = 4;
+    Testcase testcase = 2;
+    int32 returncode = 3;
+    string stdout = 4;
+    string stderr = 5;
   }
 
   Testbed testbed = 2;
@@ -69,19 +70,19 @@ message SubmitTestcasesResponse {
 // GetTestcases
 
 message GetTestcaseRequest {
-  string client = 1;  // name of the client. E.g. $HOSTNAME.
-  Harness harness = 2;
-  Testbed testbed = 3;
+  string client = 2;  // name of the client. E.g. $HOSTNAME.
+  Harness harness = 3;
+  Testbed testbed = 4;
 }
 
 message GetTestcaseResponse {
-  repeated Testcase testcases = 1;
+  repeated Testcase testcases = 2;
 }
 
 // SubmitTestcases
 
 message SubmitResultsRequest {
-  ResultsBatch results = 1;
+  ResultsBatch results = 2;
 }
 
 message SubmitResultsResponse {

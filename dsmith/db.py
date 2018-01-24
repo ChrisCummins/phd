@@ -91,10 +91,35 @@ class Generator(Base):
     # Columns:
     id: int = Column(id_t, primary_key=True)
     date_added: datetime = Column(DateTime, nullable=False, default=now)
-    generator: str = Column(String(128), nullable=False, unique=True)
+    name: str = Column(String(1024), nullable=False)
+    version: str = Column(String(1024), nullable=False)
 
     # Relationships:
-    testcases: List['Testcase'] = relationship("Testcase", back_populates="generator")
+    testcases: List["Testcase"] = relationship("Testcase", back_populates="generator")
+
+    # Constraints:
+    __table_args__ = (
+        UniqueConstraint('name', 'version', name='unique_generator'),
+    )
+
+
+class Harness(Base):
+    id_t = Integer
+    __tablename__ = "harnesses"
+
+    # Columns:
+    id: int = Column(id_t, primary_key=True)
+    date_added: datetime = Column(DateTime, nullable=False, default=now)
+    name: str = Column(String(1024), nullable=False)
+    version: str = Column(String(1024), nullable=False)
+
+    # Relationships:
+    testcases: List["Testcase"] = relationship("Testcase", back_populates="harness")
+
+    # Constraints:
+    __table_args__ = (
+        UniqueConstraint('name', 'version', name='unique_harness'),
+    )
 
 
 class Testcase(Base):
@@ -105,9 +130,11 @@ class Testcase(Base):
     id: int = Column(id_t, primary_key=True)
     date_added: datetime = Column(DateTime, nullable=False, default=now)
     generator_id: int = Column(Generator.id_t, ForeignKey("generators.id"), nullable=False)
+    harness_id: int = Column(Harness.id_t, ForeignKey("harnesses.id"), nullable=False)
 
     # Relationships:
     generator: "Generator" = relationship("Generator", back_populates="testcases")
+    harness: "Harness" = relationship("Harness", back_populates="testcases")
     inputs = relationship(
         "TestcaseInput", secondary="testcase_input_associations",
         primaryjoin="TestcaseInputAssociation.testcase_id == Testcase.id",
@@ -194,25 +221,6 @@ class TestcaseTiming(Base):
     )
 
 
-class Harness(Base):
-    id_t = Integer
-    __tablename__ = "harnesses"
-
-    # Columns:
-    id: int = Column(id_t, primary_key=True)
-    date_added: datetime = Column(DateTime, nullable=False, default=now)
-    name: str = Column(String(256), nullable=False)
-    version: str = Column(String(256), nullable=False)
-
-    # Relationships:
-    results: List["Result"] = relationship("Result", back_populates="harness")
-
-    # Constraints:
-    __table_args__ = (
-        UniqueConstraint('name', 'version', name='unique_harness'),
-    )
-
-
 class Language(Base):
     id_t = Integer
     __tablename__ = "languages"
@@ -256,13 +264,11 @@ class Result(Base):
     date_added: datetime = Column(DateTime, nullable=False, default=now)
     testcase_id: int = Column(Testcase.id_t, ForeignKey("testcases.id"), nullable=False)
     testbed_id: int = Column(Testbed.id_t, ForeignKey("testbeds.id"), nullable=False)
-    harness_id: int = Column(Harness.id_t, ForeignKey("harnesses.id"), nullable=False)
     returncode: int = Column(SmallInteger, nullable=False)
 
     # Relationships:
     testcase: Testcase = relationship("Testcase", back_populates="results")
     testbed: Testbed = relationship("Testbed", back_populates="results")
-    harness: Harness = relationship("Harness", back_populates="results")
     outputs = relationship(
         "ResultOutput", secondary="result_output_associations",
         primaryjoin="ResultOutputAssociation.result_id == Result.id",
@@ -271,7 +277,7 @@ class Result(Base):
 
     # Constraints:
     __table_args__ = (
-        UniqueConstraint('testcase_id', 'testbed_id', 'harness_id', name='unique_result'),
+        UniqueConstraint('testcase_id', 'testbed_id', name='unique_result'),
     )
 
 
