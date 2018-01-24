@@ -147,6 +147,19 @@ class Testcase(Base):
     results: List["Result"] = relationship("Result", back_populates="testcase")
 
 
+class TestcaseInputName(Base):
+    id_t = Integer
+    __tablename__ = "testcase_input_names"
+
+    # Columns:
+    id: int = Column(id_t, primary_key=True)
+    date_added: datetime = Column(DateTime, nullable=False, default=now)
+    name: str = Column(String(1024), unique=True, nullable=False)
+
+    # Relationships:
+    inputs: List["TestcaseInput"] = relationship("TestcaseInput", back_populates="name")
+
+
 class TestcaseInput(Base):
     id_t = Integer
     __tablename__ = "testcase_inputs"
@@ -154,8 +167,18 @@ class TestcaseInput(Base):
     # Columns:
     id: int = Column(id_t, primary_key=True)
     date_added: datetime = Column(DateTime, nullable=False, default=now)
-    sha1: str = Column(String(40), nullable=False, unique=True, index=True)
+    name_id: TestcaseInputName.id_t = Column(
+        TestcaseInputName.id_t, ForeignKey("testcase_input_names.id"), nullable=False)
+    sha1: str = Column(String(40), nullable=False, index=True)
     input: str = Column(UnicodeText(length=2**31), nullable=False)
+
+    # Relationships:
+    name: TestcaseInputName = relationship("TestcaseInputName", back_populates="inputs")
+
+    # Constraints:
+    __table_args__ = (
+        UniqueConstraint('name_id', 'sha1', name='unique_testcase_input'),
+    )
 
 
 class TestcaseInputAssociation(Base):
@@ -281,15 +304,46 @@ class Result(Base):
     )
 
 
-class ResultOutput(Base):
+class ResultOutputName(Base):
     id_t = Integer
-    __tablename__ = "result_outputs"
+    __tablename__ = "result_output_names"
 
     # Columns:
     id: int = Column(id_t, primary_key=True)
     date_added: datetime = Column(DateTime, nullable=False, default=now)
-    sha1: str = Column(String(40), nullable=False, unique=True, index=True)
-    output: str = Column(UnicodeText(length=2**31), nullable=False)
+    name: str = Column(String(1024), unique=True, nullable=False)
+
+    # Relationships:
+    outputs: List["ResultOutput"] = relationship("ResultOutput", back_populates="name")
+
+
+class ResultOutput(Base):
+    id_t = Integer
+    __tablename__ = "result_outputs"
+
+    # Truncate everything after
+    MAX_LEN = 128000
+
+    # Columns:
+    id: int = Column(id_t, primary_key=True)
+    date_added: datetime = Column(DateTime, nullable=False, default=now)
+    name_id: ResultOutputName.id_t = Column(
+        ResultOutputName.id_t, ForeignKey("result_output_names.id"), nullable=False)
+    original_sha1: str = Column(String(40), nullable=False, index=True)
+    original_linecount = sql.Column(sql.Integer, nullable=False)
+    original_charcount = sql.Column(sql.Integer, nullable=False)
+    truncated_output: str = Column(UnicodeText(length=MAX_LEN), nullable=False)
+    truncated: bool = sql.Column(sql.Boolean, nullable=False)
+    truncated_linecount = sql.Column(sql.Integer, nullable=False)
+    truncated_charcount = sql.Column(sql.Integer, nullable=False)
+
+    # Relationships:
+    name: ResultOutputName = relationship("ResultOutputName", back_populates="outputs")
+
+    # Constraints:
+    __table_args__ = (
+        UniqueConstraint("name_id", "original_sha1", name="unique_result_output"),
+    )
 
 
 class ResultOutputAssociation(Base):
