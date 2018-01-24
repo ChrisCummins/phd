@@ -4,7 +4,7 @@
 #
 # Uses version numbering scheme <major>.<minor>.<micro>.
 #
-# Copyright (C) 2015, 2016, 2017 Chris Cummins.
+# Copyright (C) 2015, 2016, 2017, 2018 Chris Cummins.
 #
 # This file is part of DeepSmith.
 #

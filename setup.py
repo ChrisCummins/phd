@@ -1,6 +1,6 @@
 # DeepSmith python package details
 #
-# Copyright 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
+# Copyright 2016, 2017, 2018 Chris Cummins <chrisc.101@gmail.com>.
 #
 # This file is part of DeepSmith.
 #
