@@ -58,6 +58,6 @@ clgen
     
     For information about a specific command, run `clgen <command> --help`.
     
-    Copyright (C) 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
+    Copyright (C) 2016, 2017, 2018 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>
 

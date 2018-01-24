@@ -70,7 +70,7 @@ Documentation for the [Python API](http://chriscummins.cc/clgen/api/) and
 
 ## License
 
-Copyright 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
+Copyright 2016, 2017, 2018 Chris Cummins <chrisc.101@gmail.com>.
 
 Released under the terms of the GPLv3 license. See [LICENSE.txt](/LICENSE.txt)
 for details.

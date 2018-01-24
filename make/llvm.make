@@ -6,7 +6,7 @@
 #   * Add $(llvm_CxxFlags) to CFLAGS for files which are include LLVM headers.
 #   * Add $(llvm_LdFlags) to link binaries against LLVM.
 #
-# Copyright 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
+# Copyright 2016, 2017, 2018 Chris Cummins <chrisc.101@gmail.com>.
 #
 # This file is part of CLgen.
 #

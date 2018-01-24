@@ -2,7 +2,7 @@
 #
 # One-liner to install dependencies for CLgen 0.4.0.dev0.
 #
-# Copyright 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
+# Copyright 2016, 2017, 2018 Chris Cummins <chrisc.101@gmail.com>.
 #
 # Adapted from Torch's install-deps script, see:
 #     https://github.com/torch/distro
