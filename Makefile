@@ -80,8 +80,8 @@ protobuf: $(python_packages) $(protobuf)
 dsmith/opencl/opencl_pb2.py: dsmith/opencl/opencl.proto $(venv_activate)
 	cd $(dir $@) && $(venv) protoc $(notdir $<) --python_out=.
 
-dsmith/dsmith_pb2.py dsmith/dsmith_pb2_grpc.py: dsmith/protos/dsmith.proto
-	$(venv) python -m grpc_tools.protoc -Idsmith/protos --python_out=dsmith --grpc_python_out=dsmith $<
+dsmith/dsmith_pb2.py dsmith/dsmith_pb2_grpc.py: dsmith/protos/dsmith/dsmith.proto
+	$(venv) python -m grpc_tools.protoc -Idsmith/protos --python_out=. --grpc_python_out=. dsmith/protos/dsmith/*.proto
 
 
 # python packages
