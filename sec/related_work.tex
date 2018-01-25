@@ -1,5 +1,11 @@
 \section{Related Work}\label{sec:rw}
 
+% \cc{TODO: ASPLOS reviewer suggestions~\cite{Yan2017}.}
+
+% \cc{TODO: interesting recent work on Ocaml~\cite{Midtgaard2017}, jsfunfuzz, AFL, libFuzzer.}
+
+The random generation of test cases is a well established approach to the compiler validation problem. Prior approaches are surveyed in~\cite{Kossatchev2005,Boujarwah1997} and empirically contrasted in~\cite{Chen2014a}. The main question of interest is in how to efficiently generate codes which trigger bugs. There are two main approaches: \emph{program generation}, in which inputs are synthesized from scratch, typically by stochastic enumeration of a grammar; and \emph{program mutation}, in which existing codes are modified and mutated so as to identify anomalous behavior.
+
 \begin{figure}
 	\centering %
 	\includegraphics[width=.95\columnwidth]{build/img/clang-crashes}%
@@ -8,7 +14,6 @@
 	}%
 	\label{fig:clangs} %
 \end{figure}
-
 \begin{table}
 	\footnotesize %
 	\centering %
@@ -18,12 +23,6 @@
 	}
 	\label{tab:clangs}
 \end{table}
-
-% \cc{TODO: ASPLOS reviewer suggestions~\cite{Yan2017}.}
-
-% \cc{TODO: interesting recent work on Ocaml~\cite{Midtgaard2017}, jsfunfuzz, AFL, libFuzzer.}
-
-The random generation of test cases is a well established approach to the compiler validation problem. Prior approaches are surveyed in~\cite{Kossatchev2005,Boujarwah1997} and empirically contrasted in~\cite{Chen2014a}. The main question of interest is in how to efficiently generate codes which trigger bugs. There are two main approaches: \emph{program generation}, in which inputs are synthesized from scratch, typically by stochastic enumeration of a grammar; and \emph{program mutation}, in which existing codes are modified and mutated so as to identify anomalous behavior.
 
 \paragraph{Program Generation}
 

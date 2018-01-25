@@ -408,22 +408,21 @@ The results emphasize that compiler validation is a moving target. Every change 
 
 \subsection{Extensibility of Language Model}
 
-To evaluate the 
+\cc{This is still in note form, needs shaping:} A large portion of the DeepSmith architecture is language-agnostic, requiring only a corpus, encoder, and harness for each new language. This potentially significantly lowers the barrier to entry compared with prior grammar-based fuzzers. To explore this, we report on initial results in extending DeepSmith to the Solidty programming language.  Solidity is the smart contract programming language of the Ethereum blockchain. At less than four years old, it lacks much of the tooling of more established programming languages. Yet, it is an important candidate for rigorous testing, as exploitable bugs could lead to fraudulent transactions.
 
-Solidity, the programming language of the Ethereum Blockchain. Very young language, little time to develop tooling (yet still very important - money is involved!). Syntax based on JavaScript.
+\paragraph{Testing Methodology} Followed same methodology as OpenCL. Assembled corpus from scraped solidity files on GitHub. Recursively inlined imported modules. Used same language keywords/character tokenizer. Enforced code formatting through clangformat. Trained model in the same manner as OpenCL. The language model and generator code is identical to OpenCL. Simple compile-only test harness.
 
-Method: Assembled corpus from scraped solidity files on GitHub. Recursively inlined imported modules. Encoded corpus using combination of tokens and characters (super easy list of tokens were taken from a syntax highlighter). No variable renaming, just code formatting using clangformat. Trained model in the same manner as OpenCL. \cc{TODO: How long did training take?} Simple compile-only test harness. Two testbeds: reference compiler \texttt{solc} with optimizations on or off.
-
-Results from running generator+harness loop for 12 hours. Found a compiler crash caused by missing error handling of language features.
+\paragraph{Initial Results} Ran generator+harness loop for 12 hours on four testbeds: reference compiler \texttt{solc} with optimizations on or off, and \texttt{solc-js}, which is an Emscripten compiled version of the \texttt{solc} compiler. Found three distinct compiler crashes: %
+%
+one caused by missing error handling of language features (known to developers).
 % Unimplemented feature: FixedPointType
 % https://github.com/ethereum/solidity/issues/409
-%
 % /build/solc-GCChSM/solc-0.4.18/libsolidity/codegen/CompilerUtils.cpp(499): Throw in function void dev::solidity::CompilerUtils::convertType(const dev::solidity::Type&, const dev::solidity::Type&, bool, bool, bool)
 % Dynamic exception type: boost::exception_detail::clone_impl<dev::solidity::UnimplementedFeatureError>
 % std::exception::what: Not yet implemented - FixedPointType.
 % [dev::tag_comment*] = Not yet implemented - FixedPointType.
 %
-Found one case where the compiler silently crashes when optimizations are enabled.
+Found testcase where the compiler silently crashes when optimizations are enabled.
 % select * from results
 % left join testcases on results.testcase_id=testcases.id
 % left join programs on testcases.program_id=programs.id
@@ -431,7 +430,7 @@ Found one case where the compiler silently crashes when optimizations are enable
 % where programs.generator=1
 % and results.id=135558;
 %
-Triggered one compiler assertion in the emscripten compiled version.
+Triggered one compiler assertion in the \texttt{solc-js} compiled version. This is interesting since it suggests an error in the automatic Emscripten translation from LLVM to JavaScript.
 % /usr/local/lib/node_modules/solc/soljson.js:1
 % (function (exports, require, module, __filename, __dirname) { var Module;if(!Module)Module=(typeof Module!=="undefined"?Module:null)||{};var moduleOverrides={};for(var key in Module){if(Module.hasOwnProperty(key)){moduleOverrides[key]=Module[key]}}var ENVIRONMENT_IS_WEB=typeof window==="object";var ENVIRONMENT_IS_WORKER=typeof importScripts==="function";var ENVIRONMENT_IS_NODE=typeof process==="object"&&typeof require==="function"&&!ENVIRONMENT_IS_WEB&&!ENVIRONMENT_IS_WORKER;var ENVIRONMENT_IS_SHELL=!ENVIRONMENT_IS_WEB&&!ENVIRONMENT_IS_NODE&&!ENVIRONMENT_IS_WORKER;if(ENVIRONMENT_IS_NODE){if(!Module["print"])Module["print"]=function print(x){process["stdout"].write(x+"\n")};if(!Module["printErr"])Module["printErr"]=function printErr(x){process["stderr"].write(x+"\n")};var nodeFS=require("fs");var nodePath=require("path");Module["read"]=function read(filename,binary){filename=nodePath["normalize"](filename);var ret=nodeFS["readFileSync"](filename);if(!ret&&filenam
 % abort() at Error
@@ -447,4 +446,6 @@ Triggered one compiler assertion in the emscripten compiled version.
 %     at invoke_iiiiii (/usr/local/lib/node_modules/solc/soljson.js:1:863594)
 % If this abort() is unexpected, build with -s ASSERTIONS=1 which can give more information.
 
-\cc{Other Notes on Extensibility:} This approach could be combined with symbolic execution to drive more complex structured inputs~\cite{Braione2017}. For dynamic languages, the test process would be the same, only without the separate compilation step and possibility for ``compile-only'' stubs.
+% \cc{Other Notes on Extensibility:} This approach could be combined with symbolic execution to drive more complex structured inputs~\cite{Braione2017}. For dynamic languages, the test process would be the same, only without the separate compilation step and possibility for ``compile-only'' stubs.
+
+Only preliminary results, but given the low-cost of porting between languages, suggests the utility of DeepSmith.
