@@ -4,7 +4,7 @@ DeepSmith\footnote{DeepSmith available at: \emph{[URL redacted for double-blind 
 
 \begin{figure}
   \centering
-  \includegraphics[width=\columnwidth]{img/deepsmith} %
+  \includegraphics[width=.85\columnwidth]{img/deepsmith} %
   % \vspace{-2em}%
   \caption{%
     DeepSmith system overview.
@@ -15,19 +15,21 @@ DeepSmith\footnote{DeepSmith available at: \emph{[URL redacted for double-blind 
 
 \subsection{Generative Model}
 
-Generating test cases for compilers is hard because their inputs are highly structured. Producing text with the right structure requires expert knowledge and a significant engineering effort, which has to be repeated from scratch for each new language. Instead, we treat the problem as an unsupervised machine learning task, employing state-of-the-art deep learning techniques to build models for how humans write programs. \cc{Cite some successes of deep learning in other fields.} Contrary to existing tools, our approach does not require expert knowledge of the target language, is only a few hundred lines of code, and requires little effort to design.
+Generating test cases for compilers is hard because their inputs are highly structured. Producing text with the right structure requires expert knowledge and a significant engineering effort, which has to be repeated from scratch for each new language. Instead, we treat the problem as an unsupervised machine learning task, employing state-of-the-art deep learning techniques to build models for how humans write programs. Our approach is inspired by breakthrough results in modeling challenging and high dimensional datasets through unsupervised learning~\cite{Raghu2016,Radford2016b,Bowman2015}. Contrary to existing tools, our approach does not require expert knowledge of the target language and is only a few hundred lines of code.
 
 % Contrary to existing tools, this approach is language agnostic, is only a few hundred lines of code, and requires little effort to design.
 
 \paragraph{Handwritten Programs} The generative model needs to be trained on a \emph{seed corpus} of example programs. We automated the assembly of this corpus by mining 10k OpenCL kernels from open source repositories on GitHub. We used an \emph{oracle compiler} (LLVM 3.9) to statically check the source files, discarding files that are not well-formed. The main purpose of this step is to remove the need to manually check that each file selected from GitHub does indeed contain OpenCL. A downside is that any training candidate which triggers a bug in the LLVM 3.9's front end will not be included. However, this did not prevent our system from uncovering errors in that compiler (Section~\ref{subsec:clangs}).
 
-This corpus, totalling \cc{XX} lines of code, is used as a representative sample of OpenCL code from which which a generative model can be derived.
+This corpus, exceeding one million lines of code, is used as a representative sample of OpenCL code from which which a generative model can be derived.
 
-\paragraph{Encoder} The textual representation of program codes must be encoded as numeric sequences for feeding as input to the machine learning model. \cc{Add citations:} Prior machine learning works have used character-level encodings, token-level encodings, or fixed length feature vectors. We extend the hybrid character/token-level encoding of~\cite{Cummins2017b}, in which a programming language's keywords and common names are treated as individual tokens while the rest of the text is encoded on a character-level basis. This approach hits a balance between compressing the input text and keeping the number of tokens in the vocabulary low.
+\paragraph{Encoder} The textual representation of program codes must be encoded as numeric sequences for feeding as input to the machine learning model. Prior machine learning works have used character-level encodings, token-level encodings, or fixed length feature vectors. We extend the hybrid character/token-level encoding of~\cite{Cummins2017b}, in which a programming language's keywords and common names are treated as individual tokens while the rest of the text is encoded on a character-level basis. This approach hits a balance between compressing the input text and keeping the number of tokens in the vocabulary low.
 
 We additionally employed semantic-preserving transformations to simplify the training programs. First, each source file is preprocessed to expand macros and remove conditional compilation and comments. Then, all user-declared identifiers are renamed using an arbitrary, but consistent pattern based on their order of declaration: $\{a,\allowbreak b,\allowbreak c,\allowbreak \ldots,\allowbreak aa,\allowbreak ab,\allowbreak ac,\allowbreak \ldots\}$ for variables and $\{A,\allowbreak B,\allowbreak C,\allowbreak \ldots,\allowbreak AA,\allowbreak AB,\allowbreak AC,\allowbreak \ldots\}$ for functions. This ensures a consistent naming convention, without modifying program behavior. Finally, a uniform code style is enforced to ensure consistent use of braces, parentheses, and white space. These rewriting simplifications give more opportunities for the model to learn the structure and deeper aspects of the language and speed up the learning. On the other hand, some bugs in the preprocessor or front-end might no longer be discoverable. We reason that this is an acceptable trade-off. For languages where the corpus can be many orders of magnitude larger, for example, C or Java, models may be generated without these modifications.
 
-\paragraph{Neural Network} We use the Long Short-Term Memory (LSTM) architecture of Recurrent Neural Network to model program code~\cite{Hochreiter1997}. In the LSTM architecture activations are learned with respect not just to their current inputs but to previous inputs in a sequence. In our case, this allows modeling the probability of a token appearing in the text given a history of previously seen tokens. Unlike previous recurrent networks, LSTMs employ a \emph{forget gate} with a linear activation function, allowing them to avoid the \emph{vanishing gradients} problem~\cite{Pacanu2013}. This makes them effective at learning complex relationships over long sequences~\cite{Lipton2015} which is important for modeling program code. Our LSTM networks model the vocabulary distribution over the encoded corpus. \cc{TODO: Cite a language model with similar params:} We use a two layer LSTM network of 512 nodes each, trained using Stochastic Gradient Descent for 50 epochs, with an initial learning rate of 0.002 and decaying by a factor of a half every 5 epochs. Training the model on the OpenCL dataset took 12 hours using a single NVIDIA Tesla P40.
+\paragraph{Neural Network} We use the Long Short-Term Memory (LSTM) architecture of Recurrent Neural Network to model program code~\cite{Hochreiter1997}. In the LSTM architecture activations are learned with respect not just to their current inputs but to previous inputs in a sequence. In our case, this allows modeling the probability of a token appearing in the text given a history of previously seen tokens. Unlike previous recurrent networks, LSTMs employ a \emph{forget gate} with a linear activation function, allowing them to avoid the \emph{vanishing gradients} problem~\cite{Pacanu2013}. This makes them effective at learning complex relationships over long sequences~\cite{Lipton2015} which is important for modeling program code. Our LSTM networks model the vocabulary distribution over the encoded corpus. We selected network parameters based on prior works in other domains~\cite{Vinyals,Karpathy2016,Jozefowicz2016a} --- a two layer LSTM network of 512 nodes each, trained using Stochastic Gradient Descent for 50 epochs, with an initial learning rate of 0.002 and decaying by a factor of a half every 5 epochs.
+
+Training the model on the OpenCL corpus took 12 hours using a single NVIDIA Tesla P40. We provided the model with no prior knowledge of the structure or syntax of a programming language.
 
 %Unlike previous recurrent networks in which the strength of learning decreases over time (a symptom of the \emph{vanishing gradients} problem~\cite{Pacanu2013}), LSTMs employ a \emph{forget gate} with a linear activation function, allowing them to retain activations for arbitrary durations. This makes them effective at learning complex relationships over long sequences~\cite{Lipton2015}, an especially important capability for modeling program code, as dependencies in sequences frequently occur over long ranges (for example, a variable may be declared as an argument to a function and used throughout). LSTM networks model the vocabulary distribution over the encoded corpus. We use a two layer LSTM network of 512 nodes each, trained using Stochastic Gradient Descent for 50 epochs, with an initial learning rate of 0.002 and decaying by a factor of a half every 5 epochs. % We use TensorFlow to implement the LSTM networks, with the entire generative model requiring less than 200 lines of Python, and is not specialized to OpenCL.
 
@@ -98,6 +100,18 @@ We employ established Differential Testing methodologies to expose compiler defe
 %	\item \emph{Runtime timeout} (\textbf{to}) Compilation of the OpenCL kernel succeeds gracefully, but program execution exceeds the timeout of 60 second.
 %	\item \textbf{\cmark} \emph{Completion} The program terminates gracefully and produces an output.
 %\end{enumerate}
+
+\begin{table*}[t!]
+	\footnotesize %
+	\centering %
+	% \rowcolors{2}{white}{gray!25}
+	\input{build/tab/platforms}
+	\caption{%
+		OpenCL systems and the number of bug reports submitted to date. For each system, two testbeds are created, one with compiler optimizations, the other without.%
+		\vspace{-.5em}
+	}
+	\label{tab:platforms}
+\end{table*}
 
 When evaluating the outcomes of test cases, build crash (\bc) and build timeout (\bto) outcomes are of immediate interest, indicative of erroneous compiler behavior (examples may be found in Section~\ref{subsec:compile-time-defects}). For all other outcomes, \emph{differential tests} are required to confirm anomalous behavior. We look for test cases where there is a majority outcome -- i.e. for which some fraction of the testbeds behave the same -- but some testbed deviates. We use the presence of the majority increasing the likelihood that there is a `correct' behavior for the test case. In this work, we choose the majority fraction to be $\ceil{\frac{2}{3}n}$, where $n$ is the number of testbeds.
 
