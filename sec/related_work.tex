@@ -32,7 +32,7 @@ In the foundational work on differential testing for compilers, McKeeman \emph{e
 
 \paragraph{Program Mutation}
 
-Equivalence Modulo Inputs (EMI) testing~\cite{Le2013a,Sun2016a} follows a different approach to test case generation. Starting with existing code, it inserts or deletes statements that will not be executed, so functionality should remain the same. If it is affected, it is due to a compiler bug. While a powerful technique able to find hard to detect bugs, it relies on having a very large number of programs to mutate. As such, it still requires an external code generator. Similarly to CSmith, EMI favors very long test programs. LangFuzz~\cite{Holler2012} also uses mutation but does this by inserting code segments which have previously exposed bugs. This increases the chances of discovering vulnerabilities in scripting language engines. 
+Equivalence Modulo Inputs (EMI) testing~\cite{Le2013a,Sun2016a} follows a different approach to test case generation. Starting with existing code, it inserts or deletes statements that will not be executed, so functionality should remain the same. If it is affected, it is due to a compiler bug. While a powerful technique able to find hard to detect bugs, it relies on having a very large number of programs to mutate. As such, it still requires an external code generator. Similarly to CSmith, EMI favors very long test programs. LangFuzz~\cite{Holler2012} also uses mutation but does this by inserting code segments which have previously exposed bugs. This increases the chances of discovering vulnerabilities in scripting language engines.
 % \cc{TODO: Expand discussion}
 Skeletal program enumeration~\cite{Zhang2017a} again works by transforming existing code. It identifies algorithmic patterns in short pieces of code and enumerates all the possible permutations of variable usage.
 % \cc{TODO: no testing of invalid inputs, unclear if scales to complex programs.}
@@ -115,8 +115,8 @@ machine learning has been successfully applied before on areas such as improving
 
 % \cite{Yan2017}
 
-Deep Learning is a nascent field that is responsible for a multitude of breakthroughs in modeling rich, hierarchical datasets. The major milestones are reviewed in~\cite{Wang2017}, and methods in~\cite{Schmidhuber2014}. There is an increasing interest in mining source code repositories at large scale~\cite{Allamanis2017a}.  
+Deep Learning is a nascent field that is responsible for a multitude of breakthroughs in modeling rich, hierarchical datasets. The major milestones are reviewed in~\cite{Wang2017}, and methods in~\cite{Schmidhuber2014}. There is an increasing interest in mining source code repositories at large scale~\cite{Allamanis2017a}.
 % \cc{Using machine learning to inductive program synthesis~\cite{Parisotto2016,Balog2017}.}
-Previous studies have involved data mining of GitHub to analyze software engineering practices~\cite{Wu2014,Guzman2014,Baishakhi2014a,Vasilescu2015}, for example code generation~\cite{Zhang2015a}, comment generation~\cite{Wong2013}, and code completion~\cite{Raychev2014}. 
-%\cc{Creating compilable code snippets mined from StackOverflow~\cite{Terragni2016}}.
+Previous studies have involved data mining of GitHub to analyze software engineering practices~\cite{Wu2014,Guzman2014,Baishakhi2014a,Vasilescu2015}, for example code generation~\cite{Zhang2015a}, comment generation~\cite{Wong2013}, and code completion~\cite{Raychev2014}.
+% \cc{Creating compilable code snippets mined from StackOverflow~\cite{Terragni2016}}.
 To the best of our knowledge, no work so far has succeeded in finding compiler bugs by exploiting mined source code for test case generation. Ours is the first to do so.
