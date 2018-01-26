@@ -57,31 +57,24 @@ now = datetime.utcnow
 # Tables ######################################################################
 
 
-class Client(Base):
+class ListOfNames(Base):
     id_t = Integer
+    __abstract__ = True
+
+    # Columns:
+    id: int = Column(id_t, primary_key=True)
+    date_added: datetime = Column(DateTime, nullable=False, default=now)
+    name: str = Column(String(1024), nullable=False, unique=True)
+
+
+class Client(ListOfNames):
+    id_t = ListOfNames.id_t
     __tablename__ = "clients"
 
-    # Columns:
-    id: int = Column(id_t, primary_key=True)
-    date_added: datetime = Column(DateTime, nullable=False, default=now)
-    client: str = Column(String(512), nullable=False, unique=True)
 
-    # Relationships:
-    events: List['Event'] = relationship("Event", back_populates="client")
-
-
-class Event(Base):
-    id_t = Integer
+class Event(ListOfNames):
+    id_t = ListOfNames.id_t
     __tablename__ = "events"
-
-    # Columns:
-    id: int = Column(id_t, primary_key=True)
-    date_added: datetime = Column(DateTime, nullable=False, default=now)
-    event: str = Column(String(128), nullable=False)
-    client_id: int = Column(Client.id_t, ForeignKey("clients.id"), nullable=False)
-
-    # Relationships:
-    client: List[Client] = relationship("Client", back_populates="events")
 
 
 class Generator(Base):
@@ -147,14 +140,9 @@ class Testcase(Base):
     results: List["Result"] = relationship("Result", back_populates="testcase")
 
 
-class TestcaseInputName(Base):
-    id_t = Integer
+class TestcaseInputName(ListOfNames):
+    id_t = ListOfNames.id_t
     __tablename__ = "testcase_input_names"
-
-    # Columns:
-    id: int = Column(id_t, primary_key=True)
-    date_added: datetime = Column(DateTime, nullable=False, default=now)
-    name: str = Column(String(1024), unique=True, nullable=False)
 
     # Relationships:
     inputs: List["TestcaseInput"] = relationship("TestcaseInput", back_populates="name")
@@ -170,6 +158,8 @@ class TestcaseInput(Base):
     name_id: TestcaseInputName.id_t = Column(
         TestcaseInputName.id_t, ForeignKey("testcase_input_names.id"), nullable=False)
     sha1: str = Column(String(40), nullable=False, index=True)
+    linecount = sql.Column(sql.Integer, nullable=False)
+    charcount = sql.Column(sql.Integer, nullable=False)
     input: str = Column(UnicodeText(length=2**31), nullable=False)
 
     # Relationships:
@@ -204,9 +194,6 @@ class TestcaseOpt(Base):
     date_added: datetime = Column(DateTime, nullable=False, default=now)
     opt: str = Column(String(1024), nullable=False, unique=True)
 
-    # Relationships:
-    # testcases: List["Testcase"] = relationship("Testcase", back_populates="opts")
-
 
 class TestcaseOptAssociation(Base):
     __tablename__ = "testcase_opt_associations"
@@ -215,7 +202,7 @@ class TestcaseOptAssociation(Base):
     testcase_id: int = Column(Testcase.id_t, ForeignKey("testcases.id"), nullable=False)
     opt_id: int = Column(TestcaseOpt.id_t, ForeignKey("testcase_opts.id"), nullable=False)
     __table_args__ = (
-        PrimaryKeyConstraint('testcase_id', 'opt_id', name='_uid'),)
+        PrimaryKeyConstraint('testcase_id', 'opt_id', name='unique_testcase_opt'),)
 
     # Relationships:
     testcase: Testcase = relationship("Testcase")
@@ -231,12 +218,14 @@ class TestcaseTiming(Base):
     date_added: datetime = Column(DateTime, nullable=False, default=now)
     testcase_id: int = Column(Testcase.id_t, ForeignKey("testcases.id"), nullable=False)
     event_id: int = Column(Event.id_t, ForeignKey("events.id"), nullable=False)
+    client_id: int = Column(Client.id_t, ForeignKey("clients.id"), nullable=False)
     duration: float = Column(Float, nullable=False)
     date: datetime = Column(DateTime, nullable=False)
 
     # Relationships:
     testcase: Testcase = relationship("Testcase", back_populates="timings")
     event: Event = relationship("Event")
+    client: Client = relationship("Client")
 
     # Constraints:
     __table_args__ = (
@@ -244,14 +233,9 @@ class TestcaseTiming(Base):
     )
 
 
-class Language(Base):
-    id_t = Integer
+class Language(ListOfNames):
+    id_t = ListOfNames.id_t
     __tablename__ = "languages"
-
-    # Columns:
-    id: int = Column(id_t, primary_key=True)
-    date_added: datetime = Column(DateTime, nullable=False, default=now)
-    name: str = Column(String(256), nullable=False, unique=True)
 
     # Relationships:
     testbeds: List["Testbed"] = relationship("Testbed", back_populates="lang")
@@ -265,17 +249,40 @@ class Testbed(Base):
     id: int = Column(id_t, primary_key=True)
     date_added: datetime = Column(DateTime, nullable=False, default=now)
     lang_id: int = Column(Language.id_t, ForeignKey("languages.id"), nullable=False)
-    name: str = Column(String(256), nullable=False)
-    version: str = Column(String(256), nullable=False)
+    name: str = Column(String(1024), nullable=False)
+    version: str = Column(String(1024), nullable=False)
 
     # Relationships:
     lang: Language = relationship("Language", back_populates="testbeds")
     results: List["Result"] = relationship("Result", back_populates="testbed")
+    opts = relationship(
+        "TestbedOpt", secondary="testbed_opt_associations",
+        primaryjoin="TestbedOptAssociation.testbed_id == Testbed.id",
+        secondaryjoin="TestbedOptAssociation.opt_id == TestbedOpt.id")
 
     # Constraints:
     __table_args__ = (
         UniqueConstraint('lang_id', 'name', 'version', name='unique_testbed'),
     )
+
+
+class TestbedOpt(ListOfNames):
+    id_t = ListOfNames.id_t
+    __tablename__ = "testbed_opts"
+
+
+class TestbedOptAssociation(Base):
+    __tablename__ = "testbed_opt_associations"
+
+    # Columns:
+    testbed_id: int = Column(Testbed.id_t, ForeignKey("testbeds.id"), nullable=False)
+    opt_id: int = Column(TestbedOpt.id_t, ForeignKey("testbed_opts.id"), nullable=False)
+    __table_args__ = (
+        PrimaryKeyConstraint('testbed_id', 'opt_id', name='unique_testbed_opt'),)
+
+    # Relationships:
+    testbed: Testbed = relationship("Testbed")
+    opt: TestbedOpt = relationship("TestbedOpt")
 
 
 class Result(Base):
@@ -304,14 +311,9 @@ class Result(Base):
     )
 
 
-class ResultOutputName(Base):
-    id_t = Integer
+class ResultOutputName(ListOfNames):
+    id_t = ListOfNames.id_t
     __tablename__ = "result_output_names"
-
-    # Columns:
-    id: int = Column(id_t, primary_key=True)
-    date_added: datetime = Column(DateTime, nullable=False, default=now)
-    name: str = Column(String(1024), unique=True, nullable=False)
 
     # Relationships:
     outputs: List["ResultOutput"] = relationship("ResultOutput", back_populates="name")
@@ -369,12 +371,14 @@ class ResultTiming(Base):
     date_added: datetime = Column(DateTime, nullable=False, default=now)
     result_id: int = Column(Result.id_t, ForeignKey("results.id"), nullable=False)
     event_id: int = Column(Event.id_t, ForeignKey("events.id"), nullable=False)
-    duration: float = Column(Float, nullable=False)
+    client_id: int = Column(Client.id_t, ForeignKey("clients.id"), nullable=False)
+    duration_seconds: float = Column(Float, nullable=False)
     date: datetime = Column(DateTime, nullable=False)
 
     # Relationships:
     result: Result = relationship("Result", back_populates="timings")
     event: Event = relationship("Event")
+    client: Client = relationship("Client")
 
     # Constraints:
     __table_args__ = (
