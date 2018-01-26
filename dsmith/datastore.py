@@ -18,9 +18,10 @@
 import logging
 
 from contextlib import contextmanager
+from datetime import datetime
 from labm8 import crypto
-from typing import List
 from sqlalchemy.orm import sessionmaker
+from typing import List
 
 import dsmith
 
@@ -63,23 +64,73 @@ class DataStore(object):
 
     def _add_one_testcase(self, session: db.session_t, testcase_pb: pb.Testcase) -> None:
         # Add generator:
-        generator = dbutil.get_or_add(session, db.Generator, generator=testcase_pb.generator)
+        generator = dbutil.get_or_add(
+            session, db.Generator,
+            name=testcase_pb.generator.name,
+            version=testcase_pb.generator.name,
+        )
 
-        # Add input:
-        sha1 = crypto.sha1_str(testcase_pb.input)
-        input = dbutil.get_or_add(session, db.TestcaseInput, sha1=sha1, input=testcase_pb.input)
+        # Add harness:
+        harness = dbutil.get_or_add(
+            session, db.Harness,
+            name=testcase_pb.harness.name,
+            version=testcase_pb.harness.version,
+        )
 
         # Add testcase:
-        testcase = dbutil.get_or_add(session, db.Testcase, generator=generator, input=input)
+        testcase = dbutil.get_or_add(
+            session, db.Testcase,
+            generator=generator,
+            harness=harness,
+        )
+
+        # Add inputs:
+        for input_pb in testcase_pb.inputs:
+            name = dbutil.get_or_add(
+                session, db.TestcaseInputName,
+                name=input_pb.name,
+            )
+            sha1 = crypto.sha1_str(input_pb.text)
+            input = dbutil.get_or_add(
+                session, db.TestcaseInput,
+                name=name,
+                sha1=sha1,
+                linecount=len(input_pb.text.split("\n")),
+                charcount=len(input_pb.text),
+                input=input_pb.text,
+            )
+            dbutil.get_or_add(
+                session, db.TestcaseInputAssociation,
+                testcase=testcase,
+                input=input,
+            )
 
         # Add options:
         for opt_ in testcase_pb.opts:
-            opt = dbutil.get_or_add(session, db.TestcaseOpt, opt=opt_)
-            dbutil.get_or_add(session, db.TestcaseOptAssociation, testcase=testcase, opt=opt)
+            opt = dbutil.get_or_add(
+                session, db.TestcaseOpt,
+                opt=opt_
+            )
+            dbutil.get_or_add(
+                session, db.TestcaseOptAssociation,
+                testcase=testcase, opt=opt
+            )
 
         # Add timings:
         for timings_ in testcase_pb.timings:
-            client = dbutil.get_or_add(session, db.Client, client=timings_.client)
-            event = dbutil.get_or_add(session, db.Event, event=timings_.event, client=client)
-            timing = dbutil.get_or_add(session, db.TestcaseTiming, testcase=testcase,
-                                       event=event, time=timings_.time)
+            client = dbutil.get_or_add(
+                session, db.Client,
+                name=timings_.client
+            )
+            event = dbutil.get_or_add(
+                session, db.Event,
+                name=timings_.event
+            )
+            timing = dbutil.get_or_add(
+                session, db.TestcaseTiming,
+                testcase=testcase,
+                event=event,
+                client=client,
+                duration_seconds=timings_.duration,
+                date=datetime.fromtimestamp(timings_.event_epoch_seconds)
+            )

@@ -219,7 +219,7 @@ class TestcaseTiming(Base):
     testcase_id: int = Column(Testcase.id_t, ForeignKey("testcases.id"), nullable=False)
     event_id: int = Column(Event.id_t, ForeignKey("events.id"), nullable=False)
     client_id: int = Column(Client.id_t, ForeignKey("clients.id"), nullable=False)
-    duration: float = Column(Float, nullable=False)
+    duration_seconds: float = Column(Float, nullable=False)
     date: datetime = Column(DateTime, nullable=False)
 
     # Relationships:
