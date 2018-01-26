@@ -20,6 +20,7 @@ The random generation of test cases is a well established approach to the compil
 	\input{build/tab/clang-assert-counts}
 	\caption{%
 		The number of DeepSmith programs which trigger distinct Clang front-end assertions, and the number of programs which trigger unreachables.%
+        \vspace{-2em}
 	}
 	\label{tab:clangs}
 \end{table}
@@ -89,6 +90,26 @@ Compared to all these, our fuzzing approach is low cost, easy to develop, portab
 
 \paragraph{Machine Learning} In software testing,
 machine learning has been successfully applied before on areas such as improving bug finding static analyzers~\cite{Heo2017,Koc2017}, repairing programs~\cite{Koukoutos2017a,White}, prioritizing test programs~\cite{Chen2017}, identifying buffer overruns~\cite{Choi2016}, and processing bug reports~\cite{Lam2016,Huo2016}. A proof-of-concept implementation of machine learning for input fuzzing is presented in~\cite{Godefroid2017}, although no bugs are found. % TODO: More on this?
+
+\begin{table}
+	\footnotesize %
+	\centering %
+	\begin{tabular}{rc|ccc}
+\toprule
+  \textbf{Compiler} & $\pm$ & \textbf{Silent Crashes} & \textbf{Assertion 1} & \textbf{Assertion 2}\\
+\midrule
+  \multirow{ 2}{*}{solc} & $-$ & 204 & 1 & \\
+                         & $+$ & 204 & 1 & \\
+  \multirow{ 2}{*}{solc-js} & $-$ & 3628 & 1 & 1\\
+                         & $+$ & 908 & 1 & 1\\
+\bottomrule
+\end{tabular}
+	\caption{%
+		Crash rate of Solidity compilers from 12 hours of testing using DeepSmith.%
+        \vspace{-1em}
+	}
+	\label{tab:solidity}
+\end{table}
 
 % \cite{Yan2017}
 
