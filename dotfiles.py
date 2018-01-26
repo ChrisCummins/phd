@@ -1481,6 +1481,7 @@ class DefaultApps(Task):
         "cpp": "com.sublimetext.3",
         "cxx": "com.sublimetext.3",
         "gz": "cx.c3.theunarchiver",
+        "log": "com.sublimetext.3",
         "markdown": "com.sublimetext.3",
         "md": "com.sublimetext.3",
         "mkv": "org.videolan.vlc",
