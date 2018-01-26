@@ -46,6 +46,7 @@ OpenCL is typically compiled online, which amplifies the significance of detecti
     \label{lst:almost-everything-crash}
   }\\%
   \caption{Example kernels which crash compilers.}%
+  \vspace{-1.1em}
 \end{figure}
 
 \begin{figure}
@@ -60,6 +61,7 @@ OpenCL is typically compiled online, which amplifies the significance of detecti
 		\noindent\mbox{\parbox{\columnwidth}{\usebox{\ParserFailThree}}}%
 	}\\%
 	\caption{Example codes which crash parsers.}%
+	  \vspace{-1.1em}
 	\label{lst:parser-crashes}%
 \end{figure}
 
@@ -103,6 +105,7 @@ Parser development is a mature and well understood practice. We uncovered parser
     \label{lst:xeon-phi-spin}
   }\\%
   \caption{Example kernels which hang compilers.}%
+  \vspace{-1.3em}
   \label{lst:compiler-hangs}%
 \end{figure}
 
@@ -181,6 +184,7 @@ On Testbeds~$3\pm$, the statement \texttt{int n = mad24(a, (32), get\_global\_si
 %    \label{lst:beignet-cast-error}
 %  }\\%
   \caption{Example kernels which are miscompiled.}%
+  \vspace{-1.3em}
 \end{figure}
 
 Prior work on compiler test case generation has focused on extensive stress-testing of compiler middle-ends to uncover miscompilations~\cite{Chen2014a}. CSmith, and by extension, CLSmith, specifically targets this class of bugs. Grammar based enumeration is highly effective at this task, yet is bounded by the expressiveness of the grammar. Here we provide examples of bugs which cannot currently be discovered by CLSmith.
@@ -239,6 +243,7 @@ In this section, we provide a quantitative comparison of the bug-finding capabil
     Results from 48 hours of testing using CLSmith and DeepSmith. System \#. as per Table~\ref{tab:platforms}. $\pm$ denotes optimizations off ($-$) vs on ($+$). The remaining columns denote the number of build crash (\bc), build timeout (\bto), anomalous build failure (\abf), anomalous runtime crash (\arc), anomalous wrong-output (\awo), and pass (\textbf{\cmark}) results.
     \vspace{-1.1em}
   }
+  \vspace{-1.1em}
   \label{tab:megatable}
 \end{table*}
 
@@ -254,6 +259,7 @@ In this section, we provide a quantitative comparison of the bug-finding capabil
 %    CLgen execution is 4.46x faster than CLSmith
 %    CLgen reduction is 66.54x faster than CLSmith
   }%
+  \vspace{-1.3em}
   \label{fig:vs-clsmith} %
 \end{figure}
 
