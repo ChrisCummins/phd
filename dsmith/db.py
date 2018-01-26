@@ -54,9 +54,6 @@ Base = declarative_base()
 now = datetime.utcnow
 
 
-# Tables ######################################################################
-
-
 class ListOfNames(Base):
     id_t = Integer
     __abstract__ = True
@@ -65,6 +62,9 @@ class ListOfNames(Base):
     id: int = Column(id_t, primary_key=True)
     date_added: datetime = Column(DateTime, nullable=False, default=now)
     name: str = Column(String(1024), nullable=False, unique=True)
+
+
+# Tables ######################################################################
 
 
 class Client(ListOfNames):
