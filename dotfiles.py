@@ -802,6 +802,8 @@ class MySQL(Task):
         if os.path.isdir(os.path.join(PRIVATE, "mysql")):
             self.__genfiles__ += ["~/.my.cnf"]
             symlink(os.path.join(PRIVATE, "mysql", ".my.cnf"), "~/.my.cnf")
+        Homebrew().install_package("mysql")
+        shell("brew services start mysql")
 
 
 class LaTeX(Task):
