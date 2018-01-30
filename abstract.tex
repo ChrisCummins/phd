@@ -5,7 +5,9 @@ We introduce DeepSmith, a novel machine learning approach to accelerating compil
 
 We apply our approach to the OpenCL programming language, automatically exposing bugs in OpenCL compilers with little effort on our side. In 1,000 hours of automated testing of commercial and open source compilers, we discover bugs in all of them, submitting 67 bug reports.
 
-Our test cases are on average two orders of magnitude smaller than the state-of-the-art, require $3.03\times$ less time to generate and evaluate, and expose bugs which the state-of-the-art cannot. Our random program generator, comprising only 500 lines of code, took 12 hours to train for OpenCL versus the state-of-the-art taking 9 man months to port from a generator for C and 50,000 lines of code.
+Our test cases are on average two orders of magnitude smaller than the state-of-the-art, require $3.03\times$ less time to generate and evaluate, and expose bugs which the state-of-the-art cannot. Our random program generator, comprising only 500 lines of code, took 12 hours to train for OpenCL versus the state-of-the-art taking 9 man months to port from a generator for C and 50,000 lines of code. %
+%
+With 18 lines of code we extended our program generator to a second  language, uncovering crashes in Solidity compilers in 12 hours of automated testing.
 
 
 %We introduce DeepSmith, a novel approach to the compiler validation problem. While prior works require expert domain knowledge to craft random program generators from probabilistic grammars or program mutation, we instead frame the generation of random programs a language modeling problem. We apply deep learning techniques over millions of lines of handwritten code in order to automatically construct models capable of generating plausible, human-like code samples.
@@ -27,7 +29,7 @@ Our test cases are on average two orders of magnitude smaller than the state-of-
 %
 %
 % find CLSmith/src -name '*.cpp' -o '*.h' | xargs wc -l  # 49775
-\hl{Is it worth talking about the Solidity work?}\am{To demonstrate the portability of our approach we also undertook an initial experiment applying DeepSmith to the Solidity language, uncovering several compiler crashes.}
+% \hl{Is it worth talking about the Solidity work?}\am{To demonstrate the portability of our approach we also undertook an initial experiment applying DeepSmith to the Solidity language, uncovering several compiler crashes.}
 
 %Compilers should produce correct code for valid inputs, and produce meaningful errors when inputs are invalid. Fixed test-suites and formal verification techniques cannot ensure these properties over the enormous range of possible inputs and complexity of optimizing compilers, leading to the development of random program generators that attempt to find compiler bugs by comparing the outputs of programs across compilers.
 

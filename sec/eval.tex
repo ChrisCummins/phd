@@ -435,7 +435,9 @@ The first is caused by missing error handling of language features (this issue i
 % where programs.generator=1
 % and results.id=135558;
 %
-The source of the second assertion is the JavaScript runtime and is triggered only in the Emscripten version, suggesting an error in the automatic translation from LLVM to JavaScript. Given the low cost of extending DeepSmith to this second language, we believe these preliminary results indicate the utility of our approach for simplifying test case generation.
+The source of the second assertion is the JavaScript runtime and is triggered only in the Emscripten version, suggesting an error in the automatic translation from LLVM to JavaScript.  Extended DeepSmith to a second programming required an additional 18 lines of code and took about a day. Given the low cost of extending DeepSmith to this second language, we believe these preliminary results indicate the utility of our approach for simplifying test case generation.
+
+% 168 lines
 \hl{Is it possible to say how long the porting took? And perhaps a sentence to justify the compile time only nature - i.e. we expect more errors to be found when we build a runtime driver (maybe?).}
 
 % /usr/local/lib/node_modules/solc/soljson.js:1
