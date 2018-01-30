@@ -375,6 +375,7 @@ CLSmith produced many \bto results across 13 Testbeds. Given the large kernel si
     \label{lst:beig-iter-assertion}
   }\\%
   \caption{Example kernels which trigger compiler assertions which both CLSmith and DeepSmith exposed.}%
+  \vspace{-2.1em}
   \label{lst:beig-assertions}
 \end{figure}
 
@@ -435,10 +436,12 @@ The first is caused by missing error handling of language features (this issue i
 % where programs.generator=1
 % and results.id=135558;
 %
-The source of the second assertion is the JavaScript runtime and is triggered only in the Emscripten version, suggesting an error in the automatic translation from LLVM to JavaScript.  Extended DeepSmith to a second programming required an additional 18 lines of code and took about a day. Given the low cost of extending DeepSmith to this second language, we believe these preliminary results indicate the utility of our approach for simplifying test case generation.
+The source of the second assertion is the JavaScript runtime and is triggered only in the Emscripten version, suggesting an error in the automatic translation from LLVM to JavaScript.
+
+Extending DeepSmith to a second programming required an additional 150 lines of code (18 lines for the generator and encoder, the remainder for the test harness) and took about a day. Given the low cost of extensibility, we believe these preliminary results indicate the utility of our approach for simplifying test case generation.
 
 % 168 lines
-\hl{Is it possible to say how long the porting took? And perhaps a sentence to justify the compile time only nature - i.e. we expect more errors to be found when we build a runtime driver (maybe?).}
+% \hl{Is it possible to say how long the porting took? And perhaps a sentence to justify the compile time only nature - i.e. we expect more errors to be found when we build a runtime driver (maybe?).}
 
 % /usr/local/lib/node_modules/solc/soljson.js:1
 % (function (exports, require, module, __filename, __dirname) { var Module;if(!Module)Module=(typeof Module!=="undefined"?Module:null)||{};var moduleOverrides={};for(var key in Module){if(Module.hasOwnProperty(key)){moduleOverrides[key]=Module[key]}}var ENVIRONMENT_IS_WEB=typeof window==="object";var ENVIRONMENT_IS_WORKER=typeof importScripts==="function";var ENVIRONMENT_IS_NODE=typeof process==="object"&&typeof require==="function"&&!ENVIRONMENT_IS_WEB&&!ENVIRONMENT_IS_WORKER;var ENVIRONMENT_IS_SHELL=!ENVIRONMENT_IS_WEB&&!ENVIRONMENT_IS_NODE&&!ENVIRONMENT_IS_WORKER;if(ENVIRONMENT_IS_NODE){if(!Module["print"])Module["print"]=function print(x){process["stdout"].write(x+"\n")};if(!Module["printErr"])Module["printErr"]=function printErr(x){process["stderr"].write(x+"\n")};var nodeFS=require("fs");var nodePath=require("path");Module["read"]=function read(filename,binary){filename=nodePath["normalize"](filename);var ret=nodeFS["readFileSync"](filename);if(!ret&&filenam
