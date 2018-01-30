@@ -102,13 +102,13 @@ $(root)/clgen/data/libclc: $(libclc)
 $(root)/clgen/data/gpuverify: $(gpuverify)
 	mkdir -p $(dir $@)
 	rm -f $@
-	ln -sf $(root)/native/gpuverify/$(gpuverify_version) $@
+	ln -sf $(root)/third_party/gpuverify/$(gpuverify_version) $@
 	touch $@
 
 $(root)/clgen/data/oclgrind: $(oclgrind)
 	mkdir -p $(dir $@)
 	rm -f $@
-	ln -sf $(root)/native/oclgrind/$(oclgrind_version)/install $@
+	ln -sf $(root)/third_party/oclgrind/$(oclgrind_version)/install $@
 	touch $@
 
 $(root)/clgen/data/bin/clgen-features: $(root)/native/clgen-features.cpp $(data_symlinks)

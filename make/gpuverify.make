@@ -25,7 +25,8 @@
 # note that we've hardcoded a specific version of GPUverify, but the nightly
 # build may update at any time and break this.
 gpuverify_version := 2016-03-28
-gpuverify := $(root)/native/gpuverify/$(gpuverify_version)/gpuverify
+gpuverify_dir := $(root)/third_party/gpuverify
+gpuverify := $(gpuverify_dir)/$(gpuverify_version)/gpuverify
 gpuverify_url := http://multicore.doc.ic.ac.uk/tools/downloads/GPUVerifyLinux64-nightly.zip
 
 gpuverify: $(gpuverify)
@@ -34,16 +35,16 @@ gpuverify: $(gpuverify)
 # setuptools discovers them and considers them part of CLgen, causing syntax
 # errors
 $(gpuverify):
-	rm -rf $(root)/native/gpuverify
-	mkdir -p $(root)/native/gpuverify
-	cd $(root)/native/gpuverify && wget $(gpuverify_url) -O gpuverify.zip
-	cd $(root)/native/gpuverify && unzip gpuverify.zip
-	rm $(root)/native/gpuverify/gpuverify.zip
-	find $(root)/native/gpuverify/$(gpuverify_version)/bugle/include-blang \
+	rm -rf $(gpuverify_dir)
+	mkdir -p $(gpuverify_dir)
+	cd $(gpuverify_dir) && wget $(gpuverify_url) -O gpuverify.zip
+	cd $(gpuverify_dir) && unzip gpuverify.zip
+	rm $(gpuverify_dir)/gpuverify.zip
+	find $(gpuverify_dir)/$(gpuverify_version)/bugle/include-blang \
 		-name '*.py' -exec rm -v {} \;
 	touch $@
 
 .PHONY: distclean-gpuverify
 distclean-gpuverify:
-	rm -rf $(root)/native/gpuverify
+	rm -rf $(gpuverify_dir)
 distclean_targets += distclean-gpuverify

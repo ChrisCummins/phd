@@ -29,7 +29,7 @@ libclc_version := d0f8ca7247ded04afbf1561fc5823c3e3517d892
 
 libclc_url := https://github.com/$(libclc_user)/libclc/archive/$(libclc_version).zip
 libclc_zip := $(cache)/$(libclc_user).libclc.$(libclc_version).zip
-libclc_dir := $(root)/native/libclc/$(libclc_version)
+libclc_dir := $(root)/third_party/libclc/$(libclc_version)
 libclc := $(libclc_dir)/utils/prepare-builtins.o
 
 # add this target as a prerequisite for files which require libclc

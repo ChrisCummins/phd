@@ -1,5 +1,5 @@
---- native/llvm/3.9.0/src/tools/clang/tools/extra/include-fixer/find-all-symbols/tool/FindAllSymbolsMain.cpp	2016-11-01 23:46:39.205194054 +0000
-+++ native/llvm/3.9.0/src/tools/clang/tools/extra/include-fixer/find-all-symbols/tool/FindAllSymbolsMain.cpp.new	2016-11-01 23:46:20.118260831 +0000
+--- third_party/llvm/3.9.0/src/tools/clang/tools/extra/include-fixer/find-all-symbols/tool/FindAllSymbolsMain.cpp	2016-11-01 23:46:39.205194054 +0000
++++ third_party/llvm/3.9.0/src/tools/clang/tools/extra/include-fixer/find-all-symbols/tool/FindAllSymbolsMain.cpp.new	2016-11-01 23:46:20.118260831 +0000
 @@ -64,7 +64,7 @@
 
  class YamlReporter : public clang::find_all_symbols::SymbolReporter {

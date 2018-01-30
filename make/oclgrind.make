@@ -24,7 +24,7 @@
 #
 oclgrind_version := c3760d07365b74ccda04cd361e1b567a6d99dd8c
 oclgrind_remote := https://github.com/jrprice/Oclgrind.git
-oclgrind_dir := $(root)/native/oclgrind/$(oclgrind_version)
+oclgrind_dir := $(root)/third_party/oclgrind/$(oclgrind_version)
 oclgrind := $(oclgrind_dir)/install/bin/oclgrind
 
 oclgrind: $(oclgrind)
@@ -37,9 +37,9 @@ oclgrind_cmake = $(cmake) .. -DCMAKE_BUILD_TYPE=RelWithDebInfo \
 	-DCMAKE_MAKE_PROGRAM=$(ninja) -G Ninja
 
 $(oclgrind):
-	rm -rf $(root)/native/oclgrind
-	mkdir -p $(root)/native/oclgrind
-	cd $(root)/native/oclgrind && git clone $(oclgrind_remote) $(oclgrind_version)
+	rm -rf $(root)/third_party/oclgrind
+	mkdir -p $(root)/third_party/oclgrind
+	cd $(root)/third_party/oclgrind && git clone $(oclgrind_remote) $(oclgrind_version)
 	cd $(oclgrind_dir) && git reset --hard $(oclgrind_version)
 	rm -rf $(oclgrind_dir)/.git
 	mkdir $(oclgrind_dir)/build $(oclgrind_dir)/install
@@ -50,5 +50,5 @@ $(oclgrind):
 
 .PHONY: distclean-oclgrind
 distclean-oclgrind:
-	rm -rf $(root)/native/oclgrind
+	rm -rf $(root)/third_party/oclgrind
 distclean_targets += distclean-oclgrind

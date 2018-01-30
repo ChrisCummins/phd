@@ -24,8 +24,8 @@
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
 llvm_version := 3.9.0
-llvm_src := $(root)/native/llvm/$(llvm_version)/src
-llvm_build := $(root)/native/llvm/$(llvm_version)/build
+llvm_src := $(root)/third_party/llvm/$(llvm_version)/src
+llvm_build := $(root)/third_party/llvm/$(llvm_version)/build
 llvm := $(llvm_build)/bin/llvm-config
 
 # add this target as a prerequisite for files which require LLVM

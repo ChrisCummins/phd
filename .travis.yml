@@ -14,12 +14,12 @@ python:
 cache:
   directories:
     - .cache
-    - native/cmake
-    - native/gpuverify
-    - native/libclc
-    - native/llvm
-    - native/ninja
-    - native/oclgrind
+    - third_party/cmake
+    - third_party/gpuverify
+    - third_party/libclc
+    - third_party/llvm
+    - third_party/ninja
+    - third_party/oclgrind
 
 # here we do the work that install-deps.sh script does
 addons:
