@@ -779,6 +779,29 @@ class SublimeText(Task):
         Homebrew().upgrade_cask("sublime-text")
 
 
+class JetbrainsIDEs(Task):
+    # A map of homebrew cask names to local apps.
+    IDES = {
+        "datagrip": "/Applications/DataGrip.app",
+        "goland": "/Applications/GoLand.app",
+        "clion": "/Applications/CLion.app",
+        "intellij-idea": "/Applications/IntelliJ IDEA.app",
+        "pycharm": "/Applications/PyCharm.app",
+    }
+
+    __platforms__ = ['osx']
+    __deps__ = ['Homebrew']
+    __genfiles__ = IDES.values()
+
+    def install(self):
+        for ide in self.IDES:
+            Homebrew().install_cask(ide)
+
+    def upgrade(self):
+        for ide in self.IDES:
+            Homebrew().upgrade_cask(ide)
+
+
 class Ssmtp(Task):
     """ mail server and config """
     __platforms__ = ['ubuntu']
