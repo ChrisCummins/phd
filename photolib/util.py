@@ -21,7 +21,6 @@ KNOWN_FILE_EXTENSIONS = set([
 
 # A mapping from "bad" file extension to suggested file extension.
 FILE_EXTENSION_SUGGESTIONS = {
-    ".jpeg": ".jpg",
     ".psd": ".tif",
     ".raf": ".dng",
 }

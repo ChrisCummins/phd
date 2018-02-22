@@ -146,6 +146,11 @@ class FileExtension(PhotolibFileLinter, GalleryFileLinter):
                   fix_it=f"mv -v '{abspath}' '{labspath}'")
 
         if lext not in util.KNOWN_FILE_EXTENSIONS:
+            if lext == ".jpeg":
+                jabspath = abspath[:-len(ext)] + ".jpg"
+                error(workspace_relpath, "extension/bad",
+                      f"convert {lext} file to .jpg",
+                      fix_it=f"mv -v '{abspath}' '{jabspath}'")
             if lext in util.FILE_EXTENSION_SUGGESTIONS:
                 suggestion = util.FILE_EXTENSION_SUGGESTIONS[lext]
                 error(workspace_relpath, "extension/bad",
