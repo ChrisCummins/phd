@@ -354,10 +354,10 @@ class DirHierachy(PhotolibDirLinter):
             workspace_relpath: str) -> typing.Tuple[typing.Optional[int],
                                                     typing.Optional[int]]:
         """Parse string or show error. Returns None in case of error."""
-        c = string.split("-")
-        if len(c) == 2:
-            year = cls.get_yyyy(c[0], workspace_relpath)
-            month = cls.get_mm(c[1], workspace_relpath)
+        components = string.split("-")
+        if len(components) == 2:
+            year = cls.get_yyyy(components[0], workspace_relpath)
+            month = cls.get_mm(components[1], workspace_relpath)
             if year and month:
                 return year, month
         else:
@@ -372,11 +372,11 @@ class DirHierachy(PhotolibDirLinter):
                                                     typing.Optional[int],
                                                     typing.Optional[int]]:
         """Parse string or show error. Returns None in case of error."""
-        c = string.split("-")
-        if len(c) == 3:
-            year = cls.get_yyyy(c[0], workspace_relpath)
-            month = cls.get_mm(c[1], workspace_relpath)
-            day = cls.get_dd(c[2], workspace_relpath)
+        components = string.split("-")
+        if len(components) == 3:
+            year = cls.get_yyyy(components[0], workspace_relpath)
+            month = cls.get_mm(components[1], workspace_relpath)
+            day = cls.get_dd(components[2], workspace_relpath)
             if year and month and day:
                 return year, month, day
         else:
