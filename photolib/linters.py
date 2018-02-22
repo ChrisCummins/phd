@@ -168,12 +168,12 @@ class PanoramaKeyword(PhotolibFileLinter, GalleryFileLinter):
         if "-Pano" not in filename:
             return
 
-        kw = lightroom.get_lightroom_keywords(abspath)
-        if "ATTR|PanoPart" not in kw:
+        keywords = lightroom.get_lightroom_keywords(abspath)
+        if "ATTR|PanoPart" not in keywords:
             error(workspace_relpath, "keywords/panorama",
                   "keyword 'ATTR >> PanoPart' not set on suspected panorama")
 
-        if "ATTR|Panorama" not in kw:
+        if "ATTR|Panorama" not in keywords:
             error(workspace_relpath, "keywords/panorama",
                   "keyword 'ATTR >> Panorama' not set on suspected panorama")
 
@@ -187,8 +187,8 @@ class FilmFormat(PhotolibFileLinter):
         if not util.PHOTO_LIB_SCAN_PATH_COMPONENTS_RE.match(filename_noext):
             return
 
-        kw = lightroom.get_lightroom_keywords(abspath)
-        if not any(k.startswith("ATTR|Film Format") for k in kw):
+        keywords = lightroom.get_lightroom_keywords(abspath)
+        if not any(k.startswith("ATTR|Film Format") for k in keywords):
             error(workspace_relpath, "keywords/film_format",
                   "keyword 'ATTR >> Film Format' not set on film scan")
 
@@ -198,8 +198,8 @@ class ThirdPartyInPhotolib(PhotolibFileLinter):
     __cost__ = 29
 
     def __call__(self, abspath: str, workspace_relpath: str, filename: str):
-        kw = lightroom.get_lightroom_keywords(abspath)
-        if "ATTR|third_party" in kw:
+        keywords = lightroom.get_lightroom_keywords(abspath)
+        if "ATTR|third_party" in keywords:
             error(workspace_relpath, "keywords/third_party",
                   "third_party file should be in //gallery")
 
@@ -209,8 +209,8 @@ class ThirdPartyInGallery(GalleryFileLinter):
     __cost__ = 29
 
     def __call__(self, abspath: str, workspace_relpath: str, filename: str):
-        kw = lightroom.get_lightroom_keywords(abspath)
-        if "ATTR|third_party" not in kw:
+        keywords = lightroom.get_lightroom_keywords(abspath)
+        if "ATTR|third_party" not in keywords:
             error(workspace_relpath, "keywords/third_party",
                   "files in //gallery should have third_party keyword set")
 
@@ -220,11 +220,12 @@ class SingularEvents(PhotolibFileLinter):
     __cost__ = 20
 
     def __call__(self, abspath: str, workspace_relpath: str, filename: str):
-        kw = lightroom.get_lightroom_keywords(abspath)
-        num_events = sum(1 if k.startswith("EVENT|") else 0 for k in kw)
+        keywords = lightroom.get_lightroom_keywords(abspath)
+        num_events = sum(1 if k.startswith("EVENT|") else 0 for k in keywords)
 
         if num_events > 1:
-            events = ", ".join([f"'{k}'" for k in kw if k.startswith("EVENT|")])
+            events = ", ".join(
+                [f"'{k}'" for k in keywords if k.startswith("EVENT|")])
             error(workspace_relpath, "keywords/events",
                   f"mutually exclusive keywords = {events}")
 
