@@ -37,6 +37,15 @@ py_library(
 )
 
 py_test(
+    name = "test_linters",
+    srcs = ["test_linters.py"],
+    default_python_version = "PY3",
+    deps = [
+        ":linters",
+    ],
+)
+
+py_test(
     name = "test_workspace",
     srcs = ["test_workspace.py"],
     default_python_version = "PY3",

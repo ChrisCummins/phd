@@ -42,7 +42,7 @@ IGNORED_DIRS = set([
 ])
 
 PHOTO_LIB_PATH_COMPONENTS_RE = re.compile(
-    r"(?P<year>(1\d|20)\d\d)(?P<month>(0[1-9]|1[012]))(?P<day>([012]\d|3[012]))T"
+    r"(?P<year>(1\d|20)\d\d)(?P<month>(0[1-9]|1[012]))(?P<day>(0[1-9]|[12]\d|3[012]))T"
     r"(?P<hour>([01]\d|2[01234]))(?P<min>[0-5]\d)(?P<sec>[0-5]\d)(?P<seq>-\d+)?"
     r"(-(?P<modifier>Edit|HDR|Pano))?$"
 )

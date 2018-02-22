@@ -77,6 +77,10 @@ class Linter(object):
     def __call__(self, *args, **kwargs):
         raise NotImplementedError("abstract class")
 
+    @property
+    def cost(self):
+        return self.__cost__
+
 
 # File linters.
 
