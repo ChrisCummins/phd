@@ -1,5 +1,6 @@
 """Unit tests for workspace.py."""
 import os
+import sys
 from tempfile import TemporaryDirectory
 
 import pytest
@@ -49,7 +50,7 @@ def test_get_workspace_relpath():
 
 def main(argv):  # pylint: disable=missing-docstring
     del argv
-    pytest.main([__file__, "-v"])
+    sys.exit(pytest.main([__file__, "-v"]))
 
 
 if __name__ == "__main__":
