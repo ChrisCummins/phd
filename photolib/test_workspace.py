@@ -3,7 +3,7 @@ import os
 from tempfile import TemporaryDirectory
 
 import pytest
-import sys
+from absl import app
 
 from photolib import workspace
 
@@ -47,5 +47,10 @@ def test_get_workspace_relpath():
     assert workspace.get_workspace_relpath("/a/b", "/a") == "/"
 
 
+def main(argv):  # pylint: disable=missing-docstring
+    del argv
+    pytest.main([__file__, "-v"])
+
+
 if __name__ == "__main__":
-    sys.exit(pytest.main([__file__, "-v"]))
+    app.run(main)
