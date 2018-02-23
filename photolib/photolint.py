@@ -49,7 +49,8 @@ class ToplevelLinter(linters.Linter):
 
             for filename in filenames:
                 for linter in self.filelinters:
-                    linter(f"{abspath}/{filename}", f"{relpath}/{filename}", filename)
+                    linter(f"{abspath}/{filename}", f"{relpath}/{filename}",
+                           filename)
 
 
 class WorkspaceLinter(linters.Linter):
@@ -62,8 +63,8 @@ class WorkspaceLinter(linters.Linter):
 
     def __call__(self, *args, **kwargs):
         photolib_linter = ToplevelLinter(
-            self.workspace, "photos", linters.PhotolibDirLinter,
-            linters.PhotolibFileLinter)
+            self.workspace, "photos",
+            linters.PhotolibDirLinter, linters.PhotolibFileLinter)
         gallery_linter = ToplevelLinter(
             self.workspace, "gallery",
             linters.GalleryDirLinter, linters.GalleryFileLinter)

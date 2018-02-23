@@ -92,10 +92,13 @@ def get_linters(base_linter: Linter) -> typing.List[Linter]:
 
     def is_runnable_linter(obj):
         """Return true if obj is a runnable linter."""
-        return (inspect.isclass(obj) and
-                issubclass(obj, base_linter) and
-                obj != base_linter and  # Don't include the base_linter.
-                obj().cost <= FLAGS.cost)
+        if not inspect.isclass(obj):
+            return False
+        if not issubclass(obj, base_linter):
+            return False
+        if obj == base_linter:  # Don't include the base_linter.
+            return False
+        return obj().cost <= FLAGS.cost
 
     members = inspect.getmembers(sys.modules[__name__], is_runnable_linter)
     return [member[1]() for member in members]
