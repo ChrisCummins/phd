@@ -10,16 +10,16 @@ _KEYWORDS_CACHE: typing.Dict[str, typing.Set] = dict()
 
 
 def get_lightroom_keywords(abspath: str) -> typing.Set[str]:
-    """Fetch lightroom."""
-    if abspath in _KEYWORDS_CACHE:
-        return _KEYWORDS_CACHE[abspath]
+  """Fetch lightroom."""
+  if abspath in _KEYWORDS_CACHE:
+    return _KEYWORDS_CACHE[abspath]
 
-    try:
-        xmp = xmputils.file_to_dict(abspath)
-        lrtags = xmp['http://ns.adobe.com/lightroom/1.0/']
-        keywords = set([e[1] for e in lrtags if e[1]])
-        _KEYWORDS_CACHE[abspath] = keywords
-        return keywords
-    except KeyError:
-        logging.error(abspath)
-        raise KeyError(abspath)
+  try:
+    xmp = xmputils.file_to_dict(abspath)
+    lrtags = xmp['http://ns.adobe.com/lightroom/1.0/']
+    keywords = set([e[1] for e in lrtags if e[1]])
+    _KEYWORDS_CACHE[abspath] = keywords
+    return keywords
+  except KeyError:
+    logging.error(abspath)
+    raise KeyError(abspath)
