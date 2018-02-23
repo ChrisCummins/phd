@@ -72,13 +72,14 @@ class Linter(object):
     __cost__ = -1
 
     def __init__(self):
-        assert self.__cost__ > 0 and self.__cost__ <= 100
+        assert self.cost > 0 and self.cost <= 100
 
     def __call__(self, *args, **kwargs):
         raise NotImplementedError("abstract class")
 
     @property
     def cost(self):
+        """Get the cost of the linter."""
         return self.__cost__
 
 

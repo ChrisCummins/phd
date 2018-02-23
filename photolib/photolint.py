@@ -30,7 +30,7 @@ def get_linters(base_linter: linters.Linter) -> typing.List[linters.Linter]:
         return (inspect.isclass(obj) and
                 issubclass(obj, base_linter) and
                 obj != base_linter and  # Don't include the base_linter.
-                obj.__cost__ <= FLAGS.cost)
+                obj.cost <= FLAGS.cost)
 
     return [x[1]() for x in inspect.getmembers(linters, is_runnable_linter)]
 
