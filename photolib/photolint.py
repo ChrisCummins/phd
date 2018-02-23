@@ -13,7 +13,6 @@ from photolib import workspace
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string("workspace", os.getcwd(), "Path to workspace root")
-flags.DEFINE_integer("cost", 10, "The maximum cost of linter to run (1-100).")
 
 
 class ToplevelLinter(linters.Linter):

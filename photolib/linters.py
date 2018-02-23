@@ -13,6 +13,7 @@ from photolib import lightroom
 from photolib import util
 
 FLAGS = flags.FLAGS
+flags.DEFINE_integer("cost", 10, "The maximum cost of linter to run (1-100).")
 flags.DEFINE_boolean("counts", False, "Show only the counts of errors.")
 flags.DEFINE_boolean("fix_it", False, "Show how to fix it.")
 
