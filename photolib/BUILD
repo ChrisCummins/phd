@@ -37,8 +37,9 @@ py_library(
 )
 
 py_test(
-    name = "test_linters",
-    srcs = ["test_linters.py"],
+    name = "tests/linters_test",
+    size = "small",
+    srcs = ["tests/linters_test.py"],
     default_python_version = "PY3",
     deps = [
         ":linters",
@@ -46,8 +47,9 @@ py_test(
 )
 
 py_test(
-    name = "test_workspace",
-    srcs = ["test_workspace.py"],
+    name = "tests/workspace_test",
+    size = "small",
+    srcs = ["tests/workspace_test.py"],
     default_python_version = "PY3",
     deps = [
         ":workspace",
