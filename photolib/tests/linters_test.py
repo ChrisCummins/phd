@@ -98,6 +98,28 @@ def test_PhotolibFilename():
     good_name("000101A-30-1-Edit")
 
 
+def test_GalleryFilename():
+    """Checks that file name matches one of expected formats."""
+    linter = linters.GalleryFilename()
+
+    def good_name(filename):
+        n = linters.ERROR_COUNTS.get("file/name", 0)
+        linter(f"/photos/{filename}.dng", f"//photos/{filename}.jpg",
+               f"{filename}.jpg")
+        assert linters.ERROR_COUNTS.get("file/name", 0) == n
+
+    def bad_name(filename):
+        n = linters.ERROR_COUNTS.get("file/name", 0)
+        linter(f"/photos/{filename}.dng", f"//photos/{filename}.jpg",
+               f"{filename}.jpg")
+        assert linters.ERROR_COUNTS.get("file/name", 0) == n + 1
+
+    good_name("foobar")
+
+    # Contains whitespace.
+    bad_name("foo bar")
+
+
 def main(argv):  # pylint: disable=missing-docstring
     del argv
     sys.exit(pytest.main([__file__, "-v"]))
