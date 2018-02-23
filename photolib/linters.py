@@ -1,8 +1,10 @@
 """This file contains the linter implementations for photolint."""
+import inspect
 import os
 import re
 import sys
 import typing
+
 from collections import defaultdict
 
 from absl import flags
@@ -81,6 +83,24 @@ class Linter(object):
     def cost(self):
         """Get the cost of the linter."""
         return self.__cost__
+
+
+def get_linters(base_linter: Linter) -> typing.List[Linter]:
+    """Return a list of linters to run.
+
+    For a linter to be "runnable", it must have a cost <= the --cost flag,
+    and inherit from the base_linter argument.
+    """
+
+    def is_runnable_linter(obj):
+        """Return true if obj is a runnable linter."""
+        return (inspect.isclass(obj) and
+                issubclass(obj, base_linter) and
+                obj != base_linter and  # Don't include the base_linter.
+                obj().cost <= FLAGS.cost)
+
+    members = inspect.getmembers(sys.modules[__name__], is_runnable_linter)
+    return [member[1]() for member in members]
 
 
 # File linters.

@@ -1,6 +1,4 @@
 """A linter for ensuring that a Photo Library is organized correctly."""
-
-import inspect
 import os
 import sys
 import typing
@@ -18,23 +16,6 @@ flags.DEFINE_string("workspace", os.getcwd(), "Path to workspace root")
 flags.DEFINE_integer("cost", 10, "The maximum cost of linter to run (1-100).")
 
 
-def get_linters(base_linter: linters.Linter) -> typing.List[linters.Linter]:
-    """Return a list of linters to run.
-
-    For a linter to be "runnable", it must have a cost <= the --cost flag,
-    and inherit from the base_linter argument.
-    """
-
-    def is_runnable_linter(obj):
-        """Return true if obj is a runnable linter."""
-        return (inspect.isclass(obj) and
-                issubclass(obj, base_linter) and
-                obj != base_linter and  # Don't include the base_linter.
-                obj.cost <= FLAGS.cost)
-
-    return [x[1]() for x in inspect.getmembers(linters, is_runnable_linter)]
-
-
 class ToplevelLinter(linters.Linter):
     """A linter for top level directories."""
     __cost__ = 1
@@ -45,8 +26,8 @@ class ToplevelLinter(linters.Linter):
         super(ToplevelLinter, self).__init__()
         self.workspace = workspace
         self.toplevel_dir = toplevel_dir
-        self.dirlinters = get_linters(dirlinters)
-        self.filelinters = get_linters(filelinters)
+        self.dirlinters = linters.get_linters(dirlinters)
+        self.filelinters = linters.get_linters(filelinters)
 
         linter_names = [
             type(lin).__name__ for lin in self.dirlinters + self.filelinters]
