@@ -13,9 +13,19 @@ def test_error():
         linters.error("//photos", "not/a/real/category", "msg")
 
 
+def test_costs():
+    lns = linters.get_linters(linters.PhotolibFileLinter)
+    for linter in lns: assert 1 <= linter.cost <= 100
+    lns = linters.get_linters(linters.PhotolibDirLinter)
+    for linter in lns: assert 1 <= linter.cost <= 100
+    lns = linters.get_linters(linters.GalleryFileLinter)
+    for linter in lns: assert 1 <= linter.cost <= 100
+    lns = linters.get_linters(linters.GalleryDirLinter)
+    for linter in lns: assert 1 <= linter.cost <= 100
+
+
 def test_PhotolibFilename():
     linter = linters.PhotolibFilename()
-    assert 1 <= linter.cost <= 100
 
     def good_name(filename):
         n = linters.ERROR_COUNTS.get("file/name", 0)

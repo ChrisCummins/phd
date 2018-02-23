@@ -74,9 +74,6 @@ class Linter(object):
     """
     __cost__ = -1
 
-    def __init__(self):
-        assert self.cost > 0 and self.cost <= 100
-
     def __call__(self, *args, **kwargs):
         raise NotImplementedError("abstract class")
 
