@@ -2,17 +2,32 @@
 import os
 import sys
 import typing
+import time
 
 from absl import app
 from absl import flags
 from absl import logging
 
 from photolib import linters
+from photolib import lightroom
 from photolib import util
 from photolib import workspace
+from photolib import lintercache
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string("workspace", os.getcwd(), "Path to workspace root")
+flags.DEFINE_boolean("counts", False, "Show only the counts of errors.")
+flags.DEFINE_boolean("profile", False, "Print profiling timers on completion.")
+
+
+class Timers(object):
+  """Profiling timers."""
+  total_seconds: float = 0
+  linting_seconds: float = 0
+  cached_seconds: float = 0
+
+
+TIMERS = Timers()
 
 
 class ToplevelLinter(linters.Linter):
@@ -28,29 +43,59 @@ class ToplevelLinter(linters.Linter):
     self.dirlinters = linters.get_linters(dirlinters)
     self.filelinters = linters.get_linters(filelinters)
 
-    linter_names = [
-        type(lin).__name__ for lin in self.dirlinters + self.filelinters]
+    linter_names = list(
+        type(lin).__name__ for lin in self.dirlinters + self.filelinters)
     logging.info("Running //%s linters: %s",
                  self.toplevel_dir, ", ".join(linter_names))
 
+  def _lint_this_dir(self, abspath: str, relpath: str,
+                     dirnames: typing.List[str],
+                     filenames: typing.List[str]) -> typing.List[linters.Error]:
+    """Run linters in this directory."""
+    errors = []
+
+    # Strip files and directories which are not to be linted.
+    dirnames = [d for d in dirnames if d not in util.IGNORED_DIRS]
+    filenames = [f for f in filenames if f not in util.IGNORED_FILES]
+
+    for linter in self.dirlinters:
+      errors += linter(abspath, relpath, dirnames, filenames)
+
+    for filename in filenames:
+      for linter in self.filelinters:
+        errors += linter(f"{abspath}/{filename}", f"{relpath}/{filename}",
+                         filename) or []
+
+    return errors
+
   def __call__(self, *args, **kwargs):
+    start_ = time.time()
+
     working_dir = os.path.join(self.workspace, self.toplevel_dir)
     for abspath, dirnames, filenames in os.walk(working_dir):
+      _start = time.time()
       relpath = workspace.get_workspace_relpath(self.workspace, abspath)
 
-      logging.debug("traversing %s", relpath)
+      cache_entry = lintercache.get_linter_errors(abspath, relpath)
 
-      # Strip files and directories which are not to be linted.
-      dirnames = [d for d in dirnames if d not in util.IGNORED_DIRS]
-      filenames = [f for f in filenames if f not in util.IGNORED_FILES]
+      if cache_entry.exists:
+        for error in cache_entry.errors:
+          linters.ERROR_COUNTS[error.category] += 1
+          if not FLAGS.counts:
+            print(error, file=sys.stderr)
+        sys.stderr.flush()
 
-      for linter in self.dirlinters:
-        linter(abspath, relpath, dirnames, filenames)
+        if FLAGS.counts:
+          linters.print_error_counts()
 
-      for filename in filenames:
-        for linter in self.filelinters:
-          linter(f"{abspath}/{filename}", f"{relpath}/{filename}",
-                 filename)
+        TIMERS.cached_seconds += time.time() - _start
+      else:
+        errors = self._lint_this_dir(
+            abspath, relpath, dirnames, filenames)
+        lintercache.add_linter_errors(cache_entry, errors)
+        TIMERS.linting_seconds += time.time() - _start
+
+    TIMERS.total_seconds += time.time() - start_
 
 
 class WorkspaceLinter(linters.Linter):
@@ -81,11 +126,25 @@ def main(argv):  # pylint: disable=missing-docstring
     print(f"Cannot find workspace in '{FLAGS.workspace}'", file=sys.stderr)
     sys.exit(1)
 
+  lightroom.init_keywords_cache(abspath)
+  lintercache.init_errors_cache(abspath)
+
   WorkspaceLinter(abspath)()
 
   # Print the carriage return once we've done updating the counts line.
   if FLAGS.counts and linters.ERROR_COUNTS:
     print("", file=sys.stderr)
+
+  # Print the profiling timers once we're done.
+  if FLAGS.profile:
+    total_time = TIMERS.total_seconds
+    linting_time = TIMERS.linting_seconds
+    cached_time = TIMERS.cached_seconds
+    overhead = total_time - linting_time - cached_time
+
+    print(f"linting={linting_time:.3f}s, cached={cached_time:.3f}s, "
+          f"overhead={overhead:.3f}s, total={total_time:.3f}s",
+          file=sys.stderr)
 
 
 if __name__ == "__main__":

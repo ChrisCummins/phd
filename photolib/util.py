@@ -1,4 +1,5 @@
 """Utility functions."""
+import hashlib
 import re
 
 from absl import flags
@@ -59,14 +60,33 @@ PHOTOLIB_LEAF_DIR_RE = re.compile(
 
 
 class Colors(object):
-    """Shell escape codes for pretty-printing."""
-    PURPLE = "\033[95m"
-    CYAN = "\033[96m"
-    DARKCYAN = "\033[36m"
-    BLUE = "\033[94m"
-    GREEN = "\033[92m"
-    YELLOW = "\033[93m"
-    RED = "\033[91m"
-    BOLD = "\033[1m"
-    UNDERLINE = "\033[4m"
-    END = "\033[0m"
+  """Shell escape codes for pretty-printing."""
+  PURPLE = "\033[95m"
+  CYAN = "\033[96m"
+  DARKCYAN = "\033[36m"
+  BLUE = "\033[94m"
+  GREEN = "\033[92m"
+  YELLOW = "\033[93m"
+  RED = "\033[91m"
+  BOLD = "\033[1m"
+  UNDERLINE = "\033[4m"
+  END = "\033[0m"
+
+
+def md5(string: str) -> hashlib.md5:
+  """
+  Compute md5sum of string.
+
+  This function returns the hash instance. The 16 byte binary string can be
+  obtained using .digest(), or the 40 character hex representation using
+  .hexdigest().
+
+  Args:
+    string: String to md5sum.
+
+  Returns:
+    Returns the hash instance.
+  """
+  md5_ = hashlib.md5()
+  md5_.update(string.encode("utf-8"))
+  return md5_
