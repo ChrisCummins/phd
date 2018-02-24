@@ -45,8 +45,8 @@ class ToplevelLinter(linters.Linter):
 
     linter_names = list(
         type(lin).__name__ for lin in self.dirlinters + self.filelinters)
-    logging.info("Running //%s linters: %s",
-                 self.toplevel_dir, ", ".join(linter_names))
+    logging.debug("Running //%s linters: %s",
+                  self.toplevel_dir, ", ".join(linter_names))
 
   def _lint_this_dir(self, abspath: str, relpath: str,
                      dirnames: typing.List[str],
