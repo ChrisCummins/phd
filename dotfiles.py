@@ -1576,6 +1576,7 @@ class DefaultApps(Task):
 
 
 class GoogleChrome(Task):
+    """ internet explorer """
     __platforms__ = ['osx']
     __deps__ = ['Homebrew']
 
@@ -1584,3 +1585,15 @@ class GoogleChrome(Task):
 
     def upgrade_osx(self):
         Homebrew().upgrade_cask('google-chrome')
+
+
+class Ripgrep(Task):
+    """ a very, very fast grep """
+    __platforms__ = ['osx', 'linux']
+    __deps__ = ['Homebrew', 'Ruby']
+
+    def install(self):
+        if not shell_ok("gem list --local | grep rails"):
+            task_print("gem install rails")
+            shell("sudo gem install rails")
+        Homebrew().install_package("ripgrip")
