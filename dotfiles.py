@@ -619,6 +619,38 @@ class Git(Task):
         Homebrew().upgrade_package("git")
 
 
+class Gogs(Task):
+    """self hosted git client"""
+    __platforms__ = ["linux"]
+    __deps__ = ["MySQL"]
+    __genfiles__ = ["/opt/gogs"]
+    __versions__ = {
+        "gogs": "0.11.34",
+    }
+
+    def install(self):
+        if HOSTNAME == "ryangosling" and not os.path.isdir("/opt/gogs"):
+            url = ("https://dl.gogs.io/{self.__versions__['gogs']}/linux_amd64.tar.gz"
+                   .format(**vars()))
+            shell("wget {url} -O /tmp/gogs.tar.gz".format(**vars()))
+            shell("cd /tmp && tar xjf linux_amd64.tar.gz")
+            shell("rm linux_amd64.tar.gz")
+            shell("sudo mv gogs /opt/gogs")
+            shell("sudo chown -R cec:cec /opt/gogs")
+
+
+class GogsConfig(Task):
+    """custom config for gogs"""
+    __platforms__ = ["linux"]
+    __deps__ = ["Gogs", "MySQL"]
+    __genfiles__ = ["/opt/gogs/custom/conf/app.ini"]
+
+    def install(self):
+        if HOSTNAME == "ryangosling":
+            symlink(usr_share("gogs/custom/conf/app.ini"),
+                    "/opt/gogs/custom/conf/app.ini")
+
+
 class Wallpaper(Task):
     """ set desktop background """
     WALLPAPERS = {
