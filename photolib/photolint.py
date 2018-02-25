@@ -16,7 +16,6 @@ from photolib import lintercache
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string("workspace", os.getcwd(), "Path to workspace root")
-flags.DEFINE_boolean("counts", False, "Show only the counts of errors.")
 flags.DEFINE_boolean("profile", False, "Print profiling timers on completion.")
 
 

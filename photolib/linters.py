@@ -13,6 +13,7 @@ from photolib import lightroom
 from photolib import util
 
 FLAGS = flags.FLAGS
+flags.DEFINE_boolean("counts", False, "Show only the counts of errors.")
 flags.DEFINE_boolean("fix_it", False, "Show how to fix it.")
 
 # A global list of all error categories. Every time you add a new linter rule, add it
