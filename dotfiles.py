@@ -753,6 +753,8 @@ class Linters(Task):
         '~/go/bin/protoc-gen-lint',
         '/usr/local/bin/write-good',
         '/usr/local/bin/writegood',
+        Homebrew.bin("tidy"),
+        Homebrew.bin("buildifier"),
     ]
     __versions__ = {
         "cpplint": "1.3.0",
@@ -767,6 +769,7 @@ class Linters(Task):
         Python().pip_install("pycodestyle", version=self.__versions__["pycodestyle"],
                              pip="pip3.6")
         Homebrew().install_package("tidy-html5")
+        Homebrew().install_package("buildifier")
         Go().get('github.com/ckaznocha/protoc-gen-lint')
         Node().npm_install("write-good", version=self.__versions__["write-good"])
 
