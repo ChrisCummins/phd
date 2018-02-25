@@ -1312,14 +1312,14 @@ class OmniFocus(Task):
         Homebrew().upgrade_cask('omnifocus')
 
 
-class Toggl(Task):
+class Timing(Task):
     """ time tracking app """
     __platforms__ = ['osx']
-    __osx_genfiles__ = ['/Applications/TogglDesktop.app']
-    __osx_deps__ = ['AppStore']
+    __osx_genfiles__ = ['/Applications/Timing.app']
+    __osx_deps__ = ['Homebrew']
 
     def install_osx(self):
-        AppStore().install_app('957734279', '/Applications/TogglDesktop.app')
+        Homebrew().install_cask("timing")
 
 
 class Timer(Task):
