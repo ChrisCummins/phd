@@ -335,7 +335,8 @@ def clone_git_repo(url, destination, version=None):
     if not os.path.isdir(destination):
         task_print("Cloning git repository to {destination}".format(**vars()))
         shell('git clone --recursive "{url}" "{destination}"'.format(**vars()))
-        shell('cd "{destination}" && git submodule update --init --recursive')
+        shell('cd "{destination}" && git submodule update --init --recursive'
+              .format(**vars()))
         cloned = True
 
     if not os.path.isdir(os.path.join(destination, ".git")):
