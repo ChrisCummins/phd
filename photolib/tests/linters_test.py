@@ -10,18 +10,7 @@ from photolib import linters
 def test_error():
   # error() raises an assertion if the category is not recognized.
   with pytest.raises(AssertionError):
-    linters.error("//photos", "not/a/real/category", "msg")
-
-
-def test_costs():
-  lns = linters.get_linters(linters.PhotolibFileLinter)
-  for linter in lns: assert 1 <= linter.cost <= 100
-  lns = linters.get_linters(linters.PhotolibDirLinter)
-  for linter in lns: assert 1 <= linter.cost <= 100
-  lns = linters.get_linters(linters.GalleryFileLinter)
-  for linter in lns: assert 1 <= linter.cost <= 100
-  lns = linters.get_linters(linters.GalleryDirLinter)
-  for linter in lns: assert 1 <= linter.cost <= 100
+    linters.Error("//photos", "not/a/real/category", "msg")
 
 
 def test_PhotolibFilename():
@@ -114,10 +103,13 @@ def test_GalleryFilename():
            f"{filename}.jpg")
     assert linters.ERROR_COUNTS.get("file/name", 0) == n + 1
 
-  good_name("foobar")
+  good_name("photos-1")
 
   # Contains whitespace.
-  bad_name("foo bar")
+  bad_name("photos 1")
+
+  # Out of sequence (missing photos-1).
+  bad_name("photos-2")
 
 
 def main(argv):  # pylint: disable=missing-docstring
