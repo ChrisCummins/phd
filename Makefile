@@ -39,23 +39,23 @@ $(error Directory moved from $(ROOT) to $(root). Please rerun ./configure)
 endif
 
 # modules
-include build/make/wget.make
-include build/make/tar.make
-include build/make/cmake.make
-include build/make/ninja.make
-include build/make/venv.make
-include build/make/jupyter.make
-include build/make/clgen.make
+include tools/make/wget.make
+include tools/make/tar.make
+include tools/make/cmake.make
+include tools/make/ninja.make
+include tools/make/venv.make
+include tools/make/jupyter.make
+include tools/make/clgen.make
 
 ifeq ($(WITH_OPENCL),1)
-include build/make/cldrive.make
-include build/make/clsmith.make
-include build/make/clreduce.make
-include build/make/llvm.make
+include tools/make/cldrive.make
+include tools/make/clsmith.make
+include tools/make/clreduce.make
+include tools/make/llvm.make
 endif
 
 ifeq ($(WITH_GLSL),1)
-include build/make/glsl.make
+include tools/make/glsl.make
 endif
 
 python_version = 3.6
@@ -103,7 +103,7 @@ run: all
 # clean compiled files
 .PHONY: clean
 clean: $(clean_targets)
-	rm -rfv build/third_party/dsmith build/dsmith/third_party/python*/site-packages/dsmith-*
+	rm -rfv tools/third_party/dsmith tools/dsmith/third_party/python*/site-packages/dsmith-*
 
 
 # clean everything

@@ -1,4 +1,4 @@
-# Makefile module for Jupyter. Requires $(venv) and $(python)
+# Makefile module for python virtualenvs.
 #
 # Copyright 2017, 2018 Chris Cummins <chrisc.101@gmail.com>.
 #
@@ -17,18 +17,9 @@
 # You should have received a copy of the GNU General Public License
 # along with DeepSmith.  If not, see <http://www.gnu.org/licenses/>.
 #
-jupyter = $(venv_dir)/bin/jupyter
-ipython = ~/.ipython/kernels/dsmith/kernel.json
+venv_dir := $(root)/venv/dsmith
+venv_activate := $(venv_dir)/bin/activate
+venv := source $(venv_activate) &&
 
-jupyter: $(jupyter)
-
-$(jupyter): $(venv_activate) $(ipython)
-	$(venv) pip install -r requirements.txt
-
-$(ipython): build/ipython/kernels/dsmith/kernel.json
-	mkdir -p ~/.ipython/kernels
-	cp -Rv build/ipython/kernels/dsmith ~/.ipython/kernels
-
-build/ipython/kernels/dsmith/kernel.json: build/ipython/kernels/dsmith/kernel.json.template
-	cp $< $@
-	sed "s,@PYTHON@,$(python)," -i $@
+$(venv_activate):
+	virtualenv -p python3.6 $(venv_dir)

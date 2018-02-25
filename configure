@@ -309,7 +309,7 @@ The following questions will create it for you:""")
 
     with open("requirements.txt", "w") as outfile:
         for name in requirements_files:
-            with open(os.path.join("build", "requirements", name)) as infile:
+            with open(os.path.join("tools", "requirements", name)) as infile:
                 outfile.write(infile.read())
 
     try:
@@ -317,7 +317,7 @@ The following questions will create it for you:""")
         subprocess.check_call(['git', 'submodule', 'update', '--init', '--recursive'])
         # Install any required system-wide dependencies:
         # TODO: Pipe output into bash shell:
-        subprocess.check_call(['bash', os.path.join('build', 'install-deps.sh')])
+        subprocess.check_call(['bash', os.path.join('tools', 'install-deps.sh')])
     except subprocess.CalledProcessError:
         print("💩  Something went wrong.", file=sys.stderr)
         sys.exit(1)
