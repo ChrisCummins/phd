@@ -1,31 +1,25 @@
-syntax = "proto3";
+syntax = "proto2";
 
 message Timing {
   // Reserved for later use as ID field.
   reserved 1;
 
-  string client = 2;  // name of the client. E.g. $HOSTNAME.
-  string event = 3;
-  float duration = 4;
+  optional string client = 2;  // name of the client. E.g. $HOSTNAME.
+  optional string event = 3;
+  optional float duration = 4;
   // Seconds since the epoch of the timing.
-  int64 event_epoch_seconds = 5;
-}
-
-message NamedText {
-  // Reserved for later use as ID field.
-  reserved 1;
-
-  string name = 2;
-  string text = 3;
+  optional int64 event_epoch_seconds = 5;
 }
 
 message Testcase {
   // Reserved for later use as ID field.
   reserved 1;
 
-  Generator generator = 2;
-  Harness harness = 4;
-  repeated NamedText inputs = 3;
+  optional Generator generator = 2;
+  optional Harness harness = 4;
+
+  // <input_name, input_value>
+  map<string, string> inputs = 3;
   repeated string opts = 5;
   repeated Timing timings = 6;
 }
@@ -34,25 +28,25 @@ message Generator {
   // Reserved for later use as ID field.
   reserved 1;
 
-  string name = 2;
-  string version = 3;
+  optional string name = 2;
+  optional string version = 3;
 }
 
 message Harness {
   // Reserved for later use as ID field.
   reserved 1;
 
-  string name = 2;
-  string version = 3;
+  optional string name = 2;
+  optional string version = 3;
 }
 
 message Testbed {
   // Reserved for later use as ID field.
   reserved 1;
 
-  string lang = 2;
-  string name = 3;
-  string version = 4;
+  optional string lang = 2;
+  optional string name = 3;
+  optional string version = 4;
   repeated string opts = 5;
 }
 
@@ -60,10 +54,11 @@ message Result {
   // Reserved for later use as ID field.
   reserved 1;
 
-  Testcase testcase = 2;
-  Testbed testbed = 3;
-  int32 returncode = 4;
-  repeated NamedText outputs = 5;
+  optional Testcase testcase = 2;
+  optional Testbed testbed = 3;
+  optional int32 returncode = 4;
+  // <name, value>
+  map<string, string> outputs = 5;
   repeated Timing timings = 6;
 }
 
@@ -85,7 +80,7 @@ message SubmitTestcasesResponse {
   // Reserved for later use as ID field.
   reserved 1;
 
-  int32 error_code = 2;
+  optional int32 error_code = 2;
 }
 
 // GetTestcases
@@ -94,16 +89,17 @@ message GetTestcaseRequest {
   // Reserved for later use as ID field.
   reserved 1;
 
-  string client = 2;  // name of the client. E.g. $HOSTNAME.
-  Testbed testbed = 3;
-  Harness harness = 4;
+  // The client name, e.g. $HOSTNAME.
+  optional string client = 2;
+  optional Testbed testbed = 3;
+  optional Harness harness = 4;
 }
 
 message GetTestcaseResponse {
   // Reserved for later use as ID field.
   reserved 1;
 
-  int32 error_code = 2;
+  optional int32 error_code = 2;
   repeated Testcase testcases = 3;
 }
 
@@ -120,7 +116,7 @@ message SubmitResultsResponse {
   // Reserved for later use as ID field.
   reserved 1;
 
-  int32 error_code = 2;
+  optional int32 error_code = 2;
 }
 
 service TestingService {
@@ -139,8 +135,8 @@ message ResultsCollection {
 
 message ResultsTable {
   message ResultsTableEntry {
-    Testbed testbed = 1;
-    Harness harness = 2;
+    optional Testbed testbed = 1;
+    optional Harness harness = 2;
     repeated Result results = 3;
   }
 
