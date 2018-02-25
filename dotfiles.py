@@ -527,6 +527,34 @@ class Zsh(Task):
         Homebrew().upgrade_package("zsh")
 
 
+class ZshBazelCompletion(Task):
+    """ tab completion for bazel """
+    __platforms__ = ['linux', 'osx']
+    __deps__ = ['Zsh']
+    __genfiles__ = ['~/.zsh/completion/_bazel', '~/.zsh/cache']
+    __versions__ = {
+        "bazel_completion": "30af177d5cd2188ee6e23ba849d865b8a42ad8f8",
+    }
+
+    def install(self):
+        # See: https://docs.bazel.build/versions/master/install.html#zsh
+        bazel = os.path.expanduser("~/.bazel_tmp")
+        shell("rm -rf {bazel}".format(**vars()))
+
+        if not os.path.isfile("~/.zsh/completion/_bazel"):
+            shell("fpath[1,0]=~/.zsh/completion/")
+            clone_git_repo(github_repo("bazelbuild", "bazel"), bazel,
+                           self.__versions__["bazel_completion"])
+
+            mkdir("~/.zsh/completion/")
+            copy_file("{bazel}/scripts/zsh_completion/_bazel".format(**vars()),
+                      "~/.zsh/completion/_bazel")
+            shell("rm -rf {bazel} ~/.zcompdump".format(**vars()))
+
+        if not os.path.isdir("~/.zsh/cache"):
+            mkdir("~/.zsh/cache")
+
+
 class Autoenv(Task):
     """ 'cd' wrapper """
     __platforms__ = ['linux', 'osx']
