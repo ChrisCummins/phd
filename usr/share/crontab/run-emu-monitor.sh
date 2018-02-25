@@ -10,7 +10,7 @@ export LMK_TO="chrisc.101@gmail.com"
 
 export EMU="/usr/local/bin/emu"
 
-export EMU_PORT=65334
+export EMU_PORT=65337
 
 
 # ****************************************************************************
