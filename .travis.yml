@@ -36,7 +36,6 @@ before_install:
       brew install python3
     else
       sudo add-apt-repository ppa:jonathonf/python-3.6
-
       echo "deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
       curl https://bazel.build/bazel-release.pub.gpg | sudo apt-key add -
       sudo apt-get update >/dev/null
@@ -49,6 +48,9 @@ script:
   - echo $CC && $CC --version   # c compiler
   - echo $CXX && $CXX --version  # c++ compiler
   - bazel query //... | grep -v -f .travisignore  # test targets
+  - |
+    bazel build --local_resources=400,1,1.0 \
+        $(bazel query //... | grep -v -f .travisignore)
   - |
     bazel test --local_resources=400,1,1.0 \
         $(bazel query //... | grep -v -f .travisignore)
