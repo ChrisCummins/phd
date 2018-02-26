@@ -20,8 +20,6 @@ String formatting utils.
 """
 from __future__ import print_function
 
-import labm8 as lab
-
 
 class Error(Exception):
     """

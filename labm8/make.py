@@ -18,11 +18,8 @@
 """
 Wrapper for invoking Makefiles.
 """
-import os
 import re
-import subprocess
 
-import labm8
 from labm8 import fs
 from labm8 import system
 

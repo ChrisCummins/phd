@@ -17,7 +17,6 @@
 """
 Graphing helper.
 """
-import labm8 as lab
 from labm8 import io
 
 

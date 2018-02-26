@@ -19,7 +19,6 @@ JSON parser which supports comments.
 import json
 import re
 
-import labm8
 from labm8 import fs
 
 

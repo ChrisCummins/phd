@@ -14,10 +14,8 @@
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import division
 
-from unittest import main
 from tests import TestCase
 
-import labm8 as lab
 from labm8 import text
 
 class TestText(TestCase):

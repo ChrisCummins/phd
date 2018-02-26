@@ -17,7 +17,6 @@
 Extended SQL database interface.
 """
 import atexit
-import csv
 import re
 import six
 import sqlite3 as sql

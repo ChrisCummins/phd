@@ -17,9 +17,6 @@ from tests import TestCase
 
 import sqlite3 as sql
 
-import pandas.io.sql as panda
-
-import labm8 as lab
 from labm8 import db
 from labm8 import fs
 

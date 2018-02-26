@@ -21,7 +21,6 @@ from __future__ import print_function
 import re
 
 import labm8 as lab
-from labm8 import fs
 from labm8 import io
 
 if lab.is_python3():

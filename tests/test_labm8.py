@@ -15,7 +15,6 @@
 from unittest import main
 from tests import TestCase
 
-import math
 import sys
 
 import labm8 as lab

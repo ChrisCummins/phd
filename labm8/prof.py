@@ -20,14 +20,10 @@ from __future__ import print_function
 
 import inspect
 import os
-import random
 import sys
 
 from time import time
 
-import labm8 as lab
-from labm8 import fs
-from labm8 import io
 from labm8 import types
 
 

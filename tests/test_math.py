@@ -16,7 +16,6 @@ from unittest import main
 from tests import TestCase
 
 import math
-import labm8 as lab
 from labm8 import math as labmath
 
 class TestMath(TestCase):

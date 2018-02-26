@@ -23,7 +23,6 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 
-import labm8 as lab
 from labm8 import fs
 from labm8 import viz
 

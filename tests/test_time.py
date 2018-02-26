@@ -16,7 +16,6 @@ from unittest import main
 from tests import TestCase
 
 import labm8 as lab
-import labm8.time
 
 import datetime
 

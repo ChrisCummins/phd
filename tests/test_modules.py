@@ -17,7 +17,6 @@ from tests import TestCase
 
 import sys
 
-import labm8 as lab
 from labm8 import modules
 
 

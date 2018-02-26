@@ -25,7 +25,6 @@ from glob import iglob
 from humanize import naturalsize
 from send2trash import send2trash
 
-import labm8 as lab
 from labm8 import types
 
 

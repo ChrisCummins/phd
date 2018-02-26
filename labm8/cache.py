@@ -21,7 +21,6 @@ import json
 import re
 import six
 
-import labm8 as lab
 from labm8 import crypto
 from labm8 import fs
 from labm8 import io

@@ -19,14 +19,8 @@
 Utils for manipulating quantitative experimental data.
 """
 import labm8 as lab
-import labm8.io
 
 import sys
-
-from pkg_resources import require
-
-
-__version__ = require("labm8")[0].version
 
 
 def exit(status=0):

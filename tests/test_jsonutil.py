@@ -15,10 +15,6 @@
 from unittest import main
 from tests import TestCase
 
-import json
-import json.decoder
-
-import labm8 as lab
 from labm8 import fs
 from labm8 import system
 from labm8 import jsonutil
