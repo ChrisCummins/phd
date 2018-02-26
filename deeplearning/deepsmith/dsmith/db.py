@@ -20,7 +20,8 @@ Database backend.
 """
 import sqlalchemy as sql
 
-from contextlib import contextmanager
+from absl import flags
+
 from datetime import datetime
 from sqlalchemy import DateTime
 from sqlalchemy import Column
@@ -34,13 +35,10 @@ from sqlalchemy import UnicodeText
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from typing import Dict
-from typing import Iterable
 from typing import List
-from typing import Tuple
-from typing import Union
 
-import dsmith
+
+FLAGS = flags.FLAGS
 
 
 # Type aliases:
