@@ -40,3 +40,6 @@
 [submodule "src/emu"]
 	path = src/emu
 	url = git@github.com:ChrisCummins/emu.git
+[submodule "http/cgo.org/cgo2018"]
+	path = http/cgo.org/cgo2018
+	url = git@github.com:ChrisCummins/cgo2018.git
