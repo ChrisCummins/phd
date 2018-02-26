@@ -35,7 +35,7 @@ cc_test(
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
-    deps = ["//src/phd:main"],
+    deps = ["//lib/phd:main"],
 )
 
 cc_test(
@@ -47,7 +47,7 @@ cc_test(
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
-    deps = ["//src/phd:main"],
+    deps = ["//lib/phd:main"],
 )
 
 cc_binary(

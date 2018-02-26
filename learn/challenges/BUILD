@@ -53,7 +53,7 @@ cc_test(
         "-Iexternal/benchmark/include",
     ],
     deps = [
-        "//src/phd:main",
+        "//lib/phd:main",
     ],
 )
 
@@ -79,7 +79,7 @@ cc_test(
         "-Iexternal/benchmark/include",
     ],
     deps = [
-        "//src/phd:main",
+        "//lib/phd:main",
     ],
 )
 

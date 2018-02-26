@@ -14,6 +14,6 @@ cc_test(
     ],
     deps = [
         "//lab/lm:main",
-        "//src/phd:main",
+        "//lib/phd:main",
     ],
 )

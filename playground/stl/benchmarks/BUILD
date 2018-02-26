@@ -13,7 +13,7 @@ cc_binary(
     ],
     deps = [
         "//lab/stl:main",
-        "//src/phd:main",
+        "//lib/phd:main",
     ],
 )
 
@@ -32,7 +32,7 @@ cc_binary(
     ],
     deps = [
         "//lab/stl:main",
-        "//src/phd:main",
+        "//lib/phd:main",
     ],
 )
 
@@ -51,7 +51,7 @@ cc_binary(
     ],
     deps = [
         "//lab/stl:main",
-        "//src/phd:main",
+        "//lib/phd:main",
     ],
 )
 
@@ -70,7 +70,7 @@ cc_binary(
     ],
     deps = [
         "//lab/stl:main",
-        "//src/phd:main",
+        "//lib/phd:main",
     ],
 )
 
@@ -89,7 +89,7 @@ cc_binary(
     ],
     deps = [
         "//lab/stl:main",
-        "//src/phd:main",
+        "//lib/phd:main",
     ],
 )
 
@@ -108,7 +108,7 @@ cc_binary(
     ],
     deps = [
         "//lab/stl:main",
-        "//src/phd:main",
+        "//lib/phd:main",
     ],
 )
 
@@ -127,7 +127,7 @@ cc_binary(
     ],
     deps = [
         "//lab/stl:main",
-        "//src/phd:main",
+        "//lib/phd:main",
     ],
 )
 
@@ -146,7 +146,7 @@ cc_binary(
     ],
     deps = [
         "//lab/stl:main",
-        "//src/phd:main",
+        "//lib/phd:main",
     ],
 )
 
@@ -165,7 +165,7 @@ cc_binary(
     ],
     deps = [
         "//lab/stl:main",
-        "//src/phd:main",
+        "//lib/phd:main",
     ],
 )
 
@@ -184,6 +184,6 @@ cc_binary(
     ],
     deps = [
         "//lab/stl:main",
-        "//src/phd:main",
+        "//lib/phd:main",
     ],
 )

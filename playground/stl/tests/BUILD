@@ -14,7 +14,7 @@ cc_test(
     ],
     deps = [
         "//lab/stl:main",
-        "//src/phd:main",
+        "//lib/phd:main",
     ],
 )
 
@@ -34,7 +34,7 @@ cc_test(
     ],
     deps = [
         "//lab/stl:main",
-        "//src/phd:main",
+        "//lib/phd:main",
     ],
 )
 
@@ -54,7 +54,7 @@ cc_test(
     ],
     deps = [
         "//lab/stl:main",
-        "//src/phd:main",
+        "//lib/phd:main",
     ],
 )
 
@@ -74,7 +74,7 @@ cc_test(
     ],
     deps = [
         "//lab/stl:main",
-        "//src/phd:main",
+        "//lib/phd:main",
     ],
 )
 
@@ -94,7 +94,7 @@ cc_test(
     ],
     deps = [
         "//lab/stl:main",
-        "//src/phd:main",
+        "//lib/phd:main",
     ],
 )
 
@@ -114,7 +114,7 @@ cc_test(
     ],
     deps = [
         "//lab/stl:main",
-        "//src/phd:main",
+        "//lib/phd:main",
     ],
 )
 
@@ -134,7 +134,7 @@ cc_test(
     ],
     deps = [
         "//lab/stl:main",
-        "//src/phd:main",
+        "//lib/phd:main",
     ],
 )
 
@@ -154,7 +154,7 @@ cc_test(
     ],
     deps = [
         "//lab/stl:main",
-        "//src/phd:main",
+        "//lib/phd:main",
     ],
 )
 
@@ -174,7 +174,7 @@ cc_test(
     ],
     deps = [
         "//lab/stl:main",
-        "//src/phd:main",
+        "//lib/phd:main",
     ],
 )
 
@@ -194,6 +194,6 @@ cc_test(
     ],
     deps = [
         "//lab/stl:main",
-        "//src/phd:main",
+        "//lib/phd:main",
     ],
 )
