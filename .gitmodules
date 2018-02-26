@@ -8,7 +8,7 @@
 	path = docs/2017-02-cgo
 	url = git@github.com:ChrisCummins/paper-synthesizing-benchmarks.git
 [submodule "experimental/humanorrobot.uk"]
-	path = src/humanorrobot.uk
+	path = http/humanorrobot.uk
 	url = git@github.com:ChrisCummins/humanorrobot.uk.git
 [submodule "src/cldrive"]
 	path = src/cldrive
@@ -26,7 +26,7 @@
 	path = src/shutterbug
 	url = git@github.com:ChrisCummins/shutterbug.git
 [submodule "src/chriscumms.cc"]
-	path = src/chriscumms.cc
+	path = http/chriscummins.cc
 	url = git@github.com:ChrisCummins/chriscummins.github.io.git
 [submodule "src/gh-archiver"]
 	path = src/gh-archiver
