@@ -38,8 +38,32 @@
 	path = learn/interactive-coding-challenges
 	url = git@github.com:ChrisCummins/interactive-coding-challenges.git
 [submodule "src/emu"]
-	path = util/emu
+	path = system/emu
 	url = git@github.com:ChrisCummins/emu.git
 [submodule "http/cgo.org/cgo2018"]
 	path = http/cgo.org/cgo2018
 	url = git@github.com:ChrisCummins/cgo2018.git
+[submodule "system/dotfiles"]
+	path = system/dotfiles
+	url = git@github.com:ChrisCummins/dotfiles.git
+[submodule "third_party/torch-rnn"]
+	path = third_party/torch-rnn
+	url = git@github.com:jcjohnson/torch-rnn.git
+[submodule "third_party/visioncpp"]
+	path = third_party/visioncpp
+	url = git@github.com:codeplaysoftware/visioncpp.git
+[submodule "util/photolib"]
+	path = util/photolib
+	url = git@github.com:ChrisCummins/photolib.git
+[submodule "experimental/eevee"]
+	path = experimental/eevee
+	url = git@github.com:ChrisCummins/eevee.git
+[submodule "gpu/libcecl"]
+	path = gpu/libcecl
+	url = git@github.com:ChrisCummins/libcecl.git
+[submodule "util/srtime"]
+	path = util/srtime
+	url = git@github.com:ChrisCummins/srtime.git
+[submodule "playground/euclid"]
+	path = experimental/euclid
+	url = git@github.com:ChrisCummins/euclid.git
