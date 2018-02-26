@@ -20,16 +20,16 @@
 	path = lib/labm8
 	url = git@github.com:ChrisCummins/labm8.git
 [submodule "src/lmk"]
-	path = src/lmk
+	path = util/lmk
 	url = git@github.com:ChrisCummins/lmk.git
 [submodule "src/shutterbug"]
-	path = src/shutterbug
+	path = util/shutterbug
 	url = git@github.com:ChrisCummins/shutterbug.git
 [submodule "src/chriscumms.cc"]
 	path = http/chriscummins.cc
 	url = git@github.com:ChrisCummins/chriscummins.github.io.git
 [submodule "src/gh-archiver"]
-	path = src/gh-archiver
+	path = util/gh-archiver
 	url = git@github.com:ChrisCummins/gh-archiver.git
 [submodule "docs/2017-09-pact"]
 	path = docs/2017-09-pact
@@ -38,7 +38,7 @@
 	path = learn/interactive-coding-challenges
 	url = git@github.com:ChrisCummins/interactive-coding-challenges.git
 [submodule "src/emu"]
-	path = src/emu
+	path = util/emu
 	url = git@github.com:ChrisCummins/emu.git
 [submodule "http/cgo.org/cgo2018"]
 	path = http/cgo.org/cgo2018
