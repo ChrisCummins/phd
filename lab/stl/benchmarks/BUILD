@@ -1,189 +1,189 @@
 cc_binary(
-    name = 'algorithm',
+    name = "algorithm",
     srcs = [
-        'algorithm.cc',
-        'benchmarks.cc',
-        'benchmarks.h',
+        "algorithm.cc",
+        "benchmarks.cc",
+        "benchmarks.h",
     ],
     copts = [
-        '-Ilab/stl/include',
-        '-Isrc/phd/include',
-        '-Iexternal/gtest/include',
-        '-Iexternal/benchmark/include',
+        "-Ilab/stl/include",
+        "-Isrc/phd/include",
+        "-Iexternal/gtest/include",
+        "-Iexternal/benchmark/include",
     ],
     deps = [
-        '//lab/stl:main',
-        '//src/phd:main',
+        "//lab/stl:main",
+        "//src/phd:main",
     ],
 )
 
 cc_binary(
-    name = 'array',
+    name = "array",
     srcs = [
-        'array.cc',
-        'benchmarks.cc',
-        'benchmarks.h',
+        "array.cc",
+        "benchmarks.cc",
+        "benchmarks.h",
     ],
     copts = [
-        '-Ilab/stl/include',
-        '-Isrc/phd/include',
-        '-Iexternal/gtest/include',
-        '-Iexternal/benchmark/include',
+        "-Ilab/stl/include",
+        "-Isrc/phd/include",
+        "-Iexternal/gtest/include",
+        "-Iexternal/benchmark/include",
     ],
     deps = [
-        '//lab/stl:main',
-        '//src/phd:main',
+        "//lab/stl:main",
+        "//src/phd:main",
     ],
 )
 
 cc_binary(
-    name = 'forward_list',
+    name = "forward_list",
     srcs = [
-        'forward_list.cc',
-        'benchmarks.cc',
-        'benchmarks.h',
+        "benchmarks.cc",
+        "benchmarks.h",
+        "forward_list.cc",
     ],
     copts = [
-        '-Ilab/stl/include',
-        '-Isrc/phd/include',
-        '-Iexternal/gtest/include',
-        '-Iexternal/benchmark/include',
+        "-Ilab/stl/include",
+        "-Isrc/phd/include",
+        "-Iexternal/gtest/include",
+        "-Iexternal/benchmark/include",
     ],
     deps = [
-        '//lab/stl:main',
-        '//src/phd:main',
+        "//lab/stl:main",
+        "//src/phd:main",
     ],
 )
 
 cc_binary(
-    name = 'list',
+    name = "list",
     srcs = [
-        'list.cc',
-        'benchmarks.cc',
-        'benchmarks.h',
+        "benchmarks.cc",
+        "benchmarks.h",
+        "list.cc",
     ],
     copts = [
-        '-Ilab/stl/include',
-        '-Isrc/phd/include',
-        '-Iexternal/gtest/include',
-        '-Iexternal/benchmark/include',
+        "-Ilab/stl/include",
+        "-Isrc/phd/include",
+        "-Iexternal/gtest/include",
+        "-Iexternal/benchmark/include",
     ],
     deps = [
-        '//lab/stl:main',
-        '//src/phd:main',
+        "//lab/stl:main",
+        "//src/phd:main",
     ],
 )
 
 cc_binary(
-    name = 'map',
+    name = "map",
     srcs = [
-        'map.cc',
-        'benchmarks.cc',
-        'benchmarks.h',
+        "benchmarks.cc",
+        "benchmarks.h",
+        "map.cc",
     ],
     copts = [
-        '-Ilab/stl/include',
-        '-Isrc/phd/include',
-        '-Iexternal/gtest/include',
-        '-Iexternal/benchmark/include',
+        "-Ilab/stl/include",
+        "-Isrc/phd/include",
+        "-Iexternal/gtest/include",
+        "-Iexternal/benchmark/include",
     ],
     deps = [
-        '//lab/stl:main',
-        '//src/phd:main',
+        "//lab/stl:main",
+        "//src/phd:main",
     ],
 )
 
 cc_binary(
-    name = 'set',
+    name = "set",
     srcs = [
-        'set.cc',
-        'benchmarks.cc',
-        'benchmarks.h',
+        "benchmarks.cc",
+        "benchmarks.h",
+        "set.cc",
     ],
     copts = [
-        '-Ilab/stl/include',
-        '-Isrc/phd/include',
-        '-Iexternal/gtest/include',
-        '-Iexternal/benchmark/include',
+        "-Ilab/stl/include",
+        "-Isrc/phd/include",
+        "-Iexternal/gtest/include",
+        "-Iexternal/benchmark/include",
     ],
     deps = [
-        '//lab/stl:main',
-        '//src/phd:main',
+        "//lab/stl:main",
+        "//src/phd:main",
     ],
 )
 
 cc_binary(
-    name = 'stack',
+    name = "stack",
     srcs = [
-        'stack.cc',
-        'benchmarks.cc',
-        'benchmarks.h',
+        "benchmarks.cc",
+        "benchmarks.h",
+        "stack.cc",
     ],
     copts = [
-        '-Ilab/stl/include',
-        '-Isrc/phd/include',
-        '-Iexternal/gtest/include',
-        '-Iexternal/benchmark/include',
+        "-Ilab/stl/include",
+        "-Isrc/phd/include",
+        "-Iexternal/gtest/include",
+        "-Iexternal/benchmark/include",
     ],
     deps = [
-        '//lab/stl:main',
-        '//src/phd:main',
+        "//lab/stl:main",
+        "//src/phd:main",
     ],
 )
 
 cc_binary(
-    name = 'type_traits',
+    name = "type_traits",
     srcs = [
-        'type_traits.cc',
-        'benchmarks.cc',
-        'benchmarks.h',
+        "benchmarks.cc",
+        "benchmarks.h",
+        "type_traits.cc",
     ],
     copts = [
-        '-Ilab/stl/include',
-        '-Isrc/phd/include',
-        '-Iexternal/gtest/include',
-        '-Iexternal/benchmark/include',
+        "-Ilab/stl/include",
+        "-Isrc/phd/include",
+        "-Iexternal/gtest/include",
+        "-Iexternal/benchmark/include",
     ],
     deps = [
-        '//lab/stl:main',
-        '//src/phd:main',
+        "//lab/stl:main",
+        "//src/phd:main",
     ],
 )
 
 cc_binary(
-    name = 'unordered_map',
+    name = "unordered_map",
     srcs = [
-        'unordered_map.cc',
-        'benchmarks.cc',
-        'benchmarks.h',
+        "benchmarks.cc",
+        "benchmarks.h",
+        "unordered_map.cc",
     ],
     copts = [
-        '-Ilab/stl/include',
-        '-Isrc/phd/include',
-        '-Iexternal/gtest/include',
-        '-Iexternal/benchmark/include',
+        "-Ilab/stl/include",
+        "-Isrc/phd/include",
+        "-Iexternal/gtest/include",
+        "-Iexternal/benchmark/include",
     ],
     deps = [
-        '//lab/stl:main',
-        '//src/phd:main',
+        "//lab/stl:main",
+        "//src/phd:main",
     ],
 )
 
 cc_binary(
-    name = 'vector',
+    name = "vector",
     srcs = [
-        'vector.cc',
-        'benchmarks.cc',
-        'benchmarks.h',
+        "benchmarks.cc",
+        "benchmarks.h",
+        "vector.cc",
     ],
     copts = [
-        '-Ilab/stl/include',
-        '-Isrc/phd/include',
-        '-Iexternal/gtest/include',
-        '-Iexternal/benchmark/include',
+        "-Ilab/stl/include",
+        "-Isrc/phd/include",
+        "-Iexternal/gtest/include",
+        "-Iexternal/benchmark/include",
     ],
     deps = [
-        '//lab/stl:main',
-        '//src/phd:main',
+        "//lab/stl:main",
+        "//src/phd:main",
     ],
 )

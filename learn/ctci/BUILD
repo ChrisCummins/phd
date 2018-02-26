@@ -4,292 +4,292 @@ cc_library(
     name = "ctci",
     hdrs = ["ctci.h"],
     deps = [
-        "@gtest//:main",
         "@benchmark//:main",
+        "@gtest//:main",
     ],
 )
 
 cc_test(
-    name =  "0101-unique-chars-in-string-cpp",
+    name = "0101-unique-chars-in-string-cpp",
+    size = "small",
     srcs = ["0101-unique-chars-in-string.cc"],
     copts = [
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
-    size = 'small',
 )
 
 py_test(
-    name =  '0101-unique-chars-in-string-py',
-    srcs = ['0101-unique-chars-in-string.py'],
-    main =  '0101-unique-chars-in-string.py',
-    size = 'small',
+    name = "0101-unique-chars-in-string-py",
+    size = "small",
+    srcs = ["0101-unique-chars-in-string.py"],
+    main = "0101-unique-chars-in-string.py",
     deps = [
         requirement("absl-py"),
-    ]
+    ],
 )
 
 cc_test(
-    name =  "0102-reverse-string-cpp",
+    name = "0102-reverse-string-cpp",
+    size = "small",
     srcs = ["0102-reverse-string.cc"],
     copts = [
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
-    size = 'small',
 )
 
 cc_test(
-    name =  "0103-permutations-cpp",
+    name = "0103-permutations-cpp",
+    size = "small",
     srcs = ["0103-permutations.cc"],
     copts = [
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
-    size = 'small',
 )
 
 py_test(
-    name =  '0103-permutations-py',
-    srcs = ['0103-permutations.py'],
-    main =  '0103-permutations.py',
-    size = 'small',
+    name = "0103-permutations-py",
+    size = "small",
+    srcs = ["0103-permutations.py"],
+    main = "0103-permutations.py",
     deps = [
         requirement("absl-py"),
-    ]
+    ],
 )
 
 cc_test(
-    name =  "0104-escape-string-cpp",
+    name = "0104-escape-string-cpp",
+    size = "small",
     srcs = ["0104-escape-string.cc"],
     copts = [
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
-    size = 'small',
 )
 
 py_test(
-    name =  '0104-escape-string-py',
-    srcs = ['0104-escape-string.py'],
-    main =  '0104-escape-string.py',
-    size = 'small',
+    name = "0104-escape-string-py",
+    size = "small",
+    srcs = ["0104-escape-string.py"],
+    main = "0104-escape-string.py",
     deps = [
         requirement("absl-py"),
-    ]
+    ],
 )
 
 cc_test(
-    name =  "0105-string-compression-cpp",
+    name = "0105-string-compression-cpp",
+    size = "small",
     srcs = ["0105-string-compression.cc"],
     copts = [
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
-    size = 'small',
 )
 
 cc_test(
-    name =  "0107-matrix-zero-cpp",
+    name = "0107-matrix-zero-cpp",
+    size = "small",
     srcs = ["0107-matrix-zero.cc"],
     copts = [
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
-    size = 'small',
 )
 
 cc_test(
-    name =  "0108-string-rotation-cpp",
+    name = "0108-string-rotation-cpp",
+    size = "small",
     srcs = ["0108-string-rotation.cc"],
     copts = [
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
-    size = 'small',
 )
 
 cc_test(
-    name =  "0201-list-remove-dups-cpp",
+    name = "0201-list-remove-dups-cpp",
+    size = "small",
     srcs = ["0201-list-remove-dups.cc"],
     copts = [
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
-    size = 'small',
 )
 
 py_test(
-    name =  "0201-list-remove-dups-py",
+    name = "0201-list-remove-dups-py",
+    size = "small",
     srcs = ["0201-list-remove-dups.py"],
-    main =  '0201-list-remove-dups.py',
     default_python_version = "PY3",
-    size = 'small',
+    main = "0201-list-remove-dups.py",
     deps = [
         requirement("absl-py"),
-    ]
+    ],
 )
 
 cc_test(
-    name =  "0202-linked-list-k-last-cpp",
+    name = "0202-linked-list-k-last-cpp",
+    size = "small",
     srcs = ["0202-linked-list-k-last.cc"],
     copts = [
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
-    size = 'small',
 )
 
 cc_test(
-    name =  "0207-list-palindrone-cpp",
+    name = "0207-list-palindrone-cpp",
+    size = "small",
     srcs = ["0207-list-palindrone.cc"],
     copts = [
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
-    size = 'small',
 )
 
 cc_test(
-    name =  "0302-stack-min-cpp",
+    name = "0302-stack-min-cpp",
+    size = "small",
     srcs = ["0302-stack-min.cc"],
     copts = [
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
-    size = 'small',
 )
 
 cc_test(
-    name =  "0303-set-of-stacks-cpp",
+    name = "0303-set-of-stacks-cpp",
+    size = "small",
     srcs = ["0303-set-of-stacks.cc"],
     copts = [
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
-    size = 'small',
 )
 
 cc_test(
-    name =  "0305-stack-queue-cpp",
+    name = "0305-stack-queue-cpp",
+    size = "small",
     srcs = ["0305-stack-queue.cc"],
     copts = [
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
-    size = 'small',
 )
 
 cc_test(
-    name =  "0402-directed-graph-routefinder-cpp",
+    name = "0402-directed-graph-routefinder-cpp",
+    size = "small",
     srcs = ["0402-directed-graph-routefinder.cc"],
     copts = [
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
-    size = 'small',
 )
 
 cc_test(
-    name =  "0404-binary-tree-list-cpp",
+    name = "0404-binary-tree-list-cpp",
+    size = "small",
     srcs = ["0404-binary-tree-list.cc"],
     copts = [
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
-    size = 'small',
 )
 
 cc_test(
-    name =  "0502-binary-double-cpp",
+    name = "0502-binary-double-cpp",
+    size = "small",
     srcs = ["0502-binary-double.cc"],
     copts = [
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
-    size = 'small',
 )
 
 cc_test(
-    name =  "0505-int-bitdiff-cpp",
+    name = "0505-int-bitdiff-cpp",
+    size = "small",
     srcs = ["0505-int-bitdiff.cc"],
     copts = [
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
-    size = 'small',
 )
 
 cc_test(
-    name =  "0508-horiz-line-cpp",
+    name = "0508-horiz-line-cpp",
+    size = "small",
     srcs = ["0508-horiz-line.cc"],
     copts = [
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
-    size = 'small',
 )
 
 cc_test(
-    name =  "1101-merge-arrays-cpp",
+    name = "1101-merge-arrays-cpp",
+    size = "small",
     srcs = ["1101-merge-arrays.cc"],
     copts = [
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
-    size = 'small',
 )
 
 cc_test(
-    name =  "1102-sort-anagrams-cpp",
+    name = "1102-sort-anagrams-cpp",
+    size = "small",
     srcs = ["1102-sort-anagrams.cc"],
     copts = [
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
-    size = 'small',
 )
 
 cc_test(
-    name =  "1301-last-k-lines-cpp",
+    name = "1301-last-k-lines-cpp",
+    size = "small",
     srcs = ["1301-last-k-lines.cc"],
     copts = [
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
-    size = 'small',
 )
 
 cc_test(
-    name =  "1307-tree-copy-cpp",
+    name = "1307-tree-copy-cpp",
+    size = "small",
     srcs = ["1307-tree-copy.cc"],
     copts = [
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
-    size = 'small',
 )
 
 # FIXME: this is broken
@@ -305,23 +305,23 @@ cc_test(
 # )
 
 cc_test(
-    name =  "1701-num-swap-cpp",
+    name = "1701-num-swap-cpp",
+    size = "small",
     srcs = ["1701-num-swap.cc"],
     copts = [
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
-    size = 'small',
 )
 
 cc_test(
-    name =  "1702-tic-tac-toe-cpp",
+    name = "1702-tic-tac-toe-cpp",
+    size = "small",
     srcs = ["1702-tic-tac-toe.cc"],
     copts = [
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [":ctci"],
-    size = 'small',
 )

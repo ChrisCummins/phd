@@ -1,19 +1,19 @@
 # cldrive
 
 sh_library(
-    name = 'cldrive_src',
+    name = "cldrive_src",
     srcs = glob([
-        'cldrive/bin/cldrive',
-        'cldrive/cldrive/**/*.py',
-        'cldrive/Makefile',
-        'cldrive/pytest.ini',
-        'cldrive/requirements.txt',
-        'cldrive/setup.cfg',
-        'cldrive/setup.py',
-        'cldrive/tests/**/*.py',
-        'cldrive/tests/data/**/*',
+        "cldrive/bin/cldrive",
+        "cldrive/cldrive/**/*.py",
+        "cldrive/Makefile",
+        "cldrive/pytest.ini",
+        "cldrive/requirements.txt",
+        "cldrive/setup.cfg",
+        "cldrive/setup.py",
+        "cldrive/tests/**/*.py",
+        "cldrive/tests/data/**/*",
     ]),
-    visibility = ['//visibility:public'],
+    visibility = ["//visibility:public"],
 )
 
 # TODO(cec): Enable cldrive testing once the tests are stable:
@@ -29,19 +29,19 @@ sh_library(
 # clgen
 
 sh_library(
-    name = 'clgen_src',
+    name = "clgen_src",
     srcs = glob([
-        'clgen/bin/*',
-        'clgen/clgen/**/*.py',
-        'clgen/clgen/data/**/*',
-        'clgen/configure',
-        'clgen/make/**/*',
-        'clgen/Makefile',
-        'clgen/native/*.cpp',
-        'clgen/setup.py',
-        'clgen/tests/**/*',
+        "clgen/bin/*",
+        "clgen/clgen/**/*.py",
+        "clgen/clgen/data/**/*",
+        "clgen/configure",
+        "clgen/make/**/*",
+        "clgen/Makefile",
+        "clgen/native/*.cpp",
+        "clgen/setup.py",
+        "clgen/tests/**/*",
     ]),
-    visibility = ['//visibility:public'],
+    visibility = ["//visibility:public"],
 )
 
 # a script which sets up a virtualenv and runs the test suite.

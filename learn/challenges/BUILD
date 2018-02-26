@@ -1,24 +1,25 @@
 cc_test(
-    name =  "001-int-average",
+    name = "001-int-average",
+    size = "small",
     srcs = ["001-int-average.cc"],
     copts = [
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [
-        "@gtest//:main",
         "@benchmark//:main",
+        "@gtest//:main",
     ],
-    size = 'small',
 )
 
 cc_binary(
-    name =  "006-gray-code",
+    name = "006-gray-code",
     srcs = ["006-gray-code.cc"],
 )
 
 cc_test(
-    name =  "008-linked-list",
+    name = "008-linked-list",
+    size = "small",
     srcs = ["008-linked-list.cc"],
     copts = [
         "-Iexternal/gtest/include",
@@ -26,25 +27,25 @@ cc_test(
     deps = [
         "@gtest//:main",
     ],
-    size = 'small',
 )
 
 cc_test(
-    name =  "009-longest-substr",
+    name = "009-longest-substr",
+    size = "small",
     srcs = ["009-longest-substr.cc"],
     copts = [
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [
-        "@gtest//:main",
         "@benchmark//:main",
+        "@gtest//:main",
     ],
-    size = 'small',
 )
 
 cc_test(
-    name =  "010-inc-int-arr",
+    name = "010-inc-int-arr",
+    size = "small",
     srcs = ["010-inc-int-arr.cc"],
     copts = [
         "-Isrc/phd/include",
@@ -54,23 +55,23 @@ cc_test(
     deps = [
         "//src/phd:main",
     ],
-    size = 'small',
 )
 
 cc_test(
-    name =  "011-big-mandelbrot",
+    name = "011-big-mandelbrot",
+    size = "small",
     srcs = ["011-big-mandelbrot.cc"],
     copts = ["-Ithird_party/opencl/include"],
     linkopts = select({
-        '//:darwin': ['-framework OpenCL'],
-        '//conditions:default': ['-lOpenCL'],
+        "//:darwin": ["-framework OpenCL"],
+        "//conditions:default": ["-lOpenCL"],
     }),
     deps = ["//:opencl"],
-    size = 'small',
 )
 
 cc_test(
-    name =  "012-simple-cyphers",
+    name = "012-simple-cyphers",
+    size = "small",
     srcs = ["012-simple-cyphers.cc"],
     copts = [
         "-Isrc/phd/include",
@@ -80,62 +81,61 @@ cc_test(
     deps = [
         "//src/phd:main",
     ],
-    size = 'small',
 )
 
 cc_test(
-    name =  "014-palindrome",
+    name = "014-palindrome",
+    size = "small",
     srcs = ["014-palindrome.c"],
-    args = ['abcdefedcba'],  # palindrome
-    size = 'small',
+    args = ["abcdefedcba"],  # palindrome
 )
 
 cc_test(
-    name =  "015-longest-path-matrix",
+    name = "015-longest-path-matrix",
+    size = "small",
     srcs = ["015-longest-path-matrix.cc"],
-    size = 'small',
 )
 
 sh_test(
     name = "016-min-hops",
+    size = "small",
     srcs = ["016-min-hops.py"],
-    size = 'small',
 )
 
 sh_test(
     name = "017-longest-substrings",
+    size = "small",
     srcs = ["017-longest-substrings.py"],
-    size = 'small',
 )
 
 sh_test(
     name = "018-list-binary-tree",
+    size = "small",
     srcs = ["018-list-binary-tree.py"],
-    size = 'small',
 )
 
 sh_test(
     name = "019-validate-bst",
+    size = "small",
     srcs = ["019-validate-bst.py"],
-    size = 'small',
 )
 
 sh_test(
     name = "020-highest-product",
+    size = "small",
     srcs = ["020-highest-product.py"],
-    size = 'small',
 )
 
 cc_test(
     name = "021-string-reverse-cpp",
+    size = "small",
     srcs = ["021-string-reverse.cc"],
-    size = 'small',
 )
 
 sh_test(
     name = "021-string-reverse-py",
+    size = "small",
     srcs = ["021-string-reverse.py"],
-    size = 'small',
 )
 
 sh_binary(
@@ -150,6 +150,7 @@ sh_binary(
 
 cc_test(
     name = "024-linked-list-cycle",
+    size = "small",
     srcs = ["024-linked-list-cycle.cc"],
     copts = [
         "-Iexternal/gtest/include",
@@ -157,7 +158,6 @@ cc_test(
     deps = [
         "@gtest//:main",
     ],
-    size = 'small',
 )
 
 sh_binary(
@@ -172,14 +172,14 @@ cc_binary(
 
 sh_test(
     name = "027-missing-number",
+    size = "small",
     srcs = ["027-missing-number.py"],
-    size = 'small',
 )
 
 cc_test(
-    name = '029-unique-substrings',
-    srcs = ['029-unique-substrings.cc'],
-    size = 'small',
-    copts = ['-Iexternal/gtest/include'],
-    deps = ['@gtest//:main'],
+    name = "029-unique-substrings",
+    size = "small",
+    srcs = ["029-unique-substrings.cc"],
+    copts = ["-Iexternal/gtest/include"],
+    deps = ["@gtest//:main"],
 )

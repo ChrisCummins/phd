@@ -76,7 +76,7 @@ genrule(
     tools = ["//tools:autotex"],
 )
 
-# FIXME:
+# TODO(cec):
 # genrule(
 #     name = "2016-07-pact",
 #     srcs = glob([
@@ -103,7 +103,7 @@ genrule(
     tools = ["//tools:autotex"],
 )
 
-# FIXME: bibliography error
+# TODO(cec): bibliography error
 # genrule(
 #     name = "2016-12-wip-taco",
 #     srcs = glob([

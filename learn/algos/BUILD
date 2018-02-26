@@ -4,43 +4,44 @@ cc_binary(
 )
 
 cc_test(
-    name =  "breadth_first_search",
+    name = "breadth_first_search",
+    size = "small",
     srcs = [
         "breadth_first_search.cc",
         "graph.h",
     ],
-    size = 'small',
 )
 
 sh_test(
     name = "bts_rotate",
+    size = "small",
     srcs = ["bts_rotate.py"],
-    size = 'small',
 )
 
 cc_test(
-    name =  "depth_first_search",
+    name = "depth_first_search",
+    size = "small",
     srcs = [
         "depth_first_search.cc",
         "graph.h",
     ],
-    size = 'small',
 )
 
 sh_test(
     name = "graph",
+    size = "small",
     srcs = ["graph.py"],
-    size = 'small',
 )
 
 sh_test(
     name = "search",
+    size = "small",
     srcs = ["search.py"],
-    size = 'small',
 )
 
 cc_test(
     name = "priority_queues",
+    size = "small",
     srcs = ["priority_queues.cc"],
     copts = [
         "-Iexternal/gtest/include",
@@ -48,5 +49,4 @@ cc_test(
     deps = [
         "@gtest//:main",
     ],
-    size = 'small',
 )

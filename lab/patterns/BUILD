@@ -1,14 +1,14 @@
 cc_test(
-    name = 'main',
+    name = "main",
+    size = "small",
     srcs = [
-        'main.cc',
-        'container.hpp',
+        "container.hpp",
+        "main.cc",
     ],
     copts = [
-        '-Isrc/phd/include',
-        '-Iexternal/gtest/include',
-        '-Iexternal/benchmark/include',
+        "-Isrc/phd/include",
+        "-Iexternal/gtest/include",
+        "-Iexternal/benchmark/include",
     ],
-    deps = ['//src/phd:main'],
-    size = 'small',
+    deps = ["//src/phd:main"],
 )
