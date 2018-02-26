@@ -14,7 +14,7 @@
 	path = src/cldrive
 	url = git@github.com:ChrisCummins/cldrive.git
 [submodule "src/clgen"]
-	path = src/clgen
+	path = deeplearning/clgen
 	url = git@github.com:ChrisCummins/clgen.git
 [submodule "src/labm8"]
 	path = src/labm8
