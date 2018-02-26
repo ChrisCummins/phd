@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+from absl import app
 
 # Exercise 1.1:
 #
@@ -39,6 +39,10 @@ def characters_are_unique(string):
 
     return True
 
-if __name__ == "__main__":
+def main(argv):
+    del argv
     assert characters_are_unique("abcdefg") == True
     assert characters_are_unique("abcdefga") == False
+
+if __name__ == "__main__":
+    app.run(main)

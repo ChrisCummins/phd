@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-#
+from absl import app
+
 # Univariate linear regression using iterative batch gradient descent.
 #
 def target_func(x):
@@ -38,7 +38,6 @@ def regression(data):
         # Compute gradients.
         g0, g1 = gradient(h, a, data)
 
-
         # Update gradients.
         h[0] -= a * g0
         h[1] -= a * g1
@@ -60,11 +59,13 @@ def validate_hypothesis(h, data):
         assert(abs(h(x) == y) < 0.0001)
 
 
-def main():
+def main(argv):
+    del argv
+
     training_data1a = [(i, target_func(i)) for i in range(10)]
     h = regression(training_data1a)
     validate_hypothesis(h, training_data1a)
 
 
 if __name__ == "__main__":
-    main()
+    app.run(main)

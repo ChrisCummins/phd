@@ -1,12 +1,10 @@
-#!/usr/bin/env python2.7
-#
+from absl import app
+
 ## Linked Lists:
 #
 # Solutions for the code questions posed in Cracking the Code
 # Interview, Chapter 2, page 77.
 #
-from sets import Set
-
 class Node:
     def __init__(self, key):
         self.key = key
@@ -48,7 +46,7 @@ def remove_duplicates_no_buffer(head):
 # O(n) space.
 #
 def remove_duplicates(head):
-    values = Set()
+    values = set()
 
     prev, x = None, head
     while x:
@@ -59,7 +57,9 @@ def remove_duplicates(head):
         prev, x = x, x.next
 
 
-if __name__ == "__main__":
+def main(argv):
+    del argv
+
     # Exercise 2.1
     a, b, c, d, e = Node(1), Node(2), Node(3), Node(2), Node(4)
     a.next = b
@@ -75,3 +75,7 @@ if __name__ == "__main__":
     assert str(a) == "1 2 3 4 2"
     remove_duplicates(a)
     assert str(a) == "1 2 3 4"
+
+
+if __name__ == "__main__":
+    app.run(main)

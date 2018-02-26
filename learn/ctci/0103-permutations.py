@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+from absl import app
 
 # Exercise 1.3:
 #
@@ -29,7 +29,12 @@ def is_permutation(a, b):
     return sorted(list(a)) == sorted(list(b))
 
 
-if __name__ == "__main__":
+def main(argv):
+    del argv
     assert is_permutation("abc", "abc") == True
     assert is_permutation("abc", "abcd") == False
     assert is_permutation("abc", "cab") == True
+
+
+if __name__ == "__main__":
+    app.run(main)
