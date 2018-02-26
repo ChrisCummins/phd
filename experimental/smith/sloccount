@@ -8,5 +8,5 @@ cd ../../
     find src/smith -name '*.py'; \
     find src/smith -name '*.cpp'; \
     find src/smith/bin -type f; \
-    find lab/smith -executable -type f \
+    find experimental/smith -executable -type f \
 ) | grep -v '/.eggs/' | grep -v '/build/' | xargs wc -l | sort -n

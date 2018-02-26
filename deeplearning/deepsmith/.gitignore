@@ -24,8 +24,8 @@ __pycache__
 
 # runtime files
 .ipynb_checkpoints
-/lab/autotest/clsmith-0.cl
-/lab/autotest/outbox.json
+/experimental/autotest/clsmith-0.cl
+/experimental/autotest/outbox.json
 /notebooks/.cache/*
 /notebooks/.tex/*
 

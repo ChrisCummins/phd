@@ -7,7 +7,7 @@
 [submodule "docs/2017-02-cgo"]
 	path = docs/2017-02-cgo
 	url = git@github.com:ChrisCummins/paper-synthesizing-benchmarks.git
-[submodule "lab/humanorrobot.uk"]
+[submodule "experimental/humanorrobot.uk"]
 	path = src/humanorrobot.uk
 	url = git@github.com:ChrisCummins/humanorrobot.uk.git
 [submodule "src/cldrive"]

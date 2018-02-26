@@ -25,10 +25,10 @@ from smith import cgo13
 # Seaborn configuration:
 sns.set(style="ticks", color_codes=True)
 
-bench_a_path = fs.path("~/phd/lab/smith/ml/data/a/benchmarks.csv")
-bench_b_path = fs.path("~/phd/lab/smith/ml/data/b/benchmarks.csv")
-syn_a_path = fs.path("~/phd/lab/smith/ml/data/a/synthetics.csv")
-syn_b_path = fs.path("~/phd/lab/smith/ml/data/b/synthetics.csv")
+bench_a_path = fs.path("~/phd/experimental/smith/ml/data/a/benchmarks.csv")
+bench_b_path = fs.path("~/phd/experimental/smith/ml/data/b/benchmarks.csv")
+syn_a_path = fs.path("~/phd/experimental/smith/ml/data/a/synthetics.csv")
+syn_b_path = fs.path("~/phd/experimental/smith/ml/data/b/synthetics.csv")
 
 bench_a = cgo13.LabelledData.from_csv(bench_a_path)
 bench_b = cgo13.LabelledData.from_csv(bench_b_path)

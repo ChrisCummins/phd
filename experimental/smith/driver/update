@@ -62,11 +62,11 @@ main() {
     wait_for_jobs
 
     ### Update ML directory.
-    ln -sf ~/phd/lab/smith/benchmarks/data/platform-a.csv ../ml/data/a/benchmarks.csv
-    ln -sf ~/phd/lab/smith/benchmarks/data/platform-b.csv ../ml/data/b/benchmarks.csv
+    ln -sf ~/phd/experimental/smith/benchmarks/data/platform-a.csv ../ml/data/a/benchmarks.csv
+    ln -sf ~/phd/experimental/smith/benchmarks/data/platform-b.csv ../ml/data/b/benchmarks.csv
 
-    ln -sf ~/phd/lab/smith/driver/data/synthetic/platform-a.csv ../ml/data/a/synthetics.csv
-    ln -sf ~/phd/lab/smith/driver/data/synthetic/platform-b.csv ../ml/data/b/synthetics.csv
+    ln -sf ~/phd/experimental/smith/driver/data/synthetic/platform-a.csv ../ml/data/a/synthetics.csv
+    ln -sf ~/phd/experimental/smith/driver/data/synthetic/platform-b.csv ../ml/data/b/synthetics.csv
 
     # Perform experiments.
     cd ../ml/

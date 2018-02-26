@@ -8,11 +8,11 @@ push() {
     local archive=$(date +"$HOSTNAME-%y-%m-%d.%H-%M.tar.bz2")
 
     if [[ $HOSTNAME == "monza" ]]; then
-        ~/phd/lab/smith/driver/mkerros intel $dir
-        ~/phd/lab/smith/driver/mkerros amd $dir
+        ~/phd/experimental/smith/driver/mkerros intel $dir
+        ~/phd/experimental/smith/driver/mkerros amd $dir
         tar -jcvf $archive intel.csv intel-errors.csv amd.csv amd-errors.csv
     elif [[ $HOSTNAME == "diana" ]]; then
-        ~/phd/lab/smith/driver/mkerros nvidia $dir
+        ~/phd/experimental/smith/driver/mkerros nvidia $dir
         tar -jcvf $archive nvidia.csv nvidia-errors.csv
     else
         echo "Unkown hostname '$HOSTNAME'" >&2

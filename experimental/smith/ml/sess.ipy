@@ -24,14 +24,14 @@ import smith
 from smith import features
 from smith import cgo13
 
-lab_smith = fs.path("~/phd/lab/smith")
+lab_smith = fs.path("~/phd/experimental/smith")
 
 BENCHMARKS = {
-    "a": cgo.LabelledData.from_csv("~/phd/lab/smith/ml/data/a/benchmarks.csv"),
-    "b": cgo.LabelledData.from_csv("~/phd/lab/smith/ml/data/b/benchmarks.csv")
+    "a": cgo.LabelledData.from_csv("~/phd/experimental/smith/ml/data/a/benchmarks.csv"),
+    "b": cgo.LabelledData.from_csv("~/phd/experimental/smith/ml/data/b/benchmarks.csv")
 }
 
 SYNTHETICS = {
-    "a": cgo.LabelledData.from_csv("~/phd/lab/smith/ml/data/a/synthetics.csv"),
-    "b": cgo.LabelledData.from_csv("~/phd/lab/smith/ml/data/b/synthetics.csv")
+    "a": cgo.LabelledData.from_csv("~/phd/experimental/smith/ml/data/a/synthetics.csv"),
+    "b": cgo.LabelledData.from_csv("~/phd/experimental/smith/ml/data/b/synthetics.csv")
 }
