@@ -1,0 +1,29 @@
+syntax = "proto2";
+package dsmith;
+
+
+message Stderr {
+    sha1 = sql.Column(sql.String(40), nullable=False, unique=True, index=True)
+    assertion_id = sql.Column(Assertion.id_t, sql.ForeignKey("assertions.id"))
+    unreachable_id = sql.Column(Unreachable.id_t, sql.ForeignKey("unreachables.id"))
+    stackdump_id = sql.Column(StackDump.id_t, sql.ForeignKey("stackdumps.id"))
+    linecount = sql.Column(sql.Integer, nullable=False)
+    charcount = sql.Column(sql.Integer, nullable=False)
+    truncated = sql.Column(sql.Boolean, nullable=False)
+    stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+
+    optional int32 id = 1;
+    optional string sha1 = 2;
+    optional int32 assertion_id = 3;
+    optional int32 unreachable_id = 4;
+    optional int32 stackdump_id = 5;
+    optional int32 linecount = 6;
+    optional int32 charcount = 7;
+    optional bool truncated = 8;
+    optional string stderr = 9;
+}
+
+
+message Stderrs {
+    repeated Stderr stderrs = 1;
+}

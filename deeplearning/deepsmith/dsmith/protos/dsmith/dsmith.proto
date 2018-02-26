@@ -1,0 +1,147 @@
+syntax = "proto2";
+
+message Timing {
+  // Reserved for later use as ID field.
+  reserved 1;
+
+  optional string client = 2;  // name of the client. E.g. $HOSTNAME.
+  optional string event = 3;
+  optional float duration = 4;
+  // Seconds since the epoch of the timing.
+  optional int64 event_epoch_seconds = 5;
+}
+
+message Testcase {
+  // Reserved for later use as ID field.
+  reserved 1;
+
+  optional Generator generator = 2;
+  optional Harness harness = 4;
+
+  // <input_name, input_value>
+  map<string, string> inputs = 3;
+  repeated string opts = 5;
+  repeated Timing timings = 6;
+}
+
+message Generator {
+  // Reserved for later use as ID field.
+  reserved 1;
+
+  optional string name = 2;
+  optional string version = 3;
+}
+
+message Harness {
+  // Reserved for later use as ID field.
+  reserved 1;
+
+  optional string name = 2;
+  optional string version = 3;
+}
+
+message Testbed {
+  // Reserved for later use as ID field.
+  reserved 1;
+
+  optional string lang = 2;
+  optional string name = 3;
+  optional string version = 4;
+  repeated string opts = 5;
+}
+
+message Result {
+  // Reserved for later use as ID field.
+  reserved 1;
+
+  optional Testcase testcase = 2;
+  optional Testbed testbed = 3;
+  optional int32 returncode = 4;
+  // <name, value>
+  map<string, string> outputs = 5;
+  repeated Timing timings = 6;
+}
+
+
+//
+// RPCs
+//
+
+// SubmitTestcases
+
+message SubmitTestcasesRequest {
+  // Reserved for later use as ID field.
+  reserved 1;
+
+  repeated Testcase testcases = 2;
+}
+
+message SubmitTestcasesResponse {
+  // Reserved for later use as ID field.
+  reserved 1;
+
+  optional int32 error_code = 2;
+}
+
+// GetTestcases
+
+message GetTestcaseRequest {
+  // Reserved for later use as ID field.
+  reserved 1;
+
+  // The client name, e.g. $HOSTNAME.
+  optional string client = 2;
+  optional Testbed testbed = 3;
+  optional Harness harness = 4;
+}
+
+message GetTestcaseResponse {
+  // Reserved for later use as ID field.
+  reserved 1;
+
+  optional int32 error_code = 2;
+  repeated Testcase testcases = 3;
+}
+
+// SubmitTestcases
+
+message SubmitResultsRequest {
+  // Reserved for later use as ID field.
+  reserved 1;
+
+  repeated Result results = 2;
+}
+
+message SubmitResultsResponse {
+  // Reserved for later use as ID field.
+  reserved 1;
+
+  optional int32 error_code = 2;
+}
+
+service TestingService {
+  rpc SubmitTestcases (SubmitTestcasesRequest) returns (SubmitTestcasesResponse);
+  rpc GetTestCases (GetTestcaseRequest) returns (GetTestcaseResponse);
+  rpc SubmitResults (SubmitResultsRequest) returns (SubmitResultsResponse);
+}
+
+
+message ResultsCollection {
+  // Reserved for later use as ID field.
+  reserved 1;
+
+  repeated Result results = 2;
+}
+
+message ResultsTable {
+  message ResultsTableEntry {
+    optional Testbed testbed = 1;
+    optional Harness harness = 2;
+    repeated Result results = 3;
+  }
+
+  // Reserved for later use as ID field.
+  reserved 1;
+
+  repeated ResultsTableEntry entries = 2;
+}

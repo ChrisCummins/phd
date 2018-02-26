@@ -1,0 +1,37 @@
+# vim swap files
+*.swp
+
+# configure files
+/.config.json
+/.config.make
+/dsmith/_config.py
+/requirements.txt
+
+# build files
+/bazel-*
+/*.egg-info/*
+/.cache/*
+/venv/*
+/dist/*
+/dsmith/dsmith_pb2.py
+/dsmith/dsmith_pb2_grpc.py
+/dsmith/opencl/opencl_pb2.py
+/third_party/cmake/*
+/third_party/glsl/*
+/third_party/llvm/*
+/third_party/ninja/*
+__pycache__
+
+# runtime files
+.ipynb_checkpoints
+/lab/autotest/clsmith-0.cl
+/lab/autotest/outbox.json
+/notebooks/.cache/*
+/notebooks/.tex/*
+
+# CLSmith runtime files
+platform.info
+
+# what even is this lol
+broken.dot
+__gvdump.txt

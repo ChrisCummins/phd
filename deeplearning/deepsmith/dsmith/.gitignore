@@ -1,0 +1,10 @@
+/bug-report.sh
+/CLSmith
+/expected-output.txt
+/kernel.cl
+/nvidia-bug-report.log.gz
+/reproduced-output.txt
+/stderr.txt
+/stdout.txt
+__pycache__
+platform.info
