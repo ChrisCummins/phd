@@ -13,8 +13,8 @@ import sqlalchemy as sql
 
 from absl import logging
 
-from labm8 import crypto, fs, prof, system
-from sqlalchemy.exc import IntegrityError, OperationalError
+from labm8 import fs
+from sqlalchemy import exc
 from time import time
 
 from deeplearning.deepsmith import db
@@ -54,7 +54,7 @@ def make_engine(**kwargs) -> sql.engine.Engine:
     print("echo", os.environ.get("DB_DEBUG", False))
     echo = True if os.environ.get("DB_DEBUG", None) else False
 
-    logging.debug("connecting to database %s", public_uri})
+    logging.debug("connecting to database %s", public_uri)
     return sql.create_engine(uri, encoding="utf-8", echo=echo), public_uri
 
 
@@ -191,13 +191,13 @@ def save_records(session: db.session_t, records: typing.List['Base'],
         session.commit()
         runtime = time() - start_time
         logging.info("flushed %s records in %.2f seconds", nrecords, runtime)
-    except IntegrityError as e:
+    except exc.IntegrityError as e:
         logging.debug(e)
         logging.warning("database integrity error, rolling back")
         logging.warning(e)
         session.rollback()
         save_records(session, records, max_attempts, attempt + 1, e)
-    except OperationalError as e:
+    except exc.OperationalError as e:
         logging.debug(e)
         logging.warning("database operational error, rolling back")
         logging.warning(e)

@@ -136,6 +136,7 @@ class TestcaseInput(Base):
   date_added: datetime = Column(DateTime, nullable=False, default=now)
   name_id: TestcaseInputName.id_t = Column(
       TestcaseInputName.id_t, ForeignKey("testcase_input_names.id"), nullable=False)
+  # TODO(cec): Use Binary column type.
   sha1: str = Column(String(40), nullable=False, index=True)
   linecount = sql.Column(sql.Integer, nullable=False)
   charcount = sql.Column(sql.Integer, nullable=False)

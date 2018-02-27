@@ -12,7 +12,7 @@ from sqlalchemy import orm
 
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith import dbutil
-from deeplearning.deepsmith import dsmith_pb2 as pb
+from deeplearning.deepsmith.protos import deepsmith_pb2 as pb
 
 FLAGS = flags.FLAGS
 

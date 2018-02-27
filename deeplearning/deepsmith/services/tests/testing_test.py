@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 
 from deeplearning.deepsmith import datastore
 from deeplearning.deepsmith import db
-from deeplearning.deepsmith import deepsmith_pb2 as pb
+from deeplearning.deepsmith.protos import deepsmith_pb2 as pb
 from deeplearning.deepsmith.services import testing as testing_service
 
 
@@ -88,9 +88,9 @@ def test_service_add_one(ds):
             inputs=[pb.NamedText(name="src", text="foo")],
             opts=["1", "2", "3"],
             timings=[
-                pb.Timing(client="c", event="a", duration=1),
-                pb.Timing(client="c", event="b", duration=2),
-                pb.Timing(client="c", event="c", duration=3),
+                pb.ProfilingEvent(client="c", event="a", duration=1),
+                pb.ProfilingEvent(client="c", event="b", duration=2),
+                pb.ProfilingEvent(client="c", event="c", duration=3),
             ],
         ),
     ]
