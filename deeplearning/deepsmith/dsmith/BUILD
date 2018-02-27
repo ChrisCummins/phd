@@ -1,7 +1,5 @@
 load("@requirements//:requirements.bzl", "requirement")
 
-licenses(["restricted"])
-
 py_library(
     name = "db",
     srcs = ["db.py"],
