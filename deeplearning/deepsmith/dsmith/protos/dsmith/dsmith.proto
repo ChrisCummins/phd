@@ -4,11 +4,17 @@ message Timing {
   // Reserved for later use as ID field.
   reserved 1;
 
-  optional string client = 2;  // name of the client. E.g. $HOSTNAME.
-  optional string event = 3;
-  optional float duration = 4;
+  // A unique client name. A good starting point would be the hostname.
+  optional string client = 2;
+
+  // The name of the timing.
+  optional string name = 3;
+
+  // The duration in seconds.
+  optional float duration_seconds = 4;
+
   // Seconds since the epoch of the timing.
-  optional int64 event_epoch_seconds = 5;
+  optional int64 date_epoch_seconds = 5;
 }
 
 message Testcase {
