@@ -31,7 +31,7 @@ cc_test(
     size = "small",
     srcs = ["003-string-inc.cc"],
     copts = [
-        "-Isrc/phd/include",
+        "-Ilib/phd/include",
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
@@ -43,7 +43,7 @@ cc_test(
     size = "small",
     srcs = ["004-fractal.cc"],
     copts = [
-        "-Isrc/phd/include",
+        "-Ilib/phd/include",
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],

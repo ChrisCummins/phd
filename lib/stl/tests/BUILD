@@ -7,13 +7,13 @@ cc_test(
         "tests.h",
     ],
     copts = [
-        "-Ilab/stl/include",
-        "-Isrc/phd/include",
+        "-Ilib/stl/include",
+        "-Ilib/phd/include",
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [
-        "//lab/stl:main",
+        "//lib/stl:main",
         "//lib/phd:main",
     ],
 )
@@ -27,13 +27,13 @@ cc_test(
         "tests.h",
     ],
     copts = [
-        "-Ilab/stl/include",
-        "-Isrc/phd/include",
+        "-Ilib/stl/include",
+        "-Ilib/phd/include",
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [
-        "//lab/stl:main",
+        "//lib/stl:main",
         "//lib/phd:main",
     ],
 )
@@ -47,13 +47,13 @@ cc_test(
         "tests.h",
     ],
     copts = [
-        "-Ilab/stl/include",
-        "-Isrc/phd/include",
+        "-Ilib/stl/include",
+        "-Ilib/phd/include",
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [
-        "//lab/stl:main",
+        "//lib/stl:main",
         "//lib/phd:main",
     ],
 )
@@ -67,13 +67,13 @@ cc_test(
         "tests.h",
     ],
     copts = [
-        "-Ilab/stl/include",
-        "-Isrc/phd/include",
+        "-Ilib/stl/include",
+        "-Ilib/phd/include",
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [
-        "//lab/stl:main",
+        "//lib/stl:main",
         "//lib/phd:main",
     ],
 )
@@ -87,13 +87,13 @@ cc_test(
         "tests.h",
     ],
     copts = [
-        "-Ilab/stl/include",
-        "-Isrc/phd/include",
+        "-Ilib/stl/include",
+        "-Ilib/phd/include",
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [
-        "//lab/stl:main",
+        "//lib/stl:main",
         "//lib/phd:main",
     ],
 )
@@ -107,13 +107,13 @@ cc_test(
         "tests.h",
     ],
     copts = [
-        "-Ilab/stl/include",
-        "-Isrc/phd/include",
+        "-Ilib/stl/include",
+        "-Ilib/phd/include",
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [
-        "//lab/stl:main",
+        "//lib/stl:main",
         "//lib/phd:main",
     ],
 )
@@ -127,13 +127,13 @@ cc_test(
         "tests.h",
     ],
     copts = [
-        "-Ilab/stl/include",
-        "-Isrc/phd/include",
+        "-Ilib/stl/include",
+        "-Ilib/phd/include",
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [
-        "//lab/stl:main",
+        "//lib/stl:main",
         "//lib/phd:main",
     ],
 )
@@ -147,13 +147,13 @@ cc_test(
         "type_traits.cc",
     ],
     copts = [
-        "-Ilab/stl/include",
-        "-Isrc/phd/include",
+        "-Ilib/stl/include",
+        "-Ilib/phd/include",
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [
-        "//lab/stl:main",
+        "//lib/stl:main",
         "//lib/phd:main",
     ],
 )
@@ -167,13 +167,13 @@ cc_test(
         "unordered_map.cc",
     ],
     copts = [
-        "-Ilab/stl/include",
-        "-Isrc/phd/include",
+        "-Ilib/stl/include",
+        "-Ilib/phd/include",
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [
-        "//lab/stl:main",
+        "//lib/stl:main",
         "//lib/phd:main",
     ],
 )
@@ -187,13 +187,13 @@ cc_test(
         "vector.cc",
     ],
     copts = [
-        "-Ilab/stl/include",
-        "-Isrc/phd/include",
+        "-Ilib/stl/include",
+        "-Ilib/phd/include",
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [
-        "//lab/stl:main",
+        "//lib/stl:main",
         "//lib/phd:main",
     ],
 )

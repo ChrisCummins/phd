@@ -6,7 +6,7 @@ cc_test(
         "main.cc",
     ],
     copts = [
-        "-Isrc/phd/include",
+        "-Ilib/phd/include",
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],

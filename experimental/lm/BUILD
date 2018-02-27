@@ -1,5 +1,5 @@
 cc_library(
     name = "main",
     hdrs = glob(["include/lm/*"]),
-    visibility = ["//lab/lm:__subpackages__"],
+    visibility = ["//experimental/lm:__subpackages__"],
 )

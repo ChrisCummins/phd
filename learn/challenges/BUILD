@@ -48,7 +48,7 @@ cc_test(
     size = "small",
     srcs = ["010-inc-int-arr.cc"],
     copts = [
-        "-Isrc/phd/include",
+        "-Ilib/phd/include",
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
@@ -74,7 +74,7 @@ cc_test(
     size = "small",
     srcs = ["012-simple-cyphers.cc"],
     copts = [
-        "-Isrc/phd/include",
+        "-Ilib/phd/include",
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],

@@ -3,7 +3,7 @@ cc_library(
     srcs = glob(["src/*.cc"]),
     hdrs = glob(["include/phd/*"]),
     copts = [
-        "-Isrc/phd/include",
+        "-Ilib/phd/include",
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],

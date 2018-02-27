@@ -6,13 +6,13 @@ cc_test(
         "benchmarks.hpp",
     ],
     copts = [
-        "-Ilab/lm/include",
-        "-Isrc/phd/include",
+        "-Iexperimental/lm/include",
+        "-Ilib/phd/include",
         "-Iexternal/gtest/include",
         "-Iexternal/benchmark/include",
     ],
     deps = [
-        "//lab/lm:main",
+        "//experimental/lm:main",
         "//lib/phd:main",
     ],
 )
