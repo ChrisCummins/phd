@@ -12,8 +12,8 @@ cc_binary(
         "-Iexternal/benchmark/include",
     ],
     deps = [
-        "//lib/stl:main",
         "//lib/phd:main",
+        "//lib/stl:main",
     ],
 )
 
@@ -31,8 +31,8 @@ cc_binary(
         "-Iexternal/benchmark/include",
     ],
     deps = [
-        "//lib/stl:main",
         "//lib/phd:main",
+        "//lib/stl:main",
     ],
 )
 
@@ -50,8 +50,8 @@ cc_binary(
         "-Iexternal/benchmark/include",
     ],
     deps = [
-        "//lib/stl:main",
         "//lib/phd:main",
+        "//lib/stl:main",
     ],
 )
 
@@ -69,8 +69,8 @@ cc_binary(
         "-Iexternal/benchmark/include",
     ],
     deps = [
-        "//lib/stl:main",
         "//lib/phd:main",
+        "//lib/stl:main",
     ],
 )
 
@@ -88,8 +88,8 @@ cc_binary(
         "-Iexternal/benchmark/include",
     ],
     deps = [
-        "//lib/stl:main",
         "//lib/phd:main",
+        "//lib/stl:main",
     ],
 )
 
@@ -107,8 +107,8 @@ cc_binary(
         "-Iexternal/benchmark/include",
     ],
     deps = [
-        "//lib/stl:main",
         "//lib/phd:main",
+        "//lib/stl:main",
     ],
 )
 
@@ -126,8 +126,8 @@ cc_binary(
         "-Iexternal/benchmark/include",
     ],
     deps = [
-        "//lib/stl:main",
         "//lib/phd:main",
+        "//lib/stl:main",
     ],
 )
 
@@ -145,8 +145,8 @@ cc_binary(
         "-Iexternal/benchmark/include",
     ],
     deps = [
-        "//lib/stl:main",
         "//lib/phd:main",
+        "//lib/stl:main",
     ],
 )
 
@@ -164,8 +164,8 @@ cc_binary(
         "-Iexternal/benchmark/include",
     ],
     deps = [
-        "//lib/stl:main",
         "//lib/phd:main",
+        "//lib/stl:main",
     ],
 )
 
@@ -183,7 +183,7 @@ cc_binary(
         "-Iexternal/benchmark/include",
     ],
     deps = [
-        "//lib/stl:main",
         "//lib/phd:main",
+        "//lib/stl:main",
     ],
 )

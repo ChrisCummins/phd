@@ -13,6 +13,7 @@ py_library(
 
 py_test(
     name = "tests/db_test",
+    size = "small",
     srcs = ["tests/db_test.py"],
     deps = [
         ":db",
