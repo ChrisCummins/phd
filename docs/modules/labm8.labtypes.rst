@@ -1,6 +1,6 @@
-labm8.types
+labm8.labtypes
 ============
 
-.. automodule:: labm8.types
+.. automodule:: labm8.labtypes
    :members:
    :undoc-members:

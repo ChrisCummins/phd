@@ -13,115 +13,178 @@ py_test(
 )
 
 py_test(
-   name = "test_cache",
-   srcs = ["test_cache.py"],
-   deps = [":tests", "//labm8:cache"],
+    name = "test_cache",
+    srcs = ["test_cache.py"],
+    deps = [
+        ":tests",
+        "//:cache",
+        "//:fs",
+    ],
 )
 
 py_test(
-   name = "test_crypto",
-   srcs = ["test_crypto.py"],
-   deps = [":tests", "//labm8:crypto"],
+    name = "test_crypto",
+    srcs = ["test_crypto.py"],
+    deps = [
+        ":tests",
+        "//:crypto",
+    ],
 )
 
 py_test(
-   name = "test_db",
-   srcs = ["test_db.py"],
-   deps = [":tests", "//labm8:db"],
+    name = "test_db",
+    srcs = ["test_db.py"],
+    deps = [
+        ":tests",
+        "//:db",
+    ],
 )
 
 py_test(
-   name = "test_dirhashcache",
-   srcs = ["test_dirhashcache.py"],
-   deps = [":tests", "//labm8:dirhashcache"],
+    name = "test_dirhashcache",
+    srcs = ["test_dirhashcache.py"],
+    deps = [
+        ":tests",
+        "//:dirhashcache",
+    ],
 )
 
 py_test(
-   name = "test_fs",
-   srcs = ["test_fs.py"],
-   deps = [":tests", "//labm8:fs"],
+    name = "test_fs",
+    srcs = ["test_fs.py"],
+    deps = [
+        ":tests",
+        "//:fs",
+    ],
 )
 
 py_test(
-   name = "test_io",
-   srcs = ["test_io.py"],
-   deps = [":tests", "//labm8:io"]
+    name = "test_io",
+    srcs = ["test_io.py"],
+    deps = [
+        ":tests",
+        "//:io",
+        "//:labm8",
+    ],
 )
 
 py_test(
-   name = "test_jsonutil",
-   srcs = ["test_jsonutil.py"],
-   deps = [":tests", "//labm8:jsonutil"]
+    name = "test_jsonutil",
+    srcs = ["test_jsonutil.py"],
+    deps = [
+        ":tests",
+        "//:fs",
+        "//:jsonutil",
+    ],
 )
 
 py_test(
-   name = "test_latex",
-   srcs = ["test_latex.py"],
-   deps = [":tests", "//labm8:latex"]
+    name = "foo",
+    srcs = ["foo.py"],
+    deps = [
+        "//:fs",
+        "//:labm8",
+    ],
 )
 
 py_test(
-   name = "test_lockfile",
-   srcs = ["test_lockfile.py"],
-   deps = [":tests", "//labm8:lockfile"]
+    name = "test_latex",
+    srcs = ["test_latex.py"],
+    deps = [
+        ":tests",
+        "//:latex",
+    ],
 )
 
 py_test(
-   name = "test_make",
-   srcs = ["test_make.py"],
-   deps = [":tests", "//labm8:make"]
+    name = "test_lockfile",
+    srcs = ["test_lockfile.py"],
+    deps = [
+        ":tests",
+        "//:lockfile",
+    ],
 )
 
 py_test(
-   name = "test_math",
-   srcs = ["test_math.py"],
-   deps = [":tests", "//labm8:math"]
+    name = "test_make",
+    srcs = ["test_make.py"],
+    deps = [
+        ":tests",
+        "//:fs",
+        "//:make",
+    ],
 )
 
 py_test(
-   name = "test_modules",
-   srcs = ["test_modules.py"],
-   deps = [":tests", "//labm8:modules"]
+    name = "test_labmath",
+    srcs = ["test_labmath.py"],
+    deps = [
+        ":tests",
+        "//:labmath",
+    ],
 )
 
 py_test(
-   name = "test_prof",
-   srcs = ["test_prof.py"],
-   deps = [":tests", "//labm8:prof"]
+    name = "test_modules",
+    srcs = ["test_modules.py"],
+    deps = [
+        ":tests",
+        "//:modules",
+    ],
 )
 
 py_test(
-   name = "test_system",
-   srcs = ["test_system.py"],
-   deps = [":tests", "//labm8:system"]
+    name = "test_prof",
+    srcs = ["test_prof.py"],
+    deps = [
+        ":tests",
+        "//:prof",
+    ],
 )
 
 py_test(
-   name = "test_tar",
-   srcs = ["test_tar.py"],
-   deps = [":tests", "//labm8:tar"]
+    name = "test_system",
+    srcs = ["test_system.py"],
+    deps = [
+        ":tests",
+        "//:fs",
+        "//:system",
+    ],
 )
 
 py_test(
-   name = "test_text",
-   srcs = ["test_text.py"],
-   deps = [":tests", "//labm8:text"]
+    name = "test_text",
+    srcs = ["test_text.py"],
+    deps = [
+        ":tests",
+        "//:text",
+    ],
 )
 
 py_test(
-   name = "test_time",
-   srcs = ["test_time.py"],
-   deps = [":tests", "//labm8:time"]
+    name = "test_time",
+    srcs = ["test_time.py"],
+    deps = [
+        ":tests",
+        "//:time",
+    ],
 )
 
 py_test(
-   name = "test_types",
-   srcs = ["test_types.py"],
-   deps = [":tests", "//labm8:types"]
+    name = "test_labtypes",
+    srcs = ["test_labtypes.py"],
+    deps = [
+        ":tests",
+        "//:labtypes",
+    ],
 )
 
 py_test(
-   name = "test_viz",
-   srcs = ["test_viz.py"],
-   deps = [":tests", "//labm8:viz"]
+    name = "test_viz",
+    srcs = ["test_viz.py"],
+    deps = [
+        ":tests",
+        "//:fs",
+        "//:viz",
+    ],
 )

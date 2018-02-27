@@ -50,7 +50,8 @@ py_library(
     srcs = ["fs.py"],
     visibility = ["//visibility:public"],
     deps = [
-        ":types",
+        ":labm8",
+        ":labtypes",
         requirement("humanize"),
         requirement("Send2Trash"),
     ],
@@ -61,7 +62,7 @@ py_library(
     srcs = ["io.py"],
     visibility = ["//visibility:public"],
     deps = [
-        ":types",
+        ":labtypes",
         requirement("humanize"),
         requirement("Send2Trash"),
     ],
@@ -106,8 +107,8 @@ py_library(
 )
 
 py_library(
-    name = "math",
-    srcs = ["math.py"],
+    name = "labmath",
+    srcs = ["labmath.py"],
     visibility = ["//visibility:public"],
     deps = [
         requirement("numpy"),
@@ -129,7 +130,7 @@ py_library(
     srcs = ["prof.py"],
     visibility = ["//visibility:public"],
     deps = [
-        ":types",
+        ":labtypes",
     ],
 )
 
@@ -168,8 +169,8 @@ py_library(
 )
 
 py_library(
-    name = "types",
-    srcs = ["types.py"],
+    name = "labtypes",
+    srcs = ["labtypes.py"],
     visibility = ["//visibility:public"],
     deps = [requirement("six")],
 )

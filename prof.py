@@ -24,7 +24,7 @@ import sys
 
 from time import time
 
-from labm8 import types
+from labm8 import labtypes
 
 
 __TIMERS = {}
@@ -119,7 +119,7 @@ def profile(fun, *args, **kwargs):
     if not timer_name:
         module = inspect.getmodule(fun)
         c = [module.__name__]
-        parentclass = types.get_class_that_defined_method(fun)
+        parentclass = labtypes.get_class_that_defined_method(fun)
         if parentclass:
             c.append(parentclass.__name__)
         c.append(fun.__name__)

@@ -25,7 +25,7 @@ from glob import iglob
 from humanize import naturalsize
 from send2trash import send2trash
 
-from labm8 import types
+from labm8 import labtypes
 
 
 class Error(Exception):
@@ -249,7 +249,7 @@ def ls(root=".", abspaths=False, recursive=False):
     elif recursive:
         # Recursively expand subdirectories.
         paths = ls(root, abspaths=abspaths, recursive=False)
-        return types.flatten([_expand_subdirs(file) for file in paths])
+        return labtypes.flatten([_expand_subdirs(file) for file in paths])
     else:
         # List directory contents.
         return list(sorted(os.listdir(root)))
