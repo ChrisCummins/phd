@@ -1,12 +1,7 @@
-load("@protobuf//:protobuf.bzl", "py_proto_library")
-
-proto_library(
-    name = "dsmith",
-    srcs = ["dsmith.proto"],
-)
+load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
 
 py_proto_library(
-    name = "dsmith_py",
-    protoc = "@com_google_protobuf//:protoc",
-    deps = [":dsmith"],
+    name = "dsmith",
+    protos = ["dsmith.proto"],
+    with_grpc = True,
 )
