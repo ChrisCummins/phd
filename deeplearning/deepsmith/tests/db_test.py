@@ -4,8 +4,7 @@ import sys
 import pytest
 from absl import app
 
-from deeplearning.deepsmith.dsmith import db
-
+from deeplearning.deepsmith import db
 
 def test_hello_world():
   assert 2 == 1 + 1

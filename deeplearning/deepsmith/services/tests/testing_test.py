@@ -1,31 +1,16 @@
-#
-# Copyright 2017, 2018 Chris Cummins <chrisc.101@gmail.com>.
-#
-# This file is part of DeepSmith.
-#
-# DeepSmith is free software: you can redistribute it and/or modify it under the
-# terms of the GNU General Public License as published by the Free Software
-# Foundation, either version 3 of the License, or (at your option) any later
-# version.
-#
-# DeepSmith is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along with
-# DeepSmith.  If not, see <http://www.gnu.org/licenses/>.
-#
 import pytest
 import random
 import string
+import sys
+
+from absl import app
 
 from tempfile import TemporaryDirectory
 
-from dsmith import test as tests
-from dsmith import datastore
-from dsmith import db
-from dsmith import dsmith_pb2 as pb
-from dsmith.services import testing as testing_service
+from deeplearning.deepsmith import datastore
+from deeplearning.deepsmith import db
+from deeplearning.deepsmith import deepsmith_pb2 as pb
+from deeplearning.deepsmith.services import testing as testing_service
 
 
 @pytest.fixture
@@ -176,3 +161,12 @@ def test_add_many(ds, benchmark):
         testcases.append(random_testcase())
     request = pb.SubmitTestcasesRequest(testcases=testcases)
     benchmark(serve_request, service, request)
+
+
+def main(argv):  # pylint: disable=missing-docstring
+    del argv
+    sys.exit(pytest.main([__file__, "-v"]))
+
+
+if __name__ == "__main__":
+    app.run(main)

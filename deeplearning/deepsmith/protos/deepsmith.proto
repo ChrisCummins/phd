@@ -1,6 +1,7 @@
+
 syntax = "proto2";
 
-message Timing {
+message ProfilingEvent {
   // Reserved for later use as ID field.
   reserved 1;
 
@@ -27,7 +28,7 @@ message Testcase {
   // <input_name, input_value>
   map<string, string> inputs = 3;
   repeated string opts = 5;
-  repeated Timing timings = 6;
+  repeated ProfilingEvent timings = 6;
 }
 
 message Generator {
@@ -65,7 +66,7 @@ message Result {
   optional int32 returncode = 4;
   // <name, value>
   map<string, string> outputs = 5;
-  repeated Timing timings = 6;
+  repeated ProfilingEvent timings = 6;
 }
 
 
@@ -114,6 +115,8 @@ message GetTestcaseResponse {
 message SubmitResultsRequest {
   // Reserved for later use as ID field.
   reserved 1;
+
+  // TODO(cec): Use a repeated fields for common values with indicies.
 
   repeated Result results = 2;
 }

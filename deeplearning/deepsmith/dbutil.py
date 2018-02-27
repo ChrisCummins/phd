@@ -1,22 +1,5 @@
-#
-# Copyright 2017, 2018 Chris Cummins <chrisc.101@gmail.com>.
-#
-# This file is part of DeepSmith.
-#
-# DeepSmith is free software: you can redistribute it and/or modify it under the
-# terms of the GNU General Public License as published by the Free Software
-# Foundation, either version 3 of the License, or (at your option) any later
-# version.
-#
-# DeepSmith is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along with
-# DeepSmith.  If not, see <http://www.gnu.org/licenses/>.
-#
 """
-Database backend.
+Database utility code.
 
 Some notes on schema portability:
     * SQLite auto incrementing requires that integral indices be integers.
@@ -24,28 +7,17 @@ Some notes on schema portability:
       to integers on sqlite. See:
         http://docs.sqlalchemy.org/en/latest/dialects/sqlite.html#sqlite-auto-incrementing-behavior
 """
-import datetime
-import humanize
-import logging
+import typing
 import os
-import progressbar
-import re
 import sqlalchemy as sql
-import threading
 
-from contextlib import contextmanager
+from absl import logging
+
 from labm8 import crypto, fs, prof, system
 from sqlalchemy.exc import IntegrityError, OperationalError
-from sqlalchemy.ext.declarative import declarative_base
-from signal import Signals
-from sqlalchemy.sql import func
 from time import time
-from typing import Dict, Iterable, List, Tuple, Union
 
-import dsmith
-from dsmith import db
-from dsmith import Colors
-from dsmith.langs import Language
+from deeplearning.deepsmith import db
 
 
 def make_engine(**kwargs) -> sql.engine.Engine:
@@ -82,12 +54,12 @@ def make_engine(**kwargs) -> sql.engine.Engine:
     print("echo", os.environ.get("DB_DEBUG", False))
     echo = True if os.environ.get("DB_DEBUG", None) else False
 
-    logging.debug(f"connecting to database {Colors.BOLD}{public_uri}{Colors.END}")
+    logging.debug("connecting to database %s", public_uri})
     return sql.create_engine(uri, encoding="utf-8", echo=echo), public_uri
 
 
 def get_or_add(session: sql.orm.session.Session, model,
-               defaults: Dict[str, object]=None, **kwargs) -> object:
+               defaults: typing.Dict[str, object]=None, **kwargs) -> object:
     """
     Instantiate a mapped database object. If the object is not in the database,
     add it.
@@ -104,7 +76,7 @@ def get_or_add(session: sql.orm.session.Session, model,
         session.add(instance)
 
         # logging
-        logging.debug(f"new {model.__name__} record")
+        logging.debug("new %s record", model.__name__)
 
     return instance
 
@@ -137,7 +109,7 @@ class Proxy(object):
         raise NotImplementedError("abstract class")
 
 
-def save_proxies(session: db.session_t, proxies: List[Proxy],
+def save_proxies(session: db.session_t, proxies: typing.List[Proxy],
                  max_attempts: int=3) -> None:
     """
     Convert a set of proxy objects in to database records and save them.
@@ -149,13 +121,13 @@ def save_proxies(session: db.session_t, proxies: List[Proxy],
         session, [proxy.to_record(session) for proxy in proxies], max_attempts)
 
 
-def save_proxies_uniq_on(session: db.session_t, proxies: List[Proxy], uniq_on: str,
+def save_proxies_uniq_on(session: db.session_t, proxies: typing.List[Proxy], uniq_on: str,
                          max_attempts: int=3) -> int:
     return save_records_uniq_on(
         session, [proxy.to_record(session) for proxy in proxies], uniq_on, max_attempts)
 
 
-def save_records_uniq_on(session: db.session_t, records: List["Base"], uniq_on: str,
+def save_records_uniq_on(session: db.session_t, records: typing.List["Base"], uniq_on: str,
                          max_attempts: int=3) -> int:
     """ Save records which are unique on some column value. """
     # Break early if possible
@@ -177,11 +149,11 @@ def save_records_uniq_on(session: db.session_t, records: List["Base"], uniq_on: 
     nprog, nuniq = len(records), len(uniq)
     save_records(session, uniq, max_attempts)
 
-    logging.info(f"imported {nuniq} of {nprog} unique programs")
+    logging.info("imported %s of %s unique programs", nuniq, nprog)
     return nuniq
 
 
-def save_records(session: db.session_t, records: List['Base'],
+def save_records(session: db.session_t, records: typing.List['Base'],
                  max_attempts: int=3, attempt: int=1,
                  exception=None) -> None:
     """
@@ -212,13 +184,13 @@ def save_records(session: db.session_t, records: List['Base'],
         else:
             raise OSError(msg)
 
-    logging.debug(f"flushing {nrecords} records")
+    logging.debug("flushing %d records", nrecords)
     try:
         start_time = time()
         session.add_all(records)
         session.commit()
         runtime = time() - start_time
-        logging.info(f"flushed {nrecords} records in {runtime:.2} seconds")
+        logging.info("flushed %s records in %.2f seconds", nrecords, runtime)
     except IntegrityError as e:
         logging.debug(e)
         logging.warning("database integrity error, rolling back")
