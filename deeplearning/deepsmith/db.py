@@ -62,9 +62,9 @@ class Client(ListOfNames):
   __tablename__ = "clients"
 
 
-class Event(ListOfNames):
+class ProfilingEventName(ListOfNames):
   id_t = ListOfNames.id_t
-  __tablename__ = "events"
+  __tablename__ = "proviling_event_names"
 
 
 class Generator(Base):
@@ -208,19 +208,19 @@ class TestcaseTiming(Base):
   id: int = Column(id_t, primary_key=True)
   date_added: datetime = Column(DateTime, nullable=False, default=now)
   testcase_id: int = Column(Testcase.id_t, ForeignKey("testcases.id"), nullable=False)
-  event_id: int = Column(Event.id_t, ForeignKey("events.id"), nullable=False)
+  name_id: int = Column(ProfilingEventName.id_t, ForeignKey("proviling_event_names.id"), nullable=False)
   client_id: int = Column(Client.id_t, ForeignKey("clients.id"), nullable=False)
   duration_seconds: float = Column(Float, nullable=False)
   date: datetime = Column(DateTime, nullable=False)
 
   # Relationships:
   testcase: Testcase = relationship("Testcase", back_populates="timings")
-  event: Event = relationship("Event")
+  name: ProfilingEventName = relationship("ProfilingEventName")
   client: Client = relationship("Client")
 
   # Constraints:
   __table_args__ = (
-    UniqueConstraint('testcase_id', 'event_id', name='unique_testcase_timing'),
+    UniqueConstraint('testcase_id', 'name_id', 'client_id', name='unique_testcase_timing'),
   )
 
 
@@ -361,17 +361,17 @@ class ResultTiming(Base):
   id: int = Column(id_t, primary_key=True)
   date_added: datetime = Column(DateTime, nullable=False, default=now)
   result_id: int = Column(Result.id_t, ForeignKey("results.id"), nullable=False)
-  event_id: int = Column(Event.id_t, ForeignKey("events.id"), nullable=False)
+  name_id: int = Column(ProfilingEventName.id_t, ForeignKey("proviling_event_names.id"), nullable=False)
   client_id: int = Column(Client.id_t, ForeignKey("clients.id"), nullable=False)
   duration_seconds: float = Column(Float, nullable=False)
   date: datetime = Column(DateTime, nullable=False)
 
   # Relationships:
   result: Result = relationship("Result", back_populates="timings")
-  event: Event = relationship("Event")
+  name: ProfilingEventName = relationship("ProfilingEventName")
   client: Client = relationship("Client")
 
   # Constraints:
   __table_args__ = (
-    UniqueConstraint('result_id', 'event_id', name='unique_result_timing'),
+    UniqueConstraint('result_id', 'name_id', name='unique_result_timing'),
   )

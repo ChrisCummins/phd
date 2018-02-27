@@ -106,21 +106,24 @@ class DataStore(object):
           testcase=testcase, opt=opt
       )
 
+    # TODO(cec): If the testcase already exists, don't add timings.
+
     # Add timings:
     for timings_ in testcase_pb.timings:
       client = dbutil.get_or_add(
           session, db.Client,
           name=timings_.client
       )
-      event = dbutil.get_or_add(
-          session, db.Event,
+      profiling_event_name = dbutil.get_or_add(
+          session, db.ProfilingEventName,
           name=timings_.name
       )
       timing = dbutil.get_or_add(
           session, db.TestcaseTiming,
           testcase=testcase,
-          event=event,
+          name=profiling_event_name,
           client=client,
           duration_seconds=timings_.duration_seconds,
           date=datetime.fromtimestamp(timings_.date_epoch_seconds)
       )
+

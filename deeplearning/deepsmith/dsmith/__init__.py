@@ -193,26 +193,3 @@ def verbose_scope() -> None:
 def unformat(string: str) -> str:
     """ strip shell formatting escape codes """
     return re.sub(r'\x1b[^m]*m', '', string.split(" ")[0])
-
-
-class ReprComparable(object):
-    """
-    An abstract class which may be inherited from in order to enable __repr__.
-    """
-    def __lt__(self, other):
-        return str(self) < str(other)
-
-    def __le__(self, other):
-        return str(self) <= str(other)
-
-    def __eq__(self, other):
-        return str(self) == str(other)
-
-    def __ne__(self, other):
-        return str(self) != str(other)
-
-    def __gt__(self, other):
-        return str(self) > str(other)
-
-    def __ge__(self, other):
-        return str(self) >= str(other)
