@@ -74,18 +74,20 @@ class DataStore(object):
 
     # Add inputs:
     for input_pb in testcase_pb.inputs:
+      text = testcase_pb.inputs[input_pb]
       name = dbutil.get_or_add(
           session, db.TestcaseInputName,
-          name=input_pb.name,
+          name=input_pb,
       )
-      sha1 = crypto.sha1_str(input_pb.text)
+      sha1 = crypto.sha1_str(text)
+
       input = dbutil.get_or_add(
           session, db.TestcaseInput,
           name=name,
           sha1=sha1,
-          linecount=len(input_pb.text.split("\n")),
-          charcount=len(input_pb.text),
-          input=input_pb.text,
+          linecount=len(text.split("\n")),
+          charcount=len(text),
+          input=text,
       )
       dbutil.get_or_add(
           session, db.TestcaseInputAssociation,
@@ -112,13 +114,13 @@ class DataStore(object):
       )
       event = dbutil.get_or_add(
           session, db.Event,
-          name=timings_.event
+          name=timings_.name
       )
       timing = dbutil.get_or_add(
           session, db.TestcaseTiming,
           testcase=testcase,
           event=event,
           client=client,
-          duration_seconds=timings_.duration,
-          date=datetime.fromtimestamp(timings_.event_epoch_seconds)
+          duration_seconds=timings_.duration_seconds,
+          date=datetime.fromtimestamp(timings_.date_epoch_seconds)
       )
