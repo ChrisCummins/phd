@@ -17,7 +17,7 @@ py_library(
 
 py_library(
     name = "args",
-    srcs = ["_args.py"],
+    srcs = ["args.py"],
 )
 
 py_library(
@@ -51,5 +51,5 @@ py_library(
 
 py_library(
     name = "env",
-    srcs = ["_env.py"],
+    srcs = ["env.py"],
 )

@@ -13,12 +13,13 @@ from gpu import cldrive
 
 ENV = cldrive.make_env()
 
+
 def _platform_name():
-    import pyopencl as cl
-    _, queue = ENV.ctx_queue()
-    device = queue.get_info(cl.command_queue_info.DEVICE)
-    platform = device.get_info(cl.device_info.PLATFORM)
-    return platform.get_info(cl.platform_info.NAME)
+  import pyopencl as cl
+  _, queue = ENV.ctx_queue()
+  device = queue.get_info(cl.command_queue_info.DEVICE)
+  platform = device.get_info(cl.device_info.PLATFORM)
+  return platform.get_info(cl.platform_info.NAME)
 
 
 # test decorators
@@ -34,37 +35,38 @@ needs_gpu = pytest.mark.skipif(
 
 
 def data_path(path: str) -> Path:
-    return Path(os.path.join(os.path.dirname(__file__), "data", path))
+  return Path(os.path.join(os.path.dirname(__file__), "data", path))
 
 
 def lol2np(list_of_lists: List[list]) -> np.array:
-    return np.array([np.array(x) for x in list_of_lists])
+  return np.array([np.array(x) for x in list_of_lists])
 
 
 def almost_equal(l1: np.array, l2: np.array) -> None:
-    for x, y in zip(l1, l2):
-        nptest.assert_almost_equal(lol2np(x), lol2np(y))
+  for x, y in zip(l1, l2):
+    nptest.assert_almost_equal(lol2np(x), lol2np(y))
 
 
 class DevNullRedirect(object):
-    """
-    Context manager to redirect stdout and stderr to devnull.
+  """
+  Context manager to redirect stdout and stderr to devnull.
 
-    Examples
-    --------
-    >>> with DevNullRedirect(): print("this will not print")
-    """
-    def __init__(self):
-        self.stdout = None
-        self.stderr = None
+  Examples
+  --------
+  >>> with DevNullRedirect(): print("this will not print")
+  """
 
-    def __enter__(self):
-        self.stdout = sys.stdout
-        self.stderr = sys.stderr
+  def __init__(self):
+    self.stdout = None
+    self.stderr = None
 
-        sys.stdout = StringIO()
-        sys.stderr = StringIO()
+  def __enter__(self):
+    self.stdout = sys.stdout
+    self.stderr = sys.stderr
 
-    def __exit__(self, *args):
-        sys.stdout = self.stdout
-        sys.stderr = self.stderr
+    sys.stdout = StringIO()
+    sys.stderr = StringIO()
+
+  def __exit__(self, *args):
+    sys.stdout = self.stdout
+    sys.stderr = self.stderr
