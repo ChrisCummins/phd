@@ -111,6 +111,7 @@ main() {
     # Python 3.6 virtualenv
     if [[ ! -f "$DIR/../venv/phd/bin/activate" ]]; then
         echo "virtualenv -p python3.6 $DIR/../venv/phd"
+        echo "source $DIR/../venv/phd/bin/activate && python setup.py install"
     fi
 
     # autoenv
