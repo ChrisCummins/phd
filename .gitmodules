@@ -10,9 +10,6 @@
 [submodule "experimental/humanorrobot.uk"]
 	path = http/humanorrobot.uk
 	url = git@github.com:ChrisCummins/humanorrobot.uk.git
-[submodule "src/cldrive"]
-	path = gpu/cldrive
-	url = git@github.com:ChrisCummins/cldrive.git
 [submodule "src/clgen"]
 	path = deeplearning/clgen
 	url = git@github.com:ChrisCummins/clgen.git
