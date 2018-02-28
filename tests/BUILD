@@ -5,6 +5,7 @@ py_library(
 
 py_test(
     name = "test_labm8",
+    size = "small",
     srcs = ["test_labm8.py"],
     deps = [
         ":tests",
@@ -14,6 +15,7 @@ py_test(
 
 py_test(
     name = "test_cache",
+    size = "small",
     srcs = ["test_cache.py"],
     deps = [
         ":tests",
@@ -24,6 +26,7 @@ py_test(
 
 py_test(
     name = "test_crypto",
+    size = "small",
     srcs = ["test_crypto.py"],
     deps = [
         ":tests",
@@ -33,6 +36,7 @@ py_test(
 
 py_test(
     name = "test_db",
+    size = "small",
     srcs = ["test_db.py"],
     deps = [
         ":tests",
@@ -41,25 +45,19 @@ py_test(
 )
 
 py_test(
-    name = "test_dirhashcache",
-    srcs = ["test_dirhashcache.py"],
-    deps = [
-        ":tests",
-        "//:dirhashcache",
-    ],
-)
-
-py_test(
     name = "test_fs",
+    size = "small",
     srcs = ["test_fs.py"],
     deps = [
         ":tests",
         "//:fs",
+        "//:system",
     ],
 )
 
 py_test(
     name = "test_io",
+    size = "small",
     srcs = ["test_io.py"],
     deps = [
         ":tests",
@@ -70,25 +68,19 @@ py_test(
 
 py_test(
     name = "test_jsonutil",
+    size = "small",
     srcs = ["test_jsonutil.py"],
     deps = [
         ":tests",
         "//:fs",
         "//:jsonutil",
-    ],
-)
-
-py_test(
-    name = "foo",
-    srcs = ["foo.py"],
-    deps = [
-        "//:fs",
-        "//:labm8",
+        "//:system",
     ],
 )
 
 py_test(
     name = "test_latex",
+    size = "small",
     srcs = ["test_latex.py"],
     deps = [
         ":tests",
@@ -98,6 +90,7 @@ py_test(
 
 py_test(
     name = "test_lockfile",
+    size = "small",
     srcs = ["test_lockfile.py"],
     deps = [
         ":tests",
@@ -107,6 +100,7 @@ py_test(
 
 py_test(
     name = "test_make",
+    size = "small",
     srcs = ["test_make.py"],
     deps = [
         ":tests",
@@ -117,6 +111,7 @@ py_test(
 
 py_test(
     name = "test_labmath",
+    size = "small",
     srcs = ["test_labmath.py"],
     deps = [
         ":tests",
@@ -126,6 +121,7 @@ py_test(
 
 py_test(
     name = "test_modules",
+    size = "small",
     srcs = ["test_modules.py"],
     deps = [
         ":tests",
@@ -135,15 +131,18 @@ py_test(
 
 py_test(
     name = "test_prof",
+    size = "small",
     srcs = ["test_prof.py"],
     deps = [
         ":tests",
+        "//:labm8",
         "//:prof",
     ],
 )
 
 py_test(
     name = "test_system",
+    size = "small",
     srcs = ["test_system.py"],
     deps = [
         ":tests",
@@ -154,6 +153,7 @@ py_test(
 
 py_test(
     name = "test_text",
+    size = "small",
     srcs = ["test_text.py"],
     deps = [
         ":tests",
@@ -163,6 +163,7 @@ py_test(
 
 py_test(
     name = "test_time",
+    size = "small",
     srcs = ["test_time.py"],
     deps = [
         ":tests",
@@ -172,6 +173,7 @@ py_test(
 
 py_test(
     name = "test_labtypes",
+    size = "small",
     srcs = ["test_labtypes.py"],
     deps = [
         ":tests",
@@ -181,6 +183,7 @@ py_test(
 
 py_test(
     name = "test_viz",
+    size = "small",
     srcs = ["test_viz.py"],
     deps = [
         ":tests",
