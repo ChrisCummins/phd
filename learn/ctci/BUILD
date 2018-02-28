@@ -1,5 +1,3 @@
-load("@requirements//:requirements.bzl", "requirement")
-
 cc_library(
     name = "ctci",
     hdrs = ["ctci.h"],
@@ -25,9 +23,6 @@ py_test(
     size = "small",
     srcs = ["0101-unique-chars-in-string.py"],
     main = "0101-unique-chars-in-string.py",
-    deps = [
-        requirement("absl-py"),
-    ],
 )
 
 cc_test(
@@ -57,9 +52,6 @@ py_test(
     size = "small",
     srcs = ["0103-permutations.py"],
     main = "0103-permutations.py",
-    deps = [
-        requirement("absl-py"),
-    ],
 )
 
 cc_test(
@@ -78,9 +70,6 @@ py_test(
     size = "small",
     srcs = ["0104-escape-string.py"],
     main = "0104-escape-string.py",
-    deps = [
-        requirement("absl-py"),
-    ],
 )
 
 cc_test(
@@ -133,9 +122,6 @@ py_test(
     srcs = ["0201-list-remove-dups.py"],
     default_python_version = "PY3",
     main = "0201-list-remove-dups.py",
-    deps = [
-        requirement("absl-py"),
-    ],
 )
 
 cc_test(
