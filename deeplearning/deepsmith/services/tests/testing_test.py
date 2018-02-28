@@ -157,24 +157,77 @@ def test_service_add_two(ds):
     assert s.query(db.TestcaseOpt).count() == 4
     assert s.query(db.TestcaseTiming).count() == 6
 
+# RequestTestcases
 
-def serve_request(service, request):
+@pytest.mark.skip(reason="FIXME(cec):")
+def test_service_request_one(ds):
+  service = testing.TestingService(ds)
+  testcases = [
+    deepsmith_pb2.Testcase(
+        language="cpp",
+        generator=deepsmith_pb2.Generator(name="foo", version="foo"),
+        harness=deepsmith_pb2.Harness(name="foo", version="bar"),
+        inputs={"src": "foo"},
+        opts=["1", "2", "3"],
+        timings=[
+          deepsmith_pb2.ProfilingEvent(client="c", name="a", duration_seconds=1),
+          deepsmith_pb2.ProfilingEvent(client="c", name="b", duration_seconds=2),
+          deepsmith_pb2.ProfilingEvent(client="c", name="c", duration_seconds=3),
+        ],
+    ),
+  ]
+  request = deepsmith_pb2.SubmitTestcasesRequest(testcases=testcases)
   service.SubmitTestcases(request, None)
 
+  with ds.session() as s:
+    assert s.query(db.Client).count() == 1
+    assert s.query(db.ProfilingEventName).count() == 3
+    assert s.query(db.Testcase).count() == 1
+    assert s.query(db.TestcaseInput).count() == 1
+    assert s.query(db.TestcaseOpt).count() == 3
+    assert s.query(db.TestcaseTiming).count() == 3
+
+  request = deepsmith_pb2.RequestTestcasesRequest(
+      language="cpp",
+  )
+  response = service.RequestTestcases(request, None)
+
+  assert response.status == deepsmith_pb2.RequestTestcasesResponse.SUCCESS
+  assert len(response.testcases) == 1
+  # assert response.testcases[0] == testcases[0]
+
+
+def test_service_request_invalid(ds):
+  service = testing.TestingService(ds)
+
+  # max_num_testcases must be > 1.
+  request = deepsmith_pb2.RequestTestcasesRequest(
+      max_num_testcases=-1,
+  )
+
+  response = service.RequestTestcases(request, None)
+  assert response.status == deepsmith_pb2.RequestTestcasesResponse.INVALID_REQUEST
+  assert response.error == "max_num_testcases must be >= 1, not -1"
+
+
+
 # Benchmarks.
+
+def submit_testcases_request(service, request):
+  service.SubmitTestcases(request, None)
 
 def test_benchmark_add_1(ds, benchmark):
   service = testing.TestingService(ds)
   testcases = [random_testcase()]
   request = deepsmith_pb2.SubmitTestcasesRequest(testcases=testcases)
-  benchmark(serve_request, service, request)
+  benchmark(submit_testcases_request, service, request)
 
 
 def test_benchmark_add_2(ds, benchmark):
   service = testing.TestingService(ds)
   testcases = [random_testcase(), random_testcase()]
   request = deepsmith_pb2.SubmitTestcasesRequest(testcases=testcases)
-  benchmark(serve_request, service, request)
+  benchmark(submit_testcases_request, service, request)
 
 
 def test_benchmark_add_100(ds, benchmark):
@@ -183,7 +236,7 @@ def test_benchmark_add_100(ds, benchmark):
   for _ in range(100):
     testcases.append(random_testcase())
   request = deepsmith_pb2.SubmitTestcasesRequest(testcases=testcases)
-  benchmark(serve_request, service, request)
+  benchmark(submit_testcases_request, service, request)
 
 
 def main(argv):  # pylint: disable=missing-docstring

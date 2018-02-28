@@ -6,8 +6,9 @@ import time
 from concurrent import futures
 
 import grpc
-from absl import flags
 from absl import app
+from absl import flags
+from absl import logging
 
 from deeplearning.deepsmith import datastore
 from deeplearning.deepsmith import db
@@ -35,21 +36,30 @@ class TestingService(deepsmith_pb2_grpc.TestingServiceServicer):
                       context) -> deepsmith_pb2.SubmitTestcasesResponse:
     """Submit Testcases.
     """
+    logging.info("SubmitTestcases() client=%s", request.client)
     response = deepsmith_pb2.SubmitTestcasesResponse()
     try:
       self.ds.submit_testcases(request, response)
     except:
-      response.status = deepsmith_pb2.FAILURE
+      response.status = deepsmith_pb2.SubmitTestcasesResponse.FAILURE
     return response
 
   def RequestTestcases(self, request: deepsmith_pb2.RequestTestcasesRequest,
                        context) -> deepsmith_pb2.RequestTestcasesResponse:
     """Request Testcases.
     """
+    logging.info("RequestTestcases() client=%s", request.client)
     response = deepsmith_pb2.RequestTestcasesResponse()
 
-    return self.ds.request_testcases(request, response)
+    try:
+      self.ds.request_testcases(request, response)
+    except datastore.InvalidRequest as e:
+      response.status = deepsmith_pb2.RequestTestcasesResponse.INVALID_REQUEST
+      response.error = str(e)
+    except:
+      response.status = deepsmith_pb2.RequestTestcasesResponse.FAILURE
 
+    return response
 
 
 def main():  # pylint: disable=missing-docstring

@@ -16,6 +16,12 @@ from deeplearning.deepsmith.protos import deepsmith_pb2
 
 FLAGS = flags.FLAGS
 
+
+class InvalidRequest(ValueError):
+  """Exception raised if request cannot be served."""
+  pass
+
+
 class DataStore(object):
   """ The centralized data store. """
 
@@ -135,3 +141,100 @@ class DataStore(object):
           duration_seconds=timings_.duration_seconds,
           date=datetime.fromtimestamp(timings_.date_epoch_seconds)
       )
+
+  def _build_testcase_request_query(self, session, request) -> db.query_t:
+    def _filter_lang_gen_harn(q):
+      if request.has_language:
+        language = dbutil.get_or_add(db.Language, name=request.language)
+        if not language:
+          raise LookupError
+        q = q.filter(db.Testcase.language_id == language.id)
+
+      # Filter by generator.
+      if request.has_generator:
+        generator = session.query(db.Generator) \
+          .filter(db.Generator.name == request.generator.name,
+                  db.Generator.version == request.generator.version) \
+          .first()
+        if not generator:
+          raise LookupError
+        q = q.filter(db.Testcase.generator_id == generator.id)
+
+      # Filter by generator.
+      if request.has_harness:
+        harness = session.query(db.Harness) \
+          .filter(db.Harness.name == request.harness.name,
+                  db.Harness.version == request.harness.version) \
+          .first()
+        if not harness:
+          raise LookupError
+        q = q.filter(db.Testcase.harness_id == harness.id)
+
+      return q
+
+    q = session.query(db.Testcase)
+    q = _filter_lang_gen_harn(q)
+
+    testbed_id = None
+    if request.has_testbed():
+      language = dbutil.get_or_add(db.Language, name=request.testbed)
+      testbed = dbutil.get_or_add(db.Testbed, language=language,
+                                  name=request.testbed.language,
+                                  version=request.testbed.version)
+      testbed_id = testbed.id
+
+    if testbed_id and not request.include_testcases_with_results:
+      q2 = session.query(db.Result.testcase_id) \
+        .join(db.Testcase) \
+        .filter(db.Result.testbed_id == testbed_id)
+      q2 = _filter_lang_gen_harn(q2)
+      q = q.filter(~db.Testcase.id.in_(q2))
+
+    if testbed_id and not request.include_testcases_with_pending_results:
+      q2 = session.query(db.PendingResult.testcase_id) \
+        .join(db.Testcase)\
+        .filter(db.PendingResult.testbed_id == testbed_id)
+      q2 = _filter_lang_gen_harn(q2)
+      q = q.filter(~db.Testcase.id.in_(q2))
+
+    return q
+
+  def _generator_db_to_pb(self, generator: db.Generator) -> deepsmith_pb2.Generator:
+    return deepsmith_pb2.Generator(name=generator.name,
+                                   version=generator.version)
+
+  def _harness_db_to_pb(self, harness: db.Harness) -> deepsmith_pb2.Harness:
+    return deepsmith_pb2.Harness(name=harness.name,
+                                 version=harness.version)
+
+  def _testcase_db_to_pb(self, testcase: db.Testcase) -> deepsmith_pb2.Testcase:
+    return deepsmith_pb2.Testcase(
+        language=testcase.language,
+        generator=self._generator_db_to_pb(testcase.generator),
+        harness=self._harness_db_to_pb(testcase.harness),
+        inputs={i.name: i.input for i in testcase.inputs},
+        opts=testcase.opts,
+        # TODO(cec) optionally set timings field.
+    )
+
+  def request_testcases(
+      self, request: deepsmith_pb2.RequestTestcasesRequest,
+      response: deepsmith_pb2.RequestTestcasesResponse) -> None:
+    """Request testcases.
+    """
+    with self.session(commit=False) as session:
+      # Validate request parameters.
+      if request.max_num_testcases < 1:
+        raise InvalidRequest(
+            f"max_num_testcases must be >= 1, not {request.max_num_testcases}")
+
+      q = self._build_testcase_request_query(session, request)
+      q.limit(request.max_num_testcases)
+
+      if request.return_testcases:
+        response.testcases = [
+          self._testcase_db_to_pb(testcase) for testcase in q]
+
+      if request.return_total_matching_count:
+        q2 = self._build_testcase_request_query(session, request)
+        response.total_matching_count = q2.count()
