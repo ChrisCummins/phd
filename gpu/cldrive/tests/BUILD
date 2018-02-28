@@ -7,8 +7,8 @@ py_library(
 )
 
 py_test(
-    size = "small",
     name = "args_test",
+    size = "small",
     srcs = ["args_test.py"],
     deps = [
         ":lib",
@@ -26,7 +26,6 @@ py_test(
     ],
 )
 
-
 py_test(
     name = "driver_test",
     size = "small",
@@ -39,8 +38,8 @@ py_test(
 
 py_test(
     name = "env_test",
-    srcs = ["env_test.py"],
     size = "small",
+    srcs = ["env_test.py"],
     deps = [
         ":lib",
         "//gpu/cldrive",

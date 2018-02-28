@@ -6,10 +6,6 @@ py_library(
     name = "db",
     srcs = ["db.py"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
-    deps = [
-        requirement("SQLAlchemy"),
-        requirement("absl-py"),
-    ],
 )
 
 py_library(
@@ -22,7 +18,6 @@ py_library(
         "@labm8//:fs",
         "@labm8//:prof",
         "@labm8//:system",
-        requirement("absl-py"),
     ],
 )
 
@@ -33,9 +28,8 @@ py_library(
     deps = [
         ":db",
         ":dbutil",
-        "@labm8//:crypto",
-        requirement("absl-py"),
         "//deeplearning/deepsmith/protos:deepsmith",
+        "@labm8//:crypto",
     ],
 )
 
@@ -45,6 +39,5 @@ py_test(
     srcs = ["tests/db_test.py"],
     deps = [
         ":db",
-        requirement("absl-py"),
     ],
 )

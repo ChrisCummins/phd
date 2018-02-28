@@ -1,16 +1,12 @@
-load("@requirements//:requirements.bzl", "requirement")
-
 py_library(
     name = "testing",
     srcs = ["testing.py"],
-    deps = [
-        "//deeplearning/deepsmith:db",
-        "//deeplearning/deepsmith:datastore",
-        "//deeplearning/deepsmith/protos:deepsmith",
-        requirement("grpcio"),
-        requirement("absl-py"),
-    ],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
+    deps = [
+        "//deeplearning/deepsmith:datastore",
+        "//deeplearning/deepsmith:db",
+        "//deeplearning/deepsmith/protos:deepsmith",
+    ],
 )
 
 py_test(
@@ -18,8 +14,5 @@ py_test(
     srcs = ["tests/testing_test.py"],
     deps = [
         ":testing",
-        requirement("pytest"),
-        requirement("pytest-benchmark"),
-        requirement("absl-py"),
-    ]
+    ],
 )
