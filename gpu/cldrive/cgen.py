@@ -1,158 +1,142 @@
-# Copyright (C) 2017 Chris Cummins.
-#
-# This file is part of cldrive.
-#
-# Cldrive is free software: you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free
-# Software Foundation, either version 3 of the License, or (at your
-# option) any later version.
-#
-# Cldrive is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-# License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with cldrive.  If not, see <http://www.gnu.org/licenses/>.
-#
+import typing
 import numpy as np
 
-import cldrive
-from cldrive import *
+from gpu.cldrive import _args
+from gpu.cldrive import driver
 
 
 def escape_c_string(s: str) -> str:
-    """ quote and return the given string """
-    return '\n'.join('"{}\\n"'.format(line.replace('"','\\"'))
-                     for line in s.split('\n') if len(line.strip()))
+  """ quote and return the given string """
+  return '\n'.join('"{}\\n"'.format(line.replace('"', '\\"'))
+                   for line in s.split('\n') if len(line.strip()))
 
 
 def to_array_str(array):
-    if array.dtype == np.dtype("bool"):
-        stringify = lambda x: "1" if x else "0"
-    else:
-        stringify = repr
+  if array.dtype == np.dtype("bool"):
+    stringify = lambda x: "1" if x else "0"
+  else:
+    stringify = repr
 
-    array_values = ', '.join(stringify(x) for x in array.tolist())
-    return f"{{ {array_values} }}"
+  array_values = ', '.join(stringify(x) for x in array.tolist())
+  return f"{{ {array_values} }}"
 
 
-def gen_data_blocks(args: List[KernelArg], inputs: np.array):
-    setup_c, teardown_c, print_c = [], [], []
-    for i, (arg, array) in enumerate(zip(args, inputs)):
-        ctype = cldrive.args.OPENCL_TYPES[array.dtype]
-        # we don't support printing all types:
-        format_specifier = cldrive.args.FORMAT_SPECIFIERS.get(array.dtype, None)
+def gen_data_blocks(kernel_args: typing.List[_args.KernelArg], inputs: np.array):
+  setup_c, teardown_c, print_c = [], [], []
+  for i, (arg, array) in enumerate(zip(kernel_args, inputs)):
+    ctype = _args.OPENCL_TYPES[array.dtype]
+    # we don't support printing all types:
+    format_specifier = _args.FORMAT_SPECIFIERS.get(array.dtype, None)
 
-        if arg.is_pointer:
-            array_str = to_array_str(array)
+    if arg.is_pointer:
+      array_str = to_array_str(array)
 
-            flags = "CL_MEM_COPY_HOST_PTR"
-            if arg.is_const:
-                flags += " | CL_MEM_READ_ONLY"
-            else:
-                flags += " | CL_MEM_READ_WRITE"
+      flags = "CL_MEM_COPY_HOST_PTR"
+      if arg.is_const:
+        flags += " | CL_MEM_READ_ONLY"
+      else:
+        flags += " | CL_MEM_READ_WRITE"
 
-            setup_c.append(f"""\
+      setup_c.append(f"""\
     {ctype} host_{i}[{array.size}] = {array_str};
     cl_mem dev_{i} = clCreateBuffer(ctx, {flags}, sizeof({ctype}) * {array.size}, &host_{i}, &err);
     check_error("clCreateBuffer", err);
     err = clSetKernelArg(kernel, {i}, sizeof(cl_mem), &dev_{i});
     check_error("clSetKernelArg", err);
 """)
-            if format_specifier and not arg.is_const:
-                teardown_c.append(f"""\
+      if format_specifier and not arg.is_const:
+        teardown_c.append(f"""\
     err = clEnqueueReadBuffer(queue, dev_{i}, CL_TRUE, 0, sizeof({ctype}) * {array.size}, &host_{i}, 0, NULL, NULL);
     check_error("clEnqueueReadBuffer", err);
 """)
-                print_c.append(f"""\
+        print_c.append(f"""\
     printf("{arg}:");
     for (int i = 0; i < {array.size}; i++) {{
         printf(" {format_specifier}", host_{i}[i]);
     }}
     printf("\\n");
 """)
-        else:
-            if array.size > 1:
-                data_val = to_array_str(array)
-                setup_c.append(f"{ctype} host_{i}[{array.size}] = {data_val};")
-            else:
-                setup_c.append(f"{ctype} host_{i} = {array[0]};")
+    else:
+      if array.size > 1:
+        data_val = to_array_str(array)
+        setup_c.append(f"{ctype} host_{i}[{array.size}] = {data_val};")
+      else:
+        setup_c.append(f"{ctype} host_{i} = {array[0]};")
 
-            setup_c.append(f"""\
+      setup_c.append(f"""\
     err = clSetKernelArg(kernel, {i}, sizeof({ctype}), &host_{i});
     check_error("clSetKernelArg", err);
 """)
 
-    return (
-        '\n'.join(setup_c).rstrip(),
-        '\n'.join(teardown_c).rstrip(),
-        '\n'.join(print_c).rstrip()
-    )
+  return (
+    '\n'.join(setup_c).rstrip(),
+    '\n'.join(teardown_c).rstrip(),
+    '\n'.join(print_c).rstrip()
+  )
 
 
 def emit_c(src: str, inputs: np.array,
-           gsize: NDRange, lsize: NDRange, timeout: int=-1,
-           optimizations: bool=True, profiling: bool=False,
-           debug: bool=False, compile_only: bool=False,
-           create_kernel: bool=True) -> np.array:
-    """
-    Generate C code to drive kernel.
+           gsize: driver.NDRange, lsize: driver.NDRange, timeout: int = -1,
+           optimizations: bool = True, profiling: bool = False,
+           debug: bool = False, compile_only: bool = False,
+           create_kernel: bool = True) -> np.array:
+  """
+  Generate C code to drive kernel.
 
-    Parameters
-    ----------
-    env : OpenCLEnvironment
-        The OpenCL environment to run the kernel in.
-    src : str
-        The OpenCL kernel source.
-    inputs : np.array
-        The input data to the kernel.
-    optimizations : bool, optional
-        Whether to enable or disbale OpenCL compiler optimizations.
-    profiling : bool, optional
-        If true, print OpenCLevent times for data transfers and kernel
-        executions to stderr.
-    timeout : int, optional
-        Cancel execution if it has not completed after this many seconds.
-        A value <= 0 means never time out.
-    debug : bool, optional
-        If true, silence the OpenCL compiler.
-    compile_only: bool, optional
-        If true, generate code only to compile the kernel, not to generate
-        inputs and run it.
-    create_kernel: bool, optional
-        If 'compile_only' parameter is set, this parameter determines whether
-        to create a kernel object after compilation. This requires a kernel
-        name.
+  Parameters
+  ----------
+  env : OpenCLEnvironment
+      The OpenCL environment to run the kernel in.
+  src : str
+      The OpenCL kernel source.
+  inputs : np.array
+      The input data to the kernel.
+  optimizations : bool, optional
+      Whether to enable or disbale OpenCL compiler optimizations.
+  profiling : bool, optional
+      If true, print OpenCLevent times for data transfers and kernel
+      executions to stderr.
+  timeout : int, optional
+      Cancel execution if it has not completed after this many seconds.
+      A value <= 0 means never time out.
+  debug : bool, optional
+      If true, silence the OpenCL compiler.
+  compile_only: bool, optional
+      If true, generate code only to compile the kernel, not to generate
+      inputs and run it.
+  create_kernel: bool, optional
+      If 'compile_only' parameter is set, this parameter determines whether
+      to create a kernel object after compilation. This requires a kernel
+      name.
 
-    Returns
-    -------
-    str
-        Code which can be compiled using a C compiler to drive the kernel.
+  Returns
+  -------
+  str
+      Code which can be compiled using a C compiler to drive the kernel.
 
-    Raises
-    ------
-    ValueError
-        If input types are incorrect.
-    TypeError
-        If an input is of an incorrect type.
-    LogicError
-        If the input types do not match OpenCL kernel types.
-    PorcelainError
-        If the OpenCL subprocess exits with non-zero return  code.
-    RuntimeError
-        If OpenCL program fails to build or run.
+  Raises
+  ------
+  ValueError
+      If input types are incorrect.
+  TypeError
+      If an input is of an incorrect type.
+  LogicError
+      If the input types do not match OpenCL kernel types.
+  PorcelainError
+      If the OpenCL subprocess exits with non-zero return  code.
+  RuntimeError
+      If OpenCL program fails to build or run.
 
-    Examples
-    --------
-    TODO
-    """
-    src_string = escape_c_string(src)
-    optimizations_on_off = "on" if optimizations else "off"
+  Examples
+  --------
+  TODO
+  """
+  src_string = escape_c_string(src)
+  optimizations_on_off = "on" if optimizations else "off"
 
-    clBuildProgram_opts = "NULL" if optimizations else '"-cl-opt-disable"'
+  clBuildProgram_opts = "NULL" if optimizations else '"-cl-opt-disable"'
 
-    c = f"""
+  c = f"""
 /*
  * Usage:
  *   gcc -std=c99 [-DPLATFORM_ID=<platform-id>] [-DDEVICE_ID=<device-id>] foo.c -lOpenCL
@@ -374,9 +358,9 @@ int main(int argc, char** argv) {{
     check_error("clBuildProgram", build_err);
     """
 
-    if not compile_only or (compile_only and create_kernel):
-        kernel_name_ = kernel_name(src)
-        c += f"""
+  if not compile_only or (compile_only and create_kernel):
+    kernel_name_ = args.kernel_name(src)
+    c += f"""
     cl_kernel kernels[128];
     cl_uint num_kernels;
     err = clCreateKernelsInProgram(program, 128, kernels, &num_kernels);
@@ -399,10 +383,10 @@ int main(int argc, char** argv) {{
     fprintf(stderr, "[cldrive] Kernel: \\\"%s\\\"\\n", kernel_name);
 """
 
-    if not compile_only:
-        args = extract_args(src)
-        setup_block, teardown_block, print_block = gen_data_blocks(args, inputs)
-        c += f"""
+  if not compile_only:
+    args = args.extract_args(src)
+    setup_block, teardown_block, print_block = gen_data_blocks(args, inputs)
+    c += f"""
 {setup_block}
 
     const size_t lsize[3] = {{ {lsize.x}, {lsize.y}, {lsize.z} }};
@@ -424,10 +408,10 @@ int main(int argc, char** argv) {{
     clReleaseContext(ctx);
 """
 
-    # close out main():
-    c += f"""
+  # close out main():
+  c += f"""
     fprintf(stderr, "done.\\n");
     return 0;
 }}
 """
-    return c
+  return c

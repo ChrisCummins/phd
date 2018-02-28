@@ -1,5 +1,3 @@
-load("@requirements//:requirements.bzl", "requirement")
-
 licenses(["restricted"])  # GPL v3
 
 exports_files(["LICENSE"])

@@ -1,26 +1,10 @@
-# Copyright (C) 2017 Chris Cummins.
-#
-# This file is part of cldrive.
-#
-# Cldrive is free software: you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free
-# Software Foundation, either version 3 of the License, or (at your
-# option) any later version.
-#
-# Cldrive is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-# License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with cldrive.  If not, see <http://www.gnu.org/licenses/>.
-#
+import collections
+import os
 import pickle
 import re
 import sys
 
 from contextlib import suppress
-from pkg_resources import resource_filename
 from signal import Signals
 from subprocess import Popen, PIPE
 from tempfile import NamedTemporaryFile
@@ -28,7 +12,10 @@ from typing import List, Union
 
 import numpy as np
 
-from cldrive import *
+from labm8 import err
+
+from gpu.cldrive import _args
+from gpu.cldrive import _env
 
 
 class Timeout(RuntimeError):
@@ -49,7 +36,7 @@ class PorcelainError(RuntimeError):
         return f"porcelain subprocess exited with return code {self.status}"
 
 
-class NDRange(namedtuple('NDRange', ['x', 'y', 'z'])):
+class NDRange(collections.namedtuple('NDRange', ['x', 'y', 'z'])):
     """
     A 3 dimensional NDRange tuple. Has components x,y,z.
 
@@ -132,7 +119,7 @@ class NDRange(namedtuple('NDRange', ['x', 'y', 'z'])):
         return NDRange(x, y, z)
 
 
-def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
+def drive(env: _env.OpenCLEnvironment, src: str, inputs: np.array,
           gsize: NDRange, lsize: NDRange, timeout: int=-1,
           optimizations: bool=True, profiling: bool=False,
           debug: bool=False) -> np.array:
@@ -195,37 +182,37 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
             print(*args, **kwargs, file=sys.stderr)
 
     # assert input types
-    assert_or_raise(isinstance(env, OpenCLEnvironment), ValueError,
-                    "env argument is of incorrect type")
-    assert_or_raise(isinstance(src, str), ValueError,
-                    "source is not a string")
+    err.assert_or_raise(isinstance(env, _env.OpenCLEnvironment), ValueError,
+                        "env argument is of incorrect type")
+    err.assert_or_raise(isinstance(src, str), ValueError,
+                        "source is not a string")
 
     # validate global and local sizes
-    assert_or_raise(len(gsize) == 3, TypeError)
-    assert_or_raise(len(lsize) == 3, TypeError)
+    err.assert_or_raise(len(gsize) == 3, TypeError)
+    err.assert_or_raise(len(lsize) == 3, TypeError)
     gsize, lsize = NDRange(*gsize), NDRange(*lsize)
 
-    assert_or_raise(gsize.product >= 1, ValueError,
-                    f"Scalar global size {gsize.product} must be >= 1")
-    assert_or_raise(lsize.product >= 1, ValueError,
-                    f"Scalar local size {lsize.product} must be >= 1")
-    assert_or_raise(gsize >= lsize, ValueError,
-                    f"Global size {gsize} must be larger than local size {lsize}")
+    err.assert_or_raise(gsize.product >= 1, ValueError,
+                        f"Scalar global size {gsize.product} must be >= 1")
+    err.assert_or_raise(lsize.product >= 1, ValueError,
+                        f"Scalar local size {lsize.product} must be >= 1")
+    err.assert_or_raise(gsize >= lsize, ValueError,
+                        f"Global size {gsize} must be larger than local size {lsize}")
 
     # parse args in this process since we want to preserve the sueful exception
     # type
-    args = extract_args(src)
+    args = _args.extract_args(src)
 
     # check that the number of inputs is correct
     args_with_inputs = [i for i, arg in enumerate(args)
                         if not arg.address_space == 'local']
-    assert_or_raise(len(args_with_inputs) == len(inputs), ValueError,
-                    "Kernel expects {} inputs, but {} were provided".format(
-                        len(args_with_inputs), len(inputs)))
+    err.assert_or_raise(len(args_with_inputs) == len(inputs), ValueError,
+                        "Kernel expects {} inputs, but {} were provided".format(
+                            len(args_with_inputs), len(inputs)))
 
     # all inputs must have some length
     for i, x in enumerate(inputs):
-        assert_or_raise(len(x), ValueError, f"Input {i} has size zero")
+        err.assert_or_raise(len(x), ValueError, f"Input {i} has size zero")
 
     # copy inputs into the expected data types
     data = np.array([np.array(d).astype(a.numpy_type)
@@ -296,18 +283,19 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
         rets = pickle.load(tmpfile)
 
         outputs = rets["outputs"]
-        err = rets["err"]
+        error = rets["err"]
 
-        if err:  # porcelain raised an exception, re-raise it
-            raise err
+        if error:  # porcelain raised an exception, re-raise it
+            raise error
         else:
             return outputs
 
 
-ArgTuple = namedtuple('ArgTuple', ['hostdata', 'devdata'])
+ArgTuple = collections.namedtuple('ArgTuple', ['hostdata', 'devdata'])
 
 
-def extract_argtuples(ctx, args: List[KernelArg], data: np.array) -> List[ArgTuple]:
+def extract_argtuples(ctx, args: List[_args.KernelArg], data: np.array) -> List[ArgTuple]:
+    import pyopencl as cl
     argtuples = []
     data_i = 0
     for i, arg in enumerate(args):
@@ -336,8 +324,8 @@ def extract_argtuples(ctx, args: List[KernelArg], data: np.array) -> List[ArgTup
             raise ValueError(f"unknown argument type '{arg}'")
         argtuples.append(ArgTuple(hostdata=hostdata, devdata=devdata))
 
-    assert_or_raise(len(data) == data_i, ValueError,
-                    "failed to interpret inputs")
+    err.assert_or_raise(len(data) == data_i, ValueError,
+                        "failed to interpret inputs")
 
     return argtuples
 
@@ -506,8 +494,9 @@ def __porcelain_exec(path: str) -> np.array:
     return data
 
 
-# entry point for porcelain incvocation
-if __name__ == "__main__":
+# entry point for porcelain invocation
+# TODO(cec): Wrap with abbsl.app.run()
+def main():
     path = sys.argv[1]
 
     outputs = None
@@ -528,3 +517,6 @@ if __name__ == "__main__":
 
     print("[cldrive] Porcelain subprocess complete", file=sys.stderr)
     sys.exit(0)
+
+if __name__ == "__main__":
+    main()

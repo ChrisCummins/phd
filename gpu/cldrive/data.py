@@ -1,27 +1,11 @@
-# Copyright (C) 2017 Chris Cummins.
-#
-# This file is part of cldrive.
-#
-# Cldrive is free software: you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free
-# Software Foundation, either version 3 of the License, or (at your
-# option) any later version.
-#
-# Cldrive is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-# License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with cldrive.  If not, see <http://www.gnu.org/licenses/>.
-#
 from enum import Enum
 from functools import partial
 
 import numpy as np
 
+from labm8 import err
 
-from cldrive import *
+from gpu.cldrive import _args
 
 
 class Generator(Enum):
@@ -47,7 +31,7 @@ class Generator(Enum):
         elif string == "ones":
             return Generator.ONES
         else:
-            raise InputTypeError
+            raise TypeError
 
 
 def make_data(src: str, size: int, data_generator: Generator,
@@ -88,15 +72,15 @@ def make_data(src: str, size: int, data_generator: Generator,
     array([array([0, 1, 2], dtype=int32), array([100], dtype=int32)], dtype=object)
     """
     # check the input types
-    assert_or_raise(isinstance(src, str), TypeError)
-    assert_or_raise(isinstance(data_generator, Generator), TypeError,
-                    "invalid argument type for enum data_generator")
+    err.assert_or_raise(isinstance(src, str), TypeError)
+    err.assert_or_raise(isinstance(data_generator, Generator), TypeError,
+                        "invalid argument type for enum data_generator")
 
     if scalar_val is None:
         scalar_val = size
 
     data = []
-    for arg in extract_args(src):
+    for arg in _args.extract_args(src):
         if arg.address_space == "global" or arg.address_space == "constant":
             argdata = data_generator(arg.numpy_type, size * arg.vector_width)
         elif arg.address_space == "local":

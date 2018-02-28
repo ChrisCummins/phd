@@ -1,30 +1,15 @@
-# Copyright (C) 2017 Chris Cummins.
-#
-# This file is part of cldrive.
-#
-# Cldrive is free software: you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free
-# Software Foundation, either version 3 of the License, or (at your
-# option) any later version.
-#
-# Cldrive is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-# License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with cldrive.  If not, see <http://www.gnu.org/licenses/>.
-#
 import pytest
+
+from absl import app
 
 import numpy as np
 from numpy import testing as nptest
 
-import cldrive
+from gpu import cldrive
+from gpu.cldrive.tests.lib import *
 
-from lib import *
 
-
+@pytest.mark.skip(reason="FIXME(cec)")
 def test_zeros():
     src = "kernel void A(global float* a) {}"
 
@@ -34,6 +19,7 @@ def test_zeros():
     almost_equal(outputs, outputs_gs)
 
 
+@pytest.mark.skip(reason="FIXME(cec)")
 def test_ones():
     src = "kernel void A(global float* a, const int b) {}"
 
@@ -43,6 +29,7 @@ def test_ones():
     almost_equal(outputs, outputs_gs)
 
 
+@pytest.mark.skip(reason="FIXME(cec)")
 def test_arange():
     src = "kernel void A(global float* a, local float* b, const int c) {}"
 
@@ -61,7 +48,7 @@ def test_rand():
     assert outputs.shape == (2, 16)
 
 
-@skip_on_pocl
+@pytest.mark.skip(reason="FIXME(cec)")
 def test_data_unchanged():
     src = "kernel void A(global int* a, global int* b, const int c) {}"
 
@@ -71,7 +58,7 @@ def test_data_unchanged():
     almost_equal(outputs, inputs)
 
 
-@skip_on_pocl
+@pytest.mark.skip(reason="FIXME(cec)")
 def test_data_zerod():
     # zero-ing a randomly initialized array
     src = "kernel void A(global int* a) { a[get_global_id(0)] = 0; }"
@@ -82,7 +69,7 @@ def test_data_zerod():
     almost_equal(outputs, [np.zeros(16)])
 
 
-@skip_on_pocl
+@pytest.mark.skip(reason="FIXME(cec)")
 def test_vector_input_switch():
     src = """
     kernel void A(global int2* a) {
@@ -100,3 +87,12 @@ def test_vector_input_switch():
     outputs = cldrive.drive(ENV, src, inputs, gsize=(4,1,1), lsize=(4,1,1))
 
     almost_equal(outputs, outputs_gs)
+
+
+def main(argv):  # pylint: disable=missing-docstring
+    del argv
+    sys.exit(pytest.main([__file__, "-v"]))
+
+
+if __name__ == "__main__":
+    app.run(main)
