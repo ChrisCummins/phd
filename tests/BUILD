@@ -8,7 +8,7 @@ py_test(
     srcs = ["test_labm8.py"],
     deps = [
         ":tests",
-        "//labm8",
+        "//:labm8",
     ],
 )
 
