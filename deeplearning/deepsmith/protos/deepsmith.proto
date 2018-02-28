@@ -1,4 +1,3 @@
-
 syntax = "proto2";
 
 message ProfilingEvent {
@@ -22,13 +21,14 @@ message Testcase {
   // Reserved for later use as ID field.
   reserved 1;
 
-  optional Generator generator = 2;
+  optional string language = 2;
+  optional Generator generator = 3;
   optional Harness harness = 4;
 
   // <input_name, input_value>
-  map<string, string> inputs = 3;
-  repeated string opts = 5;
-  repeated ProfilingEvent timings = 6;
+  map<string, string> inputs = 5;
+  repeated string opts = 6;
+  repeated ProfilingEvent timings = 7;
 }
 
 message Generator {
@@ -51,7 +51,7 @@ message Testbed {
   // Reserved for later use as ID field.
   reserved 1;
 
-  optional string lang = 2;
+  optional string language = 2;
   optional string name = 3;
   optional string version = 4;
   repeated string opts = 5;
@@ -69,7 +69,6 @@ message Result {
   repeated ProfilingEvent timings = 6;
 }
 
-
 //
 // RPCs
 //
@@ -80,19 +79,24 @@ message SubmitTestcasesRequest {
   // Reserved for later use as ID field.
   reserved 1;
 
-  repeated Testcase testcases = 2;
+  optional string client = 2;
+  repeated Testcase testcases = 3;
 }
 
 message SubmitTestcasesResponse {
-  // Reserved for later use as ID field.
-  reserved 1;
+  enum Status {
+    SUCCESS = 0;
+    FAILURE = 1;
+  }
 
-  optional int32 error_code = 2;
+  optional Status status = 1 [default = SUCCESS];
+  optional string server_name = 2;
+  optional int32 error_code = 3;
 }
 
-// GetTestcases
+// RequestTestcases.
 
-message GetTestcaseRequest {
+message RequestTestcasesRequest {
   // Reserved for later use as ID field.
   reserved 1;
 
@@ -102,12 +106,16 @@ message GetTestcaseRequest {
   optional Harness harness = 4;
 }
 
-message GetTestcaseResponse {
-  // Reserved for later use as ID field.
-  reserved 1;
+message RequestTestcasesResponse {
+  enum Status {
+    SUCCESS = 0;
+    FAILURE = 1;
+  }
 
-  optional int32 error_code = 2;
-  repeated Testcase testcases = 3;
+  optional Status status = 1 [default = SUCCESS];
+  optional string server_name = 2;
+  optional int32 error_code = 3;
+  repeated Testcase testcases = 4;
 }
 
 // SubmitTestcases
@@ -116,21 +124,22 @@ message SubmitResultsRequest {
   // Reserved for later use as ID field.
   reserved 1;
 
-  // TODO(cec): Use a repeated fields for common values with indicies.
-
+  // TODO(cec): Normalize results using repeated fields and indices.
   repeated Result results = 2;
 }
 
 message SubmitResultsResponse {
-  // Reserved for later use as ID field.
-  reserved 1;
+  enum Status {
+    SUCCESS = 0;
+    FAILURE = 1;
+  }
 
-  optional int32 error_code = 2;
+  optional Status status = 1 [default = SUCCESS];
 }
 
 service TestingService {
   rpc SubmitTestcases (SubmitTestcasesRequest) returns (SubmitTestcasesResponse);
-  rpc GetTestCases (GetTestcaseRequest) returns (GetTestcaseResponse);
+  rpc RequestTestCases (RequestTestcasesRequest) returns (RequestTestcasesResponse);
   rpc SubmitResults (SubmitResultsRequest) returns (SubmitResultsResponse);
 }
 

@@ -34,6 +34,10 @@ def random_harness():
   )
 
 
+def random_language() -> str:
+  return random.choice(["cpp", "java", "python"])
+
+
 def random_str(n: int) -> str:
   return ''.join(random.choices(string.ascii_uppercase + string.digits, k=n))
 
@@ -57,6 +61,7 @@ def random_opts():
 def random_testcase() -> deepsmith_pb2.Testcase:
   client = random_str(16)
   return deepsmith_pb2.Testcase(
+      language=random_language(),
       generator=random_generator(),
       harness=random_harness(),
       inputs=random_inputs(),
@@ -74,6 +79,7 @@ def test_service_empty(ds):
   request = deepsmith_pb2.SubmitTestcasesRequest(testcases=[])
   response = service.SubmitTestcases(request, None)
   assert type(response) == deepsmith_pb2.SubmitTestcasesResponse
+  assert response.status == deepsmith_pb2.SubmitTestcasesResponse.SUCCESS
 
   with ds.session() as s:
     assert s.query(db.Client).count() == 0
@@ -88,6 +94,7 @@ def test_service_add_one(ds):
   service = testing.TestingService(ds)
   testcases = [
     deepsmith_pb2.Testcase(
+        language="cpp",
         generator=deepsmith_pb2.Generator(name="foo", version="foo"),
         harness=deepsmith_pb2.Harness(name="foo", version="bar"),
         inputs={"src": "foo"},
@@ -115,6 +122,7 @@ def test_service_add_two(ds):
   service = testing.TestingService(ds)
   testcases = [
     deepsmith_pb2.Testcase(
+        language="cpp",
         generator=deepsmith_pb2.Generator(name="foo", version="foo"),
         harness=deepsmith_pb2.Harness(name="foo", version="bar"),
         inputs={"src": "foo"},
@@ -126,6 +134,7 @@ def test_service_add_two(ds):
         ],
     ),
     deepsmith_pb2.Testcase(
+        language="cpp",
         generator=deepsmith_pb2.Generator(name="bar", version="foo"),
         harness=deepsmith_pb2.Harness(name="foo", version="bar"),
         inputs={"src": "abc"},

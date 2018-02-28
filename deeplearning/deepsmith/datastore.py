@@ -12,7 +12,7 @@ from sqlalchemy import orm
 
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith import dbutil
-from deeplearning.deepsmith.protos import deepsmith_pb2 as pb
+from deeplearning.deepsmith.protos import deepsmith_pb2
 
 FLAGS = flags.FLAGS
 
@@ -28,6 +28,8 @@ class DataStore(object):
 
   @contextmanager
   def session(self, commit: bool = False) -> db.session_t:
+    """Provide a transactional scope around a session.
+    """
     session = self._make_session()
     try:
       yield session
@@ -39,18 +41,24 @@ class DataStore(object):
     finally:
       session.close()
 
-  def add_testcases(self, testcases: typing.List[pb.Testcase]) -> None:
-    """
-    Add a sequence of testcases to the datastore.
-
-    TODO: Optimize to reduce the number of SQL queries by batching lookups/inserts.
+  def submit_testcases(self, request: deepsmith_pb2.SubmitTestcasesRequest,
+                       response: deepsmith_pb2.SubmitTestcasesResponse) -> None:
+    """Add a sequence of testcases to the datastore.
     """
     with self.session(commit=True) as session:
-      for testcase in testcases:
+      for testcase in request.testcases:
         self._add_one_testcase(session, testcase)
 
   def _add_one_testcase(self, session: db.session_t,
-                        testcase_pb: pb.Testcase) -> None:
+                        testcase_pb: deepsmith_pb2.Testcase) -> None:
+    """Record a single Testcase in the database.
+    """
+    # Add language:
+    language = dbutil.get_or_add(
+        session, db.Language,
+        name=testcase_pb.language,
+    )
+
     # Add generator:
     generator = dbutil.get_or_add(
         session, db.Generator,
@@ -68,6 +76,7 @@ class DataStore(object):
     # Add testcase:
     testcase = dbutil.get_or_add(
         session, db.Testcase,
+        language=language,
         generator=generator,
         harness=harness,
     )
@@ -126,4 +135,3 @@ class DataStore(object):
           duration_seconds=timings_.duration_seconds,
           date=datetime.fromtimestamp(timings_.date_epoch_seconds)
       )
-

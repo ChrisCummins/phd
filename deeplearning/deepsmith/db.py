@@ -105,6 +105,11 @@ class Harness(Base):
   )
 
 
+class Language(ListOfNames):
+  id_t = ListOfNames.id_t
+  __tablename__ = "languages"
+
+
 class Testcase(Base):
   id_t = Integer
   __tablename__ = "testcases"
@@ -112,10 +117,12 @@ class Testcase(Base):
   # Columns:
   id: int = Column(id_t, primary_key=True)
   date_added: datetime = Column(DateTime, nullable=False, default=now)
+  language_id: int = Column(Language.id_t, ForeignKey("languages.id"), nullable=False)
   generator_id: int = Column(Generator.id_t, ForeignKey("generators.id"), nullable=False)
   harness_id: int = Column(Harness.id_t, ForeignKey("harnesses.id"), nullable=False)
 
   # Relationships:
+  language: Language = relationship("Language")
   generator: "Generator" = relationship("Generator", back_populates="testcases")
   harness: "Harness" = relationship("Harness", back_populates="testcases")
   inputs = relationship(
@@ -128,6 +135,8 @@ class Testcase(Base):
       secondaryjoin="TestcaseOptAssociation.opt_id == TestcaseOpt.id")
   timings: List["TimingTiming"] = relationship("TestcaseTiming", back_populates="testcase")
   results: List["Result"] = relationship("Result", back_populates="testcase")
+  pending_results: List["PendingResult"] = relationship(
+      "PendingResult", back_populates="testcase")
 
 
 class TestcaseInputName(ListOfNames):
@@ -224,14 +233,6 @@ class TestcaseTiming(Base):
   )
 
 
-class Language(ListOfNames):
-  id_t = ListOfNames.id_t
-  __tablename__ = "languages"
-
-  # Relationships:
-  testbeds: List["Testbed"] = relationship("Testbed", back_populates="lang")
-
-
 class Testbed(Base):
   id_t = Integer
   __tablename__ = "testbeds"
@@ -239,13 +240,15 @@ class Testbed(Base):
   # Columns:
   id: int = Column(id_t, primary_key=True)
   date_added: datetime = Column(DateTime, nullable=False, default=now)
-  lang_id: int = Column(Language.id_t, ForeignKey("languages.id"), nullable=False)
+  language_id: int = Column(Language.id_t, ForeignKey("languages.id"), nullable=False)
   name: str = Column(String(1024), nullable=False)
   version: str = Column(String(1024), nullable=False)
 
   # Relationships:
-  lang: Language = relationship("Language", back_populates="testbeds")
+  lang: Language = relationship("Language")
   results: List["Result"] = relationship("Result", back_populates="testbed")
+  pending_results: List["PendingResult"] = relationship(
+      "PendingResult", back_populates="testbed")
   opts = relationship(
       "TestbedOpt", secondary="testbed_opt_associations",
       primaryjoin="TestbedOptAssociation.testbed_id == Testbed.id",
@@ -253,7 +256,7 @@ class Testbed(Base):
 
   # Constraints:
   __table_args__ = (
-    UniqueConstraint('lang_id', 'name', 'version', name='unique_testbed'),
+    UniqueConstraint('language_id', 'name', 'version', name='unique_testbed'),
   )
 
 
@@ -294,11 +297,51 @@ class Result(Base):
       "ResultOutput", secondary="result_output_associations",
       primaryjoin="ResultOutputAssociation.result_id == Result.id",
       secondaryjoin="ResultOutputAssociation.output_id == ResultOutput.id")
-  timings: List["ResultTiming"] = relationship("ResultTiming", back_populates="result")
+  timings: List["ResultTiming"] = relationship(
+      "ResultTiming", back_populates="result")
 
   # Constraints:
   __table_args__ = (
     UniqueConstraint('testcase_id', 'testbed_id', name='unique_result'),
+  )
+
+
+class PendingResult(Base):
+  """A pending result is created when a testcase is issued to a testbed.
+
+  It is used to prevent a testcase from being issued to the same testbed
+  multiple times. When a testbed requests a testcase, a PendingResult is
+  created. Pending results have a deadline by which the result is expected.
+  The testcase will not be issued again to a matching testbed until this
+  deadline has passed.
+
+  PendingResults are removed in two cases:
+    - A Result is received with the same testcase and testbed.
+    - The deadline passes (this is to prevent the result being permanently
+      lost in case of a testbed which never responds with a result).
+  """
+  id_t = Result.id_t
+  __tablename__ = "pending_results"
+
+  # Columns:
+  id: int = Column(id_t, primary_key=True)
+  date_added: datetime = Column(DateTime, nullable=False, default=now)
+  # The date that the result is due by.
+  deadline: datetime = Column(DateTime, nullable=False)
+  testcase_id: int = Column(
+      Testcase.id_t, ForeignKey("testcases.id"), nullable=False)
+  testbed_id: int = Column(
+      Testbed.id_t, ForeignKey("testbeds.id"), nullable=False)
+
+  # Relationships:
+  testcase: Testcase = relationship(
+      "Testcase", back_populates="pending_results")
+  testbed: Testbed = relationship(
+      "Testbed", back_populates="pending_results")
+
+  # Constraints:
+  __table_args__ = (
+    UniqueConstraint('testcase_id', 'testbed_id', name='unique_pending_result'),
   )
 
 
