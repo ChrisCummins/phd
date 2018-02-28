@@ -1,0 +1,29 @@
+dist: trusty
+sudo: required
+
+os:
+  - linux
+
+language: python
+
+python:
+  - "3.6"
+
+env:
+  global:
+    - CC=clang
+    - CXX=clang++
+
+before_install:
+  - sudo apt-get install -y pkg-config libltdl3-dev libhwloc-dev llvm-dev clang libclang-dev ocl-icd-opencl-dev libedit-dev
+  - wget http://portablecl.org/downloads/pocl-0.12.tar.gz
+  - tar xzf pocl-0.12.tar.gz
+  - cd pocl-0.12/ && ./configure && make && sudo make install && cd ..
+  - sudo rm -r pocl-0.12
+
+install:
+  - make install
+
+script:
+  - cldrive --clinfo
+  - make test
