@@ -49,9 +49,6 @@
 [submodule "third_party/visioncpp"]
 	path = third_party/visioncpp
 	url = git@github.com:codeplaysoftware/visioncpp.git
-[submodule "util/photolib"]
-	path = util/photolib
-	url = git@github.com:ChrisCummins/photolib.git
 [submodule "experimental/eevee"]
 	path = experimental/eevee
 	url = git@github.com:ChrisCummins/eevee.git
