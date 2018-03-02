@@ -4,7 +4,7 @@ import sys
 import pytest
 from absl import app
 
-from photolib import linters
+from util.photolib import linters
 
 
 def test_error():

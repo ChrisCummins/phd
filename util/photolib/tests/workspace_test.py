@@ -6,7 +6,7 @@ from tempfile import TemporaryDirectory
 import pytest
 from absl import app
 
-from photolib import workspace
+from util.photolib import workspace
 
 
 def test_find_workspace_rootpath():

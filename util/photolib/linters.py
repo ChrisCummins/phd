@@ -9,8 +9,8 @@ from collections import defaultdict
 
 from absl import flags
 
-from photolib import lightroom
-from photolib import util
+from util.photolib import lightroom
+from util.photolib import util
 
 FLAGS = flags.FLAGS
 flags.DEFINE_boolean("counts", False, "Show only the counts of errors.")

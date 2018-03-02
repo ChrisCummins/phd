@@ -2,7 +2,7 @@
 import os
 import typing
 
-from photolib import util
+from util.photolib import util
 
 
 def find_workspace_rootpath(start_path: str) -> typing.Optional[str]:

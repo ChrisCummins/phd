@@ -17,7 +17,7 @@ from sqlalchemy import Integer
 from sqlalchemy import ForeignKey
 from sqlalchemy.ext import declarative
 
-from photolib import util
+from util.photolib import util
 
 FLAGS = flags.FLAGS
 

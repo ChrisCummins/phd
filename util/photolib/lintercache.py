@@ -17,8 +17,8 @@ from sqlalchemy import UniqueConstraint
 from sqlalchemy import ForeignKey
 from sqlalchemy.ext import declarative
 
-from photolib import linters
-from photolib import util
+from util.photolib import linters
+from util.photolib import util
 
 FLAGS = flags.FLAGS
 

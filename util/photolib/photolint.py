@@ -8,11 +8,11 @@ from absl import app
 from absl import flags
 from absl import logging
 
-from photolib import linters
-from photolib import lightroom
-from photolib import util
-from photolib import workspace
-from photolib import lintercache
+from util.photolib import linters
+from util.photolib import lightroom
+from util.photolib import util
+from util.photolib import workspace
+from util.photolib import lintercache
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string("workspace", os.getcwd(), "Path to workspace root")
