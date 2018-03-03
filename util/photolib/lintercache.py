@@ -163,12 +163,25 @@ def add_linter_errors(entry: CacheLookupResult,
   logging.debug("cached directory %s", entry.relpath)
 
 
+def get_directory_mtime(abspath) -> int:
+  """Get the timestamp of the most recently modified file/dir in directory.
+
+  Params:
+    abspath: The absolute path to the directory.
+
+  Returns:
+    The seconds since epoch of the last modification.
+  """
+  paths = (os.path.join(abspath, filename) for filename in os.listdir(abspath))
+  return int(max(os.path.getmtime(path) for path in paths))
+
+
 def get_linter_errors(abspath: str, relpath: str) -> CacheLookupResult:
   """Looks up the given directory and returns cached results (if any)."""
   relpath_md5 = util.md5(relpath).digest()
 
   # Get the time of the most-recently modified file in the directory.
-  mtime = int(max(os.path.getmtime(root) for root, _, _ in os.walk(abspath)))
+  mtime = get_directory_mtime(abspath)
 
   ret = CacheLookupResult(
       exists=False,
@@ -185,7 +198,6 @@ def get_linter_errors(abspath: str, relpath: str) -> CacheLookupResult:
 
   if directory and directory.mtime == ret.mtime:
     ret.exists = True
-    # logging.debug("directory cache hit %s", relpath)
     ret.errors = SESSION \
       .query(CachedError) \
       .filter(CachedError.dir == ret.relpath_md5)
