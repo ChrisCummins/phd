@@ -5,7 +5,7 @@ A set of tools for managing my library of photographs.
 ## Usage
 
 ```sh
-$ bazel run //photolib/photolint -- --workspace=/Volumes/Photos --cost=10
+$ bazel run //util/photolib:photolint -- --workspace=/Volumes/Photos
 ```
 
 ## License

@@ -1,4 +1,4 @@
-"""Functions for working with Lightroom."""
+"""This file defines a cache for linting results."""
 import datetime
 import typing
 import os
