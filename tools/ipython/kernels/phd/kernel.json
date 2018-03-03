@@ -1,0 +1,11 @@
+{
+ "argv": [
+  "@PYTHON@",
+  "-m",
+  "ipykernel",
+  "-f",
+  "{connection_file}"
+ ],
+ "language": "python",
+ "display_name": "phd"
+}

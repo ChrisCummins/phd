@@ -114,6 +114,14 @@ main() {
         echo "source $DIR/../venv/phd/bin/activate && python setup.py install"
     fi
 
+    # Jupyter kernel
+    if [[ ! -f "$HOME/.ipython/kernels/phd/kernel.json" ]]; then
+        echo "rm -rf $HOME/.ipython/kernels/phd"
+        echo "mkdir -p ~/.ipython/kernels"
+        echo "cp -r $DIR/ipython/kernels/phd $HOME/.ipython/kernels/phd"
+        echo "gsed \"s,@PYTHON@,$DIR/../venv/phd/bin/python,\" -i $HOME/.ipython/kernels/phd/kernel.json"
+    fi
+
     # autoenv
     if pip freeze 2>/dev/null | grep '^autoenv' &>/dev/null ; then
         echo '# autoenv: installed'
