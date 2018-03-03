@@ -16,9 +16,6 @@
 [submodule "src/labm8"]
 	path = lib/labm8
 	url = git@github.com:ChrisCummins/labm8.git
-[submodule "src/lmk"]
-	path = util/lmk
-	url = git@github.com:ChrisCummins/lmk.git
 [submodule "src/shutterbug"]
 	path = util/shutterbug
 	url = git@github.com:ChrisCummins/shutterbug.git
