@@ -589,7 +589,11 @@ def build_html_message_body(output, command=None, returncode=None,
     else:
         # full length report
         for line, lineno in zip(lines, range(1, len(lines) + 1)):
-            line_html = cgi.escape(line.decode('utf-8'))
+            try:
+                line = line.decode('utf-8')
+            except AttributeError:  # str.decode() depends on Python version.
+                pass
+            line_html = cgi.escape(line)
             html += u"""
   <tr style="line-height:1em;">
     <td style="{lineno_css}">{lineno}</td>
