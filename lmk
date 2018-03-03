@@ -308,7 +308,7 @@ def load_cfg(path=None):
     if sys.version_info >= (3, 0):
         from configparser import ConfigParser
     else:
-        from configparser import ConfigParser
+        from ConfigParser import ConfigParser
 
     if path is None:
         path = get_cfg_path()
