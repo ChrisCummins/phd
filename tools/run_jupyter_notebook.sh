@@ -8,7 +8,7 @@ set -eu
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 main() {
-    source "$DIR/../venv/phd/bin/activate"
+    source "$DIR/jupyter.runfiles/phd/venv/phd/bin/activate"
     cd "$DIR/.."
     jupyter notebook
 }
