@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+#
+# update_requirements.sh - Update python requirements.txt.
+#
+set -eu
+
+# Directory of this script.
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+main() {
+    source "$DIR/../venv/phd/bin/activate"
+    pip freeze > "$DIR/../requirements.txt"
+    git diff -- "$DIR/../requirements.txt"
+}
+main $@
