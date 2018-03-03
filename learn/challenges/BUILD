@@ -66,7 +66,7 @@ cc_test(
         "//:darwin": ["-framework OpenCL"],
         "//conditions:default": ["-lOpenCL"],
     }),
-    deps = ["//:opencl"],
+    deps = ["//third_party/opencl"],
 )
 
 cc_test(

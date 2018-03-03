@@ -9,7 +9,7 @@ cc_library(
         "-Ilearn/hoocl/include",
         "-Ithird_party/opencl/include",
     ],
-    deps = ["//:opencl"],
+    deps = ["//third_party/opencl"],
 )
 
 cc_binary(
