@@ -375,6 +375,7 @@ def get_smtp_server(cfg):
     """
 
     def _error(*msg, **kwargs):
+        c = colors
         sep = kwargs.get('sep', ' ')
         msg = sep.join(msg)
         print(
