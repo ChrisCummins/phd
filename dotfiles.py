@@ -161,7 +161,6 @@ class Homebrew(Task):
 
 class Python(Task):
     """ python2 and pip """
-    PYP_IRC = "~/.pypirc"
     PIP_LIST = ".pip-freeze.json"
 
     PIP2_BINARY = Homebrew.bin('pip2')
@@ -193,12 +192,6 @@ class Python(Task):
 
         if Homebrew().install_package("python3"):
             shell("{brew} link python3 --force".format(**vars()))
-
-        # Install pythonirc config file
-        if os.path.isdir(PRIVATE):
-            self.__genfiles__ += [self.PYP_IRC]
-            symlink("{private}/python/.pypirc".format(private=PRIVATE),
-                    "~/.pypirc")
 
         # install pip
         self._install_pip_version(self.PIP2_BINARY, self.__versions__["pip"])
@@ -240,6 +233,20 @@ class Python(Task):
             task_print("pip install {package}=={version}".format(**vars()))
             shell("{use_sudo} {pip} install {package}=={version}".format(**vars()))
             return True
+
+
+class PypiConfig(Task):
+    """pypi config file"""
+    PYP_IRC = "~/.pypirc"
+
+    __platforms__ = ['linux', 'osx']
+    __deps__ = ["Python"]
+    __reqs__ = [lambda: os.path.isdir(PRIVATE + "/python/")]
+    __genfiles__ = [PYP_IRC]
+
+    def install(self):
+        symlink("{private}/python/.pypirc".format(private=PRIVATE),
+                "~/.pypirc")
 
 
 class Unzip(Task):
@@ -301,6 +308,30 @@ class Curl(Task):
         Homebrew().upgrade_package("curl")
 
 
+class DropboxInbox(Task):
+    """ dropbox inbox """
+    __platforms__ = ['linux', 'osx']
+    __deps__ = ['Dropbox']
+    __reqs__ = [lambda: os.path.isdir(os.path.expanduser("~/Dropbox/Inbox"))]
+    __genfiles__ = ["~/Inbox"]
+
+    def install(self):
+        if not os.path.isdir(os.path.expanduser("~/Dropbox/Inbox")):
+            symlink("Dropbox/Inbox", "~/Inbox")
+
+
+class DropboxScripts(Task):
+    """ dropbox scripts """
+    __platforms__ = ['linux', 'osx']
+    __deps__ = ['Dropbox']
+    __reqs__ = [lambda: os.path.isdir(os.path.expanduser("~/Dropbox"))]
+    __genfiles__ = ["~/.local/bin/dropbox-find-conflicts"]
+
+    def install(self):
+        symlink(usr_share("Dropbox/dropbox-find-conflicts.sh"),
+                "~/.local/bin/dropbox-find-conflicts")
+
+
 class Dropbox(Task):
     """ dropbox """
     UBUNTU_URL = "https://www.dropbox.com/download?plat=lnx.x86_64"
@@ -317,16 +348,6 @@ class Dropbox(Task):
     def _install_common(self):
         mkdir("~/.local/bin")
         symlink(usr_share("Dropbox/dropbox.py"), "~/.local/bin/dropbox")
-
-        if (os.path.isdir(os.path.expanduser("~/Dropbox/Inbox")) and not
-            os.path.isdir(os.path.expanduser("~/Dropbox/Inbox"))):
-            self.__genfiles__.append("~/Inbox")
-            symlink("Dropbox/Inbox", "~/Inbox")
-
-        if os.path.isdir(os.path.expanduser("~/Dropbox")):
-            self.__genfiles__.append("~/.local/bin/dropbox-find-conflicts")
-            symlink(usr_share("Dropbox/dropbox-find-conflicts.sh"),
-                    "~/.local/bin/dropbox-find-conflicts")
 
     def install_osx(self):
         Homebrew().install_cask("dropbox")
@@ -373,37 +394,35 @@ class Fluid(Task):
         Homebrew().upgrade_cask("fluid")
 
 
-class SSH(Task):
+class SshConfig(Task):
     """ ssh configuration """
     __platforms__ = ['linux', 'osx']
-    __genfiles__ = []
+    __reqs__ = [lambda: os.path.isdir(PRIVATE + "/ssh")]
+    __genfiles__ = [
+        "~/.ssh/authorized_keys",
+        "~/.ssh/known_hosts",
+        "~/.ssh/config",
+        "~/.ssh/id_rsa.ppk",
+        "~/.ssh/id_rsa.pub",
+        "~/.ssh/id_rsa",
+    ]
 
     def install(self):
-        if os.path.isdir(PRIVATE + "/ssh"):
-            self.__genfiles__ += [
-                "~/.ssh/authorized_keys",
-                "~/.ssh/known_hosts",
-                "~/.ssh/config",
-                "~/.ssh/id_rsa.ppk",
-                "~/.ssh/id_rsa.pub",
-                "~/.ssh/id_rsa",
-            ]
+        mkdir("~/.ssh")
+        shell('chmod 600 "' + PRIVATE + '"/ssh/*')
 
-            mkdir("~/.ssh")
-            shell('chmod 600 "' + PRIVATE + '"/ssh/*')
+        for file in ['authorized_keys', 'known_hosts', 'config', 'id_rsa.ppk', 'id_rsa.pub']:
+            src = os.path.join(PRIVATE, "ssh", file)
+            dst = os.path.join("~/.ssh", file)
 
-            for file in ['authorized_keys', 'known_hosts', 'config', 'id_rsa.ppk', 'id_rsa.pub']:
-                src = os.path.join(PRIVATE, "ssh", file)
-                dst = os.path.join("~/.ssh", file)
+            if shell_ok("test $(stat -c %U '{src}') = $USER".format(**vars())):
+                symlink(src, dst)
+            else:
+                copy_file(src, dst)
+                shell("chmod 600 {dst}".format(**vars()))
 
-                if shell_ok("test $(stat -c %U '{src}') = $USER".format(**vars())):
-                    symlink(src, dst)
-                else:
-                    copy_file(src, dst)
-                    shell("chmod 600 {dst}".format(**vars()))
-
-            copy_file(os.path.join(PRIVATE, "ssh", "id_rsa"), "~/.ssh/id_rsa")
-            shell("chmod 600 ~/.ssh/id_rsa")
+        copy_file(os.path.join(PRIVATE, "ssh", "id_rsa"), "~/.ssh/id_rsa")
+        shell("chmod 600 ~/.ssh/id_rsa")
 
 
 class Netdata(Task):
@@ -514,9 +533,6 @@ class Zsh(Task):
         symlink(usr_share("Zsh"), "~/.zsh")
         symlink(usr_share("Zsh/zshrc"), "~/.zshrc")
         symlink(usr_share("Zsh/zshenv"), "~/.zshenv")
-        if os.path.isdir(os.path.join(PRIVATE, "zsh")):
-            self.__genfiles__ += ["~/.zsh/private"]
-            symlink(os.path.join(PRIVATE, "zsh"), "~/.zsh/private")
 
         # oh-my-zsh
         clone_git_repo(github_repo("robbyrussell", "oh-my-zsh"),
@@ -530,6 +546,19 @@ class Zsh(Task):
 
     def upgrade_osx(self):
         Homebrew().upgrade_package("zsh")
+
+
+class ZshPrivate(Task):
+    """ zsh private config files """
+    __platforms__ = ['linux', 'osx']
+    __deps__ = ['Zsh']
+    __reqs__ = [lambda: os.path.isdir(os.path.join(PRIVATE, "zsh"))]
+    __genfiles__ = [
+        "~/.zsh/private",
+    ]
+
+    def install(self):
+        symlink(os.path.join(PRIVATE, "zsh"), "~/.zsh/private")
 
 
 class ZshBazelCompletion(Task):
@@ -581,20 +610,31 @@ class Lmk(Task):
 
     def install(self):
         Python().pip_install("lmk", self.__versions__["lmk"])
-        if os.path.isdir(os.path.join(PRIVATE, "lmk")):
-            self.__genfiles__ += ["~/.lmkrc"]
-            symlink(os.path.join(PRIVATE, "lmk", "lmkrc"), "~/.lmkrc")
 
 
-class DSmith(Task):
-    """ dsmith config """
-    __platforms__ = ['ubuntu']
-    __genfiles__ = []
+class LmkConfig(Task):
+    """ let-me-know config file """
+    __platforms__ = ['linux', 'osx']
+    __deps__ = ['Lmk']
+    __reqs__ = [lambda: os.path.isdir(os.path.join(PRIVATE, "lmk"))]
+    __genfiles__ = [
+        "~/.lmkrc"
+    ]
 
     def install(self):
-        if os.path.isdir(os.path.join(PRIVATE, "dsmith")):
-            self.__genfiles__ += ['~/.dsmithrc']
-            symlink(os.path.join(PRIVATE, "dsmith", "dsmithrc"), "~/.dsmithrc")
+        symlink(os.path.join(PRIVATE, "lmk", "lmkrc"), "~/.lmkrc")
+
+
+class DSmithConfig(Task):
+    """ dsmith config """
+    __platforms__ = ['ubuntu']
+    __reqs__ = [lambda: os.path.isdir(os.path.join(PRIVATE, "dsmith"))]
+    __genfiles__ = [
+        '~/.dsmithrc'
+    ]
+
+    def install(self):
+        symlink(os.path.join(PRIVATE, "dsmith", "dsmithrc"), "~/.dsmithrc")
 
 
 class Git(Task):
@@ -615,10 +655,23 @@ class Git(Task):
         if not IS_TRAVIS_CI:
             symlink(usr_share("git/gitconfig"), "~/.gitconfig")
 
-        if os.path.isdir(os.path.join(PRIVATE, "git")):
-            self.__genfiles__ += ['~/.githubrc', '~/.gogsrc']
-            symlink(os.path.join(PRIVATE, "git", "githubrc"), "~/.githubrc")
-            symlink(os.path.join(PRIVATE, "git", "gogsrc"), "~/.gogsrc")
+    def upgrade_osx(self):
+        Homebrew().upgrade_package("git")
+
+
+class GitPrivate(Task):
+    """ git private config """
+    __platforms__ = ['linux', 'osx']
+    __osx_deps__ = ['Homebrew']
+    __reqs__ = [lambda: os.path.isdir(os.path.join(PRIVATE, "git"))]
+    __genfiles__ = [
+        '~/.githubrc',
+        '~/.gogsrc',
+    ]
+
+    def install(self):
+        symlink(os.path.join(PRIVATE, "git", "githubrc"), "~/.githubrc")
+        symlink(os.path.join(PRIVATE, "git", "gogsrc"), "~/.gogsrc")
 
     def upgrade_osx(self):
         Homebrew().upgrade_package("git")
@@ -817,8 +870,13 @@ class SublimeText(Task):
     """ sublime text """
     __platforms__ = ['linux', 'osx']
     __osx_deps__ = ['Homebrew', 'Linters']
-    __genfiles__ = ['/usr/local/bin/rsub']
-    __osx_genfiles__ = ['/usr/local/bin/subl', '/Applications/Sublime Text.app']
+    __genfiles__ = [
+        '/usr/local/bin/rsub'
+    ]
+    __osx_genfiles__ = [
+        '/usr/local/bin/subl',
+        '/Applications/Sublime Text.app'
+    ]
 
     def install_osx(self):
         Homebrew().install_cask("sublime-text")
@@ -827,15 +885,7 @@ class SublimeText(Task):
         symlink("/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl",
                 "/usr/local/bin/subl", sudo=True)
 
-        if os.path.isdir(os.path.join(PRIVATE, "subl")):
-            self.__genfiles__ += [
-                "~/.subl",
-                "~/.subl/Packages/User",
-                "~/.subl/Packages/INI"
-            ]
-            symlink("~/Library/Application Support/Sublime Text 3", "~/.subl")
-            symlink(os.path.join(PRIVATE, "subl", "User"), "~/.subl/Packages/User")
-            symlink(os.path.join(PRIVATE, "subl", "INI"), "~/.subl/Packages/INI")
+        symlink("~/Library/Application Support/Sublime Text 3", "~/.subl")
 
         self.install()
 
@@ -844,6 +894,22 @@ class SublimeText(Task):
 
     def upgrade_osx(self):
         Homebrew().upgrade_cask("sublime-text")
+
+
+class SublimeConfig(Task):
+    """ sublime text """
+    __platforms__ = ['osx']
+    __osx_deps__ = ['SublimeText']
+    __reqs__ = [lambda: os.path.isdir(os.path.join(PRIVATE, "subl"))]
+    __genfiles__ = [
+        "~/.subl",
+        "~/.subl/Packages/User",
+        "~/.subl/Packages/INI",
+    ]
+
+    def install_osx(self):
+        symlink(os.path.join(PRIVATE, "subl", "User"), "~/.subl/Packages/User")
+        symlink(os.path.join(PRIVATE, "subl", "INI"), "~/.subl/Packages/INI")
 
 
 class JetbrainsIDEs(Task):
@@ -870,17 +936,23 @@ class JetbrainsIDEs(Task):
 
 
 class Ssmtp(Task):
-    """ mail server and config """
+    """ mail server """
     __platforms__ = ['ubuntu']
     __genfiles__ = ["/usr/sbin/ssmtp"]
 
     def install_ubuntu(self):
         Apt().install_package("ssmtp")
 
-        if os.path.isdir(os.path.join(PRIVATE, "ssmtp")):
-            self.__genfiles__ += ["/etc/ssmtp/ssmtp.conf"]
-            symlink(os.path.join(PRIVATE, "ssmtp", "ssmtp.conf"),
-                    "/etc/ssmtp/ssmtp.conf", sudo=True)
+
+class SsmtpConfig(Task):
+    """ mail config """
+    __platforms__ = ['ubuntu']
+    __deps__ = ["Ssmtp"]
+    __genfiles__ = ["/etc/ssmtp/ssmtp.conf"]
+
+    def install_ubuntu(self):
+        symlink(os.path.join(PRIVATE, "ssmtp", "ssmtp.conf"),
+                "/etc/ssmtp/ssmtp.conf", sudo=True)
 
 
 class MySQL(Task):
@@ -897,19 +969,17 @@ class MySQL(Task):
 class MySQLConfig(Task):
     """ mysql configuration """
     __platforms__ = ['linux', 'osx']
-    __genfiles__ = []
+    __genfiles__ = ["~/.my.cnf"]
+    __reqs__ = [lambda: os.path.isdir(os.path.join(PRIVATE, "mysql"))]
 
     def install(self):
-        if os.path.isdir(os.path.join(PRIVATE, "mysql")):
-            self.__genfiles__ += ["~/.my.cnf"]
-            symlink(os.path.join(PRIVATE, "mysql", ".my.cnf"), "~/.my.cnf")
+        symlink(os.path.join(PRIVATE, "mysql", ".my.cnf"), "~/.my.cnf")
 
 
 class LaTeX(Task):
-    """ pdflatex and helper scripts """
-    __platforms__ = ['linux', 'osx']
+    """ latex compiler and libraries """
+    __platforms__ = ['osx']
     __osx_deps__ = ['Homebrew']
-    __genfiles__ = []
     __osx_genfiles__ = [
         '/Library/TeX/Distributions/.DefaultTeX/Contents/Programs/texbin/pdflatex',
         '/Applications/texstudio.app',
@@ -920,16 +990,25 @@ class LaTeX(Task):
         Homebrew().install_cask("texstudio")
         self.install()
 
-    def install(self):
-        if which("pdflatex"):
-            self.__genfiles__ += ["~/.local/bin/autotex", "~/.local/bin/cleanbib"]
-            mkdir("~/.local/bin")
-            symlink(usr_share("LaTeX", "autotex"), "~/.local/bin/autotex")
-            symlink(usr_share("LaTeX", "cleanbib"), "~/.local/bin/cleanbib")
-
-    def upgrade(self):
+    def upgrade_osc(self):
         Homebrew().upgrade_cask("mactex")
         Homebrew().upgrade_cask("texstudio")
+
+
+class LaTeXScripts(Task):
+    """ latex helper scripts """
+    __platforms__ = ['linux', 'osx']
+    __osx_deps__ = ['LaTeX']
+    __reqs__ = [lambda: which("pdflatex")]
+    __genfiles__ = [
+        "~/.local/bin/autotex",
+        "~/.local/bin/cleanbib"
+    ]
+
+    def install(self):
+        mkdir("~/.local/bin")
+        symlink(usr_share("LaTeX", "autotex"), "~/.local/bin/autotex")
+        symlink(usr_share("LaTeX", "cleanbib"), "~/.local/bin/cleanbib")
 
 
 class AdobeCreativeCloud(Task):
@@ -1238,10 +1317,13 @@ class GpuStat(Task):
 
     __platforms__ = ['linux', 'osx']
     __deps__ = ['Python']
+    __reqs__ = [lambda: which("nvidia-smi")]
+    __genfiles__ = [
+        '/usr/local/bin/gpustat',
+    ]
 
     def install(self):
-        if which("nvidia-smi"):
-            Python().pip_install("gpustat", self.VERSION)
+        Python().pip_install("gpustat", self.VERSION)
 
 
 class IOTop(Task):
@@ -1375,17 +1457,16 @@ class Timer(Task):
 class MeCsv(Task):
     """ me.csv health and time tracking """
     __platforms__ = ['osx']
-    __genfiles__ = []
     __osx_deps__ = ['OmniFocus']
+    __reqs__ = [lambda: os.path.isdir(os.path.join(PRIVATE, "me.csv"))]
+    __genfiles__ = [
+        "~/.me.json",
+        "~/me.csv"
+    ]
 
     def install_osx(self):
-        if os.path.isdir(os.path.join(PRIVATE, "me.csv")):
-            self.__genfiles__ += [
-                "~/.me.json",
-                "~/me.csv"
-            ]
-            symlink(os.path.join(PRIVATE, "me.csv", "config.json"), "~/.me.json")
-            symlink(os.path.join(PRIVATE, "me.csv", "data"), "~/me.csv")
+        symlink(os.path.join(PRIVATE, "me.csv", "config.json"), "~/.me.json")
+        symlink(os.path.join(PRIVATE, "me.csv", "data"), "~/me.csv")
 
 
 class Bazel(Task):
@@ -1654,6 +1735,9 @@ class Ripgrep(Task):
     """ a very, very fast grep """
     __platforms__ = ['osx', 'linux']
     __deps__ = ['Homebrew', 'Ruby']
+    __genfiles__ = [
+        Homebrew.bin("rg")
+    ]
 
     def install(self):
         if not shell_ok("gem list --local | grep rails"):
