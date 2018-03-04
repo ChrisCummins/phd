@@ -129,10 +129,6 @@ class Testcase(Base):
       "TestcaseInput", secondary="testcase_input_associations",
       primaryjoin="TestcaseInputAssociation.testcase_id == Testcase.id",
       secondaryjoin="TestcaseInputAssociation.input_id == TestcaseInput.id")
-  opts = relationship(
-      "TestcaseOpt", secondary="testcase_opt_associations",
-      primaryjoin="TestcaseOptAssociation.testcase_id == Testcase.id",
-      secondaryjoin="TestcaseOptAssociation.opt_id == TestcaseOpt.id")
   timings: List["TimingTiming"] = relationship("TestcaseTiming", back_populates="testcase")
   results: List["Result"] = relationship("Result", back_populates="testcase")
   pending_results: List["PendingResult"] = relationship(
@@ -183,30 +179,6 @@ class TestcaseInputAssociation(Base):
   # Relationships:
   testcase: Testcase = relationship("Testcase")
   input: TestcaseInput = relationship("TestcaseInput")
-
-
-class TestcaseOpt(Base):
-  id_t = Integer
-  __tablename__ = "testcase_opts"
-
-  # Columns:
-  id: int = Column(id_t, primary_key=True)
-  date_added: datetime = Column(DateTime, nullable=False, default=now)
-  opt: str = Column(String(1024), nullable=False, unique=True)
-
-
-class TestcaseOptAssociation(Base):
-  __tablename__ = "testcase_opt_associations"
-
-  # Columns:
-  testcase_id: int = Column(Testcase.id_t, ForeignKey("testcases.id"), nullable=False)
-  opt_id: int = Column(TestcaseOpt.id_t, ForeignKey("testcase_opts.id"), nullable=False)
-  __table_args__ = (
-    PrimaryKeyConstraint('testcase_id', 'opt_id', name='unique_testcase_opt'),)
-
-  # Relationships:
-  testcase: Testcase = relationship("Testcase")
-  opt: TestcaseOpt = relationship("TestcaseOpt")
 
 
 class TestcaseTiming(Base):
@@ -260,9 +232,34 @@ class Testbed(Base):
   )
 
 
-class TestbedOpt(ListOfNames):
+class TestbedOptName(ListOfNames):
   id_t = ListOfNames.id_t
+  __tablename__ = "testbed_opt_names"
+
+  # Relationships:
+  opts: List["TestbedOpt"] = relationship("TestbedOpt", back_populates="name")
+
+
+class TestbedOpt(Base):
+  id_t = Integer
   __tablename__ = "testbed_opts"
+
+  # Columns:
+  id: int = Column(id_t, primary_key=True)
+  date_added: datetime = Column(DateTime, nullable=False, default=now)
+  name_id: TestbedOptName.id_t = Column(
+      TestbedOptName.id_t, ForeignKey("testbed_opt_names.id"), nullable=False)
+  # TODO(cec): Use Binary column type.
+  sha1: str = Column(String(40), nullable=False, index=True)
+  opt: str = Column(UnicodeText(length=4096), nullable=False)
+
+  # Relationships:
+  name: TestbedOptName = relationship("TestbedOptName", back_populates="opts")
+
+  # Constraints:
+  __table_args__ = (
+    UniqueConstraint('name_id', 'sha1', name='unique_testbed_opt'),
+  )
 
 
 class TestbedOptAssociation(Base):

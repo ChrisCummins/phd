@@ -116,17 +116,6 @@ class DataStore(object):
           input=input,
       )
 
-    # Add options:
-    for opt_ in testcase_pb.opts:
-      opt = dbutil.GetOrAdd(
-          session, db.TestcaseOpt,
-          opt=opt_
-      )
-      dbutil.GetOrAdd(
-          session, db.TestcaseOptAssociation,
-          testcase=testcase, opt=opt
-      )
-
     # TODO(cec): If the testcase already exists, don't add timings.
 
     # Add timings:
@@ -219,7 +208,6 @@ class DataStore(object):
         generator=self._GeneratorObjectToProto(testcase.generator),
         harness=self._HarnessObjectToProto(testcase.harness),
         inputs={i.name: i.input for i in testcase.inputs},
-        opts=testcase.opts,
         # TODO(cec) optionally set timings field.
     )
 

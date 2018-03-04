@@ -47,15 +47,15 @@ def CreateRandomInput() -> str:
 
 
 def CreateRandomInputs():
-  return {"src": CreateRandomInput()}
+  return {"src": CreateRandomInput(), "opt": CreateRandomInput()}
 
 
 def CreateRandomOpt():
-  return CreateRandomStr(32)
+  return {CreateRandomStr(3): CreateRandomStr(32)}
 
 
 def CreateRandomOpts():
-  return [CreateRandomOpt()] * (int(random.random() * 5) + 1)
+  return [CreateRandomOpt() for _ in range(int(random.random() * 5) + 1)]
 
 
 def CreateRandomTestcase() -> deepsmith_pb2.Testcase:
@@ -65,7 +65,6 @@ def CreateRandomTestcase() -> deepsmith_pb2.Testcase:
       generator=CreateRandomGenerator(),
       harness=CreateRandomHarness(),
       inputs=CreateRandomInputs(),
-      opts=CreateRandomOpts(),
       timings=[
         deepsmith_pb2.ProfilingEvent(client=client, name="a", duration_seconds=random.random()),
         deepsmith_pb2.ProfilingEvent(client=client, name="b", duration_seconds=random.random()),
@@ -86,7 +85,6 @@ def test_TestingService_empty_datastore(ds):
     assert s.query(db.ProfilingEventName).count() == 0
     assert s.query(db.Testcase).count() == 0
     assert s.query(db.TestcaseInput).count() == 0
-    assert s.query(db.TestcaseOpt).count() == 0
     assert s.query(db.TestcaseTiming).count() == 0
 
 
@@ -98,7 +96,6 @@ def test_TestingService_SubmitTestcases_one(ds):
         generator=deepsmith_pb2.Generator(name="foo", version="foo"),
         harness=deepsmith_pb2.Harness(name="foo", version="bar"),
         inputs={"src": "foo"},
-        opts=["1", "2", "3"],
         timings=[
           deepsmith_pb2.ProfilingEvent(client="c", name="a", duration_seconds=1),
           deepsmith_pb2.ProfilingEvent(client="c", name="b", duration_seconds=2),
@@ -114,7 +111,6 @@ def test_TestingService_SubmitTestcases_one(ds):
     assert s.query(db.ProfilingEventName).count() == 3
     assert s.query(db.Testcase).count() == 1
     assert s.query(db.TestcaseInput).count() == 1
-    assert s.query(db.TestcaseOpt).count() == 3
     assert s.query(db.TestcaseTiming).count() == 3
 
 
@@ -126,7 +122,6 @@ def test_TestingService_SubmitTestcases_two(ds):
         generator=deepsmith_pb2.Generator(name="foo", version="foo"),
         harness=deepsmith_pb2.Harness(name="foo", version="bar"),
         inputs={"src": "foo"},
-        opts=["1", "2", "3"],
         timings=[
           deepsmith_pb2.ProfilingEvent(client="c", name="a", duration_seconds=1),
           deepsmith_pb2.ProfilingEvent(client="c", name="b", duration_seconds=2),
@@ -138,7 +133,6 @@ def test_TestingService_SubmitTestcases_two(ds):
         generator=deepsmith_pb2.Generator(name="bar", version="foo"),
         harness=deepsmith_pb2.Harness(name="foo", version="bar"),
         inputs={"src": "abc"},
-        opts=["1", "2", "3", "4"],
         timings=[
           deepsmith_pb2.ProfilingEvent(client="d", name="a", duration_seconds=1),
           deepsmith_pb2.ProfilingEvent(client="d", name="d", duration_seconds=2),
@@ -154,7 +148,6 @@ def test_TestingService_SubmitTestcases_two(ds):
     assert s.query(db.ProfilingEventName).count() == 4
     assert s.query(db.Testcase).count() == 2
     assert s.query(db.TestcaseInput).count() == 2
-    assert s.query(db.TestcaseOpt).count() == 4
     assert s.query(db.TestcaseTiming).count() == 6
 
 
@@ -169,7 +162,6 @@ def test_TestingService_RequestTestcases_one(ds):
         generator=deepsmith_pb2.Generator(name="foo", version="foo"),
         harness=deepsmith_pb2.Harness(name="foo", version="bar"),
         inputs={"src": "foo"},
-        opts=["1", "2", "3"],
         timings=[
           deepsmith_pb2.ProfilingEvent(client="c", name="a", duration_seconds=1),
           deepsmith_pb2.ProfilingEvent(client="c", name="b", duration_seconds=2),
@@ -185,7 +177,6 @@ def test_TestingService_RequestTestcases_one(ds):
     assert s.query(db.ProfilingEventName).count() == 3
     assert s.query(db.Testcase).count() == 1
     assert s.query(db.TestcaseInput).count() == 1
-    assert s.query(db.TestcaseOpt).count() == 3
     assert s.query(db.TestcaseTiming).count() == 3
 
   request = deepsmith_pb2.RequestTestcasesRequest(

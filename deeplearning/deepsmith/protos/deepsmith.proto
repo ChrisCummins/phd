@@ -27,7 +27,6 @@ message Testcase {
 
   // <input_name, input_value>
   map<string, string> inputs = 5;
-  repeated string opts = 6;
   repeated ProfilingEvent timings = 7;
 }
 
@@ -54,7 +53,7 @@ message Testbed {
   optional string language = 2;
   optional string name = 3;
   optional string version = 4;
-  repeated string opts = 5;
+  map<string, string> opts = 5;
 }
 
 message Result {
