@@ -126,6 +126,9 @@ class Task(object):
         __platforms__ (List[str], optional): A list of platforms which the
             task may be run on. Any platform not in this list will not
             execute the task.
+        __hosts__ (List[str], optional): A list of hostnames which the task
+            may be run on. If this list is not present or is empty, all hosts
+            are whitelisted.
         __deps__ (List[str], optional): A list of task classes which must be
             executed before the task may be run.
         __<platform>_deps__ (List[Task], optional): A list of platform-specific
@@ -154,6 +157,7 @@ class Task(object):
         teardown_<platform>():
     """
     __platforms__ = []
+    __hosts__ = []
     __deps__ = []
     __genfiles__ = []
     __tmpfiles__ = []
@@ -378,6 +382,13 @@ def is_runnable_task(obj):
     platforms = getattr(task, "__platforms__", [])
     if not any(is_compatible(PLATFORM, x) for x in platforms):
         msg = "skipping " + type(task).__name__ + " on platform " + PLATFORM
+        logging.debug(msg)
+        return False
+
+    # Check that hostname is whitelisted (if whitelist is provided):
+    hosts = getattr(task, "__hosts__", [])
+    if hosts and HOSTNAME not in hosts:
+        msg = "skipping " + type(task).__name__ + " on host " + HOSTNAME
         logging.debug(msg)
         return False
 
