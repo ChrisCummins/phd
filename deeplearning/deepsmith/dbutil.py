@@ -14,7 +14,6 @@ import sqlalchemy as sql
 from absl import flags
 from absl import logging
 
-from labm8 import fs
 from sqlalchemy import exc
 from time import time
 

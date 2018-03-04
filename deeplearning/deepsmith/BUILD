@@ -14,10 +14,6 @@ py_library(
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     deps = [
         ":db",
-        "@labm8//:crypto",
-        "@labm8//:fs",
-        "@labm8//:prof",
-        "@labm8//:system",
     ],
 )
 
