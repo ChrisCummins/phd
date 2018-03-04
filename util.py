@@ -131,6 +131,8 @@ class Task(object):
             are whitelisted.
         __deps__ (List[str], optional): A list of task classes which must be
             executed before the task may be run.
+        __reqs__ (List[Callable], optional): A list of callable functions
+            to determine if the task may be run.
         __<platform>_deps__ (List[Task], optional): A list of platform-specific
             tasks which must be executed before the task may be run.
         __genfiles__ (List[str], optional): A list of files generated during
@@ -159,6 +161,7 @@ class Task(object):
     __platforms__ = []
     __hosts__ = []
     __deps__ = []
+    __reqs__ = []
     __genfiles__ = []
     __tmpfiles__ = []
 
@@ -395,6 +398,13 @@ def is_runnable_task(obj):
     # Check that task is not excluded:
     if type(task).__name__ in EXCLUDES:
         msg = "skipping " + type(task).__name__ + " as it is excluded"
+        logging.debug(msg)
+        return False
+
+    # Check that task passes all req tests:
+    reqs = getattr(task, "__reqs__", [])
+    if reqs and not all(req() for req in reqs):
+        msg = "skipping " + type(task).__name__ + ", failed req check"
         logging.debug(msg)
         return False
 
