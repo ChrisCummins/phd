@@ -1633,4 +1633,4 @@ class Ripgrep(Task):
         if not shell_ok("gem list --local | grep rails"):
             task_print("gem install rails")
             shell("sudo gem install rails")
-        Homebrew().install_package("ripgrip")
+        Homebrew().install_package("ripgrep")
