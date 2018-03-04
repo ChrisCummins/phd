@@ -10,9 +10,9 @@ py_library(
 )
 
 py_test(
-    name = "tests/testing_test",
+    name = "testing_test",
     size = "small",
-    srcs = ["tests/testing_test.py"],
+    srcs = ["testing_test.py"],
     deps = [
         ":testing",
     ],

@@ -8,6 +8,15 @@ py_library(
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
 )
 
+py_test(
+    name = "db_test",
+    size = "small",
+    srcs = ["tests/db_test.py"],
+    deps = [
+        ":db",
+    ],
+)
+
 py_library(
     name = "dbutil",
     srcs = ["dbutil.py"],
@@ -26,14 +35,5 @@ py_library(
         ":dbutil",
         "//deeplearning/deepsmith/protos:deepsmith",
         "@labm8//:crypto",
-    ],
-)
-
-py_test(
-    name = "tests/db_test",
-    size = "small",
-    srcs = ["tests/db_test.py"],
-    deps = [
-        ":db",
     ],
 )
