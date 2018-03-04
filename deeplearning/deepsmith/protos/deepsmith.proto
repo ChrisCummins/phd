@@ -21,7 +21,7 @@ message Testcase {
   // Reserved for later use as ID field.
   reserved 1;
 
-  optional string language = 2;
+  optional string toolchain = 2;
   optional Generator generator = 3;
   optional Harness harness = 4;
 
@@ -50,7 +50,7 @@ message Testbed {
   // Reserved for later use as ID field.
   reserved 1;
 
-  optional string language = 2;
+  optional string toolchain = 2;
   optional string name = 3;
   optional string version = 4;
   map<string, string> opts = 5;
@@ -99,7 +99,7 @@ message RequestTestcasesRequest {
   // The client name, e.g. $HOSTNAME.
   optional string client = 1 [default = "<anon>"];
 
-  optional string language = 9;
+  optional string toolchain = 9;
   optional Testbed testbed = 2;
   optional Harness harness = 3;
 

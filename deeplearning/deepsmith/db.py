@@ -40,13 +40,13 @@ session_t = sql.orm.session.Session
 query_t = sql.orm.query.Query
 
 # SQLAlchemy:
-Base = declarative_base()
+Table = declarative_base()
 
 # Shorthand:
 now = datetime.datetime.utcnow
 
 
-class ListOfNames(Base):
+class ListOfNames(Table):
   id_t = sql.Integer
   __abstract__ = True
 

@@ -7,11 +7,11 @@ from sqlalchemy import orm
 
 import deeplearning.deepsmith.generator
 import deeplearning.deepsmith.harness
-import deeplearning.deepsmith.language
+import deeplearning.deepsmith.toolchain
 from deeplearning.deepsmith import db
 
 
-class Testcase(db.Base):
+class Testcase(db.Table):
   id_t = sql.Integer
   __tablename__ = "testcases"
 
@@ -19,9 +19,9 @@ class Testcase(db.Base):
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
       sql.DateTime, nullable=False, default=db.now)
-  language_id: int = sql.Column(
-      deeplearning.deepsmith.language.Language.id_t,
-      sql.ForeignKey("languages.id"), nullable=False)
+  toolchain_id: int = sql.Column(
+      deeplearning.deepsmith.toolchain.Toolchain.id_t,
+      sql.ForeignKey("toolchains.id"), nullable=False)
   generator_id: int = sql.Column(
       deeplearning.deepsmith.generator.Generator.id_t,
       sql.ForeignKey("generators.id"), nullable=False)
@@ -30,10 +30,13 @@ class Testcase(db.Base):
       sql.ForeignKey("harnesses.id"), nullable=False)
 
   # Relationships:
-  language: deeplearning.deepsmith.language.Language = orm.relationship("Language")
-  generator: "Generator" = orm.relationship("Generator", back_populates="testcases")
-  harness: "Harness" = orm.relationship("Harness", back_populates="testcases")
-  inputs = orm.relationship(
+  toolchain: deeplearning.deepsmith.toolchain.Toolchain = orm.relationship(
+      "Toolchain")
+  generator: deeplearning.deepsmith.generator.Generator = orm.relationship(
+      "Generator", back_populates="testcases")
+  harness: deeplearning.deepsmith.harness.Harness = orm.relationship(
+      "Harness", back_populates="testcases")
+  inputs : typing.List["TestcaseInput"] = orm.relationship(
       "TestcaseInput", secondary="testcase_input_associations",
       primaryjoin="TestcaseInputAssociation.testcase_id == Testcase.id",
       secondaryjoin="TestcaseInputAssociation.input_id == TestcaseInput.id")
@@ -54,7 +57,7 @@ class TestcaseInputName(db.ListOfNames):
       "TestcaseInput", back_populates="name")
 
 
-class TestcaseInput(db.Base):
+class TestcaseInput(db.Table):
   id_t = sql.Integer
   __tablename__ = "testcase_inputs"
 
@@ -79,7 +82,7 @@ class TestcaseInput(db.Base):
   )
 
 
-class TestcaseInputAssociation(db.Base):
+class TestcaseInputAssociation(db.Table):
   __tablename__ = "testcase_input_associations"
 
   # Columns:

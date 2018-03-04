@@ -18,11 +18,11 @@ py_library(
         ":db",
         ":generator",
         ":harness",
-        ":language",
         ":profiling_event",
         ":result",
         ":testbed",
         ":testcase",
+        ":toolchain",
         "//deeplearning/deepsmith/protos:deepsmith",
         "@labm8//:crypto",
     ],
@@ -47,19 +47,47 @@ py_library(
     name = "generator",
     srcs = ["generator.py"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
-    deps = [":db"],
+    deps = [
+        ":db",
+        "//deeplearning/deepsmith/protos:deepsmith",
+    ],
+)
+
+py_test(
+    name = "generator_test",
+    size = "small",
+    srcs = ["generator_test.py"],
+    deps = [
+        ":datastore",
+        ":db",
+        ":generator",
+    ],
 )
 
 py_library(
     name = "harness",
     srcs = ["harness.py"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
-    deps = [":db", ":testcase"],
+    deps = [
+        ":db",
+        "//deeplearning/deepsmith/protos:deepsmith",
+    ],
+)
+
+py_test(
+    name = "harness_test",
+    size = "small",
+    srcs = ["harness_test.py"],
+    deps = [
+        ":datastore",
+        ":db",
+        ":harness",
+    ],
 )
 
 py_library(
-    name = "language",
-    srcs = ["language.py"],
+    name = "toolchain",
+    srcs = ["toolchain.py"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     deps = [":db"],
 )
@@ -93,7 +121,7 @@ py_library(
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     deps = [
         ":db",
-        ":language",
+        ":toolchain",
     ],
 )
 
@@ -105,6 +133,6 @@ py_library(
         ":db",
         ":generator",
         ":harness",
-        ":language",
+        ":toolchain",
     ],
 )

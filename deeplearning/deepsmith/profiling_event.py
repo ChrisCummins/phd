@@ -15,7 +15,7 @@ class ProfilingEventName(db.ListOfNames):
   __tablename__ = "proviling_event_names"
 
 
-class TestcaseTiming(db.Base):
+class TestcaseTiming(db.Table):
   id_t = sql.Integer
   __tablename__ = "testcase_timings"
 
@@ -46,7 +46,7 @@ class TestcaseTiming(db.Base):
   )
 
 
-class ResultTiming(db.Base):
+class ResultTiming(db.Table):
   id_t = sql.Integer
   __tablename__ = "result_timings"
 

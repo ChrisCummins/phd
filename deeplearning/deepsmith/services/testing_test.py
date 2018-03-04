@@ -1,24 +1,23 @@
-import pytest
+"""Tests for //deeplearning/deepsmith/services:testing."""
 import random
 import string
 import sys
+import tempfile
 
+import pytest
 from absl import app
-
-from tempfile import TemporaryDirectory
 
 import deeplearning.deepsmith.client
 import deeplearning.deepsmith.profiling_event
 import deeplearning.deepsmith.testcase
 from deeplearning.deepsmith import datastore
 from deeplearning.deepsmith.protos import deepsmith_pb2
-
 from deeplearning.deepsmith.services import testing
 
 
 @pytest.fixture
 def ds():
-  with TemporaryDirectory(prefix="dsmith-test-db-") as tmpdir:
+  with tempfile.TemporaryDirectory(prefix="dsmith-test-db-") as tmpdir:
     yield datastore.DataStore(engine="sqlite", db_dir=tmpdir)
 
 
@@ -36,7 +35,7 @@ def CreateRandomHarness():
   )
 
 
-def CreateRandomLanguage() -> str:
+def CreateRandomToolchain() -> str:
   return random.choice(["cpp", "java", "python"])
 
 
@@ -63,7 +62,7 @@ def CreateRandomOpts():
 def CreateRandomTestcase() -> deepsmith_pb2.Testcase:
   client = CreateRandomStr(16)
   return deepsmith_pb2.Testcase(
-      language=CreateRandomLanguage(),
+      toolchain=CreateRandomToolchain(),
       generator=CreateRandomGenerator(),
       harness=CreateRandomHarness(),
       inputs=CreateRandomInputs(),
@@ -94,7 +93,7 @@ def test_TestingService_SubmitTestcases_one(ds):
   service = testing.TestingService(ds)
   testcases = [
     deepsmith_pb2.Testcase(
-        language="cpp",
+        toolchain="cpp",
         generator=deepsmith_pb2.Generator(name="foo", version="foo"),
         harness=deepsmith_pb2.Harness(name="foo", version="bar"),
         inputs={"src": "foo"},
@@ -120,7 +119,7 @@ def test_TestingService_SubmitTestcases_two(ds):
   service = testing.TestingService(ds)
   testcases = [
     deepsmith_pb2.Testcase(
-        language="cpp",
+        toolchain="cpp",
         generator=deepsmith_pb2.Generator(name="foo", version="foo"),
         harness=deepsmith_pb2.Harness(name="foo", version="bar"),
         inputs={"src": "foo"},
@@ -131,7 +130,7 @@ def test_TestingService_SubmitTestcases_two(ds):
         ],
     ),
     deepsmith_pb2.Testcase(
-        language="cpp",
+        toolchain="cpp",
         generator=deepsmith_pb2.Generator(name="bar", version="foo"),
         harness=deepsmith_pb2.Harness(name="foo", version="bar"),
         inputs={"src": "abc"},
@@ -160,7 +159,7 @@ def test_TestingService_RequestTestcases_one(ds):
   service = testing.TestingService(ds)
   testcases = [
     deepsmith_pb2.Testcase(
-        language="cpp",
+        toolchain="cpp",
         generator=deepsmith_pb2.Generator(name="foo", version="foo"),
         harness=deepsmith_pb2.Harness(name="foo", version="bar"),
         inputs={"src": "foo"},
@@ -182,7 +181,7 @@ def test_TestingService_RequestTestcases_one(ds):
     assert s.query(deeplearning.deepsmith.profiling_event.TestcaseTiming).count() == 3
 
   request = deepsmith_pb2.RequestTestcasesRequest(
-      language="cpp",
+      toolchain="cpp",
   )
   response = service.RequestTestcases(request, None)
 

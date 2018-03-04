@@ -10,7 +10,7 @@ import deeplearning.deepsmith.testcase
 from deeplearning.deepsmith import db
 
 
-class Result(db.Base):
+class Result(db.Table):
   id_t = sql.Integer
   __tablename__ = "results"
 
@@ -44,7 +44,7 @@ class Result(db.Base):
   )
 
 
-class PendingResult(db.Base):
+class PendingResult(db.Table):
   """A pending result is created when a testcase is issued to a testbed.
 
   It is used to prevent a testcase from being issued to the same testbed
@@ -96,7 +96,7 @@ class ResultOutputName(db.ListOfNames):
       "ResultOutput", back_populates="name")
 
 
-class ResultOutput(db.Base):
+class ResultOutput(db.Table):
   id_t = sql.Integer
   __tablename__ = "result_outputs"
 
@@ -130,7 +130,7 @@ class ResultOutput(db.Base):
   )
 
 
-class ResultOutputAssociation(db.Base):
+class ResultOutputAssociation(db.Table):
   __tablename__ = "result_output_associations"
 
   # Columns:

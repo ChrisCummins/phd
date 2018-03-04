@@ -5,11 +5,11 @@ import typing
 import sqlalchemy as sql
 from sqlalchemy import orm
 
-import deeplearning.deepsmith.language
+import deeplearning.deepsmith.toolchain
 from deeplearning.deepsmith import db
 
 
-class Testbed(db.Base):
+class Testbed(db.Table):
   id_t = sql.Integer
   __tablename__ = "testbeds"
 
@@ -17,13 +17,15 @@ class Testbed(db.Base):
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(sql.DateTime, nullable=False,
                                              default=db.now)
-  language_id: int = sql.Column(deeplearning.deepsmith.language.Language.id_t,
-                                sql.ForeignKey("languages.id"), nullable=False)
+  toolchain_id: int = sql.Column(
+      deeplearning.deepsmith.toolchain.Toolchain.id_t,
+      sql.ForeignKey("toolchains.id"), nullable=False)
   name: str = sql.Column(sql.String(1024), nullable=False)
   version: str = sql.Column(sql.String(1024), nullable=False)
 
   # Relationships:
-  lang: deeplearning.deepsmith.language.Language = orm.relationship("Language")
+  lang: deeplearning.deepsmith.toolchain.Toolchain = orm.relationship(
+      "Toolchain")
   results: typing.List["Result"] = orm.relationship(
       "Result", back_populates="testbed")
   pending_results: typing.List["PendingResult"] = orm.relationship(
@@ -36,7 +38,7 @@ class Testbed(db.Base):
   # Constraints:
   __table_args__ = (
     sql.UniqueConstraint(
-        'language_id', 'name', 'version', name='unique_testbed'),
+        'toolchain_id', 'name', 'version', name='unique_testbed'),
   )
 
 
@@ -49,7 +51,7 @@ class TestbedOptName(db.ListOfNames):
       "TestbedOpt", back_populates="name")
 
 
-class TestbedOpt(db.Base):
+class TestbedOpt(db.Table):
   id_t = sql.Integer
   __tablename__ = "testbed_opts"
 
@@ -73,7 +75,7 @@ class TestbedOpt(db.Base):
   )
 
 
-class TestbedOptAssociation(db.Base):
+class TestbedOptAssociation(db.Table):
   __tablename__ = "testbed_opt_associations"
 
   # Columns:

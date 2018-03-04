@@ -12,7 +12,7 @@ from labm8 import crypto
 import deeplearning.deepsmith.client
 import deeplearning.deepsmith.generator
 import deeplearning.deepsmith.harness
-import deeplearning.deepsmith.language
+import deeplearning.deepsmith.toolchain
 import deeplearning.deepsmith.result
 import deeplearning.deepsmith.testbed
 import deeplearning.deepsmith.testcase
@@ -35,8 +35,8 @@ class DataStore(object):
   def __init__(self, **db_opts):
     self.opts = db_opts
     self._engine, _ = db.MakeEngine(**self.opts)
-    db.Base.metadata.create_all(self._engine)
-    db.Base.metadata.bind = self._engine
+    db.Table.metadata.create_all(self._engine)
+    db.Table.metadata.bind = self._engine
     self._make_session = orm.sessionmaker(bind=self._engine)
 
   @contextlib.contextmanager
@@ -72,10 +72,10 @@ class DataStore(object):
                       testcase_proto: deepsmith_pb2.Testcase) -> None:
     """Record a single Testcase in the database.
     """
-    # Add language:
-    language = db.GetOrAdd(
-        session, deeplearning.deepsmith.language.Language,
-        name=testcase_proto.language,
+    # Add toolchain:
+    toolchain = db.GetOrAdd(
+        session, deeplearning.deepsmith.toolchain.Toolchain,
+        name=testcase_proto.toolchain,
     )
 
     # Add generator:
@@ -95,7 +95,7 @@ class DataStore(object):
     # Add testcase:
     testcase = db.GetOrAdd(
         session, deeplearning.deepsmith.testcase.Testcase,
-        language=language,
+        toolchain=toolchain,
         generator=generator,
         harness=harness,
     )
@@ -145,19 +145,19 @@ class DataStore(object):
       )
 
   def _BuildTestcaseRequestQuery(self, session, request) -> db.query_t:
-    def _FilterLanguageGeneratorHarness(q):
-      if request.has_language:
-        language = db.GetOrAdd(
-            session, deeplearning.deepsmith.language.Language,
-            name=request.language
+    def _FilterToolchainGeneratorHarness(q):
+      if request.HasField("toolchain"):
+        toolchain = db.GetOrAdd(
+            session, deeplearning.deepsmith.toolchain.Toolchain,
+            name=request.toolchain
         )
-        if not language:
+        if not toolchain:
           raise LookupError
         q = q.filter(
-            deeplearning.deepsmith.testcase.Testcase.languageid == language.id)
+            deeplearning.deepsmith.testcase.Testcase.toolchain_id == toolchain.id)
 
       # Filter by generator.
-      if request.has_generator:
+      if request.HasField("generator"):
         generator = session.query(deeplearning.deepsmith.generator.Generator) \
           .filter(deeplearning.deepsmith.generator.Generator.name == request.generator.name,
                   deeplearning.deepsmith.generator.Generator.version == request.generator.version) \
@@ -180,18 +180,18 @@ class DataStore(object):
       return q
 
     q = session.query(deeplearning.deepsmith.testcase.Testcase)
-    q = _FilterLanguageGeneratorHarness(q)
+    q = _FilterToolchainGeneratorHarness(q)
 
     testbed_id = None
     if request.has_testbed():
-      language = db.GetOrAdd(
-          session, deeplearning.deepsmith.language.Language,
+      toolchain = db.GetOrAdd(
+          session, deeplearning.deepsmith.toolchain.Toolchain,
           name=request.testbed
       )
       testbed = db.GetOrAdd(
           session, deeplearning.deepsmith.testbed.Testbed,
-          language=language,
-          name=request.testbed.language,
+          toolchain=toolchain,
+          name=request.testbed.toolchain,
           version=request.testbed.version
       )
       testbed_id = testbed.id
@@ -200,21 +200,17 @@ class DataStore(object):
       q2 = session.query(deeplearning.deepsmith.result.Result.testcase_id) \
         .join(deeplearning.deepsmith.testcase.Testcase) \
         .filter(deeplearning.deepsmith.result.Result.testbed_id == testbed_id)
-      q2 = _FilterLanguageGeneratorHarness(q2)
+      q2 = _FilterToolchainGeneratorHarness(q2)
       q = q.filter(~deeplearning.deepsmith.testcase.Testcase.id.in_(q2))
 
     if testbed_id and not request.include_testcases_with_pending_results:
       q2 = session.query(deeplearning.deepsmith.result.PendingResult.testcase_id) \
         .join(deeplearning.deepsmith.testcase.Testcase) \
         .filter(deeplearning.deepsmith.result.PendingResult.testbed_id == testbed_id)
-      q2 = _FilterLanguageGeneratorHarness(q2)
+      q2 = _FilterToolchainGeneratorHarness(q2)
       q = q.filter(~deeplearning.deepsmith.testcase.Testcase.id.in_(q2))
 
     return q
-
-  def _GeneratorObjectToProto(self, generator: deeplearning.deepsmith.generator.Generator) -> deepsmith_pb2.Generator:
-    return deepsmith_pb2.Generator(name=generator.name,
-                                   version=generator.version)
 
   def _HarnessObjectToProto(self, harness: deeplearning.deepsmith.harness.Harness) -> deepsmith_pb2.Harness:
     return deepsmith_pb2.Harness(name=harness.name,
@@ -222,8 +218,8 @@ class DataStore(object):
 
   def _TestcaseObjectToProto(self, testcase: deeplearning.deepsmith.testcase.Testcase) -> deepsmith_pb2.Testcase:
     return deepsmith_pb2.Testcase(
-        language=testcase.language,
-        generator=self._GeneratorObjectToProto(testcase.generator),
+        toolchain=testcase.toolchain,
+        generator=testcase.generator.ToProto(),
         harness=self._HarnessObjectToProto(testcase.harness),
         inputs={i.name: i.input for i in testcase.inputs},
         # TODO(cec) optionally set timings field.
