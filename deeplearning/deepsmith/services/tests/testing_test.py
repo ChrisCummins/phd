@@ -20,52 +20,52 @@ def ds():
     yield datastore.DataStore(engine="sqlite", db_dir=tmpdir)
 
 
-def random_generator() -> deepsmith_pb2.Generator:
+def CreateRandomGenerator() -> deepsmith_pb2.Generator:
   return deepsmith_pb2.Generator(
       name=random.choice(["foo", "bar", "baz"]),
       version=random.choice(["1", "1", "1", "2"]),
   )
 
 
-def random_harness():
+def CreateRandomHarness():
   return deepsmith_pb2.Harness(
       name=random.choice(["a", "b", "c"]),
       version=random.choice(["1", "1", "1", "2"]),
   )
 
 
-def random_language() -> str:
+def CreateRandomLanguage() -> str:
   return random.choice(["cpp", "java", "python"])
 
 
-def random_str(n: int) -> str:
+def CreateRandomStr(n: int) -> str:
   return ''.join(random.choices(string.ascii_uppercase + string.digits, k=n))
 
 
-def random_input() -> str:
-  return random_str(int(random.random() * 1000) + 1)
+def CreateRandomInput() -> str:
+  return CreateRandomStr(int(random.random() * 1000) + 1)
 
 
-def random_inputs():
-  return {"src": random_input()}
+def CreateRandomInputs():
+  return {"src": CreateRandomInput()}
 
 
-def random_opt():
-  return random_str(32)
+def CreateRandomOpt():
+  return CreateRandomStr(32)
 
 
-def random_opts():
-  return [random_opt()] * (int(random.random() * 5) + 1)
+def CreateRandomOpts():
+  return [CreateRandomOpt()] * (int(random.random() * 5) + 1)
 
 
-def random_testcase() -> deepsmith_pb2.Testcase:
-  client = random_str(16)
+def CreateRandomTestcase() -> deepsmith_pb2.Testcase:
+  client = CreateRandomStr(16)
   return deepsmith_pb2.Testcase(
-      language=random_language(),
-      generator=random_generator(),
-      harness=random_harness(),
-      inputs=random_inputs(),
-      opts=random_opts(),
+      language=CreateRandomLanguage(),
+      generator=CreateRandomGenerator(),
+      harness=CreateRandomHarness(),
+      inputs=CreateRandomInputs(),
+      opts=CreateRandomOpts(),
       timings=[
         deepsmith_pb2.ProfilingEvent(client=client, name="a", duration_seconds=random.random()),
         deepsmith_pb2.ProfilingEvent(client=client, name="b", duration_seconds=random.random()),
@@ -74,14 +74,14 @@ def random_testcase() -> deepsmith_pb2.Testcase:
   )
 
 
-def test_service_empty(ds):
+def test_TestingService_empty_datastore(ds):
   service = testing.TestingService(ds)
   request = deepsmith_pb2.SubmitTestcasesRequest(testcases=[])
   response = service.SubmitTestcases(request, None)
   assert type(response) == deepsmith_pb2.SubmitTestcasesResponse
   assert response.status == deepsmith_pb2.SubmitTestcasesResponse.SUCCESS
 
-  with ds.session() as s:
+  with ds.Session() as s:
     assert s.query(db.Client).count() == 0
     assert s.query(db.ProfilingEventName).count() == 0
     assert s.query(db.Testcase).count() == 0
@@ -90,7 +90,7 @@ def test_service_empty(ds):
     assert s.query(db.TestcaseTiming).count() == 0
 
 
-def test_service_add_one(ds):
+def test_TestingService_SubmitTestcases_one(ds):
   service = testing.TestingService(ds)
   testcases = [
     deepsmith_pb2.Testcase(
@@ -109,7 +109,7 @@ def test_service_add_one(ds):
   request = deepsmith_pb2.SubmitTestcasesRequest(testcases=testcases)
   service.SubmitTestcases(request, None)
 
-  with ds.session() as s:
+  with ds.Session() as s:
     assert s.query(db.Client).count() == 1
     assert s.query(db.ProfilingEventName).count() == 3
     assert s.query(db.Testcase).count() == 1
@@ -118,7 +118,7 @@ def test_service_add_one(ds):
     assert s.query(db.TestcaseTiming).count() == 3
 
 
-def test_service_add_two(ds):
+def test_TestingService_SubmitTestcases_two(ds):
   service = testing.TestingService(ds)
   testcases = [
     deepsmith_pb2.Testcase(
@@ -149,7 +149,7 @@ def test_service_add_two(ds):
   request = deepsmith_pb2.SubmitTestcasesRequest(testcases=testcases)
   service.SubmitTestcases(request, None)
 
-  with ds.session() as s:
+  with ds.Session() as s:
     assert s.query(db.Client).count() == 2
     assert s.query(db.ProfilingEventName).count() == 4
     assert s.query(db.Testcase).count() == 2
@@ -157,10 +157,11 @@ def test_service_add_two(ds):
     assert s.query(db.TestcaseOpt).count() == 4
     assert s.query(db.TestcaseTiming).count() == 6
 
+
 # RequestTestcases
 
 @pytest.mark.skip(reason="FIXME(cec):")
-def test_service_request_one(ds):
+def test_TestingService_RequestTestcases_one(ds):
   service = testing.TestingService(ds)
   testcases = [
     deepsmith_pb2.Testcase(
@@ -179,7 +180,7 @@ def test_service_request_one(ds):
   request = deepsmith_pb2.SubmitTestcasesRequest(testcases=testcases)
   service.SubmitTestcases(request, None)
 
-  with ds.session() as s:
+  with ds.Session() as s:
     assert s.query(db.Client).count() == 1
     assert s.query(db.ProfilingEventName).count() == 3
     assert s.query(db.Testcase).count() == 1
@@ -197,7 +198,7 @@ def test_service_request_one(ds):
   # assert response.testcases[0] == testcases[0]
 
 
-def test_service_request_invalid(ds):
+def test_TestingService_RequestTestcases_invalid_request(ds):
   service = testing.TestingService(ds)
 
   # max_num_testcases must be > 1.
@@ -210,33 +211,33 @@ def test_service_request_invalid(ds):
   assert response.error == "max_num_testcases must be >= 1, not -1"
 
 
-
 # Benchmarks.
 
-def submit_testcases_request(service, request):
+def _SubmitTestcasesRequest(service, request):
   service.SubmitTestcases(request, None)
 
-def test_benchmark_add_1(ds, benchmark):
+
+def test_benchmark_TestingService_SubmitTestcases_one(ds, benchmark):
   service = testing.TestingService(ds)
-  testcases = [random_testcase()]
+  testcases = [CreateRandomTestcase()]
   request = deepsmith_pb2.SubmitTestcasesRequest(testcases=testcases)
-  benchmark(submit_testcases_request, service, request)
+  benchmark(_SubmitTestcasesRequest, service, request)
 
 
-def test_benchmark_add_2(ds, benchmark):
+def test_benchmark_TestingService_SubmitTestcases_two(ds, benchmark):
   service = testing.TestingService(ds)
-  testcases = [random_testcase(), random_testcase()]
+  testcases = [CreateRandomTestcase(), CreateRandomTestcase()]
   request = deepsmith_pb2.SubmitTestcasesRequest(testcases=testcases)
-  benchmark(submit_testcases_request, service, request)
+  benchmark(_SubmitTestcasesRequest, service, request)
 
 
-def test_benchmark_add_100(ds, benchmark):
+def test_benchmark_TestingService_SubmitTestcases_100(ds, benchmark):
   service = testing.TestingService(ds)
   testcases = []
   for _ in range(100):
-    testcases.append(random_testcase())
+    testcases.append(CreateRandomTestcase())
   request = deepsmith_pb2.SubmitTestcasesRequest(testcases=testcases)
-  benchmark(submit_testcases_request, service, request)
+  benchmark(_SubmitTestcasesRequest, service, request)
 
 
 def main(argv):  # pylint: disable=missing-docstring

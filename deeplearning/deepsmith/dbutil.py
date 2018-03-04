@@ -32,7 +32,7 @@ flags.DEFINE_string("db_password", None, "")
 flags.DEFINE_string("db_dir", None, "")
 
 
-def make_engine(**kwargs) -> sql.engine.Engine:
+def MakeEngine(**kwargs) -> sql.engine.Engine:
   """
   Raises:
       ValueError: If DB_ENGINE config value is invalid.
@@ -56,8 +56,8 @@ def make_engine(**kwargs) -> sql.engine.Engine:
     db_dir = kwargs.get("db_dir", FLAGS.db_dir)
     if not db_dir:
       raise ValueError(f"no database directory specified")
-    fs.mkdir(db_dir)  # create directory if it doesn't already exist
-    path = fs.path(db_dir, f"{name}.db")
+    os.makedirs(db_dir, exist_ok=True)
+    path = os.path.join(db_dir, f"{name}.db")
     uri = f"sqlite:///{path}"
     public_uri = uri
   else:
@@ -71,8 +71,8 @@ def make_engine(**kwargs) -> sql.engine.Engine:
   return sql.create_engine(uri, encoding="utf-8", echo=echo), public_uri
 
 
-def get_or_add(session: sql.orm.session.Session, model,
-               defaults: typing.Dict[str, object] = None, **kwargs) -> object:
+def GetOrAdd(session: sql.orm.session.Session, model,
+             defaults: typing.Dict[str, object] = None, **kwargs) -> object:
   """
   Instantiate a mapped database object. If the object is not in the database,
   add it.
@@ -94,7 +94,7 @@ def get_or_add(session: sql.orm.session.Session, model,
   return instance
 
 
-def paginate(query: db.query_t, page_size: int = 1000):
+def Paginate(query: db.query_t, page_size: int = 1000):
   """
   Paginate query results.
   """
@@ -116,33 +116,33 @@ class Proxy(object):
   session.
   """
 
-  def to_record(self, session: db.session_t) -> 'Base':
+  def ToRecord(self, session: db.session_t) -> 'Base':
     """
     Instantiate a database record from this proxy.
     """
     raise NotImplementedError("abstract class")
 
 
-def save_proxies(session: db.session_t, proxies: typing.List[Proxy],
-                 max_attempts: int = 3) -> None:
+def SaveProxies(session: db.session_t, proxies: typing.List[Proxy],
+                max_attempts: int = 3) -> None:
   """
   Convert a set of proxy objects in to database records and save them.
 
   Raises:
       OSError: In case of error importing proxies.
   """
-  return save_records(
-      session, [proxy.to_record(session) for proxy in proxies], max_attempts)
+  return SaveRecords(
+      session, [proxy.ToRecord(session) for proxy in proxies], max_attempts)
 
 
-def save_proxies_uniq_on(session: db.session_t, proxies: typing.List[Proxy], uniq_on: str,
-                         max_attempts: int = 3) -> int:
-  return save_records_uniq_on(
-      session, [proxy.to_record(session) for proxy in proxies], uniq_on, max_attempts)
+def SaveUniqueProxies(session: db.session_t, proxies: typing.List[Proxy], uniq_on: str,
+                      max_attempts: int = 3) -> int:
+  return SaveUniqueRecords(
+      session, [proxy.ToRecord(session) for proxy in proxies], uniq_on, max_attempts)
 
 
-def save_records_uniq_on(session: db.session_t, records: typing.List["Base"], uniq_on: str,
-                         max_attempts: int = 3) -> int:
+def SaveUniqueRecords(session: db.session_t, records: typing.List["Base"], uniq_on: str,
+                      max_attempts: int = 3) -> int:
   """ Save records which are unique on some column value. """
   # Break early if possible
   if not len(records):
@@ -161,15 +161,15 @@ def save_records_uniq_on(session: db.session_t, records: typing.List["Base"], un
 
   # Import those suckas:
   nprog, nuniq = len(records), len(uniq)
-  save_records(session, uniq, max_attempts)
+  SaveRecords(session, uniq, max_attempts)
 
   logging.info("imported %s of %s unique programs", nuniq, nprog)
   return nuniq
 
 
-def save_records(session: db.session_t, records: typing.List['Base'],
-                 max_attempts: int = 3, attempt: int = 1,
-                 exception=None) -> None:
+def SaveRecords(session: db.session_t, records: typing.List['Base'],
+                max_attempts: int = 3, attempt: int = 1,
+                exception=None) -> None:
   """
   Save a list of database records.
 
@@ -210,15 +210,15 @@ def save_records(session: db.session_t, records: typing.List['Base'],
     logging.warning("database integrity error, rolling back")
     logging.warning(e)
     session.rollback()
-    save_records(session, records, max_attempts, attempt + 1, e)
+    SaveRecords(session, records, max_attempts, attempt + 1, e)
   except exc.OperationalError as e:
     logging.debug(e)
     logging.warning("database operational error, rolling back")
     logging.warning(e)
     session.rollback()
-    save_records(session, records, max_attempts, attempt + 1, e)
+    SaveRecords(session, records, max_attempts, attempt + 1, e)
 
 
-def sql_query(*query):
+def FlattenSqlQuery(*query):
   """ flatten an SQL query into a single line of text """
   return " ".join(" ".join(query).strip().split("\n"))

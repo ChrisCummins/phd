@@ -39,7 +39,7 @@ class TestingService(deepsmith_pb2_grpc.TestingServiceServicer):
     logging.info("SubmitTestcases() client=%s", request.client)
     response = deepsmith_pb2.SubmitTestcasesResponse()
     try:
-      self.ds.submit_testcases(request, response)
+      self.ds.SubmitTestcases(request, response)
     except:
       response.status = deepsmith_pb2.SubmitTestcasesResponse.FAILURE
     return response
@@ -52,7 +52,7 @@ class TestingService(deepsmith_pb2_grpc.TestingServiceServicer):
     response = deepsmith_pb2.RequestTestcasesResponse()
 
     try:
-      self.ds.request_testcases(request, response)
+      self.ds.RequestTestcases(request, response)
     except datastore.InvalidRequest as e:
       response.status = deepsmith_pb2.RequestTestcasesResponse.INVALID_REQUEST
       response.error = str(e)

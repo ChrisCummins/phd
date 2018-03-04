@@ -6,7 +6,7 @@ from absl import app
 
 from deeplearning.deepsmith import db
 
-def test_hello_world():
+def test_HelloWorld():
   assert 2 == 1 + 1
 
 
