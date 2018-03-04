@@ -627,6 +627,7 @@ class Git(Task):
 class Gogs(Task):
     """self hosted git client"""
     __platforms__ = ["linux"]
+    __hosts__ = ["ryangosling"]
     __deps__ = ["MySQL"]
     __genfiles__ = ["/opt/gogs"]
     __versions__ = {
@@ -634,26 +635,25 @@ class Gogs(Task):
     }
 
     def install(self):
-        if HOSTNAME == "ryangosling" and not os.path.isdir("/opt/gogs"):
-            url = ("https://dl.gogs.io/{self.__versions__['gogs']}/linux_amd64.tar.gz"
-                   .format(**vars()))
-            shell("wget {url} -O /tmp/gogs.tar.gz".format(**vars()))
-            shell("cd /tmp && tar xjf linux_amd64.tar.gz")
-            shell("rm linux_amd64.tar.gz")
-            shell("sudo mv gogs /opt/gogs")
-            shell("sudo chown -R cec:cec /opt/gogs")
+        url = ("https://dl.gogs.io/{self.__versions__['gogs']}/linux_amd64.tar.gz"
+               .format(**vars()))
+        shell("wget {url} -O /tmp/gogs.tar.gz".format(**vars()))
+        shell("cd /tmp && tar xjf linux_amd64.tar.gz")
+        shell("rm linux_amd64.tar.gz")
+        shell("sudo mv gogs /opt/gogs")
+        shell("sudo chown -R cec:cec /opt/gogs")
 
 
 class GogsConfig(Task):
     """custom config for gogs"""
     __platforms__ = ["linux"]
+    __hosts__ = ["ryangosling"]
     __deps__ = ["Gogs", "MySQL"]
     __genfiles__ = ["/opt/gogs/custom/conf/app.ini"]
 
     def install(self):
-        if HOSTNAME == "ryangosling":
-            symlink(usr_share("gogs/custom/conf/app.ini"),
-                    "/opt/gogs/custom/conf/app.ini")
+        symlink(usr_share("gogs/custom/conf/app.ini"),
+                "/opt/gogs/custom/conf/app.ini")
 
 
 class Wallpaper(Task):
@@ -662,16 +662,15 @@ class Wallpaper(Task):
         "diana": "~/Dropbox/Pictures/desktops/diana/Manhattan.jpg",
         "florence": "~/Dropbox/Pictures/desktops/florence/Uluru.jpg",
     }
-
+    __hosts__ = WALLPAPERS.keys()
     __platforms__ = ['osx']
 
     def install_osx(self):
-        if HOSTNAME in self.WALLPAPERS:
-            path = os.path.expanduser(self.WALLPAPERS[HOSTNAME])
-            if os.path.exists(path):
-                shell("osascript -e 'tell application \"Finder\" to set " +
-                      "desktop picture to POSIX file \"{path}\"'"
-                      .format(**vars()))
+        path = os.path.expanduser(self.WALLPAPERS[HOSTNAME])
+        if os.path.exists(path):
+            shell("osascript -e 'tell application \"Finder\" to set " +
+                  "desktop picture to POSIX file \"{path}\"'"
+                  .format(**vars()))
 
 
 class GnuCoreutils(Task):
@@ -1211,12 +1210,6 @@ class AppStoreApps(Task):
         410628904: '/Applications/Wunderlist.app',
     }
 
-    HOST_APPS = {
-        "diana": {
-            883878097: '/Applications/Server.app'
-        },
-    }
-
     __platforms__ = ['osx']
     __deps__ = ['AppStore']
     __genfiles__ = list(APPS.values())
@@ -1225,8 +1218,18 @@ class AppStoreApps(Task):
         for app_id in self.APPS.keys():
             AppStore().install_app(app_id, self.APPS[app_id])
 
-        for app_id in self.HOST_APPS.get(HOSTNAME, dict()):
-            AppStore().install_app(app_id, self.HOST_APPS[HOSTNAME][app_id])
+class DianaApps(Task):
+    APPS = {
+        883878097: '/Applications/Server.app'
+    }
+
+    __platforms__ = ['osx']
+    __hosts__ = ['diana']
+    __genfiles__ = list(APPS.values())
+
+    def install(self):
+        for app_id in self.APPS.keys():
+            AppStore().install_app(app_id, self.APPS[app_id])
 
 
 class GpuStat(Task):
@@ -1528,29 +1531,52 @@ class Scripts(Task):
         symlink(usr_share("scripts/mkepisodal.py"), "~/.local/bin/mkepisodal")
         symlink(usr_share("scripts/rm-dsstore.sh"), "~/.local/bin/rm-dsstore")
 
-        if HOSTNAME == "florence":
-            self.__genfiles__ += [
-                "~/.local/bin/orange_you_glad_you_backup",
-                "~/.local/bin/ryan_gosling_have_my_movies",
-                "~/.local/bin/ryan_gosling_have_my_music",
-                "~/.local/bin/ryan_gosling_have_my_photos",
-            ]
-            symlink(usr_share("scripts/orange_you_glad_you_backup.sh"),
-                    "~/.local/bin/orange_you_glad_you_backup")
-            symlink(usr_share("scripts/ryan_gosling_have_my_photos.sh"),
-                    "~/.local/bin/ryan_gosling_have_my_photos")
-            symlink(usr_share("scripts/ryan_gosling_have_my_movies.sh"),
-                    "~/.local/bin/ryan_gosling_have_my_movies")
-            symlink(usr_share("scripts/ryan_gosling_have_my_music.sh"),
-                    "~/.local/bin/ryan_gosling_have_my_music")
+    def uninstall(self):
+        task_print("Removing scripts")
+        Trash().trash(*self.__genfiles__)
 
-        if HOSTNAME == "diana":
-            self.__genfiles__ += ["~/.local/bin/orange"]
-            symlink(usr_share("scripts/orange.sh"), "~/.local/bin/orange")
+
+class DianaScripts(Task):
+    """Scripts just for florence."""
+    __platforms__ = ['osx']
+    __hosts__ = ['diana']
+    __deps__ = ["Scripts"]
+    __genfiles__ = [
+        "~/.local/bin/orange",
+    ]
+
+    def install(self):
+        symlink(usr_share("scripts/orange.sh"), "~/.local/bin/orange")
 
     def uninstall(self):
-        self.install()  # run to resolve dynamic genfiles
-        task_print("Removing scripts")
+        task_print("Removing florence scripts")
+        Trash().trash(*self.__genfiles__)
+
+
+class FlorenceScripts(Task):
+    """Scripts just for florence."""
+    __platforms__ = ['osx']
+    __hosts__ = ['florence']
+    __deps__ = ["Scripts"]
+    __genfiles__ = [
+        "~/.local/bin/orange_you_glad_you_backup",
+        "~/.local/bin/ryan_gosling_have_my_movies",
+        "~/.local/bin/ryan_gosling_have_my_music",
+        "~/.local/bin/ryan_gosling_have_my_photos",
+    ]
+
+    def install(self):
+        symlink(usr_share("scripts/orange_you_glad_you_backup.sh"),
+                "~/.local/bin/orange_you_glad_you_backup")
+        symlink(usr_share("scripts/ryan_gosling_have_my_photos.sh"),
+                "~/.local/bin/ryan_gosling_have_my_photos")
+        symlink(usr_share("scripts/ryan_gosling_have_my_movies.sh"),
+                "~/.local/bin/ryan_gosling_have_my_movies")
+        symlink(usr_share("scripts/ryan_gosling_have_my_music.sh"),
+                "~/.local/bin/ryan_gosling_have_my_music")
+
+    def uninstall(self):
+        task_print("Removing florence scripts")
         Trash().trash(*self.__genfiles__)
 
 
