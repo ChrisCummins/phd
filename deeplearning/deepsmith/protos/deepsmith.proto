@@ -170,6 +170,7 @@ message ResultsTable {
   message ResultsTableEntry {
     optional Testbed testbed = 1;
     optional Harness harness = 2;
+    // Result.testcase must be none.
     repeated Result results = 3;
   }
 

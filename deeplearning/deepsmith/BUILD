@@ -54,7 +54,7 @@ py_library(
     name = "harness",
     srcs = ["harness.py"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
-    deps = [":db"],
+    deps = [":db", ":testcase"],
 )
 
 py_library(

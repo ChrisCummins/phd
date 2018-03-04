@@ -1,13 +1,12 @@
 """This file defines the result class."""
-from datetime import datetime
-from typing import List
+import datetime
+import typing
 
 import sqlalchemy as sql
-from sqlalchemy.orm import relationship
+from sqlalchemy import orm
 
 import deeplearning.deepsmith.testbed
 import deeplearning.deepsmith.testcase
-
 from deeplearning.deepsmith import db
 
 
@@ -17,7 +16,8 @@ class Result(db.Base):
 
   # Columns:
   id: int = sql.Column(id_t, primary_key=True)
-  date_added: datetime = sql.Column(sql.DateTime, nullable=False, default=db.now)
+  date_added: datetime.datetime = sql.Column(
+      sql.DateTime, nullable=False, default=db.now)
   testcase_id: int = sql.Column(
       deeplearning.deepsmith.testcase.Testcase.id_t,
       sql.ForeignKey("testcases.id"), nullable=False)
@@ -27,15 +27,15 @@ class Result(db.Base):
   returncode: int = sql.Column(sql.SmallInteger, nullable=False)
 
   # Relationships:
-  testcase: deeplearning.deepsmith.testcase.Testcase = relationship(
+  testcase: deeplearning.deepsmith.testcase.Testcase = orm.relationship(
       "Testcase", back_populates="results")
-  testbed: deeplearning.deepsmith.testbed.Testbed = relationship(
+  testbed: deeplearning.deepsmith.testbed.Testbed = orm.relationship(
       "Testbed", back_populates="results")
-  outputs = relationship(
+  outputs = orm.relationship(
       "ResultOutput", secondary="result_output_associations",
       primaryjoin="ResultOutputAssociation.result_id == Result.id",
       secondaryjoin="ResultOutputAssociation.output_id == ResultOutput.id")
-  timings: List["ResultTiming"] = relationship(
+  timings: typing.List["ResultTiming"] = orm.relationship(
       "ResultTiming", back_populates="result")
 
   # Constraints:
@@ -63,9 +63,10 @@ class PendingResult(db.Base):
 
   # Columns:
   id: int = sql.Column(id_t, primary_key=True)
-  date_added: datetime = sql.Column(sql.DateTime, nullable=False, default=db.now)
+  date_added: datetime.datetime = sql.Column(
+      sql.DateTime, nullable=False, default=db.now)
   # The date that the result is due by.
-  deadline: datetime = sql.Column(sql.DateTime, nullable=False)
+  deadline: datetime.datetime = sql.Column(sql.DateTime, nullable=False)
   testcase_id: int = sql.Column(
       deeplearning.deepsmith.testcase.Testcase.id_t,
       sql.ForeignKey("testcases.id"), nullable=False)
@@ -74,9 +75,9 @@ class PendingResult(db.Base):
       sql.ForeignKey("testbeds.id"), nullable=False)
 
   # Relationships:
-  testcase: deeplearning.deepsmith.testcase.Testcase = relationship(
+  testcase: deeplearning.deepsmith.testcase.Testcase = orm.relationship(
       "Testcase", back_populates="pending_results")
-  testbed: deeplearning.deepsmith.testbed.Testbed = relationship(
+  testbed: deeplearning.deepsmith.testbed.Testbed = orm.relationship(
       "Testbed", back_populates="pending_results")
 
   # Constraints:
@@ -91,7 +92,7 @@ class ResultOutputName(db.ListOfNames):
   __tablename__ = "result_output_names"
 
   # Relationships:
-  outputs: List["ResultOutput"] = relationship(
+  outputs: typing.List["ResultOutput"] = orm.relationship(
       "ResultOutput", back_populates="name")
 
 
@@ -104,7 +105,7 @@ class ResultOutput(db.Base):
 
   # Columns:
   id: int = sql.Column(id_t, primary_key=True)
-  date_added: datetime = sql.Column(
+  date_added: datetime.datetime = sql.Column(
       sql.DateTime, nullable=False, default=db.now)
   name_id: ResultOutputName.id_t = sql.Column(
       ResultOutputName.id_t, sql.ForeignKey("result_output_names.id"),
@@ -119,8 +120,8 @@ class ResultOutput(db.Base):
   truncated_charcount = sql.Column(sql.Integer, nullable=False)
 
   # Relationships:
-  name: ResultOutputName = relationship("ResultOutputName",
-                                        back_populates="outputs")
+  name: ResultOutputName = orm.relationship(
+      "ResultOutputName", back_populates="outputs")
 
   # Constraints:
   __table_args__ = (
@@ -135,7 +136,8 @@ class ResultOutputAssociation(db.Base):
   # Columns:
   result_id: int = sql.Column(Result.id_t, sql.ForeignKey("results.id"),
                               nullable=False)
-  output_id: int = sql.Column(ResultOutput.id_t, sql.ForeignKey("result_outputs.id"),
+  output_id: int = sql.Column(ResultOutput.id_t,
+                              sql.ForeignKey("result_outputs.id"),
                               nullable=False)
   __table_args__ = (
     sql.PrimaryKeyConstraint(
@@ -143,5 +145,5 @@ class ResultOutputAssociation(db.Base):
   )
 
   # Relationships:
-  result: deeplearning.deepsmith.testcase.Testcase = relationship("Result")
-  output: ResultOutput = relationship("ResultOutput")
+  result: deeplearning.deepsmith.testcase.Testcase = orm.relationship("Result")
+  output: ResultOutput = orm.relationship("ResultOutput")

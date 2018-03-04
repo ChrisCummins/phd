@@ -1,27 +1,29 @@
 """This file defines the testcase generator."""
-from datetime import datetime
-from typing import List
+import datetime
+import typing
 
-from sqlalchemy import Integer, Column, DateTime, String, UniqueConstraint
-from sqlalchemy.orm import relationship
+import sqlalchemy as sql
+from sqlalchemy import orm
 
 from deeplearning.deepsmith import db
 
 
 class Generator(db.Base):
-  id_t = Integer
+  id_t = sql.Integer
   __tablename__ = "generators"
 
   # Columns:
-  id: int = Column(id_t, primary_key=True)
-  date_added: datetime = Column(DateTime, nullable=False, default=db.now)
-  name: str = Column(String(1024), nullable=False)
-  version: str = Column(String(1024), nullable=False)
+  id: int = sql.Column(id_t, primary_key=True)
+  date_added: datetime.datetime = sql.Column(
+      sql.DateTime, nullable=False, default=db.now)
+  name: str = sql.Column(sql.String(1024), nullable=False)
+  version: str = sql.Column(sql.String(1024), nullable=False)
 
   # Relationships:
-  testcases: List["Testcase"] = relationship("Testcase", back_populates="generator")
+  testcases: typing.List["Testcase"] = orm.relationship(
+      "Testcase", back_populates="generator")
 
   # Constraints:
   __table_args__ = (
-    UniqueConstraint('name', 'version', name='unique_generator'),
+    sql.UniqueConstraint('name', 'version', name='unique_generator'),
   )

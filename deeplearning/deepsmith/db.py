@@ -1,21 +1,15 @@
 """
 Database backend.
 """
+import collections
+import datetime
 import os
 import typing
 
 import sqlalchemy as sql
-
-from absl import flags, logging
-
-from collections import namedtuple
-from datetime import datetime
-from sqlalchemy import DateTime
-from sqlalchemy import Column
-from sqlalchemy import Integer
-from sqlalchemy import String
+from absl import flags
+from absl import logging
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
 
 FLAGS = flags.FLAGS
 
@@ -30,11 +24,15 @@ flags.DEFINE_string("db_dir", None, "")
 __version__ = "1.0.0.dev1"
 
 _major = int(__version__.split(".")[0])
-_minor = int(__version__.split('.')[1]) if len(__version__.split('.')) > 1 else 0
-_micro = int(__version__.split('.')[2]) if len(__version__.split('.')) > 2 else 0
-_releaselevel = __version__.split('.')[3] if len(__version__.split('.')) > 3 else 'final'
+_minor = (int(__version__.split('.')[1])
+          if len(__version__.split('.')) > 1 else 0)
+_micro = (int(__version__.split('.')[2])
+          if len(__version__.split('.')) > 2 else 0)
+_releaselevel = (__version__.split('.')[3]
+                 if len(__version__.split('.')) > 3 else 'final')
 
-version_info_t = namedtuple('version_info_t', ['major', 'minor', 'micro', 'releaselevel'])
+version_info_t = collections.namedtuple(
+    'version_info_t', ['major', 'minor', 'micro', 'releaselevel'])
 version_info = version_info_t(_major, _minor, _micro, _releaselevel)
 
 # Type aliases:
@@ -45,17 +43,18 @@ query_t = sql.orm.query.Query
 Base = declarative_base()
 
 # Shorthand:
-now = datetime.utcnow
+now = datetime.datetime.utcnow
 
 
 class ListOfNames(Base):
-  id_t = Integer
+  id_t = sql.Integer
   __abstract__ = True
 
   # Columns:
-  id: int = Column(id_t, primary_key=True)
-  date_added: datetime = Column(DateTime, nullable=False, default=now)
-  name: str = Column(String(1024), nullable=False, unique=True)
+  id: int = sql.Column(id_t, primary_key=True)
+  date_added: datetime.datetime = sql.Column(sql.DateTime, nullable=False,
+                                             default=now)
+  name: str = sql.Column(sql.String(1024), nullable=False, unique=True)
 
 
 def MakeEngine(**kwargs) -> sql.engine.Engine:
@@ -107,8 +106,8 @@ def GetOrAdd(session: sql.orm.session.Session, model,
   """
   instance = session.query(model).filter_by(**kwargs).first()
   if not instance:
-    params = dict((k, v) for k, v in kwargs.items()
-                  if not isinstance(v, sql.sql.expression.ClauseElement))
+    params = {k: v for k, v in kwargs.items()
+              if not isinstance(v, sql.sql.expression.ClauseElement)}
     params.update(defaults or {})
     instance = model(**params)
     session.add(instance)
@@ -118,17 +117,3 @@ def GetOrAdd(session: sql.orm.session.Session, model,
 
   return instance
 
-
-def Paginate(query: query_t, page_size: int = 1000):
-  """
-  Paginate query results.
-  """
-  offset = 0
-  while True:
-    r = False
-    for elem in query.limit(page_size).offset(offset):
-      r = True
-      yield elem
-    offset += page_size
-    if not r:
-      break
