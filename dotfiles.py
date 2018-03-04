@@ -1373,7 +1373,7 @@ class MeCsv(Task):
     """ me.csv health and time tracking """
     __platforms__ = ['osx']
     __genfiles__ = []
-    __osx_deps__ = ['OmniFocus', 'Toggl']
+    __osx_deps__ = ['OmniFocus']
 
     def install_osx(self):
         if os.path.isdir(os.path.join(PRIVATE, "me.csv")):
