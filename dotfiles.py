@@ -186,8 +186,13 @@ class Python(Task):
     }
 
     def install(self):
-        Homebrew().install_package("python")
-        Homebrew().install_package("python3")
+        brew = Homebrew.BREW_BINARY
+
+        if Homebrew().install_package("python2"):
+            shell("{brew} link python2 --force".format(**vars()))
+
+        if Homebrew().install_package("python3"):
+            shell("{brew} link python3 --force".format(**vars()))
 
         # Install pythonirc config file
         if os.path.isdir(PRIVATE):
