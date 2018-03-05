@@ -125,6 +125,18 @@ py_library(
     ],
 )
 
+py_test(
+    name = "testbed_test",
+    size = "small",
+    srcs = ["testbed_test.py"],
+    deps = [
+        ":datastore",
+        ":db",
+        ":testbed",
+        ":toolchain",
+    ],
+)
+
 py_library(
     name = "testcase",
     srcs = ["testcase.py"],

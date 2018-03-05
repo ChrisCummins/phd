@@ -183,7 +183,7 @@ class DataStore(object):
     q = _FilterToolchainGeneratorHarness(q)
 
     testbed_id = None
-    if request.has_testbed():
+    if request.HasField("testbed"):
       toolchain = db.GetOrAdd(
           session, deeplearning.deepsmith.toolchain.Toolchain,
           name=request.testbed

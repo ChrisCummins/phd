@@ -21,6 +21,7 @@ flags.DEFINE_string("db_username", None, "")
 flags.DEFINE_string("db_password", None, "")
 flags.DEFINE_string("db_dir", None, "")
 
+# TODO(cec): Revise database versioning approach.
 __version__ = "1.0.0.dev1"
 
 _major = int(__version__.split(".")[0])
@@ -35,26 +36,130 @@ version_info_t = collections.namedtuple(
     'version_info_t', ['major', 'minor', 'micro', 'releaselevel'])
 version_info = version_info_t(_major, _minor, _micro, _releaselevel)
 
-# Type aliases:
+# Type aliases.
 session_t = sql.orm.session.Session
 query_t = sql.orm.query.Query
 
-# SQLAlchemy:
-Table = declarative_base()
+# A type alias for annotating methods which take or return protocol buffers.
+ProtocolBuffer = typing.Any
 
-# Shorthand:
+# SQLAlchemy base table type.
+Base = declarative_base()
+
+# A shorthand declaration for the current time.
 now = datetime.datetime.utcnow
 
 
-class ListOfNames(Table):
-  id_t = sql.Integer
+class InvalidInputError(ValueError):
+  pass
+
+
+class StringTooLongError(ValueError):
+  def __init__(self, column_name: str, string: str, max_len: int):
+    self.column_name = column_name
+    self.string = string
+    self.max_len = max_len
+
+  def __repr__(self):
+    n = len(self.max_len)
+    s = string[:20]
+    return (f"String '{s}...' too long for '{self.column_name}'. " +
+            f"Max length: {self.max_len}, actual length: {n}. ")
+
+
+class Table(Base):
+  """A database-backed object.
+
+  This extends the standard SQLAlchemy 'Base' object by adding features
+  specific to Deepsmith: methods for serializing to and from protobufs, and
+  an index type for use when declaring foreign keys.
+  """
   __abstract__ = True
+  id_t = None
+
+  @classmethod
+  def GetOrAdd(cls, session: session_t, proto: ProtocolBuffer) -> 'Table':
+    """Instantiate an object from a protocol buffer message.
+
+    This is the preferred method for creating database-backed instances.
+    If the created instance does not already exist in the database, it is
+    added.
+
+    Args:
+      session: A database session.
+      proto: A protocol buffer.
+
+    Returns:
+      An instance.
+
+    Raises:
+      InvalidInputError: In case one or more values contained in the protocol
+        buffer cannot be stored in the database schema.
+    """
+    raise NotImplementedError("abstract class")
+
+  def ToProto(self) -> ProtocolBuffer:
+    """Create protocol buffer representation.
+
+    Returns:
+      A protocol buffer.
+    """
+    raise NotImplementedError("abstract class")
+
+  def SetProto(self, proto: ProtocolBuffer) -> ProtocolBuffer:
+    """Set a protocol buffer representation.
+
+    Args:
+      proto: A protocol buffer.
+
+    Returns:
+      The same protocol buffer that is passed as argument.
+    """
+    raise NotImplementedError("abstract class")
+
+  def __repr__(self):
+    try:
+      return str(self.ToProto())
+    except NotImplementedError:
+      typename = type(self).__name__
+      return f"TODO: Define {typename}.ToProto() method"
+
+
+class ListOfNames(Table):
+  """A list of names table.
+  """
+  __abstract__ = True
+  id_t = sql.Integer
+  name_len = 4096
 
   # Columns:
   id: int = sql.Column(id_t, primary_key=True)
-  date_added: datetime.datetime = sql.Column(sql.DateTime, nullable=False,
-                                             default=now)
-  name: str = sql.Column(sql.String(1024), nullable=False, unique=True)
+  date_added: datetime.datetime = sql.Column(
+      sql.DateTime, nullable=False, default=now)
+  name: str = sql.Column(sql.String(name_len), nullable=False, unique=True)
+
+  @classmethod
+  def GetOrAdd(cls, session: session_t, name: str):
+    """Instantiate a ListOfNames entry from a name.
+
+    This is the preferred method for creating database-backed instances.
+    If the created instance does not already exist in the database, it is
+    added.
+
+    Args:
+      session: A database session.
+      name: The name.
+
+    Returns:
+      A ListOfNames instance.
+    """
+    if len(name) > cls.name_len:
+      raise StringTooLongError(cls, name, cls.name_len)
+
+    return GetOrAdd(session, cls, name=name)
+
+  def __repr__(self):
+    return self.name or ""
 
 
 def MakeEngine(**kwargs) -> sql.engine.Engine:
@@ -116,4 +221,3 @@ def GetOrAdd(session: sql.orm.session.Session, model,
     logging.debug("new %s record", model.__name__)
 
   return instance
-
