@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 #
-# buildifier.sh - Run buildifier on BUILD files.
+# buildifier.sh - Run buildifier on BUILD files. This modifiers BUILD files
+# in-place.
 #
 # Usage:
 #
 #     ./buildifier
 #
-set -eux
+set -eu
 
 # Directory of this script.
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
