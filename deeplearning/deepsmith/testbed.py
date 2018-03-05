@@ -154,8 +154,7 @@ class Testbed(db.Table):
       optset_id = optset_id[0]
     elif opts:
       # If no OptSet was found, we must create one. We do this by looking up
-      # the largest existing id and incrementing it, then adding an entry with
-      # this id for every opt.
+      # the largest existing id and incrementing it
       prev_optset_id = session.query(TestbedOptSet.id) \
         .order_by(TestbedOptSet.id.desc()) \
         .first()
@@ -163,6 +162,7 @@ class Testbed(db.Table):
       # testbeds with no opts.
       prev_optset_id = prev_optset_id[0] if prev_optset_id else 0
       optset_id = prev_optset_id + 1
+      # Create the new optset table entries.
       for opt in opts:
         session.add(TestbedOptSet(id=optset_id, opt_id=opt.id))
     else:
@@ -224,6 +224,9 @@ class TestbedOpt(db.Table):
     sql.UniqueConstraint("name_id", "value_id", name="unique_testbed_opt"),
   )
 
+  def __repr__(self):
+    return f"{self.name}: {self.value}"
+
 
 class TestbedOptSet(db.Table):
   """A set of of testbed options.
@@ -249,3 +252,6 @@ class TestbedOptSet(db.Table):
     sql.PrimaryKeyConstraint(
         "id", "opt_id", name="unique_testbed_optset"),
   )
+
+  def __repr__(self):
+    return f"{self.id}: {self.opt_id}={self.opt}"
