@@ -1,6 +1,7 @@
 """This file implements testbeds."""
-import collections
+import binascii
 import datetime
+import hashlib
 import typing
 
 import sqlalchemy as sql
@@ -12,7 +13,7 @@ from deeplearning.deepsmith.protos import deepsmith_pb2
 
 # The index types for tables defined in this file.
 _TestbedId = sql.Integer
-_TestbedOptSetId = sql.Integer
+_TestbedOptSetId = sql.Binary(16)  # MD5 checksum.
 _TestbedOptId = sql.Integer
 _TestbedOptNameId = db.ListOfNames.id_t
 _TestbedOptValueId = db.ListOfNames.id_t
@@ -36,7 +37,7 @@ class Testbed(db.Table):
   name: str = sql.Column(sql.String(1024), nullable=False)
   version: str = sql.Column(sql.String(1024), nullable=False)
   optset_id: int = sql.Column(
-      sql.Integer, sql.ForeignKey("testbed_optsets.id"), nullable=False)
+      _TestbedOptSetId, sql.ForeignKey("testbed_optsets.id"), nullable=False)
 
   # Relationships.
   toolchain: deeplearning.deepsmith.toolchain.Toolchain = orm.relationship(
@@ -110,64 +111,29 @@ class Testbed(db.Table):
         session, proto.toolchain
     )
 
+    # Build the list of options, and md5sum the key value strings.
     opts = []
-    for proto_opt_name, proto_opt_value in proto.opts.items():
-      opt_name = db.GetOrAdd(
-          session, TestbedOptName,
-          name=proto_opt_name,
-      )
-      opt_value = db.GetOrAdd(
-          session, TestbedOptValue,
-          name=proto_opt_value
-      )
+    md5 = hashlib.md5()
+    for proto_opt_name in sorted(proto.opts):
+      proto_opt_value = proto.opts[proto_opt_name]
+      md5.update((proto_opt_name + proto_opt_value).encode("utf-8"))
       opt = db.GetOrAdd(
           session, TestbedOpt,
-          name=opt_name,
-          value=opt_value,
+          name=db.GetOrAdd(
+              session, TestbedOptName,
+              name=proto_opt_name,
+          ),
+          value=db.GetOrAdd(
+              session, TestbedOptValue,
+              name=proto_opt_value
+          ),
       )
       opts.append(opt)
 
-    # Flush here so that any newly created TestbedOpts are assigned ids.
-    session.flush()
-
-    # Lookup the TestbedOptSet by first fetching the list of TestbedOptSet ids
-    # which contain at least one matching TestbedOpt.
-    opt_ids = set([opt.id for opt in opts])
-    optset_ids = session.query(TestbedOptSet.id) \
-      .filter(TestbedOptSet.opt_id.in_(opt_ids))
-
-    # Build a hash map of TestbedOptSet IDs to the number of results.
-    optset_counts = collections.defaultdict(int)
-    for optset_id in optset_ids:
-      optset_counts[optset_id] += 1
-
-    # Invert the hash map and look up the entry with the same number of results
-    # as the number of options for this testbed. Since each result is a
-    # matching option (and since there are no duplicate results), the entry
-    # with the same count of results as the options for this testbed is
-    # _guaranteed_ to be the right set.
-    optset_counts_inverted = {v: k for k, v in optset_counts.items()}
-    optset_id = optset_counts_inverted.get(len(opts))
-
-    if optset_id:
-      # Query results is a single-element tuple.
-      optset_id = optset_id[0]
-    elif opts:
-      # If no OptSet was found, we must create one. We do this by looking up
-      # the largest existing id and incrementing it
-      prev_optset_id = session.query(TestbedOptSet.id) \
-        .order_by(TestbedOptSet.id.desc()) \
-        .first()
-      # If the optset table is empty, begin counting at 1. ID 0 is reserved for
-      # testbeds with no opts.
-      prev_optset_id = prev_optset_id[0] if prev_optset_id else 0
-      optset_id = prev_optset_id + 1
-      # Create the new optset table entries.
-      for opt in opts:
-        session.add(TestbedOptSet(id=optset_id, opt_id=opt.id))
-    else:
-      # TestbedOptSet.id == 0 is reserved for testbeds with no options.
-      optset_id = 0
+    # Create optset table entries.
+    optset_id = md5.digest()
+    for opt in opts:
+      db.GetOrAdd(session, TestbedOptSet, id=optset_id, opt=opt)
 
     return db.GetOrAdd(
         session, cls,
@@ -178,24 +144,34 @@ class Testbed(db.Table):
     )
 
 
-class TestbedOptName(db.ListOfNames):
-  """The name of a testbed option."""
-  id_t = _TestbedOptNameId
-  __tablename__ = "testbed_opt_names"
+class TestbedOptSet(db.Table):
+  """A set of of testbed options.
+
+  An option set groups options for testbed.
+  """
+  __tablename__ = "testbed_optsets"
+  id_t = _TestbedOptSetId
+
+  # Columns.
+  id: bytes = sql.Column(
+      id_t, sql.ForeignKey("testbeds.optset_id"), nullable=False)
+  opt_id: int = sql.Column(
+      _TestbedOptId, sql.ForeignKey("testbed_opts.id"), nullable=False)
 
   # Relationships.
-  opts: typing.List["TestbedOpt"] = orm.relationship(
-      "TestbedOpt", back_populates="name")
+  testbeds: typing.List[Testbed] = orm.relationship(
+      "Testbed", foreign_keys=[Testbed.optset_id])
+  opt: "TestbedOpt" = orm.relationship("TestbedOpt")
 
+  # Constraints.
+  __table_args__ = (
+    sql.PrimaryKeyConstraint(
+        "id", "opt_id", name="unique_testbed_optset"),
+  )
 
-class TestbedOptValue(db.ListOfNames):
-  """The value of a testbed option."""
-  id_t = _TestbedOptValueId
-  __tablename__ = "testbed_opt_values"
-
-  # Relationships.
-  opts: typing.List["TestbedOpt"] = orm.relationship(
-      "TestbedOpt", back_populates="value")
+  def __repr__(self):
+    hex_id = binascii.hexlify(self.id).decode("utf-8")
+    return f"{hex_id}: {self.opt_id}={self.opt}"
 
 
 class TestbedOpt(db.Table):
@@ -214,10 +190,10 @@ class TestbedOpt(db.Table):
       nullable=False)
 
   # Relationships.
-  name: TestbedOptName = orm.relationship(
-      TestbedOptName, back_populates="opts")
-  value: TestbedOptValue = orm.relationship(
-      TestbedOptValue, back_populates="opts")
+  name: "TestbedOptName" = orm.relationship(
+      "TestbedOptName", back_populates="opts")
+  value: "TestbedOptValue" = orm.relationship(
+      "TestbedOptValue", back_populates="opts")
 
   # Constraints.
   __table_args__ = (
@@ -228,30 +204,21 @@ class TestbedOpt(db.Table):
     return f"{self.name}: {self.value}"
 
 
-class TestbedOptSet(db.Table):
-  """A set of of testbed options.
-
-  An option set groups options for testbed.
-  """
-  __tablename__ = "testbed_optsets"
-  id_t = _TestbedOptSetId
-
-  # Columns.
-  id: int = sql.Column(
-      id_t, sql.ForeignKey("testbeds.optset_id"), nullable=False)
-  opt_id: int = sql.Column(
-      _TestbedOptId, sql.ForeignKey("testbed_opts.id"), nullable=False)
+class TestbedOptName(db.ListOfNames):
+  """The name of a testbed option."""
+  id_t = _TestbedOptNameId
+  __tablename__ = "testbed_opt_names"
 
   # Relationships.
-  testbeds: typing.List[Testbed] = orm.relationship(
-      "Testbed", foreign_keys=[Testbed.optset_id])
-  opt: TestbedOpt = orm.relationship("TestbedOpt")
+  opts: typing.List[TestbedOpt] = orm.relationship(
+      TestbedOpt, back_populates="name")
 
-  # Constraints.
-  __table_args__ = (
-    sql.PrimaryKeyConstraint(
-        "id", "opt_id", name="unique_testbed_optset"),
-  )
 
-  def __repr__(self):
-    return f"{self.id}: {self.opt_id}={self.opt}"
+class TestbedOptValue(db.ListOfNames):
+  """The value of a testbed option."""
+  id_t = _TestbedOptValueId
+  __tablename__ = "testbed_opt_values"
+
+  # Relationships.
+  opts: typing.List[TestbedOpt] = orm.relationship(
+      TestbedOpt, back_populates="value")

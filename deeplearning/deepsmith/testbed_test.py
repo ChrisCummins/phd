@@ -1,4 +1,5 @@
 """Tests for //deeplearning/deepsmith:testbed."""
+import hashlib
 import sys
 import tempfile
 
@@ -66,6 +67,7 @@ def test_Testbed_GetOrAdd(session):
   assert testbed.toolchain.name == "cpp"
   assert testbed.name == "clang"
   assert testbed.version == "3.9.0"
+  assert len(testbed.optset) == 2
   assert len(testbed.opts) == 2
   assert testbed.opts["arch"] == "x86_64"
   assert testbed.opts["build"] == "debug+assert"
@@ -133,27 +135,23 @@ def test_Testbed_GetOrAdd_duplicates(session):
   assert session.query(deeplearning.deepsmith.testbed.TestbedOptValue).count() == 3
 
 
-@pytest.mark.xfail
 def test_Testbed_GetOrAdd_ToProto_equivalence(session):
   proto_in = deepsmith_pb2.Testbed(
-      toolchain="opencl",
-      name="nvidia",
-      version="1.0.0",
+      toolchain="cpp",
+      name="clang",
+      version="3.9.0",
       opts={
-        "opencl": "1.2",
-        "devtype": "GPU",
+        "arch": "x86_64",
+        "build": "debug+assert"
       },
   )
   testbed = deeplearning.deepsmith.testbed.Testbed.GetOrAdd(session, proto_in)
+
+  # NOTE: We have to flush before constructing a proto so that SQLAlchemy
+  # resolves all of the object IDs.
+  session.flush()
+
   proto_out = testbed.ToProto()
-  # FIXME(cec): testbed.optset is empty.
-  print("PROTO_IN", proto_in)
-  print("PROTO_OUT", proto_out)
-  print(session.query(deeplearning.deepsmith.testbed.TestbedOpt).all())
-  print(session.query(deeplearning.deepsmith.testbed.TestbedOptSet).all())
-  print(session.query(deeplearning.deepsmith.testbed.TestbedOptName).all())
-  print(session.query(deeplearning.deepsmith.testbed.TestbedOptValue).all())
-  print(session.query(deeplearning.deepsmith.testbed.Testbed).first())
   assert proto_in == proto_out
   proto_out.ClearField("toolchain")
   assert proto_in != proto_out  # Sanity check.
@@ -168,7 +166,8 @@ def test_Testbed_GetOrAdd_no_opts(session):
           opts={},
       )
   )
-  assert testbed.optset_id == 0
+  empty_md5 = hashlib.md5().digest()
+  assert testbed.optset_id == empty_md5
   assert session.query(deeplearning.deepsmith.testbed.Testbed).count() == 1
   assert session.query(deeplearning.deepsmith.testbed.TestbedOpt).count() == 0
   assert session.query(deeplearning.deepsmith.testbed.TestbedOptSet).count() == 0
