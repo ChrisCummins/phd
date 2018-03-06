@@ -12,8 +12,8 @@ from absl import logging
 
 from deeplearning.deepsmith import datastore
 from deeplearning.deepsmith import db
-from deeplearning.deepsmith.protos import deepsmith_pb2
-from deeplearning.deepsmith.protos import deepsmith_pb2_grpc
+from deeplearning.deepsmith.proto import deepsmith_pb2
+from deeplearning.deepsmith.proto import deepsmith_pb2_grpc
 
 FLAGS = flags.FLAGS
 

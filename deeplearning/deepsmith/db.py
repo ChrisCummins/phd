@@ -96,7 +96,7 @@ class Table(Base):
       InvalidInputError: In case one or more values contained in the protocol
         buffer cannot be stored in the database schema.
     """
-    raise NotImplementedError("abstract class")
+    raise NotImplementedError(type(cls).__name__ + ".GetOrAdd() not implemented")
 
   def ToProto(self) -> ProtocolBuffer:
     """Create protocol buffer representation.
@@ -104,7 +104,7 @@ class Table(Base):
     Returns:
       A protocol buffer.
     """
-    raise NotImplementedError("abstract class")
+    raise NotImplementedError(type(self).__name__ + ".ToProto() not implemented")
 
   def SetProto(self, proto: ProtocolBuffer) -> ProtocolBuffer:
     """Set a protocol buffer representation.
@@ -115,7 +115,7 @@ class Table(Base):
     Returns:
       The same protocol buffer that is passed as argument.
     """
-    raise NotImplementedError("abstract class")
+    raise NotImplementedError(type(self).__name__ + ".SetProto() not implemented")
 
   def __repr__(self):
     try:
@@ -159,7 +159,7 @@ class ListOfNames(Table):
     return GetOrAdd(session, cls, name=name)
 
   def __repr__(self):
-    return self.name or ""
+    return self.name[:50] or ""
 
 
 def MakeEngine(**kwargs) -> sql.engine.Engine:

@@ -11,7 +11,7 @@ import deeplearning.deepsmith.client
 import deeplearning.deepsmith.profiling_event
 import deeplearning.deepsmith.testcase
 from deeplearning.deepsmith import datastore
-from deeplearning.deepsmith.protos import deepsmith_pb2
+from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.services import testing
 
 
@@ -83,10 +83,10 @@ def test_TestingService_empty_datastore(ds):
 
   with ds.Session() as s:
     assert s.query(deeplearning.deepsmith.client.Client).count() == 0
-    assert s.query(deeplearning.deepsmith.profiling_event.ProfilingEventName).count() == 0
+    assert s.query(deeplearning.deepsmith.profiling_event.ProfilingEventType).count() == 0
     assert s.query(deeplearning.deepsmith.testcase.Testcase).count() == 0
     assert s.query(deeplearning.deepsmith.testcase.TestcaseInput).count() == 0
-    assert s.query(deeplearning.deepsmith.profiling_event.TestcaseTiming).count() == 0
+    assert s.query(deeplearning.deepsmith.profiling_event.TestcaseProfilingEvent).count() == 0
 
 
 def test_TestingService_SubmitTestcases_one(ds):
@@ -109,10 +109,10 @@ def test_TestingService_SubmitTestcases_one(ds):
 
   with ds.Session() as s:
     assert s.query(deeplearning.deepsmith.client.Client).count() == 1
-    assert s.query(deeplearning.deepsmith.profiling_event.ProfilingEventName).count() == 3
+    assert s.query(deeplearning.deepsmith.profiling_event.ProfilingEventType).count() == 3
     assert s.query(deeplearning.deepsmith.testcase.Testcase).count() == 1
     assert s.query(deeplearning.deepsmith.testcase.TestcaseInput).count() == 1
-    assert s.query(deeplearning.deepsmith.profiling_event.TestcaseTiming).count() == 3
+    assert s.query(deeplearning.deepsmith.profiling_event.TestcaseProfilingEvent).count() == 3
 
 
 def test_TestingService_SubmitTestcases_two(ds):
@@ -146,10 +146,10 @@ def test_TestingService_SubmitTestcases_two(ds):
 
   with ds.Session() as s:
     assert s.query(deeplearning.deepsmith.client.Client).count() == 2
-    assert s.query(deeplearning.deepsmith.profiling_event.ProfilingEventName).count() == 4
+    assert s.query(deeplearning.deepsmith.profiling_event.ProfilingEventType).count() == 4
     assert s.query(deeplearning.deepsmith.testcase.Testcase).count() == 2
     assert s.query(deeplearning.deepsmith.testcase.TestcaseInput).count() == 2
-    assert s.query(deeplearning.deepsmith.profiling_event.TestcaseTiming).count() == 6
+    assert s.query(deeplearning.deepsmith.profiling_event.TestcaseProfilingEvent).count() == 6
 
 
 # RequestTestcases
@@ -175,10 +175,10 @@ def test_TestingService_RequestTestcases_one(ds):
 
   with ds.Session() as s:
     assert s.query(deeplearning.deepsmith.client.Client).count() == 1
-    assert s.query(deeplearning.deepsmith.profiling_event.ProfilingEventName).count() == 3
+    assert s.query(deeplearning.deepsmith.profiling_event.ProfilingEventType).count() == 3
     assert s.query(deeplearning.deepsmith.testcase.Testcase).count() == 1
     assert s.query(deeplearning.deepsmith.testcase.TestcaseInput).count() == 1
-    assert s.query(deeplearning.deepsmith.profiling_event.TestcaseTiming).count() == 3
+    assert s.query(deeplearning.deepsmith.profiling_event.TestcaseProfilingEvent).count() == 3
 
   request = deepsmith_pb2.RequestTestcasesRequest(
       toolchain="cpp",

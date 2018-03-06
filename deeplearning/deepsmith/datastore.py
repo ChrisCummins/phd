@@ -19,7 +19,7 @@ import deeplearning.deepsmith.testcase
 
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith import profiling_event
-from deeplearning.deepsmith.protos import deepsmith_pb2
+from deeplearning.deepsmith.proto import deepsmith_pb2
 
 FLAGS = flags.FLAGS
 
@@ -132,11 +132,11 @@ class DataStore(object):
           name=timing.client
       )
       profiling_event_name = db.GetOrAdd(
-          session, profiling_event.ProfilingEventName,
+          session, profiling_event.ProfilingEventType,
           name=timing.name
       )
       timing = db.GetOrAdd(
-          session, profiling_event.TestcaseTiming,
+          session, profiling_event.TestcaseProfilingEvent,
           testcase=testcase,
           name=profiling_event_name,
           client=client_,

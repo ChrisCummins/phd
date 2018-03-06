@@ -9,7 +9,7 @@ from sqlalchemy import orm
 
 import deeplearning.deepsmith.toolchain
 from deeplearning.deepsmith import db
-from deeplearning.deepsmith.protos import deepsmith_pb2
+from deeplearning.deepsmith.proto import deepsmith_pb2
 
 # The index types for tables defined in this file.
 _TestbedId = sql.Integer
@@ -22,7 +22,7 @@ _TestbedOptValueId = db.ListOfNames.id_t
 class Testbed(db.Table):
   """A Testbed is a system on which testcases may be run.
 
-  Each testbed is a <toolchain,name,version,opts> tuple.
+  Each testbed is a <toolchain,name,opts> tuple.
   """
   id_t = _TestbedId
   __tablename__ = "testbeds"
@@ -35,8 +35,7 @@ class Testbed(db.Table):
       deeplearning.deepsmith.toolchain.Toolchain.id_t,
       sql.ForeignKey("toolchains.id"), nullable=False)
   name: str = sql.Column(sql.String(1024), nullable=False)
-  version: str = sql.Column(sql.String(1024), nullable=False)
-  optset_id: int = sql.Column(
+  optset_id: bytes = sql.Column(
       _TestbedOptSetId, sql.ForeignKey("testbed_optsets.id"), nullable=False)
 
   # Relationships.
@@ -54,7 +53,7 @@ class Testbed(db.Table):
   # Constraints.
   __table_args__ = (
     sql.UniqueConstraint(
-        "toolchain_id", "name", "version", "optset_id", name="unique_testbed"),
+        "toolchain_id", "name", "optset_id", name="unique_testbed"),
   )
 
   @property
@@ -86,7 +85,6 @@ class Testbed(db.Table):
     """
     proto.toolchain = self.toolchain.name
     proto.name = self.name
-    proto.version = self.version
     for opt in self.optset:
       proto.opts[opt.name.name] = opt.value.name
     return proto
@@ -139,7 +137,6 @@ class Testbed(db.Table):
         session, cls,
         toolchain=toolchain,
         name=proto.name,
-        version=proto.version,
         optset_id=optset_id,
     )
 

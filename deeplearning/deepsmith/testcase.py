@@ -1,5 +1,7 @@
 """This file implements testcases."""
+import binascii
 import datetime
+import hashlib
 import typing
 
 import sqlalchemy as sql
@@ -9,13 +11,25 @@ import deeplearning.deepsmith.generator
 import deeplearning.deepsmith.harness
 import deeplearning.deepsmith.toolchain
 from deeplearning.deepsmith import db
+from deeplearning.deepsmith.proto import deepsmith_pb2
+
+# The index types for tables defined in this file.
+_TestcaseId = sql.Integer
+_TestcaseInputSetId = sql.Binary(16)  # MD5 checksum.
+_TestcaseInputId = sql.Integer
+_TestcaseInputNameId = db.ListOfNames.id_t
+_TestcaseInputValueId = sql.Integer
+_TestcaseInvariantOptSetId = sql.Binary(16)  # MD5 checksum.
+_TestcaseInvariantOptId = sql.Integer
+_TestcaseInvariantOptNameId = sql.Integer
+_TestcaseInvariantOptValueId = sql.Integer
 
 
 class Testcase(db.Table):
-  id_t = sql.Integer
+  id_t = _TestcaseId
   __tablename__ = "testcases"
 
-  # Columns:
+  # Columns.
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
       sql.DateTime, nullable=False, default=db.now)
@@ -28,74 +42,266 @@ class Testcase(db.Table):
   harness_id: int = sql.Column(
       deeplearning.deepsmith.harness.Harness.id_t,
       sql.ForeignKey("harnesses.id"), nullable=False)
+  inputset_id: bytes = sql.Column(
+      _TestcaseInputSetId, sql.ForeignKey("testcase_inputsets.id"), nullable=False)
+  invariant_optset_id: bytes = sql.Column(
+      _TestcaseInvariantOptSetId,
+      sql.ForeignKey("testcase_invariant_optsets.id"), nullable=False)
 
-  # Relationships:
+  # Relationships.
   toolchain: deeplearning.deepsmith.toolchain.Toolchain = orm.relationship(
       "Toolchain")
   generator: deeplearning.deepsmith.generator.Generator = orm.relationship(
       "Generator", back_populates="testcases")
   harness: deeplearning.deepsmith.harness.Harness = orm.relationship(
       "Harness", back_populates="testcases")
-  inputs : typing.List["TestcaseInput"] = orm.relationship(
-      "TestcaseInput", secondary="testcase_input_associations",
-      primaryjoin="TestcaseInputAssociation.testcase_id == Testcase.id",
-      secondaryjoin="TestcaseInputAssociation.input_id == TestcaseInput.id")
-  timings: typing.List["TimingTiming"] = orm.relationship(
-      "TestcaseTiming", back_populates="testcase")
+  inputset: typing.List["TestcaseInput"] = orm.relationship(
+      "TestcaseInput", secondary="testcase_inputsets",
+      primaryjoin="TestcaseInputSet.id == Testcase.inputset_id",
+      secondaryjoin="TestcaseInputSet.input_id == TestcaseInput.id")
+  invariant_optset: typing.List["TestcaseInvariantOpt"] = orm.relationship(
+      "TestcaseInvariantOpt", secondary="testcase_invariant_optsets",
+      primaryjoin="TestcaseInvariantOptSet.id == Testcase.invariant_optset_id",
+      secondaryjoin="TestcaseInvariantOptSet.invariant_opt_id == TestcaseInvariantOpt.id")
+  profiling_events: typing.List["TestcaseProfilingEvent"] = orm.relationship(
+      "TestcaseProfilingEvent", back_populates="testcase")
   results: typing.List["Result"] = orm.relationship(
       "Result", back_populates="testcase")
   pending_results: typing.List["PendingResult"] = orm.relationship(
       "PendingResult", back_populates="testcase")
 
+  @property
+  def inputs(self) -> typing.Dict[str, str]:
+    """Get the generator inputs.
 
-class TestcaseInputName(db.ListOfNames):
-  id_t = db.ListOfNames.id_t
-  __tablename__ = "testcase_input_names"
+    Returns:
+      A map of generator inputs.
+    """
+    return {input.name.name: input.value.string for input in self.inputset}
 
-  # Relationships:
-  inputs: typing.List["TestcaseInput"] = orm.relationship(
-      "TestcaseInput", back_populates="name")
+  @property
+  def invariant_opts(self) -> typing.Dict[str, str]:
+    """Get the generator options.
+
+    Returns:
+      A map of generator options.
+    """
+    return {opt.name.name: opt.value.name for opt in self.invariant_optset}
+
+  def SetProto(self, proto: deepsmith_pb2.Testcase) -> deepsmith_pb2.Testcase:
+    """Set a protocol buffer representation.
+
+    Args:
+      proto: A protocol buffer message.
+
+    Returns:
+      A Generator message.
+    """
+    proto.toolchain = self.toolchain.name
+    self.generator.SetProto(proto.generator)
+    self.harness.SetProto(proto.harness)
+    for input_ in self.inputset:
+      proto.inputs[input_.name.name] = input_.value.string
+    for opt in self.invariant_optset:
+      proto.invariant_opts[opt.name.name] = opt.value.name
+    return proto
+
+  def ToProto(self) -> deepsmith_pb2.Testcase:
+    """Create protocol buffer representation.
+
+    Returns:
+      A Generator message.
+    """
+    proto = deepsmith_pb2.Testcase()
+    return self.SetProto(proto)
+
+class TestcaseInputSet(db.Table):
+  """A set of of testcase inputs.
+
+  An input set groups inputs for testcases.
+  """
+  __tablename__ = "testcase_inputsets"
+  id_t = _TestcaseInputSetId
+
+  # Columns.
+  id: bytes = sql.Column(
+      id_t, sql.ForeignKey("testcases.inputset_id"), nullable=False)
+  input_id: int = sql.Column(
+      _TestcaseInputId, sql.ForeignKey("testcase_inputs.id"), nullable=False)
+
+  # Relationships.
+  testcases: typing.List[Testcase] = orm.relationship(
+      "Testcase", foreign_keys=[Testcase.inputset_id])
+  input: "TestcaseInput" = orm.relationship("TestcaseInput")
+
+  # Constraints.
+  __table_args__ = (
+    sql.PrimaryKeyConstraint(
+        "id", "input_id", name="unique_testcase_inputset"),
+  )
+
+  def __repr__(self):
+    hex_id = binascii.hexlify(self.id).decode("utf-8")
+    return f"{hex_id}: {self.input_id}={self.input}"
 
 
 class TestcaseInput(db.Table):
-  id_t = sql.Integer
+  """A testcase input consists of a <name, value> pair."""
+  id_t = _TestcaseInputId
   __tablename__ = "testcase_inputs"
+
+  # Columns.
+  id: int = sql.Column(id_t, primary_key=True)
+  date_added: datetime.datetime = sql.Column(
+      sql.DateTime, nullable=False, default=db.now)
+  name_id: _TestcaseInputNameId = sql.Column(
+      _TestcaseInputNameId, sql.ForeignKey("testcase_input_names.id"), nullable=False)
+  value_id: _TestcaseInputValueId = sql.Column(
+      _TestcaseInputValueId, sql.ForeignKey("testcase_input_values.id"),
+      nullable=False)
+
+  # Relationships.
+  name: "TestcaseInputName" = orm.relationship(
+      "TestcaseInputName", back_populates="inputs")
+  value: "TestcaseInputValue" = orm.relationship(
+      "TestcaseInputValue", back_populates="inputs")
+
+  # Constraints.
+  __table_args__ = (
+    sql.UniqueConstraint("name_id", "value_id", name="unique_testcase_opt"),
+  )
+
+  def __repr__(self):
+    return f"{self.name}: {self.value}"
+
+
+class TestcaseInputName(db.ListOfNames):
+  """The name of a testcase input."""
+  id_t = _TestcaseInputNameId
+  __tablename__ = "testcase_input_names"
+
+  # Relationships.
+  inputs: typing.List[TestcaseInput] = orm.relationship(
+      TestcaseInput, back_populates="name")
+
+
+class TestcaseInputValue(db.Table):
+  id_t = sql.Integer
+  __tablename__ = "testcase_input_values"
 
   # Columns:
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(sql.DateTime, nullable=False, default=db.now)
-  name_id: TestcaseInputName.id_t = sql.Column(
-      TestcaseInputName.id_t, sql.ForeignKey("testcase_input_names.id"), nullable=False)
-  # TODO(cec): Use Binary column type.
-  sha1: str = sql.Column(sql.String(40), nullable=False, index=True)
-  linecount = sql.Column(sql.Integer, nullable=False)
+  md5: bytes = sql.Column(sql.Binary(16), nullable=False, unique=True)
   charcount = sql.Column(sql.Integer, nullable=False)
-  input: str = sql.Column(sql.UnicodeText(length=2 ** 31), nullable=False)
+  linecount = sql.Column(sql.Integer, nullable=False)
+  string: str = sql.Column(sql.UnicodeText(length=2 ** 31), nullable=False)
 
   # Relationships:
-  name: TestcaseInputName = orm.relationship(
-      "TestcaseInputName", back_populates="inputs")
+  inputs: typing.List[TestcaseInput] = orm.relationship(
+      TestcaseInput, back_populates="value")
 
-  # Constraints:
-  __table_args__ = (
-    sql.UniqueConstraint('name_id', 'sha1', name='unique_testcase_input'),
-  )
+  @classmethod
+  def GetOrAdd(cls, session: db.session_t, string: str):
+    """Instantiate a TestcaseInputValue entry from a string.
+
+    Args:
+      session: A database session.
+      string: The string.
+
+    Returns:
+      A TestcaseInputValue instance.
+    """
+    md5 = hashlib.md5()
+    md5.update(string)
+
+    return db.GetOrAdd(
+        session, cls,
+        md5=md5,
+        charcount=len(string),
+        linecount=string.count("\n"),
+        string=string,
+    )
+
+  def __repr__(self):
+    return self.string[:50] or ""
 
 
-class TestcaseInputAssociation(db.Table):
-  __tablename__ = "testcase_input_associations"
+class TestcaseInvariantOptSet(db.Table):
+  """A set of of testcase invariant opts.
 
-  # Columns:
-  testcase_id: int = sql.Column(Testcase.id_t,
-                                sql.ForeignKey("testcases.id"), nullable=False)
-  input_id: int = sql.Column(TestcaseInput.id_t,
-                             sql.ForeignKey("testcase_inputs.id"),
-                             nullable=False)
+  An invariant optset groups invariant opts for testcases.
+  """
+  __tablename__ = "testcase_invariant_optsets"
+  id_t = _TestcaseInvariantOptSetId
+
+  # Columns.
+  id: bytes = sql.Column(
+      id_t, sql.ForeignKey("testcases.invariant_optset_id"), nullable=False)
+  invariant_opt_id: int = sql.Column(
+      _TestcaseInvariantOptId, sql.ForeignKey("testcase_invariant_opts.id"), nullable=False)
+
+  # Relationships.
+  testcases: typing.List[Testcase] = orm.relationship(
+      "Testcase", foreign_keys=[Testcase.invariant_optset_id])
+  invariant_opt: "TestcaseInvariantOpt" = orm.relationship("TestcaseInvariantOpt")
+
+  # Constraints.
   __table_args__ = (
     sql.PrimaryKeyConstraint(
-        'testcase_id', 'input_id', name='unique_testcase_input'),
+        "id", "invariant_opt_id", name="unique_testcase_invariant_optset"),
   )
 
-  # Relationships:
-  testcase: Testcase = orm.relationship("Testcase")
-  input: TestcaseInput = orm.relationship("TestcaseInput")
+  def __repr__(self):
+    hex_id = binascii.hexlify(self.id).decode("utf-8")
+    return f"{hex_id}: {self.invariant_opt_id}={self.opt}"
+
+
+class TestcaseInvariantOpt(db.Table):
+  """A testcase invariant_opt consists of a <name, value> pair."""
+  id_t = _TestcaseInvariantOptId
+  __tablename__ = "testcase_invariant_opts"
+
+  # Columns.
+  id: int = sql.Column(id_t, primary_key=True)
+  date_added: datetime.datetime = sql.Column(
+      sql.DateTime, nullable=False, default=db.now)
+  name_id: _TestcaseInvariantOptNameId = sql.Column(
+      _TestcaseInvariantOptNameId, sql.ForeignKey("testcase_invariant_opt_names.id"), nullable=False)
+  value_id: _TestcaseInvariantOptValueId = sql.Column(
+      _TestcaseInvariantOptValueId, sql.ForeignKey("testcase_invariant_opt_values.id"),
+      nullable=False)
+
+  # Relationships.
+  name: "TestcaseInvariantOptName" = orm.relationship(
+      "TestcaseInvariantOptName", back_populates="invariant_opts")
+  value: "TestcaseInvariantOptValue" = orm.relationship(
+      "TestcaseInvariantOptValue", back_populates="invariant_opts")
+
+  # Constraints.
+  __table_args__ = (
+    sql.UniqueConstraint("name_id", "value_id", name="unique_testcase_opt"),
+  )
+
+  def __repr__(self):
+    return f"{self.name}: {self.value}"
+
+
+class TestcaseInvariantOptName(db.ListOfNames):
+  """The name of a testcase invariant_opt."""
+  id_t = _TestcaseInvariantOptNameId
+  __tablename__ = "testcase_invariant_opt_names"
+
+  # Relationships.
+  invariant_opts: typing.List[TestcaseInvariantOpt] = orm.relationship(
+      TestcaseInvariantOpt, back_populates="name")
+
+
+class TestcaseInvariantOptValue(db.ListOfNames):
+  """The value of a testcase invariant_opt."""
+  id_t = _TestcaseInvariantOptValueId
+  __tablename__ = "testcase_invariant_opt_values"
+
+  # Relationships.
+  invariant_opts: typing.List[TestcaseInvariantOpt] = orm.relationship(
+      TestcaseInvariantOpt, back_populates="value")

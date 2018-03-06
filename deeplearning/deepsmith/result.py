@@ -35,8 +35,8 @@ class Result(db.Table):
       "ResultOutput", secondary="result_output_associations",
       primaryjoin="ResultOutputAssociation.result_id == Result.id",
       secondaryjoin="ResultOutputAssociation.output_id == ResultOutput.id")
-  timings: typing.List["ResultTiming"] = orm.relationship(
-      "ResultTiming", back_populates="result")
+  # timings: typing.List["ResultTiming"] = orm.relationship(
+  #     "ResultTiming", back_populates="result")
 
   # Constraints:
   __table_args__ = (

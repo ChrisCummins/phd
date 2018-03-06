@@ -23,7 +23,7 @@ py_library(
         ":testbed",
         ":testcase",
         ":toolchain",
-        "//deeplearning/deepsmith/protos:deepsmith",
+        "//deeplearning/deepsmith/proto:deepsmith",
         "@labm8//:crypto",
     ],
 )
@@ -49,7 +49,7 @@ py_library(
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     deps = [
         ":db",
-        "//deeplearning/deepsmith/protos:deepsmith",
+        "//deeplearning/deepsmith/proto:deepsmith",
     ],
 )
 
@@ -70,7 +70,7 @@ py_library(
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     deps = [
         ":db",
-        "//deeplearning/deepsmith/protos:deepsmith",
+        "//deeplearning/deepsmith/proto:deepsmith",
     ],
 )
 
@@ -99,8 +99,6 @@ py_library(
     deps = [
         ":client",
         ":db",
-        ":result",
-        ":testcase",
     ],
 )
 
@@ -146,5 +144,6 @@ py_library(
         ":generator",
         ":harness",
         ":toolchain",
+        ":profiling_event",
     ],
 )

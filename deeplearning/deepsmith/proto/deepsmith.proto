@@ -1,59 +1,46 @@
 syntax = "proto2";
 
 message ProfilingEvent {
-  // Reserved for later use as ID field.
-  reserved 1;
-
   // A unique client name. A good starting point would be the hostname.
-  optional string client = 2 [default = "<anon>"];
+  optional string client = 1 [default = "<anon>"];
 
-  // The name of the timing.
-  optional string name = 3;
+  // The type of profiling event. E.g. "overhead", "generation", "warmup", etc.
+  optional string type = 2;
 
   // The duration in seconds.
-  optional float duration_seconds = 4;
+  optional float duration_seconds = 3;
 
   // Seconds since the epoch of the timing.
-  optional int64 date_epoch_seconds = 5;
+  optional int64 date_epoch_seconds = 4;
 }
 
 message Testcase {
-  // Reserved for later use as ID field.
-  reserved 1;
-
-  optional string toolchain = 2;
-  optional Generator generator = 3;
-  optional Harness harness = 4;
+  optional string toolchain = 1;
+  optional Generator generator = 2;
+  optional Harness harness = 3;
 
   // <input_name, input_value>
-  map<string, string> inputs = 5;
-  repeated ProfilingEvent timings = 7;
+  map<string, string> inputs = 4;
+
+  map<string, string> invariant_opts = 5;
+
+  repeated ProfilingEvent timings = 6;
 }
 
 message Generator {
-  // Reserved for later use as ID field.
-  reserved 1;
-
-  optional string name = 2;
-  optional string version = 3;
+  optional string name = 1;
+  map<string, string> opts = 2;
 }
 
 message Harness {
-  // Reserved for later use as ID field.
-  reserved 1;
-
-  optional string name = 2;
-  optional string version = 3;
+  optional string name = 1;
+  map<string, string> opts = 2;
 }
 
 message Testbed {
-  // Reserved for later use as ID field.
-  reserved 1;
-
-  optional string toolchain = 2;
-  optional string name = 3;
-  optional string version = 4;
-  map<string, string> opts = 5;
+  optional string toolchain = 1;
+  optional string name = 2;
+  map<string, string> opts = 3;
 }
 
 message Result {
