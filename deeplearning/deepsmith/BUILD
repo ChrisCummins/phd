@@ -61,6 +61,7 @@ py_test(
         ":datastore",
         ":db",
         ":generator",
+        "//deeplearning/deepsmith/proto:deepsmith",
     ],
 )
 
@@ -82,6 +83,7 @@ py_test(
         ":datastore",
         ":db",
         ":harness",
+        "//deeplearning/deepsmith/proto:deepsmith",
     ],
 )
 
@@ -108,8 +110,27 @@ py_library(
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     deps = [
         ":db",
+        ":profiling_event",
         ":testbed",
         ":testcase",
+        "//deeplearning/deepsmith/proto:deepsmith",
+    ],
+)
+
+py_library(
+    name = "result_test",
+    srcs = ["result_test.py"],
+    deps = [
+        ":client",
+        ":datastore",
+        ":db",
+        ":generator",
+        ":harness",
+        ":profiling_event",
+        ":result",
+        ":testbed",
+        ":testcase",
+        "//deeplearning/deepsmith/proto:deepsmith",
     ],
 )
 
@@ -120,6 +141,7 @@ py_library(
     deps = [
         ":db",
         ":toolchain",
+        "//deeplearning/deepsmith/proto:deepsmith",
     ],
 )
 
@@ -132,6 +154,7 @@ py_test(
         ":db",
         ":testbed",
         ":toolchain",
+        "//deeplearning/deepsmith/proto:deepsmith",
     ],
 )
 
@@ -143,7 +166,7 @@ py_library(
         ":db",
         ":generator",
         ":harness",
-        ":toolchain",
         ":profiling_event",
+        ":toolchain",
     ],
 )

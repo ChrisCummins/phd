@@ -131,7 +131,7 @@ class Testcase(db.Table):
     harness = deeplearning.deepsmith.harness.Harness.GetOrAdd(
         session, proto.harness
     )
-    # Build the list of invariant options, and md5sum the key value strings.
+    # Build the list of inputs, and md5sum the key value strings.
     inputs = []
     md5 = hashlib.md5()
     for proto_input_name in sorted(proto.inputs):
@@ -139,12 +139,11 @@ class Testcase(db.Table):
       md5.update((proto_input_name + proto_input_value).encode("utf-8"))
       input_ = db.GetOrAdd(
           session, TestcaseInput,
-          name=db.GetOrAdd(
-              session, TestcaseInputName,
-              name=proto_input_name,
+          name=TestcaseInputName.GetOrAdd(
+              session, name=proto_input_name,
           ),
           value=TestcaseInputValue.GetOrAdd(
-              session, string=proto_input_value
+              session, string=proto_input_value,
           ),
       )
       inputs.append(input_)
@@ -198,7 +197,7 @@ class Testcase(db.Table):
 
 
 class TestcaseInputSet(db.Table):
-  """A set of of testcase inputs.
+  """A set of testcase inputs.
 
   An input set groups inputs for testcases.
   """
@@ -271,20 +270,20 @@ class TestcaseInputValue(db.Table):
   id_t = sql.Integer
   __tablename__ = "testcase_input_values"
 
-  # Columns:
+  # Columns.
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(sql.DateTime, nullable=False, default=db.now)
-  md5: bytes = sql.Column(sql.Binary(16), nullable=False, unique=True)
+  md5: bytes = sql.Column(sql.Binary(16), nullable=False, index=True, unique=True)
   charcount = sql.Column(sql.Integer, nullable=False)
   linecount = sql.Column(sql.Integer, nullable=False)
   string: str = sql.Column(sql.UnicodeText(length=2 ** 31), nullable=False)
 
-  # Relationships:
+  # Relationships.
   inputs: typing.List[TestcaseInput] = orm.relationship(
       TestcaseInput, back_populates="value")
 
   @classmethod
-  def GetOrAdd(cls, session: db.session_t, string: str):
+  def GetOrAdd(cls, session: db.session_t, string: str) -> "TestcaseInputValue":
     """Instantiate a TestcaseInputValue entry from a string.
 
     Args:

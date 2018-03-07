@@ -44,15 +44,12 @@ message Testbed {
 }
 
 message Result {
-  // Reserved for later use as ID field.
-  reserved 1;
-
-  optional Testcase testcase = 2;
-  optional Testbed testbed = 3;
-  optional int32 returncode = 4;
+  optional Testcase testcase = 1;
+  optional Testbed testbed = 2;
+  optional int32 returncode = 3;
   // <name, value>
-  map<string, string> outputs = 5;
-  repeated ProfilingEvent profiling_events = 6;
+  map<string, string> outputs = 4;
+  repeated ProfilingEvent profiling_events = 5;
 }
 
 //
@@ -78,6 +75,7 @@ message SubmitTestcasesResponse {
   optional Status status = 1 [default = SUCCESS];
   optional string server_name = 2;
   optional int32 error_code = 3;
+  optional int32 num_truncated_outputs = 4;
 }
 
 // RequestTestcases.
