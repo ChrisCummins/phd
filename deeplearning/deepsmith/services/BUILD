@@ -9,11 +9,11 @@ py_library(
     ],
 )
 
-py_test(
-    name = "testing_test",
-    size = "small",
-    srcs = ["testing_test.py"],
-    deps = [
-        ":testing",
-    ],
-)
+# py_test(
+#     name = "testing_test",
+#     size = "small",
+#     srcs = ["testing_test.py"],
+#     deps = [
+#         ":testing",
+#     ],
+# )
