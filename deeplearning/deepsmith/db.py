@@ -139,7 +139,7 @@ class ListOfNames(Table):
   name: str = sql.Column(sql.String(name_len), nullable=False, unique=True)
 
   @classmethod
-  def GetOrAdd(cls, session: session_t, name: str):
+  def GetOrAdd(cls, session: session_t, name: str) -> 'ListOfNames':
     """Instantiate a ListOfNames entry from a name.
 
     This is the preferred method for creating database-backed instances.

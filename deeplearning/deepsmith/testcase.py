@@ -10,6 +10,7 @@ from sqlalchemy import orm
 import deeplearning.deepsmith.generator
 import deeplearning.deepsmith.harness
 import deeplearning.deepsmith.toolchain
+import deeplearning.deepsmith.profiling_event
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import deepsmith_pb2
 
@@ -104,6 +105,9 @@ class Testcase(db.Table):
       proto.inputs[input_.name.name] = input_.value.string
     for opt in self.invariant_optset:
       proto.invariant_opts[opt.name.name] = opt.value.name
+    for profiling_event in self.profiling_events:
+      event = proto.profiling_events.add()
+      profiling_event.SetProto(event)
     return proto
 
   def ToProto(self) -> deepsmith_pb2.Testcase:
@@ -114,6 +118,84 @@ class Testcase(db.Table):
     """
     proto = deepsmith_pb2.Testcase()
     return self.SetProto(proto)
+
+  @classmethod
+  def GetOrAdd(cls, session: db.session_t,
+               proto: deepsmith_pb2.Testcase) -> "Testcase":
+    toolchain = deeplearning.deepsmith.toolchain.Toolchain.GetOrAdd(
+        session, proto.toolchain
+    )
+    generator = deeplearning.deepsmith.generator.Generator.GetOrAdd(
+        session, proto.generator
+    )
+    harness = deeplearning.deepsmith.harness.Harness.GetOrAdd(
+        session, proto.harness
+    )
+    # Build the list of invariant options, and md5sum the key value strings.
+    inputs = []
+    md5 = hashlib.md5()
+    for proto_input_name in sorted(proto.inputs):
+      proto_input_value = proto.inputs[proto_input_name]
+      md5.update((proto_input_name + proto_input_value).encode("utf-8"))
+      input_ = db.GetOrAdd(
+          session, TestcaseInput,
+          name=db.GetOrAdd(
+              session, TestcaseInputName,
+              name=proto_input_name,
+          ),
+          value=TestcaseInputValue.GetOrAdd(
+              session, string=proto_input_value
+          ),
+      )
+      inputs.append(input_)
+
+    # Create invariant optset table entries.
+    inputset_id = md5.digest()
+    for input in inputs:
+      db.GetOrAdd(session, TestcaseInputSet, id=inputset_id, input=input)
+
+    # Build the list of invariant options, and md5sum the key value strings.
+    invariant_opts = []
+    md5 = hashlib.md5()
+    for proto_invariant_opt_name in sorted(proto.invariant_opts):
+      proto_invariant_opt_value = proto.invariant_opts[proto_invariant_opt_name]
+      md5.update((proto_invariant_opt_name + proto_invariant_opt_value).encode("utf-8"))
+      invariant_opt = db.GetOrAdd(
+          session, TestcaseInvariantOpt,
+          name=db.GetOrAdd(
+              session, TestcaseInvariantOptName,
+              name=proto_invariant_opt_name,
+          ),
+          value=db.GetOrAdd(
+              session, TestcaseInvariantOptValue,
+              name=proto_invariant_opt_value
+          ),
+      )
+      invariant_opts.append(invariant_opt)
+
+    # Create invariant optset table entries.
+    invariant_optset_id = md5.digest()
+    for invariant_opt in invariant_opts:
+      db.GetOrAdd(session, TestcaseInvariantOptSet, id=invariant_optset_id,
+                  invariant_opt=invariant_opt)
+
+    testcase = db.GetOrAdd(
+        session, cls,
+        toolchain=toolchain,
+        generator=generator,
+        harness=harness,
+        inputset_id=inputset_id,
+        invariant_optset_id=invariant_optset_id,
+    )
+
+    # Add profiling events.
+    for event in proto.profiling_events:
+      deeplearning.deepsmith.profiling_event.TestcaseProfilingEvent.GetOrAdd(
+          session, event
+      ).testcase = testcase
+
+    return testcase
+
 
 class TestcaseInputSet(db.Table):
   """A set of of testcase inputs.
@@ -213,11 +295,11 @@ class TestcaseInputValue(db.Table):
       A TestcaseInputValue instance.
     """
     md5 = hashlib.md5()
-    md5.update(string)
+    md5.update(string.encode("utf-8"))
 
     return db.GetOrAdd(
         session, cls,
-        md5=md5,
+        md5=md5.digest(),
         charcount=len(string),
         linecount=string.count("\n"),
         string=string,

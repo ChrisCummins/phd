@@ -2,7 +2,7 @@ syntax = "proto2";
 
 message ProfilingEvent {
   // A unique client name. A good starting point would be the hostname.
-  optional string client = 1 [default = "<anon>"];
+  optional string client = 1;
 
   // The type of profiling event. E.g. "overhead", "generation", "warmup", etc.
   optional string type = 2;
@@ -24,7 +24,7 @@ message Testcase {
 
   map<string, string> invariant_opts = 5;
 
-  repeated ProfilingEvent timings = 6;
+  repeated ProfilingEvent profiling_events = 6;
 }
 
 message Generator {
@@ -52,7 +52,7 @@ message Result {
   optional int32 returncode = 4;
   // <name, value>
   map<string, string> outputs = 5;
-  repeated ProfilingEvent timings = 6;
+  repeated ProfilingEvent profiling_events = 6;
 }
 
 //
