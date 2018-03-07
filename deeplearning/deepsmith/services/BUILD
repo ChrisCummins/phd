@@ -5,7 +5,7 @@ py_library(
     deps = [
         "//deeplearning/deepsmith:datastore",
         "//deeplearning/deepsmith:db",
-        "//deeplearning/deepsmith/protos:deepsmith",
+        "//deeplearning/deepsmith/proto:deepsmith",
     ],
 )
 
