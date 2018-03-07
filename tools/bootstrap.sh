@@ -116,10 +116,10 @@ main() {
 
     # Jupyter kernel
     if [[ ! -f "$HOME/.ipython/kernels/phd/kernel.json" ]]; then
-        echo "rm -rf $HOME/.ipython/kernels/phd"
-        echo "mkdir -p ~/.ipython/kernels"
-        echo "cp -r $DIR/ipython/kernels/phd $HOME/.ipython/kernels/phd"
-        echo "gsed \"s,@PYTHON@,$DIR/../venv/phd/bin/python,\" -i $HOME/.ipython/kernels/phd/kernel.json"
+        echo "rm -rvf $HOME/.ipython/kernels/phd"
+        echo "mkdir -vp ~/.ipython/kernels"
+        echo "cp -vr $DIR/ipython/kernels/phd $HOME/.ipython/kernels/phd"
+        echo "sed \"s,@PYTHON@,$DIR/../venv/phd/bin/python,\" -i $HOME/.ipython/kernels/phd/kernel.json"
     fi
 
     # autoenv
