@@ -157,5 +157,17 @@ main() {
             echo
         fi
     fi
+
+    # libexempi3 is required by //util/photolib/ and python package
+    # python-xmp-toolkit to read XMP metadata from image files.
+    if [[ "$(uname)" != "Darwin" ]]; then
+        if dpkg -s texlive-full &>/dev/null ; then
+            echo '# libexempi3: installed'
+        else
+            echo '# libexempi3:'
+            echo 'sudo apt-get install -y libexempi3'
+            echo
+        fi
+    fi
 }
 main $@
