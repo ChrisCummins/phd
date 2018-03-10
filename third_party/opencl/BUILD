@@ -1,3 +1,5 @@
+licenses(["notice"])  # MIT.
+
 cc_library(
     name = "opencl",
     hdrs = [
