@@ -114,6 +114,10 @@ main() {
         echo "source $DIR/../venv/phd/bin/activate && python setup.py install"
     fi
 
+    if [[ ! -d "$DIR/../venv/phd/lib/python3.6/site-packages/numpy" ]]; then
+        echo "source $DIR/../venv/phd/bin/activate && pip install -r $DIR/../requirements.txt"
+    fi
+
     # Jupyter kernel
     if [[ ! -f "$HOME/.ipython/kernels/phd/kernel.json" ]]; then
         echo "rm -rvf $HOME/.ipython/kernels/phd"
