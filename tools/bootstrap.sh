@@ -139,6 +139,11 @@ main() {
         echo
     fi
 
+    if [[ ! -f "$DIR/../.env" ]]; then
+        echo "cp -v $DIR/env.sh $DIR/../.env"
+        echo "sed \"s,@ROOT@,$DIR/../,\" -i $DIR/../.env"
+    fi
+
     # LaTeX
     if [[ "$(uname)" == "Darwin" ]]; then
         if brew cask list | grep mactex &>/dev/null ; then
