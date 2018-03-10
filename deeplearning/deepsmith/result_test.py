@@ -21,8 +21,8 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 def session() -> db.session_t:
   with tempfile.TemporaryDirectory(prefix="dsmith-test-db-") as tmpdir:
     ds = datastore.DataStore(engine="sqlite", db_dir=tmpdir)
-    with ds.Session() as session:
-      yield session
+    with ds.Session() as session_:
+      yield session_
 
 
 def test_Result_ToProto():
