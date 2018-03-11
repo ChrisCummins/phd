@@ -1,5 +1,5 @@
-#!/usr/bin/env bash
-root="$HOME/phd"
+#!/bin/bash
+root="@ROOT@"
 venv="$root/venv/phd"
 [ -f "$venv/bin/activate" ] && [ -z "$VIRTUAL_ENV" ] && source "$venv/bin/activate"
 
