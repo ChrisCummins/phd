@@ -167,7 +167,7 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
 
 
 def GetOrAdd(session: sql.orm.session.Session, model,
-             defaults: typing.Dict[str, object] = None, **kwargs) -> object:
+             defaults: typing.Dict[str, object] = None, **kwargs):
   """
   Instantiate a mapped database object. If the object is not in the database,
   add it.

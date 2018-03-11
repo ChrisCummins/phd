@@ -68,80 +68,10 @@ class DataStore(object):
         self._AddOneTestcase(session, testcase)
 
   def _AddOneTestcase(self, session: db.session_t,
-                      testcase_proto: deepsmith_pb2.Testcase) -> None:
+                      proto: deepsmith_pb2.Testcase) -> None:
     """Record a single Testcase in the database.
     """
-    # Add toolchain:
-    toolchain = db.GetOrAdd(
-        session, deeplearning.deepsmith.toolchain.Toolchain,
-        name=testcase_proto.toolchain,
-    )
-
-    # Add generator:
-    generator = db.GetOrAdd(
-        session, deeplearning.deepsmith.generator.Generator,
-        name=testcase_proto.generator.name,
-        version=testcase_proto.generator.name,
-    )
-
-    # Add harness:
-    harness = db.GetOrAdd(
-        session, deeplearning.deepsmith.harness.Harness,
-        name=testcase_proto.harness.name,
-        version=testcase_proto.harness.version,
-    )
-
-    # Add testcase:
-    testcase = db.GetOrAdd(
-        session, deeplearning.deepsmith.testcase.Testcase,
-        toolchain=toolchain,
-        generator=generator,
-        harness=harness,
-    )
-
-    # Add inputs:
-    for input_pb in testcase_proto.inputs:
-      text = testcase_proto.inputs[input_pb]
-      name = db.GetOrAdd(
-          session, deeplearning.deepsmith.testcase.TestcaseInputName,
-          name=input_pb,
-      )
-      sha1 = crypto.sha1_str(text)
-
-      input = db.GetOrAdd(
-          session, deeplearning.deepsmith.testcase.TestcaseInput,
-          name=name,
-          sha1=sha1,
-          linecount=len(text.split("\n")),
-          charcount=len(text),
-          input=text,
-      )
-      db.GetOrAdd(
-          session, deeplearning.deepsmith.testcase.TestcaseInputAssociation,
-          testcase=testcase,
-          input=input,
-      )
-
-    # TODO(cec): If the testcase already exists, don't add timings.
-
-    # Add timings:
-    for timing in testcase_proto.timings:
-      client_ = db.GetOrAdd(
-          session, deeplearning.deepsmith.client.Client,
-          name=timing.client
-      )
-      profiling_event_name = db.GetOrAdd(
-          session, profiling_event.ProfilingEventType,
-          name=timing.name
-      )
-      timing = db.GetOrAdd(
-          session, profiling_event.TestcaseProfilingEvent,
-          testcase=testcase,
-          name=profiling_event_name,
-          client=client_,
-          duration_seconds=timing.duration_seconds,
-          date=datetime.datetime.fromtimestamp(timing.date_epoch_seconds)
-      )
+    deeplearning.deepsmith.testcase.Testcase.GetOrAdd(session, proto)
 
   def _BuildTestcaseRequestQuery(self, session, request) -> db.query_t:
     def _FilterToolchainGeneratorHarness(q):
@@ -211,19 +141,6 @@ class DataStore(object):
 
     return q
 
-  def _HarnessObjectToProto(self, harness: deeplearning.deepsmith.harness.Harness) -> deepsmith_pb2.Harness:
-    return deepsmith_pb2.Harness(name=harness.name,
-                                 version=harness.version)
-
-  def _TestcaseObjectToProto(self, testcase: deeplearning.deepsmith.testcase.Testcase) -> deepsmith_pb2.Testcase:
-    return deepsmith_pb2.Testcase(
-        toolchain=testcase.toolchain,
-        generator=testcase.generator.ToProto(),
-        harness=self._HarnessObjectToProto(testcase.harness),
-        inputs={i.name: i.input for i in testcase.inputs},
-        # TODO(cec) optionally set timings field.
-    )
-
   def RequestTestcases(
       self, request: deepsmith_pb2.RequestTestcasesRequest,
       response: deepsmith_pb2.RequestTestcasesResponse) -> None:
@@ -239,8 +156,7 @@ class DataStore(object):
       q.limit(request.max_num_testcases)
 
       if request.return_testcases:
-        response.testcases = [
-          self._TestcaseObjectToProto(testcase) for testcase in q]
+        response.testcases = [testcase.ToProto() for testcase in q]
 
       if request.return_total_matching_count:
         q2 = self._BuildTestcaseRequestQuery(session, request)
