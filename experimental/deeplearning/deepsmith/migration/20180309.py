@@ -345,7 +345,6 @@ SELECT
   testcases.timeout
 FROM testcases
 LEFT JOIN programs on testcases.program_id = programs.id
-LEFT JOIN threads on testcases.threads_id = threads.id
 WHERE testcases.id >= %s
 AND testcases.id NOT IN (
   SELECT testcase_id FROM
