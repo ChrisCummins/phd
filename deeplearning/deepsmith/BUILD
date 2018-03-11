@@ -3,6 +3,18 @@ licenses(["restricted"])  # GPL v3
 exports_files(["LICENSE"])
 
 py_library(
+    name = "conftest",
+    srcs = ["conftest.py"],
+    visibility = ["//deeplearning/deepsmith:__subpackages__"],
+    testonly = 1,
+    deps = [
+        ":datastore",
+        ":db",
+        "//deeplearning/deepsmith/proto:datastore",
+    ],
+)
+
+py_library(
     name = "client",
     srcs = ["client.py"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],

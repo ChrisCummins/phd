@@ -19,9 +19,12 @@ import deeplearning.deepsmith.testcase
 
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith import profiling_event
+from deeplearning.deepsmith.proto import datastore_pb2
 from deeplearning.deepsmith.proto import deepsmith_pb2
 
 FLAGS = flags.FLAGS
+
+flags.DEFINE_string('datastore', None, 'Path to Datastore config proto.')
 
 
 class InvalidRequest(ValueError):
@@ -32,9 +35,9 @@ class InvalidRequest(ValueError):
 class DataStore(object):
   """ The centralized data store. """
 
-  def __init__(self, **db_opts):
-    self.opts = db_opts
-    self._engine, _ = db.MakeEngine(**self.opts)
+  def __init__(self, config: datastore_pb2.DataStore):
+    self._config = config
+    self._engine = db.MakeEngine(self._config)
     db.Table.metadata.create_all(self._engine)
     db.Table.metadata.bind = self._engine
     self._make_session = orm.sessionmaker(bind=self._engine)

@@ -2,23 +2,12 @@
 import hashlib
 import random
 import sys
-import tempfile
 
 import pytest
 from absl import app
 
 import deeplearning.deepsmith.harness
-from deeplearning.deepsmith import datastore
-from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import deepsmith_pb2
-
-
-@pytest.fixture
-def session() -> db.session_t:
-  with tempfile.TemporaryDirectory(prefix="dsmith-test-db-") as tmpdir:
-    ds = datastore.DataStore(engine="sqlite", db_dir=tmpdir)
-    with ds.Session() as session:
-      yield session
 
 
 def test_Harness_ToProto():

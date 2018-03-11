@@ -1,0 +1,19 @@
+syntax = "proto2";
+
+message DataStore {
+  message Sqlite {
+    optional string url = 1;
+  }
+
+  message MySql {
+    optional string hostname = 1 [default = "localhost"];
+    optional int32 port = 2 [default = 3306];
+    optional string username = 3;
+    optional string password = 4;
+  }
+
+  oneof value {
+    Sqlite sqlite = 1;
+    MySql mysql = 2;
+  }
+}

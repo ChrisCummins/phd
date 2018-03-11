@@ -11,15 +11,11 @@ from absl import flags
 from absl import logging
 from sqlalchemy.ext.declarative import declarative_base
 
+from deeplearning.deepsmith.proto import datastore_pb2
+
 FLAGS = flags.FLAGS
 
-# TODO(cec): Document these flags and set appropriate defaults.
-flags.DEFINE_string("db_engine", None, "")
-flags.DEFINE_string("db_hostname", None, "")
-flags.DEFINE_integer("db_port", None, "")
-flags.DEFINE_string("db_username", None, "")
-flags.DEFINE_string("db_password", None, "")
-flags.DEFINE_string("db_dir", None, "")
+flags.DEFINE_bool('sql_echo', None, 'Print all executed SQL statements')
 
 # TODO(cec): Revise database versioning approach.
 __version__ = "1.0.0.dev1"
@@ -162,42 +158,27 @@ class ListOfNames(Table):
     return self.name[:50] or ""
 
 
-def MakeEngine(**kwargs) -> sql.engine.Engine:
+def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
   """
   Raises:
       ValueError: If DB_ENGINE config value is invalid.
   """
-  prefix = kwargs.get("prefix", "")
-  engine = kwargs.get("engine", FLAGS.db_engine)
-
-  name = f"{prefix}dsmith_{version_info.major}{version_info.minor}"
-
-  if engine == "mysql":
-    flags_credentials = (FLAGS.db_username, FLAGS.db_password)
-    username, password = kwargs.get("credentials", flags_credentials)
-    hostname = kwargs.get("hostname", FLAGS.db_hostname)
-    port = str(kwargs.get("port", FLAGS.db_port))
+  if config.HasField('sqlite'):
+    url, public_url = config.sqlite.url, config.sqlite.url
+  elif config.HasField('mysql'):
+    username, password = config.mysql.username, config.mysql.password
+    hostname = config.mysql.password
+    port = config.mysql.password
 
     # Use UTF-8 encoding (default is latin-1) when connecting to MySQL.
     # See: https://stackoverflow.com/a/16404147/1318051
-    public_uri = f"mysql://{username}@{hostname}:{port}/{name}?charset=utf8".format(**vars())
-    uri = f"mysql+mysqldb://{username}:{password}@{hostname}:{port}/{name}?charset=utf8"
-  elif engine == "sqlite":
-    db_dir = kwargs.get("db_dir", FLAGS.db_dir)
-    if not db_dir:
-      raise ValueError(f"no database directory specified")
-    os.makedirs(db_dir, exist_ok=True)
-    path = os.path.join(db_dir, f"{name}.db")
-    uri = f"sqlite:///{path}"
-    public_uri = uri
+    public_url = f'mysql://{username}@{hostname}:{port}/{name}?charset=utf8'
+    url = f'mysql+mysqldb://{username}:{password}@{hostname}:{port}/{name}?charset=utf8'
   else:
-    raise ValueError(f"unsupported database engine {engine}")
+    raise ValueError(f'unsupported database engine {engine}')
 
-  # Determine whether to enable logging of SQL statements:
-  echo = True if os.environ.get("DB_DEBUG", None) else False
-
-  logging.debug("connecting to database %s", public_uri)
-  return sql.create_engine(uri, encoding="utf-8", echo=echo), public_uri
+  logging.info('creating database engine %s', public_url)
+  return sql.create_engine(url, encoding='utf-8', echo=FLAGS.sql_echo)
 
 
 def GetOrAdd(session: sql.orm.session.Session, model,
