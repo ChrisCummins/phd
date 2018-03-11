@@ -1,9 +1,7 @@
 """
 Database backend.
 """
-import collections
 import datetime
-import os
 import typing
 
 import sqlalchemy as sql
@@ -17,29 +15,16 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_bool('sql_echo', None, 'Print all executed SQL statements')
 
-# TODO(cec): Revise database versioning approach.
-__version__ = "1.0.0.dev1"
-
-_major = int(__version__.split(".")[0])
-_minor = (int(__version__.split('.')[1])
-          if len(__version__.split('.')) > 1 else 0)
-_micro = (int(__version__.split('.')[2])
-          if len(__version__.split('.')) > 2 else 0)
-_releaselevel = (__version__.split('.')[3]
-                 if len(__version__.split('.')) > 3 else 'final')
-
-version_info_t = collections.namedtuple(
-    'version_info_t', ['major', 'minor', 'micro', 'releaselevel'])
-version_info = version_info_t(_major, _minor, _micro, _releaselevel)
-
-# Type aliases.
+# The database session type.
 session_t = sql.orm.session.Session
+
+# The database query type.
 query_t = sql.orm.query.Query
 
 # A type alias for annotating methods which take or return protocol buffers.
 ProtocolBuffer = typing.Any
 
-# SQLAlchemy base table type.
+# The SQLAlchemy base table.
 Base = declarative_base()
 
 # A shorthand declaration for the current time.

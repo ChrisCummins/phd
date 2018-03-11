@@ -2,23 +2,19 @@
 The datastore acts as the bridge between the RPC frontend and the db backend.
 """
 import contextlib
-import datetime
 
 from absl import flags
 from sqlalchemy import orm
 
-from labm8 import crypto
-
 import deeplearning.deepsmith.client
 import deeplearning.deepsmith.generator
 import deeplearning.deepsmith.harness
-import deeplearning.deepsmith.toolchain
 import deeplearning.deepsmith.result
 import deeplearning.deepsmith.testbed
 import deeplearning.deepsmith.testcase
-
+import deeplearning.deepsmith.testcase
+import deeplearning.deepsmith.toolchain
 from deeplearning.deepsmith import db
-from deeplearning.deepsmith import profiling_event
 from deeplearning.deepsmith.proto import datastore_pb2
 from deeplearning.deepsmith.proto import deepsmith_pb2
 

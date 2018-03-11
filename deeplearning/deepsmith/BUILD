@@ -4,9 +4,9 @@ exports_files(["LICENSE"])
 
 py_library(
     name = "conftest",
+    testonly = 1,
     srcs = ["conftest.py"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
-    testonly = 1,
     deps = [
         ":datastore",
         ":db",
@@ -35,8 +35,8 @@ py_library(
         ":testbed",
         ":testcase",
         ":toolchain",
+        "//deeplearning/deepsmith/proto:datastore",
         "//deeplearning/deepsmith/proto:deepsmith",
-        "@labm8//:crypto",
     ],
 )
 
@@ -44,6 +44,9 @@ py_library(
     name = "db",
     srcs = ["db.py"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
+    deps = [
+        "//deeplearning/deepsmith/proto:datastore",
+    ],
 )
 
 py_test(
@@ -51,6 +54,7 @@ py_test(
     size = "small",
     srcs = ["db_test.py"],
     deps = [
+        ":conftest",
         ":db",
     ],
 )
@@ -70,8 +74,7 @@ py_test(
     size = "small",
     srcs = ["generator_test.py"],
     deps = [
-        ":datastore",
-        ":db",
+        ":conftest",
         ":generator",
         "//deeplearning/deepsmith/proto:deepsmith",
     ],
@@ -92,8 +95,7 @@ py_test(
     size = "small",
     srcs = ["harness_test.py"],
     deps = [
-        ":datastore",
-        ":db",
+        ":conftest",
         ":harness",
         "//deeplearning/deepsmith/proto:deepsmith",
     ],
@@ -113,6 +115,7 @@ py_library(
     deps = [
         ":client",
         ":db",
+        "//deeplearning/deepsmith/proto:deepsmith",
     ],
 )
 
@@ -129,13 +132,13 @@ py_library(
     ],
 )
 
-py_library(
+py_test(
     name = "result_test",
+    size = "small",
     srcs = ["result_test.py"],
     deps = [
         ":client",
-        ":datastore",
-        ":db",
+        ":conftest",
         ":generator",
         ":harness",
         ":profiling_event",
@@ -162,8 +165,7 @@ py_test(
     size = "small",
     srcs = ["testbed_test.py"],
     deps = [
-        ":datastore",
-        ":db",
+        ":conftest",
         ":testbed",
         ":toolchain",
         "//deeplearning/deepsmith/proto:deepsmith",
@@ -180,5 +182,22 @@ py_library(
         ":harness",
         ":profiling_event",
         ":toolchain",
+        "//deeplearning/deepsmith/proto:deepsmith",
+    ],
+)
+
+py_test(
+    name = "testcase_test",
+    size = "small",
+    srcs = ["testcase_test.py"],
+    deps = [
+        ":client",
+        ":conftest",
+        ":generator",
+        ":harness",
+        ":profiling_event",
+        ":testcase",
+        ":toolchain",
+        "//deeplearning/deepsmith/proto:deepsmith",
     ],
 )
