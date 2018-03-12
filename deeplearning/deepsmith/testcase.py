@@ -15,6 +15,7 @@ import deeplearning.deepsmith.profiling_event
 import deeplearning.deepsmith.toolchain
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import deepsmith_pb2
+from deeplearning.deepsmith.proto import pbutil
 
 # The index types for tables defined in this file.
 _TestcaseId = sql.Integer
@@ -205,10 +206,7 @@ class Testcase(db.Table):
     Returns:
       Testcase message instance.
     """
-    proto = deepsmith_pb2.Testcase()
-    with open(path, 'rb') as f:
-      proto.ParseFromString(f)
-    return proto
+    return pbutil.FromFile(path, deepsmith_pb2.Testcase())
 
   @classmethod
   def FromFile(cls, session: db.session_t, path: pathlib.Path) -> 'Testcase':

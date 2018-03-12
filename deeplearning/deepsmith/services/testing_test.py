@@ -1,24 +1,16 @@
 """Tests for //deeplearning/deepsmith/services:testing."""
 import random
-import string
 import sys
-import tempfile
 
 import pytest
+import string
 from absl import app
 
 import deeplearning.deepsmith.client
 import deeplearning.deepsmith.profiling_event
 import deeplearning.deepsmith.testcase
-from deeplearning.deepsmith import datastore
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.services import testing
-
-
-@pytest.fixture
-def ds():
-  with tempfile.TemporaryDirectory(prefix="dsmith-test-db-") as tmpdir:
-    yield datastore.DataStore(engine="sqlite", db_dir=tmpdir)
 
 
 def CreateRandomGenerator() -> deepsmith_pb2.Generator:
@@ -66,7 +58,7 @@ def CreateRandomTestcase() -> deepsmith_pb2.Testcase:
       generator=CreateRandomGenerator(),
       harness=CreateRandomHarness(),
       inputs=CreateRandomInputs(),
-      timings=[
+      profiling_events=[
         deepsmith_pb2.ProfilingEvent(client=client, name="a", duration_seconds=random.random()),
         deepsmith_pb2.ProfilingEvent(client=client, name="b", duration_seconds=random.random()),
         deepsmith_pb2.ProfilingEvent(client=client, name="c", duration_seconds=random.random()),

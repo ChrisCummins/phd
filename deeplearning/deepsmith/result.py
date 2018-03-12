@@ -14,6 +14,7 @@ import deeplearning.deepsmith.testbed
 import deeplearning.deepsmith.testcase
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import deepsmith_pb2
+from deeplearning.deepsmith.proto import pbutil
 
 # The index types for tables defined in this file.
 _ResultId = sql.Integer
@@ -155,10 +156,7 @@ class Result(db.Table):
     Returns:
       Result message instance.
     """
-    proto = deepsmith_pb2.Result()
-    with open(path, 'rb') as f:
-      proto.ParseFromString(f)
-    return proto
+    return pbutil.FromFile(path, deepsmith_pb2.Result())
 
   @classmethod
   def FromFile(cls, session: db.session_t, path: pathlib.Path) -> 'Result':
