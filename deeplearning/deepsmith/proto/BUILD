@@ -28,5 +28,8 @@ py_library(
 py_test(
     name = "pbutil_test",
     srcs = ["pbutil_test.py"],
-    deps = [":test_protos"],
+    deps = [
+        ":pbutil",
+        ":test_protos",
+    ],
 )
