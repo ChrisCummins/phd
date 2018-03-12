@@ -1,0 +1,11 @@
+// Protocol buffers for unit testing.
+syntax = "proto2";
+
+message TestMessage {
+  required string string = 1;
+  optional int32 number = 2;
+}
+
+message AnotherTestMessage {
+  optional int32 number = 1;
+}

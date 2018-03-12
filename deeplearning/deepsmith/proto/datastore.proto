@@ -6,10 +6,13 @@ message DataStore {
   }
 
   message MySql {
-    optional string hostname = 1 [default = "localhost"];
-    optional int32 port = 2 [default = 3306];
-    optional string username = 3;
-    optional string password = 4;
+    optional string database = 1;
+    optional string hostname = 2 [default = "localhost"];
+    optional int32 port = 3 [default = 3306];
+    optional string username = 4;
+    optional string password = 5;
+
+    optional bool create_database_if_not_exist = 6;
   }
 
   oneof value {
