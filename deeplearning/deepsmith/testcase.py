@@ -1,11 +1,12 @@
 """This file implements testcases."""
 import binascii
-import datetime
 import hashlib
-import pathlib
-import typing
 
+import datetime
+import pathlib
 import sqlalchemy as sql
+import sqlalchemy.dialects.mysql
+import typing
 from sqlalchemy import orm
 
 import deeplearning.deepsmith.generator
@@ -17,11 +18,11 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 
 # The index types for tables defined in this file.
 _TestcaseId = sql.Integer
-_TestcaseInputSetId = sql.Binary(16)  # MD5 checksum.
+_TestcaseInputSetId = sqlalchemy.dialects.mysql.BINARY(16)  # MD5 checksum.
 _TestcaseInputId = sql.Integer
 _TestcaseInputNameId = db.StringTable.id_t
 _TestcaseInputValueId = sql.Integer
-_TestcaseInvariantOptSetId = sql.Binary(16)  # MD5 checksum.
+_TestcaseInvariantOptSetId = sqlalchemy.dialects.mysql.BINARY(16)  # MD5 checksum.
 _TestcaseInvariantOptId = sql.Integer
 _TestcaseInvariantOptNameId = db.StringTable.id_t
 _TestcaseInvariantOptValueId = db.StringTable.id_t
@@ -323,7 +324,8 @@ class TestcaseInputValue(db.Table):
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(sql.DateTime, nullable=False, default=db.now)
-  md5: bytes = sql.Column(sql.Binary(16), nullable=False, index=True, unique=True)
+  md5: bytes = sql.Column(sqlalchemy.dialects.mysql.BINARY(16), nullable=False,
+                          index=True, unique=True)
   charcount = sql.Column(sql.Integer, nullable=False)
   linecount = sql.Column(sql.Integer, nullable=False)
   string: str = sql.Column(sql.UnicodeText(length=2 ** 31), nullable=False)

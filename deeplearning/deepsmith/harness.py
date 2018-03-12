@@ -1,9 +1,10 @@
 """This file implements the testcase harness."""
-import datetime
 import hashlib
-import typing
 
+import datetime
 import sqlalchemy as sql
+import sqlalchemy.dialects.mysql
+import typing
 from sqlalchemy import orm
 
 from deeplearning.deepsmith import db
@@ -11,7 +12,7 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 
 # The index types for tables defined in this file.
 _HarnessId = sql.Integer
-_HarnessOptSetId = sql.Binary(16)  # MD5 checksum.
+_HarnessOptSetId = sqlalchemy.dialects.mysql.BINARY(16)  # MD5 checksum.
 _HarnessOptId = sql.Integer
 _HarnessOptNameId = db.StringTable.id_t
 _HarnessOptValueId = db.StringTable.id_t

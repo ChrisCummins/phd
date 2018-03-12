@@ -1,9 +1,10 @@
 """This file defines the testcase generator."""
-import datetime
 import hashlib
-import typing
 
+import datetime
 import sqlalchemy as sql
+import sqlalchemy.dialects.mysql
+import typing
 from sqlalchemy import orm
 
 from deeplearning.deepsmith import db
@@ -11,7 +12,7 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 
 # The index types for tables defined in this file.
 _GeneratorId = sql.Integer
-_GeneratorOptSetId = sql.Binary(16)  # MD5 checksum.
+_GeneratorOptSetId = sqlalchemy.dialects.mysql.BINARY(16)  # MD5 checksum.
 _GeneratorOptId = sql.Integer
 _GeneratorOptNameId = db.StringTable.id_t
 _GeneratorOptValueId = db.StringTable.id_t

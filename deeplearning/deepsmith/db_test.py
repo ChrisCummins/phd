@@ -1,4 +1,4 @@
-"""Unit tests for db.py."""
+"""Unit tests for :db."""
 import sys
 
 import pytest

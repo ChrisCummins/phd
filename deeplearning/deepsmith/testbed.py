@@ -1,10 +1,11 @@
 """This file implements testbeds."""
 import binascii
-import datetime
 import hashlib
-import typing
 
+import datetime
 import sqlalchemy as sql
+import sqlalchemy.dialects.mysql
+import typing
 from sqlalchemy import orm
 
 import deeplearning.deepsmith.toolchain
@@ -13,7 +14,7 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 
 # The index types for tables defined in this file.
 _TestbedId = sql.Integer
-_TestbedOptSetId = sql.Binary(16)  # MD5 checksum.
+_TestbedOptSetId = sqlalchemy.dialects.mysql.BINARY(16)  # MD5 checksum.
 _TestbedOptId = sql.Integer
 _TestbedOptNameId = db.StringTable.id_t
 _TestbedOptValueId = db.StringTable.id_t

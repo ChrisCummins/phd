@@ -3,15 +3,13 @@ This file defines the TestingService object.
 """
 import time
 
-from concurrent import futures
-
 import grpc
 from absl import app
 from absl import flags
 from absl import logging
+from concurrent import futures
 
 from deeplearning.deepsmith import datastore
-from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import deepsmith_pb2_grpc
 
@@ -62,10 +60,12 @@ class TestingService(deepsmith_pb2_grpc.TestingServiceServicer):
     return response
 
 
-def main():  # pylint: disable=missing-docstring
+def main(argv):
+  del argv
   server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-  service = TestingService(db.DatabaseContext())
-  deepsmith_pb2_grpc.add_TestingServiceServicer_to_server(service, server)
+  ds = datastore.DataStore.FromFlags()
+  service = TestingService(ds)
+  deepsmith_pb2_grpc.add_TestingServiceService_to_server(service, server)
   server.add_insecure_port(f"[::]:{FLAGS.port}")
   server.start()
 
