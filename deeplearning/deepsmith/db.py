@@ -144,16 +144,18 @@ class StringTable(Table):
   The downside of a string table is that it requires one extra table lookup to
   resolve the string itself.
 
-  Note that the maximum length of strings is hardcoded to 4k. You should only
-  use the StringTable.GetOrAdd() method to insert new strings, as this method
-  performs the bounds checking and will raise a StringTooLongError if required.
-  Instantiating a StringTable directly with a string which is too long will
-  cause some SQL-based error which is harder to catch and potentially
-  backend-specific.
+  Note that the maximum length of strings is hardcoded to StringTable.maxlen.
+  You should only use the StringTable.GetOrAdd() method to insert new strings,
+  as this method performs the bounds checking and will raise a
+  StringTooLongError if required. Instantiating a StringTable directly with a
+  string which is too long will cause some SQL-based error which is harder to
+  catch and potentially backend-specific.
   """
   __abstract__ = True
   id_t = sql.Integer
-  maxlen = 4096
+  # This seemingly arbitrary maximum of 3072 is the limit which MySQL allows for
+  # unique columns.
+  maxlen = 3072
 
   # Columns:
   id: int = sql.Column(id_t, primary_key=True)
