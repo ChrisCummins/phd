@@ -15,8 +15,19 @@ message DataStore {
     optional bool create_database_if_not_exist = 6;
   }
 
+  message PostgreSQL {
+    optional string database = 1;
+    optional string hostname = 2 [default = "localhost"];
+    optional int32 port = 3 [default = 5432];
+    optional string username = 4;
+    optional string password = 5;
+
+    optional bool create_database_if_not_exist = 6;
+  }
+
   oneof value {
     Sqlite sqlite = 1;
     MySql mysql = 2;
+    PostgreSQL postgresql = 3;
   }
 }

@@ -226,7 +226,6 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
     _RaiseIfNotset(config.mysql, 'hostname')
     _RaiseIfNotset(config.mysql, 'port')
     _RaiseIfNotset(config.mysql, 'database')
-
     url_base = (f'mysql://{config.mysql.username}:{config.mysql.password}@' +
                 f'{config.mysql.hostname}:{config.mysql.port}')
 
@@ -239,6 +238,32 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
     public_url = (f'mysql://{config.mysql.username}@{config.mysql.hostname}:' +
                   f'{config.mysql.port}/{config.mysql.database}?charset=utf8')
     url = f'{url_base}/{config.mysql.database}?charset=utf8'
+  elif config.HasField('postgresql'):
+    _RaiseIfNotset(config.postgresql, 'username')
+    _RaiseIfNotset(config.postgresql, 'hostname')
+    _RaiseIfNotset(config.postgresql, 'port')
+    _RaiseIfNotset(config.postgresql, 'database')
+    url_base = (f'postgresql+psycopg2://{config.postgresql.username}:' +
+                f'{config.postgresql.password}@{config.postgresql.hostname}:' +
+                f'{config.postgresql.port}')
+
+    if config.postgresql.create_database_if_not_exist:
+      engine = sql.create_engine(f'{url_base}/postgres')
+      conn = engine.connect()
+      query = conn.execute(
+          "SELECT 1 FROM pg_database WHERE datname "
+          f"= '{config.postgresql.database}'")
+      if not query.first():
+        # PostgreSQL does not let you create databases within a transaction, so
+        # manually complete the transaction before creating the database.
+        conn.execute("COMMIT")
+        conn.execute(f"CREATE DATABASE {config.postgresql.database}")
+      conn.close()
+
+    public_url = (f'postgresql://{config.postgresql.username}@' +
+                  f'{config.postgresql.hostname}:{config.postgresql.port}/' +
+                  f'{config.postgresql.database}')
+    url = f'{url_base}/{config.postgresql.database}'
   else:
     raise ValueError(f'unsupported database engine {engine}')
 

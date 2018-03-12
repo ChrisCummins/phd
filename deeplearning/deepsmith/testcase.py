@@ -5,9 +5,9 @@ import hashlib
 import datetime
 import pathlib
 import sqlalchemy as sql
-import sqlalchemy.dialects.mysql
 import typing
 from sqlalchemy import orm
+from sqlalchemy.dialects import mysql
 
 import deeplearning.deepsmith.generator
 import deeplearning.deepsmith.harness
@@ -19,11 +19,11 @@ from deeplearning.deepsmith.proto import pbutil
 
 # The index types for tables defined in this file.
 _TestcaseId = sql.Integer
-_TestcaseInputSetId = sqlalchemy.dialects.mysql.BINARY(16)  # MD5 checksum.
+_TestcaseInputSetId = sql.Binary(16).with_variant(mysql.BINARY(16), 'mysql')
 _TestcaseInputId = sql.Integer
 _TestcaseInputNameId = db.StringTable.id_t
 _TestcaseInputValueId = sql.Integer
-_TestcaseInvariantOptSetId = sqlalchemy.dialects.mysql.BINARY(16)  # MD5 checksum.
+_TestcaseInvariantOptSetId = sql.Binary(16).with_variant(mysql.BINARY(16), 'mysql')
 _TestcaseInvariantOptId = sql.Integer
 _TestcaseInvariantOptNameId = db.StringTable.id_t
 _TestcaseInvariantOptValueId = db.StringTable.id_t
@@ -50,11 +50,9 @@ class Testcase(db.Table):
   harness_id: int = sql.Column(
       deeplearning.deepsmith.harness.Harness.id_t,
       sql.ForeignKey('harnesses.id'), nullable=False)
-  inputset_id: bytes = sql.Column(
-      _TestcaseInputSetId, sql.ForeignKey('testcase_inputsets.id'), nullable=False)
+  inputset_id: bytes = sql.Column(_TestcaseInputSetId, nullable=False)
   invariant_optset_id: bytes = sql.Column(
-      _TestcaseInvariantOptSetId,
-      sql.ForeignKey('testcase_invariant_optsets.id'), nullable=False)
+      _TestcaseInvariantOptSetId, nullable=False)
 
   # Relationships.
   toolchain: deeplearning.deepsmith.toolchain.Toolchain = orm.relationship(
@@ -231,14 +229,13 @@ class TestcaseInputSet(db.Table):
   id_t = _TestcaseInputSetId
 
   # Columns.
-  id: bytes = sql.Column(
-      id_t, sql.ForeignKey('testcases.inputset_id'), nullable=False)
+  id: bytes = sql.Column(id_t, nullable=False)
   input_id: int = sql.Column(
       _TestcaseInputId, sql.ForeignKey('testcase_inputs.id'), nullable=False)
 
   # Relationships.
   testcases: typing.List[Testcase] = orm.relationship(
-      'Testcase', foreign_keys=[Testcase.inputset_id])
+      Testcase, primaryjoin=id == orm.foreign(Testcase.inputset_id))
   input: 'TestcaseInput' = orm.relationship('TestcaseInput')
 
   # Constraints.
@@ -275,7 +272,7 @@ class TestcaseInput(db.Table):
 
   # Constraints.
   __table_args__ = (
-    sql.UniqueConstraint('name_id', 'value_id', name='unique_testcase_opt'),
+    sql.UniqueConstraint('name_id', 'value_id', name='unique_testcase_input'),
   )
 
   def __repr__(self):
@@ -322,11 +319,12 @@ class TestcaseInputValue(db.Table):
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(sql.DateTime, nullable=False, default=db.now)
-  md5: bytes = sql.Column(sqlalchemy.dialects.mysql.BINARY(16), nullable=False,
-                          index=True, unique=True)
+  md5: bytes = sql.Column(
+      sql.Binary(16).with_variant(mysql.BINARY(16), 'mysql'), nullable=False,
+      index=True, unique=True)
   charcount = sql.Column(sql.Integer, nullable=False)
   linecount = sql.Column(sql.Integer, nullable=False)
-  string: str = sql.Column(sql.UnicodeText(length=2 ** 31), nullable=False)
+  string: str = sql.Column(sql.UnicodeText, nullable=False)
 
   # Relationships.
   inputs: typing.List[TestcaseInput] = orm.relationship(
@@ -367,14 +365,13 @@ class TestcaseInvariantOptSet(db.Table):
   id_t = _TestcaseInvariantOptSetId
 
   # Columns.
-  id: bytes = sql.Column(
-      id_t, sql.ForeignKey('testcases.invariant_optset_id'), nullable=False)
+  id: bytes = sql.Column(id_t, nullable=False)
   invariant_opt_id: int = sql.Column(
       _TestcaseInvariantOptId, sql.ForeignKey('testcase_invariant_opts.id'), nullable=False)
 
   # Relationships.
   testcases: typing.List[Testcase] = orm.relationship(
-      'Testcase', foreign_keys=[Testcase.invariant_optset_id])
+      Testcase, primaryjoin=id == orm.foreign(Testcase.invariant_optset_id))
   invariant_opt: 'TestcaseInvariantOpt' = orm.relationship('TestcaseInvariantOpt')
 
   # Constraints.
@@ -411,7 +408,8 @@ class TestcaseInvariantOpt(db.Table):
 
   # Constraints.
   __table_args__ = (
-    sql.UniqueConstraint('name_id', 'value_id', name='unique_testcase_opt'),
+    sql.UniqueConstraint('name_id', 'value_id',
+                         name='unique_testcase_invariant_opt'),
   )
 
   def __repr__(self):

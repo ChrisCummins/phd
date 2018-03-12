@@ -3,16 +3,16 @@ import hashlib
 
 import datetime
 import sqlalchemy as sql
-import sqlalchemy.dialects.mysql
 import typing
 from sqlalchemy import orm
+from sqlalchemy.dialects import mysql
 
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import deepsmith_pb2
 
 # The index types for tables defined in this file.
 _GeneratorId = sql.Integer
-_GeneratorOptSetId = sqlalchemy.dialects.mysql.BINARY(16)  # MD5 checksum.
+_GeneratorOptSetId = sql.Binary(16).with_variant(mysql.BINARY(16), 'mysql')
 _GeneratorOptId = sql.Integer
 _GeneratorOptNameId = db.StringTable.id_t
 _GeneratorOptValueId = db.StringTable.id_t
@@ -27,8 +27,7 @@ class Generator(db.Table):
   date_added: datetime.datetime = sql.Column(
       sql.DateTime, nullable=False, default=db.now)
   name: str = sql.Column(sql.String(1024), nullable=False)
-  optset_id: bytes = sql.Column(
-      _GeneratorOptSetId, sql.ForeignKey("generator_optsets.id"), nullable=False)
+  optset_id: bytes = sql.Column(_GeneratorOptSetId, nullable=False)
 
   # Relationships.
   testcases: typing.List["Testcase"] = orm.relationship(
@@ -113,14 +112,13 @@ class GeneratorOptSet(db.Table):
   id_t = _GeneratorOptSetId
 
   # Columns.
-  id: bytes = sql.Column(
-      id_t, sql.ForeignKey("generators.optset_id"), nullable=False)
+  id: bytes = sql.Column(id_t, nullable=False)
   opt_id: int = sql.Column(
       _GeneratorOptId, sql.ForeignKey("generator_opts.id"), nullable=False)
 
   # Relationships.
   generators: typing.List[Generator] = orm.relationship(
-      "Generator", foreign_keys=[Generator.optset_id])
+      Generator, primaryjoin=id == orm.foreign(Generator.optset_id))
   opt: "GeneratorOpt" = orm.relationship("GeneratorOpt")
 
   # Constraints.

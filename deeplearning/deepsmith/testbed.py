@@ -4,9 +4,9 @@ import hashlib
 
 import datetime
 import sqlalchemy as sql
-import sqlalchemy.dialects.mysql
 import typing
 from sqlalchemy import orm
+from sqlalchemy.dialects import mysql
 
 import deeplearning.deepsmith.toolchain
 from deeplearning.deepsmith import db
@@ -14,7 +14,7 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 
 # The index types for tables defined in this file.
 _TestbedId = sql.Integer
-_TestbedOptSetId = sqlalchemy.dialects.mysql.BINARY(16)  # MD5 checksum.
+_TestbedOptSetId = sql.Binary(16).with_variant(mysql.BINARY(16), 'mysql')
 _TestbedOptId = sql.Integer
 _TestbedOptNameId = db.StringTable.id_t
 _TestbedOptValueId = db.StringTable.id_t
@@ -36,8 +36,7 @@ class Testbed(db.Table):
       deeplearning.deepsmith.toolchain.Toolchain.id_t,
       sql.ForeignKey("toolchains.id"), nullable=False)
   name: str = sql.Column(sql.String(1024), nullable=False)
-  optset_id: bytes = sql.Column(
-      _TestbedOptSetId, sql.ForeignKey("testbed_optsets.id"), nullable=False)
+  optset_id: bytes = sql.Column(_TestbedOptSetId, nullable=False)
 
   # Relationships.
   toolchain: deeplearning.deepsmith.toolchain.Toolchain = orm.relationship(
@@ -145,14 +144,13 @@ class TestbedOptSet(db.Table):
   id_t = _TestbedOptSetId
 
   # Columns.
-  id: bytes = sql.Column(
-      id_t, sql.ForeignKey("testbeds.optset_id"), nullable=False)
+  id: bytes = sql.Column(id_t, nullable=False)
   opt_id: int = sql.Column(
       _TestbedOptId, sql.ForeignKey("testbed_opts.id"), nullable=False)
 
   # Relationships.
   testbeds: typing.List[Testbed] = orm.relationship(
-      "Testbed", foreign_keys=[Testbed.optset_id])
+      Testbed, primaryjoin=id == orm.foreign(Testbed.optset_id))
   opt: "TestbedOpt" = orm.relationship("TestbedOpt")
 
   # Constraints.

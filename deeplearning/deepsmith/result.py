@@ -5,9 +5,9 @@ import hashlib
 import datetime
 import pathlib
 import sqlalchemy as sql
-import sqlalchemy.dialects.mysql
 import typing
 from sqlalchemy import orm
+from sqlalchemy.dialects import mysql
 
 import deeplearning.deepsmith.profiling_event
 import deeplearning.deepsmith.testbed
@@ -18,7 +18,7 @@ from deeplearning.deepsmith.proto import pbutil
 
 # The index types for tables defined in this file.
 _ResultId = sql.Integer
-_ResultOutputSetId = sqlalchemy.dialects.mysql.BINARY(16)  # MD5 checksum.
+_ResultOutputSetId = sql.Binary(16).with_variant(mysql.BINARY(16), 'mysql')
 _ResultOutputId = sql.Integer
 _ResultOutputNameId = db.StringTable.id_t
 _ResultOutputValueId = sql.Integer
@@ -39,9 +39,7 @@ class Result(db.Table):
       deeplearning.deepsmith.testbed.Testbed.id_t,
       sql.ForeignKey("testbeds.id"), nullable=False)
   returncode: int = sql.Column(sql.SmallInteger, nullable=False)
-  outputset_id: bytes = sql.Column(
-      _ResultOutputSetId, sql.ForeignKey("result_outputsets.id"),
-      nullable=False)
+  outputset_id: bytes = sql.Column(_ResultOutputSetId, nullable=False)
 
   # Relationships.
   testcase: deeplearning.deepsmith.testcase.Testcase = orm.relationship(
@@ -181,14 +179,13 @@ class ResultOutputSet(db.Table):
   id_t = _ResultOutputSetId
 
   # Columns.
-  id: bytes = sql.Column(
-      id_t, sql.ForeignKey("results.outputset_id"), nullable=False)
+  id: bytes = sql.Column(id_t, nullable=False)
   output_id: int = sql.Column(
       _ResultOutputId, sql.ForeignKey("result_outputs.id"), nullable=False)
 
   # Relationships.
   results: typing.List[Result] = orm.relationship(
-      "Result", foreign_keys=[Result.outputset_id])
+      Result, primaryjoin=id == orm.foreign(Result.outputset_id))
   output: "ResultOutput" = orm.relationship("ResultOutput")
 
   # Constraints.
@@ -255,15 +252,16 @@ class ResultOutputValue(db.Table):
   date_added: datetime.datetime = sql.Column(
       sql.DateTime, nullable=False, default=db.now)
   original_md5: bytes = sql.Column(
-      sqlalchemy.dialects.mysql.BINARY(16), nullable=False, index=True,
-      unique=True)
+      sql.Binary(16).with_variant(mysql.BINARY(16), 'mysql'), nullable=False,
+      index=True, unique=True)
   original_linecount = sql.Column(sql.Integer, nullable=False)
   original_charcount = sql.Column(sql.Integer, nullable=False)
   truncated_value: str = sql.Column(
-      sql.UnicodeText(length=max_len), nullable=False)
+      sql.UnicodeText().with_variant(sql.UnicodeText(max_len), 'mysql'),
+      nullable=False)
   truncated: bool = sql.Column(sql.Boolean, nullable=False)
   truncated_md5: bytes = sql.Column(
-      sqlalchemy.dialects.mysql.BINARY(16), nullable=False)
+      sql.Binary(16).with_variant(mysql.BINARY(16), 'mysql'), nullable=False)
   truncated_linecount = sql.Column(sql.Integer, nullable=False)
   truncated_charcount = sql.Column(sql.Integer, nullable=False)
 

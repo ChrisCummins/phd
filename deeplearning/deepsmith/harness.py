@@ -3,16 +3,16 @@ import hashlib
 
 import datetime
 import sqlalchemy as sql
-import sqlalchemy.dialects.mysql
 import typing
 from sqlalchemy import orm
+from sqlalchemy.dialects import mysql
 
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import deepsmith_pb2
 
 # The index types for tables defined in this file.
 _HarnessId = sql.Integer
-_HarnessOptSetId = sqlalchemy.dialects.mysql.BINARY(16)  # MD5 checksum.
+_HarnessOptSetId = sql.Binary(16).with_variant(mysql.BINARY(16), 'mysql')
 _HarnessOptId = sql.Integer
 _HarnessOptNameId = db.StringTable.id_t
 _HarnessOptValueId = db.StringTable.id_t
@@ -27,8 +27,7 @@ class Harness(db.Table):
   date_added: datetime.datetime = sql.Column(sql.DateTime, nullable=False,
                                              default=db.now)
   name: str = sql.Column(sql.String(1024), nullable=False)
-  optset_id: bytes = sql.Column(
-      _HarnessOptSetId, sql.ForeignKey("harness_optsets.id"), nullable=False)
+  optset_id: bytes = sql.Column(_HarnessOptSetId, nullable=False)
 
   # Relationships:
   testcases: typing.List["Testcase"] = orm.relationship(
@@ -113,14 +112,13 @@ class HarnessOptSet(db.Table):
   id_t = _HarnessOptSetId
 
   # Columns.
-  id: bytes = sql.Column(
-      id_t, sql.ForeignKey("harnesses.optset_id"), nullable=False)
+  id: bytes = sql.Column(id_t, nullable=False)
   opt_id: int = sql.Column(
       _HarnessOptId, sql.ForeignKey("harness_opts.id"), nullable=False)
 
   # Relationships.
   harnesses: typing.List[Harness] = orm.relationship(
-      "Harness", foreign_keys=[Harness.optset_id])
+      Harness, primaryjoin=id == orm.foreign(Harness.optset_id))
   opt: "HarnessOpt" = orm.relationship("HarnessOpt")
 
   # Constraints.
