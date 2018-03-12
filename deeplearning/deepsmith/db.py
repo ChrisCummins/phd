@@ -3,14 +3,14 @@ Database backend.
 """
 import datetime
 import pathlib
-import typing
-
 import sqlalchemy as sql
+import typing
 from absl import flags
 from absl import logging
 from sqlalchemy.ext.declarative import declarative_base
 
 from deeplearning.deepsmith.proto import datastore_pb2
+from deeplearning.deepsmith.proto import pbutil
 
 FLAGS = flags.FLAGS
 
@@ -21,9 +21,6 @@ session_t = sql.orm.session.Session
 
 # The database query type.
 query_t = sql.orm.query.Query
-
-# A type alias for annotating methods which take or return protocol buffers.
-ProtocolBuffer = typing.Any
 
 # The SQLAlchemy base table.
 Base = declarative_base()
@@ -60,7 +57,7 @@ class Table(Base):
   id_t = None
 
   @classmethod
-  def GetOrAdd(cls, session: session_t, proto: ProtocolBuffer) -> 'Table':
+  def GetOrAdd(cls, session: session_t, proto: pbutil.ProtocolBuffer) -> 'Table':
     """Instantiate an object from a protocol buffer message.
 
     This is the preferred method for creating database-backed instances.
@@ -80,7 +77,7 @@ class Table(Base):
     """
     raise NotImplementedError(type(cls).__name__ + ".GetOrAdd() not implemented")
 
-  def ToProto(self) -> ProtocolBuffer:
+  def ToProto(self) -> pbutil.ProtocolBuffer:
     """Create protocol buffer representation.
 
     Returns:
@@ -88,7 +85,7 @@ class Table(Base):
     """
     raise NotImplementedError(type(self).__name__ + ".ToProto() not implemented")
 
-  def SetProto(self, proto: ProtocolBuffer) -> ProtocolBuffer:
+  def SetProto(self, proto: pbutil.ProtocolBuffer) -> pbutil.ProtocolBuffer:
     """Set a protocol buffer representation.
 
     Args:
@@ -100,7 +97,7 @@ class Table(Base):
     raise NotImplementedError(type(self).__name__ + ".SetProto() not implemented")
 
   @classmethod
-  def ProtoFromFile(cls, path: pathlib.Path) -> ProtocolBuffer:
+  def ProtoFromFile(cls, path: pathlib.Path) -> pbutil.ProtocolBuffer:
     """Instantiate a protocol buffer representation from file.
 
     Args:
@@ -212,17 +209,34 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
   Raises:
       ValueError: If DB_ENGINE config value is invalid.
   """
+
+  def _RaiseIfNotset(proto, field):
+    if not proto.HasField(field):
+      raise ValueError(f'datastore field {field} not set')
+    elif not getattr(proto, field):
+      raise ValueError(f'datastore field {field} not set')
+
   if config.HasField('sqlite'):
+    _RaiseIfNotset(config.sqlite, 'url')
     url, public_url = config.sqlite.url, config.sqlite.url
   elif config.HasField('mysql'):
-    username, password = config.mysql.username, config.mysql.password
-    hostname = config.mysql.password
-    port = config.mysql.password
+    _RaiseIfNotset(config.mysql, 'username')
+    _RaiseIfNotset(config.mysql, 'hostname')
+    _RaiseIfNotset(config.mysql, 'port')
+    _RaiseIfNotset(config.mysql, 'database')
+
+    url_base = (f'mysql://{config.mysql.username}:{config.mysql.password}@' +
+                f'{config.mysql.hostname}:{config.mysql.port}')
+
+    if config.mysql.create_database_if_not_exist:
+      engine = sql.create_engine(url_base)
+      engine.execute(f"CREATE DATABASE IF NOT EXISTS {config.mysql.database}")
 
     # Use UTF-8 encoding (default is latin-1) when connecting to MySQL.
     # See: https://stackoverflow.com/a/16404147/1318051
-    public_url = f'mysql://{username}@{hostname}:{port}/{name}?charset=utf8'
-    url = f'mysql+mysqldb://{username}:{password}@{hostname}:{port}/{name}?charset=utf8'
+    public_url = (f'mysql://{config.mysql.username}@{config.mysql.hostname}:' +
+                  f'{config.mysql.port}/{config.mysql.database}?charset=utf8')
+    url = f'{url_base}/{config.mysql.database}?charset=utf8'
   else:
     raise ValueError(f'unsupported database engine {engine}')
 

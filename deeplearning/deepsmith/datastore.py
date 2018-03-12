@@ -3,8 +3,8 @@ The datastore acts as the bridge between the RPC frontend and the db backend.
 """
 import contextlib
 import pathlib
-
 from absl import flags
+from absl import logging
 from sqlalchemy import orm
 
 import deeplearning.deepsmith.client
@@ -18,6 +18,7 @@ import deeplearning.deepsmith.toolchain
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import datastore_pb2
 from deeplearning.deepsmith.proto import deepsmith_pb2
+from deeplearning.deepsmith.proto import pbutil
 
 FLAGS = flags.FLAGS
 
@@ -49,10 +50,29 @@ class DataStore(object):
     Returns:
       A DataStore instance.
     """
-    config = datastore_pb2.DataStore()
-    with open(path, 'rb') as f:
-      config.ParseFromString(f)
+    config = pbutil.FromFile(path, datastore_pb2.DataStore())
     return DataStore(config)
+
+  @classmethod
+  def FromFlags(cls, raise_exception: bool = False) -> 'DataStore':
+    """Instantiate a DataStore from command line flags.
+
+    Args:
+      raise_exception: If True, an exception will be raised on error. If False,
+        the application will terminate.
+
+    Returns:
+      A DataStore instance.
+    """
+    if not FLAGS.datastore and raise_exception:
+      raise EnvironmentError('Flag --datastore not set')
+    elif not FLAGS.datastore:
+      logging.fatal('Flag --datastore not set')
+
+    path = pathlib.Path(FLAGS.datastore)
+    ds = DataStore.FromFile(path)
+    logging.info('Read datastore proto %s', FLAGS.datastore)
+    return ds
 
   @contextlib.contextmanager
   def Session(self, commit: bool = False) -> db.session_t:
