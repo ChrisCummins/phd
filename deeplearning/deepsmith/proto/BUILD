@@ -15,8 +15,8 @@ py_proto_library(
 
 py_proto_library(
     name = "test_protos",
-    protos = ["test_protos.proto"],
     testonly = 1,
+    protos = ["test_protos.proto"],
 )
 
 py_library(
@@ -28,5 +28,5 @@ py_library(
 py_test(
     name = "pbutil_test",
     srcs = ["pbutil_test.py"],
-    deps = [":test_protos"]
+    deps = [":test_protos"],
 )

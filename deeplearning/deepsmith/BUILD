@@ -37,6 +37,7 @@ py_library(
         ":toolchain",
         "//deeplearning/deepsmith/proto:datastore",
         "//deeplearning/deepsmith/proto:deepsmith",
+        "//deeplearning/deepsmith/proto:pbutil",
     ],
 )
 
@@ -46,6 +47,7 @@ py_library(
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     deps = [
         "//deeplearning/deepsmith/proto:datastore",
+        "//deeplearning/deepsmith/proto:pbutil",
     ],
 )
 
@@ -130,6 +132,7 @@ py_library(
         ":testbed",
         ":testcase",
         "//deeplearning/deepsmith/proto:deepsmith",
+        "//deeplearning/deepsmith/proto:pbutil",
     ],
 )
 
@@ -184,6 +187,7 @@ py_library(
         ":profiling_event",
         ":toolchain",
         "//deeplearning/deepsmith/proto:deepsmith",
+        "//deeplearning/deepsmith/proto:pbutil",
     ],
 )
 
