@@ -39,6 +39,21 @@ class DataStore(object):
     db.Table.metadata.bind = self._engine
     self._make_session = orm.sessionmaker(bind=self._engine)
 
+  @classmethod
+  def FromFile(cls, path: pathlib.Path) -> 'DataStore':
+    """Instantiate a DataStore from a config file.
+
+    Args:
+      path: Path to the datastore config proto file.
+
+    Returns:
+      A DataStore instance.
+    """
+    config = datastore_pb2.DataStore()
+    with open(path, 'rb') as f:
+      config.ParseFromString(f)
+    return DataStore(config)
+
   @contextlib.contextmanager
   def Session(self, commit: bool = False) -> db.session_t:
     """Provide a transactional scope around a session.

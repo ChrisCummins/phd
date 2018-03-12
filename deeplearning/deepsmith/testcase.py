@@ -194,6 +194,34 @@ class Testcase(db.Table):
 
     return testcase
 
+  @classmethod
+  def ProtoFromFile(cls, path: pathlib.Path) -> deepsmith_pb2.Testcase:
+    """Instantiate a protocol buffer testcase from file.
+
+    Args:
+      path: Path to the testcase proto file.
+
+    Returns:
+      Testcase message instance.
+    """
+    proto = deepsmith_pb2.Testcase()
+    with open(path, 'rb') as f:
+      proto.ParseFromString(f)
+    return proto
+
+  @classmethod
+  def FromFile(cls, session: db.session_t, path: pathlib.Path) -> 'Testcase':
+    """Instantiate a Result from a serialized protocol buffer on file.
+
+    Args:
+      session: A database session.
+      path: Path to the testcase proto file.
+
+    Returns:
+      A Testcase instance.
+    """
+    return cls.GetOrAdd(session, cls.ProtoFromFile(path))
+
 
 class TestcaseInputSet(db.Table):
   """A set of testcase inputs.

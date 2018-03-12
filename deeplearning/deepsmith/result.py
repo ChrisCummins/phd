@@ -144,6 +144,34 @@ class Result(db.Table):
 
     return result
 
+  @classmethod
+  def ProtoFromFile(cls, path: pathlib.Path) -> deepsmith_pb2.Result:
+    """Instantiate a protocol buffer result from file.
+
+    Args:
+      path: Path to the result proto file.
+
+    Returns:
+      Result message instance.
+    """
+    proto = deepsmith_pb2.Result()
+    with open(path, 'rb') as f:
+      proto.ParseFromString(f)
+    return proto
+
+  @classmethod
+  def FromFile(cls, session: db.session_t, path: pathlib.Path) -> 'Result':
+    """Instantiate a Result from a serialized protocol buffer on file.
+
+    Args:
+      session: A database session.
+      path: Path to the result proto file.
+
+    Returns:
+      A Result instance.
+    """
+    return cls.GetOrAdd(session, cls.ProtoFromFile(path))
+
 
 class ResultOutputSet(db.Table):
   """A set of result outputs.

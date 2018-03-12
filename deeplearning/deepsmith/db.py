@@ -99,6 +99,33 @@ class Table(Base):
     """
     raise NotImplementedError(type(self).__name__ + ".SetProto() not implemented")
 
+  @classmethod
+  def ProtoFromFile(cls, path: pathlib.Path) -> ProtocolBuffer:
+    """Instantiate a protocol buffer representation from file.
+
+    Args:
+      path: Path to the proto file.
+
+    Returns:
+      Protocol buffer message instance.
+    """
+    raise NotImplementedError(type(cls).__name__ +
+                              ".ProtoFromFile() not implemented")
+
+  @classmethod
+  def FromFile(cls, session: session_t, path: pathlib.Path) -> 'Table':
+    """Instantiate an object from a serialized protocol buffer on file.
+
+    Args:
+      session: A database session.
+      path: Path to the proto file.
+
+    Returns:
+      An instance.
+    """
+    raise NotImplementedError(type(cls).__name__ +
+                              ".FromFile() not implemented")
+
   def __repr__(self):
     try:
       return str(self.ToProto())
