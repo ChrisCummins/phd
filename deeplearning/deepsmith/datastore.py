@@ -2,6 +2,7 @@
 The datastore acts as the bridge between the RPC frontend and the db backend.
 """
 import contextlib
+import pathlib
 
 from absl import flags
 from sqlalchemy import orm

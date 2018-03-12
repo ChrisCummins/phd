@@ -2,6 +2,7 @@
 Database backend.
 """
 import datetime
+import pathlib
 import typing
 
 import sqlalchemy as sql
@@ -106,22 +107,39 @@ class Table(Base):
       return f"TODO: Define {typename}.ToProto() method"
 
 
-class ListOfNames(Table):
-  """A list of names table.
+class StringTable(Table):
+  """A table of unique strings.
+
+  A string table maps a unique string to a unique integer. In most cases, it is
+  better to use a string table than to store strings directly in columns. The
+  advantage of a string table is that it saves space for duplicate strings, and
+  reduces table sizes by having tables contain only integer indexes. This makes
+  grouping rows by string values faster, as well as reducing the cost of
+  modifying a string.
+
+  The downside of a string table is that it requires one extra table lookup to
+  resolve the string itself.
+
+  Note that the maximum length of strings is hardcoded to 4k. You should only
+  use the StringTable.GetOrAdd() method to insert new strings, as this method
+  performs the bounds checking and will raise a StringTooLongError if required.
+  Instantiating a StringTable directly with a string which is too long will
+  cause some SQL-based error which is harder to catch and potentially
+  backend-specific.
   """
   __abstract__ = True
   id_t = sql.Integer
-  name_len = 4096
+  maxlen = 4096
 
   # Columns:
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
       sql.DateTime, nullable=False, default=now)
-  name: str = sql.Column(sql.String(name_len), nullable=False, unique=True)
+  string: str = sql.Column(sql.String(maxlen), nullable=False, unique=True)
 
   @classmethod
-  def GetOrAdd(cls, session: session_t, name: str) -> 'ListOfNames':
-    """Instantiate a ListOfNames entry from a name.
+  def GetOrAdd(cls, session: session_t, string: str) -> 'StringTable':
+    """Instantiate a StringTable entry from a string.
 
     This is the preferred method for creating database-backed instances.
     If the created instance does not already exist in the database, it is
@@ -129,18 +147,37 @@ class ListOfNames(Table):
 
     Args:
       session: A database session.
-      name: The name.
+      string: The string.
 
     Returns:
-      A ListOfNames instance.
-    """
-    if len(name) > cls.name_len:
-      raise StringTooLongError(cls, name, cls.name_len)
+      A StringTable instance.
 
-    return GetOrAdd(session, cls, name=name)
+    Raises:
+      StringTooLongError: If the string is too long.
+    """
+    if len(string) > cls.maxlen:
+      raise StringTooLongError(cls, string, cls.maxlen)
+
+    return GetOrAdd(session, cls, string=string)
+
+  def TruncatedString(self, n=80):
+    """Return the truncated first 'n' characters of the string.
+
+    Args:
+      n: The maximum length of the string to return.
+
+    Returns:
+      A truncated string.
+    """
+    if self.string and len(self.string) > n:
+      return self.string[:n - 3] + '...'
+    elif self.string:
+      return self.string
+    else:
+      return ''
 
   def __repr__(self):
-    return self.name[:50] or ""
+    return self.TruncatedString(n=52)
 
 
 def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:

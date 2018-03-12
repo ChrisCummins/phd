@@ -15,12 +15,12 @@ def test_Harness_ToProto():
       name="name",
       optset=[
         deeplearning.deepsmith.harness.HarnessOpt(
-            name=deeplearning.deepsmith.harness.HarnessOptName(name="version"),
-            value=deeplearning.deepsmith.harness.HarnessOptValue(name="1.0.0"),
+            name=deeplearning.deepsmith.harness.HarnessOptName(string="version"),
+            value=deeplearning.deepsmith.harness.HarnessOptValue(string="1.0.0"),
         ),
         deeplearning.deepsmith.harness.HarnessOpt(
-            name=deeplearning.deepsmith.harness.HarnessOptName(name="build"),
-            value=deeplearning.deepsmith.harness.HarnessOptValue(name="debug+assert"),
+            name=deeplearning.deepsmith.harness.HarnessOptName(string="build"),
+            value=deeplearning.deepsmith.harness.HarnessOptValue(string="debug+assert"),
         ),
       ],
   )

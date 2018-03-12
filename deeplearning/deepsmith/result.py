@@ -2,6 +2,7 @@
 import binascii
 import datetime
 import hashlib
+import pathlib
 import typing
 
 import sqlalchemy as sql
@@ -17,7 +18,7 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 _ResultId = sql.Integer
 _ResultOutputSetId = sql.Binary(16)  # MD5 checksum.
 _ResultOutputId = sql.Integer
-_ResultOutputNameId = db.ListOfNames.id_t
+_ResultOutputNameId = db.StringTable.id_t
 _ResultOutputValueId = sql.Integer
 
 
@@ -64,7 +65,7 @@ class Result(db.Table):
     Returns:
       A map of result outputs.
     """
-    return {output.name.name: output.value.truncated_value
+    return {output.name.string: output.value.truncated_value
             for output in self.outputset}
 
   def SetProto(self, proto: deepsmith_pb2.Result) -> deepsmith_pb2.Result:
@@ -80,7 +81,7 @@ class Result(db.Table):
     self.testbed.SetProto(proto.testbed)
     proto.returncode = self.returncode
     for output in self.outputset:
-      proto.outputs[output.name.name] = output.value.truncated_value
+      proto.outputs[output.name.string] = output.value.truncated_value
     for profiling_event in self.profiling_events:
       event = proto.profiling_events.add()
       profiling_event.SetProto(event)
@@ -114,7 +115,7 @@ class Result(db.Table):
       output = db.GetOrAdd(
           session, ResultOutput,
           name=ResultOutputName.GetOrAdd(
-              session, name=proto_output_name,
+              session, string=proto_output_name,
           ),
           value=ResultOutputValue.GetOrAdd(
               session, string=proto_output_value
@@ -205,7 +206,7 @@ class ResultOutput(db.Table):
     return f"{self.name}: {self.value}"
 
 
-class ResultOutputName(db.ListOfNames):
+class ResultOutputName(db.StringTable):
   """The name of a result output."""
   id_t = _ResultOutputNameId
   __tablename__ = "result_output_names"

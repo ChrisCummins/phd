@@ -9,8 +9,8 @@ from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import deepsmith_pb2
 
 
-class ProfilingEventType(db.ListOfNames):
-  id_t = db.ListOfNames.id_t
+class ProfilingEventType(db.StringTable):
+  id_t = db.StringTable.id_t
   __tablename__ = "proviling_event_types"
 
 
@@ -53,8 +53,8 @@ class TestcaseProfilingEvent(db.Table):
     Returns:
       A ProfilingEvent message.
     """
-    proto.client = self.client.name
-    proto.type = self.type.name
+    proto.client = self.client.string
+    proto.type = self.type.string
     proto.duration_seconds = self.duration_seconds
     proto.date_epoch_seconds = int(self.date.strftime("%s"))
     return proto
@@ -123,8 +123,8 @@ class ResultProfilingEvent(db.Table):
     Returns:
       A ProfilingEvent message.
     """
-    proto.client = self.client.name
-    proto.type = self.type.name
+    proto.client = self.client.string
+    proto.type = self.type.string
     proto.duration_seconds = self.duration_seconds
     proto.date_epoch_seconds = int(self.date.strftime("%s"))
     return proto

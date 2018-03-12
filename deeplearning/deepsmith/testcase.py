@@ -2,6 +2,7 @@
 import binascii
 import datetime
 import hashlib
+import pathlib
 import typing
 
 import sqlalchemy as sql
@@ -18,12 +19,12 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 _TestcaseId = sql.Integer
 _TestcaseInputSetId = sql.Binary(16)  # MD5 checksum.
 _TestcaseInputId = sql.Integer
-_TestcaseInputNameId = db.ListOfNames.id_t
+_TestcaseInputNameId = db.StringTable.id_t
 _TestcaseInputValueId = sql.Integer
 _TestcaseInvariantOptSetId = sql.Binary(16)  # MD5 checksum.
 _TestcaseInvariantOptId = sql.Integer
-_TestcaseInvariantOptNameId = sql.Integer
-_TestcaseInvariantOptValueId = sql.Integer
+_TestcaseInvariantOptNameId = db.StringTable.id_t
+_TestcaseInvariantOptValueId = db.StringTable.id_t
 
 
 class Testcase(db.Table):
@@ -82,7 +83,7 @@ class Testcase(db.Table):
     Returns:
       A map of generator inputs.
     """
-    return {input.name.name: input.value.string for input in self.inputset}
+    return {input.name.string: input.value.string for input in self.inputset}
 
   @property
   def invariant_opts(self) -> typing.Dict[str, str]:
@@ -91,7 +92,7 @@ class Testcase(db.Table):
     Returns:
       A map of generator options.
     """
-    return {opt.name.name: opt.value.name for opt in self.invariant_optset}
+    return {opt.name.string: opt.value.string for opt in self.invariant_optset}
 
   def SetProto(self, proto: deepsmith_pb2.Testcase) -> deepsmith_pb2.Testcase:
     """Set a protocol buffer representation.
@@ -102,13 +103,13 @@ class Testcase(db.Table):
     Returns:
       A Testcase message.
     """
-    proto.toolchain = self.toolchain.name
+    proto.toolchain = self.toolchain.string
     self.generator.SetProto(proto.generator)
     self.harness.SetProto(proto.harness)
     for input_ in self.inputset:
-      proto.inputs[input_.name.name] = input_.value.string
+      proto.inputs[input_.name.string] = input_.value.string
     for opt in self.invariant_optset:
-      proto.invariant_opts[opt.name.name] = opt.value.name
+      proto.invariant_opts[opt.name.string] = opt.value.string
     for profiling_event in self.profiling_events:
       event = proto.profiling_events.add()
       profiling_event.SetProto(event)
@@ -269,7 +270,7 @@ class TestcaseInput(db.Table):
     return db.GetOrAdd(
         session, TestcaseInput,
         name=TestcaseInputName.GetOrAdd(
-            session, name=name,
+            session, string=name,
         ),
         value=TestcaseInputValue.GetOrAdd(
             session, string=value,
@@ -277,7 +278,7 @@ class TestcaseInput(db.Table):
     )
 
 
-class TestcaseInputName(db.ListOfNames):
+class TestcaseInputName(db.StringTable):
   """The name of a testcase input."""
   id_t = _TestcaseInputNameId
   __tablename__ = 'testcase_input_names'
@@ -404,15 +405,15 @@ class TestcaseInvariantOpt(db.Table):
     return db.GetOrAdd(
         session, cls,
         name=TestcaseInvariantOptName.GetOrAdd(
-            session, name=name,
+            session, string=name,
         ),
         value=TestcaseInvariantOptValue.GetOrAdd(
-            session, name=value,
+            session, string=value,
         ),
     )
 
 
-class TestcaseInvariantOptName(db.ListOfNames):
+class TestcaseInvariantOptName(db.StringTable):
   """The name of a testcase invariant_opt."""
   id_t = _TestcaseInvariantOptNameId
   __tablename__ = 'testcase_invariant_opt_names'
@@ -422,7 +423,7 @@ class TestcaseInvariantOptName(db.ListOfNames):
       TestcaseInvariantOpt, back_populates='name')
 
 
-class TestcaseInvariantOptValue(db.ListOfNames):
+class TestcaseInvariantOptValue(db.StringTable):
   """The value of a testcase invariant_opt."""
   id_t = _TestcaseInvariantOptValueId
   __tablename__ = 'testcase_invariant_opt_values'

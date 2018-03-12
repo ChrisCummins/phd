@@ -15,12 +15,12 @@ def test_Generator_ToProto():
       name="name",
       optset=[
         deeplearning.deepsmith.generator.GeneratorOpt(
-            name=deeplearning.deepsmith.generator.GeneratorOptName(name="version"),
-            value=deeplearning.deepsmith.generator.GeneratorOptValue(name="1.0.0"),
+            name=deeplearning.deepsmith.generator.GeneratorOptName(string="version"),
+            value=deeplearning.deepsmith.generator.GeneratorOptValue(string="1.0.0"),
         ),
         deeplearning.deepsmith.generator.GeneratorOpt(
-            name=deeplearning.deepsmith.generator.GeneratorOptName(name="build"),
-            value=deeplearning.deepsmith.generator.GeneratorOptValue(name="debug+assert"),
+            name=deeplearning.deepsmith.generator.GeneratorOptName(string="build"),
+            value=deeplearning.deepsmith.generator.GeneratorOptValue(string="debug+assert"),
         ),
       ],
   )

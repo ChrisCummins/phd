@@ -2,6 +2,6 @@
 from deeplearning.deepsmith import db
 
 
-class Client(db.ListOfNames):
-  id_t = db.ListOfNames.id_t
+class Client(db.StringTable):
+  id_t = db.StringTable.id_t
   __tablename__ = "clients"

@@ -13,8 +13,8 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 _GeneratorId = sql.Integer
 _GeneratorOptSetId = sql.Binary(16)  # MD5 checksum.
 _GeneratorOptId = sql.Integer
-_GeneratorOptNameId = db.ListOfNames.id_t
-_GeneratorOptValueId = db.ListOfNames.id_t
+_GeneratorOptNameId = db.StringTable.id_t
+_GeneratorOptValueId = db.StringTable.id_t
 
 
 class Generator(db.Table):
@@ -49,7 +49,7 @@ class Generator(db.Table):
     Returns:
       A map of generator options.
     """
-    return {opt.name.name: opt.value.name for opt in self.optset}
+    return {opt.name.string: opt.value.string for opt in self.optset}
 
   def SetProto(self, proto: deepsmith_pb2.Generator) -> deepsmith_pb2.Generator:
     """Set a protocol buffer representation.
@@ -62,12 +62,12 @@ class Generator(db.Table):
     """
     proto.name = self.name
     for opt in self.optset:
-      proto.opts[opt.name.name] = opt.value.name
+      proto.opts[opt.name.string] = opt.value.string
     return proto
 
   def ToProto(self) -> deepsmith_pb2.Generator:
     """Create protocol buffer representation.
-    
+
     Returns:
       A Generator message.
     """
@@ -86,14 +86,8 @@ class Generator(db.Table):
       md5.update((proto_opt_name + proto_opt_value).encode("utf-8"))
       opt = db.GetOrAdd(
           session, GeneratorOpt,
-          name=db.GetOrAdd(
-              session, GeneratorOptName,
-              name=proto_opt_name,
-          ),
-          value=db.GetOrAdd(
-              session, GeneratorOptValue,
-              name=proto_opt_value
-          ),
+          name=GeneratorOptName.GetOrAdd(session, proto_opt_name),
+          value=GeneratorOptValue.GetOrAdd(session, proto_opt_value),
       )
       opts.append(opt)
 
@@ -169,7 +163,7 @@ class GeneratorOpt(db.Table):
     return f"{self.name}: {self.value}"
 
 
-class GeneratorOptName(db.ListOfNames):
+class GeneratorOptName(db.StringTable):
   """The name of a generator option."""
   id_t = _GeneratorOptNameId
   __tablename__ = "generator_opt_names"
@@ -179,7 +173,7 @@ class GeneratorOptName(db.ListOfNames):
       GeneratorOpt, back_populates="name")
 
 
-class GeneratorOptValue(db.ListOfNames):
+class GeneratorOptValue(db.StringTable):
   """The value of a generator option."""
   id_t = _GeneratorOptValueId
   __tablename__ = "generator_opt_values"

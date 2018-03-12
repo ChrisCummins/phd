@@ -18,38 +18,38 @@ def test_Testcase_ToProto():
   now = datetime.datetime.now()
 
   testcase = deeplearning.deepsmith.testcase.Testcase(
-      toolchain=deeplearning.deepsmith.toolchain.Toolchain(name="cpp"),
+      toolchain=deeplearning.deepsmith.toolchain.Toolchain(string="cpp"),
       generator=deeplearning.deepsmith.generator.Generator(name="generator"),
       harness=deeplearning.deepsmith.harness.Harness(name="harness"),
       inputset=[
         deeplearning.deepsmith.testcase.TestcaseInput(
-            name=deeplearning.deepsmith.testcase.TestcaseInputName(name="src"),
+            name=deeplearning.deepsmith.testcase.TestcaseInputName(string="src"),
             value=deeplearning.deepsmith.testcase.TestcaseInputValue(string="void main() {}"),
         ),
         deeplearning.deepsmith.testcase.TestcaseInput(
-            name=deeplearning.deepsmith.testcase.TestcaseInputName(name="data"),
+            name=deeplearning.deepsmith.testcase.TestcaseInputName(string="data"),
             value=deeplearning.deepsmith.testcase.TestcaseInputValue(string="[1,2]"),
         ),
       ],
       invariant_optset=[
         deeplearning.deepsmith.testcase.TestcaseInvariantOpt(
-            name=deeplearning.deepsmith.testcase.TestcaseInvariantOptName(name="config"),
-            value=deeplearning.deepsmith.testcase.TestcaseInvariantOptValue(name="opt"),
+            name=deeplearning.deepsmith.testcase.TestcaseInvariantOptName(string="config"),
+            value=deeplearning.deepsmith.testcase.TestcaseInvariantOptValue(string="opt"),
         ),
       ],
       profiling_events=[
         deeplearning.deepsmith.profiling_event.TestcaseProfilingEvent(
-            client=deeplearning.deepsmith.client.Client(name="localhost"),
+            client=deeplearning.deepsmith.client.Client(string="localhost"),
             type=deeplearning.deepsmith.profiling_event.ProfilingEventType(
-                name="generate",
+                string="generate",
             ),
             duration_seconds=1.0,
             date=now,
         ),
         deeplearning.deepsmith.profiling_event.TestcaseProfilingEvent(
-            client=deeplearning.deepsmith.client.Client(name="localhost"),
+            client=deeplearning.deepsmith.client.Client(string="localhost"),
             type=deeplearning.deepsmith.profiling_event.ProfilingEventType(
-                name="foo",
+                string="foo",
             ),
             duration_seconds=1.0,
             date=now,
@@ -108,7 +108,7 @@ def test_Testcase_GetOrAdd(session):
 
   # NOTE: We have to flush so that SQLAlchemy resolves all of the object IDs.
   session.flush()
-  assert testcase.toolchain.name == "cpp"
+  assert testcase.toolchain.string == "cpp"
   assert testcase.generator.name == "generator"
   assert testcase.harness.name == "harness"
   assert len(testcase.inputset) == 2

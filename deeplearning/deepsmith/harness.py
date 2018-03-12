@@ -13,8 +13,8 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 _HarnessId = sql.Integer
 _HarnessOptSetId = sql.Binary(16)  # MD5 checksum.
 _HarnessOptId = sql.Integer
-_HarnessOptNameId = db.ListOfNames.id_t
-_HarnessOptValueId = db.ListOfNames.id_t
+_HarnessOptNameId = db.StringTable.id_t
+_HarnessOptValueId = db.StringTable.id_t
 
 
 class Harness(db.Table):
@@ -49,7 +49,7 @@ class Harness(db.Table):
     Returns:
       A map of harness options.
     """
-    return {opt.name.name: opt.value.name for opt in self.optset}
+    return {opt.name.string: opt.value.string for opt in self.optset}
 
   def SetProto(self, proto: deepsmith_pb2.Harness) -> deepsmith_pb2.Harness:
     """Set a protocol buffer representation.
@@ -62,7 +62,7 @@ class Harness(db.Table):
     """
     proto.name = self.name
     for opt in self.optset:
-      proto.opts[opt.name.name] = opt.value.name
+      proto.opts[opt.name.string] = opt.value.string
     return proto
 
   def ToProto(self) -> deepsmith_pb2.Harness:
@@ -86,14 +86,8 @@ class Harness(db.Table):
       md5.update((proto_opt_name + proto_opt_value).encode("utf-8"))
       opt = db.GetOrAdd(
           session, HarnessOpt,
-          name=db.GetOrAdd(
-              session, HarnessOptName,
-              name=proto_opt_name,
-          ),
-          value=db.GetOrAdd(
-              session, HarnessOptValue,
-              name=proto_opt_value
-          ),
+          name=HarnessOptName.GetOrAdd(session, proto_opt_name),
+          value=HarnessOptValue.GetOrAdd(session, proto_opt_value),
       )
       opts.append(opt)
 
@@ -169,7 +163,7 @@ class HarnessOpt(db.Table):
     return f"{self.name}: {self.value}"
 
 
-class HarnessOptName(db.ListOfNames):
+class HarnessOptName(db.StringTable):
   """The name of a harness option."""
   id_t = _HarnessOptNameId
   __tablename__ = "harness_opt_names"
@@ -179,7 +173,7 @@ class HarnessOptName(db.ListOfNames):
       HarnessOpt, back_populates="name")
 
 
-class HarnessOptValue(db.ListOfNames):
+class HarnessOptValue(db.StringTable):
   """The value of a harness option."""
   id_t = _HarnessOptValueId
   __tablename__ = "harness_opt_values"

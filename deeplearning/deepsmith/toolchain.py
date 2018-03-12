@@ -2,6 +2,6 @@
 from deeplearning.deepsmith import db
 
 
-class Toolchain(db.ListOfNames):
-  id_t = db.ListOfNames.id_t
+class Toolchain(db.StringTable):
+  id_t = db.StringTable.id_t
   __tablename__ = "toolchains"

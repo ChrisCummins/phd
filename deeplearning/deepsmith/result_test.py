@@ -19,38 +19,52 @@ def test_Result_ToProto():
 
   result = deeplearning.deepsmith.result.Result(
       testcase=deeplearning.deepsmith.testcase.Testcase(
-          toolchain=deeplearning.deepsmith.toolchain.Toolchain(name="cpp"),
-          generator=deeplearning.deepsmith.generator.Generator(name="generator"),
+          toolchain=deeplearning.deepsmith.toolchain.Toolchain(string="cpp"),
+          generator=deeplearning.deepsmith.generator.Generator(
+              name="generator"
+          ),
           harness=deeplearning.deepsmith.harness.Harness(name="harness"),
           inputset=[
             deeplearning.deepsmith.testcase.TestcaseInput(
-                name=deeplearning.deepsmith.testcase.TestcaseInputName(name="src"),
-                value=deeplearning.deepsmith.testcase.TestcaseInputValue(string="void main() {}"),
+                name=deeplearning.deepsmith.testcase.TestcaseInputName(
+                    string="src"
+                ),
+                value=deeplearning.deepsmith.testcase.TestcaseInputValue(
+                    string="void main() {}"
+                ),
             ),
             deeplearning.deepsmith.testcase.TestcaseInput(
-                name=deeplearning.deepsmith.testcase.TestcaseInputName(name="data"),
-                value=deeplearning.deepsmith.testcase.TestcaseInputValue(string="[1,2]"),
+                name=deeplearning.deepsmith.testcase.TestcaseInputName(
+                    string="data"
+                ),
+                value=deeplearning.deepsmith.testcase.TestcaseInputValue(
+                    string="[1,2]"
+                ),
             ),
           ],
           invariant_optset=[
             deeplearning.deepsmith.testcase.TestcaseInvariantOpt(
-                name=deeplearning.deepsmith.testcase.TestcaseInvariantOptName(name="config"),
-                value=deeplearning.deepsmith.testcase.TestcaseInvariantOptValue(name="opt"),
+                name=deeplearning.deepsmith.testcase.TestcaseInvariantOptName(
+                    string="config"
+                ),
+                value=deeplearning.deepsmith.testcase.TestcaseInvariantOptValue(
+                    string="opt"
+                ),
             ),
           ],
           profiling_events=[
             deeplearning.deepsmith.profiling_event.TestcaseProfilingEvent(
-                client=deeplearning.deepsmith.client.Client(name="localhost"),
+                client=deeplearning.deepsmith.client.Client(string="localhost"),
                 type=deeplearning.deepsmith.profiling_event.ProfilingEventType(
-                    name="generate",
+                    string="generate",
                 ),
                 duration_seconds=1.0,
                 date=now,
             ),
             deeplearning.deepsmith.profiling_event.TestcaseProfilingEvent(
-                client=deeplearning.deepsmith.client.Client(name="localhost"),
+                client=deeplearning.deepsmith.client.Client(string="localhost"),
                 type=deeplearning.deepsmith.profiling_event.ProfilingEventType(
-                    name="foo",
+                    string="foo",
                 ),
                 duration_seconds=1.0,
                 date=now,
@@ -58,29 +72,37 @@ def test_Result_ToProto():
           ]
       ),
       testbed=deeplearning.deepsmith.testbed.Testbed(
-          toolchain=deeplearning.deepsmith.toolchain.Toolchain(name="cpp"),
+          toolchain=deeplearning.deepsmith.toolchain.Toolchain(string="cpp"),
           name="clang",
           optset=[
             deeplearning.deepsmith.testbed.TestbedOpt(
-                name=deeplearning.deepsmith.testbed.TestbedOptName(name="arch"),
-                value=deeplearning.deepsmith.testbed.TestbedOptValue(name="x86_64"),
+                name=deeplearning.deepsmith.testbed.TestbedOptName(
+                    string="arch"
+                ),
+                value=deeplearning.deepsmith.testbed.TestbedOptValue(
+                    string="x86_64"
+                ),
             ),
             deeplearning.deepsmith.testbed.TestbedOpt(
-                name=deeplearning.deepsmith.testbed.TestbedOptName(name="build"),
-                value=deeplearning.deepsmith.testbed.TestbedOptValue(name="debug+assert"),
+                name=deeplearning.deepsmith.testbed.TestbedOptName(
+                    string="build"
+                ),
+                value=deeplearning.deepsmith.testbed.TestbedOptValue(
+                    string="debug+assert"
+                ),
             ),
           ],
       ),
       returncode=0,
       outputset=[
         deeplearning.deepsmith.result.ResultOutput(
-            name=deeplearning.deepsmith.result.ResultOutputName(name="stdout"),
+            name=deeplearning.deepsmith.result.ResultOutputName(string="stdout"),
             value=deeplearning.deepsmith.result.ResultOutputValue(
                 truncated_value="Hello, world!"
             ),
         ),
         deeplearning.deepsmith.result.ResultOutput(
-            name=deeplearning.deepsmith.result.ResultOutputName(name="stderr"),
+            name=deeplearning.deepsmith.result.ResultOutputName(string="stderr"),
             value=deeplearning.deepsmith.result.ResultOutputValue(
                 truncated_value=""
             ),
@@ -88,17 +110,17 @@ def test_Result_ToProto():
       ],
       profiling_events=[
         deeplearning.deepsmith.profiling_event.ResultProfilingEvent(
-            client=deeplearning.deepsmith.client.Client(name="localhost"),
+            client=deeplearning.deepsmith.client.Client(string="localhost"),
             type=deeplearning.deepsmith.profiling_event.ProfilingEventType(
-                name="exec",
+                string="exec",
             ),
             duration_seconds=10.0,
             date=now,
         ),
         deeplearning.deepsmith.profiling_event.ResultProfilingEvent(
-            client=deeplearning.deepsmith.client.Client(name="localhost"),
+            client=deeplearning.deepsmith.client.Client(string="localhost"),
             type=deeplearning.deepsmith.profiling_event.ProfilingEventType(
-                name="overhead",
+                string="overhead",
             ),
             duration_seconds=1.0,
             date=now,

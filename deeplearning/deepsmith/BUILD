@@ -56,6 +56,7 @@ py_test(
     deps = [
         ":conftest",
         ":db",
+        ":toolchain",
     ],
 )
 

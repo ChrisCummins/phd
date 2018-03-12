@@ -13,16 +13,16 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 
 def test_Testbed_ToProto():
   testbed = deeplearning.deepsmith.testbed.Testbed(
-      toolchain=deeplearning.deepsmith.toolchain.Toolchain(name="cpp"),
+      toolchain=deeplearning.deepsmith.toolchain.Toolchain(string="cpp"),
       name="clang",
       optset=[
         deeplearning.deepsmith.testbed.TestbedOpt(
-            name=deeplearning.deepsmith.testbed.TestbedOptName(name="arch"),
-            value=deeplearning.deepsmith.testbed.TestbedOptValue(name="x86_64"),
+            name=deeplearning.deepsmith.testbed.TestbedOptName(string="arch"),
+            value=deeplearning.deepsmith.testbed.TestbedOptValue(string="x86_64"),
         ),
         deeplearning.deepsmith.testbed.TestbedOpt(
-            name=deeplearning.deepsmith.testbed.TestbedOptName(name="build"),
-            value=deeplearning.deepsmith.testbed.TestbedOptValue(name="debug+assert"),
+            name=deeplearning.deepsmith.testbed.TestbedOptName(string="build"),
+            value=deeplearning.deepsmith.testbed.TestbedOptValue(string="debug+assert"),
         ),
       ],
   )
@@ -51,7 +51,7 @@ def test_Testbed_GetOrAdd(session):
   assert session.query(deeplearning.deepsmith.testbed.TestbedOptName).count() == 2
   assert session.query(deeplearning.deepsmith.testbed.TestbedOptValue).count() == 2
 
-  assert testbed.toolchain.name == "cpp"
+  assert testbed.toolchain.string == "cpp"
   assert testbed.name == "clang"
   assert len(testbed.optset) == 2
   assert len(testbed.opts) == 2

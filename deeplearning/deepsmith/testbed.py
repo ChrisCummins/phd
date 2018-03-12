@@ -15,8 +15,8 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 _TestbedId = sql.Integer
 _TestbedOptSetId = sql.Binary(16)  # MD5 checksum.
 _TestbedOptId = sql.Integer
-_TestbedOptNameId = db.ListOfNames.id_t
-_TestbedOptValueId = db.ListOfNames.id_t
+_TestbedOptNameId = db.StringTable.id_t
+_TestbedOptValueId = db.StringTable.id_t
 
 
 class Testbed(db.Table):
@@ -63,7 +63,7 @@ class Testbed(db.Table):
     Returns:
       A map of testbed options.
     """
-    return {opt.name.name: opt.value.name for opt in self.optset}
+    return {opt.name.string: opt.value.string for opt in self.optset}
 
   def ToProto(self) -> deepsmith_pb2.Testbed:
     """Create protocol buffer representation.
@@ -83,10 +83,10 @@ class Testbed(db.Table):
     Returns:
       A Testbed message.
     """
-    proto.toolchain = self.toolchain.name
+    proto.toolchain = self.toolchain.string
     proto.name = self.name
     for opt in self.optset:
-      proto.opts[opt.name.name] = opt.value.name
+      proto.opts[opt.name.string] = opt.value.string
     return proto
 
   @classmethod
@@ -117,14 +117,8 @@ class Testbed(db.Table):
       md5.update((proto_opt_name + proto_opt_value).encode("utf-8"))
       opt = db.GetOrAdd(
           session, TestbedOpt,
-          name=db.GetOrAdd(
-              session, TestbedOptName,
-              name=proto_opt_name,
-          ),
-          value=db.GetOrAdd(
-              session, TestbedOptValue,
-              name=proto_opt_value
-          ),
+          name=TestbedOptName.GetOrAdd(session, proto_opt_name),
+          value=TestbedOptValue.GetOrAdd(session, proto_opt_value),
       )
       opts.append(opt)
 
@@ -201,7 +195,7 @@ class TestbedOpt(db.Table):
     return f"{self.name}: {self.value}"
 
 
-class TestbedOptName(db.ListOfNames):
+class TestbedOptName(db.StringTable):
   """The name of a testbed option."""
   id_t = _TestbedOptNameId
   __tablename__ = "testbed_opt_names"
@@ -211,7 +205,7 @@ class TestbedOptName(db.ListOfNames):
       TestbedOpt, back_populates="name")
 
 
-class TestbedOptValue(db.ListOfNames):
+class TestbedOptValue(db.StringTable):
   """The value of a testbed option."""
   id_t = _TestbedOptValueId
   __tablename__ = "testbed_opt_values"
