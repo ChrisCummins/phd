@@ -30,6 +30,8 @@ def FromFile(path: pathlib.Path, message: ProtocolBuffer) -> ProtocolBuffer:
   to formatting is, in order:
       *.txt.gz: Gzipped text.
       *.txt: Text.
+      *.pbtxt.gz: Gzipped text.
+      *.pbtxt: Text.
       *.json.gz: Gzipped JSON.
       *.json: JSON.
       *.gz: Gzipped encoded string.
@@ -61,7 +63,7 @@ def FromFile(path: pathlib.Path, message: ProtocolBuffer) -> ProtocolBuffer:
   suffix = suffixes[-1] if suffixes else ''
   try:
     with open_function(path, 'rb') as f:
-      if suffix == '.txt':
+      if suffix == '.txt' or suffix == '.pbtxt':
         google.protobuf.text_format.Merge(f.read(), message)
       elif suffix == '.json':
         google.protobuf.json_format.Parse(f.read(), message)
@@ -85,6 +87,8 @@ def ToFile(message: ProtocolBuffer, path: pathlib.Path,
   to formatting is, in order:
       *.txt.gz: Gzipped text.
       *.txt: Text.
+      *.pbtxt.gz: Gzipped text.
+      *.pbtxt: Text.
       *.json.gz: Gzipped JSON.
       *.json: JSON.
       *.gz: Gzipped encoded string.
@@ -112,10 +116,10 @@ def ToFile(message: ProtocolBuffer, path: pathlib.Path,
     open_function = open
 
   suffix = suffixes[-1] if suffixes else ''
-  mode = 'wt' if suffix in {'.txt', '.json'} else 'wb'
+  mode = 'wt' if suffix in {'.txt', '.pbtxt', '.json'} else 'wb'
 
   with open_function(path, mode) as f:
-    if suffix == '.txt':
+    if suffix == '.txt' or suffix == '.pbtxt':
       f.write(google.protobuf.text_format.MessageToString(message))
     elif suffix == '.json':
       f.write(google.protobuf.json_format.MessageToJson(

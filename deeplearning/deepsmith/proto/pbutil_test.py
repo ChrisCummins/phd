@@ -38,6 +38,15 @@ def test_FromFile_wrong_message_type_txt():
     with pytest.raises(pbutil.DecodeError):
       pbutil.FromFile(path, proto_out)
 
+  with tempfile.NamedTemporaryFile(prefix='deeplearning.deepsmith.proto.',
+                                   suffix='.pbtxt') as d:
+    path = pathlib.Path(d.name)
+    proto_in = test_protos_pb2.TestMessage(string='abc', number=1)
+    pbutil.ToFile(proto_in, path)
+    proto_out = test_protos_pb2.AnotherTestMessage()
+    with pytest.raises(pbutil.DecodeError):
+      pbutil.FromFile(path, proto_out)
+
 
 def test_FromFile_wrong_message_type_json():
   with tempfile.NamedTemporaryFile(prefix='deeplearning.deepsmith.proto.',
@@ -64,6 +73,22 @@ def test_FromFile_wrong_message_type_binary():
 def test_ToFile_FromFile_equivalence_txt():
   with tempfile.NamedTemporaryFile(prefix='deeplearning.deepsmith.proto.',
                                    suffix='.txt') as d:
+    path = pathlib.Path(d.name)
+    proto_in = test_protos_pb2.TestMessage(string='abc', number=1)
+    pbutil.ToFile(proto_in, path)
+    assert path.is_file()
+    with open(path) as f:
+      text = f.read()
+    assert text == 'string: "abc"\nnumber: 1\n'
+    proto_out = test_protos_pb2.TestMessage()
+    assert proto_in != proto_out  # Sanity check.
+    pbutil.FromFile(path, proto_out)
+    assert proto_out.string == 'abc'
+    assert proto_out.number == 1
+    assert proto_in == proto_out
+
+  with tempfile.NamedTemporaryFile(prefix='deeplearning.deepsmith.proto.',
+                                   suffix='.pbtxt') as d:
     path = pathlib.Path(d.name)
     proto_in = test_protos_pb2.TestMessage(string='abc', number=1)
     pbutil.ToFile(proto_in, path)
@@ -115,6 +140,22 @@ def test_ToFile_FromFile_equivalence_binary():
 def test_ToFile_FromFile_equivalence_txt_gz():
   with tempfile.NamedTemporaryFile(prefix='deeplearning.deepsmith.proto.',
                                    suffix='.txt.gz') as d:
+    path = pathlib.Path(d.name)
+    proto_in = test_protos_pb2.TestMessage(string='abc', number=1)
+    pbutil.ToFile(proto_in, path)
+    assert path.is_file()
+    with gzip.open(path, 'r') as f:
+      text = f.read().decode('utf-8')
+    assert text == 'string: "abc"\nnumber: 1\n'
+    proto_out = test_protos_pb2.TestMessage()
+    assert proto_in != proto_out  # Sanity check.
+    pbutil.FromFile(path, proto_out)
+    assert proto_out.string == 'abc'
+    assert proto_out.number == 1
+    assert proto_in == proto_out
+
+  with tempfile.NamedTemporaryFile(prefix='deeplearning.deepsmith.proto.',
+                                   suffix='.pbtxt.gz') as d:
     path = pathlib.Path(d.name)
     proto_in = test_protos_pb2.TestMessage(string='abc', number=1)
     pbutil.ToFile(proto_in, path)
