@@ -13,3 +13,13 @@ cc_library(
     }),
     visibility = ["//visibility:public"],
 )
+
+sh_binary(
+    name = "mkcecl",
+    srcs = ["mkcecl.sh"],
+)
+
+sh_binary(
+    name = "runcecl",
+    srcs = ["runcecl.sh"],
+)
