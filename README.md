@@ -43,7 +43,7 @@ A self-contained, monolothic repository for (almost) everything I have done whil
 
 ## Talks
 
-1. Chris Cummins. "Second Year Progression Review", 18th Dec, 2017. The
+1. Chris Cummins. "**Second Year Progression Review**", 18th Dec, 2017. The
    University of Edinburgh, Scotland. [[files]](/talks/2017-12-second-year-review).
    [[pdf]](https://github.com/ChrisCummins/phd/raw/master/talks/2017-12-second-year-review/2017-12-second-year-review.pdf).
 1. Chris Cummins. "**End-to-end Deep Learning of Optimization Heuristics**",  4th Oct,
