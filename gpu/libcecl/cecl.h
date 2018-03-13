@@ -1,0 +1,218 @@
+/*
+ * celc interface.
+ *
+ * Provides a blocking, verbose wrappers around a subset of the OpenCL
+ * API.
+ *
+ * cecl is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * cecl is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with cecl.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#ifndef CECL_OPENCL_H
+#define CECL_OPENCL_H
+
+#ifdef __APPLE__
+#include <OpenCL/opencl.h>
+#else
+#include <CL/cl.h>
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif  /* __cplusplus */
+
+
+cl_command_queue CECL_CREATE_COMMAND_QUEUE(cl_context context,
+                                           cl_device_id device,
+                                           cl_command_queue_properties props,
+                                           cl_int* err);
+
+
+cl_program CECL_PROGRAM_WITH_SOURCE(cl_context context,
+                                    cl_uint count,
+                                    const char** strings,
+                                    const size_t* lengths,
+                                    cl_int* err);
+
+#define CECL_PROGRAM(program, num_devices, device_list, options, \
+                     pfn_notify, user_data) \
+    cecl_program(program, num_devices, device_list, options, pfn_notify, \
+                 user_data, #program)
+
+
+#define CECL_KERNEL(program, kernel_name, err) \
+    cecl_kernel(program, #program, kernel_name, err)
+
+
+#define CECL_MAP_BUFFER(command_queue, \
+                        buffer, \
+                        blocking_map__UNUSED__, \
+                        map_flags, \
+                        offset, \
+                        cb, \
+                        num_events_in_wait_list, \
+                        event_wait_list, \
+                        event, \
+                        errcode_ret) \
+    cecl_map_buffer(command_queue, buffer, #buffer, map_flags, offset, cb, \
+                    num_events_in_wait_list, event_wait_list, event, \
+                    errcode_ret)
+
+
+#define CECL_WRITE_BUFFER(command_queue, \
+                          buffer, \
+                          blocking_write__UNUSED__, \
+                          offset, \
+                          cb, \
+                          ptr, \
+                          num_events_in_wait_list, \
+                          event_wait_list, \
+                          event) \
+    cecl_write_buffer(command_queue, buffer, #buffer, offset, \
+                      cb, ptr, num_events_in_wait_list, \
+                      event_wait_list, event)
+
+
+#define CECL_SET_KERNEL_ARG(kernel, \
+                            arg_index, \
+                            arg_size, \
+                            arg_value) \
+    cecl_set_kernel_arg(kernel, arg_index, arg_size, arg_value, #arg_value)
+
+
+#define CECL_BUFFER(context, \
+                    flags, \
+                    size, \
+                    host_ptr, \
+                    err) \
+    cecl_buffer(context, flags, size, host_ptr, err, #host_ptr, #flags)
+
+
+#define CECL_ND_RANGE_KERNEL(command_queue, \
+                             kernel, \
+                             work_dim, \
+                             global_work_offset, \
+                             global_work_size, \
+                             local_work_size, \
+                             num_events_in_wait_list, \
+                             event_wait_list, \
+                             event) \
+    cecl_nd_range_kernel(command_queue, kernel, work_dim, \
+                         global_work_offset, global_work_size, \
+                         local_work_size, num_events_in_wait_list, \
+                         event_wait_list, event)
+
+
+#define CECL_TASK(command_queue, \
+                  kernel, \
+                  num_events_in_wait_list, \
+                  event_wait_list, \
+                  event) \
+    cecl_task(command_queue, kernel, #kernel, num_events_in_wait_list, \
+              event_wait_list, event)
+
+
+#define CECL_READ_BUFFER(command_queue, \
+                         buffer, \
+                         blocking_read__UNUSED__, \
+                         offset, \
+                         cb, \
+                         ptr, \
+                         num_events_in_wait_list, \
+                         event_wait_list, \
+                         event) \
+    cecl_read_buffer(command_queue, buffer, #buffer, offset, cb, ptr, \
+                     num_events_in_wait_list, event_wait_list, event)
+
+/* Internal: */
+
+
+cl_kernel cecl_kernel(cl_program  program,
+                      const char* program_name,
+                      const char* kernel_name,
+                      cl_int* err);
+
+cl_int cecl_program(cl_program program,
+                    cl_uint num_devices,
+                    const cl_device_id* device_list,
+                    const char* options,
+                    void (*pfn_notify)(cl_program, void* user_data),
+                    void* user_data,
+                    const char* program_name);
+
+cl_int cecl_write_buffer(cl_command_queue command_queue,
+                         cl_mem buffer,
+                         const char *buffer_name,
+                         size_t offset,
+                         size_t cb,
+                         const void* ptr,
+                         cl_uint num_events_in_wait_list,
+                         const cl_event* event_wait_list,
+                         cl_event* event);
+
+cl_int cecl_set_kernel_arg(cl_kernel kernel,
+                           cl_uint arg_index,
+                           size_t arg_size,
+                           const void* arg_value,
+                           const char* arg_name);
+
+cl_mem cecl_buffer(cl_context context,
+                   cl_mem_flags flags,
+                   size_t size,
+                   void* host_ptr,
+                   cl_int* err,
+                   const char* host_ptr_name,
+                   const char* flags_name);
+
+cl_int cecl_nd_range_kernel(cl_command_queue command_queue,
+                            cl_kernel kernel,
+                            cl_uint work_dim,
+                            const size_t* global_work_offset,
+                            const size_t* global_work_size,
+                            const size_t* local_work_size,
+                            cl_uint num_events_in_wait_list,
+                            const cl_event* event_wait_list,
+                            cl_event *event);
+
+cl_int cecl_task(cl_command_queue command_queue,
+                 cl_kernel kernel,
+                 cl_uint num_events_in_wait_list,
+                 const cl_event* event_wait_list,
+                 cl_event* event);
+
+cl_int cecl_read_buffer(cl_command_queue command_queue,
+                        cl_mem buffer,
+                        const char* buffer_name,
+                        size_t offset,
+                        size_t cb,
+                        void *ptr,
+                        cl_uint num_events_in_wait_list,
+                        const cl_event *event_wait_list,
+                        cl_event* event);
+
+void* cecl_map_buffer(cl_command_queue command_queue,
+                      cl_mem buffer,
+                      const char* buffer_name,
+                      cl_map_flags map_flags,
+                      size_t offset,
+                      size_t cb,
+                      cl_uint num_events_in_wait_list,
+                      const cl_event* event_wait_list,
+                      cl_event* event,
+                      cl_int* errcode_ret);
+
+
+#ifdef __cplusplus
+}  /* extern "C" */
+#endif  /* __cplusplus */
+
+#endif  /* CECL_OPENCL_H */
