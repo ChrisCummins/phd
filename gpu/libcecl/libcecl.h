@@ -1,24 +1,24 @@
 /*
- * celc interface.
+ * Libcecl interface.
  *
  * Provides a blocking, verbose wrappers around a subset of the OpenCL
  * API.
  *
- * cecl is free software: you can redistribute it and/or modify it
+ * libcecl is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * cecl is distributed in the hope that it will be useful, but
+ * libcecl is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with cecl.  If not, see <http://www.gnu.org/licenses/>.
+ * along with libcecl.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef CECL_OPENCL_H
-#define CECL_OPENCL_H
+#ifndef GPU_LIBCECL_CECL_H
+#define GPU_LIBCECL_CECL_H
 
 #ifdef __APPLE__
 #include <OpenCL/opencl.h>
@@ -215,4 +215,4 @@ void* cecl_map_buffer(cl_command_queue command_queue,
 }  /* extern "C" */
 #endif  /* __cplusplus */
 
-#endif  /* CECL_OPENCL_H */
+#endif  /* GPU_LIBCECL_CECL_H */

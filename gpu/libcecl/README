@@ -1,21 +1,16 @@
-                 cecl - OpenCL Application profiling
-                 ===================================
+               libcecl - OpenCL Application profiling
+               ======================================
 
-What is cecl?
+What is libcecl?
 
   A small library which provides replacement calls for a subset of the
   OpenCL API. It allows simple performance benchmarking of OpenCL programs.
 
-Installation:
-
-  $ make
-  $ sudo make install
-
 Usage:
 
-  Rewrites the OpenCL calls in myapp.cpp to use cecl:
+  Rewrites the OpenCL calls in myapp.cpp to use libcecl:
 
-    mkcecl myapp.cpp
+    mkcecl.sh myapp.cpp
 
   Compile and link myapp using libcecl:
 
@@ -23,7 +18,7 @@ Usage:
 
   Execute compiled application and print profiling information:
 
-    runcecl ./myapp
+    runcecl.sh ./myapp
 
 Requirements:
 

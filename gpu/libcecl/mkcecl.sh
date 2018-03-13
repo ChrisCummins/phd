@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-#
+
 # Rewrite OpenCL sources to use libcecl.
 #
-# This file is part of cecl.
+# This file is part of libcecl.
 #
-# cecl is free software: you can redistribute it and/or modify it
+# libcecl is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# cecl is distributed in the hope that it will be useful, but
+# libcecl is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # General Public License for more details.
@@ -49,7 +49,7 @@ rewritefile() {
     cp "$path" "$tmp"
     cp "$path" "$backup"
 
-    local start_checksum=$(md5sum "$path" | awk '{print $1}')
+    local start_checksum="$(md5sum "$path" | awk '{print $1}')"
 
     sed -i 's/clBuildProgram/CECL_PROGRAM/g' "$tmp"
     sed -i 's/clCreateBuffer/CECL_BUFFER/g' "$tmp"
@@ -68,9 +68,9 @@ rewritefile() {
     if [[ "$start_checksum" == "$end_checksum" ]]; then
         rm "$tmp"
     else
-        if ! grep '#include <cecl.h>' "$tmp" &>/dev/null; then
-            echo '#include <cecl.h>' > "$path"
-            cat "$tmp" >> "$path"
+        if ! grep '#include <libcecl.h>' "$tmp" &> /dev/null; then
+            echo '#include <libcecl.h>' >"$path"
+            cat "$tmp" >>"$path"
             rm "$tmp"
         else
             mv "$tmp" "$path"
@@ -86,7 +86,7 @@ main() {
 
     for arg in "$@"
     do
-        if file_is_source "$arg" &>/dev/null; then
+        if file_is_source "$arg" &> /dev/null; then
             echo "$arg"
             rewritefile "$arg"
         else
@@ -94,4 +94,5 @@ main() {
         fi
     done
 }
+
 main $@
