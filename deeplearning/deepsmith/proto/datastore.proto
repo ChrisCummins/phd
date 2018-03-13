@@ -15,7 +15,7 @@ message DataStore {
     optional bool create_database_if_not_exist = 6;
   }
 
-  message PostgreSQL {
+  message PostgreSql {
     optional string database = 1;
     optional string hostname = 2 [default = "localhost"];
     optional int32 port = 3 [default = 5432];
@@ -28,6 +28,14 @@ message DataStore {
   oneof value {
     Sqlite sqlite = 1;
     MySql mysql = 2;
-    PostgreSQL postgresql = 3;
+    PostgreSql postgresql = 3;
   }
+}
+
+// A map of datastore names to configs.
+//
+// Used by //deeplearning/deepsmith:conftest to parameterize the test fixtures
+// used for unit tests.
+message DataStoreTestSet {
+  map<string, DataStore> values = 1;
 }
