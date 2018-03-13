@@ -49,9 +49,6 @@
 [submodule "experimental/eevee"]
 	path = experimental/eevee
 	url = git@github.com:ChrisCummins/eevee.git
-[submodule "gpu/libcecl"]
-	path = gpu/libcecl
-	url = git@github.com:ChrisCummins/libcecl.git
 [submodule "util/srtime"]
 	path = util/srtime
 	url = git@github.com:ChrisCummins/srtime.git
