@@ -1677,6 +1677,42 @@ class Phd(Task):
     shell("~/phd/tools/bootstrap.sh | bash")
 
 
+class TransmissionHeadless(Task):
+    """Headless bittorrent client."""
+    __platforms__ = ['linux']
+    __hosts__ = ['ryangosling']
+    __linux_genfiles__ = [
+        '/usr/share/transmission',
+        '/usr/bin/transmission-cli',
+        '/etc/transmission-daemon',
+        '/usr/bin/transmission-daemon',
+    ]
+
+    def install(self):
+        shell("sudo add-apt-repository -y ppa:transmissionbt/ppa")
+        Apt().update()
+        Apt().install_package("transmission-cli")
+        Apt().install_package("transmission-common")
+        Apt().install_package("transmission-daemon")
+
+
+class TransmissionConfig(Task):
+    """User config for transmission."""
+    CFG = '/etc/transmission-daemon/settings.json'
+
+    __platforms__ = ['linux']
+    __hosts__ = ['ryangosling']
+    __linux_genfiles__ = [CFG]
+    __linux_deps__ = ['TransmissionHeadless']
+
+    def install(self):
+        if not os.path.islink(self.CFG):
+            shell('sudo service transmission-daemon stop')
+            symlink('{private}/transmission/settings.json'
+                    .format(private=PRIVATE), self.CFG, sudo=True)
+            shell('sudo service transmission-daemon start')
+
+
 class DefaultApps(Task):
   """ set default applications for file extensions """
   __platforms__ = ['osx']
