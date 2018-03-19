@@ -22,7 +22,7 @@ message DataStore {
     optional string password = 5;
   }
 
-  oneof value {
+  oneof backend {
     Sqlite sqlite = 1;
     MySql mysql = 2;
     PostgreSql postgresql = 3;
