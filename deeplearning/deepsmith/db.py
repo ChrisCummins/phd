@@ -241,7 +241,7 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
     url = f'{url_base}/{database}?charset=utf8'
   elif config.HasField('postgresql'):
     username = pbutil.RaiseIfNotSet(config.postgresql, 'username')
-    password = pbutil.RaiseIfNotSet(config.mysql, 'password')
+    password = pbutil.RaiseIfNotSet(config.postgresql, 'password')
     hostname = pbutil.RaiseIfNotSet(config.postgresql, 'hostname')
     port = pbutil.RaiseIfNotSet(config.postgresql, 'port')
     database = pbutil.RaiseIfNotSet(config.postgresql, 'database')
@@ -298,7 +298,7 @@ def DestroyTestonlyEngine(config: datastore_pb2.DataStore):
     engine.execute(f"DROP DATABASE {database}")
   elif config.HasField('postgresql'):
     username = pbutil.RaiseIfNotSet(config.postgresql, 'username')
-    password = pbutil.RaiseIfNotSet(config.mysql, 'password')
+    password = pbutil.RaiseIfNotSet(config.postgresql, 'password')
     hostname = pbutil.RaiseIfNotSet(config.postgresql, 'hostname')
     port = pbutil.RaiseIfNotSet(config.postgresql, 'port')
     database = pbutil.RaiseIfNotSet(config.postgresql, 'database')
