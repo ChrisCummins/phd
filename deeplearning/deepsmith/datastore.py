@@ -53,6 +53,16 @@ class DataStore(object):
     config = pbutil.FromFile(path, datastore_pb2.DataStore())
     return DataStore(config)
 
+  def ToProto(self) -> datastore_pb2.DataStore:
+    """Get the Protocol Buffer representation of the datastore.
+
+    Returns:
+      A DataStore message instance.
+    """
+    proto = datastore_pb2.DataStore()
+    proto.CopyFrom(self._config)
+    return proto
+
   @classmethod
   def FromFlags(cls, raise_exception: bool = False) -> 'DataStore':
     """Instantiate a DataStore from command line flags.

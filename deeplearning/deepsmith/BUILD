@@ -6,6 +6,7 @@ py_library(
     name = "conftest",
     testonly = 1,
     srcs = ["conftest.py"],
+    data = glob(["tests/data/datastores/*"]),
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     deps = [
         ":datastore",

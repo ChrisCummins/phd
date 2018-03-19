@@ -1,0 +1,4 @@
+sqlite {
+  inmemory: true
+}
+testonly: true

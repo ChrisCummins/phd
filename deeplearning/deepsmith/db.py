@@ -212,58 +212,55 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
       ValueError: If DB_ENGINE config value is invalid.
   """
 
-  def _RaiseIfNotset(proto, field):
-    if not proto.HasField(field):
-      raise ValueError(f'datastore field {field} not set')
-    elif not getattr(proto, field):
-      raise ValueError(f'datastore field {field} not set')
-
   if config.HasField('sqlite'):
-    _RaiseIfNotset(config.sqlite, 'url')
-    url, public_url = config.sqlite.url, config.sqlite.url
+    if config.sqlite.inmemory:
+      url = 'sqlite://'
+    else:
+      path = pathlib.Path(pbutil.RaiseIfNotSet(config.sqlite, 'path')).absolute()
+      if config.create_database_if_not_exist:
+        path.parent.mkdir(parents=True, exist_ok=True)
+      abspath = path.absolute()
+      url = f'sqlite:///{abspath}'
+    public_url = url
   elif config.HasField('mysql'):
-    _RaiseIfNotset(config.mysql, 'username')
-    _RaiseIfNotset(config.mysql, 'hostname')
-    _RaiseIfNotset(config.mysql, 'port')
-    _RaiseIfNotset(config.mysql, 'database')
-    url_base = (f'mysql://{config.mysql.username}:{config.mysql.password}@' +
-                f'{config.mysql.hostname}:{config.mysql.port}')
+    username = pbutil.RaiseIfNotSet(config.mysql, 'username')
+    password = pbutil.RaiseIfNotSet(config.mysql, 'password')
+    hostname = pbutil.RaiseIfNotSet(config.mysql, 'hostname')
+    port = pbutil.RaiseIfNotSet(config.mysql, 'port')
+    database = pbutil.RaiseIfNotSet(config.mysql, 'database')
+    url_base = f'mysql://{username}:{password}@{hostname}:{port}'
 
-    if config.mysql.create_database_if_not_exist:
+    if config.create_database_if_not_exist:
       engine = sql.create_engine(url_base)
-      engine.execute(f"CREATE DATABASE IF NOT EXISTS {config.mysql.database}")
+      engine.execute(f"CREATE DATABASE IF NOT EXISTS {database}")
 
     # Use UTF-8 encoding (default is latin-1) when connecting to MySQL.
     # See: https://stackoverflow.com/a/16404147/1318051
-    public_url = (f'mysql://{config.mysql.username}@{config.mysql.hostname}:' +
-                  f'{config.mysql.port}/{config.mysql.database}?charset=utf8')
-    url = f'{url_base}/{config.mysql.database}?charset=utf8'
+    public_url = f'mysql://{username}@{hostname}:{port}/{database}?charset=utf8'
+    url = f'{url_base}/{database}?charset=utf8'
   elif config.HasField('postgresql'):
-    _RaiseIfNotset(config.postgresql, 'username')
-    _RaiseIfNotset(config.postgresql, 'hostname')
-    _RaiseIfNotset(config.postgresql, 'port')
-    _RaiseIfNotset(config.postgresql, 'database')
-    url_base = (f'postgresql+psycopg2://{config.postgresql.username}:' +
-                f'{config.postgresql.password}@{config.postgresql.hostname}:' +
-                f'{config.postgresql.port}')
+    username = pbutil.RaiseIfNotSet(config.postgresql, 'username')
+    password = pbutil.RaiseIfNotSet(config.mysql, 'password')
+    hostname = pbutil.RaiseIfNotSet(config.postgresql, 'hostname')
+    port = pbutil.RaiseIfNotSet(config.postgresql, 'port')
+    database = pbutil.RaiseIfNotSet(config.postgresql, 'database')
+    url_base = f'postgresql+psycopg2://{username}:{password}@{hostname}:{port}'
 
-    if config.postgresql.create_database_if_not_exist:
+    if config.create_database_if_not_exist:
       engine = sql.create_engine(f'{url_base}/postgres')
       conn = engine.connect()
       query = conn.execute(
           "SELECT 1 FROM pg_database WHERE datname "
-          f"= '{config.postgresql.database}'")
+          f"= '{database}'")
       if not query.first():
         # PostgreSQL does not let you create databases within a transaction, so
         # manually complete the transaction before creating the database.
         conn.execute("COMMIT")
-        conn.execute(f"CREATE DATABASE {config.postgresql.database}")
+        conn.execute(f"CREATE DATABASE {database}")
       conn.close()
 
-    public_url = (f'postgresql://{config.postgresql.username}@' +
-                  f'{config.postgresql.hostname}:{config.postgresql.port}/' +
-                  f'{config.postgresql.database}')
-    url = f'{url_base}/{config.postgresql.database}'
+    public_url = f'postgresql://{username}@{hostname}:{port}/{database}'
+    url = f'{url_base}/{database}'
   else:
     raise ValueError(f'unsupported database engine {engine}')
 

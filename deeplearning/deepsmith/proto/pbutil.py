@@ -193,3 +193,23 @@ def PrettyPrintJson(message: ProtocolBuffer,
   data = ToJson(message)
   return json.dumps(_TruncateDictionaryStringValues(data) if truncate else data,
                     indent=2, sort_keys=True)
+
+
+def RaiseIfNotSet(proto: ProtocolBuffer, field: str) -> typing.Any:
+  """Check that a proto field is set before returning it.
+
+  Args:
+    proto: A message instance.
+    field: The name of the field.
+
+  Returns:
+    The value of the field.
+
+  Raises:
+    ValueError: If the field is not set.
+  """
+  if not proto.HasField(field):
+    raise ValueError(f'datastore field {field} not set')
+  elif not getattr(proto, field):
+    raise ValueError(f'datastore field {field} not set')
+  return getattr(proto, field)

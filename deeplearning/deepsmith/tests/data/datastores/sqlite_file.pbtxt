@@ -1,0 +1,4 @@
+sqlite {
+  path: "/tmp/dsmith_test_datastore.db"
+}
+testonly: true

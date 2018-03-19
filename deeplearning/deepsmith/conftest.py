@@ -6,33 +6,75 @@ do not need to import this file, it is discovered automatically by pytest.
 See the conftest.py documentation for more details:
 https://docs.pytest.org/en/latest/fixture.html#conftest-py-sharing-fixture-functions
 """
+import pathlib
 import pytest
 
 from deeplearning.deepsmith import datastore
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import datastore_pb2
+from deeplearning.deepsmith.proto import pbutil
 
 
-@pytest.fixture
-def ds() -> datastore.DataStore:
+def _TestConfigFromProto(
+    proto: datastore_pb2.DataStore) -> datastore_pb2.DataStore:
+  # if proto.HasField('sqlite'):
+
+  return proto
+
+
+def _ReadTestDataStoreFiles() -> datastore_pb2.DataStoreTestSet:
+  """Read the config protos for testing.
+
+  The datastore names are derived from the file names.
+
+  Returns:
+    A DataStoreTestSet instance.
+
+  Raises:
+    AssertionError: In case of error reading datastore configs.
+  """
+  paths = list(pathlib.Path('deeplearning/deepsmith/tests/data/datastores').iterdir())
+  assert paths
+  names = [p.stem for p in paths]
+  protos = [pbutil.FromFile(path, datastore_pb2.DataStore())
+            for path in paths]
+  datastore_set = datastore_pb2.DataStoreTestSet()
+  for name, proto in zip(names, protos):
+    assert proto.testonly
+    dst_proto = datastore_set.values[name]
+    # Force the ability to create this database.
+    proto.create_database_if_not_exist = True
+    dst_proto.MergeFrom(_TestConfigFromProto(proto))
+  assert len(datastore_set.values) == len(protos) == len(names) == len(paths)
+  return datastore_set
+
+
+# Read the proto files once.
+_DATASTORE_TESTSET = _ReadTestDataStoreFiles()
+
+
+@pytest.fixture(ids=_DATASTORE_TESTSET.values.keys(),
+                params=_DATASTORE_TESTSET.values.values())
+def ds(request) -> datastore.DataStore:
   """Create an in-memory SQLite datastore for testing.
+
+  The database is will be empty.
 
   Returns:
     A DataStore instance.
   """
-  return datastore.DataStore(datastore_pb2.DataStore(
-      sqlite=datastore_pb2.DataStore.Sqlite(
-          url='sqlite://',
-      )
-  ))
+  return datastore.DataStore(request.param)
 
 
-@pytest.fixture
-def session() -> db.session_t:
+@pytest.fixture(ids=_DATASTORE_TESTSET.values.keys(),
+                params=_DATASTORE_TESTSET.values.values())
+def session(request) -> db.session_t:
   """Create a session for an in-memory SQLite datastore.
+
+  The database is will be empty.
 
   Returns:
     A Session instance.
   """
-  with ds().Session() as session_:
+  with ds(request).Session() as session_:
     yield session_
