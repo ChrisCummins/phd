@@ -207,9 +207,10 @@ class StringTable(Table):
 
 
 def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
-  """
+  """Instantiate a database engine.
+
   Raises:
-      ValueError: If DB_ENGINE config value is invalid.
+    NotImplementedError: If the datastore backend is not supported.
   """
 
   if config.HasField('sqlite'):
@@ -262,10 +263,56 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
     public_url = f'postgresql://{username}@{hostname}:{port}/{database}'
     url = f'{url_base}/{database}'
   else:
-    raise ValueError(f'unsupported database engine {engine}')
+    raise NotImplementedError(f'unsupported database engine {engine}')
 
   logging.info('creating database engine %s', public_url)
   return sql.create_engine(url, encoding='utf-8', echo=FLAGS.sql_echo)
+
+
+def DestroyTestonlyEngine(config: datastore_pb2.DataStore):
+  """Permamently erase all data in a testonly datastore engine.
+
+  Args:
+    config: The datastore config.
+
+  Raises:
+    OSError: If the datastore is not configured as testonly.
+    NotImplementedError: If the datastore backend is not supported.
+  """
+  if not config.testonly:
+    raise OSError('Cannot destroy non-testonly dataset')
+
+  if config.HasField('sqlite'):
+    if not config.sqlite.inmemory:
+      pbutil.RaiseIfNotSet(config.sqlite, 'path')
+      pathlib.Path(config.sqlite.path).unlink()
+  elif config.HasField('mysql'):
+    username = pbutil.RaiseIfNotSet(config.mysql, 'username')
+    password = pbutil.RaiseIfNotSet(config.mysql, 'password')
+    hostname = pbutil.RaiseIfNotSet(config.mysql, 'hostname')
+    port = pbutil.RaiseIfNotSet(config.mysql, 'port')
+    database = pbutil.RaiseIfNotSet(config.mysql, 'database')
+    url_base = f'mysql://{username}:{password}@{hostname}:{port}'
+
+    engine = sql.create_engine(url_base)
+    engine.execute(f"DROP DATABASE {database}")
+  elif config.HasField('postgresql'):
+    username = pbutil.RaiseIfNotSet(config.postgresql, 'username')
+    password = pbutil.RaiseIfNotSet(config.mysql, 'password')
+    hostname = pbutil.RaiseIfNotSet(config.postgresql, 'hostname')
+    port = pbutil.RaiseIfNotSet(config.postgresql, 'port')
+    database = pbutil.RaiseIfNotSet(config.postgresql, 'database')
+    url_base = f'postgresql+psycopg2://{username}:{password}@{hostname}:{port}'
+
+    engine = sql.create_engine(f'{url_base}/postgres')
+    conn = engine.connect()
+    # PostgreSQL does not let you delete databases within a transaction, so
+    # manually complete the transaction before creating the database.
+    conn.execute("COMMIT")
+    conn.execute(f"DROP DATABASE {database}")
+    conn.close()
+  else:
+    raise NotImplementedError(f'unsupported database engine {engine}')
 
 
 def GetOrAdd(session: sql.orm.session.Session, model,
