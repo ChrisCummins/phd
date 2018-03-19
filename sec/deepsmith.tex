@@ -21,7 +21,7 @@ Generating test cases for compilers is hard because their inputs are highly stru
 
 \paragraph{Handwritten Programs} The generative model needs to be trained on a \emph{seed corpus} of example programs. We automated the assembly of this corpus by mining 10k OpenCL kernels from open source repositories on GitHub. We used an \emph{oracle compiler} (LLVM 3.9) to statically check the source files, discarding files that are not well-formed. The main purpose of this step is to remove the need to manually check that each file selected from GitHub does indeed contain OpenCL. A downside is that any training candidate which triggers a bug in the LLVM 3.9's front end will not be included. However, this did not prevent our system from uncovering errors in that compiler (Section~\ref{subsec:clangs}).
 
-This corpus, exceeding one million lines of code, is used as a representative sample of OpenCL code from which which a generative model can be derived.
+This corpus, exceeding one million lines of code, is used as a representative sample of OpenCL code from which a generative model can be derived.
 
 \paragraph{Encoder} The textual representation of program codes must be encoded as numeric sequences for feeding as input to the machine learning model. Prior machine learning works have used character-level encodings, token-level encodings, or fixed length feature vectors. We extend the hybrid character/token-level encoding of~\cite{Cummins2017b}, in which a programming language's keywords and common names are treated as individual tokens while the rest of the text is encoded on a character-level basis. This approach hits a balance between compressing the input text and keeping the number of tokens in the vocabulary low.
 
