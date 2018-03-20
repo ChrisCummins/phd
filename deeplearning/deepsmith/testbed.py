@@ -30,12 +30,17 @@ class Testbed(db.Table):
 
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
-  date_added: datetime.datetime = sql.Column(sql.DateTime, nullable=False,
-                                             default=db.now)
+  date_added: datetime.datetime = sql.Column(
+      sql.DateTime, nullable=False, default=db.now)
   toolchain_id: int = sql.Column(
       deeplearning.deepsmith.toolchain.Toolchain.id_t,
       sql.ForeignKey("toolchains.id"), nullable=False)
-  name: str = sql.Column(sql.String(1024), nullable=False)
+  # MySQL maximum key length is 3072, with 3 bytes per character. We must
+  # preserve 16 bytes for the optset_id in the unique constraint and 4 bytes
+  # for the toolchain_id.
+  name: str = sql.Column(
+      sql.String(4096).with_variant(sql.String((3072 - 16 - 6) // 3), 'mysql'),
+      nullable=False)
   optset_id: bytes = sql.Column(_TestbedOptSetId, nullable=False)
 
   # Relationships.

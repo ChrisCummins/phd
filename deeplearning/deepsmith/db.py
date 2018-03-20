@@ -153,15 +153,18 @@ class StringTable(Table):
   """
   __abstract__ = True
   id_t = sql.Integer
-  # This seemingly arbitrary maximum of 3072 is the limit which MySQL allows for
-  # unique columns.
-  maxlen = 3072
 
   # Columns:
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
       sql.DateTime, nullable=False, default=now)
-  string: str = sql.Column(sql.String(maxlen), nullable=False, unique=True)
+  # MySQL maximum key length is 3072 bytes, with 3 bytes per character.
+  string: str = sql.Column(
+      sql.String(4096).with_variant(sql.String(3072 // 3), 'mysql'),
+      nullable=False, unique=True)
+
+  # The maximum number of characters in the string column.
+  maxlen = string.type.length
 
   @classmethod
   def GetOrAdd(cls, session: session_t, string: str) -> 'StringTable':
