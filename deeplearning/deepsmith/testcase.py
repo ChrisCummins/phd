@@ -23,7 +23,8 @@ _TestcaseInputSetId = sql.Binary(16).with_variant(mysql.BINARY(16), 'mysql')
 _TestcaseInputId = sql.Integer
 _TestcaseInputNameId = db.StringTable.id_t
 _TestcaseInputValueId = sql.Integer
-_TestcaseInvariantOptSetId = sql.Binary(16).with_variant(mysql.BINARY(16), 'mysql')
+_TestcaseInvariantOptSetId = sql.Binary(16).with_variant(
+    mysql.BINARY(16), 'mysql')
 _TestcaseInvariantOptId = sql.Integer
 _TestcaseInvariantOptNameId = db.StringTable.id_t
 _TestcaseInvariantOptValueId = db.StringTable.id_t

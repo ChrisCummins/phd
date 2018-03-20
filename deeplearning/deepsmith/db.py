@@ -1,5 +1,4 @@
-"""
-Database backend.
+"""Database backend.
 """
 import datetime
 import pathlib
@@ -42,8 +41,8 @@ class StringTooLongError(ValueError):
   def __repr__(self):
     n = len(self.max_len)
     s = string[:20]
-    return (f"String '{s}...' too long for '{self.column_name}'. " +
-            f"Max length: {self.max_len}, actual length: {n}. ")
+    return (f'String "{s}..." too long for "{self.column_name}". ' +
+            f'Max length: {self.max_len}, actual length: {n}. ')
 
 
 class Table(Base):
@@ -75,7 +74,8 @@ class Table(Base):
       InvalidInputError: In case one or more values contained in the protocol
         buffer cannot be stored in the database schema.
     """
-    raise NotImplementedError(type(cls).__name__ + ".GetOrAdd() not implemented")
+    typename = type(cls).__name__
+    raise NotImplementedError(f'{typename}.GetOrAdd() not implemented')
 
   def ToProto(self) -> pbutil.ProtocolBuffer:
     """Create protocol buffer representation.
@@ -83,7 +83,8 @@ class Table(Base):
     Returns:
       A protocol buffer.
     """
-    raise NotImplementedError(type(self).__name__ + ".ToProto() not implemented")
+    typename = type(cls).__name__
+    raise NotImplementedError(f'{typename}.ToProto() not implemented')
 
   def SetProto(self, proto: pbutil.ProtocolBuffer) -> pbutil.ProtocolBuffer:
     """Set a protocol buffer representation.
@@ -94,7 +95,8 @@ class Table(Base):
     Returns:
       The same protocol buffer that is passed as argument.
     """
-    raise NotImplementedError(type(self).__name__ + ".SetProto() not implemented")
+    typename = type(cls).__name__
+    raise NotImplementedError(f'{typename}.SetProto() not implemented')
 
   @classmethod
   def ProtoFromFile(cls, path: pathlib.Path) -> pbutil.ProtocolBuffer:
@@ -106,8 +108,8 @@ class Table(Base):
     Returns:
       Protocol buffer message instance.
     """
-    raise NotImplementedError(type(cls).__name__ +
-                              ".ProtoFromFile() not implemented")
+    typename = type(cls).__name__
+    raise NotImplementedError(f'{typename}.ProtoFromFile() not implemented')
 
   @classmethod
   def FromFile(cls, session: session_t, path: pathlib.Path) -> 'Table':
@@ -121,14 +123,14 @@ class Table(Base):
       An instance.
     """
     raise NotImplementedError(type(cls).__name__ +
-                              ".FromFile() not implemented")
+                              '.FromFile() not implemented')
 
   def __repr__(self):
     try:
       return str(self.ToProto())
     except NotImplementedError:
       typename = type(self).__name__
-      return f"TODO: Define {typename}.ToProto() method"
+      return f'TODO: Define {typename}.ToProto() method'
 
 
 class StringTable(Table):
@@ -236,7 +238,7 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
 
     if config.create_database_if_not_exist:
       engine = sql.create_engine(url_base)
-      engine.execute(f"CREATE DATABASE IF NOT EXISTS {database}")
+      engine.execute(f'CREATE DATABASE IF NOT EXISTS {database}')
 
     # Use UTF-8 encoding (default is latin-1) when connecting to MySQL.
     # See: https://stackoverflow.com/a/16404147/1318051
@@ -254,13 +256,12 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
       engine = sql.create_engine(f'{url_base}/postgres')
       conn = engine.connect()
       query = conn.execute(
-          "SELECT 1 FROM pg_database WHERE datname "
-          f"= '{database}'")
+          f"SELECT 1 FROM pg_database WHERE datname = '{database}'")
       if not query.first():
         # PostgreSQL does not let you create databases within a transaction, so
         # manually complete the transaction before creating the database.
-        conn.execute("COMMIT")
-        conn.execute(f"CREATE DATABASE {database}")
+        conn.execute('COMMIT')
+        conn.execute(f"CREATE DATABASE '{database}'")
       conn.close()
 
     public_url = f'postgresql://{username}@{hostname}:{port}/{database}'
@@ -298,7 +299,7 @@ def DestroyTestonlyEngine(config: datastore_pb2.DataStore):
     url_base = f'mysql://{username}:{password}@{hostname}:{port}'
 
     engine = sql.create_engine(url_base)
-    engine.execute(f"DROP DATABASE {database}")
+    engine.execute(f'DROP DATABASE {database}')
   elif config.HasField('postgresql'):
     username = pbutil.RaiseIfNotSet(config.postgresql, 'username')
     password = pbutil.RaiseIfNotSet(config.postgresql, 'password')
@@ -311,8 +312,8 @@ def DestroyTestonlyEngine(config: datastore_pb2.DataStore):
     conn = engine.connect()
     # PostgreSQL does not let you delete databases within a transaction, so
     # manually complete the transaction before creating the database.
-    conn.execute("COMMIT")
-    conn.execute(f"DROP DATABASE {database}")
+    conn.execute('COMMIT')
+    conn.execute(f'DROP DATABASE {database}')
     conn.close()
   else:
     raise NotImplementedError(f'unsupported database engine {engine}')
@@ -336,6 +337,6 @@ def GetOrAdd(session: sql.orm.session.Session, model,
     session.add(instance)
 
     # logging
-    logging.debug("new %s record", model.__name__)
+    logging.debug('new %s record', model.__name__)
 
   return instance

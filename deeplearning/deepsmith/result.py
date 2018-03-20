@@ -26,7 +26,7 @@ _ResultOutputValueId = sql.Integer
 
 class Result(db.Table):
   id_t = _ResultId
-  __tablename__ = "results"
+  __tablename__ = 'results'
 
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
@@ -34,24 +34,24 @@ class Result(db.Table):
       sql.DateTime, nullable=False, default=db.now)
   testcase_id: int = sql.Column(
       deeplearning.deepsmith.testcase.Testcase.id_t,
-      sql.ForeignKey("testcases.id"), nullable=False)
+      sql.ForeignKey('testcases.id'), nullable=False)
   testbed_id: int = sql.Column(
       deeplearning.deepsmith.testbed.Testbed.id_t,
-      sql.ForeignKey("testbeds.id"), nullable=False)
+      sql.ForeignKey('testbeds.id'), nullable=False)
   returncode: int = sql.Column(sql.SmallInteger, nullable=False)
   outputset_id: bytes = sql.Column(_ResultOutputSetId, nullable=False)
 
   # Relationships.
   testcase: deeplearning.deepsmith.testcase.Testcase = orm.relationship(
-      "Testcase", back_populates="results")
+      'Testcase', back_populates='results')
   testbed: deeplearning.deepsmith.testbed.Testbed = orm.relationship(
-      "Testbed", back_populates="results")
-  outputset: typing.List["ResultOutput"] = orm.relationship(
-      "ResultOutput", secondary="result_outputsets",
-      primaryjoin="ResultOutputSet.id == Result.outputset_id",
-      secondaryjoin="ResultOutputSet.output_id == ResultOutput.id")
-  profiling_events: typing.List["ResultProfilingEvent"] = orm.relationship(
-      "ResultProfilingEvent", back_populates="result")
+      'Testbed', back_populates='results')
+  outputset: typing.List['ResultOutput'] = orm.relationship(
+      'ResultOutput', secondary='result_outputsets',
+      primaryjoin='ResultOutputSet.id == Result.outputset_id',
+      secondaryjoin='ResultOutputSet.output_id == ResultOutput.id')
+  profiling_events: typing.List['ResultProfilingEvent'] = orm.relationship(
+      'ResultProfilingEvent', back_populates='result')
 
   # Constraints.
   __table_args__ = (
@@ -98,7 +98,7 @@ class Result(db.Table):
 
   @classmethod
   def GetOrAdd(cls, session: db.session_t,
-               proto: deepsmith_pb2.Result) -> "Result":
+               proto: deepsmith_pb2.Result) -> 'Result':
     testcase = deeplearning.deepsmith.testcase.Testcase.GetOrAdd(
         session, proto.testcase
     )
@@ -111,7 +111,7 @@ class Result(db.Table):
     md5 = hashlib.md5()
     for proto_output_name in sorted(proto.outputs):
       proto_output_value = proto.outputs[proto_output_name]
-      md5.update((proto_output_name + proto_output_value).encode("utf-8"))
+      md5.update((proto_output_name + proto_output_value).encode('utf-8'))
       output = db.GetOrAdd(
           session, ResultOutput,
           name=ResultOutputName.GetOrAdd(
@@ -175,74 +175,74 @@ class ResultOutputSet(db.Table):
 
   An outputset groups outputs for results.
   """
-  __tablename__ = "result_outputsets"
+  __tablename__ = 'result_outputsets'
   id_t = _ResultOutputSetId
 
   # Columns.
   id: bytes = sql.Column(id_t, nullable=False)
   output_id: int = sql.Column(
-      _ResultOutputId, sql.ForeignKey("result_outputs.id"), nullable=False)
+      _ResultOutputId, sql.ForeignKey('result_outputs.id'), nullable=False)
 
   # Relationships.
   results: typing.List[Result] = orm.relationship(
       Result, primaryjoin=id == orm.foreign(Result.outputset_id))
-  output: "ResultOutput" = orm.relationship("ResultOutput")
+  output: 'ResultOutput' = orm.relationship('ResultOutput')
 
   # Constraints.
   __table_args__ = (
     sql.PrimaryKeyConstraint(
-        "id", "output_id", name="unique_result_outputset"),
+        'id', 'output_id', name='unique_result_outputset'),
   )
 
   def __repr__(self):
-    hex_id = binascii.hexlify(self.id).decode("utf-8")
-    return f"{hex_id}: {self.input_id}={self.input}"
+    hex_id = binascii.hexlify(self.id).decode('utf-8')
+    return f'{hex_id}: {self.input_id}={self.input}'
 
 
 class ResultOutput(db.Table):
   """A result output consists of a <name, value> pair."""
   id_t = _ResultOutputId
-  __tablename__ = "result_outputs"
+  __tablename__ = 'result_outputs'
 
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
       sql.DateTime, nullable=False, default=db.now)
   name_id: _ResultOutputNameId = sql.Column(
-      _ResultOutputNameId, sql.ForeignKey("result_output_names.id"),
+      _ResultOutputNameId, sql.ForeignKey('result_output_names.id'),
       nullable=False)
   value_id: _ResultOutputValueId = sql.Column(
-      _ResultOutputValueId, sql.ForeignKey("result_output_values.id"),
+      _ResultOutputValueId, sql.ForeignKey('result_output_values.id'),
       nullable=False)
 
   # Relationships.
-  name: "ResultOutputName" = orm.relationship(
-      "ResultOutputName", back_populates="outputs")
-  value: "ResultOutputValue" = orm.relationship(
-      "ResultOutputValue", back_populates="outputs")
+  name: 'ResultOutputName' = orm.relationship(
+      'ResultOutputName', back_populates='outputs')
+  value: 'ResultOutputValue' = orm.relationship(
+      'ResultOutputValue', back_populates='outputs')
 
   # Constraints.
   __table_args__ = (
-    sql.UniqueConstraint("name_id", "value_id", name="unique_result_output"),
+    sql.UniqueConstraint('name_id', 'value_id', name='unique_result_output'),
   )
 
   def __repr__(self):
-    return f"{self.name}: {self.value}"
+    return f'{self.name}: {self.value}'
 
 
 class ResultOutputName(db.StringTable):
   """The name of a result output."""
   id_t = _ResultOutputNameId
-  __tablename__ = "result_output_names"
+  __tablename__ = 'result_output_names'
 
   # Relationships.
   outputs: typing.List[ResultOutput] = orm.relationship(
-      ResultOutput, back_populates="name")
+      ResultOutput, back_populates='name')
 
 
 class ResultOutputValue(db.Table):
   id_t = _ResultOutputValueId
-  __tablename__ = "result_output_values"
+  __tablename__ = 'result_output_values'
 
   # Truncate everything after
   max_len = 128000
@@ -267,10 +267,10 @@ class ResultOutputValue(db.Table):
 
   # Relationships.
   outputs: typing.List[ResultOutput] = orm.relationship(
-      ResultOutput, back_populates="value")
+      ResultOutput, back_populates='value')
 
   @classmethod
-  def GetOrAdd(cls, session: db.session_t, string: str) -> "ResultOutputValue":
+  def GetOrAdd(cls, session: db.session_t, string: str) -> 'ResultOutputValue':
     """Instantiate a ResultOutputValue entry from a string.
 
     Args:
@@ -281,16 +281,16 @@ class ResultOutputValue(db.Table):
       A ResultOutputValue instance.
     """
     original_charcount = len(string)
-    original_linecount = string.count("\n")
+    original_linecount = string.count('\n')
     md5_ = hashlib.md5()
-    md5_.update(string.encode("utf-8"))
+    md5_.update(string.encode('utf-8'))
     original_md5 = md5_.digest()
     if original_charcount > cls.max_len:
       truncated = string[:cls.max_len]
       md5_ = hashlib.md5()
-      md5_.update(truncated.encode("utf-8"))
+      md5_.update(truncated.encode('utf-8'))
       truncated_md5 = md5_.digest()
-      truncated_linecount = truncated.count("\n")
+      truncated_linecount = truncated.count('\n')
       truncated_charcount = cls.max_len
     else:
       truncated = string
@@ -310,7 +310,7 @@ class ResultOutputValue(db.Table):
     )
 
   def __repr__(self):
-    return self.truncated_value[:50] or ""
+    return self.truncated_value[:50] or ''
 
 
 class PendingResult(db.Table):
@@ -328,7 +328,7 @@ class PendingResult(db.Table):
       lost in case of a testbed which never responds with a result).
   """
   id_t = Result.id_t
-  __tablename__ = "pending_results"
+  __tablename__ = 'pending_results'
 
   # Columns:
   id: int = sql.Column(id_t, primary_key=True)
@@ -339,17 +339,17 @@ class PendingResult(db.Table):
   # The testcase that was issued.
   testcase_id: int = sql.Column(
       deeplearning.deepsmith.testcase.Testcase.id_t,
-      sql.ForeignKey("testcases.id"), nullable=False)
+      sql.ForeignKey('testcases.id'), nullable=False)
   # The testbed that the testcase was issued to.
   testbed_id: int = sql.Column(
       deeplearning.deepsmith.testbed.Testbed.id_t,
-      sql.ForeignKey("testbeds.id"), nullable=False)
+      sql.ForeignKey('testbeds.id'), nullable=False)
 
   # Relationships:
   testcase: deeplearning.deepsmith.testcase.Testcase = orm.relationship(
-      "Testcase", back_populates="pending_results")
+      'Testcase', back_populates='pending_results')
   testbed: deeplearning.deepsmith.testbed.Testbed = orm.relationship(
-      "Testbed", back_populates="pending_results")
+      'Testbed', back_populates='pending_results')
 
   # Constraints:
   __table_args__ = (

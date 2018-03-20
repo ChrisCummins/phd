@@ -15,13 +15,6 @@ from deeplearning.deepsmith.proto import datastore_pb2
 from deeplearning.deepsmith.proto import pbutil
 
 
-def _TestConfigFromProto(
-    proto: datastore_pb2.DataStore) -> datastore_pb2.DataStore:
-  # if proto.HasField('sqlite'):
-
-  return proto
-
-
 def _ReadTestDataStoreFiles() -> datastore_pb2.DataStoreTestSet:
   """Read the config protos for testing.
 
@@ -44,7 +37,7 @@ def _ReadTestDataStoreFiles() -> datastore_pb2.DataStoreTestSet:
     dst_proto = datastore_set.values[name]
     # Force the ability to create this database.
     proto.create_database_if_not_exist = True
-    dst_proto.MergeFrom(_TestConfigFromProto(proto))
+    dst_proto.MergeFrom(proto)
   assert len(datastore_set.values) == len(protos) == len(names) == len(paths)
   return datastore_set
 

@@ -12,31 +12,31 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 
 def test_Generator_ToProto():
   generator = deeplearning.deepsmith.generator.Generator(
-      name="name",
+      name='name',
       optset=[
         deeplearning.deepsmith.generator.GeneratorOpt(
-            name=deeplearning.deepsmith.generator.GeneratorOptName(string="version"),
-            value=deeplearning.deepsmith.generator.GeneratorOptValue(string="1.0.0"),
+            name=deeplearning.deepsmith.generator.GeneratorOptName(string='version'),
+            value=deeplearning.deepsmith.generator.GeneratorOptValue(string='1.0.0'),
         ),
         deeplearning.deepsmith.generator.GeneratorOpt(
-            name=deeplearning.deepsmith.generator.GeneratorOptName(string="build"),
-            value=deeplearning.deepsmith.generator.GeneratorOptValue(string="debug+assert"),
+            name=deeplearning.deepsmith.generator.GeneratorOptName(string='build'),
+            value=deeplearning.deepsmith.generator.GeneratorOptValue(string='debug+assert'),
         ),
       ],
   )
   proto = generator.ToProto()
-  assert proto.name == "name"
+  assert proto.name == 'name'
   assert len(proto.opts) == 2
-  assert proto.opts["version"] == "1.0.0"
-  assert proto.opts["build"] == "debug+assert"
+  assert proto.opts['version'] == '1.0.0'
+  assert proto.opts['build'] == 'debug+assert'
 
 
 def test_Generator_GetOrAdd(session):
   proto = deepsmith_pb2.Generator(
-      name="name",
+      name='name',
       opts={
-        "version": "1.0.0",
-        "build": "debug+assert",
+        'version': '1.0.0',
+        'build': 'debug+assert',
       }
   )
   generator = deeplearning.deepsmith.generator.Generator.GetOrAdd(
@@ -48,11 +48,11 @@ def test_Generator_GetOrAdd(session):
   assert session.query(deeplearning.deepsmith.generator.GeneratorOptName).count() == 2
   assert session.query(deeplearning.deepsmith.generator.GeneratorOptValue).count() == 2
 
-  assert generator.name == "name"
+  assert generator.name == 'name'
   assert len(generator.optset) == 2
   assert len(generator.opts) == 2
-  assert generator.opts["version"] == "1.0.0"
-  assert generator.opts["build"] == "debug+assert"
+  assert generator.opts['version'] == '1.0.0'
+  assert generator.opts['build'] == 'debug+assert'
 
 
 def test_Generator_duplicates(session):
@@ -62,24 +62,24 @@ def test_Generator_duplicates(session):
   assert session.query(deeplearning.deepsmith.generator.GeneratorOptName).count() == 0
   assert session.query(deeplearning.deepsmith.generator.GeneratorOptValue).count() == 0
   proto_a1 = deepsmith_pb2.Generator(
-      name="a",
+      name='a',
       opts={
-        "arch": "x86_64",
-        "build": "debug+assert",
+        'arch': 'x86_64',
+        'build': 'debug+assert',
       },
   )
   proto_a2 = deepsmith_pb2.Generator(  # proto_a1 == proto_a2
-      name="a",
+      name='a',
       opts={
-        "arch": "x86_64",
-        "build": "debug+assert",
+        'arch': 'x86_64',
+        'build': 'debug+assert',
       },
   )
   proto_b = deepsmith_pb2.Generator(
-      name="b",
+      name='b',
       opts={
-        "arch": "x86_64",
-        "build": "opt",
+        'arch': 'x86_64',
+        'build': 'opt',
       },
   )
   assert proto_a1 == proto_a2  # Sanity check.
@@ -108,10 +108,10 @@ def test_Generator_duplicates(session):
 
 def test_Generator_GetOrAdd_ToProto_equivalence(session):
   proto_in = deepsmith_pb2.Generator(
-      name="a",
+      name='a',
       opts={
-        "arch": "x86_64",
-        "build": "debug+assert"
+        'arch': 'x86_64',
+        'build': 'debug+assert'
       },
   )
   generator = deeplearning.deepsmith.generator.Generator.GetOrAdd(
@@ -123,14 +123,14 @@ def test_Generator_GetOrAdd_ToProto_equivalence(session):
 
   proto_out = generator.ToProto()
   assert proto_in == proto_out
-  proto_out.ClearField("name")
+  proto_out.ClearField('name')
   assert proto_in != proto_out  # Sanity check.
 
 
 def test_Generator_GetOrAdd_no_opts(session):
   generator = deeplearning.deepsmith.generator.Generator.GetOrAdd(
       session, deepsmith_pb2.Generator(
-          name="name",
+          name='name',
           opts={},
       )
   )
@@ -146,25 +146,25 @@ def test_Generator_GetOrAdd_no_opts(session):
 def test_Generator_GetOrAdd_only_different_optset(session):
   generator_a = deeplearning.deepsmith.generator.Generator.GetOrAdd(
       session, deepsmith_pb2.Generator(
-          name="name",
+          name='name',
           opts={
-            "a": "A",
-            "b": "B",
-            "c": "C",
+            'a': 'A',
+            'b': 'B',
+            'c': 'C',
           },
       )
   )
   generator_b = deeplearning.deepsmith.generator.Generator.GetOrAdd(
       session, deepsmith_pb2.Generator(
-          name="name",
+          name='name',
           opts={
-            "d": "D",
+            'd': 'D',
           },
       )
   )
   generator_c = deeplearning.deepsmith.generator.Generator.GetOrAdd(
       session, deepsmith_pb2.Generator(
-          name="name",
+          name='name',
           opts={},
       )
   )
@@ -182,10 +182,10 @@ def test_Generator_GetOrAdd_rollback(session):
   deeplearning.deepsmith.generator.Generator.GetOrAdd(
       session,
       deepsmith_pb2.Generator(
-          name="name",
+          name='name',
           opts={
-            "a": "1",
-            "b": "2",
+            'a': '1',
+            'b': '2',
           },
       )
   )
@@ -225,11 +225,11 @@ def _AddExistingGenerator(session):
   deeplearning.deepsmith.generator.Generator.GetOrAdd(
       session,
       deepsmith_pb2.Generator(
-          name="name",
+          name='name',
           opts={
-            "a": "a",
-            "b": "b",
-            "c": "c",
+            'a': 'a',
+            'b': 'b',
+            'c': 'c',
           },
       )
   )
@@ -242,8 +242,8 @@ def test_benchmark_Generator_GetOrAdd_existing(session, benchmark):
 
 def main(argv):  # pylint: disable=missing-docstring
   del argv
-  sys.exit(pytest.main([__file__, "-v"]))
+  sys.exit(pytest.main([__file__, '-v']))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   app.run(main)

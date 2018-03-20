@@ -29,8 +29,8 @@ def test_StringTable_TruncatedString_uninitialized():
 
 def main(argv):  # pylint: disable=missing-docstring
   del argv
-  sys.exit(pytest.main([__file__, "-v"]))
+  sys.exit(pytest.main([__file__, '-v']))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   app.run(main)

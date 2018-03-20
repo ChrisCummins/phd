@@ -1,5 +1,4 @@
-"""
-The datastore acts as the bridge between the RPC frontend and the db backend.
+"""The datastore acts as the bridge between the RPC frontend and the db backend.
 """
 import contextlib
 import pathlib
@@ -109,6 +108,7 @@ class DataStore(object):
                       response: deepsmith_pb2.SubmitTestcasesResponse) -> None:
     """Add a sequence of testcases to the datastore.
     """
+    del response
     with self.Session(commit=True) as session:
       for testcase in request.testcases:
         self._AddOneTestcase(session, testcase)
@@ -121,7 +121,7 @@ class DataStore(object):
 
   def _BuildTestcaseRequestQuery(self, session, request) -> db.query_t:
     def _FilterToolchainGeneratorHarness(q):
-      if request.HasField("toolchain"):
+      if request.HasField('toolchain'):
         toolchain = db.GetOrAdd(
             session, deeplearning.deepsmith.toolchain.Toolchain,
             name=request.toolchain
@@ -132,7 +132,7 @@ class DataStore(object):
             deeplearning.deepsmith.testcase.Testcase.toolchain_id == toolchain.id)
 
       # Filter by generator.
-      if request.HasField("generator"):
+      if request.HasField('generator'):
         generator = session.query(deeplearning.deepsmith.generator.Generator) \
           .filter(deeplearning.deepsmith.generator.Generator.name == request.generator.name,
                   deeplearning.deepsmith.generator.Generator.version == request.generator.version) \
@@ -158,7 +158,7 @@ class DataStore(object):
     q = _FilterToolchainGeneratorHarness(q)
 
     testbed_id = None
-    if request.HasField("testbed"):
+    if request.HasField('testbed'):
       toolchain = db.GetOrAdd(
           session, deeplearning.deepsmith.toolchain.Toolchain,
           name=request.testbed
@@ -196,7 +196,7 @@ class DataStore(object):
       # Validate request parameters.
       if request.max_num_testcases < 1:
         raise InvalidRequest(
-            f"max_num_testcases must be >= 1, not {request.max_num_testcases}")
+            f'max_num_testcases must be >= 1, not {request.max_num_testcases}')
 
       q = self._BuildTestcaseRequestQuery(session, request)
       q.limit(request.max_num_testcases)

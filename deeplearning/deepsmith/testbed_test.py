@@ -13,34 +13,34 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 
 def test_Testbed_ToProto():
   testbed = deeplearning.deepsmith.testbed.Testbed(
-      toolchain=deeplearning.deepsmith.toolchain.Toolchain(string="cpp"),
-      name="clang",
+      toolchain=deeplearning.deepsmith.toolchain.Toolchain(string='cpp'),
+      name='clang',
       optset=[
         deeplearning.deepsmith.testbed.TestbedOpt(
-            name=deeplearning.deepsmith.testbed.TestbedOptName(string="arch"),
-            value=deeplearning.deepsmith.testbed.TestbedOptValue(string="x86_64"),
+            name=deeplearning.deepsmith.testbed.TestbedOptName(string='arch'),
+            value=deeplearning.deepsmith.testbed.TestbedOptValue(string='x86_64'),
         ),
         deeplearning.deepsmith.testbed.TestbedOpt(
-            name=deeplearning.deepsmith.testbed.TestbedOptName(string="build"),
-            value=deeplearning.deepsmith.testbed.TestbedOptValue(string="debug+assert"),
+            name=deeplearning.deepsmith.testbed.TestbedOptName(string='build'),
+            value=deeplearning.deepsmith.testbed.TestbedOptValue(string='debug+assert'),
         ),
       ],
   )
   proto = testbed.ToProto()
-  assert proto.toolchain == "cpp"
-  assert proto.name == "clang"
+  assert proto.toolchain == 'cpp'
+  assert proto.name == 'clang'
   assert len(proto.opts) == 2
-  assert proto.opts["arch"] == "x86_64"
-  assert proto.opts["build"] == "debug+assert"
+  assert proto.opts['arch'] == 'x86_64'
+  assert proto.opts['build'] == 'debug+assert'
 
 
 def test_Testbed_GetOrAdd(session):
   proto = deepsmith_pb2.Testbed(
-      toolchain="cpp",
-      name="clang",
+      toolchain='cpp',
+      name='clang',
       opts={
-        "arch": "x86_64",
-        "build": "debug+assert"
+        'arch': 'x86_64',
+        'build': 'debug+assert'
       },
   )
   testbed = deeplearning.deepsmith.testbed.Testbed.GetOrAdd(
@@ -51,12 +51,12 @@ def test_Testbed_GetOrAdd(session):
   assert session.query(deeplearning.deepsmith.testbed.TestbedOptName).count() == 2
   assert session.query(deeplearning.deepsmith.testbed.TestbedOptValue).count() == 2
 
-  assert testbed.toolchain.string == "cpp"
-  assert testbed.name == "clang"
+  assert testbed.toolchain.string == 'cpp'
+  assert testbed.name == 'clang'
   assert len(testbed.optset) == 2
   assert len(testbed.opts) == 2
-  assert testbed.opts["arch"] == "x86_64"
-  assert testbed.opts["build"] == "debug+assert"
+  assert testbed.opts['arch'] == 'x86_64'
+  assert testbed.opts['build'] == 'debug+assert'
 
 
 def test_Testbed_GetOrAdd_duplicates(session):
@@ -67,27 +67,27 @@ def test_Testbed_GetOrAdd_duplicates(session):
   assert session.query(deeplearning.deepsmith.testbed.TestbedOptName).count() == 0
   assert session.query(deeplearning.deepsmith.testbed.TestbedOptValue).count() == 0
   proto_a1 = deepsmith_pb2.Testbed(
-      toolchain="cpp",
-      name="clang",
+      toolchain='cpp',
+      name='clang',
       opts={
-        "arch": "x86_64",
-        "build": "debug+assert",
+        'arch': 'x86_64',
+        'build': 'debug+assert',
       },
   )
   proto_a2 = deepsmith_pb2.Testbed(
-      toolchain="cpp",
-      name="clang",
+      toolchain='cpp',
+      name='clang',
       opts={
-        "arch": "x86_64",
-        "build": "debug+assert",
+        'arch': 'x86_64',
+        'build': 'debug+assert',
       },
   )
   proto_b = deepsmith_pb2.Testbed(
-      toolchain="cpp",
-      name="gcc",
+      toolchain='cpp',
+      name='gcc',
       opts={
-        "arch": "x86_64",
-        "build": "opt",
+        'arch': 'x86_64',
+        'build': 'opt',
       },
   )
   assert proto_a1 == proto_a2  # Sanity check.
@@ -119,11 +119,11 @@ def test_Testbed_GetOrAdd_duplicates(session):
 
 def test_Testbed_GetOrAdd_ToProto_equivalence(session):
   proto_in = deepsmith_pb2.Testbed(
-      toolchain="cpp",
-      name="clang",
+      toolchain='cpp',
+      name='clang',
       opts={
-        "arch": "x86_64",
-        "build": "debug+assert"
+        'arch': 'x86_64',
+        'build': 'debug+assert'
       },
   )
   testbed = deeplearning.deepsmith.testbed.Testbed.GetOrAdd(session, proto_in)
@@ -134,15 +134,15 @@ def test_Testbed_GetOrAdd_ToProto_equivalence(session):
 
   proto_out = testbed.ToProto()
   assert proto_in == proto_out
-  proto_out.ClearField("toolchain")
+  proto_out.ClearField('toolchain')
   assert proto_in != proto_out  # Sanity check.
 
 
 def test_Testbed_GetOrAdd_no_opts(session):
   testbed = deeplearning.deepsmith.testbed.Testbed.GetOrAdd(
       session, deepsmith_pb2.Testbed(
-          toolchain="toolchain",
-          name="name",
+          toolchain='toolchain',
+          name='name',
           opts={},
       )
   )
@@ -158,28 +158,28 @@ def test_Testbed_GetOrAdd_no_opts(session):
 def test_Testbed_GetOrAdd_only_different_optset(session):
   testbed_a = deeplearning.deepsmith.testbed.Testbed.GetOrAdd(
       session, deepsmith_pb2.Testbed(
-          toolchain="toolchain",
-          name="name",
+          toolchain='toolchain',
+          name='name',
           opts={
-            "a": "A",
-            "b": "B",
-            "c": "C",
+            'a': 'A',
+            'b': 'B',
+            'c': 'C',
           },
       )
   )
   testbed_b = deeplearning.deepsmith.testbed.Testbed.GetOrAdd(
       session, deepsmith_pb2.Testbed(
-          toolchain="toolchain",
-          name="name",
+          toolchain='toolchain',
+          name='name',
           opts={
-            "d": "D",
+            'd': 'D',
           },
       )
   )
   testbed_c = deeplearning.deepsmith.testbed.Testbed.GetOrAdd(
       session, deepsmith_pb2.Testbed(
-          toolchain="toolchain",
-          name="name",
+          toolchain='toolchain',
+          name='name',
           opts={},
       )
   )
@@ -197,11 +197,11 @@ def test_Testbed_GetOrAdd_rollback(session):
   deeplearning.deepsmith.testbed.Testbed.GetOrAdd(
       session,
       deepsmith_pb2.Testbed(
-          toolchain="opencl",
-          name="nvidia",
+          toolchain='opencl',
+          name='nvidia',
           opts={
-            "opencl": "1.2",
-            "devtype": "GPU",
+            'opencl': '1.2',
+            'devtype': 'GPU',
           },
       )
   )
@@ -242,12 +242,12 @@ def _AddExistingTestbed(session):
   deeplearning.deepsmith.testbed.Testbed.GetOrAdd(
       session,
       deepsmith_pb2.Testbed(
-          toolchain="toolchain",
-          name="name",
+          toolchain='toolchain',
+          name='name',
           opts={
-            "a": "a",
-            "b": "b",
-            "c": "c",
+            'a': 'a',
+            'b': 'b',
+            'c': 'c',
           },
       )
   )
@@ -260,8 +260,8 @@ def test_benchmark_Testbed_GetOrAdd_existing(session, benchmark):
 
 def main(argv):  # pylint: disable=missing-docstring
   del argv
-  sys.exit(pytest.main([__file__, "-v"]))
+  sys.exit(pytest.main([__file__, '-v']))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   app.run(main)

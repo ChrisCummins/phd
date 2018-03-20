@@ -12,31 +12,31 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 
 def test_Harness_ToProto():
   harness = deeplearning.deepsmith.harness.Harness(
-      name="name",
+      name='name',
       optset=[
         deeplearning.deepsmith.harness.HarnessOpt(
-            name=deeplearning.deepsmith.harness.HarnessOptName(string="version"),
-            value=deeplearning.deepsmith.harness.HarnessOptValue(string="1.0.0"),
+            name=deeplearning.deepsmith.harness.HarnessOptName(string='version'),
+            value=deeplearning.deepsmith.harness.HarnessOptValue(string='1.0.0'),
         ),
         deeplearning.deepsmith.harness.HarnessOpt(
-            name=deeplearning.deepsmith.harness.HarnessOptName(string="build"),
-            value=deeplearning.deepsmith.harness.HarnessOptValue(string="debug+assert"),
+            name=deeplearning.deepsmith.harness.HarnessOptName(string='build'),
+            value=deeplearning.deepsmith.harness.HarnessOptValue(string='debug+assert'),
         ),
       ],
   )
   proto = harness.ToProto()
-  assert proto.name == "name"
+  assert proto.name == 'name'
   assert len(proto.opts) == 2
-  assert proto.opts["version"] == "1.0.0"
-  assert proto.opts["build"] == "debug+assert"
+  assert proto.opts['version'] == '1.0.0'
+  assert proto.opts['build'] == 'debug+assert'
 
 
 def test_Harness_GetOrAdd(session):
   proto = deepsmith_pb2.Harness(
-      name="name",
+      name='name',
       opts={
-        "version": "1.0.0",
-        "build": "debug+assert",
+        'version': '1.0.0',
+        'build': 'debug+assert',
       }
   )
   harness = deeplearning.deepsmith.harness.Harness.GetOrAdd(
@@ -48,11 +48,11 @@ def test_Harness_GetOrAdd(session):
   assert session.query(deeplearning.deepsmith.harness.HarnessOptName).count() == 2
   assert session.query(deeplearning.deepsmith.harness.HarnessOptValue).count() == 2
 
-  assert harness.name == "name"
+  assert harness.name == 'name'
   assert len(harness.optset) == 2
   assert len(harness.opts) == 2
-  assert harness.opts["version"] == "1.0.0"
-  assert harness.opts["build"] == "debug+assert"
+  assert harness.opts['version'] == '1.0.0'
+  assert harness.opts['build'] == 'debug+assert'
 
 
 def test_Harness_duplicates(session):
@@ -62,24 +62,24 @@ def test_Harness_duplicates(session):
   assert session.query(deeplearning.deepsmith.harness.HarnessOptName).count() == 0
   assert session.query(deeplearning.deepsmith.harness.HarnessOptValue).count() == 0
   proto_a1 = deepsmith_pb2.Harness(
-      name="a",
+      name='a',
       opts={
-        "arch": "x86_64",
-        "build": "debug+assert",
+        'arch': 'x86_64',
+        'build': 'debug+assert',
       },
   )
   proto_a2 = deepsmith_pb2.Harness(  # proto_a1 == proto_a2
-      name="a",
+      name='a',
       opts={
-        "arch": "x86_64",
-        "build": "debug+assert",
+        'arch': 'x86_64',
+        'build': 'debug+assert',
       },
   )
   proto_b = deepsmith_pb2.Harness(
-      name="b",
+      name='b',
       opts={
-        "arch": "x86_64",
-        "build": "opt",
+        'arch': 'x86_64',
+        'build': 'opt',
       },
   )
   assert proto_a1 == proto_a2  # Sanity check.
@@ -108,10 +108,10 @@ def test_Harness_duplicates(session):
 
 def test_Harness_GetOrAdd_ToProto_equivalence(session):
   proto_in = deepsmith_pb2.Harness(
-      name="a",
+      name='a',
       opts={
-        "arch": "x86_64",
-        "build": "debug+assert"
+        'arch': 'x86_64',
+        'build': 'debug+assert'
       },
   )
   harness = deeplearning.deepsmith.harness.Harness.GetOrAdd(
@@ -123,14 +123,14 @@ def test_Harness_GetOrAdd_ToProto_equivalence(session):
 
   proto_out = harness.ToProto()
   assert proto_in == proto_out
-  proto_out.ClearField("name")
+  proto_out.ClearField('name')
   assert proto_in != proto_out  # Sanity check.
 
 
 def test_Harness_GetOrAdd_no_opts(session):
   harness = deeplearning.deepsmith.harness.Harness.GetOrAdd(
       session, deepsmith_pb2.Harness(
-          name="name",
+          name='name',
           opts={},
       )
   )
@@ -146,25 +146,25 @@ def test_Harness_GetOrAdd_no_opts(session):
 def test_Harness_GetOrAdd_only_different_optset(session):
   harness_a = deeplearning.deepsmith.harness.Harness.GetOrAdd(
       session, deepsmith_pb2.Harness(
-          name="name",
+          name='name',
           opts={
-            "a": "A",
-            "b": "B",
-            "c": "C",
+            'a': 'A',
+            'b': 'B',
+            'c': 'C',
           },
       )
   )
   harness_b = deeplearning.deepsmith.harness.Harness.GetOrAdd(
       session, deepsmith_pb2.Harness(
-          name="name",
+          name='name',
           opts={
-            "d": "D",
+            'd': 'D',
           },
       )
   )
   harness_c = deeplearning.deepsmith.harness.Harness.GetOrAdd(
       session, deepsmith_pb2.Harness(
-          name="name",
+          name='name',
           opts={},
       )
   )
@@ -182,10 +182,10 @@ def test_Harness_GetOrAdd_rollback(session):
   deeplearning.deepsmith.harness.Harness.GetOrAdd(
       session,
       deepsmith_pb2.Harness(
-          name="name",
+          name='name',
           opts={
-            "a": "1",
-            "b": "2",
+            'a': '1',
+            'b': '2',
           },
       )
   )
@@ -225,11 +225,11 @@ def _AddExistingHarness(session):
   deeplearning.deepsmith.harness.Harness.GetOrAdd(
       session,
       deepsmith_pb2.Harness(
-          name="name",
+          name='name',
           opts={
-            "a": "a",
-            "b": "b",
-            "c": "c",
+            'a': 'a',
+            'b': 'b',
+            'c': 'c',
           },
       )
   )
@@ -242,8 +242,8 @@ def test_benchmark_Harness_GetOrAdd_existing(session, benchmark):
 
 def main(argv):  # pylint: disable=missing-docstring
   del argv
-  sys.exit(pytest.main([__file__, "-v"]))
+  sys.exit(pytest.main([__file__, '-v']))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   app.run(main)

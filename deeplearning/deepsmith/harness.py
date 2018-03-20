@@ -1,4 +1,5 @@
 """This file implements the testcase harness."""
+import binascii
 import hashlib
 
 import datetime
@@ -20,7 +21,7 @@ _HarnessOptValueId = db.StringTable.id_t
 
 class Harness(db.Table):
   id_t = sql.Integer
-  __tablename__ = "harnesses"
+  __tablename__ = 'harnesses'
 
   # Columns:
   id: int = sql.Column(id_t, primary_key=True)
@@ -34,12 +35,12 @@ class Harness(db.Table):
   optset_id: bytes = sql.Column(_HarnessOptSetId, nullable=False)
 
   # Relationships:
-  testcases: typing.List["Testcase"] = orm.relationship(
-      "Testcase", back_populates="harness")
-  optset: typing.List["HarnessOpt"] = orm.relationship(
-      "HarnessOpt", secondary="harness_optsets",
-      primaryjoin="HarnessOptSet.id == Harness.optset_id",
-      secondaryjoin="HarnessOptSet.opt_id == HarnessOpt.id")
+  testcases: typing.List['Testcase'] = orm.relationship(
+      'Testcase', back_populates='harness')
+  optset: typing.List['HarnessOpt'] = orm.relationship(
+      'HarnessOpt', secondary='harness_optsets',
+      primaryjoin='HarnessOptSet.id == Harness.optset_id',
+      secondaryjoin='HarnessOptSet.opt_id == HarnessOpt.id')
 
   # Constraints:
   __table_args__ = (
@@ -80,14 +81,14 @@ class Harness(db.Table):
 
   @classmethod
   def GetOrAdd(cls, session: db.session_t,
-               proto: deepsmith_pb2.Harness) -> "Harness":
+               proto: deepsmith_pb2.Harness) -> 'Harness':
 
     # Build the list of options, and md5sum the key value strings.
     opts = []
     md5 = hashlib.md5()
     for proto_opt_name in sorted(proto.opts):
       proto_opt_value = proto.opts[proto_opt_name]
-      md5.update((proto_opt_name + proto_opt_value).encode("utf-8"))
+      md5.update((proto_opt_name + proto_opt_value).encode('utf-8'))
       opt = db.GetOrAdd(
           session, HarnessOpt,
           name=HarnessOptName.GetOrAdd(session, proto_opt_name),
@@ -112,75 +113,75 @@ class HarnessOptSet(db.Table):
 
   An option set groups options for harnesses.
   """
-  __tablename__ = "harness_optsets"
+  __tablename__ = 'harness_optsets'
   id_t = _HarnessOptSetId
 
   # Columns.
   id: bytes = sql.Column(id_t, nullable=False)
   opt_id: int = sql.Column(
-      _HarnessOptId, sql.ForeignKey("harness_opts.id"), nullable=False)
+      _HarnessOptId, sql.ForeignKey('harness_opts.id'), nullable=False)
 
   # Relationships.
   harnesses: typing.List[Harness] = orm.relationship(
       Harness, primaryjoin=id == orm.foreign(Harness.optset_id))
-  opt: "HarnessOpt" = orm.relationship("HarnessOpt")
+  opt: 'HarnessOpt' = orm.relationship('HarnessOpt')
 
   # Constraints.
   __table_args__ = (
     sql.PrimaryKeyConstraint(
-        "id", "opt_id", name="unique_harness_optset"),
+        'id', 'opt_id', name='unique_harness_optset'),
   )
 
   def __repr__(self):
-    hex_id = binascii.hexlify(self.id).decode("utf-8")
-    return f"{hex_id}: {self.opt_id}={self.opt}"
+    hex_id = binascii.hexlify(self.id).decode('utf-8')
+    return f'{hex_id}: {self.opt_id}={self.opt}'
 
 
 class HarnessOpt(db.Table):
   """A harness option consists of a <name, value> pair."""
   id_t = _HarnessOptId
-  __tablename__ = "harness_opts"
+  __tablename__ = 'harness_opts'
 
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
       sql.DateTime, nullable=False, default=db.now)
   name_id: _HarnessOptNameId = sql.Column(
-      _HarnessOptNameId, sql.ForeignKey("harness_opt_names.id"), nullable=False)
+      _HarnessOptNameId, sql.ForeignKey('harness_opt_names.id'), nullable=False)
   value_id: _HarnessOptValueId = sql.Column(
-      _HarnessOptValueId, sql.ForeignKey("harness_opt_values.id"),
+      _HarnessOptValueId, sql.ForeignKey('harness_opt_values.id'),
       nullable=False)
 
   # Relationships.
-  name: "HarnessOptName" = orm.relationship(
-      "HarnessOptName", back_populates="opts")
-  value: "HarnessOptValue" = orm.relationship(
-      "HarnessOptValue", back_populates="opts")
+  name: 'HarnessOptName' = orm.relationship(
+      'HarnessOptName', back_populates='opts')
+  value: 'HarnessOptValue' = orm.relationship(
+      'HarnessOptValue', back_populates='opts')
 
   # Constraints.
   __table_args__ = (
-    sql.UniqueConstraint("name_id", "value_id", name="unique_harness_opt"),
+    sql.UniqueConstraint('name_id', 'value_id', name='unique_harness_opt'),
   )
 
   def __repr__(self):
-    return f"{self.name}: {self.value}"
+    return f'{self.name}: {self.value}'
 
 
 class HarnessOptName(db.StringTable):
   """The name of a harness option."""
   id_t = _HarnessOptNameId
-  __tablename__ = "harness_opt_names"
+  __tablename__ = 'harness_opt_names'
 
   # Relationships.
   opts: typing.List[HarnessOpt] = orm.relationship(
-      HarnessOpt, back_populates="name")
+      HarnessOpt, back_populates='name')
 
 
 class HarnessOptValue(db.StringTable):
   """The value of a harness option."""
   id_t = _HarnessOptValueId
-  __tablename__ = "harness_opt_values"
+  __tablename__ = 'harness_opt_values'
 
   # Relationships.
   opts: typing.List[HarnessOpt] = orm.relationship(
-      HarnessOpt, back_populates="value")
+      HarnessOpt, back_populates='value')

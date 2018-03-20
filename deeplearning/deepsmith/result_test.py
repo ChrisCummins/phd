@@ -1,7 +1,7 @@
 """Tests for //deeplearning/deepsmith:result."""
-import datetime
 import sys
 
+import datetime
 import pytest
 from absl import app
 
@@ -19,52 +19,52 @@ def test_Result_ToProto():
 
   result = deeplearning.deepsmith.result.Result(
       testcase=deeplearning.deepsmith.testcase.Testcase(
-          toolchain=deeplearning.deepsmith.toolchain.Toolchain(string="cpp"),
+          toolchain=deeplearning.deepsmith.toolchain.Toolchain(string='cpp'),
           generator=deeplearning.deepsmith.generator.Generator(
-              name="generator"
+              name='generator'
           ),
-          harness=deeplearning.deepsmith.harness.Harness(name="harness"),
+          harness=deeplearning.deepsmith.harness.Harness(name='harness'),
           inputset=[
             deeplearning.deepsmith.testcase.TestcaseInput(
                 name=deeplearning.deepsmith.testcase.TestcaseInputName(
-                    string="src"
+                    string='src'
                 ),
                 value=deeplearning.deepsmith.testcase.TestcaseInputValue(
-                    string="void main() {}"
+                    string='void main() {}'
                 ),
             ),
             deeplearning.deepsmith.testcase.TestcaseInput(
                 name=deeplearning.deepsmith.testcase.TestcaseInputName(
-                    string="data"
+                    string='data'
                 ),
                 value=deeplearning.deepsmith.testcase.TestcaseInputValue(
-                    string="[1,2]"
+                    string='[1,2]'
                 ),
             ),
           ],
           invariant_optset=[
             deeplearning.deepsmith.testcase.TestcaseInvariantOpt(
                 name=deeplearning.deepsmith.testcase.TestcaseInvariantOptName(
-                    string="config"
+                    string='config'
                 ),
                 value=deeplearning.deepsmith.testcase.TestcaseInvariantOptValue(
-                    string="opt"
+                    string='opt'
                 ),
             ),
           ],
           profiling_events=[
             deeplearning.deepsmith.profiling_event.TestcaseProfilingEvent(
-                client=deeplearning.deepsmith.client.Client(string="localhost"),
+                client=deeplearning.deepsmith.client.Client(string='localhost'),
                 type=deeplearning.deepsmith.profiling_event.ProfilingEventType(
-                    string="generate",
+                    string='generate',
                 ),
                 duration_seconds=1.0,
                 date=now,
             ),
             deeplearning.deepsmith.profiling_event.TestcaseProfilingEvent(
-                client=deeplearning.deepsmith.client.Client(string="localhost"),
+                client=deeplearning.deepsmith.client.Client(string='localhost'),
                 type=deeplearning.deepsmith.profiling_event.ProfilingEventType(
-                    string="foo",
+                    string='foo',
                 ),
                 duration_seconds=1.0,
                 date=now,
@@ -72,23 +72,23 @@ def test_Result_ToProto():
           ]
       ),
       testbed=deeplearning.deepsmith.testbed.Testbed(
-          toolchain=deeplearning.deepsmith.toolchain.Toolchain(string="cpp"),
-          name="clang",
+          toolchain=deeplearning.deepsmith.toolchain.Toolchain(string='cpp'),
+          name='clang',
           optset=[
             deeplearning.deepsmith.testbed.TestbedOpt(
                 name=deeplearning.deepsmith.testbed.TestbedOptName(
-                    string="arch"
+                    string='arch'
                 ),
                 value=deeplearning.deepsmith.testbed.TestbedOptValue(
-                    string="x86_64"
+                    string='x86_64'
                 ),
             ),
             deeplearning.deepsmith.testbed.TestbedOpt(
                 name=deeplearning.deepsmith.testbed.TestbedOptName(
-                    string="build"
+                    string='build'
                 ),
                 value=deeplearning.deepsmith.testbed.TestbedOptValue(
-                    string="debug+assert"
+                    string='debug+assert'
                 ),
             ),
           ],
@@ -96,31 +96,31 @@ def test_Result_ToProto():
       returncode=0,
       outputset=[
         deeplearning.deepsmith.result.ResultOutput(
-            name=deeplearning.deepsmith.result.ResultOutputName(string="stdout"),
+            name=deeplearning.deepsmith.result.ResultOutputName(string='stdout'),
             value=deeplearning.deepsmith.result.ResultOutputValue(
-                truncated_value="Hello, world!"
+                truncated_value='Hello, world!'
             ),
         ),
         deeplearning.deepsmith.result.ResultOutput(
-            name=deeplearning.deepsmith.result.ResultOutputName(string="stderr"),
+            name=deeplearning.deepsmith.result.ResultOutputName(string='stderr'),
             value=deeplearning.deepsmith.result.ResultOutputValue(
-                truncated_value=""
+                truncated_value=''
             ),
         ),
       ],
       profiling_events=[
         deeplearning.deepsmith.profiling_event.ResultProfilingEvent(
-            client=deeplearning.deepsmith.client.Client(string="localhost"),
+            client=deeplearning.deepsmith.client.Client(string='localhost'),
             type=deeplearning.deepsmith.profiling_event.ProfilingEventType(
-                string="exec",
+                string='exec',
             ),
             duration_seconds=10.0,
             date=now,
         ),
         deeplearning.deepsmith.profiling_event.ResultProfilingEvent(
-            client=deeplearning.deepsmith.client.Client(string="localhost"),
+            client=deeplearning.deepsmith.client.Client(string='localhost'),
             type=deeplearning.deepsmith.profiling_event.ProfilingEventType(
-                string="overhead",
+                string='overhead',
             ),
             duration_seconds=1.0,
             date=now,
@@ -128,90 +128,90 @@ def test_Result_ToProto():
       ],
   )
   proto = result.ToProto()
-  assert proto.testcase.toolchain == "cpp"
-  assert proto.testcase.generator.name == "generator"
-  assert proto.testcase.harness.name == "harness"
+  assert proto.testcase.toolchain == 'cpp'
+  assert proto.testcase.generator.name == 'generator'
+  assert proto.testcase.harness.name == 'harness'
   assert len(proto.testcase.inputs) == 2
-  assert proto.testcase.inputs["src"] == "void main() {}"
-  assert proto.testcase.inputs["data"] == "[1,2]"
+  assert proto.testcase.inputs['src'] == 'void main() {}'
+  assert proto.testcase.inputs['data'] == '[1,2]'
   assert len(proto.testcase.invariant_opts) == 1
-  assert proto.testcase.invariant_opts["config"] == "opt"
+  assert proto.testcase.invariant_opts['config'] == 'opt'
   assert len(proto.testcase.profiling_events) == 2
-  assert proto.testcase.profiling_events[0].client == "localhost"
-  assert proto.testcase.profiling_events[0].type == "generate"
-  assert proto.testcase.profiling_events[0].client == "localhost"
-  assert proto.testbed.toolchain == "cpp"
-  assert proto.testbed.name == "clang"
+  assert proto.testcase.profiling_events[0].client == 'localhost'
+  assert proto.testcase.profiling_events[0].type == 'generate'
+  assert proto.testcase.profiling_events[0].client == 'localhost'
+  assert proto.testbed.toolchain == 'cpp'
+  assert proto.testbed.name == 'clang'
   assert len(proto.testbed.opts) == 2
-  assert proto.testbed.opts["arch"] == "x86_64"
-  assert proto.testbed.opts["build"] == "debug+assert"
+  assert proto.testbed.opts['arch'] == 'x86_64'
+  assert proto.testbed.opts['build'] == 'debug+assert'
   assert len(proto.outputs) == 2
-  assert proto.outputs["stdout"] == "Hello, world!"
-  assert proto.outputs["stderr"] == ""
+  assert proto.outputs['stdout'] == 'Hello, world!'
+  assert proto.outputs['stderr'] == ''
   assert len(proto.testcase.profiling_events) == 2
-  assert proto.profiling_events[0].client == "localhost"
-  assert proto.profiling_events[0].type == "exec"
+  assert proto.profiling_events[0].client == 'localhost'
+  assert proto.profiling_events[0].type == 'exec'
   assert proto.profiling_events[0].duration_seconds == 10.0
-  assert proto.profiling_events[1].client == "localhost"
-  assert proto.profiling_events[1].type == "overhead"
+  assert proto.profiling_events[1].client == 'localhost'
+  assert proto.profiling_events[1].type == 'overhead'
   assert proto.profiling_events[1].duration_seconds == 1.0
 
 
 def test_Generator_GetOrAdd_ToProto_equivalence(session):
   proto_in = deepsmith_pb2.Result(
       testcase=deepsmith_pb2.Testcase(
-          toolchain="cpp",
+          toolchain='cpp',
           generator=deepsmith_pb2.Generator(
-              name="generator"
+              name='generator'
           ),
           harness=deepsmith_pb2.Harness(
-              name="harness"
+              name='harness'
           ),
           inputs={
-            "src": "void main() {}",
-            "data": "[1,2]",
+            'src': 'void main() {}',
+            'data': '[1,2]',
           },
           invariant_opts={
-            "config": "opt",
+            'config': 'opt',
           },
           profiling_events=[
             deepsmith_pb2.ProfilingEvent(
-                client="localhost",
-                type="generate",
+                client='localhost',
+                type='generate',
                 duration_seconds=1.0,
                 date_epoch_seconds=1123123123,
             ),
             deepsmith_pb2.ProfilingEvent(
-                client="localhost",
-                type="foo",
+                client='localhost',
+                type='foo',
                 duration_seconds=1.0,
                 date_epoch_seconds=1123123123,
             ),
           ]
       ),
       testbed=deepsmith_pb2.Testbed(
-          toolchain="cpp",
-          name="clang",
+          toolchain='cpp',
+          name='clang',
           opts={
-            "arch": "x86_64",
-            "build": "debug+assert",
+            'arch': 'x86_64',
+            'build': 'debug+assert',
           },
       ),
       returncode=0,
       outputs={
-        "stdout": "Hello, world!",
-        "stderr": "",
+        'stdout': 'Hello, world!',
+        'stderr': '',
       },
       profiling_events=[
         deepsmith_pb2.ProfilingEvent(
-            client="localhost",
-            type="exec",
+            client='localhost',
+            type='exec',
             duration_seconds=10.0,
             date_epoch_seconds=1123123123,
         ),
         deepsmith_pb2.ProfilingEvent(
-            client="localhost",
-            type="overhead",
+            client='localhost',
+            type='overhead',
             duration_seconds=1.0,
             date_epoch_seconds=1123123123,
         ),
@@ -225,14 +225,14 @@ def test_Generator_GetOrAdd_ToProto_equivalence(session):
   session.flush()
   proto_out = testcase.ToProto()
   assert proto_in == proto_out
-  proto_out.ClearField("outputs")
+  proto_out.ClearField('outputs')
   assert proto_in != proto_out  # Sanity check.
 
 
 def main(argv):  # pylint: disable=missing-docstring
   del argv
-  sys.exit(pytest.main([__file__, "-v"]))
+  sys.exit(pytest.main([__file__, '-v']))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   app.run(main)
