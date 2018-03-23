@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with libcecl.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "./cecl.h"
+#include "gpu/libcecl/libcecl.h"
 
 #include <stdbool.h>
 #include <stdio.h>
