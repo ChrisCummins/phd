@@ -8,6 +8,14 @@ from deeplearning.deepsmith import db
 from deeplearning.deepsmith import toolchain
 
 
+class DataStoreProtoMock(object):
+  """DataStore proto mock class."""
+  testonly = True
+
+  def HasField(self, name):
+    return False
+
+
 def test_Table_GetOrAdd_abstract():
   with pytest.raises(NotImplementedError):
     db.Table.GetOrAdd('session', 'proto')
@@ -69,6 +77,11 @@ def test_StringTable_TruncatedString(session):
 def test_StringTable_TruncatedString_uninitialized():
   t = toolchain.Toolchain()
   assert len(t.TruncatedString()) == 0
+
+
+def test_MakeEngine_unknown_backend():
+  with pytest.raises(NotImplementedError):
+    db.MakeEngine(DataStoreProtoMock())
 
 
 def main(argv):  # pylint: disable=missing-docstring

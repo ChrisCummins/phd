@@ -28,6 +28,16 @@ Base = declarative_base()
 now = datetime.datetime.utcnow
 
 
+class DatabaseDoesNotExist(EnvironmentError):
+  """Raised if the database does not exist."""
+
+  def __init__(self):
+    super(DatabaseDoesNotExist, self).__init__(
+        'Database does not exist. Either create it yourself, or set field '
+        'create_database_if_not_exist in DataStore proto to create it '
+        'automatically.')
+
+
 class InvalidInputError(ValueError):
   pass
 
@@ -215,6 +225,8 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
   """Instantiate a database engine.
 
   Raises:
+    DatabaseDoesNotExist: If the database does not exist and
+      config.create_database_if_not_exist not set.
     NotImplementedError: If the datastore backend is not supported.
   """
   # Force database creation on testonly databases:
@@ -226,8 +238,9 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
       url = 'sqlite://'
     else:
       path = pathlib.Path(pbutil.RaiseIfNotSet(config.sqlite, 'path')).absolute()
-      if config.create_database_if_not_exist:
-        path.parent.mkdir(parents=True, exist_ok=True)
+      if not config.create_database_if_not_exist and not path.is_file():
+        raise DatabaseDoesNotExist()
+      path.parent.mkdir(parents=True, exist_ok=True)
       abspath = path.absolute()
       url = f'sqlite:///{abspath}'
     public_url = url
@@ -239,17 +252,16 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
     database = pbutil.RaiseIfNotSet(config.mysql, 'database')
     url_base = f'mysql://{username}:{password}@{hostname}:{port}'
 
-    if config.create_database_if_not_exist:
-      # We could use 'CREATE DATABASE IF NOT EXIST' rather than checking for the
-      # database first but doing so causes a warning to be printed to stderr
-      # which looks ugly to me.
-      engine = sql.create_engine(url_base)
-      query = engine.execute('SELECT SCHEMA_NAME FROM '
-                             'INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '
-                             f"'{database}'")
-      if not query.first():
+    engine = sql.create_engine(url_base)
+    query = engine.execute(
+        'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME '
+        f"= '{database}'")
+    if not query.first():
+      if config.create_database_if_not_exist:
         engine.execute(f"CREATE DATABASE `{database}`")
-
+      else:
+        raise DatabaseDoesNotExist()
+    engine.dispose()
     # Use UTF-8 encoding (default is latin-1) when connecting to MySQL.
     # See: https://stackoverflow.com/a/16404147/1318051
     public_url = f'mysql://{username}@{hostname}:{port}/{database}?charset=utf8'
@@ -262,22 +274,24 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
     database = pbutil.RaiseIfNotSet(config.postgresql, 'database')
     url_base = f'postgresql+psycopg2://{username}:{password}@{hostname}:{port}'
 
-    if config.create_database_if_not_exist:
-      engine = sql.create_engine(f'{url_base}/postgres')
-      conn = engine.connect()
-      query = conn.execute(
-          f"SELECT 1 FROM pg_database WHERE datname = '{database}'")
-      if not query.first():
+    engine = sql.create_engine(f'{url_base}/postgres')
+    conn = engine.connect()
+    query = conn.execute(
+        f"SELECT 1 FROM pg_database WHERE datname = '{database}'")
+    if not query.first():
+      if config.create_database_if_not_exist:
         # PostgreSQL does not let you create databases within a transaction, so
         # manually complete the transaction before creating the database.
         conn.execute('COMMIT')
         conn.execute(f"CREATE DATABASE '{database}'")
-      conn.close()
-
+      else:
+        raise DatabaseDoesNotExist()
+    conn.close()
+    engine.dispose()
     public_url = f'postgresql://{username}@{hostname}:{port}/{database}'
     url = f'{url_base}/{database}'
   else:
-    raise NotImplementedError(f'unsupported database engine {engine}')
+    raise NotImplementedError(f'unsupported database engine')
 
   logging.info('creating database engine %s', public_url)
   return sql.create_engine(url, encoding='utf-8', echo=FLAGS.sql_echo)
