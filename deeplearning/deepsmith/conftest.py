@@ -45,7 +45,8 @@ _DATASTORE_TESTSET = _ReadTestDataStoreFiles()
 
 
 @pytest.fixture(ids=_DATASTORE_TESTSET.values.keys(),
-                params=_DATASTORE_TESTSET.values.values())
+                params=_DATASTORE_TESTSET.values.values(),
+                scope='session')
 def ds(request) -> datastore.DataStore:
   """Create an in-memory SQLite datastore for testing.
 
@@ -58,7 +59,8 @@ def ds(request) -> datastore.DataStore:
 
 
 @pytest.fixture(ids=_DATASTORE_TESTSET.values.keys(),
-                params=_DATASTORE_TESTSET.values.values())
+                params=_DATASTORE_TESTSET.values.values(),
+                scope='session')
 def session(request) -> db.session_t:
   """Create a session for an in-memory SQLite datastore.
 
