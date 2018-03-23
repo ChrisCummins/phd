@@ -50,7 +50,7 @@ class StringTooLongError(ValueError):
 
   def __repr__(self):
     n = len(self.max_len)
-    s = string[:20]
+    s = self.string[:20]
     return (f'String "{s}..." too long for "{self.column_name}". ' +
             f'Max length: {self.max_len}, actual length: {n}. ')
 
