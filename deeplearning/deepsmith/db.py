@@ -258,7 +258,10 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
                  'SCHEMA_NAME = :database'), database=database)
     if not query.first():
       if config.create_database_if_not_exist:
-        engine.execute(sql.text('CREATE DATABASE :database'), database=database)
+        # We can't use sql.text() escaping here becuase it uses singlequotes
+        # for escaping. MySQL only accepts backticks for quoting database
+        # names.
+        engine.execute(f'CREATE DATABASE `{database}`')
       else:
         raise DatabaseDoesNotExist()
     engine.dispose()
