@@ -83,7 +83,7 @@ class Table(Base):
     Returns:
       A protocol buffer.
     """
-    typename = type(cls).__name__
+    typename = type(self).__name__
     raise NotImplementedError(f'{typename}.ToProto() not implemented')
 
   def SetProto(self, proto: pbutil.ProtocolBuffer) -> pbutil.ProtocolBuffer:
@@ -95,7 +95,7 @@ class Table(Base):
     Returns:
       The same protocol buffer that is passed as argument.
     """
-    typename = type(cls).__name__
+    typename = type(self).__name__
     raise NotImplementedError(f'{typename}.SetProto() not implemented')
 
   @classmethod
