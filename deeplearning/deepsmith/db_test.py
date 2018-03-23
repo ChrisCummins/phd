@@ -13,6 +13,7 @@ class DataStoreProtoMock(object):
   testonly = True
 
   def HasField(self, name):
+    del name
     return False
 
 
