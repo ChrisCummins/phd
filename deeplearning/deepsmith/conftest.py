@@ -33,6 +33,8 @@ def _ReadTestDataStoreFiles() -> datastore_pb2.DataStoreTestSet:
             for path in paths]
   datastore_set = datastore_pb2.DataStoreTestSet()
   for name, proto in zip(names, protos):
+    # There's no graceful error handling here, but it's important that we don't
+    # run tests on a datastore unless it's specifically marked as testonly.
     assert proto.testonly
     dst_proto = datastore_set.values[name]
     dst_proto.MergeFrom(proto)
