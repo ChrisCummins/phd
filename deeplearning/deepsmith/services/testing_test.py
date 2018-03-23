@@ -59,9 +59,9 @@ def CreateRandomTestcase() -> deepsmith_pb2.Testcase:
       harness=CreateRandomHarness(),
       inputs=CreateRandomInputs(),
       profiling_events=[
-        deepsmith_pb2.ProfilingEvent(client=client, name="a", duration_seconds=random.random()),
-        deepsmith_pb2.ProfilingEvent(client=client, name="b", duration_seconds=random.random()),
-        deepsmith_pb2.ProfilingEvent(client=client, name="c", duration_seconds=random.random()),
+        deepsmith_pb2.ProfilingEvent(client=client, name="a", duration_ms=int(random.random() * 1000)),
+        deepsmith_pb2.ProfilingEvent(client=client, name="b", duration_ms=int(random.random() * 1000)),
+        deepsmith_pb2.ProfilingEvent(client=client, name="c", duration_ms=int(random.random() * 1000)),
       ],
   )
 
@@ -90,9 +90,9 @@ def test_TestingService_SubmitTestcases_one(ds):
         harness=deepsmith_pb2.Harness(name="foo", version="bar"),
         inputs={"src": "foo"},
         timings=[
-          deepsmith_pb2.ProfilingEvent(client="c", name="a", duration_seconds=1),
-          deepsmith_pb2.ProfilingEvent(client="c", name="b", duration_seconds=2),
-          deepsmith_pb2.ProfilingEvent(client="c", name="c", duration_seconds=3),
+          deepsmith_pb2.ProfilingEvent(client="c", name="a", duration_ms=1),
+          deepsmith_pb2.ProfilingEvent(client="c", name="b", duration_ms=2),
+          deepsmith_pb2.ProfilingEvent(client="c", name="c", duration_ms=3),
         ],
     ),
   ]
@@ -116,9 +116,9 @@ def test_TestingService_SubmitTestcases_two(ds):
         harness=deepsmith_pb2.Harness(name="foo", version="bar"),
         inputs={"src": "foo"},
         timings=[
-          deepsmith_pb2.ProfilingEvent(client="c", name="a", duration_seconds=1),
-          deepsmith_pb2.ProfilingEvent(client="c", name="b", duration_seconds=2),
-          deepsmith_pb2.ProfilingEvent(client="c", name="c", duration_seconds=3),
+          deepsmith_pb2.ProfilingEvent(client="c", name="a", duration_ms=1),
+          deepsmith_pb2.ProfilingEvent(client="c", name="b", duration_ms=2),
+          deepsmith_pb2.ProfilingEvent(client="c", name="c", duration_ms=3),
         ],
     ),
     deepsmith_pb2.Testcase(
@@ -127,9 +127,9 @@ def test_TestingService_SubmitTestcases_two(ds):
         harness=deepsmith_pb2.Harness(name="foo", version="bar"),
         inputs={"src": "abc"},
         timings=[
-          deepsmith_pb2.ProfilingEvent(client="d", name="a", duration_seconds=1),
-          deepsmith_pb2.ProfilingEvent(client="d", name="d", duration_seconds=2),
-          deepsmith_pb2.ProfilingEvent(client="d", name="c", duration_seconds=3),
+          deepsmith_pb2.ProfilingEvent(client="d", name="a", duration_ms=1),
+          deepsmith_pb2.ProfilingEvent(client="d", name="d", duration_ms=2),
+          deepsmith_pb2.ProfilingEvent(client="d", name="c", duration_ms=3),
         ],
     ),
   ]
@@ -156,9 +156,9 @@ def test_TestingService_RequestTestcases_one(ds):
         harness=deepsmith_pb2.Harness(name="foo", version="bar"),
         inputs={"src": "foo"},
         timings=[
-          deepsmith_pb2.ProfilingEvent(client="c", name="a", duration_seconds=1),
-          deepsmith_pb2.ProfilingEvent(client="c", name="b", duration_seconds=2),
-          deepsmith_pb2.ProfilingEvent(client="c", name="c", duration_seconds=3),
+          deepsmith_pb2.ProfilingEvent(client="c", name="a", duration_ms=1),
+          deepsmith_pb2.ProfilingEvent(client="c", name="b", duration_ms=2),
+          deepsmith_pb2.ProfilingEvent(client="c", name="c", duration_ms=3),
         ],
     ),
   ]

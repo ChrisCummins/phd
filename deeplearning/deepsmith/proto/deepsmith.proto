@@ -7,8 +7,8 @@ message ProfilingEvent {
   // The type of profiling event. E.g. "overhead", "generation", "warmup", etc.
   optional string type = 2;
 
-  // The duration in seconds.
-  optional float duration_seconds = 3;
+  // The duration in milliseconds.
+  optional int64 duration_ms = 3;
 
   // Seconds since the epoch of the timing.
   optional int64 date_epoch_seconds = 4;

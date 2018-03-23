@@ -58,7 +58,7 @@ def test_Result_ToProto():
                 type=deeplearning.deepsmith.profiling_event.ProfilingEventType(
                     string='generate',
                 ),
-                duration_seconds=1.0,
+                duration_ms=100,
                 date=now,
             ),
             deeplearning.deepsmith.profiling_event.TestcaseProfilingEvent(
@@ -66,7 +66,7 @@ def test_Result_ToProto():
                 type=deeplearning.deepsmith.profiling_event.ProfilingEventType(
                     string='foo',
                 ),
-                duration_seconds=1.0,
+                duration_ms=100,
                 date=now,
             ),
           ]
@@ -114,7 +114,7 @@ def test_Result_ToProto():
             type=deeplearning.deepsmith.profiling_event.ProfilingEventType(
                 string='exec',
             ),
-            duration_seconds=10.0,
+            duration_ms=500,
             date=now,
         ),
         deeplearning.deepsmith.profiling_event.ResultProfilingEvent(
@@ -122,7 +122,7 @@ def test_Result_ToProto():
             type=deeplearning.deepsmith.profiling_event.ProfilingEventType(
                 string='overhead',
             ),
-            duration_seconds=1.0,
+            duration_ms=100,
             date=now,
         ),
       ],
@@ -151,10 +151,10 @@ def test_Result_ToProto():
   assert len(proto.testcase.profiling_events) == 2
   assert proto.profiling_events[0].client == 'localhost'
   assert proto.profiling_events[0].type == 'exec'
-  assert proto.profiling_events[0].duration_seconds == 10.0
+  assert proto.profiling_events[0].duration_ms == 500
   assert proto.profiling_events[1].client == 'localhost'
   assert proto.profiling_events[1].type == 'overhead'
-  assert proto.profiling_events[1].duration_seconds == 1.0
+  assert proto.profiling_events[1].duration_ms == 100
 
 
 def test_Generator_GetOrAdd_ToProto_equivalence(session):
@@ -178,13 +178,13 @@ def test_Generator_GetOrAdd_ToProto_equivalence(session):
             deepsmith_pb2.ProfilingEvent(
                 client='localhost',
                 type='generate',
-                duration_seconds=1.0,
+                duration_ms=100,
                 date_epoch_seconds=1123123123,
             ),
             deepsmith_pb2.ProfilingEvent(
                 client='localhost',
                 type='foo',
-                duration_seconds=1.0,
+                duration_ms=100,
                 date_epoch_seconds=1123123123,
             ),
           ]
@@ -206,13 +206,13 @@ def test_Generator_GetOrAdd_ToProto_equivalence(session):
         deepsmith_pb2.ProfilingEvent(
             client='localhost',
             type='exec',
-            duration_seconds=10.0,
+            duration_ms=500,
             date_epoch_seconds=1123123123,
         ),
         deepsmith_pb2.ProfilingEvent(
             client='localhost',
             type='overhead',
-            duration_seconds=1.0,
+            duration_ms=100,
             date_epoch_seconds=1123123123,
         ),
       ],

@@ -43,7 +43,7 @@ def test_Testcase_ToProto():
             type=deeplearning.deepsmith.profiling_event.ProfilingEventType(
                 string='generate',
             ),
-            duration_seconds=1.0,
+            duration_ms=100,
             date=now,
         ),
         deeplearning.deepsmith.profiling_event.TestcaseProfilingEvent(
@@ -51,7 +51,7 @@ def test_Testcase_ToProto():
             type=deeplearning.deepsmith.profiling_event.ProfilingEventType(
                 string='foo',
             ),
-            duration_seconds=1.0,
+            duration_ms=100,
             date=now,
         ),
       ]
@@ -91,13 +91,13 @@ def test_Testcase_GetOrAdd(session):
         deepsmith_pb2.ProfilingEvent(
             client='localhost',
             type='generate',
-            duration_seconds=1.0,
+            duration_ms=100,
             date_epoch_seconds=1021312312,
         ),
         deepsmith_pb2.ProfilingEvent(
             client='localhost',
             type='foo',
-            duration_seconds=1.0,
+            duration_ms=100,
             date_epoch_seconds=1230812312,
         ),
       ]
@@ -140,7 +140,7 @@ def test_Generator_GetOrAdd_ToProto_equivalence(session):
         deepsmith_pb2.ProfilingEvent(
             client='localhost',
             type='generate',
-            duration_seconds=1.0,
+            duration_ms=100,
             date_epoch_seconds=101231231,
         ),
       ]
@@ -192,7 +192,7 @@ def _AddRandomNewTestcase(session):
             deepsmith_pb2.ProfilingEvent(
                 client=str(random.random()),
                 type=str(random.random()),
-                duration_seconds=random.random(),
+                duration_ms=int(random.random() * 1000),
                 date_epoch_seconds=int(random.random() * 1000000),
             ),
           ]
@@ -240,7 +240,7 @@ def _AddExistingTestcase(session):
             deepsmith_pb2.ProfilingEvent(
                 client='localhost',
                 type='generate',
-                duration_seconds=1.0,
+                duration_ms=100,
                 date_epoch_seconds=101231231,
             ),
           ]

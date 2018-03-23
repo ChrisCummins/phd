@@ -28,7 +28,7 @@ class TestcaseProfilingEvent(db.Table):
   type_id: int = sql.Column(ProfilingEventType.id_t,
                             sql.ForeignKey('proviling_event_types.id'),
                             nullable=False)
-  duration_seconds: float = sql.Column(sql.Float, nullable=False)
+  duration_ms: int = sql.Column(sql.Integer, nullable=False)
   date: datetime.datetime = sql.Column(sql.DateTime, nullable=False)
 
   # Relationships.
@@ -40,7 +40,8 @@ class TestcaseProfilingEvent(db.Table):
   # Constraints:
   __table_args__ = (
     sql.UniqueConstraint(
-        'testcase_id', 'client_id', 'type_id', name='unique_testcase_timing'),
+        'testcase_id', 'client_id', 'type_id',
+        name='unique_testcase_profiling_event'),
   )
 
   def SetProto(self, proto: deepsmith_pb2.ProfilingEvent) -> deepsmith_pb2.ProfilingEvent:
@@ -54,7 +55,7 @@ class TestcaseProfilingEvent(db.Table):
     """
     proto.client = self.client.string
     proto.type = self.type.string
-    proto.duration_seconds = self.duration_seconds
+    proto.duration_ms = self.duration_ms
     proto.date_epoch_seconds = int(self.date.strftime('%s'))
     return proto
 
@@ -78,7 +79,7 @@ class TestcaseProfilingEvent(db.Table):
         type=ProfilingEventType.GetOrAdd(
             session, proto.type
         ),
-        duration_seconds=proto.duration_seconds,
+        duration_ms=proto.duration_ms,
         date=datetime.datetime.fromtimestamp(proto.date_epoch_seconds)
     )
 
@@ -98,7 +99,7 @@ class ResultProfilingEvent(db.Table):
   type_id: int = sql.Column(ProfilingEventType.id_t,
                             sql.ForeignKey('proviling_event_types.id'),
                             nullable=False)
-  duration_seconds: float = sql.Column(sql.Float, nullable=False)
+  duration_ms: int = sql.Column(sql.Integer, nullable=False)
   date: datetime.datetime = sql.Column(sql.DateTime, nullable=False)
 
   # Relationships.
@@ -110,7 +111,8 @@ class ResultProfilingEvent(db.Table):
   # Constraints:
   __table_args__ = (
     sql.UniqueConstraint(
-        'result_id', 'client_id', 'type_id', name='unique_result_timing'),
+        'result_id', 'client_id', 'type_id',
+        name='unique_result_profiling_event'),
   )
 
   def SetProto(self, proto: deepsmith_pb2.ProfilingEvent) -> deepsmith_pb2.ProfilingEvent:
@@ -124,7 +126,7 @@ class ResultProfilingEvent(db.Table):
     """
     proto.client = self.client.string
     proto.type = self.type.string
-    proto.duration_seconds = self.duration_seconds
+    proto.duration_ms = self.duration_ms
     proto.date_epoch_seconds = int(self.date.strftime('%s'))
     return proto
 
@@ -148,6 +150,6 @@ class ResultProfilingEvent(db.Table):
         type=ProfilingEventType.GetOrAdd(
             session, proto.type
         ),
-        duration_seconds=proto.duration_seconds,
+        duration_ms=proto.duration_ms,
         date=datetime.datetime.fromtimestamp(proto.date_epoch_seconds)
     )
