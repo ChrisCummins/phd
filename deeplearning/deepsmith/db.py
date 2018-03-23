@@ -254,11 +254,11 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
 
     engine = sql.create_engine(url_base)
     query = engine.execute(
-        'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME '
-        f"= '{database}'")
+        sql.text('SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE '
+                 'SCHEMA_NAME = :database'), database=database)
     if not query.first():
       if config.create_database_if_not_exist:
-        engine.execute(f"CREATE DATABASE `{database}`")
+        engine.execute(sql.text('CREATE DATABASE :database'), database=database)
       else:
         raise DatabaseDoesNotExist()
     engine.dispose()
@@ -277,13 +277,14 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
     engine = sql.create_engine(f'{url_base}/postgres')
     conn = engine.connect()
     query = conn.execute(
-        f"SELECT 1 FROM pg_database WHERE datname = '{database}'")
+        sql.text('SELECT 1 FROM pg_database WHERE datname = :database'),
+        database=database)
     if not query.first():
       if config.create_database_if_not_exist:
         # PostgreSQL does not let you create databases within a transaction, so
         # manually complete the transaction before creating the database.
-        conn.execute('COMMIT')
-        conn.execute(f"CREATE DATABASE '{database}'")
+        conn.execute(sql.text('COMMIT'))
+        conn.execute(sql.text('CREATE DATABASE :database'), database=database)
       else:
         raise DatabaseDoesNotExist()
     conn.close()
