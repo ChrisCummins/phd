@@ -240,8 +240,15 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
     url_base = f'mysql://{username}:{password}@{hostname}:{port}'
 
     if config.create_database_if_not_exist:
+      # We could use 'CREATE DATABASE IF NOT EXIST' rather than checking for the
+      # database first but doing so causes a warning to be printed to stderr
+      # which looks ugly to me.
       engine = sql.create_engine(url_base)
-      engine.execute(f'CREATE DATABASE IF NOT EXISTS {database}')
+      query = engine.execute('SELECT SCHEMA_NAME FROM '
+                             'INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '
+                             f"'{database}'")
+      if not query.first():
+        engine.execute(f"CREATE DATABASE `{database}`")
 
     # Use UTF-8 encoding (default is latin-1) when connecting to MySQL.
     # See: https://stackoverflow.com/a/16404147/1318051
