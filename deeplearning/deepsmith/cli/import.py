@@ -25,7 +25,7 @@ def ImportResultsFromDirectory(session: db.session_t,
     session: A database session.
     results_dir: Directory containing (only) Result protos.
   """
-  batch_size = 100
+  batch_size = 1000
   if not results_dir.is_dir():
     logging.fatal('directory %s does not exist', results_dir)
   for i, path in enumerate(results_dir.iterdir()):
@@ -43,7 +43,7 @@ def ImportTestcasesFromDirectory(session: db.session_t,
     session: A database session.
     testcases_dir: Directory containing (only) Testcase protos.
   """
-  batch_size = 100
+  batch_size = 1000
   if not testcases_dir.is_dir():
     logging.fatal('directory %s does not exist', testcases_dir)
   for i, path in enumerate(testcases_dir.iterdir()):
