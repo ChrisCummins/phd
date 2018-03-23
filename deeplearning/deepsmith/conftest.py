@@ -35,8 +35,6 @@ def _ReadTestDataStoreFiles() -> datastore_pb2.DataStoreTestSet:
   for name, proto in zip(names, protos):
     assert proto.testonly
     dst_proto = datastore_set.values[name]
-    # Force the ability to create this database.
-    proto.create_database_if_not_exist = True
     dst_proto.MergeFrom(proto)
   assert len(datastore_set.values) == len(protos) == len(names) == len(paths)
   return datastore_set

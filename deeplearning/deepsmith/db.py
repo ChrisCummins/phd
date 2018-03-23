@@ -217,6 +217,9 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
   Raises:
     NotImplementedError: If the datastore backend is not supported.
   """
+  # Force database creation on testonly databases:
+  if config.testonly:
+    config.create_database_if_not_exist = True
 
   if config.HasField('sqlite'):
     if config.sqlite.inmemory:
