@@ -57,3 +57,15 @@ def finalise(output=None, figsize=None, tight=True, **kwargs):
         plt.savefig(output, **kwargs)
         io.info("Wrote", output)
     plt.close()
+
+
+def ShowErrorBarCaps(ax):
+    """Show error bar caps.
+  
+    Seaborn paper style hides error bar caps. Call this function on an axes
+    object to make them visible again.
+    """
+    for ch in ax.get_children():
+        if str(ch).startswith('Line2D'):
+            ch.set_markeredgewidth(1)
+            ch.set_markersize(8)
