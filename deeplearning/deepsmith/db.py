@@ -308,7 +308,8 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
         # PostgreSQL does not let you create databases within a transaction, so
         # manually complete the transaction before creating the database.
         conn.execute(sql.text('COMMIT'))
-        conn.execute(sql.text('CREATE DATABASE :database'), database=database)
+        # PostgreSQL does not allow single quoting of database names.
+        conn.execute(f'CREATE DATABASE {database}')
       else:
         raise DatabaseDoesNotExist()
     conn.close()
