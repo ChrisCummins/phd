@@ -44,7 +44,7 @@ def test_Testcase_ToProto():
                 string='generate',
             ),
             duration_ms=100,
-            date=now,
+            event_start=now,
         ),
         deeplearning.deepsmith.profiling_event.TestcaseProfilingEvent(
             client=deeplearning.deepsmith.client.Client(string='localhost'),
@@ -52,7 +52,7 @@ def test_Testcase_ToProto():
                 string='foo',
             ),
             duration_ms=100,
-            date=now,
+            event_start=now,
         ),
       ]
   )
@@ -66,6 +66,7 @@ def test_Testcase_ToProto():
   assert len(proto.invariant_opts) == 1
   assert proto.invariant_opts['config'] == 'opt'
   assert len(proto.profiling_events) == 2
+  assert proto.profiling_events[0].event_start == now
   assert proto.profiling_events[0].client == 'localhost'
   assert proto.profiling_events[0].type == 'generate'
   assert proto.profiling_events[0].client == 'localhost'
@@ -92,13 +93,13 @@ def test_Testcase_GetOrAdd(session):
             client='localhost',
             type='generate',
             duration_ms=100,
-            date_epoch_seconds=1021312312,
+            event_start_epoch_ms=1021312312,
         ),
         deepsmith_pb2.ProfilingEvent(
             client='localhost',
             type='foo',
             duration_ms=100,
-            date_epoch_seconds=1230812312,
+            event_start_epoch_ms=1230812312,
         ),
       ]
   )
@@ -118,6 +119,14 @@ def test_Testcase_GetOrAdd(session):
   assert len(testcase.invariant_optset) == 1
   assert len(testcase.invariant_opts) == 1
   assert testcase.invariant_opts['config'] == 'opt'
+  assert testcase.profiling_events[0].client == 'localhost'
+  assert testcase.profiling_events[0].type == 'generate'
+  assert testcase.profiling_events[0].duration_ms == 100
+  assert testcase.profiling_events[0].event_start_epoch_ms == 1021312312
+  assert testcase.profiling_events[1].client == 'localhost'
+  assert testcase.profiling_events[1].type == 'foo'
+  assert testcase.profiling_events[1].duration_ms == 100
+  assert testcase.profiling_events[1].event_start_epoch_ms == 1230812312
 
 
 def test_Generator_GetOrAdd_ToProto_equivalence(session):
@@ -141,7 +150,7 @@ def test_Generator_GetOrAdd_ToProto_equivalence(session):
             client='localhost',
             type='generate',
             duration_ms=100,
-            date_epoch_seconds=101231231,
+            event_start_epoch_ms=101231231,
         ),
       ]
   )
@@ -193,7 +202,7 @@ def _AddRandomNewTestcase(session):
                 client=str(random.random()),
                 type=str(random.random()),
                 duration_ms=int(random.random() * 1000),
-                date_epoch_seconds=int(random.random() * 1000000),
+                event_start_epoch_ms=int(random.random() * 1000000),
             ),
           ]
       )
@@ -241,7 +250,7 @@ def _AddExistingTestcase(session):
                 client='localhost',
                 type='generate',
                 duration_ms=100,
-                date_epoch_seconds=101231231,
+                event_start_epoch_ms=101231231,
             ),
           ]
       )

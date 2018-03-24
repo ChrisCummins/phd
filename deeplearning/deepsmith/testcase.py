@@ -13,6 +13,7 @@ import deeplearning.deepsmith.generator
 import deeplearning.deepsmith.harness
 import deeplearning.deepsmith.profiling_event
 import deeplearning.deepsmith.toolchain
+from deeplearning.deepsmith import dateutil
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import pbutil
@@ -41,7 +42,7 @@ class Testcase(db.Table):
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
-      sql.DateTime, nullable=False, default=db.now)
+      sql.DateTime, nullable=False, default=dateutil.Now)
   toolchain_id: int = sql.Column(
       deeplearning.deepsmith.toolchain.Toolchain.id_t,
       sql.ForeignKey('toolchains.id'), nullable=False)
@@ -258,7 +259,7 @@ class TestcaseInput(db.Table):
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
-      sql.DateTime, nullable=False, default=db.now)
+      sql.DateTime, nullable=False, default=dateutil.Now)
   name_id: _TestcaseInputNameId = sql.Column(
       _TestcaseInputNameId, sql.ForeignKey('testcase_input_names.id'), nullable=False)
   value_id: _TestcaseInputValueId = sql.Column(
@@ -319,7 +320,7 @@ class TestcaseInputValue(db.Table):
 
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
-  date_added: datetime.datetime = sql.Column(sql.DateTime, nullable=False, default=db.now)
+  date_added: datetime.datetime = sql.Column(sql.DateTime, nullable=False, default=dateutil.Now)
   md5: bytes = sql.Column(
       sql.Binary(16).with_variant(mysql.BINARY(16), 'mysql'), nullable=False,
       index=True, unique=True)
@@ -394,7 +395,7 @@ class TestcaseInvariantOpt(db.Table):
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
-      sql.DateTime, nullable=False, default=db.now)
+      sql.DateTime, nullable=False, default=dateutil.Now)
   name_id: _TestcaseInvariantOptNameId = sql.Column(
       _TestcaseInvariantOptNameId, sql.ForeignKey('testcase_invariant_opt_names.id'), nullable=False)
   value_id: _TestcaseInvariantOptValueId = sql.Column(

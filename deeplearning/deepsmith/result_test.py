@@ -59,7 +59,7 @@ def test_Result_ToProto():
                     string='generate',
                 ),
                 duration_ms=100,
-                date=now,
+                event_start=now,
             ),
             deeplearning.deepsmith.profiling_event.TestcaseProfilingEvent(
                 client=deeplearning.deepsmith.client.Client(string='localhost'),
@@ -67,7 +67,7 @@ def test_Result_ToProto():
                     string='foo',
                 ),
                 duration_ms=100,
-                date=now,
+                event_start=now,
             ),
           ]
       ),
@@ -115,7 +115,7 @@ def test_Result_ToProto():
                 string='exec',
             ),
             duration_ms=500,
-            date=now,
+            event_start=now,
         ),
         deeplearning.deepsmith.profiling_event.ResultProfilingEvent(
             client=deeplearning.deepsmith.client.Client(string='localhost'),
@@ -123,7 +123,7 @@ def test_Result_ToProto():
                 string='overhead',
             ),
             duration_ms=100,
-            date=now,
+            event_start=now,
         ),
       ],
   )
@@ -152,9 +152,11 @@ def test_Result_ToProto():
   assert proto.profiling_events[0].client == 'localhost'
   assert proto.profiling_events[0].type == 'exec'
   assert proto.profiling_events[0].duration_ms == 500
+  assert proto.profiling_events[0].event_start == now
   assert proto.profiling_events[1].client == 'localhost'
   assert proto.profiling_events[1].type == 'overhead'
   assert proto.profiling_events[1].duration_ms == 100
+  assert proto.profiling_events[1].event_start == now
 
 
 def test_Generator_GetOrAdd_ToProto_equivalence(session):
@@ -179,13 +181,13 @@ def test_Generator_GetOrAdd_ToProto_equivalence(session):
                 client='localhost',
                 type='generate',
                 duration_ms=100,
-                date_epoch_seconds=1123123123,
+                event_start_epoch_ms=1123123123,
             ),
             deepsmith_pb2.ProfilingEvent(
                 client='localhost',
                 type='foo',
                 duration_ms=100,
-                date_epoch_seconds=1123123123,
+                event_start_epoch_ms=1123123123,
             ),
           ]
       ),
@@ -207,13 +209,13 @@ def test_Generator_GetOrAdd_ToProto_equivalence(session):
             client='localhost',
             type='exec',
             duration_ms=500,
-            date_epoch_seconds=1123123123,
+            event_start_epoch_ms=1123123123,
         ),
         deepsmith_pb2.ProfilingEvent(
             client='localhost',
             type='overhead',
             duration_ms=100,
-            date_epoch_seconds=1123123123,
+            event_start_epoch_ms=1123123123,
         ),
       ],
   )

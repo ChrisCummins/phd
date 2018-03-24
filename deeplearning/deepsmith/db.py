@@ -8,6 +8,7 @@ from absl import flags
 from absl import logging
 from sqlalchemy.ext.declarative import declarative_base
 
+from deeplearning.deepsmith import dateutil
 from deeplearning.deepsmith.proto import datastore_pb2
 from deeplearning.deepsmith.proto import pbutil
 
@@ -23,9 +24,6 @@ query_t = sql.orm.query.Query
 
 # The SQLAlchemy base table.
 Base = declarative_base()
-
-# A shorthand declaration for the current time.
-now = datetime.datetime.utcnow
 
 
 class InvalidDatabaseConfig(ValueError):
@@ -174,7 +172,7 @@ class StringTable(Table):
   # Columns:
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
-      sql.DateTime, nullable=False, default=now)
+      sql.DateTime, nullable=False, default=dateutil.Now)
   # MySQL maximum key length is 3072 bytes, with 3 bytes per character.
   string: str = sql.Column(
       sql.String(4096).with_variant(sql.String(3072 // 3), 'mysql'),

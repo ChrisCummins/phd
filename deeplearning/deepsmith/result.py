@@ -12,6 +12,7 @@ from sqlalchemy.dialects import mysql
 import deeplearning.deepsmith.profiling_event
 import deeplearning.deepsmith.testbed
 import deeplearning.deepsmith.testcase
+from deeplearning.deepsmith import dateutil
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import pbutil
@@ -31,7 +32,7 @@ class Result(db.Table):
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
-      sql.DateTime, nullable=False, default=db.now)
+      sql.DateTime, nullable=False, default=dateutil.Now)
   testcase_id: int = sql.Column(
       deeplearning.deepsmith.testcase.Testcase.id_t,
       sql.ForeignKey('testcases.id'), nullable=False)
@@ -207,7 +208,7 @@ class ResultOutput(db.Table):
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
-      sql.DateTime, nullable=False, default=db.now)
+      sql.DateTime, nullable=False, default=dateutil.Now)
   name_id: _ResultOutputNameId = sql.Column(
       _ResultOutputNameId, sql.ForeignKey('result_output_names.id'),
       nullable=False)
@@ -250,7 +251,7 @@ class ResultOutputValue(db.Table):
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
-      sql.DateTime, nullable=False, default=db.now)
+      sql.DateTime, nullable=False, default=dateutil.Now)
   original_md5: bytes = sql.Column(
       sql.Binary(16).with_variant(mysql.BINARY(16), 'mysql'), nullable=False,
       index=True, unique=True)
@@ -333,7 +334,7 @@ class PendingResult(db.Table):
   # Columns:
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
-      sql.DateTime, nullable=False, default=db.now)
+      sql.DateTime, nullable=False, default=dateutil.Now)
   # The date that the result is due by.
   deadline: datetime.datetime = sql.Column(sql.DateTime, nullable=False)
   # The testcase that was issued.
