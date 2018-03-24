@@ -8,13 +8,25 @@ from deeplearning.deepsmith import db
 from deeplearning.deepsmith import toolchain
 
 
+def HasFieldMock(self, name):
+  """Mock for proto 'HasField' method"""
+  del self, name
+  return False
+
+
 class DataStoreProtoMock(object):
   """DataStore proto mock class."""
   testonly = True
 
-  def HasField(self, name):
-    del name
-    return False
+  HasField = HasFieldMock
+
+  class DatabaseMock(object):
+    """Database config mock class."""
+    HasField = HasFieldMock
+
+  mysql = DatabaseMock()
+  postgresql = DatabaseMock()
+  sqlite = DatabaseMock()
 
 
 def test_Table_GetOrAdd_abstract():
@@ -83,6 +95,22 @@ def test_StringTable_TruncatedString_uninitialized():
 def test_MakeEngine_unknown_backend():
   with pytest.raises(NotImplementedError):
     db.MakeEngine(DataStoreProtoMock())
+
+
+def test_MakeEngine_mysql_database_backtick():
+  config = DataStoreProtoMock()
+  config.HasField = lambda x: x == 'mysql'
+  config.mysql.database = 'backtick`'
+  with pytest.raises(db.InvalidDatabaseConfig):
+    db.MakeEngine(config)
+
+
+def test_MakeEngine_postgresql_database_quote():
+  config = DataStoreProtoMock()
+  config.HasField = lambda x: x == 'postgresql'
+  config.postgresql.database = "singlequote'"
+  with pytest.raises(db.InvalidDatabaseConfig):
+    db.MakeEngine(config)
 
 
 def main(argv):  # pylint: disable=missing-docstring

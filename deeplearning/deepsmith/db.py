@@ -28,6 +28,11 @@ Base = declarative_base()
 now = datetime.datetime.utcnow
 
 
+class InvalidDatabaseConfig(ValueError):
+  """Raise if the datastore config contains invalid values."""
+  pass
+
+
 class DatabaseDoesNotExist(EnvironmentError):
   """Raised if the database does not exist."""
 
@@ -225,6 +230,7 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
   """Instantiate a database engine.
 
   Raises:
+    InvalidDatabaseConfig: If the config contains illegal or missing values.
     DatabaseDoesNotExist: If the database does not exist and
       config.create_database_if_not_exist not set.
     NotImplementedError: If the datastore backend is not supported.
@@ -237,7 +243,8 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
     if config.sqlite.inmemory:
       url = 'sqlite://'
     else:
-      path = pathlib.Path(pbutil.RaiseIfNotSet(config.sqlite, 'path')).absolute()
+      path = pathlib.Path(pbutil.RaiseIfNotSet(
+          config.sqlite, 'path', InvalidDatabaseConfig)).absolute()
       if not config.create_database_if_not_exist and not path.is_file():
         raise DatabaseDoesNotExist()
       path.parent.mkdir(parents=True, exist_ok=True)
@@ -245,13 +252,19 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
       url = f'sqlite:///{abspath}'
     public_url = url
   elif config.HasField('mysql'):
-    username = pbutil.RaiseIfNotSet(config.mysql, 'username')
-    password = pbutil.RaiseIfNotSet(config.mysql, 'password')
-    hostname = pbutil.RaiseIfNotSet(config.mysql, 'hostname')
-    port = pbutil.RaiseIfNotSet(config.mysql, 'port')
-    database = pbutil.RaiseIfNotSet(config.mysql, 'database')
+    username = pbutil.RaiseIfNotSet(
+        config.mysql, 'username', InvalidDatabaseConfig)
+    password = pbutil.RaiseIfNotSet(
+        config.mysql, 'password', InvalidDatabaseConfig)
+    hostname = pbutil.RaiseIfNotSet(
+        config.mysql, 'hostname', InvalidDatabaseConfig)
+    port = pbutil.RaiseIfNotSet(
+        config.mysql, 'port', InvalidDatabaseConfig)
+    database = pbutil.RaiseIfNotSet(
+        config.mysql, 'database', InvalidDatabaseConfig)
     url_base = f'mysql://{username}:{password}@{hostname}:{port}'
-
+    if '`' in database:
+      raise InvalidDatabaseConfig('MySQL database cannot have backtick in name')
     engine = sql.create_engine(url_base)
     query = engine.execute(
         sql.text('SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE '
@@ -270,11 +283,19 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
     public_url = f'mysql://{username}@{hostname}:{port}/{database}?charset=utf8'
     url = f'{url_base}/{database}?charset=utf8'
   elif config.HasField('postgresql'):
-    username = pbutil.RaiseIfNotSet(config.postgresql, 'username')
-    password = pbutil.RaiseIfNotSet(config.postgresql, 'password')
-    hostname = pbutil.RaiseIfNotSet(config.postgresql, 'hostname')
-    port = pbutil.RaiseIfNotSet(config.postgresql, 'port')
-    database = pbutil.RaiseIfNotSet(config.postgresql, 'database')
+    username = pbutil.RaiseIfNotSet(
+        config.postgresql, 'username', InvalidDatabaseConfig)
+    password = pbutil.RaiseIfNotSet(
+        config.postgresql, 'password', InvalidDatabaseConfig)
+    hostname = pbutil.RaiseIfNotSet(
+        config.postgresql, 'hostname', InvalidDatabaseConfig)
+    port = pbutil.RaiseIfNotSet(
+        config.postgresql, 'port', InvalidDatabaseConfig)
+    database = pbutil.RaiseIfNotSet(
+        config.postgresql, 'database', InvalidDatabaseConfig)
+    if "'" in database:
+      raise InvalidDatabaseConfig(
+          'PostgreSQL database name cannot contain single quotes')
     url_base = f'postgresql+psycopg2://{username}:{password}@{hostname}:{port}'
 
     engine = sql.create_engine(f'{url_base}/postgres')
@@ -316,24 +337,34 @@ def DestroyTestonlyEngine(config: datastore_pb2.DataStore):
 
   if config.HasField('sqlite'):
     if not config.sqlite.inmemory:
-      pbutil.RaiseIfNotSet(config.sqlite, 'path')
+      pbutil.RaiseIfNotSet(config.sqlite, 'path', InvalidDatabaseConfig)
       pathlib.Path(config.sqlite.path).unlink()
   elif config.HasField('mysql'):
-    username = pbutil.RaiseIfNotSet(config.mysql, 'username')
-    password = pbutil.RaiseIfNotSet(config.mysql, 'password')
-    hostname = pbutil.RaiseIfNotSet(config.mysql, 'hostname')
-    port = pbutil.RaiseIfNotSet(config.mysql, 'port')
-    database = pbutil.RaiseIfNotSet(config.mysql, 'database')
+    username = pbutil.RaiseIfNotSet(
+        config.mysql, 'username', InvalidDatabaseConfig)
+    password = pbutil.RaiseIfNotSet(
+        config.mysql, 'password', InvalidDatabaseConfig)
+    hostname = pbutil.RaiseIfNotSet(
+        config.mysql, 'hostname', InvalidDatabaseConfig)
+    port = pbutil.RaiseIfNotSet(
+        config.mysql, 'port', InvalidDatabaseConfig)
+    database = pbutil.RaiseIfNotSet(
+        config.mysql, 'database', InvalidDatabaseConfig)
     url_base = f'mysql://{username}:{password}@{hostname}:{port}'
 
     engine = sql.create_engine(url_base)
     engine.execute(f'DROP DATABASE {database}')
   elif config.HasField('postgresql'):
-    username = pbutil.RaiseIfNotSet(config.postgresql, 'username')
-    password = pbutil.RaiseIfNotSet(config.postgresql, 'password')
-    hostname = pbutil.RaiseIfNotSet(config.postgresql, 'hostname')
-    port = pbutil.RaiseIfNotSet(config.postgresql, 'port')
-    database = pbutil.RaiseIfNotSet(config.postgresql, 'database')
+    username = pbutil.RaiseIfNotSet(
+        config.postgresql, 'username', InvalidDatabaseConfig)
+    password = pbutil.RaiseIfNotSet(
+        config.postgresql, 'password', InvalidDatabaseConfig)
+    hostname = pbutil.RaiseIfNotSet(
+        config.postgresql, 'hostname', InvalidDatabaseConfig)
+    port = pbutil.RaiseIfNotSet(
+        config.postgresql, 'port', InvalidDatabaseConfig)
+    database = pbutil.RaiseIfNotSet(
+        config.postgresql, 'database', InvalidDatabaseConfig)
     url_base = f'postgresql+psycopg2://{username}:{password}@{hostname}:{port}'
 
     engine = sql.create_engine(f'{url_base}/postgres')
