@@ -43,10 +43,23 @@ py_library(
 )
 
 py_library(
+    name = "dateutil",
+    srcs = ["dateutil.py"],
+)
+
+py_test(
+    name = "dateutil_test",
+    size = "small",
+    srcs = ["dateutil_test.py"],
+    deps = [":dateutil"],
+)
+
+py_library(
     name = "db",
     srcs = ["db.py"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     deps = [
+        ":dateutil",
         "//deeplearning/deepsmith/proto:datastore",
         "//deeplearning/deepsmith/proto:pbutil",
     ],
@@ -68,6 +81,7 @@ py_library(
     srcs = ["generator.py"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     deps = [
+        ":dateutil",
         ":db",
         "//deeplearning/deepsmith/proto:deepsmith",
     ],
@@ -89,6 +103,7 @@ py_library(
     srcs = ["harness.py"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     deps = [
+        ":dateutil",
         ":db",
         "//deeplearning/deepsmith/proto:deepsmith",
     ],
@@ -118,6 +133,7 @@ py_library(
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     deps = [
         ":client",
+        ":dateutil",
         ":db",
         "//deeplearning/deepsmith/proto:deepsmith",
     ],
@@ -128,6 +144,7 @@ py_library(
     srcs = ["result.py"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     deps = [
+        ":dateutil",
         ":db",
         ":profiling_event",
         ":testbed",
@@ -159,6 +176,7 @@ py_library(
     srcs = ["testbed.py"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     deps = [
+        ":dateutil",
         ":db",
         ":toolchain",
         "//deeplearning/deepsmith/proto:deepsmith",
@@ -182,6 +200,7 @@ py_library(
     srcs = ["testcase.py"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     deps = [
+        ":dateutil",
         ":db",
         ":generator",
         ":harness",
