@@ -1,6 +1,4 @@
-"""
-Export dsmith_04 databases to Protos.
-"""
+"""Export dsmith_04 databases to Protos."""
 import os
 
 import MySQLdb
@@ -11,6 +9,7 @@ from absl import app
 from absl import flags
 from absl import logging
 
+from deeplearning.deepsmith import dateutil
 from deeplearning.deepsmith.proto import deepsmith_pb2
 
 FLAGS = flags.FLAGS
@@ -215,7 +214,8 @@ LIMIT %s
                 client="cc1",
                 type="generation",
                 duration_ms=int(program_generation_time * 1000),
-                date_epoch_seconds=int(program_date.strftime('%s')),
+                event_start_epoch_ms=dateutil.MillisecondsTimestamp(
+                    program_date),
             ),
           ]
       )
@@ -317,11 +317,11 @@ LIMIT %s
         dsmith_program_compiler_warnings
       ) = row
       inputs = {
-        "src": program_src,
+        'src': program_src,
       }
       if harness_id != -1:
-        inputs["gsize"] = f"{gsize_x},{gsize_y},{gsize_z}"
-        inputs["lsize"] = f"{lsize_x},{lsize_y},{lsize_z}"
+        inputs['gsize'] = f'{gsize_x},{gsize_y},{gsize_z}'
+        inputs['lsize'] = f'{lsize_x},{lsize_y},{lsize_z}'
       testbed_name = OPENCL_DEVICE_MAP[device_name]
       testbed_opts = {}
       _SetIf(testbed_opts, 'opencl_device', device_name.strip())
@@ -377,7 +377,8 @@ LIMIT %s
                     client="cc1",
                     type="generation",
                     duration_ms=int(program_generation_time * 1000),
-                    date_epoch_seconds=int(program_date.strftime('%s')),
+                    event_start_epoch_ms=dateutil.MillisecondsTimestamp(
+                        program_date),
                 ),
               ]
           ),
@@ -396,7 +397,8 @@ LIMIT %s
                 }[host_os],
                 type="runtime",
                 duration_ms=int(runtime * 1000),
-                date_epoch_seconds=int(result_date.strftime('%s')),
+                event_start_epoch_ms=dateutil.MillisecondsTimestamp(
+                    result_date),
             ),
           ],
       )
@@ -460,7 +462,8 @@ LIMIT %s
                 client="cc1",
                 type="generation",
                 duration_ms=int(program_generation_time * 1000),
-                date_epoch_seconds=int(program_date.strftime('%s')),
+                event_start_epoch_ms=dateutil.MillisecondsTimestamp(
+                    program_date),
             ),
           ]
       )
@@ -571,7 +574,8 @@ LIMIT %s
                     client="cc1",
                     type="generation",
                     duration_ms=int(program_generation_time * 1000),
-                    date_epoch_seconds=int(program_date.strftime('%s')),
+                    event_start_epoch_ms=dateutil.MillisecondsTimestamp(
+                        program_date),
                 ),
               ]
           ),
@@ -593,7 +597,8 @@ LIMIT %s
                 client='cc1',
                 type="runtime",
                 duration_ms=int(runtime * 1000),
-                date_epoch_seconds=int(result_date.strftime('%s')),
+                event_start_epoch_ms=dateutil.MillisecondsTimestamp(
+                    result_date),
             ),
           ],
       )
