@@ -2,7 +2,6 @@
 import random
 import sys
 
-import datetime
 import pytest
 from absl import app
 
@@ -11,11 +10,12 @@ import deeplearning.deepsmith.generator
 import deeplearning.deepsmith.harness
 import deeplearning.deepsmith.profiling_event
 import deeplearning.deepsmith.testcase
+from deeplearning.deepsmith import dateutil
 from deeplearning.deepsmith.proto import deepsmith_pb2
 
 
 def test_Testcase_ToProto():
-  now = datetime.datetime.now()
+  now = dateutil.Now()
 
   testcase = deeplearning.deepsmith.testcase.Testcase(
       toolchain=deeplearning.deepsmith.toolchain.Toolchain(string='cpp'),
@@ -66,7 +66,8 @@ def test_Testcase_ToProto():
   assert len(proto.invariant_opts) == 1
   assert proto.invariant_opts['config'] == 'opt'
   assert len(proto.profiling_events) == 2
-  assert proto.profiling_events[0].event_start == now
+  assert (proto.profiling_events[0].event_start_epoch_ms ==
+          dateutil.MillisecondsTimestamp(now))
   assert proto.profiling_events[0].client == 'localhost'
   assert proto.profiling_events[0].type == 'generate'
   assert proto.profiling_events[0].client == 'localhost'
@@ -119,14 +120,16 @@ def test_Testcase_GetOrAdd(session):
   assert len(testcase.invariant_optset) == 1
   assert len(testcase.invariant_opts) == 1
   assert testcase.invariant_opts['config'] == 'opt'
-  assert testcase.profiling_events[0].client == 'localhost'
-  assert testcase.profiling_events[0].type == 'generate'
+  assert testcase.profiling_events[0].client.string == 'localhost'
+  assert testcase.profiling_events[0].type.string == 'generate'
   assert testcase.profiling_events[0].duration_ms == 100
-  assert testcase.profiling_events[0].event_start_epoch_ms == 1021312312
-  assert testcase.profiling_events[1].client == 'localhost'
-  assert testcase.profiling_events[1].type == 'foo'
+  assert (testcase.profiling_events[0].event_start ==
+          dateutil.DatetimeFromMillisecondsTimestamp(1021312312))
+  assert testcase.profiling_events[1].client.string == 'localhost'
+  assert testcase.profiling_events[1].type.string == 'foo'
   assert testcase.profiling_events[1].duration_ms == 100
-  assert testcase.profiling_events[1].event_start_epoch_ms == 1230812312
+  assert (testcase.profiling_events[1].event_start ==
+          dateutil.DatetimeFromMillisecondsTimestamp(1230812312))
 
 
 def test_Generator_GetOrAdd_ToProto_equivalence(session):

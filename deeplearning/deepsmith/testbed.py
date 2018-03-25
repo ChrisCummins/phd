@@ -32,7 +32,8 @@ class Testbed(db.Table):
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
-      sql.DateTime, nullable=False, default=dateutil.Now)
+      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
+      nullable=False, default=dateutil.Now)
   toolchain_id: int = sql.Column(
       deeplearning.deepsmith.toolchain.Toolchain.id_t,
       sql.ForeignKey('toolchains.id'), nullable=False)
@@ -178,7 +179,8 @@ class TestbedOpt(db.Table):
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
-      sql.DateTime, nullable=False, default=dateutil.Now)
+      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
+      nullable=False, default=dateutil.Now)
   name_id: _TestbedOptNameId = sql.Column(
       _TestbedOptNameId, sql.ForeignKey('testbed_opt_names.id'), nullable=False)
   value_id: _TestbedOptValueId = sql.Column(

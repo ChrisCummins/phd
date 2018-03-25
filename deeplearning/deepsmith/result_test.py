@@ -11,6 +11,7 @@ import deeplearning.deepsmith.harness
 import deeplearning.deepsmith.profiling_event
 import deeplearning.deepsmith.result
 import deeplearning.deepsmith.testcase
+from deeplearning.deepsmith import dateutil
 from deeplearning.deepsmith.proto import deepsmith_pb2
 
 
@@ -152,11 +153,13 @@ def test_Result_ToProto():
   assert proto.profiling_events[0].client == 'localhost'
   assert proto.profiling_events[0].type == 'exec'
   assert proto.profiling_events[0].duration_ms == 500
-  assert proto.profiling_events[0].event_start == now
+  assert (proto.profiling_events[0].event_start_epoch_ms ==
+          dateutil.MillisecondsTimestamp(now))
   assert proto.profiling_events[1].client == 'localhost'
   assert proto.profiling_events[1].type == 'overhead'
   assert proto.profiling_events[1].duration_ms == 100
-  assert proto.profiling_events[1].event_start == now
+  assert (proto.profiling_events[1].event_start_epoch_ms ==
+          dateutil.MillisecondsTimestamp(now))
 
 
 def test_Generator_GetOrAdd_ToProto_equivalence(session):

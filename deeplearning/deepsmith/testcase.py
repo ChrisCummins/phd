@@ -42,7 +42,8 @@ class Testcase(db.Table):
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
-      sql.DateTime, nullable=False, default=dateutil.Now)
+      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
+      nullable=False, default=dateutil.Now)
   toolchain_id: int = sql.Column(
       deeplearning.deepsmith.toolchain.Toolchain.id_t,
       sql.ForeignKey('toolchains.id'), nullable=False)
@@ -259,7 +260,8 @@ class TestcaseInput(db.Table):
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
-      sql.DateTime, nullable=False, default=dateutil.Now)
+      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
+      nullable=False, default=dateutil.Now)
   name_id: _TestcaseInputNameId = sql.Column(
       _TestcaseInputNameId, sql.ForeignKey('testcase_input_names.id'), nullable=False)
   value_id: _TestcaseInputValueId = sql.Column(
@@ -320,7 +322,9 @@ class TestcaseInputValue(db.Table):
 
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
-  date_added: datetime.datetime = sql.Column(sql.DateTime, nullable=False, default=dateutil.Now)
+  date_added: datetime.datetime = sql.Column(
+      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
+      nullable=False, default=dateutil.Now)
   md5: bytes = sql.Column(
       sql.Binary(16).with_variant(mysql.BINARY(16), 'mysql'), nullable=False,
       index=True, unique=True)
@@ -395,12 +399,14 @@ class TestcaseInvariantOpt(db.Table):
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
-      sql.DateTime, nullable=False, default=dateutil.Now)
+      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
+      nullable=False, default=dateutil.Now)
   name_id: _TestcaseInvariantOptNameId = sql.Column(
-      _TestcaseInvariantOptNameId, sql.ForeignKey('testcase_invariant_opt_names.id'), nullable=False)
+      _TestcaseInvariantOptNameId,
+      sql.ForeignKey('testcase_invariant_opt_names.id'), nullable=False)
   value_id: _TestcaseInvariantOptValueId = sql.Column(
-      _TestcaseInvariantOptValueId, sql.ForeignKey('testcase_invariant_opt_values.id'),
-      nullable=False)
+      _TestcaseInvariantOptValueId,
+      sql.ForeignKey('testcase_invariant_opt_values.id'), nullable=False)
 
   # Relationships.
   name: 'TestcaseInvariantOptName' = orm.relationship(

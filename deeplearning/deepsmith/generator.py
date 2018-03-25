@@ -27,7 +27,8 @@ class Generator(db.Table):
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
-      sql.DateTime, nullable=False, default=dateutil.Now)
+      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
+      nullable=False, default=dateutil.Now)
   # MySQL maximum key length is 3072, with 3 bytes per character. We must
   # preserve 16 bytes for the unique constraint.
   name: str = sql.Column(
@@ -146,9 +147,11 @@ class GeneratorOpt(db.Table):
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
-      sql.DateTime, nullable=False, default=dateutil.Now)
+      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
+      nullable=False, default=dateutil.Now)
   name_id: _GeneratorOptNameId = sql.Column(
-      _GeneratorOptNameId, sql.ForeignKey('generator_opt_names.id'), nullable=False)
+      _GeneratorOptNameId, sql.ForeignKey('generator_opt_names.id'),
+      nullable=False)
   value_id: _GeneratorOptValueId = sql.Column(
       _GeneratorOptValueId, sql.ForeignKey('generator_opt_values.id'),
       nullable=False)

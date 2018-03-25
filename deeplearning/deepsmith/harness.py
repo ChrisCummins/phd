@@ -26,8 +26,9 @@ class Harness(db.Table):
 
   # Columns:
   id: int = sql.Column(id_t, primary_key=True)
-  date_added: datetime.datetime = sql.Column(sql.DateTime, nullable=False,
-                                             default=dateutil.Now)
+  date_added: datetime.datetime = sql.Column(
+      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
+      nullable=False, default=dateutil.Now)
   # MySQL maximum key length is 3072, with 3 bytes per character. We must
   # preserve 16 bytes for the unique constraint.
   name: str = sql.Column(
@@ -146,7 +147,8 @@ class HarnessOpt(db.Table):
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
-      sql.DateTime, nullable=False, default=dateutil.Now)
+      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
+      nullable=False, default=dateutil.Now)
   name_id: _HarnessOptNameId = sql.Column(
       _HarnessOptNameId, sql.ForeignKey('harness_opt_names.id'), nullable=False)
   value_id: _HarnessOptValueId = sql.Column(

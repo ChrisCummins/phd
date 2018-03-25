@@ -2,6 +2,7 @@
 import datetime
 import sqlalchemy as sql
 from sqlalchemy import orm
+from sqlalchemy.dialects import mysql
 
 import deeplearning.deepsmith.client
 from deeplearning.deepsmith import dateutil
@@ -20,8 +21,9 @@ class TestcaseProfilingEvent(db.Table):
 
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
-  date_added: datetime.datetime = sql.Column(sql.DateTime, nullable=False,
-                                             default=dateutil.Now)
+  date_added: datetime.datetime = sql.Column(
+      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
+      nullable=False, default=dateutil.Now)
   testcase_id: int = sql.Column(sql.Integer,
                                 sql.ForeignKey('testcases.id'), nullable=False)
   client_id: int = sql.Column(deeplearning.deepsmith.client.Client.id_t,
@@ -30,7 +32,8 @@ class TestcaseProfilingEvent(db.Table):
                             sql.ForeignKey('proviling_event_types.id'),
                             nullable=False)
   duration_ms: int = sql.Column(sql.Integer, nullable=False)
-  event_start: datetime.datetime = sql.Column(sql.DateTime, nullable=False)
+  event_start: datetime.datetime = sql.Column(
+      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'), nullable=False)
 
   # Relationships.
   testcase: 'deeplearning.deepsmith.testcase.Testcase' = orm.relationship(
@@ -93,8 +96,9 @@ class ResultProfilingEvent(db.Table):
 
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
-  date_added: datetime.datetime = sql.Column(sql.DateTime, nullable=False,
-                                             default=dateutil.Now)
+  date_added: datetime.datetime = sql.Column(
+      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
+      nullable=False, default=dateutil.Now)
   result_id: int = sql.Column(
       sql.Integer, sql.ForeignKey('results.id'), nullable=False)
   client_id: int = sql.Column(deeplearning.deepsmith.client.Client.id_t,
@@ -103,7 +107,8 @@ class ResultProfilingEvent(db.Table):
                             sql.ForeignKey('proviling_event_types.id'),
                             nullable=False)
   duration_ms: int = sql.Column(sql.Integer, nullable=False)
-  event_start: datetime.datetime = sql.Column(sql.DateTime, nullable=False)
+  event_start: datetime.datetime = sql.Column(
+      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'), nullable=False)
 
   # Relationships.
   result: 'deeplearning.deepsmith.result.Result' = orm.relationship(
