@@ -10,8 +10,8 @@ from sqlalchemy.dialects import mysql
 from sqlalchemy.ext.declarative import declarative_base
 
 from deeplearning.deepsmith import dateutil
+from deeplearning.deepsmith import pbutil
 from deeplearning.deepsmith.proto import datastore_pb2
-from deeplearning.deepsmith.proto import pbutil
 
 FLAGS = flags.FLAGS
 

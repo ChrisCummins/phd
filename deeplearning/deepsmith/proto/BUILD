@@ -17,19 +17,5 @@ py_proto_library(
     name = "test_protos",
     testonly = 1,
     protos = ["test_protos.proto"],
-)
-
-py_library(
-    name = "pbutil",
-    srcs = ["pbutil.py"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
-)
-
-py_test(
-    name = "pbutil_test",
-    srcs = ["pbutil_test.py"],
-    deps = [
-        ":pbutil",
-        ":test_protos",
-    ],
 )

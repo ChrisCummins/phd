@@ -4,10 +4,10 @@ py_binary(
     deps = [
         "//deeplearning/deepsmith:datastore",
         "//deeplearning/deepsmith:db",
+        "//deeplearning/deepsmith:pbutil",
         "//deeplearning/deepsmith:result",
         "//deeplearning/deepsmith:testcase",
         "//deeplearning/deepsmith/proto:deepsmith",
-        "//deeplearning/deepsmith/proto:pbutil",
     ],
 )
 
@@ -17,8 +17,8 @@ py_binary(
     deps = [
         "//deeplearning/deepsmith:datastore",
         "//deeplearning/deepsmith:db",
+        "//deeplearning/deepsmith:pbutil",
         "//deeplearning/deepsmith:result",
         "//deeplearning/deepsmith/proto:deepsmith",
-        "//deeplearning/deepsmith/proto:pbutil",
     ],
 )

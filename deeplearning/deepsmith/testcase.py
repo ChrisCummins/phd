@@ -15,8 +15,8 @@ import deeplearning.deepsmith.profiling_event
 import deeplearning.deepsmith.toolchain
 from deeplearning.deepsmith import dateutil
 from deeplearning.deepsmith import db
+from deeplearning.deepsmith import pbutil
 from deeplearning.deepsmith.proto import deepsmith_pb2
-from deeplearning.deepsmith.proto import pbutil
 
 # The index types for tables defined in this file.
 _TestcaseId = sql.Integer

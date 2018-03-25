@@ -15,9 +15,9 @@ import deeplearning.deepsmith.testcase
 import deeplearning.deepsmith.testcase
 import deeplearning.deepsmith.toolchain
 from deeplearning.deepsmith import db
+from deeplearning.deepsmith import pbutil
 from deeplearning.deepsmith.proto import datastore_pb2
 from deeplearning.deepsmith.proto import deepsmith_pb2
-from deeplearning.deepsmith.proto import pbutil
 
 FLAGS = flags.FLAGS
 

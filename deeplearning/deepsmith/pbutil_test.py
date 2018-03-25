@@ -9,7 +9,7 @@ import pathlib
 import pytest
 from absl import app
 
-from deeplearning.deepsmith.proto import pbutil
+from deeplearning.deepsmith import pbutil
 from deeplearning.deepsmith.proto import test_protos_pb2
 
 

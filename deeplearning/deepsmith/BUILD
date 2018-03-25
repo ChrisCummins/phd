@@ -31,6 +31,7 @@ py_library(
         ":db",
         ":generator",
         ":harness",
+        ":pbutil",
         ":profiling_event",
         ":result",
         ":testbed",
@@ -38,7 +39,6 @@ py_library(
         ":toolchain",
         "//deeplearning/deepsmith/proto:datastore",
         "//deeplearning/deepsmith/proto:deepsmith",
-        "//deeplearning/deepsmith/proto:pbutil",
     ],
 )
 
@@ -60,8 +60,8 @@ py_library(
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     deps = [
         ":dateutil",
+        ":pbutil",
         "//deeplearning/deepsmith/proto:datastore",
-        "//deeplearning/deepsmith/proto:pbutil",
     ],
 )
 
@@ -128,6 +128,21 @@ py_library(
 )
 
 py_library(
+    name = "pbutil",
+    srcs = ["pbutil.py"],
+    visibility = ["//deeplearning/deepsmith:__subpackages__"],
+)
+
+py_test(
+    name = "pbutil_test",
+    srcs = ["pbutil_test.py"],
+    deps = [
+        ":pbutil",
+        "//deeplearning/deepsmith/proto:test_protos",
+    ],
+)
+
+py_library(
     name = "profiling_event",
     srcs = ["profiling_event.py"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
@@ -146,11 +161,11 @@ py_library(
     deps = [
         ":dateutil",
         ":db",
+        ":pbutil",
         ":profiling_event",
         ":testbed",
         ":testcase",
         "//deeplearning/deepsmith/proto:deepsmith",
-        "//deeplearning/deepsmith/proto:pbutil",
     ],
 )
 
@@ -161,8 +176,8 @@ py_test(
     deps = [
         ":client",
         ":conftest",
-        ":generator",
         ":dateutil",
+        ":generator",
         ":harness",
         ":profiling_event",
         ":result",
@@ -205,10 +220,10 @@ py_library(
         ":db",
         ":generator",
         ":harness",
+        ":pbutil",
         ":profiling_event",
         ":toolchain",
         "//deeplearning/deepsmith/proto:deepsmith",
-        "//deeplearning/deepsmith/proto:pbutil",
     ],
 )
 
@@ -219,8 +234,8 @@ py_test(
     deps = [
         ":client",
         ":conftest",
-        ":generator",
         ":dateutil",
+        ":generator",
         ":harness",
         ":profiling_event",
         ":testcase",

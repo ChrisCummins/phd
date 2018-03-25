@@ -11,8 +11,8 @@ import pytest
 
 from deeplearning.deepsmith import datastore
 from deeplearning.deepsmith import db
+from deeplearning.deepsmith import pbutil
 from deeplearning.deepsmith.proto import datastore_pb2
-from deeplearning.deepsmith.proto import pbutil
 
 
 def _ReadTestDataStoreFiles() -> datastore_pb2.DataStoreTestSet:
