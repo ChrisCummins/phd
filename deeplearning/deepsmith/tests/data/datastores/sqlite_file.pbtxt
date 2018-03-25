@@ -1,4 +1,4 @@
 sqlite {
-  path: "/tmp/dsmith_test_datastore.db"
+  path: "/tmp/deepsmith_testing_datastore.db"
 }
 testonly: true
