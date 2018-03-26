@@ -9,10 +9,14 @@ fi
 
 set -eu
 
-local_dst="/Volumes/Photo Library/"
-remote_dst="ryangosling:img/photos/"
+# TODO(cec): Remove the 'photos/2018' qualifier once ryangosling has been
+# synced to the new layout.
+subpath="photos/2018/"
 
-src="/Volumes/Orange/"
+local_dst="/Volumes/Photo Library/$subpath"
+remote_dst="ryangosling:img/photos/$subpath"
+
+src="/Volumes/Orange/$subpath"
 
 if [[ ! -d "$src" ]]; then
     echo "fatal: '$src' not found" >&2
