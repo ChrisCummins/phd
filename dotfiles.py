@@ -166,7 +166,7 @@ class Homebrew(Task):
 
 
 class Python(Task):
-  """ python2 and pip """
+  """ python 2 & 3 """
   PIP_LIST = ".pip-freeze.json"
 
   PIP2_BINARY = Homebrew.bin('pip2')
@@ -193,11 +193,11 @@ class Python(Task):
   def install(self):
     brew = Homebrew.BREW_BINARY
 
-    if Homebrew().install_package("python2"):
-      shell("{brew} link python2 --force".format(**vars()))
+    if Homebrew().install_package("python@2"):
+      shell("{brew} link python@2 --force".format(**vars()))
 
-    if Homebrew().install_package("python3"):
-      shell("{brew} link python3 --force".format(**vars()))
+    if Homebrew().install_package("python"):
+      shell("{brew} link python --force".format(**vars()))
 
     # install pip
     self._install_pip_version(self.PIP2_BINARY, self.__versions__["pip"])
