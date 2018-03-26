@@ -576,6 +576,9 @@ class ZshBazelCompletion(Task):
 
   def install(self):
     # See: https://docs.bazel.build/versions/master/install.html#zsh
+    # TODO(cec): Rather than clone an enormous repo, just download the single
+    # file we need:
+    # https://raw.githubusercontent.com/bazelbuild/bazel/bffa2db380cb3ca2fd9262ac5a45d02518376e03/scripts/zsh_completion/_bazel
     bazel = os.path.expanduser("~/.bazel_tmp")
     shell("rm -rf {bazel}".format(**vars()))
 
