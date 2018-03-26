@@ -1113,7 +1113,8 @@ class Caffeine(Task):
 
   def install(self):
     Homebrew().install_cask('caffeine')
-    MacOSConfig().add_login_item('/Applications/Caffeine.app', hidden=False)
+    # TODO(cec): Re-activate this once osascript command is fixed.
+    # MacOSConfig().add_login_item('/Applications/Caffeine.app', hidden=False)
 
   def upgrade(self):
     Homebrew().upgrade_cask('caffeine')
