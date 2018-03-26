@@ -1675,6 +1675,7 @@ class Phd(Task):
   """ phd repo """
   __platforms__ = ['linux', 'osx']
   __genfiles__ = ['~/phd']
+  __deps__ = ['Bazel']
 
   def install(self):
     clone_git_repo(github_repo("ChrisCummins", "phd"), "~/phd")
