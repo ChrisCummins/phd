@@ -1789,3 +1789,21 @@ class Ripgrep(Task):
       task_print("gem install rails")
       shell("sudo gem install rails")
     Homebrew().install_package("ripgrep")
+
+
+class DnsTest(Task):
+  """dns performance test"""
+  __platforms__ = ['osx', 'linux']
+  __osx_deps__ = ['Wget']
+  __genfiles__ = ['~/.local/bin/dnstest']
+  __versions__ = {
+      'dnstest': '80341abdd2afc12cd18ce6404bb3c937b16ccfa7',
+  }
+
+  def install(self):
+    url = ('https://raw.githubusercontent.com/cleanbrowsing/dnsperftest/'
+           '{version}/dnstest.sh'.format(version=self.__versions__['dnstest']))
+    if not os.path.isfile(os.path.expanduser('~/.local/bin/dnstest')):
+      mkdir("~/.local/bin")
+      shell("wget '{url}' -O ~/.local/bin/dnstest".format(url=url))
+      shell('chmod +x ~/.local/bin/dnstest')
