@@ -55,3 +55,6 @@
 [submodule "playground/euclid"]
 	path = experimental/euclid
 	url = git@github.com:ChrisCummins/euclid.git
+[submodule "http/warhaniye.com"]
+	path = http/warhaniye.com
+	url = git@github.com:ChrisCummins/warhaniye.com.git
