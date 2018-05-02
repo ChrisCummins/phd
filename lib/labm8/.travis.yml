@@ -1,0 +1,37 @@
+language: python
+
+python:
+  - "2.7"
+  - "3.4"
+  - "3.5"
+  - "3.6"
+
+install:
+  - pip install --upgrade pip
+  - pip install coveralls
+  - pip install --only-binary=numpy 'numpy>=1.10.4'
+  - pip install --only-binary=scipy 'scipy>=0.16.1'
+  - pip install --only-binary=pandas 'pandas>=0.19.0'
+  - pip install -r requirements.txt
+  - python ./setup.py install
+
+script:
+  - coverage run --source=labm8 ./setup.py test
+
+after_success:
+  - coveralls
+
+deploy:
+  provider: pypi
+  user: ChrisCummins
+  password:
+    secure: C/iOpWXlF374EKCzL6i/CLWQyrC+MiStymbCku9MqcmbgcEzvv0Nb/xzoFu7AoiamSJHaAjNA3o5UFCkliK2D5Pf/j3xpyEmNwpf1V6RVNSXaGZpLBvfitoP6OVNTdu7d0MrZmG4RJnp7lTUaymqP1vahDaziqkOz2h0rsVGJM1+deSzs8bw8l5p5MBdfOZwDyle2NjK036IETCVh2ABsnD5TsaIq5FJLhVrX3OjlIV6JO1PAuqqylZVFfg2/bJvJitVkXk7ebj3TZfGYPpXu6U20rZ0t3ya1TYw3GZSBSRh/QsbQqJAgymIeuM1qiIrffaBIjEbJ/glsOvLWHszqfMW1+QC6d7Eov5tBdrWPsXPOCLcS+Z+bRFC/p8+YcbUduXEINe1FL6uWZ3xCKO43CybfHqZLImjgh9vKCC7jV5p+e+SfWL8ACMbDjpw6kTcMbRXeWaQFSrF9JGClqm+c1g6uT5zPAe1+pwyQompGyJKSb5oVGfk6tCknT0bkiB9a8wggCVEzKdMhkgO71rOOJy9GF9GVALuvbvsAJhUpmO79oUx9CWyepCj61JthWwxT3xBFqCVEhhanA1aFJaoDHvaIOfc5T+318tnovEUtgEYTN5M5plm2KL+jrmbT4TJ+4t17r6B42d5NkHrCBtqgsbmagE5dA2Rid2OMkFCuRs=
+  on:
+    tags: true
+    distributions: sdist bdist_wheel
+    repo: ChrisCummins/labm8
+
+notifications:
+  email:
+    on_success: change # [always|never|change]
+    on_failure: change # [always|never|change]
