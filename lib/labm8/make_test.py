@@ -1,53 +1,55 @@
-# Copyright (C) 2015-2018 Chris Cummins.
-#
-# Labm8 is free software: you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free
-# Software Foundation, either version 3 of the License, or (at your
-# option) any later version.
-#
-# Labm8 is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-# License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with labm8.  If not, see <http://www.gnu.org/licenses/>.
+"""Unit tests for //lib/labm8:labmath."""
+import sys
+
+import pytest
+from absl import app
+
 from lib.labm8 import fs
 from lib.labm8 import make
-from lib.labm8.tests.testutil import TestCase
 
 
-class TestMake(TestCase):
+# make()
+def test_make():
+  ret, out, err = make.make(dir="lib/labm8/test/data/makeproj")
+  assert 0 == ret
+  assert True == out is not None
+  assert True == fs.isfile("lib/labm8/test/data/makeproj/foo")
+  assert True == fs.isfile("lib/labm8/test/data/makeproj/foo.o")
 
-  # make()
-  def test_make(self):
-    ret, out, err = make.make(dir="tests/data/makeproj")
-    self._test(0, ret)
-    self._test(True, out is not None)
-    self._test(True, fs.isfile("tests/data/makeproj/foo"))
-    self._test(True, fs.isfile("tests/data/makeproj/foo.o"))
 
-  def test_make_bad_target(self):
-    with self.assertRaises(make.NoTargetError):
-      make.make(target="bad-target", dir="tests/data/makeproj")
+def test_make_bad_target():
+  with pytest.raises(make.NoTargetError):
+    make.make(target="bad-target", dir="lib/labm8/test/data/makeproj")
 
-  def test_make_bad_target(self):
-    with self.assertRaises(make.NoMakefileError):
-      make.make(dir="/bad/path")
-    with self.assertRaises(make.NoMakefileError):
-      make.make(target="foo", dir="tests/data")
 
-  def test_make_fail(self):
-    with self.assertRaises(make.MakeError):
-      make.make(target="fail", dir="tests/data/makeproj")
+def test_make_bad_target():
+  with pytest.raises(make.NoMakefileError):
+    make.make(dir="/bad/path")
+  with pytest.raises(make.NoMakefileError):
+    make.make(target="foo", dir="lib/labm8/test/data")
 
-  # clean()
-  def test_make_clean(self, ):
-    fs.cd("tests/data/makeproj")
-    make.make()
-    self._test(True, fs.isfile("foo"))
-    self._test(True, fs.isfile("foo.o"))
-    make.clean()
-    self._test(False, fs.isfile("foo"))
-    self._test(False, fs.isfile("foo.o"))
-    fs.cdpop()
+
+def test_make_fail():
+  with pytest.raises(make.MakeError):
+    make.make(target="fail", dir="lib/labm8/test/data/makeproj")
+
+
+# clean()
+def test_make_clean():
+  fs.cd("lib/labm8/test/data/makeproj")
+  make.make()
+  assert fs.isfile("foo")
+  assert fs.isfile("foo.o")
+  make.clean()
+  assert not fs.isfile("foo")
+  assert not fs.isfile("foo.o")
+  fs.cdpop()
+
+
+def main(argv):  # pylint: disable=missing-docstring
+  del argv
+  sys.exit(pytest.main([__file__, '-v']))
+
+
+if __name__ == '__main__':
+  app.run(main)
