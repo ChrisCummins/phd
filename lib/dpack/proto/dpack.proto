@@ -1,0 +1,37 @@
+// A DataPackage is a structured collection of data files.
+
+syntax = 'proto2';
+
+// A data package is a structured collection of data files.
+message DataPackage {
+  // A human readable description of the data package.
+  optional string comment = 1;
+  // The date of package creation, expressed in milliseconds since the epoch.
+  optional int64 utc_epoch_ms_packaged = 2;
+  // A list of one or more files contained in the data package.
+  repeated DataPackageFile file = 3;
+}
+
+// A single file in a data package.
+message DataPackageFile {
+  // A human readable description of the file.
+  optional string comment = 1;
+  // The path of the file, relative to the root of the containing data package.
+  // E.g. for a package located at "~/data", the file "~/data/foo/bar" would
+  // have a package_relative_path of "foo/bar".
+  optional string relative_path = 2;
+  // The size of the file in bytes.
+  optional int32 size_in_bytes = 3;
+  // The hashing function used to compute a file checksum. Must be set if
+  // 'checksum' field is set.
+  enum ChecksumHash {
+    UNKNOWN = 0;
+    MD5 = 1;
+    SHA1 = 2;
+    SHA256 = 3;
+  };
+  optional ChecksumHash checksum_hash = 4;
+  // The checksum of the file, computed using the hashing function declared in
+  // 'checksum_hash' field.
+  optional string checksum = 5;
+}
