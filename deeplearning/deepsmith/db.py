@@ -10,7 +10,8 @@ from sqlalchemy.dialects import mysql
 from sqlalchemy.ext.declarative import declarative_base
 
 from deeplearning.deepsmith.proto import datastore_pb2
-from lib.labm8 import dateutil, pbutil
+from lib.labm8 import labdate
+from lib.labm8 import pbutil
 
 FLAGS = flags.FLAGS
 
@@ -173,7 +174,7 @@ class StringTable(Table):
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
       sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-      nullable=False, default=dateutil.GetUtcMillisecondsNow)
+      nullable=False, default=labdate.GetUtcMillisecondsNow)
   # MySQL maximum key length is 3072 bytes, with 3 bytes per character.
   string: str = sql.Column(
       sql.String(4096).with_variant(sql.String(3072 // 3), 'mysql'),

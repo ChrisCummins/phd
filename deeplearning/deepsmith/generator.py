@@ -10,7 +10,7 @@ from sqlalchemy.dialects import mysql
 
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import deepsmith_pb2
-from lib.labm8 import dateutil
+from lib.labm8 import labdate
 
 # The index types for tables defined in this file.
 _GeneratorId = sql.Integer
@@ -28,7 +28,7 @@ class Generator(db.Table):
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
       sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-      nullable=False, default=dateutil.GetUtcMillisecondsNow)
+      nullable=False, default=labdate.GetUtcMillisecondsNow)
   # MySQL maximum key length is 3072, with 3 bytes per character. We must
   # preserve 16 bytes for the unique constraint.
   name: str = sql.Column(
@@ -148,7 +148,7 @@ class GeneratorOpt(db.Table):
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
       sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-      nullable=False, default=dateutil.GetUtcMillisecondsNow)
+      nullable=False, default=labdate.GetUtcMillisecondsNow)
   name_id: _GeneratorOptNameId = sql.Column(
       _GeneratorOptNameId, sql.ForeignKey('generator_opt_names.id'),
       nullable=False)

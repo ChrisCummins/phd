@@ -15,7 +15,7 @@ import deeplearning.deepsmith.profiling_event
 import deeplearning.deepsmith.toolchain
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import deepsmith_pb2
-from lib.labm8 import dateutil, pbutil
+from lib.labm8 import labdate, pbutil
 
 # The index types for tables defined in this file.
 _TestcaseId = sql.Integer
@@ -42,7 +42,7 @@ class Testcase(db.Table):
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
       sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-      nullable=False, default=dateutil.GetUtcMillisecondsNow)
+      nullable=False, default=labdate.GetUtcMillisecondsNow)
   toolchain_id: int = sql.Column(
       deeplearning.deepsmith.toolchain.Toolchain.id_t,
       sql.ForeignKey('toolchains.id'), nullable=False)
@@ -260,7 +260,7 @@ class TestcaseInput(db.Table):
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
       sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-      nullable=False, default=dateutil.GetUtcMillisecondsNow)
+      nullable=False, default=labdate.GetUtcMillisecondsNow)
   name_id: _TestcaseInputNameId = sql.Column(
       _TestcaseInputNameId, sql.ForeignKey('testcase_input_names.id'), nullable=False)
   value_id: _TestcaseInputValueId = sql.Column(
@@ -323,7 +323,7 @@ class TestcaseInputValue(db.Table):
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
       sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-      nullable=False, default=dateutil.GetUtcMillisecondsNow)
+      nullable=False, default=labdate.GetUtcMillisecondsNow)
   md5: bytes = sql.Column(
       sql.Binary(16).with_variant(mysql.BINARY(16), 'mysql'), nullable=False,
       index=True, unique=True)
@@ -399,7 +399,7 @@ class TestcaseInvariantOpt(db.Table):
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
       sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-      nullable=False, default=dateutil.GetUtcMillisecondsNow)
+      nullable=False, default=labdate.GetUtcMillisecondsNow)
   name_id: _TestcaseInvariantOptNameId = sql.Column(
       _TestcaseInvariantOptNameId,
       sql.ForeignKey('testcase_invariant_opt_names.id'), nullable=False)

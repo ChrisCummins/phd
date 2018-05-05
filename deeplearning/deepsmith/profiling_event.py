@@ -7,7 +7,7 @@ from sqlalchemy.dialects import mysql
 import deeplearning.deepsmith.client
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import deepsmith_pb2
-from lib.labm8 import dateutil
+from lib.labm8 import labdate
 
 
 class ProfilingEventType(db.StringTable):
@@ -23,7 +23,7 @@ class TestcaseProfilingEvent(db.Table):
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
       sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-      nullable=False, default=dateutil.GetUtcMillisecondsNow)
+      nullable=False, default=labdate.GetUtcMillisecondsNow)
   testcase_id: int = sql.Column(sql.Integer,
                                 sql.ForeignKey('testcases.id'), nullable=False)
   client_id: int = sql.Column(deeplearning.deepsmith.client.Client.id_t,
@@ -60,7 +60,7 @@ class TestcaseProfilingEvent(db.Table):
     proto.client = self.client.string
     proto.type = self.type.string
     proto.duration_ms = self.duration_ms
-    proto.event_start_epoch_ms = dateutil.MillisecondsTimestamp(
+    proto.event_start_epoch_ms = labdate.MillisecondsTimestamp(
         self.event_start)
     return proto
 
@@ -85,7 +85,7 @@ class TestcaseProfilingEvent(db.Table):
             session, proto.type
         ),
         duration_ms=proto.duration_ms,
-        event_start=dateutil.DatetimeFromMillisecondsTimestamp(
+        event_start=labdate.DatetimeFromMillisecondsTimestamp(
             proto.event_start_epoch_ms)
     )
 
@@ -98,7 +98,7 @@ class ResultProfilingEvent(db.Table):
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
       sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-      nullable=False, default=dateutil.GetUtcMillisecondsNow)
+      nullable=False, default=labdate.GetUtcMillisecondsNow)
   result_id: int = sql.Column(
       sql.Integer, sql.ForeignKey('results.id'), nullable=False)
   client_id: int = sql.Column(deeplearning.deepsmith.client.Client.id_t,
@@ -135,7 +135,7 @@ class ResultProfilingEvent(db.Table):
     proto.client = self.client.string
     proto.type = self.type.string
     proto.duration_ms = self.duration_ms
-    proto.event_start_epoch_ms = dateutil.MillisecondsTimestamp(self.event_start)
+    proto.event_start_epoch_ms = labdate.MillisecondsTimestamp(self.event_start)
     return proto
 
   def ToProto(self) -> deepsmith_pb2.ProfilingEvent:
@@ -159,6 +159,6 @@ class ResultProfilingEvent(db.Table):
             session, proto.type
         ),
         duration_ms=proto.duration_ms,
-        event_start=dateutil.DatetimeFromMillisecondsTimestamp(
+        event_start=labdate.DatetimeFromMillisecondsTimestamp(
             proto.event_start_epoch_ms)
     )

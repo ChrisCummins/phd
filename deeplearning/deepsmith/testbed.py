@@ -11,7 +11,7 @@ from sqlalchemy.dialects import mysql
 import deeplearning.deepsmith.toolchain
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import deepsmith_pb2
-from lib.labm8 import dateutil
+from lib.labm8 import labdate
 
 # The index types for tables defined in this file.
 _TestbedId = sql.Integer
@@ -33,7 +33,7 @@ class Testbed(db.Table):
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
       sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-      nullable=False, default=dateutil.GetUtcMillisecondsNow)
+      nullable=False, default=labdate.GetUtcMillisecondsNow)
   toolchain_id: int = sql.Column(
       deeplearning.deepsmith.toolchain.Toolchain.id_t,
       sql.ForeignKey('toolchains.id'), nullable=False)
@@ -180,7 +180,7 @@ class TestbedOpt(db.Table):
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
       sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-      nullable=False, default=dateutil.GetUtcMillisecondsNow)
+      nullable=False, default=labdate.GetUtcMillisecondsNow)
   name_id: _TestbedOptNameId = sql.Column(
       _TestbedOptNameId, sql.ForeignKey('testbed_opt_names.id'), nullable=False)
   value_id: _TestbedOptValueId = sql.Column(

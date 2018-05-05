@@ -51,15 +51,15 @@ py_test(
 )
 
 py_library(
-    name = "dateutil",
-    srcs = ["dateutil.py"],
+    name = "labdate",
+    srcs = ["labdate.py"],
 )
 
 py_test(
-    name = "dateutil_test",
+    name = "labdate_test",
     size = "small",
-    srcs = ["dateutil_test.py"],
-    deps = [":dateutil"],
+    srcs = ["labdate_test.py"],
+    deps = [":labdate"],
 )
 
 py_library(

@@ -11,11 +11,11 @@ import deeplearning.deepsmith.harness
 import deeplearning.deepsmith.profiling_event
 import deeplearning.deepsmith.testcase
 from deeplearning.deepsmith.proto import deepsmith_pb2
-from lib.labm8 import dateutil
+from lib.labm8 import labdate
 
 
 def test_Testcase_ToProto():
-  now = dateutil.GetUtcMillisecondsNow()
+  now = labdate.GetUtcMillisecondsNow()
 
   testcase = deeplearning.deepsmith.testcase.Testcase(
       toolchain=deeplearning.deepsmith.toolchain.Toolchain(string='cpp'),
@@ -67,7 +67,7 @@ def test_Testcase_ToProto():
   assert proto.invariant_opts['config'] == 'opt'
   assert len(proto.profiling_events) == 2
   assert (proto.profiling_events[0].event_start_epoch_ms ==
-          dateutil.MillisecondsTimestamp(now))
+          labdate.MillisecondsTimestamp(now))
   assert proto.profiling_events[0].client == 'localhost'
   assert proto.profiling_events[0].type == 'generate'
   assert proto.profiling_events[0].client == 'localhost'
@@ -124,12 +124,12 @@ def test_Testcase_GetOrAdd(session):
   assert testcase.profiling_events[0].type.string == 'generate'
   assert testcase.profiling_events[0].duration_ms == 100
   assert (testcase.profiling_events[0].event_start ==
-          dateutil.DatetimeFromMillisecondsTimestamp(1021312312))
+          labdate.DatetimeFromMillisecondsTimestamp(1021312312))
   assert testcase.profiling_events[1].client.string == 'localhost'
   assert testcase.profiling_events[1].type.string == 'foo'
   assert testcase.profiling_events[1].duration_ms == 100
   assert (testcase.profiling_events[1].event_start ==
-          dateutil.DatetimeFromMillisecondsTimestamp(1230812312))
+          labdate.DatetimeFromMillisecondsTimestamp(1230812312))
 
 
 def test_Generator_GetOrAdd_ToProto_equivalence(session):
