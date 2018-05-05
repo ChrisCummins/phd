@@ -73,8 +73,7 @@ class ScpError(Error):
 
 
 class Subprocess(object):
-  """
-  Subprocess abstraction.
+  """Subprocess abstraction.
 
   Wrapper around subprocess.Popen() which provides the ability to
   force a timeout after a number of seconds have elapsed.
