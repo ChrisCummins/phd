@@ -5,7 +5,9 @@ each of the files within the directory. Use dpack to create consistent and well
 documented collections of data files.
 """
 import fnmatch
+import os
 import sys
+import tarfile
 
 import pathlib
 import typing
@@ -23,6 +25,8 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_string('package', None,
                     'The path of the target package.')
+flags.DEFINE_string('sidecar', None,
+                    'The path of the archive sidecar.')
 flags.DEFINE_list('exclude', [],
                   'A list of patterns to exclude from the package. Supports '
                   'UNIX-style globbing: *,?,[],[!].')
@@ -43,6 +47,16 @@ flags.register_validator(
     # run if the flag is present.
     lambda path: pathlib.Path(path).exists() if path else True,
     message='--package path not found.')
+
+
+def _IsManifest(path) -> bool:
+  return pbutil.ProtoIsReadable(path, dpack_pb2.DataPackage())
+
+
+flags.register_validator(
+    'sidecar',
+    lambda path: _IsManifest(path) if path else True,
+    message='--sidecar path not found.')
 
 # A list of filename patterns to exclude from all data packages.
 ALWAYS_EXCLUDE_PATTERNS = [
@@ -100,8 +114,8 @@ def SetDataPackageFileAttributes(package_root: pathlib.Path,
   f.checksum_hash = dpack_pb2.SHA256
 
 
-def VerifyDataPackageFileAttributes(package_root: pathlib.Path,
-                                    f: dpack_pb2.DataPackageFile) -> bool:
+def DataPackageFileAttributesAreValid(package_root: pathlib.Path,
+                                      f: dpack_pb2.DataPackageFile) -> bool:
   abspath = package_root / f.relative_path
   size_in_bytes = abspath.stat().st_size
   if f.size_in_bytes != size_in_bytes:
@@ -109,8 +123,8 @@ def VerifyDataPackageFileAttributes(package_root: pathlib.Path,
     return False
 
   hash_fn = dpack_pb2.ChecksumHash.Name(f.checksum_hash).lower()
-  crypto_fn = getattr(crypto, hash_fn + '_file')
-  checksum = crypto_fn(abspath)
+  checksum_fn = getattr(crypto, hash_fn + '_file')
+  checksum = checksum_fn(abspath)
   if f.checksum != checksum:
     logging.warning("the contents of '%s' have changed but the size remains "
                     "the same", abspath)
@@ -119,9 +133,10 @@ def VerifyDataPackageFileAttributes(package_root: pathlib.Path,
   return True
 
 
-def _MergeComments(new: dpack_pb2.DataPackage,
-                   old: dpack_pb2.DataPackage):
+def _MergeManifests(new: dpack_pb2.DataPackage,
+                    old: dpack_pb2.DataPackage):
   new.comment = old.comment
+  new.utc_epoch_ms_packaged = old.utc_epoch_ms_packaged
   old_files = {f.relative_path: f for f in old.file}
   for f in new.file:
     if f.relative_path in old_files:
@@ -130,7 +145,7 @@ def _MergeComments(new: dpack_pb2.DataPackage,
 
 def CreatePackageManifest(
     package_root: pathlib.Path,
-    exclude_patterns: typing.List[str]) -> dpack_pb2.DataPackage:
+    contents: typing.List[pathlib.Path]) -> dpack_pb2.DataPackage:
   """TODO.
 
   Args:
@@ -144,15 +159,15 @@ def CreatePackageManifest(
   manifest.comment = ''
   manifest.utc_epoch_ms_packaged = labdate.MillisecondsTimestamp(
       labdate.GetUtcMillisecondsNow())
-  for path in GetFilesInDirectory(package_root, exclude_patterns):
+  for path in contents:
     f = manifest.file.add()
     SetDataPackageFileAttributes(package_root, path, f)
     f.comment = f.comment or ''
   return manifest
 
 
-def VerifyPackageManifest(package_root: pathlib.Path,
-                          manifest: dpack_pb2.DataPackage) -> bool:
+def PackageManifestIsValid(package_root: pathlib.Path,
+                           manifest: dpack_pb2.DataPackage) -> bool:
   """TODO.
 
   Args:
@@ -162,11 +177,12 @@ def VerifyPackageManifest(package_root: pathlib.Path,
   Returns:
 
   """
-  return all(VerifyDataPackageFileAttributes(package_root, f)
+  return all(DataPackageFileAttributesAreValid(package_root, f)
              for f in manifest.file)
 
 
-def CreatePackageArchive(package_dir: pathlib.Path, manifest: dpack_pb2.DataPackage,
+def CreatePackageArchive(package_dir: pathlib.Path,
+                         manifest: dpack_pb2.DataPackage,
                          archive_path: pathlib.Path) -> None:
   """TODO.
 
@@ -183,55 +199,101 @@ def CreatePackageArchive(package_dir: pathlib.Path, manifest: dpack_pb2.DataPack
   if archive_path.exists():
     raise OSError(f'Refusing to overwrite {archive_path}.')
 
-  logging.info('Creating archive %s', archive_path)
-  # with open(archive_path, 'w'):
-  for file_ in manifest.file:
-    path = package_dir / file_.relative_path
-    print("PATH", path.is_file())
+  # Change to the package directory so that relative paths within the archive
+  # are preserved.
+  os.chdir(package_dir.parent)
+  with tarfile.open(archive_path.absolute(), 'w') as tar:
+    path = os.path.join(package_dir.name, 'MANIFEST.pbtxt')
+    logging.info('+ %s', path)
+    tar.add(path)
+    for f in manifest.file:
+      logging.info('+ %s', f.relative_path)
+      path = os.path.join(package_dir.name, f.relative_path)
+      tar.add(path)
+  logging.info('Created %s', archive_path.absolute())
 
 
-def _CreateArchiveFromPackage() -> None:
+def CreatePackageArchiveSidecar(package_dir: pathlib.Path,
+                                manifest: dpack_pb2.DataPackage,
+                                archive_path: pathlib.Path,
+                                sidecar_path: pathlib.Path) -> None:
+  """TODO.
+
+  Args:
+    package_dir:
+    manifest:
+    archive_path:
+    sidecar_path:
+
+  Returns:
+
+  Raises:
+    OSError:
+  """
+  if sidecar_path.exists():
+    raise OSError(f'Refusing to overwrite {sidecar_path}.')
+  if not archive_path.is_file():
+    raise OSError(f'Archive {archive_path} does not exist')
+
+  # TODO(cec): Create a copy of manifest and delete the 'file' field.
+  sidecar = manifest
+  sidecar.checksum_hash = dpack_pb2.SHA256
+  sidecar.checksum = crypto.sha256_file(archive_path)
+  pbutil.ToFile(sidecar, sidecar_path)
+
+  logging.info('Wrote %s', sidecar_path.absolute())
+
+
+def PackDataPackage(package_dir: pathlib.Path) -> None:
   """TODO."""
-  package_dir = pathlib.Path(FLAGS.package)
   manifest = pbutil.FromFile(
       package_dir / 'MANIFEST.pbtxt', dpack_pb2.DataPackage())
-  VerifyPackageManifest(package_dir, manifest)
+  PackageManifestIsValid(package_dir, manifest)
   archive_path = (package_dir / f'../{package_dir.name}.dpack.tar.bz2').resolve()
+  sidecar_path = (package_dir / f'../{package_dir.name}.dpack.pbtxt').resolve()
   CreatePackageArchive(package_dir, manifest, archive_path)
+  CreatePackageArchiveSidecar(package_dir, manifest, archive_path, sidecar_path)
 
 
-def _WriteManifestFile(update: bool) -> None:
+def InitManifest(package_dir: pathlib.Path,
+                 contents: typing.List[pathlib.Path],
+                 update: bool) -> None:
   """TODO."""
-  updated = False
-  package_dir = pathlib.Path(FLAGS.package)
-  manifest = CreatePackageManifest(package_dir, FLAGS.exclude)
+  manifest = CreatePackageManifest(package_dir, contents)
   manifest_path = package_dir / 'MANIFEST.pbtxt'
   if update and pbutil.ProtoIsReadable(manifest_path, dpack_pb2.DataPackage()):
     old = pbutil.FromFile(manifest_path, dpack_pb2.DataPackage())
-    _MergeComments(manifest, old)
-    updated = True
+    _MergeManifests(manifest, old)
   elif manifest_path.is_file():
     raise OSError('Refusing to overwrite MANIFEST.pbtxt file.')
   pbutil.ToFile(manifest, manifest_path)
-  if updated:
-    logging.info('Updated MANIFEST.pbtxt')
-  else:
-    logging.info('Created MANIFEST.pbtxt')
+  logging.info('Wrote %s', manifest_path.absolute())
 
 
-def _VerifyPackage() -> None:
+def VerifyManifest(package_dir: pathlib.Path) -> None:
   """TODO."""
-  package_dir = pathlib.Path(FLAGS.package)
   if not (package_dir / 'MANIFEST.pbtxt').is_file():
     logging.info('No MANIFEST.pbtxt, nothing to do.')
     sys.exit(1)
   manifest = pbutil.FromFile(
       package_dir / 'MANIFEST.pbtxt', dpack_pb2.DataPackage())
-  if VerifyPackageManifest(package_dir, manifest):
+  if PackageManifestIsValid(package_dir, manifest):
     logging.info('Package verified. No changes to files in the manifest.')
   else:
     logging.error('Package contains errors.')
     sys.exit(1)
+
+
+def VerifySidecar(archive: pathlib.Path, sidecar: pathlib.Path) -> None:
+  sidecar_manifest = pbutil.FromFile(sidecar, dpack_pb2.DataPackage())
+
+  hash_fn = dpack_pb2.ChecksumHash.Name(sidecar_manifest.checksum_hash).lower()
+  checksum_fn = getattr(crypto, hash_fn + '_file')
+  checksum = checksum_fn(archive)
+  if sidecar_manifest.checksum != checksum:
+    logging.warning("the contents of '%s' have changed", archive.absolute())
+    sys.exit(1)
+  logging.info('Package verified using the sidecar.')
 
 
 def main(argv) -> None:
@@ -246,13 +308,18 @@ def main(argv) -> None:
   if FLAGS.update and not FLAGS.init:
     logging.warning('--update flag ignored.')
 
+  package = pathlib.Path(FLAGS.package)
+
   # Perform the requested action.
   if FLAGS.pack:
-    _CreateArchiveFromPackage()
+    PackDataPackage(package)
   elif FLAGS.init:
-    _WriteManifestFile(update=FLAGS.update)
+    contents = GetFilesInDirectory(package, FLAGS.exclude)
+    InitManifest(package, contents, update=FLAGS.update)
+  elif FLAGS.sidecar:
+    VerifySidecar(package, pathlib.Path(FLAGS.sidecar))
   else:
-    _VerifyPackage()
+    VerifyManifest(package)
 
 
 if __name__ == '__main__':
