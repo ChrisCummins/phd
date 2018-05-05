@@ -41,8 +41,8 @@ directory {
 directory {
   tier: 3
   path: "/"
-  exclude: "~cec"
-  exclude: "/proc"
-  exclude: "/run"
-  exclude: "/mnt"
+  exclude: "home/cec"
+  exclude: "proc"
+  exclude: "run"
+  exclude: "mnt"
 }

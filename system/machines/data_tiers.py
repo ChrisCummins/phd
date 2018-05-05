@@ -4,11 +4,12 @@ Data directories are classified by a "tier", described in
 //system/machines/proto/data_tiers.proto. This program reports the sizes of
 these data directories.
 """
-import random
+import os
 
 import humanize
 import pandas as pd
 import pathlib
+import subprocess
 from absl import app
 from absl import flags
 from absl import logging
@@ -29,11 +30,23 @@ flags.register_validator(
 
 
 def _SetDirectorySize(tier: data_tiers_pb2.Directory):
-  path = pathlib.Path(tier.path)
+  path = pathlib.Path(tier.path).expanduser()
   if not path.is_dir():
-    logging.fatal("Directory '%s' not found", path)
-  # TODO:
-  tier.size_bytes = random.randint(1000000, 1e9)
+    logging.warning("Directory '%s' not found", path)
+    return
+
+  os.chdir(path)
+  excludes = ['--exclude={}'.format(pathlib.Path(e).expanduser())
+              for e in tier.exclude]
+  cmd = ['du', '-b', '-s', '.'] + excludes
+  logging.info('$ cd %s && %s', path, ' '.join(cmd))
+  proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
+  stdout, _ = proc.communicate()
+  if proc.returncode:
+    raise OSError
+
+  size = int(stdout.split('\t')[0])
+  tier.size_bytes = size
 
 
 def main(argv) -> None:
@@ -55,10 +68,10 @@ def main(argv) -> None:
         'Tier': d.tier,
         'Size': humanize.naturalsize(d.size_bytes),
         'Size (bytes)': d.size_bytes
-      } for d in tiers.directory
+      } for d in tiers.directory if d.size_bytes
     ])
     df = df.sort_values(['Tier', 'Size (bytes)'], ascending=[True, False])
-    print(df[['Path', 'Tier', 'Size']])
+    print(df[['Path', 'Tier', 'Size']].to_string(index=False))
 
     # Print the total size per tier.
     df2 = df.groupby('Tier').sum()
@@ -68,7 +81,7 @@ def main(argv) -> None:
     df2 = df2.sort_values('Tier')
     print()
     print("Totals:")
-    print(df2[['Tier', 'Size']])
+    print(df2[['Tier', 'Size']].to_string(index=False))
   else:
     print(tiers)
 
