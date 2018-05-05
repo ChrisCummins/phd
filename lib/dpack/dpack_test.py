@@ -12,7 +12,7 @@ def test_SetDataPackageFileAttributes():
 
 
 def test_CreatePackageManifest():
-  dpack.CreatePackageManifest()
+  del dpack
 
 
 def main(argv):  # pylint: disable=missing-docstring

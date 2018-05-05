@@ -16,6 +16,7 @@ from absl import logging
 from lib.dpack.proto import dpack_pb2
 from lib.labm8 import crypto
 from lib.labm8 import fs
+from lib.labm8 import pbutil
 
 FLAGS = flags.FLAGS
 
@@ -24,6 +25,11 @@ flags.DEFINE_string('package_dir', None,
 flags.DEFINE_list('excludes', [],
                   'A list of patterns to exclude from the package. Supports '
                   'UNIX-style globbing: *,?,[],[!].')
+flags.DEFINE_bool('mkmanifest', False,
+                  'If set, create the package MANIFEST.txt file. This will '
+                  'not overwrite an existing manifest file.')
+flags.DEFINE_bool('pack', False,
+                  'If set, create the package archive.')
 
 flags.register_validator(
     'package_dir',
@@ -97,14 +103,12 @@ def _MergePackageManifest(manifest: dpack_pb2.DataPackage,
 
 def CreatePackageManifest(package_root: pathlib.Path,
                           exclude_patterns: typing.List[str] = []):
-  manifest_path = package_root / 'MANIFEST.txt'
-  if manifest_path.is_file():
-    raise OSError('Refusing to overwrite MANIFEST.txt file.')
-
   manifest = dpack_pb2.DataPackage()
-  _MergePackageManifest(manifest, package_root,
-                        _GetPackageContents(package_root, exclude_patterns))
-  print(manifest)
+  manifest.comment = ''
+  for path in _GetPackageContents(package_root, exclude_patterns):
+    f = manifest.file.add()
+    _SetDataPackageFileAttributes(package_root, path, f)
+  return manifest
 
 
 def CreateArchiveFromPackage(package_root: pathlib.Path):
@@ -119,7 +123,14 @@ def main(argv) -> None:
   if not FLAGS.package_dir:
     raise app.UsageError('')
 
-  CreatePackageManifest(pathlib.Path(FLAGS.package_dir))
+  package_dir = pathlib.Path(FLAGS.package_dir)
+  manifest = CreatePackageManifest(package_dir)
+  if FLAGS.mkmanifest:
+    manifest_path = package_dir / 'MANIFEST.txt'
+    if manifest_path.is_file():
+      raise OSError('Refusing to overwrite MANIFEST.txt file.')
+    pbutil.ToFile(manifest, manifest_path, exist_ok=False)
+    return
 
 
 if __name__ == '__main__':
