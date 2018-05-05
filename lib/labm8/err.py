@@ -1,6 +1,6 @@
+"""Errors and assertions helpers.
 """
-Errors and assertions helpers.
-"""
+
 
 def assert_or_raise(stmt: bool, exception: Exception,
                     *exception_args, **exception_kwargs) -> None:
