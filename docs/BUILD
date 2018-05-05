@@ -145,3 +145,20 @@ genrule(
     cmd = "$(location //tools:autotex) docs/2017-09-pact/tex/paper.tex $@",
     tools = ["//tools:autotex"],
 )
+
+genrule(
+    name = "2018-07-issta",
+    srcs = glob([
+        "2018-07-issta/**/*.tex",
+        "2018-07-issta/build/img/*.pdf",
+        "2018-07-issta/build/tab/*.tex",
+        "2018-07-issta/img/*",
+        "2018-07-issta/refs.bib",
+        "2018-07-issta/etoolbox.def",
+        "2018-07-issta/**/*.sty",
+        "2018-07-issta/jpaper.cls",
+    ]),
+    outs = ["2018-07-issta.pdf"],
+    cmd = "$(location //tools:autotex) docs/2018-07-issta/paper.tex $@",
+    tools = ["//tools:autotex"],
+)
