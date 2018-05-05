@@ -6,10 +6,16 @@ syntax = 'proto2';
 message DataPackage {
   // A human readable description of the data package.
   optional string comment = 1;
-  // The date of package creation, expressed in milliseconds since the epoch.
-  optional int64 utc_epoch_ms_packaged = 2;
   // A list of one or more files contained in the data package.
-  repeated DataPackageFile file = 3;
+  repeated DataPackageFile file = 2;
+  // The date of package creation, expressed in milliseconds since the epoch.
+  optional int64 utc_epoch_ms_packaged = 3;
+  // The hashing function used for 'checksum' field. Must be set if 'checksum'
+  // field is set.
+  optional ChecksumHash checksum_hash = 4;
+  // The checksum of the file, computed using the hashing function declared in
+  // 'checksum_hash' field.
+  optional string checksum = 5;
 }
 
 // A single file in a data package.
@@ -22,16 +28,18 @@ message DataPackageFile {
   optional string relative_path = 2;
   // The size of the file in bytes.
   optional int32 size_in_bytes = 3;
-  // The hashing function used to compute a file checksum. Must be set if
-  // 'checksum' field is set.
-  enum ChecksumHash {
-    UNKNOWN = 0;
-    MD5 = 1;
-    SHA1 = 2;
-    SHA256 = 3;
-  };
+  // The hashing function used for 'checksum' field. Must be set if 'checksum'
+  // field is set.
   optional ChecksumHash checksum_hash = 4;
   // The checksum of the file, computed using the hashing function declared in
   // 'checksum_hash' field.
   optional string checksum = 5;
 }
+
+// The hashing function used to compute a file checksum.
+enum ChecksumHash {
+  UNKNOWN = 0;
+  MD5 = 1;
+  SHA1 = 2;
+  SHA256 = 3;
+};

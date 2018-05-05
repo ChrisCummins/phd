@@ -5,7 +5,7 @@ each of the files within the directory. Use dpack to create consistent and well
 documented collections of data files.
 """
 import fnmatch
-import hashlib
+import sys
 
 import pathlib
 import typing
@@ -16,121 +16,243 @@ from absl import logging
 from lib.dpack.proto import dpack_pb2
 from lib.labm8 import crypto
 from lib.labm8 import fs
+from lib.labm8 import labdate
 from lib.labm8 import pbutil
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string('package_dir', None,
-                    'The path of the directory to package.')
-flags.DEFINE_list('excludes', [],
+flags.DEFINE_string('package', None,
+                    'The path of the target package.')
+flags.DEFINE_list('exclude', [],
                   'A list of patterns to exclude from the package. Supports '
                   'UNIX-style globbing: *,?,[],[!].')
-flags.DEFINE_bool('mkmanifest', False,
-                  'If set, create the package MANIFEST.txt file. This will '
+flags.DEFINE_bool('init', False,
+                  'If set, create the package MANIFEST.pbtxt file. This will '
                   'not overwrite an existing manifest file.')
+flags.DEFINE_bool('update', False,
+                  'If set, update the file attributes in MANIFEST.pbtxt file. '
+                  'This can only be used in conjunction with --init flag. '
+                  'If no MANIFEST.pbtxt exists, it is created.')
 flags.DEFINE_bool('pack', False,
                   'If set, create the package archive.')
 
 flags.register_validator(
-    'package_dir',
-    lambda path: pathlib.Path(path).is_dir(),
-    message='--package_dir must be a directory.')
+    'package',
+    # Flags validation occurs whenever this file is imported. During unit
+    # testing we have no value for this flag, so the validator should only
+    # run if the flag is present.
+    lambda path: pathlib.Path(path).exists() if path else True,
+    message='--package path not found.')
 
 # A list of filename patterns to exclude from all data packages.
 ALWAYS_EXCLUDE_PATTERNS = [
+  'MANIFEST.pbtxt',  # No self-reference.
   '.DS_Store',
+  '*/.DS_Store/*',
 ]
 
 
-def _Md5sumFile(path):
-  m = hashlib.md5()
-  with open(path, 'rb') as infile:
-    m.update(infile.read())
-  return m.hexdigest()
+def GetFilesInDirectory(
+    directory: pathlib.Path,
+    exclude_patterns: typing.List[str]) -> typing.List[pathlib.Path]:
+  """Recursively list all files in a directory.
 
-
-def WritePackageManifest(package: dpack_pb2.DataPackage, path: pathlib.Path):
-  """
+  Returns relative paths of all files in a directory which do not match the
+  exclude patterns. The list of exclude patterns supports UNIX style globbing.
 
   Args:
-    package:
-    path:
+    directory: The path to the directory.
+    exclude_patterns: A list of patterns to exclude.
+
+  Returns:
+    A list of paths.
+  """
+  exclude_patterns = set(exclude_patterns + ALWAYS_EXCLUDE_PATTERNS)
+  files = []
+  for path in sorted(fs.lsfiles(directory, recursive=True)):
+    for pattern in exclude_patterns:
+      if fnmatch.fnmatch(path, pattern):
+        logging.info('- %s', path)
+        break
+    else:
+      logging.info('+ %s', path)
+      files.append(pathlib.Path(path))
+  return files
+
+
+def SetDataPackageFileAttributes(package_root: pathlib.Path,
+                                 relpath: pathlib.Path,
+                                 f: dpack_pb2.DataPackageFile) -> None:
+  """TODO.
+
+  Args:
+    package_root:
+    relpath:
+    f:
 
   Returns:
 
   """
-  with open(path, 'w') as f:
-    for entry in package.files:
-      print(entry.relpath, entry.size, entry.checksum, entry.description, sep='\t')
-
-
-def _GetPackageContents(package_root: pathlib.Path,
-                        exclude_patterns: typing.List[str]) -> typing.List[str]:
-  exclude_patterns = set(exclude_patterns + ALWAYS_EXCLUDE_PATTERNS)
-  contents = []
-  for path in fs.lsfiles(package_root, recursive=True):
-    for pattern in exclude_patterns:
-      if fnmatch.fnmatch(path, pattern):
-        logging.info("excluding path '%s' which matched pattern '%s'",
-                     path, pattern)
-        break
-    else:
-      contents.append(pathlib.Path(path))
-  return contents
-
-
-def _SetDataPackageFileAttributes(package_root: pathlib.Path,
-                                  relpath: pathlib.Path,
-                                  f: dpack_pb2.DataPackageFile) -> None:
   abspath = package_root / relpath
   f.relative_path = str(relpath)
   f.size_in_bytes = abspath.stat().st_size
-  f.comment = f.comment or ''
   f.checksum = crypto.sha256_file(abspath)
-  f.checksum_algo = dpack_pb2.DataPackageFile.SHA256
+  f.checksum_hash = dpack_pb2.SHA256
 
 
-def _MergePackageManifest(manifest: dpack_pb2.DataPackage,
-                          package_root: pathlib.Path,
-                          paths: typing.List[str]):
-  manifest.comment = manifest.comment or ''
-  files = {f.relative_path: f for f in manifest.file}
-  for path in paths:
-    # Create a new file entry if it is new, else update.
-    f = files[path] if path in files else manifest.file.add()
-    _SetDataPackageFileAttributes(package_root, path, f)
+def VerifyDataPackageFileAttributes(package_root: pathlib.Path,
+                                    f: dpack_pb2.DataPackageFile) -> bool:
+  abspath = package_root / f.relative_path
+  size_in_bytes = abspath.stat().st_size
+  if f.size_in_bytes != size_in_bytes:
+    logging.warning("the contents of '%s' has changed", f.relative_path)
+    return False
+
+  hash_fn = dpack_pb2.ChecksumHash.Name(f.checksum_hash).lower()
+  crypto_fn = getattr(crypto, hash_fn + '_file')
+  checksum = crypto_fn(abspath)
+  if f.checksum != checksum:
+    logging.warning("the contents of '%s' have changed but the size remains "
+                    "the same", abspath)
+    return False
+
+  return True
 
 
-def CreatePackageManifest(package_root: pathlib.Path,
-                          exclude_patterns: typing.List[str] = []):
+def _MergeComments(new: dpack_pb2.DataPackage,
+                   old: dpack_pb2.DataPackage):
+  new.comment = old.comment
+  old_files = {f.relative_path: f for f in old.file}
+  for f in new.file:
+    if f.relative_path in old_files:
+      f.comment = old_files[f.relative_path].comment
+
+
+def CreatePackageManifest(
+    package_root: pathlib.Path,
+    exclude_patterns: typing.List[str]) -> dpack_pb2.DataPackage:
+  """TODO.
+
+  Args:
+    package_root:
+    exclude_patterns:
+
+  Returns:
+    A DataPackage instance with attributes set.
+  """
   manifest = dpack_pb2.DataPackage()
   manifest.comment = ''
-  for path in _GetPackageContents(package_root, exclude_patterns):
+  manifest.utc_epoch_ms_packaged = labdate.MillisecondsTimestamp(
+      labdate.GetUtcMillisecondsNow())
+  for path in GetFilesInDirectory(package_root, exclude_patterns):
     f = manifest.file.add()
-    _SetDataPackageFileAttributes(package_root, path, f)
+    SetDataPackageFileAttributes(package_root, path, f)
+    f.comment = f.comment or ''
   return manifest
 
 
-def CreateArchiveFromPackage(package_root: pathlib.Path):
-  pass
+def VerifyPackageManifest(package_root: pathlib.Path,
+                          manifest: dpack_pb2.DataPackage) -> bool:
+  """TODO.
+
+  Args:
+    package_root:
+    manifest:
+
+  Returns:
+
+  """
+  return all(VerifyDataPackageFileAttributes(package_root, f)
+             for f in manifest.file)
+
+
+def CreatePackageArchive(package_dir: pathlib.Path, manifest: dpack_pb2.DataPackage,
+                         archive_path: pathlib.Path) -> None:
+  """TODO.
+
+  Args:
+    package_dir:
+    manifest:
+    archive_path:
+
+  Returns:
+
+  Raises:
+    OSError:
+  """
+  if archive_path.exists():
+    raise OSError(f'Refusing to overwrite {archive_path}.')
+
+  logging.info('Creating archive %s', archive_path)
+  # with open(archive_path, 'w'):
+  for file_ in manifest.file:
+    path = package_dir / file_.relative_path
+    print("PATH", path.is_file())
+
+
+def _CreateArchiveFromPackage() -> None:
+  """TODO."""
+  package_dir = pathlib.Path(FLAGS.package)
+  manifest = pbutil.FromFile(
+      package_dir / 'MANIFEST.pbtxt', dpack_pb2.DataPackage())
+  VerifyPackageManifest(package_dir, manifest)
+  archive_path = (package_dir / f'../{package_dir.name}.dpack.tar.bz2').resolve()
+  CreatePackageArchive(package_dir, manifest, archive_path)
+
+
+def _WriteManifestFile(update: bool) -> None:
+  """TODO."""
+  updated = False
+  package_dir = pathlib.Path(FLAGS.package)
+  manifest = CreatePackageManifest(package_dir, FLAGS.exclude)
+  manifest_path = package_dir / 'MANIFEST.pbtxt'
+  if update and pbutil.ProtoIsReadable(manifest_path, dpack_pb2.DataPackage()):
+    old = pbutil.FromFile(manifest_path, dpack_pb2.DataPackage())
+    _MergeComments(manifest, old)
+    updated = True
+  elif manifest_path.is_file():
+    raise OSError('Refusing to overwrite MANIFEST.pbtxt file.')
+  pbutil.ToFile(manifest, manifest_path)
+  if updated:
+    logging.info('Updated MANIFEST.pbtxt')
+  else:
+    logging.info('Created MANIFEST.pbtxt')
+
+
+def _VerifyPackage() -> None:
+  """TODO."""
+  package_dir = pathlib.Path(FLAGS.package)
+  if not (package_dir / 'MANIFEST.pbtxt').is_file():
+    logging.info('No MANIFEST.pbtxt, nothing to do.')
+    sys.exit(1)
+  manifest = pbutil.FromFile(
+      package_dir / 'MANIFEST.pbtxt', dpack_pb2.DataPackage())
+  if VerifyPackageManifest(package_dir, manifest):
+    logging.info('Package verified. No changes to files in the manifest.')
+  else:
+    logging.error('Package contains errors.')
+    sys.exit(1)
 
 
 def main(argv) -> None:
   """Main entry point."""
+  # Validate flags.
   if len(argv) > 1:
     raise app.UsageError('Too many command-line arguments.')
 
-  if not FLAGS.package_dir:
-    raise app.UsageError('')
+  if not FLAGS.package:
+    raise app.UsageError('--package argument is required.')
 
-  package_dir = pathlib.Path(FLAGS.package_dir)
-  manifest = CreatePackageManifest(package_dir)
-  if FLAGS.mkmanifest:
-    manifest_path = package_dir / 'MANIFEST.txt'
-    if manifest_path.is_file():
-      raise OSError('Refusing to overwrite MANIFEST.txt file.')
-    pbutil.ToFile(manifest, manifest_path, exist_ok=False)
-    return
+  if FLAGS.update and not FLAGS.init:
+    logging.warning('--update flag ignored.')
+
+  # Perform the requested action.
+  if FLAGS.pack:
+    _CreateArchiveFromPackage()
+  elif FLAGS.init:
+    _WriteManifestFile(update=FLAGS.update)
+  else:
+    _VerifyPackage()
 
 
 if __name__ == '__main__':
