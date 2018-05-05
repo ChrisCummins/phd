@@ -6,5 +6,5 @@ py_binary(
     deps = [
         "//lib/labm8:pbutil",
         "//system/machines/ryangosling/proto:ryangosling_pb2_py",
-    ]
+    ],
 )
