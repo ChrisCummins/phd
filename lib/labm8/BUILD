@@ -162,15 +162,6 @@ py_library(
 )
 
 py_library(
-    name = "modules",
-    srcs = ["modules.py"],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":io",
-    ],
-)
-
-py_library(
     name = "pbutil",
     srcs = ["pbutil.py"],
     visibility = ["//visibility:public"],
@@ -220,12 +211,6 @@ py_library(
         ":fs",
         ":system",
     ],
-)
-
-py_library(
-    name = "time",
-    srcs = ["time.py"],
-    visibility = ["//visibility:public"],
 )
 
 py_library(
@@ -311,15 +296,6 @@ py_test(
 )
 
 py_test(
-    name = "modules_test",
-    size = "small",
-    srcs = ["modules_test.py"],
-    deps = [
-        "//lib/labm8:modules",
-    ],
-)
-
-py_test(
     name = "prof_test",
     size = "small",
     srcs = ["prof_test.py"],
@@ -345,15 +321,6 @@ py_test(
     srcs = ["text_test.py"],
     deps = [
         "//lib/labm8:text",
-    ],
-)
-
-py_test(
-    name = "time_test",
-    size = "small",
-    srcs = ["time_test.py"],
-    deps = [
-        "//lib/labm8:time",
     ],
 )
 

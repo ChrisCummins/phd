@@ -1,91 +1,92 @@
-# Copyright (C) 2015-2018 Chris Cummins.
-#
-# Labm8 is free software: you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free
-# Software Foundation, either version 3 of the License, or (at your
-# option) any later version.
-#
-# Labm8 is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-# License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with labm8.  If not, see <http://www.gnu.org/licenses/>.
+"""Unit tests for //lib/labm8:text."""
 import re
+import sys
+from io import StringIO
 
-from lib import labm8 as lab
+import pytest
+from absl import app
+
 from lib.labm8 import io
-from lib.labm8.tests.testutil import TestCase
-
-if lab.is_python3():
-  from io import StringIO
-else:
-  from StringIO import StringIO
 
 
-class TestIO(TestCase):
+# colourise()
+def test_colourise():
+  assert ("\033[91mHello, World!\033[0m" ==
+          io.colourise(io.Colours.RED, "Hello, World!"))
 
-  # colourise()
-  def test_colourise(self):
-    self._test("\033[91mHello, World!\033[0m",
-               io.colourise(io.Colours.RED, "Hello, World!"))
 
-  # printf()
-  def test_printf(self):
-    out = StringIO()
-    io.printf(io.Colours.RED, "Hello, World!", file=out)
-    self._test("\033[91mHello, World!\033[0m", out.getvalue().strip())
+# printf()
+def test_printf():
+  out = StringIO()
+  io.printf(io.Colours.RED, "Hello, World!", file=out)
+  assert "\033[91mHello, World!\033[0m" == out.getvalue().strip()
 
-  # pprint()
-  def test_pprint(self):
-    out = StringIO()
-    io.pprint({"foo": 1, "bar": "baz"}, file=out)
-    self._test('{\n  "bar": "baz",\n  "foo": 1\n}', out.getvalue().strip())
 
-  # info()
-  def test_info(self):
-    out = StringIO()
-    io.info("foo", file=out)
-    self._test("INFO", re.search("INFO", out.getvalue()).group(0))
+# pprint()
+def test_pprint():
+  out = StringIO()
+  io.pprint({"foo": 1, "bar": "baz"}, file=out)
+  assert '{\n  "bar": "baz",\n  "foo": 1\n}' == out.getvalue().strip()
 
-  # debug()
-  def test_debug(self):
-    out = StringIO()
-    io.debug("foo", file=out)
-    self._test("DEBUG", re.search("DEBUG", out.getvalue()).group(0))
 
-  # warn()
-  def test_warn(self):
-    out = StringIO()
-    io.warn("foo", file=out)
-    self._test("WARN", re.search("WARN", out.getvalue()).group(0))
+# info()
+def test_info():
+  out = StringIO()
+  io.info("foo", file=out)
+  assert "INFO" == re.search("INFO", out.getvalue()).group(0)
 
-  # error()
-  def test_error(self):
-    out = StringIO()
-    io.error("foo", file=out)
-    self._test("ERROR", re.search("ERROR", out.getvalue()).group(0))
 
-  # fatal()
-  def test_fatal(self):
-    out = StringIO()
-    with self.assertRaises(SystemExit) as ctx:
-      io.fatal("foo", file=out)
-    self.assertEqual(ctx.exception.code, 1)
-    self._test("ERROR", re.search("ERROR", out.getvalue()).group(0))
-    self._test("fatal", re.search("fatal", out.getvalue()).group(0))
+# debug()
+def test_debug():
+  out = StringIO()
+  io.debug("foo", file=out)
+  assert "DEBUG" == re.search("DEBUG", out.getvalue()).group(0)
 
-  def test_fatal_status(self):
-    out = StringIO()
-    with self.assertRaises(SystemExit) as ctx:
-      io.fatal("foo", file=out, status=10)
-    self.assertEqual(ctx.exception.code, 10)
-    self._test("ERROR", re.search("ERROR", out.getvalue()).group(0))
-    self._test("fatal", re.search("fatal", out.getvalue()).group(0))
 
-  # prof()
-  def test_prof(self):
-    out = StringIO()
-    io.prof("foo", file=out)
-    self._test("PROF", re.search("PROF", out.getvalue()).group(0))
+# warn()
+def test_warn():
+  out = StringIO()
+  io.warn("foo", file=out)
+  assert "WARN" == re.search("WARN", out.getvalue()).group(0)
+
+
+# error()
+def test_error():
+  out = StringIO()
+  io.error("foo", file=out)
+  assert "ERROR" == re.search("ERROR", out.getvalue()).group(0)
+
+
+# fatal()
+def test_fatal():
+  out = StringIO()
+  with pytest.raises(SystemExit) as ctx:
+    io.fatal("foo", file=out)
+  assert ctx.value.code == 1
+  assert "ERROR" == re.search("ERROR", out.getvalue()).group(0)
+  assert "fatal" == re.search("fatal", out.getvalue()).group(0)
+
+
+def test_fatal_status():
+  out = StringIO()
+  with pytest.raises(SystemExit) as ctx:
+    io.fatal("foo", file=out, status=10)
+  assert ctx.value.code == 10
+  assert "ERROR" == re.search("ERROR", out.getvalue()).group(0)
+  assert "fatal" == re.search("fatal", out.getvalue()).group(0)
+
+
+# prof()
+def test_prof():
+  out = StringIO()
+  io.prof("foo", file=out)
+  assert "PROF" == re.search("PROF", out.getvalue()).group(0)
+
+
+def main(argv):  # pylint: disable=missing-docstring
+  del argv
+  sys.exit(pytest.main([__file__, '-v']))
+
+
+if __name__ == '__main__':
+  app.run(main)

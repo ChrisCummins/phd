@@ -1,22 +1,9 @@
-# Copyright (C) 2015-2018 Chris Cummins.
-#
-# Labm8 is free software: you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free
-# Software Foundation, either version 3 of the License, or (at your
-# option) any later version.
-#
-# Labm8 is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-# License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with labm8.  If not, see <http://www.gnu.org/licenses/>.
-from __future__ import division
+"""Unit tests for //lib/labm8:viz."""
+import sys
 
 import matplotlib
-
-from lib.labm8.tests.testutil import TestCase
+import pytest
+from absl import app
 
 matplotlib.use('Agg')
 
@@ -27,26 +14,37 @@ from lib.labm8 import fs
 from lib.labm8 import viz
 
 
-class TestViz(TestCase):
-  def _mkplot(self):
-    t = np.arange(0.0, 2.0, 0.01)
-    s = np.sin(2 * np.pi * t)
-    plt.plot(t, s)
+def _MakeTestPlot():
+  t = np.arange(0.0, 2.0, 0.01)
+  s = np.sin(2 * np.pi * t)
+  plt.plot(t, s)
 
-  def test_finalise(self):
-    self._mkplot()
-    viz.finalise("/tmp/labm8.png")
-    self.assertTrue(fs.exists("/tmp/labm8.png"))
-    fs.rm("/tmp/labm8.png")
 
-  def test_finalise_tight(self):
-    self._mkplot()
-    viz.finalise("/tmp/labm8.png", tight=True)
-    self.assertTrue(fs.exists("/tmp/labm8.png"))
-    fs.rm("/tmp/labm8.png")
+def test_finalise():
+  _MakeTestPlot()
+  viz.finalise("/tmp/labm8.png")
+  assert fs.exists("/tmp/labm8.png")
+  fs.rm("/tmp/labm8.png")
 
-  def test_finalise_figsize(self):
-    self._mkplot()
-    viz.finalise("/tmp/labm8.png", figsize=(10, 5))
-    self.assertTrue(fs.exists("/tmp/labm8.png"))
-    fs.rm("/tmp/labm8.png")
+
+def test_finalise_tight():
+  _MakeTestPlot()
+  viz.finalise("/tmp/labm8.png", tight=True)
+  assert fs.exists("/tmp/labm8.png")
+  fs.rm("/tmp/labm8.png")
+
+
+def test_finalise_figsize():
+  _MakeTestPlot()
+  viz.finalise("/tmp/labm8.png", figsize=(10, 5))
+  assert fs.exists("/tmp/labm8.png")
+  fs.rm("/tmp/labm8.png")
+
+
+def main(argv):  # pylint: disable=missing-docstring
+  del argv
+  sys.exit(pytest.main([__file__, '-v']))
+
+
+if __name__ == '__main__':
+  app.run(main)

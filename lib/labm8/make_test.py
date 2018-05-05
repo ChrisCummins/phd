@@ -1,4 +1,4 @@
-"""Unit tests for //lib/labm8:labmath."""
+"""Unit tests for //lib/labm8:make."""
 import sys
 
 import pytest

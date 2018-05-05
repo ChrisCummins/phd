@@ -3,14 +3,9 @@
 from __future__ import print_function
 
 import re
+from io import StringIO
 
-from lib import labm8 as lab
 from lib.labm8 import io
-
-if lab.is_python3():
-  from io import StringIO
-else:
-  from StringIO import StringIO
 
 
 class Error(Exception):

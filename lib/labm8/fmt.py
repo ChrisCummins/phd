@@ -1,5 +1,6 @@
 """String formatting utils.
 """
+import pandas as pd
 
 
 class Error(Exception):
@@ -32,9 +33,9 @@ def table(rows, columns=None, output=None, data_args={}, **kwargs) -> str:
     columns (list of str, optional): Column names.
     output (str, optional): Path to output file.
     data_args (dict, optional): Any additional kwargs to pass to
-      pandas.DataFrame constructor.
+      pd.DataFrame constructor.
     **kwargs: Any additional arguments to pass to
-      pandas.DataFrame.to_string().
+      pd.DataFrame.to_string().
 
   Returns:
     str: Formatted data as table.
@@ -44,8 +45,6 @@ def table(rows, columns=None, output=None, data_args={}, **kwargs) -> str:
       number of columns in rows; or if number of columns is not
       consistent across all rows.
   """
-  import pandas
-
   # Number of columns.
   num_columns = len(rows[0])
 
@@ -73,9 +72,9 @@ def table(rows, columns=None, output=None, data_args={}, **kwargs) -> str:
 
   data_args["columns"] = columns
 
-  string = pandas.DataFrame(list(rows), **data_args).to_string(**kwargs)
+  string = pd.DataFrame(list(rows), **data_args).to_string(**kwargs)
   if output is None:
     return string
   else:
     print(string, file=open(output, "w"))
-    io.info("Wrote", output)
+    print("Wrote", output)

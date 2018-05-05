@@ -1,4 +1,4 @@
-"""Unit tests for //deeplearning.deepsmith.proto.pbutil."""
+"""Unit tests for //lib/labm8:pbutil."""
 import sys
 import tempfile
 
