@@ -1,21 +1,19 @@
 import collections
 import os
-import pickle
 import re
 import sys
-
-from contextlib import suppress
-from signal import Signals
-from subprocess import Popen, PIPE
 from tempfile import NamedTemporaryFile
-from typing import List, Union
 
 import numpy as np
-
-from labm8 import err
+import pickle
+from contextlib import suppress
+from signal import Signals
+from subprocess import PIPE, Popen
+from typing import List, Union
 
 from gpu.cldrive import args as _args
 from gpu.cldrive import env as _env
+from lib.labm8 import err
 
 
 class Timeout(RuntimeError):
