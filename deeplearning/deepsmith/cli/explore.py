@@ -7,7 +7,7 @@ from absl import flags
 import deeplearning.deepsmith.result
 from deeplearning.deepsmith import datastore
 from deeplearning.deepsmith import db
-from deeplearning.deepsmith import pbutil
+from lib.labm8 import pbutil
 
 FLAGS = flags.FLAGS
 

@@ -8,9 +8,9 @@ import typing
 from sqlalchemy import orm
 from sqlalchemy.dialects import mysql
 
-from deeplearning.deepsmith import dateutil
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import deepsmith_pb2
+from lib.labm8 import dateutil
 
 # The index types for tables defined in this file.
 _HarnessId = sql.Integer
@@ -28,7 +28,7 @@ class Harness(db.Table):
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
       sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-      nullable=False, default=dateutil.Now)
+      nullable=False, default=dateutil.GetUtcMillisecondsNow)
   # MySQL maximum key length is 3072, with 3 bytes per character. We must
   # preserve 16 bytes for the unique constraint.
   name: str = sql.Column(
@@ -148,7 +148,7 @@ class HarnessOpt(db.Table):
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
       sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-      nullable=False, default=dateutil.Now)
+      nullable=False, default=dateutil.GetUtcMillisecondsNow)
   name_id: _HarnessOptNameId = sql.Column(
       _HarnessOptNameId, sql.ForeignKey('harness_opt_names.id'), nullable=False)
   value_id: _HarnessOptValueId = sql.Column(

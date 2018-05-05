@@ -12,10 +12,9 @@ from sqlalchemy.dialects import mysql
 import deeplearning.deepsmith.profiling_event
 import deeplearning.deepsmith.testbed
 import deeplearning.deepsmith.testcase
-from deeplearning.deepsmith import dateutil
 from deeplearning.deepsmith import db
-from deeplearning.deepsmith import pbutil
 from deeplearning.deepsmith.proto import deepsmith_pb2
+from lib.labm8 import dateutil, pbutil
 
 # The index types for tables defined in this file.
 _ResultId = sql.Integer
@@ -33,7 +32,7 @@ class Result(db.Table):
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
       sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-      nullable=False, default=dateutil.Now)
+      nullable=False, default=dateutil.GetUtcMillisecondsNow)
   testcase_id: int = sql.Column(
       deeplearning.deepsmith.testcase.Testcase.id_t,
       sql.ForeignKey('testcases.id'), nullable=False)
@@ -210,7 +209,7 @@ class ResultOutput(db.Table):
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
       sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-      nullable=False, default=dateutil.Now)
+      nullable=False, default=dateutil.GetUtcMillisecondsNow)
   name_id: _ResultOutputNameId = sql.Column(
       _ResultOutputNameId, sql.ForeignKey('result_output_names.id'),
       nullable=False)
@@ -254,7 +253,7 @@ class ResultOutputValue(db.Table):
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
       sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-      nullable=False, default=dateutil.Now)
+      nullable=False, default=dateutil.GetUtcMillisecondsNow)
   original_md5: bytes = sql.Column(
       sql.Binary(16).with_variant(mysql.BINARY(16), 'mysql'), nullable=False,
       index=True, unique=True)
@@ -338,7 +337,7 @@ class PendingResult(db.Table):
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
       sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-      nullable=False, default=dateutil.Now)
+      nullable=False, default=dateutil.GetUtcMillisecondsNow)
   # The date that the result is due by.
   deadline: datetime.datetime = sql.Column(
       sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),

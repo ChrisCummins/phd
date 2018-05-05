@@ -11,8 +11,8 @@ import deeplearning.deepsmith.harness
 import deeplearning.deepsmith.profiling_event
 import deeplearning.deepsmith.result
 import deeplearning.deepsmith.testcase
-from deeplearning.deepsmith import dateutil
 from deeplearning.deepsmith.proto import deepsmith_pb2
+from lib.labm8 import dateutil
 
 
 def test_Result_ToProto():

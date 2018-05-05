@@ -5,9 +5,9 @@ from sqlalchemy import orm
 from sqlalchemy.dialects import mysql
 
 import deeplearning.deepsmith.client
-from deeplearning.deepsmith import dateutil
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import deepsmith_pb2
+from lib.labm8 import dateutil
 
 
 class ProfilingEventType(db.StringTable):
@@ -23,7 +23,7 @@ class TestcaseProfilingEvent(db.Table):
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
       sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-      nullable=False, default=dateutil.Now)
+      nullable=False, default=dateutil.GetUtcMillisecondsNow)
   testcase_id: int = sql.Column(sql.Integer,
                                 sql.ForeignKey('testcases.id'), nullable=False)
   client_id: int = sql.Column(deeplearning.deepsmith.client.Client.id_t,
@@ -98,7 +98,7 @@ class ResultProfilingEvent(db.Table):
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
       sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-      nullable=False, default=dateutil.Now)
+      nullable=False, default=dateutil.GetUtcMillisecondsNow)
   result_id: int = sql.Column(
       sql.Integer, sql.ForeignKey('results.id'), nullable=False)
   client_id: int = sql.Column(deeplearning.deepsmith.client.Client.id_t,
