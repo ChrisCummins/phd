@@ -1,6 +1,9 @@
 licenses(["notice"])  # Apache 2.0
 
-exports_files(["LICENSE"])
+exports_files([
+    "LICENSE",
+    "README.md",
+])
 
 py_binary(
     name = "photolint",
