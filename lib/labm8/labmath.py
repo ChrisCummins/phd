@@ -11,11 +11,6 @@ import math
 import numpy as np
 from scipy import stats
 
-from lib import labm8 as lab
-
-if lab.is_python3():
-  pass
-
 
 def ceil(number):
   """
@@ -25,7 +20,7 @@ def ceil(number):
 
   Example:
 
-      >>> labmath.ceil(1.5)
+      >>> ceil(1.5)
       2
 
   Arguments:
@@ -51,7 +46,7 @@ def floor(number):
 
   Example:
 
-      >>> labmath.floor(1.5)
+      >>> floor(1.5)
       1
 
   Arguments:
