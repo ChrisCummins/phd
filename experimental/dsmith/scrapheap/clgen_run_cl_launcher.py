@@ -7,7 +7,7 @@ import pyopencl as cl
 import re
 
 from argparse import ArgumentParser
-from labm8 import fs
+from lib.labm8 import fs
 from tempfile import NamedTemporaryFile
 from typing import Dict, List, Tuple
 

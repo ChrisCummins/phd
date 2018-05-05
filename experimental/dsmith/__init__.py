@@ -34,7 +34,7 @@ import re
 from collections import namedtuple
 from configparser import ConfigParser
 from contextlib import contextmanager
-from labm8 import fs
+from lib.labm8 import fs
 from pathlib import Path
 from pkg_resources import resource_filename, resource_string, require
 from typing import Tuple

@@ -24,9 +24,9 @@ import sys
 import tarfile
 
 from io import StringIO
-from labm8 import fs
-from labm8 import system
-from labm8 import tar
+from lib.labm8 import fs
+from lib.labm8 import system
+from lib.labm8 import tar
 from pathlib import Path
 
 import dsmith

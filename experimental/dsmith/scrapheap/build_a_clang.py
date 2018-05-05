@@ -10,7 +10,7 @@ import subprocess
 from argparse import ArgumentParser
 from collections import deque, namedtuple
 from subprocess import Popen, PIPE
-from labm8 import fs, crypto
+from lib.labm8 import fs, crypto
 from time import time, strftime
 from typing import Dict, List, Tuple, NewType, Union
 from tempfile import NamedTemporaryFile, TemporaryDirectory

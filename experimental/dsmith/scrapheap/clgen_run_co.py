@@ -10,7 +10,7 @@ from collections import namedtuple
 from subprocess import Popen, PIPE
 from time import time
 from typing import Dict, List, Tuple, NewType
-from labm8 import fs
+from lib.labm8 import fs
 
 import dsmith
 from dsmith import co

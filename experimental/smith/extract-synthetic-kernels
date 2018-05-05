@@ -2,77 +2,65 @@
 #
 # Given some training data file.
 #
-import csv
-import sys
-import os
-import copy
-import numpy as np
 import re
-import pandas as pd
-import math
-
-from argparse import ArgumentParser
-from random import random
-
-import labm8
-from labm8 import fs
-from labm8 import math as labmath
-from multiprocessing import cpu_count, Pool
+import sys
 
 import smith
-from smith import features
+from argparse import ArgumentParser
 from smith import cgo13
+
+from lib.labm8 import fs
 
 
 def main():
-    parser = ArgumentParser()
-    parser.add_argument('input', help='path to training data CSV')
-    parser.add_argument('kernels', help='path to kernels directory')
-    parser.add_argument('output', help='path to output file/directory')
-    parser.add_argument("-g", "--group", action="store", default=None,
-                        help='group results')
-    args = parser.parse_args()
+  parser = ArgumentParser()
+  parser.add_argument('input', help='path to training data CSV')
+  parser.add_argument('kernels', help='path to kernels directory')
+  parser.add_argument('output', help='path to output file/directory')
+  parser.add_argument("-g", "--group", action="store", default=None,
+                      help='group results')
+  args = parser.parse_args()
 
-    data = cgo13.LabelledData.from_csv(smith.assert_exists(args.input),
-                                       group_by=args.group)
-    groups = sorted(list(set(data["Group"])))
-    kernel_paths = sorted(fs.ls(smith.assert_exists(args.kernels), abspaths=True))
-    kernel_basenames = sorted(fs.ls(smith.assert_exists(args.kernels)))
+  data = cgo13.LabelledData.from_csv(smith.assert_exists(args.input),
+                                     group_by=args.group)
+  groups = sorted(list(set(data["Group"])))
+  kernel_paths = sorted(fs.ls(smith.assert_exists(args.kernels), abspaths=True))
+  kernel_basenames = sorted(fs.ls(smith.assert_exists(args.kernels)))
 
-    for group in groups:
-        kernel_indices = set()
-        for benchmark in data["benchmark"]:
-            basename = re.sub(r"-[A-Z]+$", "", benchmark)
+  for group in groups:
+    kernel_indices = set()
+    for benchmark in data["benchmark"]:
+      basename = re.sub(r"-[A-Z]+$", "", benchmark)
 
-            try:
-                index = kernel_basenames.index(basename)
-                kernel_indices.add(index)
-            except ValueError:
-                print("error: kernel '{}' not found".format(basename),
-                      file=sys.stderr)
+      try:
+        index = kernel_basenames.index(basename)
+        kernel_indices.add(index)
+      except ValueError:
+        print("error: kernel '{}' not found".format(basename),
+              file=sys.stderr)
 
-        kernels = []
-        for index in kernel_indices:
-            with open(kernel_paths[index]) as infile:
-                kernels.append(infile.read().strip())
+    kernels = []
+    for index in kernel_indices:
+      with open(kernel_paths[index]) as infile:
+        kernels.append(infile.read().strip())
 
-        # Create an ordered list of benchmarks, by descending line count.
-        ordered = sorted(
-            [(kernel_paths[i], k) for k,i in zip(kernels, kernel_indices)],
-            key=lambda x: len(x[1].split("\n")), reverse=True)
+    # Create an ordered list of benchmarks, by descending line count.
+    ordered = sorted(
+        [(kernel_paths[i], k) for k, i in zip(kernels, kernel_indices)],
+        key=lambda x: len(x[1].split("\n")), reverse=True)
 
-        # If we're grouping results, output to <output>/<group>.cl.
-        # Else output to <output>.
-        if args.group:
-            outpath = fs.path(args.output, str(group) + ".cl")
-        else:
-            outpath = fs.path(args.output)
+    # If we're grouping results, output to <output>/<group>.cl.
+    # Else output to <output>.
+    if args.group:
+      outpath = fs.path(args.output, str(group) + ".cl")
+    else:
+      outpath = fs.path(args.output)
 
-        with open(outpath, "w") as outfile:
-            for path, kernel in ordered:
-                print("/* ", path, " */\n", kernel, "\n\n",
-                      sep="", file=outfile)
+    with open(outpath, "w") as outfile:
+      for path, kernel in ordered:
+        print("/* ", path, " */\n", kernel, "\n\n",
+              sep="", file=outfile)
 
 
 if __name__ == '__main__':
-    main()
+  main()

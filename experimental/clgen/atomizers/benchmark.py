@@ -23,7 +23,7 @@ import numpy as np
 import string
 
 from collections import Counter
-from labm8 import fs
+from lib.labm8 import fs
 from timeit import timeit
 
 import clgen

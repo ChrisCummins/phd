@@ -5,9 +5,9 @@
 import sys
 
 from collections import Counter
-from labm8 import fs
-from labm8 import time
-from labm8 import system
+from lib.labm8 import fs
+from lib.labm8 import time
+from lib.labm8 import system
 
 import clgen
 from clgen import corpus

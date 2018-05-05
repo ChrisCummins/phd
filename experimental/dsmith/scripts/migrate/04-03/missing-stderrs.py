@@ -15,7 +15,7 @@ import datetime
 from collections import deque
 from itertools import product
 from argparse import ArgumentParser
-from labm8 import crypto, fs
+from lib.labm8 import crypto, fs
 from pathlib import Path
 from progressbar import ProgressBar
 from time import time

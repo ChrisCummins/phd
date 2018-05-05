@@ -8,7 +8,7 @@ import re
 
 from collections import deque, namedtuple
 from argparse import ArgumentParser
-from labm8 import crypto, fs
+from lib.labm8 import crypto, fs
 from tempfile import NamedTemporaryFile
 from time import time, strftime
 from typing import Dict, List, Tuple

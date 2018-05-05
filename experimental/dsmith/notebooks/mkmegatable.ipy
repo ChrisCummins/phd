@@ -1,7 +1,7 @@
 #!/usr/bin/env ipython
 
 from collections import namedtuple, OrderedDict
-from labm8 import fs
+from lib.labm8 import fs
 import os
 import pandas as pd
 import sqlalchemy as sql

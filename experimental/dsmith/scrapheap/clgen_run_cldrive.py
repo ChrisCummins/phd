@@ -6,7 +6,7 @@ import subprocess
 
 from argparse import ArgumentParser
 from collections import deque, namedtuple
-from labm8 import crypto, fs
+from lib.labm8 import crypto, fs
 from subprocess import Popen, PIPE
 from tempfile import NamedTemporaryFile
 from time import time, strftime

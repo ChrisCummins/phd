@@ -18,7 +18,7 @@
 import os
 import pytest
 
-from labm8 import fs
+from lib.labm8 import fs
 
 from dsmith import test as tests
 from dsmith import cli

@@ -27,7 +27,7 @@ import sys
 import traceback
 
 from argparse import ArgumentParser, FileType, RawDescriptionHelpFormatter
-from labm8 import jsonutil, fs, prof, types
+from lib.labm8 import jsonutil, fs, prof, types
 from pathlib import Path
 from sys import exit
 from typing import BinaryIO, List, TextIO

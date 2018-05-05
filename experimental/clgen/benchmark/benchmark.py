@@ -3,9 +3,9 @@
 # python ./benchmark.py model-64x2x50.json 2>&1 | tee benchmark-model-64x2x50.log
 #
 from time import time
-from labm8 import fs
-from labm8 import system
-from labm8.time import nowstr
+from lib.labm8 import fs
+from lib.labm8 import system
+from lib.labm8.time import nowstr
 
 import clgen
 from clgen import corpus

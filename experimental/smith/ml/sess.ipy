@@ -17,8 +17,8 @@ from functools import partial
 from itertools import product
 from scipy import stats
 
-import labm8
-from labm8 import fs
+from lib import labm8
+from lib.labm8 import fs
 
 import smith
 from smith import features

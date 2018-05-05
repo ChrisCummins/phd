@@ -31,7 +31,7 @@ import subprocess
 import threading
 
 from contextlib import contextmanager
-from labm8 import crypto, fs, prof, system
+from lib.labm8 import crypto, fs, prof, system
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.ext.declarative import declarative_base
 from signal import Signals

@@ -34,7 +34,7 @@ import sys
 import traceback
 
 from collections import namedtuple
-from labm8 import fs
+from lib.labm8 import fs
 from typing import List, Tuple
 
 import dsmith

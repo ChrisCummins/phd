@@ -6,7 +6,7 @@ import sys
 
 from argparse import ArgumentParser
 from collections import deque
-from labm8 import fs, crypto
+from lib.labm8 import fs, crypto
 from pathlib import Path
 from progressbar import ProgressBar
 

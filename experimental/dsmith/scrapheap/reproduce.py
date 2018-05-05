@@ -7,7 +7,7 @@ import os
 import sys
 
 from time import sleep
-from labm8 import crypto
+from lib.labm8 import crypto
 from argparse import ArgumentParser
 from itertools import product
 from subprocess import Popen

@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-from labm8 import fs
+from lib.labm8 import fs
 
 import clgen
 from clgen import cache

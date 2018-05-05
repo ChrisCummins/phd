@@ -32,7 +32,7 @@ import sys
 from argparse import ArgumentParser
 from collections import Counter
 from subprocess import Popen, PIPE
-from labm8 import fs
+from lib.labm8 import fs
 from pathlib import Path
 from progressbar import ProgressBar
 

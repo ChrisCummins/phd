@@ -6,7 +6,7 @@ import sys
 
 from typing import List, NewType
 from pathlib import Path
-from labm8 import crypto
+from lib.labm8 import crypto
 
 import dsmith
 from dsmith.opencl import clsmith

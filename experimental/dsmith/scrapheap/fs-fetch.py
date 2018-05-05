@@ -8,7 +8,7 @@ import sqlalchemy as sql
 from argparse import ArgumentParser
 from pathlib import Path
 from random import shuffle
-from labm8 import fs
+from lib.labm8 import fs
 from progressbar import ProgressBar
 
 import dsmith

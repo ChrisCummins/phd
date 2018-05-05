@@ -25,8 +25,8 @@ from keras.preprocessing.sequence import pad_sequences
 from keras.utils.visualize_util import model_to_dot
 from keras.wrappers.scikit_learn import KerasClassifier
 
-from labm8 import fs
-from labm8 import viz
+from lib.labm8 import fs
+from lib.labm8 import viz
 
 from scipy.stats import percentileofscore
 from scipy.stats.mstats import gmean

@@ -2,7 +2,7 @@
 
 import sys
 
-from labm8 import crypto, fs
+from lib.labm8 import crypto, fs
 from progressbar import ProgressBar
 
 

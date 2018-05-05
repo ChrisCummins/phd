@@ -19,7 +19,7 @@
 Oclgrind module
 """
 import subprocess
-from labm8 import fs
+from lib.labm8 import fs
 from tempfile import NamedTemporaryFile
 from typing import List
 

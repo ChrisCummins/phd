@@ -26,7 +26,7 @@ import progressbar
 import math
 
 from time import time
-from labm8 import crypto, fs
+from lib.labm8 import crypto, fs
 from sqlalchemy.sql import func
 from tempfile import NamedTemporaryFile
 from pathlib import Path

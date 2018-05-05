@@ -4,7 +4,7 @@ import sqlalchemy as sql
 
 from argparse import ArgumentParser
 from progressbar import ProgressBar
-from labm8 import fs
+from lib.labm8 import fs
 
 import dsmith
 from dsmith import db

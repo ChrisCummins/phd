@@ -15,7 +15,7 @@ from progressbar import ProgressBar
 import cldrive
 import progressbar
 import subprocess
-from labm8 import fs
+from lib.labm8 import fs
 
 import dsmith
 from dsmith import db

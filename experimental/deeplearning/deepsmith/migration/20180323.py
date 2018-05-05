@@ -9,8 +9,8 @@ from absl import app
 from absl import flags
 from absl import logging
 
-from deeplearning.deepsmith import dateutil
 from deeplearning.deepsmith.proto import deepsmith_pb2
+from lib.labm8 import dateutil
 
 FLAGS = flags.FLAGS
 

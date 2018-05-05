@@ -13,7 +13,7 @@ from configparser import ConfigParser
 from progressbar import ProgressBar
 from github import Github, GithubException, Repository
 from github.GithubException import RateLimitExceededException
-from labm8 import crypto, fs, prof
+from lib.labm8 import crypto, fs, prof
 from pathlib import Path
 from sqlalchemy.ext.declarative import declarative_base
 from tempfile import TemporaryDirectory

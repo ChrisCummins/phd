@@ -7,7 +7,7 @@ import os
 import sqlalchemy as sql
 
 from argparse import ArgumentParser
-from labm8 import fs
+from lib.labm8 import fs
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from progressbar import ProgressBar

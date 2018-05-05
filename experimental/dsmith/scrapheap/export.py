@@ -5,7 +5,7 @@ import sqlalchemy as sql
 import sys
 
 from argparse import ArgumentParser
-from labm8 import fs, crypto
+from lib.labm8 import fs, crypto
 from pathlib import Path
 from progressbar import ProgressBar
 

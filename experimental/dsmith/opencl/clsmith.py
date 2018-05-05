@@ -22,7 +22,7 @@ import logging
 import re
 
 from tempfile import NamedTemporaryFile
-from labm8 import fs
+from lib.labm8 import fs
 from collections import namedtuple
 from subprocess import Popen, PIPE, STDOUT
 from time import time

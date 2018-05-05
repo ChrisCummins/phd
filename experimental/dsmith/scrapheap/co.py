@@ -7,7 +7,7 @@ import re
 
 from argparse import ArgumentParser
 from collections import namedtuple
-from labm8 import fs
+from lib.labm8 import fs
 from subprocess import Popen, PIPE
 from tempfile import NamedTemporaryFile
 from time import time
