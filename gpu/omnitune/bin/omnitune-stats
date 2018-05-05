@@ -2,34 +2,32 @@
 
 import sys
 
-import labm8 as lab
-from labm8 import fs
-
-import omnitune
 from omnitune.skelcl import db as _db
 from omnitune.skelcl.migrate import migrate
 
+from lib.labm8 import fs
+
 
 def print_usage_and_exit():
-    print("Usage: omnitune-stats <path>")
-    print("")
-    print("Print stats about omnitune database.")
-    sys.exit(1)
+  print("Usage: omnitune-stats <path>")
+  print("")
+  print("Print stats about omnitune database.")
+  sys.exit(1)
 
 
 def main(arguments):
-    if len(arguments) > 1:
-        print_usage_and_exit()
+  if len(arguments) > 1:
+    print_usage_and_exit()
 
-    path = arguments[0] if len(arguments) else _db.DEFAULT_PATH
+  path = arguments[0] if len(arguments) else _db.DEFAULT_PATH
 
-    if not fs.isfile(path):
-        print("File not found!")
-        sys.exit(127)
+  if not fs.isfile(path):
+    print("File not found!")
+    sys.exit(127)
 
-    db = migrate(_db.Database(path))
-    db.status_report()
+  db = migrate(_db.Database(path))
+  db.status_report()
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+  main(sys.argv[1:])

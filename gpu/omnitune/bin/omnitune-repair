@@ -2,39 +2,36 @@
 
 import sys
 
-import labm8 as lab
-from labm8 import fs
-
-import omnitune
 from omnitune.skelcl import db as _db
-from omnitune.skelcl.migrate import migrate
+
+from lib.labm8 import fs
 
 
 def print_usage_and_exit():
-    print("Usage: omnitune-repair <path> [--dry-run]")
-    sys.exit(1)
+  print("Usage: omnitune-repair <path> [--dry-run]")
+  sys.exit(1)
 
 
 def main(arguments):
-    if len(arguments) > 2:
-        print_usage_and_exit()
+  if len(arguments) > 2:
+    print_usage_and_exit()
 
-    if len(arguments) and arguments[0] != "--dry-run":
-        path = arguments[0]
-    else:
-        path = _db.DEFAULT_PATH
-    if len(arguments) and arguments[-1] == "--dry-run":
-        dry_run = True
-    else:
-        dry_run = False
+  if len(arguments) and arguments[0] != "--dry-run":
+    path = arguments[0]
+  else:
+    path = _db.DEFAULT_PATH
+  if len(arguments) and arguments[-1] == "--dry-run":
+    dry_run = True
+  else:
+    dry_run = False
 
-    if not fs.isfile(path):
-        print("File not found!")
-        sys.exit(127)
+  if not fs.isfile(path):
+    print("File not found!")
+    sys.exit(127)
 
-    db = _db.Database(path)
-    db.repair(dry_run=dry_run)
+  db = _db.Database(path)
+  db.repair(dry_run=dry_run)
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+  main(sys.argv[1:])

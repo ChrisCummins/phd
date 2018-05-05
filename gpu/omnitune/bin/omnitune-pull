@@ -3,36 +3,33 @@
 from __future__ import division
 from __future__ import print_function
 
-import json
 import sys
 
-import labm8 as lab
-from labm8 import fs
-from labm8 import io
-
-import omnitune
 from omnitune.skelcl import db as _db
 from omnitune.skelcl import load_config
 from omnitune.skelcl.migrate import migrate
 
+from lib.labm8 import fs
+from lib.labm8 import io
+
 
 def print_usage_and_exit():
-    print("Usage: omnitune-pull [path]")
-    sys.exit(1)
+  print("Usage: omnitune-pull [path]")
+  sys.exit(1)
 
 
 def main(arguments):
-    if len(arguments) > 1:
-        print_usage_and_exit()
+  if len(arguments) > 1:
+    print_usage_and_exit()
 
-    path = arguments[0] if len(arguments) else _db.DEFAULT_PATH
-    if not fs.isfile(path):
-        io.fatal("File", path, "not found!")
+  path = arguments[0] if len(arguments) else _db.DEFAULT_PATH
+  if not fs.isfile(path):
+    io.fatal("File", path, "not found!")
 
-    cfg = load_config()
-    db = migrate(_db.Database(path, remote=True, remote_cfg=cfg["remote"]))
-    db.pull_remote()
+  cfg = load_config()
+  db = migrate(_db.Database(path, remote=True, remote_cfg=cfg["remote"]))
+  db.pull_remote()
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+  main(sys.argv[1:])

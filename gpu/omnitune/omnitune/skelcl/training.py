@@ -1,20 +1,13 @@
-import itertools
 import random
-import re
-
-import labm8 as lab
-from labm8 import io
-
-from . import hash_params
 
 
 def random_wg_value(max_wg_size):
+  wg_c = random.randrange(2, max_wg_size / 2, 2)
+  wg_r = random.randrange(2, max_wg_size / 2, 2)
+  while wg_c * wg_r > max_wg_size:
     wg_c = random.randrange(2, max_wg_size / 2, 2)
     wg_r = random.randrange(2, max_wg_size / 2, 2)
-    while wg_c * wg_r > max_wg_size:
-        wg_c = random.randrange(2, max_wg_size / 2, 2)
-        wg_r = random.randrange(2, max_wg_size / 2, 2)
-    return [wg_c, wg_r]
+  return [wg_c, wg_r]
 
 
 simple_kernel = """
@@ -154,33 +147,34 @@ int main(int argc, char** argv)
 
 
 def define(name, val):
-    return "#define {name} {val}".format(name=name, val=val)
+  return "#define {name} {val}".format(name=name, val=val)
 
 
 def escape_kernel(kernel):
-    return 'R"(' + kernel + ')";'
+  return 'R"(' + kernel + ')";'
+
 
 def make_synthetic_benchmark(complexity, north, south, east, west,
                              width, height):
-    program = [common_header]
+  program = [common_header]
 
-    program.append(define("HEIGHT", height))
-    program.append(define("WIDTH", width))
-    program.append(define("NORTH", north))
-    program.append(define("SOUTH", south))
-    program.append(define("EAST", east))
-    program.append(define("WEST", west))
+  program.append(define("HEIGHT", height))
+  program.append(define("WIDTH", width))
+  program.append(define("NORTH", north))
+  program.append(define("SOUTH", south))
+  program.append(define("EAST", east))
+  program.append(define("WEST", west))
 
-    program.append("const char *KERNEL = ");
+  program.append("const char *KERNEL = ");
 
-    if complexity > .5:
-        program.append(escape_kernel(complex_kernel))
-    else:
-        program.append(escape_kernel(simple_kernel))
+  if complexity > .5:
+    program.append(escape_kernel(complex_kernel))
+  else:
+    program.append(escape_kernel(simple_kernel))
 
-    program.append(main)
+  program.append(main)
 
-    return "\n".join(program)
+  return "\n".join(program)
 
 # sizes = (512, 1024, 2048, 4096)
 # stencil_direction_values(1, 5, 10, 20, 30)
