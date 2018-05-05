@@ -1,0 +1,24 @@
+// Data in directories is grouped in 'tiers' based on their importance.
+//
+// Tier 1 is for irreplacable content.
+//   Examples: personal photographs, recordings, documents, etc.
+// Tier 2 is for high-value replaceable content. These could be replaced if
+// lost, but not necessarily easily.
+//   Examples: iTunes catalog, system configuration files, digital downloads.
+// Tier 3 is for disposable data. These can be replaced if lost.
+//   Examples: Operating system files.
+syntax = "proto2";
+
+// A container for a list of directories.
+message DataTiers {
+  repeated Directory directory = 1;
+}
+
+// A directory consists of a path and a tier. The 'exclude' field can be
+// used to exclude contents.
+message Directory {
+  optional int32 tier = 1;
+  optional string path = 2;
+  repeated string exclude = 3;
+  optional int64 size_bytes = 4;
+}

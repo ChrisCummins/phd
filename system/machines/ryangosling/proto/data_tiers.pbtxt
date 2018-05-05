@@ -1,0 +1,48 @@
+# File: //system/machines/proto/data_tiers.proto
+# Proto: DataTiers
+directory {
+  tier: 1
+  path: "~cec/Dropbox"
+}
+directory {
+  tier: 1
+  path: "~cec/git"
+}
+directory {
+  tier: 1
+  path: "~cec/audio"
+  exclude: "~cec/audio/third_party"
+}
+directory {
+  tier: 1
+  path: "~cec/docs"
+}
+directory {
+  tier: 1
+  path: "~cec/img"
+}
+directory {
+  tier: 1
+  path: "~cec/video"
+  exclude: "~cec/video/third_party"
+}
+directory {
+  tier: 2
+  path: "~cec/bin"
+}
+directory {
+  tier: 2
+  path: "~cec/audio/third_party"
+}
+directory {
+  tier: 2
+  path: "~cec/video/third_party"
+}
+directory {
+  tier: 3
+  path: "/"
+  exclude: "~cec"
+  exclude: "/proc"
+  exclude: "/run"
+  exclude: "/mnt"
+}
