@@ -1,0 +1,170 @@
+%
+% LaTeX template for prepartion of submissions to PLDI'16
+%
+% Requires temporary version of sigplanconf style file provided on
+% PLDI'16 web site.
+%
+%\documentclass[pageno,nonatbib]{jpaper}
+% \documentclass[pageno]{jpaper}
+% \documentclass[pldi-cameraready]{sigplanconf-pldi16}
+\documentclass[sigconf,review,anonymous]{acmart}
+\acmConference[ISSTA 2018]{ACM SIGSOFT International Symposium on Software Testing and Analysis}{16–22 July, 2018}{Amsterdam, The Netherlands}
+
+\usepackage[utf8]{inputenc}
+
+\usepackage[normalem]{ulem}
+
+%
+% the following standard packages may be helpful, but are not required
+%
+% \usepackage{siunitx}            % typset units correctly
+% \usepackage{courier}            % standard fixed width font
+% \usepackage[scaled]{helvet} % see www.ctan.org/get/macros/latex/required/psnfss/psnfss2e.pdf
+% \usepackage{url}                  % format URLs
+% \usepackage{listings}          % format code
+% \usepackage{enumitem}      % adjust spacing in enums
+% \usepackage[colorlinks=true,allcolors=blue,breaklinks,draft=false]{hyperref}   % hyperlinks, including DOIs and URLs in bibliography
+% known bug: http://tex.stackexchange.com/questions/1522/pdfendlink-ended-up-in-different-nesting-level-than-pdfstartlink
+% \newcommand{\doi}[1]{doi:~\href{http://dx.doi.org/#1}{\Hurl{#1}}}   % print a hyperlinked DOI
+
+% Start of 'ignore natbib' hack
+\let\bibhang\relax
+\let\citename\relax
+\let\bibfont\relax
+\let\Citeauthor\relax
+\expandafter\let\csname ver@natbib.sty\endcsname\relax
+% End of 'ignore natbib' hack
+
+% sort and compress citations
+%\usepackage[%
+%backend=biber,
+%style=numeric-comp,
+%sorting=none,        % nty,nyt,nyvt,anyt,anyvt,ynt,ydnt,none
+%sortcites=true,      % sort \cite{b a d c}: true,false
+%block=none,          % space between blocks: none,space,par,nbpar,ragged
+%indexing=false,      % indexing options: true,false,cite,bib
+%citereset=none,      % don't reset cites
+%isbn=false,          % print ISBN?
+%url=true,            % print URL?
+%doi=false,           % print DOI?
+%natbib=true,         % natbib compatability
+%maxbibnames=99       % no 'et-al' condensing author names in biliography
+%]{biblatex}
+
+%\addbibresource{./refs.bib}
+
+\usepackage{graphicx}
+
+% for subfloat:
+\usepackage{subfig}
+
+%\usepackage{csquotes}
+%
+% no border around links
+\usepackage{xcolor}
+\hypersetup{
+   colorlinks,
+   linkcolor={black},
+   citecolor={black},
+   urlcolor={black}
+}
+
+% Author comments:
+\usepackage{color}
+\newcommand{\cc}[1]{{\color{orange}{\emph{(CC)} #1}}}
+\newcommand{\hl}[1]{{\color{blue}{\emph{(HL)} #1}}}
+\newcommand{\pp}[1]{{\color{cyan}{\emph{(PP)} #1}}}
+\newcommand{\am}[1]{{\color{purple}{\emph{(AM)} #1}}}
+
+% \newcommand{\factcheck}[1]{{\color{red}{#1}}}
+\newcommand{\factcheck}[1]{#1}
+
+% Tables.
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{hhline}
+\usepackage{xspace}
+% \usepackage[table]{xcolor}
+
+% Define column types L, C, R with known text justification and fixed widths:
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+%% needed for \upgammar
+%\usepackage{upgreek}
+%
+% Source code listings.
+\usepackage{listings,lstautogobble}
+\lstset{%
+  basicstyle=\footnotesize,%
+  numbers=left,%
+  xleftmargin=1em,
+  framexleftmargin=2.5em,
+  framexrightmargin=-2em,
+  escapeinside={@|}{|@},
+  frame=b,
+  breaklines=true,
+  postbreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\color{red}\hookrightarrow\space}},% red arrow at line breaks
+  captionpos=b,
+  autogobble=true % indent listing based on first line
+}
+
+% OpenCL listings
+%
+% From:
+% http://gpumodeling.blogspot.com/2011/06/opencl-programs-in-latex-listings.html
+\lstdefinelanguage[OpenCL]{C}[ANSI]{C}
+{morekeywords={__kernel,kernel,__local,local,__global,global,%
+    __constant,constant,__private,private,%
+    __read_only,read_only,__write_only,write_only,%
+    char2,char3,char4,char8,char16,%
+    uchar2,uchar3,uchar4,uchar8,uchar16,%
+    short2,short3,short4,short8,short16,%
+    ushort2,ushort3,ushort4,ushort8,ushort16,%
+    int2,int3,int4,int8,int16,%
+    uint2,uint3,uint4,uint8,uint16,%
+    long2,long3,long4,long8,long16,%
+    ulong2,ulong3,ulong4,ulong8,ulong16,%
+    float2,float3,float4,float8,float16,%
+    image2d_t,image3d_t,sampler_t,event_t,size_t,%
+    bool2,bool3,bool4,bool8,bool16,%
+    half2,half3,half4,half8,half16,%
+    quad,quad2,quad3,quad4,quad8,quad16,%
+    complex,imaginary,barrier},%
+}%
+%
+%% Pseudo-code listings.
+%\usepackage{algorithm}
+%\usepackage{algorithmicx}
+%\usepackage{algpseudocode}
+%\usepackage[american]{babel}
+%
+%\newcommand\DeepTune{DeepTune\xspace}
+%
+%% math
+% \usepackage{amssymb}
+%\usepackage{bm}
+%\usepackage{amsmath}
+%\DeclareMathOperator*{\argmin}{arg\,min}
+%\DeclareMathOperator*{\argmax}{arg\,max}
+
+% \ceil operator
+\usepackage{mathtools}
+\DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
+
+\usepackage{tikz}
+\def\checkmark{\tikz\fill[scale=0.2](0,.35) -- (.25,0) -- (1,.7) -- (.25,.15) -- cycle;}
+
+\usepackage{amssymb}
+\usepackage{pifont}
+\usepackage{multirow}
+\newcommand{\cmark}{\ding{51}}
+\newcommand{\xmark}{\ding{55}}
+
+\newcommand\bc{\textbf{bc}\xspace}
+\newcommand\bto{\textbf{bto}\xspace}
+\newcommand\abf{\textbf{abf}\xspace}
+\newcommand\arc{\textbf{arc}\xspace}
+\newcommand\awo{\textbf{awo}\xspace}
