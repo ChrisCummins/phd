@@ -40,6 +40,16 @@ flags.DEFINE_bool('update', False,
 flags.DEFINE_bool('pack', False,
                   'If set, create the package archive.')
 
+
+def _IsPackage(path: pathlib.Path) -> bool:
+  """Check that a path is a package: either a .dpack.tar.bz2 file or a dir."""
+  if path.is_dir():
+    return True
+  else:
+    return path.is_file() and path.suffixes == ['.dpack', '.tar', '.bz2']
+
+
+# The --package argument points to either a directory or an archive file.
 flags.register_validator(
     'package',
     # Flags validation occurs whenever this file is imported. During unit
@@ -49,10 +59,12 @@ flags.register_validator(
     message='--package path not found.')
 
 
-def _IsManifest(path) -> bool:
+def _IsManifest(path: pathlib.Path) -> bool:
+  """Check if a path contains a DataPackafe file."""
   return pbutil.ProtoIsReadable(path, dpack_pb2.DataPackage())
 
 
+# The --sidecar argument optionally points to a DataPackage message.
 flags.register_validator(
     'sidecar',
     lambda path: _IsManifest(path) if path else True,
@@ -97,15 +109,12 @@ def GetFilesInDirectory(
 def SetDataPackageFileAttributes(package_root: pathlib.Path,
                                  relpath: pathlib.Path,
                                  f: dpack_pb2.DataPackageFile) -> None:
-  """TODO.
+  """Set the file attributes of a DataPackageFile message.
 
   Args:
-    package_root:
-    relpath:
-    f:
-
-  Returns:
-
+    package_root: The root of the package.
+    relpath: The path to the file, relative to package_root.
+    f: A DataPackageFile instance.
   """
   abspath = package_root / relpath
   f.relative_path = str(relpath)
@@ -116,25 +125,53 @@ def SetDataPackageFileAttributes(package_root: pathlib.Path,
 
 def DataPackageFileAttributesAreValid(package_root: pathlib.Path,
                                       f: dpack_pb2.DataPackageFile) -> bool:
+  """Check that the values in a DataPackageFile match the real file.
+
+  Args:
+    package_root: The root of the package.
+    f: A DataPackageFile instance.
+
+  Returns:
+    True if the DataPackageFile fields match what is found in the filesystem.
+  """
   abspath = package_root / f.relative_path
+  if not abspath.is_file():
+    logging.warning("'%s' has vanished", f.relative_path)
+    return False
+
   size_in_bytes = abspath.stat().st_size
   if f.size_in_bytes != size_in_bytes:
     logging.warning("the contents of '%s' has changed", f.relative_path)
     return False
 
   hash_fn = dpack_pb2.ChecksumHash.Name(f.checksum_hash).lower()
-  checksum_fn = getattr(crypto, hash_fn + '_file')
+  try:
+    checksum_fn = getattr(crypto, hash_fn + '_file')
+  except AttributeError:
+    logging.warning("unknown value for field checksum_hash in '%s'",
+                    f.relative_path)
+    return False
+
   checksum = checksum_fn(abspath)
   if f.checksum != checksum:
     logging.warning("the contents of '%s' have changed but the size remains "
-                    "the same", abspath)
+                    "the same", f.relative_path)
     return False
 
   return True
 
 
-def _MergeManifests(new: dpack_pb2.DataPackage,
-                    old: dpack_pb2.DataPackage):
+def MergeManifests(new: dpack_pb2.DataPackage,
+                   old: dpack_pb2.DataPackage) -> None:
+  """Transfer non-file attribute fields from old to new manifests.
+
+  This copies over the comment and package date fields from the old manifest
+  to the new manifest. File attributes are not updated.
+
+  Args:
+    new: The manifest to merge to.
+    old: The manifest to merge fields from.
+  """
   new.comment = old.comment
   new.utc_epoch_ms_packaged = old.utc_epoch_ms_packaged
   old_files = {f.relative_path: f for f in old.file}
@@ -146,11 +183,11 @@ def _MergeManifests(new: dpack_pb2.DataPackage,
 def CreatePackageManifest(
     package_root: pathlib.Path,
     contents: typing.List[pathlib.Path]) -> dpack_pb2.DataPackage:
-  """TODO.
+  """Create a DataPackage message for the contents of a package.
 
   Args:
-    package_root:
-    exclude_patterns:
+    package_root: The root of the package.
+    contents: A list of relative paths to files to include.
 
   Returns:
     A DataPackage instance with attributes set.
@@ -168,14 +205,14 @@ def CreatePackageManifest(
 
 def PackageManifestIsValid(package_root: pathlib.Path,
                            manifest: dpack_pb2.DataPackage) -> bool:
-  """TODO.
+  """Check that the package manifest is correct.
 
   Args:
-    package_root:
-    manifest:
+    package_root: The root of the package.
+    manifest: A DataPackage instance describing the package.
 
   Returns:
-
+    True if the manifest matches the contents of the file system, else False.
   """
   return all(DataPackageFileAttributesAreValid(package_root, f)
              for f in manifest.file)
@@ -184,17 +221,15 @@ def PackageManifestIsValid(package_root: pathlib.Path,
 def CreatePackageArchive(package_dir: pathlib.Path,
                          manifest: dpack_pb2.DataPackage,
                          archive_path: pathlib.Path) -> None:
-  """TODO.
+  """Create a tarball of the package.
 
   Args:
-    package_dir:
-    manifest:
-    archive_path:
-
-  Returns:
+    package_dir: The root of the package.
+    manifest: A DataPackage manifest instance.
+    archive_path: The path of the archive to create.
 
   Raises:
-    OSError:
+    OSError: If archive_path already exists.
   """
   if archive_path.exists():
     raise OSError(f'Refusing to overwrite {archive_path}.')
@@ -213,22 +248,18 @@ def CreatePackageArchive(package_dir: pathlib.Path,
   logging.info('Created %s', archive_path.absolute())
 
 
-def CreatePackageArchiveSidecar(package_dir: pathlib.Path,
+def CreatePackageArchiveSidecar(archive_path: pathlib.Path,
                                 manifest: dpack_pb2.DataPackage,
-                                archive_path: pathlib.Path,
                                 sidecar_path: pathlib.Path) -> None:
-  """TODO.
+  """Create a sidecar manifest to accompany an archive.
 
   Args:
-    package_dir:
-    manifest:
-    archive_path:
-    sidecar_path:
-
-  Returns:
+    archive_path: The path of the archive tarball.
+    manifest: A DataPackage manifest instance.
+    sidecar_path: The path of the sidecar to create
 
   Raises:
-    OSError:
+    OSError: If sidecar_path already exists, or archive_path does not.
   """
   if sidecar_path.exists():
     raise OSError(f'Refusing to overwrite {sidecar_path}.')
@@ -240,30 +271,28 @@ def CreatePackageArchiveSidecar(package_dir: pathlib.Path,
   sidecar.checksum_hash = dpack_pb2.SHA256
   sidecar.checksum = crypto.sha256_file(archive_path)
   pbutil.ToFile(sidecar, sidecar_path)
-
   logging.info('Wrote %s', sidecar_path.absolute())
 
 
 def PackDataPackage(package_dir: pathlib.Path) -> None:
-  """TODO."""
+  """Create an archive and sidecar of a package."""
   manifest = pbutil.FromFile(
       package_dir / 'MANIFEST.pbtxt', dpack_pb2.DataPackage())
   PackageManifestIsValid(package_dir, manifest)
   archive_path = (package_dir / f'../{package_dir.name}.dpack.tar.bz2').resolve()
   sidecar_path = (package_dir / f'../{package_dir.name}.dpack.pbtxt').resolve()
   CreatePackageArchive(package_dir, manifest, archive_path)
-  CreatePackageArchiveSidecar(package_dir, manifest, archive_path, sidecar_path)
+  CreatePackageArchiveSidecar(archive_path, manifest, sidecar_path)
 
 
-def InitManifest(package_dir: pathlib.Path,
-                 contents: typing.List[pathlib.Path],
+def InitManifest(package_dir: pathlib.Path, contents: typing.List[pathlib.Path],
                  update: bool) -> None:
-  """TODO."""
+  """Write the MANIFEST.pbtxt file for a package."""
   manifest = CreatePackageManifest(package_dir, contents)
   manifest_path = package_dir / 'MANIFEST.pbtxt'
   if update and pbutil.ProtoIsReadable(manifest_path, dpack_pb2.DataPackage()):
     old = pbutil.FromFile(manifest_path, dpack_pb2.DataPackage())
-    _MergeManifests(manifest, old)
+    MergeManifests(manifest, old)
   elif manifest_path.is_file():
     raise OSError('Refusing to overwrite MANIFEST.pbtxt file.')
   pbutil.ToFile(manifest, manifest_path)
@@ -271,7 +300,7 @@ def InitManifest(package_dir: pathlib.Path,
 
 
 def VerifyManifest(package_dir: pathlib.Path) -> None:
-  """TODO."""
+  """Verify that the MANIFEST.pbtext file matches the contents."""
   if not (package_dir / 'MANIFEST.pbtxt').is_file():
     logging.info('No MANIFEST.pbtxt, nothing to do.')
     sys.exit(1)
@@ -284,16 +313,22 @@ def VerifyManifest(package_dir: pathlib.Path) -> None:
     sys.exit(1)
 
 
-def VerifySidecar(archive: pathlib.Path, sidecar: pathlib.Path) -> None:
+def SidecarIsValid(archive: pathlib.Path, sidecar: pathlib.Path) -> None:
+  """Check the archive matches the attributes in the sidecar."""
   sidecar_manifest = pbutil.FromFile(sidecar, dpack_pb2.DataPackage())
 
   hash_fn = dpack_pb2.ChecksumHash.Name(sidecar_manifest.checksum_hash).lower()
-  checksum_fn = getattr(crypto, hash_fn + '_file')
+  try:
+    checksum_fn = getattr(crypto, hash_fn + '_file')
+  except AttributeError:
+    logging.warning("unknown value for field checksum_hash in manifest")
+    return False
   checksum = checksum_fn(archive)
   if sidecar_manifest.checksum != checksum:
     logging.warning("the contents of '%s' have changed", archive.absolute())
-    sys.exit(1)
+    return False
   logging.info('Package verified using the sidecar.')
+  return True
 
 
 def main(argv) -> None:
@@ -317,7 +352,8 @@ def main(argv) -> None:
     contents = GetFilesInDirectory(package, FLAGS.exclude)
     InitManifest(package, contents, update=FLAGS.update)
   elif FLAGS.sidecar:
-    VerifySidecar(package, pathlib.Path(FLAGS.sidecar))
+    if not SidecarIsValid(package, pathlib.Path(FLAGS.sidecar)):
+      sys.exit(1)
   else:
     VerifyManifest(package)
 
