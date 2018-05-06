@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 
-#
 # buildifier.sh - Run buildifier on BUILD files. This modifiers BUILD files
 # in-place.
 #
 # Usage:
 #
-#     ./buildifier
+#     ./buildifier.sh
 #
 set -eu
 
