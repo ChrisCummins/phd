@@ -1,20 +1,19 @@
 """Functions for working with Lightroom."""
-import datetime
-import typing
 import os
 
+import datetime
+import sqlalchemy as sql
+import typing
 from absl import flags
 from absl import logging
 from libxmp import utils as xmputils
-
-import sqlalchemy as sql
 from sqlalchemy import Binary
 from sqlalchemy import Column
 from sqlalchemy import DateTime
+from sqlalchemy import ForeignKey
+from sqlalchemy import Integer
 from sqlalchemy import String
 from sqlalchemy import orm
-from sqlalchemy import Integer
-from sqlalchemy import ForeignKey
 from sqlalchemy.ext import declarative
 
 from util.photolib import util
@@ -158,7 +157,7 @@ def get_lightroom_keywords(abspath: str, relpath: str) -> typing.Set[str]:
   relpath_md5 = util.md5(relpath).digest()
   mtime = int(os.path.getmtime(abspath))
 
-  entry = SESSION\
+  entry = SESSION \
     .query(KeywordCacheEntry) \
     .filter(KeywordCacheEntry.relpath_md5 == relpath_md5) \
     .first()

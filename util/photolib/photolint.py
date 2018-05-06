@@ -1,18 +1,18 @@
 """A linter for ensuring that a Photo Library is organized correctly."""
 import os
 import sys
-import typing
 import time
 
+import typing
 from absl import app
 from absl import flags
 from absl import logging
 
-from util.photolib import linters
 from util.photolib import lightroom
+from util.photolib import lintercache
+from util.photolib import linters
 from util.photolib import util
 from util.photolib import workspace
-from util.photolib import lintercache
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string("workspace", os.getcwd(), "Path to workspace root")

@@ -1,5 +1,6 @@
 from absl import app
 
+
 # Exercise 1.3:
 #
 #     Given two strings, write a method to decide if one is a
@@ -17,24 +18,23 @@ from absl import app
 # have identical character counts, but this requires a priori
 # knowledge of the size of the character sets.
 def is_permutation(a, b):
+  if len(a) != len(b):
+    return False
 
-    if len(a) != len(b):
-        return False
+  # Depending on how efficient this comparison is, we may want to
+  # skip it.
+  if a == b:
+    return True
 
-    # Depending on how efficient this comparison is, we may want to
-    # skip it.
-    if a == b:
-        return True
-
-    return sorted(list(a)) == sorted(list(b))
+  return sorted(list(a)) == sorted(list(b))
 
 
 def main(argv):
-    del argv
-    assert is_permutation("abc", "abc") == True
-    assert is_permutation("abc", "abcd") == False
-    assert is_permutation("abc", "cab") == True
+  del argv
+  assert is_permutation("abc", "abc") == True
+  assert is_permutation("abc", "abcd") == False
+  assert is_permutation("abc", "cab") == True
 
 
 if __name__ == "__main__":
-    app.run(main)
+  app.run(main)

@@ -1,7 +1,7 @@
 from setuptools import setup
 
 with open('./requirements.txt') as infile:
-    requirements = [x.strip() for x in infile.readlines() if x.strip()]
+  requirements = [x.strip() for x in infile.readlines() if x.strip()]
 
 setup(name='lmk',
       version='0.0.13.dev0',

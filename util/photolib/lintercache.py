@@ -1,20 +1,19 @@
 """This file defines a cache for linting results."""
-import datetime
-import typing
 import os
 
+import datetime
+import sqlalchemy as sql
+import typing
 from absl import flags
 from absl import logging
-
-import sqlalchemy as sql
 from sqlalchemy import Binary
 from sqlalchemy import Column
 from sqlalchemy import DateTime
-from sqlalchemy import String
-from sqlalchemy import orm
-from sqlalchemy import Integer
-from sqlalchemy import UniqueConstraint
 from sqlalchemy import ForeignKey
+from sqlalchemy import Integer
+from sqlalchemy import String
+from sqlalchemy import UniqueConstraint
+from sqlalchemy import orm
 from sqlalchemy.ext import declarative
 
 from util.photolib import linters

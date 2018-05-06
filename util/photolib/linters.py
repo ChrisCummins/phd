@@ -1,12 +1,11 @@
 """This file contains the linter implementations for photolint."""
-import inspect
 import os
 import re
 import sys
-import typing
-
 from collections import defaultdict
 
+import inspect
+import typing
 from absl import flags
 
 from util.photolib import lightroom
@@ -19,17 +18,17 @@ flags.DEFINE_boolean("fix_it", False, "Show how to fix it.")
 # A global list of all error categories. Every time you add a new linter rule, add it
 # here!
 ERROR_CATEGORIES = set([
-    "dir/empty",
-    "dir/not_empty",
-    "dir/hierarchy",
-    "file/name",
-    "extension/lowercase",
-    "extension/bad",
-    "extension/unknown",
-    "keywords/third_party",
-    "keywords/film_format",
-    "keywords/panorama",
-    "keywords/events",
+  "dir/empty",
+  "dir/not_empty",
+  "dir/hierarchy",
+  "file/name",
+  "extension/lowercase",
+  "extension/bad",
+  "extension/unknown",
+  "keywords/third_party",
+  "keywords/film_format",
+  "keywords/panorama",
+  "keywords/events",
 ])
 
 # A map of error categories to error counts.

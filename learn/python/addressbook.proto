@@ -2,7 +2,7 @@
  *  Protocal buffer language guide:
  *    https://developers.google.com/protocol-buffers/docs/proto
  */
-package tutorial;  // namespace
+package tutorial; // namespace
 
 message Person {
   required string name = 1;

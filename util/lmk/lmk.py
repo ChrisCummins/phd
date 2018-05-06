@@ -23,15 +23,15 @@ E_SMTP : int
 """
 from __future__ import print_function
 
+import os
+import sys
+
 import argparse
 import cgi
 import humanize
-import os
 import smtplib
 import string
 import subprocess
-import sys
-
 from datetime import datetime
 from email.mime.application import MIMEApplication
 from pkg_resources import require

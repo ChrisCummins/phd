@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 #
 # autotex - Build a LaTeX document
 #
@@ -38,18 +39,18 @@ HOOKS_DIRECTORY=scripts
 # Note: tput can return with non-zero status in some TTY environments,
 # so we disable errors.
 set +e
-TTYreset="$(tput sgr0 2>/dev/null)"
-TTYbold="$(tput bold 2>/dev/null)"
-TTYstandout="$(tput smso 2>/dev/null)"
-TTYunderline="$(tput smul 2>/dev/null)"
-TTYblack="$(tput setaf 0 2>/dev/null)"
-TTYblue="$(tput setaf 4 2>/dev/null)"
-TTYcyan="$(tput setaf 6 2>/dev/null)"
-TTYgreen="$(tput setaf 2 2>/dev/null)"
-TTYmagenta="$(tput setaf 5 2>/dev/null)"
-TTYred="$(tput setaf 1 2>/dev/null)"
-TTYwhite="$(tput setaf 7 2>/dev/null)"
-TTYyellow="$(tput setaf 3 2>/dev/null)"
+TTYreset="$(tput sgr0 2> /dev/null)"
+TTYbold="$(tput bold 2> /dev/null)"
+TTYstandout="$(tput smso 2> /dev/null)"
+TTYunderline="$(tput smul 2> /dev/null)"
+TTYblack="$(tput setaf 0 2> /dev/null)"
+TTYblue="$(tput setaf 4 2> /dev/null)"
+TTYcyan="$(tput setaf 6 2> /dev/null)"
+TTYgreen="$(tput setaf 2 2> /dev/null)"
+TTYmagenta="$(tput setaf 5 2> /dev/null)"
+TTYred="$(tput setaf 1 2> /dev/null)"
+TTYwhite="$(tput setaf 7 2> /dev/null)"
+TTYyellow="$(tput setaf 3 2> /dev/null)"
 set -e
 
 TaskNameLength=8
@@ -65,16 +66,16 @@ silent_unless_fail() {
     local command=$@
 
     set +e
-    echo "======================================================" >> "$log"
-    echo "$command" >> "$log"
-    echo "======================================================" >> "$log"
-    echo >> "$log"
-    $command 2>&1 >> "$log"
-    echo >> "$log"
+    echo "======================================================" >>"$log"
+    echo "$command" >>"$log"
+    echo "======================================================" >>"$log"
+    echo >>"$log"
+    $command 2>&1 >>"$log"
+    echo >>"$log"
     status=$?
     set -e
 
-    if (( $status )); then
+    if (($status)); then
         echo "*** Build failed with status $status! Autotex log:" >&2
         echo
         cat $log >&2
@@ -98,7 +99,7 @@ exec_hooks() {
     set -u
 
     local hooks_glob=$HOOKS_DIRECTORY/*$suffix
-    local hooks=$(ls $hooks_glob 2>/dev/null)
+    local hooks=$(ls $hooks_glob 2> /dev/null)
 
     if [[ -n "$hooks" ]]; then
         for hook in $hooks; do
@@ -132,9 +133,9 @@ get_citation_backend() {
     # \bibcite{} keyword, which would test true for the biber backend.
     #
     set +e
-    if grep 'citation{' $document.aux &>/dev/null ; then
+    if grep 'citation{' $document.aux &> /dev/null; then
         echo "bibtex"
-    elif grep 'cite{' $document.aux &>/dev/null ; then
+    elif grep 'cite{' $document.aux &> /dev/null; then
         echo "biber"
     else
         echo # No citations.
@@ -155,14 +156,14 @@ run_citation_backend() {
     case $backend in
         "biber")
             silent_unless_fail $LOGFILE $BIBER $document
-            ;;
+        ;;
         "bibtex")
             silent_unless_fail $LOGFILE $BIBTEX $document
-            ;;
+        ;;
         *)
             echo "autotex: unrecognized backend '$backend'!" >&2
             exit 1
-            ;;
+        ;;
     esac
 }
 
@@ -192,12 +193,13 @@ main() {
     rm_tmpdir() {
         rm -rf "$tmpdir"
     }
+
     trap rm_tmpdir EXIT
 
     cd $tmpdir
 
     export LOGFILE="$tmpdir/.autotex.log"
-    rm -f $LOGFILE  # Remove existing logfile
+    rm -f $LOGFILE # Remove existing logfile
 
     # copy the sources into the working directory. When symlinks are
     # encountered, the file they point to is copied.
@@ -213,14 +215,14 @@ main() {
     if [[ -n $backend ]]; then
         run_citation_backend $backend $input_document "$TTYblue"
         run_pdflatex $input_document "$TTYyellow"
-        # TODO: run bibtool and cleanbib
+    # TODO: run bibtool and cleanbib
     fi
 
     run_pdflatex $input_document "$TTYgreen"
     exec_hooks ".post"
 
     # copy from temporary directory to output
-    cd - &>/dev/null
+    cd - &> /dev/null
     mkdir -p "$output_dir"
     mv "$tmpdir/$input_document.pdf" "$output_file"
 
@@ -228,4 +230,5 @@ main() {
     mv "$LOGFILE" "$output_log"
     echo "autotex log: $output_log"
 }
+
 main $@

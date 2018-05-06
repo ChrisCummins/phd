@@ -11,35 +11,35 @@ TOP_LEVEL_DIRS = set(["photos", "gallery", "lightroom"])
 
 # The set of all valid content file extensions.
 KNOWN_FILE_EXTENSIONS = set([
-    ".dng",
-    ".jpg",
-    ".mov",
-    ".mp4",
-    ".png",
-    ".m4v",
-    ".tif"
+  ".dng",
+  ".jpg",
+  ".mov",
+  ".mp4",
+  ".png",
+  ".m4v",
+  ".tif"
 ])
 
 # A mapping from "bad" file extension to suggested file extension.
 FILE_EXTENSION_SUGGESTIONS = {
-    ".psd": ".tif",
-    ".raf": ".dng",
+  ".psd": ".tif",
+  ".raf": ".dng",
 }
 
 # Files which are not linted.
 IGNORED_FILES = set([
-    "autorun.inf",
-    ".DS_Store",
-    ".VolumeIcon.icns",
-    ".VolumeIcon.ico",
-    ".com.apple.timemachine.donotpresent",
-    "README.md"
+  "autorun.inf",
+  ".DS_Store",
+  ".VolumeIcon.icns",
+  ".VolumeIcon.ico",
+  ".com.apple.timemachine.donotpresent",
+  "README.md"
 ])
 
 # Directories which are not linted. The contents of ignored
 # directories are not traversed.
 IGNORED_DIRS = set([
-    ".tmp.drivedownload",
+  ".tmp.drivedownload",
 ])
 
 PHOTO_LIB_PATH_COMPONENTS_RE = re.compile(

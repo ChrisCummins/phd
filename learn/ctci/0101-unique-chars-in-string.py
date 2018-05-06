@@ -1,5 +1,6 @@
 from absl import app
 
+
 # Exercise 1.1:
 #
 #     Implement an algorithm to determine if a string has all unique
@@ -15,34 +16,35 @@ from absl import app
 # space complexity.
 #
 def characters_are_unique(string):
+  # This is a crafty optimisation: since we know the character space
+  # is 256 (the number of characters in the ASCII character set),
+  # then by definition any string that is longer than this *must*
+  # include duplicate characters:
+  if len(string) > 256:
+    return False
 
-    # This is a crafty optimisation: since we know the character space
-    # is 256 (the number of characters in the ASCII character set),
-    # then by definition any string that is longer than this *must*
-    # include duplicate characters:
-    if len(string) > 256:
-        return False
+  # We need 256 bytes in order to store our set of character
+  # occurrences. If we were interested in bit twiddling, we could
+  # reduce the memory footprint by 7/8 by using an array of bytes of
+  # using individual bits to represent each character:
+  characters = [False] * 256
 
-    # We need 256 bytes in order to store our set of character
-    # occurrences. If we were interested in bit twiddling, we could
-    # reduce the memory footprint by 7/8 by using an array of bytes of
-    # using individual bits to represent each character:
-    characters = [False] * 256
+  for c in string:
+    val = ord(c)
 
-    for c in string:
-        val = ord(c)
+    if characters[val] == True:
+      return False
+    else:
+      characters[val] = True
 
-        if characters[val] == True:
-            return False
-        else:
-            characters[val] = True
+  return True
 
-    return True
 
 def main(argv):
-    del argv
-    assert characters_are_unique("abcdefg") == True
-    assert characters_are_unique("abcdefga") == False
+  del argv
+  assert characters_are_unique("abcdefg") == True
+  assert characters_are_unique("abcdefga") == False
+
 
 if __name__ == "__main__":
-    app.run(main)
+  app.run(main)

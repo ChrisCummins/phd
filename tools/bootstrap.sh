@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 #
 # bootstrap.sh - Prepare the toolchain
 #
@@ -9,7 +10,7 @@
 set -eu
 
 # Directory of this script.
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 main() {
     # header
@@ -23,7 +24,7 @@ main() {
 
     # On macOS: Homebrew & coreutils
     if [[ "$(uname)" == "Darwin" ]]; then
-        if which brew &>/dev/null ; then
+        if which brew &> /dev/null; then
             echo '# homebrew: installed'
         else
             echo '# homebrew:'
@@ -32,7 +33,7 @@ main() {
             echo
         fi
 
-        if brew list | grep '^coreutils$' &>/dev/null ; then
+        if brew list | grep '^coreutils$' &> /dev/null; then
             echo '# coreutils: installed'
         else
             echo '# coreutils:'
@@ -53,7 +54,7 @@ main() {
 
     # Build system: Bazel
     if [[ "$(uname)" == "Darwin" ]]; then
-        if brew list | grep '^bazel$' &>/dev/null ; then
+        if brew list | grep '^bazel$' &> /dev/null; then
             echo '# bazel: installed'
         else
             echo '# bazel:'
@@ -62,7 +63,7 @@ main() {
             echo
         fi
     else
-        if dpkg -s bazel &>/dev/null ; then
+        if dpkg -s bazel &> /dev/null; then
             echo '# bazel: installed'
         else
             echo '# bazel:'
@@ -78,7 +79,7 @@ main() {
     if [[ "$(uname)" == "Darwin" ]]; then
         echo '# clang: installed (system)'
     else
-        if dpkg -s clang &>/dev/null ; then
+        if dpkg -s clang &> /dev/null; then
             echo '# clang: installed'
         else
             echo '# clang:'
@@ -89,7 +90,7 @@ main() {
 
     # Python 3.6
     if [[ "$(uname)" == "Darwin" ]]; then
-        if brew list | grep '^python$' &>/dev/null ; then
+        if brew list | grep '^python$' &> /dev/null; then
             echo '# python>=3.6: installed'
         else
             echo '# python>=3.6:'
@@ -97,7 +98,7 @@ main() {
             echo
         fi
     else
-        if dpkg -s python3.6 &>/dev/null ; then
+        if dpkg -s python3.6 &> /dev/null; then
             echo '# python3.6: installed'
         else
             echo '# python3.6:'
@@ -127,13 +128,14 @@ main() {
     fi
 
     # autoenv
-    if pip freeze 2>/dev/null | grep '^autoenv' &>/dev/null ; then
+    if pip freeze 2> /dev/null | grep '^autoenv' &> /dev/null; then
         echo '# autoenv: installed'
     else
         echo '# autoenv:'
         if [[ "$(uname)" == "Darwin" ]]; then
             echo 'pip install autoenv'
-        else  # we need sudo on linux
+        else
+        # we need sudo on linux
             echo 'sudo -H pip install autoenv'
         fi
         echo
@@ -146,7 +148,7 @@ main() {
 
     # LaTeX
     if [[ "$(uname)" == "Darwin" ]]; then
-        if brew cask list | grep mactex &>/dev/null ; then
+        if brew cask list | grep mactex &> /dev/null; then
             echo '# mactex: installed'
         else
             echo '# mactex:'
@@ -154,7 +156,7 @@ main() {
             echo
         fi
     else
-        if dpkg -s texlive-full &>/dev/null ; then
+        if dpkg -s texlive-full &> /dev/null; then
             echo '# texlive-full: installed'
         else
             echo '# texlive-full:'
@@ -166,7 +168,7 @@ main() {
     # libexempi3 is required by //util/photolib/ and python package
     # python-xmp-toolkit to read XMP metadata from image files.
     if [[ "$(uname)" != "Darwin" ]]; then
-        if dpkg -s texlive-full &>/dev/null ; then
+        if dpkg -s texlive-full &> /dev/null; then
             echo '# libexempi3: installed'
         else
             echo '# libexempi3:'
@@ -175,4 +177,5 @@ main() {
         fi
     fi
 }
+
 main $@
