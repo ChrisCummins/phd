@@ -53,6 +53,7 @@ py_test(
 py_library(
     name = "labdate",
     srcs = ["labdate.py"],
+    visibility = ["//visibility:public"],
 )
 
 py_test(
