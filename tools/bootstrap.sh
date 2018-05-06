@@ -135,7 +135,7 @@ main() {
         if [[ "$(uname)" == "Darwin" ]]; then
             echo 'pip install autoenv'
         else
-        # we need sudo on linux
+            # we need sudo on linux
             echo 'sudo -H pip install autoenv'
         fi
         echo

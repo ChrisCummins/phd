@@ -21,3 +21,5 @@ pytest_dir() {
         fi
     done
 }
+
+alias dpack="python $root/lib/dpack/dpack.py"
