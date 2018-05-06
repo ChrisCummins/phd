@@ -172,7 +172,7 @@ py_test(
     srcs = ["pbutil_test.py"],
     deps = [
         ":pbutil",
-        "//deeplearning/deepsmith/proto:test_protos",
+        "//lib/labm8/proto:test_protos",
     ],
 )
 
