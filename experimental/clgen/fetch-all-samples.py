@@ -17,66 +17,65 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-from lib.labm8 import fs
-
-import clgen
-from clgen import cache
 from clgen import cli
 from clgen import dbutil
 from clgen import explore
 from clgen import log
 
+from lib.labm8 import fs
+
 __description__ = """
 Merge kernel datasets.
 """
 
-def get_all_sampler_datasets():
-    datasets = []
-    sampledirs = []
-    for versioncache in fs.ls(fs.path("~/.cache/clgen"), abspaths=True):
-        samplerdir = fs.path(versioncache, "sampler")
-        if fs.isdir(samplerdir):
-            sampledirs += fs.ls(samplerdir, abspaths=True)
 
-    for samplerdir in sampledirs:
-        inpath = fs.path(samplerdir, "kernels.db")
-        if fs.isfile(inpath):
-            datasets.append(inpath)
-    return datasets
+def get_all_sampler_datasets():
+  datasets = []
+  sampledirs = []
+  for versioncache in fs.ls(fs.path("~/.cache/clgen"), abspaths=True):
+    samplerdir = fs.path(versioncache, "sampler")
+    if fs.isdir(samplerdir):
+      sampledirs += fs.ls(samplerdir, abspaths=True)
+
+  for samplerdir in sampledirs:
+    inpath = fs.path(samplerdir, "kernels.db")
+    if fs.isfile(inpath):
+      datasets.append(inpath)
+  return datasets
 
 
 def merge(outpath, inpaths=[]):
-    if not fs.isfile(outpath):
-        dbutil.create_db(outpath)
-        log.info("created", outpath)
+  if not fs.isfile(outpath):
+    dbutil.create_db(outpath)
+    log.info("created", outpath)
 
-    db = dbutil.connect(outpath)
+  db = dbutil.connect(outpath)
 
-    if not inpaths:
-        inpaths = get_all_sampler_datasets()
+  if not inpaths:
+    inpaths = get_all_sampler_datasets()
 
-    for inpath in inpaths:
-        log.info("merging from", inpath)
-        c = db.cursor()
-        c.execute("ATTACH '{}' AS rhs".format(inpath))
-        c.execute("INSERT OR IGNORE INTO ContentFiles "
-                  "SELECT * FROM rhs.ContentFiles")
-        c.execute("INSERT OR IGNORE INTO PreprocessedFiles "
-                  "SELECT * FROM rhs.PreprocessedFiles")
-        c.execute("DETACH rhs")
-        db.commit()
+  for inpath in inpaths:
+    log.info("merging from", inpath)
+    c = db.cursor()
+    c.execute("ATTACH '{}' AS rhs".format(inpath))
+    c.execute("INSERT OR IGNORE INTO ContentFiles "
+              "SELECT * FROM rhs.ContentFiles")
+    c.execute("INSERT OR IGNORE INTO PreprocessedFiles "
+              "SELECT * FROM rhs.PreprocessedFiles")
+    c.execute("DETACH rhs")
+    db.commit()
 
-    explore.explore(outpath)
+  explore.explore(outpath)
 
 
 def main():
-    parser = cli.ArgumentParser(description=__description__)
-    parser.add_argument("dataset", help="path to output dataset")
-    parser.add_argument("inputs", nargs='*', help="path to input datasets")
-    args = parser.parse_args()
+  parser = cli.ArgumentParser(description=__description__)
+  parser.add_argument("dataset", help="path to output dataset")
+  parser.add_argument("inputs", nargs='*', help="path to input datasets")
+  args = parser.parse_args()
 
-    cli.main(merge, args.dataset, args.inputs)
+  cli.main(merge, args.dataset, args.inputs)
 
 
 if __name__ == "__main__":
-    main()
+  main()

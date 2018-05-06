@@ -22,24 +22,21 @@ Attributes:
     __help__ (str): REPL help string.
     __available_commands__ (str): Help string for available commands.
 """
-import datetime
-import humanize
-import logging
 import math
 import os
-import progressbar
 import random
 import re
 import sys
-import traceback
 
-from collections import namedtuple
-from lib.labm8 import fs
-from typing import List, Tuple
-
+import datetime
 import dsmith
+import humanize
+import logging
+import traceback
 from dsmith import Colors
-from dsmith.langs import Generator, Harness, Language, mklang
+from dsmith.langs import Generator, Language, mklang
+
+from lib.labm8 import fs
 
 _lang_str = f"{Colors.RED}<lang>{Colors.END}{Colors.BOLD}"
 _generator_str = f"{Colors.GREEN}<generator>{Colors.END}{Colors.BOLD}"
@@ -88,7 +85,6 @@ __available_commands__ = f"""\
     End the session.\
 """
 
-
 __help__ = f"""\
 This is the DeepSmith interactive session. The following commands are available:
 
@@ -97,254 +93,255 @@ This is the DeepSmith interactive session. The following commands are available:
 
 
 class UnrecognizedInput(ValueError):
-    pass
+  pass
 
 
 def _hello(file=sys.stdout):
-    print("Hi there!", file=file)
+  print("Hi there!", file=file)
 
 
 def _help(file=sys.stdout):
-    print(__help__, file=file)
+  print(__help__, file=file)
 
 
 def _version(file=sys.stdout):
-    print(dsmith.__version_str__, file=file)
+  print(dsmith.__version_str__, file=file)
 
 
 def _test(file=sys.stdout):
-    import dsmith.test
-    dsmith.test.testsuite()
+  import dsmith.test
+  dsmith.test.testsuite()
 
 
 def _exit(*args, **kwargs):
-    file = kwargs.pop("file", sys.stdout)
+  file = kwargs.pop("file", sys.stdout)
 
-    farewell = random.choice([
-        "Have a nice day!",
-        "Over and out.",
-        "God speed.",
-        "See ya!",
-        "See you later alligator.",
-    ])
-    print(f"{Colors.END}{farewell}", file=file)
-    sys.exit()
+  farewell = random.choice([
+    "Have a nice day!",
+    "Over and out.",
+    "God speed.",
+    "See ya!",
+    "See you later alligator.",
+  ])
+  print(f"{Colors.END}{farewell}", file=file)
+  sys.exit()
 
 
 def _describe_generators(lang: Language, file=sys.stdout):
-    gen = ", ".join(f"{Colors.BOLD}{generator}{Colors.END}"
-                    for generator in lang.generators)
-    print(f"The following {lang} generators are available: {gen}.",
-          file=file)
+  gen = ", ".join(f"{Colors.BOLD}{generator}{Colors.END}"
+                  for generator in lang.generators)
+  print(f"The following {lang} generators are available: {gen}.",
+        file=file)
 
 
 def _describe_programs(lang: Language, file=sys.stdout):
-    for generator in lang.generators:
-        num = humanize.intcomma(generator.num_programs())
-        sloc = humanize.intcomma(generator.sloc_total())
-        print(f"You have {Colors.BOLD}{num} {generator}{Colors.END} "
-              f"programs, total {Colors.BOLD}{sloc}{Colors.END} SLOC.",
-              file=file)
+  for generator in lang.generators:
+    num = humanize.intcomma(generator.num_programs())
+    sloc = humanize.intcomma(generator.sloc_total())
+    print(f"You have {Colors.BOLD}{num} {generator}{Colors.END} "
+          f"programs, total {Colors.BOLD}{sloc}{Colors.END} SLOC.",
+          file=file)
 
 
 def _describe_testcases(lang: Language, generator: Generator, file=sys.stdout):
-    for harness in generator.harnesses:
-        num = humanize.intcomma(generator.num_testcases())
-        print(f"There are {Colors.BOLD}{num} {generator}:{harness} "
-              "testcases.", file=file)
+  for harness in generator.harnesses:
+    num = humanize.intcomma(generator.num_testcases())
+    print(f"There are {Colors.BOLD}{num} {generator}:{harness} "
+          "testcases.", file=file)
 
 
 def _make_programs(lang: Language, generator: Generator,
-                   n: int, up_to: bool=False, file=sys.stdout):
-    up_to_val = n if up_to else math.inf
-    n = math.inf if up_to else n
-    generator.generate(n=n, up_to=up_to_val)
+                   n: int, up_to: bool = False, file=sys.stdout):
+  up_to_val = n if up_to else math.inf
+  n = math.inf if up_to else n
+  generator.generate(n=n, up_to=up_to_val)
 
 
 def _execute(statement: str, file=sys.stdout) -> None:
-    if not isinstance(statement, str): raise TypeError
+  if not isinstance(statement, str): raise TypeError
 
-    # parsing is case insensitive
-    statement = re.sub("\s+", " ", statement.strip().lower())
-    components = statement.split(" ")
+  # parsing is case insensitive
+  statement = re.sub("\s+", " ", statement.strip().lower())
+  components = statement.split(" ")
 
-    if not statement:
+  if not statement:
+    return
+
+  # Parse command modifiers:
+  if components[0] == "debug":
+    statement = re.sub(r'^debug ', '', statement)
+    with dsmith.debug_scope():
+      return _execute(statement, file=file)
+  elif components[0] == "verbose":
+    components = components[1:]
+    statement = re.sub(r'^verbose ', '', statement)
+    with dsmith.verbose_scope():
+      return _execute(statement, file=file)
+
+  csv = ", ".join(f"'{x}'" for x in components)
+  logging.debug(f"parsing input [{csv}]")
+
+  # Full command parser:
+  if len(components) == 1 and re.match(r'(hi|hello|hey)', components[0]):
+    return _hello(file=file)
+
+  if len(components) == 1 and re.match(r'(exit|quit)', components[0]):
+    return _exit(file=file)
+
+  if len(components) == 1 and components[0] == "help":
+    return _help(file=file)
+
+  if len(components) == 1 and components[0] == "version":
+    return _version(file=file)
+
+  if len(components) == 1 and components[0] == "test":
+    return _test(file=file)
+
+  if components[0] == "describe":
+    generators_match = re.match(r'describe (?P<lang>\w+) generators$', statement)
+    testbeds_match = re.match(r'describe (?P<available>available )?(?P<lang>\w+) testbeds$', statement)
+    programs_match = re.match(r'describe (?P<lang>\w+) programs$', statement)
+    testcases_match = re.match(r'describe (?P<lang>\w+) ((?P<generator>\w+) )?testcases$', statement)
+    results_match = re.match(r'describe (?P<lang>\w+) results$', statement)
+
+    if generators_match:
+      lang = mklang(generators_match.group("lang"))
+      return _describe_generators(lang=lang, file=file)
+    elif testbeds_match:
+      lang = mklang(testbeds_match.group("lang"))
+      available_only = True if testbeds_match.group("available") else False
+      return lang.describe_testbeds(available_only=available_only, file=file)
+    elif programs_match:
+      lang = mklang(programs_match.group("lang"))
+      return _describe_programs(lang=lang, file=file)
+    elif testcases_match:
+      lang = mklang(testcases_match.group("lang"))
+      gen = testcases_match.group("generator")
+      if gen:
+        generator = lang.mkgenerator(gen)
+        return _describe_testcases(lang=lang, generator=generator, file=file)
+      else:
+        for generator in lang.generators:
+          _describe_testcases(lang=lang, generator=generator, file=file)
         return
+    elif results_match:
+      lang = mklang(results_match.group("lang"))
+      return lang.describe_results(file=file)
+    else:
+      raise UnrecognizedInput
 
-    # Parse command modifiers:
-    if components[0] == "debug":
-        statement = re.sub(r'^debug ', '', statement)
-        with dsmith.debug_scope():
-            return _execute(statement, file=file)
-    elif components[0] == "verbose":
-        components = components[1:]
-        statement = re.sub(r'^verbose ', '', statement)
-        with dsmith.verbose_scope():
-            return _execute(statement, file=file)
+  if components[0] == "make":
+    programs_match = re.match(
+      r'make ((?P<up_to>up to )?(?P<number>\d+) )?(?P<lang>\w+) program(s)?( using (?P<generator>\w+))?$', statement)
+    testcases_match = re.match(r'make (?P<lang>\w+) ((?P<harness>\w+):(?P<generator>\w+)? )?testcases$', statement)
 
-    csv = ", ".join(f"'{x}'" for x in components)
-    logging.debug(f"parsing input [{csv}]")
+    if programs_match:
+      number = int(programs_match.group("number") or 0) or math.inf
+      lang = mklang(programs_match.group("lang"))
+      generator = lang.mkgenerator(programs_match.group("generator"))
 
-    # Full command parser:
-    if len(components) == 1 and re.match(r'(hi|hello|hey)', components[0]):
-        return _hello(file=file)
+      return _make_programs(
+          lang=lang, generator=generator, n=number,
+          up_to=True if programs_match.group("up_to") else False,
+          file=file)
 
-    if len(components) == 1 and re.match(r'(exit|quit)', components[0]):
-        return _exit(file=file)
-
-    if len(components) == 1 and components[0] == "help":
-        return _help(file=file)
-
-    if len(components) == 1 and components[0] == "version":
-        return _version(file=file)
-
-    if len(components) == 1 and components[0] == "test":
-        return _test(file=file)
-
-    if components[0] == "describe":
-        generators_match = re.match(r'describe (?P<lang>\w+) generators$', statement)
-        testbeds_match = re.match(r'describe (?P<available>available )?(?P<lang>\w+) testbeds$', statement)
-        programs_match = re.match(r'describe (?P<lang>\w+) programs$', statement)
-        testcases_match = re.match(r'describe (?P<lang>\w+) ((?P<generator>\w+) )?testcases$', statement)
-        results_match = re.match(r'describe (?P<lang>\w+) results$', statement)
-
-        if generators_match:
-            lang = mklang(generators_match.group("lang"))
-            return _describe_generators(lang=lang, file=file)
-        elif testbeds_match:
-            lang = mklang(testbeds_match.group("lang"))
-            available_only = True if testbeds_match.group("available") else False
-            return lang.describe_testbeds(available_only=available_only, file=file)
-        elif programs_match:
-            lang = mklang(programs_match.group("lang"))
-            return _describe_programs(lang=lang, file=file)
-        elif testcases_match:
-            lang = mklang(testcases_match.group("lang"))
-            gen = testcases_match.group("generator")
-            if gen:
-                generator = lang.mkgenerator(gen)
-                return _describe_testcases(lang=lang, generator=generator, file=file)
-            else:
-                for generator in lang.generators:
-                    _describe_testcases(lang=lang, generator=generator, file=file)
-                return
-        elif results_match:
-            lang = mklang(results_match.group("lang"))
-            return lang.describe_results(file=file)
+    elif testcases_match:
+      lang = mklang(testcases_match.group("lang"))
+      if testcases_match.group("harness"):
+        harness = lang.mkharness(testcases_match.group("harness"))
+        if testcases_match.group("generator"):
+          generators = [lang.mkgenerator(testcases_match.group("generator"))]
         else:
-            raise UnrecognizedInput
+          # No generator specified, use all:
+          generators = list(harness.generators)
 
-    if components[0] == "make":
-        programs_match = re.match(r'make ((?P<up_to>up to )?(?P<number>\d+) )?(?P<lang>\w+) program(s)?( using (?P<generator>\w+))?$', statement)
-        testcases_match = re.match(r'make (?P<lang>\w+) ((?P<harness>\w+):(?P<generator>\w+)? )?testcases$', statement)
+        for generator in generators:
+          harness.make_testcases(generator)
+      else:
+        # No harness specified, use all:
+        for harness in lang.harnesses:
+          for generator in harness.generators:
+            harness.make_testcases(generator)
+      return
+    else:
+      raise UnrecognizedInput
 
-        if programs_match:
-            number = int(programs_match.group("number") or 0) or math.inf
-            lang = mklang(programs_match.group("lang"))
-            generator = lang.mkgenerator(programs_match.group("generator"))
+  if components[0] == "import":
+    match = re.match(r'import (?P<generator>\w+) (?P<lang>\w+) program(s)? from (?P<path>.+)$', statement)
 
-            return _make_programs(
-                lang=lang, generator=generator, n=number,
-                up_to=True if programs_match.group("up_to") else False,
-                file=file)
+    if match:
+      lang = mklang(match.group("lang"))
+      generator = lang.mkgenerator(match.group("generator"))
+      path = fs.abspath(match.group("path"))
+      if not fs.isdir(path):
+        raise ValueError(f"'{path}' is not a directory")
 
-        elif testcases_match:
-            lang = mklang(testcases_match.group("lang"))
-            if testcases_match.group("harness"):
-                harness = lang.mkharness(testcases_match.group("harness"))
-                if testcases_match.group("generator"):
-                    generators = [lang.mkgenerator(testcases_match.group("generator"))]
-                else:
-                    # No generator specified, use all:
-                    generators = list(harness.generators)
+      return generator.import_from_dir(path)
+    else:
+      raise UnrecognizedInput
 
-                for generator in generators:
-                    harness.make_testcases(generator)
-            else:
-                # No harness specified, use all:
-                for harness in lang.harnesses:
-                    for generator in harness.generators:
-                        harness.make_testcases(generator)
-            return
+  if components[0] == "run":
+    match = re.match(
+      r'run (?P<lang>\w+) ((?P<harness>\w+):(?P<generator>\w+)? )?testcases( on (?P<testbed>[\w+-±]+))?$', statement)
+    if match:
+      lang = mklang(match.group("lang"))
+
+      if match.group("harness"):
+        harness = lang.mkharness(match.group("harness"))
+        if match.group("generator"):
+          generators = [lang.mkgenerator(match.group("generator"))]
         else:
-            raise UnrecognizedInput
+          # No generator specified, use all:
+          generators = list(harness.generators)
 
-    if components[0] == "import":
-        match = re.match(r'import (?P<generator>\w+) (?P<lang>\w+) program(s)? from (?P<path>.+)$', statement)
+        pairs = [(harness, generator) for generator in generators]
+      else:
+        pairs = []
+        # No harness specified, use all:
+        for harness in lang.harnesses:
+          pairs += [(harness, generator) for generator in harness.generators]
 
-        if match:
-            lang = mklang(match.group("lang"))
-            generator = lang.mkgenerator(match.group("generator"))
-            path = fs.abspath(match.group("path"))
-            if not fs.isdir(path):
-                raise ValueError(f"'{path}' is not a directory")
-
-            return generator.import_from_dir(path)
+      for harness, generator in pairs:
+        if match.group("testbed"):
+          testbeds = lang.mktestbeds(match.group("testbed"))
         else:
-            raise UnrecognizedInput
+          testbeds = harness.available_testbeds()
 
-    if components[0] == "run":
-        match = re.match(r'run (?P<lang>\w+) ((?P<harness>\w+):(?P<generator>\w+)? )?testcases( on (?P<testbed>[\w+-±]+))?$', statement)
-        if match:
-            lang = mklang(match.group("lang"))
+        for testbed in testbeds:
+          testbed.run_testcases(harness, generator)
+      return
+    else:
+      raise UnrecognizedInput
 
-            if match.group("harness"):
-                harness = lang.mkharness(match.group("harness"))
-                if match.group("generator"):
-                    generators = [lang.mkgenerator(match.group("generator"))]
-                else:
-                    # No generator specified, use all:
-                    generators = list(harness.generators)
+  if components[0] == "difftest":
+    match = re.match(r'difftest (?P<lang>\w+) results$', statement)
+    lang = mklang(match.group("lang"))
 
-                pairs = [(harness, generator) for generator in generators]
-            else:
-                pairs = []
-                # No harness specified, use all:
-                for harness in lang.harnesses:
-                    pairs += [(harness, generator) for generator in harness.generators]
+    return lang.difftest()
 
-            for harness, generator in pairs:
-                if match.group("testbed"):
-                    testbeds = lang.mktestbeds(match.group("testbed"))
-                else:
-                    testbeds = harness.available_testbeds()
-
-                for testbed in testbeds:
-                    testbed.run_testcases(harness, generator)
-            return
-        else:
-            raise UnrecognizedInput
-
-    if components[0] == "difftest":
-        match = re.match(r'difftest (?P<lang>\w+) results$', statement)
-        lang = mklang(match.group("lang"))
-
-        return lang.difftest()
-
-
-    raise UnrecognizedInput
+  raise UnrecognizedInput
 
 
 def _user_message_with_stacktrace(exception):
-        # get limited stack trace
-        def _msg(i, x):
-            n = i + 1
+  # get limited stack trace
+  def _msg(i, x):
+    n = i + 1
 
-            filename = fs.basename(x[0])
-            lineno = x[1]
-            fnname = x[2]
+    filename = fs.basename(x[0])
+    lineno = x[1]
+    fnname = x[2]
 
-            loc = "{filename}:{lineno}".format(**vars())
-            return "      #{n}  {loc: <18} {fnname}()".format(**vars())
+    loc = "{filename}:{lineno}".format(**vars())
+    return "      #{n}  {loc: <18} {fnname}()".format(**vars())
 
-        _, _, tb = sys.exc_info()
-        NUM_ROWS = 5  # number of rows in traceback
+  _, _, tb = sys.exc_info()
+  NUM_ROWS = 5  # number of rows in traceback
 
-        trace = reversed(traceback.extract_tb(tb, limit=NUM_ROWS+1)[1:])
-        stack_trace = "\n".join(_msg(*r) for r in enumerate(trace))
-        typename = type(exception).__name__
+  trace = reversed(traceback.extract_tb(tb, limit=NUM_ROWS + 1)[1:])
+  stack_trace = "\n".join(_msg(*r) for r in enumerate(trace))
+  typename = type(exception).__name__
 
-        print(f"""
+  print(f"""
 ======================================================================
 💩  Fatal error!
 {exception} ({typename})
@@ -357,48 +354,48 @@ Please report bugs at <https://github.com/ChrisCummins/dsmith/issues>\
 
 
 def run_command(command: str, file=sys.stdout) -> None:
-    """
-    Pseudo-natural language command parsing.
-    """
-    try:
-        _execute(command, file=file)
-    except UnrecognizedInput as e:
-        print("😕  I don't understand. "
-              "Type 'help' for available commands.", file=file)
-        if os.environ.get("DEBUG"):
-            raise e
-    except NotImplementedError as e:
-        print("🤔  I don't know how to do that (yet).", file=file)
-        if os.environ.get("DEBUG"):
-            raise e
-    except KeyboardInterrupt:
-        print("", file=file)
-        _exit(file=file)
-    except Exception as e:
-        _user_message_with_stacktrace(e)
-        if os.environ.get("DEBUG"):
-            raise e
+  """
+  Pseudo-natural language command parsing.
+  """
+  try:
+    _execute(command, file=file)
+  except UnrecognizedInput as e:
+    print("😕  I don't understand. "
+          "Type 'help' for available commands.", file=file)
+    if os.environ.get("DEBUG"):
+      raise e
+  except NotImplementedError as e:
+    print("🤔  I don't know how to do that (yet).", file=file)
+    if os.environ.get("DEBUG"):
+      raise e
+  except KeyboardInterrupt:
+    print("", file=file)
+    _exit(file=file)
+  except Exception as e:
+    _user_message_with_stacktrace(e)
+    if os.environ.get("DEBUG"):
+      raise e
 
 
 def repl(file=sys.stdout) -> None:
-    hour = datetime.datetime.now().hour
+  hour = datetime.datetime.now().hour
 
-    greeting = "Good evening."
-    if hour > 4:
-        greeting = "Good morning."
-    if hour > 12 and hour < 18:
-        greeting = "Good afternoon."
+  greeting = "Good evening."
+  if hour > 4:
+    greeting = "Good morning."
+  if hour > 12 and hour < 18:
+    greeting = "Good afternoon."
 
-    print(greeting, "Type 'help' for available commands.", file=file)
+  print(greeting, "Type 'help' for available commands.", file=file)
 
-    while True:
-        sys.stdout.write(f"{Colors.BOLD}> ")
-        choice = input()
-        sys.stdout.write(Colors.END)
-        sys.stdout.flush()
+  while True:
+    sys.stdout.write(f"{Colors.BOLD}> ")
+    choice = input()
+    sys.stdout.write(Colors.END)
+    sys.stdout.flush()
 
-        # Strip '#' command, and split ';' separated commands
-        commands = choice.split("#")[0].split(";")
+    # Strip '#' command, and split ';' separated commands
+    commands = choice.split("#")[0].split(";")
 
-        for command in commands:
-            run_command(command, file=file)
+    for command in commands:
+      run_command(command, file=file)

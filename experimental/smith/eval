@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 #
 # Create plots. Use FORMAT=pdf to control output format.
 #
@@ -223,10 +224,11 @@ main() {
     # wait_for_jobs
 
 
-    if which xdg-open &>/dev/null ; then
+    if which xdg-open &> /dev/null; then
         xdg-open $dir
     else
         open $dir
     fi
 }
+
 main $@

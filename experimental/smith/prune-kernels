@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 set -eu
 
 usage() {
@@ -24,9 +25,10 @@ main() {
     for path in $(find $dir -name '*.cl'); do
         local f=$(basename $path)
 
-        if ! cut -f1 -d',' < $features | tail -n+2 | grep $f &>/dev/null ; then
+        if ! cut -f1 -d',' < $features | tail -n+2 | grep $f &> /dev/null; then
             rm -v $path
         fi
     done
 }
+
 main $@

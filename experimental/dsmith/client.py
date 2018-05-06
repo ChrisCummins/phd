@@ -17,20 +17,19 @@
 #
 import grpc
 
-import dsmith
 from dsmith import dsmith_pb2 as pb
 from dsmith import dsmith_pb2_grpc as rpc
 
 
 def run():
-    channel = grpc.insecure_channel('localhost:50051')
-    stub = rpc.TestingServiceStub(channel)
+  channel = grpc.insecure_channel('localhost:50051')
+  stub = rpc.TestingServiceStub(channel)
 
-    request = pb.SubmitTestcasesRequest(testcases=[])
+  request = pb.SubmitTestcasesRequest(testcases=[])
 
-    response: pb.SubmitTestcasesResponse = stub.SubmitTestcases(request)
-    print("TestingService client received: ", type(response).__name__)
+  response: pb.SubmitTestcasesResponse = stub.SubmitTestcases(request)
+  print("TestingService client received: ", type(response).__name__)
 
 
 if __name__ == '__main__':
-    run()
+  run()

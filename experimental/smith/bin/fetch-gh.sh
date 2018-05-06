@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 #
 # Fetch from Github
 #
@@ -16,7 +17,8 @@ main() {
 
         fetch-gh "$db_path"
 
-        i=$((i+1))
+        i=$((i + 1))
     done
 }
+
 main $@

@@ -12,11 +12,11 @@ import numpy as np
 from clgen import log as clgen_log
 from clgen import model
 from clgen import preprocess
+from lib.labm8.time import nowstr
 from subprocess import PIPE, Popen
 
 from lib import labm8
 from lib.labm8 import fs
-from lib.labm8.time import nowstr
 
 if labm8.is_python3():
   from io import StringIO

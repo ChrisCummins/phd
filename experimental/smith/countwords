@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 #
 # Count bag-of-words vocabulary size
 set -eu
