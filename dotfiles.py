@@ -836,7 +836,7 @@ class Vim(Task):
 
 class Linters(Task):
   __platforms__ = ['osx']
-  __osx_deps__ = ['Node', 'Python']
+  __osx_deps__ = ['Node', 'Python', 'Go']
   __osx_genfiles__ = [
       '/usr/local/bin/cpplint',
       '/usr/local/bin/csslint',
