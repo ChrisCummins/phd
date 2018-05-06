@@ -266,8 +266,15 @@ def CreatePackageArchiveSidecar(archive_path: pathlib.Path,
   if not archive_path.is_file():
     raise OSError(f'Archive {archive_path} does not exist')
 
-  # TODO(cec): Create a copy of manifest and delete the 'file' field.
-  sidecar = manifest
+  sidecar = dpack_pb2.DataPackage()
+  sidecar.CopyFrom(manifest)
+  # Clear the file attributes. Only the file names and comments are stored in the sidecar.
+  for f in sidecar.file:
+    if not f.comment:
+      f.ClearField("comment")
+    f.ClearField("size_in_bytes")
+    f.ClearField("checksum_hash")
+    f.ClearField("checksum")
   sidecar.checksum_hash = dpack_pb2.SHA256
   sidecar.checksum = crypto.sha256_file(archive_path)
   pbutil.ToFile(sidecar, sidecar_path)
