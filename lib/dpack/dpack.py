@@ -74,7 +74,7 @@ flags.register_validator(
 ALWAYS_EXCLUDE_PATTERNS = [
   'MANIFEST.pbtxt',  # No self-reference.
   '.DS_Store',
-  '*/.DS_Store/*',
+  '*/.DS_Store',
 ]
 
 
