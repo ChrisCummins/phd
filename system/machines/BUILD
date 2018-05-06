@@ -5,6 +5,6 @@ py_binary(
     srcs = ["data_tiers.py"],
     deps = [
         "//lib/labm8:pbutil",
-        "//system/machines/ryangosling/proto:ryangosling_pb2_py",
+        "//system/machines/proto:data_tiers_pb2_py",
     ],
 )
