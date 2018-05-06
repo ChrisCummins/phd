@@ -8,14 +8,14 @@ online_data=~/data/msc-thesis
 
 set -eu
 
-if mount | grep $online_share >/dev/null; then
+if mount | grep $online_share > /dev/null; then
     echo "unmounting $online_share"
     rsync -avh $online_share/ $offline_share/
     sudo umount $online_share
     sudo rmdir $online_share
 fi
 
-if mount | grep $online_data >/dev/null; then
+if mount | grep $online_data > /dev/null; then
     echo "unmounting $online_data"
     rsync -avh $online_data/ $offline_data/
     sudo umount $online_data

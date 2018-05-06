@@ -1,8 +1,8 @@
+from lib.labm8.tests.testutil import TestCase
 from omnitune import llvm
 from unittest import main
 
 from lib.labm8 import fs
-from lib.labm8.tests.testutil import TestCase
 
 
 class TestLLVM(TestCase):

@@ -9,7 +9,7 @@ online_data=~/data/msc-thesis
 
 set -eu
 
-if ! mount | grep $online_share >/dev/null; then
+if ! mount | grep $online_share > /dev/null; then
     echo "mounting $online_share"
     sudo mkdir -p $online_share
     sudo mount -t tmpfs -o size=2048m tmpfs $online_share
@@ -18,7 +18,7 @@ if ! mount | grep $online_share >/dev/null; then
 fi
 
 
-if ! mount | grep $online_data >/dev/null; then
+if ! mount | grep $online_data > /dev/null; then
     echo "mounting $online_data"
     sudo mkdir -p $online_data
     sudo mount -t tmpfs -o size=2048m tmpfs $online_data

@@ -1,11 +1,10 @@
-import platform
 import re
 import sys
-
 from collections import namedtuple
-from typing import List, Tuple, Iterator
 
+import platform
 import pyopencl as cl
+from typing import Iterator, Tuple
 
 
 class OpenCLEnvironment(namedtuple('OpenCLEnvironment', ['platform', 'device'])):

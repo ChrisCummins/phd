@@ -10,15 +10,13 @@ NUMPY_TYPES : Dict[np.dtype, str]
 """
 import re
 
-from pathlib import Path
-from subprocess import Popen, PIPE
-from typing import List
-
 import numpy as np
-
-from pycparser.c_ast import FileAST, NodeVisitor, PtrDecl, TypeDecl, Struct, IdentifierType
+from pathlib import Path
+from pycparser.c_ast import FileAST, IdentifierType, NodeVisitor, PtrDecl, Struct
 from pycparser.plyparser import ParseError
 from pycparserext.ext_c_parser import OpenCLCParser
+from subprocess import PIPE, Popen
+from typing import List
 
 NUMPY_TYPES = {
   "bool": np.dtype("bool"),

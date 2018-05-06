@@ -7,6 +7,8 @@ import csv
 import json
 import omnitune
 import subprocess
+from lib.labm8.db import placeholders
+from lib.labm8.db import where
 from omnitune.skelcl import features
 from pkg_resources import resource_string
 from space import ParamSpace
@@ -17,8 +19,6 @@ from lib.labm8 import fs
 from lib.labm8 import io
 from lib.labm8 import math as labmath
 from lib.labm8 import prof
-from lib.labm8.db import placeholders
-from lib.labm8.db import where
 from . import get_kernel_name_and_type
 from . import hash_dataset
 from . import hash_device

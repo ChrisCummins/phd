@@ -1,9 +1,8 @@
 import itertools
 
+from lib.labm8.tests.testutil import TestCase
 from omnitune import skelcl
 from unittest import main
-
-from lib.labm8.tests.testutil import TestCase
 
 
 class TestSkelCL(TestCase):

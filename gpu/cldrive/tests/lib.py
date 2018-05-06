@@ -1,13 +1,12 @@
 import os
 import sys
 from io import StringIO
-from pathlib import Path
-from typing import List
 
 import numpy as np
-from numpy import testing as nptest
-
 import pytest
+from numpy import testing as nptest
+from pathlib import Path
+from typing import List
 
 from gpu import cldrive
 

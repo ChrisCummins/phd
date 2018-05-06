@@ -1,7 +1,6 @@
+from lib.labm8.tests.testutil import TestCase
 from omnitune import opencl
 from unittest import main
-
-from lib.labm8.tests.testutil import TestCase
 
 
 class TestOpenCL(TestCase):

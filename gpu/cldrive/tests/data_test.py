@@ -1,11 +1,5 @@
-import pytest
-
 from absl import app
 
-import numpy as np
-from numpy import testing as nptest
-
-from gpu import cldrive
 from gpu.cldrive.tests.lib import *
 
 

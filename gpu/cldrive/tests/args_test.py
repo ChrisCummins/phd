@@ -1,10 +1,5 @@
-import sys
-
-import pytest
-
 from absl import app
 
-from gpu import cldrive
 from gpu.cldrive.tests.lib import *
 
 
