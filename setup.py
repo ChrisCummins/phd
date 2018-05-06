@@ -18,14 +18,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import os
 
 from setuptools import setup
 
 
 def read_requirements(path='requirements.txt'):
-    with open(path) as infile:
-        return [x.strip() for x in infile.readlines() if x.strip()]
+  with open(path) as infile:
+    return [x.strip() for x in infile.readlines() if x.strip()]
+
 
 setup(
     name='gh-archiver',

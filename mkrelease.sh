@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 #
 # mkrelease.sh - push a new python package version
 #
@@ -25,7 +26,7 @@ set -e
 
 # List of files in which the version number should be updated
 files_to_update=(
-    "setup.py"
+"setup.py"
 )
 
 # Branch on which releases must be made
@@ -38,8 +39,8 @@ dev_suffix=".dev0"
 version_is_pep440_compliant() {
     local version="$1"
 
-    pip install packaging &>/dev/null
-    echo "$version" | python -c 'import sys; import packaging.version; packaging.version.Version(sys.stdin.read().strip())' &>/dev/null
+    pip install packaging &> /dev/null
+    echo "$version" | python -c 'import sys; import packaging.version; packaging.version.Version(sys.stdin.read().strip())' &> /dev/null
 }
 
 
@@ -67,7 +68,7 @@ usage() {
 
 
 main() {
-    test -n "$DEBUG" && set -x  # Set debugging output if DEBUG=1
+    test -n "$DEBUG" && set -x # Set debugging output if DEBUG=1
     local new_version="$1"
 
     set -eu
@@ -88,7 +89,7 @@ main() {
     fi
 
     # check that it is the root of a python package
-    if [ ! -f setup.py ] ; then
+    if [ ! -f setup.py ]; then
         echo "File setup.py not found" >&2
         exit 1
     fi
@@ -129,9 +130,9 @@ main() {
     while true; do
         read -p "Commit to release $new_version? [yn] " yn
         case $yn in
-            [Yy]* ) break;;
-            [Nn]* ) exit 1;;
-            * ) echo "Please answer yes or no.";;
+            [Yy]*) break ;;
+            [Nn]*) exit 1 ;;
+            *) echo "Please answer yes or no." ;;
         esac
     done
 
@@ -155,4 +156,5 @@ main() {
     git commit -m "Development version bump"
     git push origin master
 }
+
 main $@
