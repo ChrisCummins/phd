@@ -23,3 +23,4 @@ build --ignore_unsupported_sandboxing
 
 # Test options:
 test --test_output=errors
+test --keep_going
