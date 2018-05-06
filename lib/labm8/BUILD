@@ -280,7 +280,7 @@ py_test(
     name = "make_test",
     size = "small",
     srcs = ["make_test.py"],
-    data = glob(["data/makeproj/**"]),
+    data = glob(["data/test/makeproj/**"]),
     deps = [
         "//lib/labm8:fs",
         "//lib/labm8:make",
