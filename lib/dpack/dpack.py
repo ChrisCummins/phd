@@ -299,18 +299,18 @@ def InitManifest(package_dir: pathlib.Path, contents: typing.List[pathlib.Path],
   logging.info('Wrote %s', manifest_path.absolute())
 
 
-def VerifyManifest(package_dir: pathlib.Path) -> None:
+def VerifyManifest(package_dir: pathlib.Path) -> bool:
   """Verify that the MANIFEST.pbtext file matches the contents."""
   if not (package_dir / 'MANIFEST.pbtxt').is_file():
-    logging.info('No MANIFEST.pbtxt, nothing to do.')
-    sys.exit(1)
+    logging.info('%s/MANIFEST.pbtxt missing, nothing to do.', package_dir)
+    return False
   manifest = pbutil.FromFile(
       package_dir / 'MANIFEST.pbtxt', dpack_pb2.DataPackage())
-  if PackageManifestIsValid(package_dir, manifest):
-    logging.info('Package verified. No changes to files in the manifest.')
-  else:
-    logging.error('Package contains errors.')
-    sys.exit(1)
+  if not PackageManifestIsValid(package_dir, manifest):
+    logging.error('Package %s contains errors.', package_dir)
+    return False
+  logging.info('%s verified. No changes to files in the manifest.', package_dir)
+  return True
 
 
 def SidecarIsValid(archive: pathlib.Path, sidecar: pathlib.Path) -> None:
@@ -355,7 +355,8 @@ def main(argv) -> None:
     if not SidecarIsValid(package, pathlib.Path(FLAGS.sidecar)):
       sys.exit(1)
   else:
-    VerifyManifest(package)
+    if not VerifyManifest(package):
+      sys.exit(1)
 
 
 if __name__ == '__main__':
