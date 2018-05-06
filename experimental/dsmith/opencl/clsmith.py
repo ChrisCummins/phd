@@ -18,19 +18,18 @@
 """
 Interface to CLSmith binaries
 """
-import logging
 import re
-
-from tempfile import NamedTemporaryFile
-from lib.labm8 import fs
 from collections import namedtuple
-from subprocess import Popen, PIPE, STDOUT
+from tempfile import NamedTemporaryFile
 from time import time
-from pathlib import Path
-from typing import Dict, List, Tuple, NewType
 
 import dsmith
+import logging
 from dsmith import Colors
+from subprocess import PIPE, Popen
+from typing import List, NewType, Tuple
+
+from lib.labm8 import fs
 
 runtime_t = NewType('runtime_t', float)
 status_t = NewType('status_t', int)
@@ -47,125 +46,125 @@ assert fs.isexe(cl_launcher_path)
 assert fs.isfile(fs.path(include_path, "CLSmith.h"))
 
 
-def clsmith_cli(*args, timeout: int=60, exec_path=exec_path) -> List[str]:
-    return ["timeout", "--signal=9", str(timeout), exec_path] + list(args)
+def clsmith_cli(*args, timeout: int = 60, exec_path=exec_path) -> List[str]:
+  return ["timeout", "--signal=9", str(timeout), exec_path] + list(args)
 
 
 def clsmith(*args, exec_path=exec_path) -> return_t:
-    """
-        Returns:
-            return_t: A named tuple consisting of runtime (float),
-                status (int), stdout (str), and stderr (str).
-    """
-    start_time = time()
+  """
+      Returns:
+          return_t: A named tuple consisting of runtime (float),
+              status (int), stdout (str), and stderr (str).
+  """
+  start_time = time()
 
-    cli = clsmith_cli(*args)
-    logging.debug(f"{Colors.BOLD}${Colors.END} " + " ".join(cli))
-    process = Popen(cli, stdout=PIPE, stderr=PIPE)
-    stdout, stderr = process.communicate()
+  cli = clsmith_cli(*args)
+  logging.debug(f"{Colors.BOLD}${Colors.END} " + " ".join(cli))
+  process = Popen(cli, stdout=PIPE, stderr=PIPE)
+  stdout, stderr = process.communicate()
 
-    runtime = runtime_t(time() - start_time)
+  runtime = runtime_t(time() - start_time)
 
-    return return_t(
-        runtime=runtime, status=status_t(process.returncode),
-        stdout=stdout.decode('utf-8'), stderr=stderr.decode('utf-8'))
+  return return_t(
+      runtime=runtime, status=status_t(process.returncode),
+      stdout=stdout.decode('utf-8'), stderr=stderr.decode('utf-8'))
 
 
 def cl_launcher_cli(program_path: str, platform_id: int, device_id: int,
                     optimizations: bool, timeout: int) -> str:
-    cmd = ["timeout", "--signal=9", str(timeout)] if timeout else []
-    cmd += [cl_launcher_path, '---debug', '-f', program_path,
-            '-p', str(platform_id), '-d', str(device_id),
-            '--include_path', include_path]
-    if not optimizations:
-        cmd += ['---disable_opts']
-    return cmd
+  cmd = ["timeout", "--signal=9", str(timeout)] if timeout else []
+  cmd += [cl_launcher_path, '---debug', '-f', program_path,
+          '-p', str(platform_id), '-d', str(device_id),
+          '--include_path', include_path]
+  if not optimizations:
+    cmd += ['---disable_opts']
+  return cmd
 
 
 def cl_launcher(*args, **kwargs) -> return_t:
-    """
-        Returns:
-            return_t: A named tuple consisting of runtime (float),
-                status (int), stdout (str), and stderr (str).
-    """
-    start_time = time()
+  """
+      Returns:
+          return_t: A named tuple consisting of runtime (float),
+              status (int), stdout (str), and stderr (str).
+  """
+  start_time = time()
 
-    cli = cl_launcher_cli(*args, **kwargs)
-    logging.debug(f"{Colors.BOLD}${Colors.END} " + " ".join(cli))
-    process = Popen(cli, stdout=PIPE, stderr=PIPE)
-    stdout, stderr = process.communicate()
+  cli = cl_launcher_cli(*args, **kwargs)
+  logging.debug(f"{Colors.BOLD}${Colors.END} " + " ".join(cli))
+  process = Popen(cli, stdout=PIPE, stderr=PIPE)
+  stdout, stderr = process.communicate()
 
-    runtime = runtime_t(time() - start_time)
+  runtime = runtime_t(time() - start_time)
 
-    return return_t(
-        runtime=runtime, status=status_t(process.returncode),
-        stdout=stdout.decode('utf-8'), stderr=stderr.decode('utf-8'))
+  return return_t(
+      runtime=runtime, status=status_t(process.returncode),
+      stdout=stdout.decode('utf-8'), stderr=stderr.decode('utf-8'))
 
 
 def cl_launcher_str(src: str, *args, **kwargs) -> Tuple[float, int, str, str]:
-    """
-    Invoke cl launcher on program source.
+  """
+  Invoke cl launcher on program source.
 
-    Arguments:
-        same as cl_launcher_cli()
+  Arguments:
+      same as cl_launcher_cli()
 
-    Returns:
-        same as cl_launcher()
-    """
-    with NamedTemporaryFile(prefix='dsmith-cl_launcher-', suffix='.cl') as tmp:
-        tmp.write(src.encode('utf-8'))
-        tmp.flush()
+  Returns:
+      same as cl_launcher()
+  """
+  with NamedTemporaryFile(prefix='dsmith-cl_launcher-', suffix='.cl') as tmp:
+    tmp.write(src.encode('utf-8'))
+    tmp.flush()
 
-        return cl_launcher(tmp.name, *args, **kwargs)
+    return cl_launcher(tmp.name, *args, **kwargs)
 
 
 def verify_cl_launcher_run(platform: str, device: str, optimizations: bool,
                            global_size: tuple, local_size: tuple,
                            stderr: str) -> None:
-    """ verify that expected params match actual as reported by CLsmith """
-    optimizations = "on" if optimizations else "off"
+  """ verify that expected params match actual as reported by CLsmith """
+  optimizations = "on" if optimizations else "off"
 
-    actual_platform = None
-    actual_device = None
-    actual_optimizations = None
-    actual_global_size = None
-    actual_local_size = None
-    for line in stderr.split('\n'):
-        if line.startswith("Platform: "):
-            actual_platform_name = re.sub(r"^Platform: ", "", line).rstrip()
-        elif line.startswith("Device: "):
-            actual_device_name = re.sub(r"^Device: ", "", line).rstrip()
-        elif line.startswith("OpenCL optimizations: "):
-            actual_optimizations = re.sub(r"^OpenCL optimizations: ", "", line).rstrip()
+  actual_platform = None
+  actual_device = None
+  actual_optimizations = None
+  actual_global_size = None
+  actual_local_size = None
+  for line in stderr.split('\n'):
+    if line.startswith("Platform: "):
+      actual_platform_name = re.sub(r"^Platform: ", "", line).rstrip()
+    elif line.startswith("Device: "):
+      actual_device_name = re.sub(r"^Device: ", "", line).rstrip()
+    elif line.startswith("OpenCL optimizations: "):
+      actual_optimizations = re.sub(r"^OpenCL optimizations: ", "", line).rstrip()
 
-        # global size
-        match = re.match('^3-D global size \d+ = \[(\d+), (\d+), (\d+)\]', line)
-        if match:
-            actual_global_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
-        match = re.match('^2-D global size \d+ = \[(\d+), (\d+)\]', line)
-        if match:
-            actual_global_size = (int(match.group(1)), int(match.group(2)), 0)
-        match = re.match('^1-D global size \d+ = \[(\d+)\]', line)
-        if match:
-            actual_global_size = (int(match.group(1)), 0, 0)
+    # global size
+    match = re.match('^3-D global size \d+ = \[(\d+), (\d+), (\d+)\]', line)
+    if match:
+      actual_global_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
+    match = re.match('^2-D global size \d+ = \[(\d+), (\d+)\]', line)
+    if match:
+      actual_global_size = (int(match.group(1)), int(match.group(2)), 0)
+    match = re.match('^1-D global size \d+ = \[(\d+)\]', line)
+    if match:
+      actual_global_size = (int(match.group(1)), 0, 0)
 
-        # local size
-        match = re.match('^3-D local size \d+ = \[(\d+), (\d+), (\d+)\]', line)
-        if match:
-            actual_local_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
-        match = re.match('^2-D local size \d+ = \[(\d+), (\d+)\]', line)
-        if match:
-            actual_local_size = (int(match.group(1)), int(match.group(2)), 0)
-        match = re.match('^1-D local size \d+ = \[(\d+)\]', line)
-        if match:
-            actual_local_size = (int(match.group(1)), 0, 0)
+    # local size
+    match = re.match('^3-D local size \d+ = \[(\d+), (\d+), (\d+)\]', line)
+    if match:
+      actual_local_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
+    match = re.match('^2-D local size \d+ = \[(\d+), (\d+)\]', line)
+    if match:
+      actual_local_size = (int(match.group(1)), int(match.group(2)), 0)
+    match = re.match('^1-D local size \d+ = \[(\d+)\]', line)
+    if match:
+      actual_local_size = (int(match.group(1)), 0, 0)
 
-        # check if we've collected everything:
-        if (actual_platform and actual_device and actual_optimizations and
-            actual_global_size and actual_local_size):
-            assert(actual_platform == platform)
-            assert(actual_device == device)
-            assert(actual_optimizations == optimizations)
-            assert(actual_global_size == global_size)
-            assert(actual_local_size == local_size)
-            return
+    # check if we've collected everything:
+    if (actual_platform and actual_device and actual_optimizations and
+        actual_global_size and actual_local_size):
+      assert (actual_platform == platform)
+      assert (actual_device == device)
+      assert (actual_optimizations == optimizations)
+      assert (actual_global_size == global_size)
+      assert (actual_local_size == local_size)
+      return

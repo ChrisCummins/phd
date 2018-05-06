@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 set -eu
 
 main() {
@@ -9,4 +10,5 @@ main() {
     rm -frv $logdir
     tar -I pbzip2 -xvf $archive
 }
+
 main $@

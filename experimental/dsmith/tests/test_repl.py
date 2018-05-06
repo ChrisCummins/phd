@@ -17,23 +17,22 @@
 #
 import pytest
 
-from dsmith import test
 from dsmith import repl
 
 
 def test_execute_type_error():
-    with pytest.raises(TypeError):
-        repl._execute(2.5)
+  with pytest.raises(TypeError):
+    repl._execute(2.5)
 
 
 def test_execute_unrecognized():
-    with pytest.raises(ValueError):
-        repl._execute("__ unrecognized input ___")
+  with pytest.raises(ValueError):
+    repl._execute("__ unrecognized input ___")
 
-    with pytest.raises(repl.UnrecognizedInput):
-        repl._execute("__ unrecognized input ___")
+  with pytest.raises(repl.UnrecognizedInput):
+    repl._execute("__ unrecognized input ___")
 
 
 def test_run_command_type_error():
-    with pytest.raises(TypeError):
-        repl.run_command(2.5)
+  with pytest.raises(TypeError):
+    repl.run_command(2.5)

@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
-from argparse import ArgumentParser
-from progressbar import ProgressBar
 
-import dsmith
-from dsmith import clgen_fetch
-from dsmith import db
 # from dsmith.db import CLgenProgram, Session
 
 

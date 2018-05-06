@@ -18,90 +18,81 @@
 """
 The OpenCL programming language.
 """
-import datetime
-import humanize
-import logging
-import math
-import progressbar
-import re
 import sys
 
-from sqlalchemy.sql import func
-from typing import List
-
-import dsmith
-
+import humanize
 from dsmith import Colors
-from dsmith.langs import Language, Generator, Harness
+from dsmith.langs import Generator, Harness, Language
 from dsmith.opencl import db
 from dsmith.opencl import difftest
 from dsmith.opencl.db import *
-from dsmith.opencl.generators import DSmith, CLSmith, RandChar, RandTok
-from dsmith.opencl.harnesses import Cldrive, Cl_launcher, Clang
+from dsmith.opencl.generators import CLSmith, DSmith, RandChar, RandTok
+from dsmith.opencl.harnesses import Cl_launcher, Clang, Cldrive
+from typing import List
 
 
 class OpenCL(Language):
-    __name__ = "opencl"
+  __name__ = "opencl"
 
-    __generators__ = {
-        None: DSmith,  # default
-        "dsmith": DSmith,
-        "clsmith": CLSmith,
-        "randchar": RandChar,
-        "randtok": RandTok,
-    }
+  __generators__ = {
+    None: DSmith,  # default
+    "dsmith": DSmith,
+    "clsmith": CLSmith,
+    "randchar": RandChar,
+    "randtok": RandTok,
+  }
 
-    __harnesses__ = {
-        "cldrive": Cldrive,
-        "cl_launcher": Cl_launcher,
-        "clang": Clang,
-    }
+  __harnesses__ = {
+    "cldrive": Cldrive,
+    "cl_launcher": Cl_launcher,
+    "clang": Clang,
+  }
 
-    def __init__(self):
-        if db.engine is None:
-            db.init()
+  def __init__(self):
+    if db.engine is None:
+      db.init()
 
-    def mktestbeds(self, string: str) -> List[Testbed]:
-        """ Instantiate testbed(s) by name """
-        with Session() as s:
-            return [TestbedProxy(testbed) for testbed in Testbed.from_str(string, session=s)]
+  def mktestbeds(self, string: str) -> List[Testbed]:
+    """ Instantiate testbed(s) by name """
+    with Session() as s:
+      return [TestbedProxy(testbed) for testbed in Testbed.from_str(string, session=s)]
 
-    def run_testcases(self, testbeds: List[str],
-                      pairs: List[Tuple[Generator, Harness]]) -> None:
-        with Session() as s:
-            for generator, harness in pairs:
-                for testbed_name in testbeds:
-                    testbed = Testbed.from_str(testbed_name, session=s)[0]
-                    self._run_testcases(testbed, generator, harness, s)
+  def run_testcases(self, testbeds: List[str],
+                    pairs: List[Tuple[Generator, Harness]]) -> None:
+    with Session() as s:
+      for generator, harness in pairs:
+        for testbed_name in testbeds:
+          testbed = Testbed.from_str(testbed_name, session=s)[0]
+          self._run_testcases(testbed, generator, harness, s)
 
-    def describe_testbeds(self, available_only: bool=False, file=sys.stdout) -> None:
-        with Session() as s:
-            if not available_only:
-                print(f"The following {self} testbeds are in the data store:", file=file)
-                for harness in sorted(self.harnesses):
-                    for testbed in sorted(harness.testbeds()):
-                        print(f"    {harness} {testbed} {testbed.platform} on {testbed.host}",
-                              file=file)
-                print(file=file)
-
-            print(f"The following {self} testbeds are available on this machine:",
+  def describe_testbeds(self, available_only: bool = False, file=sys.stdout) -> None:
+    with Session() as s:
+      if not available_only:
+        print(f"The following {self} testbeds are in the data store:", file=file)
+        for harness in sorted(self.harnesses):
+          for testbed in sorted(harness.testbeds()):
+            print(f"    {harness} {testbed} {testbed.platform} on {testbed.host}",
                   file=file)
-            for harness in sorted(self.harnesses):
-                for testbed in sorted(harness.available_testbeds()):
-                    print(f"    {harness} {testbed} {testbed.platform}", file=file)
+        print(file=file)
 
-    def describe_results(self, file=sys.stdout) -> None:
-        with Session() as s:
-            for harness in self.harnesses:
-                for generator in harness.generators:
-                    for testbed in harness.testbeds():
-                        testbed = str(testbed)
-                        num_results = harness.num_results(generator, testbed)
-                        if num_results:
-                            word_num = humanize.intcomma(num_results)
-                            print(f"There are {Colors.BOLD}{word_num}{Colors.END} "
-                                  f"{generator}:{harness} "
-                                  f"results on {testbed}.", file=file)
+      print(f"The following {self} testbeds are available on this machine:",
+            file=file)
+      for harness in sorted(self.harnesses):
+        for testbed in sorted(harness.available_testbeds()):
+          print(f"    {harness} {testbed} {testbed.platform}", file=file)
 
-    def difftest(self) -> None:
-        difftest.difftest()
+  def describe_results(self, file=sys.stdout) -> None:
+    with Session() as s:
+      for harness in self.harnesses:
+        for generator in harness.generators:
+          for testbed in harness.testbeds():
+            testbed = str(testbed)
+            num_results = harness.num_results(generator, testbed)
+            if num_results:
+              word_num = humanize.intcomma(num_results)
+              print(f"There are {Colors.BOLD}{word_num}{Colors.END} "
+                    f"{generator}:{harness} "
+                    f"results on {testbed}.", file=file)
+
+  def difftest(self) -> None:
+    difftest.difftest()

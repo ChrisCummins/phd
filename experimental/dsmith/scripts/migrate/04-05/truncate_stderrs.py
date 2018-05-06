@@ -2,31 +2,29 @@
 """
 Add stderrs linecount and charcount metadata, and truncate original strings.
 """
-import progressbar
-import sqlalchemy as sql
-
 import dsmith
+import progressbar
 # from dsmith.sol.db import *
 from dsmith.opencl.db import *
 
-
 if __name__ == "__main__":
-    import logging
-    logging.getLogger().setLevel(logging.DEBUG)
-    dsmith.langs.mklang("opencl")
+  import logging
 
-    with Session() as s:
-        print("Setting metadata for stderrs ...")
-        bar = progressbar.ProgressBar(max_value=s.query(Stderr).count(),
-                                      redirect_stdout=True)
+  logging.getLogger().setLevel(logging.DEBUG)
+  dsmith.langs.mklang("opencl")
 
-        try:
-            for i, stderr in enumerate(s.query(Stderr).yield_per(2000)):
-                bar.update(i)
+  with Session() as s:
+    print("Setting metadata for stderrs ...")
+    bar = progressbar.ProgressBar(max_value=s.query(Stderr).count(),
+                                  redirect_stdout=True)
 
-                stderr.linecount = len(stderr.stderr.split('\n'))
-                stderr.charcount = len(stderr.stderr)
-                stderr.truncated = stderr.charcount > stderr.max_chars
-                stderr.stderr = stderr.stderr.rstrip()[:stderr.max_chars]
-        finally:
-            s.commit()
+    try:
+      for i, stderr in enumerate(s.query(Stderr).yield_per(2000)):
+        bar.update(i)
+
+        stderr.linecount = len(stderr.stderr.split('\n'))
+        stderr.charcount = len(stderr.stderr)
+        stderr.truncated = stderr.charcount > stderr.max_chars
+        stderr.stderr = stderr.stderr.rstrip()[:stderr.max_chars]
+    finally:
+      s.commit()

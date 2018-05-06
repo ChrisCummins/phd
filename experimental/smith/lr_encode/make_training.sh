@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 set -eu
 
 main() {
@@ -12,7 +13,7 @@ main() {
         echo $f
         nchar=$(wc -c $f | awk '{print $1}')
 
-        for idx in $(shuf -i 10-$((nchar-2)) -n 10); do
+        for idx in $(shuf -i 10-$((nchar - 2)) -n 10); do
             local outpath="encoded/$(basename $f)-$idx.cl"
             echo "  $outpath"
 
@@ -22,5 +23,6 @@ main() {
         done
     done
 }
+
 main $@
 

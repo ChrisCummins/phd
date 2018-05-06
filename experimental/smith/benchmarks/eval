@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 set -eu
 
 print() {
@@ -6,7 +7,7 @@ print() {
 }
 
 mktab() {
-    $@ 2>/dev/null | column -t -s','
+    $@ 2> /dev/null | column -t -s','
 }
 
 run_cgo13() {
@@ -50,4 +51,5 @@ main() {
     mktab cgo13 $B --with-raw-features
     echo
 }
+
 main $@

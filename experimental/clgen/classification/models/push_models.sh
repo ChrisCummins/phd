@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 set -eux
 
 model_file=models-$(hostname).tar.bz2

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 #
 # Rename a database
 set -eux
@@ -12,4 +13,5 @@ main() {
         mysql -sNe "RENAME TABLE $old_db.$table to $new_db.$table"
     done
 }
+
 main $@

@@ -14,7 +14,7 @@ clgen-explore $datadir/pp1.db
 
 set +x
 for j in {2..3}; do
-    i=$((j-1))
+    i=$((j - 1))
     echo "iteration $i"
     if [[ ! -f $datadir/pp$j.db ]]; then
         rm -fr $datadir/pp$j

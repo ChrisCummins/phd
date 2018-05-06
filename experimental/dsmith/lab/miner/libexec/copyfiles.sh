@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 set -eu
 
 main() {
@@ -16,4 +17,5 @@ main() {
         chmod -x "$dst"
     done
 }
+
 main $@

@@ -1,26 +1,12 @@
 #!/usr/bin/env python3
-import re
-import fileinput
-import os
-import sys
-import pyopencl as cl
-from argparse import ArgumentParser
 from collections import namedtuple
-from subprocess import Popen, PIPE
-from time import time
-from typing import Dict, List, Tuple, NewType, Union
-from tempfile import TemporaryDirectory
-from progressbar import ProgressBar
 
-import cldrive
-import progressbar
-import subprocess
-from lib.labm8 import fs
-
-import dsmith
-from dsmith import db
+import pyopencl as cl
 from dsmith.db import *
 from dsmith.lib import *
+from typing import NewType
+
+from lib.labm8 import fs
 
 # paths to clreduce library
 CLREDUCE_DIR = fs.abspath('..', 'lib', 'clreduce')
@@ -39,15 +25,14 @@ return_t = namedtuple('return_t', ['runtime', 'status', 'log', 'src'])
 
 
 def get_platform_name(platform_id):
-    platform = cl.get_platforms()[platform_id]
-    return platform.get_info(cl.platform_info.NAME)
+  platform = cl.get_platforms()[platform_id]
+  return platform.get_info(cl.platform_info.NAME)
 
 
 def get_device_name(platform_id, device_id):
-    platform = cl.get_platforms()[platform_id]
-    device = platform.get_devices()[device_id]
-    return device.get_info(cl.device_info.NAME)
-
+  platform = cl.get_platforms()[platform_id]
+  device = platform.get_devices()[device_id]
+  return device.get_info(cl.device_info.NAME)
 
 # def get_num_results_to_reduce(session: db.session_t, tables: Tableset, testbed: Testbed):
 #     num_ran = session.query(sql.sql.func.count(tables.reductions.id))\

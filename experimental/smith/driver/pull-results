@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 set -eu
 
 . $HOME/phd/experimental/smith/driver/lib/pushpull.sh
@@ -8,4 +9,5 @@ main() {
 
     pull $HOME/phd/experimental/smith/driver/data/synthetic $archive
 }
+
 main $@

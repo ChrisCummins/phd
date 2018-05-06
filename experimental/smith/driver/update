@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 #
 # Rebuild training data. Run pull-results beforehand.
 #
@@ -34,14 +35,14 @@ main() {
 
     # Make training data files (one for each platform and combined).
     ./mktraining data/synthetic/kernels \
-                 data/synthetic/intel.csv \
-                 data/synthetic/amd.csv \
-                 > data/synthetic/platform-a.csv &
+ data/synthetic/intel.csv \
+ data/synthetic/amd.csv \
+ > data/synthetic/platform-a.csv &
 
     ./mktraining data/synthetic/kernels \
-                 data/synthetic/intel.csv \
-                 data/synthetic/nvidia.csv \
-                 > data/synthetic/platform-b.csv &
+ data/synthetic/intel.csv \
+ data/synthetic/nvidia.csv \
+ > data/synthetic/platform-b.csv &
     wait_for_jobs
 
     # Make common subset of synthetic data
@@ -52,12 +53,12 @@ main() {
     cd ../
     # Make combined training data.
     ./merge-training-data driver/data/synthetic/platform-a.csv \
-                          driver/data/synthetic/platform-b.csv \
-                          > driver/data/synthetic/training-combined.csv
+ driver/data/synthetic/platform-b.csv \
+ > driver/data/synthetic/training-combined.csv
     # Extract kernels.
     ./extract-synthetic-kernels driver/data/synthetic/training-combined.csv \
-                                driver/data/synthetic/kernels \
-                                driver/data/synthetic/training-combined.cl
+ driver/data/synthetic/kernels \
+ driver/data/synthetic/training-combined.cl
     cd driver
     wait_for_jobs
 
@@ -75,4 +76,5 @@ main() {
 
     wait_for_jobs
 }
+
 main $@

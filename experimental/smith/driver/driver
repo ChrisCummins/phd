@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 #
 # Drive OpenCL files in a directory.
 #
@@ -48,4 +49,5 @@ main() {
         drive_file $f --$devtype $dsize
     done
 }
+
 main $@

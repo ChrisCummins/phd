@@ -2,40 +2,41 @@
 """
 Rebuild the stderrs using the new from_str() constructor method.
 """
+import dsmith
 import progressbar
 import sqlalchemy as sql
-
-import dsmith
 from dsmith.sol.db import *
+
 # from dsmith.opencl.db import *
 
 
 if __name__ == "__main__":
-    import logging
-    logging.getLogger().setLevel(logging.INFO)
-    dsmith.langs.mklang("sol")
+  import logging
 
-    with Session() as s:
-        print("Replacing stderrs ...")
-        bar = progressbar.ProgressBar(max_value=s.query(Result).count(),
-                                      redirect_stdout=True)
+  logging.getLogger().setLevel(logging.INFO)
+  dsmith.langs.mklang("sol")
 
-        try:
-            q = s.query(Result).options(sql.orm.joinedload(Result.stderr))
+  with Session() as s:
+    print("Replacing stderrs ...")
+    bar = progressbar.ProgressBar(max_value=s.query(Result).count(),
+                                  redirect_stdout=True)
 
-            for i, result in bar(enumerate(q)):
+    try:
+      q = s.query(Result).options(sql.orm.joinedload(Result.stderr))
 
-                # get the prior stderr
-                stderr, truncated = result.stderr.stderr, result.stderr.truncated
+      for i, result in bar(enumerate(q)):
 
-                # construct a new stderr
-                new_stderr = Stderr.from_str(s, stderr)
-                new_stderr.truncated = truncated
+        # get the prior stderr
+        stderr, truncated = result.stderr.stderr, result.stderr.truncated
 
-                # update the result's stderr
-                result.stderr = new_stderr
+        # construct a new stderr
+        new_stderr = Stderr.from_str(s, stderr)
+        new_stderr.truncated = truncated
 
-                if not i % 10000:
-                    s.commit()
-        finally:
-            s.commit()
+        # update the result's stderr
+        result.stderr = new_stderr
+
+        if not i % 10000:
+          s.commit()
+    finally:
+      s.commit()

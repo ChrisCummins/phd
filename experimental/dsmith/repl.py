@@ -232,7 +232,7 @@ def _execute(statement: str, file=sys.stdout) -> None:
 
   if components[0] == "make":
     programs_match = re.match(
-      r'make ((?P<up_to>up to )?(?P<number>\d+) )?(?P<lang>\w+) program(s)?( using (?P<generator>\w+))?$', statement)
+        r'make ((?P<up_to>up to )?(?P<number>\d+) )?(?P<lang>\w+) program(s)?( using (?P<generator>\w+))?$', statement)
     testcases_match = re.match(r'make (?P<lang>\w+) ((?P<harness>\w+):(?P<generator>\w+)? )?testcases$', statement)
 
     if programs_match:
@@ -282,7 +282,7 @@ def _execute(statement: str, file=sys.stdout) -> None:
 
   if components[0] == "run":
     match = re.match(
-      r'run (?P<lang>\w+) ((?P<harness>\w+):(?P<generator>\w+)? )?testcases( on (?P<testbed>[\w+-±]+))?$', statement)
+        r'run (?P<lang>\w+) ((?P<harness>\w+):(?P<generator>\w+)? )?testcases( on (?P<testbed>[\w+-±]+))?$', statement)
     if match:
       lang = mklang(match.group("lang"))
 

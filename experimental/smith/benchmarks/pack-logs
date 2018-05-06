@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 set -eu
 
 main() {
@@ -11,4 +12,5 @@ main() {
     rm -rv $logdir
     du -h $archive
 }
+
 main $@

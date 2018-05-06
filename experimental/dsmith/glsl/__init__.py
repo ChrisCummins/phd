@@ -18,76 +18,65 @@
 """
 The GLSL programming language.
 """
-import datetime
-import humanize
-import logging
-import math
-import progressbar
-import re
 import sys
 
-from sqlalchemy.sql import func
-from typing import List
-
-import dsmith
-
-from dsmith import Colors
-from dsmith.langs import Language, Generator, Harness
 from dsmith.glsl import db
 from dsmith.glsl.db import *
 from dsmith.glsl.generators import *
 from dsmith.glsl.harnesses import *
+from dsmith.langs import Generator, Harness, Language
+from typing import List
 
 
 class Glsl(Language):
-    __name__ = "glsl"
+  __name__ = "glsl"
 
-    __generators__ = {
-        None: RandChar,
-        "randchar": RandChar,
-        "dsmith": DSmith,
-        "github": GitHub,
-    }
+  __generators__ = {
+    None: RandChar,
+    "randchar": RandChar,
+    "dsmith": DSmith,
+    "github": GitHub,
+  }
 
-    __harnesses__ = {
-        "glsl_frag": GlslFrag,
-    }
+  __harnesses__ = {
+    "glsl_frag": GlslFrag,
+  }
 
-    def __init__(self):
-        if db.engine is None:
-            db.init()
+  def __init__(self):
+    if db.engine is None:
+      db.init()
 
-    def mktestbeds(self, string: str) -> List[Testbed]:
-        """ Instantiate testbed(s) by name """
-        with Session() as s:
-            return [TestbedProxy(testbed) for testbed in Testbed.from_str(string, session=s)]
+  def mktestbeds(self, string: str) -> List[Testbed]:
+    """ Instantiate testbed(s) by name """
+    with Session() as s:
+      return [TestbedProxy(testbed) for testbed in Testbed.from_str(string, session=s)]
 
-    def run_testcases(self, testbeds: List[str],
-                      pairs: List[Tuple[Generator, Harness]]) -> None:
-        with Session() as s:
-            for generator, harness in pairs:
-                for testbed_name in testbeds:
-                    testbed = Testbed.from_str(testbed_name, session=s)[0]
-                    self._run_testcases(testbed, generator, harness, s)
+  def run_testcases(self, testbeds: List[str],
+                    pairs: List[Tuple[Generator, Harness]]) -> None:
+    with Session() as s:
+      for generator, harness in pairs:
+        for testbed_name in testbeds:
+          testbed = Testbed.from_str(testbed_name, session=s)[0]
+          self._run_testcases(testbed, generator, harness, s)
 
-    def describe_testbeds(self, available_only: bool=False, file=sys.stdout) -> None:
-        with Session() as s:
-            if not available_only:
-                print(f"The following {self} testbeds are in the data store:", file=file)
-                for harness in sorted(self.harnesses):
-                    for testbed in sorted(harness.testbeds()):
-                        print(f"    {harness} {testbed} {testbed.platform} on {testbed.host}",
-                              file=file)
-                print(file=file)
-
-            print(f"The following {self} testbeds are available on this machine:",
+  def describe_testbeds(self, available_only: bool = False, file=sys.stdout) -> None:
+    with Session() as s:
+      if not available_only:
+        print(f"The following {self} testbeds are in the data store:", file=file)
+        for harness in sorted(self.harnesses):
+          for testbed in sorted(harness.testbeds()):
+            print(f"    {harness} {testbed} {testbed.platform} on {testbed.host}",
                   file=file)
-            for harness in sorted(self.harnesses):
-                for testbed in sorted(harness.available_testbeds()):
-                    print(f"    {harness} {testbed} {testbed.platform}", file=file)
+        print(file=file)
 
-    def describe_results(self, file=sys.stdout) -> None:
-        raise NotImplementedError
+      print(f"The following {self} testbeds are available on this machine:",
+            file=file)
+      for harness in sorted(self.harnesses):
+        for testbed in sorted(harness.available_testbeds()):
+          print(f"    {harness} {testbed} {testbed.platform}", file=file)
 
-    def difftest(self) -> None:
-        raise NotImplementedError
+  def describe_results(self, file=sys.stdout) -> None:
+    raise NotImplementedError
+
+  def difftest(self) -> None:
+    raise NotImplementedError

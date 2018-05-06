@@ -18,45 +18,43 @@
 """
 Differential test soldity results.
 """
-import threading
 
 import dsmith
 
-from dsmith import Colors
 from dsmith.sol.db import *
 
 
 def difftest():
-    with Session() as s:
-        create_results_metas(s)
-        create_majorities(s)
-        create_classifications(s)
+  with Session() as s:
+    create_results_metas(s)
+    create_majorities(s)
+    create_classifications(s)
 
 
 def create_results_metas(s: session_t):
-    """
-    Create total time and cumulative time for each test case evaluated on each
-    testbed using each harness.
-    """
-    # break early if we can
-    num_results = s.query(func.count(Result.id)).scalar()
-    num_metas = s.query(func.count(ResultMeta.id)).scalar()
-    if num_results == num_metas:
-        return
+  """
+  Create total time and cumulative time for each test case evaluated on each
+  testbed using each harness.
+  """
+  # break early if we can
+  num_results = s.query(func.count(Result.id)).scalar()
+  num_metas = s.query(func.count(ResultMeta.id)).scalar()
+  if num_results == num_metas:
+    return
 
-    print("creating results metas ...")
-    s.execute(f"DELETE FROM {ResultMeta.__tablename__}")
-    logging.debug("deleted existing result metas")
-    testbeds_harnesses = s.query(Result.testbed_id, Testcase.harness)\
-        .join(Testcase)\
-        .group_by(Result.testbed_id, Testcase.harness)\
-        .order_by(Testcase.harness, Result.testbed_id)\
-        .all()
+  print("creating results metas ...")
+  s.execute(f"DELETE FROM {ResultMeta.__tablename__}")
+  logging.debug("deleted existing result metas")
+  testbeds_harnesses = s.query(Result.testbed_id, Testcase.harness) \
+    .join(Testcase) \
+    .group_by(Result.testbed_id, Testcase.harness) \
+    .order_by(Testcase.harness, Result.testbed_id) \
+    .all()
 
-    bar = progressbar.ProgressBar(redirect_stdout=True)
-    for testbed_id, harness in bar(testbeds_harnesses):
-        # FIXME: @cumtime variable is not supported by SQLite.
-        s.execute(sql_query(f"""
+  bar = progressbar.ProgressBar(redirect_stdout=True)
+  for testbed_id, harness in bar(testbeds_harnesses):
+    # FIXME: @cumtime variable is not supported by SQLite.
+    s.execute(sql_query(f"""
 INSERT INTO {ResultMeta.__tablename__} (id, total_time, cumtime)
 SELECT  results.id,
         results.runtime + programs.generation_time AS total_time,
@@ -68,26 +66,26 @@ JOIN (SELECT @cumtime := 0) r
 WHERE results.testbed_id = {testbed_id}
 AND testcases.harness = {harness}
 ORDER BY programs.date"""))
-        s.commit()
+    s.commit()
 
 
 def create_majorities(s: session_t) -> None:
-    """
-    Majority vote on testcase outcomes and outputs.
-    """
-    # We require at least this many results in order for there to be a majority:
-    min_results_for_majority = 1
+  """
+  Majority vote on testcase outcomes and outputs.
+  """
+  # We require at least this many results in order for there to be a majority:
+  min_results_for_majority = 1
 
-    print("voting on test case majorities ...")
-    s.execute(f"DELETE FROM {Majority.__tablename__}")
+  print("voting on test case majorities ...")
+  s.execute(f"DELETE FROM {Majority.__tablename__}")
 
-    # Note we have to insert ignore here because there may be ties in the
-    # majority outcome or output. E.g. there could be a test case with an even
-    # split of 5 '1' outcomes and 5 '3' outcomes. Since there is only a single
-    # majority outcome, we order results by outcome number, so that '1' (build
-    # failure) will over-rule '6' (pass).
-    insert_ignore = "INSERT IGNORE" if dsmith.DB_ENGINE == "mysql" else "INSERT OR IGNORE"
-    s.execute(f"""
+  # Note we have to insert ignore here because there may be ties in the
+  # majority outcome or output. E.g. there could be a test case with an even
+  # split of 5 '1' outcomes and 5 '3' outcomes. Since there is only a single
+  # majority outcome, we order results by outcome number, so that '1' (build
+  # failure) will over-rule '6' (pass).
+  insert_ignore = "INSERT IGNORE" if dsmith.DB_ENGINE == "mysql" else "INSERT OR IGNORE"
+  s.execute(f"""
 {insert_ignore} INTO {Majority.__tablename__}
     (id, num_results, maj_outcome, outcome_majsize, maj_stderr_id, stderr_majsize)
 SELECT  result_counts.testcase_id,
@@ -140,34 +138,34 @@ JOIN (
 ) stderr_majs ON outcome_majs.testcase_id = stderr_majs.testcase_id
 ORDER BY outcome_majs.maj_outcome DESC
 """)
-    s.commit()
+  s.commit()
 
 
 def create_classifications(s: session_t) -> None:
-    """
-    Determine anomalous results.
-    """
-    s.execute(f"DELETE FROM {Classification.__tablename__}")
+  """
+  Determine anomalous results.
+  """
+  s.execute(f"DELETE FROM {Classification.__tablename__}")
 
-    # We require at least this many results in order to vote on the majority:
-    min_majsize = 1
+  # We require at least this many results in order to vote on the majority:
+  min_majsize = 1
 
-    print("creating {bc,bto} classifications ...")
-    s.execute(f"""
+  print("creating {bc,bto} classifications ...")
+  s.execute(f"""
 INSERT INTO {Classification.__tablename__}
 SELECT results.id, {Classifications.BC}
 FROM {Result.__tablename__} results
 WHERE outcome = {Outcomes.BC}
 """)
-    s.execute(f"""
+  s.execute(f"""
 INSERT INTO {Classification.__tablename__}
 SELECT results.id, {Classifications.BTO}
 FROM {Result.__tablename__} results
 WHERE outcome = {Outcomes.BTO}
 """)
 
-    print("determining anomalous build-failures ...")
-    s.execute(f"""
+  print("determining anomalous build-failures ...")
+  s.execute(f"""
 INSERT INTO {Classification.__tablename__}
 SELECT results.id, {Classifications.ABF}
 FROM {Result.__tablename__} results

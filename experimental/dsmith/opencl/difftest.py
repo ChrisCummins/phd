@@ -18,45 +18,44 @@
 """
 Differential test OpenCL results.
 """
-import threading
-
 import dsmith
-
-from dsmith import Colors
+import threading
 from dsmith.opencl.db import *
 
 
 def difftest():
-    with Session() as s:
-        create_results_metas(s)
-        create_majorities(s)
-        create_classifications(s)
-        prune_abf_classifications(s)
-        prune_arc_classifications(s)
-        prune_awo_classifications(s)
+  with Session() as s:
+    create_results_metas(s)
+    create_majorities(s)
+    create_classifications(s)
+    prune_abf_classifications(s)
+    prune_arc_classifications(s)
+    prune_awo_classifications(s)
 
 
 def create_results_metas(s: session_t):
-    """
-    Create total time and cumulative time for each test case evaluated on each
-    testbed using each harness.
-    """
-    class Worker(threading.Thread):
-        """ worker thread to run testcases asynchronously """
-        def __init__(self, testbeds_harnesses: List[Tuple['Testbed.id_t', 'Harnesses.column_t']]):
-            self.ndone = 0
-            self.testbeds_harnesses = testbeds_harnesses
-            super(Worker, self).__init__()
+  """
+  Create total time and cumulative time for each test case evaluated on each
+  testbed using each harness.
+  """
 
-        def run(self):
-            """ main loop"""
-            with Session() as s:
-                for testbed_id, harness in self.testbeds_harnesses:
-                    self.ndone += 1
-                    testbed = s.query(Testbed).filter(Testbed.id == testbed_id).scalar()
+  class Worker(threading.Thread):
+    """ worker thread to run testcases asynchronously """
 
-                    # FIXME: @cumtime variable is not supported by SQLite.
-                    s.execute(f"""
+    def __init__(self, testbeds_harnesses: List[Tuple['Testbed.id_t', 'Harnesses.column_t']]):
+      self.ndone = 0
+      self.testbeds_harnesses = testbeds_harnesses
+      super(Worker, self).__init__()
+
+    def run(self):
+      """ main loop"""
+      with Session() as s:
+        for testbed_id, harness in self.testbeds_harnesses:
+          self.ndone += 1
+          testbed = s.query(Testbed).filter(Testbed.id == testbed_id).scalar()
+
+          # FIXME: @cumtime variable is not supported by SQLite.
+          s.execute(f"""
 INSERT INTO {ResultMeta.__tablename__} (id, total_time, cumtime)
 SELECT  results.id,
         results.runtime + programs.generation_time AS total_time,
@@ -68,49 +67,49 @@ JOIN (SELECT @cumtime := 0) r
 WHERE results.testbed_id = {testbed.id}
 AND testcases.harness = {harness}
 ORDER BY programs.date, testcases.threads_id""")
-                    s.commit()
+          s.commit()
 
-    # break early if we can
-    num_results = s.query(func.count(Result.id)).scalar()
-    num_metas = s.query(func.count(ResultMeta.id)).scalar()
-    if num_results == num_metas:
-        return
+  # break early if we can
+  num_results = s.query(func.count(Result.id)).scalar()
+  num_metas = s.query(func.count(ResultMeta.id)).scalar()
+  if num_results == num_metas:
+    return
 
-    print("creating results metas ...")
-    s.execute(f"DELETE FROM {ResultMeta.__tablename__}")
-    testbeds_harnesses = s.query(Result.testbed_id, Testcase.harness)\
-        .join(Testcase)\
-        .group_by(Result.testbed_id, Testcase.harness)\
-        .order_by(Testcase.harness, Result.testbed_id)\
-        .all()
+  print("creating results metas ...")
+  s.execute(f"DELETE FROM {ResultMeta.__tablename__}")
+  testbeds_harnesses = s.query(Result.testbed_id, Testcase.harness) \
+    .join(Testcase) \
+    .group_by(Result.testbed_id, Testcase.harness) \
+    .order_by(Testcase.harness, Result.testbed_id) \
+    .all()
 
-    bar = progressbar.ProgressBar(initial_value=0,
-                                  max_value=len(testbeds_harnesses),
-                                  redirect_stdout=True)
-    worker = Worker(testbeds_harnesses)
-    worker.start()
-    while worker.is_alive():
-        bar.update(min(worker.ndone, len(testbeds_harnesses)))
-        worker.join(0.5)
+  bar = progressbar.ProgressBar(initial_value=0,
+                                max_value=len(testbeds_harnesses),
+                                redirect_stdout=True)
+  worker = Worker(testbeds_harnesses)
+  worker.start()
+  while worker.is_alive():
+    bar.update(min(worker.ndone, len(testbeds_harnesses)))
+    worker.join(0.5)
 
 
 def create_majorities(s: session_t) -> None:
-    """
-    Majority vote on testcase outcomes and outputs.
-    """
-    # We require at least this many results in order for there to be a majority:
-    min_results_for_majority = 3
+  """
+  Majority vote on testcase outcomes and outputs.
+  """
+  # We require at least this many results in order for there to be a majority:
+  min_results_for_majority = 3
 
-    print("voting on test case majorities ...")
-    s.execute(f"DELETE FROM {Majority.__tablename__}")
+  print("voting on test case majorities ...")
+  s.execute(f"DELETE FROM {Majority.__tablename__}")
 
-    # Note we have to insert ignore here because there may be ties in the
-    # majority outcome or output. E.g. there could be a test case with an even
-    # split of 5 '1' outcomes and 5 '3' outcomes. Since there is only a single
-    # majority outcome, we order results by outcome number, so that '1' (build
-    # failure) will over-rule '6' (pass).
-    insert_ignore = "INSERT IGNORE" if dsmith.DB_ENGINE == "mysql" else "INSERT OR IGNORE"
-    s.execute(f"""
+  # Note we have to insert ignore here because there may be ties in the
+  # majority outcome or output. E.g. there could be a test case with an even
+  # split of 5 '1' outcomes and 5 '3' outcomes. Since there is only a single
+  # majority outcome, we order results by outcome number, so that '1' (build
+  # failure) will over-rule '6' (pass).
+  insert_ignore = "INSERT IGNORE" if dsmith.DB_ENGINE == "mysql" else "INSERT OR IGNORE"
+  s.execute(f"""
 {insert_ignore} INTO {Majority.__tablename__}
     (id, num_results, maj_outcome, outcome_majsize, maj_stdout_id, stdout_majsize)
 SELECT  result_counts.testcase_id,
@@ -163,33 +162,33 @@ JOIN (
 ) stdout_majs ON outcome_majs.testcase_id = stdout_majs.testcase_id
 ORDER BY outcome_majs.maj_outcome DESC
 """)
-    s.commit()
+  s.commit()
 
 
 def create_classifications(s: session_t) -> None:
-    """
-    Determine anomalous results.
-    """
-    s.execute(f"DELETE FROM {Classification.__tablename__}")
+  """
+  Determine anomalous results.
+  """
+  s.execute(f"DELETE FROM {Classification.__tablename__}")
 
-    min_majsize = 7
+  min_majsize = 7
 
-    print("creating {bc,bto} classifications ...")
-    s.execute(f"""
+  print("creating {bc,bto} classifications ...")
+  s.execute(f"""
 INSERT INTO {Classification.__tablename__}
 SELECT results.id, {Classifications.BC}
 FROM {Result.__tablename__} results
 WHERE outcome = {Outcomes.BC}
 """)
-    s.execute(f"""
+  s.execute(f"""
 INSERT INTO {Classification.__tablename__}
 SELECT results.id, {Classifications.BTO}
 FROM {Result.__tablename__} results
 WHERE outcome = {Outcomes.BTO}
 """)
 
-    print("determining anomalous build-failures ...")
-    s.execute(f"""
+  print("determining anomalous build-failures ...")
+  s.execute(f"""
 INSERT INTO {Classification.__tablename__}
 SELECT results.id, {Classifications.ABF}
 FROM {Result.__tablename__} results
@@ -199,8 +198,8 @@ AND outcome_majsize >= {min_majsize}
 AND maj_outcome = {Outcomes.PASS}
 """)
 
-    print("determining anomalous runtime crashes ...")
-    s.execute(f"""
+  print("determining anomalous runtime crashes ...")
+  s.execute(f"""
 INSERT INTO {Classification.__tablename__}
 SELECT {Result.__tablename__}.id, {Classifications.ARC}
 FROM {Result.__tablename__}
@@ -210,8 +209,8 @@ AND outcome_majsize >= {min_majsize}
 AND maj_outcome = {Outcomes.PASS}
 """)
 
-    print("determining anomylous wrong output classifications ...")
-    s.execute(f"""
+  print("determining anomylous wrong output classifications ...")
+  s.execute(f"""
 INSERT INTO {Classification.__tablename__}
 SELECT results.id, {Classifications.AWO}
 FROM {Result.__tablename__} results
@@ -222,195 +221,195 @@ AND outcome_majsize >= {min_majsize}
 AND stdout_majsize >= CEILING(2 * outcome_majsize / 3)
 AND stdout_id <> maj_stdout_id
 """)
-    s.commit()
+  s.commit()
 
 
 def prune_awo_classifications(s: session_t) -> None:
+  def testcases_to_verify(session: session_t) -> query_t:
+    q = session.query(Result.testcase_id) \
+      .join(Classification) \
+      .filter(Classification.classification == Classifications.AWO) \
+      .distinct()
+    return session.query(Testcase) \
+      .filter(Testcase.id.in_(q)) \
+      .distinct()
 
-    def testcases_to_verify(session: session_t) -> query_t:
-        q = session.query(Result.testcase_id)\
-            .join(Classification)\
-            .filter(Classification.classification == Classifications.AWO)\
-            .distinct()
-        return session.query(Testcase)\
-            .filter(Testcase.id.in_(q))\
-            .distinct()
+  class Worker(threading.Thread):
+    """ worker thread to run testcases asynchronously """
 
-    class Worker(threading.Thread):
-        """ worker thread to run testcases asynchronously """
-        def __init__(self):
-            self.ndone = 0
-            super(Worker, self).__init__()
+    def __init__(self):
+      self.ndone = 0
+      super(Worker, self).__init__()
 
-        def run(self):
-            """ main loop"""
-            with Session() as s:
-                for testcase in testcases_to_verify(s):
-                    self.ndone += 1
-                    if not testcase.verify_awo(s):
-                        testcase.retract_classifications(s, Classifications.AWO)
-                s.commit()
+    def run(self):
+      """ main loop"""
+      with Session() as s:
+        for testcase in testcases_to_verify(s):
+          self.ndone += 1
+          if not testcase.verify_awo(s):
+            testcase.retract_classifications(s, Classifications.AWO)
+        s.commit()
 
-    print("Verifying awo-classified testcases ...")
-    ntodo = testcases_to_verify(s).count()
-    bar = progressbar.ProgressBar(initial_value=0, max_value=ntodo,
-                                  redirect_stdout=True)
-    worker = Worker()
-    worker.start()
-    while worker.is_alive():
-        bar.update(min(worker.ndone, ntodo))
-        worker.join(0.5)
+  print("Verifying awo-classified testcases ...")
+  ntodo = testcases_to_verify(s).count()
+  bar = progressbar.ProgressBar(initial_value=0, max_value=ntodo,
+                                redirect_stdout=True)
+  worker = Worker()
+  worker.start()
+  while worker.is_alive():
+    bar.update(min(worker.ndone, ntodo))
+    worker.join(0.5)
 
 
 def verify_opencl_version(s: session_t, testcase: Testcase) -> None:
-    """
-    OpenCL 2.0
-    """
-    opencl_2_0_platforms = s.query(Platform.id).filter(Platform.opencl == "2.0")
+  """
+  OpenCL 2.0
+  """
+  opencl_2_0_platforms = s.query(Platform.id).filter(Platform.opencl == "2.0")
 
-    passes_2_0 = s.query(sql.sql.func.count(Result.id))\
-        .join(Testbed)\
-        .filter(Result.testcase_id == testcase.id,
-                Testbed.platform_id.in_(opencl_2_0_platforms),
-                Result.outcome != Outcomes.BF)\
-        .scalar()
+  passes_2_0 = s.query(sql.sql.func.count(Result.id)) \
+    .join(Testbed) \
+    .filter(Result.testcase_id == testcase.id,
+            Testbed.platform_id.in_(opencl_2_0_platforms),
+            Result.outcome != Outcomes.BF) \
+    .scalar()
 
-    if not passes_2_0:
-        # If it didn't build on OpenCL 2.0, we're done.
-        return
+  if not passes_2_0:
+    # If it didn't build on OpenCL 2.0, we're done.
+    return
 
-    passes_1_2 = s.query(sql.sql.func.count(Result.id))\
-        .join(Testbed)\
-        .filter(Result.testcase_id == testcase.id,
-                ~Testbed.platform_id.in_(opencl_2_0_platforms),
-                Result.outcome == Outcomes.PASS)\
-        .scalar()
+  passes_1_2 = s.query(sql.sql.func.count(Result.id)) \
+    .join(Testbed) \
+    .filter(Result.testcase_id == testcase.id,
+            ~Testbed.platform_id.in_(opencl_2_0_platforms),
+            Result.outcome == Outcomes.PASS) \
+    .scalar()
 
-    if passes_1_2:
-        # If it *did* build on OpenCL 1.2, we're done.
-        return
+  if passes_1_2:
+    # If it *did* build on OpenCL 1.2, we're done.
+    return
 
-    testcase.retract_classifications(s, Classifications.ABF)
+  testcase.retract_classifications(s, Classifications.ABF)
 
 
 def prune_abf_classifications(s: session_t) -> None:
+  def prune_stderr_like(like):
+    q = s.query(Result.id) \
+      .join(Classification) \
+      .join(Stderr) \
+      .filter(Classification.classification == Classifications.ABF,
+              Stderr.stderr.like(f"%{like}%"))
+    ids_to_delete = [x[0] for x in q]
 
-    def prune_stderr_like(like):
-        q = s.query(Result.id)\
-            .join(Classification)\
-            .join(Stderr)\
-            .filter(Classification.classification == Classifications.ABF,
-                    Stderr.stderr.like(f"%{like}%"))
-        ids_to_delete = [x[0] for x in q]
+    n = len(ids_to_delete)
+    if n:
+      print(f'retracting {n} bf-classified results with msg "{like[:40]}"')
+      s.query(Classification) \
+        .filter(Classification.id.in_(ids_to_delete)) \
+        .delete(synchronize_session=False)
 
-        n = len(ids_to_delete)
-        if n:
-            print(f'retracting {n} bf-classified results with msg "{like[:40]}"')
-            s.query(Classification)\
-                .filter(Classification.id.in_(ids_to_delete))\
-                .delete(synchronize_session=False)
+  prune_stderr_like("use of type 'double' requires cl_khr_fp64 extension")
+  prune_stderr_like("implicit declaration of function")
+  prune_stderr_like("function cannot have argument whose type is, or contains, type size_t")
+  prune_stderr_like("unresolved extern function")
+  prune_stderr_like("error: cannot increment value of type%")
+  prune_stderr_like("subscripted access is not allowed for OpenCL vectors")
+  prune_stderr_like("Images are not supported on given device")
+  prune_stderr_like("error: variables in function scope cannot be declared")
+  prune_stderr_like("error: implicit conversion ")
+  prune_stderr_like("Could not find a definition ")
 
-    prune_stderr_like("use of type 'double' requires cl_khr_fp64 extension")
-    prune_stderr_like("implicit declaration of function")
-    prune_stderr_like("function cannot have argument whose type is, or contains, type size_t")
-    prune_stderr_like("unresolved extern function")
-    prune_stderr_like("error: cannot increment value of type%")
-    prune_stderr_like("subscripted access is not allowed for OpenCL vectors")
-    prune_stderr_like("Images are not supported on given device")
-    prune_stderr_like("error: variables in function scope cannot be declared")
-    prune_stderr_like("error: implicit conversion ")
-    prune_stderr_like("Could not find a definition ")
+  def testcases_to_verify(session: session_t) -> query_t:
+    q = session.query(Result.testcase_id) \
+      .join(Classification) \
+      .join(Testbed) \
+      .join(Platform) \
+      .filter(Classification.classification == Classifications.ABF,
+              Platform.opencl == "1.2") \
+      .distinct()
+    return session.query(Testcase) \
+      .filter(Testcase.id.in_(q)) \
+      .distinct()
 
-    def testcases_to_verify(session: session_t) -> query_t:
-        q = session.query(Result.testcase_id)\
-            .join(Classification)\
-            .join(Testbed)\
-            .join(Platform)\
-            .filter(Classification.classification == Classifications.ABF,
-                    Platform.opencl == "1.2")\
-            .distinct()
-        return session.query(Testcase)\
-            .filter(Testcase.id.in_(q))\
-            .distinct()
+  class Worker(threading.Thread):
+    """ worker thread to run testcases asynchronously """
 
-    class Worker(threading.Thread):
-        """ worker thread to run testcases asynchronously """
-        def __init__(self):
-            self.ndone = 0
-            super(Worker, self).__init__()
+    def __init__(self):
+      self.ndone = 0
+      super(Worker, self).__init__()
 
-        def run(self):
-            """ main loop"""
-            with Session() as s:
-                for testcase in testcases_to_verify(s):
-                    self.ndone += 1
-                    verify_opencl_version(s, testcase)
-                s.commit()
+    def run(self):
+      """ main loop"""
+      with Session() as s:
+        for testcase in testcases_to_verify(s):
+          self.ndone += 1
+          verify_opencl_version(s, testcase)
+        s.commit()
 
-    # Verify results
-    print("Verifying abf-classified testcases ...")
-    ntodo = testcases_to_verify(s).count()
-    bar = progressbar.ProgressBar(initial_value=0, max_value=ntodo,
-                                  redirect_stdout=True)
-    worker = Worker()
-    worker.start()
-    while worker.is_alive():
-        bar.update(min(worker.ndone, ntodo))
-        worker.join(0.5)
+  # Verify results
+  print("Verifying abf-classified testcases ...")
+  ntodo = testcases_to_verify(s).count()
+  bar = progressbar.ProgressBar(initial_value=0, max_value=ntodo,
+                                redirect_stdout=True)
+  worker = Worker()
+  worker.start()
+  while worker.is_alive():
+    bar.update(min(worker.ndone, ntodo))
+    worker.join(0.5)
 
 
 def prune_arc_classifications(s: session_t) -> None:
+  def prune_stderr_like(like):
+    q = s.query(Result.id) \
+      .join(Classification) \
+      .join(Stderr) \
+      .filter(Classification.classification == Classifications.ARC,
+              Stderr.stderr.like(f"%{like}%"))
+    ids_to_delete = [x[0] for x in q]
 
-    def prune_stderr_like(like):
-        q = s.query(Result.id)\
-            .join(Classification)\
-            .join(Stderr)\
-            .filter(Classification.classification == Classifications.ARC,
-                    Stderr.stderr.like(f"%{like}%"))
-        ids_to_delete = [x[0] for x in q]
+    n = len(ids_to_delete)
+    if n:
+      print(f"retracting {n} arc classified results with msg {like[:30]}")
+      s.query(Classification) \
+        .filter(Classification.id.in_(ids_to_delete)) \
+        .delete(synchronize_session=False)
 
-        n = len(ids_to_delete)
-        if n:
-            print(f"retracting {n} arc classified results with msg {like[:30]}")
-            s.query(Classification)\
-                .filter(Classification.id.in_(ids_to_delete))\
-                .delete(synchronize_session=False)
+  prune_stderr_like("clFinish CL_INVALID_COMMAND_QUEUE")
 
-    prune_stderr_like("clFinish CL_INVALID_COMMAND_QUEUE")
+  def testcases_to_verify(session: session_t) -> query_t:
+    q = session.query(Result.testcase_id) \
+      .join(Classification) \
+      .filter(Classification.classification == Classifications.ARC) \
+      .distinct()
+    return session.query(Testcase) \
+      .filter(Testcase.id.in_(q)) \
+      .distinct()
 
-    def testcases_to_verify(session: session_t) -> query_t:
-        q = session.query(Result.testcase_id)\
-            .join(Classification)\
-            .filter(Classification.classification == Classifications.ARC)\
-            .distinct()
-        return session.query(Testcase)\
-            .filter(Testcase.id.in_(q))\
-            .distinct()
+  class Worker(threading.Thread):
+    """ worker thread to run testcases asynchronously """
 
-    class Worker(threading.Thread):
-        """ worker thread to run testcases asynchronously """
-        def __init__(self):
-            self.ndone = 0
-            super(Worker, self).__init__()
+    def __init__(self):
+      self.ndone = 0
+      super(Worker, self).__init__()
 
-        def run(self):
-            """ main loop"""
-            with Session() as s:
-                for testcase in testcases_to_verify(s):
-                    self.ndone += 1
-                    if not testcase.verify_arc(s):
-                        testcase.retract_classifications(s, Classifications.ARC)
-                s.commit()
+    def run(self):
+      """ main loop"""
+      with Session() as s:
+        for testcase in testcases_to_verify(s):
+          self.ndone += 1
+          if not testcase.verify_arc(s):
+            testcase.retract_classifications(s, Classifications.ARC)
+        s.commit()
 
-    # Verify testcases
-    print("Verifying arc-classified testcases ...")
-    ntodo = testcases_to_verify(s).count()
-    bar = progressbar.ProgressBar(initial_value=0, max_value=ntodo,
-                                  redirect_stdout=True)
-    worker = Worker()
-    worker.start()
-    while worker.is_alive():
-        bar.update(min(worker.ndone, ntodo))
-        worker.join(0.5)
+  # Verify testcases
+  print("Verifying arc-classified testcases ...")
+  ntodo = testcases_to_verify(s).count()
+  bar = progressbar.ProgressBar(initial_value=0, max_value=ntodo,
+                                redirect_stdout=True)
+  worker = Worker()
+  worker.start()
+  while worker.is_alive():
+    bar.update(min(worker.ndone, ntodo))
+    worker.join(0.5)
 
-    s.commit()
+  s.commit()

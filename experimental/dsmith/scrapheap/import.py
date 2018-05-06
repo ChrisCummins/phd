@@ -1,20 +1,6 @@
 #!/usr/bin/env python
-import datetime
-import gzip
-import sqlalchemy as sql
-import sys
 
-from argparse import ArgumentParser
-from collections import deque
-from lib.labm8 import fs, crypto
-from pathlib import Path
-from progressbar import ProgressBar
-
-import dsmith
-from dsmith import db
-from dsmith import dsmith_pb2 as pb
 from dsmith.db import *
-
 
 # def import_result_protobufs(s: session_t, path: Path, generator: Generators.type) -> None:
 #     print(f"importing results from {path}")

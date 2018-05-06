@@ -18,218 +18,218 @@
 """
 Solidity program generators.
 """
+import math
+import random
+from time import time
+
 import humanize
 import logging
-import random
-import string
 import progressbar
-import math
-
-from time import time
-from lib.labm8 import crypto, fs
-from sqlalchemy.sql import func
-from tempfile import NamedTemporaryFile
-from pathlib import Path
-from typing import Union
-
+import string
 from dsmith import Colors
 from dsmith.langs import Generator
 from dsmith.sol.db import *
+from pathlib import Path
+from sqlalchemy.sql import func
+from typing import Union
+
+from lib.labm8 import fs
 
 
 class SolidityGenerator(Generator):
-    """
-    Common baseclass for program generators.
-    """
-    # Abstract methods (must be implemented):
-    def generate_one(self, session: session_t) -> ProgramProxy:
-        """ Generate a single program. """
-        raise NotImplementedError("abstract class")
+  """
+  Common baseclass for program generators.
+  """
 
-    # Default methods (may be overriden):
+  # Abstract methods (must be implemented):
+  def generate_one(self, session: session_t) -> ProgramProxy:
+    """ Generate a single program. """
+    raise NotImplementedError("abstract class")
 
-    def __repr__(self):
-        return f"{Colors.BOLD}{Colors.GREEN}{self.__name__}{Colors.END}"
+  # Default methods (may be overriden):
 
-    def num_programs(self, session: session_t=None) -> int:
-        """ return the number of generated programs in the database """
-        with ReuseSession(session) as s:
-            return s.query(func.count(Program.id))\
-                .filter(Program.generator == self.id)\
-                .scalar()
+  def __repr__(self):
+    return f"{Colors.BOLD}{Colors.GREEN}{self.__name__}{Colors.END}"
 
-    def sloc_total(self, session: session_t=None) -> int:
-        """ return the total linecount of generated programs """
-        with ReuseSession(session) as s:
-            return s.query(func.sum(Program.linecount))\
-                .filter(Program.generator == self.id)\
-                .scalar()
+  def num_programs(self, session: session_t = None) -> int:
+    """ return the number of generated programs in the database """
+    with ReuseSession(session) as s:
+      return s.query(func.count(Program.id)) \
+        .filter(Program.generator == self.id) \
+        .scalar()
 
-    def generation_time(self, session: session_t=None) -> float:
-        """ return the total generation time of all programs """
-        with ReuseSession(session) as s:
-            return s.query(func.sum(Program.generation_time))\
-                .filter(Program.generator == self.id)\
-                .scalar() or 0
+  def sloc_total(self, session: session_t = None) -> int:
+    """ return the total linecount of generated programs """
+    with ReuseSession(session) as s:
+      return s.query(func.sum(Program.linecount)) \
+        .filter(Program.generator == self.id) \
+        .scalar()
 
-    def num_testcases(self, session: session_t=None) -> int:
-        """ return the total number of testcases """
-        with ReuseSession(session) as s:
-            return s.query(func.count(Testcase.id))\
-                .join(Program)\
-                .filter(Program.generator == self.id)\
-                .scalar()
+  def generation_time(self, session: session_t = None) -> float:
+    """ return the total generation time of all programs """
+    with ReuseSession(session) as s:
+      return s.query(func.sum(Program.generation_time)) \
+               .filter(Program.generator == self.id) \
+               .scalar() or 0
 
-    def generate(self, n: int=math.inf, up_to: int=math.inf) -> None:
-        """ generate 'n' new programs 'up_to' this many exist in db """
-        with Session() as s:
-            num_progs = self.num_programs(s)
+  def num_testcases(self, session: session_t = None) -> int:
+    """ return the total number of testcases """
+    with ReuseSession(session) as s:
+      return s.query(func.count(Testcase.id)) \
+        .join(Program) \
+        .filter(Program.generator == self.id) \
+        .scalar()
 
-            # Determine the termination criteria:
-            if n == math.inf and up_to == math.inf:
-                max_value = math.inf
-                bar_max = progressbar.UnknownLength
-            elif n == math.inf:
-                max_value = up_to
-                bar_max = max_value
-            else:
-                max_value = num_progs + n
-                bar_max = max_value
+  def generate(self, n: int = math.inf, up_to: int = math.inf) -> None:
+    """ generate 'n' new programs 'up_to' this many exist in db """
+    with Session() as s:
+      num_progs = self.num_programs(s)
 
-            # Exit early if possible:
-            if num_progs >= max_value:
-                print(f"There are already {Colors.BOLD}{num_progs}{Colors.END} "
-                      "programs in the database. Nothing to be done.")
-                return
+      # Determine the termination criteria:
+      if n == math.inf and up_to == math.inf:
+        max_value = math.inf
+        bar_max = progressbar.UnknownLength
+      elif n == math.inf:
+        max_value = up_to
+        bar_max = max_value
+      else:
+        max_value = num_progs + n
+        bar_max = max_value
 
-            # Print a preamble message:
-            num_to_generate = max_value - num_progs
-            if num_to_generate < math.inf:
-                estimated_time = (self.generation_time(s) / max(num_progs, 1)) * num_to_generate
-                eta = humanize.naturaldelta(datetime.timedelta(seconds=estimated_time))
-                print(f"{Colors.BOLD}{num_to_generate}{Colors.END} programs are "
-                      "to be generated. Estimated generation time is " +
-                      f"{Colors.BOLD}{eta}{Colors.END}.")
-            else:
-                print(f"Generating programs {Colors.BOLD}forever{Colors.END} ...")
+      # Exit early if possible:
+      if num_progs >= max_value:
+        print(f"There are already {Colors.BOLD}{num_progs}{Colors.END} "
+              "programs in the database. Nothing to be done.")
+        return
 
-            bar = progressbar.ProgressBar(initial_value=num_progs,
-                                          max_value=bar_max,
-                                          redirect_stdout=True)
+      # Print a preamble message:
+      num_to_generate = max_value - num_progs
+      if num_to_generate < math.inf:
+        estimated_time = (self.generation_time(s) / max(num_progs, 1)) * num_to_generate
+        eta = humanize.naturaldelta(datetime.timedelta(seconds=estimated_time))
+        print(f"{Colors.BOLD}{num_to_generate}{Colors.END} programs are "
+              "to be generated. Estimated generation time is " +
+              f"{Colors.BOLD}{eta}{Colors.END}.")
+      else:
+        print(f"Generating programs {Colors.BOLD}forever{Colors.END} ...")
 
-            # The actual generation loop:
-            buf = []
-            while num_progs < max_value:
-                buf.append(self.generate_one(s))
+      bar = progressbar.ProgressBar(initial_value=num_progs,
+                                    max_value=bar_max,
+                                    redirect_stdout=True)
 
-                # Update progress bar
-                num_progs += 1
-                bar.update(num_progs)
+      # The actual generation loop:
+      buf = []
+      while num_progs < max_value:
+        buf.append(self.generate_one(s))
 
-                if len(buf) >= dsmith.DB_BUF_SIZE:
-                    save_proxies_uniq_on(s, buf, "sha1")
-                    num_progs = self.num_programs(s)
-                    buf = []
-            save_proxies_uniq_on(s, buf, "sha1")
-        print(f"All done! You now have {Colors.BOLD}{num_progs}{Colors.END} "
-              f"{self} programs in the database")
+        # Update progress bar
+        num_progs += 1
+        bar.update(num_progs)
 
-    def import_from_dir(self, indir: Path) -> None:
-        """ import program sources from a directory """
-        with Session() as s:
-            start_num_progs = self.num_programs(s)
+        if len(buf) >= dsmith.DB_BUF_SIZE:
+          save_proxies_uniq_on(s, buf, "sha1")
+          num_progs = self.num_programs(s)
+          buf = []
+      save_proxies_uniq_on(s, buf, "sha1")
+    print(f"All done! You now have {Colors.BOLD}{num_progs}{Colors.END} "
+          f"{self} programs in the database")
 
-            def _save(proxies):
-                # Create records from proxies:
-                programs = [proxy.to_record(s) for proxy in proxies]
+  def import_from_dir(self, indir: Path) -> None:
+    """ import program sources from a directory """
+    with Session() as s:
+      start_num_progs = self.num_programs(s)
 
-                logging.warning(getattr(type(programs[0]), "sha1"))
+      def _save(proxies):
+        # Create records from proxies:
+        programs = [proxy.to_record(s) for proxy in proxies]
 
-                import sys
-                sys.exit(0)
+        logging.warning(getattr(type(programs[0]), "sha1"))
 
-                # Filter duplicates in the set of new records:
-                programs = dict((program.sha1, program) for program in programs).values()
+        import sys
+        sys.exit(0)
 
-                # Fetch a list of dupe keys already in the database:
-                sha1s = [program.sha1 for program in programs]
-                dupes = set(x[0] for x in s.query(Program.sha1).filter(Program.sha1.in_(sha1s)))
+        # Filter duplicates in the set of new records:
+        programs = dict((program.sha1, program) for program in programs).values()
 
-                # Filter the list of records to import, excluding dupes:
-                uniq = [program for program in programs if program.sha1 not in dupes]
+        # Fetch a list of dupe keys already in the database:
+        sha1s = [program.sha1 for program in programs]
+        dupes = set(x[0] for x in s.query(Program.sha1).filter(Program.sha1.in_(sha1s)))
 
-                # Import those suckas:
-                s.add_all(uniq)
-                s.commit()
+        # Filter the list of records to import, excluding dupes:
+        uniq = [program for program in programs if program.sha1 not in dupes]
 
-                nprog, nuniq = len(programs), len(uniq)
-                logging.info(f"imported {nuniq} of {nprog} unique programs")
+        # Import those suckas:
+        s.add_all(uniq)
+        s.commit()
 
-            num_progs = self.num_programs(s)
+        nprog, nuniq = len(programs), len(uniq)
+        logging.info(f"imported {nuniq} of {nprog} unique programs")
 
-            # Print a preamble message:
-            paths = fs.ls(indir, abspaths=True)
-            num_to_import = humanize.intcomma(len(paths))
-            print(f"{Colors.BOLD}{num_to_import}{Colors.END} files are "
-                  "to be imported.")
+      num_progs = self.num_programs(s)
 
-            bar = progressbar.ProgressBar(redirect_stdout=True)
+      # Print a preamble message:
+      paths = fs.ls(indir, abspaths=True)
+      num_to_import = humanize.intcomma(len(paths))
+      print(f"{Colors.BOLD}{num_to_import}{Colors.END} files are "
+            "to be imported.")
 
-            # The actual import loop:
-            buf = []
-            for i, path in enumerate(bar(paths)):
-                buf.append(self.import_from_file(s, path))
+      bar = progressbar.ProgressBar(redirect_stdout=True)
 
-                if len(buf) >= dsmith.DB_BUF_SIZE:
-                    save_proxies_uniq_on(s, buf, "sha1")
-                    buf = []
-            save_proxies_uniq_on(s, buf, "sha1")
+      # The actual import loop:
+      buf = []
+      for i, path in enumerate(bar(paths)):
+        buf.append(self.import_from_file(s, path))
 
-        num_imported = humanize.intcomma(self.num_programs(s) - start_num_progs)
-        num_progs = humanize.intcomma(self.num_programs(s))
-        print(f"All done! Imported {Colors.BOLD}{num_imported}{Colors.END} "
-              f"new {self} programs. You now have "
-              f"{Colors.BOLD}{num_progs}{Colors.END} {self} programs in the "
-              "database")
+        if len(buf) >= dsmith.DB_BUF_SIZE:
+          save_proxies_uniq_on(s, buf, "sha1")
+          buf = []
+      save_proxies_uniq_on(s, buf, "sha1")
 
-    def import_from_file(self, session: session_t, path: Path) -> Union[None, ProgramProxy]:
-        """ Import a program from a file. """
-        # logging.debug(f"importing '{path}'")
-        # Simply ignore non-ASCII chars:
-        src = ''.join([i if ord(i) < 128 else '' for i in fs.read_file(path).strip()])
-        return ProgramProxy(generator=self.id, generation_time=0, src=src)
+    num_imported = humanize.intcomma(self.num_programs(s) - start_num_progs)
+    num_progs = humanize.intcomma(self.num_programs(s))
+    print(f"All done! Imported {Colors.BOLD}{num_imported}{Colors.END} "
+          f"new {self} programs. You now have "
+          f"{Colors.BOLD}{num_progs}{Colors.END} {self} programs in the "
+          "database")
+
+  def import_from_file(self, session: session_t, path: Path) -> Union[None, ProgramProxy]:
+    """ Import a program from a file. """
+    # logging.debug(f"importing '{path}'")
+    # Simply ignore non-ASCII chars:
+    src = ''.join([i if ord(i) < 128 else '' for i in fs.read_file(path).strip()])
+    return ProgramProxy(generator=self.id, generation_time=0, src=src)
 
 
 class RandChar(SolidityGenerator):
-    """
-    This generator produces a uniformly random sequence of ASCII characters, of
-    a random length.
-    """
-    __name__ = "randchar"
-    id = Generators.RANDCHAR
+  """
+  This generator produces a uniformly random sequence of ASCII characters, of
+  a random length.
+  """
+  __name__ = "randchar"
+  id = Generators.RANDCHAR
 
-    # Arbitrary range
-    charcount_range = (100, 100000)
+  # Arbitrary range
+  charcount_range = (100, 100000)
 
-    def generate_one(self, session: session_t) -> ProgramProxy:
-        """ Generate a single program. """
-        start_time = time()
-        charcount = random.randint(*self.charcount_range)
-        src = ''.join(random.choices(string.printable, k=charcount))
-        runtime = time() - start_time
+  def generate_one(self, session: session_t) -> ProgramProxy:
+    """ Generate a single program. """
+    start_time = time()
+    charcount = random.randint(*self.charcount_range)
+    src = ''.join(random.choices(string.printable, k=charcount))
+    runtime = time() - start_time
 
-        return ProgramProxy(generator=self.id, generation_time=runtime,
-                            src=src)
+    return ProgramProxy(generator=self.id, generation_time=runtime,
+                        src=src)
 
 
 class GitHub(SolidityGenerator):
-    """
-    Programs mined from GitHub.
-    """
-    __name__ = "github"
-    id = Generators.GITHUB
+  """
+  Programs mined from GitHub.
+  """
+  __name__ = "github"
+  id = Generators.GITHUB
 
 
 class DSmith(SolidityGenerator):
-    __name__ = "dsmith"
-    id = Generators.DSMITH
+  __name__ = "dsmith"
+  id = Generators.DSMITH

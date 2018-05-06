@@ -10,4 +10,5 @@ main() {
     tar cjvf $dstdir/$db-$(date '+%Y-%m-%d').mysql.tar.bz2 -C /tmp $db.mysql
     rm -v /tmp/$db.mysql
 }
+
 main $@
