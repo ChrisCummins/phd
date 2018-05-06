@@ -5,6 +5,8 @@ import os.path
 import re
 import shutil
 
+import pathlib
+import typing
 from glob import iglob
 from humanize import naturalsize
 from send2trash import send2trash
@@ -259,7 +261,7 @@ def lsdirs(root=".", **kwargs):
   return [_path for _path in paths if isdir(path(root, _path))]
 
 
-def lsfiles(root=".", **kwargs):
+def lsfiles(root: typing.Union[str, pathlib.Path] = ".", **kwargs):
   """
   Return only files from a directory listing.
 
