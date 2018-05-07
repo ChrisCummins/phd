@@ -1,0 +1,359 @@
+% Chris Cummins Curriculum Vitae
+%
+% Based on "Classicthesis-Styled CV" by Alessandro Plasmati,
+% downloaded from: http://www.LaTeXTemplates.com
+%
+% License: CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+\documentclass[a4paper,11pt,hidelinks]{scrartcl}
+
+\usepackage{enumitem}
+\setlist{leftmargin=2.5em}
+
+% Hide the date:
+\date{}
+
+% Move the margin to the left of the page:
+\reversemarginpar
+
+% New command defining the margin text style:
+\newcommand{\MarginText}[1]{\marginpar{\raggedleft\itshape\normalsize#1}}
+
+% Use the classicthesis style for the style of the document:
+\usepackage[nochapters]{classicthesis}
+% Use the currvita style for the layout of the document:
+\usepackage[LabelsAligned]{currvita}
+
+% Font color of your name at the top:
+\definecolor{namecolour}{rgb}{.85,0,0}
+\definecolor{titlecolour}{rgb}{0,0,0}
+
+\renewcommand{\cvheadingfont}{\LARGE\color{namecolour}}
+
+\usepackage{hyperref}
+% Set link colors:
+% \hypersetup{colorlinks, breaklinks, urlcolor=Red, linkcolor=Red}
+
+% Set the width of the date box in each block:
+\newlength{\datebox}\settowidth{\datebox}{Spring 2011}
+
+% Set page margins:
+\usepackage[top=1.4cm, bottom=1cm, left=4.3cm, right=2cm]{geometry}
+
+% New section title:
+\newcommand{\Title}[1]{\noindent\rule{15cm}{0.4pt}\vspace{-.45em}\\
+\noindent\spacedlowsmallcaps{\color{titlecolour}{#1}}
+
+\vspace{-.85em}\noindent\rule{15cm}{0.4pt}\vspace{.2em}}
+
+% Description blocks:
+\newcommand{\Description}[1]{\hangindent=0em\hangafter=0%
+\noindent\normalsize{#1}\vspace{1em}}
+
+\newcommand{\ShortJob}[3]{\Description{\MarginText{#1}\textbf{#2},
+  \textit{#3}}}
+
+\newcommand{\Job}[4]{\Description{\MarginText{#1}\textbf{#2},
+  \textit{#3}\newline\vspace{-.8em}
+
+  \noindent
+  #4}}
+
+
+\newcommand{\Publication}[5]{\Description{\MarginText{#1}#2. \textbf{\href{#5}{#3}}. #4.}}
+
+\newcommand{\Award}[2]{\Description{\MarginText{#1}#2}
+\vspace{-.9em}}
+
+\begin{document}
+
+% Stop the page count at the bottom of the first page:
+\thispagestyle{empty}
+
+
+%%%%%%%%%%
+% HEADER %
+%%%%%%%%%%
+\begin{cv}%
+%
+{\spacedallcaps{Chris Cummins}} %
+
+\begin{flushright}
+\vspace{-2.9em}
+\hfill \noindent \href{http://chriscummins.cc}{\textsc{http://chriscummins.cc}}\\%
+\vspace{-.35em}
+\hfill \noindent \href{mailto:chrisc.101@gmail.com}{\textsc{chrisc.101@gmail.com}}\\%
+\end{flushright}
+\vspace{-1em}
+
+%%%%%%%%%%%%%
+% EDUCATION %
+%%%%%%%%%%%%%
+\Title{Education}
+
+\Description{\MarginText{2019\\(expected)}\textbf{Ph.D, Informatics}
+  \newline University of Edinburgh, School of Informatics
+  \vspace{.6em}
+  
+  \noindent %
+  Deep learning over programs. Developing machine learning methods for random program generation, compiler optimisations, and representative benchmarking. Applications for heterogeneous parallelism, compiler testing, and adaptive performance tuning. To date: 4 publications, 2 best papers, 7 invited talks, 5 posters, 4 conferences.
+}
+
+\Description{\MarginText{2015}\textbf{MSc by Research, Pervasive Parallelism}
+  \textit{(Distinction)}
+  \newline University of Edinburgh, School of Informatics
+  \newline Thesis: \textit{Autotuning Stencil Codes with Algorithmic
+    Skeletons} (grade: 85\%)
+  \vspace{.6em}
+
+  \noindent %
+  Runtime adaptive tuning for heterogeneous parallel systems, targeting a high level DSL for multi-GPU stencil programs. Machine learning over distributed training sets.
+}
+
+\Description{\MarginText{2014}\textbf{MEng Electronic Engineering \& Computer Science}
+  \textit{(First Class Honours)}
+  \newline Aston University, School of Engineering \& Applied Science
+  \newline Thesis: \textit{Protein Isoelectric Point Database} (grade: 90\%)
+  \vspace{.6em}
+
+  \noindent %
+  Created a novel search engine for molecular biochemistry data. Integrated BLAST search tools, a publicly accessible API, and tooling to generate synthetic payloads from confidential datasets for whitebox systems testing. Released open source.
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PROFESSIONAL EXPERIENCE %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\vspace{-1em}
+\Title{Professional Experience}
+% Format: \Job{dates}{employer}{title}{description}
+% Format: \ShortJob{dates}{employer}{title}
+
+\Description{\MarginText{2018}\textbf{Google}, Mountain View, California, USA
+  \newline Software Engineer Intern
+  \vspace{.6em}
+
+  \noindent %
+  Created a representative benchmark of Google Protocol Buffer usage. Working in the Google Wide Profiling team to synthesize benchmarks for Google compute. The project involved company-wide workload characterization through to datacenter-scale low level performance analysis of profiles and hardware counters.
+}
+
+\Description{\MarginText{2016--2018}%
+	\textbf{Codeplay Software}, Edinburgh, UK %
+	\newline Software Engineer, Part Time
+  \vspace{.6em}
+
+  \noindent %
+  Developing OpenCL port of Tensorflow. Implemented GPU memory management for Eigen. Compile time scheduling and kernel fusion for expression trees on GPUs. Proposed and designed a Python interface for VisionCpp as lead developer. Extensive C++ meta-programming. Integrated compiler fuzzers into continuous testing tooling.%
+}
+
+\Description{\MarginText{2012--2013}\textbf{Intel Corporation}, London, UK
+  \newline Open Source Developer Intern
+  \vspace{.6em}
+
+	\noindent
+  Patched \texttt{ioctl} subsystem in Linux kernel. Developed a novel SIMD register visualisation tool for Intel GPU assembly programming. Implemented GTK+ support for Wayland display server. Fixed memory and usability bugs in GNOME desktop applications. Developed particle effects engine for a 3D rendering program. Rapid prototyping of Android applications. Numerous contributions to open source projects.%
+}
+
+\Description{\MarginText{2010--2017}\textbf{Freelance Web Developer}
+	\newline %
+  Full-stack development for small businesses, including graphic design and branding. Clients included conferences, publishing houses, musicians, and a beauty parlour.%
+	%
+  % Clients:
+  %
+  % CGO'18
+  % The Beauty Rooms
+  % Barthelemy Jusselme
+  % Myrmidon Books
+  % Border Scripts
+  % Greystones Press
+}
+
+%\Description{\MarginText{2008}\textbf{Rolls Royce Holdings plc}, Derby, UK
+%	\newline Work placement in the Design Methods \& Improvements team.%
+%}
+
+
+\newpage
+
+
+%%%%%%%%%%%%%%%%
+% PUBLICATIONS %
+%%%%%%%%%%%%%%%%
+\Title{Publications}
+% Format: \Publication{year}{authors}{title}{location}{url}
+
+\Description{\MarginText{\textit{2018}}C.\ \textsc{Cummins}, P.\
+  \textsc{Petoumenos}, A.\ \textsc{Murray}, H.\
+  \textsc{Leather}. \textbf{Compiler Fuzzing through Deep Learning}. ISSTA'18 (28\% acceptance rate), Amsterdam, Netherlands.\@
+  \newline\vspace{-1em}
+  
+  \noindent %
+  Unsupervised machine learning to derive program generators for compiler fuzz testing. $3.03\times$ faster than a grammar based approach, requiring $100\times$ less code. Found and reported 67 bug reports in OpenCL compilers.
+}
+
+\vspace{-.4em}
+\Description{\MarginText{\textit{2017}}C.\ \textsc{Cummins}, P.\
+  \textsc{Petoumenos}, Z.\ \textsc{Wang}, H.\
+  \textsc{Leather}. \textbf{End-to-end Deep Learning of Compiler Heuristics}. Best Paper PACT'17 (23\% acceptance rate), Portland, Oregon.\@
+  \newline\vspace{-1em}
+
+  \noindent %
+  Learning optimization heuristics directly from raw source code, without the need for feature extraction. 12\% and 14\% performance improvements over state-of-the art, with greatly reduced development costs and the ability to transfer learning across heuristics.% Can transfer knowledge gained from one optimization task to another, even if the learned tasks are dissimilar.%
+}
+
+\vspace{-.4em}
+\Description{\MarginText{2017}C.\ \textsc{Cummins}, P.\
+  \textsc{Petoumenos}, Z.\ \textsc{Wang}, H.\
+  \textsc{Leather}. \textbf{Synthesizing Benchmarks for Predictive Modeling}. Best Paper CGO'17 (22\% acceptance rate), Austin, Texas.\@
+  \newline\vspace{-1em}
+
+  \noindent %
+  Deep learning over massive codebases from GitHub to generate benchmark programs. Automatically synthesizes OpenCL kernels which are indistinguishable from hand-written code, and improves state-of-the-art predictive model performance by $4.30\times$.%
+}
+\vspace{-1.8em}
+
+\Description{\MarginText{2016}C.\ \textsc{Cummins}, P.\
+  \textsc{Petoumenos}, M.\ \textsc{Steuwer}, H.\
+  \textsc{Leather}. \textbf{Towards Collaborative Performance Tuning
+    of Algorithmic Skeletons}. HLPGPU'16, HiPEAC, Prague.\@
+  \newline\vspace{-1em}
+
+  \noindent %
+  A distributed framework for dynamic prediction of optimisation parameters using machine learning. Automatically exceeds human experts by $1.22\times$.%
+}
+\vspace{-.4em}
+
+\Description{\MarginText{2016}C.\ \textsc{Cummins}, P.\
+  \textsc{Petoumenos}, M.\ \textsc{Steuwer}, H.\
+  \textsc{Leather}. \textbf{Autotuning OpenCL Workgroup Size for
+    Stencil Patterns}. ADAPT'16, HiPEAC, Prague.\@ %
+  \newline\vspace{-1em}
+
+  \noindent %
+  Three methodologies to autotune stencil patterns using machine learning. Speedups of $3.79\times$ over the best possible static size, 94\% of the maximum performance.%
+}
+\vspace{-.4em}
+
+\Description{%
+  % Year:
+  \MarginText{2015}%
+  % Authors:
+  E.\ \textsc{Bunkute}, %
+  C.\ \textsc{Cummins}, %
+  F.\ \textsc{Crofts}, %
+  G.\ \textsc{Bunce}, %
+  I.\ T.\ \textsc{Nabney}, %
+  D.\ R.\ \textsc{Flower}.
+  % Title:
+  \textbf{\href{http://bioinformatics.oxfordjournals.org/content/31/2/295.full?etoc}{PIP-DB:
+      The Protein Isoelectric Point Database}}.
+  % Appears in:
+  Bioinformatics, 31(2), 295-296. Chicago. %
+  \newline\vspace{-1em}
+
+  % Blurb:
+  \noindent %
+  An open source search engine of protein isoelectric points. Provides public access to bioinformatics data from the literature for comparison and benchmarking purposes.%
+}
+
+
+%%%%%%%%%%
+% AWARDS %
+%%%%%%%%%%
+\Title{Awards}
+% Format: \Award{year}{title}
+
+\Description{\MarginText{2017}\textbf{Best Paper Winner, PACT'17} \newline\vspace{-1.8em}}
+
+\Description{\MarginText{2017}\textbf{Best Paper Winner, CGO'17} \newline\vspace{-1.8em}}
+
+\Description{\MarginText{2014}\textbf{Institute of Engineering \&
+    Technology Prize}
+  \newline \noindent Annual prize for top engineering student at Aston University.%
+}
+
+\Description{\MarginText{2009}\textbf{Arkwright Scholarship, Rolls
+    Royce Holdings plc}
+  \newline \noindent Funded scholarship awarded to less than 250 students nationwide.%
+}
+
+\Description{\MarginText{2009}\textbf{Engineering Education Scheme of England}
+  \newline \noindent R\&D for a (now patented) supermarket trolley mounted shopping aid.%
+}
+
+\Description{\MarginText{2008}\textbf{AESSEAL Design Innovation Award}
+	\newline \noindent Cash prize for first place in an industrial 3D CAD competition.%
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%
+% ACADEMIC ACTIVITIES %
+%%%%%%%%%%%%%%%%%%%%%%%
+\Title{Academic Activities}
+
+\Description{%
+  \MarginText{\textbf{Invited Talks}}%
+  Facebook 2018, %
+  Google 2018 ($\times2$), %
+  SPLS 2017, %
+  Codeplay Software 2016, %
+  Ocado Technology 2016, %
+  Amazon Development Center 2016.%
+  \vspace{-.8em}}
+
+\Description{%
+  \MarginText{\textbf{Posters}}%
+  ISSTA 2018,
+  DeepLearn 2018,
+  ACACES 2018,
+  % PPar 2017, %
+  Google 2016, %
+  ACACES 2016, %
+  PLDI 2016, %
+  HiPEAC 2016, %
+  Google 2015, %
+  PPar 2015.%
+  \vspace{-.8em}}
+
+\Description{%
+  \MarginText{\textbf{Peer reviews}}%
+  CGO 2018, %
+  ACM TACO 2016, %
+  LCTES 2016, %
+  CGO 2016.%
+  \vspace{-.8em}}
+
+ \Description{\MarginText{\textbf{Conference org.}}%
+   CGO 2018 Web Chair, %
+   PACT 2018 HotCRP Chair, %
+   ParCo 2015 Student Volunteer.%
+   \vspace{-.8em}}
+
+\vspace{.8em}
+
+
+%%%%%%%%%%%%%%%%%%%%
+% Technical skills %
+%%%%%%%%%%%%%%%%%%%%
+% \Title{Technical Skills}
+
+% \Description{\MarginText{\textbf{Languages}}%
+%   C / C++, Python, SQL, Bash, JavaScript, OpenCL, various LISP dialects.%
+%   \vspace{-.8em}%
+% }
+
+% \Description{\MarginText{\textbf{Tools}}%
+%   Git, GNU/Linux, \LaTeX, TensorFlow, Bazel.%
+%   % GNU autotools, gdb
+%   \vspace{-.8em}%
+% }
+
+
+%\Description{\MarginText{\textbf{}}%
+ % C/C++, Python, git, GNU/Linux, Bash, JavaScript, OpenCL, SQL, \LaTeX, TensorFlow.%
+%  \vspace{-.8em}%
+%}
+
+
+\end{cv}
+
+\end{document}
