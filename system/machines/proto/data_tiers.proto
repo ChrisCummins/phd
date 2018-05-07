@@ -1,12 +1,16 @@
-// Data in directories is grouped in 'tiers' based on their importance.
+// This file defines the specification of Data Tiers.
 //
-// Tier 1 is for irreplacable content.
-//   Examples: personal photographs, recordings, documents, etc.
-// Tier 2 is for high-value replaceable content. These could be replaced if
-// lost, but not necessarily easily.
-//   Examples: iTunes catalog, system configuration files, digital downloads.
-// Tier 3 is for disposable data. These can be replaced if lost.
-//   Examples: Operating system files.
+// I use 'data tiers' as a loosely enforced means to quantify the importance
+// of data. The higher the tier, the more important the data is. I find this
+// useful for planning how to allocate space, think of hardware redundancy, and
+// plan backups. Broadly, the 'tier' of a directory should reflect how many
+// copies of the data I keep around, though this is not enforced.
+//
+// For example, a directory containing photographs from a vacation would likely
+// have a tier value of 3, indicating that there should be at least three
+// redundant copies of the data. A directory used for storing generated
+// temporary files may have a tier value of 1, since there is no need to
+// backup something which can be generated.
 syntax = "proto2";
 
 // A container for a list of directories.
@@ -17,8 +21,15 @@ message DataTiers {
 // A directory consists of a path and a tier. The 'exclude' field can be
 // used to exclude contents.
 message Directory {
+  // The tier value for the directory. This indicates the number of redundant
+  // copies of this data that should be stored. A tier value must be equal to
+  // or greater than one.
   optional int32 tier = 1;
-  optional string path = 2;
+  // The path of the directory. Must be an absolute path.
+  optional string absolute_path = 2;
+  // A list of relative paths to exclude.
   repeated string exclude = 3;
-  optional int64 size_bytes = 4;
+  // The total size of the directory contents in bytes, after excluding the
+  // excluded paths.
+  optional int64 size_in_bytes = 4;
 }
