@@ -1,0 +1,49 @@
+% Preamble.
+
+% This was originally based on "Classicthesis-Styled CV" by Alessandro Plasmati,
+% available at: http://www.LaTeXTemplates.com
+% License: CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+
+\documentclass[a4paper,11pt,hidelinks]{scrartcl}
+
+\usepackage{enumitem}
+\setlist{leftmargin=2.5em}
+
+% Hide the date.
+\date{}
+
+% Move the margin to the left of the page.
+\reversemarginpar
+
+% Use the classicthesis style for the style of the document.
+\usepackage[nochapters]{classicthesis}
+% Use the currvita style for the layout of the document.
+\usepackage[LabelsAligned]{currvita}
+
+% Font colors.
+\definecolor{namecolour}{rgb}{.85,0,0}
+\definecolor{titlecolour}{rgb}{.85,0,0}
+
+% Formatting of my name.
+\renewcommand{\cvheadingfont}{\LARGE\color{namecolour}}
+
+% Enable hyperlinks in generated PDF.
+\usepackage{hyperref}
+
+% Set the width of the date box in each block.
+\newlength{\datebox}\settowidth{\datebox}{Spring 2011}
+
+% Set page margins.
+\usepackage[top=1.4cm, bottom=1cm, left=4.3cm, right=2cm]{geometry}
+
+% New section title.
+\newcommand{\Title}[1]{\noindent\rule{15cm}{0.4pt}\vspace{-.45em}\\
+  \noindent\spacedlowsmallcaps{\color{titlecolour}{#1}}
+
+  \vspace{-.85em}\noindent\rule{15cm}{0.4pt}\vspace{.2em}}
+
+% New command defining the margin text style.
+\newcommand{\MarginText}[1]{\marginpar{\raggedleft\itshape\normalsize#1}}
+
+% The definition of description blocks.
+\newcommand{\Description}[1]{\hangindent=0em\hangafter=0\noindent\normalsize{#1}\vspace{1em}}
