@@ -5,7 +5,7 @@
       <configuration>
         <option name="rootFolder" value="$MODULE_DIR$/venv/phd/lib/python3.6/site-packages/isort" />
         <option name="settingsModule" value="settings.py" />
-        <option name="manageScript" value="manage.py" />
+        <option name="manageScript" value="" />
         <option name="environment" value="&lt;map/&gt;" />
         <option name="doNotUseTestRunner" value="false" />
         <option name="trackFilePattern" value="migrations" />
@@ -20,6 +20,7 @@
       <excludeFolder url="file://$MODULE_DIR$/bazel-out" />
       <excludeFolder url="file://$MODULE_DIR$/bazel-phd" />
       <excludeFolder url="file://$MODULE_DIR$/bazel-testlogs" />
+      <excludeFolder url="file://$MODULE_DIR$/venv" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
