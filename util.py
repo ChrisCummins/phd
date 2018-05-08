@@ -336,6 +336,9 @@ def copy_file(src, dst):
 def clone_git_repo(url, destination, version=None, shallow=False,
                    recursive=True):
   """ clone a git repo, returns True if cloned """
+  # Cannot set the version of a shallow clone.
+  assert not (version and shallow)
+
   destination = os.path.abspath(os.path.expanduser(destination))
   cloned = False
 
