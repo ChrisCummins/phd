@@ -65,17 +65,3 @@ fi
 
 
 unsetopt nullglob # Globs which don't match anything expand to nothing.
-
-
-# Enable pretty colors.
-if $(which dircolors &>/dev/null); then
-    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" \
-        || eval "$(dircolors -b)"
-
-    alias ls='ls --color=auto'
-    alias dir='dir --color=auto'
-    alias egrep='egrep --color=auto'
-    alias fgrep='fgrep --color=auto'
-    alias grep='grep --color=auto'
-    alias vdir='vdir --color=auto'
-fi

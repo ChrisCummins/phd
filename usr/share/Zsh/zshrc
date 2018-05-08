@@ -548,3 +548,19 @@ manpath_dirs=( \
     /usr/local/opt/gnu-tar/libexec/gnuman \
 )
 export MANPATH=$(build_path "${manpath_dirs[@]}")
+
+
+# Enable pretty colors.
+# This must be done after setting PATH so that on macOS the gnubin directory
+# containing dircolors is in the path.
+if $(which dircolors &>/dev/null); then
+    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" \
+        || eval "$(dircolors -b)"
+
+    alias ls='ls --color=auto'
+    alias dir='dir --color=auto'
+    alias egrep='egrep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias grep='grep --color=auto'
+    alias vdir='vdir --color=auto'
+fi
