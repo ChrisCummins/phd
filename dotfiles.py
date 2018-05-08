@@ -1145,6 +1145,10 @@ class HomebrewCasks(Task):
       'omnigraffle': '/Applications/OmniGraffle.app',
       'omnioutliner': '/Applications/OmniOutliner.app',
       'omnipresence': '/Applications/OmniPresence.app',
+      # TODO(cec): Issue post-install message for Rocket telling the user to
+      # launch the app, make the changes to Accessibility seettings, and hide
+      # the menubar icon using Bartender.
+      'rocket': '/Applications/Rocket.app',
       'skype': '/Applications/Skype.app',
       'steam': '/Applications/Steam.app',
       'transmission': '/Applications/Transmission.app',
