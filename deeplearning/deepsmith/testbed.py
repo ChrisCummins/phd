@@ -1,8 +1,7 @@
 """This file implements testbeds."""
 import binascii
-import hashlib
-
 import datetime
+import hashlib
 import sqlalchemy as sql
 import typing
 from sqlalchemy import orm
@@ -32,35 +31,35 @@ class Testbed(db.Table):
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
-      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-      nullable=False, default=labdate.GetUtcMillisecondsNow)
+    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
+    nullable=False, default=labdate.GetUtcMillisecondsNow)
   toolchain_id: int = sql.Column(
-      deeplearning.deepsmith.toolchain.Toolchain.id_t,
-      sql.ForeignKey('toolchains.id'), nullable=False)
+    deeplearning.deepsmith.toolchain.Toolchain.id_t,
+    sql.ForeignKey('toolchains.id'), nullable=False)
   # MySQL maximum key length is 3072, with 3 bytes per character. We must
   # preserve 16 bytes for the optset_id in the unique constraint and 4 bytes
   # for the toolchain_id.
   name: str = sql.Column(
-      sql.String(4096).with_variant(sql.String((3072 - 16 - 6) // 3), 'mysql'),
-      nullable=False)
+    sql.String(4096).with_variant(sql.String((3072 - 16 - 6) // 3), 'mysql'),
+    nullable=False)
   optset_id: bytes = sql.Column(_TestbedOptSetId, nullable=False)
 
   # Relationships.
   toolchain: deeplearning.deepsmith.toolchain.Toolchain = orm.relationship(
-      'Toolchain')
+    'Toolchain')
   results: typing.List['Result'] = orm.relationship(
-      'Result', back_populates='testbed')
+    'Result', back_populates='testbed')
   pending_results: typing.List['PendingResult'] = orm.relationship(
-      'PendingResult', back_populates='testbed')
+    'PendingResult', back_populates='testbed')
   optset: typing.List['TestbedOpt'] = orm.relationship(
-      'TestbedOpt', secondary='testbed_optsets',
-      primaryjoin='TestbedOptSet.id == Testbed.optset_id',
-      secondaryjoin='TestbedOptSet.opt_id == TestbedOpt.id')
+    'TestbedOpt', secondary='testbed_optsets',
+    primaryjoin='TestbedOptSet.id == Testbed.optset_id',
+    secondaryjoin='TestbedOptSet.opt_id == TestbedOpt.id')
 
   # Constraints.
   __table_args__ = (
     sql.UniqueConstraint(
-        'toolchain_id', 'name', 'optset_id', name='unique_testbed'),
+      'toolchain_id', 'name', 'optset_id', name='unique_testbed'),
   )
 
   @property
@@ -113,7 +112,7 @@ class Testbed(db.Table):
       A Testbed.
     """
     toolchain = deeplearning.deepsmith.toolchain.Toolchain.GetOrAdd(
-        session, proto.toolchain
+      session, proto.toolchain
     )
 
     # Build the list of options, and md5sum the key value strings.
@@ -123,9 +122,9 @@ class Testbed(db.Table):
       proto_opt_value = proto.opts[proto_opt_name]
       md5.update((proto_opt_name + proto_opt_value).encode('utf-8'))
       opt = db.GetOrAdd(
-          session, TestbedOpt,
-          name=TestbedOptName.GetOrAdd(session, proto_opt_name),
-          value=TestbedOptValue.GetOrAdd(session, proto_opt_value),
+        session, TestbedOpt,
+        name=TestbedOptName.GetOrAdd(session, proto_opt_name),
+        value=TestbedOptValue.GetOrAdd(session, proto_opt_value),
       )
       opts.append(opt)
 
@@ -135,10 +134,10 @@ class Testbed(db.Table):
       db.GetOrAdd(session, TestbedOptSet, id=optset_id, opt=opt)
 
     return db.GetOrAdd(
-        session, cls,
-        toolchain=toolchain,
-        name=proto.name,
-        optset_id=optset_id,
+      session, cls,
+      toolchain=toolchain,
+      name=proto.name,
+      optset_id=optset_id,
     )
 
 
@@ -153,17 +152,17 @@ class TestbedOptSet(db.Table):
   # Columns.
   id: bytes = sql.Column(id_t, nullable=False)
   opt_id: int = sql.Column(
-      _TestbedOptId, sql.ForeignKey('testbed_opts.id'), nullable=False)
+    _TestbedOptId, sql.ForeignKey('testbed_opts.id'), nullable=False)
 
   # Relationships.
   testbeds: typing.List[Testbed] = orm.relationship(
-      Testbed, primaryjoin=id == orm.foreign(Testbed.optset_id))
+    Testbed, primaryjoin=id == orm.foreign(Testbed.optset_id))
   opt: 'TestbedOpt' = orm.relationship('TestbedOpt')
 
   # Constraints.
   __table_args__ = (
     sql.PrimaryKeyConstraint(
-        'id', 'opt_id', name='unique_testbed_optset'),
+      'id', 'opt_id', name='unique_testbed_optset'),
   )
 
   def __repr__(self):
@@ -179,19 +178,19 @@ class TestbedOpt(db.Table):
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
-      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-      nullable=False, default=labdate.GetUtcMillisecondsNow)
+    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
+    nullable=False, default=labdate.GetUtcMillisecondsNow)
   name_id: _TestbedOptNameId = sql.Column(
-      _TestbedOptNameId, sql.ForeignKey('testbed_opt_names.id'), nullable=False)
+    _TestbedOptNameId, sql.ForeignKey('testbed_opt_names.id'), nullable=False)
   value_id: _TestbedOptValueId = sql.Column(
-      _TestbedOptValueId, sql.ForeignKey('testbed_opt_values.id'),
-      nullable=False)
+    _TestbedOptValueId, sql.ForeignKey('testbed_opt_values.id'),
+    nullable=False)
 
   # Relationships.
   name: 'TestbedOptName' = orm.relationship(
-      'TestbedOptName', back_populates='opts')
+    'TestbedOptName', back_populates='opts')
   value: 'TestbedOptValue' = orm.relationship(
-      'TestbedOptValue', back_populates='opts')
+    'TestbedOptValue', back_populates='opts')
 
   # Constraints.
   __table_args__ = (
@@ -209,7 +208,7 @@ class TestbedOptName(db.StringTable):
 
   # Relationships.
   opts: typing.List[TestbedOpt] = orm.relationship(
-      TestbedOpt, back_populates='name')
+    TestbedOpt, back_populates='name')
 
 
 class TestbedOptValue(db.StringTable):
@@ -219,4 +218,4 @@ class TestbedOptValue(db.StringTable):
 
   # Relationships.
   opts: typing.List[TestbedOpt] = orm.relationship(
-      TestbedOpt, back_populates='value')
+    TestbedOpt, back_populates='value')
