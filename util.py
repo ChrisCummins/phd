@@ -333,7 +333,8 @@ def copy_file(src, dst):
     shutil.copyfile(src, dst)
 
 
-def clone_git_repo(url, destination, version=None):
+def clone_git_repo(url, destination, version=None, shallow=False,
+                   recursive=True):
   """ clone a git repo, returns True if cloned """
   destination = os.path.abspath(os.path.expanduser(destination))
   cloned = False
@@ -341,9 +342,12 @@ def clone_git_repo(url, destination, version=None):
   # clone repo if necessary
   if not os.path.isdir(destination):
     task_print("Cloning git repository to {destination}".format(**vars()))
-    shell('git clone --recursive "{url}" "{destination}"'.format(**vars()))
-    shell('cd "{destination}" && git submodule update --init --recursive'
-          .format(**vars()))
+    cmd = ['git clone "{url}" "{destination}"'.format(**vars())]
+    if shallow:
+      cmd.append('--depth 1')
+    if recursive:
+      cmd.append('--recursive')
+    shell(' '.join(cmd))
     cloned = True
 
   if not os.path.isdir(os.path.join(destination, ".git")):
