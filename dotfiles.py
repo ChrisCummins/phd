@@ -1246,6 +1246,15 @@ class Emacs(Task):
     Homebrew().upgrade_cask('emacs')
 
 
+class Graphviz(Task):
+  """ graph visualization software """
+  __platforms__ = ['osx', 'linux']
+  __deps__ ['Homebrew']
+
+  def install(self):
+    Homebrew().install_package('graphviz')
+
+
 class AppStore(Task):
   """ install mas app store command line """
   __platforms__ = ['osx']
