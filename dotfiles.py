@@ -1249,7 +1249,7 @@ class Emacs(Task):
 class Graphviz(Task):
   """ graph visualization software """
   __platforms__ = ['osx', 'linux']
-  __deps__ ['Homebrew']
+  __deps__ = ['Homebrew']
 
   def install(self):
     Homebrew().install_package('graphviz')
