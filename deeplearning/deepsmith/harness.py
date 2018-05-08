@@ -1,16 +1,18 @@
 """This file implements the testcase harness."""
 import binascii
-import hashlib
-
 import datetime
+import hashlib
 import sqlalchemy as sql
 import typing
 from sqlalchemy import orm
 from sqlalchemy.dialects import mysql
 
 from deeplearning.deepsmith import db
+from deeplearning.deepsmith import testbed
+from deeplearning.deepsmith import testcase
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from lib.labm8 import labdate
+from lib.labm8 import system
 
 # The index types for tables defined in this file.
 _HarnessId = sql.Integer
@@ -27,22 +29,22 @@ class Harness(db.Table):
   # Columns:
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
-      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-      nullable=False, default=labdate.GetUtcMillisecondsNow)
+    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
+    nullable=False, default=labdate.GetUtcMillisecondsNow)
   # MySQL maximum key length is 3072, with 3 bytes per character. We must
   # preserve 16 bytes for the unique constraint.
   name: str = sql.Column(
-      sql.String(4096).with_variant(sql.String((3072 - 16) // 3), 'mysql'),
-      nullable=False)
+    sql.String(4096).with_variant(sql.String((3072 - 16) // 3), 'mysql'),
+    nullable=False)
   optset_id: bytes = sql.Column(_HarnessOptSetId, nullable=False)
 
   # Relationships:
   testcases: typing.List['Testcase'] = orm.relationship(
-      'Testcase', back_populates='harness')
+    'Testcase', back_populates='harness')
   optset: typing.List['HarnessOpt'] = orm.relationship(
-      'HarnessOpt', secondary='harness_optsets',
-      primaryjoin='HarnessOptSet.id == Harness.optset_id',
-      secondaryjoin='HarnessOptSet.opt_id == HarnessOpt.id')
+    'HarnessOpt', secondary='harness_optsets',
+    primaryjoin='HarnessOptSet.id == Harness.optset_id',
+    secondaryjoin='HarnessOptSet.opt_id == HarnessOpt.id')
 
   # Constraints:
   __table_args__ = (
@@ -92,9 +94,9 @@ class Harness(db.Table):
       proto_opt_value = proto.opts[proto_opt_name]
       md5.update((proto_opt_name + proto_opt_value).encode('utf-8'))
       opt = db.GetOrAdd(
-          session, HarnessOpt,
-          name=HarnessOptName.GetOrAdd(session, proto_opt_name),
-          value=HarnessOptValue.GetOrAdd(session, proto_opt_value),
+        session, HarnessOpt,
+        name=HarnessOptName.GetOrAdd(session, proto_opt_name),
+        value=HarnessOptValue.GetOrAdd(session, proto_opt_value),
       )
       opts.append(opt)
 
@@ -104,10 +106,33 @@ class Harness(db.Table):
       db.GetOrAdd(session, HarnessOptSet, id=optset_id, opt=opt)
 
     return db.GetOrAdd(
-        session, cls,
-        name=proto.name,
-        optset_id=optset_id,
+      session, cls,
+      name=proto.name,
+      optset_id=optset_id,
     )
+
+  def RunTestcaseOnTestbed(self, testcase: testcase.Testcase,
+                           testbed: testbed.Testbed) -> deepsmith_pb2.Result:
+    start_time = labdate.GetUtcMillisecondsNow()
+    # ~~ Begin 'exec' timed region. ~~~
+    # TODO: Popen something.
+    # ~~~ End 'exec' timed region. ~~~
+    end_time = labdate.GetUtcMillisecondsNow()
+
+    # Create the result.
+    result = deepsmith_pb2.Result()
+    result.testcase = testcase
+    result.testbed = testbed
+    result.returncode = 0
+
+    # Create profiling events.
+    exec_time = result.profiling_events.add()
+    exec_time.client = system.HOSTNAME
+    exec_time.type = 'exec'
+    exec_time.duration_ms = end_time - start_time
+    exec_time.event_start_epoch_ms = start_time
+
+    return result
 
 
 class HarnessOptSet(db.Table):
@@ -121,17 +146,17 @@ class HarnessOptSet(db.Table):
   # Columns.
   id: bytes = sql.Column(id_t, nullable=False)
   opt_id: int = sql.Column(
-      _HarnessOptId, sql.ForeignKey('harness_opts.id'), nullable=False)
+    _HarnessOptId, sql.ForeignKey('harness_opts.id'), nullable=False)
 
   # Relationships.
   harnesses: typing.List[Harness] = orm.relationship(
-      Harness, primaryjoin=id == orm.foreign(Harness.optset_id))
+    Harness, primaryjoin=id == orm.foreign(Harness.optset_id))
   opt: 'HarnessOpt' = orm.relationship('HarnessOpt')
 
   # Constraints.
   __table_args__ = (
     sql.PrimaryKeyConstraint(
-        'id', 'opt_id', name='unique_harness_optset'),
+      'id', 'opt_id', name='unique_harness_optset'),
   )
 
   def __repr__(self):
@@ -147,19 +172,19 @@ class HarnessOpt(db.Table):
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
-      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-      nullable=False, default=labdate.GetUtcMillisecondsNow)
+    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
+    nullable=False, default=labdate.GetUtcMillisecondsNow)
   name_id: _HarnessOptNameId = sql.Column(
-      _HarnessOptNameId, sql.ForeignKey('harness_opt_names.id'), nullable=False)
+    _HarnessOptNameId, sql.ForeignKey('harness_opt_names.id'), nullable=False)
   value_id: _HarnessOptValueId = sql.Column(
-      _HarnessOptValueId, sql.ForeignKey('harness_opt_values.id'),
-      nullable=False)
+    _HarnessOptValueId, sql.ForeignKey('harness_opt_values.id'),
+    nullable=False)
 
   # Relationships.
   name: 'HarnessOptName' = orm.relationship(
-      'HarnessOptName', back_populates='opts')
+    'HarnessOptName', back_populates='opts')
   value: 'HarnessOptValue' = orm.relationship(
-      'HarnessOptValue', back_populates='opts')
+    'HarnessOptValue', back_populates='opts')
 
   # Constraints.
   __table_args__ = (
@@ -177,7 +202,7 @@ class HarnessOptName(db.StringTable):
 
   # Relationships.
   opts: typing.List[HarnessOpt] = orm.relationship(
-      HarnessOpt, back_populates='name')
+    HarnessOpt, back_populates='name')
 
 
 class HarnessOptValue(db.StringTable):
@@ -187,4 +212,4 @@ class HarnessOptValue(db.StringTable):
 
   # Relationships.
   opts: typing.List[HarnessOpt] = orm.relationship(
-      HarnessOpt, back_populates='value')
+    HarnessOpt, back_populates='value')

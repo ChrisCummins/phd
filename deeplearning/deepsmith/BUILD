@@ -94,6 +94,7 @@ py_library(
         ":db",
         "//deeplearning/deepsmith/proto:deepsmith",
         "//lib/labm8:labdate",
+        "//lib/labm8:system",
     ],
 )
 
