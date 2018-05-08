@@ -9,38 +9,35 @@ fi
 
 set -eu
 
+# Use the local area network if available.
+remote_lan="192.168.0.203"
+remote_wan="ryangosling"
+remote_port=65335
+
+if ping -c1 -W1 "$remote_lan" &>/dev/null; then
+    remote="$remote_lan"
+else
+    remote="$remote_wan"
+fi
+
 movies_src="$HOME/Movies/"
-local_movies_dst="/Volumes/Movies/"
-remote_movies_dst="ryangosling:video/library/movies/"
+movies_dst="$remote:video/third_party/movies/"
 
 tv_src="$HOME/TV Shows/"
-local_tv_dst="/Volumes/TV Shows/"
-remote_tv_dst="ryangosling:video/library/tv/"
+tv_dst="$remote:video/third_party/tv/"
 
-# Select between locally mounted network share or SSH:
-if [[ -d "$local_movies_dst" ]]; then
-    movies_dst="$local_movies_dst"
-else
-    movies_dst="$remote_movies_dst"
-fi
-echo "pushing to $movies_dst"
-
-# Select between locally mounted network share or SSH:
-if [[ -d "$local_tv_dst" ]]; then
-    tv_dst="$local_tv_dst"
-else
-    tv_dst="$remote_tv_dst"
-fi
-echo "pushing to $tv_dst"
+echo "pushing to $movies_dst and $tv_dst"
 
 set -x
 
-rsync -avh "$movies_src" "$movies_dst" $@ \
+rsync -avh "$movies_src" "$movies_dst" \
+    -e "ssh -p $remote_port" $@ \
     --exclude "._.DS_Store" \
     --exclude ".DS_Store" \
     --exclude ".localized"
 
-rsync -avh "$tv_src" "$tv_dst" $@ \
+rsync -avh "$tv_src" "$tv_dst" \
+    -e "ssh -p $remote_port" $@ \
     --exclude "._.DS_Store" \
     --exclude ".DS_Store" \
     --exclude ".localized"

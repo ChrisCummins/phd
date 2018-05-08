@@ -5,9 +5,16 @@
 set -eu
 
 
+# Paths must end with a trailing slash.
+src="/Volumes/Orange/"
+dst="/Volumes/Satsuma/"
+
+
 backup() {
     local src="$1"
     local dst="$2"
+    shift
+    shift
 
     if [[ ! -d "$src" ]]; then
         echo "fatal: '$src' not found" >&2
@@ -21,13 +28,17 @@ backup() {
 
     echo
     echo "================================================================="
-    rsync -avh --delete "$src/" "$dst/" \
+    set -x
+    rsync "$src" "$dst" \
+        -avh --delete \
         --exclude "*.lrcat-journal" \
         --exclude "*.lrcat.lock" \
+        --exclude "*.lrdata" \
         --exclude "._.DS_Store" \
         --exclude ".com.apple.timemachine.supported" \
         --exclude ".DS_Store" \
         --exclude ".sync.ffs_db" \
+        --exclude "/.cache" \
         --exclude "/.DocumentRevisions-V100" \
         --exclude "/.fseventsd" \
         --exclude "/.Spotlight-V100" \
@@ -37,14 +48,13 @@ backup() {
         --exclude "/.VolumeIcon.ico" \
         --exclude "/autorun.inf" \
         $@
+    set +x
     echo "================================================================="
     echo
 }
 
 
 main() {
-    # TODO(cec): Remove the 'photos/2018' qualifier once ryangosling has
-    # been synced to the new layout.
-    backup "/Volumes/Orange/photos/2018/" "/Volumes/Satsuma/photos/2018/" $@
+    backup "$src" "$dst" $@
 }
 main $@

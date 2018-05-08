@@ -9,32 +9,36 @@ fi
 
 set -eu
 
-# TODO(cec): Remove the 'photos/2018' qualifier once ryangosling has been
-# synced to the new layout.
-subpath="photos/2018/"
+# Use this to optionally specify a subdirectory within the photo library for
+# partial syncs. This must end in a trailing slash.
+subpath=""
 
-local_dst="/Volumes/Photo Library/$subpath"
-remote_dst="ryangosling:img/photos/$subpath"
+# Use the local area network if available.
+remote_lan="192.168.0.203"
+remote_wan="ryangosling"
+remote_port=65335
+
+if ping -c1 -W1 "$remote_lan" &>/dev/null; then
+    remote="$remote_lan"
+else
+    remote="$remote_wan"
+fi
 
 src="/Volumes/Orange/$subpath"
+dst="$remote:img/photos/$subpath"
 
 if [[ ! -d "$src" ]]; then
     echo "fatal: '$src' not found" >&2
     exit 1
 fi
 
-# Select between locally mounted network share or SSH:
-if [[ -d "$local_dst" ]]; then
-    dst="$local_dst"
-else
-    dst="$remote_dst"
-fi
 echo "pushing to $dst"
 
 set -x
 
-# copy from source to dest, excluding Lightroom Previews:
-rsync -avh --delete "$src" "$dst" $@ \
+# Copy from source to dest, excluding Lightroom Previews.
+rsync -avh --delete "$src" "$dst" \
+    -e 'ssh -p 65335' $@ \
     --exclude "*.lrcat-journal" \
     --exclude "*.lrcat.lock" \
     --exclude "*.lrdata" \

@@ -9,27 +9,31 @@ fi
 
 set -eu
 
-src="/Users/cec/Music/Music Library/"
+# Use the local area network if available.
+remote_lan="192.168.0.203"
+remote_wan="ryangosling"
+remote_port=65335
 
-local_dst="/Volumes/Music Library/"
-remote_dst="ryangosling:audio/library/"
+if ping -c1 -W1 "$remote_lan" &>/dev/null; then
+    remote="$remote_lan"
+else
+    remote="$remote_wan"
+fi
+
+src="/Users/cec/Music/Music Library/"
+dst="$remote:audio/third_party/"
 
 if [[ ! -d "$src" ]]; then
     echo "fatal: '/Volumes/Music Library' not mounted" >&2
     exit 1
 fi
 
-# Select between locally mounted network share or SSH:
-if [[ -d "$local_dst" ]]; then
-    dst="$local_dst"
-else
-    dst="$remote_dst"
-fi
 echo "pushing to $dst"
 
 set -x
 
-rsync -avh --delete "$src" "$dst" $@ \
+rsync -avh --delete "$src" "$dst" \
+        -e "ssh -p $remote_port" $@ \
         --exclude "._.DS_Store" \
         --exclude ".DS_Store" \
         --exclude ".iTunes Preferences.plist" \
