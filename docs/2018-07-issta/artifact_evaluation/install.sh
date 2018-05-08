@@ -11,30 +11,45 @@
 #
 set -eux
 
-# Directory of this script.
+# This directory.
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 main() {
-  cd "$DIR"
+  # Run from the artifact_evaluation root directory.
+
 
   # Checkout the phd repository.
   if [ ! -d build/phd/.git ]; then
-    mkdir build
-    git clone --recursive https://XXXX.git ./build/phd
-    cd build/phd
-    cd ../..
+    mkdir -pv "$DIR/build"
+    git clone --depth 1 https://github.com/ChrisCummins/phd.git "$DIR/build/phd"
   fi
+
+  # Checkout phd repository submodules.
+  cd "$DIR/build/phd"
+  perl -i -p -e 's|git@(.*?):|https://\1/|g' .gitmodules
+  git submodule update --init
+  cd "$DIR"
 
   # Install the phd repository dependencies.
   if [ ! -f ./build/phd/.git/.env ]; then
-    ./build/phd/tools/bootstrap.sh | bash
+    "$DIR/build/phd/tools/bootstrap.sh" | bash
   fi
 
   # Activate the phd virtual environment.
-  source ./build/phd/.env
+  test -f "$DIR/build/phd/.env"
+  # Disable unbound variable errors, since ./build/phd/.env checks whether
+  # $VIRTUAL_ENV is set.
+  set +u
+  source "$DIR/build/phd/.env"
+  # Re-enable unbound variable errors.
+  set -u
 
   # Generate in-tree files.
-  ./build/phd/tools/protoc.sh
-}
+  "$DIR/build/phd/tools/protoc.sh"
 
+  # Build CLgen.
+  cd "$DIR/build/phd/deeplearning/clgen"
+  ./configure -b
+  make
+}
 main $@

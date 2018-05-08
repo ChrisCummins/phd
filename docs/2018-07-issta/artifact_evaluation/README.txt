@@ -12,17 +12,16 @@ Contents
   install.sh
     Our automated installation process.
 
-  01_evaluate_generator.sh
-    A script which runs a pre-trained DeepSmith model to generate new
-    testcases.
+  01_evaluate_generator/
+    A demonstration of pre-trained DeepSmith model to generate new test cases.
 
-  02_evaluate_harness.sh
-    A script which runs through testcases which we found to cause crashes/bugs
-    in at least one device.
+  02_evaluate_harness/
+    A demonstration which executes test cases on a local OpenCL test bed which
+    we found to cause crashes/bugs in at least one device.
 
-  03_evaluate_results.sh
-    A script which difftests the output of the prior script, along with our
-    data, to show the classification of bugs.
+  03_evaluate_results/
+    A script which differential tests the output of the prior script and our
+    data, to show the classification of results.
 
 
 Requirements
@@ -50,5 +49,39 @@ Disk space:
 Instructions
 ============
 
-1. Install the
-   In case of a problem at this stage please contact us.
+Installation
+------------
+
+Install local and system-wide dependencies using the command:
+
+    $ ./install.sh
+
+The entire installation process is automated. Please note that it may take
+some time.
+
+
+Evaluate the generator
+----------------------
+
+In case of a problem at this stage please contact us.
+
+
+Evaluate the harness
+--------------------
+
+
+Evaluate the results
+--------------------
+
+
+Clean up
+--------
+
+Once you are done evaluating our artifact, you can remove the files generated
+during installation and experiment execution using the command:
+
+  $ ./cleanup.sh
+
+Please note that system-wide packages which are installed (for example
+through apt-get) are not removed, since we do not know if they were installed
+by our artifact or by you.

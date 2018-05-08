@@ -13,21 +13,18 @@
 #
 set -eux
 
-# Directory of this script.
-DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 main() {
-  # Run from the root of the package.
-  cd "$DIR"
+    # Run from the artifact_evaluation root directory.
+  cd "$(dirname "${BASH_SOURCE[0]}")"
 
   paths_to_delete=(
-    "$DIR/build"
-    ~/.cache/clgen/models/TODO
+    "./build"
+    # ~/.cache/clgen/models/TODO
   )
 
   for path in ${paths_to_delete[*]}; do
-    echo "$path"
-    # rm -rfv "$path"
+    rm -rf "$path"
   done
 }
 
