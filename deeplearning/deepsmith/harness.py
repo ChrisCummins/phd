@@ -2,8 +2,9 @@
 import binascii
 import datetime
 import hashlib
-import sqlalchemy as sql
 import typing
+
+import sqlalchemy as sql
 from sqlalchemy import orm
 from sqlalchemy.dialects import mysql
 
