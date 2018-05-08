@@ -74,7 +74,13 @@ flags.register_validator(
 ALWAYS_EXCLUDE_PATTERNS = [
   'MANIFEST.pbtxt',  # No self-reference.
   '.DS_Store',
+  '._.DS_Store',
   '*/.DS_Store',
+  '*/._.DS_Store',
+  '.com.apple.timemachine.supported',
+  '*/.com.apple.timemachine.supported',
+  '.sync.ffs_db',
+  '*/.sync.ffs_db',
 ]
 
 
