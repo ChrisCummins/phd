@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-#
 # bootstrap.sh - Prepare the toolchain
 #
 # Usage:
