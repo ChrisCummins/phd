@@ -331,6 +331,7 @@ search() {
 # Launch a webserver in the current dir.
 serve() {
     local port=${1:=3000}
+    echo "Serving directory contents on http://localhost:$port/"
     python2 -m SimpleHTTPServer $port
 }
 
