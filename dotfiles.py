@@ -575,22 +575,16 @@ class ZshBazelCompletion(Task):
   }
 
   def install(self):
-    # See: https://docs.bazel.build/versions/master/install.html#zsh
-    # TODO(cec): Rather than clone an enormous repo, just download the single
-    # file we need:
-    # https://raw.githubusercontent.com/bazelbuild/bazel/bffa2db380cb3ca2fd9262ac5a45d02518376e03/scripts/zsh_completion/_bazel
+    url = ('https://raw.githubusercontent.com/bazelbuild/bazel/{}/'
+           'scripts/zsh_completion/_bazel').format(
+              self.__versions__['bazel_completion'])
     bazel = os.path.expanduser("~/.bazel_tmp")
     shell("rm -rf {bazel}".format(**vars()))
 
-    if not os.path.isfile("~/.zsh/completion/_bazel"):
+    if not os.path.isfile(os.path.expanduser("~/.zsh/completion/_bazel")):
       shell("fpath[1,0]=~/.zsh/completion/")
-      clone_git_repo(github_repo("bazelbuild", "bazel"), bazel,
-                     self.__versions__["bazel_completion"])
-
       mkdir("~/.zsh/completion/")
-      copy_file("{bazel}/scripts/zsh_completion/_bazel".format(**vars()),
-                "~/.zsh/completion/_bazel")
-      shell("rm -rf {bazel} ~/.zcompdump".format(**vars()))
+      shell("wget {url} -O ~/.zsh/completion/_bazel".format(**vars()))
 
     if not os.path.isdir("~/.zsh/cache"):
       mkdir("~/.zsh/cache")
