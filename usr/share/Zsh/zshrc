@@ -302,6 +302,24 @@ eel() {
     done
 }
 
+# Repeatedly execute a command until it exits with a zero return code.
+for_the_love_of_god() {
+    while true; do
+        # Print the command being executed.
+        echo "$@"
+        # If the command completes with a zero return code, break the loop.
+        if $@ ; then
+            # Notify via lmk.
+            echo "$@" | lmk -
+            break
+        fi
+        # Pause for a second so that the user can C-c twice to break the loop.
+        if ! sleep 1 ; then
+            break
+        fi
+    done
+}
+
 # List file and directory contents.
 unalias l
 l() {
