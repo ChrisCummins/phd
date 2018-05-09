@@ -322,7 +322,7 @@ class DropboxInbox(Task):
   __genfiles__ = ["~/Inbox"]
 
   def install(self):
-    if not os.path.isdir(os.path.expanduser("~/Dropbox/Inbox")):
+    if not os.path.isdir(os.path.expanduser("~/Inbox")):
       symlink("Dropbox/Inbox", "~/Inbox")
 
 
