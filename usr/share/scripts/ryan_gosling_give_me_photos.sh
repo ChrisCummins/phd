@@ -11,7 +11,7 @@ set -eu
 
 # Use this to optionally specify a subdirectory within the photo library for
 # partial syncs. This must end in a trailing slash.
-subpath="photos/"
+subpath=""
 
 # Use the local area network if available.
 remote_lan="192.168.0.203"
