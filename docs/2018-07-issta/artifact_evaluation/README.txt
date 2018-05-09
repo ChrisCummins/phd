@@ -27,23 +27,26 @@ Contents
 Requirements
 ============
 
-Operating system:
+Operating system
+----------------
 
-  Ubuntu Linux or macOS. Unfortunately Windows is not supported by many of our
-  dependencies. Other Linux distributions may work, but we have not tested them,
-  and our install.sh script uses the apt package manager to automate the
-  installation of depdencies. If you have requirements for a specific Linux
-  distribution that is not Ubuntu >= 16.04, please contact us.
+Ubuntu Linux or macOS. Unfortunately Windows is not supported by many of our
+dependencies. Other Linux distributions may work, but we have not tested them,
+and our install.sh script uses the apt package manager to automate the
+installation of depdencies. If you have requirements for a specific Linux
+distribution that is not Ubuntu >= 16.04, please contact us.
 
-OpenCL:
+OpenCL
+------
 
-  To
+macOS has OpenCL support built in.
 
-Disk space:
+Disk space
+----------
 
-  Due to time constraints we have not optimized our artifact for space,
-  requiring approximately 10GB of disk space in total. Please contact us if
-  this is an issue.
+Due to time constraints we have not optimized our artifact for space, requiring
+approximately 10GB of disk space in total. Please contact us if this is an
+issue.
 
 
 Instructions
@@ -57,13 +60,11 @@ Install local and system-wide dependencies using the command:
     $ ./install.sh
 
 The entire installation process is automated. Please note that it may take
-some time.
+some time. In case of a problem at this stage please contact us.
 
 
 Evaluate the generator
 ----------------------
-
-In case of a problem at this stage please contact us.
 
 
 Evaluate the harness
