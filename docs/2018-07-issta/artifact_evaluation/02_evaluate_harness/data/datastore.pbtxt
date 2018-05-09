@@ -1,7 +1,7 @@
 # File: //deeplearning/deepsmith/proto/datastore.proto
 # Message: deepsmith.DataStore
 sqlite {
-  path: "./02_evaluate_harness/run/datastore.db"
+  path: "./02_evaluate_harness/output/datastore.db"
 }
 testonly: false
 create_database_if_not_exist: false
