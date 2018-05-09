@@ -32,7 +32,12 @@ if [[ ! -d "$src" ]]; then
     exit 1
 fi
 
-echo "pushing to $dst"
+if find "$src" -name '*.lrcat.lock' 2>/dev/null | grep lrcat.lock ; then
+    echo "fatal: $(find "$src" -name '*.lrcat.lock') found. Close Lightroom."
+    exit 1
+fi
+
+echo "pushing from $src to $dst"
 
 set -x
 
