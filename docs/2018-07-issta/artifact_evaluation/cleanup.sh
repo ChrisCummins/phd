@@ -14,12 +14,16 @@
 set -eux
 
 
+# This directory.
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+
 main() {
-    # Run from the artifact_evaluation root directory.
-  cd "$(dirname "${BASH_SOURCE[0]}")"
+  # Run from the artifact_evaluation root directory.
+  cd "$ROOT"
 
   paths_to_delete=(
-    "./build"
+    "$ROOT/build"
     # ~/.cache/clgen/models/TODO
   )
 

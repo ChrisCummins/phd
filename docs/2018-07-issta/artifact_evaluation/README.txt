@@ -13,7 +13,7 @@ Contents
     Our automated installation process.
 
   01_evaluate_generator/
-    A demonstration of pre-trained DeepSmith model to generate new test cases.
+    A demonstration of training a DeepSmith model to generate programs.
 
   02_evaluate_harness/
     A demonstration which executes test cases on a local OpenCL test bed which
@@ -66,13 +66,37 @@ some time. In case of a problem at this stage please contact us.
 Evaluate the generator
 ----------------------
 
+Evaluate the DeepSmith generator by running the following script:
+
+    $ ./01_evaluate_generator/run.sh
+
+The script downloads a small OpenCL corpus of 1000 kernels randomly selected
+from our GitHub corpus, pre-processes the corpus, trains a model on the
+preprocessed corpus, and generates 1000 new OpenCL programs.
+
+We have reduced the size of the corpus and network so that it takes around 2
+hours to train on a CPU. The model we used to generate the programs used in the
+review copy of our paper is much larger, is trained on more data, and is trained
+for longer. It takes around 2 days to train on a CPU.
+
+Once the script has completed, the generated programs can be found in
+./01_evaluate_generator/run/generated_programs.
+
 
 Evaluate the harness
 --------------------
 
+Evaluate the DeepSmith harness by running the following script:
+
+    $ ./02_evaluate_harness/run.sh
+
 
 Evaluate the results
 --------------------
+
+Evaluate the DeepSmith difftester by running the following script:
+
+    $ ./03_evaluate_results/run.sh
 
 
 Clean up
