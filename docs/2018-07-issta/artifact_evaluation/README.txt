@@ -80,7 +80,7 @@ review copy of our paper is much larger, is trained on more data, and is trained
 for longer. It takes around 2 days to train on a CPU.
 
 Once the script has completed, the generated programs can be found in
-./01_evaluate_generator/run/generated_programs.
+./01_evaluate_generator/run/generated_kernels.
 
 
 Evaluate the harness
