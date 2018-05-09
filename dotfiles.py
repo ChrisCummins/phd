@@ -624,16 +624,6 @@ class LmkConfig(Task):
     symlink(os.path.join(PRIVATE, "lmk", "lmkrc"), "~/.lmkrc")
 
 
-class DSmithConfig(Task):
-  """ dsmith config """
-  __platforms__ = ['ubuntu']
-  __reqs__ = [lambda: os.path.isdir(os.path.join(PRIVATE, "dsmith"))]
-  __genfiles__ = ['~/.dsmithrc']
-
-  def install(self):
-    symlink(os.path.join(PRIVATE, "dsmith", "dsmithrc"), "~/.dsmithrc")
-
-
 class Git(Task):
   """ git config """
   __platforms__ = ['linux', 'osx']
