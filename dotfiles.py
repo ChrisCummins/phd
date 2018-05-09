@@ -1648,6 +1648,7 @@ class FlorenceScripts(Task):
   __deps__ = ["Scripts"]
   __genfiles__ = [
       "~/.local/bin/orange_you_glad_you_backup",
+      "~/.local/bin/ryan_gosling_give_me_photos",
       "~/.local/bin/ryan_gosling_have_my_movies",
       "~/.local/bin/ryan_gosling_have_my_music",
       "~/.local/bin/ryan_gosling_have_my_photos",
@@ -1656,6 +1657,8 @@ class FlorenceScripts(Task):
   def install(self):
     symlink(usr_share("scripts/orange_you_glad_you_backup.sh"),
             "~/.local/bin/orange_you_glad_you_backup")
+    symlink(usr_share("scripts/ryan_gosling_give_me_photos.sh"),
+            "~/.local/bin/ryan_gosling_give_me_photos")
     symlink(usr_share("scripts/ryan_gosling_have_my_photos.sh"),
             "~/.local/bin/ryan_gosling_have_my_photos")
     symlink(usr_share("scripts/ryan_gosling_have_my_movies.sh"),
