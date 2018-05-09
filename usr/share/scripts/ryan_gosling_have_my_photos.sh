@@ -36,12 +36,10 @@ echo "pushing to $dst"
 
 set -x
 
-# Copy from source to dest, excluding Lightroom Previews.
 rsync -avh --delete "$src" "$dst" \
     -e 'ssh -p 65335' $@ \
     --exclude "*.lrcat-journal" \
     --exclude "*.lrcat.lock" \
-    --exclude "*.lrdata" \
     --exclude "._.DS_Store" \
     --exclude ".com.apple.timemachine.supported" \
     --exclude ".DS_Store" \
