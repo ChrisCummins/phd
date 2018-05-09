@@ -18,4 +18,4 @@ export GOGS_CLONE_DIR="$HOME/git/cec"
 # ****************************************************************************
 set -eux
 
-$LMK --only-errors "timeout -s9 $JOB_TIMEOUT $GH_ARCHIVER $GH_USERNAME --gogs -o $GOGS_CLONE_DIR"
+$LMK --only-errors "timeout -s9 $JOB_TIMEOUT $GH_ARCHIVER $GH_USERNAME --gogs -o $GOGS_CLONE_DIR --exclude linux"
