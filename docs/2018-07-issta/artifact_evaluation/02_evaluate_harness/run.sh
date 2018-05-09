@@ -24,6 +24,11 @@ main() {
   # Re-enable unbound variable errors.
   set -u
 
+  # Create a working copy of the pre-populated datastore.
+  mkdir -pv "$ROOT/02_evaluate_harness/run"
+  cp "$ROOT/02_evaluate_harness/data/datastore.db" \
+      "$ROOT/02_evaluate_harness/run/datastore.db"
+
   python "$ROOT/02_evaluate_harness/experiments.py"
 }
 main $@
