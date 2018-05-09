@@ -1631,6 +1631,8 @@ class DianaScripts(Task):
   __deps__ = ["Scripts"]
   __genfiles__ = [
       "~/.local/bin/orange",
+      "~/.local/bin/ryan_gosling_give_me_photos",
+      "~/.local/bin/ryan_gosling_have_my_photos",
   ]
 
   def install(self):
