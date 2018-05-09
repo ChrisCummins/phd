@@ -79,8 +79,10 @@ hours to train on a CPU. The model we used to generate the programs used in the
 review copy of our paper is much larger, is trained on more data, and is trained
 for longer. It takes around 2 days to train on a CPU.
 
-Once the script has completed, the generated programs can be found in
-./01_evaluate_generator/run/generated_kernels.
+Once the script has completed, the generated programs are written to the
+directory ./01_evaluate_generator/output/generated_kernels. Testcases are
+generated for the kernels, found in
+./01_evaluate_generator/output/generated_testcases.
 
 
 Evaluate the harness
@@ -89,6 +91,9 @@ Evaluate the harness
 Evaluate the DeepSmith harness by running the following script:
 
     $ ./02_evaluate_harness/run.sh
+
+The script executes the 1000 programs generated in the last experiment on a
+local OpenCL device.
 
 
 Evaluate the results

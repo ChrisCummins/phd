@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# run.sh - Run the experiments.
+# run.sh - Train and sample a model on OpenCL examples.
 #
 # Usage:
 #
@@ -38,9 +38,11 @@ main() {
       "$ROOT/01_evaluate_generator/data/sampler.json"
 
   # Dump the generated kernels to a directory.
+  rm -rf "$ROOT/01_evaluate_generator/output/generated_kernels"
   clgen -v db dump $(clgen --sampler-dir \
       "$ROOT/01_evaluate_generator/data/model.json" \
       "$ROOT/01_evaluate_generator/data/sampler.json")/kernels.db \
-      "$ROOT/01_evaluate_generator/run/generated_kernels" --dir --input-samples
+      "$ROOT/01_evaluate_generator/output/generated_kernels" \
+      --dir --input-samples
 }
 main $@
