@@ -85,3 +85,23 @@ during installation and experiment execution using the command:
 Please note that system-wide packages which are installed (for example
 through apt-get) are not removed, since we do not know if they were installed
 by our artifact or by you.
+
+
+Further Reading
+===============
+
+DeepSmith is currently undergoing a ground-up rewrite to support more languages
+and add new features, such as a distributing tests across multiple machines.
+The work-in-progress implementation can be found in:
+
+    https://github.com/ChrisCummins/phd/tree/master/deeplearning/deepsmith
+
+The implementation used for the review copy of our paper is available at:
+
+    https://github.com/ChrisCummins/phd/tree/master/experimental/dsmith
+
+We extended our neural network program generator CLgen for generating the
+tests used in the review copy of our paper. The documentation for CLgen is
+available at:
+
+    http://chriscummins.cc/clgen
