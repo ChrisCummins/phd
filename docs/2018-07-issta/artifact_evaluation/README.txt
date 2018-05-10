@@ -51,9 +51,8 @@ distribution that is not Ubuntu >= 16.04, please contact us.
 2.2 Disk space
 --------------
 
-We have not optimized our artifact for space, requiring approximately 10GB of
+We have not optimized our artifact for space, requiring approximately 6GB of
 disk space in total. Please contact us if this is an issue.
-TODO: check this value
 
 
 2.3 OpenCL
