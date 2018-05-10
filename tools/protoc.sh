@@ -14,5 +14,6 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 for file in $(git ls-files | grep '\.proto'); do
   dir="$(dirname $file)"
-  protoc -I="$dir" -I="$ROOT" --python_out="$dir" "$file"
+  python -m grpc_tools.protoc -I"$dir" -I"$ROOT" --python_out="$dir" \
+      --grpc_python_out="$dir" "$file"
 done
