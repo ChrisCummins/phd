@@ -19,6 +19,15 @@ WORKING_DIR="$ROOT/docs/2018-07-issta/artifact_evaluation/02_evaluate_harness"
 
 
 main() {
+  set +u
+  OPENCL_DEVICE="$1"
+  if [[ -z "$OPENCL_DEVICE" ]]; then
+    echo "Please specify an OpenCL device number." >&2
+    echo "List the available devices using: ./diagnose-me.sh" >&2
+    exit 1
+  fi
+  set -u
+
   # Activate the phd virtual environment.
   test -f "$ROOT/.env"
   # Disable unbound variable errors, since .env checks if $VIRTUAL_ENV is set.
@@ -30,6 +39,6 @@ main() {
   mkdir -pv "$WORKING_DIR/output"
 
   # See file 'experiments.py' for the implementation.
-  python "$WORKING_DIR/experiments.py"
+  python "$WORKING_DIR/experiments.py" --testbed_id "$OPENCL_DEVICE"
 }
 main $@

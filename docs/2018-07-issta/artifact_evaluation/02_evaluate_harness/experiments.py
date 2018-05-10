@@ -1,14 +1,20 @@
-"""This file defines TODO:
+"""Run testcases on a local OpenCL device.
 
-TODO: Detailed explanation of this file.
+This script runs DeepSmith testcases on an OpenCL testbed, and records the
+results.
+
+Usage:
+
+    $ python experiments.py --testbed_id <device> --testcase_dirs <dirs> \
+        --output_dir <dir>
 """
 import collections
 import pathlib
-import re
 import subprocess
 import tempfile
 import typing
 
+import humanize
 from absl import app
 from absl import flags
 
@@ -20,10 +26,11 @@ from lib.labm8 import labdate
 from lib.labm8 import labtypes
 from lib.labm8 import pbutil
 from lib.labm8 import system
+from lib.labm8 import text
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string('opencl_device', '1+',
+flags.DEFINE_string('testbed_id', '1+',
                     'The OpenCL device to run the experiments on.')
 flags.DEFINE_list('testcase_dirs',
                   ['./02_evaluate_harness/data/testcases'],
@@ -47,9 +54,9 @@ def CldriveEnvToTestbed(env: cldrive.OpenCLEnvironment,
   testbed.toolchain = 'opencl'
   testbed.opts['driver_version'] = env.driver_version
   testbed.opts['host'] = system.HOSTNAME
-  testbed.opts['opencl_device'] = env.device_name
+  testbed.opts['testbed_id'] = env.device_name
   testbed.opts['opencl_devtype'] = env.device_type
-  testbed.opts['opencl_opt'] = 'true' if optimizations else 'false'
+  testbed.opts['opencl_opt'] = 'enabled' if optimizations else 'disabled'
   testbed.opts['opencl_platform'] = env.platform_name
   testbed.opts['opencl_version'] = env.opencl_version
   return testbed
@@ -72,51 +79,11 @@ def GetTestbedAndEnvironment(arg: str) -> TestbedAndEnv:
     env = list(cldrive.all_envs())[num - 1]
     return TestbedAndEnv(env, CldriveEnvToTestbed(env, optimizations))
   except:
-    raise app.UsageError(f"Unknown OpenCL device '{FLAGS.opencl_device}''")
+    raise app.UsageError(f"Unknown OpenCL device '{FLAGS.testbed_id}''")
 
 
-def __VerifyParams(platform: str, device: str, optimizations: bool,
-                   global_size: typing.Tuple[int, int, int],
-                   local_size: typing.Tuple[int, int, int], stderr: str) -> None:
-  """ verify that expected params match actual as reported by cldrive """
-  optimizations = "on" if optimizations else "off"
-
-  actual_platform = None
-  actual_device = None
-  actual_optimizations = None
-  actual_global_size = None
-  actual_local_size = None
-  for line in stderr.split('\n'):
-    if line.startswith("[cldrive] Platform: "):
-      actual_platform_name = re.sub(r"^\[cldrive\] Platform: ", "", line).rstrip()
-    elif line.startswith("[cldrive] Device: "):
-      actual_device_name = re.sub(r"^\[cldrive\] Device: ", "", line).rstrip()
-    elif line.startswith("[cldrive] OpenCL optimizations: "):
-      actual_optimizations = re.sub(r"^\[cldrive\] OpenCL optimizations: ", "", line).rstrip()
-
-    # global size
-    match = re.match('^\[cldrive\] 3-D global size \d+ = \[(\d+), (\d+), (\d+)\]', line)
-    if match:
-      actual_global_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
-
-    # local size
-    match = re.match('^\[cldrive\] 3-D local size \d+ = \[(\d+), (\d+), (\d+)\]', line)
-    if match:
-      actual_local_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
-
-    # check if we've collected everything:
-    if (actual_platform and actual_device and actual_optimizations and
-        actual_global_size and actual_local_size):
-      assert (actual_platform_name == platform)
-      assert (actual_device_name == device)
-      assert (actual_optimizations == optimizations)
-      assert (actual_global_size == global_size)
-      assert (actual_local_size == local_size)
-      return
-
-
-def MakeCDriver(testcase: deepsmith_pb2.Testcase) -> str:
-  """ generate a self-contained C program for the given test case """
+def MakeDriver(testcase: deepsmith_pb2.Testcase) -> str:
+  """Generate a self-contained C program for the given test case."""
   try:
     # Generate a compile-and-execute test harness.
     gsize = cldrive.NDRange(
@@ -124,7 +91,6 @@ def MakeCDriver(testcase: deepsmith_pb2.Testcase) -> str:
     lsize = cldrive.NDRange(
       *[int(x) for x in testcase.inputs['lsize'].split(',')])
     size = max(gsize.product * 2, 256)
-
     inputs = cldrive.make_data(
       src=testcase.inputs['src'], size=size,
       data_generator=cldrive.Generator.ARANGE,
@@ -142,15 +108,14 @@ def MakeCDriver(testcase: deepsmith_pb2.Testcase) -> str:
       src = cldrive.emit_c(
         src=testcase.inputs['src'], inputs=None, gsize=None, lsize=None,
         compile_only=True, create_kernel=False)
-
   return src
 
 
-def CompileHarness(src: str, path: str = 'a.out', platform_id=None,
-                   device_id=None, cc: str = 'gcc',
-                   cflags: typing.Optional[typing.List[str]] = None,
-                   timeout: int = 60) -> None:
-  """ compile harness binary from source """
+def CompileDriver(src: str, path: str, platform_id,
+                  device_id, cc: str = 'gcc',
+                  cflags: typing.Optional[typing.List[str]] = None,
+                  timeout: int = 60) -> None:
+  """Compile driver binary from source."""
   # Assign default compilation flags.
   cflags = cflags or ["-std=c99", "-Wno-deprecated-declarations"]
   if system.is_linux():
@@ -158,36 +123,35 @@ def CompileHarness(src: str, path: str = 'a.out', platform_id=None,
   elif system.is_mac():
     cflags += ['-framework', 'OpenCL']
 
-  cmd = ['timeout', '-s9', str(timeout), cc,
-         '-xc', '-', '-o', str(path)] + cflags
-  if platform_id is not None:
-    cmd.append(f'-DPLATFORM_ID={platform_id}')
-  if device_id is not None:
-    cmd.append(f'-DDEVICE_ID={device_id}')
-
+  cmd = [
+          'timeout', '-s9', str(timeout),
+          cc, '-xc', '-',
+          '-o', str(path),
+          f'-DPLATFORM_ID={platform_id}',
+          f'-DDEVICE_ID={device_id}',
+        ] + cflags
   proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
   proc.communicate(src.encode('utf-8'))
   if not proc.returncode == 0:
     raise EnvironmentError(
-      f'harness compilation failed with returncode {proc.returncode}')
+      f'Driver compilation failed with returncode {proc.returncode}.')
   return path
 
 
 def RunTestcase(opencl: TestbedAndEnv,
                 testcase: deepsmith_pb2.Testcase) -> deepsmith_pb2.Result:
   """Run a testcase."""
+  assert testcase.toolchain == 'opencl'
   result = deepsmith_pb2.Result()
   result.testcase.CopyFrom(testcase)
   result.testbed.CopyFrom(opencl.testbed)
   platform_id, device_id = opencl.env.ids()
-  driver = MakeCDriver(testcase)
-
+  driver = MakeDriver(testcase)
   with tempfile.NamedTemporaryFile(prefix='dsmith-cldrive-', delete=False) as f:
     path = f.name
+  CompileDriver(driver, path, platform_id, device_id)
   try:
-    CompileHarness(driver, path, platform_id=platform_id, device_id=device_id)
-
-    cmd = ['timeout', '-s9', str(testcase.inputs['timeout']), f.name]
+    cmd = ['timeout', '-s9', testcase.harness.opts['timeout_seconds'], f.name]
     start_time = labdate.GetUtcMillisecondsNow()
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                             universal_newlines=True)
@@ -212,25 +176,27 @@ def main(argv):
   if len(argv) > 1:
     unknown_args = ', '.join(argv[1:])
     raise app.UsageError(f"Unknown arguments {unknown_args}")
-
-  opencl = GetTestbedAndEnvironment(FLAGS.opencl_device)
+  opencl = GetTestbedAndEnvironment(FLAGS.testbed_id)
   testcase_dirs = [pathlib.Path(x) for x in FLAGS.testcase_dirs]
   if not all(testcase_dirs):
     raise app.UsageError('--testcase_dirs must be directories.')
   testcase_paths = labtypes.flatten(
     [[pathlib.Path(y) for y in fs.ls(x, abspaths=True)]
      for x in testcase_dirs])
-
   print('Running', len(testcase_paths), 'testcases on OpenCL device:')
   print(fmt.Indent(2, opencl.testbed))
-
-  results_dir = pathlib.Path(FLAGS.output_dir) / FLAGS.opencl_device
+  results_dir = pathlib.Path(FLAGS.output_dir) / FLAGS.testbed_id
   results_dir.mkdir(parents=True, exist_ok=True)
-
   for path in testcase_paths:
     print('Running testcase', path, '...')
     testcase = pbutil.FromFile(path, deepsmith_pb2.Testcase())
     result = RunTestcase(opencl, testcase)
+    runtime = humanize.intcomma(result.profiling_events[0].duration_ms)
+    print(f'Testcase completed in {runtime} ms '
+          f'with returncode {result.returncode}.')
+    if result.returncode:
+      print(fmt.Indent(
+        2, text.truncate(result.outputs['stderr'].rstrip(), 600)))
     pbutil.ToFile(result, results_dir / fs.basename(path))
     print('Wrote result', (results_dir / fs.basename(path)).absolute())
 
