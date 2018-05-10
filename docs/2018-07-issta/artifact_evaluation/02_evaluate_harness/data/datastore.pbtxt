@@ -4,4 +4,4 @@ sqlite {
   path: "./02_evaluate_harness/output/datastore.db"
 }
 testonly: false
-create_database_if_not_exist: false
+create_database_if_not_exist: true
