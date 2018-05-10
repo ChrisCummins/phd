@@ -294,10 +294,10 @@ WHERE programs.id = %s
       ],
     )
     # Write the testcase to file.
-    outpath = proto_dir / 'opencl' / 'testcases' / (str(testcase_id) + '.pbtxt')
+    outpath = proto_dir / 'testcases' / (str(testcase_id) + '.pbtxt')
     pbutil.ToFile(testcase, outpath)
     # Write the results to file.
-    outpath = proto_dir / 'opencl' / 'results' / (str(result_id) + '.pbtxt')
+    outpath = proto_dir / 'results' / (str(result_id) + '.pbtxt')
     pbutil.ToFile(result, outpath)
 
 
@@ -317,8 +317,8 @@ def _ExportProtos() -> None:
                         user=credentials[0], password=credentials[1])
   cursor = cnx.cursor()
 
-  (proto_dir / 'opencl' / 'testcases').mkdir(parents=True, exist_ok=True)
-  (proto_dir / 'opencl' / 'results').mkdir(parents=True, exist_ok=True)
+  (proto_dir / 'testcases').mkdir(parents=True, exist_ok=True)
+  (proto_dir / 'results').mkdir(parents=True, exist_ok=True)
   for program_id in FLAGS.program_ids:
     logging.info("Exporting OpenCL program %s", program_id)
     _ExportOpenCLResults(cursor, program_id, proto_dir)
@@ -327,8 +327,8 @@ def _ExportProtos() -> None:
   cnx.close()
 
   logging.info('Exported %d testcases and %d results',
-               len(fs.ls(proto_dir / 'opencl' / 'testcases')),
-               len(fs.ls(proto_dir / 'opencl' / 'results')))
+               len(fs.ls(proto_dir / 'testcases')),
+               len(fs.ls(proto_dir / 'results')))
 
 
 def main(argv):
