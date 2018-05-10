@@ -11,44 +11,41 @@
 #
 set -eux
 
-# This directory.
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Root of this repository.
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+
 
 main() {
   # Run from the artifact_evaluation root directory.
   cd "$ROOT"
 
-  # Checkout the phd repository.
-  if [ ! -d build/phd/.git ]; then
-    mkdir -pv "$ROOT/build"
-    git clone --depth 1 https://github.com/ChrisCummins/phd.git "$ROOT/build/phd"
-  fi
+  # If repository is cloned using https protocol, change the submodule
+  # URLs to use https also.
+  git remote -v | grep 'git@' &>/dev/null || \
+      perl -i -p -e 's|git@(.*?):|https://\1/|g' .gitmodules
 
-  # Checkout phd repository submodules.
-  cd "$ROOT/build/phd"
-  perl -i -p -e 's|git@(.*?):|https://\1/|g' .gitmodules
+  # Checkout repository submodules.
   git submodule update --init
-  cd "$ROOT"
 
-  # Install the phd repository dependencies.
-  if [ ! -f ./build/phd/.git/.env ]; then
-    "$ROOT/build/phd/tools/bootstrap.sh" | bash
-  fi
+  # Bootstrap the phd repository.
+  "$ROOT/tools/bootstrap.sh" | bash
 
   # Activate the phd virtual environment.
-  test -f "$ROOT/build/phd/.env"
-  # Disable unbound variable errors, since ./build/phd/.env checks whether
-  # $VIRTUAL_ENV is set.
+  test -f "$ROOT/.env"
+  # Disable unbound variable errors, since .env checks if $VIRTUAL_ENV is set.
   set +u
-  source "$ROOT/build/phd/.env"
+  source "$ROOT/.env"
   # Re-enable unbound variable errors.
   set -u
 
   # Generate in-tree files.
-  "$ROOT/build/phd/tools/protoc.sh"
+  "$ROOT/tools/protoc.sh"
 
-  # Build CLgen.
-  cd "$ROOT/build/phd/deeplearning/clgen"
+  # Install the CLgen dependencies.
+  cd "$ROOT/deeplearning/clgen"
+  ./install-deps.sh
+
+  # Configure and build CLgen.
   ./configure -b
   make
 }
