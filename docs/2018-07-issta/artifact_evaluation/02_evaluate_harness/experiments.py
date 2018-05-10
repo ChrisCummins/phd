@@ -17,7 +17,8 @@ def main(argv):
     unknown_args = ', '.join(argv[1:])
     raise app.UsageError(f"Unknown arguments {unknown_args}")
 
-  ds = datastore.DataStore.FromFile(pathlib.Path('./02_evaluate_harness/data/datastore.pbtxt'))
+  ds = datastore.DataStore.FromFile(pathlib.Path(
+    './02_evaluate_harness/data/datastore.pbtxt'))
 
 
 if __name__ == '__main__':

@@ -2,6 +2,9 @@
 
 # run.sh - Run the experiments.
 #
+# The experiments are written in Python in experiments.py for the
+# implementation. This script only launches that one.
+#
 # Usage:
 #
 #     ./run.sh
@@ -11,24 +14,22 @@ set -eu
 
 # The artficat_evaluation root directory.
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# The directory of this experiment.
+WORKING_DIR="$ROOT/docs/2018-07-issta/artifact_evaluation/01_evaluate_generator"
 
 
 main() {
-  # Run from the artifact_evaluation root directory.
-  cd "$ROOT"
-
-  # Disable unbound variable errors, since ./build/phd/.env checks whether
-  # $VIRTUAL_ENV is set.
+  # Activate the phd virtual environment.
+  test -f "$ROOT/.env"
+  # Disable unbound variable errors, since .env checks if $VIRTUAL_ENV is set.
   set +u
-  # TODO: source "$ROOT/build/phd/.env"
+  source "$ROOT/.env"
   # Re-enable unbound variable errors.
   set -u
 
-  # Create a working copy of the pre-populated datastore.
-  mkdir -pv "$ROOT/02_evaluate_harness/run"
-  cp "$ROOT/02_evaluate_harness/data/datastore.db" \
-      "$ROOT/02_evaluate_harness/output/datastore.db"
+  mkdir -pv "$WORKING_DIR/run"
 
-  python "$ROOT/02_evaluate_harness/experiments.py"
+  # See this file for the experiment implementation.
+  python "$WORKING_DIR/experiments.py"
 }
 main $@

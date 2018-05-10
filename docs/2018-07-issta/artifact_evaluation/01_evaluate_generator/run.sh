@@ -8,15 +8,14 @@
 #
 set -eu
 
+
 # The artficat_evaluation root directory.
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # The directory of this experiment.
 WORKING_DIR="$ROOT/docs/2018-07-issta/artifact_evaluation/01_evaluate_generator"
 
-main() {
-  # Run from the artifact_evaluation root directory.
-  cd "$ROOT"
 
+main() {
   # Activate the phd virtual environment.
   test -f "$ROOT/.env"
   # Disable unbound variable errors, since .env checks if $VIRTUAL_ENV is set.
