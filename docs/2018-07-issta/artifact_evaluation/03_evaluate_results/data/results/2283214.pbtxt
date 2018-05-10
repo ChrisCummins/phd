@@ -1,0 +1,102 @@
+testcase {
+  toolchain: "opencl"
+  generator {
+    name: "clgen"
+    opts {
+      key: "git_commit"
+      value: "9556e7112ba2bd6f79ee59eef74f0a2304efa007"
+    }
+    opts {
+      key: "git_remote"
+      value: "https://github.com/ChrisCummins/clgen.git"
+    }
+    opts {
+      key: "version"
+      value: "0.4.0.dev0"
+    }
+  }
+  harness {
+    name: "cldrive"
+    opts {
+      key: "git_commit"
+      value: "9556e7112ba2bd6f79ee59eef74f0a2304efa007"
+    }
+    opts {
+      key: "git_remote"
+      value: "https://github.com/ChrisCummins/clgen.git"
+    }
+    opts {
+      key: "timeout_seconds"
+      value: "60"
+    }
+    opts {
+      key: "version"
+      value: "0.4.0.dev0"
+    }
+  }
+  inputs {
+    key: "gsize"
+    value: "1,1,1"
+  }
+  inputs {
+    key: "lsize"
+    value: "1,1,1"
+  }
+  inputs {
+    key: "src"
+    value: "__kernel void A(float4 a, __global float4* b, __global float4* c, unsigned int d, __global double* e, __global int2* f, __global int4* g, __constant int* h, __constant int* i) {\n  A(a, b, c, d, d, e, f, g, h);\n}"
+  }
+  profiling_events {
+    client: "cc1"
+    type: "generation"
+    duration_ms: 453
+    event_start_epoch_ms: 1500375078000
+  }
+}
+testbed {
+  toolchain: "opencl"
+  name: "oclgrind_cpu"
+  opts {
+    key: "driver_version"
+    value: "Oclgrind 16.10"
+  }
+  opts {
+    key: "host"
+    value: "Ubuntu 16.04 64bit"
+  }
+  opts {
+    key: "opencl_device"
+    value: "Oclgrind Simulator"
+  }
+  opts {
+    key: "opencl_devtype"
+    value: "Emulator"
+  }
+  opts {
+    key: "opencl_opt"
+    value: "enabled"
+  }
+  opts {
+    key: "opencl_platform"
+    value: "Oclgrind"
+  }
+  opts {
+    key: "opencl_version"
+    value: "1.2"
+  }
+}
+returncode: 1
+outputs {
+  key: "stderr"
+  value: "[cldrive] Platform: Oclgrind\n[cldrive] Device: Oclgrind Simulator\n[cldrive] OpenCL optimizations: on\n4 warnings generated.\ninput.cl:2:17: warning: incompatible integer to pointer conversion passing \'unsigned int\' to parameter of type \'__global double *\'\n  A(a, b, c, d, d, e, f, g, h);\n                ^\ninput.cl:1:100: note: passing argument to parameter \'e\' here\n__kernel void A(float4 a, __global float4* b, __global float4* c, unsigned int d, __global double* e, __global int2* f, __global int4* g, __constant int* h, __constant int* i) {\n                                                                                                   ^\ninput.cl:2:20: warning: incompatible pointer types passing \'__global double *\' to parameter of type \'__global int2 *\'\n  A(a, b, c, d, d, e, f, g, h);\n                   ^\ninput.cl:1:118: note: passing argument to parameter \'f\' here\n__kernel void A(float4 a, __global float4* b, __global float4* c, unsigned int d, __global double* e, __global int2* f, __global int4* g, __constant int* h, __constant int* i) {\n                                                                                                                     ^\ninput.cl:2:23: warning: incompatible pointer types passing \'__global int2 *\' to parameter of type \'__global int4 *\'\n  A(a, b, c, d, d, e, f, g, h);\n                      ^\ninput.cl:1:136: note: passing argument to parameter \'g\' here\n__kernel void A(float4 a, __global float4* b, __global float4* c, unsigned int d, __global double* e, __global int2* f, __global int4* g, __constant int* h, __constant int* i) {\n                                                                                                                                       ^\ninput.cl:2:26: warning: incompatible pointer types passing \'__global int4 *\' to parameter of type \'__constant int *\'\n  A(a, b, c, d, d, e, f, g, h);\n                         ^\ninput.cl:1:155: note: passing argument to parameter \'h\' here\n__kernel void A(float4 a, __global float4* b, __global float4* c, unsigned int d, __global double* e, __global int2* f, __global int4* g, __constant int* h, __constant int* i) {\n                                                                                                                                                          ^\n[cldrive] Kernel: \"A\"\nclSetKernelArg CL_INVALID_ARG_SIZE\n"
+}
+outputs {
+  key: "stdout"
+  value: ""
+}
+profiling_events {
+  client: "cc1"
+  type: "runtime"
+  duration_ms: 29
+  event_start_epoch_ms: 1500412741000
+}

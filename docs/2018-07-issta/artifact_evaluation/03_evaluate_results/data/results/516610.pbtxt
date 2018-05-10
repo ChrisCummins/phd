@@ -1,0 +1,102 @@
+testcase {
+  toolchain: "opencl"
+  generator {
+    name: "clgen"
+    opts {
+      key: "git_commit"
+      value: "9556e7112ba2bd6f79ee59eef74f0a2304efa007"
+    }
+    opts {
+      key: "git_remote"
+      value: "https://github.com/ChrisCummins/clgen.git"
+    }
+    opts {
+      key: "version"
+      value: "0.4.0.dev0"
+    }
+  }
+  harness {
+    name: "cldrive"
+    opts {
+      key: "git_commit"
+      value: "9556e7112ba2bd6f79ee59eef74f0a2304efa007"
+    }
+    opts {
+      key: "git_remote"
+      value: "https://github.com/ChrisCummins/clgen.git"
+    }
+    opts {
+      key: "timeout_seconds"
+      value: "60"
+    }
+    opts {
+      key: "version"
+      value: "0.4.0.dev0"
+    }
+  }
+  inputs {
+    key: "gsize"
+    value: "128,16,1"
+  }
+  inputs {
+    key: "lsize"
+    value: "32,1,1"
+  }
+  inputs {
+    key: "src"
+    value: "__kernel void entry(__global unsigned char* a, unsigned b) {\n  a[get_global_id(0)] %= 42;\n  barrier(1);\n}"
+  }
+  profiling_events {
+    client: "cc1"
+    type: "generation"
+    duration_ms: 225
+    event_start_epoch_ms: 1498643168000
+  }
+}
+testbed {
+  toolchain: "opencl"
+  name: "intel_xeon_phi"
+  opts {
+    key: "driver_version"
+    value: "1.2"
+  }
+  opts {
+    key: "host"
+    value: "CentOS Linux 7.1.1503 64bit"
+  }
+  opts {
+    key: "opencl_device"
+    value: "Intel(R) Many Integrated Core Acceleration Card"
+  }
+  opts {
+    key: "opencl_devtype"
+    value: "ACCELERATOR"
+  }
+  opts {
+    key: "opencl_opt"
+    value: "disabled"
+  }
+  opts {
+    key: "opencl_platform"
+    value: "Intel(R) OpenCL"
+  }
+  opts {
+    key: "opencl_version"
+    value: "1.2"
+  }
+}
+returncode: -9
+outputs {
+  key: "stderr"
+  value: "[cldrive] Platform: Intel(R) OpenCL\n[cldrive] Device: Intel(R) Many Integrated Core Acceleration Card\n[cldrive] OpenCL optimizations: off\nLLVM ERROR: LLVM2PIL: Cannot yet select: 0x7f25842cec70: i8,i8 = umul_lohi 0x7f25842cf570, 0x7f25842cf670 [ORD=16] [ID=22]\n  0x7f25842cf570: i8 = srl 0x7f25842ceb70, 0x7f258400a4e0 [ORD=16] [ID=21]\n    0x7f25842ceb70: i8,ch = load 0x7f25840db5f8, 0x7f258400ace0, 0x7f258400aae0<LD1[%scevgep2]> [ORD=15] [ID=20]\n      0x7f258400ace0: i64 = add 0x7f25842cf170, 0x7f25842cee70 [ORD=14] [ID=17]\n        0x7f25842cf170: i64,ch = CopyFromReg 0x7f25840db5f8, 0x7f25842cf470 [ORD=14] [ID=13]\n          0x7f25842cf470: i64 = Register %vreg1 [ID=1]\n        0x7f25842cee70: i64,ch = CopyFromReg 0x7f25840db5f8, 0x7f25842cef70 [ORD=14] [ID=14]\n          0x7f25842cef70: i64 = Register %vreg2 [ID=2]\n      0x7f258400aae0: i64 = undef [ID=3]\n    0x7f258400a4e0: i8 = Constant<1> [ID=9]\n  0x7f25842cf670: i8 = Constant<49> [ID=10]\n"
+}
+outputs {
+  key: "stdout"
+  value: ""
+}
+profiling_events {
+  client: "fuji"
+  type: "runtime"
+  duration_ms: 60012
+  event_start_epoch_ms: 1500216002000
+}

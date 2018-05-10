@@ -1,0 +1,110 @@
+testcase {
+  toolchain: "opencl"
+  generator {
+    name: "clgen"
+    opts {
+      key: "git_commit"
+      value: "9556e7112ba2bd6f79ee59eef74f0a2304efa007"
+    }
+    opts {
+      key: "git_remote"
+      value: "https://github.com/ChrisCummins/clgen.git"
+    }
+    opts {
+      key: "version"
+      value: "0.4.0.dev0"
+    }
+  }
+  harness {
+    name: "cldrive"
+    opts {
+      key: "git_commit"
+      value: "9556e7112ba2bd6f79ee59eef74f0a2304efa007"
+    }
+    opts {
+      key: "git_remote"
+      value: "https://github.com/ChrisCummins/clgen.git"
+    }
+    opts {
+      key: "timeout_seconds"
+      value: "60"
+    }
+    opts {
+      key: "version"
+      value: "0.4.0.dev0"
+    }
+  }
+  inputs {
+    key: "gsize"
+    value: "128,16,1"
+  }
+  inputs {
+    key: "lsize"
+    value: "32,1,1"
+  }
+  inputs {
+    key: "src"
+    value: "__kernel void A(__global int* a, __global int* b) {\n  switch (get_global_id(0)) {\n    case 0:\n      a[get_global_id(0)] = b[get_global_id(0) + 13];\n      break;\n    case 2:\n      a[get_global_id(0)] = b[get_global_id(0) + 11];\n      break;\n    case 6:\n      a[get_global_id(0)] = b[get_global_id(0) + 128];\n  }\n\n  barrier(2);\n}"
+  }
+  invariant_opts {
+    key: "kernel_throws_compiler_warning"
+    value: "false"
+  }
+  invariant_opts {
+    key: "oclverify"
+    value: "fail"
+  }
+  profiling_events {
+    client: "cc1"
+    type: "generation"
+    duration_ms: 703
+    event_start_epoch_ms: 1500285254000
+  }
+}
+testbed {
+  toolchain: "opencl"
+  name: "oclgrind_cpu"
+  opts {
+    key: "driver_version"
+    value: "Oclgrind 16.10"
+  }
+  opts {
+    key: "host"
+    value: "Ubuntu 16.04 64bit"
+  }
+  opts {
+    key: "opencl_device"
+    value: "Oclgrind Simulator"
+  }
+  opts {
+    key: "opencl_devtype"
+    value: "Emulator"
+  }
+  opts {
+    key: "opencl_opt"
+    value: "enabled"
+  }
+  opts {
+    key: "opencl_platform"
+    value: "Oclgrind"
+  }
+  opts {
+    key: "opencl_version"
+    value: "1.2"
+  }
+}
+returncode: 139
+outputs {
+  key: "stderr"
+  value: "[cldrive] Platform: Oclgrind\n[cldrive] Device: Oclgrind Simulator\n[cldrive] OpenCL optimizations: on\n[cldrive] Kernel: \"A\"\ncldrive-harness-qwy09xdl: /home/cec/src/project_b/lib/clgen/native/llvm/3.9.0/src/include/llvm/ADT/DenseMap.h:334: void llvm::DenseMapBase<DerivedT, KeyT, ValueT, KeyInfoT, BucketT>::moveFromOldBuckets(BucketT*, BucketT*) [with DerivedT = llvm::DenseMap<llvm::APInt, llvm::ConstantInt*, llvm::DenseMapAPIntKeyInfo>; KeyT = llvm::APInt; ValueT = llvm::ConstantInt*; KeyInfoT = llvm::DenseMapAPIntKeyInfo; BucketT = llvm::detail::DenseMapPair<llvm::APInt, llvm::ConstantInt*>]: Assertion `!FoundVal && \"Key already in new map?\"\' failed.\ntimeout: the monitored command dumped core\n"
+}
+outputs {
+  key: "stdout"
+  value: ""
+}
+profiling_events {
+  client: "cc1"
+  type: "runtime"
+  duration_ms: 271
+  event_start_epoch_ms: 1500292787000
+}

@@ -1,0 +1,102 @@
+testcase {
+  toolchain: "opencl"
+  generator {
+    name: "clgen"
+    opts {
+      key: "git_commit"
+      value: "9556e7112ba2bd6f79ee59eef74f0a2304efa007"
+    }
+    opts {
+      key: "git_remote"
+      value: "https://github.com/ChrisCummins/clgen.git"
+    }
+    opts {
+      key: "version"
+      value: "0.4.0.dev0"
+    }
+  }
+  harness {
+    name: "cldrive"
+    opts {
+      key: "git_commit"
+      value: "9556e7112ba2bd6f79ee59eef74f0a2304efa007"
+    }
+    opts {
+      key: "git_remote"
+      value: "https://github.com/ChrisCummins/clgen.git"
+    }
+    opts {
+      key: "timeout_seconds"
+      value: "60"
+    }
+    opts {
+      key: "version"
+      value: "0.4.0.dev0"
+    }
+  }
+  inputs {
+    key: "gsize"
+    value: "1,1,1"
+  }
+  inputs {
+    key: "lsize"
+    value: "1,1,1"
+  }
+  inputs {
+    key: "src"
+    value: "__kernel void A(__global float4* a, __global float4* b, __global float2* c) {\n  if (get_global_id(0) == 0) {\n    *b = __builtin_astype(d, uint4);\n    d = complexLoadHack(a);\n  }\n\n  uint4 d = b[d], e = 1, f ) << 3U;\n\n  return c[0];\n}"
+  }
+  profiling_events {
+    client: "cc1"
+    type: "generation"
+    duration_ms: 498
+    event_start_epoch_ms: 1500150564000
+  }
+}
+testbed {
+  toolchain: "opencl"
+  name: "nvidia_gpu_gtx780"
+  opts {
+    key: "driver_version"
+    value: "361.42"
+  }
+  opts {
+    key: "host"
+    value: "openSUSE 13.1 64bit"
+  }
+  opts {
+    key: "opencl_device"
+    value: "GeForce GTX 780"
+  }
+  opts {
+    key: "opencl_devtype"
+    value: "GPU"
+  }
+  opts {
+    key: "opencl_opt"
+    value: "enabled"
+  }
+  opts {
+    key: "opencl_platform"
+    value: "NVIDIA CUDA"
+  }
+  opts {
+    key: "opencl_version"
+    value: "1.2"
+  }
+}
+returncode: 1
+outputs {
+  key: "stderr"
+  value: "[cldrive] Platform: NVIDIA CUDA\n[cldrive] Device: GeForce GTX 780\n[cldrive] OpenCL optimizations: on\n<kernel>:3:27: error: use of undeclared identifier \'d\'\n    *b = __builtin_astype(d, uint4);\n                          ^\n<kernel>:4:5: error: use of undeclared identifier \'d\'\n    d = complexLoadHack(a);\n    ^\n<kernel>:4:9: warning: implicit declaration of function \'complexLoadHack\' is invalid in C99\n    d = complexLoadHack(a);\n        ^\n<kernel>:6:14: error: array subscript is not an integer\n  uint4 d = b[d], e = 1, f ) << 3U;\n             ^~\n<kernel>:6:27: error: expected \';\' at end of declaration\n  uint4 d = b[d], e = 1, f ) << 3U;\n                          ^\n                          ;\n<kernel>:7:3: error: void function \'A\' should not return a value\n  return c[0];\n  ^      ~~~~\nclBuildProgram CL_BUILD_PROGRAM_FAILURE\n"
+}
+outputs {
+  key: "stdout"
+  value: ""
+}
+profiling_events {
+  client: "kobol"
+  type: "runtime"
+  duration_ms: 214
+  event_start_epoch_ms: 1500867411000
+}

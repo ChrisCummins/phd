@@ -1,0 +1,102 @@
+testcase {
+  toolchain: "opencl"
+  generator {
+    name: "clgen"
+    opts {
+      key: "git_commit"
+      value: "9556e7112ba2bd6f79ee59eef74f0a2304efa007"
+    }
+    opts {
+      key: "git_remote"
+      value: "https://github.com/ChrisCummins/clgen.git"
+    }
+    opts {
+      key: "version"
+      value: "0.4.0.dev0"
+    }
+  }
+  harness {
+    name: "cldrive"
+    opts {
+      key: "git_commit"
+      value: "9556e7112ba2bd6f79ee59eef74f0a2304efa007"
+    }
+    opts {
+      key: "git_remote"
+      value: "https://github.com/ChrisCummins/clgen.git"
+    }
+    opts {
+      key: "timeout_seconds"
+      value: "60"
+    }
+    opts {
+      key: "version"
+      value: "0.4.0.dev0"
+    }
+  }
+  inputs {
+    key: "gsize"
+    value: "128,16,1"
+  }
+  inputs {
+    key: "lsize"
+    value: "32,1,1"
+  }
+  inputs {
+    key: "src"
+    value: "__kernel void A(__global float* a, __global float* b) {\n  a[0] = max(a[c], b[2]);\n}"
+  }
+  profiling_events {
+    client: "cc1"
+    type: "generation"
+    duration_ms: 178
+    event_start_epoch_ms: 1500908146000
+  }
+}
+testbed {
+  toolchain: "opencl"
+  name: "intel_cpu_i5-4570"
+  opts {
+    key: "driver_version"
+    value: "1.2.0.25"
+  }
+  opts {
+    key: "host"
+    value: "Ubuntu 16.04 64bit"
+  }
+  opts {
+    key: "opencl_device"
+    value: "Intel(R) Core(TM) i5-4570 CPU @ 3.20GHz"
+  }
+  opts {
+    key: "opencl_devtype"
+    value: "CPU"
+  }
+  opts {
+    key: "opencl_opt"
+    value: "disabled"
+  }
+  opts {
+    key: "opencl_platform"
+    value: "Intel(R) OpenCL"
+  }
+  opts {
+    key: "opencl_version"
+    value: "1.2"
+  }
+}
+returncode: 1
+outputs {
+  key: "stderr"
+  value: "[cldrive] Platform: Intel(R) OpenCL\n[cldrive] Device: Intel(R) Core(TM) i5-4570 CPU @ 3.20GHz\n[cldrive] OpenCL optimizations: off\n1 error generated.\nCompilation started\n1:2:10: error: no matching function for call to \'max\'\n<stdin>:2078:61: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'float\' for 1st argument\n<stdin>:2084:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'float2\' (vector of 2 \'float\' values) for 1st argument\n<stdin>:2085:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'float3\' (vector of 3 \'float\' values) for 1st argument\n<stdin>:2086:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'float4\' (vector of 4 \'float\' values) for 1st argument\n<stdin>:2087:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'float8\' (vector of 8 \'float\' values) for 1st argument\n<stdin>:2088:63: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'float16\' (vector of 16 \'float\' values) for 1st argument\n<stdin>:1461:68: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'double\' for 1st argument\n<stdin>:1469:23: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'double2\' (vector of 2 \'double\' values) for 1st argument\n<stdin>:1470:39: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'double3\' (vector of 3 \'double\' values) for 1st argument\n<stdin>:1471:53: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'double4\' (vector of 4 \'double\' values) for 1st argument\n<stdin>:1472:67: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'double8\' (vector of 8 \'double\' values) for 1st argument\n<stdin>:1474:8: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'double16\' (vector of 16 \'double\' values) for 1st argument\n<stdin>:1641:60: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'char\' for 1st argument\n<stdin>:1642:61: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'uchar\' (aka \'unsigned char\') for 1st argument\n<stdin>:1643:61: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'char2\' (vector of 2 \'char\' values) for 1st argument\n<stdin>:1644:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'uchar2\' (vector of 2 \'uchar\' values) for 1st argument\n<stdin>:1645:61: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'char3\' (vector of 3 \'char\' values) for 1st argument\n<stdin>:1646:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'uchar3\' (vector of 3 \'uchar\' values) for 1st argument\n<stdin>:1647:61: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'char4\' (vector of 4 \'char\' values) for 1st argument\n<stdin>:1648:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'uchar4\' (vector of 4 \'uchar\' values) for 1st argument\n<stdin>:1649:61: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'char8\' (vector of 8 \'char\' values) for 1st argument\n<stdin>:1650:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'uchar8\' (vector of 8 \'uchar\' values) for 1st argument\n<stdin>:1651:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'char16\' (vector of 16 \'char\' values) for 1st argument\n<stdin>:1652:63: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'uchar16\' (vector of 16 \'uchar\' values) for 1st argument\n<stdin>:1653:61: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'short\' for 1st argument\n<stdin>:1654:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'ushort\' (aka \'unsigned short\') for 1st argument\n<stdin>:1655:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'short2\' (vector of 2 \'short\' values) for 1st argument\n<stdin>:1656:63: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'ushort2\' (vector of 2 \'ushort\' values) for 1st argument\n<stdin>:1657:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'short3\' (vector of 3 \'short\' values) for 1st argument\n<stdin>:1658:63: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'ushort3\' (vector of 3 \'ushort\' values) for 1st argument\n<stdin>:1659:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'short4\' (vector of 4 \'short\' values) for 1st argument\n<stdin>:1660:63: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'ushort4\' (vector of 4 \'ushort\' values) for 1st argument\n<stdin>:1661:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'short8\' (vector of 8 \'short\' values) for 1st argument\n<stdin>:1662:63: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'ushort8\' (vector of 8 \'ushort\' values) for 1st argument\n<stdin>:1663:63: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'short16\' (vector of 16 \'short\' values) for 1st argument\n<stdin>:1664:64: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'ushort16\' (vector of 16 \'ushort\' values) for 1st argument\n<stdin>:1665:59: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'int\' for 1st argument\n<stdin>:1666:60: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'uint\' (aka \'unsigned int\') for 1st argument\n<stdin>:1667:60: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'int2\' (vector of 2 \'int\' values) for 1st argument\n<stdin>:1668:61: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'uint2\' (vector of 2 \'uint\' values) for 1st argument\n<stdin>:1669:60: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'int3\' (vector of 3 \'int\' values) for 1st argument\n<stdin>:1670:61: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'uint3\' (vector of 3 \'uint\' values) for 1st argument\n<stdin>:1671:60: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'int4\' (vector of 4 \'int\' values) for 1st argument\n<stdin>:1672:61: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'uint4\' (vector of 4 \'uint\' values) for 1st argument\n<stdin>:1673:60: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'int8\' (vector of 8 \'int\' values) for 1st argument\n<stdin>:1674:61: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'uint8\' (vector of 8 \'uint\' values) for 1st argument\n<stdin>:1675:61: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'int16\' (vector of 16 \'int\' values) for 1st argument\n<stdin>:1676:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'uint16\' (vector of 16 \'uint\' values) for 1st argument\n<stdin>:1677:60: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'long\' for 1st argument\n<stdin>:1678:61: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'ulong\' (aka \'unsigned long\') for 1st argument\n<stdin>:1679:61: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'long2\' (vector of 2 \'long\' values) for 1st argument\n<stdin>:1680:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'ulong2\' (vector of 2 \'ulong\' values) for 1st argument\n<stdin>:1681:61: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'long3\' (vector of 3 \'long\' values) for 1st argument\n<stdin>:1682:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'ulong3\' (vector of 3 \'ulong\' values) for 1st argument\n<stdin>:1683:61: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'long4\' (vector of 4 \'long\' values) for 1st argument\n<stdin>:1684:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'ulong4\' (vector of 4 \'ulong\' values) for 1st argument\n<stdin>:1685:61: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'long8\' (vector of 8 \'long\' values) for 1st argument\n<stdin>:1686:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'ulong8\' (vector of 8 \'ulong\' values) for 1st argument\n<stdin>:1687:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'long16\' (vector of 16 \'long\' values) for 1st argument\n<stdin>:1688:63: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'ulong16\' (vector of 16 \'ulong\' values) for 1st argument\n<stdin>:1595:61: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'char2\' (vector of 2 \'char\' values) for 1st argument\n<stdin>:1596:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'uchar2\' (vector of 2 \'uchar\' values) for 1st argument\n<stdin>:1597:61: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'char3\' (vector of 3 \'char\' values) for 1st argument\n<stdin>:1598:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'uchar3\' (vector of 3 \'uchar\' values) for 1st argument\n<stdin>:1599:61: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'char4\' (vector of 4 \'char\' values) for 1st argument\n<stdin>:1600:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'uchar4\' (vector of 4 \'uchar\' values) for 1st argument\n<stdin>:1601:61: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'char8\' (vector of 8 \'char\' values) for 1st argument\n<stdin>:1602:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'uchar8\' (vector of 8 \'uchar\' values) for 1st argument\n<stdin>:1603:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'char16\' (vector of 16 \'char\' values) for 1st argument\n<stdin>:1604:63: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'uchar16\' (vector of 16 \'uchar\' values) for 1st argument\n<stdin>:1607:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'short2\' (vector of 2 \'short\' values) for 1st argument\n<stdin>:1608:63: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'ushort2\' (vector of 2 \'ushort\' values) for 1st argument\n<stdin>:1609:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'short3\' (vector of 3 \'short\' values) for 1st argument\n<stdin>:1610:63: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'ushort3\' (vector of 3 \'ushort\' values) for 1st argument\n<stdin>:1611:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'short4\' (vector of 4 \'short\' values) for 1st argument\n<stdin>:1612:63: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'ushort4\' (vector of 4 \'ushort\' values) for 1st argument\n<stdin>:1613:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'short8\' (vector of 8 \'short\' values) for 1st argument\n<stdin>:1614:63: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'ushort8\' (vector of 8 \'ushort\' values) for 1st argument\n<stdin>:1615:63: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'short16\' (vector of 16 \'short\' values) for 1st argument\n<stdin>:1616:64: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'ushort16\' (vector of 16 \'ushort\' values) for 1st argument\n<stdin>:1619:60: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'int2\' (vector of 2 \'int\' values) for 1st argument\n<stdin>:1620:61: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'uint2\' (vector of 2 \'uint\' values) for 1st argument\n<stdin>:1621:60: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'int3\' (vector of 3 \'int\' values) for 1st argument\n<stdin>:1622:61: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'uint3\' (vector of 3 \'uint\' values) for 1st argument\n<stdin>:1623:60: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'int4\' (vector of 4 \'int\' values) for 1st argument\n<stdin>:1624:61: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'uint4\' (vector of 4 \'uint\' values) for 1st argument\n<stdin>:1625:60: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'int8\' (vector of 8 \'int\' values) for 1st argument\n<stdin>:1626:61: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'uint8\' (vector of 8 \'uint\' values) for 1st argument\n<stdin>:1627:61: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'int16\' (vector of 16 \'int\' values) for 1st argument\n<stdin>:1628:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'uint16\' (vector of 16 \'uint\' values) for 1st argument\n<stdin>:1631:61: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'long2\' (vector of 2 \'long\' values) for 1st argument\n<stdin>:1632:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'ulong2\' (vector of 2 \'ulong\' values) for 1st argument\n<stdin>:1633:61: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'long3\' (vector of 3 \'long\' values) for 1st argument\n<stdin>:1634:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'ulong3\' (vector of 3 \'ulong\' values) for 1st argument\n<stdin>:1635:61: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'long4\' (vector of 4 \'long\' values) for 1st argument\n<stdin>:1636:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'ulong4\' (vector of 4 \'ulong\' values) for 1st argument\n<stdin>:1637:61: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'long8\' (vector of 8 \'long\' values) for 1st argument\n<stdin>:1638:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'ulong8\' (vector of 8 \'ulong\' values) for 1st argument\n<stdin>:1639:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'long16\' (vector of 16 \'long\' values) for 1st argument\n<stdin>:1640:63: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'ulong16\' (vector of 16 \'ulong\' values) for 1st argument\n<stdin>:2079:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'float2\' (vector of 2 \'float\' values) for 1st argument\n<stdin>:2080:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'float3\' (vector of 3 \'float\' values) for 1st argument\n<stdin>:2081:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'float4\' (vector of 4 \'float\' values) for 1st argument\n<stdin>:2082:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'float8\' (vector of 8 \'float\' values) for 1st argument\n<stdin>:2083:63: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'float16\' (vector of 16 \'float\' values) for 1st argument\n<stdin>:1463:13: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'double2\' (vector of 2 \'double\' values) for 1st argument\n<stdin>:1464:30: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'double3\' (vector of 3 \'double\' values) for 1st argument\n<stdin>:1465:45: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'double4\' (vector of 4 \'double\' values) for 1st argument\n<stdin>:1466:62: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'double8\' (vector of 8 \'double\' values) for 1st argument\n<stdin>:1468:6: note: candidate function not viable: no known conversion from \'<dependent type>\' to \'double16\' (vector of 16 \'double\' values) for 1st argument\nCompilation failed\nclBuildProgram CL_BUILD_PROGRAM_FAILURE\n"
+}
+outputs {
+  key: "stdout"
+  value: ""
+}
+profiling_events {
+  client: "cc1"
+  type: "runtime"
+  duration_ms: 62
+  event_start_epoch_ms: 1500953401000
+}
