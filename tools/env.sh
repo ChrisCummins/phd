@@ -11,15 +11,4 @@ export PYTHONPATH=$root:$root/lib:$root/bazel-genfiles
 
 alias pgit="git -C ~/phd"
 
-# Run all python _test files in a directory.
-pytest_dir() {
-    for f in $(find $1 -name '*_test.py'); do
-        echo $f
-        if ! python $f; then
-            echo "$f tests failed" >&2
-            break
-        fi
-    done
-}
-
 alias dpack="python $root/lib/dpack/dpack.py"
