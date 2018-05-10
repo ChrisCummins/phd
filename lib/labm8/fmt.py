@@ -10,6 +10,23 @@ class Error(Exception):
   pass
 
 
+def Indent(num_spaces: int, text: str) -> str:
+  """Indent a string by a number of spaces.
+
+  Prepends 'num_spaces' whitespace characters to every line in the given string.
+
+  Args:
+    num_spaces: The number of spaces to indent by. Must be greater than or equal
+      to zero.
+    text: The string to indent.
+
+  Returns:
+    The indented string.
+  """
+  prefix = ''.join([' '] * num_spaces)
+  return f'\n{prefix}'.join((prefix + str(text)).split('\n'))
+
+
 def table(rows, columns=None, output=None, data_args={}, **kwargs) -> str:
   """
   Return a formatted string of "list of list" table data.

@@ -7,6 +7,14 @@ from absl import app
 from lib.labm8 import fmt
 
 
+def test_indent_zero():
+  assert fmt.Indent(0, 'abc\nd') == 'abc\nd'
+
+
+def test_indent_two():
+  assert fmt.Indent(2, 'abc\nd') == '  abc\n  d'
+
+
 def test_table():
   assert (["foo", "1", "bar", "2"] ==
           fmt.table((("foo", 1), ("bar", 2))).split())
