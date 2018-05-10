@@ -8,14 +8,11 @@
 #
 set -eu
 
-# Directory of this script.
-DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# The root of the repository.
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-# Run from the workspace root directory.
-cd "$DIR/.."
-
-for dir in $(find . -name proto -type d); do
-  if compgen -G "$dir/*.proto" > /dev/null; then
-    protoc -I$dir --python_out=$dir $dir/*.proto
-  fi
+cd "$ROOT"
+for file in $(git ls-files | grep '\.proto'); do
+  dir="$(dirname $file)"
+  protoc -I="$dir" -I="$ROOT" --python_out="$dir" "$file"
 done
