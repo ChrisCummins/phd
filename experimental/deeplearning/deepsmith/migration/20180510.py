@@ -164,7 +164,7 @@ LEFT JOIN stderrs ON results.stderr_id = stderrs.id
 LEFT JOIN clsmith_testcase_metas ON testcases.id=clsmith_testcase_metas.id
 LEFT JOIN dsmith_testcase_metas ON testcases.id=dsmith_testcase_metas.id
 LEFT JOIN dsmith_program_metas ON programs.id=dsmith_program_metas.id
-WHERE programs.id = %s
+WHERE programs.id = %s AND platforms.platform <> 'clang'
 """, (program_id,))
 
   i = 0
