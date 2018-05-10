@@ -18,25 +18,25 @@
 """
 GLSL database backend.
 """
-import re
-
 import datetime
-import dsmith
-import humanize
 import logging
-import progressbar
-import sqlalchemy as sql
+import re
 import subprocess
 import threading
 from contextlib import contextmanager
-from dsmith import Colors
-from dsmith import db_base
-from dsmith.db_base import *
 from pathlib import Path
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.sql import func
 from typing import Iterable, List, Union
 
+import humanize
+import progressbar
+import sqlalchemy as sql
+from experimental.dsmith.db_base import *
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.sql import func
+
+from experimental import dsmith
+from experimental.dsmith import Colors
+from experimental.dsmith import db_base
 from lib.labm8 import crypto, fs
 
 # Global state to manage database connections. Must call init() before
@@ -160,13 +160,13 @@ class ProgramProxy(Proxy):
 
   def to_record(self, session: session_t) -> Program:
     return Program(
-        generator=self.generator,
-        sha1=self.sha1,
-        date=self.date,
-        generation_time=self.generation_time,
-        linecount=self.linecount,
-        charcount=self.charcount,
-        src=self.src)
+      generator=self.generator,
+      sha1=self.sha1,
+      date=self.date,
+      generation_time=self.generation_time,
+      linecount=self.linecount,
+      charcount=self.charcount,
+      src=self.src)
 
 
 # Testcases ###################################################################
@@ -319,9 +319,9 @@ class Testbed(Base):
             .scalar()
 
           already_done = testbed._testcase_ids_ran(
-              s, self.harness, self.generator)
+            s, self.harness, self.generator)
           todo = testbed._testcases_to_run(
-              s, self.harness, self.generator)
+            s, self.harness, self.generator)
 
           self.ndone = already_done.count()
           ntodo = todo.count()
@@ -426,20 +426,20 @@ class Testbed(Base):
           if string[-1] == "±":
             return [
               get_or_add(
-                  s, Testbed,
-                  platform_id=testbed.platform.id,
-                  optimizations=True),
+                s, Testbed,
+                platform_id=testbed.platform.id,
+                optimizations=True),
               get_or_add(
-                  s, Testbed,
-                  platform_id=testbed.platform.id,
-                  optimizations=False)
+                s, Testbed,
+                platform_id=testbed.platform.id,
+                optimizations=False)
             ]
           else:
             return [
               get_or_add(
-                  s, Testbed,
-                  platform_id=testbed.platform.id,
-                  optimizations=True if string[-1] == "+" else False)
+                s, Testbed,
+                platform_id=testbed.platform.id,
+                optimizations=True if string[-1] == "+" else False)
             ]
 
     # Strip shell formatting
@@ -518,9 +518,9 @@ class Stdout(Base):
     string = Stdout._escape(string)
 
     stdout = get_or_add(
-        session, Stdout,
-        sha1=crypto.sha1_str(string),
-        stdout=string)
+      session, Stdout,
+      sha1=crypto.sha1_str(string),
+      stdout=string)
     return stdout
 
 
@@ -561,12 +561,12 @@ class Stderr(Base):
     sha1 = crypto.sha1_str(string)
 
     stderr = get_or_add(
-        session, Stderr,
-        sha1=sha1,
-        linecount=len(string.split("\n")),
-        charcount=len(string),
-        truncated=len(string) > Stderr.max_chars,
-        stderr=string[:Stderr.max_chars])
+      session, Stderr,
+      sha1=sha1,
+      linecount=len(string.split("\n")),
+      charcount=len(string),
+      truncated=len(string) > Stderr.max_chars,
+      stderr=string[:Stderr.max_chars])
     return stderr
 
 
@@ -606,7 +606,8 @@ class Result(Base):
   # Fields
   id = sql.Column(id_t, primary_key=True)
   testbed_id = sql.Column(Testbed.id_t, sql.ForeignKey("testbeds.id"), nullable=False, index=True)
-  testcase_id = sql.Column(Testcase.id_t, sql.ForeignKey("testcases.id"), nullable=False, index=True)
+  testcase_id = sql.Column(Testcase.id_t, sql.ForeignKey("testcases.id"), nullable=False,
+                           index=True)
   date = sql.Column(sql.DateTime, nullable=False, index=True, default=datetime.datetime.utcnow)
   returncode = sql.Column(sql.SmallInteger, nullable=False)
   outcome = sql.Column(Outcomes.column_t, nullable=False, index=True)
@@ -656,14 +657,14 @@ class ResultProxy(object):
     session.flush()  # required to get IDs
 
     return Result(
-        testbed_id=self.testbed_id,
-        testcase_id=self.testcase_id,
-        returncode=self.returncode,
-        outcome=self.outcome,
-        runtime=self.runtime,
-        stdout=stdout,
-        stderr=stderr,
-        date=self.date)
+      testbed_id=self.testbed_id,
+      testcase_id=self.testcase_id,
+      returncode=self.returncode,
+      outcome=self.outcome,
+      runtime=self.runtime,
+      stdout=stdout,
+      stderr=stderr,
+      date=self.date)
 
 
 class GlslResult(Result):

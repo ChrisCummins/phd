@@ -18,19 +18,18 @@
 """
 Command line interface.
 """
-import os
-import sys
-
 import cProfile
-import dsmith
 import inspect
 import logging
+import os
+import sys
 import traceback
 from argparse import ArgumentParser, FileType, RawDescriptionHelpFormatter
-from dsmith import Colors
-from dsmith.repl import repl, run_command
 from typing import List
 
+from experimental import dsmith
+from experimental.dsmith import Colors
+from experimental.dsmith.repl import repl, run_command
 from lib.labm8 import fs, prof
 
 __help_epilog__ = """
@@ -141,30 +140,30 @@ def main(self, args: List[str] = sys.argv[1:]):
   Compiler fuzzing through deep learning.
   """
   parser = ArgumentParser(
-      prog="dsmith",
-      description=inspect.getdoc(self),
-      epilog=__help_epilog__,
-      formatter_class=RawDescriptionHelpFormatter)
+    prog="dsmith",
+    description=inspect.getdoc(self),
+    epilog=__help_epilog__,
+    formatter_class=RawDescriptionHelpFormatter)
 
   parser.add_argument(
-      "--config", metavar="<path>", type=FileType("r"), dest="rc_path",
-      help=f"path to configuration file (default: '{dsmith.RC_PATH}')")
+    "--config", metavar="<path>", type=FileType("r"), dest="rc_path",
+    help=f"path to configuration file (default: '{dsmith.RC_PATH}')")
   parser.add_argument(
-      "-v", "--verbose", action="store_true",
-      help="increase output verbosity")
+    "-v", "--verbose", action="store_true",
+    help="increase output verbosity")
   parser.add_argument(
-      "--debug", action="store_true",
-      help="debugging output verbosity")
+    "--debug", action="store_true",
+    help="debugging output verbosity")
   parser.add_argument(
-      "--db-debug", action="store_true",
-      help="additional database debugging output")
+    "--db-debug", action="store_true",
+    help="additional database debugging output")
   parser.add_argument(
-      "--version", action="store_true",
-      help="show version information and exit")
+    "--version", action="store_true",
+    help="show version information and exit")
   parser.add_argument(
-      "--profile", action="store_true",
-      help=("enable internal API profiling. When combined with --verbose, "
-            "prints a complete profiling trace"))
+    "--profile", action="store_true",
+    help=("enable internal API profiling. When combined with --verbose, "
+          "prints a complete profiling trace"))
   parser.add_argument("command", metavar="<command>", nargs="*",
                       help=("command to run. If not given, run an "
                             "interactive prompt"))

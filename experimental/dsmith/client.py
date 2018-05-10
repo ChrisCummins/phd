@@ -17,8 +17,8 @@
 #
 import grpc
 
-from dsmith import dsmith_pb2 as pb
-from dsmith import dsmith_pb2_grpc as rpc
+from experimental.dsmith import dsmith_pb2 as pb
+from experimental.dsmith import dsmith_pb2_grpc as rpc
 
 
 def run():

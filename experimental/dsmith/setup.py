@@ -29,8 +29,8 @@ class DsmithTestCommand(TestCommand):
   user_options = []
 
   def run_tests(self):
-    import dsmith.test
-    dsmith.test.testsuite()
+    import experimental.dsmith.test
+    experimental.dsmith.test.testsuite()
 
 
 def read_requirements(path='requirements.txt'):
@@ -73,29 +73,29 @@ def all_module_data_files(module, datadir="data", excludes=[]):
 
 
 setup(
-    name='dsmith',
-    version='1.0.0.dev0',
-    description='Compiler Fuzzing through Deep Learning',
-    url='https://github.com/ChrisCummins/dsmith',
-    author='Chris Cummins',
-    author_email='chrisc.101@gmail.com',
-    license='GNU General Public License, Version 3',
-    packages=[
-      'dsmith',
-      'dsmith.services',
-      'dsmith.glsl',
-      'dsmith.opencl',
-      'dsmith.sol',
-      'dsmith.test',
-    ],
-    package_data={
-      'dsmith': all_module_data_files('dsmith'),
-      'dsmith.test': all_module_data_files('dsmith.test', excludes=[
-        'data/cache',
-      ]),
-    },
-    entry_points={'console_scripts': ['dsmith=dsmith.cli:main']},
-    install_requires=read_requirements('requirements.txt'),
-    cmdclass={'test': DsmithTestCommand},
-    data_files=[],
-    zip_safe=False)
+  name='dsmith',
+  version='1.0.0.dev0',
+  description='Compiler Fuzzing through Deep Learning',
+  url='https://github.com/ChrisCummins/dsmith',
+  author='Chris Cummins',
+  author_email='chrisc.101@gmail.com',
+  license='GNU General Public License, Version 3',
+  packages=[
+    'dsmith',
+    'dsmith.services',
+    'dsmith.glsl',
+    'dsmith.opencl',
+    'dsmith.sol',
+    'dsmith.test',
+  ],
+  package_data={
+    'dsmith': all_module_data_files('dsmith'),
+    'dsmith.test': all_module_data_files('dsmith.test', excludes=[
+      'data/cache',
+    ]),
+  },
+  entry_points={'console_scripts': ['dsmith=dsmith.cli:main']},
+  install_requires=read_requirements('requirements.txt'),
+  cmdclass={'test': DsmithTestCommand},
+  data_files=[],
+  zip_safe=False)

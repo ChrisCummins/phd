@@ -15,16 +15,16 @@
 # You should have received a copy of the GNU General Public License along with
 # DeepSmith.  If not, see <http://www.gnu.org/licenses/>.
 #
+import contextlib
+import logging
 import os
 import sys
 from io import StringIO
-
-import contextlib
-import dsmith
-import logging
-import pytest
 from pathlib import Path
 
+import pytest
+
+from experimental import dsmith
 from lib.labm8 import fs
 from lib.labm8 import system
 from lib.labm8 import tar
@@ -38,7 +38,7 @@ class Data404(Exception):
 needs_cuda = pytest.mark.skipif(not dsmith.USE_CUDA, reason="no CUDA support")
 needs_linux = pytest.mark.skipif(not system.is_linux(), reason="not linux")
 skip_on_travis = pytest.mark.skipif(
-    os.environ.get("TRAVIS") == 'true', reason="skip on Travis CI")
+  os.environ.get("TRAVIS") == 'true', reason="skip on Travis CI")
 
 
 def data_path(*components, exists=True) -> str:

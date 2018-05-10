@@ -18,14 +18,13 @@
 """
 Oclgrind module
 """
-from tempfile import NamedTemporaryFile
-
-import dsmith
 import subprocess
-from dsmith.opencl import cldrive_mkharness as mkharness
-from dsmith.opencl import clsmith
+from tempfile import NamedTemporaryFile
 from typing import List
 
+from experimental import dsmith
+from experimental.dsmith.opencl import cldrive_mkharness as mkharness
+from experimental.dsmith.opencl import clsmith
 from lib.labm8 import fs
 
 # build paths
@@ -70,7 +69,7 @@ def verify_clsmith_testcase(testcase: 'Testcase') -> bool:
     with open(src_path, "w") as outfile:
       print(testcase.program.src, file=outfile)
     return oclgrind_verify(clsmith.cl_launcher_cli(
-        src_path, 0, 0, optimizations=True, timeout=None))
+      src_path, 0, 0, optimizations=True, timeout=None))
   finally:
     fs.rm(src_path)
 

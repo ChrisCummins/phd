@@ -23,11 +23,11 @@ Attributes:
 """
 import math
 import sys
-
-import dsmith
-from dsmith import Colors
 from pathlib import Path
 from typing import Iterable, Tuple
+
+from experimental import dsmith
+from experimental.dsmith import Colors
 
 
 class Harness(dsmith.ReprComparable):

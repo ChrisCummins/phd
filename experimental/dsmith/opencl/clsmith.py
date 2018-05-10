@@ -18,17 +18,16 @@
 """
 Interface to CLSmith binaries
 """
+import logging
 import re
 from collections import namedtuple
+from subprocess import PIPE, Popen
 from tempfile import NamedTemporaryFile
 from time import time
-
-import dsmith
-import logging
-from dsmith import Colors
-from subprocess import PIPE, Popen
 from typing import List, NewType, Tuple
 
+from experimental import dsmith
+from experimental.dsmith import Colors
 from lib.labm8 import fs
 
 runtime_t = NewType('runtime_t', float)
@@ -66,8 +65,8 @@ def clsmith(*args, exec_path=exec_path) -> return_t:
   runtime = runtime_t(time() - start_time)
 
   return return_t(
-      runtime=runtime, status=status_t(process.returncode),
-      stdout=stdout.decode('utf-8'), stderr=stderr.decode('utf-8'))
+    runtime=runtime, status=status_t(process.returncode),
+    stdout=stdout.decode('utf-8'), stderr=stderr.decode('utf-8'))
 
 
 def cl_launcher_cli(program_path: str, platform_id: int, device_id: int,
@@ -97,8 +96,8 @@ def cl_launcher(*args, **kwargs) -> return_t:
   runtime = runtime_t(time() - start_time)
 
   return return_t(
-      runtime=runtime, status=status_t(process.returncode),
-      stdout=stdout.decode('utf-8'), stderr=stderr.decode('utf-8'))
+    runtime=runtime, status=status_t(process.returncode),
+    stdout=stdout.decode('utf-8'), stderr=stderr.decode('utf-8'))
 
 
 def cl_launcher_str(src: str, *args, **kwargs) -> Tuple[float, int, str, str]:

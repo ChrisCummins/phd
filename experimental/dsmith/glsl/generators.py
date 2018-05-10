@@ -20,20 +20,11 @@ GLSL program generators.
 """
 import math
 import random
+import string
 from time import time
 
-import dsmith.opencl.db
-import humanize
-import logging
-import progressbar
-import string
-from dsmith import Colors
-from dsmith.glsl.db import *
-from dsmith.langs import Generator
-from pathlib import Path
-from sqlalchemy.sql import func
-from typing import Union
-
+from experimental.dsmith.glsl.db import *
+from experimental.dsmith.langs import Generator
 from lib.labm8 import fs
 
 

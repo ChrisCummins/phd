@@ -19,9 +19,7 @@
 Differential test soldity results.
 """
 
-import dsmith
-
-from dsmith.sol.db import *
+from experimental.dsmith.sol.db import *
 
 
 def difftest():

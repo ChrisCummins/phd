@@ -27,17 +27,17 @@ Attributes:
     DB_CREDENTIALS (Tuple[str, str]): Database username and password.
     DB_BUF_SIZE (int): Number of records to buffer before adding to database.
 """
+import logging
 import os
 import re
 from collections import namedtuple
-
-import logging
 from configparser import ConfigParser
 from contextlib import contextmanager
-from dsmith._config import *
 from pathlib import Path
-from pkg_resources import require, resource_filename
 from typing import Tuple
+
+from experimental.dsmith._config import *
+from pkg_resources import require, resource_filename
 
 from lib.labm8 import fs
 

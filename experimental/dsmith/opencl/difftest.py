@@ -18,9 +18,8 @@
 """
 Differential test OpenCL results.
 """
-import dsmith
-import threading
-from dsmith.opencl.db import *
+
+from experimental.dsmith.opencl.db import *
 
 
 def difftest():

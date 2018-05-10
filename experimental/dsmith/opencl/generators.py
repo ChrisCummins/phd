@@ -20,21 +20,14 @@ OpenCL program generators.
 """
 import math
 import random
+import string
+from pathlib import Path
 from tempfile import NamedTemporaryFile
 from time import time
 
-import dsmith.opencl.db
-import humanize
-import logging
-import progressbar
-import string
-from dsmith import Colors
-from dsmith.langs import Generator
-from dsmith.opencl import clsmith
-from dsmith.opencl.db import *
-from pathlib import Path
-from sqlalchemy.sql import func
-
+from experimental.dsmith.langs import Generator
+from experimental.dsmith.opencl import clsmith
+from experimental.dsmith.opencl.db import *
 from lib.labm8 import fs
 
 

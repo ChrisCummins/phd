@@ -19,13 +19,13 @@
 The GLSL programming language.
 """
 import sys
+import typing
 
-from dsmith.glsl import db
-from dsmith.glsl.db import *
-from dsmith.glsl.generators import *
-from dsmith.glsl.harnesses import *
-from dsmith.langs import Generator, Harness, Language
-from typing import List
+from experimental.dsmith.glsl import db
+from experimental.dsmith.glsl.db import *
+from experimental.dsmith.glsl.generators import *
+from experimental.dsmith.glsl.harnesses import *
+from experimental.dsmith.langs import Generator, Harness, Language
 
 
 class Glsl(Language):
@@ -52,7 +52,7 @@ class Glsl(Language):
       return [TestbedProxy(testbed) for testbed in Testbed.from_str(string, session=s)]
 
   def run_testcases(self, testbeds: List[str],
-                    pairs: List[Tuple[Generator, Harness]]) -> None:
+                    pairs: typing.List[typing.Tuple[Generator, Harness]]) -> None:
     with Session() as s:
       for generator, harness in pairs:
         for testbed_name in testbeds:

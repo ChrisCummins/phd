@@ -18,17 +18,13 @@
 """
 The Solidity programming language.
 """
-import sys
 
-import humanize
-from dsmith import Colors
-from dsmith.langs import Generator, Harness, Language
-from dsmith.sol import db
-from dsmith.sol import difftest
-from dsmith.sol.db import *
-from dsmith.sol.generators import DSmith, GitHub, RandChar
-from dsmith.sol.harnesses import Solc
-from typing import List
+from experimental.dsmith.langs import Generator, Harness, Language
+from experimental.dsmith.sol import db
+from experimental.dsmith.sol import difftest
+from experimental.dsmith.sol.db import *
+from experimental.dsmith.sol.generators import DSmith, GitHub, RandChar
+from experimental.dsmith.sol.harnesses import Solc
 
 
 class Solidity(Language):
