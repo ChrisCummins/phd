@@ -12,10 +12,10 @@
 set -eu
 
 
-# The artficat_evaluation root directory.
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Root of this repository.
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
 # The directory of this experiment.
-WORKING_DIR="$ROOT/docs/2018-07-issta/artifact_evaluation/01_evaluate_generator"
+WORKING_DIR="$ROOT/docs/2018-07-issta/artifact_evaluation/02_evaluate_harness"
 
 
 main() {
@@ -27,9 +27,9 @@ main() {
   # Re-enable unbound variable errors.
   set -u
 
-  mkdir -pv "$WORKING_DIR/run"
+  mkdir -pv "$WORKING_DIR/output"
 
-  # See this file for the experiment implementation.
+  # See file 'experiments.py' for the implementation.
   python "$WORKING_DIR/experiments.py"
 }
 main $@

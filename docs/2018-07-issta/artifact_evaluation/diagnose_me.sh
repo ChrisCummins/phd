@@ -72,5 +72,15 @@ main() {
   else
     echo "CLGEN=Not found."
   fi
+
+  echo
+  echo "Available OpenCL devices:"
+  cat <<EOF > diagnose_me.py
+from gpu import cldrive
+for i, env in enumerate(cldrive.all_envs()):
+  print('{}±: '.format(i + 1), env)
+EOF
+  python diagnose_me.py 2>&1 | indent
+  rm diagnose_me.py
 }
 main $@
