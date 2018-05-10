@@ -1,6 +1,8 @@
 syntax = "proto2";
 package deepsmith;
 
+import 'deeplearning/deepsmith/proto/deepsmith.proto';
+
 message DataStore {
   message Sqlite {
     optional string path = 1;
@@ -41,4 +43,117 @@ message DataStore {
 // used for unit tests.
 message DataStoreTestSet {
   map<string, DataStore> values = 1;
+}
+
+//
+// RPCs
+//
+
+// SubmitTestcases
+
+message SubmitTestcasesRequest {
+  // Reserved for later use as ID field.
+  reserved 1;
+
+  optional string client = 2 [default = "<anon>"];
+  repeated Testcase testcases = 3;
+}
+
+message SubmitTestcasesResponse {
+  enum Status {
+    SUCCESS = 0;
+    FAILURE = 1;
+  }
+
+  optional Status status = 1 [default = SUCCESS];
+  optional string server_name = 2;
+  optional int32 error_code = 3;
+  optional int32 num_truncated_outputs = 4;
+}
+
+// RequestTestcases.
+
+message RequestTestcasesRequest {
+  // The client name, e.g. $HOSTNAME.
+  optional string client = 1 [default = "<anon>"];
+
+  optional string toolchain = 9;
+  optional Testbed testbed = 2;
+  optional Harness harness = 3;
+
+  optional bool return_testcases = 5 [default = true];
+  optional bool mark_pending_results = 6 [default = true];
+
+  // Must be >= 1.
+  optional int32 max_num_testcases = 4 [default = 100];
+
+  optional bool include_testcases_with_results = 100 [default = false];
+  optional bool include_testcases_with_pending_results = 101 [default = false];
+  optional bool return_total_matching_count = 102 [default = false];
+}
+
+message RequestTestcasesResponse {
+  enum Status {
+    SUCCESS = 0;
+    FAILURE = 1;
+    INVALID_REQUEST = 2;
+  }
+
+  optional Status status = 1 [default = SUCCESS];
+  optional string server_name = 2;
+  repeated Testcase testcases = 4;
+
+  optional int64 total_matching_count = 5;
+
+  // Only set if status != SUCCESS.
+  optional string error = 6;
+}
+
+// SubmitTestcases
+
+message SubmitResultsRequest {
+  // Reserved for later use as ID field.
+  reserved 1;
+
+  // TODO(cec): Normalize results using repeated fields and indices.
+  repeated Result results = 2;
+}
+
+message SubmitResultsResponse {
+  enum Status {
+    SUCCESS = 0;
+    FAILURE = 1;
+  }
+
+  optional Status status = 1 [default = SUCCESS];
+}
+
+// Service.
+
+service TestingService {
+  rpc SubmitTestcases (SubmitTestcasesRequest) returns (SubmitTestcasesResponse);
+  rpc RequestTestCases (RequestTestcasesRequest) returns (RequestTestcasesResponse);
+  rpc SubmitResults (SubmitResultsRequest) returns (SubmitResultsResponse);
+}
+
+
+message ResultsCollection {
+  // Reserved for later use as ID field.
+  reserved 1;
+
+  repeated Result results = 2;
+}
+
+message ResultsTable {
+  message ResultsTableEntry {
+    optional Testbed testbed = 1;
+    optional Harness harness = 2;
+    // Result.testcase must be none.
+    repeated Result results = 3;
+  }
+
+  // Reserved for later use as ID field.
+  reserved 1;
+
+  repeated ResultsTableEntry entries = 2;
 }

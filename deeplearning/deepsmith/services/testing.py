@@ -2,12 +2,12 @@
 This file defines the TestingService object.
 """
 import time
+from concurrent import futures
 
 import grpc
 from absl import app
 from absl import flags
 from absl import logging
-from concurrent import futures
 
 from deeplearning.deepsmith import datastore
 from deeplearning.deepsmith.proto import deepsmith_pb2
@@ -30,16 +30,16 @@ class TestingService(deepsmith_pb2_grpc.TestingServiceServicer):
   def __init__(self, ds: datastore.DataStore):
     self.ds = ds
 
-  def SubmitTestcases(self, request: deepsmith_pb2.SubmitTestcasesRequest,
-                      context) -> deepsmith_pb2.SubmitTestcasesResponse:
+  def SubmitTestcases(self, request: datastore_pb2.SubmitTestcasesRequest,
+                      context) -> datastore_pb2.SubmitTestcasesResponse:
     """Submit Testcases.
     """
     logging.info("SubmitTestcases() client=%s", request.client)
-    response = deepsmith_pb2.SubmitTestcasesResponse()
+    response = datastore_pb2.SubmitTestcasesResponse()
     try:
       self.ds.SubmitTestcases(request, response)
     except:
-      response.status = deepsmith_pb2.SubmitTestcasesResponse.FAILURE
+      response.status = datastore_pb2.SubmitTestcasesResponse.FAILURE
     return response
 
   def RequestTestcases(self, request: deepsmith_pb2.RequestTestcasesRequest,
