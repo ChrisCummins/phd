@@ -1628,18 +1628,20 @@ class DianaScripts(Task):
   """Scripts just for florence."""
   __platforms__ = ['osx']
   __hosts__ = ['diana']
-  __deps__ = ["Scripts"]
+  __deps__ = ['Scripts']
   __genfiles__ = [
-      "~/.local/bin/orange",
-      "~/.local/bin/ryan_gosling_give_me_photos",
-      "~/.local/bin/ryan_gosling_have_my_photos",
+      '~/.local/bin/ryan_gosling_give_me_photos',
+      '~/.local/bin/ryan_gosling_have_my_photos',
   ]
 
   def install(self):
-    symlink(usr_share("scripts/orange.sh"), "~/.local/bin/orange")
+    symlink(usr_share("scripts/ryan_gosling_give_me_photos.sh"),
+            "~/.local/bin/ryan_gosling_give_me_photos")
+    symlink(usr_share("scripts/ryan_gosling_have_my_photos.sh"),
+            "~/.local/bin/ryan_gosling_have_my_photos")
 
   def uninstall(self):
-    task_print("Removing florence scripts")
+    task_print("Removing diana scripts")
     Trash().trash(*self.__genfiles__)
 
 
