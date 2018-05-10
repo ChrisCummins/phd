@@ -17,7 +17,7 @@
 #
 import pytest
 
-from dsmith import repl
+from experimental.dsmith import repl
 
 
 def test_execute_type_error():

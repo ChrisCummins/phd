@@ -22,20 +22,20 @@ Attributes:
     __help__ (str): REPL help string.
     __available_commands__ (str): Help string for available commands.
 """
+import datetime
+import logging
 import math
 import os
 import random
 import re
 import sys
-
-import datetime
-import dsmith
-import humanize
-import logging
 import traceback
-from dsmith import Colors
-from dsmith.langs import Generator, Language, mklang
 
+import humanize
+
+from experimental import dsmith
+from experimental.dsmith import Colors
+from experimental.dsmith.langs import Generator, Language, mklang
 from lib.labm8 import fs
 
 _lang_str = f"{Colors.RED}<lang>{Colors.END}{Colors.BOLD}"
@@ -48,7 +48,8 @@ __available_commands__ = f"""\
   {Colors.BOLD}describe [all]{Colors.END}
     Provide an overview of stored data.
 
-  {Colors.BOLD}describe {_lang_str} {{{Colors.GREEN}generators{Colors.END}{Colors.BOLD},programs}}{Colors.END}
+  {Colors.BOLD}describe {_lang_str} {{{Colors.GREEN}generators{Colors.END}{Colors.BOLD},
+  programs}}{Colors.END}
     Provide details about generators, or generated programs.
 
   {Colors.BOLD}describe [available] {_lang_str} [{_harness_str}] {Colors.PURPLE}testbeds{Colors.END}
@@ -62,13 +63,15 @@ __available_commands__ = f"""\
     Generate the specified number of programs. If no generator is specified,
     default to dsmith.
 
-  {Colors.BOLD}import {_generator_str} {_lang_str} programs from {Colors.BOLD}{Colors.BLUE}<dir>{Colors.END}
+  {Colors.BOLD}import {_generator_str} {_lang_str} programs from {Colors.BOLD}{Colors.BLUE}<dir>{
+  Colors.END}
     Import programs from a directory.
 
   {Colors.BOLD}make {_lang_str} [[{_harness_str}]:[{_generator_str}]] testcases{Colors.END}
     Prepare testcases from programs.
 
-  {Colors.BOLD}run {_lang_str} [[{_harness_str}]:[{_generator_str}]] testcases [on {_testbed_str}]{Colors.END}
+  {Colors.BOLD}run {_lang_str} [[{_harness_str}]:[{_generator_str}]] testcases [on {
+  _testbed_str}]{Colors.END}
     Run testcases. If no generator is specified, run testcases from all
     generators. If no testbed is specified, use all available testbeds.
 
@@ -158,7 +161,8 @@ def _make_programs(lang: Language, generator: Generator,
 
 
 def _execute(statement: str, file=sys.stdout) -> None:
-  if not isinstance(statement, str): raise TypeError
+  if not isinstance(statement, str):
+    raise TypeError
 
   # parsing is case insensitive
   statement = re.sub("\s+", " ", statement.strip().lower())
@@ -199,9 +203,11 @@ def _execute(statement: str, file=sys.stdout) -> None:
 
   if components[0] == "describe":
     generators_match = re.match(r'describe (?P<lang>\w+) generators$', statement)
-    testbeds_match = re.match(r'describe (?P<available>available )?(?P<lang>\w+) testbeds$', statement)
+    testbeds_match = re.match(r'describe (?P<available>available )?(?P<lang>\w+) testbeds$',
+                              statement)
     programs_match = re.match(r'describe (?P<lang>\w+) programs$', statement)
-    testcases_match = re.match(r'describe (?P<lang>\w+) ((?P<generator>\w+) )?testcases$', statement)
+    testcases_match = re.match(r'describe (?P<lang>\w+) ((?P<generator>\w+) )?testcases$',
+                               statement)
     results_match = re.match(r'describe (?P<lang>\w+) results$', statement)
 
     if generators_match:
@@ -232,8 +238,11 @@ def _execute(statement: str, file=sys.stdout) -> None:
 
   if components[0] == "make":
     programs_match = re.match(
-        r'make ((?P<up_to>up to )?(?P<number>\d+) )?(?P<lang>\w+) program(s)?( using (?P<generator>\w+))?$', statement)
-    testcases_match = re.match(r'make (?P<lang>\w+) ((?P<harness>\w+):(?P<generator>\w+)? )?testcases$', statement)
+      r'make ((?P<up_to>up to )?(?P<number>\d+) )?(?P<lang>\w+) program(s)?( using ('
+      r'?P<generator>\w+))?$',
+      statement)
+    testcases_match = re.match(
+      r'make (?P<lang>\w+) ((?P<harness>\w+):(?P<generator>\w+)? )?testcases$', statement)
 
     if programs_match:
       number = int(programs_match.group("number") or 0) or math.inf
@@ -241,9 +250,9 @@ def _execute(statement: str, file=sys.stdout) -> None:
       generator = lang.mkgenerator(programs_match.group("generator"))
 
       return _make_programs(
-          lang=lang, generator=generator, n=number,
-          up_to=True if programs_match.group("up_to") else False,
-          file=file)
+        lang=lang, generator=generator, n=number,
+        up_to=True if programs_match.group("up_to") else False,
+        file=file)
 
     elif testcases_match:
       lang = mklang(testcases_match.group("lang"))
@@ -267,7 +276,8 @@ def _execute(statement: str, file=sys.stdout) -> None:
       raise UnrecognizedInput
 
   if components[0] == "import":
-    match = re.match(r'import (?P<generator>\w+) (?P<lang>\w+) program(s)? from (?P<path>.+)$', statement)
+    match = re.match(r'import (?P<generator>\w+) (?P<lang>\w+) program(s)? from (?P<path>.+)$',
+                     statement)
 
     if match:
       lang = mklang(match.group("lang"))
@@ -282,7 +292,9 @@ def _execute(statement: str, file=sys.stdout) -> None:
 
   if components[0] == "run":
     match = re.match(
-        r'run (?P<lang>\w+) ((?P<harness>\w+):(?P<generator>\w+)? )?testcases( on (?P<testbed>[\w+-±]+))?$', statement)
+      r'run (?P<lang>\w+) ((?P<harness>\w+):(?P<generator>\w+)? )?testcases( on (?P<testbed>['
+      r'\w+-±]+))?$',
+      statement)
     if match:
       lang = mklang(match.group("lang"))
 

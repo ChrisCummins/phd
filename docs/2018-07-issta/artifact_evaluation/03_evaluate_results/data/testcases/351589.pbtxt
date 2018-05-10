@@ -1,0 +1,53 @@
+toolchain: "opencl"
+generator {
+  name: "clgen"
+  opts {
+    key: "git_commit"
+    value: "9556e7112ba2bd6f79ee59eef74f0a2304efa007"
+  }
+  opts {
+    key: "git_remote"
+    value: "https://github.com/ChrisCummins/clgen.git"
+  }
+  opts {
+    key: "version"
+    value: "0.4.0.dev0"
+  }
+}
+harness {
+  name: "cldrive"
+  opts {
+    key: "git_commit"
+    value: "9556e7112ba2bd6f79ee59eef74f0a2304efa007"
+  }
+  opts {
+    key: "git_remote"
+    value: "https://github.com/ChrisCummins/clgen.git"
+  }
+  opts {
+    key: "timeout_seconds"
+    value: "60"
+  }
+  opts {
+    key: "version"
+    value: "0.4.0.dev0"
+  }
+}
+inputs {
+  key: "gsize"
+  value: "128,16,1"
+}
+inputs {
+  key: "lsize"
+  value: "32,1,1"
+}
+inputs {
+  key: "src"
+  value: "__kernel void A(__global float4* a, __global float4* b, __global float4* c, uint d, uint e, uint f, __local float4* g, __local float4* h, __local uint* i) {\n  int j = get_local_id(0);\n  int k = get_local_id(1);\n\n  int l = get_local_id(0);\n  int m = get_local_id(1);\n\n  int n = h + h;\n\n  const int o = max(4 * f + j);\n  const int p = mad24(k, h, i);\n\n  const int q = l.m_maxElems[4];\n  const int r = a.center.w;\n  const int s = j.ral;\n  const b2clTrow = (float)(o.z) + (n * r * m) / o.dir;\n\n  const float3 t = r - i;\n\n  for (int u = 0; u < v; u++) {\n    u = r * d + (u);\n    w *= f;\n\n    f[s] += -(t / p) * p * r;\n    w[s] = v;\n\n    barrier(1);\n\n    n[u.numbots = -1e30f;\n  }\n}"
+}
+profiling_events {
+  client: "cc1"
+  type: "generation"
+  duration_ms: 1453
+  event_start_epoch_ms: 1499980310000
+}

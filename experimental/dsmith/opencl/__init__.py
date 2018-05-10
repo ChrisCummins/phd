@@ -20,15 +20,12 @@ The OpenCL programming language.
 """
 import sys
 
-import humanize
-from dsmith import Colors
-from dsmith.langs import Generator, Harness, Language
-from dsmith.opencl import db
-from dsmith.opencl import difftest
-from dsmith.opencl.db import *
-from dsmith.opencl.generators import CLSmith, DSmith, RandChar, RandTok
-from dsmith.opencl.harnesses import Cl_launcher, Clang, Cldrive
-from typing import List
+from experimental.dsmith.langs import Generator, Harness, Language
+from experimental.dsmith.opencl import db
+from experimental.dsmith.opencl import difftest
+from experimental.dsmith.opencl.db import *
+from experimental.dsmith.opencl.generators import CLSmith, DSmith, RandChar, RandTok
+from experimental.dsmith.opencl.harnesses import Cl_launcher, Clang, Cldrive
 
 
 class OpenCL(Language):

@@ -1,0 +1,102 @@
+testcase {
+  toolchain: "opencl"
+  generator {
+    name: "clgen"
+    opts {
+      key: "git_commit"
+      value: "9556e7112ba2bd6f79ee59eef74f0a2304efa007"
+    }
+    opts {
+      key: "git_remote"
+      value: "https://github.com/ChrisCummins/clgen.git"
+    }
+    opts {
+      key: "version"
+      value: "0.4.0.dev0"
+    }
+  }
+  harness {
+    name: "cldrive"
+    opts {
+      key: "git_commit"
+      value: "9556e7112ba2bd6f79ee59eef74f0a2304efa007"
+    }
+    opts {
+      key: "git_remote"
+      value: "https://github.com/ChrisCummins/clgen.git"
+    }
+    opts {
+      key: "timeout_seconds"
+      value: "60"
+    }
+    opts {
+      key: "version"
+      value: "0.4.0.dev0"
+    }
+  }
+  inputs {
+    key: "gsize"
+    value: "128,16,1"
+  }
+  inputs {
+    key: "lsize"
+    value: "32,1,1"
+  }
+  inputs {
+    key: "src"
+    value: "__kernel void A(__global int* a, long b, int c) {\n  __global int* d = a + get_global_id(0) * c;\n  int e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x;\n  int y;\n  e = d[0];\n  f = d[1];\n  g = d[2];\n  h = d[3];\n  i = d[4];\n  j = d[5];\n  k = d[6];\n  l = d[7];\n  m = d[8];\n  n = d[9];\n  o = d[10];\n  p = d[11];\n  q = d[12];\n  r = d[13];\n  s = d[14];\n  t = d[15];\n  u = d[16];\n  y = e;\n  while (b-- > 1) {\n    e = e + y;\n    f = f + y;\n    g = g + y;\n    h = h + y;\n    i = i + y;\n    j = j + y;\n    k = k + y;\n    l = l + y;\n    m = m + y;\n    n = n + y;\n    o = o + y;\n    p = p + y;\n    q = q + y;\n    r = r + y;\n    s = s + y;\n    t = t + y;\n    u = u + y;\n    v = v + y;\n    w = w + y;\n    x = x + y;\n    y = y + y;\n  }\n  d[0] = e;\n  d[1] = f;\n  d[2] = g;\n  d[3] = h;\n  d[4] = i;\n  d[5] = j;\n  d[6] = k;\n  d[7] = l;\n  d[8] = m;\n  d[9] = n;\n  d[10] = o;\n  d[11] = p;\n  d[12] = q;\n  d[13] = r;\n  d[14] = s;\n  d[15] = t;\n  d[16] = u;\n  d[17] = v;\n  d[18] = w;\n  d[19] = x;\n}"
+  }
+  profiling_events {
+    client: "cc1"
+    type: "generation"
+    duration_ms: 2109
+    event_start_epoch_ms: 1500502611000
+  }
+}
+testbed {
+  toolchain: "opencl"
+  name: "intel_cpu_i5-4570"
+  opts {
+    key: "driver_version"
+    value: "1.2.0.25"
+  }
+  opts {
+    key: "host"
+    value: "Ubuntu 16.04 64bit"
+  }
+  opts {
+    key: "opencl_device"
+    value: "Intel(R) Core(TM) i5-4570 CPU @ 3.20GHz"
+  }
+  opts {
+    key: "opencl_devtype"
+    value: "CPU"
+  }
+  opts {
+    key: "opencl_opt"
+    value: "enabled"
+  }
+  opts {
+    key: "opencl_platform"
+    value: "Intel(R) OpenCL"
+  }
+  opts {
+    key: "opencl_version"
+    value: "1.2"
+  }
+}
+returncode: 139
+outputs {
+  key: "stderr"
+  value: "[cldrive] Platform: Intel(R) OpenCL\n[cldrive] Device: Intel(R) Core(TM) i5-4570 CPU @ 3.20GHz\n[cldrive] OpenCL optimizations: on\nCompilation started\nCompilation done\nLinking started\nLinking done\nDevice build started\nDevice build done\nKernel <A> was not vectorized\nDone.[cldrive] Kernel: \"A\"\ntimeout: the monitored command dumped core\n"
+}
+outputs {
+  key: "stdout"
+  value: ""
+}
+profiling_events {
+  client: "cc1"
+  type: "runtime"
+  duration_ms: 165
+  event_start_epoch_ms: 1500788885000
+}

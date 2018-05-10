@@ -1,0 +1,102 @@
+testcase {
+  toolchain: "opencl"
+  generator {
+    name: "clgen"
+    opts {
+      key: "git_commit"
+      value: "9556e7112ba2bd6f79ee59eef74f0a2304efa007"
+    }
+    opts {
+      key: "git_remote"
+      value: "https://github.com/ChrisCummins/clgen.git"
+    }
+    opts {
+      key: "version"
+      value: "0.4.0.dev0"
+    }
+  }
+  harness {
+    name: "cldrive"
+    opts {
+      key: "git_commit"
+      value: "9556e7112ba2bd6f79ee59eef74f0a2304efa007"
+    }
+    opts {
+      key: "git_remote"
+      value: "https://github.com/ChrisCummins/clgen.git"
+    }
+    opts {
+      key: "timeout_seconds"
+      value: "60"
+    }
+    opts {
+      key: "version"
+      value: "0.4.0.dev0"
+    }
+  }
+  inputs {
+    key: "gsize"
+    value: "1,1,1"
+  }
+  inputs {
+    key: "lsize"
+    value: "1,1,1"
+  }
+  inputs {
+    key: "src"
+    value: "__kernel void A(__global int* a, __global int* b, __global int* c) {\n  a[get_global_id(0)] = a[get_global_id(0)] > b;\n}"
+  }
+  profiling_events {
+    client: "cc1"
+    type: "generation"
+    duration_ms: 255
+    event_start_epoch_ms: 1500500725000
+  }
+}
+testbed {
+  toolchain: "opencl"
+  name: "intel_gpu_gt2"
+  opts {
+    key: "driver_version"
+    value: "1.3"
+  }
+  opts {
+    key: "host"
+    value: "Ubuntu 16.04 64bit"
+  }
+  opts {
+    key: "opencl_device"
+    value: "Intel(R) HD Graphics Haswell GT2 Desktop"
+  }
+  opts {
+    key: "opencl_devtype"
+    value: "GPU"
+  }
+  opts {
+    key: "opencl_opt"
+    value: "enabled"
+  }
+  opts {
+    key: "opencl_platform"
+    value: "Intel Gen OCL Driver"
+  }
+  opts {
+    key: "opencl_version"
+    value: "1.2"
+  }
+}
+returncode: -5
+outputs {
+  key: "stderr"
+  value: "[cldrive] Platform: Intel Gen OCL Driver\n[cldrive] Device: Intel(R) HD Graphics Haswell GT2 Desktop\n[cldrive] OpenCL optimizations: on\nASSERTION FAILED: (isa<AllocaInst>(ptr) || ptrCandidate.empty()) && \"storing/loading pointers only support private array\"\n  at file ../backend/src/llvm/llvm_gen_backend.cpp, function void gbe::GenWriter::findPointerEscape(llvm::Value*, std::set<llvm::Value*>&, bool, std::vector<llvm::Value*, std::allocator<llvm::Value*> >&), line 991\ntimeout: the monitored command dumped core\n"
+}
+outputs {
+  key: "stdout"
+  value: ""
+}
+profiling_events {
+  client: "cc1"
+  type: "runtime"
+  duration_ms: 258
+  event_start_epoch_ms: 1500735355000
+}

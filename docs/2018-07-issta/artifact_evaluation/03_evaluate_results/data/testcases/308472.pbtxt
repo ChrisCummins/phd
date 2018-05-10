@@ -1,0 +1,53 @@
+toolchain: "opencl"
+generator {
+  name: "clgen"
+  opts {
+    key: "git_commit"
+    value: "9556e7112ba2bd6f79ee59eef74f0a2304efa007"
+  }
+  opts {
+    key: "git_remote"
+    value: "https://github.com/ChrisCummins/clgen.git"
+  }
+  opts {
+    key: "version"
+    value: "0.4.0.dev0"
+  }
+}
+harness {
+  name: "cldrive"
+  opts {
+    key: "git_commit"
+    value: "9556e7112ba2bd6f79ee59eef74f0a2304efa007"
+  }
+  opts {
+    key: "git_remote"
+    value: "https://github.com/ChrisCummins/clgen.git"
+  }
+  opts {
+    key: "timeout_seconds"
+    value: "60"
+  }
+  opts {
+    key: "version"
+    value: "0.4.0.dev0"
+  }
+}
+inputs {
+  key: "gsize"
+  value: "128,16,1"
+}
+inputs {
+  key: "lsize"
+  value: "32,1,1"
+}
+inputs {
+  key: "src"
+  value: "__kernel void A() {\n  while (true) {\n    barrier(1);\n  }\n}"
+}
+profiling_events {
+  client: "cc1"
+  type: "generation"
+  duration_ms: 124
+  event_start_epoch_ms: 1499074531000
+}

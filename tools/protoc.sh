@@ -8,14 +8,20 @@
 #
 set -eu
 
-# Directory of this script.
-DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# The root of the repository.
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-# Run from the workspace root directory.
-cd "$DIR/.."
-
-for dir in $(find . -name proto -type d); do
-  if compgen -G "$dir/*.proto" > /dev/null; then
-    protoc -I$dir --python_out=$dir $dir/*.proto
-  fi
+cd "$ROOT"
+for file in $(git ls-files | grep '\.proto'); do
+  dir="$(dirname $file)"
+  no_extension=${file%.proto}
+  # Remove previously generated code
+  rm -f ${no_extension}_pb2.py
+  rm -f ${no_extension}_pb2_grpc.py
+  python -m grpc_tools.protoc -I"$ROOT" -I"$dir" \
+      --python_out="$dir" --grpc_python_out="$dir" "$file"
+  # Fix the imports of generated GRPC code. This is a workaround for issue
+  # https://github.com/grpc/grpc/issues/9575#issuecomment-293934506
+  sed -i 's/^import /from . import /' ${no_extension}_pb2_grpc.py
+  sed -i 's/^from . import grpc$/import grpc/' ${no_extension}_pb2_grpc.py
 done

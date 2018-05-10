@@ -2,14 +2,13 @@
 import binascii
 import datetime
 import hashlib
-import sqlalchemy as sql
 import typing
+
+import sqlalchemy as sql
 from sqlalchemy import orm
 from sqlalchemy.dialects import mysql
 
 from deeplearning.deepsmith import db
-from deeplearning.deepsmith import testbed
-from deeplearning.deepsmith import testcase
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from lib.labm8 import labdate
 from lib.labm8 import system
@@ -111,8 +110,9 @@ class Harness(db.Table):
       optset_id=optset_id,
     )
 
-  def RunTestcaseOnTestbed(self, testcase: testcase.Testcase,
-                           testbed: testbed.Testbed) -> deepsmith_pb2.Result:
+  def RunTestcaseOnTestbed(
+      self, testcase: deepsmith_pb2.Testcase,
+      testbed: deepsmith_pb2.Testbed) -> deepsmith_pb2.Result:
     start_time = labdate.GetUtcMillisecondsNow()
     # ~~ Begin 'exec' timed region. ~~~
     # TODO: Popen something.

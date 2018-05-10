@@ -18,18 +18,14 @@
 """
 OpenCL test harnesses.
 """
+import subprocess
 from tempfile import NamedTemporaryFile
 from time import time
 
-import cldrive
-import dsmith
-import subprocess
-from dsmith.langs import Generator, Harness
-from dsmith.opencl import cldrive_mkharness
-from dsmith.opencl import clsmith, generators
-from dsmith.opencl.db import *
-from sqlalchemy.sql import func
-from typing import List, Tuple
+from experimental.dsmith.langs import Generator, Harness
+from experimental.dsmith.opencl import cldrive_mkharness
+from experimental.dsmith.opencl import clsmith, generators
+from experimental.dsmith.opencl.db import *
 
 
 def _non_zero_threads(session: session_t = None) -> List[Threads]:
@@ -107,11 +103,11 @@ class OpenCLHarness(Harness):
 
         # Bulk insert new testcases:
         s.add_all(Testcase(
-            program_id=program.id,
-            threads_id=threads.id,
-            harness=self.id,
-            input_seed=self.default_seed,
-            timeout=self.default_timeout,
+          program_id=program.id,
+          threads_id=threads.id,
+          harness=self.id,
+          input_seed=self.default_seed,
+          timeout=self.default_timeout,
         ) for program in todo)
         s.commit()
 
@@ -165,9 +161,9 @@ class Cl_launcher(OpenCLHarness):
     # run testcase
     platform_id, device_id = testbed.ids
     runtime, returncode, stdout, stderr = clsmith.cl_launcher_str(
-        src=testcase.program.src, platform_id=platform_id,
-        device_id=device_id, optimizations=testbed.optimizations,
-        timeout=testcase.timeout)
+      src=testcase.program.src, platform_id=platform_id,
+      device_id=device_id, optimizations=testbed.optimizations,
+      timeout=testcase.timeout)
 
     # assert that executed params match expected
     clsmith.verify_cl_launcher_run(platform=testbed.platform.platform,
@@ -179,17 +175,17 @@ class Cl_launcher(OpenCLHarness):
 
     # outcome
     outcome = Cl_launcherResult.get_outcome(
-        returncode, stderr, runtime, testcase.timeout)
+      returncode, stderr, runtime, testcase.timeout)
     _log_outcome(outcome, runtime)
 
     return ResultProxy(
-        testbed_id=testbed.id,
-        testcase_id=testcase.id,
-        returncode=returncode,
-        outcome=outcome,
-        runtime=runtime,
-        stdout=stdout,
-        stderr=stderr)
+      testbed_id=testbed.id,
+      testcase_id=testcase.id,
+      returncode=returncode,
+      outcome=outcome,
+      runtime=runtime,
+      stdout=stdout,
+      stderr=stderr)
 
 
 class Cldrive(OpenCLHarness):
@@ -258,7 +254,7 @@ class Cldrive(OpenCLHarness):
       path = tmpfile.name
     try:
       cldrive_mkharness.compile_harness(
-          harness.src, path, platform_id=platform_id, device_id=device_id)
+        harness.src, path, platform_id=platform_id, device_id=device_id)
 
       cmd = ['timeout', '-s9', str(testcase.timeout), tmpfile.name]
 
@@ -277,13 +273,13 @@ class Cldrive(OpenCLHarness):
                                         testcase.timeout)
 
     return ResultProxy(
-        testbed_id=testbed.id,
-        testcase_id=testcase.id,
-        returncode=returncode,
-        outcome=outcome,
-        runtime=runtime,
-        stdout=stdout,
-        stderr=stderr)
+      testbed_id=testbed.id,
+      testcase_id=testcase.id,
+      returncode=returncode,
+      outcome=outcome,
+      runtime=runtime,
+      stdout=stdout,
+      stderr=stderr)
 
 
 class Clang(OpenCLHarness):
@@ -384,8 +380,8 @@ class Clang(OpenCLHarness):
 
       start_time = time()
       process = subprocess.Popen(
-          cmd, universal_newlines=True,
-          stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        cmd, universal_newlines=True,
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
       _, stderr = process.communicate()
 
       returncode = process.returncode
@@ -396,14 +392,14 @@ class Clang(OpenCLHarness):
 
     # outcome
     outcome = ClangResult.get_outcome(
-        returncode, stderr, runtime, testcase.timeout)
+      returncode, stderr, runtime, testcase.timeout)
     _log_outcome(outcome, runtime)
 
     return ResultProxy(
-        testbed_id=testbed.id,
-        testcase_id=testcase.id,
-        returncode=returncode,
-        outcome=outcome,
-        runtime=runtime,
-        stdout="",
-        stderr=stderr)
+      testbed_id=testbed.id,
+      testcase_id=testcase.id,
+      returncode=returncode,
+      outcome=outcome,
+      runtime=runtime,
+      stdout="",
+      stderr=stderr)

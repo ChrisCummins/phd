@@ -2,12 +2,12 @@
 """
 Create test harnesses for cldrive programs.
 """
+import subprocess
 from collections import namedtuple
 from time import time
-
-import cldrive
-import subprocess
 from typing import List
+
+from gpu import cldrive
 
 
 class HarnessCompilationError(ValueError):
@@ -33,25 +33,25 @@ def mkharness(testcase: 'Testcase') -> harness_t:
     start_time = time()
     # TODO: use testcase.input_seed to set start of ARANGE
     inputs = cldrive.make_data(
-        src=src, size=size,
-        data_generator=cldrive.Generator.ARANGE,
-        scalar_val=size)
+      src=src, size=size,
+      data_generator=cldrive.Generator.ARANGE,
+      scalar_val=size)
     src = cldrive.emit_c(
-        src=program.src, inputs=inputs, gsize=gsize, lsize=lsize)
+      src=program.src, inputs=inputs, gsize=gsize, lsize=lsize)
   except Exception:
     # create a compile-only stub if not possible
     compile_only = True
     try:
       start_time = time()
       src = cldrive.emit_c(
-          src=program.src, inputs=None, gsize=gsize, lsize=lsize,
-          compile_only=True)
+        src=program.src, inputs=None, gsize=gsize, lsize=lsize,
+        compile_only=True)
     except Exception:
       # create a compiler-only stub without creating kernel
       start_time = time()
       src = cldrive.emit_c(
-          src=program.src, inputs=None, gsize=gsize, lsize=lsize,
-          compile_only=True, create_kernel=False)
+        src=program.src, inputs=None, gsize=gsize, lsize=lsize,
+        compile_only=True, create_kernel=False)
 
   generation_time = time() - start_time
 
@@ -73,5 +73,5 @@ def compile_harness(src: str, path: str = 'a.out', platform_id=None,
   proc.communicate(src.encode('utf-8'))
   if not proc.returncode == 0:
     raise HarnessCompilationError(
-        f'harness compilation failed with returncode {proc.returncode}')
+      f'harness compilation failed with returncode {proc.returncode}')
   return path

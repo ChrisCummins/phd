@@ -2,6 +2,7 @@
 """
 import contextlib
 import pathlib
+
 from absl import flags
 from absl import logging
 from sqlalchemy import orm
@@ -104,8 +105,8 @@ class DataStore(object):
     finally:
       session.close()
 
-  def SubmitTestcases(self, request: deepsmith_pb2.SubmitTestcasesRequest,
-                      response: deepsmith_pb2.SubmitTestcasesResponse) -> None:
+  def SubmitTestcases(self, request: datastore_pb2.SubmitTestcasesRequest,
+                      response: datastore_pb2.SubmitTestcasesResponse) -> None:
     """Add a sequence of testcases to the datastore.
     """
     del response
@@ -123,13 +124,13 @@ class DataStore(object):
     def _FilterToolchainGeneratorHarness(q):
       if request.HasField('toolchain'):
         toolchain = db.GetOrAdd(
-            session, deeplearning.deepsmith.toolchain.Toolchain,
-            name=request.toolchain
+          session, deeplearning.deepsmith.toolchain.Toolchain,
+          name=request.toolchain
         )
         if not toolchain:
           raise LookupError
         q = q.filter(
-            deeplearning.deepsmith.testcase.Testcase.toolchain_id == toolchain.id)
+          deeplearning.deepsmith.testcase.Testcase.toolchain_id == toolchain.id)
 
       # Filter by generator.
       if request.HasField('generator'):
@@ -150,7 +151,7 @@ class DataStore(object):
         if not harness:
           raise LookupError
         q = q.filter(
-            deeplearning.deepsmith.testcase.Testcase.harnessid == harness.id)
+          deeplearning.deepsmith.testcase.Testcase.harnessid == harness.id)
 
       return q
 
@@ -160,14 +161,14 @@ class DataStore(object):
     testbed_id = None
     if request.HasField('testbed'):
       toolchain = db.GetOrAdd(
-          session, deeplearning.deepsmith.toolchain.Toolchain,
-          name=request.testbed
+        session, deeplearning.deepsmith.toolchain.Toolchain,
+        name=request.testbed
       )
       testbed = db.GetOrAdd(
-          session, deeplearning.deepsmith.testbed.Testbed,
-          toolchain=toolchain,
-          name=request.testbed.toolchain,
-          version=request.testbed.version
+        session, deeplearning.deepsmith.testbed.Testbed,
+        toolchain=toolchain,
+        name=request.testbed.toolchain,
+        version=request.testbed.version
       )
       testbed_id = testbed.id
 
@@ -188,15 +189,15 @@ class DataStore(object):
     return q
 
   def RequestTestcases(
-      self, request: deepsmith_pb2.RequestTestcasesRequest,
-      response: deepsmith_pb2.RequestTestcasesResponse) -> None:
+      self, request: datastore_pb2.RequestTestcasesRequest,
+      response: datastore_pb2.RequestTestcasesResponse) -> None:
     """Request testcases.
     """
     with self.Session(commit=False) as session:
       # Validate request parameters.
       if request.max_num_testcases < 1:
         raise InvalidRequest(
-            f'max_num_testcases must be >= 1, not {request.max_num_testcases}')
+          f'max_num_testcases must be >= 1, not {request.max_num_testcases}')
 
       q = self._BuildTestcaseRequestQuery(session, request)
       q.limit(request.max_num_testcases)

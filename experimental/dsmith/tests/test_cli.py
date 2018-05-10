@@ -18,7 +18,8 @@
 import os
 
 import pytest
-from dsmith import cli
+
+from experimental.dsmith import cli
 
 
 def mymethod(a, b):

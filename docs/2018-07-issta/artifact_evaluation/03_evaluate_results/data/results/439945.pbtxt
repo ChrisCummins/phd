@@ -1,0 +1,102 @@
+testcase {
+  toolchain: "opencl"
+  generator {
+    name: "clgen"
+    opts {
+      key: "git_commit"
+      value: "9556e7112ba2bd6f79ee59eef74f0a2304efa007"
+    }
+    opts {
+      key: "git_remote"
+      value: "https://github.com/ChrisCummins/clgen.git"
+    }
+    opts {
+      key: "version"
+      value: "0.4.0.dev0"
+    }
+  }
+  harness {
+    name: "cldrive"
+    opts {
+      key: "git_commit"
+      value: "9556e7112ba2bd6f79ee59eef74f0a2304efa007"
+    }
+    opts {
+      key: "git_remote"
+      value: "https://github.com/ChrisCummins/clgen.git"
+    }
+    opts {
+      key: "timeout_seconds"
+      value: "60"
+    }
+    opts {
+      key: "version"
+      value: "0.4.0.dev0"
+    }
+  }
+  inputs {
+    key: "gsize"
+    value: "128,16,1"
+  }
+  inputs {
+    key: "lsize"
+    value: "32,1,1"
+  }
+  inputs {
+    key: "src"
+    value: "__kernel void A(__global float4* a, int b, int c, int d, float e, float f) {\n  unsigned int g = get_global_id(0);\n  unsigned int h = get_global_id(1);\n\n  unsigned int i = h * d + g + c;\n  g += g * h;\n\n  e[f + g * b] = a[g + e];\n  barrier(1);\n\n  f = d;\n  e = a + c;\n  if (e < f) {\n    a[e] = h, a[e] = g;\n  } else if (f == (int)c - 1) {\n    b[e] = a[e];\n    b[e] += f;\n    b[e] = b[e];\n  }\n}"
+  }
+  profiling_events {
+    client: "cc1"
+    type: "generation"
+    duration_ms: 838
+    event_start_epoch_ms: 1500903267000
+  }
+}
+testbed {
+  toolchain: "opencl"
+  name: "pocl_cpu_e5-2620"
+  opts {
+    key: "driver_version"
+    value: "0.14"
+  }
+  opts {
+    key: "host"
+    value: "Ubuntu 16.04 64bit"
+  }
+  opts {
+    key: "opencl_device"
+    value: "pthread-Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz"
+  }
+  opts {
+    key: "opencl_devtype"
+    value: "CPU"
+  }
+  opts {
+    key: "opencl_opt"
+    value: "enabled"
+  }
+  opts {
+    key: "opencl_platform"
+    value: "Portable Computing Language"
+  }
+  opts {
+    key: "opencl_version"
+    value: "2.0"
+  }
+}
+returncode: 1
+outputs {
+  key: "stderr"
+  value: "[cldrive] Platform: Portable Computing Language\n[cldrive] Device: pthread-Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz\n[cldrive] OpenCL optimizations: on\n10 errors generated.\nerror: /home/cec/.cache/pocl/kcache/temp_SXJrJr.cl:6:4: subscripted value is not an array, pointer, or vector\nerror: /home/cec/.cache/pocl/kcache/temp_SXJrJr.cl:6:19: array subscript is not an integer\nerror: /home/cec/.cache/pocl/kcache/temp_SXJrJr.cl:9:5: assigning to \'float\' from incompatible type \'__global float4 *\'\nerror: /home/cec/.cache/pocl/kcache/temp_SXJrJr.cl:11:6: array subscript is not an integer\nerror: /home/cec/.cache/pocl/kcache/temp_SXJrJr.cl:11:16: array subscript is not an integer\nerror: /home/cec/.cache/pocl/kcache/temp_SXJrJr.cl:13:6: subscripted value is not an array, pointer, or vector\nerror: /home/cec/.cache/pocl/kcache/temp_SXJrJr.cl:13:13: array subscript is not an integer\nerror: /home/cec/.cache/pocl/kcache/temp_SXJrJr.cl:14:6: subscripted value is not an array, pointer, or vector\nerror: /home/cec/.cache/pocl/kcache/temp_SXJrJr.cl:15:6: subscripted value is not an array, pointer, or vector\nerror: /home/cec/.cache/pocl/kcache/temp_SXJrJr.cl:15:13: subscripted value is not an array, pointer, or vector\nclBuildProgram CL_BUILD_PROGRAM_FAILURE\n"
+}
+outputs {
+  key: "stdout"
+  value: ""
+}
+profiling_events {
+  client: "cc1"
+  type: "runtime"
+  duration_ms: 245
+  event_start_epoch_ms: 1500953572000
+}

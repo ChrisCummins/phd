@@ -1,10 +1,10 @@
+import platform
 import re
 import sys
 from collections import namedtuple
-
-import platform
-import pyopencl as cl
 from typing import Iterator, Tuple
+
+import pyopencl as cl
 
 
 class OpenCLEnvironment(namedtuple('OpenCLEnvironment', ['platform', 'device'])):
@@ -50,6 +50,59 @@ class OpenCLEnvironment(namedtuple('OpenCLEnvironment', ['platform', 'device']))
     """
     return _lookup_env(return_ids=True, platform=self.platform,
                        device=self.device)
+
+  @property
+  def device_name(self) -> str:
+    """
+    Get the OpenCL device name.
+
+    Returns
+    -------
+    str
+        OpenCL device name.
+
+    Raises
+    ------
+    LookupError
+        If a matching OpenCL device cannot be found.
+    RuntimeError
+        In case of an OpenCL API call failure.
+
+    Examples
+    --------
+    make_env().device_name  # doctest: +SKIP
+    "pthread-Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz"
+    """
+    ctx, queue = self.ctx_queue()
+    dev = queue.get_info(cl.command_queue_info.DEVICE)
+    return dev.get_info(cl.device_info.NAME)
+
+  @property
+  def platform_name(self) -> str:
+    """
+    Get the OpenCL platform name.
+
+    Returns
+    -------
+    str
+        OpenCL platform name.
+
+    Raises
+    ------
+    LookupError
+        If a matching OpenCL device cannot be found.
+    RuntimeError
+        In case of an OpenCL API call failure.
+
+    Examples
+    --------
+    make_env().platform_name  # doctest: +SKIP
+    "Portable Computing Language"
+    """
+    ctx, queue = self.ctx_queue()
+    dev = queue.get_info(cl.command_queue_info.DEVICE)
+    platform = dev.get_info(cl.device_info.PLATFORM)
+    return platform.get_info(cl.platform_info.NAME)
 
   @property
   def driver_version(self) -> str:
@@ -187,8 +240,8 @@ def _lookup_env(return_cl: bool = False, return_ids: bool = False, platform: str
             properties = None
 
           ctx = cl.Context(
-              dev_type=cl.device_type.ALL,
-              properties=[(cl.context_properties.PLATFORM, cl_platform)])
+            dev_type=cl.device_type.ALL,
+            properties=[(cl.context_properties.PLATFORM, cl_platform)])
 
           queue = cl.CommandQueue(ctx, device=cl_device,
                                   properties=properties)
@@ -197,15 +250,15 @@ def _lookup_env(return_cl: bool = False, return_ids: bool = False, platform: str
           return platform_id, device_id
         else:
           return OpenCLEnvironment(
-              platform=platform_str, device=device_str)
+            platform=platform_str, device=device_str)
       else:
         if device:
           raise LookupError(
-              f"could not find device '{device}' on platform '{platform}'")
+            f"could not find device '{device}' on platform '{platform}'")
     else:
       if platform:
         raise LookupError(
-            f"could not find platform '{platform}'")
+          f"could not find platform '{platform}'")
 
     raise LookupError(f"could not find a device of type '{devtype}'")
   except cl.RuntimeError as e:
@@ -275,7 +328,7 @@ def opencl_version(platform: cl.Platform) -> str:
     return m.group(1)
   else:
     raise LookupError(
-        f"Could not determine OpenCL version from string '{version}'")
+      f"Could not determine OpenCL version from string '{version}'")
 
 
 def device_type(device: cl.Device) -> str:

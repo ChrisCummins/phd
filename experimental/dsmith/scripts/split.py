@@ -4,7 +4,8 @@ import sys
 
 from progressbar import ProgressBar
 
-from lib.labm8 import crypto, fs
+from lib.labm8 import crypto
+from lib.labm8 import fs
 
 if __name__ == "__main__":
   inpath = sys.argv[1]

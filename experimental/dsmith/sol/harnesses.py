@@ -21,12 +21,9 @@ OpenCL test harnesses.
 from tempfile import NamedTemporaryFile
 from time import time
 
-import subprocess
-from dsmith.langs import Generator, Harness
-from dsmith.sol import generators
-from dsmith.sol.db import *
-from sqlalchemy.sql import func
-from typing import List
+from experimental.dsmith.langs import Generator, Harness
+from experimental.dsmith.sol import generators
+from experimental.dsmith.sol.db import *
 
 
 def _log_outcome(outcome: Outcomes, runtime: float):
@@ -77,9 +74,9 @@ class SolidityHarness(Harness):
 
       # Bulk insert new testcases:
       s.add_all(Testcase(
-          program_id=program.id,
-          harness=self.id,
-          timeout=self.default_timeout,
+        program_id=program.id,
+        harness=self.id,
+        timeout=self.default_timeout,
       ) for program in todo)
       s.commit()
 
@@ -141,8 +138,8 @@ class Solc(SolidityHarness):
     try:
       start_time = time()
       process = subprocess.Popen(
-          cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-          universal_newlines=True)
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        universal_newlines=True)
       stdout, stderr = process.communicate()
       runtime = time() - start_time
       returncode = process.returncode
@@ -155,10 +152,10 @@ class Solc(SolidityHarness):
     _log_outcome(outcome, runtime)
 
     return ResultProxy(
-        testbed_id=testbed.id,
-        testcase_id=testcase.id,
-        returncode=returncode,
-        outcome=outcome,
-        runtime=runtime,
-        stdout=stdout,
-        stderr=stderr)
+      testbed_id=testbed.id,
+      testcase_id=testcase.id,
+      returncode=returncode,
+      outcome=outcome,
+      runtime=runtime,
+      stdout=stdout,
+      stderr=stderr)

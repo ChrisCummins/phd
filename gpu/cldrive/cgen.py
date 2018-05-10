@@ -167,7 +167,9 @@ const char *kernel_src = \\
 
 #define True 1
 #define False 0
+#ifndef __APPLE__
 typedef unsigned char bool;
+#endif
 typedef unsigned short ushort;
 
 const char *clerror_string(cl_int err) {{

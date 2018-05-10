@@ -18,27 +18,25 @@
 """
 OpenCL database backend.
 """
-import re
-
-import cldrive
-import clgen
 import datetime
-import dsmith
-import humanize
 import logging
-import progressbar
-import sqlalchemy as sql
+import re
 import threading
 from contextlib import contextmanager
-from dsmith import Colors
-from dsmith import db_base
-from dsmith.db_base import *
-from dsmith.opencl import oclgrind
 from signal import Signals
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.sql import func
 from typing import Iterable, List, Tuple, Union
 
+import clgen
+import humanize
+import progressbar
+import sqlalchemy as sql
+from experimental.dsmith.db_base import *
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.sql import func
+
+from experimental.dsmith import Colors
+from experimental.dsmith import db_base
+from experimental.dsmith.opencl import oclgrind
 from lib.labm8 import crypto, prof
 
 # Global state to manage database connections. Must call init() before
@@ -164,13 +162,13 @@ class ProgramProxy(Proxy):
 
   def to_record(self, session: session_t) -> Program:
     return Program(
-        generator=self.generator,
-        sha1=self.sha1,
-        date=self.date,
-        generation_time=self.generation_time,
-        linecount=self.linecount,
-        charcount=self.charcount,
-        src=self.src)
+      generator=self.generator,
+      sha1=self.sha1,
+      date=self.date,
+      generation_time=self.generation_time,
+      linecount=self.linecount,
+      charcount=self.charcount,
+      src=self.src)
 
 
 class ClsmithProgramMeta(Base):
@@ -223,19 +221,19 @@ class DsmithProgramMeta(Base):
       q = s.query(func.count(Stderr.id)) \
         .join(Result) \
         .filter(
-          Result.testcase_id == self.id,
-          (Stderr.stderr.like("%incompatible pointer to integer conversion%") |
-           Stderr.stderr.like("%comparison between pointer and integer%") |
-           Stderr.stderr.like("%warning: incompatible%") |
-           Stderr.stderr.like("%warning: division by zero is undefined%") |
-           Stderr.stderr.like("%warning: comparison of distinct pointer types%") |
-           Stderr.stderr.like("%is past the end of the array%") |
-           Stderr.stderr.like("%warning: comparison between pointer and%") |
-           Stderr.stderr.like("%warning: array index%") |
-           Stderr.stderr.like("%warning: implicit conversion from%") |
-           Stderr.stderr.like("%array index -1 is before the beginning of the array%") |
-           Stderr.stderr.like("%incompatible pointer%") |
-           Stderr.stderr.like("%incompatible integer to pointer %"))
+        Result.testcase_id == self.id,
+        (Stderr.stderr.like("%incompatible pointer to integer conversion%") |
+         Stderr.stderr.like("%comparison between pointer and integer%") |
+         Stderr.stderr.like("%warning: incompatible%") |
+         Stderr.stderr.like("%warning: division by zero is undefined%") |
+         Stderr.stderr.like("%warning: comparison of distinct pointer types%") |
+         Stderr.stderr.like("%is past the end of the array%") |
+         Stderr.stderr.like("%warning: comparison between pointer and%") |
+         Stderr.stderr.like("%warning: array index%") |
+         Stderr.stderr.like("%warning: implicit conversion from%") |
+         Stderr.stderr.like("%array index -1 is before the beginning of the array%") |
+         Stderr.stderr.like("%incompatible pointer%") |
+         Stderr.stderr.like("%incompatible integer to pointer %"))
       ) \
         .scalar()
       self.compiler_warnings = True if q else False
@@ -262,9 +260,9 @@ class Threads(Base):
   # Constraints
   __table_args__ = (
     sql.UniqueConstraint(
-        'gsize_x', 'gsize_y', 'gsize_z',
-        'lsize_x', 'lsize_y', 'lsize_z',
-        name='unique_thread_size'),
+      'gsize_x', 'gsize_y', 'gsize_z',
+      'lsize_x', 'lsize_y', 'lsize_z',
+      name='unique_thread_size'),
   )
 
   # Relationships
@@ -631,13 +629,13 @@ class Platform(Base):
                session: session_t = None) -> 'Testbed':
     with ReuseSession(session) as s:
       return get_or_add(
-          s, Platform,
-          platform=env.platform,
-          device=env.device,
-          driver=env.driver_version,
-          opencl=env.opencl_version,
-          devtype=env.device_type,
-          host=cldrive.host_os())
+        s, Platform,
+        platform=env.platform,
+        device=env.device,
+        driver=env.driver_version,
+        opencl=env.opencl_version,
+        devtype=env.device_type,
+        host=cldrive.host_os())
 
   @staticmethod
   def _get_ids(platform: str, device: str, driver: str) -> Tuple[int, int]:
@@ -731,9 +729,9 @@ class Testbed(Base):
           testbed = Testbed.from_id(s, self.testbed_id)
 
           already_done = testbed._testcase_ids_ran(
-              s, self.harness, self.generator)
+            s, self.harness, self.generator)
           todo = testbed._testcases_to_run(
-              s, self.harness, self.generator)
+            s, self.harness, self.generator)
 
           self.ndone = already_done.count()
           ntodo = todo.count()
@@ -845,20 +843,20 @@ class Testbed(Base):
           if string[-1] == "±":
             return [
               get_or_add(
-                  s, Testbed,
-                  platform_id=testbed.platform.id,
-                  optimizations=True),
+                s, Testbed,
+                platform_id=testbed.platform.id,
+                optimizations=True),
               get_or_add(
-                  s, Testbed,
-                  platform_id=testbed.platform.id,
-                  optimizations=False)
+                s, Testbed,
+                platform_id=testbed.platform.id,
+                optimizations=False)
             ]
           else:
             return [
               get_or_add(
-                  s, Testbed,
-                  platform_id=testbed.platform.id,
-                  optimizations=True if string[-1] == "+" else False)
+                s, Testbed,
+                platform_id=testbed.platform.id,
+                optimizations=True if string[-1] == "+" else False)
             ]
 
     # Strip shell formatting
@@ -958,9 +956,9 @@ class Stdout(Base):
     string = Stdout._escape(string)
 
     stdout = get_or_add(
-        session, Stdout,
-        sha1=crypto.sha1_str(string),
-        stdout=string)
+      session, Stdout,
+      sha1=crypto.sha1_str(string),
+      stdout=string)
     return stdout
 
 
@@ -1055,8 +1053,8 @@ class Stderr(Base):
           msg = line
 
         assertion = get_or_add(
-            session, Assertion,
-            sha1=crypto.sha1_str(msg), assertion=msg)
+          session, Assertion,
+          sha1=crypto.sha1_str(msg), assertion=msg)
         return assertion
 
   @staticmethod
@@ -1064,8 +1062,8 @@ class Stderr(Base):
     for line in lines:
       if "unreachable" in line.lower():
         unreachable = get_or_add(
-            session, Unreachable,
-            sha1=crypto.sha1_str(line), unreachable=line)
+          session, Unreachable,
+          sha1=crypto.sha1_str(line), unreachable=line)
         return unreachable
 
   @staticmethod
@@ -1079,8 +1077,8 @@ class Stderr(Base):
         else:
           stackdump_ = "\n".join(stackdump)
           stackdump = get_or_add(
-              session, StackDump,
-              sha1=crypto.sha1_str(stackdump_), stackdump=stackdump_)
+            session, StackDump,
+            sha1=crypto.sha1_str(stackdump_), stackdump=stackdump_)
           return stackdump
       elif "stack dump:" in line.lower():
         in_stackdump = True
@@ -1120,15 +1118,15 @@ class Stderr(Base):
                         f"Stackdump: {stackdump}")
 
     stderr = get_or_add(
-        session, Stderr,
-        sha1=crypto.sha1_str(string),
-        assertion=assertion,
-        unreachable=unreachable,
-        stackdump=stackdump,
-        linecount=len(lines),
-        charcount=len(string),
-        truncated=len(string) > Stderr.max_chars,
-        stderr=string[:Stderr.max_chars])
+      session, Stderr,
+      sha1=crypto.sha1_str(string),
+      assertion=assertion,
+      unreachable=unreachable,
+      stackdump=stackdump,
+      linecount=len(lines),
+      charcount=len(string),
+      truncated=len(string) > Stderr.max_chars,
+      stderr=string[:Stderr.max_chars])
     return stderr
 
 
@@ -1172,7 +1170,8 @@ class Result(Base):
   # Fields
   id = sql.Column(id_t, primary_key=True)
   testbed_id = sql.Column(Testbed.id_t, sql.ForeignKey("testbeds.id"), nullable=False, index=True)
-  testcase_id = sql.Column(Testcase.id_t, sql.ForeignKey("testcases.id"), nullable=False, index=True)
+  testcase_id = sql.Column(Testcase.id_t, sql.ForeignKey("testcases.id"), nullable=False,
+                           index=True)
   date = sql.Column(sql.DateTime, nullable=False, index=True, default=datetime.datetime.utcnow)
   returncode = sql.Column(sql.SmallInteger, nullable=False)
   outcome = sql.Column(Outcomes.column_t, nullable=False, index=True)
@@ -1223,14 +1222,14 @@ class ResultProxy(object):
     session.flush()  # required to get IDs
 
     return Result(
-        testbed_id=self.testbed_id,
-        testcase_id=self.testcase_id,
-        returncode=self.returncode,
-        outcome=self.outcome,
-        runtime=self.runtime,
-        stdout=stdout,
-        stderr=stderr,
-        date=self.date)
+      testbed_id=self.testbed_id,
+      testcase_id=self.testcase_id,
+      returncode=self.returncode,
+      outcome=self.outcome,
+      runtime=self.runtime,
+      stdout=stdout,
+      stderr=stderr,
+      date=self.date)
 
 
 class Cl_launcherResult(Result):

@@ -1,0 +1,102 @@
+testcase {
+  toolchain: "opencl"
+  generator {
+    name: "clgen"
+    opts {
+      key: "git_commit"
+      value: "9556e7112ba2bd6f79ee59eef74f0a2304efa007"
+    }
+    opts {
+      key: "git_remote"
+      value: "https://github.com/ChrisCummins/clgen.git"
+    }
+    opts {
+      key: "version"
+      value: "0.4.0.dev0"
+    }
+  }
+  harness {
+    name: "cldrive"
+    opts {
+      key: "git_commit"
+      value: "9556e7112ba2bd6f79ee59eef74f0a2304efa007"
+    }
+    opts {
+      key: "git_remote"
+      value: "https://github.com/ChrisCummins/clgen.git"
+    }
+    opts {
+      key: "timeout_seconds"
+      value: "60"
+    }
+    opts {
+      key: "version"
+      value: "0.4.0.dev0"
+    }
+  }
+  inputs {
+    key: "gsize"
+    value: "128,16,1"
+  }
+  inputs {
+    key: "lsize"
+    value: "32,1,1"
+  }
+  inputs {
+    key: "src"
+    value: "__kernel void fn_A(__read_only image2d_t A, __global double2* B) {\n  B[0] = get_global_id(0);\n}"
+  }
+  profiling_events {
+    client: "cc1"
+    type: "generation"
+    duration_ms: 204
+    event_start_epoch_ms: 1500375256000
+  }
+}
+testbed {
+  toolchain: "opencl"
+  name: "intel_cpu_e5-2620v4"
+  opts {
+    key: "driver_version"
+    value: "1.2.0.25"
+  }
+  opts {
+    key: "host"
+    value: "Ubuntu 16.04 64bit"
+  }
+  opts {
+    key: "opencl_device"
+    value: "Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz"
+  }
+  opts {
+    key: "opencl_devtype"
+    value: "CPU"
+  }
+  opts {
+    key: "opencl_opt"
+    value: "disabled"
+  }
+  opts {
+    key: "opencl_platform"
+    value: "Intel(R) OpenCL"
+  }
+  opts {
+    key: "opencl_version"
+    value: "2.0"
+  }
+}
+returncode: 0
+outputs {
+  key: "stderr"
+  value: "[cldrive] Platform: Intel(R) OpenCL\n[cldrive] Device: Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz\n[cldrive] OpenCL optimizations: off\nCompilation started\nCompilation done\nLinking started\nLinking done\nDevice build started\nDevice build done\nKernel <fn_A> was not vectorized\nDone.[cldrive] Kernel: \"fn_A\"\ndone.\n"
+}
+outputs {
+  key: "stdout"
+  value: ""
+}
+profiling_events {
+  client: "cc1"
+  type: "runtime"
+  duration_ms: 128
+  event_start_epoch_ms: 1500882085000
+}

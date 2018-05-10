@@ -2,6 +2,7 @@
  *  Protocal buffer language guide:
  *    https://developers.google.com/protocol-buffers/docs/proto
  */
+ syntax = "proto2";
 package tutorial; // namespace
 
 message Person {

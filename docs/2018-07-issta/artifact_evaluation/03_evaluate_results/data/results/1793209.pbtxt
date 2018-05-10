@@ -1,0 +1,102 @@
+testcase {
+  toolchain: "opencl"
+  generator {
+    name: "clgen"
+    opts {
+      key: "git_commit"
+      value: "9556e7112ba2bd6f79ee59eef74f0a2304efa007"
+    }
+    opts {
+      key: "git_remote"
+      value: "https://github.com/ChrisCummins/clgen.git"
+    }
+    opts {
+      key: "version"
+      value: "0.4.0.dev0"
+    }
+  }
+  harness {
+    name: "cldrive"
+    opts {
+      key: "git_commit"
+      value: "9556e7112ba2bd6f79ee59eef74f0a2304efa007"
+    }
+    opts {
+      key: "git_remote"
+      value: "https://github.com/ChrisCummins/clgen.git"
+    }
+    opts {
+      key: "timeout_seconds"
+      value: "60"
+    }
+    opts {
+      key: "version"
+      value: "0.4.0.dev0"
+    }
+  }
+  inputs {
+    key: "gsize"
+    value: "128,16,1"
+  }
+  inputs {
+    key: "lsize"
+    value: "32,1,1"
+  }
+  inputs {
+    key: "src"
+    value: "__kernel void A(__global float4* a, __global float4* b, __global float4* c, uint d, uint e, uint f, __local float4* g, __local float4* h, __local uint* i) {\n  int j = get_local_id(0);\n  int k = get_local_id(1);\n\n  int l = get_local_id(0);\n  int m = get_local_id(1);\n\n  int n = h + h;\n\n  const int o = max(4 * f + j);\n  const int p = mad24(k, h, i);\n\n  const int q = l.m_maxElems[4];\n  const int r = a.center.w;\n  const int s = j.ral;\n  const b2clTrow = (float)(o.z) + (n * r * m) / o.dir;\n\n  const float3 t = r - i;\n\n  for (int u = 0; u < v; u++) {\n    u = r * d + (u);\n    w *= f;\n\n    f[s] += -(t / p) * p * r;\n    w[s] = v;\n\n    barrier(1);\n\n    n[u.numbots = -1e30f;\n  }\n}"
+  }
+  profiling_events {
+    client: "cc1"
+    type: "generation"
+    duration_ms: 1453
+    event_start_epoch_ms: 1499980310000
+  }
+}
+testbed {
+  toolchain: "opencl"
+  name: "intel_cpu_i5-4570"
+  opts {
+    key: "driver_version"
+    value: "1.2.0.25"
+  }
+  opts {
+    key: "host"
+    value: "Ubuntu 16.04 64bit"
+  }
+  opts {
+    key: "opencl_device"
+    value: "Intel(R) Core(TM) i5-4570 CPU @ 3.20GHz"
+  }
+  opts {
+    key: "opencl_devtype"
+    value: "CPU"
+  }
+  opts {
+    key: "opencl_opt"
+    value: "enabled"
+  }
+  opts {
+    key: "opencl_platform"
+    value: "Intel(R) OpenCL"
+  }
+  opts {
+    key: "opencl_version"
+    value: "1.2"
+  }
+}
+returncode: 1
+outputs {
+  key: "stderr"
+  value: "[cldrive] Platform: Intel(R) OpenCL\n[cldrive] Device: Intel(R) Core(TM) i5-4570 CPU @ 3.20GHz\n[cldrive] OpenCL optimizations: on\n17 errors generated.\nCompilation started\n1:6:13: error: invalid operands to binary expression (\'__local float4 *\' and \'__local float4 *\')\n1:7:17: error: no matching function for call to \'max\'\n<stdin>:1641:60: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1626:61: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1627:61: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1628:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1631:61: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1632:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1633:61: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1634:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1635:61: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1636:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1637:61: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1638:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1639:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1640:63: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1625:60: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1642:61: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1643:61: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1644:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1645:61: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1646:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1647:61: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1648:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1649:61: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1650:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1651:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1652:63: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1653:61: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1654:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1610:63: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1595:61: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1596:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1597:61: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1598:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1599:61: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1600:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1601:61: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1602:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1603:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1604:63: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1607:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1608:63: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1609:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1655:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1611:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1612:63: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1613:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1614:63: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1615:63: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1616:64: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1619:60: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1620:61: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1621:60: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1622:61: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1623:60: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1624:61: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:2085:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1683:61: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1684:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1685:61: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1686:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1687:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1688:63: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:2078:61: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:2079:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:2080:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:2081:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:2082:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:2083:63: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:2084:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1682:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:2086:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:2087:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:2088:63: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1461:68: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1463:13: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1464:30: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1465:45: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1466:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1468:6: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1469:23: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1470:39: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1471:53: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1472:67: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1669:60: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1656:63: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1657:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1658:63: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1659:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1660:63: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1661:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1662:63: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1663:63: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1664:64: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1665:59: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1666:60: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1667:60: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1668:61: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1474:8: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1670:61: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1671:60: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1672:61: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1673:60: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1674:61: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1675:61: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1676:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1677:60: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1678:61: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1679:61: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1680:62: note: candidate function not viable: requires 2 arguments, but 1 was provided\n<stdin>:1681:61: note: candidate function not viable: requires 2 arguments, but 1 was provided\n1:8:17: error: no matching function for call to \'mad24\'\n<stdin>:2007:59: note: candidate function not viable: no known conversion from \'__local float4 *\' to \'int\' for 2nd argument\n<stdin>:2008:60: note: candidate function not viable: no known conversion from \'__local float4 *\' to \'uint\' (aka \'unsigned int\') for 2nd argument\n<stdin>:2009:60: note: candidate function not viable: no known conversion from \'__local float4 *\' to \'int2\' (vector of 2 \'int\' values) for 2nd argument\n<stdin>:2010:61: note: candidate function not viable: no known conversion from \'__local float4 *\' to \'uint2\' (vector of 2 \'uint\' values) for 2nd argument\n<stdin>:2011:60: note: candidate function not viable: no known conversion from \'__local float4 *\' to \'int3\' (vector of 3 \'int\' values) for 2nd argument\n<stdin>:2012:61: note: candidate function not viable: no known conversion from \'__local float4 *\' to \'uint3\' (vector of 3 \'uint\' values) for 2nd argument\n<stdin>:2013:60: note: candidate function not viable: no known conversion from \'__local float4 *\' to \'int4\' (vector of 4 \'int\' values) for 2nd argument\n<stdin>:2014:61: note: candidate function not viable: no known conversion from \'__local float4 *\' to \'uint4\' (vector of 4 \'uint\' values) for 2nd argument\n<stdin>:2015:60: note: candidate function not viable: no known conversion from \'__local float4 *\' to \'int8\' (vector of 8 \'int\' values) for 2nd argument\n<stdin>:2016:61: note: candidate function not viable: no known conversion from \'__local float4 *\' to \'uint8\' (vector of 8 \'uint\' values) for 2nd argument\n<stdin>:2017:61: note: candidate function not viable: no known conversion from \'__local float4 *\' to \'int16\' (vector of 16 \'int\' values) for 2nd argument\n<stdin>:2018:62: note: candidate function not viable: no known conversion from \'__local float4 *\' to \'uint16\' (vector of 16 \'uint\' values) for 2nd argument\n1:9:18: error: member reference base type \'int\' is not a structure or union\n1:10:18: error: member reference base type \'__global float4 *\' is not a structure or union\n1:11:18: error: member reference base type \'int\' is not a structure or union\n1:12:9: error: type specifier missing\n1:12:29: error: member reference base type \'const int\' is not a structure or union\n1:12:50: error: member reference base type \'const int\' is not a structure or union\n1:13:22: error: invalid operands to binary expression (\'int\' and \'__local uint *\' (aka \'__local unsigned int *\'))\n1:14:23: error: use of undeclared identifier \'v\'\n1:16:5: error: use of undeclared identifier \'w\'\n1:17:6: error: subscripted value is not an array, pointer, or vector\n1:18:5: error: use of undeclared identifier \'w\'\n1:18:12: error: use of undeclared identifier \'v\'\n1:20:8: error: member reference base type \'int\' is not a structure or union\n1:20:25: error: expected \']\'\n1:20:6: note: to match this \'[\'\nCompilation failed\nclBuildProgram CL_BUILD_PROGRAM_FAILURE\n"
+}
+outputs {
+  key: "stdout"
+  value: ""
+}
+profiling_events {
+  client: "cc1"
+  type: "runtime"
+  duration_ms: 62
+  event_start_epoch_ms: 1500794981000
+}
