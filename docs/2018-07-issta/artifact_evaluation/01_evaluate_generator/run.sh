@@ -9,8 +9,8 @@
 set -eu
 
 
-# The artficat_evaluation root directory.
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Root of this repository.
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
 # The directory of this experiment.
 WORKING_DIR="$ROOT/docs/2018-07-issta/artifact_evaluation/01_evaluate_generator"
 
@@ -41,7 +41,8 @@ main() {
   # layer for 10 epochs. For the paper we trained a 2 layer LSTM network with
   # 512 neurons per layer for 50 epochs. You are free to change the values
   # used for the model. For example, you can train a 3 layer LSTM by changing
-  # the line '"num_layers": 2' to '"num_layers": 3'. Please refer to the CLgen
+  # the line '"num_layers": 2' to '"num_layers": 3'. Alternatively, you could
+  # change the path to the corpus to your own corpus. Please refer to the CLgen
   # source code for details:
   # https://github.com/ChrisCummins/clgen/blob/master/clgen/_model.py#L43-L63
   cat <<EOF > "$WORKING_DIR/data/model.json"
@@ -82,7 +83,8 @@ EOF
 EOF
 
   # Run CLgen to automatically pre-process the corpus, train a model, and
-  # sample from it.
+  # sample from it. This may take a couple of hours, or more if you have
+  # changed the model configuration above.
   clgen sample "$WORKING_DIR/data/model.json" "$WORKING_DIR/data/sampler.json"
 
   # Once we are done, write the sampled OpenCL kernels to a directory for
