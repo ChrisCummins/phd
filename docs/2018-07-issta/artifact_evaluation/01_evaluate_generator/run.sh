@@ -95,7 +95,7 @@ EOF
             "$WORKING_DIR/data/sampler.json")/kernels.db \
       "$WORKING_DIR/output/generated_kernels"
 
-  cd "$WORKING_DIR"
+  cd "$WORKING_DIR/.."
   python ./01_evaluate_generator/make_testcases.py
 }
 main $@
