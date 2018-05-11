@@ -24,11 +24,7 @@ else
     remote="$remote_wan"
 fi
 
-if [[ -d "/Volumes/Data/$subpath" ]]; then
-    src="/Volumes/Data/$subpath"
-else
-    src="/Volumes/Orange/$subpath"
-fi
+src="/Volumes/Orange/$subpath"
 dst="$remote:img/photos/$subpath"
 
 if [[ ! -d "$src" ]]; then

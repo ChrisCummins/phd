@@ -25,11 +25,7 @@ else
 fi
 
 src="$remote:img/photos/$subpath"
-if [[ -d "/Volumes/Data/$subpath" ]]; then
-    dst="/Volumes/Data/$subpath"
-else
-    dst="/Volumes/Orange/$subpath"
-fi
+dst="/Volumes/Orange/$subpath"
 
 if [[ ! -d "$dst" ]]; then
     echo "fatal: '$dst' not found" >&2
