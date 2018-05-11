@@ -14,8 +14,10 @@ set -e
 # Based on Platform:
 if [[ `uname` == 'Darwin' ]]; then
 
-    brew tap homebrew/science
-    brew install git libffi wget python3
+    package_list=(git libffi wget python3)
+    for item in "${package_list[@]}"; do
+        brew info "${item}" | grep --quiet 'Not installed' && brew install "${item}"
+    done
 
 elif [[ "$(uname)" == 'Linux' ]]; then
 
