@@ -29,9 +29,9 @@ main() {
   # we used to train the model in the paper is much larger, but consequently
   # requires a longer training time.
   if [[ ! -f "$WORKING_DIR/data/tiny/1000.cl" ]]; then
+    mkdir -pv "$WORKING_DIR/data/tiny"
     wget 'https://github.com/ChrisCummins/clgen/raw/master/clgen/test/data/tiny.tar.bz2' \
         -O "$WORKING_DIR/data/tiny.tar.bz2"
-    mkdir -pv "$WORKING_DIR/data/tiny"
     tar xjf "$WORKING_DIR/data/tiny.tar.bz2" -C "$WORKING_DIR/data/tiny"
   fi
 
@@ -94,5 +94,8 @@ EOF
       $(clgen --sampler-dir "$WORKING_DIR/data/model.json" \
             "$WORKING_DIR/data/sampler.json")/kernels.db \
       "$WORKING_DIR/output/generated_kernels"
+
+  cd "$WORKING_DIR"
+  python ./01_evaluate_generator/make_testcases.py
 }
 main $@
