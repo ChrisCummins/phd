@@ -34,9 +34,6 @@
 [submodule "http/cgo.org/cgo2018"]
 	path = http/cgo.org/cgo2018
 	url = git@github.com:ChrisCummins/cgo2018.git
-[submodule "system/dotfiles"]
-	path = system/dotfiles
-	url = git@github.com:ChrisCummins/dotfiles.git
 [submodule "third_party/torch-rnn"]
 	path = third_party/torch-rnn
 	url = git@github.com:jcjohnson/torch-rnn.git
