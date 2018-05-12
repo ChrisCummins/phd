@@ -1,0 +1,46 @@
+"*":
+  core:
+    disabledPackages: [
+      "scroll-through-time"
+      "language-python"
+    ]
+    telemetryConsent: "no"
+    themes: [
+      "atom-dark-ui"
+      "monokai"
+    ]
+  editor:
+    invisibles: {}
+    showIndentGuide: true
+    showInvisibles: true
+    tabLength: 4
+  "exception-reporting":
+    userId: "89238f39-41b1-38a3-2657-397fa4728b99"
+  "file-types":
+    ipy: "source.python"
+  linter: {}
+  "linter-cppcheck":
+    enableMissingInclude: true
+  "linter-pylint": {}
+  "linter-ui-default":
+    panelHeight: 141
+    showPanel: true
+  "markdown-preview":
+    useGitHubStyle: true
+  "remote-atom":
+    keep_alive: true
+    launch_at_startup: true
+  "split-diff":
+    diffWords: true
+    ignoreWhitespace: true
+    leftEditorColor: "red"
+    rightEditorColor: "green"
+    scrollSyncType: "Vertical + Horizontal"
+  welcome:
+    showOnStartup: false
+".c.source":
+  editor:
+    tabLength: 2
+".cpp.source":
+  editor:
+    tabLength: 2

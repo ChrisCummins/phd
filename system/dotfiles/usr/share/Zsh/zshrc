@@ -1,0 +1,585 @@
+#!/usr/bin/env zsh
+
+# Set name of the theme to load.
+# Look in ~/.oh-my-zsh/themes/
+# Optionally, if you set this to "random", it'll load a random theme
+# each time that oh-my-zsh is loaded.
+export ZSH_THEME="cec"
+
+# Set to this to use case-sensitive completion:
+export CASE_SENSITIVE="true"
+
+# Uncomment following line if you want to disable weekly auto-update
+# checks.
+export DISABLE_AUTO_UPDATE="true"
+
+# Uncomment following line if you want to disable autosetting terminal
+# title.
+#DISABLE_AUTO_TITLE="true"
+
+# Uncomment following line if you want red dots to be displayed while
+# waiting for completion.
+export COMPLETION_WAITING_DOTS="true"
+
+export HISTIGNORE="&:ls:[bf]g:exit:reset:clear:cd:cd ..:cd.."
+export HISTSIZE=25000
+export HISTFILE=~/.zsh_history
+export SAVEHIST=10000
+export TERM=xterm-256color
+
+# Say how long a command took, if it took more than 30 seconds.
+export REPORTTIME=30
+
+export LOGCHECK=60
+
+autoload zsh/sched
+
+# Renaming with globbing
+autoload zmv
+
+# Watch other user login/out
+watch=notme
+
+# Don't put duplicate lines or lines starting with space in the history.
+# See bash(1) for more options.
+HISTCONTROL=ignoreboth
+
+setopt AUTO_CD              # cd by just entering the directory
+setopt AUTO_PUSHD           # Auto pushd
+setopt autocontinue         # Background processes aren't killed on exit of shell
+setopt clobber              # Allow clobbering with output redirection
+setopt EXTENDED_GLOB        # Extended globbing
+setopt HIST_IGNORE_ALL_DUPS
+setopt HIST_IGNORE_SPACE
+setopt HIST_REDUCE_BLANKS
+setopt INC_APPEND_HISTORY
+setopt MULTIOS              # Pipe to multiple outputs
+setopt NO_BEEP              # Beeps are annoying
+setopt NO_CORRECT           # Disable command spell check
+setopt NO_FLOW_CONTROL      # If I could disable Ctrl-s completely I would!
+unsetopt histverify         # Don't reload history lines
+
+# --------------------------------------------------------------------------
+# Plugins.
+# --------------------------------------------------------------------------
+
+# Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
+# Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
+# Example format: plugins=(rails git textmate ruby lighthouse)
+plugins=(    \
+    ant      \
+    debian   \
+    extract  \
+    git      \
+    git-flow \
+    github   \
+    perl     \
+    python   \
+    rails    \
+    ruby     \
+    zsh-syntax-highlighting \
+    )
+
+# --------------------------------------------------------------------------
+# Key bindings.
+# --------------------------------------------------------------------------
+
+# Copies word from earlier in the current command line
+# or previous line if it was chosen with ^[. etc
+autoload copy-earlier-word
+zle -N copy-earlier-word
+bindkey '^[,' copy-earlier-word
+
+# Cycle between positions for ambigous completions
+autoload cycle-completion-positions
+zle -N cycle-completion-positions
+bindkey '^[z' cycle-completion-positions
+
+# Increment integer argument
+autoload incarg
+zle -N incarg
+bindkey '^X+' incarg
+
+# Write globbed files into command line
+autoload insert-files
+zle -N insert-files
+bindkey '^Xf' insert-files
+
+# Alt+S inserts sudo at the start of a line
+insert_sudo () { zle beginning-of-line; zle -U "sudo "; }
+zle -N insert-sudo insert_sudo
+bindkey "^[s" insert-sudo
+
+# Alt+T inserts time at the start of a line
+insert_time () { zle beginning-of-line; zle -U "time "; }
+zle -N insert-time insert_time
+bindkey "^[t" insert-time
+
+bindkey -s '\eu' '^Ucd ..^M' # Meta-u to chdir to the parent directory
+bindkey -s '\ep' '^Upopd >/dev/null^M' # If AUTO_PUSHD is set, Meta-p pops the dir stack
+
+# --------------------------------------------------------------------------
+# Auto completion.
+# --------------------------------------------------------------------------
+
+# Username completion
+zstyle -d users
+
+# Set explicitly:   zstyle ':completion:*' users mrb04 matt
+# Uses /etc/passwd, minus these entries:
+zstyle ':completion:*:*:*:users' ignored-patterns \
+    adm apache bin daemon games gdm halt ident junkbust lp mail mailnull \
+    named news nfsnobody nobody nscd ntp operator pcap postgres radvd \
+    rpc rpcuser rpm shutdown squid sshd sync uucp vcsa xfs backup  bind  \
+    dictd  gnats  identd  irc  man  messagebus  postfix  proxy  sys  www-data \
+    avahi Debian-exim hplip list cupsys haldaemon ntpd proftpd statd
+
+# File/directory completion, for cd command.
+zstyle ':completion:*:cd:*' ignored-patterns '(*/)#lost+found' '(*/)#CVS'
+
+#  and for all commands taking file arguments.
+zstyle ':completion:*:(all-|)files' ignored-patterns '(|*/)CVS'
+
+# Prevent offering a file (process, etc) that's already in the command line.
+zstyle ':completion:*:(rm|cp|mv|kill|diff|scp):*' ignore-line yes
+
+# Completion selection by menu for kill.
+zstyle ':completion:*:*:kill:*' menu yes select
+zstyle ':completion:*:kill:*' force-list always
+zstyle ':completion:*:kill:*' command 'ps -u $USER -o pid,%cpu,tty,cputime,cmd'
+zstyle ':completion:*:*:kill:*:processes' list-colors '=(#b) #([0-9]#)*=0=01;31'
+
+zstyle ':completion:*:*:rmdir:*' file-sort time
+
+# CD to never select parent directory.
+zstyle ':completion:*:cd:*' ignore-parents parent pwd
+
+## Use cache
+# Some functions, like _apt and _dpkg, are very slow. You can use a cache in
+# order to proxy the list of results (like the list of available debian
+# packages)
+zstyle ':completion:*' use-cache on
+zstyle ':completion:*' cache-path /usr/share/zsh/cache
+
+
+
+export ZSH=~/.oh-my-zsh
+source ~/.oh-my-zsh/oh-my-zsh.sh
+
+
+# --------------------------------------------------------------------------
+# Aliases.
+# --------------------------------------------------------------------------
+
+# Don't kill forked jobs on shell exit.
+alias exit='disown &>/dev/null; exit'
+
+alias off='sudo shutdown -h now'
+
+# Shortcuts.
+alias c='clear'
+alias E='exit'
+alias f='file'
+alias ff='find'
+alias H='head'
+alias ll='ls -lh'
+alias m='make'
+alias M='mkdir'
+alias p='ipython'
+alias q='which'
+alias T='tail'
+alias t='timer'
+alias v='vim'
+alias wg='wget'
+
+# Directory stack navigation.
+alias pu='pushd >/dev/null'
+alias po='popd  >/dev/null'
+alias st='dirs -v'
+
+# Ping test.
+alias pingg='ping -c 3 www.google.com'
+
+# Print a table of all defined aliases.
+alias ls_alias="alias | sed 's/=/\t/' | sed -r 's/'"'"(.*)"'"'/\1/' | column -t -s$'\t'"
+
+# Open an emacs terminal to magit in the current directory
+alias magit="emacs -nw --eval '(progn (magit-status) (delete-other-windows))'"
+alias mg=magit
+
+# Go away "rails generate".
+unalias rg
+
+
+# --------------------------------------------------------------------------
+# Shell functions.
+# --------------------------------------------------------------------------
+
+# For performing quick calculations.
+calc() {
+    test -n "$1" || { echo "Usage: calc <expression>" >&2; return 1; }
+
+    echo "$@" | bc -l
+}
+
+# Cat with ROT-13.
+cat13() {
+    tr '[a-m][n-z][A-M][N-Z]' '[n-z][a-m][N-Z][A-M]' < "$@"
+}
+
+# Plaintext cat for markdown files.
+catmd() {
+    test -n "$1" || { echo "Usage: catmd <files>" >&2; return 1; }
+
+    for arg in "$@"
+    do
+        if [[ ${arg%.md} == "$arg" ]]; then
+            echo "'$arg' does not end in .md extension" >&2
+        else
+            local html=${arg%.md}.html
+            thor md:generate "$arg"
+            html2text "$html"
+            rm -f "$html"
+        fi
+    done
+}
+
+# Recursively change file extensions
+# Extended from: https://github.com/thoughtbot/dotfiles
+function change-extension() {
+  test -n "$1" || { echo "Usage: change-extension <current-extension> <new-extension>" >&2; return 1; }
+
+  setopt nullglob
+  foreach f (**/*.$1)
+    mv -v $f $f:r.$2
+  end
+  unsetopt nullglob
+}
+
+# Lookup tldr page, but use man as a fallback
+help() {
+    tldr "$@" 2>/dev/null || { echo "No tldr entry for $1 (try tldr --update)"; man "$@" }
+}
+
+# Make a directory with root permissions with that belongs to user.
+mkudir() {
+    test -n "$1" || { echo "Usage: mkudir <directory>" >&2; return 2; }
+
+    sudo mkdir -v "$@"
+    sudo chown "$USER" "$@"
+    sudo chgrp "$USER" "$@"
+}
+
+# Edit exec loop.
+eel() {
+    while true; do
+        # edit
+        $EDITOR $1
+
+        # exec
+        if [[ "$2" == "--exec" ]]; then
+            echo "[eel] \$ ${@:3}"
+            ${@:3}
+        else
+            echo "[eel] \$ $@"
+            $@
+        fi
+
+        # loop
+        ret=$?
+        if [ $ret -ne 0 ]; then
+            printf "[eel] Return status $ret. Press enter to continue. "
+        else
+            printf "[eel] Press enter to continue. "
+        fi
+
+        hold=' '
+        sed -n q < /dev/tty
+        ret=$?
+        if [ $ret -ne 0 ]; then
+            exit $ret
+        fi
+    done
+}
+
+# Repeatedly execute a command until it exits with a zero return code.
+for_the_love_of_god() {
+    while true; do
+        # Print the command being executed.
+        echo "$@"
+        # If the command completes with a zero return code, break the loop.
+        if $@ ; then
+            # Notify via lmk.
+            echo "$@" | lmk -
+            break
+        fi
+        # Pause for a second so that the user can C-c twice to break the loop.
+        if ! sleep 1 ; then
+            break
+        fi
+    done
+}
+
+# List file and directory contents.
+unalias l
+l() {
+    if [ -z "$1" ]; then
+        ls -l
+    else
+        for var in "$@"; do
+            if [ -d "$var" ]; then
+                ls -l "$var"
+            else
+                less "$var"
+            fi
+        done
+    fi
+}
+
+# For convenient file searching.
+search() {
+    test -n "$1" || { echo "Usage: search [dir] <pattern>" >&2; return 1; }
+    test -n "$2" && { local d="$1"; local q="$2"; } || { local d=. local q="$1"; }
+    test -d "$d" || { echo "Directory '$d' does not exist!"; return 1; }
+
+    sudo find "$d" -iname '*'"$q"'*' 2>/dev/null | grep -v '^'"$d"'$'
+    return 0
+}
+
+# Launch a webserver in the current dir.
+serve() {
+    local port=${1:=3000}
+    echo "Serving directory contents on http://localhost:$port/"
+    python2 -m SimpleHTTPServer $port
+}
+
+# Silence the output of a command, unless it fails. Example:
+#
+#     $ silent my command
+silent() {
+    local tmpfile="$(mktemp)"
+
+    $@ 2>&1 > "$tmpfile" || {
+        ret=$?
+        cat "$tmpfile"
+        rm "$tmpfile"
+        exit $ret
+    }
+    rm "$tmpfile"
+}
+
+ra() {
+    for arg in "$@"; do
+        ratom "$arg";
+    done
+}
+
+
+# If sublime-text is available locally, command 's' opens sublime.
+# If not, command 's' opens rsub.
+#
+s() {
+    if [[ -f /usr/local/bin/subl ]]; then
+        # open locally
+        subl $@
+    else
+        # open remotely
+        for arg in "$@"; do
+            rsub "$arg"
+        done
+    fi
+}
+
+
+# Buffer standard input to a file. Useful for redirecting output of a
+# pipe chain to the same input file. Example:
+#
+#     $ grep -v 'a' foo | sponge foo
+sponge() {
+    if [ -z "$1" ]; then
+        echo "$(basename $0):$LINENO sponge():  No file name given!"
+        exit 1
+    fi
+
+    # Create a temporary file.
+    local tmpfile="$(mktemp)"
+    # Redirect all stdin in to the temporary file.
+    cat > "$tmpfile"
+    # Replace the destintation file with the temporary file.
+    mv "$tmpfile" "$1"
+}
+
+# Super simple and super strong encryption.
+cry() {
+    test -n "$1" || { echo "Usage: cry <file ...>" >&2; return 1; }
+
+    for f in "$@"; do
+        if [[ ${f##*.} == "cry" ]]; then
+            scrypt dec "$f" > "${f%.cry}"
+            if (( $? )); then
+                echo "Decryption failed on '$f'" >&2
+                return 1
+            fi
+        else
+            scrypt enc "$f" > "$f".cry
+            if (( $? )); then
+                echo "Encryption failed on '$f'" >&2
+                return 1
+            fi
+        fi
+
+        rm -f "$f"
+    done
+}
+
+# TODO list tracking.
+todo() {
+    local dir="."
+    test -n "$1" && dir="$1"
+
+    for f in $(find "$dir" -type f 2>/dev/null | grep -v .git); do
+        grep -Hn 'TODO\|FIXME' "$f" 2>/dev/null
+    done
+
+    return 0
+}
+
+# Easy-open.
+if [[ "$(uname -s)" == "Darwin" ]]; then
+    alias o='open'
+else
+    o() {
+        xdg-open "$@" &>/dev/null
+    }
+fi
+
+# --------------------------------------------------------------------------
+# External files.
+# --------------------------------------------------------------------------
+
+# autoenv cd script. https://github.com/kennethreitz/autoenv
+which activate.sh &>/dev/null && source $(which activate.sh)
+
+setopt nullglob
+
+# Custom zsh scripts
+if test -d ~/.zsh; then
+    for script in ~/.zsh/*.zsh; do
+        test -r "$script" && . "$script"
+    done
+
+    for script in ~/.zsh/private/*.zsh; do
+        test -r "$script" && . "$script"
+    done
+    unset script
+fi
+
+unsetopt nullglob
+
+
+# Expand '...' into '../..'
+autoload -Uz manydots-magic
+manydots-magic
+
+
+# --------------------------------------------------------------------------
+# Paths.
+# --------------------------------------------------------------------------
+
+# Accepts an array of directories and returns a colon separated path
+# of all of the directories that exist, in order.  Example usage:
+#
+#    dirs=("/usr/local/bin" /usr/bin "/not a real path")
+#    unset FOO
+#    FOO=$(build_path "${dirs[@]}")
+#    echo $FOO
+#    # Outputs: /usr/local/bin:/usr/bin
+build_path() {
+    local _dir=""
+    local _path=""
+
+    for _dir in "$@"
+    do
+        if [ -d $_dir ]; then
+            _path=$_path:$_dir
+        fi
+    done
+
+    _path=${_path:1}
+    echo $_path
+}
+
+export NODE_PATH=/usr/local/lib/node_modules
+
+setopt nullglob # Globs which don't match anything expand to nothing.
+
+pkg_config_path_dirs=( \
+    /usr/local/lib/pkgconfig \
+    /usr/lib/pkgconfig \
+)
+export PKG_CONFIG_PATH=$(build_path "${pkg_config_path_dirs[@]}")
+
+ld_library_path_dirs=( \
+    /usr/lib \
+    /usr/lib32 \
+    /usr/local/lib \
+    /usr/local/cuda/lib64 \
+)
+export LD_LIBRARY_PATH=$(build_path "${ld_library_path_dirs[@]}")
+
+path_dirs=( \
+    ~/bin \
+    ~/.rbenv/shims \
+    ~/.local/bin \
+    ~/.gem/*/*/bin \
+    ~/.gem/*/ruby/*/bin \
+    ~/go/bin \
+    /home/linuxbrew/.linuxbrew/bin \
+    /home/linuxbrew/.linuxbrew/sbin \
+    /Library/TeX/Distributions/.DefaultTeX/Contents/Programs/texbin \
+    /usr/local/opt/coreutils/libexec/gnubin \
+    /usr/local/opt/gnu-sed/libexec/gnubin \
+    /usr/local/opt/gnu-tar/libexec/gnubin \
+    /usr/local/opt/python/bin \
+    /usr/local/opt/unzip/bin \
+    /usr/local/opt/ofexport/bin \
+    /usr/local/bin \
+    /usr/contrib/bin \
+    /usr/local/cuda/bin \
+    /opt/bin \
+    /opt/local/bin \
+    /opt/local/sbin \
+    /bin \
+    /usr/bin \
+    /usr/bin/core_perl \
+    /usr/bin/vendor_perl \
+    /usr/local/mysql/bin \
+    /usr/sbin \
+    /usr/texbin \
+    /sbin \
+)
+export PATH=$(build_path "${path_dirs[@]}")
+
+manpath_dirs=( \
+    /Library/TeX/Distributions/.DefaultTeX/Contents/Man/ \
+    /usr/local/opt/coreutils/libexec/gnuman \
+    /usr/local/opt/gnu-sed/libexec/gnuman \
+    /usr/local/opt/gnu-tar/libexec/gnuman \
+)
+export MANPATH=$(build_path "${manpath_dirs[@]}")
+
+
+# Enable pretty colors.
+# This must be done after setting PATH so that on macOS the gnubin directory
+# containing dircolors is in the path.
+if $(which dircolors &>/dev/null); then
+    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" \
+        || eval "$(dircolors -b)"
+
+    alias ls='ls --color=auto'
+    alias dir='dir --color=auto'
+    alias egrep='egrep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias grep='grep --color=auto'
+    alias vdir='vdir --color=auto'
+fi

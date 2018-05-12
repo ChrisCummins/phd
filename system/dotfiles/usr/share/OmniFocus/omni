@@ -1,0 +1,188 @@
+#!/usr/bin/env python2
+"""
+omni - add a task to OmniFocus inbox from the command-line.
+
+Requirements:
+
+ * A working 'mail' interface, for sending email over the command-line.
+   For OS X, see: http://codana.me/2014/11/23/sending-gmail-from-os-x-yosemite-terminal/
+ * An OmniFocus Mail Drop account. See the OmniFocus help.
+
+The MIT License (MIT)
+
+Copyright (c) 2016 Chris Cummins <chrisc.101@gmail.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+"""
+from __future__ import print_function
+
+import logging
+import os
+
+from argparse import ArgumentParser
+from subprocess import Popen, PIPE
+from sys import exit, stderr
+
+
+def fatal_error(*msg, **kwargs):
+    print("[omni] error:", *msg, file=stderr)
+    exit(kwargs.get("ret", 1))
+
+
+def get_editor():
+    """
+    The editor used to edit the item message will be chosen from the
+    OMNI_EDITOR environment variable, the VISUAL environment variable,
+    or the EDITOR environment variable (in that order).
+    """
+    DEFAULT_EDITOR = "vim"
+
+    if "OMNI_EDITOR" in os.environ:
+        return os.environ["OMNI_EDITOR"]
+    elif "VISUAL" in os.environ:
+        return os.environ["VISUAL"]
+    elif "EDITOR" in os.environ:
+        return os.environ["EDITOR"]
+    else:
+        return DEFAULT_EDITOR
+
+
+def get_mail_drop_address():
+    if not "OMNI_MAIL_DROP" in os.environ:
+        fatal_error(
+"""I don't know your Mail Drop email address. Please set the
+OMNI_MAIL_DROP variable and try again. You can do this using the command:
+
+     OMNI_MAIL_DROP=[me]@sync.omnigroup.com !!
+
+Consider adding 'export OMNI_MAIL_DROP=[me]@sync.omnigroup.com' to
+your .bashrc file.""")
+    return os.environ["OMNI_MAIL_DROP"]
+
+
+def get_message_file_path():
+    # TODO: Allow user configurable option.
+    return "/tmp/OMNI_MSG"
+
+
+def get_prompt(note):
+    prompt = """
+# Please enter your message for the OmniFocus Inbox item.
+# Lines starting with '#' will be ignored, and an empty
+# message aborts the task."""
+    if note:
+        prompt = "\n\n" + note + prompt
+    return prompt
+
+
+def launch_editor(editor, path):
+    process = Popen([editor, path])
+    process.communicate()
+
+
+def parse_file(path):
+    assert(os.path.exists(path))
+    with open(path) as infile:
+        contents = infile.read()
+    lines = contents.split('\n')
+
+    note_lines = [line for line in lines[1:]
+                  if not line.startswith('#')]
+
+    message = lines[0].strip()
+    note = '\n'.join(note_lines).strip()
+
+    return message, note
+
+
+def get_item_interactively(note):
+    tmpfile = get_message_file_path()
+    if note or not os.path.exists(tmpfile):
+        prompt = get_prompt(note)
+        with open(tmpfile, "w") as outfile:
+            print(prompt, file=outfile)
+
+    editor = get_editor()
+    launch_editor(editor, tmpfile)
+
+    message, note = parse_file(tmpfile)
+
+    # We are done with the tempfile:
+    os.unlink(tmpfile)
+
+    return message, note
+
+
+def send_item_to_drop_mail(message, note, email_address):
+    process = Popen(['mail', '-s', message, email_address], stdin=PIPE)
+    # Some versions of mailx will print 'Null message body; hope that's ok'
+    # message if email contains no body. We'll circumvent that by sending a
+    # single whitespace character:
+    process.communicate(note or " ")
+
+
+def address_is_sane(address):
+    return "@" in address
+
+
+def main():
+    parser = ArgumentParser(description="Add a new OmniFocus item.")
+    parser.add_argument("message", metavar="MSG...", type=str, nargs="*",
+                        help="the item text")
+    parser.add_argument("-v", "--verbose", action="store_true",
+                        help="execute verbosely")
+    parser.add_argument("-n", "--note", type=str, nargs="+",
+                        help="note")
+    args = parser.parse_args()
+
+    if args.verbose:  # Verbose mode logging
+        logging.basicConfig(level=logging.DEBUG)
+
+    message = ' '.join(args.message).strip()
+    note = ' '.join(args.note or []).strip()
+    dest = str(get_mail_drop_address()).strip()
+
+    if not address_is_sane(dest):
+        fatal_error("omni: The Mail Drop address I have is '{dest}'\n"
+                    "      I don't think that's right.".format(dest=dest))
+
+    if not message:
+        message, note = get_item_interactively(note)
+
+    def tostr(*args):
+        return " ".join([str(arg) for arg in args])
+
+    logging.debug(tostr("MSG: ", message))
+    logging.debug(tostr("NOTE:", note))
+    logging.debug(tostr("DEST:", dest))
+
+    if not (message or note):
+        print("Nothing to send")
+        exit(0)
+
+    # TODO: Maintain a log of the last 1000 tasks in /tmp/log/omni.
+    # This provides a possible backup in case the user's postfix wasn't
+    # properly configured and things get lost.
+
+    send_item_to_drop_mail(message, note, dest)
+    print("Item sent")
+
+
+if __name__ == "__main__":
+    main()

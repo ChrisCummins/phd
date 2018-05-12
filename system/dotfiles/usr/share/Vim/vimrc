@@ -1,0 +1,91 @@
+set nocompatible              " be iMproved, required
+filetype off                  " required
+
+" set the runtime path to include Vundle and initialize
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
+" alternatively, pass a path where Vundle should install plugins
+"call vundle#begin('~/some/path/here')
+
+" let Vundle manage Vundle, required
+Plugin 'VundleVim/Vundle.vim'
+
+" Plugin 'ntpeters/vim-better-whitespace'
+Plugin 'scrooloose/nerdtree'
+Plugin 'Xuyuanp/nerdtree-git-plugin'
+Plugin 'tpope/vim-fugitive'
+Plugin 'airblade/vim-gitgutter'
+Plugin 'jdkanani/vim-material-theme'
+Plugin 'terryma/vim-multiple-cursors'
+Plugin 'vim-airline/vim-airline'
+
+" All of your Plugins must be added before the following line
+call vundle#end()            " required
+filetype plugin indent on    " required
+" To ignore plugin indent changes, instead use:
+"filetype plugin on
+"
+" Brief help
+" :PluginList       - lists configured plugins
+" :PluginInstall    - installs plugins; append `!` to update or just :PluginUpdate
+" :PluginSearch foo - searches for foo; append `!` to refresh local cache
+" :PluginClean      - confirms removal of unused plugins; append `!` to auto-approve removal
+"
+" see :h vundle for more details or wiki for FAQ
+" Put your non-Plugin stuff after this line
+
+" Insert tabs as spaces
+set tabstop=8 softtabstop=0 expandtab shiftwidth=4 smarttab
+
+" Strip trailing whitesapce, and maintain cursor position.
+fun! <SID>StripTrailingWhitespaces()
+    let l = line(".")
+    let c = col(".")
+    %s/\s\+$//e
+    call cursor(l, c)
+endfun
+autocmd BufWritePre * :call <SID>StripTrailingWhitespaces()
+
+" Turn syntax highlighting on
+syntax enable
+
+" show line numbers
+set number
+set relativenumber
+
+" indent when moving to the next line while writing code
+set autoindent
+
+" show a visual line under the cursor's current line
+" set cursorline
+
+" show the matching part of the pair for [] {} and ()
+set showmatch
+
+" enable all Python syntax highlighting features
+let python_highlight_all = 1
+
+
+" For GUI, use a color scheme
+if has('gui_running')
+    set background=dark
+    colorscheme material-theme
+endif
+
+" Enable mouse scrolling in iTerm2
+set mouse=a
+
+" Always show statusline
+set laststatus=2
+
+" Highlight text beyond 80 column width
+highlight OverLength ctermbg=red ctermfg=white guibg=#592929
+match OverLength /\%81v.\+/
+
+hi Search guibg=peru guifg=wheat
+set hlsearch
+
+
+" iPad keybaord has no escape key
+imap § <Esc>
+

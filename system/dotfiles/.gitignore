@@ -1,0 +1,17 @@
+.DS_Store
+.install-lastrun.txt
+
+*.pyc
+
+# vim swap files:
+*.swp
+
+# Intellij files:
+/.idea/
+
+# configure file:
+/config.json
+
+# temp files:
+.*.txt
+.*.json

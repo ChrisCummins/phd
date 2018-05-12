@@ -1,0 +1,5 @@
+private
+/cache
+
+# Installed by dotfiles.
+/completion/_bazel

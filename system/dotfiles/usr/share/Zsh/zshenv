@@ -1,0 +1,67 @@
+#!/usr/bin/env zsh
+
+# --------------------------------------------------------------------------
+# Shell environment.
+# --------------------------------------------------------------------------
+
+# Development environment.
+export USE_CCACHE=1
+
+# Don't modify prompt when activating Python virtualenv environments.
+# This is because our zsh prompt includes this information.
+#
+# See: https://virtualenv.pypa.io/en/stable/reference/#envvar-VIRTUAL_ENV_DISABLE_PROMPT
+export VIRTUAL_ENV_DISABLE_PROMPT=1
+
+# travis tab completion
+[ -f ~/.travis/travis.sh ] && source ~/.travis/travis.sh
+
+# torch environment
+[ -f ~/torch/install/bin/torch-activate ] && source ~/torch/install/bin/torch-activate
+
+# rbenv shims. https://github.com/sstephenson/rbenv#how-it-works
+if [[ -x $(which rbenv) ]]; then
+    eval "$(rbenv init -)"
+fi
+
+# Pagers and editors.
+export VIEW=/usr/bin/elinks
+export PAGER="less"
+export LESS="--ignore-case --LONG-PROMPT --QUIET --chop-long-lines -Sm \
+             --RAW-CONTROL-CHARS --quit-if-one-screen --no-init"
+if [[ -x $(which lesspipe.sh) ]]; then
+    export LESSOPEN="| lesspipe.sh %s"
+fi
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+
+export EDITOR='vim'
+# sublime for local shell, rsub if on a remote machine
+# arguments: --wait block until closed, -n open a new window
+# if [[ -f /usr/local/bin/subl ]]; then
+#     export EDITOR='subl -n --wait'
+# else
+#     export EDITOR='rsub -n --wait'
+# fi
+export ALTERNATE_EDITOR=''
+export USE_EDITOR=$EDITOR
+export VISUAL=$EDITOR
+
+# OpenCL vendor installation.
+[ -d /etc/OpenCL/vendors/ ] && export OPENCL_VENDOR_PATH=/etc/OpenCL/vendors/
+
+
+# --------------------------------------------------------------------------
+# External files.
+# --------------------------------------------------------------------------
+
+
+# Load bash profiles from /etc/profile.d
+if test -d /etc/profile.d/; then
+    for profile in /etc/profile.d/*.sh; do
+        test -r "$profile" && . "$profile"
+    done
+    unset profile
+fi
+
+
+unsetopt nullglob # Globs which don't match anything expand to nothing.
