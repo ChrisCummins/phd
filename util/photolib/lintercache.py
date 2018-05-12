@@ -1,7 +1,6 @@
 """This file defines a cache for linting results."""
-import os
-
 import datetime
+import os
 import sqlalchemy as sql
 import typing
 from absl import flags
@@ -16,8 +15,8 @@ from sqlalchemy import UniqueConstraint
 from sqlalchemy import orm
 from sqlalchemy.ext import declarative
 
+from util.photolib import common
 from util.photolib import linters
-from util.photolib import util
 
 FLAGS = flags.FLAGS
 
@@ -44,11 +43,11 @@ class Directory(Base):
   relpath_md5: str = Column(Binary(16), primary_key=True)
   mtime: int = Column(Integer, nullable=False)
   date_added: datetime.datetime = Column(
-      DateTime, nullable=False, default=datetime.datetime.utcnow)
+    DateTime, nullable=False, default=datetime.datetime.utcnow)
 
   def __repr__(self):
     return (f"{self.relpath}:  "
-            f"{util.Colors.YELLOW}{self.message}{util.Colors.END}  "
+            f"{common.Colors.YELLOW}{self.message}{common.Colors.END}  "
             f"[{self.category}]")
 
 
@@ -67,11 +66,11 @@ class CachedError(Base):
   directory: Directory = orm.relationship("Directory")
 
   __table_args__ = (UniqueConstraint(
-      'dir', 'relpath', 'category', 'message', 'fix_it', name='unique_error'),)
+    'dir', 'relpath', 'category', 'message', 'fix_it', name='unique_error'),)
 
   def __repr__(self):
     return (f"{self.relpath}:  "
-            f"{util.Colors.YELLOW}{self.message}{util.Colors.END}  "
+            f"{common.Colors.YELLOW}{self.message}{common.Colors.END}  "
             f"[{self.category}]")
 
 
@@ -118,7 +117,7 @@ def refresh_linters_version():
 
   with open(linters.__file__) as f:
     actual_linters_version = Meta(
-        key=meta_key, value=util.md5(f.read()).hexdigest())
+      key=meta_key, value=common.md5(f.read()).hexdigest())
 
   if cached_checksum != actual_linters_version.value:
     logging.debug("linters.py has changed, emptying cache ...")
@@ -150,11 +149,11 @@ def add_linter_errors(entry: CacheLookupResult,
 
   # Create entries for the errors.
   errors_ = [CachedError(
-      dir=directory.relpath_md5,
-      relpath=e.relpath,
-      category=e.category,
-      message=e.message,
-      fix_it=e.fix_it or ""
+    dir=directory.relpath_md5,
+    relpath=e.relpath,
+    category=e.category,
+    message=e.message,
+    fix_it=e.fix_it or ""
   ) for e in errors]
   if errors_:
     SESSION.bulk_save_objects(errors_)
@@ -177,17 +176,17 @@ def get_directory_mtime(abspath) -> int:
 
 def get_linter_errors(abspath: str, relpath: str) -> CacheLookupResult:
   """Looks up the given directory and returns cached results (if any)."""
-  relpath_md5 = util.md5(relpath).digest()
+  relpath_md5 = common.md5(relpath).digest()
 
   # Get the time of the most-recently modified file in the directory.
   mtime = get_directory_mtime(abspath)
 
   ret = CacheLookupResult(
-      exists=False,
-      mtime=mtime,
-      relpath=relpath,
-      relpath_md5=relpath_md5,
-      errors=[]
+    exists=False,
+    mtime=mtime,
+    relpath=relpath,
+    relpath_md5=relpath_md5,
+    errors=[]
   )
 
   directory = SESSION \

@@ -1,15 +1,15 @@
 """This file contains the linter implementations for photolint."""
-import os
-import re
 import sys
-from collections import defaultdict
 
 import inspect
+import os
+import re
 import typing
 from absl import flags
+from collections import defaultdict
 
+from util.photolib import common
 from util.photolib import lightroom
-from util.photolib import util
 
 FLAGS = flags.FLAGS
 flags.DEFINE_boolean("counts", False, "Show only the counts of errors.")
@@ -62,7 +62,7 @@ class Error(object):
     ERROR_COUNTS[category] += 1
 
     if not FLAGS.counts:
-      print(f"{relpath}:  {util.Colors.YELLOW}{message}{util.Colors.END}  "
+      print(f"{relpath}:  {common.Colors.YELLOW}{message}{common.Colors.END}  "
             f"[{category}]", file=sys.stderr)
       sys.stderr.flush()
 
@@ -129,11 +129,11 @@ class PhotolibFilename(PhotolibFileLinter):
 
   def __call__(self, abspath: str, workspace_relpath: str, filename: str):
     filename_noext = os.path.splitext(filename)[0]
-    if re.match(util.PHOTO_LIB_PATH_COMPONENTS_RE, filename_noext):
+    if re.match(common.PHOTO_LIB_PATH_COMPONENTS_RE, filename_noext):
       # TODO(cec): Compare YYYY-MM-DD against directory name.
       return []
 
-    if re.match(util.PHOTO_LIB_SCAN_PATH_COMPONENTS_RE, filename_noext):
+    if re.match(common.PHOTO_LIB_SCAN_PATH_COMPONENTS_RE, filename_noext):
       # TODO(cec): Compare YYYY-MM-DD against directory name.
       return []
 
@@ -188,14 +188,14 @@ class FileExtension(PhotolibFileLinter, GalleryFileLinter):
                           "file extension should be lowercase",
                           fix_it=f"mv -v '{abspath}' '{labspath}'"))
 
-    if lext not in util.KNOWN_FILE_EXTENSIONS:
+    if lext not in common.KNOWN_FILE_EXTENSIONS:
       if lext == ".jpeg":
         jabspath = abspath[:-len(ext)] + ".jpg"
         errors.append(Error(workspace_relpath, "extension/bad",
                             f"convert {lext} file to .jpg",
                             fix_it=f"mv -v '{abspath}' '{jabspath}'"))
-      if lext in util.FILE_EXTENSION_SUGGESTIONS:
-        suggestion = util.FILE_EXTENSION_SUGGESTIONS[lext]
+      if lext in common.FILE_EXTENSION_SUGGESTIONS:
+        suggestion = common.FILE_EXTENSION_SUGGESTIONS[lext]
         errors.append(Error(workspace_relpath, "extension/bad",
                             f"convert {lext} file to {suggestion}"))
       else:
@@ -231,7 +231,7 @@ class FilmFormat(PhotolibFileLinter):
 
   def __call__(self, abspath: str, workspace_relpath: str, filename: str):
     filename_noext = os.path.splitext(filename)[0]
-    if not util.PHOTO_LIB_SCAN_PATH_COMPONENTS_RE.match(filename_noext):
+    if not common.PHOTO_LIB_SCAN_PATH_COMPONENTS_RE.match(filename_noext):
       return []
 
     keywords = lightroom.get_lightroom_keywords(abspath, workspace_relpath)
@@ -335,7 +335,7 @@ class DirShouldNotHaveFiles(PhotolibDirLinter):
   def __call__(self, abspath: str, workspace_relpath: str,
                dirnames: typing.List[str], filenames: typing.List[str]):
     # Do nothing if we're in a leaf directory.
-    if util.PHOTOLIB_LEAF_DIR_RE.match(workspace_relpath):
+    if common.PHOTOLIB_LEAF_DIR_RE.match(workspace_relpath):
       return []
 
     if not filenames:

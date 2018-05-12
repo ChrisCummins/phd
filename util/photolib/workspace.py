@@ -1,9 +1,8 @@
 """Utilities for working with workspaces."""
 import os
-
 import typing
 
-from util.photolib import util
+from util.photolib import common
 
 
 def find_workspace_rootpath(start_path: str) -> typing.Optional[str]:
@@ -18,7 +17,7 @@ def find_workspace_rootpath(start_path: str) -> typing.Optional[str]:
       The path of the workspace root, or None if not found.
   """
   if all(os.path.isdir(os.path.join(start_path, tld))
-         for tld in util.TOP_LEVEL_DIRS):
+         for tld in common.TOP_LEVEL_DIRS):
     return os.path.abspath(start_path)
 
   if os.path.ismount(start_path):

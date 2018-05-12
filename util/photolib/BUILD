@@ -12,7 +12,7 @@ py_binary(
     deps = [
         ":lintercache",
         ":linters",
-        ":util",
+        ":common",
         ":workspace",
     ],
 )
@@ -21,7 +21,7 @@ py_library(
     name = "workspace",
     srcs = ["workspace.py"],
     deps = [
-        ":util",
+        ":common",
     ],
 )
 
@@ -30,7 +30,7 @@ py_library(
     srcs = ["lintercache.py"],
     deps = [
         ":linters",
-        ":util",
+        ":common",
     ],
 )
 
@@ -38,7 +38,7 @@ py_library(
     name = "lightroom",
     srcs = ["lightroom.py"],
     deps = [
-        ":util",
+        ":common",
     ],
 )
 
@@ -47,13 +47,13 @@ py_library(
     srcs = ["linters.py"],
     deps = [
         ":lightroom",
-        ":util",
+        ":common",
     ],
 )
 
 py_library(
-    name = "util",
-    srcs = ["util.py"],
+    name = "common",
+    srcs = ["common.py"],
 )
 
 py_test(

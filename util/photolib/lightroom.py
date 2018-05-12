@@ -1,7 +1,6 @@
 """Functions for working with Lightroom."""
-import os
-
 import datetime
+import os
 import sqlalchemy as sql
 import typing
 from absl import flags
@@ -16,7 +15,7 @@ from sqlalchemy import String
 from sqlalchemy import orm
 from sqlalchemy.ext import declarative
 
-from util.photolib import util
+from util.photolib import common
 
 FLAGS = flags.FLAGS
 
@@ -48,7 +47,7 @@ class KeywordCacheEntry(Base):
   mtime: int = Column(Integer, nullable=False)
   keywords_id: int = Column(Integer, ForeignKey("keywords.id"), nullable=False)
   date_added: datetime.datetime = Column(
-      DateTime, nullable=False, default=datetime.datetime.utcnow)
+    DateTime, nullable=False, default=datetime.datetime.utcnow)
 
   keywords: Keywords = orm.relationship("Keywords")
 
@@ -114,9 +113,9 @@ def _add_keywords_to_cache(relpath_md5: str, mtime: float,
   keywords_ = get_or_add(SESSION, Keywords, keywords=",".join(keywords))
 
   entry = KeywordCacheEntry(
-      relpath_md5=relpath_md5,
-      mtime=int(mtime),
-      keywords=keywords_,
+    relpath_md5=relpath_md5,
+    mtime=int(mtime),
+    keywords=keywords_,
   )
   SESSION.add(entry)
   SESSION.commit()
@@ -154,7 +153,7 @@ def get_lightroom_keywords(abspath: str, relpath: str) -> typing.Set[str]:
   Returns:
     A set of lightroom keywords. An empty set is returned on failure.
   """
-  relpath_md5 = util.md5(relpath).digest()
+  relpath_md5 = common.md5(relpath).digest()
   mtime = int(os.path.getmtime(abspath))
 
   entry = SESSION \
