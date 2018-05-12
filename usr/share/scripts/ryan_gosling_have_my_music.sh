@@ -10,8 +10,8 @@ fi
 set -eu
 
 # Use the local area network if available.
-remote_lan="192.168.0.203"
-remote_wan="ryangosling"
+remote_lan="ryangosling"
+remote_wan="ryangosling.wan"
 remote_port=65335
 
 if ping -c1 -W1 "$remote_lan" &>/dev/null; then
