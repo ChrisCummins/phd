@@ -158,11 +158,22 @@ class Homebrew(Task):
       return True
 
   @staticmethod
-  def bin(name):
+  def _home():
     if get_platform() == 'osx':
-      return '/usr/local/bin/{name}'.format(name=name)
+      return '/usr/local'
     else:
-      return '/home/linuxbrew/.linuxbrew/bin/{name}'.format(name=name)
+      return '/home/linuxbrew/.linuxbrew'
+
+  @classmethod
+  def bin(cls, name):
+    home = cls._home()
+    return '{home}/bin/{name}'.format(**vars())
+
+
+  @classmethod
+  def lib(cls, name):
+    home = cls._home()
+    return '{home}/lib/{name}'.format(**vars())
 
 
 class Python(Task):
