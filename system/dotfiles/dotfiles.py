@@ -1686,11 +1686,21 @@ class FlorenceScripts(Task):
     Trash().trash(*self.__genfiles__)
 
 
+class LibExempi(Task):
+  """ parse XMP metadata """
+  __platforms__ = ['osx', 'linux']
+  __deps__ = ['Homebrew']
+  __genfiles__ = [Homebrew.lib('libexempi.a')]
+
+  def install(self):
+    Homebrew().install_package('exempi')
+
+
 class Phd(Task):
   """ phd repo """
   __platforms__ = ['linux', 'osx']
   __genfiles__ = ['~/phd']
-  __deps__ = ['Bazel']
+  __deps__ = ['Bazel', 'LibExempi']
 
   def install(self):
     clone_git_repo(github_repo("ChrisCummins", "phd"), "~/phd")
