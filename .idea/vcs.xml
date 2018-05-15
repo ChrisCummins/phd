@@ -15,12 +15,10 @@
     <mapping directory="$PROJECT_DIR$/http/humanorrobot.uk" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/http/warhaniye.com" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/learn/interactive-coding-challenges" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/system/dotfiles" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/system/emu" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/third_party/torch-rnn" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/third_party/visioncpp" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/util/gh-archiver" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/util/shutterbug" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/util/srtime" vcs="Git" />
   </component>
 </project>
