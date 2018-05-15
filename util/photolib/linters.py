@@ -1,15 +1,16 @@
 """This file contains the linter implementations for photolint."""
-import sys
-
 import inspect
 import os
 import re
+import sys
 import typing
-from absl import flags
 from collections import defaultdict
+
+from absl import flags
 
 from util.photolib import common
 from util.photolib import lightroom
+from util.photolib.proto import photolint_pb2
 
 FLAGS = flags.FLAGS
 flags.DEFINE_boolean("counts", False, "Show only the counts of errors.")
@@ -68,6 +69,18 @@ class Error(object):
 
     if FLAGS.fix_it and fix_it:
       print(fix_it)
+
+  def ToProto(self) -> photolint_pb2.PhotolintFileError:
+    """Instantiate a PhotolintFileError message for this error.
+
+    Returns:
+      A PhotolintFileError message instance.
+    """
+    error = photolint_pb2.PhotolintFileError()
+    error.workspace_relative_path = self.relpath
+    error.category = self.category
+    error.message = self.message
+    error.shell_command_to_fix_it = self.fix_it
 
 
 class Linter(object):

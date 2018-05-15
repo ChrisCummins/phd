@@ -10,9 +10,9 @@ py_binary(
     srcs = ["photolint.py"],
     default_python_version = "PY3",
     deps = [
+        ":common",
         ":lintercache",
         ":linters",
-        ":common",
         ":workspace",
     ],
 )
@@ -29,8 +29,8 @@ py_library(
     name = "lintercache",
     srcs = ["lintercache.py"],
     deps = [
-        ":linters",
         ":common",
+        ":linters",
     ],
 )
 
@@ -46,8 +46,8 @@ py_library(
     name = "linters",
     srcs = ["linters.py"],
     deps = [
-        ":lightroom",
         ":common",
+        ":lightroom",
     ],
 )
 
