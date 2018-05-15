@@ -266,6 +266,22 @@ class PypiConfig(Task):
             "~/.pypirc")
 
 
+class Docker(Task):
+  __platforms__ = ['osx', 'linux']
+  __deps__ = ['Homebrew']
+
+  def install_osx(self):
+    Homebrew().install_cask('docker')
+
+  def install_ubuntu(self):
+    Apt().install_package('docker.io')
+    shell('sudo systemctl docker docker')
+    shell('sudo systemctl enable docker')
+
+  def uninstall(self):
+    Homebrew().uninstall_cask('docker')
+
+
 class Unzip(Task):
   """ unzip pacakge """
   __platforms__ = ['osx', 'ubuntu']
