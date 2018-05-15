@@ -1,0 +1,2 @@
+class CallContext(object):
+  pass
