@@ -275,8 +275,9 @@ class Docker(Task):
 
   def install_ubuntu(self):
     Apt().install_package('docker.io')
-    shell('sudo systemctl docker docker')
+    shell('sudo systemctl start docker')
     shell('sudo systemctl enable docker')
+    shell('sudo usermod -aG docker $USER')
 
   def uninstall(self):
     Homebrew().uninstall_cask('docker')
