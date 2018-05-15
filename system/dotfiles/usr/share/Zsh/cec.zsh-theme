@@ -121,6 +121,6 @@ $(__cec_zsh_theme_prefix) '
 
 ZSH_THEME_GIT_PROMPT_PREFIX=" on %{$fg[white]%}"
 ZSH_THEME_GIT_PROMPT_SUFFIX="%{$reset_color%}"
-ZSH_THEME_GIT_PROMPT_DIRTY=":$(git rev-parse --short HEAD) %{$fg[red]%}✘%{$reset_color%}"
-ZSH_THEME_GIT_PROMPT_UNTRACKED=":$(git rev-parse --short HEAD) %{$fg[green]%}?"
-ZSH_THEME_GIT_PROMPT_CLEAN=":$(git rev-parse --short HEAD) %{$fg[green]%}✔"
+ZSH_THEME_GIT_PROMPT_DIRTY=":$(git rev-parse --short HEAD 2>/dev/null) %{$fg[red]%}✘%{$reset_color%}"
+ZSH_THEME_GIT_PROMPT_UNTRACKED=":$(git rev-parse --short HEAD 2>/dev/null) %{$fg[green]%}?"
+ZSH_THEME_GIT_PROMPT_CLEAN=":$(git rev-parse --short HEAD 2>/dev/null) %{$fg[green]%}✔"
