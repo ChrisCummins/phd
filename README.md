@@ -107,10 +107,10 @@ A self-contained monolothic repository for (almost) everything I have done while
 
 ## Misc
 
-1. **Curriculum Vitae**. 
-   [[source code]](/docs/cv). 
-   [[pdf]](https://chriscummins.cc/cv.pdf). 
-   [[html]](https://chriscummins.cc/cv/). 
+1. **Curriculum Vitae**.
+   [[source code]](/docs/cv).
+   [[pdf]](https://chriscummins.cc/cv.pdf).
+   [[html]](https://chriscummins.cc/cv/).
    Build command: `$ bazel build //docs:cv`.
 1. Chris Cummins, Pavlos Petoumenos, Michel Steuwer, Hugh Leather.
    "**Collaborative Autotuning of Algorithmic Skeletons for GPUs and CPUs**".
