@@ -1,6 +1,6 @@
 # My PhD
 
-A self-contained, monolothic repository for (almost) everything I have done while at the University of Edinburgh. Living an #open life.
+A self-contained monolothic repository for (almost) everything I have done while at the University of Edinburgh. Living an #open life.
 
 
 ##  Publications
