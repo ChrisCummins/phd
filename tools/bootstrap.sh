@@ -192,7 +192,12 @@ main() {
     # use the presence of the .env to determine if the project has been
     # bootstrapped.
     echo "cp -v $ROOT/tools/env.sh $ROOT/.env"
-    echo "sed \"s,@ROOT@,$ROOT,\" -i $ROOT/.env"
+    if [[ -f /usr/local/opt/gnu-sed/libexec/gnubin/sed ]]; then
+        SED="/usr/local/opt/gnu-sed/libexec/gnubin/sed"
+    else
+        SED="sed"
+    fi
+    echo -i "$SED \"s,@ROOT@,$ROOT,\" $ROOT/.env"
 }
 
 main $@
