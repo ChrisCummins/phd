@@ -140,7 +140,7 @@ main() {
 
     # Create autoenv environment file.
     echo "cp -v $ROOT/tools/env.sh $ROOT/.env"
-    echo "sed \"s,@ROOT@,$ROOT/,\" -i $ROOT/.env"
+    echo "sed \"s,@ROOT@,$ROOT,\" -i $ROOT/.env"
 
     # LaTeX
     if [[ "$(uname)" == "Darwin" ]]; then
