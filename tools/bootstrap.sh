@@ -138,10 +138,6 @@ main() {
         echo
     fi
 
-    # Create autoenv environment file.
-    echo "cp -v $ROOT/tools/env.sh $ROOT/.env"
-    echo "sed \"s,@ROOT@,$ROOT,\" -i $ROOT/.env"
-
     # LaTeX
     if [[ "$(uname)" == "Darwin" ]]; then
         if brew cask list | grep mactex &> /dev/null; then
@@ -172,6 +168,12 @@ main() {
             echo
         fi
     fi
+
+    # Create autoenv environment file. This should be done last, since we can
+    # use the presence of the .env to determine if the project has been
+    # bootstrapped.
+    echo "cp -v $ROOT/tools/env.sh $ROOT/.env"
+    echo "sed \"s,@ROOT@,$ROOT,\" -i $ROOT/.env"
 }
 
 main $@
