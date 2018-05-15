@@ -29,6 +29,17 @@ main() {
   echo "Submodule status:"
   git submodule status 2>&1 | indent
 
+  # Print Linux version, if available.
+  if [[ -f /etc/os-release ]]; then
+    echo "/etc/os-release"
+    cat /etc/os-release 2>&1 | indent
+  fi
+  # Print macOS version, if available.
+  if which sw_vers &>/dev/null; then
+    echo "sw_vers"
+    sw_vers 2>&1 | indent
+  fi
+
   if [[ -f "$ROOT/.env" ]]; then
     echo "Repository appears to have been bootstrapped."
   else
