@@ -8,8 +8,8 @@
 #
 set -eu
 
-# Directory of this script.
-DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Directory of the root of this repository.
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 main() {
     # header
@@ -42,12 +42,12 @@ main() {
     fi
 
     # git hook
-    if [[ -f "$DIR/../.git/hooks/pre-push" ]]; then
+    if [[ -f "$ROOT/.git/hooks/pre-push" ]]; then
         echo '# git hook: installed'
     else
         echo '# git hook:'
-        echo "cp -v $DIR/pre-push $DIR/../.git/hooks/pre-push"
-        echo "chmod +x $DIR/../.git/hooks/pre-push"
+        echo "cp -v $ROOT/tools/pre-push $ROOT/.git/hooks/pre-push"
+        echo "chmod +x $ROOT/.git/hooks/pre-push"
         echo
     fi
 
@@ -109,21 +109,19 @@ main() {
     fi
 
     # Python 3.6 virtualenv
-    if [[ ! -f "$DIR/../venv/phd/bin/activate" ]]; then
-        echo "python3.6 -m venv $DIR/../venv/phd"
-        echo "source $DIR/../venv/phd/bin/activate && python setup.py install"
+    if [[ ! -f "$ROOT/venv/phd/bin/activate" ]]; then
+        echo "python3.6 -m venv $ROOT/venv/phd"
+        echo "source $ROOT/venv/phd/bin/activate && python setup.py install"
     fi
 
-    if [[ ! -d "$DIR/../venv/phd/lib/python3.6/site-packages/numpy" ]]; then
-        echo "source $DIR/../venv/phd/bin/activate && pip install -r $DIR/../requirements.txt"
-    fi
+    echo "source $ROOT/venv/phd/bin/activate && pip install -r $ROOT/requirements.txt"
 
     # Jupyter kernel
     if [[ ! -f "$HOME/.ipython/kernels/phd/kernel.json" ]]; then
         echo "rm -rvf $HOME/.ipython/kernels/phd"
         echo "mkdir -vp ~/.ipython/kernels"
-        echo "cp -vr $DIR/ipython/kernels/phd $HOME/.ipython/kernels/phd"
-        echo "sed \"s,@PYTHON@,$DIR/../venv/phd/bin/python,\" -i $HOME/.ipython/kernels/phd/kernel.json"
+        echo "cp -vr $ROOT/tools/ipython/kernels/phd $HOME/.ipython/kernels/phd"
+        echo "sed \"s,@PYTHON@,$ROOT/venv/phd/bin/python,\" -i $HOME/.ipython/kernels/phd/kernel.json"
     fi
 
     # autoenv
@@ -140,10 +138,9 @@ main() {
         echo
     fi
 
-    if [[ ! -f "$DIR/../.env" ]]; then
-        echo "cp -v $DIR/env.sh $DIR/../.env"
-        echo "sed \"s,@ROOT@,$DIR/../,\" -i $DIR/../.env"
-    fi
+    # Create autoenv environment file.
+    echo "cp -v $ROOT/tools/env.sh $ROOT/.env"
+    echo "sed \"s,@ROOT@,$ROOT/,\" -i $ROOT/.env"
 
     # LaTeX
     if [[ "$(uname)" == "Darwin" ]]; then
