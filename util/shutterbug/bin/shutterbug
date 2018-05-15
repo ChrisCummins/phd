@@ -1,0 +1,66 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+import sys
+
+import argparse
+from shutterbug import __version__, mkchunks, unchunk
+
+
+class ArgumentParser(argparse.ArgumentParser):
+  """
+  Specialized argument parser, with --version flag.
+  """
+
+  def __init__(self, *args, **kwargs):
+    """
+    See python argparse.ArgumentParser.__init__().
+    """
+    super(ArgumentParser, self).__init__(*args, **kwargs)
+    self.add_argument('--version', action='store_true',
+                      help='show version information and exit')
+
+  def parse_args(self, args=sys.argv[1:], namespace=None):
+    """
+    See python argparse.ArgumentParser.parse_args().
+    """
+    # --version option overrides the normal argument parsing process.
+    if '--version' in args:
+      print('shutterbug %s, made with \033[1;31m♥\033[0;0m by '
+            'Chris Cummins <chrisc.101@gmail.com>' % __version__)
+      sys.exit(0)
+
+    return super(ArgumentParser, self).parse_args(args, namespace)
+
+
+def main():
+  parser = ArgumentParser(description="""\
+Split photo collections into chunks for backup.\
+""")
+
+  parser.add_argument('directory', nargs='+',
+                      help='input directories')
+  parser.add_argument('-u', '--unpack', action='store_true',
+                      help="unpack chunks (overrides all other flags)")
+  parser.add_argument('-s', '--size', type=float, default=4695,
+                      help="maximum size of chunks (in MB, default: 4695)")
+  parser.add_argument('-g', '--gzip', action='store_true',
+                      help="use GZIP compression on files")
+  parser.add_argument('-i', '--in-order', action='store_true',
+                      help=('preserve file ordering in chunks (else, files '
+                            'are shuffled between chunks'))
+  parser.add_argument('-r', '--seed', type=int, default=None,
+                      help=("integer value to control file order shuffling "
+                            "(ignored if --in-order flag used)"))
+  parser.add_argument('-p', '--prefix', type=str, default='chunk',
+                      help='chunk prefix (default: "chunk")')
+  args = parser.parse_args()
+
+  if args.unpack:
+    unchunk(args.directory)
+  else:
+    mkchunks(args.directory, args.size * 1000 ** 2, prefix=args.prefix,
+             shuffle=not args.in_order, seed=args.seed, compress=args.gzip)
+
+
+if __name__ == "__main__":
+  main()
