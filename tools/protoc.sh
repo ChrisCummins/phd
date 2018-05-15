@@ -18,8 +18,8 @@ for file in $(git ls-files | grep '\.proto'); do
   # Remove previously generated code
   rm -f ${no_extension}_pb2.py
   rm -f ${no_extension}_pb2_grpc.py
-  python -m grpc_tools.protoc -I"$ROOT" -I"$dir" \
-      --python_out="$dir" --grpc_python_out="$dir" "$file"
+  python -m grpc_tools.protoc -I"$ROOT" \
+      --python_out="$ROOT" --grpc_python_out="$ROOT" "$file"
   # Fix the imports of generated GRPC code. This is a workaround for issue
   # https://github.com/grpc/grpc/issues/9575#issuecomment-293934506
   sed -i 's/^import /from . import /' ${no_extension}_pb2_grpc.py
