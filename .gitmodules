@@ -13,9 +13,6 @@
 [submodule "src/clgen"]
 	path = deeplearning/clgen
 	url = git@github.com:ChrisCummins/clgen.git
-[submodule "src/shutterbug"]
-	path = util/shutterbug
-	url = git@github.com:ChrisCummins/shutterbug.git
 [submodule "src/chriscumms.cc"]
 	path = http/chriscummins.cc
 	url = git@github.com:ChrisCummins/chriscummins.github.io.git
