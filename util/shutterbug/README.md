@@ -1,6 +1,8 @@
 # Shutterbug
 
-Shutterbug splits a large collection of photos into a series of DVD-sized folders for burning to disc, and provides a mechanism to go from these disc backups back to the original directory structure.
+Shutterbug splits a large collection of photos into a series of DVD-sized
+folders for burning to disc, and provides a mechanism to go from these disc
+backups back to the original directory structure.
 
 Shutterbug is paranoid about data loss and corruption, and has some coping
 strategies:
@@ -17,23 +19,15 @@ strategies:
 
 ## Usage
 
-### Requirements
-
-* Python 3.
-
-### Installation
-
-```
-$ pip3 install shutterbug
-```
-
 ### Archiving to disc
 
-To backup your photo library in `~/Pictures/2016` to 4.7GB DVDs, split the folder into "chunks" using shutterbug:
+To backup your photo library in `~/Pictures/2016` to 4.7GB DVDs, split the 
+folder into "chunks" using shutterbug:
 
 ```
-$ mkdir ~/chunks && cd ~/chunks
-$ shutterbug ~/Pictures/2016 --gzip
+$ mkdir ~/chunks
+$ bazel run //util/shutterbug:pack --gzip --size=4695 --chunk_prefix=chunk_ \
+    --src_dir=$HOME/Pictures/2016 --chunks_dir=$HOME/chunks
 chunk_001/ae3d47f87af176b74e1ec30599a7b31a.jpg.gz 4.93MB -> 4.90MB
 chunk_001/631600d1e11339794e81d75f104e9f19.jpg.gz 7.40MB -> 7.38MB
 chunk_001/130c52fe396237a59500a61b8101ff55.jpg.gz 6.79MB -> 6.77MB
@@ -57,9 +51,9 @@ Copy each chunk from your DVDs back to disc, e.g. `~/import/chunk_001`,
 shutterbug from the output directory:
 
 ```
-$ mkdir ~/Pictures/2016 && cd ~/Pictures/2016
-$ shutterbug --unpack ~/import/chunk_*
-$ ~/Pictures/mkbackup.py ../compressed/* -u
+$ mkdir ~/Pictures/2016
+$ bazel run //util/shutterbug:unpack \
+    --chunks_dir=$HOME/import --out_dir=$HOME/Pictures/2016
 ~/import/chunk_001/ae3d47f87af176b74e1ec30599a7b31a.jpg.gz -> ./2016-12 NYC (2434 of 5025).jpg
 ~/import/chunk_001/631600d1e11339794e81d75f104e9f19.jpg.gz -> ./2016-12 NYC (4411 of 5025).jpg
 ~/import/chunk_001/130c52fe396237a59500a61b8101ff55.jpg.gz -> ./2016-12 NYC (301 of 5025).jpg

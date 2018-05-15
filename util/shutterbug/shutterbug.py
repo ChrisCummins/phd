@@ -1,20 +1,22 @@
+"""This file implements the common library code of shutterbug.
+
+Shutterbug is a library for creating DVD backups of photo libraries.
+"""
+import gzip
 import os
 import random
 import sys
+from datetime import datetime
 from hashlib import md5
 from shutil import copy, copyfileobj
 
-import gzip
-from datetime import datetime
-from pkg_resources import require
-
-__author__ = "Chris Cummins"
-__copyright__ = "Copyright 2017, Chris Cummins"
-__license__ = "GPL v3"
-__version__ = require("shutterbug")[0].version
+__author__ = 'Chris Cummins'
+__copyright__ = 'Copyright 2017, 2018, Chris Cummins'
+__license__ = 'GPL v3'
+__version__ = '0.0.4'
 __maintainer__ = __author__
-__email__ = "chrisc.101@gmail.com"
-__status__ = "Development"
+__email__ = 'chrisc.101@gmail.com'
+__status__ = 'Development'
 
 
 def md5sum(path):
@@ -24,9 +26,10 @@ def md5sum(path):
   return m.hexdigest()
 
 
-def chunk_files(paths, outdir, maxsize, prefix="chunk", shuffle=True,
+def chunk_files(paths, outdir, maxsize, prefix='chunk', shuffle=True,
                 seed=None, compress=True):
-  """
+  """Create chunk files.
+
   Split a set of file paths into chunks, whereby the cumulative size of files
   in each chunk is smaller than or equal to a maximum size in bytes.
 
@@ -51,7 +54,7 @@ def chunk_files(paths, outdir, maxsize, prefix="chunk", shuffle=True,
       for outpath, path, size, checksum in sorted(chunk,
                                                   key=lambda x: x[0]):
         print(outpath, checksum, size, path, file=outfile, sep='\t')
-    print("Wrote", manifestpath)
+    print('Wrote', manifestpath)
 
     readmepath = os.path.join(chunk_path, 'README.txt')
     progpath, version = __file__, __version__
@@ -72,7 +75,7 @@ line in the manifest file:
   2. Compare the output file md5sum against the checksum in the second column.
   3. Compare the output file size against the file size of the third column.\
 """.format(**vars()), file=outfile)
-    print("Wrote", readmepath)
+    print('Wrote', readmepath)
 
     chunksize_mb = chunksize / 1000 ** 2
     nfiles = len(chunk)
@@ -85,8 +88,8 @@ line in the manifest file:
     checksum = md5sum(path)
     ext = os.path.splitext(path)[1]  # file extension
 
-    if ext == ".gz":  # prevent double-zipping
-      ext = "-gz"
+    if ext == '.gz':  # prevent double-zipping
+      ext = '-gz'
 
     if gzip:
       outpath = os.path.join(chunk_path, checksum + ext) + '.gz'
@@ -134,7 +137,7 @@ line in the manifest file:
     chunk_path = prefix + '_{:03}'.format(chunk_count + 1)
 
     if os.path.exists(chunk_path):
-      print("fatal: refusing to overwrite", chunk_path, file=sys.stderr)
+      print('fatal: refusing to overwrite', chunk_path, file=sys.stderr)
       sys.exit(1)
     os.mkdir(chunk_path)
     return chunk_path
@@ -189,42 +192,44 @@ line in the manifest file:
   return chunks
 
 
-def mkchunks(directories, chunksize, **kwargs):
+def mkchunks(src_dirs, chunks_dir, chunksize, **kwargs):
   files = []
-  for directory in directories:
+  for directory in src_dirs:
     if not os.path.exists(directory):
-      print("fatal: {} not found".format(directory), file=sys.stderr)
+      print('fatal: {} not found'.format(directory), file=sys.stderr)
       sys.exit(1)
 
-    # tidy up .DS_Store files
-    os.system("rm-dsstore '{}'".format(directory))
+    # TODO: Rather than remove .DS_Store files from the source directory, just
+    # exclude them from the os.walk results, and add a flag --exclude_pattern
+    # to control the list of files which are excluded.
+    os.system(f"rm-dsstore '{directory}'")
 
     for dirpath, _, filenames in os.walk(directory):
       files += [(os.path.join(dirpath, filename), dirpath)
                 for filename in filenames]
 
-  chunks = chunk_files(files, '.', chunksize, **kwargs)
+  chunks = chunk_files(files, chunks_dir, chunksize, **kwargs)
 
   chunksizes_mb = [chunk[1] / 1000 ** 2 for chunk in chunks]
   totalsize_mb = sum(chunksizes_mb)
   avgchunksize_mb = totalsize_mb / len(chunks)
   minchunksize_mb, maxchunksize_mb = min(chunksizes_mb), max(chunksizes_mb)
+  num_chunks = len(chunks)
 
-  print(len(chunks), "chunks of avg size {avgchunksize_mb:.2f} MB "
-                     "(min: {minchunksize_mb:.2f} MB, max: {maxchunksize_mb:.2f} MB)"
-        .format(**vars()))
-  print("total size of chunks {totalsize_mb:.2f} MB".format(**vars()))
+  print(f'{num_chunks} chunks of avg size {avgchunksize_mb:.2f} MB '
+        f'(min: {minchunksize_mb:.2f} MB, max: {maxchunksize_mb:.2f} MB)')
+  print(f'total size of chunks {totalsize_mb:.2f} MB')
 
 
 def unchunk_file(chunk_path, outdir, manifest_entry, lineno):
   def deflate(src, dst):
-    print(src, "->", dst)
+    print(src, '->', dst)
     with gzip.open(src, 'rb') as infile:
       with open(dst, 'wb') as outfile:
         copyfileobj(infile, outfile)
 
   def cp(src, dst):
-    print(src, "->", dst)
+    print(src, '->', dst)
     copy(src, dst)
 
   inpath, checksum, size, outpath = manifest_entry.split('\t')
@@ -233,9 +238,9 @@ def unchunk_file(chunk_path, outdir, manifest_entry, lineno):
   outpath = os.path.join(outdir, outpath)
 
   if not os.path.exists(inpath):
-    raise Exception("file does not exist {inpath}".format(**vars()))
+    raise Exception('file does not exist {inpath}'.format(**vars()))
   if os.path.exists(outpath):
-    raise Exception("refusing to overwrite file {outpath}".format(**vars()))
+    raise Exception('refusing to overwrite file {outpath}'.format(**vars()))
 
   # make parent directories for destination file
   os.makedirs(os.path.dirname(outpath), exist_ok=True)
@@ -243,7 +248,7 @@ def unchunk_file(chunk_path, outdir, manifest_entry, lineno):
   ext = os.path.splitext(inpath)[1]  # file extension
 
   # determine whether file is compressed
-  unpack_fn = deflate if ext == ".gz" else cp
+  unpack_fn = deflate if ext == '.gz' else cp
 
   # if file is compressed, unpack it
   unpack_fn(inpath, outpath)
@@ -253,17 +258,17 @@ def unchunk_file(chunk_path, outdir, manifest_entry, lineno):
     size = int(size)
     actualsize = os.stat(outpath).st_size
     if size != actualsize:
-      print("warning[{lineno}]: expected file size {size} does not match"
-            "actual size {actualsize}. File is corrupt", outpath,
+      print('warning[{lineno}]: expected file size {size} does not match'
+            'actual size {actualsize}. File is corrupt', outpath,
             file=sys.stderr)
   except ValueError:
-    print("warning[{lineno}]: could not read file size in manifest"
+    print('warning[{lineno}]: could not read file size in manifest'
           .format(**vars()), file=sys.stderr)
 
   # validate checksum
   actualchecksum = md5sum(outpath)
   if checksum != actualchecksum:
-    print("warning[{lineno}]: checksum validation failed. File is corrupt",
+    print('warning[{lineno}]: checksum validation failed. File is corrupt',
           outpath, file=sys.stderr)
 
 
@@ -273,7 +278,7 @@ def read_manifest(manifestpath):
     with open(manifestpath) as infile:
       return [l for l in infile.read().split('\n') if l]
   except Exception:
-    print("fatal: unable to read manifest file", manifestpath)
+    print('fatal: unable to read manifest file', manifestpath)
 
 
 def unchunk_chunk(chunk_path, out_path):
@@ -284,10 +289,10 @@ def unchunk_chunk(chunk_path, out_path):
       lineno = i + 1
       unchunk_file(chunk_path, out_path, row, lineno)
     except Exception as e:
-      print("error[{lineno}]: {e}".format(**vars()),
+      print('error[{lineno}]: {e}'.format(**vars()),
             file=sys.stderr)
 
 
-def unchunk(directories):
-  for directory in directories:
-    unchunk_chunk(directory, '.')
+def unchunk(chunks_dir, out_dir):
+  for directory in chunks_dir:
+    unchunk_chunk(directory, out_dir)
