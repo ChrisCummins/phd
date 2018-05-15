@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 
-# bootstrap.sh - Prepare the toolchain
+# bootstrap.sh - A script to automatically install all project requirements.
+#
+# The aim of this script is to provide a "hands free" method to install all
+# the relevant dependencies for building this project on an Ubuntu or macOS
+# host.
 #
 # Usage:
 #
