@@ -128,6 +128,11 @@ main() {
         echo "source $ROOT/venv/phd/bin/activate && python setup.py install"
     fi
 
+    # Install the wheel package before all other dependencies, as the
+    # bdist_wheel command is required for installing the other requirements.
+    echo "source $ROOT/venv/phd/bin/activate && pip install wheel"
+
+    # Install Python packages.
     echo "source $ROOT/venv/phd/bin/activate && pip install -r $ROOT/requirements.txt"
 
     # Jupyter kernel
