@@ -91,6 +91,16 @@ main() {
         fi
     fi
 
+    # mysql_config is required by Python MySQL client.
+    if [[ "$(uname)" != "Darwin" ]]; then
+        if dpkg -s libmysqlclient-dev &> /dev/null; then
+            echo '# libmysql: installed'
+        else
+            echo '# libmysql:'
+            echo 'sudo apt-get install -y libmysqlclient-dev'
+        fi
+    fi
+
     # Python 3.6
     if [[ "$(uname)" == "Darwin" ]]; then
         if brew list | grep '^python$' &> /dev/null; then
