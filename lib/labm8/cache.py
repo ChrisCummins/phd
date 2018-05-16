@@ -1,9 +1,9 @@
 """Transient and persistent caching mechanisms.
 """
 import atexit
-import re
 
 import json
+import re
 import six
 
 from lib.labm8 import crypto
@@ -173,7 +173,7 @@ class JsonCache(TransientCache):
     super(JsonCache, self).__init__()
     self.path = fs.abspath(path)
 
-    if fs.exists(self.path):
+    if fs.exists(self.path) and fs.read_file(self.path):
       io.debug(("Loading cache '{0}'".format(self.path)))
       with open(self.path) as file:
         self._data = json.load(file)

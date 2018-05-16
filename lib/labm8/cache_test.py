@@ -2,6 +2,7 @@
 import sys
 
 import pytest
+import tempfile
 from absl import app
 
 from lib.labm8 import cache
@@ -75,29 +76,32 @@ def test_TransientCache():
 
 
 def test_JsonCache():
-  # Load test-set
-  _cache = cache.JsonCache("lib/labm8/data/test/jsoncache.json")
+  with tempfile.NamedTemporaryFile(prefix='labm8_') as f:
+    # Load test-set
+    fs.cp('lib/labm8/data/test/jsoncache.json', f.name)
+    _cache = cache.JsonCache(f.name)
 
-  assert "foo" in _cache
-  assert 1 == _cache["foo"]
-  _TestCacheOps(_cache)
+    assert "foo" in _cache
+    assert 1 == _cache["foo"]
+    _TestCacheOps(_cache)
 
-  # Test copy constructor.
-  _cache["foo"] = 1
-  _cache["bar"] = 2
-  _cache["baz"] = 3
+    # Test copy constructor.
+    _cache["foo"] = 1
+    _cache["bar"] = 2
+    _cache["baz"] = 3
 
-  cache2 = cache.JsonCache("/tmp/labm8.cache.json", _cache)
-  assert 1 == cache2["foo"]
-  assert 2 == cache2["bar"]
-  assert 3 == cache2["baz"]
-  assert 1 == _cache["foo"]
-  assert 2 == _cache["bar"]
-  assert 3 == _cache["baz"]
-  _cache.clear()
-  # Set for next time.
-  _cache["foo"] = 1
-  _cache.write()
+    with tempfile.NamedTemporaryFile(prefix='labm8_') as f2:
+      cache2 = cache.JsonCache(f2.name, _cache)
+      assert 1 == cache2["foo"]
+      assert 2 == cache2["bar"]
+      assert 3 == cache2["baz"]
+      assert 1 == _cache["foo"]
+      assert 2 == _cache["bar"]
+      assert 3 == _cache["baz"]
+      _cache.clear()
+      # Set for next time.
+      _cache["foo"] = 1
+      _cache.write()
 
 
 def test_FSCache_init_and_empty():
