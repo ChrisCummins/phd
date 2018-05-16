@@ -127,7 +127,6 @@ py_test(
     size = "small",
     srcs = ["0201-list-remove-dups.py"],
     default_python_version = "PY3",
-    default_python_version = "PY3",
     main = "0201-list-remove-dups.py",
     srcs_version = "PY3",
 )
