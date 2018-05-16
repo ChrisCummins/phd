@@ -122,26 +122,27 @@ main() {
         fi
     fi
 
+    PYTHON="python3"
     # Check that the default python is Python 3.
     # TODO(cec): This seems *okay*, but could be better.
-    if ! python --version | grep -q 'Python 3' ; then
-        echo '# fatal: python --version is not Python 3'
+    if ! $PYTHON --version | grep -q 'Python 3' ; then
+        echo '# fatal: $PYTHON --version is not Python 3'
         exit 1
     fi
 
     # Install the wheel package before all other dependencies, as the
     # bdist_wheel command is required for installing the other requirements.
-    echo "python -m pip install wheel"
+    echo "$PYTHON -m pip install wheel"
 
     # Install Python packages.
-    echo "python -m pip install -r $ROOT/requirements.txt"
+    echo "$PYTHON -m pip install -r $ROOT/requirements.txt"
 
     # Jupyter kernel
     if [[ ! -f "$HOME/.ipython/kernels/phd/kernel.json" ]]; then
         echo "rm -rvf $HOME/.ipython/kernels/phd"
         echo "mkdir -vp ~/.ipython/kernels"
         echo "cp -vr $ROOT/tools/ipython/kernels/phd $HOME/.ipython/kernels/phd"
-        echo "sed \"s,@PYTHON@,$(which python),\" -i $HOME/.ipython/kernels/phd/kernel.json"
+        echo "sed \"s,@PYTHON@,$(which $PYTHON),\" -i $HOME/.ipython/kernels/phd/kernel.json"
     fi
 
     # autoenv
