@@ -341,6 +341,7 @@ py_test(
     name = "system_test",
     size = "small",
     srcs = ["system_test.py"],
+    data = ["data/test/bin/scp"],
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
