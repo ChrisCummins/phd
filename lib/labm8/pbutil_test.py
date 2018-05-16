@@ -1,16 +1,16 @@
 """Unit tests for //lib/labm8:pbutil."""
 import sys
-import tempfile
 
 import google.protobuf.message
 import gzip
 import json
 import pathlib
 import pytest
+import tempfile
 from absl import app
 
-from deeplearning.deepsmith.proto import test_protos_pb2
 from lib.labm8 import pbutil
+from lib.labm8.proto import test_protos_pb2
 
 
 def test_ToFile_missing_required():
