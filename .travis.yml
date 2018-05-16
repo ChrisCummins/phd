@@ -27,8 +27,6 @@ os:
 #       - clang-3.6
 
 before_install:
-  - ./tools/http-git-submodules.sh
-  - git submodule update --init --recursive
   - echo 'set -eux' > bootstrap.sh && ./tools/bootstrap.sh >> bootstrap.sh
   - cat bootstrap.sh
 
