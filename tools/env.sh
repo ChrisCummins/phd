@@ -1,6 +1,6 @@
 #!/bin/bash
 
-root="@ROOT@"
+root="__ROOT__"
 
 # Export a dummy virtualenv.
 # TODO(cec): Add a better way of signalling that we're in the phd env from
