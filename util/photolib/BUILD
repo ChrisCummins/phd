@@ -54,6 +54,7 @@ py_library(
 py_library(
     name = "common",
     srcs = ["common.py"],
+    deps = ["//util/photolib/proto:photolint_py_pb2"],
 )
 
 py_test(
