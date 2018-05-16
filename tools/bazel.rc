@@ -1,9 +1,5 @@
 # See: https://bazel.build/versions/master/docs/bazel-user-manual.html#flag--compilation_mode
 
-build --python_top=//:python3.6
-test --python_top=//:python3.6
-run --python_top=//:python3.6
-
 # Build and test options:
 build --verbose_failures
 test --verbose_failures

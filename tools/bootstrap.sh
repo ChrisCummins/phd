@@ -117,30 +117,31 @@ main() {
             echo '# python3.6:'
             echo 'sudo add-apt-repository ppa:jonathonf/python-3.6'
             echo 'sudo apt-get update'
-            echo 'sudo apt-get install -y python3.6 python3.6-venv python3.6-dev'
+            echo 'sudo apt-get install -y python3.6 python3.6-dev'
             echo
         fi
     fi
 
-    # Python 3.6 virtualenv
-    if [[ ! -f "$ROOT/venv/phd/bin/activate" ]]; then
-        echo "python3.6 -m venv $ROOT/venv/phd"
-        echo "source $ROOT/venv/phd/bin/activate && python setup.py install"
+    # Check that the default python is Python 3.
+    # TODO(cec): This seems *okay*, but could be better.
+    if ! python --version | grep -q 'Python 3' ; then
+        echo '# fatal: python --version is not Python 3'
+        exit 1
     fi
 
     # Install the wheel package before all other dependencies, as the
     # bdist_wheel command is required for installing the other requirements.
-    echo "source $ROOT/venv/phd/bin/activate && pip install wheel"
+    echo "python -m pip install wheel"
 
     # Install Python packages.
-    echo "source $ROOT/venv/phd/bin/activate && pip install -r $ROOT/requirements.txt"
+    echo "python -m pip install -r $ROOT/requirements.txt"
 
     # Jupyter kernel
     if [[ ! -f "$HOME/.ipython/kernels/phd/kernel.json" ]]; then
         echo "rm -rvf $HOME/.ipython/kernels/phd"
         echo "mkdir -vp ~/.ipython/kernels"
         echo "cp -vr $ROOT/tools/ipython/kernels/phd $HOME/.ipython/kernels/phd"
-        echo "sed \"s,@PYTHON@,$ROOT/venv/phd/bin/python,\" -i $HOME/.ipython/kernels/phd/kernel.json"
+        echo "sed \"s,@PYTHON@,$(which python),\" -i $HOME/.ipython/kernels/phd/kernel.json"
     fi
 
     # autoenv

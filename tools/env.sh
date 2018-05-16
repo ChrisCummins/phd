@@ -1,8 +1,11 @@
 #!/bin/bash
 
 root="@ROOT@"
-venv="$root/venv/phd"
-[ -f "$venv/bin/activate" ] && [ -z "$VIRTUAL_ENV" ] && source "$venv/bin/activate"
+
+# Export a dummy virtualenv.
+# TODO(cec): Add a better way of signalling that we're in the phd env from
+# the command line.
+export VIRTUAL_ENV=phd
 
 export CC=clang
 export CXX=clang++
