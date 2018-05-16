@@ -123,13 +123,6 @@ main() {
     fi
 
     PYTHON="python3"
-    # Check that the default python is Python 3.
-    # TODO(cec): This seems *okay*, but could be better.
-    if ! $PYTHON --version | grep -q 'Python 3' ; then
-        echo '# fatal: $PYTHON --version is not Python 3'
-        exit 1
-    fi
-
     # Install the wheel package before all other dependencies, as the
     # bdist_wheel command is required for installing the other requirements.
     echo "$PYTHON -m pip install wheel"
