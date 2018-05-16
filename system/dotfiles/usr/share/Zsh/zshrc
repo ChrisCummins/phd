@@ -540,7 +540,7 @@ path_dirs=( \
     /usr/local/opt/coreutils/libexec/gnubin \
     /usr/local/opt/gnu-sed/libexec/gnubin \
     /usr/local/opt/gnu-tar/libexec/gnubin \
-    /usr/local/opt/python/bin \
+    /usr/local/opt/python/libexec/bin \
     /usr/local/opt/unzip/bin \
     /usr/local/opt/ofexport/bin \
     /usr/local/bin \
