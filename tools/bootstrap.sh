@@ -127,7 +127,7 @@ main() {
             echo '# python3.6: installed'
         else
             echo '# python3.6:'
-            echo 'sudo add-apt-repository ppa:jonathonf/python-3.6'
+            echo 'sudo add-apt-repository -y ppa:jonathonf/python-3.6'
             echo 'sudo apt-get update'
             echo 'sudo apt-get install -y --no-install-recommends python3.6 python3.6-dev python3-distutils'
             echo
