@@ -29,13 +29,10 @@ os:
 before_install:
   - ./tools/http-git-submodules.sh
   - git submodule update --init --recursive
+  - ./tools/bootstrap.sh
 
 script:
-  - ./tools/bootstrap.sh
-  # Use `travis_wait 30` prevents the command from being terminated after 10
-  # minutes without printing anything to stdout. The reason for no output being
-  # printed in 10 minutes is the downloading of the mactex homebrew cask.
-  - travis_wait 30 (./tools/bootstrap.sh | bash)
+  - ./tools/bootstrap.sh | bash
   - source .env
   - echo $CC && $CC --version   # c compiler
   - echo $CXX && $CXX --version  # c++ compiler
