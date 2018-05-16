@@ -197,7 +197,7 @@ main() {
     else
         SED="sed"
     fi
-    echo -i "$SED \"s,@ROOT@,$ROOT,\" $ROOT/.env"
+    echo "$SED -i \"s,@ROOT@,$ROOT,\" $ROOT/.env"
 }
 
 main $@
