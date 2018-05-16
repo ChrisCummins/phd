@@ -91,7 +91,12 @@ py_test(
     name = "fs_test",
     size = "small",
     srcs = ["fs_test.py"],
-    data = glob(["data/test/testdir/**"]),
+    data = glob([
+        "data/test/empty_file",
+        "data/test/data1",
+        "data/test/hello_world",
+        "data/test/testdir/**",
+    ]),
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
