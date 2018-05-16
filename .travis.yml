@@ -29,10 +29,11 @@ os:
 before_install:
   - ./tools/http-git-submodules.sh
   - git submodule update --init --recursive
-  - ./tools/bootstrap.sh
+  - echo 'set -eux' > bootstrap.sh && ./tools/bootstrap.sh >> bootstrap.sh
+  - cat bootstrap.sh
 
 script:
-  - ./tools/bootstrap.sh | bash
+  - bash bootstrap.sh
   - source .env
   - echo $CC && $CC --version   # c compiler
   - echo $CXX && $CXX --version  # c++ compiler
