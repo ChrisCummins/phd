@@ -155,11 +155,13 @@ A self-contained monolothic repository for (almost) everything I have done while
 Clone this repository and its submodules:
 
 ```sh
-$ git clone git@github.com:ChrisCummins/phd.git --recursive
+$ https://github.com/ChrisCummins/phd.git
 $ cd phd
 ```
 
-The script `./tools/bootstrap.sh` will probe your system for the required packages, and if any are missing, print the commands necessary to install them. Automatically install them using:
+The script `./tools/bootstrap.sh` will probe your system for the required
+packages, and if any are missing, print the commands necessary to install them.
+Automatically install them using:
 
 ```sh
 $ ./tools/bootstrap.sh | bash

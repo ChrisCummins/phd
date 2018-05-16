@@ -19,14 +19,6 @@ main() {
   # Run from the artifact_evaluation root directory.
   cd "$ROOT"
 
-  # If repository is cloned using https protocol, change the submodule
-  # URLs to use https also.
-  git remote -v | grep 'git@' &>/dev/null || \
-      perl -i -p -e 's|git@(.*?):|https://\1/|g' .gitmodules
-
-  # Checkout repository submodules.
-  git submodule update --init
-
   # Bootstrap the phd repository.
   "$ROOT/tools/bootstrap.sh" | bash
 
