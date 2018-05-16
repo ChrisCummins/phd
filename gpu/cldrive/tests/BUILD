@@ -1,6 +1,6 @@
 py_library(
-    name = "lib",
-    srcs = ["lib.py"],
+    name = "testlib",
+    srcs = ["testlib.py"],
     deps = [
         "//gpu/cldrive",
     ],
@@ -13,7 +13,7 @@ py_test(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
-        ":lib",
+        ":testlib",
         "//gpu/cldrive",
     ],
 )
@@ -25,7 +25,7 @@ py_test(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
-        ":lib",
+        ":testlib",
         "//gpu/cldrive",
     ],
 )
@@ -37,7 +37,7 @@ py_test(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
-        ":lib",
+        ":testlib",
         "//gpu/cldrive",
     ],
 )
@@ -49,7 +49,7 @@ py_test(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
-        ":lib",
+        ":testlib",
         "//gpu/cldrive",
     ],
 )

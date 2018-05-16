@@ -1,6 +1,6 @@
 from absl import app
 
-from gpu.cldrive.tests.lib import *
+from gpu.cldrive.tests.testlib import *
 
 
 def test_make_env_not_found():
@@ -12,8 +12,10 @@ def test_make_env_not_found():
 def test_all_envs():
   min_num_devices = 0
 
-  if cldrive.has_cpu(): min_num_devices += 1
-  if cldrive.has_gpu(): min_num_devices += 1
+  if cldrive.has_cpu():
+    min_num_devices += 1
+  if cldrive.has_gpu():
+    min_num_devices += 1
 
   envs = list(cldrive.all_envs())
   assert len(envs) >= min_num_devices
@@ -34,7 +36,7 @@ def test_make_env_gpu():
 def main(argv):  # pylint: disable=missing-docstring
   del argv
   sys.exit(pytest.main(
-      [cldrive.env.__file__, __file__, "-v", "--doctest-modules"]))
+    [cldrive.env.__file__, __file__, "-v", "--doctest-modules"]))
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 from absl import app
 
-from gpu.cldrive.tests.lib import *
+from gpu.cldrive.tests.testlib import *
 
 
 @pytest.mark.skip(reason="FIXME(cec)")
@@ -168,7 +168,7 @@ def test_profiling():
 
   with DevNullRedirect():
     outputs = cldrive.drive(
-        ENV, src, inputs, gsize=(16, 1, 1), lsize=(16, 1, 1), profiling=True)
+      ENV, src, inputs, gsize=(16, 1, 1), lsize=(16, 1, 1), profiling=True)
 
   almost_equal(outputs, outputs_gs)
 
@@ -196,7 +196,7 @@ def test_header():
 def main(argv):  # pylint: disable=missing-docstring
   del argv
   sys.exit(pytest.main(
-      [cldrive.driver.__file__, __file__, "-v", "--doctest-modules"]))
+    [cldrive.driver.__file__, __file__, "-v", "--doctest-modules"]))
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 from absl import app
 
-from gpu.cldrive.tests.lib import *
+from gpu.cldrive.tests.testlib import *
 
 
 @pytest.mark.skip(reason="FIXME(cec)")
@@ -86,7 +86,7 @@ def test_vector_input_switch():
 def main(argv):  # pylint: disable=missing-docstring
   del argv
   sys.exit(pytest.main(
-      [cldrive.data.__file__, __file__, "-v", "--doctest-modules"]))
+    [cldrive.data.__file__, __file__, "-v", "--doctest-modules"]))
 
 
 if __name__ == "__main__":

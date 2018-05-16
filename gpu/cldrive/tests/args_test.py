@@ -1,6 +1,6 @@
 from absl import app
 
-from gpu.cldrive.tests.lib import *
+from gpu.cldrive.tests.testlib import *
 
 
 @pytest.mark.skip(reason="FIXME(cec)")
@@ -199,7 +199,7 @@ def test_extract_args_preprocess():
 def main(argv):  # pylint: disable=missing-docstring
   del argv
   sys.exit(pytest.main(
-      [cldrive.args.__file__, __file__, "-v", "--doctest-modules"]))
+    [cldrive.args.__file__, __file__, "-v", "--doctest-modules"]))
 
 
 if __name__ == "__main__":
