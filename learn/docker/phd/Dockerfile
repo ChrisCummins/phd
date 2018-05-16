@@ -13,6 +13,10 @@ RUN apt-get install -y --no-install-recommends \
 # Instal Beignet for OpenCL CPU support.
 RUN apt-get install -y --no-install-recommends beignet-opencl-icd clinfo
 
+# Add Beignet's libOpenCL to the default LD_LIBRARY_PATH. This is needed
+# because pyopencl uses -lOpenCL during build.
+RUN ln -s /usr/lib/x86_64-linux-gnu/beignet/libcl.so /usr/local/lib/libOpenCL.so
+
 # Install the OpenCL headers from Khronos.
 WORKDIR /tmp
 RUN git clone https://github.com/KhronosGroup/OpenCL-Headers.git
@@ -21,11 +25,11 @@ RUN mv OpenCL-Headers/CL /usr/local/include/CL
 # Create the phd repository.
 WORKDIR /root
 RUN git clone https://github.com/ChrisCummins/phd.git
-WORKDIR /root/phd
 
 # Bootstrap the PhD repo.
 ENV HOME /root
 ENV USER docker
+WORKDIR /root/phd
 RUN echo 'set -eux' >> /tmp/bootstrap.sh
 RUN ./tools/bootstrap.sh >> /tmp/bootstrap.sh
 RUN bash /tmp/bootstrap.sh
