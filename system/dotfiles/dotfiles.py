@@ -180,6 +180,7 @@ class Python(Task):
   """ python 2 & 3 """
   PIP_LIST = ".pip-freeze.json"
 
+  # TODO(ceec): Remove references to pip binaries and use 'python -m pip'.
   PIP2_BINARY = Homebrew.bin('pip2')
   PIP3_BINARY = Homebrew.bin('pip3')
   PYTHON2_BINARY = Homebrew.bin('python2')
