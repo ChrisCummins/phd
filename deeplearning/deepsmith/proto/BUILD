@@ -2,16 +2,14 @@
 
 load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
 
+# The set of protocol buffers used by deepsmith. Note that proto files which
+# include other protos must be contained in the same py_proto_library target.
 py_proto_library(
     name = "deepsmith",
-    protos = ["deepsmith.proto"],
-    visibility = ["//deeplearning/deepsmith:__subpackages__"],
-)
-
-py_proto_library(
-    name = "datastore",
-    protos = ["datastore.proto"],
+    protos = [
+        "datastore.proto",
+        "deepsmith.proto",
+    ],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     with_grpc = True,
-    deps = [":deepsmith"],
 )

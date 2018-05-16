@@ -11,7 +11,7 @@ py_library(
     deps = [
         ":datastore",
         ":db",
-        "//deeplearning/deepsmith/proto:datastore",
+        "//deeplearning/deepsmith/proto:deepsmith",
     ],
 )
 
@@ -36,7 +36,6 @@ py_library(
         ":testbed",
         ":testcase",
         ":toolchain",
-        "//deeplearning/deepsmith/proto:datastore",
         "//deeplearning/deepsmith/proto:deepsmith",
         "//lib/labm8:pbutil",
     ],
@@ -47,7 +46,7 @@ py_library(
     srcs = ["db.py"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     deps = [
-        "//deeplearning/deepsmith/proto:datastore",
+        "//deeplearning/deepsmith/proto:deepsmith",
         "//lib/labm8:labdate",
         "//lib/labm8:pbutil",
     ],
