@@ -22,7 +22,9 @@ py_test(
     name = "0101-unique-chars-in-string-py",
     size = "small",
     srcs = ["0101-unique-chars-in-string.py"],
+    default_python_version = "PY3",
     main = "0101-unique-chars-in-string.py",
+    srcs_version = "PY3",
 )
 
 cc_test(
@@ -51,7 +53,9 @@ py_test(
     name = "0103-permutations-py",
     size = "small",
     srcs = ["0103-permutations.py"],
+    default_python_version = "PY3",
     main = "0103-permutations.py",
+    srcs_version = "PY3",
 )
 
 cc_test(
@@ -69,7 +73,9 @@ py_test(
     name = "0104-escape-string-py",
     size = "small",
     srcs = ["0104-escape-string.py"],
+    default_python_version = "PY3",
     main = "0104-escape-string.py",
+    srcs_version = "PY3",
 )
 
 cc_test(
@@ -121,7 +127,9 @@ py_test(
     size = "small",
     srcs = ["0201-list-remove-dups.py"],
     default_python_version = "PY3",
+    default_python_version = "PY3",
     main = "0201-list-remove-dups.py",
+    srcs_version = "PY3",
 )
 
 cc_test(

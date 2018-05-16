@@ -56,6 +56,8 @@ py_test(
     name = "db_test",
     size = "small",
     srcs = ["db_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
     deps = [
         ":conftest",
         ":db",
@@ -78,6 +80,8 @@ py_test(
     name = "generator_test",
     size = "small",
     srcs = ["generator_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
     deps = [
         ":conftest",
         ":generator",
@@ -101,6 +105,8 @@ py_test(
     name = "harness_test",
     size = "small",
     srcs = ["harness_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
     deps = [
         ":conftest",
         ":harness",
@@ -146,6 +152,8 @@ py_test(
     name = "result_test",
     size = "small",
     srcs = ["result_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
     deps = [
         ":client",
         ":conftest",
@@ -176,6 +184,8 @@ py_test(
     name = "testbed_test",
     size = "small",
     srcs = ["testbed_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
     deps = [
         ":conftest",
         ":testbed",
@@ -204,6 +214,8 @@ py_test(
     name = "testcase_test",
     size = "small",
     srcs = ["testcase_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
     deps = [
         ":client",
         ":conftest",
