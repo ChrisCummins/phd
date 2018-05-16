@@ -1,8 +1,9 @@
 """Unit tests for //lib/labm8:fs."""
-import os
 import sys
 
+import os
 import pytest
+import tempfile
 from absl import app
 
 from lib.labm8 import fs
@@ -22,14 +23,11 @@ def test_path_homedir():
 
 
 def test_must_exist():
-  system.echo("Hello, world!", "/tmp/labm8.must_exist.txt")
-  assert (fs.must_exist("/tmp/labm8.must_exist.txt") ==
-          "/tmp/labm8.must_exist.txt")
-  assert (fs.must_exist("/tmp", "labm8.must_exist.txt") ==
-          "/tmp/labm8.must_exist.txt")
+  with tempfile.NamedTemporaryFile(prefix='labm8_') as f:
+    assert fs.must_exist(f.name) == f.name
+    assert fs.must_exist(fs.dirname(f.name), fs.basename(f.name)) == f.name
   with pytest.raises(fs.File404):
     fs.must_exist("/not/a/real/path")
-  fs.rm("/tmp/labm8.must_exist.txt")
 
 
 # abspath()
@@ -261,20 +259,22 @@ def test_rm_glob():
 
 
 # rmtrash()
+@pytest.mark.skip(reason='Insufficient access privileges for operation on macOS')
 def test_rmtrash():
-  system.echo("Hello, world!", "/tmp/labm8.tmp")
-  assert fs.isfile("/tmp/labm8.tmp")
-  fs.rmtrash("/tmp/labm8.tmp")
-  assert not fs.isfile("/tmp/labm8.tmp")
-  fs.rmtrash("/tmp/labm8.tmp")
-  fs.rm("/tmp/labm8.tmp")
-  fs.rm("/tmp/labm8.dir")
-  fs.mkdir("/tmp/labm8.dir/foo/bar")
-  system.echo("Hello, world!", "/tmp/labm8.dir/foo/bar/baz")
-  assert fs.isfile("/tmp/labm8.dir/foo/bar/baz")
-  fs.rmtrash("/tmp/labm8.dir")
-  assert not fs.isfile("/tmp/labm8.dir/foo/bar/baz")
-  assert not fs.isfile("/tmp/labm8.dir/")
+  with tempfile.NamedTemporaryFile(prefix='labm8_') as f:
+    assert fs.isfile(f.name)
+    fs.rmtrash(f.name)
+    assert not fs.isfile(f.name)
+    fs.rmtrash(f.name)
+    fs.rm(f.name)
+  with tempfile.TemporaryDirectory() as d:
+    fs.rm(d)
+    fs.mkdir(d, "foo/bar")
+    system.echo("Hello, world!", fs.path(d, "foo/bar/baz"))
+    assert fs.isfile(f, "foo/bar/baz")
+    fs.rmtrash(d)
+    assert not fs.isfile(d, "foo/bar/baz")
+    assert not fs.isdir(d)
 
 
 def test_rmtrash_bad_path():
