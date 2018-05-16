@@ -19,28 +19,35 @@ RUN git clone https://github.com/KhronosGroup/OpenCL-Headers.git
 RUN mv OpenCL-Headers/CL /usr/local/include/CL
 
 # Create the phd repository.
-WORKDIR /
+WORKDIR /root
 RUN git clone https://github.com/ChrisCummins/phd.git
-WORKDIR /phd
+WORKDIR /root/phd
 
 # Bootstrap the PhD repo.
-RUN ./tools/bootstrap | bash
+RUN echo 'set -eux' >> /tmp/bootstrap.sh
+RUN ./tools/bootstrap.sh >> /tmp/bootstrap.sh
+RUN bash /tmp/bootstrap.sh
 
 # Install and configure my preferred shell.
 RUN apt-get install -y --no-install-recommends zsh
 ENV HOME /root
 ENV USER docker
 ENV SHELL zsh
-WORKDIR /phd/system/dotfiles
+WORKDIR /root/phd/system/dotfiles
 RUN ./run -v Zsh
 
+# Install and configure my preferred editor.
+RUN apt-get install -y --no-install-recommends vim
+ENV ./run -v Vim
+
 # Set and configure the locale. This is necessary for CLgen, which uses en_GB.
-# RUN apt-get install -y --no-install-recommends language-pack-en
-# RUN locale-gen --purge en_GB.UTF-8
+RUN apt-get install -y --no-install-recommends language-pack-en
+RUN locale-gen --purge en_GB.UTF-8
 
 # Clean up.
 RUN apt autoremove -y
 RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+WORKDIR /root/phd
 CMD ["zsh"]
