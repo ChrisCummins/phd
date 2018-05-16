@@ -129,12 +129,21 @@ main() {
             echo '# python3.6:'
             echo 'sudo add-apt-repository ppa:jonathonf/python-3.6'
             echo 'sudo apt-get update'
-            echo 'sudo apt-get install -y python3.6 python3.6-dev'
+            echo 'sudo apt-get install -y --no-recommends python3.6 python3.6-dev python3-distutils'
             echo
         fi
     fi
 
     PYTHON="python3"
+    # Install pip if required.
+    if "$PYTHON" -c 'import pip' 2>/dev/null ; then
+        echo '# pip: installed'
+    else
+        echo 'curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py'
+        echo "$PYTHON get-pip.py"
+        echo 'rm get-pip.py'
+    fi
+
     # Install the wheel package before all other dependencies, as the
     # bdist_wheel command is required for installing the other requirements.
     echo "$PYTHON -m pip install wheel"
