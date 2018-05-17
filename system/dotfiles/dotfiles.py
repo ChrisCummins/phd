@@ -248,7 +248,7 @@ class Homebrew(Task):
 
 class Python(Task):
   """ python 2 & 3 """
-  PIP_LIST = ".pip-freeze.json"
+  PIP_LIST = "/tmp/dotfiles_pip_freeze.json"
   PYTHON2_BINARY = ('/usr/local/opt/python@2/bin/python2' if PLATFORM == 'osx'
                     else Homebrew.bin('python2'))
   PYTHON3_BINARY = ('/usr/local/opt/python@3/bin/python3' if PLATFORM == 'osx'
@@ -572,7 +572,7 @@ class WacomDriver(Task):
 
 class Node(Task):
   """ nodejs and npm """
-  PKG_LIST = os.path.abspath(".npm-list.txt")
+  PKG_LIST = "/tmp/npm-list.txt"
   NPM_BINARY = Homebrew.bin('npm')
   NODE_BINARY = Homebrew.bin('node')
 
