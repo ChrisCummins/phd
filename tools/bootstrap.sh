@@ -37,47 +37,6 @@ main() {
     # Ensure that submodules are checked out and set to correct versions.
     echo "git -C $ROOT submodule update --init --recursive"
 
-    # On macOS: Homebrew & coreutils
-    if [[ "$(uname)" == "Darwin" ]]; then
-        if which brew &> /dev/null; then
-            echo '# homebrew: installed'
-        else
-            echo '# homebrew:'
-            echo '/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"'
-            echo 'brew update'
-            echo
-        fi
-
-        if brew list | grep '^coreutils$' &> /dev/null; then
-            echo '# coreutils: installed'
-        else
-            echo '# coreutils:'
-            echo 'brew install coreutils'
-            echo
-        fi
-    fi
-
-    # git hook
-    if [[ -f "$ROOT/.git/hooks/pre-push" ]]; then
-        echo '# git hook: installed'
-    else
-        echo '# git hook:'
-        echo "cp -v $ROOT/tools/pre-push $ROOT/.git/hooks/pre-push"
-        echo "chmod +x $ROOT/.git/hooks/pre-push"
-        echo
-    fi
-
-    echo '# bazel:'
-    echo "$ROOT/system/dotfiles/run -v Bazel"
-
-    # Compiler: Clang
-    if [[ "$(uname)" == "Darwin" ]]; then
-        echo '# clang: installed (system)'
-    else
-        echo '# clang:'
-        echo "$ROOT/system/dotfiles/run -v Clang"
-    fi
-
     # mysql_config is required by Python MySQL client.
     if [[ "$(uname)" != "Darwin" ]]; then
         if dpkg -s libmysqlclient-dev &> /dev/null; then
@@ -91,10 +50,29 @@ main() {
     # Python 3.6
     echo '# python:'
     echo "$ROOT/system/dotfiles/run -v Python"
-    PYTHON="python3"
+    # Use the absolute path to Python, since the homebrew installed package
+    # may not yet be in the $PATH.
+    if [[ "$(uname)" == "Darwin" ]]; then
+        PYTHON=/usr/local/opt/python@2/bin/python2
+    else
+        PYTHON=/home/linuxbrew/.linuxbrew/bin/python
+    fi
+    echo "test -f $PYTHON || { echo 'error: $PYTHON not found!' >&2 }"
 
     # Install Python packages.
     echo "$PYTHON -m pip install -r $ROOT/requirements.txt"
+
+    # On macOS: Homebrew & coreutils
+    if [[ "$(uname)" == "Darwin" ]]; then
+        echo "$ROOT/system/dotfiles/run -v GnuCoreutils"
+    fi
+
+    echo '# bazel:'
+    echo "$ROOT/system/dotfiles/run -v Bazel"
+
+    # Compiler: Clang
+    echo '# clang:'
+    echo "$ROOT/system/dotfiles/run -v Clang"
 
     # Jupyter kernel
     if [[ ! -f "$HOME/.ipython/kernels/phd/kernel.json" ]]; then
@@ -104,14 +82,19 @@ main() {
         echo "sed \"s,@PYTHON@,$(which $PYTHON),\" -i $HOME/.ipython/kernels/phd/kernel.json"
     fi
 
-    # autoenv
-    if $PYTHON -m pip freeze 2>/dev/null | grep '^autoenv' &> /dev/null; then
-        echo '# autoenv: installed'
+    # git pre-commit hook
+    if [[ -f "$ROOT/.git/hooks/pre-push" ]]; then
+        echo '# git hook: installed'
     else
-        echo '# autoenv:'
-        echo "$PYTHON -m pip install autoenv"
+        echo '# git hook:'
+        echo "cp -v $ROOT/tools/pre-push $ROOT/.git/hooks/pre-push"
+        echo "chmod +x $ROOT/.git/hooks/pre-push"
         echo
     fi
+
+    # autoenv
+    echo '# autoenv:'
+    echo "$ROOT/system/dotfiles/run -v Autoenv"
 
     # LaTeX
     echo '# mactex:'
