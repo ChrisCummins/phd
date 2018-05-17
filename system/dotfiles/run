@@ -219,8 +219,7 @@ def main(*args):
       for file in tmpfiles:
         file = os.path.abspath(os.path.expanduser(file))
         if os.path.exists(file):
-          logging.debug("rm {file}".format(**vars()))
-          os.remove(file)
+          shell("sudo rm -f '{file}'".format(file=file))
 
   return 1 if errored else 0
 
