@@ -125,7 +125,7 @@ class LanguageCloneWorker(threading.Thread):
       num_remaining = (self.language.num_repos_to_clone -
                        self.GetNumberOfClonedRepos())
       repos = list(page)[:num_remaining]
-      CloneRepositories(repos)
+      CloneRepositories(repos, self.destination_directory)
       page = self.GetNextBatchOfRepositories()
 
 
