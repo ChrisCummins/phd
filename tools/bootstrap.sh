@@ -67,40 +67,15 @@ main() {
         echo
     fi
 
-    # Build system: Bazel
-    if [[ "$(uname)" == "Darwin" ]]; then
-        if brew list | grep '^bazel$' &> /dev/null; then
-            echo '# bazel: installed'
-        else
-            echo '# bazel:'
-            echo "brew cask list | grep '^java$' &>/dev/null || brew cask install java"
-            echo 'brew install bazel'
-            echo
-        fi
-    else
-        if dpkg -s bazel &> /dev/null; then
-            echo '# bazel: installed'
-        else
-            echo '# bazel:'
-            echo 'echo "deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list'
-            echo 'curl https://bazel.build/bazel-release.pub.gpg | sudo apt-key add -'
-            echo 'sudo apt-get update'
-            echo 'sudo apt-get install -y bazel'
-            echo
-        fi
-    fi
+    echo '# bazel:'
+    echo 'cd $ROOT/system/dotfiles && ./run -v Bazel'
 
     # Compiler: Clang
     if [[ "$(uname)" == "Darwin" ]]; then
         echo '# clang: installed (system)'
     else
-        if dpkg -s clang &> /dev/null; then
-            echo '# clang: installed'
-        else
-            echo '# clang:'
-            echo 'sudo apt-get install -y clang'
-            echo
-        fi
+        echo '# clang:'
+        echo 'cd $ROOT/system/dotfiles && ./run -v Clang'
     fi
 
     # mysql_config is required by Python MySQL client.
@@ -114,40 +89,9 @@ main() {
     fi
 
     # Python 3.6
-    if [[ "$(uname)" == "Darwin" ]]; then
-        if brew list | grep '^python$' &> /dev/null; then
-            echo '# python>=3.6: installed'
-        else
-            echo '# python>=3.6:'
-            echo 'brew install python'
-            echo
-        fi
-    else
-        if dpkg -s python3.6 &> /dev/null; then
-            echo '# python3.6: installed'
-        else
-            echo '# python3.6:'
-            echo 'sudo add-apt-repository -y ppa:jonathonf/python-3.6'
-            echo 'sudo apt-get update'
-            echo 'sudo apt-get install -y --no-install-recommends python3-dev python3-distutils'
-            echo 'sudo apt-get install -y --no-install-recommends python3.6 python3.6-dev'
-            echo
-        fi
-    fi
-
+    echo '# python:'
+    echo 'cd $ROOT/system/dotfiles && ./run -v Python'
     PYTHON="python3"
-    # Install pip if required.
-    if "$PYTHON" -c 'import pip' 2>/dev/null ; then
-        echo '# pip: installed'
-    else
-        echo 'curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py'
-        echo "$PYTHON get-pip.py"
-        echo 'rm get-pip.py'
-    fi
-
-    # Install the wheel package before all other dependencies, as the
-    # bdist_wheel command is required for installing the other requirements.
-    echo "$PYTHON -m pip install wheel"
 
     # Install Python packages.
     echo "$PYTHON -m pip install -r $ROOT/requirements.txt"
