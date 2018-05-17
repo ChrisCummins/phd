@@ -75,7 +75,7 @@ main() {
         echo '# clang: installed (system)'
     else
         echo '# clang:'
-        echo 'cd $ROOT/system/dotfiles && ./run -v Clang'
+        echo "cd $ROOT/system/dotfiles && ./run -v Clang"
     fi
 
     # mysql_config is required by Python MySQL client.
