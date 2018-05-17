@@ -1597,7 +1597,7 @@ class Bazel(Task):
 class Buildifier(Task):
   __platforms__ = ['linux', 'osx']
   __deps__ = ['Homebrew', 'Bazel']
-  __genfiles__ = [Homebrew.bin('buildifer')]
+  __genfiles__ = [Homebrew.bin('buildifier')]
 
   def install(self):
     Homebrew().install_package('buildifier')
