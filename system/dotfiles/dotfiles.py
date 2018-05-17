@@ -1583,6 +1583,8 @@ class Bazel(Task):
     Homebrew().install_package('bazel')
 
   def install_ubuntu(self):
+    # Currently (2018-05-17) I have been unable to get the Linuxbrew
+    # distribution of Bazel to build.
     # See: https://docs.bazel.build/versions/master/install-ubuntu.html
 
     # Add Bazel distribution URY
