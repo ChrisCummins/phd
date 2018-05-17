@@ -309,7 +309,7 @@ class Python(Task):
         json.dump(data, outfile)
 
     pkg_str = package + '==' + version
-    if pkg_str not in data[pip]:
+    if pkg_str not in data[python]:
       task_print("{python} -m pip install {package}=={version}".format(**vars()))
       shell("{python} -m pip install {package}=={version}".format(**vars()))
       return True
