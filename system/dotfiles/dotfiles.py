@@ -102,9 +102,9 @@ class Homebrew(Task):
     if not os.path.exists('/home/linuxbrew/.linuxbrew/bin/brew'):
       url = ("https://raw.githubusercontent.com/"
              "Linuxbrew/install/master/install.sh")
-      self._shell('yes | sh -c "$(curl -fsSL {url})"'.format(url=url))
+      self.shell('yes | sh -c "$(curl -fsSL {url})"'.format(url=url))
       try:
-        self._shell('{brew} doctor'.format(brew=self.BREW_BINARY))
+        self.shell('{brew} doctor'.format(brew=self.BREW_BINARY))
       except CalledProcessError:
         # We don't care about errors at this stage.
         pass
@@ -126,18 +126,18 @@ class Homebrew(Task):
     return "sudo -H -u linuxbrew bash -c '{cmd}'".format(cmd=cmd)
 
   @classmethod
-  def _shell(cls, cmd):
+  def shell(cls, cmd):
     """Portability wrapper for the shell() command.
 
     On Linux, the command is executed as the linuxbrew user.
     """
     if PLATFORM in LINUX_DISTROS:
-      shell(cls._as_linuxbrew_user(cmd))
+      return shell(cls._as_linuxbrew_user(cmd))
     else:
-      shell(cmd)
+      return shell(cmd)
 
   @classmethod
-  def _shell_ok(cls, cmd):
+  def shell_ok(cls, cmd):
     """Portability wrapper for the shell() command.
 
     On Linux, the command is executed as the linuxbrew user.
@@ -154,16 +154,16 @@ class Homebrew(Task):
   def package_is_installed(self, package):
     """ return True if package is installed """
     if not os.path.isfile(self.PKG_LIST):
-      self._shell("{self.BREW_BINARY} list > {self.PKG_LIST}".format(**vars()))
+      self.shell("{self.BREW_BINARY} list > {self.PKG_LIST}".format(**vars()))
 
-    return self._shell_ok(
+    return self.shell_ok(
       "grep '^{package}$' <{self.PKG_LIST}".format(**vars()))
 
   def install_package(self, package):
     """ install a package using homebrew, return True if installed """
     if not self.package_is_installed(package):
       task_print("brew install " + package)
-      self._shell("{self.BREW_BINARY} install {package}".format(**vars()))
+      self.shell("{self.BREW_BINARY} install {package}".format(**vars()))
       self._make_user_writeable()
       return True
 
@@ -174,37 +174,37 @@ class Homebrew(Task):
                              "as it is not installed".format(**vars()))
 
     if not os.path.isfile(self.OUTDATED_PKG_LIST):
-      self._shell(
+      self.shell(
         "{self.BREW_BINARY} outdated | awk '{{print $1}}' >{self.OUTDATED_PKG_LIST}"
         .format(**vars()))
 
     package_stump = package.split('/')[-1]
-    return self._shell_ok("grep '^{package_stump}$' <{self.OUTDATED_PKG_LIST}"
+    return self.shell_ok("grep '^{package_stump}$' <{self.OUTDATED_PKG_LIST}"
                           .format(**vars()))
 
   def upgrade_package(self, package):
     """ upgrade package, return True if upgraded """
     if self.package_is_outdated(package):
       task_print("brew upgrade {package}".format(**vars()))
-      self._shell("{self.BREW_BINARY} upgrade {package}".format(**vars()))
+      self.shell("{self.BREW_BINARY} upgrade {package}".format(**vars()))
       self._make_user_writeable()
       return True
 
   def cask_is_installed(self, cask):
     """ return True if cask is installed """
     if not os.path.isfile(self.CASK_LIST):
-      self._shell("{self.BREW_BINARY} cask list > {self.CASK_LIST}"
+      self.shell("{self.BREW_BINARY} cask list > {self.CASK_LIST}"
                   .format(**vars()))
 
     cask_stump = cask.split('/')[-1]
-    return self._shell_ok(
+    return self.shell_ok(
       "grep '^{cask_stump}$' <{self.CASK_LIST}".format(**vars()))
 
   def install_cask(self, cask):
     """ install a homebrew cask, return True if installed """
     if not self.cask_is_installed(cask):
       task_print("brew cask install " + cask)
-      self._shell("{self.BREW_BINARY} cask install {cask}".format(**vars()))
+      self.shell("{self.BREW_BINARY} cask install {cask}".format(**vars()))
       self._make_user_writeable()
       return True
 
@@ -216,19 +216,19 @@ class Homebrew(Task):
           .format(**vars()))
 
     if not os.path.isfile(self.OUTDATED_CASK_LIST):
-      self._shell(
+      self.shell(
           "{self.BREW_BINARY} cask outdated ".format(**vars()) +
           "| awk '{{print $1}}' >{self.OUTDATED_CASK_LIST}".format(**vars()))
 
     cask_stump = cask.split('/')[-1]
-    return self._shell_ok(
+    return self.shell_ok(
         "grep '^{cask_stump}$' <{self.OUTDATED_CASK_LIST}".format(**vars()))
 
   def upgrade_cask(self, cask):
     """ upgrade a homebrew cask. does nothing if cask not installed """
     if self.cask_is_outdated(cask):
       task_print("brew cask upgrade {cask}".format(**vars()))
-      self._shell("{self.BREW_BINARY} cask upgrade {cask}".format(**vars()))
+      self.shell("{self.BREW_BINARY} cask upgrade {cask}".format(**vars()))
       self._make_user_writeable()
       return True
 
@@ -236,7 +236,7 @@ class Homebrew(Task):
     """ remove a homebrew cask, return True if uninstalled """
     if self.cask_is_installed(cask):
       task_print("brew cask remove " + cask)
-      self._shell("{self.BREW_BINARY} cask remove " + cask)
+      self.shell("{self.BREW_BINARY} cask remove " + cask)
       return True
 
   @staticmethod
@@ -297,7 +297,7 @@ class Python(Task):
   def _install_pip_version(self, python, version):
     if not shell_ok("test $({python} -m pip --version | awk '{{print $2}}') = {version}".format(**vars())):
       task_print("{python} -m pip install --upgrade 'pip=={version}'".format(**vars()))
-      shell("{python} -m pip install --upgrade 'pip=={version}'".format(**vars()))
+      Homebrew.shell('{python} -m pip install --upgrade "pip=={version}"'.format(**vars()))
 
   def upgrade(self):
     Homebrew().upgrade_package("python")
@@ -313,7 +313,7 @@ class Python(Task):
       data = {}
 
     if python not in data:
-      freeze = shell("{python} -m pip freeze 2>/dev/null".format(**vars()))
+      freeze = Homebrew.shell("{python} -m pip freeze 2>/dev/null".format(**vars()))
       data[python] = freeze.strip().split("\n")
       with open(self.PIP_LIST, "w") as outfile:
         json.dump(data, outfile)
@@ -321,7 +321,7 @@ class Python(Task):
     pkg_str = package + '==' + version
     if pkg_str not in data[python]:
       task_print("{python} -m pip install {package}=={version}".format(**vars()))
-      shell("{python} -m pip install {package}=={version}".format(**vars()))
+      Homebrew.shell("{python} -m pip install {package}=={version}".format(**vars()))
       return True
 
 
