@@ -4,8 +4,7 @@ MAINTAINER Chris Cummins <chrisc.101@gmail.com>
 # Install essential packages.
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends \
-  software-properties-common \
-  git curl sudo python
+  software-properties-common git curl sudo python
 
 # TODO: Determine if these need installing.
 # python3-distutils python3-venv python3-dev
