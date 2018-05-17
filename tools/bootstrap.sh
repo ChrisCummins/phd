@@ -105,16 +105,11 @@ main() {
     fi
 
     # autoenv
-    if pip freeze 2> /dev/null | grep '^autoenv' &> /dev/null; then
+    if $PYTHON -m pip freeze 2>/dev/null | grep '^autoenv' &> /dev/null; then
         echo '# autoenv: installed'
     else
         echo '# autoenv:'
-        if [[ "$(uname)" == "Darwin" ]]; then
-            echo 'pip install autoenv'
-        else
-            # we need sudo on linux
-            echo 'sudo -H pip install autoenv'
-        fi
+        echo "$PYTHON -m pip install autoenv"
         echo
     fi
 
