@@ -30,8 +30,10 @@ def ImportResultsFromDirectory(session: db.session_t,
     logging.fatal('directory %s does not exist', results_dir)
   for i, path in enumerate(results_dir.iterdir()):
     deeplearning.deepsmith.result.Result.FromFile(session, path)
+    logging.info('Imported result %s %s', i + 1, path)
     if not i % batch_size:
       session.commit()
+      logging.info('Commited database')
   session.commit()
 
 
@@ -67,7 +69,6 @@ def main(argv):
     session.commit()
     if FLAGS.testcases_dir:
       ImportTestcasesFromDirectory(session, pathlib.Path(FLAGS.testcases_dir))
-  logging.info('done')
 
 
 if __name__ == '__main__':
