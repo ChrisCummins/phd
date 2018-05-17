@@ -42,3 +42,8 @@ script:
   # - |
   #   bazel test --local_resources=400,1,1.0 \
   #       $(bazel query //... | grep -v -f .travisignore)
+
+notifications:
+  email:
+    on_success: change # [always|never|change]
+    on_failure: change # [always|never|change]
