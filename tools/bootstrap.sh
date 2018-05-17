@@ -47,9 +47,12 @@ main() {
         fi
     fi
 
-    # Python 3.6
-    echo '# python:'
-    $ROOT/system/dotfiles/run -v Python
+    # Install dotfiles packages.
+    $ROOT/system/dotfiles/run -v Python Bazel Buildifier Clang Autoenv LaTeX
+    if [[ "$(uname)" == "Darwin" ]]; then
+        $ROOT/system/dotfiles/run -v GnuCoreutils
+    fi
+
     # Use the absolute path to Python, since the homebrew installed package
     # may not yet be in the $PATH.
     if [[ "$(uname)" == "Darwin" ]]; then
@@ -61,18 +64,6 @@ main() {
 
     # Install Python packages.
     $PYTHON -m pip install -r $ROOT/requirements.txt
-
-    # On macOS: Homebrew & coreutils
-    if [[ "$(uname)" == "Darwin" ]]; then
-        $ROOT/system/dotfiles/run -v GnuCoreutils
-    fi
-
-    echo '# bazel:'
-    $ROOT/system/dotfiles/run -v Bazel Buildifier
-
-    # Compiler: Clang
-    echo '# clang:'
-    $ROOT/system/dotfiles/run -v Clang
 
     # Jupyter kernel
     if [[ ! -f "$HOME/.ipython/kernels/phd/kernel.json" ]]; then
@@ -91,14 +82,6 @@ main() {
         chmod +x $ROOT/.git/hooks/pre-push
         echo
     fi
-
-    # autoenv
-    echo '# autoenv:'
-    $ROOT/system/dotfiles/run -v Autoenv
-
-    # LaTeX
-    echo '# mactex:'
-    $ROOT/system/dotfiles/run -v LaTeX
 
     # libexempi3 is required by //util/photolib/ and python package
     # python-xmp-toolkit to read XMP metadata from image files.
