@@ -119,6 +119,9 @@ def main(*args):
     loglevel = logging.INFO
   logging.basicConfig(level=loglevel, format="%(message)s")
 
+  # Change to root directory.
+  os.chdir('/')
+
   # Get the list of tasks to run
   logging.debug("creating tasks list ...")
   queue = get_tasks_to_run(*args.tasks)
