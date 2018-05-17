@@ -68,7 +68,7 @@ main() {
     fi
 
     echo '# bazel:'
-    echo 'cd $ROOT/system/dotfiles && ./run -v Bazel'
+    echo "cd $ROOT/system/dotfiles && ./run -v Bazel"
 
     # Compiler: Clang
     if [[ "$(uname)" == "Darwin" ]]; then
@@ -90,7 +90,7 @@ main() {
 
     # Python 3.6
     echo '# python:'
-    echo 'cd $ROOT/system/dotfiles && ./run -v Python'
+    echo "cd $ROOT/system/dotfiles && ./run -v Python"
     PYTHON="python3"
 
     # Install Python packages.
