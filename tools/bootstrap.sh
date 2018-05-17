@@ -53,9 +53,9 @@ main() {
     # Use the absolute path to Python, since the homebrew installed package
     # may not yet be in the $PATH.
     if [[ "$(uname)" == "Darwin" ]]; then
-        PYTHON=/usr/local/opt/python@2/bin/python2
+        PYTHON=/usr/local/opt/python/bin/python3
     else
-        PYTHON=/home/linuxbrew/.linuxbrew/bin/python
+        PYTHON=/home/linuxbrew/.linuxbrew/bin/python3
     fi
     test -f $PYTHON || { echo 'error: $PYTHON not found!' >&2; exit 1; }
 
