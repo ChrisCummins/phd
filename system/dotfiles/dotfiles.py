@@ -42,12 +42,21 @@ class Apt(object):
 
 
 class Sudo(Task):
-  __platforms__ = ['ubuntu']
+  __platforms__ = ['linux']
   __deps__ = []
   __genfiles__ = ['/usr/bin/sudo']
 
-  def install_ubuntu(self):
+  def install_linux(self):
     Apt().install_package('sudo')
+
+
+class BuildEssential(Task):
+  __platforms__ = ['linux']
+  __deps__ = []
+  __genfiles__ = ['/usr/bin/gcc']
+
+  def install_linux(self):
+    Apt().install_package('build-essential')
 
 
 class Homebrew(Task):
@@ -65,7 +74,7 @@ class Homebrew(Task):
 
   __platforms__ = ['linux', 'osx']
   __deps__ = []
-  __linux_deps__ = ['Sudo']
+  __ubuntu_deps__ = ['Sudo', 'BuildEssential']
   __genfiles__ = [BREW_BINARY]
   __tmpfiles__ = [PKG_LIST, CASK_LIST, OUTDATED_PKG_LIST, OUTDATED_CASK_LIST]
 
