@@ -888,15 +888,8 @@ class Vim(Task):
       "vundle": "fcc204205e3305c4f86f07e09cd756c7d06f0f00",
   }
 
-  def install_osx(self):
-    Homebrew().install_package('vim')
-    self.install()
-
-  def install_ubuntu(self):
-    Apt().install_package('vim')
-    self.install()
-
   def install(self):
+    Homebrew().install_package('vim')
     symlink(usr_share("Vim/vimrc"), "~/.vimrc")
 
     # Vundle
