@@ -902,7 +902,9 @@ class Vim(Task):
     clone_git_repo(github_repo("VundleVim", "Vundle.vim"),
                    "~/.vim/bundle/Vundle.vim",
                    self.__versions__["vundle"])
-    shell("vim +PluginInstall +qall")
+    # Note we use the absolute path to vim since on first run we won't
+    # necessarily have the homebrew bin directory in out $PATH.
+    shell("{vim} +PluginInstall +qall".format(vim=Homebrew.bin('vim')))
 
   def upgrade_osx(self):
     Homebrew().upgrade_package("vim")
