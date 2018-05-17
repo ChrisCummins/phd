@@ -565,8 +565,14 @@ manpath_dirs=( \
     /usr/local/opt/coreutils/libexec/gnuman \
     /usr/local/opt/gnu-sed/libexec/gnuman \
     /usr/local/opt/gnu-tar/libexec/gnuman \
+    /home/linuxbrew/.linuxbrew/share/man \
 )
 export MANPATH=$(build_path "${manpath_dirs[@]}")
+
+infopath_dirs=( \
+    /home/linuxbrew/.linuxbrew/share/info \
+)
+export INFOPATH=$(build_path "${infopath_dirs[@]}")
 
 
 # Enable pretty colors.
