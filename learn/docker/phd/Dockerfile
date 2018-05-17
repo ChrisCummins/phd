@@ -5,7 +5,7 @@ MAINTAINER Chris Cummins <chrisc.101@gmail.com>
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends \
   software-properties-common \
-  git curl sudo python python-pip
+  git curl sudo python
 
 # TODO: Determine if these need installing.
 # python3-distutils python3-venv python3-dev
@@ -51,7 +51,11 @@ RUN locale-gen --purge en_GB.UTF-8
 # Clean up.
 RUN apt autoremove -y
 RUN apt-get clean
-RUN rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN rm -rf \
+    /home/linuxbrew/.cache/Homebrew/* \
+    /tmp/* \
+    /var/lib/apt/lists/* \
+    /var/tmp/*
 
 WORKDIR /root/phd
 CMD ["zsh"]
