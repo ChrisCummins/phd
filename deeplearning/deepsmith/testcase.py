@@ -329,7 +329,9 @@ class TestcaseInputValue(db.Table):
       index=True, unique=True)
   charcount = sql.Column(sql.Integer, nullable=False)
   linecount = sql.Column(sql.Integer, nullable=False)
-  string: str = sql.Column(sql.UnicodeText, nullable=False)
+  string: str = sql.Column(
+      sql.UnicodeText().with_variant(sql.UnicodeText(2 ** 31), 'mysql'),
+      nullable=False)
 
   # Relationships.
   inputs: typing.List[TestcaseInput] = orm.relationship(
