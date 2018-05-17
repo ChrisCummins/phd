@@ -672,7 +672,7 @@ class ZshBazelCompletion(Task):
     shell("rm -rf {bazel}".format(**vars()))
 
     if not os.path.isfile(os.path.expanduser("~/.zsh/completion/_bazel")):
-      shell("fpath[1,0]=~/.zsh/completion/")
+      # FIXME: shell("fpath[1,0]=~/.zsh/completion/")
       mkdir("~/.zsh/completion/")
       shell("wget {url} -O ~/.zsh/completion/_bazel".format(**vars()))
 
