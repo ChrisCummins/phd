@@ -27,15 +27,15 @@ main() {
 
     # If repository is cloned using https protocol, change the submodule
     # URLs to use https also.
-    if  git remote -v | grep -q 'git@' ; then
+    if  git -C "$ROOT" remote -v | grep -q 'git@' ; then
         echo '# git: cloned from SSH.'
     else
         echo '# git: change to HTTPS submodules'
-        echo "perl -i -p -e 's|git@(.*?):|https://\1/|g' .gitmodules"
+        echo "perl -i -p -e 's|git@(.*?):|https://\1/|g' $ROOT/.gitmodules"
     fi
 
     # Ensure that submodules are checked out and set to correct versions.
-    echo 'git submodule update --init --recursive'
+    echo "git -C $ROOT submodule update --init --recursive"
 
     # On macOS: Homebrew & coreutils
     if [[ "$(uname)" == "Darwin" ]]; then
