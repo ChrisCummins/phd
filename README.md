@@ -152,7 +152,7 @@ A self-contained monolothic repository for (almost) everything I have done while
 
 ### Installation
 
-Clone this repository and its submodules:
+Clone this repository:
 
 ```sh
 $ https://github.com/ChrisCummins/phd.git
