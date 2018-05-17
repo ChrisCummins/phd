@@ -281,13 +281,11 @@ class Python(Task):
   }
 
   def install(self):
-    brew = Homebrew.BREW_BINARY
-
     if Homebrew().install_package("python@2"):
-      shell("{brew} link python@2 --force".format(**vars()))
+      Homebrew.brew_command("link python@2 --force")
 
     if Homebrew().install_package("python"):
-      shell("{brew} link python --force".format(**vars()))
+      Homebrew.brew_command("link python --force")
 
     # install pip
     self._install_pip_version(self.PYTHON2_BINARY, self.__versions__["pip"])
