@@ -21,6 +21,11 @@ WORKDIR /tmp
 RUN git clone https://github.com/KhronosGroup/OpenCL-Headers.git
 RUN mv OpenCL-Headers/CL /usr/local/include/CL
 
+# Set and configure the locale. This is necessary for CLgen, which uses en_GB,
+# and Linuxbrew, which uses en_US.
+RUN apt-get install -y --no-install-recommends language-pack-en
+RUN locale-gen --purge en_GB.UTF-8
+
 # Create the phd repository.
 WORKDIR /root
 RUN git clone https://github.com/ChrisCummins/phd.git
@@ -40,12 +45,7 @@ WORKDIR /root/phd/system/dotfiles
 RUN ./run -v Zsh
 
 # Install and configure my preferred editor.
-RUN apt-get install -y --no-install-recommends vim
 ENV ./run -v Vim
-
-# Set and configure the locale. This is necessary for CLgen, which uses en_GB.
-RUN apt-get install -y --no-install-recommends language-pack-en
-RUN locale-gen --purge en_GB.UTF-8
 
 # Clean up.
 RUN apt-get purge git curl sudo python
