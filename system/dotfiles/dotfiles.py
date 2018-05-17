@@ -87,7 +87,6 @@ class Homebrew(Task):
 
   def install_ubuntu(self):
     # Install build dependencies:
-    Apt().install_package("build-essential")
     Apt().install_package("curl")
     Apt().install_package("file")
     Apt().install_package("git")
