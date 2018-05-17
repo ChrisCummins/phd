@@ -27,12 +27,10 @@ os:
 #       - clang-3.6
 
 before_install:
-  - echo 'set -eux' > bootstrap.sh && ./tools/bootstrap.sh >> bootstrap.sh
-  - cat bootstrap.sh
+  - ./tools/bootstrap.sh
+  - source .env
 
 script:
-  - bash bootstrap.sh
-  - source .env
   - echo $CC && $CC --version   # c compiler
   - echo $CXX && $CXX --version  # c++ compiler
   # - bazel query //... | grep -v -f .travisignore  # test targets

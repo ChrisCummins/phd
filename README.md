@@ -152,19 +152,13 @@ A self-contained monolothic repository for (almost) everything I have done while
 
 ### Installation
 
-Clone this repository:
+Clone this repository and use the [bootstrap](/tools/bootstrap.sh) script to
+prepare the system dependencies and toolchain:
 
 ```sh
 $ https://github.com/ChrisCummins/phd.git
 $ cd phd
-```
-
-The script `./tools/bootstrap.sh` will probe your system for the required
-packages, and if any are missing, print the commands necessary to install them.
-Automatically install them using:
-
-```sh
-$ ./tools/bootstrap.sh | bash
+$ ./tools/bootstrap.sh
 ```
 
 Test the universe using:

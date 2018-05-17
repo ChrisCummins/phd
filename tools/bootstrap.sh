@@ -8,7 +8,7 @@
 #
 # Usage:
 #
-#     ./boostrap.sh | bash
+#     ./boostrap.sh
 #
 set -eu
 
@@ -31,11 +31,11 @@ main() {
         echo '# git: cloned from SSH.'
     else
         echo '# git: change to HTTPS submodules'
-        echo "perl -i -p -e 's|git@(.*?):|https://\1/|g' $ROOT/.gitmodules"
+        perl -i -p -e 's|git@(.*?):|https://\1/|g' $ROOT/.gitmodules
     fi
 
     # Ensure that submodules are checked out and set to correct versions.
-    echo "git -C $ROOT submodule update --init --recursive"
+    git -C $ROOT submodule update --init --recursive
 
     # mysql_config is required by Python MySQL client.
     if [[ "$(uname)" != "Darwin" ]]; then
@@ -43,13 +43,13 @@ main() {
             echo '# libmysql: installed'
         else
             echo '# libmysql:'
-            echo 'sudo apt-get install -y --no-install-recommends libmysqlclient-dev'
+            sudo apt-get install -y --no-install-recommends libmysqlclient-dev
         fi
     fi
 
     # Python 3.6
     echo '# python:'
-    echo "$ROOT/system/dotfiles/run -v Python"
+    $ROOT/system/dotfiles/run -v Python
     # Use the absolute path to Python, since the homebrew installed package
     # may not yet be in the $PATH.
     if [[ "$(uname)" == "Darwin" ]]; then
@@ -57,29 +57,29 @@ main() {
     else
         PYTHON=/home/linuxbrew/.linuxbrew/bin/python
     fi
-    echo "test -f $PYTHON || echo 'error: $PYTHON not found!' >&2"
+    test -f $PYTHON || { echo 'error: $PYTHON not found!' >&2; exit 1; }
 
     # Install Python packages.
-    echo "$PYTHON -m pip install -r $ROOT/requirements.txt"
+    $PYTHON -m pip install -r $ROOT/requirements.txt
 
     # On macOS: Homebrew & coreutils
     if [[ "$(uname)" == "Darwin" ]]; then
-        echo "$ROOT/system/dotfiles/run -v GnuCoreutils"
+        $ROOT/system/dotfiles/run -v GnuCoreutils
     fi
 
     echo '# bazel:'
-    echo "$ROOT/system/dotfiles/run -v Bazel"
+    $ROOT/system/dotfiles/run -v Bazel
 
     # Compiler: Clang
     echo '# clang:'
-    echo "$ROOT/system/dotfiles/run -v Clang"
+    $ROOT/system/dotfiles/run -v Clang
 
     # Jupyter kernel
     if [[ ! -f "$HOME/.ipython/kernels/phd/kernel.json" ]]; then
-        echo "rm -rvf $HOME/.ipython/kernels/phd"
-        echo "mkdir -vp ~/.ipython/kernels"
-        echo "cp -vr $ROOT/tools/ipython/kernels/phd $HOME/.ipython/kernels/phd"
-        echo "sed \"s,@PYTHON@,$(which $PYTHON),\" -i $HOME/.ipython/kernels/phd/kernel.json"
+        rm -rvf $HOME/.ipython/kernels/phd
+        mkdir -vp ~/.ipython/kernels
+        cp -vr $ROOT/tools/ipython/kernels/phd $HOME/.ipython/kernels/phd
+        sed "s,@PYTHON@,$PYTHON," -i $HOME/.ipython/kernels/phd/kernel.json
     fi
 
     # git pre-commit hook
@@ -87,18 +87,18 @@ main() {
         echo '# git hook: installed'
     else
         echo '# git hook:'
-        echo "cp -v $ROOT/tools/pre-push $ROOT/.git/hooks/pre-push"
-        echo "chmod +x $ROOT/.git/hooks/pre-push"
+        cp -v $ROOT/tools/pre-push $ROOT/.git/hooks/pre-push
+        chmod +x $ROOT/.git/hooks/pre-push
         echo
     fi
 
     # autoenv
     echo '# autoenv:'
-    echo "$ROOT/system/dotfiles/run -v Autoenv"
+    $ROOT/system/dotfiles/run -v Autoenv
 
     # LaTeX
     echo '# mactex:'
-    echo "$ROOT/system/dotfiles/run -v LaTeX"
+    $ROOT/system/dotfiles/run -v LaTeX
 
     # libexempi3 is required by //util/photolib/ and python package
     # python-xmp-toolkit to read XMP metadata from image files.
@@ -107,7 +107,7 @@ main() {
             echo '# libexempi3: installed'
         else
             echo '# libexempi3:'
-            echo 'sudo apt-get install -y --no-install-recommends libexempi3'
+            sudo apt-get install -y --no-install-recommends libexempi3
             echo
         fi
     fi
@@ -115,8 +115,8 @@ main() {
     # Create autoenv environment file. This should be done last, since we can
     # use the presence of the .env to determine if the project has been
     # bootstrapped.
-    echo "cp -v $ROOT/tools/env.sh $ROOT/.env"
-    echo "perl -pi -e 's|__ROOT__|$ROOT|g' $ROOT/.env"
+    cp -v $ROOT/tools/env.sh $ROOT/.env
+    perl -pi -e 's|__ROOT__|$ROOT|g' $ROOT/.env
 }
 
 main $@

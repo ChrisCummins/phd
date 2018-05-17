@@ -34,9 +34,7 @@ RUN git clone https://github.com/ChrisCummins/phd.git
 ENV HOME /root
 ENV USER docker
 WORKDIR /root/phd
-RUN echo 'set -eux' >> /tmp/bootstrap.sh
-RUN ./tools/bootstrap.sh >> /tmp/bootstrap.sh
-RUN bash /tmp/bootstrap.sh
+RUN /root/phd/tools/bootstrap.sh
 
 # Install and configure my preferred shell.
 RUN apt-get install -y --no-install-recommends zsh

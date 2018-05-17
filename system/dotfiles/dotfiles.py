@@ -1817,13 +1817,10 @@ class Phd(Task):
   __platforms__ = ['linux', 'osx']
   __genfiles__ = ['~/phd/.env']
   __deps__ = ['Bazel', 'LibExempi', 'Clang']
-  __tmpfiles__ = ['/tmp/phd_bootstrap.sh']
 
   def install(self):
     clone_git_repo(github_repo("ChrisCummins", "phd"), "~/phd")
-    shell("echo 'set -eux' > /tmp/phd_bootstrap.sh")
-    shell("~/phd/tools/bootstrap.sh >> /tmp/phd_bootstrap.sh")
-    shell("bash /tmp/phd_bootstrap.sh")
+    shell("~/phd/tools/bootstrap.sh")
 
 
 class TransmissionHeadless(Task):

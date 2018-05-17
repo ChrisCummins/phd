@@ -20,7 +20,7 @@ main() {
   cd "$ROOT"
 
   # Bootstrap the phd repository if necessary.
-  test -f "$ROOT/.env" || "$ROOT/tools/bootstrap.sh" | bash
+  test -f "$ROOT/.env" || "$ROOT/tools/bootstrap.sh"
 
   # Activate the phd virtual environment.
   test -f "$ROOT/.env"

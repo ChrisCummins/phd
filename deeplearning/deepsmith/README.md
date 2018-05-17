@@ -12,9 +12,9 @@ differential testing methodologies on them to expose bugs in compilers.
 First checkout this repo and install the build requirements:
 
 ```sh
-$ git clone --recursive https://github.com/ChrisCummins/phd.git
+$ git clone https://github.com/ChrisCummins/phd.git
 $ cd phd
-$ ./tools/bootstrap.sh | bash
+$ ./tools/bootstrap.sh
 ```
 
 Then run the unit tests using:
