@@ -693,7 +693,7 @@ class Autoenv(Task):
   """ 'cd' wrapper """
   __platforms__ = ['linux', 'osx']
   __deps__ = ['Python']
-  __genfiles__ = ['/usr/local/bin/activate.sh']
+  __genfiles__ = [Homebrew.bin('activate.sh')]
 
   def install(self):
     Python().pip_install("autoenv", "1.0.0")
