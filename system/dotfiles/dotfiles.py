@@ -41,13 +41,22 @@ class Apt(object):
     shell("sudo apt-get update")
 
 
+class Sudo(Task):
+  __platforms__ = ['ubuntu']
+  __deps__ = []
+  __genfiles__ = ['/usr/bin/sudo']
+
+  def install_ubuntu(self):
+    Apt().install_package('sudo')
+
+
 class Homebrew(Task):
   """ homebrew package manager """
   # Temporary files for caching list of installed packages and casks
-  PKG_LIST = os.path.abspath(".brew-pkgs.txt")
-  CASK_LIST = os.path.abspath(".brew-casks.txt")
-  OUTDATED_PKG_LIST = os.path.abspath(".brew-pkgs-outdated.txt")
-  OUTDATED_CASK_LIST = os.path.abspath(".brew-casks-outdated.txt")
+  PKG_LIST = "/tmp/dotfiles_brew_package_list.txt"
+  CASK_LIST = "/tmp/dotfiles_brew_cask_list.txt"
+  OUTDATED_PKG_LIST = "/tmp/dotfiles_brew_outdated_packages.txt"
+  OUTDATED_CASK_LIST = "/tmp/dotfiles_brew_outdated_casks.txt"
 
   BREW_BINARY = {
       'osx': '/usr/local/bin/brew',
@@ -56,6 +65,7 @@ class Homebrew(Task):
 
   __platforms__ = ['linux', 'osx']
   __deps__ = []
+  __linux_deps__ = ['Sudo']
   __genfiles__ = [BREW_BINARY]
   __tmpfiles__ = [PKG_LIST, CASK_LIST, OUTDATED_PKG_LIST, OUTDATED_CASK_LIST]
 
@@ -74,24 +84,75 @@ class Homebrew(Task):
     Apt().install_package("git")
     Apt().install_package("python-setuptools")
 
+    # On Ubuntu we create a special 'linuxbrew' user to own the linuxbrew
+    # installation. This is because Homebrew does not support use by root user,
+    # and on linux we can't guarantee that a user account exists, such as
+    # in Docker containers.
+    if not shell_ok('id -u linuxbrew'):
+      shell('sudo useradd -m linuxbrew')
+
     if not os.path.exists('/home/linuxbrew/.linuxbrew/bin/brew'):
       url = ("https://raw.githubusercontent.com/"
              "Linuxbrew/install/master/install.sh")
-      shell('yes | sh -c "$(curl -fsSL {url})"'.format(**vars()))
-      shell('{brew} update'.format(brew=self.BREW_BINARY))
+      self._shell('yes | sh -c "$(curl -fsSL {url})"'.format(url=url))
+      self._shell('{brew} doctor'.format(brew=self.BREW_BINARY))
+      self._make_user_writeable()
+
+  def _make_user_writeable(self):
+    """Hacky workaround for non-user owned homebrew installations.
+
+    Ensures that the directories (but not specific files) are writeable by
+    all users on linux. This is so that programs which create files (such as
+    python's pip) can write to their installation directories.
+    """
+    if PLATFORM in LINUX_DISTROS:
+      shell('find /home/linuxbrew/.linuxbrew/ -type d | xargs sudo chmod 777')
+
+  @staticmethod
+  def _as_linuxbrew_user(cmd):
+    """Run a command as the 'linuxbrew' user."""
+    return "sudo -H -u linuxbrew bash -c '{cmd}'".format(cmd=cmd)
+
+  @classmethod
+  def _shell(cls, cmd):
+    """Portability wrapper for the shell() command.
+
+    On Linux, the command is executed as the linuxbrew user.
+    """
+    if PLATFORM in LINUX_DISTROS:
+      shell(cls._as_linuxbrew_user(cmd))
+    else:
+      shell(cmd)
+
+  @classmethod
+  def _shell_ok(cls, cmd):
+    """Portability wrapper for the shell() command.
+
+    On Linux, the command is executed as the linuxbrew user.
+    """
+    if PLATFORM in LINUX_DISTROS:
+      return shell_ok(cls._as_linuxbrew_user(cmd))
+    else:
+      return shell_ok(cmd)
+
+  @classmethod
+  def brew_command(cls, cmd):
+    cls._shell(" ".join([cls.BREW_BINARY, cmd]))
 
   def package_is_installed(self, package):
     """ return True if package is installed """
     if not os.path.isfile(self.PKG_LIST):
-      shell("{self.BREW_BINARY} list > {self.PKG_LIST}".format(**vars()))
+      self._shell("{self.BREW_BINARY} list > {self.PKG_LIST}".format(**vars()))
 
-    return shell_ok("grep '^{package}$' <{self.PKG_LIST}".format(**vars()))
+    return self._shell_ok(
+      "grep '^{package}$' <{self.PKG_LIST}".format(**vars()))
 
   def install_package(self, package):
     """ install a package using homebrew, return True if installed """
     if not self.package_is_installed(package):
       task_print("brew install " + package)
-      shell("{self.BREW_BINARY} install {package}".format(**vars()))
+      self._shell("{self.BREW_BINARY} install {package}".format(**vars()))
+      self._make_user_writeable()
       return True
 
   def package_is_outdated(self, package):
@@ -101,32 +162,38 @@ class Homebrew(Task):
                              "as it is not installed".format(**vars()))
 
     if not os.path.isfile(self.OUTDATED_PKG_LIST):
-      shell("{self.BREW_BINARY} outdated | awk '{{print $1}}' >{self.OUTDATED_PKG_LIST}"
-            .format(**vars()))
+      self._shell(
+        "{self.BREW_BINARY} outdated | awk '{{print $1}}' >{self.OUTDATED_PKG_LIST}"
+        .format(**vars()))
 
     package_stump = package.split('/')[-1]
-    return shell_ok("grep '^{package_stump}$' <{self.OUTDATED_PKG_LIST}".format(**vars()))
+    return self._shell_ok("grep '^{package_stump}$' <{self.OUTDATED_PKG_LIST}"
+                          .format(**vars()))
 
   def upgrade_package(self, package):
     """ upgrade package, return True if upgraded """
     if self.package_is_outdated(package):
       task_print("brew upgrade {package}".format(**vars()))
-      shell("{self.BREW_BINARY} upgrade {package}".format(**vars()))
+      self._shell("{self.BREW_BINARY} upgrade {package}".format(**vars()))
+      self._make_user_writeable()
       return True
 
   def cask_is_installed(self, cask):
     """ return True if cask is installed """
     if not os.path.isfile(self.CASK_LIST):
-      shell("{self.BREW_BINARY} cask list > {self.CASK_LIST}".format(**vars()))
+      self._shell("{self.BREW_BINARY} cask list > {self.CASK_LIST}"
+                  .format(**vars()))
 
     cask_stump = cask.split('/')[-1]
-    return shell_ok("grep '^{cask_stump}$' <{self.CASK_LIST}".format(**vars()))
+    return self._shell_ok(
+      "grep '^{cask_stump}$' <{self.CASK_LIST}".format(**vars()))
 
   def install_cask(self, cask):
     """ install a homebrew cask, return True if installed """
     if not self.cask_is_installed(cask):
       task_print("brew cask install " + cask)
-      shell("{self.BREW_BINARY} cask install {cask}".format(**vars()))
+      self._shell("{self.BREW_BINARY} cask install {cask}".format(**vars()))
+      self._make_user_writeable()
       return True
 
   def cask_is_outdated(self, cask):
@@ -137,24 +204,27 @@ class Homebrew(Task):
           .format(**vars()))
 
     if not os.path.isfile(self.OUTDATED_CASK_LIST):
-      shell("{self.BREW_BINARY} cask outdated ".format(**vars()) +
-            "| awk '{{print $1}}' >{self.OUTDATED_CASK_LIST}".format(**vars()))
+      self._shell(
+          "{self.BREW_BINARY} cask outdated ".format(**vars()) +
+          "| awk '{{print $1}}' >{self.OUTDATED_CASK_LIST}".format(**vars()))
 
     cask_stump = cask.split('/')[-1]
-    return shell_ok("grep '^{cask_stump}$' <{self.OUTDATED_CASK_LIST}".format(**vars()))
+    return self._shell_ok(
+        "grep '^{cask_stump}$' <{self.OUTDATED_CASK_LIST}".format(**vars()))
 
   def upgrade_cask(self, cask):
     """ upgrade a homebrew cask. does nothing if cask not installed """
     if self.cask_is_outdated(cask):
       task_print("brew cask upgrade {cask}".format(**vars()))
-      shell("{self.BREW_BINARY} cask upgrade {cask}".format(**vars()))
+      self._shell("{self.BREW_BINARY} cask upgrade {cask}".format(**vars()))
+      self._make_user_writeable()
       return True
 
   def uninstall_cask(self, cask):
     """ remove a homebrew cask, return True if uninstalled """
     if self.cask_is_installed(cask):
       task_print("brew cask remove " + cask)
-      shell("{self.BREW_BINARY} cask remove " + cask)
+      self._shell("{self.BREW_BINARY} cask remove " + cask)
       return True
 
   @staticmethod
