@@ -1599,6 +1599,15 @@ class Bazel(Task):
     Homebrew().upgrade_package("bazel")
 
 
+class Buildifier(Task):
+  __platforms__ = ['linux', 'osx']
+  __deps__ = ['Homebrew', 'Bazel']
+  __genfiles__ = [Homebrew.bin('buildifer')]
+
+  def install(self):
+    Homebrew().install_package('buildifier')
+
+
 class CMake(Task):
   """ cmake build system """
   __platforms__ = ['linux', 'osx']
