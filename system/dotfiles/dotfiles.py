@@ -114,7 +114,7 @@ class Homebrew(Task):
     python's pip) can write to their installation directories.
     """
     if PLATFORM in LINUX_DISTROS:
-      shell('find /home/linuxbrew/.linuxbrew/ -type d | xargs sudo chmod 777')
+      shell('find /home/linuxbrew/.linuxbrew/ -type d | xargs -L 500 sudo chmod 777')
 
   @staticmethod
   def _as_linuxbrew_user(cmd):
