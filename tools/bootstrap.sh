@@ -68,14 +68,14 @@ main() {
     fi
 
     echo '# bazel:'
-    echo "cd $ROOT/system/dotfiles && ./run -v Bazel"
+    echo "$ROOT/system/dotfiles/run -v Bazel"
 
     # Compiler: Clang
     if [[ "$(uname)" == "Darwin" ]]; then
         echo '# clang: installed (system)'
     else
         echo '# clang:'
-        echo "cd $ROOT/system/dotfiles && ./run -v Clang"
+        echo "$ROOT/system/dotfiles/run -v Clang"
     fi
 
     # mysql_config is required by Python MySQL client.
@@ -90,7 +90,7 @@ main() {
 
     # Python 3.6
     echo '# python:'
-    echo "cd $ROOT/system/dotfiles && ./run -v Python"
+    echo "$ROOT/system/dotfiles/run -v Python"
     PYTHON="python3"
 
     # Install Python packages.
