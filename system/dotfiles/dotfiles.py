@@ -1035,12 +1035,18 @@ class SsmtpConfig(Task):
 class MySQL(Task):
   """ mysql pacakge """
   __platforms__ = ['linux', 'osx']
-  __genfiles__ = [Homebrew.bin("mysql")]
+  __osx_genfiles__ = [Homebrew.bin("mysql")]
+  __linux_genfiles__ = ['/usr/bin/mysql']
   __deps__ = ['Homebrew']
 
-  def install(self):
+  def install_osx(self):
     Homebrew().install_package("mysql")
-    shell("brew services start mysql")
+    Homebrew.brew_command("services start mysql")
+
+  def install_ubuntu(self):
+    # Currently (2018-05-17), homebrew mysql does not appear to work.
+    Apt().install_package("mysql-server")
+    shell("sudo systemctl enable mysql")
 
 
 class MySQLConfig(Task):
