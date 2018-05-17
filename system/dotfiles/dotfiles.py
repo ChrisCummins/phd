@@ -249,9 +249,10 @@ class Homebrew(Task):
 class Python(Task):
   """ python 2 & 3 """
   PIP_LIST = ".pip-freeze.json"
-
-  PYTHON2_BINARY = Homebrew.bin('python2')
-  PYTHON3_BINARY = Homebrew.bin('python3')
+  PYTHON2_BINARY = ('/usr/local/opt/python@2/bin/python2' if PLATFORM == 'osx'
+                    else Homebrew.bin('python2'))
+  PYTHON3_BINARY = ('/usr/local/opt/python@3/bin/python3' if PLATFORM == 'osx'
+                    else Homebrew.bin('python3'))
 
   __platforms__ = ['linux', 'osx']
   __deps__ = ['Homebrew']
