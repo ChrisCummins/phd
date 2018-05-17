@@ -95,8 +95,12 @@ def shell_ok(*args):
     return False
 
 
-shell("./configure")
-with open("config.json") as infile:
+
+# Run the configure script and read the resulting config.json file.
+_c1 = os.path.join(os.path.dirname(os.path.realpath(__file__)), "configure")
+_c2 = os.path.join(os.path.dirname(os.path.realpath(__file__)), "config.json")
+shell(_c1)
+with open(_c2) as infile:
   _CFG = json.loads(infile.read())
 
 DOTFILES = _CFG["dotfiles"]
