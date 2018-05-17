@@ -215,6 +215,19 @@ unalias rg
 # Shell functions.
 # --------------------------------------------------------------------------
 
+
+# Portability wrapper around homebrew. On linux, we install homebrew as a
+# different user, and we must perform any homebrew commands as that user.
+brew() {
+    if [[ -f /usr/local/bin/brew ]]; then
+        /usr/local/bin/brew $@
+    elif [[ -f /home/linuxbrew/.linuxbrew/bin/brew ]]; then
+        echo "bash -c '/home/linuxbrew/.linuxbrew/bin/brew $@'" | xargs sudo -H -u linuxbrew
+    else
+        echo 'brew not installed!' >&2
+    fi
+}
+
 # For performing quick calculations.
 calc() {
     test -n "$1" || { echo "Usage: calc <expression>" >&2; return 1; }
