@@ -82,11 +82,11 @@ Command '{cmd}' failed with returncode {p.returncode} and output:
     return stdout
 
 
-def shell_ok(*args):
+def shell_ok(cmd):
   """ run a shell command and return False if error """
-  _log_shell(*args)
+  _log_shell(cmd)
   try:
-    subprocess.check_call(*args, shell=True, stdout=subprocess.PIPE,
+    subprocess.check_call(cmd, shell=True, stdout=subprocess.PIPE,
                           stderr=subprocess.PIPE)
     _log_shell_output("-> 0")
     return True
