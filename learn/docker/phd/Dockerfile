@@ -49,9 +49,11 @@ RUN apt-get install -y --no-install-recommends language-pack-en
 RUN locale-gen --purge en_GB.UTF-8
 
 # Clean up.
+RUN apt-get purge git curl sudo python
 RUN apt autoremove -y
 RUN apt-get clean
 RUN rm -rf \
+    /root/phd/.git \
     /home/linuxbrew/.cache/Homebrew/* \
     /tmp/* \
     /var/lib/apt/lists/* \
