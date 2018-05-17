@@ -383,7 +383,7 @@ class Ruby(Task):
     Homebrew().install_package("rbenv")
 
     # initialize rbenv if required
-    if shell_ok("which rbenv &>/dev/null"):
+    if shell_ok("which rbenv"):
       shell('eval "$(rbenv init -)"')
 
     # install ruby and set as global version
