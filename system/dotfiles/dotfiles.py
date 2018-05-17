@@ -149,7 +149,7 @@ class Homebrew(Task):
 
   @classmethod
   def brew_command(cls, cmd):
-    cls._shell(" ".join([cls.BREW_BINARY, cmd]))
+    cls.shell(" ".join([cls.BREW_BINARY, cmd]))
 
   def package_is_installed(self, package):
     """ return True if package is installed """
