@@ -250,9 +250,6 @@ class Python(Task):
   """ python 2 & 3 """
   PIP_LIST = ".pip-freeze.json"
 
-  # TODO(ceec): Remove references to pip binaries and use 'python -m pip'.
-  PIP2_BINARY = Homebrew.bin('pip2')
-  PIP3_BINARY = Homebrew.bin('pip3')
   PYTHON2_BINARY = Homebrew.bin('python2')
   PYTHON3_BINARY = Homebrew.bin('python3')
 
@@ -260,15 +257,13 @@ class Python(Task):
   __deps__ = ['Homebrew']
   __genfiles__ = []
   __genfiles__ = [
-      PIP2_BINARY,
-      PIP3_BINARY,
       PYTHON2_BINARY,
       PYTHON3_BINARY,
       Homebrew.bin('virtualenv'),
   ]
   __tmpfiles__ = [PIP_LIST]
   __versions__ = {
-      "pip": "9.0.1",
+      "pip": "10.0.1",
       "virtualenv": "15.1.0",
   }
 
@@ -282,27 +277,23 @@ class Python(Task):
       shell("{brew} link python --force".format(**vars()))
 
     # install pip
-    self._install_pip_version(self.PIP2_BINARY, self.__versions__["pip"])
-    self._install_pip_version(self.PIP3_BINARY, self.__versions__["pip"])
+    self._install_pip_version(self.PYTHON2_BINARY, self.__versions__["pip"])
+    self._install_pip_version(self.PYTHON3_BINARY, self.__versions__["pip"])
 
     # install virtualenv
     self.pip_install("virtualenv", self.__versions__["virtualenv"])
 
-  def _install_pip_version(self, pip, version):
-    if not shell_ok("test $({pip} --version | awk '{{print $2}}') = {version}".format(**vars())):
-      basename = os.path.basename(pip)
-      task_print("{basename} install --upgrade 'pip=={version}'".format(**vars()))
-      shell("{pip} install --upgrade 'pip=={version}'".format(**vars()))
+  def _install_pip_version(self, python, version):
+    if not shell_ok("test $({python} -m pip --version | awk '{{print $2}}') = {version}".format(**vars())):
+      task_print("{python} -m pip install --upgrade 'pip=={version}'".format(**vars()))
+      shell("{python} -m pip install --upgrade 'pip=={version}'".format(**vars()))
 
   def upgrade(self):
     Homebrew().upgrade_package("python")
     Homebrew().upgrade_package("python3")
 
-  def pip_install(self, package, version, pip=PIP2_BINARY, sudo=False):
+  def pip_install(self, package, version, python=PYTHON3_BINARY, sudo=False):
     """ install a package using pip, return True if installed """
-    # Ubuntu requires sudo permission for pip install
-    use_sudo = "sudo -H " if sudo else ""
-
     # Create the list of pip packages
     if os.path.exists(self.PIP_LIST):
       with open(self.PIP_LIST) as infile:
@@ -310,16 +301,16 @@ class Python(Task):
     else:
       data = {}
 
-    if pip not in data:
-      freeze = shell("{use_sudo} {pip} freeze 2>/dev/null".format(**vars()))
-      data[pip] = freeze.strip().split("\n")
+    if python not in data:
+      freeze = shell("{python} -m pip freeze 2>/dev/null".format(**vars()))
+      data[python] = freeze.strip().split("\n")
       with open(self.PIP_LIST, "w") as outfile:
         json.dump(data, outfile)
 
     pkg_str = package + '==' + version
     if pkg_str not in data[pip]:
-      task_print("pip install {package}=={version}".format(**vars()))
-      shell("{use_sudo} {pip} install {package}=={version}".format(**vars()))
+      task_print("{python} -m pip install {package}=={version}".format(**vars()))
+      shell("{python} -m pip install {package}=={version}".format(**vars()))
       return True
 
 
@@ -860,7 +851,7 @@ class GhArchiver(Task):
   __genfiles__ = ['/usr/local/bin/gh-archiver']
 
   def install(self):
-    Python().pip_install("gh-archiver", self.VERSION, pip="python3.6 -m pip")
+    Python().pip_install("gh-archiver", self.VERSION, python=Python.PYTHON2_BINARY)
 
 
 class Tmux(Task):
@@ -942,7 +933,7 @@ class Linters(Task):
     Python().pip_install("cpplint", version=self.__versions__["cpplint"])
     Node().npm_install("csslint", version=self.__versions__["csslint"])
     Python().pip_install("pycodestyle", version=self.__versions__["pycodestyle"],
-                         pip="pip3.6")
+                         python=Python.PYTHON3_BINARY)
     Homebrew().install_package("tidy-html5")
     Homebrew().install_package("buildifier")
     Go().get('github.com/ckaznocha/protoc-gen-lint')
@@ -1668,14 +1659,13 @@ class Sloccount(Task):
 class Emu(Task):
   """ backup software """
   VERSION = "0.3.0"
-  PIP = "pip3"
 
   __platforms__ = ['linux', 'osx']
   __deps__ = ['Python']
   __genfiles__ = ['/usr/local/bin/emu']
 
   def install(self):
-    Python().pip_install("emu", self.VERSION, pip=self.PIP, sudo=True)
+    Python().pip_install("emu", self.VERSION)
 
 
 class JsonUtil(Task):
