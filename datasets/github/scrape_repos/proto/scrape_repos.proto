@@ -1,0 +1,25 @@
+// Protocol buffers used for organizing mass-clones of GitHub repos.
+syntax = "proto2";
+package scrape_repos;
+
+message LanguageCloneList {
+  repeated LanguageToClone language = 1;
+}
+
+
+message LanguageToClone {
+  optional string language = 1;
+  optional int32 num_repos_to_clone = 2;
+  optional string destination_directory = 3;
+}
+
+
+message GitHubRepo {
+
+}
+
+message GitHubCredentials {
+  optional string username = 1;
+  optional string password = 2;
+  optional string token = 3;
+}

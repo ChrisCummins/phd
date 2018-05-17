@@ -1,0 +1,50 @@
+language {
+  language: "glsl",
+  num_repos_to_clone: 1000,
+  destination_directory: '/var/phd/datasets/github/scrape_repos/glsl',
+}
+language {
+  language: "javascript",
+  num_repos_to_clone: 1000,
+  destination_directory: '/var/phd/datasets/github/scrape_repos/javascript',
+}
+language {
+  language: "c",
+  num_repos_to_clone: 1000,
+  destination_directory: '/var/phd/datasets/github/scrape_repos/c',
+}
+language {
+  language: "haskell",
+  num_repos_to_clone: 1000,
+  destination_directory: '/var/phd/datasets/github/scrape_repos/haskell',
+}
+language {
+  language: "go",
+  num_repos_to_clone: 1000,
+  destination_directory: '/var/phd/datasets/github/scrape_repos/go',
+}
+language {
+  language: "java",
+  num_repos_to_clone: 1000,
+  destination_directory: '/var/phd/datasets/github/scrape_repos/java',
+}
+language {
+  language: "php",
+  num_repos_to_clone: 1000,
+  destination_directory: '/var/phd/datasets/github/scrape_repos/php',
+}
+language {
+  language: "python",
+  num_repos_to_clone: 1000,
+  destination_directory: '/var/phd/datasets/github/scrape_repos/python',
+}
+language {
+  language: "rust",
+  num_repos_to_clone: 1000,
+  destination_directory: '/var/phd/datasets/github/scrape_repos/rust',
+}
+language {
+  language: "swift",
+  num_repos_to_clone: 1000,
+  destination_directory: '/var/phd/datasets/github/scrape_repos/swift',
+}
