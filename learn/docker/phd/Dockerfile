@@ -19,7 +19,7 @@ RUN ln -s /usr/lib/x86_64-linux-gnu/beignet/libcl.so /usr/local/lib/libOpenCL.so
 # Install the OpenCL headers from Khronos.
 WORKDIR /tmp
 RUN git clone https://github.com/KhronosGroup/OpenCL-Headers.git
-RUN mv OpenCL-Headers/CL /usr/local/include/CL
+RUN mv OpenCL-Headers/CL /usr/include/CL
 
 # Set and configure the locale. This is necessary for CLgen, which uses en_GB,
 # and Linuxbrew, which uses en_US.
