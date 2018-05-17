@@ -1780,11 +1780,24 @@ class LibExempi(Task):
     Homebrew().install_package('exempi')
 
 
+class Clang(Task):
+  __platforms__ = ['linux', 'osx']
+  __deps__ = ['Homebrew']
+  __linux_genfiles__ = [Homebrew.bin('clang')]
+
+  def install_osx(self):
+    # LLVM comes free with macOS.
+    pass
+
+  def install_linux(self):
+    Homebrew().install_package('llvm')
+
+
 class Phd(Task):
   """ phd repo """
   __platforms__ = ['linux', 'osx']
   __genfiles__ = ['~/phd']
-  __deps__ = ['Bazel', 'LibExempi']
+  __deps__ = ['Bazel', 'LibExempi', 'Clang']
 
   def install(self):
     clone_git_repo(github_repo("ChrisCummins", "phd"), "~/phd")
