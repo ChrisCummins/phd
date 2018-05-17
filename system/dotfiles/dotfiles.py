@@ -32,7 +32,7 @@ class Apt(object):
 
   def install_package(self, package):
     """ install a package using apt-get, return True if installed """
-    if not shell_ok("/usr/bin/dpkg -s '{package}' &>/dev/null".format(**vars())):
+    if not shell_ok("/usr/bin/dpkg -s '{package}'".format(**vars())):
       shell("sudo apt-get install -y '{package}'".format(**vars()))
       return True
 
