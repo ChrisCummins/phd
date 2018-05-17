@@ -16,7 +16,7 @@ cd "$DIR/.."
 
 bazel build //docs:all
 
-for name in $(bazel query //docs:all | sed -r 's,^//docs:(.*)$,\1,'); do
+for name in $(bazel query //docs:all | sed -r 's,^//docs:(.*)$,\1,' | sort); do
   cp bazel-genfiles/docs/$name.pdf docs/$name.pdf
   chmod 664 docs/$name.pdf
   git add docs/$name.pdf

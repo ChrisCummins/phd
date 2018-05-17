@@ -1,165 +1,165 @@
 genrule(
-    name = "2015-08-msc-thesis",
+    name = "2015_08_msc_thesis",
     srcs = glob([
-        "2015-08-msc-thesis/**/*.bib",
-        "2015-08-msc-thesis/**/*.tex",
-        "2015-08-msc-thesis/dat/*",
-        "2015-08-msc-thesis/img/*",
-        "2015-08-msc-thesis/lib/*",
+        "2015_08_msc_thesis/**/*.bib",
+        "2015_08_msc_thesis/**/*.tex",
+        "2015_08_msc_thesis/dat/*",
+        "2015_08_msc_thesis/img/*",
+        "2015_08_msc_thesis/lib/*",
     ]),
-    outs = ["2015-08-msc-thesis.pdf"],
-    cmd = "$(location //tools:autotex) docs/2015-08-msc-thesis/thesis.tex $@",
+    outs = ["2015_08_msc_thesis.pdf"],
+    cmd = "$(location //tools:autotex) docs/2015_08_msc_thesis/thesis.tex $@",
     tools = ["//tools:autotex"],
 )
 
 genrule(
-    name = "2015-09-progression-review",
+    name = "2015_09_progression_review",
     srcs = glob([
-        "2015-09-progression-review/*.tex",
+        "2015_09_progression_review/*.tex",
     ]),
-    outs = ["2015-09-progression-review.pdf"],
-    cmd = "$(location //tools:autotex) docs/2015-09-progression-review/document.tex $@",
+    outs = ["2015_09_progression_review.pdf"],
+    cmd = "$(location //tools:autotex) docs/2015_09_progression_review/document.tex $@",
     tools = ["//tools:autotex"],
 )
 
 genrule(
-    name = "2016-01-adapt",
+    name = "2016_01_adapt",
     srcs = glob([
-        "2016-01-adapt/tex/**/*.bib",
-        "2016-01-adapt/tex/**/*.cls",
-        "2016-01-adapt/tex/**/*.tex",
-        "2016-01-adapt/tex/img/*",
+        "2016_01_adapt/tex/**/*.bib",
+        "2016_01_adapt/tex/**/*.cls",
+        "2016_01_adapt/tex/**/*.tex",
+        "2016_01_adapt/tex/img/*",
     ]),
-    outs = ["2016-01-adapt.pdf"],
-    cmd = "$(location //tools:autotex) docs/2016-01-adapt/tex/paper.tex $@",
+    outs = ["2016_01_adapt.pdf"],
+    cmd = "$(location //tools:autotex) docs/2016_01_adapt/tex/paper.tex $@",
     tools = ["//tools:autotex"],
 )
 
 genrule(
-    name = "2016-01-hlpgpu",
+    name = "2016_01_hlpgpu",
     srcs = glob([
-        "2016-01-hlpgpu/tex/**/*.bib",
-        "2016-01-hlpgpu/tex/**/*.cls",
-        "2016-01-hlpgpu/tex/**/*.tex",
-        "2016-01-hlpgpu/tex/img/*",
+        "2016_01_hlpgpu/tex/**/*.bib",
+        "2016_01_hlpgpu/tex/**/*.cls",
+        "2016_01_hlpgpu/tex/**/*.tex",
+        "2016_01_hlpgpu/tex/img/*",
     ]),
-    outs = ["2016-01-hlpgpu.pdf"],
-    cmd = "$(location //tools:autotex) docs/2016-01-hlpgpu/tex/paper.tex $@",
+    outs = ["2016_01_hlpgpu.pdf"],
+    cmd = "$(location //tools:autotex) docs/2016_01_hlpgpu/tex/paper.tex $@",
     tools = ["//tools:autotex"],
 )
 
 genrule(
-    name = "2016-06-pldi",
+    name = "2016_06_pldi",
     srcs = glob([
-        "2016-06-pldi/abstract.tex",
-        "2016-06-pldi/hugh-letter.pdf",
-        "2016-06-pldi/preamble.tex",
-        "2016-06-pldi/poster.pdf",
+        "2016_06_pldi/abstract.tex",
+        "2016_06_pldi/hugh_letter.pdf",
+        "2016_06_pldi/preamble.tex",
+        "2016_06_pldi/poster.pdf",
     ]),
-    outs = ["2016-06-pldi.pdf"],
-    cmd = "$(location //tools:autotex) docs/2016-06-pldi/abstract.tex $@",
+    outs = ["2016_06_pldi.pdf"],
+    cmd = "$(location //tools:autotex) docs/2016_06_pldi/abstract.tex $@",
     tools = ["//tools:autotex"],
 )
 
 genrule(
-    name = "2016-07-acaces",
+    name = "2016_07_acaces",
     srcs = glob([
-        "2016-07-acaces/*.bib",
-        "2016-07-acaces/*.bst",
-        "2016-07-acaces/*.cls",
-        "2016-07-acaces/*.pdf",
-        "2016-07-acaces/*.png",
-        "2016-07-acaces/*.tex",
+        "2016_07_acaces/*.bib",
+        "2016_07_acaces/*.bst",
+        "2016_07_acaces/*.cls",
+        "2016_07_acaces/*.pdf",
+        "2016_07_acaces/*.png",
+        "2016_07_acaces/*.tex",
     ]),
-    outs = ["2016-07-acaces.pdf"],
-    cmd = "$(location //tools:autotex) docs/2016-07-acaces/abstract.tex $@",
+    outs = ["2016_07_acaces.pdf"],
+    cmd = "$(location //tools:autotex) docs/2016_07_acaces/abstract.tex $@",
     tools = ["//tools:autotex"],
 )
 
 # TODO(cec):
 # genrule(
-#     name = "2016-07-pact",
+#     name = "2016_07_pact",
 #     srcs = glob([
-#         "2016-07-pact/*.bib",
-#         "2016-07-pact/*.bst",
-#         "2016-07-pact/*.sty",
-#         "2016-07-pact/*.png",
-#         "2016-07-pact/*.tex",
+#         "2016_07_pact/*.bib",
+#         "2016_07_pact/*.bst",
+#         "2016_07_pact/*.sty",
+#         "2016_07_pact/*.png",
+#         "2016_07_pact/*.tex",
 #     ]),
-#     outs = ["2016-07-pact.pdf"],
-#     cmd = "$(location //tools:autotex) docs/2016-07-pact/pact.tex $@",
+#     outs = ["2016_07_pact.pdf"],
+#     cmd = "$(location //tools:autotex) docs/2016_07_pact/pact.tex $@",
 #     tools = ["//tools:autotex"],
 # )
 
 genrule(
-    name = "2016-11-first-year-review",
+    name = "2016_11_first_year_review",
     srcs = glob([
-        "2016-11-first-year-review/**/*.tex",
-        "2016-11-first-year-review/app/*",
-        "2016-11-first-year-review/refs.bib",
+        "2016_11_first_year_review/**/*.tex",
+        "2016_11_first_year_review/app/*",
+        "2016_11_first_year_review/refs.bib",
     ]),
-    outs = ["2016-11-first-year-review.pdf"],
-    cmd = "$(location //tools:autotex) docs/2016-11-first-year-review/main.tex $@",
+    outs = ["2016_11_first_year_review.pdf"],
+    cmd = "$(location //tools:autotex) docs/2016_11_first_year_review/main.tex $@",
     tools = ["//tools:autotex"],
 )
 
 # TODO(cec): bibliography error
 # genrule(
-#     name = "2016-12-wip-taco",
+#     name = "2016_12_wip_taco",
 #     srcs = glob([
-#         "2016-12-wip-taco/*.bst",
-#         "2016-12-wip-taco/*.png",
-#         "2016-12-wip-taco/*.sty",
-#         "2016-12-wip-taco/*.tex",
-#         "2016-12-wip-taco/acmsmall*",
-#         "2016-12-wip-taco/refs.bib",
+#         "2016_12_wip_taco/*.bst",
+#         "2016_12_wip_taco/*.png",
+#         "2016_12_wip_taco/*.sty",
+#         "2016_12_wip_taco/*.tex",
+#         "2016_12_wip_taco/acmsmall*",
+#         "2016_12_wip_taco/refs.bib",
 #     ]),
-#     outs = ["2016-12-wip-taco.pdf"],
-#     cmd = "$(location //tools:autotex) docs/2016-12-wip-taco/main.tex $@",
+#     outs = ["2016_12_wip_taco.pdf"],
+#     cmd = "$(location //tools:autotex) docs/2016_12_wip_taco/main.tex $@",
 #     tools = ["//tools:autotex"],
 # )
 
 genrule(
-    name = "2017-02-cgo",
+    name = "2017_02_cgo",
     srcs = glob([
-        "2017-02-cgo/tex/**/*.tex",
-        "2017-02-cgo/tex/img/*",
-        "2017-02-cgo/tex/refs.bib",
-        "2017-02-cgo/tex/sigplanconf.cls",
+        "2017_02_cgo/tex/**/*.tex",
+        "2017_02_cgo/tex/img/*",
+        "2017_02_cgo/tex/refs.bib",
+        "2017_02_cgo/tex/sigplanconf.cls",
     ]),
-    outs = ["2017-02-cgo.pdf"],
-    cmd = "$(location //tools:autotex) docs/2017-02-cgo/tex/paper.tex $@",
+    outs = ["2017_02_cgo.pdf"],
+    cmd = "$(location //tools:autotex) docs/2017_02_cgo/tex/paper.tex $@",
     tools = ["//tools:autotex"],
 )
 
 genrule(
-    name = "2017-09-pact",
+    name = "2017_09_pact",
     srcs = glob([
-        "2017-09-pact/tex/**/*.tex",
-        "2017-09-pact/tex/img/*",
-        "2017-09-pact/tex/refs.bib",
-        "2017-09-pact/tex/IEEEtran.cls",
-        "2017-09-pact/tex/IEEEtranS.bst",
+        "2017_09_pact/tex/**/*.tex",
+        "2017_09_pact/tex/img/*",
+        "2017_09_pact/tex/refs.bib",
+        "2017_09_pact/tex/IEEEtran.cls",
+        "2017_09_pact/tex/IEEEtranS.bst",
     ]),
-    outs = ["2017-09-pact.pdf"],
-    cmd = "$(location //tools:autotex) docs/2017-09-pact/tex/paper.tex $@",
+    outs = ["2017_09_pact.pdf"],
+    cmd = "$(location //tools:autotex) docs/2017_09_pact/tex/paper.tex $@",
     tools = ["//tools:autotex"],
 )
 
 genrule(
-    name = "2018-07-issta",
+    name = "2018_07_issta",
     srcs = glob([
-        "2018-07-issta/**/*.tex",
-        "2018-07-issta/build/img/*.pdf",
-        "2018-07-issta/build/tab/*.tex",
-        "2018-07-issta/img/*",
-        "2018-07-issta/refs.bib",
-        "2018-07-issta/etoolbox.def",
-        "2018-07-issta/**/*.sty",
-        "2018-07-issta/jpaper.cls",
+        "2018_07_issta/**/*.tex",
+        "2018_07_issta/build/img/*.pdf",
+        "2018_07_issta/build/tab/*.tex",
+        "2018_07_issta/img/*",
+        "2018_07_issta/refs.bib",
+        "2018_07_issta/etoolbox.def",
+        "2018_07_issta/**/*.sty",
+        "2018_07_issta/jpaper.cls",
     ]),
-    outs = ["2018-07-issta.pdf"],
-    cmd = "$(location //tools:autotex) docs/2018-07-issta/paper.tex $@",
+    outs = ["2018_07_issta.pdf"],
+    cmd = "$(location //tools:autotex) docs/2018_07_issta/paper.tex $@",
     tools = ["//tools:autotex"],
 )
 

@@ -12,7 +12,7 @@ set -eu
 # Root of this repository.
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
 # The directory of this experiment.
-WORKING_DIR="$ROOT/docs/2018-07-issta/artifact_evaluation/01_evaluate_generator"
+WORKING_DIR="$ROOT/docs/2018_07_issta/artifact_evaluation/01_evaluate_generator"
 
 
 main() {

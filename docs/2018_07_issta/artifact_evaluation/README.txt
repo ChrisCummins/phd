@@ -81,7 +81,7 @@ If you have not already, please clone this git repository and change to this
 directory:
 
     $ git clone https://github.com/ChrisCummins/phd.git
-    $ cd phd/docs/2018-07-issta/artifact_evaluation
+    $ cd phd/docs/2018_07_issta/artifact_evaluation
 
 Install local and system-wide dependencies using the command:
 

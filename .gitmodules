@@ -1,11 +1,11 @@
 [submodule "docs/2016-01-adapt"]
-	path = docs/2016-01-adapt
+	path = docs/2016_01_adapt
 	url = git@github.com:ChrisCummins/paper-autotuning-opencl-wgsize.git
 [submodule "docs/2016-01-hlpgpu"]
-	path = docs/2016-01-hlpgpu
+	path = docs/2016_01_hlpgpu
 	url = git@github.com:ChrisCummins/paper-towards-collaborative-performance-tuning.git
 [submodule "docs/2017-02-cgo"]
-	path = docs/2017-02-cgo
+	path = docs/2017_02_cgo
 	url = git@github.com:ChrisCummins/paper-synthesizing-benchmarks.git
 [submodule "experimental/humanorrobot.uk"]
 	path = http/humanorrobot.uk
@@ -20,7 +20,7 @@
 	path = util/gh-archiver
 	url = git@github.com:ChrisCummins/gh-archiver.git
 [submodule "docs/2017-09-pact"]
-	path = docs/2017-09-pact
+	path = docs/2017_09_pact
 	url = https://github.com/ChrisCummins/paper-end2end-dl
 [submodule "learn/interactive-coding-challenges"]
 	path = learn/interactive-coding-challenges
