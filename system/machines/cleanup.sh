@@ -5,3 +5,5 @@ dirs=(
   /private/var/tmp/_bazel_$USER
   $(brew --cache)
 )
+
+sudo apt-get autoremove -y
