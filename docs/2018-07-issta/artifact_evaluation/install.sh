@@ -19,8 +19,8 @@ main() {
   # Run from the artifact_evaluation root directory.
   cd "$ROOT"
 
-  # Bootstrap the phd repository.
-  "$ROOT/tools/bootstrap.sh" | bash
+  # Bootstrap the phd repository if necessary.
+  test -f "$ROOT/.env" || "$ROOT/tools/bootstrap.sh" | bash
 
   # Activate the phd virtual environment.
   test -f "$ROOT/.env"
