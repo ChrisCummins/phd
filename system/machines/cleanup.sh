@@ -7,3 +7,4 @@ dirs=(
 )
 
 sudo apt-get autoremove -y
+apt-get clean
