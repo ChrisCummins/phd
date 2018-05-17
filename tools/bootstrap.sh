@@ -68,7 +68,7 @@ main() {
     fi
 
     echo '# bazel:'
-    $ROOT/system/dotfiles/run -v Bazel
+    $ROOT/system/dotfiles/run -v Bazel Buildifier
 
     # Compiler: Clang
     echo '# clang:'
