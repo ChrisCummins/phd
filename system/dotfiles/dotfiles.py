@@ -613,7 +613,7 @@ class Node(Task):
 class Zsh(Task):
   """ zsh shell and config files """
   __platforms__ = ['linux', 'osx']
-  __osx_deps__ = ['Homebrew']
+  __deps__ = ['Homebrew']
   __genfiles__ = [
       '~/.oh-my-zsh',
       '~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting',
@@ -629,11 +629,9 @@ class Zsh(Task):
       "zsh-syntax-highlighting": "b07ada1255b74c25fbc96901f2b77dc4bd81de1a",
   }
 
-  def install_osx(self):
-    Homebrew().install_package("zsh")
-    self.install()
-
   def install(self):
+    Homebrew().install_package("zsh")
+
     # install config files
     symlink(usr_share("Zsh"), "~/.zsh")
     symlink(usr_share("Zsh/zshrc"), "~/.zshrc")
@@ -649,7 +647,7 @@ class Zsh(Task):
                    "~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting",
                    self.__versions__["zsh-syntax-highlighting"])
 
-  def upgrade_osx(self):
+  def upgrade(self):
     Homebrew().upgrade_package("zsh")
 
 
