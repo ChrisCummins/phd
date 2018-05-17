@@ -103,7 +103,11 @@ class Homebrew(Task):
       url = ("https://raw.githubusercontent.com/"
              "Linuxbrew/install/master/install.sh")
       self._shell('yes | sh -c "$(curl -fsSL {url})"'.format(url=url))
-      self._shell('{brew} doctor'.format(brew=self.BREW_BINARY))
+      try:
+        self._shell('{brew} doctor'.format(brew=self.BREW_BINARY))
+      except CalledProcessError:
+        # We don't care about errors at this stage.
+        pass
       self._make_user_writeable()
 
   def _make_user_writeable(self):
