@@ -1063,7 +1063,7 @@ class MySQLConfig(Task):
 
 class LaTeX(Task):
   """ latex compiler and libraries """
-  __platforms__ = ['osx']
+  __platforms__ = ['linux', 'osx']
   __osx_deps__ = ['Homebrew']
   __osx_genfiles__ = [
       '/Library/TeX/Distributions/.DefaultTeX/Contents/Programs/texbin/pdflatex',
@@ -1075,7 +1075,11 @@ class LaTeX(Task):
     Homebrew().install_cask("texstudio")
     self.install()
 
-  def upgrade_osc(self):
+  def install_linux(self):
+    Apt().install_package('texlive-full')
+    Apt().install_package('biber')
+
+  def upgrade_osx(self):
     Homebrew().upgrade_cask("mactex")
     Homebrew().upgrade_cask("texstudio")
 

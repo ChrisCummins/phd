@@ -84,7 +84,7 @@ main() {
             echo '# libmysql: installed'
         else
             echo '# libmysql:'
-            echo 'sudo apt-get install -y libmysqlclient-dev'
+            echo 'sudo apt-get install -y --no-install-recommends libmysqlclient-dev'
         fi
     fi
 
@@ -114,23 +114,8 @@ main() {
     fi
 
     # LaTeX
-    if [[ "$(uname)" == "Darwin" ]]; then
-        if brew cask list | grep mactex &> /dev/null; then
-            echo '# mactex: installed'
-        else
-            echo '# mactex:'
-            echo 'brew cask install mactex'
-            echo
-        fi
-    else
-        if dpkg -s texlive-full &> /dev/null; then
-            echo '# texlive-full: installed'
-        else
-            echo '# texlive-full:'
-            echo 'sudo apt-get install -y texlive-full biber'
-            echo
-        fi
-    fi
+    echo '# mactex:'
+    echo "$ROOT/system/dotfiles/run -v LaTeX"
 
     # libexempi3 is required by //util/photolib/ and python package
     # python-xmp-toolkit to read XMP metadata from image files.
@@ -139,7 +124,7 @@ main() {
             echo '# libexempi3: installed'
         else
             echo '# libexempi3:'
-            echo 'sudo apt-get install -y libexempi3'
+            echo 'sudo apt-get install -y --no-install-recommends libexempi3'
             echo
         fi
     fi
