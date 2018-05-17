@@ -57,7 +57,7 @@ main() {
     else
         PYTHON=/home/linuxbrew/.linuxbrew/bin/python
     fi
-    echo "test -f $PYTHON || { echo 'error: $PYTHON not found!' >&2 }"
+    echo "test -f $PYTHON || echo 'error: $PYTHON not found!' >&2"
 
     # Install Python packages.
     echo "$PYTHON -m pip install -r $ROOT/requirements.txt"
