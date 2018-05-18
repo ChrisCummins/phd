@@ -42,8 +42,11 @@ def GetNumberOfTestcasesInDataStore(
     datastore_stub: datastore_pb2_grpc.DataStoreServiceStub,
     capabilities: generator_pb2.GetCapabilitiesResponse) -> int:
   request = services.BuildDefaultRequest(datastore_pb2.GetTestcasesRequest)
-  request.return_testcases = False
   request.return_total_matching_count = True
+  request.return_testcases = False
+  request.mark_pending_results = False
+  request.include_testcases_with_results = True
+  request.include_testcases_with_pending_results = True
   request.toolchain = capabilities.toolchain
   request.generator.CopyFrom(capabilities.generator)
   response = datastore_stub.GetTestcases(request)

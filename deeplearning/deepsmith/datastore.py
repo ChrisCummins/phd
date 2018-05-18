@@ -191,8 +191,7 @@ class DataStore(object):
   def GetTestcases(
       self, request: datastore_pb2.GetTestcasesRequest,
       response: datastore_pb2.GetTestcasesResponse) -> None:
-    """Request testcases.
-    """
+    """Request testcases."""
     with self.Session(commit=False) as session:
       # Validate request parameters.
       if request.max_num_testcases < 1:
