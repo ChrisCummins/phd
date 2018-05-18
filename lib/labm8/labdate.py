@@ -6,6 +6,8 @@ equivalency when converting between timestamp and datetime formats.
 """
 import datetime
 
+import typing
+
 
 def GetUtcMillisecondsNow() -> datetime.datetime:
   """Return the current date to millisecond precision.
@@ -22,7 +24,8 @@ def GetUtcMillisecondsNow() -> datetime.datetime:
   return d.replace(microsecond=int(d.microsecond / 1000) * 1000)
 
 
-def MillisecondsTimestamp(date: datetime.datetime = None) -> int:
+def MillisecondsTimestamp(
+    date: typing.Optional[datetime.datetime] = None) -> int:
   """Get the millisecond timestamp of a date.
 
   Args:
