@@ -60,7 +60,8 @@ def CloneRepositories(repos: typing.List[Repository.Repository],
   logging.debug('Cloning %d repositories', len(repos))
   pool = multiprocessing.Pool()
   cloner = RepositoryCloneWorker(destination_directory)
-  pool.imap_unordered(cloner, repos)
+  for _ in pool.imap_unordered(cloner, repos):
+    logging.debug('Clone completed')
 
 
 class LanguageCloneWorker(threading.Thread):
