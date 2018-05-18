@@ -1,0 +1,9 @@
+# File: //deeplearning/deepsmith/proto/datastore.proto
+# Proto: deepsmith.DataStore
+service {
+  hostname: "localhost"
+  port: 50501
+}
+sqlite {
+  path: "/var/phd/deeplearning/deepsmith/deepsmith.db"
+}

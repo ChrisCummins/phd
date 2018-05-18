@@ -1,0 +1,6 @@
+# File: //deeplearning/deepsmith/proto/generator.proto
+# Proto: deepsmith.ClgenGenerator
+service {
+  hostname: "localhost"
+  port: 50502
+}

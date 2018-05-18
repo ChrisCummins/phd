@@ -22,3 +22,13 @@ py_binary(
         "//lib/labm8:pbutil",
     ],
 )
+
+py_binary(
+    name = "generate_testcases",
+    srcs = ["generate_testcases.py"],
+    deps = [
+        "//deeplearning/deepsmith:testcase",
+        "//deeplearning/deepsmith/proto:deepsmith",
+        "//deeplearning/deepsmith/services",
+    ],
+)
