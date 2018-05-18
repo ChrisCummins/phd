@@ -1948,6 +1948,15 @@ class Ripgrep(Task):
     Homebrew().install_package("ripgrep")
 
 
+class Tower(Task):
+  __platforms__ = ['osx']
+  __osx_deps__ = ['Homebrew']
+  __genfiles__ = ['/Applications/Tower.app']
+
+  def install_osx(self):
+    Homebrew().install_cask('tower')
+
+
 class DnsTest(Task):
   """dns performance test"""
   __platforms__ = ['osx', 'linux']
