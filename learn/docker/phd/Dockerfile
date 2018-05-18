@@ -46,8 +46,7 @@ RUN ./run -v Zsh
 ENV ./run -v Vim
 
 # Clean up.
-RUN apt-get purge git curl sudo python
-RUN apt autoremove -y
+RUN apt-get autoremove -y
 RUN apt-get clean
 RUN rm -rf \
     /root/phd/.git \
