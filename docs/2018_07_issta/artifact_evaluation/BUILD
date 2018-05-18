@@ -9,7 +9,7 @@
 sh_binary(
     name = "install",
     srcs = ["install.sh"],
-    deps = [
+    data = [
         "//tools:bootstrap",
         "//tools:protoc",
     ],
