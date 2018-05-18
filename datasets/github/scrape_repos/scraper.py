@@ -222,7 +222,8 @@ class RepositoryCloneWorker(object):
       logging.debug('%s', meta)
       try:
         subprocess.check_call(
-          ['timeout', '30m', '/usr/bin/git', 'clone', '--recursive',
+          ['timeout', f'{FLAGS.repository_clone_timeout_minutes}m',
+           '/usr/bin/git', 'clone', '--recursive',
            repo.clone_url, clone_dir],
           stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
         pbutil.ToFile(meta, meta_path)
