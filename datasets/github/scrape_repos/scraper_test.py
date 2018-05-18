@@ -7,6 +7,23 @@ from datasets.github.scrape_repos import scraper
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
 
 
+class MockNamedUser(object):
+  """Mock class for github.NamedUser.NamedUser."""
+  login = 'login'
+
+
+class MockRepository(object):
+  """Mock class for github.Repository.Repository."""
+
+  def __init__(self):
+    self.owner = MockNamedUser()
+    self.name = 'name'
+    self.watchers_count = 1
+    self.forks_count = 2
+    self.stargazers_count = 3
+    self.clone_url = 'url'
+
+
 def test_ReadGitHubCredentials():
   """Test that GitHub credentials are read from the filesystem."""
   # Note that the function ReadGitHubCredentials() depends on a file
@@ -19,9 +36,16 @@ def test_ReadGitHubCredentials():
   assert credentials.password
 
 
-def test_TODO():
-  # TODO(cec): Placeholder for mocking tests of the cloner workers.
-  _ = scrape_repos_pb2.GitHubRepo()
+def test_GetRepositoryMetadata():
+  repo = MockRepository()
+  meta = scraper.GetRepositoryMetadata(repo)
+  assert isinstance(meta, scrape_repos_pb2.GitHubRepoMetadata)
+  assert meta.owner == repo.owner.login
+  assert meta.name == repo.name
+  assert meta.num_watchers == repo.watchers_count
+  assert meta.num_forks == repo.forks_count
+  assert meta.num_stars == repo.stargazers_count
+  assert meta.clone_from_url == repo.clone_url
 
 
 def test_main_unrecognized_arguments():

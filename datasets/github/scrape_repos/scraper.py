@@ -184,6 +184,26 @@ def RunLanguageCloneWorker(worker: threading.Thread) -> None:
   sys.stderr.flush()
 
 
+def GetRepositoryMetadata(
+    repo: Repository.Repository) -> scrape_repos_pb2.GitHubRepoMetadata():
+  """Get metadata about a GitHub repository.
+
+  Args:
+    repo: A Repository instance.
+
+  Returns:
+    A GitHubRepoMetadata instance.
+  """
+  meta = scrape_repos_pb2.GitHubRepoMetadata()
+  meta.owner = repo.owner.login
+  meta.name = repo.name
+  meta.num_watchers = repo.watchers_count
+  meta.num_forks = repo.forks_count
+  meta.num_stars = repo.stargazers_count
+  meta.clone_from_url = repo.clone_url
+  return meta
+
+
 class RepositoryCloneWorker(object):
   """An object which clones a git repository from GitHub."""
 
@@ -211,14 +231,7 @@ class RepositoryCloneWorker(object):
       fs.rm(clone_dir)
       fs.rm(meta_path)
 
-      meta = scrape_repos_pb2.GitHubRepoMetadata()
-      meta.owner = repo.owner.login
-      meta.name = repo.name
-      meta.num_watchers = repo.watchers_count
-      meta.num_forks = repo.forks_count
-      meta.num_stars = repo.stargazers_count
-      meta.clone_from_url = repo.clone_url
-
+      meta = GetRepositoryMetadata(repo)
       logging.debug('%s', meta)
       try:
         subprocess.check_call(
