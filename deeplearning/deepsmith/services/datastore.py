@@ -40,6 +40,15 @@ class DataStore(services.ServiceBase,
     # TODO(cec): Implement!
     return response
 
+  def SubmitResults(self, request: datastore_pb2.SubmitResultsRequest,
+                    context) -> datastore_pb2.SubmitResultsResponse:
+    del context
+    logging.info('SubmitResults() client=%s', request.status.client)
+    response = services.BuildDefaultResponse(
+      datastore_pb2.SubmitResultsResponse)
+    # TODO(cec): Implement!
+    return response
+
 
 def main(argv):
   if len(argv) > 1:

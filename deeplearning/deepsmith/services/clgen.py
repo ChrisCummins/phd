@@ -24,7 +24,7 @@ class ClgenGenerator(generator.GeneratorBase,
       self, request: generator_pb2.GetGeneratorCapabilitiesRequest,
       context) -> generator_pb2.GetGeneratorCapabilitiesResponse:
     del context
-    logging.info('GetGenerator() client=%s', request.status.client)
+    logging.info('GetGeneratorCapabilities() client=%s', request.status.client)
     response = services.BuildDefaultResponse(
       generator_pb2.GetGeneratorCapabilitiesRequest)
     # TODO(cec): Implement!

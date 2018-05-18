@@ -57,7 +57,7 @@ message DataStoreTestSet {
 service DataStoreService {
   rpc GetTestcases (GetTestcasesRequest) returns (GetTestcasesResponse);
   rpc SubmitTestcases (SubmitTestcasesRequest) returns (SubmitTestcasesResponse);
-  //  rpc SubmitResults (SubmitResultsRequest) returns (SubmitResultsResponse);
+  rpc SubmitResults (SubmitResultsRequest) returns (SubmitResultsResponse);
 }
 
 message GetTestcasesRequest {
@@ -97,45 +97,12 @@ message SubmitTestcasesResponse {
   optional int32 num_truncated_outputs = 2;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-// SubmitTestcases
 
 message SubmitResultsRequest {
-  // Reserved for later use as ID field.
-  reserved 1;
-
-  // TODO(cec): Normalize results using repeated fields and indices.
+  optional ServiceStatus status = 1;
   repeated Result results = 2;
 }
 
 message SubmitResultsResponse {
-  enum Status {
-    SUCCESS = 0;
-    FAILURE = 1;
-  }
-
-  optional Status status = 1 [default = FAILURE];
-}
-
-
-message ResultsCollection {
-  // Reserved for later use as ID field.
-  reserved 1;
-
-  repeated Result results = 2;
-}
-
-message ResultsTable {
-  message ResultsTableEntry {
-    optional Testbed testbed = 1;
-    optional Harness harness = 2;
-    // Result.testcase must be none.
-    repeated Result results = 3;
-  }
-
-  // Reserved for later use as ID field.
-  reserved 1;
-
-  repeated ResultsTableEntry entries = 2;
+  optional ServiceStatus status = 1;
 }

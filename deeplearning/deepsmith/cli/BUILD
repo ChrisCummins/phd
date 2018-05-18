@@ -27,7 +27,15 @@ py_binary(
     name = "generate_testcases",
     srcs = ["generate_testcases.py"],
     deps = [
-        "//deeplearning/deepsmith:testcase",
+        "//deeplearning/deepsmith/proto:deepsmith",
+        "//deeplearning/deepsmith/services",
+    ],
+)
+
+py_binary(
+    name = "run_testcases",
+    srcs = ["run_testcases.py"],
+    deps = [
         "//deeplearning/deepsmith/proto:deepsmith",
         "//deeplearning/deepsmith/services",
     ],

@@ -19,11 +19,20 @@ class CldriveHarness(harness.HarnessBase,
 
   def GetHarnessCapabilities(self, request: harness_pb2.GetHarnessCapabilitiesRequest,
                              context) -> harness_pb2.GetHarnessCapabilitiesResponse:
-    pass
+    del context
+    logging.info('GetHarnessCapabilities() client=%s', request.status.client)
+    response = services.BuildDefaultResponse(
+      harness_pb2.GetHarnessCapabilitiesRequest)
+    # TODO(cec): Implement!
+    return response
 
   def RunTestcases(self, request: harness_pb2.RunTestcasesRequest,
                    context) -> harness_pb2.RunTestcasesResponse:
-    pass
+    del context
+    logging.info('RunTestcases() client=%s', request.status.client)
+    response = services.BuildDefaultResponse(harness_pb2.RunTestcasesResponse)
+    # TODO(cec): Implement!
+    return response
 
 
 def main(argv):

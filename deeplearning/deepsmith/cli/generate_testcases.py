@@ -4,9 +4,9 @@ from absl import app
 from absl import flags
 from absl import logging
 
-from deeplearning.deepsmith import testcase
 from deeplearning.deepsmith.proto import datastore_pb2
 from deeplearning.deepsmith.proto import datastore_pb2_grpc
+from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import generator_pb2_grpc
 from deeplearning.deepsmith.services import services
@@ -53,7 +53,7 @@ def GetNumberOfTestcasesInDataStore(
 
 def GenerateTestcases(
     generator_stub: generator_pb2_grpc.GeneratorServiceStub,
-    num_to_generate: int) -> typing.List[testcase.Testcase]:
+    num_to_generate: int) -> typing.List[deepsmith_pb2.Testcase]:
   logging.info(f'Generating batch of {num_to_generate} testcases')
   request = services.BuildDefaultRequest(generator_pb2.GenerateTestcasesRequest)
   response = generator_stub.GenerateTestcases(request)
@@ -67,7 +67,7 @@ def GenerateTestcases(
 
 def SubmitTestcases(
     datastore_stub: datastore_pb2_grpc.DataStoreServiceStub,
-    testcases: typing.List[testcase.Testcase]) -> None:
+    testcases: typing.List[deepsmith_pb2.Testcase]) -> None:
   request = services.BuildDefaultRequest(datastore_pb2.SubmitTestcasesRequest)
   request.testcases.extend(testcases)
   response = datastore_stub.SubmitTestcases(request)
