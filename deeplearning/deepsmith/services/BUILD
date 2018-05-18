@@ -1,19 +1,17 @@
 py_library(
-    name = "testing",
-    srcs = ["testing.py"],
-    visibility = ["//deeplearning/deepsmith:__subpackages__"],
-    deps = [
-        "//deeplearning/deepsmith:datastore",
-        "//deeplearning/deepsmith:db",
-        "//deeplearning/deepsmith/proto:deepsmith",
-    ],
+    name = "services",
+    srcs = ["services.py"],
+    deps = ["//lib/labm8:pbutil"],
 )
 
-# py_test(
-#     name = "testing_test",
-#     size = "small",
-#     srcs = ["testing_test.py"],
-#     deps = [
-#         ":testing",
-#     ],
-# )
+py_binary(
+    name = "clgen",
+    srcs = ["clgen.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":services",
+        "//deeplearning/deepsmith/proto:deepsmith",
+        "//lib/labm8:pbutil",
+    ],
+)

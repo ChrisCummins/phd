@@ -1,0 +1,36 @@
+// A Generator generates testcases.
+
+syntax = "proto2";
+package deepsmith;
+
+import "deeplearning/deepsmith/proto/deepsmith.proto";
+
+message GeneratorConfig {
+  optional int32 service_port = 102 [default = 5052];
+  optional string service_hostname = 103 [default = "localhost"];
+}
+
+service GeneratorService {
+  rpc GenerateTestcases (GenerateTestcasesRequest) returns (GenerateTestcasesResponse);
+}
+
+message GenerateTestcasesRequest {
+  optional string client = 2 [default = "<anon>"];
+}
+
+message GenerateTestcasesResponse {
+  enum Status {
+    SUCCESS = 0;
+    FAILURE = 1;
+  }
+
+  optional Status status = 1 [default = SUCCESS];
+  optional string client = 2 [default = "<anon>"];
+  optional int32 error_code = 3;
+  repeated deepsmith.Testcase testcase = 4;
+}
+
+// A testcase generator which uses CLgen to generate programs.
+message ClgenGenerator {
+  optional GeneratorConfig generator = 1;
+}

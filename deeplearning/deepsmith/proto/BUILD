@@ -9,6 +9,7 @@ py_proto_library(
     protos = [
         "datastore.proto",
         "deepsmith.proto",
+        "generator.proto",
     ],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     with_grpc = True,
