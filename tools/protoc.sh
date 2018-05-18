@@ -15,7 +15,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PYTHON="python3"
 
 cd "$ROOT"
-for file in $(git ls-files | grep '\.proto'); do
+for file in $(find "$ROOT" -name '*.proto' -type f | grep '\.proto'); do
   dir="$(dirname $file)"
   no_extension=${file%.proto}
   # Remove previously generated code
