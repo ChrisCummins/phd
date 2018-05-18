@@ -33,7 +33,7 @@ if [[ ! -d "$src" ]]; then
 fi
 
 if find "$src" -name '*.lrcat.lock' 2>/dev/null | grep lrcat.lock ; then
-    echo "fatal: $(find "$src" -name '*.lrcat.lock') found. Close Lightroom."
+    echo "fatal: $(find "$src" -name '*.lrcat.lock' 2>/dev/null) found. Close Lightroom."
     exit 1
 fi
 

@@ -33,7 +33,7 @@ if [[ ! -d "$dst" ]]; then
 fi
 
 if find "$dst" -name '*.lrcat.lock' 2>/dev/null | grep lrcat.lock ; then
-    echo "fatal: $(find "$dst" -name '*.lrcat.lock') found. Close Lightroom."
+    echo "fatal: $(find "$dst" -name '*.lrcat.lock' 2>/dev/null) found. Close Lightroom."
     exit 1
 fi
 
