@@ -4,11 +4,10 @@
     <mapping directory="" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/bazel-phd" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/deeplearning/clgen" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/deeplearning/deeptune" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/docs/2016-01-adapt" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/docs/2016-01-hlpgpu" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/docs/2017-02-cgo" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/docs/2017-09-pact" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/docs/2016_01_adapt" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/docs/2016_01_hlpgpu" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/docs/2017_02_cgo" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/docs/2017_09_pact" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/experimental/eevee" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/experimental/euclid" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/http/chriscummins.cc" vcs="Git" />
