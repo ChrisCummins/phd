@@ -20,7 +20,7 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":scraper",
-        "//lib/labm8:labdate",
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
+        "//lib/labm8:labdate",
     ],
 )
