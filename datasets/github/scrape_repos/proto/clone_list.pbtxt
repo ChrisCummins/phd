@@ -1,50 +1,93 @@
+# File: //datasets/github/scrape_repos/proto/scrape_repos.proto
+# Proto: scrape_repos.LanguageCloneList
+
 language {
-  language: "glsl",
-  num_repos_to_clone: 1000,
-  destination_directory: '/var/phd/datasets/github/scrape_repos/glsl',
+  language: "glsl"
+  num_repos_to_clone: 1000
+  destination_directory: '/var/phd/datasets/github/repos_by_lang/glsl'
 }
 language {
-  language: "javascript",
-  num_repos_to_clone: 1000,
-  destination_directory: '/var/phd/datasets/github/scrape_repos/javascript',
+  language: "javascript"
+  num_repos_to_clone: 1000
+  destination_directory: '/var/phd/datasets/github/repos_by_lang/javascript'
 }
 language {
-  language: "c",
-  num_repos_to_clone: 1000,
-  destination_directory: '/var/phd/datasets/github/scrape_repos/c',
+  language: "c"
+  num_repos_to_clone: 1000
+  destination_directory: '/var/phd/datasets/github/repos_by_lang/c'
 }
 language {
-  language: "haskell",
-  num_repos_to_clone: 1000,
-  destination_directory: '/var/phd/datasets/github/scrape_repos/haskell',
+  language: "haskell"
+  num_repos_to_clone: 1000
+  destination_directory: '/var/phd/datasets/github/repos_by_lang/haskell'
 }
 language {
-  language: "go",
-  num_repos_to_clone: 1000,
-  destination_directory: '/var/phd/datasets/github/scrape_repos/go',
+  language: "go"
+  num_repos_to_clone: 1000
+  destination_directory: '/var/phd/datasets/github/repos_by_lang/go'
 }
 language {
-  language: "java",
-  num_repos_to_clone: 1000,
-  destination_directory: '/var/phd/datasets/github/scrape_repos/java',
+  language: "java"
+  num_repos_to_clone: 1000
+  destination_directory: '/var/phd/datasets/github/repos_by_lang/java'
 }
 language {
-  language: "php",
-  num_repos_to_clone: 1000,
-  destination_directory: '/var/phd/datasets/github/scrape_repos/php',
+  language: "php"
+  num_repos_to_clone: 1000
+  destination_directory: '/var/phd/datasets/github/repos_by_lang/php'
 }
 language {
-  language: "python",
-  num_repos_to_clone: 1000,
-  destination_directory: '/var/phd/datasets/github/scrape_repos/python',
+  language: "python"
+  num_repos_to_clone: 1000
+  destination_directory: '/var/phd/datasets/github/repos_by_lang/python'
 }
 language {
-  language: "rust",
-  num_repos_to_clone: 1000,
-  destination_directory: '/var/phd/datasets/github/scrape_repos/rust',
+  language: "rust"
+  num_repos_to_clone: 1000
+  destination_directory: '/var/phd/datasets/github/repos_by_lang/rust'
 }
 language {
-  language: "swift",
-  num_repos_to_clone: 1000,
-  destination_directory: '/var/phd/datasets/github/scrape_repos/swift',
+  language: "swift"
+  num_repos_to_clone: 1000
+  destination_directory: '/var/phd/datasets/github/repos_by_lang/swift'
+}
+language {
+  language: "elixir"
+  num_repos_to_clone: 1000
+  destination_directory: '/var/phd/datasets/github/repos_by_lang/elixir'
+}
+language {
+  language: "objective-c"
+  num_repos_to_clone: 1000
+  destination_directory: '/var/phd/datasets/github/repos_by_lang/objective_c'
+}
+language {
+  language: "ocaml"
+  num_repos_to_clone: 1000
+  destination_directory: '/var/phd/datasets/github/repos_by_lang/ocaml'
+}
+language {
+  language: "ruby"
+  num_repos_to_clone: 1000
+  destination_directory: '/var/phd/datasets/github/repos_by_lang/ruby'
+}
+language {
+  language: "perl"
+  num_repos_to_clone: 1000
+  destination_directory: '/var/phd/datasets/github/repos_by_lang/perl'
+}
+language {
+  language: "scala"
+  num_repos_to_clone: 1000
+  destination_directory: '/var/phd/datasets/github/repos_by_lang/scala'
+}
+language {
+  language: "lua"
+  num_repos_to_clone: 1000
+  destination_directory: '/var/phd/datasets/github/repos_by_lang/lua'
+}
+language {
+  language: "clojure"
+  num_repos_to_clone: 1000
+  destination_directory: '/var/phd/datasets/github/repos_by_lang/clojure'
 }
