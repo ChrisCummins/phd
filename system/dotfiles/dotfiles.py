@@ -1818,7 +1818,7 @@ class Clang(Task):
 
 class Rsync(Task):
   __platforms__ = ['linux', 'osx']
-  __linux_genfiles__ ['/usr/bin/rsync']
+  __linux_genfiles__ = ['/usr/bin/rsync']
 
   def install_osx(self):
     # rsync comes free with macOS.
