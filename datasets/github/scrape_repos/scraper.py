@@ -229,7 +229,8 @@ class RepositoryCloneWorker(object):
         pbutil.ToFile(meta, meta_path)
       except subprocess.CalledProcessError:
         logging.warning('\nClone failed %s', clone_dir)
-        raise Exception()
+        fs.rm(clone_dir)
+        fs.rm(meta_path)
       except:
         fs.rm(clone_dir)
         fs.rm(meta_path)
