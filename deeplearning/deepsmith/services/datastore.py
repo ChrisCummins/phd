@@ -1,0 +1,64 @@
+import time
+from concurrent import futures
+
+import grpc
+from absl import app
+from absl import flags
+from absl import logging
+
+from deeplearning.deepsmith.proto import datastore_pb2
+from deeplearning.deepsmith.proto import datastore_pb2_grpc
+from deeplearning.deepsmith.services import services
+
+FLAGS = flags.FLAGS
+
+flags.DEFINE_string(
+  'datastore_config', None,
+  'Path to a DataStore message.')
+
+
+class DataStore(services.ServiceBase,
+                datastore_pb2_grpc.DataStoreServiceServicer):
+
+  def __init__(self, config: datastore_pb2.DataStore):
+    self.config = config
+
+  def GetTestcases(self, request: datastore_pb2.GetTestcasesRequest,
+                   context) -> datastore_pb2.GetTestcasesResponse:
+    del context
+    logging.info('GetTestcases() client=%s', request.status.client)
+    response = services.BuildDefaultResponse(datastore_pb2.GetTestcasesResponse)
+    return response
+
+  def SubmitTestcases(self, request: datastore_pb2.SubmitTestcasesRequest,
+                      context) -> datastore_pb2.SubmitTestcasesResponse:
+    del context
+    logging.info('SubmitTestcases() client=%s', request.status.client)
+    response = services.BuildDefaultResponse(
+      datastore_pb2.SubmitTestcasesResponse)
+    return response
+
+
+def main(argv):
+  if len(argv) > 1:
+    raise app.UsageError('Unrecognized arguments')
+  datastore_config = services.ServiceConfigFromFlag(
+    'datastore_config', datastore_pb2.DataStore())
+  server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+  services.AssertLocalServiceHostname(datastore_config.service)
+  service = DataStore(datastore_config)
+  datastore_pb2_grpc.add_DataStoreServiceServicer_to_server(service, server)
+  server.add_insecure_port(f'[::]:{datastore_config.service.port}')
+  logging.info('%s listening on %s:%s', type(service).__name__,
+               datastore_config.service.hostname,
+               datastore_config.service.port)
+  server.start()
+  try:
+    while True:
+      time.sleep(3600 * 24)
+  except KeyboardInterrupt:
+    server.stop(0)
+
+
+if __name__ == '__main__':
+  app.run(main)

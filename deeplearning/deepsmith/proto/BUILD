@@ -10,6 +10,7 @@ py_proto_library(
         "datastore.proto",
         "deepsmith.proto",
         "generator.proto",
+        "service.proto",
     ],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     with_grpc = True,

@@ -8,16 +8,14 @@ from absl import logging
 
 from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import generator_pb2_grpc
+from deeplearning.deepsmith.services import generator
 from deeplearning.deepsmith.services import services
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string(
-  'generator_config', None,
-  'Path to a ClgenGenerator message.')
 
-
-class ClgenGenerator(generator_pb2_grpc.GeneratorServiceServicer):
+class ClgenGenerator(generator.GeneratorBase,
+                     generator_pb2_grpc.GeneratorServiceServicer):
 
   def __init__(self, config: generator_pb2.ClgenGenerator):
     self.config = config
@@ -25,9 +23,9 @@ class ClgenGenerator(generator_pb2_grpc.GeneratorServiceServicer):
   def GenerateTestcases(self, request: generator_pb2.GenerateTestcasesRequest,
                         context) -> generator_pb2.GenerateTestcasesResponse:
     del context
-    logging.info("GenerateTestcases() client=%s", request.client)
-    response = generator_pb2.GenerateTestcasesResponse()
-    response.status = generator_pb2.GenerateTestcasesResponse.SUCCESS
+    logging.info('GenerateTestcases() client=%s', request.status.client)
+    response = services.BuildDefaultResponse(
+      generator_pb2.GenerateTestcasesResponse)
     return response
 
 
@@ -37,13 +35,13 @@ def main(argv):
   generator_config = services.ServiceConfigFromFlag(
     'generator_config', generator_pb2.ClgenGenerator())
   server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-  services.AssertLocalServiceHostname(generator_config)
+  services.AssertLocalServiceHostname(generator_config.service)
   service = ClgenGenerator(generator_config)
   generator_pb2_grpc.add_GeneratorServiceServicer_to_server(service, server)
-  server.add_insecure_port(f'[::]:{generator_config.generator.service_port}')
+  server.add_insecure_port(f'[::]:{generator_config.service.port}')
   logging.info('%s listening on %s:%s', type(service).__name__,
-               generator_config.generator.service_hostname,
-               generator_config.generator.service_port)
+               generator_config.service.hostname,
+               generator_config.service.port)
   server.start()
   try:
     while True:

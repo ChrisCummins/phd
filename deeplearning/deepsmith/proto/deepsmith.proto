@@ -53,3 +53,4 @@ message Result {
   map<string, string> outputs = 4;
   repeated ProfilingEvent profiling_events = 5;
 }
+
