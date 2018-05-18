@@ -13,6 +13,7 @@ import typing
 
 import github
 import progressbar
+import sys
 import time
 from absl import app
 from absl import flags
@@ -20,6 +21,7 @@ from absl import logging
 from github import Repository
 
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
+from lib.labm8 import fs
 from lib.labm8 import pbutil
 
 FLAGS = flags.FLAGS
@@ -55,6 +57,7 @@ def CloneRepositories(repos: typing.List[Repository.Repository],
     repos: A list of GitHub Repository instances.
     destination_directory: The directory to clone each repository in to.
   """
+  logging.debug('Cloning %d repositories', len(repos))
   pool = multiprocessing.Pool()
   cloner = RepositoryCloneWorker(destination_directory)
   pool.imap_unordered(cloner, repos)
@@ -77,9 +80,17 @@ class LanguageCloneWorker(threading.Thread):
 
     credentials = ReadGitHubCredentials()
     github_connection = github.Github(credentials.username, credentials.password)
-    self.query = github_connection.search_repositories(
-      f'language:{language.language} sort:stars fork:false')
-    self.total_num_repos_on_github = self.query.totalCount
+    # Any access to the query properties can cause the rate limit to be
+    # exceeded.
+    while True:
+      try:
+        self.query = github_connection.search_repositories(
+          f'language:{language.language} sort:stars fork:false')
+        self.total_num_repos_on_github = self.query.totalCount
+        break
+      except github.RateLimitExceededException:
+        logging.info('Pausing on GitHub rate limit')
+        time.sleep(3)
     self.next_page_num = 0
     super(LanguageCloneWorker, self).__init__()
 
@@ -91,7 +102,8 @@ class LanguageCloneWorker(threading.Thread):
     """
     if self.destination_directory.is_dir():
       return len(
-        [x for x in self.destination_directory.glob('*/.git') if x.is_dir()])
+        [x for x in self.destination_directory.iterdir()
+         if x.suffix == '.pbtxt'])
     else:
       return 0
 
@@ -103,30 +115,51 @@ class LanguageCloneWorker(threading.Thread):
     """
     while True:
       try:
-        page = self.query.get_page(self.next_page_num)
+        logging.debug('Requesting page %d', self.next_page_num)
+        page = list(self.query.get_page(self.next_page_num))
+        logging.debug('Page %d contains %d results',
+                      self.next_page_num, len(page))
         self.next_page_num += 1
-        return list(page)
+        return page
       except github.RateLimitExceededException:
+        logging.info('Pausing on GitHub rate limit')
         time.sleep(3)
+      except github.GithubException:
+        # One possible cause for this exception is when trying to request
+        # a page beyond 1000 results, since GitHub only returns the first
+        # 1000 results for a query.
+        return []
 
-  def IsDone(self) -> bool:
+  def IsDone(self, repos: typing.List[Repository.Repository]) -> bool:
+    """Determine if we are done cloning repos.
+
+    Args:
+      repos: The next batch of repos to clone.
+
+    Returns:
+      True if we should stop cloning repos, else False.
+    """
+    if not repos:
+      # An empty list indicates that we've run out of query results.
+      return True
     num_cloned_repos = self.GetNumberOfClonedRepos()
     if num_cloned_repos >= self.language.num_repos_to_clone:
       return True
     if num_cloned_repos >= self.total_num_repos_on_github:
       logging.warning('Ran out of repositories to clone on GitHub')
       return True
+    return False
 
   def run(self) -> None:
     """Execute the worker thread."""
     self.destination_directory.mkdir(parents=True, exist_ok=True)
-    page = self.GetNextBatchOfRepositories()
-    while not self.IsDone():
+    repos = self.GetNextBatchOfRepositories()
+    while not self.IsDone(repos):
       num_remaining = (self.language.num_repos_to_clone -
                        self.GetNumberOfClonedRepos())
-      repos = list(page)[:num_remaining]
+      repos = repos[:num_remaining]
       CloneRepositories(repos, self.destination_directory)
-      page = self.GetNextBatchOfRepositories()
+      repos = self.GetNextBatchOfRepositories()
 
 
 def RunLanguageCloneWorker(worker: threading.Thread) -> None:
@@ -146,6 +179,8 @@ def RunLanguageCloneWorker(worker: threading.Thread) -> None:
     bar.update(worker.GetNumberOfClonedRepos())
     worker.join(.5)
   bar.update(worker.GetNumberOfClonedRepos())
+  print('', file=sys.stderr)
+  sys.stderr.flush()
 
 
 class RepositoryCloneWorker(object):
@@ -159,21 +194,43 @@ class RepositoryCloneWorker(object):
     """
     self.destination_directory = destination_directory
 
-  def __call__(self, repository: Repository.Repository) -> None:
+  def __call__(self, repo: Repository.Repository) -> None:
     """Clone a git repository from GitHub.
 
     Args:
-      repository: A Repository instance.
+      repo: A Repository instance.
     """
-    clone_dir = self.destination_directory / repository.name
-    if not (clone_dir / '.git').is_dir():
+    concat_name = '_'.join([repo.owner.login, repo.name])
+
+    clone_dir = self.destination_directory / concat_name
+    meta_path = pathlib.Path(str(clone_dir) + '.pbtxt')
+    if not ((clone_dir / '.git').is_dir() and
+            pbutil.ProtoIsReadable(
+              meta_path, scrape_repos_pb2.GitHubRepoMetadata())):
+      fs.rm(clone_dir)
+      fs.rm(meta_path)
+
+      meta = scrape_repos_pb2.GitHubRepoMetadata()
+      meta.owner = repo.owner.login
+      meta.name = repo.name
+      meta.num_watchers = repo.watchers_count
+      meta.num_forks = repo.forks_count
+      meta.num_stars = repo.stargazers_count
+      meta.clone_from_url = repo.clone_url
+
+      logging.debug('%s', meta)
       try:
         subprocess.check_call(
           ['timeout', '30m', '/usr/bin/git', 'clone', '--recursive',
-           repository.clone_url, clone_dir],
+           repo.clone_url, clone_dir],
           stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+        pbutil.ToFile(meta, meta_path)
       except subprocess.CalledProcessError:
-        logging.warning('Clone failed %s', clone_dir)
+        logging.warning('\nClone failed %s', clone_dir)
+        raise Exception()
+      except:
+        fs.rm(clone_dir)
+        fs.rm(meta_path)
 
 
 def main(argv) -> None:

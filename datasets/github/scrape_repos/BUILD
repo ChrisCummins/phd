@@ -8,6 +8,7 @@ py_binary(
     deps = [
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
         "//lib/labm8:pbutil",
+        "//lib/labm8:fs",
     ],
 )
 
