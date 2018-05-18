@@ -21,12 +21,12 @@ class ClgenGenerator(generator.GeneratorBase,
     self.config = config
 
   def GetGeneratorCapabilities(
-      self, request: generator_pb2.GetCapabilitiesRequest,
-      context) -> generator_pb2.GetCapabilitiesResponse:
+      self, request: generator_pb2.GetGeneratorCapabilitiesRequest,
+      context) -> generator_pb2.GetGeneratorCapabilitiesResponse:
     del context
     logging.info('GetGenerator() client=%s', request.status.client)
     response = services.BuildDefaultResponse(
-      generator_pb2.GetCapabilitiesRequest)
+      generator_pb2.GetGeneratorCapabilitiesRequest)
     # TODO(cec): Implement!
     return response
 

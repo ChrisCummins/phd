@@ -2,22 +2,23 @@ from absl import flags
 
 from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.services import services
+from lib.labm8 import pbutil
 
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
   'generator_config', None,
-  'Path to a ClgenGenerator message.')
+  'Path to a generator config proto.')
 
 
 class GeneratorBase(services.ServiceBase):
 
-  def __init__(self, config: generator_pb2.ClgenGenerator):
+  def __init__(self, config: pbutil.ProtocolBuffer):
     self.config = config
 
   def GetGeneratorCapabilities(
-      self, request: generator_pb2.GetCapabilitiesRequest,
-      context) -> generator_pb2.GetCapabilitiesResponse:
+      self, request: generator_pb2.GetGeneratorCapabilitiesRequest,
+      context) -> generator_pb2.GetGeneratorCapabilitiesResponse:
     del request
     del context
     raise NotImplementedError('abstract class')

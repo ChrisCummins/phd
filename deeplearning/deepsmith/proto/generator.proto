@@ -7,15 +7,15 @@ import "deeplearning/deepsmith/proto/deepsmith.proto";
 import "deeplearning/deepsmith/proto/service.proto";
 
 service GeneratorService {
-  rpc GetGeneratorCapabilities (GetCapabilitiesRequest) returns (GetCapabilitiesResponse);
+  rpc GetGeneratorCapabilities (GetGeneratorCapabilitiesRequest) returns (GetGeneratorCapabilitiesResponse);
   rpc GenerateTestcases (GenerateTestcasesRequest) returns (GenerateTestcasesResponse);
 }
 
-message GetCapabilitiesRequest {
+message GetGeneratorCapabilitiesRequest {
   optional ServiceStatus status = 1;
 }
 
-message GetCapabilitiesResponse {
+message GetGeneratorCapabilitiesResponse {
   optional ServiceStatus status = 1;
   optional string toolchain = 2;
   optional Generator generator = 3;

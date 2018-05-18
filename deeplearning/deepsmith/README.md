@@ -62,7 +62,7 @@ with:
 ```sh
 $ bazel build //deeplearning/deepsmith/services:cldrive && \
     ./bazel-phd/bazel-out/*/bin/deeplearning/deepsmith/services/cldrive \
-    --harness_config=$PHD/deeplearning/proto/harness_opencl_cldrive.pbtxt
+    --harness_config=$PHD/deeplearning/deepsmith/proto/harness_opencl_cldrive.pbtxt
 ```
 
 #### Running Experiments

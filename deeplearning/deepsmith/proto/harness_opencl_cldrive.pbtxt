@@ -1,0 +1,6 @@
+# File: //deeplearning/deepsmith/proto/harness.proto
+# Proto: deepsmith.CldriveHarness
+service {
+  hostname: "localhost"
+  port: 50503
+}
