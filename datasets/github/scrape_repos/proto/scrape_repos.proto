@@ -23,6 +23,10 @@ message LanguageToClone {
 
 
 message GitHubRepoMetadata {
+  // The number of milliseconds since the epoch (UTC) that the repository was
+  // cloned.
+  optional int64 cloned_utc_epoch_ms = 7;
+
   optional string owner = 1;
   optional string name = 2;
   optional string clone_from_url = 3;

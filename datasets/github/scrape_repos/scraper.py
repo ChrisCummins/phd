@@ -22,6 +22,7 @@ from github import Repository
 
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
 from lib.labm8 import fs
+from lib.labm8 import labdate
 from lib.labm8 import pbutil
 
 FLAGS = flags.FLAGS
@@ -195,6 +196,8 @@ def GetRepositoryMetadata(
     A GitHubRepoMetadata instance.
   """
   meta = scrape_repos_pb2.GitHubRepoMetadata()
+  meta.cloned_utc_epoch_ms = labdate.MillisecondsTimestamp(
+    labdate.GetUtcMillisecondsNow())
   meta.owner = repo.owner.login
   meta.name = repo.name
   meta.num_watchers = repo.watchers_count

@@ -5,6 +5,7 @@ from absl import app
 
 from datasets.github.scrape_repos import scraper
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
+from lib.labm8 import labdate
 
 
 class MockNamedUser(object):
@@ -46,6 +47,13 @@ def test_GetRepositoryMetadata():
   assert meta.num_forks == repo.forks_count
   assert meta.num_stars == repo.stargazers_count
   assert meta.clone_from_url == repo.clone_url
+
+
+def test_GetRepositoryMetadata_timestamp():
+  """Test that the timestamp in metadata is set to (aprox) now."""
+  now_ms = labdate.MillisecondsTimestamp(labdate.GetUtcMillisecondsNow())
+  meta = scraper.GetRepositoryMetadata(MockRepository())
+  assert now_ms - meta.cloned_utc_epoch_ms <= 1000
 
 
 def test_main_unrecognized_arguments():
