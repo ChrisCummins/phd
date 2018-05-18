@@ -49,6 +49,10 @@ export VISUAL=$EDITOR
 # OpenCL vendor installation.
 [ -d /etc/OpenCL/vendors/ ] && export OPENCL_VENDOR_PATH=/etc/OpenCL/vendors/
 
+# Compiler toolchain.
+export CC=clang
+export CXX=clang++
+
 
 # --------------------------------------------------------------------------
 # External files.
