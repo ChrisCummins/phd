@@ -104,7 +104,7 @@ main() {
     # use the presence of the .env to determine if the project has been
     # bootstrapped.
     cp -v $ROOT/tools/env.sh $ROOT/.env
-    perl -pi -e 's|__ROOT__|$ROOT|g' $ROOT/.env
+    perl -pi -e "s|__ROOT__|$ROOT|g" $ROOT/.env
 }
 
 main $@
