@@ -1,6 +1,6 @@
 #!/bin/bash
 
-root="__ROOT__"
+export PHD="__ROOT__"
 
 # Export a dummy virtualenv.
 # TODO(cec): Add a better way of signalling that we're in the phd env from
@@ -10,8 +10,8 @@ export VIRTUAL_ENV=phd
 export CC=clang
 export CXX=clang++
 
-export PYTHONPATH=$root:$root/lib:$root/bazel-genfiles
+export PYTHONPATH=$PHD:$PHD/lib:$PHD/bazel-genfiles
 
 alias pgit="git -C ~/phd"
 
-alias dpack="python $root/lib/dpack/dpack.py"
+alias dpack="python $PHD/lib/dpack/dpack.py"
