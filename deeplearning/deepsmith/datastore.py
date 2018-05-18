@@ -188,9 +188,9 @@ class DataStore(object):
 
     return q
 
-  def RequestTestcases(
-      self, request: datastore_pb2.RequestTestcasesRequest,
-      response: datastore_pb2.RequestTestcasesResponse) -> None:
+  def GetTestcases(
+      self, request: datastore_pb2.GetTestcasesRequest,
+      response: datastore_pb2.GetTestcasesResponse) -> None:
     """Request testcases.
     """
     with self.Session(commit=False) as session:
