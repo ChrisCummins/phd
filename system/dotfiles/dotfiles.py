@@ -814,15 +814,19 @@ class Wallpaper(Task):
 
 class GnuCoreutils(Task):
   """ replace BSD utils with GNU """
-  __platforms__ = ['osx']
-  __deps__ = ['Homebrew']
-  __genfiles__ = [
+  __platforms__ = ['linux', 'osx']
+  __osx_deps__ = ['Homebrew']
+  __osx_genfiles__ = [
       '/usr/local/opt/coreutils/libexec/gnubin/cp',
       '/usr/local/opt/gnu-sed/libexec/gnubin/sed',
       '/usr/local/opt/gnu-tar/libexec/gnubin/tar',
   ]
 
-  def install(self):
+  def install_linux(self):
+    # Already there.
+    pass
+
+  def install_osx(self):
     Homebrew().install_package('coreutils')
     Homebrew().install_package('gnu-indent')
     Homebrew().install_package('gnu-sed')
@@ -830,7 +834,7 @@ class GnuCoreutils(Task):
     Homebrew().install_package('gnu-time')
     Homebrew().install_package('gnu-which')
 
-  def upgrade(self):
+  def install_osx(self):
     Homebrew().upgrade_package("coreutils")
     Homebrew().upgrade_package('gnu-indent')
     Homebrew().upgrade_package('gnu-sed')
@@ -1812,11 +1816,23 @@ class Clang(Task):
     Homebrew().install_package('llvm')
 
 
+class Rsync(Task):
+  __platforms__ = ['linux', 'osx']
+  __linux_genfiles__ ['/usr/bin/rsync']
+
+  def install_osx(self):
+    # rsync comes free with macOS.
+    pass
+
+  def install_linux(self):
+    Apt().install_package('rsync')
+
+
 class Phd(Task):
   """ phd repo """
   __platforms__ = ['linux', 'osx']
   __genfiles__ = ['~/phd/.env']
-  __deps__ = ['Bazel', 'LibExempi', 'Clang']
+  __deps__ = ['Bazel', 'LibExempi', 'Clang', 'Rsync']
 
   def install(self):
     clone_git_repo(github_repo("ChrisCummins", "phd"), "~/phd")

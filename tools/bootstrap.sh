@@ -48,10 +48,15 @@ main() {
     fi
 
     # Install dotfiles packages.
-    $ROOT/system/dotfiles/run -v Python Bazel Buildifier Clang Autoenv LaTeX
-    if [[ "$(uname)" == "Darwin" ]]; then
-        $ROOT/system/dotfiles/run -v GnuCoreutils
-    fi
+    $ROOT/system/dotfiles/run -v \
+        Autoenv \
+        Bazel \
+        Buildifier \
+        Clang \
+        GnuCoreutils \
+        LaTeX \
+        Python \
+        Rsync
 
     # Use the absolute path to Python, since the homebrew installed package
     # may not yet be in the $PATH.
