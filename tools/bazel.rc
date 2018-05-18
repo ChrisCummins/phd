@@ -1,5 +1,10 @@
 # See: https://bazel.build/versions/master/docs/bazel-user-manual.html#flag--compilation_mode
 
+# Force Python 3:
+build --python_path=python3
+test --python_path=python3
+run --python_path=python3
+
 # Build and test options:
 build --verbose_failures
 test --verbose_failures
