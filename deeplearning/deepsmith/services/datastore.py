@@ -28,6 +28,7 @@ class DataStore(services.ServiceBase,
     del context
     logging.info('GetTestcases() client=%s', request.status.client)
     response = services.BuildDefaultResponse(datastore_pb2.GetTestcasesResponse)
+    # TODO(cec): Implement!
     return response
 
   def SubmitTestcases(self, request: datastore_pb2.SubmitTestcasesRequest,
@@ -36,6 +37,7 @@ class DataStore(services.ServiceBase,
     logging.info('SubmitTestcases() client=%s', request.status.client)
     response = services.BuildDefaultResponse(
       datastore_pb2.SubmitTestcasesResponse)
+    # TODO(cec): Implement!
     return response
 
 

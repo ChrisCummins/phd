@@ -20,12 +20,23 @@ class ClgenGenerator(generator.GeneratorBase,
   def __init__(self, config: generator_pb2.ClgenGenerator):
     self.config = config
 
+  def GetGeneratorCapabilities(
+      self, request: generator_pb2.GetCapabilitiesRequest,
+      context) -> generator_pb2.GetCapabilitiesResponse:
+    del context
+    logging.info('GetGenerator() client=%s', request.status.client)
+    response = services.BuildDefaultResponse(
+      generator_pb2.GetCapabilitiesRequest)
+    # TODO(cec): Implement!
+    return response
+
   def GenerateTestcases(self, request: generator_pb2.GenerateTestcasesRequest,
                         context) -> generator_pb2.GenerateTestcasesResponse:
     del context
     logging.info('GenerateTestcases() client=%s', request.status.client)
     response = services.BuildDefaultResponse(
       generator_pb2.GenerateTestcasesResponse)
+    # TODO(cec): Implement!
     return response
 
 

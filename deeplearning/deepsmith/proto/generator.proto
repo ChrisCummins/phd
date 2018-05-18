@@ -7,7 +7,18 @@ import "deeplearning/deepsmith/proto/deepsmith.proto";
 import "deeplearning/deepsmith/proto/service.proto";
 
 service GeneratorService {
+  rpc GetGeneratorCapabilities (GetCapabilitiesRequest) returns (GetCapabilitiesResponse);
   rpc GenerateTestcases (GenerateTestcasesRequest) returns (GenerateTestcasesResponse);
+}
+
+message GetCapabilitiesRequest {
+  optional ServiceStatus status = 1;
+}
+
+message GetCapabilitiesResponse {
+  optional ServiceStatus status = 1;
+  optional string toolchain = 2;
+  optional Generator generator = 3;
 }
 
 message GenerateTestcasesRequest {
@@ -16,9 +27,7 @@ message GenerateTestcasesRequest {
 
 message GenerateTestcasesResponse {
   optional ServiceStatus status = 1;
-  optional string client = 2 [default = "<anon>"];
-  optional int32 error_code = 3;
-  repeated deepsmith.Testcase testcases = 4;
+  repeated Testcase testcases = 2;
 }
 
 // A testcase generator which uses CLgen to generate programs.

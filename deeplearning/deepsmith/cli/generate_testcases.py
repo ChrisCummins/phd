@@ -29,11 +29,23 @@ flags.DEFINE_integer(
   'The number of testcases to generate in each batch.')
 
 
+def GetGeneratorCapabilities(
+    generator_stub: generator_pb2_grpc.GeneratorServiceStub
+) -> generator_pb2.GetCapabilitiesResponse:
+  request = services.BuildDefaultRequest(generator_pb2.GetCapabilitiesRequest)
+  response = generator_stub.GetGeneratorCapabilities(request)
+  services.AssertResponseStatus(response.status)
+  return response
+
+
 def GetNumberOfTestcasesInDataStore(
-    datastore_stub: datastore_pb2_grpc.DataStoreServiceStub) -> int:
+    datastore_stub: datastore_pb2_grpc.DataStoreServiceStub,
+    capabilities: generator_pb2.GetCapabilitiesResponse) -> int:
   request = services.BuildDefaultRequest(datastore_pb2.GetTestcasesRequest)
   request.return_testcases = False
   request.return_total_matching_count = True
+  request.toolchain = capabilities.toolchain
+  request.generator.CopyFrom(capabilities.generator)
   response = datastore_stub.GetTestcases(request)
   services.AssertResponseStatus(response.status)
   return response.total_matching_count
@@ -79,9 +91,10 @@ def main(argv):
 
   target_total_testcases = FLAGS.target_total_testcases
   generator_batch_size = FLAGS.generator_batch_size
+  capabilities = GetGeneratorCapabilities(generator_stub)
 
   while True:
-    num_testcases = GetNumberOfTestcasesInDataStore(datastore_stub)
+    num_testcases = GetNumberOfTestcasesInDataStore(datastore_stub, capabilities)
     logging.info(f'Number of testcases in datastore: %d', num_testcases)
     if 0 <= target_total_testcases <= num_testcases:
       logging.info('Stopping generation with %d testcases in the DataStore.',
