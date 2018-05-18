@@ -39,11 +39,10 @@ RUN /root/phd/tools/bootstrap.sh
 # Install and configure my preferred shell.
 RUN apt-get install -y --no-install-recommends zsh
 ENV SHELL zsh
-WORKDIR /root/phd/system/dotfiles
-RUN ./run -v Zsh
+RUN /root/phd/system/dotfiles/run -v Zsh
 
 # Install and configure my preferred editor.
-ENV ./run -v Vim
+ENV /root/phd/system/dotfiles/run -v Vim
 
 # Clean up.
 RUN apt-get autoremove -y
@@ -56,4 +55,4 @@ RUN rm -rf \
     /var/tmp/*
 
 WORKDIR /root/phd
-CMD ["zsh"]
+CMD ["/bin/zsh"]
