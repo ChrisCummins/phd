@@ -36,6 +36,7 @@ import editdistance
 import requests
 from github import Github, GithubException
 
+import deeplearning.clgen.clgen.errors
 from deeplearning.clgen import clgen
 from deeplearning.clgen import dbutil
 from deeplearning.clgen import log
@@ -307,7 +308,7 @@ def _scrape_github_for_files(db_path: str, github_username: str, github_pw: str,
   db = dbutil.connect(db_path)
 
   if not dbutil.is_github:
-    raise clgen.UserError("not a GitHub database")
+    raise deeplearning.clgen.clgen.errors.UserError("not a GitHub database")
 
   # fetch the repositories to iterate over
   for query in query_terms:
@@ -357,7 +358,7 @@ def fetch_repos(db_path: Path, indir: Path, lang: clgen.Language) -> None:
   db = dbutil.connect(db_path)
 
   if not dbutil.is_github(db):
-    raise clgen.UserError("not a GitHub database")
+    raise deeplearning.clgen.clgen.errors.UserError("not a GitHub database")
 
   c = db.cursor()
 

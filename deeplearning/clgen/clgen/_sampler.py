@@ -33,6 +33,7 @@ import progressbar
 from tensorflow.python.framework.errors import InvalidArgumentError as \
   TensorFlowInvalidArgumentError
 
+import deeplearning.clgen.clgen.errors
 from deeplearning.clgen import clgen
 from deeplearning.clgen import dbutil
 from deeplearning.clgen import log
@@ -330,7 +331,7 @@ class SampleConsumer(Thread):
       self.producer.stop()
 
 
-class Sampler(clgen.CLgenObject):
+class Sampler(object):
   """
   CLgen sampler for models.
 
@@ -380,16 +381,14 @@ class Sampler(clgen.CLgenObject):
     # Validate options
     for key in sampler_opts.keys():
       if key not in DEFAULT_SAMPLER_OPTS:
-        raise clgen.UserError("Unsupported sampler option '{}'. Valid keys: {}".format(key,
-                                                                                       ','.join(
-                                                                                         sorted(
-                                                                                           DEFAULT_SAMPLER_OPTS.keys()))))
+        raise deeplearning.clgen.clgen.errors.UserError(
+          "Unsupported sampler option '{}'. Valid keys: {}".format(key, ','.join(
+            sorted(DEFAULT_SAMPLER_OPTS.keys()))))
     for key in kernel_opts.keys():
       if key not in DEFAULT_KERNELS_OPTS:
-        raise clgen.UserError("Unsupported kernels option '{}'. Valid keys: {}".format(key,
-                                                                                       ','.join(
-                                                                                         sorted(
-                                                                                           DEFAULT_KERNELS_OPTS.keys()))))
+        raise deeplearning.clgen.clgen.errors.UserError(
+          "Unsupported kernels option '{}'. Valid keys: {}".format(key, ','.join(
+            sorted(DEFAULT_KERNELS_OPTS.keys()))))
 
     # set properties
     self.sampler_opts = types.update(deepcopy(DEFAULT_SAMPLER_OPTS), sampler_opts)
@@ -448,7 +447,7 @@ class Sampler(clgen.CLgenObject):
       del meta["sampler"]["min_kernels"]
 
       if meta != cached_meta:
-        raise clgen.InternalError("sampler metadata mismatch")
+        raise deeplearning.clgen.clgen.errors.InternalError("sampler metadata mismatch")
     else:
       self._flush_meta(cache)
 
@@ -557,8 +556,9 @@ class Sampler(clgen.CLgenObject):
     """
     unrecognized_keys = (set(sampler_json.keys()) - set(["sampler", "kernels"]))
     if unrecognized_keys:
-      raise clgen.UserError("unrecognized sampler JSON options '{}'".format(
-        ",".join(["'{}'".format(key) for key in unrecognized_keys])))
+      raise deeplearning.clgen.clgen.errors.UserError(
+        "unrecognized sampler JSON options '{}'".format(
+          ",".join(["'{}'".format(key) for key in unrecognized_keys])))
 
     sampler_opts = sampler_json.get("sampler", {})
     kernel_opts = sampler_json.get("kernels", {})

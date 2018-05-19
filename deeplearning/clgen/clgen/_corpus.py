@@ -30,6 +30,7 @@ from typing import Iterable, List, Tuple
 
 import numpy as np
 
+import deeplearning.clgen.clgen.errors
 from deeplearning.clgen import clgen
 from deeplearning.clgen import dbutil
 from deeplearning.clgen import features
@@ -55,7 +56,7 @@ DEFAULT_CORPUS_OPTS = {
 }
 
 
-class FeaturesError(clgen.CLgenError):
+class FeaturesError(deeplearning.clgen.clgen.errors.CLgenError):
   """
   Thrown in case of error during features encoding.
   """
@@ -95,7 +96,8 @@ def unpack_directory_if_needed(path: str) -> str:
     tar.unpack_archive(path + ".tar.bz2")
     return path
 
-  raise clgen.InternalError("cannot interpret archive '{path}'".format(**vars()))
+  raise deeplearning.clgen.clgen.errors.InternalError(
+    "cannot interpret archive '{path}'".format(**vars()))
 
 
 def get_kernel_features(code: str, **kwargs) -> np.array:
@@ -241,14 +243,14 @@ def encode_kernels_db(kernels_db: str, encoding: str) -> None:
   encoders = {"default": _default, "static_features": _static_features, }
   encoder = encoders.get(encoding, None)
   if encoder is None:
-    raise clgen.UserError(
+    raise deeplearning.clgen.clgen.errors.UserError(
       "Unknown encoding type '{bad}'. Supported values: {good}".format(bad=encoding, good=", ".join(
         sorted(encoders.keys()))))
   else:
     encoder(kernels_db)
 
 
-class Corpus(clgen.CLgenObject):
+class Corpus(object):
   """
   Representation of a training corpus.
 
@@ -277,8 +279,9 @@ class Corpus(clgen.CLgenObject):
     # Validate options
     for key in opts.keys():
       if key not in DEFAULT_CORPUS_OPTS:
-        raise clgen.UserError("Unsupported corpus option '{}'. Valid keys: {}".format(key, ','.join(
-          sorted(DEFAULT_CORPUS_OPTS.keys()))))
+        raise deeplearning.clgen.clgen.errors.UserError(
+          "Unsupported corpus option '{}'. Valid keys: {}".format(key, ','.join(
+            sorted(DEFAULT_CORPUS_OPTS.keys()))))
 
     self.opts = deepcopy(DEFAULT_CORPUS_OPTS)
     types.update(self.opts, opts)
@@ -288,7 +291,8 @@ class Corpus(clgen.CLgenObject):
     self.language = clgen.Language.from_str(opts.get("language"))
     if (path is None and not fs.isdir(
         clgen.cachepath("contentfiles", f"{self.language}-{contentid}"))):
-      raise clgen.UserError("corpus {self.language}-{contentid} not found".format(**vars()))
+      raise deeplearning.clgen.clgen.errors.UserError(
+        "corpus {self.language}-{contentid} not found".format(**vars()))
 
     self.contentid = contentid
     self.contentcache = clgen.mkcache("contentfiles", f"{self.language}-{contentid}")
@@ -316,7 +320,7 @@ class Corpus(clgen.CLgenObject):
       del meta["stats"]
 
       if meta != cached_meta:
-        raise clgen.InternalError("corpus metadata mismatch")
+        raise deeplearning.clgen.clgen.errors.InternalError("corpus metadata mismatch")
     else:
       self._flush_meta()
 
@@ -340,7 +344,8 @@ class Corpus(clgen.CLgenObject):
     try:
       if path is not None:
         if not fs.isdir(path):
-          raise clgen.UserError("Corpus path '{}' is not a directory".format(path))
+          raise deeplearning.clgen.clgen.errors.UserError(
+            "Corpus path '{}' is not a directory".format(path))
         try:
           self.contentcache["kernels.db"]
         except KeyError:
@@ -442,9 +447,12 @@ class Corpus(clgen.CLgenObject):
       atomizers = {"char": clgen.CharacterAtomizer, "greedy": clgen.GreedyAtomizer, }
       atomizerclass = atomizers.get(vocab, None)
       if atomizerclass is None:
-        raise clgen.UserError("Unknown vocabulary type '{bad}'. "
-                              "Supported values: {good}".format(bad=vocab, good=", ".join(
-          sorted(atomizers.keys()))))
+        raise deeplearning.clgen.clgen.errors.UserError("Unknown vocabulary type '{bad}'. "
+                                                        "Supported values: {good}".format(bad=vocab,
+                                                                                          good=", "
+                                                                                               "".join(
+                                                                                            sorted(
+                                                                                              atomizers.keys()))))
       else:
         return atomizerclass.from_text(self.language, corpus_txt)
 
@@ -506,7 +514,8 @@ class Corpus(clgen.CLgenObject):
     self._size = len(self._tensor)
     self._num_batches = int(self.size / (batch_size * seq_length))
     if self.num_batches == 0:
-      raise clgen.UserError("Not enough data. Use a smaller seq_length and batch_size")
+      raise deeplearning.clgen.clgen.errors.UserError(
+        "Not enough data. Use a smaller seq_length and batch_size")
 
     # split into batches
     self._tensor = self._tensor[:self.num_batches * batch_size * seq_length]
@@ -663,16 +672,17 @@ class Corpus(clgen.CLgenObject):
     if path:
       path = unpack_directory_if_needed(fs.abspath(path))
       if not fs.isdir(path):
-        raise clgen.UserError("Corpus path '{}' is not a directory".format(path))
+        raise deeplearning.clgen.clgen.errors.UserError(
+          "Corpus path '{}' is not a directory".format(path))
 
       dirhashcache = DirHashCache(clgen.cachepath("dirhash.db"), 'sha1')
       uid = prof.profile(dirhashcache.dirhash, path)
     elif uid:
       cache_path = clgen.mkcache("contentfiles", f"{language}-{uid}").path
       if not fs.isdir(cache_path):
-        raise clgen.UserError("Corpus content {} not found".format(uid))
+        raise deeplearning.clgen.clgen.errors.UserError("Corpus content {} not found".format(uid))
     else:
-      raise clgen.UserError("No corpus path or ID provided")
+      raise deeplearning.clgen.clgen.errors.UserError("No corpus path or ID provided")
 
     if "stats" in corpus_json:  # ignore stats
       del corpus_json["stats"]

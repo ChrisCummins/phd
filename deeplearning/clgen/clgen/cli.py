@@ -29,6 +29,7 @@ from argparse import ArgumentParser, FileType, RawDescriptionHelpFormatter
 from pathlib import Path
 from typing import BinaryIO, List, TextIO
 
+import deeplearning.clgen.clgen.errors
 from deeplearning.clgen import clgen
 from deeplearning.clgen import dbutil
 from deeplearning.clgen import log
@@ -137,16 +138,16 @@ Please report bugs at <https://github.com/ChrisCummins/clgen/issues>\
       return cProfile.runctx('runctx()', None, locals(), sort='tottime')
     else:
       return runctx()
-  except clgen.UserError as err:
+  except deeplearning.clgen.clgen.errors.UserError as err:
     log.fatal(err, "(" + type(err).__name__ + ")")
   except KeyboardInterrupt:
     sys.stdout.flush()
     sys.stderr.flush()
     print("\nkeyboard interrupt, terminating", file=sys.stderr)
     sys.exit(1)
-  except clgen.UserError as e:
+  except deeplearning.clgen.clgen.errors.UserError as e:
     _user_message(e)
-  except clgen.File404 as e:
+  except deeplearning.clgen.clgen.errors.File404 as e:
     _user_message(e)
   except Exception as e:
     _user_message_with_stacktrace(e)

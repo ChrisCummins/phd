@@ -28,6 +28,7 @@ from typing import List
 
 import editdistance
 
+import deeplearning.clgen.clgen.errors
 from deeplearning.clgen import clgen
 from deeplearning.clgen import log
 from lib.labm8 import fs
@@ -47,7 +48,7 @@ def create_db(path: str, github: bool = False) -> None:
   path = os.path.expanduser(path)
 
   if os.path.exists(path):
-    raise clgen.UserError("'{}' already exists".format(path))
+    raise deeplearning.clgen.clgen.errors.UserError("'{}' already exists".format(path))
 
   db = sqlite3.connect(path)
   c = db.cursor()

@@ -35,6 +35,7 @@ from typing import Dict, List, Tuple
 
 import progressbar
 
+import deeplearning.clgen.clgen.errors
 from deeplearning.clgen import clgen
 from deeplearning.clgen import dbutil
 from deeplearning.clgen import log
@@ -47,7 +48,7 @@ from lib.labm8 import fs
 #
 
 # Internal exceptions:
-class LlvmException(clgen.CLgenError):
+class LlvmException(deeplearning.clgen.clgen.errors.CLgenError):
   """LLVM Error"""
   pass
 
@@ -59,7 +60,7 @@ class OptException(LlvmException):
   pass
 
 
-class BadCodeException(clgen.CLgenError):
+class BadCodeException(deeplearning.clgen.clgen.errors.CLgenError):
   """
   Code is bad.
   """
@@ -80,7 +81,7 @@ class ClangFormatException(BadCodeException):
   pass
 
 
-class UglyCodeException(clgen.CLgenError):
+class UglyCodeException(deeplearning.clgen.clgen.errors.CLgenError):
   """
   Code is ugly.
   """
@@ -329,7 +330,7 @@ def gpuverify(src: str, args: list, id: str = 'anon', timeout: int = 60) -> str:
   # FIXME: GPUVerify support on macOS.
   from lib.labm8 import system
   if not system.is_linux():
-    raise clgen.InternalError("GPUVerify only supported on Linux!")
+    raise deeplearning.clgen.clgen.errors.InternalError("GPUVerify only supported on Linux!")
 
   # GPUverify can't read from stdin.
   with NamedTemporaryFile('w', suffix='.cl') as tmp:
@@ -812,7 +813,8 @@ def preprocess_inplace(paths: List[str], max_num_workers: int = cpu_count(),
       made.
   """
   if attempt > max_attempts:
-    raise clgen.InternalError(f"Failed to process files after {max_attempts} attempts")
+    raise deeplearning.clgen.clgen.errors.InternalError(
+      f"Failed to process files after {max_attempts} attempts")
   elif attempt > 1:
     log.warning("preprocess attempt #.", attempt)
 
@@ -871,7 +873,8 @@ def _preprocess_db(db_path: str, max_num_workers: int = cpu_count(), max_attempt
       made.
   """
   if attempt > max_attempts:
-    raise clgen.InternalError(f"failed to preprocess files after {max_attempts} attempts")
+    raise deeplearning.clgen.clgen.errors.InternalError(
+      f"failed to preprocess files after {max_attempts} attempts")
 
   log.verbose("determining jobs")
 

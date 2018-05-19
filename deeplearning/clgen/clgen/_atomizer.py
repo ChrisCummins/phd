@@ -24,10 +24,11 @@ from typing import Dict, List
 
 import numpy as np
 
+import deeplearning.clgen.clgen.errors
 from deeplearning.clgen import clgen
 
 
-class VocabError(clgen.CLgenError):
+class VocabError(deeplearning.clgen.clgen.errors.CLgenError):
   """A character sequence is not in the atomizer's vocab"""
   pass
 
@@ -37,7 +38,7 @@ class InvalidVocab(VocabError):
   pass
 
 
-class Atomizer(clgen.CLgenObject):
+class Atomizer(object):
   """
   Abstract base class for atomizers.
   """

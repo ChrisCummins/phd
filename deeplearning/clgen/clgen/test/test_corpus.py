@@ -19,6 +19,7 @@
 import numpy as np
 import pytest
 
+import deeplearning.clgen.clgen.errors
 from deeplearning.clgen import clgen
 from deeplearning.clgen import test as tests
 from lib.labm8 import fs
@@ -34,7 +35,7 @@ def test_path():
 
 
 def test_badpath():
-  with pytest.raises(clgen.CLgenError):
+  with pytest.raises(deeplearning.clgen.clgen.errors.CLgenError):
     clgen.Corpus("notarealid", path="notarealpath")
 
 
@@ -100,30 +101,30 @@ __kernel void B(__global float* a) {}"""
 
 
 def test_no_language():
-  with pytest.raises(clgen.UserError):
+  with pytest.raises(deeplearning.clgen.clgen.errors.UserError):
     clgen.Corpus.from_json({"path": tests.archive("tiny", "corpus"), })
 
 
 def test_bad_language():
-  with pytest.raises(clgen.UserError):
+  with pytest.raises(deeplearning.clgen.clgen.errors.UserError):
     clgen.Corpus.from_json({"language": "NOTALANG", "path": tests.archive("tiny", "corpus"), })
 
 
 def test_bad_option():
-  with pytest.raises(clgen.UserError):
+  with pytest.raises(deeplearning.clgen.clgen.errors.UserError):
     clgen.Corpus.from_json(
       {"language": "opencl", "path": tests.archive("tiny", "corpus"), "not_a_real_option": False})
 
 
 def test_bad_vocab():
-  with pytest.raises(clgen.UserError):
+  with pytest.raises(deeplearning.clgen.clgen.errors.UserError):
     clgen.Corpus.from_json(
       {"language": "opencl", "path": tests.archive("tiny", "corpus"), "vocab": "INVALID_VOCAB"})
 
 
 @pytest.mark.xfail(reason="FIXME: UserError not raised")
 def test_bad_encoding():
-  with pytest.raises(clgen.UserError):
+  with pytest.raises(deeplearning.clgen.clgen.errors.UserError):
     clgen.Corpus.from_json({"language": "opencl", "path": tests.archive("tiny", "corpus"),
                             "encoding": "INVALID_ENCODING"})
 

@@ -28,6 +28,7 @@ from typing import Iterator, List, Union
 import progressbar
 from prettytable import PrettyTable
 
+import deeplearning.clgen.clgen.errors
 from deeplearning.clgen import clgen
 from deeplearning.clgen import log
 from lib.labm8 import crypto
@@ -51,14 +52,14 @@ DEFAULT_MODEL_OPTS = {"created": {"author": clgen.get_default_author(), "date": 
                                      "intermediate_checkpoints": True}}
 
 
-class ModelError(clgen.CLgenError):
+class ModelError(deeplearning.clgen.clgen.errors.CLgenError):
   """
   Module level error
   """
   pass
 
 
-class Model(clgen.CLgenObject):
+class Model(object):
   """
   A CLgen Model.
 
@@ -91,8 +92,9 @@ class Model(clgen.CLgenObject):
     # Validate options
     for key in opts:
       if key not in DEFAULT_MODEL_OPTS:
-        raise clgen.UserError("Unsupported model option '{}'. Valid keys: {}".format(key, ','.join(
-          sorted(DEFAULT_MODEL_OPTS.keys()))))
+        raise deeplearning.clgen.clgen.errors.UserError(
+          "Unsupported model option '{}'. Valid keys: {}".format(key, ','.join(
+            sorted(DEFAULT_MODEL_OPTS.keys()))))
 
     # set properties
     self.opts = types.update(deepcopy(DEFAULT_MODEL_OPTS), opts)
@@ -127,7 +129,8 @@ class Model(clgen.CLgenObject):
 
       if meta != cached_meta:
         log.error("Computed META:", jsonutil.format_json(meta))
-        raise clgen.InternalError("metadata mismatch in model %s" % self.cache["META"])
+        raise deeplearning.clgen.clgen.errors.InternalError(
+          "metadata mismatch in model %s" % self.cache["META"])
     else:
       self._flush_meta()
 
@@ -162,7 +165,7 @@ class Model(clgen.CLgenObject):
     self.cell_fn = {"lstm": rnn.BasicLSTMCell, "gru": rnn.GRUCell, "rnn": rnn.BasicRNNCell}.get(
       self.model_type, None)
     if self.cell_fn is None:
-      raise clgen.UserError("Unrecognized model type")
+      raise deeplearning.clgen.clgen.errors.UserError("Unrecognized model type")
 
     # reset the graph when switching between training and inference
     tf.reset_default_graph()
@@ -422,7 +425,7 @@ class Model(clgen.CLgenObject):
     assert (isinstance(model_json, dict))
 
     if "corpus" not in model_json:
-      raise clgen.UserError("model JSON has no corpus entry")
+      raise deeplearning.clgen.clgen.errors.UserError("model JSON has no corpus entry")
 
     # create corpus and remove from JSON
     corpus = clgen.Corpus.from_json(model_json.pop("corpus"))

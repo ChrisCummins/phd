@@ -35,6 +35,8 @@ import psutil
 from deeplearning.clgen._config import *
 from pkg_resources import require, resource_filename, resource_string
 
+from deeplearning.clgen.clgen import CLgenError, InternalError
+from deeplearning.clgen.clgen.errors import CLgenError, File404, InternalError, UserError
 from lib.labm8 import cache, fs, system
 
 
@@ -54,49 +56,6 @@ _releaselevel = __version__.split('.')[3] if len(__version__.split('.')) > 3 els
 
 version_info_t = namedtuple('version_info_t', ['major', 'minor', 'micro', 'releaselevel'])
 version_info = version_info_t(_major, _minor, _micro, _releaselevel)
-
-
-class CLgenError(Exception):
-  """
-  Top level error. Never directly thrown.
-  """
-  pass
-
-
-class InternalError(CLgenError):
-  """
-  An internal module error. This class of errors should not leak outside of
-  the module into user code.
-  """
-  pass
-
-
-class UserError(CLgenError):
-  """
-  Raised in case of bad user interaction, e.g. an invalid argument.
-  """
-  pass
-
-
-class File404(InternalError):
-  """
-  Data not found.
-  """
-  pass
-
-
-class InvalidFile(UserError):
-  """
-  Raised in case a file contains invalid contents.
-  """
-  pass
-
-
-class CLgenObject(object):
-  """
-  Base object for CLgen classes.
-  """
-  pass
 
 
 def version() -> str:

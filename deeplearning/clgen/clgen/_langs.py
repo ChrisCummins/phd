@@ -20,7 +20,7 @@ import re
 from enum import Enum
 from typing import List, Set
 
-from deeplearning.clgen import clgen
+import deeplearning.clgen.clgen.errors
 
 
 class Language(Enum):
@@ -31,11 +31,11 @@ class Language(Enum):
   @staticmethod
   def from_str(string: str) -> 'Language':
     if not string:
-      raise clgen.UserError(f"no language specified!")
+      raise deeplearning.clgen.clgen.errors.UserError(f"no language specified!")
     lang = {"opencl": Language.OPENCL, "sol": Language.SOLIDITY, "solidity": Language.SOLIDITY,
             "glsl": Language.GLSL, }.get(string.lower(), None)
     if not lang:
-      raise clgen.UserError(f"unknown language '{string}'")
+      raise deeplearning.clgen.clgen.errors.UserError(f"unknown language '{string}'")
     return lang
 
   def __str__(self):

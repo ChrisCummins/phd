@@ -18,7 +18,7 @@
 #
 import pytest
 
-from deeplearning.clgen import clgen
+import deeplearning.clgen.clgen.errors
 from deeplearning.clgen import dbutil
 from deeplearning.clgen import test as tests
 from lib.labm8 import fs
@@ -31,7 +31,7 @@ def test_create_db():
   dbutil.create_db(db_path, github=False)
   assert fs.exists(db_path)
 
-  with pytest.raises(clgen.UserError):
+  with pytest.raises(deeplearning.clgen.clgen.errors.UserError):
     dbutil.create_db(db_path, github=False)
 
 
@@ -42,7 +42,7 @@ def test_create_db_gh():
   dbutil.create_db(db_path, github=True)
   assert fs.exists(db_path)
 
-  with pytest.raises(clgen.UserError):
+  with pytest.raises(deeplearning.clgen.clgen.errors.UserError):
     dbutil.create_db(db_path, github=True)
 
 

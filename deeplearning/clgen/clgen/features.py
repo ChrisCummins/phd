@@ -29,13 +29,14 @@ from typing import List, TextIO
 
 import numpy as np
 
+import deeplearning.clgen.clgen.errors
 from deeplearning.clgen import clgen
 from deeplearning.clgen import log
 from deeplearning.clgen import native
 from lib.labm8 import math as labmath
 
 
-class FeatureExtractionError(clgen.CLgenError):
+class FeatureExtractionError(deeplearning.clgen.clgen.errors.CLgenError):
   """ Thrown in case feature extraction fails """
   pass
 
