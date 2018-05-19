@@ -159,10 +159,10 @@ class Homebrew(Task):
     return self.shell_ok(
       "grep '^{package}$' <{self.PKG_LIST}".format(**vars()))
 
-  def install_package(self, package):
+  def install_package(self, package, *opts):
     """ install a package using homebrew, return True if installed """
     if not self.package_is_installed(package):
-      task_print("brew install " + package)
+      task_print("brew install " + package + ' '.join(opts))
       self.shell("{self.BREW_BINARY} install {package}".format(**vars()))
       self._make_user_writeable()
       return True
@@ -1826,6 +1826,18 @@ class ClangFormat(Task):
 
   def upgrade(self):
     Homebrew().upgrade_package('clang-format')
+
+
+class Ninja(Task):
+  __platforms__ = ['linux', 'osx']
+  __deps__ = ['Homebrew']
+  __genfiles__ = [Homebrew.bin('ninja')]
+
+  def install(self):
+    Homebrew().install_package('ninja')
+
+  def upgrade(self):
+    Homebrew().upgrade_package('ninja')
 
 
 class Rsync(Task):
