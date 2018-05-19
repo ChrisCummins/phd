@@ -1856,7 +1856,7 @@ class Phd(Task):
   """ phd repo """
   __platforms__ = ['linux', 'osx']
   __genfiles__ = ['~/phd/.env']
-  __deps__ = ['Bazel', 'LibExempi', 'Clang', 'Rsync']
+  __deps__ = ['Bazel', 'LibExempi', 'Clang', 'ClangFormat', 'Rsync']
 
   def install(self):
     clone_git_repo(github_repo("ChrisCummins", "phd"), "~/phd")
