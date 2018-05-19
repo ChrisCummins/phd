@@ -49,6 +49,13 @@ clgen._fetch
    :members:
    :undoc-members:
 
+clgen._langs
+-------------
+
+.. automodule:: clgen._langs
+   :members:
+   :undoc-members:
+
 clgen._model
 -------------
 
