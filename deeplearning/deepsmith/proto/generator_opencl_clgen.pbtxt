@@ -10,6 +10,7 @@ corpus {
   path: "$PHD/deeplearning/deepsmith/tests/data/datastores/"
   ascii_character_tokenizer: true
   sequence_length: 50
+  contentfile_separator: "\n\n"
 }
 model {
   architecture {
