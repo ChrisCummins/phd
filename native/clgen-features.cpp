@@ -46,6 +46,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <stdio.h>
 #include <string>
@@ -668,7 +669,7 @@ void extract_features(std::string path, std::ostream &out,
     argv.push_back(arg.c_str());
 
   // Create an invocation that passes any flags to preprocessor
-  clang::CompilerInvocation *Invocation = new clang::CompilerInvocation;
+  auto Invocation = std::make_shared<clang::CompilerInvocation>();
   clang::CompilerInvocation::CreateFromArgs(*Invocation,
                                             &(*argv.begin()), &(*argv.end()),
                                             compiler.getDiagnostics());
@@ -693,7 +694,8 @@ void extract_features(std::string path, std::ostream &out,
   llvm::Triple *triple = new llvm::Triple(llvm::sys::getDefaultTargetTriple());
   clang::PreprocessorOptions pproc;
 
-  Invocation->setLangDefaults(langOpts, clang::IK_OpenCL, *triple, pproc);
+  Invocation->setLangDefaults(
+    langOpts, clang::InputKind::OpenCL, *triple, pproc);
 
   compiler.createPreprocessor(clang::TU_Complete);
   compiler.getPreprocessorOpts().UsePredefines = false;
