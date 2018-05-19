@@ -3,8 +3,12 @@
 import re
 
 import json
+import typing
 
 from lib.labm8 import fs
+
+# A type alias for annotating methods which take or return JSON.
+JSON = typing.Union[typing.List[typing.Any], typing.Dict[str, typing.Any]]
 
 
 def format_json(data):

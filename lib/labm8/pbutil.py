@@ -8,11 +8,10 @@ import json
 import pathlib
 import typing
 
+from lib.labm8 import jsonutil
+
 # A type alias for annotating methods which take or return protocol buffers.
 ProtocolBuffer = typing.Any
-
-# A type alias for JSON data.
-JSON = typing.Dict[str, typing.Any]
 
 
 class EncodeError(Exception):
@@ -131,7 +130,7 @@ def ToFile(message: ProtocolBuffer, path: pathlib.Path,
   return message
 
 
-def ToJson(message: ProtocolBuffer) -> JSON:
+def ToJson(message: ProtocolBuffer) -> jsonutil.JSON:
   """Return a JSON encoded representation of a protocol buffer.
 
   Args:
@@ -160,7 +159,8 @@ def _TruncatedString(string: str, n: int = 80) -> str:
     return string
 
 
-def _TruncateDictionaryStringValues(data: JSON, n: int = 62) -> JSON:
+def _TruncateDictionaryStringValues(
+    data: jsonutil.JSON, n: int = 62) -> jsonutil.JSON:
   """Truncate all string values in a nested dictionary.
 
   Args:

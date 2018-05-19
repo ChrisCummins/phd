@@ -180,6 +180,7 @@ py_library(
 py_library(
     name = "pbutil",
     srcs = ["pbutil.py"],
+    deps = [":jsonutil"],
     visibility = ["//visibility:public"],
 )
 
