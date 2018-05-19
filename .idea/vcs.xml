@@ -2,7 +2,6 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/deeplearning/clgen" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/deeplearning/deeptune" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/docs/2016_01_adapt" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/docs/2016_01_hlpgpu" vcs="Git" />
