@@ -5,6 +5,7 @@ package deepsmith;
 
 import "deeplearning/deepsmith/proto/deepsmith.proto";
 import "deeplearning/deepsmith/proto/service.proto";
+import "deeplearning/clgen/proto/clgen.proto";
 
 service GeneratorService {
   rpc GetGeneratorCapabilities (GetGeneratorCapabilitiesRequest) returns (GetGeneratorCapabilitiesResponse);
@@ -33,4 +34,7 @@ message GenerateTestcasesResponse {
 // A testcase generator which uses CLgen to generate programs.
 message ClgenGenerator {
   optional ServiceConfig service = 1;
+  optional clgen.Corpus corpus = 2;
+  optional clgen.Model model = 3;
+  optional clgen.Sampler sampler = 4;
 }

@@ -4,6 +4,7 @@ load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
 
 # The set of protocol buffers used by deepsmith. Note that proto files which
 # include other protos must be contained in the same py_proto_library target.
+# TODO(cec): Break this into one py_proto_library target per .proto file.
 py_proto_library(
     name = "deepsmith",
     protos = [
@@ -12,6 +13,9 @@ py_proto_library(
         "generator.proto",
         "harness.proto",
         "service.proto",
+    ],
+    proto_deps = [
+      "//deeplearning/clgen/proto:clgen_py_pb2",
     ],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     with_grpc = True,
