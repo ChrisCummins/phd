@@ -19,63 +19,61 @@
 """
 OpenCL utilities.
 """
-import numpy as np
-import re
 
-from labm8 import text
-from six import string_types
-from typing import List, Tuple
+from typing import Tuple
+
+from lib.labm8 import text
 
 
 def get_attribute_range(src: str, start_idx: int) -> Tuple[int, int]:
-    """
-    Get string indices range of attributes.
+  """
+  Get string indices range of attributes.
 
-    Parameters
-    ----------
-    src : str
-        OpenCL kernel source.
-    start_idx : int
-        Index of attribute opening brace.
+  Parameters
+  ----------
+  src : str
+      OpenCL kernel source.
+  start_idx : int
+      Index of attribute opening brace.
 
-    Returns
-    -------
-    Tuple[int, int]
-        Start and end indices of attributes.
-    """
-    i = src.find('(', start_idx) + 1
-    d = 1
-    while i < len(src) and d > 0:
-        if src[i] == '(':
-            d += 1
-        elif src[i] == ')':
-            d -= 1
-        i += 1
+  Returns
+  -------
+  Tuple[int, int]
+      Start and end indices of attributes.
+  """
+  i = src.find('(', start_idx) + 1
+  d = 1
+  while i < len(src) and d > 0:
+    if src[i] == '(':
+      d += 1
+    elif src[i] == ')':
+      d -= 1
+    i += 1
 
-    return (start_idx, i)
+  return (start_idx, i)
 
 
 def strip_attributes(src: str) -> str:
-    """
-    Remove attributes from OpenCL source.
+  """
+  Remove attributes from OpenCL source.
 
-    Parameters
-    ----------
-    src : str
-        OpenCL source.
+  Parameters
+  ----------
+  src : str
+      OpenCL source.
 
-    Returns
-    -------
-    str
-        OpenCL source, with ((attributes)) removed.
-    """
-    # get list of __attribute__ substrings
-    idxs = sorted(text.get_substring_idxs('__attribute__', src))
+  Returns
+  -------
+  str
+      OpenCL source, with ((attributes)) removed.
+  """
+  # get list of __attribute__ substrings
+  idxs = sorted(text.get_substring_idxs('__attribute__', src))
 
-    # get ((attribute)) ranges
-    attribute_ranges = [get_attribute_range(src, i) for i in idxs]
+  # get ((attribute)) ranges
+  attribute_ranges = [get_attribute_range(src, i) for i in idxs]
 
-    # remove ((atribute)) ranges
-    for r in reversed(attribute_ranges):
-        src = src[:r[0]] + src[r[1]:]
-    return src
+  # remove ((atribute)) ranges
+  for r in reversed(attribute_ranges):
+    src = src[:r[0]] + src[r[1]:]
+  return src

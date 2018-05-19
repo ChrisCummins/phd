@@ -18,25 +18,29 @@
 #
 import pytest
 
-import clgen
+from deeplearning.clgen import clgen
+
 
 def test_pacakge_data():
-    with pytest.raises(clgen.InternalError):
-        clgen.package_data("This definitely isn't a real path")
-    with pytest.raises(clgen.File404):
-        clgen.package_data("This definitely isn't a real path")
+  with pytest.raises(clgen.InternalError):
+    clgen.package_data("This definitely isn't a real path")
+  with pytest.raises(clgen.File404):
+    clgen.package_data("This definitely isn't a real path")
+
 
 def test_pacakge_str():
-    with pytest.raises(clgen.InternalError):
-        clgen.package_str("This definitely isn't a real path")
-    with pytest.raises(clgen.File404):
-        clgen.package_str("This definitely isn't a real path")
+  with pytest.raises(clgen.InternalError):
+    clgen.package_str("This definitely isn't a real path")
+  with pytest.raises(clgen.File404):
+    clgen.package_str("This definitely isn't a real path")
+
 
 def test_sql_script():
-    with pytest.raises(clgen.InternalError):
-        clgen.sql_script("This definitely isn't a real path")
-    with pytest.raises(clgen.File404):
-        clgen.sql_script("This definitely isn't a real path")
+  with pytest.raises(clgen.InternalError):
+    clgen.sql_script("This definitely isn't a real path")
+  with pytest.raises(clgen.File404):
+    clgen.sql_script("This definitely isn't a real path")
+
 
 def test_platform_info():
-    clgen.platform_info()
+  clgen.platform_info()

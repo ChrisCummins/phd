@@ -19,17 +19,13 @@
 """
 CLgen sqlite3 database utilities
 """
-import sqlalchemy as sql
 
 from pathlib import Path
 
-import clgen
-from clgen import log
-
 
 class ContentDb(object):
-    def __init__(self, path: Path, github: bool=False):
-        raise NotImplementedError
+  def __init__(self, path: Path, github: bool = False):
+    raise NotImplementedError
 
-    def session(self):
-        raise NotImplementedError
+  def session(self):
+    raise NotImplementedError

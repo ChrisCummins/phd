@@ -9,7 +9,7 @@ $ clgen --version
 or from the API:
 
 ```py
->>> import clgen
+>>> from deeplearning.clgen import clgen
 >>> clgen.version()
 ```
 

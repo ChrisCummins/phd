@@ -25,123 +25,123 @@ from sys import exit
 
 
 def _fmt(msg: str, fmt_opts: dict) -> str:
-    """
-    Format a message to a string.
-    """
-    assert(len(msg))
-    sep = fmt_opts.get("sep", " ")
-    return sep.join([str(x) for x in msg])
+  """
+  Format a message to a string.
+  """
+  assert (len(msg))
+  sep = fmt_opts.get("sep", " ")
+  return sep.join([str(x) for x in msg])
 
 
-def init(verbose: bool=False) -> None:
-    """
-    Initialiaze the logging engine.
+def init(verbose: bool = False) -> None:
+  """
+  Initialiaze the logging engine.
 
-    Parameters
-    ----------
-    verbose : bool, optional
-        If True, print debug() messages.
-    """
-    level = logging.DEBUG if verbose else logging.INFO
-    logging.basicConfig(level=level, format="%(message)s")
+  Parameters
+  ----------
+  verbose : bool, optional
+      If True, print debug() messages.
+  """
+  level = logging.DEBUG if verbose else logging.INFO
+  logging.basicConfig(level=level, format="%(message)s")
 
 
 def is_verbose() -> bool:
-    """ Return whether logging is verbose. """
-    return logging.getLogger().getEffectiveLevel() == logging.DEBUG
+  """ Return whether logging is verbose. """
+  return logging.getLogger().getEffectiveLevel() == logging.DEBUG
 
 
 def debug(*msg, **opts) -> None:
-    """
-    Debug message.
+  """
+  Debug message.
 
-    If executing verbosely, prints the given message to stderr. To execute
-    verbosely, intialize logging engine using log.init(verbose=True).
+  If executing verbosely, prints the given message to stderr. To execute
+  verbosely, intialize logging engine using log.init(verbose=True).
 
-    Parameters
-    ----------
-    *msg
-        Message to print.
-    **opts
-        Format options.
-    """
-    logging.debug(_fmt(msg, opts))
+  Parameters
+  ----------
+  *msg
+      Message to print.
+  **opts
+      Format options.
+  """
+  logging.debug(_fmt(msg, opts))
 
 
 def verbose(*msg, **opts) -> None:
-    """
-    Calls debug().
-    """
-    debug(*msg, **opts)
+  """
+  Calls debug().
+  """
+  debug(*msg, **opts)
 
 
 def info(*msg, **opts) -> None:
-    """
-    Info message.
+  """
+  Info message.
 
-    Prints the given message to stderr.
+  Prints the given message to stderr.
 
-    Parameters
-    ----------
-    *msg
-        Message to print.
-    **opts
-        Format options.
-    """
-    logging.info(_fmt(msg, opts))
+  Parameters
+  ----------
+  *msg
+      Message to print.
+  **opts
+      Format options.
+  """
+  logging.info(_fmt(msg, opts))
 
 
 def warning(*msg, **opts) -> None:
-    """
-    Warning message.
+  """
+  Warning message.
 
-    Prints the given message to stderr prefixed with "warning: ".
+  Prints the given message to stderr prefixed with "warning: ".
 
-    Parameters
-    ----------
-    *msg
-        Message to print.
-    **opts
-        Format options.
-    """
-    logging.warning("warning: " + _fmt(msg, opts))
+  Parameters
+  ----------
+  *msg
+      Message to print.
+  **opts
+      Format options.
+  """
+  logging.warning("warning: " + _fmt(msg, opts))
 
 
 def error(*msg, **opts) -> None:
-    """
-    Error message.
+  """
+  Error message.
 
-    Prints the given message to stderr prefixed with "error: ".
+  Prints the given message to stderr prefixed with "error: ".
 
-    Parameters
-    ----------
-    *msg
-        Message to print.
-    **opts
-        Format options.
-    """
-    logging.error("error: " + _fmt(msg, opts))
+  Parameters
+  ----------
+  *msg
+      Message to print.
+  **opts
+      Format options.
+  """
+  logging.error("error: " + _fmt(msg, opts))
 
 
 def fatal(*msg, **opts):
-    """
-    Fatal error.
+  """
+  Fatal error.
 
-    Prints the given message to stderr prefixed with "fatal: ", then exists.
-    This function does not return.
+  Prints the given message to stderr prefixed with "fatal: ", then exists.
+  This function does not return.
 
-    Parameters
-    ----------
-    *msg
-        Message to print.
-    **opts
-        Format options.
+  Parameters
+  ----------
+  *msg
+      Message to print.
+  **opts
+      Format options.
 
-    Raises
-    ------
-    SystemExit
-        This function terminates the process.
-    """
-    logging.error("fatal: " + _fmt(msg, opts))
-    ret = opts.get("ret", 1)
-    exit(ret)
+  Raises
+  ------
+  SystemExit
+      This function terminates the process.
+  """
+  logging.error("fatal: " + _fmt(msg, opts))
+  ret = opts.get("ret", 1)
+  exit(ret)

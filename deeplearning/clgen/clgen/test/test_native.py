@@ -16,31 +16,21 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-from clgen import test as tests
 
-import labm8
-from labm8 import fs
-
-import clgen
-from clgen import native
+from deeplearning.clgen import native
+from lib.labm8 import fs
 
 
-BINARIES = [
-    native.CLANG,
-    native.CLANG_FORMAT,
-    native.CLGEN_REWRITER,
-    native.OPT,
-]
+BINARIES = [native.CLANG, native.CLANG_FORMAT, native.CLGEN_REWRITER, native.OPT, ]
 
-FILES = [
-    fs.path(native.LIBCLC, "clc", "clc.h"),
-    native.SHIMFILE,
-]
+FILES = [fs.path(native.LIBCLC, "clc", "clc.h"), native.SHIMFILE, ]
+
 
 def test_binaries_exist():
-    for binary in BINARIES:
-        assert fs.isexe(binary)
+  for binary in BINARIES:
+    assert fs.isexe(binary)
+
 
 def test_files_exist():
-    for file in FILES:
-        assert fs.isfile(file)
+  for file in FILES:
+    assert fs.isfile(file)

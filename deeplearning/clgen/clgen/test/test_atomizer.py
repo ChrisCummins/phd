@@ -18,72 +18,70 @@
 #
 import pytest
 
-import clgen
-
-import clgen.test as test
+from deeplearning.clgen import clgen.test as test
 
 
 def test_CharacterAtomizer_from_text():
-    c = clgen.CharacterAtomizer.from_text(clgen.Language.OPENCL, 'abcabc')
+  c = clgen.CharacterAtomizer.from_text(clgen.Language.OPENCL, 'abcabc')
 
-    assert c.indices == [0, 1, 2]
-    assert c.atoms == ['a', 'b', 'c']
-    assert c.vocab_size == 3
+  assert c.indices == [0, 1, 2]
+  assert c.atoms == ['a', 'b', 'c']
+  assert c.vocab_size == 3
 
 
 def test_CharacterAtomizer_atomize():
-    c = clgen.CharacterAtomizer({'a': 1, 'b': 2, 'c': 3})
-    assert list(c.atomize('abcabc')) == [1, 2, 3, 1, 2, 3]
+  c = clgen.CharacterAtomizer({'a': 1, 'b': 2, 'c': 3})
+  assert list(c.atomize('abcabc')) == [1, 2, 3, 1, 2, 3]
 
 
 def test_CharacterAtomizer_atomize_error():
-    c = clgen.CharacterAtomizer({'a': 1, 'b': 2, 'c': 3})
-    with pytest.raises(clgen.VocabError):
-        c.atomize('abcdeabc')
+  c = clgen.CharacterAtomizer({'a': 1, 'b': 2, 'c': 3})
+  with pytest.raises(clgen.VocabError):
+    c.atomize('abcdeabc')
 
 
 def test_CharacterAtomizer_deatomize():
-    c = clgen.CharacterAtomizer({'a': 1, 'b': 2, 'c': 3})
-    assert c.deatomize([1, 2, 3, 1, 2, 3]) == 'abcabc'
+  c = clgen.CharacterAtomizer({'a': 1, 'b': 2, 'c': 3})
+  assert c.deatomize([1, 2, 3, 1, 2, 3]) == 'abcabc'
 
-    text = """
+  text = """
 __kernel void A(__global float* a, const int b, const double c) {
   int d = get_global_id(0);
   if (b < get_global_size(0))
     a[d] *= (float)c;
 }
 """
-    c = clgen.CharacterAtomizer.from_text(clgen.Language.OPENCL, text)
-    assert c.deatomize(c.atomize(text)) == text
+  c = clgen.CharacterAtomizer.from_text(clgen.Language.OPENCL, text)
+  assert c.deatomize(c.atomize(text)) == text
+
 
 # Greedy
 
 def test_CharacterAtomizer_deatomize_error():
-    c = clgen.CharacterAtomizer({'a': 1, 'b': 2, 'c': 3})
-    with pytest.raises(clgen.VocabError):
-        c.deatomize([1, 2, 5, 10, 0])
+  c = clgen.CharacterAtomizer({'a': 1, 'b': 2, 'c': 3})
+  with pytest.raises(clgen.VocabError):
+    c.deatomize([1, 2, 5, 10, 0])
 
 
 def test_GreedyAtomizer_tokeize1():
-    test_vocab = {'abc': 1, 'a': 2, 'b': 3, 'ab': 4, 'c': 5, 'cab': 6, ' ': 7}
-    test_in = 'abcababbaabcabcaabccccabcabccabcccabcabc'
-    test_out = [
-        'abc', 'ab', 'ab', 'b', 'a', 'abc', 'abc', 'a', 'abc', 'c', 'c',
-        'cab', 'cab', 'c', 'cab', 'c', 'c', 'cab', 'cab', 'c']
-    c = clgen.GreedyAtomizer(test_vocab)
-    assert c.tokenize(test_in) == test_out
+  test_vocab = {'abc': 1, 'a': 2, 'b': 3, 'ab': 4, 'c': 5, 'cab': 6, ' ': 7}
+  test_in = 'abcababbaabcabcaabccccabcabccabcccabcabc'
+  test_out = ['abc', 'ab', 'ab', 'b', 'a', 'abc', 'abc', 'a', 'abc', 'c', 'c', 'cab', 'cab', 'c',
+    'cab', 'c', 'c', 'cab', 'cab', 'c']
+  c = clgen.GreedyAtomizer(test_vocab)
+  assert c.tokenize(test_in) == test_out
 
 
 def test_GreedyAtomizer_tokenize2():
-    test_vocab = {'volatile': 0, 'voletile': 1, 'vo': 2, ' ': 3, 'l': 4}
-    test_in = 'volatile voletile vol '
-    test_out = ['volatile', ' ', 'voletile', ' ', 'vo', 'l', ' ']
-    c = clgen.GreedyAtomizer(test_vocab)
-    assert c.tokenize(test_in) == test_out
+  test_vocab = {'volatile': 0, 'voletile': 1, 'vo': 2, ' ': 3, 'l': 4}
+  test_in = 'volatile voletile vol '
+  test_out = ['volatile', ' ', 'voletile', ' ', 'vo', 'l', ' ']
+  c = clgen.GreedyAtomizer(test_vocab)
+  assert c.tokenize(test_in) == test_out
 
 
 def test_GreedyAtomizer_tokenize3():
-    test_in = """\
+  test_in = """\
 __kernel void A(__global float* a, __global float* b, const int c) {
   int d = get_global_id(0);
   if (d < c) {
@@ -91,21 +89,18 @@ __kernel void A(__global float* a, __global float* b, const int c) {
   }
 }\
 """
-    test_out = [
-        '__kernel', ' ', 'void', ' ', 'A', '(', '__global', ' ', 'float', '*',
-        ' ', 'a', ',', ' ', '__global', ' ', 'float', '*', ' ', 'b', ',',
-        ' ', 'const', ' ', 'int', ' ', 'c', ')', ' ', '{', '\n', '  ', 'int',
-        ' ', 'd', ' ', '=', ' ', 'get_global_id', '(', '0', ')', ';', '\n',
-        '  ', 'if', ' ', '(', 'd', ' ', '<', ' ', 'c', ')', ' ', '{', '\n',
-        '  ', '  ', 'a', '[', 'd', ']', ' ', '=', ' ', 'b', '[', 'd', ']',
-        ' ', '*', ' ', '1', '0', '.', '0', 'f', ';', '\n', '  ', '}', '\n',
-        '}'
-    ]
-    c = clgen.GreedyAtomizer.from_text(clgen.Language.OPENCL, test_in)
-    assert c.tokenize(test_in) == test_out
+  test_out = ['__kernel', ' ', 'void', ' ', 'A', '(', '__global', ' ', 'float', '*', ' ', 'a', ',',
+    ' ', '__global', ' ', 'float', '*', ' ', 'b', ',', ' ', 'const', ' ', 'int', ' ', 'c', ')', ' ',
+    '{', '\n', '  ', 'int', ' ', 'd', ' ', '=', ' ', 'get_global_id', '(', '0', ')', ';', '\n',
+    '  ', 'if', ' ', '(', 'd', ' ', '<', ' ', 'c', ')', ' ', '{', '\n', '  ', '  ', 'a', '[', 'd',
+    ']', ' ', '=', ' ', 'b', '[', 'd', ']', ' ', '*', ' ', '1', '0', '.', '0', 'f', ';', '\n', '  ',
+    '}', '\n', '}']
+  c = clgen.GreedyAtomizer.from_text(clgen.Language.OPENCL, test_in)
+  assert c.tokenize(test_in) == test_out
+
 
 def test_GreedyAtomizer_deatomize():
-    test_in = """\
+  test_in = """\
 __kernel void A(__global float* a, __global float* b, const int c) {
   int d = get_global_id(0);
   if (d < c) {
@@ -113,12 +108,13 @@ __kernel void A(__global float* a, __global float* b, const int c) {
   }
 }\
 """
-    c = clgen.GreedyAtomizer.from_text(clgen.Language.OPENCL, test_in)
-    a = c.atomize(test_in)
-    assert c.deatomize(a) == test_in
+  c = clgen.GreedyAtomizer.from_text(clgen.Language.OPENCL, test_in)
+  a = c.atomize(test_in)
+  assert c.deatomize(a) == test_in
+
 
 def test_GreedyAtomizer_from_text():
-    test_in = """\
+  test_in = """\
 __kernel void A(__global float* a, __global float* b, const int c) {
   int d = get_global_id(0);
   if (d < c) {
@@ -126,11 +122,9 @@ __kernel void A(__global float* a, __global float* b, const int c) {
   }
 }\
 """
-    tokens = [
-        '__kernel', ' ', 'A', '(', ')', '__global', 'float', '*', 'a', '0',
-        'b', 'const', 'int', 'c', '{', '}', '  ', 'd', 'get_global_id',
-        ';', 'if', '<', '[', ']', 'f', '.', '1', '\n', '=', ',', 'void'
-    ]
-    c = clgen.GreedyAtomizer.from_text(clgen.Language.OPENCL, test_in)
-    assert sorted(c.atoms) == sorted(tokens)
-    assert c.vocab_size == len(tokens)
+  tokens = ['__kernel', ' ', 'A', '(', ')', '__global', 'float', '*', 'a', '0', 'b', 'const', 'int',
+    'c', '{', '}', '  ', 'd', 'get_global_id', ';', 'if', '<', '[', ']', 'f', '.', '1', '\n', '=',
+    ',', 'void']
+  c = clgen.GreedyAtomizer.from_text(clgen.Language.OPENCL, test_in)
+  assert sorted(c.atoms) == sorted(tokens)
+  assert c.vocab_size == len(tokens)

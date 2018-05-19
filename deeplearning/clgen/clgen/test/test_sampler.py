@@ -16,110 +16,56 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-from clgen import test as tests
-
-import clgen
-from clgen import dbutil
+from deeplearning.clgen import clgen
+from deeplearning.clgen import dbutil
+from deeplearning.clgen import test as tests
 
 
 def _get_test_model():
-    return clgen.Model.from_json({
-        "corpus": {
-            "language": "opencl",
-            "path": tests.data_path("tiny", "corpus"),
-        },
-        "architecture": {
-          "rnn_size": 8,
-          "num_layers": 2,
-        },
-        "train_opts": {
-          "epochs": 1
-        }
-    })
+  return clgen.Model.from_json(
+    {"corpus": {"language": "opencl", "path": tests.data_path("tiny", "corpus"), },
+     "architecture": {"rnn_size": 8, "num_layers": 2, }, "train_opts": {"epochs": 1}})
 
 
 def test_sample():
-    m = _get_test_model()
-    m.train()
+  m = _get_test_model()
+  m.train()
 
-    argspec = [
-        '__global float*',
-        '__global float*',
-        '__global float*',
-        'const int'
-    ]
-    s = clgen.Sampler.from_json({
-        "kernels": {
-            "language": "opencl",
-            "args": argspec,
-            "max_length": 300,
-        },
-        "sampler": {
-            "min_samples": 1
-        }
-    })
+  argspec = ['__global float*', '__global float*', '__global float*', 'const int']
+  s = clgen.Sampler.from_json(
+    {"kernels": {"language": "opencl", "args": argspec, "max_length": 300, },
+     "sampler": {"min_samples": 1}})
 
-    s.cache(m).clear()  # clear old samples
+  s.cache(m).clear()  # clear old samples
 
-    # sample a single kernel:
-    s.sample(m)
-    num_contentfiles = dbutil.num_rows_in(s.cache(m)["kernels.db"], "ContentFiles")
-    assert num_contentfiles >= 1
+  # sample a single kernel:
+  s.sample(m)
+  num_contentfiles = dbutil.num_rows_in(s.cache(m)["kernels.db"], "ContentFiles")
+  assert num_contentfiles >= 1
 
-    s.sample(m)
-    num_contentfiles2 = dbutil.num_rows_in(s.cache(m)["kernels.db"], "ContentFiles")
-    diff = num_contentfiles2 - num_contentfiles
-    # if sample is the same as previous, then there will still only be a
-    # single sample in db:
-    assert diff >= 1
+  s.sample(m)
+  num_contentfiles2 = dbutil.num_rows_in(s.cache(m)["kernels.db"], "ContentFiles")
+  diff = num_contentfiles2 - num_contentfiles
+  # if sample is the same as previous, then there will still only be a
+  # single sample in db:
+  assert diff >= 1
 
 
 def test_eq():
-    s1 = clgen.Sampler.from_json({
-        "kernels": {
-            "language": "opencl",
-            "args": [
-                '__global float*',
-                '__global float*',
-                'const int'
-            ]
-        }
-    })
-    s2 = clgen.Sampler.from_json({
-        "kernels": {
-            "language": "opencl",
-            "args": [
-                '__global float*',
-                '__global float*',
-                'const int'
-            ]
-        }
-    })
-    s3 = clgen.Sampler.from_json({
-        "kernels": {
-            "language": "opencl",
-            "args": [
-                'int'
-            ]
-        }
-    })
+  s1 = clgen.Sampler.from_json({
+    "kernels": {"language": "opencl", "args": ['__global float*', '__global float*', 'const int']}})
+  s2 = clgen.Sampler.from_json({
+    "kernels": {"language": "opencl", "args": ['__global float*', '__global float*', 'const int']}})
+  s3 = clgen.Sampler.from_json({"kernels": {"language": "opencl", "args": ['int']}})
 
-    assert s1 == s2
-    assert s2 != s3
-    assert s1
-    assert s1 != 'abcdef'
+  assert s1 == s2
+  assert s2 != s3
+  assert s1
+  assert s1 != 'abcdef'
 
 
 def test_to_json():
-    s1 = clgen.Sampler.from_json({
-        "kernels": {
-            "language": "opencl",
-            "args": [
-                '__global float*',
-                '__global float*',
-                'const int'
-            ]
-        }
-    })
-    s2 = clgen.Sampler.from_json(s1.to_json())
-    assert s1 == s2
+  s1 = clgen.Sampler.from_json({
+    "kernels": {"language": "opencl", "args": ['__global float*', '__global float*', 'const int']}})
+  s2 = clgen.Sampler.from_json(s1.to_json())
+  assert s1 == s2

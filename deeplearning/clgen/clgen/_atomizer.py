@@ -19,244 +19,243 @@
 """
 Converting & encoding text streams into vocabularies for machine learning.
 """
-import numpy as np
-import string
-
 from collections import Counter
 from typing import Dict, List
 
-import clgen
+import numpy as np
+
+from deeplearning.clgen import clgen
 
 
 class VocabError(clgen.CLgenError):
-    """A character sequence is not in the atomizer's vocab"""
-    pass
+  """A character sequence is not in the atomizer's vocab"""
+  pass
 
 
 class InvalidVocab(VocabError):
-    """An invalid atomizer vocabulary"""
-    pass
+  """An invalid atomizer vocabulary"""
+  pass
 
 
 class Atomizer(clgen.CLgenObject):
+  """
+  Abstract base class for atomizers.
+  """
+
+  def __init__(self, vocab: Dict[str, int]):
     """
-    Abstract base class for atomizers.
+    Parameters
+    ----------
+    vocab : Dict[str, int]
+        A dictionary of mappings from character sequences (atoms) into
+        indices.
+
+    Raises
+    ------
+    TypeError
+        If vocab is not a dictionary.
+    InvalidVocab
+        If the dictionary of mappings includes any duplicate values.
     """
-    def __init__(self, vocab: Dict[str, int]):
-        """
-        Parameters
-        ----------
-        vocab : Dict[str, int]
-            A dictionary of mappings from character sequences (atoms) into
-            indices.
+    self.vocab = vocab
+    self._vocab_update()
 
-        Raises
-        ------
-        TypeError
-            If vocab is not a dictionary.
-        InvalidVocab
-            If the dictionary of mappings includes any duplicate values.
-        """
-        self.vocab = vocab
-        self._vocab_update()
+  @property
+  def atoms(self) -> List[str]:
+    return list(sorted(self.vocab.keys()))
 
-    @property
-    def atoms(self) -> List[str]:
-        return list(sorted(self.vocab.keys()))
+  @property
+  def indices(self) -> List[int]:
+    return list(sorted(self.vocab.values()))
 
-    @property
-    def indices(self) -> List[int]:
-        return list(sorted(self.vocab.values()))
+  def _vocab_update(self) -> None:
+    """ call this when vocab is modified """
+    if not isinstance(self.vocab, dict):
+      raise TypeError('vocabulary must be a dict')
 
-    def _vocab_update(self) -> None:
-        """ call this when vocab is modified """
-        if not isinstance(self.vocab, dict):
-            raise TypeError('vocabulary must be a dict')
+    # Each atom and index must be unique to ensure deterministic encoding.
+    if len(set(self.vocab.keys())) != len(self.vocab):
+      raise InvalidVocab('all atoms must be unique')
+    if len(set(self.vocab.values())) != len(self.vocab):
+      raise InvalidVocab('all indices must be unique')
 
-        # Each atom and index must be unique to ensure deterministic encoding.
-        if len(set(self.vocab.keys())) != len(self.vocab):
-            raise InvalidVocab('all atoms must be unique')
-        if len(set(self.vocab.values())) != len(self.vocab):
-            raise InvalidVocab('all indices must be unique')
+    self.vocab_size = len(self.vocab)
+    self.decoder = dict((val, key) for key, val in self.vocab.items())
 
-        self.vocab_size = len(self.vocab)
-        self.decoder = dict((val, key) for key, val in self.vocab.items())
+  def atomize(self, text: str) -> np.array:
+    """
+    Atomize a text into an array of vocabulary indices.
 
-    def atomize(self, text: str) -> np.array:
-        """
-        Atomize a text into an array of vocabulary indices.
+    Parameters
+    ----------
+    text : str
+        Input text.
 
-        Parameters
-        ----------
-        text : str
-            Input text.
+    Returns
+    -------
+    np.array
+        Indices into vocabulary for all atoms in text.
+    """
+    raise NotImplementedError("abstract class")
 
-        Returns
-        -------
-        np.array
-            Indices into vocabulary for all atoms in text.
-        """
-        raise NotImplementedError("abstract class")
+  def tokenize(self, text: str) -> List[str]:
+    """
+    Split the text into atoms, but do not encode to indices.
 
-    def tokenize(self, text: str) -> List[str]:
-        """
-        Split the text into atoms, but do not encode to indices.
+    Parameters
+    ----------
+    text : str
+        Input text.
 
-        Parameters
-        ----------
-        text : str
-            Input text.
+    Returns
+    -------
+    List[str]
+        Atom strings.
+    """
+    indices = self.atomize(text)
+    return list(map(lambda x: self.decoder[x], indices))
 
-        Returns
-        -------
-        List[str]
-            Atom strings.
-        """
-        indices = self.atomize(text)
-        return list(map(lambda x: self.decoder[x], indices))
+  def deatomize(self, encoded: np.array) -> str:
+    """
+    Translate atomized code back into a string.
 
-    def deatomize(self, encoded: np.array) -> str:
-        """
-        Translate atomized code back into a string.
+    Parameters
+    ----------
+    encoded : np.array
+        Encoded vocabulary indices.
 
-        Parameters
-        ----------
-        encoded : np.array
-            Encoded vocabulary indices.
+    Returns
+    -------
+    str
+        Decoded text.
+    """
+    try:
+      return ''.join(list(map(lambda x: self.decoder[x], encoded)))
+    except KeyError:
+      raise VocabError
 
-        Returns
-        -------
-        str
-            Decoded text.
-        """
-        try:
-            return ''.join(list(map(lambda x: self.decoder[x], encoded)))
-        except KeyError:
-            raise VocabError
+  @staticmethod
+  def from_text(lang: clgen.Language, text: str) -> 'Atomizer':
+    """
+    Instantiate and specialize an atomizer from a corpus text.
 
-    @staticmethod
-    def from_text(lang: clgen.Language, text: str) -> 'Atomizer':
-        """
-        Instantiate and specialize an atomizer from a corpus text.
+    Parameters
+    ----------
+    text : str
+        Text corpus
 
-        Parameters
-        ----------
-        text : str
-            Text corpus
+    Returns
+    -------
+    Atomizer
+        Specialized atomizer.
 
-        Returns
-        -------
-        Atomizer
-            Specialized atomizer.
-
-        Examples
-        --------
-        >>> a = CharacterAtomizer.from_text(clgen.Language.OPENCL, 'abcdefg')
-        >>> b = a.atomize('abcd')
-        >>> len(b)
-        4
-        >>> a.deatomize(b)
-        'abcd'
-        """
-        raise NotImplementedError("abstract class")
+    Examples
+    --------
+    >>> a = CharacterAtomizer.from_text(clgen.Language.OPENCL, 'abcdefg')
+    >>> b = a.atomize('abcd')
+    >>> len(b)
+    4
+    >>> a.deatomize(b)
+    'abcd'
+    """
+    raise NotImplementedError("abstract class")
 
 
 class CharacterAtomizer(Atomizer):
-    """
-    An atomizer for character-level syntactic modelling.
-    """
-    def __init__(self, *args, **kwargs):
-        super(CharacterAtomizer, self).__init__(*args, **kwargs)
+  """
+  An atomizer for character-level syntactic modelling.
+  """
 
-    def atomize(self, text: str) -> np.array:
-        try:
-            return np.array(list(map(lambda x: self.vocab[x], text)))
-        except KeyError:
-            raise VocabError
+  def __init__(self, *args, **kwargs):
+    super(CharacterAtomizer, self).__init__(*args, **kwargs)
 
-    def __repr__(self) -> str:
-        return "CharacterAtomizer[{n} chars]".format(n=self.vocab_size)
+  def atomize(self, text: str) -> np.array:
+    try:
+      return np.array(list(map(lambda x: self.vocab[x], text)))
+    except KeyError:
+      raise VocabError
 
-    @staticmethod
-    def from_text(lang: clgen.Language, text: str) -> 'CharacterAtomizer':
-        counter = Counter(text)
-        count_pairs = sorted(counter.items(), key=lambda x: -x[1])
-        atoms, _ = zip(*count_pairs)
-        vocab = dict(zip(atoms, range(len(atoms))))
-        return CharacterAtomizer(vocab)
+  def __repr__(self) -> str:
+    return "CharacterAtomizer[{n} chars]".format(n=self.vocab_size)
+
+  @staticmethod
+  def from_text(lang: clgen.Language, text: str) -> 'CharacterAtomizer':
+    counter = Counter(text)
+    count_pairs = sorted(counter.items(), key=lambda x: -x[1])
+    atoms, _ = zip(*count_pairs)
+    vocab = dict(zip(atoms, range(len(atoms))))
+    return CharacterAtomizer(vocab)
 
 
 class GreedyAtomizer(Atomizer):
-    """
-    Greedy encoding for multi-character modelling.
-    """
-    def __init__(self, *args, **kwargs):
-        self.determine_chars = kwargs.pop("determine_chars", False)
-        super(GreedyAtomizer, self).__init__(*args, **kwargs)
+  """
+  Greedy encoding for multi-character modelling.
+  """
 
-        multichars = set(k for k in self.atoms if len(k) > 1)
-        first_chars = set(a[0] for a in multichars)
-        self.lookup = dict((c, [a for a in multichars if a[0] == c])
-                           for c in first_chars)
+  def __init__(self, *args, **kwargs):
+    self.determine_chars = kwargs.pop("determine_chars", False)
+    super(GreedyAtomizer, self).__init__(*args, **kwargs)
 
-    def atomize(self, text: str) -> np.array:
-        def _add_to_vocab(token: str):
-            if self.determine_chars and token not in self.vocab:
-                maxind = max(self.vocab.values())
-                self.vocab[token] = maxind + 1
+    multichars = set(k for k in self.atoms if len(k) > 1)
+    first_chars = set(a[0] for a in multichars)
+    self.lookup = dict((c, [a for a in multichars if a[0] == c]) for c in first_chars)
 
-            return self.vocab[token]
+  def atomize(self, text: str) -> np.array:
+    def _add_to_vocab(token: str):
+      if self.determine_chars and token not in self.vocab:
+        maxind = max(self.vocab.values())
+        self.vocab[token] = maxind + 1
 
-        indices = []
-        i = 0
-        j = 2
-        try:
-            while i < len(text):
-                if self.lookup.get(text[i]):
-                    if j <= len(text) and any(x.startswith(text[i:j])
-                                              for x in self.lookup[text[i]]):
-                        j += 1
-                    else:
-                        while j > i + 1:
-                            if any(x == text[i:j]
-                                   for x in self.lookup[text[i]]):
-                                indices.append(self.vocab[text[i:j]])
-                                i = j
-                                j = j + 2
-                                break
-                            else:
-                                j -= 1
-                        else:
-                            indices.append(_add_to_vocab(text[i]))
-                            i = i + 1
-                            j = j + 2
-                else:
-                    indices.append(_add_to_vocab(text[i]))
-                    i = i + 1
-                    j = j + 2
-        except KeyError:
-            raise VocabError
+      return self.vocab[token]
 
-        if self.determine_chars:
-            self._vocab_update()
+    indices = []
+    i = 0
+    j = 2
+    try:
+      while i < len(text):
+        if self.lookup.get(text[i]):
+          if j <= len(text) and any(x.startswith(text[i:j]) for x in self.lookup[text[i]]):
+            j += 1
+          else:
+            while j > i + 1:
+              if any(x == text[i:j] for x in self.lookup[text[i]]):
+                indices.append(self.vocab[text[i:j]])
+                i = j
+                j = j + 2
+                break
+              else:
+                j -= 1
+            else:
+              indices.append(_add_to_vocab(text[i]))
+              i = i + 1
+              j = j + 2
+        else:
+          indices.append(_add_to_vocab(text[i]))
+          i = i + 1
+          j = j + 2
+    except KeyError:
+      raise VocabError
 
-        return np.array(indices)
+    if self.determine_chars:
+      self._vocab_update()
 
-    def __repr__(self) -> str:
-        return "GreedyAtomizer[{n} tokens]".format(n=self.vocab_size)
+    return np.array(indices)
 
-    @staticmethod
-    def from_text(lang: clgen.Language, text: str) -> 'GreedyAtomizer':
-        atoms = clgen.atoms_for_lang(lang)
+  def __repr__(self) -> str:
+    return "GreedyAtomizer[{n} tokens]".format(n=self.vocab_size)
 
-        # Instantiate a greedy atomizer using the full vocabulary.
-        full_vocab = dict(zip(atoms, range(len(atoms))))
-        c = GreedyAtomizer(full_vocab, determine_chars=True)
+  @staticmethod
+  def from_text(lang: clgen.Language, text: str) -> 'GreedyAtomizer':
+    atoms = clgen.atoms_for_lang(lang)
 
-        # Derive the subset of the vocabulary required to encode the given
-        # text.
-        tokens = sorted(list(set(c.tokenize(text))))
-        vocab_subset = dict(zip(tokens, range(len(tokens))))
+    # Instantiate a greedy atomizer using the full vocabulary.
+    full_vocab = dict(zip(atoms, range(len(atoms))))
+    c = GreedyAtomizer(full_vocab, determine_chars=True)
 
-        # Return a new atomizer using the subset vocabulary.
-        return GreedyAtomizer(vocab_subset)
+    # Derive the subset of the vocabulary required to encode the given
+    # text.
+    tokens = sorted(list(set(c.tokenize(text))))
+    vocab_subset = dict(zip(tokens, range(len(tokens))))
+
+    # Return a new atomizer using the subset vocabulary.
+    return GreedyAtomizer(vocab_subset)

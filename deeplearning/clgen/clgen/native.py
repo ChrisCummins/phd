@@ -40,9 +40,8 @@ OPT : str
 SHIMFILE : str
     Path to shim headerfile.
 """
-from labm8 import fs
-
-import clgen
+from deeplearning.clgen import clgen
+from lib.labm8 import fs
 
 
 CLANG = clgen.data_path(fs.path("bin", "clang"))
@@ -52,8 +51,8 @@ CLGEN_REWRITER = clgen.data_path(fs.path("bin", "clgen-rewriter"))
 GPUVERIFY = clgen.data_path(fs.path("gpuverify", "gpuverify"))
 LIBCLC = clgen.data_path("libclc")
 try:
-    OCLGRIND = clgen.data_path(fs.path("oclgrind", "bin", "oclgrind"))
+  OCLGRIND = clgen.data_path(fs.path("oclgrind", "bin", "oclgrind"))
 except clgen.File404:
-    pass  # FIXME: oclgrind is broken on Travis CI.
+  pass  # FIXME: oclgrind is broken on Travis CI.
 OPT = clgen.data_path(fs.path("bin", "opt"))
 SHIMFILE = clgen.data_path(fs.path("include", "opencl-shim.h"))

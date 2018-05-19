@@ -16,18 +16,14 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-import pytest
-from clgen import test as tests
-
 import os
-import sqlite3
 import sys
 
-import labm8
-from labm8 import fs
-from labm8 import system
+import pytest
 
-import clgen
+from deeplearning.clgen import clgen
+from deeplearning.clgen import test as tests
+
 
 # Invoke tests with UPDATE_GS_FILES set to update the gold standard
 # tests. E.g.:
@@ -38,50 +34,48 @@ UPDATE_GS_FILES = True if 'UPDATE_GS_FILES' in os.environ else False
 
 
 def preprocess_pair(basename, preprocessor=clgen.preprocess):
-    gs_path = tests.data_path(os.path.join('cl', str(basename) + '.gs'),
-                              exists=not UPDATE_GS_FILES)
-    tin_path = tests.data_path(os.path.join('cl', str(basename) + '.cl'))
+  gs_path = tests.data_path(os.path.join('cl', str(basename) + '.gs'), exists=not UPDATE_GS_FILES)
+  tin_path = tests.data_path(os.path.join('cl', str(basename) + '.cl'))
 
-    # Run preprocess
-    tin = tests.data_str(tin_path)
-    tout = preprocessor(tin)
+  # Run preprocess
+  tin = tests.data_str(tin_path)
+  tout = preprocessor(tin)
 
-    if UPDATE_GS_FILES:
-        gs = tout
-        with open(gs_path, 'w') as outfile:
-            outfile.write(gs)
-            print("\n-> updated gold standard file '{}' ..."
-                  .format(gs_path), file=sys.stderr, end=' ')
-    else:
-        gs = tests.data_str(gs_path)
+  if UPDATE_GS_FILES:
+    gs = tout
+    with open(gs_path, 'w') as outfile:
+      outfile.write(gs)
+      print("\n-> updated gold standard file '{}' ...".format(gs_path), file=sys.stderr, end=' ')
+  else:
+    gs = tests.data_str(gs_path)
 
-    return (gs, tout)
+  return (gs, tout)
 
 
 def test_preprocess():
-    assert len(set(preprocess_pair('sample-1'))) == 1
+  assert len(set(preprocess_pair('sample-1'))) == 1
 
 
 def test_preprocess_shim():
-    # FLOAT_T is defined in shim header
-    assert clgen.preprocess("""
+  # FLOAT_T is defined in shim header
+  assert clgen.preprocess("""
 __kernel void A(__global FLOAT_T* a) { int b; }""", use_shim=True)
 
-    # Preprocess will fail without FLOAT_T defined
-    with pytest.raises(clgen.BadCodeException):
-        clgen.preprocess("""
+  # Preprocess will fail without FLOAT_T defined
+  with pytest.raises(clgen.BadCodeException):
+    clgen.preprocess("""
 __kernel void A(__global FLOAT_T* a) { int b; }""", use_shim=False)
 
 
 def test_ugly_preprocessed():
-    # empty kernel protoype is rejected
-    with pytest.raises(clgen.NoCodeException):
-        clgen.preprocess("""\
+  # empty kernel protoype is rejected
+  with pytest.raises(clgen.NoCodeException):
+    clgen.preprocess("""\
 __kernel void A() {
 }\
 """)
-    # kernel containing some code returns the same.
-    assert """\
+  # kernel containing some code returns the same.
+  assert """\
 __kernel void A() {
   int a;
 }\
@@ -93,7 +87,7 @@ __kernel void A() {
 
 
 def test_preprocess_stable():
-    code = """\
+  code = """\
 __kernel void A(__global float* a) {
   int b;
   float c;
@@ -101,28 +95,28 @@ __kernel void A(__global float* a) {
 
   a[d] *= 2.0f;
 }"""
-    # pre-processing is "stable" if the code doesn't change
-    out = code
-    for _ in range(5):
-        out = clgen.preprocess(out)
-        assert out == code
+  # pre-processing is "stable" if the code doesn't change
+  out = code
+  for _ in range(5):
+    out = clgen.preprocess(out)
+    assert out == code
 
 
 @tests.needs_linux  # FIXME: GPUVerify support on macOS.
 def test_gpuverify():
-    code = """\
+  code = """\
 __kernel void A(__global float* a) {
   int b = get_global_id(0);
   a[b] *= 2.0f;
 }"""
-    assert clgen.gpuverify(code, ["--local_size=64", "--num_groups=128"]) == code
+  assert clgen.gpuverify(code, ["--local_size=64", "--num_groups=128"]) == code
 
 
 @tests.needs_linux  # FIXME: GPUVerify support on macOS.
 def test_gpuverify_data_race():
-    code = """\
+  code = """\
 __kernel void A(__global float* a) {
   a[0] +=  1.0f;
 }"""
-    with pytest.raises(clgen.GPUVerifyException):
-        clgen.gpuverify(code, ["--local_size=64", "--num_groups=128"])
+  with pytest.raises(clgen.GPUVerifyException):
+    clgen.gpuverify(code, ["--local_size=64", "--num_groups=128"])

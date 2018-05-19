@@ -16,12 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-from clgen import test as tests
-
-import clgen
+from deeplearning.clgen import clgen
+from deeplearning.clgen import test as tests
 
 
 def test_inline_fs_headers():
-    src = clgen.inline_fs_headers(tests.data_path("cl", "sample-3.cl"), [])
-    assert "MY_DATA_TYPE" in src
-    assert "__kernel void" in src
+  src = clgen.inline_fs_headers(tests.data_path("cl", "sample-3.cl"), [])
+  assert "MY_DATA_TYPE" in src
+  assert "__kernel void" in src

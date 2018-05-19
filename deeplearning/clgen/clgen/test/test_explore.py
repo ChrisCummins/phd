@@ -16,22 +16,19 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-from labm8 import fs
-
-import clgen
-from clgen import test as tests
+from deeplearning.clgen import clgen
+from deeplearning.clgen import test as tests
+from lib.labm8 import fs
 
 
 def test_explore():
-    c = clgen.Corpus.from_json({
-        "language": "opencl",
-        "path": tests.data_path("tiny", "corpus", exists=False)
-    })
-    clgen.explore(c.contentcache["kernels.db"])
+  c = clgen.Corpus.from_json(
+    {"language": "opencl", "path": tests.data_path("tiny", "corpus", exists=False)})
+  clgen.explore(c.contentcache["kernels.db"])
 
 
 def test_explore_gh():
-    db_path = tests.archive("tiny-gh.db")
-    assert(fs.exists(db_path))
+  db_path = tests.archive("tiny-gh.db")
+  assert (fs.exists(db_path))
 
-    clgen.explore(db_path)
+  clgen.explore(db_path)

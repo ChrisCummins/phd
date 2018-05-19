@@ -19,191 +19,141 @@
 import numpy as np
 import pytest
 
-from labm8 import fs
+from deeplearning.clgen import clgen
+from deeplearning.clgen import test as tests
+from lib.labm8 import fs
 
-import clgen
-from clgen import test as tests
 
 TINY_HASH = 'b5c2c4f07ef6f1a6423d079a07392411e49891ed'
 
 
 def test_path():
-    path = tests.archive("tiny", "corpus")
-    c = clgen.Corpus.from_json({
-        "language": "opencl",
-        "id": TINY_HASH,
-        "path": path
-    })
-    assert TINY_HASH == c.hash
+  path = tests.archive("tiny", "corpus")
+  c = clgen.Corpus.from_json({"language": "opencl", "id": TINY_HASH, "path": path})
+  assert TINY_HASH == c.hash
 
 
 def test_badpath():
-    with pytest.raises(clgen.CLgenError):
-        clgen.Corpus("notarealid", path="notarealpath")
+  with pytest.raises(clgen.CLgenError):
+    clgen.Corpus("notarealid", path="notarealpath")
 
 
 def test_from_archive():
-    # delete any existing unpacked directory
-    fs.rm(tests.data_path("tiny", "corpus", exists=False))
+  # delete any existing unpacked directory
+  fs.rm(tests.data_path("tiny", "corpus", exists=False))
 
-    c = clgen.Corpus.from_json({
-        "language": "opencl",
-        "path": tests.data_path("tiny", "corpus", exists=False)
-    })
-    assert TINY_HASH == c.hash
+  c = clgen.Corpus.from_json(
+    {"language": "opencl", "path": tests.data_path("tiny", "corpus", exists=False)})
+  assert TINY_HASH == c.hash
 
 
 def test_from_archive_path():
-    # delete any existing unpacked directory
-    fs.rm(tests.data_path("tiny", "corpus", exists=False))
+  # delete any existing unpacked directory
+  fs.rm(tests.data_path("tiny", "corpus", exists=False))
 
-    c = clgen.Corpus.from_json({
-        "language": "opencl",
-        "path": tests.data_path("tiny", "corpus.tar.bz2")
-    })
-    assert TINY_HASH == c.hash
+  c = clgen.Corpus.from_json(
+    {"language": "opencl", "path": tests.data_path("tiny", "corpus.tar.bz2")})
+  assert TINY_HASH == c.hash
 
 
 def test_hash():
-    c1 = clgen.Corpus.from_json({
-        "language": "opencl",
-        "path": tests.archive("tiny", "corpus")
-    })
+  c1 = clgen.Corpus.from_json({"language": "opencl", "path": tests.archive("tiny", "corpus")})
 
-    # same as c1, with explicit default opt:
-    c2 = clgen.Corpus.from_json({
-        "language": "opencl",
-        "path": tests.archive("tiny", "corpus"),
-        "eof": False
-    })
+  # same as c1, with explicit default opt:
+  c2 = clgen.Corpus.from_json(
+    {"language": "opencl", "path": tests.archive("tiny", "corpus"), "eof": False})
 
-    # different opt value:
-    c3 = clgen.Corpus.from_json({
-        "language": "opencl",
-        "path": tests.archive("tiny", "corpus"),
-        "eof": True
-    })
+  # different opt value:
+  c3 = clgen.Corpus.from_json(
+    {"language": "opencl", "path": tests.archive("tiny", "corpus"), "eof": True})
 
-    assert c1.hash == c2.hash
-    assert c2.hash != c3.hash
+  assert c1.hash == c2.hash
+  assert c2.hash != c3.hash
 
 
 def test_get_features():
-    code = """\
+  code = """\
 __kernel void A(__global float* a) {
   int b = get_global_id(0);
   a[b] *= 2.0f;
 }"""
-    assert np.array_equal(clgen.get_kernel_features(code),
-                          [0, 0, 1, 0, 1, 0, 1, 0])
+  assert np.array_equal(clgen.get_kernel_features(code), [0, 0, 1, 0, 1, 0, 1, 0])
 
 
 def test_get_features_bad_code():
-    code = """\
+  code = """\
 __kernel void A(__global float* a) {
   SYNTAX ERROR!
 }"""
-    with tests.DevNullRedirect():
-        with pytest.raises(clgen.FeaturesError):
-            clgen.get_kernel_features(code, quiet=True)
+  with tests.DevNullRedirect():
+    with pytest.raises(clgen.FeaturesError):
+      clgen.get_kernel_features(code, quiet=True)
 
 
 def test_get_features_multiple_kernels():
-    code = """\
+  code = """\
 __kernel void A(__global float* a) {}
 __kernel void B(__global float* a) {}"""
 
-    with pytest.raises(clgen.FeaturesError):
-        clgen.get_kernel_features(code)
+  with pytest.raises(clgen.FeaturesError):
+    clgen.get_kernel_features(code)
 
 
 def test_no_language():
-    with pytest.raises(clgen.UserError):
-        clgen.Corpus.from_json({
-            "path": tests.archive("tiny", "corpus"),
-        })
+  with pytest.raises(clgen.UserError):
+    clgen.Corpus.from_json({"path": tests.archive("tiny", "corpus"), })
 
 
 def test_bad_language():
-    with pytest.raises(clgen.UserError):
-        clgen.Corpus.from_json({
-            "language": "NOTALANG",
-            "path": tests.archive("tiny", "corpus"),
-        })
+  with pytest.raises(clgen.UserError):
+    clgen.Corpus.from_json({"language": "NOTALANG", "path": tests.archive("tiny", "corpus"), })
 
 
 def test_bad_option():
-    with pytest.raises(clgen.UserError):
-        clgen.Corpus.from_json({
-            "language": "opencl",
-            "path": tests.archive("tiny", "corpus"),
-            "not_a_real_option": False
-        })
+  with pytest.raises(clgen.UserError):
+    clgen.Corpus.from_json(
+      {"language": "opencl", "path": tests.archive("tiny", "corpus"), "not_a_real_option": False})
 
 
 def test_bad_vocab():
-    with pytest.raises(clgen.UserError):
-        clgen.Corpus.from_json({
-            "language": "opencl",
-            "path": tests.archive("tiny", "corpus"),
-            "vocab": "INVALID_VOCAB"
-        })
+  with pytest.raises(clgen.UserError):
+    clgen.Corpus.from_json(
+      {"language": "opencl", "path": tests.archive("tiny", "corpus"), "vocab": "INVALID_VOCAB"})
 
 
 @pytest.mark.xfail(reason="FIXME: UserError not raised")
 def test_bad_encoding():
-    with pytest.raises(clgen.UserError):
-        clgen.Corpus.from_json({
-            "language": "opencl",
-            "path": tests.archive("tiny", "corpus"),
-            "encoding": "INVALID_ENCODING"
-        })
+  with pytest.raises(clgen.UserError):
+    clgen.Corpus.from_json({"language": "opencl", "path": tests.archive("tiny", "corpus"),
+                            "encoding": "INVALID_ENCODING"})
 
 
 def test_eq():
-    c1 = clgen.Corpus.from_json({
-        "language": "opencl",
-        "path": tests.archive("tiny", "corpus"),
-        "eof": False
-    })
-    c2 = clgen.Corpus.from_json({
-        "language": "opencl",
-        "path": tests.archive("tiny", "corpus"),
-        "eof": False
-    })
-    c3 = clgen.Corpus.from_json({
-        "language": "opencl",
-        "path": tests.archive("tiny", "corpus"),
-        "eof": True
-    })
+  c1 = clgen.Corpus.from_json(
+    {"language": "opencl", "path": tests.archive("tiny", "corpus"), "eof": False})
+  c2 = clgen.Corpus.from_json(
+    {"language": "opencl", "path": tests.archive("tiny", "corpus"), "eof": False})
+  c3 = clgen.Corpus.from_json(
+    {"language": "opencl", "path": tests.archive("tiny", "corpus"), "eof": True})
 
-    assert c1 == c2
-    assert c2 != c3
-    assert c1 != 'abcdef'
+  assert c1 == c2
+  assert c2 != c3
+  assert c1 != 'abcdef'
 
 
 def test_preprocessed():
-    c1 = clgen.Corpus.from_json({
-        "language": "opencl",
-        "path": tests.archive("tiny", "corpus")
-    })
-    assert len(list(c1.preprocessed())) == 187
-    assert len(list(c1.preprocessed(1))) == 56
-    assert len(list(c1.preprocessed(2))) == 7
+  c1 = clgen.Corpus.from_json({"language": "opencl", "path": tests.archive("tiny", "corpus")})
+  assert len(list(c1.preprocessed())) == 187
+  assert len(list(c1.preprocessed(1))) == 56
+  assert len(list(c1.preprocessed(2))) == 7
 
 
 def test_contentfiles():
-    c1 = clgen.Corpus.from_json({
-        "language": "opencl",
-        "path": tests.archive("tiny", "corpus")
-    })
-    assert len(list(c1.contentfiles())) == 250
+  c1 = clgen.Corpus.from_json({"language": "opencl", "path": tests.archive("tiny", "corpus")})
+  assert len(list(c1.contentfiles())) == 250
 
 
 def test_to_json():
-    c1 = clgen.Corpus.from_json({
-        "language": "opencl",
-        "path": tests.archive("tiny", "corpus")
-    })
-    c2 = clgen.Corpus.from_json(c1.to_json())
-    assert c1 == c2
+  c1 = clgen.Corpus.from_json({"language": "opencl", "path": tests.archive("tiny", "corpus")})
+  c2 = clgen.Corpus.from_json(c1.to_json())
+  assert c1 == c2
