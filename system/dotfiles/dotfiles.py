@@ -1817,15 +1817,23 @@ class Clang(Task):
 
 
 class ClangFormat(Task):
+  # On Linux, this task is a no-op, since the task 'Clang' installs
+  # clang-format.
   __platforms__ = ['linux', 'osx']
   __deps__ = ['Homebrew']
-  __genfiles__ = [Homebrew.bin('clang-format')]
+  __osx_genfiles__ = [Homebrew.bin('clang-format')]
 
-  def install(self):
+  def install_osx(self):
     Homebrew().install_package('clang-format')
 
-  def upgrade(self):
+  def install(self):
+    pass
+
+  def upgrade_osx(self):
     Homebrew().upgrade_package('clang-format')
+
+  def upgrade(self):
+    pass
 
 
 class Ninja(Task):
