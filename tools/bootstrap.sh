@@ -53,6 +53,7 @@ main() {
         Bazel \
         Buildifier \
         Clang \
+        ClangFormat \
         GnuCoreutils \
         LaTeX \
         Python \

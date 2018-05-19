@@ -1816,6 +1816,18 @@ class Clang(Task):
     Homebrew().install_package('llvm')
 
 
+class ClangFormat(Task):
+  __platforms__ = ['linux', 'osx']
+  __deps__ = ['Homebrew']
+  __genfiles__ = [Homebrew.bin('clang-format')]
+
+  def install(self):
+    Homebrew().install_package('clang-format')
+
+  def upgrade(self):
+    Homebrew().upgrade_package('clang-format')
+
+
 class Rsync(Task):
   __platforms__ = ['linux', 'osx']
   __linux_genfiles__ = ['/usr/bin/rsync']
