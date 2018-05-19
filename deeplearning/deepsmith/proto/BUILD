@@ -7,15 +7,15 @@ load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
 # TODO(cec): Break this into one py_proto_library target per .proto file.
 py_proto_library(
     name = "deepsmith",
+    proto_deps = [
+        "//deeplearning/clgen/proto:clgen_py_pb2",
+    ],
     protos = [
         "datastore.proto",
         "deepsmith.proto",
         "generator.proto",
         "harness.proto",
         "service.proto",
-    ],
-    proto_deps = [
-      "//deeplearning/clgen/proto:clgen_py_pb2",
     ],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     with_grpc = True,
