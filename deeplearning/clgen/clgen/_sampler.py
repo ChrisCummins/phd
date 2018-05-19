@@ -33,6 +33,7 @@ import progressbar
 from tensorflow.python.framework.errors import InvalidArgumentError as \
   TensorFlowInvalidArgumentError
 
+import deeplearning.clgen.clgen.cache
 import deeplearning.clgen.clgen.errors
 from deeplearning.clgen import clgen
 from deeplearning.clgen import dbutil
@@ -421,7 +422,8 @@ class Sampler(object):
     """
     sampler_model_hash = crypto.sha1_str(self.hash + model.hash)
 
-    cache = clgen.mkcache("sampler", f"{self.language}-{sampler_model_hash}")
+    cache = deeplearning.clgen.clgen.cache.mkcache("sampler",
+                                                   f"{self.language}-{sampler_model_hash}")
 
     # validate metadata against cache
     self.stats = {"time": 0, "progress": 0}
@@ -490,7 +492,7 @@ class Sampler(object):
 
   @property
   def shorthash(self) -> str:
-    return clgen._shorthash(self.hash, clgen.cachepath("sampler"))
+    return clgen._shorthash(self.hash, deeplearning.clgen.clgen.cache.cachepath("sampler"))
 
   @property
   def min_samples(self) -> int:

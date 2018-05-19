@@ -29,6 +29,7 @@ from argparse import ArgumentParser, FileType, RawDescriptionHelpFormatter
 from pathlib import Path
 from typing import BinaryIO, List, TextIO
 
+import deeplearning.clgen.clgen.cache
 import deeplearning.clgen.clgen.errors
 from deeplearning.clgen import clgen
 from deeplearning.clgen import dbutil
@@ -633,7 +634,7 @@ def _register_cache_parser(self, parent: ArgumentParser) -> None:
     """
 
     def _main() -> None:
-      cache = clgen.cachepath()
+      cache = deeplearning.clgen.clgen.cache.cachepath()
 
       log.warning("Not Implemented: refresh corpuses")
 

@@ -30,6 +30,7 @@ from typing import Iterable, List, Tuple
 
 import numpy as np
 
+import deeplearning.clgen.clgen.cache
 import deeplearning.clgen.clgen.errors
 from deeplearning.clgen import clgen
 from deeplearning.clgen import dbutil
@@ -290,16 +291,17 @@ class Corpus(object):
     # check that contentid exists
     self.language = clgen.Language.from_str(opts.get("language"))
     if (path is None and not fs.isdir(
-        clgen.cachepath("contentfiles", f"{self.language}-{contentid}"))):
+        deeplearning.clgen.clgen.cache.cachepath("contentfiles", f"{self.language}-{contentid}"))):
       raise deeplearning.clgen.clgen.errors.UserError(
         "corpus {self.language}-{contentid} not found".format(**vars()))
 
     self.contentid = contentid
-    self.contentcache = clgen.mkcache("contentfiles", f"{self.language}-{contentid}")
+    self.contentcache = deeplearning.clgen.clgen.cache.mkcache("contentfiles",
+                                                               f"{self.language}-{contentid}")
     self.kernels_db = self.contentcache.keypath('kernels.db')
 
     self.hash = self._hash(contentid, self.opts)
-    self.cache = clgen.mkcache("corpus", f"{self.language}-{self.hash}")
+    self.cache = deeplearning.clgen.clgen.cache.mkcache("corpus", f"{self.language}-{self.hash}")
 
     log.debug("contentfiles {self.contentid}".format(**vars()))
     log.debug("corpus {hash}".format(hash=self.hash))
@@ -528,7 +530,7 @@ class Corpus(object):
 
   @property
   def shorthash(self):
-    return clgen._shorthash(self.hash, clgen.cachepath("corpus"))
+    return clgen._shorthash(self.hash, deeplearning.clgen.clgen.cache.cachepath("corpus"))
 
   @property
   def lock(self):
@@ -675,10 +677,10 @@ class Corpus(object):
         raise deeplearning.clgen.clgen.errors.UserError(
           "Corpus path '{}' is not a directory".format(path))
 
-      dirhashcache = DirHashCache(clgen.cachepath("dirhash.db"), 'sha1')
+      dirhashcache = DirHashCache(deeplearning.clgen.clgen.cache.cachepath("dirhash.db"), 'sha1')
       uid = prof.profile(dirhashcache.dirhash, path)
     elif uid:
-      cache_path = clgen.mkcache("contentfiles", f"{language}-{uid}").path
+      cache_path = deeplearning.clgen.clgen.cache.mkcache("contentfiles", f"{language}-{uid}").path
       if not fs.isdir(cache_path):
         raise deeplearning.clgen.clgen.errors.UserError("Corpus content {} not found".format(uid))
     else:

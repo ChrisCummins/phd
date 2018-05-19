@@ -28,6 +28,7 @@ from typing import Iterator, List, Union
 import progressbar
 from prettytable import PrettyTable
 
+import deeplearning.clgen.clgen.cache
 import deeplearning.clgen.clgen.errors
 from deeplearning.clgen import clgen
 from deeplearning.clgen import log
@@ -99,7 +100,7 @@ class Model(object):
     self.opts = types.update(deepcopy(DEFAULT_MODEL_OPTS), opts)
     self.corpus = corpus
     self.hash = _hash(self.corpus, self.opts)
-    self.cache = clgen.mkcache("model", f"{corpus.language}-{self.hash}")
+    self.cache = deeplearning.clgen.clgen.cache.mkcache("model", f"{corpus.language}-{self.hash}")
 
     log.debug("model", self.hash)
 
@@ -444,8 +445,8 @@ def models() -> Iterator[Model]:
   Iterator[Model]
       An iterable over all cached models.
   """
-  if fs.isdir(clgen.cachepath(), "model"):
-    modeldirs = fs.ls(fs.path(clgen.cachepath(), "model"), abspaths=True)
+  if fs.isdir(deeplearning.clgen.clgen.cache.cachepath(), "model"):
+    modeldirs = fs.ls(fs.path(deeplearning.clgen.clgen.cache.cachepath(), "model"), abspaths=True)
     for modeldir in modeldirs:
       meta = jsonutil.read_file(fs.path(modeldir, "META"))
       model = Model.from_json(meta)

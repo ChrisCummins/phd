@@ -36,8 +36,9 @@ from deeplearning.clgen._config import *
 from pkg_resources import require, resource_filename, resource_string
 
 from deeplearning.clgen.clgen import CLgenError, InternalError
+from deeplearning.clgen.clgen.cache import cachepath
 from deeplearning.clgen.clgen.errors import CLgenError, File404, InternalError, UserError
-from lib.labm8 import cache, fs, system
+from lib.labm8 import fs, system
 
 
 __author__ = "Chris Cummins"
@@ -58,27 +59,6 @@ version_info_t = namedtuple('version_info_t', ['major', 'minor', 'micro', 'relea
 version_info = version_info_t(_major, _minor, _micro, _releaselevel)
 
 
-def cachepath(*relative_path_components: list) -> str:
-  """
-  Return path to file system cache.
-
-  Parameters
-  ----------
-  *relative_path_components
-      Relative path of cache.
-
-  Returns
-  -------
-  str
-      Absolute path of file system cache.
-  """
-  cache_root = os.environ.get("CLGEN_CACHE",
-                              f"~/.cache/clgen/{version_info.major}.{version_info.minor}.x")
-
-  fs.mkdir(cache_root)
-  return fs.path(cache_root, *relative_path_components)
-
-
 def get_default_author() -> str:
   """
   Get a default author name.
@@ -93,27 +73,6 @@ def get_default_author() -> str:
   """
   return os.environ.get("CLGEN_AUTHOR",
                         "{user}@{host}".format(user=system.USERNAME, host=system.HOSTNAME))
-
-
-def mkcache(*relative_path_components: list) -> cache.FSCache:
-  """
-  Instantiae a file system cache.
-
-  If the cache does not exist, one is created.
-
-  Parameters
-  ----------
-  lang
-      Programming language.
-  *relative_path_components
-      Relative path of cache.
-
-  Returns
-  -------
-  labm8.FSCache
-      Filesystem cache.
-  """
-  return cache.FSCache(cachepath(*relative_path_components), escape_key=cache.escape_path)
 
 
 def must_exist(*path_components: str, **kwargs) -> str:
