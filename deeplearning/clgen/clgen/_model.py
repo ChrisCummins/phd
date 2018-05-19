@@ -41,15 +41,15 @@ from lib.labm8 import types
 
 # Default options used for model. Any values provided by the user will override
 # these defaults.
-DEFAULT_MODEL_OPTS = {
-  "created": {"author": clgen.get_default_author(), "date": str(datetime.now()), },
-  "architecture": {"model_type": "lstm",  # {lstm,rnn.gru}
-                   "rnn_size": 128,  # num nodes in layer
-                   "num_layers": 2,  # num layers
-                   },
-  "train_opts": {"epochs": 10, "grad_clip": 5, "learning_rate": 2e-3,  # initial learning rate
-                 "lr_decay_rate": 5,  # % to reduce learning rate by per epoch
-                 "intermediate_checkpoints": True}}
+DEFAULT_MODEL_OPTS = {"created": {"date": str(datetime.now()), },
+                      "architecture": {"model_type": "lstm",  # {lstm,rnn.gru}
+                                       "rnn_size": 128,  # num nodes in layer
+                                       "num_layers": 2,  # num layers
+                                       },
+                      "train_opts": {"epochs": 10, "grad_clip": 5, "learning_rate": 2e-3,
+                                     # initial learning rate
+                                     "lr_decay_rate": 5,  # % to reduce learning rate by per epoch
+                                     "intermediate_checkpoints": True}}
 
 
 class ModelError(deeplearning.clgen.clgen.errors.CLgenError):

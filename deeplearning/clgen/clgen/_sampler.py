@@ -49,10 +49,9 @@ from lib.labm8 import types
 DEFAULT_KERNELS_OPTS = {"language": None,  # note language must be explicitly provided
                         "args": None, "start_text": None, "max_length": 10000, "seed": None,
                         "temperature": 1}
-DEFAULT_SAMPLER_OPTS = {
-  "created": {"author": clgen.get_default_author(), "date": str(datetime.now()), },
-  "min_samples": -1, "min_kernels": -1,  # FIXME(polyglot): remove static checker and gpuverify
-  "static_checker": True, "gpuverify": False}
+DEFAULT_SAMPLER_OPTS = {"created": {"date": str(datetime.now()), }, "min_samples": -1,
+                        "min_kernels": -1,  # FIXME(polyglot): remove static checker and gpuverify
+                        "static_checker": True, "gpuverify": False}
 
 
 def serialize_opencl_argspec(args: List[str]) -> str:

@@ -38,7 +38,7 @@ from pkg_resources import require, resource_filename, resource_string
 from deeplearning.clgen.clgen import CLgenError, InternalError
 from deeplearning.clgen.clgen.cache import cachepath
 from deeplearning.clgen.clgen.errors import CLgenError, File404, InternalError, UserError
-from lib.labm8 import fs, system
+from lib.labm8 import fs
 
 
 __author__ = "Chris Cummins"
@@ -57,22 +57,6 @@ _releaselevel = __version__.split('.')[3] if len(__version__.split('.')) > 3 els
 
 version_info_t = namedtuple('version_info_t', ['major', 'minor', 'micro', 'releaselevel'])
 version_info = version_info_t(_major, _minor, _micro, _releaselevel)
-
-
-def get_default_author() -> str:
-  """
-  Get a default author name.
-
-  If CLGEN_AUTHOR environment variable is set, use that. Else, author
-  is $USER@$HOSTNAME.
-
-  Returns
-  -------
-  str
-      Author name.
-  """
-  return os.environ.get("CLGEN_AUTHOR",
-                        "{user}@{host}".format(user=system.USERNAME, host=system.HOSTNAME))
 
 
 def must_exist(*path_components: str, **kwargs) -> str:
