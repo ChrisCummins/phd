@@ -7,7 +7,7 @@ package clgen;
 message Corpus {
   // The identifying name of the programming language.
   optional string language = 1;
-  
+
   oneof contentfiles {
     string id = 10;
     string path = 11;
@@ -19,6 +19,7 @@ message Corpus {
   }
 
   optional int32 sequence_length = 30 [default = 50];
+  optional string contentfile_separator = 31 [default = "\n\n"];
 }
 
 message GreedyMulticharTokenizer {
