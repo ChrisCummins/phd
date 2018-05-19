@@ -737,9 +737,8 @@ For information about a specific command, run `clgen <command> --help`.
 
   # options whch override the normal argument parsing process.
   if args.version:
-    version = clgen.version()
-    print(f"clgen {version} made with \033[1;31m♥\033[0;0m by "
-          "Chris Cummins <chrisc.101@gmail.com>.")
+    print(f"clgen made with \033[1;31m♥\033[0;0m by Chris Cummins "
+          "<chrisc.101@gmail.com>.")
   elif args.corpus_dir:
     model = clgen.Model.from_json(jsonutil.loads(args.corpus_dir.read()))
     print(model.corpus.cache.path)

@@ -58,18 +58,6 @@ version_info_t = namedtuple('version_info_t', ['major', 'minor', 'micro', 'relea
 version_info = version_info_t(_major, _minor, _micro, _releaselevel)
 
 
-def version() -> str:
-  """
-  Get the package version.
-
-  Returns
-  -------
-  str
-      Version string.
-  """
-  return __version__
-
-
 def cachepath(*relative_path_components: list) -> str:
   """
   Return path to file system cache.

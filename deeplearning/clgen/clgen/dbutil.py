@@ -303,7 +303,7 @@ def get_inlined_kernel(path: str, kid: str, lang: clgen.Language = clgen.Languag
   return "\n".join(outlines)
 
 
-def set_version_meta(path: str, version: str = clgen.version()) -> None:
+def set_version_meta(path: str) -> None:
   """
   Set the "version" key in an database.
 
@@ -318,10 +318,10 @@ def set_version_meta(path: str, version: str = clgen.version()) -> None:
   version : str, optional
       Version value (defaults to CLgen version).
   """
-  set_meta(path, "version", version)
+  set_meta(path, "version", "master")
 
 
-def version_meta_matches(path: str, version: str = clgen.version()) -> bool:
+def version_meta_matches(path: str) -> bool:
   """
   Check that the "version" key in a database matches the expected value.
 
@@ -340,7 +340,7 @@ def version_meta_matches(path: str, version: str = clgen.version()) -> bool:
   bool
       True if version in database matches expected version, else False.
   """
-  return get_meta(path, "version") == version
+  return True
 
 
 def run_script(path: str, script: str) -> None:
@@ -796,7 +796,7 @@ def get_all_sampler_datasets(all_clgen_versions: bool = True) -> list:
   if all_clgen_versions:
     versiondirs = fs.ls(fs.path("~/.cache/clgen"), abspaths=True)
   else:
-    versiondirs = [fs.path("~/.cache/clgen", clgen.version())]
+    versiondirs = [fs.path("~/.cache/clgen")]
 
   versiondirs = [v for v in versiondirs if fs.isdir(v, "sampler")]
 

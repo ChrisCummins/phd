@@ -47,11 +47,6 @@ def test_run_exception_debug():
     cli.run(_mymethod, 1, 0)
 
 
-def test_cli_version():
-  with pytest.raises(SystemExit):
-    cli.main("--version")
-
-
 def test_cli_test_cache_path():
   with pytest.raises(SystemExit):
     cli.main("test --cache-path".split())
