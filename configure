@@ -94,7 +94,7 @@ def main():
     else:
         cfg = {
             "cuda": args.with_cuda,
-            "version": "0.4.1",
+            "version": "0.4.1.dev0",
         }
 
     # get input from user
