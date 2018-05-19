@@ -1,0 +1,101 @@
+// Protocol buffers describing CLgen models and samplers.
+
+syntax = "proto2";
+package clgen;
+
+// The specification of a training corpus.
+message Corpus {
+  // The identifying name of the programming language.
+  optional string language = 1;
+
+  oneof contentfiles {
+    string id = 10;
+    string path = 11;
+  }
+
+  oneof tokenizer {
+    bool ascii_character_tokenizer = 20;
+    GreedyMulticharTokenizer greedy_multichar_tokenizer = 21;
+  }
+
+  optional int32 sequence_length = 30 [default = 50];
+  optional string contentfile_separator = 31 [default = "\n\n"];
+}
+
+message GreedyMulticharTokenizer {
+  // A list of multi-character tokens.
+  repeated string tokens = 1;
+}
+
+// The specification of a CLgen model.
+message Model {
+  optional NetworkArchitecture architecture = 2;
+  optional TrainingOptions training = 3;
+}
+
+message NetworkArchitecture {
+  enum NeuronType {
+    UNKNOWN = 0; // UNKNOWN == error.
+    LSTM = 1;
+    RNN = 2;
+    GRU = 3;
+  }
+
+  // The type of neuron. Valid options are: {"lstm","rnn","gru"}.
+  optional NeuronType neuron_type = 1 [default = LSTM];
+  // The number of neurons in each layer of the network.
+  optional int32 neurons_per_layer = 2 [default = 512];
+  // The total number of layers in the network.
+  optional int32 num_layers = 3 [default = 2];
+}
+
+message TrainingOptions {
+  // The number of epochs to train the network for.
+  optional int32 num_epochs = 1 [default = 50];
+  // If true, shuffle the order of contentfiles in the corpus between each
+  // training epoch.
+  optional bool shuffle_corpus_contentfiles_between_epochs = 2;
+  // The training batch size.
+  optional int32 batch_size = 3 [default = 128];
+  optional int32 gradient_clip = 4 [default = 5];
+  // The initial learning rate.
+  optional float initial_learning_rate = 5 [default = 0.001];
+  // The rate at which the learning rate decays per epoch of training, in
+  // percent.
+  optional int32 percent_learning_rate_decay_per_epoch = 6 [default = 5];
+  // Whether to save a checkpoint at each epoch of training. This is
+  // recommended in most cases, as it allows incremental training of models.
+  optional bool save_intermediate_checkpoints = 7 [default = true];
+}
+
+// The specification of a CLgen sampler.
+message Sampler {
+  // The initial text to the seed the language model with. Each sample will
+  // begin with this text.
+  optional string start_text = 1;
+  // The sampling batch size.
+  optional int32 batch_size = 2 [default = 50];
+  // A value used to seed the RNG. A sampler invoked twice with the same
+  // seed and the same settings will produce the same output. If no seed is set,
+  // the RNG is seeded (pseudo)randomly.
+  optional int64 seed = 3;
+  // The criteria that determine when to terminate sampling.
+  repeated SampleTerminationCriterion termination_criteria = 4;
+}
+
+message SampleTerminationCriterion {
+  oneof criterion {
+    MaxTokenLength maxlen = 1;
+    SymetricalTokenDepth symtok = 2;
+  }
+}
+
+message MaxTokenLength {
+  optional int32 maximum_tokens_in_sample = 1;
+  optional bool include_start_text_in_maximum = 2 [default = true];
+}
+
+message SymetricalTokenDepth {
+  optional string depth_increase_token = 1 [default = "{"];
+  optional string depth_decrease_token = 2 [default = "}"];
+}

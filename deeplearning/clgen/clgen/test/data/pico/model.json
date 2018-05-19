@@ -1,0 +1,19 @@
+{
+  "created": {
+    "author": "Chris Cummins <chrisc.101@gmail.com>",
+    "date": "2017-05-18 12:00:00"
+  },
+  "corpus": {
+    "language": "opencl",
+    "path": "corpus",
+    "vocabulary": "greedy"
+  },
+  "architecture": {
+    "model_type": "lstm",
+    "rnn_size": 8,
+    "num_layers": 2
+  },
+  "train_opts": {
+    "epochs": 1
+  }
+}

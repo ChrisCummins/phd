@@ -1,0 +1,82 @@
+# build environment
+#
+# We need the extra RAM that a non-container build gives us.
+#
+# See: https://docs.travis-ci.com/user/ci-environment/
+sudo: required
+dist: trusty
+
+language: python
+
+python:
+  - "3.6"
+
+cache:
+  directories:
+    - .cache
+    - third_party/cmake
+    - third_party/gpuverify
+    - third_party/libclc
+    - third_party/llvm
+    - third_party/ninja
+    - third_party/oclgrind
+
+# here we do the work that install-deps.sh script does
+addons:
+  apt:
+    sources:
+      - llvm-toolchain-precise-3.7
+      - ubuntu-toolchain-r-test
+    packages:
+      - libtcmalloc-minimal4  # fix for TensorFlow malloc. See: https://github.com/tensorflow/tensorflow/issues/6968#issuecomment-279060156
+      - gcc-5
+      - g++-5
+      - clang-3.6
+      - libhdf5-serial-dev
+      - python-dev
+      - mono-complete
+
+env:
+  global:
+    - CC=clang
+    - CXX=clang++
+    - LD_PRELOAD="/usr/lib/libtcmalloc_minimal.so.4"  # fix for TensorFlow malloc. See: https://github.com/tensorflow/tensorflow/issues/6968#issuecomment-279060156
+
+before_install:
+  - pip install --upgrade pip
+  - pip install coveralls
+  - sudo apt-get update -qq
+  - ldd --version   # glibc version
+  - $CC --version   # c compiler
+  - $CXX --version  # c++ compiler
+
+# A clean Travis CI build will timeout after 50 minutes and fail. Irritatingly,
+# this means that the caches are not updated, so we can't incrementally build
+# the project by restarting the job. The workaround is to kill the build after
+# a time limit and then restart the job by hand:
+#
+# install:  # cache cold (runs build in 30min chunks, restart job until complete)
+#   - ./configure -b
+#   - timeout 1800 make all || true
+#   - touch NORUN
+#
+install:  # cache hot
+  - ./configure -b
+  - make all
+  - pip freeze  # python package versions
+
+script:
+  - test -f NORUN || which clgen
+  - test -f NORUN || clgen -v test
+
+after_success:
+  - test -f NORUN || mv -v ~/virtualenv/*/lib/*/site-packages/CLgen-*/clgen/.coverage .
+  - test -f NORUN || mv -v ~/virtualenv/*/lib/*/site-packages/CLgen-*/clgen/test/data/coveragerc .coveragerc
+  # strip absolute paths from coverage file
+  - test -f NORUN || sed -r 's,/home/travis/virtualenv/python[0-9\.]+/lib/python[0-9\.]+/site-packages/CLgen-[0-9\.]+(\.dev[0-9]+)?-py[0-9\.]+\.egg,'$(pwd)',g' -i .coverage
+  - test -f NORUN || test -f NORUN || coveralls
+
+notifications:
+  email:
+    on_success: always # [always|never|change]
+    on_failure: always # [always|never|change]
