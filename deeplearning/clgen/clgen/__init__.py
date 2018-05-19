@@ -319,7 +319,7 @@ def platform_info(printfn=print) -> None:
   else:
     features_str = ""
 
-  printfn("CLgen:     ", version(), features_str)
+  printfn("CLgen:      mater")
   printfn("Platform:  ", platform.system())
   printfn("Memory:    ", round(psutil.virtual_memory().total / (1024 ** 2)), "MB")
 

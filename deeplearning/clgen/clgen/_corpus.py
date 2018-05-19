@@ -49,10 +49,10 @@ from lib.labm8.dirhashcache import DirHashCache
 # Default options used for corpus. Any values provided by the user will override
 # these defaults.
 DEFAULT_CORPUS_OPTS = {
-  "created": {"author": clgen.get_default_author(), "date": str(datetime.now()),
-              "version": clgen.version(), }, "eof": False, "batch_size": 50, "seq_length": 50,
-  "vocabulary": "char", "encoding": "default", "preprocess": True, "preserve_order": False,
-  "language": None,  # Note no explicit default language.
+  "created": {"author": clgen.get_default_author(), "date": str(datetime.now()), }, "eof": False,
+  "batch_size": 50, "seq_length": 50, "vocabulary": "char", "encoding": "default",
+  "preprocess": True, "preserve_order": False, "language": None,
+  # Note no explicit default language.
 }
 
 
