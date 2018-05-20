@@ -17,47 +17,56 @@
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
 import sys
+import tempfile
 
 import pytest
 from absl import app
 
 from deeplearning.clgen import dbutil
 from deeplearning.clgen import errors
-from deeplearning.clgen.tests import testlib as tests
 from lib.labm8 import fs
 
 
-def test_create_db():
-  db_path = tests.data_path("db", "tmp.db", exists=False)
-  fs.rm(db_path)
-
-  dbutil.create_db(db_path, github=False)
-  assert fs.exists(db_path)
-
-  with pytest.raises(errors.UserError):
+@pytest.fixture(scope='module')
+def empty_db_path(request) -> str:
+  del request
+  with tempfile.TemporaryDirectory(prefix='clgen_') as d:
+    db_path = fs.path(d, 'test.db')
     dbutil.create_db(db_path, github=False)
+    yield db_path
+
+
+def test_create_db():
+  """Test creating a non-GitHub database."""
+  with tempfile.TemporaryDirectory(prefix='clgen_') as d:
+    db_path = fs.path(d, 'test.db')
+
+    dbutil.create_db(db_path, github=False)
+    assert fs.exists(db_path)
+
+    # You cannot create a db that already exists.
+    with pytest.raises(errors.UserError):
+      dbutil.create_db(db_path, github=False)
 
 
 def test_create_db_gh():
-  db_path = tests.data_path("db", "tmp.db", exists=False)
-  fs.rm(db_path)
+  """Test creating a GitHub database."""
+  with tempfile.TemporaryDirectory(prefix='clgen_') as d:
+    db_path = fs.path(d, 'test.db')
 
-  dbutil.create_db(db_path, github=True)
-  assert fs.exists(db_path)
-
-  with pytest.raises(errors.UserError):
     dbutil.create_db(db_path, github=True)
+    assert fs.exists(db_path)
+
+    with pytest.raises(errors.UserError):
+      dbutil.create_db(db_path, github=True)
 
 
-def test_insert():
-  db_path = tests.data_path("db", "tmp.db", exists=False)
-  fs.rm(db_path)
-
-  dbutil.create_db(db_path)
-  db = dbutil.connect(db_path)
+def test_insert(empty_db_path):
+  print("empty_db_path", empty_db_path)
+  db = dbutil.connect(empty_db_path)
   c = db.cursor()
 
-  assert dbutil.num_rows_in(db_path, "ContentFiles") == 0
+  assert dbutil.num_rows_in(empty_db_path, "ContentFiles") == 0
 
   dbutil.sql_insert_dict(c, "ContentFiles", {"id": "a", "contents": "foo"})
   dbutil.sql_insert_dict(c, "PreprocessedFiles",
@@ -68,22 +77,22 @@ def test_insert():
   db.commit()
   c = db.cursor()
 
-  assert dbutil.num_rows_in(db_path, "ContentFiles") == 1
-  assert dbutil.num_rows_in(db_path, "PreprocessedFiles") == 2
+  assert dbutil.num_rows_in(empty_db_path, "ContentFiles") == 1
+  assert dbutil.num_rows_in(empty_db_path, "PreprocessedFiles") == 2
 
-  assert dbutil.cc(db_path, "ContentFiles", "contents") == 3
-  assert dbutil.cc(db_path, "ContentFiles", "id") == 1
-  assert dbutil.lc(db_path, "ContentFiles", "contents") == 1
+  assert dbutil.cc(empty_db_path, "ContentFiles", "contents") == 3
+  assert dbutil.cc(empty_db_path, "ContentFiles", "id") == 1
+  assert dbutil.lc(empty_db_path, "ContentFiles", "contents") == 1
 
-  dbutil.remove_bad_preprocessed(db_path)
-  assert dbutil.num_rows_in(db_path, "ContentFiles") == 1
+  dbutil.remove_bad_preprocessed(empty_db_path)
+  assert dbutil.num_rows_in(empty_db_path, "ContentFiles") == 1
   # remove_bad_preprocessed doesn't actually delete any rows, just
   # replaces contents
-  assert dbutil.num_rows_in(db_path, "PreprocessedFiles") == 2
+  assert dbutil.num_rows_in(empty_db_path, "PreprocessedFiles") == 2
 
-  dbutil.remove_preprocessed(db_path)
-  assert dbutil.num_rows_in(db_path, "ContentFiles") == 1
-  assert dbutil.num_rows_in(db_path, "PreprocessedFiles") == 0
+  dbutil.remove_preprocessed(empty_db_path)
+  assert dbutil.num_rows_in(empty_db_path, "ContentFiles") == 1
+  assert dbutil.num_rows_in(empty_db_path, "PreprocessedFiles") == 0
 
 
 def main(argv):

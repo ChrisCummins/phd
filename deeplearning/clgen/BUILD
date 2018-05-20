@@ -121,6 +121,7 @@ py_test(
 py_library(
     name = "dbutil",
     srcs = ["dbutil.py"],
+    data = ["//deeplearning/clgen/data/sql:scripts"],
     deps = [
         ":errors",
         ":languages",

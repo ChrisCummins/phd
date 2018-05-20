@@ -288,7 +288,8 @@ def get_inlined_kernel(path: str, kid: str,
           outlines.append(
             '// [FETCH] ignored recursive include: ' + include_name)
         else:
-          logging.debug("closest match to", include_name, "is", closest_match)
+          logging.debug("closest match to %s is %s", include_name,
+                        closest_match)
 
           c.execute("SELECT id FROM contentmeta WHERE path=?", (closest_match,))
           closest_kid = c.fetchone()[0]
@@ -608,7 +609,7 @@ def remove_bad_preprocessed(db_path: str) -> None:
   """
   original_size = fs.du(db_path, human_readable=False)
   original_size_human_readable = fs.du(db_path, human_readable=True)
-  logging.info("vacuuming", original_size_human_readable, "database")
+  logging.info("vacuuming %s database", original_size_human_readable)
   sys.stdout.flush()
 
   # Remove contents from bad or ugly preprocessed files.
@@ -629,9 +630,8 @@ def remove_bad_preprocessed(db_path: str) -> None:
   new_size = fs.du(db_path, human_readable=False)
   new_size_human_readable = fs.du(db_path, human_readable=True)
   reduction_ratio = (1 - (new_size / original_size)) * 100
-  logging.info(
-    "done. new size {}. ({:.0f}% reduction)".format(new_size_human_readable,
-                                                    reduction_ratio), sep=".")
+  logging.info("done. new size %s. (%.0f reduction)", new_size_human_readable,
+               reduction_ratio)
 
 
 def sql_insert_dict(c, table: str, data: dict, ignore_existing: bool = False,
@@ -731,7 +731,7 @@ def _dump_db(db, out_path: str, gh: bool = False, fileid: bool = False,
   dir : bool, optional
       Write output to directory.
   """
-  logging.info('writing corpus', out_path, '...')
+  logging.info('writing corpus %s ...', out_path)
 
   order = 'ASC' if reverse else 'DESC'
 
@@ -763,7 +763,7 @@ def _dump_db(db, out_path: str, gh: bool = False, fileid: bool = False,
   rows = c.fetchall()
 
   if dir:
-    logging.info('writing to directory ', out_path, '/', sep='')
+    logging.info('writing to directory %s/', out_path)
     if not os.path.exists(out_path):
       os.makedirs(out_path)
     for row in rows:
@@ -772,7 +772,7 @@ def _dump_db(db, out_path: str, gh: bool = False, fileid: bool = False,
       with open(path, 'w') as out:
         out.write(contents)
   else:
-    logging.info('writing file', out_path)
+    logging.info('writing file %s', out_path)
     with open(out_path, 'wb') as out:
       for row in rows:
         id, contents = row
@@ -832,7 +832,7 @@ def merge(outpath, inpaths=None):
   """
   if not fs.isfile(outpath):
     create_db(outpath)
-    logging.info("created", outpath)
+    logging.info("created %s", outpath)
 
   db = connect(outpath)
 
@@ -840,7 +840,7 @@ def merge(outpath, inpaths=None):
     inpaths = get_all_sampler_datasets()
 
   for inpath in inpaths:
-    logging.info("merging from", inpath)
+    logging.info("merging from %s", inpath)
     c = db.cursor()
     c.execute("ATTACH '{}' AS rhs".format(inpath))
     c.execute("INSERT OR IGNORE INTO ContentFiles "
