@@ -48,7 +48,6 @@ env:
     - LD_PRELOAD="/usr/lib/libtcmalloc_minimal.so.4"  # fix for TensorFlow malloc. See: https://github.com/tensorflow/tensorflow/issues/6968#issuecomment-279060156
 
 before_install:
-  - ldd --version
   - echo $CC && $CC --version
   - echo $CXX && $CXX --version
   - ./tools/bootstrap.sh
