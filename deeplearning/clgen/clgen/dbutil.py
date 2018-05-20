@@ -29,6 +29,7 @@ from typing import List
 import editdistance
 
 import deeplearning.clgen.clgen.errors
+import deeplearning.clgen.clgen.package_util
 from deeplearning.clgen import clgen
 from deeplearning.clgen import log
 from lib.labm8 import fs
@@ -54,9 +55,11 @@ def create_db(path: str, github: bool = False) -> None:
   db = sqlite3.connect(path)
   c = db.cursor()
   if github:
-    script = clgen.sql_script('create-gh-samples-db')
+    script = deeplearning.clgen.clgen.package_util.sql_script(
+      'create-gh-samples-db')
   else:
-    script = clgen.sql_script('create-samples-db')
+    script = deeplearning.clgen.clgen.package_util.sql_script(
+      'create-samples-db')
   c.executescript(script)
   c.close()
   db.commit()
@@ -362,7 +365,7 @@ def run_script(path: str, script: str) -> None:
   """
   db = sqlite3.connect(path)
   c = db.cursor()
-  c.executescript(clgen.sql_script(script))
+  c.executescript(deeplearning.clgen.clgen.package_util.sql_script(script))
   c.close()
   db.commit()
   db.close()

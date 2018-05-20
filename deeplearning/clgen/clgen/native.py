@@ -41,19 +41,26 @@ SHIMFILE : str
     Path to shim headerfile.
 """
 import deeplearning.clgen.clgen.errors
+import deeplearning.clgen.clgen.package_util
 from deeplearning.clgen import clgen
 from lib.labm8 import fs
 
 
-CLANG = clgen.data_path(fs.path("bin", "clang"))
-CLANG_FORMAT = clgen.data_path(fs.path("bin", "clang-format"))
-CLGEN_FEATURES = clgen.data_path(fs.path("bin", "clgen-features"))
-CLGEN_REWRITER = clgen.data_path(fs.path("bin", "clgen-rewriter"))
-GPUVERIFY = clgen.data_path(fs.path("gpuverify", "gpuverify"))
-LIBCLC = clgen.data_path("libclc")
+CLANG = deeplearning.clgen.clgen.package_util.data_path(fs.path("bin", "clang"))
+CLANG_FORMAT = deeplearning.clgen.clgen.package_util.data_path(
+  fs.path("bin", "clang-format"))
+CLGEN_FEATURES = deeplearning.clgen.clgen.package_util.data_path(
+  fs.path("bin", "clgen-features"))
+CLGEN_REWRITER = deeplearning.clgen.clgen.package_util.data_path(
+  fs.path("bin", "clgen-rewriter"))
+GPUVERIFY = deeplearning.clgen.clgen.package_util.data_path(
+  fs.path("gpuverify", "gpuverify"))
+LIBCLC = deeplearning.clgen.clgen.package_util.data_path("libclc")
 try:
-  OCLGRIND = clgen.data_path(fs.path("oclgrind", "bin", "oclgrind"))
+  OCLGRIND = deeplearning.clgen.clgen.package_util.data_path(
+    fs.path("oclgrind", "bin", "oclgrind"))
 except deeplearning.clgen.clgen.errors.File404:
   pass  # FIXME: oclgrind is broken on Travis CI.
-OPT = clgen.data_path(fs.path("bin", "opt"))
-SHIMFILE = clgen.data_path(fs.path("include", "opencl-shim.h"))
+OPT = deeplearning.clgen.clgen.package_util.data_path(fs.path("bin", "opt"))
+SHIMFILE = deeplearning.clgen.clgen.package_util.data_path(
+  fs.path("include", "opencl-shim.h"))

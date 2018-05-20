@@ -30,7 +30,7 @@ from typing import List, TextIO
 import numpy as np
 
 import deeplearning.clgen.clgen.errors
-from deeplearning.clgen import clgen
+import deeplearning.clgen.clgen.package_util
 from deeplearning.clgen import log
 from deeplearning.clgen import native
 from lib.labm8 import math as labmath
@@ -98,8 +98,8 @@ def to_np_arrays(paths: List[str], **kwargs):
 
 
 # FIXME(polyglot):
-def features(path: str, file=sys.stdout, fatal_errors: bool = False, use_shim: bool = False,
-             quiet: bool = False) -> None:
+def features(path: str, file=sys.stdout, fatal_errors: bool = False,
+             use_shim: bool = False, quiet: bool = False) -> None:
   """
   Print CSV format features of file.
 
@@ -116,9 +116,10 @@ def features(path: str, file=sys.stdout, fatal_errors: bool = False, use_shim: b
   quiet : bool, optional
       Don't print compiler output on errors.
   """
-  path = clgen.must_exist(path)
+  path = deeplearning.clgen.clgen.package_util.must_exist(path)
 
-  cmd = [native.CLGEN_FEATURES, path] + ['-extra-arg=' + x for x in _shim_args(use_shim=use_shim)]
+  cmd = [native.CLGEN_FEATURES, path] + ['-extra-arg=' + x for x in
+                                         _shim_args(use_shim=use_shim)]
 
   process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
   stdout, stderr = process.communicate()
@@ -163,7 +164,8 @@ def feature_headers(file: TextIO = sys.stdout) -> None:
   print(stdout, file=file)
 
 
-def files(paths: List[str], header: bool = True, file: TextIO = sys.stdout, **kwargs) -> None:
+def files(paths: List[str], header: bool = True, file: TextIO = sys.stdout,
+          **kwargs) -> None:
   """
   Print feature values of files in CSV format.
 
