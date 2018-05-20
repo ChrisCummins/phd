@@ -39,6 +39,6 @@ main() {
   mkdir -pv "$WORKING_DIR/output"
 
   # See file 'experiments.py' for the implementation.
-  python "$WORKING_DIR/experiments.py" --testbed_id "$OPENCL_DEVICE"
+  python3 "$WORKING_DIR/experiments.py" --testbed_id "$OPENCL_DEVICE"
 }
 main $@

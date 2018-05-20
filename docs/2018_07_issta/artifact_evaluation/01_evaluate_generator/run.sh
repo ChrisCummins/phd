@@ -96,6 +96,6 @@ EOF
       "$WORKING_DIR/output/generated_kernels"
 
   cd "$WORKING_DIR/.."
-  python ./01_evaluate_generator/make_testcases.py
+  python3 ./01_evaluate_generator/make_testcases.py
 }
 main $@
