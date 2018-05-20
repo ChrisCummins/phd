@@ -1,4 +1,4 @@
-# Testing code and data for CLgen.
+# Testing code for CLgen.
 
 py_library(
     name = "testlib",

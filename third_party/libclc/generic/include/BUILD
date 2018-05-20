@@ -10,5 +10,8 @@ exports_files(["LICENSE"])
 
 filegroup(
     name = "headers",
-    srcs = glob(["**/*.h", "**/*.inc"]),
+    srcs = glob([
+        "**/*.h",
+        "**/*.inc",
+    ]),
 )
