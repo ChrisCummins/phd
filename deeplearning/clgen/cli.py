@@ -34,6 +34,7 @@ import deeplearning.tmp_clgen.clgen.errors
 from deeplearning.tmp_clgen import clgen
 from deeplearning.tmp_clgen import dbutil
 from deeplearning.tmp_clgen import log
+
 from lib.labm8 import fs, jsonutil, prof, types
 
 
@@ -60,9 +61,11 @@ class ReadableFilesOrDirectories(argparse.Action):
   def __call__(self, parser, namespace, values, option_string=None) -> None:
     for path in values:
       if not os.path.isdir(path) and not os.path.isfile(path):
-        raise argparse.ArgumentTypeError(f"ReadableFilesOrDirectories:{path} not found")
+        raise argparse.ArgumentTypeError(
+          f"ReadableFilesOrDirectories:{path} not found")
       if not os.access(path, os.R_OK):
-        raise argparse.ArgumentTypeError(f"ReadableFilesOrDirectories:{path} is not readable")
+        raise argparse.ArgumentTypeError(
+          f"ReadableFilesOrDirectories:{path} is not readable")
 
     setattr(namespace, self.dest, [Path(path) for path in values])
 
@@ -155,36 +158,6 @@ Please report bugs at <https://github.com/ChrisCummins/clgen/issues>\
 
 
 @getself
-def _register_test_parser(self, parent: ArgumentParser) -> None:
-  """
-  Run the CLgen self-test suite.
-  """
-
-  def _main(cache_path: bool, coveragerc_path: bool, coverage_path: bool) -> None:
-    from deeplearning.tmp_clgen import clgen.test
-
-    if cache_path:
-      print(clgen.test.test_cache_path())
-      sys.exit(0)
-    elif coveragerc_path:
-      print(clgen.test.coveragerc_path())
-      sys.exit(0)
-    elif coverage_path:
-      print(clgen.test.coverage_report_path())
-      sys.exit(0)
-
-    sys.exit(clgen.test.testsuite())
-
-  parser = parent.add_parser("test", help="run the testsuite", description=inspect.getdoc(self),
-                             epilog=__help_epilog__)
-  parser.set_defaults(dispatch_func=_main)
-  group = parser.add_mutually_exclusive_group()
-  group.add_argument("--cache-path", action="store_true", help="print path to test cache")
-  group.add_argument("--coveragerc-path", action="store_true", help="print path to coveragerc file")
-  group.add_argument("--coverage-path", action="store_true", help="print path to coverage file")
-
-
-@getself
 def _register_train_parser(self, parent: ArgumentParser) -> None:
   """
   Train a CLgen model.
@@ -197,7 +170,8 @@ def _register_train_parser(self, parent: ArgumentParser) -> None:
     log.info("done.")
 
   parser = parent.add_parser("train", aliases=["t", "tr"], help="train models",
-                             description=inspect.getdoc(self), epilog=__help_epilog__)
+                             description=inspect.getdoc(self),
+                             epilog=__help_epilog__)
   parser.set_defaults(dispatch_func=_main)
   parser.add_argument("model_file", metavar="<model>", type=FileType("r"),
                       help="path to model specification file")
@@ -219,8 +193,10 @@ def _register_sample_parser(self, parent: ArgumentParser) -> None:
     model.train()
     sampler.sample(model)
 
-  parser = parent.add_parser("sample", aliases=["s", "sa"], help="train and sample models",
-                             description=inspect.getdoc(self), epilog=__help_epilog__)
+  parser = parent.add_parser("sample", aliases=["s", "sa"],
+                             help="train and sample models",
+                             description=inspect.getdoc(self),
+                             epilog=__help_epilog__)
   parser.set_defaults(dispatch_func=_main)
   parser.add_argument("model_file", metavar="<model>", type=FileType("r"),
                       help="path to model specification file")
@@ -250,11 +226,14 @@ def _register_fetch_parser(self, parent: ArgumentParser) -> None:
       clgen.fetch(db_file.name, paths)
       log.info("done.")
 
-    parser = parent.add_parser("fs", help="fetch from filesystem", description=inspect.getdoc(self),
+    parser = parent.add_parser("fs", help="fetch from filesystem",
+                               description=inspect.getdoc(self),
                                epilog=__help_epilog__)
     parser.set_defaults(dispatch_func=_main)
-    parser.add_argument("db_file", metavar="<db>", type=FileType("rb"), help="path to SQL dataset")
-    parser.add_argument("paths", metavar="<path>", nargs="+", action=ReadableFilesOrDirectories,
+    parser.add_argument("db_file", metavar="<db>", type=FileType("rb"),
+                        help="path to SQL dataset")
+    parser.add_argument("paths", metavar="<path>", nargs="+",
+                        action=ReadableFilesOrDirectories,
                         help="path to OpenCL files or directories")
 
   @getself
@@ -269,7 +248,8 @@ def _register_fetch_parser(self, parent: ArgumentParser) -> None:
 
     For instructions to generate an API token, see:
 
-      <https://help.github.com/articles/creating-an-access-token-for-command-line-use/>
+      <https://help.github.com/articles/creating-an-access-token-for-command
+      -line-use/>
 
     This process issues thousands of GitHub API requests per minute. Please
     exercise restrained in minimizing your use of this program -- we don't
@@ -288,14 +268,17 @@ def _register_fetch_parser(self, parent: ArgumentParser) -> None:
         log.fatal('environment variable {} not set'.format(e))
 
       try:
-        clgen.fetch_github(db_file.name, username, password, token, lang=clgen.Language.OPENCL)
+        clgen.fetch_github(db_file.name, username, password, token,
+                           lang=clgen.Language.OPENCL)
       except BadCredentialsException as e:
         log.fatal("bad GitHub credentials")
 
     parser = parent.add_parser("github", help="mine OpenCL from GitHub",
-                               description=inspect.getdoc(self), epilog=__help_epilog__)
+                               description=inspect.getdoc(self),
+                               epilog=__help_epilog__)
     parser.set_defaults(dispatch_func=_main)
-    parser.add_argument("db_file", metavar="<db>", type=FileType('rb'), help='path to SQL dataset')
+    parser.add_argument("db_file", metavar="<db>", type=FileType('rb'),
+                        help='path to SQL dataset')
 
   @getself
   def _register_repos_parser(self, parent: ArgumentParser) -> None:
@@ -306,17 +289,24 @@ def _register_fetch_parser(self, parent: ArgumentParser) -> None:
     def _main(db_file: BinaryIO, indir: Path) -> None:
       clgen.fetch_repos(db_file.name, indir, lang=clgen.Language.GLSL)
 
-    parser = parent.add_parser("repos", help="import from directory of repositories",
-                               description=inspect.getdoc(self), epilog=__help_epilog__)
+    parser = parent.add_parser("repos",
+                               help="import from directory of repositories",
+                               description=inspect.getdoc(self),
+                               epilog=__help_epilog__)
     parser.set_defaults(dispatch_func=_main)
-    parser.add_argument("db_file", metavar="<db>", type=FileType('rb'), help='path to SQL dataset')
-    parser.add_argument("indir", metavar="<dir>", help='directory containing repositories')
+    parser.add_argument("db_file", metavar="<db>", type=FileType('rb'),
+                        help='path to SQL dataset')
+    parser.add_argument("indir", metavar="<dir>",
+                        help='directory containing repositories')
 
-  fetch = parent.add_parser("fetch", aliases=["f", "fe"], help="gather training data",
-                            description=inspect.getdoc(self), epilog=__help_epilog__)
+  fetch = parent.add_parser("fetch", aliases=["f", "fe"],
+                            help="gather training data",
+                            description=inspect.getdoc(self),
+                            epilog=__help_epilog__)
   subparser = fetch.add_subparsers(title="available commands")
 
-  subparsers = [_register_fs_parser, _register_github_parser, _register_repos_parser, ]
+  subparsers = [_register_fs_parser, _register_github_parser,
+                _register_repos_parser, ]
 
   for register_fn in subparsers:
     register_fn(subparser)
@@ -346,15 +336,18 @@ def _register_ls_parser(self, parent: ArgumentParser) -> None:
         sampler = clgen.Sampler.from_json(sampler_json)
         caches.append(sampler.cache(model))
 
-      files = sorted(types.flatten(c.ls(abspaths=True, recursive=True) for c in caches))
+      files = sorted(
+        types.flatten(c.ls(abspaths=True, recursive=True) for c in caches))
       print('\n'.join(files))
 
-    parser = parent.add_parser("files", help="list cached files", description=inspect.getdoc(self),
+    parser = parent.add_parser("files", help="list cached files",
+                               description=inspect.getdoc(self),
                                epilog=__help_epilog__)
     parser.set_defaults(dispatch_func=_main)
     parser.add_argument("model_file", metavar="<model>", type=FileType("r"),
                         help="path to model specification file")
-    parser.add_argument("sampler_file", metavar="<sampler>", nargs="?", type=FileType("r"),
+    parser.add_argument("sampler_file", metavar="<sampler>", nargs="?",
+                        type=FileType("r"),
                         help="path to sampler specification file")
 
   @getself
@@ -367,7 +360,8 @@ def _register_ls_parser(self, parent: ArgumentParser) -> None:
       print(clgen.models_to_tab(*clgen.models()))
 
     parser = parent.add_parser("models", help="list cached models",
-                               description=inspect.getdoc(self), epilog=__help_epilog__)
+                               description=inspect.getdoc(self),
+                               epilog=__help_epilog__)
     parser.set_defaults(dispatch_func=_main)
 
   @getself
@@ -380,10 +374,12 @@ def _register_ls_parser(self, parent: ArgumentParser) -> None:
       log.warning("not implemented")
 
     parser = parent.add_parser("samplers", help="list cached samplers",
-                               description=inspect.getdoc(self), epilog=__help_epilog__)
+                               description=inspect.getdoc(self),
+                               epilog=__help_epilog__)
     parser.set_defaults(dispatch_func=_main)
 
-  parser = parent.add_parser("ls", help="list files", description=inspect.getdoc(self),
+  parser = parent.add_parser("ls", help="list files",
+                             description=inspect.getdoc(self),
                              epilog=__help_epilog__)
   subparser = parser.add_subparsers(title="available commands")
 
@@ -411,10 +407,12 @@ def _register_db_parser(self, parent: ArgumentParser) -> None:
       dbutil.create_db(db_file, github)
       print(fs.abspath(db_file))
 
-    parser = parent.add_parser("init", help="create a database", description=inspect.getdoc(self),
+    parser = parent.add_parser("init", help="create a database",
+                               description=inspect.getdoc(self),
                                epilog=__help_epilog__)
     parser.set_defaults(dispatch_func=_main)
-    parser.add_argument('db_file', metavar="<db>", type=Path, help='path to SQL dataset')
+    parser.add_argument('db_file', metavar="<db>", type=Path,
+                        help='path to SQL dataset')
     parser.add_argument('-g', '--github', action='store_true',
                         help='generate dataset with GitHub metadata')
 
@@ -430,9 +428,11 @@ def _register_db_parser(self, parent: ArgumentParser) -> None:
       clgen.explore(db_file.name)
 
     parser = parent.add_parser("explore", help="show database stats",
-                               description=inspect.getdoc(self), epilog=__help_epilog__)
+                               description=inspect.getdoc(self),
+                               epilog=__help_epilog__)
     parser.set_defaults(dispatch_func=_main)
-    parser.add_argument('db_file', metavar="<db>", type=FileType("rb"), help='path to SQL dataset')
+    parser.add_argument('db_file', metavar="<db>", type=FileType("rb"),
+                        help='path to SQL dataset')
 
   @getself
   def _register_merge_parser(self, parent: ArgumentParser) -> None:
@@ -443,12 +443,14 @@ def _register_db_parser(self, parent: ArgumentParser) -> None:
     def _main(db_out: BinaryIO, inputs: List[BinaryIO]):
       dbutil.merge(db_out.name, [db.name for db in inputs])
 
-    parser = parent.add_parser("merge", help="merge databases", description=inspect.getdoc(_main),
+    parser = parent.add_parser("merge", help="merge databases",
+                               description=inspect.getdoc(_main),
                                epilog=__help_epilog__)
     parser.set_defaults(dispatch_func=_main)
     parser.add_argument("db_out", metavar="<db>", type=FileType("wb"),
                         help="path to output database")
-    parser.add_argument("inputs", metavar="<db>", nargs='+', type=FileType("rb"),
+    parser.add_argument("inputs", metavar="<db>", nargs='+',
+                        type=FileType("rb"),
                         help="path to database(s) to merge")
 
   @getself
@@ -457,13 +459,15 @@ def _register_db_parser(self, parent: ArgumentParser) -> None:
     Dump kernel dataset to file(s).
     """
 
-    def _main(db_file: BinaryIO, outpath: Path, dir: bool, eof: bool, file_sep: bool,
-              input_samples: bool, reverse: bool, status: int) -> None:
+    def _main(db_file: BinaryIO, outpath: Path, dir: bool, eof: bool,
+              file_sep: bool, input_samples: bool, reverse: bool,
+              status: int) -> None:
       dbutil.dump_db(db_file.name, outpath, dir=dir, eof=eof, fileid=file_sep,
                      input_samples=input_samples)
 
     parser = parent.add_parser("dump", help="export database contents",
-                               description=inspect.getdoc(_main), epilog=__help_epilog__)
+                               description=inspect.getdoc(_main),
+                               epilog=__help_epilog__)
     parser.set_defaults(dispatch_func=_main)
     parser.add_argument('db_file', metavar="<db>", type=FileType("rb"),
                         help='path to kernels database')
@@ -471,19 +475,23 @@ def _register_db_parser(self, parent: ArgumentParser) -> None:
                         help='path to output file or directory')
     parser.add_argument("-d", "--dir", action='store_true',
                         help='output to directory (overrides -i, --eof, -r)')
-    parser.add_argument("-i", "--file-sep", action='store_true', help='include file separators')
+    parser.add_argument("-i", "--file-sep", action='store_true',
+                        help='include file separators')
     parser.add_argument('--input-samples', action='store_true',
                         help='use input contents, not preprocessed')
     parser.add_argument('--eof', action='store_true', help='print end of file')
-    parser.add_argument('-r', '--reverse', action='store_true', help='use reverse order')
-    parser.add_argument('-s', '--status', type=int, default=0, help='status code to use')
+    parser.add_argument('-r', '--reverse', action='store_true',
+                        help='use reverse order')
+    parser.add_argument('-s', '--status', type=int, default=0,
+                        help='status code to use')
 
-  parser = parent.add_parser("db", help="manage databases", description=inspect.getdoc(self),
+  parser = parent.add_parser("db", help="manage databases",
+                             description=inspect.getdoc(self),
                              epilog=__help_epilog__)
   subparser = parser.add_subparsers(title="available commands")
 
-  subparsers = [_register_init_parser, _register_explore_parser, _register_merge_parser,
-    _register_dump_parser, ]
+  subparsers = [_register_init_parser, _register_explore_parser,
+                _register_merge_parser, _register_dump_parser, ]
 
   for register_fn in subparsers:
     register_fn(subparser)
@@ -503,8 +511,9 @@ def _register_preprocess_parser(self, parent: ArgumentParser) -> None:
 
   # FIXME(polyglot):
 
-  def _main(inputs: List[TextIO], inputs_are_files: bool, inplace: bool, gpuverify: bool,
-            remove_bad_preprocessed: bool, remove_preprocessed: bool) -> None:
+  def _main(inputs: List[TextIO], inputs_are_files: bool, inplace: bool,
+            gpuverify: bool, remove_bad_preprocessed: bool,
+            remove_preprocessed: bool) -> None:
     input_paths = [infile.name for infile in inputs]
 
     if inputs_are_files and inplace:
@@ -519,21 +528,25 @@ def _register_preprocess_parser(self, parent: ArgumentParser) -> None:
           dbutil.remove_preprocessed(path)
           print("done.")
         else:
-          if clgen.preprocess_db(path, lang=clgen.Language.OPENCL, use_gpuverify=gpuverify):
+          if clgen.preprocess_db(path, lang=clgen.Language.OPENCL,
+                                 use_gpuverify=gpuverify):
             print("done.")
           else:
             print("nothing to be done.")
 
   parser = parent.add_parser("preprocess", aliases=["p", "pp"],
-                             help="preprocess files for training", description=inspect.getdoc(self),
+                             help="preprocess files for training",
+                             description=inspect.getdoc(self),
                              epilog=__help_epilog__)
   parser.set_defaults(dispatch_func=_main)
   parser.add_argument('inputs', metavar="<path>", nargs='+', type=FileType("r"),
                       help='path to input(s)')
-  parser.add_argument('-f', '--file', dest="inputs_are_files", action='store_true',
-                      help='treat input as file')
-  parser.add_argument('-i', '--inplace', action='store_true', help='inplace file rewrite')
-  parser.add_argument('-G', '--gpuverify', action='store_true', help='run GPUVerify on kernels')
+  parser.add_argument('-f', '--file', dest="inputs_are_files",
+                      action='store_true', help='treat input as file')
+  parser.add_argument('-i', '--inplace', action='store_true',
+                      help='inplace file rewrite')
+  parser.add_argument('-G', '--gpuverify', action='store_true',
+                      help='run GPUVerify on kernels')
   group = parser.add_mutually_exclusive_group()
   group.add_argument('--remove-bad-preprocessed', action='store_true', help="""\
 delete the contents of all bad or ugly preprocessed files,
@@ -555,8 +568,9 @@ def _register_features_parser(self, parent: ArgumentParser) -> None:
 
   # FIXME(polyglot):
 
-  def _main(infiles: List[TextIO], dir_mode: bool, summarise: bool, fatal_errors: bool,
-            use_shum: bool, quiet: bool, no_header: bool) -> None:
+  def _main(infiles: List[TextIO], dir_mode: bool, summarise: bool,
+            fatal_errors: bool, use_shum: bool, quiet: bool,
+            no_header: bool) -> None:
     from deeplearning.tmp_clgen import features
 
     input_paths = [infile.name for infile in infiles]
@@ -578,21 +592,27 @@ def _register_features_parser(self, parent: ArgumentParser) -> None:
     else:
       paths = [fs.path(f) for f in input_paths]
 
-    features.files(paths, fatal_errors=fatal_errors, quiet=quiet, use_shim=use_shim,
-                   header=not no_header)
+    features.files(paths, fatal_errors=fatal_errors, quiet=quiet,
+                   use_shim=use_shim, header=not no_header)
 
   parser = parent.add_parser("features", help="extract OpenCL kernel features",
-                             description=inspect.getdoc(self), epilog=__help_epilog__)
+                             description=inspect.getdoc(self),
+                             epilog=__help_epilog__)
   parser.set_defaults(dispatch_func=_main)
-  parser.add_argument("infiles", metavar="<path>", nargs="+", type=FileType("r"),
-                      help="input path(s)")
-  parser.add_argument("-d", "--dir", action="store_true", help="treat inputs as directories")
+  parser.add_argument("infiles", metavar="<path>", nargs="+",
+                      type=FileType("r"), help="input path(s)")
+  parser.add_argument("-d", "--dir", action="store_true",
+                      help="treat inputs as directories")
   parser.add_argument("-s", "--stats", dest="summarize", action="store_true",
                       help="summarize features files")
-  parser.add_argument("-e", "--fatal-errors", action="store_true", help="quit on compiler error")
-  parser.add_argument("--shim", dest="use_shim", action="store_true", help="include shim header")
-  parser.add_argument("-q", "--quiet", action="store_true", help="minimal error output")
-  parser.add_argument("-H", "--no-header", action="store_true", help="no features header")
+  parser.add_argument("-e", "--fatal-errors", action="store_true",
+                      help="quit on compiler error")
+  parser.add_argument("--shim", dest="use_shim", action="store_true",
+                      help="include shim header")
+  parser.add_argument("-q", "--quiet", action="store_true",
+                      help="minimal error output")
+  parser.add_argument("-H", "--no-header", action="store_true",
+                      help="no features header")
 
 
 @getself
@@ -611,14 +631,16 @@ def _register_atomize_parser(self, parent: ArgumentParser) -> None:
     else:
       log.info('\n'.join(atoms))
 
-  parser = parent.add_parser("atomize", help="atomize files", description=inspect.getdoc(self),
+  parser = parent.add_parser("atomize", help="atomize files",
+                             description=inspect.getdoc(self),
                              epilog=__help_epilog__)
   parser.set_defaults(dispatch_func=_main)
   parser.add_argument('infile', metavar="<path>", type=FileType("r"),
                       help='path to input text file')
   parser.add_argument('-t', '--type', type=str, dest="vocab", default='char',
                       help='vocabulary type')
-  parser.add_argument('-s', '--size', action="store_true", help="print vocabulary size")
+  parser.add_argument('-s', '--size', action="store_true",
+                      help="print vocabulary size")
 
 
 @getself
@@ -657,11 +679,13 @@ def _register_cache_parser(self, parent: ArgumentParser) -> None:
       log.warning("Not Implemented: refresh samplers")
 
     parser = parent.add_parser("migrate", help="migrate the cache",
-                               description=inspect.getdoc(self), epilog=__help_epilog__)
+                               description=inspect.getdoc(self),
+                               epilog=__help_epilog__)
     parser.set_defaults(dispatch_func=_main)
 
   parser = parent.add_parser("cache", help="manage filesystem cache",
-                             description=inspect.getdoc(self), epilog=__help_epilog__)
+                             description=inspect.getdoc(self),
+                             epilog=__help_epilog__)
 
   subparser = parser.add_subparsers(title="available commands")
 
@@ -690,7 +714,8 @@ def main(self, args: List[str] = sys.argv[1:]):
   across runs. If installed with CUDA support, NVIDIA GPUs will be used to
   improve performance where possible.
   """
-  parser = ArgumentParser(prog="clgen", description=inspect.getdoc(self), epilog="""
+  parser = ArgumentParser(prog="clgen", description=inspect.getdoc(self),
+                          epilog="""
 For information about a specific command, run `clgen <command> --help`.
 
 """ + __help_epilog__, formatter_class=RawDescriptionHelpFormatter)
@@ -699,26 +724,31 @@ For information about a specific command, run `clgen <command> --help`.
   # parser.add_argument(
   #     "-l", "--lang", metavar="<language>",
   #     help="programming language (default: OpenCL)")
-  parser.add_argument("-v", "--verbose", action="store_true", help="increase output verbosity")
-  parser.add_argument("--version", action="store_true", help="show version information and exit")
+  parser.add_argument("-v", "--verbose", action="store_true",
+                      help="increase output verbosity")
+  parser.add_argument("--version", action="store_true",
+                      help="show version information and exit")
   parser.add_argument("--debug", action="store_true",
-    help="in case of error, print debugging information")
-  parser.add_argument("--profile", action="store_true",
-    help=("enable internal API profiling. When combined with --verbose, "
-          "prints a complete profiling trace"))
+                      help="in case of error, print debugging information")
+  parser.add_argument("--profile", action="store_true", help=(
+    "enable internal API profiling. When combined with --verbose, "
+    "prints a complete profiling trace"))
 
   parser.add_argument("--corpus-dir", metavar="<corpus>", type=FileType("r"),
-    help="print path to corpus cache")
+                      help="print path to corpus cache")
   parser.add_argument("--model-dir", metavar="<model>", type=FileType("r"),
-    help="print path to model cache")
-  parser.add_argument("--sampler-dir", metavar=("<model>", "<sampler>"), type=FileType("r"),
-    nargs=2, help="print path to sampler cache")
+                      help="print path to model cache")
+  parser.add_argument("--sampler-dir", metavar=("<model>", "<sampler>"),
+                      type=FileType("r"), nargs=2,
+                      help="print path to sampler cache")
 
   subparser = parser.add_subparsers(title="available commands")
 
-  subparsers = [_register_test_parser, _register_train_parser, _register_sample_parser,
-    _register_db_parser, _register_fetch_parser, _register_ls_parser, _register_preprocess_parser,
-    _register_features_parser, _register_atomize_parser, _register_cache_parser, ]
+  subparsers = [_register_train_parser, _register_sample_parser,
+                _register_db_parser, _register_fetch_parser,
+                _register_ls_parser, _register_preprocess_parser,
+                _register_features_parser, _register_atomize_parser,
+                _register_cache_parser, ]
 
   for register_fn in subparsers:
     register_fn(subparser)
@@ -748,7 +778,8 @@ For information about a specific command, run `clgen <command> --help`.
     print(model.cache.path)
   elif args.sampler_dir:
     model = clgen.Model.from_json(jsonutil.loads(args.sampler_dir[0].read()))
-    sampler = clgen.Sampler.from_json(jsonutil.loads(args.sampler_dir[1].read()))
+    sampler = clgen.Sampler.from_json(
+      jsonutil.loads(args.sampler_dir[1].read()))
     print(sampler.cache(model).path)
   else:
     # strip the arguments from the top-level parser
