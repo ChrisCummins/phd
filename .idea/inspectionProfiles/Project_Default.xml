@@ -101,6 +101,7 @@
         <list>
           <option value="E111" />
           <option value="E114" />
+          <option value="E125" />
         </list>
       </option>
     </inspection_tool>
