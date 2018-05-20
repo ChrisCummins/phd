@@ -1,0 +1,27 @@
+// Global configuration options for this repository.
+syntax = "proto2";
+
+package phd;
+
+// The root message describing the repository configuration.
+//
+// A plaintext format instance of this message is generated in the root of this
+// repository by the bootstrap script, with path ./config.pbtxt.
+message GlobalConfig {
+  // The path to the root of the repository.
+  optional GlobalConfigPaths paths = 1;
+  // Whether or not the repository is configured to use CUDA.
+  optional bool with_cuda = 2;
+}
+
+// A list of absolute paths to import system files and directories.
+message GlobalConfigPaths {
+  // The root directory of the repository.
+  optional string repo_root = 1;
+  // The path of the system $CC compiler.
+  optional string cc = 2;
+  // The path of the system $CXX compiler.
+  optional string cxx = 3;
+  // The path of the system python.
+  optional string python = 4;
+}
