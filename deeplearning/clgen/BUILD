@@ -14,17 +14,6 @@ exports_files([
 ])
 
 py_library(
-    name = "errors",
-    srcs = ["errors.py"],
-)
-
-py_library(
-    name = "languages",
-    srcs = ["languages.py"],
-    deps = [":errors"],
-)
-
-py_library(
     name = "atomizers",
     srcs = ["atomizers.py"],
     deps = [
@@ -45,6 +34,45 @@ py_test(
 )
 
 py_library(
+    name = "config",
+    srcs = ["config.py"],
+    visibility = ["//deeplearning/clgen:__subpackages__"],
+)
+
+py_library(
+    name = "dbutil",
+    srcs = ["dbutil.py"],
+    deps = [
+        ":errors",
+        ":languages",
+        ":package_util",
+    ],
+)
+
+py_test(
+    name = "dbutil_test",
+    srcs = ["dbutil_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":dbutil",
+        ":errors",
+        "//deeplearning/clgen/tests:testlib",
+    ],
+)
+
+py_library(
+    name = "errors",
+    srcs = ["errors.py"],
+)
+
+py_library(
+    name = "explore",
+    srcs = ["explore.py"],
+    deps = [":dbutil"],
+)
+
+py_library(
     name = "features",
     srcs = ["features.py"],
     deps = [
@@ -53,6 +81,12 @@ py_library(
         ":package_util",
         "//lib/labm8:labmath",
     ],
+)
+
+py_library(
+    name = "languages",
+    srcs = ["languages.py"],
+    deps = [":errors"],
 )
 
 py_library(

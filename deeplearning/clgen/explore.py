@@ -182,8 +182,6 @@ def explore_gh(db_path: str) -> None:
   locale.setlocale(locale.LC_ALL, 'en_GB.utf-8')
 
   db = dbutil.connect(db_path)
-
-  db = dbutil.connect(db_path)
   c = db.cursor()
   stats = []
 

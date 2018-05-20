@@ -9,7 +9,10 @@ from pathlib import Path
 import pytest
 from absl import flags
 
-from lib.labm8 import fs, system, tar
+from deeplearning.clgen import config
+from lib.labm8 import fs
+from lib.labm8 import system
+from lib.labm8 import tar
 
 
 FLAGS = flags.FLAGS
@@ -19,7 +22,7 @@ class Data404(Exception):
   pass
 
 
-needs_cuda = pytest.mark.skipif(not clgen.USE_CUDA, reason="no CUDA support")
+needs_cuda = pytest.mark.skipif(not config.USE_CUDA, reason="no CUDA support")
 needs_linux = pytest.mark.skipif(not system.is_linux(), reason="not linux")
 skip_on_travis = pytest.mark.skipif(os.environ.get("TRAVIS") == 'true',
                                     reason="skip on Travis CI")

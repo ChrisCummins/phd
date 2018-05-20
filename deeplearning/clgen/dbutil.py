@@ -27,11 +27,11 @@ from hashlib import md5
 from typing import List
 
 import editdistance
+from absl import logging
 
-import deeplearning.tmp_clgen.clgen.errors
-import deeplearning.tmp_clgen.clgen.package_util
-from deeplearning.tmp_clgen import clgen
-from deeplearning.tmp_clgen import log
+from deeplearning.clgen import errors
+from deeplearning.clgen import languages
+from deeplearning.clgen import package_util
 from lib.labm8 import fs
 
 
@@ -49,17 +49,14 @@ def create_db(path: str, github: bool = False) -> None:
   path = os.path.expanduser(path)
 
   if os.path.exists(path):
-    raise deeplearning.tmp_clgen.clgen.errors.UserError(
-      "'{}' already exists".format(path))
+    raise errors.UserError("'{}' already exists".format(path))
 
   db = sqlite3.connect(path)
   c = db.cursor()
   if github:
-    script = deeplearning.tmp_clgen.clgen.package_util.sql_script(
-      'create-gh-samples-db')
+    script = package_util.sql_script('create-gh-samples-db')
   else:
-    script = deeplearning.tmp_clgen.clgen.package_util.sql_script(
-      'create-samples-db')
+    script = package_util.sql_script('create-samples-db')
   c.executescript(script)
   c.close()
   db.commit()
@@ -232,7 +229,7 @@ def get_kernel(path: str, kid: str, table: str = "PreprocessedFiles") -> str:
 
 
 def get_inlined_kernel(path: str, kid: str,
-                       lang: clgen.Language = clgen.Language.OPENCL,
+                       lang: languages.Language = languages.Language.OPENCL,
                        stack: List[str] = None) -> str:
   """
   Retrieve a kernel from a database and inline any includes.
@@ -243,7 +240,7 @@ def get_inlined_kernel(path: str, kid: str,
       Path to database.
   kid : str
       Kernel ID.
-  lang : clgen.Language
+  lang : languages.Language
       Programming language.
 
   Returns
@@ -264,9 +261,9 @@ def get_inlined_kernel(path: str, kid: str,
   stack.append(repo_path)
 
   include_re = \
-    {clgen.Language.GLSL: re.compile(r'\w*#include ["<](?P<path>.*)[">]'),
-     clgen.Language.OPENCL: re.compile(r'\w*#include ["<](?P<path>.*)[">]'),
-     clgen.Language.SOLIDITY: re.compile(
+    {languages.Language.GLSL: re.compile(r'\w*#include ["<](?P<path>.*)[">]'),
+     languages.Language.OPENCL: re.compile(r'\w*#include ["<](?P<path>.*)[">]'),
+     languages.Language.SOLIDITY: re.compile(
        r'\w*import ["<](\./)?(?P<path>.*)[">];'), }[lang]
 
   outlines = []
@@ -278,9 +275,8 @@ def get_inlined_kernel(path: str, kid: str,
       # try and resolve relative paths
       include_name = include_name.replace('../', '').replace('./', '')
 
-      c.execute(
-        f"SELECT path FROM contentmeta WHERE repo_url=? AND path LIKE '%{"
-        f"include_name}%'", (repo,))
+      c.execute('SELECT path FROM contentmeta WHERE repo_url=? AND '
+                f"path LIKE '%{include_name}%'", (repo,))
       repo_paths = [row[0] for row in c.fetchall()]
 
       if len(repo_paths):
@@ -292,7 +288,7 @@ def get_inlined_kernel(path: str, kid: str,
           outlines.append(
             '// [FETCH] ignored recursive include: ' + include_name)
         else:
-          log.verbose("closest match to", include_name, "is", closest_match)
+          logging.debug("closest match to", include_name, "is", closest_match)
 
           c.execute("SELECT id FROM contentmeta WHERE path=?", (closest_match,))
           closest_kid = c.fetchone()[0]
@@ -365,7 +361,7 @@ def run_script(path: str, script: str) -> None:
   """
   db = sqlite3.connect(path)
   c = db.cursor()
-  c.executescript(deeplearning.tmp_clgen.clgen.package_util.sql_script(script))
+  c.executescript(package_util.sql_script(script))
   c.close()
   db.commit()
   db.close()
@@ -612,7 +608,7 @@ def remove_bad_preprocessed(db_path: str) -> None:
   """
   original_size = fs.du(db_path, human_readable=False)
   original_size_human_readable = fs.du(db_path, human_readable=True)
-  log.info("vacuuming", original_size_human_readable, "database")
+  logging.info("vacuuming", original_size_human_readable, "database")
   sys.stdout.flush()
 
   # Remove contents from bad or ugly preprocessed files.
@@ -633,7 +629,7 @@ def remove_bad_preprocessed(db_path: str) -> None:
   new_size = fs.du(db_path, human_readable=False)
   new_size_human_readable = fs.du(db_path, human_readable=True)
   reduction_ratio = (1 - (new_size / original_size)) * 100
-  log.info(
+  logging.info(
     "done. new size {}. ({:.0f}% reduction)".format(new_size_human_readable,
                                                     reduction_ratio), sep=".")
 
@@ -735,7 +731,7 @@ def _dump_db(db, out_path: str, gh: bool = False, fileid: bool = False,
   dir : bool, optional
       Write output to directory.
   """
-  log.info('writing corpus', out_path, '...')
+  logging.info('writing corpus', out_path, '...')
 
   order = 'ASC' if reverse else 'DESC'
 
@@ -767,7 +763,7 @@ def _dump_db(db, out_path: str, gh: bool = False, fileid: bool = False,
   rows = c.fetchall()
 
   if dir:
-    log.info('writing to directory ', out_path, '/', sep='')
+    logging.info('writing to directory ', out_path, '/', sep='')
     if not os.path.exists(out_path):
       os.makedirs(out_path)
     for row in rows:
@@ -776,7 +772,7 @@ def _dump_db(db, out_path: str, gh: bool = False, fileid: bool = False,
       with open(path, 'w') as out:
         out.write(contents)
   else:
-    log.info('writing file', out_path)
+    logging.info('writing file', out_path)
     with open(out_path, 'wb') as out:
       for row in rows:
         id, contents = row
@@ -834,11 +830,9 @@ def merge(outpath, inpaths=None):
   """
   Merge kernel datasets.
   """
-  from deeplearning.tmp_clgen import explore
-
   if not fs.isfile(outpath):
     create_db(outpath)
-    log.info("created", outpath)
+    logging.info("created", outpath)
 
   db = connect(outpath)
 
@@ -846,7 +840,7 @@ def merge(outpath, inpaths=None):
     inpaths = get_all_sampler_datasets()
 
   for inpath in inpaths:
-    log.info("merging from", inpath)
+    logging.info("merging from", inpath)
     c = db.cursor()
     c.execute("ATTACH '{}' AS rhs".format(inpath))
     c.execute("INSERT OR IGNORE INTO ContentFiles "
@@ -856,5 +850,3 @@ def merge(outpath, inpaths=None):
     db.commit()
     c.execute("DETACH rhs")
     c.close()
-
-  explore.explore(outpath)
