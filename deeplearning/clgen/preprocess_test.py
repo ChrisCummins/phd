@@ -20,7 +20,9 @@ import os
 import sys
 
 import pytest
+from absl import app
 
+from deeplearning.clgen import errors
 from deeplearning.clgen import preprocess
 from deeplearning.clgen.tests import testlib as tests
 
@@ -64,14 +66,14 @@ def test_preprocess_shim():
 __kernel void A(__global FLOAT_T* a) { int b; }""", use_shim=True)
 
   # Preprocess will fail without FLOAT_T defined
-  with pytest.raises(clgen.BadCodeException):
+  with pytest.raises(errors.BadCodeException):
     preprocess.preprocess("""
 __kernel void A(__global FLOAT_T* a) { int b; }""", use_shim=False)
 
 
 def test_ugly_preprocessed():
   # empty kernel protoype is rejected
-  with pytest.raises(clgen.NoCodeException):
+  with pytest.raises(errors.NoCodeException):
     preprocess.preprocess("""\
 __kernel void A() {
 }\
@@ -111,7 +113,8 @@ __kernel void A(__global float* a) {
   int b = get_global_id(0);
   a[b] *= 2.0f;
 }"""
-  assert clgen.gpuverify(code, ["--local_size=64", "--num_groups=128"]) == code
+  assert preprocess.gpuverify(code,
+                              ["--local_size=64", "--num_groups=128"]) == code
 
 
 @tests.needs_linux  # FIXME: GPUVerify support on macOS.
@@ -120,5 +123,16 @@ def test_gpuverify_data_race():
 __kernel void A(__global float* a) {
   a[0] +=  1.0f;
 }"""
-  with pytest.raises(clgen.GPUVerifyException):
-    clgen.gpuverify(code, ["--local_size=64", "--num_groups=128"])
+  with pytest.raises(preprocess.GPUVerifyException):
+    preprocess.gpuverify(code, ["--local_size=64", "--num_groups=128"])
+
+
+def main(argv):
+  """Main entry point."""
+  if len(argv) > 1:
+    raise app.UsageError('Unrecognized command line flags.')
+  sys.exit(pytest.main([__file__, '-v']))
+
+
+if __name__ == '__main__':
+  app.run(main)

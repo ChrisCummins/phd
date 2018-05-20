@@ -17,8 +17,10 @@
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
 import os
+import sys
 
 import pytest
+from absl import app
 
 from deeplearning.clgen import cli
 from deeplearning.clgen.tests import testlib as tests
@@ -110,3 +112,14 @@ def test_cli_sample():
 def test_cli_ls():
   cli.main("ls models".split())
   cli.main("ls samplers".split())
+
+
+def main(argv):
+  """Main entry point."""
+  if len(argv) > 1:
+    raise app.UsageError('Unrecognized command line flags.')
+  sys.exit(pytest.main([__file__, '-v']))
+
+
+if __name__ == '__main__':
+  app.run(main)

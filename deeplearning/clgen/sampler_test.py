@@ -16,6 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
+import sys
+
+import pytest
+from absl import app
+
 from deeplearning.clgen import dbutil
 from deeplearning.clgen import model
 from deeplearning.clgen import sampler
@@ -83,3 +88,14 @@ def test_to_json():
                                                        'const int']}})
   s2 = sampler.Sampler.from_json(s1.to_json())
   assert s1 == s2
+
+
+def main(argv):
+  """Main entry point."""
+  if len(argv) > 1:
+    raise app.UsageError('Unrecognized command line flags.')
+  sys.exit(pytest.main([__file__, '-v']))
+
+
+if __name__ == '__main__':
+  app.run(main)

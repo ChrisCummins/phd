@@ -276,6 +276,10 @@ py_library(
 py_test(
     name = "package_util_test",
     srcs = ["package_util_test.py"],
+    data = [
+        "//deeplearning/clgen/data/include:opencl-shim",
+        "//deeplearning/clgen/data/sql:scripts",
+    ],
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
@@ -302,6 +306,7 @@ py_test(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
+        ":errors",
         ":preprocess",
         "//deeplearning/clgen/tests:testlib",
     ],

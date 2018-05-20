@@ -16,6 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
+import sys
+
+import pytest
+from absl import app
+
 from deeplearning.clgen import corpus
 from deeplearning.clgen import explore
 from deeplearning.clgen.tests import testlib as tests
@@ -34,3 +39,14 @@ def test_explore_gh():
   assert (fs.exists(db_path))
 
   explore.explore(db_path)
+
+
+def main(argv):
+  """Main entry point."""
+  if len(argv) > 1:
+    raise app.UsageError('Unrecognized command line flags.')
+  sys.exit(pytest.main([__file__, '-v']))
+
+
+if __name__ == '__main__':
+  app.run(main)

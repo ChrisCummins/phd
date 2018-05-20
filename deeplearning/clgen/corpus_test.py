@@ -16,8 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
+import sys
+
 import numpy as np
 import pytest
+from absl import app
 
 from deeplearning.clgen import corpus
 from deeplearning.clgen import errors
@@ -174,3 +177,14 @@ def test_to_json():
     {"language": "opencl", "path": tests.archive("tiny", "corpus")})
   c2 = corpus.Corpus.from_json(c1.to_json())
   assert c1 == c2
+
+
+def main(argv):
+  """Main entry point."""
+  if len(argv) > 1:
+    raise app.UsageError('Unrecognized command line flags.')
+  sys.exit(pytest.main([__file__, '-v']))
+
+
+if __name__ == '__main__':
+  app.run(main)

@@ -16,7 +16,10 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
+import sys
+
 import pytest
+from absl import app
 
 from deeplearning.clgen import dbutil
 from deeplearning.clgen import errors
@@ -81,3 +84,14 @@ def test_insert():
   dbutil.remove_preprocessed(db_path)
   assert dbutil.num_rows_in(db_path, "ContentFiles") == 1
   assert dbutil.num_rows_in(db_path, "PreprocessedFiles") == 0
+
+
+def main(argv):
+  """Main entry point."""
+  if len(argv) > 1:
+    raise app.UsageError('Unrecognized command line flags.')
+  sys.exit(pytest.main([__file__, '-v']))
+
+
+if __name__ == '__main__':
+  app.run(main)
