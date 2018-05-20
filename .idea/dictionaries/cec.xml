@@ -5,6 +5,7 @@
       <w>gsize</w>
       <w>lsize</w>
       <w>opencl</w>
+      <w>preprocess</w>
     </words>
   </dictionary>
 </component>
