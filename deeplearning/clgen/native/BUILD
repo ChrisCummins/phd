@@ -493,8 +493,8 @@ cc_binary(
         ],
     }),
     deps = select({
-        "//:darwin": ["@llvm_mac//:headers"],
-        "//conditions:default": ["@llvm_linux//:headers"],
+        "//:darwin": ["@llvm_mac_headers//:headers"],
+        "//conditions:default": ["@llvm_linux_headers//:headers"],
     }),
 )
 
@@ -985,7 +985,7 @@ cc_binary(
         ],
     }),
     deps = select({
-        "//:darwin": ["@llvm_mac//:headers"],
-        "//conditions:default": ["@llvm_linux//:headers"],
+        "//:darwin": ["@llvm_mac_headers//:headers"],
+        "//conditions:default": ["@llvm_linux_headers//:headers"],
     }),
 )
