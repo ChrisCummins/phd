@@ -44,16 +44,17 @@ SHIMFILE : str
 from deeplearning.clgen import package_util
 
 
-CLANG = package_util.must_exist('../llvm_mac/bin/clang')
-CLANG_FORMAT = package_util.must_exist('../llvm_mac/bin/clang-format')
+# TODO(cec): Determine llvm_mac or llvm_linux.
+CLANG = package_util.must_exist('external/llvm_mac/bin/clang')
+CLANG_FORMAT = package_util.must_exist('external/llvm_mac/bin/clang-format')
+OPT = package_util.must_exist('external/llvm_mac/bin/opt')
 CLGEN_FEATURES = package_util.must_exist(
   'deeplearning/clgen/native/clgen-features')
 CLGEN_REWRITER = package_util.must_exist(
   'deeplearning/clgen/native/clgen-features')
-# TODO(cec): Add GPUVerify.
+LIBCLC = package_util.must_exist('third_party/libclc/generic/include')
+# TODO(cec): Add these remaining files.
 GPUVERIFY = 'TODO'
-LIBCLC = 'TODO'
 OCLGRIND = 'TODO'
-OPT = 'TODO'
 SHIMFILE = package_util.must_exist(
   'deeplearning/clgen/data/include/opencl-shim.h')

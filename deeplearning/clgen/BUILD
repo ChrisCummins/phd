@@ -238,19 +238,21 @@ py_library(
         "//deeplearning/clgen/native:clgen-features",
         "//deeplearning/clgen/native:clgen-rewriter",
         "//deeplearning/clgen/data/include:opencl-shim",
+        "//third_party/libclc/generic/include:headers",
     ] + select({
         "//:darwin": [
             "@llvm_mac//:clang",
             "@llvm_mac//:clang-format",
+            "@llvm_mac//:opt",
         ],
         "//conditions:default": [
             "@llvm_linux//:clang-format",
             "@llvm_linux//:clang",
+            "@llvm_linux//:opt",
         ],
     }),
     deps = [
         ":package_util",
-        "//lib/labm8:fs",
     ],
 )
 
