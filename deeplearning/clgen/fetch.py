@@ -34,17 +34,17 @@ import dateutil
 import dateutil.parser
 import editdistance
 import requests
+from absl import logging
 from github import Github, GithubException
 
-import deeplearning.tmp_clgen.clgen.errors
-from deeplearning.tmp_clgen import clgen
-from deeplearning.tmp_clgen import dbutil
-from deeplearning.tmp_clgen import log
+from deeplearning.clgen import dbutil
+from deeplearning.clgen import errors
+from deeplearning.clgen import languages
 from lib.labm8 import crypto
 from lib.labm8 import fs
 
 
-class FetchError(clgen.CLgenError):
+class FetchError(errors.CLgenError):
   """
   Module error.
   """
@@ -147,7 +147,7 @@ def _process_repo(g, db, repo) -> bool:
 
   c.execute("DELETE FROM Repositories WHERE url=?", (url,))
   c.execute("INSERT INTO Repositories VALUES(?,?,?,?,?,?,?,?,?)", (
-  url, owner, name, fork, stars, contributors, forks, created_at, updated_at))
+    url, owner, name, fork, stars, contributors, forks, created_at, updated_at))
 
   if cached_updated_at:
     repos_modified_counter += 1
@@ -311,7 +311,7 @@ def _scrape_github_for_files(db_path: str, github_username: str, github_pw: str,
   db = dbutil.connect(db_path)
 
   if not dbutil.is_github:
-    raise deeplearning.tmp_clgen.clgen.errors.UserError("not a GitHub database")
+    raise errors.UserError("not a GitHub database")
 
   # fetch the repositories to iterate over
   for query in query_terms:
@@ -357,11 +357,11 @@ def is_solidity_path(file) -> bool:
   return file.path.endswith('.sol')
 
 
-def fetch_repos(db_path: Path, indir: Path, lang: clgen.Language) -> None:
+def fetch_repos(db_path: Path, indir: Path, lang: languages.Language) -> None:
   db = dbutil.connect(db_path)
 
   if not dbutil.is_github(db):
-    raise deeplearning.tmp_clgen.clgen.errors.UserError("not a GitHub database")
+    raise errors.UserError("not a GitHub database")
 
   c = db.cursor()
 
@@ -377,13 +377,14 @@ def fetch_repos(db_path: Path, indir: Path, lang: clgen.Language) -> None:
       f"git --git-dir {gitdir} rev-list --format=format:'%ai' " +
       f"--max-count=1 $(git --git-dir "
                                                                   f"{gitdir} "
-      f"rev-parse HEAD) | "
+                                                                  f"rev-parse "
+                                                                  f"HEAD) | "
                                                                   f"tail -n1",
       shell=True, universal_newlines=True)
     try:
       updated_at = dateutil.parser.parse(output)
     except ValueError:
-      log.error(f"failed to process {name} {url}")
+      logging.error(f"failed to process {name} {url}")
       continue
 
     c.execute("SELECT updated_at FROM Repositories WHERE url=?", (url,))
@@ -391,7 +392,7 @@ def fetch_repos(db_path: Path, indir: Path, lang: clgen.Language) -> None:
 
     # Do nothing unless updated timestamps don't match
     # if cached_updated_at and cached_updated_at[0] >= updated_at:
-    #     log.verbose(name, "already in database")
+    #     logging.debug(name, "already in database")
     #     continue
 
     c.execute("DELETE FROM Repositories WHERE url=?", (url,))
@@ -399,7 +400,7 @@ def fetch_repos(db_path: Path, indir: Path, lang: clgen.Language) -> None:
               (url, "<unknown>", name, 0, 0, 0, 0, updated_at, updated_at))
 
     name_str = " -o ".join(
-      [f"-name '*{ext}'" for ext in clgen.file_extensions(lang)])
+      [f"-name '*{ext}'" for ext in languages.file_extensions(lang)])
     output = subprocess.check_output(
       f"find {directory} -type f {name_str} | grep -v '.git/' || true",
       shell=True, universal_newlines=True)
@@ -407,10 +408,10 @@ def fetch_repos(db_path: Path, indir: Path, lang: clgen.Language) -> None:
 
     # nothing to import
     if not len(files):
-      # log.verbose("no files in", name)
+      # logging.debug("no files in", name)
       continue
 
-    log.verbose("processing", len(files), "files in", name)
+    logging.debug("processing", len(files), "files in", name)
     for path in files:
       relpath = path[len(directory) + 1:]
       try:
@@ -421,7 +422,7 @@ def fetch_repos(db_path: Path, indir: Path, lang: clgen.Language) -> None:
         c.execute("INSERT OR IGNORE INTO ContentMeta VALUES(?,?,?,?,?)",
                   (sha, relpath, url, sha, len(contents)))
       except UnicodeDecodeError:
-        log.warning("non UTF-8 file", path)
+        logging.warning("non UTF-8 file", path)
 
     db.commit()
     c = db.cursor()
@@ -429,7 +430,7 @@ def fetch_repos(db_path: Path, indir: Path, lang: clgen.Language) -> None:
 
 def fetch_github(db_path: str, github_username: str, github_pw: str,
                  github_token: str,
-                 lang: clgen.Language = clgen.Language.OPENCL) -> None:
+                 lang: languages.Language = languages.Language.OPENCL) -> None:
   """
   Download all of the Solidity on GitHub (!)
 
@@ -444,12 +445,12 @@ def fetch_github(db_path: str, github_username: str, github_pw: str,
   github_token : str
       Authorization.
   """
-  if lang == clgen.Language.OPENCL:
+  if lang == languages.Language.OPENCL:
     download_file_cb = _download_opencl_file
     file_is_intetesting = is_opencl_path
     query_terms = ['opencl', 'cl', 'khronos', 'gpu', 'gpgpu', 'cuda', 'amd',
                    'nvidia', 'heterogeneous']
-  elif lang == clgen.Language.SOLIDITY:
+  elif lang == languages.Language.SOLIDITY:
     download_file_cb = _download_file
     file_is_intetesting = is_solidity_path
     query_terms = ['solidity', 'ethereum', 'solc', ]
@@ -462,7 +463,7 @@ def fetch_github(db_path: str, github_username: str, github_pw: str,
 
 
 def inline_fs_headers(path: Path, stack: List[str],
-                      lang: clgen.Language = clgen.Language.OPENCL,
+                      lang: languages.Language = languages.Language.OPENCL,
                       topdir: Path = None) -> str:
   """
   Recursively inline headers in file.
@@ -488,7 +489,7 @@ def inline_fs_headers(path: Path, stack: List[str],
   # shell escaped top directory
   escp_topdir = topdir.replace('"', '\\"')
 
-  include_re = clgen.include_regexp(lang)
+  include_re = languages.include_regexp(lang)
 
   with open(path, encoding="utf-8") as infile:
     src = infile.read()
@@ -519,9 +520,9 @@ def inline_fs_headers(path: Path, stack: List[str],
         distances = [editdistance.eval(include, path) for path in rel_matches]
         min_distance = min(distances)
         file_to_inline = candidates[distances.index(min_distance)]
-        log.debug(
-          f"Inferred include '{file_to_inline}' from '{line}' with distance {"
-          f"min_distance}")
+        logging.debug(
+          f"Inferred include '{file_to_inline}' from '{line}' with distance "
+          f"{min_distance}")
       else:
         # We didn't find anything suitable:
         file_to_inline = None
@@ -530,20 +531,20 @@ def inline_fs_headers(path: Path, stack: List[str],
       if file_to_inline in stack:
         # We've already inlined this file, so ignore it:
         outlines.append(
-          clgen.format_as_comment(lang, f'[FETCH] ignored_include({line})'))
+          languages.format_as_comment(lang, f'[FETCH] ignored_include({line})'))
       elif file_to_inline:
         # Inline the file by recursively expanding its contents:
         outlines.append(
-          clgen.format_as_comment(lang, f'[FETCH] begin_include({line})'))
+          languages.format_as_comment(lang, f'[FETCH] begin_include({line})'))
         inline_src = inline_fs_headers(file_to_inline, stack)
         outlines.append(inline_src)
         outlines.append(
-          clgen.format_as_comment(lang, f'[FETCH] end_include({line})'))
+          languages.format_as_comment(lang, f'[FETCH] end_include({line})'))
       else:
         # We didn't find anything suitable, so keep the original
         # include:
         outlines.append(
-          clgen.format_as_comment(lang, f'[FETCH] not_found({line})'))
+          languages.format_as_comment(lang, f'[FETCH] not_found({line})'))
         outlines.append(line)
     else:
       outlines.append(line)
@@ -570,7 +571,7 @@ def process_cl_file(db_path: str, path: str) -> None:
   db = dbutil.connect(db_path)
   c = db.cursor()
 
-  log.debug("fetch {path}".format(path=fs.abspath(path)))
+  logging.debug("fetch {path}".format(path=fs.abspath(path)))
   try:
     contents = inline_fs_headers(path, [])
   except IOError:
@@ -598,7 +599,7 @@ def fetch(db_path: str, paths: List[str] = []) -> None:
   c = db.cursor()
 
   for path in paths:
-    log.debug("fetch", path)
+    logging.debug("fetch", path)
     try:
       contents = inline_fs_headers(path, [])
     except IOError:

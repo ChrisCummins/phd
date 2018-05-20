@@ -19,9 +19,9 @@
 import numpy as np
 import pytest
 
-import deeplearning.tmp_clgen.clgen.errors
-from deeplearning.tmp_clgen import clgen
-from deeplearning.tmp_clgen import test as tests
+from deeplearning.clgen import corpus
+from deeplearning.clgen import errors
+from deeplearning.clgen.tests import testlib as tests
 from lib.labm8 import fs
 
 
@@ -30,23 +30,23 @@ TINY_HASH = 'b5c2c4f07ef6f1a6423d079a07392411e49891ed'
 
 def test_path():
   path = tests.archive("tiny", "corpus")
-  c = clgen.Corpus.from_json(
+  c = corpus.Corpus.from_json(
     {"language": "opencl", "id": TINY_HASH, "path": path})
   assert TINY_HASH == c.hash
 
 
 def test_badpath():
-  with pytest.raises(deeplearning.tmp_clgen.clgen.errors.CLgenError):
-    clgen.Corpus("notarealid", path="notarealpath")
+  with pytest.raises(errors.CLgenError):
+    corpus.Corpus("notarealid", path="notarealpath")
 
 
 def test_from_archive():
   # delete any existing unpacked directory
   fs.rm(tests.data_path("tiny", "corpus", exists=False))
 
-  c = clgen.Corpus.from_json({"language": "opencl",
-                              "path": tests.data_path("tiny", "corpus",
-                                                      exists=False)})
+  c = corpus.Corpus.from_json({"language": "opencl",
+                               "path": tests.data_path("tiny", "corpus",
+                                                       exists=False)})
   assert TINY_HASH == c.hash
 
 
@@ -54,22 +54,22 @@ def test_from_archive_path():
   # delete any existing unpacked directory
   fs.rm(tests.data_path("tiny", "corpus", exists=False))
 
-  c = clgen.Corpus.from_json(
+  c = corpus.Corpus.from_json(
     {"language": "opencl", "path": tests.data_path("tiny", "corpus.tar.bz2")})
   assert TINY_HASH == c.hash
 
 
 def test_hash():
-  c1 = clgen.Corpus.from_json(
+  c1 = corpus.Corpus.from_json(
     {"language": "opencl", "path": tests.archive("tiny", "corpus")})
 
   # same as c1, with explicit default opt:
-  c2 = clgen.Corpus.from_json(
+  c2 = corpus.Corpus.from_json(
     {"language": "opencl", "path": tests.archive("tiny", "corpus"),
      "eof": False})
 
   # different opt value:
-  c3 = clgen.Corpus.from_json(
+  c3 = corpus.Corpus.from_json(
     {"language": "opencl", "path": tests.archive("tiny", "corpus"),
      "eof": True})
 
@@ -107,46 +107,46 @@ __kernel void B(__global float* a) {}"""
 
 
 def test_no_language():
-  with pytest.raises(deeplearning.tmp_clgen.clgen.errors.UserError):
-    clgen.Corpus.from_json({"path": tests.archive("tiny", "corpus"), })
+  with pytest.raises(errors.UserError):
+    corpus.Corpus.from_json({"path": tests.archive("tiny", "corpus"), })
 
 
 def test_bad_language():
-  with pytest.raises(deeplearning.tmp_clgen.clgen.errors.UserError):
-    clgen.Corpus.from_json(
+  with pytest.raises(errors.UserError):
+    corpus.Corpus.from_json(
       {"language": "NOTALANG", "path": tests.archive("tiny", "corpus"), })
 
 
 def test_bad_option():
-  with pytest.raises(deeplearning.tmp_clgen.clgen.errors.UserError):
-    clgen.Corpus.from_json(
+  with pytest.raises(errors.UserError):
+    corpus.Corpus.from_json(
       {"language": "opencl", "path": tests.archive("tiny", "corpus"),
        "not_a_real_option": False})
 
 
 def test_bad_vocab():
-  with pytest.raises(deeplearning.tmp_clgen.clgen.errors.UserError):
-    clgen.Corpus.from_json(
+  with pytest.raises(errors.UserError):
+    corpus.Corpus.from_json(
       {"language": "opencl", "path": tests.archive("tiny", "corpus"),
        "vocab": "INVALID_VOCAB"})
 
 
 @pytest.mark.xfail(reason="FIXME: UserError not raised")
 def test_bad_encoding():
-  with pytest.raises(deeplearning.tmp_clgen.clgen.errors.UserError):
-    clgen.Corpus.from_json(
+  with pytest.raises(errors.UserError):
+    corpus.Corpus.from_json(
       {"language": "opencl", "path": tests.archive("tiny", "corpus"),
        "encoding": "INVALID_ENCODING"})
 
 
 def test_eq():
-  c1 = clgen.Corpus.from_json(
+  c1 = corpus.Corpus.from_json(
     {"language": "opencl", "path": tests.archive("tiny", "corpus"),
      "eof": False})
-  c2 = clgen.Corpus.from_json(
+  c2 = corpus.Corpus.from_json(
     {"language": "opencl", "path": tests.archive("tiny", "corpus"),
      "eof": False})
-  c3 = clgen.Corpus.from_json(
+  c3 = corpus.Corpus.from_json(
     {"language": "opencl", "path": tests.archive("tiny", "corpus"),
      "eof": True})
 
@@ -156,7 +156,7 @@ def test_eq():
 
 
 def test_preprocessed():
-  c1 = clgen.Corpus.from_json(
+  c1 = corpus.Corpus.from_json(
     {"language": "opencl", "path": tests.archive("tiny", "corpus")})
   assert len(list(c1.preprocessed())) == 187
   assert len(list(c1.preprocessed(1))) == 56
@@ -164,13 +164,13 @@ def test_preprocessed():
 
 
 def test_contentfiles():
-  c1 = clgen.Corpus.from_json(
+  c1 = corpus.Corpus.from_json(
     {"language": "opencl", "path": tests.archive("tiny", "corpus")})
   assert len(list(c1.contentfiles())) == 250
 
 
 def test_to_json():
-  c1 = clgen.Corpus.from_json(
+  c1 = corpus.Corpus.from_json(
     {"language": "opencl", "path": tests.archive("tiny", "corpus")})
-  c2 = clgen.Corpus.from_json(c1.to_json())
+  c2 = corpus.Corpus.from_json(c1.to_json())
   assert c1 == c2

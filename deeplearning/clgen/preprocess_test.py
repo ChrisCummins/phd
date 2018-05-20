@@ -21,8 +21,8 @@ import sys
 
 import pytest
 
-from deeplearning.tmp_clgen import clgen
-from deeplearning.tmp_clgen import test as tests
+from deeplearning.clgen import preprocess
+from deeplearning.clgen.tests import testlib as tests
 
 
 # Invoke tests with UPDATE_GS_FILES set to update the gold standard
@@ -33,7 +33,7 @@ from deeplearning.tmp_clgen import test as tests
 UPDATE_GS_FILES = True if 'UPDATE_GS_FILES' in os.environ else False
 
 
-def preprocess_pair(basename, preprocessor=clgen.preprocess):
+def preprocess_pair(basename, preprocessor=preprocess.preprocess):
   gs_path = tests.data_path(os.path.join('cl', str(basename) + '.gs'),
                             exists=not UPDATE_GS_FILES)
   tin_path = tests.data_path(os.path.join('cl', str(basename) + '.cl'))
@@ -60,19 +60,19 @@ def test_preprocess():
 
 def test_preprocess_shim():
   # FLOAT_T is defined in shim header
-  assert clgen.preprocess("""
+  assert preprocess.preprocess("""
 __kernel void A(__global FLOAT_T* a) { int b; }""", use_shim=True)
 
   # Preprocess will fail without FLOAT_T defined
   with pytest.raises(clgen.BadCodeException):
-    clgen.preprocess("""
+    preprocess.preprocess("""
 __kernel void A(__global FLOAT_T* a) { int b; }""", use_shim=False)
 
 
 def test_ugly_preprocessed():
   # empty kernel protoype is rejected
   with pytest.raises(clgen.NoCodeException):
-    clgen.preprocess("""\
+    preprocess.preprocess("""\
 __kernel void A() {
 }\
 """)
@@ -81,7 +81,7 @@ __kernel void A() {
 __kernel void A() {
   int a;
 }\
-""" == clgen.preprocess("""\
+""" == preprocess.preprocess("""\
 __kernel void A() {
   int a;
 }\
@@ -100,7 +100,7 @@ __kernel void A(__global float* a) {
   # pre-processing is "stable" if the code doesn't change
   out = code
   for _ in range(5):
-    out = clgen.preprocess(out)
+    out = preprocess.preprocess(out)
     assert out == code
 
 

@@ -30,18 +30,20 @@ from typing import List, Union
 
 import numpy as np
 import progressbar
+from absl import logging
 from tensorflow.python.framework.errors import InvalidArgumentError as \
   TensorFlowInvalidArgumentError
 
-import deeplearning.tmp_clgen.clgen.cache
-import deeplearning.tmp_clgen.clgen.errors
-from deeplearning.tmp_clgen import clgen
-from deeplearning.tmp_clgen import dbutil
-from deeplearning.tmp_clgen import log
+from deeplearning.clgen import cache
+from deeplearning.clgen import dbutil
+from deeplearning.clgen import errors
+from deeplearning.clgen import explore
+from deeplearning.clgen import languages
+from deeplearning.clgen import model
 from lib.labm8 import crypto
 from lib.labm8 import jsonutil
+from lib.labm8 import labtypes
 from lib.labm8 import lockfile
-from lib.labm8 import types
 
 
 # Default options used for sampler. Any values provided by the user will
@@ -76,7 +78,7 @@ def serialize_opencl_argspec(args: List[str]) -> str:
 
 
 class SampleProducer(Thread):
-  def __init__(self, model: clgen.Model, start_text: str, queue: Queue,
+  def __init__(self, model: model.Model, start_text: str, queue: Queue,
                **kernel_opts):
     super(SampleProducer, self).__init__()
 
@@ -85,9 +87,8 @@ class SampleProducer(Thread):
     self.queue = queue
     self.stop_signal = Event()
     self.kernel_opts = kernel_opts
-    self.sample_header = "\n\n" + clgen.format_as_comment(model.corpus.language,
-                                                          "==== START SAMPLE "
-                                                          "====") + "\n\n"
+    self.sample_header = "\n\n" + languages.format_as_comment(
+      model.corpus.language, "==== START SAMPLE ====") + "\n\n"
 
   def run(self) -> None:
     model = self.model
@@ -162,7 +163,7 @@ class SampleProducer(Thread):
           try:
             [probs, state] = sess.run([model.probs, model.final_state], feed)
           except TensorFlowInvalidArgumentError:
-            log.warning("sampling error")
+            logging.warning("sampling error")
             self.run()
 
           # sample distribution to pick next symbol:
@@ -175,8 +176,8 @@ class SampleProducer(Thread):
             # In case of decoding error, start sampling again:
             try:
               atom = deatomize([indices[item, 0]])
-            except clgen.VocabError:
-              log.warning("deatomizing error")
+            except errors.VocabError:
+              logging.warning("deatomizing error")
               self.run()
 
             buf[item].write(atom)
@@ -191,7 +192,7 @@ class SampleProducer(Thread):
             if not _running:
               text = buf[item].getvalue()
               self.queue.put(text)
-              if log.is_verbose():
+              if logging.get_verbosity() == logging.DEBUG:
                 sys.stdout.write(self.sample_header)
                 sys.stdout.write(text)
                 sys.stdout.flush()
@@ -200,7 +201,7 @@ class SampleProducer(Thread):
           if not any(running):
             break
 
-      if log.is_verbose():
+      if logging.get_verbosity() == logging.DEBUG:
         sys.stdout.write('\n\n')
 
   def stop(self) -> None:
@@ -214,7 +215,7 @@ class SampleProducer(Thread):
 class SampleConsumer(Thread):
   """ handle generated samples """
 
-  def __init__(self, db_path: str, producer: SampleProducer, sampler, cache,
+  def __init__(self, db_path: str, producer: SampleProducer, sampler, cache_,
                queue: Queue, **sampler_opts):
     """
     Construct a sample consumer.
@@ -239,7 +240,7 @@ class SampleConsumer(Thread):
     self.db_path = db_path
     self.producer = producer
     self.sampler = sampler
-    self.cache = cache
+    self.cache = cache_
     self.queue = queue
     self.sampler_opts = sampler_opts
 
@@ -296,7 +297,7 @@ class SampleConsumer(Thread):
   def run(self) -> None:
     i = dbutil.num_rows_in(self.db_path, "ContentFiles")
 
-    if not log.is_verbose():
+    if not logging.get_verbosity() == logging.DEBUG:
       bar = progressbar.ProgressBar(max_value=self.max_i)
       bar.update(self.progress())
 
@@ -322,7 +323,7 @@ class SampleConsumer(Thread):
 
         # update progress bar
         progress = self.progress()
-        if not log.is_verbose():
+        if not logging.get_verbosity() == logging.DEBUG:
           bar.update(progress)
 
         sample_time = time() - sample_time
@@ -375,9 +376,9 @@ class Sampler(object):
       return crypto.sha1_str(string)
 
     # FIXME(polyglot):
-    def _start_text(lang: clgen.Language, args: Union[List[str], None],
+    def _start_text(lang: languages.Language, args: Union[List[str], None],
                     start_text: str):
-      if lang == clgen.Language.OPENCL:
+      if lang == languages.Language.OPENCL:
         if args is None:
           return "__kernel void A("
         else:
@@ -391,27 +392,28 @@ class Sampler(object):
     # Validate options
     for key in sampler_opts.keys():
       if key not in DEFAULT_SAMPLER_OPTS:
-        raise deeplearning.tmp_clgen.clgen.errors.UserError(
+        raise errors.UserError(
           "Unsupported sampler option '{}'. Valid keys: {}".format(key,
                                                                    ','.join(
                                                                      sorted(
                                                                        DEFAULT_SAMPLER_OPTS.keys()))))
     for key in kernel_opts.keys():
       if key not in DEFAULT_KERNELS_OPTS:
-        raise deeplearning.tmp_clgen.clgen.errors.UserError(
+        raise errors.UserError(
           "Unsupported kernels option '{}'. Valid keys: {}".format(key,
                                                                    ','.join(
                                                                      sorted(
                                                                        DEFAULT_KERNELS_OPTS.keys()))))
 
     # set properties
-    self.sampler_opts = types.update(deepcopy(DEFAULT_SAMPLER_OPTS),
-                                     sampler_opts)
-    self.kernel_opts = types.update(deepcopy(DEFAULT_KERNELS_OPTS), kernel_opts)
+    self.sampler_opts = labtypes.update(deepcopy(DEFAULT_SAMPLER_OPTS),
+                                        sampler_opts)
+    self.kernel_opts = labtypes.update(deepcopy(DEFAULT_KERNELS_OPTS),
+                                       kernel_opts)
 
     self.hash = _hash(self.sampler_opts, self.kernel_opts)
 
-    self.language = clgen.Language.from_str(kernel_opts.get("language"))
+    self.language = languages.Language.from_str(kernel_opts.get("language"))
 
     self.start_text = _start_text(self.language,
                                   self.kernel_opts.get("args", []),
@@ -422,13 +424,13 @@ class Sampler(object):
     # options to pass to preprocess_db()
     self.preprocess_opts = {"use_gpuverify": self.sampler_opts["gpuverify"]}
 
-  def cache(self, model: clgen.Model):
+  def cache(self, model: model.Model):
     """
     Return sampler cache.
 
     Parameters
     ----------
-    model : clgen.Model
+    model : model.Model
         CLgen model.
 
     Returns
@@ -438,15 +440,13 @@ class Sampler(object):
     """
     sampler_model_hash = crypto.sha1_str(self.hash + model.hash)
 
-    cache = deeplearning.tmp_clgen.clgen.cache.mkcache("sampler",
-                                                       f"{self.language}-{"
-                                                       f"sampler_model_hash}")
+    cache_ = cache.mkcache("sampler", f"{self.language}-{sampler_model_hash}")
 
     # validate metadata against cache
     self.stats = {"time": 0, "progress": 0}
     meta = deepcopy(self.to_json())
-    if cache.get("META"):
-      cached_meta = jsonutil.read_file(cache["META"])
+    if cache_.get("META"):
+      cached_meta = jsonutil.read_file(cache_["META"])
 
       if "stats" in cached_meta:
         self.stats = cached_meta["stats"]
@@ -465,55 +465,52 @@ class Sampler(object):
       del meta["sampler"]["min_kernels"]
 
       if meta != cached_meta:
-        raise deeplearning.tmp_clgen.clgen.errors.InternalError(
-          "sampler metadata mismatch")
+        raise errors.InternalError("sampler metadata mismatch")
     else:
-      self._flush_meta(cache)
+      self._flush_meta(cache_)
 
-    return cache
+    return cache_
 
-  def _flush_meta(self, cache):
-    jsonutil.write_file(cache.keypath("META"), self.to_json(cache))
+  def _flush_meta(self, cache_):
+    jsonutil.write_file(cache_.keypath("META"), self.to_json(cache))
 
-  def sample(self, model: clgen.Model) -> None:
+  def sample(self, model: model.Model) -> None:
     """
     Sample CLgen model.
 
     Parameters
     ----------
-    model : clgen.Model
+    model : model.Model
         CLgen model.
     """
-    cache = self.cache(model)
+    cache_ = self.cache(model)
 
     # create samples database if it doesn't exist
-    if not cache.get("kernels.db"):
-      tmp_kernels_db = cache.keypath("kernels.tmp.db")
+    if not cache_.get("kernels.db"):
+      tmp_kernels_db = cache_.keypath("kernels.tmp.db")
       dbutil.create_db(tmp_kernels_db)
-      cache["kernels.db"] = tmp_kernels_db
+      cache_["kernels.db"] = tmp_kernels_db
 
     # producer-consumer queue
     queue = Queue(maxsize=128)
 
-    log.info("sampling", self)
+    logging.info("sampling", self)
 
     sampler = SampleProducer(model, self.start_text, queue, **self.kernel_opts)
     sampler.start()
 
-    consumer = SampleConsumer(cache["kernels.db"], sampler, self, cache, queue,
-                              **self.sampler_opts)
+    consumer = SampleConsumer(cache_["kernels.db"], sampler, self, cache_,
+                              queue, **self.sampler_opts)
     consumer.start()
 
     sampler.join()
     consumer.join()
 
-    clgen.explore(cache["kernels.db"])
+    explore.explore(cache_["kernels.db"])
 
   @property
   def shorthash(self) -> str:
-    return deeplearning.tmp_clgen.clgen.cache.ShortHash(self.hash,
-                                                        deeplearning.tmp_clgen.clgen.cache.cachepath(
-                                                          "sampler"))
+    return cache.ShortHash(self.hash, cache.cachepath("sampler"))
 
   @property
   def min_samples(self) -> int:
@@ -531,7 +528,7 @@ class Sampler(object):
   def num_good_kernels(self) -> int:
     return dbutil.num_good_kernels(self.db_path)
 
-  def to_json(self, cache=None) -> dict:
+  def to_json(self, cache_=None) -> dict:
     """
     JSON representation.
 
@@ -542,7 +539,7 @@ class Sampler(object):
     """
     d = {"kernels": self.kernel_opts, "sampler": self.sampler_opts}
 
-    if cache:
+    if cache_:
       d["stats"] = self.stats
 
     return d
@@ -578,9 +575,8 @@ class Sampler(object):
     """
     unrecognized_keys = (set(sampler_json.keys()) - set(["sampler", "kernels"]))
     if unrecognized_keys:
-      raise deeplearning.tmp_clgen.clgen.errors.UserError(
-        "unrecognized sampler JSON options '{}'".format(
-          ",".join(["'{}'".format(key) for key in unrecognized_keys])))
+      raise errors.UserError("unrecognized sampler JSON options '{}'".format(
+        ",".join(["'{}'".format(key) for key in unrecognized_keys])))
 
     sampler_opts = sampler_json.get("sampler", {})
     kernel_opts = sampler_json.get("kernels", {})

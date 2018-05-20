@@ -2,7 +2,8 @@ import os
 import pathlib
 import typing
 
-from lib.labm8 import cache, fs
+from lib.labm8 import cache
+from lib.labm8 import fs
 
 
 def cachepath(*relative_path_components: typing.List[str]) -> pathlib.Path:

@@ -26,17 +26,17 @@ from time import time
 from typing import Iterator, List, Union
 
 import progressbar
+from absl import logging
 from prettytable import PrettyTable
 
-import deeplearning.tmp_clgen.clgen.cache
-import deeplearning.tmp_clgen.clgen.errors
-from deeplearning.tmp_clgen import clgen
-from deeplearning.tmp_clgen import log
+from deeplearning.clgen import cache
+from deeplearning.clgen import corpus
+from deeplearning.clgen import errors
 from lib.labm8 import crypto
 from lib.labm8 import fs
 from lib.labm8 import jsonutil
+from lib.labm8 import labtypes
 from lib.labm8 import lockfile
-from lib.labm8 import types
 
 
 # Default options used for model. Any values provided by the user will override
@@ -54,7 +54,7 @@ DEFAULT_MODEL_OPTS = {"created": {"date": str(datetime.now()), },
                                      "intermediate_checkpoints": True}}
 
 
-class ModelError(deeplearning.tmp_clgen.clgen.errors.CLgenError):
+class ModelError(errors.CLgenError):
   """
   Module level error
   """
@@ -71,42 +71,40 @@ class Model(object):
   can lead to bad things happening.
   """
 
-  def __init__(self, corpus: clgen.Corpus, **opts):
+  def __init__(self, corpus_: corpus.Corpus, **opts):
     """
     Instantiate model.
 
     Parameters
     ----------
-    corpus : clgen.Corpus
+    corpus : corpus.Corpus
         Corpus instance.
     **opts
         Training options.
     """
-    assert (isinstance(corpus, clgen.Corpus))
+    assert (isinstance(corpus_, corpus.Corpus))
 
-    def _hash(corpus: clgen.Corpus, opts: dict) -> str:
+    def _hash(corpus_: corpus.Corpus, opts: dict) -> str:
       """ compute model hash """
       hashopts = deepcopy(opts)
       del hashopts["created"]
       del hashopts["train_opts"]["epochs"]
-      return crypto.sha1_list(corpus.hash, *types.dict_values(hashopts))
+      return crypto.sha1_list(corpus_.hash, *labtypes.dict_values(hashopts))
 
     # Validate options
     for key in opts:
       if key not in DEFAULT_MODEL_OPTS:
-        raise deeplearning.tmp_clgen.clgen.errors.UserError(
+        raise errors.UserError(
           "Unsupported model option '{}'. Valid keys: {}".format(key, ','.join(
             sorted(DEFAULT_MODEL_OPTS.keys()))))
 
     # set properties
-    self.opts = types.update(deepcopy(DEFAULT_MODEL_OPTS), opts)
+    self.opts = labtypes.update(deepcopy(DEFAULT_MODEL_OPTS), opts)
     self.corpus = corpus
     self.hash = _hash(self.corpus, self.opts)
-    self.cache = deeplearning.tmp_clgen.clgen.cache.mkcache("model",
-                                                            f"{corpus.language}-{"
-                                                            f"self.hash}")
+    self.cache = cache.mkcache("model", f"{self.corpus.language}-{self.hash}")
 
-    log.debug("model", self.hash)
+    logging.debug("model", self.hash)
 
     # validate metadata against cache, and restore stats
     self.stats = {"epoch_times": [], "epoch_costs": [], "epoch_batches": []}
@@ -132,8 +130,8 @@ class Model(object):
       del meta["train_opts"]["epochs"]
 
       if meta != cached_meta:
-        log.error("Computed META:", jsonutil.format_json(meta))
-        raise deeplearning.tmp_clgen.clgen.errors.InternalError(
+        logging.error("Computed META:", jsonutil.format_json(meta))
+        raise errors.InternalError(
           "metadata mismatch in model %s" % self.cache["META"])
     else:
       self._flush_meta()
@@ -170,8 +168,7 @@ class Model(object):
     self.cell_fn = {"lstm": rnn.BasicLSTMCell, "gru": rnn.GRUCell,
                     "rnn": rnn.BasicRNNCell}.get(self.model_type, None)
     if self.cell_fn is None:
-      raise deeplearning.tmp_clgen.clgen.errors.UserError(
-        "Unrecognized model type")
+      raise errors.UserError("Unrecognized model type")
 
     # reset the graph when switching between training and inference
     tf.reset_default_graph()
@@ -245,7 +242,7 @@ class Model(object):
     for e, path in zip(epoch_nums, paths):
       diff = self.epochs - e
       if diff >= 0 and diff < closest:
-        log.verbose("  cached checkpoint at epoch =", e, "diff =", diff)
+        logging.debug("  cached checkpoint at epoch =", e, "diff =", diff)
         closest = diff
         closest_path = path
 
@@ -276,9 +273,9 @@ class Model(object):
 
       # restore model from closest checkpoint
       if ckpt_path:
-        log.debug("restoring", ckpt_path)
+        logging.debug("restoring", ckpt_path)
         saver.restore(sess, ckpt_path)
-        log.verbose("restored checkpoint {}".format(ckpt_path))
+        logging.debug("restored checkpoint {}".format(ckpt_path))
 
       # make sure we don't lose track of other checkpoints
       if ckpt_paths:
@@ -290,7 +287,7 @@ class Model(object):
       bar = progressbar.ProgressBar(max_value=max_batch)
 
       if sess.run(self.epoch) != self.epochs:
-        log.info("training", self)
+        logging.info("training", self)
 
       for e in range(sess.run(self.epoch) + 1, self.epochs + 1):
         epoch_start = time()
@@ -325,8 +322,8 @@ class Model(object):
 
           next_checkpoint = e * self.corpus.num_batches + b
           max_epoch = self.epochs
-          log.verbose("\n{self} epoch {e} / {max_epoch}. "
-                      "next checkpoint at batch {next_checkpoint}".format(
+          logging.debug("\n{self} epoch {e} / {max_epoch}. "
+                        "next checkpoint at batch {next_checkpoint}".format(
             **vars()))
 
           # update training time
@@ -355,9 +352,7 @@ class Model(object):
 
   @property
   def shorthash(self):
-    return deeplearning.tmp_clgen.clgen.cache.ShortHash(self.hash,
-                                                        clgen.cachepath(
-                                                          "model"))
+    return cache.ShortHash(self.hash, cache.cachepath("model"))
 
   @property
   def lock(self) -> lockfile.LockFile:
@@ -393,9 +388,8 @@ class Model(object):
     String representation.
     """
     celltype = self.model_type.upper()
-    return (f"model[{self.shorthash}]: " + f"{self.rnn_size}x{"
-                                           f"self.num_layers}x{self.epochs} {"
-                                           f"celltype}")
+    return (f'model[{self.shorthash}]: '
+            '{self.rnn_size}x{self.num_layers}x{self.epochs} {celltype}')
 
   def to_json(self) -> dict:
     d = deepcopy(self.opts)
@@ -444,11 +438,10 @@ class Model(object):
     assert (isinstance(model_json, dict))
 
     if "corpus" not in model_json:
-      raise deeplearning.tmp_clgen.clgen.errors.UserError(
-        "model JSON has no corpus entry")
+      raise errors.UserError("model JSON has no corpus entry")
 
     # create corpus and remove from JSON
-    corpus = clgen.Corpus.from_json(model_json.pop("corpus"))
+    corpus = corpus.Corpus.from_json(model_json.pop("corpus"))
 
     if "stats" in model_json:  # ignore stats
       del model_json["stats"]
@@ -465,10 +458,8 @@ def models() -> Iterator[Model]:
   Iterator[Model]
       An iterable over all cached models.
   """
-  if fs.isdir(deeplearning.tmp_clgen.clgen.cache.cachepath(), "model"):
-    modeldirs = fs.ls(
-      fs.path(deeplearning.tmp_clgen.clgen.cache.cachepath(), "model"),
-      abspaths=True)
+  if fs.isdir(cache.cachepath(), "model"):
+    modeldirs = fs.ls(fs.path(cache.cachepath(), "model"), abspaths=True)
     for modeldir in modeldirs:
       meta = jsonutil.read_file(fs.path(modeldir, "META"))
       model = Model.from_json(meta)

@@ -35,12 +35,12 @@ from threading import Thread
 from typing import Dict, List, Tuple
 
 import progressbar
+from absl import logging
 
-import deeplearning.tmp_clgen.clgen.errors
-from deeplearning.tmp_clgen import clgen
-from deeplearning.tmp_clgen import dbutil
-from deeplearning.tmp_clgen import log
-from deeplearning.tmp_clgen import native
+from deeplearning.clgen import dbutil
+from deeplearning.clgen import errors
+from deeplearning.clgen import languages
+from deeplearning.clgen import native
 from lib.labm8 import fs
 
 
@@ -49,7 +49,7 @@ from lib.labm8 import fs
 #
 
 # Internal exceptions:
-class LlvmException(deeplearning.tmp_clgen.clgen.errors.CLgenError):
+class LlvmException(errors.CLgenError):
   """LLVM Error"""
   pass
 
@@ -61,7 +61,7 @@ class OptException(LlvmException):
   pass
 
 
-class BadCodeException(deeplearning.tmp_clgen.clgen.errors.CLgenError):
+class BadCodeException(errors.CLgenError):
   """
   Code is bad.
   """
@@ -82,7 +82,7 @@ class ClangFormatException(BadCodeException):
   pass
 
 
-class UglyCodeException(deeplearning.tmp_clgen.clgen.errors.CLgenError):
+class UglyCodeException(errors.CLgenError):
   """
   Code is ugly.
   """
@@ -337,8 +337,7 @@ def gpuverify(src: str, args: list, id: str = 'anon', timeout: int = 60) -> str:
   # FIXME: GPUVerify support on macOS.
   from lib.labm8 import system
   if not system.is_linux():
-    raise deeplearning.tmp_clgen.clgen.errors.InternalError(
-      "GPUVerify only supported on Linux!")
+    raise errors.InternalError("GPUVerify only supported on Linux!")
 
   # GPUverify can't read from stdin.
   with NamedTemporaryFile('w', suffix='.cl') as tmp:
@@ -517,7 +516,7 @@ def clangformat(src: str, id: str = 'anon', timeout: int = 60) -> str:
   stdout, stderr = process.communicate(src.encode('utf-8'))
 
   if stderr:
-    log.error(stderr.decode('utf-8'))
+    logging.error(stderr.decode('utf-8'))
   if process.returncode != 0:
     raise ClangFormatException(stderr.decode('utf-8'))
 
@@ -707,7 +706,7 @@ def preprocess_glsl(src: str, id: str = 'anon', **kwargs) -> str:
 
 
 def preprocess(src: str, id: str = "anon",
-               lang: clgen.Language = clgen.Language.OPENCL,
+               lang: languages.Language = languages.Language.OPENCL,
                **lang_opts) -> str:
   """
   Preprocess a file. There are three possible outcomes:
@@ -735,14 +734,14 @@ def preprocess(src: str, id: str = "anon",
       If code is bad (see above).
   UglyCodeException
       If code is ugly (see above).
-  clgen.InternalException
+  errors.InternalException
       In case of some other error.
   """
-  if lang == clgen.Language.OPENCL:
+  if lang == languages.Language.OPENCL:
     return preprocess_opencl(src, id, **lang_opts)
-  elif lang == clgen.Language.SOLIDITY:
+  elif lang == languages.Language.SOLIDITY:
     return preprocess_solidity(src, id, **lang_opts)
-  elif lang == clgen.Language.GLSL:
+  elif lang == languages.Language.GLSL:
     return preprocess_glsl(src, id, **lang_opts)
   else:
     raise ValueError(f"unsuporrted language '{lang}'")
@@ -803,14 +802,14 @@ def preprocess_file(path: str, inplace: bool = False,
     else:
       print(out)
   except BadCodeException as e:
-    log.fatal(e, ret=1)
+    logging.fatal(e, ret=1)
   except UglyCodeException as e:
-    log.fatal(e, ret=2)
+    logging.fatal(e, ret=2)
 
 
 def _preprocess_inplace_worker(path: str) -> None:
   """worker function for preprocess_inplace()"""
-  log.info('preprocess', path)
+  logging.info('preprocess', path)
   preprocess_file(path, inplace=True)
 
 
@@ -841,20 +840,20 @@ def preprocess_inplace(paths: List[str], max_num_workers: int = cpu_count(),
       made.
   """
   if attempt > max_attempts:
-    raise deeplearning.tmp_clgen.clgen.errors.InternalError(
+    raise errors.InternalError(
       f"Failed to process files after {max_attempts} attempts")
   elif attempt > 1:
-    log.warning("preprocess attempt #.", attempt)
+    logging.warning("preprocess attempt #.", attempt)
 
   num_workers = min(len(paths), max_num_workers)
 
   try:
-    log.info('spawned', num_workers, 'worker threads to process', len(paths),
-             'files ...')
+    logging.info('spawned', num_workers, 'worker threads to process',
+                 len(paths), 'files ...')
     with terminating(Pool(num_workers)) as pool:
       pool.map(_preprocess_inplace_worker, paths)
   except (OSError, TimeoutError) as e:
-    log.error(e)
+    logging.error(e)
 
     # Try again with fewer threads.
     # See: https://github.com/ChrisCummins/clgen/issues/64
@@ -903,10 +902,10 @@ def _preprocess_db(db_path: str, max_num_workers: int = cpu_count(),
       made.
   """
   if attempt > max_attempts:
-    raise deeplearning.tmp_clgen.clgen.errors.InternalError(
+    raise errors.InternalError(
       f"failed to preprocess files after {max_attempts} attempts")
 
-  log.verbose("determining jobs")
+  logging.debug("determining jobs")
 
   contentfiles = set(dbutil.kernel_ids(db_path, "ContentFiles"))
   preprocessedfiles = set(dbutil.kernel_ids(db_path, "PreprocessedFiles"))
@@ -923,10 +922,10 @@ def _preprocess_db(db_path: str, max_num_workers: int = cpu_count(),
 
   todo_ratio = ntodo / ncontentfiles
 
-  log.info(
+  logging.info(
     "{ntodo} ({todo_ratio:.1%}) samples need preprocessing".format(**vars()))
 
-  log.verbose("creating jobs")
+  logging.debug("creating jobs")
 
   # Determine if we need to inline kernels when creating jobs
   db = sqlite3.connect(db_path)
@@ -957,7 +956,7 @@ def _preprocess_db(db_path: str, max_num_workers: int = cpu_count(),
   # producer-consumer queue
   queue = Queue(maxsize=128)
 
-  log.verbose(f"assigning {ntodo} jobs to {max_num_workers} threads")
+  logging.debug(f"assigning {ntodo} jobs to {max_num_workers} threads")
 
   try:
     # our worker threads. these busy little bees will do the heavy lifting
@@ -992,11 +991,11 @@ def _preprocess_db(db_path: str, max_num_workers: int = cpu_count(),
       producer.join()
 
   except (OSError, TimeoutError) as e:
-    log.error(e)
+    logging.error(e)
 
     if attempt > 2 and not i:
-      log.warning("no progress has been made since previous attempt. "
-                  "I'm not going to try another attempt.")
+      logging.warning("no progress has been made since previous attempt. "
+                      "I'm not going to try another attempt.")
       return
 
     # Try again with fewer threads.

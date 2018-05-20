@@ -16,13 +16,14 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-from deeplearning.tmp_clgen import clgen
-from deeplearning.tmp_clgen import dbutil
-from deeplearning.tmp_clgen import test as tests
+from deeplearning.clgen import dbutil
+from deeplearning.clgen import model
+from deeplearning.clgen import sampler
+from deeplearning.clgen.tests import testlib as tests
 
 
 def _get_test_model():
-  return clgen.Model.from_json({"corpus": {"language": "opencl",
+  return model.Model.from_json({"corpus": {"language": "opencl",
                                            "path": tests.data_path("tiny",
                                                                    "corpus"), },
                                 "architecture": {"rnn_size": 8,
@@ -36,7 +37,7 @@ def test_sample():
 
   argspec = ['__global float*', '__global float*', '__global float*',
              'const int']
-  s = clgen.Sampler.from_json(
+  s = sampler.Sampler.from_json(
     {"kernels": {"language": "opencl", "args": argspec, "max_length": 300, },
      "sampler": {"min_samples": 1}})
 
@@ -58,15 +59,15 @@ def test_sample():
 
 
 def test_eq():
-  s1 = clgen.Sampler.from_json({"kernels": {"language": "opencl",
-                                            "args": ['__global float*',
-                                                     '__global float*',
-                                                     'const int']}})
-  s2 = clgen.Sampler.from_json({"kernels": {"language": "opencl",
-                                            "args": ['__global float*',
-                                                     '__global float*',
-                                                     'const int']}})
-  s3 = clgen.Sampler.from_json(
+  s1 = sampler.Sampler.from_json({"kernels": {"language": "opencl",
+                                              "args": ['__global float*',
+                                                       '__global float*',
+                                                       'const int']}})
+  s2 = sampler.Sampler.from_json({"kernels": {"language": "opencl",
+                                              "args": ['__global float*',
+                                                       '__global float*',
+                                                       'const int']}})
+  s3 = sampler.Sampler.from_json(
     {"kernels": {"language": "opencl", "args": ['int']}})
 
   assert s1 == s2
@@ -76,9 +77,9 @@ def test_eq():
 
 
 def test_to_json():
-  s1 = clgen.Sampler.from_json({"kernels": {"language": "opencl",
-                                            "args": ['__global float*',
-                                                     '__global float*',
-                                                     'const int']}})
-  s2 = clgen.Sampler.from_json(s1.to_json())
+  s1 = sampler.Sampler.from_json({"kernels": {"language": "opencl",
+                                              "args": ['__global float*',
+                                                       '__global float*',
+                                                       'const int']}})
+  s2 = sampler.Sampler.from_json(s1.to_json())
   assert s1 == s2

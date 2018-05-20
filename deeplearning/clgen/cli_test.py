@@ -20,8 +20,8 @@ import os
 
 import pytest
 
-from deeplearning.tmp_clgen import cli
-from deeplearning.tmp_clgen import test as tests
+from deeplearning.clgen import cli
+from deeplearning.clgen.tests import testlib as tests
 from lib.labm8 import fs
 
 

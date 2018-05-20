@@ -29,13 +29,17 @@ from argparse import ArgumentParser, FileType, RawDescriptionHelpFormatter
 from pathlib import Path
 from typing import BinaryIO, List, TextIO
 
-import deeplearning.tmp_clgen.clgen.cache
-import deeplearning.tmp_clgen.clgen.errors
-from deeplearning.tmp_clgen import clgen
-from deeplearning.tmp_clgen import dbutil
-from deeplearning.tmp_clgen import log
+from absl import logging
 
-from lib.labm8 import fs, jsonutil, prof, types
+from deeplearning.clgen import cache
+from deeplearning.clgen import dbutil
+from deeplearning.clgen import errors
+from deeplearning.clgen import model
+from deeplearning.clgen import sampler
+from lib.labm8 import fs
+from lib.labm8 import jsonutil
+from lib.labm8 import labtypes
+from lib.labm8 import prof
 
 
 __help_epilog__ = """
@@ -93,7 +97,7 @@ def run(method, *args, **kwargs):
   """
 
   def _user_message(exception):
-    log.fatal("""\
+    logging.fatal("""\
 {err} ({type})
 
 Please report bugs at <https://github.com/ChrisCummins/clgen/issues>\
@@ -117,7 +121,7 @@ Please report bugs at <https://github.com/ChrisCummins/clgen/issues>\
     trace = reversed(traceback.extract_tb(tb, limit=NUM_ROWS + 1)[1:])
     message = "\n".join(_msg(*r) for r in enumerate(trace))
 
-    log.fatal("""\
+    logging.fatal("""\
 {err} ({type})
 
   stacktrace:
@@ -138,20 +142,20 @@ Please report bugs at <https://github.com/ChrisCummins/clgen/issues>\
     def runctx():
       return method(*args, **kwargs)
 
-    if prof.is_enabled() and log.is_verbose():
+    if prof.is_enabled() and logging.is_verbose():
       return cProfile.runctx('runctx()', None, locals(), sort='tottime')
     else:
       return runctx()
-  except deeplearning.tmp_clgen.clgen.errors.UserError as err:
-    log.fatal(err, "(" + type(err).__name__ + ")")
+  except errors.UserError as err:
+    logging.fatal(err, "(" + type(err).__name__ + ")")
   except KeyboardInterrupt:
     sys.stdout.flush()
     sys.stderr.flush()
     print("\nkeyboard interrupt, terminating", file=sys.stderr)
     sys.exit(1)
-  except deeplearning.tmp_clgen.clgen.errors.UserError as e:
+  except errors.UserError as e:
     _user_message(e)
-  except deeplearning.tmp_clgen.clgen.errors.File404 as e:
+  except errors.File404 as e:
     _user_message(e)
   except Exception as e:
     _user_message_with_stacktrace(e)
@@ -165,9 +169,9 @@ def _register_train_parser(self, parent: ArgumentParser) -> None:
 
   def _main(model_file: TextIO) -> None:
     model_json = jsonutil.loads(model_file.read())
-    model = clgen.Model.from_json(model_json)
-    model.train()
-    log.info("done.")
+    model_ = model.Model.from_json(model_json)
+    model_.train()
+    logging.info("done.")
 
   parser = parent.add_parser("train", aliases=["t", "tr"], help="train models",
                              description=inspect.getdoc(self),
@@ -185,13 +189,13 @@ def _register_sample_parser(self, parent: ArgumentParser) -> None:
 
   def _main(model_file: TextIO, sampler_file: TextIO) -> None:
     model_json = jsonutil.loads(model_file.read())
-    model = clgen.Model.from_json(model_json)
+    model_ = model.Model.from_json(model_json)
 
     sampler_json = jsonutil.loads(sampler_file.read())
-    sampler = clgen.Sampler.from_json(sampler_json)
+    sampler_ = sampler.Sampler.from_json(sampler_json)
 
-    model.train()
-    sampler.sample(model)
+    model_.train()
+    sampler_.sample(model_)
 
   parser = parent.add_parser("sample", aliases=["s", "sa"],
                              help="train and sample models",
@@ -224,7 +228,7 @@ def _register_fetch_parser(self, parent: ArgumentParser) -> None:
 
     def _main(db_file: BinaryIO, paths: List[Path]) -> None:
       clgen.fetch(db_file.name, paths)
-      log.info("done.")
+      logging.info("done.")
 
     parser = parent.add_parser("fs", help="fetch from filesystem",
                                description=inspect.getdoc(self),
@@ -265,13 +269,13 @@ def _register_fetch_parser(self, parent: ArgumentParser) -> None:
         password = environ['GITHUB_PW']
         token = environ['GITHUB_TOKEN']
       except KeyError as e:
-        log.fatal('environment variable {} not set'.format(e))
+        logging.fatal('environment variable {} not set'.format(e))
 
       try:
         clgen.fetch_github(db_file.name, username, password, token,
                            lang=clgen.Language.OPENCL)
       except BadCredentialsException as e:
-        log.fatal("bad GitHub credentials")
+        logging.fatal("bad GitHub credentials")
 
     parser = parent.add_parser("github", help="mine OpenCL from GitHub",
                                description=inspect.getdoc(self),
@@ -327,17 +331,17 @@ def _register_ls_parser(self, parent: ArgumentParser) -> None:
 
     def _main(model_file: TextIO, sampler_file: TextIO) -> None:
       model_json = jsonutil.loads(model_file.read())
-      model = clgen.Model.from_json(model_json)
+      model_ = model.Model.from_json(model_json)
 
-      caches = [model.corpus.cache, model.cache]
+      caches = [model_.corpus.cache, model_.cache]
 
       if sampler_file:
         sampler_json = jsonutil.loads(sampler_file.read())
-        sampler = clgen.Sampler.from_json(sampler_json)
-        caches.append(sampler.cache(model))
+        sampler_ = sampler.Sampler.from_json(sampler_json)
+        caches.append(sampler_.cache(model_))
 
       files = sorted(
-        types.flatten(c.ls(abspaths=True, recursive=True) for c in caches))
+        labtypes.flatten(c.ls(abspaths=True, recursive=True) for c in caches))
       print('\n'.join(files))
 
     parser = parent.add_parser("files", help="list cached files",
@@ -371,7 +375,7 @@ def _register_ls_parser(self, parent: ArgumentParser) -> None:
     """
 
     def _main() -> None:
-      log.warning("not implemented")
+      logging.warning("not implemented")
 
     parser = parent.add_parser("samplers", help="list cached samplers",
                                description=inspect.getdoc(self),
@@ -627,9 +631,9 @@ def _register_atomize_parser(self, parent: ArgumentParser) -> None:
     atoms = corpus.atomize(infile.read(), vocab=vocab)
 
     if size:
-      log.info("size:", len(atoms))
+      logging.info("size:", len(atoms))
     else:
-      log.info('\n'.join(atoms))
+      logging.info('\n'.join(atoms))
 
   parser = parent.add_parser("atomize", help="atomize files",
                              description=inspect.getdoc(self),
@@ -656,34 +660,34 @@ def _register_cache_parser(self, parent: ArgumentParser) -> None:
     """
 
     def _main() -> None:
-      cache = deeplearning.tmp_clgen.clgen.cache.cachepath()
+      cache_ = cache.cachepath()
 
-      log.warning("Not Implemented: refresh corpuses")
+      logging.warning("Not Implemented: refresh corpuses")
 
-      if fs.isdir(cache, "model"):
-        cached_modeldirs = fs.ls(fs.path(cache, "model"), abspaths=True)
+      if fs.isdir(cache_, "model"):
+        cached_modeldirs = fs.ls(fs.path(cache_, "model"), abspaths=True)
         for cached_modeldir in cached_modeldirs:
           cached_model_id = fs.basename(cached_modeldir)
           cached_meta = jsonutil.read_file(fs.path(cached_modeldir, "META"))
 
-          model = clgen.Model.from_json(cached_meta)
+          model_ = model.Model.from_json(cached_meta)
 
-          if cached_model_id != model.hash:
-            log.info(cached_model_id, '->', model.hash)
+          if cached_model_id != model_.hash:
+            logging.info(cached_model_id, '->', model_.hash)
 
-            if fs.isdir(model.cache.path):
-              log.fatal("cache conflict", file=sys.stderr)
+            if fs.isdir(model_.cache.path):
+              logging.fatal("cache_ conflict", file=sys.stderr)
 
-            fs.mv(cached_modeldir, model.cache.path)
+            fs.mv(cached_modeldir, model_.cache.path)
 
-      log.warning("Not Implemented: refresh samplers")
+      logging.warning("Not Implemented: refresh samplers")
 
-    parser = parent.add_parser("migrate", help="migrate the cache",
+    parser = parent.add_parser("migrate", help="migrate the cache_",
                                description=inspect.getdoc(self),
                                epilog=__help_epilog__)
     parser.set_defaults(dispatch_func=_main)
 
-  parser = parent.add_parser("cache", help="manage filesystem cache",
+  parser = parent.add_parser("cache", help="manage filesystem cache_",
                              description=inspect.getdoc(self),
                              epilog=__help_epilog__)
 
@@ -756,7 +760,7 @@ For information about a specific command, run `clgen <command> --help`.
   args = parser.parse_args(args)
 
   # set log level
-  log.init(args.verbose)
+  logging.init(args.verbose)
 
   # set debug option
   if args.debug:
@@ -771,16 +775,16 @@ For information about a specific command, run `clgen <command> --help`.
     print("clgen made with \033[1;31m♥\033[0;0m by Chris Cummins "
           "<chrisc.101@gmail.com>.")
   elif args.corpus_dir:
-    model = clgen.Model.from_json(jsonutil.loads(args.corpus_dir.read()))
-    print(model.corpus.cache.path)
+    model_ = model.Model.from_json(jsonutil.loads(args.corpus_dir.read()))
+    print(model_.corpus.cache.path)
   elif args.model_dir:
-    model = clgen.Model.from_json(jsonutil.loads(args.model_dir.read()))
-    print(model.cache.path)
+    model_ = model.Model.from_json(jsonutil.loads(args.model_dir.read()))
+    print(model_.cache.path)
   elif args.sampler_dir:
-    model = clgen.Model.from_json(jsonutil.loads(args.sampler_dir[0].read()))
-    sampler = clgen.Sampler.from_json(
+    model_ = model.Model.from_json(jsonutil.loads(args.sampler_dir[0].read()))
+    sampler_ = sampler.Sampler.from_json(
       jsonutil.loads(args.sampler_dir[1].read()))
-    print(sampler.cache(model).path)
+    print(sampler_.cache(model).path)
   else:
     # strip the arguments from the top-level parser
     dispatch_func = args.dispatch_func

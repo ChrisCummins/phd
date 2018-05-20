@@ -16,35 +16,32 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""
-Manipulating and handling training corpuses.
-"""
+"""Manipulating and handling training corpuses."""
 import codecs
 import pickle
 import re
+import typing
 from copy import deepcopy
 from datetime import datetime
 from tempfile import NamedTemporaryFile
 from time import time
-from typing import Iterable, List, Tuple
 
 import numpy as np
+from absl import logging
 
-import deeplearning.tmp_clgen.clgen.cache
-import deeplearning.tmp_clgen.clgen.errors
-from deeplearning.tmp_clgen import clgen
-from deeplearning.tmp_clgen import dbutil
-from deeplearning.tmp_clgen import features
-from deeplearning.tmp_clgen import log
+from deeplearning.clgen import cache
+from deeplearning.clgen import dbutil
+from deeplearning.clgen import errors
+from deeplearning.clgen import features
+from deeplearning.clgen import languages
 from lib.labm8 import crypto
+from lib.labm8 import dirhashcache
 from lib.labm8 import fs
 from lib.labm8 import jsonutil
 from lib.labm8 import lockfile
 from lib.labm8 import prof
 from lib.labm8 import tar
 from lib.labm8 import text
-from lib.labm8 import types
-from lib.labm8.dirhashcache import DirHashCache
 
 
 # Default options used for corpus. Any values provided by the user will override
@@ -57,7 +54,7 @@ DEFAULT_CORPUS_OPTS = {"created": {"date": str(datetime.now()), }, "eof": False,
                        }
 
 
-class FeaturesError(deeplearning.tmp_clgen.clgen.errors.CLgenError):
+class FeaturesError(errors.CLgenError):
   """
   Thrown in case of error during features encoding.
   """
@@ -88,16 +85,16 @@ def unpack_directory_if_needed(path: str) -> str:
     return path
 
   if fs.isfile(path) and path.endswith(".tar.bz2"):
-    log.info("unpacking '{}'".format(path))
+    logging.info("unpacking '{}'".format(path))
     tar.unpack_archive(path)
     return re.sub(r'.tar.bz2$', '', path)
 
   if fs.isfile(path + ".tar.bz2"):
-    log.info("unpacking '{}'".format(path + ".tar.bz2"))
+    logging.info("unpacking '{}'".format(path + ".tar.bz2"))
     tar.unpack_archive(path + ".tar.bz2")
     return path
 
-  raise deeplearning.tmp_clgen.clgen.errors.InternalError(
+  raise errors.InternalError(
     "cannot interpret archive '{path}'".format(**vars()))
 
 
@@ -122,7 +119,7 @@ def get_kernel_features(code: str, **kwargs) -> np.array:
     outfile.seek(0)
     f = features.to_np_arrays([outfile.name], **kwargs)
   if len(f) != 1:
-    log.error("features:", f)
+    logging.error("features:", f)
     raise FeaturesError("code contains more than one kernel")
   return f[0]
 
@@ -179,7 +176,7 @@ def get_cl_kernel(src: str, start_idx: int, max_len: int = 5000) -> str:
   return src[start_idx:get_cl_kernel_end_idx(src, start_idx)]
 
 
-def get_cl_kernels(src: str) -> List[str]:
+def get_cl_kernels(src: str) -> typing.List[str]:
   """
   Return OpenCL kernels.
 
@@ -190,7 +187,7 @@ def get_cl_kernels(src: str) -> List[str]:
 
   Returns
   -------
-  List[str]
+  typing.List[str]
       OpenCL kernels.
   """
   idxs = text.get_substring_idxs('__kernel', src)
@@ -214,7 +211,7 @@ def encode_kernels_db(kernels_db: str, encoding: str) -> None:
     pass
 
   def _static_features(kernels_db: str) -> None:
-    log.verbose("Static feature encoding")
+    logging.debug("Static feature encoding")
     db = dbutil.connect(kernels_db)
     c = db.cursor()
     c.execute("SELECT id,contents FROM PreprocessedFiles WHERE status=0")
@@ -225,7 +222,7 @@ def encode_kernels_db(kernels_db: str, encoding: str) -> None:
         features = get_kernel_features(kernel)
         kid = "{}-{}".format(id, i)
         if len(features) == 8:
-          log.verbose("features", kid)
+          logging.debug("features", kid)
           feature_str = ("/* {:10} {:10} {:10} {:10} {:10} {:10}"
                          "{:10.3f} {:10.3f} */".format(int(features[0]),
                                                        int(features[1]),
@@ -241,7 +238,7 @@ def encode_kernels_db(kernels_db: str, encoding: str) -> None:
                         VALUES (?,?,?)
                     """, (kid, newsource, 0))
         else:
-          log.verbose("ignored", kid)
+          logging.debug("ignored", kid)
     c.close()
     db.commit()
 
@@ -249,7 +246,7 @@ def encode_kernels_db(kernels_db: str, encoding: str) -> None:
   encoders = {"default": _default, "static_features": _static_features, }
   encoder = encoders.get(encoding, None)
   if encoder is None:
-    raise deeplearning.tmp_clgen.clgen.errors.UserError(
+    raise errors.UserError(
       "Unknown encoding type '{bad}'. Supported values: {good}".format(
         bad=encoding, good=", ".join(sorted(encoders.keys()))))
   else:
@@ -285,7 +282,7 @@ class Corpus(object):
     # Validate options
     for key in opts.keys():
       if key not in DEFAULT_CORPUS_OPTS:
-        raise deeplearning.tmp_clgen.clgen.errors.UserError(
+        raise errors.UserError(
           "Unsupported corpus option '{}'. Valid keys: {}".format(key, ','.join(
             sorted(DEFAULT_CORPUS_OPTS.keys()))))
 
@@ -294,26 +291,24 @@ class Corpus(object):
     self.opts["id"] = contentid
 
     # check that contentid exists
-    self.language = clgen.Language.from_str(opts.get("language"))
+    self.language = languages.Language.from_str(opts.get("language"))
     if (path is None and not fs.isdir(
-        deeplearning.tmp_clgen.clgen.cache.cachepath("contentfiles",
-                                                     f"{self.language}-{"
-                                                     f"contentid}"))):
-      raise deeplearning.tmp_clgen.clgen.errors.UserError(
+        cache.cachepath("contentfiles", f"{self.language}-"
+                                        f"{contentid}"))):
+      raise errors.UserError(
         "corpus {self.language}-{contentid} not found".format(**vars()))
 
     self.contentid = contentid
-    self.contentcache = deeplearning.tmp_clgen.clgen.cache.mkcache(
-      "contentfiles", f"{self.language}-{contentid}")
+    self.contentcache = cache.mkcache("contentfiles",
+                                      f"{self.language}-{contentid}")
     self.kernels_db = self.contentcache.keypath('kernels.db')
 
     self.hash = self._hash(contentid, self.opts)
-    self.cache = deeplearning.tmp_clgen.clgen.cache.mkcache("corpus",
-                                                            f"{self.language}-{"
-                                                            f"self.hash}")
+    self.cache = cache.mkcache("corpus", f"{self.language}-"
+                                         f"{self.hash}")
 
-    log.debug("contentfiles {self.contentid}".format(**vars()))
-    log.debug("corpus {hash}".format(hash=self.hash))
+    logging.debug("contentfiles {self.contentid}".format(**vars()))
+    logging.debug("corpus {hash}".format(hash=self.hash))
 
     # validate metadata against cache
     self.stats = {"preprocess_time": 0}
@@ -331,8 +326,7 @@ class Corpus(object):
       del meta["stats"]
 
       if meta != cached_meta:
-        raise deeplearning.tmp_clgen.clgen.errors.InternalError(
-          "corpus metadata mismatch")
+        raise errors.InternalError("corpus metadata mismatch")
     else:
       self._flush_meta()
 
@@ -343,12 +337,12 @@ class Corpus(object):
     jsonutil.write_file(self.cache.keypath("META"), self.to_json())
 
   def _create_files(self, path):
-    def _init_error(err: Exception, files_to_rm: List[str] = []) -> None:
+    def _init_error(err: Exception, files_to_rm: typing.List[str] = []) -> None:
       """ tidy up in case of error """
-      log.error("corpus creation failed. Deleting corpus files")
+      logging.error("corpus creation failed. Deleting corpus files")
       for path in files_to_rm:
         if fs.exists(path):
-          log.info("removing", path)
+          logging.info("removing", path)
           fs.rm(path)
       raise err
 
@@ -356,7 +350,7 @@ class Corpus(object):
     try:
       if path is not None:
         if not fs.isdir(path):
-          raise deeplearning.tmp_clgen.clgen.errors.UserError(
+          raise errors.UserError(
             "Corpus path '{}' is not a directory".format(path))
         try:
           self.contentcache["kernels.db"]
@@ -411,7 +405,7 @@ class Corpus(object):
 
   def _create_kernels_db(self, path: str) -> None:
     """creates and caches kernels.db"""
-    log.debug("creating database")
+    logging.debug("creating database")
 
     # create a database and put it in the cache
     tmppath = self.contentcache.keypath("kernels.db.tmp")
@@ -427,7 +421,7 @@ class Corpus(object):
 
   def _create_txt(self) -> None:
     """creates and caches corpus.txt"""
-    log.debug("creating corpus")
+    logging.debug("creating corpus")
 
     # TODO: additional options in corpus JSON to accomodate for EOF,
     # different encodings etc.
@@ -462,15 +456,16 @@ class Corpus(object):
                    "greedy": clgen.GreedyAtomizer, }
       atomizerclass = atomizers.get(vocab, None)
       if atomizerclass is None:
-        raise deeplearning.tmp_clgen.clgen.errors.UserError(
-          "Unknown vocabulary type '{bad}'. "
-          "Supported values: {good}".format(bad=vocab, good=", "
-                                                            "".join(
-            sorted(atomizers.keys()))))
+        raise errors.UserError("Unknown vocabulary type '{bad}'. "
+                               "Supported values: {good}".format(bad=vocab,
+                                                                 good=", "
+                                                                      "".join(
+                                                                   sorted(
+                                                                     atomizers.keys()))))
       else:
         return atomizerclass.from_text(self.language, corpus_txt)
 
-    log.debug("creating vocab file")
+    logging.debug("creating vocab file")
     data = self._read_txt()
 
     self.atomizer = _get_atomizer(data, vocab)
@@ -528,7 +523,7 @@ class Corpus(object):
     self._size = len(self._tensor)
     self._num_batches = int(self.size / (batch_size * seq_length))
     if self.num_batches == 0:
-      raise deeplearning.tmp_clgen.clgen.errors.UserError(
+      raise errors.UserError(
         "Not enough data. Use a smaller seq_length and batch_size")
 
     # split into batches
@@ -544,9 +539,7 @@ class Corpus(object):
 
   @property
   def shorthash(self):
-    return deeplearning.tmp_clgen.clgen.cache.ShortHash(self.hash,
-                                                        deeplearning.tmp_clgen.clgen.cache.cachepath(
-                                                          "corpus"))
+    return cache.ShortHash(self.hash, cache.cachepath("corpus"))
 
   @property
   def lock(self):
@@ -586,13 +579,13 @@ class Corpus(object):
     """
     self._pointer = 0
 
-  def next_batch(self) -> Tuple[np.array, np.array]:
+  def next_batch(self) -> typing.Tuple[np.array, np.array]:
     """
     Fetch next batch indices.
 
     Returns
     -------
-    Tuple[np.array, np.array]
+    typing.Tuple[np.array, np.array]
         X, Y batch tuple.
     """
     x = self._x_batches[self._pointer]
@@ -611,7 +604,7 @@ class Corpus(object):
     """
     self._pointer = pointer
 
-  def preprocessed(self, status: int = 0) -> Iterable[str]:
+  def preprocessed(self, status: int = 0) -> typing.Iterable[str]:
     """
     Return an iterator over all preprocessed kernels.
 
@@ -622,7 +615,7 @@ class Corpus(object):
 
     Returns
     -------
-    Iterable[str]
+    typing.Iterable[str]
         Sources.
     """
     db = dbutil.connect(self.contentcache["kernels.db"])
@@ -633,13 +626,13 @@ class Corpus(object):
     for row in query.fetchall():
       yield row[0]
 
-  def contentfiles(self) -> Iterable[str]:
+  def contentfiles(self) -> typing.Iterable[str]:
     """
     Return an iterator over all un-processed samples.
 
     Returns
     -------
-    Iterable[str]
+    typing.Iterable[str]
         Samples.
     """
     db = dbutil.connect(self.contentcache["kernels.db"])
@@ -650,11 +643,9 @@ class Corpus(object):
 
   def __repr__(self) -> str:
     nf = dbutil.num_good_kernels(self.contentcache['kernels.db'])
-    return (
-        f"corpus[{self.shorthash}]: {nf} files, {self.size} tokens " +
-        f"using {self.opts["
-                                                                       f"'vocabulary']} "
-                                                                       f"vocabulary of size " + f"{self.atomizer.vocab_size}")
+    return (f"corpus[{self.shorthash}]: {nf} files, {self.size} tokens "
+            f"using {self.opts['vocabulary']} "
+            f"vocabulary of size {self.atomizer.vocab_size}")
 
   def to_json(self) -> dict:
     d = deepcopy(self.opts)
@@ -687,27 +678,24 @@ class Corpus(object):
     """
     path = corpus_json.pop("path", None)
     uid = corpus_json.pop("id", None)
-    language = clgen.Language.from_str(corpus_json.get("language"))
+    language = languages.Language.from_str(corpus_json.get("language"))
 
     if path:
       path = unpack_directory_if_needed(fs.abspath(path))
       if not fs.isdir(path):
-        raise deeplearning.tmp_clgen.clgen.errors.UserError(
+        raise errors.UserError(
           "Corpus path '{}' is not a directory".format(path))
 
-      dirhashcache = DirHashCache(
-        deeplearning.tmp_clgen.clgen.cache.cachepath("dirhash.db"), 'sha1')
-      uid = prof.profile(dirhashcache.dirhash, path)
+      dirhashcache_ = dirhashcache.DirHashCache(cache.cachepath("dirhash.db"),
+                                                'sha1')
+      uid = prof.profile(dirhashcache_.dirhash, path)
     elif uid:
-      cache_path = deeplearning.tmp_clgen.clgen.cache.mkcache("contentfiles",
-                                                              f"{language}-{"
-                                                              f"uid}").path
+      cache_path = cache.mkcache("contentfiles", f"{language}-"
+                                                 f"{uid}").path
       if not fs.isdir(cache_path):
-        raise deeplearning.tmp_clgen.clgen.errors.UserError(
-          "Corpus content {} not found".format(uid))
+        raise errors.UserError("Corpus content {} not found".format(uid))
     else:
-      raise deeplearning.tmp_clgen.clgen.errors.UserError(
-        "No corpus path or ID provided")
+      raise errors.UserError("No corpus path or ID provided")
 
     if "stats" in corpus_json:  # ignore stats
       del corpus_json["stats"]

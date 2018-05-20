@@ -16,12 +16,12 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-from deeplearning.tmp_clgen import clgen
-from deeplearning.tmp_clgen import test as tests
+from deeplearning.clgen import model
+from deeplearning.clgen.tests import testlib as tests
 
 
 def get_test_model(vocab="char"):
-  return clgen.Model.from_json({
+  return model.Model.from_json({
     "corpus": {"language": "opencl", "path": tests.data_path("tiny", "corpus"),
                "vocabulary": vocab},
     "architecture": {"rnn_size": 8, "num_layers": 2},
@@ -29,17 +29,17 @@ def get_test_model(vocab="char"):
 
 
 def test_model_hash():
-  m1 = clgen.Model.from_json({"corpus": {"language": "opencl",
+  m1 = model.Model.from_json({"corpus": {"language": "opencl",
                                          "path": tests.data_path("tiny",
                                                                  "corpus")}})
 
   # same as m1, with explicit default opt:
-  m2 = clgen.Model.from_json({
+  m2 = model.Model.from_json({
     "corpus": {"language": "opencl", "path": tests.data_path("tiny", "corpus")},
     "train_opts": {"intermediate_checkpoints": True}})
 
   # different opt value:
-  m3 = clgen.Model.from_json({
+  m3 = model.Model.from_json({
     "corpus": {"language": "opencl", "path": tests.data_path("tiny", "corpus")},
     "train_opts": {"intermediate_checkpoints": False}})
 
@@ -54,13 +54,13 @@ def test_model_checkpoint_path_untrained():
 
 
 def test_model_eq():
-  m1 = clgen.Model.from_json({
+  m1 = model.Model.from_json({
     "corpus": {"language": "opencl", "path": tests.data_path("tiny", "corpus")},
     "train_opts": {"intermediate_checkpoints": False}})
-  m2 = clgen.Model.from_json({
+  m2 = model.Model.from_json({
     "corpus": {"language": "opencl", "path": tests.data_path("tiny", "corpus")},
     "train_opts": {"intermediate_checkpoints": False}})
-  m3 = clgen.Model.from_json({
+  m3 = model.Model.from_json({
     "corpus": {"language": "opencl", "path": tests.data_path("tiny", "corpus")},
     "train_opts": {"intermediate_checkpoints": True}})
 
@@ -71,8 +71,8 @@ def test_model_eq():
 
 
 def test_model_to_json():
-  m1 = clgen.Model.from_json({
+  m1 = model.Model.from_json({
     "corpus": {"language": "opencl", "path": tests.data_path("tiny", "corpus")},
     "train_opts": {"intermediate_checkpoints": True}})
-  m2 = clgen.Model.from_json(m1.to_json())
+  m2 = model.Model.from_json(m1.to_json())
   m1 == m2
