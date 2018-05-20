@@ -9,6 +9,7 @@ py_binary(
     name = "photolint",
     srcs = ["photolint.py"],
     default_python_version = "PY3",
+    srcs_version = "PY3",
     deps = [
         ":common",
         ":lintercache",
@@ -62,6 +63,7 @@ py_test(
     size = "small",
     srcs = ["tests/linters_test.py"],
     default_python_version = "PY3",
+    srcs_version = "PY3",
     deps = [
         ":linters",
     ],
@@ -72,6 +74,7 @@ py_test(
     size = "small",
     srcs = ["tests/workspace_test.py"],
     default_python_version = "PY3",
+    srcs_version = "PY3",
     deps = [
         ":workspace",
     ],
