@@ -19,6 +19,7 @@
 """
 Preprocess OpenCL files for machine learning.
 """
+import contextlib
 import json
 import math
 import random
@@ -128,9 +129,8 @@ CLANG_CL_TARGETS = ['nvptx64-nvidia-nvcl', 'spir64']
 
 
 # FIXME(polyglot):
-def clang_cl_args(target: str = CLANG_CL_TARGETS[0], use_shim: bool = True, error_limit: int = 0)\
-    -> \
-    List[str]:
+def clang_cl_args(target: str = CLANG_CL_TARGETS[0], use_shim: bool = True,
+                  error_limit: int = 0) -> List[str]:
   """
   Get the Clang args to compile OpenCL.
 
@@ -150,10 +150,13 @@ def clang_cl_args(target: str = CLANG_CL_TARGETS[0], use_shim: bool = True, erro
   """
   # clang warnings to disable
   disabled_warnings = ['ignored-pragmas', 'implicit-function-declaration',
-                       'incompatible-library-redeclaration', 'macro-redefined', ]
+                       'incompatible-library-redeclaration',
+                       'macro-redefined', ]
 
-  args = ['-I' + fs.path(native.LIBCLC), '-target', target, '-ferror-limit={}'.format(error_limit),
-          '-xcl'] + ['-Wno-{}'.format(x) for x in disabled_warnings]
+  args = ['-I' + fs.path(native.LIBCLC), '-target', target,
+          '-ferror-limit={}'.format(error_limit), '-xcl'] + ['-Wno-{}'.format(x)
+                                                             for x in
+                                                             disabled_warnings]
 
   if use_shim:
     args += ['-include', native.SHIMFILE]
@@ -177,8 +180,12 @@ def strip_preprocessor_lines(src: str) -> str:
   return src
 
 
-def compiler_preprocess(src: str, compiler_args: List[str], id: str = 'anon', timeout: int = 60):
-  cmd = ["timeout", "-s9", str(timeout), native.CLANG] + compiler_args + ['-E', '-c', '-', '-o',
+def compiler_preprocess(src: str, compiler_args: List[str], id: str = 'anon',
+                        timeout: int = 60):
+  cmd = ["timeout", "-s9", str(timeout), native.CLANG] + compiler_args + ['-E',
+                                                                          '-c',
+                                                                          '-',
+                                                                          '-o',
                                                                           '-']
   process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
   stdout, stderr = process.communicate(src.encode('utf-8'))
@@ -190,7 +197,8 @@ def compiler_preprocess(src: str, compiler_args: List[str], id: str = 'anon', ti
   return strip_preprocessor_lines(src)
 
 
-def compiler_preprocess_cl(src: str, id: str = 'anon', use_shim: bool = True) -> str:
+def compiler_preprocess_cl(src: str, id: str = 'anon',
+                           use_shim: bool = True) -> str:
   """
   Preprocess OpenCL file.
 
@@ -218,7 +226,8 @@ def compiler_preprocess_cl(src: str, id: str = 'anon', use_shim: bool = True) ->
   return compiler_preprocess(src, clang_cl_args(use_shim=use_shim), id)
 
 
-def rewrite_cl(src: str, id: str = 'anon', use_shim: bool = True, timeout: int = 60) -> str:
+def rewrite_cl(src: str, id: str = 'anon', use_shim: bool = True,
+               timeout: int = 60) -> str:
   """
   Rewrite OpenCL sources.
 
@@ -247,10 +256,8 @@ def rewrite_cl(src: str, id: str = 'anon', use_shim: bool = True, timeout: int =
   with NamedTemporaryFile('w', suffix='.cl') as tmp:
     tmp.write(src)
     tmp.flush()
-    cmd = (
-        ["timeout", "-s9", str(timeout), native.CLGEN_REWRITER, tmp.name] + ['-extra-arg=' + x for x
-                                                                             in clang_cl_args(
-        use_shim=use_shim)] + ['--'])
+    cmd = (["timeout", "-s9", str(timeout), native.CLGEN_REWRITER, tmp.name] + [
+      '-extra-arg=' + x for x in clang_cl_args(use_shim=use_shim)] + ['--'])
 
     process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
     stdout, stderr = process.communicate()
@@ -293,8 +300,8 @@ def compile_cl_bytecode(src: str, id: str = 'anon', use_shim: bool = True,
   ClangException
       If compiler errors.
   """
-  cmd = ["timeout", "-s9", str(timeout), native.CLANG] + clang_cl_args(use_shim=use_shim) + [
-    '-emit-llvm', '-S', '-c', '-', '-o', '-']
+  cmd = ["timeout", "-s9", str(timeout), native.CLANG] + clang_cl_args(
+    use_shim=use_shim) + ['-emit-llvm', '-S', '-c', '-', '-o', '-']
 
   process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
   stdout, stderr = process.communicate(src.encode('utf-8'))
@@ -330,7 +337,8 @@ def gpuverify(src: str, args: list, id: str = 'anon', timeout: int = 60) -> str:
   # FIXME: GPUVerify support on macOS.
   from lib.labm8 import system
   if not system.is_linux():
-    raise deeplearning.clgen.clgen.errors.InternalError("GPUVerify only supported on Linux!")
+    raise deeplearning.clgen.clgen.errors.InternalError(
+      "GPUVerify only supported on Linux!")
 
   # GPUverify can't read from stdin.
   with NamedTemporaryFile('w', suffix='.cl') as tmp:
@@ -342,14 +350,16 @@ def gpuverify(src: str, args: list, id: str = 'anon', timeout: int = 60) -> str:
     stdout, stderr = process.communicate()
 
   if process.returncode == -9:  # timeout signal
-    raise GPUVerifyTimeoutException(f"GPUveryify failed to complete with {timeout} seconds")
+    raise GPUVerifyTimeoutException(
+      f"GPUveryify failed to complete with {timeout} seconds")
   elif process.returncode != 0:
     raise GPUVerifyException(stderr.decode('utf-8'))
 
   return src
 
 
-_instcount_re = re.compile(r"^(?P<count>\d+) instcount - Number of (?P<type>.+)")
+_instcount_re = re.compile(
+  r"^(?P<count>\d+) instcount - Number of (?P<type>.+)")
 
 
 def parse_instcounts(txt: str) -> Dict[str, int]:
@@ -427,7 +437,8 @@ def instcounts2ratios(counts: Dict[str, int]) -> Dict[str, float]:
   return ratios
 
 
-def bytecode_features(bc: str, id: str = 'anon', timeout: int = 60) -> Dict[str, float]:
+def bytecode_features(bc: str, id: str = 'anon', timeout: int = 60) -> Dict[
+  str, float]:
   """
   Extract features from bytecode.
 
@@ -448,7 +459,8 @@ def bytecode_features(bc: str, id: str = 'anon', timeout: int = 60) -> Dict[str,
   OptException
       If LLVM opt pass errors.
   """
-  cmd = ["timeout", "-s9", str(timeout), native.OPT, '-analyze', '-stats', '-instcount', '-']
+  cmd = ["timeout", "-s9", str(timeout), native.OPT, '-analyze', '-stats',
+         '-instcount', '-']
 
   # LLVM pass output pritns to stderr, so we'll pipe stderr to
   # stdout.
@@ -468,12 +480,13 @@ def bytecode_features(bc: str, id: str = 'anon', timeout: int = 60) -> Dict[str,
 #
 # See: http://clang.llvm.org/docs/ClangFormatStyleOptions.html
 #
-clangformat_config = {'BasedOnStyle': 'Google', 'ColumnLimit': 500, 'IndentWidth': 2,
-                      'AllowShortBlocksOnASingleLine': False,
+clangformat_config = {'BasedOnStyle': 'Google', 'ColumnLimit': 500,
+                      'IndentWidth': 2, 'AllowShortBlocksOnASingleLine': False,
                       'AllowShortCaseLabelsOnASingleLine': False,
                       'AllowShortFunctionsOnASingleLine': False,
                       'AllowShortLoopsOnASingleLine': False,
-                      'AllowShortIfStatementsOnASingleLine': False, 'DerivePointerAlignment': False,
+                      'AllowShortIfStatementsOnASingleLine': False,
+                      'DerivePointerAlignment': False,
                       'PointerAlignment': 'Left'}
 
 
@@ -511,7 +524,8 @@ def clangformat(src: str, id: str = 'anon', timeout: int = 60) -> str:
   return stdout.decode('utf-8')
 
 
-def verify_bytecode_features(bc_features: Dict[str, float], id: str = 'anon') -> None:
+def verify_bytecode_features(bc_features: Dict[str, float],
+                             id: str = 'anon') -> None:
   """
   Verify LLVM bytecode features.
 
@@ -534,8 +548,8 @@ def verify_bytecode_features(bc_features: Dict[str, float], id: str = 'anon') ->
 
   if num_instructions < min_num_instructions:
     raise InstructionCountException(
-      'Code contains {} instructions. The minimum allowed is {}'.format(num_instructions,
-                                                                        min_num_instructions))
+      'Code contains {} instructions. The minimum allowed is {}'.format(
+        num_instructions, min_num_instructions))
 
 
 def ensure_has_code(src: str) -> str:
@@ -613,8 +627,9 @@ def strip_comments(text: str):
     else:
       return s
 
-  pattern = re.compile(r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
-                       re.DOTALL | re.MULTILINE)
+  pattern = re.compile(
+    r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
+    re.DOTALL | re.MULTILINE)
   return re.sub(pattern, replacer, text)
 
 
@@ -691,7 +706,8 @@ def preprocess_glsl(src: str, id: str = 'anon', **kwargs) -> str:
   return src
 
 
-def preprocess(src: str, id: str = "anon", lang: clgen.Language = clgen.Language.OPENCL,
+def preprocess(src: str, id: str = "anon",
+               lang: clgen.Language = clgen.Language.OPENCL,
                **lang_opts) -> str:
   """
   Preprocess a file. There are three possible outcomes:
@@ -762,7 +778,8 @@ def preprocess_for_db(src: str, **preprocess_opts) -> Tuple[int, str]:
   return status, contents
 
 
-def preprocess_file(path: str, inplace: bool = False, **preprocess_opts) -> None:
+def preprocess_file(path: str, inplace: bool = False,
+                    **preprocess_opts) -> None:
   """
   Preprocess a file.
 
@@ -797,6 +814,17 @@ def _preprocess_inplace_worker(path: str) -> None:
   preprocess_file(path, inplace=True)
 
 
+@contextlib.contextmanager
+def terminating(thing):
+  """
+  Context manager to terminate object at end of scope.
+  """
+  try:
+    yield thing
+  finally:
+    thing.terminate()
+
+
 def preprocess_inplace(paths: List[str], max_num_workers: int = cpu_count(),
                        max_attempts: int = 100, attempt: int = 1) -> None:
   """
@@ -821,8 +849,9 @@ def preprocess_inplace(paths: List[str], max_num_workers: int = cpu_count(),
   num_workers = min(len(paths), max_num_workers)
 
   try:
-    log.info('spawned', num_workers, 'worker threads to process', len(paths), 'files ...')
-    with clgen.terminating(Pool(num_workers)) as pool:
+    log.info('spawned', num_workers, 'worker threads to process', len(paths),
+             'files ...')
+    with terminating(Pool(num_workers)) as pool:
       pool.map(_preprocess_inplace_worker, paths)
   except (OSError, TimeoutError) as e:
     log.error(e)
@@ -830,8 +859,8 @@ def preprocess_inplace(paths: List[str], max_num_workers: int = cpu_count(),
     # Try again with fewer threads.
     # See: https://github.com/ChrisCummins/clgen/issues/64
     max_num_workers = max(int(max_num_workers / 2), 1)
-    preprocess_inplace(paths, max_num_workers=max_num_workers, attempt=attempt + 1,
-                       max_attempts=max_attempts)
+    preprocess_inplace(paths, max_num_workers=max_num_workers,
+                       attempt=attempt + 1, max_attempts=max_attempts)
 
 
 class PreprocessWorker(Thread):
@@ -857,8 +886,9 @@ class PreprocessWorker(Thread):
       self.queue.put(result)
 
 
-def _preprocess_db(db_path: str, max_num_workers: int = cpu_count(), max_attempts: int = 100,
-                   attempt: int = 1, **preprocess_opts) -> None:
+def _preprocess_db(db_path: str, max_num_workers: int = cpu_count(),
+                   max_attempts: int = 100, attempt: int = 1,
+                   **preprocess_opts) -> None:
   """
   Preprocess OpenCL dataset.
 
@@ -893,24 +923,31 @@ def _preprocess_db(db_path: str, max_num_workers: int = cpu_count(), max_attempt
 
   todo_ratio = ntodo / ncontentfiles
 
-  log.info("{ntodo} ({todo_ratio:.1%}) samples need preprocessing".format(**vars()))
+  log.info(
+    "{ntodo} ({todo_ratio:.1%}) samples need preprocessing".format(**vars()))
 
   log.verbose("creating jobs")
 
   # Determine if we need to inline kernels when creating jobs
   db = sqlite3.connect(db_path)
   c = db.cursor()
-  c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='ContentMeta';")
+  c.execute(
+    "SELECT name FROM sqlite_master WHERE type='table' AND name='ContentMeta';")
   meta_table = c.fetchone()
   c.close()
   db.close()
   if meta_table:
-    get_kernel = lambda kid: dbutil.get_inlined_kernel(db_path, kid, lang=preprocess_opts["lang"])
+    get_kernel = lambda kid: dbutil.get_inlined_kernel(db_path, kid,
+                                                       lang=preprocess_opts[
+                                                         "lang"])
   else:
-    get_kernel = lambda kid: dbutil.get_kernel(db_path, kid, table="ContentFiles")
+    get_kernel = lambda kid: dbutil.get_kernel(db_path, kid,
+                                               table="ContentFiles")
 
   # create jobs
-  jobs = [{"id": kid, "src": get_kernel(kid), "preprocess_opts": preprocess_opts, } for kid in todo]
+  jobs = [
+    {"id": kid, "src": get_kernel(kid), "preprocess_opts": preprocess_opts, }
+    for kid in todo]
 
   random.shuffle(jobs)
 
@@ -965,8 +1002,9 @@ def _preprocess_db(db_path: str, max_num_workers: int = cpu_count(), max_attempt
     # Try again with fewer threads.
     # See: https://github.com/ChrisCummins/clgen/issues/64
     max_num_workers = max(int(max_num_workers / 2), 1)
-    _preprocess_db(db_path, max_num_workers=max_num_workers, attempt=attempt + 1,
-                   max_attempts=max_attempts, **preprocess_opts)
+    _preprocess_db(db_path, max_num_workers=max_num_workers,
+                   attempt=attempt + 1, max_attempts=max_attempts,
+                   **preprocess_opts)
 
 
 def preprocess_db(db_path: str, **preprocess_opts) -> bool:

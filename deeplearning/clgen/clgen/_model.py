@@ -46,9 +46,11 @@ DEFAULT_MODEL_OPTS = {"created": {"date": str(datetime.now()), },
                                        "rnn_size": 128,  # num nodes in layer
                                        "num_layers": 2,  # num layers
                                        },
-                      "train_opts": {"epochs": 10, "grad_clip": 5, "learning_rate": 2e-3,
+                      "train_opts": {"epochs": 10, "grad_clip": 5,
+                                     "learning_rate": 2e-3,
                                      # initial learning rate
-                                     "lr_decay_rate": 5,  # % to reduce learning rate by per epoch
+                                     "lr_decay_rate": 5,
+                                     # % to reduce learning rate by per epoch
                                      "intermediate_checkpoints": True}}
 
 
@@ -100,7 +102,9 @@ class Model(object):
     self.opts = types.update(deepcopy(DEFAULT_MODEL_OPTS), opts)
     self.corpus = corpus
     self.hash = _hash(self.corpus, self.opts)
-    self.cache = deeplearning.clgen.clgen.cache.mkcache("model", f"{corpus.language}-{self.hash}")
+    self.cache = deeplearning.clgen.clgen.cache.mkcache("model",
+                                                        f"{corpus.language}-{"
+                                                        f"self.hash}")
 
     log.debug("model", self.hash)
 
@@ -155,15 +159,16 @@ class Model(object):
     module
         TensorFlow module.
     """
-    # quiet tensorflow. See: https://github.com/tensorflow/tensorflow/issues/1258
+    # quiet tensorflow. See: https://github.com/tensorflow/tensorflow/issues
+    # /1258
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
     import tensorflow as tf
     import tensorflow.contrib.legacy_seq2seq as seq2seq
     from tensorflow.contrib import rnn
 
-    self.cell_fn = {"lstm": rnn.BasicLSTMCell, "gru": rnn.GRUCell, "rnn": rnn.BasicRNNCell}.get(
-      self.model_type, None)
+    self.cell_fn = {"lstm": rnn.BasicLSTMCell, "gru": rnn.GRUCell,
+                    "rnn": rnn.BasicRNNCell}.get(self.model_type, None)
     if self.cell_fn is None:
       raise deeplearning.clgen.clgen.errors.UserError("Unrecognized model type")
 
@@ -176,7 +181,8 @@ class Model(object):
     vocab_size = self.corpus.vocab_size
 
     cell = self.cell_fn(self.rnn_size, state_is_tuple=True)
-    self.cell = cell = rnn.MultiRNNCell([cell] * self.num_layers, state_is_tuple=True)
+    self.cell = cell = rnn.MultiRNNCell([cell] * self.num_layers,
+                                        state_is_tuple=True)
     self.input_data = tf.placeholder(tf.int32, [batch_size, seq_length])
     self.targets = tf.placeholder(tf.int32, [batch_size, seq_length])
     self.initial_state = self.cell.zero_state(batch_size, tf.float32)
@@ -189,7 +195,8 @@ class Model(object):
       with tf.device("/cpu:0"):
         embedding = tf.get_variable("embedding", [vocab_size, self.rnn_size])
         inputs = tf.split(axis=1, num_or_size_splits=seq_length,
-                          value=tf.nn.embedding_lookup(embedding, self.input_data))
+                          value=tf.nn.embedding_lookup(embedding,
+                                                       self.input_data))
         inputs = [tf.squeeze(input_, [1]) for input_ in inputs]
 
     def loop(prev, _):
@@ -198,13 +205,17 @@ class Model(object):
       return tf.nn.embedding_lookup(embedding, prev_symbol)
 
     outputs, last_state = seq2seq.rnn_decoder(inputs, self.initial_state, cell,
-                                              loop_function=loop if infer else None,
+                                              loop_function=loop if infer
+                                              else None,
                                               scope=scope_name)
     output = tf.reshape(tf.concat(axis=1, values=outputs), [-1, self.rnn_size])
     self.logits = tf.matmul(output, softmax_w) + softmax_b
     self.probs = tf.nn.softmax(self.logits)
-    loss = seq2seq.sequence_loss_by_example([self.logits], [tf.reshape(self.targets, [-1])],
-                                            [tf.ones([batch_size * seq_length])], vocab_size)
+    loss = seq2seq.sequence_loss_by_example([self.logits],
+                                            [tf.reshape(self.targets, [-1])], [
+                                              tf.ones(
+                                                [batch_size * seq_length])],
+                                            vocab_size)
     self.cost = tf.reduce_sum(loss) / batch_size / seq_length
     self.final_state = last_state
     self.learning_rate = tf.Variable(0.0, trainable=False)
@@ -284,7 +295,8 @@ class Model(object):
         epoch_start = time()
 
         # decay and set learning rate
-        new_learning_rate = learning_rate * ((float(100 - decay_rate) / 100.0) ** (e - 1))
+        new_learning_rate = learning_rate * (
+            (float(100 - decay_rate) / 100.0) ** (e - 1))
         sess.run(tf.assign(self.learning_rate, new_learning_rate))
         sess.run(tf.assign(self.epoch, e))
 
@@ -297,7 +309,8 @@ class Model(object):
           for i, (c, h) in enumerate(self.initial_state):
             feed[c] = state[i].c
             feed[h] = state[i].h
-          train_cost, state, _ = sess.run([self.cost, self.final_state, self.train_op], feed)
+          train_cost, state, _ = sess.run(
+            [self.cost, self.final_state, self.train_op], feed)
 
           # update progress bar
           batch_num = (e - 1) * self.corpus.num_batches + b
@@ -306,12 +319,14 @@ class Model(object):
         save = self.opts["train_opts"]["intermediate_checkpoints"]
         save |= e == self.epochs  # always save on last epoch
         if save:
-          saver.save(sess, self.cache.keypath("model.ckpt"), global_step=batch_num)
+          saver.save(sess, self.cache.keypath("model.ckpt"),
+                     global_step=batch_num)
 
           next_checkpoint = e * self.corpus.num_batches + b
           max_epoch = self.epochs
           log.verbose("\n{self} epoch {e} / {max_epoch}. "
-                      "next checkpoint at batch {next_checkpoint}".format(**vars()))
+                      "next checkpoint at batch {next_checkpoint}".format(
+            **vars()))
 
           # update training time
           epoch_duration = time() - epoch_start
@@ -339,7 +354,8 @@ class Model(object):
 
   @property
   def shorthash(self):
-    return clgen._shorthash(self.hash, clgen.cachepath("model"))
+    return deeplearning.clgen.clgen.cache.ShortHash(self.hash,
+                                                    clgen.cachepath("model"))
 
   @property
   def lock(self) -> lockfile.LockFile:
@@ -375,7 +391,8 @@ class Model(object):
     String representation.
     """
     celltype = self.model_type.upper()
-    return (f"model[{self.shorthash}]: " + f"{self.rnn_size}x{self.num_layers}x{self.epochs} {"
+    return (f"model[{self.shorthash}]: " + f"{self.rnn_size}x{"
+                                           f"self.num_layers}x{self.epochs} {"
                                            f"celltype}")
 
   def to_json(self) -> dict:
@@ -425,7 +442,8 @@ class Model(object):
     assert (isinstance(model_json, dict))
 
     if "corpus" not in model_json:
-      raise deeplearning.clgen.clgen.errors.UserError("model JSON has no corpus entry")
+      raise deeplearning.clgen.clgen.errors.UserError(
+        "model JSON has no corpus entry")
 
     # create corpus and remove from JSON
     corpus = clgen.Corpus.from_json(model_json.pop("corpus"))
@@ -446,7 +464,9 @@ def models() -> Iterator[Model]:
       An iterable over all cached models.
   """
   if fs.isdir(deeplearning.clgen.clgen.cache.cachepath(), "model"):
-    modeldirs = fs.ls(fs.path(deeplearning.clgen.clgen.cache.cachepath(), "model"), abspaths=True)
+    modeldirs = fs.ls(
+      fs.path(deeplearning.clgen.clgen.cache.cachepath(), "model"),
+      abspaths=True)
     for modeldir in modeldirs:
       meta = jsonutil.read_file(fs.path(modeldir, "META"))
       model = Model.from_json(meta)
@@ -467,7 +487,9 @@ def models_to_tab(*models: List[Model]) -> PrettyTable:
   PrettyTable
       Formatted table for printing.
   """
-  tab = PrettyTable(["model", "corpus", "trained", "type", "nodes", "epochs", "lr", "dr", "gc", ])
+  tab = PrettyTable(
+    ["model", "corpus", "trained", "type", "nodes", "epochs", "lr", "dr",
+     "gc", ])
 
   tab.align['nodes'] = 'r'
   tab.sortby = "nodes"
@@ -492,10 +514,11 @@ def models_to_tab(*models: List[Model]) -> PrettyTable:
     else:
       trained = ""
 
-    tab.add_row(
-      [model.shorthash, model.corpus.shorthash, trained, meta["architecture"]["model_type"],
-       f'{nodes} x {layers}', meta["train_opts"]["epochs"],
-       "{:.0e}".format(meta["train_opts"]["learning_rate"]), meta["train_opts"]["lr_decay_rate"],
-       meta["train_opts"]["grad_clip"], ])
+    tab.add_row([model.shorthash, model.corpus.shorthash, trained,
+                 meta["architecture"]["model_type"], f'{nodes} x {layers}',
+                 meta["train_opts"]["epochs"],
+                 "{:.0e}".format(meta["train_opts"]["learning_rate"]),
+                 meta["train_opts"]["lr_decay_rate"],
+                 meta["train_opts"]["grad_clip"], ])
 
   return tab

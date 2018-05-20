@@ -18,7 +18,6 @@
 #
 """CLgen is a Deep learning program generator."""
 import platform
-from contextlib import contextmanager
 
 import psutil
 from deeplearning.clgen._config import *
@@ -29,7 +28,6 @@ from deeplearning.clgen.clgen.errors import (
   CLgenError, File404, InternalError, UserError,
 )
 from deeplearning.clgen.clgen.package_util import must_exist
-from lib.labm8 import fs
 
 
 __author__ = "Chris Cummins"
@@ -38,48 +36,6 @@ __license__ = "GPL v3"
 __maintainer__ = __author__
 __email__ = "chrisc.101@gmail.com"
 __status__ = "Prototype"
-
-_must_exist = must_exist  # prevent variable scope shadowing
-
-
-def _shorthash(hash: str, cachedir: str, min_len: int = 7) -> str:
-  """
-  Truncate the hash to a shorter length, while maintaining uniqueness.
-
-  This returns the shortest hash required to uniquely identify all elements
-  in the cache.
-
-  Parameters
-  ----------
-  hash : str
-      Hash to truncate.
-  cachedir : str
-      Path to cache.
-  min_len : int, optional
-      Minimum length of hash to try.
-
-  Returns
-  -------
-  str
-      Truncated hash.
-  """
-  for shorthash_len in range(min_len, len(hash)):
-    entries = [x[:shorthash_len] for x in fs.ls(cachedir)]
-    if len(entries) == len(set(entries)):
-      break
-
-  return hash[:shorthash_len]
-
-
-@contextmanager
-def terminating(thing):
-  """
-  Context manager to terminate object at end of scope.
-  """
-  try:
-    yield thing
-  finally:
-    thing.terminate()
 
 
 def platform_info(printfn=print) -> None:

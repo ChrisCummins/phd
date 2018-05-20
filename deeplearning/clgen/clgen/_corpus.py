@@ -49,9 +49,10 @@ from lib.labm8.dirhashcache import DirHashCache
 
 # Default options used for corpus. Any values provided by the user will override
 # these defaults.
-DEFAULT_CORPUS_OPTS = {"created": {"date": str(datetime.now()), }, "eof": False, "batch_size": 50,
-                       "seq_length": 50, "vocabulary": "char", "encoding": "default",
-                       "preprocess": True, "preserve_order": False, "language": None,
+DEFAULT_CORPUS_OPTS = {"created": {"date": str(datetime.now()), }, "eof": False,
+                       "batch_size": 50, "seq_length": 50, "vocabulary": "char",
+                       "encoding": "default", "preprocess": True,
+                       "preserve_order": False, "language": None,
                        # Note no explicit default language.
                        }
 
@@ -126,7 +127,8 @@ def get_kernel_features(code: str, **kwargs) -> np.array:
   return f[0]
 
 
-def get_cl_kernel_end_idx(src: str, start_idx: int = 0, max_len: int = 5000) -> int:
+def get_cl_kernel_end_idx(src: str, start_idx: int = 0,
+                          max_len: int = 5000) -> int:
   """
   Return the index of the character after the end of the OpenCL
   kernel.
@@ -225,10 +227,14 @@ def encode_kernels_db(kernels_db: str, encoding: str) -> None:
         if len(features) == 8:
           log.verbose("features", kid)
           feature_str = ("/* {:10} {:10} {:10} {:10} {:10} {:10}"
-                         "{:10.3f} {:10.3f} */".format(int(features[0]), int(features[1]),
-                                                       int(features[2]), int(features[3]),
-                                                       int(features[4]), int(features[5]),
-                                                       features[6], features[7]))
+                         "{:10.3f} {:10.3f} */".format(int(features[0]),
+                                                       int(features[1]),
+                                                       int(features[2]),
+                                                       int(features[3]),
+                                                       int(features[4]),
+                                                       int(features[5]),
+                                                       features[6],
+                                                       features[7]))
           newsource = feature_str + '\n' + kernel
           c.execute("""
                         INSERT INTO PreprocessedFiles (id,contents,status)
@@ -244,8 +250,8 @@ def encode_kernels_db(kernels_db: str, encoding: str) -> None:
   encoder = encoders.get(encoding, None)
   if encoder is None:
     raise deeplearning.clgen.clgen.errors.UserError(
-      "Unknown encoding type '{bad}'. Supported values: {good}".format(bad=encoding, good=", ".join(
-        sorted(encoders.keys()))))
+      "Unknown encoding type '{bad}'. Supported values: {good}".format(
+        bad=encoding, good=", ".join(sorted(encoders.keys()))))
   else:
     encoder(kernels_db)
 
@@ -290,7 +296,9 @@ class Corpus(object):
     # check that contentid exists
     self.language = clgen.Language.from_str(opts.get("language"))
     if (path is None and not fs.isdir(
-        deeplearning.clgen.clgen.cache.cachepath("contentfiles", f"{self.language}-{contentid}"))):
+        deeplearning.clgen.clgen.cache.cachepath("contentfiles",
+                                                 f"{self.language}-{"
+                                                 f"contentid}"))):
       raise deeplearning.clgen.clgen.errors.UserError(
         "corpus {self.language}-{contentid} not found".format(**vars()))
 
@@ -300,7 +308,9 @@ class Corpus(object):
     self.kernels_db = self.contentcache.keypath('kernels.db')
 
     self.hash = self._hash(contentid, self.opts)
-    self.cache = deeplearning.clgen.clgen.cache.mkcache("corpus", f"{self.language}-{self.hash}")
+    self.cache = deeplearning.clgen.clgen.cache.mkcache("corpus",
+                                                        f"{self.language}-{"
+                                                        f"self.hash}")
 
     log.debug("contentfiles {self.contentid}".format(**vars()))
     log.debug("corpus {hash}".format(hash=self.hash))
@@ -321,7 +331,8 @@ class Corpus(object):
       del meta["stats"]
 
       if meta != cached_meta:
-        raise deeplearning.clgen.clgen.errors.InternalError("corpus metadata mismatch")
+        raise deeplearning.clgen.clgen.errors.InternalError(
+          "corpus metadata mismatch")
     else:
       self._flush_meta()
 
@@ -359,7 +370,8 @@ class Corpus(object):
       modified = False
       preprocess_time = time()
       encoding = self.opts["encoding"]
-      if clgen.preprocess_db(self.contentcache["kernels.db"], lang=self.language):
+      if clgen.preprocess_db(self.contentcache["kernels.db"],
+                             lang=self.language):
         modified = True
         encode_kernels_db(self.contentcache["kernels.db"], encoding)
     except Exception as e:
@@ -407,7 +419,8 @@ class Corpus(object):
     self.contentcache["kernels.db"] = tmppath
 
     # get a list of files in the corpus
-    filelist = [f for f in fs.ls(path, abspaths=True, recursive=True) if fs.isfile(f)]
+    filelist = [f for f in fs.ls(path, abspaths=True, recursive=True) if
+                fs.isfile(f)]
 
     # import files into database
     clgen.fetch(self.contentcache["kernels.db"], filelist)
@@ -445,15 +458,15 @@ class Corpus(object):
       clgen.Atomizer
           Atomizer.
       """
-      atomizers = {"char": clgen.CharacterAtomizer, "greedy": clgen.GreedyAtomizer, }
+      atomizers = {"char": clgen.CharacterAtomizer,
+                   "greedy": clgen.GreedyAtomizer, }
       atomizerclass = atomizers.get(vocab, None)
       if atomizerclass is None:
-        raise deeplearning.clgen.clgen.errors.UserError("Unknown vocabulary type '{bad}'. "
-                                                        "Supported values: {good}".format(bad=vocab,
-                                                                                          good=", "
-                                                                                               "".join(
-                                                                                            sorted(
-                                                                                              atomizers.keys()))))
+        raise deeplearning.clgen.clgen.errors.UserError(
+          "Unknown vocabulary type '{bad}'. "
+          "Supported values: {good}".format(bad=vocab, good=", "
+                                                            "".join(
+            sorted(atomizers.keys()))))
       else:
         return atomizerclass.from_text(self.language, corpus_txt)
 
@@ -524,12 +537,16 @@ class Corpus(object):
     ydata = np.copy(self._tensor)
     ydata[:-1] = xdata[1:]
     ydata[-1] = xdata[0]
-    self._x_batches = np.split(xdata.reshape(batch_size, -1), self.num_batches, 1)
-    self._y_batches = np.split(ydata.reshape(batch_size, -1), self.num_batches, 1)
+    self._x_batches = np.split(xdata.reshape(batch_size, -1), self.num_batches,
+                               1)
+    self._y_batches = np.split(ydata.reshape(batch_size, -1), self.num_batches,
+                               1)
 
   @property
   def shorthash(self):
-    return clgen._shorthash(self.hash, deeplearning.clgen.clgen.cache.cachepath("corpus"))
+    return deeplearning.clgen.clgen.cache.ShortHash(self.hash,
+                                                    deeplearning.clgen.clgen.cache.cachepath(
+                                                      "corpus"))
 
   @property
   def lock(self):
@@ -611,7 +628,8 @@ class Corpus(object):
     db = dbutil.connect(self.contentcache["kernels.db"])
     c = db.cursor()
     query = c.execute(
-      "SELECT Contents FROM PreprocessedFiles WHERE status={status}".format(**vars()))
+      "SELECT Contents FROM PreprocessedFiles WHERE status={status}".format(
+        **vars()))
     for row in query.fetchall():
       yield row[0]
 
@@ -632,10 +650,11 @@ class Corpus(object):
 
   def __repr__(self) -> str:
     nf = dbutil.num_good_kernels(self.contentcache['kernels.db'])
-    return (f"corpus[{self.shorthash}]: {nf} files, {self.size} tokens " + f"using {self.opts["
-                                                                           f"'vocabulary']} "
-                                                                           f"vocabulary of size "
-            + f"{self.atomizer.vocab_size}")
+    return (
+        f"corpus[{self.shorthash}]: {nf} files, {self.size} tokens " +
+        f"using {self.opts["
+                                                                       f"'vocabulary']} "
+                                                                       f"vocabulary of size " + f"{self.atomizer.vocab_size}")
 
   def to_json(self) -> dict:
     d = deepcopy(self.opts)
@@ -676,14 +695,19 @@ class Corpus(object):
         raise deeplearning.clgen.clgen.errors.UserError(
           "Corpus path '{}' is not a directory".format(path))
 
-      dirhashcache = DirHashCache(deeplearning.clgen.clgen.cache.cachepath("dirhash.db"), 'sha1')
+      dirhashcache = DirHashCache(
+        deeplearning.clgen.clgen.cache.cachepath("dirhash.db"), 'sha1')
       uid = prof.profile(dirhashcache.dirhash, path)
     elif uid:
-      cache_path = deeplearning.clgen.clgen.cache.mkcache("contentfiles", f"{language}-{uid}").path
+      cache_path = deeplearning.clgen.clgen.cache.mkcache("contentfiles",
+                                                          f"{language}-{"
+                                                          f"uid}").path
       if not fs.isdir(cache_path):
-        raise deeplearning.clgen.clgen.errors.UserError("Corpus content {} not found".format(uid))
+        raise deeplearning.clgen.clgen.errors.UserError(
+          "Corpus content {} not found".format(uid))
     else:
-      raise deeplearning.clgen.clgen.errors.UserError("No corpus path or ID provided")
+      raise deeplearning.clgen.clgen.errors.UserError(
+        "No corpus path or ID provided")
 
     if "stats" in corpus_json:  # ignore stats
       del corpus_json["stats"]

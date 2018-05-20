@@ -46,11 +46,13 @@ from lib.labm8 import types
 
 # Default options used for sampler. Any values provided by the user will
 # override these defaults.
-DEFAULT_KERNELS_OPTS = {"language": None,  # note language must be explicitly provided
-                        "args": None, "start_text": None, "max_length": 10000, "seed": None,
-                        "temperature": 1}
-DEFAULT_SAMPLER_OPTS = {"created": {"date": str(datetime.now()), }, "min_samples": -1,
-                        "min_kernels": -1,  # FIXME(polyglot): remove static checker and gpuverify
+DEFAULT_KERNELS_OPTS = {"language": None,
+                        # note language must be explicitly provided
+                        "args": None, "start_text": None, "max_length": 10000,
+                        "seed": None, "temperature": 1}
+DEFAULT_SAMPLER_OPTS = {"created": {"date": str(datetime.now()), },
+                        "min_samples": -1, "min_kernels": -1,
+                        # FIXME(polyglot): remove static checker and gpuverify
                         "static_checker": True, "gpuverify": False}
 
 
@@ -74,7 +76,8 @@ def serialize_opencl_argspec(args: List[str]) -> str:
 
 
 class SampleProducer(Thread):
-  def __init__(self, model: clgen.Model, start_text: str, queue: Queue, **kernel_opts):
+  def __init__(self, model: clgen.Model, start_text: str, queue: Queue,
+               **kernel_opts):
     super(SampleProducer, self).__init__()
 
     self.model = model
@@ -83,7 +86,8 @@ class SampleProducer(Thread):
     self.stop_signal = Event()
     self.kernel_opts = kernel_opts
     self.sample_header = "\n\n" + clgen.format_as_comment(model.corpus.language,
-                                                          "==== START SAMPLE ====") + "\n\n"
+                                                          "==== START SAMPLE "
+                                                          "====") + "\n\n"
 
   def run(self) -> None:
     model = self.model
@@ -210,8 +214,8 @@ class SampleProducer(Thread):
 class SampleConsumer(Thread):
   """ handle generated samples """
 
-  def __init__(self, db_path: str, producer: SampleProducer, sampler, cache, queue: Queue,
-               **sampler_opts):
+  def __init__(self, db_path: str, producer: SampleProducer, sampler, cache,
+               queue: Queue, **sampler_opts):
     """
     Construct a sample consumer.
 
@@ -271,16 +275,20 @@ class SampleConsumer(Thread):
     return self.min_kernels_progress() >= self.sampler_opts["min_kernels"]
 
   def min_samples_cond(self) -> bool:
-    return (dbutil.num_rows_in(self.db_path, "ContentFiles") >= self.sampler_opts["min_samples"])
+    return (
+        dbutil.num_rows_in(self.db_path, "ContentFiles") >= self.sampler_opts[
+      "min_samples"])
 
   def null_cond(self) -> bool:
     return False
 
   def min_kernels_progress(self) -> int:
-    return min(dbutil.num_good_kernels(self.db_path), self.sampler_opts["min_kernels"])
+    return min(dbutil.num_good_kernels(self.db_path),
+               self.sampler_opts["min_kernels"])
 
   def min_samples_progress(self) -> int:
-    return min(dbutil.num_rows_in(self.db_path, "ContentFiles"), self.sampler_opts["min_samples"])
+    return min(dbutil.num_rows_in(self.db_path, "ContentFiles"),
+               self.sampler_opts["min_samples"])
 
   def null_progress(self) -> int:
     return dbutil.num_rows_in(self.db_path, "ContentFiles")
@@ -305,7 +313,8 @@ class SampleConsumer(Thread):
         # Add the new sample to the database:
         db = dbutil.connect(self.db_path)
         c = db.cursor()
-        dbutil.sql_insert_dict(c, "ContentFiles", {"id": kid, "contents": sample},
+        dbutil.sql_insert_dict(c, "ContentFiles",
+                               {"id": kid, "contents": sample},
                                ignore_existing=True)
         c.close()
         db.commit()
@@ -360,12 +369,14 @@ class Sampler(object):
       del sampler_opts["created"]
 
       checksum_data = sorted(
-        [str(x) for x in sampler_opts.values()] + [str(x) for x in kernel_opts.values()])
+        [str(x) for x in sampler_opts.values()] + [str(x) for x in
+                                                   kernel_opts.values()])
       string = "".join([str(x) for x in checksum_data])
       return crypto.sha1_str(string)
 
     # FIXME(polyglot):
-    def _start_text(lang: clgen.Language, args: Union[List[str], None], start_text: str):
+    def _start_text(lang: clgen.Language, args: Union[List[str], None],
+                    start_text: str):
       if lang == clgen.Language.OPENCL:
         if args is None:
           return "__kernel void A("
@@ -381,23 +392,29 @@ class Sampler(object):
     for key in sampler_opts.keys():
       if key not in DEFAULT_SAMPLER_OPTS:
         raise deeplearning.clgen.clgen.errors.UserError(
-          "Unsupported sampler option '{}'. Valid keys: {}".format(key, ','.join(
-            sorted(DEFAULT_SAMPLER_OPTS.keys()))))
+          "Unsupported sampler option '{}'. Valid keys: {}".format(key,
+                                                                   ','.join(
+                                                                     sorted(
+                                                                       DEFAULT_SAMPLER_OPTS.keys()))))
     for key in kernel_opts.keys():
       if key not in DEFAULT_KERNELS_OPTS:
         raise deeplearning.clgen.clgen.errors.UserError(
-          "Unsupported kernels option '{}'. Valid keys: {}".format(key, ','.join(
-            sorted(DEFAULT_KERNELS_OPTS.keys()))))
+          "Unsupported kernels option '{}'. Valid keys: {}".format(key,
+                                                                   ','.join(
+                                                                     sorted(
+                                                                       DEFAULT_KERNELS_OPTS.keys()))))
 
     # set properties
-    self.sampler_opts = types.update(deepcopy(DEFAULT_SAMPLER_OPTS), sampler_opts)
+    self.sampler_opts = types.update(deepcopy(DEFAULT_SAMPLER_OPTS),
+                                     sampler_opts)
     self.kernel_opts = types.update(deepcopy(DEFAULT_KERNELS_OPTS), kernel_opts)
 
     self.hash = _hash(self.sampler_opts, self.kernel_opts)
 
     self.language = clgen.Language.from_str(kernel_opts.get("language"))
 
-    self.start_text = _start_text(self.language, self.kernel_opts.get("args", []),
+    self.start_text = _start_text(self.language,
+                                  self.kernel_opts.get("args", []),
                                   self.kernel_opts.get("start_text", ""))
     # pop "start_text" option
     del self.kernel_opts["start_text"]
@@ -422,7 +439,8 @@ class Sampler(object):
     sampler_model_hash = crypto.sha1_str(self.hash + model.hash)
 
     cache = deeplearning.clgen.clgen.cache.mkcache("sampler",
-                                                   f"{self.language}-{sampler_model_hash}")
+                                                   f"{self.language}-{"
+                                                   f"sampler_model_hash}")
 
     # validate metadata against cache
     self.stats = {"time": 0, "progress": 0}
@@ -447,7 +465,8 @@ class Sampler(object):
       del meta["sampler"]["min_kernels"]
 
       if meta != cached_meta:
-        raise deeplearning.clgen.clgen.errors.InternalError("sampler metadata mismatch")
+        raise deeplearning.clgen.clgen.errors.InternalError(
+          "sampler metadata mismatch")
     else:
       self._flush_meta(cache)
 
@@ -481,7 +500,8 @@ class Sampler(object):
     sampler = SampleProducer(model, self.start_text, queue, **self.kernel_opts)
     sampler.start()
 
-    consumer = SampleConsumer(cache["kernels.db"], sampler, self, cache, queue, **self.sampler_opts)
+    consumer = SampleConsumer(cache["kernels.db"], sampler, self, cache, queue,
+                              **self.sampler_opts)
     consumer.start()
 
     sampler.join()
@@ -491,7 +511,9 @@ class Sampler(object):
 
   @property
   def shorthash(self) -> str:
-    return clgen._shorthash(self.hash, deeplearning.clgen.clgen.cache.cachepath("sampler"))
+    return deeplearning.clgen.clgen.cache.ShortHash(self.hash,
+                                                    deeplearning.clgen.clgen.cache.cachepath(
+                                                      "sampler"))
 
   @property
   def min_samples(self) -> int:
