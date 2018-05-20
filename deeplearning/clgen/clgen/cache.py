@@ -1,9 +1,11 @@
 import os
+import pathlib
+import typing
 
 from lib.labm8 import cache, fs
 
 
-def cachepath(*relative_path_components: list) -> str:
+def cachepath(*relative_path_components: typing.List[str]) -> pathlib.Path:
   """
   Return path to file system cache.
 
@@ -17,11 +19,9 @@ def cachepath(*relative_path_components: list) -> str:
   str
       Absolute path of file system cache.
   """
-  cache_root = os.environ.get("CLGEN_CACHE",
-                              f"~/.cache/clgen/{version_info.major}.{version_info.minor}.x")
-
-  fs.mkdir(cache_root)
-  return fs.path(cache_root, *relative_path_components)
+  cache_root = pathlib.Path(os.environ.get("CLGEN_CACHE", "~/.cache/clgen/"))
+  cache_root.expanduser().mkdir(parents=True, exist_ok=True)
+  return pathlib.Path(fs.path(cache_root, *relative_path_components))
 
 
 def mkcache(*relative_path_components: list) -> cache.FSCache:
@@ -42,4 +42,5 @@ def mkcache(*relative_path_components: list) -> cache.FSCache:
   labm8.FSCache
       Filesystem cache.
   """
-  return cache.FSCache(cachepath(*relative_path_components), escape_key=cache.escape_path)
+  return cache.FSCache(cachepath(*relative_path_components),
+                       escape_key=cache.escape_path)
