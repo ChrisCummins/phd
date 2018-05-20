@@ -334,25 +334,25 @@ def gpuverify(src: str, args: list, id: str = 'anon', timeout: int = 60) -> str:
   InternalError
       If GPUverify fails.
   """
-  # FIXME: GPUVerify support on macOS.
-  from lib.labm8 import system
-  if not system.is_linux():
-    raise errors.InternalError("GPUVerify only supported on Linux!")
-
-  # GPUverify can't read from stdin.
-  with NamedTemporaryFile('w', suffix='.cl') as tmp:
-    tmp.write(src)
-    tmp.flush()
-    cmd = ['timeout', '-s9', str(timeout), native.GPUVERIFY, tmp.name] + args
-
-    process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    stdout, stderr = process.communicate()
-
-  if process.returncode == -9:  # timeout signal
-    raise GPUVerifyTimeoutException(
-      f"GPUveryify failed to complete with {timeout} seconds")
-  elif process.returncode != 0:
-    raise GPUVerifyException(stderr.decode('utf-8'))
+  # TODO(cec): Re-enable GPUVerify support.
+  # from lib.labm8 import system
+  # if not system.is_linux():
+  #   raise errors.InternalError("GPUVerify only supported on Linux!")
+  #
+  # # GPUverify can't read from stdin.
+  # with NamedTemporaryFile('w', suffix='.cl') as tmp:
+  #   tmp.write(src)
+  #   tmp.flush()
+  #   cmd = ['timeout', '-s9', str(timeout), native.GPUVERIFY, tmp.name] + args
+  #
+  #   process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+  #   stdout, stderr = process.communicate()
+  #
+  # if process.returncode == -9:  # timeout signal
+  #   raise GPUVerifyTimeoutException(
+  #     f"GPUveryify failed to complete with {timeout} seconds")
+  # elif process.returncode != 0:
+  #   raise GPUVerifyException(stderr.decode('utf-8'))
 
   return src
 
