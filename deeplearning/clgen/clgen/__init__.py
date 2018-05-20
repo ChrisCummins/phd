@@ -16,47 +16,29 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""
-Deep learning program generator
-
-Attributes
-----------
-__version__ : str
-    PEP 440 compliant version string.
-version_info : namedtuple['major', 'minor', 'micro', 'releaselevel'])
-    Version tuple.
-"""
+"""CLgen is a Deep learning program generator."""
 import os
 import platform
-from collections import namedtuple
 from contextlib import contextmanager
 
 import psutil
 from deeplearning.clgen._config import *
-from pkg_resources import require, resource_filename, resource_string
+from pkg_resources import resource_filename, resource_string
 
 from deeplearning.clgen.clgen import CLgenError, InternalError
 from deeplearning.clgen.clgen.cache import cachepath
-from deeplearning.clgen.clgen.errors import CLgenError, File404, InternalError, UserError
+from deeplearning.clgen.clgen.errors import (
+  CLgenError, File404, InternalError, UserError,
+)
 from lib.labm8 import fs
 
 
 __author__ = "Chris Cummins"
 __copyright__ = "Copyright 2016, 2017, 2018 Chris Cummins"
 __license__ = "GPL v3"
-__version__ = require("clgen")[0].version
 __maintainer__ = __author__
 __email__ = "chrisc.101@gmail.com"
 __status__ = "Prototype"
-
-# version_info tuple
-_major = int(__version__.split(".")[0])
-_minor = int(__version__.split('.')[1]) if len(__version__.split('.')) > 1 else 0
-_micro = int(__version__.split('.')[2]) if len(__version__.split('.')) > 2 else 0
-_releaselevel = __version__.split('.')[3] if len(__version__.split('.')) > 3 else 'final'
-
-version_info_t = namedtuple('version_info_t', ['major', 'minor', 'micro', 'releaselevel'])
-version_info = version_info_t(_major, _minor, _micro, _releaselevel)
 
 
 def must_exist(*path_components: str, **kwargs) -> str:
@@ -246,13 +228,14 @@ def platform_info(printfn=print) -> None:
       Function to call to print output to. Default `print()`.
   """
   if USE_CUDA:
-    features_str = "(with CUDA)"
+    features_str = " (with CUDA)"
   else:
     features_str = ""
 
-  printfn("CLgen:      mater")
+  printfn(f"CLgen{features_str}")
   printfn("Platform:  ", platform.system())
-  printfn("Memory:    ", round(psutil.virtual_memory().total / (1024 ** 2)), "MB")
+  printfn("Memory:    ", round(psutil.virtual_memory().total / (1024 ** 2)),
+          "MB")
 
 
 # package level imports

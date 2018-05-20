@@ -48,7 +48,8 @@ def create_db(path: str, github: bool = False) -> None:
   path = os.path.expanduser(path)
 
   if os.path.exists(path):
-    raise deeplearning.clgen.clgen.errors.UserError("'{}' already exists".format(path))
+    raise deeplearning.clgen.clgen.errors.UserError(
+      "'{}' already exists".format(path))
 
   db = sqlite3.connect(path)
   c = db.cursor()
@@ -227,7 +228,8 @@ def get_kernel(path: str, kid: str, table: str = "PreprocessedFiles") -> str:
   return src
 
 
-def get_inlined_kernel(path: str, kid: str, lang: clgen.Language = clgen.Language.OPENCL,
+def get_inlined_kernel(path: str, kid: str,
+                       lang: clgen.Language = clgen.Language.OPENCL,
                        stack: List[str] = None) -> str:
   """
   Retrieve a kernel from a database and inline any includes.
@@ -258,10 +260,11 @@ def get_inlined_kernel(path: str, kid: str, lang: clgen.Language = clgen.Languag
   repo_path, repo = c.fetchone()
   stack.append(repo_path)
 
-  include_re = {clgen.Language.GLSL: re.compile(r'\w*#include ["<](?P<path>.*)[">]'),
-                clgen.Language.OPENCL: re.compile(r'\w*#include ["<](?P<path>.*)[">]'),
-                clgen.Language.SOLIDITY: re.compile(r'\w*import ["<](\./)?(?P<path>.*)[">];'), }[
-    lang]
+  include_re = \
+    {clgen.Language.GLSL: re.compile(r'\w*#include ["<](?P<path>.*)[">]'),
+     clgen.Language.OPENCL: re.compile(r'\w*#include ["<](?P<path>.*)[">]'),
+     clgen.Language.SOLIDITY: re.compile(
+       r'\w*import ["<](\./)?(?P<path>.*)[">];'), }[lang]
 
   outlines = []
   for line in src.split('\n'):
@@ -272,16 +275,19 @@ def get_inlined_kernel(path: str, kid: str, lang: clgen.Language = clgen.Languag
       # try and resolve relative paths
       include_name = include_name.replace('../', '').replace('./', '')
 
-      c.execute(f"SELECT path FROM contentmeta WHERE repo_url=? AND path LIKE '%{include_name}%'",
-                (repo,))
+      c.execute(
+        f"SELECT path FROM contentmeta WHERE repo_url=? AND path LIKE '%{"
+        f"include_name}%'", (repo,))
       repo_paths = [row[0] for row in c.fetchall()]
 
       if len(repo_paths):
-        distances = [editdistance.eval(include_name, path) for path in repo_paths]
+        distances = [editdistance.eval(include_name, path) for path in
+                     repo_paths]
         closest_match = repo_paths[distances.index(min(distances))]
 
         if closest_match in stack:
-          outlines.append('// [FETCH] ignored recursive include: ' + include_name)
+          outlines.append(
+            '// [FETCH] ignored recursive include: ' + include_name)
         else:
           log.verbose("closest match to", include_name, "is", closest_match)
 
@@ -401,7 +407,8 @@ def set_modified_status(db, checksum: str) -> None:
       New preprocessed checksum.
   """
   c = db.cursor()
-  c.execute("INSERT OR REPLACE INTO Meta VALUES (?,?)", ('preprocessed_checksum', checksum))
+  c.execute("INSERT OR REPLACE INTO Meta VALUES (?,?)",
+            ('preprocessed_checksum', checksum))
   db.commit()
   c.close()
 
@@ -451,7 +458,9 @@ def table_exists(db, table_name: str) -> None:
       True if table with name exists.
   """
   c = db.cursor()
-  c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='" + table_name + "'")
+  c.execute(
+    "SELECT name FROM sqlite_master WHERE type='table' AND name='" +
+    table_name + "'")
   res = c.fetchone()
   c.close()
   return res and res[0]
@@ -511,11 +520,13 @@ def num_rows_in(path: str, table: str, condition: str = "") -> int:
   """
   db = connect(path)
   c = db.cursor()
-  c.execute('SELECT Count(*) FROM {table} {condition}'.format(table=table, condition=condition))
+  c.execute('SELECT Count(*) FROM {table} {condition}'.format(table=table,
+                                                              condition=condition))
   return c.fetchone()[0]
 
 
-def cc(path: str, table: str, column: str = "Contents", condition: str = "") -> int:
+def cc(path: str, table: str, column: str = "Contents",
+       condition: str = "") -> int:
   """
   Fetch character count of contents in table.
 
@@ -535,12 +546,14 @@ def cc(path: str, table: str, column: str = "Contents", condition: str = "") -> 
   """
   db = connect(path)
   c = db.cursor()
-  c.execute("SELECT CC({column}) FROM {table} {condition}".format(column=column, table=table,
+  c.execute("SELECT CC({column}) FROM {table} {condition}".format(column=column,
+                                                                  table=table,
                                                                   condition=condition))
   return c.fetchone()[0] or 0
 
 
-def lc(path: str, table: str, column: str = "Contents", condition: str = "") -> int:
+def lc(path: str, table: str, column: str = "Contents",
+       condition: str = "") -> int:
   """
   Fetch line count of contents in table.
 
@@ -560,7 +573,8 @@ def lc(path: str, table: str, column: str = "Contents", condition: str = "") -> 
   """
   db = connect(path)
   c = db.cursor()
-  c.execute("SELECT LC({column}) FROM {table} {condition}".format(column=column, table=table,
+  c.execute("SELECT LC({column}) FROM {table} {condition}".format(column=column,
+                                                                  table=table,
                                                                   condition=condition))
   return c.fetchone()[0] or 0
 
@@ -617,8 +631,8 @@ def remove_bad_preprocessed(db_path: str) -> None:
   new_size_human_readable = fs.du(db_path, human_readable=True)
   reduction_ratio = (1 - (new_size / original_size)) * 100
   log.info(
-    "done. new size {}. ({:.0f}% reduction)".format(new_size_human_readable, reduction_ratio),
-    sep=".")
+    "done. new size {}. ({:.0f}% reduction)".format(new_size_human_readable,
+                                                    reduction_ratio), sep=".")
 
 
 def sql_insert_dict(c, table: str, data: dict, ignore_existing: bool = False,
@@ -646,7 +660,8 @@ def sql_insert_dict(c, table: str, data: dict, ignore_existing: bool = False,
   cols = ','.join(sorted(data.keys()))
   vals = ','.join(['?'] * len(data))
 
-  cmd = ("INSERT {or_ignore} {or_replace} INTO {table}({cols}) VALUES({vals})".format(**vars()))
+  cmd = ("INSERT {or_ignore} {or_replace} INTO {table}({cols}) VALUES({"
+         "vals})".format(**vars()))
 
   c.execute(cmd, tuple([data[v] for v in sorted(data.keys())]))
 
@@ -669,7 +684,8 @@ def escape_sql_key(key: str) -> str:
   str
       Escaped key.
   """
-  return re.sub(_sql_sub_chars, '_', re.sub(_sql_rm_chars, '', '_'.join(key.split(' '))))
+  return re.sub(_sql_sub_chars, '_',
+                re.sub(_sql_rm_chars, '', '_'.join(key.split(' '))))
 
 
 def kid_to_path(id: str) -> str:
@@ -689,9 +705,9 @@ def kid_to_path(id: str) -> str:
   return re.sub('[/:\. ]+', '-', id)
 
 
-def _dump_db(db, out_path: str, gh: bool = False, fileid: bool = False, reverse: bool = False,
-             input_samples: bool = False, status: int = 0, eof: bool = False,
-             dir: bool = False) -> None:
+def _dump_db(db, out_path: str, gh: bool = False, fileid: bool = False,
+             reverse: bool = False, input_samples: bool = False,
+             status: int = 0, eof: bool = False, dir: bool = False) -> None:
   """
   Dump database contents.
 
@@ -739,11 +755,10 @@ def _dump_db(db, out_path: str, gh: bool = False, fileid: bool = False, reverse:
   else:
     orderby = 'LC_col(contents)'
 
-  query = ('{select} FROM {table} {qualifier} ORDER BY {orderby} {order}'.format(select=select,
-                                                                                 table=table,
-                                                                                 qualifier=qualifier,
-                                                                                 orderby=orderby,
-                                                                                 order=order))
+  query = (
+    '{select} FROM {table} {qualifier} ORDER BY {orderby} {order}'.format(
+      select=select, table=table, qualifier=qualifier, orderby=orderby,
+      order=order))
 
   c.execute(query)
   rows = c.fetchall()
@@ -793,6 +808,8 @@ def dump_db(db_path: str, out_path: str, **kwargs) -> None:
 
 
 def get_all_sampler_datasets(all_clgen_versions: bool = True) -> list:
+  # TODO(cec): CLgen will no longer use a global cache, so there is no concept
+  # of "all" sampler datasets.
   if all_clgen_versions:
     versiondirs = fs.ls(fs.path("~/.cache/clgen"), abspaths=True)
   else:
