@@ -20,7 +20,6 @@ import pytest
 
 import deeplearning.clgen.clgen.errors
 import deeplearning.clgen.clgen.package_util
-from deeplearning.clgen import clgen
 
 
 def test_pacakge_data():
@@ -48,7 +47,3 @@ def test_sql_script():
   with pytest.raises(deeplearning.clgen.clgen.errors.File404):
     deeplearning.clgen.clgen.package_util.sql_script(
       "This definitely isn't a real path")
-
-
-def test_platform_info():
-  clgen.platform_info()

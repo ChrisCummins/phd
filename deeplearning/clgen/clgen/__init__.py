@@ -17,9 +17,7 @@
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
 """CLgen is a Deep learning program generator."""
-import platform
 
-import psutil
 from deeplearning.clgen._config import *
 
 from deeplearning.clgen.clgen import CLgenError, InternalError
@@ -36,27 +34,6 @@ __license__ = "GPL v3"
 __maintainer__ = __author__
 __email__ = "chrisc.101@gmail.com"
 __status__ = "Prototype"
-
-
-def platform_info(printfn=print) -> None:
-  """
-  Log platform information.
-
-  Parameters
-  ----------
-  printfn : fn, optional
-      Function to call to print output to. Default `print()`.
-  """
-  if USE_CUDA:
-    features_str = " (with CUDA)"
-  else:
-    features_str = ""
-
-  printfn(f"CLgen{features_str}")
-  printfn("Platform:  ", platform.system())
-  printfn("Memory:    ", round(psutil.virtual_memory().total / (1024 ** 2)),
-          "MB")
-
 
 # package level imports
 from deeplearning.clgen._langs import *
