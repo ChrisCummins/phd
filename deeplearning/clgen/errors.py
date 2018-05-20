@@ -32,3 +32,78 @@ class InvalidFile(UserError):
   Raised in case a file contains invalid contents.
   """
   pass
+
+
+class LlvmException(CLgenError):
+  """LLVM Error"""
+  pass
+
+
+class OptException(LlvmException):
+  """
+  LLVM opt error.
+  """
+  pass
+
+
+class BadCodeException(CLgenError):
+  """
+  Code is bad.
+  """
+  pass
+
+
+class ClangException(BadCodeException):
+  """
+  clang error.
+  """
+  pass
+
+
+class ClangFormatException(BadCodeException):
+  """
+  clang-format error.
+  """
+  pass
+
+
+class UglyCodeException(CLgenError):
+  """
+  Code is ugly.
+  """
+  pass
+
+
+class InstructionCountException(UglyCodeException):
+  """
+  Instruction count error.
+  """
+  pass
+
+
+class NoCodeException(UglyCodeException):
+  """
+  Sample contains no code.
+  """
+  pass
+
+
+class RewriterException(UglyCodeException):
+  """
+  Program rewriter error.
+  """
+  pass
+
+
+class GPUVerifyException(UglyCodeException):
+  """
+  GPUVerify found a bug.
+  """
+  pass
+
+
+class GPUVerifyTimeoutException(GPUVerifyException):
+  """
+  GPUVerify timed out.
+  """
+  pass

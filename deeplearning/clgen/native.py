@@ -51,7 +51,7 @@ OPT = package_util.must_exist('external/llvm_mac/bin/opt')
 CLGEN_FEATURES = package_util.must_exist(
   'deeplearning/clgen/native/clgen-features')
 CLGEN_REWRITER = package_util.must_exist(
-  'deeplearning/clgen/native/clgen-features')
+  'deeplearning/clgen/native/clgen-rewriter')
 LIBCLC = package_util.must_exist('third_party/libclc/generic/include')
 # TODO(cec): Add these remaining files.
 GPUVERIFY = 'TODO'

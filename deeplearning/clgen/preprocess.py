@@ -49,79 +49,6 @@ from lib.labm8 import fs
 #
 
 # Internal exceptions:
-class LlvmException(errors.CLgenError):
-  """LLVM Error"""
-  pass
-
-
-class OptException(LlvmException):
-  """
-  LLVM opt error.
-  """
-  pass
-
-
-class BadCodeException(errors.CLgenError):
-  """
-  Code is bad.
-  """
-  pass
-
-
-class ClangException(BadCodeException):
-  """
-  clang error.
-  """
-  pass
-
-
-class ClangFormatException(BadCodeException):
-  """
-  clang-format error.
-  """
-  pass
-
-
-class UglyCodeException(errors.CLgenError):
-  """
-  Code is ugly.
-  """
-  pass
-
-
-class InstructionCountException(UglyCodeException):
-  """
-  Instruction count error.
-  """
-  pass
-
-
-class NoCodeException(UglyCodeException):
-  """
-  Sample contains no code.
-  """
-  pass
-
-
-class RewriterException(UglyCodeException):
-  """
-  Program rewriter error.
-  """
-  pass
-
-
-class GPUVerifyException(UglyCodeException):
-  """
-  GPUVerify found a bug.
-  """
-  pass
-
-
-class GPUVerifyTimeoutException(GPUVerifyException):
-  """
-  GPUVerify timed out.
-  """
-  pass
 
 
 # FIXME(polyglot):
@@ -182,19 +109,21 @@ def strip_preprocessor_lines(src: str) -> str:
 
 def compiler_preprocess(src: str, compiler_args: List[str], id: str = 'anon',
                         timeout: int = 60):
+  """Run input code through the compiler frontend to inline macros."""
   cmd = ["timeout", "-s9", str(timeout), native.CLANG] + compiler_args + ['-E',
                                                                           '-c',
                                                                           '-',
                                                                           '-o',
                                                                           '-']
+  logging.debug('$ %s', ' '.join(cmd))
   process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
   stdout, stderr = process.communicate(src.encode('utf-8'))
   if process.returncode != 0:
-    raise ClangException(stderr.decode('utf-8'))
+    raise errors.ClangException(stderr.decode('utf-8'))
 
   src = stdout.decode('utf-8')
 
-  return strip_preprocessor_lines(src)
+  return strip_preprocessor_lines(src).strip()
 
 
 def compiler_preprocess_cl(src: str, id: str = 'anon',
@@ -258,22 +187,24 @@ def rewrite_cl(src: str, id: str = 'anon', use_shim: bool = True,
     tmp.flush()
     cmd = (["timeout", "-s9", str(timeout), native.CLGEN_REWRITER, tmp.name] + [
       '-extra-arg=' + x for x in clang_cl_args(use_shim=use_shim)] + ['--'])
-
-    process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    logging.debug('$ %s', ' '.join(cmd))
+    process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE,
+                    universal_newlines=True)
     stdout, stderr = process.communicate()
+    logging.debug(stderr)
 
   # If there was nothing to rewrite, rewriter exits with error code:
   EUGLY_CODE = 204
   if process.returncode == EUGLY_CODE:
     # Propagate the error:
-    raise RewriterException(src)
+    raise errors.RewriterException(src)
   # NOTE: the rewriter process can still fail because of some other
   # compilation problem, e.g. for some reason the 'enable 64bit
   # support' pragma which should be included in the shim isn't being
   # propogated correctly to the rewriter. However, the rewriter will
   # still correctly process the input, so we ignore all error codes
   # except the one we care about (EUGLY_CODE).
-  return stdout.decode('utf-8')
+  return stdout
 
 
 def compile_cl_bytecode(src: str, id: str = 'anon', use_shim: bool = True,
@@ -303,11 +234,13 @@ def compile_cl_bytecode(src: str, id: str = 'anon', use_shim: bool = True,
   cmd = ["timeout", "-s9", str(timeout), native.CLANG] + clang_cl_args(
     use_shim=use_shim) + ['-emit-llvm', '-S', '-c', '-', '-o', '-']
 
-  process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-  stdout, stderr = process.communicate(src.encode('utf-8'))
+  logging.debug('$ %s', ' '.join(cmd))
+  process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE,
+                  universal_newlines=True)
+  stdout, stderr = process.communicate(src)
 
   if process.returncode != 0:
-    raise ClangException(stderr.decode('utf-8'))
+    raise errors.ClangException(stderr)
   return stdout
 
 
@@ -349,10 +282,10 @@ def gpuverify(src: str, args: list, id: str = 'anon', timeout: int = 60) -> str:
   #   stdout, stderr = process.communicate()
   #
   # if process.returncode == -9:  # timeout signal
-  #   raise GPUVerifyTimeoutException(
+  #   raise errors.GPUVerifyTimeoutException(
   #     f"GPUveryify failed to complete with {timeout} seconds")
   # elif process.returncode != 0:
-  #   raise GPUVerifyException(stderr.decode('utf-8'))
+  #   raise errors.GPUVerifyException(stderr.decode('utf-8'))
 
   return src
 
@@ -463,13 +396,15 @@ def bytecode_features(bc: str, id: str = 'anon', timeout: int = 60) -> Dict[
 
   # LLVM pass output pritns to stderr, so we'll pipe stderr to
   # stdout.
-  process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+  logging.debug('$ %s', ' '.join(cmd))
+  process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=STDOUT,
+                  universal_newlines=True)
   stdout, _ = process.communicate(bc)
 
   if process.returncode != 0:
-    raise OptException(stdout.decode('utf-8'))
+    raise errors.OptException(stdout)
 
-  instcounts = parse_instcounts(stdout.decode('utf-8'))
+  instcounts = parse_instcounts(stdout)
   instratios = instcounts2ratios(instcounts)
 
   return instratios
@@ -512,13 +447,14 @@ def clangformat(src: str, id: str = 'anon', timeout: int = 60) -> str:
   """
   cmd = ["timeout", "-s9", str(timeout), native.CLANG_FORMAT,
          '-style={}'.format(json.dumps(clangformat_config))]
+  logging.debug('$ %s', ' '.join(cmd))
   process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
   stdout, stderr = process.communicate(src.encode('utf-8'))
 
   if stderr:
     logging.error(stderr.decode('utf-8'))
   if process.returncode != 0:
-    raise ClangFormatException(stderr.decode('utf-8'))
+    raise errors.ClangFormatException(stderr.decode('utf-8'))
 
   return stdout.decode('utf-8')
 
@@ -546,7 +482,7 @@ def verify_bytecode_features(bc_features: Dict[str, float],
   num_instructions = bc_features.get('instructions_of_all_types', 0)
 
   if num_instructions < min_num_instructions:
-    raise InstructionCountException(
+    raise errors.InstructionCountException(
       'Code contains {} instructions. The minimum allowed is {}'.format(
         num_instructions, min_num_instructions))
 
@@ -571,7 +507,7 @@ def ensure_has_code(src: str) -> str:
       If kernel is empty.
   """
   if len(src.split('\n')) < 3:
-    raise NoCodeException
+    raise errors.NoCodeException
 
   return src
 
@@ -668,9 +604,14 @@ def preprocess_opencl(src: str, id: str = 'anon', use_shim: bool = True,
       Whether to run GPUVerify on the code.
   """
   # Compile to bytecode and verify features:
+  logging.debug('OpenCL source = %s', src)
   bc = compile_cl_bytecode(src, id, use_shim)
-  bc_features = bytecode_features(bc, id)
-  verify_bytecode_features(bc_features, id)
+  # TODO(cec): Fix llvm opt instcount invocation. There appears to be no output
+  # (at least on macos homebrew version).
+  #   $ /usr/local/opt/llvm/bin/clang -emit-llvm ~/foo.cc -S -o foo.ll
+  #   $ /usr/local/opt/llvm/bin/opt -S -instcount -stats -analyze < foo.ll
+  # bc_features = bytecode_features(bc, id)
+  # verify_bytecode_features(bc_features, id)
 
   # Rewrite and format source:
   src = compiler_preprocess_cl(src, id, use_shim)
@@ -746,7 +687,7 @@ def preprocess(src: str, id: str = "anon",
   elif lang == languages.Language.GLSL:
     return preprocess_glsl(src, id, **lang_opts)
   else:
-    raise ValueError(f"unsuporrted language '{lang}'")
+    raise errors.ValueError(f"unsuporrted language '{lang}'")
 
 
 def preprocess_for_db(src: str, **preprocess_opts) -> Tuple[int, str]:
@@ -977,8 +918,8 @@ def _preprocess_db(db_path: str, max_num_workers: int = cpu_count(),
       try:
         result = queue.get(timeout=90)
       except QueueEmpty as e:
-        raise TimeoutError('failed to fetch result after 90 seconds. '
-                           'something went wrong') from e
+        raise errors.TimeoutError('failed to fetch result after 90 seconds. '
+                                  'something went wrong') from e
 
       # insert result into database
       db = dbutil.connect(db_path)
