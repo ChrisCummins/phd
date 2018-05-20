@@ -28,15 +28,15 @@ from subprocess import PIPE, Popen
 from typing import List, TextIO
 
 import numpy as np
+from absl import logging
 
-import deeplearning.tmp_clgen.clgen.errors
-import deeplearning.tmp_clgen.clgen.package_util
-from deeplearning.tmp_clgen import log
-from deeplearning.tmp_clgen import native
-from lib.labm8 import math as labmath
+from deeplearning.clgen import errors
+from deeplearning.clgen import native
+from deeplearning.clgen import package_util
+from lib.labm8 import labmath
 
 
-class FeatureExtractionError(deeplearning.tmp_clgen.clgen.errors.CLgenError):
+class FeatureExtractionError(errors.CLgenError):
   """ Thrown in case feature extraction fails """
   pass
 
@@ -90,7 +90,7 @@ def to_np_arrays(paths: List[str], **kwargs):
       parse = lambda l: np.array([float(x) for x in l.split(',')[2:]])
       return [parse(line) for line in lines]
     except IndexError:
-      log.error("lines:", lines)
+      logging.error("lines:", lines)
       raise FeatureExtractionError
 
   flatten = lambda l: [item for sublist in l for item in sublist]
@@ -116,7 +116,7 @@ def features(path: str, file=sys.stdout, fatal_errors: bool = False,
   quiet : bool, optional
       Don't print compiler output on errors.
   """
-  path = deeplearning.tmp_clgen.clgen.package_util.must_exist(path)
+  path = package_util.must_exist(path)
 
   cmd = [native.CLGEN_FEATURES, path] + ['-extra-arg=' + x for x in
                                          _shim_args(use_shim=use_shim)]
@@ -180,8 +180,6 @@ def files(paths: List[str], header: bool = True, file: TextIO = sys.stdout,
   **kwargs
       Additional arguments to features().
   """
-  npaths = len(paths)
-
   if header:
     feature_headers(file=file)
   for path in paths:

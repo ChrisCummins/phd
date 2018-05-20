@@ -24,11 +24,11 @@ from typing import Dict, List
 
 import numpy as np
 
-import deeplearning.tmp_clgen.clgen.errors
-from deeplearning.tmp_clgen import clgen
+from deeplearning.clgen import errors
+from deeplearning.clgen import languages
 
 
-class VocabError(deeplearning.tmp_clgen.clgen.errors.CLgenError):
+class VocabError(errors.CLgenError):
   """A character sequence is not in the atomizer's vocab"""
   pass
 
@@ -136,7 +136,7 @@ class Atomizer(object):
       raise VocabError
 
   @staticmethod
-  def from_text(lang: clgen.Language, text: str) -> 'Atomizer':
+  def from_text(lang: languages.Language, text: str) -> 'Atomizer':
     """
     Instantiate and specialize an atomizer from a corpus text.
 
@@ -152,7 +152,7 @@ class Atomizer(object):
 
     Examples
     --------
-    >>> a = CharacterAtomizer.from_text(clgen.Language.OPENCL, 'abcdefg')
+    >>> a = CharacterAtomizer.from_text(languages.Language.OPENCL, 'abcdefg')
     >>> b = a.atomize('abcd')
     >>> len(b)
     4
@@ -180,7 +180,7 @@ class CharacterAtomizer(Atomizer):
     return "CharacterAtomizer[{n} chars]".format(n=self.vocab_size)
 
   @staticmethod
-  def from_text(lang: clgen.Language, text: str) -> 'CharacterAtomizer':
+  def from_text(lang: languages.Language, text: str) -> 'CharacterAtomizer':
     counter = Counter(text)
     count_pairs = sorted(counter.items(), key=lambda x: -x[1])
     atoms, _ = zip(*count_pairs)
@@ -248,8 +248,8 @@ class GreedyAtomizer(Atomizer):
     return "GreedyAtomizer[{n} tokens]".format(n=self.vocab_size)
 
   @staticmethod
-  def from_text(lang: clgen.Language, text: str) -> 'GreedyAtomizer':
-    atoms = clgen.atoms_for_lang(lang)
+  def from_text(lang: languages.Language, text: str) -> 'GreedyAtomizer':
+    atoms = languages.atoms_for_lang(lang)
 
     # Instantiate a greedy atomizer using the full vocabulary.
     full_vocab = dict(zip(atoms, range(len(atoms))))

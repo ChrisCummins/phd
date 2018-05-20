@@ -1,8 +1,8 @@
 import os
 
-from pkg_resources import resource_filename, resource_string
+import pkg_resources
 
-from deeplearning.tmp_clgen.clgen import File404, InternalError
+from deeplearning.clgen import errors
 from lib.labm8 import fs
 
 
@@ -26,7 +26,7 @@ def must_exist(*path_components: str, **kwargs) -> str:
 
   path = os.path.expanduser(os.path.join(*path_components))
   if not os.path.exists(path):
-    Error = kwargs.get("Error", File404)
+    Error = kwargs.get("Error", errors.File404)
     e = Error("path '{}' does not exist".format(path))
     e.path = path
     raise e
@@ -48,7 +48,7 @@ def package_path(*path) -> str:
       Path.
   """
   path = os.path.expanduser(os.path.join(*path))
-  abspath = resource_filename(__name__, path)
+  abspath = pkg_resources.resource_filename(__name__, path)
   return must_exist(abspath)
 
 
@@ -85,16 +85,16 @@ def package_data(*path) -> bytes:
 
   Raises
   ------
-  InternalError
+  errors.InternalError
       In case of IO error.
   """
   # throw exception if file doesn't exist
   package_path(*path)
 
   try:
-    return resource_string(__name__, fs.path(*path))
+    return pkg_resources.resource_string(__name__, fs.path(*path))
   except Exception:
-    raise InternalError("failed to read package data '{}'".format(path))
+    raise errors.InternalError("failed to read package data '{}'".format(path))
 
 
 def package_str(*path) -> str:
@@ -113,13 +113,14 @@ def package_str(*path) -> str:
 
   Raises
   ------
-  InternalError
+  errors.InternalError
       In case of IO error.
   """
   try:
     return package_data(*path).decode('utf-8')
   except UnicodeDecodeError:
-    raise InternalError("failed to decode package data '{}'".format(path))
+    raise errors.InternalError(
+      "failed to decode package data '{}'".format(path))
 
 
 def sql_script(name: str) -> str:
