@@ -492,6 +492,7 @@ cc_binary(
             "-lLLVMDemangle",
         ],
     }),
+    visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = select({
         "//:darwin": ["@llvm_mac_headers//:headers"],
         "//conditions:default": ["@llvm_linux_headers//:headers"],
@@ -984,6 +985,7 @@ cc_binary(
             "-lLLVMDemangle",
         ],
     }),
+    visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = select({
         "//:darwin": ["@llvm_mac_headers//:headers"],
         "//conditions:default": ["@llvm_linux_headers//:headers"],
