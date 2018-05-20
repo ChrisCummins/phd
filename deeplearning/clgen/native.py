@@ -40,16 +40,20 @@ OPT : str
 SHIMFILE : str
     Path to shim headerfile.
 """
+
 from deeplearning.clgen import package_util
-from lib.labm8 import fs
 
 
-CLANG = package_util.data_path(fs.path("bin", "clang"))
-CLANG_FORMAT = package_util.data_path(fs.path("bin", "clang-format"))
-CLGEN_FEATURES = package_util.data_path(fs.path("bin", "clgen-features"))
-CLGEN_REWRITER = package_util.data_path(fs.path("bin", "clgen-rewriter"))
-GPUVERIFY = package_util.data_path(fs.path("gpuverify", "gpuverify"))
-LIBCLC = package_util.data_path("libclc")
-OCLGRIND = package_util.data_path(fs.path("oclgrind", "bin", "oclgrind"))
-OPT = package_util.data_path(fs.path("bin", "opt"))
-SHIMFILE = package_util.data_path(fs.path("include", "opencl-shim.h"))
+CLANG = package_util.must_exist('../llvm_mac/bin/clang')
+CLANG_FORMAT = package_util.must_exist('../llvm_mac/bin/clang-format')
+CLGEN_FEATURES = package_util.must_exist(
+  'deeplearning/clgen/native/clgen-features')
+CLGEN_REWRITER = package_util.must_exist(
+  'deeplearning/clgen/native/clgen-features')
+# TODO(cec): Add GPUVerify.
+GPUVERIFY = 'TODO'
+LIBCLC = 'TODO'
+OCLGRIND = 'TODO'
+OPT = 'TODO'
+SHIMFILE = package_util.must_exist(
+  'deeplearning/clgen/data/include/opencl-shim.h')

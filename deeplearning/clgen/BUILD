@@ -233,6 +233,20 @@ py_test(
 py_library(
     name = "native",
     srcs = ["native.py"],
+    data = [
+        "//deeplearning/clgen/native:clgen-features",
+        "//deeplearning/clgen/native:clgen-rewriter",
+        "//deeplearning/clgen/data/include:opencl-shim",
+    ] + select({
+        "//:darwin": [
+            "@llvm_mac//:clang",
+            "@llvm_mac//:clang-format",
+        ],
+        "//conditions:default": [
+            "@llvm_linux//:clang-format",
+            "@llvm_linux//:clang",
+        ],
+    }),
     deps = [
         ":package_util",
         "//lib/labm8:fs",

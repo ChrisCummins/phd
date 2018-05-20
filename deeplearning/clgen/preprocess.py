@@ -680,6 +680,8 @@ def preprocess_opencl(src: str, id: str = 'anon', use_shim: bool = True,
   src = sanitize_prototype(src)
 
   if use_gpuverify:
+    pass
+    # TODO(cec): Re-enable GPUVerify.
     gpuverify(src)
 
   return src
