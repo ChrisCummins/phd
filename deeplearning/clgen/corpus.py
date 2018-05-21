@@ -456,16 +456,13 @@ class Corpus(object):
       atomizers.Atomizer
           Atomizer.
       """
-      atomizers = {"char": atomizers.CharacterAtomizer,
-                   "greedy": atomizers.GreedyAtomizer, }
-      atomizerclass = atomizers.get(vocab, None)
+      all_atomizers = {"char": atomizers.CharacterAtomizer,
+                       "greedy": atomizers.GreedyAtomizer, }
+      atomizerclass = all_atomizers.get(vocab, None)
       if atomizerclass is None:
-        raise errors.UserError("Unknown vocabulary type '{bad}'. "
-                               "Supported values: {good}".format(bad=vocab,
-                                                                 good=", "
-                                                                      "".join(
-                                                                   sorted(
-                                                                     atomizers.keys()))))
+        atomizer_names = ", ".join(sorted(all_atomizers.keys()))
+        raise errors.UserError(f"Unknown vocabulary type '{vocab}'. "
+                               f"Supported values: {atomizer_names}")
       else:
         return atomizerclass.from_text(self.language, corpus_txt)
 
