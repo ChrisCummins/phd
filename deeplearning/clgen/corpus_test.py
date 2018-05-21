@@ -18,20 +18,19 @@
 #
 import sys
 
-import numpy as np
 import pytest
 from absl import app
 
 from deeplearning.clgen import corpus
-from deeplearning.clgen import errors
 from deeplearning.clgen.tests import testlib as tests
-from lib.labm8 import fs
 
 
 TINY_HASH = 'b5c2c4f07ef6f1a6423d079a07392411e49891ed'
 
 
-def test_path():
+def test_archive_corpus_id(clgen_cache_dir):
+  """Test that the ID of an archive corpus matches expected value."""
+  del clgen_cache_dir
   path = tests.archive("tiny", "corpus")
   c = corpus.Corpus.from_json(
     {"language": "opencl", "id": TINY_HASH, "path": path})

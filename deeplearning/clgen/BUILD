@@ -85,11 +85,20 @@ py_library(
 )
 
 py_library(
+    name = "conftest",
+    srcs = ["conftest.py"],
+    testonly = True,
+)
+
+py_library(
     name = "corpus",
     srcs = ["corpus.py"],
     deps = [
+        ":atomizers",
         ":cache",
         ":dbutil",
+        ":fetch",
+        ":preprocess",
         ":errors",
         ":features",
         ":languages",
@@ -110,7 +119,9 @@ py_test(
     srcs = ["corpus_test.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
+    data = ["//deeplearning/clgen/tests/data:tiny"],
     deps = [
+        ":conftest",
         ":corpus",
         ":errors",
         "//deeplearning/clgen/tests:testlib",
