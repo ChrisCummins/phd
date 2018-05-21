@@ -32,6 +32,7 @@ cc_binary(
         "-D__STDC_FORMAT_MACROS",
         "-D__STDC_LIMIT_MACROS",
     ],
+    data = ["//third_party/opencl/inlined/include:opencl"],
     linkopts = select({
         "//:darwin": [
             "-Wl,-rpath,/usr/local/opt/llvm/lib",

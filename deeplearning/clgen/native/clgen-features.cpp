@@ -644,8 +644,14 @@ std::string getexepath() {
 
 
 // Return path to OpenCL platform header.
+// WARNING this path is hardcoded to the current location of these two files:
+//
+//   //deeplearning/clgen/native/clgen-features.cpp
+//   //third_party/opencl/inlined/include/cl.h
+//
+// If either of these files is moved, this path must be updated!
 std::string cl_header() {
-  return dirname(getexepath()) + "/../include/cl.h";
+  return dirname(getexepath()) + "/../../../third_party/opencl/inlined/include/cl.h";
 }
 
 
