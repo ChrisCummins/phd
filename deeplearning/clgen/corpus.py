@@ -58,13 +58,6 @@ DEFAULT_CORPUS_OPTS = {"created": {"date": str(datetime.now()), }, "eof": False,
                        }
 
 
-class FeaturesError(errors.CLgenError):
-  """
-  Thrown in case of error during features encoding.
-  """
-  pass
-
-
 def unpack_directory_if_needed(path: str) -> str:
   """
   If path is a tarball, unpack it. If path doesn't exist but there is a
@@ -117,6 +110,11 @@ def get_kernel_features(code: str, **kwargs) -> np.array:
   -------
   np.array
       Feature values.
+
+  Raises
+  ------
+  FeaturesError
+      In case of error.
   """
   with NamedTemporaryFile() as outfile:
     outfile.write(code.encode("utf-8"))
@@ -124,7 +122,7 @@ def get_kernel_features(code: str, **kwargs) -> np.array:
     f = features.to_np_arrays([outfile.name], **kwargs)
   if len(f) != 1:
     logging.error("features:", f)
-    raise FeaturesError("code contains more than one kernel")
+    raise errors.FeaturesError("code contains more than one kernel")
   return f[0]
 
 

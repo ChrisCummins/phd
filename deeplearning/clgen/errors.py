@@ -107,3 +107,10 @@ class GPUVerifyTimeoutException(GPUVerifyException):
   GPUVerify timed out.
   """
   pass
+
+
+class FeaturesError(CLgenError):
+  """
+  Thrown in case of error during features encoding.
+  """
+  pass
