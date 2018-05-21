@@ -23,11 +23,15 @@ main() {
   cd "$ROOT"
 
   echo "ROOT=$ROOT"
-  echo "HEAD=$(git rev-parse HEAD)"
-  echo "Git status:"
-  git status 2>&1 | indent
-  echo "Submodule status:"
-  git submodule status 2>&1 | indent
+  if [[ -d "$ROOT/.git" ]]; then
+    echo "HEAD=$(git rev-parse HEAD)"
+    echo "Git status:"
+    git status 2>&1 | indent
+    echo "Submodule status:"
+    git submodule status 2>&1 | indent
+  else
+    echo "Not a git clone."
+  fi
 
   # Print Linux version, if available.
   if [[ -f /etc/os-release ]]; then
