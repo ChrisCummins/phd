@@ -35,7 +35,7 @@ main() {
 
   # Install the CLgen dependencies.
   cd "$ROOT/deeplearning/clgen"
-  bash ./install-deps.sh
+  yes | bash ./install-deps.sh
 
   # Configure and build CLgen.
   ./configure -b
