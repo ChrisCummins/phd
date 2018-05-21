@@ -224,6 +224,7 @@ __kernel void A(__global float* a) {
     assert out == code
 
 
+@pytest.mark.skip(reason="TODO(cec)")
 @tests.needs_linux  # FIXME: GPUVerify support on macOS.
 def test_gpuverify():
   code = """\
@@ -235,6 +236,7 @@ __kernel void A(__global float* a) {
                               ["--local_size=64", "--num_groups=128"]) == code
 
 
+@pytest.mark.skip(reason="TODO(cec)")
 @tests.needs_linux  # FIXME: GPUVerify support on macOS.
 def test_gpuverify_data_race():
   code = """\
