@@ -52,14 +52,6 @@ main() {
     exit 1
   fi
 
-  if [[ -f "$ROOT/venv/phd/bin/activate" ]]; then
-    echo "Python virtual environment found."
-  else
-    echo "Python virtual environment not found." >&2
-    echo "Have you run ./install.sh ?" >&2
-    exit 1
-  fi
-
   # Activate the phd virtual environment.
   test -f "$ROOT/.env"
   # Disable unbound variable errors, since ./build/phd/.env checks whether
@@ -69,12 +61,11 @@ main() {
   # Re-enable unbound variable errors.
   set -u
 
-  source "$ROOT/venv/phd/bin/activate"
-  echo "PYTHON=$(which python)"
+  echo "PYTHON=$(which python3)"
   echo "PYTHONPATH=$PYTHONPATH"
   echo "PYTHON_VERSION=$(python --version)"
   echo "Python packages:"
-  python -m pip freeze 2>&1 | indent
+  python3 -m pip freeze 2>&1 | indent
 
   if [[ -f "$ROOT/deeplearning/deepsmith/proto/deepsmith_pb2.py" ]]; then
     echo "Python protocol buffer code is generated."
@@ -95,7 +86,7 @@ from gpu import cldrive
 for i, env in enumerate(cldrive.all_envs()):
   print('{}: '.format(i + 1), env)
 EOF
-  python diagnose_me.py 2>&1 | indent
+  python3 diagnose_me.py 2>&1 | indent
   rm diagnose_me.py
 }
 main $@
