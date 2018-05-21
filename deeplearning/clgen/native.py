@@ -19,35 +19,26 @@
 """
 Paths to native files.
 
-Attributes
-----------
-CLANG : str
-    Path to clang binary.
-CLANG_FORMAT : str
-    Path to clang-format binary.
-CLGEN_FEATURES : str
-    Path to clgen-features binary.
-CLGEN_REWRITER : str
-    Path to clgen-rewriter binary.
-GPUVERIFY : str
-    Path to GPUVerify.
-LIBCLC : str
-    Path to libclc directory.
-OCLGRIND : str
-     Path to OCLgrind.
-OPT : str
-    Path to LLVM opt binary.
-SHIMFILE : str
-    Path to shim headerfile.
+Attributes:
+    CLANG: Path to clang binary.
+    CLANG_FORMAT: Path to clang-format binary.
+    OPT: Path to LLVM opt binary.
+    CLGEN_FEATURES: Path to clgen-features binary.
+    CLGEN_REWRITER: Path to clgen-rewriter binary.
+    GPUVERIFY: Path to GPUVerify.
+    LIBCLC: Path to libclc directory.
+    OCLGRIND:  Path to OCLgrind.
+    SHIMFILE: Path to shim headerfile.
 """
 
+from config import getconfig
 from deeplearning.clgen import package_util
 
 
-# TODO(cec): Determine llvm_mac or llvm_linux.
-CLANG = package_util.must_exist('external/llvm_mac/bin/clang')
-CLANG_FORMAT = package_util.must_exist('external/llvm_mac/bin/clang-format')
-OPT = package_util.must_exist('external/llvm_mac/bin/opt')
+_config = getconfig.GetGlobalConfig()
+CLANG = package_util.must_exist(_config.paths.cc)
+CLANG_FORMAT = package_util.must_exist(_config.paths.clang_format)
+OPT = package_util.must_exist(_config.paths.opt)
 CLGEN_FEATURES = package_util.must_exist(
   'deeplearning/clgen/native/clgen-features')
 CLGEN_REWRITER = package_util.must_exist(
