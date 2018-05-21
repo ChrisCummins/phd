@@ -42,9 +42,11 @@ py_library(
     ],
 )
 
-py_library(
+py_binary(
     name = "cli",
     srcs = ["cli.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
     deps = [
         ":cache",
         ":dbutil",
