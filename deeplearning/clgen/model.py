@@ -100,7 +100,7 @@ class Model(object):
 
     # set properties
     self.opts = labtypes.update(deepcopy(DEFAULT_MODEL_OPTS), opts)
-    self.corpus = corpus
+    self.corpus = corpus_
     self.hash = _hash(self.corpus, self.opts)
     self.cache = cache.mkcache("model", f"{self.corpus.language}-{self.hash}")
 
@@ -441,12 +441,12 @@ class Model(object):
       raise errors.UserError("model JSON has no corpus entry")
 
     # create corpus and remove from JSON
-    corpus = corpus.Corpus.from_json(model_json.pop("corpus"))
+    corpus_ = corpus.Corpus.from_json(model_json.pop("corpus"))
 
     if "stats" in model_json:  # ignore stats
       del model_json["stats"]
 
-    return Model(corpus, **model_json)
+    return Model(corpus_, **model_json)
 
 
 def models() -> Iterator[Model]:

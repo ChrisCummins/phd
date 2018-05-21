@@ -237,9 +237,11 @@ py_library(
 py_test(
     name = "model_test",
     srcs = ["model_test.py"],
+    data = ["//deeplearning/clgen/tests/data:tiny"],
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
+        ":conftest",
         ":model",
         "//deeplearning/clgen/tests:testlib",
     ],

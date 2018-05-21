@@ -27,47 +27,49 @@ from deeplearning.clgen.tests import testlib as tests
 
 def get_test_model(vocab="char"):
   return model.Model.from_json({
-    "corpus": {"language": "opencl", "path": tests.data_path("tiny", "corpus"),
+    "corpus": {"language": "opencl", "path": tests.archive("tiny", "corpus"),
                "vocabulary": vocab},
     "architecture": {"rnn_size": 8, "num_layers": 2},
     "train_opts": {"epochs": 1}})
 
 
-def test_model_hash():
-  m1 = model.Model.from_json({"corpus": {"language": "opencl",
-                                         "path": tests.data_path("tiny",
-                                                                 "corpus")}})
+def test_model_hash(clgen_cache_dir):
+  del clgen_cache_dir
+  m1 = model.Model.from_json(
+    {"corpus": {"language": "opencl", "path": tests.archive("tiny", "corpus")}})
 
   # same as m1, with explicit default opt:
-  m2 = model.Model.from_json({
-    "corpus": {"language": "opencl", "path": tests.data_path("tiny", "corpus")},
-    "train_opts": {"intermediate_checkpoints": True}})
+  m2 = model.Model.from_json(
+    {"corpus": {"language": "opencl", "path": tests.archive("tiny", "corpus")},
+     "train_opts": {"intermediate_checkpoints": True}})
 
   # different opt value:
-  m3 = model.Model.from_json({
-    "corpus": {"language": "opencl", "path": tests.data_path("tiny", "corpus")},
-    "train_opts": {"intermediate_checkpoints": False}})
+  m3 = model.Model.from_json(
+    {"corpus": {"language": "opencl", "path": tests.archive("tiny", "corpus")},
+     "train_opts": {"intermediate_checkpoints": False}})
 
   assert m1.hash == m2.hash
   assert m2.hash != m3.hash
 
 
-def test_model_checkpoint_path_untrained():
+def test_model_checkpoint_path_untrained(clgen_cache_dir):
+  del clgen_cache_dir
   m = get_test_model()
   m.cache.clear()  # untrain
   assert m.checkpoint_path == None
 
 
-def test_model_eq():
-  m1 = model.Model.from_json({
-    "corpus": {"language": "opencl", "path": tests.data_path("tiny", "corpus")},
-    "train_opts": {"intermediate_checkpoints": False}})
-  m2 = model.Model.from_json({
-    "corpus": {"language": "opencl", "path": tests.data_path("tiny", "corpus")},
-    "train_opts": {"intermediate_checkpoints": False}})
-  m3 = model.Model.from_json({
-    "corpus": {"language": "opencl", "path": tests.data_path("tiny", "corpus")},
-    "train_opts": {"intermediate_checkpoints": True}})
+def test_model_eq(clgen_cache_dir):
+  del clgen_cache_dir
+  m1 = model.Model.from_json(
+    {"corpus": {"language": "opencl", "path": tests.archive("tiny", "corpus")},
+     "train_opts": {"intermediate_checkpoints": False}})
+  m2 = model.Model.from_json(
+    {"corpus": {"language": "opencl", "path": tests.archive("tiny", "corpus")},
+     "train_opts": {"intermediate_checkpoints": False}})
+  m3 = model.Model.from_json(
+    {"corpus": {"language": "opencl", "path": tests.archive("tiny", "corpus")},
+     "train_opts": {"intermediate_checkpoints": True}})
 
   assert m1 == m2
   assert m2 != m3
@@ -75,10 +77,11 @@ def test_model_eq():
   assert m1 != 'abcdef'
 
 
-def test_model_to_json():
-  m1 = model.Model.from_json({
-    "corpus": {"language": "opencl", "path": tests.data_path("tiny", "corpus")},
-    "train_opts": {"intermediate_checkpoints": True}})
+def test_json_equivalency(clgen_cache_dir):
+  del clgen_cache_dir
+  m1 = model.Model.from_json(
+    {"corpus": {"language": "opencl", "path": tests.archive("tiny", "corpus")},
+     "train_opts": {"intermediate_checkpoints": True}})
   m2 = model.Model.from_json(m1.to_json())
   assert m1 == m2
 

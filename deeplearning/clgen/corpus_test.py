@@ -181,7 +181,7 @@ def test_contentfiles(clgen_cache_dir):
   assert len(list(c1.contentfiles())) == 250
 
 
-def test_to_json_equivalency(clgen_cache_dir):
+def test_json_equivalency(clgen_cache_dir):
   """Test that from_json() and to_json() are symmetrical."""
   del clgen_cache_dir
   c1 = corpus.Corpus.from_json(
