@@ -176,7 +176,6 @@ __kernel void A(__global int * a) {
 """
 
 
-@pytest.mark.skip(reason="TODO(cec)")
 def test_preprocess_shim():
   """Test that code which contains defs in opencl-shim can compile."""
   # FLOAT_T is defined in shim header. Preprocess will fail if FLOAT_T is
@@ -189,7 +188,6 @@ __kernel void A(__global FLOAT_T* a) { int b; }""", use_shim=False)
 __kernel void A(__global FLOAT_T* a) { int b; }""", use_shim=True)
 
 
-@pytest.mark.skip(reason="TODO(cec)")
 def test_ugly_preprocessed():
   # empty kernel protoype is rejected
   with pytest.raises(errors.NoCodeException):
@@ -209,7 +207,6 @@ __kernel void A() {
 """)
 
 
-@pytest.mark.skip(reason="TODO(cec)")
 def test_preprocess_stable():
   code = """\
 __kernel void A(__global float* a) {
@@ -218,7 +215,8 @@ __kernel void A(__global float* a) {
   int d = get_global_id(0);
 
   a[d] *= 2.0f;
-}"""
+}\
+"""
   # pre-processing is "stable" if the code doesn't change
   out = code
   for _ in range(5):
