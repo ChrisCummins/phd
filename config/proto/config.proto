@@ -24,8 +24,11 @@ message GlobalConfigPaths {
   required string cxx = 3;
   // The path of the system LLVM optimizer.
   required string opt = 4;
+  // The path of the system libclang.so, if it exists. If there is no
+  // libclang.so, this should be an empty string.
+  required string libclang_so = 5;
   // The path of the system clang_format.
-  required string clang_format = 5;
+  required string clang_format = 6;
   // The path of the system python.
-  required string python = 6;
+  required string python = 7;
 }

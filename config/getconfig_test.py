@@ -20,6 +20,7 @@ def test_GetGlobalConfig_system_values():
   assert config.paths.HasField('cc')
   assert config.paths.HasField('cxx')
   assert config.paths.HasField('opt')
+  assert config.paths.HasField('libclang_so')
   assert config.paths.HasField('clang_format')
   assert config.paths.HasField('python')
   assert config.HasField('with_cuda')
@@ -49,6 +50,12 @@ def test_GlobalConfigPaths_opt():
   config = getconfig.GetGlobalConfig()
   assert pathlib.Path(config.paths.opt).is_file()
   assert os.access(config.paths.opt, os.X_OK)
+
+def test_GlobalConfigPaths_libclang_so():
+  """Test that libclang_so is a file, if set."""
+  config = getconfig.GetGlobalConfig()
+  if config.paths.libclang_so:
+    assert pathlib.Path(config.paths.libclang_so).is_file()
 
 def test_GlobalConfigPaths_clang_format():
   """Test that clang-format is an executable."""
