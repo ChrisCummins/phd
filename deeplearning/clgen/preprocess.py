@@ -22,6 +22,7 @@ Preprocess OpenCL files for machine learning.
 import contextlib
 import json
 import math
+import os
 import random
 import re
 import sqlite3
@@ -181,6 +182,12 @@ def rewrite_cl(src: str, id: str = 'anon', use_shim: bool = True,
   RewriterException
       If rewriter fails.
   """
+  # On Linux we must preload the clang library.
+  env = os.environ
+  if native.LIBCLANG_SO:
+    env = os.environ.copy()
+    env['LD_PRELOAD'] = native.LIBCLANG_SO
+
   # Rewriter can't read from stdin.
   with NamedTemporaryFile('w', suffix='.cl') as tmp:
     tmp.write(src)
@@ -188,8 +195,9 @@ def rewrite_cl(src: str, id: str = 'anon', use_shim: bool = True,
     cmd = (["timeout", "-s9", str(timeout), native.CLGEN_REWRITER, tmp.name] + [
       '-extra-arg=' + x for x in clang_cl_args(use_shim=use_shim)] + ['--'])
     logging.debug('$ %s', ' '.join(cmd))
+
     process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE,
-                    universal_newlines=True)
+                    universal_newlines=True, env=env)
     stdout, stderr = process.communicate()
     logging.debug(stderr)
 
