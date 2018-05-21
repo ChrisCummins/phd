@@ -523,7 +523,9 @@ class Corpus(object):
     self._num_batches = int(self.size / (batch_size * seq_length))
     if self.num_batches == 0:
       raise errors.UserError(
-        "Not enough data. Use a smaller seq_length and batch_size")
+        "Not enough data. Use a smaller seq_length and batch_size. "
+        f'Current data size = {self.size}, seq_length = {seq_length}, and '
+        f'batch_size {batch_size}.')
 
     # split into batches
     self._tensor = self._tensor[:self.num_batches * batch_size * seq_length]

@@ -5,8 +5,10 @@
   },
   "corpus": {
     "language": "opencl",
-    "path": "corpus",
-    "vocabulary": "greedy"
+    "path": "corpus.tar.bz2",
+    "vocabulary": "greedy",
+    "seq_length": 1,
+    "batch_size": 1
   },
   "architecture": {
     "model_type": "lstm",

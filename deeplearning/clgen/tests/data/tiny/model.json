@@ -1,57 +1,25 @@
 {
   "created": {
     "author": "Chris Cummins <chrisc.101@gmail.com>",
-    #
-    str
     "date": "2017-05-15 12:00:00"
-    #
-    str
   },
   "corpus": {
     "language": "opencl",
-    "path": "corpus",
-    #
-    directory
-    containing
-    kernel
-    files
+    "path": "/Users/cec/phd/deeplearning/clgen/tests/data/tiny/corpus",
     "preserve_order": false,
-    #
-    if
-    false,
-    shuffle
-    kernels
-    during
-    training
     "eof": false,
-    #
-    if
-    True,
-    insert
-    markers
-    between
-    kernels
-    during
-    training
     "vocabulary": "char"
-    #
-    encoding
-    type {
-  "char",
-  "greedy"
-}
-},
-"architecture": {
-"model_type": "lstm", # {"lstm", "rnn", "gru"
-}
-"rnn_size": 128,  # num nodes per layer, int
-"num_layers": 2
-},
-"train_opts": {
-"epochs": 10, # number of iterations over training data
-"grad_clip": 5,
-"learning_rate": 2e-3, # initial learning rate
-"lr_decay_rate": 5, # % to reduce learning rate by per epoch
-"intermediate_checkpoints": true
-}
+  },
+  "architecture": {
+    "model_type": "lstm",
+    "rnn_size": 128,
+    "num_layers": 2
+  },
+  "train_opts": {
+    "epochs": 10,
+    "grad_clip": 5,
+    "learning_rate": 2e-3,
+    "lr_decay_rate": 5,
+    "intermediate_checkpoints": true
+  }
 }

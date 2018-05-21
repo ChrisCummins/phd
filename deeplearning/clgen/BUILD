@@ -48,10 +48,16 @@ py_binary(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
+        "atomizers",
         ":cache",
         ":dbutil",
         ":errors",
+        ":explore",
+        ":features",
+        ":fetch",
+        ":languages",
         ":model",
+        ":preprocess",
         ":sampler",
         "//lib/labm8:fs",
         "//lib/labm8:jsonutil",
@@ -63,10 +69,15 @@ py_binary(
 py_test(
     name = "cli_test",
     srcs = ["cli_test.py"],
+    data = [
+        "//deeplearning/clgen/tests/data:pico",
+        "//deeplearning/clgen/tests/data:tiny",
+    ],
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
         ":cli",
+        ":conftest",
         "//deeplearning/clgen/tests:testlib",
         "//lib/labm8:fs",
     ],

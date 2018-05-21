@@ -8,25 +8,13 @@
       "const int"
     ],
     "max_length": 500,
-    #
-    max
-    sample
-    length
     "temperature": 1,
-    #
-    sampling
-    temperature [
-  0,
-  1
-]
-"seed": null  # if an integer, seed the RNG
-},
-"sampler": {
-"min_samples": 100, # stop sampling after min_kernels samples (ignored if <= 0)
-"min_kernels": -1, # stop sampling after min_kernels good samples (ignored if <= 0)
-"static_checker": true, # use static checker {true, false}
-"gpuverify": false  # use GPUVerify {
-true, false
-}
-}
+    "seed": null
+  },
+  "sampler": {
+    "min_samples": 100,
+    "min_kernels": -1,
+    "static_checker": true,
+    "gpuverify": false
+  }
 }

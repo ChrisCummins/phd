@@ -31,10 +31,15 @@ from typing import BinaryIO, List, TextIO
 
 from absl import logging
 
+from deeplearning.clgen import atomizers
 from deeplearning.clgen import cache
 from deeplearning.clgen import dbutil
 from deeplearning.clgen import errors
+from deeplearning.clgen import explore
+from deeplearning.clgen import features
+from deeplearning.clgen import languages
 from deeplearning.clgen import model
+from deeplearning.clgen import preprocess
 from deeplearning.clgen import sampler
 from lib.labm8 import fs
 from lib.labm8 import jsonutil
@@ -142,19 +147,17 @@ Please report bugs at <https://github.com/ChrisCummins/clgen/issues>\
     def runctx():
       return method(*args, **kwargs)
 
-    if prof.is_enabled() and logging.is_verbose():
+    if prof.is_enabled() and logging.get_verbosity() == logging.DEBUG:
       return cProfile.runctx('runctx()', None, locals(), sort='tottime')
     else:
       return runctx()
   except errors.UserError as err:
-    logging.fatal(err, "(" + type(err).__name__ + ")")
+    logging.fatal("%s (%s)", err, type(err).__name__)
   except KeyboardInterrupt:
     sys.stdout.flush()
     sys.stderr.flush()
     print("\nkeyboard interrupt, terminating", file=sys.stderr)
     sys.exit(1)
-  except errors.UserError as e:
-    _user_message(e)
   except errors.File404 as e:
     _user_message(e)
   except Exception as e:
@@ -227,7 +230,7 @@ def _register_fetch_parser(self, parent: ArgumentParser) -> None:
     """
 
     def _main(db_file: BinaryIO, paths: List[Path]) -> None:
-      clgen.fetch(db_file.name, paths)
+      fetch.fetch(db_file.name, paths)
       logging.info("done.")
 
     parser = parent.add_parser("fs", help="fetch from filesystem",
@@ -272,8 +275,8 @@ def _register_fetch_parser(self, parent: ArgumentParser) -> None:
         logging.fatal('environment variable {} not set'.format(e))
 
       try:
-        clgen.fetch_github(db_file.name, username, password, token,
-                           lang=clgen.Language.OPENCL)
+        fetch.fetch_github(db_file.name, username, password, token,
+                           lang=languages.Language.OPENCL)
       except BadCredentialsException as e:
         logging.fatal("bad GitHub credentials")
 
@@ -291,7 +294,7 @@ def _register_fetch_parser(self, parent: ArgumentParser) -> None:
     """
 
     def _main(db_file: BinaryIO, indir: Path) -> None:
-      clgen.fetch_repos(db_file.name, indir, lang=clgen.Language.GLSL)
+      fetch.fetch_repos(db_file.name, indir, lang=languages.Language.GLSL)
 
     parser = parent.add_parser("repos",
                                help="import from directory of repositories",
@@ -361,7 +364,7 @@ def _register_ls_parser(self, parent: ArgumentParser) -> None:
     """
 
     def _main() -> None:
-      print(clgen.models_to_tab(*clgen.models()))
+      print(model.models_to_tab(*model.models()))
 
     parser = parent.add_parser("models", help="list cached models",
                                description=inspect.getdoc(self),
@@ -429,7 +432,7 @@ def _register_db_parser(self, parent: ArgumentParser) -> None:
     """
 
     def _main(db_file: BinaryIO):
-      clgen.explore(db_file.name)
+      explore.explore(db_file.name)
 
     parser = parent.add_parser("explore", help="show database stats",
                                description=inspect.getdoc(self),
@@ -521,19 +524,20 @@ def _register_preprocess_parser(self, parent: ArgumentParser) -> None:
     input_paths = [infile.name for infile in inputs]
 
     if inputs_are_files and inplace:
-      clgen.preprocess_inplace(input_paths, use_gpuverify=gpuverify)
+      preprocess.preprocess_inplace(input_paths, use_gpuverify=gpuverify)
     else:
       for path in input_paths:
         if inputs_are_files:
-          clgen.preprocess_file(path, inplace=False, use_gpuverify=gpuverify)
+          preprocess.preprocess_file(path, inplace=False,
+                                     use_gpuverify=gpuverify)
         elif remove_bad_preprocessed:
           dbutil.remove_bad_preprocessed(path)
         elif remove_preprocessed:
           dbutil.remove_preprocessed(path)
           print("done.")
         else:
-          if clgen.preprocess_db(path, lang=clgen.Language.OPENCL,
-                                 use_gpuverify=gpuverify):
+          if preprocess.preprocess_db(path, lang=languages.Language.OPENCL,
+                                      use_gpuverify=gpuverify):
             print("done.")
           else:
             print("nothing to be done.")
@@ -573,10 +577,8 @@ def _register_features_parser(self, parent: ArgumentParser) -> None:
   # FIXME(polyglot):
 
   def _main(infiles: List[TextIO], dir_mode: bool, summarise: bool,
-            fatal_errors: bool, use_shum: bool, quiet: bool,
+            fatal_errors: bool, use_shim: bool, quiet: bool,
             no_header: bool) -> None:
-    from deeplearning.tmp_clgen import features
-
     input_paths = [infile.name for infile in infiles]
 
     def features_dir(csv_path):
@@ -628,7 +630,7 @@ def _register_atomize_parser(self, parent: ArgumentParser) -> None:
   # FIXME(polyglot):
 
   def _main(infile: TextIO, vocab: str, size: bool) -> None:
-    atoms = corpus.atomize(infile.read(), vocab=vocab)
+    atoms = atomizers.atomize(infile.read(), vocab=vocab)
 
     if size:
       logging.info("size:", len(atoms))
@@ -760,7 +762,7 @@ For information about a specific command, run `clgen <command> --help`.
   args = parser.parse_args(args)
 
   # set log level
-  logging.init(args.verbose)
+  logging.set_verbosity(logging.DEBUG if args.verbose else logging.INFO)
 
   # set debug option
   if args.debug:
@@ -784,7 +786,7 @@ For information about a specific command, run `clgen <command> --help`.
     model_ = model.Model.from_json(jsonutil.loads(args.sampler_dir[0].read()))
     sampler_ = sampler.Sampler.from_json(
       jsonutil.loads(args.sampler_dir[1].read()))
-    print(sampler_.cache(model).path)
+    print(sampler_.cache(model_).path)
   else:
     # strip the arguments from the top-level parser
     dispatch_func = args.dispatch_func
@@ -799,3 +801,7 @@ For information about a specific command, run `clgen <command> --help`.
     del opts["dispatch_func"]
 
     run(dispatch_func, **opts)
+
+
+if __name__ == '__main__':
+  main()

@@ -104,7 +104,7 @@ class Model(object):
     self.hash = _hash(self.corpus, self.opts)
     self.cache = cache.mkcache("model", f"{self.corpus.language}-{self.hash}")
 
-    logging.debug("model", self.hash)
+    logging.debug("model %s", self.hash)
 
     # validate metadata against cache, and restore stats
     self.stats = {"epoch_times": [], "epoch_costs": [], "epoch_batches": []}
@@ -130,7 +130,7 @@ class Model(object):
       del meta["train_opts"]["epochs"]
 
       if meta != cached_meta:
-        logging.error("Computed META:", jsonutil.format_json(meta))
+        logging.error("Computed META: %s", jsonutil.format_json(meta))
         raise errors.InternalError(
           "metadata mismatch in model %s" % self.cache["META"])
     else:
@@ -242,7 +242,7 @@ class Model(object):
     for e, path in zip(epoch_nums, paths):
       diff = self.epochs - e
       if diff >= 0 and diff < closest:
-        logging.debug("  cached checkpoint at epoch =", e, "diff =", diff)
+        logging.debug("  cached checkpoint at epoch = %s diff = %s", e, diff)
         closest = diff
         closest_path = path
 
@@ -273,9 +273,9 @@ class Model(object):
 
       # restore model from closest checkpoint
       if ckpt_path:
-        logging.debug("restoring", ckpt_path)
+        logging.debug("restoring %s", ckpt_path)
         saver.restore(sess, ckpt_path)
-        logging.debug("restored checkpoint {}".format(ckpt_path))
+        logging.debug("restored checkpoint %s", ckpt_path)
 
       # make sure we don't lose track of other checkpoints
       if ckpt_paths:
@@ -287,7 +287,7 @@ class Model(object):
       bar = progressbar.ProgressBar(max_value=max_batch)
 
       if sess.run(self.epoch) != self.epochs:
-        logging.info("training", self)
+        logging.info("training %s", self)
 
       for e in range(sess.run(self.epoch) + 1, self.epochs + 1):
         epoch_start = time()
