@@ -718,10 +718,10 @@ def preprocess_for_db(src: str, **preprocess_opts) -> Tuple[int, str]:
     # Try and preprocess it:
     status = 0
     contents = preprocess(src, **preprocess_opts)
-  except BadCodeException as e:
+  except errors.BadCodeException as e:
     status = 1
     contents = str(e)
-  except UglyCodeException as e:
+  except errors.UglyCodeException as e:
     status = 2
     contents = str(e)
 
@@ -752,9 +752,9 @@ def preprocess_file(path: str, inplace: bool = False,
         outfile.write(out)
     else:
       print(out)
-  except BadCodeException as e:
+  except errors.BadCodeException as e:
     logging.fatal(e, ret=1)
-  except UglyCodeException as e:
+  except errors.UglyCodeException as e:
     logging.fatal(e, ret=2)
 
 

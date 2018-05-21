@@ -29,15 +29,19 @@ from time import time
 import numpy as np
 from absl import logging
 
+from deeplearning.clgen import atomizers
 from deeplearning.clgen import cache
 from deeplearning.clgen import dbutil
 from deeplearning.clgen import errors
 from deeplearning.clgen import features
+from deeplearning.clgen import fetch
 from deeplearning.clgen import languages
+from deeplearning.clgen import preprocess
 from lib.labm8 import crypto
 from lib.labm8 import dirhashcache
 from lib.labm8 import fs
 from lib.labm8 import jsonutil
+from lib.labm8 import labtypes
 from lib.labm8 import lockfile
 from lib.labm8 import prof
 from lib.labm8 import tar
@@ -287,7 +291,7 @@ class Corpus(object):
             sorted(DEFAULT_CORPUS_OPTS.keys()))))
 
     self.opts = deepcopy(DEFAULT_CORPUS_OPTS)
-    types.update(self.opts, opts)
+    labtypes.update(self.opts, opts)
     self.opts["id"] = contentid
 
     # check that contentid exists
@@ -364,8 +368,8 @@ class Corpus(object):
       modified = False
       preprocess_time = time()
       encoding = self.opts["encoding"]
-      if clgen.preprocess_db(self.contentcache["kernels.db"],
-                             lang=self.language):
+      if preprocess.preprocess_db(self.contentcache["kernels.db"],
+                                  lang=self.language):
         modified = True
         encode_kernels_db(self.contentcache["kernels.db"], encoding)
     except Exception as e:
@@ -401,7 +405,7 @@ class Corpus(object):
     """ compute corpus hash """
     opts = deepcopy(opts)
     del opts["created"]
-    return crypto.sha1_list(contentid, *types.dict_values(opts))
+    return crypto.sha1_list(contentid, *labtypes.dict_values(opts))
 
   def _create_kernels_db(self, path: str) -> None:
     """creates and caches kernels.db"""
@@ -417,7 +421,7 @@ class Corpus(object):
                 fs.isfile(f)]
 
     # import files into database
-    clgen.fetch(self.contentcache["kernels.db"], filelist)
+    fetch.fetch(self.contentcache["kernels.db"], filelist)
 
   def _create_txt(self) -> None:
     """creates and caches corpus.txt"""
@@ -449,11 +453,11 @@ class Corpus(object):
 
       Returns
       -------
-      clgen.Atomizer
+      atomizers.Atomizer
           Atomizer.
       """
-      atomizers = {"char": clgen.CharacterAtomizer,
-                   "greedy": clgen.GreedyAtomizer, }
+      atomizers = {"char": atomizers.CharacterAtomizer,
+                   "greedy": atomizers.GreedyAtomizer, }
       atomizerclass = atomizers.get(vocab, None)
       if atomizerclass is None:
         raise errors.UserError("Unknown vocabulary type '{bad}'. "
@@ -685,7 +689,6 @@ class Corpus(object):
       if not fs.isdir(path):
         raise errors.UserError(
           "Corpus path '{}' is not a directory".format(path))
-
       dirhashcache_ = dirhashcache.DirHashCache(cache.cachepath("dirhash.db"),
                                                 'sha1')
       uid = prof.profile(dirhashcache_.dirhash, path)
