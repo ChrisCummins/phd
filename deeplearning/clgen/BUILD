@@ -80,6 +80,7 @@ py_test(
         ":conftest",
         "//deeplearning/clgen/tests:testlib",
         "//lib/labm8:fs",
+        "//lib/labm8:tar",
     ],
 )
 

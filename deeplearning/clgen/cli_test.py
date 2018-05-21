@@ -129,7 +129,7 @@ def test_cli_train(clgen_cache_dir):
       assert fs.isfile('corpus/99.cl')
       cli.main("--corpus-dir model.json".split())
       cli.main("--model-dir model.json".split())
-      cli.main("-v train model.json".split())
+      cli.main("train model.json".split())
 
 
 # def test_cli_sample(clgen_cache_dir):

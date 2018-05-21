@@ -522,6 +522,10 @@ class Corpus(object):
     self._size = len(self._tensor)
     self._num_batches = int(self.size / (batch_size * seq_length))
     if self.num_batches == 0:
+      # TODO(cec): Fix under bazel test.
+      print("!!!!! CORPUS")
+      print(data)
+      print("!!!!! END CORPUS")
       raise errors.UserError(
         "Not enough data. Use a smaller seq_length and batch_size. "
         f'Current data size = {self.size}, seq_length = {seq_length}, and '
