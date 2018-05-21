@@ -50,28 +50,32 @@ process for both is described below.
 ---------------------
 
 Our Docker image must be run on a Linux host with an Intel CPU. Instructions
-for installing docker may be found at:
-
-  https://docs.docker.com/install/
+for installing docker may be found at https://docs.docker.com/install/
 
 Build the docker container using:
 
-    $ sudo docker build -t deepsmith
+    $ sudo docker build -t deepsmith .
 
 Launch the docker container using:
 
-    $ sudo docker run -it deepsmith /bin/bash
+    $ sudo docker run -it deepsmith /bin/zsh
+
+The docker image contains Intel's OpenCL driver pre-installed. Run the command
+$ ./diagnose_me.sh to print various diagnostic information and the list of
+available OpenCL devices. You should see at least one entry (for your CPU).
+You may install drivers for additional OpenCL devices should you wish (see
+instructions in "Build from source" section).
 
 
 2.2. Build from source
 ----------------------
 
-Building from source is supported on Ubuntu Linux or macOS. Unfortunately
-Windows is not supported by many of our dependencies. Other Linux distributions
-may work, but we have not tested them, and our install.sh script uses the apt
-package manager to automate the installation of depdencies. If you have
-requirements for a specific Linux distribution that is not Ubuntu >= 16.04,
-please contact us.
+Building from source is supported only Ubuntu Linux or macOS, since
+unfortunately Windows is not supported by many of our dependencies. Other Linux
+distributions may work, but we have not tested them, and our install.sh script
+uses the apt package manager to automate the installation of depdencies. If you
+have requirements for a specific Linux distribution that is not Ubuntu >=
+16.04, please contact us.
 
 We use OpenCL as the programming language to demonstrate our approach. We
 require an OpenCL compiler to test. The installation process depends on what
@@ -111,11 +115,11 @@ preprocessed corpus, and generates 1000 new OpenCL programs.
 We have reduced the size of the corpus and network so that it takes around 2
 hours to train on a CPU. The model we used to generate the programs used in the
 review copy of our paper is much larger, is trained on more data, and is trained
-for longer. It takes around 2 days to train on a CPU.
+for longer. It takes around 2 days to train on a 16-core CPU.
 
 Once the script has completed, the generated programs are written to the
 directory ./01_evaluate_generator/output/generated_kernels. Testcases are
-generated for the kernels, found in
+generated for each of the kernels, found in
 ./01_evaluate_generator/output/generated_testcases.
 
 3.1.1. Extended Evaluation (optional)
@@ -166,7 +170,8 @@ In addition to running the testcases on multiple OpenCL devices, you could add
 more testcases to execute. For example, you could run the testcases generated
 by your model from the previous step:
 
-    $ rsync -avh ./01_evaluate_generator/output/generated_testcases/ \
+    $ rsync -avh \
+        ./01_evaluate_generator/output/generated_testcases/ \
         ./02_evaluate_harness/data/testcases/
     $ ./02_evaluate_harness/run.sh
 
@@ -181,9 +186,23 @@ Evaluate the DeepSmith difftester by running the following script:
 The script evaluates the results generated from your local system in the
 previous experiment, and differential tests the outputs against the data we
 used in the paper. At the end of execution, the script prints a table of
-classifications, using the same format as Table 2 of the paper. Individua
+classifications, using the same format as Table 2 of the paper. Individually
 classified results are available in
 ./03_evaluate_results/output/classifications/<class>/<device>/.
+
+3.3.1. Extended Evaluation (optional)
+
+The evaluation script difftests all results files from these directories:
+
+  ./02_evaluate_harness/output/results  # Results from your system
+  ./03_evaluate_harness/data/results    # Results from our machines
+
+You could add new results to this directory by either running the previous
+step on multiple OpenCL devices. Once a testcase has results from three or more
+devices, it will be difftested. Alternatively you could modify individual
+results files, such as by changing the returncode, to simulate different
+testcase outcomes, and observe how that influences the classification of
+results.
 
 
 4. Further Reading and References
