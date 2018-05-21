@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-import os
 import sys
 
 import pytest
@@ -27,40 +26,6 @@ import deeplearning.clgen.errors
 from deeplearning.clgen import errors
 from deeplearning.clgen import preprocess
 from deeplearning.clgen.tests import testlib as tests
-
-
-# Invoke tests with UPDATE_GS_FILES set to update the gold standard
-# tests. E.g.:
-#
-#   $ UPDATE_GS_FILES=1 python3 ./setup.py test
-#
-UPDATE_GS_FILES = True if 'UPDATE_GS_FILES' in os.environ else False
-
-
-def preprocess_pair(basename, preprocessor=preprocess.preprocess):
-  gs_path = tests.data_path(os.path.join('cl', str(basename) + '.gs'),
-                            exists=not UPDATE_GS_FILES)
-  tin_path = tests.data_path(os.path.join('cl', str(basename) + '.cl'))
-
-  # Run preprocess
-  tin = tests.data_str(tin_path)
-  tout = preprocessor(tin)
-
-  if UPDATE_GS_FILES:
-    gs = tout
-    with open(gs_path, 'w') as outfile:
-      outfile.write(gs)
-      print("\n-> updated gold standard file '{}' ...".format(gs_path),
-            file=sys.stderr, end=' ')
-  else:
-    gs = tests.data_str(gs_path)
-
-  return (gs, tout)
-
-
-@pytest.mark.skip(reason="TODO(cec)")
-def test_preprocess():
-  assert len(set(preprocess_pair('sample-1'))) == 1
 
 
 def test_compile_cl_bytecode_good_code():
