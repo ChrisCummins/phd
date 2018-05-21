@@ -87,52 +87,50 @@ ENV PATH /home/linuxbrew/.linuxbrew/bin:$PATH
 # Build the artifact.
 RUN cd $PHD/docs/2018_07_issta/artifact_evaluation && ./install.sh
 
-# TODO(cec): Once I've tested the artifact scripts.
+# TODO(cec): See if we can still eval artifact after this.
 # # Clean up.
-# RUN sudo -H -u linuxbrew bash -c \
-#     '/home/linuxbrew/.linuxbrew/bin/brew remove buildifier llvm'
-# RUN python3 -m pip uninstall virtualenv
-# RUN apt-get uninstall -y openjdk-8-jdk bazel texlive-full build-essential
-# RUN apt-get autoremove -y
-# RUN apt-get clean
-# RUN find / -name '.git' -type d -delete
-# RUN rm -rf \
-#     $HOME/.cache \
-#     $PHD/config \
-#     $PHD/datasets \
-#     $PHD/docs/2015_08_msc_thesis \
-#     $PHD/docs/2015_08_msc_thesis.pdf \
-#     $PHD/docs/2015_09_progression_review \
-#     $PHD/docs/2015_09_progression_review.pdf \
-#     $PHD/docs/2016_01_adapt \
-#     $PHD/docs/2016_01_adapt.pdf \
-#     $PHD/docs/2016_01_hlpgpu \
-#     $PHD/docs/2016_01_hlpgpu.pdf \
-#     $PHD/docs/2016_06_pldi \
-#     $PHD/docs/2016_06_pldi.pdf \
-#     $PHD/docs/2016_07_acaces \
-#     $PHD/docs/2016_07_acaces.pdf \
-#     $PHD/docs/2016_07_pact \
-#     $PHD/docs/2016_11_first_year_review \
-#     $PHD/docs/2016_11_first_year_review.pdf \
-#     $PHD/docs/2016_12_wip_taco \
-#     $PHD/docs/2017_02_cgo \
-#     $PHD/docs/2017_02_cgo.pdf \
-#     $PHD/docs/2017_09_pact \
-#     $PHD/docs/2017_09_pact.pdf \
-#     $PHD/experimental \
-#     $PHD/gpu \
-#     $PHD/http \
-#     $PHD/learn \
-#     $PHD/system \
-#     $PHD/talks \
-#     $PHD/third_party \
-#     $PHD/util \
-#     /home/linuxbrew/.cache \
-#     /tmp \
-#     /var/lib/apt/lists \
-#     /var/tmp
-# RUN mkdir /var/tmp /tmp /var/lib/apt/lists
+RUN sudo -H -u linuxbrew bash -c \
+    '/home/linuxbrew/.linuxbrew/bin/brew remove buildifier llvm'
+RUN python3 -m pip uninstall -y virtualenv
+RUN apt-get remove -y openjdk-8-jdk bazel texlive-full build-essential
+RUN apt-get autoremove -y
+RUN apt-get clean
+RUN find / -name '.git' -type d -exec rm -rfv {} \; || true
+RUN rm -rf \
+    $HOME/.cache \
+    $PHD/config \
+    $PHD/datasets \
+    $PHD/docs/2015_08_msc_thesis \
+    $PHD/docs/2015_08_msc_thesis.pdf \
+    $PHD/docs/2015_09_progression_review \
+    $PHD/docs/2015_09_progression_review.pdf \
+    $PHD/docs/2016_01_adapt \
+    $PHD/docs/2016_01_adapt.pdf \
+    $PHD/docs/2016_01_hlpgpu \
+    $PHD/docs/2016_01_hlpgpu.pdf \
+    $PHD/docs/2016_06_pldi \
+    $PHD/docs/2016_06_pldi.pdf \
+    $PHD/docs/2016_07_acaces \
+    $PHD/docs/2016_07_acaces.pdf \
+    $PHD/docs/2016_07_pact \
+    $PHD/docs/2016_11_first_year_review \
+    $PHD/docs/2016_11_first_year_review.pdf \
+    $PHD/docs/2016_12_wip_taco \
+    $PHD/docs/2017_02_cgo \
+    $PHD/docs/2017_02_cgo.pdf \
+    $PHD/docs/2017_09_pact \
+    $PHD/docs/2017_09_pact.pdf \
+    $PHD/experimental \
+    $PHD/http \
+    $PHD/learn \
+    $PHD/talks \
+    $PHD/third_party \
+    $PHD/util \
+    /home/linuxbrew/.cache \
+    /tmp \
+    /var/lib/apt/lists \
+    /var/tmp
+RUN mkdir $HOME/.cache /var/tmp /var/lib/apt/lists
 
 WORKDIR $PHD/docs/2018_07_issta/artifact_evaluation
 CMD [clinfo]
