@@ -5,12 +5,17 @@ subsequent hashes are cache hits. Hashes are recomputed lazily, when a
 directory (or any of its subdirectories) have been modified.
 """
 import os
+import sqlite3
 import time
 
 import checksumdir
-import sqlite3
 
 from lib.labm8 import fs
+
+
+class DirHashCacheError(sqlite3.OperationalError):
+  """Exception thrown in case of an error with the cache database."""
+  pass
 
 
 class DirHashCache(object):
@@ -25,7 +30,10 @@ class DirHashCache(object):
     self.path = fs.path(path)
     self.hash = hash
 
-    db = sqlite3.connect(self.path)
+    try:
+      db = sqlite3.connect(self.path)
+    except sqlite3.OperationalError:
+      raise DirHashCacheError(f'could not connect to database {self.path}')
     c = db.cursor()
     c.execute("""\
 CREATE TABLE IF NOT EXISTS dirhashcache (
@@ -60,8 +68,8 @@ CREATE TABLE IF NOT EXISTS dirhashcache (
     """
     path = fs.path(path)
     last_modified = time.ctime(max(
-        max(os.path.getmtime(os.path.join(root, file)) for file in files)
-        for root, _, files in os.walk(path)))
+      max(os.path.getmtime(os.path.join(root, file)) for file in files) for
+      root, _, files in os.walk(path)))
 
     db = sqlite3.connect(self.path)
     c = db.cursor()
