@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from absl import flags
 
-from deeplearning.clgen import config
+from deeplearning.clgen import clgen_config as config
 from lib.labm8 import fs
 from lib.labm8 import system
 from lib.labm8 import tar

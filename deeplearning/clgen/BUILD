@@ -79,8 +79,8 @@ py_library(
 )
 
 py_library(
-    name = "config",
-    srcs = ["config.py"],
+    name = "clgen_config",
+    srcs = ["clgen_config.py"],
     visibility = ["//deeplearning/clgen:__subpackages__"],
 )
 
