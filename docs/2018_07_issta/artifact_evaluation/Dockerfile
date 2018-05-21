@@ -81,6 +81,9 @@ RUN /root/phd/system/dotfiles/run -v Zsh
 # Install and configure my preferred editor.
 ENV /root/phd/system/dotfiles/run -v Vim
 
+# Add out newly-minted python3 to the PATH.
+ENV PATH /home/linuxbrew/.linuxbrew/bin:$PATH
+
 # Build the artifact.
 RUN cd $PHD/docs/2018_07_issta/artifact_evaluation && ./install.sh
 
