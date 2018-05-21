@@ -116,12 +116,16 @@ def features(path: str, file=sys.stdout, fatal_errors: bool = False,
   quiet : bool, optional
       Don't print compiler output on errors.
   """
-  path = package_util.must_exist(path)
+  # On Linux we must preload the clang library.
+  env = os.environ
+  if native.LIBCLANG_SO:
+    env = os.environ.copy()
+    env['LD_PRELOAD'] = native.LIBCLANG_SO
 
+  path = package_util.must_exist(path)
   cmd = [native.CLGEN_FEATURES, path] + ['-extra-arg=' + x for x in
                                          _shim_args(use_shim=use_shim)]
-
-  process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+  process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env)
   stdout, stderr = process.communicate()
   stdout, stderr = stdout.decode('utf-8'), stderr.decode('utf-8')
 
