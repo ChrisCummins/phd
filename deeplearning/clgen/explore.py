@@ -21,7 +21,7 @@ Exploratory analysis of OpenCL dataset
 """
 import locale
 
-from deeplearning.tmp_clgen import dbutil
+from deeplearning.clgen import dbutil
 
 
 IMG_DIR = 'img'

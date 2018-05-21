@@ -166,9 +166,11 @@ py_library(
 py_test(
     name = "explore_test",
     srcs = ["explore_test.py"],
+    data = ["//deeplearning/clgen/tests/data:tiny"],
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
+        ":conftest",
         ":corpus",
         ":explore",
         "//deeplearning/clgen/tests:testlib",
