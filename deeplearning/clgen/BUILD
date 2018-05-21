@@ -86,8 +86,8 @@ py_library(
 
 py_library(
     name = "conftest",
-    srcs = ["conftest.py"],
     testonly = True,
+    srcs = ["conftest.py"],
 )
 
 py_library(
@@ -97,11 +97,11 @@ py_library(
         ":atomizers",
         ":cache",
         ":dbutil",
-        ":fetch",
-        ":preprocess",
         ":errors",
         ":features",
+        ":fetch",
         ":languages",
+        ":preprocess",
         "//lib/labm8:crypto",
         "//lib/labm8:dirhashcache",
         "//lib/labm8:fs",
@@ -117,9 +117,9 @@ py_library(
 py_test(
     name = "corpus_test",
     srcs = ["corpus_test.py"],
+    data = ["//deeplearning/clgen/tests/data:tiny"],
     default_python_version = "PY3",
     srcs_version = "PY3",
-    data = ["//deeplearning/clgen/tests/data:tiny"],
     deps = [
         ":conftest",
         ":corpus",
@@ -202,6 +202,7 @@ py_library(
 py_test(
     name = "fetch_test",
     srcs = ["fetch_test.py"],
+    data = ["//deeplearning/clgen/tests/data:cl_kernels"],
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
