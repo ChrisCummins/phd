@@ -9,23 +9,23 @@ package phd;
 // repository by the bootstrap script, with path ./config.pbtxt.
 message GlobalConfig {
   // The path to the root of the repository.
-  optional GlobalConfigPaths paths = 1;
+  required GlobalConfigPaths paths = 1;
   // Whether or not the repository is configured to use CUDA.
-  optional bool with_cuda = 2;
+  required bool with_cuda = 2;
 }
 
 // A list of absolute paths to import system files and directories.
 message GlobalConfigPaths {
   // The root directory of the repository.
-  optional string repo_root = 1;
+  required string repo_root = 1;
   // The path of the system $CC compiler.
-  optional string cc = 2;
+  required string cc = 2;
   // The path of the system $CXX compiler.
-  optional string cxx = 3;
+  required string cxx = 3;
   // The path of the system LLVM optimizer.
-  optional string opt = 4;
+  required string opt = 4;
   // The path of the system clang_format.
-  optional string clang_format = 5;
+  required string clang_format = 5;
   // The path of the system python.
-  optional string python = 6;
+  required string python = 6;
 }
