@@ -19,6 +19,6 @@ def clgen_cache_dir() -> str:
   Returns:
     The location of $CLGEN_CACHE.
   """
-  with tempfile.TemporaryDirectory() as d:
+  with tempfile.TemporaryDirectory(prefix='clgen_cache_') as d:
     os.environ['CLGEN_CACHE'] = d
     yield d
