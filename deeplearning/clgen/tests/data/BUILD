@@ -29,6 +29,8 @@ filegroup(
 filegroup(
     name = "tiny",
     srcs = [
+        "tiny.tar.bz2",
+        "tiny-gh.db.tar.bz2",
         "tiny/corpus.tar.bz2",
         "tiny/model.json",
         "tiny/sampler.json",
