@@ -16,9 +16,6 @@ more details.
 1. Artifact Contents
 ====================
 
-  install.sh
-    Our automated installation process.
-
   01_evaluate_generator/
     A demonstration of training a DeepSmith model to generate programs.
 
@@ -35,53 +32,57 @@ more details.
     A script which reports various diagnostic information about your system.
 
 
-2. Requirements
+2. Installation
 ===============
-
-2.1 Operating system
---------------------
-
-Ubuntu Linux or macOS. Unfortunately Windows is not supported by many of our
-dependencies. Other Linux distributions may work, but we have not tested them,
-and our install.sh script uses the apt package manager to automate the
-installation of depdencies. If you have requirements for a specific Linux
-distribution that is not Ubuntu >= 16.04, please contact us.
-
-
-2.2 Disk space
---------------
-
-We have not optimized our artifact for space, requiring approximately 6GB of
-disk space in total. Please contact us if this is an issue.
-
-
-2.3 OpenCL
-----------
-
-We use OpenCL as the programming language to demonstrate our approach. We
-require an OpenCL compiler to test. The installation process depends on what
-hardware you have available on your system. OpenCL drivers are typically
-distributed as part of GPU driver packages or as standalone SDKs. Please refer
-to your manufactures documentation:
-
-  Intel   https://software.intel.com/en-us/intel-opencl
-  NVIDIA  http://www.nvidia.com/drivers
-  AMD     https://www.amd.com/en-us/solutions/professional/hpc/opencl
-
-On macOS, OpenCL support is built in.
-
-
-3. Instructions
-===============
-
-3.1. Installation (approximate runtime: 1 hour).
------------------
 
 If you have not already, please clone this git repository and change to this
 directory:
 
     $ git clone https://github.com/ChrisCummins/phd.git
     $ cd phd/docs/2018_07_issta/artifact_evaluation
+
+There are two options for evaluating our artifact: either using a
+self-contained Docker image or by building from source. The installation
+process for both is described below.
+
+
+2.1. Docker container
+---------------------
+
+Our Docker image must be run on a Linux host with an Intel CPU. Instructions
+for installing docker may be found at:
+
+  https://docs.docker.com/install/
+
+Build the docker container using:
+
+    $ sudo docker build -t deepsmith
+
+Launch the docker container using:
+
+    $ sudo docker run -it deepsmith /bin/bash
+
+
+2.2. Build from source
+----------------------
+
+Building from source is supported on Ubuntu Linux or macOS. Unfortunately
+Windows is not supported by many of our dependencies. Other Linux distributions
+may work, but we have not tested them, and our install.sh script uses the apt
+package manager to automate the installation of depdencies. If you have
+requirements for a specific Linux distribution that is not Ubuntu >= 16.04,
+please contact us.
+
+We use OpenCL as the programming language to demonstrate our approach. We
+require an OpenCL compiler to test. The installation process depends on what
+hardware you have available on your system. On macOS, OpenCL support is built
+in. OpenCL drivers on Linux are typically distributed as part of GPU driver
+packages or as standalone SDKs. Please refer to your manufacturers
+documentation:
+
+  Intel   https://software.intel.com/en-us/intel-opencl
+  NVIDIA  http://www.nvidia.com/drivers
+  AMD     https://www.amd.com/en-us/solutions/professional/hpc/opencl
 
 Install local and system-wide dependencies using the command:
 
@@ -92,7 +93,11 @@ some time. In case of a problem at this stage, please run the ./diagnose_me.sh
 command and send the output to us.
 
 
-3.2. Evaluate the generator (approximate runtime: 2.5 hours)
+2. Evaluating the artifact
+==========================
+
+
+3.1. Evaluate the generator (approximate runtime: 2.5 hours)
 ---------------------------
 
 Evaluate the DeepSmith generator by running the following script:
@@ -113,7 +118,7 @@ directory ./01_evaluate_generator/output/generated_kernels. Testcases are
 generated for the kernels, found in
 ./01_evaluate_generator/output/generated_testcases.
 
-3.2.1. Extended Evaluation (optional)
+3.1.1. Extended Evaluation (optional)
 
 By changing the parameters of the model defined in the
 ./01_evaluate_generator/run.sh script, you could evaluate the output of models
@@ -123,7 +128,7 @@ You could also change the corpus by adding additional OpenCL files, removing
 files and training on only a subset, etc.
 
 
-3.3. Evaluate the harness (approximate runtime: 30 minutes)
+3.2. Evaluate the harness (approximate runtime: 30 minutes)
 -------------------------
 
 Evaluate the DeepSmith harness by running a set of testcases on your local
@@ -155,7 +160,7 @@ The results of execution are written to the directories
 ./02_evaluate_harnesses/output/results/<device_id>/. Each file in these
 directories stores the result of a single testcase execution. Open the files
 
-3.3.3. Extended Evaluation (optional)
+3.2.1. Extended Evaluation (optional)
 
 In addition to running the testcases on multiple OpenCL devices, you could add
 more testcases to execute. For example, you could run the testcases generated
@@ -166,7 +171,7 @@ by your model from the previous step:
     $ ./02_evaluate_harness/run.sh
 
 
-3.4. Evaluate the results (approximate runtime: 5 minutes)
+3.3. Evaluate the results (approximate runtime: 5 minutes)
 -------------------------
 
 Evaluate the DeepSmith difftester by running the following script:
