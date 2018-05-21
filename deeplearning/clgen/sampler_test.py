@@ -29,14 +29,15 @@ from deeplearning.clgen.tests import testlib as tests
 
 def _get_test_model():
   return model.Model.from_json({"corpus": {"language": "opencl",
-                                           "path": tests.data_path("tiny",
-                                                                   "corpus"), },
+                                           "path": tests.archive("tiny",
+                                                                 "corpus"), },
                                 "architecture": {"rnn_size": 8,
                                                  "num_layers": 2, },
                                 "train_opts": {"epochs": 1}})
 
 
-def test_sample():
+def test_sample(clgen_cache_dir):
+  del clgen_cache_dir
   m = _get_test_model()
   m.train()
 
@@ -63,7 +64,8 @@ def test_sample():
   assert diff >= 1
 
 
-def test_eq():
+def test_eq(clgen_cache_dir):
+  del clgen_cache_dir
   s1 = sampler.Sampler.from_json({"kernels": {"language": "opencl",
                                               "args": ['__global float*',
                                                        '__global float*',
@@ -81,7 +83,8 @@ def test_eq():
   assert s1 != 'abcdef'
 
 
-def test_to_json():
+def test_to_json(clgen_cache_dir):
+  del clgen_cache_dir
   s1 = sampler.Sampler.from_json({"kernels": {"language": "opencl",
                                               "args": ['__global float*',
                                                        '__global float*',

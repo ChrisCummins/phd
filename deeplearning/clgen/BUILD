@@ -355,9 +355,11 @@ py_library(
 py_test(
     name = "sampler_test",
     srcs = ["sampler_test.py"],
+    data = ["//deeplearning/clgen/tests/data:tiny"],
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
+        ":conftest",
         ":dbutil",
         ":model",
         ":sampler",
