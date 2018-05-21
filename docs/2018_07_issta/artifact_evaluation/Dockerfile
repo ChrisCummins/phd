@@ -51,7 +51,7 @@ ENV USER docker
 ENV PHD /root/phd
 
 # Git commit IDs of our dependencies.
-ENV PHD_VERSION 54ffea4b126af927b16dc1c73cdd55d28093b00e
+ENV PHD_VERSION fb0fcf59d3c6c8451ba44b1bb2b2db41ddaf9af7
 ENV CLGEN_VERSION 1c126b5bb9ace265fe9bc25f8beef6702a169fec
 
 # Clone the source code for this project.
