@@ -115,6 +115,8 @@ paths {
   repo_root: "$ROOT"
   cc: "$(which clang)"
   cxx: "$(which clang++)"
+  opt: "$(which opt)"
+  clang_format: "$(which clang-format)"
   python: "$PYTHON"
 }
 # TODO(cec): Enable cuda support through a flag at bootstrap time.

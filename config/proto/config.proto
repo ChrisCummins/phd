@@ -22,6 +22,10 @@ message GlobalConfigPaths {
   optional string cc = 2;
   // The path of the system $CXX compiler.
   optional string cxx = 3;
+  // The path of the system LLVM optimizer.
+  optional string opt = 4;
+  // The path of the system clang_format.
+  optional string clang_format = 5;
   // The path of the system python.
-  optional string python = 4;
+  optional string python = 6;
 }
