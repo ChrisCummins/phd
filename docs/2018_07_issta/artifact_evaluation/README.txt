@@ -35,12 +35,6 @@ more details.
 2. Installation
 ===============
 
-If you have not already, please clone this git repository and change to this
-directory:
-
-    $ git clone https://github.com/ChrisCummins/phd.git
-    $ cd phd/docs/2018_07_issta/artifact_evaluation
-
 There are two options for evaluating our artifact: either using a
 self-contained Docker image or by building from source. The installation
 process for both is described below.
@@ -52,9 +46,15 @@ process for both is described below.
 Our Docker image must be run on a Linux host with an Intel CPU. Instructions
 for installing docker may be found at https://docs.docker.com/install/
 
+Download our Dockerfile:
+
+    $ mkdir -p /tmp/deepsmith
+    $ wget -O/tmp/deepsmith/Dockerfile \
+        https://raw.githubusercontent.com/ChrisCummins/phd/master/docs/2018_07_issta/artifact_evaluation/Dockerfile
+
 Build the docker container using:
 
-    $ sudo docker build -t deepsmith .
+    $ sudo docker build -t deepsmith /tmp/deepsmith
 
 Launch the docker container using:
 
@@ -87,6 +87,12 @@ documentation:
   Intel   https://software.intel.com/en-us/intel-opencl
   NVIDIA  http://www.nvidia.com/drivers
   AMD     https://www.amd.com/en-us/solutions/professional/hpc/opencl
+
+If you have not already, please clone this git repository and change to this
+directory:
+
+    $ git clone https://github.com/ChrisCummins/phd.git
+    $ cd phd/docs/2018_07_issta/artifact_evaluation
 
 Install local and system-wide dependencies using the command:
 
