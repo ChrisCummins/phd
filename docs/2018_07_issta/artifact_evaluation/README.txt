@@ -135,11 +135,11 @@ At the end of the script output is a list of the available OpenCL devices on
 this system. For example:
 
     Available OpenCL devices:
-        1±:  Device: Intel(R) Core(TM) i5-3570K CPU @ 3.40GHz, Platform: Apple
-        2±:  Device: GeForce GTX 970, Platform: Apple
+        1:  Device: Intel(R) Core(TM) i5-3570K CPU @ 3.40GHz, Platform: Apple
+        2:  Device: GeForce GTX 970, Platform: Apple
 
-Each item in the list is prefixed by a number and a ± sign. Pass this number,
-and either + or - (for OpenCL optimizations on or off, respectively), to the
+Each item in the list is prefixed by a number. Pass this number, and either +
+or - (for OpenCL optimizations on or off, respectively), to the
 experiment script:
 
     $ ./02_evaluate_harness/run.sh  <DEVICE_ID>
