@@ -20,6 +20,7 @@
 OpenCL feature extraction.
 """
 import csv
+import os
 import re
 import sys
 from collections import OrderedDict
@@ -28,7 +29,6 @@ from subprocess import PIPE, Popen
 from typing import List, TextIO
 
 import numpy as np
-from absl import logging
 
 from deeplearning.clgen import errors
 from deeplearning.clgen import native
@@ -49,7 +49,7 @@ def _shim_args(use_shim: bool = False) -> list:
   return args
 
 
-def _is_features(line: int) -> bool:
+def _is_features(line: str) -> bool:
   """true if features"""
   return len(line) == 10
 
@@ -90,14 +90,13 @@ def to_np_arrays(paths: List[str], **kwargs):
       parse = lambda l: np.array([float(x) for x in l.split(',')[2:]])
       return [parse(line) for line in lines]
     except IndexError:
-      logging.error("lines:", lines)
       raise FeatureExtractionError
 
   flatten = lambda l: [item for sublist in l for item in sublist]
   return flatten([_process_file(path, **kwargs) for path in paths])
 
 
-# FIXME(polyglot):
+# FIXME(polyglot): Add support for multiple languages.
 def features(path: str, file=sys.stdout, fatal_errors: bool = False,
              use_shim: bool = False, quiet: bool = False) -> None:
   """
