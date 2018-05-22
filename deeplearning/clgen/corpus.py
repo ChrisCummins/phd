@@ -4,6 +4,7 @@ A training corpus is a set of one or more "contentfiles", where each contentfile
 is a file containing text to train over.
 """
 import codecs
+import math
 import pathlib
 import pickle
 import re
@@ -382,7 +383,7 @@ WHERE ContentFiles.id NOT IN (
     sep = self.config.contentfile_separator or '\n\n'
     return sep.join(row[0] for row in c.fetchall())
 
-  def _CreateBatches(self, shuffle: bool) -> None:
+  def CreateBatches(self, batch_size: int, shuffle: bool) -> None:
     """Create batches for training.
 
     Args:
@@ -396,20 +397,19 @@ WHERE ContentFiles.id NOT IN (
     # encode corpus into vocab indices
     self._tensor = self.atomizer.AtomizeString(data)
 
-    batch_size = self.batch_size
-    seq_length = self.seq_length
-
     # set corpus size and number of batches
     self._size = len(self._tensor)
-    self._num_batches = int(self.size / (batch_size * seq_length))
-    if self.num_batches == 0:
+    # TODO(cec): Investigate this. Use math.floor() seems one batch too few?
+    self._num_batches = math.floor(self.size / (batch_size * self.seq_length))
+    if not self.num_batches:
       raise errors.UserError(
         "Not enough data. Use a smaller seq_length and batch_size. "
-        f'Current data size = {self.size}, seq_length = {seq_length}, and '
+        f'Current data size = {self.size}, seq_length = {self.seq_length}, and '
         f'batch_size {batch_size}.')
 
     # split into batches
-    self._tensor = self._tensor[:self.num_batches * batch_size * seq_length]
+    self._tensor = self._tensor[
+                   :self.num_batches * batch_size * self.seq_length]
     xdata = self._tensor
     ydata = np.copy(self._tensor)
     ydata[:-1] = xdata[1:]
@@ -429,11 +429,6 @@ WHERE ContentFiles.id NOT IN (
     return lockfile.LockFile(lockpath)
 
   @property
-  def batch_size(self) -> int:
-    # TODO(cec): This has been moved into Model and Sampler protos.
-    return 50
-
-  @property
   def seq_length(self) -> int:
     return self.config.sequence_length
 
@@ -445,7 +440,7 @@ WHERE ContentFiles.id NOT IN (
     try:
       return self._size
     except AttributeError:
-      self._CreateBatches(False)
+      self._size = self.ConcatenateTextCorpus(False)
       return self._size
 
   @property
@@ -453,7 +448,7 @@ WHERE ContentFiles.id NOT IN (
     try:
       return self._num_batches
     except AttributeError:
-      self._CreateBatches(False)
+      self.CreateBatches(1, False)
       return self._num_batches
 
   def ResetBatchPointer(self) -> None:

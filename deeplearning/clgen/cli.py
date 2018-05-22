@@ -174,7 +174,7 @@ def _register_train_parser(self, parent: ArgumentParser) -> None:
   def _main(model_file: TextIO) -> None:
     model_json = jsonutil.loads(model_file.read())
     model_ = model.Model.from_json(model_json)
-    model_.train()
+    model_.Train()
     logging.info("done.")
 
   parser = parent.add_parser("train", aliases=["t", "tr"], help="train models",
@@ -198,7 +198,7 @@ def _register_sample_parser(self, parent: ArgumentParser) -> None:
     sampler_json = jsonutil.loads(sampler_file.read())
     sampler_ = sampler.Sampler.from_json(sampler_json)
 
-    model_.train()
+    model_.Train()
     sampler_.sample(model_)
 
   parser = parent.add_parser("sample", aliases=["s", "sa"],
@@ -365,7 +365,7 @@ def _register_ls_parser(self, parent: ArgumentParser) -> None:
     """
 
     def _main() -> None:
-      print(model.models_to_tab(*model.models()))
+      print(model.ModelsToTable(*model.GetAllModels()))
 
     parser = parent.add_parser("models", help="list cached models",
                                description=inspect.getdoc(self),

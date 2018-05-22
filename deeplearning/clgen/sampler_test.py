@@ -22,7 +22,7 @@ def _get_test_model():
 def test_sample(clgen_cache_dir):
   del clgen_cache_dir
   m = _get_test_model()
-  m.train()
+  m.Train()
 
   argspec = ['__global float*', '__global float*', '__global float*',
              'const int']

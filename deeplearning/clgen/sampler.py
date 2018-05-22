@@ -99,7 +99,7 @@ class SampleProducer(Thread):
     if model.lock.islocked:  # model is locked during training
       raise lockfile.UnableToAcquireLockError(self.lock)
 
-    tf = model._init_tensorflow(infer=True)
+    tf = model._InitAndGetTensorflow(infer=True)
 
     # seed RNG
     np.random.seed(self.kernel_opts["seed"])
