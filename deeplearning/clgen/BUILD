@@ -103,6 +103,10 @@ py_library(
     name = "conftest",
     testonly = True,
     srcs = ["conftest.py"],
+    deps = [
+        "//deeplearning/clgen/proto:corpus_py_pb2",
+        "//deeplearning/clgen/proto:model_py_pb2",
+    ],
 )
 
 py_library(

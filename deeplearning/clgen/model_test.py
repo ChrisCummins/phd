@@ -6,35 +6,10 @@ import pytest
 from absl import app
 
 from deeplearning.clgen import model
-from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.tests import testlib as tests
 from lib.labm8 import crypto
 from lib.labm8 import fs
-
-
-@pytest.fixture(scope='function')
-def abc_corpus_config(abc_corpus):
-  """The proto config for a simple Corpus."""
-  return corpus_pb2.Corpus(language="opencl", path=abc_corpus,
-                           ascii_character_atomizer=True, sequence_length=2,
-                           contentfile_separator='\n\n')
-
-
-@pytest.fixture(scope='function')
-def abc_model_config(abc_corpus_config):
-  """The proto config for a simple Model."""
-  architecture = model_pb2.NetworkArchitecture(
-    neuron_type=model_pb2.NetworkArchitecture.LSTM, neurons_per_layer=8,
-    num_layers=2)
-  training = model_pb2.TrainingOptions(num_epochs=1,
-                                       shuffle_corpus_contentfiles_between_epochs=False,
-                                       batch_size=5, gradient_clip=5,
-                                       initial_learning_rate=0.001,
-                                       percent_learning_rate_decay_per_epoch=5,
-                                       save_intermediate_checkpoints=False)
-  return model_pb2.Model(corpus=abc_corpus_config, architecture=architecture,
-                         training=training)
 
 
 # The Model.hash for a Model instance of abc_model_config.
