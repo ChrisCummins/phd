@@ -51,17 +51,15 @@ Build the docker container using:
 $ sudo docker build -t deepsmith .
 ```
 
-Launch the docker container using:
+Launch an interactive shell in the docker container using:
 
 ```sh
 $ sudo docker run -it deepsmith /bin/zsh
 ```
 
-The docker image contains Intel's OpenCL driver pre-installed. Run the command
-`./diagnose_me.sh` to print various diagnostic information and the list of
-available OpenCL devices. You should see at least one entry (for your CPU).
-You may install drivers for additional OpenCL devices should you wish (see
-instructions in "Build from source" section).
+The docker image contains everything you need to evaluate our artifact 
+pre-installed, including an Intel OpenCL driver. Should you wish, you may 
+install drivers for additional OpenCL devices you have available on your system.
 
 
 ### 2.2. Build from source
