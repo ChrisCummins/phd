@@ -78,6 +78,15 @@ py_library(
     ],
 )
 
+py_test(
+    name = "dirhashcache_test",
+    size = "small",
+    srcs = ["dirhashcache_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [":dirhashcache"],
+)
+
 py_library(
     name = "fs",
     srcs = ["fs.py"],

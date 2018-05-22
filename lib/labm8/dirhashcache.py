@@ -13,22 +13,38 @@ import checksumdir
 from lib.labm8 import fs
 
 
+# A list of all the supported hash functions.
+HASH_FUNCTIONS = ['md5', 'sha1', 'sha256', 'sha512']
+
+
 class DirHashCacheError(sqlite3.OperationalError):
   """Exception thrown in case of an error with the cache database."""
   pass
 
 
 class DirHashCache(object):
-  def __init__(self, path, hash='sha1'):
+  """A persistent database for directory checksums."""
+
+  def __init__(self, database_path: str, hash_function: str = 'sha1'):
     """
     Instantiate a directory checksum cache.
 
     Arguments:
-        path (str): Path to persistent cache store.
-        hash (str, optional): Hash algorithm to use, e.g. 'md5', 'sha1'.
+      database_path (str): Path to persistent cache store.
+      hash_function (str, optional): The name of the hash algorithm to use.
+        See HASH_FUNCTIONS for a list of acceptable values.
+
+    Raises:
+      ValueError: If hash_function is not one of HASH_FUNCTIONS.
+      DirHashCacheError: If the requested database_path could not be connected
+        to.
     """
-    self.path = fs.path(path)
-    self.hash = hash
+    self.path = fs.path(database_path)
+    self.hash = hash_function
+
+    if hash_function not in HASH_FUNCTIONS:
+      raise ValueError(f'Unsupported hash_function "{hash_function}". '
+                       'Available hash functions: ' + ', '.join(HASH_FUNCTIONS))
 
     try:
       db = sqlite3.connect(self.path)
