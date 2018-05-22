@@ -1,6 +1,8 @@
 """Hashing and cryptography utils.
 """
 import hashlib
+import pathlib
+import typing
 
 
 def _checksum(hash_fn, data):
@@ -16,7 +18,7 @@ def _checksum_list(hash_fn, *elems):
   return _checksum_str(hash_fn, string)
 
 
-def _checksum_file(hash_fn, path):
+def _checksum_file(hash_fn, path: typing.Union[str, pathlib.Path]):
   with open(path, 'rb') as infile:
     ret = _checksum(hash_fn, infile.read())
   return ret
@@ -61,7 +63,7 @@ def sha1_list(*elems):
   return _checksum_list(hashlib.sha1, *elems)
 
 
-def sha1_file(path):
+def sha1_file(path: typing.Union[str, pathlib.Path]):
   """
   Return the sha1 of file at "path".
 
@@ -113,7 +115,7 @@ def md5_list(*elems):
   return _checksum_list(hashlib.md5, *elems)
 
 
-def md5_file(path):
+def md5_file(path: typing.Union[str, pathlib.Path]):
   """
   Return the md5 of file at "path".
 
@@ -165,7 +167,7 @@ def sha256_list(*elems):
   return _checksum_list(hashlib.sha256, *elems)
 
 
-def sha256_file(path):
+def sha256_file(path: typing.Union[str, pathlib.Path]):
   """
   Return the sha256 of file at "path".
 
