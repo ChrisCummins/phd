@@ -1,12 +1,11 @@
 import os
 import pathlib
-import typing
 
 from lib.labm8 import cache
 from lib.labm8 import fs
 
 
-def cachepath(*relative_path_components: typing.List[str]) -> pathlib.Path:
+def cachepath(*relative_path_components: str) -> pathlib.Path:
   """
   Return path to file system cache.
 
@@ -25,7 +24,7 @@ def cachepath(*relative_path_components: typing.List[str]) -> pathlib.Path:
   return pathlib.Path(fs.path(cache_root, *relative_path_components))
 
 
-def mkcache(*relative_path_components: typing.List[str]) -> cache.FSCache:
+def mkcache(*relative_path_components: str) -> cache.FSCache:
   """
   Instantiae a file system cache.
 
@@ -47,7 +46,7 @@ def mkcache(*relative_path_components: typing.List[str]) -> cache.FSCache:
                        escape_key=cache.escape_path)
 
 
-def ShortHash(hash: str, cachedir: str, min_len: int = 7) -> str:
+def ShortHash(fullhash: str, cache_dir: pathlib.Path, min_len: int = 7) -> str:
   """
   Truncate the hash to a shorter length, while maintaining uniqueness.
 
@@ -56,9 +55,9 @@ def ShortHash(hash: str, cachedir: str, min_len: int = 7) -> str:
 
   Parameters
   ----------
-  hash : str
+  fullhash : str
       Hash to truncate.
-  cachedir : str
+  cache_dir : str
       Path to cache.
   min_len : int, optional
       Minimum length of hash to try.
@@ -68,9 +67,9 @@ def ShortHash(hash: str, cachedir: str, min_len: int = 7) -> str:
   str
       Truncated hash.
   """
-  for shorthash_len in range(min_len, len(hash)):
-    entries = [x[:shorthash_len] for x in fs.ls(cachedir)]
+  for shorthash_len in range(min_len, len(fullhash)):
+    entries = [x[:shorthash_len] for x in fs.ls(cache_dir)]
     if len(entries) == len(set(entries)):
       break
 
-  return hash[:shorthash_len]
+  return fullhash[:shorthash_len]

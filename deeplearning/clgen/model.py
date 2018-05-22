@@ -298,7 +298,9 @@ class Model(object):
         sess.run(tf.assign(self.learning_rate, new_learning_rate))
         sess.run(tf.assign(self.epoch, e))
 
-        self.corpus.create_batches()
+        # TODO(cec): Once Model proto is set, use field
+        # training.shuffle_corpus_contentfiles_between_epochs
+        self.corpus._CreateBatches(shuffle=True)
 
         state = sess.run(self.initial_state)
         for b in range(self.corpus.num_batches):
