@@ -306,8 +306,7 @@ class Corpus(object):
     self.kernels_db = self.contentcache.keypath('kernels.db')
 
     self.hash = self._hash(contentid, self.opts)
-    self.cache = cache.mkcache("corpus", f"{self.language}-"
-                                         f"{self.hash}")
+    self.cache = cache.mkcache("corpus", f"{self.language}-{self.hash}")
 
     logging.debug("contentfiles {self.contentid}".format(**vars()))
     logging.debug("corpus {hash}".format(hash=self.hash))
