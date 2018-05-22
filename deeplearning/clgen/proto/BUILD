@@ -24,8 +24,8 @@ py_proto_library(
 
 py_proto_library(
     name = "model_py_pb2",
-    protos = ["model.proto"],
     proto_deps = [":corpus_py_pb2"],
+    protos = ["model.proto"],
 )
 
 py_proto_library(
