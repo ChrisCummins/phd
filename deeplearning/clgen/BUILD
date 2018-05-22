@@ -243,7 +243,6 @@ py_library(
         ":cache",
         ":corpus",
         ":errors",
-        "//deeplearning/clgen/proto:corpus_py_pb2",
         "//deeplearning/clgen/proto:model_py_pb2",
         "//lib/labm8:crypto",
         "//lib/labm8:fs",
