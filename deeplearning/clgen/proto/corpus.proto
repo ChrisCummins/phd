@@ -16,7 +16,7 @@ message Corpus {
   // The atomizer to use to encode the corpus.
   oneof atomizer {
     bool ascii_character_atomizer = 20;
-    GreedyMulticharTokenizer greedy_multichar_atomizer = 21;
+    GreedyMulticharAtomizer greedy_multichar_atomizer = 21;
   }
 
   // A list of preprocessor passes to run on each contentfile in the corpus
@@ -26,7 +26,7 @@ message Corpus {
   optional string contentfile_separator = 32;
 }
 
-message GreedyMulticharTokenizer {
+message GreedyMulticharAtomizer {
   // A list of multi-character tokens.
   repeated string tokens = 1;
 }
