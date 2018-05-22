@@ -861,20 +861,14 @@ def _preprocess_db(db_path: str, max_num_workers: int = cpu_count(),
   contentfiles = set(dbutil.kernel_ids(db_path, "ContentFiles"))
   preprocessedfiles = set(dbutil.kernel_ids(db_path, "PreprocessedFiles"))
 
-  ncontentfiles = len(contentfiles)
-  npreprocessedfiles = len(preprocessedfiles)
-
   todo = contentfiles - preprocessedfiles
-  ntodo = len(todo)
 
   # check we have something to do
-  if not ntodo:
+  if not todo:
     return
 
-  todo_ratio = ntodo / ncontentfiles
-
-  logging.info(
-    "{ntodo} ({todo_ratio:.1%}) samples need preprocessing".format(**vars()))
+  logging.info("%d of %d (%.1f%%) samples need preprocessing", len(todo),
+               len(contentfiles), (len(todo) / len(contentfiles)) * 100)
 
   logging.debug("creating jobs")
 
@@ -902,26 +896,26 @@ def _preprocess_db(db_path: str, max_num_workers: int = cpu_count(),
   random.shuffle(jobs)
 
   # split size
-  worker_njobs = math.ceil(ntodo / max_num_workers)
+  worker_njobs = math.ceil(len(todo) / max_num_workers)
 
   # producer-consumer queue
   queue = Queue(maxsize=128)
 
-  logging.debug(f"assigning {ntodo} jobs to {max_num_workers} threads")
+  logging.debug("assigning %d jobs to %s threads", len(todo), max_num_workers)
 
   try:
     # our worker threads. these busy little bees will do the heavy lifting
     # of preprocessing the contentfiles, pushing their results onto
     # the queue
     producers = [PreprocessWorker(jobs[i:i + worker_njobs], queue) for i in
-                 range(0, ntodo, worker_njobs)]
+                 range(0, len(todo), worker_njobs)]
 
     # fly, my pretties, fly!
     for producer in producers:
       producer.start()
 
     # consume the results from the worker threads from the main thread
-    for i in progressbar.ProgressBar()(range(ntodo)):
+    for i in progressbar.ProgressBar()(range(len(todo))):
       # pull a fresh result from the queue (block if necessary)
       try:
         result = queue.get(timeout=90)
