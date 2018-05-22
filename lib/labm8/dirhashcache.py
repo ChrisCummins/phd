@@ -4,7 +4,9 @@ Checksum directories and cache results. If a directory has not been modified,
 subsequent hashes are cache hits. Hashes are recomputed lazily, when a
 directory (or any of its subdirectories) have been modified.
 """
+import datetime
 import os
+import pathlib
 import sqlite3
 import time
 
@@ -25,14 +27,14 @@ class DirHashCacheError(sqlite3.OperationalError):
 class DirHashCache(object):
   """A persistent database for directory checksums."""
 
-  def __init__(self, database_path: str, hash_function: str = 'sha1'):
+  def __init__(self, database_path: pathlib.Path, hash_function: str = 'sha1'):
     """
     Instantiate a directory checksum cache.
 
     Arguments:
-      database_path (str): Path to persistent cache store.
-      hash_function (str, optional): The name of the hash algorithm to use.
-        See HASH_FUNCTIONS for a list of acceptable values.
+      database_path: Path to persistent cache store.
+      hash_function: The name of the hash algorithm to use. See HASH_FUNCTIONS
+        for a list of acceptable values.
 
     Raises:
       ValueError: If hash_function is not one of HASH_FUNCTIONS.
@@ -71,21 +73,30 @@ CREATE TABLE IF NOT EXISTS dirhashcache (
     db.commit()
     db.close()
 
-  def dirhash(self, path, **dirhash_opts):
-    """
-    Compute the hash of a directory.
+  def dirhash(self, path: pathlib.Path, **dirhash_opts) -> str:
+    """Compute the hash of a directory.
 
     Arguments:
-       path: Directory.
-       **dirhash_opts: Additional options to checksumdir.dirhash().
+      path: Directory.
+      **dirhash_opts: Additional options to checksumdir.dirhash().
 
     Returns:
-        str: Checksum of directory.
+      The checksum of the directory.
+
+    Raises:
+      ValueError: If the path does not exist, or is not a directory.
     """
     path = fs.path(path)
-    last_modified = time.ctime(max(
-      max(os.path.getmtime(os.path.join(root, file)) for file in files) for
-      root, _, files in os.walk(path)))
+
+    if not fs.isdir(path):
+      raise ValueError(f'Path "{path}" is not a directory')
+
+    if fs.directory_is_empty(path):
+      last_modified = datetime.datetime.now()
+    else:
+      last_modified = time.ctime(max(
+        max(os.path.getmtime(os.path.join(root, file)) for file in files) for
+        root, _, files in os.walk(path)))
 
     db = sqlite3.connect(self.path)
     c = db.cursor()
