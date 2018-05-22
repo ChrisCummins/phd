@@ -37,6 +37,7 @@ from deeplearning.clgen import dbutil
 from deeplearning.clgen import errors
 from deeplearning.clgen import explore
 from deeplearning.clgen import features
+from deeplearning.clgen import fetch
 from deeplearning.clgen import languages
 from deeplearning.clgen import model
 from deeplearning.clgen import preprocess
@@ -306,11 +307,11 @@ def _register_fetch_parser(self, parent: ArgumentParser) -> None:
     parser.add_argument("indir", metavar="<dir>",
                         help='directory containing repositories')
 
-  fetch = parent.add_parser("fetch", aliases=["f", "fe"],
-                            help="gather training data",
-                            description=inspect.getdoc(self),
-                            epilog=__help_epilog__)
-  subparser = fetch.add_subparsers(title="available commands")
+  fetch_ = parent.add_parser("fetch", aliases=["f", "fe"],
+                             help="gather training data",
+                             description=inspect.getdoc(self),
+                             epilog=__help_epilog__)
+  subparser = fetch_.add_subparsers(title="available commands")
 
   subparsers = [_register_fs_parser, _register_github_parser,
                 _register_repos_parser, ]
