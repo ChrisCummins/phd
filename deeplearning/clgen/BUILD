@@ -68,6 +68,7 @@ py_binary(
 
 py_test(
     name = "cli_test",
+    size = "enormous",
     srcs = ["cli_test.py"],
     data = [
         "//deeplearning/clgen/tests/data:pico",
