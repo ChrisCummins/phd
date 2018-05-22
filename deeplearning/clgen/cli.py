@@ -199,7 +199,7 @@ def _register_sample_parser(self, parent: ArgumentParser) -> None:
     sampler_ = sampler.Sampler.from_json(sampler_json)
 
     model_.Train()
-    sampler_.sample(model_)
+    sampler_.Sample(model_)
 
   parser = parent.add_parser("sample", aliases=["s", "sa"],
                              help="train and sample models",

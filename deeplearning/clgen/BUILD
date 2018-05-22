@@ -138,7 +138,6 @@ py_library(
 py_test(
     name = "corpus_test",
     srcs = ["corpus_test.py"],
-    data = ["//deeplearning/clgen/tests/data:tiny"],
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
@@ -260,14 +259,14 @@ py_library(
 py_test(
     name = "model_test",
     srcs = ["model_test.py"],
-    data = ["//deeplearning/clgen/tests/data:tiny"],
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
         ":conftest",
         ":model",
-        "//deeplearning/clgen/proto:corpus_py_pb2",
         "//deeplearning/clgen/proto:model_py_pb2",
+        "//lib/labm8:crypto",
+        "//lib/labm8:fs",
     ],
 )
 
@@ -370,6 +369,7 @@ py_library(
         ":explore",
         ":languages",
         ":model",
+        "//deeplearning/clgen/proto:sampler_py_pb2",
         "//lib/labm8:crypto",
         "//lib/labm8:jsonutil",
         "//lib/labm8:labtypes",
@@ -380,14 +380,13 @@ py_library(
 py_test(
     name = "sampler_test",
     srcs = ["sampler_test.py"],
-    data = ["//deeplearning/clgen/tests/data:tiny"],
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
         ":conftest",
         ":dbutil",
+        ":errors",
         ":model",
         ":sampler",
-        "//deeplearning/clgen/tests:testlib",
     ],
 )

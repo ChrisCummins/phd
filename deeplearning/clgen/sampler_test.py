@@ -5,75 +5,68 @@ import pytest
 from absl import app
 
 from deeplearning.clgen import dbutil
+from deeplearning.clgen import errors
 from deeplearning.clgen import model
 from deeplearning.clgen import sampler
-from deeplearning.clgen.tests import testlib as tests
 
 
-def _get_test_model():
-  return model.Model.from_json({"corpus": {"language": "opencl",
-                                           "path": tests.archive("tiny",
-                                                                 "corpus"), },
-                                "architecture": {"rnn_size": 8,
-                                                 "num_layers": 2, },
-                                "train_opts": {"epochs": 1}})
+@pytest.fixture(scope='function')
+def abc_model(abc_model_config):
+  return model.Model(abc_model_config)
 
 
-def test_sample(clgen_cache_dir):
+def test_Sampler_invalid_start_text(clgen_cache_dir, abc_sampler_config):
+  """Test that an error is thrown if start_text is not set."""
   del clgen_cache_dir
-  m = _get_test_model()
-  m.Train()
+  abc_sampler_config.ClearField('start_text')
+  with pytest.raises(errors.UserError):
+    sampler.Sampler(abc_sampler_config)
+  abc_sampler_config.start_text = ''
+  with pytest.raises(errors.UserError):
+    sampler.Sampler(abc_sampler_config)
 
-  argspec = ['__global float*', '__global float*', '__global float*',
-             'const int']
-  s = sampler.Sampler.from_json(
-    {"kernels": {"language": "opencl", "args": argspec, "max_length": 300, },
-     "sampler": {"min_samples": 1}})
 
-  s.cache(m).clear()  # clear old samples
+def test_Sampler_invalid_batch_size(clgen_cache_dir, abc_sampler_config):
+  """Test that an error is thrown if start_text is not set."""
+  del clgen_cache_dir
+  abc_sampler_config.ClearField('batch_size')
+  with pytest.raises(errors.UserError):
+    sampler.Sampler(abc_sampler_config)
+  abc_sampler_config.batch_size = 0
+  with pytest.raises(errors.UserError):
+    sampler.Sampler(abc_sampler_config)
 
-  # sample a single kernel:
-  s.sample(m)
-  num_contentfiles = dbutil.num_rows_in(s.cache(m)["kernels.db"],
+
+def test_Sampler_Sample_one_sample(clgen_cache_dir, abc_model,
+                                   abc_sampler_config):
+  """Test that Sample() produces the expected number of samples."""
+  del clgen_cache_dir
+  abc_model.Train()
+  abc_sampler_config.min_num_samples = 1
+  s = sampler.Sampler(abc_sampler_config)
+  # Take a single sample.
+  s.Sample(abc_model)
+  num_contentfiles = dbutil.num_rows_in(s.cache(abc_model)["kernels.db"],
                                         "ContentFiles")
+  # Note that the number of contentfiles may be larger than 1, even though we
+  # asked for a single sample, since we split the output on the start text.
   assert num_contentfiles >= 1
-
-  s.sample(m)
-  num_contentfiles2 = dbutil.num_rows_in(s.cache(m)["kernels.db"],
+  s.Sample(abc_model)
+  num_contentfiles2 = dbutil.num_rows_in(s.cache(abc_model)["kernels.db"],
                                          "ContentFiles")
-  diff = num_contentfiles2 - num_contentfiles
-  # if sample is the same as previous, then there will still only be a
-  # single sample in db:
-  assert diff >= 1
+  assert num_contentfiles == num_contentfiles2
 
 
-def test_eq(clgen_cache_dir):
+def test_Sampler_Sample_five_samples(clgen_cache_dir, abc_model,
+                                     abc_sampler_config):
   del clgen_cache_dir
-  s1 = sampler.Sampler.from_json({"kernels": {"language": "opencl",
-                                              "args": ['__global float*',
-                                                       '__global float*',
-                                                       'const int']}})
-  s2 = sampler.Sampler.from_json({"kernels": {"language": "opencl",
-                                              "args": ['__global float*',
-                                                       '__global float*',
-                                                       'const int']}})
-  s3 = sampler.Sampler.from_json(
-    {"kernels": {"language": "opencl", "args": ['int']}})
-
-  assert s1 == s2
-  assert s2 != s3
-  assert s1
-  assert s1 != 'abcdef'
-
-
-def test_to_json(clgen_cache_dir):
-  del clgen_cache_dir
-  s1 = sampler.Sampler.from_json({"kernels": {"language": "opencl",
-                                              "args": ['__global float*',
-                                                       '__global float*',
-                                                       'const int']}})
-  s2 = sampler.Sampler.from_json(s1.to_json())
-  assert s1 == s2
+  abc_model.Train()
+  abc_sampler_config.min_num_samples = 5
+  s = sampler.Sampler(abc_sampler_config)
+  s.Sample(abc_model)
+  num_contentfiles = dbutil.num_rows_in(s.cache(abc_model)["kernels.db"],
+                                        "ContentFiles")
+  assert num_contentfiles >= 5
 
 
 def main(argv):

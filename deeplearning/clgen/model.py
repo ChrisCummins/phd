@@ -32,6 +32,9 @@ class Model(object):
 
     Args:
       config: A Model message.
+
+    Raises:
+      UserError: In case on an invalid config.
     """
     self.config = model_pb2.Model()
     self.config.CopyFrom(config)
@@ -74,7 +77,7 @@ class Model(object):
     return crypto.sha1_list(corpus_.hash,
                             config_without_corpus.SerializeToString())
 
-  def _InitAndGetTensorflow(self, infer: bool = False):
+  def InitAndGetTensorflow(self, infer: bool = False):
     """Import Tensorflow runtime and return it.
 
     Deferred importing of tensorflow and initializing model for training
@@ -183,7 +186,7 @@ class Model(object):
     return closest_path, paths
 
   def _LockedTrain(self) -> 'Model':
-    tf = self._InitAndGetTensorflow(infer=False)
+    tf = self.InitAndGetTensorflow(infer=False)
 
     # training options
     learning_rate = self.config.training.initial_learning_rate
