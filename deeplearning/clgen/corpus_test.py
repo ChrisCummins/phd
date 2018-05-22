@@ -49,7 +49,7 @@ def test_Corpus_hash(clgen_cache_dir, abc_corpus):
   c = corpus.Corpus(corpus_pb2.Corpus(language="opencl", path=abc_corpus,
                                       ascii_character_atomizer=True,
                                       sequence_length=10))
-  assert c.hash == ABC_CORPUS_HASH
+  assert ABC_CORPUS_HASH == c.hash
 
 
 def test_Corpus_archive_hash(clgen_cache_dir, abc_corpus_archive):
@@ -58,7 +58,7 @@ def test_Corpus_archive_hash(clgen_cache_dir, abc_corpus_archive):
   c = corpus.Corpus(
     corpus_pb2.Corpus(language="opencl", path=abc_corpus_archive,
                       ascii_character_atomizer=True, sequence_length=10))
-  assert c.hash == ABC_CORPUS_HASH
+  assert ABC_CORPUS_HASH == c.hash
 
 
 def test_Corpus_config_hash_different_options(clgen_cache_dir, abc_corpus):
