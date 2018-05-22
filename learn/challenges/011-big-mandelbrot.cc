@@ -9,7 +9,6 @@
 //              use sequential CPU.
 // use_mmap - if defined, map output file to memory for writing. Else,
 //            use output file stream.
-#define use_opencl
 #define use_mmap
 
 #include <algorithm>
