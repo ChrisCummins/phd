@@ -284,8 +284,8 @@ def _process_file(g, github_token: str, db, repo, file,
     return False
 
   repo_url = repo.url
-  contents = download_file_cb(github_token, repo, file.url)
-  size = file.size
+  contents = download_file_cb(github_token, repo, file.url).strip()
+  size = len(contents)
 
   c.execute("DELETE FROM ContentFiles WHERE id=?", (url,))
   c.execute("DELETE FROM ContentMeta WHERE id=?", (url,))
@@ -415,7 +415,7 @@ def fetch_repos(db_path: Path, indir: Path, lang: languages.Language) -> None:
     for path in files:
       relpath = path[len(directory) + 1:]
       try:
-        contents = inline_fs_headers(path, [], lang=lang)
+        contents = inline_fs_headers(path, [], lang=lang).strip()
         sha = crypto.sha1_str(contents)
         c.execute('INSERT OR IGNORE INTO ContentFiles VALUES(?,?)',
                   (sha, contents))
@@ -573,7 +573,7 @@ def process_cl_file(db_path: str, path: str) -> None:
 
   logging.debug("fetch {path}".format(path=fs.abspath(path)))
   try:
-    contents = inline_fs_headers(path, [])
+    contents = inline_fs_headers(path, []).strip()
   except IOError:
     raise FetchError("cannot read file '{path}'".format(path=fs.abspath(path)))
   c.execute('INSERT OR IGNORE INTO ContentFiles VALUES(?,?)', (path, contents))
@@ -601,7 +601,7 @@ def fetch(db_path: str, paths: List[str] = []) -> None:
   for path in paths:
     logging.debug("fetch", path)
     try:
-      contents = inline_fs_headers(path, [])
+      contents = inline_fs_headers(path, []).strip()
     except IOError:
       db.commit()
       raise FetchError(
