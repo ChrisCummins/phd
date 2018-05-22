@@ -91,8 +91,7 @@ def unpack_directory_if_needed(path: str) -> str:
     tar.unpack_archive(path + ".tar.bz2")
     return path
 
-  raise errors.InternalError(
-    "cannot interpret archive '{path}'".format(**vars()))
+  raise errors.InternalError(f"cannot interpret archive '{path}'")
 
 
 def get_kernel_features(code: str, **kwargs) -> np.array:
@@ -295,10 +294,8 @@ class Corpus(object):
     # check that contentid exists
     self.language = languages.Language.from_str(opts.get("language"))
     if (path is None and not fs.isdir(
-        cache.cachepath("contentfiles", f"{self.language}-"
-                                        f"{contentid}"))):
-      raise errors.UserError(
-        "corpus {self.language}-{contentid} not found".format(**vars()))
+        cache.cachepath("contentfiles", f"{self.language}-{contentid}"))):
+      raise errors.UserError(f"corpus {self.language}-{contentid} not found")
 
     self.contentid = contentid
     self.contentcache = cache.mkcache("contentfiles",
@@ -308,7 +305,7 @@ class Corpus(object):
     self.hash = self._hash(contentid, self.opts)
     self.cache = cache.mkcache("corpus", f"{self.language}-{self.hash}")
 
-    logging.debug("contentfiles {self.contentid}".format(**vars()))
+    logging.debug(f"contentfiles {self.contentid}")
     logging.debug("corpus {hash}".format(hash=self.hash))
 
     # validate metadata against cache
@@ -625,8 +622,7 @@ class Corpus(object):
     db = dbutil.connect(self.contentcache["kernels.db"])
     c = db.cursor()
     query = c.execute(
-      "SELECT Contents FROM PreprocessedFiles WHERE status={status}".format(
-        **vars()))
+      f"SELECT Contents FROM PreprocessedFiles WHERE status={status}")
     for row in query.fetchall():
       yield row[0]
 
