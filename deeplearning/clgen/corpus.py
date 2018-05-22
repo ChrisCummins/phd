@@ -168,6 +168,10 @@ class Corpus(object):
 
     self.language = languages.Language.from_str(config.language)
 
+    # Validate config options.
+    if config.sequence_length < 1:
+      raise errors.UserError('Corpus.sequence_length must be >= 1')
+
     # Determine the corpus cache path. This will depend on whether a path or
     # an id was specified.
     path = None
@@ -361,8 +365,8 @@ WHERE ContentFiles.id NOT IN (
     self.vocab_size = self.atomizer.vocab_size
     self.vocab = self.atomizer.vocab
 
-  def _GenerateKernelCorpus(self, shuffle: bool) -> str:
-    """Concatenate all kernels into a string in a random order.
+  def ConcatenateTextCorpus(self, shuffle: bool) -> str:
+    """Concatenate the entire corpus into a string.
 
     Args:
       shuffle: If true, randomize order of contentfiles.
@@ -372,11 +376,10 @@ WHERE ContentFiles.id NOT IN (
     """
     db = dbutil.connect(self.contentfiles_cache["kernels.db"])
     c = db.cursor()
-    orderby = 'RANDOM()' if shuffle else 'LC(contents)'
-    c.execute("SELECT PreprocessedFiles.Contents FROM PreprocessedFiles "
-              "WHERE status=0 ORDER BY {orderby}".format(orderby=orderby))
-    # If file separators are requested, insert EOF markers between files
-    sep = '\n\n// EOF\n\n' if self.opts["eof"] else '\n\n'
+    order_by = 'RANDOM()' if shuffle else 'LENGTH(contents) DESC'
+    c.execute('SELECT contents FROM PreprocessedFiles WHERE status=0 '
+              f'ORDER BY {order_by}')
+    sep = self.config.contentfile_separator or '\n\n'
     return sep.join(row[0] for row in c.fetchall())
 
   def _CreateBatches(self, shuffle: bool) -> None:
@@ -388,7 +391,7 @@ WHERE ContentFiles.id NOT IN (
     self.ResetBatchPointer()
 
     # generate a kernel corpus
-    data = self._GenerateKernelCorpus(shuffle)
+    data = self.ConcatenateTextCorpus(shuffle)
 
     # encode corpus into vocab indices
     self._tensor = self.atomizer.AtomizeString(data)
@@ -400,10 +403,6 @@ WHERE ContentFiles.id NOT IN (
     self._size = len(self._tensor)
     self._num_batches = int(self.size / (batch_size * seq_length))
     if self.num_batches == 0:
-      # TODO(cec): Fix under bazel test.
-      print("!!!!! CORPUS")
-      print(data)
-      print("!!!!! END CORPUS")
       raise errors.UserError(
         "Not enough data. Use a smaller seq_length and batch_size. "
         f'Current data size = {self.size}, seq_length = {seq_length}, and '
