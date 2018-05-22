@@ -227,6 +227,21 @@ Very wow.
 Hello, world!"""
 
 
+def test_Corpus_ConcatenateTextCorpus_separator(clgen_cache_dir, abc_corpus):
+  """Test the concatenation of the abc corpus with a custom separator."""
+  del clgen_cache_dir
+  c = corpus.Corpus(corpus_pb2.Corpus(language="opencl", path=abc_corpus,
+                                      ascii_character_atomizer=True,
+                                      sequence_length=10,
+                                      contentfile_separator='\n!!\n'))
+  assert c.ConcatenateTextCorpus(shuffle=False) == """The cat sat on the mat.
+!!
+Such corpus.
+Very wow.
+!!
+Hello, world!"""
+
+
 def test_Corpus_ConcatenateTextCorpus_random_order(clgen_cache_dir, abc_corpus):
   """Test that random shuffling of contentfiles changes the corpus."""
   del clgen_cache_dir
