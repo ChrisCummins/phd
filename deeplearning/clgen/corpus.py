@@ -34,112 +34,6 @@ from lib.labm8 import tar
 from lib.labm8 import text
 
 
-def UnpackDirectoryIfNeeded(path: pathlib.Path) -> pathlib.Path:
-  """Unpack a directory tarball and return its path.
-
-  If path is a tarball, unpack it. If path doesn't exist but there is a
-  tarball with the same name, unpack it.
-
-  Args:
-    path: Path to directory or tarball.
-
-  Returns:
-    Path to directory.
-
-  Raises:
-    clgen.InternalError: If unable to extract archive.
-  """
-  if path.is_dir():
-    return path
-
-  if path.is_file() and str(path).endswith(".tar.bz2"):
-    logging.info('unpacking %s', path)
-    tar.unpack_archive(path)
-    return pathlib.Path(re.sub(r'.tar.bz2$', '', str(path)))
-
-  if pathlib.Path(str(path) + ".tar.bz2").is_file():
-    logging.info('unpacking %s.tar.bz', path)
-    tar.unpack_archive(str(path) + ".tar.bz2")
-    return path
-
-  raise errors.InternalError(f"Cannot find path '{path}'")
-
-
-def GetKernelFeatures(code: str, **kwargs) -> np.array:
-  """Get features for code.
-
-  Args:
-    code: Source code.
-    **kwargs: Arguments to features.features()
-
-  Returns:
-    An array of feature values.
-
-  Raises:
-    FeaturesError: In case of error.
-  """
-  with NamedTemporaryFile() as outfile:
-    outfile.write(code.encode("utf-8"))
-    outfile.seek(0)
-    f = features.to_np_arrays([outfile.name], **kwargs)
-  if len(f) != 1:
-    logging.error("features:", f)
-    raise errors.FeaturesError("code contains more than one kernel")
-  return f[0]
-
-
-def GetClKernelEndIndex(src: str, start_idx: int = 0,
-                        max_len: int = 5000) -> int:
-  """Return the index of the character after the end of the OpenCL kernel.
-
-  Args:
-    src: OpenCL source.
-    start_idx: Start index.
-    max_len: Maximum kernel length.
-
-  Returns:
-    Index of end of OpenCL kernel.
-  """
-  i = src.find('{', start_idx) + 1
-  d = 1  # depth
-  while i < min(len(src), start_idx + max_len) and d > 0:
-    if src[i] == '{':
-      d += 1
-    elif src[i] == '}':
-      d -= 1
-    i += 1
-  return i
-
-
-def GetClKernel(src: str, start_idx: int, max_len: int = 5000) -> str:
-  """Return the OpenCL kernel.
-
-  Args:
-    src: OpenCL source.
-    start_idx: Start index.
-    max_len: Maximum kernel length.
-
-  Returns:
-    OpenCL kernel.
-  """
-  return src[start_idx:GetClKernelEndIndex(src, start_idx, max_len)]
-
-
-def GetClKernels(src: str) -> typing.List[str]:
-  """
-  Return OpenCL kernels.
-
-  Args:
-    src: OpenCL source.
-
-  Returns:
-    OpenCL kernels.
-  """
-  idxs = text.get_substring_idxs('__kernel', src)
-  kernels = [GetClKernel(src, i) for i in idxs]
-  return kernels
-
-
 class Corpus(object):
   """Representation of a training corpus.
 
@@ -530,3 +424,109 @@ WHERE ContentFiles.id NOT IN (
 
   def __ne__(self, rhs) -> bool:
     return not self.__eq__(rhs)
+
+
+def UnpackDirectoryIfNeeded(path: pathlib.Path) -> pathlib.Path:
+  """Unpack a directory tarball and return its path.
+
+  If path is a tarball, unpack it. If path doesn't exist but there is a
+  tarball with the same name, unpack it.
+
+  Args:
+    path: Path to directory or tarball.
+
+  Returns:
+    Path to directory.
+
+  Raises:
+    clgen.InternalError: If unable to extract archive.
+  """
+  if path.is_dir():
+    return path
+
+  if path.is_file() and str(path).endswith(".tar.bz2"):
+    logging.info('unpacking %s', path)
+    tar.unpack_archive(path)
+    return pathlib.Path(re.sub(r'.tar.bz2$', '', str(path)))
+
+  if pathlib.Path(str(path) + ".tar.bz2").is_file():
+    logging.info('unpacking %s.tar.bz', path)
+    tar.unpack_archive(str(path) + ".tar.bz2")
+    return path
+
+  raise errors.InternalError(f"Cannot find path '{path}'")
+
+
+def GetKernelFeatures(code: str, **kwargs) -> np.array:
+  """Get features for code.
+
+  Args:
+    code: Source code.
+    **kwargs: Arguments to features.features()
+
+  Returns:
+    An array of feature values.
+
+  Raises:
+    FeaturesError: In case of error.
+  """
+  with NamedTemporaryFile() as outfile:
+    outfile.write(code.encode("utf-8"))
+    outfile.seek(0)
+    f = features.to_np_arrays([outfile.name], **kwargs)
+  if len(f) != 1:
+    logging.error("features:", f)
+    raise errors.FeaturesError("code contains more than one kernel")
+  return f[0]
+
+
+def GetClKernelEndIndex(src: str, start_idx: int = 0,
+                        max_len: int = 5000) -> int:
+  """Return the index of the character after the end of the OpenCL kernel.
+
+  Args:
+    src: OpenCL source.
+    start_idx: Start index.
+    max_len: Maximum kernel length.
+
+  Returns:
+    Index of end of OpenCL kernel.
+  """
+  i = src.find('{', start_idx) + 1
+  d = 1  # depth
+  while i < min(len(src), start_idx + max_len) and d > 0:
+    if src[i] == '{':
+      d += 1
+    elif src[i] == '}':
+      d -= 1
+    i += 1
+  return i
+
+
+def GetClKernel(src: str, start_idx: int, max_len: int = 5000) -> str:
+  """Return the OpenCL kernel.
+
+  Args:
+    src: OpenCL source.
+    start_idx: Start index.
+    max_len: Maximum kernel length.
+
+  Returns:
+    OpenCL kernel.
+  """
+  return src[start_idx:GetClKernelEndIndex(src, start_idx, max_len)]
+
+
+def GetClKernels(src: str) -> typing.List[str]:
+  """
+  Return OpenCL kernels.
+
+  Args:
+    src: OpenCL source.
+
+  Returns:
+    OpenCL kernels.
+  """
+  idxs = text.get_substring_idxs('__kernel', src)
+  kernels = [GetClKernel(src, i) for i in idxs]
+  return kernels
