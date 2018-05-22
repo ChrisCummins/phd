@@ -30,7 +30,7 @@ from deeplearning.clgen.tests import testlib as tests
 
 
 # The Corpus.hash for an OpenCL corpus with asciii_character_atomizer.
-TINY_HASH = '0640b32387e34f1e9c5573f940d48227cfb13e08'
+TINY_HASH = '058d1743dcc733cc130c420f8b2c07d499c6267d'
 
 
 def test_GetKernelFeatures():

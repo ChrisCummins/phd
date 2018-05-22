@@ -148,30 +148,31 @@ class Corpus(object):
   can lead to bad things happening.
   """
 
-  def __init__(self, corpus: corpus_pb2.Corpus):
+  def __init__(self, config: corpus_pb2.Corpus):
     """Instantiate a corpus from a proto config.
 
     If this is a new corpus, a number of files will be created, which may
     take some time.
 
     Args:
-      corpus: A Corpus message.
+      config: A Corpus message.
 
     Raises:
-      EmptyCorpusException
-        In case the corpus contains no data.
+      UserError: In case the corpus is not found, or config contains invalid
+        options.
+      EmptyCorpusException: In case the corpus contains no data.
     """
     # Make a local copy of the configuration.
     self.config = corpus_pb2.Corpus()
-    self.config.CopyFrom(corpus)
+    self.config.CopyFrom(config)
 
-    self.language = languages.Language.from_str(corpus.language)
+    self.language = languages.Language.from_str(config.language)
 
     # Determine the corpus cache path. This will depend on whether a path or
     # an id was specified.
     path = None
-    if corpus.HasField('path'):
-      path = UnpackDirectoryIfNeeded(pathlib.Path(corpus.path).absolute())
+    if config.HasField('path'):
+      path = UnpackDirectoryIfNeeded(pathlib.Path(config.path).absolute())
       if not fs.isdir(path):
         raise errors.UserError(
           "Corpus path '{}' is not a directory".format(path))
@@ -179,18 +180,18 @@ class Corpus(object):
         raise errors.EmptyCorpusException(f"Corpus path '{path}' is empty")
       hasher = dirhashcache.DirHashCache(cache.cachepath("dirhash.db"), 'sha1')
       self.content_id = prof.profile(hasher.dirhash, path)
-    elif corpus.HasField('id'):
-      self.content_id = corpus.id
+    elif config.HasField('id'):
+      self.content_id = config.id
       if not fs.isdir(
-          cache.cachepath("contentfiles", f"{self.language}-{corpus.id}")):
-        raise errors.UserError(f"corpus {self.language}-{corpus.id} not found")
+          cache.cachepath("contentfiles", f"{self.language}-{config.id}")):
+        raise errors.UserError(f"corpus {self.language}-{config.id} not found")
     else:
       raise errors.UserError('Must specify corpus id or path.')
 
     cache_name = f"{self.language}-{self.content_id}"
     self.contentfiles_cache = cache.mkcache("contentfiles", cache_name)
     self.kernels_db = self.contentfiles_cache.keypath('kernels.db')
-    self.hash = self._ComputeHash(self.content_id, corpus)
+    self.hash = self._ComputeHash(self.content_id, config)
     self.cache = cache.mkcache("corpus", f"{self.language}-{self.hash}")
 
     logging.debug('contentfiles %s', self.content_id)
@@ -295,7 +296,8 @@ WHERE ContentFiles.id NOT IN (
     config_without_contentfiles = corpus_pb2.Corpus()
     config_without_contentfiles.CopyFrom(config)
     config_without_contentfiles.ClearField('contentfiles')
-    return crypto.sha1_list(contentid, config_without_contentfiles)
+    return crypto.sha1_list(contentid,
+                            config_without_contentfiles.SerializeToString())
 
   def _CreateKernelsDatabase(self, path: pathlib.Path) -> None:
     """creates and caches kernels.db"""
