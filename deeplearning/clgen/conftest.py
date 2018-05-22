@@ -36,7 +36,7 @@ def abc_corpus() -> str:
   Returns:
     The location of the corpus directory.
   """
-  with tempfile.TemporaryDirectory(prefix='clgen_numpty_corpus_') as d:
+  with tempfile.TemporaryDirectory(prefix='clgen_abc_corpus_') as d:
     path = pathlib.Path(d)
     with open(path / 'a', 'w') as f:
       f.write('The cat sat on the mat.')
