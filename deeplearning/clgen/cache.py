@@ -25,7 +25,7 @@ def cachepath(*relative_path_components: typing.List[str]) -> pathlib.Path:
   return pathlib.Path(fs.path(cache_root, *relative_path_components))
 
 
-def mkcache(*relative_path_components: list) -> cache.FSCache:
+def mkcache(*relative_path_components: typing.List[str]) -> cache.FSCache:
   """
   Instantiae a file system cache.
 
