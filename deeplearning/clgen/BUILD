@@ -48,7 +48,7 @@ py_binary(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
-        "atomizers",
+        ":atomizers",
         ":cache",
         ":dbutil",
         ":errors",
@@ -59,9 +59,13 @@ py_binary(
         ":model",
         ":preprocess",
         ":sampler",
+        "//deeplearning/clgen/proto:corpus_py_pb2",
+        "//deeplearning/clgen/proto:model_py_pb2",
+        "//deeplearning/clgen/proto:sampler_py_pb2",
         "//lib/labm8:fs",
         "//lib/labm8:jsonutil",
         "//lib/labm8:labtypes",
+        "//lib/labm8:pbutil",
         "//lib/labm8:prof",
     ],
 )

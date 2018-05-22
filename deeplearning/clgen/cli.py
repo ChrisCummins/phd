@@ -23,6 +23,7 @@ import argparse
 import cProfile
 import inspect
 import os
+import pathlib
 import sys
 import traceback
 from argparse import ArgumentParser, FileType, RawDescriptionHelpFormatter
@@ -42,9 +43,11 @@ from deeplearning.clgen import languages
 from deeplearning.clgen import model
 from deeplearning.clgen import preprocess
 from deeplearning.clgen import sampler
+from deeplearning.clgen.proto import model_pb2
+from deeplearning.clgen.proto import sampler_pb2
 from lib.labm8 import fs
-from lib.labm8 import jsonutil
 from lib.labm8 import labtypes
+from lib.labm8 import pbutil
 from lib.labm8 import prof
 
 
@@ -167,13 +170,12 @@ Please report bugs at <https://github.com/ChrisCummins/clgen/issues>\
 
 @getself
 def _register_train_parser(self, parent: ArgumentParser) -> None:
-  """
-  Train a CLgen model.
-  """
+  """Train a CLgen model."""
 
   def _main(model_file: TextIO) -> None:
-    model_json = jsonutil.loads(model_file.read())
-    model_ = model.Model.from_json(model_json)
+    model_proto = pbutil.FromFile(pathlib.Path(model_file.name),
+                                  model_pb2.Model())
+    model_ = model.Model(model_proto)
     model_.Train()
     logging.info("done.")
 
@@ -187,16 +189,16 @@ def _register_train_parser(self, parent: ArgumentParser) -> None:
 
 @getself
 def _register_sample_parser(self, parent: ArgumentParser) -> None:
-  """
-  Sample a model.
-  """
+  """Sample a model."""
 
   def _main(model_file: TextIO, sampler_file: TextIO) -> None:
-    model_json = jsonutil.loads(model_file.read())
-    model_ = model.Model.from_json(model_json)
+    model_proto = pbutil.FromFile(pathlib.Path(model_file.name),
+                                  model_pb2.Model())
+    model_ = model.Model(model_proto)
 
-    sampler_json = jsonutil.loads(sampler_file.read())
-    sampler_ = sampler.Sampler.from_json(sampler_json)
+    sampler_proto = pbutil.FromFile(pathlib.Path(sampler_file.name),
+                                    sampler_pb2.Sampler())
+    sampler_ = sampler.Sampler(sampler_proto)
 
     model_.Train()
     sampler_.Sample(model_)
@@ -334,14 +336,16 @@ def _register_ls_parser(self, parent: ArgumentParser) -> None:
     """
 
     def _main(model_file: TextIO, sampler_file: TextIO) -> None:
-      model_json = jsonutil.loads(model_file.read())
-      model_ = model.Model.from_json(model_json)
+      model_proto = pbutil.FromFile(pathlib.Path(model_file.name),
+                                    model_pb2.Model())
+      model_ = model.Model(model_proto)
 
       caches = [model_.corpus.cache, model_.cache]
 
       if sampler_file:
-        sampler_json = jsonutil.loads(sampler_file.read())
-        sampler_ = sampler.Sampler.from_json(sampler_json)
+        sampler_proto = pbutil.FromFile(pathlib.Path(sampler_file.name),
+                                        sampler_pb2.Sampler())
+        sampler_ = sampler.Sampler(sampler_proto)
         caches.append(sampler_.cache(model_))
 
       files = sorted(
@@ -671,10 +675,9 @@ def _register_cache_parser(self, parent: ArgumentParser) -> None:
         cached_modeldirs = fs.ls(fs.path(cache_, "model"), abspaths=True)
         for cached_modeldir in cached_modeldirs:
           cached_model_id = fs.basename(cached_modeldir)
-          cached_meta = jsonutil.read_file(fs.path(cached_modeldir, "META"))
-
-          model_ = model.Model.from_json(cached_meta)
-
+          cached_proto = pbutil.FromFile(
+            pathlib.Path(fs.path(cached_modeldir, "META")))
+          model_ = model.Model(cached_proto)
           if cached_model_id != model_.hash:
             logging.info(cached_model_id, '->', model_.hash)
 
@@ -778,15 +781,18 @@ For information about a specific command, run `clgen <command> --help`.
     print("clgen made with \033[1;31m♥\033[0;0m by Chris Cummins "
           "<chrisc.101@gmail.com>.")
   elif args.corpus_dir:
-    model_ = model.Model.from_json(jsonutil.loads(args.corpus_dir.read()))
+    model_ = model.Model(
+      pbutil.FromFile(args.corpus_dir.name, model_pb2.Model()))
     print(model_.corpus.cache.path)
   elif args.model_dir:
-    model_ = model.Model.from_json(jsonutil.loads(args.model_dir.read()))
+    model_ = model.Model(
+      pbutil.FromFile(args.model_dir.name, model_pb2.Model()))
     print(model_.cache.path)
   elif args.sampler_dir:
-    model_ = model.Model.from_json(jsonutil.loads(args.sampler_dir[0].read()))
-    sampler_ = sampler.Sampler.from_json(
-      jsonutil.loads(args.sampler_dir[1].read()))
+    model_ = model.Model(
+      pbutil.FromFile(args.sampler_dir[0].name, model_pb2.Model()))
+    sampler_ = sampler.Sampler(
+      pbutil.FromFile(args.sampler_dir[1].name, sampler_pb2.Sampler()))
     print(sampler_.cache(model_).path)
   else:
     # strip the arguments from the top-level parser
