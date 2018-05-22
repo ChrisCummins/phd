@@ -39,7 +39,7 @@ def abc_corpus() -> str:
   with tempfile.TemporaryDirectory(prefix='clgen_numpty_corpus_') as d:
     path = pathlib.Path(d)
     with open(path / 'a', 'w') as f:
-      f.write('The cat sat on the matt.')
+      f.write('The cat sat on the mat.')
     with open(path / 'b', 'w') as f:
       f.write('Hello, world!')
     with open(path / 'c', 'w') as f:
