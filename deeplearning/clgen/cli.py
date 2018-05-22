@@ -782,17 +782,18 @@ For information about a specific command, run `clgen <command> --help`.
           "<chrisc.101@gmail.com>.")
   elif args.corpus_dir:
     model_ = model.Model(
-      pbutil.FromFile(args.corpus_dir.name, model_pb2.Model()))
+      pbutil.FromFile(pathlib.Path(args.corpus_dir.name), model_pb2.Model()))
     print(model_.corpus.cache.path)
   elif args.model_dir:
     model_ = model.Model(
-      pbutil.FromFile(args.model_dir.name, model_pb2.Model()))
+      pbutil.FromFile(pathlib.Path(args.model_dir.name), model_pb2.Model()))
     print(model_.cache.path)
   elif args.sampler_dir:
-    model_ = model.Model(
-      pbutil.FromFile(args.sampler_dir[0].name, model_pb2.Model()))
+    model_ = model.Model(pbutil.FromFile(pathlib.Path(args.sampler_dir[0].name),
+                                         model_pb2.Model()))
     sampler_ = sampler.Sampler(
-      pbutil.FromFile(args.sampler_dir[1].name, sampler_pb2.Sampler()))
+      pbutil.FromFile(pathlib.Path(args.sampler_dir[1].name),
+                      sampler_pb2.Sampler()))
     print(sampler_.cache(model_).path)
   else:
     # strip the arguments from the top-level parser

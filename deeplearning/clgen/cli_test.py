@@ -1,5 +1,6 @@
 """Unit tests for //deeplearning/clgen/cli.py."""
 import os
+import pathlib
 import sys
 import tempfile
 
@@ -9,6 +10,7 @@ from absl import app
 from deeplearning.clgen import cli
 from deeplearning.clgen.tests import testlib as tests
 from lib.labm8 import fs
+from lib.labm8 import pbutil
 from lib.labm8 import tar
 
 
@@ -81,68 +83,30 @@ def test_cli(clgen_cache_dir):
   fs.rm("kernels_out")
 
 
-def test_cli_train(clgen_cache_dir):
+def test_cli_train(clgen_cache_dir, abc_model_config):
   del clgen_cache_dir
   os.environ["DEBUG"] = "1"
   with tempfile.TemporaryDirectory(prefix="clgen_") as d:
     with tests.chdir(d):
       fs.cp(tests.data_path("pico", "corpus.tar.bz2"), './corpus.tar.bz2')
       tar.unpack_archive('corpus.tar.bz2')
-      with open('model.json', 'w') as f:
-        f.write(f"""
-{{
-  "corpus": {{
-    "language": "opencl",
-    "path": "{d}/corpus",
-    "vocabulary": "greedy",
-    "seq_length": 1,
-    "batch_size": 1
-  }},
-  "architecture": {{
-    "model_type": "lstm",
-    "rnn_size": 8,
-    "num_layers": 2
-  }},
-  "train_opts": {{
-    "epochs": 1
-  }}
-}}
-""")
-      cli.main("--corpus-dir model.json".split())
-      cli.main("--model-dir model.json".split())
-      cli.main("-v train model.json".split())
+      pbutil.ToFile(abc_model_config, pathlib.Path('model.pbtxt'))
+      cli.main("--corpus-dir model.pbtxt".split())
+      cli.main("--model-dir model.pbtxt".split())
+      cli.main("-v train model.pbtxt".split())
 
 
-def test_cli_sample(clgen_cache_dir):
+def test_cli_sample(clgen_cache_dir, abc_model_config, abc_sampler_config):
   del clgen_cache_dir
   with tempfile.TemporaryDirectory() as d:
     with tests.chdir(d):
       fs.cp(tests.data_path("pico", "corpus.tar.bz2"), './corpus.tar.bz2')
-      fs.cp(tests.data_path("pico", "sampler.json"), './sampler.json')
-      with open('model.json', 'w') as f:
-        f.write(f"""
-{{
-  "corpus": {{
-    "language": "opencl",
-    "path": "{d}/corpus",
-    "vocabulary": "greedy",
-    "seq_length": 1,
-    "batch_size": 1
-  }},
-  "architecture": {{
-    "model_type": "lstm",
-    "rnn_size": 8,
-    "num_layers": 2
-  }},
-  "train_opts": {{
-    "epochs": 1
-  }}
-}}
-""")
-      cli.main("--corpus-dir model.json".split())
-      cli.main("--model-dir model.json".split())
-      cli.main("--sampler-dir model.json sampler.json".split())
-      cli.main("ls files model.json sampler.json".split())
+      pbutil.ToFile(abc_model_config, pathlib.Path('model.pbtxt'))
+      pbutil.ToFile(abc_sampler_config, pathlib.Path('sampler.pbtxt'))
+      cli.main("--corpus-dir model.pbtxt".split())
+      cli.main("--model-dir model.pbtxt".split())
+      cli.main("--sampler-dir model.pbtxt sampler.pbtxt".split())
+      cli.main("ls files model.pbtxt sampler.pbtxt".split())
 
 
 def test_cli_ls(clgen_cache_dir):
