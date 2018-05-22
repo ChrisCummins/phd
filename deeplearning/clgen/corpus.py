@@ -696,12 +696,11 @@ class Corpus(object):
           "Corpus path '{}' is not a directory".format(path))
       if fs.directory_is_empty(path):
         raise errors.EmptyCorpusException(f"Corpus path '{path}' is empty")
-      dirhashcache_ = dirhashcache.DirHashCache(cache.cachepath("dirhash.db"),
-                                                'sha1')
-      uid = prof.profile(dirhashcache_.dirhash, path)
+      dircache = dirhashcache.DirHashCache(cache.cachepath("dirhash.db"),
+                                           'sha1')
+      uid = prof.profile(dircache.dirhash, path)
     elif uid:
-      cache_path = cache.mkcache("contentfiles", f"{language}-"
-                                                 f"{uid}").path
+      cache_path = cache.mkcache("contentfiles", f"{language}-{uid}").path
       if not fs.isdir(cache_path):
         raise errors.UserError("Corpus content {} not found".format(uid))
     else:
