@@ -49,33 +49,14 @@ py_test(
     ],
     default_python_version = "PY3",
     srcs_version = "PY3",
-    deps = [
-        "//lib/labm8:crypto",
-    ],
-)
-
-py_library(
-    name = "labdate",
-    srcs = ["labdate.py"],
-    visibility = ["//visibility:public"],
-)
-
-py_test(
-    name = "labdate_test",
-    size = "small",
-    srcs = ["labdate_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
-    deps = [":labdate"],
+    deps = [":crypto"],
 )
 
 py_library(
     name = "dirhashcache",
     srcs = ["dirhashcache.py"],
     visibility = ["//visibility:public"],
-    deps = [
-        ":fs",
-    ],
+    deps = [":fs"],
 )
 
 py_test(
@@ -88,12 +69,16 @@ py_test(
 )
 
 py_library(
+    name = "err",
+    srcs = ["err.py"],
+    visibility = ["//visibility:public"],
+)
+
+py_library(
     name = "fs",
     srcs = ["fs.py"],
     visibility = ["//visibility:public"],
-    deps = [
-        ":labtypes",
-    ],
+    deps = [":labtypes"],
 )
 
 py_test(
@@ -109,8 +94,8 @@ py_test(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
-        "//lib/labm8:fs",
-        "//lib/labm8:system",
+        ":fs",
+        ":system",
     ],
 )
 
@@ -118,8 +103,6 @@ py_library(
     name = "fmt",
     srcs = ["fmt.py"],
     visibility = ["//visibility:public"],
-    deps = [
-    ],
 )
 
 py_test(
@@ -141,12 +124,83 @@ py_library(
     ],
 )
 
+py_test(
+    name = "io_test",
+    size = "small",
+    srcs = ["io_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":io",
+        ":system",
+    ],
+)
+
 py_library(
     name = "jsonutil",
     srcs = ["jsonutil.py"],
     visibility = ["//visibility:public"],
+    deps = [":fs"],
+)
+
+py_test(
+    name = "jsonutil_test",
+    size = "small",
+    srcs = ["jsonutil_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
     deps = [
         ":fs",
+        ":jsonutil",
+        ":system",
+    ],
+)
+
+py_library(
+    name = "labdate",
+    srcs = ["labdate.py"],
+    visibility = ["//visibility:public"],
+)
+
+py_test(
+    name = "labdate_test",
+    size = "small",
+    srcs = ["labdate_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [":labdate"],
+)
+
+py_library(
+    name = "labmath",
+    srcs = ["labmath.py"],
+    visibility = ["//visibility:public"],
+    deps = [":system"],
+)
+
+py_test(
+    name = "labmath_test",
+    size = "small",
+    srcs = ["labmath_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [":labmath"],
+)
+
+py_library(
+    name = "labtypes",
+    srcs = ["labtypes.py"],
+    visibility = ["//visibility:public"],
+)
+
+py_test(
+    name = "labtypes_test",
+    size = "small",
+    srcs = ["labtypes_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":labtypes",
     ],
 )
 
@@ -154,8 +208,17 @@ py_library(
     name = "latex",
     srcs = ["latex.py"],
     visibility = ["//visibility:public"],
+    deps = [":io"],
+)
+
+py_test(
+    name = "latex_test",
+    size = "small",
+    srcs = ["latex_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
     deps = [
-        ":io",
+        ":latex",
     ],
 )
 
@@ -169,6 +232,17 @@ py_library(
     ],
 )
 
+py_test(
+    name = "lockfile_test",
+    size = "small",
+    srcs = ["lockfile_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":lockfile",
+    ],
+)
+
 py_library(
     name = "make",
     srcs = ["make.py"],
@@ -179,11 +253,17 @@ py_library(
     ],
 )
 
-py_library(
-    name = "labmath",
-    srcs = ["labmath.py"],
-    visibility = ["//visibility:public"],
-    deps = [":system"],
+py_test(
+    name = "make_test",
+    size = "small",
+    srcs = ["make_test.py"],
+    data = glob(["data/test/makeproj/**"]),
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":fs",
+        ":make",
+    ],
 )
 
 py_library(
@@ -208,8 +288,18 @@ py_library(
     name = "prof",
     srcs = ["prof.py"],
     visibility = ["//visibility:public"],
+    deps = [":labtypes"],
+)
+
+py_test(
+    name = "prof_test",
+    size = "small",
+    srcs = ["prof_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
     deps = [
-        ":labtypes",
+        ":prof",
+        ":system",
     ],
 )
 
@@ -217,8 +307,19 @@ py_library(
     name = "system",
     srcs = ["system.py"],
     visibility = ["//visibility:public"],
+    deps = [":fs"],
+)
+
+py_test(
+    name = "system_test",
+    size = "small",
+    srcs = ["system_test.py"],
+    data = ["data/test/bin/scp"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
     deps = [
         ":fs",
+        ":system",
     ],
 )
 
@@ -226,9 +327,7 @@ py_library(
     name = "tar",
     srcs = ["tar.py"],
     visibility = ["//visibility:public"],
-    deps = [
-        ":fs",
-    ],
+    deps = [":fs"],
 )
 
 py_library(
@@ -241,125 +340,6 @@ py_library(
     ],
 )
 
-py_library(
-    name = "labtypes",
-    srcs = ["labtypes.py"],
-    visibility = ["//visibility:public"],
-)
-
-py_library(
-    name = "viz",
-    srcs = ["viz.py"],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":io",
-    ],
-)
-
-py_library(
-    name = "err",
-    srcs = ["err.py"],
-    visibility = ["//visibility:public"],
-)
-
-### Unit test files to refactor:
-
-py_test(
-    name = "io_test",
-    size = "small",
-    srcs = ["io_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
-    deps = [
-        "//lib/labm8:io",
-        "//lib/labm8:system",
-    ],
-)
-
-py_test(
-    name = "jsonutil_test",
-    size = "small",
-    srcs = ["jsonutil_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
-    deps = [
-        "//lib/labm8:fs",
-        "//lib/labm8:jsonutil",
-        "//lib/labm8:system",
-    ],
-)
-
-py_test(
-    name = "latex_test",
-    size = "small",
-    srcs = ["latex_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
-    deps = [
-        "//lib/labm8:latex",
-    ],
-)
-
-py_test(
-    name = "lockfile_test",
-    size = "small",
-    srcs = ["lockfile_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
-    deps = [
-        "//lib/labm8:lockfile",
-    ],
-)
-
-py_test(
-    name = "make_test",
-    size = "small",
-    srcs = ["make_test.py"],
-    data = glob(["data/test/makeproj/**"]),
-    default_python_version = "PY3",
-    srcs_version = "PY3",
-    deps = [
-        "//lib/labm8:fs",
-        "//lib/labm8:make",
-    ],
-)
-
-py_test(
-    name = "labmath_test",
-    size = "small",
-    srcs = ["labmath_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
-    deps = [
-        "//lib/labm8:labmath",
-    ],
-)
-
-py_test(
-    name = "prof_test",
-    size = "small",
-    srcs = ["prof_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
-    deps = [
-        "//lib/labm8:prof",
-        "//lib/labm8:system",
-    ],
-)
-
-py_test(
-    name = "system_test",
-    size = "small",
-    srcs = ["system_test.py"],
-    data = ["data/test/bin/scp"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
-    deps = [
-        "//lib/labm8:fs",
-        "//lib/labm8:system",
-    ],
-)
-
 py_test(
     name = "text_test",
     size = "small",
@@ -367,19 +347,15 @@ py_test(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
-        "//lib/labm8:text",
+        ":text",
     ],
 )
 
-py_test(
-    name = "labtypes_test",
-    size = "small",
-    srcs = ["labtypes_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
-    deps = [
-        "//lib/labm8:labtypes",
-    ],
+py_library(
+    name = "viz",
+    srcs = ["viz.py"],
+    visibility = ["//visibility:public"],
+    deps = [":io"],
 )
 
 py_test(
@@ -389,7 +365,7 @@ py_test(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
-        "//lib/labm8:fs",
-        "//lib/labm8:viz",
+        ":fs",
+        ":viz",
     ],
 )
