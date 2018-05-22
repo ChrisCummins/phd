@@ -20,8 +20,6 @@
 CLgen model.
 """
 import os
-from copy import deepcopy
-from datetime import datetime
 from time import time
 from typing import Iterator, List, Union
 
@@ -32,33 +30,11 @@ from prettytable import PrettyTable
 from deeplearning.clgen import cache
 from deeplearning.clgen import corpus
 from deeplearning.clgen import errors
+from deeplearning.clgen.proto import model_pb2
 from lib.labm8 import crypto
 from lib.labm8 import fs
 from lib.labm8 import jsonutil
-from lib.labm8 import labtypes
 from lib.labm8 import lockfile
-
-
-# Default options used for model. Any values provided by the user will override
-# these defaults.
-DEFAULT_MODEL_OPTS = {"created": {"date": str(datetime.now()), },
-                      "architecture": {"model_type": "lstm",  # {lstm,rnn.gru}
-                                       "rnn_size": 128,  # num nodes in layer
-                                       "num_layers": 2,  # num layers
-                                       },
-                      "train_opts": {"epochs": 10, "grad_clip": 5,
-                                     "learning_rate": 2e-3,
-                                     # initial learning rate
-                                     "lr_decay_rate": 5,
-                                     # % to reduce learning rate by per epoch
-                                     "intermediate_checkpoints": True}}
-
-
-class ModelError(errors.CLgenError):
-  """
-  Module level error
-  """
-  pass
 
 
 class Model(object):
@@ -71,55 +47,25 @@ class Model(object):
   can lead to bad things happening.
   """
 
-  def __init__(self, corpus_: corpus.Corpus, **opts):
+  def __init__(self, config: model_pb2.Model):
+    """Instantiate a model.
+
+    Args:
+      config: A Model message.
     """
-    Instantiate model.
+    self.corpus = corpus.Corpus(config.corpus)
+    self.hash = self._ComputeHash(self.corpus, self.opts)
+    self.cache = cache.mkcache('model', f'{self.corpus.language}-{self.hash}')
+    logging.debug('model %s', self.hash)
 
-    Parameters
-    ----------
-    corpus : corpus.Corpus
-        Corpus instance.
-    **opts
-        Training options.
-    """
-    assert (isinstance(corpus_, corpus.Corpus))
-
-    def _hash(corpus_: corpus.Corpus, opts: dict) -> str:
-      """ compute model hash """
-      hashopts = deepcopy(opts)
-      del hashopts["created"]
-      del hashopts["train_opts"]["epochs"]
-      return crypto.sha1_list(corpus_.hash, *labtypes.dict_values(hashopts))
-
-    # Validate options
-    for key in opts:
-      if key not in DEFAULT_MODEL_OPTS:
-        raise errors.UserError(
-          "Unsupported model option '{}'. Valid keys: {}".format(key, ','.join(
-            sorted(DEFAULT_MODEL_OPTS.keys()))))
-
-    # set properties
-    self.opts = labtypes.update(deepcopy(DEFAULT_MODEL_OPTS), opts)
-    self.corpus = corpus_
-    self.hash = _hash(self.corpus, self.opts)
-    self.cache = cache.mkcache("model", f"{self.corpus.language}-{self.hash}")
-
-    logging.debug("model %s", self.hash)
+    # TODO(cec): Continue from here.
 
     # validate metadata against cache, and restore stats
-    self.stats = {"epoch_times": [], "epoch_costs": [], "epoch_batches": []}
-    meta = deepcopy(self.to_json())
+    self.stats = {'epoch_times': [], 'epoch_costs': [], 'epoch_batches': []}
+    meta = {"statis": self.stats}
     if self.cache.get("META"):
       cached_meta = jsonutil.read_file(self.cache["META"])
       self.stats = cached_meta["stats"]  # restore stats
-
-      if "created" in cached_meta:
-        del cached_meta["created"]
-      del meta["created"]
-
-      if "created" in cached_meta["corpus"]:
-        del cached_meta["corpus"]["created"]
-      del meta["corpus"]["created"]
 
       if "stats" in cached_meta:
         del cached_meta["stats"]
@@ -134,7 +80,20 @@ class Model(object):
         raise errors.InternalError(
           "metadata mismatch in model %s" % self.cache["META"])
     else:
-      self._flush_meta()
+      self._FlushMeta()
+
+  @staticmethod
+  def _ComputeHash(corpus_: corpus.Corpus, config: model_pb2.Model) -> str:
+    """Compute model hash.
+
+    The hash is computed from the ID of the corpus and the serialized
+    representation of the config proto.
+    """
+    config_without_corpus = model_pb2.Model()
+    config_without_corpus.CopyFrom(config)
+    config_without_corpus.ClearField('corpus')
+    return crypto.sha1_list(corpus_.hash,
+                            config_without_corpus.SerializeToString())
 
   def _init_tensorflow(self, infer: bool = False) -> 'tf':
     """
@@ -333,12 +292,12 @@ class Model(object):
           self.stats["epoch_costs"].append(float(train_cost))
           self.stats["epoch_times"].append(epoch_duration)
           self.stats["epoch_batches"].append(batch_num + 1)
-          self._flush_meta()
+          self._FlushMeta()
 
     return self
 
-  def _flush_meta(self) -> None:
-    jsonutil.write_file(self.cache.keypath("META"), self.to_json())
+  def _FlushMeta(self) -> None:
+    jsonutil.write_file(self.cache.keypath("META"), self.meta)
 
   def train(self) -> 'Model':
     """
@@ -393,12 +352,6 @@ class Model(object):
     return (f'model[{self.shorthash}]: '
             '{self.rnn_size}x{self.num_layers}x{self.epochs} {celltype}')
 
-  def to_json(self) -> dict:
-    d = deepcopy(self.opts)
-    d["corpus"] = self.corpus.to_json()
-    d["stats"] = self.stats
-    return d
-
   def __eq__(self, rhs) -> bool:
     if not isinstance(rhs, Model):
       return False
@@ -421,34 +374,6 @@ class Model(object):
       return self.cache.path
     else:
       return None
-
-  @staticmethod
-  def from_json(model_json: dict) -> 'Model':
-    """
-    Load model from JSON.
-
-    Parameters
-    ----------
-    model_json : dict
-        JSON specification.
-
-    Returns
-    -------
-    Model
-        Model instance.
-    """
-    assert (isinstance(model_json, dict))
-
-    if "corpus" not in model_json:
-      raise errors.UserError("model JSON has no corpus entry")
-
-    # create corpus and remove from JSON
-    corpus_ = corpus.Corpus.from_json(model_json.pop("corpus"))
-
-    if "stats" in model_json:  # ignore stats
-      del model_json["stats"]
-
-    return Model(corpus_, **model_json)
 
 
 def models() -> Iterator[Model]:
@@ -490,7 +415,7 @@ def models_to_tab(*models: List[Model]) -> PrettyTable:
   tab.sortby = "nodes"
 
   for model in models:
-    meta = model.to_json()
+    meta = model.meta
 
     nodes = meta["architecture"]["rnn_size"]
     layers = meta["architecture"]["num_layers"]
