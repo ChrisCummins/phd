@@ -17,6 +17,7 @@
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
 import sys
+import tempfile
 
 import numpy as np
 import pytest
@@ -70,6 +71,13 @@ def test_hash(clgen_cache_dir):
      "eof": True})
   assert c1.hash == c2.hash
   assert c2.hash != c3.hash
+
+
+def test_empty_corpus_raises_error(clgen_cache_dir):
+  """Test that a corpus with no data raises an error."""
+  with tempfile.TemporaryDirectory() as d:
+    with pytest.raises(errors.EmptyCorpusException):
+      corpus.Corpus.from_json({"language": "opencl", "path": d})
 
 
 def test_get_features():

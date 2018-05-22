@@ -487,19 +487,19 @@ class Corpus(object):
     self.vocab = self.atomizer.vocab
 
   def _generate_kernel_corpus(self) -> str:
-    """ dump all kernels into a string in a random order """
+    """Concatenate all kernels into a string in a random order.
+
+    Returns:
+      A concatenated corpus string.
+    """
     db = dbutil.connect(self.contentcache["kernels.db"])
     c = db.cursor()
-
-    # if preservering order, order by line count. Else, order randomly
+    # If preservering order, order by line count. Else, order randomly
     orderby = "LC(contents)" if self.opts["preserve_order"] else "RANDOM()"
-
     c.execute("SELECT PreprocessedFiles.Contents FROM PreprocessedFiles "
               "WHERE status=0 ORDER BY {orderby}".format(orderby=orderby))
-
     # If file separators are requested, insert EOF markers between files
     sep = '\n\n// EOF\n\n' if self.opts["eof"] else '\n\n'
-
     return sep.join(row[0] for row in c.fetchall())
 
   def create_batches(self) -> None:
@@ -679,6 +679,11 @@ class Corpus(object):
     -------
     Corpus
         Insantiated corpus.
+
+    Raises
+    ------
+    EmptyCorpusException
+        In case the corpus contains no data.
     """
     path = corpus_json.pop("path", None)
     uid = corpus_json.pop("id", None)
@@ -689,6 +694,8 @@ class Corpus(object):
       if not fs.isdir(path):
         raise errors.UserError(
           "Corpus path '{}' is not a directory".format(path))
+      if fs.directory_is_empty(path):
+        raise errors.EmptyCorpusException(f"Corpus path '{path}' is empty")
       dirhashcache_ = dirhashcache.DirHashCache(cache.cachepath("dirhash.db"),
                                                 'sha1')
       uid = prof.profile(dirhashcache_.dirhash, path)

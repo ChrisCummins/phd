@@ -34,6 +34,13 @@ class InvalidFile(UserError):
   pass
 
 
+class EmptyCorpusException(UserError):
+  """
+  Raised in case a corpus contains no data.
+  """
+  pass
+
+
 class LlvmException(CLgenError):
   """LLVM Error"""
   pass
