@@ -134,8 +134,8 @@ class SampleProducer(Thread):
         return started, depth
 
       init_started, init_depth = get_bracket_depth(self.start_text)
-      atomize = model.corpus.atomizer.atomize
-      deatomize = model.corpus.atomizer.deatomize
+      atomize = model.corpus.atomizer.AtomizeString
+      deatomize = model.corpus.atomizer.DeatomizeIndices
 
       while not self.stop_requested:
         buf = [StringIO() for _ in range(batch_size)]

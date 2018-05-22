@@ -447,18 +447,16 @@ class Corpus(object):
 
       Returns
       -------
-      atomizers.Atomizer
+      atomizers.AtomizerBase
           Atomizer.
       """
-      all_atomizers = {"char": atomizers.CharacterAtomizer,
-                       "greedy": atomizers.GreedyAtomizer, }
-      atomizerclass = all_atomizers.get(vocab, None)
-      if atomizerclass is None:
-        atomizer_names = ", ".join(sorted(all_atomizers.keys()))
-        raise errors.UserError(f"Unknown vocabulary type '{vocab}'. "
-                               f"Supported values: {atomizer_names}")
+      if vocab == "char":
+        return atomizers.AsciiCharacterAtomizer.FromText(corpus_txt)
+      elif vocab == "greedy":
+        atoms = languages.atoms_for_lang(self.language)
+        return atomizers.GreedyAtomizer(corpus_txt, atoms)
       else:
-        return atomizerclass.from_text(self.language, corpus_txt)
+        raise errors.UserError(f"Unknown vocabulary type '{vocab}'")
 
     logging.debug("creating vocab file")
     data = self._read_txt()
@@ -509,7 +507,7 @@ class Corpus(object):
     data = self._generate_kernel_corpus()
 
     # encode corpus into vocab indices
-    self._tensor = self.atomizer.atomize(data)
+    self._tensor = self.atomizer.AtomizeString(data)
 
     batch_size = self.batch_size
     seq_length = self.seq_length
