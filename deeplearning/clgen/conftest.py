@@ -9,6 +9,7 @@ from absl import flags
 
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
+from deeplearning.clgen.proto import sampler_pb2
 
 
 FLAGS = flags.FLAGS
@@ -87,3 +88,13 @@ def abc_model_config(abc_corpus_config):
                                        save_intermediate_checkpoints=False)
   return model_pb2.Model(corpus=abc_corpus_config, architecture=architecture,
                          training=training)
+
+
+@pytest.fixture(scope='function')
+def abc_sampler_config():
+  """The sampler config for a simple Sampler."""
+  maxlen = sampler_pb2.MaxTokenLength(maximum_tokens_in_sample=5)
+  sample_stop = [sampler_pb2.SampleTerminationCriterion(maxlen=maxlen)]
+  return sampler_pb2.Sampler(start_text='a', batch_size=5, seed=0,
+                             termination_criteria=sample_stop,
+                             min_num_samples=5)

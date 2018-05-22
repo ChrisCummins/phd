@@ -106,6 +106,7 @@ py_library(
     deps = [
         "//deeplearning/clgen/proto:corpus_py_pb2",
         "//deeplearning/clgen/proto:model_py_pb2",
+        "//deeplearning/clgen/proto:sampler_py_pb2",
     ],
 )
 

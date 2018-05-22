@@ -9,13 +9,15 @@ message Sampler {
   // begin with this text.
   optional string start_text = 1;
   // The sampling batch size.
-  optional int32 batch_size = 2 [default = 50];
+  optional int32 batch_size = 2;
   // A value used to seed the RNG. A sampler invoked twice with the same
   // seed and the same settings will produce the same output. If no seed is set,
   // the RNG is seeded (pseudo)randomly.
   optional int64 seed = 3;
-  // The criteria that determine when to terminate sampling.
+  // The criteria that determine when to terminate a sample.
   repeated SampleTerminationCriterion termination_criteria = 4;
+  // The criteria that determine when to terminate sampling.
+  optional int32 min_num_samples = 5;
 }
 
 // Criteria used for determining when to stop sampling.
@@ -28,10 +30,10 @@ message SampleTerminationCriterion {
 
 message MaxTokenLength {
   optional int32 maximum_tokens_in_sample = 1;
-  optional bool include_start_text_in_maximum = 2 [default = true];
+  optional bool include_start_text_in_maximum = 2;
 }
 
 message SymetricalTokenDepth {
-  optional string depth_increase_token = 1 [default = "{"];
-  optional string depth_decrease_token = 2 [default = "}"];
+  optional string depth_increase_token = 1;
+  optional string depth_decrease_token = 2;
 }
