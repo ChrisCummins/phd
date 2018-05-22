@@ -180,7 +180,8 @@ def isdir(*components):
     return False
 
 
-def ls(root=".", abspaths=False, recursive=False):
+def ls(root: typing.Union[str, pathlib.Path] = ".", abspaths=False,
+       recursive=False):
   """
   Return a list of files in directory.
 
