@@ -2,12 +2,12 @@
 """
 import os
 import os.path
+import pathlib
 import re
 import shutil
-
-import pathlib
 import typing
 from glob import iglob
+
 from humanize import naturalsize
 from send2trash import send2trash
 
@@ -436,14 +436,12 @@ def read(*components, **kwargs):
 
     if rstrip:
       # Ignore comments, and right strip results.
-      return [re.match(not_comment_re, line).group(0).rstrip()
-              for line in lines
+      return [re.match(not_comment_re, line).group(0).rstrip() for line in lines
               if not re.match(comment_line_re, line)]
     else:
       # Ignore comments, and don't strip results.
-      return [re.match(not_comment_re, line).group(0)
-              for line in lines
-              if not re.match(comment_line_re, line)]
+      return [re.match(not_comment_re, line).group(0) for line in lines if
+              not re.match(comment_line_re, line)]
   elif rstrip:
     # No comments, and right strip results.
     return [line.rstrip() for line in lines]
@@ -522,8 +520,26 @@ def files_from_list(*paths):
     if isfile(path):
       ret.append(abspath(path))
     elif isdir(path):
-      ret += [f for f in ls(path, abspaths=True, recursive=True)
-              if isfile(f)]
+      ret += [f for f in ls(path, abspaths=True, recursive=True) if isfile(f)]
     else:
       raise File404(path)
   return ret
+
+
+def directory_is_empty(directory: pathlib.Path) -> bool:
+  """Return if a directory is empty.
+
+  A directory which does not exist is considered empty (returns True). A
+  directory containing only subdirectories but no files is considered not empty
+  (returns False).
+
+  Args:
+    directory: The path of a directory.
+
+  Returns:
+    True if directory is empty, else False.
+  """
+  for _, subdirs, files in os.walk(path(directory)):
+    if subdirs or files:
+      return False
+  return True

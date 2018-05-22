@@ -1,9 +1,10 @@
 """Unit tests for //lib/labm8:fs."""
-import sys
-
 import os
-import pytest
+import pathlib
+import sys
 import tempfile
+
+import pytest
 from absl import app
 
 from lib.labm8 import fs
@@ -18,8 +19,7 @@ def test_path():
 
 def test_path_homedir():
   assert os.path.expanduser("~") == fs.path("~")
-  assert (os.path.join(os.path.expanduser("~"), "foo") ==
-          fs.path("~", "foo"))
+  assert (os.path.join(os.path.expanduser("~"), "foo") == fs.path("~", "foo"))
 
 
 def test_must_exist():
@@ -32,16 +32,14 @@ def test_must_exist():
 
 # abspath()
 def test_abspath():
-  assert (os.path.abspath(".") + "/foo/bar" ==
-          fs.abspath("foo", "bar"))
-  assert (os.path.abspath(".") + "/foo/bar/car" ==
-          fs.abspath("foo/bar", "car"))
+  assert (os.path.abspath(".") + "/foo/bar" == fs.abspath("foo", "bar"))
+  assert (os.path.abspath(".") + "/foo/bar/car" == fs.abspath("foo/bar", "car"))
 
 
 def test_abspath_homedir():
   assert os.path.expanduser("~") == fs.abspath("~")
-  assert (os.path.join(os.path.expanduser("~"), "foo") ==
-          fs.abspath("~", "foo"))
+  assert (
+      os.path.join(os.path.expanduser("~"), "foo") == fs.abspath("~", "foo"))
 
 
 # is_subdir()
@@ -122,66 +120,28 @@ def test_isdir():
 # read()
 def test_read():
   assert ['Hello, world!'] == fs.read("lib/labm8/data/test/hello_world")
-  assert ([
-            '# data1 - test file',
-            'This',
-            'is a test file',
-            'With',
-            'trailing  # comment',
-            '',
-            '',
-            '',
-            'whitespace',
-            '0.344'
-          ] ==
-          fs.read("lib/labm8/data/test/data1"))
+  assert (['# data1 - test file', 'This', 'is a test file', 'With',
+           'trailing  # comment', '', '', '', 'whitespace', '0.344'] == fs.read(
+    "lib/labm8/data/test/data1"))
 
 
 def test_read_no_rstrip():
-  assert ([
-            '# data1 - test file\n',
-            'This\n',
-            'is a test file\n',
-            'With\n',
-            'trailing  # comment  \n',
-            '\n',
-            '\n',
-            '\n',
-            'whitespace\n',
-            '0.344\n'
-          ] ==
-          fs.read("lib/labm8/data/test/data1", rstrip=False))
+  assert (['# data1 - test file\n', 'This\n', 'is a test file\n', 'With\n',
+           'trailing  # comment  \n', '\n', '\n', '\n', 'whitespace\n',
+           '0.344\n'] == fs.read("lib/labm8/data/test/data1", rstrip=False))
 
 
 def test_read_ignore_comments():
-  assert ([
-            'This',
-            'is a test file',
-            'With',
-            'trailing',
-            '',
-            '',
-            '',
-            'whitespace',
-            '0.344'
-          ] ==
-          fs.read("lib/labm8/data/test/data1", comment_char="#"))
+  assert (
+      ['This', 'is a test file', 'With', 'trailing', '', '', '', 'whitespace',
+       '0.344'] == fs.read("lib/labm8/data/test/data1", comment_char="#"))
 
 
 def test_read_ignore_comments_no_rstrip():
-  assert ([
-            'This\n',
-            'is a test file\n',
-            'With\n',
-            'trailing  ',
-            '\n',
-            '\n',
-            '\n',
-            'whitespace\n',
-            '0.344\n'
-          ] ==
-          fs.read("lib/labm8/data/test/data1",
-                  rstrip=False, comment_char="#"))
+  assert (
+      ['This\n', 'is a test file\n', 'With\n', 'trailing  ', '\n', '\n', '\n',
+       'whitespace\n', '0.344\n'] == fs.read("lib/labm8/data/test/data1",
+                                             rstrip=False, comment_char="#"))
 
 
 def test_read_empty_file():
@@ -259,7 +219,8 @@ def test_rm_glob():
 
 
 # rmtrash()
-@pytest.mark.skip(reason='Insufficient access privileges for operation on macOS')
+@pytest.mark.skip(
+  reason='Insufficient access privileges for operation on macOS')
 def test_rmtrash():
   with tempfile.NamedTemporaryFile(prefix='labm8_') as f:
     assert fs.isfile(f.name)
@@ -293,8 +254,7 @@ def test_cp():
 
 
 def test_cp_no_file():
-  pytest.raises(IOError, fs.cp,
-                "/not a real src", "/not/a/real dest")
+  pytest.raises(IOError, fs.cp, "/not a real src", "/not/a/real dest")
 
 
 def test_cp_dir():
@@ -334,8 +294,8 @@ def test_cp_over_dir():
   assert fs.isfile("/tmp/labm8.tmp.src/foo")
   assert fs.isdir("/tmp/labm8.tmp.copy")
   assert fs.isfile("/tmp/labm8.tmp.copy/foo")
-  assert (fs.read("/tmp/labm8.tmp.src/foo") ==
-          fs.read("/tmp/labm8.tmp.copy/foo"))
+  assert (
+      fs.read("/tmp/labm8.tmp.src/foo") == fs.read("/tmp/labm8.tmp.copy/foo"))
 
 
 # mv()
@@ -368,31 +328,24 @@ def test_ls():
 
 
 def test_ls_recursive():
-  assert fs.ls("lib/labm8/data/test/testdir", recursive=True) == [
-    "a", "b", "c", "c/e", "c/f", "c/f/f", "c/f/f/i", "c/f/h", "c/g", "d",
-  ]
+  assert fs.ls("lib/labm8/data/test/testdir", recursive=True) == ["a", "b", "c",
+                                                                  "c/e", "c/f",
+                                                                  "c/f/f",
+                                                                  "c/f/f/i",
+                                                                  "c/f/h",
+                                                                  "c/g", "d", ]
 
 
 def test_ls_abspaths():
   fs.cp("lib/labm8/data/test/testdir", "/tmp/testdir")
-  assert fs.ls("/tmp/testdir", abspaths=True) == [
-    "/tmp/testdir/a",
-    "/tmp/testdir/b",
-    "/tmp/testdir/c",
-    "/tmp/testdir/d",
-  ]
+  assert fs.ls("/tmp/testdir", abspaths=True) == ["/tmp/testdir/a",
+                                                  "/tmp/testdir/b",
+                                                  "/tmp/testdir/c",
+                                                  "/tmp/testdir/d", ]
   assert fs.ls("/tmp/testdir", recursive=True, abspaths=True) == [
-    "/tmp/testdir/a",
-    "/tmp/testdir/b",
-    "/tmp/testdir/c",
-    "/tmp/testdir/c/e",
-    "/tmp/testdir/c/f",
-    "/tmp/testdir/c/f/f",
-    "/tmp/testdir/c/f/f/i",
-    "/tmp/testdir/c/f/h",
-    "/tmp/testdir/c/g",
-    "/tmp/testdir/d",
-  ]
+    "/tmp/testdir/a", "/tmp/testdir/b", "/tmp/testdir/c", "/tmp/testdir/c/e",
+    "/tmp/testdir/c/f", "/tmp/testdir/c/f/f", "/tmp/testdir/c/f/f/i",
+    "/tmp/testdir/c/f/h", "/tmp/testdir/c/g", "/tmp/testdir/d", ]
   fs.rm("/tmp/testdir")
 
 
@@ -417,9 +370,9 @@ def test_lsdirs():
 
 
 def test_lsdirs_recursive():
-  assert fs.lsdirs("lib/labm8/data/test/testdir", recursive=True) == [
-    "c", "c/f", "c/f/f",
-  ]
+  assert fs.lsdirs("lib/labm8/data/test/testdir", recursive=True) == ["c",
+                                                                      "c/f",
+                                                                      "c/f/f", ]
 
 
 def test_lsdirs_bad_path():
@@ -437,9 +390,12 @@ def test_lsfiles():
 
 
 def test_lsfiles_recursive():
-  assert fs.lsfiles("lib/labm8/data/test/testdir", recursive=True) == [
-    "a", "b", "c/e", "c/f/f/i", "c/f/h", "c/g", "d",
-  ]
+  assert fs.lsfiles("lib/labm8/data/test/testdir", recursive=True) == ["a", "b",
+                                                                       "c/e",
+                                                                       "c/f/f/i",
+                                                                       "c/f/h",
+                                                                       "c/g",
+                                                                       "d", ]
 
 
 def test_lsfiles_bad_path():
@@ -449,6 +405,39 @@ def test_lsfiles_bad_path():
 
 def test_lsfiles_single_file():
   assert fs.lsfiles("lib/labm8/data/test/testdir/a") == ["a"]
+
+
+def test_directory_is_empty_empty_dir():
+  """Test that en empty directory returns True."""
+  with tempfile.TemporaryDirectory() as d:
+    assert fs.directory_is_empty(d)
+
+
+def test_directory_is_empty_only_subdirs():
+  """Test that a subdirectory means the directory is not empty."""
+  with tempfile.TemporaryDirectory() as d:
+    (pathlib.Path(d) / 'a').mkdir()
+    assert not fs.directory_is_empty(d)
+
+
+def test_directory_is_empty_file():
+  """Test that a file means the directory is not empty."""
+  with tempfile.TemporaryDirectory() as d:
+    (pathlib.Path(d) / 'a').touch()
+    assert not fs.directory_is_empty(d)
+
+
+def test_directory_is_empty_non_existent():
+  """Test that a non-existent path is an empty directory."""
+  with tempfile.TemporaryDirectory() as d:
+    assert fs.directory_is_empty(pathlib.Path(d) / 'a')
+
+
+def test_directory_is_empty_file_argument():
+  """Test that path to a file is an empty directory."""
+  with tempfile.TemporaryDirectory() as d:
+    (pathlib.Path(d) / 'a').touch()
+    assert fs.directory_is_empty(pathlib.Path(d) / 'a')
 
 
 def main(argv):  # pylint: disable=missing-docstring
