@@ -341,7 +341,7 @@ class SampleConsumer(Thread):
       while True:
         sample_time = time()
         # Block while waiting for a new sample to come in.
-        sample = self.queue.get(timeout=10).strip()
+        sample = self.queue.get(timeout=120).strip()
         # Compute the sample ID.
         kid = crypto.sha1_str(sample)
         # Add the new sample to the database.
