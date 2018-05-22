@@ -268,7 +268,6 @@ py_test(
         ":model",
         "//deeplearning/clgen/proto:corpus_py_pb2",
         "//deeplearning/clgen/proto:model_py_pb2",
-        "//deeplearning/clgen/tests:testlib",
     ],
 )
 

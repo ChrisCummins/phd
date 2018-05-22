@@ -7,7 +7,6 @@ from absl import app
 
 from deeplearning.clgen import model
 from deeplearning.clgen.proto import model_pb2
-from deeplearning.clgen.tests import testlib as tests
 from lib.labm8 import crypto
 from lib.labm8 import fs
 
@@ -103,5 +102,3 @@ def main(argv):
 
 if __name__ == '__main__':
   app.run(main)
-
-a = tests
