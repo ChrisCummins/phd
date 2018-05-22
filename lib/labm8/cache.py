@@ -1,9 +1,11 @@
 """Transient and persistent caching mechanisms.
 """
 import atexit
-
 import json
+import pathlib
 import re
+import typing
+
 import six
 
 from lib.labm8 import crypto
@@ -19,7 +21,7 @@ class Cache(object):
   functionality.
   """
 
-  def get(self, key, default=None):
+  def get(self, key, default=None) -> typing.Optional[pathlib.Path]:
     """
     Retrieve an item from cache.
 
@@ -29,19 +31,19 @@ class Cache(object):
     """
     raise NotImplementedError
 
-  def clear(self):
+  def clear(self) -> None:
     """
     Remove all items from cache.
     """
     raise NotImplementedError
 
-  def items(self):
+  def items(self) -> typing.Iterable[pathlib.Path]:
     """
     Returns a generator for iterating over (key, value) pairs.
     """
     raise NotImplementedError
 
-  def __getitem__(self, key):
+  def __getitem__(self, key) -> pathlib.Path:
     """
     Retrieve an item from cache.
 
@@ -53,31 +55,31 @@ class Cache(object):
     """
     raise NotImplementedError
 
-  def __setitem__(self, key, value):
+  def __setitem__(self, key, value) -> None:
     """
     Set (key, value) pair.
     """
     raise NotImplementedError
 
-  def __contains__(self, key):
+  def __contains__(self, key) -> bool:
     """
     Returns whether key is in cache.
     """
     raise NotImplementedError
 
-  def __delitem__(self, key):
+  def __delitem__(self, key) -> None:
     """
     Remove (key, value) pair.
     """
     raise NotImplementedError
 
-  def __iter__(self):
+  def __iter__(self) -> typing.Iterator[pathlib.Path]:
     """
     Iterate over all cache entries.
     """
     raise NotImplementedError
 
-  def __len__(self):
+  def __len__(self) -> int:
     """
     Get the number of entries in the cache.
     """
