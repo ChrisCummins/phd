@@ -22,8 +22,8 @@ message Corpus {
   // A list of preprocessor passes to run on each contentfile in the corpus
   // prior to training, in the order in which they are run.
   repeated string preprocessors = 30;
-  optional int32 sequence_length = 31 [default = 50];
-  optional string contentfile_separator = 32 [default = "\n\n"];
+  optional int32 sequence_length = 31;
+  optional string contentfile_separator = 32;
 }
 
 message GreedyMulticharTokenizer {
