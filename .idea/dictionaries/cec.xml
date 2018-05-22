@@ -2,6 +2,7 @@
   <dictionary name="cec">
     <words>
       <w>clgen</w>
+      <w>contentfiles</w>
       <w>corpuses</w>
       <w>dataset</w>
       <w>gsize</w>
