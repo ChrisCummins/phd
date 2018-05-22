@@ -33,8 +33,8 @@ message GenerateTestcasesResponse {
 
 // A testcase generator which uses CLgen to generate programs.
 message ClgenGenerator {
+  // Configuration of the service host.
   optional ServiceConfig service = 1;
-  optional clgen.Corpus corpus = 2;
-  optional clgen.Model model = 3;
-  optional clgen.Sampler sampler = 4;
+  // The CLgen instance configuration.
+  optional clgen.Instance instance = 2;
 }

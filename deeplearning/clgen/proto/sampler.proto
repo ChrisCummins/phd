@@ -1,0 +1,37 @@
+// The file defines the protos for specificying CLgen samplers.
+
+syntax = "proto2";
+package clgen;
+
+// The specification of a CLgen sampler.
+message Sampler {
+  // The initial text to the seed the language model with. Each sample will
+  // begin with this text.
+  optional string start_text = 1;
+  // The sampling batch size.
+  optional int32 batch_size = 2 [default = 50];
+  // A value used to seed the RNG. A sampler invoked twice with the same
+  // seed and the same settings will produce the same output. If no seed is set,
+  // the RNG is seeded (pseudo)randomly.
+  optional int64 seed = 3;
+  // The criteria that determine when to terminate sampling.
+  repeated SampleTerminationCriterion termination_criteria = 4;
+}
+
+// Criteria used for determining when to stop sampling.
+message SampleTerminationCriterion {
+  oneof criterion {
+    MaxTokenLength maxlen = 1;
+    SymetricalTokenDepth symtok = 2;
+  }
+}
+
+message MaxTokenLength {
+  optional int32 maximum_tokens_in_sample = 1;
+  optional bool include_start_text_in_maximum = 2 [default = true];
+}
+
+message SymetricalTokenDepth {
+  optional string depth_increase_token = 1 [default = "{"];
+  optional string depth_decrease_token = 2 [default = "}"];
+}

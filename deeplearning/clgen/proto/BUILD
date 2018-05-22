@@ -9,5 +9,26 @@ package(default_visibility = ["//visibility:public"])
 
 py_proto_library(
     name = "clgen_py_pb2",
+    proto_deps = [
+        ":corpus_py_pb2",
+        ":model_py_pb2",
+        ":sampler_py_pb2",
+    ],
     protos = ["clgen.proto"],
+)
+
+py_proto_library(
+    name = "corpus_py_pb2",
+    protos = ["corpus.proto"],
+)
+
+py_proto_library(
+    name = "model_py_pb2",
+    protos = ["model.proto"],
+    proto_deps = [":corpus_py_pb2"],
+)
+
+py_proto_library(
+    name = "sampler_py_pb2",
+    protos = ["sampler.proto"],
 )

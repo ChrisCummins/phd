@@ -1,0 +1,50 @@
+// The file defines the protos for specificying CLgen models.
+
+syntax = "proto2";
+package clgen;
+
+import "deeplearning/clgen/proto/corpus.proto";
+
+// The specification of a CLgen model.
+message Model {
+  optional clgen.Corpus corpus = 1;
+  optional NetworkArchitecture architecture = 2;
+  optional TrainingOptions training = 3;
+}
+
+// The specification of a CLgen language model.
+message NetworkArchitecture {
+  enum NeuronType {
+    UNKNOWN = 0; // UNKNOWN == error.
+    LSTM = 1;
+    RNN = 2;
+    GRU = 3;
+  }
+
+  // The type of neuron. Valid options are: {"lstm","rnn","gru"}.
+  optional NeuronType neuron_type = 1 [default = LSTM];
+  // The number of neurons in each layer of the network.
+  optional int32 neurons_per_layer = 2 [default = 512];
+  // The total number of layers in the network.
+  optional int32 num_layers = 3 [default = 2];
+}
+
+// Options used for training a CLgen language model.
+message TrainingOptions {
+  // The number of epochs to train the network for.
+  optional int32 num_epochs = 1 [default = 50];
+  // If true, shuffle the order of contentfiles in the corpus between each
+  // training epoch.
+  optional bool shuffle_corpus_contentfiles_between_epochs = 2;
+  // The training batch size.
+  optional int32 batch_size = 3 [default = 128];
+  optional int32 gradient_clip = 4 [default = 5];
+  // The initial learning rate.
+  optional float initial_learning_rate = 5 [default = 0.001];
+  // The rate at which the learning rate decays per epoch of training, in
+  // percent.
+  optional int32 percent_learning_rate_decay_per_epoch = 6 [default = 5];
+  // Whether to save a checkpoint at each epoch of training. This is
+  // recommended in most cases, as it allows incremental training of models.
+  optional bool save_intermediate_checkpoints = 7 [default = true];
+}

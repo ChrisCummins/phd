@@ -1,0 +1,32 @@
+// The file defines the protos for specificying CLgen training corpuses.
+
+syntax = "proto2";
+package clgen;
+
+// The specification of a training corpus.
+message Corpus {
+  // The identifying name of the programming language.
+  optional string language = 1;
+
+  oneof contentfiles {
+    string id = 10;
+    string path = 11;
+  }
+
+  // The atomizer to use to encode the corpus.
+  oneof atomizer {
+    bool ascii_character_atomizer = 20;
+    GreedyMulticharTokenizer greedy_multichar_atomizer = 21;
+  }
+
+  // A list of preprocessor passes to run on each contentfile in the corpus
+  // prior to training, in the order in which they are run.
+  repeated string preprocessors = 30;
+  optional int32 sequence_length = 31 [default = 50];
+  optional string contentfile_separator = 32 [default = "\n\n"];
+}
+
+message GreedyMulticharTokenizer {
+  // A list of multi-character tokens.
+  repeated string tokens = 1;
+}
