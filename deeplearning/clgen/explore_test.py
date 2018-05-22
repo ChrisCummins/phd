@@ -10,21 +10,18 @@ from deeplearning.clgen.tests import testlib as tests
 from lib.labm8 import fs
 
 
-def test_explore(clgen_cache_dir):
+def test_explore(clgen_cache_dir, abc_corpus_config):
   """Test that explore doesn't fail?? This is a shit test."""
   del clgen_cache_dir
-  c = corpus.Corpus.from_json({"language": "opencl",
-                               "path": tests.data_path("tiny", "corpus",
-                                                       exists=False)})
-  explore.explore(c.contentcache["kernels.db"])
+  c = corpus.Corpus(abc_corpus_config)
+  explore.explore(c.contentfiles_cache["kernels.db"])
 
 
 def test_explore_gh(clgen_cache_dir):
   """Test that explore doesn't fail?? This is a shit test."""
   del clgen_cache_dir
   db_path = tests.archive("tiny-gh.db")
-  assert (fs.exists(db_path))
-
+  assert fs.exists(db_path)
   explore.explore(db_path)
 
 
