@@ -284,6 +284,7 @@ py_library(
     deps = [
         ":package_util",
         "//config:getconfig",
+        "//lib/labm8:fs",
     ],
 )
 
