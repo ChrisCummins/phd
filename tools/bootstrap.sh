@@ -145,8 +145,8 @@ EOF
 export VIRTUAL_ENV=phd
 
 export PHD="$ROOT"
-export CC=$(which clang)
-export CXX=$(which clang++)
+export CC=clang
+export CXX=clang++
 export PYTHON=$PYTHON
 
 export PYTHONPATH=$ROOT:$ROOT/lib:$ROOT/bazel-genfiles
