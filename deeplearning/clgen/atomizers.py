@@ -218,6 +218,9 @@ class GreedyAtomizer(AtomizerBase):
     Returns:
       An atomizer instance.
     """
+    if not atoms:
+      raise errors.UserError('No atoms specified')
+
     # Instantiate a greedy atomizer using the full vocabulary.
     full_vocab = dict(zip(atoms, range(len(atoms))))
     c = GreedyAtomizer(full_vocab, determine_chars=True)
