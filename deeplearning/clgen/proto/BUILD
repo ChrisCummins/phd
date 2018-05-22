@@ -23,6 +23,16 @@ py_proto_library(
 )
 
 py_proto_library(
+    name = "internal_py_pb2",
+    proto_deps = [
+        ":corpus_py_pb2",
+        ":model_py_pb2",
+        ":sampler_py_pb2",
+    ],
+    protos = ["internal.proto"],
+)
+
+py_proto_library(
     name = "model_py_pb2",
     proto_deps = [":corpus_py_pb2"],
     protos = ["model.proto"],

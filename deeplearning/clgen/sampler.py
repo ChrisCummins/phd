@@ -1,10 +1,10 @@
 """Samplers for CLgen language models."""
+import pathlib
 import sys
 import typing
 from io import StringIO
 from queue import Queue
 from threading import Event, Thread
-from time import time
 
 import numpy as np
 import progressbar
@@ -17,11 +17,13 @@ from deeplearning.clgen import errors
 from deeplearning.clgen import explore
 from deeplearning.clgen import languages
 from deeplearning.clgen import model
+from deeplearning.clgen.proto import internal_pb2
 from deeplearning.clgen.proto import sampler_pb2
 from lib.labm8 import cache as labcache
 from lib.labm8 import crypto
-from lib.labm8 import jsonutil
+from lib.labm8 import labdate
 from lib.labm8 import lockfile
+from lib.labm8 import pbutil
 
 
 class Sampler(object):
@@ -68,22 +70,24 @@ class Sampler(object):
     sampler_model_hash = crypto.sha1_list([self.hash, model_.hash])
     cache_ = cache.mkcache('sampler', f'{model_.corpus.language}-'
                                       f'{sampler_model_hash}')
-    self.stats = {'time': 0, 'progress': 0}
-    self.meta = {}
-    if cache_.get('META'):
-      cached_meta = jsonutil.read_file(cache_['META'])
-      if 'stats' in cached_meta:
-        self.stats = cached_meta['stats']
-        del cached_meta['stats']
-      if self.meta != cached_meta:
-        raise errors.InternalError('sampler metadata mismatch')
-      self.meta['stats'] = self.stats
+    # Validate metadata against cache.
+    if cache_.get('META.pbtxt'):
+      cached_meta = pbutil.FromFile(pathlib.Path(cache_['META.pbtxt']),
+                                    internal_pb2.SamplerMeta())
+      if self.config != cached_meta.config:
+        raise errors.InternalError('Metadata mismatch')
+      if model_.config != cached_meta.model:
+        raise errors.InternalError('Metadata mismatch')
+      self.meta = cached_meta
     else:
+      self.meta = internal_pb2.SamplerMeta()
+      self.meta.config.CopyFrom(self.config)
+      self.meta.model.CopyFrom(model_.config)
       self._FlushMeta(cache_)
     return cache_
 
   def _FlushMeta(self, cache_):
-    jsonutil.write_file(cache_.keypath('META'), self.meta)
+    pbutil.ToFile(self.meta, pathlib.Path(cache_.keypath('META.pbtxt')))
 
   def Sample(self, model_: model.Model) -> None:
     """Sample CLgen model.
@@ -331,24 +335,23 @@ class SampleConsumer(Thread):
     return dbutil.num_rows_in(self.db_path, 'ContentFiles')
 
   def run(self) -> None:
-    i = dbutil.num_rows_in(self.db_path, 'ContentFiles')
-
     if not logging.get_verbosity() == logging.DEBUG:
       bar = progressbar.ProgressBar(max_value=self.max_i)
       bar.update(self.progress())
 
     try:
       while True:
-        sample_time = time()
+        sample_start_time = labdate.MillisecondsTimestamp()
         # Block while waiting for a new sample to come in.
         sample = self.queue.get(timeout=120).strip()
-        # Compute the sample ID.
-        kid = crypto.sha1_str(sample)
+        sample_end_time = labdate.MillisecondsTimestamp()
+        sample_id = crypto.sha1_str(sample)
+        sample_time = sample_end_time - sample_start_time
         # Add the new sample to the database.
         db = dbutil.connect(self.db_path)
         c = db.cursor()
         dbutil.sql_insert_dict(c, 'ContentFiles',
-                               {'id': kid, 'contents': sample},
+                               {'id': sample_id, 'contents': sample},
                                ignore_existing=True)
         c.close()
         db.commit()
@@ -357,10 +360,6 @@ class SampleConsumer(Thread):
         progress = self.progress()
         if not logging.get_verbosity() == logging.DEBUG:
           bar.update(progress)
-        sample_time = time() - sample_time
-        self.sampler.stats['progress'] = progress
-        self.sampler.stats['time'] += sample_time
-        self.sampler._FlushMeta(self.cache)
         # Determine if we are done sampling.
         if self.term_condition():
           self.producer.stop()

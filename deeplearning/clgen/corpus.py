@@ -24,11 +24,12 @@ from deeplearning.clgen import fetch
 from deeplearning.clgen import languages
 from deeplearning.clgen import preprocess
 from deeplearning.clgen.proto import corpus_pb2
+from deeplearning.clgen.proto import internal_pb2
 from lib.labm8 import crypto
 from lib.labm8 import dirhashcache
 from lib.labm8 import fs
-from lib.labm8 import jsonutil
 from lib.labm8 import lockfile
+from lib.labm8 import pbutil
 from lib.labm8 import prof
 from lib.labm8 import tar
 from lib.labm8 import text
@@ -96,18 +97,23 @@ class Corpus(object):
     logging.debug('contentfiles %s', self.content_id)
     logging.debug('corpus %s', self.hash)
 
-    self.stats = {"preprocess_time": 0}
-    self.meta = {"stats": self.stats}
-    if self.cache.get("META"):
-      self.meta = jsonutil.read_file(self.cache["META"])
+    # Validate metadata against cache.
+    if self.cache.get('META.pbtxt'):
+      cached_meta = pbutil.FromFile(pathlib.Path(self.cache['META.pbtxt']),
+                                    internal_pb2.CorpusMeta())
+      if config != cached_meta.config:
+        raise errors.InternalError('Metadata mismatch')
+      self.meta = cached_meta
     else:
+      self.meta = internal_pb2.CorpusMeta()
+      self.meta.config.CopyFrom(self.config)
       self._FlushMeta()
 
     with path and self.lock.acquire(replace_stale=True):
       self._CreateCorpusFiles(path)
 
   def _FlushMeta(self):
-    jsonutil.write_file(self.cache.keypath("META"), self.meta)
+    pbutil.ToFile(self.meta, pathlib.Path(self.cache.keypath('META.pbtxt')))
 
   def _CreateCorpusFiles(self, contentfiles_dir: pathlib.Path) -> None:
     """Perform the initial creation of derived corpus files.
@@ -162,7 +168,7 @@ WHERE ContentFiles.id NOT IN (
 
     if modified:
       preprocess_time = time() - preprocess_time
-      self.stats["preprocess_time"] += preprocess_time
+      self.meta.preprocess_time_ms += int(preprocess_time * 1000)
       self._FlushMeta()
 
     # Create the corpus text if it does not exist.

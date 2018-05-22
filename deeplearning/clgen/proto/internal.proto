@@ -1,0 +1,40 @@
+// The file defines protos used internally with CLgen components.
+
+syntax = "proto2";
+package clgen;
+
+import "deeplearning/clgen/proto/corpus.proto";
+import "deeplearning/clgen/proto/model.proto";
+import "deeplearning/clgen/proto/sampler.proto";
+
+message CorpusMeta {
+  optional Corpus config = 1;
+  optional int32 preprocess_time_ms = 2;
+}
+
+message ModelMeta {
+  optional Model config = 1;
+  repeated ModelTrainingEpochStats training_stats = 2;
+}
+
+message ModelTrainingEpochStats {
+  optional int32 batch_num = 1;
+  optional int32 time_ms = 2;
+  optional double training_cost = 3;
+}
+
+message SamplerMeta {
+  optional Sampler config = 1;
+  optional Model model = 2;
+}
+
+message Sample {
+  optional string text = 1;
+  optional int32 sample_time_ms = 2;
+  optional int64 sample_start_epoch_ms_utc = 3;
+}
+
+message SamplesBatch {
+  optional Sampler sampler = 1;
+  repeated Sample sample = 2;
+}

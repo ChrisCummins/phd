@@ -1,5 +1,6 @@
 """The CLgen language model."""
 import os
+import pathlib
 import typing
 from time import time
 
@@ -10,11 +11,12 @@ from prettytable import PrettyTable
 from deeplearning.clgen import cache
 from deeplearning.clgen import corpus
 from deeplearning.clgen import errors
+from deeplearning.clgen.proto import internal_pb2
 from deeplearning.clgen.proto import model_pb2
 from lib.labm8 import crypto
 from lib.labm8 import fs
-from lib.labm8 import jsonutil
 from lib.labm8 import lockfile
+from lib.labm8 import pbutil
 
 
 class Model(object):
@@ -46,22 +48,16 @@ class Model(object):
     if not config.architecture.HasField('neuron_type'):
       raise errors.UserError('Model.archictecture.neuron_type specified.')
 
-    # validate metadata against cache, and restore stats
-    self.stats = {'epoch_times': [], 'epoch_costs': [], 'epoch_batches': []}
-    self.meta = {"stats": self.stats}
-    if self.cache.get("META"):
-      cached_meta = jsonutil.read_file(self.cache["META"])
-      self.stats = cached_meta["stats"]  # restore stats
-
-      if "stats" in cached_meta:
-        del cached_meta["stats"]
-      del self.meta["stats"]
-
-      if self.meta != cached_meta:
-        logging.error("Computed META: %s", jsonutil.format_json(self.meta))
-        raise errors.InternalError(
-          "metadata mismatch in model %s" % self.cache["META"])
+    # Validate metadata against cache.
+    if self.cache.get('META.pbtxt'):
+      cached_meta = pbutil.FromFile(pathlib.Path(self.cache['META.pbtxt']),
+                                    internal_pb2.ModelMeta())
+      if config != cached_meta.config:
+        raise errors.InternalError('Metadata mismatch')
+      self.meta = cached_meta
     else:
+      self.meta = internal_pb2.ModelMeta()
+      self.meta.config.CopyFrom(self.config)
       self._FlushMeta()
 
   @staticmethod
@@ -264,14 +260,15 @@ class Model(object):
 
           # Update training time.
           epoch_duration = time() - epoch_start
-          self.stats["epoch_costs"].append(float(train_cost))
-          self.stats["epoch_times"].append(epoch_duration)
-          self.stats["epoch_batches"].append(batch_num + 1)
+          stat = self.meta.training_stats.add()
+          stat.batch_num = batch_num + 1
+          stat.time_ms = int(epoch_duration * 1000)
+          stat.training_cost = float(train_cost)
           self._FlushMeta()
     return self
 
   def _FlushMeta(self) -> None:
-    jsonutil.write_file(self.cache.keypath("META"), self.meta)
+    pbutil.ToFile(self.meta, pathlib.Path(self.cache.keypath('META.pbtxt')))
 
   def Train(self) -> 'Model':
     """Train the model.
@@ -348,9 +345,9 @@ def GetAllModels() -> typing.Iterator[Model]:
   if fs.isdir(cache.cachepath(), "model"):
     modeldirs = fs.ls(fs.path(cache.cachepath(), "model"), abspaths=True)
     for modeldir in modeldirs:
-      meta = jsonutil.read_file(fs.path(modeldir, "META"))
-      # TODO(cec): Fix.
-      model = Model(meta)
+      meta = pbutil.FromFile(pathlib.Path(fs.path(modeldir, 'META.pbtxt')),
+                             internal_pb2.ModelMeta())
+      model = Model(meta.config)
       yield model
 
 

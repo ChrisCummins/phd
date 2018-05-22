@@ -75,7 +75,7 @@ def test_Model_checkpoint_path_trained(clgen_cache_dir, abc_model_config):
   assert m.most_recent_checkpoint_path
   path = pathlib.Path(m.most_recent_checkpoint_path)
   assert fs.isfile(path / 'checkpoint')
-  assert fs.isfile(path / 'META')
+  assert fs.isfile(path / 'META.pbtxt')
 
 
 def test_Model_train_twice(clgen_cache_dir, abc_model_config):
@@ -85,10 +85,10 @@ def test_Model_train_twice(clgen_cache_dir, abc_model_config):
   m.Train()
   path = pathlib.Path(m.most_recent_checkpoint_path)
   f1a = crypto.md5_file(path / 'checkpoint')
-  f1b = crypto.md5_file(path / 'META')
+  f1b = crypto.md5_file(path / 'META.pbtxt')
   m.Train()
   f2a = crypto.md5_file(path / 'checkpoint')
-  f2b = crypto.md5_file(path / 'META')
+  f2b = crypto.md5_file(path / 'META.pbtxt')
   assert f1a == f2a
   assert f1b == f2b
 
