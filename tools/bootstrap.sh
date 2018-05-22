@@ -101,13 +101,14 @@ main() {
         fi
     fi
 
-    # Create autoenv environment file. This should be done last, since we can
-    # use the presence of the .env to determine if the project has been
-    # bootstrapped.
-    cp -v $ROOT/tools/env.sh $ROOT/.env
-    perl -pi -e "s|__ROOT__|$ROOT|g" $ROOT/.env
-
-    LIBCLANG_SO="/home/linuxbrew/.linuxbrew/opt/llvm/lib/libclang.so"
+    # Get the installation directory of our LLVM.
+    LLVM_PREFIX="$(brew --prefix llvm)"
+    # Sanity check to ensure that LLVM was installed correctly.
+    test -f "$LLVM_PREFIX/bin/clang"
+    test -f "$LLVM_PREFIX/bin/clang-format"
+    test -f "$LLVM_PREFIX/bin/clang++"
+    test -f "$LLVM_PREFIX/bin/opt"
+    LIBCLANG_SO="$LLVM_PREFIX/lib/libclang.so"
     if [[ ! -f "$LIBCLANG_SO" ]]; then
         LIBCLANG_SO=""
     fi
@@ -118,18 +119,39 @@ main() {
 # Proto: GlobalConfig
 paths {
   repo_root: "$ROOT"
-  cc: "$(which clang)"
-  cxx: "$(which clang++)"
-  opt: "$(which opt)"
+  cc: "$LLVM_PREFIX/bin/clang"
+  cxx: "$LLVM_PREFIX/bin/clang++"
+  opt: "$LLVM_PREFIX/bin/opt"
   libclang_so: "$LIBCLANG_SO"
-  clang_format: "$(which clang-format)"
+  clang_format: "$LLVM_PREFIX/bin/clang-format"
   python: "$PYTHON"
 }
 # TODO(cec): Enable cuda support through a flag at bootstrap time.
 with_cuda: false
 EOF
-    echo "Created $ROOT/config.pbtxt"
-    grep -v '^#' < "$ROOT/config.pbtxt"
+    echo "# Created $ROOT/config.pbtxt"
+    grep -v '^#' < "$ROOT/config.pbtxt" | sed 's/^/  /'
+
+    # Create autoenv environment file. This should be done last, since we can
+    # use the presence of the .env to determine if the project has been
+    # bootstrapped.
+    cat <<EOF >$ROOT/.env
+#!/bin/bash
+# Shell environment for the project.
+
+# Export a dummy virtualenv.
+# TODO(cec): Add a better way of signalling that we're in the phd env from
+# the command line.
+export VIRTUAL_ENV=phd
+
+export PHD="$ROOT"
+export CC=$(which clang)
+export CXX=$(which clang++)
+export PYTHON=$PYTHON
+
+export PYTHONPATH=$ROOT:$ROOT/lib:$ROOT/bazel-genfiles
+EOF
+    echo "# Created $ROOT/.env"
 }
 
 main $@
