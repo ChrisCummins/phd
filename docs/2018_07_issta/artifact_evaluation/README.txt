@@ -48,13 +48,11 @@ for installing docker may be found at https://docs.docker.com/install/
 
 Download our Dockerfile:
 
-    $ mkdir -p /tmp/deepsmith
-    $ wget -O/tmp/deepsmith/Dockerfile \
-        https://raw.githubusercontent.com/ChrisCummins/phd/master/docs/2018_07_issta/artifact_evaluation/Dockerfile
+    $ wget -ODockerfile https://raw.githubusercontent.com/ChrisCummins/phd/919a535e1c4ddc0a9aea3fa610550e14423fea74/docs/2018_07_issta/artifact_evaluation/Dockerfile
 
 Build the docker container using:
 
-    $ sudo docker build -t deepsmith /tmp/deepsmith
+    $ sudo docker build -t deepsmith .
 
 Launch the docker container using:
 
