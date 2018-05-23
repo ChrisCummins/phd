@@ -8,6 +8,7 @@ import subprocess
 import threading
 import typing
 
+import humanize
 import progressbar
 from absl import app
 from absl import flags
@@ -57,6 +58,7 @@ class AsyncWorker(threading.Thread):
   """Thread which clones github repos."""
 
   def __init__(self, meta_files: typing.List[pathlib.Path]):
+    super(AsyncWorker, self).__init__()
     self.meta_files = meta_files
     self.max = len(meta_files)
     self.i = 0
@@ -87,7 +89,8 @@ def main(argv) -> None:
                      IsRepoMetaFile(f)]
   random.shuffle(meta_files)
   worker = AsyncWorker(meta_files)
-  logging.info('Cloning %d repos from GitHub ...', worker.max)
+  logging.info('Cloning %s repos from GitHub ...',
+               humanize.intcomma(worker.max))
   bar = progressbar.ProgressBar(max_value=worker.max, redirect_stderr=True)
   worker.start()
   while worker.is_alive():
