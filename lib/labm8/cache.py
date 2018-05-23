@@ -234,7 +234,7 @@ class FSCache(Cache):
         root (str): String.
         escape_key (fn, optional): Function to convert keys to file names.
     """
-    self.path = root
+    self.path = pathlib.Path(root)
     self.escape_key = escape_key
 
     fs.mkdir(self.path)
