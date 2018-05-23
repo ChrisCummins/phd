@@ -13,13 +13,13 @@ more details.
 
 ## 1. Artifact Contents
 
- * `01_evaluate_generator/` A demonstration of training a DeepSmith model to 
+ * `01_evaluate_generator/` A demonstration of training a DeepSmith model to
    generate programs.
 
- * `02_evaluate_harness/` A demonstration which executes test cases on a local 
+ * `02_evaluate_harness/` A demonstration which executes test cases on a local
    OpenCL test bed which we found to cause crashes/bugs in at least one device.
 
- * `03_evaluate_results/` A demonstration of our differential testing approach. 
+ * `03_evaluate_results/` A demonstration of our differential testing approach.
    The results from the prior demonstration are combined with our own data from
    the paper to perform differential testing.
 
@@ -36,8 +36,8 @@ process for both is described below.
 
 ### 2.1. Docker container
 
-Our [Docker](https://docs.docker.com/install/) image must be run on a Linux host
-with an Intel CPU.
+Our [Docker](https://docs.docker.com/install/) image must be run on a host with
+an Intel CPU.
 
 Download our Dockerfile:
 
@@ -57,8 +57,8 @@ Launch an interactive shell in the docker container using:
 $ sudo docker run -it deepsmith /bin/zsh
 ```
 
-The docker image contains everything you need to evaluate our artifact 
-pre-installed, including an Intel OpenCL driver. Should you wish, you may 
+The docker image contains everything you need to evaluate our artifact
+pre-installed, including an Intel OpenCL driver. Should you wish, you may
 install drivers for additional OpenCL devices you have available on your system.
 
 
@@ -77,7 +77,7 @@ hardware you have available on your system. On macOS, OpenCL support is built
 in. OpenCL drivers on Linux are typically distributed as part of GPU driver
 packages or as standalone SDKs. Please refer to your manufacturers
 documentation (e.g. [Intel](https://software.intel.com/en-us/intel-opencl),
-[NVIDIA](http://www.nvidia.com/drivers), 
+[NVIDIA](http://www.nvidia.com/drivers),
 [AMD](https://www.amd.com/en-us/solutions/professional/hpc/opencl)).
 
 If you have not already, please clone this git repository and change to this
