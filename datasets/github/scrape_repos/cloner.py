@@ -5,6 +5,8 @@ This looks for repo meta files and clones any which have not been cloned.
 import pathlib
 import random
 import subprocess
+import threading
+import typing
 
 import progressbar
 from absl import app
@@ -51,6 +53,20 @@ def IsRepoMetaFile(f: str):
                                                   scrape_repos_pb2.GitHubRepoMetadata()))
 
 
+class AsyncWorker(threading.Thread):
+  """Thread which clones github repos."""
+
+  def __init__(self, meta_files: typing.List[pathlib.Path]):
+    self.meta_files = meta_files
+    self.max = len(meta_files)
+    self.i = 0
+
+  def run(self):
+    for i, meta_file in enumerate(self.meta_files):
+      self.i = i
+      CloneFromMetafile(meta_file)
+
+
 def main(argv) -> None:
   """Main entry point."""
   if len(argv) > 1:
@@ -70,8 +86,14 @@ def main(argv) -> None:
       meta_files += [pathlib.Path(directory / f) for f in directory.iterdir() if
                      IsRepoMetaFile(f)]
   random.shuffle(meta_files)
-  for meta_file in progressbar.ProgressBar()(meta_files):
-    CloneFromMetafile(meta_file)
+  worker = AsyncWorker(meta_files)
+  logging.info('Cloning %d repos from GitHub ...', worker.max)
+  bar = progressbar.ProgressBar(max_value=worker.max, redirect_stderr=True)
+  worker.start()
+  while worker.is_alive():
+    bar.update(worker.i)
+    worker.join(.5)
+  bar.update(worker.i)
 
 
 if __name__ == '__main__':
