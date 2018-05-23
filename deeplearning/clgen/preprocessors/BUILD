@@ -1,3 +1,24 @@
+# This package defines the preprocessor pipeline for CLgen.
+
+py_library(
+    name = "clang",
+    srcs = ["clang.py"],
+    deps = [
+        "//deeplearning/clgen:errors",
+        "//config:getconfig",
+    ],
+)
+
+py_test(
+    name = "clang_test",
+    srcs = ["clang_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":clang",
+    ],
+)
+
 py_library(
     name = "preprocess",
     srcs = ["preprocess.py"],
