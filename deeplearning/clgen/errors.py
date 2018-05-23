@@ -54,7 +54,12 @@ class ClangException(BadCodeException):
   pass
 
 
-class ClangFormatException(BadCodeException):
+class ClangTimeout(ClangException):
+  """Clang failed to terminate without time limit."""
+  pass
+
+
+class ClangFormatException(ClangException):
   """An error from clang-format."""
   pass
 
