@@ -2,21 +2,49 @@
 
 load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
 
-# The set of protocol buffers used by deepsmith. Note that proto files which
-# include other protos must be contained in the same py_proto_library target.
-# TODO(cec): Break this into one py_proto_library target per .proto file.
 py_proto_library(
-    name = "deepsmith",
+    name = "datastore_py_pb2",
     proto_deps = [
-        "//deeplearning/clgen/proto:clgen_py_pb2",
+        ":deepsmith_py_pb2",
+        ":service_py_pb2",
     ],
-    protos = [
-        "datastore.proto",
-        "deepsmith.proto",
-        "generator.proto",
-        "harness.proto",
-        "service.proto",
-    ],
+    protos = ["datastore.proto"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     with_grpc = True,
+)
+
+py_proto_library(
+    name = "deepsmith_py_pb2",
+    protos = ["deepsmith.proto"],
+    visibility = ["//deeplearning/deepsmith:__subpackages__"],
+)
+
+py_proto_library(
+    name = "generator_py_pb2",
+    proto_deps = [
+        ":deepsmith_py_pb2",
+        ":service_py_pb2",
+        "//deeplearning/clgen/proto:model_py_pb2",
+        "//deeplearning/clgen/proto:sampler_py_pb2",
+    ],
+    protos = ["generator.proto"],
+    visibility = ["//deeplearning/deepsmith:__subpackages__"],
+    with_grpc = True,
+)
+
+py_proto_library(
+    name = "harness_py_pb2",
+    proto_deps = [
+        ":deepsmith_py_pb2",
+        ":service_py_pb2",
+    ],
+    protos = ["harness.proto"],
+    visibility = ["//deeplearning/deepsmith:__subpackages__"],
+    with_grpc = True,
+)
+
+py_proto_library(
+    name = "service_py_pb2",
+    protos = ["service.proto"],
+    visibility = ["//deeplearning/deepsmith:__subpackages__"],
 )

@@ -11,7 +11,7 @@ py_library(
     deps = [
         ":datastore",
         ":db",
-        "//deeplearning/deepsmith/proto:deepsmith",
+        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
     ],
 )
 
@@ -36,7 +36,8 @@ py_library(
         ":testbed",
         ":testcase",
         ":toolchain",
-        "//deeplearning/deepsmith/proto:deepsmith",
+        "//deeplearning/deepsmith/proto:datastore_py_pb2",
+        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//lib/labm8:pbutil",
     ],
 )
@@ -46,7 +47,7 @@ py_library(
     srcs = ["db.py"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     deps = [
-        "//deeplearning/deepsmith/proto:deepsmith",
+        "//deeplearning/deepsmith/proto:datastore_py_pb2",
         "//lib/labm8:labdate",
         "//lib/labm8:pbutil",
     ],
@@ -71,7 +72,7 @@ py_library(
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     deps = [
         ":db",
-        "//deeplearning/deepsmith/proto:deepsmith",
+        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//lib/labm8:labdate",
     ],
 )
@@ -85,7 +86,7 @@ py_test(
     deps = [
         ":conftest",
         ":generator",
-        "//deeplearning/deepsmith/proto:deepsmith",
+        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
     ],
 )
 
@@ -95,7 +96,7 @@ py_library(
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     deps = [
         ":db",
-        "//deeplearning/deepsmith/proto:deepsmith",
+        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//lib/labm8:labdate",
         "//lib/labm8:system",
     ],
@@ -110,7 +111,7 @@ py_test(
     deps = [
         ":conftest",
         ":harness",
-        "//deeplearning/deepsmith/proto:deepsmith",
+        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
     ],
 )
 
@@ -128,7 +129,7 @@ py_library(
     deps = [
         ":client",
         ":db",
-        "//deeplearning/deepsmith/proto:deepsmith",
+        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//lib/labm8:labdate",
     ],
 )
@@ -142,7 +143,7 @@ py_library(
         ":profiling_event",
         ":testbed",
         ":testcase",
-        "//deeplearning/deepsmith/proto:deepsmith",
+        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//lib/labm8:labdate",
         "//lib/labm8:pbutil",
     ],
@@ -163,7 +164,7 @@ py_test(
         ":result",
         ":testbed",
         ":testcase",
-        "//deeplearning/deepsmith/proto:deepsmith",
+        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//lib/labm8:labdate",
     ],
 )
@@ -175,7 +176,7 @@ py_library(
     deps = [
         ":db",
         ":toolchain",
-        "//deeplearning/deepsmith/proto:deepsmith",
+        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//lib/labm8:labdate",
     ],
 )
@@ -190,7 +191,7 @@ py_test(
         ":conftest",
         ":testbed",
         ":toolchain",
-        "//deeplearning/deepsmith/proto:deepsmith",
+        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
     ],
 )
 
@@ -204,7 +205,7 @@ py_library(
         ":harness",
         ":profiling_event",
         ":toolchain",
-        "//deeplearning/deepsmith/proto:deepsmith",
+        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//lib/labm8:labdate",
         "//lib/labm8:pbutil",
     ],
@@ -224,7 +225,7 @@ py_test(
         ":profiling_event",
         ":testcase",
         ":toolchain",
-        "//deeplearning/deepsmith/proto:deepsmith",
+        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//lib/labm8:labdate",
     ],
 )

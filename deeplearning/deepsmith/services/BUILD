@@ -3,7 +3,7 @@ py_library(
     srcs = ["services.py"],
     visibility = ["//deeplearning/deepsmith/cli:__subpackages__"],
     deps = [
-        "//deeplearning/deepsmith/proto:deepsmith",
+        "//deeplearning/deepsmith/proto:service_py_pb2",
         "//lib/labm8:pbutil",
     ],
 )
@@ -16,7 +16,7 @@ py_binary(
     visibility = ["//deeplearning/deepsmith/cli:__subpackages__"],
     deps = [
         ":services",
-        "//deeplearning/deepsmith/proto:deepsmith",
+        "//deeplearning/deepsmith/proto:datastore_py_pb2",
         "//lib/labm8:pbutil",
     ],
 )
@@ -26,7 +26,7 @@ py_library(
     srcs = ["generator.py"],
     deps = [
         ":services",
-        "//deeplearning/deepsmith/proto:deepsmith",
+        "//deeplearning/deepsmith/proto:generator_py_pb2",
         "//lib/labm8:pbutil",
     ],
 )
@@ -40,7 +40,7 @@ py_binary(
     deps = [
         ":generator",
         ":services",
-        "//deeplearning/deepsmith/proto:deepsmith",
+        "//deeplearning/deepsmith/proto:generator_py_pb2",
         "//lib/labm8:pbutil",
     ],
 )
@@ -50,7 +50,7 @@ py_library(
     srcs = ["harness.py"],
     deps = [
         ":services",
-        "//deeplearning/deepsmith/proto:deepsmith",
+        "//deeplearning/deepsmith/proto:harness_py_pb2",
         "//lib/labm8:pbutil",
     ],
 )
@@ -64,7 +64,7 @@ py_binary(
     deps = [
         ":harness",
         ":services",
-        "//deeplearning/deepsmith/proto:deepsmith",
+        "//deeplearning/deepsmith/proto:harness_py_pb2",
         "//lib/labm8:pbutil",
     ],
 )
