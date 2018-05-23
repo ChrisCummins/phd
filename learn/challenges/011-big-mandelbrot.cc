@@ -22,6 +22,7 @@
 
 #ifdef use_mmap
 #include <fcntl.h>
+#include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
 #endif  // use_mmap
