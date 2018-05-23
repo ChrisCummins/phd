@@ -17,7 +17,7 @@ from lib.labm8 import pbutil
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string('clone_dir', None, 'The path to a LanguageCloneList file.')
+flags.DEFINE_string('clone_list', None, 'The path to a LanguageCloneList file.')
 flags.DEFINE_integer('repository_clone_timeout_minutes', 30,
                      'The maximum number of minutes to attempt to clone a '
                      'repository before '
@@ -52,13 +52,19 @@ def main(argv) -> None:
   if len(argv) > 1:
     raise app.UsageError('Too many command-line arguments.')
 
-  clone_dir = pathlib.Path(FLAGS.clone_dir or "")
-  if not clone_dir.is_dir():
-    raise app.UsageError('--clone_dir is not a file.')
+  clone_list_path = pathlib.Path(FLAGS.clone_list or "")
+  if not clone_list_path.is_file():
+    raise app.UsageError('--clone_list is not a file.')
 
-  meta_files = [pathlib.Path(f) for f in
-                fs.ls(clone_dir, recursive=True, abspaths=True) if
-                IsRepoMetaFile(f)]
+  clone_list = pbutil.FromFile(clone_list_path,
+                               scrape_repos_pb2.LanguageCloneList())
+
+  meta_files = []
+  for language in clone_list.language:
+    directory = pathlib.Path(language.destination_directory)
+    if directory.is_dir():
+      meta_files += [pathlib.Path(directory / f) for f in directory.iterdir() if
+                     IsRepoMetaFile(f)]
   for meta_file in progressbar.ProgressBar()(meta_files):
     CloneFromMetafile(meta_file)
 

@@ -231,15 +231,6 @@ class RepositoryCloneWorker(object):
       logging.debug('%s', meta)
       pbutil.ToFile(meta, meta_path)
 
-      # try:  #   # subprocess.check_call(  #   #   ['timeout',
-      #  f'{FLAGS.repository_clone_timeout_minutes}m',  #   #  #  #  #  #  #
-      #  '/usr/bin/git', 'clone', '--recursive',  #   #    repo.clone_url,
-      #  clone_dir],  #   #   stderr=subprocess.STDOUT,
-      #  stdout=subprocess.PIPE)  #  # except subprocess.CalledProcessError:
-      #   logging.warning('\nClone failed %s', clone_dir)  #   fs.rm(  #  #
-      #  clone_dir)  #   fs.rm(meta_path)  # except:  #   fs.rm(clone_dir)  #
-      #   fs.rm(meta_path)
-
 
 def main(argv) -> None:
   """Main entry point."""
