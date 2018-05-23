@@ -22,7 +22,7 @@ from deeplearning.clgen import errors
 from deeplearning.clgen import features
 from deeplearning.clgen import fetch
 from deeplearning.clgen import languages
-from deeplearning.clgen import preprocess
+from deeplearning.clgen.preprocessors import preprocessors
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import internal_pb2
 from lib.labm8 import crypto
@@ -139,15 +139,18 @@ class Corpus(object):
 
     # Preprocess the kernels database, if necessary.
     modified = False
-    if self.config.preprocessors:
+    if self.config.preprocessor:
       try:
         preprocess_time = time()
-        if preprocess.preprocess_db(self.contentfiles_cache["kernels.db"],
-                                    lang=self.language):
+        if preprocessors.PreprocessDatabase(
+            pathlib.Path(self.contentfiles_cache["kernels.db"]), self.language,
+            self.config.preprocessor):
           modified = True
       except Exception as e:
         _Error(e, [])
     else:
+      # If we have no preprocessors to run, simply copy the ContentFiles over to
+      # PreprocessedFiles, rather than spooling up all of the preprocessors.
       db = dbutil.connect(self.contentfiles_cache["kernels.db"])
       c = db.cursor()
       c.execute("""

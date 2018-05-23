@@ -20,6 +20,7 @@
 CLgen sqlite3 database utilities
 """
 import os
+import pathlib
 import re
 import sqlite3
 import sys
@@ -850,3 +851,22 @@ def merge(outpath, inpaths=None):
     db.commit()
     c.execute("DETACH rhs")
     c.close()
+
+
+def HasContentMetaTable(db_path: pathlib.Path) -> bool:
+  """Check if database has a ContentMeta table.
+
+  Args:
+    db_path: Path to the contentfiles database.
+
+  Returns:
+    True if ContentMeta table exists, else False.
+  """
+  db = sqlite3.connect(str(db_path))
+  c = db.cursor()
+  c.execute(
+    "SELECT name FROM sqlite_master WHERE type='table' AND name='ContentMeta';")
+  meta_table = c.fetchone()
+  c.close()
+  db.close()
+  return True if meta_table else False

@@ -7,27 +7,28 @@ from absl import logging
 
 import deeplearning.clgen.errors
 from deeplearning.clgen import errors
-from deeplearning.clgen import preprocess
+from deeplearning.clgen.preprocessors import preprocessors
+from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.tests import testlib as tests
 
 
 def test_compile_cl_bytecode_good_code():
   """Test that bytecode is produced for good code."""
-  assert preprocess.compile_cl_bytecode("kernel void A(global float* a) {}",
-                                        "<anon>", use_shim=False)
+  assert preprocessors.compile_cl_bytecode("kernel void A(global float* a) {}",
+                                           "<anon>", use_shim=False)
 
 
 def test_compile_cl_bytecode_undefined_type():
   """Test that error is raised when kernel contains undefined type."""
   with pytest.raises(errors.ClangException):
-    preprocess.compile_cl_bytecode("kernel void A(global FLOAT_T* a) {}",
-                                   "<anon>", use_shim=False)
+    preprocessors.compile_cl_bytecode("kernel void A(global FLOAT_T* a) {}",
+                                      "<anon>", use_shim=False)
 
 
 def test_compile_cl_bytecode_shim_type():
   """Test that bytecode is produced for code with shim type."""
-  assert preprocess.compile_cl_bytecode("kernel void A(global FLOAT_T* a) {}",
-                                        "<anon>", use_shim=True)
+  assert preprocessors.compile_cl_bytecode(
+    "kernel void A(global FLOAT_T* a) {}", "<anon>", use_shim=True)
 
 
 @pytest.mark.skip(reason="TODO(cec)")
@@ -69,22 +70,22 @@ attributes #0 = { noinline norecurse nounwind readnone
 !6 = !{!"float*"}
 !7 = !{!""}
 """
-  assert preprocess.bytecode_features(bc, "<anon>")
+  assert preprocessors.bytecode_features(bc, "<anon>")
 
 
 def test_compiler_preprocess_cl_no_change():
   """Test that code without preprocessor directives is unchanged."""
   src = "kernel void A(global int*a ) {}"
-  assert preprocess.compiler_preprocess_cl(src) == src
+  assert preprocessors.compiler_preprocess_cl(src) == src
 
 
 def test_compiler_preprocess_cl_whitespace():
   """Test that preprocessor output produces exactly one terminating newling."""
   src = "kernel void A(global int*a ) {}"
   # Leading whitespace is stripped.
-  assert preprocess.compiler_preprocess_cl('\n\n' + src) == src
+  assert preprocessors.compiler_preprocess_cl('\n\n' + src) == src
   # Trailing whitespace is stripped.
-  assert preprocess.compiler_preprocess_cl(src + '\n\n') == src
+  assert preprocessors.compiler_preprocess_cl(src + '\n\n') == src
 
 
 def test_compiler_preprocess_cl_user_directives():
@@ -97,18 +98,18 @@ kernel void B() {}
 #endif
 """
   out = "kernel void A(global int* a) {}"
-  assert preprocess.compiler_preprocess_cl(src) == out
+  assert preprocessors.compiler_preprocess_cl(src) == out
 
 
 def test_compiler_preprocess_cl_undefined_macro():
   """Test that code with undefined macro is unchanged."""
   src = "kernel void A(global MY_TYPE* a) {}"
-  assert preprocess.compiler_preprocess_cl(src) == src
+  assert preprocessors.compiler_preprocess_cl(src) == src
 
 
 def test_rewriter_good_code():
   """Test that OpenCL rewriter renames variables and functions."""
-  rewritten = preprocess.rewrite_cl("""\
+  rewritten = preprocessors.rewrite_cl("""\
 __kernel void FOOBAR(__global int * b) {
     if (  b < *b) {
           *b *= 2;
@@ -128,18 +129,19 @@ def test_preprocess_shim():
   """Test that code which contains defs in opencl-shim can compile."""
   # FLOAT_T is defined in shim header. Preprocess will fail if FLOAT_T is
   # undefined.
+  preprocessors = [corpus_pb2.Preprocessor(name="")]
   with pytest.raises(errors.BadCodeException):
-    preprocess.preprocess("""
+    preprocessors.preprocess("""
 __kernel void A(__global FLOAT_T* a) { int b; }""", use_shim=False)
 
-  assert preprocess.preprocess("""
+  assert preprocessors.preprocess("""
 __kernel void A(__global FLOAT_T* a) { int b; }""", use_shim=True)
 
 
 def test_ugly_preprocessed():
   # empty kernel protoype is rejected
   with pytest.raises(errors.NoCodeException):
-    preprocess.preprocess("""\
+    preprocessors.preprocess("""\
 __kernel void A() {
 }\
 """)
@@ -148,7 +150,7 @@ __kernel void A() {
 __kernel void A() {
   int a;
 }\
-""" == preprocess.preprocess("""\
+""" == preprocessors.preprocess("""\
 __kernel void A() {
   int a;
 }\
@@ -168,7 +170,7 @@ __kernel void A(__global float* a) {
   # pre-processing is "stable" if the code doesn't change
   out = code
   for _ in range(5):
-    out = preprocess.preprocess(out)
+    out = preprocessors.preprocess(out)
     assert out == code
 
 
@@ -180,8 +182,8 @@ __kernel void A(__global float* a) {
   int b = get_global_id(0);
   a[b] *= 2.0f;
 }"""
-  assert preprocess.gpuverify(code,
-                              ["--local_size=64", "--num_groups=128"]) == code
+  assert preprocessors.gpuverify(code, ["--local_size=64",
+                                        "--num_groups=128"]) == code
 
 
 @pytest.mark.skip(reason="TODO(cec)")
@@ -192,7 +194,7 @@ __kernel void A(__global float* a) {
   a[0] +=  1.0f;
 }"""
   with pytest.raises(deeplearning.clgen.errors.GPUVerifyException):
-    preprocess.gpuverify(code, ["--local_size=64", "--num_groups=128"])
+    preprocessors.gpuverify(code, ["--local_size=64", "--num_groups=128"])
 
 
 def main(argv):

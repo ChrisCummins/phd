@@ -57,7 +57,7 @@ py_binary(
         ":fetch",
         ":languages",
         ":model",
-        ":preprocess",
+        "//deeplearning/clgen/preprocessors:preprocessors",
         ":sampler",
         "//deeplearning/clgen/proto:corpus_py_pb2",
         "//deeplearning/clgen/proto:model_py_pb2",
@@ -124,7 +124,7 @@ py_library(
         ":features",
         ":fetch",
         ":languages",
-        ":preprocess",
+        "//deeplearning/clgen/preprocessors:preprocessors",
         "//deeplearning/clgen/proto:corpus_py_pb2",
         "//deeplearning/clgen/proto:internal_py_pb2",
         "//lib/labm8:crypto",
@@ -334,33 +334,6 @@ py_test(
     deps = [
         ":errors",
         ":package_util",
-    ],
-)
-
-py_library(
-    name = "preprocess",
-    srcs = ["preprocess.py"],
-    deps = [
-        ":dbutil",
-        ":errors",
-        ":languages",
-        ":native",
-        "//lib/labm8:fs",
-    ],
-)
-
-py_test(
-    name = "preprocess_test",
-    srcs = ["preprocess_test.py"],
-    data = [
-        "//deeplearning/clgen/tests/data:cl_kernels",
-    ],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
-    deps = [
-        ":errors",
-        ":preprocess",
-        "//deeplearning/clgen/tests:testlib",
     ],
 )
 

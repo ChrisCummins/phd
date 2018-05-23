@@ -41,8 +41,8 @@ from deeplearning.clgen import features
 from deeplearning.clgen import fetch
 from deeplearning.clgen import languages
 from deeplearning.clgen import model
-from deeplearning.clgen import preprocess
 from deeplearning.clgen import sampler
+from deeplearning.clgen.preprocessors import preprocessors
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
 from lib.labm8 import fs
@@ -529,20 +529,21 @@ def _register_preprocess_parser(self, parent: ArgumentParser) -> None:
     input_paths = [infile.name for infile in inputs]
 
     if inputs_are_files and inplace:
-      preprocess.preprocess_inplace(input_paths, use_gpuverify=gpuverify)
+      preprocessors.preprocess_inplace(input_paths, use_gpuverify=gpuverify)
     else:
       for path in input_paths:
         if inputs_are_files:
-          preprocess.preprocess_file(path, inplace=False,
-                                     use_gpuverify=gpuverify)
+          preprocessors.preprocess_file(path, inplace=False,
+                                        use_gpuverify=gpuverify)
         elif remove_bad_preprocessed:
           dbutil.remove_bad_preprocessed(path)
         elif remove_preprocessed:
           dbutil.remove_preprocessed(path)
           print("done.")
         else:
-          if preprocess.preprocess_db(path, lang=languages.Language.OPENCL,
-                                      use_gpuverify=gpuverify):
+          if preprocessors.PreprocessDatabase(path,
+                                              lang=languages.Language.OPENCL,
+                                              use_gpuverify=gpuverify):
             print("done.")
           else:
             print("nothing to be done.")

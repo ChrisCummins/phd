@@ -33,3 +33,21 @@ message Sample {
   optional int32 sample_time_ms = 2;
   optional int64 sample_start_epoch_ms_utc = 3;
 }
+
+message PreprocessorWorkerJob {
+  optional string contentfile_id = 1;
+  optional string src = 2;
+  repeated Preprocessor preprocessors = 3;
+}
+
+message PreprocessorWorkerJobOutcome {
+  enum Status {
+    OK = 0;
+    BAD = 1;
+    UGLY = 2;
+  }
+
+  optional string contentfile_id = 1;
+  optional string contents = 2;
+  optional Status status = 3;
+}

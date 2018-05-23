@@ -1,39 +1,20 @@
-#
-# Copyright 2016, 2017, 2018 Chris Cummins <chrisc.101@gmail.com>.
-#
-# This file is part of CLgen.
-#
-# CLgen is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# CLgen is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
-#
-"""
-Preprocess OpenCL files for machine learning.
-"""
+"""Preprocess OpenCL files for machine learning."""
 import contextlib
 import json
 import math
+import multiprocessing
 import os
+import pathlib
+import queue
 import random
 import re
-import sqlite3
+import typing
 from io import open
 from multiprocessing import Pool, cpu_count
-from queue import Empty as QueueEmpty
-from queue import Queue
 from subprocess import PIPE, Popen, STDOUT
 from tempfile import NamedTemporaryFile
 from threading import Thread
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import progressbar
 from absl import logging
@@ -42,6 +23,8 @@ from deeplearning.clgen import dbutil
 from deeplearning.clgen import errors
 from deeplearning.clgen import languages
 from deeplearning.clgen import native
+from deeplearning.clgen.proto import corpus_pb2
+from deeplearning.clgen.proto import internal_pb2
 from lib.labm8 import fs
 
 
@@ -649,9 +632,8 @@ def preprocess_glsl(src: str, id: str = 'anon', **kwargs) -> str:
   return src
 
 
-def preprocess(src: str, id: str = "anon",
-               lang: languages.Language = languages.Language.OPENCL,
-               **lang_opts) -> str:
+def preprocess(src: str, preprocessors: typing.List[corpus_pb2.Preprocessor],
+               id: str = "anon") -> str:
   """
   Preprocess a file. There are three possible outcomes:
 
@@ -660,12 +642,10 @@ def preprocess(src: str, id: str = "anon",
   3. Ugly. Code can be preprocessed but isn't useful for training
      (e.g. it's an empty file).
 
-  Parameters
-  ----------
-  src : str
-      The source code as a string.
-  id : str, optional
-      An identifying name for the source code (used in exception messages).
+  Args:
+    src: The source code as a string.
+    preprocessors: The list of preprocessors to run.
+    id: An identifying name for the source code (used in exception messages).
 
   Returns
   -------
@@ -681,44 +661,16 @@ def preprocess(src: str, id: str = "anon",
   errors.InternalException
       In case of some other error.
   """
-  if lang == languages.Language.OPENCL:
-    return preprocess_opencl(src, id, **lang_opts)
-  elif lang == languages.Language.SOLIDITY:
-    return preprocess_solidity(src, id, **lang_opts)
-  elif lang == languages.Language.GLSL:
-    return preprocess_glsl(src, id, **lang_opts)
-  else:
-    raise errors.ValueError(f"unsuporrted language '{lang}'")
+  for preprocessor_proto in preprocessors:
+    preprocessor = {"opencl:compiler_preprocess": compiler_preprocess_cl,
+                    "opencl:rewriter": rewrite_cl,
+                    "opencl:clangformat": clangformat,
+                    "opencl:ensure_has_code": ensure_has_code,
+                    "opencl:sanitize_prototype": sanitize_prototype
 
-
-def preprocess_for_db(src: str, **preprocess_opts) -> Tuple[int, str]:
-  """
-  Preprocess source code for import into contentdb.
-
-  Parameters
-  ----------
-  src : str
-      Source to preprocess.
-  **preprocess_opts
-      Preprocessing options.
-
-  Returns
-  -------
-  Tuple[int, str]
-      The status of the preprocessed code, and the preprocess output.
-  """
-  try:
-    # Try and preprocess it:
-    status = 0
-    contents = preprocess(src, **preprocess_opts)
-  except errors.BadCodeException as e:
-    status = 1
-    contents = str(e)
-  except errors.UglyCodeException as e:
-    status = 2
-    contents = str(e)
-
-  return status, contents
+                    }.get(preprocessor_proto.name)
+    src = preprocessor(src, **preprocessor_proto.opts)
+  return src
 
 
 def preprocess_file(path: str, inplace: bool = False,
@@ -807,161 +759,150 @@ def preprocess_inplace(paths: List[str], max_num_workers: int = cpu_count(),
 
 
 class PreprocessWorker(Thread):
-  """ preprocessor worker thread """
+  """A preprocessor worker thread."""
 
-  def __init__(self, jobs: List[Dict], queue: Queue):
+  def __init__(self, jobs: List[internal_pb2.PreprocessorWorkerJob],
+               output_queue: queue.Queue):
+    """Instantiate a PreprocessWorker.
+
+    Args:
+      jobs: A list of jobs to execute.
+      output_queue: The output queue to write results to.
+    """
     super(PreprocessWorker, self).__init__()
     self.jobs = jobs
-    self.queue = queue
+    self.queue = output_queue
 
   def run(self):
-    while self.jobs:
-      job = self.jobs.pop(0)
-
-      kid = job["id"]
-      src = job["src"]
-      preprocess_opts = job["preprocess_opts"]
-
-      status, contents = preprocess_for_db(src, id=id, **preprocess_opts)
-
-      result = {"id": kid, "status": status, "contents": contents}
-
+    for job in self.jobs:
+      result = internal_pb2.PreprocessorWorkerJobOutcome()
+      result.contentfile_id = job.contentfile_id
+      result.status = internal_pb2.PreprocessorWorkerJobOutcome.OK
+      try:
+        # TODO(cec): Implement preprocessors.
+        preprocess = job.preprocessors
+        result.contents = preprocess(job.src)
+      except errors.BadCodeException as e:
+        result.status = internal_pb2.PreprocessorWorkerJobOutcome.BAD
+        result.contents = str(e)
+      except errors.UglyCodeException as e:
+        result.status = internal_pb2.PreprocessorWorkerJobOutcome.UGLY
+        result.contents = str(e)
       self.queue.put(result)
 
 
-def _preprocess_db(db_path: str, max_num_workers: int = cpu_count(),
-                   max_attempts: int = 100, attempt: int = 1,
-                   **preprocess_opts) -> None:
-  """Preprocess OpenCL dataset.
+def _DoPreprocessDatabase(db_path: pathlib.Path, language: languages.Language,
+                          preprocessors: typing.List[corpus_pb2.Preprocessor],
+                          attempt_num: int, max_attempts: int,
+                          max_num_threads: int) -> None:
+  """The private function to preprocess a database.
 
   Args:
-    db_path: Path to the kernels database.
-    max_num_workers: Number of processes to spawn.
-    max_attempts: In case of an OSError or TimeoutError, this number of attempts
-      will be made.
-
-  Raises:
-    InternalError: In case the preprocessing fails.
+    db_path: The path to the contentfiles database.
+    language: The language of the contentfiles database.
+    preprocessors: The list of preprocessors to run.
+    attempt_num: The current attempt number.
+    max_attempts: The maxmium number of attempts to try.
+    max_num_threads: The maximum number of threads to spawn.
   """
-  if attempt > max_attempts:
-    raise errors.InternalError(
-      f"failed to preprocess files after {max_attempts} attempts")
+  if attempt_num > max_attempts:
+    logging.error('Failed to complete preprocessing after %d attempts. '
+                  'Stopping now', max_attempts)
 
-  logging.debug("determining jobs")
-
-  contentfiles = set(dbutil.kernel_ids(db_path, "ContentFiles"))
-  preprocessedfiles = set(dbutil.kernel_ids(db_path, "PreprocessedFiles"))
-
+  # Determine the set of contentfiles which need preprocessing.
+  contentfiles = set(dbutil.kernel_ids(str(db_path), "ContentFiles"))
+  preprocessedfiles = set(dbutil.kernel_ids(str(db_path), "PreprocessedFiles"))
   todo = contentfiles - preprocessedfiles
-
-  # check we have something to do
   if not todo:
+    logging.warning("Database preprocess requested, but there's nothing to do")
     return
 
-  logging.info("%d of %d (%.1f%%) samples need preprocessing", len(todo),
+  logging.info('%d of %d (%.1f%%) samples need preprocessing', len(todo),
                len(contentfiles), (len(todo) / len(contentfiles)) * 100)
-
-  logging.debug("creating jobs")
-
-  # Determine if we need to inline kernels when creating jobs
-  db = sqlite3.connect(db_path)
-  c = db.cursor()
-  c.execute(
-    "SELECT name FROM sqlite_master WHERE type='table' AND name='ContentMeta';")
-  meta_table = c.fetchone()
-  c.close()
-  db.close()
-  if meta_table:
-    get_kernel = lambda kid: dbutil.get_inlined_kernel(db_path, kid,
-                                                       lang=preprocess_opts[
-                                                         "lang"])
+  # Determine if we need to inline kernels when creating jobs.
+  if dbutil.HasContentMetaTable(db_path):
+    get_kernel = lambda kid: dbutil.get_inlined_kernel(str(db_path), kid,
+                                                       lang=language)
   else:
-    get_kernel = lambda kid: dbutil.get_kernel(db_path, kid,
+    get_kernel = lambda kid: dbutil.get_kernel(str(db_path), kid,
                                                table="ContentFiles")
-
-  # create jobs
+  # Create job protos and distribute the jobs.
   jobs = [
-    {"id": kid, "src": get_kernel(kid), "preprocess_opts": preprocess_opts, }
-    for kid in todo]
-
+    internal_pb2.PreprocessorWorkerJob(contentfiles_id=kid, src=get_kernel(kid),
+                                       preprocessors=preprocessors) for kid in
+    todo]
   random.shuffle(jobs)
+  num_threads = int(math.ceil(len(todo) / max_num_threads))
+  output_queue = queue.Queue(maxsize=128)
+  logging.debug('assigning %d jobs to %s threads', len(todo), num_threads)
 
-  # split size
-  worker_njobs = math.ceil(len(todo) / max_num_workers)
-
-  # producer-consumer queue
-  queue = Queue(maxsize=128)
-
-  logging.debug("assigning %d jobs to %s threads", len(todo), max_num_workers)
-
+  num_preprocessed = 0
   try:
-    # our worker threads. these busy little bees will do the heavy lifting
-    # of preprocessing the contentfiles, pushing their results onto
-    # the queue
-    producers = [PreprocessWorker(jobs[i:i + worker_njobs], queue) for i in
-                 range(0, len(todo), worker_njobs)]
-
-    # fly, my pretties, fly!
+    # Our worker threads. These busy little bees will do the heavy lifting
+    # of preprocessing the contentfiles and pushing their results onto the
+    # queue.
+    producers = [PreprocessWorker(jobs[i:i + num_threads], output_queue) for i
+                 in range(0, len(todo), num_threads)]
+    # Fly, my pretties, fly!
     for producer in producers:
       producer.start()
-
-    # consume the results from the worker threads from the main thread
-    for i in progressbar.ProgressBar()(range(len(todo))):
-      # pull a fresh result from the queue (block if necessary)
-      try:
-        result = queue.get(timeout=120)
-      except QueueEmpty as e:
-        raise errors.InternalError('failed to fetch result after 120 seconds. '
-                                   'something went wrong') from e
-
-      # insert result into database
-      db = dbutil.connect(db_path)
+    # Consume the results from the worker threads in the main thread.
+    db = dbutil.connect(db_path)
+    for _ in progressbar.ProgressBar()(range(len(todo))):
+      num_preprocessed += 1
+      # Block until another result comes in.
+      result: internal_pb2.PreprocessorWorkerJobOutcome = output_queue.get(
+        timeout=120)
+      status = internal_pb2.PreprocessorWorkerJobOutcome.Status.Value(
+        result.status)
+      # Insert result into database.
       c = db.cursor()
-      c.execute("INSERT INTO PreprocessedFiles VALUES(?,?,?)",
-                (result["id"], result["status"], result["contents"]))
+      c.execute(
+        "INSERT INTO PreprocessedFiles (id,status,contents) VALUES(?,?,?)",
+        (result.contenfile_id, status, result.contents))
       c.close()
       db.commit()
-      db.close()
-
+    db.close()
     for producer in producers:
       producer.join()
 
-  except (OSError, TimeoutError) as e:
+  except (OSError, TimeoutError, output_queue.Empty) as e:
     logging.error(e)
-
-    if attempt > 2 and not i:
-      logging.warning("no progress has been made since previous attempt. "
+    if attempt_num >= 3 and not num_preprocessed:
+      logging.warning('No progress has been made since previous attempt. '
                       "I'm not going to try another attempt.")
       return
-
     # Try again with fewer threads.
     # See: https://github.com/ChrisCummins/clgen/issues/64
-    max_num_workers = max(int(max_num_workers / 2), 1)
-    _preprocess_db(db_path, max_num_workers=max_num_workers,
-                   attempt=attempt + 1, max_attempts=max_attempts,
-                   **preprocess_opts)
+    new_max_threads = max(int(math.ceil(max_num_threads / 2)), 1)
+    _DoPreprocessDatabase(db_path, language, preprocessors, attempt_num + 1,
+                          max_attempts, new_max_threads)
 
 
-def preprocess_db(db_path: str, **preprocess_opts) -> bool:
-  """
-  Preprocess database contents.
+def PreprocessDatabase(db_path: pathlib.Path, language: languages.Language,
+                       preprocessors: typing.List[
+                         corpus_pb2.Preprocessor]) -> bool:
+  """Preprocess a contentfiles database.
 
-  Parameters
-  ----------
-  db_path : str
-      Path to database.
+  This function tries to do as little as possible. If no changes to the database
+  have been made since the last time this function was called on it, then this
+  function does nothing.
 
-  Returns
-  -------
-  bool
-      True if modified, false if no work needed.
+  Args:
+    db_path: The path of the contentfiles database.
+    language: The language of the contentfiles database.
+    preprocessors: The list of preprocessors to run.
+
+  Returns:
+    True if the database was modified, else False.
   """
   db = dbutil.connect(db_path)
-
-  modified = dbutil.is_modified(db)
-  if modified:
-    _preprocess_db(db_path, **preprocess_opts)
-    dbutil.set_modified_status(db, modified)
+  is_modified = dbutil.is_modified(db)
+  max_retries = 10
+  if is_modified:
+    _DoPreprocessDatabase(db_path, language, preprocessors, 1, max_retries,
+                          multiprocessing.cpu_count())
+    dbutil.set_modified_status(db, is_modified)
     return True
   else:
     return False
