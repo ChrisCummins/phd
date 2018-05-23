@@ -1,4 +1,5 @@
 """Unit tests for //deeplearning/clgen/sampler.py."""
+import pathlib
 import sys
 
 import pytest
@@ -7,7 +8,9 @@ from absl import app
 from deeplearning.clgen import errors
 from deeplearning.clgen import model
 from deeplearning.clgen import sampler
+from deeplearning.clgen.proto import internal_pb2
 from lib.labm8 import fs
+from lib.labm8 import pbutil
 
 
 @pytest.fixture(scope='function')
@@ -66,14 +69,21 @@ def test_Sampler_Sample_five_samples(clgen_cache_dir, abc_model,
   assert num_contentfiles >= 5
 
 
-def test_Sampler_Sample_return_paths(clgen_cache_dir, abc_model,
+def test_Sampler_Sample_return_value(clgen_cache_dir, abc_model,
                                      abc_sampler_config):
+  """Test that Sample() returns Sample protos."""
   del clgen_cache_dir
   abc_model.Train()
-  abc_sampler_config.min_num_samples = 5
+  abc_sampler_config.min_num_samples = 1
   s = sampler.Sampler(abc_sampler_config)
   samples = s.Sample(abc_model)
-  assert len(samples) >= 5
+  assert len(samples) >= 1
+  assert samples[0].text
+  assert samples[0].sample_time_ms
+  assert samples[0].sample_start_epoch_ms_utc
+  proto = pbutil.FromFile(pathlib.Path(fs.ls(s.sample_dir, abspaths=True)[0]),
+                          internal_pb2.Sample())
+  assert proto == samples[0]
 
 
 def main(argv):

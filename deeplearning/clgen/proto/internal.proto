@@ -33,8 +33,3 @@ message Sample {
   optional int32 sample_time_ms = 2;
   optional int64 sample_start_epoch_ms_utc = 3;
 }
-
-message SamplesBatch {
-  optional Sampler sampler = 1;
-  repeated Sample sample = 2;
-}

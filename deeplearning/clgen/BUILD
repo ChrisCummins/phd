@@ -392,6 +392,8 @@ py_test(
         ":errors",
         ":model",
         ":sampler",
+        "//deeplearning/clgen/proto:internal_py_pb2",
         "//lib/labm8:fs",
+        "//lib/labm8:pbutil",
     ],
 )
