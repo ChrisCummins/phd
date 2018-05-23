@@ -55,16 +55,7 @@ main() {
     fi
 
     # Install dotfiles packages.
-    $ROOT/system/dotfiles/run -v \
-        Autoenv \
-        Bazel \
-        Buildifier \
-        Clang \
-        ClangFormat \
-        GnuCoreutils \
-        LaTeX \
-        Python \
-        Rsync
+    $ROOT/system/dotfiles/run PhdBuildDeps
 
     # Use the absolute path to Python, since the homebrew installed package
     # may not yet be in the $PATH.

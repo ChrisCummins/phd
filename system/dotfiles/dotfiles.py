@@ -1816,26 +1816,6 @@ class Clang(Task):
     Homebrew().install_package('llvm')
 
 
-class ClangFormat(Task):
-  # On Linux, this task is a no-op, since the task 'Clang' installs
-  # clang-format.
-  __platforms__ = ['linux', 'osx']
-  __deps__ = ['Homebrew']
-  __osx_genfiles__ = [Homebrew.bin('clang-format')]
-
-  def install_osx(self):
-    Homebrew().install_package('clang-format')
-
-  def install(self):
-    pass
-
-  def upgrade_osx(self):
-    Homebrew().upgrade_package('clang-format')
-
-  def upgrade(self):
-    pass
-
-
 class Ninja(Task):
   __platforms__ = ['linux', 'osx']
   __deps__ = ['Homebrew']
@@ -1860,11 +1840,29 @@ class Rsync(Task):
     Apt().install_package('rsync')
 
 
+class PhdBuildDeps(Task):
+  """ phd repo dependencies"""
+  __platforms__ = ['linux', 'osx']
+  __deps__ = [
+      'Bazel',
+      'Buildifier',
+      'Clang',
+      'GnuCoreutils',
+      'LaTeX',
+      'LibExempi',
+      'Python',
+      'Rsync',
+  ]
+
+  def install(self):
+    pass
+
+
 class Phd(Task):
-  """ phd repo """
+  """PhD repo"""
   __platforms__ = ['linux', 'osx']
   __genfiles__ = ['~/phd/.env']
-  __deps__ = ['Bazel', 'LibExempi', 'Clang', 'ClangFormat', 'Rsync']
+  __deps__ = ['PhdBuildDeps']
 
   def install(self):
     clone_git_repo(github_repo("ChrisCummins", "phd"), "~/phd")
