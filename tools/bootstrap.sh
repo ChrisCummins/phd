@@ -139,6 +139,16 @@ EOF
     echo "# Created $ROOT/config.pbtxt"
     grep -v '^#' < "$ROOT/config.pbtxt" | sed 's/^/  /'
 
+    # On Linux systems we use the homebrew-installed clang. On macOS we use the
+    # system clang.
+    if [[ "$(uname)" == "Linux" ]]; then
+        CC="$LLVM_PREFIX/bin/clang"
+        CXX="$LLVM_PREFIX/bin/clang++"
+    else
+        CC="clang"
+        CXX="clang++"
+    fi
+
     # Create autoenv environment file. This should be done last, since we can
     # use the presence of the .env to determine if the project has been
     # bootstrapped.
@@ -152,9 +162,9 @@ EOF
 export VIRTUAL_ENV=phd
 
 export PHD="$ROOT"
-export CC=clang
-export CXX=clang++
-export PYTHON=$PYTHON
+export CC="$CC"
+export CXX="$CXX"
+export PYTHON="$PYTHON"
 
 export PYTHONPATH=$ROOT:$ROOT/lib:$ROOT/bazel-genfiles
 EOF
