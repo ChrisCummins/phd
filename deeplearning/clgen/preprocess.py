@@ -45,13 +45,6 @@ from deeplearning.clgen import native
 from lib.labm8 import fs
 
 
-#
-# Custom exceptions:
-#
-
-# Internal exceptions:
-
-
 # FIXME(polyglot):
 CLANG_CL_TARGETS = ['nvptx64-nvidia-nvcl', 'spir64']
 
@@ -839,18 +832,16 @@ class PreprocessWorker(Thread):
 def _preprocess_db(db_path: str, max_num_workers: int = cpu_count(),
                    max_attempts: int = 100, attempt: int = 1,
                    **preprocess_opts) -> None:
-  """
-  Preprocess OpenCL dataset.
+  """Preprocess OpenCL dataset.
 
-  Parameters
-  ----------
-  db_path : str
-      OpenCL kernels dataset.
-  max_num_workers : int, optional
-      Number of processes to spawn.
-  max_attempts : int, optional
-      In case of an OSError or TimeoutError, this number of attempts will be
-      made.
+  Args:
+    db_path: Path to the kernels database.
+    max_num_workers: Number of processes to spawn.
+    max_attempts: In case of an OSError or TimeoutError, this number of attempts
+      will be made.
+
+  Raises:
+    InternalError: In case the preprocessing fails.
   """
   if attempt > max_attempts:
     raise errors.InternalError(
@@ -918,10 +909,10 @@ def _preprocess_db(db_path: str, max_num_workers: int = cpu_count(),
     for i in progressbar.ProgressBar()(range(len(todo))):
       # pull a fresh result from the queue (block if necessary)
       try:
-        result = queue.get(timeout=90)
+        result = queue.get(timeout=120)
       except QueueEmpty as e:
-        raise errors.TimeoutError('failed to fetch result after 90 seconds. '
-                                  'something went wrong') from e
+        raise errors.InternalError('failed to fetch result after 120 seconds. '
+                                   'something went wrong') from e
 
       # insert result into database
       db = dbutil.connect(db_path)
