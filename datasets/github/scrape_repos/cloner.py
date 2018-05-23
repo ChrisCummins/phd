@@ -3,6 +3,7 @@
 This looks for repo meta files and clones any which have not been cloned.
 """
 import pathlib
+import random
 import subprocess
 
 import progressbar
@@ -26,19 +27,22 @@ flags.DEFINE_integer('repository_clone_timeout_minutes', 30,
 
 def CloneFromMetafile(metafile: pathlib.Path) -> None:
   meta = pbutil.FromFile(metafile, scrape_repos_pb2.GitHubRepoMetadata())
+  if not meta.owner and meta.name:
+    logging.error('Metafile missing owner and name fields %s', metafile)
+    return
   clone_dir = metafile.parent / f'{meta.owner}_{meta.name}'
   logging.debug('%s', meta)
-  if not (clone_dir / '.git').is_dir():
-    cmd = ['timeout', f'{FLAGS.repository_clone_timeout_minutes}m',
-           '/usr/bin/git', 'clone', '--recursive', meta.clone_from_url,
-           str(clone_dir)]
-    logging.debug('$ %s', ' '.join(cmd))
-    try:
-      subprocess.check_call(cmd, stderr=subprocess.STDOUT,
-                            stdout=subprocess.PIPE)
-    except subprocess.CalledProcessError:
-      logging.warning('\nClone failed %s', clone_dir)
-      fs.rm(clone_dir)
+  if (clone_dir / '.git').is_dir():
+    return
+  cmd = ['timeout', f'{FLAGS.repository_clone_timeout_minutes}m',
+         '/usr/bin/git', 'clone', '--recursive', meta.clone_from_url,
+         str(clone_dir)]
+  logging.debug('$ %s', ' '.join(cmd))
+  try:
+    subprocess.check_call(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+  except subprocess.CalledProcessError:
+    logging.warning('\nClone failed %s', clone_dir)
+    fs.rm(clone_dir)
 
 
 def IsRepoMetaFile(f: str):
@@ -65,6 +69,7 @@ def main(argv) -> None:
     if directory.is_dir():
       meta_files += [pathlib.Path(directory / f) for f in directory.iterdir() if
                      IsRepoMetaFile(f)]
+  random.shuffle(meta_files)
   for meta_file in progressbar.ProgressBar()(meta_files):
     CloneFromMetafile(meta_file)
 
