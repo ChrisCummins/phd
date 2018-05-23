@@ -4,8 +4,9 @@ py_library(
     name = "clang",
     srcs = ["clang.py"],
     deps = [
-        "//deeplearning/clgen:errors",
         "//config:getconfig",
+        "//deeplearning/clgen:dbutil",
+        "//deeplearning/clgen:errors",
     ],
 )
 
