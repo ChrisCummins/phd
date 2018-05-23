@@ -124,10 +124,10 @@ class Corpus(object):
 
     def _Error(err: Exception, files_to_rm: typing.List[pathlib.Path]) -> None:
       """Tidy up in case of error."""
-      logging.error("corpus creation failed. Deleting corpus files")
+      logging.error('corpus creation failed. Deleting corpus files')
       for path in files_to_rm:
         if path.is_file():
-          logging.info("removing", path)
+          logging.info('removing %s', path)
           fs.rm(path)
       raise err
 
@@ -206,7 +206,7 @@ WHERE ContentFiles.id NOT IN (
 
   def _CreateKernelsDatabase(self, path: pathlib.Path) -> None:
     """creates and caches kernels.db"""
-    logging.debug("creating database")
+    logging.debug('creating database')
 
     # create a database and put it in the cache
     tmppath = self.contentfiles_cache.keypath("kernels.db.tmp")
@@ -222,7 +222,7 @@ WHERE ContentFiles.id NOT IN (
 
   def _CreateCorpusText(self) -> None:
     """creates and caches corpus.txt"""
-    logging.debug("creating corpus")
+    logging.debug('creating corpus')
 
     # TODO: additional options in corpus JSON to accomodate for EOF,
     # different encodings etc.
@@ -237,7 +237,7 @@ WHERE ContentFiles.id NOT IN (
   def _CreateAtomizer(self) -> None:
     """creates and caches atomizer.pkl"""
 
-    logging.debug("creating vocab file")
+    logging.debug('creating vocab file')
     corpus_txt = self._ReadCorpusTxt()
 
     if self.config.HasField('ascii_character_atomizer'):
@@ -481,7 +481,7 @@ def GetKernelFeatures(code: str, **kwargs) -> np.array:
     outfile.seek(0)
     f = features.to_np_arrays([outfile.name], **kwargs)
   if len(f) != 1:
-    logging.error("features:", f)
+    logging.error('features: %s', f)
     raise errors.FeaturesError("code contains more than one kernel")
   return f[0]
 
