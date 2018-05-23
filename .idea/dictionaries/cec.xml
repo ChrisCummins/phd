@@ -12,6 +12,7 @@
       <w>lstm</w>
       <w>opencl</w>
       <w>preprocess</w>
+      <w>stdin</w>
       <w>subdirs</w>
     </words>
   </dictionary>
