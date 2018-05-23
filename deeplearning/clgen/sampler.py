@@ -12,15 +12,14 @@ from absl import logging
 from tensorflow.python.framework import errors as tf_errors
 
 from deeplearning.clgen import cache
-from deeplearning.clgen import dbutil
 from deeplearning.clgen import errors
-from deeplearning.clgen import explore
 from deeplearning.clgen import languages
 from deeplearning.clgen import model
 from deeplearning.clgen.proto import internal_pb2
 from deeplearning.clgen.proto import sampler_pb2
 from lib.labm8 import cache as labcache
 from lib.labm8 import crypto
+from lib.labm8 import fs
 from lib.labm8 import labdate
 from lib.labm8 import lockfile
 from lib.labm8 import pbutil
@@ -44,6 +43,7 @@ class Sampler(object):
     self.config = sampler_pb2.Sampler()
     self.config.CopyFrom(config)
     self.hash = self._ComputeHash(self.config)
+    self.sample_dir = None
     if not config.start_text:
       raise errors.UserError('Sampler.start_text not set')
     if config.batch_size < 1:
@@ -89,29 +89,25 @@ class Sampler(object):
   def _FlushMeta(self, cache_):
     pbutil.ToFile(self.meta, pathlib.Path(cache_.keypath('META.pbtxt')))
 
-  def Sample(self, model_: model.Model) -> None:
+  def Sample(self, model_: model.Model) -> typing.List[internal_pb2.Sample]:
     """Sample CLgen model.
 
     Args:
       model: The CLgen model to sample.
     """
     cache_ = self.cache(model_)
-    # Create samples database if it doesn't exist.
-    if not cache_.get('kernels.db'):
-      tmp_kernels_db = cache_.keypath('kernels.tmp.db')
-      dbutil.create_db(tmp_kernels_db)
-      cache_['kernels.db'] = tmp_kernels_db
+    self.sample_dir = cache_.path / 'samples'
+    self.sample_dir.mkdir(exist_ok=True)
     # Producer-consumer queue.
     queue = Queue(maxsize=128)
     logging.info('sampling %s', self)
     sampler = SampleProducer(model_, self.config, queue)
     sampler.start()
-    consumer = SampleConsumer(cache_['kernels.db'], sampler, self, cache_,
-                              queue)
+    consumer = SampleConsumer(sampler, self, cache_, queue)
     consumer.start()
     sampler.join()
     consumer.join()
-    explore.explore(cache_['kernels.db'])
+    return consumer.samples
 
   @property
   def shorthash(self) -> str:
@@ -123,7 +119,7 @@ class Sampler(object):
 
   @property
   def num_samples(self) -> int:
-    return dbutil.num_rows_in(self.db_path, 'ContentFiles')
+    return len(fs.ls(self.sample_dir)) if self.sample_dir else 0
 
   def __repr__(self) -> str:
     """String representation."""
@@ -293,23 +289,23 @@ class SampleProducer(Thread):
 class SampleConsumer(Thread):
   """Handle generated samples."""
 
-  def __init__(self, db_path: str, producer: SampleProducer, sampler: Sampler,
+  def __init__(self, producer: SampleProducer, sampler: Sampler,
                cache_: labcache.FSCache, queue: Queue):
     """Instantiate a SampleConsumer.
 
     Args:
-      db_path: Path to the sampler database.
       producer: A SampleProducer thread.
       sampler: The host Sampler instance.
       cache_: The sampler cache.
       queue: A shared queue.
     """
     super(SampleConsumer, self).__init__()
-    self.db_path = db_path
+    self.sample_dir = (cache_.path / 'samples').absolute()
     self.producer = producer
     self.sampler = sampler
     self.cache = cache_
     self.queue = queue
+    self.samples = []
     min_samples = self.sampler.config.min_num_samples
     has_min_samples = min_samples >= 0
     # Determine termination criteria.
@@ -323,16 +319,16 @@ class SampleConsumer(Thread):
       self.progress = self.null_progress
 
   def min_samples_cond(self) -> bool:
-    return (dbutil.num_rows_in(self.db_path, 'ContentFiles') >= self.max_i)
+    return len(fs.ls(self.sample_dir)) >= self.max_i
 
   def null_cond(self) -> bool:
     return False
 
   def min_samples_progress(self) -> int:
-    return min(dbutil.num_rows_in(self.db_path, 'ContentFiles'), self.max_i)
+    return min(len(fs.ls(self.sample_dir)), self.max_i)
 
   def null_progress(self) -> int:
-    return dbutil.num_rows_in(self.db_path, 'ContentFiles')
+    return len(fs.ls(self.sample_dir))
 
   def run(self) -> None:
     if not logging.get_verbosity() == logging.DEBUG:
@@ -341,21 +337,18 @@ class SampleConsumer(Thread):
 
     try:
       while True:
-        sample_start_time = labdate.MillisecondsTimestamp()
+        start_time = labdate.MillisecondsTimestamp()
         # Block while waiting for a new sample to come in.
-        sample = self.queue.get(timeout=120).strip()
-        sample_end_time = labdate.MillisecondsTimestamp()
-        sample_id = crypto.sha1_str(sample)
-        sample_time = sample_end_time - sample_start_time
-        # Add the new sample to the database.
-        db = dbutil.connect(self.db_path)
-        c = db.cursor()
-        dbutil.sql_insert_dict(c, 'ContentFiles',
-                               {'id': sample_id, 'contents': sample},
-                               ignore_existing=True)
-        c.close()
-        db.commit()
-        db.close()
+        sample_text = self.queue.get(timeout=120).strip()
+        end_time = labdate.MillisecondsTimestamp()
+        sample_id = crypto.sha1_str(sample_text)
+        sample = internal_pb2.Sample(text=sample_text,
+                                     sample_start_epoch_ms_utc=start_time,
+                                     sample_time_ms=end_time - start_time)
+        path = self.sample_dir / (sample_id + '.pb')
+        pbutil.ToFile(sample, path)
+        if self.term_condition != self.null_cond:
+          self.samples.append(sample)
         # Update progress bar.
         progress = self.progress()
         if not logging.get_verbosity() == logging.DEBUG:

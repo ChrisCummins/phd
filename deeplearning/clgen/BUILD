@@ -368,7 +368,6 @@ py_library(
     srcs = ["sampler.py"],
     deps = [
         ":cache",
-        ":dbutil",
         ":errors",
         ":explore",
         ":languages",
@@ -390,9 +389,9 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":conftest",
-        ":dbutil",
         ":errors",
         ":model",
         ":sampler",
+        "//lib/labm8:fs",
     ],
 )

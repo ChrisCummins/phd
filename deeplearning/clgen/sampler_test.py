@@ -4,10 +4,10 @@ import sys
 import pytest
 from absl import app
 
-from deeplearning.clgen import dbutil
 from deeplearning.clgen import errors
 from deeplearning.clgen import model
 from deeplearning.clgen import sampler
+from lib.labm8 import fs
 
 
 @pytest.fixture(scope='function')
@@ -46,14 +46,12 @@ def test_Sampler_Sample_one_sample(clgen_cache_dir, abc_model,
   s = sampler.Sampler(abc_sampler_config)
   # Take a single sample.
   s.Sample(abc_model)
-  num_contentfiles = dbutil.num_rows_in(s.cache(abc_model)["kernels.db"],
-                                        "ContentFiles")
+  num_contentfiles = len(fs.ls(s.cache(abc_model)["samples"]))
   # Note that the number of contentfiles may be larger than 1, even though we
   # asked for a single sample, since we split the output on the start text.
   assert num_contentfiles >= 1
   s.Sample(abc_model)
-  num_contentfiles2 = dbutil.num_rows_in(s.cache(abc_model)["kernels.db"],
-                                         "ContentFiles")
+  num_contentfiles2 = len(fs.ls(s.cache(abc_model)["samples"]))
   assert num_contentfiles == num_contentfiles2
 
 
@@ -64,9 +62,18 @@ def test_Sampler_Sample_five_samples(clgen_cache_dir, abc_model,
   abc_sampler_config.min_num_samples = 5
   s = sampler.Sampler(abc_sampler_config)
   s.Sample(abc_model)
-  num_contentfiles = dbutil.num_rows_in(s.cache(abc_model)["kernels.db"],
-                                        "ContentFiles")
+  num_contentfiles = len(fs.ls(s.cache(abc_model)["samples"]))
   assert num_contentfiles >= 5
+
+
+def test_Sampler_Sample_return_paths(clgen_cache_dir, abc_model,
+                                     abc_sampler_config):
+  del clgen_cache_dir
+  abc_model.Train()
+  abc_sampler_config.min_num_samples = 5
+  s = sampler.Sampler(abc_sampler_config)
+  samples = s.Sample(abc_model)
+  assert len(samples) >= 5
 
 
 def main(argv):
