@@ -5,7 +5,8 @@ package deepsmith;
 
 import "deeplearning/deepsmith/proto/deepsmith.proto";
 import "deeplearning/deepsmith/proto/service.proto";
-import "deeplearning/clgen/proto/clgen.proto";
+import "deeplearning/clgen/proto/model.proto";
+import "deeplearning/clgen/proto/sampler.proto";
 
 service GeneratorService {
   rpc GetGeneratorCapabilities (GetGeneratorCapabilitiesRequest) returns (GetGeneratorCapabilitiesResponse);
@@ -35,6 +36,12 @@ message GenerateTestcasesResponse {
 message ClgenGenerator {
   // Configuration of the service host.
   optional ServiceConfig service = 1;
-  // The CLgen instance configuration.
-  optional clgen.Instance instance = 2;
+  // The path to the clgen working directory on the host machine. This directory
+  // stores persistent CLgen files, including the corpus, model checkpoints,
+  // and sampler outputs. If not provided, the default value of
+  // $HOME/.cache/clgen is used.
+  optional string clgen_working_dir = 2;
+  // The CLgen model and sampler configuration.
+  optional clgen.Model model = 3;
+  optional clgen.Sampler sampler = 4;
 }
