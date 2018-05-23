@@ -32,7 +32,7 @@ sh_binary(
 py_binary(
     name = "02_evaluate_harness_experiments",
     srcs = ["02_evaluate_harness/experiments.py"],
-    data = glob(["02_evaluate_harness/data/testcases/*"]),
+    data = glob(["02_evaluate_harness/data/testcases/*.pbtxt"]),
     default_python_version = "PY3",
     main = "02_evaluate_harness/experiments.py",
     srcs_version = "PY3",
@@ -47,7 +47,7 @@ sh_binary(
 py_binary(
     name = "03_evaluate_results_experiments",
     srcs = ["03_evaluate_results/experiments.py"],
-    data = glob(["03_evaluate_results/data/**/*"]),
+    data = glob(["03_evaluate_results/data/**/*.pbtxt"]),
     default_python_version = "PY3",
     main = "03_evaluate_results/experiments.py",
     srcs_version = "PY3",
