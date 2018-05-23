@@ -13,6 +13,7 @@ from lib.labm8 import fs
 from lib.labm8 import io
 
 
+# TODO(cec): Remove type hints on base Cache, place them on FSCache.
 class Cache(object):
   """
   Cache for storing (key,value) relational data.
