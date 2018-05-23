@@ -44,4 +44,8 @@ message ClgenGenerator {
   // The CLgen model and sampler configuration.
   optional clgen.Model model = 3;
   optional clgen.Sampler sampler = 4;
+  // The skeleton Testcases used to convert CLgen samples into DeepSmith
+  // testcases. For each CLgen sample, a copy of all of the Testcase skeletons
+  // is made and the 'src' input is set as the sample text.
+  repeated Testcase testcase_skeleton = 5;
 }
