@@ -2,12 +2,14 @@
   <dictionary name="cec">
     <words>
       <w>clgen</w>
+      <w>contentfile</w>
       <w>contentfiles</w>
       <w>corpuses</w>
       <w>dataset</w>
       <w>gsize</w>
       <w>inlining</w>
       <w>lsize</w>
+      <w>lstm</w>
       <w>opencl</w>
       <w>preprocess</w>
       <w>subdirs</w>
