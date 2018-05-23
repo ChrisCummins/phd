@@ -1,6 +1,7 @@
 """Tests for //datasets/github/scrape_repos:scraper."""
-import pytest
 import sys
+
+import pytest
 from absl import app
 
 from datasets.github.scrape_repos import scraper
@@ -53,7 +54,7 @@ def test_GetRepositoryMetadata_timestamp():
   """Test that the timestamp in metadata is set to (aprox) now."""
   now_ms = labdate.MillisecondsTimestamp(labdate.GetUtcMillisecondsNow())
   meta = scraper.GetRepositoryMetadata(MockRepository())
-  assert now_ms - meta.cloned_utc_epoch_ms <= 1000
+  assert now_ms - meta.scraped_utc_epoch_ms <= 1000
 
 
 def test_main_unrecognized_arguments():
