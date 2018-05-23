@@ -35,5 +35,5 @@ Rune the cloner to download the repos scraped in the previous step:
 
 ```sh
 $ bazel run //datasets/github/scrape_repos:cloner -- \
-    --clone_dir /var/github_repos/
+    --clone_list $PWD/clone_list.pbtxt
 ```
