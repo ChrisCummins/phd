@@ -133,7 +133,6 @@ paths {
   clang_format: "$LLVM_PREFIX/bin/clang-format"
   python: "$PYTHON"
 }
-# TODO(cec): Enable cuda support through a flag at bootstrap time.
 with_cuda: $WITH_CUDA
 EOF
     echo "# Created $ROOT/config.pbtxt"
