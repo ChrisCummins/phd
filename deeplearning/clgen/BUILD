@@ -247,6 +247,7 @@ py_library(
 py_library(
     name = "model",
     srcs = ["model.py"],
+    visibility = ["//visibility:public"],
     deps = [
         ":cache",
         ":corpus",
@@ -366,6 +367,7 @@ py_test(
 py_library(
     name = "sampler",
     srcs = ["sampler.py"],
+    visibility = ["//visibility:public"],
     deps = [
         ":cache",
         ":errors",
