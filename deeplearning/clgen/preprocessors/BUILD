@@ -58,6 +58,27 @@ py_test(
 )
 
 py_library(
+    name = "normalizer",
+    srcs = ["normalizer.py"],
+    data = ["//deeplearning/clgen/native:clgen-rewriter"],
+    deps = [
+        "//config:getconfig",
+        "//deeplearning/clgen:errors",
+    ],
+)
+
+py_test(
+    name = "normalizer_test",
+    srcs = ["normalizer_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":normalizer",
+        "//deeplearning/clgen:errors",
+    ],
+)
+
+py_library(
     name = "opencl",
     srcs = ["opencl.py"],
     deps = [
