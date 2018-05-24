@@ -141,7 +141,18 @@ py_library(
     srcs = ["preprocessors.py"],
     visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = [
+        # This target *must* depend on all modules which expose a
+        # @public.clgen_preprocessor decorated function, since the method
+        # GetPreprocessorFunction() will try to import it. Otherwise it would
+        # be the responsibility of any code which calls into one of the public
+        # PreprocessX() functions to ensure that the module which implements
+        # each preprocessor is listed in its deps.
+        ":common",
+        ":cxx",
+        ":java",
         ":normalizer",
+        ":opencl",
+        ":public",
         "//deeplearning/clgen:dbutil",
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen:languages",
