@@ -24,6 +24,7 @@ py_library(
     name = "common",
     srcs = ["common.py"],
     deps = [
+        ":preprocessors",
         "//config:getconfig",
         "//deeplearning/clgen:errors",
     ],
@@ -35,7 +36,8 @@ py_test(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
-        ":clang",
+        ":common",
+        "//deeplearning/clgen:errors",
     ],
 )
 
@@ -44,6 +46,8 @@ py_library(
     srcs = ["cxx.py"],
     deps = [
         ":clang",
+        ":preprocessors",
+      "//deeplearning/clgen:native",
     ],
 )
 
@@ -54,6 +58,7 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":cxx",
+        "//deeplearning/clgen:errors",
     ],
 )
 
@@ -83,6 +88,7 @@ py_library(
     srcs = ["opencl.py"],
     deps = [
         ":clang",
+        ":preprocessors",
         "//config:getconfig",
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen:native",
@@ -108,13 +114,9 @@ py_library(
     srcs = ["preprocessors.py"],
     visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = [
-        ":common",
-        ":cxx",
-        ":opencl",
         "//deeplearning/clgen:dbutil",
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen:languages",
-        "//deeplearning/clgen/proto:corpus_py_pb2",
         "//deeplearning/clgen/proto:internal_py_pb2",
     ],
 )

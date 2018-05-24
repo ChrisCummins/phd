@@ -1,24 +1,45 @@
+"""Preprocessor functions for C++."""
 import re
 
+from deeplearning.clgen import native
 from deeplearning.clgen.preprocessors import clang
+from deeplearning.clgen.preprocessors import preprocessors
 
 
 C_COMMENT_RE = re.compile(
   r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
   re.DOTALL | re.MULTILINE)
 
+CLANG_ARGS = ['-xc++', '-isystem', native.CXX_HEADERS, '-Wno-ignored-pragmas',
+              '-Wno-implicit-function-declaration',
+              '-Wno-incompatible-library-redeclaration', '-Wno-macro-redefined',
+              '-Wno-unused-parameter', '-Wno-long-long',
+              '-Wcovered-switch-default', '-Wdelete-non-virtual-dtor',
+              '-Wstring-conversion', '-DLLVM_BUILD_GLOBAL_ISEL',
+              '-D__STDC_CONSTANT_MACROS', '-D__STDC_FORMAT_MACROS',
+              '-D__STDC_LIMIT_MACROS', '-D_LIBCPP_HAS_C_ATOMIC_IMP']
 
-def ClangPreprocess(src: str) -> str:
-  return clang.Preprocess(src, ['-x', 'c++'])
+
+@preprocessors.clgen_preprocessor
+def ClangPreprocess(text: str) -> str:
+  return clang.Preprocess(text, CLANG_ARGS)
 
 
+@preprocessors.clgen_preprocessor
+def Compile(text: str) -> str:
+  clang.CompileLlvmBytecode(text, '.cpp', CLANG_ARGS)
+  return text
+
+
+@preprocessors.clgen_preprocessor
 def StripComments(text: str) -> str:
   """Strip C/C++ style comments.
 
-  written by @markus-jarderot https://stackoverflow.com/a/241506/1318051
+  Written by @markus-jarderot https://stackoverflow.com/a/241506/1318051
   """
 
   def Replacer(match):
+    """Regex replacement callback."""
     s = match.group(0)
     if s.startswith('/'):
       return " "  # note: a space and not an empty string

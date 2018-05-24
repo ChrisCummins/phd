@@ -1,18 +1,12 @@
 """Preprocessor passes for the OpenCL programming language."""
-import os
-import subprocess
-import tempfile
 import typing
 
-from absl import logging
-
-from deeplearning.clgen import errors
 from deeplearning.clgen import native
 from deeplearning.clgen.preprocessors import clang
+from deeplearning.clgen.preprocessors import preprocessors
 
 
-def GetClangArgs(use_shim: bool = False, error_limit: int = 0) -> typing.List[
-  str]:
+def GetClangArgs(use_shim: bool, error_limit: int = 0) -> typing.List[str]:
   """Get the arguments to pass to clang for handling OpenCL.
 
   Args:
@@ -22,93 +16,71 @@ def GetClangArgs(use_shim: bool = False, error_limit: int = 0) -> typing.List[
   Returns:
     A list of command line arguments to pass to Popen().
   """
-  # Clang warnings to disable.
-  disabled_warnings = ['ignored-pragmas', 'implicit-function-declaration',
-                       'incompatible-library-redeclaration',
-                       'macro-redefined', ]
-  args = ['-I' + str(native.LIBCLC), '-target', 'nvptx64-nvidia-nvcl',
-          f'-ferror-limit={error_limit}', '-xcl'] + ['-Wno-{}'.format(x) for x
-                                                     in disabled_warnings]
+  args = ['-I' + str(native.LIBCLC), '-include', str(native.OPENCL_H),
+          '-target', 'nvptx64-nvidia-nvcl', f'-ferror-limit={error_limit}',
+          '-xcl', '-Wno-ignored-pragmas', '-Wno-implicit-function-declaration',
+          '-Wno-incompatible-library-redeclaration', '-Wno-macro-redefined',
+          '-Wno-unused-parameter']
   if use_shim:
     args += ['-include', str(native.SHIMFILE)]
   return args
 
 
-def ClangPreprocess(src: str, use_shim: bool = True) -> str:
-  """Preprocess OpenCL source.
+def _ClangPreprocess(text: str, use_shim: bool) -> str:
+  """Private preprocess OpenCL source implementation.
 
   Inline macros, removes comments, etc.
 
   Args:
-    src: OpenCL source.
-    id: Name of OpenCL source.
+    text: OpenCL source.
     use_shim: Inject shim header.
 
   Returns:
     Preprocessed source.
   """
-  return clang.Preprocess(src, GetClangArgs(use_shim=use_shim))
+  return clang.Preprocess(text, GetClangArgs(use_shim=use_shim))
 
 
-def NormalizeIdentifiers(src: str, timeout_seconds: int = 60,
-                         use_shim: bool = True) -> str:
+@preprocessors.clgen_preprocessor
+def ClangPreprocess(text: str) -> str:
+  """Preprocessor OpenCL source.
+
+  Args:
+    text: OpenCL source to preprocess.
+
+  Returns:
+    Preprocessed source.
   """
-  Rewrite OpenCL sources.
+  return _ClangPreprocess(text, False)
 
-  Renames all functions and variables with short, unique names.
 
-  Parameters
-  ----------
-  src : str
-      OpenCL source.
-  id : str, optional
-      OpenCL source name.
-  use_shim : bool, optional
-      Inject shim header.
+@preprocessors.clgen_preprocessor
+def ClangPreprocessWithShim(text: str) -> str:
+  """Preprocessor OpenCL source with OpenCL shim header injection.
 
-  Returns
-  -------
-  str
-      Rewritten OpenCL source.
+  Args:
+    text: OpenCL source to preprocess.
 
-  Raises
-  ------
-  RewriterException
-      If rewriter fails.
+  Returns:
+    Preprocessed source.
   """
-  # On Linux we must preload the clang library.
-  env = os.environ
-  if native.LIBCLANG_SO:
-    env = os.environ.copy()
-    env['LD_PRELOAD'] = native.LIBCLANG_SO
+  return _ClangPreprocess(text, True)
 
-  # Rewriter can't read from stdin.
-  with tempfile.NamedTemporaryFile('w', suffix='.cl') as tmp:
-    tmp.write(src)
-    tmp.flush()
-    cmd = (["timeout", "-s9", str(timeout_seconds), native.CLGEN_REWRITER,
-            tmp.name] + ['-extra-arg=' + x for x in
-                         GetClangArgs(use_shim=use_shim)] + ['--'])
-    logging.debug('$ %s', ' '.join(cmd))
 
-    process = subprocess.Popen(cmd, stdin=subprocess.PIPE,
-                               stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                               universal_newlines=True, env=env)
-    stdout, stderr = process.communicate()
-    logging.debug(stderr)
+@preprocessors.clgen_preprocessor
+def Compile(text: str) -> str:
+  """Check that the OpenCL source compiles.
 
-  # If there was nothing to rewrite, rewriter exits with error code:
-  EUGLY_CODE = 204
-  if process.returncode == EUGLY_CODE:
-    # Propagate the error:
-    raise errors.RewriterException(src)
-  # NOTE: the rewriter process can still fail because of some other
-  # compilation problem, e.g. for some reason the 'enable 64bit
-  # support' pragma which should be included in the shim isn't being
-  # propogated correctly to the rewriter. However, the rewriter will
-  # still correctly process the input, so we ignore all error codes
-  # except the one we care about (EUGLY_CODE).
-  return stdout
+  This does not modify the input.
+
+  Args:
+    text: OpenCL source to check.
+
+  Returns:
+    Unmodified OpenCL source.
+  """
+  clang.CompileLlvmBytecode(text, '.cl', GetClangArgs(use_shim=False))
+  return text
 
 
 def GpuVerify(src: str, args: list, id: str = 'anon', timeout: int = 60) -> str:
@@ -154,35 +126,26 @@ def GpuVerify(src: str, args: list, id: str = 'anon', timeout: int = 60) -> str:
   #     f"GPUveryify failed to complete with {timeout} seconds")
   # elif process.returncode != 0:
   #   raise errors.GPUVerifyException(stderr.decode('utf-8'))
-
   return src
 
 
-def SanitizeKernelPrototype(src: str) -> str:
+@preprocessors.clgen_preprocessor
+def SanitizeKernelPrototype(text: str) -> str:
   """Sanitize OpenCL prototype.
 
   Ensures that OpenCL prototype fits on a single line.
 
-  Parameters
-  ----------
-  src : str
-      OpenCL source.
+  Args:
+    text: OpenCL source.
 
-  Returns
-  -------
-  src
-      Source code with sanitized prototypes.
-
-  Returns
-  -------
-  str
-      Sanitized OpenCL source.
+  Returns:
+    Source code with sanitized prototypes.
   """
   # Ensure that prototype is well-formed on a single line:
   try:
-    prototype_end_idx = src.index('{') + 1
-    prototype = ' '.join(src[:prototype_end_idx].split())
-    return prototype + src[prototype_end_idx:]
+    prototype_end_idx = text.index('{') + 1
+    prototype = ' '.join(text[:prototype_end_idx].split())
+    return prototype + text[prototype_end_idx:]
   except ValueError:
     # Ok so erm... if the '{' character isn't found, a ValueError
     # is thrown. Why would '{' not be found? Who knows, but
@@ -190,4 +153,28 @@ def SanitizeKernelPrototype(src: str) -> str:
     # preprocessing pipeline then it's probably "good" code. It
     # could just be that an empty file slips through the cracks or
     # something.
-    return src
+    return text
+
+
+@preprocessors.clgen_preprocessor
+def StripDoubleUnderscorePrefixes(text: str) -> str:
+  """Remove the optional __ qualifiers on OpenCL keywords.
+
+  The OpenCL spec allows __ prefix for OpenCL keywords, e.g. '__global' and
+  'global' are equivalent. This preprocessor removes the '__' prefix on those
+  keywords.
+
+  Args:
+    text: The OpenCL source to preprocess.
+
+  Returns:
+    OpenCL source with __ stripped from OpenCL keywords.
+  """
+  # List of keywords taken from the OpenCL 1.2. specification, page 169.
+  replacements = {'__constant': 'constant', '__global': 'global',
+                  '__kernel': 'kernel', '__local': 'local',
+                  '__private': 'private', '__read_only': 'read_only',
+                  '__read_write': 'read_write', '__write_only': 'write_only', }
+  for old, new in replacements.items():
+    text = text.replace(old, new)
+  return text

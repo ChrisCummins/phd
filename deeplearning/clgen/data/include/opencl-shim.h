@@ -1,63 +1,46 @@
-// Enable OpenCL features and implementation.
-#ifndef CLGEN_FEATURES
-#define cl_clang_storage_class_specifiers
-#define cl_khr_fp64
-#include <clc/clc.h>
-#pragma OPENCL EXTENSION cl_khr_fp64 : enable
-
-#define __CL_VERSION_1_0__
-#define __CL_VERSION_1_1__
-#define __CL_VERSION_1_2__
-#define __ENDIAN_LITTLE__
-#define __FAST_RELAXED_MATH__
-#define __IMAGE_SUPPORT__
-#define __OPENCL_VERSION__ 1
-#endif  /* CLGEN_FEATURES */
-
 // Unsupported OpenCL storage classes and qualifiers.
 #define static
 #define generic
 #define AS
 
-// Common typedefs
-typedef float CONVT;
-typedef float DATA_TYPE;
-typedef float DATATYPE;
-typedef float FLOAT_T;
-typedef float FLOAT_TYPE;
-typedef float FPTYPE;
-typedef float hmc_float;
-typedef float inType;
-typedef float outType;
-typedef float real;
-typedef float REAL;
-/* typedef float T; */
-typedef float Ty;
-typedef float TyOut;
-typedef float TYPE;
-typedef float VALTYPE;
-typedef float VALUE_TYPE;
-typedef float VECTYPE;
-typedef float WORKTYPE;
-typedef float2 hmc_complex;
-typedef float2 mixed2;
-typedef float2 real2;
-typedef float2 REAL2;
-typedef float3 mixed3;
-typedef float3 real3;
-typedef float3 REAL3;
-typedef float4 FPVECTYPE;
-typedef float4 mixed4;
-typedef float4 real4;
-typedef float4 REAL4;
-typedef float4 T4;
-typedef int BITMAP_INDEX_TYPE;
-typedef int INDEX_TYPE;
-typedef int Ix;
-typedef int KParam;
-typedef int Tp;
-typedef int3 Pixel;
-typedef unsigned int uint32_t;
+// Common types.
+#define CONVT float
+#define DATA_TYPE float
+#define DATATYPE float
+#define FLOAT_T float
+#define FLOAT_TYPE float
+#define FPTYPE float
+#define hmc_float float
+#define inType float
+#define outType float
+#define real float
+#define REAL float
+#define Ty float
+#define TyOut float
+#define TYPE float
+#define VALTYPE float
+#define VALUE_TYPE float
+#define VECTYPE float
+#define WORKTYPE float
+#define hmc_complex float2
+#define mixed2 float2
+#define real2 float2
+#define REAL2 float2
+#define mixed3 float3
+#define real3 float3
+#define REAL3 float3
+#define FPVECTYPE float4
+#define mixed4 float4
+#define real4 float4
+#define REAL4 float4
+#define T4 float4
+#define BITMAP_INDEX_TYPE int
+#define INDEX_TYPE int
+#define Ix int
+#define KParam int
+#define Tp int
+#define Pixel int3
+#define uint32_t unsigned int
 
 // Common constants
 #define ACCESSES 16

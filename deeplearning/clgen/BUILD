@@ -285,14 +285,17 @@ py_library(
         "//deeplearning/clgen/native:clgen-features",
         "//deeplearning/clgen/native:clgen-rewriter",
         "//deeplearning/clgen/data/include:opencl-shim",
+        "//deeplearning/clgen/data/include:opencl",
         "//third_party/libclc/generic/include:headers",
     ] + select({
         "//:darwin": [
+            "@llvm_mac_headers//:headers",
             "@llvm_mac//:clang",
             "@llvm_mac//:clang-format",
             "@llvm_mac//:opt",
         ],
         "//conditions:default": [
+            "@llvm_linux_headers//:headers",
             "@llvm_linux//:clang-format",
             "@llvm_linux//:clang",
             "@llvm_linux//:opt",
