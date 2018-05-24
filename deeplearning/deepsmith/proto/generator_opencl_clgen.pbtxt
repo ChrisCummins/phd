@@ -14,27 +14,27 @@ model {
       tokens: "__assert"
       tokens: "__attribute"
       tokens: "__builtin_astype"
-      tokens: "__clc_fabs",
+      tokens: "__clc_fabs"
       tokens: "__clc_fma"
       tokens: "__constant"
       tokens: "__global"
       tokens: "__inline"
       tokens: "__kernel"
-      tokens: "__local",
+      tokens: "__local"
       tokens: "__private"
       tokens: "__read_only"
       tokens: "__read_write"
       tokens: "__write_only"
       tokens: "*/"
       tokens: "/*"
-      tokens: "//",
+      tokens: "//"
       tokens: "abs"
       tokens: "alignas"
       tokens: "alignof"
       tokens: "atomic_add"
       tokens: "auto"
       tokens: "barrier"
-      tokens: "bool",
+      tokens: "bool"
       tokens: "break"
       tokens: "case"
       tokens: "char"
@@ -42,7 +42,7 @@ model {
       tokens: "complex"
       tokens: "const"
       tokens: "constant"
-      tokens: "continue",
+      tokens: "continue"
       tokens: "default"
       tokens: "define"
       tokens: "defined"
@@ -50,7 +50,7 @@ model {
       tokens: "double"
       tokens: "elif"
       tokens: "else"
-      tokens: "endif",
+      tokens: "endif"
       tokens: "enum"
       tokens: "error"
       tokens: "event_t"
@@ -58,29 +58,29 @@ model {
       tokens: "fabs"
       tokens: "false"
       tokens: "float"
-      tokens: "for",
+      tokens: "for"
       tokens: "get_global_id"
       tokens: "get_global_size"
       tokens: "get_local_id"
-      tokens: "get_local_size",
+      tokens: "get_local_size"
       tokens: "get_num_groups"
       tokens: "global"
       tokens: "goto"
       tokens: "half"
       tokens: "if"
       tokens: "ifdef"
-      tokens: "ifndef",
+      tokens: "ifndef"
       tokens: "image1d_array_t"
       tokens: "image1d_buffer_t"
       tokens: "image1d_t"
-      tokens: "image2d_array_t",
+      tokens: "image2d_array_t"
       tokens: "image2d_t"
       tokens: "image3d_t"
       tokens: "imaginary"
       tokens: "include"
       tokens: "inline"
       tokens: "int"
-      tokens: "into",
+      tokens: "into"
       tokens: "kernel"
       tokens: "line"
       tokens: "local"
@@ -88,13 +88,13 @@ model {
       tokens: "noreturn"
       tokens: "pragma"
       tokens: "private"
-      tokens: "quad",
+      tokens: "quad"
       tokens: "read_only"
       tokens: "read_write"
       tokens: "register"
       tokens: "restrict"
       tokens: "return"
-      tokens: "sampler_t",
+      tokens: "sampler_t"
       tokens: "short"
       tokens: "shuffle"
       tokens: "signed"
@@ -102,7 +102,7 @@ model {
       tokens: "sizeof"
       tokens: "sqrt"
       tokens: "static"
-      tokens: "struct",
+      tokens: "struct"
       tokens: "switch"
       tokens: "true"
       tokens: "typedef"
@@ -110,14 +110,14 @@ model {
       tokens: "uchar"
       tokens: "uint"
       tokens: "ulong"
-      tokens: "undef",
+      tokens: "undef"
       tokens: "union"
       tokens: "unsigned"
       tokens: "void"
       tokens: "volatile"
       tokens: "while"
       tokens: "wide"
-      tokens: "write_only",
+      tokens: "write_only"
     }
     sequence_length: 50
     contentfile_separator: "\n\n"
