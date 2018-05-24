@@ -274,7 +274,14 @@ def PreprocessDatabase(db_path: pathlib.Path, language: languages.Language,
 
   Returns:
     True if the database was modified, else False.
+
+  Raises:
+    UserError: If GetPreprocessorFunction() fails for any of the preprocessors.
   """
+  # Lookup each of the preprocessors now, since GetPreprocessorFunction() will
+  # raise a UserError if any of them can't be found.
+  [GetPreprocessorFunction(p) for p in preprocessors]
+
   db = dbutil.connect(str(db_path))
   is_modified = dbutil.is_modified(db)
   max_retries = 10

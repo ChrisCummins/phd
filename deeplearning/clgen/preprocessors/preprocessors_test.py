@@ -130,6 +130,33 @@ def test_PreprocessDatabase_abc(abc_db_path):
   assert set([r[2] for r in results]) == {'PREPROCESSED', }
 
 
+def test_PreprocessDatabase_abc_no_preprocessors(abc_db_path):
+  """Test that contentfiles are not modified if there's no preprocessors."""
+  preprocessors.PreprocessDatabase(abc_db_path, languages.Language.OPENCL, [])
+  assert dbutil.num_rows_in(abc_db_path, "PreprocessedFiles") == 3
+  db = dbutil.connect(abc_db_path)
+  c = db.cursor()
+  results = c.execute(
+    'SELECT id,status,contents FROM PreprocessedFiles').fetchall()
+  assert set([r[0] for r in results]) == {'a', 'b', 'c'}
+  assert set([r[1] for r in results]) == {0}
+  # The abc_db contentfiles, unmodified.
+  assert set([r[2] for r in results]) == {'foo', 'car', 'bar'}
+
+
+def test_PreprocessDatabase_invalid_preprocessor(abc_db_path):
+  """Test that an invalid preprocessor raises an InternalError"""
+  with pytest.raises(errors.UserError) as e_info:
+    preprocessors.PreprocessDatabase(abc_db_path, languages.Language.OPENCL,
+                                     ['not.a.real:Preprocessor'])
+  assert 'not.a.real:Preprocessor' in str(e_info.value)
+  # Check that nothing has been added to the PreprocessedFiles table.
+  db = dbutil.connect(abc_db_path)
+  c = db.cursor()
+  results = c.execute('SELECT Count(*) FROM PreprocessedFiles').fetchone()
+  assert not results[0]
+
+
 def test_PreprocessDatabase_abc_bad_code(abc_db_path):
   """Test PreprocessDatabase with a bad code preprocessor."""
   preprocessors.PreprocessDatabase(abc_db_path, languages.Language.OPENCL, [
