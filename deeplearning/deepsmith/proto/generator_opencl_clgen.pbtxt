@@ -121,7 +121,15 @@ model {
     }
     sequence_length: 50
     contentfile_separator: "\n\n"
-    preprocessors: "opencl"
+    preprocessor: "deeplearning.clgen.preprocessors.opencl:ClangPreprocessWithShim"
+    preprocessor: "deeplearning.clgen.preprocessors.opencl:Compile"
+    preprocessor: "deeplearning.clgen.preprocessors.opencl:NormalizeIdentifiers"
+    preprocessor: "deeplearning.clgen.preprocessors.opencl:StripDoubleUnderscorePrefixes"
+    preprocessor: "deeplearning.clgen.preprocessors.common:StripDuplicateEmptyLines"
+    preprocessor: "deeplearning.clgen.preprocessors.opencl:SanitizeKernelPrototype"
+    preprocessor: "deeplearning.clgen.preprocessors.common:StripTrailingWhitespace"
+    preprocessor: "deeplearning.clgen.preprocessors.cxx:ClangFormat"
+    preprocessor: "deeplearning.clgen.preprocessors.common:MinimumLineCount"
   }
   architecture {
     neuron_type: LSTM
