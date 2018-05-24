@@ -124,8 +124,8 @@ model {
     preprocessor: "deeplearning.clgen.preprocessors.common:StripDuplicateEmptyLines"
     preprocessor: "deeplearning.clgen.preprocessors.opencl:SanitizeKernelPrototype"
     preprocessor: "deeplearning.clgen.preprocessors.common:StripTrailingWhitespace"
-    preprocessor: "deeplearning.clgen.preprocessors.cxx:ClangFormat"
-    preprocessor: "deeplearning.clgen.preprocessors.common:MinimumLineCount"
+    preprocessor: "deeplearning.clgen.preprocessors.opencl:ClangFormat"
+    preprocessor: "deeplearning.clgen.preprocessors.common:MinimumLineCount3"
   }
   architecture {
     neuron_type: LSTM
