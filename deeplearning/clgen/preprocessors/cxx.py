@@ -11,8 +11,9 @@ C_COMMENT_RE = re.compile(
   r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
   re.DOTALL | re.MULTILINE)
 
-CLANG_ARGS = ['-xc++', '-isystem', native.CXX_HEADERS, '-Wno-ignored-pragmas',
-              '-ferror-limit=1', '-Wno-implicit-function-declaration',
+CLANG_ARGS = ['-xc++', '-isystem', native.LIBCXX_HEADERS,
+              '-Wno-ignored-pragmas', '-ferror-limit=1',
+              '-Wno-implicit-function-declaration',
               '-Wno-incompatible-library-redeclaration', '-Wno-macro-redefined',
               '-Wno-unused-parameter', '-Wno-long-long',
               '-Wcovered-switch-default', '-Wdelete-non-virtual-dtor',

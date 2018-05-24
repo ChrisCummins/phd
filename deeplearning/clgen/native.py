@@ -14,8 +14,6 @@ Attributes:
   SHIMFILE: Path to shim headerfile.
 """
 
-import pathlib
-
 from config import getconfig
 from deeplearning.clgen import package_util
 from lib.labm8 import fs
@@ -39,7 +37,7 @@ OPENCL_H = package_util.must_exist(
 SHIMFILE = package_util.must_exist(
   fs.abspath('deeplearning/clgen/data/include/opencl-shim.h'))
 # TODO(cec): Rename CXX_HEADERS to LIBCXX_HEADERS.
-CXX_HEADERS = package_util.must_exist(fs.abspath('../libcxx/include'))
+LIBCXX_HEADERS = package_util.must_exist(fs.abspath('../libcxx/include'))
 # TODO(cec): Add these remaining files.
 GPUVERIFY = 'TODO'
 OCLGRIND = 'TODO'
