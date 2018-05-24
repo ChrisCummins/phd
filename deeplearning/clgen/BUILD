@@ -292,6 +292,7 @@ py_library(
         "//deeplearning/clgen/data/include:opencl-shim",
         "//deeplearning/clgen/data/include:opencl",
         "//third_party/libclc/generic/include:headers",
+        "@libcxx//:headers",
     ] + select({
         "//:darwin": [
             "@llvm_mac_headers//:headers",

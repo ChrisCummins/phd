@@ -38,8 +38,8 @@ OPENCL_H = package_util.must_exist(
   fs.abspath('deeplearning/clgen/data/include/opencl.h'))
 SHIMFILE = package_util.must_exist(
   fs.abspath('deeplearning/clgen/data/include/opencl-shim.h'))
-CXX_HEADERS = package_util.must_exist(
-  pathlib.Path(_config.paths.llvm_prefix) / 'include' / 'c++' / 'v1')
+# TODO(cec): Rename CXX_HEADERS to LIBCXX_HEADERS.
+CXX_HEADERS = package_util.must_exist(fs.abspath('../libcxx/include'))
 # TODO(cec): Add these remaining files.
 GPUVERIFY = 'TODO'
 OCLGRIND = 'TODO'
