@@ -650,6 +650,7 @@ std::string getexepath() {
 //   //third_party/opencl/inlined/include/cl.h
 //
 // If either of these files is moved, this path must be updated!
+// TODO(cec): Fix this to match runfiles tree on Linux.
 std::string cl_header() {
   return dirname(getexepath()) + "/../../../third_party/opencl/inlined/include/cl.h";
 }
