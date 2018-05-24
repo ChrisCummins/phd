@@ -1,15 +1,14 @@
 """This file contains utility code for working with clang."""
 import json
-import pathlib
 import re
 import subprocess
+import tempfile
 import typing
 
 from absl import flags
 from absl import logging
 
 from config import getconfig
-from deeplearning.clgen import dbutil
 from deeplearning.clgen import errors
 
 
@@ -95,12 +94,14 @@ def Preprocess(src: str, cflags: typing.List[str], timeout_seconds: int = 60,
     return stdout
 
 
-def CompileLlvmBytecode(src: str, cflags: typing.List[str],
+def CompileLlvmBytecode(src: str, suffix: str, cflags: typing.List[str],
                         timeout_seconds: int = 60) -> str:
   """Compile input code into textual LLVM byte code.
 
   Args:
-    src: The source code to compiler.
+    src: The source code to compile.
+    suffix: The suffix to append to the source code temporary file. E.g. '.c'
+      for a C program.
     cflags: A list of flags to be passed to clang.
     timeout_seconds: The number of seconds to allow before killing clang.
 
@@ -111,22 +112,17 @@ def CompileLlvmBytecode(src: str, cflags: typing.List[str],
     ClangException: In case of an error.
     ClangTimeout: If clang does not complete before timeout_seconds.
   """
-  # TODO(cec): I haven't the willpower to get this work again.
   builtin_cflags = ['-S', '-emit-llvm', '-o', '-']
-  path = pathlib.Path('/tmp/input')
-  try:
-    with open(path, 'w') as f:
-      f.write(src)
-    with open(path) as f:
-      print(f.read())
-    cmd = ['timeout', '-s9', str(timeout_seconds),
-           CLANG, ] + builtin_cflags + cflags + [str(path)]
-    logging.debug('$ %s', ' '.join(cmd))
+  with tempfile.NamedTemporaryFile('w', prefix='clgen_clang_',
+                                   suffix=suffix) as f:
+    f.write(src)
+    f.flush()
+    cmd = ['timeout', '-s9', str(timeout_seconds), CLANG,
+           f.name] + builtin_cflags + cflags
+    logging.info('$ %s', ' '.join(cmd))
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE, universal_newlines=True)
     stdout, stderr = process.communicate()
-  finally:
-    path.unlink()
   if process.returncode == 9:
     raise errors.ClangTimeout(f'Clang timed out after {timeout_seconds}s')
   elif process.returncode != 0:
@@ -160,150 +156,3 @@ def ClangFormat(src: str, timeout_seconds: int = 60) -> str:
   elif process.returncode != 0:
     raise errors.ClangFormatException(stderr)
   return stdout
-
-
-_instcount_re = re.compile(
-  r"^(?P<count>\d+) instcount - Number of (?P<type>.+)")
-
-
-def parse_instcounts(txt: str) -> typing.Dict[str, int]:
-  """Parse LLVM opt instruction counts pass.
-
-  Parameters
-  ----------
-  txt : str
-      LLVM output.
-
-  Returns
-  -------
-  Dict[str, int]
-      key, value pairs, where key is instruction type and value is
-      instruction type count.
-  """
-  lines = [x.strip() for x in txt.split("\n")]
-  counts = {}
-
-  # Build a list of counts for each type.
-  for line in lines:
-    match = re.search(_instcount_re, line)
-    if match:
-      count = int(match.group("count"))
-      key = match.group("type")
-      if key in counts:
-        counts[key].append(count)
-      else:
-        counts[key] = [count]
-
-  # Sum all counts.
-  for key in counts:
-    counts[key] = sum(counts[key])
-
-  return counts
-
-
-def instcounts2ratios(counts: typing.Dict[str, int]) -> typing.Dict[str, float]:
-  """
-  Convert instruction counts to instruction densities.
-
-  If, for example, there are 10 instructions and 2 addition instructions,
-  then the instruction density of add operations is .2.
-
-  Parameters
-  ----------
-  counts : Dict[str, int]
-      Key value pairs of instruction types and counts.
-
-  Returns
-  -------
-  ratios : Dict[str, float]
-      Key value pairs of instruction types and densities.
-  """
-  if not len(counts):
-    return {}
-
-  ratios = {}
-  total_key = "instructions (of all types)"
-  non_ratio_keys = [total_key]
-  total = float(counts[total_key])
-
-  for key in non_ratio_keys:
-    ratios[dbutil.escape_sql_key(key)] = counts[key]
-
-  for key in counts:
-    if key not in non_ratio_keys:
-      # Copy count
-      ratios[dbutil.escape_sql_key(key)] = counts[key]
-      # Insert ratio
-      ratio = float(counts[key]) / total
-      ratios[dbutil.escape_sql_key('ratio_' + key)] = ratio
-
-  return ratios
-
-
-def bytecode_features(bc: str, id: str = 'anon', timeout: int = 60) -> \
-    typing.Dict[str, float]:
-  """
-  Extract features from bytecode.
-
-  Parameters
-  ----------
-  bc : str
-      LLVM bytecode.
-  id : str, optional
-      Name of OpenCL source.
-
-  Returns
-  -------
-  Dict[str, float]
-      Key value pairs of instruction types and densities.
-
-  Raises
-  ------
-  OptException
-      If LLVM opt pass errors.
-  """
-  cmd = ["timeout", "-s9", str(timeout), OPT, '-analyze', '-stats',
-         '-instcount', '-']
-
-  # LLVM pass output pritns to stderr, so we'll pipe stderr to
-  # stdout.
-  logging.debug('$ %s', ' '.join(cmd))
-  process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT, universal_newlines=True)
-  stdout, _ = process.communicate(bc)
-
-  if process.returncode != 0:
-    raise errors.OptException(stdout)
-
-  instcounts = parse_instcounts(stdout)
-  instratios = instcounts2ratios(instcounts)
-
-  return instratios
-
-
-def verify_bytecode_features(bc_features: typing.Dict[str, float],
-                             id: str = 'anon') -> None:
-  """
-  Verify LLVM bytecode features.
-
-  Parameters
-  ----------
-  bc_features : Dict[str, float]
-      Bytecode features.
-  id : str, optional
-      Name of OpenCL source.
-
-  Raises
-  ------
-  InstructionCountException
-      If verification errors.
-  """
-  # The minimum number of instructions before a kernel is discarded
-  # as ugly.
-  min_num_instructions = 1
-  num_instructions = bc_features.get('instructions_of_all_types', 0)
-
-  if num_instructions < min_num_instructions:
-    raise errors.InstructionCountException(
-      'Code contains {} instructions. The minimum allowed is {}'.format(
-        num_instructions, min_num_instructions))
