@@ -1,4 +1,10 @@
-"""This file contains utility code for working with clang."""
+"""This file contains utility code for working with clang.
+
+This module does not expose any preprocessor functions for CLgen. It contains
+wrappers around Clang binaries, which preprocessor functions can use to
+implement specific behavior. See deeplearning.clgen.preprocessors.cxx.Compile()
+for an example.
+"""
 import json
 import re
 import subprocess
