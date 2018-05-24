@@ -37,14 +37,13 @@ message Sample {
 message PreprocessorWorkerJob {
   optional string contentfile_id = 1;
   optional string src = 2;
-  repeated Preprocessor preprocessors = 3;
+  repeated string preprocessors = 3;
 }
 
 message PreprocessorWorkerJobOutcome {
   enum Status {
     OK = 0;
-    BAD = 1;
-    UGLY = 2;
+    FAIL = 1;
   }
 
   optional string contentfile_id = 1;
