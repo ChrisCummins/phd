@@ -80,7 +80,10 @@ def Compile(text: str) -> str:
   Returns:
     Unmodified OpenCL source.
   """
-  clang.CompileLlvmBytecode(text, '.cl', GetClangArgs(use_shim=False))
+  # We must override the flag -Wno-implicit-function-declaration from
+  # GetClangArgs() to ensure that undefined functions are treated as errors.
+  clang.CompileLlvmBytecode(text, '.cl', GetClangArgs(use_shim=False) + [
+      '-Werror=implicit-function-declaration'])
   return text
 
 
