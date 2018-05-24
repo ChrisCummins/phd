@@ -132,6 +132,7 @@ paths {
   libclang_so: "$LIBCLANG_SO"
   clang_format: "$LLVM_PREFIX/bin/clang-format"
   python: "$PYTHON"
+  llvm_prefix: "$LLVM_PREFIX"
 }
 with_cuda: $WITH_CUDA
 EOF
