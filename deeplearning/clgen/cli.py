@@ -528,25 +528,18 @@ def _register_preprocess_parser(self, parent: ArgumentParser) -> None:
             remove_preprocessed: bool) -> None:
     input_paths = [infile.name for infile in inputs]
 
-    if inputs_are_files and inplace:
-      preprocessors.preprocess_inplace(input_paths, use_gpuverify=gpuverify)
-    else:
-      for path in input_paths:
-        if inputs_are_files:
-          preprocessors.preprocess_file(path, inplace=False,
-                                        use_gpuverify=gpuverify)
-        elif remove_bad_preprocessed:
-          dbutil.remove_bad_preprocessed(path)
-        elif remove_preprocessed:
-          dbutil.remove_preprocessed(path)
+    for path in input_paths:
+      if remove_bad_preprocessed:
+        dbutil.remove_bad_preprocessed(path)
+      elif remove_preprocessed:
+        dbutil.remove_preprocessed(path)
+        print("done.")
+      else:
+        if preprocessors.PreprocessDatabase(pathlib.Path(path),
+                                            languages.Language.OPENCL, []):
           print("done.")
         else:
-          if preprocessors.PreprocessDatabase(path,
-                                              lang=languages.Language.OPENCL,
-                                              use_gpuverify=gpuverify):
-            print("done.")
-          else:
-            print("nothing to be done.")
+          print("nothing to be done.")
 
   parser = parent.add_parser("preprocess", aliases=["p", "pp"],
                              help="preprocess files for training",
