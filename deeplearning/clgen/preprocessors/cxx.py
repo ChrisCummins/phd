@@ -34,7 +34,7 @@ def Compile(text: str) -> str:
 
 @preprocessors.clgen_preprocessor
 def ClangFormat(text: str) -> str:
-  return clang.ClangFormat(text)
+  return clang.ClangFormat(text, '.cpp')
 
 
 @preprocessors.clgen_preprocessor

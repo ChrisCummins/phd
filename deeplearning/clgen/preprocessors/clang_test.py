@@ -188,7 +188,7 @@ def test_ClangFormat_process_command(mocker):
   """Test the clang-format comand which is run."""
   mock_Popen = mocker.patch('subprocess.Popen')
   mock_Popen.return_value = MockProcess(0)
-  clang.ClangFormat('')
+  clang.ClangFormat('', '.cpp')
   subprocess.Popen.assert_called_once()
   cmd = subprocess.Popen.call_args_list[0][0][0]
   assert cmd[:3] == ['timeout', '-s9', '60']
@@ -199,10 +199,10 @@ def test_ClangFormat_ClangTimeout(mocker):
   mock_Popen = mocker.patch('subprocess.Popen')
   mock_Popen.return_value = MockProcess(9)
   with pytest.raises(errors.ClangTimeout):
-    clang.ClangFormat('')
+    clang.ClangFormat('', '.cpp')
   # ClangTimeout inherits from ClangException.
   with pytest.raises(errors.ClangException):
-    clang.ClangFormat('')
+    clang.ClangFormat('', '.cpp')
 
 
 def test_ClangFormat_ClangException(mocker):
@@ -210,78 +210,12 @@ def test_ClangFormat_ClangException(mocker):
   mock_Popen = mocker.patch('subprocess.Popen')
   mock_Popen.return_value = MockProcess(1)
   with pytest.raises(errors.ClangFormatException):
-    clang.ClangFormat('')
+    clang.ClangFormat('', '.cpp')
 
 
 def test_ClangFormat_empty_file():
   """Test the preprocessor output with an empty file."""
-  assert clang.ClangFormat('') == ''
-
-
-def test_ClangFormat_simple_c_program():
-  """Test that a simple C program is unchanged."""
-  assert clang.ClangFormat("""
-int main(int argc, char** argv) { return 0; }
-""") == """
-int main(int argc, char** argv) {
-  return 0;
-}
-"""
-
-
-def test_ClangFormat_pointer_alignment():
-  """Test that pointers are positioned left."""
-  assert clang.ClangFormat("""
-int * A(int* a, int * b, int *c);
-""") == """
-int* A(int* a, int* b, int* c);
-"""
-
-
-def test_ClangFormat_undefined_data_type():
-  """Test that an undefined data type does not cause an error."""
-  assert clang.ClangFormat("""
-int main(MY_TYPE argc, char** argv) { return 0; }
-""") == """
-int main(MY_TYPE argc, char** argv) {
-  return 0;
-}
-"""
-
-
-def test_ClangFormat_undefined_variable():
-  """Test that an undefined variable does not cause an error."""
-  assert clang.ClangFormat("""
-int main(int argc, char** argv) { return UNDEFINED_VARIABLE; }
-""") == """
-int main(int argc, char** argv) {
-  return UNDEFINED_VARIABLE;
-}
-"""
-
-
-def test_ClangFormat_undefined_function():
-  """Test that an undefined function does not cause an error."""
-  assert clang.ClangFormat("""
-int main(int argc, char** argv) { return UNDEFINED_FUNCTION(0); }
-""") == """
-int main(int argc, char** argv) {
-  return UNDEFINED_FUNCTION(0);
-}
-"""
-
-
-def test_ClangFormat_invalid_preprocessor_directive():
-  """Test that an invalid preprocessor directive does not raise an error."""
-  assert clang.ClangFormat("""
-#this_is_not_a_valid_directive
-int main(int argc, char** argv) { return 0; }
-""") == """
-#this_is_not_a_valid_directive
-int main(int argc, char** argv) {
-  return 0;
-}
-"""
+  assert clang.ClangFormat('', '.cpp') == ''
 
 
 # CompileLlvmBytecode() tests.
@@ -368,7 +302,7 @@ def test_benchmark_Preprocess_c_hello_world(benchmark):
 
 def test_benchmark_ClangFormat_c_hello_world(benchmark):
   """Benchmark ClangFormat for a "hello world" C program."""
-  benchmark(clang.ClangFormat, HELLO_WORLD_C)
+  benchmark(clang.ClangFormat, HELLO_WORLD_C, '.cpp')
 
 
 def test_benchmark_CompileLlvmBytecode_c_hello_world(benchmark):

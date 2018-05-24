@@ -130,7 +130,7 @@ def CompileLlvmBytecode(src: str, suffix: str, cflags: typing.List[str],
   return stdout
 
 
-def ClangFormat(src: str, timeout_seconds: int = 60) -> str:
+def ClangFormat(src: str, suffix: str, timeout_seconds: int = 60) -> str:
   """Run clang-format on a source to enforce code style.
 
   Args:
@@ -145,6 +145,7 @@ def ClangFormat(src: str, timeout_seconds: int = 60) -> str:
     ClangTimeout: If clang-format does not complete before timeout_seconds.
   """
   cmd = ["timeout", "-s9", str(timeout_seconds), CLANG_FORMAT,
+         '-assume-filename', f'input{suffix}',
          '-style={}'.format(json.dumps(CLANG_FORMAT_CONFIG))]
   logging.debug('$ %s', ' '.join(cmd))
   process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,

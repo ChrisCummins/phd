@@ -100,6 +100,74 @@ int main(int argc, char** argv) {
   assert 'use of undeclared identifier' in str(e_info.value)
 
 
+# ClangFormat() tests.
+
+def test_ClangFormat_simple_c_program():
+  """Test that a simple C program is unchanged."""
+  assert cxx.ClangFormat("""
+int main(int argc, char** argv) { return 0; }
+""") == """
+int main(int argc, char** argv) {
+  return 0;
+}
+"""
+
+
+def test_ClangFormat_pointer_alignment():
+  """Test that pointers are positioned left."""
+  assert cxx.ClangFormat("""
+int * A(int* a, int * b, int *c);
+""") == """
+int* A(int* a, int* b, int* c);
+"""
+
+
+def test_ClangFormat_undefined_data_type():
+  """Test that an undefined data type does not cause an error."""
+  assert cxx.ClangFormat("""
+int main(MY_TYPE argc, char** argv) { return 0; }
+""") == """
+int main(MY_TYPE argc, char** argv) {
+  return 0;
+}
+"""
+
+
+def test_ClangFormat_undefined_variable():
+  """Test that an undefined variable does not cause an error."""
+  assert cxx.ClangFormat("""
+int main(int argc, char** argv) { return UNDEFINED_VARIABLE; }
+""") == """
+int main(int argc, char** argv) {
+  return UNDEFINED_VARIABLE;
+}
+"""
+
+
+def test_ClangFormat_undefined_function():
+  """Test that an undefined function does not cause an error."""
+  assert cxx.ClangFormat("""
+int main(int argc, char** argv) { return UNDEFINED_FUNCTION(0); }
+""") == """
+int main(int argc, char** argv) {
+  return UNDEFINED_FUNCTION(0);
+}
+"""
+
+
+def test_ClangFormat_invalid_preprocessor_directive():
+  """Test that an invalid preprocessor directive does not raise an error."""
+  assert cxx.ClangFormat("""
+#this_is_not_a_valid_directive
+int main(int argc, char** argv) { return 0; }
+""") == """
+#this_is_not_a_valid_directive
+int main(int argc, char** argv) {
+  return 0;
+}
+"""
+
+
 # StripComments() tests.
 
 def test_StripComments_empty_input():
@@ -160,7 +228,7 @@ def test_benchmark_StripComments_hello_world(benchmark):
 def main(argv):
   """Main entry point."""
   del argv
-  sys.exit(pytest.main([__file__, '-v']))
+  sys.exit(pytest.main([__file__, '-vv']))
 
 
 if __name__ == '__main__':
