@@ -36,8 +36,14 @@ OPENCL_H = package_util.must_exist(
   fs.abspath('deeplearning/clgen/data/include/opencl.h'))
 SHIMFILE = package_util.must_exist(
   fs.abspath('deeplearning/clgen/data/include/opencl-shim.h'))
-# TODO(cec): Rename CXX_HEADERS to LIBCXX_HEADERS.
-LIBCXX_HEADERS = package_util.must_exist(fs.abspath('../libcxx/include'))
+# On Linux, we use @libcxx//:headers. On MacOS we use the homebrew libcxx
+# headers since @libcxx//:headers raise compilation errors and appear to be
+# incompatible.
+if _config.uname == 'darwin':
+  LIBCXX_HEADERS = package_util.must_exist(
+    fs.abspath(_config.paths.llvm_prefix, 'include/c++/v1'))
+else:
+  LIBCXX_HEADERS = package_util.must_exist(fs.abspath('../libcxx/include'))
 # TODO(cec): Add these remaining files.
 GPUVERIFY = 'TODO'
 OCLGRIND = 'TODO'
