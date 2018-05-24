@@ -135,11 +135,13 @@ def CompileLlvmBytecode(src: str, suffix: str, cflags: typing.List[str],
   return stdout
 
 
-def ClangFormat(src: str, suffix: str, timeout_seconds: int = 60) -> str:
+def ClangFormat(text: str, suffix: str, timeout_seconds: int = 60) -> str:
   """Run clang-format on a source to enforce code style.
 
   Args:
-    src: The source code to run through clang-format.
+    text: The source code to run through clang-format.
+    suffix: The suffix to append to the source code temporary file. E.g. '.c'
+      for a C program.
     timeout_seconds: The number of seconds to allow clang-format to run for.
 
   Returns:
@@ -155,7 +157,7 @@ def ClangFormat(src: str, suffix: str, timeout_seconds: int = 60) -> str:
   logging.debug('$ %s', ' '.join(cmd))
   process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE, universal_newlines=True)
-  stdout, stderr = process.communicate(src)
+  stdout, stderr = process.communicate(text)
   if process.returncode == 9:
     raise errors.ClangTimeout(
       f'Clang-format timed out after {timeout_seconds}s')

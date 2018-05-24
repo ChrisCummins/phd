@@ -34,7 +34,7 @@ OPENCL_PREPROCESSORS = [
   'deeplearning.clgen.preprocessors.common:StripDuplicateEmptyLines',
   'deeplearning.clgen.preprocessors.opencl:SanitizeKernelPrototype',
   'deeplearning.clgen.preprocessors.common:StripTrailingWhitespace',
-  'deeplearning.clgen.preprocessors.cxx:ClangFormat',
+  'deeplearning.clgen.preprocessors.opencl:ClangFormat',
   'deeplearning.clgen.preprocessors.common:MinimumLineCount3', ]
 
 
