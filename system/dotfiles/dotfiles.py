@@ -162,7 +162,7 @@ class Homebrew(Task):
   def install_package(self, package, *opts):
     """ install a package using homebrew, return True if installed """
     if not self.package_is_installed(package):
-      task_print("brew install " + package + ' '.join(opts))
+      task_print("brew install " + package + ' ' + ' '.join(opts))
       self.shell("{self.BREW_BINARY} install {package}".format(**vars()))
       self._make_user_writeable()
       return True
