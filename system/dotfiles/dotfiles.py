@@ -1813,7 +1813,7 @@ class Clang(Task):
     pass
 
   def install_linux(self):
-    Homebrew().install_package('llvm')
+    Homebrew().install_package('llvm', '--with-libcxx')
 
 
 class Ninja(Task):
