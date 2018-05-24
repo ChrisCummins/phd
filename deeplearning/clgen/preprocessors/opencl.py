@@ -50,8 +50,8 @@ def ClangPreprocess(src: str, use_shim: bool = True) -> str:
   return clang.Preprocess(src, GetClangArgs(use_shim=use_shim))
 
 
-def rewrite_cl(src: str, timeout_seconds: int = 60,
-               use_shim: bool = True) -> str:
+def NormalizeIdentifiers(src: str, timeout_seconds: int = 60,
+                         use_shim: bool = True) -> str:
   """
   Rewrite OpenCL sources.
 
@@ -111,7 +111,7 @@ def rewrite_cl(src: str, timeout_seconds: int = 60,
   return stdout
 
 
-def gpuverify(src: str, args: list, id: str = 'anon', timeout: int = 60) -> str:
+def GpuVerify(src: str, args: list, id: str = 'anon', timeout: int = 60) -> str:
   """
   Run GPUverify over kernel.
 
@@ -156,3 +156,38 @@ def gpuverify(src: str, args: list, id: str = 'anon', timeout: int = 60) -> str:
   #   raise errors.GPUVerifyException(stderr.decode('utf-8'))
 
   return src
+
+
+def SanitizeKernelPrototype(src: str) -> str:
+  """Sanitize OpenCL prototype.
+
+  Ensures that OpenCL prototype fits on a single line.
+
+  Parameters
+  ----------
+  src : str
+      OpenCL source.
+
+  Returns
+  -------
+  src
+      Source code with sanitized prototypes.
+
+  Returns
+  -------
+  str
+      Sanitized OpenCL source.
+  """
+  # Ensure that prototype is well-formed on a single line:
+  try:
+    prototype_end_idx = src.index('{') + 1
+    prototype = ' '.join(src[:prototype_end_idx].split())
+    return prototype + src[prototype_end_idx:]
+  except ValueError:
+    # Ok so erm... if the '{' character isn't found, a ValueError
+    # is thrown. Why would '{' not be found? Who knows, but
+    # whatever, if the source file got this far through the
+    # preprocessing pipeline then it's probably "good" code. It
+    # could just be that an empty file slips through the cracks or
+    # something.
+    return src

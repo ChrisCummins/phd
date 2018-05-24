@@ -124,7 +124,7 @@ __kernel void A(__global float* a) {
   int b = get_global_id(0);
   a[b] *= 2.0f;
 }"""
-  assert opencl.gpuverify(code, ["--local_size=64", "--num_groups=128"]) == code
+  assert opencl.GpuVerify(code, ["--local_size=64", "--num_groups=128"]) == code
 
 
 @pytest.mark.skip(reason='TODO(cec) New preprocessor pipeline')
@@ -135,7 +135,7 @@ __kernel void A(__global float* a) {
   a[0] +=  1.0f;
 }"""
   with pytest.raises(deeplearning.clgen.errors.GPUVerifyException):
-    opencl.gpuverify(code, ["--local_size=64", "--num_groups=128"])
+    opencl.GpuVerify(code, ["--local_size=64", "--num_groups=128"])
 
 
 def main(argv):

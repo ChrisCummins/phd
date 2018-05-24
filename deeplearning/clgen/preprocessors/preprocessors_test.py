@@ -13,7 +13,7 @@ import deeplearning.clgen.preprocessors.opencl
 @pytest.mark.skip(reason='TODO(cec) New preprocessor pipeline')
 def test_rewriter_good_code():
   """Test that OpenCL rewriter renames variables and functions."""
-  rewritten = deeplearning.clgen.preprocessors.opencl.rewrite_cl("""\
+  rewritten = deeplearning.clgen.preprocessors.opencl.NormalizeIdentifiers("""\
 __kernel void FOOBAR(__global int * b) {
     if (  b < *b) {
           *b *= 2;

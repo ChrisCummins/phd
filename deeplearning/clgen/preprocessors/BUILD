@@ -40,6 +40,24 @@ py_test(
 )
 
 py_library(
+    name = "cxx",
+    srcs = ["cxx.py"],
+    deps = [
+        ":clang",
+    ],
+)
+
+py_test(
+    name = "cxx_test",
+    srcs = ["cxx_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":cxx",
+    ],
+)
+
+py_library(
     name = "opencl",
     srcs = ["opencl.py"],
     deps = [
@@ -69,14 +87,14 @@ py_library(
     srcs = ["preprocessors.py"],
     visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = [
-        ":clang",
+        ":common",
+        ":cxx",
+        ":opencl",
         "//deeplearning/clgen:dbutil",
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen:languages",
-        "//deeplearning/clgen:native",
         "//deeplearning/clgen/proto:corpus_py_pb2",
         "//deeplearning/clgen/proto:internal_py_pb2",
-        "//lib/labm8:fs",
     ],
 )
 

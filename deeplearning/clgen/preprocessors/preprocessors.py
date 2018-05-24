@@ -5,7 +5,6 @@ import multiprocessing
 import pathlib
 import queue
 import random
-import re
 import typing
 from io import open
 from multiprocessing import Pool, cpu_count
@@ -18,143 +17,15 @@ from absl import logging
 from deeplearning.clgen import dbutil
 from deeplearning.clgen import errors
 from deeplearning.clgen import languages
-from deeplearning.clgen.preprocessors.clang import (
-  ClangFormat, CompileLlvmBytecode, Preprocess,
-)
-from deeplearning.clgen.preprocessors.common import (
-  MinimumLineCount, RemoveDuplicateEmptyLines,
-)
-from deeplearning.clgen.preprocessors.opencl import (
-  ClangPreprocess, gpuverify, rewrite_cl,
-)
+from deeplearning.clgen.preprocessors import common
+from deeplearning.clgen.preprocessors import cxx
+from deeplearning.clgen.preprocessors import opencl
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import internal_pb2
 
 
-def sanitize_prototype(src: str) -> str:
-  """
-  Sanitize OpenCL prototype.
-
-  Ensures that OpenCL prototype fits on a single line.
-
-  Parameters
-  ----------
-  src : str
-      OpenCL source.
-
-  Returns
-  -------
-  src
-      Source code with sanitized prototypes.
-
-  Returns
-  -------
-  str
-      Sanitized OpenCL source.
-  """
-  # Ensure that prototype is well-formed on a single line:
-  try:
-    prototype_end_idx = src.index('{') + 1
-    prototype = ' '.join(src[:prototype_end_idx].split())
-    return prototype + src[prototype_end_idx:]
-  except ValueError:
-    # Ok so erm... if the '{' character isn't found, a ValueError
-    # is thrown. Why would '{' not be found? Who knows, but
-    # whatever, if the source file got this far through the
-    # preprocessing pipeline then it's probably "good" code. It
-    # could just be that an empty file slips through the cracks or
-    # something.
-    return src
-
-
-def strip_comments(text: str):
-  """
-  Strip C/C++ style comments.
-
-  written by @markus-jarderot https://stackoverflow.com/a/241506/1318051
-  """
-
-  def replacer(match):
-    s = match.group(0)
-    if s.startswith('/'):
-      return " "  # note: a space and not an empty string
-    else:
-      return s
-
-  pattern = re.compile(
-    r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
-    re.DOTALL | re.MULTILINE)
-  return re.sub(pattern, replacer, text)
-
-
-def preprocess_opencl(src: str, id: str = 'anon', use_shim: bool = True,
-                      use_gpuverify: bool = False) -> str:
-  """
-  Preprocess an OpenCL source. There are three possible outcomes:
-
-  1. Good. Code is preprocessed and ready to be put into a training set.
-  2. Bad. Code can't be preprocessed (i.e. it's "bad" OpenCL).
-  3. Ugly. Code can be preprocessed but isn't useful for training
-     (e.g. it's an empty file).
-
-  Parameters
-  ----------
-  src : str
-      The source code as a string.
-  id : str, optional
-      An identifying name for the source code (used in exception messages).
-  use_shim : bool, optional
-      Inject shim header.
-  use_gpuverify : bool, optional
-      Whether to run GPUVerify on the code.
-  """
-  # Compile to bytecode and verify features:
-  logging.debug('OpenCL source = %s', src)
-  bc = CompileLlvmBytecode(src, id, use_shim)
-  # TODO(cec): Fix llvm opt instcount invocation. There appears to be no output
-  # (at least on macos homebrew version).
-  #   $ /usr/local/opt/llvm/bin/clang -emit-llvm ~/foo.cc -S -o foo.ll
-  #   $ /usr/local/opt/llvm/bin/opt -S -instcount -stats -analyze < foo.ll
-  # bc_features = bytecode_features(bc, id)
-  # verify_bytecode_features(bc_features, id)
-
-  # Rewrite and format source:
-  src = ClangPreprocess(src, id, use_shim)
-  src = rewrite_cl(src, id, use_shim)
-  src = ClangFormat(src, id).strip()
-  src = MinimumLineCount(src)
-  src = sanitize_prototype(src)
-
-  if use_gpuverify:
-    pass
-    # TODO(cec): Re-enable GPUVerify.
-    gpuverify(src)
-
-  return src
-
-
-def preprocess_solidity(src: str, id: str = 'anon', **kwargs) -> str:
-  """
-  Preprocess a solidity source.
-  """
-  src = strip_comments(src)
-  src = RemoveDuplicateEmptyLines(src)
-  src = ClangFormat(src)
-  return src
-
-
-def preprocess_glsl(src: str, id: str = 'anon', **kwargs) -> str:
-  """
-  Process a GLSL source.
-  """
-  src = Preprocess(src, [], id)
-  src = RemoveDuplicateEmptyLines(src)
-  src = ClangFormat(src)
-  return src
-
-
-def preprocess(src: str, preprocessors: typing.List[corpus_pb2.Preprocessor],
-               id: str = "anon") -> str:
+def preprocess(src: str,
+               preprocessors: typing.List[corpus_pb2.Preprocessor]) -> str:
   """
   Preprocess a file. There are three possible outcomes:
 
@@ -183,13 +54,19 @@ def preprocess(src: str, preprocessors: typing.List[corpus_pb2.Preprocessor],
       In case of some other error.
   """
   for preprocessor_proto in preprocessors:
-    preprocessor = {"opencl:compiler_preprocess": ClangPreprocess,
-                    "opencl:rewriter": rewrite_cl,
-                    "opencl:ClangFormat": ClangFormat,
-                    "opencl:MinimumLineCount": MinimumLineCount,
-                    "opencl:sanitize_prototype": sanitize_prototype
-
-                    }.get(preprocessor_proto.name)
+    preprocessor = {"common:MinimumLineCount": common.MinimumLineCount,
+                    "common:RemoveDuplicateEmptyLines":
+                      common.RemoveDuplicateEmptyLines,
+                    "cxx:ClangFormat": cxx.ClangFormat,
+                    "cxx:ClangPreprocess": cxx.ClangPreprocess,
+                    "cxx:StripComments": cxx.StripComments,
+                    "opencl:ClangFormat": cxx.ClangFormat,
+                    "opencl:ClangPreprocess": opencl.ClangPreprocess,
+                    "opencl:MinimumLineCount": opencl.MinimumLineCount,
+                    "opencl:NormalizeIdentifiers": opencl.NormalizeIdentifiers,
+                    "opencl:SanitizeKernelPrototype":
+                      opencl.SanitizeKernelPrototype}.get(
+      preprocessor_proto.name)
     src = preprocessor(src, **preprocessor_proto.opts)
   return src
 
