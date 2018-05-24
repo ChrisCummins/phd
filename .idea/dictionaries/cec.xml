@@ -7,12 +7,14 @@
       <w>contentfiles</w>
       <w>corpuses</w>
       <w>dataset</w>
+      <w>deeplearning</w>
       <w>gsize</w>
       <w>inlining</w>
       <w>lsize</w>
       <w>lstm</w>
       <w>opencl</w>
       <w>preprocess</w>
+      <w>preprocessing</w>
       <w>rewriter</w>
       <w>stdin</w>
       <w>subdirs</w>
