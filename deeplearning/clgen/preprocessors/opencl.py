@@ -3,6 +3,7 @@ import typing
 
 from deeplearning.clgen import native
 from deeplearning.clgen.preprocessors import clang
+from deeplearning.clgen.preprocessors import normalizer
 from deeplearning.clgen.preprocessors import preprocessors
 
 
@@ -83,50 +84,69 @@ def Compile(text: str) -> str:
   return text
 
 
-def GpuVerify(src: str, args: list, id: str = 'anon', timeout: int = 60) -> str:
+@preprocessors.clgen_preprocessor
+def NormalizeIdentifiers(text: str) -> str:
+  """Normalize identifiers in OpenCL source code.
+
+  Args:
+    text: The source code to rewrite.
+
+  Returns:
+    Source code with identifier names normalized.
+
+  Raises:
+    RewriterException: If rewriter found nothing to rewrite.
+    ClangTimeout: If rewriter fails to complete within timeout_seconds.
   """
-  Run GPUverify over kernel.
+  return normalizer.NormalizeIdentifiers(text, '.cl',
+                                         GetClangArgs(use_shim=False))
 
-  Parameters
-  ----------
-  src : str
-      OpenCL source.
-  id : str, optional
-      OpenCL source name.
 
-  Returns
-  -------
-  str
-      OpenCL source.
-
-  Raises
-  ------
-  GPUVerifyException
-      If GPUverify finds a bug.
-  InternalError
-      If GPUverify fails.
-  """
-  # TODO(cec): Re-enable GPUVerify support.
-  # from lib.labm8 import system
-  # if not system.is_linux():
-  #   raise errors.InternalError("GPUVerify only supported on Linux!")
-  #
-  # # GPUverify can't read from stdin.
-  # with tempfile.NamedTemporaryFile('w', suffix='.cl') as tmp:
-  #   tmp.write(src)
-  #   tmp.flush()
-  #   cmd = ['timeout', '-s9', str(timeout), native.GPUVERIFY, tmp.name] + args
-  #
-  #   process = subprocess.Popen(cmd, stdin=subprocess.PIPE,
-  # stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-  #   stdout, stderr = process.communicate()
-  #
-  # if process.returncode == -9:  # timeout signal
-  #   raise errors.GPUVerifyTimeoutException(
-  #     f"GPUveryify failed to complete with {timeout} seconds")
-  # elif process.returncode != 0:
-  #   raise errors.GPUVerifyException(stderr.decode('utf-8'))
-  return src
+# TODO(cec): Re-enable GPUVerify support.
+# def GpuVerify(src: str, args: list, id: str = 'anon', timeout: int = 60) ->
+#  str:
+#   """
+#   Run GPUverify over kernel.
+#
+#   Parameters
+#   ----------
+#   src : str
+#       OpenCL source.
+#   id : str, optional
+#       OpenCL source name.
+#
+#   Returns
+#   -------
+#   str
+#       OpenCL source.
+#
+#   Raises
+#   ------
+#   GPUVerifyException
+#       If GPUverify finds a bug.
+#   InternalError
+#       If GPUverify fails.
+#   """
+#   from lib.labm8 import system
+#   if not system.is_linux():
+#     raise errors.InternalError("GPUVerify only supported on Linux!")
+#
+#   # GPUverify can't read from stdin.
+#   with tempfile.NamedTemporaryFile('w', suffix='.cl') as tmp:
+#     tmp.write(src)
+#     tmp.flush()
+#     cmd = ['timeout', '-s9', str(timeout), native.GPUVERIFY, tmp.name] + args
+#
+#     process = subprocess.Popen(cmd, stdin=subprocess.PIPE,
+#   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+#     stdout, stderr = process.communicate()
+#
+#   if process.returncode == -9:  # timeout signal
+#     raise errors.GPUVerifyTimeoutException(
+#       f"GPUveryify failed to complete with {timeout} seconds")
+#   elif process.returncode != 0:
+#     raise errors.GPUVerifyException(stderr.decode('utf-8'))
+#   return src
 
 
 @preprocessors.clgen_preprocessor

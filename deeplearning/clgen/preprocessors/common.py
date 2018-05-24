@@ -42,13 +42,35 @@ def MinimumLineCount3(text: str) -> str:
 
 
 @preprocessors.clgen_preprocessor
-def StripDuplicateEmptyLines(text: str):
-  """Truncate blank lines."""
+def StripDuplicateEmptyLines(text: str) -> str:
+  """A preprocessor pass which removes duplicate empty lines.
+
+  Args:
+    text: The text to preprocess.
+
+  Returns:
+    The input text, where duplicate empty lines have been removed.
+  """
   last_line = None
   lines = []
   for line in text.split("\n"):
-    line = line.rstrip()
-    if line or last_line:
+    if line.strip() or last_line:
       lines.append(line)
-    last_line = line
+    last_line = line.rstrip()
   return "\n".join(lines)
+
+
+@preprocessors.clgen_preprocessor
+def StripTrailingWhitespace(text: str) -> str:
+  """A preprocessor pass which strips trailing whitespace from all lines.
+
+  Whitespace at the end of each line is removed, as is any trailing whitespace
+  at the end of the input.
+
+  Args:
+    text: The text to preprocess.
+
+  Returns:
+    The input text, with trailing whitespace removed.
+  """
+  return '\n'.join(l.rstrip() for l in text.split('\n')).rstrip()

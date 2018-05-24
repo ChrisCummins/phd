@@ -27,7 +27,7 @@ if _config.paths.libclang_so:
 
 def NormalizeIdentifiers(text: str, suffix: str, cflags: typing.List[str],
                          timeout_seconds: int = 60) -> str:
-  """Normalize identifiers in a source code.
+  """Normalize identifiers in source code.
 
   An LLVM rewriter pass which renames all functions and variables with short,
   unique names. The variables and functions defined within the input text

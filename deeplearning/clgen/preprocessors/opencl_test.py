@@ -10,7 +10,6 @@ from absl import logging
 import deeplearning.clgen
 from deeplearning.clgen import errors, native
 from deeplearning.clgen.preprocessors import opencl
-from deeplearning.clgen.tests import testlib as tests
 
 
 FLAGS = flags.FLAGS
@@ -235,47 +234,8 @@ def test_benchmark_StripDoubleUnderscorePrefixes_hello_world(benchmark):
   benchmark(opencl.StripDoubleUnderscorePrefixes, HELLO_WORLD_CL)
 
 
-@pytest.mark.skip(reason='TODO(cec) New preprocessor pipeline')
-def test_ugly_preprocessed():
-  # empty kernel protoype is rejected
-  with pytest.raises(errors.NoCodeException):
-    preprocessors.preprocess("""\
-__kernel void A() {
-}\
-""")
-  # kernel containing some code returns the same.
-  assert """\
-__kernel void A() {
-  int a;
-}\
-""" == preprocessors.preprocess("""\
-__kernel void A() {
-  int a;
-}\
-""")
-
-
-@pytest.mark.skip(reason='TODO(cec) New preprocessor pipeline')
-def test_preprocess_stable():
-  code = """\
-__kernel void A(__global float* a) {
-  int b;
-  float c;
-  int d = get_global_id(0);
-
-  a[d] *= 2.0f;
-}\
-"""
-  # pre-processing is "stable" if the code doesn't change
-  out = code
-  for _ in range(5):
-    out = preprocessors.preprocess(out)
-    assert out == code
-
-
-@pytest.mark.skip(reason='TODO(cec) New preprocessor pipeline')
-@tests.needs_linux  # FIXME: GPUVerify support on macOS.
-def test_gpuverify():
+@pytest.mark.skip(reason='TODO(cec): Re-enable GPUVerify support.')
+def test_GpuVerify():
   code = """\
 __kernel void A(__global float* a) {
   int b = get_global_id(0);
@@ -284,9 +244,8 @@ __kernel void A(__global float* a) {
   assert opencl.GpuVerify(code, ["--local_size=64", "--num_groups=128"]) == code
 
 
-@pytest.mark.skip(reason='TODO(cec) New preprocessor pipeline')
-@tests.needs_linux  # FIXME: GPUVerify support on macOS.
-def test_gpuverify_data_race():
+@pytest.mark.skip(reason='TODO(cec): Re-enable GPUVerify support.')
+def test_GpuVerify_data_race():
   code = """\
 __kernel void A(__global float* a) {
   a[0] +=  1.0f;

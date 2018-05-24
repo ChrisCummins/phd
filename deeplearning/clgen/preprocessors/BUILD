@@ -89,6 +89,7 @@ py_library(
     deps = [
         ":clang",
         ":preprocessors",
+        ":normalizer",
         "//config:getconfig",
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen:native",
@@ -114,6 +115,7 @@ py_library(
     srcs = ["preprocessors.py"],
     visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = [
+        ":normalizer",
         "//deeplearning/clgen:dbutil",
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen:languages",
@@ -131,8 +133,9 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":opencl",
+        ":common",
+        ":cxx",
         ":preprocessors",
         "//deeplearning/clgen:errors",
-        "//deeplearning/clgen/tests:testlib",
     ],
 )

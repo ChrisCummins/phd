@@ -70,12 +70,11 @@ int A(int a, char** b) {}
 """
 
 
-@pytest.mark.xfail(reason='TODO(cec): clgen-rewriter var scope', strict=True)
 def test_NormalizeIdentifiers_variable_names_function_scope():
   """Test that variable name sequence reset for each function."""
   assert normalizer.NormalizeIdentifiers("""
 int foo(int bar, int car) { int blah = bar; }
-int foo(int hello, int bar) { int test = bar; }
+int foobar(int hello, int bar) { int test = bar; }
 """, '.c', []) == """
 int A(int a, int b) { int c = a; }
 int B(int a, int b) { int c = b; }

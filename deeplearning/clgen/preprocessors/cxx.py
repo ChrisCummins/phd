@@ -3,6 +3,7 @@ import re
 
 from deeplearning.clgen import native
 from deeplearning.clgen.preprocessors import clang
+from deeplearning.clgen.preprocessors import normalizer
 from deeplearning.clgen.preprocessors import preprocessors
 
 
@@ -29,6 +30,28 @@ def ClangPreprocess(text: str) -> str:
 def Compile(text: str) -> str:
   clang.CompileLlvmBytecode(text, '.cpp', CLANG_ARGS)
   return text
+
+
+@preprocessors.clgen_preprocessor
+def ClangFormat(text: str) -> str:
+  return clang.ClangFormat(text)
+
+
+@preprocessors.clgen_preprocessor
+def NormalizeIdentifiers(text: str) -> str:
+  """Normalize identifiers in C++ source code.
+
+  Args:
+    text: The source code to rewrite.
+
+  Returns:
+    Source code with identifier names normalized.
+
+  Raises:
+    RewriterException: If rewriter found nothing to rewrite.
+    ClangTimeout: If rewriter fails to complete within timeout_seconds.
+  """
+  return normalizer.NormalizeIdentifiers(text, '.cpp', CLANG_ARGS)
 
 
 @preprocessors.clgen_preprocessor
