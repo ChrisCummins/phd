@@ -16,6 +16,7 @@ FLAGS = flags.FLAGS
 def test_GetGlobalConfig_system_values():
   """Check that the repo config has all of the expected fields."""
   config = getconfig.GetGlobalConfig()
+  assert config.HasField('uname')
   assert config.paths.HasField('repo_root')
   assert config.paths.HasField('cc')
   assert config.paths.HasField('cxx')
@@ -25,6 +26,12 @@ def test_GetGlobalConfig_system_values():
   assert config.paths.HasField('python')
   assert config.paths.HasField('llvm_prefix')
   assert config.HasField('with_cuda')
+
+
+def test_uname():
+  """Test that uname is one of the expected values."""
+  config = getconfig.GetGlobalConfig()
+  assert config.uname in {'darwin', 'linux'}
 
 
 def test_GlobalConfigPaths_repo_root():

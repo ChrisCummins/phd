@@ -8,10 +8,12 @@ package phd;
 // A plaintext format instance of this message is generated in the root of this
 // repository by the bootstrap script, with path ./config.pbtxt.
 message GlobalConfig {
-  // The path to the root of the repository.
-  required GlobalConfigPaths paths = 1;
+  // Either "darwin" or "linux" for macOS or Linux host OS, respectively.
+  required string uname = 1;
+  // Important paths.
+  required GlobalConfigPaths paths = 2;
   // Whether or not the repository is configured to use CUDA.
-  required bool with_cuda = 2;
+  required bool with_cuda = 3;
 }
 
 // A list of absolute paths to import system files and directories.
