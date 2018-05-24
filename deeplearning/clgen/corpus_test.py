@@ -16,6 +16,8 @@ from deeplearning.clgen.tests import testlib as tests
 ABC_CORPUS_HASH = '57f227934240cdcb39d996a4c3bfffb8ba27ced6'
 
 
+@pytest.mark.skip(reason='TODO(cec): Fix clgen-features data path.')
+# See TODO note in //deeplearning/clgen/native/clgen-features.cpp.
 def test_GetKernelFeatures():
   """Test that features of a known kernel matches expected values."""
   code = """\
