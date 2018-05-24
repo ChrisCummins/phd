@@ -65,6 +65,27 @@ py_test(
 )
 
 py_library(
+    name = "java",
+    srcs = ["java.py"],
+    visibility = ["//deeplearning/clgen:__subpackages__"],
+    deps = [
+        ":clang",
+        ":preprocessors",
+    ],
+)
+
+py_test(
+    name = "java_test",
+    srcs = ["java_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":java",
+        "//deeplearning/clgen:errors",
+    ],
+)
+
+py_library(
     name = "normalizer",
     srcs = ["normalizer.py"],
     data = ["//deeplearning/clgen/native:clgen-rewriter"],
