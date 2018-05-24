@@ -2,7 +2,7 @@
 from absl import flags
 
 from deeplearning.clgen import errors
-from deeplearning.clgen.preprocessors import preprocessors
+from deeplearning.clgen.preprocessors import public
 
 
 FLAGS = flags.FLAGS
@@ -25,7 +25,7 @@ def _MinimumLineCount(text: str, min_line_count: int) -> str:
   return text
 
 
-@preprocessors.clgen_preprocessor
+@public.clgen_preprocessor
 def MinimumLineCount3(text: str) -> str:
   """Check that file contains a minimum number of lines.
 
@@ -41,7 +41,7 @@ def MinimumLineCount3(text: str) -> str:
   return _MinimumLineCount(text, 3)
 
 
-@preprocessors.clgen_preprocessor
+@public.clgen_preprocessor
 def StripDuplicateEmptyLines(text: str) -> str:
   """A preprocessor pass which removes duplicate empty lines.
 
@@ -60,7 +60,7 @@ def StripDuplicateEmptyLines(text: str) -> str:
   return "\n".join(lines)
 
 
-@preprocessors.clgen_preprocessor
+@public.clgen_preprocessor
 def StripTrailingWhitespace(text: str) -> str:
   """A preprocessor pass which strips trailing whitespace from all lines.
 

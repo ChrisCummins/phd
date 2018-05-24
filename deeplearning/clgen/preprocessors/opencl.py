@@ -4,7 +4,7 @@ import typing
 from deeplearning.clgen import native
 from deeplearning.clgen.preprocessors import clang
 from deeplearning.clgen.preprocessors import normalizer
-from deeplearning.clgen.preprocessors import preprocessors
+from deeplearning.clgen.preprocessors import public
 
 
 def GetClangArgs(use_shim: bool, error_limit: int = 0) -> typing.List[str]:
@@ -42,7 +42,7 @@ def _ClangPreprocess(text: str, use_shim: bool) -> str:
   return clang.Preprocess(text, GetClangArgs(use_shim=use_shim))
 
 
-@preprocessors.clgen_preprocessor
+@public.clgen_preprocessor
 def ClangPreprocess(text: str) -> str:
   """Preprocessor OpenCL source.
 
@@ -55,7 +55,7 @@ def ClangPreprocess(text: str) -> str:
   return _ClangPreprocess(text, False)
 
 
-@preprocessors.clgen_preprocessor
+@public.clgen_preprocessor
 def ClangPreprocessWithShim(text: str) -> str:
   """Preprocessor OpenCL source with OpenCL shim header injection.
 
@@ -68,7 +68,7 @@ def ClangPreprocessWithShim(text: str) -> str:
   return _ClangPreprocess(text, True)
 
 
-@preprocessors.clgen_preprocessor
+@public.clgen_preprocessor
 def Compile(text: str) -> str:
   """Check that the OpenCL source compiles.
 
@@ -83,11 +83,11 @@ def Compile(text: str) -> str:
   # We must override the flag -Wno-implicit-function-declaration from
   # GetClangArgs() to ensure that undefined functions are treated as errors.
   clang.CompileLlvmBytecode(text, '.cl', GetClangArgs(use_shim=False) + [
-      '-Werror=implicit-function-declaration'])
+    '-Werror=implicit-function-declaration'])
   return text
 
 
-@preprocessors.clgen_preprocessor
+@public.clgen_preprocessor
 def ClangFormat(text: str) -> str:
   """Run clang-format on a source to enforce code style.
 
@@ -104,7 +104,7 @@ def ClangFormat(text: str) -> str:
   return clang.ClangFormat(text, '.cl')
 
 
-@preprocessors.clgen_preprocessor
+@public.clgen_preprocessor
 def NormalizeIdentifiers(text: str) -> str:
   """Normalize identifiers in OpenCL source code.
 
@@ -169,7 +169,7 @@ def NormalizeIdentifiers(text: str) -> str:
 #   return src
 
 
-@preprocessors.clgen_preprocessor
+@public.clgen_preprocessor
 def SanitizeKernelPrototype(text: str) -> str:
   """Sanitize OpenCL prototype.
 
@@ -196,7 +196,7 @@ def SanitizeKernelPrototype(text: str) -> str:
     return text
 
 
-@preprocessors.clgen_preprocessor
+@public.clgen_preprocessor
 def StripDoubleUnderscorePrefixes(text: str) -> str:
   """Remove the optional __ qualifiers on OpenCL keywords.
 

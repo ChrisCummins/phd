@@ -4,7 +4,7 @@ import re
 from deeplearning.clgen import native
 from deeplearning.clgen.preprocessors import clang
 from deeplearning.clgen.preprocessors import normalizer
-from deeplearning.clgen.preprocessors import preprocessors
+from deeplearning.clgen.preprocessors import public
 
 
 C_COMMENT_RE = re.compile(
@@ -21,18 +21,18 @@ CLANG_ARGS = ['-xc++', '-isystem', native.CXX_HEADERS, '-Wno-ignored-pragmas',
               '-D__STDC_LIMIT_MACROS', '-D_LIBCPP_HAS_C_ATOMIC_IMP']
 
 
-@preprocessors.clgen_preprocessor
+@public.clgen_preprocessor
 def ClangPreprocess(text: str) -> str:
   return clang.Preprocess(text, CLANG_ARGS)
 
 
-@preprocessors.clgen_preprocessor
+@public.clgen_preprocessor
 def Compile(text: str) -> str:
   clang.CompileLlvmBytecode(text, '.cpp', CLANG_ARGS)
   return text
 
 
-@preprocessors.clgen_preprocessor
+@public.clgen_preprocessor
 def ClangFormat(text: str) -> str:
   """Run clang-format on a source to enforce code style.
 
@@ -49,7 +49,7 @@ def ClangFormat(text: str) -> str:
   return clang.ClangFormat(text, '.cpp')
 
 
-@preprocessors.clgen_preprocessor
+@public.clgen_preprocessor
 def NormalizeIdentifiers(text: str) -> str:
   """Normalize identifiers in C++ source code.
 
@@ -66,7 +66,7 @@ def NormalizeIdentifiers(text: str) -> str:
   return normalizer.NormalizeIdentifiers(text, '.cpp', CLANG_ARGS)
 
 
-@preprocessors.clgen_preprocessor
+@public.clgen_preprocessor
 def StripComments(text: str) -> str:
   """Strip C/C++ style comments.
 

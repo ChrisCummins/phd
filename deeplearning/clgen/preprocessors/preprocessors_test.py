@@ -9,23 +9,24 @@ from deeplearning.clgen import dbutil
 from deeplearning.clgen import errors
 from deeplearning.clgen import languages
 from deeplearning.clgen.preprocessors import preprocessors
+from deeplearning.clgen.preprocessors import public
 
 
-@preprocessors.clgen_preprocessor
+@public.clgen_preprocessor
 def MockPreprocessor(text: str) -> str:
   """A mock preprocessor."""
   del text
   return 'PREPROCESSED'
 
 
-@preprocessors.clgen_preprocessor
+@public.clgen_preprocessor
 def MockPreprocessorBadCode(text: str) -> str:
   """A mock preprocessor which raises a BadCodeException."""
   del text
   raise errors.BadCodeException('bad code')
 
 
-@preprocessors.clgen_preprocessor
+@public.clgen_preprocessor
 def MockPreprocessorInternalError(text: str) -> str:
   """A mock preprocessor which raises a BadCodeException."""
   del text

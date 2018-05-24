@@ -2,13 +2,13 @@
 from absl import flags
 
 from deeplearning.clgen.preprocessors import clang
-from deeplearning.clgen.preprocessors import preprocessors
+from deeplearning.clgen.preprocessors import public
 
 
 FLAGS = flags.FLAGS
 
 
-@preprocessors.clgen_preprocessor
+@public.clgen_preprocessor
 def ClangFormat(text: str) -> str:
   """Run clang-format on a source to enforce code style.
 
