@@ -170,11 +170,15 @@ int main(int argc, char** argv) { return 0; }
 
 def test_Preprocess_include_stdio_strip():
   """Test that an included file is stripped."""
-  assert clang.Preprocess("""
+  out = clang.Preprocess("""
 #include <stdio.h>
 int main(int argc, char** argv) { return NULL; }
-""", []) == """\
+""", [])
+  # NULL expands to either "((void *)0)" or "((void*)0)". Accept either.
+  assert out == """\
 int main(int argc, char** argv) { return ((void *)0); }
+""" or out == """\
+int main(int argc, char** argv) { return ((void*)0); }
 """
 
 
