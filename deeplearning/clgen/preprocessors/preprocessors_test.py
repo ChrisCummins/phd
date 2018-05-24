@@ -1,12 +1,12 @@
 """Unit tests for //deeplearning/clgen/preprocessors/preprocessors.py."""
 import sys
-import typing
 
 import pytest
 from absl import app
 from absl import logging
 
 from deeplearning.clgen import errors
+from deeplearning.clgen import languages
 from deeplearning.clgen.preprocessors import preprocessors
 
 
@@ -61,6 +61,14 @@ def test_GetPreprocessFunction_mock_preprocessor():
   assert f == MockPreprocessor
 
 
+# PreprocessDatabase() tests.
+
+def test_PreprocessDatabase_empty(empty_db_path):
+  """Test PreprocessDatabase on an empty database."""
+  preprocessors.PreprocessDatabase(empty_db_path, languages.Language.OPENCL, [
+    'deeplearning.clgen.preprocessors.preprocessors_test:MockPreprocessor'])
+
+
 # Benchmarks.
 
 def test_benchmark_GetPreprocessFunction_mock(benchmark):
@@ -68,72 +76,6 @@ def test_benchmark_GetPreprocessFunction_mock(benchmark):
   benchmark(preprocessors.GetPreprocessorFunction,
             'deeplearning.clgen.preprocessors.preprocessors_test'
             ':MockPreprocessor')
-
-
-def _PreprocessBenchmarkInnerLoop(preprocessors_: typing.List[str],
-                                  code_in: str, code_out: str):
-  """Benchmark inner loop."""
-  assert preprocessors.Preprocess(code_in, preprocessors_) == code_out
-
-
-def test_benchmark_Preprocess_opencl_pipeline(benchmark):
-  """Benchmark Preprocess an OpenCL kernel using a full pipeline."""
-  preprocessors_ = [
-    'deeplearning.clgen.preprocessors.opencl:ClangPreprocessWithShim',
-    'deeplearning.clgen.preprocessors.opencl:Compile',
-    'deeplearning.clgen.preprocessors.opencl:NormalizeIdentifiers',
-    'deeplearning.clgen.preprocessors.opencl:StripDoubleUnderscorePrefixes',
-    'deeplearning.clgen.preprocessors.common:StripDuplicateEmptyLines',
-    'deeplearning.clgen.preprocessors.opencl:SanitizeKernelPrototype',
-    'deeplearning.clgen.preprocessors.common:StripTrailingWhitespace',
-    'deeplearning.clgen.preprocessors.cxx:ClangFormat',
-    'deeplearning.clgen.preprocessors.common:MinimumLineCount3', ]
-  code_in = """
-__kernel void foo(__global float* a, const int b) {
-  int id = get_global_id(0);
-  if (id <= b)
-    a[id] = 0;
-}
-"""
-  code_out = """\
-kernel void A(global float* a, const int b) {
-  int c = get_global_id(0);
-  if (c <= b)
-    a[c] = 0;
-}\
-"""
-  benchmark(_PreprocessBenchmarkInnerLoop, preprocessors_, code_in, code_out)
-
-
-def test_benchmark_Preprocess_cxx_pipeline(benchmark):
-  """Benchmark Preprocess a C++ program using a full pipeline."""
-  preprocessors_ = ['deeplearning.clgen.preprocessors.cxx:ClangPreprocess',
-                    'deeplearning.clgen.preprocessors.cxx:Compile',
-                    'deeplearning.clgen.preprocessors.cxx:NormalizeIdentifiers',
-                    'deeplearning.clgen.preprocessors.common'
-                    ':StripDuplicateEmptyLines',
-                    'deeplearning.clgen.preprocessors.common:MinimumLineCount3',
-                    'deeplearning.clgen.preprocessors.common'
-                    ':StripTrailingWhitespace',
-                    'deeplearning.clgen.preprocessors.cxx:ClangFormat', ]
-  code_in = """
-#include <iostream>
-
-int do_something(int a) { return a * 2; }
-
-
-int main(int argc, char **argv) { return do_something(argc); }
-"""
-  code_out = """\
-int A(int a) {
-  return a * 2;
-}
-
-int B(int a, char** b) {
-  return A(a);
-}\
-"""
-  benchmark(_PreprocessBenchmarkInnerLoop, preprocessors_, code_in, code_out)
 
 
 def main(argv):

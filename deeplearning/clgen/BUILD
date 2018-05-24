@@ -106,13 +106,13 @@ py_library(
     name = "conftest",
     testonly = True,
     srcs = ["conftest.py"],
+    visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = [
         ":dbutil",
         "//deeplearning/clgen/proto:corpus_py_pb2",
         "//deeplearning/clgen/proto:model_py_pb2",
         "//deeplearning/clgen/proto:sampler_py_pb2",
     ],
-    visibility = ["//deeplearning/clgen:__subpackages__"],
 )
 
 py_library(

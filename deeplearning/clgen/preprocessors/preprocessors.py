@@ -1,16 +1,13 @@
 """Preprocess OpenCL files for machine learning."""
-import contextlib
 import importlib
 import math
 import multiprocessing
 import pathlib
 import queue
 import random
+import threading
 import typing
 from io import open
-from multiprocessing import Pool, cpu_count
-from threading import Thread
-from typing import List
 
 import progressbar
 from absl import logging
@@ -89,20 +86,24 @@ def GetPreprocessorFunction(name: str) -> PreprocessorFunction:
 
 
 def Preprocess(text: str, preprocessors: typing.List[str]) -> str:
-  """Preprocess a text. There are three possible outcomes:
+  """Preprocess a text using the given preprocessor pipeline.
 
-  1. Good. Code is preprocessed and ready for use in the training set.
-  2. Bad. Code can't be preprocessed.
+  If preprocessing succeeds, the preprocessed text is returned. If preprocessing
+  fails (in an expected way, for example by trying to compile incorrect code),
+  a BadCodeException is raised. Any other error leads to an InternalError.
+
 
   Args:
-    text: The source code to be preprocessed as a string.
-    preprocessors: The list of preprocessor functions to run.
+    text: The input to be preprocessed.
+    preprocessors: The list of preprocessor functions to run. These will be
+      passed to GetPreprocessorFunction() to resolve the python implementations.
 
   Returns:
-    Preprocessed source code as a string.
+    Preprocessed source input as a string.
 
   Raises:
-    BadCodeException: If code is bad (see above).
+    UserError: If the requested preprocessors cannot be loaded.
+    BadCodeException: If one of the preprocessors rejects the input.
     InternalException: In case of some other error.
   """
   preprocessor_functions = [GetPreprocessorFunction(p) for p in preprocessors]
@@ -111,93 +112,39 @@ def Preprocess(text: str, preprocessors: typing.List[str]) -> str:
   return text
 
 
-def preprocess_file(path: str, inplace: bool = False,
-                    **preprocess_opts) -> None:
-  """
-  Preprocess a file.
+def PreprocessFile(path: str, preprocessors: typing.List[str],
+                   inplace: bool) -> str:
+  """Preprocess a file and optionally update it.
 
-  Prints output to stdout by default. If preprocessing fails, this function
-  exits.
+  Args:
+    text: The input to be preprocessed.
+    preprocessors: The list of preprocessor functions to run. These will be
+      passed to GetPreprocessorFunction() to resolve the python implementations.
+    inplace: If True, the input file is overwritten with the preprocessed code,
+      unless the preprocessing fails. If the preprocessing fails, the input
+      file is left unmodified.
 
-  Parameters
-  ----------
-  path : str
-      String path to file.
-  inplace : bool, optional
-      If True, overwrite input file.
+  Returns:
+    Preprocessed source input as a string.
+
+  Raises:
+    UserError: If the requested preprocessors cannot be loaded.
+    BadCodeException: If one of the preprocessors rejects the input.
+    InternalException: In case of some other error.
   """
   with open(path) as infile:
     contents = infile.read()
-  try:
-    out = preprocess(contents, **preprocess_opts)
-    if inplace:
-      with open(path, 'w') as outfile:
-        outfile.write(out)
-    else:
-      print(out)
-  except errors.BadCodeException as e:
-    logging.fatal(e, ret=1)
+  preprocessed = Preprocess(contents, preprocessors)
+  if inplace:
+    with open(path, 'w') as outfile:
+      outfile.write(preprocessed)
+  return preprocessed
 
 
-def _preprocess_inplace_worker(path: str) -> None:
-  """worker function for preprocess_inplace()"""
-  logging.info('preprocess', path)
-  preprocess_file(path, inplace=True)
-
-
-@contextlib.contextmanager
-def terminating(thing):
-  """
-  Context manager to terminate object at end of scope.
-  """
-  try:
-    yield thing
-  finally:
-    thing.terminate()
-
-
-def preprocess_inplace(paths: List[str], max_num_workers: int = cpu_count(),
-                       max_attempts: int = 100, attempt: int = 1) -> None:
-  """
-  Preprocess a list of files in place.
-
-  Parameters
-  ----------
-  paths : List[str]
-      List of paths.
-  max_num_workers : int, optional
-      Number of processes to spawn.
-  max_attempts : int, optional
-      In case of an OSError or TimeoutError, this number of attempts will be
-      made.
-  """
-  if attempt > max_attempts:
-    raise errors.InternalError(
-      f"Failed to process files after {max_attempts} attempts")
-  elif attempt > 1:
-    logging.warning("preprocess attempt #.", attempt)
-
-  num_workers = min(len(paths), max_num_workers)
-
-  try:
-    logging.info('spawned', num_workers, 'worker threads to process',
-                 len(paths), 'files ...')
-    with terminating(Pool(num_workers)) as pool:
-      pool.map(_preprocess_inplace_worker, paths)
-  except (OSError, TimeoutError) as e:
-    logging.error(e)
-
-    # Try again with fewer threads.
-    # See: https://github.com/ChrisCummins/clgen/issues/64
-    max_num_workers = max(int(max_num_workers / 2), 1)
-    preprocess_inplace(paths, max_num_workers=max_num_workers,
-                       attempt=attempt + 1, max_attempts=max_attempts)
-
-
-class PreprocessWorker(Thread):
+class PreprocessWorker(threading.Thread):
   """A preprocessor worker thread."""
 
-  def __init__(self, jobs: List[internal_pb2.PreprocessorWorkerJob],
+  def __init__(self, jobs: typing.List[internal_pb2.PreprocessorWorkerJob],
                output_queue: queue.Queue):
     """Instantiate a PreprocessWorker.
 
