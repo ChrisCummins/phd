@@ -1,5 +1,6 @@
 """Preprocess OpenCL files for machine learning."""
 import contextlib
+import importlib
 import math
 import multiprocessing
 import pathlib
@@ -17,58 +18,68 @@ from absl import logging
 from deeplearning.clgen import dbutil
 from deeplearning.clgen import errors
 from deeplearning.clgen import languages
-from deeplearning.clgen.preprocessors import common
-from deeplearning.clgen.preprocessors import cxx
-from deeplearning.clgen.preprocessors import opencl
-from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import internal_pb2
 
 
-def preprocess(src: str,
-               preprocessors: typing.List[corpus_pb2.Preprocessor]) -> str:
-  """
-  Preprocess a file. There are three possible outcomes:
+def clgen_preprocessor(func):
+  func.__dict__['is_clgen_preprocessor'] = True
+  return func
 
-  1. Good. Code is preprocessed and ready to be put into a training set.
-  2. Bad. Code can't be preprocessed (i.e. it's "bad" code).
-  3. Ugly. Code can be preprocessed but isn't useful for training
-     (e.g. it's an empty file).
+
+def GetPreprocessorFunction(name: str) -> typing.Callable[[str], str]:
+  """Lookup a preprocess function by name.
+
+  A preprocessor is a function which takes a single argument 'text' of type str,
+  and returns a str. The name is the fully qualified name of the python
+  function which implements it. This function first imports the module
 
   Args:
-    src: The source code as a string.
-    preprocessors: The list of preprocessors to run.
-    id: An identifying name for the source code (used in exception messages).
+    name: The name of the preprocessor to get.
 
-  Returns
-  -------
-  str
-      Preprocessed source code as a string.
-
-  Raises
-  ------
-  BadCodeException
-      If code is bad (see above).
-  UglyCodeException
-      If code is ugly (see above).
-  errors.InternalException
-      In case of some other error.
+  Returns:
+    The python preprocessor function.
   """
-  for preprocessor_proto in preprocessors:
-    preprocessor = {"common:MinimumLineCount": common.MinimumLineCount,
-                    "common:RemoveDuplicateEmptyLines":
-                      common.RemoveDuplicateEmptyLines,
-                    "cxx:ClangFormat": cxx.ClangFormat,
-                    "cxx:ClangPreprocess": cxx.ClangPreprocess,
-                    "cxx:StripComments": cxx.StripComments,
-                    "opencl:ClangFormat": cxx.ClangFormat,
-                    "opencl:ClangPreprocess": opencl.ClangPreprocess,
-                    "opencl:MinimumLineCount": opencl.MinimumLineCount,
-                    "opencl:NormalizeIdentifiers": opencl.NormalizeIdentifiers,
-                    "opencl:SanitizeKernelPrototype":
-                      opencl.SanitizeKernelPrototype}.get(
-      preprocessor_proto.name)
-    src = preprocessor(src, **preprocessor_proto.opts)
-  return src
+  components = name.split(':')
+  if len(components) != 2:
+    raise errors.InternalError(f'Invalid preprocessor name {name}')
+  module_name, function_name = components
+  try:
+    module = importlib.import_module(module_name)
+    function_ = getattr(module, function_name)
+  except (ModuleNotFoundError, AttributeError):
+    raise errors.InternalError(f'Preprocessor {name} not found.')
+  if not function_.__dict__.get('is_clgen_preprocessor'):
+    raise errors.InternalError(
+      f'Preprocessor {name} not decorated with @clgen_preprocessor')
+  type_hints = typing.get_type_hints(function_)
+  if not type_hints == {'text': str, 'return': str}:
+    raise errors.InternalError(f'Preprocessor {name} does not have signature '
+                               f'"def {name}(text: str) -> str".')
+  logging.debug('Loaded preprocessor %s', name)
+  return function_
+
+
+def Preprocess(text: str, preprocessors: typing.List[str]) -> str:
+  """Preprocess a text. There are three possible outcomes:
+
+  1. Good. Code is preprocessed and ready for use in the training set.
+  2. Bad. Code can't be preprocessed.
+
+  Args:
+    text: The source code to be preprocessed as a string.
+    preprocessors: The list of preprocessor functions to run.
+
+  Returns:
+    Preprocessed source code as a string.
+
+  Raises:
+    BadCodeException: If code is bad (see above).
+    InternalException: In case of some other error.
+  """
+  preprocessor_functions = [GetPreprocessorFunction(p) for p in preprocessors]
+  for preprocessor in preprocessor_functions:
+    text = preprocessor(text)
+  return text
 
 
 def preprocess_file(path: str, inplace: bool = False,
@@ -97,8 +108,6 @@ def preprocess_file(path: str, inplace: bool = False,
       print(out)
   except errors.BadCodeException as e:
     logging.fatal(e, ret=1)
-  except errors.UglyCodeException as e:
-    logging.fatal(e, ret=2)
 
 
 def _preprocess_inplace_worker(path: str) -> None:
@@ -175,24 +184,18 @@ class PreprocessWorker(Thread):
     for job in self.jobs:
       result = internal_pb2.PreprocessorWorkerJobOutcome()
       result.contentfile_id = job.contentfile_id
-      result.status = internal_pb2.PreprocessorWorkerJobOutcome.OK
       try:
-        # TODO(cec): Implement preprocessors.
-        preprocess = job.preprocessors
-        result.contents = preprocess(job.src)
+        result.contents = Preprocess(job.src, job.preprocessors)
+        result.status = internal_pb2.PreprocessorWorkerJobOutcome.OK
       except errors.BadCodeException as e:
-        result.status = internal_pb2.PreprocessorWorkerJobOutcome.BAD
-        result.contents = str(e)
-      except errors.UglyCodeException as e:
-        result.status = internal_pb2.PreprocessorWorkerJobOutcome.UGLY
+        result.status = internal_pb2.PreprocessorWorkerJobOutcome.FAIL
         result.contents = str(e)
       self.queue.put(result)
 
 
 def _DoPreprocessDatabase(db_path: pathlib.Path, language: languages.Language,
-                          preprocessors: typing.List[corpus_pb2.Preprocessor],
-                          attempt_num: int, max_attempts: int,
-                          max_num_threads: int) -> None:
+                          preprocessors: typing.List[str], attempt_num: int,
+                          max_attempts: int, max_num_threads: int) -> None:
   """The private function to preprocess a database.
 
   Args:
@@ -278,8 +281,7 @@ def _DoPreprocessDatabase(db_path: pathlib.Path, language: languages.Language,
 
 
 def PreprocessDatabase(db_path: pathlib.Path, language: languages.Language,
-                       preprocessors: typing.List[
-                         corpus_pb2.Preprocessor]) -> bool:
+                       preprocessors: typing.List[str]) -> bool:
   """Preprocess a contentfiles database.
 
   This function tries to do as little as possible. If no changes to the database
