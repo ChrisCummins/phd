@@ -21,41 +21,70 @@ from deeplearning.clgen import languages
 from deeplearning.clgen.proto import internal_pb2
 
 
-def clgen_preprocessor(func):
+# Type hint for a preprocessor function. See @clgen_preprocess for details.
+PreprocessorFunction = typing.Callable[[str], str]
+
+
+def clgen_preprocessor(func: PreprocessorFunction) -> PreprocessorFunction:
+  """A decorator which marks a function as a CLgen preprocessor.
+
+  A CLgen preprocessor is accessible using GetPreprocessFunction(), and is a
+  function which accepts a single parameter 'text', and returns a string.
+  Type hinting is used to ensure that any function wrapped with this decorator
+  has the appropriate argument and return type. If the function does not, an
+  InternalError is raised at the time that the module containing the function
+  is imported.
+
+  Args:
+    func: The preprocessor function to decorate.
+
+  Returns:
+    The decorated preprocessor function.
+
+  Raises:
+    InternalError: If the function being wrapped does not have the signature
+      'def func(text: str) -> str:'.
+  """
+  type_hints = typing.get_type_hints(func)
+  if not type_hints == {'text': str, 'return': str}:
+    raise errors.InternalError(
+      f'Preprocessor {func.__name__} does not have signature '
+      f'"def {func.__name__}(text: str) -> str".')
   func.__dict__['is_clgen_preprocessor'] = True
   return func
 
 
-def GetPreprocessorFunction(name: str) -> typing.Callable[[str], str]:
+def GetPreprocessorFunction(name: str) -> PreprocessorFunction:
   """Lookup a preprocess function by name.
 
   A preprocessor is a function which takes a single argument 'text' of type str,
   and returns a str. The name is the fully qualified name of the python
-  function which implements it. This function first imports the module
+  function which implements it, in the form <module>:<name>. For example,
+  the name 'deeplearning.clgen.preprocessors.cxx:Compile' will return the
+  function 'Compile' in the module 'deeplearning.clgen.preprocessors.cxx'.
 
   Args:
     name: The name of the preprocessor to get.
 
   Returns:
     The python preprocessor function.
+
+  Raises:
+    UserError: If the requested name cannot be found or is not a
+      @clgen_preprocessor decorated function.
   """
   components = name.split(':')
   if len(components) != 2:
-    raise errors.InternalError(f'Invalid preprocessor name {name}')
+    raise errors.UserError(f'Invalid preprocessor name {name}')
   module_name, function_name = components
   try:
     module = importlib.import_module(module_name)
     function_ = getattr(module, function_name)
   except (ModuleNotFoundError, AttributeError):
-    raise errors.InternalError(f'Preprocessor {name} not found.')
+    raise errors.UserError(f'Preprocessor {name} not found.')
   if not function_.__dict__.get('is_clgen_preprocessor'):
-    raise errors.InternalError(
+    raise errors.UserError(
       f'Preprocessor {name} not decorated with @clgen_preprocessor')
-  type_hints = typing.get_type_hints(function_)
-  if not type_hints == {'text': str, 'return': str}:
-    raise errors.InternalError(f'Preprocessor {name} does not have signature '
-                               f'"def {name}(text: str) -> str".')
-  logging.debug('Loaded preprocessor %s', name)
   return function_
 
 

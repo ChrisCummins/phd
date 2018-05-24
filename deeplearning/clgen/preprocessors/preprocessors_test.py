@@ -21,31 +21,33 @@ def MockUndecoratedPreprocessor(text: str) -> str:
   return text
 
 
+# GetPreprocessFunction() tests.
+
 def test_GetPreprocessFunction_empty_string():
-  """Test that an InternalError is raised if no preprocessor is given."""
-  with pytest.raises(errors.InternalError) as e_info:
+  """Test that an UserError is raised if no preprocessor is given."""
+  with pytest.raises(errors.UserError) as e_info:
     preprocessors.GetPreprocessorFunction('')
   assert 'Invalid preprocessor name' in str(e_info.value)
 
 
 def test_GetPreprocessFunction_missing_module():
-  """Test that InternalError is raised if module not found."""
-  with pytest.raises(errors.InternalError) as e_info:
+  """Test that UserError is raised if module not found."""
+  with pytest.raises(errors.UserError) as e_info:
     preprocessors.GetPreprocessorFunction('not.a.real.module:Foo')
   assert 'not found' in str(e_info.value)
 
 
 def test_GetPreprocessFunction_missing_function():
-  """Test that InternalError is raised if module exists but function doesn't."""
-  with pytest.raises(errors.InternalError) as e_info:
+  """Test that UserError is raised if module exists but function doesn't."""
+  with pytest.raises(errors.UserError) as e_info:
     preprocessors.GetPreprocessorFunction(
       'deeplearning.clgen.preprocessors.preprocessors_test:Foo')
   assert 'not found' in str(e_info.value)
 
 
 def test_GetPreprocessFunction_undecorated_preprocessor():
-  """Test that an InternalError is raised if preprocessor not decorated."""
-  with pytest.raises(errors.InternalError) as e_info:
+  """Test that an UserError is raised if preprocessor not decorated."""
+  with pytest.raises(errors.UserError) as e_info:
     preprocessors.GetPreprocessorFunction(
       'deeplearning.clgen.preprocessors.preprocessors_test'
       ':MockUndecoratedPreprocessor')
