@@ -12,7 +12,7 @@ C_COMMENT_RE = re.compile(
   re.DOTALL | re.MULTILINE)
 
 CLANG_ARGS = ['-xc++', '-isystem', native.CXX_HEADERS, '-Wno-ignored-pragmas',
-              '-Wno-implicit-function-declaration',
+              '-ferror-limit=1', '-Wno-implicit-function-declaration',
               '-Wno-incompatible-library-redeclaration', '-Wno-macro-redefined',
               '-Wno-unused-parameter', '-Wno-long-long',
               '-Wcovered-switch-default', '-Wdelete-non-virtual-dtor',

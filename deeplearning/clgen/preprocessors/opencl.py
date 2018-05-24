@@ -7,7 +7,7 @@ from deeplearning.clgen.preprocessors import normalizer
 from deeplearning.clgen.preprocessors import public
 
 
-def GetClangArgs(use_shim: bool, error_limit: int = 0) -> typing.List[str]:
+def GetClangArgs(use_shim: bool) -> typing.List[str]:
   """Get the arguments to pass to clang for handling OpenCL.
 
   Args:
@@ -18,8 +18,8 @@ def GetClangArgs(use_shim: bool, error_limit: int = 0) -> typing.List[str]:
     A list of command line arguments to pass to Popen().
   """
   args = ['-I' + str(native.LIBCLC), '-include', str(native.OPENCL_H),
-          '-target', 'nvptx64-nvidia-nvcl', f'-ferror-limit={error_limit}',
-          '-xcl', '-Wno-ignored-pragmas', '-Wno-implicit-function-declaration',
+          '-target', 'nvptx64-nvidia-nvcl', f'-ferror-limit=1', '-xcl',
+          '-Wno-ignored-pragmas', '-Wno-implicit-function-declaration',
           '-Wno-incompatible-library-redeclaration', '-Wno-macro-redefined',
           '-Wno-unused-parameter']
   if use_shim:
