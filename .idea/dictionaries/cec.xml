@@ -1,6 +1,7 @@
 <component name="ProjectDictionaryState">
   <dictionary name="cec">
     <words>
+      <w>cflags</w>
       <w>clgen</w>
       <w>contentfile</w>
       <w>contentfiles</w>
@@ -12,6 +13,7 @@
       <w>lstm</w>
       <w>opencl</w>
       <w>preprocess</w>
+      <w>rewriter</w>
       <w>stdin</w>
       <w>subdirs</w>
     </words>
