@@ -1,9 +1,7 @@
 """Preprocess OpenCL files for machine learning."""
 import contextlib
-import json
 import math
 import multiprocessing
-import os
 import pathlib
 import queue
 import random
@@ -11,10 +9,8 @@ import re
 import typing
 from io import open
 from multiprocessing import Pool, cpu_count
-from subprocess import PIPE, Popen, STDOUT
-from tempfile import NamedTemporaryFile
 from threading import Thread
-from typing import Dict, List
+from typing import List
 
 import progressbar
 from absl import logging
@@ -22,478 +18,17 @@ from absl import logging
 from deeplearning.clgen import dbutil
 from deeplearning.clgen import errors
 from deeplearning.clgen import languages
-from deeplearning.clgen import native
+from deeplearning.clgen.preprocessors.clang import (
+  ClangFormat, CompileLlvmBytecode, Preprocess,
+)
+from deeplearning.clgen.preprocessors.common import (
+  MinimumLineCount, RemoveDuplicateEmptyLines,
+)
+from deeplearning.clgen.preprocessors.opencl import (
+  ClangPreprocess, gpuverify, rewrite_cl,
+)
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import internal_pb2
-from lib.labm8 import fs
-
-
-# FIXME(polyglot):
-CLANG_CL_TARGETS = ['nvptx64-nvidia-nvcl', 'spir64']
-
-
-# FIXME(polyglot):
-def clang_cl_args(target: str = CLANG_CL_TARGETS[0], use_shim: bool = True,
-                  error_limit: int = 0) -> List[str]:
-  """
-  Get the Clang args to compile OpenCL.
-
-  Parameters
-  ----------
-  target : str
-      LLVM target.
-  use_shim : bool, optional
-      Inject shim header.
-  error_limit : int, optional
-      Limit number of compiler errors.
-
-  Returns
-  -------
-  List[str]
-      Array of args.
-  """
-  # clang warnings to disable
-  disabled_warnings = ['ignored-pragmas', 'implicit-function-declaration',
-                       'incompatible-library-redeclaration',
-                       'macro-redefined', ]
-
-  args = ['-I' + fs.path(native.LIBCLC), '-target', target,
-          '-ferror-limit={}'.format(error_limit), '-xcl'] + ['-Wno-{}'.format(x)
-                                                             for x in
-                                                             disabled_warnings]
-
-  if use_shim:
-    args += ['-include', native.SHIMFILE]
-
-  return args
-
-
-def strip_preprocessor_lines(src: str) -> str:
-  lines = src.split('\n')
-
-  # Strip all the includes:
-  for i, line in enumerate(lines):
-    if line == '# 1 "<stdin>" 2':
-      break
-  lines = lines[i + 1:]
-
-  # Strip lines beginning with '#' (that's preprocessor
-  # stuff):
-  src = '\n'.join([line for line in lines if not line.startswith('#')])
-
-  return src
-
-
-def compiler_preprocess(src: str, compiler_args: List[str], id: str = 'anon',
-                        timeout: int = 60):
-  """Run input code through the compiler frontend to inline macros."""
-  cmd = ["timeout", "-s9", str(timeout), native.CLANG] + compiler_args + ['-E',
-                                                                          '-c',
-                                                                          '-',
-                                                                          '-o',
-                                                                          '-']
-  logging.debug('$ %s', ' '.join(cmd))
-  process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-  stdout, stderr = process.communicate(src.encode('utf-8'))
-  if process.returncode != 0:
-    raise errors.ClangException(stderr.decode('utf-8'))
-
-  src = stdout.decode('utf-8')
-
-  return strip_preprocessor_lines(src).strip()
-
-
-def compiler_preprocess_cl(src: str, id: str = 'anon',
-                           use_shim: bool = True) -> str:
-  """
-  Preprocess OpenCL file.
-
-  Inlines macros, removes comments, etc.
-
-  Parameters
-  ----------
-  src : str
-      OpenCL source.
-  id : str, optional
-      Name of OpenCL source.
-  use_shim : bool, optional
-      Inject shim header.
-
-  Returns
-  -------
-  str
-      Preprocessed source.
-
-  Raises
-  ------
-  ClangException
-      If compiler errors.
-  """
-  return compiler_preprocess(src, clang_cl_args(use_shim=use_shim), id)
-
-
-def rewrite_cl(src: str, id: str = 'anon', use_shim: bool = True,
-               timeout: int = 60) -> str:
-  """
-  Rewrite OpenCL sources.
-
-  Renames all functions and variables with short, unique names.
-
-  Parameters
-  ----------
-  src : str
-      OpenCL source.
-  id : str, optional
-      OpenCL source name.
-  use_shim : bool, optional
-      Inject shim header.
-
-  Returns
-  -------
-  str
-      Rewritten OpenCL source.
-
-  Raises
-  ------
-  RewriterException
-      If rewriter fails.
-  """
-  # On Linux we must preload the clang library.
-  env = os.environ
-  if native.LIBCLANG_SO:
-    env = os.environ.copy()
-    env['LD_PRELOAD'] = native.LIBCLANG_SO
-
-  # Rewriter can't read from stdin.
-  with NamedTemporaryFile('w', suffix='.cl') as tmp:
-    tmp.write(src)
-    tmp.flush()
-    cmd = (["timeout", "-s9", str(timeout), native.CLGEN_REWRITER, tmp.name] + [
-      '-extra-arg=' + x for x in clang_cl_args(use_shim=use_shim)] + ['--'])
-    logging.debug('$ %s', ' '.join(cmd))
-
-    process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE,
-                    universal_newlines=True, env=env)
-    stdout, stderr = process.communicate()
-    logging.debug(stderr)
-
-  # If there was nothing to rewrite, rewriter exits with error code:
-  EUGLY_CODE = 204
-  if process.returncode == EUGLY_CODE:
-    # Propagate the error:
-    raise errors.RewriterException(src)
-  # NOTE: the rewriter process can still fail because of some other
-  # compilation problem, e.g. for some reason the 'enable 64bit
-  # support' pragma which should be included in the shim isn't being
-  # propogated correctly to the rewriter. However, the rewriter will
-  # still correctly process the input, so we ignore all error codes
-  # except the one we care about (EUGLY_CODE).
-  return stdout
-
-
-def compile_cl_bytecode(src: str, id: str = 'anon', use_shim: bool = True,
-                        timeout: int = 60) -> str:
-  """
-  Compile OpenCL kernel to LLVM bytecode.
-
-  Parameters
-  ----------
-  src : str
-      OpenCL source.
-  id : str, optional
-      Name of OpenCL source.
-  use_shim : bool, optional
-      Inject shim header.
-
-  Returns
-  -------
-  str
-      Bytecode.
-
-  Raises
-  ------
-  ClangException
-      If compiler errors.
-  """
-  cmd = ["timeout", "-s9", str(timeout), native.CLANG] + clang_cl_args(
-    use_shim=use_shim) + ['-emit-llvm', '-S', '-c', '-', '-o', '-']
-
-  logging.debug('$ %s', ' '.join(cmd))
-  process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE,
-                  universal_newlines=True)
-  stdout, stderr = process.communicate(src)
-
-  if process.returncode != 0:
-    raise errors.ClangException(stderr)
-  return stdout
-
-
-def gpuverify(src: str, args: list, id: str = 'anon', timeout: int = 60) -> str:
-  """
-  Run GPUverify over kernel.
-
-  Parameters
-  ----------
-  src : str
-      OpenCL source.
-  id : str, optional
-      OpenCL source name.
-
-  Returns
-  -------
-  str
-      OpenCL source.
-
-  Raises
-  ------
-  GPUVerifyException
-      If GPUverify finds a bug.
-  InternalError
-      If GPUverify fails.
-  """
-  # TODO(cec): Re-enable GPUVerify support.
-  # from lib.labm8 import system
-  # if not system.is_linux():
-  #   raise errors.InternalError("GPUVerify only supported on Linux!")
-  #
-  # # GPUverify can't read from stdin.
-  # with NamedTemporaryFile('w', suffix='.cl') as tmp:
-  #   tmp.write(src)
-  #   tmp.flush()
-  #   cmd = ['timeout', '-s9', str(timeout), native.GPUVERIFY, tmp.name] + args
-  #
-  #   process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-  #   stdout, stderr = process.communicate()
-  #
-  # if process.returncode == -9:  # timeout signal
-  #   raise errors.GPUVerifyTimeoutException(
-  #     f"GPUveryify failed to complete with {timeout} seconds")
-  # elif process.returncode != 0:
-  #   raise errors.GPUVerifyException(stderr.decode('utf-8'))
-
-  return src
-
-
-_instcount_re = re.compile(
-  r"^(?P<count>\d+) instcount - Number of (?P<type>.+)")
-
-
-def parse_instcounts(txt: str) -> Dict[str, int]:
-  """
-  Parse LLVM opt instruction counts pass.
-
-  Parameters
-  ----------
-  txt : str
-      LLVM output.
-
-  Returns
-  -------
-  Dict[str, int]
-      key, value pairs, where key is instruction type and value is
-      instruction type count.
-  """
-  lines = [x.strip() for x in txt.split("\n")]
-  counts = {}
-
-  # Build a list of counts for each type.
-  for line in lines:
-    match = re.search(_instcount_re, line)
-    if match:
-      count = int(match.group("count"))
-      key = match.group("type")
-      if key in counts:
-        counts[key].append(count)
-      else:
-        counts[key] = [count]
-
-  # Sum all counts.
-  for key in counts:
-    counts[key] = sum(counts[key])
-
-  return counts
-
-
-def instcounts2ratios(counts: Dict[str, int]) -> Dict[str, float]:
-  """
-  Convert instruction counts to instruction densities.
-
-  If, for example, there are 10 instructions and 2 addition instructions,
-  then the instruction density of add operations is .2.
-
-  Parameters
-  ----------
-  counts : Dict[str, int]
-      Key value pairs of instruction types and counts.
-
-  Returns
-  -------
-  ratios : Dict[str, float]
-      Key value pairs of instruction types and densities.
-  """
-  if not len(counts):
-    return {}
-
-  ratios = {}
-  total_key = "instructions (of all types)"
-  non_ratio_keys = [total_key]
-  total = float(counts[total_key])
-
-  for key in non_ratio_keys:
-    ratios[dbutil.escape_sql_key(key)] = counts[key]
-
-  for key in counts:
-    if key not in non_ratio_keys:
-      # Copy count
-      ratios[dbutil.escape_sql_key(key)] = counts[key]
-      # Insert ratio
-      ratio = float(counts[key]) / total
-      ratios[dbutil.escape_sql_key('ratio_' + key)] = ratio
-
-  return ratios
-
-
-def bytecode_features(bc: str, id: str = 'anon', timeout: int = 60) -> Dict[
-  str, float]:
-  """
-  Extract features from bytecode.
-
-  Parameters
-  ----------
-  bc : str
-      LLVM bytecode.
-  id : str, optional
-      Name of OpenCL source.
-
-  Returns
-  -------
-  Dict[str, float]
-      Key value pairs of instruction types and densities.
-
-  Raises
-  ------
-  OptException
-      If LLVM opt pass errors.
-  """
-  cmd = ["timeout", "-s9", str(timeout), native.OPT, '-analyze', '-stats',
-         '-instcount', '-']
-
-  # LLVM pass output pritns to stderr, so we'll pipe stderr to
-  # stdout.
-  logging.debug('$ %s', ' '.join(cmd))
-  process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=STDOUT,
-                  universal_newlines=True)
-  stdout, _ = process.communicate(bc)
-
-  if process.returncode != 0:
-    raise errors.OptException(stdout)
-
-  instcounts = parse_instcounts(stdout)
-  instratios = instcounts2ratios(instcounts)
-
-  return instratios
-
-
-# Options to pass to clang-format.
-#
-# See: http://clang.llvm.org/docs/ClangFormatStyleOptions.html
-#
-clangformat_config = {'BasedOnStyle': 'Google', 'ColumnLimit': 500,
-                      'IndentWidth': 2, 'AllowShortBlocksOnASingleLine': False,
-                      'AllowShortCaseLabelsOnASingleLine': False,
-                      'AllowShortFunctionsOnASingleLine': False,
-                      'AllowShortLoopsOnASingleLine': False,
-                      'AllowShortIfStatementsOnASingleLine': False,
-                      'DerivePointerAlignment': False,
-                      'PointerAlignment': 'Left'}
-
-
-def clangformat(src: str, id: str = 'anon', timeout: int = 60) -> str:
-  """
-  Enforce code style on source file.
-
-  Parameters
-  ----------
-  src : str
-      Source code.
-  id : str, optional
-      Name of source file.
-
-  Returns
-  -------
-  str
-      Styled source.
-
-  Raises
-  ------
-  ClangFormatException
-      If formatting errors.
-  """
-  cmd = ["timeout", "-s9", str(timeout), native.CLANG_FORMAT,
-         '-style={}'.format(json.dumps(clangformat_config))]
-  logging.debug('$ %s', ' '.join(cmd))
-  process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-  stdout, stderr = process.communicate(src.encode('utf-8'))
-
-  if stderr:
-    logging.error(stderr.decode('utf-8'))
-  if process.returncode != 0:
-    raise errors.ClangFormatException(stderr.decode('utf-8'))
-
-  return stdout.decode('utf-8')
-
-
-def verify_bytecode_features(bc_features: Dict[str, float],
-                             id: str = 'anon') -> None:
-  """
-  Verify LLVM bytecode features.
-
-  Parameters
-  ----------
-  bc_features : Dict[str, float]
-      Bytecode features.
-  id : str, optional
-      Name of OpenCL source.
-
-  Raises
-  ------
-  InstructionCountException
-      If verification errors.
-  """
-  # The minimum number of instructions before a kernel is discarded
-  # as ugly.
-  min_num_instructions = 1
-  num_instructions = bc_features.get('instructions_of_all_types', 0)
-
-  if num_instructions < min_num_instructions:
-    raise errors.InstructionCountException(
-      'Code contains {} instructions. The minimum allowed is {}'.format(
-        num_instructions, min_num_instructions))
-
-
-def ensure_has_code(src: str) -> str:
-  """
-  Check that file contains actual executable code.
-
-  Parameters
-  ----------
-  src : str
-      OpenCL source, must be preprocessed.
-
-  Returns
-  -------
-  src
-      Unmodified source code.
-
-  Raises
-  ------
-  NoCodeException
-      If kernel is empty.
-  """
-  if len(src.split('\n')) < 3:
-    raise errors.NoCodeException
-
-  return src
 
 
 def sanitize_prototype(src: str) -> str:
@@ -552,20 +87,6 @@ def strip_comments(text: str):
   return re.sub(pattern, replacer, text)
 
 
-def remove_duplicate_empty_lines(text: str):
-  """
-  Truncate blank lines.
-  """
-  last_line = None
-  lines = []
-  for line in text.split("\n"):
-    line = line.rstrip()
-    if line or last_line:
-      lines.append(line)
-    last_line = line
-  return "\n".join(lines)
-
-
 def preprocess_opencl(src: str, id: str = 'anon', use_shim: bool = True,
                       use_gpuverify: bool = False) -> str:
   """
@@ -589,7 +110,7 @@ def preprocess_opencl(src: str, id: str = 'anon', use_shim: bool = True,
   """
   # Compile to bytecode and verify features:
   logging.debug('OpenCL source = %s', src)
-  bc = compile_cl_bytecode(src, id, use_shim)
+  bc = CompileLlvmBytecode(src, id, use_shim)
   # TODO(cec): Fix llvm opt instcount invocation. There appears to be no output
   # (at least on macos homebrew version).
   #   $ /usr/local/opt/llvm/bin/clang -emit-llvm ~/foo.cc -S -o foo.ll
@@ -598,10 +119,10 @@ def preprocess_opencl(src: str, id: str = 'anon', use_shim: bool = True,
   # verify_bytecode_features(bc_features, id)
 
   # Rewrite and format source:
-  src = compiler_preprocess_cl(src, id, use_shim)
+  src = ClangPreprocess(src, id, use_shim)
   src = rewrite_cl(src, id, use_shim)
-  src = clangformat(src, id).strip()
-  src = ensure_has_code(src)
+  src = ClangFormat(src, id).strip()
+  src = MinimumLineCount(src)
   src = sanitize_prototype(src)
 
   if use_gpuverify:
@@ -617,8 +138,8 @@ def preprocess_solidity(src: str, id: str = 'anon', **kwargs) -> str:
   Preprocess a solidity source.
   """
   src = strip_comments(src)
-  src = remove_duplicate_empty_lines(src)
-  src = clangformat(src)
+  src = RemoveDuplicateEmptyLines(src)
+  src = ClangFormat(src)
   return src
 
 
@@ -626,9 +147,9 @@ def preprocess_glsl(src: str, id: str = 'anon', **kwargs) -> str:
   """
   Process a GLSL source.
   """
-  src = compiler_preprocess(src, [], id)
-  src = remove_duplicate_empty_lines(src)
-  src = clangformat(src)
+  src = Preprocess(src, [], id)
+  src = RemoveDuplicateEmptyLines(src)
+  src = ClangFormat(src)
   return src
 
 
@@ -662,10 +183,10 @@ def preprocess(src: str, preprocessors: typing.List[corpus_pb2.Preprocessor],
       In case of some other error.
   """
   for preprocessor_proto in preprocessors:
-    preprocessor = {"opencl:compiler_preprocess": compiler_preprocess_cl,
+    preprocessor = {"opencl:compiler_preprocess": ClangPreprocess,
                     "opencl:rewriter": rewrite_cl,
-                    "opencl:clangformat": clangformat,
-                    "opencl:ensure_has_code": ensure_has_code,
+                    "opencl:ClangFormat": ClangFormat,
+                    "opencl:MinimumLineCount": MinimumLineCount,
                     "opencl:sanitize_prototype": sanitize_prototype
 
                     }.get(preprocessor_proto.name)

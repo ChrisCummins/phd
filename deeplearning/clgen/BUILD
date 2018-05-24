@@ -158,6 +158,7 @@ py_library(
     name = "dbutil",
     srcs = ["dbutil.py"],
     data = ["//deeplearning/clgen/data/sql:scripts"],
+    visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = [
         ":errors",
         ":languages",
@@ -180,6 +181,7 @@ py_test(
 py_library(
     name = "errors",
     srcs = ["errors.py"],
+    visibility = ["//deeplearning/clgen:__subpackages__"],
 )
 
 py_library(
@@ -241,6 +243,7 @@ py_test(
 py_library(
     name = "languages",
     srcs = ["languages.py"],
+    visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = [":errors"],
 )
 
@@ -295,6 +298,7 @@ py_library(
             "@llvm_linux//:opt",
         ],
     }),
+    visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = [
         ":package_util",
         "//config:getconfig",
