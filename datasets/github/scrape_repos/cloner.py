@@ -2,6 +2,7 @@
 
 This looks for repo meta files and clones any which have not been cloned.
 """
+import multiprocessing
 import pathlib
 import random
 import subprocess
@@ -26,6 +27,8 @@ flags.DEFINE_integer('repository_clone_timeout_minutes', 30,
                      'The maximum number of minutes to attempt to clone a '
                      'repository before '
                      'quitting and moving on to the next repository.')
+flags.DEFINE_integer('num_cloner_threads', 4,
+                     'The number of cloner threads to spawn.')
 
 
 def CloneFromMetafile(metafile: pathlib.Path) -> None:
@@ -64,9 +67,9 @@ class AsyncWorker(threading.Thread):
     self.i = 0
 
   def run(self):
-    for i, meta_file in enumerate(self.meta_files):
-      self.i = i
-      CloneFromMetafile(meta_file)
+    pool = multiprocessing.Pool(FLAGS.num_cloner_threads)
+    for _ in pool.imap_unordered(CloneFromMetafile, self.meta_files):
+      self.i += 1
 
 
 def main(argv) -> None:
