@@ -9,25 +9,21 @@ model {
   corpus {
     language: "opencl"
     path: "/mnt/cc/data/kernels/github"
+    # Note these tokens omit the optional __ qualifiers on OpenCL keywords.
+    # The preprocessor
+    # "deeplearning.clgen.preprocessors.opencl:StripDoubleUnderscorePrefixes"
+    # should be used to strip any __ qualifiers in the corpus.
     greedy_multichar_atomizer {
       tokens: "  "
+      tokens: "*/"
+      tokens: "/*"
+      tokens: "//"
       tokens: "__assert"
       tokens: "__attribute"
       tokens: "__builtin_astype"
       tokens: "__clc_fabs"
       tokens: "__clc_fma"
-      tokens: "__constant"
-      tokens: "__global"
       tokens: "__inline"
-      tokens: "__kernel"
-      tokens: "__local"
-      tokens: "__private"
-      tokens: "__read_only"
-      tokens: "__read_write"
-      tokens: "__write_only"
-      tokens: "*/"
-      tokens: "/*"
-      tokens: "//"
       tokens: "abs"
       tokens: "alignas"
       tokens: "alignof"
