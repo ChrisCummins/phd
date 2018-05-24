@@ -25,14 +25,19 @@ OPT = _config.paths.opt
 CLANG_STDIN_MARKER = re.compile(r'# \d+ "<stdin>" 2')
 # Options to pass to clang-format.
 # See: http://clang.llvm.org/docs/ClangFormatStyleOptions.html
-CLANG_FORMAT_CONFIG = {'BasedOnStyle': 'Google', 'ColumnLimit': 500,
+CLANG_FORMAT_CONFIG = {'BasedOnStyle': 'Google', 'ColumnLimit': 5000,
                        'IndentWidth': 2, 'AllowShortBlocksOnASingleLine': False,
                        'AllowShortCaseLabelsOnASingleLine': False,
                        'AllowShortFunctionsOnASingleLine': False,
                        'AllowShortLoopsOnASingleLine': False,
                        'AllowShortIfStatementsOnASingleLine': False,
                        'DerivePointerAlignment': False,
-                       'PointerAlignment': 'Left'}
+                       'PointerAlignment': 'Left',
+                       'BreakAfterJavaFieldAnnotations': True,
+                       'BreakBeforeInheritanceComma': False,
+                       'BreakBeforeTernaryOperators': False,
+                       'AlwaysBreakAfterReturnType': 'None',
+                       'AlwaysBreakAfterDefinitionReturnType': 'None', }
 
 
 def StripPreprocessorLines(src: str) -> str:
