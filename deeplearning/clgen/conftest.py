@@ -7,6 +7,7 @@ import tempfile
 import pytest
 from absl import flags
 
+from deeplearning.clgen import dbutil
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
@@ -98,3 +99,13 @@ def abc_sampler_config():
   return sampler_pb2.Sampler(start_text='a', batch_size=5, seed=0,
                              termination_criteria=sample_stop,
                              min_num_samples=5)
+
+
+@pytest.fixture(scope='function')
+def empty_db_path(request) -> str:
+  """A text fixture which returns an empty database."""
+  del request
+  with tempfile.TemporaryDirectory(prefix='clgen_') as d:
+    db_path = pathlib.Path(d) / 'test.db'
+    dbutil.create_db(str(db_path), github=False)
+    yield str(db_path)

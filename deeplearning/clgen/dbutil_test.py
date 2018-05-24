@@ -10,15 +10,6 @@ from deeplearning.clgen import errors
 from lib.labm8 import fs
 
 
-@pytest.fixture(scope='module')
-def empty_db_path(request) -> str:
-  del request
-  with tempfile.TemporaryDirectory(prefix='clgen_') as d:
-    db_path = fs.path(d, 'test.db')
-    dbutil.create_db(db_path, github=False)
-    yield db_path
-
-
 def test_create_db():
   """Test creating a non-GitHub database."""
   with tempfile.TemporaryDirectory(prefix='clgen_') as d:

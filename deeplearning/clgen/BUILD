@@ -107,10 +107,12 @@ py_library(
     testonly = True,
     srcs = ["conftest.py"],
     deps = [
+        ":dbutil",
         "//deeplearning/clgen/proto:corpus_py_pb2",
         "//deeplearning/clgen/proto:model_py_pb2",
         "//deeplearning/clgen/proto:sampler_py_pb2",
     ],
+    visibility = ["//deeplearning/clgen:__subpackages__"],
 )
 
 py_library(
@@ -172,6 +174,7 @@ py_test(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
+        ":conftest",
         ":dbutil",
         ":errors",
         "//deeplearning/clgen/tests:testlib",
