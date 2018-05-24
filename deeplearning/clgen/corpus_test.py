@@ -193,7 +193,7 @@ def test_Corpus_preprocess_outcomes(clgen_cache_dir, abc_corpus):
   # Add a file containing a "good" OpenCL contentfile.
   with open(abc_corpus + '/cl_good.cl', 'w') as f:
     f.write("""
-// Add a 
+// A good kernel.
 kernel void foo(global int* a) {
   a[get_global_id(0)] *= 2;
 }
