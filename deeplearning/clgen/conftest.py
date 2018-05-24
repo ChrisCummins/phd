@@ -102,10 +102,23 @@ def abc_sampler_config():
 
 
 @pytest.fixture(scope='function')
-def empty_db_path(request) -> str:
+def empty_db_path() -> str:
   """A text fixture which returns an empty database."""
-  del request
   with tempfile.TemporaryDirectory(prefix='clgen_') as d:
     db_path = pathlib.Path(d) / 'test.db'
     dbutil.create_db(str(db_path), github=False)
     yield str(db_path)
+
+
+@pytest.fixture(scope='function')
+def abc_db_path(empty_db_path) -> str:
+  """A text fixture which returns a database containing three ContentFiles."""
+  db = dbutil.connect(empty_db_path)
+  c = db.cursor()
+  dbutil.sql_insert_dict(c, 'ContentFiles', {'id': 'a', 'contents': 'foo'})
+  dbutil.sql_insert_dict(c, 'ContentFiles', {'id': 'b', 'contents': 'bar'})
+  dbutil.sql_insert_dict(c, 'ContentFiles', {'id': 'c', 'contents': 'car'})
+  c.close()
+  db.commit()
+  db.close()
+  return empty_db_path

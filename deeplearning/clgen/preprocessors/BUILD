@@ -134,6 +134,7 @@ py_test(
     deps = [
         ":preprocessors",
         "//deeplearning/clgen:conftest",
+        "//deeplearning/clgen:dbutil",
         "//deeplearning/clgen:errors",
     ],
 )

@@ -166,6 +166,10 @@ class PreprocessWorker(threading.Thread):
       except errors.BadCodeException as e:
         result.status = internal_pb2.PreprocessorWorkerJobOutcome.FAIL
         result.contents = str(e)
+      # An intentionally broad exception catch here to catch whatever's left.
+      except Exception as e:
+        result.status = internal_pb2.PreprocessorWorkerJobOutcome.FAIL
+        result.contents = f'!!INTERNAL ERROR!! {e}'
       self.queue.put(result)
 
 
@@ -205,7 +209,7 @@ def _DoPreprocessDatabase(db_path: pathlib.Path, language: languages.Language,
                                                table="ContentFiles")
   # Create job protos and distribute the jobs.
   jobs = [
-    internal_pb2.PreprocessorWorkerJob(contentfiles_id=kid, src=get_kernel(kid),
+    internal_pb2.PreprocessorWorkerJob(contentfile_id=kid, src=get_kernel(kid),
                                        preprocessors=preprocessors) for kid in
     todo]
   random.shuffle(jobs)
@@ -230,20 +234,19 @@ def _DoPreprocessDatabase(db_path: pathlib.Path, language: languages.Language,
       # Block until another result comes in.
       result: internal_pb2.PreprocessorWorkerJobOutcome = output_queue.get(
         timeout=120)
-      status = internal_pb2.PreprocessorWorkerJobOutcome.Status.Value(
-        result.status)
+      status = result.status
       # Insert result into database.
       c = db.cursor()
       c.execute(
         "INSERT INTO PreprocessedFiles (id,status,contents) VALUES(?,?,?)",
-        (result.contenfile_id, status, result.contents))
+        (result.contentfile_id, status, result.contents))
       c.close()
       db.commit()
     db.close()
     for producer in producers:
       producer.join()
 
-  except (OSError, TimeoutError, output_queue.Empty) as e:
+  except (OSError, TimeoutError, queue.Empty) as e:
     logging.error(e)
     if attempt_num >= 3 and not num_preprocessed:
       logging.warning('No progress has been made since previous attempt. '

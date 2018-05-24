@@ -5,6 +5,7 @@ import pytest
 from absl import app
 from absl import logging
 
+from deeplearning.clgen import dbutil
 from deeplearning.clgen import errors
 from deeplearning.clgen import languages
 from deeplearning.clgen.preprocessors import preprocessors
@@ -13,7 +14,22 @@ from deeplearning.clgen.preprocessors import preprocessors
 @preprocessors.clgen_preprocessor
 def MockPreprocessor(text: str) -> str:
   """A mock preprocessor."""
-  return text
+  del text
+  return 'PREPROCESSED'
+
+
+@preprocessors.clgen_preprocessor
+def MockPreprocessorBadCode(text: str) -> str:
+  """A mock preprocessor which raises a BadCodeException."""
+  del text
+  raise errors.BadCodeException('bad code')
+
+
+@preprocessors.clgen_preprocessor
+def MockPreprocessorInternalError(text: str) -> str:
+  """A mock preprocessor which raises a BadCodeException."""
+  del text
+  raise errors.InternalError('internal error')
 
 
 def MockUndecoratedPreprocessor(text: str) -> str:
@@ -61,6 +77,37 @@ def test_GetPreprocessFunction_mock_preprocessor():
   assert f == MockPreprocessor
 
 
+# Preprocess() tests.
+
+
+def test_Preprocess_no_preprocessors():
+  """Test unmodified output if no preprocessors."""
+  assert preprocessors.Preprocess('hello', []) == 'hello'
+
+
+def test_Preprocess_mock_preprocessor():
+  """Test unmodified output if no preprocessors."""
+  assert preprocessors.Preprocess('hello', [
+    'deeplearning.clgen.preprocessors.preprocessors_test:MockPreprocessor']) \
+         == 'PREPROCESSED'
+
+
+def test_Preprocess_mock_preprocessor_bad_code():
+  """Test that BadCodeException is propagated."""
+  with pytest.raises(errors.BadCodeException):
+    preprocessors.Preprocess('', [
+      'deeplearning.clgen.preprocessors.preprocessors_test'
+      ':MockPreprocessorBadCode'])
+
+
+def test_Preprocess_mock_preprocessor_bad_code():
+  """Test that InternalError is propagated."""
+  with pytest.raises(errors.InternalError):
+    preprocessors.Preprocess('', [
+      'deeplearning.clgen.preprocessors.preprocessors_test'
+      ':MockPreprocessorInternalError'])
+
+
 # PreprocessDatabase() tests.
 
 def test_PreprocessDatabase_empty(empty_db_path):
@@ -69,13 +116,67 @@ def test_PreprocessDatabase_empty(empty_db_path):
     'deeplearning.clgen.preprocessors.preprocessors_test:MockPreprocessor'])
 
 
+def test_PreprocessDatabase_abc(abc_db_path):
+  """Test PreprocessDatabase on an empty database."""
+  preprocessors.PreprocessDatabase(abc_db_path, languages.Language.OPENCL, [
+    'deeplearning.clgen.preprocessors.preprocessors_test:MockPreprocessor'])
+  assert dbutil.num_rows_in(abc_db_path, "PreprocessedFiles") == 3
+  db = dbutil.connect(abc_db_path)
+  c = db.cursor()
+  results = c.execute(
+    'SELECT id,status,contents FROM PreprocessedFiles').fetchall()
+  assert set([r[0] for r in results]) == {'a', 'b', 'c'}
+  assert set([r[1] for r in results]) == {0}
+  assert set([r[2] for r in results]) == {'PREPROCESSED', }
+
+
+def test_PreprocessDatabase_abc_bad_code(abc_db_path):
+  """Test PreprocessDatabase with a bad code preprocessor."""
+  preprocessors.PreprocessDatabase(abc_db_path, languages.Language.OPENCL, [
+    'deeplearning.clgen.preprocessors.preprocessors_test:MockPreprocessor',
+    'deeplearning.clgen.preprocessors.preprocessors_test'
+    ':MockPreprocessorBadCode'])
+  assert dbutil.num_rows_in(abc_db_path, "PreprocessedFiles") == 3
+  db = dbutil.connect(abc_db_path)
+  c = db.cursor()
+  results = c.execute(
+    'SELECT id,status,contents FROM PreprocessedFiles').fetchall()
+  assert set([r[0] for r in results]) == {'a', 'b', 'c'}
+  assert set([r[1] for r in results]) == {1}
+  assert set([r[2] for r in results]) == {'bad code', }
+
+
+def test_PreprocessDatabase_abc_internal_error(abc_db_path):
+  """Test PreprocessDatabase with an internal error preprocessor."""
+  preprocessors.PreprocessDatabase(abc_db_path, languages.Language.OPENCL, [
+    'deeplearning.clgen.preprocessors.preprocessors_test:MockPreprocessor',
+    'deeplearning.clgen.preprocessors.preprocessors_test'
+    ':MockPreprocessorInternalError'])
+  assert dbutil.num_rows_in(abc_db_path, "PreprocessedFiles") == 3
+  db = dbutil.connect(abc_db_path)
+  c = db.cursor()
+  results = c.execute(
+    'SELECT id,status,contents FROM PreprocessedFiles').fetchall()
+  assert set([r[0] for r in results]) == {'a', 'b', 'c'}
+  assert set([r[1] for r in results]) == {1}
+  assert set([r[2] for r in results]) == {'!!INTERNAL ERROR!! internal error', }
+
+
 # Benchmarks.
 
 def test_benchmark_GetPreprocessFunction_mock(benchmark):
-  """Benchmark GetPreprocessFunction()"""
+  """Benchmark GetPreprocessFunction."""
   benchmark(preprocessors.GetPreprocessorFunction,
             'deeplearning.clgen.preprocessors.preprocessors_test'
             ':MockPreprocessor')
+
+
+def test_benchmark_PreprocessDatabase_abc(benchmark, abc_db_path):
+  """Benchmark PreprocessDatabase with a mock preprocessor."""
+  benchmark(preprocessors.PreprocessDatabase, abc_db_path,
+            languages.Language.OPENCL,
+            ['deeplearning.clgen.preprocessors.preprocessors_test'
+             ':MockPreprocessor'])
 
 
 def main(argv):
