@@ -18,6 +18,7 @@
       <w>rewriter</w>
       <w>stdin</w>
       <w>subdirs</w>
+      <w>uname</w>
     </words>
   </dictionary>
 </component>
