@@ -2,8 +2,8 @@
 """
 import datetime
 import pathlib
+
 import sqlalchemy as sql
-import typing
 from absl import flags
 from absl import logging
 from sqlalchemy.dialects import mysql
@@ -12,6 +12,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from deeplearning.deepsmith.proto import datastore_pb2
 from lib.labm8 import labdate
 from lib.labm8 import pbutil
+from lib.labm8.sqlutil import GetOrAdd
+
 
 FLAGS = flags.FLAGS
 
@@ -37,9 +39,9 @@ class DatabaseDoesNotExist(EnvironmentError):
 
   def __init__(self):
     super(DatabaseDoesNotExist, self).__init__(
-        'Database does not exist. Either create it yourself, or set field '
-        'create_database_if_not_exist in DataStore proto to create it '
-        'automatically.')
+      'Database does not exist. Either create it yourself, or set field '
+      'create_database_if_not_exist in DataStore proto to create it '
+      'automatically.')
 
 
 class InvalidInputError(ValueError):
@@ -55,8 +57,9 @@ class StringTooLongError(ValueError):
   def __repr__(self):
     n = len(self.max_len)
     s = self.string[:20]
-    return (f'String "{s}..." too long for "{self.column_name}". ' +
-            f'Max length: {self.max_len}, actual length: {n}. ')
+    return (f'String "{s}..." too long for "{self.column_name}". ' + f'Max '
+                                                                     f'length: '
+                                                                     f'{self.max_len}, actual length: {n}. ')
 
 
 class Table(Base):
@@ -70,7 +73,8 @@ class Table(Base):
   id_t = None
 
   @classmethod
-  def GetOrAdd(cls, session: session_t, proto: pbutil.ProtocolBuffer) -> 'Table':
+  def GetOrAdd(cls, session: session_t,
+               proto: pbutil.ProtocolBuffer) -> 'Table':
     """Instantiate an object from a protocol buffer message.
 
     This is the preferred method for creating database-backed instances.
@@ -136,8 +140,8 @@ class Table(Base):
     Returns:
       An instance.
     """
-    raise NotImplementedError(type(cls).__name__ +
-                              '.FromFile() not implemented')
+    raise NotImplementedError(
+      type(cls).__name__ + '.FromFile() not implemented')
 
   def __repr__(self):
     try:
@@ -173,12 +177,12 @@ class StringTable(Table):
   # Columns:
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
-      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-      nullable=False, default=labdate.GetUtcMillisecondsNow)
+    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'), nullable=False,
+    default=labdate.GetUtcMillisecondsNow)
   # MySQL maximum key length is 3072 bytes, with 3 bytes per character.
   string: str = sql.Column(
-      sql.String(4096).with_variant(sql.String(3072 // 3), 'mysql'),
-      nullable=False, unique=True)
+    sql.String(4096).with_variant(sql.String(3072 // 3), 'mysql'),
+    nullable=False, unique=True)
 
   # The maximum number of characters in the string column.
   maxlen = string.type.length
@@ -243,8 +247,8 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
     if config.sqlite.inmemory:
       url = 'sqlite://'
     else:
-      path = pathlib.Path(pbutil.RaiseIfNotSet(
-          config.sqlite, 'path', InvalidDatabaseConfig)).absolute()
+      path = pathlib.Path(pbutil.RaiseIfNotSet(config.sqlite, 'path',
+                                               InvalidDatabaseConfig)).absolute()
       if not config.create_database_if_not_exist and not path.is_file():
         raise DatabaseDoesNotExist()
       path.parent.mkdir(parents=True, exist_ok=True)
@@ -252,23 +256,22 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
       url = f'sqlite:///{abspath}'
     public_url = url
   elif config.HasField('mysql'):
-    username = pbutil.RaiseIfNotSet(
-        config.mysql, 'username', InvalidDatabaseConfig)
-    password = pbutil.RaiseIfNotSet(
-        config.mysql, 'password', InvalidDatabaseConfig)
-    hostname = pbutil.RaiseIfNotSet(
-        config.mysql, 'hostname', InvalidDatabaseConfig)
-    port = pbutil.RaiseIfNotSet(
-        config.mysql, 'port', InvalidDatabaseConfig)
-    database = pbutil.RaiseIfNotSet(
-        config.mysql, 'database', InvalidDatabaseConfig)
+    username = pbutil.RaiseIfNotSet(config.mysql, 'username',
+                                    InvalidDatabaseConfig)
+    password = pbutil.RaiseIfNotSet(config.mysql, 'password',
+                                    InvalidDatabaseConfig)
+    hostname = pbutil.RaiseIfNotSet(config.mysql, 'hostname',
+                                    InvalidDatabaseConfig)
+    port = pbutil.RaiseIfNotSet(config.mysql, 'port', InvalidDatabaseConfig)
+    database = pbutil.RaiseIfNotSet(config.mysql, 'database',
+                                    InvalidDatabaseConfig)
     url_base = f'mysql://{username}:{password}@{hostname}:{port}'
     if '`' in database:
       raise InvalidDatabaseConfig('MySQL database cannot have backtick in name')
     engine = sql.create_engine(url_base)
     query = engine.execute(
-        sql.text('SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE '
-                 'SCHEMA_NAME = :database'), database=database)
+      sql.text('SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE '
+               'SCHEMA_NAME = :database'), database=database)
     if not query.first():
       if config.create_database_if_not_exist:
         # We can't use sql.text() escaping here becuase it uses singlequotes
@@ -283,26 +286,26 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
     public_url = f'mysql://{username}@{hostname}:{port}/{database}?charset=utf8'
     url = f'{url_base}/{database}?charset=utf8'
   elif config.HasField('postgresql'):
-    username = pbutil.RaiseIfNotSet(
-        config.postgresql, 'username', InvalidDatabaseConfig)
-    password = pbutil.RaiseIfNotSet(
-        config.postgresql, 'password', InvalidDatabaseConfig)
-    hostname = pbutil.RaiseIfNotSet(
-        config.postgresql, 'hostname', InvalidDatabaseConfig)
-    port = pbutil.RaiseIfNotSet(
-        config.postgresql, 'port', InvalidDatabaseConfig)
-    database = pbutil.RaiseIfNotSet(
-        config.postgresql, 'database', InvalidDatabaseConfig)
+    username = pbutil.RaiseIfNotSet(config.postgresql, 'username',
+                                    InvalidDatabaseConfig)
+    password = pbutil.RaiseIfNotSet(config.postgresql, 'password',
+                                    InvalidDatabaseConfig)
+    hostname = pbutil.RaiseIfNotSet(config.postgresql, 'hostname',
+                                    InvalidDatabaseConfig)
+    port = pbutil.RaiseIfNotSet(config.postgresql, 'port',
+                                InvalidDatabaseConfig)
+    database = pbutil.RaiseIfNotSet(config.postgresql, 'database',
+                                    InvalidDatabaseConfig)
     if "'" in database:
       raise InvalidDatabaseConfig(
-          'PostgreSQL database name cannot contain single quotes')
+        'PostgreSQL database name cannot contain single quotes')
     url_base = f'postgresql+psycopg2://{username}:{password}@{hostname}:{port}'
 
     engine = sql.create_engine(f'{url_base}/postgres')
     conn = engine.connect()
     query = conn.execute(
-        sql.text('SELECT 1 FROM pg_database WHERE datname = :database'),
-        database=database)
+      sql.text('SELECT 1 FROM pg_database WHERE datname = :database'),
+      database=database)
     if not query.first():
       if config.create_database_if_not_exist:
         # PostgreSQL does not let you create databases within a transaction, so
@@ -341,31 +344,30 @@ def DestroyTestonlyEngine(config: datastore_pb2.DataStore):
       pbutil.RaiseIfNotSet(config.sqlite, 'path', InvalidDatabaseConfig)
       pathlib.Path(config.sqlite.path).unlink()
   elif config.HasField('mysql'):
-    username = pbutil.RaiseIfNotSet(
-        config.mysql, 'username', InvalidDatabaseConfig)
-    password = pbutil.RaiseIfNotSet(
-        config.mysql, 'password', InvalidDatabaseConfig)
-    hostname = pbutil.RaiseIfNotSet(
-        config.mysql, 'hostname', InvalidDatabaseConfig)
-    port = pbutil.RaiseIfNotSet(
-        config.mysql, 'port', InvalidDatabaseConfig)
-    database = pbutil.RaiseIfNotSet(
-        config.mysql, 'database', InvalidDatabaseConfig)
+    username = pbutil.RaiseIfNotSet(config.mysql, 'username',
+                                    InvalidDatabaseConfig)
+    password = pbutil.RaiseIfNotSet(config.mysql, 'password',
+                                    InvalidDatabaseConfig)
+    hostname = pbutil.RaiseIfNotSet(config.mysql, 'hostname',
+                                    InvalidDatabaseConfig)
+    port = pbutil.RaiseIfNotSet(config.mysql, 'port', InvalidDatabaseConfig)
+    database = pbutil.RaiseIfNotSet(config.mysql, 'database',
+                                    InvalidDatabaseConfig)
     url_base = f'mysql://{username}:{password}@{hostname}:{port}'
 
     engine = sql.create_engine(url_base)
     engine.execute(f'DROP DATABASE {database}')
   elif config.HasField('postgresql'):
-    username = pbutil.RaiseIfNotSet(
-        config.postgresql, 'username', InvalidDatabaseConfig)
-    password = pbutil.RaiseIfNotSet(
-        config.postgresql, 'password', InvalidDatabaseConfig)
-    hostname = pbutil.RaiseIfNotSet(
-        config.postgresql, 'hostname', InvalidDatabaseConfig)
-    port = pbutil.RaiseIfNotSet(
-        config.postgresql, 'port', InvalidDatabaseConfig)
-    database = pbutil.RaiseIfNotSet(
-        config.postgresql, 'database', InvalidDatabaseConfig)
+    username = pbutil.RaiseIfNotSet(config.postgresql, 'username',
+                                    InvalidDatabaseConfig)
+    password = pbutil.RaiseIfNotSet(config.postgresql, 'password',
+                                    InvalidDatabaseConfig)
+    hostname = pbutil.RaiseIfNotSet(config.postgresql, 'hostname',
+                                    InvalidDatabaseConfig)
+    port = pbutil.RaiseIfNotSet(config.postgresql, 'port',
+                                InvalidDatabaseConfig)
+    database = pbutil.RaiseIfNotSet(config.postgresql, 'database',
+                                    InvalidDatabaseConfig)
     url_base = f'postgresql+psycopg2://{username}:{password}@{hostname}:{port}'
 
     engine = sql.create_engine(f'{url_base}/postgres')
@@ -377,26 +379,3 @@ def DestroyTestonlyEngine(config: datastore_pb2.DataStore):
     conn.close()
   else:
     raise NotImplementedError(f'unsupported database engine {engine}')
-
-
-def GetOrAdd(session: sql.orm.session.Session, model,
-             defaults: typing.Dict[str, object] = None, **kwargs):
-  """
-  Instantiate a mapped database object. If the object is not in the database,
-  add it.
-
-  Note that no change is written to disk until commit() is called on the
-  session.
-  """
-  instance = session.query(model).filter_by(**kwargs).first()
-  if not instance:
-    params = {k: v for k, v in kwargs.items()
-              if not isinstance(v, sql.sql.expression.ClauseElement)}
-    params.update(defaults or {})
-    instance = model(**params)
-    session.add(instance)
-
-    # logging
-    logging.debug('new %s record', model.__name__)
-
-  return instance

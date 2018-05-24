@@ -304,6 +304,12 @@ py_test(
 )
 
 py_library(
+    name = "sqlutil",
+    srcs = ["sqlutil.py"],
+    visibility = ["//visibility:public"],
+)
+
+py_library(
     name = "system",
     srcs = ["system.py"],
     visibility = ["//visibility:public"],

@@ -12,9 +12,11 @@ from sqlalchemy.dialects import mysql
 import deeplearning.deepsmith.profiling_event
 import deeplearning.deepsmith.testbed
 import deeplearning.deepsmith.testcase
+import lib.labm8.sqlutil
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from lib.labm8 import labdate, pbutil
+
 
 # The index types for tables defined in this file.
 _ResultId = sql.Integer
@@ -31,33 +33,30 @@ class Result(db.Table):
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
-    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-    nullable=False, default=labdate.GetUtcMillisecondsNow)
-  testcase_id: int = sql.Column(
-    deeplearning.deepsmith.testcase.Testcase.id_t,
-    sql.ForeignKey('testcases.id'), nullable=False)
-  testbed_id: int = sql.Column(
-    deeplearning.deepsmith.testbed.Testbed.id_t,
-    sql.ForeignKey('testbeds.id'), nullable=False)
+    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'), nullable=False,
+    default=labdate.GetUtcMillisecondsNow)
+  testcase_id: int = sql.Column(deeplearning.deepsmith.testcase.Testcase.id_t,
+                                sql.ForeignKey('testcases.id'), nullable=False)
+  testbed_id: int = sql.Column(deeplearning.deepsmith.testbed.Testbed.id_t,
+                               sql.ForeignKey('testbeds.id'), nullable=False)
   returncode: int = sql.Column(sql.SmallInteger, nullable=False)
   outputset_id: bytes = sql.Column(_ResultOutputSetId, nullable=False)
 
   # Relationships.
   testcase: deeplearning.deepsmith.testcase.Testcase = orm.relationship(
     'Testcase', back_populates='results')
-  testbed: deeplearning.deepsmith.testbed.Testbed = orm.relationship(
-    'Testbed', back_populates='results')
-  outputset: typing.List['ResultOutput'] = orm.relationship(
-    'ResultOutput', secondary='result_outputsets',
-    primaryjoin='ResultOutputSet.id == Result.outputset_id',
-    secondaryjoin='ResultOutputSet.output_id == ResultOutput.id')
+  testbed: deeplearning.deepsmith.testbed.Testbed = orm.relationship('Testbed',
+                                                                     back_populates='results')
+  outputset: typing.List['ResultOutput'] = orm.relationship('ResultOutput',
+                                                            secondary='result_outputsets',
+                                                            primaryjoin='ResultOutputSet.id == Result.outputset_id',
+                                                            secondaryjoin='ResultOutputSet.output_id == ResultOutput.id')
   profiling_events: typing.List['ResultProfilingEvent'] = orm.relationship(
     'ResultProfilingEvent', back_populates='result')
 
   # Constraints.
   __table_args__ = (
-    sql.UniqueConstraint('testcase_id', 'testbed_id', name='unique_result'),
-  )
+    sql.UniqueConstraint('testcase_id', 'testbed_id', name='unique_result'),)
 
   @property
   def outputs(self) -> typing.Dict[str, str]:
@@ -66,8 +65,8 @@ class Result(db.Table):
     Returns:
       A map of result outputs.
     """
-    return {output.name.string: output.value.truncated_value
-            for output in self.outputset}
+    return {output.name.string: output.value.truncated_value for output in
+            self.outputset}
 
   def SetProto(self, proto: deepsmith_pb2.Result) -> deepsmith_pb2.Result:
     """Set a protocol buffer representation.
@@ -100,12 +99,10 @@ class Result(db.Table):
   @classmethod
   def GetOrAdd(cls, session: db.session_t,
                proto: deepsmith_pb2.Result) -> 'Result':
-    testcase = deeplearning.deepsmith.testcase.Testcase.GetOrAdd(
-      session, proto.testcase
-    )
-    testbed = deeplearning.deepsmith.testbed.Testbed.GetOrAdd(
-      session, proto.testbed
-    )
+    testcase = deeplearning.deepsmith.testcase.Testcase.GetOrAdd(session,
+                                                                 proto.testcase)
+    testbed = deeplearning.deepsmith.testbed.Testbed.GetOrAdd(session,
+                                                              proto.testbed)
 
     # Build the list of outputs, and md5sum the key value strings.
     outputs = []
@@ -113,35 +110,30 @@ class Result(db.Table):
     for proto_output_name in sorted(proto.outputs):
       proto_output_value = proto.outputs[proto_output_name]
       md5.update((proto_output_name + proto_output_value).encode('utf-8'))
-      output = db.GetOrAdd(
-        session, ResultOutput,
-        name=ResultOutputName.GetOrAdd(
-          session, string=proto_output_name,
-        ),
-        value=ResultOutputValue.GetOrAdd(
-          session, string=proto_output_value
-        ),
-      )
+      output = lib.labm8.sqlutil.GetOrAdd(session, ResultOutput,
+                                          name=ResultOutputName.GetOrAdd(
+                                            session,
+                                            string=proto_output_name, ),
+                                          value=ResultOutputValue.GetOrAdd(
+                                            session,
+                                            string=proto_output_value), )
       outputs.append(output)
 
     # Create invariant optset table entries.
     outputset_id = md5.digest()
     for output in outputs:
-      db.GetOrAdd(session, ResultOutputSet, id=outputset_id, output=output)
+      lib.labm8.sqlutil.GetOrAdd(session, ResultOutputSet, id=outputset_id,
+                                 output=output)
 
-    result = db.GetOrAdd(
-      session, cls,
-      testcase=testcase,
-      testbed=testbed,
-      returncode=proto.returncode,
-      outputset_id=outputset_id,
-    )
+    result = lib.labm8.sqlutil.GetOrAdd(session, cls, testcase=testcase,
+                                        testbed=testbed,
+                                        returncode=proto.returncode,
+                                        outputset_id=outputset_id, )
 
     # Add profiling events.
     for event in proto.profiling_events:
       deeplearning.deepsmith.profiling_event.ResultProfilingEvent.GetOrAdd(
-        session, event
-      ).result = result
+        session, event).result = result
 
     return result
 
@@ -181,19 +173,19 @@ class ResultOutputSet(db.Table):
 
   # Columns.
   id: bytes = sql.Column(id_t, nullable=False)
-  output_id: int = sql.Column(
-    _ResultOutputId, sql.ForeignKey('result_outputs.id'), nullable=False)
+  output_id: int = sql.Column(_ResultOutputId,
+                              sql.ForeignKey('result_outputs.id'),
+                              nullable=False)
 
   # Relationships.
-  results: typing.List[Result] = orm.relationship(
-    Result, primaryjoin=id == orm.foreign(Result.outputset_id))
+  results: typing.List[Result] = orm.relationship(Result,
+                                                  primaryjoin=id == orm.foreign(
+                                                    Result.outputset_id))
   output: 'ResultOutput' = orm.relationship('ResultOutput')
 
   # Constraints.
-  __table_args__ = (
-    sql.PrimaryKeyConstraint(
-      'id', 'output_id', name='unique_result_outputset'),
-  )
+  __table_args__ = (sql.PrimaryKeyConstraint('id', 'output_id',
+                                             name='unique_result_outputset'),)
 
   def __repr__(self):
     hex_id = binascii.hexlify(self.id).decode('utf-8')
@@ -208,25 +200,24 @@ class ResultOutput(db.Table):
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
-    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-    nullable=False, default=labdate.GetUtcMillisecondsNow)
-  name_id: _ResultOutputNameId = sql.Column(
-    _ResultOutputNameId, sql.ForeignKey('result_output_names.id'),
-    nullable=False)
-  value_id: _ResultOutputValueId = sql.Column(
-    _ResultOutputValueId, sql.ForeignKey('result_output_values.id'),
-    nullable=False)
+    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'), nullable=False,
+    default=labdate.GetUtcMillisecondsNow)
+  name_id: _ResultOutputNameId = sql.Column(_ResultOutputNameId, sql.ForeignKey(
+    'result_output_names.id'), nullable=False)
+  value_id: _ResultOutputValueId = sql.Column(_ResultOutputValueId,
+                                              sql.ForeignKey(
+                                                'result_output_values.id'),
+                                              nullable=False)
 
   # Relationships.
-  name: 'ResultOutputName' = orm.relationship(
-    'ResultOutputName', back_populates='outputs')
-  value: 'ResultOutputValue' = orm.relationship(
-    'ResultOutputValue', back_populates='outputs')
+  name: 'ResultOutputName' = orm.relationship('ResultOutputName',
+                                              back_populates='outputs')
+  value: 'ResultOutputValue' = orm.relationship('ResultOutputValue',
+                                                back_populates='outputs')
 
   # Constraints.
   __table_args__ = (
-    sql.UniqueConstraint('name_id', 'value_id', name='unique_result_output'),
-  )
+    sql.UniqueConstraint('name_id', 'value_id', name='unique_result_output'),)
 
   def __repr__(self):
     return f'{self.name}: {self.value}'
@@ -238,8 +229,8 @@ class ResultOutputName(db.StringTable):
   __tablename__ = 'result_output_names'
 
   # Relationships.
-  outputs: typing.List[ResultOutput] = orm.relationship(
-    ResultOutput, back_populates='name')
+  outputs: typing.List[ResultOutput] = orm.relationship(ResultOutput,
+                                                        back_populates='name')
 
 
 class ResultOutputValue(db.Table):
@@ -252,8 +243,8 @@ class ResultOutputValue(db.Table):
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
-    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-    nullable=False, default=labdate.GetUtcMillisecondsNow)
+    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'), nullable=False,
+    default=labdate.GetUtcMillisecondsNow)
   original_md5: bytes = sql.Column(
     sql.Binary(16).with_variant(mysql.BINARY(16), 'mysql'), nullable=False,
     index=True, unique=True)
@@ -269,8 +260,8 @@ class ResultOutputValue(db.Table):
   truncated_charcount = sql.Column(sql.Integer, nullable=False)
 
   # Relationships.
-  outputs: typing.List[ResultOutput] = orm.relationship(
-    ResultOutput, back_populates='value')
+  outputs: typing.List[ResultOutput] = orm.relationship(ResultOutput,
+                                                        back_populates='value')
 
   @classmethod
   def GetOrAdd(cls, session: db.session_t, string: str) -> 'ResultOutputValue':
@@ -300,17 +291,15 @@ class ResultOutputValue(db.Table):
       truncated_md5 = original_md5
       truncated_linecount = original_linecount
       truncated_charcount = original_charcount
-    return db.GetOrAdd(
-      session, cls,
-      original_md5=original_md5,
-      original_linecount=original_linecount,
-      original_charcount=original_charcount,
-      truncated=True if original_charcount > cls.max_len else False,
-      truncated_value=truncated,
-      truncated_md5=truncated_md5,
-      truncated_linecount=truncated_linecount,
-      truncated_charcount=truncated_charcount,
-    )
+    return lib.labm8.sqlutil.GetOrAdd(session, cls, original_md5=original_md5,
+                                      original_linecount=original_linecount,
+                                      original_charcount=original_charcount,
+                                      truncated=True if original_charcount >
+                                                        cls.max_len else False,
+                                      truncated_value=truncated,
+                                      truncated_md5=truncated_md5,
+                                      truncated_linecount=truncated_linecount,
+                                      truncated_charcount=truncated_charcount, )
 
   def __repr__(self):
     return self.truncated_value[:50] or ''
@@ -336,29 +325,24 @@ class PendingResult(db.Table):
   # Columns:
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
-    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-    nullable=False, default=labdate.GetUtcMillisecondsNow)
+    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'), nullable=False,
+    default=labdate.GetUtcMillisecondsNow)
   # The date that the result is due by.
   deadline: datetime.datetime = sql.Column(
-    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-    nullable=False)
+    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'), nullable=False)
   # The testcase that was issued.
-  testcase_id: int = sql.Column(
-    deeplearning.deepsmith.testcase.Testcase.id_t,
-    sql.ForeignKey('testcases.id'), nullable=False)
+  testcase_id: int = sql.Column(deeplearning.deepsmith.testcase.Testcase.id_t,
+                                sql.ForeignKey('testcases.id'), nullable=False)
   # The testbed that the testcase was issued to.
-  testbed_id: int = sql.Column(
-    deeplearning.deepsmith.testbed.Testbed.id_t,
-    sql.ForeignKey('testbeds.id'), nullable=False)
+  testbed_id: int = sql.Column(deeplearning.deepsmith.testbed.Testbed.id_t,
+                               sql.ForeignKey('testbeds.id'), nullable=False)
 
   # Relationships:
   testcase: deeplearning.deepsmith.testcase.Testcase = orm.relationship(
     'Testcase', back_populates='pending_results')
-  testbed: deeplearning.deepsmith.testbed.Testbed = orm.relationship(
-    'Testbed', back_populates='pending_results')
+  testbed: deeplearning.deepsmith.testbed.Testbed = orm.relationship('Testbed',
+                                                                     back_populates='pending_results')
 
   # Constraints:
-  __table_args__ = (
-    sql.UniqueConstraint(
-      'testcase_id', 'testbed_id', name='unique_pending_result'),
-  )
+  __table_args__ = (sql.UniqueConstraint('testcase_id', 'testbed_id',
+                                         name='unique_pending_result'),)
