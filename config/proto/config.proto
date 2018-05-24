@@ -31,4 +31,6 @@ message GlobalConfigPaths {
   required string clang_format = 6;
   // The path of the system python.
   required string python = 7;
+  // The path to the project's LLVM root.
+  required string llvm_prefix = 8;
 }

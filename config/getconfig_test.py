@@ -23,6 +23,7 @@ def test_GetGlobalConfig_system_values():
   assert config.paths.HasField('libclang_so')
   assert config.paths.HasField('clang_format')
   assert config.paths.HasField('python')
+  assert config.paths.HasField('llvm_prefix')
   assert config.HasField('with_cuda')
 
 
@@ -45,11 +46,13 @@ def test_GlobalConfigPaths_cxx():
   assert pathlib.Path(config.paths.cxx).is_file()
   assert os.access(config.paths.cxx, os.X_OK)
 
+
 def test_GlobalConfigPaths_opt():
   """Test that opt is an executable."""
   config = getconfig.GetGlobalConfig()
   assert pathlib.Path(config.paths.opt).is_file()
   assert os.access(config.paths.opt, os.X_OK)
+
 
 def test_GlobalConfigPaths_libclang_so():
   """Test that libclang_so is a file, if set."""
@@ -57,17 +60,27 @@ def test_GlobalConfigPaths_libclang_so():
   if config.paths.libclang_so:
     assert pathlib.Path(config.paths.libclang_so).is_file()
 
+
 def test_GlobalConfigPaths_clang_format():
   """Test that clang-format is an executable."""
   config = getconfig.GetGlobalConfig()
   assert pathlib.Path(config.paths.clang_format).is_file()
   assert os.access(config.paths.clang_format, os.X_OK)
 
+
 def test_GlobalConfigPaths_python():
   """Test that python is an executable."""
   config = getconfig.GetGlobalConfig()
   assert pathlib.Path(config.paths.python).is_file()
   assert os.access(config.paths.python, os.X_OK)
+
+
+def test_GlobalConfigPaths_llvm_prefix():
+  """Test that llvm_prefix is a directory."""
+  config = getconfig.GetGlobalConfig()
+  assert pathlib.Path(config.paths.llvm_prefix).is_dir()
+  assert (pathlib.Path(
+    config.paths.llvm_prefix) / 'bin' / 'llvm-config').is_file()
 
 
 def main(argv):
