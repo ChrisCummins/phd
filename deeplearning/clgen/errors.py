@@ -64,27 +64,22 @@ class ClangFormatException(ClangException):
   pass
 
 
-class UglyCodeException(CLgenError):
-  """Code is ugly."""
-  pass
-
-
-class InstructionCountException(UglyCodeException):
-  """Instruction count error."""
-  pass
-
-
-class NoCodeException(UglyCodeException):
-  """Sample contains no code."""
-  pass
-
-
-class RewriterException(UglyCodeException):
+class RewriterException(ClangException):
   """Program rewriter error."""
   pass
 
 
-class GPUVerifyException(UglyCodeException):
+class InstructionCountException(BadCodeException):
+  """Instruction count error."""
+  pass
+
+
+class NoCodeException(BadCodeException):
+  """Sample contains no code."""
+  pass
+
+
+class GPUVerifyException(BadCodeException):
   """GPUVerify found a bug."""
   pass
 
