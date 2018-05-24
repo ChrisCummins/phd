@@ -203,14 +203,21 @@ kernel void bar(global int* a) {
   // No code, therefore ugly.
 }
 """)
-  # TODO(cec): Update preprocessor list after implementing preprocessor logic.
-  c = corpus.Corpus(corpus_pb2.Corpus(language="opencl", path=abc_corpus,
-                                      ascii_character_atomizer=True,
-                                      preprocessors=['opencl'],
-                                      sequence_length=10))
+  config = corpus_pb2.Corpus(language="opencl", path=abc_corpus,
+                             sequence_length=10, ascii_character_atomizer=True,
+                             preprocessor=[
+                               'deeplearning.clgen.preprocessors.opencl:ClangPreprocessWithShim',
+                               'deeplearning.clgen.preprocessors.opencl:Compile',
+                               'deeplearning.clgen.preprocessors.opencl:NormalizeIdentifiers',
+                               'deeplearning.clgen.preprocessors.opencl:StripDoubleUnderscorePrefixes',
+                               'deeplearning.clgen.preprocessors.common:StripDuplicateEmptyLines',
+                               'deeplearning.clgen.preprocessors.opencl:SanitizeKernelPrototype',
+                               'deeplearning.clgen.preprocessors.common:StripTrailingWhitespace',
+                               'deeplearning.clgen.preprocessors.cxx:ClangFormat',
+                               'deeplearning.clgen.preprocessors.common:MinimumLineCount3'])
+  c = corpus.Corpus(config)
   assert len(list(c.GetPreprocessedKernels())) == 1
-  assert len(list(c.GetPreprocessedKernels(1))) == 3
-  assert len(list(c.GetPreprocessedKernels(2))) == 1
+  assert len(list(c.GetPreprocessedKernels(1))) == 4
 
 
 def test_Corpus_ConcatenateTextCorpus_no_shuffle(clgen_cache_dir, abc_corpus):

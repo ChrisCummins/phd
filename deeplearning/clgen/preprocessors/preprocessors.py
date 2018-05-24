@@ -228,7 +228,7 @@ def _DoPreprocessDatabase(db_path: pathlib.Path, language: languages.Language,
     for producer in producers:
       producer.start()
     # Consume the results from the worker threads in the main thread.
-    db = dbutil.connect(db_path)
+    db = dbutil.connect(str(db_path))
     for _ in progressbar.ProgressBar()(range(len(todo))):
       num_preprocessed += 1
       # Block until another result comes in.
@@ -275,7 +275,7 @@ def PreprocessDatabase(db_path: pathlib.Path, language: languages.Language,
   Returns:
     True if the database was modified, else False.
   """
-  db = dbutil.connect(db_path)
+  db = dbutil.connect(str(db_path))
   is_modified = dbutil.is_modified(db)
   max_retries = 10
   if is_modified:

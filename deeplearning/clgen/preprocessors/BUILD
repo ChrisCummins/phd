@@ -23,7 +23,7 @@ py_test(
 py_library(
     name = "common",
     srcs = ["common.py"],
-    visibility = ["//deeplearning/clgen/preprocessors:__subpackages__"],
+    visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = [
         ":preprocessors",
         "//config:getconfig",
@@ -45,7 +45,7 @@ py_test(
 py_library(
     name = "cxx",
     srcs = ["cxx.py"],
-    visibility = ["//deeplearning/clgen/preprocessors:__subpackages__"],
+    visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = [
         ":clang",
         ":preprocessors",
@@ -88,7 +88,7 @@ py_test(
 py_library(
     name = "opencl",
     srcs = ["opencl.py"],
-    visibility = ["//deeplearning/clgen/preprocessors:__subpackages__"],
+    visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = [
         ":clang",
         ":normalizer",
