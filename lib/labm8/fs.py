@@ -1,5 +1,6 @@
 """High level filesystem interface.
 """
+import contextlib
 import os
 import os.path
 import pathlib
@@ -544,3 +545,25 @@ def directory_is_empty(directory: pathlib.Path) -> bool:
     if subdirs or files:
       return False
   return True
+
+
+@contextlib.contextmanager
+def chdir(directory: typing.Union[str, pathlib.Path]) -> pathlib.Path:
+  """A context manager which allows you to temporarily change working directory.
+
+  Args:
+    directory: The directory to change to.
+
+  Returns:
+    The directory which has been changed to.
+
+  Raises:
+    OSError: If the given directory does not exist.
+    NotADirectoryError: If the given path is a file.
+  """
+  previous_directory = pathlib.Path.cwd()
+  os.chdir(str(directory))
+  try:
+    yield pathlib.Path(directory)
+  finally:
+    os.chdir(str(previous_directory))

@@ -440,6 +440,44 @@ def test_directory_is_empty_file_argument():
     assert fs.directory_is_empty(pathlib.Path(d) / 'a')
 
 
+# chdir()
+
+def test_chdir_yield_value():
+  """Test that chdir() yields the requested directory as a pathlib.Path."""
+  with tempfile.TemporaryDirectory() as d:
+    with fs.chdir(d) as d2:
+      assert pathlib.Path(d) == d2
+
+
+def test_chdir_cwd():
+  """Test that chdir() correctly changes the working directory."""
+  with tempfile.TemporaryDirectory() as d:
+    with fs.chdir(d):
+      # Bazel sandboxing only changes to directories within the sandbox, so
+      # there may be an unwanted prefix like /private that we can ignore.
+      assert os.getcwd().endswith(d)
+
+
+def test_chdir_not_a_directory():
+  """Test that FileNotFoundError is raised if requested path does not exist."""
+  with pytest.raises(FileNotFoundError) as e_info:
+    with fs.chdir('/not/a/real/path'):
+      pass
+  assert "No such file or directory: '/not/a/real/path'" in str(e_info)
+
+
+def test_chdir_file_argument():
+  """Test that NotADirectoryError is raised if requested path is a file."""
+  with tempfile.NamedTemporaryFile(prefix='labm8_') as f:
+    with pytest.raises(NotADirectoryError) as e_info:
+      with fs.chdir(f.name):
+        pass
+    # Bazel sandboxing only changes to directories within the sandbox, so there
+    # may be an unwanted prefix like /private that we can ignore.
+    assert f"Not a directory: '" in str(e_info)
+    assert f.name in str(e_info)
+
+
 def main(argv):  # pylint: disable=missing-docstring
   del argv
   sys.exit(pytest.main([__file__, '-v']))
