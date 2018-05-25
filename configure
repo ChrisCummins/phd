@@ -1,21 +1,85 @@
 #!/usr/bin/env python
-# Bootstrap and configure the project.
+"""Configure and build the phd toolchain.
 
+Creates a config.pbtxt proto.
+"""
 import argparse
+import logging
+import os
+import re
+import subprocess
 import sys
+
+
+def GetCudaHome():
+  """Get the CUDA home directory."""
+  return os.environ.get('CUDA_HOME', '/usr/local/cuda')
 
 
 def GuessIfCudaIsAvailable():
   """Guess if CUDA is available on the host."""
-  pass
+  nvcc_path = os.path.join(GetCudaHome(), 'bin/nvcc')
+  is_available = os.path.isfile(nvcc_path)
+  if is_available:
+    logging.info("CUDA found at: '%s'.", nvcc_path)
+  else:
+    logging.info("File does not exist: '%s'. Disabling CUDA support.",
+                 nvcc_path)
+  return is_available
+
+
+def IsGitRepo():
+  """Determine if it is a git repo."""
+  return os.path.isdir(os.path.join(os.path.dirname(__file__), '.git'))
+
+
+def GetGitRemote():
+  """Get the git remote for this repo."""
+  remotes = subprocess.check_output(
+      ['git', '-C', os.path.dirname(__file__), 'remote', '-v']).decode('utf-8')
+  return remotes.split('\n')[0].split()[1]
+
+
+def RewriteGitSubmodulesToHttps():
+  """Rewrite git@ prefixed submodules to https://."""
+  with open(os.path.join(os.path.dirname(__file__), '.gitmodules')) as f:
+    modules = f.read()
+  new_modules = re.sub(r'(url\s*=\s*)git@', r'\1https=', modules)
+  assert 'git@' not in new_modules
+  with open(os.path.join(os.path.dirname(__file__), '.gitmodules'), 'w') as f:
+    f.write(new_modules)
 
 
 def main(argv):
+  logging.basicConfig(level=logging.DEBUG, format='%(message)s')
+
   parser = argparse.ArgumentParser()
-  parser.add_argument('--with_cuda', action='store_true',
-                      help=('If true, enable CUDA support. This requires that '
+  parser.add_argument('--with_cuda', dest='cuda', action='store_true',
+                      help=('Enable CUDA support. This requires that '
                             'CUDA is installed on the host machine.'))
+  parser.add_argument('--nowith_cuda', dest='cuda', action='store_false',
+                      help=('Disable CUDA support.'))
+  parser.set_defaults(cuda=True)
   args = parser.parse_args(argv)
+
+  if IsGitRepo():
+    git_remote = GetGitRemote()
+    logging.info('Git remote: %s', git_remote)
+    # Rewrite git@ to https:// if required.
+    if git_remote.startswith('https://'):
+      logging.info('Rewriting .gitmodules to use https://')
+      RewriteGitSubmodulesToHttps()
+    # Update submodules.
+    logging.info('Updating git submodules.')
+    subprocess.check_call(['git', '-C', os.path.dirname(__file__),
+                           'submodule', 'update', '--init', '--recursive'],
+                          stdout=subprocess.DEVNULL)
+  else:
+    logging.info('Not a git repo.')
+
+  with_cuda = False
+  if args.cuda and GuessIfCudaIsAvailable():
+    with_cuda = True
 
   # TODO(cec): Implement!
 
