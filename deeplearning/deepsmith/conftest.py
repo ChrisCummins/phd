@@ -7,6 +7,7 @@ See the conftest.py documentation for more details:
 https://docs.pytest.org/en/latest/fixture.html#conftest-py-sharing-fixture-functions
 """
 import pathlib
+
 import pytest
 
 from deeplearning.deepsmith import datastore
@@ -26,7 +27,8 @@ def _ReadTestDataStoreFiles() -> datastore_pb2.DataStoreTestSet:
   Raises:
     AssertionError: In case of error reading datastore configs.
   """
-  paths = list(pathlib.Path('deeplearning/deepsmith/tests/data/datastores').iterdir())
+  paths = list(
+      pathlib.Path('deeplearning/deepsmith/tests/data/datastores').iterdir())
   assert paths
   names = [p.stem for p in paths]
   protos = [pbutil.FromFile(path, datastore_pb2.DataStore())
@@ -47,7 +49,8 @@ _DATASTORE_TESTSET = _ReadTestDataStoreFiles()
 
 
 @pytest.fixture(ids=_DATASTORE_TESTSET.values.keys(),
-                params=_DATASTORE_TESTSET.values.values())
+                params=_DATASTORE_TESTSET.values.values(),
+                scope='function')
 def ds(request) -> datastore.DataStore:
   """Create an in-memory SQLite datastore for testing.
 
@@ -60,7 +63,8 @@ def ds(request) -> datastore.DataStore:
 
 
 @pytest.fixture(ids=_DATASTORE_TESTSET.values.keys(),
-                params=_DATASTORE_TESTSET.values.values())
+                params=_DATASTORE_TESTSET.values.values(),
+                scope='function')
 def session(request) -> db.session_t:
   """Create a session for an in-memory SQLite datastore.
 
