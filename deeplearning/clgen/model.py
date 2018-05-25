@@ -65,13 +65,18 @@ class Model(object):
     """Compute model hash.
 
     The hash is computed from the ID of the corpus and the serialized
-    representation of the config proto.
+    representation of the config proto. The number of epochs that the model is
+    trained for does not affect the hash, since we can share checkpoints
+    between different models if the only variable is the epoch count. E.g.
+    we have a model trained for 10 epochs, we can use the checkpoint as the
+    starting point for a training a model for 20 epochs.
     """
-    config_without_corpus = model_pb2.Model()
-    config_without_corpus.CopyFrom(config)
-    config_without_corpus.ClearField('corpus')
+    config_to_hash = model_pb2.Model()
+    config_to_hash.CopyFrom(config)
+    config_to_hash.ClearField('corpus')
+    config_to_hash.training.ClearField('num_epochs')
     return crypto.sha1_list(corpus_.hash,
-                            config_without_corpus.SerializeToString())
+                            config_to_hash.SerializeToString())
 
   def InitAndGetTensorflow(self, infer: bool = False):
     """Import Tensorflow runtime and return it.
