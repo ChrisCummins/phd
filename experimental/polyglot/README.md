@@ -30,5 +30,4 @@ $ git rev-parse HEAD
 1969647a89e1c56060da20065946f17f1e412855
 $ bazel run //datasets/github/scrape_repos:importer -- \
     --clone_list=$PHD/experimental/polyglot/clone_list.pbtxt
-    --contentfiles_path=/var/phd/datasets/github/contentfiles.db
 ```

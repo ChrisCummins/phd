@@ -38,10 +38,9 @@ $ bazel run //datasets/github/scrape_repos:cloner -- \
     --clone_list=$PWD/clone_list.pbtxt
 ```
 
-Run the importer to put source files into a contentfiles database:
+Run the importer to put source files into contentfiles databases:
 
 ```sh
 $ bazel run //datasets/github/scrape_repos:importer -- \
-    --clone_list=$PWD/clone_list.pbtxt \
-    --contentfiles_path=/var/cloned.db
+    --clone_list=$PWD/clone_list.pbtxt
 ``` 
