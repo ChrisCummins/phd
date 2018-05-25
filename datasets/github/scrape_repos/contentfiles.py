@@ -83,6 +83,8 @@ class ContentFile(Base):
   text: str = sql.Column(sql.UnicodeText(), nullable=False)
   date_added: datetime.datetime = sql.Column(sql.DateTime, nullable=False,
                                              default=datetime.datetime.utcnow)
+  __table_args__ = (
+    sql.UniqueConstraint('clone_from_url', 'relpath', name='uniq_contentfile'),)
 
   @classmethod
   def FromFile(cls, repo: GitHubRepository, clone_dir: pathlib.Path,
