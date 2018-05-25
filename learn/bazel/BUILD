@@ -3,13 +3,13 @@
 py_test(
     name = "python_binary",
     srcs = ["python_binary.py"],
-    deps = ["//lib/labm8:bazelutil"],
     data = [
         ":data_binary",
         ":data_file",
     ],
     default_python_version = "PY3",
     srcs_version = "PY3",
+    deps = ["//lib/labm8:bazelutil"],
 )
 
 filegroup(
