@@ -1,6 +1,8 @@
 <component name="ProjectDictionaryState">
   <dictionary name="cec">
     <words>
+      <w>bazel</w>
+      <w>bazelutil</w>
       <w>cflags</w>
       <w>clgen</w>
       <w>contentfile</w>
@@ -10,12 +12,14 @@
       <w>deeplearning</w>
       <w>gsize</w>
       <w>inlining</w>
+      <w>labm</w>
       <w>lsize</w>
       <w>lstm</w>
       <w>opencl</w>
       <w>preprocess</w>
       <w>preprocessing</w>
       <w>rewriter</w>
+      <w>runfiles</w>
       <w>stdin</w>
       <w>subdirs</w>
       <w>uname</w>
