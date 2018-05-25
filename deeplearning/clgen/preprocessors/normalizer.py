@@ -65,7 +65,7 @@ def NormalizeIdentifiers(text: str, suffix: str, cflags: typing.List[str],
   EUGLY_CODE = 204
   if process.returncode == EUGLY_CODE:
     # Propagate the error:
-    raise errors.RewriterException(text)
+    raise errors.RewriterException(stderr)
   elif process.returncode == 9:
     raise errors.ClangTimeout(
       f'clgen-rewriter failed to complete after {timeout_seconds}s')
