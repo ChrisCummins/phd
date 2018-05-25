@@ -71,7 +71,7 @@ def abc_corpus_archive(abc_corpus) -> str:
 def abc_corpus_config(abc_corpus):
   """The proto config for a simple Corpus."""
   return corpus_pb2.Corpus(language="opencl", path=abc_corpus,
-                           ascii_character_atomizer=True, sequence_length=2,
+                           ascii_character_atomizer=True, sequence_length=10,
                            contentfile_separator='\n\n')
 
 
