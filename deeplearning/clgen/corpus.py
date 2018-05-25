@@ -226,12 +226,8 @@ WHERE ContentFiles.id NOT IN (
   def _CreateCorpusText(self) -> None:
     """creates and caches corpus.txt"""
     logging.debug('creating corpus')
-
-    # TODO: additional options in corpus JSON to accomodate for EOF,
-    # different encodings etc.
-    tmppath = self.cache.keypath("corpus.txt.tmp")
-    dbutil.dump_db(self.contentfiles_cache["kernels.db"], tmppath)
-    self.cache["corpus.txt"] = tmppath
+    with open(self.cache.keypath('corpus.txt'), 'w') as f:
+      f.write(self.ConcatenateTextCorpus(shuffle=True))
 
   def _ReadCorpusTxt(self) -> str:
     with codecs.open(self.cache["corpus.txt"], encoding="utf-8") as infile:
