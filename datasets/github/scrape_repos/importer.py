@@ -90,7 +90,7 @@ def main(argv):
 
   for language in clone_list.language:
     d = pathlib.Path(language.destination_directory)
-    d = d.parents / d.name + '.db'
+    d = d.parent / (str(d.name) + '.db')
     db = contentfiles.ContentFiles(d)
     if pathlib.Path(language.destination_directory).is_dir():
       ImportFromLanguage(db, language)
