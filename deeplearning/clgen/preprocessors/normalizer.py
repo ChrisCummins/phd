@@ -10,13 +10,14 @@ from absl import logging
 
 from config import getconfig
 from deeplearning.clgen import errors
+from lib.labm8 import bazelutil
 
 
 FLAGS = flags.FLAGS
 
 _config = getconfig.GetGlobalConfig()
-CLGEN_REWRITER = pathlib.Path(
-  'deeplearning/clgen/native/clgen-rewriter').absolute()
+CLGEN_REWRITER = bazelutil.DataPath(
+    'phd/deeplearning/clgen/native/clgen-rewriter')
 assert CLGEN_REWRITER.is_file()
 
 # On Linux we must preload the libclang library.

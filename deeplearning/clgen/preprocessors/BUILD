@@ -95,6 +95,7 @@ py_library(
     deps = [
         "//config:getconfig",
         "//deeplearning/clgen:errors",
+        "//lib/labm8:bazelutil",
     ],
 )
 

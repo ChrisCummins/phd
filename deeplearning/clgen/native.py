@@ -16,6 +16,7 @@ Attributes:
 
 from config import getconfig
 from deeplearning.clgen import package_util
+from lib.labm8 import bazelutil
 from lib.labm8 import fs
 
 
@@ -27,15 +28,15 @@ LIBCLANG_SO = None
 if _config.paths.libclang_so:
   LIBCLANG_SO = package_util.must_exist(_config.paths.libclang_so)
 CLGEN_FEATURES = package_util.must_exist(
-  fs.abspath('deeplearning/clgen/native/clgen-features'))
+  bazelutil.DataPath('phd/deeplearning/clgen/native/clgen-features'))
 CLGEN_REWRITER = package_util.must_exist(
-  fs.abspath('deeplearning/clgen/native/clgen-rewriter'))
+  bazelutil.DataPath('phd/deeplearning/clgen/native/clgen-rewriter'))
 LIBCLC = package_util.must_exist(
-  fs.abspath('third_party/libclc/generic/include'))
+  bazelutil.DataPath('phd/third_party/libclc/generic/include'))
 OPENCL_H = package_util.must_exist(
-  fs.abspath('deeplearning/clgen/data/include/opencl.h'))
+  bazelutil.DataPath('phd/deeplearning/clgen/data/include/opencl.h'))
 SHIMFILE = package_util.must_exist(
-  fs.abspath('deeplearning/clgen/data/include/opencl-shim.h'))
+  bazelutil.DataPath('phd/deeplearning/clgen/data/include/opencl-shim.h'))
 # On Linux, we use @libcxx//:headers. On MacOS we use the homebrew libcxx
 # headers since @libcxx//:headers raise compilation errors and appear to be
 # incompatible.
@@ -43,7 +44,7 @@ if _config.uname == 'darwin':
   LIBCXX_HEADERS = package_util.must_exist(
     fs.abspath(_config.paths.llvm_prefix, 'include/c++/v1'))
 else:
-  LIBCXX_HEADERS = package_util.must_exist(fs.abspath('../libcxx/include'))
+  LIBCXX_HEADERS = package_util.must_exist(bazelutil.DataPath('libcxx/include'))
 # TODO(cec): Add these remaining files.
 GPUVERIFY = 'TODO'
 OCLGRIND = 'TODO'
