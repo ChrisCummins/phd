@@ -52,6 +52,12 @@ def test_DataPath_read_file():
     assert f.read() == 'Hello, world!\n'
 
 
+def test_DataPath_directory():
+  """Test that DataPath returns the path to a directory."""
+  assert str(bazelutil.DataPath('phd/lib/labm8/data/test')).endswith(
+      'phd/lib/labm8/data/test')
+
+
 def test_DataPath_different_working_dir():
   """Test that DataPath is not affected by current working dir."""
   p = bazelutil.DataPath('phd/lib/labm8/data/test/hello_world')

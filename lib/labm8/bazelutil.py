@@ -61,8 +61,10 @@ def DataPath(path: typing.Union[str, pathlib.Path]) -> pathlib.Path:
   Raises:
     FileNotFoundError: If the requested path is not found.
   """
+  if not str(path):
+    raise FileNotFoundError(f"No such file or directory: ''")
   runfiles = FindRunfilesDirectory()
   real_path = runfiles / path if runfiles else pathlib.Path(path).absolute()
-  if not real_path.is_file() or real_path.is_dir():
+  if not (real_path.is_file() or real_path.is_dir()):
     raise FileNotFoundError(f"No such file or directory: '{path}'")
   return real_path
