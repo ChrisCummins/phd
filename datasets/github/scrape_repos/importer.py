@@ -44,10 +44,10 @@ def ImportFromMetafile(db: contentfiles.ContentFiles,
     repo = contentfiles.GitHubRepository.GetOrAdd(s, meta)
     repo.language = language.language
     name_str = " -o ".join(
-      [f"-name '*{ext}'" for ext in FILE_EXTENSIONS[language.language]])
+        [f"-name '*{ext}'" for ext in FILE_EXTENSIONS[language.language]])
     paths = subprocess.check_output(
-      f"find {clone_dir} -type f {name_str} | grep -v '.git/' || true",
-      shell=True, universal_newlines=True).rstrip().split('\n')
+        f"find {clone_dir} -type f {name_str} | grep -v '.git/' || true",
+        shell=True, universal_newlines=True).rstrip().split('\n')
     if len(paths) == 1 and not paths[0]:
       logging.debug('No files to import from %s', clone_dir)
       return
@@ -71,7 +71,7 @@ def ImportFromLanguage(db: contentfiles.ContentFiles,
     repos_to_import = [pathlib.Path(language.destination_directory / f) for f in
                        pathlib.Path(language.destination_directory).iterdir() if
                        ShouldImport(s, pathlib.Path(
-                         language.destination_directory / f))]
+                           language.destination_directory / f))]
   logging.info('Importing %d %s repos ...', len(repos_to_import),
                language.language.capitalize())
   for metafile in repos_to_import:
