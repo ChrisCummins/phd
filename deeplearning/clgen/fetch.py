@@ -374,13 +374,9 @@ def fetch_repos(db_path: Path, indir: Path, lang: languages.Language) -> None:
     name = fs.basename(directory)
 
     output = subprocess.check_output(
-      f"git --git-dir {gitdir} rev-list --format=format:'%ai' " +
-      f"--max-count=1 $(git --git-dir "
-                                                                  f"{gitdir} "
-                                                                  f"rev-parse "
-                                                                  f"HEAD) | "
-                                                                  f"tail -n1",
-      shell=True, universal_newlines=True)
+      f"git --git-dir {gitdir} rev-list --format=format:'%ai' --max-count=1 "
+      f"$(git --git-dir {gitdir} rev-parse HEAD) | tail -n1", shell=True,
+      universal_newlines=True)
     try:
       updated_at = dateutil.parser.parse(output)
     except ValueError:

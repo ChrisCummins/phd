@@ -80,7 +80,6 @@ def main(argv) -> None:
   clone_list_path = pathlib.Path(FLAGS.clone_list or "")
   if not clone_list_path.is_file():
     raise app.UsageError('--clone_list is not a file.')
-
   clone_list = pbutil.FromFile(clone_list_path,
                                scrape_repos_pb2.LanguageCloneList())
 
