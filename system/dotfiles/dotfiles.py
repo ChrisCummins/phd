@@ -1840,6 +1840,16 @@ class Rsync(Task):
     Apt().install_package('rsync')
 
 
+
+class InotifyMaxUserWatchers(Task):
+  __platforms__ = ['linux']
+
+  def install_linux(self):
+    if not shell_ok('grep fs.inotify.max_user_watches /etc/sysctl.conf'):
+      shell("sudo sh -c 'echo fs.inotify.max_user_watches=1048576 >> /etc/sysctl.conf'")
+      shell('sudo sysctl -p')
+
+
 class PhdBuildDeps(Task):
   """ phd repo dependencies"""
   __platforms__ = ['linux', 'osx']
@@ -1852,6 +1862,9 @@ class PhdBuildDeps(Task):
       'LibExempi',
       'Python',
       'Rsync',
+  ]
+  __linux_deps__ = [
+      'InotifyMaxUserWatchers',
   ]
 
   def install(self):
