@@ -79,8 +79,8 @@ def abc_corpus_config(abc_corpus):
 def abc_model_config(abc_corpus_config):
   """The proto config for a simple Model."""
   architecture = model_pb2.NetworkArchitecture(
-    neuron_type=model_pb2.NetworkArchitecture.LSTM, neurons_per_layer=8,
-    num_layers=2)
+      neuron_type=model_pb2.NetworkArchitecture.LSTM, neurons_per_layer=8,
+      num_layers=2)
   training = model_pb2.TrainingOptions(num_epochs=1,
                                        shuffle_corpus_contentfiles_between_epochs=False,
                                        batch_size=5, gradient_clip=5,
