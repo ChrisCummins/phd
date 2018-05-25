@@ -75,7 +75,7 @@ class Corpus(object):
       path = UnpackDirectoryIfNeeded(pathlib.Path(config.path).absolute())
       if not fs.isdir(path):
         raise errors.UserError(
-          "Corpus path '{}' is not a directory".format(path))
+            "Corpus path '{}' is not a directory".format(path))
       if fs.directory_is_empty(path):
         raise errors.EmptyCorpusException(f"Corpus path '{path}' is empty")
       hasher = dirhashcache.DirHashCache(cache.cachepath("dirhash.db"), 'sha1')
@@ -282,11 +282,17 @@ WHERE ContentFiles.id NOT IN (
     sep = self.config.contentfile_separator or '\n\n'
     return sep.join(row[0] for row in c.fetchall())
 
-  def CreateBatches(self, batch_size: int, shuffle: bool) -> None:
+  def CreateBatches(self, batch_size: int, shuffle: bool) -> int:
     """Create batches for training.
 
     Args:
       shuffle: If true, randomize order of contentfiles.
+
+    Returns:
+      The number of matches.
+
+    Raises:
+      UserError: If the number of batches is zero.
     """
     self.ResetBatchPointer()
 
@@ -299,24 +305,23 @@ WHERE ContentFiles.id NOT IN (
     # set corpus size and number of batches
     self._size = len(self._tensor)
     # TODO(cec): Investigate this. Use math.floor() seems one batch too few?
-    self._num_batches = math.floor(self.size / (batch_size * self.seq_length))
-    if not self.num_batches:
+    num_batches = math.floor(self.size / (batch_size * self.seq_length))
+    if not num_batches:
       raise errors.UserError(
-        "Not enough data. Use a smaller seq_length and batch_size. "
-        f'Current data size = {self.size}, seq_length = {self.seq_length}, and '
-        f'batch_size {batch_size}.')
+          "Not enough data. Use a smaller seq_length and batch_size. "
+          f'Current data size = {self.size}, seq_length = {self.seq_length}, and '
+          f'batch_size {batch_size}.')
 
     # split into batches
     self._tensor = self._tensor[
-                   :self.num_batches * batch_size * self.seq_length]
+                   :num_batches * batch_size * self.seq_length]
     xdata = self._tensor
     ydata = np.copy(self._tensor)
     ydata[:-1] = xdata[1:]
     ydata[-1] = xdata[0]
-    self._x_batches = np.split(xdata.reshape(batch_size, -1), self.num_batches,
-                               1)
-    self._y_batches = np.split(ydata.reshape(batch_size, -1), self.num_batches,
-                               1)
+    self._x_batches = np.split(xdata.reshape(batch_size, -1), num_batches, 1)
+    self._y_batches = np.split(ydata.reshape(batch_size, -1), num_batches, 1)
+    return num_batches
 
   @property
   def shorthash(self):
@@ -341,14 +346,6 @@ WHERE ContentFiles.id NOT IN (
     except AttributeError:
       self._size = self.ConcatenateTextCorpus(False)
       return self._size
-
-  @property
-  def num_batches(self) -> int:
-    try:
-      return self._num_batches
-    except AttributeError:
-      self.CreateBatches(1, False)
-      return self._num_batches
 
   def ResetBatchPointer(self) -> None:
     """
@@ -398,7 +395,7 @@ WHERE ContentFiles.id NOT IN (
     db = dbutil.connect(self.contentfiles_cache["kernels.db"])
     c = db.cursor()
     query = c.execute(
-      f"SELECT Contents FROM PreprocessedFiles WHERE status={status}")
+        f"SELECT Contents FROM PreprocessedFiles WHERE status={status}")
     for row in query.fetchall():
       yield row[0]
 

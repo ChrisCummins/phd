@@ -177,11 +177,12 @@ class Model(object):
 
     return tf
 
-  def _GetParamsPath(self, ckpt) -> typing.Tuple[str, typing.List[str]]:
+  def _GetParamsPath(self, ckpt, num_batches: int) -> typing.Tuple[
+    str, typing.List[str]]:
     """Return the path to checkpoint closest to target num of epochs."""
     paths = ckpt.all_model_checkpoint_paths
     batch_nums = [int(x.split('-')[-1]) for x in paths]
-    epoch_nums = [int((x + 1) / (self.corpus.num_batches)) for x in batch_nums]
+    epoch_nums = [int((x + 1) / num_batches) for x in batch_nums]
 
     closest = self.epochs
     closest_path = None
@@ -200,6 +201,10 @@ class Model(object):
     learning_rate = self.config.training.initial_learning_rate
     decay_rate = self.config.training.percent_learning_rate_decay_per_epoch
 
+    num_batches = self.corpus.CreateBatches(self.config.training.batch_size,
+                                            False)
+    max_batch = self.epochs * num_batches
+
     # resume from prior checkpoint
     checkpoint_path, checkpoint_paths = None, None
     if self.most_recent_checkpoint_path:
@@ -209,7 +214,8 @@ class Model(object):
           self.most_recent_checkpoint_path)
       assert checkpoint
       assert checkpoint.model_checkpoint_path
-      checkpoint_path, checkpoint_paths = self._GetParamsPath(checkpoint)
+      checkpoint_path, checkpoint_paths = self._GetParamsPath(checkpoint,
+                                                              num_batches)
 
     with tf.Session() as sess:
       tf.global_variables_initializer().run()
@@ -227,8 +233,6 @@ class Model(object):
       if checkpoint_paths:
         saver.recover_last_checkpoints(checkpoint_paths)
 
-      max_batch = self.epochs * self.corpus.num_batches
-
       bar = progressbar.ProgressBar(max_value=max_batch)
       if sess.run(self.epoch) != self.epochs:
         logging.info('training %s', self)
@@ -244,7 +248,7 @@ class Model(object):
         self.corpus.CreateBatches(self.config.training.batch_size,
                                   self.config.training.shuffle_corpus_contentfiles_between_epochs)
         state = sess.run(self.initial_state)
-        for b in range(self.corpus.num_batches):
+        for b in range(num_batches):
           x, y = self.corpus.next_batch()
           feed = {self.input_data: x, self.targets: y}
           for i, (c, h) in enumerate(self.initial_state):
@@ -254,7 +258,7 @@ class Model(object):
               [self.cost, self.final_state, self.train_op], feed)
 
           # update progress bar
-          batch_num = (e - 1) * self.corpus.num_batches + b
+          batch_num = (e - 1) * num_batches + b
           bar.update(batch_num)
 
         # Determine whether we should save a checkpoint.
@@ -265,7 +269,7 @@ class Model(object):
           saver.save(sess, self.cache.keypath("model.ckpt"),
                      global_step=batch_num)
 
-          next_checkpoint = e * self.corpus.num_batches + b
+          next_checkpoint = e * num_batches + b
           max_epoch = self.epochs
           logging.debug('\n%s epoch %d / %d. next checkpoint at batch %d', self,
                         e, max_epoch, next_checkpoint)
