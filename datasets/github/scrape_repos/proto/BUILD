@@ -1,4 +1,4 @@
-# Protos for mining GitHub repos.
+# Protos for mining programming language datasets from GitHub.
 
 load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
 

@@ -2,34 +2,60 @@
 syntax = "proto2";
 package scrape_repos;
 
-
+// A GitHub user's credentials and API token, used for authenticating API calls.
 message GitHubCredentials {
   optional string username = 1;
   optional string password = 2;
   optional string token = 3;
 }
 
-
+// The schema for "clone lists", which are used to determine the GitHub queries
+// to run and repos to clone.
 message LanguageCloneList {
   repeated LanguageToClone language = 1;
 }
 
-
+// A single programming language to clone repositories of.
 message LanguageToClone {
   optional string language = 1;
+  // The maximum number of repositories to clone. Fewer repositories may be
+  // cloned if there are less than this number available on GitHub.
   optional int32 num_repos_to_clone = 2;
+  // The base directory to clone GitHub repositories to.
   optional string destination_directory = 3;
+  // If true, a "lang:<language>" qualifier will be used when querying GitHub
+  // to filter only repos which GitHub considers to be in this language. This
+  // requires that the language be recognized by GitHub.
+  optional bool github_filter_by_lang = 4 [default = True];
+  // If set, provide a set of keyword queries to run against GitHub, rather than
+  // returning all repos. Can be combined with github_filter_by_lang.
+  repeated string github_search_keywords = 5;
+  // The configuration for the program which imports source code from cloned
+  // repositories into contentfile databases.
+  optional ContentFilesImporterConfig importer_config = 6;
 }
 
+// The configuration for the contentfiles importer.
+message ContentFilesImporterConfig {
+  repeated string source_code_suffixes = 1;
+  // A list of preprocessor passes to run on each imported source code, in the
+  // order in which they should be executed.
+  repeated string preprocessors = 2;
+}
 
+// The "metafile" schema. Each repository which is scraped produces one of these
+// files, recording various attributes about the repository.
 message GitHubRepoMetadata {
   // The number of milliseconds since the epoch (UTC) that the repository was
   // found.
   optional int64 scraped_utc_epoch_ms = 7;
-
+  // The GitHub username of the repository owner.
   optional string owner = 1;
+  // The name of the repository as it appears on GitHub.
   optional string name = 2;
+  // The git URL to clone the repo.
   optional string clone_from_url = 3;
+  // The number of stargazers, forks, and watchers of the repository.
   optional int32 num_stars = 4;
   optional int32 num_forks = 5;
   optional int32 num_watchers = 6;
