@@ -39,6 +39,7 @@ py_library(
         "//deeplearning/deepsmith/proto:datastore_py_pb2",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//lib/labm8:pbutil",
+        "//lib/labm8:sqlutil",
     ],
 )
 
@@ -74,6 +75,7 @@ py_library(
         ":db",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//lib/labm8:labdate",
+        "//lib/labm8:sqlutil",
     ],
 )
 
@@ -98,6 +100,7 @@ py_library(
         ":db",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//lib/labm8:labdate",
+        "//lib/labm8:sqlutil",
         "//lib/labm8:system",
     ],
 )
@@ -131,6 +134,7 @@ py_library(
         ":db",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//lib/labm8:labdate",
+        "//lib/labm8:sqlutil",
     ],
 )
 
@@ -146,6 +150,7 @@ py_library(
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//lib/labm8:labdate",
         "//lib/labm8:pbutil",
+        "//lib/labm8:sqlutil",
     ],
 )
 
@@ -178,6 +183,7 @@ py_library(
         ":toolchain",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//lib/labm8:labdate",
+        "//lib/labm8:sqlutil",
     ],
 )
 
@@ -208,6 +214,7 @@ py_library(
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//lib/labm8:labdate",
         "//lib/labm8:pbutil",
+        "//lib/labm8:sqlutil",
     ],
 )
 
