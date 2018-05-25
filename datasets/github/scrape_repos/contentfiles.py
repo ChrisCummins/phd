@@ -95,7 +95,7 @@ class ContentFile(Base):
     sha256 = hashlib.sha256()
     sha256.update(contents)
     return ContentFile(clone_from_url=repo.clone_from_url,
-                       relpath=path[len(str(clone_dir)):],
+                       relpath=path[len(str(clone_dir)) + 1:],
                        sha256=sha256.digest(), charcount=len(text),
                        linecount=len(text.split('\n')), text=text)
 
