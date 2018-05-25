@@ -135,7 +135,7 @@ model {
   training {
     num_epochs: 50
     shuffle_corpus_contentfiles_between_epochs: true
-    batch_size: 256
+    batch_size: 50
     gradient_clip: 5
     initial_learning_rate: 0.001
     percent_learning_rate_decay_per_epoch: 5
