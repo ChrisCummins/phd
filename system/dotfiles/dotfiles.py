@@ -294,6 +294,11 @@ class Python(Task):
     # install virtualenv
     self.pip_install("virtualenv", self.__versions__["virtualenv"])
 
+    # Symlink my preferred python into ~/.local/bin.
+    shell('mkdir -p ~/.local/bin')
+    symlink(self.PYTHON3_BINARY, "~/.local/bin/python")
+
+
   def _install_pip_version(self, python, version):
     if not shell_ok("test $({python} -m pip --version | awk '{{print $2}}') = {version}".format(**vars())):
       task_print("{python} -m pip install --upgrade 'pip=={version}'".format(**vars()))
