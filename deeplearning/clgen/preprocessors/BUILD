@@ -73,6 +73,7 @@ py_library(
     deps = [
         ":clang",
         ":public",
+        "//deeplearning/clgen:errors",
     ],
 )
 
