@@ -9,6 +9,7 @@ from absl import logging
 from deeplearning.deepsmith.proto import service_pb2
 from lib.labm8 import pbutil
 
+
 FLAGS = flags.FLAGS
 
 
@@ -30,8 +31,8 @@ def AssertLocalServiceHostname(service_config: service_pb2.ServiceConfig):
       service_hostname != 'localhost' and
       service_hostname != hostname):
     raise app.UsageError(
-      f'System hostname {hostname} does not match service hostname '
-      f'{service_hostname}')
+        f'System hostname {hostname} does not match service hostname '
+        f'{service_hostname}')
 
 
 def AssertResponseStatus(status: service_pb2.ServiceStatus):
@@ -64,7 +65,7 @@ def ServiceConfigFromFlag(
     raise app.UsageError(f"{cls_name} file not found: '{config_path}'.")
 
   return pbutil.FromFile(
-    config_path, service_config)
+      config_path, service_config)
 
 
 def GetServiceStub(service_config: service_pb2.ServiceConfig,
