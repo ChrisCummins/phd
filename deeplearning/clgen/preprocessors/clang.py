@@ -130,7 +130,7 @@ def CompileLlvmBytecode(src: str, suffix: str, cflags: typing.List[str],
     f.flush()
     cmd = ['timeout', '-s9', str(timeout_seconds), CLANG,
            f.name] + builtin_cflags + cflags
-    logging.info('$ %s', ' '.join(cmd))
+    logging.debug('$ %s', ' '.join(cmd))
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE, universal_newlines=True)
     stdout, stderr = process.communicate()
