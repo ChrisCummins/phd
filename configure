@@ -1,0 +1,24 @@
+#!/usr/bin/env python
+# Bootstrap and configure the project.
+
+import argparse
+import sys
+
+
+def GuessIfCudaIsAvailable():
+  """Guess if CUDA is available on the host."""
+  pass
+
+
+def main(argv):
+  parser = argparse.ArgumentParser()
+  parser.add_argument('--with_cuda', action='store_true',
+                      help=('If true, enable CUDA support. This requires that '
+                            'CUDA is installed on the host machine.'))
+  args = parser.parse_args(argv)
+
+  # TODO(cec): Implement!
+
+
+if __name__ == '__main__':
+  main(sys.argv[1:])
