@@ -28,19 +28,26 @@ message LanguageToClone {
   // requires that the language be recognized by GitHub.
   optional bool github_filter_by_lang = 4 [default = True];
   // If set, provide a set of keyword queries to run against GitHub, rather than
-  // returning all repos. Can be combined with github_filter_by_lang.
-  repeated string github_search_keywords = 5;
+  // returning all repos. If github_filter_by_lang is true, these terms are
+  // searched first. Terms are searched in the order they appear, until
+  // num_repos_to_clone repositories have been cloned.
+  repeated string github_search_term = 5;
   // The configuration for the program which imports source code from cloned
   // repositories into contentfile databases.
-  optional ContentFilesImporterConfig importer_config = 6;
+  repeated ContentFilesImporterConfig importer = 6;
 }
 
 // The configuration for the contentfiles importer.
 message ContentFilesImporterConfig {
-  repeated string source_code_suffixes = 1;
+  // A regular expression to match repo-relative source code paths.
+  // E.g. the pattern "^src/.+\.c$" would match any files in a repository's
+  // 'src/' directory ending in suffix '.c'. This pattern is searched for in
+  // each path, it does not need to match the entire path. E.g. the pattern 'a'
+  // will match any file with an 'a' in its path.
+  optional string source_code_pattern = 1;
   // A list of preprocessor passes to run on each imported source code, in the
   // order in which they should be executed.
-  repeated string preprocessors = 2;
+  repeated string preprocessor = 2;
 }
 
 // The "metafile" schema. Each repository which is scraped produces one of these

@@ -1,93 +1,195 @@
 # File: //datasets/github/scrape_repos/proto/scrape_repos.proto
 # Proto: scrape_repos.LanguageCloneList
 
+# Download OpenCL source code.
+# OpenCL is not treated as a first-class language on GitHub, so we must use
+# broad search keywords. As a result, our "hit" ratio of interesting files is
+# likely to be low.
+language {
+  language: "opencl"
+  num_repos_to_clone: 1000
+  github_filter_by_lang: false
+  github_search_term: "opencl"
+  github_search_term: "cl"
+  github_search_term: "khronos"
+  github_search_term: "gpu"
+  github_search_term: "gpgpu"
+  github_search_term: "cuda"
+  github_search_term: "amd"
+  github_search_term: "nvidia"
+  github_search_term: "heterogeneous"
+  destination_directory: "/var/phd/datasets/github/repos_by_lang/opencl"
+  importer {
+    source_code_pattern: "\\.cl$"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
+  }
+  importer {
+    source_code_pattern: "\\.ocl$"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
+  }
+}
+
+# Download OpenCL source code.
+# OpenCL is not treated as a first-class language on GitHub, so we must use
+# broad search keywords. As a result, our "hit" ratio of interesting files is
+# likely to be low.
 language {
   language: "glsl"
   num_repos_to_clone: 1000
-  destination_directory: '/var/phd/datasets/github/repos_by_lang/glsl'
+  destination_directory: "/var/phd/datasets/github/repos_by_lang/glsl"
+  importer {
+    source_code_pattern: "\\.glsl$"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
+  }
+  importer {
+    source_code_pattern: "\\.frag$"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
+  }
+  importer {
+    source_code_pattern: "\\.vert$"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
+  }
+  importer {
+    source_code_pattern: "\\.tesc$"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
+  }
+  importer {
+    source_code_pattern: "\\.tese$"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
+  }
+  importer {
+    source_code_pattern: "\\.geom$"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
+  }
+  importer {
+    source_code_pattern: "\\.comp$"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
+  }
 }
-language {
-  language: "javascript"
-  num_repos_to_clone: 1000
-  destination_directory: '/var/phd/datasets/github/repos_by_lang/javascript'
-}
+
+# Download C/C++ files.
 language {
   language: "c"
   num_repos_to_clone: 1000
-  destination_directory: '/var/phd/datasets/github/repos_by_lang/c'
+  github_search_term: "compute"
+  destination_directory: "/var/phd/datasets/github/repos_by_lang/c"
+  importer {
+    source_code_pattern: "\\.c$"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
+  }
+  importer {
+    source_code_pattern: "\\.cpp$"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
+  }
+  importer {
+    source_code_pattern: "\\.cxx$"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
+  }
+  importer {
+    source_code_pattern: "\\.inc$"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
+  }
 }
+
+# Download Java files.
+language {
+  language: "java"
+  num_repos_to_clone: 1000
+  destination_directory: "/var/phd/datasets/github/repos_by_lang/java"
+  importer {
+    source_code_pattern: "\\.java$"
+  }
+}
+
+# Download source code for solidity, the language of the Ethereum blockchain.
+# As with OpenCL, Solidity is not treated as a first-class language and we
+# cannot filter by it. Our hit ratio is likely to be low.
+language {
+  language: "solidity"
+  num_repos_to_clone: 5000
+  github_filter_by_lang: false
+  github_search_term: "solidity"
+  github_search_term: "ethereum"
+  github_search_term: "solc"
+  importer {
+    source_code_pattern: "\\.sol$"
+  }
+}
+
+language {
+  language: "javascript"
+  num_repos_to_clone: 1000
+  destination_directory: "/var/phd/datasets/github/repos_by_lang/javascript"
+}
+
 language {
   language: "haskell"
   num_repos_to_clone: 1000
-  destination_directory: '/var/phd/datasets/github/repos_by_lang/haskell'
+  destination_directory: "/var/phd/datasets/github/repos_by_lang/haskell"
 }
 language {
   language: "go"
   num_repos_to_clone: 1000
-  destination_directory: '/var/phd/datasets/github/repos_by_lang/go'
+  destination_directory: "/var/phd/datasets/github/repos_by_lang/go"
 }
-language {
-  language: "java"
-  num_repos_to_clone: 1000
-  destination_directory: '/var/phd/datasets/github/repos_by_lang/java'
-}
+
 language {
   language: "php"
   num_repos_to_clone: 1000
-  destination_directory: '/var/phd/datasets/github/repos_by_lang/php'
+  destination_directory: "/var/phd/datasets/github/repos_by_lang/php"
 }
 language {
   language: "python"
   num_repos_to_clone: 1000
-  destination_directory: '/var/phd/datasets/github/repos_by_lang/python'
+  destination_directory: "/var/phd/datasets/github/repos_by_lang/python"
 }
 language {
   language: "rust"
   num_repos_to_clone: 1000
-  destination_directory: '/var/phd/datasets/github/repos_by_lang/rust'
+  destination_directory: "/var/phd/datasets/github/repos_by_lang/rust"
 }
 language {
   language: "swift"
   num_repos_to_clone: 1000
-  destination_directory: '/var/phd/datasets/github/repos_by_lang/swift'
+  destination_directory: "/var/phd/datasets/github/repos_by_lang/swift"
 }
 language {
   language: "elixir"
   num_repos_to_clone: 1000
-  destination_directory: '/var/phd/datasets/github/repos_by_lang/elixir'
+  destination_directory: "/var/phd/datasets/github/repos_by_lang/elixir"
 }
 language {
   language: "objective-c"
   num_repos_to_clone: 1000
-  destination_directory: '/var/phd/datasets/github/repos_by_lang/objective_c'
+  destination_directory: "/var/phd/datasets/github/repos_by_lang/objective_c"
 }
 language {
   language: "ocaml"
   num_repos_to_clone: 1000
-  destination_directory: '/var/phd/datasets/github/repos_by_lang/ocaml'
+  destination_directory: "/var/phd/datasets/github/repos_by_lang/ocaml"
 }
 language {
   language: "ruby"
   num_repos_to_clone: 1000
-  destination_directory: '/var/phd/datasets/github/repos_by_lang/ruby'
+  destination_directory: "/var/phd/datasets/github/repos_by_lang/ruby"
 }
 language {
   language: "perl"
   num_repos_to_clone: 1000
-  destination_directory: '/var/phd/datasets/github/repos_by_lang/perl'
+  destination_directory: "/var/phd/datasets/github/repos_by_lang/perl"
 }
 language {
   language: "scala"
   num_repos_to_clone: 1000
-  destination_directory: '/var/phd/datasets/github/repos_by_lang/scala'
+  destination_directory: "/var/phd/datasets/github/repos_by_lang/scala"
 }
 language {
   language: "lua"
   num_repos_to_clone: 1000
-  destination_directory: '/var/phd/datasets/github/repos_by_lang/lua'
+  destination_directory: "/var/phd/datasets/github/repos_by_lang/lua"
 }
 language {
   language: "clojure"
   num_repos_to_clone: 1000
-  destination_directory: '/var/phd/datasets/github/repos_by_lang/clojure'
+  destination_directory: "/var/phd/datasets/github/repos_by_lang/clojure"
 }
