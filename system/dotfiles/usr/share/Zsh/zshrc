@@ -232,7 +232,7 @@ brew() {
 # the same workaround as for the brew() function.
 pip() {
     if [[ -f /usr/local/bin/brew ]]; then
-        /usr/local/bin/brew $@
+        /usr/local/bin/python3 -m pip $@
     elif [[ -f /home/linuxbrew/.linuxbrew/bin/brew ]]; then
         echo "bash -c '/home/linuxbrew/.linuxbrew/bin/python3 -m pip --no-warn-script-location $@'" | xargs sudo -H -u linuxbrew
     else
