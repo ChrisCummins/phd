@@ -51,10 +51,12 @@ def ImportFromMetafile(db: contentfiles.ContentFiles,
     if len(paths) == 1 and not paths[0]:
       logging.debug('No files to import from %s', clone_dir)
       return
-    logging.info('Importing %s files from %s ...', len(paths), clone_dir)
+    logging.info('Importing %d %s files from %s ...', len(paths),
+                 language.language.capitalize(), clone_dir)
     for path in paths:
       try:
-        s.add(contentfiles.ContentFile.FromFile(meta, clone_dir, path))
+        if pathlib.Path(path).is_file():
+          s.add(contentfiles.ContentFile.FromFile(meta, clone_dir, path))
       except UnicodeError:
         logging.warning('Failed to decode %s', path)
 
@@ -63,14 +65,14 @@ def ImportFromLanguage(db: contentfiles.ContentFiles,
                        language: scrape_repos_pb2.LanguageToClone) -> None:
   if not language.language in FILE_EXTENSIONS:
     logging.error('Language %s not supported! Importing nothing',
-                  language.language)
+                  language.language.capitalize())
   with db.Session() as s:
     repos_to_import = [pathlib.Path(language.destination_directory / f) for f in
                        pathlib.Path(language.destination_directory).iterdir() if
                        ShouldImport(s, pathlib.Path(
                          language.destination_directory / f))]
   logging.info('Importing %d %s repos ...', len(repos_to_import),
-               language.language)
+               language.language.capitalize())
   for metafile in repos_to_import:
     ImportFromMetafile(db, language, metafile)
 
