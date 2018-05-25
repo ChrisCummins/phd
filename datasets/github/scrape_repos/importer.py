@@ -15,8 +15,6 @@ from lib.labm8 import pbutil
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('clone_list', None, 'The path to a LanguageCloneList file.')
-flags.DEFINE_string('contentfiles_path', None,
-                    'The path to the contentfiles directory.')
 
 
 def ShouldImport(session: orm.session.Session, metafile: pathlib.Path) -> bool:
@@ -88,13 +86,10 @@ def main(argv):
   clone_list = pbutil.FromFile(clone_list_path,
                                scrape_repos_pb2.LanguageCloneList())
 
-  contentfiles_path = pathlib.Path(FLAGS.contentfiles_path or "")
-  if not contentfiles_path.parent.is_dir():
-    raise app.UsageError('--contentfiles_path parent directory not found.')
-
-  db = contentfiles.ContentFiles(contentfiles_path)
-
   for language in clone_list.language:
+    d = pathlib.Path(language.destination_directory)
+    d = d.parents / d.name + '.db'
+    db = contentfiles.ContentFiles(d)
     if pathlib.Path(language.destination_directory).is_dir():
       ImportFromLanguage(db, language)
 
