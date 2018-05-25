@@ -36,6 +36,13 @@ int foo() { return foobar<int>(10); }
 """
 
 
+def test_ClangPreprocess_missing_include():
+  """Test that ClangPreprocessor error is raised on missing #include."""
+  with pytest.raises(errors.ClangException) as e_info:
+    cxx.ClangPreprocess('#include "my-missing-file.h"')
+  assert "'my-missing-file.h' file not found" in str(e_info)
+
+
 # Compile() tests.
 
 def test_Compile_empty_input():
