@@ -12,6 +12,29 @@ py_binary(
     ],
 )
 
+py_library(
+    name = "contentfiles",
+    srcs = ["contentfiles.py"],
+    deps = [
+        "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
+        "//lib/labm8:crypto",
+        "//lib/labm8:labdate",
+        "//lib/labm8:sqlutil",
+    ],
+)
+
+py_binary(
+    name = "importer",
+    srcs = ["importer.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":contentfiles",
+        "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
+        "//lib/labm8:pbutil",
+    ],
+)
+
 py_binary(
     name = "scraper",
     srcs = ["scraper.py"],

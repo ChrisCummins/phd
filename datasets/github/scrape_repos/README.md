@@ -28,12 +28,20 @@ Scrape GitHub to create `GitHubRepositoryMeta` messages of repos using:
 
 ```sh
 $ bazel run //datasets/github/scrape_repos:scraper -- \
-    --clone_list $PWD/clone_list.pbtxt
+    --clone_list=$PWD/clone_list.pbtxt
 ```
 
-Rune the cloner to download the repos scraped in the previous step:
+Run the cloner to download the repos scraped in the previous step:
 
 ```sh
 $ bazel run //datasets/github/scrape_repos:cloner -- \
-    --clone_list $PWD/clone_list.pbtxt
+    --clone_list=$PWD/clone_list.pbtxt
 ```
+
+Run the importer to put source files into a contentfiles database:
+
+```sh
+$ bazel run //datasets/github/scrape_repos:importer -- \
+    --clone_list=$PWD/clone_list.pbtxt \
+    --contentfiles_path=/var/cloned.db
+``` 
