@@ -61,7 +61,7 @@ def ServiceConfigFromFlag(
   config_path = pathlib.Path(getattr(FLAGS, flag_name))
   if not config_path.is_file():
     cls_name = type(service_config).__name__
-    raise app.UsageError(f'--{flag_name} must be a {cls_name} proto.')
+    raise app.UsageError(f"{cls_name} file not found: '{config_path}'.")
 
   return pbutil.FromFile(
     config_path, service_config)
