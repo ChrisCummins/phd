@@ -52,7 +52,14 @@ class Model(object):
     if self.cache.get('META.pbtxt'):
       cached_meta = pbutil.FromFile(pathlib.Path(self.cache['META.pbtxt']),
                                     internal_pb2.ModelMeta())
-      if config != cached_meta.config:
+      # Exclude num_epochs from metadata comparison.
+      config_to_compare = model_pb2.Model()
+      config_to_compare.CopyFrom(self.config)
+      config_to_compare.training.ClearField('num_epochs')
+      cached_to_compare = model_pb2.Model()
+      cached_to_compare.CopyFrom(cached_meta.config)
+      cached_to_compare.training.ClearField('num_epochs')
+      if config_to_compare != cached_to_compare:
         raise errors.InternalError('Metadata mismatch')
       self.meta = cached_meta
     else:
@@ -107,7 +114,7 @@ class Model(object):
     self.cell_fn = {model_pb2.NetworkArchitecture.LSTM: rnn.BasicLSTMCell,
                     model_pb2.NetworkArchitecture.GRU: rnn.GRUCell,
                     model_pb2.NetworkArchitecture.RNN: rnn.BasicRNNCell}.get(
-      self.config.architecture.neuron_type)
+        self.config.architecture.neuron_type)
     # Reset the graph when switching between training and inference.
     tf.reset_default_graph()
     batch_size = self.config.training.batch_size
@@ -151,7 +158,7 @@ class Model(object):
     loss = seq2seq.sequence_loss_by_example([self.logits],
                                             [tf.reshape(self.targets, [-1])], [
                                               tf.ones(
-                                                [batch_size * seq_length])],
+                                                  [batch_size * seq_length])],
                                             vocab_size)
     self.cost = tf.reduce_sum(loss) / batch_size / seq_length
     self.final_state = last_state
@@ -159,12 +166,12 @@ class Model(object):
     self.epoch = tf.Variable(0, trainable=False)
     tvars = tf.trainable_variables()
     grads, _ = tf.clip_by_global_norm(  # Argument of potential interest:
-      #   aggregation_method=tf.AggregationMethod.EXPERIMENTAL_TREE
-      #
-      # See:
-      #   https://www.tensorflow.org/api_docs/python/tf/gradients
-      #   https://www.tensorflow.org/api_docs/python/tf/AggregationMethod
-      tf.gradients(self.cost, tvars), self.gradient_clip)
+        #   aggregation_method=tf.AggregationMethod.EXPERIMENTAL_TREE
+        #
+        # See:
+        #   https://www.tensorflow.org/api_docs/python/tf/gradients
+        #   https://www.tensorflow.org/api_docs/python/tf/AggregationMethod
+        tf.gradients(self.cost, tvars), self.gradient_clip)
     optimizer = tf.train.AdamOptimizer(self.learning_rate)
     self.train_op = optimizer.apply_gradients(zip(grads, tvars))
 
@@ -199,7 +206,7 @@ class Model(object):
       # Check that all necessary files exist.
       assert fs.isdir(self.most_recent_checkpoint_path)
       checkpoint = tf.train.get_checkpoint_state(
-        self.most_recent_checkpoint_path)
+          self.most_recent_checkpoint_path)
       assert checkpoint
       assert checkpoint.model_checkpoint_path
       checkpoint_path, checkpoint_paths = self._GetParamsPath(checkpoint)
@@ -244,7 +251,7 @@ class Model(object):
             feed[c] = state[i].c
             feed[h] = state[i].h
           train_cost, state, _ = sess.run(
-            [self.cost, self.final_state, self.train_op], feed)
+              [self.cost, self.final_state, self.train_op], feed)
 
           # update progress bar
           batch_num = (e - 1) * self.corpus.num_batches + b
@@ -371,8 +378,8 @@ def ModelsToTable(*models: typing.List[Model]) -> PrettyTable:
       Formatted table for printing.
   """
   tab = PrettyTable(
-    ["model", "corpus", "trained", "type", "nodes", "epochs", "lr", "dr",
-     "gc", ])
+      ["model", "corpus", "trained", "type", "nodes", "epochs", "lr", "dr",
+       "gc", ])
 
   tab.align['nodes'] = 'r'
   tab.sortby = "nodes"

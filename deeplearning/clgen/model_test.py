@@ -12,7 +12,7 @@ from lib.labm8 import fs
 
 
 # The Model.hash for a Model instance of abc_model_config.
-ABC_MODEL_HASH = 'ad3bd344f2083061c2ad3b800d75c2fa4cc2b1aa'
+ABC_MODEL_HASH = 'f64d79ff1a003441253d759a10c463da2f679f64'
 
 
 def test_Model_hash(clgen_cache_dir, abc_model_config):
@@ -30,6 +30,17 @@ def test_Model_config_hash_different_options(clgen_cache_dir, abc_model_config):
   abc_model_config.architecture.neuron_type = model_pb2.NetworkArchitecture.RNN
   m2 = model.Model(abc_model_config)
   assert m1.hash != m2.hash
+
+
+def test_Model_config_hash_different_num_epochs(clgen_cache_dir,
+                                                abc_model_config):
+  """Test that different num_eopchs doesn't affect model hash."""
+  del clgen_cache_dir
+  abc_model_config.training.num_epochs = 10
+  m1 = model.Model(abc_model_config)
+  abc_model_config.training.num_epochs = 20
+  m2 = model.Model(abc_model_config)
+  assert m1.hash == m2.hash
 
 
 def test_Model_config_hash_different_corpus(clgen_cache_dir, abc_model_config):
