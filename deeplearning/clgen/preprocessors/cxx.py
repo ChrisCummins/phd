@@ -29,6 +29,14 @@ def ClangPreprocess(text: str) -> str:
 
 @public.clgen_preprocessor
 def Compile(text: str) -> str:
+  """A preprocessor which attempts to compile the given code.
+
+  Args:
+    text: Code to compile.
+
+  Returns:
+    The input code, unmodified.
+  """
   clang.CompileLlvmBytecode(text, '.cpp', CLANG_ARGS)
   return text
 
