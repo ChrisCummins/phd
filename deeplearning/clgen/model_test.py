@@ -2,6 +2,7 @@
 import pathlib
 import sys
 
+import checksumdir
 import pytest
 from absl import app
 
@@ -12,7 +13,7 @@ from lib.labm8 import fs
 
 
 # The Model.hash for a Model instance of abc_model_config.
-ABC_MODEL_HASH = 'f64d79ff1a003441253d759a10c463da2f679f64'
+ABC_MODEL_HASH = '98dadcd7890565e65be97ac212a141a744e8b016'
 
 
 def test_Model_hash(clgen_cache_dir, abc_model_config):
@@ -84,22 +85,21 @@ def test_Model_checkpoint_path_trained(clgen_cache_dir, abc_model_config):
   m = model.Model(abc_model_config)
   m.Train()
   assert m.most_recent_checkpoint_path
-  path = pathlib.Path(m.most_recent_checkpoint_path)
-  assert fs.isfile(path / 'checkpoint')
-  assert fs.isfile(path / 'META.pbtxt')
+  assert pathlib.Path(m.most_recent_checkpoint_path).is_file()
+  assert fs.isfile(m.cache.path / 'META.pbtxt')
 
 
+@pytest.mark.skip(reason='TODO(cec): Re-implement model loading', strict=True)
 def test_Model_train_twice(clgen_cache_dir, abc_model_config):
   """Test that TensorFlow checkpoint does not change after training twice."""
   del clgen_cache_dir
   m = model.Model(abc_model_config)
   m.Train()
-  path = pathlib.Path(m.most_recent_checkpoint_path)
-  f1a = crypto.md5_file(path / 'checkpoint')
-  f1b = crypto.md5_file(path / 'META.pbtxt')
+  f1a = checksumdir.dirhash(m.cache.path / 'checkpoints')
+  f1b = crypto.md5_file(m.cache.path / 'META.pbtxt')
   m.Train()
-  f2a = crypto.md5_file(path / 'checkpoint')
-  f2b = crypto.md5_file(path / 'META.pbtxt')
+  f2a = checksumdir.dirhash(m.cache.path / 'checkpoints')
+  f2b = crypto.md5_file(m.cache.path / 'META.pbtxt')
   assert f1a == f2a
   assert f1b == f2b
 

@@ -9,6 +9,7 @@ from threading import Event, Thread
 import numpy as np
 import progressbar
 from absl import logging
+from keras import models
 from tensorflow.python.framework import errors as tf_errors
 
 from deeplearning.clgen import cache
@@ -95,19 +96,47 @@ class Sampler(object):
     Args:
       model: The CLgen model to sample.
     """
-    cache_ = self.cache(model_)
-    self.sample_dir = cache_.path / 'samples'
-    self.sample_dir.mkdir(exist_ok=True)
-    # Producer-consumer queue.
-    queue = Queue(maxsize=128)
-    logging.info('sampling %s', self)
-    sampler = SampleProducer(model_, self.config, queue)
-    sampler.start()
-    consumer = SampleConsumer(sampler, self, cache_, queue)
-    consumer.start()
-    sampler.join()
-    consumer.join()
-    return consumer.samples
+    with open(model_.cache['model.yaml']) as f:
+      yaml = f.read()
+    m = models.model_from_yaml(yaml)
+    m.load_weights(model_.most_recent_checkpoint_path)
+    m.compile(loss='categorical_crossentropy', optimizer='adam')
+
+    X = np.zeros((1, model_.corpus.config.sequence_length,
+                  len(model_.corpus.atomizer.vocab)), dtype=np.bool)
+    for i, token in enumerate(
+        model_.corpus.atomizer.AtomizeString(self.config.start_text)):
+      X[0, i, token] = 1
+
+    generated_text = ''
+    start_time = labdate.MillisecondsTimestamp()
+    for i in range(500):
+      prediction = np.argmax(m.predict(X, verbose=0))
+      generated_text += model_.corpus.atomizer.decoder[prediction]
+      activations = np.zeros((1, 1, len(model_.corpus.atomizer.vocab)),
+                             dtype=np.bool)
+      activations[0, 0, prediction] = 1
+      X = np.concatenate((X[:, 1:, :], activations), axis=1)
+    end_time = labdate.MillisecondsTimestamp()
+    logging.info('Sample: %s', generated_text)
+    sample = internal_pb2.Sample(text=generated_text,
+                                 sample_start_epoch_ms_utc=start_time,
+                                 sample_time_ms=end_time - start_time)
+    return [sample]
+    # TODO(cec): Re-implement producer consumer queue.
+    # cache_ = self.cache(model_)
+    # self.sample_dir = cache_.path / 'samples'
+    # self.sample_dir.mkdir(exist_ok=True)
+    # # Producer-consumer queue.
+    # queue = Queue(maxsize=128)
+    # logging.info('sampling %s', self)
+    # sampler = SampleProducer(model_, self.config, queue)
+    # sampler.start()
+    # consumer = SampleConsumer(sampler, self, cache_, queue)
+    # consumer.start()
+    # sampler.join()
+    # consumer.join()
+    # return consumer.samples
 
   @property
   def shorthash(self) -> str:
@@ -143,7 +172,7 @@ class SampleProducer(Thread):
     self.queue = queue
     self.stop_signal = Event()
     self.sample_header = '\n\n' + languages.format_as_comment(
-      self.model.corpus.language, '==== START SAMPLE ====') + '\n\n'
+        self.model.corpus.language, '==== START SAMPLE ====') + '\n\n'
 
     # Determine the termination criteria.
     self.max_length = -1
@@ -204,7 +233,7 @@ class SampleProducer(Thread):
 
       if self.has_symmetrical_tokens:
         init_started, init_depth = GetSymmetricalTokenDepth(
-          self.sampler_config.start_text, 0)
+            self.sampler_config.start_text, 0)
       atomize = self.model.corpus.atomizer.AtomizeString
       deatomize = self.model.corpus.atomizer.DeatomizeIndices
 
@@ -233,7 +262,7 @@ class SampleProducer(Thread):
                   self.model.initial_state: state}
           try:
             [probs, state] = sess.run(
-              [self.model.probs, self.model.final_state], feed)
+                [self.model.probs, self.model.final_state], feed)
           except tf_errors.InvalidArgumentError:
             logging.warning('sampling error')
             self.run()

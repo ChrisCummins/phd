@@ -2,10 +2,11 @@
 import os
 import pathlib
 import typing
-from time import time
 
-import progressbar
 from absl import logging
+from keras import callbacks
+from keras import layers
+from keras import models
 from prettytable import PrettyTable
 
 from deeplearning.clgen import cache
@@ -195,92 +196,42 @@ class Model(object):
     return closest_path, paths
 
   def _LockedTrain(self) -> 'Model':
-    tf = self.InitAndGetTensorflow(infer=False)
-
-    # training options
+    # TODO(cec): Re-implement learning rate, decay rate, and gradient clip.
     learning_rate = self.config.training.initial_learning_rate
     decay_rate = self.config.training.percent_learning_rate_decay_per_epoch
+    num_epochs = self.config.training.num_epochs
+    batch_size = self.config.training.batch_size
+    sequence_len = self.corpus.seq_length
 
-    num_batches = self.corpus.CreateBatches(self.config.training.batch_size,
-                                            False)
-    max_batch = self.epochs * num_batches
+    X, y = self.corpus.GetTrainingData(shuffle=True)
+    model = models.Sequential()
+    model.add(layers.LSTM(self.config.architecture.neurons_per_layer,
+                          input_shape=(
+                            sequence_len, len(self.corpus.atomizer.vocab))))
+    # for _ in range(1, self.config.architecture.num_layers):
+    #   model.add(layers.LSTM(self.config.architecture.neurons_per_layer))
+    model.add(layers.Dense(len(self.corpus.atomizer.vocab)))
+    model.add(layers.Activation('softmax'))
+    model.compile(loss='categorical_crossentropy', optimizer='adam')
 
-    # resume from prior checkpoint
-    checkpoint_path, checkpoint_paths = None, None
-    if self.most_recent_checkpoint_path:
-      # Check that all necessary files exist.
-      assert fs.isdir(self.most_recent_checkpoint_path)
-      checkpoint = tf.train.get_checkpoint_state(
-          self.most_recent_checkpoint_path)
-      assert checkpoint
-      assert checkpoint.model_checkpoint_path
-      checkpoint_path, checkpoint_paths = self._GetParamsPath(checkpoint,
-                                                              num_batches)
+    with open(self.cache.keypath('model.yaml'), 'w') as f:
+      f.write(model.to_yaml())
 
-    with tf.Session() as sess:
-      tf.global_variables_initializer().run()
+    checkpoint_dir = pathlib.Path(self.cache.keypath('checkpoints'))
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    file_path = str(
+        checkpoint_dir) + "/checkpoint_weights_{epoch:02d}_{loss:.4f}.hdf5"
+    checkpoint = callbacks.ModelCheckpoint(file_path, monitor="loss", verbose=1,
+                                           save_best_only=True, mode="min")
+    model.fit(X, y, epochs=num_epochs, batch_size=batch_size,
+              callbacks=[checkpoint])
 
-      # Keep all checkpoints.
-      saver = tf.train.Saver(tf.global_variables(), max_to_keep=100)
-
-      # Restore model from closest checkpoint.
-      if checkpoint_path:
-        logging.debug('restoring %s', checkpoint_path)
-        saver.restore(sess, checkpoint_path)
-        logging.debug('restored checkpoint %s', checkpoint_path)
-
-      # make sure we don't lose track of other checkpoints
-      if checkpoint_paths:
-        saver.recover_last_checkpoints(checkpoint_paths)
-
-      bar = progressbar.ProgressBar(max_value=max_batch)
-      if sess.run(self.epoch) != self.epochs:
-        logging.info('training %s', self)
-
-      for e in range(sess.run(self.epoch) + 1, self.epochs + 1):
-        epoch_start = time()
-
-        # Decay and set learning rate.
-        new_learning_rate = learning_rate * (
-            (float(100 - decay_rate) / 100.0) ** (e - 1))
-        sess.run(tf.assign(self.learning_rate, new_learning_rate))
-        sess.run(tf.assign(self.epoch, e))
-        self.corpus.CreateBatches(self.config.training.batch_size,
-                                  self.config.training.shuffle_corpus_contentfiles_between_epochs)
-        state = sess.run(self.initial_state)
-        for b in range(num_batches):
-          x, y = self.corpus.next_batch()
-          feed = {self.input_data: x, self.targets: y}
-          for i, (c, h) in enumerate(self.initial_state):
-            feed[c] = state[i].c
-            feed[h] = state[i].h
-          train_cost, state, _ = sess.run(
-              [self.cost, self.final_state, self.train_op], feed)
-
-          # update progress bar
-          batch_num = (e - 1) * num_batches + b
-          bar.update(batch_num)
-
-        # Determine whether we should save a checkpoint.
-        should_save = self.config.training.save_intermediate_checkpoints
-        # Always save on last epoch.
-        should_save |= e == self.epochs
-        if should_save:
-          saver.save(sess, self.cache.keypath("model.ckpt"),
-                     global_step=batch_num)
-
-          next_checkpoint = e * num_batches + b
-          max_epoch = self.epochs
-          logging.debug('\n%s epoch %d / %d. next checkpoint at batch %d', self,
-                        e, max_epoch, next_checkpoint)
-
-          # Update training time.
-          epoch_duration = time() - epoch_start
-          stat = self.meta.training_stats.add()
-          stat.batch_num = batch_num + 1
-          stat.time_ms = int(epoch_duration * 1000)
-          stat.training_cost = float(train_cost)
-          self._FlushMeta()
+    # TODO(cec): Checkpoint callback.
+    # stat = self.meta.training_stats.add()
+    # stat.batch_num = batch_num + 1
+    # stat.time_ms = int(epoch_duration * 1000)
+    # stat.training_cost = float(train_cost)
+    # self._FlushMeta()
     return self
 
   def _FlushMeta(self) -> None:
@@ -331,8 +282,9 @@ class Model(object):
     Returns:
       Path to the most recent checkpoint, or None if no checkpoints.
     """
-    if self.cache.get("checkpoint"):
-      return self.cache.path
+    if self.cache.get("checkpoints"):
+      last = sorted(pathlib.Path(self.cache['checkpoints']).iterdir())[-1]
+      return fs.path(self.cache['checkpoints'], last)
     else:
       return None
 

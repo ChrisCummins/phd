@@ -4,7 +4,6 @@ A training corpus is a set of one or more "contentfiles", where each contentfile
 is a file containing text to train over.
 """
 import codecs
-import math
 import pathlib
 import pickle
 import re
@@ -12,6 +11,7 @@ import typing
 from tempfile import NamedTemporaryFile
 from time import time
 
+import humanize
 import numpy as np
 from absl import logging
 
@@ -282,7 +282,8 @@ WHERE ContentFiles.id NOT IN (
     sep = self.config.contentfile_separator or '\n\n'
     return sep.join(row[0] for row in c.fetchall())
 
-  def CreateBatches(self, batch_size: int, shuffle: bool) -> int:
+  def GetTrainingData(self, shuffle: bool) -> typing.Tuple[
+    np.ndarray, np.ndarray]:
     """Create batches for training.
 
     Args:
@@ -294,34 +295,35 @@ WHERE ContentFiles.id NOT IN (
     Raises:
       UserError: If the number of batches is zero.
     """
-    self.ResetBatchPointer()
-
-    # generate a kernel corpus
-    data = self.ConcatenateTextCorpus(shuffle)
-
-    # encode corpus into vocab indices
-    self._tensor = self.atomizer.AtomizeString(data)
-
-    # set corpus size and number of batches
-    self._size = len(self._tensor)
-    # TODO(cec): Investigate this. Use math.floor() seems one batch too few?
-    num_batches = math.floor(self.size / (batch_size * self.seq_length))
-    if not num_batches:
-      raise errors.UserError(
-          "Not enough data. Use a smaller seq_length and batch_size. "
-          f'Current data size = {self.size}, seq_length = {self.seq_length}, and '
-          f'batch_size {batch_size}.')
-
-    # split into batches
-    self._tensor = self._tensor[
-                   :num_batches * batch_size * self.seq_length]
-    xdata = self._tensor
-    ydata = np.copy(self._tensor)
-    ydata[:-1] = xdata[1:]
-    ydata[-1] = xdata[0]
-    self._x_batches = np.split(xdata.reshape(batch_size, -1), num_batches, 1)
-    self._y_batches = np.split(ydata.reshape(batch_size, -1), num_batches, 1)
-    return num_batches
+    # Generate a corpus by randomly shuffling the contentfiles.
+    corpus_text = self.ConcatenateTextCorpus(shuffle)
+    # Encode the corpus into an array of encoded tokens.
+    tokenized_corpus = self.atomizer.AtomizeString(corpus_text)
+    # Set the corpus size as the number of tokens.
+    num_tokens = len(tokenized_corpus)
+    self._size = num_tokens
+    # Split into X,y pairs.
+    X_data, y_data = [], []
+    for i in range(0, len(tokenized_corpus) - self.config.sequence_length):
+      sequence = tokenized_corpus[i:i + self.config.sequence_length]
+      next_token = tokenized_corpus[i + self.config.sequence_length]
+      X_data.append(sequence)
+      y_data.append(next_token)
+    num_sequences = len(X_data)
+    logging.info('%s tokens sliced into %s sequences of length %s',
+                 humanize.intcomma(len(tokenized_corpus)),
+                 humanize.intcomma(num_sequences),
+                 humanize.intcomma(self.config.sequence_length))
+    # Vectorize our data and labels.
+    X = np.zeros(
+        (num_sequences, self.config.sequence_length, len(self.atomizer.vocab)),
+        dtype=np.bool)
+    y = np.zeros((num_sequences, len(self.atomizer.vocab)), dtype=np.bool)
+    for i, sequence in enumerate(X_data):
+      for t, encoded_char in enumerate(sequence):
+        X[i, t, encoded_char] = 1
+      y[i, y_data[i]] = 1
+    return X, y
 
   @property
   def shorthash(self):
@@ -344,7 +346,7 @@ WHERE ContentFiles.id NOT IN (
     try:
       return self._size
     except AttributeError:
-      self._size = self.ConcatenateTextCorpus(False)
+      self.GetTrainingData(False)
       return self._size
 
   def ResetBatchPointer(self) -> None:
