@@ -10,6 +10,28 @@ exports_files([
 ])
 
 py_library(
+    name = "bazelutil",
+    srcs = ["bazelutil.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//config:getconfig",
+    ],
+)
+
+py_test(
+    name = "bazelutil_test",
+    size = "small",
+    srcs = ["bazelutil_test.py"],
+    data = ["data/test/hello_world"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":bazelutil",
+        ":fs",
+    ],
+)
+
+py_library(
     name = "cache",
     srcs = ["cache.py"],
     visibility = ["//visibility:public"],
