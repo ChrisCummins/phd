@@ -26,7 +26,7 @@ message LanguageToClone {
   // If true, a "lang:<language>" qualifier will be used when querying GitHub
   // to filter only repos which GitHub considers to be in this language. This
   // requires that the language be recognized by GitHub.
-  optional bool github_filter_by_lang = 4 [default = True];
+  optional bool github_filter_by_lang = 4 [default = true];
   // If set, provide a set of keyword queries to run against GitHub, rather than
   // returning all repos. If github_filter_by_lang is true, these terms are
   // searched first. Terms are searched in the order they appear, until
