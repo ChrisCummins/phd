@@ -66,6 +66,7 @@ def ImportFromLanguage(db: contentfiles.ContentFiles,
   if not language.language in FILE_EXTENSIONS:
     logging.error('Language %s not supported! Importing nothing',
                   language.language.capitalize())
+    return
   with db.Session() as s:
     repos_to_import = [pathlib.Path(language.destination_directory / f) for f in
                        pathlib.Path(language.destination_directory).iterdir() if
