@@ -16,8 +16,6 @@ message Sampler {
   optional int64 seed = 3;
   // The criteria that determine when to terminate a sample.
   repeated SampleTerminationCriterion termination_criteria = 4;
-  // The criteria that determine when to terminate sampling.
-  optional int32 min_num_samples = 5;
 }
 
 // Criteria used for determining when to stop sampling.

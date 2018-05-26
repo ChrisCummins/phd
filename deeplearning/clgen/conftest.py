@@ -97,8 +97,7 @@ def abc_sampler_config():
   maxlen = sampler_pb2.MaxTokenLength(maximum_tokens_in_sample=5)
   sample_stop = [sampler_pb2.SampleTerminationCriterion(maxlen=maxlen)]
   return sampler_pb2.Sampler(start_text='a', batch_size=5, seed=0,
-                             termination_criteria=sample_stop,
-                             min_num_samples=5)
+                             termination_criteria=sample_stop)
 
 
 @pytest.fixture(scope='function')
