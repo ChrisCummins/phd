@@ -5,9 +5,12 @@ An atomizer converts a block of text into a sequence of vocbulary tokens.
 import typing
 from collections import Counter
 
+import humanize
 import numpy as np
+from absl import logging
 
 from deeplearning.clgen import errors
+from lib.labm8 import labdate
 
 
 class AtomizerBase(object):
@@ -151,7 +154,7 @@ class GreedyAtomizer(AtomizerBase):
     multichars = set(k for k in self.atoms if len(k) > 1)
     first_chars = set(a[0] for a in multichars)
     self.lookup = dict(
-      (c, [a for a in multichars if a[0] == c]) for c in first_chars)
+        (c, [a for a in multichars if a[0] == c]) for c in first_chars)
 
   def AtomizeString(self, text: str) -> np.array:
     """Atomize a text into an array of vocabulary indices.
@@ -221,14 +224,16 @@ class GreedyAtomizer(AtomizerBase):
     if not atoms:
       raise errors.UserError('No atoms specified')
 
+    start_time = labdate.MillisecondsTimestamp()
     # Instantiate a greedy atomizer using the full vocabulary.
     full_vocab = dict(zip(atoms, range(len(atoms))))
     c = GreedyAtomizer(full_vocab, determine_chars=True)
-
-    # Derive the subset of the vocabulary required to encode the given
-    # text.
+    # Derive the subset of the vocabulary required to encode the given text.
     tokens = sorted(list(set(c.TokenizeString(text))))
     vocab_subset = dict(zip(tokens, range(len(tokens))))
-
+    end_time = labdate.MillisecondsTimestamp()
+    logging.info('Derived vocabulary of size %s from %s tokens in %s',
+                 humanize.intcomma(len(tokens)), humanize.intcomma(len(atoms)),
+                 humanize.intcomma(end_time - start_time))
     # Return a new atomizer using the subset vocabulary.
     return GreedyAtomizer(vocab_subset)
