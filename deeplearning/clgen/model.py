@@ -56,7 +56,10 @@ class Model(object):
     self.corpus = corpus.Corpus(config.corpus)
     self.hash = self._ComputeHash(self.corpus, self.config)
     self.cache = cache.mkcache('model', f'{self.corpus.language}-{self.hash}')
+    checkpoint_dir = pathlib.Path(self.cache.path) / 'checkpoints'
+    checkpoint_dir.mkdir(exist_ok=True)
     self._model: typing.Optional[models.Sequential] = None
+    self._current_weights_epoch: int = 0
     logging.debug('model %s', self.hash)
 
     if not config.architecture.HasField('neuron_type'):
@@ -103,9 +106,7 @@ class Model(object):
     """Get the Keras model.
 
     If there is a cached model description, the model will be initialized from
-    that. Else, it is constructed from the proto config. If there are cached
-    weight checkpoints, the one closest to the target number of epochs will be
-    loaded.
+    that. Else, it is constructed from the proto config.
 
     Returns:
       A Sequential model instance.
@@ -113,7 +114,6 @@ class Model(object):
     if self.cache.get('model.yaml'):
       with open(self.cache['model.yaml']) as f:
         model = models.model_from_yaml(f.read())
-      # TODO(cec): Load weights from checkpoint.
       return model
     else:
       model = BuildKerasModelFromProto(self.config,
@@ -132,15 +132,40 @@ class Model(object):
   def _LockedTrain(self) -> 'Model':
     """Locked training.
 
+    If there are cached epoch checkpoints, the one closest to the target number
+    of epochs will be loaded, and the model will be trained for only the
+    remaining number of epochs, if any. This means that calling this function
+    twice will only actually train the model the first time, and all subsequent
+    calls will be no-ops.
+
     Returns:
-      The self instance.
+      The Model instance (self).
     """
-    # TODO(cec): Load past checkpoints.
+    target_num_epochs = self.config.training.num_epochs
+    starting_epoch = 0
+
+    # Early exit in case the model is already sufficiently trained.
+    if target_num_epochs == self._current_weights_epoch:
+      return
+
+    epoch_checkpoints = self.epoch_checkpoints
+    if len(epoch_checkpoints) >= target_num_epochs:
+      # We have already trained a model to at least this number of epochs, so
+      # simply the weights from that epoch and call it a day.
+      self.model.load_weights(
+          epoch_checkpoints[target_num_epochs - 1])
+      return
+    elif epoch_checkpoints:
+      # We have already trained a model at least part of the way to our target
+      # number of epochs, so load the most recent one.
+      self.model.load_weights(epoch_checkpoints[-1])
+      starting_epoch = len(epoch_checkpoints)
+
     # model.load_weights(self.most_recent_checkpoint_path)
     # TODO(cec): Re-implement learning rate, decay rate, and gradient clip.
     learning_rate = self.config.training.initial_learning_rate
     decay_rate = self.config.training.percent_learning_rate_decay_per_epoch
-    num_epochs = self.config.training.num_epochs
+
     batch_size = self.config.training.batch_size
     sequence_length = self.corpus.sequence_length
 
@@ -153,13 +178,16 @@ class Model(object):
     checkpoint = callbacks.ModelCheckpoint(file_path, monitor="loss", verbose=1,
                                            save_best_only=True, mode="min")
 
-    num_batches = int(corpus_len / (batch_size * sequence_length))
-    logging.info('Number of batches: %s', humanize.intcomma(num_batches))
     generator = DataGenerator(
         self.corpus, batch_size, sequence_length,
         self.config.training.shuffle_corpus_contentfiles_between_epochs)
-    self.model.fit_generator(generator, steps_per_epoch=num_batches,
-                             epochs=num_epochs, callbacks=[checkpoint])
+    logging.info('Steps per epoch: %s',
+                 humanize.intcomma(generator.steps_per_epoch))
+    self.model.fit_generator(generator,
+                             steps_per_epoch=generator.steps_per_epoch,
+                             epochs=target_num_epochs - starting_epoch,
+                             callbacks=[checkpoint])
+    self._current_weights_epoch = self.config.training.num_epochs
     # TODO(cec): Checkpoint callback.
     # stat = self.meta.training_stats.add()
     # stat.batch_num = batch_num + 1
@@ -199,7 +227,6 @@ class Model(object):
                                  sample_start_epoch_ms_utc=start_time,
                                  sample_time_ms=end_time - start_time)
     # TODO(cec): Re-implement producer consumer queue.
-    # cache_ = self.cache(model_)
     # self.sample_dir = cache_.path / 'samples'
     # self.sample_dir.mkdir(exist_ok=True)
     # # Producer-consumer queue.
@@ -245,11 +272,15 @@ class Model(object):
     return lockfile.LockFile(lockpath)
 
   @property
-  def checkpoint_paths(self) -> typing.List[pathlib.Path]:
-    """Get path to most recent checkpoint, if exists.
+  def epoch_checkpoints(self) -> typing.List[pathlib.Path]:
+    """Get the paths to all epoch checkpoint files in order.
+
+    Remember that the returned list is zero-indexed, so the epoch number is
+    the array index plus one. E.g. The checkpoint for epoch 5 is
+    epoch_checkpoints[4].
 
     Returns:
-      Path to the most recent checkpoint, or None if no checkpoints.
+      A list of paths.
     """
     checkpoint_dir = pathlib.Path(self.cache.path) / 'checkpoints'
     return [checkpoint_dir / x for x in
@@ -274,7 +305,7 @@ class Model(object):
 def BuildKerasModelFromProto(config: model_pb2.Model,
                              sequence_length: int,
                              vocabulary_size: int) -> models.Sequential:
-  """Build the Keras model from the proto config.
+  """Build a Keras model from a Model proto.
 
   Args:
     config: A Model proto instance.
@@ -322,13 +353,23 @@ class DataGenerator(object):
     self.encoded_corpus = self.corpus.GetTrainingData(shuffle=shuffle)
     self.corpus_len = len(self.encoded_corpus)
     self.sequence_length = sequence_length
-    self.skip = 1  # TODO
+    self.skip = 1  # TODO(cec): Add this as a field in Model proto.
     self.shuffle = shuffle
+
+    # Set this publicly visibly attribute. The number of steps per epoch is
+    # the total number of batches per epoch.
+    self.steps_per_epoch = int(
+        self.corpus_len / (self.batch_size * self.sequence_length))
 
     self.i = 0
 
   def __next__(self) -> typing.Tuple[np.ndarray, np.ndarray]:
     """Generate the next batch of X, y pairs."""
+    if self.i + self.batch_size + self.sequence_length >= self.corpus_len:
+      self.i = 0
+      if self.shuffle:
+        self.encoded_corpus = self.corpus.GetTrainingData(shuffle=True)
+
     X_data = []
     y_data = []
     for i in range(self.i, self.i + self.batch_size, self.skip):
@@ -351,16 +392,10 @@ class DataGenerator(object):
         X[i, t, encoded_char] = 1
       y[i, y_data[i]] = 1
 
-    # TODO(cec): Use keras to_categorical().
+    # TODO(cec): Use keras to_categorical() instead of vectorizing by hand.
     _ = utils.to_categorical(y_data, self.corpus.vocabulary_size)
 
-    if self.i + self.batch_size + self.sequence_length >= self.corpus_len:
-      self.i = 0
-      if self.shuffle:
-        self.encoded_corpus = self.corpus.GetTrainingData(shuffle=True)
-    else:
-      self.i += self.batch_size
-
+    self.i += self.batch_size
     return X, y
 
 
