@@ -8,6 +8,17 @@ py_library(
     ],
 )
 
+
+py_test(
+    name = "builders_test",
+    srcs = ["builders_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":builders",
+    ],
+)
+
 py_library(
     name = "models",
     srcs = ["models.py"],
