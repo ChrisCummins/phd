@@ -49,8 +49,21 @@ class Model(object):
       config: A Model message.
 
     Raises:
+      TypeError: If the config argument is not a Model proto.
       UserError: In case on an invalid config.
     """
+    # Error early, so that a cache isn't created.
+    if not isinstance(config, model_pb2.Model):
+      t = type(config).__name__
+      raise TypeError(f"Config must be a Model proto. Received: '{t}'")
+
+    if not config.architecture.HasField('neuron_type'):
+      raise errors.UserError('Model.architecture.neuron_type field not set')
+
+    # Attributes that will be lazily set.
+    self._model: typing.Optional[models.Sequential] = None
+    self._current_weights_epoch: int = 0
+
     self.config = model_pb2.Model()
     self.config.CopyFrom(config)
     self.corpus = corpuses.Corpus(config.corpus)
@@ -59,12 +72,7 @@ class Model(object):
     # Create the necessary cache directories.
     (self.cache.path / 'checkpoints').mkdir(exist_ok=True)
     (self.cache.path / 'samples').mkdir(exist_ok=True)
-    self._model: typing.Optional[models.Sequential] = None
-    self._current_weights_epoch: int = 0
     logging.debug('model %s', self.hash)
-
-    if not config.architecture.HasField('neuron_type'):
-      raise errors.UserError('Model.archictecture.neuron_type specified.')
 
     # Validate metadata against cache.
     if self.cache.get('META.pbtxt'):
@@ -215,6 +223,7 @@ class Model(object):
       InvalidStartText: If the sampler's start text cannot be encoded using the
         corpus vocabulary.
     """
+    logging.info('Sampling %s', sampler)
     try:
       encoded_seed = self.corpus.atomizer.AtomizeString(sampler.start_text)
     except errors.VocabError:
@@ -222,45 +231,40 @@ class Model(object):
           'Sampler start text cannot be encoded using the corpus vocabulary: '
           f"'{sampler.start_text}'")
 
-    # TODO(cec): Re-implement batched sampling.
-    X = np.zeros((1, self.corpus.sequence_length, self.corpus.vocabulary_size),
-                 dtype=np.bool)
-    for i, token in enumerate(encoded_seed):
-      X[0, i, token] = 1
+    samples = []
 
-    text = []
-    start_time = labdate.MillisecondsTimestamp()
-    # Save a few cycles by not going via the model() property every time we need
-    # to access it.
-    model = self.model
-    # TODO(cec): Re-implement sampling termination criteria.
-    for i in range(100):
-      prediction = np.argmax(model.predict(X, verbose=0))
-      text.append(self.corpus.atomizer.decoder[prediction])
-      activations = np.zeros((1, 1, self.corpus.vocabulary_size), dtype=np.bool)
-      activations[0, 0, prediction] = 1
-      X = np.concatenate((X[:, 1:, :], activations), axis=1)
-    end_time = labdate.MillisecondsTimestamp()
-    sample = internal_pb2.Sample(text=''.join(text),
-                                 sample_start_epoch_ms_utc=start_time,
-                                 sample_time_ms=end_time - start_time)
-    sample_id = crypto.sha1_str(sample.text)
-    p = self.cache.path / f'samples/{sampler.hash}/{sample_id}.pbtxt'
-    pbutil.ToFile(sample, p)
-    # TODO(cec): Re-implement producer consumer queue.
-    # self.sample_dir = cache_.path / 'samples'
-    # self.sample_dir.mkdir(exist_ok=True)
-    # # Producer-consumer queue.
-    # queue = Queue(maxsize=128)
-    # logging.info('sampling %s', self)
-    # sampler = SampleProducer(model_, self.config, queue)
-    # sampler.start()
-    # consumer = SampleConsumer(sampler, self, cache_, queue)
-    # consumer.start()
-    # sampler.join()
-    # consumer.join()
-    # return consumer.samples
-    return [sample]
+    # TODO(cec): Re-implement batched sampling.
+    vectorized_seed = np.zeros(
+        (1, self.corpus.sequence_length, self.corpus.vocabulary_size),
+        dtype=np.bool)
+    for i, token in enumerate(encoded_seed):
+      vectorized_seed[0, i, token] = 1
+
+    while len(samples) < min_num_samples:
+      X = np.copy(vectorized_seed)
+      text = []
+      start_time = labdate.MillisecondsTimestamp()
+      # Save a few cycles by not going via the model() property every time we need
+      # to access it.
+      model = self.model
+      # TODO(cec): Re-implement sampling termination criteria.
+      for i in range(100):
+        prediction = np.argmax(model.predict(X, verbose=0))
+        text.append(self.corpus.atomizer.decoder[prediction])
+        activations = np.zeros((1, 1, self.corpus.vocabulary_size),
+                               dtype=np.bool)
+        activations[0, 0, prediction] = 1
+        X = np.concatenate((X[:, 1:, :], activations), axis=1)
+      end_time = labdate.MillisecondsTimestamp()
+      sample = internal_pb2.Sample(text=''.join(text),
+                                   sample_start_epoch_ms_utc=start_time,
+                                   sample_time_ms=end_time - start_time)
+      sample_id = crypto.sha1_str(sample.text)
+      p = self.cache.path / f'samples/{sampler.hash}/{sample_id}.pbtxt'
+      pbutil.ToFile(sample, p)
+      samples.append(sample)
+
+    return samples
 
   def Train(self) -> 'Model':
     """Train the model.
@@ -330,7 +334,8 @@ class Model(object):
 
   def __repr__(self) -> str:
     """String representation."""
-    celltype = model_pb2.NetworkArchitecture.NeuronType.Name(self.neuron_type)
+    celltype = model_pb2.NetworkArchitecture.NeuronType.Name(
+        self.config.architecture.neuron_type)
     return (f'model[{self.shorthash}]: '
             f'{self.neurons_per_layer}x{self.num_layers}x{self.epochs} '
             f'{celltype}')

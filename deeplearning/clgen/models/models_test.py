@@ -30,6 +30,21 @@ class MockSampler(object):
 ABC_MODEL_HASH = '98dadcd7890565e65be97ac212a141a744e8b016'
 
 
+def test_Model_config_type_error():
+  """Test that a TypeError is raised if config is not a Model proto."""
+  with pytest.raises(TypeError) as e_info:
+    models.Model(1)
+  assert str(e_info).endswith("Config must be a Model proto. Received: 'int'")
+
+
+def test_Model_missing_neuron_type_field(abc_model_config):
+  """Test that a UserError is raided if neuron_type field not set."""
+  abc_model_config.architecture.ClearField('neuron_type')
+  with pytest.raises(errors.UserError) as e_info:
+    models.Model(abc_model_config)
+  assert str(e_info).endswith('Model.architecture.neuron_type field not set')
+
+
 def test_Model_hash(clgen_cache_dir, abc_model_config):
   """Test that the ID of a known corpus matches expected value."""
   del clgen_cache_dir
@@ -205,14 +220,34 @@ def test_Model_Sample_return_value_matches_cached_sample(clgen_cache_dir,
 
 
 def test_Model_Sample_exact_multiple_of_batch_size(clgen_cache_dir,
-                                                   abc_corpus_config):
+                                                   abc_model_config):
   """Test that min_num_samples are returned when a multiple of batch_size."""
   del clgen_cache_dir
-  m = models.Model(abc_corpus_config)
-  assert len(m.Sample(MockSampler(batch_size=1), 1)) == 1
+  m = models.Model(abc_model_config)
   assert len(m.Sample(MockSampler(batch_size=2), 2)) == 2
-  assert len(m.Sample(MockSampler(batch_size=1), 3)) == 3
   assert len(m.Sample(MockSampler(batch_size=2), 4)) == 4
+
+
+# Benchmarks.
+
+def test_benchmark_Model_instantiation(clgen_cache_dir, abc_model_config,
+                                       benchmark):
+  """Benchmark model instantiation.
+
+  We can expect the first iteration of this benchmark to take a little more
+  time than subsequent iterations since it must create the cache directories.
+  """
+  del clgen_cache_dir
+  benchmark(models.Model, abc_model_config)
+
+
+def test_benchmark_Model_Train_already_trained(clgen_cache_dir,
+                                               abc_model_config, benchmark):
+  """Benchmark the Train() method on an already-trained model."""
+  del clgen_cache_dir
+  m = models.Model(abc_model_config)
+  m.Train()  # "Offline" training from cold.
+  benchmark(m.Train)
 
 
 def main(argv):
