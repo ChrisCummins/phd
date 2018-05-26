@@ -18,6 +18,9 @@
         <option value="com.jetbrains.python.testing.pytestLegacy.PyTestConfigurationProducer" />
         <option value="com.jetbrains.python.testing.tox.PyToxConfigurationProducer" />
         <option value="com.jetbrains.python.testing.unittestLegacy.PythonUnitTestConfigurationProducer" />
+        <option value="org.jetbrains.kotlin.idea.run.KotlinJUnitRunConfigurationProducer" />
+        <option value="org.jetbrains.kotlin.idea.run.KotlinPatternConfigurationProducer" />
+        <option value="org.jetbrains.kotlin.idea.run.KotlinRunConfigurationProducer" />
       </set>
     </option>
   </component>
