@@ -120,6 +120,9 @@ def test_Model_train_twice(clgen_cache_dir, abc_model_config):
 # TODO(cec): Add tests on incrementally trained model predictions and losses.
 
 
+# TODO(cec): Add test where batch_size is larger than corpus.
+
+
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:

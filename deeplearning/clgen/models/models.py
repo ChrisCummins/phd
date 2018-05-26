@@ -82,7 +82,7 @@ class Model(object):
     else:
       self.meta = internal_pb2.ModelMeta()
       self.meta.config.CopyFrom(self.config)
-      self._FlushMeta()
+      self._WriteMetafile()
 
   @staticmethod
   def _ComputeHash(corpus_: corpuses.Corpus, config: model_pb2.Model) -> str:
@@ -192,7 +192,7 @@ class Model(object):
     # stat.batch_num = batch_num + 1
     # stat.time_ms = int(epoch_duration * 1000)
     # stat.training_cost = float(train_cost)
-    # self._FlushMeta()
+    # self._WriteMetafile()
     return self
 
   def _LockedSample(self, sampler: samplers.Sampler, min_num_samples: int) -> \
@@ -258,12 +258,17 @@ class Model(object):
       self.Train()
       return self._LockedSample(sampler, min_num_samples)
 
-  def _FlushMeta(self) -> None:
+  def _WriteMetafile(self) -> None:
     pbutil.ToFile(self.meta, pathlib.Path(self.cache.keypath('META.pbtxt')))
 
   @property
-  def shorthash(self):
+  def shorthash(self) -> str:
     return cache.ShortHash(self.hash, cache.cachepath("model"))
+
+  @property
+  def is_trained(self) -> bool:
+    """Return whether the model has previously been trained."""
+    return len(self.epoch_checkpoints) >= self.config.training.num_epochs
 
   @property
   def lock(self) -> lockfile.LockFile:
@@ -344,7 +349,7 @@ class DataGenerator(object):
 
     num_sentences = len(X_data)
     assert num_sentences == self.batch_size
-    logging.info('sliced %d sentences of length %d', num_sentences,
+    logging.info('Sliced %d sequences of length %d', num_sentences,
                  self.sequence_length)
     # Vectorize.
     X = np.zeros(
