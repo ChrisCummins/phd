@@ -102,3 +102,8 @@ class VocabError(CLgenError):
 class InvalidVocab(VocabError):
   """An invalid atomizer vocabulary"""
   pass
+
+
+class InvalidStartText(InvalidVocab):
+  """A Sampler's start text cannot be encoded using the corpus vocabulary."""
+  pass

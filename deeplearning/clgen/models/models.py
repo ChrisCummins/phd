@@ -137,6 +137,8 @@ class Model(object):
     twice will only actually train the model the first time, and all subsequent
     calls will be no-ops.
 
+    This method must only be called when the model is locked.
+
     Returns:
       The Model instance (self).
     """
@@ -169,13 +171,12 @@ class Model(object):
     sequence_length = self.corpus.sequence_length
 
     encoded_corpus = self.corpus.GetTrainingData(shuffle=True)
-    corpus_len = len(encoded_corpus)
     checkpoint_dir = pathlib.Path(self.cache.keypath('checkpoints'))
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
     file_path = str(
         checkpoint_dir) + "/checkpoint_weights_{epoch:02d}_{loss:.4f}.hdf5"
     checkpoint = callbacks.ModelCheckpoint(file_path, monitor="loss", verbose=1,
-                                           save_best_only=True, mode="min")
+                                           save_best_only=False, mode="min")
 
     generator = DataGenerator(
         self.corpus, batch_size, sequence_length,
@@ -197,26 +198,43 @@ class Model(object):
 
   def _LockedSample(self, sampler: samplers.Sampler, min_num_samples: int) -> \
       typing.List[internal_pb2.Sample]:
-    """Locker sampling.
+    """Locked sampling.
+
+    This method must only be called when the model is locked.
 
     Args:
       sampler: A Sampler instance.
+      min_num_samples: The minimum number of samples to return. If -1, the
+        sampler runs indefinitely, and this method never returns.
 
     Returns:
       A list of samples.
+
+    Raises:
+      InvalidStartText: If the sampler's start text cannot be encoded using the
+        corpus vocabulary.
     """
-    X = np.zeros((1, self.corpus.sequence_length, self.corpus.vocabulary_size),
-                 dtype=np.bool)
-    for i, token in enumerate(
-        self.corpus.atomizer.AtomizeString(sampler.config.start_text)):
-      X[0, i, token] = 1
+    try:
+      encoded_seed = self.corpus.atomizer.AtomizeString(sampler.start_text)
+    except errors.VocabError:
+      raise errors.InvalidStartText(
+          'Sampler start text cannot be encoded using the corpus vocabulary: '
+          f"'{sampler.start_text}'")
 
     # TODO(cec): Re-implement batched sampling.
+    X = np.zeros((1, self.corpus.sequence_length, self.corpus.vocabulary_size),
+                 dtype=np.bool)
+    for i, token in enumerate(encoded_seed):
+      X[0, i, token] = 1
+
     text = []
     start_time = labdate.MillisecondsTimestamp()
+    # Save a few cycles by not going via the model() property every time we need
+    # to access it.
+    model = self.model
     # TODO(cec): Re-implement sampling termination criteria.
-    for i in range(500):
-      prediction = np.argmax(self.model.predict(X, verbose=0))
+    for i in range(100):
+      prediction = np.argmax(model.predict(X, verbose=0))
       text.append(self.corpus.atomizer.decoder[prediction])
       activations = np.zeros((1, 1, self.corpus.vocabulary_size), dtype=np.bool)
       activations[0, 0, prediction] = 1
@@ -225,6 +243,9 @@ class Model(object):
     sample = internal_pb2.Sample(text=''.join(text),
                                  sample_start_epoch_ms_utc=start_time,
                                  sample_time_ms=end_time - start_time)
+    sample_id = crypto.sha1_str(sample.text)
+    p = self.cache.path / f'samples/{sampler.hash}/{sample_id}.pbtxt'
+    pbutil.ToFile(sample, p)
     # TODO(cec): Re-implement producer consumer queue.
     # self.sample_dir = cache_.path / 'samples'
     # self.sample_dir.mkdir(exist_ok=True)
@@ -238,9 +259,6 @@ class Model(object):
     # sampler.join()
     # consumer.join()
     # return consumer.samples
-    sample_id = crypto.sha1_str(text)
-    p = self.cache.keypath(f'samples/{sampler.hash}/{sample_id}.pbtxt')
-    pbutil.ToFile(sample, p)
     return [sample]
 
   def Train(self) -> 'Model':
@@ -254,6 +272,24 @@ class Model(object):
 
   def Sample(self, sampler: samplers.Sampler,
              min_num_samples: int) -> typing.List[internal_pb2.Sample]:
+    """Sample a model.
+
+    If the model is not already trained, calling Sample() first trains the
+    model. Thus a call to Sample() is equivalent to calling Train() then
+    Sample().
+
+    Args:
+      sampler: The sampler to sample using.
+      min_num_samples: The minimum number of samples to return. Note that the
+        true number of samples returned may be higher than this value, as
+        sampling occurs in batches. The model will continue producing samples
+        until the lowest mulitple of the sampler batch size property that is
+        larger than this value. E.g. if min_num_samples is 7 and the Sampler
+        batch size is 10, 10 samples will be returned.
+
+    Returns:
+      A list of Sample protos.
+    """
     with self.lock.acquire(replace_stale=True):
       self.Train()
       return self._LockedSample(sampler, min_num_samples)

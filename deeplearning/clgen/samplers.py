@@ -47,6 +47,10 @@ class Sampler(object):
   def shorthash(self) -> str:
     return cache.ShortHash(self.hash, cache.cachepath('sampler'))
 
+  @property
+  def start_text(self) -> str:
+    return self.config.start_text
+
   def __repr__(self) -> str:
     """String representation."""
     return f'sampler[{self.shorthash}]: "{self.config.start_text}"'
