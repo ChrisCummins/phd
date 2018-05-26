@@ -90,7 +90,7 @@ def _seq_stats(sorted_arr: list) -> str:
   return ('min: {}, med: {}, avg: {}, max: {}'.format(_bigint(sorted_arr[0]),
                                                       _bigint(median),
                                                       _bigint(avg), _bigint(
-      sorted_arr[len(sorted_arr) - 1])))
+        sorted_arr[len(sorted_arr) - 1])))
 
 
 def explore(db_path: str) -> None:
@@ -136,14 +136,14 @@ def explore(db_path: str) -> None:
   ratio_pp_files = _safe_div(nb_pp_files, nb_uniq_ocl_files)
   stats.append(('Number of preprocessed files',
                 _bigint(nb_pp_files) + ' ({:.0f}%)'.format(
-                  ratio_pp_files * 100)))
+                    ratio_pp_files * 100)))
 
   c.execute("SELECT Count(*) FROM PreprocessedFiles WHERE status=0")
   nb_pp_files = c.fetchone()[0]
   ratio_pp_files = _safe_div(nb_pp_files, nb_uniq_ocl_files)
   stats.append(('Number of good preprocessed files',
                 _bigint(nb_pp_files) + ' ({:.0f}%)'.format(
-                  ratio_pp_files * 100)))
+                    ratio_pp_files * 100)))
 
   c.execute('SELECT contents FROM PreprocessedFiles WHERE status=0')
   bc = c.fetchall()
@@ -228,14 +228,14 @@ def explore_gh(db_path: str) -> None:
   ratio_pp_files = _safe_div(nb_pp_files, nb_uniq_ocl_files)
   stats.append(('Number of preprocessed files',
                 _bigint(nb_pp_files) + ' ({:.0f}%)'.format(
-                  ratio_pp_files * 100)))
+                    ratio_pp_files * 100)))
 
   c.execute("SELECT Count(*) FROM PreprocessedFiles WHERE status=0")
   nb_pp_files = c.fetchone()[0]
   ratio_pp_files = _safe_div(nb_pp_files, nb_uniq_ocl_files)
   stats.append(('Number of good preprocessed files',
                 _bigint(nb_pp_files) + ' ({:.0f}%)'.format(
-                  ratio_pp_files * 100)))
+                    ratio_pp_files * 100)))
 
   c.execute('SELECT contents FROM PreprocessedFiles WHERE status=0')
   bc = c.fetchall()

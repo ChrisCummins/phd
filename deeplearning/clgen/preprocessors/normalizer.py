@@ -1,6 +1,5 @@
 """Python entry point to the clgen-rewriter binary."""
 import os
-import pathlib
 import subprocess
 import tempfile
 import typing
@@ -69,7 +68,7 @@ def NormalizeIdentifiers(text: str, suffix: str, cflags: typing.List[str],
     raise errors.RewriterException(stderr)
   elif process.returncode == 9:
     raise errors.ClangTimeout(
-      f'clgen-rewriter failed to complete after {timeout_seconds}s')
+        f'clgen-rewriter failed to complete after {timeout_seconds}s')
   # The rewriter process can still fail because of some other compilation
   # problem, e.g. for some reason the 'enable 64bit support' pragma which should
   # be included in the shim isn't being propogated correctly to the rewriter.

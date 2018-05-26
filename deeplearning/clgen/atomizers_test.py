@@ -91,7 +91,7 @@ __kernel void A(__global float* a, __global float* b, const int c) {
               ' ', 'b', '[', 'd', ']', ' ', '*', ' ', '1', '0', '.', '0', 'f',
               ';', '\n', '  ', '}', '\n', '}']
   c = atomizers.GreedyAtomizer.FromText(test_in, languages.atoms_for_lang(
-    languages.Language.OPENCL))
+      languages.Language.OPENCL))
   assert c.TokenizeString(test_in) == test_out
 
 
@@ -105,7 +105,7 @@ __kernel void A(__global float* a, __global float* b, const int c) {
 }\
 """
   c = atomizers.GreedyAtomizer.FromText(test_in, languages.atoms_for_lang(
-    languages.Language.OPENCL))
+      languages.Language.OPENCL))
   a = c.AtomizeString(test_in)
   assert c.DeatomizeIndices(a) == test_in
 
@@ -123,7 +123,7 @@ __kernel void A(__global float* a, __global float* b, const int c) {
             'b', 'const', 'int', 'c', '{', '}', '  ', 'd', 'get_global_id', ';',
             'if', '<', '[', ']', 'f', '.', '1', '\n', '=', ',', 'void']
   c = atomizers.GreedyAtomizer.FromText(test_in, languages.atoms_for_lang(
-    languages.Language.OPENCL))
+      languages.Language.OPENCL))
   assert sorted(c.atoms) == sorted(tokens)
   assert c.vocab_size == len(tokens)
 

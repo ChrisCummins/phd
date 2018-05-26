@@ -120,7 +120,7 @@ def package_str(*path) -> str:
     return package_data(*path).decode('utf-8')
   except UnicodeDecodeError:
     raise errors.InternalError(
-      "failed to decode package data '{}'".format(path))
+        "failed to decode package data '{}'".format(path))
 
 
 def sql_script(name: str) -> str:

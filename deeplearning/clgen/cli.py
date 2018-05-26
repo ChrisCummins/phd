@@ -75,10 +75,10 @@ class ReadableFilesOrDirectories(argparse.Action):
     for path in values:
       if not os.path.isdir(path) and not os.path.isfile(path):
         raise argparse.ArgumentTypeError(
-          f"ReadableFilesOrDirectories:{path} not found")
+            f"ReadableFilesOrDirectories:{path} not found")
       if not os.access(path, os.R_OK):
         raise argparse.ArgumentTypeError(
-          f"ReadableFilesOrDirectories:{path} is not readable")
+            f"ReadableFilesOrDirectories:{path} is not readable")
 
     setattr(namespace, self.dest, [Path(path) for path in values])
 
@@ -349,7 +349,7 @@ def _register_ls_parser(self, parent: ArgumentParser) -> None:
         caches.append(sampler_.cache(model_))
 
       files = sorted(
-        labtypes.flatten(c.ls(abspaths=True, recursive=True) for c in caches))
+          labtypes.flatten(c.ls(abspaths=True, recursive=True) for c in caches))
       print('\n'.join(files))
 
     parser = parent.add_parser("files", help="list cached files",
@@ -670,7 +670,7 @@ def _register_cache_parser(self, parent: ArgumentParser) -> None:
         for cached_modeldir in cached_modeldirs:
           cached_model_id = fs.basename(cached_modeldir)
           cached_proto = pbutil.FromFile(
-            pathlib.Path(fs.path(cached_modeldir, "META")))
+              pathlib.Path(fs.path(cached_modeldir, "META")))
           model_ = models.Model(cached_proto)
           if cached_model_id != model_.hash:
             logging.info(cached_model_id, '->', model_.hash)

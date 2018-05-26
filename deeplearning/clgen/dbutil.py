@@ -245,7 +245,7 @@ def get_inlined_kernel(path: str, kid: str,
     {languages.Language.GLSL: re.compile(r'\w*#include ["<](?P<path>.*)[">]'),
      languages.Language.OPENCL: re.compile(r'\w*#include ["<](?P<path>.*)[">]'),
      languages.Language.SOLIDITY: re.compile(
-       r'\w*import ["<](\./)?(?P<path>.*)[">];'), }[lang]
+         r'\w*import ["<](\./)?(?P<path>.*)[">];'), }[lang]
 
   outlines = []
   for line in src.split('\n'):
@@ -267,7 +267,7 @@ def get_inlined_kernel(path: str, kid: str,
 
         if closest_match in stack:
           outlines.append(
-            '// [FETCH] ignored recursive include: ' + include_name)
+              '// [FETCH] ignored recursive include: ' + include_name)
         else:
           logging.debug("closest match to %s is %s", include_name,
                         closest_match)
@@ -440,8 +440,8 @@ def table_exists(db, table_name: str) -> None:
   """
   c = db.cursor()
   c.execute(
-    "SELECT name FROM sqlite_master WHERE type='table' AND name='" +
-    table_name + "'")
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='" +
+      table_name + "'")
   res = c.fetchone()
   c.close()
   return res and res[0]
@@ -737,8 +737,8 @@ def _dump_db(db, out_path: str, gh: bool = False, fileid: bool = False,
 
   query = (
     '{select} FROM {table} {qualifier} ORDER BY {orderby} {order}'.format(
-      select=select, table=table, qualifier=qualifier, orderby=orderby,
-      order=order))
+        select=select, table=table, qualifier=qualifier, orderby=orderby,
+        order=order))
 
   c.execute(query)
   rows = c.fetchall()
@@ -845,7 +845,7 @@ def HasContentMetaTable(db_path: pathlib.Path) -> bool:
   db = sqlite3.connect(str(db_path))
   c = db.cursor()
   c.execute(
-    "SELECT name FROM sqlite_master WHERE type='table' AND name='ContentMeta';")
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='ContentMeta';")
   meta_table = c.fetchone()
   c.close()
   db.close()

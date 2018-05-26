@@ -8,8 +8,8 @@ from deeplearning.clgen.preprocessors import public
 
 
 C_COMMENT_RE = re.compile(
-  r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
-  re.DOTALL | re.MULTILINE)
+    r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
+    re.DOTALL | re.MULTILINE)
 
 CLANG_ARGS = ['-xc++', '-isystem', native.LIBCXX_HEADERS,
               '-Wno-ignored-pragmas', '-ferror-limit=1',

@@ -369,14 +369,14 @@ def fetch_repos(db_path: Path, indir: Path, lang: languages.Language) -> None:
     # hacky hardcoded interpretation of `git remote -v`
     gitdir = fs.path(directory, ".git")
     output = subprocess.check_output(
-      ["git", "--git-dir", gitdir, "remote", "-v"], universal_newlines=True)
+        ["git", "--git-dir", gitdir, "remote", "-v"], universal_newlines=True)
     url = output.split("\n")[0].split("\t")[1].split(" ")[0]
     name = fs.basename(directory)
 
     output = subprocess.check_output(
-      f"git --git-dir {gitdir} rev-list --format=format:'%ai' --max-count=1 "
-      f"$(git --git-dir {gitdir} rev-parse HEAD) | tail -n1", shell=True,
-      universal_newlines=True)
+        f"git --git-dir {gitdir} rev-list --format=format:'%ai' --max-count=1 "
+        f"$(git --git-dir {gitdir} rev-parse HEAD) | tail -n1", shell=True,
+        universal_newlines=True)
     try:
       updated_at = dateutil.parser.parse(output)
     except ValueError:
@@ -396,10 +396,10 @@ def fetch_repos(db_path: Path, indir: Path, lang: languages.Language) -> None:
               (url, "<unknown>", name, 0, 0, 0, 0, updated_at, updated_at))
 
     name_str = " -o ".join(
-      [f"-name '*{ext}'" for ext in languages.file_extensions(lang)])
+        [f"-name '*{ext}'" for ext in languages.file_extensions(lang)])
     output = subprocess.check_output(
-      f"find {directory} -type f {name_str} | grep -v '.git/' || true",
-      shell=True, universal_newlines=True)
+        f"find {directory} -type f {name_str} | grep -v '.git/' || true",
+        shell=True, universal_newlines=True)
     files = [x.strip() for x in output.split("\n") if x.strip()]
 
     # nothing to import
@@ -501,8 +501,8 @@ def inline_fs_headers(path: Path, stack: List[str],
       include_basename = fs.basename(include)
       esc_basename = include_basename.replace('"', '\\"')
       candidates = [x for x in subprocess.check_output(
-        f'find "{escp_topdir}" -type f -name {esc_basename}', shell=True,
-        universal_newlines=True).split('\n') if x]
+          f'find "{escp_topdir}" -type f -name {esc_basename}', shell=True,
+          universal_newlines=True).split('\n') if x]
 
       # Select which file to inline:
       if len(candidates) == 1:
@@ -517,8 +517,8 @@ def inline_fs_headers(path: Path, stack: List[str],
         min_distance = min(distances)
         file_to_inline = candidates[distances.index(min_distance)]
         logging.debug(
-          f"Inferred include '{file_to_inline}' from '{line}' with distance "
-          f"{min_distance}")
+            f"Inferred include '{file_to_inline}' from '{line}' with distance "
+            f"{min_distance}")
       else:
         # We didn't find anything suitable:
         file_to_inline = None
@@ -527,20 +527,21 @@ def inline_fs_headers(path: Path, stack: List[str],
       if file_to_inline in stack:
         # We've already inlined this file, so ignore it:
         outlines.append(
-          languages.format_as_comment(lang, f'[FETCH] ignored_include({line})'))
+            languages.format_as_comment(lang,
+                                        f'[FETCH] ignored_include({line})'))
       elif file_to_inline:
         # Inline the file by recursively expanding its contents:
         outlines.append(
-          languages.format_as_comment(lang, f'[FETCH] begin_include({line})'))
+            languages.format_as_comment(lang, f'[FETCH] begin_include({line})'))
         inline_src = inline_fs_headers(file_to_inline, stack)
         outlines.append(inline_src)
         outlines.append(
-          languages.format_as_comment(lang, f'[FETCH] end_include({line})'))
+            languages.format_as_comment(lang, f'[FETCH] end_include({line})'))
       else:
         # We didn't find anything suitable, so keep the original
         # include:
         outlines.append(
-          languages.format_as_comment(lang, f'[FETCH] not_found({line})'))
+            languages.format_as_comment(lang, f'[FETCH] not_found({line})'))
         outlines.append(line)
     else:
       outlines.append(line)
@@ -601,7 +602,7 @@ def fetch(db_path: str, paths: List[str] = []) -> None:
     except IOError:
       db.commit()
       raise FetchError(
-        "cannot read file '{path}'".format(path=fs.abspath(path)))
+          "cannot read file '{path}'".format(path=fs.abspath(path)))
     c.execute('INSERT OR IGNORE INTO ContentFiles VALUES(?,?)',
               (path, contents))
 

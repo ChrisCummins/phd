@@ -58,7 +58,7 @@ def test_GetPreprocessFunction_missing_function():
   """Test that UserError is raised if module exists but function doesn't."""
   with pytest.raises(errors.UserError) as e_info:
     preprocessors.GetPreprocessorFunction(
-      'deeplearning.clgen.preprocessors.preprocessors_test:Foo')
+        'deeplearning.clgen.preprocessors.preprocessors_test:Foo')
   assert 'not found' in str(e_info.value)
 
 
@@ -66,15 +66,15 @@ def test_GetPreprocessFunction_undecorated_preprocessor():
   """Test that an UserError is raised if preprocessor not decorated."""
   with pytest.raises(errors.UserError) as e_info:
     preprocessors.GetPreprocessorFunction(
-      'deeplearning.clgen.preprocessors.preprocessors_test'
-      ':MockUndecoratedPreprocessor')
+        'deeplearning.clgen.preprocessors.preprocessors_test'
+        ':MockUndecoratedPreprocessor')
   assert '@clgen_preprocessor' in str(e_info.value)
 
 
 def test_GetPreprocessFunction_mock_preprocessor():
   """Test that a mock preprocessor can be found."""
   f = preprocessors.GetPreprocessorFunction(
-    'deeplearning.clgen.preprocessors.preprocessors_test:MockPreprocessor')
+      'deeplearning.clgen.preprocessors.preprocessors_test:MockPreprocessor')
   assert f == MockPreprocessor
 
 
@@ -125,7 +125,7 @@ def test_PreprocessDatabase_abc(abc_db_path):
   db = dbutil.connect(abc_db_path)
   c = db.cursor()
   results = c.execute(
-    'SELECT id,status,contents FROM PreprocessedFiles').fetchall()
+      'SELECT id,status,contents FROM PreprocessedFiles').fetchall()
   assert set([r[0] for r in results]) == {'a', 'b', 'c'}
   assert set([r[1] for r in results]) == {0}
   assert set([r[2] for r in results]) == {'PREPROCESSED', }
@@ -138,7 +138,7 @@ def test_PreprocessDatabase_abc_no_preprocessors(abc_db_path):
   db = dbutil.connect(abc_db_path)
   c = db.cursor()
   results = c.execute(
-    'SELECT id,status,contents FROM PreprocessedFiles').fetchall()
+      'SELECT id,status,contents FROM PreprocessedFiles').fetchall()
   assert set([r[0] for r in results]) == {'a', 'b', 'c'}
   assert set([r[1] for r in results]) == {0}
   # The abc_db contentfiles, unmodified.
@@ -168,7 +168,7 @@ def test_PreprocessDatabase_abc_bad_code(abc_db_path):
   db = dbutil.connect(abc_db_path)
   c = db.cursor()
   results = c.execute(
-    'SELECT id,status,contents FROM PreprocessedFiles').fetchall()
+      'SELECT id,status,contents FROM PreprocessedFiles').fetchall()
   assert set([r[0] for r in results]) == {'a', 'b', 'c'}
   assert set([r[1] for r in results]) == {1}
   assert set([r[2] for r in results]) == {'bad code', }
@@ -184,7 +184,7 @@ def test_PreprocessDatabase_abc_internal_error(abc_db_path):
   db = dbutil.connect(abc_db_path)
   c = db.cursor()
   results = c.execute(
-    'SELECT id,status,contents FROM PreprocessedFiles').fetchall()
+      'SELECT id,status,contents FROM PreprocessedFiles').fetchall()
   assert set([r[0] for r in results]) == {'a', 'b', 'c'}
   assert set([r[1] for r in results]) == {1}
   assert set([r[2] for r in results]) == {'!!INTERNAL ERROR!! internal error', }

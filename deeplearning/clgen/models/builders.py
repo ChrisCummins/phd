@@ -1,6 +1,6 @@
 """This file builds Keras models from CLgen Model config protos."""
 from absl import flags
-from keras import models, layers
+from keras import layers, models
 
 from deeplearning.clgen.proto import model_pb2
 

@@ -52,7 +52,7 @@ def GetPreprocessorFunction(name: str) -> public.PreprocessorFunction:
     raise errors.UserError(f'Preprocessor {name} not found.')
   if not function_.__dict__.get('is_clgen_preprocessor'):
     raise errors.UserError(
-      f'Preprocessor {name} not decorated with @clgen_preprocessor')
+        f'Preprocessor {name} not decorated with @clgen_preprocessor')
   return function_
 
 
@@ -204,13 +204,13 @@ def _DoPreprocessDatabase(db_path: pathlib.Path, language: languages.Language,
       num_preprocessed += 1
       # Block until another result comes in.
       result: internal_pb2.PreprocessorWorkerJobOutcome = output_queue.get(
-        timeout=120)
+          timeout=120)
       status = result.status
       # Insert result into database.
       c = db.cursor()
       c.execute(
-        "INSERT INTO PreprocessedFiles (id,status,contents) VALUES(?,?,?)",
-        (result.contentfile_id, status, result.contents))
+          "INSERT INTO PreprocessedFiles (id,status,contents) VALUES(?,?,?)",
+          (result.contentfile_id, status, result.contents))
       c.close()
       db.commit()
     db.close()
