@@ -45,8 +45,8 @@ py_library(
 )
 
 py_binary(
-    name = "cli",
-    srcs = ["cli.py"],
+    name = "clgen",
+    srcs = ["clgen.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
@@ -72,9 +72,9 @@ py_binary(
 )
 
 py_test(
-    name = "cli_test",
+    name = "clgen_test",
     size = "enormous",
-    srcs = ["cli_test.py"],
+    srcs = ["clgen_test.py"],
     data = [
         "//deeplearning/clgen/tests/data:pico",
         "//deeplearning/clgen/tests/data:tiny",
@@ -82,7 +82,7 @@ py_test(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
-        ":cli",
+        ":clgen",
         ":conftest",
         "//deeplearning/clgen/tests:testlib",
         "//lib/labm8:fs",
