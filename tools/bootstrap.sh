@@ -86,14 +86,11 @@ main() {
         sed "s,@PYTHON@,$PYTHON," -i $HOME/.ipython/kernels/phd/kernel.json
     fi
 
-    # git pre-commit hook
-    if [[ -f "$ROOT/.git/hooks/pre-push" ]]; then
-        echo '# git hook: installed'
-    else
-        echo '# git hook:'
-        cp -v $ROOT/tools/git/pre-push $ROOT/.git/hooks/pre-push
-        chmod +x $ROOT/.git/hooks/pre-push
-        echo
+    # "Husky" enables easy git commit hooks.
+    # https://github.com/typicode/husky/tree/master
+    if [[ ! -d "$ROOT/node_modules/husky" ]]; then
+        echo '# husky:'
+        npm install --cwd "$ROOT" husky --save-dev
     fi
 
     # libexempi3 is required by //util/photolib/ and python package
