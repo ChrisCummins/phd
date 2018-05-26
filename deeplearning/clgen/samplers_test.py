@@ -8,6 +8,13 @@ from deeplearning.clgen import errors
 from deeplearning.clgen import samplers
 
 
+def test_Sampler_config_type_error():
+  """Test that a TypeError is raised if config is not a Sampler proto."""
+  with pytest.raises(TypeError) as e_info:
+    samplers.Sampler(1)
+  assert str(e_info).endswith("Config must be a Sampler proto. Received: 'int'")
+
+
 def test_Sampler_no_start_text_field(clgen_cache_dir, abc_sampler_config):
   """Test that an error is thrown if start_text field is not set."""
   del clgen_cache_dir
