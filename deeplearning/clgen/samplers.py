@@ -5,7 +5,6 @@ from deeplearning.clgen import cache
 from deeplearning.clgen import errors
 from deeplearning.clgen.proto import sampler_pb2
 from lib.labm8 import crypto
-from lib.labm8 import fs
 from lib.labm8 import pbutil
 
 
@@ -27,7 +26,6 @@ class Sampler(object):
     self.config = sampler_pb2.Sampler()
     self.config.CopyFrom(config)
     self.hash = self._ComputeHash(self.config)
-    self.sample_dir = None
     if not config.start_text:
       raise errors.UserError('Sampler.start_text not set')
     if config.batch_size < 1:
@@ -48,14 +46,6 @@ class Sampler(object):
   @property
   def shorthash(self) -> str:
     return cache.ShortHash(self.hash, cache.cachepath('sampler'))
-
-  @property
-  def min_samples(self) -> int:
-    return self.config.min_num_samples
-
-  @property
-  def num_samples(self) -> int:
-    return len(fs.ls(self.sample_dir)) if self.sample_dir else 0
 
   def __repr__(self) -> str:
     """String representation."""

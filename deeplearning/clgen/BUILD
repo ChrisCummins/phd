@@ -332,7 +332,6 @@ py_library(
         ":errors",
         "//deeplearning/clgen/proto:sampler_py_pb2",
         "//lib/labm8:crypto",
-        "//lib/labm8:fs",
         "//lib/labm8:pbutil",
     ],
 )
