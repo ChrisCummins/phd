@@ -44,6 +44,7 @@ class Model(object):
     self.corpus = corpus.Corpus(config.corpus)
     self.hash = self._ComputeHash(self.corpus, self.config)
     self.cache = cache.mkcache('model', f'{self.corpus.language}-{self.hash}')
+    self._model: typing.Optional[models.Sequential] = None
     logging.debug('model %s', self.hash)
 
     if not config.architecture.HasField('neuron_type'):
@@ -120,7 +121,7 @@ class Model(object):
     tf.reset_default_graph()
     batch_size = self.config.training.batch_size
     # Corpus info:
-    seq_length = 1 if infer else self.corpus.seq_length
+    seq_length = 1 if infer else self.corpus.sequence_length
     vocab_size = self.corpus.vocab_size
     # Model state:
     cell = self.cell_fn(self.neurons_per_layer, state_is_tuple=True)
@@ -195,28 +196,54 @@ class Model(object):
         closest_path = path
     return closest_path, paths
 
+  def GetKerasModel(self) -> models.Sequential:
+    """Get the Keras model.
+
+    If there is a cached model description, the model will be initialized from
+    that. Else, it is constructed from the proto config. If there are cached
+    weight checkpoints, the one closest to the target number of epochs will be
+    loaded.
+
+    Returns:
+      A Sequential model instance.
+    """
+    if self.cache.get('model.yaml'):
+      with open(self.cache['model.yaml']) as f:
+        model = models.model_from_yaml(f.read())
+      # TODO(cec): Load weights from checkpoint.
+      return model
+    else:
+      model = BuildKerasModelFromProto(self.config,
+                                       self.corpus.sequence_length,
+                                       self.corpus.vocabulary_size)
+      with open(self.cache.keypath('model.yaml'), 'w') as f:
+        f.write(model.to_yaml())
+      return model
+
+  @property
+  def model(self) -> models.Sequential:
+    if self._model == None:
+      self._model = self.GetKerasModel()
+    else:
+      return self._model
+
   def _LockedTrain(self) -> 'Model':
+    """Locked training.
+
+    Returns:
+      The self instance.
+    """
     # TODO(cec): Re-implement learning rate, decay rate, and gradient clip.
     learning_rate = self.config.training.initial_learning_rate
     decay_rate = self.config.training.percent_learning_rate_decay_per_epoch
     num_epochs = self.config.training.num_epochs
     batch_size = self.config.training.batch_size
-    sequence_len = self.corpus.seq_length
+    sequence_len = self.corpus.sequence_length
 
     X, y = self.corpus.GetTrainingData(shuffle=True)
-    model = models.Sequential()
-    model.add(layers.LSTM(self.config.architecture.neurons_per_layer,
-                          input_shape=(
-                            sequence_len, len(self.corpus.atomizer.vocab))))
-    # for _ in range(1, self.config.architecture.num_layers):
-    #   model.add(layers.LSTM(self.config.architecture.neurons_per_layer))
-    model.add(layers.Dense(len(self.corpus.atomizer.vocab)))
-    model.add(layers.Activation('softmax'))
-    model.compile(loss='categorical_crossentropy', optimizer='adam')
-
+    model = self.GetKerasModel()
     with open(self.cache.keypath('model.yaml'), 'w') as f:
       f.write(model.to_yaml())
-
     checkpoint_dir = pathlib.Path(self.cache.keypath('checkpoints'))
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
     file_path = str(
@@ -225,7 +252,6 @@ class Model(object):
                                            save_best_only=True, mode="min")
     model.fit(X, y, epochs=num_epochs, batch_size=batch_size,
               callbacks=[checkpoint])
-
     # TODO(cec): Checkpoint callback.
     # stat = self.meta.training_stats.add()
     # stat.batch_num = batch_num + 1
@@ -256,26 +282,6 @@ class Model(object):
     return lockfile.LockFile(lockpath)
 
   @property
-  def neuron_type(self) -> model_pb2.NetworkArchitecture.NeuronType:
-    return self.config.architecture.neuron_type
-
-  @property
-  def neurons_per_layer(self) -> int:
-    return self.config.architecture.neurons_per_layer
-
-  @property
-  def num_layers(self) -> int:
-    return self.config.architecture.num_layers
-
-  @property
-  def gradient_clip(self) -> int:
-    return self.config.training.gradient_clip
-
-  @property
-  def epochs(self) -> int:
-    return self.config.training.num_epochs
-
-  @property
   def most_recent_checkpoint_path(self) -> typing.Optional[str]:
     """Get path to most recent checkpoint, if exists.
 
@@ -302,6 +308,41 @@ class Model(object):
 
   def __ne__(self, rhs) -> bool:
     return not self.__eq__(rhs)
+
+
+def BuildKerasModelFromProto(config: model_pb2.Model,
+                             sequence_length: int,
+                             vocabulary_size: int) -> models.Sequential:
+  """Build the Keras model from the proto config.
+
+  Args:
+    config: A Model proto instance.
+    sequence_length: The length of sequences.
+    vocabulary_size: The number of tokens in the vocabulary.
+
+  Returns:
+    A Sequential model instance.
+  """
+  model = models.Sequential()
+  layer = {
+    model_pb2.NetworkArchitecture.LSTM: layers.LSTM,
+    model_pb2.NetworkArchitecture.RNN: layers.RNN,
+    model_pb2.NetworkArchitecture.GRU: layers.GRU,
+  }[config.architecture.neuron_type]
+  return_sequences = config.architecture.neurons_per_layer > 1
+  model.add(layer(config.architecture.neurons_per_layer,
+                  input_shape=(
+                    sequence_length,
+                    vocabulary_size),
+                  return_sequences=return_sequences))
+  for _ in range(1, config.architecture.num_layers - 1):
+    model.add(layer(config.architecture.neurons_per_layer,
+                    return_sequences=True))
+  model.add(layer(config.architecture.neurons_per_layer))
+  model.add(layers.Dense(vocabulary_size))
+  model.add(layers.Activation('softmax'))
+  model.compile(loss='categorical_crossentropy', optimizer='adam')
+  return model
 
 
 def GetAllModels() -> typing.Iterator[Model]:

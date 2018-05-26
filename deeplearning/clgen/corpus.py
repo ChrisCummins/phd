@@ -335,8 +335,14 @@ WHERE ContentFiles.id NOT IN (
     return lockfile.LockFile(lockpath)
 
   @property
-  def seq_length(self) -> int:
+  def sequence_length(self) -> int:
+    """The length of sequences."""
     return self.config.sequence_length
+
+  @property
+  def vocabulary_size(self) -> int:
+    """The number of elements in the corpus vocabulary."""
+    return len(self.atomizer.vocab)
 
   @property
   def size(self) -> int:
