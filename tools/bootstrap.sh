@@ -90,7 +90,7 @@ main() {
     # https://github.com/typicode/husky/tree/master
     if [[ ! -d "$ROOT/node_modules/husky" ]]; then
         echo '# husky:'
-        npm install --cwd "$ROOT" husky --save-dev
+        "$(brew --prefix npm)/bin/npm" install --cwd "$ROOT" husky --save-dev
     fi
 
     # libexempi3 is required by //util/photolib/ and python package
