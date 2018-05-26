@@ -302,23 +302,23 @@ WHERE ContentFiles.id NOT IN (
     # Set the corpus size as the number of tokens.
     num_tokens = len(tokenized_corpus)
     self._size = num_tokens
-    # Split into X,y pairs.
+    # Split into X, y pairs.
     X_data, y_data = [], []
-    for i in range(0, len(tokenized_corpus) - self.config.sequence_length):
-      sequence = tokenized_corpus[i:i + self.config.sequence_length]
-      next_token = tokenized_corpus[i + self.config.sequence_length]
+    for i in range(0, len(tokenized_corpus) - self.sequence_length):
+      sequence = tokenized_corpus[i:i + self.sequence_length]
+      next_token = tokenized_corpus[i + self.sequence_length]
       X_data.append(sequence)
       y_data.append(next_token)
     num_sequences = len(X_data)
     logging.info('%s tokens sliced into %s sequences of length %s',
                  humanize.intcomma(len(tokenized_corpus)),
                  humanize.intcomma(num_sequences),
-                 humanize.intcomma(self.config.sequence_length))
+                 humanize.intcomma(self.sequence_length))
     # Vectorize our data and labels.
     X = np.zeros(
-        (num_sequences, self.config.sequence_length, len(self.atomizer.vocab)),
+        (num_sequences, self.sequence_length, self.vocabulary_size),
         dtype=np.bool)
-    y = np.zeros((num_sequences, len(self.atomizer.vocab)), dtype=np.bool)
+    y = np.zeros((num_sequences, self.vocabulary_size), dtype=np.bool)
     for i, sequence in enumerate(X_data):
       for t, encoded_char in enumerate(sequence):
         X[i, t, encoded_char] = 1
