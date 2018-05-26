@@ -184,18 +184,18 @@ class Model(object):
         self.corpus.atomizer.AtomizeString(sampler.config.start_text)):
       X[0, i, token] = 1
 
-    text = ''
-    start_time = labdate.MillisecondsTimestamp()
     # TODO(cec): Re-implement batched sampling.
+    text = []
+    start_time = labdate.MillisecondsTimestamp()
     # TODO(cec): Re-implement sampling termination criteria.
     for i in range(500):
       prediction = np.argmax(self.model.predict(X, verbose=0))
-      text += self.corpus.atomizer.decoder[prediction]
+      text.append(self.corpus.atomizer.decoder[prediction])
       activations = np.zeros((1, 1, self.corpus.vocabulary_size), dtype=np.bool)
       activations[0, 0, prediction] = 1
       X = np.concatenate((X[:, 1:, :], activations), axis=1)
     end_time = labdate.MillisecondsTimestamp()
-    sample = internal_pb2.Sample(text=text,
+    sample = internal_pb2.Sample(text=''.join(text),
                                  sample_start_epoch_ms_utc=start_time,
                                  sample_time_ms=end_time - start_time)
     # TODO(cec): Re-implement producer consumer queue.
