@@ -40,8 +40,8 @@ from deeplearning.clgen import explore
 from deeplearning.clgen import features
 from deeplearning.clgen import fetch
 from deeplearning.clgen import languages
-from deeplearning.clgen import model
-from deeplearning.clgen import sampler
+from deeplearning.clgen import samplers
+from deeplearning.clgen.models import models
 from deeplearning.clgen.preprocessors import preprocessors
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
@@ -175,7 +175,7 @@ def _register_train_parser(self, parent: ArgumentParser) -> None:
   def _main(model_file: TextIO) -> None:
     model_proto = pbutil.FromFile(pathlib.Path(model_file.name),
                                   model_pb2.Model())
-    model_ = model.Model(model_proto)
+    model_ = models.Model(model_proto)
     model_.Train()
     logging.info("done.")
 
@@ -194,11 +194,11 @@ def _register_sample_parser(self, parent: ArgumentParser) -> None:
   def _main(model_file: TextIO, sampler_file: TextIO) -> None:
     model_proto = pbutil.FromFile(pathlib.Path(model_file.name),
                                   model_pb2.Model())
-    model_ = model.Model(model_proto)
+    model_ = models.Model(model_proto)
 
     sampler_proto = pbutil.FromFile(pathlib.Path(sampler_file.name),
                                     sampler_pb2.Sampler())
-    sampler_ = sampler.Sampler(sampler_proto)
+    sampler_ = samplers.Sampler(sampler_proto)
 
     model_.Train()
     sampler_.Sample(model_)
@@ -338,14 +338,14 @@ def _register_ls_parser(self, parent: ArgumentParser) -> None:
     def _main(model_file: TextIO, sampler_file: TextIO) -> None:
       model_proto = pbutil.FromFile(pathlib.Path(model_file.name),
                                     model_pb2.Model())
-      model_ = model.Model(model_proto)
+      model_ = models.Model(model_proto)
 
       caches = [model_.corpus.cache, model_.cache]
 
       if sampler_file:
         sampler_proto = pbutil.FromFile(pathlib.Path(sampler_file.name),
                                         sampler_pb2.Sampler())
-        sampler_ = sampler.Sampler(sampler_proto)
+        sampler_ = samplers.Sampler(sampler_proto)
         caches.append(sampler_.cache(model_))
 
       files = sorted(
@@ -369,7 +369,7 @@ def _register_ls_parser(self, parent: ArgumentParser) -> None:
     """
 
     def _main() -> None:
-      print(model.ModelsToTable(*model.GetAllModels()))
+      print(models.ModelsToTable(*models.GetAllModels()))
 
     parser = parent.add_parser("models", help="list cached models",
                                description=inspect.getdoc(self),
@@ -671,7 +671,7 @@ def _register_cache_parser(self, parent: ArgumentParser) -> None:
           cached_model_id = fs.basename(cached_modeldir)
           cached_proto = pbutil.FromFile(
             pathlib.Path(fs.path(cached_modeldir, "META")))
-          model_ = model.Model(cached_proto)
+          model_ = models.Model(cached_proto)
           if cached_model_id != model_.hash:
             logging.info(cached_model_id, '->', model_.hash)
 
@@ -775,19 +775,20 @@ For information about a specific command, run `clgen <command> --help`.
     print("clgen made with \033[1;31m♥\033[0;0m by Chris Cummins "
           "<chrisc.101@gmail.com>.")
   elif args.corpus_dir:
-    model_ = model.Model(
-      pbutil.FromFile(pathlib.Path(args.corpus_dir.name), model_pb2.Model()))
+    model_ = models.Model(
+        pbutil.FromFile(pathlib.Path(args.corpus_dir.name), model_pb2.Model()))
     print(model_.corpus.cache.path)
   elif args.model_dir:
-    model_ = model.Model(
-      pbutil.FromFile(pathlib.Path(args.model_dir.name), model_pb2.Model()))
+    model_ = models.Model(
+        pbutil.FromFile(pathlib.Path(args.model_dir.name), model_pb2.Model()))
     print(model_.cache.path)
   elif args.sampler_dir:
-    model_ = model.Model(pbutil.FromFile(pathlib.Path(args.sampler_dir[0].name),
-                                         model_pb2.Model()))
-    sampler_ = sampler.Sampler(
-      pbutil.FromFile(pathlib.Path(args.sampler_dir[1].name),
-                      sampler_pb2.Sampler()))
+    model_ = models.Model(
+        pbutil.FromFile(pathlib.Path(args.sampler_dir[0].name),
+                        model_pb2.Model()))
+    sampler_ = samplers.Sampler(
+        pbutil.FromFile(pathlib.Path(args.sampler_dir[1].name),
+                        sampler_pb2.Sampler()))
     print(sampler_.cache(model_).path)
   else:
     # strip the arguments from the top-level parser

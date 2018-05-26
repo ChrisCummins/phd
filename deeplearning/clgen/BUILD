@@ -37,6 +37,7 @@ py_test(
 py_library(
     name = "cache",
     srcs = ["cache.py"],
+    visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = [
         "//lib/labm8:cache",
         "//lib/labm8:fs",
@@ -57,8 +58,8 @@ py_binary(
         ":features",
         ":fetch",
         ":languages",
-        ":model",
-        ":sampler",
+        ":samplers",
+        "//deeplearning/clgen/models",
         "//deeplearning/clgen/preprocessors",
         "//deeplearning/clgen/proto:corpus_py_pb2",
         "//deeplearning/clgen/proto:model_py_pb2",
@@ -117,8 +118,9 @@ py_library(
 )
 
 py_library(
-    name = "corpus",
-    srcs = ["corpus.py"],
+    name = "corpuses",
+    srcs = ["corpuses.py"],
+    visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = [
         ":atomizers",
         ":cache",
@@ -142,13 +144,13 @@ py_library(
 )
 
 py_test(
-    name = "corpus_test",
-    srcs = ["corpus_test.py"],
+    name = "corpuses_test",
+    srcs = ["corpuses_test.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
         ":conftest",
-        ":corpus",
+        ":corpuses",
         ":errors",
         "//deeplearning/clgen/preprocessors:common",
         "//deeplearning/clgen/preprocessors:cxx",
@@ -204,7 +206,7 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":conftest",
-        ":corpus",
+        ":corpuses",
         ":explore",
         "//deeplearning/clgen/tests:testlib",
         "//lib/labm8:fs",
@@ -251,43 +253,6 @@ py_library(
     srcs = ["languages.py"],
     visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = [":errors"],
-)
-
-py_library(
-    name = "model",
-    srcs = ["model.py"],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":cache",
-        ":corpus",
-        ":errors",
-        ":languages",
-        ":sampler",
-        "//deeplearning/clgen/proto:internal_py_pb2",
-        "//deeplearning/clgen/proto:model_py_pb2",
-        "//deeplearning/clgen/proto:sampler_py_pb2",
-        "//lib/labm8:cache",
-        "//lib/labm8:crypto",
-        "//lib/labm8:fs",
-        "//lib/labm8:labdate",
-        "//lib/labm8:labtypes",
-        "//lib/labm8:lockfile",
-        "//lib/labm8:pbutil",
-    ],
-)
-
-py_test(
-    name = "model_test",
-    srcs = ["model_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
-    deps = [
-        ":conftest",
-        ":model",
-        "//deeplearning/clgen/proto:model_py_pb2",
-        "//lib/labm8:crypto",
-        "//lib/labm8:fs",
-    ],
 )
 
 py_library(
@@ -359,8 +324,8 @@ py_test(
 )
 
 py_library(
-    name = "sampler",
-    srcs = ["sampler.py"],
+    name = "samplers",
+    srcs = ["samplers.py"],
     visibility = ["//visibility:public"],
     deps = [
         ":cache",
@@ -373,15 +338,15 @@ py_library(
 )
 
 py_test(
-    name = "sampler_test",
-    srcs = ["sampler_test.py"],
+    name = "samplers_test",
+    srcs = ["samplers_test.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
         ":conftest",
         ":errors",
-        ":model",
-        ":sampler",
+        ":samplers",
+        "//deeplearning/clgen/models",
         "//deeplearning/clgen/proto:internal_py_pb2",
         "//lib/labm8:fs",
         "//lib/labm8:pbutil",

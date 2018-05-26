@@ -10,8 +10,8 @@ from absl import app
 from absl import flags
 from absl import logging
 
-from deeplearning.clgen import model
-from deeplearning.clgen import sampler
+from deeplearning.clgen import samplers
+from deeplearning.clgen.models import models
 from deeplearning.clgen.proto import internal_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.deepsmith.proto import deepsmith_pb2
@@ -24,8 +24,8 @@ from deeplearning.deepsmith.services import services
 FLAGS = flags.FLAGS
 
 
-def ClgenConfigToGenerator(m: model.Model,
-                           s: sampler.Sampler) -> deepsmith_pb2.Generator:
+def ClgenConfigToGenerator(m: models.Model,
+                           s: samplers.Sampler) -> deepsmith_pb2.Generator:
   """Convert a CLgen model+sampler pair to a DeepSmith generator proto."""
   g = deepsmith_pb2.Generator()
   sampler_id = s.cache(m).path.name
@@ -61,8 +61,8 @@ class ClgenGenerator(generator.GeneratorBase,
   def __init__(self, config: generator_pb2.ClgenGenerator):
     self.config = config
     with self.ClgenWorkingDir():
-      m = model.Model(self.config.model)
-      s = sampler.Sampler(self.config.sampler)
+      m = models.Model(self.config.model)
+      s = samplers.Sampler(self.config.sampler)
       self.generator = ClgenConfigToGenerator(m, s)
       for t in self.config.testcase_skeleton:
         t.generator.CopyFrom(self.generator)
@@ -104,8 +104,8 @@ class ClgenGenerator(generator.GeneratorBase,
       generator_pb2.GenerateTestcasesResponse)
     os.environ['CLGEN_CACHE'] = self.config.clgen_working_dir
     with self.ClgenWorkingDir():
-      m = model.Model(self.config.model)
-      s = sampler.Sampler(self.config.sampler)
+      m = models.Model(self.config.model)
+      s = samplers.Sampler(self.config.sampler)
       for sample in s.Sample(m):
         response.testcases.extend(self.SampleToTestcases(sample))
     return response

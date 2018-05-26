@@ -6,8 +6,8 @@ import pytest
 from absl import app
 
 from deeplearning.clgen import errors
-from deeplearning.clgen import model
-from deeplearning.clgen import sampler
+from deeplearning.clgen import samplers
+from deeplearning.clgen.models import models
 from deeplearning.clgen.proto import internal_pb2
 from lib.labm8 import fs
 from lib.labm8 import pbutil
@@ -15,7 +15,7 @@ from lib.labm8 import pbutil
 
 @pytest.fixture(scope='function')
 def abc_model(abc_model_config):
-  return model.Model(abc_model_config)
+  return models.Model(abc_model_config)
 
 
 def test_Sampler_invalid_start_text(clgen_cache_dir, abc_sampler_config):
@@ -23,10 +23,10 @@ def test_Sampler_invalid_start_text(clgen_cache_dir, abc_sampler_config):
   del clgen_cache_dir
   abc_sampler_config.ClearField('start_text')
   with pytest.raises(errors.UserError):
-    sampler.Sampler(abc_sampler_config)
+    samplers.Sampler(abc_sampler_config)
   abc_sampler_config.start_text = ''
   with pytest.raises(errors.UserError):
-    sampler.Sampler(abc_sampler_config)
+    samplers.Sampler(abc_sampler_config)
 
 
 def test_Sampler_invalid_batch_size(clgen_cache_dir, abc_sampler_config):
@@ -34,10 +34,10 @@ def test_Sampler_invalid_batch_size(clgen_cache_dir, abc_sampler_config):
   del clgen_cache_dir
   abc_sampler_config.ClearField('batch_size')
   with pytest.raises(errors.UserError):
-    sampler.Sampler(abc_sampler_config)
+    samplers.Sampler(abc_sampler_config)
   abc_sampler_config.batch_size = 0
   with pytest.raises(errors.UserError):
-    sampler.Sampler(abc_sampler_config)
+    samplers.Sampler(abc_sampler_config)
 
 
 def test_Sampler_Sample_one_sample(clgen_cache_dir, abc_model,
@@ -46,7 +46,7 @@ def test_Sampler_Sample_one_sample(clgen_cache_dir, abc_model,
   del clgen_cache_dir
   abc_model.Train()
   abc_sampler_config.min_num_samples = 1
-  s = sampler.Sampler(abc_sampler_config)
+  s = samplers.Sampler(abc_sampler_config)
   # Take a single sample.
   s.Sample(abc_model)
   num_contentfiles = len(fs.ls(s.cache(abc_model)["samples"]))
@@ -63,7 +63,7 @@ def test_Sampler_Sample_five_samples(clgen_cache_dir, abc_model,
   del clgen_cache_dir
   abc_model.Train()
   abc_sampler_config.min_num_samples = 5
-  s = sampler.Sampler(abc_sampler_config)
+  s = samplers.Sampler(abc_sampler_config)
   s.Sample(abc_model)
   num_contentfiles = len(fs.ls(s.cache(abc_model)["samples"]))
   assert num_contentfiles >= 5
@@ -75,7 +75,7 @@ def test_Sampler_Sample_return_value(clgen_cache_dir, abc_model,
   del clgen_cache_dir
   abc_model.Train()
   abc_sampler_config.min_num_samples = 1
-  s = sampler.Sampler(abc_sampler_config)
+  s = samplers.Sampler(abc_sampler_config)
   samples = s.Sample(abc_model)
   assert len(samples) >= 1
   assert samples[0].text

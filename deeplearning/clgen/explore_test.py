@@ -4,7 +4,7 @@ import sys
 import pytest
 from absl import app
 
-from deeplearning.clgen import corpus
+from deeplearning.clgen import corpuses
 from deeplearning.clgen import explore
 from deeplearning.clgen.tests import testlib as tests
 from lib.labm8 import fs
@@ -13,7 +13,7 @@ from lib.labm8 import fs
 def test_explore(clgen_cache_dir, abc_corpus_config):
   """Test that explore doesn't fail?? This is a shit test."""
   del clgen_cache_dir
-  c = corpus.Corpus(abc_corpus_config)
+  c = corpuses.Corpus(abc_corpus_config)
   explore.explore(c.contentfiles_cache["kernels.db"])
 
 

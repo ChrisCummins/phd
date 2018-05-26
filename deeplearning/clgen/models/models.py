@@ -17,10 +17,10 @@ from keras import utils
 from prettytable import PrettyTable
 
 from deeplearning.clgen import cache
-from deeplearning.clgen import corpus
+from deeplearning.clgen import corpuses
 from deeplearning.clgen import errors
 from deeplearning.clgen import languages
-from deeplearning.clgen import sampler
+from deeplearning.clgen import samplers
 from deeplearning.clgen.proto import internal_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
@@ -53,7 +53,7 @@ class Model(object):
     """
     self.config = model_pb2.Model()
     self.config.CopyFrom(config)
-    self.corpus = corpus.Corpus(config.corpus)
+    self.corpus = corpuses.Corpus(config.corpus)
     self.hash = self._ComputeHash(self.corpus, self.config)
     self.cache = cache.mkcache('model', f'{self.corpus.language}-{self.hash}')
     checkpoint_dir = pathlib.Path(self.cache.path) / 'checkpoints'
@@ -85,7 +85,7 @@ class Model(object):
       self._FlushMeta()
 
   @staticmethod
-  def _ComputeHash(corpus_: corpus.Corpus, config: model_pb2.Model) -> str:
+  def _ComputeHash(corpus_: corpuses.Corpus, config: model_pb2.Model) -> str:
     """Compute model hash.
 
     The hash is computed from the ID of the corpus and the serialized
@@ -196,7 +196,7 @@ class Model(object):
     # self._FlushMeta()
     return self
 
-  def _LockedSample(self, sampler: sampler.Sampler, min_num_samples: int) -> \
+  def _LockedSample(self, sampler: samplers.Sampler, min_num_samples: int) -> \
       typing.List[internal_pb2.Sample]:
     """Locker sampling.
 
@@ -253,7 +253,7 @@ class Model(object):
     with self.lock.acquire(replace_stale=True):
       return self._LockedTrain()
 
-  def Sample(self, sampler: sampler.Sampler,
+  def Sample(self, sampler: samplers.Sampler,
              min_num_samples: int) -> typing.List[internal_pb2.Sample]:
     with self.lock.acquire(replace_stale=True):
       self.Train()
@@ -346,7 +346,7 @@ class DataGenerator(object):
   feed in training data.
   """
 
-  def __init__(self, corpus_: corpus.Corpus, batch_size: int,
+  def __init__(self, corpus_: corpuses.Corpus, batch_size: int,
                sequence_length: int, shuffle: bool):
     self.corpus = corpus_
     self.batch_size = batch_size
@@ -554,7 +554,7 @@ class SampleProducer(threading.Thread):
 class SampleConsumer(threading.Thread):
   """Handle generated samples."""
 
-  def __init__(self, producer: SampleProducer, s: sampler.Sampler,
+  def __init__(self, producer: SampleProducer, s: samplers.Sampler,
                cache_: labcache.FSCache, q: queue.Queue):
     """Instantiate a SampleConsumer.
 
