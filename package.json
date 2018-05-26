@@ -18,7 +18,8 @@
     "url": "https://github.com/ChrisCummins/phd.git"
   },
   "scripts": {
-    "precommit": "./tools/buildifier.sh"
+    "precommit": "./tools/buildifier.sh",
+    "prepush": "./tools/git/pre-push.sh"
   },
   "devDependencies": {
     "husky": "^0.14.3"
