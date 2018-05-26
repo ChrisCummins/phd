@@ -194,14 +194,11 @@ def _register_sample_parser(self, parent: ArgumentParser) -> None:
   def _main(model_file: TextIO, sampler_file: TextIO) -> None:
     model_proto = pbutil.FromFile(pathlib.Path(model_file.name),
                                   model_pb2.Model())
-    model_ = models.Model(model_proto)
-
+    model = models.Model(model_proto)
     sampler_proto = pbutil.FromFile(pathlib.Path(sampler_file.name),
                                     sampler_pb2.Sampler())
-    sampler_ = samplers.Sampler(sampler_proto)
-
-    model_.Train()
-    sampler_.Sample(model_)
+    sampler = samplers.Sampler(sampler_proto)
+    model.Sampler(sampler)
 
   parser = parent.add_parser("sample", aliases=["s", "sa"],
                              help="train and sample models",
@@ -338,19 +335,19 @@ def _register_ls_parser(self, parent: ArgumentParser) -> None:
     def _main(model_file: TextIO, sampler_file: TextIO) -> None:
       model_proto = pbutil.FromFile(pathlib.Path(model_file.name),
                                     model_pb2.Model())
-      model_ = models.Model(model_proto)
-
-      caches = [model_.corpus.cache, model_.cache]
+      model = models.Model(model_proto)
+      cache_paths = [model.corpus.cache.path, model.cache.path]
 
       if sampler_file:
         sampler_proto = pbutil.FromFile(pathlib.Path(sampler_file.name),
                                         sampler_pb2.Sampler())
-        sampler_ = samplers.Sampler(sampler_proto)
-        caches.append(sampler_.cache(model_))
+        sampler = samplers.Sampler(sampler_proto)
+        cache_paths.append(model.SamplerCache(sampler))
 
-      files = sorted(
-          labtypes.flatten(c.ls(abspaths=True, recursive=True) for c in caches))
-      print('\n'.join(files))
+      files = labtypes.flatten(
+          fs.ls(c, abspaths=True, recursive=True) for c in cache_paths if
+          c.is_dir())
+      print('\n'.join(sorted(files)))
 
     parser = parent.add_parser("files", help="list cached files",
                                description=inspect.getdoc(self),
@@ -775,21 +772,21 @@ For information about a specific command, run `clgen <command> --help`.
     print("clgen made with \033[1;31m♥\033[0;0m by Chris Cummins "
           "<chrisc.101@gmail.com>.")
   elif args.corpus_dir:
-    model_ = models.Model(
+    model = models.Model(
         pbutil.FromFile(pathlib.Path(args.corpus_dir.name), model_pb2.Model()))
-    print(model_.corpus.cache.path)
+    print(model.corpus.cache.path)
   elif args.model_dir:
-    model_ = models.Model(
+    model = models.Model(
         pbutil.FromFile(pathlib.Path(args.model_dir.name), model_pb2.Model()))
-    print(model_.cache.path)
+    print(model.cache.path)
   elif args.sampler_dir:
-    model_ = models.Model(
+    model = models.Model(
         pbutil.FromFile(pathlib.Path(args.sampler_dir[0].name),
                         model_pb2.Model()))
-    sampler_ = samplers.Sampler(
+    sampler = samplers.Sampler(
         pbutil.FromFile(pathlib.Path(args.sampler_dir[1].name),
                         sampler_pb2.Sampler()))
-    print(sampler_.cache(model_).path)
+    print(model.SamplerCache(sampler))
   else:
     # strip the arguments from the top-level parser
     dispatch_func = args.dispatch_func
