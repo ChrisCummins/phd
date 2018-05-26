@@ -129,8 +129,8 @@ model {
   }
   architecture {
     neuron_type: LSTM
-    neurons_per_layer: 128
-    num_layers: 2
+    neurons_per_layer: 256
+    num_layers: 1
   }
   training {
     num_epochs: 50
