@@ -345,9 +345,5 @@ py_test(
         ":conftest",
         ":errors",
         ":samplers",
-        "//deeplearning/clgen/models",
-        "//deeplearning/clgen/proto:internal_py_pb2",
-        "//lib/labm8:fs",
-        "//lib/labm8:pbutil",
     ],
 )
