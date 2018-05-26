@@ -156,7 +156,7 @@ Clone this repository and use the [bootstrap](/tools/bootstrap.sh) script to
 prepare the system dependencies and toolchain:
 
 ```sh
-$ https://github.com/ChrisCummins/phd.git
+$ git clone https://github.com/ChrisCummins/phd.git
 $ cd phd
 $ ./tools/bootstrap.sh
 ```
