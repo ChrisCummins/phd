@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="RunConfigurationProducerService">
+    <option name="ignoredProducers">
+      <set>
+        <option value="com.intellij.execution.application.ApplicationConfigurationProducer" />
+        <option value="com.intellij.execution.junit.AllInDirectoryConfigurationProducer" />
+        <option value="com.intellij.execution.junit.AllInPackageConfigurationProducer" />
+        <option value="com.intellij.execution.junit.PatternConfigurationProducer" />
+        <option value="com.intellij.execution.junit.TestClassConfigurationProducer" />
+        <option value="com.intellij.execution.junit.TestInClassConfigurationProducer" />
+        <option value="com.intellij.execution.junit.TestMethodConfigurationProducer" />
+        <option value="com.jetbrains.python.run.PythonRunConfigurationProducer" />
+        <option value="com.jetbrains.python.testing.PyTestsConfigurationProducer" />
+        <option value="com.jetbrains.python.testing.PythonTestLegacyConfigurationProducer" />
+        <option value="com.jetbrains.python.testing.doctest.PythonDocTestConfigurationProducer" />
+        <option value="com.jetbrains.python.testing.nosetestLegacy.PythonNoseTestConfigurationProducer" />
+        <option value="com.jetbrains.python.testing.pytestLegacy.PyTestConfigurationProducer" />
+        <option value="com.jetbrains.python.testing.tox.PyToxConfigurationProducer" />
+        <option value="com.jetbrains.python.testing.unittestLegacy.PythonUnitTestConfigurationProducer" />
+      </set>
+    </option>
+  </component>
+</project>
