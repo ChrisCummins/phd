@@ -19,9 +19,11 @@ class MockSampler(object):
   # The default value for start_text has been chosen to only use characters and
   # words from the abc_corpus, so that it may be encoded using the vocabulary
   # of that corpus.
-  def __init__(self, start_text: str = 'H', hash='hash'):
+  def __init__(self, start_text: str = 'H', hash: str = 'hash',
+               batch_size: int = 1):
     self.start_text = start_text
     self.hash = hash
+    self.batch_size = batch_size
 
 
 # The Model.hash for a Model instance of abc_model_config.
@@ -84,8 +86,19 @@ def test_Model_inequality(clgen_cache_dir, abc_model_config):
   assert m1 != m2
 
 
+def test_Model_directories(clgen_cache_dir, abc_model_config):
+  """A newly instantiated model's cache has checkpoint and sample dirs."""
+  del clgen_cache_dir
+  m = models.Model(abc_model_config)
+  assert (m.cache.path / 'checkpoints').is_dir()
+  assert (m.cache.path / 'samples').is_dir()
+  # There should be nothing in these directories yet.
+  assert not list((m.cache.path / 'checkpoints').iterdir())
+  assert not list((m.cache.path / 'samples').iterdir())
+
+
 def test_Model_metafile(clgen_cache_dir, abc_model_config):
-  """Test that a newly instantiated model has a metafile."""
+  """A newly instantiated model's cache has a metafile."""
   del clgen_cache_dir
   m = models.Model(abc_model_config)
   assert (m.cache.path / 'META.pbtxt').is_file()
@@ -180,9 +193,10 @@ def test_Model_Sample_return_value_matches_cached_sample(clgen_cache_dir,
   m = models.Model(abc_model_config)
   samples = m.Sample(MockSampler(hash='hash'), 1)
   assert len(samples) == 1
-  assert len((m.cache.path / 'samples' / 'hash').iterdir()) == 1
-  cached_sample_path = (m.cache.path / 'samples' / 'hash' / (
-    (m.cache.path / 'samples' / 'hash').iterdir()[0]))
+  assert len(list((m.cache.path / 'samples' / 'hash').iterdir())) == 1
+  cached_sample_path = (m.cache.path / 'samples' / 'hash' /
+                        list((m.cache.path / 'samples' / 'hash').iterdir())[0])
+  assert cached_sample_path.is_file()
   cached_sample = pbutil.FromFile(cached_sample_path, internal_pb2.Sample())
   assert samples[0].text == cached_sample.text
   assert samples[0].sample_time_ms == cached_sample.sample_time_ms
@@ -190,35 +204,15 @@ def test_Model_Sample_return_value_matches_cached_sample(clgen_cache_dir,
            0].sample_start_epoch_ms_utc == cached_sample.sample_start_epoch_ms_utc
 
 
-@pytest.mark.skip(reason='TODO(cec): Implement!')
-def test_Model_Sample_one_sample(clgen_cache_dir, abc_model_config):
-  """Test that Sample() produces the expected number of samples."""
-  del clgen_cache_dir
-  m = models.Model(abc_model_config)
-  m.Train()
-  abc_sampler_config.min_num_samples = 1
-  s = samplers.Sampler(abc_sampler_config)
-  # Take a single sample.
-  s.Sample(m)
-  num_contentfiles = len(fs.ls(s.cache(m)["samples"]))
-  # Note that the number of contentfiles may be larger than 1, even though we
-  # asked for a single sample, since we split the output on the start text.
-  assert num_contentfiles >= 1
-  s.Sample(m)
-  num_contentfiles2 = len(fs.ls(s.cache(m)["samples"]))
-  assert num_contentfiles == num_contentfiles2
-
-
-@pytest.mark.skip(reason='TODO(cec): Implement!')
-def test_Model_Sample_five_samples(clgen_cache_dir, abc_corpus_config):
+def test_Model_Sample_exact_multiple_of_batch_size(clgen_cache_dir,
+                                                   abc_corpus_config):
+  """Test that min_num_samples are returned when a multiple of batch_size."""
   del clgen_cache_dir
   m = models.Model(abc_corpus_config)
-  m.Train()
-  abc_sampler_config.min_num_samples = 5
-  s = samplers.Sampler(abc_sampler_config)
-  s.Sample(m)
-  num_contentfiles = len(fs.ls(s.cache(m)["samples"]))
-  assert num_contentfiles >= 5
+  assert len(m.Sample(MockSampler(batch_size=1), 1)) == 1
+  assert len(m.Sample(MockSampler(batch_size=2), 2)) == 2
+  assert len(m.Sample(MockSampler(batch_size=1), 3)) == 3
+  assert len(m.Sample(MockSampler(batch_size=2), 4)) == 4
 
 
 def main(argv):

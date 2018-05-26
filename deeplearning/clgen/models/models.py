@@ -56,8 +56,9 @@ class Model(object):
     self.corpus = corpuses.Corpus(config.corpus)
     self.hash = self._ComputeHash(self.corpus, self.config)
     self.cache = cache.mkcache('model', f'{self.corpus.language}-{self.hash}')
-    checkpoint_dir = pathlib.Path(self.cache.path) / 'checkpoints'
-    checkpoint_dir.mkdir(exist_ok=True)
+    # Create the necessary cache directories.
+    (self.cache.path / 'checkpoints').mkdir(exist_ok=True)
+    (self.cache.path / 'samples').mkdir(exist_ok=True)
     self._model: typing.Optional[models.Sequential] = None
     self._current_weights_epoch: int = 0
     logging.debug('model %s', self.hash)
@@ -290,6 +291,7 @@ class Model(object):
     Returns:
       A list of Sample protos.
     """
+    (self.cache.path / 'samples' / sampler.hash).mkdir(exist_ok=True)
     with self.lock.acquire(replace_stale=True):
       self.Train()
       return self._LockedSample(sampler, min_num_samples)
