@@ -9,7 +9,15 @@
     <option name="workspaceRoot" value="$PROJECT_DIR$/.." />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="72fb85d7-7e8e-4f11-9e54-d6ff59b6f190" name="Default" comment="" />
+    <list default="true" id="72fb85d7-7e8e-4f11-9e54-d6ff59b6f190" name="Default" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/saveactions_settings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../deeplearning/clgen/BUILD" beforeDir="false" afterPath="$PROJECT_DIR$/../deeplearning/clgen/BUILD" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../deeplearning/clgen/models/models_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/../deeplearning/clgen/models/models_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../deeplearning/clgen/samplers.py" beforeDir="false" afterPath="$PROJECT_DIR$/../deeplearning/clgen/samplers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../deeplearning/clgen/samplers_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/../deeplearning/clgen/samplers_test.py" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -19,16 +27,64 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="BUILD" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/../deeplearning/deepsmith/services/BUILD">
+      <file leaf-file-name="samplers.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../deeplearning/clgen/samplers.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="156">
-              <caret line="22" lean-forward="true" selection-start-line="22" selection-end-line="22" />
+            <state relative-caret-position="120">
+              <caret line="6" column="28" selection-start-line="6" selection-start-column="28" selection-end-line="6" selection-end-column="28" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="models.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../deeplearning/clgen/models/models.py">
+          <provider selected="true" editor-type-id="text-editor" />
+        </entry>
+      </file>
+      <file leaf-file-name="models_test.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/../deeplearning/clgen/models/models_test.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="314">
+              <caret line="96" lean-forward="true" selection-start-line="96" selection-end-line="96" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="samplers_test.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../deeplearning/clgen/samplers_test.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="240">
+              <caret line="12" column="28" selection-start-line="12" selection-start-column="28" selection-end-line="12" selection-end-column="28" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="conftest.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../deeplearning/clgen/conftest.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="540">
+              <caret line="90" column="43" selection-start-line="90" selection-start-column="43" selection-end-line="90" selection-end-column="43" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="BUILD" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../deeplearning/clgen/BUILD">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="676">
+              <caret line="327" column="19" selection-start-line="327" selection-start-column="19" selection-end-line="327" selection-end-column="19" />
             </state>
           </provider>
         </entry>
       </file>
     </leaf>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>model</find>
+      <find>&quot;samplers&quot;</find>
+      <find>sample_dir</find>
+    </findStrings>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
@@ -37,6 +93,11 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/../deeplearning/deepsmith/services/BUILD" />
+        <option value="$PROJECT_DIR$/../deeplearning/clgen/samplers.py" />
+        <option value="$PROJECT_DIR$/../deeplearning/clgen/BUILD" />
+        <option value="$PROJECT_DIR$/../deeplearning/clgen/samplers_test.py" />
+        <option value="$PROJECT_DIR$/../deeplearning/clgen/conftest.py" />
+        <option value="$PROJECT_DIR$/../deeplearning/clgen/models/models_test.py" />
       </list>
     </option>
   </component>
@@ -52,6 +113,9 @@
   <component name="ProjectFrameBounds" fullScreen="true">
     <option name="width" value="2560" />
     <option name="height" value="1440" />
+  </component>
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
@@ -76,14 +140,14 @@
               <item name="phd" type="b2602c69:ProjectViewProjectNode" />
               <item name="phd" type="34d14456:WorkspaceRootNode" />
               <item name="deeplearning" type="462c0819:PsiDirectoryNode" />
-              <item name="deepsmith" type="462c0819:PsiDirectoryNode" />
+              <item name="clgen" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="phd" type="b2602c69:ProjectViewProjectNode" />
               <item name="phd" type="34d14456:WorkspaceRootNode" />
               <item name="deeplearning" type="462c0819:PsiDirectoryNode" />
-              <item name="deepsmith" type="462c0819:PsiDirectoryNode" />
-              <item name="services" type="462c0819:PsiDirectoryNode" />
+              <item name="clgen" type="462c0819:PsiDirectoryNode" />
+              <item name="models" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -96,7 +160,8 @@
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
-    <property name="settings.editor.selected.configurable" value="preferences.keymap" />
+    <property name="restartRequiresConfirmation" value="false" />
+    <property name="settings.editor.selected.configurable" value="settings.saveactions" />
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -110,13 +175,20 @@
       </list>
     </option>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Bazel Command.test //deeplearning/clgen:samplers_test">
     <configuration default="true" type="Application" factoryName="Application">
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
     </configuration>
-    <configuration name="CLgen test" type="BlazeCommandRunConfigurationType" factoryName="Bazel Command" handler-id="BlazeCommandGenericRunConfigurationHandlerProvider" blaze-command="test">
+    <configuration name="test //deeplearning/clgen/..." type="BlazeCommandRunConfigurationType" factoryName="Bazel Command" handler-id="BlazeCommandGenericRunConfigurationHandlerProvider" blaze-command="test">
       <blaze-target>//deeplearning/clgen/...</blaze-target>
       <blaze-user-flag>--test_output=errors</blaze-user-flag>
+    </configuration>
+    <configuration name="test //deeplearning/clgen:samplers_test" type="BlazeCommandRunConfigurationType" factoryName="Bazel Command" handler-id="BlazePyRunConfigurationHandlerProvider" blaze-command="test">
+      <blaze-target kind="py_test">//deeplearning/clgen:samplers_test</blaze-target>
+      <blaze-user-flag>--test_output=all</blaze-user-flag>
+      <env_state>
+        <envs />
+      </env_state>
     </configuration>
     <configuration default="true" type="JUnit" factoryName="JUnit">
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
@@ -196,6 +268,10 @@
       <option name="_new_target" value="&quot;&quot;" />
       <option name="_new_targetType" value="&quot;PATH&quot;" />
     </configuration>
+    <list>
+      <item itemvalue="Bazel Command.test //deeplearning/clgen/..." />
+      <item itemvalue="Bazel Command.test //deeplearning/clgen:samplers_test" />
+    </list>
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -204,7 +280,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1527352478411</updated>
-      <workItem from="1527352480382" duration="462000" />
+      <workItem from="1527352480382" duration="859000" />
     </task>
     <servers />
   </component>
@@ -215,23 +291,36 @@
     <history-entry file="CLgen_test - 2018.05.26 at 17h 41m 50s.xml">
       <configuration name="CLgen test" configurationId="BlazeCommandRunConfigurationType" />
     </history-entry>
+    <history-entry file="CLgen_test - 2018.05.26 at 17h 42m 49s.xml">
+      <configuration name="CLgen test" configurationId="BlazeCommandRunConfigurationType" />
+    </history-entry>
+    <history-entry file="test___deeplearning_clgen_samplers_test - 2018.05.26 at 17h 44m 18s.xml">
+      <configuration name="test //deeplearning/clgen:samplers_test" configurationId="BlazeCommandRunConfigurationType" />
+    </history-entry>
+    <history-entry file="test___deeplearning_clgen_samplers_test - 2018.05.26 at 17h 44m 38s.xml">
+      <configuration name="test //deeplearning/clgen:samplers_test" configurationId="BlazeCommandRunConfigurationType" />
+    </history-entry>
+    <history-entry file="test___deeplearning_clgen_samplers_test - 2018.05.26 at 17h 45m 39s.xml">
+      <configuration name="test //deeplearning/clgen:samplers_test" configurationId="BlazeCommandRunConfigurationType" />
+    </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="462000" />
+    <option name="totallyTimeSpent" value="859000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="2560" height="1440" extended-state="0" />
+    <editor active="true" />
     <layout>
       <window_info anchor="bottom" id="TODO" order="12" />
       <window_info anchor="right" id="Palette&#9;" order="0" />
       <window_info anchor="bottom" id="Event Log" order="0" side_tool="true" />
       <window_info anchor="bottom" id="Database Changes" order="1" show_stripe_button="false" />
-      <window_info active="true" anchor="right" id="Run" order="6" visible="true" weight="0.4698173" />
+      <window_info anchor="right" id="Run" order="6" visible="true" weight="0.4698173" />
       <window_info anchor="bottom" id="Version Control" order="2" />
       <window_info anchor="bottom" id="Blaze Console" order="3" sideWeight="0.50050557" side_tool="true" weight="0.3063209" />
       <window_info anchor="bottom" id="Terminal" order="4" />
       <window_info id="Designer" />
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.12748213" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.12748213" />
       <window_info anchor="bottom" id="Docker" order="5" show_stripe_button="false" />
       <window_info anchor="right" id="Database" order="1" />
       <window_info id="Learn" />
@@ -258,8 +347,46 @@
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/../deeplearning/deepsmith/services/BUILD">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="156">
-          <caret line="22" lean-forward="true" selection-start-line="22" selection-end-line="22" />
+        <state relative-caret-position="556">
+          <caret line="42" column="33" lean-forward="true" selection-start-line="42" selection-start-column="33" selection-end-line="42" selection-end-column="33" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../deeplearning/clgen/BUILD">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="676">
+          <caret line="327" column="19" selection-start-line="327" selection-start-column="19" selection-end-line="327" selection-end-column="19" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../deeplearning/clgen/samplers.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="6" column="28" selection-start-line="6" selection-start-column="28" selection-end-line="6" selection-end-column="28" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../deeplearning/clgen/conftest.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="540">
+          <caret line="90" column="43" selection-start-line="90" selection-start-column="43" selection-end-line="90" selection-end-column="43" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../deeplearning/clgen/samplers_test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="240">
+          <caret line="12" column="28" selection-start-line="12" selection-start-column="28" selection-end-line="12" selection-end-column="28" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../deeplearning/clgen/models/models.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../deeplearning/clgen/models/models_test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="314">
+          <caret line="96" lean-forward="true" selection-start-line="96" selection-end-line="96" />
         </state>
       </provider>
     </entry>
