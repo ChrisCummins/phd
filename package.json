@@ -10,9 +10,7 @@
   "bugs": {
     "url": "https://github.com/ChrisCummins/phd/issues"
   },
-  "license": {
-    "license": "GPL-3.0-only"
-  },
+  "license": "UNLICENSED",
   "repository": {
     "type": "git",
     "url": "https://github.com/ChrisCummins/phd.git"
