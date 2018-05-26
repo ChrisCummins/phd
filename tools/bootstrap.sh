@@ -91,7 +91,7 @@ main() {
         echo '# git hook: installed'
     else
         echo '# git hook:'
-        cp -v $ROOT/tools/pre-push $ROOT/.git/hooks/pre-push
+        cp -v $ROOT/tools/git/pre-push $ROOT/.git/hooks/pre-push
         chmod +x $ROOT/.git/hooks/pre-push
         echo
     fi
