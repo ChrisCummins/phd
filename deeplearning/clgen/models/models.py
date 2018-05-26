@@ -123,6 +123,7 @@ class Model(object):
     if self.cache.get('model.yaml'):
       with open(self.cache['model.yaml']) as f:
         model = models.model_from_yaml(f.read())
+        model.compile(loss='categorical_crossentropy', optimizer='adam')
       return model
     else:
       model = builders.BuildKerasModel(self.config, self.corpus.sequence_length,
