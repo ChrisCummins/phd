@@ -1,0 +1,20 @@
+{
+  "name": "phd",
+  "description": "My PhD.",
+  "author": {
+    "name": "Chris Cummins",
+    "email": "chrisc.101@gmail.com",
+    "url": "https://chriscummins.cc"
+  },
+  "homepage": "https://github.com/ChrisCummins/phd",
+  "bugs": {
+    "url": "https://github.com/ChrisCummins/phd/issues"
+  },
+  "license": {
+    "license": "GPL-3.0-only"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ChrisCummins/phd.git"
+  }
+}
