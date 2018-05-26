@@ -10,10 +10,13 @@ package phd;
 message GlobalConfig {
   // Either "darwin" or "linux" for macOS or Linux host OS, respectively.
   required string uname = 1;
-  // Important paths.
-  required GlobalConfigPaths paths = 2;
+  // The sha256sum of ./tools/bootstrap.sh, the script which is used to generate
+  // an instance of this proto.
+  required string bootstrap_sha256 = 2;
   // Whether or not the repository is configured to use CUDA.
   required bool with_cuda = 3;
+  // Important paths.
+  required GlobalConfigPaths paths = 15;
 }
 
 // A list of absolute paths to import system files and directories.

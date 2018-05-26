@@ -6,4 +6,5 @@ py_proto_library(
     name = "config",
     protos = ["config.proto"],
     visibility = ["//visibility:public"],
+    deps = ["//lib/labm8:crypto"],
 )

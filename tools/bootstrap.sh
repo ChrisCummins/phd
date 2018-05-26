@@ -122,6 +122,8 @@ main() {
 # File: //config/proto/config.proto
 # Proto: GlobalConfig
 uname: "$(uname | tr '[:upper:]' '[:lower:]')"
+bootstrap_sha256: "$(sha256sum "${BASH_SOURCE[0]}" | awk '{print $1}')"
+with_cuda: $WITH_CUDA
 paths {
   repo_root: "$ROOT"
   cc: "$LLVM_PREFIX/bin/clang"
@@ -132,7 +134,6 @@ paths {
   python: "$PYTHON"
   llvm_prefix: "$LLVM_PREFIX"
 }
-with_cuda: $WITH_CUDA
 EOF
     echo "# Created $ROOT/config.pbtxt"
     grep -v '^#' < "$ROOT/config.pbtxt" | sed 's/^/  /'

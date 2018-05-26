@@ -8,6 +8,7 @@ from absl import app
 from absl import flags
 
 from config import getconfig
+from lib.labm8 import crypto
 
 
 FLAGS = flags.FLAGS
@@ -17,6 +18,8 @@ def test_GetGlobalConfig_system_values():
   """Check that the repo config has all of the expected fields."""
   config = getconfig.GetGlobalConfig()
   assert config.HasField('uname')
+  assert config.HasField('bootstrap_sha256')
+  assert config.HasField('with_cuda')
   assert config.paths.HasField('repo_root')
   assert config.paths.HasField('cc')
   assert config.paths.HasField('cxx')
@@ -25,13 +28,24 @@ def test_GetGlobalConfig_system_values():
   assert config.paths.HasField('clang_format')
   assert config.paths.HasField('python')
   assert config.paths.HasField('llvm_prefix')
-  assert config.HasField('with_cuda')
 
 
 def test_uname():
   """Test that uname is one of the expected values."""
   config = getconfig.GetGlobalConfig()
   assert config.uname in {'darwin', 'linux'}
+
+
+def test_bootstra_sha256():
+  """Test that the sha256sum of ./tools/bootstrap.sh has not changed.
+
+  If this test fails, do not panic. It simply indicates that the bootstrap
+  script has been changed and should be re-run.
+  """
+  config = getconfig.GetGlobalConfig()
+  bootstrap_path = (pathlib.Path(config.paths.repo_root) / 'tools/bootstrap.sh')
+  assert bootstrap_path.is_file()
+  assert config.bootstrap_sha256 == crypto.sha256_file(bootstrap_path)
 
 
 def test_GlobalConfigPaths_repo_root():
