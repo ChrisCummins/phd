@@ -28,8 +28,7 @@ def ClgenConfigToGenerator(m: models.Model,
                            s: samplers.Sampler) -> deepsmith_pb2.Generator:
   """Convert a CLgen model+sampler pair to a DeepSmith generator proto."""
   g = deepsmith_pb2.Generator()
-  sampler_id = s.cache(m).path.name
-  g.name = f'clgen_{sampler_id}'
+  g.name = f'clgen_model:{m.hash}_sampler:{s.hash}'
   g.opts['contentfiles_id'] = m.corpus.content_id
   g.opts['corpus_id'] = m.corpus.hash
   g.opts['neuron_type'] = model_pb2.NetworkArchitecture.NeuronType.Name(
@@ -106,7 +105,7 @@ class ClgenGenerator(generator.GeneratorBase,
     with self.ClgenWorkingDir():
       m = models.Model(self.config.model)
       s = samplers.Sampler(self.config.sampler)
-      for sample in s.Sample(m):
+      for sample in m.Sample(s):
         response.testcases.extend(self.SampleToTestcases(sample))
     return response
 
