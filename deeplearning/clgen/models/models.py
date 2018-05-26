@@ -176,19 +176,15 @@ class Model(object):
     learning_rate = self.config.training.initial_learning_rate
     decay_rate = self.config.training.percent_learning_rate_decay_per_epoch
 
-    batch_size = self.config.training.batch_size
-    sequence_length = self.corpus.sequence_length
-
-    encoded_corpus = self.corpus.GetTrainingData(shuffle=True)
     checkpoint_dir = pathlib.Path(self.cache.keypath('checkpoints'))
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
     file_path = str(
         checkpoint_dir) + "/checkpoint_weights_{epoch:02d}_{loss:.4f}.hdf5"
     checkpoint = callbacks.ModelCheckpoint(file_path, monitor="loss", verbose=1,
                                            save_best_only=False, mode="min")
-
     generator = DataGenerator(
-        self.corpus, batch_size, sequence_length,
+        self.corpus, self.config.training.batch_size,
+        self.corpus.sequence_length,
         self.config.training.shuffle_corpus_contentfiles_between_epochs)
     logging.info('Steps per epoch: %s',
                  humanize.intcomma(generator.steps_per_epoch))
@@ -259,8 +255,8 @@ class Model(object):
       sample = internal_pb2.Sample(text=''.join(text),
                                    sample_start_epoch_ms_utc=start_time,
                                    sample_time_ms=end_time - start_time)
-      sample_id = crypto.sha1_str(sample.text)
-      p = self.cache.path / f'samples/{sampler.hash}/{sample_id}.pbtxt'
+      sample_id = crypto.sha256_str(sample.text)
+      p = self.SamplerCache(sampler) / f'{sample_id}.pbtxt'
       pbutil.ToFile(sample, p)
       samples.append(sample)
 
@@ -295,10 +291,21 @@ class Model(object):
     Returns:
       A list of Sample protos.
     """
-    (self.cache.path / 'samples' / sampler.hash).mkdir(exist_ok=True)
+    self.SamplerCache(sampler).mkdir(exist_ok=True)
     with self.lock.acquire(replace_stale=True):
       self.Train()
       return self._LockedSample(sampler, min_num_samples)
+
+  def SamplerCache(self, sampler: samplers.Sampler) -> pathlib.Path:
+    """Get the path to a sampler cache.
+
+    Args:
+      sampler: A Sampler instance.
+
+    Returns:
+      A path to a directory. Note that this directory may not exist.
+    """
+    return self.cache.path / 'samples' / sampler.hash
 
   def _WriteMetafile(self) -> None:
     pbutil.ToFile(self.meta, pathlib.Path(self.cache.keypath('META.pbtxt')))
