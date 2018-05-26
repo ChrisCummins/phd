@@ -1,21 +1,34 @@
 """The CLgen language model."""
+import io
 import os
 import pathlib
+import queue
+import sys
+import threading
 import typing
 
+import humanize
+import numpy as np
+import progressbar
 from absl import logging
 from keras import callbacks
 from keras import layers
 from keras import models
+from keras import utils
 from prettytable import PrettyTable
 
 from deeplearning.clgen import cache
 from deeplearning.clgen import corpus
 from deeplearning.clgen import errors
+from deeplearning.clgen import languages
+from deeplearning.clgen import sampler
 from deeplearning.clgen.proto import internal_pb2
 from deeplearning.clgen.proto import model_pb2
+from deeplearning.clgen.proto import sampler_pb2
+from lib.labm8 import cache as labcache
 from lib.labm8 import crypto
 from lib.labm8 import fs
+from lib.labm8 import labdate
 from lib.labm8 import lockfile
 from lib.labm8 import pbutil
 
@@ -222,10 +235,9 @@ class Model(object):
 
   @property
   def model(self) -> models.Sequential:
-    if self._model == None:
+    if self._model is None:
       self._model = self.GetKerasModel()
-    else:
-      return self._model
+    return self._model
 
   def _LockedTrain(self) -> 'Model':
     """Locked training.
@@ -233,25 +245,31 @@ class Model(object):
     Returns:
       The self instance.
     """
+    # TODO(cec): Load past checkpoints.
+    # model.load_weights(self.most_recent_checkpoint_path)
     # TODO(cec): Re-implement learning rate, decay rate, and gradient clip.
     learning_rate = self.config.training.initial_learning_rate
     decay_rate = self.config.training.percent_learning_rate_decay_per_epoch
     num_epochs = self.config.training.num_epochs
     batch_size = self.config.training.batch_size
-    sequence_len = self.corpus.sequence_length
+    sequence_length = self.corpus.sequence_length
 
-    X, y = self.corpus.GetTrainingData(shuffle=True)
-    model = self.GetKerasModel()
-    with open(self.cache.keypath('model.yaml'), 'w') as f:
-      f.write(model.to_yaml())
+    encoded_corpus = self.corpus.GetTrainingData(shuffle=True)
+    corpus_len = len(encoded_corpus)
     checkpoint_dir = pathlib.Path(self.cache.keypath('checkpoints'))
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
     file_path = str(
         checkpoint_dir) + "/checkpoint_weights_{epoch:02d}_{loss:.4f}.hdf5"
     checkpoint = callbacks.ModelCheckpoint(file_path, monitor="loss", verbose=1,
                                            save_best_only=True, mode="min")
-    model.fit(X, y, epochs=num_epochs, batch_size=batch_size,
-              callbacks=[checkpoint])
+
+    num_batches = int(corpus_len / (batch_size * sequence_length))
+    logging.info('Number of batches: %s', humanize.intcomma(num_batches))
+    generator = Generator(
+        self.corpus, batch_size, sequence_length,
+        self.config.training.shuffle_corpus_contentfiles_between_epochs)
+    self.model.fit_generator(generator, steps_per_epoch=num_batches,
+                             epochs=num_epochs, callbacks=[checkpoint])
     # TODO(cec): Checkpoint callback.
     # stat = self.meta.training_stats.add()
     # stat.batch_num = batch_num + 1
@@ -260,8 +278,54 @@ class Model(object):
     # self._FlushMeta()
     return self
 
-  def _FlushMeta(self) -> None:
-    pbutil.ToFile(self.meta, pathlib.Path(self.cache.keypath('META.pbtxt')))
+  def _LockedSample(self, sampler: sampler.Sampler, min_num_samples: int) -> \
+      typing.List[internal_pb2.Sample]:
+    """Locker sampling.
+
+    Args:
+      sampler: A Sampler instance.
+
+    Returns:
+      A list of samples.
+    """
+    X = np.zeros((1, self.corpus.sequence_length, self.corpus.vocabulary_size),
+                 dtype=np.bool)
+    for i, token in enumerate(
+        self.corpus.atomizer.AtomizeString(sampler.config.start_text)):
+      X[0, i, token] = 1
+
+    text = ''
+    start_time = labdate.MillisecondsTimestamp()
+    # TODO(cec): Re-implement batched sampling.
+    # TODO(cec): Re-implement sampling termination criteria.
+    for i in range(500):
+      prediction = np.argmax(self.model.predict(X, verbose=0))
+      text += self.corpus.atomizer.decoder[prediction]
+      activations = np.zeros((1, 1, self.corpus.vocabulary_size), dtype=np.bool)
+      activations[0, 0, prediction] = 1
+      X = np.concatenate((X[:, 1:, :], activations), axis=1)
+    end_time = labdate.MillisecondsTimestamp()
+    sample = internal_pb2.Sample(text=text,
+                                 sample_start_epoch_ms_utc=start_time,
+                                 sample_time_ms=end_time - start_time)
+    # TODO(cec): Re-implement producer consumer queue.
+    # cache_ = self.cache(model_)
+    # self.sample_dir = cache_.path / 'samples'
+    # self.sample_dir.mkdir(exist_ok=True)
+    # # Producer-consumer queue.
+    # queue = Queue(maxsize=128)
+    # logging.info('sampling %s', self)
+    # sampler = SampleProducer(model_, self.config, queue)
+    # sampler.start()
+    # consumer = SampleConsumer(sampler, self, cache_, queue)
+    # consumer.start()
+    # sampler.join()
+    # consumer.join()
+    # return consumer.samples
+    sample_id = crypto.sha1_str(text)
+    p = self.cache.keypath(f'samples/{sampler.hash}/{sample_id}.pbtxt')
+    pbutil.ToFile(sample, p)
+    return [sample]
 
   def Train(self) -> 'Model':
     """Train the model.
@@ -271,6 +335,15 @@ class Model(object):
     """
     with self.lock.acquire(replace_stale=True):
       return self._LockedTrain()
+
+  def Sample(self, sampler: sampler.Sampler,
+             min_num_samples: int) -> typing.List[internal_pb2.Sample]:
+    with self.lock.acquire(replace_stale=True):
+      self.Train()
+      return self._LockedSample(sampler, min_num_samples)
+
+  def _FlushMeta(self) -> None:
+    pbutil.ToFile(self.meta, pathlib.Path(self.cache.keypath('META.pbtxt')))
 
   @property
   def shorthash(self):
@@ -343,6 +416,286 @@ def BuildKerasModelFromProto(config: model_pb2.Model,
   model.add(layers.Activation('softmax'))
   model.compile(loss='categorical_crossentropy', optimizer='adam')
   return model
+
+
+class Generator(object):
+
+  def __init__(self, corpus_: corpus.Corpus, batch_size: int,
+               sequence_length: int, shuffle: bool):
+    self.corpus = corpus_
+    self.batch_size = batch_size
+    self.encoded_corpus = self.corpus.GetTrainingData(shuffle=shuffle)
+    self.corpus_len = len(self.encoded_corpus)
+    self.sequence_length = sequence_length
+    self.skip = 1  # TODO
+    self.shuffle = shuffle
+
+    self.i = 0
+
+  def __next__(self) -> typing.Tuple[np.ndarray, np.ndarray]:
+    X_data = []
+    y_data = []
+    for i in range(self.i, self.i + self.batch_size,
+                   self.skip):
+      sequence = self.encoded_corpus[i:i + self.sequence_length]
+      next_token = self.encoded_corpus[i + self.sequence_length]
+      X_data.append(sequence)
+      y_data.append(next_token)
+
+    num_sentences = len(X_data)
+    assert num_sentences == self.batch_size
+    logging.info('sliced %d sentences of length %d', num_sentences,
+                 self.sequence_length)
+    # Vectorize.
+    X = np.zeros(
+        (num_sentences, self.sequence_length, self.corpus.vocabulary_size),
+        dtype=np.bool)
+    y = np.zeros((num_sentences, self.corpus.vocabulary_size), dtype=np.bool)
+    for i, sequence in enumerate(X_data):
+      for t, encoded_char in enumerate(sequence):
+        X[i, t, encoded_char] = 1
+      y[i, y_data[i]] = 1
+
+    # TODO(cec): Use keras to_categorical().
+    _ = utils.to_categorical(y_data, self.corpus.vocabulary_size)
+
+    if self.i + self.batch_size + self.sequence_length >= self.corpus_len:
+      self.i = 0
+      if self.shuffle:
+        self.encoded_corpus = self.corpus.GetTrainingData(shuffle=True)
+    else:
+      self.i += self.batch_size
+
+    return X, y
+
+
+class SampleProducer(threading.Thread):
+  def __init__(self, model: Model, sampler_config: sampler_pb2.Sampler,
+               q: queue.Queue):
+    super(SampleProducer, self).__init__()
+    self.model = model
+    self.sampler_config = sampler_config
+    self.queue = q
+    self.stop_signal = threading.Event()
+    self.sample_header = '\n\n' + languages.format_as_comment(
+        self.model.corpus.language, '==== START SAMPLE ====') + '\n\n'
+
+    # Determine the termination criteria.
+    self.max_length = -1
+    self.special_token_left = None
+    self.special_token_right = None
+    for criterion in self.sampler_config.termination_criteria:
+      if criterion.HasField('maxlen'):
+        self.max_length = criterion.maxlen.maximum_tokens_in_sample
+        if not criterion.maxlen.include_start_text_in_maximum:
+          self.max_length += len(self.sampler_config.start_text)
+      elif criterion.HasField('symtok'):
+        self.symmetrical_token_left = criterion.symtok.depth_increase_token
+        self.symmetrical_token_right = criterion.symtok.depth_decrease_token
+    self.has_max_length = self.max_length > 0
+    self.has_symmetrical_tokens = (
+        self.special_token_left and self.special_token_right)
+
+  def run(self) -> None:
+    batch_size = self.sampler_config.batch_size
+
+    # Fail if the model is locked. Models are locked during training.
+    if self.model.lock.islocked:
+      raise lockfile.UnableToAcquireLockError(self.lock)
+
+    tf = self.model.InitAndGetTensorflow(infer=True)
+
+    # Seed the RNG.
+    np.random.seed(self.sampler_config.seed)
+    tf.set_random_seed(self.sampler_config.seed)
+
+    with tf.Session() as sess:
+      tf.global_variables_initializer().run()
+      saver = tf.train.Saver(tf.global_variables())
+      checkpoint = tf.train.get_checkpoint_state(self.model.cache.path)
+      # Sanity checks.
+      assert checkpoint
+      assert checkpoint.model_checkpoint_path
+      saver.restore(sess, checkpoint.model_checkpoint_path)
+
+      def WeightedPick(weights):
+        """Make a weighted choice.
+
+        Requires that all probabilities are >= 0, i.e.:
+          assert all(x >= 0 for x in weights)
+        See: https://github.com/ChrisCummins/clgen/issues/120
+        """
+        t = np.cumsum(weights)
+        s = np.sum(weights)
+        return int(np.searchsorted(t, np.random.rand(1) * s))
+
+      def GetSymmetricalTokenDepth(text: str, depth: int) -> typing.Tuple[
+        int, int]:
+        """Calculate the sample depth for symmetrical tokens."""
+        depth += text.count(self.symmetrical_token_left)
+        is_started = depth > 0
+        depth -= text.count(self.symmetrical_token_right)
+        return is_started, depth
+
+      if self.has_symmetrical_tokens:
+        init_started, init_depth = GetSymmetricalTokenDepth(
+            self.sampler_config.start_text, 0)
+      atomize = self.model.corpus.atomizer.AtomizeString
+      deatomize = self.model.corpus.atomizer.DeatomizeIndices
+
+      while not self.stop_requested:
+        buf = [io.StringIO() for _ in range(batch_size)]
+        if self.has_symmetrical_tokens:
+          depth = [init_depth] * batch_size
+          started = [init_started] * batch_size
+        running = [True] * batch_size
+
+        state = sess.run(self.model.cell.zero_state(batch_size, tf.float32))
+        indices = np.zeros((batch_size, 1))
+
+        seed_tensor = atomize(self.sampler_config.start_text)
+        for symbol in seed_tensor[:-1]:
+          indices[:] = symbol
+          feed = {self.model.input_data: indices,
+                  self.model.initial_state: state}
+          [state] = sess.run([self.model.final_state], feed)
+        for item in range(batch_size):
+          buf[item].write(self.sampler_config.start_text)
+        indices[:] = seed_tensor[-1]
+        i = 0
+        while True:
+          feed = {self.model.input_data: indices,
+                  self.model.initial_state: state}
+          try:
+            [probs, state] = sess.run(
+                [self.model.probs, self.model.final_state], feed)
+          except tf_errors.InvalidArgumentError:
+            logging.warning('sampling error')
+            self.run()
+          # Sample distribution to pick next symbols:
+          indices[:, 0] = [WeightedPick(p) for p in probs]
+
+          for item in range(batch_size):
+            if not running[item]:
+              continue
+
+            # In case of decoding error, start sampling again:
+            # try:
+            atom = deatomize([indices[item, 0]])
+            # except errors.VocabError:
+            #   logging.warning('deatomizing error')
+            #   self.run()
+            buf[item].write(atom)
+            # Update symmetrical character depths.
+            if self.has_symmetrical_tokens:
+              _started, depth[item] = GetSymmetricalTokenDepth(atom,
+                                                               depth=depth[
+                                                                 item])
+              started[item] |= _started  # You can't 'unset' the started state.
+              running[item] = (
+                  not started[item] or (started[item] and depth[item] > 0))
+            # Update max length.
+            if self.has_max_length and i >= self.max_length:
+              running[item] = False
+            # Submit sample to processing queue.
+            if not running[item]:
+              text = buf[item].getvalue()
+              self.queue.put(text)
+              if logging.get_verbosity() == logging.DEBUG:
+                sys.stdout.write(self.sample_header)
+                sys.stdout.write(text)
+                sys.stdout.flush()
+          # Start a new batch if there's nothing left running.
+          if not any(running):
+            break
+          i += 1
+
+      if logging.get_verbosity() == logging.DEBUG:
+        sys.stdout.write('\n\n')
+
+  def stop(self) -> None:
+    self.stop_signal.set()
+
+  @property
+  def stop_requested(self) -> bool:
+    return self.stop_signal.isSet()
+
+
+class SampleConsumer(threading.Thread):
+  """Handle generated samples."""
+
+  def __init__(self, producer: SampleProducer, s: sampler.Sampler,
+               cache_: labcache.FSCache, q: queue.Queue):
+    """Instantiate a SampleConsumer.
+
+    Args:
+      producer: A SampleProducer thread.
+      s: The host Sampler instance.
+      cache_: The sampler cache.
+      q: A shared queue.
+    """
+    super(SampleConsumer, self).__init__()
+    self.sample_dir = (cache_.path / 'samples').absolute()
+    self.producer = producer
+    self.sampler = s
+    self.cache = cache_
+    self.queue = q
+    self.samples = []
+    min_samples = self.sampler.config.min_num_samples
+    has_min_samples = min_samples >= 0
+    # Determine termination criteria.
+    if has_min_samples:
+      self.term_condition = self.min_samples_cond
+      self.max_i = min_samples
+      self.progress = self.min_samples_progress
+    else:
+      self.term_condition = self.null_cond
+      self.max_i = progressbar.UnknownLength
+      self.progress = self.null_progress
+
+  def min_samples_cond(self) -> bool:
+    return len(fs.ls(self.sample_dir)) >= self.max_i
+
+  def null_cond(self) -> bool:
+    return False
+
+  def min_samples_progress(self) -> int:
+    return min(len(fs.ls(self.sample_dir)), self.max_i)
+
+  def null_progress(self) -> int:
+    return len(fs.ls(self.sample_dir))
+
+  def run(self) -> None:
+    if not logging.get_verbosity() == logging.DEBUG:
+      bar = progressbar.ProgressBar(max_value=self.max_i)
+      bar.update(self.progress())
+
+    try:
+      while True:
+        start_time = labdate.MillisecondsTimestamp()
+        # Block while waiting for a new sample to come in.
+        sample_text = self.queue.get(timeout=120).strip()
+        end_time = labdate.MillisecondsTimestamp()
+        sample_id = crypto.sha1_str(sample_text)
+        sample = internal_pb2.Sample(text=sample_text,
+                                     sample_start_epoch_ms_utc=start_time,
+                                     sample_time_ms=end_time - start_time)
+        path = self.sample_dir / (sample_id + '.pb')
+        pbutil.ToFile(sample, path)
+        if self.term_condition != self.null_cond:
+          self.samples.append(sample)
+        # Update progress bar.
+        progress = self.progress()
+        if not logging.get_verbosity() == logging.DEBUG:
+          bar.update(progress)
+        # Determine if we are done sampling.
+        if self.term_condition():
+          self.producer.stop()
+          return
+    finally:
+      # Always kill the sampler thread.
+      print()
+      self.producer.stop()
 
 
 def GetAllModels() -> typing.Iterator[Model]:

@@ -7,7 +7,6 @@ py_test(
     srcs_version = "PY3",
 )
 
-
 py_test(
     name = "profile_model_init",
     srcs = ["profile_model_init.py"],

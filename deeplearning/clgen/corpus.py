@@ -282,18 +282,14 @@ WHERE ContentFiles.id NOT IN (
     sep = self.config.contentfile_separator or '\n\n'
     return sep.join(row[0] for row in c.fetchall())
 
-  def GetTrainingData(self, shuffle: bool) -> typing.Tuple[
-    np.ndarray, np.ndarray]:
+  def GetTrainingData(self, shuffle: bool) -> np.ndarray:
     """Create batches for training.
 
     Args:
       shuffle: If true, randomize order of contentfiles.
 
     Returns:
-      The number of matches.
-
-    Raises:
-      UserError: If the number of batches is zero.
+      The encoded corpus.
     """
     # Generate a corpus by randomly shuffling the contentfiles.
     corpus_text = self.ConcatenateTextCorpus(shuffle)
@@ -302,28 +298,10 @@ WHERE ContentFiles.id NOT IN (
     # Set the corpus size as the number of tokens.
     num_tokens = len(tokenized_corpus)
     self._size = num_tokens
-    # Split into X, y pairs.
-    X_data, y_data = [], []
-    for i in range(0, len(tokenized_corpus) - self.sequence_length):
-      sequence = tokenized_corpus[i:i + self.sequence_length]
-      next_token = tokenized_corpus[i + self.sequence_length]
-      X_data.append(sequence)
-      y_data.append(next_token)
-    num_sequences = len(X_data)
-    logging.info('%s tokens sliced into %s sequences of length %s',
+    logging.info('Dervied %s token corpus of length %s',
                  humanize.intcomma(len(tokenized_corpus)),
-                 humanize.intcomma(num_sequences),
                  humanize.intcomma(self.sequence_length))
-    # Vectorize our data and labels.
-    X = np.zeros(
-        (num_sequences, self.sequence_length, self.vocabulary_size),
-        dtype=np.bool)
-    y = np.zeros((num_sequences, self.vocabulary_size), dtype=np.bool)
-    for i, sequence in enumerate(X_data):
-      for t, encoded_char in enumerate(sequence):
-        X[i, t, encoded_char] = 1
-      y[i, y_data[i]] = 1
-    return X, y
+    return tokenized_corpus
 
   @property
   def shorthash(self):
