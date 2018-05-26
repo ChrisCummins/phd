@@ -10,13 +10,27 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="72fb85d7-7e8e-4f11-9e54-d6ff59b6f190" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/saveactions_settings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/dictionaries/cec.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/other.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../deeplearning/clgen/BUILD" beforeDir="false" afterPath="$PROJECT_DIR$/../deeplearning/clgen/BUILD" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../deeplearning/clgen/models/models_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/../deeplearning/clgen/models/models_test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../deeplearning/clgen/samplers.py" beforeDir="false" afterPath="$PROJECT_DIR$/../deeplearning/clgen/samplers.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../deeplearning/clgen/samplers_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/../deeplearning/clgen/samplers_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../deeplearning/clgen/atomizers_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/../deeplearning/clgen/atomizers_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../deeplearning/clgen/cli.py" beforeDir="false" afterPath="$PROJECT_DIR$/../deeplearning/clgen/cli.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../deeplearning/clgen/dbutil.py" beforeDir="false" afterPath="$PROJECT_DIR$/../deeplearning/clgen/dbutil.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../deeplearning/clgen/docs/assets/logo.svg" beforeDir="false" afterPath="$PROJECT_DIR$/../deeplearning/clgen/docs/assets/logo.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../deeplearning/clgen/docs/conf.py" beforeDir="false" afterPath="$PROJECT_DIR$/../deeplearning/clgen/docs/conf.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../deeplearning/clgen/explore.py" beforeDir="false" afterPath="$PROJECT_DIR$/../deeplearning/clgen/explore.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../deeplearning/clgen/fetch.py" beforeDir="false" afterPath="$PROJECT_DIR$/../deeplearning/clgen/fetch.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../deeplearning/clgen/languages.py" beforeDir="false" afterPath="$PROJECT_DIR$/../deeplearning/clgen/languages.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../deeplearning/clgen/models/builders.py" beforeDir="false" afterPath="$PROJECT_DIR$/../deeplearning/clgen/models/builders.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../deeplearning/clgen/native.py" beforeDir="false" afterPath="$PROJECT_DIR$/../deeplearning/clgen/native.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../deeplearning/clgen/package_util.py" beforeDir="false" afterPath="$PROJECT_DIR$/../deeplearning/clgen/package_util.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../deeplearning/clgen/preprocessors/clang.py" beforeDir="false" afterPath="$PROJECT_DIR$/../deeplearning/clgen/preprocessors/clang.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../deeplearning/clgen/preprocessors/cxx.py" beforeDir="false" afterPath="$PROJECT_DIR$/../deeplearning/clgen/preprocessors/cxx.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../deeplearning/clgen/preprocessors/normalizer.py" beforeDir="false" afterPath="$PROJECT_DIR$/../deeplearning/clgen/preprocessors/normalizer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../deeplearning/clgen/preprocessors/preprocessors.py" beforeDir="false" afterPath="$PROJECT_DIR$/../deeplearning/clgen/preprocessors/preprocessors.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../deeplearning/clgen/preprocessors/preprocessors_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/../deeplearning/clgen/preprocessors/preprocessors_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../deeplearning/clgen/preprocessors/public.py" beforeDir="false" afterPath="$PROJECT_DIR$/../deeplearning/clgen/preprocessors/public.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -30,8 +44,8 @@
       <file leaf-file-name="samplers.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/../deeplearning/clgen/samplers.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="120">
-              <caret line="6" column="28" selection-start-line="6" selection-start-column="28" selection-end-line="6" selection-end-column="28" />
+            <state relative-caret-position="20">
+              <caret line="1" selection-start-line="1" selection-end-line="1" />
             </state>
           </provider>
         </entry>
@@ -44,8 +58,8 @@
       <file leaf-file-name="models_test.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/../deeplearning/clgen/models/models_test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="314">
-              <caret line="96" lean-forward="true" selection-start-line="96" selection-end-line="96" />
+            <state relative-caret-position="599">
+              <caret line="103" lean-forward="true" selection-start-line="103" selection-end-line="103" />
             </state>
           </provider>
         </entry>
@@ -53,8 +67,8 @@
       <file leaf-file-name="samplers_test.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/../deeplearning/clgen/samplers_test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="240">
-              <caret line="12" column="28" selection-start-line="12" selection-start-column="28" selection-end-line="12" selection-end-column="28" />
+            <state relative-caret-position="20">
+              <caret line="1" selection-start-line="1" selection-end-line="1" />
             </state>
           </provider>
         </entry>
@@ -161,7 +175,7 @@
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="restartRequiresConfirmation" value="false" />
-    <property name="settings.editor.selected.configurable" value="settings.saveactions" />
+    <property name="settings.editor.selected.configurable" value="Errors" />
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -280,7 +294,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1527352478411</updated>
-      <workItem from="1527352480382" duration="859000" />
+      <workItem from="1527352480382" duration="1126000" />
     </task>
     <servers />
   </component>
@@ -305,7 +319,7 @@
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="859000" />
+    <option name="totallyTimeSpent" value="1126000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="2560" height="1440" extended-state="0" />
@@ -315,7 +329,7 @@
       <window_info anchor="right" id="Palette&#9;" order="0" />
       <window_info anchor="bottom" id="Event Log" order="0" side_tool="true" />
       <window_info anchor="bottom" id="Database Changes" order="1" show_stripe_button="false" />
-      <window_info anchor="right" id="Run" order="6" visible="true" weight="0.4698173" />
+      <window_info anchor="right" id="Run" order="6" weight="0.4698173" />
       <window_info anchor="bottom" id="Version Control" order="2" />
       <window_info anchor="bottom" id="Blaze Console" order="3" sideWeight="0.50050557" side_tool="true" weight="0.3063209" />
       <window_info anchor="bottom" id="Terminal" order="4" />
@@ -323,13 +337,13 @@
       <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.12748213" />
       <window_info anchor="bottom" id="Docker" order="5" show_stripe_button="false" />
       <window_info anchor="right" id="Database" order="1" />
+      <window_info anchor="bottom" id="Find" order="8" />
       <window_info id="Learn" />
       <window_info anchor="right" id="SciView" order="2" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Blaze Problems" order="6" sideWeight="0.49949443" weight="0.3063209" />
       <window_info anchor="bottom" id="Debug" order="9" weight="0.4" />
       <window_info id="Favorites" side_tool="true" />
-      <window_info anchor="bottom" id="Find" order="8" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="3" type="SLIDING" weight="0.4" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="5" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="11" weight="0.4" />
@@ -361,8 +375,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/../deeplearning/clgen/samplers.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="120">
-          <caret line="6" column="28" selection-start-line="6" selection-start-column="28" selection-end-line="6" selection-end-column="28" />
+        <state relative-caret-position="20">
+          <caret line="1" selection-start-line="1" selection-end-line="1" />
         </state>
       </provider>
     </entry>
@@ -375,8 +389,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/../deeplearning/clgen/samplers_test.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="240">
-          <caret line="12" column="28" selection-start-line="12" selection-start-column="28" selection-end-line="12" selection-end-column="28" />
+        <state relative-caret-position="20">
+          <caret line="1" selection-start-line="1" selection-end-line="1" />
         </state>
       </provider>
     </entry>
@@ -385,8 +399,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/../deeplearning/clgen/models/models_test.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="314">
-          <caret line="96" lean-forward="true" selection-start-line="96" selection-end-line="96" />
+        <state relative-caret-position="599">
+          <caret line="103" lean-forward="true" selection-start-line="103" selection-end-line="103" />
         </state>
       </provider>
     </entry>
