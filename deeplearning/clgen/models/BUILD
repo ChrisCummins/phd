@@ -1,10 +1,19 @@
 # This package implements the machine learning models for CLgen.
 
 py_library(
+    name = "builders",
+    srcs = ["builders.py"],
+    deps = [
+        "//deeplearning/clgen/proto:model_py_pb2",
+    ],
+)
+
+py_library(
     name = "models",
     srcs = ["models.py"],
     visibility = ["//visibility:public"],
     deps = [
+        ":builders",
         "//deeplearning/clgen:cache",
         "//deeplearning/clgen:corpuses",
         "//deeplearning/clgen:errors",

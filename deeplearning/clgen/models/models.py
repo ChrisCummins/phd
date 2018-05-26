@@ -11,7 +11,6 @@ import numpy as np
 import progressbar
 from absl import logging
 from keras import callbacks
-from keras import layers
 from keras import models
 from keras import utils
 from prettytable import PrettyTable
@@ -21,6 +20,7 @@ from deeplearning.clgen import corpuses
 from deeplearning.clgen import errors
 from deeplearning.clgen import languages
 from deeplearning.clgen import samplers
+from deeplearning.clgen.models import builders
 from deeplearning.clgen.proto import internal_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
@@ -116,8 +116,7 @@ class Model(object):
         model = models.model_from_yaml(f.read())
       return model
     else:
-      model = BuildKerasModelFromProto(self.config,
-                                       self.corpus.sequence_length,
+      model = builders.BuildKerasModel(self.config, self.corpus.sequence_length,
                                        self.corpus.vocabulary_size)
       with open(self.cache.keypath('model.yaml'), 'w') as f:
         f.write(model.to_yaml())
@@ -300,41 +299,6 @@ class Model(object):
 
   def __ne__(self, rhs) -> bool:
     return not self.__eq__(rhs)
-
-
-def BuildKerasModelFromProto(config: model_pb2.Model,
-                             sequence_length: int,
-                             vocabulary_size: int) -> models.Sequential:
-  """Build a Keras model from a Model proto.
-
-  Args:
-    config: A Model proto instance.
-    sequence_length: The length of sequences.
-    vocabulary_size: The number of tokens in the vocabulary.
-
-  Returns:
-    A Sequential model instance.
-  """
-  model = models.Sequential()
-  layer = {
-    model_pb2.NetworkArchitecture.LSTM: layers.LSTM,
-    model_pb2.NetworkArchitecture.RNN: layers.RNN,
-    model_pb2.NetworkArchitecture.GRU: layers.GRU,
-  }[config.architecture.neuron_type]
-  return_sequences = config.architecture.neurons_per_layer > 1
-  model.add(layer(config.architecture.neurons_per_layer,
-                  input_shape=(
-                    sequence_length,
-                    vocabulary_size),
-                  return_sequences=return_sequences))
-  for _ in range(1, config.architecture.num_layers - 1):
-    model.add(layer(config.architecture.neurons_per_layer,
-                    return_sequences=True))
-  model.add(layer(config.architecture.neurons_per_layer))
-  model.add(layers.Dense(vocabulary_size))
-  model.add(layers.Activation('softmax'))
-  model.compile(loss='categorical_crossentropy', optimizer='adam')
-  return model
 
 
 class DataGenerator(object):
