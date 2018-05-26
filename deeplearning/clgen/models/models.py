@@ -399,7 +399,7 @@ class DataGenerator(object):
 
     num_sentences = len(X_data)
     assert num_sentences == self.batch_size
-    logging.info('Sliced %d sequences of length %d', num_sentences,
+    logging.debug('Sliced %d sequences of length %d', num_sentences,
                  self.sequence_length)
     # Vectorize.
     X = np.zeros(
