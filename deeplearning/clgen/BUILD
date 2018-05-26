@@ -99,12 +99,6 @@ py_library(
 )
 
 py_library(
-    name = "clgen_config",
-    srcs = ["clgen_config.py"],
-    visibility = ["//deeplearning/clgen:__subpackages__"],
-)
-
-py_library(
     name = "conftest",
     testonly = True,
     srcs = ["conftest.py"],

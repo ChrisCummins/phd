@@ -6,7 +6,7 @@ py_library(
     srcs = ["testlib.py"],
     visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = [
-        "//deeplearning/clgen:clgen_config",
+        "//config:getconfig",
         "//lib/labm8:fs",
         "//lib/labm8:system",
         "//lib/labm8:tar",
