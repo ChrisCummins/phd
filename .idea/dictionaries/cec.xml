@@ -13,6 +13,7 @@
       <w>gsize</w>
       <w>inlining</w>
       <w>labm</w>
+      <w>lgen</w>
       <w>lsize</w>
       <w>lstm</w>
       <w>opencl</w>
@@ -23,6 +24,7 @@
       <w>stdin</w>
       <w>subdirs</w>
       <w>uname</w>
+      <w>vectorize</w>
     </words>
   </dictionary>
 </component>
