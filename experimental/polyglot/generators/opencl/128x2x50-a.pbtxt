@@ -129,13 +129,13 @@ model {
   }
   architecture {
     neuron_type: LSTM
-    neurons_per_layer: 512
+    neurons_per_layer: 128
     num_layers: 2
   }
   training {
     num_epochs: 50
     shuffle_corpus_contentfiles_between_epochs: true
-    batch_size: 50
+    batch_size: 64
     gradient_clip: 5
     initial_learning_rate: 0.001
     percent_learning_rate_decay_per_epoch: 5
@@ -143,8 +143,8 @@ model {
   }
 }
 sampler {
-  start_text: "__kernel void A("
-  batch_size: 50
+  start_text: "kernel void "
+  batch_size: 64
   termination_criteria {
     maxlen {
       maximum_tokens_in_sample: 5000
@@ -173,22 +173,5 @@ testcase_skeleton {
   inputs {
     key: "lsize"
     value: "1,1,1"
-  }
-}
-testcase_skeleton {
-  harness {
-    name: "cldrive"
-    opts {
-      key: "timeout_seconds"
-      value: "60"
-    }
-  }
-  inputs {
-    key: "gsize"
-    value: "128,16,1"
-  }
-  inputs {
-    key: "lsize"
-    value: "32,1,1"
   }
 }
