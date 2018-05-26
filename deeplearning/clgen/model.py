@@ -1,6 +1,5 @@
 """The CLgen language model."""
 import io
-import os
 import pathlib
 import queue
 import sys
@@ -100,115 +99,6 @@ class Model(object):
     return crypto.sha1_list(corpus_.hash,
                             config_to_hash.SerializeToString())
 
-  def InitAndGetTensorflow(self, infer: bool = False):
-    """Import Tensorflow runtime and return it.
-
-    Deferred importing of tensorflow and initializing model for training
-    or sampling.
-
-    This is necessary for two reasons: first, the tensorflow graph is
-    different for training and inference, so must be reset when switching
-    between modes. Second, importing tensorflow takes a long time, so
-    we only want to do it if we actually need to.
-
-    Args:
-      infer: If True, initialize model for inference. If False, initialize
-        model for training.
-
-    Returns:
-      TensorFlow module.
-    """
-    # Quiet TensorFlow. See:
-    # https://github.com/tensorflow/tensorflow/issues/1258
-    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
-    import tensorflow as tf
-    from tensorflow.contrib import legacy_seq2seq as seq2seq
-    from tensorflow.contrib import rnn
-
-    self.cell_fn = {model_pb2.NetworkArchitecture.LSTM: rnn.BasicLSTMCell,
-                    model_pb2.NetworkArchitecture.GRU: rnn.GRUCell,
-                    model_pb2.NetworkArchitecture.RNN: rnn.BasicRNNCell}.get(
-        self.config.architecture.neuron_type)
-    # Reset the graph when switching between training and inference.
-    tf.reset_default_graph()
-    batch_size = self.config.training.batch_size
-    # Corpus info:
-    seq_length = 1 if infer else self.corpus.sequence_length
-    vocab_size = self.corpus.vocab_size
-    # Model state:
-    cell = self.cell_fn(self.neurons_per_layer, state_is_tuple=True)
-    self.cell = cell = rnn.MultiRNNCell([cell] * self.num_layers,
-                                        state_is_tuple=True)
-    self.input_data = tf.placeholder(tf.int32, [batch_size, seq_length])
-    self.targets = tf.placeholder(tf.int32, [batch_size, seq_length])
-    self.initial_state = self.cell.zero_state(batch_size, tf.float32)
-    scope_name = 'rnnlm'
-    with tf.variable_scope(scope_name):
-      softmax_w = tf.get_variable("softmax_w",
-                                  [self.neurons_per_layer, vocab_size])
-      softmax_b = tf.get_variable("softmax_b", [vocab_size])
-
-      with tf.device("/cpu:0"):
-        embedding = tf.get_variable("embedding",
-                                    [vocab_size, self.neurons_per_layer])
-        inputs = tf.split(axis=1, num_or_size_splits=seq_length,
-                          value=tf.nn.embedding_lookup(embedding,
-                                                       self.input_data))
-        inputs = [tf.squeeze(input_, [1]) for input_ in inputs]
-
-    def InferenceLoop(prev, _):
-      prev = tf.matmul(prev, softmax_w) + softmax_b
-      prev_symbol = tf.stop_gradient(tf.argmax(prev, 1))
-      return tf.nn.embedding_lookup(embedding, prev_symbol)
-
-    outputs, last_state = seq2seq.rnn_decoder(inputs, self.initial_state, cell,
-                                              loop_function=InferenceLoop if
-                                              infer else None,
-                                              scope=scope_name)
-    output = tf.reshape(tf.concat(axis=1, values=outputs),
-                        [-1, self.neurons_per_layer])
-    self.logits = tf.matmul(output, softmax_w) + softmax_b
-    self.probs = tf.nn.softmax(self.logits)
-    loss = seq2seq.sequence_loss_by_example([self.logits],
-                                            [tf.reshape(self.targets, [-1])], [
-                                              tf.ones(
-                                                  [batch_size * seq_length])],
-                                            vocab_size)
-    self.cost = tf.reduce_sum(loss) / batch_size / seq_length
-    self.final_state = last_state
-    self.learning_rate = tf.Variable(0.0, trainable=False)
-    self.epoch = tf.Variable(0, trainable=False)
-    tvars = tf.trainable_variables()
-    grads, _ = tf.clip_by_global_norm(  # Argument of potential interest:
-        #   aggregation_method=tf.AggregationMethod.EXPERIMENTAL_TREE
-        #
-        # See:
-        #   https://www.tensorflow.org/api_docs/python/tf/gradients
-        #   https://www.tensorflow.org/api_docs/python/tf/AggregationMethod
-        tf.gradients(self.cost, tvars), self.gradient_clip)
-    optimizer = tf.train.AdamOptimizer(self.learning_rate)
-    self.train_op = optimizer.apply_gradients(zip(grads, tvars))
-
-    return tf
-
-  def _GetParamsPath(self, ckpt, num_batches: int) -> typing.Tuple[
-    str, typing.List[str]]:
-    """Return the path to checkpoint closest to target num of epochs."""
-    paths = ckpt.all_model_checkpoint_paths
-    batch_nums = [int(x.split('-')[-1]) for x in paths]
-    epoch_nums = [int((x + 1) / num_batches) for x in batch_nums]
-
-    closest = self.epochs
-    closest_path = None
-    for e, path in zip(epoch_nums, paths):
-      diff = self.epochs - e
-      if 0 <= diff < closest:
-        logging.debug('  cached checkpoint at epoch = %d diff = %d', e, diff)
-        closest = diff
-        closest_path = path
-    return closest_path, paths
-
   def GetKerasModel(self) -> models.Sequential:
     """Get the Keras model.
 
@@ -265,7 +155,7 @@ class Model(object):
 
     num_batches = int(corpus_len / (batch_size * sequence_length))
     logging.info('Number of batches: %s', humanize.intcomma(num_batches))
-    generator = Generator(
+    generator = DataGenerator(
         self.corpus, batch_size, sequence_length,
         self.config.training.shuffle_corpus_contentfiles_between_epochs)
     self.model.fit_generator(generator, steps_per_epoch=num_batches,
@@ -355,17 +245,15 @@ class Model(object):
     return lockfile.LockFile(lockpath)
 
   @property
-  def most_recent_checkpoint_path(self) -> typing.Optional[str]:
+  def checkpoint_paths(self) -> typing.List[pathlib.Path]:
     """Get path to most recent checkpoint, if exists.
 
     Returns:
       Path to the most recent checkpoint, or None if no checkpoints.
     """
-    if self.cache.get("checkpoints"):
-      last = sorted(pathlib.Path(self.cache['checkpoints']).iterdir())[-1]
-      return fs.path(self.cache['checkpoints'], last)
-    else:
-      return None
+    checkpoint_dir = pathlib.Path(self.cache.path) / 'checkpoints'
+    return [checkpoint_dir / x for x in
+            sorted(pathlib.Path(self.cache['checkpoints']).iterdir())]
 
   def __repr__(self) -> str:
     """String representation."""
@@ -418,7 +306,14 @@ def BuildKerasModelFromProto(config: model_pb2.Model,
   return model
 
 
-class Generator(object):
+class DataGenerator(object):
+  """Generated X, y training data pairs of one-hot encoded text.
+
+  We train our network on overlapping one-hot encoded text sequences. For a
+  corpus of a reasonable size, this won't fit in memory. This class provides
+  a generator for use by a sequential Keras model's fit_generator() method to
+  feed in training data.
+  """
 
   def __init__(self, corpus_: corpus.Corpus, batch_size: int,
                sequence_length: int, shuffle: bool):
@@ -433,10 +328,10 @@ class Generator(object):
     self.i = 0
 
   def __next__(self) -> typing.Tuple[np.ndarray, np.ndarray]:
+    """Generate the next batch of X, y pairs."""
     X_data = []
     y_data = []
-    for i in range(self.i, self.i + self.batch_size,
-                   self.skip):
+    for i in range(self.i, self.i + self.batch_size, self.skip):
       sequence = self.encoded_corpus[i:i + self.sequence_length]
       next_token = self.encoded_corpus[i + self.sequence_length]
       X_data.append(sequence)
