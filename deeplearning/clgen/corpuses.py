@@ -54,10 +54,15 @@ class Corpus(object):
       config: A Corpus message.
 
     Raises:
+      TypeError: If the config argument is not a Sampler proto.
       UserError: In case the corpus is not found, or config contains invalid
         options.
       EmptyCorpusException: In case the corpus contains no data.
     """
+    if not isinstance(config, corpus_pb2.Corpus):
+      t = type(config).__name__
+      raise TypeError(f"Config must be a Corpus proto. Received: '{t}'")
+
     # Make a local copy of the configuration.
     self.config = corpus_pb2.Corpus()
     self.config.CopyFrom(config)

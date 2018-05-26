@@ -22,14 +22,22 @@ class Sampler(object):
 
     Args:
       config: A Sampler message.
+
+    Raises:
+      TypeError: If the config argument is not a Sampler proto.
+      UserError: If the config contains invalid values.
     """
-    self.config = sampler_pb2.Sampler()
-    self.config.CopyFrom(config)
-    self.hash = self._ComputeHash(self.config)
+    if not isinstance(config, sampler_pb2.Sampler):
+      t = type(config).__name__
+      raise TypeError(f"Config must be a Sampler proto. Received: '{t}'")
     if not config.start_text:
       raise errors.UserError('Sampler.start_text not set')
     if config.batch_size < 1:
       raise errors.UserError('Sampler.batch_size must be >= 1')
+
+    self.config = sampler_pb2.Sampler()
+    self.config.CopyFrom(config)
+    self.hash = self._ComputeHash(self.config)
 
   @staticmethod
   def _ComputeHash(config: sampler_pb2.Sampler) -> str:

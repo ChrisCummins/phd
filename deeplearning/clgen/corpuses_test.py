@@ -52,6 +52,13 @@ def test_GetKernelFeatures_bad_code():
       corpuses.GetKernelFeatures("SYNTAX ERROR!", quiet=True)
 
 
+def test_Sampler_config_type_error():
+  """Test that a TypeError is raised if config is not a Sampler proto."""
+  with pytest.raises(TypeError) as e_info:
+    corpuses.Corpus(1)
+  assert str(e_info).endswith("Config must be a Corpus proto. Received: 'int'")
+
+
 def test_Corpus_badpath(clgen_cache_dir):
   """Test that CLgenError is raised when corpus has a non-existent path."""
   del clgen_cache_dir
