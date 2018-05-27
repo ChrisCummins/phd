@@ -1,11 +1,8 @@
-"""
-let me know - Email output of command upon completion
+#!/usr/bin/env python
+"""let me know - Email output of command upon completion
 
 Attributes
 ----------
-__version__ : str
-    Package version.
-
 __description__ : str
     Package description.
 
@@ -23,19 +20,19 @@ E_SMTP : int
 """
 from __future__ import print_function
 
-import os
-import sys
-
 import argparse
 import cgi
-import humanize
+import os
 import smtplib
+import socket
 import string
 import subprocess
 from datetime import datetime
 from email.mime.application import MIMEApplication
-from pkg_resources import require
-from socket import gethostname
+
+import humanize
+import sys
+
 
 # Python 2 and 3 have different email module layouts:
 if sys.version_info >= (3, 0):
@@ -45,17 +42,15 @@ else:
   from email.MIMEMultipart import MIMEMultipart
   from email.MIMEText import MIMEText
 
-__version__ = require("lmk")[0].version
-
 DEFAULT_CFG_PATH = os.path.expanduser('~/.lmkrc')
 
 __description__ = """\
-lmk {__version__}: let me know. Patiently awaits the completion of the
-specified comamnd, and emails you with the output and result.
+{bin}: let me know. Patiently awaits the completion of the 
+specified command, and emails you with the output and result.
 
 Examples
 --------
-Run a command using lmk to receive an email when it completes, containing it's
+Run a command using lmk to receive an email when it completes, containing its
 output and return code:
 
     $ lmk './experiments -n 100'
@@ -67,12 +62,12 @@ complete:
 
 Configuration
 -------------
-The file {DEFAULT_CFG_PATH} contains the configuration settings. Modify
+The file {cfg} contains the configuration settings. Modify
 the smtp and message settings to suit.
 
 Made with \033[1;31m♥\033[0;0m by Chris Cummins.
 <https://github.com/ChrisCummins/lmk>\
-""".format(**vars())
+""".format(bin=sys.argv[0], cfg=DEFAULT_CFG_PATH)
 
 DEFAULT_CFG = """\
 ; lkm config <https://github.com/ChrisCummins/lmk>
@@ -132,9 +127,8 @@ class ArgumentParser(argparse.ArgumentParser):
     """
     # --version option overrides the normal argument parsing process.
     c = colors
-    version = __version__
     if '--version' in args:
-      print('lmk {version}, made with {c.red}♥{c.reset} by '
+      print('lmk master, made with {c.red}♥{c.reset} by '
             'Chris Cummins <chrisc.101@gmail.com>'.format(**vars()))
       sys.exit(0)
 
@@ -304,7 +298,7 @@ def load_cfg(path=None):
   _verify('from' in cfg['messages'], 'no from address in %s:messages' % path)
   _verify('to' in cfg['messages'], 'no to address in %s:messages' % path)
 
-  parse = lambda x: parse_str(x, {'HOST': lambda: gethostname()})
+  parse = lambda x: parse_str(x, {'HOST': lambda: socket.gethostname()})
 
   cfg['smtp']['host'] = parse(cfg['smtp']['host'])
   cfg['smtp']['port'] = parse(cfg['smtp']['port'])
@@ -464,9 +458,8 @@ def build_html_message_body(output, command=None, returncode=None,
     raise ValueError("snip_to must be <= snip_after")
 
   user = os.environ['USER']
-  host = gethostname()
+  host = socket.gethostname()
   cwd = os.getcwd()
-  lmk_version = __version__
   lmk = '<a href="github.com/ChrisCummins/lmk">lmk</a>'
   me = '<a href="http://chriscummins.cc">Chris Cummins</a>'
 
@@ -586,7 +579,7 @@ def build_html_message_body(output, command=None, returncode=None,
 
 <hr style="margin-top:20px;"/>
 <center style="color:#626262;">
-  {lmk} {lmk_version} made with ♥ by {me}
+  {lmk} made with ♥ by {me}
 </center>
 """.format(**vars())
 
@@ -634,7 +627,7 @@ def build_message_subject(output, command=None, returncode=None, cfg=None,
       Unicode message subject.
   """
   user = os.environ['USER']
-  host = gethostname()
+  host = socket.gethostname()
 
   if command is not None and returncode is not None:
     happy_sad = u'🙈' if returncode else u'✔'
