@@ -37,14 +37,6 @@ def test_Model_config_type_error():
   assert "Config must be a Model proto. Received: 'int'" == str(e_info.value)
 
 
-def test_Model_missing_neuron_type_field(abc_model_config):
-  """Test that a UserError is raided if neuron_type field not set."""
-  abc_model_config.architecture.ClearField('neuron_type')
-  with pytest.raises(errors.UserError) as e_info:
-    models.Model(abc_model_config)
-  assert 'Model.architecture.neuron_type field not set' == str(e_info.value)
-
-
 def test_Model_hash(clgen_cache_dir, abc_model_config):
   """Test that the ID of a known corpus matches expected value."""
   del clgen_cache_dir

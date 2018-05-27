@@ -6,6 +6,7 @@ py_library(
     deps = [
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen/proto:model_py_pb2",
+        "//lib/labm8:pbutil",
     ],
 )
 

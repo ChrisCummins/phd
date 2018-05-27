@@ -6,12 +6,13 @@ from keras import optimizers
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.proto import model_pb2
+from lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS
 
 
-def AssertBuildable(config: model_pb2.Model) -> model_pb2.Model:
+def AssertIsBuildable(config: model_pb2.Model) -> model_pb2.Model:
   """Assert that a model configuration is buildable.
 
   Args:
@@ -20,13 +21,56 @@ def AssertBuildable(config: model_pb2.Model) -> model_pb2.Model:
   Returns:
     The input model proto, unmodified.
 
-  Rases:
+  Raises:
     UserError: If the model is not buildable.
   """
-  if not config.architecture.HasField('neuron_type'):
-    raise errors.UserError('Model.architecture.neuron_type field not set')
-  if not config.training.HasField('optimizer'):
-    raise errors.UserError('Model.training.optimizer field not set')
+  # Any change to the Model proto schema will require a change to this function.
+  try:
+    pbutil.AssertFieldIsSet(config, 'corpus')
+    pbutil.AssertFieldIsSet(config, 'architecture')
+    pbutil.AssertFieldIsSet(config, 'training')
+    pbutil.AssertFieldIsSet(config.architecture, 'neuron_type')
+    pbutil.AssertFieldConstraint(
+        config.architecture, 'neurons_per_layer', lambda x: 0 < x,
+        'NetworkArchitecture.neurons_per_layer must be > 0')
+    pbutil.AssertFieldConstraint(
+        config.architecture, 'num_layers', lambda x: 0 < x,
+        'NetworkArchitecture.num_layers must be > 0')
+    pbutil.AssertFieldConstraint(
+        config.training, 'num_epochs', lambda x: 0 < x,
+        'TrainingOptions.num_epochs must be > 0')
+    pbutil.AssertFieldIsSet(
+        config.training, 'shuffle_corpus_contentfiles_between_epochs')
+    pbutil.AssertFieldConstraint(
+        config.training, 'batch_size', lambda x: 0 < x,
+        'TrainingOptions.batch_size must be > 0')
+    pbutil.AssertFieldIsSet(config.training, 'optimizer')
+    if config.training.HasField('adam_optimizer'):
+      pbutil.AssertFieldConstraint(
+          config.training.adam_optimizer, 'initial_learning_rate_micros',
+          lambda x: 0 <= x,
+          'AdamOptimizer.initial_learning_rate_micros must be >= 0')
+      pbutil.AssertFieldConstraint(
+          config.training.adam_optimizer,
+          'learning_rate_decay_per_epoch_micros', lambda x: 0 <= x,
+          'AdamOptimizer.learning_rate_decay_per_epoch_micros must be >= 0')
+      pbutil.AssertFieldConstraint(
+          config.training.adam_optimizer,
+          'beta_1_micros', lambda x: 0 <= x <= 1000000,
+          'AdamOptimizer.beta_1_micros must be >= 0 and <= 1000000')
+      pbutil.AssertFieldConstraint(
+          config.training.adam_optimizer,
+          'beta_2_micros', lambda x: 0 <= x <= 1000000,
+          'AdamOptimizer.beta_2_micros must be >= 0 and <= 1000000')
+      pbutil.AssertFieldConstraint(
+          config.training.adam_optimizer,
+          'normalized_gradient_clip_micros', lambda x: 0 <= x,
+          'AdamOptimizer.normalized_gradient_clip_micros must be >= 0')
+    else:
+      raise errors.InternalError(
+          "Unrecognized value: 'TrainingOptions.optimizer'")
+  except pbutil.ProtoValueError as e:
+    raise errors.UserError(str(e))
   return config
 
 
