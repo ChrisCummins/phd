@@ -1,0 +1,6 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="test //lib/labm8/..." type="BlazeCommandRunConfigurationType" factoryName="Bazel Command" handler-id="BlazeCommandGenericRunConfigurationHandlerProvider" blaze-command="test">
+    <blaze-target>//lib/labm8/...</blaze-target>
+    <method />
+  </configuration>
+</component>
