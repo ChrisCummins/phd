@@ -126,10 +126,9 @@ class ArgumentParser(argparse.ArgumentParser):
     See python argparse.ArgumentParser.parse_args().
     """
     # --version option overrides the normal argument parsing process.
-    c = colors
     if '--version' in args:
       print('lmk master, made with {c.red}♥{c.reset} by '
-            'Chris Cummins <chrisc.101@gmail.com>'.format(**vars()))
+            'Chris Cummins <chrisc.101@gmail.com>'.format(c=colors))
       sys.exit(0)
 
     if '--create-config' in args:
@@ -172,10 +171,9 @@ def create_default_cfg(path):
   with open(path, 'w') as outfile:
     print(DEFAULT_CFG, end='', file=outfile)
   os.chmod(path, 384)  # 384 == 0o600
-  c = colors
   print(
       '{c.bold}[lmk] created default configuration file {path}{c.reset}'
-        .format(**vars()),
+        .format(c=colors, path=path),
       file=sys.stderr)
 
 
@@ -268,12 +266,10 @@ def load_cfg(path=None):
 
   def _verify(stmt, *msg, **kwargs):
     sep = kwargs.get('sep', ' ')
-    msg = sep.join(msg)
-    c = colors
     if not stmt:
       print(
-          '{c.bold}{c.red}[lmk] {msg}{c.reset}'.format(**vars()),
-          file=sys.stderr)
+          '{c.bold}{c.red}[lmk] {msg}{c.reset}'.format(
+              c=colors, msg=sep.join(msg)), file=sys.stderr)
       sys.exit(E_CFG)
 
   if sys.version_info >= (3, 0):
@@ -346,37 +342,29 @@ def get_smtp_server(cfg):
   """
 
   def _error(*msg, **kwargs):
-    c = colors
     sep = kwargs.get('sep', ' ')
-    msg = sep.join(msg)
-    print(
-        '{c.bold}{c.red}[lmk] {msg}{c.reset}'.format(**vars()),
-        file=sys.stderr)
+    print('{c.bold}{c.red}[lmk] {msg}{c.reset}'.format(
+        c=colors, msg=sep.join(msg)), file=sys.stderr)
     sys.exit(E_SMTP)
 
-  c = colors
   try:
     server = smtplib.SMTP(cfg['smtp']['host'], int(cfg['smtp']['port']))
     server.starttls()
     server.login(cfg['smtp']['username'], cfg['smtp']['password'])
     return server
   except smtplib.SMTPHeloError:
-    host, port = cfg['smtp']['host'], cfg['smtp']['port']
-    _error('connection to {host}:{port} failed'.format(**vars()))
+    _error('connection to {host}:{port} failed'.format(
+        host=cfg['smtp']['host'], port=cfg['smtp']['port']))
   except smtplib.SMTPAuthenticationError:
     _error('smtp authentication failed. Check username and password in '
            '%s' % cfg['/run']['path'])
   except smtplib.SMTPServerDisconnected:
-    host, port = cfg['smtp']['host'], cfg['smtp']['port']
-    cfg_path = cfg['/run']['path']
-    _error(
-        '{host}:{port} disconnected. Check smtp settings in {cfg_path}'
-          .format(**vars()),
-        file=sys.stderr)
+    _error('{host}:{port} disconnected. Check smtp settings in {cfg_path}'
+           .format(host=cfg['smtp']['host'], port=cfg['smtp']['port'],
+                   cfg_path=cfg['/run']['path']), file=sys.stderr)
   except smtplib.SMTPException:
-    host, port = cfg['smtp']['host'], cfg['smtp']['port']
-    cfg_path = cfg['/run']['path']
-    _error('unknown error from {host}:{port}'.format(**vars()))
+    _error('unknown error from {host}:{port}'.format(
+        host=cfg['smtp']['host'], port=cfg['smtp']['port']))
 
 
 def send_email_smtp(cfg, server, msg):
@@ -397,14 +385,13 @@ def send_email_smtp(cfg, server, msg):
   """
 
   def _error(*msg, **kwargs):
-    c = colors
     sep = kwargs.get('sep', ' ')
-    msg = sep.join(msg)
-    print('{c.bold}{c.red}[lmk] {msg}{c.reset}'.format(**vars()),
-          file=sys.stderr)
+    print(
+        '{c.bold}{c.red}[lmk] {msg}{c.reset}'.format(c=colors,
+                                                     msg=sep.join(msg)),
+        file=sys.stderr)
     return False
 
-  c = colors
   recipient = msg['To'].strip()
   if not recipient:
     return _error('no recipient')
@@ -413,20 +400,20 @@ def send_email_smtp(cfg, server, msg):
     server.sendmail(msg['From'], msg['To'], msg.as_string())
     print(
         '{c.bold}{c.cyan}[lmk] {recipient} notified{c.reset}'.format(
-            **vars()),
+            c=colors, recipient=recipient),
         file=sys.stderr)
     return True
   except smtplib.SMTPHeloError:
-    host, port = cfg['smtp']['host'], cfg['smtp']['port']
-    return _error('connection to {host}:{port} failed'.format(**vars()))
+    return _error('connection to {host}:{port} failed'.format(
+        host=cfg['smtp']['host'], port=cfg['smtp']['port']))
   except smtplib.SMTPDataError:
-    host, port = cfg['smtp']['host'], cfg['smtp']['port']
-    return _error('unknown error from {host}:{port}'.format(**vars()))
+    return _error('unknown error from {host}:{port}'.format(
+        host=cfg['smtp']['host'], port=cfg['smtp']['port']))
   except smtplib.SMTPRecipientsRefused:
-    return _error('recipient {recipient} refused'.format(**vars()))
+    return _error('recipient {recipient} refused'.format(
+        recipient=recipient))
   except smtplib.SMTPSenderRefused:
-    from_ = msg['From']
-    return _error('sender {from_} refused'.format(**vars()))
+    return _error('sender {from_} refused'.format(from_=msg['From']))
   return False
 
 
@@ -500,18 +487,18 @@ def build_html_message_body(output, command=None, returncode=None,
     delta = humanize.naturaltime(datetime.now() - date_started)
     html += (u'  <tr><td style="{style}">Started</td>'
              u'<td>{date_started} ({delta})</td></tr>\n'
-             .format(**vars()))
+             .format(style=style, date_started=date_started, delta=delta))
   if date_ended:
     html += (u'  <tr><td style="{style}">Completed</td>'
              u'<td>{date_ended}</td></tr>\n'
-             .format(**vars()))
+             .format(style=style, date_ended=date_ended))
   if returncode is not None:
     html += (u'  <tr><td style="{style}">Return code</td>'
              u'<td style="font-weight:700;">{returncode}</td></tr>\n'
-             .format(**vars()))
+             .format(style=style, returncode=returncode))
   html += (u'  <tr><td style="{style}">Working directory</td>'
            u'<td>{cwd}</td></tr>\n'
-           .format(**vars()))
+           .format(style=style, cwd=cwd))
   html += '</table>\n<hr style="margin-top:20px;"/>\n'
 
   # output
@@ -525,7 +512,8 @@ def build_html_message_body(output, command=None, returncode=None,
     <td style="{prompt_css}">$</td>
     <td style="{command_css}">{command_html}</td>
   </tr>
-""".format(**vars())
+""".format(prompt_css=prompt_css, command_css=command_css,
+           command_html=command_html)
 
   # command output
   lines = output.split('\n')
@@ -542,10 +530,11 @@ def build_html_message_body(output, command=None, returncode=None,
     <td style="{lineno_css}">{lineno}</td>
     <td style="{line_css}">{line_html}</td>
   </tr>
-""".format(**vars())
+""".format(lineno_css=lineno_css, lineno=lineno, line_css=line_css,
+           line_html=line_html)
     num_omitted = len(lines) - 200
     html += "</table>"
-    html += "... ({num_omitted} lines snipped)".format(**vars())
+    html += "... ({num_omitted} lines snipped)".format(num_omitted=num_omitted)
     html += "<table>\n"
     line_nums = range(len(lines) - snip_to // 2 + 1, len(lines) + 1)
     for line, lineno in zip(lines[-snip_to // 2:], line_nums):
@@ -555,7 +544,8 @@ def build_html_message_body(output, command=None, returncode=None,
     <td style="{lineno_css}">{lineno}</td>
     <td style="{line_css}">{line_html}</td>
   </tr>
-""".format(**vars())
+""".format(lineno_css=lineno_css, lineno=lineno, line_css=line_css,
+           line_html=line_html)
   else:
     # full length report
     for line, lineno in zip(lines, range(1, len(lines) + 1)):
@@ -569,7 +559,8 @@ def build_html_message_body(output, command=None, returncode=None,
     <td style="{lineno_css}">{lineno}</td>
     <td style="{line_css}">{line_html}</td>
   </tr>
-""".format(**vars())
+""".format(lineno_css=lineno_css, lineno=lineno, line_css=line_css,
+           line_html=line_html)
 
   html += u'</table>\n'
 
@@ -581,7 +572,7 @@ def build_html_message_body(output, command=None, returncode=None,
 <center style="color:#626262;">
   {lmk} made with ♥ by {me}
 </center>
-""".format(**vars())
+""".format(lmk=lmk, me=me)
 
   return html, truncated
 
@@ -603,7 +594,7 @@ def get_cfg_path():
   elif not os.path.exists(cfg_path):
     print(
         '{c.bold}{c.red}$LMK_CFG ({cfg_path}) not found{c.reset}'.format(
-            **vars()),
+            c=colors, cfg_path=cfg_path),
         file=sys.stderr)
     sys.exit(E_CFG)
   return cfg_path
@@ -631,14 +622,17 @@ def build_message_subject(output, command=None, returncode=None, cfg=None,
 
   if command is not None and returncode is not None:
     happy_sad = u'🙈' if returncode else u'✔'
-    return u'{user}@{host} {happy_sad} $ {command}'.format(**vars())
+    return u'{user}@{host} {happy_sad} $ {command}'.format(
+        user=user, host=host, happy_sad=happy_sad, command=command)
   elif command is not None:
-    return u'{user}@{host} $ {command}'.format(**vars())
+    return u'{user}@{host} $ {command}'.format(
+        user=user, host=host, command=command)
   elif date_started is not None:
     delta = humanize.naturaltime(datetime.now() - date_started)
-    return u'{user}@{host} finished job started {delta}'.format(**vars())
+    return u'{user}@{host} finished job started {delta}'.format(
+        user=user, host=host, delta=delta)
   else:
-    return u'{user}@{host} finished job'
+    return u'{user}@{host} finished job'.format(user=user, host=host)
 
 
 def let_me_know(output, command=None, returncode=None, cfg=None,
@@ -733,21 +727,20 @@ def run_subprocess(command, only_errors=False):
 
 def main():
   args = parse_args(sys.argv[1:])
-  c = colors
 
   try:
     if args.command == '-':
       # check that command line usage is correct
       if args.only_errors:
         print('{c.bold}{c.red}[lmk] --only-errors option cannot be '
-              'used with stdin{c.reset}'.format(**vars()))
+              'used with stdin{c.reset}'.format(c=colors))
         sys.exit(1)
 
       read_from_stdin()
     else:
       sys.exit(run_subprocess(args.command, only_errors=args.only_errors))
   except KeyboardInterrupt:
-    print('{c.bold}{c.red}[lmk] aborted{c.reset}'.format(**vars()))
+    print('{c.bold}{c.red}[lmk] aborted{c.reset}'.format(c=colors))
     sys.exit(1)
 
 
