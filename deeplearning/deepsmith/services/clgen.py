@@ -31,7 +31,7 @@ def ClgenConfigToGenerator(m: models.Model,
   g.opts['contentfiles_id'] = m.corpus.content_id
   g.opts['corpus_id'] = m.corpus.hash
   g.opts['neuron_type'] = model_pb2.NetworkArchitecture.NeuronType.Name(
-    m.config.architecture.neuron_type)
+      m.config.architecture.neuron_type)
   g.opts['neurons_per_layer'] = str(m.config.architecture.neurons_per_layer)
   g.opts['num_layers'] = str(m.config.architecture.num_layers)
   g.opts[
@@ -40,13 +40,13 @@ def ClgenConfigToGenerator(m: models.Model,
   g.opts['training_batch_size'] = str(m.config.training.batch_size)
   g.opts['initial_learning_rate'] = str(m.config.training.initial_learning_rate)
   g.opts['percent_learning_rate_decay_per_epoch'] = str(
-    m.config.training.percent_learning_rate_decay_per_epoch)
+      m.config.training.percent_learning_rate_decay_per_epoch)
   g.opts['start_text'] = s.config.start_text
   g.opts['sampler_batch_size'] = str(s.config.batch_size)
   for criterion in s.config.termination_criteria:
     if criterion.HasField('maxlen'):
       g.opts['max_tokens_in_sample'] = str(
-        criterion.maxlen.maximum_tokens_in_sample)
+          criterion.maxlen.maximum_tokens_in_sample)
     elif criterion.HasField('symtok'):
       g.opts['depth_left_token'] = criterion.symtok.depth_increase_token
       g.opts['depth_right_token'] = criterion.symtok.depth_decrease_token
@@ -89,7 +89,7 @@ class ClgenGenerator(generator.GeneratorBase,
     del context
     logging.info('GetGeneratorCapabilities() client=%s', request.status.client)
     response = services.BuildDefaultResponse(
-      generator_pb2.GetGeneratorCapabilitiesRequest)
+        generator_pb2.GetGeneratorCapabilitiesRequest)
     response.toolchain = self.config.model.corpus.language
     response.generator = self.generator
     return response
@@ -99,7 +99,7 @@ class ClgenGenerator(generator.GeneratorBase,
     del context
     logging.info('GenerateTestcases() client=%s', request.status.client)
     response = services.BuildDefaultResponse(
-      generator_pb2.GenerateTestcasesResponse)
+        generator_pb2.GenerateTestcasesResponse)
     os.environ['CLGEN_CACHE'] = self.config.clgen_working_dir
     with self.ClgenWorkingDir():
       m = models.Model(self.config.model)
