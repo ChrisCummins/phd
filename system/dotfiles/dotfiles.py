@@ -869,7 +869,7 @@ class GhArchiver(Task):
   __genfiles__ = ['/usr/local/bin/gh-archiver']
 
   def install(self):
-    Python().pip_install("gh-archiver", self.VERSION, python=Python.PYTHON2_BINARY)
+    Python().pip_install("gh-archiver", self.VERSION)
 
 
 class Tmux(Task):
