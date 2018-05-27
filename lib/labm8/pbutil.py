@@ -1,24 +1,32 @@
-"""TODO."""
+"""Utility code for working with Protocol Buffers."""
 import collections
-
-import google.protobuf.json_format
-import google.protobuf.text_format
 import gzip
 import json
 import pathlib
 import typing
 
+import google.protobuf.json_format
+import google.protobuf.text_format
+
 from lib.labm8 import jsonutil
+
 
 # A type alias for annotating methods which take or return protocol buffers.
 ProtocolBuffer = typing.Any
 
 
-class EncodeError(Exception):
+class ProtoValueError(ValueError):
+  """Raised in case of a value error from a proto."""
   pass
 
 
-class DecodeError(Exception):
+class EncodeError(ProtoValueError):
+  """Raised in case of error encoding a proto."""
+  pass
+
+
+class DecodeError(ProtoValueError):
+  """Raised in case of error decoding a proto."""
   pass
 
 
@@ -235,3 +243,35 @@ def ProtoIsReadable(path: typing.Union[str, pathlib.Path],
     return True
   except:
     return False
+
+
+def AssertFieldConstraint(proto: ProtocolBuffer, field_name: str,
+                          constraint: typing.Callable[
+                            [typing.Any], bool] = lambda x: True) -> typing.Any:
+  """Assert a constraint on the value of a protocol buffer field.
+
+  Args:
+    proto: A proto message instance.
+    field_name: The name of the field to assert the constraint on.
+    constraint: A constraint checking function to call with the value of the
+      field. The function must return True if the constraint check passes, else
+      False. If no constraint is specified, this callback always returns True.
+      This still allows you to use this function to check if a field is set.
+
+  Returns:
+    The value of the field.
+
+  Raises:
+    ValueError: If the requested field does not exist in the proto schema.
+    ProtoValueError: If the field is not set, or if the constraint callback
+      returns False for the field's value.
+  """
+  proto_class_name = type(proto).__name__
+  if not proto.HasField(field_name):
+    raise ProtoValueError(f"Field not set: '{proto_class_name}.{field_name}'")
+  value = getattr(proto, field_name)
+  if not constraint(value):
+    raise ProtoValueError(
+        f"Field fails constraint check: '{proto_class_name}.{field_name}'")
+  else:
+    return value

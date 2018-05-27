@@ -1,12 +1,12 @@
 """Unit tests for //lib/labm8:pbutil."""
-import sys
-
-import google.protobuf.message
 import gzip
 import json
 import pathlib
-import pytest
+import sys
 import tempfile
+
+import google.protobuf.message
+import pytest
 from absl import app
 
 from lib.labm8 import pbutil
@@ -203,6 +203,74 @@ def test_ToFile_FromFile_equivalence_binary_gz():
     assert proto_out.string == 'abc'
     assert proto_out.number == 1
     assert proto_in == proto_out
+
+
+# AssertFieldConstraint() tests.
+
+def test_AssertFieldConstraint_invalid_field_name():
+  """ValueError is raised if the requested field name does not exist."""
+  t = test_protos_pb2.TestMessage()
+  with pytest.raises(ValueError):
+    pbutil.AssertFieldConstraint(t, 'not_a_real_field')
+
+
+def test_AssertFieldConstraint_field_not_set():
+  """ValueError is raised if the requested field is not set."""
+  t = test_protos_pb2.TestMessage()
+  with pytest.raises(pbutil.ProtoValueError) as e_info:
+    pbutil.AssertFieldConstraint(t, 'string')
+  assert "Field not set: 'TestMessage.string'" == str(e_info.value)
+  with pytest.raises(pbutil.ProtoValueError) as e_info:
+    pbutil.AssertFieldConstraint(t, 'number')
+  assert "Field not set: 'TestMessage.number'" == str(e_info.value)
+
+
+def test_AssertFieldConstraint_no_callback_return_value():
+  """Field value is returned when no callback and field is set."""
+  t = test_protos_pb2.TestMessage()
+  t.string = 'foo'
+  t.number = 5
+  assert 'foo' == pbutil.AssertFieldConstraint(t, 'string')
+  assert 5 == pbutil.AssertFieldConstraint(t, 'number')
+
+
+def test_AssertFieldConstraint_user_callback_passes():
+  """Field value is returned when user callback passes."""
+  t = test_protos_pb2.TestMessage()
+  t.string = 'foo'
+  t.number = 5
+  assert 'foo' == pbutil.AssertFieldConstraint(t, 'string',
+                                               lambda x: x == 'foo')
+  assert 5 == pbutil.AssertFieldConstraint(t, 'number', lambda x: 1 < x < 10)
+
+
+def test_AssertFieldConstraint_user_callback_fails():
+  """ProtoValueError raised when when user callback fails."""
+  t = test_protos_pb2.TestMessage()
+  t.string = 'foo'
+  t.number = 5
+  with pytest.raises(pbutil.ProtoValueError) as e_info:
+    pbutil.AssertFieldConstraint(t, 'string', lambda x: x == 'bar')
+  assert "Field fails constraint check: 'TestMessage.string'" == str(
+      e_info.value)
+  with pytest.raises(pbutil.ProtoValueError) as e_info:
+    pbutil.AssertFieldConstraint(t, 'number', lambda x: 10 < x < 100)
+  assert "Field fails constraint check: 'TestMessage.number'" == str(
+      e_info.value)
+
+
+def test_AssertFieldConstraint_user_callback_raises_exception():
+  """If callback raises exception, it is passed to calling code."""
+  t = test_protos_pb2.TestMessage()
+  t.string = 'foo'
+
+  def CallbackWhichRaisesException(x):
+    """Test callback which raises an exception"""
+    raise FileExistsError('foo')
+
+  with pytest.raises(FileExistsError) as e_info:
+    pbutil.AssertFieldConstraint(t, 'string', CallbackWhichRaisesException)
+  assert str(e_info.value) == 'foo'
 
 
 def main(argv):
