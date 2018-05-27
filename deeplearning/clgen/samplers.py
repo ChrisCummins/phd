@@ -1,5 +1,6 @@
 """Samplers for CLgen language models."""
 import pathlib
+import typing
 
 from deeplearning.clgen import cache
 from deeplearning.clgen import errors
@@ -38,6 +39,41 @@ class Sampler(object):
     self.config = sampler_pb2.Sampler()
     self.config.CopyFrom(config)
     self.hash = self._ComputeHash(self.config)
+
+    # Determine the termination criteria.
+    self.max_length = -1
+    self.special_token_left = None
+    self.special_token_right = None
+    for criterion in self.config.termination_criteria:
+      if criterion.HasField('maxlen'):
+        self.max_length = criterion.maxlen.maximum_tokens_in_sample
+        if not criterion.maxlen.include_start_text_in_maximum:
+          self.max_length += len(self.config.start_text)
+      elif criterion.HasField('symtok'):
+        self.symmetrical_token_left = criterion.symtok.depth_increase_token
+        self.symmetrical_token_right = criterion.symtok.depth_decrease_token
+    self.has_max_length = self.max_length > 0
+    self.has_symmetrical_tokens = (
+        self.special_token_left and self.special_token_right)
+
+  def SampleIsComplete(self, sample_in_progress: typing.List[str]) -> bool:
+    """Determine whether to stop sampling.
+
+    Args:
+      sample_in_progress: A sample in progress, as a sequence of decoded tokens.
+
+    Returns:
+      True if the sample is "complete", else False to continue sampling.
+    """
+    if self.has_max_length:
+      if len(sample_in_progress) >= self.max_length:
+        return True
+    if self.has_symmetrical_tokens:
+      left_token_count = sample_in_progress.count(self.symmetrical_token_left)
+      right_token_count = sample_in_progress.count(self.symmetrical_token_left)
+      if left_token_count and (left_token_count - right_token_count == 0):
+        return True
+    return False
 
   @staticmethod
   def _ComputeHash(config: sampler_pb2.Sampler) -> str:

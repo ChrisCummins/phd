@@ -107,3 +107,8 @@ class InvalidVocab(VocabError):
 class InvalidStartText(InvalidVocab):
   """A Sampler's start text cannot be encoded using the corpus vocabulary."""
   pass
+
+
+class InvalidSymtokTokens(InvalidVocab):
+  """A Sampler's symmetrical depth tokens cannot be encoded."""
+  pass

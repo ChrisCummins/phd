@@ -24,9 +24,14 @@ class MockSampler(object):
     self.start_text = start_text
     self.hash = hash
     self.batch_size = batch_size
+    self.has_symmetrical_tokens = False
+
+  @staticmethod
+  def SampleIsComplete(sample_in_progress):
+    return len(sample_in_progress) >= 10
 
 
-# The Model.hash for a Model instance of abc_model_config.
+# The Model.hash for an instance of abc_model_config.
 ABC_MODEL_HASH = 'bad4436bf51066ba87b2fcc3505a15030033c9d3'
 
 

@@ -192,72 +192,15 @@ class Model(object):
     # self._WriteMetafile()
     return self
 
-  def _LockedSample(self, sampler: samplers.Sampler, min_num_samples: int) -> \
-      typing.List[internal_pb2.Sample]:
-    """Locked sampling.
-
-    This method must only be called when the model is locked.
-
-    Args:
-      sampler: A Sampler instance.
-      min_num_samples: The minimum number of samples to return. If -1, the
-        sampler runs indefinitely, and this method never returns.
-
-    Returns:
-      A list of samples.
-
-    Raises:
-      InvalidStartText: If the sampler's start text cannot be encoded using the
-        corpus vocabulary.
-    """
-    logging.info('Sampling %s', sampler)
-    try:
-      encoded_seed = self.corpus.atomizer.AtomizeString(sampler.start_text)
-    except errors.VocabError:
-      raise errors.InvalidStartText(
-          'Sampler start text cannot be encoded using the corpus vocabulary: '
-          f"'{sampler.start_text}'")
-
-    samples = []
-
-    # TODO(cec): Re-implement batched sampling.
-    vectorized_seed = np.zeros(
-        (1, self.corpus.sequence_length, self.corpus.vocabulary_size),
-        dtype=np.bool)
-    for i, token in enumerate(encoded_seed):
-      vectorized_seed[0, i, token] = 1
-
-    while len(samples) < min_num_samples:
-      X = np.copy(vectorized_seed)
-      text = []
-      start_time = labdate.MillisecondsTimestamp()
-      # Save a few cycles by not going via the model() property every time we need
-      # to access it.
-      model = self.model
-      # TODO(cec): Re-implement sampling termination criteria.
-      for i in range(100):
-        prediction = np.argmax(model.predict(X, verbose=0))
-        text.append(self.corpus.atomizer.decoder[prediction])
-        activations = np.zeros((1, 1, self.corpus.vocabulary_size),
-                               dtype=np.bool)
-        activations[0, 0, prediction] = 1
-        X = np.concatenate((X[:, 1:, :], activations), axis=1)
-      end_time = labdate.MillisecondsTimestamp()
-      sample = internal_pb2.Sample(text=''.join(text),
-                                   sample_start_epoch_ms_utc=start_time,
-                                   sample_time_ms=end_time - start_time)
-      sample_id = crypto.sha256_str(sample.text)
-      p = self.SamplerCache(sampler) / f'{sample_id}.pbtxt'
-      pbutil.ToFile(sample, p)
-      samples.append(sample)
-
-    return samples
-
   def Train(self) -> 'Model':
     """Train the model.
 
     Returns:
       The model instance.
+
+    Raises:
+      UnableToAcquireLockError: If the model is locked (i.e. there is another
+        process currently modifying the model).
     """
     with self.lock.acquire(replace_stale=True):
       return self._LockedTrain()
@@ -281,11 +224,72 @@ class Model(object):
 
     Returns:
       A list of Sample protos.
+
+    Raises:
+      UnableToAcquireLockError: If the model is locked (i.e. there is another
+        process currently modifying the model).
+      InvalidStartText: If the sampler start text cannot be encoded.
+      InvalidSymtokTokens: If the sampler symmetrical depth tokens cannot be
+        encoded.
     """
     self.SamplerCache(sampler).mkdir(exist_ok=True)
-    with self.lock.acquire(replace_stale=True):
-      self.Train()
-      return self._LockedSample(sampler, min_num_samples)
+    self.Train()
+    logging.info('Sampling %s', sampler)
+    try:
+      encoded_seed = self.corpus.atomizer.AtomizeString(sampler.start_text)
+    except errors.VocabError:
+      raise errors.InvalidStartText(
+          'Sampler start text cannot be encoded using the corpus vocabulary: '
+          f"'{sampler.start_text}'")
+    if sampler.has_symmetrical_tokens:
+      try:
+        l = self.corpus.atomizer.AtomizeString(sampler.symmetrical_token_left)
+        r = self.corpus.atomizer.AtomizeString(sampler.symmetrical_token_right)
+        if len(l) > 1 or len(r) > 1:
+          raise errors.InvalidSymtokTokens(
+              'Sampler symmetrical depth tokens do not encode to a single '
+              'token using the corpus vocabulary')
+      except errors.VocabError:
+        raise errors.InvalidSymtokTokens(
+            'Sampler symmetrical depth tokens cannot be encoded using the '
+            'corpus vocabulary')
+
+    samples = []
+
+    # TODO(cec): Re-implement batched sampling.
+    vectorized_seed = np.zeros(
+        (1, self.corpus.sequence_length, self.corpus.vocabulary_size),
+        dtype=np.bool)
+    for i, token in enumerate(encoded_seed):
+      vectorized_seed[0, i, token] = 1
+
+    while len(samples) < min_num_samples:
+      X = np.copy(vectorized_seed)
+      sample_in_progress = []
+      start_time = labdate.MillisecondsTimestamp()
+      # Save a few cycles by not going via the model() property every time we
+      # need to access it.
+      model = self.model
+      while True:
+        prediction = np.argmax(model.predict(X, verbose=0))
+        sample_in_progress.append(self.corpus.atomizer.decoder[prediction])
+        activations = np.zeros((1, 1, self.corpus.vocabulary_size),
+                               dtype=np.bool)
+        activations[0, 0, prediction] = 1
+        X = np.concatenate((X[:, 1:, :], activations), axis=1)
+        if sampler.SampleIsComplete(sample_in_progress):
+          break
+      end_time = labdate.MillisecondsTimestamp()
+      sample = internal_pb2.Sample(text=''.join(sample_in_progress),
+                                   sample_start_epoch_ms_utc=start_time,
+                                   sample_time_ms=end_time - start_time,
+                                   num_tokens=len(sample_in_progress))
+      sample_id = crypto.sha256_str(sample.text)
+      p = self.SamplerCache(sampler) / f'{sample_id}.pbtxt'
+      pbutil.ToFile(sample, p)
+      samples.append(sample)
+
+    return samples
 
   def SamplerCache(self, sampler: samplers.Sampler) -> pathlib.Path:
     """Get the path to a sampler cache.

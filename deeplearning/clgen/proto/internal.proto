@@ -32,6 +32,7 @@ message Sample {
   optional string text = 1;
   optional int32 sample_time_ms = 2;
   optional int64 sample_start_epoch_ms_utc = 3;
+  optional int32 num_tokens = 4;
 }
 
 message PreprocessorWorkerJob {

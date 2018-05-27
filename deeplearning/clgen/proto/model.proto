@@ -36,7 +36,10 @@ message TrainingOptions {
   // If true, shuffle the order of contentfiles in the corpus between each
   // training epoch.
   optional bool shuffle_corpus_contentfiles_between_epochs = 2;
-  // The training batch size.
+  // The training batch size. Note that this is only a *requested* batch size,
+  // there may be cases where the runtime decides to modify this value. For
+  // example, when the corpus size is smaller than the batch size. Any changes
+  // to this value at runtime will be logged as errors.
   optional int32 batch_size = 3;
   // The optimizer configuration.
   oneof optimizer {
