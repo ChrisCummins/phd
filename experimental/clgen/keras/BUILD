@@ -13,3 +13,10 @@ py_test(
     default_python_version = "PY3",
     srcs_version = "PY3",
 )
+
+py_test(
+    name = "profile_string_concatenation",
+    srcs = ["profile_string_concatenation.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+)
