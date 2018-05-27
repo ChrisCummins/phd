@@ -45,10 +45,9 @@ message TrainingOptions {
 }
 
 // The field name suffix '_micros' shows that the value contained in the field
-// is converted at runtime to a floating point number by multiplying it by
-// 10^-6. The reason for _micros fields is so that we can realiably encode and
-// compare protos without having to worry about floating point rounding and
-// comparisons.
+// is converted at runtime to a floating point number by dividing it by 1e6.
+// The reason for _micros fields is so that we can realiably encode and compare
+// protos without having to worry about floating point rounding and comparisons.
 
 message AdamOptimizer {
   // The initial learning rate. Must be >= 0. A recommended starting value is

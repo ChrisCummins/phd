@@ -23,6 +23,8 @@ def AssertIsBuildable(config: model_pb2.Model) -> model_pb2.Model:
 
   Raises:
     UserError: If the model is not buildable.
+    InternalError: If the value of the training.optimizer field is not
+      understood.
   """
   # Any change to the Model proto schema will require a change to this function.
   try:
@@ -74,11 +76,31 @@ def AssertIsBuildable(config: model_pb2.Model) -> model_pb2.Model:
   return config
 
 
-def BuildKerasOptimizer(config: model_pb2.Model) -> optimizers.Optimizer:
-  # TODO(cec): Re-implement learning rate, decay rate, and gradient clip.
-  # learning_rate = config.training.initial_learning_rate_micros / 10e6
-  # decay_rate = config.training.percent_learning_rate_decay_per_epoch
-  return 'adam'
+def BuildOptimizer(config: model_pb2.Model) -> optimizers.Optimizer:
+  """Construct the training optimizer from config.
+
+  Args:
+    config: A Model config proto.
+
+  Raises:
+    InternalError: If the value of the optimizer field is not understood.
+  """
+  # We do not use *any* default values for arguments, in case for whatever
+  # reason the Keras API changes a default arg.
+  if config.training.HasField('adam_optimizer'):
+    adam = config.training.adam_optimizer
+    return optimizers.Adam(
+        lr=adam.initial_learning_rate_micros / 1e6,
+        beta_1=adam.beta_1_micros / 1e6,
+        beta_2=adam.beta_2_micros / 1e6,
+        epsilon=None,
+        decay=adam.learning_rate_decay_per_epoch_micros / 1e6,
+        amsgrad=False,
+        clipnorm=adam.normalized_gradient_clip_micros / 1e6,
+    )
+  else:
+    raise errors.InternalError(
+        "Unrecognized value: 'TrainingOptions.optimizer'")
 
 
 def BuildKerasModel(config: model_pb2.Model,
@@ -111,6 +133,4 @@ def BuildKerasModel(config: model_pb2.Model,
   model.add(layer(config.architecture.neurons_per_layer))
   model.add(layers.Dense(vocabulary_size))
   model.add(layers.Activation('softmax'))
-  model.compile(loss='categorical_crossentropy',
-                optimizer=BuildKerasOptimizer(config))
   return model

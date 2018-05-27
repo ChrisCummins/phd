@@ -120,14 +120,14 @@ class Model(object):
     if self.cache.get('model.yaml'):
       with open(self.cache['model.yaml']) as f:
         model = models.model_from_yaml(f.read())
-        model.compile(loss='categorical_crossentropy', optimizer='adam')
-      return model
     else:
       model = builders.BuildKerasModel(self.config, self.corpus.sequence_length,
                                        self.corpus.vocabulary_size)
       with open(self.cache.keypath('model.yaml'), 'w') as f:
         f.write(model.to_yaml())
-      return model
+    model.compile(loss='categorical_crossentropy',
+                  optimizer=builders.BuildOptimizer(self.config))
+    return model
 
   @property
   def model(self) -> models.Sequential:
