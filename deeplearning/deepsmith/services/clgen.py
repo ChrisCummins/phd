@@ -26,6 +26,7 @@ FLAGS = flags.FLAGS
 def ClgenConfigToGenerator(m: models.Model,
                            s: samplers.Sampler) -> deepsmith_pb2.Generator:
   """Convert a CLgen model+sampler pair to a DeepSmith generator proto."""
+  # TODO(cec): Update for new options and add unit tests.
   g = deepsmith_pb2.Generator()
   g.name = f'clgen_model:{m.hash}_sampler:{s.hash}'
   g.opts['contentfiles_id'] = m.corpus.content_id
@@ -38,9 +39,9 @@ def ClgenConfigToGenerator(m: models.Model,
     'shuffle_corpus_contentfiles_between_epochs'] = 'true' if \
     m.config.training.shuffle_corpus_contentfiles_between_epochs else 'false'
   g.opts['training_batch_size'] = str(m.config.training.batch_size)
-  g.opts['initial_learning_rate'] = str(m.config.training.initial_learning_rate)
-  g.opts['percent_learning_rate_decay_per_epoch'] = str(
-      m.config.training.percent_learning_rate_decay_per_epoch)
+  # g.opts['initial_learning_rate'] = str(m.config.training.initial_learning_rate)
+  # g.opts['percent_learning_rate_decay_per_epoch'] = str(
+  #     m.config.training.percent_learning_rate_decay_per_epoch)
   g.opts['start_text'] = s.config.start_text
   g.opts['sampler_batch_size'] = str(s.config.batch_size)
   for criterion in s.config.termination_criteria:
