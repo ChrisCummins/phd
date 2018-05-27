@@ -7,12 +7,6 @@
 -------
 
 <div align="center">
-  <a href="http://chriscummins.cc/clgen/" target="_blank">
-    <img src="https://img.shields.io/badge/docs-master-brightgreen.svg?style=flat">
-  </a>
-  <a href="https://travis-ci.org/ChrisCummins/phd" target="_blank">
-      <img src="https://img.shields.io/travis/ChrisCummins/phd/master.svg?style=flat">
-    </a>
   <a href="https://www.gnu.org/licenses/gpl-3.0.en.html" target="_blank">
     <img src="https://img.shields.io/badge/license-GNU%20GPL%20v3-blue.svg?style=flat">
   </a>
@@ -57,7 +51,7 @@ Publication
 ["Synthesizing Benchmarks for Predictive Modeling"](https://github.com/ChrisCummins/paper-synthesizing-benchmarks)
 (CGO'17).
 
-[Jupyter notebook](https://github.com/ChrisCummins/paper-synthesizing-benchmarks/blob/master/code/Paper.ipynb) 
+[Jupyter notebook](https://github.com/ChrisCummins/paper-synthesizing-benchmarks/blob/master/code/Paper.ipynb)
 containing experimental evaluation of an early version of CLgen.
 
 Documentation for the [Python API](http://chriscummins.cc/clgen/api/) and
@@ -68,5 +62,5 @@ Documentation for the [Python API](http://chriscummins.cc/clgen/api/) and
 
 Copyright 2016, 2017, 2018 Chris Cummins <chrisc.101@gmail.com>.
 
-Released under the terms of the GPLv3 license. See 
+Released under the terms of the GPLv3 license. See
 [LICENSE](/deeplearning/clgen/LICENSE) for details.
