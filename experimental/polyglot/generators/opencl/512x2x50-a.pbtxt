@@ -126,6 +126,7 @@ model {
     preprocessor: "deeplearning.clgen.preprocessors.common:StripTrailingWhitespace"
     preprocessor: "deeplearning.clgen.preprocessors.opencl:ClangFormat"
     preprocessor: "deeplearning.clgen.preprocessors.common:MinimumLineCount3"
+    preprocessor: "deeplearning.clgen.preprocessors.opencl:Compile"
   }
   architecture {
     neuron_type: LSTM
@@ -134,12 +135,15 @@ model {
   }
   training {
     num_epochs: 50
-    shuffle_corpus_contentfiles_between_epochs: true
     batch_size: 64
-    gradient_clip: 5
-    initial_learning_rate: 0.001
-    percent_learning_rate_decay_per_epoch: 5
-    save_intermediate_checkpoints: true
+    shuffle_corpus_contentfiles_between_epochs: true
+    adam_optimizer {
+      initial_learning_rate_micros: 2000  # 0.02
+      learning_rate_decay_per_epoch_micros: 5000  # 0.05
+      beta_1_micros = 900000 # 0.9
+      beta_2_micros = 999000 # 0.999
+      normalized_gradient_clip_micros = 5000000 # 5.0
+    }
   }
 }
 sampler {
