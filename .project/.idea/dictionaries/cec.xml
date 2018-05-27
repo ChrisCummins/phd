@@ -5,6 +5,7 @@
       <w>bazelutil</w>
       <w>cflags</w>
       <w>clgen</w>
+      <w>clipnorm</w>
       <w>contentfile</w>
       <w>contentfiles</w>
       <w>corpuses</w>
@@ -12,6 +13,7 @@
       <w>deeplearning</w>
       <w>gsize</w>
       <w>inlining</w>
+      <w>keras</w>
       <w>labm</w>
       <w>lgen</w>
       <w>lsize</w>
@@ -25,6 +27,8 @@
       <w>subdirs</w>
       <w>uname</w>
       <w>vectorize</w>
+      <w>vectorizes</w>
+      <w>vectorizing</w>
     </words>
   </dictionary>
 </component>
