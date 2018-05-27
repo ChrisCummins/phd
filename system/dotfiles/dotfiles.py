@@ -707,14 +707,11 @@ class Autoenv(Task):
 class Lmk(Task):
   """ let-me-know """
   __platforms__ = ['linux', 'osx']
-  __deps__ = ['Python']
+  __deps__ = ['Python', 'Phd']
   __genfiles__ = ['/usr/local/bin/lmk']
-  __versions__ = {
-      "lmk": "0.0.13"
-  }
 
   def install(self):
-    Python().pip_install("lmk", self.__versions__["lmk"])
+    symlink('~/phd/utils/lmk/lmk.py', '/usr/local/bin/lmk')
 
 
 class LmkConfig(Task):
