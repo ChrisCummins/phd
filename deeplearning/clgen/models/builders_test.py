@@ -1,6 +1,7 @@
 """Unit tests for //deeplearning/clgen/models/builders.py."""
-import pytest
 import sys
+
+import pytest
 from absl import app
 from absl import flags
 
@@ -21,7 +22,7 @@ def test_AssertIsBuildable_missing_neuron_type_field(abc_model_config):
   abc_model_config.architecture.ClearField('neuron_type')
   with pytest.raises(errors.UserError) as e_info:
     builders.AssertBuildable(abc_model_config)
-  assert str(e_info).endswith('Model.architecture.neuron_type field not set')
+  assert 'Model.architecture.neuron_type field not set' == str(e_info.value)
 
 
 def main(argv):

@@ -12,7 +12,7 @@ def test_Sampler_config_type_error():
   """Test that a TypeError is raised if config is not a Sampler proto."""
   with pytest.raises(TypeError) as e_info:
     samplers.Sampler(1)
-  assert str(e_info).endswith("Config must be a Sampler proto. Received: 'int'")
+  assert "Config must be a Sampler proto. Received: 'int'" == str(e_info.value)
 
 
 def test_Sampler_no_start_text_field(clgen_cache_dir, abc_sampler_config):

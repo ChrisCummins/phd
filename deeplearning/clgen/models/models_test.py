@@ -1,7 +1,8 @@
 """Unit tests for //deeplearning/clgen/model.py."""
+import sys
+
 import checksumdir
 import pytest
-import sys
 from absl import app
 
 from deeplearning.clgen import errors
@@ -33,7 +34,7 @@ def test_Model_config_type_error():
   """Test that a TypeError is raised if config is not a Model proto."""
   with pytest.raises(TypeError) as e_info:
     models.Model(1)
-  assert str(e_info).endswith("Config must be a Model proto. Received: 'int'")
+  assert "Config must be a Model proto. Received: 'int'" == str(e_info.value)
 
 
 def test_Model_missing_neuron_type_field(abc_model_config):
@@ -41,7 +42,7 @@ def test_Model_missing_neuron_type_field(abc_model_config):
   abc_model_config.architecture.ClearField('neuron_type')
   with pytest.raises(errors.UserError) as e_info:
     models.Model(abc_model_config)
-  assert str(e_info).endswith('Model.architecture.neuron_type field not set')
+  assert 'Model.architecture.neuron_type field not set' == str(e_info.value)
 
 
 def test_Model_hash(clgen_cache_dir, abc_model_config):
