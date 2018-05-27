@@ -11,6 +11,11 @@ from deeplearning.clgen.models import builders
 FLAGS = flags.FLAGS
 
 
+def test_AssertIsBuildable_returns_config(abc_model_config):
+  """Test that the original config is returned."""
+  assert abc_model_config == builders.AssertBuildable(abc_model_config)
+
+
 def test_AssertIsBuildable_missing_neuron_type_field(abc_model_config):
   """Test that a UserError is raided if neuron_type field not set."""
   abc_model_config.architecture.ClearField('neuron_type')

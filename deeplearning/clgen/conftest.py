@@ -79,14 +79,20 @@ def abc_corpus_config(abc_corpus):
 def abc_model_config(abc_corpus_config):
   """The proto config for a simple Model."""
   architecture = model_pb2.NetworkArchitecture(
-      neuron_type=model_pb2.NetworkArchitecture.LSTM, neurons_per_layer=8,
-      num_layers=2)
-  training = model_pb2.TrainingOptions(num_epochs=1,
-                                       shuffle_corpus_contentfiles_between_epochs=False,
-                                       batch_size=5, gradient_clip=5,
-                                       initial_learning_rate=0.001,
-                                       percent_learning_rate_decay_per_epoch=5,
-                                       save_intermediate_checkpoints=False)
+      neuron_type=model_pb2.NetworkArchitecture.LSTM,
+      neurons_per_layer=4,
+      num_layers=1)
+  optimizer = model_pb2.AdamOptimizer(
+      initial_learning_rate_micros=2000,
+      learning_rate_decay_per_epoch_micros=5000,
+      beta_1_micros=900000,
+      beta_2_micros=999000,
+      normalized_gradient_clip_micros=5000000)
+  training = model_pb2.TrainingOptions(
+      num_epochs=1,
+      shuffle_corpus_contentfiles_between_epochs=False,
+      batch_size=5,
+      adam_optimizer=optimizer)
   return model_pb2.Model(corpus=abc_corpus_config, architecture=architecture,
                          training=training)
 

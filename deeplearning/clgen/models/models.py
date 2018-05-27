@@ -2,13 +2,13 @@
 import io
 import pathlib
 import queue
-import sys
 import threading
 import typing
 
 import humanize
 import numpy as np
 import progressbar
+import sys
 from absl import logging
 from keras import callbacks
 from keras import models
@@ -170,10 +170,6 @@ class Model(object):
       starting_epoch = len(epoch_checkpoints)
 
     # model.load_weights(self.most_recent_checkpoint_path)
-    # TODO(cec): Re-implement learning rate, decay rate, and gradient clip.
-    learning_rate = self.config.training.initial_learning_rate
-    decay_rate = self.config.training.percent_learning_rate_decay_per_epoch
-
     checkpoint_dir = pathlib.Path(self.cache.keypath('checkpoints'))
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
     file_path = str(

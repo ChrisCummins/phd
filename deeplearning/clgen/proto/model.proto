@@ -15,7 +15,7 @@ message Model {
 // The specification of a CLgen language model.
 message NetworkArchitecture {
   enum NeuronType {
-    UNKNOWN = 0; // UNKNOWN == error.
+    UNKNOWN = 0; // The default value is an error.
     LSTM = 1;
     RNN = 2;
     GRU = 3;
@@ -38,13 +38,32 @@ message TrainingOptions {
   optional bool shuffle_corpus_contentfiles_between_epochs = 2;
   // The training batch size.
   optional int32 batch_size = 3;
-  optional int32 gradient_clip = 4;
-  // The initial learning rate.
-  optional float initial_learning_rate = 5;
-  // The rate at which the learning rate decays per epoch of training, in
-  // percent.
-  optional int32 percent_learning_rate_decay_per_epoch = 6;
-  // Whether to save a checkpoint at each epoch of training. This is
-  // recommended in most cases, as it allows incremental training of models.
-  optional bool save_intermediate_checkpoints = 7;
+  // The optimizer configuration.
+  oneof optimizer {
+    AdamOptimizer adam_optimizer = 10;
+  };
+}
+
+// The field name suffix '_micros' shows that the value contained in the field
+// is converted at runtime to a floating point number by multiplying it by
+// 10^-6. The reason for _micros fields is so that we can realiably encode and
+// compare protos without having to worry about floating point rounding and
+// comparisons.
+
+message AdamOptimizer {
+  // The initial learning rate. Must be >= 0. A recommended starting value is
+  // 2000 (i.e. real value 0.002).
+  optional int32 initial_learning_rate_micros = 1;
+  // The ratio by which the learning rate decays per epoch of training. Must be
+  // >= 0. A recommended starting value is 5000 (i.e. real value 0.05).
+  optional int32 learning_rate_decay_per_epoch_micros = 2;
+  // Must be in real value range 0 < beta_1 < 1. A recommended starting value
+  // is 900000 (i.e. real value 0.9).
+  optional int32 beta_1_micros = 3;
+  // Must be in real value range 0 < beta_2 < 1. A recommended starting value
+  // is 999000 (i.e. real value 0.999).
+  optional int32 beta_2_micros = 4;
+  // The normalized gradient clip value. A recommended starting value is 5000000
+  // (ie. real value 5.0).
+  optional int32 normalized_gradient_clip_micros = 5;
 }

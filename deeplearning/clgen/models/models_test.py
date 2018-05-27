@@ -1,8 +1,7 @@
 """Unit tests for //deeplearning/clgen/model.py."""
-import sys
-
 import checksumdir
 import pytest
+import sys
 from absl import app
 
 from deeplearning.clgen import errors
@@ -27,7 +26,7 @@ class MockSampler(object):
 
 
 # The Model.hash for a Model instance of abc_model_config.
-ABC_MODEL_HASH = '98dadcd7890565e65be97ac212a141a744e8b016'
+ABC_MODEL_HASH = 'bad4436bf51066ba87b2fcc3505a15030033c9d3'
 
 
 def test_Model_config_type_error():
@@ -179,6 +178,8 @@ def test_Model_Train_twice(clgen_cache_dir, abc_model_config):
 
 
 # TODO(cec): Add tests on incrementally trained model predictions and losses.
+
+# TODO(cec): Add test where batch_size is larger than corpus.
 
 # Model.Sample() tests.
 
