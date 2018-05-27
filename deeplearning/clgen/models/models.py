@@ -57,15 +57,12 @@ class Model(object):
       t = type(config).__name__
       raise TypeError(f"Config must be a Model proto. Received: '{t}'")
 
-    if not config.architecture.HasField('neuron_type'):
-      raise errors.UserError('Model.architecture.neuron_type field not set')
-
     # Attributes that will be lazily set.
     self._model: typing.Optional[models.Sequential] = None
     self._current_weights_epoch: int = 0
 
     self.config = model_pb2.Model()
-    self.config.CopyFrom(config)
+    self.config.CopyFrom(builders.AssertBuildable(config))
     self.corpus = corpuses.Corpus(config.corpus)
     self.hash = self._ComputeHash(self.corpus, self.config)
     self.cache = cache.mkcache('model', f'{self.corpus.language}-{self.hash}')

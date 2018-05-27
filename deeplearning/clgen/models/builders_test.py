@@ -1,18 +1,22 @@
 """Unit tests for //deeplearning/clgen/models/builders.py."""
-import sys
-
 import pytest
+import sys
 from absl import app
 from absl import flags
+
+from deeplearning.clgen import errors
+from deeplearning.clgen.models import builders
 
 
 FLAGS = flags.FLAGS
 
 
-# TODO(cec): Add test where batch_size is larger than corpus.
-
-def test_TODO():
-  pass
+def test_AssertIsBuildable_missing_neuron_type_field(abc_model_config):
+  """Test that a UserError is raided if neuron_type field not set."""
+  abc_model_config.architecture.ClearField('neuron_type')
+  with pytest.raises(errors.UserError) as e_info:
+    builders.AssertBuildable(abc_model_config)
+  assert str(e_info).endswith('Model.architecture.neuron_type field not set')
 
 
 def main(argv):

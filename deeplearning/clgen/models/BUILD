@@ -4,6 +4,7 @@ py_library(
     name = "builders",
     srcs = ["builders.py"],
     deps = [
+        "//deeplearning/clgen:errors",
         "//deeplearning/clgen/proto:model_py_pb2",
     ],
 )
@@ -15,6 +16,7 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":builders",
+        "//deeplearning/clgen:conftest",
     ],
 )
 
