@@ -137,6 +137,13 @@ model {
     num_epochs: 50
     batch_size: 64
     shuffle_corpus_contentfiles_between_epochs: true
+    adam_optimizer {
+      initial_learning_rate_micros: 2000  # 0.02
+      learning_rate_decay_per_epoch_micros: 5000  # 0.05
+      beta_1_micros: 900000 # 0.9
+      beta_2_micros: 999000 # 0.999
+      normalized_gradient_clip_micros: 5000000 # 5.0
+    }
   }
 }
 sampler {
