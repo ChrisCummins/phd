@@ -12,29 +12,30 @@ from deeplearning.deepsmith.proto import harness_pb2
 from deeplearning.deepsmith.proto import harness_pb2_grpc
 from deeplearning.deepsmith.services import services
 
+
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
-  'datastore_config', None,
-  'Path to a DataStore message.')
+    'datastore_config', None,
+    'Path to a DataStore message.')
 flags.DEFINE_string(
-  'harness_config', None,
-  'Path to a Harness config.')
+    'harness_config', None,
+    'Path to a Harness config.')
 flags.DEFINE_integer(
-  'target_total_results', -1,
-  'The number of results to collect from each Testbed. Results already in the '
-  'datastore contribute towards this total. If --target_total_results is '
-  'negative, results are collected for all testcases in the DataStore.')
+    'target_total_results', -1,
+    'The number of results to collect from each Testbed. Results already in the '
+    'datastore contribute towards this total. If --target_total_results is '
+    'negative, results are collected for all testcases in the DataStore.')
 flags.DEFINE_integer(
-  'harness_batch_size', 100,
-  'The number of results to collect in each batch.')
+    'harness_batch_size', 100,
+    'The number of results to collect in each batch.')
 
 
 def GetHarnessCapabilities(
     harness_stub: harness_pb2_grpc.HarnessServiceStub
 ) -> harness_pb2.GetHarnessCapabilitiesResponse:
   request = services.BuildDefaultRequest(
-    harness_pb2.GetHarnessCapabilitiesRequest)
+      harness_pb2.GetHarnessCapabilitiesRequest)
   response = harness_stub.GetHarnessCapabilities(request)
   services.AssertResponseStatus(response.status)
   return response
@@ -80,9 +81,9 @@ def GetTestcasesToRun(
     batch_size: int) -> typing.List[deepsmith_pb2.Testcase]:
   if target_total_results >= 0:
     total_results = GetNumberOfResultsForTestbed(
-      datastore_stub, harness, testbed)
+        datastore_stub, harness, testbed)
     total_testcases = GetNumberOfTestcases(
-      datastore_stub, harness, testbed)
+        datastore_stub, harness, testbed)
     batch_size = min(batch_size, total_results - total_testcases)
 
   request = services.BuildDefaultRequest(datastore_pb2.GetTestcasesRequest)
@@ -124,14 +125,14 @@ def main(argv):
   if FLAGS.harness_batch_size <= 0:
     raise app.UsageError('--harness_batch_size must be positive')
   datastore_config = services.ServiceConfigFromFlag(
-    'datastore_config', datastore_pb2.DataStore())
+      'datastore_config', datastore_pb2.DataStore())
   harness_config = services.ServiceConfigFromFlag(
-    'harness_config', harness_pb2.CldriveHarness())
+      'harness_config', harness_pb2.CldriveHarness())
 
   datastore_stub = services.GetServiceStub(
-    datastore_config, datastore_pb2_grpc.DataStoreServiceStub)
+      datastore_config, datastore_pb2_grpc.DataStoreServiceStub)
   harness_stub = services.GetServiceStub(
-    harness_config, harness_pb2_grpc.HarnessServiceStub)
+      harness_config, harness_pb2_grpc.HarnessServiceStub)
 
   target_total_results = FLAGS.target_total_results
   harness_batch_size = FLAGS.harness_batch_size
@@ -143,10 +144,11 @@ def main(argv):
     while testbeds:
       testbed = testbeds.popleft()
       testcases = GetTestcasesToRun(
-        datastore_stub, capabilities.harness, testbed, target_total_results,
-        harness_batch_size)
+          datastore_stub, capabilities.harness, testbed, target_total_results,
+          harness_batch_size)
       logging.info(
-        'Received %d testcases to execute on %s', len(testcases), testbed.name)
+          'Received %d testcases to execute on %s', len(testcases),
+          testbed.name)
       if testcases:
         results = RunTestcases(harness_stub, testbed, testcases)
         SubmitResults(datastore_stub, results)

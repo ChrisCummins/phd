@@ -131,31 +131,31 @@ class DataStore(object):
         if not toolchain:
           raise LookupError
         q = q.filter(
-          deeplearning.deepsmith.testcase.Testcase.toolchain_id == toolchain.id)
+            deeplearning.deepsmith.testcase.Testcase.toolchain_id == toolchain.id)
 
       # Filter by generator.
       if request.HasField('generator'):
         generator = session.query(
-          deeplearning.deepsmith.generator.Generator).filter(
-          deeplearning.deepsmith.generator.Generator.name ==
-          request.generator.name,
-          deeplearning.deepsmith.generator.Generator.version ==
-          request.generator.version).first()
+            deeplearning.deepsmith.generator.Generator).filter(
+            deeplearning.deepsmith.generator.Generator.name ==
+            request.generator.name,
+            deeplearning.deepsmith.generator.Generator.version ==
+            request.generator.version).first()
         if not generator:
           raise LookupError
         q = q.filter(
-          deeplearning.deepsmith.testcase.Testcase.generator_id == generator.id)
+            deeplearning.deepsmith.testcase.Testcase.generator_id == generator.id)
 
       # Filter by generator.
       if request.has_harness:
         harness = session.query(deeplearning.deepsmith.harness.Harness).filter(
-          deeplearning.deepsmith.harness.Harness.name == request.harness.name,
-          deeplearning.deepsmith.harness.Harness.version ==
-          request.harness.version).first()
+            deeplearning.deepsmith.harness.Harness.name == request.harness.name,
+            deeplearning.deepsmith.harness.Harness.version ==
+            request.harness.version).first()
         if not harness:
           raise LookupError
         q = q.filter(
-          deeplearning.deepsmith.testcase.Testcase.harnessid == harness.id)
+            deeplearning.deepsmith.testcase.Testcase.harnessid == harness.id)
 
       return q
 
@@ -176,16 +176,16 @@ class DataStore(object):
 
     if testbed_id and not request.include_testcases_with_results:
       q2 = session.query(deeplearning.deepsmith.result.Result.testcase_id).join(
-        deeplearning.deepsmith.testcase.Testcase).filter(
-        deeplearning.deepsmith.result.Result.testbed_id == testbed_id)
+          deeplearning.deepsmith.testcase.Testcase).filter(
+          deeplearning.deepsmith.result.Result.testbed_id == testbed_id)
       q2 = _FilterToolchainGeneratorHarness(q2)
       q = q.filter(~deeplearning.deepsmith.testcase.Testcase.id.in_(q2))
 
     if testbed_id and not request.include_testcases_with_pending_results:
       q2 = session.query(
-        deeplearning.deepsmith.result.PendingResult.testcase_id).join(
-        deeplearning.deepsmith.testcase.Testcase).filter(
-        deeplearning.deepsmith.result.PendingResult.testbed_id == testbed_id)
+          deeplearning.deepsmith.result.PendingResult.testcase_id).join(
+          deeplearning.deepsmith.testcase.Testcase).filter(
+          deeplearning.deepsmith.result.PendingResult.testbed_id == testbed_id)
       q2 = _FilterToolchainGeneratorHarness(q2)
       q = q.filter(~deeplearning.deepsmith.testcase.Testcase.id.in_(q2))
 
@@ -198,7 +198,7 @@ class DataStore(object):
       # Validate request parameters.
       if request.max_num_testcases < 1:
         raise InvalidRequest(
-          f'max_num_testcases must be >= 1, not {request.max_num_testcases}')
+            f'max_num_testcases must be >= 1, not {request.max_num_testcases}')
 
       q = self._BuildTestcaseRequestQuery(session, request)
       q.limit(request.max_num_testcases)

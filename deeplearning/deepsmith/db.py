@@ -39,9 +39,9 @@ class DatabaseDoesNotExist(EnvironmentError):
 
   def __init__(self):
     super(DatabaseDoesNotExist, self).__init__(
-      'Database does not exist. Either create it yourself, or set field '
-      'create_database_if_not_exist in DataStore proto to create it '
-      'automatically.')
+        'Database does not exist. Either create it yourself, or set field '
+        'create_database_if_not_exist in DataStore proto to create it '
+        'automatically.')
 
 
 class InvalidInputError(ValueError):
@@ -141,7 +141,7 @@ class Table(Base):
       An instance.
     """
     raise NotImplementedError(
-      type(cls).__name__ + '.FromFile() not implemented')
+        type(cls).__name__ + '.FromFile() not implemented')
 
   def __repr__(self):
     try:
@@ -177,12 +177,13 @@ class StringTable(Table):
   # Columns:
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
-    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'), nullable=False,
-    default=labdate.GetUtcMillisecondsNow)
+      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
+      nullable=False,
+      default=labdate.GetUtcMillisecondsNow)
   # MySQL maximum key length is 3072 bytes, with 3 bytes per character.
   string: str = sql.Column(
-    sql.String(4096).with_variant(sql.String(3072 // 3), 'mysql'),
-    nullable=False, unique=True)
+      sql.String(4096).with_variant(sql.String(3072 // 3), 'mysql'),
+      nullable=False, unique=True)
 
   # The maximum number of characters in the string column.
   maxlen = string.type.length
@@ -270,8 +271,8 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
       raise InvalidDatabaseConfig('MySQL database cannot have backtick in name')
     engine = sql.create_engine(url_base)
     query = engine.execute(
-      sql.text('SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE '
-               'SCHEMA_NAME = :database'), database=database)
+        sql.text('SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE '
+                 'SCHEMA_NAME = :database'), database=database)
     if not query.first():
       if config.create_database_if_not_exist:
         # We can't use sql.text() escaping here becuase it uses singlequotes
@@ -298,14 +299,14 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
                                     InvalidDatabaseConfig)
     if "'" in database:
       raise InvalidDatabaseConfig(
-        'PostgreSQL database name cannot contain single quotes')
+          'PostgreSQL database name cannot contain single quotes')
     url_base = f'postgresql+psycopg2://{username}:{password}@{hostname}:{port}'
 
     engine = sql.create_engine(f'{url_base}/postgres')
     conn = engine.connect()
     query = conn.execute(
-      sql.text('SELECT 1 FROM pg_database WHERE datname = :database'),
-      database=database)
+        sql.text('SELECT 1 FROM pg_database WHERE datname = :database'),
+        database=database)
     if not query.first():
       if config.create_database_if_not_exist:
         # PostgreSQL does not let you create databases within a transaction, so

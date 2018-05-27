@@ -1,7 +1,7 @@
 """Tests for //deeplearning/deepsmith:result."""
+import datetime
 import sys
 
-import datetime
 import pytest
 from absl import app
 
@@ -97,13 +97,15 @@ def test_Result_ToProto():
       returncode=0,
       outputset=[
         deeplearning.deepsmith.result.ResultOutput(
-            name=deeplearning.deepsmith.result.ResultOutputName(string='stdout'),
+            name=deeplearning.deepsmith.result.ResultOutputName(
+              string='stdout'),
             value=deeplearning.deepsmith.result.ResultOutputValue(
                 truncated_value='Hello, world!'
             ),
         ),
         deeplearning.deepsmith.result.ResultOutput(
-            name=deeplearning.deepsmith.result.ResultOutputName(string='stderr'),
+            name=deeplearning.deepsmith.result.ResultOutputName(
+              string='stderr'),
             value=deeplearning.deepsmith.result.ResultOutputValue(
                 truncated_value=''
             ),

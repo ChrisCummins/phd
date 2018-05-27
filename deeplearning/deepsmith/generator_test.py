@@ -15,12 +15,16 @@ def test_Generator_ToProto():
       name='name',
       optset=[
         deeplearning.deepsmith.generator.GeneratorOpt(
-            name=deeplearning.deepsmith.generator.GeneratorOptName(string='version'),
-            value=deeplearning.deepsmith.generator.GeneratorOptValue(string='1.0.0'),
+            name=deeplearning.deepsmith.generator.GeneratorOptName(
+              string='version'),
+            value=deeplearning.deepsmith.generator.GeneratorOptValue(
+              string='1.0.0'),
         ),
         deeplearning.deepsmith.generator.GeneratorOpt(
-            name=deeplearning.deepsmith.generator.GeneratorOptName(string='build'),
-            value=deeplearning.deepsmith.generator.GeneratorOptValue(string='debug+assert'),
+            name=deeplearning.deepsmith.generator.GeneratorOptName(
+              string='build'),
+            value=deeplearning.deepsmith.generator.GeneratorOptValue(
+              string='debug+assert'),
         ),
       ],
   )
@@ -43,10 +47,14 @@ def test_Generator_GetOrAdd(session):
       session, proto
   )
 
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOptSet).count() == 2
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOpt).count() == 2
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOptName).count() == 2
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOptValue).count() == 2
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOptSet).count() == 2
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOpt).count() == 2
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOptName).count() == 2
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOptValue).count() == 2
 
   assert generator.name == 'name'
   assert len(generator.optset) == 2
@@ -57,10 +65,14 @@ def test_Generator_GetOrAdd(session):
 
 def test_Generator_duplicates(session):
   assert session.query(deeplearning.deepsmith.generator.Generator).count() == 0
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOpt).count() == 0
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOptSet).count() == 0
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOptName).count() == 0
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOptValue).count() == 0
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOpt).count() == 0
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOptSet).count() == 0
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOptName).count() == 0
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOptValue).count() == 0
   proto_a1 = deepsmith_pb2.Generator(
       name='a',
       opts={
@@ -85,25 +97,37 @@ def test_Generator_duplicates(session):
   assert proto_a1 == proto_a2  # Sanity check.
   deeplearning.deepsmith.generator.Generator.GetOrAdd(session, proto_a1)
   assert session.query(deeplearning.deepsmith.generator.Generator).count() == 1
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOpt).count() == 2
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOptSet).count() == 2
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOptName).count() == 2
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOptValue).count() == 2
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOpt).count() == 2
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOptSet).count() == 2
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOptName).count() == 2
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOptValue).count() == 2
   deeplearning.deepsmith.generator.Generator.GetOrAdd(session, proto_a2)
   # proto_a1 == proto_a2, so the counts should remain unchanged.
   assert session.query(deeplearning.deepsmith.generator.Generator).count() == 1
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOpt).count() == 2
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOptSet).count() == 2
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOptName).count() == 2
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOptValue).count() == 2
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOpt).count() == 2
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOptSet).count() == 2
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOptName).count() == 2
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOptValue).count() == 2
   deeplearning.deepsmith.generator.Generator.GetOrAdd(session, proto_b)
   # proto_b adds a new generator, new opt (note the duplicate arch), and
   # two new entries in the GeneratorOptSet table.
   assert session.query(deeplearning.deepsmith.generator.Generator).count() == 2
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOpt).count() == 3
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOptSet).count() == 4
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOptName).count() == 2
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOptValue).count() == 3
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOpt).count() == 3
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOptSet).count() == 4
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOptName).count() == 2
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOptValue).count() == 3
 
 
 def test_Generator_GetOrAdd_ToProto_equivalence(session):
@@ -137,10 +161,14 @@ def test_Generator_GetOrAdd_no_opts(session):
   empty_md5 = hashlib.md5().digest()
   assert generator.optset_id == empty_md5
   assert session.query(deeplearning.deepsmith.generator.Generator).count() == 1
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOpt).count() == 0
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOptSet).count() == 0
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOptName).count() == 0
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOptValue).count() == 0
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOpt).count() == 0
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOptSet).count() == 0
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOptName).count() == 0
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOptValue).count() == 0
 
 
 def test_Generator_GetOrAdd_only_different_optset(session):
@@ -169,10 +197,14 @@ def test_Generator_GetOrAdd_only_different_optset(session):
       )
   )
   assert session.query(deeplearning.deepsmith.generator.Generator).count() == 3
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOpt).count() == 4
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOptSet).count() == 4
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOptName).count() == 4
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOptValue).count() == 4
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOpt).count() == 4
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOptSet).count() == 4
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOptName).count() == 4
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOptValue).count() == 4
   assert len(generator_a.optset) == 3
   assert len(generator_b.optset) == 1
   assert len(generator_c.optset) == 0
@@ -190,16 +222,24 @@ def test_Generator_GetOrAdd_rollback(session):
       )
   )
   assert session.query(deeplearning.deepsmith.generator.Generator).count() == 1
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOpt).count() == 2
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOptSet).count() == 2
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOptName).count() == 2
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOptValue).count() == 2
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOpt).count() == 2
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOptSet).count() == 2
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOptName).count() == 2
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOptValue).count() == 2
   session.rollback()
   assert session.query(deeplearning.deepsmith.generator.Generator).count() == 0
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOpt).count() == 0
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOptSet).count() == 0
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOptName).count() == 0
-  assert session.query(deeplearning.deepsmith.generator.GeneratorOptValue).count() == 0
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOpt).count() == 0
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOptSet).count() == 0
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOptName).count() == 0
+  assert session.query(
+    deeplearning.deepsmith.generator.GeneratorOptValue).count() == 0
 
 
 def _AddRandomNewGenerator(session):

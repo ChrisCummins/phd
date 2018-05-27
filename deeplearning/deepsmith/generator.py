@@ -29,13 +29,14 @@ class Generator(db.Table):
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
-    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'), nullable=False,
-    default=labdate.GetUtcMillisecondsNow)
+      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
+      nullable=False,
+      default=labdate.GetUtcMillisecondsNow)
   # MySQL maximum key length is 3072, with 3 bytes per character. We must
   # preserve 16 bytes for the unique constraint.
   name: str = sql.Column(
-    sql.String(4096).with_variant(sql.String((3072 - 16) // 3), 'mysql'),
-    nullable=False)
+      sql.String(4096).with_variant(sql.String((3072 - 16) // 3), 'mysql'),
+      nullable=False)
   optset_id: bytes = sql.Column(_GeneratorOptSetId, nullable=False)
 
   # Relationships.
@@ -126,7 +127,7 @@ class GeneratorOptSet(db.Table):
   generators: typing.List[Generator] = orm.relationship(Generator,
                                                         primaryjoin=id ==
                                                                     orm.foreign(
-                                                          Generator.optset_id))
+                                                                        Generator.optset_id))
   opt: 'GeneratorOpt' = orm.relationship('GeneratorOpt')
 
   # Constraints.
@@ -146,13 +147,14 @@ class GeneratorOpt(db.Table):
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
-    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'), nullable=False,
-    default=labdate.GetUtcMillisecondsNow)
+      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
+      nullable=False,
+      default=labdate.GetUtcMillisecondsNow)
   name_id: _GeneratorOptNameId = sql.Column(_GeneratorOptNameId, sql.ForeignKey(
-    'generator_opt_names.id'), nullable=False)
+      'generator_opt_names.id'), nullable=False)
   value_id: _GeneratorOptValueId = sql.Column(_GeneratorOptValueId,
                                               sql.ForeignKey(
-                                                'generator_opt_values.id'),
+                                                  'generator_opt_values.id'),
                                               nullable=False)
 
   # Relationships.

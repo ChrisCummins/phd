@@ -1,5 +1,6 @@
 """A command-line interface for importing protos to the datastore."""
 import pathlib
+
 from absl import app
 from absl import flags
 from absl import logging
@@ -9,12 +10,14 @@ import deeplearning.deepsmith.testcase
 from deeplearning.deepsmith import datastore
 from deeplearning.deepsmith import db
 
+
 FLAGS = flags.FLAGS
 
 flags.DEFINE_list('results', [], 'Result proto paths to import')
 flags.DEFINE_string('results_dir', None, 'Directory containing result protos')
 flags.DEFINE_list('testcases', [], 'Testcase proto paths to import')
-flags.DEFINE_string('testcases_dir', None, 'Directory containing testcase protos')
+flags.DEFINE_string('testcases_dir', None,
+                    'Directory containing testcase protos')
 
 
 def ImportResultsFromDirectory(session: db.session_t,
@@ -65,7 +68,8 @@ def main(argv):
     if FLAGS.results_dir:
       ImportResultsFromDirectory(session, pathlib.Path(FLAGS.results_dir))
     for path in FLAGS.testcases:
-      deeplearning.deepsmith.testcase.Testcase.FromFile(session, pathlib.Path(path))
+      deeplearning.deepsmith.testcase.Testcase.FromFile(session,
+                                                        pathlib.Path(path))
     session.commit()
     if FLAGS.testcases_dir:
       ImportTestcasesFromDirectory(session, pathlib.Path(FLAGS.testcases_dir))

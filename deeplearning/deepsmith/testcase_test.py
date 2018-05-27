@@ -23,18 +23,24 @@ def test_Testcase_ToProto():
       harness=deeplearning.deepsmith.harness.Harness(name='harness'),
       inputset=[
         deeplearning.deepsmith.testcase.TestcaseInput(
-            name=deeplearning.deepsmith.testcase.TestcaseInputName(string='src'),
-            value=deeplearning.deepsmith.testcase.TestcaseInputValue(string='void main() {}'),
+            name=deeplearning.deepsmith.testcase.TestcaseInputName(
+              string='src'),
+            value=deeplearning.deepsmith.testcase.TestcaseInputValue(
+              string='void main() {}'),
         ),
         deeplearning.deepsmith.testcase.TestcaseInput(
-            name=deeplearning.deepsmith.testcase.TestcaseInputName(string='data'),
-            value=deeplearning.deepsmith.testcase.TestcaseInputValue(string='[1,2]'),
+            name=deeplearning.deepsmith.testcase.TestcaseInputName(
+              string='data'),
+            value=deeplearning.deepsmith.testcase.TestcaseInputValue(
+              string='[1,2]'),
         ),
       ],
       invariant_optset=[
         deeplearning.deepsmith.testcase.TestcaseInvariantOpt(
-            name=deeplearning.deepsmith.testcase.TestcaseInvariantOptName(string='config'),
-            value=deeplearning.deepsmith.testcase.TestcaseInvariantOptValue(string='opt'),
+            name=deeplearning.deepsmith.testcase.TestcaseInvariantOptName(
+              string='config'),
+            value=deeplearning.deepsmith.testcase.TestcaseInvariantOptValue(
+              string='opt'),
         ),
       ],
       profiling_events=[

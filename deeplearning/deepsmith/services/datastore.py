@@ -10,11 +10,12 @@ from deeplearning.deepsmith.proto import datastore_pb2
 from deeplearning.deepsmith.proto import datastore_pb2_grpc
 from deeplearning.deepsmith.services import services
 
+
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
-  'datastore_config', None,
-  'Path to a DataStore message.')
+    'datastore_config', None,
+    'Path to a DataStore message.')
 
 
 class DataStore(services.ServiceBase,
@@ -36,7 +37,7 @@ class DataStore(services.ServiceBase,
     del context
     logging.info('SubmitTestcases() client=%s', request.status.client)
     response = services.BuildDefaultResponse(
-      datastore_pb2.SubmitTestcasesResponse)
+        datastore_pb2.SubmitTestcasesResponse)
     # TODO(cec): Implement!
     return response
 
@@ -45,7 +46,7 @@ class DataStore(services.ServiceBase,
     del context
     logging.info('SubmitResults() client=%s', request.status.client)
     response = services.BuildDefaultResponse(
-      datastore_pb2.SubmitResultsResponse)
+        datastore_pb2.SubmitResultsResponse)
     # TODO(cec): Implement!
     return response
 
@@ -54,7 +55,7 @@ def main(argv):
   if len(argv) > 1:
     raise app.UsageError('Unrecognized arguments')
   datastore_config = services.ServiceConfigFromFlag(
-    'datastore_config', datastore_pb2.DataStore())
+      'datastore_config', datastore_pb2.DataStore())
   server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
   services.AssertLocalServiceHostname(datastore_config.service)
   service = DataStore(datastore_config)

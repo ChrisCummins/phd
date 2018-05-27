@@ -4,11 +4,12 @@ from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.services import services
 from lib.labm8 import pbutil
 
+
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
-  'generator_config', None,
-  'Path to a generator config proto.')
+    'generator_config', None,
+    'Path to a generator config proto.')
 
 
 class GeneratorBase(services.ServiceBase):

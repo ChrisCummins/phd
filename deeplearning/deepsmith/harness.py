@@ -30,13 +30,14 @@ class Harness(db.Table):
   # Columns:
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
-    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'), nullable=False,
-    default=labdate.GetUtcMillisecondsNow)
+      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
+      nullable=False,
+      default=labdate.GetUtcMillisecondsNow)
   # MySQL maximum key length is 3072, with 3 bytes per character. We must
   # preserve 16 bytes for the unique constraint.
   name: str = sql.Column(
-    sql.String(4096).with_variant(sql.String((3072 - 16) // 3), 'mysql'),
-    nullable=False)
+      sql.String(4096).with_variant(sql.String((3072 - 16) // 3), 'mysql'),
+      nullable=False)
   optset_id: bytes = sql.Column(_HarnessOptSetId, nullable=False)
 
   # Relationships:
@@ -150,7 +151,7 @@ class HarnessOptSet(db.Table):
   harnesses: typing.List[Harness] = orm.relationship(Harness,
                                                      primaryjoin=id ==
                                                                  orm.foreign(
-                                                       Harness.optset_id))
+                                                                     Harness.optset_id))
   opt: 'HarnessOpt' = orm.relationship('HarnessOpt')
 
   # Constraints.
@@ -170,12 +171,13 @@ class HarnessOpt(db.Table):
   # Columns.
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
-    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'), nullable=False,
-    default=labdate.GetUtcMillisecondsNow)
+      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
+      nullable=False,
+      default=labdate.GetUtcMillisecondsNow)
   name_id: _HarnessOptNameId = sql.Column(_HarnessOptNameId, sql.ForeignKey(
-    'harness_opt_names.id'), nullable=False)
+      'harness_opt_names.id'), nullable=False)
   value_id: _HarnessOptValueId = sql.Column(_HarnessOptValueId, sql.ForeignKey(
-    'harness_opt_values.id'), nullable=False)
+      'harness_opt_values.id'), nullable=False)
 
   # Relationships.
   name: 'HarnessOptName' = orm.relationship('HarnessOptName',

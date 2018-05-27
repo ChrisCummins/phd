@@ -11,18 +11,20 @@ from deeplearning.deepsmith.proto import harness_pb2_grpc
 from deeplearning.deepsmith.services import harness
 from deeplearning.deepsmith.services import services
 
+
 FLAGS = flags.FLAGS
 
 
 class CldriveHarness(harness.HarnessBase,
                      harness_pb2_grpc.HarnessServiceServicer):
 
-  def GetHarnessCapabilities(self, request: harness_pb2.GetHarnessCapabilitiesRequest,
+  def GetHarnessCapabilities(self,
+                             request: harness_pb2.GetHarnessCapabilitiesRequest,
                              context) -> harness_pb2.GetHarnessCapabilitiesResponse:
     del context
     logging.info('GetHarnessCapabilities() client=%s', request.status.client)
     response = services.BuildDefaultResponse(
-      harness_pb2.GetHarnessCapabilitiesRequest)
+        harness_pb2.GetHarnessCapabilitiesRequest)
     # TODO(cec): Implement!
     return response
 
@@ -39,7 +41,7 @@ def main(argv):
   if len(argv) > 1:
     raise app.UsageError('Unrecognized arguments')
   harness_config = services.ServiceConfigFromFlag(
-    'harness_config', harness_pb2.CldriveHarness())
+      'harness_config', harness_pb2.CldriveHarness())
   server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
   services.AssertLocalServiceHostname(harness_config.service)
   service = CldriveHarness(harness_config)
