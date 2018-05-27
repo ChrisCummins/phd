@@ -711,7 +711,7 @@ class Lmk(Task):
   __genfiles__ = ['/usr/local/bin/lmk']
 
   def install(self):
-    symlink('~/phd/utils/lmk/lmk.py', '/usr/local/bin/lmk')
+    symlink('~/phd/util/lmk/lmk.py', '/usr/local/bin/lmk', sudo=True)
 
 
 class LmkConfig(Task):
