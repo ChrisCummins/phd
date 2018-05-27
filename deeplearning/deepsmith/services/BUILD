@@ -42,7 +42,6 @@ py_binary(
         ":services",
         "//deeplearning/clgen:samplers",
         "//deeplearning/clgen/models",
-        "//deeplearning/clgen/proto:internal_py_pb2",
         "//deeplearning/clgen/proto:model_py_pb2",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//deeplearning/deepsmith/proto:generator_py_pb2",

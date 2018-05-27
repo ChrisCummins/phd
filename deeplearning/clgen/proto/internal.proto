@@ -7,11 +7,15 @@ import "deeplearning/clgen/proto/corpus.proto";
 import "deeplearning/clgen/proto/model.proto";
 import "deeplearning/clgen/proto/sampler.proto";
 
+// The schema for a corpus metafile. An instance of this proto is created with
+// name META.pbtxt in the cache directory of each corpus.
 message CorpusMeta {
   optional Corpus config = 1;
   optional int32 preprocess_time_ms = 2;
 }
 
+// The schema for a model metafile. An instance of this proto is created with
+// name META.pbtxt in the cache directory of each model.
 message ModelMeta {
   optional Model config = 1;
   repeated ModelTrainingEpochStats training_stats = 2;
@@ -23,24 +27,21 @@ message ModelTrainingEpochStats {
   optional double training_cost = 3;
 }
 
+// The schema for a sampler metafile. An instance of this proto is created with
+// name META.pbtxt in the cache directory of each model that samples it.
+// TODO(cec): Re-implement sampler metafile creation and comparison.
 message SamplerMeta {
   optional Sampler config = 1;
-  optional Model model = 2;
 }
 
-message Sample {
-  optional string text = 1;
-  optional int32 sample_time_ms = 2;
-  optional int64 sample_start_epoch_ms_utc = 3;
-  optional int32 num_tokens = 4;
-}
-
+// A preprocessor worker input.
 message PreprocessorWorkerJob {
   optional string contentfile_id = 1;
   optional string src = 2;
   repeated string preprocessors = 3;
 }
 
+// The output of a preprocessor worker.
 message PreprocessorWorkerJobOutcome {
   enum Status {
     OK = 0;

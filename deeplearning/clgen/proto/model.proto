@@ -69,3 +69,12 @@ message AdamOptimizer {
   // (ie. real value 5.0).
   optional int32 normalized_gradient_clip_micros = 5;
 }
+
+// A generated sample. Instances of this proto are returned by a Model's
+// Sample() method.
+message Sample {
+  optional string text = 1;
+  optional int32 sample_time_ms = 2;
+  optional int64 sample_start_epoch_ms_utc = 3;
+  optional int32 num_tokens = 4;
+}

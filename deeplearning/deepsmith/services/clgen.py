@@ -12,7 +12,6 @@ from absl import logging
 
 from deeplearning.clgen import samplers
 from deeplearning.clgen.models import models
-from deeplearning.clgen.proto import internal_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
@@ -109,7 +108,7 @@ class ClgenGenerator(generator.GeneratorBase,
         response.testcases.extend(self.SampleToTestcases(sample))
     return response
 
-  def SampleToTestcases(self, sample: internal_pb2.Sample) -> typing.List[
+  def SampleToTestcases(self, sample: model_pb2.Sample) -> typing.List[
     deepsmith_pb2.Testcase]:
     """Convert a CLgen sample to a list of DeepSmith testcase protos."""
     testcases = []

@@ -211,7 +211,7 @@ def test_Model_Sample_return_value_matches_cached_sample(clgen_cache_dir,
   cached_sample_path = (m.cache.path / 'samples' / 'hash' /
                         list((m.cache.path / 'samples' / 'hash').iterdir())[0])
   assert cached_sample_path.is_file()
-  cached_sample = pbutil.FromFile(cached_sample_path, internal_pb2.Sample())
+  cached_sample = pbutil.FromFile(cached_sample_path, model_pb2.Sample())
   assert samples[0].text == cached_sample.text
   assert samples[0].sample_time_ms == cached_sample.sample_time_ms
   assert samples[

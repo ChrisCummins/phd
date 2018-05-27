@@ -206,7 +206,7 @@ class Model(object):
       return self._LockedTrain()
 
   def Sample(self, sampler: samplers.Sampler,
-             min_num_samples: int) -> typing.List[internal_pb2.Sample]:
+             min_num_samples: int) -> typing.List[model_pb2.Sample]:
     """Sample a model.
 
     If the model is not already trained, calling Sample() first trains the
@@ -280,10 +280,10 @@ class Model(object):
         if sampler.SampleIsComplete(sample_in_progress):
           break
       end_time = labdate.MillisecondsTimestamp()
-      sample = internal_pb2.Sample(text=''.join(sample_in_progress),
-                                   sample_start_epoch_ms_utc=start_time,
-                                   sample_time_ms=end_time - start_time,
-                                   num_tokens=len(sample_in_progress))
+      sample = model_pb2.Sample(text=''.join(sample_in_progress),
+                                sample_start_epoch_ms_utc=start_time,
+                                sample_time_ms=end_time - start_time,
+                                num_tokens=len(sample_in_progress))
       sample_id = crypto.sha256_str(sample.text)
       p = self.SamplerCache(sampler) / f'{sample_id}.pbtxt'
       pbutil.ToFile(sample, p)
@@ -559,9 +559,9 @@ class SampleConsumer(threading.Thread):
         sample_text = self.queue.get(timeout=120).strip()
         end_time = labdate.MillisecondsTimestamp()
         sample_id = crypto.sha1_str(sample_text)
-        sample = internal_pb2.Sample(text=sample_text,
-                                     sample_start_epoch_ms_utc=start_time,
-                                     sample_time_ms=end_time - start_time)
+        sample = model_pb2.Sample(text=sample_text,
+                                  sample_start_epoch_ms_utc=start_time,
+                                  sample_time_ms=end_time - start_time)
         path = self.sample_dir / (sample_id + '.pb')
         pbutil.ToFile(sample, path)
         if self.term_condition != self.null_cond:
