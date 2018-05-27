@@ -247,7 +247,8 @@ def ProtoIsReadable(path: typing.Union[str, pathlib.Path],
 
 def AssertFieldConstraint(proto: ProtocolBuffer, field_name: str,
                           constraint: typing.Callable[
-                            [typing.Any], bool] = lambda x: True) -> typing.Any:
+                            [typing.Any], bool] = lambda x: True,
+                          fail_message: str = None) -> typing.Any:
   """Assert a constraint on the value of a protocol buffer field.
 
   Args:
@@ -257,6 +258,8 @@ def AssertFieldConstraint(proto: ProtocolBuffer, field_name: str,
       field. The function must return True if the constraint check passes, else
       False. If no constraint is specified, this callback always returns True.
       This still allows you to use this function to check if a field is set.
+    fail_message: An optional message to raise the ProtoValueError
+      with if the assertion fails. If not provided, default messages are used.
 
   Returns:
     The value of the field.
@@ -268,10 +271,12 @@ def AssertFieldConstraint(proto: ProtocolBuffer, field_name: str,
   """
   proto_class_name = type(proto).__name__
   if not proto.HasField(field_name):
-    raise ProtoValueError(f"Field not set: '{proto_class_name}.{field_name}'")
+    raise ProtoValueError(
+        fail_message or f"Field not set: '{proto_class_name}.{field_name}'")
   value = getattr(proto, field_name)
   if not constraint(value):
     raise ProtoValueError(
+        fail_message or
         f"Field fails constraint check: '{proto_class_name}.{field_name}'")
   else:
     return value

@@ -273,6 +273,23 @@ def test_AssertFieldConstraint_user_callback_raises_exception():
   assert str(e_info.value) == 'foo'
 
 
+def test_AssertFieldConstraint_user_callback_custom_fail_message():
+  """Test that the requested message is returned on callback fail."""
+  t = test_protos_pb2.TestMessage()
+  t.string = 'foo'
+
+  # Constraint function fails.
+  with pytest.raises(pbutil.ProtoValueError) as e_info:
+    pbutil.AssertFieldConstraint(t, 'string', lambda x: x == 'bar',
+                                 'Hello, world!')
+  assert 'Hello, world!' == str(e_info.value)
+
+  # Field not set.
+  with pytest.raises(pbutil.ProtoValueError) as e_info:
+    pbutil.AssertFieldConstraint(t, 'number', fail_message='Hello, world!')
+  assert 'Hello, world!' == str(e_info.value)
+
+
 def main(argv):
   del argv
   sys.exit(pytest.main([__file__, '-v']))
