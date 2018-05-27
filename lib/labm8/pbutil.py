@@ -245,10 +245,38 @@ def ProtoIsReadable(path: typing.Union[str, pathlib.Path],
     return False
 
 
+def AssertFieldIsSet(proto: ProtocolBuffer, field_name: str,
+                     fail_message: str = None) -> typing.Optional[typing.Any]:
+  """Assert that protocol buffer field is set.
+
+  Args:
+    proto: A proto message instance.
+    field_name: The name of the field to assert the constraint on.
+    fail_message: An optional message to raise the ProtoValueError
+      with if the assertion fails. If not provided, a default message is used.
+
+  Returns:
+    The value of the field, if the field has a value. Even though a field may
+      be set, it may not have a value. For example, if any of a 'oneof' fields
+      is set, then this function will return True for the name of the oneof,
+      but the return value will be None.
+
+  Raises:
+    ValueError: If the requested field does not exist in the proto schema.
+    ProtoValueError: If the field is not set.
+  """
+  if not proto.HasField(field_name):
+    proto_class_name = type(proto).__name__
+    raise ProtoValueError(
+        fail_message or f"Field not set: '{proto_class_name}.{field_name}'")
+  return getattr(proto, field_name) if hasattr(proto, field_name) else None
+
+
 def AssertFieldConstraint(proto: ProtocolBuffer, field_name: str,
                           constraint: typing.Callable[
                             [typing.Any], bool] = lambda x: True,
-                          fail_message: str = None) -> typing.Any:
+                          fail_message: str = None) -> typing.Optional[
+  typing.Any]:
   """Assert a constraint on the value of a protocol buffer field.
 
   Args:
@@ -269,12 +297,9 @@ def AssertFieldConstraint(proto: ProtocolBuffer, field_name: str,
     ProtoValueError: If the field is not set, or if the constraint callback
       returns False for the field's value.
   """
-  proto_class_name = type(proto).__name__
-  if not proto.HasField(field_name):
-    raise ProtoValueError(
-        fail_message or f"Field not set: '{proto_class_name}.{field_name}'")
-  value = getattr(proto, field_name)
+  value = AssertFieldIsSet(proto, field_name, fail_message)
   if not constraint(value):
+    proto_class_name = type(proto).__name__
     raise ProtoValueError(
         fail_message or
         f"Field fails constraint check: '{proto_class_name}.{field_name}'")

@@ -205,6 +205,55 @@ def test_ToFile_FromFile_equivalence_binary_gz():
     assert proto_in == proto_out
 
 
+# AssertFieldIsSet() tests.
+
+
+def test_AssertFieldIsSet_invalid_field_name():
+  """ValueError is raised if the requested field name does not exist."""
+  t = test_protos_pb2.TestMessage()
+  with pytest.raises(ValueError):
+    pbutil.AssertFieldIsSet(t, 'not_a_real_field')
+
+
+def test_AssertFieldIsSet_field_not_set():
+  """ValueError is raised if the requested field is not set."""
+  t = test_protos_pb2.TestMessage()
+  with pytest.raises(pbutil.ProtoValueError) as e_info:
+    pbutil.AssertFieldIsSet(t, 'string')
+  assert "Field not set: 'TestMessage.string'" == str(e_info.value)
+  with pytest.raises(pbutil.ProtoValueError) as e_info:
+    pbutil.AssertFieldIsSet(t, 'number')
+  assert "Field not set: 'TestMessage.number'" == str(e_info.value)
+
+
+def test_AssertFieldIsSet_field_is_set():
+  """Field value is returned when field is set."""
+  t = test_protos_pb2.TestMessage()
+  t.string = 'foo'
+  t.number = 5
+  assert 'foo' == pbutil.AssertFieldIsSet(t, 'string')
+  assert 5 == pbutil.AssertFieldIsSet(t, 'number')
+
+
+def test_AssertFieldIsSet_user_callback_custom_fail_message():
+  """Test that the requested message is returned on callback fail."""
+  t = test_protos_pb2.TestMessage()
+  with pytest.raises(pbutil.ProtoValueError) as e_info:
+    pbutil.AssertFieldIsSet(t, 'string', 'Hello, world!')
+  assert 'Hello, world!' == str(e_info.value)
+  with pytest.raises(pbutil.ProtoValueError) as e_info:
+    pbutil.AssertFieldIsSet(t, 'number', fail_message='Hello, world!')
+  assert 'Hello, world!' == str(e_info.value)
+
+
+def test_AssFieldIsSet_oneof_field_no_return():
+  """Test that no value is returned when a oneof field is set."""
+  t = test_protos_pb2.TestMessage()
+  t.option_a = 1
+  assert pbutil.AssertFieldIsSet(t, 'union_field') is None
+  assert 1 == pbutil.AssertFieldIsSet(t, 'option_a')
+
+
 # AssertFieldConstraint() tests.
 
 def test_AssertFieldConstraint_invalid_field_name():
