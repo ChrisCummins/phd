@@ -93,15 +93,19 @@ class LazyVectorizingGenerator(DataGeneratorBase):
     # Start index into the encoded corpus.
     self.i = 0
 
-    batch_size = (self.batch_size * self.corpus.sequence_length *
-                  self.corpus.vocabulary_size +
-                  self.batch_size * self.corpus.vocabulary_size)
+    # Create a dummy batch of data to get the size of it.
+    x = np.zeros(
+        (self.batch_size, self.corpus.sequence_length,
+         self.corpus.vocabulary_size),
+        dtype=np.bool)
+    y = np.zeros((self.batch_size, self.corpus.vocabulary_size), dtype=np.bool)
+    batch_size = sys.getsizeof(x) + sys.getsizeof(y)
     logging.info('%s memory: %s per-batch, %s per-epoch, %s total',
                  type(self).__name__,
-                 humanize.naturalsize(batch_size * self.steps_per_epoch *
-                                      self.training_opts.num_epochs),
+                 humanize.naturalsize(batch_size),
                  humanize.naturalsize(batch_size * self.steps_per_epoch),
-                 humanize.naturalsize(batch_size))
+                 humanize.naturalsize(batch_size * self.steps_per_epoch *
+                                      self.training_opts.num_epochs))
 
   def __next__(self) -> DataBatch:
     """Generate the next batch of X, y pairs."""
