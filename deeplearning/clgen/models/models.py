@@ -2,13 +2,13 @@
 import io
 import pathlib
 import queue
+import sys
 import threading
 import typing
 
 import humanize
 import numpy as np
 import progressbar
-import sys
 from absl import logging
 from keras import callbacks
 from keras import models
@@ -62,7 +62,7 @@ class Model(object):
     self._current_weights_epoch: int = 0
 
     self.config = model_pb2.Model()
-    self.config.CopyFrom(builders.AssertBuildable(config))
+    self.config.CopyFrom(builders.AssertIsBuildable(config))
     self.corpus = corpuses.Corpus(config.corpus)
     self.hash = self._ComputeHash(self.corpus, self.config)
     self.cache = cache.mkcache('model', f'{self.corpus.language}-{self.hash}')
@@ -394,7 +394,7 @@ class DataGenerator(object):
     num_sentences = len(X_data)
     assert num_sentences == self.batch_size
     logging.debug('Sliced %d sequences of length %d', num_sentences,
-                 self.sequence_length)
+                  self.sequence_length)
     # Vectorize.
     X = np.zeros(
         (num_sentences, self.sequence_length, self.corpus.vocabulary_size),

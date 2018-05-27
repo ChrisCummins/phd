@@ -90,8 +90,8 @@ def abc_model_config(abc_corpus_config):
       normalized_gradient_clip_micros=5000000)
   training = model_pb2.TrainingOptions(
       num_epochs=1,
-      shuffle_corpus_contentfiles_between_epochs=False,
       batch_size=5,
+      shuffle_corpus_contentfiles_between_epochs=False,
       adam_optimizer=optimizer)
   return model_pb2.Model(corpus=abc_corpus_config, architecture=architecture,
                          training=training)
