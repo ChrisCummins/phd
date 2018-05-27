@@ -345,6 +345,18 @@ for_the_love_of_god() {
     done
 }
 
+# Set CUDA_VISIBLE_DEVICES.
+unalias gpu
+gpu() {
+    if [[ "$1" == 0 ]] || [[ "$1" == 1 ]]; then
+        export CUDA_VISIBLE_DEVICES="$1"
+    elif [[ -z "$1" ]]; then
+        export CUDA_VISIBLE_DEVICES=
+    else
+        echo 'Invalid GPU!' >&2
+    fi
+}
+
 # List file and directory contents.
 unalias l
 l() {
