@@ -1925,6 +1925,7 @@ class TransmissionConfig(Task):
 
 class DefaultApps(Task):
   """ set default applications for file extensions """
+  # Use `duti -x epub` to list current file associations.
   __platforms__ = ['osx']
   __deps__ = [
       'AppStoreApps',
@@ -1938,7 +1939,9 @@ class DefaultApps(Task):
   FILE_ASSOCIATIONS = {
       "7z": "cx.c3.theunarchiver",
       "avi": "org.videolan.vlc",
+      "bst": "com.sublimetext.3",
       "c": "com.sublimetext.3",
+      "cls": "com.sublimetext.3",
       "cpp": "com.sublimetext.3",
       "cxx": "com.sublimetext.3",
       "gz": "cx.c3.theunarchiver",
