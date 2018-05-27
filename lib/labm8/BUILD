@@ -250,7 +250,10 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":fs",
+        ":labdate",
+        ":pbutil",
         ":system",
+        "//lib/labm8/proto:lockfile_py_pb2",
     ],
 )
 

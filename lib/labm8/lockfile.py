@@ -1,17 +1,20 @@
-"""Lock file mechanism.
-"""
+"""Lock file mechanism."""
 # Use absolute paths for imports so as to prevent a conflict with the
 # system "time" module.
 from __future__ import absolute_import
 from __future__ import print_function
 
-import os
-import time
-
 import datetime
+import os
+import pathlib
+import typing
 
-from lib.labm8 import fs
+import sys
+
+from lib.labm8 import labdate
+from lib.labm8 import pbutil
 from lib.labm8 import system
+from lib.labm8.proto import lockfile_pb2
 
 
 class Error(Exception):
@@ -25,69 +28,64 @@ class UnableToAcquireLockError(Error):
     self.lock = lock
 
   def __str__(self):
-    path = self.lock.path
-    pid = self.lock.pid
-    date = self.lock.date
-    return """\
+    return f"""\
 Unable to acquire file lock owned by a different process.
-Lock acquired by process {pid} on {date}.
-Lock path: {path}""".format(**vars())
+Lock acquired by process {self.lock.pid} on {self.lock.date}.
+Lock path: {self.lock.path}"""
 
 
 class UnableToReleaseLockError(Error):
   """ thrown if cannot release lock """
 
-  def __init__(self, lock):
+  def __init__(self, lock: 'LockFile'):
     self.lock = lock
 
   def __str__(self):
-    path = self.lock.path
-    pid = self.lock.pid
-    date = self.lock.date
-    return """\
+    return f"""\
 Unable to release file lock owned by a different process.
-Lock acquired by process {pid} on {date}.
-Lock path: {path}""".format(**vars())
+Lock acquired by process {self.lock.pid} on {self.lock.date}.
+Lock path: {self.lock.path}"""
 
 
 class LockFile:
-  """
-  A lock file.
+  """A lock file.
 
   Attributes:
-      path (str): Path of lock file.
+    path: Path of lock file.
   """
 
-  def __init__(self, path):
+  def __init__(self, path: typing.Union[str, pathlib.Path]):
+    """Create a new directory lock.
+
+    Args:
+      path: Path to lock file.
     """
-    Create a new directory lock.
-    Arguments:
-        path (str): Path to lock file.
-    """
-    self.path = fs.path(path)
+    self.path = pathlib.Path(path).expanduser().absolute()
 
   @property
-  def pid(self):
-    """
-    The process ID of the lock. Value is None if lock is not claimed.
-    """
-    pid, _ = LockFile.read(self.path)
-    return pid
+  def pid(self) -> typing.Optional[datetime.datetime]:
+    """The process ID of the lock. Value is None if lock is not claimed."""
+    lockfile = self.read(self.path)
+    if lockfile.HasField('owner_process_id'):
+      return lockfile.owner_process_id
+    else:
+      return None
 
   @property
-  def date(self):
+  def date(self) -> typing.Optional[datetime.datetime]:
+    """The date that the lock was acquired. Value is None if lock is unclaimed.
     """
-    The date that the lock was acquired. Value is None if lock is unclaimed.
-    """
-    _, date = LockFile.read(self.path)
-    return date
+    lockfile = self.read(self.path)
+    if lockfile.date_acquired_utc_epoch_ms:
+      return labdate.DatetimeFromMillisecondsTimestamp(
+          lockfile.date_acquired_utc_epoch_ms)
+    else:
+      return None
 
   @property
-  def islocked(self):
-    """
-    Whether the directory is locked.
-    """
-    return fs.exists(self.path)
+  def islocked(self) -> bool:
+    """Whether the directory is locked."""
+    return self.path.is_file()
 
   @property
   def owned_by_self(self):
@@ -96,32 +94,39 @@ class LockFile:
     """
     return self.pid == os.getpid()
 
-  def acquire(self, replace_stale=False, force=False):
-    """
-    Acquire the lock.
+  def acquire(self, replace_stale: bool = False, force: bool = False,
+              pid: int = None):
+    """Acquire the lock.
 
     A lock can be claimed if any of these conditions are true:
-        1. The lock is unheld by anyone.
-        2. The lock is held but the 'force' argument is set.
-        3. The lock is held by the current process.
+      1. The lock is unheld by anyone.
+      2. The lock is held but the 'force' argument is set.
+      3. The lock is held by the current process.
 
-    Arguments:
-        replace_stale (bool, optional) If true, lock can be aquired from
-            stale processes. A stale process is one which currently owns
-            the parent lock, but no process with that PID is alive.
-        force (bool, optional): If true, ignore any existing
-          lock. If false, fail if lock already claimed.
+    Args:
+      replace_stale: If true, lock can be aquired from stale processes. A stale
+        process is one which currently owns the parent lock, but no process with
+        that PID is alive.
+      force: If true, ignore any existing lock. If false, fail if lock already
+        claimed.
+      pid: If provided, force the process ID of the lock to this value.
+        Otherwise the ID of the current process is used.
 
     Returns:
-        LockFile: self.
+      Self.
 
     Raises:
-        UnableToAcquireLockError: If the lock is already claimed
-          (not raised if force option is used).
+      UnableToAcquireLockError: If the lock is already claimed
+        (not raised if force option is used).
     """
 
     def _create_lock():
-      LockFile.write(self.path, os.getpid(), time.time())
+      lockfile = lockfile_pb2.LockFile(
+          owner_process_id=os.getpid() if pid is None else pid,
+          owner_process_argv=' '.join(sys.argv),
+          date_acquired_utc_epoch_ms=labdate.MillisecondsTimestamp(
+              labdate.GetUtcMillisecondsNow()))
+      pbutil.ToFile(lockfile, self.path, assume_filename='LOCK.pbtxt')
 
     if self.islocked:
       lock_owner_pid = self.pid
@@ -140,17 +145,16 @@ class LockFile:
     return self
 
   def release(self, force=False):
-    """
-    Release lock.
+    """Release lock.
 
     To release a lock, we must already own the lock.
 
-    Arguments:
-        force (bool, optional): If true, ignore any existing lock owner.
+    Args:
+      force: If true, ignore any existing lock owner.
 
     Raises:
-        UnableToReleaseLockError: If the lock is claimed by another
-          process (not raised if force option is used).
+      UnableToReleaseLockError: If the lock is claimed by another process (not
+        raised if force option is used).
     """
     # There's no lock, so do nothing.
     if not self.islocked:
@@ -171,36 +175,18 @@ class LockFile:
     self.release()
 
   @staticmethod
-  def read(path):
-    """
-    Read the contents of a LockFile.
+  def read(path: typing.Union[str, pathlib.Path]) -> lockfile_pb2.LockFile:
+    """Read the contents of a LockFile.
 
-    Arguments:
-        path (str): Path to lockfile.
+    Args:
+      path: Path to lockfile.
 
     Returns:
-        Tuple(int, datetime): The integer PID of the lock owner, and the
-            date the lock was required. If the lock is not claimed, both
-            values are None.
+      A LockFile proto.
     """
-    if fs.exists(path):
-      with open(path) as infile:
-        components = infile.read().split()
-        pid = int(components[0])
-        date = datetime.date.fromtimestamp(float(components[1]))
-      return pid, date
+    path = pathlib.Path(path)
+    if path.is_file():
+      return pbutil.FromFile(path, lockfile_pb2.LockFile(),
+                             assume_filename='LOCK.pbtxt')
     else:
-      return None, None
-
-  @staticmethod
-  def write(path, pid, timestamp):
-    """
-    Write the contents of a LockFile.
-
-    Arguments:
-        path (str): Path to lockfile.
-        pid (int): The integer process ID.
-        timestamp (datetime): The time the lock was aquired.
-    """
-    with open(path, "w") as lockfile:
-      print(pid, timestamp, file=lockfile)
+      return lockfile_pb2.LockFile()
