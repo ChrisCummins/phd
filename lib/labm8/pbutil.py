@@ -30,7 +30,9 @@ class DecodeError(ProtoValueError):
   pass
 
 
-def FromFile(path: pathlib.Path, message: ProtocolBuffer) -> ProtocolBuffer:
+def FromFile(path: pathlib.Path, message: ProtocolBuffer,
+             assume_filename: typing.Optional[
+               typing.Union[str, pathlib.Path]] = None) -> ProtocolBuffer:
   """Read a protocol buffer from a file.
 
   This method uses attempts to guess the encoding from the path suffix,
@@ -48,6 +50,8 @@ def FromFile(path: pathlib.Path, message: ProtocolBuffer) -> ProtocolBuffer:
   Args:
     path: Path to the proto file.
     message: A message instance to read into.
+    assume_filename: For the purpose of determining the encoding from the file
+      extension, use this name rather than the true path.
 
   Returns:
     The parsed message (same as the message argument).
@@ -61,7 +65,8 @@ def FromFile(path: pathlib.Path, message: ProtocolBuffer) -> ProtocolBuffer:
   if not path.is_file():
     raise IOError(f'Not a file: {path}')
 
-  suffixes = path.suffixes
+  suffixes = pathlib.Path(
+      assume_filename).suffixes if assume_filename else path.suffixes
   if suffixes and suffixes[-1] == '.gz':
     suffixes.pop()
     open_function = gzip.open
@@ -87,7 +92,9 @@ def FromFile(path: pathlib.Path, message: ProtocolBuffer) -> ProtocolBuffer:
 
 
 def ToFile(message: ProtocolBuffer, path: pathlib.Path,
-           exist_ok: bool = True) -> ProtocolBuffer:
+           exist_ok: bool = True,
+           assume_filename: typing.Optional[
+             typing.Union[str, pathlib.Path]] = None) -> ProtocolBuffer:
   """Write a protocol buffer to a file.
 
   This method uses attempts to guess the encoding from the path suffix,
@@ -106,6 +113,8 @@ def ToFile(message: ProtocolBuffer, path: pathlib.Path,
     message: A message instance to write to file.
     path: Path to the proto file.
     exist_ok: If True, overwrite existing file.
+    assume_filename: For the purpose of determining the encoding from the file
+      extension, use this name rather than the true path.
 
   Returns:
     The parsed message (same as the message argument).
@@ -116,7 +125,8 @@ def ToFile(message: ProtocolBuffer, path: pathlib.Path,
   if not exist_ok and path.exists():
     raise IOError(f'Refusing to overwrite {path}')
 
-  suffixes = path.suffixes
+  suffixes = pathlib.Path(
+      assume_filename).suffixes if assume_filename else path.suffixes
   if suffixes and suffixes[-1] == '.gz':
     suffixes.pop()
     open_function = gzip.open

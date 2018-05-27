@@ -2,11 +2,11 @@
 import gzip
 import json
 import pathlib
-import sys
 import tempfile
 
 import google.protobuf.message
 import pytest
+import sys
 from absl import app
 
 from lib.labm8 import pbutil
@@ -14,9 +14,9 @@ from lib.labm8.proto import test_protos_pb2
 
 
 def test_ToFile_missing_required():
-  with tempfile.NamedTemporaryFile(prefix='deeplearning.deepsmith.proto.',
-                                   suffix='.gz') as d:
-    path = pathlib.Path(d.name)
+  with tempfile.NamedTemporaryFile(prefix='labm8_proto_',
+                                   suffix='.gz') as f:
+    path = pathlib.Path(f.name)
     proto_in = test_protos_pb2.TestMessage(number=1)
     with pytest.raises(google.protobuf.message.EncodeError):
       pbutil.ToFile(proto_in, path)
@@ -29,18 +29,18 @@ def test_ToFile_bad_path():
 
 
 def test_FromFile_wrong_message_type_txt():
-  with tempfile.NamedTemporaryFile(prefix='deeplearning.deepsmith.proto.',
-                                   suffix='.txt') as d:
-    path = pathlib.Path(d.name)
+  with tempfile.NamedTemporaryFile(prefix='labm8_proto_',
+                                   suffix='.txt') as f:
+    path = pathlib.Path(f.name)
     proto_in = test_protos_pb2.TestMessage(string='abc', number=1)
     pbutil.ToFile(proto_in, path)
     proto_out = test_protos_pb2.AnotherTestMessage()
     with pytest.raises(pbutil.DecodeError):
       pbutil.FromFile(path, proto_out)
 
-  with tempfile.NamedTemporaryFile(prefix='deeplearning.deepsmith.proto.',
-                                   suffix='.pbtxt') as d:
-    path = pathlib.Path(d.name)
+  with tempfile.NamedTemporaryFile(prefix='labm8_proto_',
+                                   suffix='.pbtxt') as f:
+    path = pathlib.Path(f.name)
     proto_in = test_protos_pb2.TestMessage(string='abc', number=1)
     pbutil.ToFile(proto_in, path)
     proto_out = test_protos_pb2.AnotherTestMessage()
@@ -49,9 +49,9 @@ def test_FromFile_wrong_message_type_txt():
 
 
 def test_FromFile_wrong_message_type_json():
-  with tempfile.NamedTemporaryFile(prefix='deeplearning.deepsmith.proto.',
-                                   suffix='.json') as d:
-    path = pathlib.Path(d.name)
+  with tempfile.NamedTemporaryFile(prefix='labm8_proto_',
+                                   suffix='.json') as f:
+    path = pathlib.Path(f.name)
     proto_in = test_protos_pb2.TestMessage(string='abc', number=1)
     pbutil.ToFile(proto_in, path)
     proto_out = test_protos_pb2.AnotherTestMessage()
@@ -60,8 +60,8 @@ def test_FromFile_wrong_message_type_json():
 
 
 def test_FromFile_wrong_message_type_binary():
-  with tempfile.NamedTemporaryFile(prefix='deeplearning.deepsmith.proto') as d:
-    path = pathlib.Path(d.name)
+  with tempfile.NamedTemporaryFile(prefix='labm8_proto') as f:
+    path = pathlib.Path(f.name)
     proto_in = test_protos_pb2.TestMessage(string='abc', number=1)
     pbutil.ToFile(proto_in, path)
     proto_out = test_protos_pb2.AnotherTestMessage()
@@ -71,9 +71,9 @@ def test_FromFile_wrong_message_type_binary():
 
 
 def test_ToFile_FromFile_equivalence_txt():
-  with tempfile.NamedTemporaryFile(prefix='deeplearning.deepsmith.proto.',
-                                   suffix='.txt') as d:
-    path = pathlib.Path(d.name)
+  with tempfile.NamedTemporaryFile(prefix='labm8_proto_',
+                                   suffix='.txt') as f:
+    path = pathlib.Path(f.name)
     proto_in = test_protos_pb2.TestMessage(string='abc', number=1)
     pbutil.ToFile(proto_in, path)
     assert path.is_file()
@@ -87,9 +87,9 @@ def test_ToFile_FromFile_equivalence_txt():
     assert proto_out.number == 1
     assert proto_in == proto_out
 
-  with tempfile.NamedTemporaryFile(prefix='deeplearning.deepsmith.proto.',
-                                   suffix='.pbtxt') as d:
-    path = pathlib.Path(d.name)
+  with tempfile.NamedTemporaryFile(prefix='labm8_proto_',
+                                   suffix='.pbtxt') as f:
+    path = pathlib.Path(f.name)
     proto_in = test_protos_pb2.TestMessage(string='abc', number=1)
     pbutil.ToFile(proto_in, path)
     assert path.is_file()
@@ -105,9 +105,9 @@ def test_ToFile_FromFile_equivalence_txt():
 
 
 def test_ToFile_FromFile_equivalence_json():
-  with tempfile.NamedTemporaryFile(prefix='deeplearning.deepsmith.proto.',
-                                   suffix='.json') as d:
-    path = pathlib.Path(d.name)
+  with tempfile.NamedTemporaryFile(prefix='labm8_proto_',
+                                   suffix='.json') as f:
+    path = pathlib.Path(f.name)
     proto_in = test_protos_pb2.TestMessage(string='abc', number=1)
     pbutil.ToFile(proto_in, path)
     assert path.is_file()
@@ -124,8 +124,8 @@ def test_ToFile_FromFile_equivalence_json():
 
 
 def test_ToFile_FromFile_equivalence_binary():
-  with tempfile.NamedTemporaryFile(prefix='deeplearning.deepsmith.proto.') as d:
-    path = pathlib.Path(d.name)
+  with tempfile.NamedTemporaryFile(prefix='labm8_proto_') as f:
+    path = pathlib.Path(f.name)
     proto_in = test_protos_pb2.TestMessage(string='abc', number=1)
     pbutil.ToFile(proto_in, path)
     assert path.is_file()
@@ -138,9 +138,9 @@ def test_ToFile_FromFile_equivalence_binary():
 
 
 def test_ToFile_FromFile_equivalence_txt_gz():
-  with tempfile.NamedTemporaryFile(prefix='deeplearning.deepsmith.proto.',
-                                   suffix='.txt.gz') as d:
-    path = pathlib.Path(d.name)
+  with tempfile.NamedTemporaryFile(prefix='labm8_proto_',
+                                   suffix='.txt.gz') as f:
+    path = pathlib.Path(f.name)
     proto_in = test_protos_pb2.TestMessage(string='abc', number=1)
     pbutil.ToFile(proto_in, path)
     assert path.is_file()
@@ -154,9 +154,9 @@ def test_ToFile_FromFile_equivalence_txt_gz():
     assert proto_out.number == 1
     assert proto_in == proto_out
 
-  with tempfile.NamedTemporaryFile(prefix='deeplearning.deepsmith.proto.',
-                                   suffix='.pbtxt.gz') as d:
-    path = pathlib.Path(d.name)
+  with tempfile.NamedTemporaryFile(prefix='labm8_proto_',
+                                   suffix='.pbtxt.gz') as f:
+    path = pathlib.Path(f.name)
     proto_in = test_protos_pb2.TestMessage(string='abc', number=1)
     pbutil.ToFile(proto_in, path)
     assert path.is_file()
@@ -172,9 +172,9 @@ def test_ToFile_FromFile_equivalence_txt_gz():
 
 
 def test_ToFile_FromFile_equivalence_json_gz():
-  with tempfile.NamedTemporaryFile(prefix='deeplearning.deepsmith.proto.',
-                                   suffix='.json.gz') as d:
-    path = pathlib.Path(d.name)
+  with tempfile.NamedTemporaryFile(prefix='labm8_proto_',
+                                   suffix='.json.gz') as f:
+    path = pathlib.Path(f.name)
     proto_in = test_protos_pb2.TestMessage(string='abc', number=1)
     pbutil.ToFile(proto_in, path)
     assert path.is_file()
@@ -191,9 +191,9 @@ def test_ToFile_FromFile_equivalence_json_gz():
 
 
 def test_ToFile_FromFile_equivalence_binary_gz():
-  with tempfile.NamedTemporaryFile(prefix='deeplearning.deepsmith.proto.',
-                                   suffix='.gz') as d:
-    path = pathlib.Path(d.name)
+  with tempfile.NamedTemporaryFile(prefix='labm8_proto_',
+                                   suffix='.gz') as f:
+    path = pathlib.Path(f.name)
     proto_in = test_protos_pb2.TestMessage(string='abc', number=1)
     pbutil.ToFile(proto_in, path)
     assert path.is_file()
