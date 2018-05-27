@@ -12,7 +12,6 @@ import progressbar
 from absl import logging
 from keras import callbacks
 from keras import models
-from keras import utils
 from prettytable import PrettyTable
 
 from deeplearning.clgen import cache
@@ -21,6 +20,7 @@ from deeplearning.clgen import errors
 from deeplearning.clgen import languages
 from deeplearning.clgen import samplers
 from deeplearning.clgen.models import builders
+from deeplearning.clgen.models import data_generators
 from deeplearning.clgen.proto import internal_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
@@ -176,10 +176,7 @@ class Model(object):
         checkpoint_dir) + "/checkpoint_weights_{epoch:02d}_{loss:.4f}.hdf5"
     checkpoint = callbacks.ModelCheckpoint(file_path, monitor="loss", verbose=1,
                                            save_best_only=False, mode="min")
-    generator = DataGenerator(
-        self.corpus, self.config.training.batch_size,
-        self.corpus.sequence_length,
-        self.config.training.shuffle_corpus_contentfiles_between_epochs)
+    generator = data_generators.AutoGenerator(self.corpus, self.config.training)
     logging.info('Steps per epoch: %s',
                  humanize.intcomma(generator.steps_per_epoch))
     self.model.fit_generator(generator,
@@ -348,68 +345,6 @@ class Model(object):
 
   def __ne__(self, rhs) -> bool:
     return not self.__eq__(rhs)
-
-
-class DataGenerator(object):
-  """Generated X, y training data pairs of one-hot encoded text.
-
-  We train our network on overlapping one-hot encoded text sequences. For a
-  corpus of a reasonable size, this won't fit in memory. This class provides
-  a generator for use by a sequential Keras model's fit_generator() method to
-  feed in training data.
-  """
-
-  def __init__(self, corpus_: corpuses.Corpus, batch_size: int,
-               sequence_length: int, shuffle: bool):
-    self.corpus = corpus_
-    self.batch_size = batch_size
-    self.encoded_corpus = self.corpus.GetTrainingData(shuffle=shuffle)
-    self.corpus_len = len(self.encoded_corpus)
-    self.sequence_length = sequence_length
-    self.skip = 1  # TODO(cec): Add this as a field in Model proto.
-    self.shuffle = shuffle
-
-    # Set this publicly visibly attribute. The number of steps per epoch is
-    # the total number of batches per epoch.
-    self.steps_per_epoch = int(
-        self.corpus_len / (self.batch_size * self.sequence_length))
-
-    self.i = 0
-
-  def __next__(self) -> typing.Tuple[np.ndarray, np.ndarray]:
-    """Generate the next batch of X, y pairs."""
-    if self.i + self.batch_size + self.sequence_length >= self.corpus_len:
-      self.i = 0
-      if self.shuffle:
-        self.encoded_corpus = self.corpus.GetTrainingData(shuffle=True)
-
-    X_data = []
-    y_data = []
-    for i in range(self.i, self.i + self.batch_size, self.skip):
-      sequence = self.encoded_corpus[i:i + self.sequence_length]
-      next_token = self.encoded_corpus[i + self.sequence_length]
-      X_data.append(sequence)
-      y_data.append(next_token)
-
-    num_sentences = len(X_data)
-    assert num_sentences == self.batch_size
-    logging.debug('Sliced %d sequences of length %d', num_sentences,
-                  self.sequence_length)
-    # Vectorize.
-    X = np.zeros(
-        (num_sentences, self.sequence_length, self.corpus.vocabulary_size),
-        dtype=np.bool)
-    y = np.zeros((num_sentences, self.corpus.vocabulary_size), dtype=np.bool)
-    for i, sequence in enumerate(X_data):
-      for t, encoded_char in enumerate(sequence):
-        X[i, t, encoded_char] = 1
-      y[i, y_data[i]] = 1
-
-    # TODO(cec): Use keras to_categorical() instead of vectorizing by hand.
-    _ = utils.to_categorical(y_data, self.corpus.vocabulary_size)
-
-    self.i += self.batch_size
-    return X, y
 
 
 class SampleProducer(threading.Thread):

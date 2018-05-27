@@ -18,6 +18,15 @@ py_test(
     deps = [
         ":builders",
         "//deeplearning/clgen:conftest",
+        "//deeplearning/clgen/proto:model_py_pb2",
+    ],
+)
+
+py_library(
+    name = "data_generators",
+    srcs = ["data_generators.py"],
+    deps = [
+        "//deeplearning/clgen:corpuses",
     ],
 )
 
@@ -27,6 +36,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":builders",
+        ":data_generators",
         "//deeplearning/clgen:cache",
         "//deeplearning/clgen:corpuses",
         "//deeplearning/clgen:errors",
