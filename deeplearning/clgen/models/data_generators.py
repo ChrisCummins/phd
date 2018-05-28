@@ -33,7 +33,7 @@ class DataGeneratorBase(object):
     self.training_opts = training_opts
     self.shuffle = training_opts.shuffle_corpus_contentfiles_between_epochs
     self.encoded_corpus = self.corpus.GetTrainingData(shuffle=self.shuffle)
-    logging.info('Encoded corpus: %s',
+    logging.info('Encoded corpus size: %s',
                  humanize.naturalsize(sys.getsizeof(self.encoded_corpus)))
     self.corpus_len = len(self.encoded_corpus)
     self.batch_size = min(training_opts.batch_size,
