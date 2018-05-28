@@ -9,12 +9,12 @@ import "deeplearning/clgen/proto/sampler.proto";
 // A CLgen instance encapsulates all of the settings for training and sampling
 // a language model.
 message Instance {
-  // The path to the clgen working directory on the host machine. This directory
-  // stores persistent CLgen files, including the corpus, model checkpoints,
-  // and sampler outputs. If not provided, the default value of
-  // $HOME/.cache/clgen is used.
-  optional string working_dir = 2;
-  // The CLgen model and sampler configuration.
+  // The path to the clgen working directory. This directory stores persistent
+  // caches files, including the corpus, model checkpoints, and sampler outputs.
+  // If not provided, the default value of $HOME/.cache/clgen is used.
+  optional string working_dir = 2 [default = "~/.cache/clgen"];
+  // The language model specification.
   optional Model model = 3;
+  // The sampler specification.
   optional Sampler sampler = 4;
 }
