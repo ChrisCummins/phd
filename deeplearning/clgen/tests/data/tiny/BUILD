@@ -12,13 +12,12 @@ filegroup(
 py_test(
     name = "test_config",
     srcs = ["test_config.py"],
-    data = [
-        ":tiny",
-    ],
+    data = [":tiny"],
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
         "//deeplearning/clgen",
+        "//deeplearning/clgen/proto:clgen_py_pb2",
         "//lib/labm8:bazelutil",
         "//lib/labm8:pbutil",
     ],
