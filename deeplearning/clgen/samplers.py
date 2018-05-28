@@ -1,4 +1,8 @@
-"""Samplers for CLgen language models."""
+"""Samplers for CLgen language models.
+
+A Sampler is an object which, when passed to a mode's Sample() method,
+determines the shape of the generated samples.
+"""
 import pathlib
 import typing
 
@@ -7,6 +11,113 @@ from deeplearning.clgen import errors
 from deeplearning.clgen.proto import sampler_pb2
 from lib.labm8 import crypto
 from lib.labm8 import pbutil
+
+
+def AssertConfigIsValid(config: sampler_pb2.Sampler) -> sampler_pb2.Sampler:
+  """Assert that a sampler configuration contains no invalid values.
+
+  Args:
+    config: A sampler configuration proto.
+
+  Returns:
+    The sampler configuration proto.
+
+  Raises:
+    UserError: If there are configuration errors.
+  """
+  try:
+    pbutil.AssertFieldConstraint(config, 'start_text', lambda s: len(s),
+                                 'Sampler.start_text must be a string')
+    pbutil.AssertFieldConstraint(config, 'batch_size', lambda x: 0 < x,
+                                 'Sampler.batch_size must be > 0')
+    return config
+  except pbutil.ProtoValueError as e:
+    raise errors.UserError(e)
+
+
+class TerminationCriterionBase(object):
+  """Base class for TerminationCriterion objects.
+
+  A TerminationCriterion is an object with a single public function
+  SampleIsComplete(), which accepts as its sole argument a sample-in-progress,
+  and returns whether to stop sampling.
+  """
+
+  def SampleIsComplete(self, sample_in_progress: typing.List[str]) -> bool:
+    """Determine whether to stop sampling.
+
+    Args:
+      sample_in_progress: A sample in progress, as a sequence of decoded tokens.
+
+    Returns:
+      True if the sample is "complete", else False to continue sampling.
+    """
+    raise NotImplementedError('abstract class')
+
+
+class MaxlenTerminationCriterion(TerminationCriterionBase):
+  """A termination criterion which limits the maximum length of a sample."""
+
+  def __init__(self, config: sampler_pb2.MaxTokenLength):
+    try:
+      self.max_len = pbutil.AssertFieldConstraint(
+          config, 'maximum_tokens_in_sample', lambda x: x > 1,
+          'MaxTokenLength.maximum_tokens_in_sample must be > 0')
+    except pbutil.ProtoValueError as e:
+      raise errors.UserError(e)
+
+  def SampleIsComplete(self, sample_in_progress: typing.List[str]) -> bool:
+    """Determine whether to stop sampling."""
+    return len(sample_in_progress) >= self.max_len
+
+
+class SymmetricalTokenDepthCriterion(TerminationCriterionBase):
+  """A termination criterion which counts symmetrical token depth."""
+
+  def __init__(self, config: sampler_pb2.SymmetricalTokenDepth):
+    try:
+      self.left_token = pbutil.AssertFieldConstraint(
+          config, 'depth_increase_token', lambda s: len(s),
+          'SymmetricalTokenDepth.depth_increase_token must be a string')
+      self.right_token = pbutil.AssertFieldConstraint(
+          config, 'depth_decrease_token', lambda s: len(s),
+          'SymmetricalTokenDepth.depth_decrease_token must be a string')
+    except pbutil.ProtoValueError as e:
+      raise errors.UserError(e)
+    if self.left_token == self.right_token:
+      raise errors.UserError('SymmetricalTokenDepth tokens must be different')
+
+  def SampleIsComplete(self, sample_in_progress: typing.List[str]) -> bool:
+    """Determine whether to stop sampling."""
+    left_token_count = sample_in_progress.count(self.left_token)
+    right_token_count = sample_in_progress.count(self.right_token)
+    return left_token_count and (left_token_count - right_token_count == 0)
+
+
+def GetTerminationCriteria(
+    config: typing.List[sampler_pb2.SampleTerminationCriterion]) \
+    -> typing.List[TerminationCriterionBase]:
+  """Build a list of termination criteria from config protos.
+
+  Args:
+    config: A list of SampleTerminationCriterion protos.
+
+  Returns:
+    A list of TerminationCriterion instances.
+
+  Raises:
+    UserError: In case of invalid configs.
+    InternalError: If any of the termination criteria are unrecognized.
+  """
+  terminators = []
+  for criterion in config:
+    if criterion.HasField('maxlen'):
+      terminators.append(MaxlenTerminationCriterion(criterion.maxlen))
+    elif criterion.HasField('symtok'):
+      terminators.append(SymmetricalTokenDepthCriterion(criterion.symtok))
+    else:
+      raise errors.InternalError('Unknown Sampler.termination_criteria')
+  return terminators
 
 
 class Sampler(object):
@@ -31,30 +142,10 @@ class Sampler(object):
     if not isinstance(config, sampler_pb2.Sampler):
       t = type(config).__name__
       raise TypeError(f"Config must be a Sampler proto. Received: '{t}'")
-    if not config.start_text:
-      raise errors.UserError('Sampler.start_text not set')
-    if config.batch_size < 1:
-      raise errors.UserError('Sampler.batch_size must be >= 1')
-
     self.config = sampler_pb2.Sampler()
-    self.config.CopyFrom(config)
+    self.config.CopyFrom(AssertConfigIsValid(config))
     self.hash = self._ComputeHash(self.config)
-
-    # Determine the termination criteria.
-    self.max_length = -1
-    self.special_token_left = None
-    self.special_token_right = None
-    for criterion in self.config.termination_criteria:
-      if criterion.HasField('maxlen'):
-        self.max_length = criterion.maxlen.maximum_tokens_in_sample
-        if not criterion.maxlen.include_start_text_in_maximum:
-          self.max_length += len(self.config.start_text)
-      elif criterion.HasField('symtok'):
-        self.symmetrical_token_left = criterion.symtok.depth_increase_token
-        self.symmetrical_token_right = criterion.symtok.depth_decrease_token
-    self.has_max_length = self.max_length > 0
-    self.has_symmetrical_tokens = (
-        self.special_token_left and self.special_token_right)
+    self.terminators = GetTerminationCriteria(self.config.termination_criteria)
 
   def SampleIsComplete(self, sample_in_progress: typing.List[str]) -> bool:
     """Determine whether to stop sampling.
@@ -65,15 +156,7 @@ class Sampler(object):
     Returns:
       True if the sample is "complete", else False to continue sampling.
     """
-    if self.has_max_length:
-      if len(sample_in_progress) >= self.max_length:
-        return True
-    if self.has_symmetrical_tokens:
-      left_token_count = sample_in_progress.count(self.symmetrical_token_left)
-      right_token_count = sample_in_progress.count(self.symmetrical_token_left)
-      if left_token_count and (left_token_count - right_token_count == 0):
-        return True
-    return False
+    return any(t.SampleIsComplete(sample_in_progress) for t in self.terminators)
 
   @staticmethod
   def _ComputeHash(config: sampler_pb2.Sampler) -> str:

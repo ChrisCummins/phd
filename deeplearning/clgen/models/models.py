@@ -11,8 +11,6 @@ import numpy as np
 import progressbar
 from absl import flags
 from absl import logging
-from keras import callbacks
-from keras import models
 from prettytable import PrettyTable
 
 from deeplearning.clgen import cache
@@ -62,7 +60,7 @@ class Model(object):
       raise TypeError(f"Config must be a Model proto. Received: '{t}'")
 
     # Attributes that will be lazily set.
-    self._model: typing.Optional[models.Sequential] = None
+    self._model: typing.Optional['keras.models.Sequential'] = None
     self._current_weights_epoch: int = 0
 
     self.config = model_pb2.Model()
@@ -120,7 +118,7 @@ class Model(object):
     return crypto.sha1_list(corpus_.hash,
                             config_to_hash.SerializeToString())
 
-  def GetTrainableModel(self) -> models.Sequential:
+  def GetTrainableModel(self) -> 'keras.models.Sequential':
     """Get the Keras model.
 
     If there is a cached model description, the model will be initialized from
@@ -129,9 +127,13 @@ class Model(object):
     Returns:
       A Sequential model instance.
     """
+    # Deferred importing of Keras so that we don't have to activate the
+    # TensorFlow backend every time we import this module.
+    import keras
+
     if self.cache.get('model.yaml'):
       with open(self.cache['model.yaml']) as f:
-        model = models.model_from_yaml(f.read())
+        model = keras.models.model_from_yaml(f.read())
     else:
       model = builders.BuildKerasModel(self.config, self.corpus.sequence_length,
                                        self.corpus.vocabulary_size)
@@ -142,7 +144,7 @@ class Model(object):
     return model
 
   @property
-  def model(self) -> models.Sequential:
+  def model(self) -> 'keras.models.Sequential':
     if self._model is None:
       self._model = self.GetTrainableModel()
     return self._model
@@ -176,6 +178,10 @@ class Model(object):
           epoch_checkpoints[target_num_epochs - 1])
       return self
 
+    # Deferred importing of Keras so that we don't have to activate the
+    # TensorFlow backend every time we import this module.
+    import keras
+
     with logutil.TeeLogsToFile('train', self.cache.path / 'logs'):
       if epoch_checkpoints:
         # We have already trained a model at least part of the way to our target
@@ -188,13 +194,19 @@ class Model(object):
       checkpoint_dir.mkdir(parents=True, exist_ok=True)
       file_path = str(
           checkpoint_dir) + "/checkpoint_weights_{epoch:02d}_{loss:.4f}.hdf5"
-      checkpoint = callbacks.ModelCheckpoint(file_path, monitor="loss",
-                                             verbose=1,
-                                             save_best_only=False, mode="min")
+      checkpoint = keras.callbacks.ModelCheckpoint(file_path, monitor="loss",
+                                                   verbose=1,
+                                                   save_best_only=False,
+                                                   mode="min")
       generator = data_generators.AutoGenerator(self.corpus,
                                                 self.config.training)
-      logging.info('Steps per epoch: %s',
-                   humanize.intcomma(generator.steps_per_epoch))
+      logging.info('Step counts: %s per epoch, %s left to do, %s total',
+                   humanize.intcomma(generator.steps_per_epoch),
+                   humanize.intcomma(
+                       (target_num_epochs - starting_epoch) *
+                       generator.steps_per_epoch),
+                   humanize.intcomma(
+                       target_num_epochs * generator.steps_per_epoch))
       self.model.fit_generator(generator,
                                steps_per_epoch=generator.steps_per_epoch,
                                epochs=target_num_epochs - starting_epoch,
@@ -252,26 +264,30 @@ class Model(object):
     self.Train()
     with logutil.TeeLogsToFile(
         f'sampler_{sampler.hash}', self.cache.path / 'logs'):
-      logging.info('Sampling %s', sampler)
+      logging.info("Sampling: '%s'", sampler.start_text)
+      if min_num_samples < 0:
+        logging.warning(
+            'Entering an infinite sample loop, this process will never end!')
       try:
         encoded_seed = self.corpus.atomizer.AtomizeString(sampler.start_text)
       except errors.VocabError:
         raise errors.InvalidStartText(
             'Sampler start text cannot be encoded using the corpus vocabulary: '
             f"'{sampler.start_text}'")
-      if sampler.has_symmetrical_tokens:
-        try:
-          l = self.corpus.atomizer.AtomizeString(sampler.symmetrical_token_left)
-          r = self.corpus.atomizer.AtomizeString(
-              sampler.symmetrical_token_right)
-          if len(l) > 1 or len(r) > 1:
-            raise errors.InvalidSymtokTokens(
-                'Sampler symmetrical depth tokens do not encode to a single '
-                'token using the corpus vocabulary')
-        except errors.VocabError:
-          raise errors.InvalidSymtokTokens(
-              'Sampler symmetrical depth tokens cannot be encoded using the '
-              'corpus vocabulary')
+      # TODO(cec): Update this to use the new sampler API.
+      # if sampler.has_symmetrical_tokens:
+      #   try:
+      #     l = self.corpus.atomizer.AtomizeString(sampler.symmetrical_token_left)
+      #     r = self.corpus.atomizer.AtomizeString(
+      #         sampler.symmetrical_token_right)
+      #     if len(l) > 1 or len(r) > 1:
+      #       raise errors.InvalidSymtokTokens(
+      #           'Sampler symmetrical depth tokens do not encode to a single '
+      #           'token using the corpus vocabulary')
+      #   except errors.VocabError:
+      #     raise errors.InvalidSymtokTokens(
+      #         'Sampler symmetrical depth tokens cannot be encoded using the '
+      #         'corpus vocabulary')
 
       samples = []
 
@@ -282,16 +298,20 @@ class Model(object):
       for i, token in enumerate(encoded_seed):
         vectorized_seed[0, i, token] = 1
 
-      while len(samples) < min_num_samples:
+      while True:
         X = np.copy(vectorized_seed)
-        sample_in_progress = []
+        sample_in_progress = [sampler.start_text]
+        print('=== BEGIN CLGEN SAMPLE ===')
+        sys.stdout.write(sampler.start_text)
         start_time = labdate.MillisecondsTimestamp()
         # Save a few cycles by not going via the model() property every time we
         # need to access it.
         model = self.model
         while True:
           prediction = np.argmax(model.predict(X, verbose=0))
-          sample_in_progress.append(self.corpus.atomizer.decoder[prediction])
+          token = self.corpus.atomizer.decoder[prediction]
+          sys.stdout.write(token)
+          sample_in_progress.append(token)
           activations = np.zeros((1, 1, self.corpus.vocabulary_size),
                                  dtype=np.bool)
           activations[0, 0, prediction] = 1
@@ -307,6 +327,11 @@ class Model(object):
         p = self.SamplerCache(sampler) / f'{sample_id}.pbtxt'
         pbutil.ToFile(sample, p)
         samples.append(sample)
+        sys.stdout.write('\n')
+        if min_num_samples > 0:
+          samples.append(sample)
+          if len(samples) >= min_num_samples:
+            break
 
     return samples
 
@@ -388,8 +413,6 @@ class SampleProducer(threading.Thread):
     for criterion in self.sampler_config.termination_criteria:
       if criterion.HasField('maxlen'):
         self.max_length = criterion.maxlen.maximum_tokens_in_sample
-        if not criterion.maxlen.include_start_text_in_maximum:
-          self.max_length += len(self.sampler_config.start_text)
       elif criterion.HasField('symtok'):
         self.symmetrical_token_left = criterion.symtok.depth_increase_token
         self.symmetrical_token_right = criterion.symtok.depth_decrease_token

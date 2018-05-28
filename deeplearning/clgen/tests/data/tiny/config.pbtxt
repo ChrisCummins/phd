@@ -1,0 +1,54 @@
+# File: //deeplearning/deepsmith/proto/clgen.proto
+# Proto: clgen.Instance
+working_dir: "/var/phd/clgen/tiny"
+model {
+  corpus {
+    language: "opencl"
+    path: "$PWD/corpus.tar.bz2"
+    ascii_character_atomizer: true
+    sequence_length: 50
+    contentfile_separator: "\n\n"
+    preprocessor: "deeplearning.clgen.preprocessors.opencl:ClangPreprocessWithShim"
+    preprocessor: "deeplearning.clgen.preprocessors.opencl:Compile"
+    preprocessor: "deeplearning.clgen.preprocessors.opencl:NormalizeIdentifiers"
+    preprocessor: "deeplearning.clgen.preprocessors.opencl:StripDoubleUnderscorePrefixes"
+    preprocessor: "deeplearning.clgen.preprocessors.common:StripDuplicateEmptyLines"
+    preprocessor: "deeplearning.clgen.preprocessors.opencl:SanitizeKernelPrototype"
+    preprocessor: "deeplearning.clgen.preprocessors.common:StripTrailingWhitespace"
+    preprocessor: "deeplearning.clgen.preprocessors.opencl:ClangFormat"
+    preprocessor: "deeplearning.clgen.preprocessors.common:MinimumLineCount3"
+    preprocessor: "deeplearning.clgen.preprocessors.opencl:Compile"
+  }
+  architecture {
+    neuron_type: LSTM
+    neurons_per_layer: 32
+    num_layers: 2
+  }
+  training {
+    num_epochs: 20
+    batch_size: 64
+    shuffle_corpus_contentfiles_between_epochs: true
+    adam_optimizer {
+      initial_learning_rate_micros: 2000  # 0.02
+      learning_rate_decay_per_epoch_micros: 5000  # 0.05
+      beta_1_micros: 900000 # 0.9
+      beta_2_micros: 999000 # 0.999
+      normalized_gradient_clip_micros: 5000000 # 5.0
+    }
+  }
+}
+sampler {
+  start_text: "kernel void "
+  batch_size: 64
+  termination_criteria {
+    symtok {
+      depth_increase_token: "{"
+      depth_decrease_token: "}"
+    }
+  }
+  termination_criteria {
+    maxlen {
+      maximum_tokens_in_sample: 500
+    }
+  }
+}

@@ -309,8 +309,7 @@ def AssertFieldIsSet(proto: ProtocolBuffer, field_name: str,
 def AssertFieldConstraint(proto: ProtocolBuffer, field_name: str,
                           constraint: typing.Callable[
                             [typing.Any], bool] = lambda x: True,
-                          fail_message: str = None) -> typing.Optional[
-  typing.Any]:
+                          fail_message: str = None) -> typing.Any:
   """Assert a constraint on the value of a protocol buffer field.
 
   Args:

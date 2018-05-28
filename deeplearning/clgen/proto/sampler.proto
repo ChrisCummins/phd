@@ -14,7 +14,10 @@ message Sampler {
   // seed and the same settings will produce the same output. If no seed is set,
   // the RNG is seeded (pseudo)randomly.
   optional int64 seed = 3;
-  // The criteria that determine when to terminate a sample.
+  // The criteria that determine when to terminate a sample, in the order in
+  // which they will be executed. Duplicates are allowed, for example if you
+  // would like to have symmetrical token depth counters for two pairs of
+  // tokens.
   repeated SampleTerminationCriterion termination_criteria = 4;
 }
 
@@ -22,16 +25,17 @@ message Sampler {
 message SampleTerminationCriterion {
   oneof criterion {
     MaxTokenLength maxlen = 1;
-    SymetricalTokenDepth symtok = 2;
+    SymmetricalTokenDepth symtok = 2;
   }
 }
 
 message MaxTokenLength {
+  // The maximum length of a sample, as a number of tokens. The length of the
+  // Sampler.start_text counts towards this total.
   optional int32 maximum_tokens_in_sample = 1;
-  optional bool include_start_text_in_maximum = 2;
 }
 
-message SymetricalTokenDepth {
+message SymmetricalTokenDepth {
   optional string depth_increase_token = 1;
   optional string depth_decrease_token = 2;
 }

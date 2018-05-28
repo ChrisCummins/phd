@@ -1,8 +1,5 @@
 """This file builds Keras models from CLgen Model config protos."""
 from absl import flags
-from keras import layers
-from keras import models
-from keras import optimizers
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.proto import model_pb2
@@ -76,7 +73,7 @@ def AssertIsBuildable(config: model_pb2.Model) -> model_pb2.Model:
   return config
 
 
-def BuildOptimizer(config: model_pb2.Model) -> optimizers.Optimizer:
+def BuildOptimizer(config: model_pb2.Model) -> 'keras.optimizers.Optimizer':
   """Construct the training optimizer from config.
 
   Args:
@@ -85,11 +82,15 @@ def BuildOptimizer(config: model_pb2.Model) -> optimizers.Optimizer:
   Raises:
     InternalError: If the value of the optimizer field is not understood.
   """
+  # Deferred importing of Keras so that we don't have to activate the
+  # TensorFlow backend every time we import this module.
+  import keras
+
   # We do not use *any* default values for arguments, in case for whatever
   # reason the Keras API changes a default arg.
   if config.training.HasField('adam_optimizer'):
     adam = config.training.adam_optimizer
-    return optimizers.Adam(
+    return keras.optimizers.Adam(
         lr=adam.initial_learning_rate_micros / 1e6,
         beta_1=adam.beta_1_micros / 1e6,
         beta_2=adam.beta_2_micros / 1e6,
@@ -105,7 +106,7 @@ def BuildOptimizer(config: model_pb2.Model) -> optimizers.Optimizer:
 
 def BuildKerasModel(config: model_pb2.Model,
                     sequence_length: int,
-                    vocabulary_size: int) -> models.Sequential:
+                    vocabulary_size: int) -> 'keras.models.Sequential':
   """Build a Keras model from a Model proto.
 
   Args:
@@ -116,11 +117,15 @@ def BuildKerasModel(config: model_pb2.Model,
   Returns:
     A Sequential model instance.
   """
-  model = models.Sequential()
+  # Deferred importing of Keras so that we don't have to activate the
+  # TensorFlow backend every time we import this module.
+  import keras
+
+  model = keras.models.Sequential()
   layer = {
-    model_pb2.NetworkArchitecture.LSTM: layers.LSTM,
-    model_pb2.NetworkArchitecture.RNN: layers.RNN,
-    model_pb2.NetworkArchitecture.GRU: layers.GRU,
+    model_pb2.NetworkArchitecture.LSTM: keras.layers.LSTM,
+    model_pb2.NetworkArchitecture.RNN: keras.layers.RNN,
+    model_pb2.NetworkArchitecture.GRU: keras.layers.GRU,
   }[config.architecture.neuron_type]
   model.add(layer(config.architecture.neurons_per_layer,
                   input_shape=(
@@ -131,6 +136,6 @@ def BuildKerasModel(config: model_pb2.Model,
     model.add(layer(config.architecture.neurons_per_layer,
                     return_sequences=True))
   model.add(layer(config.architecture.neurons_per_layer))
-  model.add(layers.Dense(vocabulary_size))
-  model.add(layers.Activation('softmax'))
+  model.add(keras.layers.Dense(vocabulary_size))
+  model.add(keras.layers.Activation('softmax'))
   return model

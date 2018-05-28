@@ -49,6 +49,7 @@ py_binary(
     srcs = ["clgen.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
+    visibility = ["//visibility:public"],
     deps = [
         ":atomizers",
         ":cache",
@@ -61,6 +62,7 @@ py_binary(
         ":samplers",
         "//deeplearning/clgen/models",
         "//deeplearning/clgen/preprocessors",
+        "//deeplearning/clgen/proto:clgen_py_pb2",
         "//deeplearning/clgen/proto:corpus_py_pb2",
         "//deeplearning/clgen/proto:model_py_pb2",
         "//deeplearning/clgen/proto:sampler_py_pb2",
@@ -78,6 +80,7 @@ py_test(
     data = [
         "//deeplearning/clgen/tests/data:pico",
         "//deeplearning/clgen/tests/data:tiny",
+        "//deeplearning/clgen/tests/data/tiny",
     ],
     default_python_version = "PY3",
     srcs_version = "PY3",
@@ -195,7 +198,10 @@ py_library(
 py_test(
     name = "explore_test",
     srcs = ["explore_test.py"],
-    data = ["//deeplearning/clgen/tests/data:tiny"],
+    data = [
+        "//deeplearning/clgen/tests/data:tiny",
+        "//deeplearning/clgen/tests/data/tiny",
+    ],
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [

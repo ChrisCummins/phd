@@ -157,7 +157,7 @@ Download and build from my [Dockerfile](https://github.com/ChrisCummins/phd/blob
 
 ```sh
 $ cd "$(mktemp -d)"
-$ wget "https://github.com/ChrisCummins/phd/blob/master/tools/docker/Dockerfile"
+$ wget https://raw.githubusercontent.com/ChrisCummins/phd/master/tools/docker/Dockerfile
 $ docker build -t phd .
 ```
 

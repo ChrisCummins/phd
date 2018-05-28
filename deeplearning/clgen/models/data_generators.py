@@ -13,7 +13,6 @@ import humanize
 import numpy as np
 from absl import flags
 from absl import logging
-from keras import utils
 
 from deeplearning.clgen import corpuses
 from deeplearning.clgen.proto import model_pb2
@@ -34,7 +33,7 @@ class DataGeneratorBase(object):
     self.training_opts = training_opts
     self.shuffle = training_opts.shuffle_corpus_contentfiles_between_epochs
     self.encoded_corpus = self.corpus.GetTrainingData(shuffle=self.shuffle)
-    logging.info('Encoded corpus: %s',
+    logging.info('Encoded corpus size: %s',
                  humanize.naturalsize(sys.getsizeof(self.encoded_corpus)))
     self.corpus_len = len(self.encoded_corpus)
     self.batch_size = min(training_opts.batch_size,
@@ -63,7 +62,7 @@ class DataGeneratorBase(object):
       One-hot encoded sequences.
     """
     # TODO(cec): Use keras to_categorical() instead of vectorizing by hand.
-    _ = utils.to_categorical(data.y, self.corpus.vocabulary_size)
+    # _ = keras.utils.to_categorical(data.y, self.corpus.vocabulary_size)
 
     X = np.zeros(
         (self.batch_size, self.corpus.sequence_length,
