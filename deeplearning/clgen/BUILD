@@ -49,6 +49,7 @@ py_binary(
     srcs = ["clgen.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
+    visibility = ["//visibility:public"],
     deps = [
         ":atomizers",
         ":cache",
@@ -70,7 +71,6 @@ py_binary(
         "//lib/labm8:pbutil",
         "//lib/labm8:prof",
     ],
-    visibility = ["//visibility:public"],
 )
 
 py_test(
