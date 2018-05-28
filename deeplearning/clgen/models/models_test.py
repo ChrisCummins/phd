@@ -31,7 +31,7 @@ class MockSampler(object):
 
 
 # The Model.hash for an instance of abc_model_config.
-ABC_MODEL_HASH = 'bad4436bf51066ba87b2fcc3505a15030033c9d3'
+ABC_MODEL_HASH = 'd22d392d7921d3a035daa472d870ee53d34c5303'
 
 
 def test_Model_config_type_error():
@@ -72,11 +72,20 @@ def test_Model_config_hash_different_num_epochs(clgen_cache_dir,
 def test_Model_config_hash_different_corpus(clgen_cache_dir, abc_model_config):
   """Test that different corpuses produce different model hashes."""
   del clgen_cache_dir
-  abc_model_config.corpus.sequence_length = 5
+  abc_model_config.corpus.contentfile_separator = '\n\n'
   m1 = models.Model(abc_model_config)
-  abc_model_config.corpus.sequence_length = 10
+  abc_model_config.corpus.contentfile_separator = 'abc'
   m2 = models.Model(abc_model_config)
   assert m1.hash != m2.hash
+
+
+def test_Model_config_sequence_length_not_set(clgen_cache_dir,
+                                              abc_model_config):
+  """Test that an error is raised if sequence_length is < 1."""
+  del clgen_cache_dir
+  abc_model_config.training.sequence_length = -1
+  with pytest.raises(errors.UserError):
+    models.Model(abc_model_config)
 
 
 def test_Model_equality(clgen_cache_dir, abc_model_config):

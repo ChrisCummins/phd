@@ -36,16 +36,17 @@ class DataGeneratorBase(object):
     logging.info('Encoded corpus size: %s',
                  humanize.naturalsize(sys.getsizeof(self.encoded_corpus)))
     self.corpus_length = len(self.encoded_corpus)
-    self.sequence_length = min(self.corpus.sequence_length,
+    self.sequence_length = min(self.training_opts.sequence_length,
                                self.corpus_length - 1)
-    if self.sequence_length < self.corpus.sequence_length:
+    if self.sequence_length < self.training_opts.sequence_length:
       logging.warning(
-          'Requested Corpus.sequence_length (%d) is larger than the corpus '
-          '(%d). Reduced sequence length to %d', self.corpus.sequence_length,
+          'Requested training.sequence_length (%d) is larger than the corpus '
+          '(%d). Reduced sequence length to %d',
+          self.training_opts.sequence_length,
           self.corpus_length, self.sequence_length)
     self.batch_size = min(
         training_opts.batch_size,
-        max(self.corpus_length - self.corpus.sequence_length, 1))
+        max(self.corpus_length - self.training_opts.sequence_length, 1))
     if self.batch_size < training_opts.batch_size:
       logging.warning(
           'Requested training.batch_size (%d) is larger than the corpus (%d). '

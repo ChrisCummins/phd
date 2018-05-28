@@ -105,13 +105,11 @@ def BuildOptimizer(config: model_pb2.Model) -> 'keras.optimizers.Optimizer':
 
 
 def BuildKerasModel(config: model_pb2.Model,
-                    sequence_length: int,
                     vocabulary_size: int) -> 'keras.models.Sequential':
   """Build a Keras model from a Model proto.
 
   Args:
     config: A Model proto instance.
-    sequence_length: The length of sequences.
     vocabulary_size: The number of tokens in the vocabulary.
 
   Returns:
@@ -129,7 +127,7 @@ def BuildKerasModel(config: model_pb2.Model,
   }[config.architecture.neuron_type]
   model.add(layer(config.architecture.neurons_per_layer,
                   input_shape=(
-                    sequence_length,
+                    config.training.sequence_length,
                     vocabulary_size),
                   return_sequences=config.architecture.neurons_per_layer > 1))
   for _ in range(1, config.architecture.num_layers - 1):

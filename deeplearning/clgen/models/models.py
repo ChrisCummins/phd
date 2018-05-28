@@ -58,6 +58,9 @@ class Model(object):
     if not isinstance(config, model_pb2.Model):
       t = type(config).__name__
       raise TypeError(f"Config must be a Model proto. Received: '{t}'")
+    # Validate config options.
+    if config.training.sequence_length < 1:
+      raise errors.UserError('TrainingOptions.sequence_length must be >= 1')
 
     # Attributes that will be lazily set.
     self._model: typing.Optional['keras.models.Sequential'] = None
@@ -135,8 +138,7 @@ class Model(object):
       with open(self.cache['model.yaml']) as f:
         model = keras.models.model_from_yaml(f.read())
     else:
-      model = builders.BuildKerasModel(self.config, self.corpus.sequence_length,
-                                       self.corpus.vocabulary_size)
+      model = builders.BuildKerasModel(self.config, self.corpus.vocabulary_size)
       with open(self.cache.keypath('model.yaml'), 'w') as f:
         f.write(model.to_yaml())
     model.compile(loss='categorical_crossentropy',
@@ -293,7 +295,8 @@ class Model(object):
 
       # TODO(cec): Re-implement batched sampling.
       vectorized_seed = np.zeros(
-          (1, self.corpus.sequence_length, self.corpus.vocabulary_size),
+          (1,
+           self.config.training.sequence_length, self.corpus.vocabulary_size),
           dtype=np.bool)
       for i, token in enumerate(encoded_seed):
         vectorized_seed[0, i, token] = 1

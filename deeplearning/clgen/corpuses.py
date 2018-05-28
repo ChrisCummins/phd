@@ -70,10 +70,6 @@ class Corpus(object):
 
     self.language = languages.Language.from_str(config.language)
 
-    # Validate config options.
-    if config.sequence_length < 1:
-      raise errors.UserError('Corpus.sequence_length must be >= 1')
-
     # Determine the corpus cache path. This will depend on whether a path or
     # an id was specified.
     path = None
@@ -321,11 +317,6 @@ WHERE ContentFiles.id NOT IN (
   def lock(self):
     lockpath = self.cache.keypath("LOCK")
     return lockfile.LockFile(lockpath)
-
-  @property
-  def sequence_length(self) -> int:
-    """The length of sequences."""
-    return self.config.sequence_length
 
   @property
   def vocabulary_size(self) -> int:

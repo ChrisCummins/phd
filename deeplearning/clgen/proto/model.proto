@@ -33,14 +33,16 @@ message NetworkArchitecture {
 message TrainingOptions {
   // The number of epochs to train the network for.
   optional int32 num_epochs = 1;
+  // The length of training sequences.
+  optional int32 sequence_length = 2;
   // If true, shuffle the order of contentfiles in the corpus between each
   // training epoch.
-  optional bool shuffle_corpus_contentfiles_between_epochs = 2;
+  optional bool shuffle_corpus_contentfiles_between_epochs = 3;
   // The training batch size. Note that this is only a *requested* batch size,
   // there may be cases where the runtime decides to modify this value. For
   // example, when the corpus size is smaller than the batch size. Any changes
   // to this value at runtime will be logged as errors.
-  optional int32 batch_size = 3;
+  optional int32 batch_size = 4;
   // The optimizer configuration.
   oneof optimizer {
     AdamOptimizer adam_optimizer = 10;

@@ -115,7 +115,6 @@ model {
       tokens: "wide"
       tokens: "write_only"
     }
-    sequence_length: 50
     contentfile_separator: "\n\n"
     preprocessor: "deeplearning.clgen.preprocessors.opencl:ClangPreprocessWithShim"
     preprocessor: "deeplearning.clgen.preprocessors.opencl:Compile"
@@ -135,6 +134,7 @@ model {
   }
   training {
     num_epochs: 50
+    sequence_length: 50
     batch_size: 256
     shuffle_corpus_contentfiles_between_epochs: true
     adam_optimizer {

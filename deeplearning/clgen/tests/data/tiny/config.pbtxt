@@ -6,7 +6,6 @@ model {
     language: "opencl"
     path: "$PWD/corpus.tar.bz2"
     ascii_character_atomizer: true
-    sequence_length: 50
     contentfile_separator: "\n\n"
     preprocessor: "deeplearning.clgen.preprocessors.opencl:ClangPreprocessWithShim"
     preprocessor: "deeplearning.clgen.preprocessors.opencl:Compile"
@@ -26,6 +25,7 @@ model {
   }
   training {
     num_epochs: 20
+    sequence_length: 50
     batch_size: 64
     shuffle_corpus_contentfiles_between_epochs: true
     adam_optimizer {

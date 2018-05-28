@@ -1,9 +1,9 @@
 """Unit tests for //deeplearning/clgen/corpus.py."""
-import sys
 import tempfile
 
 import numpy as np
 import pytest
+import sys
 from absl import app
 
 from deeplearning.clgen import corpuses
@@ -13,7 +13,7 @@ from deeplearning.clgen.tests import testlib as tests
 
 
 # The Corpus.hash for an OpenCL corpus of the abc_corpus.
-ABC_CORPUS_HASH = '57f227934240cdcb39d996a4c3bfffb8ba27ced6'
+ABC_CORPUS_HASH = 'd22d392d7921d3a035daa472d870ee53d34c5303'
 
 
 @pytest.mark.skip(reason='TODO(cec): Fix clgen-features data path.')
@@ -63,16 +63,14 @@ def test_Corpus_badpath(clgen_cache_dir):
   """Test that CLgenError is raised when corpus has a non-existent path."""
   del clgen_cache_dir
   with pytest.raises(errors.CLgenError):
-    corpuses.Corpus(corpus_pb2.Corpus(language="opencl", path="notarealpath",
-                                      sequence_length=10))
+    corpuses.Corpus(corpus_pb2.Corpus(language="opencl", path="notarealpath"))
 
 
 def test_Corpus_hash(clgen_cache_dir, abc_corpus):
   """Test that the ID of a known corpus matches expected value."""
   del clgen_cache_dir
   c = corpuses.Corpus(corpus_pb2.Corpus(language="opencl", path=abc_corpus,
-                                        ascii_character_atomizer=True,
-                                        sequence_length=10))
+                                        ascii_character_atomizer=True))
   assert ABC_CORPUS_HASH == c.hash
 
 
@@ -81,7 +79,7 @@ def test_Corpus_archive_hash(clgen_cache_dir, abc_corpus_archive):
   del clgen_cache_dir
   c = corpuses.Corpus(
       corpus_pb2.Corpus(language="opencl", path=abc_corpus_archive,
-                        ascii_character_atomizer=True, sequence_length=10))
+                        ascii_character_atomizer=True))
   assert ABC_CORPUS_HASH == c.hash
 
 
@@ -89,12 +87,10 @@ def test_Corpus_config_hash_different_options(clgen_cache_dir, abc_corpus):
   """Test that the corpus ID is changed with a different option value."""
   del clgen_cache_dir
   c1 = corpuses.Corpus(corpus_pb2.Corpus(language="opencl", path=abc_corpus,
-                                         ascii_character_atomizer=True,
-                                         sequence_length=10))
+                                         ascii_character_atomizer=True))
   atomizer = corpus_pb2.GreedyMulticharAtomizer(tokens=['a'])
   c3 = corpuses.Corpus(corpus_pb2.Corpus(language="opencl", path=abc_corpus,
-                                         greedy_multichar_atomizer=atomizer,
-                                         sequence_length=10))
+                                         greedy_multichar_atomizer=atomizer))
   assert c1.hash != c3.hash
 
 
@@ -102,11 +98,9 @@ def test_Corpus_equality(clgen_cache_dir, abc_corpus):
   """Test that two corpuses with identical options are equivalent."""
   del clgen_cache_dir
   c1 = corpuses.Corpus(corpus_pb2.Corpus(language="opencl", path=abc_corpus,
-                                         ascii_character_atomizer=True,
-                                         sequence_length=10))
+                                         ascii_character_atomizer=True))
   c2 = corpuses.Corpus(corpus_pb2.Corpus(language="opencl", path=abc_corpus,
-                                         ascii_character_atomizer=True,
-                                         sequence_length=10))
+                                         ascii_character_atomizer=True))
   assert c1 == c2
 
 
@@ -114,21 +108,11 @@ def test_Corpus_inequality(clgen_cache_dir, abc_corpus):
   """Test that two corpuses with different options are not equivalent."""
   del clgen_cache_dir
   c1 = corpuses.Corpus(corpus_pb2.Corpus(language="opencl", path=abc_corpus,
-                                         ascii_character_atomizer=True,
-                                         sequence_length=10))
+                                         ascii_character_atomizer=True))
   atomizer = corpus_pb2.GreedyMulticharAtomizer(tokens=['a'])
   c2 = corpuses.Corpus(corpus_pb2.Corpus(language="opencl", path=abc_corpus,
-                                         greedy_multichar_atomizer=atomizer,
-                                         sequence_length=10))
+                                         greedy_multichar_atomizer=atomizer))
   assert c1 != c2
-
-
-def test_Corpus_sequence_length_not_set(clgen_cache_dir, abc_corpus):
-  """Test that an error is raised if sequence_length is < 1."""
-  del clgen_cache_dir
-  with pytest.raises(errors.UserError):
-    corpuses.Corpus(corpus_pb2.Corpus(language="opencl", path=abc_corpus,
-                                      ascii_character_atomizer=True))
 
 
 def test_Corpus_empty_directory_raises_error(clgen_cache_dir):
@@ -137,8 +121,7 @@ def test_Corpus_empty_directory_raises_error(clgen_cache_dir):
   with tempfile.TemporaryDirectory() as d:
     with pytest.raises(errors.EmptyCorpusException):
       corpuses.Corpus(corpus_pb2.Corpus(language="opencl", path=d,
-                                        ascii_character_atomizer=True,
-                                        sequence_length=10))
+                                        ascii_character_atomizer=True))
 
 
 def test_Corpus_greedy_multichar_atomizer_no_atoms(clgen_cache_dir, abc_corpus):
@@ -147,8 +130,7 @@ def test_Corpus_greedy_multichar_atomizer_no_atoms(clgen_cache_dir, abc_corpus):
   with pytest.raises(errors.UserError):
     atomizer = corpus_pb2.GreedyMulticharAtomizer(tokens=[])
     corpuses.Corpus(corpus_pb2.Corpus(language="opencl", path=abc_corpus,
-                                      greedy_multichar_atomizer=atomizer,
-                                      sequence_length=10))
+                                      greedy_multichar_atomizer=atomizer))
 
 
 def test_Corpus_no_language_option(clgen_cache_dir, abc_corpus):
@@ -156,8 +138,7 @@ def test_Corpus_no_language_option(clgen_cache_dir, abc_corpus):
   del clgen_cache_dir
   with pytest.raises(errors.UserError):
     corpuses.Corpus(
-        corpus_pb2.Corpus(path=abc_corpus, ascii_character_atomizer=True,
-                          sequence_length=10))
+        corpus_pb2.Corpus(path=abc_corpus, ascii_character_atomizer=True))
 
 
 def test_Corpus_bad_language_option(clgen_cache_dir, abc_corpus):
@@ -165,8 +146,7 @@ def test_Corpus_bad_language_option(clgen_cache_dir, abc_corpus):
   del clgen_cache_dir
   with pytest.raises(errors.UserError):
     corpuses.Corpus(corpus_pb2.Corpus(language="NOTALANG", path=abc_corpus,
-                                      ascii_character_atomizer=True,
-                                      sequence_length=10))
+                                      ascii_character_atomizer=True))
 
 
 def test_Corpus_equalivancy(clgen_cache_dir, abc_corpus):
@@ -174,14 +154,11 @@ def test_Corpus_equalivancy(clgen_cache_dir, abc_corpus):
   del clgen_cache_dir
   atomizer = corpus_pb2.GreedyMulticharAtomizer(tokens=['a'])
   c1 = corpuses.Corpus(corpus_pb2.Corpus(language="opencl", path=abc_corpus,
-                                         greedy_multichar_atomizer=atomizer,
-                                         sequence_length=10))
+                                         greedy_multichar_atomizer=atomizer))
   c2 = corpuses.Corpus(corpus_pb2.Corpus(language="opencl", path=abc_corpus,
-                                         greedy_multichar_atomizer=atomizer,
-                                         sequence_length=10))
+                                         greedy_multichar_atomizer=atomizer))
   c3 = corpuses.Corpus(corpus_pb2.Corpus(language="opencl", path=abc_corpus,
-                                         ascii_character_atomizer=True,
-                                         sequence_length=10))
+                                         ascii_character_atomizer=True))
   assert c1 == c2
   assert c2 != c3
   assert c1 != 'abcdef'
@@ -191,8 +168,7 @@ def test_Corpus_num_contentfiles(clgen_cache_dir, abc_corpus):
   """Test the number of contentfiles in a known corpus."""
   del clgen_cache_dir
   c = corpuses.Corpus(corpus_pb2.Corpus(language="opencl", path=abc_corpus,
-                                        ascii_character_atomizer=True,
-                                        sequence_length=10))
+                                        ascii_character_atomizer=True))
   assert len(list(c.GetContentFiles())) == 3
 
 
@@ -215,7 +191,7 @@ kernel void bar(global int* a) {
 }
 """)
   config = corpus_pb2.Corpus(language="opencl", path=abc_corpus,
-                             sequence_length=10, ascii_character_atomizer=True,
+                             ascii_character_atomizer=True,
                              preprocessor=[
                                'deeplearning.clgen.preprocessors.opencl:ClangPreprocessWithShim',
                                'deeplearning.clgen.preprocessors.opencl:Compile',
@@ -235,8 +211,7 @@ def test_Corpus_ConcatenateTextCorpus_no_shuffle(clgen_cache_dir, abc_corpus):
   """Test the concatenation of the abc corpus."""
   del clgen_cache_dir
   c = corpuses.Corpus(corpus_pb2.Corpus(language="opencl", path=abc_corpus,
-                                        ascii_character_atomizer=True,
-                                        sequence_length=10))
+                                        ascii_character_atomizer=True))
   assert c.ConcatenateTextCorpus(shuffle=False) == """The cat sat on the mat.
 
 Such corpus.
@@ -250,7 +225,6 @@ def test_Corpus_ConcatenateTextCorpus_separator(clgen_cache_dir, abc_corpus):
   del clgen_cache_dir
   c = corpuses.Corpus(corpus_pb2.Corpus(language="opencl", path=abc_corpus,
                                         ascii_character_atomizer=True,
-                                        sequence_length=10,
                                         contentfile_separator='\n!!\n'))
   assert c.ConcatenateTextCorpus(shuffle=False) == """The cat sat on the mat.
 !!
@@ -264,8 +238,7 @@ def test_Corpus_ConcatenateTextCorpus_random_order(clgen_cache_dir, abc_corpus):
   """Test that random shuffling of contentfiles changes the corpus."""
   del clgen_cache_dir
   c = corpuses.Corpus(corpus_pb2.Corpus(language="opencl", path=abc_corpus,
-                                        ascii_character_atomizer=True,
-                                        sequence_length=10))
+                                        ascii_character_atomizer=True))
   # Generate five concatenations with a random order. The idea is that it is
   # extremely unlikely that the same ordering would be randomly selected all
   # five times, however, this is not impossible, so consider this test flaky.

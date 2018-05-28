@@ -8,9 +8,8 @@ from deeplearning.clgen.models import data_generators
 
 class CorpusMock(object):
 
-  def __init__(self, corpus_length: int = 100, sequence_length: int = 10):
+  def __init__(self, corpus_length: int = 100):
     self.corpus_len = corpus_length
-    self.sequence_length = sequence_length
 
   def GetTrainingData(self, *args, **kwargs):
     return ['a'] * self.corpus_len
@@ -19,16 +18,18 @@ class CorpusMock(object):
 def test_DataGeneratorBase_sequence_length(abc_model_config):
   """Test that sequence length derives from TrainingOptions.sequence_length."""
   opt = abc_model_config.training
+  opt.sequence_length = 10
   dg = data_generators.DataGeneratorBase(
-      CorpusMock(corpus_length=100, sequence_length=10), opt)
+      CorpusMock(corpus_length=100), opt)
   assert dg.sequence_length == 10
 
 
 def test_DataGeneratorBase_sequence_length_too_large(abc_model_config):
   """Test that sequence length derives from TrainingOptions.sequence_length."""
   opt = abc_model_config.training
+  opt.sequence_length = 50
   dg = data_generators.DataGeneratorBase(
-      CorpusMock(corpus_length=10, sequence_length=50), opt)
+      CorpusMock(corpus_length=10), opt)
   assert dg.sequence_length == 9
 
 

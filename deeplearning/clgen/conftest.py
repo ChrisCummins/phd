@@ -71,7 +71,7 @@ def abc_corpus_archive(abc_corpus) -> str:
 def abc_corpus_config(abc_corpus):
   """The proto config for a simple Corpus."""
   return corpus_pb2.Corpus(language="opencl", path=abc_corpus,
-                           ascii_character_atomizer=True, sequence_length=10,
+                           ascii_character_atomizer=True,
                            contentfile_separator='\n\n')
 
 
@@ -90,6 +90,7 @@ def abc_model_config(abc_corpus_config):
       normalized_gradient_clip_micros=5000000)
   training = model_pb2.TrainingOptions(
       num_epochs=1,
+      sequence_length=10,
       batch_size=5,
       shuffle_corpus_contentfiles_between_epochs=False,
       adam_optimizer=optimizer)
