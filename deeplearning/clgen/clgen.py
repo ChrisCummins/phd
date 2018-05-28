@@ -1,6 +1,7 @@
 """Command line interface to clgen."""
 import argparse
 import cProfile
+import contextlib
 import inspect
 import os
 import pathlib
@@ -23,18 +24,50 @@ from deeplearning.clgen import languages
 from deeplearning.clgen import samplers
 from deeplearning.clgen.models import models
 from deeplearning.clgen.preprocessors import preprocessors
+from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
 from lib.labm8 import fs
 from lib.labm8 import labtypes
+
+
 from lib.labm8 import pbutil
 from lib.labm8 import prof
-
-
 __help_epilog__ = """
 Copyright (C) 2016, 2017, 2018 Chris Cummins <chrisc.101@gmail.com>.
 <http://chriscummins.cc/clgen>
 """
+
+
+FLAGS = flags.FLAGS
+
+flags.DEFINE_string(
+    'config', None, 'Path to a clgen.Instance proto file.')
+
+
+class Instance(object):
+  """A CLgen instance."""
+
+  def __init__(self, config: clgen_pb2.Instance):
+    self.config = config
+    self.model = None
+    self.sampler = None
+    with self.Session():
+      if config.HasField('model'):
+        self.model = models.Model(config.model)
+      if config.HasField('sampler'):
+        self.sampler = samplers.Sampler(config.sampler)
+
+  @contextlib.contextmanager
+  def Session(self) -> 'Instance':
+    old_working_dir = os.environ.get('CLGEN_CACHE', '')
+    working_dir = ''
+    if self.config.HasField('working_dir'):
+      working_dir = pathlib.Path(
+          os.path.expandvars(self.config.working_dir)).expanduser()
+    os.environ['CLGEN_CACHE'] = working_dir
+    yield self
+    os.environ['CLGEN_CACHE'] = old_working_dir
 
 
 def getself(func):

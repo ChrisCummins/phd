@@ -12,9 +12,9 @@ message Instance {
   // The path to the clgen working directory. This directory stores persistent
   // caches files, including the corpus, model checkpoints, and sampler outputs.
   // If not provided, the default value of $HOME/.cache/clgen is used.
-  optional string working_dir = 2 [default = "~/.cache/clgen"];
+  optional string working_dir = 1;
   // The language model specification.
-  optional Model model = 3;
+  optional Model model = 2;
   // The sampler specification.
-  optional Sampler sampler = 4;
+  optional Sampler sampler = 3;
 }
