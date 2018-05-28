@@ -25,7 +25,7 @@ message Sampler {
 message SampleTerminationCriterion {
   oneof criterion {
     MaxTokenLength maxlen = 1;
-    SymetricalTokenDepth symtok = 2;
+    SymmetricalTokenDepth symtok = 2;
   }
 }
 
@@ -35,7 +35,7 @@ message MaxTokenLength {
   optional int32 maximum_tokens_in_sample = 1;
 }
 
-message SymetricalTokenDepth {
+message SymmetricalTokenDepth {
   optional string depth_increase_token = 1;
   optional string depth_decrease_token = 2;
 }

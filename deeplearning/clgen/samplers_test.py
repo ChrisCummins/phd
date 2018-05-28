@@ -75,6 +75,62 @@ def test_MaxlenTerminationCriterion_SampleIsComplete():
   assert t.SampleIsComplete(['a', 'b', 'c', 'd', 'e'])
 
 
+# SymmetricalTokenDepthCriterion tests.
+
+def test_SymmetricalTokenDepthCriterion_depth_increase_token():
+  """Test that error is raised if depth_increase_token is invalid."""
+  config = sampler_pb2.SymmetricalTokenDepth(depth_decrease_token='a')
+  # Field is missing.
+  with pytest.raises(errors.UserError) as e_info:
+    samplers.SymmetricalTokenDepthCriterion(config)
+  assert 'SymmetricalTokenDepth.depth_increase_token must be a string' == str(
+      e_info.value)
+  # Value is empty.
+  config.depth_increase_token = ''
+  with pytest.raises(errors.UserError) as e_info:
+    samplers.SymmetricalTokenDepthCriterion(config)
+  assert 'SymmetricalTokenDepth.depth_increase_token must be a string' == str(
+      e_info.value)
+
+
+def test_SymmetricalTokenDepthCriterion_depth_increase_token():
+  """Test that error is raised if depth_increase_token is invalid."""
+  config = sampler_pb2.SymmetricalTokenDepth(depth_increase_token='a')
+  # Field is missing.
+  with pytest.raises(errors.UserError) as e_info:
+    samplers.SymmetricalTokenDepthCriterion(config)
+  assert 'SymmetricalTokenDepth.depth_decrease_token must be a string' == str(
+      e_info.value)
+  # Value is empty.
+  config.depth_decrease_token = ''
+  with pytest.raises(errors.UserError) as e_info:
+    samplers.SymmetricalTokenDepthCriterion(config)
+  assert 'SymmetricalTokenDepth.depth_decrease_token must be a string' == str(
+      e_info.value)
+
+
+def test_SymmetricalTokenDepthCriterion_same_tokens():
+  """test that error is raised if depth tokens are the same."""
+  config = sampler_pb2.SymmetricalTokenDepth(
+      depth_increase_token='a', depth_decrease_token='a')
+  with pytest.raises(errors.UserError) as e_info:
+    samplers.SymmetricalTokenDepthCriterion(config)
+  assert 'SymmetricalTokenDepth tokens must be different' == str(e_info.value)
+
+
+def test_SymmetricalTokenDepthCriterion_SampleIsComplete():
+  """Test SampleIsComplete() returns expected values."""
+  t = samplers.SymmetricalTokenDepthCriterion(sampler_pb2.SymmetricalTokenDepth(
+      depth_increase_token='+', depth_decrease_token='-'))
+  assert not t.SampleIsComplete([])
+  assert not t.SampleIsComplete(['+'])
+  assert not t.SampleIsComplete(['-'])
+  assert t.SampleIsComplete(['+', '-'])
+  assert not t.SampleIsComplete(['a', '+', 'b', 'c'])
+  assert not t.SampleIsComplete(['a', '+', '+', 'b', 'c', '-'])
+  assert t.SampleIsComplete(['a', '+', '-', '+', 'b', 'c', '-'])
+
+
 # Sampler.__init__() tests.
 
 def test_Sampler_config_type_error():

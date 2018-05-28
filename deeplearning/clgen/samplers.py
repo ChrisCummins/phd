@@ -74,18 +74,23 @@ class MaxlenTerminationCriterion(TerminationCriterionBase):
 class SymmetricalTokenDepthCriterion(TerminationCriterionBase):
   """A termination criterion which counts symmetrical token depth."""
 
-  def __init__(self, config: sampler_pb2.SymetricalTokenDepth):
-    self.left_token = pbutil.AssertFieldConstraint(
-        config, 'depth_increase_token', lambda s: len(s),
-        'SymetricalTokenDepth.depth_increase_token must be a string')
-    self.right_token = pbutil.AssertFieldConstraint(
-        config, 'depth_decrease_token', lambda s: len(s),
-        'SymetricalTokenDepth.depth_decrease_token must be a string')
+  def __init__(self, config: sampler_pb2.SymmetricalTokenDepth):
+    try:
+      self.left_token = pbutil.AssertFieldConstraint(
+          config, 'depth_increase_token', lambda s: len(s),
+          'SymmetricalTokenDepth.depth_increase_token must be a string')
+      self.right_token = pbutil.AssertFieldConstraint(
+          config, 'depth_decrease_token', lambda s: len(s),
+          'SymmetricalTokenDepth.depth_decrease_token must be a string')
+    except pbutil.ProtoValueError as e:
+      raise errors.UserError(e)
+    if self.left_token == self.right_token:
+      raise errors.UserError('SymmetricalTokenDepth tokens must be different')
 
   def SampleIsComplete(self, sample_in_progress: typing.List[str]) -> bool:
     """Determine whether to stop sampling."""
-    left_token_count = sample_in_progress.count(self.symmetrical_token_left)
-    right_token_count = sample_in_progress.count(self.symmetrical_token_left)
+    left_token_count = sample_in_progress.count(self.left_token)
+    right_token_count = sample_in_progress.count(self.right_token)
     return left_token_count and (left_token_count - right_token_count == 0)
 
 
