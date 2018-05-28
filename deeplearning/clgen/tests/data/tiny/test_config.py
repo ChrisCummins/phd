@@ -1,6 +1,7 @@
 """Test that //deeplearning/clgen/tests/data/tiny/config.pbtxt is valid."""
-import pytest
 import sys
+
+import pytest
 from absl import app
 
 from deeplearning.clgen import clgen

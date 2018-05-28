@@ -13,7 +13,6 @@ import humanize
 import numpy as np
 from absl import flags
 from absl import logging
-from keras import utils
 
 from deeplearning.clgen import corpuses
 from deeplearning.clgen.proto import model_pb2
@@ -63,7 +62,7 @@ class DataGeneratorBase(object):
       One-hot encoded sequences.
     """
     # TODO(cec): Use keras to_categorical() instead of vectorizing by hand.
-    _ = utils.to_categorical(data.y, self.corpus.vocabulary_size)
+    # _ = keras.utils.to_categorical(data.y, self.corpus.vocabulary_size)
 
     X = np.zeros(
         (self.batch_size, self.corpus.sequence_length,

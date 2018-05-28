@@ -11,8 +11,6 @@ import numpy as np
 import progressbar
 from absl import flags
 from absl import logging
-from keras import callbacks
-from keras import models
 from prettytable import PrettyTable
 
 from deeplearning.clgen import cache
@@ -62,7 +60,7 @@ class Model(object):
       raise TypeError(f"Config must be a Model proto. Received: '{t}'")
 
     # Attributes that will be lazily set.
-    self._model: typing.Optional[models.Sequential] = None
+    self._model: typing.Optional['keras.models.Sequential'] = None
     self._current_weights_epoch: int = 0
 
     self.config = model_pb2.Model()
@@ -120,7 +118,7 @@ class Model(object):
     return crypto.sha1_list(corpus_.hash,
                             config_to_hash.SerializeToString())
 
-  def GetTrainableModel(self) -> models.Sequential:
+  def GetTrainableModel(self) -> 'keras.models.Sequential':
     """Get the Keras model.
 
     If there is a cached model description, the model will be initialized from
@@ -129,9 +127,13 @@ class Model(object):
     Returns:
       A Sequential model instance.
     """
+    # Deferred importing of Keras so that we don't have to activate the
+    # TensorFlow backend every time we import this module.
+    import keras
+
     if self.cache.get('model.yaml'):
       with open(self.cache['model.yaml']) as f:
-        model = models.model_from_yaml(f.read())
+        model = keras.models.model_from_yaml(f.read())
     else:
       model = builders.BuildKerasModel(self.config, self.corpus.sequence_length,
                                        self.corpus.vocabulary_size)
@@ -142,7 +144,7 @@ class Model(object):
     return model
 
   @property
-  def model(self) -> models.Sequential:
+  def model(self) -> 'keras.models.Sequential':
     if self._model is None:
       self._model = self.GetTrainableModel()
     return self._model
@@ -176,6 +178,10 @@ class Model(object):
           epoch_checkpoints[target_num_epochs - 1])
       return self
 
+    # Deferred importing of Keras so that we don't have to activate the
+    # TensorFlow backend every time we import this module.
+    import keras
+
     with logutil.TeeLogsToFile('train', self.cache.path / 'logs'):
       if epoch_checkpoints:
         # We have already trained a model at least part of the way to our target
@@ -188,9 +194,10 @@ class Model(object):
       checkpoint_dir.mkdir(parents=True, exist_ok=True)
       file_path = str(
           checkpoint_dir) + "/checkpoint_weights_{epoch:02d}_{loss:.4f}.hdf5"
-      checkpoint = callbacks.ModelCheckpoint(file_path, monitor="loss",
-                                             verbose=1,
-                                             save_best_only=False, mode="min")
+      checkpoint = keras.callbacks.ModelCheckpoint(file_path, monitor="loss",
+                                                   verbose=1,
+                                                   save_best_only=False,
+                                                   mode="min")
       generator = data_generators.AutoGenerator(self.corpus,
                                                 self.config.training)
       logging.info('Steps per epoch: %s',
