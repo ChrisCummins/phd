@@ -1,9 +1,13 @@
 """Utility code for converting between absl logging output and log protos."""
+import contextlib
 import datetime
+import pathlib
 import re
+import sys
 import typing
 
 from absl import flags
+from absl import logging
 
 from lib.labm8 import labdate
 from lib.labm8.proto import logging_pb2
@@ -74,3 +78,50 @@ def ConertAbslLogToProtos(logs: str) -> typing.List[logging_pb2.LogRecord]:
       lines_buffer.append(line)
   ConvertOne()
   return records
+
+
+def StartTeeLogsToFile(program_name: str = None, log_dir: str = None,
+                       file_log_level: int = logging.DEBUG) -> None:
+  """Log messages to file as well as stderr.
+
+  Args:
+    program_name: The name of the program.
+    log_dir: The directory to log to.
+    file_log_level: The minimum verbosity level to log to file to.
+
+  Raises:
+    FileNotFoundError: If the requested log_dir does not exist.
+  """
+  if not pathlib.Path(log_dir).is_dir():
+    raise FileNotFoundError(f"Log directory not found: '{log_dir}'")
+  old_verbosity = logging.get_verbosity()
+  logging.set_verbosity(file_log_level)
+  logging.set_stderrthreshold(old_verbosity)
+  logging.get_absl_handler().start_logging_to_file(program_name, log_dir)
+  # The Absl logging handler function start_logging_to_file() sets logtostderr
+  # to False. Re-enable whatever value it was before the call.
+  FLAGS.logtostderr = False
+
+
+def StopTeeLogsToFile():
+  """Stop logging messages to file as well as stderr."""
+  logging.get_absl_handler().flush()
+  logging.get_absl_handler().stream = sys.stderr
+  FLAGS.logtostderr = True
+
+
+@contextlib.contextmanager
+def TeeLogsToFile(program_name: str = None, log_dir: str = None,
+                  file_log_level: int = logging.DEBUG):
+  """Temporarily enable logging to file.
+
+  Args:
+    program_name: The name of the program.
+    log_dir: The directory to log to.
+    file_log_level: The minimum verbosity level to log to file to.
+  """
+  try:
+    StartTeeLogsToFile(program_name, log_dir, file_log_level)
+    yield
+  finally:
+    StopTeeLogsToFile()

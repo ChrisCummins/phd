@@ -1,10 +1,13 @@
 """Unit tests for //lib/labm8/logutil.py."""
 import datetime
+import pathlib
 import sys
+import tempfile
 
 import pytest
 from absl import app
 from absl import flags
+from absl import logging
 
 from lib.labm8 import labdate
 from lib.labm8 import logutil
@@ -160,6 +163,63 @@ multiline!
   assert p[3].message == 'Hello, error!'
   assert p[4].message == 'Hello, fatal!'
   assert p[5].message == 'Goodbye ...\nmultiline!'
+
+
+# StartTeeLogsToFile() and StopTeeLogsToFile() tests.
+
+def test_TeeLogsToFile_dir_not_found():
+  """Test that FileNotFoundError is raised if log_dir does not exist"""
+  with tempfile.TemporaryDirectory() as d:
+    with pytest.raises(FileNotFoundError) as e_info:
+      logutil.StartTeeLogsToFile('test', pathlib.Path(d) / 'notadir')
+    assert "Log directory not found: '{d}/notadir'"
+
+
+def test_TeeLogsToFile(capsys):
+  """Test that StartTeeLogs also logs to file, and StopTeeLogs prevents that."""
+  with tempfile.TemporaryDirectory() as d:
+    FLAGS.logtostderr = True
+    logging.info('This is not going in a file')
+    logutil.StartTeeLogsToFile('test', d)
+    logging.info('Hello, file!')
+    logutil.StopTeeLogsToFile()
+    logging.info('This is not going in a file')
+    # Test file contents.
+    with open(pathlib.Path(d) / 'test.INFO') as f:
+      lines = f.read().rstrip().split('\n')
+      assert len(lines) == 1
+      assert lines[0].endswith('Hello, file!')
+    out, err = capsys.readouterr()
+    assert not out
+    # Test stderr contents.
+    lines = err.rstrip().split('\n')
+    assert len(lines) == 3
+    assert lines[0].endswith('This is not going in a file')
+    assert lines[1].endswith('Hello, file!')
+    assert lines[2].endswith('This is not going in a file')
+
+
+def test_TeeLogsToFile_contextmanager(capsys):
+  """Test that contextmanager temporarily also logs to file."""
+  with tempfile.TemporaryDirectory() as d:
+    FLAGS.logtostderr = True
+    logging.info('This is not going in a file')
+    with logutil.TeeLogsToFile('test', d):
+      logging.info('Hello, file!')
+    logging.info('This is not going in a file')
+    # Test file contents.
+    with open(pathlib.Path(d) / 'test.INFO') as f:
+      lines = f.read().rstrip().split('\n')
+      assert len(lines) == 1
+      assert lines[0].endswith('Hello, file!')
+    out, err = capsys.readouterr()
+    assert not out
+    # Test stderr contents.
+    lines = err.rstrip().split('\n')
+    assert len(lines) == 3
+    assert lines[0].endswith('This is not going in a file')
+    assert lines[1].endswith('Hello, file!')
+    assert lines[2].endswith('This is not going in a file')
 
 
 def main(argv):
