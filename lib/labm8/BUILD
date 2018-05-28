@@ -269,6 +269,25 @@ py_test(
 )
 
 py_library(
+    name = "logutil",
+    srcs = ["logutil.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":labdate",
+        "//lib/labm8/proto:logging_py_pb2",
+    ],
+)
+
+py_test(
+    name = "logutil_test",
+    size = "small",
+    srcs = ["logutil_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [":logutil"],
+)
+
+py_library(
     name = "make",
     srcs = ["make.py"],
     visibility = ["//visibility:public"],

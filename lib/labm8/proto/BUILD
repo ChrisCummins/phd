@@ -9,6 +9,12 @@ py_proto_library(
 )
 
 py_proto_library(
+    name = "logging_py_pb2",
+    protos = ["logging.proto"],
+    visibility = ["//visibility:public"],
+)
+
+py_proto_library(
     name = "test_protos",
     testonly = 1,
     protos = ["test_protos.proto"],

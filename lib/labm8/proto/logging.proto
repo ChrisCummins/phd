@@ -1,0 +1,20 @@
+// The file defines the schema for log records.
+syntax = "proto2";
+
+// A log record is the result of a single call to logging.debug(),
+// logging.info(), logging.warning(), logging.error(), or logging.fatal().
+message LogRecord {
+  enum LogLevel {
+    DEBUG = 0;
+    INFO = 1;
+    WARNING = 2;
+    ERROR = 3;
+    FATAL = 4;
+  }
+  optional LogLevel level = 1;
+  optional int64 date_utc_epoch_ms = 2;
+  optional int64 thread_id = 3;
+  optional string file_name = 4;
+  optional int32 line_number = 5;
+  optional string message = 6;
+}
