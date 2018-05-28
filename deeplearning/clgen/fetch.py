@@ -568,7 +568,7 @@ def process_cl_file(db_path: str, path: str) -> None:
   db = dbutil.connect(db_path)
   c = db.cursor()
 
-  logging.debug("fetch {path}".format(path=fs.abspath(path)))
+  logging.debug('fetch %s', path)
   try:
     contents = inline_fs_headers(path, []).strip()
   except IOError:
@@ -596,7 +596,7 @@ def fetch(db_path: str, paths: List[str] = []) -> None:
   c = db.cursor()
 
   for path in paths:
-    logging.debug("fetch", path)
+    logging.debug('fetch %s', path)
     try:
       contents = inline_fs_headers(path, []).strip()
     except IOError:
