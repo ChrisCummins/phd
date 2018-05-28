@@ -6,6 +6,7 @@ from absl import app
 
 from deeplearning.clgen import errors
 from deeplearning.clgen import samplers
+from deeplearning.clgen.proto import sampler_pb2
 
 
 # AssertConfigIsValid() tests.
@@ -42,6 +43,36 @@ def test_AssertConfigIsValid_invalid_batch_size(abc_sampler_config):
   with pytest.raises(errors.UserError) as e_info:
     samplers.Sampler(abc_sampler_config)
   assert "Sampler.batch_size must be > 0" == str(e_info.value)
+
+
+# MaxlenTerminationCriterion tests.
+
+def test_MaxlenTerminationCriterion_invalid_maximum_tokens_in_sample():
+  """Test that error is raised if maximum_tokens_in_sample is invalid."""
+  config = sampler_pb2.MaxTokenLength()
+  # Field is missing.
+  with pytest.raises(errors.UserError) as e_info:
+    samplers.MaxlenTerminationCriterion(config)
+  assert "MaxTokenLength.maximum_tokens_in_sample must be > 0" == str(
+      e_info.value)
+  # Value is zero.
+  config.maximum_tokens_in_sample = 0
+  with pytest.raises(errors.UserError) as e_info:
+    samplers.MaxlenTerminationCriterion(config)
+  assert "MaxTokenLength.maximum_tokens_in_sample must be > 0" == str(
+      e_info.value)
+
+
+def test_MaxlenTerminationCriterion_SampleIsComplete():
+  """Test SampleIsComplete() returns expected values."""
+  t = samplers.MaxlenTerminationCriterion(sampler_pb2.MaxTokenLength(
+      maximum_tokens_in_sample=3))
+  assert not t.SampleIsComplete([])
+  assert not t.SampleIsComplete(['a'])
+  assert not t.SampleIsComplete(['a', 'b'])
+  assert t.SampleIsComplete(['a', 'b', 'c'])
+  assert t.SampleIsComplete(['a', 'b', 'c', 'd'])
+  assert t.SampleIsComplete(['a', 'b', 'c', 'd', 'e'])
 
 
 # Sampler.__init__() tests.

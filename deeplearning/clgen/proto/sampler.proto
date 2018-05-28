@@ -30,8 +30,9 @@ message SampleTerminationCriterion {
 }
 
 message MaxTokenLength {
+  // The maximum length of a sample, as a number of tokens. The length of the
+  // Sampler.start_text counts towards this total.
   optional int32 maximum_tokens_in_sample = 1;
-  optional bool include_start_text_in_maximum = 2;
 }
 
 message SymetricalTokenDepth {

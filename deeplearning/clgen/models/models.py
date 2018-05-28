@@ -388,8 +388,6 @@ class SampleProducer(threading.Thread):
     for criterion in self.sampler_config.termination_criteria:
       if criterion.HasField('maxlen'):
         self.max_length = criterion.maxlen.maximum_tokens_in_sample
-        if not criterion.maxlen.include_start_text_in_maximum:
-          self.max_length += len(self.sampler_config.start_text)
       elif criterion.HasField('symtok'):
         self.symmetrical_token_left = criterion.symtok.depth_increase_token
         self.symmetrical_token_right = criterion.symtok.depth_decrease_token
