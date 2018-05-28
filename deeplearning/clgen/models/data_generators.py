@@ -7,14 +7,15 @@ fit_generator() method to stream batches of training data.
 """
 
 import collections
+import sys
 
 import humanize
 import numpy as np
-import sys
 from absl import flags
 from absl import logging
 
 from deeplearning.clgen import corpuses
+from deeplearning.clgen import errors
 from deeplearning.clgen.proto import model_pb2
 
 
@@ -29,6 +30,15 @@ class DataGeneratorBase(object):
 
   def __init__(self, corpus: corpuses.Corpus,
                training_opts: model_pb2.TrainingOptions):
+    """Instantiate a data generator.
+
+    Args:
+      corpus: A Corpus instance.
+      training_opts: A TrainingOptions config proto.
+
+    Raises:
+      UserError: If the corpus is smaller than the sequence length.
+    """
     self.corpus = corpus
     self.training_opts = training_opts
     self.shuffle = training_opts.shuffle_corpus_contentfiles_between_epochs
@@ -36,17 +46,16 @@ class DataGeneratorBase(object):
     logging.info('Encoded corpus size: %s',
                  humanize.naturalsize(sys.getsizeof(self.encoded_corpus)))
     self.corpus_length = len(self.encoded_corpus)
-    self.sequence_length = min(self.training_opts.sequence_length,
-                               self.corpus_length - 1)
-    if self.sequence_length < self.training_opts.sequence_length:
-      logging.warning(
-          'Requested training.sequence_length (%d) is larger than the corpus '
-          '(%d). Reduced sequence length to %d',
-          self.training_opts.sequence_length,
-          self.corpus_length, self.sequence_length)
+    self.sequence_length = self.training_opts.sequence_length
+    if self.sequence_length >= self.corpus_length:
+      max_sequence_length = self.corpus_length - 1
+      raise errors.UserError(
+          f'Requested training.sequence_length ({self.sequence_length}) is '
+          f'larger than the corpus ({self.corpus_length}). '
+          f'Reduce the sequence length to <= {max_sequence_length}.')
     self.batch_size = min(
         training_opts.batch_size,
-        max(self.corpus_length - self.training_opts.sequence_length, 1))
+        max(self.corpus_length - self.training_opts.sequence_length - 1, 1))
     if self.batch_size < training_opts.batch_size:
       logging.warning(
           'Requested training.batch_size (%d) is larger than the corpus (%d). '

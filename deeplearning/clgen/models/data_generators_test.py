@@ -1,8 +1,10 @@
 """Unit tests for //deeplearning/clgen/models/data_generators.py."""
-import pytest
 import sys
+
+import pytest
 from absl import app
 
+from deeplearning.clgen import errors
 from deeplearning.clgen.models import data_generators
 
 
@@ -28,9 +30,10 @@ def test_DataGeneratorBase_sequence_length_too_large(abc_model_config):
   """Test that sequence length derives from TrainingOptions.sequence_length."""
   opt = abc_model_config.training
   opt.sequence_length = 50
-  dg = data_generators.DataGeneratorBase(
-      CorpusMock(corpus_length=10), opt)
-  assert dg.sequence_length == 9
+  with pytest.raises(errors.UserError) as e_info:
+    data_generators.DataGeneratorBase(CorpusMock(corpus_length=10), opt)
+  assert ("Requested training.sequence_length (50) is larger than the corpus "
+          "(10). Reduce the sequence length to <= 9.") == str(e_info.value)
 
 
 def test_DataGeneratorBase_batch_size(abc_model_config):
@@ -45,8 +48,9 @@ def test_DataGeneratorBase_batch_size_too_large(abc_model_config):
   """Test that batch size is reduced when larger than corpus."""
   opt = abc_model_config.training
   opt.batch_size = 50
+  opt.sequence_length = 5
   dg = data_generators.DataGeneratorBase(CorpusMock(corpus_length=10), opt)
-  assert dg.batch_size == 1
+  assert dg.batch_size == 4
 
 
 def main(argv):
