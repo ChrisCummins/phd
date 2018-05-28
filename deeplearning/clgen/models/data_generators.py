@@ -8,6 +8,7 @@ fit_generator() method to stream batches of training data.
 
 import collections
 import sys
+import time
 
 import humanize
 import numpy as np
@@ -127,6 +128,7 @@ class LazyVectorizingGenerator(DataGeneratorBase):
 
   def __next__(self) -> DataBatch:
     """Generate the next batch of X, y pairs."""
+    start_time = time.time()
     # Reset the position in the encoded corpus if we've run out of text.
     if (self.i + self.batch_size + self.sequence_length + 1 >=
         self.corpus_length):
@@ -147,8 +149,10 @@ class LazyVectorizingGenerator(DataGeneratorBase):
       X_data.append(sequence)
       y_data.append(next_token)
 
-    logging.debug('%s produced %d sequences of length %d', type(self).__name__,
-                  self.batch_size, self.sequence_length)
+    logging.debug('%s %dx%d batch %.2f ms',
+                  type(self).__name__,
+                  self.batch_size, self.sequence_length,
+                  (time.time() - start_time) * 1000)
 
     self.i += self.batch_size
     return self.Vectorize(DataBatch(X=X_data, y=y_data))
