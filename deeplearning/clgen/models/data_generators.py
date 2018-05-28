@@ -7,10 +7,10 @@ fit_generator() method to stream batches of training data.
 """
 
 import collections
-import sys
 
 import humanize
 import numpy as np
+import sys
 from absl import flags
 from absl import logging
 
@@ -35,19 +35,27 @@ class DataGeneratorBase(object):
     self.encoded_corpus = self.corpus.GetTrainingData(shuffle=self.shuffle)
     logging.info('Encoded corpus size: %s',
                  humanize.naturalsize(sys.getsizeof(self.encoded_corpus)))
-    self.corpus_len = len(self.encoded_corpus)
-    self.batch_size = min(training_opts.batch_size,
-                          self.corpus_len - self.corpus.sequence_length - 1)
+    self.corpus_length = len(self.encoded_corpus)
+    self.sequence_length = min(self.corpus.sequence_length,
+                               self.corpus_length - 1)
+    if self.sequence_length < self.corpus.sequence_length:
+      logging.warning(
+          'Requested Corpus.sequence_length (%d) is larger than the corpus '
+          '(%d). Reduced sequence length to %d', self.corpus.sequence_length,
+          self.corpus_length, self.sequence_length)
+    self.batch_size = min(
+        training_opts.batch_size,
+        max(self.corpus_length - self.corpus.sequence_length, 1))
     if self.batch_size < training_opts.batch_size:
       logging.warning(
           'Requested training.batch_size (%d) is larger than the corpus (%d). '
-          'Reduced batch size to %d', training_opts.batch_size, self.corpus_len,
-          self.batch_size)
+          'Reduced batch size to %d', training_opts.batch_size,
+          self.corpus_length, self.batch_size)
 
     # Set this publicly visibly attribute. The number of steps per epoch is
     # the total number of batches per epoch.
     self.steps_per_epoch = int(
-        self.corpus_len / (self.batch_size * self.corpus.sequence_length))
+        self.corpus_length / (self.batch_size * self.sequence_length))
 
   def __next__(self) -> DataBatch:
     raise NotImplementedError('DataGeneratorBase is abstract')
@@ -65,7 +73,7 @@ class DataGeneratorBase(object):
     # _ = keras.utils.to_categorical(data.y, self.corpus.vocabulary_size)
 
     X = np.zeros(
-        (self.batch_size, self.corpus.sequence_length,
+        (self.batch_size, self.sequence_length,
          self.corpus.vocabulary_size),
         dtype=np.bool)
     y = np.zeros((self.batch_size, self.corpus.vocabulary_size), dtype=np.bool)
@@ -85,16 +93,17 @@ class LazyVectorizingGenerator(DataGeneratorBase):
   corpus, but requires less memory.
   """
 
-  def __init__(self, *args, **kwargs):
-    super(LazyVectorizingGenerator, self).__init__(*args, **kwargs)
-    self.skip = 1  # TODO(cec): Add this as a field in Model proto.
+  def __init__(self, corpus: corpuses.Corpus,
+               training_opts: model_pb2.TrainingOptions):
+    super(LazyVectorizingGenerator, self).__init__(corpus, training_opts)
+    self.skip = 1  # TODO(cec): Add this as a field in Model.TrainingOptions.
 
     # Start index into the encoded corpus.
     self.i = 0
 
     # Create a dummy batch of data to get the size of it.
     x = np.zeros(
-        (self.batch_size, self.corpus.sequence_length,
+        (self.batch_size, self.sequence_length,
          self.corpus.vocabulary_size),
         dtype=np.bool)
     y = np.zeros((self.batch_size, self.corpus.vocabulary_size), dtype=np.bool)
@@ -109,27 +118,27 @@ class LazyVectorizingGenerator(DataGeneratorBase):
   def __next__(self) -> DataBatch:
     """Generate the next batch of X, y pairs."""
     # Reset the position in the encoded corpus if we've run out of text.
-    if (self.i + self.batch_size + self.corpus.sequence_length + 1 >=
-        self.corpus_len):
+    if (self.i + self.batch_size + self.sequence_length + 1 >=
+        self.corpus_length):
       self.i = 0
       if self.shuffle:
         self.encoded_corpus = self.corpus.GetTrainingData(shuffle=True)
 
-    # X_data = np.ndarray((self.batch_size, self.corpus.sequence_length),
+    # X_data = np.ndarray((self.batch_size, self.sequence_length),
     #                     dtype=np.int32)
     # y_data = np.ndarray((self.batch_size,), dtype=np.int32)
     X_data, y_data = [], []
     for i in range(self.i, self.i + self.batch_size, self.skip):
       sequence = np.array(
-          self.encoded_corpus[i:i + self.corpus.sequence_length])
-      next_token = self.encoded_corpus[i + self.corpus.sequence_length]
+          self.encoded_corpus[i:i + self.sequence_length])
+      next_token = self.encoded_corpus[i + self.sequence_length]
       # X_data[i] = sequence
       # y_data[i] = next_token
       X_data.append(sequence)
       y_data.append(next_token)
 
     logging.debug('%s produced %d sequences of length %d', type(self).__name__,
-                  self.batch_size, self.corpus.sequence_length)
+                  self.batch_size, self.sequence_length)
 
     self.i += self.batch_size
     return self.Vectorize(DataBatch(X=X_data, y=y_data))

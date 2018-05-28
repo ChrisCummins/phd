@@ -30,6 +30,18 @@ py_library(
     ],
 )
 
+py_test(
+    name = "data_generators_test",
+    srcs = ["data_generators_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":data_generators",
+        "//deeplearning/clgen:conftest",
+        "//deeplearning/clgen/proto:model_py_pb2",
+    ],
+)
+
 py_library(
     name = "models",
     srcs = ["models.py"],
