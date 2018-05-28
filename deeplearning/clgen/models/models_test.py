@@ -1,8 +1,7 @@
-"""Unit tests for //deeplearning/clgen/model.py."""
-import sys
-
+"""Unit tests for //deeplearning/clgen/models/models.py."""
 import checksumdir
 import pytest
+import sys
 from absl import app
 
 from deeplearning.clgen import errors
