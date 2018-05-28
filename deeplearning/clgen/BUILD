@@ -70,6 +70,7 @@ py_binary(
         "//lib/labm8:pbutil",
         "//lib/labm8:prof",
     ],
+    visibility = ["//visibility:public"],
 )
 
 py_test(
