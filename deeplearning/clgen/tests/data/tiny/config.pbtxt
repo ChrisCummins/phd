@@ -48,7 +48,7 @@ sampler {
   }
   termination_criteria {
     maxlen {
-      maximum_tokens_in_sample: 1000
+      maximum_tokens_in_sample: 500
     }
   }
 }
