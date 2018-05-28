@@ -265,6 +265,9 @@ class Model(object):
     with logutil.TeeLogsToFile(
         f'sampler_{sampler.hash}', self.cache.path / 'logs'):
       logging.info('Sampling %s', sampler)
+      if min_num_samples < 0:
+        logging.warning(
+            'Entering an infinite sample loop, this process will never end!')
       try:
         encoded_seed = self.corpus.atomizer.AtomizeString(sampler.start_text)
       except errors.VocabError:
@@ -294,7 +297,7 @@ class Model(object):
       for i, token in enumerate(encoded_seed):
         vectorized_seed[0, i, token] = 1
 
-      while len(samples) < min_num_samples:
+      while True:
         X = np.copy(vectorized_seed)
         sample_in_progress = []
         start_time = labdate.MillisecondsTimestamp()
@@ -319,6 +322,10 @@ class Model(object):
         p = self.SamplerCache(sampler) / f'{sample_id}.pbtxt'
         pbutil.ToFile(sample, p)
         samples.append(sample)
+        if min_num_samples > 0:
+          samples.append(sample)
+          if len(samples) >= min_num_samples:
+            break
 
     return samples
 
