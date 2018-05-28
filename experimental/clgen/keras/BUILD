@@ -1,22 +1,22 @@
 # Experiments while porting CLgen from Tensorflow to Keras models.
 
 py_test(
-    name = "profile_module_import",
-    srcs = ["profile_module_import.py"],
+    name = "benchmark_module_import",
+    srcs = ["benchmark_module_import.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
 )
 
 py_test(
-    name = "profile_model_init",
-    srcs = ["profile_model_init.py"],
+    name = "benchmark_model_init",
+    srcs = ["benchmark_model_init.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
 )
 
 py_test(
-    name = "profile_string_concatenation",
-    srcs = ["profile_string_concatenation.py"],
+    name = "benchmark_string_concatenation",
+    srcs = ["benchmark_string_concatenation.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
 )
