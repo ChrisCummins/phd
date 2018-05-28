@@ -59,9 +59,12 @@ class MaxlenTerminationCriterion(TerminationCriterionBase):
   """A termination criterion which limits the maximum length of a sample."""
 
   def __init__(self, config: sampler_pb2.MaxTokenLength):
-    self.max_len = pbutil.AssertFieldConstraint(
-        config, 'maximum_tokens_in_sample', lambda x: x > 1,
-        'MaxTokenLength.maximum_tokens_in_sample must be > 0')
+    try:
+      self.max_len = pbutil.AssertFieldConstraint(
+          config, 'maximum_tokens_in_sample', lambda x: x > 1,
+          'MaxTokenLength.maximum_tokens_in_sample must be > 0')
+    except pbutil.ProtoValueError as e:
+      raise errors.UserError(e)
 
   def SampleIsComplete(self, sample_in_progress: typing.List[str]) -> bool:
     """Determine whether to stop sampling."""
