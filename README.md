@@ -1,6 +1,6 @@
 # My PhD
 
-A self-contained monolothic repository for (almost) everything I have done while at the University of Edinburgh. Living an #open life.
+A monolothic repository for (almost) everything I have done while at the University of Edinburgh. Living an #open life.
 
 
 ##  Publications
@@ -143,17 +143,40 @@ A self-contained monolothic repository for (almost) everything I have done while
   </a>
 </h2>
 
+I use [Bazel](https://bazel.build) as my build system of choice, with a
+preliminary [bootstrap](/tools/bootstrap.sh) script to configure the build and
+prepare the host toolchain. **WARNING:** the bootstrapping *will* fuck with your
+system. It installs a bunch of packages, and, unless you happen to have exactly
+the same preferences as me as to how to you like your system set up, will likely
+shit all over your preferences. For this reason I *strongly* recommend building
+in a VM or using my docker image.
 
-### Requirements
+#### Docker Image
 
-* Ubuntu 16.04 or macOS.
-* OpenCL.
+Download and build from my [Dockerfile](https://github.com/ChrisCummins/phd/blob/master/tools/docker/Dockerfile):
 
+```sh
+$ cd "$(mktemp -d)"
+$ wget "https://github.com/ChrisCummins/phd/blob/master/tools/docker/Dockerfile"
+$ docker build -t phd .
+```
 
-### Installation
+Once built, launch a shell and test the universe using:
 
-Clone this repository and use the [bootstrap](/tools/bootstrap.sh) script to
-prepare the system dependencies and toolchain:
+```
+$ sudo docker run -it phd /bin/zsh
+# bazel test //...
+```
+
+#### Building Natively
+
+If you're feeling especially reckless or if you have a burner environment,
+try building natively. You could even build as root if you just want to watch
+the world burn. The build requirements are Ubuntu (>=16.04) or macOS, and 
+OpenCL. OpenCL comes free on Apple, for Linux you'll need to install appropriate
+drivers.
+
+Clone this repository and run the bootstrap script:
 
 ```sh
 $ git clone https://github.com/ChrisCummins/phd.git
