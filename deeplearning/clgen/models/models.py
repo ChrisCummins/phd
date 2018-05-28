@@ -200,8 +200,13 @@ class Model(object):
                                                    mode="min")
       generator = data_generators.AutoGenerator(self.corpus,
                                                 self.config.training)
-      logging.info('Steps per epoch: %s',
-                   humanize.intcomma(generator.steps_per_epoch))
+      logging.info('Step counts: %s per epoch, %s left to do, %s total',
+                   humanize.intcomma(generator.steps_per_epoch),
+                   humanize.intcomma(
+                       (target_num_epochs - starting_epoch) *
+                       generator.steps_per_epoch),
+                   humanize.intcomma(
+                       target_num_epochs * generator.steps_per_epoch))
       self.model.fit_generator(generator,
                                steps_per_epoch=generator.steps_per_epoch,
                                epochs=target_num_epochs - starting_epoch,
