@@ -9,6 +9,7 @@ import typing
 import humanize
 import numpy as np
 import progressbar
+from absl import flags
 from absl import logging
 from keras import callbacks
 from keras import models
@@ -29,12 +30,15 @@ from lib.labm8 import crypto
 from lib.labm8 import fs
 from lib.labm8 import labdate
 from lib.labm8 import lockfile
+from lib.labm8 import logutil
 from lib.labm8 import pbutil
 
 
+FLAGS = flags.FLAGS
+
+
 class Model(object):
-  """
-  A CLgen Model.
+  """A CLgen Model.
 
   Please note model instances should be treated as immutable. Upon
   instantiation, a model's properties are used to determine its hash. If you
@@ -69,6 +73,7 @@ class Model(object):
     # Create the necessary cache directories.
     (self.cache.path / 'checkpoints').mkdir(exist_ok=True)
     (self.cache.path / 'samples').mkdir(exist_ok=True)
+    (self.cache.path / 'logs').mkdir(exist_ok=True)
     logging.debug('model %s', self.hash)
 
     # Validate metadata against cache.
@@ -100,6 +105,13 @@ class Model(object):
     between different models if the only variable is the epoch count. E.g.
     we have a model trained for 10 epochs, we can use the checkpoint as the
     starting point for a training a model for 20 epochs.
+
+    Args:
+      corpus: A corpus instance.
+      config: A Model config proto.
+
+    Returns:
+      The unique model ID.
     """
     config_to_hash = model_pb2.Model()
     config_to_hash.CopyFrom(config)
@@ -108,7 +120,7 @@ class Model(object):
     return crypto.sha1_list(corpus_.hash,
                             config_to_hash.SerializeToString())
 
-  def GetKerasModel(self) -> models.Sequential:
+  def GetTrainableModel(self) -> models.Sequential:
     """Get the Keras model.
 
     If there is a cached model description, the model will be initialized from
@@ -132,7 +144,7 @@ class Model(object):
   @property
   def model(self) -> models.Sequential:
     if self._model is None:
-      self._model = self.GetKerasModel()
+      self._model = self.GetTrainableModel()
     return self._model
 
   def _LockedTrain(self) -> 'Model':
@@ -154,7 +166,7 @@ class Model(object):
 
     # Early exit in case the model is already sufficiently trained.
     if target_num_epochs == self._current_weights_epoch:
-      return
+      return self
 
     epoch_checkpoints = self.epoch_checkpoints
     if len(epoch_checkpoints) >= target_num_epochs:
@@ -162,34 +174,38 @@ class Model(object):
       # simply the weights from that epoch and call it a day.
       self.model.load_weights(
           epoch_checkpoints[target_num_epochs - 1])
-      return
-    elif epoch_checkpoints:
-      # We have already trained a model at least part of the way to our target
-      # number of epochs, so load the most recent one.
-      self.model.load_weights(epoch_checkpoints[-1])
-      starting_epoch = len(epoch_checkpoints)
+      return self
 
-    # model.load_weights(self.most_recent_checkpoint_path)
-    checkpoint_dir = pathlib.Path(self.cache.keypath('checkpoints'))
-    checkpoint_dir.mkdir(parents=True, exist_ok=True)
-    file_path = str(
-        checkpoint_dir) + "/checkpoint_weights_{epoch:02d}_{loss:.4f}.hdf5"
-    checkpoint = callbacks.ModelCheckpoint(file_path, monitor="loss", verbose=1,
-                                           save_best_only=False, mode="min")
-    generator = data_generators.AutoGenerator(self.corpus, self.config.training)
-    logging.info('Steps per epoch: %s',
-                 humanize.intcomma(generator.steps_per_epoch))
-    self.model.fit_generator(generator,
-                             steps_per_epoch=generator.steps_per_epoch,
-                             epochs=target_num_epochs - starting_epoch,
-                             callbacks=[checkpoint])
-    self._current_weights_epoch = self.config.training.num_epochs
-    # TODO(cec): Checkpoint callback.
-    # stat = self.meta.training_stats.add()
-    # stat.batch_num = batch_num + 1
-    # stat.time_ms = int(epoch_duration * 1000)
-    # stat.training_cost = float(train_cost)
-    # self._WriteMetafile()
+    with logutil.TeeLogsToFile('train', self.cache.path / 'logs'):
+      if epoch_checkpoints:
+        # We have already trained a model at least part of the way to our target
+        # number of epochs, so load the most recent one.
+        self.model.load_weights(epoch_checkpoints[-1])
+        starting_epoch = len(epoch_checkpoints)
+
+      # model.load_weights(self.most_recent_checkpoint_path)
+      checkpoint_dir = pathlib.Path(self.cache.keypath('checkpoints'))
+      checkpoint_dir.mkdir(parents=True, exist_ok=True)
+      file_path = str(
+          checkpoint_dir) + "/checkpoint_weights_{epoch:02d}_{loss:.4f}.hdf5"
+      checkpoint = callbacks.ModelCheckpoint(file_path, monitor="loss",
+                                             verbose=1,
+                                             save_best_only=False, mode="min")
+      generator = data_generators.AutoGenerator(self.corpus,
+                                                self.config.training)
+      logging.info('Steps per epoch: %s',
+                   humanize.intcomma(generator.steps_per_epoch))
+      self.model.fit_generator(generator,
+                               steps_per_epoch=generator.steps_per_epoch,
+                               epochs=target_num_epochs - starting_epoch,
+                               callbacks=[checkpoint])
+      self._current_weights_epoch = self.config.training.num_epochs
+      # TODO(cec): Checkpoint callback.
+      # stat = self.meta.training_stats.add()
+      # stat.batch_num = batch_num + 1
+      # stat.time_ms = int(epoch_duration * 1000)
+      # stat.training_cost = float(train_cost)
+      # self._WriteMetafile()
     return self
 
   def Train(self) -> 'Model':
@@ -234,60 +250,63 @@ class Model(object):
     """
     self.SamplerCache(sampler).mkdir(exist_ok=True)
     self.Train()
-    logging.info('Sampling %s', sampler)
-    try:
-      encoded_seed = self.corpus.atomizer.AtomizeString(sampler.start_text)
-    except errors.VocabError:
-      raise errors.InvalidStartText(
-          'Sampler start text cannot be encoded using the corpus vocabulary: '
-          f"'{sampler.start_text}'")
-    if sampler.has_symmetrical_tokens:
+    with logutil.TeeLogsToFile(
+        f'sampler_{sampler.hash}', self.cache.path / 'logs'):
+      logging.info('Sampling %s', sampler)
       try:
-        l = self.corpus.atomizer.AtomizeString(sampler.symmetrical_token_left)
-        r = self.corpus.atomizer.AtomizeString(sampler.symmetrical_token_right)
-        if len(l) > 1 or len(r) > 1:
-          raise errors.InvalidSymtokTokens(
-              'Sampler symmetrical depth tokens do not encode to a single '
-              'token using the corpus vocabulary')
+        encoded_seed = self.corpus.atomizer.AtomizeString(sampler.start_text)
       except errors.VocabError:
-        raise errors.InvalidSymtokTokens(
-            'Sampler symmetrical depth tokens cannot be encoded using the '
-            'corpus vocabulary')
+        raise errors.InvalidStartText(
+            'Sampler start text cannot be encoded using the corpus vocabulary: '
+            f"'{sampler.start_text}'")
+      if sampler.has_symmetrical_tokens:
+        try:
+          l = self.corpus.atomizer.AtomizeString(sampler.symmetrical_token_left)
+          r = self.corpus.atomizer.AtomizeString(
+              sampler.symmetrical_token_right)
+          if len(l) > 1 or len(r) > 1:
+            raise errors.InvalidSymtokTokens(
+                'Sampler symmetrical depth tokens do not encode to a single '
+                'token using the corpus vocabulary')
+        except errors.VocabError:
+          raise errors.InvalidSymtokTokens(
+              'Sampler symmetrical depth tokens cannot be encoded using the '
+              'corpus vocabulary')
 
-    samples = []
+      samples = []
 
-    # TODO(cec): Re-implement batched sampling.
-    vectorized_seed = np.zeros(
-        (1, self.corpus.sequence_length, self.corpus.vocabulary_size),
-        dtype=np.bool)
-    for i, token in enumerate(encoded_seed):
-      vectorized_seed[0, i, token] = 1
+      # TODO(cec): Re-implement batched sampling.
+      vectorized_seed = np.zeros(
+          (1, self.corpus.sequence_length, self.corpus.vocabulary_size),
+          dtype=np.bool)
+      for i, token in enumerate(encoded_seed):
+        vectorized_seed[0, i, token] = 1
 
-    while len(samples) < min_num_samples:
-      X = np.copy(vectorized_seed)
-      sample_in_progress = []
-      start_time = labdate.MillisecondsTimestamp()
-      # Save a few cycles by not going via the model() property every time we
-      # need to access it.
-      model = self.model
-      while True:
-        prediction = np.argmax(model.predict(X, verbose=0))
-        sample_in_progress.append(self.corpus.atomizer.decoder[prediction])
-        activations = np.zeros((1, 1, self.corpus.vocabulary_size),
-                               dtype=np.bool)
-        activations[0, 0, prediction] = 1
-        X = np.concatenate((X[:, 1:, :], activations), axis=1)
-        if sampler.SampleIsComplete(sample_in_progress):
-          break
-      end_time = labdate.MillisecondsTimestamp()
-      sample = model_pb2.Sample(text=''.join(sample_in_progress),
-                                sample_start_epoch_ms_utc=start_time,
-                                sample_time_ms=end_time - start_time,
-                                num_tokens=len(sample_in_progress))
-      sample_id = crypto.sha256_str(sample.text)
-      p = self.SamplerCache(sampler) / f'{sample_id}.pbtxt'
-      pbutil.ToFile(sample, p)
-      samples.append(sample)
+      while len(samples) < min_num_samples:
+        X = np.copy(vectorized_seed)
+        sample_in_progress = []
+        start_time = labdate.MillisecondsTimestamp()
+        # Save a few cycles by not going via the model() property every time we
+        # need to access it.
+        model = self.model
+        while True:
+          prediction = np.argmax(model.predict(X, verbose=0))
+          sample_in_progress.append(self.corpus.atomizer.decoder[prediction])
+          activations = np.zeros((1, 1, self.corpus.vocabulary_size),
+                                 dtype=np.bool)
+          activations[0, 0, prediction] = 1
+          X = np.concatenate((X[:, 1:, :], activations), axis=1)
+          if sampler.SampleIsComplete(sample_in_progress):
+            break
+        end_time = labdate.MillisecondsTimestamp()
+        sample = model_pb2.Sample(text=''.join(sample_in_progress),
+                                  sample_start_epoch_ms_utc=start_time,
+                                  sample_time_ms=end_time - start_time,
+                                  num_tokens=len(sample_in_progress))
+        sample_id = crypto.sha256_str(sample.text)
+        p = self.SamplerCache(sampler) / f'{sample_id}.pbtxt'
+        pbutil.ToFile(sample, p)
+        samples.append(sample)
 
     return samples
 

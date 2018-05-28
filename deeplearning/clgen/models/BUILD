@@ -51,6 +51,7 @@ py_library(
         "//lib/labm8:labdate",
         "//lib/labm8:labtypes",
         "//lib/labm8:lockfile",
+        "//lib/labm8:logutil",
         "//lib/labm8:pbutil",
     ],
 )

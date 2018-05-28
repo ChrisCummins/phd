@@ -5,7 +5,6 @@ import checksumdir
 import pytest
 from absl import app
 
-from deeplearning.clgen import errors
 from deeplearning.clgen.models import models
 from deeplearning.clgen.proto import internal_pb2
 from deeplearning.clgen.proto import model_pb2
@@ -119,6 +118,8 @@ def test_Model_metafile(clgen_cache_dir, abc_model_config):
 
 
 # TODO(cec): Add tests on ModelMeta contents.
+
+# TODO(cec): Add tests on log files and stderr logging.
 
 
 def test_Model_epoch_checkpoints_untrained(clgen_cache_dir, abc_model_config):
