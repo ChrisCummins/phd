@@ -6,14 +6,10 @@ model {
     language: "opencl"
     path: "/mnt/cc/data/kernels/github"
     # Note these tokens omit the optional __ qualifiers on OpenCL keywords.
-    # The preprocessor
-    # "deeplearning.clgen.preprocessors.opencl:StripDoubleUnderscorePrefixes"
-    # should be used to strip any __ qualifiers in the corpus.
+    # The __ qualifiers are stripped in the corpus by the preprocessor
+    # deeplearning.clgen.preprocessors.opencl:StripDoubleUnderscorePrefixes.
     greedy_multichar_atomizer {
       tokens: "  "
-      tokens: "*/"
-      tokens: "/*"
-      tokens: "//"
       tokens: "__assert"
       tokens: "__attribute"
       tokens: "__builtin_astype"
@@ -36,13 +32,10 @@ model {
       tokens: "constant"
       tokens: "continue"
       tokens: "default"
-      tokens: "define"
       tokens: "defined"
       tokens: "do"
       tokens: "double"
-      tokens: "elif"
       tokens: "else"
-      tokens: "endif"
       tokens: "enum"
       tokens: "error"
       tokens: "event_t"
@@ -60,8 +53,6 @@ model {
       tokens: "goto"
       tokens: "half"
       tokens: "if"
-      tokens: "ifdef"
-      tokens: "ifndef"
       tokens: "image1d_array_t"
       tokens: "image1d_buffer_t"
       tokens: "image1d_t"
