@@ -264,7 +264,7 @@ class Model(object):
     self.Train()
     with logutil.TeeLogsToFile(
         f'sampler_{sampler.hash}', self.cache.path / 'logs'):
-      logging.info('Sampling %s', sampler)
+      logging.info("Sampling: '%s'", sampler.start_text)
       if min_num_samples < 0:
         logging.warning(
             'Entering an infinite sample loop, this process will never end!')
@@ -274,19 +274,20 @@ class Model(object):
         raise errors.InvalidStartText(
             'Sampler start text cannot be encoded using the corpus vocabulary: '
             f"'{sampler.start_text}'")
-      if sampler.has_symmetrical_tokens:
-        try:
-          l = self.corpus.atomizer.AtomizeString(sampler.symmetrical_token_left)
-          r = self.corpus.atomizer.AtomizeString(
-              sampler.symmetrical_token_right)
-          if len(l) > 1 or len(r) > 1:
-            raise errors.InvalidSymtokTokens(
-                'Sampler symmetrical depth tokens do not encode to a single '
-                'token using the corpus vocabulary')
-        except errors.VocabError:
-          raise errors.InvalidSymtokTokens(
-              'Sampler symmetrical depth tokens cannot be encoded using the '
-              'corpus vocabulary')
+      # TODO(cec): Update this to use the new sampler API.
+      # if sampler.has_symmetrical_tokens:
+      #   try:
+      #     l = self.corpus.atomizer.AtomizeString(sampler.symmetrical_token_left)
+      #     r = self.corpus.atomizer.AtomizeString(
+      #         sampler.symmetrical_token_right)
+      #     if len(l) > 1 or len(r) > 1:
+      #       raise errors.InvalidSymtokTokens(
+      #           'Sampler symmetrical depth tokens do not encode to a single '
+      #           'token using the corpus vocabulary')
+      #   except errors.VocabError:
+      #     raise errors.InvalidSymtokTokens(
+      #         'Sampler symmetrical depth tokens cannot be encoded using the '
+      #         'corpus vocabulary')
 
       samples = []
 
@@ -299,14 +300,18 @@ class Model(object):
 
       while True:
         X = np.copy(vectorized_seed)
-        sample_in_progress = []
+        sample_in_progress = [sampler.start_text]
+        print('=== BEGIN CLGEN SAMPLE ===')
+        sys.stdout.write(sampler.start_text)
         start_time = labdate.MillisecondsTimestamp()
         # Save a few cycles by not going via the model() property every time we
         # need to access it.
         model = self.model
         while True:
           prediction = np.argmax(model.predict(X, verbose=0))
-          sample_in_progress.append(self.corpus.atomizer.decoder[prediction])
+          token = self.corpus.atomizer.decoder[prediction]
+          sys.stdout.write(token)
+          sample_in_progress.append(token)
           activations = np.zeros((1, 1, self.corpus.vocabulary_size),
                                  dtype=np.bool)
           activations[0, 0, prediction] = 1
@@ -322,6 +327,7 @@ class Model(object):
         p = self.SamplerCache(sampler) / f'{sample_id}.pbtxt'
         pbutil.ToFile(sample, p)
         samples.append(sample)
+        sys.stdout.write('\n')
         if min_num_samples > 0:
           samples.append(sample)
           if len(samples) >= min_num_samples:

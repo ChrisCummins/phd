@@ -306,7 +306,7 @@ WHERE ContentFiles.id NOT IN (
     # Set the corpus size as the number of tokens.
     num_tokens = len(tokenized_corpus)
     self._size = num_tokens
-    logging.info('%s dervied %s token corpus of length %s in %.2f ms.',
+    logging.info('%s derived %s token corpus of length %s in %.2f ms.',
                  type(self.atomizer).__name__,
                  humanize.intcomma(len(self.atomizer.vocab)),
                  humanize.intcomma(len(tokenized_corpus)),
