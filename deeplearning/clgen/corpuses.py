@@ -343,37 +343,6 @@ WHERE ContentFiles.id NOT IN (
       self.GetTrainingData(False)
       return self._size
 
-  def ResetBatchPointer(self) -> None:
-    """
-    Resets batch pointer to first batch.
-    """
-    self._pointer = 0
-
-  def next_batch(self) -> typing.Tuple[np.array, np.array]:
-    """
-    Fetch next batch indices.
-
-    Returns
-    -------
-    typing.Tuple[np.array, np.array]
-        X, Y batch tuple.
-    """
-    x = self._x_batches[self._pointer]
-    y = self._y_batches[self._pointer]
-    self._pointer += 1
-    return x, y
-
-  def set_batch_pointer(self, pointer: int) -> None:
-    """
-    Set batch pointer.
-
-    Parameters
-    ----------
-    pointer : int
-        New batch pointer.
-    """
-    self._pointer = pointer
-
   def GetPreprocessedKernels(self, status: int = 0) -> typing.Iterable[str]:
     """
     Return an iterator over all preprocessed kernels.
