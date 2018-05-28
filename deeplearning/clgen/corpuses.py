@@ -4,15 +4,16 @@ A training corpus is a set of one or more "contentfiles", where each contentfile
 is a file containing text to train over.
 """
 import codecs
+import os
 import pathlib
 import pickle
 import re
 import typing
 from tempfile import NamedTemporaryFile
-from time import time
 
 import humanize
 import numpy as np
+import time
 from absl import logging
 
 from deeplearning.clgen import atomizers
@@ -77,7 +78,8 @@ class Corpus(object):
     # an id was specified.
     path = None
     if config.HasField('path'):
-      path = UnpackDirectoryIfNeeded(pathlib.Path(config.path).absolute())
+      path = pathlib.Path(os.path.expandvars(config.path)).absolute()
+      path = UnpackDirectoryIfNeeded(path)
       if not fs.isdir(path):
         raise errors.UserError(
             "Corpus path '{}' is not a directory".format(path))
@@ -146,7 +148,7 @@ class Corpus(object):
     modified = False
     if self.config.preprocessor:
       try:
-        preprocess_time = time()
+        preprocess_time = time.time()
         if preprocessors.PreprocessDatabase(
             pathlib.Path(self.contentfiles_cache["kernels.db"]), self.language,
             self.config.preprocessor):
@@ -175,7 +177,7 @@ WHERE ContentFiles.id NOT IN (
     # status 0.
 
     if modified:
-      preprocess_time = time() - preprocess_time
+      preprocess_time = time.time() - preprocess_time
       self.meta.preprocess_time_ms += int(preprocess_time * 1000)
       self._FlushMeta()
 
@@ -296,6 +298,7 @@ WHERE ContentFiles.id NOT IN (
     Returns:
       The encoded corpus.
     """
+    start_time = time.time()
     # Generate a corpus by randomly shuffling the contentfiles.
     corpus_text = self.ConcatenateTextCorpus(shuffle)
     # Encode the corpus into an array of encoded tokens.
@@ -303,9 +306,11 @@ WHERE ContentFiles.id NOT IN (
     # Set the corpus size as the number of tokens.
     num_tokens = len(tokenized_corpus)
     self._size = num_tokens
-    logging.info('Dervied %s token corpus of length %s',
+    logging.info('%s dervied %s token corpus of length %s in %.2f ms.',
+                 type(self.atomizer).__name__,
+                 humanize.intcomma(len(self.atomizer.vocab)),
                  humanize.intcomma(len(tokenized_corpus)),
-                 humanize.intcomma(self.sequence_length))
+                 int(round(time.time() - start_time)))
     return tokenized_corpus
 
   @property
