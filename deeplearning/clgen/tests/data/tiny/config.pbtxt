@@ -1,10 +1,10 @@
 # File: //deeplearning/deepsmith/proto/clgen.proto
 # Proto: clgen.Instance
-clgen_working_dir: "/var/phd/clgen/tiny"
+working_dir: "/var/phd/clgen/tiny"
 model {
   corpus {
     language: "opencl"
-    path: "corpus.tar.bz2"
+    path: "$PWD/corpus.tar.bz2"
     ascii_character_atomizer: true
     sequence_length: 50
     contentfile_separator: "\n\n"
