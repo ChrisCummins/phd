@@ -20,3 +20,10 @@ py_test(
     default_python_version = "PY3",
     srcs_version = "PY3",
 )
+
+py_test(
+    name = "log_to_file",
+    srcs = ["log_to_file.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+)
