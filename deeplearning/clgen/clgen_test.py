@@ -6,113 +6,171 @@ import tempfile
 
 import pytest
 from absl import app
+from absl import flags
 
 from deeplearning.clgen import clgen
-from deeplearning.clgen.tests import testlib as tests
-from lib.labm8 import fs
-from lib.labm8 import pbutil
-from lib.labm8 import tar
+from deeplearning.clgen import errors
 
 
-def test_run(clgen_cache_dir):
-  """Test that cli.run() returns correct value for function call."""
+FLAGS = flags.FLAGS
+
+
+# Instance tests.
+
+
+def test_Instance_no_working_dir_field(abc_instance_config):
+  """Test that working_dir is None when no working_dir field in config."""
+  abc_instance_config.ClearField('working_dir')
+  instance = clgen.Instance(abc_instance_config)
+  assert instance.working_dir is None
+
+
+def test_Instance_working_dir_shell_variable_expansion(abc_instance_config):
+  """Test that shell variables are expanded in working_dir."""
+  working_dir = abc_instance_config.working_dir
+  os.environ['FOO'] = working_dir
+  abc_instance_config.working_dir = '$FOO/'
+  instance = clgen.Instance(abc_instance_config)
+  assert str(instance.working_dir) == working_dir
+
+
+def test_Instance_no_model_field(abc_instance_config):
+  """Test that UserError is raised when no model field in config."""
+  abc_instance_config.ClearField('model')
+  with pytest.raises(errors.UserError) as e_info:
+    clgen.Instance(abc_instance_config)
+  assert "Field not set: 'Instance.model'" == str(e_info.value)
+
+
+def test_Instance_no_sampler_field(abc_instance_config):
+  """Test that UserError is raised when no model field in config."""
+  abc_instance_config.ClearField('model')
+  with pytest.raises(errors.UserError) as e_info:
+    clgen.Instance(abc_instance_config)
+  assert "Field not set: 'Instance.model'" == str(e_info.value)
+
+
+def test_Instance_Session_clgen_dir(abc_instance_config):
+  """Test that $CLEN_CACHE is set to working_dir inside a session."""
+  instance = clgen.Instance(abc_instance_config)
+  with instance.Session():
+    assert os.environ['CLGEN_CACHE'] == abc_instance_config.working_dir
+
+
+def test_Instance_Session_no_working_dir(abc_instance_config):
+  """Test that $CLEN_CACHE is not set when there's no working_dir."""
+  abc_instance_config.ClearField('working_dir')
+  os.environ['CLGEN_CACHE'] = 'foo'
+  instance = clgen.Instance(abc_instance_config)
+  with instance.Session():
+    assert os.environ['CLGEN_CACHE'] == 'foo'
+
+
+def test_Instance_Session_yield_value(abc_instance_config):
+  """Test that Session() yields the instance."""
+  instance = clgen.Instance(abc_instance_config)
+  with instance.Session() as s:
+    assert instance == s
+
+
+# RunWithErrorHandling() tests.
+
+def test_RunWithErrorHandling_return_value(clgen_cache_dir):
+  """Test that RunWithErrorHandling() returns correct value for function."""
   del clgen_cache_dir
-  assert clgen.run(lambda a, b: a // b, 4, 2) == 2
+  assert clgen.RunWithErrorHandling(lambda a, b: a // b, 4, 2) == 2
 
 
-# def test_run_exception_handler(clgen_cache_dir):
-#   del clgen_cache_dir
-#   os.environ["DEBUG"] = ""
-#   with pytest.raises(SystemExit):
-#     cli.run(lambda a, b: a // b, 1, 0)
-
-
-def test_run_exception_debug(clgen_cache_dir):
-  """Test that cli.run() doesn't catch exception when $DEBUG is set."""
+def test_RunWithErrorHandling_system_exit(clgen_cache_dir):
+  """Test that SystemExit is raised on exception."""
   del clgen_cache_dir
-  os.environ["DEBUG"] = "1"
+  with pytest.raises(SystemExit):
+    clgen.RunWithErrorHandling(lambda a, b: a // b, 1, 0)
+
+
+def test_RunWithErrorHandling_exception_debug(clgen_cache_dir):
+  """Test that FLAGS.debug disables exception catching."""
+  del clgen_cache_dir
+  flags.FLAGS(['argv[0]', '--clgen_debug'])
   with pytest.raises(ZeroDivisionError):
-    clgen.run(lambda a, b: a // b, 1, 0)
+    clgen.RunWithErrorHandling(lambda a, b: a // b, 1, 0)
 
 
-def test_cli_test_cache_path(clgen_cache_dir):
-  del clgen_cache_dir
-  with pytest.raises(SystemExit):
-    clgen.main("test --cache-path".split())
+# main tests.
+
+def test_main_unrecognized_arguments():
+  """Test that UsageError is raised if arguments are not recognized."""
+  with pytest.raises(app.UsageError) as e_info:
+    clgen.main(['argv[0]', '--foo', '--bar'])
+  assert "Unrecognized command line options: '--foo --bar'" == str(e_info.value)
 
 
-def test_cli_test_coverage_path(clgen_cache_dir):
-  del clgen_cache_dir
-  with pytest.raises(SystemExit):
-    clgen.main("test --coverage-path".split())
+def test_main_no_config_flag():
+  """Test that UsageError is raised if --config flag not set."""
+  with pytest.raises(app.UsageError) as e_info:
+    clgen.main(['argv[0]'])
+  assert "Missing required argument: '--config'" == str(e_info.value)
 
 
-def test_cli_test_coveragerc_path(clgen_cache_dir):
-  del clgen_cache_dir
-  with pytest.raises(SystemExit):
-    clgen.main("test --coveragerc-path".split())
-
-
-def test_cli(clgen_cache_dir):
-  del clgen_cache_dir
-  fs.rm("kernels.db")
-  clgen.main("db init kernels.db".split())
-  assert fs.exists("kernels.db")
-
-  corpus_path = tests.archive("tiny", "corpus")
-  clgen.main("db explore kernels.db".split())
-  clgen.main(f"fetch fs kernels.db {corpus_path}".split())
-  clgen.main("preprocess kernels.db".split())
-  clgen.main("db explore kernels.db".split())
-
-  fs.rm("kernels_out")
-  clgen.main("db dump kernels.db -d kernels_out".split())
-  assert fs.isdir("kernels_out")
-  assert len(fs.ls("kernels_out")) >= 1
-
-  fs.rm("kernels.cl")
-  clgen.main("db dump kernels.db kernels.cl --file-sep --eof --reverse".split())
-  assert fs.isfile("kernels.cl")
-
-  fs.rm("kernels_out")
-  clgen.main("db dump kernels.db --input-samples -d kernels_out".split())
-  assert fs.isdir("kernels_out")
-  assert len(fs.ls("kernels_out")) == 250
-
-  fs.rm("kernels.db")
-  fs.rm("kernels_out")
-
-
-def test_cli_train(clgen_cache_dir, abc_model_config):
-  del clgen_cache_dir
-  os.environ["DEBUG"] = "1"
-  with tempfile.TemporaryDirectory(prefix="clgen_") as d:
-    with tests.chdir(d):
-      fs.cp(tests.data_path("pico", "corpus.tar.bz2"), './corpus.tar.bz2')
-      tar.unpack_archive('corpus.tar.bz2')
-      pbutil.ToFile(abc_model_config, pathlib.Path('model.pbtxt'))
-      clgen.main("--corpus-dir model.pbtxt".split())
-      clgen.main("--model-dir model.pbtxt".split())
-      clgen.main("-v train model.pbtxt".split())
-
-
-def test_cli_sample(clgen_cache_dir, abc_model_config, abc_sampler_config):
-  del clgen_cache_dir
+def test_main_config_file_not_found():
+  """Test that UsageError is raised if --config flag not found."""
   with tempfile.TemporaryDirectory() as d:
-    with tests.chdir(d):
-      fs.cp(tests.data_path("pico", "corpus.tar.bz2"), './corpus.tar.bz2')
-      pbutil.ToFile(abc_model_config, pathlib.Path('model.pbtxt'))
-      pbutil.ToFile(abc_sampler_config, pathlib.Path('sampler.pbtxt'))
-      clgen.main("--corpus-dir model.pbtxt".split())
-      clgen.main("--model-dir model.pbtxt".split())
-      clgen.main("--sampler-dir model.pbtxt sampler.pbtxt".split())
-      clgen.main("ls files model.pbtxt sampler.pbtxt".split())
+    flags.FLAGS.unparse_flags()
+    flags.FLAGS(['argv[0]', '--config', f'{d}/config.pbtxt'])
+    with pytest.raises(app.UsageError) as e_info:
+      clgen.main(['argv[0]'])
+    assert f"File not found: '{d}/config.pbtxt'" == str(e_info.value)
 
 
-def test_cli_ls(clgen_cache_dir):
-  del clgen_cache_dir
-  clgen.main("ls models".split())
-  clgen.main("ls samplers".split())
+def test_main_print_cache_path_corpus(abc_instance_file, capsys):
+  """Test that --print_cache_path=corpus prints directory path."""
+  flags.FLAGS.unparse_flags()
+  flags.FLAGS(
+      ['argv[0]', '--config', abc_instance_file, '--print_cache_path=corpus'])
+  clgen.main([])
+  out, err = capsys.readouterr()
+  assert '/corpus/' in out
+  assert pathlib.Path(out.strip()).is_dir()
+
+
+def test_main_print_cache_path_model(abc_instance_file, capsys):
+  """Test that --print_cache_path=model prints directory path."""
+  flags.FLAGS.unparse_flags()
+  flags.FLAGS(
+      ['argv[0]', '--config', abc_instance_file, '--print_cache_path=model'])
+  clgen.main([])
+  out, err = capsys.readouterr()
+  assert '/model/' in out
+  assert pathlib.Path(out.strip()).is_dir()
+
+
+def test_main_print_cache_path_sampler(abc_instance_file, capsys):
+  """Test that --print_cache_path=sampler prints directory path."""
+  flags.FLAGS.unparse_flags()
+  flags.FLAGS(
+      ['argv[0]', '--config', abc_instance_file, '--print_cache_path=sampler'])
+  clgen.main([])
+  out, err = capsys.readouterr()
+  assert '/samples/' in out
+  # A sampler's cache isn't created until Sample() is called.
+  assert not pathlib.Path(out.strip()).is_dir()
+
+
+def test_main_print_cache_invalid_argument(abc_instance_file):
+  """Test that UsageError raised if --print_cache_path arg not valid."""
+  flags.FLAGS.unparse_flags()
+  flags.FLAGS(
+      ['argv[0]', '--config', abc_instance_file, '--print_cache_path=foo'])
+  with pytest.raises(app.UsageError) as e_info:
+    clgen.main([])
+  assert "Invalid --print_cache_path argument: 'foo'" == str(e_info.value)
+
+
+def test_main_min_samples(abc_instance_file):
+  """Test that min_samples samples are produced."""
+  flags.FLAGS.unparse_flags()
+  flags.FLAGS(['argv[0]', '--config', abc_instance_file, '--min_samples', '1'])
+  clgen.main([])
 
 
 def main(argv):

@@ -108,6 +108,7 @@ py_library(
     visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = [
         ":dbutil",
+        "//deeplearning/clgen/proto:clgen_py_pb2",
         "//deeplearning/clgen/proto:corpus_py_pb2",
         "//deeplearning/clgen/proto:model_py_pb2",
         "//deeplearning/clgen/proto:sampler_py_pb2",

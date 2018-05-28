@@ -8,9 +8,11 @@ import pytest
 from absl import flags
 
 from deeplearning.clgen import dbutil
+from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
+from lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS
@@ -128,3 +130,19 @@ def abc_db_path(empty_db_path) -> str:
   db.commit()
   db.close()
   return empty_db_path
+
+
+@pytest.fixture(scope='function')
+def abc_instance_config(clgen_cache_dir, abc_model_config,
+                        abc_sampler_config) -> clgen_pb2.Instance:
+  """A test fixture that returns an Instance config proto."""
+  return clgen_pb2.Instance(working_dir=clgen_cache_dir,
+                            model=abc_model_config, sampler=abc_sampler_config)
+
+
+@pytest.fixture(scope='function')
+def abc_instance_file(abc_instance_config) -> str:
+  """A test fixture that returns a path to an Instance config file."""
+  with tempfile.NamedTemporaryFile() as f:
+    pbutil.ToFile(abc_instance_config, pathlib.Path(f.name))
+    yield f.name
