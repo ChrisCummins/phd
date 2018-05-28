@@ -14,7 +14,10 @@ message Sampler {
   // seed and the same settings will produce the same output. If no seed is set,
   // the RNG is seeded (pseudo)randomly.
   optional int64 seed = 3;
-  // The criteria that determine when to terminate a sample.
+  // The criteria that determine when to terminate a sample, in the order in
+  // which they will be executed. Duplicates are allowed, for example if you
+  // would like to have symmetrical token depth counters for two pairs of
+  // tokens.
   repeated SampleTerminationCriterion termination_criteria = 4;
 }
 
