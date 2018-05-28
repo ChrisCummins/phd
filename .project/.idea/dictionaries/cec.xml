@@ -1,8 +1,10 @@
 <component name="ProjectDictionaryState">
   <dictionary name="cec">
     <words>
+      <w>absl</w>
       <w>bazel</w>
       <w>bazelutil</w>
+      <w>capsys</w>
       <w>cflags</w>
       <w>clgen</w>
       <w>clipnorm</w>
@@ -16,6 +18,7 @@
       <w>keras</w>
       <w>labm</w>
       <w>lgen</w>
+      <w>logtostderr</w>
       <w>lsize</w>
       <w>lstm</w>
       <w>opencl</w>
