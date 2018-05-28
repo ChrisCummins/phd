@@ -1,204 +1,104 @@
 """Unit tests for //lib/labm8:pbutil."""
-import gzip
-import json
 import pathlib
+import sys
 import tempfile
 
-import google.protobuf.message
 import pytest
-import sys
 from absl import app
 
 from lib.labm8 import pbutil
 from lib.labm8.proto import test_protos_pb2
 
 
-def test_ToFile_missing_required():
+# A list of all of the filename suffixes to test each function with.
+SUFFIXES_TO_TEST = [
+  '', '.gz', '.txt', '.txt.gz', '.pbtxt', '.pbtxt.gz', '.json', '.json.gz',
+  '.unknown-suffix', '.unknown-suffix.gz']
+
+
+# ToFile() tests.
+
+@pytest.mark.parametrize('suffix', SUFFIXES_TO_TEST)
+def test_ToFile_message_missing_required_fields(suffix):
+  """Test that EncodeError is raised if required field is not set."""
   with tempfile.NamedTemporaryFile(prefix='labm8_proto_',
-                                   suffix='.gz') as f:
-    path = pathlib.Path(f.name)
-    proto_in = test_protos_pb2.TestMessage(number=1)
-    with pytest.raises(google.protobuf.message.EncodeError):
-      pbutil.ToFile(proto_in, path)
+                                   suffix=suffix) as f:
+    proto = test_protos_pb2.TestMessage(number=1)
+    with pytest.raises(pbutil.EncodeError):
+      pbutil.ToFile(proto, pathlib.Path(f.name))
 
 
-def test_ToFile_bad_path():
-  proto_in = test_protos_pb2.TestMessage(string='abc', number=1)
-  with pytest.raises(IOError):
-    pbutil.ToFile(proto_in, pathlib.Path('/not a real/path/I think/'))
+@pytest.mark.parametrize('suffix', SUFFIXES_TO_TEST)
+def test_ToFile_parent_directory_does_not_exist(suffix):
+  """Test that FileNotFoundError raised if parent directory doesn't exist."""
+  with tempfile.TemporaryDirectory() as d:
+    proto = test_protos_pb2.TestMessage(string='abc', number=1)
+    with pytest.raises(FileNotFoundError):
+      pbutil.ToFile(proto, pathlib.Path(d) / 'notadir' / f'proto{suffix}')
 
 
-def test_FromFile_wrong_message_type_txt():
+@pytest.mark.parametrize('suffix', SUFFIXES_TO_TEST)
+def test_ToFile_path_is_directory(suffix):
+  """Test that IsADirectoryError raised if path is a directory."""
+  with tempfile.TemporaryDirectory(suffix=suffix) as d:
+    proto = test_protos_pb2.TestMessage(string='abc', number=1)
+    with pytest.raises(IsADirectoryError) as e_info:
+      pbutil.ToFile(proto, pathlib.Path(d))
+    assert str(e_info.value).endswith(f"Is a directory: '{d}'")
+
+
+# FromFile() tests.
+
+@pytest.mark.parametrize('suffix', SUFFIXES_TO_TEST)
+def test_FromFile_FileNotFoundError(suffix):
+  """Test that FileNotFoundError raised if file doesn't exist."""
+  with tempfile.TemporaryDirectory(prefix='labm8_proto_') as d:
+    with pytest.raises(FileNotFoundError):
+      pbutil.FromFile(pathlib.Path(d) / f'proto{suffix}',
+                      test_protos_pb2.TestMessage())
+
+
+@pytest.mark.parametrize('suffix', SUFFIXES_TO_TEST)
+def test_FromFile_IsADirectoryError(suffix):
+  """Test that IsADirectoryError raised if path is a directory."""
+  with tempfile.TemporaryDirectory(prefix='labm8_proto_', suffix=suffix) as d:
+    with pytest.raises(IsADirectoryError):
+      pbutil.FromFile(pathlib.Path(d), test_protos_pb2.TestMessage())
+
+
+@pytest.mark.parametrize('suffix', SUFFIXES_TO_TEST)
+def test_FromFile_required_fields_not_set(suffix):
+  """Test that DecodeError raised if required fields not set."""
   with tempfile.NamedTemporaryFile(prefix='labm8_proto_',
-                                   suffix='.txt') as f:
-    path = pathlib.Path(f.name)
-    proto_in = test_protos_pb2.TestMessage(string='abc', number=1)
-    pbutil.ToFile(proto_in, path)
-    proto_out = test_protos_pb2.AnotherTestMessage()
-    with pytest.raises(pbutil.DecodeError):
-      pbutil.FromFile(path, proto_out)
+                                   suffix=suffix) as f:
+    pbutil.ToFile(test_protos_pb2.AnotherTestMessage(number=1),
+                  pathlib.Path(f.name))
+    with pytest.raises(pbutil.DecodeError) as e_info:
+      pbutil.FromFile(pathlib.Path(f.name), test_protos_pb2.TestMessage())
+    assert f"Required fields not set: '{f.name}'" == str(e_info.value)
 
+
+@pytest.mark.parametrize('suffix', SUFFIXES_TO_TEST)
+def test_FromFile_required_fields_not_set_uninitialized_okay(suffix):
+  """Test that DecodeError not raised if required fields not set."""
   with tempfile.NamedTemporaryFile(prefix='labm8_proto_',
-                                   suffix='.pbtxt') as f:
-    path = pathlib.Path(f.name)
-    proto_in = test_protos_pb2.TestMessage(string='abc', number=1)
-    pbutil.ToFile(proto_in, path)
-    proto_out = test_protos_pb2.AnotherTestMessage()
-    with pytest.raises(pbutil.DecodeError):
-      pbutil.FromFile(path, proto_out)
+                                   suffix=suffix) as f:
+    proto_in = test_protos_pb2.AnotherTestMessage(number=1)
+    pbutil.ToFile(test_protos_pb2.AnotherTestMessage(number=1),
+                  pathlib.Path(f.name))
+    pbutil.FromFile(pathlib.Path(f.name), test_protos_pb2.TestMessage(),
+                    uninitialized_okay=True)
 
 
-def test_FromFile_wrong_message_type_json():
-  with tempfile.NamedTemporaryFile(prefix='labm8_proto_',
-                                   suffix='.json') as f:
-    path = pathlib.Path(f.name)
-    proto_in = test_protos_pb2.TestMessage(string='abc', number=1)
-    pbutil.ToFile(proto_in, path)
-    proto_out = test_protos_pb2.AnotherTestMessage()
-    with pytest.raises(pbutil.DecodeError):
-      pbutil.FromFile(path, proto_out)
-
-
-def test_FromFile_wrong_message_type_binary():
-  with tempfile.NamedTemporaryFile(prefix='labm8_proto') as f:
-    path = pathlib.Path(f.name)
-    proto_in = test_protos_pb2.TestMessage(string='abc', number=1)
-    pbutil.ToFile(proto_in, path)
-    proto_out = test_protos_pb2.AnotherTestMessage()
-    pbutil.FromFile(path, proto_out)
-    # Parsing from binary format does not yield an error on unknown fields.
-    assert proto_out.number == 0
-
-
-def test_ToFile_FromFile_equivalence_txt():
-  with tempfile.NamedTemporaryFile(prefix='labm8_proto_',
-                                   suffix='.txt') as f:
-    path = pathlib.Path(f.name)
-    proto_in = test_protos_pb2.TestMessage(string='abc', number=1)
-    pbutil.ToFile(proto_in, path)
-    assert path.is_file()
-    with open(path) as f:
-      text = f.read()
-    assert text == 'string: "abc"\nnumber: 1\n'
-    proto_out = test_protos_pb2.TestMessage()
-    assert proto_in != proto_out  # Sanity check.
-    pbutil.FromFile(path, proto_out)
-    assert proto_out.string == 'abc'
-    assert proto_out.number == 1
-    assert proto_in == proto_out
-
-  with tempfile.NamedTemporaryFile(prefix='labm8_proto_',
-                                   suffix='.pbtxt') as f:
-    path = pathlib.Path(f.name)
-    proto_in = test_protos_pb2.TestMessage(string='abc', number=1)
-    pbutil.ToFile(proto_in, path)
-    assert path.is_file()
-    with open(path) as f:
-      text = f.read()
-    assert text == 'string: "abc"\nnumber: 1\n'
-    proto_out = test_protos_pb2.TestMessage()
-    assert proto_in != proto_out  # Sanity check.
-    pbutil.FromFile(path, proto_out)
-    assert proto_out.string == 'abc'
-    assert proto_out.number == 1
-    assert proto_in == proto_out
-
-
-def test_ToFile_FromFile_equivalence_json():
-  with tempfile.NamedTemporaryFile(prefix='labm8_proto_',
-                                   suffix='.json') as f:
-    path = pathlib.Path(f.name)
-    proto_in = test_protos_pb2.TestMessage(string='abc', number=1)
-    pbutil.ToFile(proto_in, path)
-    assert path.is_file()
-    with open(path, 'rb') as f:
-      json_out = json.load(f)
-    assert json_out['string'] == 'abc'
-    assert json_out['number'] == 1
-    proto_out = test_protos_pb2.TestMessage()
-    assert proto_in != proto_out  # Sanity check.
-    pbutil.FromFile(path, proto_out)
-    assert proto_out.string == 'abc'
-    assert proto_out.number == 1
-    assert proto_in == proto_out
-
-
-def test_ToFile_FromFile_equivalence_binary():
-  with tempfile.NamedTemporaryFile(prefix='labm8_proto_') as f:
-    path = pathlib.Path(f.name)
+@pytest.mark.parametrize('suffix', SUFFIXES_TO_TEST)
+def test_ToFile_FromFile_equivalence(suffix):
+  """Test that ToFile() and FromFile() are symmetrical."""
+  with tempfile.TemporaryDirectory(prefix='labm8_proto_') as d:
+    path = pathlib.Path(d) / f'proto{suffix}'
     proto_in = test_protos_pb2.TestMessage(string='abc', number=1)
     pbutil.ToFile(proto_in, path)
     assert path.is_file()
     proto_out = test_protos_pb2.TestMessage()
-    assert proto_in != proto_out  # Sanity check.
-    pbutil.FromFile(path, proto_out)
-    assert proto_out.string == 'abc'
-    assert proto_out.number == 1
-    assert proto_in == proto_out
-
-
-def test_ToFile_FromFile_equivalence_txt_gz():
-  with tempfile.NamedTemporaryFile(prefix='labm8_proto_',
-                                   suffix='.txt.gz') as f:
-    path = pathlib.Path(f.name)
-    proto_in = test_protos_pb2.TestMessage(string='abc', number=1)
-    pbutil.ToFile(proto_in, path)
-    assert path.is_file()
-    with gzip.open(path, 'r') as f:
-      text = f.read().decode('utf-8')
-    assert text == 'string: "abc"\nnumber: 1\n'
-    proto_out = test_protos_pb2.TestMessage()
-    assert proto_in != proto_out  # Sanity check.
-    pbutil.FromFile(path, proto_out)
-    assert proto_out.string == 'abc'
-    assert proto_out.number == 1
-    assert proto_in == proto_out
-
-  with tempfile.NamedTemporaryFile(prefix='labm8_proto_',
-                                   suffix='.pbtxt.gz') as f:
-    path = pathlib.Path(f.name)
-    proto_in = test_protos_pb2.TestMessage(string='abc', number=1)
-    pbutil.ToFile(proto_in, path)
-    assert path.is_file()
-    with gzip.open(path, 'r') as f:
-      text = f.read().decode('utf-8')
-    assert text == 'string: "abc"\nnumber: 1\n'
-    proto_out = test_protos_pb2.TestMessage()
-    assert proto_in != proto_out  # Sanity check.
-    pbutil.FromFile(path, proto_out)
-    assert proto_out.string == 'abc'
-    assert proto_out.number == 1
-    assert proto_in == proto_out
-
-
-def test_ToFile_FromFile_equivalence_json_gz():
-  with tempfile.NamedTemporaryFile(prefix='labm8_proto_',
-                                   suffix='.json.gz') as f:
-    path = pathlib.Path(f.name)
-    proto_in = test_protos_pb2.TestMessage(string='abc', number=1)
-    pbutil.ToFile(proto_in, path)
-    assert path.is_file()
-    with gzip.open(path, 'rb') as f:
-      json_out = json.load(f)
-    assert json_out['string'] == 'abc'
-    assert json_out['number'] == 1
-    proto_out = test_protos_pb2.TestMessage()
-    assert proto_in != proto_out  # Sanity check.
-    pbutil.FromFile(path, proto_out)
-    assert proto_out.string == 'abc'
-    assert proto_out.number == 1
-    assert proto_in == proto_out
-
-
-def test_ToFile_FromFile_equivalence_binary_gz():
-  with tempfile.NamedTemporaryFile(prefix='labm8_proto_',
-                                   suffix='.gz') as f:
-    path = pathlib.Path(f.name)
-    proto_in = test_protos_pb2.TestMessage(string='abc', number=1)
-    pbutil.ToFile(proto_in, path)
-    assert path.is_file()
-    proto_out = test_protos_pb2.TestMessage()
-    assert proto_in != proto_out  # Sanity check.
     pbutil.FromFile(path, proto_out)
     assert proto_out.string == 'abc'
     assert proto_out.number == 1
@@ -341,7 +241,7 @@ def test_AssertFieldConstraint_user_callback_custom_fail_message():
 
 def main(argv):
   del argv
-  sys.exit(pytest.main([__file__, '-v']))
+  sys.exit(pytest.main([__file__, '-vv']))
 
 
 if __name__ == '__main__':

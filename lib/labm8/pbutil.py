@@ -6,6 +6,7 @@ import pathlib
 import typing
 
 import google.protobuf.json_format
+import google.protobuf.message
 import google.protobuf.text_format
 
 from lib.labm8 import jsonutil
@@ -32,7 +33,8 @@ class DecodeError(ProtoValueError):
 
 def FromFile(path: pathlib.Path, message: ProtocolBuffer,
              assume_filename: typing.Optional[
-               typing.Union[str, pathlib.Path]] = None) -> ProtocolBuffer:
+               typing.Union[str, pathlib.Path]] = None,
+             uninitialized_okay: bool = False) -> ProtocolBuffer:
   """Read a protocol buffer from a file.
 
   This method uses attempts to guess the encoding from the path suffix,
@@ -52,18 +54,23 @@ def FromFile(path: pathlib.Path, message: ProtocolBuffer,
     message: A message instance to read into.
     assume_filename: For the purpose of determining the encoding from the file
       extension, use this name rather than the true path.
+    uninitialized_okay: If True, do not require that decoded messages be
+      initialized. If False, DecodeError is raised.
 
   Returns:
     The parsed message (same as the message argument).
 
   Raises:
     IOError: If the file does not exist or cannot be read.
-    DecodeError: If the file cannot be decoded to the given message type. Note
-      that parsing from binary encoding (i.e. not *.txt or *.json) does not
-      raise this error. Instead, unknown fields are silently ignored.
+    DecodeError: If the file cannot be decoded to the given message type, or if
+      after decoding, the message is not initialized and uninitialized_okay is
+      False.
   """
   if not path.is_file():
-    raise IOError(f'Not a file: {path}')
+    if path.is_dir():
+      raise IsADirectoryError(f"Path is a directory: '{path}'")
+    else:
+      raise FileNotFoundError(f"File not found: '{path}'")
 
   suffixes = pathlib.Path(
       assume_filename).suffixes if assume_filename else path.suffixes
@@ -88,6 +95,9 @@ def FromFile(path: pathlib.Path, message: ProtocolBuffer,
     # them all under a single DecodeError exception type.
     raise DecodeError(e)
 
+  if not uninitialized_okay and not message.IsInitialized():
+    raise DecodeError(f"Required fields not set: '{path}'")
+
   return message
 
 
@@ -100,17 +110,18 @@ def ToFile(message: ProtocolBuffer, path: pathlib.Path,
   This method uses attempts to guess the encoding from the path suffix,
   supporting binary, text, and json formatted messages. The mapping of suffixes
   to formatting is, in order:
-      *.txt.gz: Gzipped text.
-      *.txt: Text.
-      *.pbtxt.gz: Gzipped text.
-      *.pbtxt: Text.
-      *.json.gz: Gzipped JSON.
-      *.json: JSON.
-      *.gz: Gzipped encoded string.
-      *: Encoded string.
+      *.txt.gz: Gzipped text format.
+      *.txt: Text format.
+      *.pbtxt.gz: Gzipped text format.
+      *.pbtxt: Text format.
+      *.json.gz: Gzipped JSON format.
+      *.json: JSON format.
+      *.gz: Gzipped binary format.
+      *: Binary format.
 
   Args:
-    message: A message instance to write to file.
+    message: A message instance to write to file. The message must be
+      initialized, i.e. have all required fields set.
     path: Path to the proto file.
     exist_ok: If True, overwrite existing file.
     assume_filename: For the purpose of determining the encoding from the file
@@ -120,10 +131,23 @@ def ToFile(message: ProtocolBuffer, path: pathlib.Path,
     The parsed message (same as the message argument).
 
   Raises:
-    IOError: If exist_ok is False and file already exists.
+    EncodeError: If the message is not initialized, i.e. it is missing required
+      fields.
+    FileNotFoundError: If the parent directory of the requested path does not
+      exist.
+    IsADirectoryError: If the requested path is a directory.
+    FileExistsError: If the requested path already exists and exist_ok is False.
   """
   if not exist_ok and path.exists():
-    raise IOError(f'Refusing to overwrite {path}')
+    raise FileExistsError(f'Refusing to overwrite {path}')
+
+  # The SerializeToString() method refuses to encode a message which is not
+  # initialized, whereas the MessageToString() and MessageToJson() methods do
+  # not. This API should be consistent, so we enforce that all formats require
+  # the message to be initialized.
+  if not message.IsInitialized():
+    class_name = type(message).__name__
+    raise EncodeError(f"Required fields not set: '{class_name}'")
 
   suffixes = pathlib.Path(
       assume_filename).suffixes if assume_filename else path.suffixes
