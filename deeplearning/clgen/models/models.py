@@ -329,7 +329,6 @@ class Model(object):
         sample_id = crypto.sha256_str(sample.text)
         p = self.SamplerCache(sampler) / f'{sample_id}.pbtxt'
         pbutil.ToFile(sample, p)
-        samples.append(sample)
         sys.stdout.write('\n')
         if min_num_samples > 0:
           samples.append(sample)
