@@ -114,8 +114,7 @@ def GetTerminationCriteria(
     if criterion.HasField('maxlen'):
       terminators.append(MaxlenTerminationCriterion(criterion.maxlen))
     elif criterion.HasField('symtok'):
-      terminators.append(
-          SymmetricalTokenDepthCriterion(criterion.maxlen))
+      terminators.append(SymmetricalTokenDepthCriterion(criterion.symtok))
     else:
       raise errors.InternalError('Unknown Sampler.termination_criteria')
   return terminators
