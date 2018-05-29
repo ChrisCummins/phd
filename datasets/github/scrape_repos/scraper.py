@@ -72,8 +72,8 @@ class QueryScraper(threading.Thread):
             self.repo_query.string)
         self.total_result_count = self.query.totalCount
         break
-      except github.RateLimitExceededException:
-        logging.debug('Pausing on GitHub rate limit')
+      except (github.RateLimitExceededException, github.GithubException) as e:
+        logging.debug('Pausing on GitHub error: %s', e)
         time.sleep(3)
     self.next_page_num = 0
     super(QueryScraper, self).__init__()
