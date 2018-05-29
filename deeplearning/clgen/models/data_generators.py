@@ -119,7 +119,7 @@ class LazyVectorizingGenerator(DataGeneratorBase):
         dtype=np.bool)
     y = np.zeros((self.batch_size, self.corpus.vocabulary_size), dtype=np.bool)
     batch_size = sys.getsizeof(x) + sys.getsizeof(y)
-    logging.info('%s memory: %s per-batch, %s per-epoch, %s total',
+    logging.info('%s memory: %s per batch, %s per epoch, %s total',
                  type(self).__name__,
                  humanize.naturalsize(batch_size),
                  humanize.naturalsize(batch_size * self.steps_per_epoch),
