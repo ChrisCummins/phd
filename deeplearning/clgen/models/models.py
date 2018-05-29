@@ -62,7 +62,7 @@ class Model(object):
     self.config.CopyFrom(builders.AssertIsBuildable(config))
     self.corpus = corpuses.Corpus(config.corpus)
     self.hash = self._ComputeHash(self.corpus, self.config)
-    self.cache = cache.mkcache('model', f'{self.corpus.language}-{self.hash}')
+    self.cache = cache.mkcache('model', self.hash)
     # Create the necessary cache directories.
     (self.cache.path / 'checkpoints').mkdir(exist_ok=True)
     (self.cache.path / 'samples').mkdir(exist_ok=True)
