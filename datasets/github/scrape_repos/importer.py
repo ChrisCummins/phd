@@ -2,6 +2,7 @@
 import pathlib
 import subprocess
 
+import humanize
 from absl import app
 from absl import flags
 from absl import logging
@@ -65,7 +66,8 @@ def ImportRepo(session: orm.session.Session,
     if len(paths) == 1 and not paths[0]:
       logging.debug('No files to import from %s', clone_dir)
       return
-    logging.info('Importing %d %s files from %s ...', len(paths),
+    logging.info('Importing %s %s files from %s ...',
+                 humanize.intcomma(len(paths)),
                  language.language.capitalize(), clone_dir)
     for path in paths:
       try:
@@ -88,7 +90,8 @@ def ImportFromLanguage(db: contentfiles.ContentFiles,
                        pathlib.Path(language.destination_directory).iterdir() if
                        ShouldImportRepo(session, pathlib.Path(
                            language.destination_directory / f))]
-  logging.info('Importing %d %s repos ...', len(repos_to_import),
+  logging.info('Importing %s %s repos ...',
+               humanize.intcomma(len(repos_to_import)),
                language.language.capitalize())
   for metafile in repos_to_import:
     with db.Session(commit=True) as session:

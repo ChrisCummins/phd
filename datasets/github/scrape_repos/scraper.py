@@ -12,6 +12,7 @@ import time
 import typing
 
 import github
+import humanize
 import progressbar
 from absl import app
 from absl import flags
@@ -51,7 +52,7 @@ def MakeRepositoryMetas(repos: typing.List[Repository.Repository],
     repos: A list of GitHub Repository instances.
     destination_directory: The directory to clone each repository in to.
   """
-  logging.debug('Scraping %d repositories', len(repos))
+  logging.debug('Scraping %s repositories', humanize.intcomma(len(repos)))
   for repo in repos:
     concat_name = '_'.join([repo.owner.login, repo.name])
     clone_dir = destination_directory / concat_name
@@ -85,7 +86,7 @@ class LanguageScraper(threading.Thread):
     while True:
       try:
         self.query = github_connection.search_repositories(
-          f'language:{language.language} sort:stars fork:false')
+            f'language:{language.language} sort:stars fork:false')
         self.total_num_repos_on_github = self.query.totalCount
         break
       except github.RateLimitExceededException:
@@ -167,9 +168,10 @@ def RunScraper(worker: LanguageScraper) -> None:
   Args:
     worker: A LanguageScraper worker instance.
   """
-  logging.info('Scraping %d of %d %s repos on GitHub ...',
-               worker.language.num_repos_to_clone,
-               worker.total_num_repos_on_github, worker.language.language)
+  logging.info('Scraping %s of %s %s repos on GitHub ...',
+               humanize.intcomma(worker.language.num_repos_to_clone),
+               humanize.intcomma(worker.total_num_repos_on_github),
+               worker.language.language)
   bar = progressbar.ProgressBar(max_value=worker.language.num_repos_to_clone,
                                 redirect_stderr=True)
   worker.start()
@@ -193,7 +195,7 @@ def GetRepositoryMetadata(
   """
   meta = scrape_repos_pb2.GitHubRepoMetadata()
   meta.scraped_utc_epoch_ms = labdate.MillisecondsTimestamp(
-    labdate.GetUtcMillisecondsNow())
+      labdate.GetUtcMillisecondsNow())
   meta.owner = repo.owner.login
   meta.name = repo.name
   meta.num_watchers = repo.watchers_count

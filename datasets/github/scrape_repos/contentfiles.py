@@ -44,7 +44,7 @@ class GitHubRepository(Base):
   def _GetArgsFromProto(proto: scrape_repos_pb2.GitHubRepoMetadata) -> \
       typing.Dict[str, typing.Any]:
     date_scraped = labdate.DatetimeFromMillisecondsTimestamp(
-      proto.scraped_utc_epoch_ms)
+        proto.scraped_utc_epoch_ms)
     return {"clone_from_url": proto.clone_from_url, "owner": proto.owner,
             "name": proto.name, "num_stars": proto.num_stars,
             "num_forks": proto.num_forks, "num_watchers": proto.num_watchers,
@@ -66,7 +66,7 @@ class GitHubRepository(Base):
   def IsInDatabase(cls, session: orm.session.Session,
                    proto: scrape_repos_pb2.GitHubRepoMetadata) -> bool:
     instance = session.query(cls).filter_by(
-      **cls._GetArgsFromProto(proto)).first()
+        **cls._GetArgsFromProto(proto)).first()
     return True if instance else False
 
 
@@ -75,7 +75,7 @@ class ContentFile(Base):
 
   id: int = sql.Column(sql.Integer, primary_key=True)
   clone_from_url: str = sql.Column(sql.String(1024), sql.ForeignKey(
-    'repositories.clone_from_url'))
+      'repositories.clone_from_url'))
   # Relative path within the repository.
   relpath: str = sql.Column(sql.String(1024), nullable=False)
   sha256: str = sql.Column(sql.Binary(32), nullable=False)
