@@ -1,4 +1,5 @@
 """This file defines a database for importing cloned GitHub repos."""
+import binascii
 import contextlib
 import datetime
 import hashlib
@@ -98,6 +99,11 @@ class ContentFile(Base):
                        relpath=path[len(str(clone_dir)) + 1:],
                        sha256=sha256.digest(), charcount=len(text),
                        linecount=len(text.split('\n')), text=text)
+
+  @property
+  def sha256_hex(self) -> str:
+    """Return the 64 character hexadecimal representation of binary sha256."""
+    return binascii.hexlify(self.sha256).decode('utf-8')
 
 
 class ContentFiles(object):

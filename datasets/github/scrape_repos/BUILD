@@ -24,6 +24,18 @@ py_library(
 )
 
 py_binary(
+    name = "export_corpus",
+    srcs = ["export_corpus.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":contentfiles",
+        "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
+        "//lib/labm8:pbutil",
+    ],
+)
+
+py_binary(
     name = "importer",
     srcs = ["importer.py"],
     default_python_version = "PY3",
