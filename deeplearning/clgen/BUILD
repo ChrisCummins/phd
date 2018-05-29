@@ -127,7 +127,7 @@ py_library(
         "//deeplearning/clgen/proto:corpus_py_pb2",
         "//deeplearning/clgen/proto:internal_py_pb2",
         "//lib/labm8:crypto",
-        "//lib/labm8:dirhashcache",
+        "//lib/labm8:hashcache",
         "//lib/labm8:fs",
         "//lib/labm8:lockfile",
         "//lib/labm8:pbutil",

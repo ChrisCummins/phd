@@ -33,7 +33,7 @@ def test_config_is_valid():
     # Make a dummy corpus.
     (working_dir / 'corpus').mkdir()
     (working_dir / 'corpus' / 'foo').touch()
-    config.model.corpus.path = str(working_dir / 'corpus')
+    config.model.corpus.local_directory = str(working_dir / 'corpus')
     clgen.Instance(config)
 
 

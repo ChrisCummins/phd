@@ -4,7 +4,6 @@ Checksums files and directories and cache results. If a file or directory has
 not been modified, subsequent hashes are cache hits. Hashes are recomputed
 lazily, when a directory (or any of its subdirectories) have been modified.
 """
-import datetime
 import os
 import pathlib
 import typing
@@ -114,13 +113,13 @@ class HashCache(sqlutil.Database):
                         self.hash_fn_file)
 
   def _DoHash(self, absolute_path: pathlib.Path,
-              last_modified: datetime.datetime,
+              last_modified: int,
               hash_fn: typing.Callable[[pathlib.Path], str]) -> str:
     with self.Session() as session:
       cached_entry = session.query(HashCacheRecord).filter(
           HashCacheRecord.absolute_path == str(absolute_path)).first()
       if cached_entry and cached_entry.date_cached == last_modified:
-        return cached_entry
+        return cached_entry.hash
       elif cached_entry:
         session.delete(cached_entry)
       new_entry = HashCacheRecord(

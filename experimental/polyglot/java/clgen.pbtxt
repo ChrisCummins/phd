@@ -4,7 +4,7 @@
 working_dir: "/var/phd/clgen/java"
 model {
   corpus {
-    path: "/var/phd/datasets/github/corpuses/java/"
+    local_directory: "/var/phd/datasets/github/corpuses/java/"
     # The set of Java keywords.
     greedy_multichar_atomizer {
         tokens: "abstract"

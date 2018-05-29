@@ -72,7 +72,7 @@ def abc_corpus_archive(abc_corpus) -> str:
 @pytest.fixture(scope='function')
 def abc_corpus_config(abc_corpus):
   """The proto config for a simple Corpus."""
-  return corpus_pb2.Corpus(path=abc_corpus,
+  return corpus_pb2.Corpus(local_directory=abc_corpus,
                            ascii_character_atomizer=True,
                            contentfile_separator='\n\n')
 

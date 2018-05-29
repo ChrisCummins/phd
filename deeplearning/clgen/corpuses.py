@@ -8,13 +8,12 @@ import os
 import pathlib
 import pickle
 import re
-import time
 import typing
 from tempfile import NamedTemporaryFile
 
 import humanize
 import numpy as np
-from absl import flags
+import time
 from absl import logging
 
 from deeplearning.clgen import atomizers
@@ -27,8 +26,8 @@ from deeplearning.clgen.preprocessors import preprocessors
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import internal_pb2
 from lib.labm8 import crypto
-from lib.labm8 import dirhashcache
 from lib.labm8 import fs
+from lib.labm8 import hashcache
 from lib.labm8 import lockfile
 from lib.labm8 import pbutil
 from lib.labm8 import prof
@@ -71,8 +70,8 @@ class Corpus(object):
     # Determine the corpus cache path. This will depend on whether a path or
     # an id was specified.
     path = None
-    if config.HasField('path'):
-      path = pathlib.Path(os.path.expandvars(config.path)).absolute()
+    if config.HasField('local_directory'):
+      path = pathlib.Path(os.path.expandvars(config.local_directory)).absolute()
       path = UnpackDirectoryIfNeeded(path)
       if not fs.isdir(path):
         raise errors.UserError(
@@ -80,8 +79,8 @@ class Corpus(object):
       if fs.directory_is_empty(path):
         raise errors.EmptyCorpusException(
             f"Contentfiles directory is empty: '{path}'")
-      hasher = dirhashcache.DirHashCache(cache.cachepath("dirhash.db"), 'sha1')
-      self.content_id = prof.profile(hasher.dirhash, path)
+      hasher = hashcache.HashCache(cache.cachepath("dirhash.db"), 'sha1')
+      self.content_id = prof.profile(hasher.GetHash, path)
     elif config.HasField('id'):
       self.content_id = config.id
       if not fs.isdir(

@@ -6,11 +6,14 @@ package clgen;
 // The specification of a training corpus.
 message Corpus {
   // The input contentfiles to the corpus.
+  // Shell variables are expanded. E.g. $HOME -> /home/<user>.
   oneof contentfiles {
-    // The ID of a corpus in cache.
-    string id = 10;
-    // The path to a directory containing content files.
-    string path = 11;
+    // The ID of an already-cached corpus.
+    string id = 1;
+    // The path to a directory on the local system containing content files.
+    string local_directory = 2;
+    // The path to an archive file containing content files.
+    string local_archive = 3;
   }
 
   // The atomizer to use to encode the corpus.
