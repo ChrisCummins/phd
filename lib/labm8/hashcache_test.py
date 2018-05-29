@@ -25,6 +25,7 @@ EMPTY_FILE_HASHES = {
 
 @pytest.fixture(scope='function')
 def database_path() -> pathlib.Path:
+  """A test fixture which returns a path to use as a HashCache database."""
   with tempfile.TemporaryDirectory(prefix='labm8_hashcache_') as d:
     yield pathlib.Path(d) / 'hashcache.db'
 
