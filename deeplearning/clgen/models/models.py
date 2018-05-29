@@ -285,6 +285,7 @@ class Model(object):
       samples = []
 
       # TODO(cec): Re-implement batched sampling.
+      # Use the same vectorizer as the DataGenorator.
       vectorized_seed = np.zeros(
           (1,
            self.config.training.sequence_length, self.corpus.vocabulary_size),
@@ -292,6 +293,8 @@ class Model(object):
       for i, token in enumerate(encoded_seed):
         vectorized_seed[0, i, token] = 1
 
+      # TODO(cec): Add to sampler proto.
+      temperature = 1.0
       while True:
         X = np.copy(vectorized_seed)
         sample_in_progress = [sampler.start_text]
@@ -302,13 +305,14 @@ class Model(object):
         # need to access it.
         model = self.model
         while True:
-          prediction = np.argmax(model.predict(X, verbose=0))
-          token = self.corpus.atomizer.decoder[prediction]
+          predictions = model.predict(X, verbose=0)[0]
+          next_index = WeightedPick(predictions, temperature)
+          token = self.corpus.atomizer.decoder[next_index]
           sys.stdout.write(token)
           sample_in_progress.append(token)
           activations = np.zeros((1, 1, self.corpus.vocabulary_size),
                                  dtype=np.bool)
-          activations[0, 0, prediction] = 1
+          activations[0, 0, next_index] = 1
           X = np.concatenate((X[:, 1:, :], activations), axis=1)
           if sampler.SampleIsComplete(sample_in_progress):
             break
@@ -384,3 +388,12 @@ class Model(object):
 
   def __ne__(self, rhs) -> bool:
     return not self.__eq__(rhs)
+
+
+def WeightedPick(predictions: np.ndarray, temperature: float) -> np.ndarray:
+  """Make a weighted choice from a predictions array."""
+  predictions = np.log(np.asarray(predictions).astype('float64')) / temperature
+  predictions_exp = np.exp(predictions)
+  predictions = predictions_exp / np.sum(predictions_exp)
+  predictions = np.random.multinomial(1, predictions, 1)
+  return np.argmax(predictions)
