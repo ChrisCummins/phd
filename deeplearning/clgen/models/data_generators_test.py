@@ -15,7 +15,7 @@ class CorpusMock(object):
     self.vocabulary_size = vocabulary_size
 
   def GetTrainingData(self, *args, **kwargs):
-    return ['a'] * self.corpus_len
+    return [1] * self.corpus_len
 
 
 # DataGeneratorBase tests.
@@ -70,10 +70,11 @@ def test_Vectorize_123(abc_model_config):
   opt.sequence_length = 3
   dg = data_generators.DataGeneratorBase(CorpusMock(vocabulary_size=3), opt)
   data = dg.Vectorize(data_generators.DataBatch([[0, 1, 2]], [0]))
-  # Output is batch_size * sequence_length * vocabulary size array.
+  # Output is a batch_size * sequence_length * vocabulary size array.
   assert data.X.shape == (1, 3, 3)
-  print(data)
-  print(dg.FastVectorize(data_generators.DataBatch([[0, 1, 2]], [0])))
+  # assert data.X == np.array(
+  #     [[[True, False, False], [False, True, False], [False, False, True]]])
+  # assert data.y = np.array([True, False, False])
 
 
 # LazyVectorizingGenerator tests.
@@ -94,6 +95,20 @@ def test_benchmark_Vectorize(benchmark, abc_model_config,
     x = [[1] * sequence_length] * batch_size
     y = [2] * batch_size
   benchmark(dg.Vectorize, data_generators.DataBatch(x, y))
+
+
+@pytest.mark.parametrize('sequence_length', [50, ])
+@pytest.mark.parametrize('batch_size', [64, ])
+@pytest.mark.parametrize('vocabulary_size', [100, 200])
+def test_benchmark_LazyVectorizingGenerator(benchmark, abc_model_config,
+                                            sequence_length, batch_size,
+                                            vocabulary_size):
+  opts = abc_model_config.training
+  opts.batch_size = batch_size
+  opts.sequence_length = sequence_length
+  dg = data_generators.LazyVectorizingGenerator(
+      CorpusMock(corpus_length=10000, vocabulary_size=vocabulary_size), opts)
+  benchmark(dg.__next__)
 
 
 def main(argv):
