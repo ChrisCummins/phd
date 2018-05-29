@@ -30,8 +30,9 @@ class HashCacheRecord(Base):
 
   # The absolute path to a file or directory.
   absolute_path: str = sql.Column(sql.String(4096), primary_key=True)
-  # The timestamp of the cache entry, in seconds since the epoch.
-  date_cached: int = sql.Column(sql.Integer, nullable=False)
+  # The number of milliseconds since the epoch that the file or directory was
+  # last modified.
+  last_modified_ms: int = sql.Column(sql.Integer, nullable=False)
   # The cached hash in hexadecimal encoding. We use the length of the longest
   # supported hash function: sha256.
   hash: str = sql.Column(sql.String(40), nullable=False)
@@ -50,7 +51,7 @@ def GetDirectoryMTime(path: pathlib.Path) -> int:
   """
   return int(max(
       max(os.path.getmtime(os.path.join(root, file)) for file in files) for
-      root, _, files in os.walk(path)))
+      root, _, files in os.walk(path)) * 1000)
 
 
 class HashCache(sqlutil.Database):
@@ -102,10 +103,10 @@ class HashCache(sqlutil.Database):
 
   def _HashDirectory(self, absolute_path: pathlib.Path) -> str:
     if fs.directory_is_empty(absolute_path):
-      last_modified = int(time.time())
+      last_modified_ms = int(time.time() * 1000)
     else:
-      last_modified = GetDirectoryMTime(absolute_path)
-    return self._DoHash(absolute_path, last_modified,
+      last_modified_ms = GetDirectoryMTime(absolute_path)
+    return self._DoHash(absolute_path, last_modified_ms,
                         lambda x: checksumdir.dirhash(x, self.hash_fn_name))
 
   def _HashFile(self, absolute_path: pathlib.Path) -> str:
@@ -113,18 +114,18 @@ class HashCache(sqlutil.Database):
                         self.hash_fn_file)
 
   def _DoHash(self, absolute_path: pathlib.Path,
-              last_modified: int,
+              last_modified_ms: int,
               hash_fn: typing.Callable[[pathlib.Path], str]) -> str:
     with self.Session() as session:
       cached_entry = session.query(HashCacheRecord).filter(
           HashCacheRecord.absolute_path == str(absolute_path)).first()
-      if cached_entry and cached_entry.date_cached == last_modified:
+      if cached_entry and cached_entry.last_modified_ms == last_modified_ms:
         return cached_entry.hash
       elif cached_entry:
         session.delete(cached_entry)
       new_entry = HashCacheRecord(
           absolute_path=str(absolute_path),
-          date_cached=last_modified,
+          last_modified_ms=last_modified_ms,
           hash=hash_fn(absolute_path))
       session.add(new_entry)
       session.commit()
