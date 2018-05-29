@@ -360,3 +360,13 @@ py_library(
         "//lib/labm8:pbutil",
     ],
 )
+
+py_test(
+    name = "telemetry_test",
+    srcs = ["telemetry_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":telemetry",
+    ],
+)

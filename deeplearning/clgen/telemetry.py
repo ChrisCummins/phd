@@ -1,5 +1,7 @@
 """This file defines telemetry data gathers."""
 import pathlib
+import re
+import typing
 
 from absl import flags
 
@@ -36,16 +38,24 @@ class TrainingLogger(object):
     epoch += 1
     now = labdate.MillisecondsTimestamp()
     epoch_time_ms = now - self.last_epoch_begin_timestamp
-    log = internal_pb2.ModelEpochTelemetry(
+    telemetry = internal_pb2.ModelEpochTelemetry(
         timestamp_utc_epoch_ms=now,
         epoch_num=epoch,
         epoch_wall_time_ms=epoch_time_ms,
         loss=logs['loss'],
     )
-    pbutil.ToFile(log, self.logdir / f'epoch_{epoch}_end.pbtxt')
+    pbutil.ToFile(telemetry, self.logdir / f'epoch_{epoch:02d}_end.pbtxt')
 
   def KerasCallback(self, keras):
     """Returns the keras callback to passed to a model's fit() function."""
     return keras.callbacks.LambdaCallback(
         on_epoch_begin=self.EpochBeginCallback,
         on_epoch_end=self.EpochEndCallback)
+
+  def EpochTelemetry(self) -> typing.List[internal_pb2.ModelEpochTelemetry]:
+    """Return the epoch telemetry files."""
+    return [
+      pbutil.FromFile(self.logdir / p, internal_pb2.ModelEpochTelemetry())
+      for p in sorted(self.logdir.iterdir())
+      if re.match(r'epoch_\d\d+_end\.pbtxt', str(p.name))
+    ]
