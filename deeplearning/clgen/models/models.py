@@ -298,8 +298,7 @@ class Model(object):
       while True:
         X = np.copy(vectorized_seed)
         sample_in_progress = [sampler.start_text]
-        print('=== BEGIN CLGEN SAMPLE ===')
-        sys.stdout.write(sampler.start_text)
+        print('=== BEGIN CLGEN SAMPLE ===', sampler.start_text, sep='\n', end='')
         start_time = labdate.MillisecondsTimestamp()
         # Save a few cycles by not going via the model() property every time we
         # need to access it.
