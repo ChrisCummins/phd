@@ -5,8 +5,11 @@ package clgen;
 
 // The specification of a training corpus.
 message Corpus {
+  // The input contentfiles to the corpus.
   oneof contentfiles {
+    // The ID of a corpus in cache.
     string id = 10;
+    // The path to a directory containing content files.
     string path = 11;
   }
 
