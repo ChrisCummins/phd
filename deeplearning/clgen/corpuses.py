@@ -14,6 +14,7 @@ from tempfile import NamedTemporaryFile
 
 import humanize
 import numpy as np
+from absl import flags
 from absl import logging
 
 from deeplearning.clgen import atomizers
@@ -77,14 +78,15 @@ class Corpus(object):
         raise errors.UserError(
             "Corpus path '{}' is not a directory".format(path))
       if fs.directory_is_empty(path):
-        raise errors.EmptyCorpusException(f"Corpus path '{path}' is empty")
+        raise errors.EmptyCorpusException(
+            f"Contentfiles directory is empty: '{path}'")
       hasher = dirhashcache.DirHashCache(cache.cachepath("dirhash.db"), 'sha1')
       self.content_id = prof.profile(hasher.dirhash, path)
     elif config.HasField('id'):
       self.content_id = config.id
       if not fs.isdir(
           cache.cachepath("contentfiles", config.id)):
-        raise errors.UserError(f"corpus {config.id} not found")
+        raise errors.UserError(f"Corpus not found: '{config.id}'")
     else:
       raise errors.UserError('Must specify corpus id or path.')
 
