@@ -13,6 +13,7 @@
       <w>corpuses</w>
       <w>dataset</w>
       <w>deeplearning</w>
+      <w>githubrc</w>
       <w>gsize</w>
       <w>inlining</w>
       <w>keras</w>
@@ -23,6 +24,7 @@
       <w>lsize</w>
       <w>lstm</w>
       <w>opencl</w>
+      <w>pbtxt</w>
       <w>preprocess</w>
       <w>preprocessing</w>
       <w>rewriter</w>
