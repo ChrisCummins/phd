@@ -335,7 +335,8 @@ class Model(object):
       sampler: A Sampler instance.
 
     Returns:
-      A path to a directory. Note that this directory may not exist.
+      A path to a directory. Note that this directory may not exist - it is
+      created only after a call to Sample().
     """
     return self.cache.path / 'samples' / sampler.hash
 
