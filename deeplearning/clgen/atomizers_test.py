@@ -6,7 +6,29 @@ from absl import app
 
 import deeplearning.clgen.errors
 from deeplearning.clgen import atomizers
-from deeplearning.clgen import languages
+
+
+# The set of multichar tokens for the OpenCL programming language.
+OPENCL_ATOMS = set(
+    ['  ', '__assert', '__attribute', '__builtin_astype', '__clc_fabs',
+     '__clc_fma', '__constant', '__global', '__inline', '__kernel', '__local',
+     '__private', '__read_only', '__read_write', '__write_only', '*/', '/*',
+     '//',
+     'abs', 'alignas', 'alignof', 'atomic_add', 'auto', 'barrier', 'bool',
+     'break', 'case', 'char', 'clamp', 'complex', 'const', 'constant',
+     'continue',
+     'default', 'define', 'defined', 'do', 'double', 'elif', 'else', 'endif',
+     'enum', 'error', 'event_t', 'extern', 'fabs', 'false', 'float', 'for',
+     'get_global_id', 'get_global_size', 'get_local_id', 'get_local_size',
+     'get_num_groups', 'global', 'goto', 'half', 'if', 'ifdef', 'ifndef',
+     'image1d_array_t', 'image1d_buffer_t', 'image1d_t', 'image2d_array_t',
+     'image2d_t', 'image3d_t', 'imaginary', 'include', 'inline', 'int', 'into',
+     'kernel', 'line', 'local', 'long', 'noreturn', 'pragma', 'private', 'quad',
+     'read_only', 'read_write', 'register', 'restrict', 'return', 'sampler_t',
+     'short', 'shuffle', 'signed', 'size_t', 'sizeof', 'sqrt', 'static',
+     'struct',
+     'switch', 'true', 'typedef', 'u32', 'uchar', 'uint', 'ulong', 'undef',
+     'union', 'unsigned', 'void', 'volatile', 'while', 'wide', 'write_only', ])
 
 
 # AsciiCharacterAtomizer
@@ -90,8 +112,7 @@ __kernel void A(__global float* a, __global float* b, const int c) {
               ')', ' ', '{', '\n', '  ', '  ', 'a', '[', 'd', ']', ' ', '=',
               ' ', 'b', '[', 'd', ']', ' ', '*', ' ', '1', '0', '.', '0', 'f',
               ';', '\n', '  ', '}', '\n', '}']
-  c = atomizers.GreedyAtomizer.FromText(test_in, languages.atoms_for_lang(
-      languages.Language.OPENCL))
+  c = atomizers.GreedyAtomizer.FromText(test_in, OPENCL_ATOMS)
   assert c.TokenizeString(test_in) == test_out
 
 
@@ -104,8 +125,7 @@ __kernel void A(__global float* a, __global float* b, const int c) {
   }
 }\
 """
-  c = atomizers.GreedyAtomizer.FromText(test_in, languages.atoms_for_lang(
-      languages.Language.OPENCL))
+  c = atomizers.GreedyAtomizer.FromText(test_in, OPENCL_ATOMS)
   a = c.AtomizeString(test_in)
   assert c.DeatomizeIndices(a) == test_in
 
@@ -122,8 +142,7 @@ __kernel void A(__global float* a, __global float* b, const int c) {
   tokens = ['__kernel', ' ', 'A', '(', ')', '__global', 'float', '*', 'a', '0',
             'b', 'const', 'int', 'c', '{', '}', '  ', 'd', 'get_global_id', ';',
             'if', '<', '[', ']', 'f', '.', '1', '\n', '=', ',', 'void']
-  c = atomizers.GreedyAtomizer.FromText(test_in, languages.atoms_for_lang(
-      languages.Language.OPENCL))
+  c = atomizers.GreedyAtomizer.FromText(test_in, OPENCL_ATOMS)
   assert sorted(c.atoms) == sorted(tokens)
   assert c.vocab_size == len(tokens)
 

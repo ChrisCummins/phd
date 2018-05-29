@@ -18,7 +18,6 @@ py_library(
     srcs = ["atomizers.py"],
     deps = [
         ":errors",
-        ":languages",
         "//lib/labm8:labdate",
     ],
 )
@@ -30,7 +29,6 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":atomizers",
-        ":languages",
     ],
 )
 
