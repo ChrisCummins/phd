@@ -29,11 +29,8 @@ on how to download and install CLgen.
 Download a tiny example dataset to train and sample your first CLgen model:
 
 ```sh
-$ wget https://github.com/ChrisCummins/phd/raw/master/deeplearning/clgen/test/data/tiny.tar.bz2
-$ tar xf tiny.tar.bz2
-$ bazel run //deeplearning/clgen:sample \
-    --model_config=$PHD/deeplearning/clgen/test/data/model.pbtxt \
-    --sampler_config=$PHD/deeplearning/clgen/test/data/sampler.pbtxt
+$ bazel run //deeplearning/clgen:clgen \
+    --config=$PHD/deeplearning/clgen/test/data/tiny/config.pbtxt
 ```
 
 <img src="https://raw.githubusercontent.com/ChrisCummins/phd/master/deeplearning/clgen/docs/assets/clgen.gif" width="500">
