@@ -1,0 +1,11 @@
+# Download Java files.
+# File: //datasets/github/scrape_repos/proto/scrape_repos.proto
+# Proto: scrape_repos.LanguageCloneList
+language {
+  language: "java"
+  num_repos_to_clone: 1000
+  destination_directory: "/var/phd/datasets/github/repos_by_lang/java"
+  importer {
+    source_code_pattern: "\\.java$"
+  }
+}

@@ -91,16 +91,6 @@ language {
   }
 }
 
-# Download Java files.
-language {
-  language: "java"
-  num_repos_to_clone: 1000
-  destination_directory: "/var/phd/datasets/github/repos_by_lang/java"
-  importer {
-    source_code_pattern: "\\.java$"
-  }
-}
-
 # Download source code for solidity, the language of the Ethereum blockchain.
 # As with OpenCL, Solidity is not treated as a first-class language and we
 # cannot filter by it. Our hit ratio is likely to be low.
