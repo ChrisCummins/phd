@@ -3,6 +3,16 @@
 This package implements a two-step process to clone the *n* most popular 
 repositories of a particular programming language from GitHub.
 
+## Pre-requisites
+
+Create a file `~/.githubrc`:
+
+```ini
+[User]
+Username = your-github-username
+Password = your-github-password
+```
+
 
 ## Usage
 
