@@ -6,7 +6,22 @@
 # per query limit imposed by GitHub search API.
 language {
   language: "java"
-  num_repos_to_clone: 1000
+  query {
+    string: "language:java sort:stars fork:false"
+    max_results: 1000
+  }
+  query {
+    string: "language:java sort:updated fork:false"
+    max_results: 1000
+  }
+  query {
+    string: "compute language:java sort:stars fork:false"
+    max_results: 1000
+  }
+  query {
+    string: "benchmark language:java sort:stars fork:false"
+    max_results: 1000
+  }
   destination_directory: "/var/phd/datasets/github/repos_by_lang/java"
   importer {
     source_code_pattern: ".*\\.java"
