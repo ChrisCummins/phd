@@ -160,7 +160,7 @@ def test_Model_is_trained_new_instance(clgen_cache_dir, abc_model_config):
 
 
 def test_Model_Train_epoch_checkpoints(clgen_cache_dir, abc_model_config):
-  """Test that a trained model has a TensorFlow checkpoint."""
+  """Test that a trained model generates weight checkpoints."""
   del clgen_cache_dir
   abc_model_config.training.num_epochs = 2
   m = models.Model(abc_model_config)
@@ -168,6 +168,18 @@ def test_Model_Train_epoch_checkpoints(clgen_cache_dir, abc_model_config):
   assert len(m.epoch_checkpoints) == 2
   for path in m.epoch_checkpoints:
     assert path.is_file()
+
+
+def test_Model_Train_telemetry(clgen_cache_dir, abc_model_config):
+  """Test that model training produced telemetry files."""
+  del clgen_cache_dir
+  abc_model_config.training.num_epochs = 2
+  m = models.Model(abc_model_config)
+  assert len(m.TrainingTelemetry()) == 0
+  m.Train()
+  assert len(m.TrainingTelemetry()) == 2
+  for telemetry in m.TrainingTelemetry():
+    assert isinstance(telemetry, internal_pb2.ModelEpochTelemetry)
 
 
 def test_Model_Train_twice(clgen_cache_dir, abc_model_config):
