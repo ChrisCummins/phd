@@ -35,7 +35,7 @@ class HashCacheRecord(Base):
   last_modified_ms: int = sql.Column(sql.Integer, nullable=False)
   # The cached hash in hexadecimal encoding. We use the length of the longest
   # supported hash function: sha256.
-  hash: str = sql.Column(sql.String(40), nullable=False)
+  hash: str = sql.Column(sql.String(64), nullable=False)
 
 
 def GetDirectoryMTime(path: pathlib.Path) -> int:
