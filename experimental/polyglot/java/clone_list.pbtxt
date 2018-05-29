@@ -1,6 +1,9 @@
-# Download Java repos.
 # File: //datasets/github/scrape_repos/proto/scrape_repos.proto
 # Proto: scrape_repos.LanguageCloneList
+
+# Download Java repos.
+# There is *a lot* of Java on GitHub. The problem we have is the 1000 results
+# per query limit imposed by GitHub search API.
 language {
   language: "java"
   num_repos_to_clone: 1000

@@ -1,4 +1,4 @@
-"""Test that //experimental/polyglot/java is valid."""
+"""Test that //experimental/polyglot/opencl:protos are valid."""
 import pathlib
 import sys
 import tempfile
@@ -16,7 +16,7 @@ from lib.labm8 import pbutil
 def test_clone_list_is_valid():
   """Test that clone_list.pbtxt is valid."""
   pbutil.FromFile(
-      bazelutil.DataPath('phd/experimental/polyglot/java/clone_list.pbtxt'),
+      bazelutil.DataPath('phd/experimental/polyglot/opencl/clone_list.pbtxt'),
       scrape_repos_pb2.LanguageCloneList())
 
 
@@ -26,7 +26,7 @@ def test_config_is_valid():
     working_dir = pathlib.Path(d)
     config = pbutil.FromFile(
         bazelutil.DataPath(
-            'phd/experimental/polyglot/java/clgen.pbtxt'),
+            'phd/experimental/polyglot/opencl/clgen.pbtxt'),
         clgen_pb2.Instance())
     # Change the working directory and corpus path to our bazel run dir.
     config.working_dir = str(working_dir)

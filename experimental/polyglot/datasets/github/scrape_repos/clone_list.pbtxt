@@ -6,34 +6,6 @@
 # broad search keywords. As a result, our "hit" ratio of interesting files is
 # likely to be low.
 language {
-  language: "opencl"
-  num_repos_to_clone: 1000
-  github_filter_by_lang: false
-  github_search_term: "opencl"
-  github_search_term: "cl"
-  github_search_term: "khronos"
-  github_search_term: "gpu"
-  github_search_term: "gpgpu"
-  github_search_term: "cuda"
-  github_search_term: "amd"
-  github_search_term: "nvidia"
-  github_search_term: "heterogeneous"
-  destination_directory: "/var/phd/datasets/github/repos_by_lang/opencl"
-  importer {
-    source_code_pattern: ".*\\.cl"
-    preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
-  }
-  importer {
-    source_code_pattern: ".*\\.ocl"
-    preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
-  }
-}
-
-# Download OpenCL source code.
-# OpenCL is not treated as a first-class language on GitHub, so we must use
-# broad search keywords. As a result, our "hit" ratio of interesting files is
-# likely to be low.
-language {
   language: "glsl"
   num_repos_to_clone: 1000
   destination_directory: "/var/phd/datasets/github/repos_by_lang/glsl"

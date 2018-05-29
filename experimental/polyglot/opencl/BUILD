@@ -1,4 +1,4 @@
-# Fuzz testing Java using CLgen.
+# Fuzz testing OpenCL using CLgen.
 
 filegroup(
     name = "protos",
