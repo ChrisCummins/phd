@@ -20,11 +20,11 @@ language {
   github_search_term: "heterogeneous"
   destination_directory: "/var/phd/datasets/github/repos_by_lang/opencl"
   importer {
-    source_code_pattern: "\\.cl$"
+    source_code_pattern: ".*\\.cl"
     preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
   }
   importer {
-    source_code_pattern: "\\.ocl$"
+    source_code_pattern: ".*\\.ocl"
     preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
   }
 }
@@ -38,31 +38,31 @@ language {
   num_repos_to_clone: 1000
   destination_directory: "/var/phd/datasets/github/repos_by_lang/glsl"
   importer {
-    source_code_pattern: "\\.glsl$"
+    source_code_pattern: ".*\\.glsl"
     preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
   }
   importer {
-    source_code_pattern: "\\.frag$"
+    source_code_pattern: ".*\\.frag"
     preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
   }
   importer {
-    source_code_pattern: "\\.vert$"
+    source_code_pattern: ".*\\.vert"
     preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
   }
   importer {
-    source_code_pattern: "\\.tesc$"
+    source_code_pattern: ".*\\.tesc"
     preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
   }
   importer {
-    source_code_pattern: "\\.tese$"
+    source_code_pattern: ".*\\.tese"
     preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
   }
   importer {
-    source_code_pattern: "\\.geom$"
+    source_code_pattern: ".*\\.geom"
     preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
   }
   importer {
-    source_code_pattern: "\\.comp$"
+    source_code_pattern: ".*\\.comp"
     preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
   }
 }
@@ -74,19 +74,19 @@ language {
   github_search_term: "compute"
   destination_directory: "/var/phd/datasets/github/repos_by_lang/c"
   importer {
-    source_code_pattern: "\\.c$"
+    source_code_pattern: ".*\\.c"
     preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
   }
   importer {
-    source_code_pattern: "\\.cpp$"
+    source_code_pattern: ".*\\.cpp"
     preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
   }
   importer {
-    source_code_pattern: "\\.cxx$"
+    source_code_pattern: ".*\\.cxx"
     preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
   }
   importer {
-    source_code_pattern: "\\.inc$"
+    source_code_pattern: ".*\\.inc"
     preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
   }
 }
@@ -102,7 +102,7 @@ language {
   github_search_term: "ethereum"
   github_search_term: "solc"
   importer {
-    source_code_pattern: "\\.sol$"
+    source_code_pattern: ".*\\.sol"
   }
 }
 

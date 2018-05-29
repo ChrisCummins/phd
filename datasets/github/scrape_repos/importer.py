@@ -17,9 +17,17 @@ FLAGS = flags.FLAGS
 flags.DEFINE_string('clone_list', None, 'The path to a LanguageCloneList file.')
 
 
-def ShouldImport(session: orm.session.Session, metafile: pathlib.Path) -> bool:
-  if not (metafile.is_file() and pbutil.ProtoIsReadable(metafile,
-                                                        scrape_repos_pb2.GitHubRepoMetadata())):
+def ShouldImportRepo(session: orm.session.Session,
+                     metafile: pathlib.Path) -> bool:
+  """Determine if the repository described by a metafile should be imported.
+
+  A repository should be imported iff:
+    * The metafile is a valid GitHubRepoMetadata proto.
+    * The clone directory specified in the metafile appears to be a github repo.
+    * The repo does not exist in the contentfiles database.
+  """
+  if not (metafile.is_file() and pbutil.ProtoIsReadable(
+      metafile, scrape_repos_pb2.GitHubRepoMetadata())):
     return False
   meta = pbutil.FromFile(metafile, scrape_repos_pb2.GitHubRepoMetadata())
   clone_dir = metafile.parent / f'{meta.owner}_{meta.name}'
@@ -28,26 +36,32 @@ def ShouldImport(session: orm.session.Session, metafile: pathlib.Path) -> bool:
   return not contentfiles.GitHubRepository.IsInDatabase(session, meta)
 
 
-FILE_EXTENSIONS = {
-  'glsl': ['.glsl', '.frag', '.vert', '.tesc', '.tese', '.geom', '.comp'],
-  'opencl': ['.cl', '.ocl'], 'solidity': ['.sol'], 'javascript': ['.js'],
-  'c': ['.c', '.h', '.inc'], 'go': ['.go'], 'java': ['.java'],
-  'python': ['.py'], }
+def ImportRepo(session: orm.session.Session,
+               language: scrape_repos_pb2.LanguageToClone,
+               metafile: pathlib.Path) -> None:
+  """Import contentfiles from repository.
 
-
-def ImportFromMetafile(db: contentfiles.ContentFiles,
-                       language: scrape_repos_pb2.LanguageToClone,
-                       metafile: pathlib.Path):
+  Args:
+    session: A database session to import to.
+    language: The language specification for the repo.
+    metafile: The repo metafile.
+  """
   meta = pbutil.FromFile(metafile, scrape_repos_pb2.GitHubRepoMetadata())
   clone_dir = metafile.parent / f'{meta.owner}_{meta.name}'
-  with db.Session(commit=True) as s:
-    repo = contentfiles.GitHubRepository.GetOrAdd(s, meta)
-    repo.language = language.language
-    name_str = " -o ".join(
-        [f"-name '*{ext}'" for ext in FILE_EXTENSIONS[language.language]])
+  repo = contentfiles.GitHubRepository.GetOrAdd(session, meta)
+  repo.language = language.language
+
+  for importer in language.importer:
+    if not importer.source_code_pattern:
+      logging.error('No source_code_pattern specified! Stopping now.')
+      return
+
+    pat = importer.source_code_pattern
+    pat = f'{clone_dir}/{pat[1:]}' if pat[0] == '^' else f'{clone_dir}/{pat}'
+    cmd = ['find', str(clone_dir), '-type', 'f', '-regex', pat, '-not',
+           '-path', '*/.git/*']
     paths = subprocess.check_output(
-        f"find {clone_dir} -type f {name_str} | grep -v '.git/' || true",
-        shell=True, universal_newlines=True).rstrip().split('\n')
+        cmd, universal_newlines=True).rstrip().split('\n')
     if len(paths) == 1 and not paths[0]:
       logging.debug('No files to import from %s', clone_dir)
       return
@@ -56,26 +70,29 @@ def ImportFromMetafile(db: contentfiles.ContentFiles,
     for path in paths:
       try:
         if pathlib.Path(path).is_file():
-          s.add(contentfiles.ContentFile.FromFile(meta, clone_dir, path))
+          session.add(contentfiles.ContentFile.FromFile(meta, clone_dir, path))
       except UnicodeError:
         logging.warning('Failed to decode %s', path)
 
 
 def ImportFromLanguage(db: contentfiles.ContentFiles,
                        language: scrape_repos_pb2.LanguageToClone) -> None:
-  if not language.language in FILE_EXTENSIONS:
-    logging.error('Language %s not supported! Importing nothing',
-                  language.language.capitalize())
-    return
-  with db.Session() as s:
+  """Import contentfiles from a language specification.
+
+  Args:
+    db: The database to import to.
+    language: The language to import.
+  """
+  with db.Session() as session:
     repos_to_import = [pathlib.Path(language.destination_directory / f) for f in
                        pathlib.Path(language.destination_directory).iterdir() if
-                       ShouldImport(s, pathlib.Path(
+                       ShouldImportRepo(session, pathlib.Path(
                            language.destination_directory / f))]
   logging.info('Importing %d %s repos ...', len(repos_to_import),
                language.language.capitalize())
   for metafile in repos_to_import:
-    ImportFromMetafile(db, language, metafile)
+    with db.Session(commit=True) as session:
+      ImportRepo(session, language, metafile)
 
 
 def main(argv):

@@ -6,6 +6,6 @@ language {
   num_repos_to_clone: 1000
   destination_directory: "/var/phd/datasets/github/repos_by_lang/java"
   importer {
-    source_code_pattern: "\\.java$"
+    source_code_pattern: ".*\\.java"
   }
 }

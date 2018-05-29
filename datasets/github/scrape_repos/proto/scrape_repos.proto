@@ -39,11 +39,11 @@ message LanguageToClone {
 
 // The configuration for the contentfiles importer.
 message ContentFilesImporterConfig {
-  // A regular expression to match repo-relative source code paths.
-  // E.g. the pattern "^src/.+\.c$" would match any files in a repository's
-  // 'src/' directory ending in suffix '.c'. This pattern is searched for in
-  // each path, it does not need to match the entire path. E.g. the pattern 'a'
-  // will match any file with an 'a' in its path.
+  // A regular expression to match repo-relative file paths. E.g. the pattern
+  // "src/.*\.c" would match any files in a repository's 'src/' directory ending
+  // in suffix '.c'. This pattern must match the entire path. E.g. the pattern
+  // '\.c$' would match only a single file called '.c'. The start and end of
+  // match characters '^' and '$' are permitted but redundant.
   optional string source_code_pattern = 1;
   // A list of preprocessor passes to run on each imported source code, in the
   // order in which they should be executed.
