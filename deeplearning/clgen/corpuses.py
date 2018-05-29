@@ -302,11 +302,12 @@ WHERE ContentFiles.id NOT IN (
     # Set the corpus size as the number of tokens.
     num_tokens = len(tokenized_corpus)
     self._size = num_tokens
-    logging.info('%s derived %s token corpus of length %s in %.2f ms.',
+    logging.info('%s derived %s token corpus of length %s in %s ms',
                  type(self.atomizer).__name__,
                  humanize.intcomma(len(self.atomizer.vocab)),
                  humanize.intcomma(len(tokenized_corpus)),
-                 int(round(time.time() - start_time)))
+                 humanize.intcomma(
+                    int(round((time.time() - start_time) * 1000))))
     return tokenized_corpus
 
   @property
