@@ -171,7 +171,7 @@ export PYTHONPATH=$ROOT:$ROOT/lib:$ROOT/bazel-genfiles
 
 clgen() {
   bazel build //deeplearning/clgen
-  $PHD/bazel-phd/bazel-out/*-py3-opt/bin/deeplearning/clgen/clgen \$@
+  $ROOT/bazel-phd/bazel-out/*-py3-opt/bin/deeplearning/clgen/clgen \$@
 }
 EOF
     echo "# Created $ROOT/.env"
