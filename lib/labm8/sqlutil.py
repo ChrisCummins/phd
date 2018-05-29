@@ -24,5 +24,7 @@ def GetOrAdd(session: sql.orm.session.Session, model,
     params.update(defaults or {})
     instance = model(**params)
     session.add(instance)
-    logging.debug('New %s record', model.__name__)
+    if logging.level_debug():
+      logging.debug('New record: %s(%s)', model.__name__,
+                    ', '.join([f'{k}={v}' for k, v in params.items()]))
   return instance
