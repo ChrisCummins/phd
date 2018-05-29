@@ -75,6 +75,8 @@ main() {
         grep -v '^#' $ROOT/tools/requirements.txt >> $ROOT/requirements.txt
     fi
 
+    # TODO(cec): Uninstall the *other* tensorflow package. E.g. if installing
+    # tensorflow-gpu, uninstall tensorflow.
     # Install Python packages.
     $PYTHON -m pip install -r $ROOT/requirements.txt
 
