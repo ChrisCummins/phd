@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="test //lib/labm8:hashcache_test" type="BlazeCommandRunConfigurationType" factoryName="Bazel Command" handler-id="BlazePyRunConfigurationHandlerProvider" blaze-command="test">
+    <blaze-target kind="py_test">//lib/labm8:hashcache_test</blaze-target>
+    <blaze-user-flag>--test_output=all</blaze-user-flag>
+    <env_state>
+      <envs />
+    </env_state>
+    <method />
+  </configuration>
+</component>
