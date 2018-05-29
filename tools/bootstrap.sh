@@ -86,6 +86,8 @@ main() {
         sed "s,@PYTHON@,$PYTHON," -i $HOME/.ipython/kernels/phd/kernel.json
     fi
 
+    # TODO(cec): Determine Homebrew location.
+
     # "Husky" enables easy git commit hooks.
     # https://github.com/typicode/husky/tree/master
     if [[ ! -d "$ROOT/node_modules/husky" ]]; then
