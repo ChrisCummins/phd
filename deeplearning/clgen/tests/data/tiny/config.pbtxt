@@ -20,11 +20,11 @@ model {
   }
   architecture {
     neuron_type: LSTM
-    neurons_per_layer: 32
+    neurons_per_layer: 256
     num_layers: 2
   }
   training {
-    num_epochs: 20
+    num_epochs: 30
     sequence_length: 50
     batch_size: 64
     shuffle_corpus_contentfiles_between_epochs: true
