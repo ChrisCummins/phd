@@ -75,19 +75,23 @@ py_test(
 )
 
 py_library(
-    name = "dirhashcache",
-    srcs = ["dirhashcache.py"],
+    name = "hashcache",
+    srcs = ["hashcache.py"],
     visibility = ["//visibility:public"],
-    deps = [":fs"],
+    deps = [
+        ":crypto",
+        ":fs",
+        ":sqlutil",
+    ],
 )
 
 py_test(
-    name = "dirhashcache_test",
+    name = "hashcache_test",
     size = "small",
-    srcs = ["dirhashcache_test.py"],
+    srcs = ["hashcache_test.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
-    deps = [":dirhashcache"],
+    deps = [":hashcache"],
 )
 
 py_library(
