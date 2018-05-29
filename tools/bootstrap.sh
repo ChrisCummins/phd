@@ -86,13 +86,24 @@ main() {
         sed "s,@PYTHON@,$PYTHON," -i $HOME/.ipython/kernels/phd/kernel.json
     fi
 
-    # TODO(cec): Determine Homebrew location.
+    # Determine brew prefix ourselves rather than using `brew --prefix`, since
+    # brew may not be on the user's PATH.to fix the Docker build.
+    if [[ -f "/usr/local/bin/brew" ]]; then
+      BREW_PREFIX="/usr/local"
+    elif [[ -f "/home/.linux/linuxbrew/bin/brew" ]]; then
+      BREW_PREFIX="/home/.linux/linuxbrew"
+    else
+      echo 'Could not determine brew location!' >&2
+      exit 1
+    fi
 
     # "Husky" enables easy git commit hooks.
     # https://github.com/typicode/husky/tree/master
     if [[ ! -d "$ROOT/node_modules/husky" ]]; then
         echo '# husky:'
-        "$(brew --prefix)/bin/npm" install --cwd "$ROOT" husky --save-dev
+        # Sanity check that homebrew npm is installed.
+        test -f "$BREW_PREFIX/bin/npm"
+        "$BREW_PREFIX/bin/npm" install --cwd "$ROOT" husky --save-dev
     fi
 
     # libexempi3 is required by //util/photolib/ and python package
@@ -108,7 +119,7 @@ main() {
     fi
 
     # Get the installation directory of our LLVM.
-    LLVM_PREFIX="$(brew --prefix llvm)"
+    LLVM_PREFIX="$BREW_PREFIX/opt/llvm"
     # Sanity check to ensure that LLVM was installed correctly.
     test -f "$LLVM_PREFIX/bin/clang"
     test -f "$LLVM_PREFIX/bin/clang-format"
