@@ -63,6 +63,17 @@ def test_HashCache_GetHash_modified_directory(database_path):
     assert hash_1 != hash_2
 
 
+def test_HashCache_GetHash_modified_file(database_path):
+  """Test that modifying a file changes the hash."""
+  c = hashcache.HashCache(database_path, 'md5')
+  with tempfile.TemporaryDirectory() as d:
+    (pathlib.Path(d) / 'a').touch()
+    hash_1 = c.GetHash(pathlib.Path(d) / 'a')
+    (pathlib.Path(d) / 'a').touch()
+    hash_2 = c.GetHash(pathlib.Path(d))
+    assert hash_1 != hash_2
+
+
 def main(argv):
   """Main entry point."""
   del argv
