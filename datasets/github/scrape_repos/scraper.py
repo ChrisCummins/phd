@@ -43,26 +43,6 @@ def ReadGitHubCredentials() -> scrape_repos_pb2.GitHubCredentials:
   return credentials
 
 
-def MakeRepositoryMetas(repos: typing.List[Repository.Repository],
-                        destination_directory: pathlib.Path) -> None:
-  """Make meta files for a list of repositories.
-
-  Args:
-    repos: A list of GitHub Repository instances.
-    destination_directory: The directory to clone each repository in to.
-  """
-  logging.debug('Scraping %s repositories', humanize.intcomma(len(repos)))
-  for repo in repos:
-    concat_name = '_'.join([repo.owner.login, repo.name])
-    clone_dir = destination_directory / concat_name
-    meta_path = pathlib.Path(str(clone_dir) + '.pbtxt')
-    if not pbutil.ProtoIsReadable(meta_path,
-                                  scrape_repos_pb2.GitHubRepoMetadata()):
-      meta = GetRepositoryMetadata(repo)
-      logging.debug('%s', meta)
-      pbutil.ToFile(meta, meta_path)
-
-
 class QueryScraper(threading.Thread):
   """Scrape repository metadata from the results of GitHub search query.
 
@@ -147,9 +127,27 @@ class QueryScraper(threading.Thread):
     while not self.IsDone(repos):
       num_remaining = (self.repo_query.max_results - self.i)
       repos = repos[:num_remaining]
-      MakeRepositoryMetas(repos, self.destination_directory)
-      self.i += len(repos)
+      self.MakeRepositoryMetas(repos)
       repos = self.GetNextBatchOfResults()
+
+  def MakeRepositoryMetas(self,
+                          repos: typing.List[Repository.Repository]) -> None:
+    """Make meta files for a list of repositories.
+
+    Args:
+      repos: A list of GitHub Repository instances.
+    """
+    logging.debug('Scraping %s repositories', humanize.intcomma(len(repos)))
+    for repo in repos:
+      self.i += 1
+      concat_name = '_'.join([repo.owner.login, repo.name])
+      clone_dir = self.destination_directory / concat_name
+      meta_path = pathlib.Path(str(clone_dir) + '.pbtxt')
+      if not pbutil.ProtoIsReadable(meta_path,
+                                    scrape_repos_pb2.GitHubRepoMetadata()):
+        meta = GetRepositoryMetadata(repo)
+        logging.debug('%s', meta)
+        pbutil.ToFile(meta, meta_path)
 
 
 def RunQuery(worker: QueryScraper) -> None:
