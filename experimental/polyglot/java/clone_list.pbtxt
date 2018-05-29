@@ -1,4 +1,4 @@
-# Download Java files.
+# Download Java repos.
 # File: //datasets/github/scrape_repos/proto/scrape_repos.proto
 # Proto: scrape_repos.LanguageCloneList
 language {
