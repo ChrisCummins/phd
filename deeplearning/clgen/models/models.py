@@ -190,9 +190,8 @@ class Model(object):
 
       callbacks = [
         keras.callbacks.ModelCheckpoint(
-            file_path, monitor="loss", verbose=1,
-            save_best_only=False, mode="min"),
-        telemetry.TrainingLogger(pathlib.Path('/tmp')).KerasCallback(keras),
+            file_path, verbose=1, save_best_only=False, mode="min"),
+        telemetry.TrainingLogger(self.cache.path / 'logs').KerasCallback(keras),
       ]
       generator = data_generators.AutoGenerator(self.corpus,
                                                 self.config.training)
@@ -375,6 +374,10 @@ class Model(object):
     checkpoint_dir = pathlib.Path(self.cache.path) / 'checkpoints'
     return [checkpoint_dir / x for x in
             sorted(pathlib.Path(self.cache['checkpoints']).iterdir())]
+
+  def TrainingTelemetry(self) -> typing.List[internal_pb2.ModelEpochTelemetry]:
+    """Get the training telemetry data."""
+    return telemetry.TrainingLogger(self.cache.path / 'logs').EpochTelemetry()
 
   def __repr__(self) -> str:
     """String representation."""
