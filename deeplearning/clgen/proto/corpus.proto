@@ -5,9 +5,6 @@ package clgen;
 
 // The specification of a training corpus.
 message Corpus {
-  // The identifying name of the programming language.
-  optional string language = 1;
-
   oneof contentfiles {
     string id = 10;
     string path = 11;

@@ -8,12 +8,12 @@ import os
 import pathlib
 import pickle
 import re
+import time
 import typing
 from tempfile import NamedTemporaryFile
 
 import humanize
 import numpy as np
-import time
 from absl import logging
 
 from deeplearning.clgen import atomizers
@@ -22,7 +22,6 @@ from deeplearning.clgen import dbutil
 from deeplearning.clgen import errors
 from deeplearning.clgen import features
 from deeplearning.clgen import fetch
-from deeplearning.clgen import languages
 from deeplearning.clgen.preprocessors import preprocessors
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import internal_pb2
@@ -68,8 +67,6 @@ class Corpus(object):
     self.config = corpus_pb2.Corpus()
     self.config.CopyFrom(config)
 
-    self.language = languages.Language.from_str(config.language)
-
     # Determine the corpus cache path. This will depend on whether a path or
     # an id was specified.
     path = None
@@ -86,16 +83,15 @@ class Corpus(object):
     elif config.HasField('id'):
       self.content_id = config.id
       if not fs.isdir(
-          cache.cachepath("contentfiles", f"{self.language}-{config.id}")):
-        raise errors.UserError(f"corpus {self.language}-{config.id} not found")
+          cache.cachepath("contentfiles", config.id)):
+        raise errors.UserError(f"corpus {config.id} not found")
     else:
       raise errors.UserError('Must specify corpus id or path.')
 
-    cache_name = f"{self.language}-{self.content_id}"
-    self.contentfiles_cache = cache.mkcache("contentfiles", cache_name)
+    self.contentfiles_cache = cache.mkcache("contentfiles", self.content_id)
     self.kernels_db = self.contentfiles_cache.keypath('kernels.db')
     self.hash = self._ComputeHash(self.content_id, config)
-    self.cache = cache.mkcache("corpus", f"{self.language}-{self.hash}")
+    self.cache = cache.mkcache("corpus", self.hash)
 
     logging.debug('contentfiles %s', self.content_id)
     logging.debug('corpus %s', self.hash)
@@ -146,7 +142,7 @@ class Corpus(object):
       try:
         preprocess_time = time.time()
         if preprocessors.PreprocessDatabase(
-            pathlib.Path(self.contentfiles_cache["kernels.db"]), self.language,
+            pathlib.Path(self.contentfiles_cache["kernels.db"]),
             self.config.preprocessor):
           modified = True
       except Exception as e:
@@ -307,7 +303,7 @@ WHERE ContentFiles.id NOT IN (
                  humanize.intcomma(len(self.atomizer.vocab)),
                  humanize.intcomma(len(tokenized_corpus)),
                  humanize.intcomma(
-                    int(round((time.time() - start_time) * 1000))))
+                     int(round((time.time() - start_time) * 1000))))
     return tokenized_corpus
 
   @property

@@ -1,7 +1,8 @@
 """Unit tests for //deeplearning/clgen/models/models.py."""
+import sys
+
 import checksumdir
 import pytest
-import sys
 from absl import app
 
 from deeplearning.clgen import errors
@@ -31,7 +32,7 @@ class MockSampler(object):
 
 
 # The Model.hash for an instance of abc_model_config.
-ABC_MODEL_HASH = '7eeb0a39eb375088d16c703b82268019801d3fa6'
+ABC_MODEL_HASH = '45205089400d6f810f67c2b52161e096c951d99d'
 
 
 def test_Model_config_type_error():

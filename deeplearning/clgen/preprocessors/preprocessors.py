@@ -14,7 +14,6 @@ from absl import logging
 
 from deeplearning.clgen import dbutil
 from deeplearning.clgen import errors
-from deeplearning.clgen import languages
 from deeplearning.clgen.preprocessors import public
 from deeplearning.clgen.proto import internal_pb2
 
@@ -144,14 +143,13 @@ class PreprocessWorker(threading.Thread):
       self.queue.put(result)
 
 
-def _DoPreprocessDatabase(db_path: pathlib.Path, language: languages.Language,
+def _DoPreprocessDatabase(db_path: pathlib.Path,
                           preprocessors: typing.List[str], attempt_num: int,
                           max_attempts: int, max_num_threads: int) -> None:
   """The private function to preprocess a database.
 
   Args:
     db_path: The path to the contentfiles database.
-    language: The language of the contentfiles database.
     preprocessors: The list of preprocessors to run.
     attempt_num: The current attempt number.
     max_attempts: The maxmium number of attempts to try.
@@ -173,8 +171,7 @@ def _DoPreprocessDatabase(db_path: pathlib.Path, language: languages.Language,
                len(contentfiles), (len(todo) / len(contentfiles)) * 100)
   # Determine if we need to inline kernels when creating jobs.
   if dbutil.HasContentMetaTable(db_path):
-    get_kernel = lambda kid: dbutil.get_inlined_kernel(str(db_path), kid,
-                                                       lang=language)
+    get_kernel = lambda kid: dbutil.get_inlined_kernel(str(db_path), kid)
   else:
     get_kernel = lambda kid: dbutil.get_kernel(str(db_path), kid,
                                                table="ContentFiles")
@@ -226,11 +223,11 @@ def _DoPreprocessDatabase(db_path: pathlib.Path, language: languages.Language,
     # Try again with fewer threads.
     # See: https://github.com/ChrisCummins/clgen/issues/64
     new_max_threads = max(int(math.ceil(max_num_threads / 2)), 1)
-    _DoPreprocessDatabase(db_path, language, preprocessors, attempt_num + 1,
+    _DoPreprocessDatabase(db_path, preprocessors, attempt_num + 1,
                           max_attempts, new_max_threads)
 
 
-def PreprocessDatabase(db_path: pathlib.Path, language: languages.Language,
+def PreprocessDatabase(db_path: pathlib.Path,
                        preprocessors: typing.List[str]) -> bool:
   """Preprocess a contentfiles database.
 
@@ -240,7 +237,6 @@ def PreprocessDatabase(db_path: pathlib.Path, language: languages.Language,
 
   Args:
     db_path: The path of the contentfiles database.
-    language: The language of the contentfiles database.
     preprocessors: The list of preprocessors to run.
 
   Returns:
@@ -257,7 +253,7 @@ def PreprocessDatabase(db_path: pathlib.Path, language: languages.Language,
   is_modified = dbutil.is_modified(db)
   max_retries = 10
   if is_modified:
-    _DoPreprocessDatabase(db_path, language, preprocessors, 1, max_retries,
+    _DoPreprocessDatabase(db_path, preprocessors, 1, max_retries,
                           multiprocessing.cpu_count())
     dbutil.set_modified_status(db, is_modified)
     return True

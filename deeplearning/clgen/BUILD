@@ -56,7 +56,6 @@ py_binary(
         ":explore",
         ":features",
         ":fetch",
-        ":languages",
         ":samplers",
         "//deeplearning/clgen/models",
         "//deeplearning/clgen/preprocessors",
@@ -124,7 +123,6 @@ py_library(
         ":errors",
         ":features",
         ":fetch",
-        ":languages",
         "//deeplearning/clgen/preprocessors",
         "//deeplearning/clgen/proto:corpus_py_pb2",
         "//deeplearning/clgen/proto:internal_py_pb2",
@@ -164,7 +162,6 @@ py_library(
     visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = [
         ":errors",
-        ":languages",
         ":package_util",
     ],
 )
@@ -229,7 +226,6 @@ py_library(
     deps = [
         ":dbutil",
         ":errors",
-        ":languages",
         "//lib/labm8:crypto",
         "//lib/labm8:fs",
     ],
@@ -245,13 +241,6 @@ py_test(
         ":fetch",
         "//deeplearning/clgen/tests:testlib",
     ],
-)
-
-py_library(
-    name = "languages",
-    srcs = ["languages.py"],
-    visibility = ["//deeplearning/clgen:__subpackages__"],
-    deps = [":errors"],
 )
 
 py_library(

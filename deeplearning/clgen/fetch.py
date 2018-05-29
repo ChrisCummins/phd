@@ -39,7 +39,6 @@ from github import Github, GithubException
 
 from deeplearning.clgen import dbutil
 from deeplearning.clgen import errors
-from deeplearning.clgen import languages
 from lib.labm8 import crypto
 from lib.labm8 import fs
 
@@ -217,6 +216,88 @@ def _download_opencl_file(github_token: str, repo, url: str,
   return '\n'.join(outlines)
 
 
+def get_inlined_kernel_DEPRECATED(path: str, kid: str,
+                                  lang: str,
+                                  stack: List[str] = None) -> str:
+  """
+  Retrieve a kernel from a database and inline any includes.
+
+  Parameters
+  ----------
+  path : str
+      Path to database.
+  kid : str
+      Kernel ID.
+  lang : languages.Language
+      Programming language.
+
+  Returns
+  -------
+  str
+      Source code.
+  """
+  if stack is None:
+    stack = []
+
+  db = sqlite3.connect(path)
+  c = db.cursor()
+  c.execute(f"SELECT contents FROM ContentFiles WHERE id=?", (kid,))
+  src = c.fetchone()[0]
+
+  c.execute("SELECT path, repo_url FROM ContentMeta WHERE id=?", (kid,))
+  repo_path, repo = c.fetchone()
+  stack.append(repo_path)
+
+  include_re = 'TODO'
+  # {languages.Language.GLSL: re.compile(r'\w*#include ["<](?P<path>.*)[">]'),
+  #  languages.Language.OPENCL: re.compile(r'\w*#include ["<](?P<path>.*)[">]'),
+  #  languages.Language.SOLIDITY: re.compile(
+  #      r'\w*import ["<](\./)?(?P<path>.*)[">];'), }[lang]
+
+  outlines = []
+  for line in src.split('\n'):
+    match = re.match(include_re, line)
+    if match:
+      include_name = match.group("path")
+
+      # try and resolve relative paths
+      include_name = include_name.replace('../', '').replace('./', '')
+
+      c.execute('SELECT path FROM contentmeta WHERE repo_url=? AND '
+                f"path LIKE '%{include_name}%'", (repo,))
+      repo_paths = [row[0] for row in c.fetchall()]
+
+      if len(repo_paths):
+        distances = [editdistance.eval(include_name, path) for path in
+                     repo_paths]
+        closest_match = repo_paths[distances.index(min(distances))]
+
+        if closest_match in stack:
+          outlines.append(
+              '// [FETCH] ignored recursive include: ' + include_name)
+        else:
+          logging.debug("closest match to %s is %s", include_name,
+                        closest_match)
+
+          c.execute("SELECT id FROM contentmeta WHERE path=?", (closest_match,))
+          closest_kid = c.fetchone()[0]
+
+          include_src = get_inlined_kernel_DEPRECATED(path, closest_kid, lang,
+                                                      stack)
+          outlines.append('// [FETCH] include: ' + include_name)
+          outlines.append(include_src)
+          outlines.append('// [FETCH] eof(' + include_name + ')')
+      else:
+        outlines.append('// [FETCH] 404 not found: ' + include_name)
+    else:
+      outlines.append(line)
+
+  c.close()
+  db.close()
+
+  return "\n".join(outlines)
+
+
 def _download_file(github_token: str, repo, url: str) -> str:
   """
   Fetch file from GitHub.
@@ -357,7 +438,8 @@ def is_solidity_path(file) -> bool:
   return file.path.endswith('.sol')
 
 
-def fetch_repos(db_path: Path, indir: Path, lang: languages.Language) -> None:
+# TODO(cec): Move to //datasets.
+def fetch_repos(db_path: Path, indir: Path) -> None:
   db = dbutil.connect(db_path)
 
   if not dbutil.is_github(db):
@@ -396,7 +478,7 @@ def fetch_repos(db_path: Path, indir: Path, lang: languages.Language) -> None:
               (url, "<unknown>", name, 0, 0, 0, 0, updated_at, updated_at))
 
     name_str = " -o ".join(
-        [f"-name '*{ext}'" for ext in languages.file_extensions(lang)])
+        [f"-name '*{ext}'" for ext in ['TODO(cec): fix me.']])
     output = subprocess.check_output(
         f"find {directory} -type f {name_str} | grep -v '.git/' || true",
         shell=True, universal_newlines=True)
@@ -424,9 +506,9 @@ def fetch_repos(db_path: Path, indir: Path, lang: languages.Language) -> None:
     c = db.cursor()
 
 
-def fetch_github(db_path: str, github_username: str, github_pw: str,
-                 github_token: str,
-                 lang: languages.Language = languages.Language.OPENCL) -> None:
+# TODO(cec): Move to //datasets.
+def fetch_github(db_path: str, lang: str, github_username: str, github_pw: str,
+                 github_token: str) -> None:
   """
   Download all of the Solidity on GitHub (!)
 
@@ -441,12 +523,12 @@ def fetch_github(db_path: str, github_username: str, github_pw: str,
   github_token : str
       Authorization.
   """
-  if lang == languages.Language.OPENCL:
+  if lang == 'opencl':
     download_file_cb = _download_opencl_file
     file_is_intetesting = is_opencl_path
     query_terms = ['opencl', 'cl', 'khronos', 'gpu', 'gpgpu', 'cuda', 'amd',
                    'nvidia', 'heterogeneous']
-  elif lang == languages.Language.SOLIDITY:
+  elif lang == 'solidity':
     download_file_cb = _download_file
     file_is_intetesting = is_solidity_path
     query_terms = ['solidity', 'ethereum', 'solc', ]
@@ -458,9 +540,8 @@ def fetch_github(db_path: str, github_username: str, github_pw: str,
                                   file_is_intetesting, download_file_cb)
 
 
-def inline_fs_headers(path: Path, stack: List[str],
-                      lang: languages.Language = languages.Language.OPENCL,
-                      topdir: Path = None) -> str:
+def inline_fs_headers_DEPRECATED(path: Path, stack: List[str], lang: str,
+                                 topdir: Path = None) -> str:
   """
   Recursively inline headers in file.
 
@@ -485,7 +566,7 @@ def inline_fs_headers(path: Path, stack: List[str],
   # shell escaped top directory
   escp_topdir = topdir.replace('"', '\\"')
 
-  include_re = languages.include_regexp(lang)
+  include_re = ''  # TODO(cec): Fix me.
 
   with open(path, encoding="utf-8") as infile:
     src = infile.read()
@@ -526,22 +607,27 @@ def inline_fs_headers(path: Path, stack: List[str],
       # Process the inline file:
       if file_to_inline in stack:
         # We've already inlined this file, so ignore it:
-        outlines.append(
-            languages.format_as_comment(lang,
-                                        f'[FETCH] ignored_include({line})'))
+        # TODO(cec): Fix me.
+        # outlines.append(
+        #     languages.format_as_comment(lang,
+        #                                 f'[FETCH] ignored_include({line})'))
+        pass
       elif file_to_inline:
         # Inline the file by recursively expanding its contents:
-        outlines.append(
-            languages.format_as_comment(lang, f'[FETCH] begin_include({line})'))
+        # TODO(cec): Fix me.
+        # outlines.append(
+        #     languages.format_as_comment(lang, f'[FETCH] begin_include({line})'))
         inline_src = inline_fs_headers(file_to_inline, stack)
         outlines.append(inline_src)
-        outlines.append(
-            languages.format_as_comment(lang, f'[FETCH] end_include({line})'))
+        # TODO(cec): Fix me.
+        # outlines.append(
+        #     languages.format_as_comment(lang, f'[FETCH] end_include({line})'))
       else:
         # We didn't find anything suitable, so keep the original
         # include:
-        outlines.append(
-            languages.format_as_comment(lang, f'[FETCH] not_found({line})'))
+        # TODO(cec): Fix me.
+        # outlines.append(
+        #     languages.format_as_comment(lang, f'[FETCH] not_found({line})'))
         outlines.append(line)
     else:
       outlines.append(line)
@@ -598,7 +684,8 @@ def fetch(db_path: str, paths: List[str] = []) -> None:
   for path in paths:
     logging.debug('fetch %s', path)
     try:
-      contents = inline_fs_headers(path, []).strip()
+      with open(path) as f:
+        contents = f.read().strip()
     except IOError:
       db.commit()
       raise FetchError(

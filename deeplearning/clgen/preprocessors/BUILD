@@ -157,7 +157,6 @@ py_library(
         ":public",
         "//deeplearning/clgen:dbutil",
         "//deeplearning/clgen:errors",
-        "//deeplearning/clgen:languages",
         "//deeplearning/clgen/proto:internal_py_pb2",
     ],
 )

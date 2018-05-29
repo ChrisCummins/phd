@@ -3,7 +3,6 @@
 working_dir: "/var/phd/clgen/opencl"
 model {
   corpus {
-    language: "opencl"
     path: "/mnt/cc/data/kernels/github"
     # Note these tokens omit the optional __ qualifiers on OpenCL keywords.
     # The __ qualifiers are stripped in the corpus by the preprocessor

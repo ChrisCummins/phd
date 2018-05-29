@@ -3,7 +3,6 @@
 working_dir: "/var/phd/clgen/tiny"
 model {
   corpus {
-    language: "opencl"
     path: "$PWD/corpus.tar.bz2"
     ascii_character_atomizer: true
     contentfile_separator: "\n\n"
