@@ -53,6 +53,7 @@ py_library(
         "//deeplearning/clgen:corpuses",
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen:samplers",
+        "//deeplearning/clgen:telemetry",
         "//deeplearning/clgen/proto:internal_py_pb2",
         "//deeplearning/clgen/proto:model_py_pb2",
         "//deeplearning/clgen/proto:sampler_py_pb2",

@@ -12,6 +12,7 @@ from deeplearning.clgen import cache
 from deeplearning.clgen import corpuses
 from deeplearning.clgen import errors
 from deeplearning.clgen import samplers
+from deeplearning.clgen import telemetry
 from deeplearning.clgen.models import builders
 from deeplearning.clgen.models import data_generators
 from deeplearning.clgen.proto import internal_pb2
@@ -187,10 +188,13 @@ class Model(object):
       checkpoint_dir.mkdir(parents=True, exist_ok=True)
       file_path = str(
           checkpoint_dir) + "/checkpoint_weights_{epoch:02d}_{loss:.4f}.hdf5"
-      checkpoint = keras.callbacks.ModelCheckpoint(file_path, monitor="loss",
-                                                   verbose=1,
-                                                   save_best_only=False,
-                                                   mode="min")
+
+      callbacks = [
+        keras.callbacks.ModelCheckpoint(
+            file_path, monitor="loss", verbose=1,
+            save_best_only=False, mode="min"),
+        telemetry.TrainingLogger(pathlib.Path('/tmp')).KerasCallback(keras),
+      ]
       generator = data_generators.AutoGenerator(self.corpus,
                                                 self.config.training)
       logging.info('Step counts: %s per epoch, %s left to do, %s total',
@@ -203,7 +207,7 @@ class Model(object):
       self.model.fit_generator(generator,
                                steps_per_epoch=generator.steps_per_epoch,
                                epochs=target_num_epochs - starting_epoch,
-                               callbacks=[checkpoint])
+                               callbacks=callbacks)
       self._current_weights_epoch = self.config.training.num_epochs
       # TODO(cec): Checkpoint callback.
       # stat = self.meta.training_stats.add()

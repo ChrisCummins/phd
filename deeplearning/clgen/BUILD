@@ -348,3 +348,15 @@ py_test(
         ":samplers",
     ],
 )
+
+py_library(
+    name = "telemetry",
+    srcs = ["telemetry.py"],
+    visibility = ["//deeplearning/clgen:__subpackages__"],
+    deps = [
+        "//deeplearning/clgen/proto:internal_py_pb2",
+        "//lib/labm8:jsonutil",
+        "//lib/labm8:labdate",
+        "//lib/labm8:pbutil",
+    ],
+)
