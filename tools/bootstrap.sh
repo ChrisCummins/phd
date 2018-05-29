@@ -90,8 +90,8 @@ main() {
     # brew may not be on the user's PATH.to fix the Docker build.
     if [[ -f "/usr/local/bin/brew" ]]; then
       BREW_PREFIX="/usr/local"
-    elif [[ -f "/home/.linux/linuxbrew/bin/brew" ]]; then
-      BREW_PREFIX="/home/.linux/linuxbrew"
+    elif [[ -f "/home/linuxbrew/.linuxbrew/bin/brew" ]]; then
+      BREW_PREFIX="/home/linuxbrew/.linuxbrew"
     else
       echo 'Could not determine brew location!' >&2
       exit 1
