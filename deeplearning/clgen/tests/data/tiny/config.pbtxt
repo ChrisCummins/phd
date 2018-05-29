@@ -38,7 +38,7 @@ model {
   }
 }
 sampler {
-  start_text: "kernel void "
+  start_text: "kernel void A(global int* a, const int b) {\n"
   batch_size: 64
   termination_criteria {
     symtok {
