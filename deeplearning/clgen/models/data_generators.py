@@ -83,11 +83,9 @@ class DataGeneratorBase(object):
     # TODO(cec): Use keras to_categorical() instead of vectorizing by hand.
     # _ = keras.utils.to_categorical(data.y, self.corpus.vocabulary_size)
 
-    X = np.zeros(
-        (self.batch_size, self.sequence_length,
-         self.corpus.vocabulary_size),
-        dtype=np.bool)
-    y = np.zeros((self.batch_size, self.corpus.vocabulary_size), dtype=np.bool)
+    X = np.zeros((len(data.X), len(data.X[0]), self.corpus.vocabulary_size),
+                 dtype=np.bool)
+    y = np.zeros((len(data.y), self.corpus.vocabulary_size), dtype=np.bool)
     for i, sequence in enumerate(data.X):
       for t, encoded_char in enumerate(sequence):
         X[i, t, encoded_char] = 1
@@ -129,25 +127,22 @@ class LazyVectorizingGenerator(DataGeneratorBase):
   def __next__(self) -> DataBatch:
     """Generate the next batch of X, y pairs."""
     start_time = time.time()
-    # Reset the position in the encoded corpus if we've run out of text.
+    # Return to the start of the encoded corpus if we've run out of text.
     if (self.i + self.batch_size + self.sequence_length + 1 >=
         self.corpus_length):
       self.i = 0
       if self.shuffle:
         self.encoded_corpus = self.corpus.GetTrainingData(shuffle=True)
 
-    # X_data = np.ndarray((self.batch_size, self.sequence_length),
-    #                     dtype=np.int32)
-    # y_data = np.ndarray((self.batch_size,), dtype=np.int32)
-    X_data, y_data = [], []
-    for i in range(self.i, self.i + self.batch_size, self.skip):
+    X_data = np.ndarray((self.batch_size, self.sequence_length),
+                        dtype=np.int32)
+    y_data = np.ndarray((self.batch_size,), dtype=np.int32)
+    for i in range(0, self.batch_size, self.skip):
       sequence = np.array(
-          self.encoded_corpus[i:i + self.sequence_length])
-      next_token = self.encoded_corpus[i + self.sequence_length]
-      # X_data[i] = sequence
-      # y_data[i] = next_token
-      X_data.append(sequence)
-      y_data.append(next_token)
+          self.encoded_corpus[self.i + i:self.i + i + self.sequence_length])
+      next_token = self.encoded_corpus[self.i + i + self.sequence_length]
+      X_data[i:, ] = sequence
+      y_data[i] = next_token
 
     logging.debug('%s %dx%d batch %.2f ms',
                   type(self).__name__,
