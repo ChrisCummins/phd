@@ -12,6 +12,17 @@ C_ATOMS = set(
      'ulong', 'undef', 'union', 'unsigned', 'void', 'volatile', 'while',
      'write_only', ])
 
+# The set of Java keywords
+JAVA_ATOMS = set(
+    ['abstract', 'assert', 'boolean', 'break', 'byte', 'case', 'catch', 'char',
+     'class', 'continue', 'default', 'do', 'double', 'else', 'enum', 'extends',
+     'final', 'finally', 'float', 'for', 'if', 'implements', 'import',
+     'instanceof', 'int', 'interface', 'long', 'native', 'new', 'package',
+     'private', 'protected', 'public', 'return', 'short', 'static', 'strictfp',
+     'super', 'switch', 'synchronized', 'this', 'throw', 'throws', 'transient',
+     'try', 'void', 'volatile', 'while', ]
+)
+
 # Taken from the C99 spec, OpenCL spec 1.2, and bag-of-words analysis of
 # GitHub corpus:
 OPENCL_ATOMS = set(
