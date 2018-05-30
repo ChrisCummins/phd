@@ -88,7 +88,6 @@ py_library(
     deps = [
         "//config:getconfig",
         "//deeplearning/clgen:errors",
-        "//deeplearning/clgen:package_util",
         "//lib/labm8:bazelutil",
         "//lib/labm8:labmath",
     ],
