@@ -175,7 +175,6 @@ py_library(
         ":normalizer",
         ":opencl",
         ":public",
-        "//deeplearning/clgen:dbutil",
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen/proto:internal_py_pb2",
     ],
@@ -190,7 +189,6 @@ py_test(
         ":preprocessors",
         ":public",
         "//deeplearning/clgen:conftest",
-        "//deeplearning/clgen:dbutil",
         "//deeplearning/clgen:errors",
     ],
 )

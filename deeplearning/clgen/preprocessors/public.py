@@ -7,6 +7,8 @@ from deeplearning.clgen import errors
 
 
 FLAGS = flags.FLAGS
+
+# Type hint for a preprocessor function. See @clgen_preprocess for details.
 PreprocessorFunction = typing.Callable[[str], str]
 
 
