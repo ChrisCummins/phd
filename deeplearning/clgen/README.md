@@ -1,5 +1,5 @@
 <div align="center">
-  <a href="https://github.com/ChrisCummins/clgen">
+  <a href="https://github.com/ChrisCummins/phd/tree/master/deeplearning/clgen">
     <img src="https://raw.githubusercontent.com/ChrisCummins/phd/master/deeplearning/clgen/docs/assets/logo.png" width="420">
   </a>
 </div>
@@ -18,7 +18,7 @@ semantics and usage from large volumes of program fragments, generating
 many-core OpenCL programs that are representative of, but *distinct* from, the
 programs it learns from.
 
-<img src="https://raw.githubusercontent.com/ChrisCummins/clgen/master/docs/assets/pipeline.png" width="500">
+<img src="https://raw.githubusercontent.com/ChrisCummins/docs/master/deeplearning/clgen/docs/assets/pipeline.png" width="500">
 
 
 ## Getting Started
@@ -50,9 +50,6 @@ Publication
 
 [Jupyter notebook](https://github.com/ChrisCummins/paper-synthesizing-benchmarks/blob/master/code/Paper.ipynb)
 containing experimental evaluation of an early version of CLgen.
-
-Documentation for the [Python API](http://chriscummins.cc/clgen/api/) and
-[command line interface](http://chriscummins.cc/clgen/bin/).
 
 
 ## License
