@@ -174,7 +174,6 @@ class PreprocessedContentFiles(sqlutil.Database):
       logging.info('Preprocessed %s content files in %s ms',
                    humanize.intcomma(len(todo)),
                    humanize.intcomma(int((time.time() - start_time) * 1000)))
-      # TODO(cec): Report num successful preprocessed and discard rate.
 
   @contextlib.contextmanager
   def GetContentFileRoot(self, config: corpus_pb2.Corpus) -> pathlib.Path:
