@@ -63,6 +63,29 @@ py_test(
 )
 
 py_library(
+    name = "encoded",
+    srcs = ["encoded.py"],
+    deps = [
+        ":preprocessed",
+        "//deeplearning/clgen:errors",
+        "//deeplearning/clgen/preprocessors",
+        "//lib/labm8:sqlutil",
+    ],
+)
+
+py_test(
+    name = "encoded_test",
+    srcs = ["encoded_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":atomizers",
+        ":encoded",
+        ":preprocessed",
+    ],
+)
+
+py_library(
     name = "explore",
     srcs = ["explore.py"],
     deps = ["//deeplearning/clgen:dbutil"],
@@ -117,5 +140,14 @@ py_test(
     deps = [
         ":fetch",
         "//deeplearning/clgen/tests:testlib",
+    ],
+)
+
+py_library(
+    name = "preprocessed",
+    srcs = ["preprocessed.py"],
+    deps = [
+        "//deeplearning/clgen:errors",
+        "//lib/labm8:sqlutil",
     ],
 )
