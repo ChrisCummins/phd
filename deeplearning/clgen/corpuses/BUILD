@@ -25,8 +25,10 @@ py_library(
     visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = [
         ":atomizers",
+        ":encoded",
         ":features",
         ":fetch",
+        ":preprocessed",
         "//deeplearning/clgen:cache",
         "//deeplearning/clgen:dbutil",
         "//deeplearning/clgen:errors",

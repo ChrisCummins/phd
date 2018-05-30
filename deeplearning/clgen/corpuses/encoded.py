@@ -62,9 +62,8 @@ class EncodedContentFile(Base):
 class EncodedContentFiles(sqlutil.Database):
   """A database of pre-processed contentfiles."""
 
-  def __init__(self, path: pathlib.Path, atomizer: atomizers.AtomizerBase):
+  def __init__(self, path: pathlib.Path):
     super(EncodedContentFiles, self).__init__(path, Base)
-    self.atomizer = atomizers
 
   def Create(self, p: preprocessed.PreprocessedContentFiles,
              atomizer: atomizers.AtomizerBase) -> bool:
@@ -96,7 +95,8 @@ class EncodedContentFiles(sqlutil.Database):
     session.add(Meta(key='done', value='yes'))
 
   def Import(self, session: sqlutil.Database.session_t,
-             preprocessed_db: preprocessed.PreprocessedContentFiles) -> None:
+             preprocessed_db: preprocessed.PreprocessedContentFiles,
+             atomizer: atomizers.AtomizerBase) -> None:
     with preprocessed_db.Session() as p_session:
       query = p_session.query(preprocessed.PreprocessedContentFile).filter(
           ~preprocessed.PreprocessedContentFile.sha256.in_(
@@ -104,6 +104,6 @@ class EncodedContentFiles(sqlutil.Database):
       pool = multiprocessing.Pool()
       bar = progressbar.ProgressBar()
       for encoded_cfg in bar(pool.imap_unordered(
-          lambda x: EncodedContentFile.FromPreprocessed(x, self.atomizer),
+          lambda x: EncodedContentFile.FromPreprocessed(x, atomizer),
           query)):
         session.add(encoded_cfg)

@@ -22,7 +22,11 @@ from absl import logging
 from deeplearning.clgen import cache
 from deeplearning.clgen import dbutil
 from deeplearning.clgen import errors
-from deeplearning.clgen.corpuses import atomizers, features, fetch
+from deeplearning.clgen.corpuses import atomizers
+from deeplearning.clgen.corpuses import encoded
+from deeplearning.clgen.corpuses import features
+from deeplearning.clgen.corpuses import fetch
+from deeplearning.clgen.corpuses import preprocessed
 from deeplearning.clgen.preprocessors import preprocessors
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import internal_pb2
@@ -68,19 +72,24 @@ class Corpus(object):
     self.config = corpus_pb2.Corpus()
     self.config.CopyFrom(config)
 
-    cache.cachepath('corpus', 'preprocessed').mkdir(exist_ok=True, parents=True)
-    cache.cachepath('corpus', 'encoded').mkdir(exist_ok=True, parents=True)
-
+    cache.cachepath('corpus').mkdir(parents=True, exist_ok=True)
     hc = hashcache.HashCache(
-        cache.cachepath('corpus/hashcache.db'), 'sha1')
+        cache.cachepath('corpus', 'hashcache.db'), 'sha1')
     self.content_id = ResolveContentId(self.config, hc)
-    self.preprocessed_id = ResolvePreprocessedId(self.content_id, self.config)
-    # self.preprocessed = PreprocessedCorpus(
-    #     cache.cachepath('corpus', 'preprocessed', self.preprocessed_id,
-    #                     'preprocessed.db'))
-    self.encoded_id = ResolvePreprocessedId(self.content_id, self.config)
     logging.info('Content ID: %s', self.content_id)
+    # Database of pre-processed files
+    self.preprocessed_id = ResolvePreprocessedId(self.content_id, self.config)
+    cache.cachepath('corpus', 'preprocessed', self.preprocessed_id).mkdir(
+        exist_ok=True, parents=True)
+    self.preprocessed = preprocessed.PreprocessedContentFiles(cache.cachepath(
+        'corpus', 'preprocessed', self.preprocessed_id, 'preprocessed.db'))
     logging.info('Preprocessed corpus: %s', self.preprocessed_id)
+    # Data of encoded pre-preprocessed files.
+    self.encoded_id = ResolvePreprocessedId(self.content_id, self.config)
+    cache.cachepath('corpus', 'encoded', self.encoded_id).mkdir(
+        exist_ok=True, parents=True)
+    self.encoded = encoded.EncodedContentFiles(cache.cachepath(
+        'corpus', 'encoded', self.encoded_id, 'encoded.db'))
     logging.info('Encoded corpus: %s', self.encoded_id)
 
     # Determine the corpus cache path. This will depend on whether a path or
@@ -130,9 +139,8 @@ class Corpus(object):
 
   def Create(self) -> None:
     """Create the corpus files."""
-    if not cache.cachepath('corpus', 'preprocessed',
-                           self.preprocessed_id).is_dir():
-      pass
+    self.preprocessed.Create()
+    self.encoded.Create()
 
   def _FlushMeta(self):
     pbutil.ToFile(self.meta, pathlib.Path(self.cache.keypath('META.pbtxt')))
