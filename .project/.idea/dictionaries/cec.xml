@@ -20,6 +20,7 @@
       <w>keras</w>
       <w>labm</w>
       <w>lgen</w>
+      <w>libclc</w>
       <w>logdir</w>
       <w>logtostderr</w>
       <w>lsize</w>
@@ -32,6 +33,7 @@
       <w>preprocessing</w>
       <w>rewriter</w>
       <w>runfiles</w>
+      <w>shimfile</w>
       <w>stdin</w>
       <w>subdirs</w>
       <w>uname</w>
