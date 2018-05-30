@@ -17,6 +17,7 @@ import sqlalchemy as sql
 from absl import flags
 from absl import logging
 from sqlalchemy.ext import declarative
+from sqlalchemy.sql import func
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import preprocessors
@@ -46,6 +47,8 @@ class PreprocessedContentFile(Base):
   input_relpath: str = sql.Column(sql.String(4096), nullable=False, unique=True)
   # Checksum of the input file.
   input_sha256: str = sql.Column(sql.Binary(32), nullable=False)
+  input_charcount = sql.Column(sql.Integer, nullable=False)
+  input_linecount = sql.Column(sql.Integer, nullable=False)
   # Checksum of the preprocessed file.
   sha256: str = sql.Column(sql.Binary(32), nullable=False, index=True)
   charcount = sql.Column(sql.Integer, nullable=False)
@@ -85,9 +88,12 @@ class PreprocessedContentFile(Base):
       preprocessing_succeeded = False
     end_time = time.time()
     preprocess_time_ms = int((end_time - start_time) * 1000)
+    input_text_stripped = input_text.strip()
     return cls(
         input_relpath=relpath,
         input_sha256=GetFileSha256(contentfile_root / relpath),
+        input_charcount=len(input_text_stripped),
+        input_linecount=len(input_text_stripped.split('\n')),
         sha256=hashlib.sha256(text.encode('utf-8')).digest(),
         charcount=len(text),
         linecount=len(text.split('\n')),
@@ -110,15 +116,21 @@ class PreprocessedContentFiles(sqlutil.Database):
   def __init__(self, path: pathlib.Path):
     super(PreprocessedContentFiles, self).__init__(path, Base)
 
-  def Create(self, config: corpus_pb2.Corpus) -> bool:
+  def Create(self, config: corpus_pb2.Corpus):
     with self.Session() as session:
-      if self.IsDone(session):
-        return False
-      else:
+      if not self.IsDone(session):
         self.Import(session, config)
         self.SetDone(session)
         session.commit()
-        return True
+    num_files = self.size
+    num_input_files = self.input_size
+    logging.info('Pre-processing discard rate: %.1f%% (%s files)',
+                 (1 - (num_files / num_input_files)) * 100,
+                 humanize.intcomma(num_input_files - num_files))
+    logging.info('Pre-processed corpus: %s chars, %s lines, %s files',
+                 humanize.intcomma(self.char_count),
+                 humanize.intcomma(self.line_count),
+                 humanize.intcomma(num_files))
 
   def IsDone(self, session: sqlutil.Database.session_t):
     if session.query(Meta).filter(Meta.key == 'done').first():
@@ -148,8 +160,7 @@ class PreprocessedContentFiles(sqlutil.Database):
       pool = multiprocessing.Pool()
       bar = progressbar.ProgressBar(max_value=len(jobs))
       last_commit = time.time()
-      for preprocessed_cf in bar(pool.imap_unordered(
-          PreprocessorWorker, jobs)):
+      for preprocessed_cf in bar(pool.imap_unordered(PreprocessorWorker, jobs)):
         session.add(preprocessed_cf)
         current_time = time.time()
         if current_time - last_commit > 10:
@@ -176,6 +187,48 @@ class PreprocessedContentFiles(sqlutil.Database):
         yield pathlib.Path(d)
     else:
       raise NotImplementedError
+
+  @property
+  def size(self) -> int:
+    """Return the total number of files in the pre-processed corpus.
+
+    This excludes contentfiles which did not pre-process successfully.
+    """
+    with self.Session() as session:
+      return session.query(PreprocessedContentFile).filter(
+          PreprocessedContentFile.preprocessing_succeeded == True
+      ).count()
+
+  @property
+  def input_size(self) -> int:
+    """Return the total number of files in the pre-processed corpus.
+
+    This *includes* contentfiles which did not pre-process successfully.
+    """
+    with self.Session() as session:
+      return session.query(PreprocessedContentFile).count()
+
+  @property
+  def char_count(self) -> int:
+    """Get the total number of characters in the pre-processed corpus.
+
+    This excludes contentfiles which did not pre-process successfully.
+    """
+    with self.Session() as session:
+      return session.query(func.sum(PreprocessedContentFile.charcount)).filter(
+          PreprocessedContentFile.preprocessing_succeeded == True
+      ).scalar()
+
+  @property
+  def line_count(self) -> int:
+    """Get the total number of lines in the pre-processed corpus.
+
+    This excludes contentfiles which did not pre-process successfully.
+    """
+    with self.Session() as session:
+      return session.query(func.sum(PreprocessedContentFile.linecount)).filter(
+          PreprocessedContentFile.preprocessing_succeeded == True
+      ).scalar()
 
   def GetImportRelpaths(
       self, contentfile_root: pathlib.Path) -> typing.List[str]:
