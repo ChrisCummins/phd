@@ -26,7 +26,7 @@ def cachepath(*relative_path_components: str) -> pathlib.Path:
 
 def mkcache(*relative_path_components: str) -> cache.FSCache:
   """
-  Instantiae a file system cache.
+  Instantiate a file system cache.
 
   If the cache does not exist, one is created.
 
