@@ -69,5 +69,6 @@ message PreprocessorWorker {
 message EncoderWorker {
   optional int64 id = 1;
   optional string text = 3;
-  optional bytes pickled_atomizer = 4;
+  optional string contentfile_separator = 4;
+  optional bytes pickled_atomizer = 5;
 }

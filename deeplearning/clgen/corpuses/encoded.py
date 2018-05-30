@@ -38,6 +38,7 @@ class EncodedContentFile(Base):
   # The ID of the PreprocessedContentFile.
   id: int = sql.Column(sql.Integer, primary_key=True)
   data: str = sql.Column(sql.Binary(), nullable=False)
+  tokencount: int = sql.Column(sql.Integer, nullable=False)
   # The number of milliseconds encoding took.
   encoding_time_ms: int = sql.Column(sql.Integer, nullable=False)
   date_added: datetime.datetime = sql.Column(sql.DateTime, nullable=False)
@@ -54,11 +55,12 @@ class EncodedContentFile(Base):
   @classmethod
   def FromPreprocessed(
       cls, preprocessed_cf: preprocessed.PreprocessedContentFile,
-      atomizer: atomizers.AtomizerBase) -> 'EncodedContentFile':
+      atomizer: atomizers.AtomizerBase, eof: str) -> 'EncodedContentFile':
     start_time = time.time()
-    data = atomizer.AtomizeString(preprocessed_cf.text)
+    data = atomizer.AtomizeString(preprocessed_cf.text + eof)
     encoding_time_ms = int((time.time() - start_time) * 1000)
     return EncodedContentFile(id=preprocessed_cf.id, data=data,
+                              tokencount=len(data),
                               encoding_time_ms=encoding_time_ms,
                               date_added=datetime.datetime.utcnow())
 
@@ -67,7 +69,7 @@ def EncoderWorker(job: internal_pb2.EncoderWorker) -> EncodedContentFile:
   return EncodedContentFile.FromPreprocessed(
       preprocessed.PreprocessedContentFile(
           id=job.id, text=job.text),
-      pickle.loads(job.pickled_atomizer))
+      pickle.loads(job.pickled_atomizer), job.contentfile_separator)
 
 
 class EncodedContentFiles(sqlutil.Database):
@@ -77,12 +79,14 @@ class EncodedContentFiles(sqlutil.Database):
     super(EncodedContentFiles, self).__init__(path, Base)
 
   def Create(self, p: preprocessed.PreprocessedContentFiles,
-             atomizer: atomizers.AtomizerBase) -> bool:
+             atomizer: atomizers.AtomizerBase,
+             contentfile_separator: str) -> bool:
     """Create the
 
     Args:
       p: A PreprocessedContentFiles database.
       atomizer: An AtomizerBase instance.
+      contentfile_separator: The contentfile separator.
 
     Returns:
       True if work was done, else False.
@@ -91,7 +95,7 @@ class EncodedContentFiles(sqlutil.Database):
       if self.IsDone(session):
         return False
       else:
-        self.Import(session, p, atomizer)
+        self.Import(session, p, atomizer, contentfile_separator)
         self.SetDone(session)
         session.commit()
         return True
@@ -107,21 +111,25 @@ class EncodedContentFiles(sqlutil.Database):
 
   def Import(self, session: sqlutil.Database.session_t,
              preprocessed_db: preprocessed.PreprocessedContentFiles,
-             atomizer: atomizers.AtomizerBase) -> None:
+             atomizer: atomizers.AtomizerBase,
+             contentfile_separator: str) -> None:
     start_time = time.time()
     with preprocessed_db.Session() as p_session:
       query = p_session.query(preprocessed.PreprocessedContentFile).filter(
+          preprocessed.PreprocessedContentFile.preprocessing_succeeded == True,
           ~preprocessed.PreprocessedContentFile.id.in_(
               session.query(EncodedContentFile.id).all()))
       jobs = [
         internal_pb2.EncoderWorker(
-            id=x.id, text=x.text, pickled_atomizer=pickle.dumps(atomizer))
+            id=x.id, text=x.text, contentfile_separator=contentfile_separator,
+            pickled_atomizer=pickle.dumps(atomizer))
         for x in query
       ]
       logging.info('Encoding %s of %s preprocessed files',
                    humanize.intcomma(query.count()),
                    humanize.intcomma(p_session.query(
-                       preprocessed.PreprocessedContentFile).count()))
+                       preprocessed.PreprocessedContentFile).filter(
+                       preprocessed.PreprocessedContentFile.preprocessing_succeeded == True).count()))
       pool = multiprocessing.Pool()
       bar = progressbar.ProgressBar()
       last_commit = time.time()

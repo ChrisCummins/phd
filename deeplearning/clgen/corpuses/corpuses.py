@@ -6,24 +6,20 @@ is a file containing text to train over.
 import os
 import pathlib
 import pickle
-import re
 import subprocess
 import tempfile
 import time
-import typing
-from tempfile import NamedTemporaryFile
 
 import checksumdir
 import humanize
 import numpy as np
 from absl import logging
+from sqlalchemy.sql.expression import func
 
 from deeplearning.clgen import cache
-from deeplearning.clgen import dbutil
 from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.corpuses import encoded
-from deeplearning.clgen.corpuses import features
 from deeplearning.clgen.corpuses import preprocessed
 from deeplearning.clgen.preprocessors import preprocessors
 from deeplearning.clgen.proto import corpus_pb2
@@ -31,7 +27,6 @@ from lib.labm8 import crypto
 from lib.labm8 import hashcache
 from lib.labm8 import lockfile
 from lib.labm8 import pbutil
-from lib.labm8 import tar
 
 
 def AssertConfigIsValid(config: corpus_pb2.Corpus) -> corpus_pb2.Corpus:
@@ -83,14 +78,12 @@ class Corpus(object):
     hc = hashcache.HashCache(
         cache.cachepath('hashcache.db'), 'sha1')
     self.content_id = ResolveContentId(self.config, hc)
-    logging.info('Content ID: %s', self.content_id)
     # Database of pre-processed files
     preprocessed_id = ResolvePreprocessedId(self.content_id, self.config)
     cache.cachepath('corpus', 'preprocessed', preprocessed_id).mkdir(
         exist_ok=True, parents=True)
     self.preprocessed = preprocessed.PreprocessedContentFiles(cache.cachepath(
         'corpus', 'preprocessed', preprocessed_id, 'preprocessed.db'))
-    logging.info('Preprocessed corpus: %s', preprocessed_id)
     # Data of encoded pre-preprocessed files.
     encoded_id = ResolveEncodedId(self.content_id, self.config)
     cache.cachepath('corpus', 'encoded', encoded_id).mkdir(
@@ -99,18 +92,23 @@ class Corpus(object):
         'corpus', 'encoded', encoded_id, 'encoded.db'))
     self.atomizer_path = cache.cachepath(
         'corpus', 'encoded', encoded_id, 'atomizer.pkl')
-    logging.info('Encoded corpus: %s', encoded_id)
 
     self.hash = encoded_id
+    self.cache = cache.mkcache('corpus', 'encoded', encoded_id)
 
   def Create(self) -> None:
     """Create the corpus files."""
+    logging.info('Content ID: %s', self.content_id)
     preprocessed_lock_path = self.preprocessed.database_path.parent / 'LOCK'
     with lockfile.LockFile(preprocessed_lock_path).acquire(replace_stale=True):
       self.preprocessed.Create(self.config)
+    logging.info('Preprocessed corpus: %s',
+                 self.preprocessed.database_path.parent)
     encoded_lock_path = self.encoded.database_path.parent / 'LOCK'
     with lockfile.LockFile(encoded_lock_path).acquire(replace_stale=True):
-      self.encoded.Create(self.preprocessed, self.atomizer)
+      self.encoded.Create(self.preprocessed, self.atomizer,
+                          self.config.contentfile_separator)
+    logging.info('Encoded corpus: %s', self.encoded.database_path.parent)
 
   def ConcatenateTextCorpus(self, shuffle: bool) -> str:
     """Concatenate the entire corpus into a string.
@@ -122,9 +120,10 @@ class Corpus(object):
       A concatenated corpus string.
     """
     with self.preprocessed.Session() as session:
-      return self.config.contentfile_separator.join(
-          [x[0] for x in
-           session.query(preprocessed.PreprocessedContentFile.text)])
+      query = session.query(preprocessed.PreprocessedContentFile.text)
+      if shuffle:
+        query = query.order_by(func.random())
+      return self.config.contentfile_separator.join([x[0] for x in query])
 
   def GetTrainingData(self, shuffle: bool) -> np.ndarray:
     """Create batches for training.
@@ -138,9 +137,10 @@ class Corpus(object):
     # TODO: Join using contentfile_separator.
     # TODO: Can binary numpy strings be concatenated and decoded as one?
     with self.encoded.Session() as session:
-      return np.concatenate([
-        np.fromstring(x[0]) for x in
-        session.query(encoded.EncodedContentFile.data)])
+      query = session.query(encoded.EncodedContentFile.data)
+      if shuffle:
+        query = query.order_by(func.random())
+      return np.concatenate([np.fromstring(x[0]) for x in query])
 
   @property
   def atomizer(self) -> atomizers.AtomizerBase:
@@ -191,47 +191,6 @@ class Corpus(object):
     except AttributeError:
       self.GetTrainingData(False)
       return self._size
-
-  def GetPreprocessedKernels(self, status: int = 0) -> typing.Iterable[str]:
-    """
-    Return an iterator over all preprocessed kernels.
-
-    Parameters
-    ----------
-    status : int, optional
-        Pre-processed status, {0, 1, 2} for {good, bad, ugly}.
-
-    Returns
-    -------
-    typing.Iterable[str]
-        Sources.
-    """
-    db = dbutil.connect(self.contentfiles_cache["kernels.db"])
-    c = db.cursor()
-    query = c.execute(
-        f"SELECT Contents FROM PreprocessedFiles WHERE status={status}")
-    for row in query.fetchall():
-      yield row[0]
-
-  def GetContentFiles(self) -> typing.Iterable[str]:
-    """
-    Return an iterator over all un-processed samples.
-
-    Returns
-    -------
-    typing.Iterable[str]
-        Samples.
-    """
-    db = dbutil.connect(self.contentfiles_cache["kernels.db"])
-    c = db.cursor()
-    query = c.execute("SELECT Contents FROM ContentFiles")
-    for row in query.fetchall():
-      yield row[0]
-
-  def __repr__(self) -> str:
-    nf = dbutil.num_good_kernels(self.contentfiles_cache['kernels.db'])
-    return (f'corpus[{self.shorthash}]: {nf} files, {self.size} tokens '
-            f'using {self.atomizer}')
 
   def __eq__(self, rhs) -> bool:
     if not isinstance(rhs, Corpus):
@@ -290,57 +249,3 @@ def GetHashOfArchiveContents(archive: pathlib.Path) -> str:
     cmd = ['tar', '-xf', str(archive), '-C', d]
     subprocess.check_call(cmd)
     return checksumdir.dirhash(d, 'sha1')
-
-
-def UnpackDirectoryIfNeeded(path: pathlib.Path) -> pathlib.Path:
-  """Unpack a directory tarball and return its path.
-
-  If path is a tarball, unpack it. If path doesn't exist but there is a
-  tarball with the same name, unpack it.
-
-  Args:
-    path: Path to directory or tarball.
-
-  Returns:
-    Path to directory.
-
-  Raises:
-    clgen.InternalError: If unable to extract archive.
-  """
-  if path.is_dir():
-    return path
-
-  if path.is_file() and str(path).endswith(".tar.bz2"):
-    logging.info('unpacking %s', path)
-    tar.unpack_archive(path)
-    return pathlib.Path(re.sub(r'.tar.bz2$', '', str(path)))
-
-  if pathlib.Path(str(path) + ".tar.bz2").is_file():
-    logging.info('unpacking %s.tar.bz', path)
-    tar.unpack_archive(str(path) + ".tar.bz2")
-    return path
-
-  raise errors.InternalError(f"Cannot find path '{path}'")
-
-
-def GetKernelFeatures(code: str, **kwargs) -> np.array:
-  """Get features for code.
-
-  Args:
-    code: Source code.
-    **kwargs: Arguments to features.features()
-
-  Returns:
-    An array of feature values.
-
-  Raises:
-    FeaturesError: In case of error.
-  """
-  with NamedTemporaryFile() as outfile:
-    outfile.write(code.encode("utf-8"))
-    outfile.seek(0)
-    f = features.to_np_arrays([outfile.name], **kwargs)
-  if len(f) != 1:
-    logging.error('features: %s', f)
-    raise errors.FeaturesError("code contains more than one kernel")
-  return f[0]
