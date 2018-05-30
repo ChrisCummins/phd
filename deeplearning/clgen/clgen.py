@@ -31,6 +31,7 @@ from deeplearning.clgen import errors
 from deeplearning.clgen import samplers
 from deeplearning.clgen.models import models
 from deeplearning.clgen.proto import clgen_pb2
+from deeplearning.clgen.proto import model_pb2
 from lib.labm8 import pbutil
 from lib.labm8 import prof
 
@@ -97,6 +98,18 @@ class Instance(object):
     yield self
     if self.working_dir:
       os.environ['CLGEN_CACHE'] = old_working_dir
+
+  def Train(self, *args, **kwargs) -> None:
+    with self.Session():
+      self.model.Train(*args, **kwargs)
+
+  def Sample(self, *args, **kwargs) -> typing.List[model_pb2.Sample]:
+    with self.Session():
+      return self.model.Sample(self.sampler, *args, **kwargs)
+
+  @classmethod
+  def FromFile(cls, path: pathlib.Path) -> 'Instance':
+    return cls(pbutil.FromFile(path, clgen_pb2.Instance()))
 
 
 def Flush():
