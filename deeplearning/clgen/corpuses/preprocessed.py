@@ -77,15 +77,12 @@ class PreprocessedContentFile(Base):
     with open(contentfile_root / relpath) as f:
       input_text = f.read()
     start_time = time.time()
-    preprocessing_succeeded = False
     try:
       text = preprocessors.Preprocess(input_text, preprocessors_)
       preprocessing_succeeded = True
     except errors.BadCodeException as e:
       text = str(e)
-      # An intentionally broad exception catch here to catch whatever's left.
-    except errors.InternalError as e:
-      text = f'!!INTERNAL ERROR!! {e}'
+      preprocessing_succeeded = False
     end_time = time.time()
     preprocess_time_ms = int((end_time - start_time) * 1000)
     return cls(
