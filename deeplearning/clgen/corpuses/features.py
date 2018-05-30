@@ -12,7 +12,6 @@ import numpy as np
 
 from config import getconfig
 from deeplearning.clgen import errors
-from deeplearning.clgen import package_util
 from lib.labm8 import bazelutil
 from lib.labm8 import labmath
 
@@ -109,7 +108,6 @@ def features(path: str, file=sys.stdout, fatal_errors: bool = False,
   quiet : bool, optional
       Don't print compiler output on errors.
   """
-  path = package_util.must_exist(path)
   cmd = [str(CLGEN_FEATURES), path] + ['-extra-arg=' + x for x in
                                        _shim_args(use_shim=use_shim)]
   process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE,

@@ -81,31 +81,6 @@ py_library(
 )
 
 py_library(
-    name = "package_util",
-    srcs = ["package_util.py"],
-    visibility = ["//deeplearning/clgen:__subpackages__"],
-    deps = [
-        ":errors",
-        "//lib/labm8:fs",
-    ],
-)
-
-py_test(
-    name = "package_util_test",
-    srcs = ["package_util_test.py"],
-    data = [
-        "//deeplearning/clgen/data/include:opencl-shim",
-        "//deeplearning/clgen/data/sql:scripts",
-    ],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
-    deps = [
-        ":errors",
-        ":package_util",
-    ],
-)
-
-py_library(
     name = "samplers",
     srcs = ["samplers.py"],
     visibility = ["//visibility:public"],
