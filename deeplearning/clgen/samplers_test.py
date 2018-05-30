@@ -131,6 +131,15 @@ def test_SymmetricalTokenDepthCriterion_SampleIsComplete():
   assert t.SampleIsComplete(['a', '+', '-', '+', 'b', 'c', '-'])
 
 
+def test_SymmetrcalTokenDepthCriterion_SampleIsComplete_reverse_order():
+  """Test that sample is not complete if right token appears before left."""
+  t = samplers.SymmetricalTokenDepthCriterion(sampler_pb2.SymmetricalTokenDepth(
+      depth_increase_token='+', depth_decrease_token='-'))
+  assert not t.SampleIsComplete(['-', '+'])
+  assert not t.SampleIsComplete(['-', 'a', 'b', 'c', '+'])
+  assert t.SampleIsComplete(['-', 'a', 'b', 'c', '+', '+', '-'])
+
+
 # Sampler.__init__() tests.
 
 def test_Sampler_config_type_error():

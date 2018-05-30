@@ -89,9 +89,15 @@ class SymmetricalTokenDepthCriterion(TerminationCriterionBase):
 
   def SampleIsComplete(self, sample_in_progress: typing.List[str]) -> bool:
     """Determine whether to stop sampling."""
+    if not sample_in_progress:
+      return False
+    if not sample_in_progress[-1] == self.right_token:
+      return False
     left_token_count = sample_in_progress.count(self.left_token)
+    if not left_token_count:
+      return False
     right_token_count = sample_in_progress.count(self.right_token)
-    return left_token_count and (left_token_count - right_token_count == 0)
+    return left_token_count - right_token_count == 0
 
 
 def GetTerminationCriteria(
