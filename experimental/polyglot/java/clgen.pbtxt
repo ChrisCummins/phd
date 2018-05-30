@@ -89,6 +89,7 @@ model {
 sampler {
   start_text: "public class "
   batch_size: 64
+  temperature_micros: 1000000
   termination_criteria {
     symtok {
       depth_increase_token: "{"

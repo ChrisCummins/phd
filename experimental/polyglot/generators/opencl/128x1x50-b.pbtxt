@@ -149,6 +149,7 @@ model {
 sampler {
   start_text: "kernel void "
   batch_size: 64
+  temperature_micros: 1000000
   termination_criteria {
     maxlen {
       maximum_tokens_in_sample: 5000

@@ -301,8 +301,6 @@ class Model(object):
       for i, token in enumerate(encoded_seed):
         vectorized_seed[0, i, token] = 1
 
-      # TODO(cec): Add to sampler proto.
-      temperature = 1.0
       while True:
         X = np.copy(vectorized_seed)
         sample_in_progress = [sampler.start_text]
@@ -314,7 +312,7 @@ class Model(object):
         model = self.model
         while True:
           predictions = model.predict(X, verbose=0)[0]
-          next_index = WeightedPick(predictions, temperature)
+          next_index = WeightedPick(predictions, sampler.temperature)
           token = self.corpus.atomizer.decoder[next_index]
           sys.stdout.write(token)
           sample_in_progress.append(token)

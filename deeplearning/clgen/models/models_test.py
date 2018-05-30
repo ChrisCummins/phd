@@ -23,6 +23,7 @@ class MockSampler(object):
   def __init__(self, start_text: str = 'H', hash: str = 'hash',
                batch_size: int = 1):
     self.start_text = start_text
+    self.temperature = 1.0
     self.hash = hash
     self.batch_size = batch_size
     self.has_symmetrical_tokens = False

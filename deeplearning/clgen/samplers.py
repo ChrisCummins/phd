@@ -28,6 +28,8 @@ def AssertConfigIsValid(config: sampler_pb2.Sampler) -> sampler_pb2.Sampler:
                                  'Sampler.start_text must be a string')
     pbutil.AssertFieldConstraint(config, 'batch_size', lambda x: 0 < x,
                                  'Sampler.batch_size must be > 0')
+    pbutil.AssertFieldConstraint(config, 'temperature_micros', lambda x: 0 < x,
+                                 'Sampler.temperature_micros must be > 0')
     return config
   except pbutil.ProtoValueError as e:
     raise errors.UserError(e)
@@ -150,6 +152,8 @@ class Sampler(object):
     self.config.CopyFrom(AssertConfigIsValid(config))
     self.hash = self._ComputeHash(self.config)
     self.terminators = GetTerminationCriteria(self.config.termination_criteria)
+    self.start_text = self.config.start_text
+    self.temperature = self.config.temperature_micros / 1e6
 
   def SampleIsComplete(self, sample_in_progress: typing.List[str]) -> bool:
     """Determine whether to stop sampling.
@@ -170,10 +174,6 @@ class Sampler(object):
     proto.
     """
     return crypto.sha1(config.SerializeToString())
-
-  @property
-  def start_text(self) -> str:
-    return self.config.start_text
 
   def __eq__(self, rhs) -> bool:
     if not isinstance(rhs, Sampler):

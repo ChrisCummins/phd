@@ -45,6 +45,20 @@ def test_AssertConfigIsValid_invalid_batch_size(abc_sampler_config):
   assert "Sampler.batch_size must be > 0" == str(e_info.value)
 
 
+def test_AssertConfigIsValid_invalid_temperature_micros(abc_sampler_config):
+  """Test that an error is thrown if temperature_micros is < 0."""
+  # Field not set.
+  abc_sampler_config.ClearField('temperature_micros')
+  with pytest.raises(errors.UserError) as e_info:
+    samplers.Sampler(abc_sampler_config)
+  assert "Sampler.temperature_micros must be > 0" == str(e_info.value)
+  # Value is negative.
+  abc_sampler_config.temperature_micros = -1
+  with pytest.raises(errors.UserError) as e_info:
+    samplers.Sampler(abc_sampler_config)
+  assert "Sampler.temperature_micros must be > 0" == str(e_info.value)
+
+
 # MaxlenTerminationCriterion tests.
 
 def test_MaxlenTerminationCriterion_invalid_maximum_tokens_in_sample():
@@ -140,13 +154,26 @@ def test_SymmetrcalTokenDepthCriterion_SampleIsComplete_reverse_order():
   assert t.SampleIsComplete(['-', 'a', 'b', 'c', '+', '+', '-'])
 
 
-# Sampler.__init__() tests.
+# Sampler tests.
 
 def test_Sampler_config_type_error():
   """Test that a TypeError is raised if config is not a Sampler proto."""
   with pytest.raises(TypeError) as e_info:
     samplers.Sampler(1)
   assert "Config must be a Sampler proto. Received: 'int'" == str(e_info.value)
+
+
+def test_Sampler_start_text(abc_sampler_config: sampler_pb2.Sampler):
+  """Test that start_text is set from Sampler proto."""
+  s = samplers.Sampler(abc_sampler_config)
+  assert s.start_text == abc_sampler_config.start_text
+
+
+def test_Sampler_temperature(abc_sampler_config: sampler_pb2.Sampler):
+  """Test that temperature is set from Sampler proto."""
+  abc_sampler_config.temperature_micros = 1000000
+  s = samplers.Sampler(abc_sampler_config)
+  assert pytest.approx(1.0) == s.temperature
 
 
 def main(argv):

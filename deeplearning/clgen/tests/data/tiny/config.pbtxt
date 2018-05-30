@@ -43,6 +43,7 @@ model {
 sampler {
   start_text: "kernel void A(global int* a, const int b) {\n"
   batch_size: 64
+  temperature_micros: 1000000
   termination_criteria {
     symtok {
       depth_increase_token: "{"

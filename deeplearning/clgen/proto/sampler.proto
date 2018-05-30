@@ -16,10 +16,9 @@ message Sampler {
   optional string start_text = 1;
   // The sampling batch size.
   optional int32 batch_size = 2;
-  // A value used to seed the RNG. A sampler invoked twice with the same
-  // seed and the same settings will produce the same output. If no seed is set,
-  // the RNG is seeded (pseudo)randomly.
-  optional int64 seed = 3;
+  // The sampling temperature. Must be >= 0. A recommended starting value is
+  // 1000000 (i.e. 1.0 in real values).
+  optional int32 temperature_micros = 3;
   // The criteria that determine when to terminate a sample, in the order in
   // which they will be executed. Duplicates are allowed, for example if you
   // would like to have symmetrical token depth counters for two pairs of
