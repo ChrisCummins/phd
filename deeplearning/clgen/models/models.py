@@ -195,7 +195,7 @@ class Model(object):
       # model.load_weights(self.most_recent_checkpoint_path)
       checkpoint_dir = pathlib.Path(self.cache.keypath('checkpoints'))
       checkpoint_dir.mkdir(parents=True, exist_ok=True)
-      file_path = str(checkpoint_dir / "weights_{epoch:03d}.hdf5")
+      file_path = str(checkpoint_dir / "{epoch:03d}.hdf5")
 
       callbacks = [
         keras.callbacks.ModelCheckpoint(
