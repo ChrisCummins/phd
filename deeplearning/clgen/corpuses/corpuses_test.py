@@ -2,7 +2,6 @@
 import sys
 import tempfile
 
-import numpy as np
 import pytest
 from absl import app
 
@@ -13,41 +12,6 @@ from deeplearning.clgen.proto import corpus_pb2
 
 # The Corpus.hash for an OpenCL corpus of the abc_corpus.
 ABC_CORPUS_HASH = 'cb7c7a23c433a1f628c9b120378759f1723fdf42'
-
-
-@pytest.mark.skip(reason='TODO(cec): Fix clgen-features data path.')
-# See TODO note in //deeplearning/clgen/native/clgen-features.cpp.
-def test_GetKernelFeatures():
-  """Test that features of a known kernel matches expected values."""
-  code = """\
-__kernel void A(__global float* a) {
-  int b = get_global_id(0);
-  a[b] *= 2.0f;
-}\
-"""
-  assert np.array_equal(corpuses.GetKernelFeatures(code),
-                        [0, 0, 1, 0, 1, 0, 1, 0])
-
-
-@pytest.mark.skip(reason='TODO(cec): Fix clgen-features data path.')
-def test_GetKernelFeatures_multiple_kernels():
-  """Features cannot be extracted if file contains more than one kernel."""
-  kernel_a = "__kernel void A(__global float* a){}\n"
-  kernel_b = "__kernel void B(__global float* b){}\n"
-  # Note that get_kernel_features returns a numpy array, so we can't simply
-  # "assert" it. Instead we check that the sum is 0, since the kernels contain
-  # no instructions, the feature vectors will be all zeros.
-  assert corpuses.GetKernelFeatures(kernel_a).sum() == 0
-  assert corpuses.GetKernelFeatures(kernel_b).sum() == 0
-  with pytest.raises(errors.FeaturesError):
-    corpuses.GetKernelFeatures(kernel_a + kernel_b)
-
-
-@pytest.mark.skip(reason='TODO(cec): Fix clgen-features data path.')
-def test_GetKernelFeatures_bad_code():
-  """Test that a FeaturesError is raised if code contains errors."""
-  with pytest.raises(errors.FeaturesError):
-    corpuses.GetKernelFeatures("SYNTAX ERROR!", quiet=True)
 
 
 def test_Sampler_config_type_error():
