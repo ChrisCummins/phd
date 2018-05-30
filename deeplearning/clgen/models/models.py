@@ -178,6 +178,9 @@ class Model(object):
           epoch_checkpoints[target_num_epochs - 1])
       return self
 
+    logging.info('Training model for %d of %d epochs',
+                 target_num_epochs - starting_epoch, target_num_epochs)
+
     # Deferred importing of Keras so that we don't have to activate the
     # TensorFlow backend every time we import this module.
     import keras

@@ -43,9 +43,11 @@ class DataGeneratorBase(object):
     self.corpus = corpus
     self.training_opts = training_opts
     self.shuffle = training_opts.shuffle_corpus_contentfiles_between_epochs
+    start_time = time.time()
     self.encoded_corpus = self.corpus.GetTrainingData(shuffle=self.shuffle)
-    logging.info('Encoded corpus size: %s',
-                 humanize.naturalsize(sys.getsizeof(self.encoded_corpus)))
+    logging.info('Assembled encoded corpus: %s in %s ms',
+                 humanize.naturalsize(sys.getsizeof(self.encoded_corpus)),
+                 humanize.intcomma(int((time.time() - start_time) * 1000)))
     self.corpus_length = len(self.encoded_corpus)
     self.sequence_length = self.training_opts.sequence_length
     if self.sequence_length >= self.corpus_length:
@@ -117,7 +119,7 @@ class LazyVectorizingGenerator(DataGeneratorBase):
         dtype=np.bool)
     y = np.zeros((self.batch_size, self.corpus.vocabulary_size), dtype=np.bool)
     batch_size = sys.getsizeof(x) + sys.getsizeof(y)
-    logging.info('%s memory: %s per batch, %s per epoch, %s total',
+    logging.info('%s: %s per batch, %s per epoch, %s total',
                  type(self).__name__,
                  humanize.naturalsize(batch_size),
                  humanize.naturalsize(batch_size * self.steps_per_epoch),
