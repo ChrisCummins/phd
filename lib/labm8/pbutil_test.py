@@ -47,6 +47,42 @@ def test_ToFile_path_is_directory(suffix):
     assert str(e_info.value).endswith(f"Is a directory: '{d}'")
 
 
+# FromString() tests.
+
+def test_FromString_empty_string():
+  """Test that an empty string can be parsed as a proto."""
+  proto = pbutil.FromString('', test_protos_pb2.AnotherTestMessage())
+  assert not proto.number
+
+
+def test_FromString_empty_string_required_fields():
+  """Test that an empty string raises DecodeError if uninitialized fields."""
+  with pytest.raises(pbutil.DecodeError):
+    pbutil.FromString('', test_protos_pb2.TestMessage())
+
+
+def test_FromString_empty_string_required_fields_uninitialized_okay():
+  """Test that an empty string raises DecodeError if uninitialized fields."""
+  proto = pbutil.FromString(
+      '', test_protos_pb2.TestMessage(), uninitialized_okay=True)
+  assert not proto.string
+
+
+def test_FromString_valid_input():
+  """Test that an valid input is decoded."""
+  proto = pbutil.FromString('number: 5', test_protos_pb2.AnotherTestMessage())
+  assert 5 == proto.number
+
+
+def test_FromString_DecodeError_unknown_field():
+  """Test that DecodeError is raised if string contains unknown field."""
+  with pytest.raises(pbutil.DecodeError) as e_info:
+    proto = pbutil.FromString('foo: "bar"',
+                              test_protos_pb2.AnotherTestMessage())
+  assert ('1:1 : Message type "labm8.AnotherTestMessage" '
+          'has no field named "foo".') == str(e_info.value)
+
+
 # FromFile() tests.
 
 @pytest.mark.parametrize('suffix', SUFFIXES_TO_TEST)

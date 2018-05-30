@@ -1,6 +1,6 @@
 // Protocol buffers for unit testing.
 syntax = "proto2";
-package deepsmith;
+package labm8;
 
 message TestMessage {
   required string string = 1;

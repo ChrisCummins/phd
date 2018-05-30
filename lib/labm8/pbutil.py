@@ -31,6 +31,35 @@ class DecodeError(ProtoValueError):
   pass
 
 
+def FromString(string: str, message: ProtocolBuffer,
+               uninitialized_okay: bool = False) -> ProtocolBuffer:
+  """Read a text format protocol buffer from a string.
+
+  Args:
+    string: A text format protocol buffer.
+    message: A message instance to read into.
+    uninitialized_okay: If True, do not require that decoded messages be
+      initialized. If False, DecodeError is raised.
+
+  Returns:
+    The parsed message (same as the message argument).
+
+  Raises:
+    DecodeError: If the file cannot be decoded to the given message type, or if
+      after decoding, the message is not initialized and uninitialized_okay is
+      False.
+  """
+  try:
+    google.protobuf.text_format.Merge(string, message)
+  except google.protobuf.text_format.ParseError as e:
+    raise DecodeError(e)
+
+  if not uninitialized_okay and not message.IsInitialized():
+    raise DecodeError(f"Required fields not set")
+
+  return message
+
+
 def FromFile(path: pathlib.Path, message: ProtocolBuffer,
              assume_filename: typing.Optional[
                typing.Union[str, pathlib.Path]] = None,
@@ -61,7 +90,8 @@ def FromFile(path: pathlib.Path, message: ProtocolBuffer,
     The parsed message (same as the message argument).
 
   Raises:
-    IOError: If the file does not exist or cannot be read.
+    FileNotFoundError: If the path does not exist.
+    IsADirectoryError: If the path is a directory.
     DecodeError: If the file cannot be decoded to the given message type, or if
       after decoding, the message is not initialized and uninitialized_okay is
       False.
@@ -84,7 +114,9 @@ def FromFile(path: pathlib.Path, message: ProtocolBuffer,
   try:
     with open_function(path, 'rb') as f:
       if suffix == '.txt' or suffix == '.pbtxt':
-        google.protobuf.text_format.Merge(f.read(), message)
+        # Allow uninitialized fields here because we will catch the error later,
+        # allowing us to report the path of the proto.
+        FromString(f.read().decode('utf-8'), message, uninitialized_okay=True)
       elif suffix == '.json':
         google.protobuf.json_format.Parse(f.read(), message)
       else:
