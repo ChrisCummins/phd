@@ -122,13 +122,10 @@ class Corpus(object):
     preprocessed_lock_path = self.preprocessed.database_path.parent / 'LOCK'
     with lockfile.LockFile(preprocessed_lock_path).acquire(replace_stale=True):
       self.preprocessed.Create(self.config)
-    logging.info('Preprocessed corpus: %s',
-                 self.preprocessed.database_path.parent)
     encoded_lock_path = self.encoded.database_path.parent / 'LOCK'
     with lockfile.LockFile(encoded_lock_path).acquire(replace_stale=True):
       self.encoded.Create(self.preprocessed, self.atomizer,
                           self.config.contentfile_separator)
-    logging.info('Encoded corpus: %s', self.encoded.database_path.parent)
 
   def GetTextCorpus(self, shuffle: bool) -> str:
     """Concatenate the entire corpus into a string.

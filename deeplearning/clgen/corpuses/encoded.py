@@ -112,16 +112,22 @@ class EncodedContentFiles(sqlutil.Database):
       True if work was done, else False.
     """
     with self.Session() as session:
-      if self.IsDone(session):
-        return False
-      else:
+      if not self.IsDone(session):
         self.Import(session, p, atomizer, contentfile_separator)
         self.SetDone(session)
         session.commit()
-        return True
+    logging.info("Encoded corpus: %s tokens, %s files",
+                 humanize.intcomma(self.token_count),
+                 humanize.intcomma(self.size))
 
   @property
-  def size(self) -> int:
+  def size(self):
+    """Return the total number of files in the encoded corpus."""
+    with self.Session() as session:
+      return session.query(EncodedContentFile).count()
+
+  @property
+  def token_count(self) -> int:
     """Return the total number of tokens in the encoded corpus.
 
     This excludes the EOF markers which are appended to each encoded text.

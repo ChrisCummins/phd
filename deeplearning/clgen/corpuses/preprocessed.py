@@ -124,6 +124,10 @@ class PreprocessedContentFiles(sqlutil.Database):
         session.commit()
     num_files = self.size
     num_input_files = self.input_size
+    logging.info("Content files: %s chars, %s lines, %s files",
+                 humanize.intcomma(self.input_char_count),
+                 humanize.intcomma(self.input_line_count),
+                 humanize.intcomma(num_input_files))
     logging.info('Pre-processing discard rate: %.1f%% (%s files)',
                  (1 - (num_files / num_input_files)) * 100,
                  humanize.intcomma(num_input_files - num_files))
@@ -229,6 +233,20 @@ class PreprocessedContentFiles(sqlutil.Database):
       return session.query(func.sum(PreprocessedContentFile.linecount)).filter(
           PreprocessedContentFile.preprocessing_succeeded == True
       ).scalar()
+
+  @property
+  def input_char_count(self) -> int:
+    """Get the total number of characters in the input content files."""
+    with self.Session() as session:
+      return session.query(
+          func.sum(PreprocessedContentFile.input_charcount)).scalar()
+
+  @property
+  def input_line_count(self) -> int:
+    """Get the total number of characters in the input content files."""
+    with self.Session() as session:
+      return session.query(
+          func.sum(PreprocessedContentFile.input_linecount)).scalar()
 
   def GetImportRelpaths(
       self, contentfile_root: pathlib.Path) -> typing.List[str]:

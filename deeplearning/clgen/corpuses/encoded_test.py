@@ -104,11 +104,11 @@ def test_EncodedContentFiles_indices_array_equivalence(
   np.testing.assert_array_equal(array_in, array_out)
 
 
-def test_EncodedContentFiles_size(
+def test_EncodedContentFiles_token_count(
     temp_db: encoded.EncodedContentFiles,
     abc_preprocessed: preprocessed.PreprocessedContentFile,
     abc_atomizer: atomizers.AsciiCharacterAtomizer):
-  """Test that size property returns sum of tokencounts."""
+  """Test that token_count property returns sum of token_count column."""
   enc1 = encoded.EncodedContentFile.FromPreprocessed(
       abc_preprocessed, abc_atomizer, 'a')
   abc_preprocessed.id += 1
@@ -118,7 +118,7 @@ def test_EncodedContentFiles_size(
     session.add(enc1)
     session.add(enc2)
     assert 2 == session.query(encoded.EncodedContentFile).count()
-  assert 20 == temp_db.size
+  assert 20 == temp_db.token_count
 
 
 def main(argv):
