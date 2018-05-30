@@ -152,7 +152,6 @@ py_test(
         ":clang",
         ":opencl",
         "//deeplearning/clgen/proto:corpus_py_pb2",
-        "//deeplearning/clgen/tests:testlib",
         "//lib/labm8:bazelutil",
     ],
 )

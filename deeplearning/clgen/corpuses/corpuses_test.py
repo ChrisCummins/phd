@@ -9,7 +9,6 @@ from absl import app
 from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import corpuses
 from deeplearning.clgen.proto import corpus_pb2
-from deeplearning.clgen.tests import testlib as tests
 
 
 # The Corpus.hash for an OpenCL corpus of the abc_corpus.
@@ -47,9 +46,8 @@ def test_GetKernelFeatures_multiple_kernels():
 @pytest.mark.skip(reason='TODO(cec): Fix clgen-features data path.')
 def test_GetKernelFeatures_bad_code():
   """Test that a FeaturesError is raised if code contains errors."""
-  with tests.DevNullRedirect():
-    with pytest.raises(errors.FeaturesError):
-      corpuses.GetKernelFeatures("SYNTAX ERROR!", quiet=True)
+  with pytest.raises(errors.FeaturesError):
+    corpuses.GetKernelFeatures("SYNTAX ERROR!", quiet=True)
 
 
 def test_Sampler_config_type_error():

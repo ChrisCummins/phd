@@ -51,7 +51,6 @@ py_test(
         "//deeplearning/clgen/preprocessors:cxx",
         "//deeplearning/clgen/preprocessors:opencl",
         "//deeplearning/clgen/proto:corpus_py_pb2",
-        "//deeplearning/clgen/tests:testlib",
         "//lib/labm8:fs",
     ],
 )
