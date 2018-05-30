@@ -1,4 +1,5 @@
 """The CLgen language model."""
+import os
 import pathlib
 import sys
 import typing
@@ -68,7 +69,11 @@ class Model(object):
     (self.cache.path / 'checkpoints').mkdir(exist_ok=True)
     (self.cache.path / 'samples').mkdir(exist_ok=True)
     (self.cache.path / 'logs').mkdir(exist_ok=True)
-    logging.debug('model %s', self.hash)
+
+    # Create symlink to encoded corpus.
+    symlink = self.cache.path / 'corpus'
+    if not symlink.is_symlink():
+      os.symlink(self.corpus.encoded.database_path.parent, symlink)
 
     # Validate metadata against cache.
     if self.cache.get('META.pbtxt'):

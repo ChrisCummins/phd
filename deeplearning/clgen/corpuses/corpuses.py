@@ -104,6 +104,13 @@ class Corpus(object):
         exist_ok=True, parents=True)
     self.preprocessed = preprocessed.PreprocessedContentFiles(cache.cachepath(
         'corpus', 'preprocessed', preprocessed_id, 'preprocessed.db'))
+    # Create symlink to contentfiles.
+    symlink = self.preprocessed.database_path.parent / 'contentfiles'
+    if not symlink.is_symlink():
+      if config.HasField('local_directory'):
+        os.symlink(str(ExpandConfigPath(config.local_directory)), symlink)
+      elif config.HasField('local_tar_archive'):
+        os.symlink(str(ExpandConfigPath(config.local_tar_archive)), symlink)
     # Data of encoded pre-preprocessed files.
     encoded_id = ResolveEncodedId(self.content_id, self.config)
     cache.cachepath('corpus', 'encoded', encoded_id).mkdir(
@@ -112,7 +119,10 @@ class Corpus(object):
         'corpus', 'encoded', encoded_id, 'encoded.db'))
     self.atomizer_path = cache.cachepath(
         'corpus', 'encoded', encoded_id, 'atomizer.pkl')
-
+    # Create symlink to preprocessed files.
+    symlink = self.encoded.database_path.parent / 'preprocessed'
+    if not symlink.is_symlink():
+      os.symlink(self.preprocessed.database_path.parent, symlink)
     self.hash = encoded_id
     self.cache = cache.mkcache('corpus', 'encoded', encoded_id)
 
