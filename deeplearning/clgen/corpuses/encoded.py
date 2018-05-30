@@ -166,7 +166,7 @@ class EncodedContentFiles(sqlutil.Database):
                        preprocessed.PreprocessedContentFile).filter(
                        preprocessed.PreprocessedContentFile.preprocessing_succeeded == True).count()))
       pool = multiprocessing.Pool()
-      bar = progressbar.ProgressBar()
+      bar = progressbar.ProgressBar(max_value=len(jobs))
       last_commit = time.time()
 
       for encoded_cf in bar(pool.imap_unordered(
