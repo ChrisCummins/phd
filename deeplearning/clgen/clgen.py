@@ -219,7 +219,6 @@ def DoFlagsAction():
           f"Invalid --print_cache_path argument: '{FLAGS.print_cache_path}'")
 
     # The default action is to sample the model.
-    logging.info('Corpus: %s', instance.model.corpus.cache.path)
     logging.info('Model: %s', instance.model.cache.path)
     logging.info('Sampler: %s', instance.model.SamplerCache(instance.sampler))
     instance.model.Sample(instance.sampler, FLAGS.min_samples)

@@ -225,6 +225,7 @@ class Model(object):
       UnableToAcquireLockError: If the model is locked (i.e. there is another
         process currently modifying the model).
     """
+    self.corpus.Create()
     with self.lock.acquire(replace_stale=True):
       return self._LockedTrain()
 

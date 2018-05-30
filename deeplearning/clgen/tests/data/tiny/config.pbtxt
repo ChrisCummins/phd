@@ -6,7 +6,7 @@
 working_dir: "/var/phd/clgen/tiny"
 model {
   corpus {
-    local_directory: "$PWD/corpus.tar.bz2"
+    local_tar_archive: "$PWD/corpus.tar.bz2"
     ascii_character_atomizer: true
     contentfile_separator: "\n\n"
     preprocessor: "deeplearning.clgen.preprocessors.opencl:ClangPreprocessWithShim"
