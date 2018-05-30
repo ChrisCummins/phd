@@ -88,30 +88,6 @@ py_test(
 )
 
 py_library(
-    name = "explore",
-    srcs = ["explore.py"],
-    deps = ["//deeplearning/clgen:dbutil"],
-)
-
-py_test(
-    name = "explore_test",
-    srcs = ["explore_test.py"],
-    data = [
-        "//deeplearning/clgen/tests/data:tiny",
-        "//deeplearning/clgen/tests/data/tiny",
-    ],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
-    deps = [
-        ":explore",
-        "//deeplearning/clgen:conftest",
-        "//deeplearning/clgen/corpuses",
-        "//deeplearning/clgen/tests:testlib",
-        "//lib/labm8:fs",
-    ],
-)
-
-py_library(
     name = "features",
     srcs = ["features.py"],
     deps = [
