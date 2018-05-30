@@ -3,10 +3,8 @@
 A Sampler is an object which, when passed to a mode's Sample() method,
 determines the shape of the generated samples.
 """
-import pathlib
 import typing
 
-from deeplearning.clgen import cache
 from deeplearning.clgen import errors
 from deeplearning.clgen.proto import sampler_pb2
 from lib.labm8 import crypto
@@ -77,10 +75,10 @@ class SymmetricalTokenDepthCriterion(TerminationCriterionBase):
   def __init__(self, config: sampler_pb2.SymmetricalTokenDepth):
     try:
       self.left_token = pbutil.AssertFieldConstraint(
-          config, 'depth_increase_token', lambda s: len(s),
+          config, 'depth_increase_token', lambda s: len(s) > 0,
           'SymmetricalTokenDepth.depth_increase_token must be a string')
       self.right_token = pbutil.AssertFieldConstraint(
-          config, 'depth_decrease_token', lambda s: len(s),
+          config, 'depth_decrease_token', lambda s: len(s) > 0,
           'SymmetricalTokenDepth.depth_decrease_token must be a string')
     except pbutil.ProtoValueError as e:
       raise errors.UserError(e)
@@ -173,20 +171,9 @@ class Sampler(object):
     """
     return crypto.sha1(config.SerializeToString())
 
-  def _FlushMeta(self, cache_):
-    pbutil.ToFile(self.meta, pathlib.Path(cache_.keypath('META.pbtxt')))
-
-  @property
-  def shorthash(self) -> str:
-    return cache.ShortHash(self.hash, cache.cachepath('sampler'))
-
   @property
   def start_text(self) -> str:
     return self.config.start_text
-
-  def __repr__(self) -> str:
-    """String representation."""
-    return f'sampler[{self.shorthash}]: "{self.config.start_text}"'
 
   def __eq__(self, rhs) -> bool:
     if not isinstance(rhs, Sampler):

@@ -1,3 +1,4 @@
+"""This file contains the logic for managing CLgen filesystem caches."""
 import os
 import pathlib
 
@@ -6,18 +7,13 @@ from lib.labm8 import fs
 
 
 def cachepath(*relative_path_components: str) -> pathlib.Path:
-  """
-  Return path to file system cache.
+  """Return path to file system cache.
 
-  Parameters
-  ----------
-  *relative_path_components
-      Relative path of cache.
+  Args:
+    *relative_path_components: Relative path of cache.
 
-  Returns
-  -------
-  str
-      Absolute path of file system cache.
+  Returns:
+    Absolute path of file system cache.
   """
   cache_root = pathlib.Path(os.environ.get("CLGEN_CACHE", "~/.cache/clgen/"))
   cache_root.expanduser().mkdir(parents=True, exist_ok=True)
@@ -25,51 +21,15 @@ def cachepath(*relative_path_components: str) -> pathlib.Path:
 
 
 def mkcache(*relative_path_components: str) -> cache.FSCache:
-  """
-  Instantiate a file system cache.
+  """Instantiate a file system cache.
 
   If the cache does not exist, one is created.
 
-  Parameters
-  ----------
-  lang
-      Programming language.
-  *relative_path_components
-      Relative path of cache.
+  Args:
+    *relative_path_components: Relative path of cache.
 
-  Returns
-  -------
-  labm8.FSCache
-      Filesystem cache.
+  Returns:
+    A filesystem cache instance.
   """
   return cache.FSCache(cachepath(*relative_path_components),
                        escape_key=cache.escape_path)
-
-
-def ShortHash(fullhash: str, cache_dir: pathlib.Path, min_len: int = 7) -> str:
-  """
-  Truncate the hash to a shorter length, while maintaining uniqueness.
-
-  This returns the shortest hash required to uniquely identify all elements
-  in the cache.
-
-  Parameters
-  ----------
-  fullhash : str
-      Hash to truncate.
-  cache_dir : str
-      Path to cache.
-  min_len : int, optional
-      Minimum length of hash to try.
-
-  Returns
-  -------
-  str
-      Truncated hash.
-  """
-  for shorthash_len in range(min_len, len(fullhash)):
-    entries = [x[:shorthash_len] for x in fs.ls(cache_dir)]
-    if len(entries) == len(set(entries)):
-      break
-
-  return fullhash[:shorthash_len]
