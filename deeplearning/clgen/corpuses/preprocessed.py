@@ -178,10 +178,25 @@ class PreprocessedContentFiles(sqlutil.Database):
       raise NotImplementedError
 
   def GetImportRelpaths(
-      self, contentfile_root: pathlib.Path) -> typing.List[pathlib.Path]:
+      self, contentfile_root: pathlib.Path) -> typing.List[str]:
+    """Get relative paths to all files in the content files directory.
+
+    Args:
+      contentfile_root: The root of the content files directory.
+
+    Returns:
+      A list of paths relative to the content files root.
+
+    Raises:
+      EmptyCorpusException: If the content files directory is empty.
+    """
     with fs.chdir(contentfile_root):
-      return subprocess.check_output(['find', '.', '-type', 'f']).decode(
-          'utf-8').strip().split('\n')
+      find_output = subprocess.check_output(['find', '.', '-type', 'f']).decode(
+          'utf-8').strip()
+      if not find_output:
+        raise errors.EmptyCorpusException(
+            f"Empty content files directory: '{contentfile_root}'")
+      return find_output.split('\n')
 
 
 def ExpandConfigPath(path: str) -> pathlib.Path:
