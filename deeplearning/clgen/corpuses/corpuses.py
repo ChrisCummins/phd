@@ -30,6 +30,17 @@ from lib.labm8 import pbutil
 
 
 def AssertConfigIsValid(config: corpus_pb2.Corpus) -> corpus_pb2.Corpus:
+  """Assert that config proto is valid.
+
+  Args:
+    config: A Corpus proto.
+
+  Returns:
+    The Corpus proto.
+
+  Raises:
+    UserError: If the config is invalid.
+  """
   try:
     pbutil.AssertFieldIsSet(config, 'contentfiles')
     pbutil.AssertFieldIsSet(config, 'atomizer')
@@ -143,7 +154,6 @@ class Corpus(object):
     Returns:
       The encoded corpus.
     """
-    # TODO: Join using contentfile_separator.
     # TODO: Can binary numpy strings be concatenated and decoded as one?
     with self.encoded.Session() as session:
       query = session.query(encoded.EncodedContentFile.data)
@@ -152,10 +162,12 @@ class Corpus(object):
       return np.concatenate([np.fromstring(x[0]) for x in query])
 
   def GetNumContentFiles(self) -> int:
+    """Get the number of contentfiles which were pre-processed."""
     with self.preprocessed.Session() as session:
       return session.query(preprocessed.PreprocessedContentFile).count()
 
   def GetNumPreprocessedFiles(self) -> int:
+    """The number of succesfully pre-processed content files."""
     with self.preprocessed.Session() as session:
       return session.query(preprocessed.PreprocessedContentFile.text).filter(
           preprocessed.PreprocessedContentFile.preprocessing_succeeded == True
@@ -166,50 +178,45 @@ class Corpus(object):
     """Must call Create() first."""
     if self._atomizer is None:
       if self.atomizer_path.is_file():
-        self._LoadAtomizer()
+        self._atomizer = self._LoadAtomizer()
       else:
-        self._CreateAtomizer()
+        self._atomizer = self._CreateAtomizer()
     return self._atomizer
 
-  def _LoadAtomizer(self) -> None:
+  def _LoadAtomizer(self) -> atomizers.AtomizerBase:
+    """Load an atomizer from cache."""
     with open(self.atomizer_path, 'rb') as infile:
-      self._atomizer = pickle.load(infile)
+      return pickle.load(infile)
 
-  def _CreateAtomizer(self) -> None:
+  def _CreateAtomizer(self) -> atomizers.AtomizerBase:
     """Creates and caches an atomizer."""
     logging.info('Deriving atomizer from preprocessed corpus')
     start_time = time.time()
     corpus_txt = self.GetTextCorpus(shuffle=False)
 
     if self.config.HasField('ascii_character_atomizer'):
-      self._atomizer = atomizers.AsciiCharacterAtomizer.FromText(corpus_txt)
+      atomizer = atomizers.AsciiCharacterAtomizer.FromText(corpus_txt)
     elif self.config.HasField('greedy_multichar_atomizer'):
       atoms = set(self.config.greedy_multichar_atomizer.tokens)
-      self._atomizer = atomizers.GreedyAtomizer.FromText(corpus_txt, atoms)
+      atomizer = atomizers.GreedyAtomizer.FromText(corpus_txt, atoms)
     else:
       raise NotImplementedError
 
-    logging.info('%s derived in %s ms',
-                 type(self._atomizer).__name__,
+    logging.info('%s derived in %s ms', type(atomizer).__name__,
                  humanize.intcomma(int((time.time() - start_time) * 1000)))
     with open(self.atomizer_path, 'wb') as f:
-      pickle.dump(self.atomizer, f)
+      pickle.dump(atomizer, f)
+    return atomizer
 
   @property
   def vocabulary_size(self) -> int:
-    """The number of elements in the corpus vocabulary."""
+    """Get the number of elements in the corpus vocabulary."""
     return len(self.atomizer.vocab)
 
   @property
   def size(self) -> int:
-    """
-    Return the atomized size of the corpus.
-    """
-    try:
-      return self._size
-    except AttributeError:
-      self.GetTrainingData(False)
-      return self._size
+    """Return the size of the atomized corpus."""
+    return len(self.GetTrainingData(shuffle=False))
 
   def __eq__(self, rhs) -> bool:
     if not isinstance(rhs, Corpus):
@@ -264,6 +271,7 @@ def ResolveEncodedId(content_id: str, config: corpus_pb2.Corpus) -> str:
 
 
 def GetHashOfArchiveContents(archive: pathlib.Path) -> str:
+  """Compute the checksum of the contents of a directory."""
   with tempfile.TemporaryDirectory(prefix='clgen_corpus_') as d:
     cmd = ['tar', '-xf', str(archive), '-C', d]
     subprocess.check_call(cmd)
