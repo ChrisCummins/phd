@@ -61,7 +61,6 @@ py_test(
     ],
 )
 
-
 py_library(
     name = "conftest",
     testonly = True,
@@ -104,50 +103,6 @@ py_library(
     name = "errors",
     srcs = ["errors.py"],
     visibility = ["//deeplearning/clgen:__subpackages__"],
-)
-
-py_library(
-    name = "native",
-    srcs = ["native.py"],
-    data = [
-        "//deeplearning/clgen/native:clgen-features",
-        "//deeplearning/clgen/native:clgen-rewriter",
-        "//deeplearning/clgen/data/include:opencl-shim",
-        "//deeplearning/clgen/data/include:opencl",
-        "//third_party/libclc/generic/include:headers",
-        "@libcxx//:headers",
-    ] + select({
-        "//:darwin": [
-            "@llvm_mac_headers//:headers",
-            "@llvm_mac//:clang",
-            "@llvm_mac//:clang-format",
-            "@llvm_mac//:opt",
-        ],
-        "//conditions:default": [
-            "@llvm_linux_headers//:headers",
-            "@llvm_linux//:clang-format",
-            "@llvm_linux//:clang",
-            "@llvm_linux//:opt",
-        ],
-    }),
-    visibility = ["//deeplearning/clgen:__subpackages__"],
-    deps = [
-        ":package_util",
-        "//config:getconfig",
-        "//lib/labm8:bazelutil",
-        "//lib/labm8:fs",
-    ],
-)
-
-py_test(
-    name = "native_test",
-    srcs = ["native_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
-    deps = [
-        ":native",
-        "//lib/labm8:fs",
-    ],
 )
 
 py_library(

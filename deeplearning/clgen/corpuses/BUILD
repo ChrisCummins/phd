@@ -82,10 +82,15 @@ py_test(
 py_library(
     name = "features",
     srcs = ["features.py"],
+    data = [
+        "//deeplearning/clgen/data/include:opencl-shim",
+        "//deeplearning/clgen/native:clgen-features",
+    ],
     deps = [
+        "//config:getconfig",
         "//deeplearning/clgen:errors",
-        "//deeplearning/clgen:native",
         "//deeplearning/clgen:package_util",
+        "//lib/labm8:bazelutil",
         "//lib/labm8:labmath",
     ],
 )

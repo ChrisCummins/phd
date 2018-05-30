@@ -3,6 +3,20 @@
 py_library(
     name = "clang",
     srcs = ["clang.py"],
+    data = select({
+        "//:darwin": [
+            "@llvm_mac_headers//:headers",
+            "@llvm_mac//:clang",
+            "@llvm_mac//:clang-format",
+            "@llvm_mac//:opt",
+        ],
+        "//conditions:default": [
+            "@llvm_linux_headers//:headers",
+            "@llvm_linux//:clang-format",
+            "@llvm_linux//:clang",
+            "@llvm_linux//:opt",
+        ],
+    }),
     deps = [
         ":public",
         "//config:getconfig",
@@ -46,12 +60,14 @@ py_test(
 py_library(
     name = "cxx",
     srcs = ["cxx.py"],
+    data = ["@libcxx//:headers"],
     visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = [
         ":clang",
         ":normalizer",
         ":public",
-        "//deeplearning/clgen:native",
+        "//config:getconfig",
+        "//lib/labm8:bazelutil",
     ],
 )
 
@@ -113,28 +129,32 @@ py_test(
 py_library(
     name = "opencl",
     srcs = ["opencl.py"],
+    data = [
+        "//deeplearning/clgen/data/include:opencl",
+        "//deeplearning/clgen/data/include:opencl-shim",
+        "//third_party/libclc/generic/include:headers",
+    ],
     visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = [
         ":clang",
         ":normalizer",
         ":public",
-        "//config:getconfig",
-        "//deeplearning/clgen:errors",
-        "//deeplearning/clgen:native",
+        "//lib/labm8:bazelutil",
     ],
 )
 
 py_test(
     name = "opencl_test",
     srcs = ["opencl_test.py"],
+    data = ["//deeplearning/clgen/data/include:opencl-shim"],
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
         ":clang",
         ":opencl",
-        "//deeplearning/clgen:native",
         "//deeplearning/clgen/proto:corpus_py_pb2",
         "//deeplearning/clgen/tests:testlib",
+        "//lib/labm8:bazelutil",
     ],
 )
 

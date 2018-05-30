@@ -1,10 +1,16 @@
 """Preprocessor passes for the OpenCL programming language."""
 import typing
 
-from deeplearning.clgen import native
 from deeplearning.clgen.preprocessors import clang
 from deeplearning.clgen.preprocessors import normalizer
 from deeplearning.clgen.preprocessors import public
+from lib.labm8 import bazelutil
+
+
+LIBCLC = bazelutil.DataPath('phd/third_party/libclc/generic/include')
+OPENCL_H = bazelutil.DataPath('phd/deeplearning/clgen/data/include/opencl.h')
+SHIMFILE = bazelutil.DataPath(
+    'phd/deeplearning/clgen/data/include/opencl-shim.h')
 
 
 def GetClangArgs(use_shim: bool) -> typing.List[str]:
@@ -17,13 +23,13 @@ def GetClangArgs(use_shim: bool) -> typing.List[str]:
   Returns:
     A list of command line arguments to pass to Popen().
   """
-  args = ['-I' + str(native.LIBCLC), '-include', str(native.OPENCL_H),
+  args = ['-I' + str(LIBCLC), '-include', str(OPENCL_H),
           '-target', 'nvptx64-nvidia-nvcl', f'-ferror-limit=1', '-xcl',
           '-Wno-ignored-pragmas', '-Wno-implicit-function-declaration',
           '-Wno-incompatible-library-redeclaration', '-Wno-macro-redefined',
           '-Wno-unused-parameter']
   if use_shim:
-    args += ['-include', str(native.SHIMFILE)]
+    args += ['-include', str(SHIMFILE)]
   return args
 
 
@@ -155,7 +161,7 @@ def NormalizeIdentifiers(text: str) -> str:
 #   with tempfile.NamedTemporaryFile('w', suffix='.cl') as tmp:
 #     tmp.write(src)
 #     tmp.flush()
-#     cmd = ['timeout', '-s9', str(timeout), native.GPUVERIFY, tmp.name] + args
+#     cmd = ['timeout', '-s9', str(timeout), GPUVERIFY, tmp.name] + args
 #
 #     process = subprocess.Popen(cmd, stdin=subprocess.PIPE,
 #   stdout=subprocess.PIPE, stderr=subprocess.PIPE)

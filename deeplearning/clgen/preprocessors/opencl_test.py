@@ -8,11 +8,15 @@ from absl import flags
 from absl import logging
 
 import deeplearning.clgen
-from deeplearning.clgen import errors, native
+from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import opencl
+from lib.labm8 import bazelutil
 
 
 FLAGS = flags.FLAGS
+
+SHIMFILE = bazelutil.DataPath(
+    'phd/deeplearning/clgen/data/include/opencl-shim.h')
 
 
 class MockProcess():
@@ -29,12 +33,12 @@ class MockProcess():
 
 def test_GetClangArgs_no_shim():
   args = opencl.GetClangArgs(use_shim=False)
-  assert native.SHIMFILE not in args
+  assert str(SHIMFILE) not in args
 
 
 def test_GetClangArgs_with_shim():
   args = opencl.GetClangArgs(use_shim=True)
-  assert native.SHIMFILE in args
+  assert str(SHIMFILE) in args
 
 
 # ClangPreprocess() tests.
@@ -80,7 +84,7 @@ def test_ClangPreprocessWithShim_compiler_args(mocker):
   opencl.ClangPreprocessWithShim('')
   subprocess.Popen.assert_called_once()
   cmd = subprocess.Popen.call_args_list[0][0][0]
-  assert native.SHIMFILE in cmd
+  assert str(SHIMFILE) in cmd
 
 
 def test_ClangPreprocessWithShim_shim_define():

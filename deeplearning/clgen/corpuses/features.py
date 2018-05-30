@@ -30,10 +30,24 @@ from typing import List, TextIO
 
 import numpy as np
 
+from config import getconfig
 from deeplearning.clgen import errors
-from deeplearning.clgen import native
 from deeplearning.clgen import package_util
+from lib.labm8 import bazelutil
 from lib.labm8 import labmath
+
+
+_config = getconfig.GetGlobalConfig()
+
+CLGEN_FEATURES = bazelutil.DataPath(
+    'phd/deeplearning/clgen/native/clgen-features')
+SHIMFILE = bazelutil.DataPath(
+    'phd/deeplearning/clgen/data/include/opencl-shim.h')
+
+# On Linux we must preload the libclang library.
+CLGEN_FEATURES_ENV = os.environ.copy()
+if _config.paths.libclang_so:
+  CLGEN_FEATURES_ENV['LD_PRELOAD'] = _config.paths.libclang_so
 
 
 class FeatureExtractionError(errors.CLgenError):
@@ -45,7 +59,7 @@ def _shim_args(use_shim: bool = False) -> list:
   """get shim header args"""
   args = []
   if use_shim:
-    args += ["-DCLGEN_FEATURES", "-include", native.SHIMFILE]
+    args += ["-DCLGEN_FEATURES", "-include", str(SHIMFILE)]
   return args
 
 
@@ -115,16 +129,11 @@ def features(path: str, file=sys.stdout, fatal_errors: bool = False,
   quiet : bool, optional
       Don't print compiler output on errors.
   """
-  # On Linux we must preload the clang library.
-  env = os.environ
-  if native.LIBCLANG_SO:
-    env = os.environ.copy()
-    env['LD_PRELOAD'] = native.LIBCLANG_SO
-
   path = package_util.must_exist(path)
-  cmd = [native.CLGEN_FEATURES, path] + ['-extra-arg=' + x for x in
-                                         _shim_args(use_shim=use_shim)]
-  process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env)
+  cmd = [str(CLGEN_FEATURES), path] + ['-extra-arg=' + x for x in
+                                       _shim_args(use_shim=use_shim)]
+  process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE,
+                  env=CLGEN_FEATURES_ENV)
   stdout, stderr = process.communicate()
   stdout, stderr = stdout.decode('utf-8'), stderr.decode('utf-8')
 
@@ -159,8 +168,9 @@ def feature_headers(file: TextIO = sys.stdout) -> None:
   file : TextIO, optional
       Target to print to.
   """
-  cmd = [native.CLGEN_FEATURES, '-header-only']
-  process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+  cmd = [str(CLGEN_FEATURES), '-header-only']
+  process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE,
+                  env=CLGEN_FEATURES_ENV)
   stdout, _ = process.communicate()
   stdout = stdout.decode('utf-8').strip()
 

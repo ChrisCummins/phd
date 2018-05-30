@@ -1,17 +1,25 @@
 """Preprocessor functions for C++."""
+import pathlib
 import re
 
-from deeplearning.clgen import native
+from config import getconfig
 from deeplearning.clgen.preprocessors import clang
 from deeplearning.clgen.preprocessors import normalizer
 from deeplearning.clgen.preprocessors import public
+from lib.labm8 import bazelutil
 
+
+_config = getconfig.GetGlobalConfig()
+if _config.uname == 'darwin':
+  LIBCXX_HEADERS = pathlib.Path(_config.paths.llvm_prefix) / 'include/c++/v1'
+else:
+  LIBCXX_HEADERS = bazelutil.DataPath('libcxx/include')
 
 C_COMMENT_RE = re.compile(
     r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
     re.DOTALL | re.MULTILINE)
 
-CLANG_ARGS = ['-xc++', '-isystem', native.LIBCXX_HEADERS,
+CLANG_ARGS = ['-xc++', '-isystem', str(LIBCXX_HEADERS),
               '-Wno-ignored-pragmas', '-ferror-limit=1',
               '-Wno-implicit-function-declaration',
               '-Wno-incompatible-library-redeclaration', '-Wno-macro-redefined',
