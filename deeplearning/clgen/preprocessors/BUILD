@@ -20,7 +20,6 @@ py_library(
     deps = [
         ":public",
         "//config:getconfig",
-        "//deeplearning/clgen:dbutil",
         "//deeplearning/clgen:errors",
     ],
 )

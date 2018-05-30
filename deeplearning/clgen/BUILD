@@ -67,35 +67,10 @@ py_library(
     srcs = ["conftest.py"],
     visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = [
-        ":dbutil",
         "//deeplearning/clgen/proto:clgen_py_pb2",
         "//deeplearning/clgen/proto:corpus_py_pb2",
         "//deeplearning/clgen/proto:model_py_pb2",
         "//deeplearning/clgen/proto:sampler_py_pb2",
-    ],
-)
-
-py_library(
-    name = "dbutil",
-    srcs = ["dbutil.py"],
-    data = ["//deeplearning/clgen/data/sql:scripts"],
-    visibility = ["//deeplearning/clgen:__subpackages__"],
-    deps = [
-        ":errors",
-        ":package_util",
-    ],
-)
-
-py_test(
-    name = "dbutil_test",
-    srcs = ["dbutil_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
-    deps = [
-        ":conftest",
-        ":dbutil",
-        ":errors",
-        "//deeplearning/clgen/tests:testlib",
     ],
 )
 
