@@ -26,6 +26,7 @@ Base = declarative.declarative_base()
 
 
 class Meta(Base):
+  """Meta table for encoded content files database."""
   __tablename__ = 'meta'
 
   key: str = sql.Column(sql.String(1024), primary_key=True)
@@ -33,11 +34,12 @@ class Meta(Base):
 
 
 class EncodedContentFile(Base):
+  """A single encoded content file."""
   __tablename__ = 'encoded_contentfiles'
 
   # The ID of the PreprocessedContentFile.
   id: int = sql.Column(sql.Integer, primary_key=True)
-  data: str = sql.Column(sql.Binary(), nullable=False)
+  data: bytes = sql.Column(sql.Binary(), nullable=False)
   tokencount: int = sql.Column(sql.Integer, nullable=False)
   # The number of milliseconds encoding took.
   encoding_time_ms: int = sql.Column(sql.Integer, nullable=False)
@@ -45,7 +47,8 @@ class EncodedContentFile(Base):
 
   @property
   def indices_array(self) -> np.ndarray:
-    return np.fromstring(self.data, dtype=np.int32)
+    """The numpy array of the encoded data."""
+    return np.frombuffer(self.data, dtype=np.int32)
 
   @property
   def sha256_hex(self) -> str:
@@ -56,24 +59,40 @@ class EncodedContentFile(Base):
   def FromPreprocessed(
       cls, preprocessed_cf: preprocessed.PreprocessedContentFile,
       atomizer: atomizers.AtomizerBase, eof: str) -> 'EncodedContentFile':
+    """Instantiate an EncodedContentFile from a preprocessed file.
+
+    Args:
+      preprocessed_cf: A PreprocessedContentFile instance.
+      atomizer: The atomizer to encode using.
+      eof: An end-of-file marker which is concatenated to the encoded sequence.
+
+    Returns:
+      An EncodedContentFile instance.
+    """
     start_time = time.time()
-    data = atomizer.AtomizeString(preprocessed_cf.text + eof)
+    data = atomizer.AtomizeString(preprocessed_cf.text)
     encoding_time_ms = int((time.time() - start_time) * 1000)
-    return EncodedContentFile(id=preprocessed_cf.id, data=data,
-                              tokencount=len(data),
-                              encoding_time_ms=encoding_time_ms,
-                              date_added=datetime.datetime.utcnow())
+    return EncodedContentFile(
+        id=preprocessed_cf.id,
+        # Encode the end-of-file marker separately to ensure that it resolves to
+        # the correct token. For example if the vocabulary contains 'a', 'b',
+        # and 'ab', then a content file 'a' with EOF marker 'b' would be encoded
+        # as 'ab', instead of 'a'+'b'.
+        data=np.concatenate((data, atomizer.AtomizeString(eof))).tostring(),
+        tokencount=len(data),
+        encoding_time_ms=encoding_time_ms,
+        date_added=datetime.datetime.utcnow())
 
 
 def EncoderWorker(job: internal_pb2.EncoderWorker) -> EncodedContentFile:
+  """Encode a single content file."""
   return EncodedContentFile.FromPreprocessed(
-      preprocessed.PreprocessedContentFile(
-          id=job.id, text=job.text),
+      preprocessed.PreprocessedContentFile(id=job.id, text=job.text),
       pickle.loads(job.pickled_atomizer), job.contentfile_separator)
 
 
 class EncodedContentFiles(sqlutil.Database):
-  """A database of pre-processed contentfiles."""
+  """A database of encoded pre-processed contentfiles."""
 
   def __init__(self, path: pathlib.Path):
     super(EncodedContentFiles, self).__init__(path, Base)
@@ -81,7 +100,7 @@ class EncodedContentFiles(sqlutil.Database):
   def Create(self, p: preprocessed.PreprocessedContentFiles,
              atomizer: atomizers.AtomizerBase,
              contentfile_separator: str) -> bool:
-    """Create the
+    """Populate the encoded contentfiles database.
 
     Args:
       p: A PreprocessedContentFiles database.

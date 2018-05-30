@@ -120,7 +120,7 @@ class AsciiCharacterAtomizer(AtomizerBase):
       An array of indices into vocabulary for all atoms in text.
     """
     try:
-      return np.array(list(map(lambda x: self.vocab[x], text)))
+      return np.array(list(map(lambda x: self.vocab[x], text)), dtype=np.int32)
     except KeyError:
       raise errors.VocabError
 
@@ -205,7 +205,7 @@ class GreedyAtomizer(AtomizerBase):
     if self.determine_chars:
       self._UpdateVocabulary()
 
-    return np.array(indices)
+    return np.array(indices, dtype=np.int32)
 
   def __repr__(self) -> str:
     return f'GreedyAtomizer[{self.vocab_size} tokens]'

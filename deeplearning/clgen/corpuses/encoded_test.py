@@ -15,12 +15,12 @@ FLAGS = flags.FLAGS
 
 
 @pytest.fixture(scope='function')
-def abc_atomizer():
+def abc_atomizer() -> atomizers.AsciiCharacterAtomizer:
   return atomizers.AsciiCharacterAtomizer.FromText('abcde')
 
 
 @pytest.fixture(scope='function')
-def abc_preprocessed():
+def abc_preprocessed() -> preprocessed.PreprocessedContentFile:
   return preprocessed.PreprocessedContentFile(id=123, text='aabbccddee')
 
 
@@ -34,13 +34,23 @@ def test_EncodedContentFile_FromPreprocessed_id(
   assert enc.id == abc_preprocessed.id
 
 
-def test_EncodedContentFile_FromPreprocessed_data(
+def test_EncodedContentFile_FromPreprocessed_indices_array(
     abc_atomizer, abc_preprocessed):
   """Test that sha256 is the same as the preprocessed content file."""
   enc = encoded.EncodedContentFile.FromPreprocessed(
       abc_preprocessed, abc_atomizer, eof='a')
-  assert np.array_equal(np.array([0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 0]),
-                        enc.data)
+  np.testing.assert_array_equal(
+      np.array([0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 0], dtype=np.int32),
+      enc.indices_array)
+
+
+def test_EncodedContentFile_FromPreprocessed_tokencount(
+    abc_atomizer, abc_preprocessed):
+  """Test that tokencount is the length of the array (minus EOF marker)."""
+  enc = encoded.EncodedContentFile.FromPreprocessed(
+      abc_preprocessed, abc_atomizer, eof='a')
+  # Single character encoding, so tokencount is the length of the string.
+  assert len('aabbccddee') == enc.tokencount
 
 
 def test_EncodedContentFile_FromPreprocessed_encoding_time_ms(
