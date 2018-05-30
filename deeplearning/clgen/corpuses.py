@@ -8,10 +8,13 @@ import os
 import pathlib
 import pickle
 import re
+import subprocess
+import tempfile
 import time
 import typing
 from tempfile import NamedTemporaryFile
 
+import checksumdir
 import humanize
 import numpy as np
 from absl import logging
@@ -70,9 +73,17 @@ class Corpus(object):
     cache.cachepath('corpus', 'preprocessed').mkdir(exist_ok=True, parents=True)
     cache.cachepath('corpus', 'encoded').mkdir(exist_ok=True, parents=True)
 
-    self.content_id = ResolveContentId(self.config)
+    hc = hashcache.HashCache(
+        cache.cachepath('corpus/hashcache.db'), 'sha1')
+    self.content_id = ResolveContentId(self.config, hc)
     self.preprocessed_id = ResolvePreprocessedId(self.content_id, self.config)
+    # self.preprocessed = PreprocessedCorpus(
+    #     cache.cachepath('corpus', 'preprocessed', self.preprocessed_id,
+    #                     'preprocessed.db'))
     self.encoded_id = ResolvePreprocessedId(self.content_id, self.config)
+    logging.info('Content ID: %s', self.content_id)
+    logging.info('Preprocessed corpus: %s', self.preprocessed_id)
+    logging.info('Encoded corpus: %s', self.encoded_id)
 
     # Determine the corpus cache path. This will depend on whether a path or
     # an id was specified.
@@ -119,8 +130,11 @@ class Corpus(object):
     with path and self.lock.acquire(replace_stale=True):
       self._CreateCorpusFiles(path)
 
-  def Create(self):
-    pass
+  def Create(self) -> None:
+    """Create the corpus files."""
+    if not cache.cachepath('corpus', 'preprocessed',
+                           self.preprocessed_id).is_dir():
+      pass
 
   def _FlushMeta(self):
     pbutil.ToFile(self.meta, pathlib.Path(self.cache.keypath('META.pbtxt')))
@@ -379,14 +393,19 @@ WHERE ContentFiles.id NOT IN (
     return not self.__eq__(rhs)
 
 
-def ResolveContentId(config: corpus_pb2.Corpus) -> str:
+def ExpandConfigPath(path: str) -> pathlib.Path:
+  return pathlib.Path(os.path.expandvars(path)).expanduser().absolute()
+
+
+def ResolveContentId(config: corpus_pb2.Corpus, hc: hashcache.HashCache) -> str:
   """Compute the hash of the input contentfiles."""
   if config.HasField('local_directory'):
     try:
-      hc = hashcache.HashCache(cache.cachepath('corpus/hashcache.db'), 'sha1')
-      return hc.GetHash(pathlib.Path(config.local_directory))
+      return hc.GetHash(ExpandConfigPath(config.local_directory))
     except FileNotFoundError as e:
       raise errors.UserError(e)
+  elif config.HasField('local_tar_archive'):
+    return GetHashOfArchiveContents(ExpandConfigPath(config.local_tar_archive))
   else:
     raise NotImplementedError('Unsupported Corpus.contentfiles field value')
 
@@ -415,6 +434,13 @@ def ResolveEncodedId(content_id: str, config: corpus_pb2.Corpus) -> str:
   config_without_contentfiles.ClearField('contentfiles')
   return crypto.sha1_list(
       content_id, config_without_contentfiles.SerializeToString())
+
+
+def GetHashOfArchiveContents(archive: pathlib.Path) -> str:
+  with tempfile.TemporaryDirectory() as d:
+    cmd = ['tar', '-xf', str(archive), '-C', d]
+    subprocess.check_call(cmd)
+    return checksumdir(d, 'sha1')
 
 
 def UnpackDirectoryIfNeeded(path: pathlib.Path) -> pathlib.Path:

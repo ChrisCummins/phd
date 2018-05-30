@@ -64,7 +64,9 @@ def test_Corpus_badpath(clgen_cache_dir):
   del clgen_cache_dir
   with pytest.raises(errors.UserError) as e_info:
     corpuses.Corpus(corpus_pb2.Corpus(local_directory="notarealpath"))
-  assert "File not found: 'notarealpath'" == str(e_info.value)
+  # We resolve the absolute path, so we can't match the whole string.
+  assert str(e_info.value).startswith("File not found: '")
+  assert str(e_info.value).endswith("notarealpath'")
 
 
 def test_Corpus_hash(clgen_cache_dir, abc_corpus):
