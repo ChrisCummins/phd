@@ -166,7 +166,8 @@ class Corpus(object):
       query = session.query(encoded.EncodedContentFile.data)
       if shuffle:
         query = query.order_by(func.random())
-      return np.concatenate([np.fromstring(x[0]) for x in query])
+      return np.concatenate(
+          [np.frombuffer(x[0], dtype=np.int32) for x in query])
 
   def GetNumContentFiles(self) -> int:
     """Get the number of contentfiles which were pre-processed."""
