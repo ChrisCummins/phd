@@ -103,7 +103,10 @@ def BuildOptimizer(config: model_pb2.Model) -> 'keras.optimizers.Optimizer':
   # We do not use *any* default values for arguments, in case for whatever
   # reason the Keras API changes a default arg.
   if config.training.HasField('adam_optimizer'):
+    opts = {}
     opt = config.training.adam_optimizer
+    if opt.normalized_gradient_clip_micros:
+      opts['clipnorm'] = opt.normalized_gradient_clip_micros / 1e6
     return keras.optimizers.Adam(
         lr=opt.initial_learning_rate_micros / 1e6,
         beta_1=opt.beta_1_micros / 1e6,
@@ -111,7 +114,7 @@ def BuildOptimizer(config: model_pb2.Model) -> 'keras.optimizers.Optimizer':
         epsilon=None,
         decay=opt.learning_rate_decay_per_epoch_micros / 1e6,
         amsgrad=False,
-        clipnorm=opt.normalized_gradient_clip_micros / 1e6,
+        **opts,
     )
   elif config.training.HasField('rmsprop_optimizer'):
     opt = config.training.rmsprop_optimizer
