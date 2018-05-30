@@ -24,6 +24,7 @@
       <w>logtostderr</w>
       <w>lsize</w>
       <w>lstm</w>
+      <w>multichar</w>
       <w>opencl</w>
       <w>pbtxt</w>
       <w>preprocess</w>
