@@ -81,6 +81,11 @@ def test_AssertIsBuildable_architecture_num_layers(abc_model_config):
 def test_AssertIsBuildable_architecture_post_layer_dropout_micros(
     abc_model_config):
   """UserError raised for invalid architecture.post_layer_dropout_micros."""
+  abc_model_config.architecture.ClearField('post_layer_dropout_micros')
+  with pytest.raises(errors.UserError) as e_info:
+    builders.AssertIsBuildable(abc_model_config)
+  assert ('NetworkArchitecture.post_layer_dropout_micros must be '
+          '>= 0 and <= 1000000') == str(e_info.value)
   abc_model_config.architecture.post_layer_dropout_micros = -1
   with pytest.raises(errors.UserError) as e_info:
     builders.AssertIsBuildable(abc_model_config)
