@@ -1,9 +1,10 @@
 """Unit tests for //lib/labm8/hashcache.py."""
 import pathlib
+import sys
 import tempfile
+import time
 
 import pytest
-import sys
 from absl import app
 from absl import flags
 
@@ -85,6 +86,7 @@ def test_HashCache_GetHash_modified_directory(database_path, hash_fn):
   c = hashcache.HashCache(database_path, hash_fn)
   with tempfile.TemporaryDirectory() as d:
     hash_1 = c.GetHash(pathlib.Path(d))
+    time.sleep(1)
     (pathlib.Path(d) / 'a').touch()
     hash_2 = c.GetHash(pathlib.Path(d))
     assert hash_1 != hash_2
@@ -111,6 +113,7 @@ def test_HashCache_GetHash_modified_file(database_path, hash_fn):
   with tempfile.TemporaryDirectory() as d:
     (pathlib.Path(d) / 'a').touch()
     hash_1 = c.GetHash(pathlib.Path(d) / 'a')
+    time.sleep(1)
     with open(pathlib.Path(d) / 'a', 'w') as f:
       f.write('Hello')
     hash_2 = c.GetHash(pathlib.Path(d) / 'a')
@@ -120,7 +123,8 @@ def test_HashCache_GetHash_modified_file(database_path, hash_fn):
 def main(argv):
   """Main entry point."""
   del argv
-  sys.exit(pytest.main([__file__, '-v']))
+  flags.FLAGS(['argv[0]', '-v=1'])
+  sys.exit(pytest.main([__file__, '-vv']))
 
 
 if __name__ == '__main__':

@@ -4,14 +4,16 @@ Checksums files and directories and cache results. If a file or directory has
 not been modified, subsequent hashes are cache hits. Hashes are recomputed
 lazily, when a directory (or any of its subdirectories) have been modified.
 """
+
 import os
 import pathlib
+import time
 import typing
 
 import checksumdir
 import sqlalchemy as sql
-import time
 from absl import flags
+from absl import logging
 from sqlalchemy.ext import declarative
 
 from lib.labm8 import crypto
@@ -30,9 +32,9 @@ class HashCacheRecord(Base):
 
   # The absolute path to a file or directory.
   absolute_path: str = sql.Column(sql.String(4096), primary_key=True)
-  # The number of milliseconds since the epoch that the file or directory was
-  # last modified.
-  last_modified_ms: int = sql.Column(sql.Integer, nullable=False)
+  # The number of seconds since the epoch that the file or directory was last
+  # modified.
+  last_modified: int = sql.Column(sql.Integer, nullable=False)
   # The cached hash in hexadecimal encoding. We use the length of the longest
   # supported hash function: sha256.
   hash: str = sql.Column(sql.String(64), nullable=False)
@@ -51,7 +53,7 @@ def GetDirectoryMTime(path: pathlib.Path) -> int:
   """
   return int(max(
       max(os.path.getmtime(os.path.join(root, file)) for file in files) for
-      root, _, files in os.walk(path)) * 1000)
+      root, _, files in os.walk(path)))
 
 
 class HashCache(sqlutil.Database):
@@ -80,6 +82,10 @@ class HashCache(sqlutil.Database):
   def GetHash(self, path: pathlib.Path) -> str:
     """Get the hash of a file or directory.
 
+    Note that the a file's mtime is used to determine cache hits. This uses
+    second granularity, so if a file has been modified within a second, this
+    method will erroneously return the cached checksum of the previous version.
+
     Args:
       path: Path to the file or directory.
 
@@ -103,29 +109,31 @@ class HashCache(sqlutil.Database):
 
   def _HashDirectory(self, absolute_path: pathlib.Path) -> str:
     if fs.directory_is_empty(absolute_path):
-      last_modified_ms = int(time.time() * 1000)
+      last_modified = int(time.time())
     else:
-      last_modified_ms = GetDirectoryMTime(absolute_path)
-    return self._DoHash(absolute_path, last_modified_ms,
+      last_modified = GetDirectoryMTime(absolute_path)
+    return self._DoHash(absolute_path, last_modified,
                         lambda x: checksumdir.dirhash(x, self.hash_fn_name))
 
   def _HashFile(self, absolute_path: pathlib.Path) -> str:
-    return self._DoHash(absolute_path, os.path.getmtime(absolute_path),
+    return self._DoHash(absolute_path, int(os.path.getmtime(absolute_path)),
                         self.hash_fn_file)
 
   def _DoHash(self, absolute_path: pathlib.Path,
-              last_modified_ms: int,
+              last_modified: int,
               hash_fn: typing.Callable[[pathlib.Path], str]) -> str:
     with self.Session() as session:
       cached_entry = session.query(HashCacheRecord).filter(
           HashCacheRecord.absolute_path == str(absolute_path)).first()
-      if cached_entry and cached_entry.last_modified_ms == last_modified_ms:
+      if cached_entry and cached_entry.last_modified == last_modified:
+        logging.debug("Cache hit: '%s'", absolute_path)
         return cached_entry.hash
       elif cached_entry:
+        logging.debug("Cache miss: '%s'", absolute_path)
         session.delete(cached_entry)
       new_entry = HashCacheRecord(
           absolute_path=str(absolute_path),
-          last_modified_ms=last_modified_ms,
+          last_modified=last_modified,
           hash=hash_fn(absolute_path))
       session.add(new_entry)
       session.commit()
