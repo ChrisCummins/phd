@@ -134,7 +134,12 @@ class Corpus(object):
       self.preprocessed.Create(self.config)
     encoded_lock_path = self.encoded.database_path.parent / 'LOCK'
     with lockfile.LockFile(encoded_lock_path).acquire(replace_stale=True):
-      self.encoded.Create(self.preprocessed, self.atomizer,
+      start_time = time.time()
+      atomizer = self.atomizer
+      logging.info('%s: %s tokens in %s ms', type(atomizer).__name__,
+                   humanize.intcomma(atomizer.vocab_size),
+                   humanize.intcomma(int((time.time() - start_time) * 1000)))
+      self.encoded.Create(self.preprocessed, atomizer,
                           self.config.contentfile_separator)
 
   def GetTextCorpus(self, shuffle: bool) -> str:
@@ -210,8 +215,6 @@ class Corpus(object):
     else:
       raise NotImplementedError
 
-    logging.info('%s derived in %s ms', type(atomizer).__name__,
-                 humanize.intcomma(int((time.time() - start_time) * 1000)))
     with open(self.atomizer_path, 'wb') as f:
       pickle.dump(atomizer, f)
     return atomizer
