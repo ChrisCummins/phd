@@ -1,4 +1,10 @@
 // The file defines the protos for specificying CLgen models.
+//
+// Please ignore the "optional" proto syntax, ALL FIELDS MUST BE SET.
+// This is to ensure consistent hashing of proto instances to a unique checksum,
+// as default values are ommitted in serialized protos. Unfortunately, this
+// means setting a value to any new field in all of the proto files across this
+// entire repository (and any which are not tracked in this repo).
 
 syntax = "proto2";
 package clgen;
