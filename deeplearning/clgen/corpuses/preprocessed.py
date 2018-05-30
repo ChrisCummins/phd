@@ -8,6 +8,7 @@ from absl import flags
 from sqlalchemy.ext import declarative
 
 from deeplearning.clgen.preprocessors import preprocessors
+from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import internal_pb2
 from lib.labm8 import sqlutil
 
@@ -73,9 +74,10 @@ class PreprocessedContentFiles(sqlutil.Database):
     else:
       return False
 
-  def Create(self, contentfiles_root: pathlib.Path) -> None:
+  def Create(self, config: corpus_pb2.Corpus) -> bool:
     with self.Session() as session:
       if self.IsDone(session):
-        return
+        return False
       else:
         pass  # TODO(cec): Implement!
+        return True

@@ -37,7 +37,6 @@ from lib.labm8 import lockfile
 from lib.labm8 import pbutil
 from lib.labm8 import prof
 from lib.labm8 import tar
-from lib.labm8 import text
 
 
 class Corpus(object):
@@ -71,6 +70,7 @@ class Corpus(object):
     # Make a local copy of the configuration.
     self.config = corpus_pb2.Corpus()
     self.config.CopyFrom(config)
+    self._atomizer = None
 
     cache.cachepath('corpus').mkdir(parents=True, exist_ok=True)
     hc = hashcache.HashCache(
@@ -78,19 +78,19 @@ class Corpus(object):
     self.content_id = ResolveContentId(self.config, hc)
     logging.info('Content ID: %s', self.content_id)
     # Database of pre-processed files
-    self.preprocessed_id = ResolvePreprocessedId(self.content_id, self.config)
-    cache.cachepath('corpus', 'preprocessed', self.preprocessed_id).mkdir(
+    preprocessed_id = ResolvePreprocessedId(self.content_id, self.config)
+    cache.cachepath('corpus', 'preprocessed', preprocessed_id).mkdir(
         exist_ok=True, parents=True)
     self.preprocessed = preprocessed.PreprocessedContentFiles(cache.cachepath(
-        'corpus', 'preprocessed', self.preprocessed_id, 'preprocessed.db'))
-    logging.info('Preprocessed corpus: %s', self.preprocessed_id)
+        'corpus', 'preprocessed', preprocessed_id, 'preprocessed.db'))
+    logging.info('Preprocessed corpus: %s', preprocessed_id)
     # Data of encoded pre-preprocessed files.
-    self.encoded_id = ResolvePreprocessedId(self.content_id, self.config)
-    cache.cachepath('corpus', 'encoded', self.encoded_id).mkdir(
+    encoded_id = ResolvePreprocessedId(self.content_id, self.config)
+    cache.cachepath('corpus', 'encoded', encoded_id).mkdir(
         exist_ok=True, parents=True)
     self.encoded = encoded.EncodedContentFiles(cache.cachepath(
-        'corpus', 'encoded', self.encoded_id, 'encoded.db'))
-    logging.info('Encoded corpus: %s', self.encoded_id)
+        'corpus', 'encoded', encoded_id, 'encoded.db'))
+    logging.info('Encoded corpus: %s', encoded_id)
 
     # Determine the corpus cache path. This will depend on whether a path or
     # an id was specified.
@@ -139,8 +139,8 @@ class Corpus(object):
 
   def Create(self) -> None:
     """Create the corpus files."""
-    self.preprocessed.Create()
-    self.encoded.Create()
+    self.preprocessed.Create(self.config)
+    self.encoded.Create(self.preprocessed, self.atomizer)
 
   def _FlushMeta(self):
     pbutil.ToFile(self.meta, pathlib.Path(self.cache.keypath('META.pbtxt')))
@@ -325,8 +325,19 @@ WHERE ContentFiles.id NOT IN (
     return tokenized_corpus
 
   @property
-  def shorthash(self):
-    return cache.ShortHash(self.hash, cache.cachepath("corpus"))
+  def atomizer_TODO(self) -> atomizers.AtomizerBase:
+    """Must call Create() first."""
+    if self._atomizer is None:
+      if self.config.HasField('ascii_character_atomizer'):
+        self._atomizer = atomizers.AsciiCharacterAtomizer.FromPreprocessed(
+            self.preprocessed)
+      elif self.config.HasField('greedy_multichar_atomizer'):
+        atoms = set(self.config.greedy_multichar_atomizer.tokens)
+        self._atomizer = atomizers.GreedyAtomizer.FromPreprocessed(
+            self.preprocessed, atoms)
+      else:
+        raise errors.UserError('No atomizer specified')
+    return self._atomizer
 
   @property
   def lock(self):
@@ -501,55 +512,3 @@ def GetKernelFeatures(code: str, **kwargs) -> np.array:
     logging.error('features: %s', f)
     raise errors.FeaturesError("code contains more than one kernel")
   return f[0]
-
-
-def GetClKernelEndIndex(src: str, start_idx: int = 0,
-                        max_len: int = 5000) -> int:
-  """Return the index of the character after the end of the OpenCL kernel.
-
-  Args:
-    src: OpenCL source.
-    start_idx: Start index.
-    max_len: Maximum kernel length.
-
-  Returns:
-    Index of end of OpenCL kernel.
-  """
-  i = src.find('{', start_idx) + 1
-  d = 1  # depth
-  while i < min(len(src), start_idx + max_len) and d > 0:
-    if src[i] == '{':
-      d += 1
-    elif src[i] == '}':
-      d -= 1
-    i += 1
-  return i
-
-
-def GetClKernel(src: str, start_idx: int, max_len: int = 5000) -> str:
-  """Return the OpenCL kernel.
-
-  Args:
-    src: OpenCL source.
-    start_idx: Start index.
-    max_len: Maximum kernel length.
-
-  Returns:
-    OpenCL kernel.
-  """
-  return src[start_idx:GetClKernelEndIndex(src, start_idx, max_len)]
-
-
-def GetClKernels(src: str) -> typing.List[str]:
-  """
-  Return OpenCL kernels.
-
-  Args:
-    src: OpenCL source.
-
-  Returns:
-    OpenCL kernels.
-  """
-  idxs = text.get_substring_idxs('__kernel', src)
-  kernels = [GetClKernel(src, i) for i in idxs]
-  return kernels
