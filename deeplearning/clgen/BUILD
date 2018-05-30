@@ -53,8 +53,10 @@ py_test(
     deps = [
         ":clgen",
         "//deeplearning/clgen:conftest",
+        "//deeplearning/clgen/proto:clgen_py_pb2",
         "//deeplearning/clgen/tests:testlib",
         "//lib/labm8:fs",
+        "//lib/labm8:pbutil",
         "//lib/labm8:tar",
     ],
 )

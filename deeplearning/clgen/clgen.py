@@ -2,7 +2,7 @@
 
 The core operations of CLgen are:
 
-  1. Preprocess a corpus of handwritten example programs.
+  1. Preprocess and encode a corpus of handwritten example programs.
   2. Define and train a machine learning model on the corpus.
   3. Sample the trained model to generate new programs.
 
@@ -47,6 +47,9 @@ flags.DEFINE_string(
     'print_cache_path', None,
     'Print the directory of a cache and exit. Valid options are: "corpus", '
     '"model", or "sampler".')
+flags.DEFINE_string(
+    'stop_after', None,
+    'Stop CLgen early. Valid options are: "corpus", or "train".')
 flags.DEFINE_bool(
     'clgen_debug', False,
     'Enable a debugging mode of CLgen python runtime. When enabled, errors '
@@ -219,9 +222,18 @@ def DoFlagsAction():
           f"Invalid --print_cache_path argument: '{FLAGS.print_cache_path}'")
 
     # The default action is to sample the model.
-    logging.info('Model: %s', instance.model.cache.path)
-    logging.info('Sampler: %s', instance.model.SamplerCache(instance.sampler))
-    instance.model.Sample(instance.sampler, FLAGS.min_samples)
+    if FLAGS.stop_after == 'corpus':
+      instance.model.corpus.Create()
+    elif FLAGS.stop_after == 'train':
+      instance.model.Train()
+      logging.info('Model: %s', instance.model.cache.path)
+    elif FLAGS.stop_after:
+      raise app.UsageError(
+          f"Invalid --stop_after argument: '{FLAGS.stop_after}'")
+    else:
+      logging.info('Model: %s', instance.model.cache.path)
+      logging.info('Sampler: %s', instance.model.SamplerCache(instance.sampler))
+      instance.model.Sample(instance.sampler, FLAGS.min_samples)
 
 
 def main(argv):

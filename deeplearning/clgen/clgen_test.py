@@ -10,6 +10,8 @@ from absl import flags
 
 from deeplearning.clgen import clgen
 from deeplearning.clgen import errors
+from deeplearning.clgen.proto import clgen_pb2
+from lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS
@@ -171,6 +173,28 @@ def test_main_min_samples(abc_instance_file):
   flags.FLAGS.unparse_flags()
   flags.FLAGS(['argv[0]', '--config', abc_instance_file, '--min_samples', '1'])
   clgen.main([])
+
+
+def test_main_stop_after_corpus(abc_instance_file):
+  """Test that --stop_after corpus prevents model training."""
+  flags.FLAGS.unparse_flags()
+  flags.FLAGS(
+      ['argv[0]', '--config', abc_instance_file, '--stop_after', 'corpus'])
+  clgen.main([])
+  instance = clgen.Instance(
+      pbutil.FromFile(pathlib.Path(abc_instance_file), clgen_pb2.Instance()))
+  assert not instance.model.is_trained
+
+
+def test_main_stop_after_train(abc_instance_file):
+  """Test that --stop_after train trains the model."""
+  flags.FLAGS.unparse_flags()
+  flags.FLAGS(
+      ['argv[0]', '--config', abc_instance_file, '--stop_after', 'train'])
+  clgen.main([])
+  instance = clgen.Instance(
+      pbutil.FromFile(pathlib.Path(abc_instance_file), clgen_pb2.Instance()))
+  assert instance.model.is_trained
 
 
 def main(argv):
