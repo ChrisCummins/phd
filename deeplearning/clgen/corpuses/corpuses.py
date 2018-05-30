@@ -36,6 +36,15 @@ def AssertConfigIsValid(config: corpus_pb2.Corpus) -> corpus_pb2.Corpus:
     pbutil.AssertFieldIsSet(config, 'contentfile_separator')
     # Check that the preprocessor pipeline resolves to preprocessor functions.
     [preprocessors.GetPreprocessorFunction(p) for p in config.preprocessor]
+
+    if config.HasField('greedy_multichar_atomizer'):
+      if not config.greedy_multichar_atomizer.tokens:
+        raise errors.UserError('GreedyMulticharAtomizer.tokens is empty')
+      for atom in config.greedy_multichar_atomizer.tokens:
+        if not atom:
+          raise errors.UserError(
+              'Empty string found in GreedyMulticharAtomizer.tokens is empty')
+
     return config
   except pbutil.ProtoValueError as e:
     raise errors.UserError(e)
