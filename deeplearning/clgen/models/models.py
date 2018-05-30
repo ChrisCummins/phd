@@ -141,6 +141,8 @@ class Model(object):
         f.write(model.to_yaml())
     model.compile(loss='categorical_crossentropy',
                   optimizer=builders.BuildOptimizer(self.config))
+    # TODO(cec): Capture using StringIO as print_fn and log:
+    model.summary()
     return model
 
   @property
