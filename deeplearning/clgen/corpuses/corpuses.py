@@ -119,7 +119,7 @@ class Corpus(object):
                           self.config.contentfile_separator)
     logging.info('Encoded corpus: %s', self.encoded.database_path.parent)
 
-  def ConcatenateTextCorpus(self, shuffle: bool) -> str:
+  def GetTextCorpus(self, shuffle: bool) -> str:
     """Concatenate the entire corpus into a string.
 
     Args:
@@ -151,6 +151,16 @@ class Corpus(object):
         query = query.order_by(func.random())
       return np.concatenate([np.fromstring(x[0]) for x in query])
 
+  def GetNumContentFiles(self) -> int:
+    with self.preprocessed.Session() as session:
+      return session.query(preprocessed.PreprocessedContentFile).count()
+
+  def GetNumPreprocessedFiles(self) -> int:
+    with self.preprocessed.Session() as session:
+      return session.query(preprocessed.PreprocessedContentFile.text).filter(
+          preprocessed.PreprocessedContentFile.preprocessing_succeeded == True
+      ).count()
+
   @property
   def atomizer(self) -> atomizers.AtomizerBase:
     """Must call Create() first."""
@@ -169,7 +179,7 @@ class Corpus(object):
     """Creates and caches an atomizer."""
     logging.info('Deriving atomizer from preprocessed corpus')
     start_time = time.time()
-    corpus_txt = self.ConcatenateTextCorpus(shuffle=False)
+    corpus_txt = self.GetTextCorpus(shuffle=False)
 
     if self.config.HasField('ascii_character_atomizer'):
       self._atomizer = atomizers.AsciiCharacterAtomizer.FromText(corpus_txt)
