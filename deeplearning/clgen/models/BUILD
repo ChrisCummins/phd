@@ -26,7 +26,7 @@ py_library(
     name = "data_generators",
     srcs = ["data_generators.py"],
     deps = [
-        "//deeplearning/clgen:corpuses",
+        "//deeplearning/clgen/corpuses",
     ],
 )
 
@@ -50,10 +50,10 @@ py_library(
         ":builders",
         ":data_generators",
         "//deeplearning/clgen:cache",
-        "//deeplearning/clgen:corpuses",
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen:samplers",
         "//deeplearning/clgen:telemetry",
+        "//deeplearning/clgen/corpuses",
         "//deeplearning/clgen/proto:internal_py_pb2",
         "//deeplearning/clgen/proto:model_py_pb2",
         "//deeplearning/clgen/proto:sampler_py_pb2",

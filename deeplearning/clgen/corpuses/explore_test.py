@@ -4,8 +4,8 @@ import sys
 import pytest
 from absl import app
 
-from deeplearning.clgen import corpuses
-from deeplearning.clgen import explore
+from deeplearning.clgen.corpuses import corpuses
+from deeplearning.clgen.corpuses import explore
 from deeplearning.clgen.tests import testlib as tests
 from lib.labm8 import fs
 

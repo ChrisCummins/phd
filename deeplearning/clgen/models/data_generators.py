@@ -15,8 +15,8 @@ import numpy as np
 from absl import flags
 from absl import logging
 
-from deeplearning.clgen import corpuses
 from deeplearning.clgen import errors
+from deeplearning.clgen.corpuses import corpuses
 from deeplearning.clgen.proto import model_pb2
 
 

@@ -19,12 +19,10 @@ import humanize
 import numpy as np
 from absl import logging
 
-from deeplearning.clgen import atomizers
 from deeplearning.clgen import cache
 from deeplearning.clgen import dbutil
 from deeplearning.clgen import errors
-from deeplearning.clgen import features
-from deeplearning.clgen import fetch
+from deeplearning.clgen.corpuses import atomizers, features, fetch
 from deeplearning.clgen.preprocessors import preprocessors
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import internal_pb2

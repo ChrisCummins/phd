@@ -5,7 +5,7 @@ import pytest
 from absl import app
 
 import deeplearning.clgen.errors
-from deeplearning.clgen import atomizers
+from deeplearning.clgen.corpuses import atomizers
 
 
 # The set of multichar tokens for the OpenCL programming language.

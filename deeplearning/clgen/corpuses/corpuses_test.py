@@ -6,8 +6,8 @@ import numpy as np
 import pytest
 from absl import app
 
-from deeplearning.clgen import corpuses
 from deeplearning.clgen import errors
+from deeplearning.clgen.corpuses import corpuses
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.tests import testlib as tests
 

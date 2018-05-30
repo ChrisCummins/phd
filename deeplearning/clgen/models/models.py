@@ -9,10 +9,10 @@ from absl import flags
 from absl import logging
 
 from deeplearning.clgen import cache
-from deeplearning.clgen import corpuses
 from deeplearning.clgen import errors
 from deeplearning.clgen import samplers
 from deeplearning.clgen import telemetry
+from deeplearning.clgen.corpuses import corpuses
 from deeplearning.clgen.models import builders
 from deeplearning.clgen.models import data_generators
 from deeplearning.clgen.proto import internal_pb2
