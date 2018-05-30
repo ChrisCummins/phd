@@ -1,0 +1,16 @@
+// The file defines protos used for CLgen telemetry data.
+
+syntax = "proto2";
+package clgen;
+
+// Records telemetry data about a single epoch of model training.
+message ModelEpochTelemetry {
+  // The number of milliseconds since the epoch that epoch training completed.
+  optional int64 timestamp_utc_epoch_ms = 1;
+  // The epoch which has just finished training, starting at one.
+  optional int32 epoch_num = 2;
+  // The wall time that it took to train the epoch.
+  optional int64 epoch_wall_time_ms = 3;
+  // The model's loss.
+  optional double loss = 4;
+}

@@ -9,6 +9,7 @@ from deeplearning.clgen import errors
 from deeplearning.clgen.models import models
 from deeplearning.clgen.proto import internal_pb2
 from deeplearning.clgen.proto import model_pb2
+from deeplearning.clgen.proto import telemetry_pb2
 from lib.labm8 import crypto
 from lib.labm8 import pbutil
 
@@ -180,7 +181,7 @@ def test_Model_Train_telemetry(clgen_cache_dir, abc_model_config):
   m.Train()
   assert len(m.TrainingTelemetry()) == 2
   for telemetry in m.TrainingTelemetry():
-    assert isinstance(telemetry, internal_pb2.ModelEpochTelemetry)
+    assert isinstance(telemetry, telemetry_pb2.ModelEpochTelemetry)
 
 
 def test_Model_Train_twice(clgen_cache_dir, abc_model_config):

@@ -17,6 +17,7 @@ from deeplearning.clgen.models import builders
 from deeplearning.clgen.models import data_generators
 from deeplearning.clgen.proto import internal_pb2
 from deeplearning.clgen.proto import model_pb2
+from deeplearning.clgen.proto import telemetry_pb2
 from lib.labm8 import crypto
 from lib.labm8 import labdate
 from lib.labm8 import lockfile
@@ -376,7 +377,7 @@ class Model(object):
     return [checkpoint_dir / x for x in
             sorted(pathlib.Path(self.cache['checkpoints']).iterdir())]
 
-  def TrainingTelemetry(self) -> typing.List[internal_pb2.ModelEpochTelemetry]:
+  def TrainingTelemetry(self) -> typing.List[telemetry_pb2.ModelEpochTelemetry]:
     """Get the training telemetry data."""
     return telemetry.TrainingLogger(self.cache.path / 'logs').EpochTelemetry()
 

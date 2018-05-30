@@ -42,3 +42,8 @@ py_proto_library(
     name = "sampler_py_pb2",
     protos = ["sampler.proto"],
 )
+
+py_proto_library(
+    name = "telemetry_py_pb2",
+    protos = ["telemetry.proto"],
+)

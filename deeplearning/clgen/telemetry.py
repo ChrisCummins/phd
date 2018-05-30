@@ -5,7 +5,7 @@ import typing
 
 from absl import flags
 
-from deeplearning.clgen.proto import internal_pb2
+from deeplearning.clgen.proto import telemetry_pb2
 from lib.labm8 import jsonutil
 from lib.labm8 import labdate
 from lib.labm8 import pbutil
@@ -38,7 +38,7 @@ class TrainingLogger(object):
     epoch += 1
     now = labdate.MillisecondsTimestamp()
     epoch_time_ms = now - self.last_epoch_begin_timestamp
-    telemetry = internal_pb2.ModelEpochTelemetry(
+    telemetry = telemetry_pb2.ModelEpochTelemetry(
         timestamp_utc_epoch_ms=now,
         epoch_num=epoch,
         epoch_wall_time_ms=epoch_time_ms,
@@ -52,10 +52,10 @@ class TrainingLogger(object):
         on_epoch_begin=self.EpochBeginCallback,
         on_epoch_end=self.EpochEndCallback)
 
-  def EpochTelemetry(self) -> typing.List[internal_pb2.ModelEpochTelemetry]:
+  def EpochTelemetry(self) -> typing.List[telemetry_pb2.ModelEpochTelemetry]:
     """Return the epoch telemetry files."""
     return [
-      pbutil.FromFile(self.logdir / p, internal_pb2.ModelEpochTelemetry())
+      pbutil.FromFile(self.logdir / p, telemetry_pb2.ModelEpochTelemetry())
       for p in sorted(self.logdir.iterdir())
       if re.match(r'epoch_\d\d+_end\.pbtxt', str(p.name))
     ]

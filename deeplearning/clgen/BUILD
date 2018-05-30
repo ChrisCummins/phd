@@ -210,7 +210,7 @@ py_library(
     srcs = ["telemetry.py"],
     visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = [
-        "//deeplearning/clgen/proto:internal_py_pb2",
+        "//deeplearning/clgen/proto:telemetry_py_pb2",
         "//lib/labm8:jsonutil",
         "//lib/labm8:labdate",
         "//lib/labm8:pbutil",
