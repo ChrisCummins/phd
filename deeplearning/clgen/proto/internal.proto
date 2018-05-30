@@ -57,3 +57,17 @@ message PreprocessorWorkerJobOutcome {
   optional string contents = 2;
   optional Status status = 3;
 }
+
+
+message PreprocessorWorker {
+  optional string contentfile_root = 1;
+  optional string relpath = 2;
+  repeated string preprocessors = 3;
+}
+
+
+message EncoderWorker {
+  optional int64 id = 1;
+  optional string text = 3;
+  optional bytes pickled_atomizer = 4;
+}

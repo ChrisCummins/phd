@@ -150,6 +150,10 @@ py_library(
     srcs = ["preprocessed.py"],
     deps = [
         "//deeplearning/clgen:errors",
+        "//deeplearning/clgen/preprocessors",
+        "//deeplearning/clgen/proto:corpus_py_pb2",
+        "//lib/labm8:crypto",
+        "//lib/labm8:fs",
         "//lib/labm8:sqlutil",
     ],
 )
