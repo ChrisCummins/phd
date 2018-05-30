@@ -1,10 +1,7 @@
 # File: //datasets/github/scrape_repos/proto/scrape_repos.proto
 # Proto: scrape_repos.LanguageCloneList
 
-# Download OpenCL source code.
-# OpenCL is not treated as a first-class language on GitHub, so we must use
-# broad search keywords. As a result, our "hit" ratio of interesting files is
-# likely to be low.
+# Download GLSL source code.
 language {
   language: "glsl"
   query {
@@ -85,7 +82,6 @@ language {
     string: "solc sort:stars fork:false"
     max_results: 1000
   }
-  num_repos_to_clone: 5000
   importer {
     source_code_pattern: ".*\\.sol"
   }
