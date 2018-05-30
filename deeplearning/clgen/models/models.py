@@ -197,15 +197,15 @@ class Model(object):
       # model.load_weights(self.most_recent_checkpoint_path)
       checkpoint_dir = pathlib.Path(self.cache.keypath('checkpoints'))
       checkpoint_dir.mkdir(parents=True, exist_ok=True)
-      file_path = str(checkpoint_dir / "{epoch:03d}.hdf5")
 
       callbacks = [
         keras.callbacks.ModelCheckpoint(
-            file_path, verbose=1, save_best_only=False, mode="min"),
+            str(checkpoint_dir / "{epoch:03d}.hdf5"), verbose=1, mode="min",
+            save_best_only=False),
         telemetry.TrainingLogger(self.cache.path / 'logs').KerasCallback(keras),
       ]
-      generator = data_generators.AutoGenerator(self.corpus,
-                                                self.config.training)
+      generator = data_generators.AutoGenerator(
+          self.corpus, self.config.training)
       logging.info('Step counts: %s per epoch, %s left to do, %s total',
                    humanize.intcomma(generator.steps_per_epoch),
                    humanize.intcomma(
@@ -218,12 +218,6 @@ class Model(object):
                                epochs=target_num_epochs - starting_epoch,
                                callbacks=callbacks)
       self._current_weights_epoch = self.config.training.num_epochs
-      # TODO(cec): Checkpoint callback.
-      # stat = self.meta.training_stats.add()
-      # stat.batch_num = batch_num + 1
-      # stat.time_ms = int(epoch_duration * 1000)
-      # stat.training_cost = float(train_cost)
-      # self._WriteMetafile()
     return self
 
   def Train(self) -> 'Model':
