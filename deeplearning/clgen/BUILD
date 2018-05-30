@@ -61,13 +61,6 @@ py_test(
     ],
 )
 
-py_library(
-    name = "clutil",
-    srcs = ["clutil.py"],
-    deps = [
-        "//lib/labm8:text",
-    ],
-)
 
 py_library(
     name = "conftest",

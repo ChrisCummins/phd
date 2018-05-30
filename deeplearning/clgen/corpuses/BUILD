@@ -26,23 +26,15 @@ py_library(
     deps = [
         ":atomizers",
         ":encoded",
-        ":features",
-        ":fetch",
         ":preprocessed",
         "//deeplearning/clgen:cache",
-        "//deeplearning/clgen:dbutil",
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen/preprocessors",
         "//deeplearning/clgen/proto:corpus_py_pb2",
-        "//deeplearning/clgen/proto:internal_py_pb2",
         "//lib/labm8:crypto",
-        "//lib/labm8:fs",
         "//lib/labm8:hashcache",
         "//lib/labm8:lockfile",
         "//lib/labm8:pbutil",
-        "//lib/labm8:prof",
-        "//lib/labm8:tar",
-        "//lib/labm8:text",
     ],
 )
 
@@ -95,29 +87,6 @@ py_library(
         "//deeplearning/clgen:native",
         "//deeplearning/clgen:package_util",
         "//lib/labm8:labmath",
-    ],
-)
-
-py_library(
-    name = "fetch",
-    srcs = ["fetch.py"],
-    deps = [
-        "//deeplearning/clgen:dbutil",
-        "//deeplearning/clgen:errors",
-        "//lib/labm8:crypto",
-        "//lib/labm8:fs",
-    ],
-)
-
-py_test(
-    name = "fetch_test",
-    srcs = ["fetch_test.py"],
-    data = ["//deeplearning/clgen/tests/data:cl_kernels"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
-    deps = [
-        ":fetch",
-        "//deeplearning/clgen/tests:testlib",
     ],
 )
 
