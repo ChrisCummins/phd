@@ -33,7 +33,7 @@ class MockSampler(object):
 
 
 # The Model.hash for an instance of abc_model_config.
-ABC_MODEL_HASH = '45205089400d6f810f67c2b52161e096c951d99d'
+ABC_MODEL_HASH = '7d9ec0d3c0e49cb02bb4333351bca6e9eab53abd'
 
 
 def test_Model_config_type_error():

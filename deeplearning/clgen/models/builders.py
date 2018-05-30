@@ -36,6 +36,11 @@ def AssertIsBuildable(config: model_pb2.Model) -> model_pb2.Model:
         config.architecture, 'num_layers', lambda x: 0 < x,
         'NetworkArchitecture.num_layers must be > 0')
     pbutil.AssertFieldConstraint(
+        config.architecture, 'post_layer_dropout_micros',
+        lambda x: 0 <= x <= 1000000,
+        'NetworkArchitecture.post_layer_dropout_micros '
+        'must be >= 0 and <= 1000000')
+    pbutil.AssertFieldConstraint(
         config.training, 'num_epochs', lambda x: 0 < x,
         'TrainingOptions.num_epochs must be > 0')
     pbutil.AssertFieldIsSet(
@@ -135,20 +140,27 @@ def BuildKerasModel(config: model_pb2.Model,
   # TensorFlow backend every time we import this module.
   import keras
 
+  dropout = (config.architecture.post_layer_dropout_micros or 0) / 1e6
   model = keras.models.Sequential()
   layer = {
     model_pb2.NetworkArchitecture.LSTM: keras.layers.LSTM,
     model_pb2.NetworkArchitecture.RNN: keras.layers.RNN,
     model_pb2.NetworkArchitecture.GRU: keras.layers.GRU,
   }[config.architecture.neuron_type]
+  # The input layer.
   model.add(layer(config.architecture.neurons_per_layer,
                   input_shape=(
                     config.training.sequence_length,
                     vocabulary_size),
                   return_sequences=config.architecture.neurons_per_layer > 1))
+  if dropout:
+    model.add(keras.layers.Dropout(dropout))
+  # Add intermediate layers as required.
   for _ in range(1, config.architecture.num_layers - 1):
     model.add(layer(config.architecture.neurons_per_layer,
                     return_sequences=True))
+    if dropout:
+      model.add(keras.layers.Dropout(dropout))
   model.add(layer(config.architecture.neurons_per_layer))
   model.add(keras.layers.Dense(vocabulary_size))
   model.add(keras.layers.Activation('softmax'))

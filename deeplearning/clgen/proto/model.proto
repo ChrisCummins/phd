@@ -27,6 +27,10 @@ message NetworkArchitecture {
   optional int32 neurons_per_layer = 2;
   // The total number of layers in the network.
   optional int32 num_layers = 3;
+  // If greater than zero, this adds a dropout layer after each layer of neurons
+  // with probability post_alyer_drop_micros / 1000000. E.g. a value of 2000
+  // would insert a dropout with probability of 0.2.
+  optional int32 post_layer_dropout_micros = 4;
 }
 
 // Options used for training a CLgen language model.

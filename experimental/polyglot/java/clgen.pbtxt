@@ -70,6 +70,7 @@ model {
     neuron_type: LSTM
     neurons_per_layer: 1024
     num_layers: 2
+    post_layer_dropout_micros: 0  # = 0.0 real value
   }
   training {
     num_epochs: 50

@@ -78,6 +78,21 @@ def test_AssertIsBuildable_architecture_num_layers(abc_model_config):
   assert "NetworkArchitecture.num_layers must be > 0" == str(e_info.value)
 
 
+def test_AssertIsBuildable_architecture_post_layer_dropout_micros(
+    abc_model_config):
+  """UserError raised for invalid architecture.post_layer_dropout_micros."""
+  abc_model_config.architecture.post_layer_dropout_micros = -1
+  with pytest.raises(errors.UserError) as e_info:
+    builders.AssertIsBuildable(abc_model_config)
+  assert ('NetworkArchitecture.post_layer_dropout_micros must be '
+          '>= 0 and <= 1000000') == str(e_info.value)
+  abc_model_config.architecture.post_layer_dropout_micros = 1000001
+  with pytest.raises(errors.UserError) as e_info:
+    builders.AssertIsBuildable(abc_model_config)
+  assert ('NetworkArchitecture.post_layer_dropout_micros must be '
+          '>= 0 and <= 1000000') == str(e_info.value)
+
+
 def test_AssertIsBuildable_training_num_epochs(abc_model_config):
   """UserError is raised if training.num_epochs field invalid."""
   abc_model_config.training.ClearField('num_epochs')

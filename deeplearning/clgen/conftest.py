@@ -82,7 +82,8 @@ def abc_model_config(abc_corpus_config):
   architecture = model_pb2.NetworkArchitecture(
       neuron_type=model_pb2.NetworkArchitecture.LSTM,
       neurons_per_layer=4,
-      num_layers=1)
+      num_layers=1,
+      post_layer_dropout_micros=2000)
   optimizer = model_pb2.AdamOptimizer(
       initial_learning_rate_micros=2000,
       learning_rate_decay_per_epoch_micros=5000,
