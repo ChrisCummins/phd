@@ -11,6 +11,7 @@ import time
 import typing
 
 import checksumdir
+import humanize
 import sqlalchemy as sql
 from absl import flags
 from absl import logging
@@ -131,10 +132,14 @@ class HashCache(sqlutil.Database):
       elif cached_entry:
         logging.debug("Cache miss: '%s'", absolute_path)
         session.delete(cached_entry)
+      start_time = time.time()
+      checksum = hash_fn(absolute_path)
+      logging.debug("New cache entry '%s' in %s ms.", absolute_path,
+                    humanize.intcomma(int((time.time() - start_time) * 1000)))
       new_entry = HashCacheRecord(
           absolute_path=str(absolute_path),
           last_modified=last_modified,
-          hash=hash_fn(absolute_path))
+          hash=checksum)
       session.add(new_entry)
       session.commit()
       return new_entry.hash
