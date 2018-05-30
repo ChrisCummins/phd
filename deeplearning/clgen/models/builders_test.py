@@ -204,12 +204,26 @@ def test_BuildOptimizer_adam():
   config.training.adam_optimizer.beta_2_micros = 999000
   config.training.adam_optimizer.normalized_gradient_clip_micros = 5000000
   optimizer = builders.BuildOptimizer(config)
-  adam = optimizer.get_config()
-  assert pytest.approx(adam['lr']) == 0.002
-  assert pytest.approx(adam['decay']) == 0.005
-  assert pytest.approx(adam['beta_1']) == 0.9
-  assert pytest.approx(adam['beta_2']) == 0.999
-  assert pytest.approx(adam['clipnorm']) == 5.0
+  optimizer_config = optimizer.get_config()
+  assert pytest.approx(optimizer_config['lr']) == 0.002
+  assert pytest.approx(optimizer_config['decay']) == 0.005
+  assert pytest.approx(optimizer_config['beta_1']) == 0.9
+  assert pytest.approx(optimizer_config['beta_2']) == 0.999
+  assert pytest.approx(optimizer_config['clipnorm']) == 5.0
+
+
+def test_BuildOptimizer_rmsprop():
+  """Test RmsOptimizer proto value conversion to Keras config."""
+  config = model_pb2.Model()
+  config.training.ClearField('optimizer')
+  config.training.rmsprop_optimizer.initial_learning_rate_micros = 1000
+  config.training.rmsprop_optimizer.learning_rate_decay_per_epoch_micros = 1000
+  optimizer = builders.BuildOptimizer(config)
+  optimizer_config = optimizer.get_config()
+  assert pytest.approx(optimizer_config['lr']) == 0.001
+  assert pytest.approx(optimizer_config['decay']) == 0.001
+  assert pytest.approx(optimizer_config['rho']) == 0.9
+  assert pytest.approx(optimizer_config['epsilon']) == 1e-7
 
 
 def main(argv):

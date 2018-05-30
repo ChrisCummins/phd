@@ -65,6 +65,15 @@ def AssertIsBuildable(config: model_pb2.Model) -> model_pb2.Model:
           config.training.adam_optimizer,
           'normalized_gradient_clip_micros', lambda x: 0 <= x,
           'AdamOptimizer.normalized_gradient_clip_micros must be >= 0')
+    elif config.training.HasField('rmsprop_optimizer'):
+      pbutil.AssertFieldConstraint(
+          config.training.rmsprop_optimizer, 'initial_learning_rate_micros',
+          lambda x: 0 <= x,
+          'RmsPropOptimizer.initial_learning_rate_micros must be >= 0')
+      pbutil.AssertFieldConstraint(
+          config.training.rmsprop_optimizer,
+          'learning_rate_decay_per_epoch_micros', lambda x: 0 <= x,
+          'RmsPropOptimizer.learning_rate_decay_per_epoch_micros must be >= 0')
     else:
       raise errors.InternalError(
           "Unrecognized value: 'TrainingOptions.optimizer'")
@@ -89,15 +98,22 @@ def BuildOptimizer(config: model_pb2.Model) -> 'keras.optimizers.Optimizer':
   # We do not use *any* default values for arguments, in case for whatever
   # reason the Keras API changes a default arg.
   if config.training.HasField('adam_optimizer'):
-    adam = config.training.adam_optimizer
+    opt = config.training.adam_optimizer
     return keras.optimizers.Adam(
-        lr=adam.initial_learning_rate_micros / 1e6,
-        beta_1=adam.beta_1_micros / 1e6,
-        beta_2=adam.beta_2_micros / 1e6,
+        lr=opt.initial_learning_rate_micros / 1e6,
+        beta_1=opt.beta_1_micros / 1e6,
+        beta_2=opt.beta_2_micros / 1e6,
         epsilon=None,
-        decay=adam.learning_rate_decay_per_epoch_micros / 1e6,
+        decay=opt.learning_rate_decay_per_epoch_micros / 1e6,
         amsgrad=False,
-        clipnorm=adam.normalized_gradient_clip_micros / 1e6,
+        clipnorm=opt.normalized_gradient_clip_micros / 1e6,
+    )
+  elif config.training.HasField('rmsprop_optimizer'):
+    opt = config.training.rmsprop_optimizer
+    return keras.optimizers.RMSprop(
+        lr=opt.initial_learning_rate_micros / 1e6,
+        decay=opt.initial_learning_rate_micros / 1e6,
+        rho=0.9, epsilon=None,
     )
   else:
     raise errors.InternalError(
