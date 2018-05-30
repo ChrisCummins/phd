@@ -1,5 +1,7 @@
 """Unit tests for ///cxx_test."""
+import pathlib
 import sys
+import tempfile
 
 import numpy as np
 import pytest
@@ -16,12 +18,21 @@ FLAGS = flags.FLAGS
 
 @pytest.fixture(scope='function')
 def abc_atomizer() -> atomizers.AsciiCharacterAtomizer:
+  """A test fixture which returns a simply atomizer."""
   return atomizers.AsciiCharacterAtomizer.FromText('abcde')
 
 
 @pytest.fixture(scope='function')
 def abc_preprocessed() -> preprocessed.PreprocessedContentFile:
+  """A test fixture which returns a preprocessed content file."""
   return preprocessed.PreprocessedContentFile(id=123, text='aabbccddee')
+
+
+@pytest.fixture(scope='function')
+def temp_db() -> encoded.EncodedContentFiles:
+  """A test fixture which returns an empty EncodedContentFiles db."""
+  with tempfile.TemporaryDirectory() as d:
+    yield encoded.EncodedContentFiles(pathlib.Path(d) / 'test.db')
 
 
 # EncodedContentFile.FromPreprocessed() tests.
@@ -67,6 +78,47 @@ def test_EncodedContentFile_FromPreprocessed_date_added(
   enc = encoded.EncodedContentFile.FromPreprocessed(
       abc_preprocessed, abc_atomizer, eof='a')
   assert enc.date_added
+
+
+# EncodedContentFiles tests.
+
+def test_EncodedContentFiles_indices_array_equivalence(
+    temp_db: encoded.EncodedContentFiles,
+    abc_preprocessed: preprocessed.PreprocessedContentFile,
+    abc_atomizer: atomizers.AsciiCharacterAtomizer):
+  """Test that indices_array is equivalent across db sessions."""
+  # Session 1: Add encoded file.
+  enc = encoded.EncodedContentFile.FromPreprocessed(
+      abc_preprocessed, abc_atomizer, 'a')
+  with temp_db.Session(commit=True) as session:
+    array_in = enc.indices_array
+    session.add(enc)
+
+  # Session 2: Get the encoded file.
+  with temp_db.Session() as session:
+    enc = session.query(encoded.EncodedContentFile).first()
+    array_out = enc.indices_array
+
+  np.testing.assert_array_equal(
+      np.array([0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 0], dtype=np.int32), array_in)
+  np.testing.assert_array_equal(array_in, array_out)
+
+
+def test_EncodedContentFiles_size(
+    temp_db: encoded.EncodedContentFiles,
+    abc_preprocessed: preprocessed.PreprocessedContentFile,
+    abc_atomizer: atomizers.AsciiCharacterAtomizer):
+  """Test that size property returns sum of tokencounts."""
+  enc1 = encoded.EncodedContentFile.FromPreprocessed(
+      abc_preprocessed, abc_atomizer, 'a')
+  abc_preprocessed.id += 1
+  enc2 = encoded.EncodedContentFile.FromPreprocessed(
+      abc_preprocessed, abc_atomizer, 'a')
+  with temp_db.Session(commit=True) as session:
+    session.add(enc1)
+    session.add(enc2)
+    assert 2 == session.query(encoded.EncodedContentFile).count()
+  assert 20 == temp_db.size
 
 
 def main(argv):

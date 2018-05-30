@@ -13,6 +13,7 @@ import sqlalchemy as sql
 from absl import flags
 from absl import logging
 from sqlalchemy.ext import declarative
+from sqlalchemy.sql import func
 
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.corpuses import preprocessed
@@ -118,6 +119,15 @@ class EncodedContentFiles(sqlutil.Database):
         self.SetDone(session)
         session.commit()
         return True
+
+  @property
+  def size(self) -> int:
+    """Return the total number of tokens in the encoded corpus.
+
+    This excludes the EOF markers which are appended to each encoded text.
+    """
+    with self.Session() as session:
+      return session.query(func.sum(EncodedContentFile.tokencount)).scalar()
 
   def IsDone(self, session: sqlutil.Database.session_t):
     if session.query(Meta).filter(Meta.key == 'done').first():
