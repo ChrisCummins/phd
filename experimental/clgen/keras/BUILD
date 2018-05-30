@@ -27,3 +27,18 @@ py_test(
     default_python_version = "PY3",
     srcs_version = "PY3",
 )
+
+py_binary(
+    name = "opencl_baseline",
+    srcs = ["opencl_baseline.py"],
+    data = [
+        "opencl_baseline_a.pbtxt",
+        "opencl_baseline_b.pbtxt",
+    ],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        "//deeplearning/clgen",
+        "//lib/labm8:bazelutil",
+    ],
+)
