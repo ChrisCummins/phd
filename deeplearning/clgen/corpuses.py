@@ -8,12 +8,12 @@ import os
 import pathlib
 import pickle
 import re
+import time
 import typing
 from tempfile import NamedTemporaryFile
 
 import humanize
 import numpy as np
-import time
 from absl import logging
 
 from deeplearning.clgen import atomizers
@@ -67,6 +67,13 @@ class Corpus(object):
     self.config = corpus_pb2.Corpus()
     self.config.CopyFrom(config)
 
+    cache.cachepath('corpus', 'preprocessed').mkdir(exist_ok=True, parents=True)
+    cache.cachepath('corpus', 'encoded').mkdir(exist_ok=True, parents=True)
+
+    self.content_id = ResolveContentId(self.config)
+    self.preprocessed_id = ResolvePreprocessedId(self.content_id, self.config)
+    self.encoded_id = ResolvePreprocessedId(self.content_id, self.config)
+
     # Determine the corpus cache path. This will depend on whether a path or
     # an id was specified.
     path = None
@@ -91,7 +98,7 @@ class Corpus(object):
 
     self.contentfiles_cache = cache.mkcache("contentfiles", self.content_id)
     self.kernels_db = self.contentfiles_cache.keypath('kernels.db')
-    self.hash = self._ComputeHash(self.content_id, config)
+    self.hash = ResolveEncodedId(self.content_id, config)
     self.cache = cache.mkcache("corpus", self.hash)
 
     logging.debug('contentfiles %s', self.content_id)
@@ -111,6 +118,9 @@ class Corpus(object):
 
     with path and self.lock.acquire(replace_stale=True):
       self._CreateCorpusFiles(path)
+
+  def Create(self):
+    pass
 
   def _FlushMeta(self):
     pbutil.ToFile(self.meta, pathlib.Path(self.cache.keypath('META.pbtxt')))
@@ -193,19 +203,6 @@ WHERE ContentFiles.id NOT IN (
         assert self.cache["atomizer.pkl"]
     except Exception as e:
       _Error(e, [pathlib.Path(self.cache.keypath("atomizer.pkl"))])
-
-  @staticmethod
-  def _ComputeHash(contentid: str, config: corpus_pb2.Corpus) -> str:
-    """Compute the hash of a corpus.
-
-    The hash is computed from the ID of the contentfiles and the serialized
-    representation of the config proto.
-    """
-    config_without_contentfiles = corpus_pb2.Corpus()
-    config_without_contentfiles.CopyFrom(config)
-    config_without_contentfiles.ClearField('contentfiles')
-    return crypto.sha1_list(contentid,
-                            config_without_contentfiles.SerializeToString())
 
   def _CreateKernelsDatabase(self, path: pathlib.Path) -> None:
     """creates and caches kernels.db"""
@@ -380,6 +377,44 @@ WHERE ContentFiles.id NOT IN (
 
   def __ne__(self, rhs) -> bool:
     return not self.__eq__(rhs)
+
+
+def ResolveContentId(config: corpus_pb2.Corpus) -> str:
+  """Compute the hash of the input contentfiles."""
+  if config.HasField('local_directory'):
+    try:
+      hc = hashcache.HashCache(cache.cachepath('corpus/hashcache.db'), 'sha1')
+      return hc.GetHash(pathlib.Path(config.local_directory))
+    except FileNotFoundError as e:
+      raise errors.UserError(e)
+  else:
+    raise NotImplementedError('Unsupported Corpus.contentfiles field value')
+
+
+def ResolvePreprocessedId(content_id: str, config: corpus_pb2.Corpus) -> str:
+  """Compute the hash of a corpus of preprocessed contentfiles.
+
+  The hash is computed from the ID of the input files and the serialized
+  representation of the preprocessor pipeline.
+  """
+  return crypto.sha1_list(content_id, *config.preprocessor)
+
+
+def ResolveEncodedId(content_id: str, config: corpus_pb2.Corpus) -> str:
+  """Compute the hash of a corpus of preprocessed and encoded contentfiles.
+
+  The hash is computed from the ID of the input files and the serialized
+  representation of the config proto.
+  """
+  config_without_contentfiles = corpus_pb2.Corpus()
+  config_without_contentfiles.CopyFrom(config)
+  # Clear the contentfiles field, since we use the content_id to uniquely
+  # identify the input files. This means that corpuses with the same content
+  # files delivered through different means (e.g. two separate but identical
+  # directories) have the same hash.
+  config_without_contentfiles.ClearField('contentfiles')
+  return crypto.sha1_list(
+      content_id, config_without_contentfiles.SerializeToString())
 
 
 def UnpackDirectoryIfNeeded(path: pathlib.Path) -> pathlib.Path:

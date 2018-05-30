@@ -62,8 +62,9 @@ def test_Sampler_config_type_error():
 def test_Corpus_badpath(clgen_cache_dir):
   """Test that CLgenError is raised when corpus has a non-existent path."""
   del clgen_cache_dir
-  with pytest.raises(errors.CLgenError):
+  with pytest.raises(errors.UserError) as e_info:
     corpuses.Corpus(corpus_pb2.Corpus(local_directory="notarealpath"))
+  assert "File not found: 'notarealpath'" == str(e_info.value)
 
 
 def test_Corpus_hash(clgen_cache_dir, abc_corpus):
