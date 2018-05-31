@@ -1,0 +1,17 @@
+# File: //deeplearning/clgen/proto/sampler.proto
+# Proto: clgen.Sampler
+start_text: "public class "
+batch_size: 1
+temperature_micros: 1000000  # = 1.0 real value
+termination_criteria {
+  symtok {
+    depth_increase_token: "{"
+    depth_decrease_token: "}"
+  }
+}
+termination_criteria {
+  maxlen {
+    maximum_tokens_in_sample: 5000
+  }
+}
+
