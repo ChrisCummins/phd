@@ -747,14 +747,27 @@ class Git(Task):
     Homebrew().upgrade_package("git")
 
 
+class GitLfs(Task):
+  """git-lfs"""
+  __platforms__ = ['linux', 'osx']
+  __deps__ = ['Homebrew']
+  __genfiles__ = [Homebrew.bin('git-lfs')]
+
+  def install(selfs):
+    Homebrew().install_package('git-lfs')
+
+  def upgrade(self):
+    Homebrew().upgrade_package('git-lfs')
+
+
 class GitPrivate(Task):
   """ git private config """
   __platforms__ = ['linux', 'osx']
   __osx_deps__ = ['Homebrew']
   __reqs__ = [lambda: os.path.isdir(os.path.join(PRIVATE, "git"))]
   __genfiles__ = [
-      '~/.githubrc',
-      '~/.gogsrc',
+    '~/.githubrc',
+    '~/.gogsrc',
   ]
 
   def install(self):
@@ -1859,6 +1872,7 @@ class PhdBuildDeps(Task):
       'Bazel',
       'Buildifier',
       'Clang',
+      'GitLfs',
       'GnuCoreutils',
       'LaTeX',
       'LibExempi',
