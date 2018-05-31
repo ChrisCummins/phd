@@ -40,6 +40,10 @@ def CloneFromMetafile(metafile: pathlib.Path) -> None:
   logging.debug('%s', meta)
   if (clone_dir / '.git').is_dir():
     return
+
+  # Remove anything left over from a previous attempt.
+  subprocess.check_call(['rm', '-rf', str(clone_dir)])
+
   cmd = ['timeout', f'{FLAGS.repository_clone_timeout_minutes}m',
          '/usr/bin/git', 'clone', meta.clone_from_url, str(clone_dir)]
   logging.debug('$ %s', ' '.join(cmd))
