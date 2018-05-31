@@ -44,10 +44,11 @@ def CloneFromMetafile(metafile: pathlib.Path) -> None:
          '/usr/bin/git', 'clone', '--recursive', meta.clone_from_url,
          str(clone_dir)]
   logging.debug('$ %s', ' '.join(cmd))
-  try:
-    subprocess.check_call(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
-  except subprocess.CalledProcessError:
-    logging.warning('\nClone failed %s', meta.clone_from_url)
+
+  p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  _, stderr = p.communicate()
+  if p.returncode:
+    logging.warning('\nClone failed %s:\n%s', meta.clone_from_url, stderr)
     fs.rm(clone_dir)
 
 
