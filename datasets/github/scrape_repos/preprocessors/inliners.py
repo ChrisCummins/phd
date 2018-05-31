@@ -252,7 +252,7 @@ def GetAllFilesRelativePaths(root_dir: pathlib.Path,
   with fs.chdir(root_dir):
     cmd = ['find']
     if follow_symlinks:
-      cmd.append('find')
+      cmd.append('-L')
     cmd += ['.', '-type', 'f']
     find_output = subprocess.check_output(cmd).decode('utf-8').strip()
   if find_output:
