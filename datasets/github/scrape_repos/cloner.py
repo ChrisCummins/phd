@@ -41,13 +41,21 @@ def CloneFromMetafile(metafile: pathlib.Path) -> None:
   if (clone_dir / '.git').is_dir():
     return
   cmd = ['timeout', f'{FLAGS.repository_clone_timeout_minutes}m',
-         '/usr/bin/git', 'clone', '--recursive', meta.clone_from_url,
-         str(clone_dir)]
+         '/usr/bin/git', 'clone', meta.clone_from_url, str(clone_dir)]
   logging.debug('$ %s', ' '.join(cmd))
 
-  p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  # Try to checkout the repository and submodules.
+  p = subprocess.Popen(cmd + ['--recursive'], stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE, universal_newlines=True)
   _, stderr = p.communicate()
+  if p.returncode and 'submodule' in stderr:
+    # Try again, but this time without cloning submodules.
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                         universal_newlines=True)
+    _, stderr = p.communicate()
+
   if p.returncode:
+    # Give up.
     logging.warning('\nClone failed %s:\n%s', meta.clone_from_url, stderr)
     fs.rm(clone_dir)
 
