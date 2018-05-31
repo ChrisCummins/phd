@@ -63,13 +63,15 @@ def ImportWorker(
 
 def ImportRepo(session: orm.session.Session,
                language: scrape_repos_pb2.LanguageToClone,
-               metafile: pathlib.Path) -> None:
+               metafile: pathlib.Path,
+               pool: multiprocessing.Pool) -> None:
   """Import contentfiles from repository.
 
   Args:
     session: A database session to import to.
     language: The language specification for the repo.
     metafile: The repo metafile.
+    pool: A multiprocessing pool.
   """
   meta = pbutil.FromFile(metafile, scrape_repos_pb2.GitHubRepoMetadata())
   clone_dir = metafile.parent / f'{meta.owner}_{meta.name}'
@@ -101,7 +103,6 @@ def ImportRepo(session: orm.session.Session,
           preprocessors=importer.preprocessor
       ) for p in paths
     ]
-    pool = multiprocessing.Pool()
     bar = progressbar.ProgressBar(max_value=len(jobs))
     for maybe_contentfile in bar(pool.imap_unordered(ImportWorker, jobs)):
       if maybe_contentfile:
@@ -109,12 +110,14 @@ def ImportRepo(session: orm.session.Session,
 
 
 def ImportFromLanguage(db: contentfiles.ContentFiles,
-                       language: scrape_repos_pb2.LanguageToClone) -> None:
+                       language: scrape_repos_pb2.LanguageToClone,
+                       pool: multiprocessing.Pool) -> None:
   """Import contentfiles from a language specification.
 
   Args:
     db: The database to import to.
     language: The language to import.
+    pool: A multiprocessing pool.
   """
   with db.Session() as session:
     repos_to_import = [pathlib.Path(language.destination_directory / f) for f in
@@ -126,7 +129,7 @@ def ImportFromLanguage(db: contentfiles.ContentFiles,
                language.language.capitalize())
   for metafile in repos_to_import:
     with db.Session(commit=True) as session:
-      ImportRepo(session, language, metafile)
+      ImportRepo(session, language, metafile, pool)
 
 
 def main(argv):
@@ -145,12 +148,13 @@ def main(argv):
     for importer in language.importer:
       [preprocessors.GetPreprocessorFunction(p) for p in importer.preprocessor]
 
+  pool = multiprocessing.Pool()
   for language in clone_list.language:
     d = pathlib.Path(language.destination_directory)
     d = d.parent / (str(d.name) + '.db')
     db = contentfiles.ContentFiles(d)
     if pathlib.Path(language.destination_directory).is_dir():
-      ImportFromLanguage(db, language)
+      ImportFromLanguage(db, language, pool)
 
 
 if __name__ == '__main__':
