@@ -233,13 +233,15 @@ def FindCandidateInclude(
     return FuzzyIncludeMatch('', 0)
 
 
-def GetAllFilesRelativePaths(root_dir: pathlib.Path) -> typing.List[str]:
+def GetAllFilesRelativePaths(root_dir: pathlib.Path,
+                             follow_symlinks: bool = False) -> typing.List[str]:
   """Get relative paths to all files in the root directory.
 
   Follows symlinks.
 
   Args:
     root_dir: The directory to find files in.
+    follow_symlinks: If true, follow symlinks.
 
   Returns:
     A list of paths relative to the root directory.
@@ -248,8 +250,11 @@ def GetAllFilesRelativePaths(root_dir: pathlib.Path) -> typing.List[str]:
     EmptyCorpusException: If the content files directory is empty.
   """
   with fs.chdir(root_dir):
-    find_output = subprocess.check_output(
-        ['find', '-L', '.', '-type', 'f']).decode('utf-8').strip()
+    cmd = ['find']
+    if follow_symlinks:
+      cmd.append('find')
+    cmd += ['.', '-type', 'f']
+    find_output = subprocess.check_output(cmd).decode('utf-8').strip()
   if find_output:
     # Strip the leading './' from paths.
     return [x[2:] for x in find_output.split('\n')]
@@ -259,4 +264,5 @@ def GetAllFilesRelativePaths(root_dir: pathlib.Path) -> typing.List[str]:
 
 def GetLibCxxHeaders() -> typing.Set[str]:
   """Enumerate the set of headers in the libcxx standard lib."""
-  return set(GetAllFilesRelativePaths(bazelutil.DataPath('libcxx/include')))
+  return set(GetAllFilesRelativePaths(bazelutil.DataPath('libcxx/include'),
+                                      follow_symlinks=True))
