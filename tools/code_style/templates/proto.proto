@@ -1,0 +1,10 @@
+// The file defines protos for TODO: one line summary.
+
+syntax = "proto2";
+package tools.code_style.templates; // TODO: ${PACKAGE}
+
+// TODO: Detailed desription of message purpose and usage.
+message Todo {
+  // TODO: One line summary of each field.
+  optional string field = 1;
+}
