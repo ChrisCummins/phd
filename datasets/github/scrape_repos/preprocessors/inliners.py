@@ -16,6 +16,15 @@ from lib.labm8 import fs
 
 FLAGS = flags.FLAGS
 
+# The set of standard headers available in C99.
+C99_HEADERS = {
+  'assert.h', 'complex.h', 'ctype.h', 'errno.h', 'fenv.h', 'float.h',
+  'inttypes.h', 'iso646.h', 'limits.h', 'locale.h', 'math.h', 'setjmp.h',
+  'signal.h', 'stdalign.h', 'stdarg.h', 'stdatomic.h', 'stdbool.h', 'stddef.h',
+  'stdint.h', 'stdio.h', 'stdlib.h', 'stdnoreturn.h', 'string.h', 'tgmath.h',
+  'threads.h', 'time.h', 'uchar.h', 'wchar.h', 'wctype.h',
+}
+
 
 @public.dataset_preprocessor
 def CxxHeaders(import_root: pathlib.Path, file_relpath: str, text: str) -> str:
@@ -35,7 +44,7 @@ def CxxHeaders(import_root: pathlib.Path, file_relpath: str, text: str) -> str:
     The contents of the file file_relpath, with included headers inlined.
   """
   return _InlineCSyntax(import_root, file_relpath, text, False,
-                        GetLibCxxHeaders())
+                        GetLibCxxHeaders().union(C99_HEADERS))
 
 
 @public.dataset_preprocessor
@@ -56,7 +65,7 @@ def CxxHeadersDiscardUnknown(import_root: pathlib.Path,
     The contents of the file file_relpath, with included headers inlined.
   """
   return _InlineCSyntax(import_root, file_relpath, text, True,
-                        GetLibCxxHeaders())
+                        GetLibCxxHeaders().union(C99_HEADERS))
 
 
 def _InlineCSyntax(import_root: pathlib.Path, file_relpath: str, text: str,

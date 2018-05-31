@@ -91,18 +91,18 @@ int main(int argc, char** argv) { return 0; }
 """
 
 
-def test_CxxHeaders_ignore_system_headers(tempdir: pathlib.Path):
-  """CxxHeaders() ignores system headers."""
+def test_CxxHeaders_ignore_libcxx_headers(tempdir: pathlib.Path):
+  """CxxHeaders() ignores libcxx headers."""
   src = """
-#include <stdio.h>
+#include <cassert>
 
 int main(int argc, char** argv) { return 0; }
 """
   MakeFile(tempdir, 'a', src)
   # Note that the angle brackets have been re-written with quotes.
   assert inliners.CxxHeaders(tempdir, 'a', src) == """
-// [InlineHeaders] Preserving blacklisted include: 'stdio.h'.
-#include "stdio.h"
+// [InlineHeaders] Preserving blacklisted include: 'cassert'.
+#include "cassert"
 
 int main(int argc, char** argv) { return 0; }
 """
@@ -117,7 +117,7 @@ int main(int argc, char** argv) { return 0; }
 """
   MakeFile(tempdir / 'src' / 'proj', 'src.c', src)
   MakeFile(tempdir / 'src' / 'proj' / 'foo', 'foo.h', '#define FOO')
-  MakeFile(tempdir / 'bar' / 'proj' / 'foo', 'foo.h', '#define NOT_FOO')
+  MakeFile(tempdir / 'bar' / 'foo' / 'proj' / 'foo', 'foo.h', '#define NOT_FOO')
   assert """
 // [InlineHeaders] Found candidate include for: 'proj/foo/foo.h' -> \
 'src/proj/foo/foo.h' (95% confidence).
