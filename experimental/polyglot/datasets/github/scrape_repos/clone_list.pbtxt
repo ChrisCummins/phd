@@ -11,31 +11,31 @@ language {
   destination_directory: "/var/phd/datasets/github/repos_by_lang/glsl"
   importer {
     source_code_pattern: ".*\\.glsl"
-    preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown"
   }
   importer {
     source_code_pattern: ".*\\.frag"
-    preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown"
   }
   importer {
     source_code_pattern: ".*\\.vert"
-    preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown"
   }
   importer {
     source_code_pattern: ".*\\.tesc"
-    preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown"
   }
   importer {
     source_code_pattern: ".*\\.tese"
-    preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown"
   }
   importer {
     source_code_pattern: ".*\\.geom"
-    preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown"
   }
   importer {
     source_code_pattern: ".*\\.comp"
-    preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown"
   }
 }
 
@@ -49,19 +49,19 @@ language {
   destination_directory: "/var/phd/datasets/github/repos_by_lang/c"
   importer {
     source_code_pattern: ".*\\.c"
-    preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown"
   }
   importer {
     source_code_pattern: ".*\\.cpp"
-    preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown"
   }
   importer {
     source_code_pattern: ".*\\.cxx"
-    preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown"
   }
   importer {
     source_code_pattern: ".*\\.inc"
-    preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown"
   }
 }
 

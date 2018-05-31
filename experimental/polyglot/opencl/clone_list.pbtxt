@@ -7,6 +7,7 @@
 # likely to be very low.
 language {
   language: "opencl"
+  destination_directory: "/var/phd/datasets/github/repos_by_lang/opencl"
   query {
     string: "opencl sort:stars fork:false"
     max_results: 1000
@@ -43,13 +44,12 @@ language {
     string: "khronos sort:stars fork:false"
     max_results: 1000
   }
-  destination_directory: "/var/phd/datasets/github/repos_by_lang/opencl"
   importer {
     source_code_pattern: ".*\\.cl"
-    preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown"
   }
   importer {
     source_code_pattern: ".*\\.ocl"
-    preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown"
   }
 }
