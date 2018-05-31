@@ -1,9 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="test //deeplearning/clgen/models/..." type="BlazeCommandRunConfigurationType" factoryName="Bazel Command" handler-id="BlazeCommandGenericRunConfigurationHandlerProvider" blaze-command="test">
-    <blaze-target>//deeplearning/clgen/models/...</blaze-target>
-    <env_state>
-      <envs />
-    </env_state>
-    <method />
-  </configuration>
-</component>
