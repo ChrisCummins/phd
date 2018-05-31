@@ -36,8 +36,10 @@ def main(argv):
   instance = clgen.Instance(config)
 
   target_samples = 1000
-  num_samples = len(list(
-      instance.model.SamplerCache(instance.sampler).iterdir()))
+  num_samples = 0
+  sample_dir = instance.model.SamplerCache(instance.sampler)
+  if sample_dir.is_dir():
+    num_samples = len(list(sample_dir.iterdir()))
   if num_samples < target_samples:
     instance.Sample(min_num_samples=target_samples - num_samples)
 
