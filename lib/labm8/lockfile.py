@@ -11,6 +11,7 @@ import typing
 
 import sys
 import time
+from absl import logging
 
 from lib.labm8 import labdate
 from lib.labm8 import pbutil
@@ -146,7 +147,8 @@ class LockFile:
         elif not block:
           raise UnableToAcquireLockError(self)
         # Block and try again later.
-        time.sleep(5.0)
+        logging.info('Blocking on lockfile %s', self.path)
+        time.sleep(10.0)
       else:  # new lock
         _create_lock()
         break
