@@ -64,7 +64,7 @@ install drivers for additional OpenCL devices you have available on your system.
 
 ### 2.2. Build from source
 
-Building from source is supported only Ubuntu Linux or macOS, since
+Building from source is supported only on Ubuntu Linux or macOS, since
 unfortunately Windows is not supported by many of our dependencies. Other Linux
 distributions may work, but we have not tested them, and our install.sh script
 uses the apt package manager to automate the installation of depdencies. If you
@@ -121,7 +121,7 @@ review copy of our paper is much larger, is trained on more data, and is trained
 for longer. It takes around 2 days to train on a 16-core CPU.
 
 Once the script has completed, the generated programs are written to the
-directory ./01_evaluate_generator/output/generated_kernels. Testcases are
+directory `./01_evaluate_generator/output/generated_kernels`. Testcases are
 generated for each of the kernels, found in
 `./01_evaluate_generator/output/generated_testcases`.
 
@@ -139,7 +139,7 @@ files and training on only a subset, etc.
 *(approximate runtime: 30 minutes)*
 
 
-Evaluate the DeepSmith harness by running a set of testcases on your local
+Evaluate the DeepSmith harness by running a set of test cases on your local
 OpenCL driver. Use our self-diagnostic script `./diagnose_me.sh` to print a list
 of the available OpenCL devices on this system. For example:
 
@@ -162,19 +162,19 @@ $ ./02_evaluate_harness/run.sh  <number±>
 For example, to run the experiments on the GeForce GPU device listed above with
 optimizations enabled, you would run `$ ./02_evaluate_harness/run.sh 2+`.
 
-The script runs 45 testcases taken from the experimental data we used in the
-paper, located in the data/testcases directory. You are free to run it on as
+The script runs 45 test cases taken from the experimental data we used in the
+paper, located in the `data/testcases` directory. You are free to run it on as
 many different OpenCL devices as you have (per-device results will be stored).
 
 The results of execution are written to the directories
 `./02_evaluate_harnesses/output/results/<number±>/`. Each file in these
-directories stores the result of a single testcase execution.
+directories stores the result of a single test case execution.
 
 
 #### 3.2.1. Extended Evaluation (optional)
 
-In addition to running the testcases on multiple OpenCL devices, you could add
-more testcases to execute. For example, you could run the testcases generated
+In addition to running the test cases on multiple OpenCL devices, you could add
+more test cases to execute. For example, you could run the test cases generated
 by your model from the previous step:
 
 ```sh
@@ -209,11 +209,11 @@ The evaluation script difftests all results files from these directories:
 ./03_evaluate_harness/data/results    # Results from our machines
 ```
 
-You could add new results to this directory by either running the previous
-step on multiple OpenCL devices. Once a testcase has results from three or more
+You could add new results to this directory by running the previous step on 
+multiple OpenCL devices. Once a test case has results from three or more
 devices, it will be difftested. Alternatively you could modify individual
 results files, such as by changing the returncode, to simulate different
-testcase outcomes, and observe how that influences the classification of
+test case outcomes, and observe how that influences the classification of
 results.
 
 
