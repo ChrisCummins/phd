@@ -1,4 +1,5 @@
 """Preprocessors to inline includes."""
+import collections
 import pathlib
 import re
 import subprocess
@@ -6,6 +7,7 @@ import typing
 
 from absl import flags
 from absl import logging
+from fuzzywuzzy import process
 
 from datasets.github.scrape_repos.preprocessors import public
 from lib.labm8 import bazelutil
@@ -108,6 +110,7 @@ def InlineHeaders(import_root: pathlib.Path,
       inlining, relative to import_root.
     already_inlined_relpaths: Paths to files which have already been inlined.
       Files are never inlined twice. Duplicate inlines are always discarded.
+    blacklist: A set of files to exclude from inlining.
     find_includes: A callback which searches a line of code and returns
       zero or more paths included by it.
     format_include: A callback which formats an include using the syntax of the
@@ -124,7 +127,7 @@ def InlineHeaders(import_root: pathlib.Path,
   Returns:
     The path with as many included files inlined as possible.
   """
-  logging.info('Processing: %s', file_relpath)
+  logging.debug('Inlining: %s.', file_relpath)
   inline_candidate_relpaths.remove(file_relpath)
   already_inlined_relpaths.add(file_relpath)
   output = []
@@ -137,14 +140,16 @@ def InlineHeaders(import_root: pathlib.Path,
 
     for include in includes:
       already_inlined_match = FindCandidateInclude(
-          include, file_relpath, already_inlined_relpaths)
-      if already_inlined_match:
+          include, file_relpath, already_inlined_relpaths,
+          exact_matches_only=True)
+      if already_inlined_match.confidence == 100:
         output.append(format_line_comment(
             f"Skipping already inlined file: '{already_inlined_match}'."))
         continue
 
-      blacklist_match = FindCandidateInclude(include, file_relpath, blacklist)
-      if blacklist_match:
+      blacklist_match = FindCandidateInclude(include, file_relpath, blacklist,
+                                             exact_matches_only=True)
+      if blacklist_match.confidence == 100:
         output.append(format_line_comment(
             f"Preserving blacklisted include: '{include}'."))
         output.append(format_include(include))
@@ -152,17 +157,21 @@ def InlineHeaders(import_root: pathlib.Path,
 
       candidate_match = FindCandidateInclude(
           include, file_relpath, inline_candidate_relpaths)
-      if candidate_match:
+      if candidate_match.confidence:
         output.append(format_line_comment(
-            f"Found candidate include for: '{include}' -> '{candidate_match}'."))
-        with open(import_root / candidate_match) as f:
+            f"Found candidate include for: "
+            f"'{include}' -> '{candidate_match.path}' "
+            f'({candidate_match.confidence}% confidence).'))
+        with open(import_root / candidate_match.path) as f:
           candidate_text = f.read()
         output.append(InlineHeaders(
-            import_root, candidate_match, candidate_text,
+            import_root, candidate_match.path, candidate_text,
             inline_candidate_relpaths,
             already_inlined_relpaths, blacklist, find_includes, format_include,
             format_line_comment, discard_unmatched_headers))
         continue
+
+      # No match found :(
       if discard_unmatched_headers:
         output.append(format_line_comment(
             f"Discarding unmatched include: '{include}'."))
@@ -174,29 +183,45 @@ def InlineHeaders(import_root: pathlib.Path,
   return '\n'.join(output)
 
 
+FuzzyIncludeMatch = collections.namedtuple(
+    'FuzzyIncludeMatch', ['path', 'confidence'])
+
+
 def FindCandidateInclude(
     include_match: str, current_file_relpath: str,
-    candidate_relpaths: typing.Set[str]) -> typing.Optional[str]:
+    candidate_relpaths: typing.Set[str],
+    exact_matches_only: bool = False) -> FuzzyIncludeMatch:
   """Find and return the most likely included file.
 
   Args:
     include_match: The path of the file to find a candidate include for.
     current_file_relpath: The path of the file we're currently processing.
     candidate_relpaths: The set of files to consider for matching.
+    exact_matches_only: If True, do no fuzzy matching of possible candidates.
 
   Returns:
-    The element of candidate_includes which is most likely to be included by
-    include_match, or None if no suitable candidate is found.
+    A FuzzyIncludeMatch instance. If no suitable candidate was found, the path
+    will be an empty string, and the confidence will be 0.0. Else, the path
+    is the member of candidate_relpaths which is most likely, and the confidence
+    is an integer between between 0 and 100, where 100 indicates a perfect
+    match.
   """
-  matches = [x for x in candidate_relpaths if
-             pathlib.Path(x).parts[-1] == include_match]
-  if len(matches) > 1:
-    logging.info("TODO: Multiple matches found! Match closest.")
-    return matches[0]
-  elif len(matches):
-    return matches[0]
+  if include_match in candidate_relpaths:
+    return FuzzyIncludeMatch(include_match, 100)
+
+  # A list of files with the same basename as include match's basename
+  candidate_matches = [
+    x for x in candidate_relpaths if x.endswith(include_match)]
+  if candidate_matches and not exact_matches_only:
+    # Fuzzy match to find the most likely include.
+    choices = (
+        process.extract(include_match, candidate_matches) +
+        process.extract(pathlib.Path(current_file_relpath).name,
+                        candidate_matches)
+    )
+    return FuzzyIncludeMatch(*max(choices, key=lambda x: x[1]))
   else:
-    return None
+    return FuzzyIncludeMatch('', 0)
 
 
 def GetAllFilesRelativePaths(root_dir: pathlib.Path) -> typing.List[str]:

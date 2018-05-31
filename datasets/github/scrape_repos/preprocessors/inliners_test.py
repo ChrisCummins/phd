@@ -68,7 +68,7 @@ int main(int argc, char** argv) { return 0; }
   MakeFile(tempdir, 'a', src)
   MakeFile(tempdir, 'foo.h', '#define FOO')
   assert inliners.CxxHeaders(tempdir, 'a', src) == """
-// [InlineHeaders] Found candidate include for: 'foo.h' -> 'foo.h'.
+// [InlineHeaders] Found candidate include for: 'foo.h' -> 'foo.h' (100% confidence).
 #define FOO
 
 int main(int argc, char** argv) { return 0; }
@@ -106,6 +106,25 @@ int main(int argc, char** argv) { return 0; }
 
 int main(int argc, char** argv) { return 0; }
 """
+
+
+def test_CxxHeaders_fuzzy_match(tempdir: pathlib.Path):
+  """CxxHeaders() fuzzy matches the closest candidate include."""
+  src = """
+#include <proj/foo/foo.h>
+
+int main(int argc, char** argv) { return 0; }
+"""
+  MakeFile(tempdir / 'src' / 'proj', 'src.c', src)
+  MakeFile(tempdir / 'src' / 'proj' / 'foo', 'foo.h', '#define FOO')
+  MakeFile(tempdir / 'bar' / 'proj' / 'foo', 'foo.h', '#define NOT_FOO')
+  assert """
+// [InlineHeaders] Found candidate include for: 'proj/foo/foo.h' -> \
+'src/proj/foo/foo.h' (95% confidence).
+#define FOO
+
+int main(int argc, char** argv) { return 0; }
+""" == inliners.CxxHeaders(tempdir, 'src/proj/src.c', src)
 
 
 # CxxHeadersDiscardUnknown() tests.
