@@ -16,6 +16,8 @@
       <w>deeplearning</w>
       <w>githubrc</w>
       <w>gsize</w>
+      <w>inlined</w>
+      <w>inlines</w>
       <w>inlining</w>
       <w>keras</w>
       <w>labm</w>
@@ -31,6 +33,8 @@
       <w>pbtxt</w>
       <w>preprocess</w>
       <w>preprocessing</w>
+      <w>relpath</w>
+      <w>relpaths</w>
       <w>rewriter</w>
       <w>runfiles</w>
       <w>shimfile</w>
