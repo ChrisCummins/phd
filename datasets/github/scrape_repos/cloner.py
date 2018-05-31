@@ -47,7 +47,7 @@ def CloneFromMetafile(metafile: pathlib.Path) -> None:
   try:
     subprocess.check_call(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
   except subprocess.CalledProcessError:
-    logging.warning('\nClone failed %s', clone_dir)
+    logging.warning('\nClone failed %s', meta.clone_from_url)
     fs.rm(clone_dir)
 
 
