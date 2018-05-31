@@ -1,0 +1,55 @@
+# File: //datasets/github/scrape_repos/proto/scrape_repos.proto
+# Proto: scrape_repos.LanguageCloneList
+
+# Download OpenCL source code.
+# OpenCL is not treated as a first-class language on GitHub, so we must use
+# broad search keywords. As a result, our "hit" ratio of interesting files is
+# likely to be very low.
+language {
+  language: "opencl"
+  destination_directory: "/var/phd/datasets/github/repos_by_lang/opencl"
+  query {
+    string: "opencl sort:stars fork:false"
+    max_results: 1000
+  }
+  query {
+    string: "opencl sort:updated fork:false"
+    max_results: 1000
+  }
+  query {
+    string: "intel opencl sort:stars fork:false"
+    max_results: 1000
+  }
+  query {
+    string: "amd opencl sort:stars fork:false"
+    max_results: 1000
+  }
+  query {
+    string: "nvidia opencl sort:stars fork:false"
+    max_results: 1000
+  }
+  query {
+    string: "gpu opencl sort:stars fork:false"
+    max_results: 1000
+  }
+  query {
+    string: "cpu opencl sort:stars fork:false"
+    max_results: 1000
+  }
+  query {
+    string: "cl sort:stars fork:false"
+    max_results: 1000
+  }
+  query {
+    string: "khronos sort:stars fork:false"
+    max_results: 1000
+  }
+  importer {
+    source_code_pattern: ".*\\.cl"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown"
+  }
+  importer {
+    source_code_pattern: ".*\\.ocl"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown"
+  }
+}

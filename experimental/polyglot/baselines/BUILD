@@ -3,6 +3,7 @@
 filegroup(
     name = "protos",
     srcs = glob([
+        "clone_lists/**/*.pbtxt",
         "corpuses/**/*.pbtxt",
         "models/**/*.pbtxt",
         "samplers/**/*.pbtxt",
