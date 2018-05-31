@@ -4,6 +4,7 @@ py_library(
     name = "inliners",
     srcs = ["inliners.py"],
     data = ["@libcxx//:headers"],
+    visibility = ["//datasets/github/scrape_repos:__subpackages__"],
     deps = [
         ":public",
         "//lib/labm8:bazelutil",
