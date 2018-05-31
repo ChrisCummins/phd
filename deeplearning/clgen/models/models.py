@@ -231,7 +231,7 @@ class Model(object):
         process currently modifying the model).
     """
     self.corpus.Create()
-    with self.lock.acquire(replace_stale=True):
+    with self.lock.acquire(replace_stale=True, block=True):
       return self._LockedTrain()
 
   def Sample(self, sampler: samplers.Sampler,

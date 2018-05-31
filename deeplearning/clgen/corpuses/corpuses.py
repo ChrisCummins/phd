@@ -130,10 +130,12 @@ class Corpus(object):
     """Create the corpus files."""
     logging.info('Content ID: %s', self.content_id)
     preprocessed_lock_path = self.preprocessed.database_path.parent / 'LOCK'
-    with lockfile.LockFile(preprocessed_lock_path).acquire(replace_stale=True):
+    with lockfile.LockFile(preprocessed_lock_path).acquire(
+        replace_stale=True, block=True):
       self.preprocessed.Create(self.config)
     encoded_lock_path = self.encoded.database_path.parent / 'LOCK'
-    with lockfile.LockFile(encoded_lock_path).acquire(replace_stale=True):
+    with lockfile.LockFile(encoded_lock_path).acquire(
+        replace_stale=True, block=True):
       start_time = time.time()
       atomizer = self.atomizer
       logging.info('%s: %s tokens in %s ms', type(atomizer).__name__,
