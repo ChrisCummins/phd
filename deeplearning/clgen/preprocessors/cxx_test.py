@@ -107,6 +107,24 @@ int main(int argc, char** argv) {
   assert 'use of undeclared identifier' in str(e_info.value)
 
 
+def test_Compile_libcxx_header():
+  """Test that Compile accepts a program using a C++ libcxx header."""
+  src = """
+#include <cassert>
+int main(int argc, char** argv) { return 0; }
+"""
+  assert src == cxx.Compile(src)
+
+
+def test_Compile_c99_header():
+  """Test that Compile accepts a program using a C99 header."""
+  src = """
+#include <assert.h>
+int main(int argc, char** argv) { return 0; }
+"""
+  assert src == cxx.Compile(src)
+
+
 # ClangFormat() tests.
 
 def test_ClangFormat_simple_c_program():
