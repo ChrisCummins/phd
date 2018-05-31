@@ -1,14 +1,19 @@
 """Import files into a ContentFiles database."""
+import hashlib
+import multiprocessing
 import pathlib
 import subprocess
+import typing
 
 import humanize
+import progressbar
 from absl import app
 from absl import flags
 from absl import logging
 from sqlalchemy import orm
 
 from datasets.github.scrape_repos import contentfiles
+from datasets.github.scrape_repos.preprocessors import preprocessors
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
 from lib.labm8 import pbutil
 
@@ -35,6 +40,25 @@ def ShouldImportRepo(session: orm.session.Session,
   if not (clone_dir / '.git').is_dir():
     return False
   return not contentfiles.GitHubRepository.IsInDatabase(session, meta)
+
+
+def ImportWorker(
+    job: scrape_repos_pb2.ImportWorker) -> typing.Optional[
+  contentfiles.ContentFile]:
+  """Import a content file."""
+  relpath = job.abspath[len(str(job.clone_dir)) + 1:]
+  try:
+    text = preprocessors.Preprocess(pathlib.Path(job.clone_dir), relpath,
+                                    job.preprocessors)
+    sha256 = hashlib.sha256(text.encode('utf-8'))
+    return contentfiles.ContentFile(
+        clone_from_url=job.clone_from_url,
+        relpath=relpath,
+        sha256=sha256.digest(), charcount=len(text),
+        linecount=len(text.split('\n')), text=text)
+  except UnicodeDecodeError:
+    logging.warning('Failed to decode %s', relpath)
+    return None
 
 
 def ImportRepo(session: orm.session.Session,
@@ -69,12 +93,19 @@ def ImportRepo(session: orm.session.Session,
     logging.info('Importing %s %s files from %s ...',
                  humanize.intcomma(len(paths)),
                  language.language.capitalize(), clone_dir)
-    for path in paths:
-      try:
-        if pathlib.Path(path).is_file():
-          session.add(contentfiles.ContentFile.FromFile(meta, clone_dir, path))
-      except UnicodeError:
-        logging.warning('Failed to decode %s', path)
+    jobs = [
+      scrape_repos_pb2.ImportWorker(
+          clone_from_url=meta.clone_from_url,
+          clone_dir=str(clone_dir),
+          abspath=p,
+          preprocessors=importer.preprocessor
+      ) for p in paths
+    ]
+    pool = multiprocessing.Pool()
+    bar = progressbar.ProgressBar(max_value=len(jobs))
+    for maybe_contentfile in bar(pool.imap_unordered(ImportWorker, jobs)):
+      if maybe_contentfile:
+        session.add(maybe_contentfile)
 
 
 def ImportFromLanguage(db: contentfiles.ContentFiles,
@@ -108,6 +139,11 @@ def main(argv):
     raise app.UsageError('--clone_list is not a file.')
   clone_list = pbutil.FromFile(clone_list_path,
                                scrape_repos_pb2.LanguageCloneList())
+
+  # Error early if the config contains invalid preprocessors.
+  for language in clone_list.language:
+    for importer in language.importer:
+      [preprocessors.GetPreprocessorFunction(p) for p in importer.preprocessor]
 
   for language in clone_list.language:
     d = pathlib.Path(language.destination_directory)

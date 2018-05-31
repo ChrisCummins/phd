@@ -23,6 +23,11 @@ py_test(
 py_library(
     name = "preprocessors",
     srcs = ["preprocessors.py"],
+    visibility = ["//datasets/github/scrape_repos:__subpackages__"],
+    deps = [
+        ":inliners",
+        ":public",
+    ],
 )
 
 py_test(

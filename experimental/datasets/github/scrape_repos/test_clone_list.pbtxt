@@ -10,6 +10,9 @@ language {
     string: "language:java sort:stars fork:false"
     max_results: 10
   }
+  importer {
+    source_code_pattern: ".*\\.java"
+  }
 }
 
 language {
@@ -21,10 +24,10 @@ language {
   }
   importer {
     source_code_pattern: ".*\\.cl"
-    preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown"
   }
   importer {
     source_code_pattern: ".*\\.ocl"
-    preprocessor: "datasets.github.scrape_repos.preprocessors.cxx:InlineIncludes"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown"
   }
 }

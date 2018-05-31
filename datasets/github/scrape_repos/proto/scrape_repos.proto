@@ -71,3 +71,11 @@ message GitHubRepoMetadata {
   optional int32 num_forks = 5;
   optional int32 num_watchers = 6;
 }
+
+
+message ImportWorker {
+  optional string clone_from_url = 1;
+  optional string clone_dir = 2;
+  optional string abspath = 3;
+  repeated string preprocessors = 4;
+}

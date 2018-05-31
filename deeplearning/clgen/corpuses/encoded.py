@@ -168,7 +168,6 @@ class EncodedContentFiles(sqlutil.Database):
       pool = multiprocessing.Pool()
       bar = progressbar.ProgressBar(max_value=len(jobs))
       last_commit = time.time()
-
       for encoded_cf in bar(pool.imap_unordered(
           EncoderWorker, jobs)):
         session.add(encoded_cf)

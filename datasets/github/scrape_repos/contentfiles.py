@@ -2,7 +2,6 @@
 import binascii
 import contextlib
 import datetime
-import hashlib
 import pathlib
 import typing
 
@@ -76,7 +75,7 @@ class ContentFile(Base):
   id: int = sql.Column(sql.Integer, primary_key=True)
   clone_from_url: str = sql.Column(sql.String(1024), sql.ForeignKey(
       'repositories.clone_from_url'))
-  # Relative path within the repository.
+  # Relative path within the repository. This can be a duplicate.
   relpath: str = sql.Column(sql.String(1024), nullable=False)
   sha256: str = sql.Column(sql.Binary(32), nullable=False)
   charcount = sql.Column(sql.Integer, nullable=False)
@@ -86,19 +85,6 @@ class ContentFile(Base):
                                              default=datetime.datetime.utcnow)
   __table_args__ = (
     sql.UniqueConstraint('clone_from_url', 'relpath', name='uniq_contentfile'),)
-
-  @classmethod
-  def FromFile(cls, repo: GitHubRepository, clone_dir: pathlib.Path,
-               path: pathlib.Path) -> 'ContentFile':
-    with open(path, 'rb') as f:
-      contents = f.read()
-    text = contents.decode('utf-8').strip()
-    sha256 = hashlib.sha256()
-    sha256.update(contents)
-    return ContentFile(clone_from_url=repo.clone_from_url,
-                       relpath=path[len(str(clone_dir)) + 1:],
-                       sha256=sha256.digest(), charcount=len(text),
-                       linecount=len(text.split('\n')), text=text)
 
   @property
   def sha256_hex(self) -> str:

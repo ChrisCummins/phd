@@ -17,7 +17,6 @@ py_library(
     srcs = ["contentfiles.py"],
     deps = [
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
-        "//lib/labm8:crypto",
         "//lib/labm8:labdate",
         "//lib/labm8:sqlutil",
     ],
@@ -42,6 +41,7 @@ py_binary(
     srcs_version = "PY3",
     deps = [
         ":contentfiles",
+        "//datasets/github/scrape_repos/preprocessors",
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
         "//lib/labm8:pbutil",
     ],
