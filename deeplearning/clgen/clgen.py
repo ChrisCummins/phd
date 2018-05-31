@@ -150,7 +150,7 @@ def LogExceptionWithStackTrace(exception: Exception):
   stacktrace:
 %s
 
-Please report bugs at <https://github.com/ChrisCummins/clgen/issues>\
+Please report bugs at <https://github.com/ChrisCummins/phd/issues>\
 """, exception, type(exception).__name__, message)
   sys.exit(1)
 
