@@ -18,19 +18,22 @@ semantics and usage from large volumes of program fragments, generating
 many-core OpenCL programs that are representative of, but *distinct* from, the
 programs it learns from.
 
-<img src="https://raw.githubusercontent.com/ChrisCummins/docs/master/deeplearning/clgen/docs/assets/pipeline.png" width="500">
+<img src="https://raw.githubusercontent.com/ChrisCummins/phd/master/deeplearning/clgen/docs/assets/pipeline.png" width="500">
 
 
 ## Getting Started
 
-See the [online documentation](http://chriscummins.cc/clgen/) for instructions
-on how to download and install CLgen.
-
-Download a tiny example dataset to train and sample your first CLgen model:
+Build CLgen:
 
 ```sh
-$ bazel run //deeplearning/clgen:clgen \
-    --config=$PHD/deeplearning/clgen/test/data/tiny/config.pbtxt
+$ bazel build //deeplearning/clgen
+```
+
+Use our tiny example dataset to train and sample your first CLgen model:
+
+```sh
+$ bazel-out/*-py3-opt/bin/deeplearning/clgen/clgen \
+    --config deeplearning/clgen/test/data/tiny/config.pbtxt
 ```
 
 <img src="https://raw.githubusercontent.com/ChrisCummins/phd/master/deeplearning/clgen/docs/assets/clgen.gif" width="500">
