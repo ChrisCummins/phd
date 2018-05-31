@@ -53,6 +53,8 @@ def CloneFromMetafile(metafile: pathlib.Path) -> None:
                        stderr=subprocess.PIPE, universal_newlines=True)
   _, stderr = p.communicate()
   if p.returncode and 'submodule' in stderr:
+    # Remove anything left over from a previous attempt.
+    subprocess.check_call(['rm', '-rf', str(clone_dir)])
     # Try again, but this time without cloning submodules.
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                          universal_newlines=True)
@@ -61,7 +63,8 @@ def CloneFromMetafile(metafile: pathlib.Path) -> None:
   if p.returncode:
     # Give up.
     logging.warning('\nClone failed %s:\n%s', meta.clone_from_url, stderr)
-    fs.rm(clone_dir)
+    # Remove anything left over.
+    subprocess.check_call(['rm', '-rf', str(clone_dir)])
 
 
 def IsRepoMetaFile(f: str):
