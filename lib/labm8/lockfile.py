@@ -7,9 +7,9 @@ from __future__ import print_function
 import datetime
 import os
 import pathlib
-import typing
-
 import sys
+import time
+import typing
 
 from lib.labm8 import labdate
 from lib.labm8 import pbutil
@@ -95,7 +95,7 @@ class LockFile:
     return self.pid == os.getpid()
 
   def acquire(self, replace_stale: bool = False, force: bool = False,
-              pid: int = None):
+              pid: int = None, block: bool = False):
     """Acquire the lock.
 
     A lock can be claimed if any of these conditions are true:
@@ -111,6 +111,8 @@ class LockFile:
         claimed.
       pid: If provided, force the process ID of the lock to this value.
         Otherwise the ID of the current process is used.
+      block: If True, block indefinitely until the lock is available. Use with
+        care!
 
     Returns:
       Self.
@@ -128,21 +130,25 @@ class LockFile:
               labdate.GetUtcMillisecondsNow()))
       pbutil.ToFile(lockfile, self.path, assume_filename='LOCK.pbtxt')
 
-    if self.islocked:
-      lock_owner_pid = self.pid
-
-      if self.owned_by_self:
-        pass  # don't replace existing lock
-      elif force:
+    while block:
+      if self.islocked:
+        lock_owner_pid = self.pid
+        if self.owned_by_self:
+          pass  # don't replace existing lock
+          return self
+        elif force:
+          _create_lock()
+          return self
+        elif replace_stale and not system.isprocess(lock_owner_pid):
+          _create_lock()
+          return self
+        elif block:
+          raise UnableToAcquireLockError(self)
+        # Block and try again later.
+        time.sleep(5.0)
+      else:  # new lock
         _create_lock()
-      elif replace_stale and not system.isprocess(lock_owner_pid):
-        _create_lock()
-      else:
-        raise UnableToAcquireLockError(self)
-    else:  # new lock
-      _create_lock()
-
-    return self
+        return self
 
   def release(self, force=False):
     """Release lock.
@@ -166,7 +172,7 @@ class LockFile:
       raise UnableToReleaseLockError(self)
 
   def __repr__(self):
-    return self.path
+    return str(self.path)
 
   def __enter__(self):
     return self.acquire()
