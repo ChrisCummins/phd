@@ -9,6 +9,7 @@
       <w>checksums</w>
       <w>clgen</w>
       <w>clipnorm</w>
+      <w>cloner</w>
       <w>contentfile</w>
       <w>contentfiles</w>
       <w>corpuses</w>
@@ -17,6 +18,7 @@
       <w>githubrc</w>
       <w>gsize</w>
       <w>inlined</w>
+      <w>inliners</w>
       <w>inlines</w>
       <w>inlining</w>
       <w>keras</w>
@@ -28,6 +30,7 @@
       <w>logtostderr</w>
       <w>lsize</w>
       <w>lstm</w>
+      <w>metafile</w>
       <w>mtime</w>
       <w>multichar</w>
       <w>opencl</w>
