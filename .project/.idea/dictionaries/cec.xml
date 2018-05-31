@@ -23,6 +23,7 @@
       <w>labm</w>
       <w>lgen</w>
       <w>libclc</w>
+      <w>libcxx</w>
       <w>logdir</w>
       <w>logtostderr</w>
       <w>lsize</w>
