@@ -7,9 +7,10 @@ from __future__ import print_function
 import datetime
 import os
 import pathlib
+import typing
+
 import sys
 import time
-import typing
 
 from lib.labm8 import labdate
 from lib.labm8 import pbutil
@@ -95,7 +96,7 @@ class LockFile:
     return self.pid == os.getpid()
 
   def acquire(self, replace_stale: bool = False, force: bool = False,
-              pid: int = None, block: bool = False):
+              pid: int = None, block: bool = False) -> 'LockFile':
     """Acquire the lock.
 
     A lock can be claimed if any of these conditions are true:
@@ -130,25 +131,26 @@ class LockFile:
               labdate.GetUtcMillisecondsNow()))
       pbutil.ToFile(lockfile, self.path, assume_filename='LOCK.pbtxt')
 
-    while block:
+    while True:
       if self.islocked:
         lock_owner_pid = self.pid
         if self.owned_by_self:
           pass  # don't replace existing lock
-          return self
+          break
         elif force:
           _create_lock()
-          return self
+          break
         elif replace_stale and not system.isprocess(lock_owner_pid):
           _create_lock()
-          return self
-        elif block:
+          break
+        elif not block:
           raise UnableToAcquireLockError(self)
         # Block and try again later.
         time.sleep(5.0)
       else:  # new lock
         _create_lock()
-        return self
+        break
+    return self
 
   def release(self, force=False):
     """Release lock.
