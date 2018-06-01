@@ -154,7 +154,8 @@ class Corpus(object):
       A concatenated corpus string.
     """
     with self.preprocessed.Session() as session:
-      query = session.query(preprocessed.PreprocessedContentFile.text)
+      query = session.query(preprocessed.PreprocessedContentFile.text).filter(
+          preprocessed.PreprocessedContentFile.preprocessing_succeeded == True)
       if shuffle:
         query = query.order_by(func.random())
       return self.config.contentfile_separator.join([x[0] for x in query])
