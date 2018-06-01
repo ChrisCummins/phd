@@ -114,6 +114,7 @@ model {
     preprocessor: "deeplearning.clgen.preprocessors.opencl:Compile"
   }
   architecture {
+    embedding_size: 64
     neuron_type: LSTM
     neurons_per_layer: 1024
     num_layers: 2
