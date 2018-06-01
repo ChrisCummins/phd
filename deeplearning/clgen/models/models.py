@@ -272,13 +272,17 @@ class Model(object):
 
       sampler.Specialize(self.corpus.atomizer)
       # TODO(cec): Re-implement batched sampling.
-      # TODO(cec): Use the same vectorizer as the DataGenorator.
+      # TODO(cec): Use the same vectorizer as the DataGenerator.
       vectorized_seed = np.zeros(
           (1,
            self.config.training.sequence_length, self.corpus.vocabulary_size),
           dtype=np.bool)
       for i, token in enumerate(sampler.encoded_start_text):
         vectorized_seed[0, i, token] = 1
+
+      # Save a few cycles by not going via the model() property every time we
+      # need to access it.
+      model = self.model
 
       samples = []
       while True:
@@ -287,9 +291,6 @@ class Model(object):
         print('=== BEGIN CLGEN SAMPLE ===', sampler.start_text, sep='\n',
               end='')
         start_time = labdate.MillisecondsTimestamp()
-        # Save a few cycles by not going via the model() property every time we
-        # need to access it.
-        model = self.model
         while True:
           predictions = model.predict(X, verbose=0)[0]
           next_index = WeightedPick(predictions, sampler.temperature)
