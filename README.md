@@ -10,6 +10,12 @@ A monolothic repository for (almost) everything I have done while at the Univers
    ISSTA '18.
    [[source code]](/docs/2018-07-issta).
    Build command: `$ bazel build //docs:2018-07-issta`.
+1. Chris Cummins, Pavlos Petoumenos, Alastair Murray, Hugh Leather.
+   "**DeepSmith: Compiler Fuzzing through Deep Learning**".
+   ACACES '18.
+   [[source code]](/docs/2018-07-acaces).
+   [[pdf]](https://chriscummins.cc/pub/2018-acaces.pdf).
+   Build command: `$ bazel build //docs/2018-07-acaces:paper`.
 1. Chris Cummins, Pavlos Petoumenos, Zheng Wang, Hugh Leather.
    "**End-to-end Deep Learning of Optimization Heuristics**".
    PACT '17.
