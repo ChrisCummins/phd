@@ -150,22 +150,21 @@ def BuildKerasModel(config: model_pb2.Model,
     model_pb2.NetworkArchitecture.RNN: keras.layers.RNN,
     model_pb2.NetworkArchitecture.GRU: keras.layers.GRU,
   }[config.architecture.neuron_type]
+
+  # TODO(cec):
+  embedding_size = 32
   # The input layer.
-  model.add(layer(config.architecture.neurons_per_layer,
-                  input_shape=(
-                    config.training.sequence_length,
-                    vocabulary_size),
-                  return_sequences=config.architecture.neurons_per_layer > 1,
-                  stateful=True))
-  if dropout:
-    model.add(keras.layers.Dropout(dropout))
-  # Add intermediate layers as required.
-  for _ in range(1, config.architecture.num_layers - 1):
+  model.add(keras.layers.Embedding(
+      vocabulary_size, embedding_size,
+      batch_input_shape=(config.training.batch_size,
+                         config.training.sequence_length)))
+  model.add(keras.layers.Dropout(dropout))
+  # The recurrent network layers.
+  for _ in range(config.architecture.num_layers):
     model.add(layer(config.architecture.neurons_per_layer,
                     return_sequences=True, stateful=True))
-    if dropout:
-      model.add(keras.layers.Dropout(dropout))
-  model.add(layer(config.architecture.neurons_per_layer))
-  model.add(keras.layers.Dense(vocabulary_size))
-  model.add(keras.layers.Activation('softmax'))
+    model.add(keras.layers.Dropout(dropout))
+  # The output layer.
+  model.add(keras.layers.TimeDistributed(
+      keras.layers.Dense(vocabulary_size, activation='softmax')))
   return model

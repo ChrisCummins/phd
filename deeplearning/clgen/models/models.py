@@ -29,6 +29,71 @@ from lib.labm8 import pbutil
 FLAGS = flags.FLAGS
 
 
+def OneHotEncode(indices: np.ndarray, vocabulary_size: int):
+  """One-hot encode a sequence of encoded token indices.
+
+    Args:
+      indices: A 1D array of vocabulary indices.
+      vocabulary_size: The size of the vocabulary.
+
+    Returns:
+      A 2D array of one-hot encoded sequences.
+    """
+  return np.eye(vocabulary_size)[indices]
+
+
+def SampleProbabilities(probs, clip_after=10):
+  probs = np.array(probs, dtype=np.float64)
+  # Set all probabilities after clip_after to 0.
+  probs[np.argsort(probs)[:-clip_after]] = 0
+  probs /= np.sum(probs)
+  sampled_index = np.random.choice(len(probs), p=probs)
+  return sampled_index
+
+
+def GetInferenceModel(model, batch_size=1, seq_len=1):
+  """Like training model, but with batch size 1."""
+  import keras
+  logging.info("building inference model.")
+  config = model.get_config()
+  # edit batch_size and seq_len
+  config[0]["config"]["batch_input_shape"] = (batch_size, seq_len)
+  inference_model = keras.models.Sequential.from_config(config)
+  inference_model.trainable = False
+  return inference_model
+
+
+def BatchGenerator(sequence, vocabulary_size, batch_size=64, seq_len=64,
+                   one_hot_features=False, one_hot_labels=False):
+  num_batches = (len(sequence) - 1) // (batch_size * seq_len)
+  if num_batches == 0:
+    raise ValueError(
+        "No batches created. Use smaller batch size or sequence length.")
+  logging.info("number of batches: %s.", num_batches)
+  rounded_len = num_batches * batch_size * seq_len
+  logging.info("effective text length: %s.", rounded_len)
+
+  x = np.reshape(sequence[: rounded_len], [batch_size, num_batches * seq_len])
+  if one_hot_features:
+    x = OneHotEncode(x, vocabulary_size)
+  logging.info("x shape: %s.", x.shape)
+
+  y = np.reshape(sequence[1: rounded_len + 1],
+                 [batch_size, num_batches * seq_len])
+  if one_hot_labels:
+    y = OneHotEncode(y, vocabulary_size)
+  logging.info("y shape: %s.", y.shape)
+
+  epoch = 0
+  while True:
+    # roll so that no need to reset rnn states over epochs
+    x_epoch = np.split(np.roll(x, -epoch, axis=0), num_batches, axis=1)
+    y_epoch = np.split(np.roll(y, -epoch, axis=0), num_batches, axis=1)
+    for batch in range(num_batches):
+      yield data_generators.DataBatch(X=x_epoch[batch], y=y_epoch[batch])
+    epoch += 1
+
+
 class Model(object):
   """A CLgen Model.
 
@@ -176,6 +241,8 @@ class Model(object):
     if len(epoch_checkpoints) >= target_num_epochs:
       # We have already trained a model to at least this number of epochs, so
       # simply the weights from that epoch and call it a day.
+      logging.info('Loading weights from %s',
+                   epoch_checkpoints[target_num_epochs - 1])
       self.model.load_weights(
           epoch_checkpoints[target_num_epochs - 1])
       return self
@@ -191,6 +258,8 @@ class Model(object):
       if epoch_checkpoints:
         # We have already trained a model at least part of the way to our target
         # number of epochs, so load the most recent one.
+        logging.info('Loading weights from %s',
+                     epoch_checkpoints[target_num_epochs - 1])
         self.model.load_weights(epoch_checkpoints[-1])
         starting_epoch = len(epoch_checkpoints)
 
@@ -202,10 +271,20 @@ class Model(object):
         keras.callbacks.ModelCheckpoint(
             str(checkpoint_dir / "{epoch:03d}.hdf5"), verbose=1, mode="min",
             save_best_only=False),
+        # keras.callbacks.TensorBoard(
+        #     '${EMBEDDINGS_DIR}', write_graph=True, embeddings_freq=1,
+        #     embeddings_metadata={"embedding_1": "PATH_TO_EMBEDDINGS"}),
         telemetry.TrainingLogger(self.cache.path / 'logs').KerasCallback(keras),
       ]
       generator = data_generators.AutoGenerator(
           self.corpus, self.config.training)
+
+      generator_ = BatchGenerator(generator.encoded_corpus,
+                                  self.corpus.atomizer.vocab_size,
+                                  batch_size=self.config.training.batch_size,
+                                  seq_len=self.config.training.sequence_length,
+                                  one_hot_features=False, one_hot_labels=True)
+
       logging.info('Step counts: %s per epoch, %s left to do, %s total',
                    humanize.intcomma(generator.steps_per_epoch),
                    humanize.intcomma(
@@ -213,7 +292,7 @@ class Model(object):
                        generator.steps_per_epoch),
                    humanize.intcomma(
                        target_num_epochs * generator.steps_per_epoch))
-      self.model.fit_generator(generator,
+      self.model.fit_generator(generator_,
                                steps_per_epoch=generator.steps_per_epoch,
                                epochs=target_num_epochs - starting_epoch,
                                callbacks=callbacks)
@@ -272,37 +351,42 @@ class Model(object):
 
       sampler.Specialize(self.corpus.atomizer)
       # TODO(cec): Re-implement batched sampling.
-      # TODO(cec): Use the same vectorizer as the DataGenerator.
-      vectorized_seed = np.zeros(
-          (1,
-           self.config.training.sequence_length, self.corpus.vocabulary_size),
-          dtype=np.bool)
-      for i, token in enumerate(sampler.encoded_start_text):
-        vectorized_seed[0, i, token] = 1
 
       # Save a few cycles by not going via the model() property every time we
       # need to access it.
-      model = self.model
+      model = GetInferenceModel(self.model)
 
       samples = []
       while True:
-        X = np.copy(vectorized_seed)
-        sample_in_progress = [sampler.start_text]
-        print('=== BEGIN CLGEN SAMPLE ===', sampler.start_text, sep='\n',
+        print('\n=== BEGIN CLGEN SAMPLE ===\n', sampler.start_text, sep='\n',
               end='')
+
+        model.reset_states()
+        sample_in_progress = sampler.tokenized_start_text.copy()
         start_time = labdate.MillisecondsTimestamp()
+
+        # Set internal states from seed text.
+        for index in sampler.encoded_start_text[:-1]:
+          x = np.array([[index]])
+          # input shape: (1, 1)
+          model.predict(x)
+
+        next_index = sampler.encoded_start_text[-1]
         while True:
-          predictions = model.predict(X, verbose=0)[0]
-          next_index = WeightedPick(predictions, sampler.temperature)
+          x = np.array([[next_index]])
+          # Input shape: (1, 1).
+          probabilities = model.predict(x)
+          # Output shape: (1, 1, vocab_size).
+          # TODO(cec): Make configurable, or use old weighted pick.
+          top_n = 10
+          next_index = SampleProbabilities(probabilities.squeeze(), top_n)
+          # append to sequence
           token = self.corpus.atomizer.decoder[next_index]
-          sys.stdout.write(token)
           sample_in_progress.append(token)
-          activations = np.zeros((1, 1, self.corpus.vocabulary_size),
-                                 dtype=np.bool)
-          activations[0, 0, next_index] = 1
-          X = np.concatenate((X[:, 1:, :], activations), axis=1)
+          sys.stdout.write(token)
           if sampler.SampleIsComplete(sample_in_progress):
             break
+
         end_time = labdate.MillisecondsTimestamp()
         sample = model_pb2.Sample(text=''.join(sample_in_progress),
                                   sample_start_epoch_ms_utc=start_time,

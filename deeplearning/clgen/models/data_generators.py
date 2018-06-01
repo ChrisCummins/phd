@@ -155,6 +155,57 @@ class LazyVectorizingGenerator(DataGeneratorBase):
     return self.Vectorize(DataBatch(X=X_data, y=y_data))
 
 
+class BatchesGenerator(DataGeneratorBase):
+
+  def __init__(self, corpus: corpuses.Corpus,
+               training_opts: model_pb2.TrainingOptions):
+    super(BatchesGenerator, self).__init__(corpus, training_opts)
+
+    # Index into the batches arrays.
+    self.i = 0
+
+    corpus_end = self.steps_per_epoch * self.batch_size * self.sequence_length
+
+    x = np.reshape(
+        self.encoded_corpus[:corpus_end],
+        [self.batch_size, self.steps_per_epoch * self.sequence_length])
+
+    y = np.reshape(
+        self.encoded_corpus[1:corpus_end + 1],
+        [self.batch_size, self.steps_per_epoch * self.sequence_length])
+    # One hot encode the y data.
+    y = np.eye(self.corpus.atomizer.vocab_size)[y]
+
+    # TODO(cec):
+    # x = self.encoded_corpus[corpus_end]
+    # y = np.copy(self.encoded_corpus[corpus_end])
+    # # Shift the y data along by one.
+    # y[:-1] = x[1:]
+    # # The end of the corpus wraps around to the start.
+    # y[-1] = x[0]
+    x_batches = np.split(x.reshape(self.batch_size, -1),
+                         self.steps_per_epoch, 1)
+    y_batches = np.split(y.reshape(self.batch_size, -1),
+                         self.steps_per_epoch, 1)
+    self.batches = [DataBatch(X=x, y=y) for x, y in zip(x_batches, y_batches)]
+
+    batch_size = sys.getsizeof(self.batches[0])
+    logging.info('%s: %s per batch, %s per epoch, %s total',
+                 type(self).__name__,
+                 humanize.naturalsize(batch_size),
+                 humanize.naturalsize(batch_size * self.steps_per_epoch),
+                 humanize.naturalsize(batch_size * self.steps_per_epoch *
+                                      self.training_opts.num_epochs))
+
+  def __next__(self) -> DataBatch:
+    """Generate the next batch of X, y pairs."""
+    self.i += 1
+    # Wrap around to the start of the corpus if we have ran out of data.
+    if self.i >= self.steps_per_epoch:
+      self.i = 0
+    return self.batches[self.i]
+
+
 def AutoGenerator(corpus: corpuses.Corpus,
                   training_opts: model_pb2.TrainingOptions) -> DataGeneratorBase:
   """Determine and construct what we believe to be the best data generator.
@@ -170,4 +221,4 @@ def AutoGenerator(corpus: corpuses.Corpus,
     A DataGenorator instance, ready to be used in a model's fit_generator()
     method.
   """
-  return LazyVectorizingGenerator(corpus, training_opts)
+  return BatchesGenerator(corpus, training_opts)
