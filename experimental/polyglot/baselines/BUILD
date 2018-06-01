@@ -8,6 +8,7 @@ filegroup(
         "models/**/*.pbtxt",
         "samplers/**/*.pbtxt",
     ]),
+    visibility = ["//experimental:__subpackages__"],
 )
 
 py_binary(
