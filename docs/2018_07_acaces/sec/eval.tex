@@ -1,11 +1,38 @@
-\section{Evaluation}%
+\section{Evaluation}
 
-We compare our fuzzer to CLSmith~\cite{Lidbury2015a}, the state-of-the art OpenCL fuzzer. We conducted 2000 hours of automated testing across 10 OpenCL compilers (3 GPUs, 4 CPUs, a co-processor, and an emulator). DeepSmith found bugs in all the compilers we tested --- every compiler crashed, and every compiler generated programs which either crash or silently compute the wrong result. To date, we have submitted 67 bug reports to compiler vendors.
+We compare our fuzzer to CLSmith~\cite{Lidbury2015a}, the state-of-the art
+OpenCL fuzzer. We conducted 2000 hours of automated testing across 10 OpenCL
+compilers (3 GPUs, 4 CPUs, a co-processor, and an emulator). DeepSmith found
+bugs in all the compilers we tested --- every compiler crashed, and every
+compiler generated programs which either crash or silently compute the wrong
+result. To date, we have submitted 67 bug reports to compiler vendors.
 
-We found that DeepSmith is able to identify a broad range of defects, many of which CLSmith cannot. For example, a common pattern in OpenCL programs is to obtain the thread identity and compare this against some fixed value to determine whether or not to complete a unit of work (46\% of OpenCL kernels on GitHub use this pattern). DeepSmith, having modeled the frequency with which this occurs in real handwritten code, generates many permutations of this pattern. And in doing so, exposed a bug in the optimizer of two Intel compilers which causes the \texttt{if} branch of a DeepSmith-generated program to be erroneously executed when the kernel is compiled with optimizations enabled. CLSmith does not permit the thread identity to modify control flow, rendering such productions impossible.
+We found that DeepSmith is able to identify a broad range of defects, many of
+which CLSmith cannot. For example, a common pattern in OpenCL programs is to
+obtain the thread identity and compare this against some fixed value to
+determine whether or not to complete a unit of work (46\% of OpenCL kernels on
+GitHub use this pattern). DeepSmith, having modeled the frequency with which
+this occurs in real handwritten code, generates many permutations of this
+pattern. And in doing so, exposed a bug in the optimizer of two Intel compilers
+which causes the \texttt{if} branch of a DeepSmith-generated program to be
+erroneously executed when the kernel is compiled with optimizations enabled.
+CLSmith does not permit the thread identity to modify control flow, rendering
+such productions impossible.
 
-Figure~\ref{fig:vs_clsmith} compares the runtime and program sizes of the two approaches. DeepSmith test cases are on average evaluated $3.03\times$ faster than CLSmith ($2.45\times$, and $4.46\times$ for generation and execution, respectively), and are two orders of magnitude smaller.
+Figure~\ref{fig:vs_clsmith} compares the runtime and program sizes of the two
+approaches. DeepSmith test cases are on average evaluated $3.03\times$ faster
+than CLSmith ($2.45\times$, and $4.46\times$ for generation and execution,
+respectively), and are two orders of magnitude smaller.
 
-The Clang front-end to LLVM is commonly used in OpenCL drivers. This in turn causes Clang-related defects to potentially affect multiple compilers. To evaluate the impact of Clang, we used debug+assert builds of every LLVM release in the past 24 months to compile 75k DeepSmith test cases. Figure~\ref{fig:clangs} shows that the crash rate of the Clang front-end is, for the most part, steadily decreasing over time. The number of failing compiler crashes decreased tenfold between 3.6.2 and 5.0.0. Notably, the current development trunk has the second lowest crash rate, emphasizing that compiler validation is a moving target. Since LLVM will not release unless their compiler passes their own extensive test suites, this also reinforces the case for compiler fuzzing.
-
+The Clang front-end to LLVM is commonly used in OpenCL drivers. This in turn
+causes Clang-related defects to potentially affect multiple compilers. To
+evaluate the impact of Clang, we used debug+assert builds of every LLVM release
+in the past 24 months to compile 75k DeepSmith test cases.
+Figure~\ref{fig:clangs} shows that the crash rate of the Clang front-end is, for
+the most part, steadily decreasing over time. The number of failing compiler
+crashes decreased tenfold between 3.6.2 and 5.0.0. Notably, the current
+development trunk has the second lowest crash rate, emphasizing that compiler
+validation is a moving target. Since LLVM will not release unless their compiler
+passes their own extensive test suites, this also reinforces the case for
+compiler fuzzing.
 \vspace{-1em}
