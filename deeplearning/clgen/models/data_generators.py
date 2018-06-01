@@ -67,6 +67,7 @@ def BatchGenerator(corpus: corpuses.Corpus,
   epoch_num = 0
   while True:
     if not epoch_num:
+      # TODO(cec): y is lazily encoded, this size is wrong.
       logging.info("Step shape: X: %s, y: %s.", x.shape, y.shape)
       total_size = sys.getsizeof(x) + sys.getsizeof(y)
       logging.info(
@@ -85,7 +86,8 @@ def BatchGenerator(corpus: corpuses.Corpus,
     y_epoch = np.split(np.roll(y, -epoch_num, axis=0), steps_per_epoch, axis=1)
     # Per-batch inner loop.
     for batch in range(steps_per_epoch):
-      yield DataBatch(X=x_epoch[batch], y=y_epoch[batch])
+      yield DataBatch(
+          X=x_epoch[batch], y=OneHotEncode(y_epoch[batch], corpus.vocab_size))
     epoch_num += 1
 
 
@@ -130,7 +132,6 @@ def GetTrainingCorpus(
       encoded_corpus[1:clipped_corpus_length + 1],
       [training_opts.batch_size,
        steps_per_epoch * training_opts.sequence_length])
-  y = OneHotEncode(y, corpus.vocab_size)
 
   logging.info(
       'Encoded corpus of %s tokens (clipped last %s tokens) in %s ms.',
