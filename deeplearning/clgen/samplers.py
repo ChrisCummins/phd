@@ -192,8 +192,10 @@ class Sampler(object):
     self.hash = self._ComputeHash(self.config)
     self.terminators = GetTerminationCriteria(self.config.termination_criteria)
     self.start_text = self.config.start_text
-    self.encoded_start_text = None
     self.temperature = self.config.temperature_micros / 1e6
+    # Set in Specialize().
+    self.encoded_start_text = None
+    self.tokenized_start_text = None
 
   def Specialize(self, atomizer: atomizers.AtomizerBase) -> None:
     """Specialize a sampler a vocabulary.
@@ -213,6 +215,7 @@ class Sampler(object):
     """
     try:
       self.encoded_start_text = atomizer.AtomizeString(self.start_text)
+      self.tokenized_start_text = atomizer.TokenizeString(self.start_text)
     except errors.VocabError:
       raise errors.InvalidStartText(
           'Sampler start text cannot be encoded using the corpus vocabulary: '
