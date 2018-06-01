@@ -18,7 +18,7 @@ def test_TrainingLogger_create_file():
     logger.EpochBeginCallback(0, {})
     logger.EpochEndCallback(0, {'loss': 1})
     # Note that one is added to the epoch number.
-    assert (pathlib.Path(d) / 'epoch_001_end.pbtxt').is_file()
+    assert (pathlib.Path(d) / 'epoch_001_telemetry.pbtxt').is_file()
 
 
 def test_TrainingLogger_EpochTelemetry():

@@ -68,6 +68,7 @@ py_library(
 
 py_test(
     name = "models_test",
+    size = "enormous",
     srcs = ["models_test.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",

@@ -25,6 +25,7 @@ class MockSampler(object):
                batch_size: int = 1):
     self.start_text = start_text
     self.encoded_start_text = np.array([1, 2, 3])
+    self.tokenized_start_text = ['a', 'b', 'c']
     self.temperature = 1.0
     self.hash = hash
     self.batch_size = batch_size

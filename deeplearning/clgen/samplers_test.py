@@ -1,7 +1,9 @@
 """Unit tests for //deeplearning/clgen/sampler.py."""
+import sys
+import typing
+
 import numpy as np
 import pytest
-import sys
 from absl import app
 
 from deeplearning.clgen import errors
@@ -15,7 +17,14 @@ class AtomizerMock(object):
   @staticmethod
   def AtomizeString(string) -> np.ndarray:
     """Mock for string atomizer"""
+    del string
     return np.array([1])
+
+  @staticmethod
+  def TokenizeString(string) -> typing.List[str]:
+    """Mock for string tokenizer."""
+    del string
+    return ['a']
 
 
 # AssertConfigIsValid() tests.
