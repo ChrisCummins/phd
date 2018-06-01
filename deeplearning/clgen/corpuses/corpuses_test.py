@@ -187,7 +187,25 @@ def test_Corpus_GetTextCorpus_random_order(clgen_cache_dir, abc_corpus_config):
   c3 = c.GetTextCorpus(shuffle=True)
   c4 = c.GetTextCorpus(shuffle=True)
   c5 = c.GetTextCorpus(shuffle=True)
-  assert len(set([c1, c2, c3, c4, c5])) > 1
+  assert len({c1, c2, c3, c4, c5}) > 1
+
+
+def test_Corpus_GetTrainingData_decode(clgen_cache_dir, abc_corpus):
+  """Test the decoded output of GetTrainingData()."""
+  del clgen_cache_dir
+  c = corpuses.Corpus(corpus_pb2.Corpus(local_directory=abc_corpus,
+                                        ascii_character_atomizer=True,
+                                        contentfile_separator='\n!!\n'))
+  c.Create()
+  decoded = c.atomizer.DeatomizeIndices(c.GetTrainingData(shuffle=False))
+  # Test that each content file (plus contentfile separator) is in corpus.
+  assert '\nSuch corpus.\nVery wow.\n!!\n' in decoded
+  assert 'Hello, world!\n!!\n' in decoded
+  assert 'The cat sat on the mat.\n!!\n' in decoded
+  # Test the total length of the corpus.
+  assert len('\nSuch corpus.\nVery wow.\n!!\n' +
+             'Hello, world!\n!!\n' +
+             'The cat sat on the mat.\n!!\n') == len(decoded)
 
 
 def main(argv):
