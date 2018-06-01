@@ -6,6 +6,7 @@ determines the shape of the generated samples.
 import typing
 
 from deeplearning.clgen import errors
+from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.proto import sampler_pb2
 from lib.labm8 import crypto
 from lib.labm8 import pbutil
@@ -42,6 +43,19 @@ class TerminationCriterionBase(object):
   SampleIsComplete(), which accepts as its sole argument a sample-in-progress,
   and returns whether to stop sampling.
   """
+
+  def Specialize(self, atomizer: atomizers.AtomizerBase) -> None:
+    """Specialize a termination criteria to a vocabulary.
+
+    This enables the termination criteria to set state specialized to a specific
+    encoding vocabulary. This is guaranteed to be called before
+    SampleIsComplete(), and ensures that the vocabulary used for all sample
+    arguments to SampleIsComplete() is from this vocabulary.
+
+    Args:
+      atomizer: An atomizer to specialize to.
+    """
+    pass
 
   def SampleIsComplete(self, sample_in_progress: typing.List[str]) -> bool:
     """Determine whether to stop sampling.
@@ -86,6 +100,31 @@ class SymmetricalTokenDepthCriterion(TerminationCriterionBase):
       raise errors.UserError(e)
     if self.left_token == self.right_token:
       raise errors.UserError('SymmetricalTokenDepth tokens must be different')
+
+  def Specialize(self, atomizer: atomizers.AtomizerBase) -> None:
+    """Specialize a termination criteria to a vocabulary.
+
+    This enables the termination criteria to set state specialized to a specific
+    encoding vocabulary. This is guaranteed to be called before
+    SampleIsComplete(), and ensures that the vocabulary used for all sample
+    arguments to SampleIsComplete() is from this vocabulary.
+
+    Args:
+      atomizer: An atomizer to specialize to.
+
+    Raises:
+    """
+    try:
+      l = atomizer.AtomizeString(self.left_token)
+      r = atomizer.AtomizeString(self.right_token)
+      if len(l) > 1 or len(r) > 1:
+        raise errors.InvalidSymtokTokens(
+            'Sampler symmetrical depth tokens do not encode to a single '
+            'token using the corpus vocabulary')
+    except errors.VocabError:
+      raise errors.InvalidSymtokTokens(
+          'Sampler symmetrical depth tokens cannot be encoded using the '
+          'corpus vocabulary')
 
   def SampleIsComplete(self, sample_in_progress: typing.List[str]) -> bool:
     """Determine whether to stop sampling."""
@@ -153,7 +192,33 @@ class Sampler(object):
     self.hash = self._ComputeHash(self.config)
     self.terminators = GetTerminationCriteria(self.config.termination_criteria)
     self.start_text = self.config.start_text
+    self.encoded_start_text = None
     self.temperature = self.config.temperature_micros / 1e6
+
+  def Specialize(self, atomizer: atomizers.AtomizerBase) -> None:
+    """Specialize a sampler a vocabulary.
+
+    This enables the sampler to set state specialized to a specific encoding
+    vocabulary. This is guaranteed to be called before SampleIsComplete(), and
+    ensures that the vocabulary used for all sample arguments to
+    SampleIsComplete() is from this vocabulary.
+
+    Args:
+      atomizer: An atomizer to specialize to.
+
+    Raises:
+      InvalidStartText: If the start_text cannot be encoded using the
+        vocabulary.
+      UserError: In case the sampler cannot be specialized to this vocabulary.
+    """
+    try:
+      self.encoded_start_text = atomizer.AtomizeString(self.start_text)
+    except errors.VocabError:
+      raise errors.InvalidStartText(
+          'Sampler start text cannot be encoded using the corpus vocabulary: '
+          f"'{self.start_text}'")
+
+    [terminator.Specialize(atomizer) for terminator in self.terminators]
 
   def SampleIsComplete(self, sample_in_progress: typing.List[str]) -> bool:
     """Determine whether to stop sampling.

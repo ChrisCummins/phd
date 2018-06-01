@@ -1,11 +1,11 @@
 """The CLgen language model."""
 import os
 import pathlib
-import sys
 import typing
 
 import humanize
 import numpy as np
+import sys
 from absl import flags
 from absl import logging
 
@@ -269,38 +269,18 @@ class Model(object):
       if min_num_samples < 0:
         logging.warning(
             'Entering an infinite sample loop, this process will never end!')
-      try:
-        encoded_seed = self.corpus.atomizer.AtomizeString(sampler.start_text)
-      except errors.VocabError:
-        raise errors.InvalidStartText(
-            'Sampler start text cannot be encoded using the corpus vocabulary: '
-            f"'{sampler.start_text}'")
-      # TODO(cec): Update this to use the new sampler API.
-      # if sampler.has_symmetrical_tokens:
-      #   try:
-      #     l = self.corpus.atomizer.AtomizeString(sampler.symmetrical_token_left)
-      #     r = self.corpus.atomizer.AtomizeString(
-      #         sampler.symmetrical_token_right)
-      #     if len(l) > 1 or len(r) > 1:
-      #       raise errors.InvalidSymtokTokens(
-      #           'Sampler symmetrical depth tokens do not encode to a single '
-      #           'token using the corpus vocabulary')
-      #   except errors.VocabError:
-      #     raise errors.InvalidSymtokTokens(
-      #         'Sampler symmetrical depth tokens cannot be encoded using the '
-      #         'corpus vocabulary')
 
-      samples = []
-
+      sampler.Specialize(self.corpus.atomizer)
       # TODO(cec): Re-implement batched sampling.
-      # Use the same vectorizer as the DataGenorator.
+      # TODO(cec): Use the same vectorizer as the DataGenorator.
       vectorized_seed = np.zeros(
           (1,
            self.config.training.sequence_length, self.corpus.vocabulary_size),
           dtype=np.bool)
-      for i, token in enumerate(encoded_seed):
+      for i, token in enumerate(sampler.encoded_start_text):
         vectorized_seed[0, i, token] = 1
 
+      samples = []
       while True:
         X = np.copy(vectorized_seed)
         sample_in_progress = [sampler.start_text]

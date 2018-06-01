@@ -3,6 +3,7 @@
 py_library(
     name = "atomizers",
     srcs = ["atomizers.py"],
+    visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = [
         "//deeplearning/clgen:errors",
         "//lib/labm8:labdate",

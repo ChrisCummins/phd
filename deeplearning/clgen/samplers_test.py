@@ -1,12 +1,21 @@
 """Unit tests for //deeplearning/clgen/sampler.py."""
-import sys
-
+import numpy as np
 import pytest
+import sys
 from absl import app
 
 from deeplearning.clgen import errors
 from deeplearning.clgen import samplers
 from deeplearning.clgen.proto import sampler_pb2
+
+
+class AtomizerMock(object):
+  """Mock class for atomizer."""
+
+  @staticmethod
+  def AtomizeString(string) -> np.ndarray:
+    """Mock for string atomizer"""
+    return np.array([1])
 
 
 # AssertConfigIsValid() tests.
@@ -174,6 +183,60 @@ def test_Sampler_temperature(abc_sampler_config: sampler_pb2.Sampler):
   abc_sampler_config.temperature_micros = 1000000
   s = samplers.Sampler(abc_sampler_config)
   assert pytest.approx(1.0) == s.temperature
+
+
+# Sampler.Specialize() tests.
+
+def test_Sampler_Specialize_invalid_depth_tokens(
+    abc_sampler_config: sampler_pb2.Sampler):
+  """Test that InvalidSymtokTokens raised if depth tokens cannot be encoded."""
+  t = abc_sampler_config.termination_criteria.add()
+  t.symtok.depth_increase_token = '{'
+  t.symtok.depth_decrease_token = '}'
+  s = samplers.Sampler(abc_sampler_config)
+
+  def MockAtomizeString(string):
+    """AtomizeString() with a vocab error on depth tokens."""
+    if string == '{' or string == '}':
+      raise errors.VocabError()
+    else:
+      return np.ndarray([1])
+
+  mock = AtomizerMock()
+  mock.AtomizeString = MockAtomizeString
+  with pytest.raises(errors.InvalidSymtokTokens) as e_info:
+    s.Specialize(mock)
+  assert ('Sampler symmetrical depth tokens cannot be encoded using the '
+          'corpus vocabulary') == str(e_info.value)
+
+
+def test_Sampler_Specialize_multiple_tokens_per(
+    abc_sampler_config: sampler_pb2.Sampler):
+  """Test that InvalidSymtokTokens raised if depth tokens encode to mult."""
+  t = abc_sampler_config.termination_criteria.add()
+  t.symtok.depth_increase_token = 'abc'
+  t.symtok.depth_decrease_token = 'cba'
+  s = samplers.Sampler(abc_sampler_config)
+
+  def MockAtomizeString(string):
+    """AtomizeString() with a multi-token output."""
+    del string
+    return np.array([1, 2, 3])
+
+  mock = AtomizerMock()
+  mock.AtomizeString = MockAtomizeString
+  with pytest.raises(errors.InvalidSymtokTokens) as e_info:
+    s.Specialize(mock)
+  assert ('Sampler symmetrical depth tokens do not encode to a single '
+          'token using the corpus vocabulary')
+
+
+def test_Sampler_Specialize_encoded_start_text(
+    abc_sampler_config: sampler_pb2.Sampler):
+  s = samplers.Sampler(abc_sampler_config)
+  assert s.encoded_start_text is None
+  s.Specialize(AtomizerMock())
+  np.testing.assert_array_equal(np.array([1]), s.encoded_start_text)
 
 
 def main(argv):

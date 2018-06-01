@@ -1,8 +1,8 @@
 """Unit tests for //deeplearning/clgen/models/models.py."""
-import sys
-
 import checksumdir
+import numpy as np
 import pytest
+import sys
 from absl import app
 
 from deeplearning.clgen import errors
@@ -23,13 +23,20 @@ class MockSampler(object):
   def __init__(self, start_text: str = 'H', hash: str = 'hash',
                batch_size: int = 1):
     self.start_text = start_text
+    self.encoded_start_text = np.array([1, 2, 3])
     self.temperature = 1.0
     self.hash = hash
     self.batch_size = batch_size
     self.has_symmetrical_tokens = False
 
   @staticmethod
+  def Specialize(atomizer):
+    """Atomizer.Specialize() mock."""
+    pass
+
+  @staticmethod
   def SampleIsComplete(sample_in_progress):
+    """Crude 'maxlen' mock."""
     return len(sample_in_progress) >= 10
 
 
@@ -205,15 +212,6 @@ def test_Model_Train_twice(clgen_cache_dir, abc_model_config):
 # TODO(cec): Add test where batch_size is larger than corpus.
 
 # Model.Sample() tests.
-
-
-def test_Model_Sample_invalid_start_text(clgen_cache_dir, abc_model_config):
-  """Test that InvalidStartText error raised if start text cannot be encoded."""
-  del clgen_cache_dir
-  m = models.Model(abc_model_config)
-  with pytest.raises(errors.InvalidStartText):
-    # This start_text chosen to include characters not in the abc_corpus.
-    m.Sample(MockSampler(start_text='!@#1234'), 1)
 
 
 def test_Model_Sample_implicit_train(clgen_cache_dir, abc_model_config):
