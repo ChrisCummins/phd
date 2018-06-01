@@ -50,7 +50,7 @@ class AtomizerBase(object):
       raise errors.InvalidVocab('all indices must be unique')
 
     self.vocab_size = len(self.vocab)
-    self.decoder = dict((val, key) for key, val in self.vocab.items())
+    self.decoder = {val: key for key, val in self.vocab.items()}
 
   def AtomizeString(self, text: str) -> np.array:
     """Atomize a text into an array of vocabulary indices.
