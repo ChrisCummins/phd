@@ -155,13 +155,14 @@ def BuildKerasModel(config: model_pb2.Model,
                   input_shape=(
                     config.training.sequence_length,
                     vocabulary_size),
-                  return_sequences=config.architecture.neurons_per_layer > 1))
+                  return_sequences=config.architecture.neurons_per_layer > 1,
+                  stateful=True))
   if dropout:
     model.add(keras.layers.Dropout(dropout))
   # Add intermediate layers as required.
   for _ in range(1, config.architecture.num_layers - 1):
     model.add(layer(config.architecture.neurons_per_layer,
-                    return_sequences=True))
+                    return_sequences=True, stateful=True))
     if dropout:
       model.add(keras.layers.Dropout(dropout))
   model.add(layer(config.architecture.neurons_per_layer))
