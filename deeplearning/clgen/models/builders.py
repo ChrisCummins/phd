@@ -30,6 +30,9 @@ def AssertIsBuildable(config: model_pb2.Model) -> model_pb2.Model:
     pbutil.AssertFieldIsSet(config, 'training')
     pbutil.AssertFieldIsSet(config.architecture, 'neuron_type')
     pbutil.AssertFieldConstraint(
+        config.architecture, 'embedding_size', lambda x: 0 < x,
+        'NetworkArchitecture.embedding_size must be > 0')
+    pbutil.AssertFieldConstraint(
         config.architecture, 'neurons_per_layer', lambda x: 0 < x,
         'NetworkArchitecture.neurons_per_layer must be > 0')
     pbutil.AssertFieldConstraint(
@@ -151,11 +154,9 @@ def BuildKerasModel(config: model_pb2.Model,
     model_pb2.NetworkArchitecture.GRU: keras.layers.GRU,
   }[config.architecture.neuron_type]
 
-  # TODO(cec):
-  embedding_size = 32
   # The input layer.
   model.add(keras.layers.Embedding(
-      vocabulary_size, embedding_size,
+      vocabulary_size, config.architecture.embedding_size,
       batch_input_shape=(config.training.batch_size,
                          config.training.sequence_length)))
   model.add(keras.layers.Dropout(dropout))

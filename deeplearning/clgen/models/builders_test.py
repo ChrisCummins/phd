@@ -44,6 +44,20 @@ def test_AssertIsBuildable_no_training(abc_model_config):
   assert "Field not set: 'Model.training'" == str(e_info.value)
 
 
+def test_AssertIsBuildable_architecture_embedding_size(abc_model_config):
+  """UserError is raised if architecture.embedding_size field invalid."""
+  abc_model_config.architecture.ClearField('embedding_size')
+  with pytest.raises(errors.UserError) as e_info:
+    builders.AssertIsBuildable(abc_model_config)
+  assert "NetworkArchitecture.embedding_size must be > 0" == str(
+      e_info.value)
+  abc_model_config.architecture.embedding_size = -1
+  with pytest.raises(errors.UserError) as e_info:
+    builders.AssertIsBuildable(abc_model_config)
+  assert "NetworkArchitecture.embedding_size must be > 0" == str(
+      e_info.value)
+
+
 def test_AssertIsBuildable_architecture_neuron_type(abc_model_config):
   """UserError is raised if architecture.neuron_type field not set."""
   abc_model_config.architecture.ClearField('neuron_type')
