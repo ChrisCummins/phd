@@ -1,9 +1,9 @@
 # File: //deeplearning/clgen/proto/clgen.proto
 # Proto: clgen.Instance
-working_dir: "/var/phd/clgen/opencl"
+working_dir: "/var/phd/clgen/baseline"
 model {
   corpus {
-    local_directory: "/mnt/cc/data/kernels/github"
+    local_directory: "/var/phd/datasets/github/corpuses/opencl"
     # Note these tokens omit the optional __ qualifiers on OpenCL keywords.
     # The __ qualifiers are stripped in the corpus by the preprocessor
     # deeplearning.clgen.preprocessors.opencl:StripDoubleUnderscorePrefixes.
