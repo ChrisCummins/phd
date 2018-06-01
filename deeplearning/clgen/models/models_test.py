@@ -1,8 +1,9 @@
 """Unit tests for //deeplearning/clgen/models/models.py."""
+import sys
+
 import checksumdir
 import numpy as np
 import pytest
-import sys
 from absl import app
 
 from deeplearning.clgen import errors
@@ -27,7 +28,6 @@ class MockSampler(object):
     self.temperature = 1.0
     self.hash = hash
     self.batch_size = batch_size
-    self.has_symmetrical_tokens = False
 
   @staticmethod
   def Specialize(atomizer):
@@ -41,7 +41,7 @@ class MockSampler(object):
 
 
 # The Model.hash for an instance of abc_model_config.
-ABC_MODEL_HASH = '7d9ec0d3c0e49cb02bb4333351bca6e9eab53abd'
+ABC_MODEL_HASH = 'a92099940caaa165359e9a250b0620c518fa50a6'
 
 
 def test_Model_config_type_error():
@@ -121,9 +121,11 @@ def test_Model_directories(clgen_cache_dir, abc_model_config):
   del clgen_cache_dir
   m = models.Model(abc_model_config)
   assert (m.cache.path / 'checkpoints').is_dir()
+  assert (m.cache.path / 'embeddings').is_dir()
   assert (m.cache.path / 'samples').is_dir()
   # There should be nothing in these directories yet.
   assert not list((m.cache.path / 'checkpoints').iterdir())
+  assert not list((m.cache.path / 'embeddings').iterdir())
   assert not list((m.cache.path / 'samples').iterdir())
 
 
@@ -212,7 +214,6 @@ def test_Model_Train_twice(clgen_cache_dir, abc_model_config):
 # TODO(cec): Add test where batch_size is larger than corpus.
 
 # Model.Sample() tests.
-
 
 def test_Model_Sample_implicit_train(clgen_cache_dir, abc_model_config):
   """Test that Sample() implicitly trains the model."""

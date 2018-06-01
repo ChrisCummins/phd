@@ -414,19 +414,22 @@ class Model(object):
     return not self.__eq__(rhs)
 
 
-def WeightedPick(predictions: np.ndarray, temperature: float) -> np.ndarray:
+def WeightedPick(predictions: np.ndarray, temperature: float) -> int:
   """Make a weighted choice from a predictions array."""
   predictions = np.log(np.asarray(predictions).astype('float64')) / temperature
   predictions_exp = np.exp(predictions)
+  # Normalize the probabilities.
   predictions = predictions_exp / np.sum(predictions_exp)
   predictions = np.random.multinomial(1, predictions, 1)
   return np.argmax(predictions)
 
 
-def SampleProbabilities(probs, clip_after=10):
-  probs = np.array(probs, dtype=np.float64)
+def SampleProbabilities(predictions: np.ndarray, clip_after=10) -> int:
+  """Make a weighted choice from a predictions array."""
+  predictions = np.array(predictions, dtype=np.float64)
   # Set all probabilities after clip_after to 0.
-  probs[np.argsort(probs)[:-clip_after]] = 0
-  probs /= np.sum(probs)
-  sampled_index = np.random.choice(len(probs), p=probs)
+  predictions[np.argsort(predictions)[:-clip_after]] = 0
+  # Normalize the probabilities.
+  predictions /= np.sum(predictions)
+  sampled_index = np.random.choice(len(predictions), p=predictions)
   return sampled_index
