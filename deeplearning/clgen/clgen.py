@@ -45,12 +45,15 @@ flags.DEFINE_integer(
     'min_samples', -1,
     'The minimum number of samples to make.')
 flags.DEFINE_string(
+    'stop_after', None,
+    'Stop CLgen early. Valid options are: "corpus", or "train".')
+flags.DEFINE_string(
     'print_cache_path', None,
     'Print the directory of a cache and exit. Valid options are: "corpus", '
     '"model", or "sampler".')
-flags.DEFINE_string(
-    'stop_after', None,
-    'Stop CLgen early. Valid options are: "corpus", or "train".')
+flags.DEFINE_bool(
+    'print_preprocessed', False,
+    'Print the pre-processed corpus to stdout and exit.')
 flags.DEFINE_bool(
     'clgen_debug', False,
     'Enable a debugging mode of CLgen python runtime. When enabled, errors '
@@ -233,6 +236,10 @@ def DoFlagsAction():
     elif FLAGS.print_cache_path:
       raise app.UsageError(
           f"Invalid --print_cache_path argument: '{FLAGS.print_cache_path}'")
+
+    if FLAGS.print_preprocessed:
+      print(instance.model.corpus.GetTextCorpus(shuffle=False))
+      return
 
     # The default action is to sample the model.
     if FLAGS.stop_after == 'corpus':
