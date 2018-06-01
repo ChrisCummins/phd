@@ -29,71 +29,6 @@ from lib.labm8 import pbutil
 FLAGS = flags.FLAGS
 
 
-def OneHotEncode(indices: np.ndarray, vocabulary_size: int):
-  """One-hot encode a sequence of encoded token indices.
-
-    Args:
-      indices: A 1D array of vocabulary indices.
-      vocabulary_size: The size of the vocabulary.
-
-    Returns:
-      A 2D array of one-hot encoded sequences.
-    """
-  return np.eye(vocabulary_size)[indices]
-
-
-def SampleProbabilities(probs, clip_after=10):
-  probs = np.array(probs, dtype=np.float64)
-  # Set all probabilities after clip_after to 0.
-  probs[np.argsort(probs)[:-clip_after]] = 0
-  probs /= np.sum(probs)
-  sampled_index = np.random.choice(len(probs), p=probs)
-  return sampled_index
-
-
-def GetInferenceModel(model, batch_size=1, seq_len=1):
-  """Like training model, but with batch size 1."""
-  import keras
-  logging.info("building inference model.")
-  config = model.get_config()
-  # edit batch_size and seq_len
-  config[0]["config"]["batch_input_shape"] = (batch_size, seq_len)
-  inference_model = keras.models.Sequential.from_config(config)
-  inference_model.trainable = False
-  return inference_model
-
-
-def BatchGenerator(sequence, vocabulary_size, batch_size=64, seq_len=64,
-                   one_hot_features=False, one_hot_labels=False):
-  num_batches = (len(sequence) - 1) // (batch_size * seq_len)
-  if num_batches == 0:
-    raise ValueError(
-        "No batches created. Use smaller batch size or sequence length.")
-  logging.info("number of batches: %s.", num_batches)
-  rounded_len = num_batches * batch_size * seq_len
-  logging.info("effective text length: %s.", rounded_len)
-
-  x = np.reshape(sequence[: rounded_len], [batch_size, num_batches * seq_len])
-  if one_hot_features:
-    x = OneHotEncode(x, vocabulary_size)
-  logging.info("x shape: %s.", x.shape)
-
-  y = np.reshape(sequence[1: rounded_len + 1],
-                 [batch_size, num_batches * seq_len])
-  if one_hot_labels:
-    y = OneHotEncode(y, vocabulary_size)
-  logging.info("y shape: %s.", y.shape)
-
-  epoch = 0
-  while True:
-    # roll so that no need to reset rnn states over epochs
-    x_epoch = np.split(np.roll(x, -epoch, axis=0), num_batches, axis=1)
-    y_epoch = np.split(np.roll(y, -epoch, axis=0), num_batches, axis=1)
-    for batch in range(num_batches):
-      yield data_generators.DataBatch(X=x_epoch[batch], y=y_epoch[batch])
-    epoch += 1
-
-
 class Model(object):
   """A CLgen Model.
 
@@ -122,8 +57,8 @@ class Model(object):
       raise errors.UserError('TrainingOptions.sequence_length must be >= 1')
 
     # Attributes that will be lazily set.
-    self._model: typing.Optional['keras.models.Sequential'] = None
-    self._current_weights_epoch: int = 0
+    self._training_model: typing.Optional['keras.models.Sequential'] = None
+    self._inference_model: typing.Optional['keras.models.Sequential'] = None
 
     self.config = model_pb2.Model()
     self.config.CopyFrom(builders.AssertIsBuildable(config))
@@ -132,6 +67,7 @@ class Model(object):
     self.cache = cache.mkcache('model', self.hash)
     # Create the necessary cache directories.
     (self.cache.path / 'checkpoints').mkdir(exist_ok=True)
+    (self.cache.path / 'embeddings').mkdir(exist_ok=True)
     (self.cache.path / 'samples').mkdir(exist_ok=True)
     (self.cache.path / 'logs').mkdir(exist_ok=True)
 
@@ -184,7 +120,7 @@ class Model(object):
     return crypto.sha1_list(corpus_.hash,
                             config_to_hash.SerializeToString())
 
-  def GetTrainableModel(self) -> 'keras.models.Sequential':
+  def GetTrainingModel(self) -> 'keras.models.Sequential':
     """Get the Keras model.
 
     If there is a cached model description, the model will be initialized from
@@ -193,30 +129,34 @@ class Model(object):
     Returns:
       A Sequential model instance.
     """
+    if self._training_model:
+      return self._training_model
+
+    self.corpus.Create()
+    with self.lock.acquire(replace_stale=True, block=True):
+      model = self._LockedTrain()
+    self._training_model = model
+    return model
+
+  def GetInferenceModel(self) -> 'keras.models.Sequential':
+    """Like training model, but with batch size 1."""
+    if self._inference_model:
+      return self._inference_model
+
     # Deferred importing of Keras so that we don't have to activate the
     # TensorFlow backend every time we import this module.
     import keras
+    logging.info('Building inference model.')
+    model = self.GetTrainingModel()
+    config = model.get_config()
+    config[0]['config']['batch_input_shape'] = (1, 1)
+    inference_model = keras.models.Sequential.from_config(config)
+    inference_model.trainable = False
+    inference_model.set_weights(model.get_weights())
+    self._inference_model = inference_model
+    return inference_model
 
-    if self.cache.get('model.yaml'):
-      with open(self.cache['model.yaml']) as f:
-        model = keras.models.model_from_yaml(f.read())
-    else:
-      model = builders.BuildKerasModel(self.config, self.corpus.vocabulary_size)
-      with open(self.cache.keypath('model.yaml'), 'w') as f:
-        f.write(model.to_yaml())
-    model.compile(loss='categorical_crossentropy',
-                  optimizer=builders.BuildOptimizer(self.config))
-    # TODO(cec): Capture using StringIO as print_fn and log:
-    model.summary()
-    return model
-
-  @property
-  def model(self) -> 'keras.models.Sequential':
-    if self._model is None:
-      self._model = self.GetTrainableModel()
-    return self._model
-
-  def _LockedTrain(self) -> 'Model':
+  def _LockedTrain(self) -> 'keras.models.Sequential':
     """Locked training.
 
     If there are cached epoch checkpoints, the one closest to the target number
@@ -228,14 +168,35 @@ class Model(object):
     This method must only be called when the model is locked.
 
     Returns:
-      The Model instance (self).
+      The trained Keras model.
     """
+    model = builders.BuildKerasModel(self.config, self.corpus.vocab_size)
+    with open(self.cache.keypath('model.yaml'), 'w') as f:
+      f.write(model.to_yaml())
+    model.compile(loss='categorical_crossentropy',
+                  optimizer=builders.BuildOptimizer(self.config))
+    # TODO(cec): Capture using StringIO as print_fn and log:
+    model.summary()
+
+    # TODO(cec): Add an atomizer.CreateVocabularyFile() method, with frequency
+    # counts for a given corpus.
+    def Escape(token):
+      if token == '\t':
+        return '\\t'
+      elif token == '\n':
+        return '\\n'
+      elif not token.strip():
+        return f"'{token}'"
+      else:
+        return token
+
+    if not (self.cache.path / 'embeddings' / 'metadata.tsv').is_file():
+      with open(self.cache.path / 'embeddings' / 'metadata.tsv', 'w') as f:
+        for _, v in sorted(self.corpus.atomizer.decoder, key=lambda x: x[0]):
+          f.write(Escape(v) + '\n')
+
     target_num_epochs = self.config.training.num_epochs
     starting_epoch = 0
-
-    # Early exit in case the model is already sufficiently trained.
-    if target_num_epochs == self._current_weights_epoch:
-      return self
 
     epoch_checkpoints = self.epoch_checkpoints
     if len(epoch_checkpoints) >= target_num_epochs:
@@ -243,61 +204,50 @@ class Model(object):
       # simply the weights from that epoch and call it a day.
       logging.info('Loading weights from %s',
                    epoch_checkpoints[target_num_epochs - 1])
-      self.model.load_weights(
-          epoch_checkpoints[target_num_epochs - 1])
-      return self
+      model.load_weights(epoch_checkpoints[target_num_epochs - 1])
+      return model
 
-    logging.info('Training model for %d of %d epochs',
-                 target_num_epochs - starting_epoch, target_num_epochs)
-
-    # Deferred importing of Keras so that we don't have to activate the
-    # TensorFlow backend every time we import this module.
-    import keras
-
+    # Now entering the point at which training is inevitable.
     with logutil.TeeLogsToFile('train', self.cache.path / 'logs'):
+      # Deferred importing of Keras so that we don't have to activate the
+      # TensorFlow backend every time we import this module.
+      import keras
+
       if epoch_checkpoints:
         # We have already trained a model at least part of the way to our target
         # number of epochs, so load the most recent one.
-        logging.info('Loading weights from %s',
-                     epoch_checkpoints[target_num_epochs - 1])
-        self.model.load_weights(epoch_checkpoints[-1])
         starting_epoch = len(epoch_checkpoints)
-
-      # model.load_weights(self.most_recent_checkpoint_path)
-      checkpoint_dir = pathlib.Path(self.cache.keypath('checkpoints'))
-      checkpoint_dir.mkdir(parents=True, exist_ok=True)
+        logging.info('Resuming training from epoch %d.', starting_epoch)
+        model.load_weights(epoch_checkpoints[-1])
 
       callbacks = [
         keras.callbacks.ModelCheckpoint(
-            str(checkpoint_dir / "{epoch:03d}.hdf5"), verbose=1, mode="min",
-            save_best_only=False),
-        # keras.callbacks.TensorBoard(
-        #     '${EMBEDDINGS_DIR}', write_graph=True, embeddings_freq=1,
-        #     embeddings_metadata={"embedding_1": "PATH_TO_EMBEDDINGS"}),
+            str(self.cache.path / 'checkpoints' / '{epoch:03d}.hdf5'),
+            verbose=1, mode="min", save_best_only=False),
+        keras.callbacks.TensorBoard(
+            str(self.cache.path / 'embeddings'), write_graph=True,
+            embeddings_freq=1, embeddings_metadata={
+              'embedding_1': str(
+                  self.cache.path / 'embeddings' / 'metadata.tsv'),
+            }),
         telemetry.TrainingLogger(self.cache.path / 'logs').KerasCallback(keras),
       ]
+
       generator = data_generators.AutoGenerator(
           self.corpus, self.config.training)
-
-      generator_ = BatchGenerator(generator.encoded_corpus,
-                                  self.corpus.atomizer.vocab_size,
-                                  batch_size=self.config.training.batch_size,
-                                  seq_len=self.config.training.sequence_length,
-                                  one_hot_features=False, one_hot_labels=True)
-
+      steps_per_epoch = (self.corpus.encoded.token_count - 1) // (
+          self.config.training.batch_size *
+          self.config.training.sequence_length)
       logging.info('Step counts: %s per epoch, %s left to do, %s total',
-                   humanize.intcomma(generator.steps_per_epoch),
-                   humanize.intcomma(
-                       (target_num_epochs - starting_epoch) *
-                       generator.steps_per_epoch),
-                   humanize.intcomma(
-                       target_num_epochs * generator.steps_per_epoch))
-      self.model.fit_generator(generator_,
-                               steps_per_epoch=generator.steps_per_epoch,
-                               epochs=target_num_epochs - starting_epoch,
-                               callbacks=callbacks)
-      self._current_weights_epoch = self.config.training.num_epochs
-    return self
+                   humanize.intcomma(steps_per_epoch),
+                   humanize.intcomma((target_num_epochs - starting_epoch) *
+                                     steps_per_epoch),
+                   humanize.intcomma(target_num_epochs * steps_per_epoch))
+      model.fit_generator(generator,
+                          steps_per_epoch=steps_per_epoch,
+                          epochs=target_num_epochs - starting_epoch,
+                          callbacks=callbacks)
+    return model
 
   def Train(self) -> 'Model':
     """Train the model.
@@ -311,7 +261,8 @@ class Model(object):
     """
     self.corpus.Create()
     with self.lock.acquire(replace_stale=True, block=True):
-      return self._LockedTrain()
+      self._LockedTrain()
+      return self
 
   def Sample(self, sampler: samplers.Sampler,
              min_num_samples: int) -> typing.List[model_pb2.Sample]:
@@ -341,7 +292,7 @@ class Model(object):
         encoded.
     """
     self.SamplerCache(sampler).mkdir(exist_ok=True)
-    self.Train()
+    model = self.GetInferenceModel()
     with logutil.TeeLogsToFile(
         f'sampler_{sampler.hash}', self.cache.path / 'logs'):
       logging.info("Sampling: '%s'", sampler.start_text)
@@ -351,10 +302,6 @@ class Model(object):
 
       sampler.Specialize(self.corpus.atomizer)
       # TODO(cec): Re-implement batched sampling.
-
-      # Save a few cycles by not going via the model() property every time we
-      # need to access it.
-      model = GetInferenceModel(self.model)
 
       samples = []
       while True:
@@ -472,3 +419,12 @@ def WeightedPick(predictions: np.ndarray, temperature: float) -> np.ndarray:
   predictions = predictions_exp / np.sum(predictions_exp)
   predictions = np.random.multinomial(1, predictions, 1)
   return np.argmax(predictions)
+
+
+def SampleProbabilities(probs, clip_after=10):
+  probs = np.array(probs, dtype=np.float64)
+  # Set all probabilities after clip_after to 0.
+  probs[np.argsort(probs)[:-clip_after]] = 0
+  probs /= np.sum(probs)
+  sampled_index = np.random.choice(len(probs), p=probs)
+  return sampled_index
