@@ -1,11 +1,11 @@
 """The CLgen language model."""
 import os
 import pathlib
+import sys
 import typing
 
 import humanize
 import numpy as np
-import sys
 from absl import flags
 from absl import logging
 
@@ -180,7 +180,8 @@ class Model(object):
 
     # TODO(cec): Add an atomizer.CreateVocabularyFile() method, with frequency
     # counts for a given corpus.
-    def Escape(token):
+    def Escape(token: str) -> str:
+      """Make a token visible and printable."""
       if token == '\t':
         return '\\t'
       elif token == '\n':
@@ -192,8 +193,9 @@ class Model(object):
 
     if not (self.cache.path / 'embeddings' / 'metadata.tsv').is_file():
       with open(self.cache.path / 'embeddings' / 'metadata.tsv', 'w') as f:
-        for _, v in sorted(self.corpus.atomizer.decoder, key=lambda x: x[0]):
-          f.write(Escape(v) + '\n')
+        for _, token in sorted(self.corpus.atomizer.decoder.items(),
+                               key=lambda x: x[0]):
+          f.write(Escape(token) + '\n')
 
     target_num_epochs = self.config.training.num_epochs
     starting_epoch = 0
