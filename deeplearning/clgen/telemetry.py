@@ -44,7 +44,7 @@ class TrainingLogger(object):
         epoch_wall_time_ms=epoch_time_ms,
         loss=logs['loss'],
     )
-    pbutil.ToFile(telemetry, self.logdir / f'epoch_{epoch:03d}_end.pbtxt')
+    pbutil.ToFile(telemetry, self.logdir / f'epoch_{epoch:03d}_telemetry.pbtxt')
 
   def KerasCallback(self, keras):
     """Returns the keras callback to passed to a model's fit() function."""
@@ -57,5 +57,5 @@ class TrainingLogger(object):
     return [
       pbutil.FromFile(self.logdir / p, telemetry_pb2.ModelEpochTelemetry())
       for p in sorted(self.logdir.iterdir())
-      if re.match(r'epoch_\d\d+_end\.pbtxt', str(p.name))
+      if re.match(r'epoch_\d\d+_telemetry\.pbtxt', str(p.name))
     ]
