@@ -9,6 +9,7 @@ fit_generator() method to stream batches of training data.
 import collections
 import sys
 import time
+import typing
 
 import humanize
 import numpy as np
@@ -26,199 +27,127 @@ FLAGS = flags.FLAGS
 DataBatch = collections.namedtuple('DataBatch', ['X', 'y'])
 
 
-class DataGeneratorBase(object):
-  """The base class for training data generators."""
-
-  def __init__(self, corpus: corpuses.Corpus,
-               training_opts: model_pb2.TrainingOptions):
-    """Instantiate a data generator.
-
-    Args:
-      corpus: A Corpus instance.
-      training_opts: A TrainingOptions config proto.
-
-    Raises:
-      UserError: If the corpus is smaller than the sequence length.
-    """
-    self.corpus = corpus
-    self.training_opts = training_opts
-    self.shuffle = training_opts.shuffle_corpus_contentfiles_between_epochs
-    start_time = time.time()
-    self.encoded_corpus = self.corpus.GetTrainingData(shuffle=self.shuffle)
-    logging.info('Assembled encoded corpus: %s in %s ms',
-                 humanize.naturalsize(sys.getsizeof(self.encoded_corpus)),
-                 humanize.intcomma(int((time.time() - start_time) * 1000)))
-    self.corpus_length = len(self.encoded_corpus)
-    self.sequence_length = self.training_opts.sequence_length
-    if self.sequence_length >= self.corpus_length:
-      max_sequence_length = self.corpus_length - 1
-      raise errors.UserError(
-          f'Requested training.sequence_length ({self.sequence_length}) is '
-          f'larger than the corpus ({self.corpus_length}). '
-          f'Reduce the sequence length to <= {max_sequence_length}.')
-    self.batch_size = min(
-        training_opts.batch_size,
-        max(self.corpus_length - self.training_opts.sequence_length - 1, 1))
-    if self.batch_size < training_opts.batch_size:
-      logging.warning(
-          'Requested training.batch_size (%d) is larger than the corpus (%d). '
-          'Reduced batch size to %d', training_opts.batch_size,
-          self.corpus_length, self.batch_size)
-
-    # Set this publicly visibly attribute. The number of steps per epoch is
-    # the total number of batches per epoch.
-    self.steps_per_epoch = int(
-        self.corpus_length / (self.batch_size * self.sequence_length))
-
-  def __next__(self) -> DataBatch:
-    raise NotImplementedError('DataGeneratorBase is abstract')
-
-  def Vectorize(self, data: DataBatch) -> DataBatch:
-    """One-hot encode a sequence of encoded tokens.
-
-    Args:
-      data: An X,y pair of encoded token sequences.
-
-    Returns:
-      One-hot encoded sequences.
-    """
-    # TODO(cec): Use keras to_categorical() instead of vectorizing by hand.
-    # _ = keras.utils.to_categorical(data.y, self.corpus.vocabulary_size)
-
-    X = np.zeros((len(data.X), len(data.X[0]), self.corpus.vocabulary_size),
-                 dtype=np.bool)
-    y = np.zeros((len(data.y), self.corpus.vocabulary_size), dtype=np.bool)
-    for i, sequence in enumerate(data.X):
-      for t, encoded_char in enumerate(sequence):
-        X[i, t, encoded_char] = 1
-      y[i, data.y[i]] = 1
-    return DataBatch(X=X, y=y)
-
-
-class LazyVectorizingGenerator(DataGeneratorBase):
-  """A data generator which vectorizes an encoded corpus in batches.
-
-  This generator converts only enough of the encoded corpus into one-hot vectors
-  as is necessary for a single batch. The memory requirement is
-  O(batch_size * vocab_size). This is slower than one-hot encoding the entire
-  corpus, but requires less memory.
-  """
-
-  def __init__(self, corpus: corpuses.Corpus,
-               training_opts: model_pb2.TrainingOptions):
-    super(LazyVectorizingGenerator, self).__init__(corpus, training_opts)
-    self.skip = 1  # TODO(cec): Add this as a field in Model.TrainingOptions.
-
-    # Start index into the encoded corpus.
-    self.i = 0
-
-    # Create a dummy batch of data to get the size of it.
-    x = np.zeros(
-        (self.batch_size, self.sequence_length,
-         self.corpus.vocabulary_size),
-        dtype=np.bool)
-    y = np.zeros((self.batch_size, self.corpus.vocabulary_size), dtype=np.bool)
-    batch_size = sys.getsizeof(x) + sys.getsizeof(y)
-    logging.info('%s: %s per batch, %s per epoch, %s total',
-                 type(self).__name__,
-                 humanize.naturalsize(batch_size),
-                 humanize.naturalsize(batch_size * self.steps_per_epoch),
-                 humanize.naturalsize(batch_size * self.steps_per_epoch *
-                                      self.training_opts.num_epochs))
-
-  def __next__(self) -> DataBatch:
-    """Generate the next batch of X, y pairs."""
-    start_time = time.time()
-    # Return to the start of the encoded corpus if we've run out of text.
-    if (self.i + self.batch_size + self.sequence_length + 1 >=
-        self.corpus_length):
-      self.i = 0
-      if self.shuffle:
-        self.encoded_corpus = self.corpus.GetTrainingData(shuffle=True)
-
-    X_data = np.ndarray((self.batch_size, self.sequence_length),
-                        dtype=np.int32)
-    y_data = np.ndarray((self.batch_size,), dtype=np.int32)
-    for i in range(0, self.batch_size, self.skip):
-      sequence = np.array(
-          self.encoded_corpus[self.i + i:self.i + i + self.sequence_length])
-      next_token = self.encoded_corpus[self.i + i + self.sequence_length]
-      X_data[i:, ] = sequence
-      y_data[i] = next_token
-
-    logging.debug('%s %dx%d batch %.2f ms',
-                  type(self).__name__,
-                  self.batch_size, self.sequence_length,
-                  (time.time() - start_time) * 1000)
-
-    self.i += self.batch_size
-    return self.Vectorize(DataBatch(X=X_data, y=y_data))
-
-
-class BatchesGenerator(DataGeneratorBase):
-
-  def __init__(self, corpus: corpuses.Corpus,
-               training_opts: model_pb2.TrainingOptions):
-    super(BatchesGenerator, self).__init__(corpus, training_opts)
-
-    # Index into the batches arrays.
-    self.i = 0
-
-    corpus_end = self.steps_per_epoch * self.batch_size * self.sequence_length
-
-    x = np.reshape(
-        self.encoded_corpus[:corpus_end],
-        [self.batch_size, self.steps_per_epoch * self.sequence_length])
-
-    y = np.reshape(
-        self.encoded_corpus[1:corpus_end + 1],
-        [self.batch_size, self.steps_per_epoch * self.sequence_length])
-    # One hot encode the y data.
-    y = np.eye(self.corpus.atomizer.vocab_size)[y]
-
-    # TODO(cec):
-    # x = self.encoded_corpus[corpus_end]
-    # y = np.copy(self.encoded_corpus[corpus_end])
-    # # Shift the y data along by one.
-    # y[:-1] = x[1:]
-    # # The end of the corpus wraps around to the start.
-    # y[-1] = x[0]
-    x_batches = np.split(x.reshape(self.batch_size, -1),
-                         self.steps_per_epoch, 1)
-    y_batches = np.split(y.reshape(self.batch_size, -1),
-                         self.steps_per_epoch, 1)
-    self.batches = [DataBatch(X=x, y=y) for x, y in zip(x_batches, y_batches)]
-
-    batch_size = sys.getsizeof(self.batches[0])
-    logging.info('%s: %s per batch, %s per epoch, %s total',
-                 type(self).__name__,
-                 humanize.naturalsize(batch_size),
-                 humanize.naturalsize(batch_size * self.steps_per_epoch),
-                 humanize.naturalsize(batch_size * self.steps_per_epoch *
-                                      self.training_opts.num_epochs))
-
-  def __next__(self) -> DataBatch:
-    """Generate the next batch of X, y pairs."""
-    self.i += 1
-    # Wrap around to the start of the corpus if we have ran out of data.
-    if self.i >= self.steps_per_epoch:
-      self.i = 0
-    return self.batches[self.i]
-
-
-def AutoGenerator(corpus: corpuses.Corpus,
-                  training_opts: model_pb2.TrainingOptions) -> DataGeneratorBase:
+def AutoGenerator(
+    corpus: corpuses.Corpus,
+    training_opts: model_pb2.TrainingOptions) -> typing.Generator[
+  DataBatch, typing.Any, None]:
   """Determine and construct what we believe to be the best data generator.
 
-  The optimum generator will depend on the size of the corpus, the amount of
-  memory available, and the vocabulary encoding.
+  The optimum generator will depend on the corpus, the amount of memory
+  available, and the vocabulary encoding.
 
   Args:
     corpus: A Corpus instance.
     training_opts: A TrainingOptions proto.
 
   Returns:
-    A DataGenorator instance, ready to be used in a model's fit_generator()
-    method.
+    A generator suitable for use by a model's fit_generator() method.
   """
-  return BatchesGenerator(corpus, training_opts)
+  return BatchGenerator(corpus, training_opts)
+
+
+def BatchGenerator(corpus: corpuses.Corpus,
+                   training_opts: model_pb2.TrainingOptions):
+  """
+
+  Args:
+    corpus: A Corpus instance.
+    training_opts: A TrainingOptions proto.
+
+  Returns:
+    A generator suitable for use by a model's fit_generator() method.
+
+  Raises:
+    UserError: If batch_size and sequence_length are too large for the corpus,
+      yielding no batches.
+  """
+  x, y, steps_per_epoch = GetTrainingCorpus(corpus, training_opts)
+
+  # Per-epoch outer loop.
+  epoch_num = 0
+  while True:
+    if not epoch_num:
+      logging.info("Step shape: X: %s, y: %s.", x.shape, y.shape)
+      total_size = sys.getsizeof(x) + sys.getsizeof(y)
+      logging.info(
+          'Memory: %s per batch, %s per epoch, %s total.',
+          humanize.naturalsize(
+              total_size / (steps_per_epoch * training_opts.num_epochs)),
+          humanize.naturalsize(total_size / training_opts.num_epochs),
+          humanize.naturalsize(total_size))
+
+    # Re-shuffle corpus if needed.
+    if epoch_num and training_opts.shuffle_corpus_contentfiles_between_epochs:
+      x, y, steps_per_epoch = GetTrainingCorpus(corpus, training_opts)
+
+    # Roll so that we don't need to reset model states over epochs.
+    x_epoch = np.split(np.roll(x, -epoch_num, axis=0), steps_per_epoch, axis=1)
+    y_epoch = np.split(np.roll(y, -epoch_num, axis=0), steps_per_epoch, axis=1)
+    # Per-batch inner loop.
+    for batch in range(steps_per_epoch):
+      yield DataBatch(X=x_epoch[batch], y=y_epoch[batch])
+    epoch_num += 1
+
+
+def GetTrainingCorpus(
+    corpus: corpuses.Corpus,
+    training_opts: model_pb2.TrainingOptions) -> typing.Tuple[
+  np.ndarray, np.ndarray, int]:
+  """Get the corpus to train over.
+
+  Args:
+    corpus: A Corpus instance.
+    training_opts: A TrainingOptions proto.
+
+  Returns:
+    An X, y pair of data for an epoch, and the number of steps in the epoch.
+
+  Raises:
+    UserError: If batch_size and sequence_length are too large for the corpus,
+      yielding no batches.
+  """
+  start_time = time.time()
+  encoded_corpus = corpus.GetTrainingData(
+      shuffle=training_opts.shuffle_corpus_contentfiles_between_epochs)
+  corpus_length = len(encoded_corpus)
+  steps_per_epoch = (corpus_length - 1) // (
+      training_opts.batch_size * training_opts.sequence_length)
+  if not steps_per_epoch:
+    raise errors.UserError(
+        f'Requested batch size ({training_opts.batch_size}) and '
+        f'sequence length ({training_opts.sequence_length}) are too large for '
+        f'corpus of size {corpus_length}.')
+
+  clipped_corpus_length = (
+      steps_per_epoch * training_opts.batch_size *
+      training_opts.sequence_length)
+
+  x = np.reshape(
+      encoded_corpus[:clipped_corpus_length],
+      [training_opts.batch_size,
+       steps_per_epoch * training_opts.sequence_length])
+  y = np.reshape(
+      encoded_corpus[1:clipped_corpus_length + 1],
+      [training_opts.batch_size,
+       steps_per_epoch * training_opts.sequence_length])
+  y = OneHotEncode(y, corpus.vocab_size)
+
+  logging.info(
+      'Encoded corpus of %s tokens (clipped last %s tokens) in %s ms.',
+      humanize.intcomma(clipped_corpus_length),
+      humanize.intcomma(corpus_length - clipped_corpus_length),
+      humanize.intcomma(int((time.time() - start_time) * 1000)))
+  return x, y, steps_per_epoch
+
+
+def OneHotEncode(indices: np.ndarray, vocabulary_size: int):
+  """One-hot encode an array of vocabulary indices.
+
+    Args:
+      indices: A 1D array of vocabulary indices.
+      vocabulary_size: The size of the vocabulary.
+
+    Returns:
+      A 2D array of one-hot encoded tokens.
+    """
+  return np.eye(vocabulary_size)[indices]

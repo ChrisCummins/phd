@@ -223,9 +223,9 @@ class Corpus(object):
     return atomizer
 
   @property
-  def vocabulary_size(self) -> int:
+  def vocab_size(self) -> int:
     """Get the number of elements in the corpus vocabulary."""
-    return len(self.atomizer.vocab)
+    return self.atomizer.vocab_size
 
   @property
   def size(self) -> int:
