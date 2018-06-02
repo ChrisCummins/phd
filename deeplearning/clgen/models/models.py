@@ -421,14 +421,3 @@ def WeightedPick(predictions: np.ndarray, temperature: float) -> int:
   predictions = predictions_exp / np.sum(predictions_exp)
   predictions = np.random.multinomial(1, predictions, 1)
   return np.argmax(predictions)
-
-
-def SampleProbabilities(predictions: np.ndarray, clip_after=10) -> int:
-  """Make a weighted choice from a predictions array."""
-  predictions = np.array(predictions, dtype=np.float64)
-  # Set all probabilities after clip_after to 0.
-  predictions[np.argsort(predictions)[:-clip_after]] = 0
-  # Normalize the probabilities.
-  predictions /= np.sum(predictions)
-  sampled_index = np.random.choice(len(predictions), p=predictions)
-  return sampled_index
