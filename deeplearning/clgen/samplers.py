@@ -193,6 +193,7 @@ class Sampler(object):
     self.terminators = GetTerminationCriteria(self.config.termination_criteria)
     self.start_text = self.config.start_text
     self.temperature = self.config.temperature_micros / 1e6
+    self.batch_size = self.config.batch_size
     # Set in Specialize().
     self.encoded_start_text = None
     self.tokenized_start_text = None

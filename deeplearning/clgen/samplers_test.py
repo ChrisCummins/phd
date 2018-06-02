@@ -194,6 +194,13 @@ def test_Sampler_temperature(abc_sampler_config: sampler_pb2.Sampler):
   assert pytest.approx(1.0) == s.temperature
 
 
+def test_Sampler_batch_size(abc_sampler_config: sampler_pb2.Sampler):
+  """Test that batch_size is set from Sampler proto."""
+  abc_sampler_config.batch_size_micros = 99
+  s = samplers.Sampler(abc_sampler_config)
+  assert 99 == s.batch_size
+
+
 # Sampler.Specialize() tests.
 
 def test_Sampler_Specialize_invalid_depth_tokens(
