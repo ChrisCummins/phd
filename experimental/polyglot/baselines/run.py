@@ -51,6 +51,7 @@ def ExtractAllSubsamples(text: str, atomizer: atomizers.AtomizerBase,
 
 
 def SampleModel(instance: clgen.Instance) -> None:
+  """Make --output_corpus_size samples from model."""
   logging.info('Training and sampling the CLgen model ...')
   target_samples = FLAGS.output_corpus_size
   num_samples = 0
@@ -63,9 +64,10 @@ def SampleModel(instance: clgen.Instance) -> None:
 
 
 def CreateOutputCorpus(instance: clgen.Instance) -> corpuses.Corpus:
+  """Create a CLgen corpus from the samples we just made."""
   out_dir = pathlib.Path(
       str(instance.model.SamplerCache(instance.sampler)) + '.postprocessed')
-  logging.info('Creating output contentfiles at %s', out_dir)
+  logging.info('Creating output corpus at %s', out_dir)
 
   out_dir.mkdir(exist_ok=True)
   sample_dir = instance.model.SamplerCache(instance.sampler)
