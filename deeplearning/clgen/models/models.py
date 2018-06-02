@@ -258,10 +258,9 @@ class Model(object):
                    humanize.intcomma((target_num_epochs - starting_epoch) *
                                      steps_per_epoch),
                    humanize.intcomma(target_num_epochs * steps_per_epoch))
-      model.fit_generator(generator,
-                          steps_per_epoch=steps_per_epoch,
-                          epochs=target_num_epochs - starting_epoch,
-                          callbacks=callbacks)
+      model.fit_generator(
+          generator, steps_per_epoch=steps_per_epoch, callbacks=callbacks,
+          initial_epoch=starting_epoch, epochs=target_num_epochs)
     return model
 
   def Train(self) -> 'Model':
