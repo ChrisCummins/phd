@@ -9,7 +9,7 @@ BRANCH_NAME="$(git -C "$ROOT" branch | grep '*' | sed 's/* //')"
 
 main() {
   source "$ROOT/.env"
-  # TODO(cec): Implement!
+  git -C "$ROOT" push
 }
 
 if [[ "$BRANCH_NAME" != '(no branch)' ]]; then
