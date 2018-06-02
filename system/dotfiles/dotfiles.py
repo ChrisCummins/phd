@@ -1818,6 +1818,17 @@ class LibExempi(Task):
     Homebrew().install_package('exempi')
 
 
+class LibMySQL(Task):
+  __platforms__ = ['osx', 'linux']
+  __deps__ = []
+
+  def install(self):
+    pass
+
+  def install_linux(self):
+    Apt().install_package('libmysqlclient-dev')
+
+
 class Clang(Task):
   __platforms__ = ['linux', 'osx']
   __deps__ = ['Homebrew']
@@ -1876,6 +1887,7 @@ class PhdBuildDeps(Task):
       'GnuCoreutils',
       'LaTeX',
       'LibExempi',
+      'LibMySQL',
       'Python',
       'Rsync',
   ]
