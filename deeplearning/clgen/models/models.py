@@ -64,6 +64,7 @@ class Model(object):
     # Attributes that will be lazily set.
     self._training_model: typing.Optional['keras.models.Sequential'] = None
     self._inference_model: typing.Optional['keras.models.Sequential'] = None
+    self._inference_batch_size: typing.Optional[int] = None
 
     self.config = model_pb2.Model()
     self.config.CopyFrom(builders.AssertIsBuildable(config))
@@ -133,10 +134,10 @@ class Model(object):
     self._training_model = self.GetTrainedModel()
     return self._training_model
 
-  def GetInferenceModel(self) -> 'keras.models.Sequential':
+  def GetInferenceModel(self) -> typing.Tuple['keras.models.Sequential', int]:
     """Like training model, but with batch size 1."""
     if self._inference_model:
-      return self._inference_model
+      return self._inference_model, self._inference_batch_size
 
     import keras
 
@@ -158,6 +159,7 @@ class Model(object):
     inference_model.trainable = False
     inference_model.set_weights(model.get_weights())
     self._inference_model = inference_model
+    self._inference_batch_size = batch_size
     return inference_model, batch_size
 
   def GetTrainedModel(self) -> 'keras.models.Sequential':
