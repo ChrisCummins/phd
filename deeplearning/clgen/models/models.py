@@ -326,9 +326,8 @@ class Model(object):
           # Input shape: (1, 1).
           probabilities = model.predict(x)
           # Output shape: (1, 1, vocab_size).
-          # TODO(cec): Make configurable, or use old weighted pick.
-          top_n = 10
-          next_index = SampleProbabilities(probabilities.squeeze(), top_n)
+          next_index = WeightedPick(
+              probabilities.squeeze(), sampler.temperature)
           # append to sequence
           token = self.corpus.atomizer.decoder[next_index]
           sample_in_progress.append(token)

@@ -252,8 +252,17 @@ def test_Model_Sample_exact_multiple_of_batch_size(clgen_cache_dir,
   assert len(m.Sample(MockSampler(batch_size=2), 4)) == 4
 
 
-# Benchmarks.
+def test_Model_GetInferenceModel_predict_output_shape(clgen_cache_dir,
+                                                      abc_model_config):
+  """Test that predict() on inference model is one-hot encoded."""
+  del clgen_cache_dir
+  m = models.Model(abc_model_config)
+  im = m.GetInferenceModel()
+  probabilities = im.predict(np.array([[0]]))
+  assert (1, 1, m.corpus.vocab_size) == probabilities.shape
 
+
+# Benchmarks.
 def test_benchmark_Model_instantiation(clgen_cache_dir, abc_model_config,
                                        benchmark):
   """Benchmark model instantiation.
