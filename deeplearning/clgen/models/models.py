@@ -126,22 +126,12 @@ class Model(object):
                             config_to_hash.SerializeToString())
 
   def GetTrainingModel(self) -> 'keras.models.Sequential':
-    """Get the Keras model.
-
-    If there is a cached model description, the model will be initialized from
-    that. Else, it is constructed from the proto config.
-
-    Returns:
-      A Sequential model instance.
-    """
+    """Get the Keras model."""
     if self._training_model:
       return self._training_model
-
     self.corpus.Create()
-    with self.lock.acquire(replace_stale=True, block=True):
-      model = self._LockedTrain()
-    self._training_model = model
-    return model
+    self._training_model = self.GetTrainedModel()
+    return self._training_model
 
   def GetInferenceModel(self) -> 'keras.models.Sequential':
     """Like training model, but with batch size 1."""
@@ -169,6 +159,19 @@ class Model(object):
     inference_model.set_weights(model.get_weights())
     self._inference_model = inference_model
     return inference_model, batch_size
+
+  def GetTrainedModel(self) -> 'keras.models.Sequential':
+    """Get and return a trained Keras model."""
+    with self.lock.acquire(replace_stale=True, block=True):
+      model = self._LockedTrain()
+    total_time_ms = sum(
+        t.epoch_wall_time_ms
+        for t in self.TrainingTelemetry()[:self.config.training.num_epochs])
+    logging.info('Trained model for %d epochs in %s ms (%s).',
+                 self.config.training.num_epochs,
+                 humanize.intcomma(total_time_ms),
+                 humanize.naturaldelta(total_time_ms / 1000))
+    return model
 
   def _LockedTrain(self) -> 'keras.models.Sequential':
     """Locked training.
@@ -278,9 +281,8 @@ class Model(object):
         process currently modifying the model).
     """
     self.corpus.Create()
-    with self.lock.acquire(replace_stale=True, block=True):
-      self._LockedTrain()
-      return self
+    self.GetTrainedModel()
+    return self
 
   def Sample(self, sampler: samplers.Sampler,
              min_num_samples: int) -> typing.List[model_pb2.Sample]:
@@ -364,8 +366,8 @@ class Model(object):
                   sample_time_ms=end_time - start_time,
                   wall_time_ms=end_time - wall_time_start,
                   num_tokens=len(samples_in_progress[i]))
-              print(f'\n=== BEGIN CLGEN SAMPLE {sample_count} '
-                    f'===\n\n{sample.text}')
+              print(f'=== BEGIN CLGEN SAMPLE {sample_count} '
+                    f'===\n\n{sample.text}\n')
               sample_count += 1
               sample_id = crypto.sha256_str(sample.text)
               sample_path = self.SamplerCache(sampler) / f'{sample_id}.pbtxt'
@@ -382,7 +384,7 @@ class Model(object):
           logging.info(
               'Produced %s samples at a rate of %s ms / sample.',
               humanize.intcomma(len(samples)),
-              humanize.intcomma(int((sample_start_time - now) / len(samples))))
+              humanize.intcomma(int((now - sample_start_time) / len(samples))))
           break
 
     return samples
