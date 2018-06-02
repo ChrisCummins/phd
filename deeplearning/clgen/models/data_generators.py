@@ -46,9 +46,16 @@ def AutoGenerator(
   return BatchGenerator(corpus, training_opts)
 
 
-def BatchGenerator(corpus: corpuses.Corpus,
-                   training_opts: model_pb2.TrainingOptions):
-  """
+def BatchGenerator(
+    corpus: corpuses.Corpus,
+    training_opts: model_pb2.TrainingOptions) -> typing.Generator[
+  DataBatch, typing.Any, None]:
+  """A batch generator which lazily one-hot encodes the y vectors.
+
+  This reduces the memory overhead by only one-hot encoding the y vectors on a
+  per-batch basis. This is of course slower than one-hot encoding the entire
+  y corpus, but that requires more memory than is available on many systems for
+  a reasonable corpus.
 
   Args:
     corpus: A Corpus instance.
@@ -56,10 +63,6 @@ def BatchGenerator(corpus: corpuses.Corpus,
 
   Returns:
     A generator suitable for use by a model's fit_generator() method.
-
-  Raises:
-    UserError: If batch_size and sequence_length are too large for the corpus,
-      yielding no batches.
   """
   x, y, steps_per_epoch = GetTrainingCorpus(corpus, training_opts)
 
