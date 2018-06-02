@@ -154,12 +154,19 @@ def test_SymmetricalTokenDepthCriterion_SampleIsComplete():
   """Test SampleIsComplete() returns expected values."""
   t = samplers.SymmetricalTokenDepthCriterion(sampler_pb2.SymmetricalTokenDepth(
       depth_increase_token='+', depth_decrease_token='-'))
+  # Depth 0, incomplete.
   assert not t.SampleIsComplete([])
+  # Depth 1, incomplete.
   assert not t.SampleIsComplete(['+'])
-  assert not t.SampleIsComplete(['-'])
+  # Depth -1, complete.
+  assert t.SampleIsComplete(['-'])
+  # Depth 0, complete.
   assert t.SampleIsComplete(['+', '-'])
+  # Depth 1, incomplete.
   assert not t.SampleIsComplete(['a', '+', 'b', 'c'])
+  # Depth 1, incomplete.
   assert not t.SampleIsComplete(['a', '+', '+', 'b', 'c', '-'])
+  # Depth 0, complete.
   assert t.SampleIsComplete(['a', '+', '-', '+', 'b', 'c', '-'])
 
 
@@ -196,7 +203,7 @@ def test_Sampler_temperature(abc_sampler_config: sampler_pb2.Sampler):
 
 def test_Sampler_batch_size(abc_sampler_config: sampler_pb2.Sampler):
   """Test that batch_size is set from Sampler proto."""
-  abc_sampler_config.batch_size_micros = 99
+  abc_sampler_config.batch_size = 99
   s = samplers.Sampler(abc_sampler_config)
   assert 99 == s.batch_size
 

@@ -133,9 +133,13 @@ class SymmetricalTokenDepthCriterion(TerminationCriterionBase):
     if not sample_in_progress[-1] == self.right_token:
       return False
     left_token_count = sample_in_progress.count(self.left_token)
+    right_token_count = sample_in_progress.count(self.right_token)
+    # We have descending into negative depth, so abort.
+    if right_token_count and not left_token_count:
+      return True
+    # We haven't started balancing the tokens yet.
     if not left_token_count:
       return False
-    right_token_count = sample_in_progress.count(self.right_token)
     return left_token_count - right_token_count == 0
 
 
