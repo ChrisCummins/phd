@@ -79,15 +79,12 @@ def RewriteGitSubmodulesToHttps():
     f.write(new_modules)
 
 
-def RunAsHomebrewUser(cmd):
+def RunAsHomebrewUser(cmd, subprocess_fn=subprocess.check_call):
   if os.path.isdir('/home/linuxbrew'):
-    proc = subprocess.Popen(
-        ['sudo', '-H', '-u', 'linuxbrew', 'bash', '-c',
-         ' '.join(cmd)])
-    proc.communicate()
+    return subprocess_fn(
+        ['sudo', '-H', '-u', 'linuxbrew', 'bash', '-c', ' '.join(cmd)])
   else:
-    proc = subprocess.Popen(cmd)
-    proc.communicate()
+    return subprocess_fn(cmd)
 
 
 def main(argv):
@@ -119,8 +116,11 @@ def main(argv):
     return
 
   # Uname in lowercase.
+  uname_path = '/usr/bin/uname'
+  if os.path.isfile('/bin/uname'):
+    uname_path = '/bin/uname'
   uname = subprocess.check_output(
-      ['/usr/bin/uname'], universal_newlines=True).rstrip().lower()
+    [uname_path], universal_newlines=True).rstrip().lower()
 
   if IsGitRepo():
     git_remote = GetGitRemote()
@@ -168,11 +168,21 @@ def main(argv):
   with open(requirements_txt_path, 'w') as f:
     f.write(requirements_txt)
 
+  pip_packages = RunAsHomebrewUser(
+    [python_path, '-m', 'pip', 'freeze'], subprocess.check_output).decode('utf-8')
+  if with_cuda and 'tensorflow==' in pip_packages:
+    print('Detected CUDA, so uninstalling CPU TensorFlow')
+    RunAsHomebrewUser(
+      [python_path, '-m', 'pip', 'uninstall', '-y', '-q', 'tensorflow'])
+  elif not with_cuda and 'tensorflow-gpu==' in pip_packages:
+    print('CUDA not detected, so uninstalling GPU TensorFlow')
+    RunAsHomebrewUser(
+      [python_path, '-m', 'pip', 'uninstall', '-y', '-q', 'tensorflow-gpu'])
+
+  print('Installing Python packages', file=sys.stderr)
   RunAsHomebrewUser(
-      [python_path, '-m', 'pip', 'uninstall', '-y',
-       'tensorflow', 'tensorflow-gpu'])
-  RunAsHomebrewUser(
-      [python_path, '-m', 'pip', 'install', '-r', requirements_txt_path])
+      [python_path, '-m', 'pip', 'install', '--no-warn-script-location', '-q',
+       '-r', requirements_txt_path])
 
   if uname == 'darwin':
     assert os.path.isfile('/usr/local/bin/brew')
