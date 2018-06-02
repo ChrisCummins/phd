@@ -147,23 +147,6 @@ genrule(
 )
 
 genrule(
-    name = "2018_07_issta",
-    srcs = glob([
-        "2018_07_issta/**/*.tex",
-        "2018_07_issta/build/img/*.pdf",
-        "2018_07_issta/build/tab/*.tex",
-        "2018_07_issta/img/*",
-        "2018_07_issta/refs.bib",
-        "2018_07_issta/etoolbox.def",
-        "2018_07_issta/**/*.sty",
-        "2018_07_issta/jpaper.cls",
-    ]),
-    outs = ["2018_07_issta.pdf"],
-    cmd = "$(location //tools:autotex) docs/2018_07_issta/paper.tex $@",
-    tools = ["//tools:autotex"],
-)
-
-genrule(
     name = "cv",
     srcs = glob([
         "cv/**/*.tex",

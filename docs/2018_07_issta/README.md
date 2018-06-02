@@ -36,8 +36,8 @@
 > compilers in 12 hours of automated testing.
 
 ```
-@inproceedings{cummins2018a,
-  title={Synthesizing Benchmarks for Predictive Modeling},
+@inproceedings{cummins2018b,
+  title={Compiler Fuzzing through Deep Learning},
   author={Cummins, Chris and Petoumenos, Pavlos and Murray, Alastair and Leather, Hugh},
   booktitle={ISSTA},
   year={2018},
