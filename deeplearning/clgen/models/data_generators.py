@@ -69,17 +69,6 @@ def BatchGenerator(
   # Per-epoch outer loop.
   epoch_num = 0
   while True:
-    if not epoch_num:
-      # TODO(cec): y is lazily encoded, this size is wrong.
-      logging.info("Step shape: X: %s, y: %s.", x.shape, y.shape)
-      total_size = sys.getsizeof(x) + sys.getsizeof(y)
-      logging.info(
-          'Memory: %s per batch, %s per epoch, %s total.',
-          humanize.naturalsize(
-              total_size / (steps_per_epoch * training_opts.num_epochs)),
-          humanize.naturalsize(total_size / training_opts.num_epochs),
-          humanize.naturalsize(total_size))
-
     # Re-shuffle corpus if needed.
     if epoch_num and training_opts.shuffle_corpus_contentfiles_between_epochs:
       x, y, steps_per_epoch = GetTrainingCorpus(corpus, training_opts)
@@ -88,9 +77,14 @@ def BatchGenerator(
     x_epoch = np.split(np.roll(x, -epoch_num, axis=0), steps_per_epoch, axis=1)
     y_epoch = np.split(np.roll(y, -epoch_num, axis=0), steps_per_epoch, axis=1)
     # Per-batch inner loop.
-    for batch in range(steps_per_epoch):
-      yield DataBatch(
-          X=x_epoch[batch], y=OneHotEncode(y_epoch[batch], corpus.vocab_size))
+    for batch_num in range(steps_per_epoch):
+      batch = DataBatch(
+          X=x_epoch[batch_num],
+          # Lazy one-hot encoding.
+          y=OneHotEncode(y_epoch[batch_num], corpus.vocab_size))
+      if not batch_num and not epoch_num:
+        LogBatchTelemetry(batch, steps_per_epoch, training_opts.num_epochs)
+      yield batch
     epoch_num += 1
 
 
@@ -155,3 +149,18 @@ def OneHotEncode(indices: np.ndarray, vocabulary_size: int):
       A 2D array of one-hot encoded tokens.
     """
   return np.eye(vocabulary_size)[indices]
+
+
+def LogBatchTelemetry(batch: DataBatch, steps_per_epoch: int,
+                      num_epochs: int) -> None:
+  """Log analytics about the batch."""
+  logging.info("Step shape: X: %s, y"
+               ": %s.", batch.X.shape, batch.y.shape)
+  # sys.getsizeof() includes only the memory required for an object, not any
+  # objects it refernces, so we must manually sum the X and y arrays.
+  batch_size = sys.getsizeof(batch) + batch.X.nbytes + batch.y.nbytes
+  logging.info(
+      'Memory: %s per batch, %s per epoch, %s total.',
+      humanize.naturalsize(batch_size),
+      humanize.naturalsize(batch_size * steps_per_epoch),
+      humanize.naturalsize(batch_size * steps_per_epoch * num_epochs))
