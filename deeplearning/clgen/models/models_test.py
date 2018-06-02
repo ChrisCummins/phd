@@ -257,9 +257,9 @@ def test_Model_GetInferenceModel_predict_output_shape(clgen_cache_dir,
   """Test that predict() on inference model is one-hot encoded."""
   del clgen_cache_dir
   m = models.Model(abc_model_config)
-  im = m.GetInferenceModel()
-  probabilities = im.predict(np.array([[0]]))
-  assert (1, 1, m.corpus.vocab_size) == probabilities.shape
+  im, batch_size = m.GetInferenceModel()
+  probabilities = im.predict(np.array([[0]]) * batch_size)
+  assert (batch_size, 1, m.corpus.vocab_size) == probabilities.shape
 
 
 # WeightedPick() tests.
