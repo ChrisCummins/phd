@@ -17,11 +17,11 @@ main() {
 
   if [[ "$COMMITS_BEHIND_UPSTREAM" > 0 ]]; then
     echo "Current branch is $COMMITS_BEHIND_UPSTREAM commits behind origin/master, creating stash ..." >&2
-    git -C "$ROOT" stash --keep-index
+    git -C "$ROOT" stash
     echo "Rebasing ..."
     git -C "$ROOT" pull --rebase
     echo "Popping stash ..."
-    git -C "$ROOT" stash pop
+    git -C "$ROOT" stash pop --index
   fi
 }
 
