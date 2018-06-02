@@ -38,7 +38,7 @@ def ExtractAllSubsamples(text: str, start_text: str, left_char: str,
   """
   out = []
   start_index = text.find(start_text)
-  while start_index > 0:
+  while start_index >= 0:
     started = False
     depth = 0
     j = 0
