@@ -14,7 +14,7 @@ genrule(
         "jpaper.cls",
         "refs.bib",
     ]),
-    outs = ["2018_07_issta.pdf"],
+    outs = ["paper.pdf"],
     cmd = "$(location //tools:autotex) docs/2018_07_issta/paper.tex $@",
     tools = ["//tools:autotex"],
 )
