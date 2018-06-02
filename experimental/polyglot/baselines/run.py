@@ -1,5 +1,6 @@
 """Run a baseline."""
 import pathlib
+import typing
 
 from absl import app
 from absl import flags
@@ -11,6 +12,7 @@ from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
+from lib.labm8 import crypto
 from lib.labm8 import pbutil
 
 
@@ -24,6 +26,33 @@ flags.DEFINE_string('working_dir', '/var/phd/clgen/baseline',
 flags.DEFINE_integer('output_corpus_size', 5000,
                      'The minimum number of samples to generate in the output'
                      'corpus.')
+
+
+# TODO(cec): Generalize for other symmetrical tokens.
+def ExtractAllSubsamples(text: str, start_text: str, left_char: str,
+                         right_char: str) -> typing.List[str]:
+  """Extract all subsamples from text.
+
+  Find all substrings in text which begin with start_text and have a symmetrical
+  balance of left and right chars.
+  """
+  out = []
+  start_index = text.find(start_text)
+  while start_index > 0:
+    started = False
+    depth = 0
+    j = 0
+    for j in range(start_index, len(text)):
+      if text[j] == left_char:
+        depth += 1
+        started = True
+      elif text[j] == right_char:
+        depth -= 1
+      if started and not depth:
+        break
+    out.append(text[start_index:j + 1])
+    start_index = text.find(start_text, start_index + 1)
+  return out
 
 
 def SampleModel(instance: clgen.Instance) -> None:
@@ -42,12 +71,17 @@ def CreateOutputCorpus(instance: clgen.Instance) -> corpuses.Corpus:
   out_dir = pathlib.Path(
       str(instance.model.SamplerCache(instance.sampler)) + '.postprocessed')
   logging.info('Creating output contentfiles at %s', out_dir)
+
   out_dir.mkdir(exist_ok=True)
   sample_dir = instance.model.SamplerCache(instance.sampler)
   for sample_path in sample_dir.iterdir():
     sample = pbutil.FromFile(sample_dir / sample_path, model_pb2.Sample())
-    with open(out_dir / sample_path.stem, 'w') as f:
-      f.write(sample.text)
+    out_samples = ExtractAllSubsamples(
+        sample.text, instance.sampler.start_text, '{', '}')
+    for out_sample in out_samples:
+      sha256 = crypto.sha256_str(out_sample)
+      with open(out_dir / (sha256 + '.txt'), 'w') as f:
+        f.write(out_sample)
   output_corpus_config = corpus_pb2.Corpus()
   output_corpus_config.CopyFrom(instance.model.corpus.config)
   output_corpus_config.local_directory = str(out_dir)
