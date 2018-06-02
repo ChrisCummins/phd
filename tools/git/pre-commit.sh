@@ -22,6 +22,8 @@ main() {
     git -C "$ROOT" pull --rebase
     echo "Popping stash ..."
     git -C "$ROOT" stash pop --index
+    echo 'Inspect and re-run git commit'
+    exit 1
   fi
 }
 
