@@ -86,7 +86,15 @@ class MaxlenTerminationCriterion(TerminationCriterionBase):
 
 
 class SymmetricalTokenDepthCriterion(TerminationCriterionBase):
-  """A termination criterion which counts symmetrical token depth."""
+  """A termination criterion which counts symmetrical token depth.
+
+  This is a generalization of bracked (i.e. { }) depth counting for C-syntax
+  programming languages. When sampling to generate a C function, the sample
+  is not "started" until the first { token is reached, and it is complete once
+  the final } token has been emitted to close the function. In between those
+  two tokens, there may be additional { } characters which increase and decrease
+  the "depth" of the scope, respectively.
+  """
 
   def __init__(self, config: sampler_pb2.SymmetricalTokenDepth):
     try:
@@ -113,6 +121,8 @@ class SymmetricalTokenDepthCriterion(TerminationCriterionBase):
       atomizer: An atomizer to specialize to.
 
     Raises:
+      InvalidSymtokTokens: If the depth tokens can't be encoded, or they encode
+        to more than one token.
     """
     try:
       l = atomizer.AtomizeString(self.left_token)
