@@ -262,6 +262,15 @@ def test_Model_GetInferenceModel_predict_output_shape(clgen_cache_dir,
   assert (1, 1, m.corpus.vocab_size) == probabilities.shape
 
 
+# WeightedPick() tests.
+
+def test_WeightedPick_output_range():
+  """Test that WeightedPick() returns an integer index into array"""
+  a = [1, 2, 3, 4]
+  assert isinstance(models.WeightedPick(np.array(a), 1.0), int)
+  assert 0 <= models.WeightedPick(np.array(a), 1.0) <= len(a)
+
+
 # Benchmarks.
 def test_benchmark_Model_instantiation(clgen_cache_dir, abc_model_config,
                                        benchmark):
