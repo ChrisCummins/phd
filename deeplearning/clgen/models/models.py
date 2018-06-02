@@ -323,6 +323,7 @@ class Model(object):
           sampler.tokenized_start_text.copy()
           for _ in range(batch_size)]
         start_time = labdate.MillisecondsTimestamp()
+        wall_time_start = start_time
 
         # Set internal states from seed text.
         for index in sampler.encoded_start_text[:-1]:
@@ -352,10 +353,12 @@ class Model(object):
             if sampler.SampleIsComplete(samples_in_progress[i]):
               end_time = labdate.MillisecondsTimestamp()
               done[i] = 1
-              sample = model_pb2.Sample(text=''.join(samples_in_progress[i]),
-                                        sample_start_epoch_ms_utc=start_time,
-                                        sample_time_ms=end_time - start_time,
-                                        num_tokens=len(samples_in_progress[i]))
+              sample = model_pb2.Sample(
+                  text=''.join(samples_in_progress[i]),
+                  sample_start_epoch_ms_utc=start_time,
+                  sample_time_ms=end_time - start_time,
+                  wall_time_ms=end_time - wall_time_start,
+                  num_tokens=len(samples_in_progress[i]))
               print(f'\n=== BEGIN CLGEN SAMPLE {sample_count} '
                     f'===\n\n{sample.text}')
               sample_count += 1
@@ -364,6 +367,7 @@ class Model(object):
               pbutil.ToFile(sample, sample_path)
               if min_num_samples > 0:
                 samples.append(sample)
+              wall_time_start = labdate.MillisecondsTimestamp()
 
           if done.all():
             break

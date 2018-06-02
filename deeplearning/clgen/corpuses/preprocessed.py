@@ -58,6 +58,13 @@ class PreprocessedContentFile(Base):
   preprocessing_succeeded: bool = sql.Column(sql.Boolean, nullable=False)
   # The number of milliseconds pre-preprocessing took.
   preprocess_time_ms: int = sql.Column(sql.Integer, nullable=False)
+  # Pre-processing is parallelizable, so the actual wall time of pre-processing
+  # may be much less than the sum of all preprocess_time_ms. This column
+  # counts the effective number of "real" milliseconds during pre-processing
+  # between the last pre-processed result and this result coming in. The idea
+  # is that summing this column provides an accurate total of the actual time
+  # spent pre-processing an entire corpus. Will be <= preprocess_time_ms.
+  wall_time_ms: int = sql.Column(sql.Integer, nullable=False)
   date_added: datetime.datetime = sql.Column(sql.DateTime, nullable=False,
                                              default=datetime.datetime.utcnow)
 
@@ -101,12 +108,14 @@ class PreprocessedContentFile(Base):
         text=text,
         preprocessing_succeeded=preprocessing_succeeded,
         preprocess_time_ms=preprocess_time_ms,
+        wall_time_ms=preprocess_time_ms,  # The outer-loop may change this.
         date_added=datetime.datetime.utcnow(),
     )
 
 
 def PreprocessorWorker(
     job: internal_pb2.PreprocessorWorker) -> PreprocessedContentFile:
+  """The inner loop of a parallelizable pre-processing job."""
   return PreprocessedContentFile.FromContentFile(
       pathlib.Path(job.contentfile_root), job.relpath, job.preprocessors)
 
@@ -165,12 +174,16 @@ class PreprocessedContentFiles(sqlutil.Database):
       pool = multiprocessing.Pool()
       bar = progressbar.ProgressBar(max_value=len(jobs))
       last_commit = time.time()
+      wall_time_start = time.time()
       for preprocessed_cf in bar(pool.imap_unordered(PreprocessorWorker, jobs)):
+        wall_time_end = time.time()
+        preprocessed_cf.wall_time_ms = (
+          int((wall_time_end - wall_time_start) * 1000))
+        wall_time_start = wall_time_end
         session.add(preprocessed_cf)
-        current_time = time.time()
-        if current_time - last_commit > 10:
+        if wall_time_end - last_commit > 10:
           session.commit()
-          last_commit = current_time
+          last_commit = wall_time_end
       logging.info('Preprocessed %s content files in %s ms',
                    humanize.intcomma(len(todo)),
                    humanize.intcomma(int((time.time() - start_time) * 1000)))

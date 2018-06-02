@@ -44,6 +44,13 @@ class EncodedContentFile(Base):
   tokencount: int = sql.Column(sql.Integer, nullable=False)
   # The number of milliseconds encoding took.
   encoding_time_ms: int = sql.Column(sql.Integer, nullable=False)
+  # Encoding is parallelizable, so the actual wall time of encoding may be much
+  # less than the sum of all encoding_time_ms. This column counts the effective
+  # number of "real" milliseconds during encoding between the last encoded
+  # result and this result coming in. The idea is that summing this column
+  # provides an accurate total of the actual time spent encoding an entire
+  # corpus. Will be <= encoding_time_ms.
+  wall_time_ms: int = sql.Column(sql.Integer, nullable=False)
   date_added: datetime.datetime = sql.Column(sql.DateTime, nullable=False)
 
   @property
@@ -82,6 +89,7 @@ class EncodedContentFile(Base):
         data=np.concatenate((data, atomizer.AtomizeString(eof))).tostring(),
         tokencount=len(data),
         encoding_time_ms=encoding_time_ms,
+        wall_time_ms=encoding_time_ms,  # The outer-loop may change this.
         date_added=datetime.datetime.utcnow())
 
 
@@ -168,13 +176,15 @@ class EncodedContentFiles(sqlutil.Database):
       pool = multiprocessing.Pool()
       bar = progressbar.ProgressBar(max_value=len(jobs))
       last_commit = time.time()
-      for encoded_cf in bar(pool.imap_unordered(
-          EncoderWorker, jobs)):
+      wall_time_start = time.time()
+      for encoded_cf in bar(pool.imap_unordered(EncoderWorker, jobs)):
+        wall_time_end = time.time()
+        encoded_cf.wall_time_ms = int((wall_time_end - wall_time_start) * 1000)
+        wall_time_start = wall_time_end
         session.add(encoded_cf)
-        current_time = time.time()
-        if current_time - last_commit > 10:
+        if wall_time_end - last_commit > 10:
           session.commit()
-          last_commit = current_time
+          last_commit = wall_time_end
 
       logging.info('Encoded %s files in %s ms',
                    humanize.intcomma(query.count()),

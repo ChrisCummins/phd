@@ -99,6 +99,13 @@ message RmsPropOptimizer {
 message Sample {
   optional string text = 1;
   optional int32 sample_time_ms = 2;
-  optional int64 sample_start_epoch_ms_utc = 3;
-  optional int32 num_tokens = 4;
+  // Sampling may be batches, so that the sum of sample_time_ms over a range
+  // of samples may be much higher than the actual amount of time required to
+  // sample the set. This field contains the number of milliseconds between the
+  // last sample completing and this sample completing, so that by summing
+  // wall_time_ms, it is possible to get an accurate idea of the actual time
+  // taken to produce a set of samples.
+  optional int32 wall_time_ms = 3;
+  optional int64 sample_start_epoch_ms_utc = 4;
+  optional int32 num_tokens = 5;
 }
