@@ -1,4 +1,5 @@
 """The CLgen language model."""
+import io
 import os
 import pathlib
 import typing
@@ -188,8 +189,11 @@ class Model(object):
       f.write(model.to_yaml())
     model.compile(loss='categorical_crossentropy',
                   optimizer=builders.BuildOptimizer(self.config))
-    # TODO(cec): Capture using StringIO as print_fn and log:
-    model.summary()
+
+    # Print a model summary.
+    buf = io.StringIO()
+    model.summary(print_fn=lambda x: buf.write(x + '\n'))
+    logging.info('Model summary:\n%s', buf.getvalue())
 
     # TODO(cec): Add an atomizer.CreateVocabularyFile() method, with frequency
     # counts for a given corpus.
