@@ -150,7 +150,7 @@ class Model(object):
     # sampler.proto.
     if FLAGS.experimental_batched_sampling:
       # Read the embedding output size.
-      batch_size = config[0]['config']['output_dim']
+      batch_size = min(config[0]['config']['output_dim'], 32)
     else:
       batch_size = 1
     logging.info('Sampling with batch size %d', batch_size)
