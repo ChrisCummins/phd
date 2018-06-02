@@ -7,6 +7,8 @@ from absl import flags
 from absl import logging
 
 from deeplearning.clgen import clgen
+from deeplearning.clgen import samplers
+from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.corpuses import corpuses
 from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import corpus_pb2
@@ -28,30 +30,23 @@ flags.DEFINE_integer('output_corpus_size', 5000,
                      'corpus.')
 
 
-# TODO(cec): Generalize for other symmetrical tokens.
-def ExtractAllSubsamples(text: str, start_text: str, left_char: str,
-                         right_char: str) -> typing.List[str]:
+def ExtractAllSubsamples(text: str, atomizer: atomizers.AtomizerBase,
+                         sampler: samplers.Sampler) -> typing.List[str]:
   """Extract all subsamples from text.
 
   Find all substrings in text which begin with start_text and have a symmetrical
   balance of left and right chars.
   """
   out = []
-  start_index = text.find(start_text)
+  encoded_text = atomizer.TokenizeString(text)
+  start_index = encoded_text.find(sampler.start_text)
   while start_index > 0:
-    started = False
-    depth = 0
-    j = 0
-    for j in range(start_index, len(text)):
-      if text[j] == left_char:
-        depth += 1
-        started = True
-      elif text[j] == right_char:
-        depth -= 1
-      if started and not depth:
+    j = start_index
+    for j in range(start_index, len(encoded_text)):
+      if sampler.SampleIsComplete(encoded_text[start_index:j + 1]):
         break
-    out.append(text[start_index:j + 1])
-    start_index = text.find(start_text, start_index + 1)
+    out.append(''.join(encoded_text[start_index:j + 1]))
+    start_index = encoded_text.find(sampler.start_text, start_index + 1)
   return out
 
 
@@ -77,7 +72,7 @@ def CreateOutputCorpus(instance: clgen.Instance) -> corpuses.Corpus:
   for sample_path in sample_dir.iterdir():
     sample = pbutil.FromFile(sample_dir / sample_path, model_pb2.Sample())
     out_samples = ExtractAllSubsamples(
-        sample.text, instance.sampler.start_text, '{', '}')
+        sample.text, instance.model.corpus.atomizer, instance.sampler)
     for out_sample in out_samples:
       sha256 = crypto.sha256_str(out_sample)
       with open(out_dir / (sha256 + '.txt'), 'w') as f:
