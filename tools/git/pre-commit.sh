@@ -10,6 +10,11 @@ BRANCH_NAME="$(git -C "$ROOT" branch | grep '*' | sed 's/* //')"
 main() {
   source "$ROOT/.env"
   "$PHD/tools/buildifier.sh"
+
+  if [[ "$(git rev-list --left-right --count master...@ | cut -f1)" > 0 ]]; then
+    echo 'fatal: Current branch is ahead' >&2
+    exit 1
+  fi
 }
 
 if [[ "$BRANCH_NAME" != '(no branch)' ]]; then
