@@ -49,6 +49,7 @@
       <w>shimfile</w>
       <w>stdin</w>
       <w>subdirs</w>
+      <w>subsamples</w>
       <w>tokencount</w>
       <w>uname</w>
       <w>vectorize</w>
