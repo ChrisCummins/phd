@@ -58,6 +58,7 @@ def SampleModel(instance: clgen.Instance) -> None:
   sample_dir = instance.model.SamplerCache(instance.sampler)
   if sample_dir.is_dir():
     num_samples = len(list(sample_dir.iterdir()))
+  logging.info('Need to generate %d samples', target_samples - num_samples)
   while num_samples < target_samples:
     instance.Sample(min_num_samples=target_samples - num_samples)
     num_samples = len(list(sample_dir.iterdir()))
