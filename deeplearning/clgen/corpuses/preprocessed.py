@@ -132,18 +132,33 @@ class PreprocessedContentFiles(sqlutil.Database):
         self.Import(session, config)
         self.SetDone(session)
         session.commit()
-    num_files = self.size
-    num_input_files = self.input_size
-    logging.info("Content files: %s chars, %s lines, %s files",
-                 humanize.intcomma(self.input_char_count),
-                 humanize.intcomma(self.input_line_count),
+
+      # Logging output.
+      num_input_files = session.query(PreprocessedContentFile).count()
+      num_files = session.query(PreprocessedContentFile).filter(
+          PreprocessedContentFile.preprocessing_succeeded == True).count()
+      input_chars, input_lines, total_walltime, total_time, = session.query(
+          func.sum(PreprocessedContentFile.charcount),
+          func.sum(PreprocessedContentFile.linecount),
+          func.sum(PreprocessedContentFile.wall_time_ms),
+          func.sum(PreprocessedContentFile.preprocess_time_ms),
+      ).first()
+      char_count, line_count = session.query(
+          func.sum(PreprocessedContentFile.charcount),
+          func.sum(PreprocessedContentFile.linecount),
+      ).filter(PreprocessedContentFile.preprocessing_succeeded == True).first()
+    logging.info('Content files: %s chars, %s lines, %s files.',
+                 humanize.intcomma(input_chars),
+                 humanize.intcomma(input_lines),
                  humanize.intcomma(num_input_files))
-    logging.info('Pre-processing discard rate: %.1f%% (%s files)',
+    logging.info('Pre-processed %s files in %s ms (%.2fx speedup).',
+                 num_input_files, humanize.intcomma(total_walltime),
+                 total_time / total_walltime)
+    logging.info('Pre-processing discard rate: %.1f%% (%s files).',
                  (1 - (num_files / num_input_files)) * 100,
                  humanize.intcomma(num_input_files - num_files))
-    logging.info('Pre-processed corpus: %s chars, %s lines, %s files',
-                 humanize.intcomma(self.char_count),
-                 humanize.intcomma(self.line_count),
+    logging.info('Pre-processed corpus: %s chars, %s lines, %s files.',
+                 humanize.intcomma(char_count), humanize.intcomma(line_count),
                  humanize.intcomma(num_files))
 
   def IsDone(self, session: sqlutil.Database.session_t):
@@ -157,7 +172,6 @@ class PreprocessedContentFiles(sqlutil.Database):
 
   def Import(self, session: sqlutil.Database.session_t,
              config: corpus_pb2.Corpus) -> None:
-    start_time = time.time()
     with self.GetContentFileRoot(config) as contentfile_root:
       relpaths = set(self.GetImportRelpaths(contentfile_root))
       done = set(
@@ -184,9 +198,6 @@ class PreprocessedContentFiles(sqlutil.Database):
         if wall_time_end - last_commit > 10:
           session.commit()
           last_commit = wall_time_end
-      logging.info('Preprocessed %s content files in %s ms',
-                   humanize.intcomma(len(todo)),
-                   humanize.intcomma(int((time.time() - start_time) * 1000)))
 
   @contextlib.contextmanager
   def GetContentFileRoot(self, config: corpus_pb2.Corpus) -> pathlib.Path:

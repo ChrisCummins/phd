@@ -124,9 +124,20 @@ class EncodedContentFiles(sqlutil.Database):
         self.Import(session, p, atomizer, contentfile_separator)
         self.SetDone(session)
         session.commit()
-    logging.info("Encoded corpus: %s tokens, %s files",
-                 humanize.intcomma(self.token_count),
-                 humanize.intcomma(self.size))
+
+      # Logging output.
+      num_files = session.query(EncodedContentFile).count()
+      token_count, total_walltime, total_time, = session.query(
+          func.sum(EncodedContentFile.tokencount),
+          func.sum(EncodedContentFile.wall_time_ms),
+          func.sum(EncodedContentFile.encoding_time_ms),
+      ).first()
+    logging.info('Encoded %s files in %s ms (%.2fx speedup).',
+                 humanize.intcomma(num_files),
+                 humanize.intcomma(total_walltime),
+                 total_time / total_walltime)
+    logging.info('Encoded corpus: %s tokens, %s files.',
+                 humanize.intcomma(token_count), humanize.intcomma(num_files))
 
   @property
   def size(self):
@@ -156,7 +167,6 @@ class EncodedContentFiles(sqlutil.Database):
              preprocessed_db: preprocessed.PreprocessedContentFiles,
              atomizer: atomizers.AtomizerBase,
              contentfile_separator: str) -> None:
-    start_time = time.time()
     with preprocessed_db.Session() as p_session:
       query = p_session.query(preprocessed.PreprocessedContentFile).filter(
           preprocessed.PreprocessedContentFile.preprocessing_succeeded == True,
@@ -185,7 +195,3 @@ class EncodedContentFiles(sqlutil.Database):
         if wall_time_end - last_commit > 10:
           session.commit()
           last_commit = wall_time_end
-
-      logging.info('Encoded %s files in %s ms',
-                   humanize.intcomma(query.count()),
-                   humanize.intcomma(int((time.time() - start_time) * 1000)))
