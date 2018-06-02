@@ -11,9 +11,17 @@ main() {
   source "$ROOT/.env"
   "$PHD/tools/buildifier.sh"
 
-  if [[ "$(git rev-list --left-right --count master...@ | cut -f1)" > 0 ]]; then
-    echo 'fatal: Current branch is ahead' >&2
-    exit 1
+  git -C "$ROOT" fetch origin
+
+  COMMITS_BEHIND_UPSTREAM="$(git rev-list --left-right --count origin/master...@ | cut -f1)"
+
+  if [[ "$COMMITS_BEHIND_UPSTREAM" > 0 ]]; then
+    echo "Current branch is $COMMITS_BEHIND_UPSTREAM commits behind origin/master, creating stash ..." >&2
+    git -C "$ROOT" stash --keep-index
+    echo "Rebasing ..."
+    git -C "$ROOT" pull --rebase
+    echo "Popping stash ..."
+    git -C "$ROOT" stash pop
   fi
 }
 
