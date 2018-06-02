@@ -3,12 +3,42 @@
 
 Creates a config.pbtxt proto.
 """
+from __future__ import print_function
+
 import argparse
+import hashlib
 import logging
 import os
 import re
 import subprocess
+
 import sys
+
+
+def GetConfigId(args):
+  sha256 = hashlib.sha256()
+  with open(__file__, 'rb') as f:
+    sha256.update(f.read())
+    for arg in sorted(args.__dict__.keys()):
+      sha256.update('{}'.format(args.__dict__[arg]).encode('utf-8'))
+  return sha256.hexdigest()
+
+
+def GetCachedConfigId():
+  config_proto_path = os.path.join(
+      os.path.dirname(os.path.realpath(__file__)), 'config.pbtxt')
+  if not os.path.isfile(config_proto_path):
+    print('no file', config_proto_path, __file__)
+    return None
+
+  with open(config_proto_path) as f:
+    for line in f.readlines():
+      if 'configure_id:' in line:
+        try:
+          return re.search(r'configure_id:\s*"([0-9a-f]{64})"', line).group(1)
+        except AttributeError:
+          pass
+  return None
 
 
 def GetCudaHome():
@@ -23,8 +53,7 @@ def GuessIfCudaIsAvailable():
   if is_available:
     logging.info("CUDA found at: '%s'.", nvcc_path)
   else:
-    logging.info("File does not exist: '%s'. Disabling CUDA support.",
-                 nvcc_path)
+    logging.info("CUDA not found.")
   return is_available
 
 
@@ -60,7 +89,20 @@ def main(argv):
   parser.add_argument('--nowith_cuda', dest='cuda', action='store_false',
                       help=('Disable CUDA support.'))
   parser.set_defaults(cuda=True)
+  parser.add_argument(
+      '--cache_result', dest='cache_result', action='store_true',
+      help='Cache the results of configure.')
+  parser.add_argument(
+      '--nocache_result', dest='cache_result', action='store_false',
+      help='Disable caching of configure results.')
+  parser.set_defaults(cache_result=True)
   args = parser.parse_args(argv)
+
+  # Calculate config ID and compare against cached ID (if it exists).
+  config_id = GetConfigId(args)
+  cached_config_id = GetCachedConfigId()
+  if args.cache_result and config_id == cached_config_id:
+    return
 
   if IsGitRepo():
     git_remote = GetGitRemote()
