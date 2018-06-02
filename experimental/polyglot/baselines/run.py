@@ -90,6 +90,8 @@ def CreateOutputCorpus(instance: clgen.Instance) -> corpuses.Corpus:
   output_corpus_config.CopyFrom(instance.model.corpus.config)
   output_corpus_config.local_directory = str(out_dir)
   output_corpus = corpuses.Corpus(output_corpus_config)
+  logging.info('Pre-processing the output samples as corpus: %s',
+               output_corpus.hash)
   output_corpus.Create()
   return output_corpus
 
