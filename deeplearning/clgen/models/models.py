@@ -1,7 +1,6 @@
 """The CLgen language model."""
 import os
 import pathlib
-import sys
 import typing
 
 import humanize
@@ -27,6 +26,11 @@ from lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS
+
+flags.DEFINE_bool(
+    'experimental_batched_sampling', False,
+    'Enable an experimental batched sampling feature. THIS FEATURE IS STILL '
+    'EXPERIMENTAL AND HAS NOT BEEN THOROUGHLY REVIEWED OR UNDERSTOOD.')
 
 
 class Model(object):
@@ -143,18 +147,27 @@ class Model(object):
     if self._inference_model:
       return self._inference_model
 
+    import keras
+
     # Deferred importing of Keras so that we don't have to activate the
     # TensorFlow backend every time we import this module.
-    import keras
     logging.info('Building inference model.')
     model = self.GetTrainingModel()
     config = model.get_config()
-    config[0]['config']['batch_input_shape'] = (1, 1)
+    # TODO(cec): Decide on whether this should be on by default, or in the
+    # sampler.proto.
+    if FLAGS.experimental_batched_sampling:
+      # Read the embedding output size.
+      batch_size = config[0]['config']['output_dim']
+    else:
+      batch_size = 1
+    logging.info('Sampling with batch size %d', batch_size)
+    config[0]['config']['batch_input_shape'] = (batch_size, 1)
     inference_model = keras.models.Sequential.from_config(config)
     inference_model.trainable = False
     inference_model.set_weights(model.get_weights())
     self._inference_model = inference_model
-    return inference_model
+    return inference_model, batch_size
 
   def _LockedTrain(self) -> 'keras.models.Sequential':
     """Locked training.
@@ -293,8 +306,9 @@ class Model(object):
       InvalidSymtokTokens: If the sampler symmetrical depth tokens cannot be
         encoded.
     """
+    sample_count = 1
     self.SamplerCache(sampler).mkdir(exist_ok=True)
-    model = self.GetInferenceModel()
+    model, batch_size = self.GetInferenceModel()
     with logutil.TeeLogsToFile(
         f'sampler_{sampler.hash}', self.cache.path / 'logs'):
       logging.info("Sampling: '%s'", sampler.start_text)
@@ -303,51 +317,60 @@ class Model(object):
             'Entering an infinite sample loop, this process will never end!')
 
       sampler.Specialize(self.corpus.atomizer)
-      # TODO(cec): Re-implement batched sampling.
-
       samples = []
       while True:
-        print('\n=== BEGIN CLGEN SAMPLE ===\n', sampler.start_text, sep='\n',
-              end='')
-
         model.reset_states()
-        sample_in_progress = sampler.tokenized_start_text.copy()
+        samples_in_progress = [
+          sampler.tokenized_start_text.copy()
+          for _ in range(batch_size)]
         start_time = labdate.MillisecondsTimestamp()
 
         # Set internal states from seed text.
         for index in sampler.encoded_start_text[:-1]:
-          x = np.array([[index]])
-          # input shape: (1, 1)
+          x = np.array([[index]] * batch_size)
+          # input shape: (batch_size, 1)
           model.predict(x)
 
         next_index = sampler.encoded_start_text[-1]
+        done = np.zeros(batch_size)
         while True:
-          x = np.array([[next_index]])
-          # Input shape: (1, 1).
+          # Predict the next index for the entire batch.
+          x = np.array([[next_index]] * batch_size)
+          # Input shape: (bath_size, 1).
           probabilities = model.predict(x)
-          # Output shape: (1, 1, vocab_size).
-          next_index = WeightedPick(
-              probabilities.squeeze(), sampler.temperature)
-          # append to sequence
-          token = self.corpus.atomizer.decoder[next_index]
-          sample_in_progress.append(token)
-          sys.stdout.write(token)
-          if sampler.SampleIsComplete(sample_in_progress):
+          # Output shape: (batch_size, 1, vocab_size).
+          next_indices = [
+            WeightedPick(p.squeeze(), sampler.temperature)
+            for p in probabilities
+          ]
+          # Append to sequences.
+          for i, next_index in enumerate(next_indices):
+            if done[i]:
+              continue
+
+            token = self.corpus.atomizer.decoder[next_index]
+            samples_in_progress[i].append(token)
+            if sampler.SampleIsComplete(samples_in_progress[i]):
+              end_time = labdate.MillisecondsTimestamp()
+              done[i] = 1
+              sample = model_pb2.Sample(text=''.join(samples_in_progress[i]),
+                                        sample_start_epoch_ms_utc=start_time,
+                                        sample_time_ms=end_time - start_time,
+                                        num_tokens=len(samples_in_progress[i]))
+              print(f'\n=== BEGIN CLGEN SAMPLE {sample_count} '
+                    f'===\n\n{sample.text}')
+              sample_count += 1
+              sample_id = crypto.sha256_str(sample.text)
+              sample_path = self.SamplerCache(sampler) / f'{sample_id}.pbtxt'
+              pbutil.ToFile(sample, sample_path)
+              if min_num_samples > 0:
+                samples.append(sample)
+
+          if done.all():
             break
 
-        end_time = labdate.MillisecondsTimestamp()
-        sample = model_pb2.Sample(text=''.join(sample_in_progress),
-                                  sample_start_epoch_ms_utc=start_time,
-                                  sample_time_ms=end_time - start_time,
-                                  num_tokens=len(sample_in_progress))
-        sample_id = crypto.sha256_str(sample.text)
-        p = self.SamplerCache(sampler) / f'{sample_id}.pbtxt'
-        pbutil.ToFile(sample, p)
-        sys.stdout.write('\n')
-        if min_num_samples > 0:
-          samples.append(sample)
-          if len(samples) >= min_num_samples:
-            break
+        if len(samples) >= min_num_samples:
+          break
 
     return samples
 
