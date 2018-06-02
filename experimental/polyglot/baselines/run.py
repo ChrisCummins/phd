@@ -74,10 +74,10 @@ def CreateOutputCorpus(instance: clgen.Instance) -> corpuses.Corpus:
   """Create a CLgen corpus from the samples we just made."""
   out_dir = pathlib.Path(
       str(instance.model.SamplerCache(instance.sampler)) + '.postprocessed')
-  logging.info('Creating output corpus at %s', out_dir)
-
   out_dir.mkdir(exist_ok=True)
   sample_dir = instance.model.SamplerCache(instance.sampler)
+  logging.info('Creating output corpus at %s from sample dir %s',
+               out_dir, sample_dir)
   for sample_path in sample_dir.iterdir():
     sample = pbutil.FromFile(sample_dir / sample_path, model_pb2.Sample())
     out_samples = ExtractAllSubsamples(
@@ -86,6 +86,8 @@ def CreateOutputCorpus(instance: clgen.Instance) -> corpuses.Corpus:
       sha256 = crypto.sha256_str(out_sample)
       with open(out_dir / (sha256 + '.txt'), 'w') as f:
         f.write(out_sample)
+  logging.info('Created output corpus of %s file',
+               len(list(out_dir.iterdir())))
   output_corpus_config = corpus_pb2.Corpus()
   output_corpus_config.CopyFrom(instance.model.corpus.config)
   output_corpus_config.local_directory = str(out_dir)
