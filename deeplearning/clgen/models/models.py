@@ -314,6 +314,7 @@ class Model(object):
       if min_num_samples < 0:
         logging.warning(
             'Entering an infinite sample loop, this process will never end!')
+      sample_start_time = labdate.MillisecondsTimestamp()
 
       sampler.Specialize(self.corpus.atomizer)
       samples = []
@@ -373,6 +374,11 @@ class Model(object):
             break
 
         if len(samples) >= min_num_samples:
+          now = labdate.MillisecondsTimestamp()
+          logging.info(
+              'Produced %s samples at a rate of %s ms / sample.',
+              humanize.intcomma(len(samples)),
+              humanize.intcomma(int((sample_start_time - now) / len(samples))))
           break
 
     return samples
