@@ -2,6 +2,7 @@
   <dictionary name="cec">
     <words>
       <w>absl</w>
+      <w>acaces</w>
       <w>bazel</w>
       <w>bazelutil</w>
       <w>capsys</w>
@@ -13,6 +14,7 @@
       <w>contentfile</w>
       <w>contentfiles</w>
       <w>corpuses</w>
+      <w>cummins</w>
       <w>dataset</w>
       <w>deeplearning</w>
       <w>githubrc</w>
@@ -35,7 +37,9 @@
       <w>mtime</w>
       <w>multichar</w>
       <w>opencl</w>
+      <w>pavlos</w>
       <w>pbtxt</w>
+      <w>petoumenos</w>
       <w>preprocess</w>
       <w>preprocessing</w>
       <w>relpath</w>
