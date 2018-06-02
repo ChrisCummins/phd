@@ -21,18 +21,21 @@ flags.DEFINE_string('model', None, 'Path to model config.')
 flags.DEFINE_string('sampler', None, 'Path to sampler config.')
 flags.DEFINE_string('working_dir', '/var/phd/clgen/baseline',
                     'Path to CLgen working directory')
+flags.DEFINE_integer('output_corpus_size', 5000,
+                     'The minimum number of samples to generate in the output'
+                     'corpus.')
 
 
 def SampleModel(instance: clgen.Instance) -> None:
   logging.info('Training and sampling the CLgen model ...')
-  # Create 1000 samples.
-  target_samples = 1000
+  target_samples = FLAGS.output_corpus_size
   num_samples = 0
   sample_dir = instance.model.SamplerCache(instance.sampler)
   if sample_dir.is_dir():
     num_samples = len(list(sample_dir.iterdir()))
-  if num_samples < target_samples:
+  while num_samples < target_samples:
     instance.Sample(min_num_samples=target_samples - num_samples)
+    num_samples = len(list(sample_dir.iterdir()))
 
 
 def CreateOutputCorpus(instance: clgen.Instance) -> corpuses.Corpus:
