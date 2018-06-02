@@ -104,6 +104,9 @@ def main(argv):
   if args.cache_result and config_id == cached_config_id:
     return
 
+  uname = subprocess.check_output(
+      ['/usr/bin/uname'], universal_newlines=True).rstrip()
+
   if IsGitRepo():
     git_remote = GetGitRemote()
     logging.info('Git remote: %s', git_remote)
@@ -123,7 +126,41 @@ def main(argv):
   if args.cuda and GuessIfCudaIsAvailable():
     with_cuda = True
 
-  # TODO(cec): Implement!
+  dotfiles_run_path = os.path.join(
+      os.path.dirname(os.path.realpath(__file__)), 'system', 'dotfiles', 'run')
+  assert os.path.isfile(dotfiles_run_path)
+  proc = subprocess.Popen([dotfiles_run_path, 'PhdBuildDeps'])
+  proc.communicate()
+
+  if uname == "Darwin":
+    python_path = '/usr/local/opt/python/bin/python3'
+  else:
+    python_path = '/home/linuxbrew/.linuxbrew/bin/python3'
+  assert os.path.isfile(python_path)
+
+  base_requirements_txt_path = os.path.join(
+      os.path.dirname(os.path.realpath(__file__)), 'tools', 'requirements.txt')
+  assert os.path.isfile(base_requirements_txt_path)
+  with open(base_requirements_txt_path) as f:
+    base_requirements = f.read()
+
+  if with_cuda:
+    requirements_txt = base_requirements.replace(
+        'tensorflow=', 'tensorflow-gpu=')
+  else:
+    requirements_txt = base_requirements
+
+  requirements_txt_path = os.path.join(
+      os.path.dirname(os.path.realpath(__file__)), 'requirements.txt')
+  with open(requirements_txt_path, 'w') as f:
+    f.write(requirements_txt)
+
+  # TODO(cec): Uninstall the *other* tensorflow package. E.g. if installing
+  # tensorflow-gpu, uninstall tensorflow.
+
+  proc = subprocess.Popen(
+      [python_path, '-m', 'pip', 'install', '-r', requirements_txt_path])
+  proc.communicate()
 
 
 if __name__ == '__main__':
