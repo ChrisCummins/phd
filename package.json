@@ -17,6 +17,7 @@
   },
   "scripts": {
     "postcommit": "./tools/git/post-commit.sh",
+    "postrebase": "./tools/git/post-rebase.sh",
     "precommit": "./tools/git/pre-commit.sh",
     "prepush": "./tools/git/pre-push.sh"
   },
