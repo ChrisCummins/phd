@@ -7,7 +7,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 main() {
   source "$ROOT/.env"
-  "$PHD/tools/buildifier.sh"
+  # TODO(cec): Implement!
 }
 
 main $@

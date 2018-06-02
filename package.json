@@ -16,6 +16,7 @@
     "url": "https://github.com/ChrisCummins/phd.git"
   },
   "scripts": {
+    "post-commit": "./tools/git/post-commit.sh",
     "precommit": "./tools/git/pre-commit.sh",
     "prepush": "./tools/git/pre-push.sh"
   },
