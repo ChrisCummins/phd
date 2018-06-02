@@ -1,0 +1,13 @@
+# File: //deeplearning/clgen/proto/corpus.proto
+# Proto: clgen.Corpus
+local_directory: "/var/phd/datasets/github/corpuses/c"
+ascii_character_atomizer: true
+contentfile_separator: "\n\n"
+preprocessor: "deeplearning.clgen.preprocessors.cxx:ClangPreprocess"
+preprocessor: "deeplearning.clgen.preprocessors.cxx:Compile"
+preprocessor: "deeplearning.clgen.preprocessors.cxx:NormalizeIdentifiers"
+preprocessor: "deeplearning.clgen.preprocessors.common:StripDuplicateEmptyLines"
+preprocessor: "deeplearning.clgen.preprocessors.common:StripTrailingWhitespace"
+preprocessor: "deeplearning.clgen.preprocessors.cxx:ClangFormat"
+preprocessor: "deeplearning.clgen.preprocessors.common:MinimumLineCount3"
+preprocessor: "deeplearning.clgen.preprocessors.cxx:Compile"
