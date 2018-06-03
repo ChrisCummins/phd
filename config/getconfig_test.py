@@ -46,7 +46,7 @@ def test_configure_id():
   configure_path = (pathlib.Path(config.paths.repo_root) / 'configure')
   assert configure_path.is_file()
   assert config.configure_id == subprocess.check_output(
-      ['./configure', '--id'], universal_newlines=True).rstrip()
+      [configure_path, '--id'], universal_newlines=True).rstrip()
 
 
 def test_GlobalConfigPaths_repo_root():

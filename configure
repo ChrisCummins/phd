@@ -20,7 +20,9 @@ def GetConfigId(args):
   with open(__file__, 'rb') as f:
     sha256.update(f.read())
     for arg in sorted(args.__dict__.keys()):
-      sha256.update('{}'.format(args.__dict__[arg]).encode('utf-8'))
+      # The --id argument does not modify the ID.
+      if arg != 'print_id':
+        sha256.update('{}'.format(args.__dict__[arg]).encode('utf-8'))
   return sha256.hexdigest()
 
 
