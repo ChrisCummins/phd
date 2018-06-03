@@ -54,7 +54,7 @@ def GuessIfCudaIsAvailable():
   if is_available:
     logging.info("CUDA found at: '%s'.", nvcc_path)
   else:
-    logging.info("CUDA not found.")
+    logging.info("CUDA not found at: '%s'.", nvcc_path)
   return is_available
 
 
