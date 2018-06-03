@@ -94,7 +94,7 @@ def main(argv):
                       help=('Enable CUDA support. This requires that '
                             'CUDA is installed on the host machine.'))
   parser.add_argument('--nowith_cuda', dest='cuda', action='store_false',
-                      help=('Disable CUDA support.'))
+                      help='Disable CUDA support.')
   parser.set_defaults(cuda=True)
   parser.add_argument(
       '--cache_result', dest='cache_result', action='store_true',
