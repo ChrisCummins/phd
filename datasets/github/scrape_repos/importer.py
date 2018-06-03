@@ -93,9 +93,9 @@ def ImportRepo(session: orm.session.Session,
     if len(paths) == 1 and not paths[0]:
       logging.debug('No files to import from %s', clone_dir)
       return
-    logging.info('Importing %s %s files from %s ...',
+    logging.info("Importing %s '%s' files from %s ...",
                  humanize.intcomma(len(paths)),
-                 language.language.capitalize(), clone_dir)
+                 importer.source_code_pattern, clone_dir)
     jobs = [
       scrape_repos_pb2.ImportWorker(
           clone_from_url=meta.clone_from_url,
