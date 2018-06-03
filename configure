@@ -112,7 +112,6 @@ def main(argv):
   config_id = GetConfigId(args)
   cached_config_id = GetCachedConfigId()
   print('Config ID:', config_id)
-  print('Cached:   ', cached_config_id)
   if args.cache_result and config_id == cached_config_id:
     return
 
