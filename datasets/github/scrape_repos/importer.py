@@ -2,6 +2,7 @@
 import hashlib
 import multiprocessing
 import pathlib
+import random
 import subprocess
 import typing
 
@@ -124,6 +125,7 @@ def ImportFromLanguage(db: contentfiles.ContentFiles,
                        pathlib.Path(language.destination_directory).iterdir() if
                        ShouldImportRepo(session, pathlib.Path(
                            language.destination_directory / f))]
+  random.shuffle(repos_to_import)
   logging.info('Importing %s %s repos ...',
                humanize.intcomma(len(repos_to_import)),
                language.language.capitalize())
