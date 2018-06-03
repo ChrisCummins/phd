@@ -28,7 +28,6 @@ def GetCachedConfigId():
   config_proto_path = os.path.join(
       os.path.dirname(os.path.realpath(__file__)), 'config.pbtxt')
   if not os.path.isfile(config_proto_path):
-    print('no file', config_proto_path, __file__)
     return None
 
   with open(config_proto_path) as f:
@@ -112,6 +111,8 @@ def main(argv):
   # Calculate config ID and compare against cached ID (if it exists).
   config_id = GetConfigId(args)
   cached_config_id = GetCachedConfigId()
+  print('Config ID:', config_id)
+  print('Cached:   ', cached_config_id)
   if args.cache_result and config_id == cached_config_id:
     return
 
@@ -215,7 +216,7 @@ def main(argv):
 # File: //config/proto/config.proto
 # Proto: phd.GlobalConfig
 uname: "{uname}"
-config_id: "{config_id}"
+configure_id: "{config_id}"
 with_cuda: {with_cuda}
 paths {{
   repo_root: "{phd_root}"
