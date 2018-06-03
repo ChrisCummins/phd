@@ -10,5 +10,6 @@ py_binary(
         "//deeplearning/clgen/proto:sampler_py_pb2",
         "//lib/labm8:bazelutil",
         "//lib/labm8:pbutil",
+        "//lib/labm8:viz",
     ],
 )
