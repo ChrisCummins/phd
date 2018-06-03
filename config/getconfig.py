@@ -2,7 +2,8 @@
 
 This module exposes a single function GetGlobalConfig() which returns the
 global configuration of the repository. The configuration schema is defined in
-//config/proto/config.proto, and the instance is created during bootstrapping.
+//config/proto/config.proto, and the instance is created by the ./configure
+script.
 """
 import os
 import pathlib
@@ -13,7 +14,7 @@ from lib.labm8 import pbutil
 
 # The path of the generated config file, which is //config.pbtxt.
 GLOBAL_CONFIG_PATH = pathlib.Path(pathlib.Path(
-  os.path.dirname(os.path.realpath(__file__))) / '../config.pbtxt').absolute()
+    os.path.dirname(os.path.realpath(__file__))) / '../config.pbtxt').absolute()
 
 
 class ConfigNotFound(EnvironmentError):

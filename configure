@@ -103,6 +103,8 @@ def main(argv):
       '--nocache_result', dest='cache_result', action='store_false',
       help='Disable caching of configure results.')
   parser.set_defaults(cache_result=True)
+  parser.add_argument('--id', dest='print_id', action='store_true',
+                      help='Print the configure ID and exit.')
   args = parser.parse_args(argv)
 
   phd_root = os.path.dirname(os.path.realpath(__file__))
@@ -110,6 +112,9 @@ def main(argv):
 
   # Calculate config ID and compare against cached ID (if it exists).
   config_id = GetConfigId(args)
+  if args.print_id:
+    print(config_id)
+    sys.exit(0)
   cached_config_id = GetCachedConfigId()
   print('Config ID:', config_id)
   if args.cache_result and config_id == cached_config_id:
