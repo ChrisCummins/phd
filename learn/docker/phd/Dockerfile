@@ -30,11 +30,11 @@ RUN locale-gen --purge en_GB.UTF-8
 WORKDIR /root
 RUN git clone https://github.com/ChrisCummins/phd.git
 
-# Bootstrap the PhD repo.
+# Configure the PhD repo.
 ENV HOME /root
 ENV USER docker
 WORKDIR /root/phd
-RUN /root/phd/tools/bootstrap.sh
+RUN /root/phd/configure
 
 # Install and configure my preferred shell.
 RUN apt-get install -y --no-install-recommends zsh

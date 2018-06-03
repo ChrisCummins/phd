@@ -63,7 +63,7 @@ RUN mv /tmp/opencl-headers/opencl12/CL /usr/include/CL
 RUN ln -s /opt/intel/opencl-*/lib64/libOpenCL.so /usr/lib/libOpenCL.so
 
 # Build the project.
-RUN $PHD/tools/bootstrap.sh
+RUN $PHD/configure
 
 # Install and configure my preferred shell.
 RUN apt-get install -y --no-install-recommends zsh

@@ -150,12 +150,12 @@ A monolothic repository for (almost) everything I have done while at the Univers
 </h2>
 
 I use [Bazel](https://bazel.build) as my build system of choice, with a
-preliminary [bootstrap](/tools/bootstrap.sh) script to configure the build and
-prepare the host toolchain. **WARNING:** the bootstrapping *will* fuck with your
-system. It installs a bunch of packages, and, unless you happen to have exactly
-the same preferences as me as to how to you like your system set up, will likely
-shit all over your preferences. For this reason I *strongly* recommend building
-in a VM or using my docker image.
+preliminary [configure](/configure) script to setup the build and prepare the
+host toolchain. **WARNING:** the configure process *will* fuck with your system.
+It installs a bunch of packages, and, unless you happen to have exactly the same
+preferences as me as to how to you like your system set up, will likely shit
+all over your preferences. For this reason I *strongly* recommend building in a
+VM or using my docker image.
 
 #### Docker Image
 
@@ -182,12 +182,12 @@ the world burn. The build requirements are Ubuntu (>=16.04) or macOS, and
 OpenCL. OpenCL comes free on Apple, for Linux you'll need to install appropriate
 drivers.
 
-Clone this repository and run the bootstrap script:
+Clone this repository and run the configure script:
 
 ```sh
 $ git clone https://github.com/ChrisCummins/phd.git
 $ cd phd
-$ ./tools/bootstrap.sh
+$ ./configure
 ```
 
 Test the universe using:

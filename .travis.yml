@@ -50,7 +50,7 @@ env:
 before_install:
   - echo $CC && $CC --version
   - echo $CXX && $CXX --version
-  - ./tools/bootstrap.sh
+  - ./configure
   - source .env
 
 script:

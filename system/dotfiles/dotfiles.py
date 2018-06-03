@@ -1907,7 +1907,7 @@ class Phd(Task):
 
   def install(self):
     clone_git_repo(github_repo("ChrisCummins", "phd"), "~/phd")
-    shell("~/phd/tools/bootstrap.sh")
+    shell("~/phd/configure")
 
 
 class TransmissionHeadless(Task):

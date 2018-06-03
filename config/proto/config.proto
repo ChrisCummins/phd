@@ -6,7 +6,7 @@ package phd;
 // The root message describing the repository configuration.
 //
 // A plaintext format instance of this message is generated in the root of this
-// repository by the bootstrap script, with path ./config.pbtxt.
+// repository by the ./configure script, with path ./config.pbtxt.
 message GlobalConfig {
   // Either "darwin" or "linux" for macOS or Linux host OS, respectively.
   required string uname = 1;

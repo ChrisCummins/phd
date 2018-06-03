@@ -1,5 +1,5 @@
 # Python package dependencies.
-# This file is copied to $ROOT/requirements.txt during bootstrap. The reason
+# This file is copied to $ROOT/requirements.txt during configure. The reason
 # for this is because the TensorFlow package is replaced with tensorflow-gpu
 # if --with-cuda is enabled.
 absl-py==0.1.10
@@ -119,7 +119,7 @@ six==1.11.0
 SQLAlchemy==1.2.4
 statistics==1.0.3.5
 subprocess32==3.5.0
-# If project is bootstrapped with --with-cuda, tensorflow-gpu is used.
+# If ./configure detects CUDA, tensorflow-gpu is used.
 tensorflow==1.8.0
 terminado==0.8.1
 testpath==0.3.1

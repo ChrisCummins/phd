@@ -26,7 +26,7 @@ First checkout this repo and install the build requirements:
 ```sh
 $ git clone https://github.com/ChrisCummins/phd.git
 $ cd phd
-$ ./tools/bootstrap.sh
+$ ./configure
 ```
 
 Then run the unit tests using:
