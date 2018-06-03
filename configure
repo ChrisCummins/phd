@@ -116,11 +116,12 @@ def main(argv):
   config_id = GetConfigId(args)
   if args.print_id:
     print(config_id)
-    sys.exit(0)
+    return
   cached_config_id = GetCachedConfigId()
-  print('Config ID:', config_id)
   if args.cache_result and config_id == cached_config_id:
     return
+
+  print('Config ID:', config_id)
 
   # Uname in lowercase.
   uname_path = '/usr/bin/uname'
