@@ -98,8 +98,8 @@ def main(argv):
   capabilities = GetGeneratorCapabilities(generator_stub)
 
   while True:
-    num_testcases = GetNumberOfTestcasesInDataStore(datastore_stub,
-                                                    capabilities)
+    num_testcases = GetNumberOfTestcasesInDataStore(
+        datastore_stub, capabilities)
     logging.info(f'Number of testcases in datastore: %d', num_testcases)
     if 0 <= target_total_testcases <= num_testcases:
       logging.info('Stopping generation with %d testcases in the DataStore.',
