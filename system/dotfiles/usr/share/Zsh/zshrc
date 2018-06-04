@@ -178,6 +178,9 @@ alias exit='disown &>/dev/null; exit'
 
 alias off='sudo shutdown -h now'
 
+# Use diff-so-fancy by default
+alias diff='git diff --no-index'
+
 # Shortcuts.
 alias c='clear'
 alias E='exit'
