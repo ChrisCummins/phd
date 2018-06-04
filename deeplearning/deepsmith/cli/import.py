@@ -1,5 +1,6 @@
 """A command-line interface for importing protos to the datastore."""
 import pathlib
+import time
 
 from absl import app
 from absl import flags
@@ -28,15 +29,16 @@ def ImportResultsFromDirectory(session: db.session_t,
     session: A database session.
     results_dir: Directory containing (only) Result protos.
   """
-  batch_size = 1000
+  last_commit_time = time.time()
   if not results_dir.is_dir():
     logging.fatal('directory %s does not exist', results_dir)
-  for i, path in enumerate(results_dir.iterdir()):
+  for path in sorted(results_dir.iterdir()):
     deeplearning.deepsmith.result.Result.FromFile(session, path)
-    logging.info('Imported result %s %s', i + 1, path)
-    if not i % batch_size:
+    logging.info('Imported result %s', path)
+    if time.time() - last_commit_time > 10:
       session.commit()
-      logging.info('Commited database')
+      last_commit_time = time.time()
+      logging.info('Committed database')
   session.commit()
 
 
@@ -48,13 +50,16 @@ def ImportTestcasesFromDirectory(session: db.session_t,
     session: A database session.
     testcases_dir: Directory containing (only) Testcase protos.
   """
-  batch_size = 1000
+  last_commit_time = time.time()
   if not testcases_dir.is_dir():
     logging.fatal('directory %s does not exist', testcases_dir)
-  for i, path in enumerate(testcases_dir.iterdir()):
+  for path in sorted(testcases_dir.iterdir()):
     deeplearning.deepsmith.testcase.Testcase.FromFile(session, path)
-    if not i % batch_size:
+    logging.info('Imported testcase %s', path)
+    if time.time() - last_commit_time > 10:
       session.commit()
+      last_commit_time = time.time()
+      logging.info('Committed database')
   session.commit()
 
 
@@ -62,14 +67,17 @@ def main(argv):
   del argv
   ds = datastore.DataStore.FromFlags()
   with ds.Session(commit=True) as session:
+    last_commit_time = time.time()
     for path in FLAGS.results:
       deeplearning.deepsmith.result.Result.FromFile(session, pathlib.Path(path))
-    session.commit()
+      if time.time() - last_commit_time > 10:
+        session.commit()
+        last_commit_time = time.time()
     if FLAGS.results_dir:
       ImportResultsFromDirectory(session, pathlib.Path(FLAGS.results_dir))
     for path in FLAGS.testcases:
-      deeplearning.deepsmith.testcase.Testcase.FromFile(session,
-                                                        pathlib.Path(path))
+      deeplearning.deepsmith.testcase.Testcase.FromFile(
+          session, pathlib.Path(path))
     session.commit()
     if FLAGS.testcases_dir:
       ImportTestcasesFromDirectory(session, pathlib.Path(FLAGS.testcases_dir))
