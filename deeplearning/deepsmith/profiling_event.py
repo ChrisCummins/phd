@@ -6,10 +6,10 @@ from sqlalchemy import orm
 from sqlalchemy.dialects import mysql
 
 import deeplearning.deepsmith.client
-import lib.labm8.sqlutil
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from lib.labm8 import labdate
+from lib.labm8 import sqlutil
 
 
 class ProfilingEventType(db.StringTable):
@@ -78,14 +78,15 @@ class TestcaseProfilingEvent(db.Table):
   @classmethod
   def GetOrAdd(cls, session: db.session_t,
                proto: deepsmith_pb2.ProfilingEvent) -> 'ProfilingEvent':
-    return lib.labm8.sqlutil.GetOrAdd(session, cls,
-                                      client=deeplearning.deepsmith.client.Client.GetOrAdd(
-                                          session, proto.client),
-                                      type=ProfilingEventType.GetOrAdd(session,
-                                                                       proto.type),
-                                      duration_ms=proto.duration_ms,
-                                      event_start=labdate.DatetimeFromMillisecondsTimestamp(
-                                          proto.event_start_epoch_ms))
+    return sqlutil.GetOrAdd(
+        session, cls,
+        client=deeplearning.deepsmith.client.Client.GetOrAdd(
+            session, proto.client),
+        type=ProfilingEventType.GetOrAdd(session,
+                                         proto.type),
+        duration_ms=proto.duration_ms,
+        event_start=labdate.DatetimeFromMillisecondsTimestamp(
+            proto.event_start_epoch_ms))
 
 
 class ResultProfilingEvent(db.Table):
@@ -149,11 +150,12 @@ class ResultProfilingEvent(db.Table):
   @classmethod
   def GetOrAdd(cls, session: db.session_t,
                proto: deepsmith_pb2.ProfilingEvent) -> 'ProfilingEvent':
-    return lib.labm8.sqlutil.GetOrAdd(session, cls,
-                                      client=deeplearning.deepsmith.client.Client.GetOrAdd(
-                                          session, proto.client),
-                                      type=ProfilingEventType.GetOrAdd(session,
-                                                                       proto.type),
-                                      duration_ms=proto.duration_ms,
-                                      event_start=labdate.DatetimeFromMillisecondsTimestamp(
-                                          proto.event_start_epoch_ms))
+    return sqlutil.GetOrAdd(
+        session, cls,
+        client=deeplearning.deepsmith.client.Client.GetOrAdd(
+            session, proto.client),
+        type=ProfilingEventType.GetOrAdd(session,
+                                         proto.type),
+        duration_ms=proto.duration_ms,
+        event_start=labdate.DatetimeFromMillisecondsTimestamp(
+            proto.event_start_epoch_ms))
