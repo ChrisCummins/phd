@@ -4,8 +4,15 @@ syntax = "proto2";
 package experimental.fish;
 
 message CompilerCrashDiscriminatorTrainingExample {
-  optional string id = 1;
-  optional string src = 2;
+  enum Outcome {
+    BUILD_FAILURE = 1;
+    BUILD_CRASH = 2;
+    BUILD_TIMEOUT = 3;
+    PASS = 6;
+  }
+
+  optional string src = 1;
+  optional Outcome outcome = 2;
   optional bool raised_assertion = 3;
   optional string assertion_name = 4;
 }
