@@ -1,6 +1,6 @@
 # File: //deeplearning/clgen/proto/corpus.proto
 # Proto: clgen.Corpus
-local_directory: "/var/phd/datasets/github/corpuses/opencl"
+local_directory: "/mnt/cc/data/datasets/github/corpuses/opencl"
 # Note these tokens omit the optional __ qualifiers on OpenCL keywords.
 # The __ qualifiers are stripped in the corpus by the preprocessor
 # deeplearning.clgen.preprocessors.opencl:StripDoubleUnderscorePrefixes.

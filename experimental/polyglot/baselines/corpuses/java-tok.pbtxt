@@ -1,6 +1,6 @@
 # File: //deeplearning/clgen/proto/corpus.proto
 # Proto: clgen.Corpus
-local_directory: "/var/phd/datasets/github/corpuses/java"
+local_directory: "/mnt/cc/data/datasets/github/corpuses/java"
 # The set of Java keywords.
 greedy_multichar_atomizer {
   tokens: "abstract"

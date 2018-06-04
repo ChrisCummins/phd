@@ -1,6 +1,6 @@
 # File: //deeplearning/clgen/proto/corpus.proto
 # Proto: clgen.Corpus
-local_directory: "/var/phd/datasets/github/corpuses/java"
+local_directory: "/mnt/cc/data/datasets/github/corpuses/java"
 ascii_character_atomizer: true
 contentfile_separator: "\n\n"
 # For now we've not going to worry about even testing to see if the Java

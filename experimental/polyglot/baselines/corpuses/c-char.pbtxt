@@ -1,6 +1,6 @@
 # File: //deeplearning/clgen/proto/corpus.proto
 # Proto: clgen.Corpus
-local_directory: "/var/phd/datasets/github/corpuses/c"
+local_directory: "/mnt/cc/data/datasets/github/corpuses/c"
 ascii_character_atomizer: true
 contentfile_separator: "\n\n"
 preprocessor: "deeplearning.clgen.preprocessors.cxx:ClangPreprocess"

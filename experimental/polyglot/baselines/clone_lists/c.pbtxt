@@ -2,6 +2,7 @@
 # Proto: scrape_repos.LanguageCloneList
 language {
   language: "c"
+  destination_directory: "/var/phd/datasets/github/repos_by_lang/c"
   query {
     string: "language:c sort:stars fork:false"
     max_results: 1000
@@ -18,7 +19,6 @@ language {
     string: "benchmark language:c sort:stars fork:false"
     max_results: 1000
   }
-  destination_directory: "/var/phd/datasets/github/repos_by_lang/c"
   importer {
     source_code_pattern: ".*\\.c"
     preprocessor: "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown"
