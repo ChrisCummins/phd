@@ -47,6 +47,7 @@
       <w>rewriter</w>
       <w>runfiles</w>
       <w>shimfile</w>
+      <w>stderrs</w>
       <w>stdin</w>
       <w>subdirs</w>
       <w>subsamples</w>
