@@ -9,11 +9,11 @@ import sqlalchemy as sql
 from sqlalchemy import orm
 from sqlalchemy.dialects import mysql
 
-import deeplearning.deepsmith.profiling_event
 import deeplearning.deepsmith.testbed
 import deeplearning.deepsmith.testcase
 import lib.labm8.sqlutil
 from deeplearning.deepsmith import db
+from deeplearning.deepsmith import profiling_event
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from lib.labm8 import labdate, pbutil
 
@@ -46,12 +46,12 @@ class Result(db.Table):
   # Relationships.
   testcase: deeplearning.deepsmith.testcase.Testcase = orm.relationship(
       'Testcase', back_populates='results')
-  testbed: deeplearning.deepsmith.testbed.Testbed = orm.relationship('Testbed',
-                                                                     back_populates='results')
-  outputset: typing.List['ResultOutput'] = orm.relationship('ResultOutput',
-                                                            secondary='result_outputsets',
-                                                            primaryjoin='ResultOutputSet.id == Result.outputset_id',
-                                                            secondaryjoin='ResultOutputSet.output_id == ResultOutput.id')
+  testbed: deeplearning.deepsmith.testbed.Testbed = orm.relationship(
+      'Testbed', back_populates='results')
+  outputset: typing.List['ResultOutput'] = orm.relationship(
+      'ResultOutput', secondary='result_outputsets',
+      primaryjoin='ResultOutputSet.id == Result.outputset_id',
+      secondaryjoin='ResultOutputSet.output_id == ResultOutput.id')
   profiling_events: typing.List['ResultProfilingEvent'] = orm.relationship(
       'ResultProfilingEvent', back_populates='result')
 
@@ -83,9 +83,9 @@ class Result(db.Table):
     proto.returncode = self.returncode
     for output in self.outputset:
       proto.outputs[output.name.string] = output.value.truncated_value
-    for profiling_event in self.profiling_events:
+    for event in self.profiling_events:
       event = proto.profiling_events.add()
-      profiling_event.SetProto(event)
+      event.SetProto(event)
     return proto
 
   def ToProto(self) -> deepsmith_pb2.Result:
