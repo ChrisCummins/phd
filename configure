@@ -172,6 +172,7 @@ def GetConfigurationOptions(argv):
   Returns:
      The arguments namespace.
   """
+  yes_no_prompts = []
   parser = argparse.ArgumentParser(
       description='Configure this project for building.',
       epilog=('Please report issues at '
@@ -207,6 +208,7 @@ def GetConfigurationOptions(argv):
       '--nowith_cuda', dest='with_cuda', action='store_false',
       help='Disable CUDA support.')
   parser.set_defaults(with_cuda=GuessIfCudaIsAvailable())
+  yes_no_prompts.append(('with_cuda', 'Enable CUDA support?'))
 
   # --[no]update_git_submodules.
   parser.add_argument(
@@ -216,15 +218,16 @@ def GetConfigurationOptions(argv):
       '--noupdate_git_submodules', dest='update_git_submodules',
       action='store_false', help='Do not checkout and update git submodules.')
   parser.set_defaults(update_git_submodules=True)
+  yes_no_prompts.append(('update_git_submodules', 'Update git submodules?'))
 
   args = parser.parse_args(argv)
 
-  def YesNo(arg, question):
-    if not args.noninteractive:
-      arg = YesNoPrompt(question, 'yes' if arg else 'no', False)
+  # Prompt the user for options.
+  if not args.print_id:
+    for field_name, question in yes_no_prompts:
+      arg = getattr(args, field_name)
+      arg = YesNoPrompt(question, 'yes' if arg else 'no', args.noninteractive)
 
-  YesNo(args.with_cuda, 'Enable CUDA support?')
-  YesNo(args.update_git_submodules, 'Update git submodules?')
   return args
 
 
