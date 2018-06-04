@@ -153,21 +153,13 @@ class ResultProfilingEvent(db.Table):
   @classmethod
   def GetOrAdd(cls, session: db.session_t, proto: deepsmith_pb2.ProfilingEvent,
                result: 'result.Result') -> 'ProfilingEvent':
-    client = deeplearning.deepsmith.client.Client.GetOrAdd(
-        session, proto.client)
-    type_ = ProfilingEventType.GetOrAdd(session, proto.type)
-    instance = session.query(cls).filter_by({
-      'result': result,
-      'client': client,
-      'type': type_,
-    }).first()
-    if not instance:
-      instance = cls(
-          result=result,
-          client=client,
-          type=type_,
-          duration_ms=proto.duration_ms,
-          event_start=labdate.DatetimeFromMillisecondsTimestamp(
-              proto.event_start_epoch_ms)
-      )
-      session.add(instance)
+    return sqlutil.GetOrAdd(
+        session, cls,
+        result=result,
+        client=deeplearning.deepsmith.client.Client.GetOrAdd(
+            session, proto.client),
+        type=ProfilingEventType.GetOrAdd(session,
+                                         proto.type),
+        duration_ms=proto.duration_ms,
+        event_start=labdate.DatetimeFromMillisecondsTimestamp(
+            proto.event_start_epoch_ms))
