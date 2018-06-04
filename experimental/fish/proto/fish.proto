@@ -1,0 +1,11 @@
+// Protos for project fish.
+
+syntax = "proto2";
+package experimental.fish;
+
+message CompilerCrashDiscriminatorTrainingExample {
+  optional string id = 1;
+  optional string src = 2;
+  optional bool raised_assertion = 3;
+  optional string assertion_name = 4;
+}
