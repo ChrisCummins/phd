@@ -1,4 +1,0 @@
-sqlite {
-  path: "/tmp/deepsmith_testing_datastore.db"
-}
-testonly: true
