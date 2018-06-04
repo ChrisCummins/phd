@@ -1,7 +1,8 @@
 """A command-line interface for importing protos to the datastore."""
 import pathlib
-
 import time
+
+import progressbar
 from absl import app
 from absl import flags
 from absl import logging
@@ -35,7 +36,7 @@ def ImportResultsFromDirectory(session: db.session_t,
   last_commit_time = time.time()
   if not results_dir.is_dir():
     logging.fatal('directory %s does not exist', results_dir)
-  for path in results_dir.iterdir():
+  for path in progressbar.ProgressBar()(results_dir.iterdir()):
     deeplearning.deepsmith.result.Result.FromFile(session, path)
     files_to_delete.append(path)
     logging.info('Imported result %s', path)
@@ -65,7 +66,7 @@ def ImportTestcasesFromDirectory(session: db.session_t,
   last_commit_time = time.time()
   if not testcases_dir.is_dir():
     logging.fatal('directory %s does not exist', testcases_dir)
-  for path in testcases_dir.iterdir():
+  for path in progressbar.ProgressBar()(testcases_dir.iterdir()):
     deeplearning.deepsmith.testcase.Testcase.FromFile(session, path)
     files_to_delete.append(path)
     logging.info('Imported testcase %s', path)
