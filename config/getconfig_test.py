@@ -2,9 +2,9 @@
 import os
 import pathlib
 import subprocess
+import sys
 
 import pytest
-import sys
 from absl import app
 from absl import flags
 
@@ -20,6 +20,8 @@ def test_GetGlobalConfig_system_values():
   assert config.HasField('uname')
   assert config.HasField('configure_id')
   assert config.HasField('with_cuda')
+  assert config.options.HasField('with_cuda')
+  assert config.options.HasField('update_git_submodules')
   assert config.paths.HasField('repo_root')
   assert config.paths.HasField('cc')
   assert config.paths.HasField('cxx')
@@ -43,10 +45,18 @@ def test_configure_id():
   run ./configure again.
   """
   config = getconfig.GetGlobalConfig()
-  configure_path = (pathlib.Path(config.paths.repo_root) / 'configure')
+  configure_path = pathlib.Path(config.paths.repo_root) / 'configure'
   assert configure_path.is_file()
+
+  def ToConfigureArg(field: str) -> str:
+    """Turn an 'options' field into a --[no]arg ./configure argument."""
+    return f'--{field}' if getattr(config.options, field) else f'--no{field}'
+
+  args = [ToConfigureArg(f.name) for f in config.options.DESCRIPTOR.fields]
+  cmd = [str(configure_path), '--print_id', '--noninteractive'] + args
+  print('$', ' '.join(cmd))
   assert config.configure_id == subprocess.check_output(
-      [configure_path, '--id'], universal_newlines=True).rstrip()
+      cmd, universal_newlines=True).rstrip()
 
 
 def test_GlobalConfigPaths_repo_root():

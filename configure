@@ -21,6 +21,54 @@ PHD_ROOT = os.path.dirname(os.path.realpath(__file__))
 CONFIG_PROTO_PATH = os.path.join(PHD_ROOT, 'config.pbtxt')
 
 
+def YesNoPrompt(question, default, noninteractive):
+  """Ask a yes/no question and return user's answer.
+
+  Args:
+    question: The question that is presented to the user.
+    default: is the presumed answer if the user just hits <Enter>.
+      It must be a string "yes" or "no".
+    noninteractive: If True, just print the question and return the default
+      response, do not prompt the user for it.
+
+  Returns:
+    True if the user answered "yes", or False for "no".
+
+  Raises:
+    ValueError: If the default is not one of: {"yes", "no"}.
+  """
+  valid = {"yes": True, "y": True, "ye": True, "no": False, "n": False}
+  if default == "yes":
+    prompt = " [Y/n] "
+  elif default == "no":
+    prompt = " [y/N] "
+  else:
+    raise ValueError("Invalid default answer: '{}'".format(default))
+
+  while True:
+    sys.stdout.write(question + prompt)
+
+    if noninteractive:
+      sys.stdout.write(default + '\n')
+      return default
+
+    # Python3 renamed raw_input() to input().
+    # https://docs.python.org/3/whatsnew/3.0.html
+    if sys.version_info >= (3, 0):
+      choice = input().lower()
+    else:
+      choice = raw_input().lower()
+
+    if choice == '':
+      sys.stdout.write(default + '\n')
+      return valid[default]
+    elif choice in valid:
+      return valid[choice]
+    else:
+      sys.stdout.write("Please respond with 'yes' or 'no' "
+                       "(or 'y' or 'n').\n")
+
+
 def GetConfigId(args):
   """Get the ID of the configuration.
 
@@ -40,8 +88,8 @@ def GetConfigId(args):
   with open(__file__, 'rb') as f:
     sha256.update(f.read())
     for arg in sorted(args.__dict__.keys()):
-      # The --id argument does not modify the ID.
-      if arg != 'print_id':
+      # The --print_id argument does not modify the ID.
+      if arg not in {'print_id', 'noninteractive', 'cache_result'}:
         sha256.update('{}'.format(args.__dict__[arg]).encode('utf-8'))
   return sha256.hexdigest()
 
@@ -115,29 +163,76 @@ def RunAsHomebrewUser(cmd, subprocess_fn=subprocess.check_call):
     return subprocess_fn(cmd)
 
 
+def GetConfigurationOptions(argv):
+  """Parse command line arguments and ask yes/no questions.
+
+  Arguments:
+    argv: A list of command line arguments.
+
+  Returns:
+     The arguments namespace.
+  """
+  parser = argparse.ArgumentParser(
+      description='Configure this project for building.',
+      epilog=('Please report issues at '
+              '<https://github.com/ChrisCummins/phd/issues>.'))
+
+  # --print_id.
+  parser.add_argument('--print_id', dest='print_id', action='store_true',
+                      help='Print the ID of the configuration and exit.')
+
+  # --noninteractive.
+  parser.add_argument(
+      '--noninteractive', action='store_true',
+      help=('Disable interactive yes/no prompts. The default values for any '
+            'yes/no prompts will be used, unless command line arguments are '
+            'provided.'))
+
+  # --[no]cache_result.
+  parser.add_argument(
+      '--cache_result', dest='cache_result', action='store_true',
+      help=('Cache the results of configure so that subsequent runs of this '
+            'script will be faster.'))
+  parser.add_argument(
+      '--nocache_result', dest='cache_result', action='store_false',
+      help='Disable caching of configure result.')
+  parser.set_defaults(cache_result=True)
+
+  # --[no]with_cuda.
+  parser.add_argument(
+      '--with_cuda', dest='with_cuda', action='store_true',
+      help=('Enable CUDA support. This requires that CUDA is installed on the '
+            'host machine.'))
+  parser.add_argument(
+      '--nowith_cuda', dest='with_cuda', action='store_false',
+      help='Disable CUDA support.')
+  parser.set_defaults(with_cuda=GuessIfCudaIsAvailable())
+
+  # --[no]update_git_submodules.
+  parser.add_argument(
+      '--update_git_submodules', dest='update_git_submodules',
+      action='store_true', help='Checkout and update git submodules.')
+  parser.add_argument(
+      '--noupdate_git_submodules', dest='update_git_submodules',
+      action='store_false', help='Do not checkout and update git submodules.')
+  parser.set_defaults(update_git_submodules=True)
+
+  args = parser.parse_args(argv)
+
+  def YesNo(arg, question):
+    if not args.noninteractive:
+      arg = YesNoPrompt(question, 'yes' if arg else 'no', False)
+
+  YesNo(args.with_cuda, 'Enable CUDA support?')
+  YesNo(args.update_git_submodules, 'Update git submodules?')
+  return args
+
+
 def main(argv):
   logging.basicConfig(level=logging.DEBUG, format='%(message)s')
 
-  parser = argparse.ArgumentParser()
-  parser.add_argument('--with_cuda', dest='cuda', action='store_true',
-                      help=('Enable CUDA support. This requires that '
-                            'CUDA is installed on the host machine.'))
-  parser.add_argument('--nowith_cuda', dest='cuda', action='store_false',
-                      help='Disable CUDA support.')
-  parser.set_defaults(cuda=True)
-  parser.add_argument(
-      '--cache_result', dest='cache_result', action='store_true',
-      help='Cache the results of configure.')
-  parser.add_argument(
-      '--nocache_result', dest='cache_result', action='store_false',
-      help='Disable caching of configure results.')
-  parser.set_defaults(cache_result=True)
-  parser.add_argument('--id', dest='print_id', action='store_true',
-                      help='Print the configure ID and exit.')
-  args = parser.parse_args(argv)
-
-  phd_root = os.path.dirname(os.path.realpath(__file__))
-  os.chdir(phd_root)
+  args = GetConfigurationOptions(argv)
+  os.chdir(PHD_ROOT)
 
   # Calculate config ID and compare against cached ID (if it exists).
   config_id = GetConfigId(args)
@@ -164,19 +259,13 @@ def main(argv):
     if git_remote.startswith('https://'):
       logging.info('Rewriting .gitmodules to use https://')
       RewriteGitSubmodulesToHttps()
-    # Update submodules.
-    logging.info('Updating git submodules.')
+
+  if args.update_git_submodules:
     subprocess.check_call(
-        ['git', '-C', phd_root, 'submodule', 'update', '--init', '--recursive'],
+        ['git', '-C', PHD_ROOT, 'submodule', 'update', '--init', '--recursive'],
         stdout=subprocess.DEVNULL)
-  else:
-    logging.info('Not a git repo.')
 
-  with_cuda = False
-  if args.cuda and GuessIfCudaIsAvailable():
-    with_cuda = True
-
-  dotfiles_run_path = os.path.join(phd_root, 'system', 'dotfiles', 'run')
+  dotfiles_run_path = os.path.join(PHD_ROOT, 'system', 'dotfiles', 'run')
   assert os.path.isfile(dotfiles_run_path)
   proc = subprocess.Popen([dotfiles_run_path, 'PhdBuildDeps'])
   proc.communicate()
@@ -188,29 +277,29 @@ def main(argv):
   assert os.path.isfile(python_path)
 
   base_requirements_txt_path = os.path.join(
-      phd_root, 'tools', 'requirements.txt')
+      PHD_ROOT, 'tools', 'requirements.txt')
   assert os.path.isfile(base_requirements_txt_path)
   with open(base_requirements_txt_path) as f:
     base_requirements = f.read()
 
-  if with_cuda:
+  if args.with_cuda:
     requirements_txt = base_requirements.replace(
         'tensorflow=', 'tensorflow-gpu=')
   else:
     requirements_txt = base_requirements
 
-  requirements_txt_path = os.path.join(phd_root, 'requirements.txt')
+  requirements_txt_path = os.path.join(PHD_ROOT, 'requirements.txt')
   with open(requirements_txt_path, 'w') as f:
     f.write(requirements_txt)
 
   pip_packages = RunAsHomebrewUser(
       [python_path, '-m', 'pip', 'freeze'], subprocess.check_output).decode(
       'utf-8')
-  if with_cuda and 'tensorflow==' in pip_packages:
+  if args.with_cuda and 'tensorflow==' in pip_packages:
     logging.info('Detected CUDA, so uninstalling CPU TensorFlow')
     RunAsHomebrewUser(
         [python_path, '-m', 'pip', 'uninstall', '-y', '-q', 'tensorflow'])
-  elif not with_cuda and 'tensorflow-gpu==' in pip_packages:
+  elif not args.with_cuda and 'tensorflow-gpu==' in pip_packages:
     logging.info('CUDA not detected, so uninstalling GPU TensorFlow')
     RunAsHomebrewUser(
         [python_path, '-m', 'pip', 'uninstall', '-y', '-q', 'tensorflow-gpu'])
@@ -229,9 +318,9 @@ def main(argv):
 
   npm_path = os.path.join(brew_prefix, 'bin', 'npm')
   assert os.path.isfile(npm_path)
-  if not os.path.isdir(os.path.join(phd_root, 'node_modules', 'husky')):
+  if not os.path.isdir(os.path.join(PHD_ROOT, 'node_modules', 'husky')):
     proc = subprocess.Popen(
-        [npm_path, 'install', '--cwd', phd_root, 'husky', '--save-dev'])
+        [npm_path, 'install', '--cwd', PHD_ROOT, 'husky', '--save-dev'])
     proc.communicate()
 
   llvm_prefix = os.path.join(brew_prefix, 'opt', 'llvm')
@@ -245,7 +334,14 @@ def main(argv):
   if not os.path.isfile(libclang_so_path):
     libclang_so_path = ''
 
-  with open(os.path.join(phd_root, 'config.pbtxt'), 'w') as f:
+  options_to_exclude = {'print_id', 'noninteractive', 'cache_result'}
+  options_to_export = {k: args.__dict__[k] for k in args.__dict__
+                       if k not in options_to_exclude}
+  options = '\n'.join(
+      ['  {k}: {v}'.format(k=k, v='true' if options_to_export[k] else 'false')
+       for k in options_to_export])
+
+  with open(os.path.join(PHD_ROOT, 'config.pbtxt'), 'w') as f:
     f.write("""\
 # Global configuration options. Generated by ./configure. DO NOT EDIT!
 # File: //config/proto/config.proto
@@ -253,6 +349,9 @@ def main(argv):
 uname: "{uname}"
 configure_id: "{config_id}"
 with_cuda: {with_cuda}
+options {{
+{options}
+}}
 paths {{
   repo_root: "{phd_root}"
   cc: "{llvm_prefix}/bin/clang"
@@ -263,8 +362,9 @@ paths {{
   python: "{python_path}"
   llvm_prefix: "{llvm_prefix}"
 }}
-""".format(uname=uname, config_id=config_id, phd_root=phd_root,
-           with_cuda='true' if with_cuda else 'false', llvm_prefix=llvm_prefix,
+""".format(uname=uname, config_id=config_id, phd_root=PHD_ROOT,
+           with_cuda='true' if args.with_cuda else 'false',
+           options=options, llvm_prefix=llvm_prefix,
            libclang_so=libclang_so_path, python_path=python_path))
 
   # On Linux systems we use the homebrew-installed clang. On macOS we use the
@@ -276,7 +376,7 @@ paths {{
     cc = os.path.join(llvm_prefix, 'bin', 'clang')
     cxx = os.path.join(llvm_prefix, 'bin', 'clang++')
 
-  with open(os.path.join(phd_root, '.env'), 'w') as f:
+  with open(os.path.join(PHD_ROOT, '.env'), 'w') as f:
     f.write("""\
 #!/bin/bash
 # Shell environment for the project. Generated by ./configure. DO NOT EDIT!
@@ -297,7 +397,7 @@ clgen() {{
   bazel build //deeplearning/clgen
   {phd_root}/bazel-phd/bazel-out/*-py3-opt/bin/deeplearning/clgen/clgen $@
 }}
-""".format(phd_root=phd_root, cc=cc, cxx=cxx, python_path=python_path))
+""".format(phd_root=PHD_ROOT, cc=cc, cxx=cxx, python_path=python_path))
 
 
 if __name__ == '__main__':

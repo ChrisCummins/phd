@@ -14,9 +14,17 @@ message GlobalConfig {
   // whether or not the configuration process needs to be run.
   required string configure_id = 2;
   // Whether or not the repository is configured to use CUDA.
-  required bool with_cuda = 3;
+  // TODO(cec): Remove this field now that 'options' field exists.
+  required bool with_cuda = 100;
+  // Configuration options.
+  required GlobalConfigOptions options = 3;
   // Important paths.
-  required GlobalConfigPaths paths = 15;
+  required GlobalConfigPaths paths = 4;
+}
+
+message GlobalConfigOptions {
+  required bool with_cuda = 1;
+  required bool update_git_submodules = 2;
 }
 
 // A list of absolute paths to import system files and directories.
