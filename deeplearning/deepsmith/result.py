@@ -84,8 +84,8 @@ class Result(db.Table):
     for output in self.outputset:
       proto.outputs[output.name.string] = output.value.truncated_value
     for event in self.profiling_events:
-      event = proto.profiling_events.add()
-      event.SetProto(event)
+      event_proto = proto.profiling_events.add()
+      event.SetProto(event_proto)
     return proto
 
   def ToProto(self) -> deepsmith_pb2.Result:
