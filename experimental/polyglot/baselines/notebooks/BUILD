@@ -1,7 +1,13 @@
+# Jupyter notebooks server.
+
 py_binary(
-    name = "run",
-    srcs = ["run.py"],
-    data = ["//experimental/polyglot/baselines:protos"],
+    name = "notebooks",
+    srcs = ["notebooks.py"],
+    data = glob([
+        "*.ipynb",
+    ]) + [
+        "//experimental/polyglot/baselines:protos",
+    ],
     deps = [
         "//deeplearning/clgen",
         "//deeplearning/clgen/proto:clgen_py_pb2",
