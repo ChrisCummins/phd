@@ -1,7 +1,7 @@
 # File: //deeplearning/clgen/proto/model.proto
 # Proto: clgen.Model
 architecture {
-  embedding_size: 512
+  embedding_size: 1024
   neuron_type: LSTM
   neurons_per_layer: 1024
   num_layers: 2
