@@ -8,6 +8,7 @@ import pytest
 from absl import app
 from absl import flags
 
+from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.corpuses import encoded
 from deeplearning.clgen.corpuses import preprocessed
@@ -119,6 +120,17 @@ def test_EncodedContentFiles_token_count(
     session.add(enc2)
     assert 2 == session.query(encoded.EncodedContentFile).count()
   assert 20 == temp_db.token_count
+
+
+def test_EncodedContentFiles_empty_preprocessed_db(
+    temp_db: encoded.EncodedContentFiles,
+    abc_atomizer: atomizers.AsciiCharacterAtomizer):
+  """Test that EmptyCorpusException raised if preprocessed db is empty."""
+  with tempfile.TemporaryDirectory() as d:
+    p = preprocessed.PreprocessedContentFiles(
+        pathlib.Path(d) / 'preprocessed.db')
+    with pytest.raises(errors.EmptyCorpusException):
+      temp_db.Create(p, abc_atomizer, '\n\n')
 
 
 def main(argv):

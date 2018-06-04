@@ -153,9 +153,9 @@ class PreprocessedContentFiles(sqlutil.Database):
                  humanize.intcomma(num_input_files))
     logging.info('Pre-processed %s files in %s ms (%.2fx speedup).',
                  num_input_files, humanize.intcomma(total_walltime),
-                 total_time / total_walltime)
+                 (total_time or 0) / (total_walltime or 1))
     logging.info('Pre-processing discard rate: %.1f%% (%s files).',
-                 (1 - (num_files / num_input_files)) * 100,
+                 (1 - (num_files / max(num_input_files, 1))) * 100,
                  humanize.intcomma(num_input_files - num_files))
     logging.info('Pre-processed corpus: %s chars, %s lines, %s files.',
                  humanize.intcomma(char_count), humanize.intcomma(line_count),

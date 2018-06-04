@@ -15,6 +15,7 @@ from absl import logging
 from sqlalchemy.ext import declarative
 from sqlalchemy.sql import func
 
+from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.corpuses import preprocessed
 from deeplearning.clgen.proto import internal_pb2
@@ -118,6 +119,10 @@ class EncodedContentFiles(sqlutil.Database):
 
     Returns:
       True if work was done, else False.
+
+    Raises:
+      EmptyCorpusException: If the PreprocessedContentFiles database has
+        no files.
     """
     with self.Session() as session:
       if not self.IsDone(session):
@@ -178,6 +183,11 @@ class EncodedContentFiles(sqlutil.Database):
             pickled_atomizer=pickle.dumps(atomizer))
         for x in query
       ]
+      if not jobs:
+        raise errors.EmptyCorpusException(
+            "Pre-processed corpus contains no files: "
+            f"'{preprocessed_db.database_path}'")
+
       logging.info('Encoding %s of %s preprocessed files',
                    humanize.intcomma(query.count()),
                    humanize.intcomma(p_session.query(

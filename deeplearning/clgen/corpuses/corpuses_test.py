@@ -7,6 +7,7 @@ from absl import app
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import corpuses
+from deeplearning.clgen.corpuses import preprocessed
 from deeplearning.clgen.proto import corpus_pb2
 
 
@@ -77,13 +78,28 @@ def test_Corpus_inequality(clgen_cache_dir, abc_corpus_config):
 
 def test_Corpus_Create_empty_directory_raises_error(clgen_cache_dir,
                                                     abc_corpus_config):
-  """Test that a corpus with no data raises an error."""
+  """Test that a corpus with no content files raises an error."""
   del clgen_cache_dir
   with tempfile.TemporaryDirectory() as d:
     abc_corpus_config.local_directory = d
     with pytest.raises(errors.EmptyCorpusException) as e_info:
       corpuses.Corpus(abc_corpus_config).Create()
     assert f"Empty content files directory: '{d}'" == str(e_info.value)
+
+
+def test_Corpus_Create_empty_preprocessed_raises_error(clgen_cache_dir,
+                                                       abc_corpus_config):
+  """Test that a pre-processed corpus with no data raises an error."""
+  del clgen_cache_dir
+  c = corpuses.Corpus(abc_corpus_config)
+  # Empty the pre-processed database:
+  c.preprocessed.Create(abc_corpus_config)
+  with c.preprocessed.Session(commit=True) as session:
+    session.query(preprocessed.PreprocessedContentFile).delete()
+  with pytest.raises(errors.EmptyCorpusException) as e_info:
+    c.Create()
+  assert ("Pre-processed corpus contains no files: "
+          f"'{c.preprocessed.database_path}'") == str(e_info.value)
 
 
 def test_Corpus_greedy_multichar_atomizer_no_atoms(clgen_cache_dir,

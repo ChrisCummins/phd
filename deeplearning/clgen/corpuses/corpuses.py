@@ -127,12 +127,21 @@ class Corpus(object):
     self.cache = cache.mkcache('corpus', 'encoded', encoded_id)
 
   def Create(self) -> None:
-    """Create the corpus files."""
+    """Create the corpus files.
+
+    Raises:
+      EmptyCorpusException: If there are no content files, or no successfully
+        pre-processed files.
+    """
     logging.info('Content ID: %s', self.content_id)
     preprocessed_lock_path = self.preprocessed.database_path.parent / 'LOCK'
     with lockfile.LockFile(preprocessed_lock_path).acquire(
         replace_stale=True, block=True):
       self.preprocessed.Create(self.config)
+    if not self.preprocessed.size:
+      raise errors.EmptyCorpusException(
+          "Pre-processed corpus contains no files: "
+          f"'{self.preprocessed.database_path}'")
     encoded_lock_path = self.encoded.database_path.parent / 'LOCK'
     with lockfile.LockFile(encoded_lock_path).acquire(
         replace_stale=True, block=True):

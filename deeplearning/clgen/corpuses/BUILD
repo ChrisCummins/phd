@@ -76,6 +76,7 @@ py_test(
         ":atomizers",
         ":encoded",
         ":preprocessed",
+        "//deeplearning/clgen:errors",
     ],
 )
 
