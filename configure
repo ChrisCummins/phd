@@ -11,11 +11,31 @@ import logging
 import os
 import re
 import subprocess
-
 import sys
 
 
+# The path to the root of the PhD repository, i.e. the directory which this file
+# is in.
+PHD_ROOT = os.path.dirname(os.path.realpath(__file__))
+# The path to the config proto file which this script generates.
+CONFIG_PROTO_PATH = os.path.join(PHD_ROOT, 'config.pbtxt')
+
+
 def GetConfigId(args):
+  """Get the ID of the configuration.
+
+  The configuration ID is a sha256 which uniquely identifies both the set of
+  configuration options requested by the user, and the contents of this file.
+  If either this file or the options change, the return value of this function
+  will change.
+
+  Arguments:
+    args: The arguments namespace which is returned by
+      ArgumentParser.parse_args().
+
+  Returns:
+    A 64 character hexadecimal string.
+  """
   sha256 = hashlib.sha256()
   with open(__file__, 'rb') as f:
     sha256.update(f.read())
@@ -27,18 +47,25 @@ def GetConfigId(args):
 
 
 def GetCachedConfigId():
-  config_proto_path = os.path.join(
-      os.path.dirname(os.path.realpath(__file__)), 'config.pbtxt')
-  if not os.path.isfile(config_proto_path):
+  """Get the ID of the last run configuration, if any.
+
+  Returns:
+    A 64 character hexadecimal string, or None if ./configure has not been run
+    before.
+  """
+  if not os.path.isfile(CONFIG_PROTO_PATH):
     return None
 
-  with open(config_proto_path) as f:
+  with open(CONFIG_PROTO_PATH) as f:
+    # Very crude text_format proto parsing!
     for line in f.readlines():
       if 'configure_id:' in line:
         try:
           return re.search(r'configure_id:\s*"([0-9a-f]{64})"', line).group(1)
         except AttributeError:
           pass
+  logging.warning(
+      "Could not find field 'configure_id' in proto: '%s'", CONFIG_PROTO_PATH)
   return None
 
 
@@ -128,7 +155,7 @@ def main(argv):
   if os.path.isfile('/bin/uname'):
     uname_path = '/bin/uname'
   uname = subprocess.check_output(
-    [uname_path], universal_newlines=True).rstrip().lower()
+      [uname_path], universal_newlines=True).rstrip().lower()
 
   if IsGitRepo():
     git_remote = GetGitRemote()
@@ -177,15 +204,16 @@ def main(argv):
     f.write(requirements_txt)
 
   pip_packages = RunAsHomebrewUser(
-    [python_path, '-m', 'pip', 'freeze'], subprocess.check_output).decode('utf-8')
+      [python_path, '-m', 'pip', 'freeze'], subprocess.check_output).decode(
+      'utf-8')
   if with_cuda and 'tensorflow==' in pip_packages:
     print('Detected CUDA, so uninstalling CPU TensorFlow')
     RunAsHomebrewUser(
-      [python_path, '-m', 'pip', 'uninstall', '-y', '-q', 'tensorflow'])
+        [python_path, '-m', 'pip', 'uninstall', '-y', '-q', 'tensorflow'])
   elif not with_cuda and 'tensorflow-gpu==' in pip_packages:
     print('CUDA not detected, so uninstalling GPU TensorFlow')
     RunAsHomebrewUser(
-      [python_path, '-m', 'pip', 'uninstall', '-y', '-q', 'tensorflow-gpu'])
+        [python_path, '-m', 'pip', 'uninstall', '-y', '-q', 'tensorflow-gpu'])
 
   print('Installing Python packages', file=sys.stderr)
   RunAsHomebrewUser(
