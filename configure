@@ -148,7 +148,7 @@ def main(argv):
   if args.cache_result and config_id == cached_config_id:
     return
 
-  print('Config ID:', config_id)
+  logging.info('Config ID: %s', config_id)
 
   # Uname in lowercase.
   uname_path = '/usr/bin/uname'
@@ -207,15 +207,15 @@ def main(argv):
       [python_path, '-m', 'pip', 'freeze'], subprocess.check_output).decode(
       'utf-8')
   if with_cuda and 'tensorflow==' in pip_packages:
-    print('Detected CUDA, so uninstalling CPU TensorFlow')
+    logging.info('Detected CUDA, so uninstalling CPU TensorFlow')
     RunAsHomebrewUser(
         [python_path, '-m', 'pip', 'uninstall', '-y', '-q', 'tensorflow'])
   elif not with_cuda and 'tensorflow-gpu==' in pip_packages:
-    print('CUDA not detected, so uninstalling GPU TensorFlow')
+    logging.info('CUDA not detected, so uninstalling GPU TensorFlow')
     RunAsHomebrewUser(
         [python_path, '-m', 'pip', 'uninstall', '-y', '-q', 'tensorflow-gpu'])
 
-  print('Installing Python packages', file=sys.stderr)
+  logging.info('Installing Python packages')
   RunAsHomebrewUser(
       [python_path, '-m', 'pip', 'install', '--no-warn-script-location', '-q',
        '-r', requirements_txt_path])
