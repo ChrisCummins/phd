@@ -151,10 +151,11 @@ class ResultProfilingEvent(db.Table):
     return self.SetProto(proto)
 
   @classmethod
-  def GetOrAdd(cls, session: db.session_t,
-               proto: deepsmith_pb2.ProfilingEvent) -> 'ProfilingEvent':
+  def GetOrAdd(cls, session: db.session_t, proto: deepsmith_pb2.ProfilingEvent,
+               result: 'result.Result') -> 'ProfilingEvent':
     return sqlutil.GetOrAdd(
         session, cls,
+        result=result,
         client=deeplearning.deepsmith.client.Client.GetOrAdd(
             session, proto.client),
         type=ProfilingEventType.GetOrAdd(session,

@@ -134,7 +134,7 @@ class Result(db.Table):
     # Add profiling events.
     for event in proto.profiling_events:
       deeplearning.deepsmith.profiling_event.ResultProfilingEvent.GetOrAdd(
-          session, event).result = result
+          session, event, result)
 
     return result
 
