@@ -7,10 +7,13 @@ import pathlib
 import typing
 
 import MySQLdb
+import humanize
 from absl import app
 from absl import flags
+from absl import logging
 
-from experimental.fish.proto import fish_pb2
+from experimental.deeplearning.fish.proto import fish_pb2
+from lib.labm8 import fs
 from lib.labm8 import pbutil
 
 
@@ -37,6 +40,7 @@ def ExportOpenCLResults(cursor, start_id, proto_dir):
   batch_size = 1000
   result_id = start_id
   while True:
+    logging.info('Exporting batch of %s results', humanize.intcomma(batch_size))
     cursor.execute("""
 SELECT
   results.id,
@@ -58,6 +62,7 @@ AND testbeds.id = (
   WHERE platform = 'clang'
   AND driver = '3.6.2'
 )
+ORDER BY results.id
 LIMIT %s
 """, (result_id, batch_size))
     i = 0
@@ -70,15 +75,16 @@ LIMIT %s
         program_src,
       ) = row
 
+      outcome = fish_pb2.CompilerCrashDiscriminatorTrainingExample.Outcome.Name(
+          outcome_num).lower()
       proto = fish_pb2.CompilerCrashDiscriminatorTrainingExample(
           src=program_src,
-          outcome=fish_pb2.CompilerCrashDiscriminatorTrainingExample.Outcome.Value(
-              outcome_num),
+          outcome=outcome_num,
           raised_assertion=True if assertion_text else False,
           assertion_name=(GetClangAssertionStub(assertion_text)
                           if assertion_text else '')
       )
-      pbutil.ToFile(proto, proto_dir / str(result_id) + '.pbtxt')
+      pbutil.ToFile(proto, proto_dir / outcome / (str(result_id) + '.pbtxt'))
 
     # If we received fewer results than the requested batch size, then we have
     # ran out of data.
@@ -103,19 +109,28 @@ def main(argv):
   export_path = pathlib.Path(FLAGS.export_path)
   if export_path.is_file():
     raise app.UsageError('--export_path must be a directory')
-  export_path.mkdir(parents=True, exist_ok=True)
 
+  # Make a directory for each outcome class.
+  for key in fish_pb2.CompilerCrashDiscriminatorTrainingExample.Outcome.keys():
+    (export_path / key.lower()).mkdir(parents=True, exist_ok=True)
+
+  logging.info('Connecting to MySQL database')
   credentials = GetMySqlCredentials()
   cnx = MySQLdb.connect(database='dsmith_04_opencl', host='cc1',
                         user=credentials[0], password=credentials[1])
   cursor = cnx.cursor()
-  ids = sorted([int(x) for x in export_path.iterdir()])
-  last_export_id = int(ids[-1]) if ids else 0
-
+  logging.info('Determining last export ID')
+  ids = sorted([
+    int(pathlib.Path(f).stem) for f in fs.lsfiles(
+        export_path, recursive=True, abspaths=True)])
+  last_export_id = ids[-1] if ids else 0
+  logging.info('Exporting results from ID %s', last_export_id)
   ExportOpenCLResults(cursor, last_export_id, export_path)
-
   cursor.close()
   cnx.close()
+  logging.info('Exported training set of %s files to %s',
+               humanize.intcomma(len(list(export_path.iterdir()))),
+               export_path)
 
 
 if __name__ == '__main__':

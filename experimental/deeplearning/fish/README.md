@@ -3,19 +3,20 @@
 Build:
 
 ```sh
-$ bazel build //experimental/fish/...
+$ bazel build //experimental/deeplearning/fish/...
 ```
 
 Export data to train a discriminator:
 
 ```sh
-$ TODO(cec): bazel-bin/experimental/fish/export_discriminator_training_set
+$ bazel-bin/experimental/deeplearning/fish/export_discriminator_training_set \
+  --export_path ~/data/experimental/deeplearning/fish/75k
 ```
 
 Train a discriminator:
 
 ```sh
-$ TODO(cec): bazel-bin/experimental/fish/train_discriminator
+$ TODO(cec): bazel-bin/experimental/deeplearning/fish/train_discriminator
 ```
 
 Evaluate the discriminator:

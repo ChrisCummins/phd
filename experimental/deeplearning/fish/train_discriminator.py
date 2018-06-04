@@ -8,16 +8,16 @@ import numpy as np
 from absl import app
 from absl import flags
 from absl import logging
-from experimental.fish.proto import fish_pb2
 
 from deeplearning.clgen.corpuses import atomizers
+from experimental.deeplearning.fish.proto import fish_pb2
 from lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
-    'training_path', None,
+    'export_path', None,
     'Directory to read training data protos from.')
 flags.DEFINE_integer(
     'sequence_length', 1024,
@@ -84,45 +84,38 @@ def BuildKerasModel(
   model = keras.models.Model(input=code_in, output=out)
   model.compile(
       optimizer='adam', metrics='accuracy', loss='categorical_crossentropy')
+  model.summary()
   return model
 
 
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:
-    raise app.UsageError('Unknown arguments: '{}'.'.format(' '.join(argv[1:])))
+    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
   if not FLAGS.export_path:
     raise app.UsageError('--export_path must be a directory')
-  training_data_path = pathlib.Path(FLAGS.export_path)
-  if training_data_path.is_file():
+  export_path = pathlib.Path(FLAGS.export_path)
+  if export_path.is_file():
     raise app.UsageError('--export_path must be a directory')
-  training_data_path.mkdir(parents=True, exist_ok=True)
-
-  training_protos = [
-    pbutil.FromFile(path, fish_pb2.CompilerCrashDiscriminatorTrainingExample())
-    for path in training_data_path.iterdir()
-  ]
-  logging.info('Loaded %s training data protos',
-               humanize.intcomma(len(training_protos)))
-
-  # A positive example is a program which crashes the compiler.
-  positive_outcomes = {
-    fish_pb2.CompilerCrashDiscriminatorTrainingExample.BUILD_CRASH,
-  }
-  # A negative example is a program which does not crash the compiler, even if
-  # the build otherwise fails.
-  negative_outcomes = {
-    fish_pb2.CompilerCrashDiscriminatorTrainingExample.BUILD_FAILURE,
-    fish_pb2.CompilerCrashDiscriminatorTrainingExample.BUILD_TIMEOUT,
-    fish_pb2.CompilerCrashDiscriminatorTrainingExample.PASS,
-  }
+  export_path.mkdir(parents=True, exist_ok=True)
 
   positive_protos = [
-    proto for proto in training_protos if proto.outcome in positive_outcomes]
+    pbutil.FromFile(path, fish_pb2.CompilerCrashDiscriminatorTrainingExample())
+    for path in sorted(list((export_path / 'build_crash').iterdir()))
+  ]
+  logging.info('Loaded %s positive data protos',
+               humanize.intcomma(len(positive_protos)))
+  # Load an equal number of negative protos, sorted by result ID.
   negative_protos = [
-    proto for proto in training_protos if proto.outcome in negative_outcomes]
-  assert len(positive_outcomes) + len(negative_outcomes) == len(training_protos)
+    pbutil.FromFile(path, fish_pb2.CompilerCrashDiscriminatorTrainingExample())
+    for path in
+    sorted(list((export_path / 'pass').iterdir()))[:len(positive_protos)]
+  ]
+  logging.info('Loaded %s negative training data protos',
+               humanize.intcomma(len(negative_protos)))
+
+  training_protos = negative_protos + positive_protos
 
   logging.info('Number of training examples: %s positive, %s negative',
                humanize.intcomma(len(positive_protos)),
@@ -135,7 +128,7 @@ def main(argv):
   x = EncodeAndPad([p.src for p in positive_protos + negative_protos],
                    sequence_length, atomizer)
   y = np.concatenate((np.ones(len(positive_protos)),
-                      np.zeroes(len(negative_outcomes))))
+                      np.zeroes(len(negative_protos))))
   assert len(x) == len(training_protos)
   assert len(y) == len(training_protos)
 

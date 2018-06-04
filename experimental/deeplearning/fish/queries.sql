@@ -23,8 +23,7 @@ SELECT
   results.id,
   assertions.assertion,
   results.outcome,
-  programs.src,
-  stderrs.stderr
+  programs.src
 FROM results
 LEFT JOIN testbeds ON results.testbed_id = testbeds.id
 LEFT JOIN platforms ON testbeds.platform_id = platforms.id
@@ -34,11 +33,11 @@ LEFT JOIN stderrs ON results.stderr_id = stderrs.id
 LEFT JOIN assertions ON stderrs.assertion_id = assertions.id
 WHERE results.id >= 0
 AND testbeds.id = (
-	SELECT testbeds.id 
+  SELECT testbeds.id 
     FROM testbeds
     LEFT JOIN platforms ON testbeds.platform_id=platforms.id
-	WHERE platform = 'clang'
-	AND driver = '3.6.2'
+  WHERE platform = 'clang'
+  AND driver = '3.6.2'
 )
-# ORDER BY results.id
+ORDER BY results.id
 LIMIT 100;
