@@ -870,6 +870,18 @@ class DiffSoFancy(Task):
     Node().npm_install("diff-so-fancy", self.VERSION)
 
 
+class Nbdime(Task):
+  """ diffs for Jupyter notebooks """
+  VERSION = '1.0.0'
+
+  __platforms__ = ['linux', 'osx']
+  __deps__ = ['Git', 'Python']
+  __genfiles__ = [Homebrew.bin('nbdime')]
+
+  def install(self):
+    Python().pip_install('nbdime', self.VERSION)
+
+
 class GhArchiver(Task):
   """ github archiver """
   VERSION = "0.0.6"
