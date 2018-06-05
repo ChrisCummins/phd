@@ -229,6 +229,10 @@ class TensorFlowModel(models.ModelBase):
       if ckpt_paths:
         saver.recover_last_checkpoints(ckpt_paths)
 
+      previous_loss = None
+      if self.TrainingTelemetry():
+        previous_loss = self.TrainingTelemetry()[-1].loss
+
       # Per-epoch training loop.
       for epoch_num in range(sess.run(self.epoch) + 1,
                              self.config.training.num_epochs + 1):
@@ -256,8 +260,12 @@ class TensorFlowModel(models.ModelBase):
           loss, state, _ = sess.run(
               [self.loss, self.final_state, self.train_op], feed)
 
-        # TODO(cec): Print diff from previous loss.
-        logging.info('Loss: %.6f.', loss)
+        # Log the loss and delta.
+        loss_delta = ''
+        if previous_loss:
+          loss_delta = ' (delta: {:.6f})'.format(loss - previous_loss)
+        logging.info('Loss: %.6f%s.', loss, loss_delta)
+        previous_loss = loss
 
         # Save after every epoch.
         start_time = time.time()
