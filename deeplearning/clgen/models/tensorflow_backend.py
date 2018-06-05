@@ -1,6 +1,7 @@
 """CLgen models using a Keras backend."""
 import os
 import pathlib
+import time
 import typing
 
 import humanize
@@ -56,7 +57,7 @@ class TensorFlowModel(models.ModelBase):
     Returns:
       The imported TensorFlow module.
     """
-    self.corpus.Create()
+    start_time = time.time()
 
     # Quiet tensorflow.
     # See: https://github.com/tensorflow/tensorflow/issues/1258
@@ -80,8 +81,6 @@ class TensorFlowModel(models.ModelBase):
 
     # Corpus attributes.
     sequence_length = 1 if inference else self.config.training.sequence_length
-    self.data_generator = data_generators.TensorflowBatchGenerator(
-        self.corpus, self.config.training)
 
     vocab_size = self.corpus.vocab_size
 
@@ -134,6 +133,7 @@ class TensorFlowModel(models.ModelBase):
     self.learning_rate = tf.Variable(0.0, trainable=False)
     self.epoch = tf.Variable(0, trainable=False)
     trainable_variables = tf.trainable_variables()
+
     # TODO(cec): Support non-adam optimizers.
     grads, _ = tf.clip_by_global_norm(
         # Argument of potential interest:
@@ -147,6 +147,12 @@ class TensorFlowModel(models.ModelBase):
         1e6)
     optimizer = tf.train.AdamOptimizer(self.learning_rate)
     self.train_op = optimizer.apply_gradients(zip(grads, trainable_variables))
+
+    num_trainable_params = int(np.sum(
+        [np.prod(v.shape) for v in tf.trainable_variables()]))
+    logging.info('Instantiated TensorFlow graph with %s trainable parameters '
+                 'in %s ms.', humanize.intcomma(num_trainable_params),
+                 humanize.intcomma(int((time.time() - start_time) * 1000)))
 
     return tf
 
@@ -185,6 +191,8 @@ class TensorFlowModel(models.ModelBase):
 
     This method must only be called when the model is locked.
     """
+    data_generator = data_generators.TensorflowBatchGenerator(
+        self.corpus, self.config.training)
     tf = self.InitTfGraph(inference=False)
 
     logger = telemetry.TrainingLogger(self.cache.path / 'logs')
@@ -214,20 +222,14 @@ class TensorFlowModel(models.ModelBase):
 
       # restore model from closest checkpoint.
       if ckpt_path:
+        logging.info("Restoring checkpoint {}".format(ckpt_path))
         saver.restore(sess, ckpt_path)
-        logging.info("restored checkpoint {}".format(ckpt_path))
 
       # make sure we don't lose track of other checkpoints
       if ckpt_paths:
         saver.recover_last_checkpoints(ckpt_paths)
 
-      max_batch = self.config.training.num_epochs * self.data_generator.num_batches
-
-      if sess.run(self.epoch) != self.config.training.num_epochs:
-        logging.info("training, %s", self)
-
       # Per-epoch training loop.
-      # TODO(cec): Per-epoch progress bars.
       for epoch_num in range(sess.run(self.epoch) + 1,
                              self.config.training.num_epochs + 1):
         logger.EpochBeginCallback()
@@ -239,14 +241,14 @@ class TensorFlowModel(models.ModelBase):
         sess.run(tf.assign(self.epoch, epoch_num))
 
         # TODO(cec): refactor data generator to a generator.
-        self.data_generator.CreateBatches()
+        data_generator.CreateBatches()
 
         logging.info('Epoch %d/%d:', epoch_num, self.config.training.num_epochs)
         state = sess.run(self.initial_state)
         # Per-batch inner loop.
-        bar = progressbar.ProgressBar(max_value=self.data_generator.num_batches)
-        for _ in bar(range(self.data_generator.num_batches)):
-          x, y = self.data_generator.NextBatch()
+        bar = progressbar.ProgressBar(max_value=data_generator.num_batches)
+        for _ in bar(range(data_generator.num_batches)):
+          x, y = data_generator.NextBatch()
           feed = {self.input_data: x, self.targets: y}
           for i, (c, h) in enumerate(self.initial_state):
             feed[c] = state[i].c
@@ -254,13 +256,19 @@ class TensorFlowModel(models.ModelBase):
           loss, state, _ = sess.run(
               [self.loss, self.final_state, self.train_op], feed)
 
-        logging.info('Loss: %.6f', loss)
+        # TODO(cec): Print diff from previous loss.
+        logging.info('Loss: %.6f.', loss)
+
         # Save after every epoch.
+        start_time = time.time()
         global_step = epoch_num
         checkpoint_prefix = (self.cache.path / 'checkpoints' / 'checkpoint')
         saver.save(sess, checkpoint_prefix, global_step=global_step)
         checkpoint_path = f'{checkpoint_prefix}-{global_step}'
-        logging.info(f'Saved file to {checkpoint_path}')
+        logging.info(
+            'Saved checkpoint %s in %s ms.',
+            checkpoint_path,
+            humanize.intcomma(int((time.time() - start_time) * 1000)))
         assert pathlib.Path(
             f'{checkpoint_prefix}-{global_step}.index').is_file()
         assert pathlib.Path(f'{checkpoint_prefix}-{global_step}.meta').is_file()

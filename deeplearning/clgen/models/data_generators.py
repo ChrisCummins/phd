@@ -97,7 +97,11 @@ class TensorflowBatchGenerator(object):
     # Lazily instantiated.
     self.encoded_corpus = None
     self.num_batches = 0
+    self.batches = None
     self.CreateBatches()
+
+    LogBatchTelemetry(
+        self.batches[0], self.num_batches, self.training_opts.num_epochs)
 
   def CreateBatches(self) -> None:
     start_time = time.time()
