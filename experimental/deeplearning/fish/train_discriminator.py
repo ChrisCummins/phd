@@ -121,7 +121,7 @@ def main(argv):
   sequence_length = FLAGS.sequence_length
   text = '\n'.join([p.src for p in positive_protos + negative_protos])
   logging.info('Deriving atomizer')
-  atomizer = atomizer.AsciiCharacterAtomizer.FromText(text)
+  atomizer = atomizers.AsciiCharacterAtomizer.FromText(text)
 
   logging.info('Encoding corpus')
   x = EncodeAndPad([p.src for p in positive_protos + negative_protos],
