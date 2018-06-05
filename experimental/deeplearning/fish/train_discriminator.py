@@ -136,7 +136,7 @@ def main(argv):
   model = BuildKerasModel(
       sequence_length=sequence_length, lstm_size=FLAGS.lstm_size,
       num_layers=FLAGS.num_layers, dnn_size=FLAGS.dnn_size, atomizer=atomizer)
-
+  logging.info('Training model')
   model.fit(x, Encode1HotLabels(y), epochs=FLAGS.num_epochs,
             batch_size=FLAGS.batch_size, verbose=True, shuffle=True)
 
