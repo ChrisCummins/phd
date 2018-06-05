@@ -89,7 +89,8 @@ class Instance(object):
     # Enter a session so that the cache paths are set relative to any requested
     # working directory.
     with self.Session():
-      self.model: models.Model = models.Model(config.model)
+      # TODO(cec): Determine which Model class to instantiate.
+      self.model: models.ModelBase = models.KerasEmbeddingModel(config.model)
       self.sampler: samplers.Sampler = samplers.Sampler(config.sampler)
 
   @contextlib.contextmanager

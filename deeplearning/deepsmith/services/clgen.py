@@ -23,7 +23,7 @@ from deeplearning.deepsmith.services import services
 FLAGS = flags.FLAGS
 
 
-def ClgenConfigToGenerator(m: models.Model,
+def ClgenConfigToGenerator(m: models.KerasEmbeddingModel,
                            s: samplers.Sampler) -> deepsmith_pb2.Generator:
   """Convert a CLgen model+sampler pair to a DeepSmith generator proto."""
   # TODO(cec): Update for new options and add unit tests.
@@ -60,7 +60,7 @@ class ClgenGenerator(generator.GeneratorBase,
   def __init__(self, config: generator_pb2.ClgenGenerator):
     self.config = config
     with self.ClgenWorkingDir():
-      m = models.Model(self.config.model)
+      m = models.KerasEmbeddingModel(self.config.model)
       s = samplers.Sampler(self.config.sampler)
       self.generator = ClgenConfigToGenerator(m, s)
       for t in self.config.testcase_skeleton:
@@ -103,7 +103,7 @@ class ClgenGenerator(generator.GeneratorBase,
         generator_pb2.GenerateTestcasesResponse)
     os.environ['CLGEN_CACHE'] = self.config.clgen_working_dir
     with self.ClgenWorkingDir():
-      m = models.Model(self.config.model)
+      m = models.KerasEmbeddingModel(self.config.model)
       s = samplers.Sampler(self.config.sampler)
       for sample in m.Sample(s):
         response.testcases.extend(self.SampleToTestcases(sample))
