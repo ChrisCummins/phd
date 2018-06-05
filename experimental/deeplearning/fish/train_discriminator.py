@@ -132,7 +132,7 @@ def main(argv):
   assert len(y) == len(training_protos)
 
   np.random.seed(FLAGS.seed)
-
+  logging.info('Building Keras model')
   model = BuildKerasModel(
       sequence_length=sequence_length, lstm_size=FLAGS.lstm_size,
       num_layers=FLAGS.num_layers, dnn_size=FLAGS.dnn_size, atomizer=atomizer)
