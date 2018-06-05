@@ -171,7 +171,7 @@ class TensorFlowModel(models.ModelBase):
     diffs = [self.config.training.num_epochs - e for e in epoch_nums]
     pairs = zip(paths, diffs)
     positive_only = [p for p in pairs if p[1] >= 0]
-    return min(positive_only)[0], paths
+    return min(positive_only, key=lambda x: x[1])[0], paths
 
   def _LockedTrain(self) -> None:
     """Locked training.
