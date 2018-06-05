@@ -5,8 +5,8 @@ import typing
 
 import humanize
 import numpy as np
-from absl import app, logging
 from absl import flags
+from absl import logging
 
 from deeplearning.clgen import samplers
 from deeplearning.clgen import telemetry
@@ -22,16 +22,6 @@ from lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS
-
-
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-
-
-if __name__ == '__main__':
-  app.run(main)
 
 
 class KerasEmbeddingModel(models.ModelBase):
