@@ -57,7 +57,6 @@ py_library(
         "//deeplearning/clgen/proto:sampler_py_pb2",
         "//lib/labm8:crypto",
         "//lib/labm8:labdate",
-        "//lib/labm8:lockfile",
         "//lib/labm8:logutil",
         "//lib/labm8:pbutil",
     ],
@@ -94,6 +93,7 @@ py_library(
         "//deeplearning/clgen/proto:model_py_pb2",
         "//deeplearning/clgen/proto:telemetry_py_pb2",
         "//lib/labm8:crypto",
+        "//lib/labm8:lockfile",
         "//lib/labm8:pbutil",
     ],
 )

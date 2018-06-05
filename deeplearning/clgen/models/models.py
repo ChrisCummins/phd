@@ -15,6 +15,7 @@ from deeplearning.clgen.proto import internal_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import telemetry_pb2
 from lib.labm8 import crypto
+from lib.labm8 import lockfile
 from lib.labm8 import pbutil
 
 
@@ -182,6 +183,12 @@ class ModelBase(object):
   def TrainingTelemetry(self) -> typing.List[telemetry_pb2.ModelEpochTelemetry]:
     """Get the training telemetry data."""
     return telemetry.TrainingLogger(self.cache.path / 'logs').EpochTelemetry()
+
+  @property
+  def lock(self) -> lockfile.LockFile:
+    """Get the lockfile."""
+    lockpath = self.cache.keypath("LOCK")
+    return lockfile.LockFile(lockpath)
 
   def __repr__(self) -> str:
     """String representation."""

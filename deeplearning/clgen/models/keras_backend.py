@@ -16,7 +16,6 @@ from deeplearning.clgen.models import models
 from deeplearning.clgen.proto import model_pb2
 from lib.labm8 import crypto
 from lib.labm8 import labdate
-from lib.labm8 import lockfile
 from lib.labm8 import logutil
 from lib.labm8 import pbutil
 
@@ -314,12 +313,6 @@ class KerasEmbeddingModel(models.ModelBase):
   def is_trained(self) -> bool:
     """Return whether the model has previously been trained."""
     return len(self.epoch_checkpoints) >= self.config.training.num_epochs
-
-  @property
-  def lock(self) -> lockfile.LockFile:
-    """Get the lockfile."""
-    lockpath = self.cache.keypath("LOCK")
-    return lockfile.LockFile(lockpath)
 
 
 def WeightedPick(predictions: np.ndarray, temperature: float) -> int:
