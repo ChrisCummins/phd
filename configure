@@ -149,7 +149,7 @@ def RewriteGitSubmodulesToHttps():
   """Rewrite git@ prefixed submodules to https://."""
   with open(os.path.join(os.path.dirname(__file__), '.gitmodules')) as f:
     modules = f.read()
-  new_modules = re.sub(r'(url\s*=\s*)git@', r'\1https=', modules)
+  new_modules = re.sub(r'(url\s*=\s*)git@', r'\1https://', modules)
   assert 'git@' not in new_modules
   with open(os.path.join(os.path.dirname(__file__), '.gitmodules'), 'w') as f:
     f.write(new_modules)
