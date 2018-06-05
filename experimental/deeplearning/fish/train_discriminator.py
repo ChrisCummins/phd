@@ -32,9 +32,6 @@ flags.DEFINE_integer(
 flags.DEFINE_integer(
     'dnn_size', 32,
     'The number of neurons in the DNN layer.')
-flags.DEFINE_string(
-    'atomizer_path', None,
-    'Path to the atomizer file.')
 flags.DEFINE_integer(
     'num_epochs', 50,
     'The number of epochs to train for.')
@@ -122,9 +119,11 @@ def main(argv):
                humanize.intcomma(len(negative_protos)))
 
   sequence_length = FLAGS.sequence_length
-  with open(FLAGS.atomizer_path, 'rb') as f:
-    atomizer = pickle.load(f)
+  text = '\n'.join([p.src for p in positive_protos + negative_protos])
+  logging.info('Deriving atomizer')
+  atomizer = atomizer.AsciiCharacterAtomizer.FromText(text)
 
+  logging.info('Encoding corpus')
   x = EncodeAndPad([p.src for p in positive_protos + negative_protos],
                    sequence_length, atomizer)
   y = np.concatenate((np.ones(len(positive_protos)),
