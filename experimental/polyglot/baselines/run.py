@@ -64,14 +64,14 @@ def SampleModel(instance: clgen.Instance) -> None:
   if sample_dir.is_dir():
     num_samples = len(list(sample_dir.iterdir()))
   logging.info('Need to generate %d samples in %s',
-               target_samples - num_samples, sample_dir)
+               max(target_samples - num_samples, 0), sample_dir)
   while num_samples < target_samples:
     instance.Sample(min_num_samples=target_samples - num_samples)
     num_samples = len(list(sample_dir.iterdir()))
 
 
 def CreateOutputCorpus(instance: clgen.Instance) -> corpuses.Corpus:
-  """Create a CLgen corpus from the samples we just made."""
+  """Create a directory of contentfiles from the samples we just made."""
   out_dir = pathlib.Path(
       str(instance.model.SamplerCache(instance.sampler)) + '.postprocessed')
   out_dir.mkdir(exist_ok=True)
@@ -101,9 +101,21 @@ def CreateOutputCorpus(instance: clgen.Instance) -> corpuses.Corpus:
 def PostprocessSampleCorpus(instance: clgen.Instance):
   """Create a corpus from the model samples and pre-process."""
   sample_dir = instance.model.SamplerCache(instance.sampler)
+
+  # Read the sample protos and write them to a directory of content files.
+  contentfiles_dir = pathlib.Path(str(sample_dir) + '.contentfiles')
+  contentfiles_dir.mkdir(exist_ok=True)
+  logging.info('Writing output contentfiles to %s', contentfiles_dir)
+  if len(list(contentfiles_dir.iterdir())) != len(list(sample_dir.iterdir())):
+    for proto_path in sample_dir.iterdir():
+      sample = pbutil.FromFile(proto_path, model_pb2.Sample())
+      with open(contentfiles_dir / proto_path.name, 'w') as f:
+        f.write(sample.text)
+
+  logging.info('Creating output corpus')
   output_corpus_config = corpus_pb2.Corpus()
   output_corpus_config.CopyFrom(instance.model.corpus.config)
-  output_corpus_config.local_directory = str(sample_dir)
+  output_corpus_config.local_directory = str(contentfiles_dir)
   output_corpus = corpuses.Corpus(output_corpus_config)
   output_corpus.Create()
   return output_corpus
@@ -125,8 +137,8 @@ def main(argv):
 
   with instance.Session():
     SampleModel(instance)
-    PostprocessSampleCorpus(instance)
     # CreateOutputCorpus(instance)
+    PostprocessSampleCorpus(instance)
 
 
 if __name__ == '__main__':
