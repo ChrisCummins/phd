@@ -349,17 +349,8 @@ class TensorFlowModel(models.ModelBase):
 
         saver.restore(sess, checkpoint_state.model_checkpoint_path)
 
-        def weighted_pick(weights):
-          """
-          requires that all probabilities are >= 0, i.e.:
-            assert all(x >= 0 for x in weights)
-          See: https://github.com/ChrisCummins/clgen/issues/120
-          """
-          t = np.cumsum(weights)
-          s = np.sum(weights)
-          return int(np.searchsorted(t, np.random.rand(1) * s))
-
-        # Per-sample batch outer loop.
+        # Per-sample batch outer loop. Continues until we have as many samples
+        # as we want.
         while True:
           samples_in_progress = [
             sampler.tokenized_start_text.copy()
@@ -378,14 +369,17 @@ class TensorFlowModel(models.ModelBase):
             [state] = sess.run([self.final_state], feed)
           indices[:] = sampler.encoded_start_text[-1]
 
-          # Sample-batch inner loop.
+          # Sampling loop. Continues until all samples in the batch are done.
           while True:
+            # Sample distribution to pick next symbol.
             feed = {self.input_data: indices, self.initial_state: state}
-            [probs, state] = sess.run([self.probs, self.final_state], feed)
+            [predictions, state] = sess.run(
+                [self.probs, self.final_state], feed)
+            indices[:, 0] = [
+              WeightedPick(p, sampler.temperature) for p in predictions]
 
-            # sample distribution to pick next symbol:
-            indices[:, 0] = [weighted_pick(p) for p in probs]
-
+            # Iterate over all samples in batch to determine whether they're
+            # done.
             for i in range(batch_size):
               if done[i]:
                 continue
@@ -426,3 +420,23 @@ class TensorFlowModel(models.ModelBase):
             break
 
     return samples
+
+
+def WeightedPick(predictions: np.ndarray, temperature: float) -> int:
+  """Make a weighted choice from a predictions array."""
+  predictions = np.log(np.asarray(predictions).astype('float64')) / temperature
+  predictions_exp = np.exp(predictions)
+  # Normalize the probabilities.
+  predictions = predictions_exp / np.sum(predictions_exp)
+  predictions = np.random.multinomial(1, predictions, 1)
+  return np.argmax(predictions)
+
+# def WeightedPick(weights):
+#   """
+#   requires that all probabilities are >= 0, i.e.:
+#     assert all(x >= 0 for x in weights)
+#   See: https://github.com/ChrisCummins/clgen/issues/120
+#   """
+#   t = np.cumsum(weights)
+#   s = np.sum(weights)
+#   return int(np.searchsorted(t, np.random.rand(1) * s))
