@@ -91,11 +91,9 @@ def test_Model_directories(clgen_cache_dir, abc_model_config):
   del clgen_cache_dir
   m = models.ModelBase(abc_model_config)
   assert (m.cache.path / 'checkpoints').is_dir()
-  assert (m.cache.path / 'embeddings').is_dir()
   assert (m.cache.path / 'samples').is_dir()
   # There should be nothing in these directories yet.
   assert not list((m.cache.path / 'checkpoints').iterdir())
-  assert not list((m.cache.path / 'embeddings').iterdir())
   assert not list((m.cache.path / 'samples').iterdir())
 
 

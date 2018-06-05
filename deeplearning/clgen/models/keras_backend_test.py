@@ -40,6 +40,14 @@ class MockSampler(object):
 
 # KerasEmbeddingModel tests.
 
+def test_KerasEmbeddingModel_directories(clgen_cache_dir, abc_model_config):
+  """A newly instantiated model's cache has checkpoint and sample dirs."""
+  del clgen_cache_dir
+  m = keras_backend.KerasEmbeddingModel(abc_model_config)
+  assert (m.cache.path / 'embeddings').is_dir()
+  assert not list((m.cache.path / 'embeddings').iterdir())
+
+
 def test_KerasEmbeddingModel_epoch_checkpoints_untrained(clgen_cache_dir,
                                                          abc_model_config):
   """Test that an untrained model has no checkpoint files."""
