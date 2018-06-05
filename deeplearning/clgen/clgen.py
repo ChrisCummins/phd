@@ -29,6 +29,7 @@ from absl import logging
 
 from deeplearning.clgen import errors
 from deeplearning.clgen import samplers
+from deeplearning.clgen.models import keras_backend
 from deeplearning.clgen.models import models
 from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import model_pb2
@@ -90,7 +91,8 @@ class Instance(object):
     # working directory.
     with self.Session():
       # TODO(cec): Determine which Model class to instantiate.
-      self.model: models.ModelBase = models.KerasEmbeddingModel(config.model)
+      self.model: models.ModelBase = keras_backend.KerasEmbeddingModel(
+          config.model)
       self.sampler: samplers.Sampler = samplers.Sampler(config.sampler)
 
   @contextlib.contextmanager

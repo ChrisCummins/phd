@@ -43,21 +43,18 @@ py_test(
 )
 
 py_library(
-    name = "models",
-    srcs = ["models.py"],
+    name = "keras_backend",
+    srcs = ["keras_backend.py"],
     visibility = ["//visibility:public"],
     deps = [
         ":builders",
         ":data_generators",
-        "//deeplearning/clgen:cache",
-        "//deeplearning/clgen:errors",
+        ":models",
         "//deeplearning/clgen:samplers",
         "//deeplearning/clgen:telemetry",
-        "//deeplearning/clgen/corpuses",
         "//deeplearning/clgen/proto:internal_py_pb2",
         "//deeplearning/clgen/proto:model_py_pb2",
         "//deeplearning/clgen/proto:sampler_py_pb2",
-        "//deeplearning/clgen/proto:telemetry_py_pb2",
         "//lib/labm8:crypto",
         "//lib/labm8:labdate",
         "//lib/labm8:lockfile",
@@ -67,8 +64,42 @@ py_library(
 )
 
 py_test(
-    name = "models_test",
+    name = "keras_backend_test",
     size = "enormous",
+    srcs = ["keras_backend_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":keras_backend",
+        "//deeplearning/clgen:conftest",
+        "//deeplearning/clgen/proto:model_py_pb2",
+        "//deeplearning/clgen/proto:telemetry_py_pb2",
+        "//lib/labm8:crypto",
+        "//lib/labm8:fs",
+    ],
+)
+
+py_library(
+    name = "models",
+    srcs = ["models.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":builders",
+        "//deeplearning/clgen:cache",
+        "//deeplearning/clgen:errors",
+        "//deeplearning/clgen:samplers",
+        "//deeplearning/clgen:telemetry",
+        "//deeplearning/clgen/corpuses",
+        "//deeplearning/clgen/proto:internal_py_pb2",
+        "//deeplearning/clgen/proto:model_py_pb2",
+        "//deeplearning/clgen/proto:telemetry_py_pb2",
+        "//lib/labm8:crypto",
+        "//lib/labm8:pbutil",
+    ],
+)
+
+py_test(
+    name = "models_test",
     srcs = ["models_test.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
