@@ -170,10 +170,10 @@ class Corpus(object):
       return self.config.contentfile_separator.join([x[0] for x in query])
 
   def GetTrainingData(self, shuffle: bool) -> np.ndarray:
-    """Create batches for training.
+    """Concatenate the entire encoded corpus into an array.
 
     Args:
-      shuffle: If true, randomize order of contentfiles.
+      shuffle: If true, randomize order of ebcided contentfiles.
 
     Returns:
       The encoded corpus.
