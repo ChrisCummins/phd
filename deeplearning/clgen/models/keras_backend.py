@@ -31,12 +31,11 @@ class KerasEmbeddingModel(models.ModelBase):
 
     Args:
       config: A Model message.
-
-    Raises:
-      TypeError: If the config argument is not a Model proto.
-      UserError: In case on an invalid config.
     """
     super(KerasEmbeddingModel, self).__init__(config)
+
+    # Create the necessary cache directories.
+    (self.cache.path / 'embeddings').mkdir(exist_ok=True)
 
     # Attributes that will be lazily set.
     self._training_model: typing.Optional['keras.models.Sequential'] = None

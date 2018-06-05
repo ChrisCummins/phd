@@ -61,7 +61,6 @@ class ModelBase(object):
     self.cache = cache.mkcache('model', self.hash)
     # Create the necessary cache directories.
     (self.cache.path / 'checkpoints').mkdir(exist_ok=True)
-    (self.cache.path / 'embeddings').mkdir(exist_ok=True)
     (self.cache.path / 'samples').mkdir(exist_ok=True)
     (self.cache.path / 'logs').mkdir(exist_ok=True)
 
