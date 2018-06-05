@@ -14,6 +14,7 @@ import "deeplearning/clgen/proto/corpus.proto";
 // The specification of a CLgen model.
 message Model {
   optional clgen.Corpus corpus = 1;
+  // TODO(cec): Replace with oneof field for keras / tensorflow models.
   optional NetworkArchitecture architecture = 2;
   optional TrainingOptions training = 3;
 }

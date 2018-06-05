@@ -15,6 +15,7 @@ message Sampler {
   // begin with this text.
   optional string start_text = 1;
   // The sampling batch size.
+  // TODO(cec): Always sample with max batch size.
   optional int32 batch_size = 2;
   // The sampling temperature. Must be >= 0. A recommended starting value is
   // 1000000 (i.e. 1.0 in real values).
