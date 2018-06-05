@@ -1,5 +1,6 @@
 """CLgen models using a Keras backend."""
 import os
+import pathlib
 import typing
 
 import humanize
@@ -260,7 +261,9 @@ class TensorFlowModel(models.ModelBase):
         saver.save(sess, checkpoint_prefix, global_step=global_step)
         checkpoint_path = f'{checkpoint_prefix}-{global_step}'
         logging.info(f'Saved file to {checkpoint_path}')
-        # TODO(cec): Assert .meta and .index files have been created.
+        assert pathlib.Path(
+            f'{checkpoint_prefix}-{global_step}.index').is_file()
+        assert pathlib.Path(f'{checkpoint_prefix}-{global_step}.meta').is_file()
 
         logger.EpochEndCallback(epoch_num, loss)
 
