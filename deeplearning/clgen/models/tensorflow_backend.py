@@ -1,12 +1,12 @@
 """CLgen models using a Keras backend."""
 import os
 import pathlib
-import time
 import typing
 
 import humanize
 import numpy as np
 import progressbar
+import time
 from absl import flags
 from absl import logging
 
@@ -285,7 +285,8 @@ class TensorFlowModel(models.ModelBase):
 
   def Sample(self, sampler: samplers.Sampler,
              min_num_samples: int,
-             seed: int = None) -> typing.List[model_pb2.Sample]:
+             seed: int = None, cache_samples: bool = True) -> typing.List[
+    model_pb2.Sample]:
     """Sample a model.
 
     If the model is not already trained, calling Sample() first trains the
@@ -300,6 +301,9 @@ class TensorFlowModel(models.ModelBase):
         until the lowest mulitple of the sampler batch size property that is
         larger than this value. E.g. if min_num_samples is 7 and the Sampler
         batch size is 10, 10 samples will be returned.
+      seed: A numeric value to seed the RNG with.
+      cache_samples: If True (default), sample protos are cached in the sampler
+        directory.
 
     Returns:
       A list of Sample protos.
@@ -312,6 +316,7 @@ class TensorFlowModel(models.ModelBase):
         encoded.
     """
     self.Train()
+    atomizer = self.corpus.atomizer
 
     sample_count = 1
     self.SamplerCache(sampler).mkdir(exist_ok=True)
@@ -325,8 +330,9 @@ class TensorFlowModel(models.ModelBase):
 
       tf = self.InitTfGraph(inference=True)
 
-      sampler.Specialize(self.corpus.atomizer)
+      sampler.Specialize(atomizer)
       samples = []
+      sample_dir = self.SamplerCache(sampler)
 
       batch_size = self.config.training.batch_size
 
@@ -384,7 +390,7 @@ class TensorFlowModel(models.ModelBase):
               if done[i]:
                 continue
 
-              token = self.corpus.atomizer.decoder[indices[i, 0]]
+              token = atomizer.decoder[indices[i, 0]]
               samples_in_progress[i].append(token)
               if sampler.SampleIsComplete(samples_in_progress[i]):
                 end_time = labdate.MillisecondsTimestamp()
@@ -398,9 +404,10 @@ class TensorFlowModel(models.ModelBase):
                 print(f'=== BEGIN CLGEN SAMPLE {sample_count} '
                       f'===\n\n{sample.text}\n')
                 sample_count += 1
-                sample_id = crypto.sha256_str(sample.text)
-                sample_path = self.SamplerCache(sampler) / f'{sample_id}.pbtxt'
-                pbutil.ToFile(sample, sample_path)
+                if cache_samples:
+                  sample_id = crypto.sha256_str(sample.text)
+                  sample_path = sample_dir / f'{sample_id}.pbtxt'
+                  pbutil.ToFile(sample, sample_path)
                 if min_num_samples > 0:
                   samples.append(sample)
                 wall_time_start = labdate.MillisecondsTimestamp()
