@@ -3,11 +3,7 @@
 py_binary(
     name = "notebooks",
     srcs = ["notebooks.py"],
-    data = glob([
-        "*.ipynb",
-    ]) + [
-        "//experimental/polyglot/baselines:protos",
-    ],
+    data = ["//experimental/polyglot/baselines:protos"],
     deps = [
         "//deeplearning/clgen",
         "//deeplearning/clgen/proto:clgen_py_pb2",
