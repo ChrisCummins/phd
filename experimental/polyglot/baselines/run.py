@@ -21,7 +21,7 @@ FLAGS = flags.FLAGS
 flags.DEFINE_string('corpus', None, 'Path to corpus config.')
 flags.DEFINE_string('model', None, 'Path to model config.')
 flags.DEFINE_string('sampler', None, 'Path to sampler config.')
-flags.DEFINE_string('working_dir', '/var/phd/clgen/baseline',
+flags.DEFINE_string('working_dir', '/mnt/cc/data/experimental/polyglot/baselines',
                     'Path to CLgen working directory')
 flags.DEFINE_integer('output_corpus_size', 5000,
                      'The minimum number of samples to generate in the output'
@@ -98,6 +98,17 @@ def CreateOutputCorpus(instance: clgen.Instance) -> corpuses.Corpus:
   return output_corpus
 
 
+def PostprocessSampleCorpus(instance: clgen.Instance):
+  """Create a corpus from the model samples and pre-process."""
+  sample_dir = instance.model.SamplerCache(instance.sampler)
+  output_corpus_config = corpus_pb2.Corpus()
+  output_corpus_config.CopyFrom(instance.model.corpus.config)
+  output_corpus_config.local_directory = str(sample_dir)
+  output_corpus = corpuses.Corpus(output_corpus_config)
+  output_corpus.Create()
+  return output_corpus
+
+
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:
@@ -114,7 +125,8 @@ def main(argv):
 
   with instance.Session():
     SampleModel(instance)
-    CreateOutputCorpus(instance)
+    PostprocessSampleCorpus(instance)
+    # CreateOutputCorpus(instance)
 
 
 if __name__ == '__main__':
