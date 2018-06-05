@@ -112,3 +112,39 @@ py_test(
         "//lib/labm8:fs",
     ],
 )
+
+py_library(
+    name = "tensorflow_backend",
+    srcs = ["tensorflow_backend.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":builders",
+        ":data_generators",
+        ":models",
+        "//deeplearning/clgen:samplers",
+        "//deeplearning/clgen:telemetry",
+        "//deeplearning/clgen/proto:internal_py_pb2",
+        "//deeplearning/clgen/proto:model_py_pb2",
+        "//deeplearning/clgen/proto:sampler_py_pb2",
+        "//lib/labm8:crypto",
+        "//lib/labm8:labdate",
+        "//lib/labm8:logutil",
+        "//lib/labm8:pbutil",
+    ],
+)
+
+py_test(
+    name = "tensorflow_backend_test",
+    size = "enormous",
+    srcs = ["tensorflow_backend_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":tensorflow_backend",
+        "//deeplearning/clgen:conftest",
+        "//deeplearning/clgen/proto:model_py_pb2",
+        "//deeplearning/clgen/proto:telemetry_py_pb2",
+        "//lib/labm8:crypto",
+        "//lib/labm8:fs",
+    ],
+)
