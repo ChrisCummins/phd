@@ -127,7 +127,7 @@ def main(argv):
   x = EncodeAndPad([p.src for p in positive_protos + negative_protos],
                    sequence_length, atomizer)
   y = np.concatenate((np.ones(len(positive_protos)),
-                      np.zeroes(len(negative_protos))))
+                      np.zeros(len(negative_protos))))
   assert len(x) == len(training_protos)
   assert len(y) == len(training_protos)
 
