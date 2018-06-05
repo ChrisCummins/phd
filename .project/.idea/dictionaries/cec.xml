@@ -36,7 +36,9 @@
       <w>metafile</w>
       <w>mtime</w>
       <w>multichar</w>
+      <w>nvidia</w>
       <w>opencl</w>
+      <w>parallelized</w>
       <w>pavlos</w>
       <w>pbtxt</w>
       <w>petoumenos</w>
@@ -53,6 +55,7 @@
       <w>subdirs</w>
       <w>subsamples</w>
       <w>tokencount</w>
+      <w>tokenized</w>
       <w>uname</w>
       <w>vectorize</w>
       <w>vectorizes</w>
