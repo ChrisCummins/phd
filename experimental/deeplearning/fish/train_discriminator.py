@@ -38,6 +38,9 @@ flags.DEFINE_integer(
 flags.DEFINE_integer(
     'batch_size', 64,
     'The training batch size.')
+flags.DEFINE_integer(
+    'seed', None,
+    'Random seed value.')
 
 
 def EncodeAndPad(srcs: typing.List[str], padded_length: int,
@@ -80,7 +83,7 @@ def BuildKerasModel(
 
   model = keras.models.Model(input=code_in, output=out)
   model.compile(
-      optimizer='adam', metrics='accuracy', loss='categorical_crossentropy')
+      loss='categorical_crossentropy', metrics=['accuracy'], optimizer='adam')
   model.summary()
   return model
 
@@ -97,9 +100,10 @@ def main(argv):
     raise app.UsageError('--export_path must be a directory')
   export_path.mkdir(parents=True, exist_ok=True)
 
+  # TODO(cec): Remove temporary [:100] index.
   positive_protos = [
     pbutil.FromFile(path, fish_pb2.CompilerCrashDiscriminatorTrainingExample())
-    for path in sorted(list((export_path / 'build_crash').iterdir()))
+    for path in sorted(list((export_path / 'build_crash').iterdir())[:100])
   ]
   logging.info('Loaded %s positive data protos',
                humanize.intcomma(len(positive_protos)))
@@ -114,9 +118,8 @@ def main(argv):
 
   training_protos = negative_protos + positive_protos
 
-  logging.info('Number of training examples: %s positive, %s negative',
-               humanize.intcomma(len(positive_protos)),
-               humanize.intcomma(len(negative_protos)))
+  logging.info('Number of training examples: %s.',
+               humanize.intcomma(len(positive_protos) + len(negative_protos)))
 
   sequence_length = FLAGS.sequence_length
   text = '\n'.join([p.src for p in positive_protos + negative_protos])
