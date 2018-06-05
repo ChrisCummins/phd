@@ -10,7 +10,7 @@ sh_binary(
     name = "install",
     srcs = ["install.sh"],
     data = [
-        "//tools:bootstrap",
+        "//:config_script",
         "//tools:protoc",
     ],
 )
