@@ -1,8 +1,9 @@
 """Unit tests for //deeplearning/clgen/models/tensorflow_backend.py."""
+import sys
+
 import checksumdir
 import numpy as np
 import pytest
-import sys
 from absl import app
 
 from deeplearning.clgen.models import tensorflow_backend
@@ -18,14 +19,12 @@ class MockSampler(object):
   # The default value for start_text has been chosen to only use characters and
   # words from the abc_corpus, so that it may be encoded using the vocabulary
   # of that corpus.
-  def __init__(self, start_text: str = 'H', hash: str = 'hash',
-               batch_size: int = 1):
+  def __init__(self, start_text: str = 'H', hash: str = 'hash'):
     self.start_text = start_text
     self.encoded_start_text = np.array([1, 2, 3])
     self.tokenized_start_text = ['a', 'b', 'c']
     self.temperature = 1.0
     self.hash = hash
-    self.batch_size = batch_size
 
   @staticmethod
   def Specialize(atomizer):
@@ -90,6 +89,7 @@ def test_TensorFlowModel_Sample_return_value_matches_cached_sample(
     abc_model_config):
   """Test that Sample() returns Sample protos."""
   del clgen_cache_dir
+  abc_model_config.training.batch_size = 1
   m = tensorflow_backend.TensorFlowModel(abc_model_config)
   samples = m.Sample(MockSampler(hash='hash'), 1)
   assert len(samples) == 1
@@ -109,9 +109,23 @@ def test_TensorFlowModel_Sample_exact_multiple_of_batch_size(
     abc_model_config):
   """Test that min_num_samples are returned when a multiple of batch_size."""
   del clgen_cache_dir
+  abc_model_config.training.batch_size = 2
   m = tensorflow_backend.TensorFlowModel(abc_model_config)
-  assert len(m.Sample(MockSampler(batch_size=2), 2)) == 2
-  assert len(m.Sample(MockSampler(batch_size=2), 4)) == 4
+  assert len(m.Sample(MockSampler(), 2)) == 2
+  assert len(m.Sample(MockSampler(), 4)) == 4
+
+
+def test_TensorFlowModel_Sample_inexact_multiple_of_batch_size(
+    clgen_cache_dir,
+    abc_model_config):
+  """Test that min_num_samples are returned when a multiple of batch_size."""
+  del clgen_cache_dir
+  abc_model_config.training.batch_size = 3
+  m = tensorflow_backend.TensorFlowModel(abc_model_config)
+  # 3 = 1 * sizeof(batch).
+  assert len(m.Sample(MockSampler(), 2)) == 3
+  # 6 = 2 * sizeof(batch).
+  assert len(m.Sample(MockSampler(), 4)) == 6
 
 
 # WeightedPick() tests.

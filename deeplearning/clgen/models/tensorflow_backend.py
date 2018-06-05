@@ -5,11 +5,11 @@ import typing
 import humanize
 import numpy as np
 import progressbar
-import time
 from absl import flags
 from absl import logging
 
 from deeplearning.clgen import samplers
+from deeplearning.clgen import telemetry
 from deeplearning.clgen.models import data_generators
 from deeplearning.clgen.models import models
 from deeplearning.clgen.proto import model_pb2
@@ -127,7 +127,7 @@ class TensorFlowModel(models.ModelBase):
         [tf.reshape(self.targets, [-1])],
         [tf.ones([self.config.training.batch_size * sequence_length])],
         vocab_size)
-    self.cost = tf.reduce_sum(
+    self.loss = tf.reduce_sum(
         sequence_loss) / self.config.training.batch_size / sequence_length
     self.final_state = last_state
     self.learning_rate = tf.Variable(0.0, trainable=False)
@@ -141,7 +141,7 @@ class TensorFlowModel(models.ModelBase):
         # See:
         #   https://www.tensorflow.org/api_docs/python/tf/gradients
         #   https://www.tensorflow.org/api_docs/python/tf/AggregationMethod
-        tf.gradients(self.cost, trainable_variables),
+        tf.gradients(self.loss, trainable_variables),
         self.config.training.adam_optimizer.normalized_gradient_clip_micros /
         1e6)
     optimizer = tf.train.AdamOptimizer(self.learning_rate)
@@ -162,24 +162,16 @@ class TensorFlowModel(models.ModelBase):
                  humanize.naturaldelta(total_time_ms / 1000))
     return None
 
-  def GetParamsPath(self, ckpt) -> typing.Tuple[typing.Optional[str], int]:
+  def GetParamsPath(self, checkpoint_state) -> typing.Tuple[
+    typing.Optional[str], typing.List[str]]:
     """Return path to checkpoint closest to target num of epochs."""
-    paths = ckpt.all_model_checkpoint_paths
-    batch_nums = [int(x.split('-')[-1]) for x in paths]
-    # TODO(cec): Fix num batches
-    epoch_nums = [int((x + 1) / self.data_generator.num_batches)
-                  for x in batch_nums]
-
-    closest = self.config.training.num_epochs
-    closest_path = None
-    for e, path in zip(epoch_nums, paths):
-      diff = self.config.training.num_epochs - e
-      if 0 <= diff < closest:
-        logging.debug("  cached checkpoint at epoch =", e, "diff =", diff)
-        closest = diff
-        closest_path = path
-
-    return closest_path, paths
+    paths = checkpoint_state.all_model_checkpoint_paths
+    # The checkpoint paths are appended with the epoch number.
+    epoch_nums = [int(x.split('-')[-1]) for x in paths]
+    diffs = [self.config.training.num_epochs - e for e in epoch_nums]
+    pairs = zip(paths, diffs)
+    positive_only = [p for p in pairs if p[1] >= 0]
+    return min(positive_only)[0], paths
 
   def _LockedTrain(self) -> None:
     """Locked training.
@@ -194,6 +186,8 @@ class TensorFlowModel(models.ModelBase):
     """
     tf = self.InitTfGraph(inference=False)
 
+    logger = telemetry.TrainingLogger(self.cache.path / 'logs')
+
     # training options
     # TODO(cec): Enable support for multiple optimizers:
     initial_learning_rate = (
@@ -204,12 +198,12 @@ class TensorFlowModel(models.ModelBase):
 
     # # resume from prior checkpoint
     ckpt_path, ckpt_paths = None, None
-    # if (self.cache.path / 'checkpoints' / 'checkpoint').is_dir():
-    #   ckpt = tf.train.get_checkpoint_state(
-    #       (self.cache.path / 'checkpoints' / 'checkpoint'))
-    #   assert ckpt
-    #   assert ckpt.model_checkpoint_path
-    #   ckpt_path, ckpt_paths = self.GetParamsPath(ckpt)
+    if (self.cache.path / 'checkpoints' / 'checkpoint').exists():
+      checkpoint_state = tf.train.get_checkpoint_state(
+          self.cache.path / 'checkpoints')
+      assert checkpoint_state
+      assert checkpoint_state.model_checkpoint_path
+      ckpt_path, ckpt_paths = self.GetParamsPath(checkpoint_state)
 
     with tf.Session() as sess:
       tf.global_variables_initializer().run()
@@ -219,7 +213,6 @@ class TensorFlowModel(models.ModelBase):
 
       # restore model from closest checkpoint.
       if ckpt_path:
-        logging.debug("restoring", ckpt_path)
         saver.restore(sess, ckpt_path)
         logging.info("restored checkpoint {}".format(ckpt_path))
 
@@ -229,16 +222,14 @@ class TensorFlowModel(models.ModelBase):
 
       max_batch = self.config.training.num_epochs * self.data_generator.num_batches
 
-      # progress bar
-      bar = progressbar.ProgressBar(max_value=max_batch)
-
       if sess.run(self.epoch) != self.config.training.num_epochs:
         logging.info("training, %s", self)
 
       # Per-epoch training loop.
+      # TODO(cec): Per-epoch progress bars.
       for epoch_num in range(sess.run(self.epoch) + 1,
                              self.config.training.num_epochs + 1):
-        epoch_start = time.time()
+        logger.EpochBeginCallback()
 
         # decay and set learning rate
         new_learning_rate = initial_learning_rate * (
@@ -246,41 +237,32 @@ class TensorFlowModel(models.ModelBase):
         sess.run(tf.assign(self.learning_rate, new_learning_rate))
         sess.run(tf.assign(self.epoch, epoch_num))
 
+        # TODO(cec): refactor data generator to a generator.
         self.data_generator.CreateBatches()
 
+        logging.info('Epoch %d/%d:', epoch_num, self.config.training.num_epochs)
         state = sess.run(self.initial_state)
         # Per-batch inner loop.
-        batch_num = 0
-        for batch_num in range(self.data_generator.num_batches):
+        bar = progressbar.ProgressBar(max_value=self.data_generator.num_batches)
+        for _ in bar(range(self.data_generator.num_batches)):
           x, y = self.data_generator.NextBatch()
           feed = {self.input_data: x, self.targets: y}
           for i, (c, h) in enumerate(self.initial_state):
             feed[c] = state[i].c
             feed[h] = state[i].h
-          train_cost, state, _ = sess.run(
-              [self.cost, self.final_state, self.train_op], feed)
+          loss, state, _ = sess.run(
+              [self.loss, self.final_state, self.train_op], feed)
 
-          # update progress bar
-          batch_num = ((epoch_num - 1) *
-                       self.data_generator.num_batches) + batch_num
-          bar.update(batch_num)
-
+        logging.info('Loss: %.6f', loss)
         # Save after every epoch.
-        saver.save(sess, (self.cache.path / 'checkpoints' / 'model.ckpt'),
-                   global_step=batch_num)
+        global_step = epoch_num
+        checkpoint_prefix = (self.cache.path / 'checkpoints' / 'checkpoint')
+        saver.save(sess, checkpoint_prefix, global_step=global_step)
+        checkpoint_path = f'{checkpoint_prefix}-{global_step}'
+        logging.info(f'Saved file to {checkpoint_path}')
+        # TODO(cec): Assert .meta and .index files have been created.
 
-        next_checkpoint = epoch_num * self.data_generator.num_batches + batch_num
-        max_epoch = self.config.training.num_epochs
-        logging.info(f"\n{self} epoch {epoch_num} / {max_epoch}. "
-                     f"next checkpoint at batch {next_checkpoint}")
-
-        # update training time
-        # TODO(cec): Submit telemetry.
-        # epoch_duration = time.time() - epoch_start
-        # self.stats["epoch_costs"].append(float(train_cost))
-        # self.stats["epoch_times"].append(epoch_duration)
-        # self.stats["epoch_batches"].append(batch_num + 1)
-        # self._flush_meta()
+        logger.EpochEndCallback(epoch_num, loss)
 
   def Sample(self, sampler: samplers.Sampler,
              min_num_samples: int,
@@ -310,6 +292,7 @@ class TensorFlowModel(models.ModelBase):
       InvalidSymtokTokens: If the sampler symmetrical depth tokens cannot be
         encoded.
     """
+    self.Train()
 
     sample_count = 1
     self.SamplerCache(sampler).mkdir(exist_ok=True)
@@ -336,12 +319,16 @@ class TensorFlowModel(models.ModelBase):
       with tf.Session() as sess:
         tf.global_variables_initializer().run()
         saver = tf.train.Saver(tf.global_variables())
-        ckpt = tf.train.get_checkpoint_state(self.cache.path / 'checkpoints')
+        checkpoint_state = tf.train.get_checkpoint_state(
+            self.cache.path / 'checkpoints')
 
-        assert ckpt
-        assert ckpt.model_checkpoint_path
+        # These assertions will fail if the model has no checkpoints. Since this
+        # method first calls Train(), there is no good reason for these
+        # assertions to fail.
+        assert checkpoint_state
+        assert checkpoint_state.model_checkpoint_path
 
-        saver.restore(sess, ckpt.model_checkpoint_path)
+        saver.restore(sess, checkpoint_state.model_checkpoint_path)
 
         def weighted_pick(weights):
           """
@@ -365,13 +352,12 @@ class TensorFlowModel(models.ModelBase):
           state = sess.run(self.cell.zero_state(batch_size, tf.float32))
           indices = np.zeros((batch_size, 1))
 
-          seed_tensor = self.corpus.atomizer.AtomizeString(sampler.start_text)
-          for symbol in seed_tensor[:-1]:
+          # Seed the model state with the starting text.
+          for symbol in sampler.encoded_start_text[:-1]:
             indices[:] = symbol
             feed = {self.input_data: indices, self.initial_state: state}
             [state] = sess.run([self.final_state], feed)
-
-          indices[:] = seed_tensor[-1]
+          indices[:] = sampler.encoded_start_text[-1]
 
           # Sample-batch inner loop.
           while True:

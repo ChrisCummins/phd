@@ -15,8 +15,8 @@ def test_TrainingLogger_create_file():
   """Test that EpochEndCallback() produces a file."""
   with tempfile.TemporaryDirectory() as d:
     logger = telemetry.TrainingLogger(pathlib.Path(d))
-    logger.EpochBeginCallback(0, {})
-    logger.EpochEndCallback(0, {'loss': 1})
+    logger.KerasEpochBeginCallback(0, {})
+    logger.KerasEpochEndCallback(0, {'loss': 1})
     # Note that one is added to the epoch number.
     assert (pathlib.Path(d) / 'epoch_001_telemetry.pbtxt').is_file()
 
@@ -26,11 +26,11 @@ def test_TrainingLogger_EpochTelemetry():
   with tempfile.TemporaryDirectory() as d:
     logger = telemetry.TrainingLogger(pathlib.Path(d))
     assert not logger.EpochTelemetry()
-    logger.EpochBeginCallback(0, {})
-    logger.EpochEndCallback(0, {'loss': 1})
+    logger.KerasEpochBeginCallback(0, {})
+    logger.KerasEpochEndCallback(0, {'loss': 1})
     assert len(logger.EpochTelemetry()) == 1
-    logger.EpochBeginCallback(1, {})
-    logger.EpochEndCallback(1, {'loss': 1})
+    logger.KerasEpochBeginCallback(1, {})
+    logger.KerasEpochEndCallback(1, {'loss': 1})
     assert len(logger.EpochTelemetry()) == 2
 
 

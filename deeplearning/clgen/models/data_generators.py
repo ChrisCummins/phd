@@ -93,6 +93,10 @@ class TensorflowBatchGenerator(object):
                training_opts: model_pb2.TrainingOptions):
     self.corpus = corpus
     self.training_opts = training_opts
+
+    # Lazily instantiated.
+    self.encoded_corpus = None
+    self.num_batches = 0
     self.CreateBatches()
 
   def CreateBatches(self) -> None:
@@ -100,8 +104,10 @@ class TensorflowBatchGenerator(object):
 
     # generate a kernel corpus
     self.i = 0
-    self.encoded_corpus = self.corpus.GetTrainingData(
-        shuffle=self.training_opts.shuffle_corpus_contentfiles_between_epochs)
+    if (self.encoded_corpus is None or
+        self.training_opts.shuffle_corpus_contentfiles_between_epochs):
+      self.encoded_corpus = self.corpus.GetTrainingData(
+          shuffle=self.training_opts.shuffle_corpus_contentfiles_between_epochs)
 
     batch_size = self.training_opts.batch_size
     sequence_length = self.training_opts.sequence_length
@@ -122,11 +128,12 @@ class TensorflowBatchGenerator(object):
     # Wrap-around.
     ydata[:-1] = xdata[1:]
     ydata[-1] = xdata[0]
-    self.x_batches = np.split(
-        xdata.reshape(batch_size, -1), self.num_batches, 1)
-    self.y_batches = np.split(
-        ydata.reshape(batch_size, -1), self.num_batches, 1)
-
+    self.batches = [
+      DataBatch(x, y) for x, y in zip(
+          np.split(xdata.reshape(batch_size, -1), self.num_batches, 1),
+          np.split(ydata.reshape(batch_size, -1), self.num_batches, 1)
+      )
+    ]
     logging.info(
         'Encoded corpus of %s tokens (clipped last %s tokens) in %s ms.',
         humanize.intcomma(clipped_corpus_length),
@@ -139,11 +146,10 @@ class TensorflowBatchGenerator(object):
     Returns:
       X, Y DataBatch.
     """
-    x = self.x_batches[self.i]
-    y = self.y_batches[self.i]
+    batch = self.batches[self.i]
     self.i += 1
-    assert self.i <= self.num_batches
-    return DataBatch(x, y)
+    assert 0 <= self.i <= self.num_batches
+    return batch
 
 
 def GetTrainingCorpus(

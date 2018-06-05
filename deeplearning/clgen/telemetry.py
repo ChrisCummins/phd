@@ -27,30 +27,36 @@ class TrainingLogger(object):
     self.logdir = logdir
     self.last_epoch_begin_timestamp = None
 
-  def EpochBeginCallback(self, epoch: int, logs: jsonutil.JSON) -> None:
-    """A Keras "on_epoch_end" callback."""
-    del epoch
-    del logs
+  def EpochBeginCallback(self) -> None:
     self.last_epoch_begin_timestamp = labdate.MillisecondsTimestamp()
 
-  def EpochEndCallback(self, epoch: int, logs: jsonutil.JSON) -> None:
-    """A Keras "on_epoch_end" callback."""
-    epoch += 1
+  def EpochEndCallback(self, epoch: int, loss: float):
     now = labdate.MillisecondsTimestamp()
     epoch_time_ms = now - self.last_epoch_begin_timestamp
     telemetry = telemetry_pb2.ModelEpochTelemetry(
         timestamp_utc_epoch_ms=now,
         epoch_num=epoch,
         epoch_wall_time_ms=epoch_time_ms,
-        loss=logs['loss'],
+        loss=loss,
     )
     pbutil.ToFile(telemetry, self.logdir / f'epoch_{epoch:03d}_telemetry.pbtxt')
+
+  def KerasEpochBeginCallback(self, epoch: int, logs: jsonutil.JSON) -> None:
+    """A Keras "on_epoch_end" callback."""
+    del epoch
+    del logs
+    self.EpochBeginCallback()
+
+  def KerasEpochEndCallback(self, epoch: int, logs: jsonutil.JSON) -> None:
+    """A Keras "on_epoch_end" callback."""
+    # Keras epoch numbers are zero indexed.
+    self.EpochEndCallback(epoch + 1, logs['loss'])
 
   def KerasCallback(self, keras):
     """Returns the keras callback to passed to a model's fit() function."""
     return keras.callbacks.LambdaCallback(
-        on_epoch_begin=self.EpochBeginCallback,
-        on_epoch_end=self.EpochEndCallback)
+        on_epoch_begin=self.KerasEpochBeginCallback,
+        on_epoch_end=self.KerasEpochEndCallback)
 
   def EpochTelemetry(self) -> typing.List[telemetry_pb2.ModelEpochTelemetry]:
     """Return the epoch telemetry files."""
