@@ -263,10 +263,12 @@ def main(argv):
       logging.info('Rewriting .gitmodules to use https://')
       RewriteGitSubmodulesToHttps()
 
+  # Python2 doesn't have subprocess.DEVNULL defined.
+  DEVNULL = open(os.devnull, 'w')
   if args.update_git_submodules:
     subprocess.check_call(
         ['git', '-C', PHD_ROOT, 'submodule', 'update', '--init', '--recursive'],
-        stdout=subprocess.DEVNULL)
+        stdout=DEVNULL)
 
   dotfiles_run_path = os.path.join(PHD_ROOT, 'system', 'dotfiles', 'run')
   assert os.path.isfile(dotfiles_run_path)
