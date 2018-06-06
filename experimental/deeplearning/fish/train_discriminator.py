@@ -100,10 +100,9 @@ def main(argv):
     raise app.UsageError('--export_path must be a directory')
   export_path.mkdir(parents=True, exist_ok=True)
 
-  # TODO(cec): Remove temporary [:100] index.
   positive_protos = [
     pbutil.FromFile(path, fish_pb2.CompilerCrashDiscriminatorTrainingExample())
-    for path in sorted(list((export_path / 'build_crash').iterdir())[:100])
+    for path in sorted(list((export_path / 'build_crash').iterdir()))
   ]
   logging.info('Loaded %s positive data protos',
                humanize.intcomma(len(positive_protos)))
@@ -116,23 +115,25 @@ def main(argv):
   logging.info('Loaded %s negative training data protos',
                humanize.intcomma(len(negative_protos)))
 
-  training_protos = negative_protos + positive_protos
+  training_ratio = .9
+  training_size = int(len(negative_protos) * training_ratio)
+  training_protos = (
+      negative_protos[:training_size] + positive_protos[:training_size])
 
   logging.info('Number of training examples: %s.',
-               humanize.intcomma(len(positive_protos) + len(negative_protos)))
+               humanize.intcomma(len(training_protos)))
 
   sequence_length = FLAGS.sequence_length
   text = '\n'.join([p.src for p in positive_protos + negative_protos])
   logging.info('Deriving atomizer')
   atomizer = atomizers.AsciiCharacterAtomizer.FromText(text)
+  logging.info('Vocabulary size: %s.', humanize.intcomma(len(atomizer.vocab)))
 
   logging.info('Encoding corpus')
-  x = EncodeAndPad([p.src for p in positive_protos + negative_protos],
-                   sequence_length, atomizer)
-  y = np.concatenate((np.ones(len(positive_protos)),
-                      np.zeros(len(negative_protos))))
-  assert len(x) == len(training_protos)
-  assert len(y) == len(training_protos)
+  x = EncodeAndPad([p.src for p in training_protos], sequence_length, atomizer)
+  y = np.concatenate((np.ones(training_size), np.zeros(training_size)))
+  assert len(x) == 2 * training_size
+  assert len(y) == 2 * training_size
 
   np.random.seed(FLAGS.seed)
   logging.info('Building Keras model')
