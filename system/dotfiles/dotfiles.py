@@ -1900,6 +1900,7 @@ class PhdBuildDeps(Task):
       'LaTeX',
       'LibExempi',
       'LibMySQL',
+      'Node',
       'Python',
       'Rsync',
   ]
