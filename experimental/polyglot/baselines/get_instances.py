@@ -5,6 +5,7 @@ import itertools
 from absl import flags
 
 from deeplearning.clgen import clgen
+from deeplearning.clgen.models import tensorflow_backend
 from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
@@ -95,8 +96,10 @@ def EnumerateInstances(
     instance_config.sampler.CopyFrom(pbutil.FromFile(bazelutil.DataPath(
         f'phd/experimental/polyglot/baselines/samplers/{sampler}.pbtxt'),
         sampler_pb2.Sampler()))
-    instance = clgen.Instance(instance)
+    instance = clgen.Instance(instance_config)
+    instance.model = tensorflow_backend.TensorFlowModel(instance_config.model)
     instances.append(instance)
+  return instances
 
 
 def GetInstances() -> typing.List[clgen.Instance]:
