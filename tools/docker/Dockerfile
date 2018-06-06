@@ -1,6 +1,11 @@
 FROM ubuntu:16.04
 MAINTAINER Chris Cummins <chrisc.101@gmail.com>
 
+# Disable post-install interactive configuration.
+# For example, the package tzdata runs a post-installation prompt to select the
+# timezone.
+ENV DEBIAN_FRONTEND noninteractive
+
 # Install essential packages.
 RUN apt-get update
 RUN apt-get install --no-install-recommends -y \
