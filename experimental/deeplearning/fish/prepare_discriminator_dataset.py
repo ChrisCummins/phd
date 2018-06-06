@@ -24,7 +24,9 @@ flags.DEFINE_float(
 flags.DEFINE_float(
     'validation_ratio', 0.0, 'Ratio of dataset to use for validation.')
 flags.DEFINE_float(
-    'test_ratio', 0.1, 'Ratio of dataset to use for testing.')
+    'testing_ratio', 0.1, 'Ratio of dataset to use for testing.')
+flags.DEFINE_integer(
+    'max_protos', 100000, 'The maximum number of protos per class to read')
 
 DatasetRatios = collections.namedtuple(
     'DataSetRatios', ['train', 'val', 'test'])
@@ -55,7 +57,8 @@ def main(argv):
 
   positive_protos = [
     pbutil.FromFile(path, fish_pb2.CompilerCrashDiscriminatorTrainingExample())
-    for path in sorted(list((export_path / 'build_crash').iterdir()))
+    for path in
+    sorted(list((export_path / 'build_crash').iterdir())[:FLAGS.max_protos])
   ]
   logging.info('Loaded %s positive data protos',
                humanize.intcomma(len(positive_protos)))
