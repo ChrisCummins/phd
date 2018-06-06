@@ -11,6 +11,8 @@ import logging
 import os
 import re
 import subprocess
+import tempfile
+
 import sys
 
 
@@ -310,9 +312,16 @@ def main(argv):
         [python_path, '-m', 'pip', 'uninstall', '-y', '-q', 'tensorflow-gpu'])
 
   logging.info('Installing Python packages')
-  RunAsHomebrewUser(
-      [python_path, '-m', 'pip', 'install', '--no-warn-script-location', '-q',
-       '-r', requirements_txt_path])
+  # If the current user is root, then the linuxbrew user will not have
+  # permissions to read the requirements.txt file. Therefore we create a
+  # temproary copy of the requirements.txt and install using that.
+  with tempfile.NamedTemporaryFile(
+      prefix='phd_python_requirements_', suffix='.txt') as f:
+    f.write(requirements_txt.encode('utf-8'))
+    f.flush()
+    RunAsHomebrewUser(
+        [python_path, '-m', 'pip', 'install', '--no-warn-script-location', '-q',
+         '-r', f.name])
 
   if uname == 'darwin':
     assert os.path.isfile('/usr/local/bin/brew')
