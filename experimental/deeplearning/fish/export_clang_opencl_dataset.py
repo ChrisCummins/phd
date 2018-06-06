@@ -1,7 +1,4 @@
-"""Export a training dataset for a discriminator model.
-
-This exports training data into a .
-"""
+"""Export a dataset for use in training and testing discriminators."""
 import configparser
 import pathlib
 import typing

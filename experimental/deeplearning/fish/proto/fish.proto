@@ -16,3 +16,13 @@ message CompilerCrashDiscriminatorTrainingExample {
   optional bool raised_assertion = 3;
   optional string assertion_name = 4;
 }
+
+message DiscriminatorDatapoint {
+  enum Class {
+    NEGATIVE = 0;
+    POSITIVE = 1;
+  }
+
+  optional string input = 1;
+  optional Class label = 2;
+}
