@@ -11,6 +11,17 @@ filegroup(
     visibility = ["//experimental:__subpackages__"],
 )
 
+py_library(
+    name = "get_instances",
+    srcs = ["get_instances.py"],
+    data = [":protos"],
+    deps = [
+        "//deeplearning/clgen",
+        "//lib/labm8:lockfile",
+    ],
+    visibility = ["//experimental:__subpackages__"],
+)
+
 py_binary(
     name = "run",
     srcs = ["run.py"],
@@ -25,6 +36,7 @@ py_binary(
         "//deeplearning/clgen/proto:sampler_py_pb2",
         "//lib/labm8:pbutil",
     ],
+    visibility = ["//experimental:__subpackages__"],
 )
 
 py_test(
