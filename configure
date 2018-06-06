@@ -222,6 +222,16 @@ def GetConfigurationOptions(argv):
   parser.set_defaults(update_git_submodules=True)
   yes_no_prompts.append(('update_git_submodules', 'Update git submodules?'))
 
+  # --[no]with_git_hooks.
+  parser.add_argument(
+      '--with_git_hooks', dest='with_git_hooks',
+      action='store_true', help='Install git hooks.')
+  parser.add_argument(
+      '--nowith_git_hooks', dest='with_git_hooks',
+      action='store_false', help='Do not install git hooks.')
+  parser.set_defaults(with_git_hooks=True)
+  yes_no_prompts.append(('with_git_hooks', 'Install git hooks?'))
+
   args = parser.parse_args(argv)
 
   # Prompt the user for options.
@@ -332,12 +342,13 @@ def main(argv):
     assert os.path.isfile('/home/linuxbrew/.linuxbrew/bin/brew')
     brew_prefix = '/home/linuxbrew/.linuxbrew'
 
-  npm_path = os.path.join(brew_prefix, 'bin', 'npm')
-  assert os.path.isfile(npm_path)
-  if not os.path.isdir(os.path.join(PHD_ROOT, 'node_modules', 'husky')):
-    proc = subprocess.Popen(
-        [npm_path, 'install', '--cwd', PHD_ROOT, 'husky', '--save-dev'])
-    proc.communicate()
+  if args.with_git_hooks:
+    npm_path = os.path.join(brew_prefix, 'bin', 'npm')
+    assert os.path.isfile(npm_path)
+    if not os.path.isdir(os.path.join(PHD_ROOT, 'node_modules', 'husky')):
+      proc = subprocess.Popen(
+          [npm_path, 'install', '--cwd', PHD_ROOT, 'husky', '--save-dev'])
+      proc.communicate()
 
   llvm_prefix = os.path.join(brew_prefix, 'opt', 'llvm')
   # Sanity check to ensure that LLVM was installed correctly.
