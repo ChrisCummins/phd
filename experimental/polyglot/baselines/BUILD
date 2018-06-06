@@ -15,11 +15,11 @@ py_library(
     name = "get_instances",
     srcs = ["get_instances.py"],
     data = [":protos"],
+    visibility = ["//experimental:__subpackages__"],
     deps = [
         "//deeplearning/clgen",
         "//lib/labm8:lockfile",
     ],
-    visibility = ["//experimental:__subpackages__"],
 )
 
 py_binary(
@@ -28,6 +28,7 @@ py_binary(
     data = [":protos"],
     default_python_version = "PY3",
     srcs_version = "PY3",
+    visibility = ["//experimental:__subpackages__"],
     deps = [
         "//deeplearning/clgen",
         "//deeplearning/clgen/proto:clgen_py_pb2",
@@ -36,7 +37,6 @@ py_binary(
         "//deeplearning/clgen/proto:sampler_py_pb2",
         "//lib/labm8:pbutil",
     ],
-    visibility = ["//experimental:__subpackages__"],
 )
 
 py_test(
