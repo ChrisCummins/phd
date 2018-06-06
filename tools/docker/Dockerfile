@@ -67,9 +67,6 @@ RUN mv /tmp/opencl-headers/opencl12/CL /usr/include/CL
 # Link libOpenCL.so into /usr/lib64 so that pyopencl can find it.
 RUN ln -s /opt/intel/opencl-*/lib64/libOpenCL.so /usr/lib/libOpenCL.so
 
-# Build the project.
-RUN $PHD/configure --noninteractive
-
 # Install and configure my preferred shell.
 RUN apt-get install -y --no-install-recommends zsh
 ENV SHELL zsh
@@ -78,8 +75,8 @@ RUN /root/phd/system/dotfiles/run -v Zsh
 # Install and configure my preferred editor.
 ENV /root/phd/system/dotfiles/run -v Vim
 
-# Add out newly-minted python3 to the PATH.
-ENV PATH /home/linuxbrew/.linuxbrew/bin:$PATH
+# Build the project.
+RUN $PHD/configure --noninteractive --nowith_git_hooks
 
 # Clean up.
 RUN apt-get clean
@@ -87,9 +84,8 @@ RUN rm -rf \
     $HOME/.cache \
     /home/linuxbrew/.cache \
     /tmp \
-    /var/lib/apt/lists \
     /var/tmp
-RUN mkdir $HOME/.cache /var/tmp /var/lib/apt/lists
+RUN mkdir -p $HOME/.cache /var/tmp
 
 WORKDIR $PHD
 CMD ["/bin/zsh"]
