@@ -94,6 +94,9 @@ class Corpus(object):
     self.config.CopyFrom(AssertConfigIsValid(config))
     self._atomizer = None
 
+    # TODO(cec): Lazily set all of these properties, so that __init__() is not
+    # blocked by ResolveContentId(), which can take several minutes on a large
+    # corpus.
     cache.cachepath('corpus').mkdir(parents=True, exist_ok=True)
     hc = hashcache.HashCache(
         cache.cachepath('hashcache.db'), 'sha1')
