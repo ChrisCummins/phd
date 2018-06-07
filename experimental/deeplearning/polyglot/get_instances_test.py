@@ -1,5 +1,6 @@
 """Tests for //experimental/deeplearning/polyglot/baselines/get_instances.py."""
 import sys
+import tempfile
 
 import pytest
 from absl import app
@@ -13,7 +14,10 @@ FLAGS = flags.FLAGS
 
 def test_GetInstances():
   """Short summary of test."""
-  assert get_instances.GetInstances()
+  with tempfile.TemporaryDirectory() as working_dir:
+    flags.FLAGS(['argv[0]', '--working_dir', working_dir])
+    assert FLAGS.working_dir == working_dir
+    assert get_instances.GetInstances()
 
 
 def main(argv):
