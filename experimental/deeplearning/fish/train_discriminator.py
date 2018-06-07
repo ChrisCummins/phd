@@ -197,7 +197,7 @@ def main(argv):
     logging.info('Evaluating model at epoch %d', epoch)
     score, accuracy = model.evaluate(test_x, Encode1HotLabels(test_y),
                                      batch_size=FLAGS.batch_size, verbose=0)
-    logging.info('Score: %.2%, Accuracy: %.2%', score, accuracy)
+    logging.info('Score: %.2f, Accuracy: %.2f', score * 100, accuracy * 100)
 
   model.fit(x, Encode1HotLabels(y), epochs=FLAGS.num_epochs,
             batch_size=FLAGS.batch_size, verbose=True, shuffle=True,
