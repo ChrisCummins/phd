@@ -202,8 +202,8 @@ def main(argv):
             validation_data=validation_data,
             callbacks=[
                 keras.callbacks.ModelCheckpoint(
-                  '{FLAGS.model_path}/weights_{epoch:03d}.hdf5',
-                  verbose=1, mode="min", save_best_only=False),
+                    FLAGS.model_path + '/weights_{epoch:03d}.hdf5',
+                    verbose=1, mode="min", save_best_only=False),
                 keras.callbacks.LambdaCallback(on_epoch_end=OnEpochEnd),
             ])
 

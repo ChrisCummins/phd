@@ -52,8 +52,9 @@ LEFT JOIN programs ON testcases.program_id = programs.id
 LEFT JOIN stderrs ON results.stderr_id = stderrs.id
 LEFT JOIN assertions ON stderrs.assertion_id = assertions.id
 WHERE results.id >= %s
+AND programs.generator = 1
 AND testbeds.id = (
-  SELECT testbeds.id 
+  SELECT testbeds.id
     FROM testbeds
     LEFT JOIN platforms ON testbeds.platform_id=platforms.id
   WHERE platform = 'clang'
