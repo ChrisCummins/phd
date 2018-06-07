@@ -89,13 +89,14 @@ def EnumerateLanguageInstances(
         f'phd/experimental/deeplearning/polyglot/samplers/{sampler}.pbtxt'),
         sampler_pb2.Sampler()))
     instance = clgen.Instance(instance_config)
+    # Swap the model for a TensorFlow model.
     instance.model = tensorflow_backend.TensorFlowModel(instance_config.model)
     instances.append(instance)
   return instances
 
 
 def GetInstances() -> typing.List[clgen.Instance]:
-  """Get the list of CLgen instances."""
+  """Get the list of CLgen instances to test."""
   instances = []
   for _, config in LANGUAGES.items():
     instances += EnumerateLanguageInstances(config)

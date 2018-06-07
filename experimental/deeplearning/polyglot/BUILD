@@ -46,6 +46,7 @@ py_binary(
         "//deeplearning/clgen/proto:model_py_pb2",
         "//deeplearning/clgen/proto:sampler_py_pb2",
         "//lib/labm8:pbutil",
+        "//lib/labm8:lockfile",
     ],
 )
 

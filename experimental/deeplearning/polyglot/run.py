@@ -12,8 +12,9 @@ from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
-from experimental.polyglot.baselines import get_instances
+from experimental.deeplearning.polyglot import get_instances
 from lib.labm8 import crypto
+from lib.labm8 import lockfile
 from lib.labm8 import pbutil
 
 
@@ -31,6 +32,7 @@ flags.DEFINE_integer('output_corpus_size', 5000,
 
 
 def IsElligible(instance: clgen.Instance):
+  """Return whether an instance is elligible for training or sampling."""
   if instance.model.lock.islocked:
     return False
   sample_dir = instance.model.SamplerCache(instance.sampler)
