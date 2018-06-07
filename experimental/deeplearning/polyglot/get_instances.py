@@ -5,7 +5,6 @@ import typing
 from absl import flags
 
 from deeplearning.clgen import clgen
-from deeplearning.clgen.models import tensorflow_backend
 from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
@@ -89,8 +88,6 @@ def EnumerateLanguageInstances(
         f'phd/experimental/deeplearning/polyglot/samplers/{sampler}.pbtxt'),
         sampler_pb2.Sampler()))
     instance = clgen.Instance(instance_config)
-    # Swap the model for a TensorFlow model.
-    instance.model = tensorflow_backend.TensorFlowBackend(instance_config.model)
     instances.append(instance)
   return instances
 
