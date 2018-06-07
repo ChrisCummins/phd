@@ -237,8 +237,10 @@ def GetConfigurationOptions(argv):
   # Prompt the user for options.
   if not args.print_id:
     for field_name, question in yes_no_prompts:
-      arg = getattr(args, field_name)
-      arg = YesNoPrompt(question, 'yes' if arg else 'no', args.noninteractive)
+      default_val = getattr(args, field_name)
+      val = YesNoPrompt(question, 'yes' if default_val else 'no',
+                        args.noninteractive)
+      setattr(args, field_name, val)
 
   return args
 
