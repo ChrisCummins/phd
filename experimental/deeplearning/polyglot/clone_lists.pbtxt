@@ -1,6 +1,8 @@
 # File: //datasets/github/scrape_repos/proto/scrape_repos.proto
 # Proto: scrape_repos.LanguageCloneList
 
+# Clone lists languages I haven't yet started on.
+
 # Download GLSL source code.
 language {
   language: "glsl"
@@ -35,32 +37,6 @@ language {
   }
   importer {
     source_code_pattern: ".*\\.comp"
-    preprocessor: "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown"
-  }
-}
-
-# Download C files.
-language {
-  language: "c"
-  query {
-    string: "language:c sort:stars fork:false"
-    max_results: 1000
-  }
-  destination_directory: "/var/phd/datasets/github/repos_by_lang/c"
-  importer {
-    source_code_pattern: ".*\\.c"
-    preprocessor: "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown"
-  }
-  importer {
-    source_code_pattern: ".*\\.cpp"
-    preprocessor: "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown"
-  }
-  importer {
-    source_code_pattern: ".*\\.cxx"
-    preprocessor: "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown"
-  }
-  importer {
-    source_code_pattern: ".*\\.inc"
     preprocessor: "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown"
   }
 }

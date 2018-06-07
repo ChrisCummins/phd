@@ -22,6 +22,16 @@ py_library(
     ],
 )
 
+py_test(
+    name = "get_instances_test",
+    srcs = ["get_instances_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":get_instances",
+    ],
+)
+
 py_binary(
     name = "run",
     srcs = ["run.py"],

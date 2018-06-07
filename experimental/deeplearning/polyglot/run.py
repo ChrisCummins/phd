@@ -12,6 +12,7 @@ from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
+from experimental.polyglot.baselines import get_instances
 from lib.labm8 import crypto
 from lib.labm8 import pbutil
 
@@ -21,11 +22,22 @@ FLAGS = flags.FLAGS
 flags.DEFINE_string('corpus', None, 'Path to corpus config.')
 flags.DEFINE_string('model', None, 'Path to model config.')
 flags.DEFINE_string('sampler', None, 'Path to sampler config.')
-flags.DEFINE_string('working_dir', '/mnt/cc/data/experimental/polyglot/baselines',
+flags.DEFINE_string('working_dir',
+                    '/mnt/cc/data/experimental/polyglot/baselines',
                     'Path to CLgen working directory')
 flags.DEFINE_integer('output_corpus_size', 5000,
                      'The minimum number of samples to generate in the output'
                      'corpus.')
+
+
+def IsElligible(instance: clgen.Instance):
+  if instance.model.lock.islocked:
+    return False
+  sample_dir = instance.model.SamplerCache(instance.sampler)
+  sample_lock = lockfile.LockFile(sample_dir / 'LOCK')
+  if sample_lock.islocked:
+    return False
+  return True
 
 
 # TODO(cec): Generalize for other symmetrical tokens.
@@ -125,6 +137,8 @@ def main(argv):
   """Main entry point."""
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
+
+  candidate_instances = get_instances.GetInstances()
 
   corpus = pbutil.FromFile(pathlib.Path(FLAGS.corpus), corpus_pb2.Corpus())
   model = pbutil.FromFile(pathlib.Path(FLAGS.model), model_pb2.Model())

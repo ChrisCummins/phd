@@ -1,7 +1,7 @@
-"""Get the instances to fetch baselines for."""
+"""Get the CLgen instances under test."""
+import itertools
 import typing
 
-import itertools
 from absl import flags
 
 from deeplearning.clgen import clgen
@@ -11,13 +11,12 @@ from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
 from lib.labm8 import bazelutil
-from lib.labm8 import lockfile
 from lib.labm8 import pbutil
 
 
-flags.DEFINE_string('working_dir',
-                    '/mnt/cc/data/experimental/polyglot/baselines',
-                    'Path to CLgen working directory')
+flags.DEFINE_string(
+    'working_dir', '/mnt/cc/data/experimental/deeplearning/polyglot/clgen',
+    'Path to CLgen working directory')
 
 FLAGS = flags.FLAGS
 
@@ -33,6 +32,7 @@ LANGUAGES = {
   }
 }
 
+# The CLgen model to base all permutations off, and the permutation options.
 NUM_NEURONS = [512, 1024]
 BASE_MODEL = """
 # File: //deeplearning/clgen/proto/model.proto
@@ -60,17 +60,8 @@ training {
 """
 
 
-def IsElligible(instance: clgen.Instance):
-  if instance.model.lock.islocked:
-    return False
-  sample_dir = instance.model.SamplerCache(instance.sampler)
-  sample_lock = lockfile.LockFile(sample_dir / 'LOCK')
-  if sample_lock.islocked:
-    return False
-  return True
-
-
-def GetModels() -> typing.List[model_pb2.Model]:
+def EnumerateModels() -> typing.List[model_pb2.Model]:
+  """Enumerate the model configurations."""
   models = []
   base_model = pbutil.FromString(BASE_MODEL, model_pb2.Model())
   for num_neurons, in itertools.product(NUM_NEURONS):
@@ -81,20 +72,21 @@ def GetModels() -> typing.List[model_pb2.Model]:
   return models
 
 
-def EnumerateInstances(
+def EnumerateLanguageInstances(
     language: typing.Dict[str, typing.List[str]]) -> typing.List[
   clgen.Instance]:
+  """Enumerate the options for a language."""
   instances = []
   for corpus, model, sampler in itertools.product(
-      language['corpuses'], GetModels(), language['samplers']):
+      language['corpuses'], EnumerateModels(), language['samplers']):
     instance_config = clgen_pb2.Instance()
     instance_config.working_dir = FLAGS.working_dir
     instance_config.model.CopyFrom(model)
     instance_config.model.corpus.CopyFrom(pbutil.FromFile(bazelutil.DataPath(
-        f'phd/experimental/polyglot/baselines/corpuses/{corpus}.pbtxt'),
+        f'phd/experimental/deeplearning/polyglot/corpuses/{corpus}.pbtxt'),
         corpus_pb2.Corpus()))
     instance_config.sampler.CopyFrom(pbutil.FromFile(bazelutil.DataPath(
-        f'phd/experimental/polyglot/baselines/samplers/{sampler}.pbtxt'),
+        f'phd/experimental/deeplearning/polyglot/samplers/{sampler}.pbtxt'),
         sampler_pb2.Sampler()))
     instance = clgen.Instance(instance_config)
     instance.model = tensorflow_backend.TensorFlowModel(instance_config.model)
@@ -103,7 +95,8 @@ def EnumerateInstances(
 
 
 def GetInstances() -> typing.List[clgen.Instance]:
+  """Get the list of CLgen instances."""
   instances = []
   for _, config in LANGUAGES.items():
-    instances += EnumerateInstances(config)
+    instances += EnumerateLanguageInstances(config)
   return instances
