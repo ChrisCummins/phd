@@ -7,6 +7,7 @@ lazily, when a directory (or any of its subdirectories) have been modified.
 
 import os
 import pathlib
+import subprocess
 import time
 import typing
 
@@ -44,7 +45,8 @@ class HashCacheRecord(Base):
 def GetDirectoryMTime(path: pathlib.Path) -> int:
   """Get the timestamp of the most recently modified file/dir in directory.
 
-  Recursively checks subdirectory contents.
+  Recursively checks subdirectory contents. This requires that the directory
+  exists and is not empty.
 
   Params:
     abspath: The absolute path to the directory.
@@ -52,9 +54,19 @@ def GetDirectoryMTime(path: pathlib.Path) -> int:
   Returns:
     The seconds since epoch of the last modification.
   """
-  return int(max(
-      max(os.path.getmtime(os.path.join(root, file)) for file in files) for
-      root, _, files in os.walk(path)))
+  # Pure python implementation.
+  # return int(max(
+  #     max(os.path.getmtime(os.path.join(root, file)) for file in files) for
+  #     root, _, files in os.walk(path)))
+  # Faster implementation using UNIX tools. Requires GNU xargs, which supports
+  # the '-d' argument, which is needed to support file names with spaces. On
+  # macOS, this means having the homebrew findutils package installed, and
+  # the following directory in your PATH:
+  #    /usr/local/opt/findutils/libexec/gnubin
+  output = subprocess.check_output(
+      f"find '{path}' -type f | xargs -d'\n' stat -c '%Y:%n' | sort -t: -n | "
+      "tail -1 | cut -d: -f1", universal_newlines=True, shell=True)
+  return int(output)
 
 
 class HashCache(sqlutil.Database):
