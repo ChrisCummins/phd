@@ -3,10 +3,10 @@ import collections
 import pathlib
 import time
 
+import humanize
 from absl import app
 from absl import flags
 from absl import logging
-import humanize
 
 from deeplearning.clgen import clgen
 from deeplearning.clgen.corpuses import corpuses
@@ -98,14 +98,15 @@ def main(argv):
 
   while candidate_instances:
     instance = candidate_instances.popleft()
-    if IsEligible(instance):
-      logging.info('Found an eligible candidate to work on')
-      SampleModel(instance)
-      PostprocessSampleCorpus(instance)
-    else:
-      logging.info('Candidate is ineligible')
-      candidate_instances.append(instance)
-      time.sleep(1)
+    with instance.Session():
+      if IsEligible(instance):
+        logging.info('Found an eligible candidate to work on')
+        SampleModel(instance)
+        PostprocessSampleCorpus(instance)
+      else:
+        logging.info('Candidate is ineligible')
+        candidate_instances.append(instance)
+        time.sleep(1)
 
   logging.info('Done.')
 
