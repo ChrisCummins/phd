@@ -153,6 +153,17 @@ class Corpus(object):
       self.encoded.Create(self.preprocessed, atomizer,
                           self.config.contentfile_separator)
 
+  @property
+  def is_locked(self) -> bool:
+    """Return whether the corpus is locked."""
+    preprocessed_lock_path = self.preprocessed.database_path.parent / 'LOCK'
+    if lockfile.LockFile(preprocessed_lock_path).islocked:
+      return True
+    encoded_lock_path = self.encoded.database_path.parent / 'LOCK'
+    if lockfile.LockFile(encoded_lock_path).islocked:
+      return True
+    return False
+
   def GetTextCorpus(self, shuffle: bool) -> str:
     """Concatenate the entire corpus into a string.
 
