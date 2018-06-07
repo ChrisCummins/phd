@@ -47,6 +47,7 @@ def GetPreprocessorFunction(name: str) -> public.PreprocessorFunction:
 
 
 def Preprocess(import_root: pathlib.Path, file_relpath: str,
+               all_file_relpaths: typing.List[str],
                preprocessors: typing.List[str]) -> str:
   """Preprocess a text using the given preprocessor pipeline.
 
@@ -58,6 +59,8 @@ def Preprocess(import_root: pathlib.Path, file_relpath: str,
   Args:
     import_root: The root of the directory to import the file from.
     file_relpath: The path of the file to import, relative to import_root.
+    all_file_relpaths: A list of all paths within the current scope, relative to
+      import_root.
     preprocessors: The list of preprocessor functions to run. These will be
       passed to GetPreprocessorFunction() to resolve the python implementations.
 
@@ -76,8 +79,6 @@ def Preprocess(import_root: pathlib.Path, file_relpath: str,
 
   with open(path) as f:
     text = f.read()
-
-  all_file_relpaths = public.GetAllFilesRelativePaths(import_root)
 
   preprocessor_functions = [GetPreprocessorFunction(p) for p in preprocessors]
   for preprocessor in preprocessor_functions:

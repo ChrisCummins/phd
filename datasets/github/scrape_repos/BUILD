@@ -42,6 +42,7 @@ py_binary(
     deps = [
         ":contentfiles",
         "//datasets/github/scrape_repos/preprocessors",
+        "//datasets/github/scrape_repos/preprocessors:public",
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
         "//lib/labm8:pbutil",
     ],

@@ -15,6 +15,7 @@ from sqlalchemy import orm
 
 from datasets.github.scrape_repos import contentfiles
 from datasets.github.scrape_repos.preprocessors import preprocessors
+from datasets.github.scrape_repos.preprocessors import public
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
 from lib.labm8 import pbutil
 
@@ -50,7 +51,7 @@ def ImportWorker(
   relpath = job.abspath[len(str(job.clone_dir)) + 1:]
   try:
     text = preprocessors.Preprocess(pathlib.Path(job.clone_dir), relpath,
-                                    job.preprocessors)
+                                    job.all_files_relpaths, job.preprocessors)
     sha256 = hashlib.sha256(text.encode('utf-8'))
     return contentfiles.ContentFile(
         clone_from_url=job.clone_from_url,
@@ -96,12 +97,14 @@ def ImportRepo(session: orm.session.Session,
     logging.info("Importing %s '%s' files from %s ...",
                  humanize.intcomma(len(paths)),
                  importer.source_code_pattern, clone_dir)
+    all_files_relpaths = public.GetAllFilesRelativePaths(clone_dir)
     jobs = [
       scrape_repos_pb2.ImportWorker(
           clone_from_url=meta.clone_from_url,
           clone_dir=str(clone_dir),
           abspath=p,
-          preprocessors=importer.preprocessor
+          all_files_relpaths=all_files_relpaths,
+          preprocessors=importer.preprocessor,
       ) for p in paths
     ]
     bar = progressbar.ProgressBar(max_value=len(jobs))
