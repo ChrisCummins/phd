@@ -56,4 +56,5 @@ rsync -avh --delete "$src" "$dst" \
     --exclude "/.Trashes" \
     --exclude "/.VolumeIcon.icns" \
     --exclude "/.VolumeIcon.ico" \
-    --exclude "/autorun.inf"
+    --exclude "/autorun.inf" \
+    --exclude "/outbox"
