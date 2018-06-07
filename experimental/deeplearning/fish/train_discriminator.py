@@ -195,7 +195,9 @@ def main(argv):
     """End-of-epoch model evaluate."""
     del logs
     logging.info('Evaluating model at epoch %d', epoch)
-    model.evaluate(test_x, test_y, batch_size=FLAGS.batch_size, verbose=1)
+    score, accuracy = model.evaluate(test_x, Encode1HotLabels(test_y),
+                                     batch_size=FLAGS.batch_size, verbose=0)
+    logging.info('Score: %.2%, Accuracy: %.2%', score, accuracy)
 
   model.fit(x, Encode1HotLabels(y), epochs=FLAGS.num_epochs,
             batch_size=FLAGS.batch_size, verbose=True, shuffle=True,
