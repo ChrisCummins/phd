@@ -40,6 +40,8 @@ class Database(object):
 
   def __init__(self, path: pathlib.Path, declarative_base):
     self.database_path = path.absolute()
+    if not self.database_path.is_file():
+      logging.info("Creating sqlite database: '%s'.", self.database_path)
     self.database_uri = f'sqlite:///{self.database_path}'
     self.engine = sql.create_engine(self.database_uri, encoding='utf-8')
     declarative_base.metadata.create_all(self.engine)
