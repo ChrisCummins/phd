@@ -40,6 +40,7 @@ py_binary(
     srcs_version = "PY3",
     visibility = ["//experimental:__subpackages__"],
     deps = [
+        ":get_instances",
         "//deeplearning/clgen",
         "//deeplearning/clgen/proto:clgen_py_pb2",
         "//deeplearning/clgen/proto:corpus_py_pb2",

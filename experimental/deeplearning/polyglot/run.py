@@ -6,6 +6,7 @@ import time
 from absl import app
 from absl import flags
 from absl import logging
+import humanize
 
 from deeplearning.clgen import clgen
 from deeplearning.clgen.corpuses import corpuses
@@ -19,12 +20,6 @@ from lib.labm8 import pbutil
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string('corpus', None, 'Path to corpus config.')
-flags.DEFINE_string('model', None, 'Path to model config.')
-flags.DEFINE_string('sampler', None, 'Path to sampler config.')
-flags.DEFINE_string('working_dir',
-                    '/mnt/cc/data/experimental/deeplearning/polyglot/clgen',
-                    'Path to CLgen working directory.')
 flags.DEFINE_integer('output_corpus_size', 10000,
                      'The minimum number of samples to generate in the output'
                      'corpus.')
@@ -32,11 +27,16 @@ flags.DEFINE_integer('output_corpus_size', 10000,
 
 def IsEligible(instance: clgen.Instance) -> bool:
   """Return whether an instance is eligible for training or sampling."""
+  if instance.model.corpus.is_locked:
+    logging.info('Corpus is locked')
+    return False
   if instance.model.training_lock.islocked:
+    logging.info('Model is locked')
     return False
   sample_dir = instance.model.SamplerCache(instance.sampler)
   sample_lock = lockfile.LockFile(sample_dir / 'LOCK')
   if sample_lock.islocked:
+    logging.info('Sampler is locked')
     return False
   return True
 
@@ -91,7 +91,10 @@ def main(argv):
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
+  start_time = time.time()
   candidate_instances = collections.deque(get_instances.GetInstances())
+  logging.info('Loaded %d instances in %s ms', len(candidate_instances),
+               humanize.intcomma(int((time.time() - start_time) * 1000)))
 
   while candidate_instances:
     instance = candidate_instances.popleft()
@@ -103,6 +106,8 @@ def main(argv):
       logging.info('Candidate is ineligible')
       candidate_instances.append(instance)
       time.sleep(1)
+
+  logging.info('Done.')
 
 
 if __name__ == '__main__':
