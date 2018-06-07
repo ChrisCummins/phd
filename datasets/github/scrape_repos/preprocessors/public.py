@@ -1,8 +1,11 @@
 """This file defines the decorator for marking a dataset preprocessor."""
 import pathlib
+import subprocess
 import typing
 
 from absl import flags
+
+from lib.labm8 import fs
 
 
 FLAGS = flags.FLAGS
@@ -34,6 +37,7 @@ def dataset_preprocessor(func: PreprocessorFunction) -> PreprocessorFunction:
   expected_type_hints = {
     'import_root': pathlib.Path,
     'file_relpath': str,
+    'all_file_relpaths': typing.List[str],
     'text': str,
     'return': str,
   }
@@ -46,3 +50,32 @@ def dataset_preprocessor(func: PreprocessorFunction) -> PreprocessorFunction:
         f'"def {func.__name__}({expected_args}) -> {return_type}".')
   func.__dict__['is_dataset_preprocessor'] = True
   return func
+
+
+def GetAllFilesRelativePaths(root_dir: pathlib.Path,
+                             follow_symlinks: bool = False) -> typing.List[str]:
+  """Get relative paths to all files in the root directory.
+
+  Follows symlinks.
+
+  Args:
+    root_dir: The directory to find files in.
+    follow_symlinks: If true, follow symlinks.
+
+  Returns:
+    A list of paths relative to the root directory.
+
+  Raises:
+    EmptyCorpusException: If the content files directory is empty.
+  """
+  with fs.chdir(root_dir):
+    cmd = ['find']
+    if follow_symlinks:
+      cmd.append('-L')
+    cmd += ['.', '-type', 'f']
+    find_output = subprocess.check_output(cmd).decode('utf-8').strip()
+  if find_output:
+    # Strip the leading './' from paths.
+    return [x[2:] for x in find_output.split('\n')]
+  else:
+    return []

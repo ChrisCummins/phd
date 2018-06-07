@@ -1,6 +1,11 @@
 # This package defines contentfile preprocessors.
 
 py_library(
+    name = "conftest",
+    srcs = ["conftest.py"],
+)
+
+py_library(
     name = "inliners",
     srcs = ["inliners.py"],
     data = ["@libcxx//:headers"],
@@ -8,7 +13,6 @@ py_library(
     deps = [
         ":public",
         "//lib/labm8:bazelutil",
-        "//lib/labm8:fs",
     ],
 )
 
@@ -18,7 +22,10 @@ py_test(
     srcs = ["inliners_test.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
-    deps = [":inliners"],
+    deps = [
+        ":conftest",
+        ":inliners",
+    ],
 )
 
 py_library(
@@ -38,6 +45,7 @@ py_test(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
+        ":conftest",
         ":preprocessors",
         ":public",
     ],
@@ -46,4 +54,19 @@ py_test(
 py_library(
     name = "public",
     srcs = ["public.py"],
+    deps = [
+        "//lib/labm8:fs",
+    ],
+)
+
+py_test(
+    name = "public_test",
+    size = "small",
+    srcs = ["public_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":conftest",
+        ":public",
+    ],
 )

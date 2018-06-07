@@ -2,7 +2,6 @@
 import collections
 import pathlib
 import re
-import subprocess
 import typing
 
 from absl import flags
@@ -11,7 +10,6 @@ from fuzzywuzzy import process
 
 from datasets.github.scrape_repos.preprocessors import public
 from lib.labm8 import bazelutil
-from lib.labm8 import fs
 
 
 FLAGS = flags.FLAGS
@@ -27,7 +25,8 @@ C99_HEADERS = {
 
 
 @public.dataset_preprocessor
-def CxxHeaders(import_root: pathlib.Path, file_relpath: str, text: str) -> str:
+def CxxHeaders(import_root: pathlib.Path, file_relpath: str, text: str,
+               all_file_relpaths: typing.List[str]) -> str:
   """Inline C++ includes.
 
   Searches for occurrences of '#include <$file>' and attempts to resolve $file
@@ -39,17 +38,20 @@ def CxxHeaders(import_root: pathlib.Path, file_relpath: str, text: str) -> str:
     file_relpath: The path to the target file to import, relative to
       import_root.
     text: The text of the target file to inline the headers of.
+    all_file_relpaths: A list of all paths within the current scope, relative to
+      import_root.
 
   Returns:
     The contents of the file file_relpath, with included headers inlined.
   """
-  return _InlineCSyntax(import_root, file_relpath, text, False,
-                        GetLibCxxHeaders().union(C99_HEADERS))
+  return _InlineCSyntax(import_root, file_relpath, text, all_file_relpaths,
+                        False, GetLibCxxHeaders().union(C99_HEADERS))
 
 
 @public.dataset_preprocessor
 def CxxHeadersDiscardUnknown(import_root: pathlib.Path,
-                             file_relpath: str, text: str) -> str:
+                             file_relpath: str, text: str,
+                             all_file_relpaths: typing.List[str]) -> str:
   """Inline C++ includes, but discard include directives that were not found.
 
   Like CxxHeaders(), but if a file included by '#include' is not found, the
@@ -60,15 +62,18 @@ def CxxHeadersDiscardUnknown(import_root: pathlib.Path,
     file_relpath: The path to the target file to import, relative to
       import_root.
     text: The text of the target file to inline the headers of.
+    all_file_relpaths: A list of all paths within the current scope, relative to
+      import_root.
 
   Returns:
     The contents of the file file_relpath, with included headers inlined.
   """
-  return _InlineCSyntax(import_root, file_relpath, text, True,
-                        GetLibCxxHeaders().union(C99_HEADERS))
+  return _InlineCSyntax(import_root, file_relpath, text, all_file_relpaths,
+                        True, GetLibCxxHeaders().union(C99_HEADERS))
 
 
-def _InlineCSyntax(import_root: pathlib.Path, file_relpath: str, text: str,
+def _InlineCSyntax(import_root: pathlib.Path, file_relpath: str,
+                   text: str, all_file_relpaths: typing.List[str],
                    discard_unknown: bool, blacklist: typing.Set[str]):
   """Private helper function to inline C preprocessor '#include' directives.
 
@@ -90,7 +95,7 @@ def _InlineCSyntax(import_root: pathlib.Path, file_relpath: str, text: str,
 
   return InlineHeaders(
       import_root, file_relpath, text,
-      inline_candidate_relpaths=set(GetAllFilesRelativePaths(import_root)),
+      inline_candidate_relpaths=set(all_file_relpaths),
       already_inlined_relpaths=set(),
       blacklist=blacklist,
       find_includes=FindIncludes,
@@ -233,36 +238,7 @@ def FindCandidateInclude(
     return FuzzyIncludeMatch('', 0)
 
 
-def GetAllFilesRelativePaths(root_dir: pathlib.Path,
-                             follow_symlinks: bool = False) -> typing.List[str]:
-  """Get relative paths to all files in the root directory.
-
-  Follows symlinks.
-
-  Args:
-    root_dir: The directory to find files in.
-    follow_symlinks: If true, follow symlinks.
-
-  Returns:
-    A list of paths relative to the root directory.
-
-  Raises:
-    EmptyCorpusException: If the content files directory is empty.
-  """
-  with fs.chdir(root_dir):
-    cmd = ['find']
-    if follow_symlinks:
-      cmd.append('-L')
-    cmd += ['.', '-type', 'f']
-    find_output = subprocess.check_output(cmd).decode('utf-8').strip()
-  if find_output:
-    # Strip the leading './' from paths.
-    return [x[2:] for x in find_output.split('\n')]
-  else:
-    return []
-
-
 def GetLibCxxHeaders() -> typing.Set[str]:
   """Enumerate the set of headers in the libcxx standard lib."""
-  return set(GetAllFilesRelativePaths(bazelutil.DataPath('libcxx/include'),
-                                      follow_symlinks=True))
+  return set(public.GetAllFilesRelativePaths(
+      bazelutil.DataPath('libcxx/include'), follow_symlinks=True))

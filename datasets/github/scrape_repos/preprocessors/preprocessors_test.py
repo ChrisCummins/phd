@@ -1,7 +1,7 @@
 """Unit tests for //datasets/github/scrape_repos/preprocessors.py."""
 import pathlib
 import sys
-import tempfile
+import typing
 
 import pytest
 from absl import app
@@ -9,13 +9,6 @@ from absl import logging
 
 from datasets.github.scrape_repos.preprocessors import preprocessors
 from datasets.github.scrape_repos.preprocessors import public
-
-
-@pytest.fixture(scope='function')
-def tempdir() -> pathlib.Path:
-  """Test fixture for an empty temporary directory."""
-  with tempfile.TemporaryDirectory() as d:
-    yield pathlib.Path(d)
 
 
 def MakeFile(directory: pathlib.Path, relpath: str, contents: str):
@@ -28,27 +21,35 @@ def MakeFile(directory: pathlib.Path, relpath: str, contents: str):
 
 @public.dataset_preprocessor
 def MockPreprocessor(import_root: pathlib.Path, file_relpath: str,
-                     text: str) -> str:
+                     text: str, all_file_relpaths: typing.List[str]) -> str:
   """A mock preprocessor."""
   del import_root
   del file_relpath
+  del text
+  del all_file_relpaths
   return 'PREPROCESSED'
 
 
 @public.dataset_preprocessor
 def MockPreprocessorError(import_root: pathlib.Path, file_relpath: str,
-                          text: str) -> str:
+                          text: str,
+                          all_file_relpaths: typing.List[str]) -> str:
   """A mock preprocessor which raises a ValueError."""
   del import_root
   del file_relpath
+  del text
+  del all_file_relpaths
   raise ValueError('ERROR')
 
 
 def MockUndecoratedPreprocessor(import_root: pathlib.Path,
-                                file_relpath: str, text: str) -> str:
+                                file_relpath: str, text: str,
+                                all_file_relpaths: typing.List[str]) -> str:
   """A mock preprocessor which is not decorated with @dataset_preprocessor."""
   del import_root
   del file_relpath
+  del text
+  del all_file_relpaths
   return 'UNDECORATED'
 
 

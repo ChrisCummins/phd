@@ -56,7 +56,8 @@ def Preprocess(import_root: pathlib.Path, file_relpath: str,
 
 
   Args:
-    text: The input to be preprocessed.
+    import_root: The root of the directory to import the file from.
+    file_relpath: The path of the file to import, relative to import_root.
     preprocessors: The list of preprocessor functions to run. These will be
       passed to GetPreprocessorFunction() to resolve the python implementations.
 
@@ -76,7 +77,11 @@ def Preprocess(import_root: pathlib.Path, file_relpath: str,
   with open(path) as f:
     text = f.read()
 
+  all_file_relpaths = public.GetAllFilesRelativePaths(import_root)
+
   preprocessor_functions = [GetPreprocessorFunction(p) for p in preprocessors]
   for preprocessor in preprocessor_functions:
-    text = preprocessor(import_root, file_relpath, text)
+    text = preprocessor(import_root=import_root,
+                        file_relpath=file_relpath, text=text,
+                        all_file_relpaths=all_file_relpaths)
   return text
