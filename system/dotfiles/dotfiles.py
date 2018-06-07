@@ -843,14 +843,16 @@ class GnuCoreutils(Task):
 
   def install_osx(self):
     Homebrew().install_package('coreutils')
+    Homebrew().install_package('findutils')
     Homebrew().install_package('gnu-indent')
     Homebrew().install_package('gnu-sed')
     Homebrew().install_package('gnu-tar')
     Homebrew().install_package('gnu-time')
     Homebrew().install_package('gnu-which')
 
-  def install_osx(self):
+  def upgrade_osx(self):
     Homebrew().upgrade_package("coreutils")
+    Homebrew().upgrade_package('findutils')
     Homebrew().upgrade_package('gnu-indent')
     Homebrew().upgrade_package('gnu-sed')
     Homebrew().upgrade_package('gnu-tar')
@@ -1906,6 +1908,10 @@ class PhdBuildDeps(Task):
   ]
   __linux_deps__ = [
       'InotifyMaxUserWatchers',
+  ]
+  __osx_deps__= [
+      # Needed by //lib/labm8:hashcache.
+      'GnuCoreutils',
   ]
 
   def install(self):
