@@ -1,48 +1,54 @@
 """CLgen models using a Keras backend."""
 import os
 import pathlib
+import time
 import typing
 
 import humanize
 import numpy as np
 import progressbar
-import time
 from absl import flags
 from absl import logging
 
 from deeplearning.clgen import samplers
 from deeplearning.clgen import telemetry
+from deeplearning.clgen.models import backends
 from deeplearning.clgen.models import data_generators
-from deeplearning.clgen.models import models
 from deeplearning.clgen.proto import model_pb2
-from lib.labm8 import crypto
-from lib.labm8 import labdate
-from lib.labm8 import logutil
-from lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS
 
 
-class TensorFlowModel(models.ModelBase):
+class TensorFlowBackend(backends.BackendBase):
   """A model with an embedding layer, using a keras backend."""
 
-  def __init__(self, config: model_pb2.Model):
+  def __init__(self, *args, **kwargs):
     """Instantiate a model.
 
     Args:
-      config: A Model message.
-
-    Raises:
-      TypeError: If the config argument is not a Model proto.
-      UserError: In case on an invalid config.
+      args: Arguments to be passed to BackendBase.__init__().
+      kwargs: Arguments to be passed to BackendBase.__init__().
     """
-    super(TensorFlowModel, self).__init__(config)
+    super(TensorFlowBackend, self).__init__(*args, **kwargs)
 
     # Attributes that will be lazily set.
-    self._training_model: typing.Optional['keras.models.Sequential'] = None
-    self._inference_model: typing.Optional['keras.models.Sequential'] = None
-    self._inference_batch_size: typing.Optional[int] = None
+    self.cell = None
+    self.input_data = None
+    self.targets = None
+    self.initial_state = None
+    self.logits = None
+    self.probs = None
+    self.loss = None
+    self.final_state = None
+    self.learning_rate = None
+    self.epoch = None
+    self.train_op = None
+
+    self.inference_tf = None
+    self.inference_sess = None
+    self.inference_state = None
+    self.inference_indices = None
 
   def InitTfGraph(self, inference: bool) -> 'tf':
     """Instantiate a TensorFlow graph for training or inference.
@@ -156,19 +162,6 @@ class TensorFlowModel(models.ModelBase):
 
     return tf
 
-  def GetTrainedModel(self) -> None:
-    """Train TensorFlow model."""
-    with self.lock.acquire(replace_stale=True, block=True):
-      self._LockedTrain()
-    total_time_ms = sum(
-        t.epoch_wall_time_ms
-        for t in self.TrainingTelemetry()[:self.config.training.num_epochs])
-    logging.info('Trained model for %d epochs in %s ms (%s).',
-                 self.config.training.num_epochs,
-                 humanize.intcomma(total_time_ms),
-                 humanize.naturaldelta(total_time_ms / 1000))
-    return None
-
   def GetParamsPath(self, checkpoint_state) -> typing.Tuple[
     typing.Optional[str], typing.List[str]]:
     """Return path to checkpoint closest to target num of epochs."""
@@ -180,7 +173,7 @@ class TensorFlowModel(models.ModelBase):
     positive_only = [p for p in pairs if p[1] >= 0]
     return min(positive_only, key=lambda x: x[1])[0], paths
 
-  def _LockedTrain(self) -> None:
+  def Train(self) -> None:
     """Locked training.
 
     If there are cached epoch checkpoints, the one closest to the target number
@@ -229,10 +222,6 @@ class TensorFlowModel(models.ModelBase):
       if ckpt_paths:
         saver.recover_last_checkpoints(ckpt_paths)
 
-      previous_loss = None
-      if self.TrainingTelemetry():
-        previous_loss = self.TrainingTelemetry()[-1].loss
-
       # Per-epoch training loop.
       for epoch_num in range(sess.run(self.epoch) + 1,
                              self.config.training.num_epochs + 1):
@@ -244,7 +233,7 @@ class TensorFlowModel(models.ModelBase):
         sess.run(tf.assign(self.learning_rate, new_learning_rate))
         sess.run(tf.assign(self.epoch, epoch_num))
 
-        # TODO(cec): refactor data generator to a generator.
+        # TODO(cec): refactor data generator to a Python generator.
         data_generator.CreateBatches()
 
         logging.info('Epoch %d/%d:', epoch_num, self.config.training.num_epochs)
@@ -261,11 +250,7 @@ class TensorFlowModel(models.ModelBase):
               [self.loss, self.final_state, self.train_op], feed)
 
         # Log the loss and delta.
-        loss_delta = ''
-        if previous_loss:
-          loss_delta = ' (delta: {:.6f})'.format(loss - previous_loss)
-        logging.info('Loss: %.6f%s.', loss, loss_delta)
-        previous_loss = loss
+        logging.info('Loss: %.6f.', loss)
 
         # Save after every epoch.
         start_time = time.time()
@@ -283,153 +268,79 @@ class TensorFlowModel(models.ModelBase):
 
         logger.EpochEndCallback(epoch_num, loss)
 
-  def Sample(self, sampler: samplers.Sampler,
-             min_num_samples: int,
-             seed: int = None, cache_samples: bool = True) -> typing.List[
-    model_pb2.Sample]:
-    """Sample a model.
+  def InitSampling(self, sampler: samplers.Sampler,
+                   seed: typing.Optional[int] = None) -> int:
+    """Initialize model for sampling."""
+    # Delete any previous sampling session.
+    if self.inference_tf:
+      del self.inference_tf
+    if self.inference_sess:
+      del self.inference_sess
 
-    If the model is not already trained, calling Sample() first trains the
-    model. Thus a call to Sample() is equivalent to calling Train() then
-    Sample().
+    # Seed the RNG.
+    if seed is not None:
+      np.random.seed(seed)
+      self.inference_tf.set_random_seed(seed)
 
-    Args:
-      sampler: The sampler to sample using.
-      min_num_samples: The minimum number of samples to return. Note that the
-        true number of samples returned may be higher than this value, as
-        sampling occurs in batches. The model will continue producing samples
-        until the lowest mulitple of the sampler batch size property that is
-        larger than this value. E.g. if min_num_samples is 7 and the Sampler
-        batch size is 10, 10 samples will be returned.
-      seed: A numeric value to seed the RNG with.
-      cache_samples: If True (default), sample protos are cached in the sampler
-        directory.
+    self.inference_tf = self.InitTfGraph(inference=True)
+    self.inference_sess = self.inference_tf.Session()
 
-    Returns:
-      A list of Sample protos.
+    self.inference_tf.global_variables_initializer().run(
+        session=self.inference_sess)
+    # Restore trained model weights.
+    saver = self.inference_tf.train.Saver(self.inference_tf.global_variables())
+    checkpoint_state = self.inference_tf.train.get_checkpoint_state(
+        self.cache.path / 'checkpoints')
 
-    Raises:
-      UnableToAcquireLockError: If the model is locked (i.e. there is another
-        process currently modifying the model).
-      InvalidStartText: If the sampler start text cannot be encoded.
-      InvalidSymtokTokens: If the sampler symmetrical depth tokens cannot be
-        encoded.
-    """
-    self.Train()
-    atomizer = self.corpus.atomizer
+    # These assertions will fail if the model has no checkpoints. Since this
+    # should only ever be called after Train(), there is no good reason for
+    # these assertions to fail.
+    assert checkpoint_state
+    assert checkpoint_state.model_checkpoint_path
 
-    sample_count = 1
-    self.SamplerCache(sampler).mkdir(exist_ok=True)
-    with logutil.TeeLogsToFile(
-        f'sampler_{sampler.hash}', self.cache.path / 'logs'):
-      logging.info("Sampling: '%s'", sampler.start_text)
-      if min_num_samples < 0:
-        logging.warning(
-            'Entering an infinite sample loop, this process will never end!')
-      sample_start_time = labdate.MillisecondsTimestamp()
+    saver.restore(self.inference_sess, checkpoint_state.model_checkpoint_path)
 
-      tf = self.InitTfGraph(inference=True)
+    return self.config.training.batch_size
 
-      sampler.Specialize(atomizer)
-      samples = []
-      sample_dir = self.SamplerCache(sampler)
+  def InitSampleBatch(self, sampler: samplers.Sampler, batch_size: int) -> None:
+    self.inference_state = self.inference_sess.run(
+        self.cell.zero_state(batch_size, self.inference_tf.float32))
+    self.inference_indices = np.zeros((batch_size, 1))
 
-      batch_size = self.config.training.batch_size
+    # Seed the model state with the starting text.
+    for symbol in sampler.encoded_start_text[:-1]:
+      self.inference_indices[:] = symbol
+      feed = {
+        self.input_data: self.inference_indices,
+        self.initial_state: self.inference_state
+      }
+      [self.inference_state] = self.inference_sess.run([self.final_state], feed)
+    self.inference_indices[:] = sampler.encoded_start_text[-1]
 
-      # Seed the RNG.
-      if seed is not None:
-        np.random.seed(seed)
-        tf.set_random_seed(seed)
+  def SampleNextIndices(self, sampler: samplers.Sampler, batch_size: int):
+    # Sample distribution to pick next symbol.
+    feed = {
+      self.input_data: self.inference_indices,
+      self.initial_state: self.inference_state
+    }
+    [predictions, self.inference_state] = self.inference_sess.run(
+        [self.probs, self.final_state], feed)
+    self.inference_indices[:, 0] = [
+      WeightedPick(p, sampler.temperature) for p in predictions]
+    return [i[0] for i in self.inference_indices]
 
-      with tf.Session() as sess:
-        tf.global_variables_initializer().run()
-        saver = tf.train.Saver(tf.global_variables())
-        checkpoint_state = tf.train.get_checkpoint_state(
-            self.cache.path / 'checkpoints')
-
-        # These assertions will fail if the model has no checkpoints. Since this
-        # method first calls Train(), there is no good reason for these
-        # assertions to fail.
-        assert checkpoint_state
-        assert checkpoint_state.model_checkpoint_path
-
-        saver.restore(sess, checkpoint_state.model_checkpoint_path)
-
-        # Per-sample batch outer loop. Continues until we have as many samples
-        # as we want.
-        while True:
-          samples_in_progress = [
-            sampler.tokenized_start_text.copy()
-            for _ in range(batch_size)]
-          done = np.zeros(batch_size, dtype=np.bool)
-          start_time = labdate.MillisecondsTimestamp()
-          wall_time_start = start_time
-
-          state = sess.run(self.cell.zero_state(batch_size, tf.float32))
-          indices = np.zeros((batch_size, 1))
-
-          # Seed the model state with the starting text.
-          for symbol in sampler.encoded_start_text[:-1]:
-            indices[:] = symbol
-            feed = {self.input_data: indices, self.initial_state: state}
-            [state] = sess.run([self.final_state], feed)
-          indices[:] = sampler.encoded_start_text[-1]
-
-          # Sampling loop. Continues until all samples in the batch are done.
-          while True:
-            # Sample distribution to pick next symbol.
-            feed = {self.input_data: indices, self.initial_state: state}
-            [predictions, state] = sess.run(
-                [self.probs, self.final_state], feed)
-            indices[:, 0] = [
-              WeightedPick(p, sampler.temperature) for p in predictions]
-
-            # Iterate over all samples in batch to determine whether they're
-            # done.
-            for i in range(batch_size):
-              if done[i]:
-                continue
-
-              token = atomizer.decoder[indices[i, 0]]
-              samples_in_progress[i].append(token)
-              if sampler.SampleIsComplete(samples_in_progress[i]):
-                end_time = labdate.MillisecondsTimestamp()
-                done[i] = 1
-                sample = model_pb2.Sample(
-                    text=''.join(samples_in_progress[i]),
-                    sample_start_epoch_ms_utc=start_time,
-                    sample_time_ms=end_time - start_time,
-                    wall_time_ms=end_time - wall_time_start,
-                    num_tokens=len(samples_in_progress[i]))
-                print(f'=== BEGIN CLGEN SAMPLE {sample_count} '
-                      f'===\n\n{sample.text}\n')
-                sample_count += 1
-                if cache_samples:
-                  sample_id = crypto.sha256_str(sample.text)
-                  sample_path = sample_dir / f'{sample_id}.pbtxt'
-                  pbutil.ToFile(sample, sample_path)
-                if min_num_samples > 0:
-                  samples.append(sample)
-                wall_time_start = labdate.MillisecondsTimestamp()
-
-            # Complete the batch.
-            if done.all():
-              break
-
-          # Complete sampling.
-          if len(samples) >= min_num_samples:
-            now = labdate.MillisecondsTimestamp()
-            logging.info(
-                'Produced %s samples at a rate of %s ms / sample.',
-                humanize.intcomma(len(samples)),
-                humanize.intcomma(
-                    int((now - sample_start_time) / len(samples))))
-            break
-
-    return samples
+  @property
+  def is_trained(self) -> bool:
+    """Determine if model has been trained."""
+    # Count the number of checkpoint files which TensorFlow has created.
+    num_checkpoints = len([
+      f for f in (self.cache.path / 'checkpoints').iterdir()
+      if f.name.startswith('checkpoint-') and f.name.endswith('.meta')
+    ])
+    return num_checkpoints >= self.config.training.num_epochs
 
 
-def WeightedPick(predictions: np.ndarray, temperature: float) -> int:
+def WeightedPick(predictions: np.ndarray, temperature: float) -> np.ndarray:
   """Make a weighted choice from a predictions array."""
   predictions = np.log(np.asarray(predictions).astype('float64')) / temperature
   predictions_exp = np.exp(predictions)
@@ -437,13 +348,3 @@ def WeightedPick(predictions: np.ndarray, temperature: float) -> int:
   predictions = predictions_exp / np.sum(predictions_exp)
   predictions = np.random.multinomial(1, predictions, 1)
   return np.argmax(predictions)
-
-# def WeightedPick(weights):
-#   """
-#   requires that all probabilities are >= 0, i.e.:
-#     assert all(x >= 0 for x in weights)
-#   See: https://github.com/ChrisCummins/clgen/issues/120
-#   """
-#   t = np.cumsum(weights)
-#   s = np.sum(weights)
-#   return int(np.searchsorted(t, np.random.rand(1) * s))

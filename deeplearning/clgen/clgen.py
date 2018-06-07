@@ -29,9 +29,7 @@ from absl import logging
 
 from deeplearning.clgen import errors
 from deeplearning.clgen import samplers
-from deeplearning.clgen.models import keras_backend
 from deeplearning.clgen.models import models
-from deeplearning.clgen.models import tensorflow_backend
 from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import model_pb2
 from lib.labm8 import pbutil
@@ -63,10 +61,6 @@ flags.DEFINE_bool(
 flags.DEFINE_bool(
     'clgen_profiling', False,
     'Enable CLgen self profiling. Profiling results be logged.')
-flags.DEFINE_bool(
-    'enable_experimental_tf_model', False,
-    'Enable support for the experimental TensorFlow model. WARNING THIS FLAG '
-    'IS NOT YET THOROUGHLY TESTED')
 
 
 class Instance(object):
@@ -95,13 +89,7 @@ class Instance(object):
     # Enter a session so that the cache paths are set relative to any requested
     # working directory.
     with self.Session():
-      # TODO(cec): Determine which Model class to instantiate.
-      if FLAGS.enable_experimental_tf_model:
-        self.model: models.ModelBase = tensorflow_backend.TensorFlowModel(
-            config.model)
-      else:
-        self.model: models.ModelBase = keras_backend.KerasEmbeddingModel(
-            config.model)
+      self.model: models.Model = models.Model(config.model)
       self.sampler: samplers.Sampler = samplers.Sampler(config.sampler)
 
   @contextlib.contextmanager

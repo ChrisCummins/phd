@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 from absl import app
 
+from deeplearning.clgen.models import models
 from deeplearning.clgen.models import tensorflow_backend
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import telemetry_pb2
@@ -37,14 +38,21 @@ class MockSampler(object):
     return len(sample_in_progress) >= 10
 
 
-# TensorFlowModel.Train() tests.
+@pytest.fixture(scope='function')
+def abc_tensorflow_model_config(abc_model_config: model_pb2.Model):
+  """A test fixture for a simple model with a TensorFlow backend."""
+  abc_model_config.architecture.backend = model_pb2.NetworkArchitecture.TENSORFLOW
+  return abc_model_config
 
-@pytest.mark.skip(reason='TODO(cec): Implement Telemetry.')
-def test_TensorFlowModel_Train_telemetry(clgen_cache_dir, abc_model_config):
+
+# TensorFlowBackend.Train() tests.
+
+def test_TensorFlowBackend_Train_telemetry(
+    clgen_cache_dir, abc_tensorflow_model_config):
   """Test that model training produced telemetry files."""
   del clgen_cache_dir
-  abc_model_config.training.num_epochs = 2
-  m = tensorflow_backend.TensorFlowModel(abc_model_config)
+  abc_tensorflow_model_config.training.num_epochs = 2
+  m = models.Model(abc_tensorflow_model_config)
   assert len(m.TrainingTelemetry()) == 0
   m.Train()
   assert len(m.TrainingTelemetry()) == 2
@@ -53,11 +61,12 @@ def test_TensorFlowModel_Train_telemetry(clgen_cache_dir, abc_model_config):
 
 
 @pytest.mark.skip(reason='TODO(cec): Update checkpoints API.')
-def test_TensorFlowModel_Train_twice(clgen_cache_dir, abc_model_config):
+def test_TensorFlowBackend_Train_twice(
+    clgen_cache_dir, abc_tensorflow_model_config):
   """Test that TensorFlow checkpoint does not change after training twice."""
   del clgen_cache_dir
-  abc_model_config.training.num_epochs = 1
-  m = tensorflow_backend.TensorFlowModel(abc_model_config)
+  abc_tensorflow_model_config.training.num_epochs = 1
+  m = models.Model(abc_tensorflow_model_config)
   m.Train()
   f1a = checksumdir.dirhash(m.cache.path / 'checkpoints')
   f1b = crypto.md5_file(m.cache.path / 'META.pbtxt')
@@ -71,26 +80,26 @@ def test_TensorFlowModel_Train_twice(clgen_cache_dir, abc_model_config):
 # TODO(cec): Add tests on incrementally trained model predictions and losses.
 
 
-# TensorFlowModel.Sample() tests.
+# TensorFlowBackend.Sample() tests.
 
 @pytest.mark.skip(reason='TODO(cec): Implement is_trained.')
-def test_TensorFlowModel_Sample_implicit_train(clgen_cache_dir,
-                                               abc_model_config):
+def test_TensorFlowBackend_Sample_implicit_train(clgen_cache_dir,
+                                                 abc_tensorflow_model_config):
   """Test that Sample() implicitly trains the model."""
   del clgen_cache_dir
-  m = tensorflow_backend.TensorFlowModel(abc_model_config)
+  m = models.Model(abc_tensorflow_model_config)
   assert not m.is_trained
   m.Sample(MockSampler(), 1)
   assert m.is_trained
 
 
-def test_TensorFlowModel_Sample_return_value_matches_cached_sample(
+def test_TensorFlowBackend_Sample_return_value_matches_cached_sample(
     clgen_cache_dir,
-    abc_model_config):
+    abc_tensorflow_model_config):
   """Test that Sample() returns Sample protos."""
   del clgen_cache_dir
-  abc_model_config.training.batch_size = 1
-  m = tensorflow_backend.TensorFlowModel(abc_model_config)
+  abc_tensorflow_model_config.training.batch_size = 1
+  m = models.Model(abc_tensorflow_model_config)
   samples = m.Sample(MockSampler(hash='hash'), 1)
   assert len(samples) == 1
   assert len(list((m.cache.path / 'samples' / 'hash').iterdir())) == 1
@@ -104,24 +113,24 @@ def test_TensorFlowModel_Sample_return_value_matches_cached_sample(
            0].sample_start_epoch_ms_utc == cached_sample.sample_start_epoch_ms_utc
 
 
-def test_TensorFlowModel_Sample_exact_multiple_of_batch_size(
+def test_TensorFlowBackend_Sample_exact_multiple_of_batch_size(
     clgen_cache_dir,
-    abc_model_config):
+    abc_tensorflow_model_config):
   """Test that min_num_samples are returned when a multiple of batch_size."""
   del clgen_cache_dir
-  abc_model_config.training.batch_size = 2
-  m = tensorflow_backend.TensorFlowModel(abc_model_config)
+  abc_tensorflow_model_config.training.batch_size = 2
+  m = models.Model(abc_tensorflow_model_config)
   assert len(m.Sample(MockSampler(), 2)) == 2
   assert len(m.Sample(MockSampler(), 4)) == 4
 
 
-def test_TensorFlowModel_Sample_inexact_multiple_of_batch_size(
+def test_TensorFlowBackend_Sample_inexact_multiple_of_batch_size(
     clgen_cache_dir,
-    abc_model_config):
+    abc_tensorflow_model_config):
   """Test that min_num_samples are returned when a multiple of batch_size."""
   del clgen_cache_dir
-  abc_model_config.training.batch_size = 3
-  m = tensorflow_backend.TensorFlowModel(abc_model_config)
+  abc_tensorflow_model_config.training.batch_size = 3
+  m = models.Model(abc_tensorflow_model_config)
   # 3 = 1 * sizeof(batch).
   assert len(m.Sample(MockSampler(), 2)) == 3
   # 6 = 2 * sizeof(batch).
@@ -140,10 +149,10 @@ def test_WeightedPick_output_range():
 # Benchmarks.
 
 def test_benchmark_TensorFlowModel_Train_already_trained(
-    clgen_cache_dir, abc_model_config, benchmark):
+    clgen_cache_dir, abc_tensorflow_model_config, benchmark):
   """Benchmark the Train() method on an already-trained model."""
   del clgen_cache_dir
-  m = tensorflow_backend.TensorFlowModel(abc_model_config)
+  m = models.Model(abc_tensorflow_model_config)
   m.Train()  # "Offline" training from cold.
   benchmark(m.Train)
 

@@ -14,32 +14,37 @@ import "deeplearning/clgen/proto/corpus.proto";
 // The specification of a CLgen model.
 message Model {
   optional clgen.Corpus corpus = 1;
-  // TODO(cec): Replace with oneof field for keras / tensorflow models.
   optional NetworkArchitecture architecture = 2;
   optional TrainingOptions training = 3;
 }
 
 // The specification of a CLgen language model.
 message NetworkArchitecture {
-  enum NeuronType {
-    UNKNOWN = 0; // The default value is an error.
-    LSTM = 1;
-    RNN = 2;
-    GRU = 3;
+  enum Backend {
+    TENSORFLOW = 0;
+    KERAS = 1;
   }
 
-  // The size of the input embedding layer. Must be > 0.
-  optional int32 embedding_size = 1;
+  enum NeuronType {
+    LSTM = 0;
+    RNN = 1;
+    GRU = 2;
+  }
+
+  optional Backend backend = 1;
+  // The size of the input embedding layer. Only required if backend == KERAS.
+  // Must be > 0.
+  optional int32 embedding_size = 2;
   // The type of neuron. Valid options are: {"lstm","rnn","gru"}.
-  optional NeuronType neuron_type = 2;
+  optional NeuronType neuron_type = 3;
   // The number of neurons in each layer of the network.
-  optional int32 neurons_per_layer = 3;
+  optional int32 neurons_per_layer = 4;
   // The total number of layers in the network.
-  optional int32 num_layers = 4;
+  optional int32 num_layers = 5;
   // If greater than zero, this adds a dropout layer after each layer of neurons
   // with probability post_alyer_drop_micros / 1000000. E.g. a value of 2000
   // would insert a dropout with probability of 0.2.
-  optional int32 post_layer_dropout_micros = 5;
+  optional int32 post_layer_dropout_micros = 6;
 }
 
 // Options used for training a CLgen language model.

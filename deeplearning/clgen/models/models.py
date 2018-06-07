@@ -3,7 +3,10 @@ import os
 import pathlib
 import typing
 
+import humanize
+import numpy as np
 from absl import flags
+from absl import logging
 
 from deeplearning.clgen import cache
 from deeplearning.clgen import errors
@@ -11,11 +14,15 @@ from deeplearning.clgen import samplers
 from deeplearning.clgen import telemetry
 from deeplearning.clgen.corpuses import corpuses
 from deeplearning.clgen.models import builders
+from deeplearning.clgen.models import keras_backend
+from deeplearning.clgen.models import tensorflow_backend
 from deeplearning.clgen.proto import internal_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import telemetry_pb2
 from lib.labm8 import crypto
+from lib.labm8 import labdate
 from lib.labm8 import lockfile
+from lib.labm8 import logutil
 from lib.labm8 import pbutil
 
 
@@ -27,8 +34,8 @@ flags.DEFINE_bool(
     'EXPERIMENTAL AND HAS NOT BEEN THOROUGHLY REVIEWED OR UNDERSTOOD.')
 
 
-class ModelBase(object):
-  """The base class of a CLgen Model.
+class Model(object):
+  """A CLgen language model.
 
   Please note model instances should be treated as immutable. Upon
   instantiation, a model's properties are used to determine its hash. If you
@@ -88,6 +95,11 @@ class ModelBase(object):
       self.meta.config.CopyFrom(self.config)
       self._WriteMetafile()
 
+    self.backend = {
+      model_pb2.NetworkArchitecture.TENSORFLOW: tensorflow_backend.TensorFlowBackend,
+      model_pb2.NetworkArchitecture.KERAS: keras_backend.KerasBackend,
+    }[config.architecture.backend](self.config, self.cache, self.corpus)
+
   @staticmethod
   def _ComputeHash(corpus_: corpuses.Corpus, config: model_pb2.Model) -> str:
     """Compute model hash.
@@ -113,7 +125,7 @@ class ModelBase(object):
     return crypto.sha1_list(corpus_.hash,
                             config_to_hash.SerializeToString())
 
-  def Train(self) -> 'ModelBase':
+  def Train(self) -> 'Model':
     """Train the model.
 
     Returns:
@@ -124,11 +136,20 @@ class ModelBase(object):
         process currently modifying the model).
     """
     self.corpus.Create()
-    self.GetTrainedModel()
+    with self.training_lock.acquire():
+      self.backend.Train()
+    total_time_ms = sum(
+        t.epoch_wall_time_ms
+        for t in self.TrainingTelemetry()[:self.config.training.num_epochs])
+    logging.info('Trained model for %d epochs in %s ms (%s).',
+                 self.config.training.num_epochs,
+                 humanize.intcomma(total_time_ms),
+                 humanize.naturaldelta(total_time_ms / 1000))
     return self
 
-  def Sample(self, sampler: samplers.Sampler,
-             min_num_samples: int) -> typing.List[model_pb2.Sample]:
+  def Sample(
+      self, sampler: samplers.Sampler, min_num_samples: int,
+      seed: int = None) -> typing.List[model_pb2.Sample]:
     """Sample a model.
 
     If the model is not already trained, calling Sample() first trains the
@@ -143,6 +164,8 @@ class ModelBase(object):
         until the lowest mulitple of the sampler batch size property that is
         larger than this value. E.g. if min_num_samples is 7 and the Sampler
         batch size is 10, 10 samples will be returned.
+      seed: A numeric value to seed the RNG with. If not present, the RNG is
+        seeded randomly.
 
     Returns:
       A list of Sample protos.
@@ -154,7 +177,178 @@ class ModelBase(object):
       InvalidSymtokTokens: If the sampler symmetrical depth tokens cannot be
         encoded.
     """
-    raise NotImplementedError
+    self.Train()
+
+    sample_count = 1
+    self.SamplerCache(sampler).mkdir(exist_ok=True)
+    with logutil.TeeLogsToFile(
+        f'sampler_{sampler.hash}', self.cache.path / 'logs'):
+      logging.info("Sampling: '%s'", sampler.start_text)
+      if min_num_samples < 0:
+        logging.warning(
+            'Entering an infinite sample loop, this process will never end!')
+      sample_start_time = labdate.MillisecondsTimestamp()
+
+      atomizer = self.corpus.atomizer
+      sampler.Specialize(atomizer)
+      batch_size = self.backend.InitSampling(sampler, seed)
+
+      samples = []
+      sample_dir = self.SamplerCache(sampler)
+
+      # Per-sample batch outer loop. Continues until we have as many samples
+      # as we want.
+      while True:
+        samples_in_progress = [
+          sampler.tokenized_start_text.copy()
+          for _ in range(batch_size)]
+        done = np.zeros(batch_size, dtype=np.bool)
+        start_time = labdate.MillisecondsTimestamp()
+        wall_time_start = start_time
+
+        self.backend.InitSampleBatch(sampler, batch_size)
+
+        # Sampling loop. Continues until all samples in the batch are done.
+        while True:
+          indices = self.backend.SampleNextIndices(sampler, batch_size)
+
+          # Iterate over all samples in batch to determine whether they're
+          # done.
+          for i in range(batch_size):
+            if done[i]:
+              continue
+
+            token = atomizer.decoder[indices[i]]
+            samples_in_progress[i].append(token)
+            if sampler.SampleIsComplete(samples_in_progress[i]):
+              end_time = labdate.MillisecondsTimestamp()
+              done[i] = 1
+              sample = model_pb2.Sample(
+                  text=''.join(samples_in_progress[i]),
+                  sample_start_epoch_ms_utc=start_time,
+                  sample_time_ms=end_time - start_time,
+                  wall_time_ms=end_time - wall_time_start,
+                  num_tokens=len(samples_in_progress[i]))
+              print(f'=== BEGIN CLGEN SAMPLE {sample_count} '
+                    f'===\n\n{sample.text}\n')
+              sample_count += 1
+              sample_id = crypto.sha256_str(sample.text)
+              sample_path = sample_dir / f'{sample_id}.pbtxt'
+              pbutil.ToFile(sample, sample_path)
+              if min_num_samples > 0:
+                samples.append(sample)
+              wall_time_start = labdate.MillisecondsTimestamp()
+
+          # Complete the batch.
+          if done.all():
+            break
+
+        # Complete sampling. Note that sample_count starts at 1.
+        if sample_count > min_num_samples:
+          now = labdate.MillisecondsTimestamp()
+          logging.info(
+              'Produced %s samples at a rate of %s ms / sample.',
+              humanize.intcomma(len(samples)),
+              humanize.intcomma(
+                  int((now - sample_start_time) / len(samples))))
+          break
+
+    return samples
+
+  def SampleFast(
+      self, sampler: samplers.Sampler, min_num_samples: int,
+      seed: int = None) -> typing.List[model_pb2.Sample]:
+    """Sample a model.
+
+    Same as Sample(), but without printing or caching samples. Because samples
+    are not cached, infinite sampling loops are not supported, since we must
+    return the sample protos at some point.
+
+    Args:
+      sampler: The sampler to sample using.
+      min_num_samples: The minimum number of samples to return. Note that the
+        true number of samples returned may be higher than this value, as
+        sampling occurs in batches. The model will continue producing samples
+        until the lowest mulitple of the sampler batch size property that is
+        larger than this value. E.g. if min_num_samples is 7 and the Sampler
+        batch size is 10, 10 samples will be returned.
+      seed: A numeric value to seed the RNG with. If not present, the RNG is
+        seeded randomly.
+
+    Returns:
+      A list of Sample protos.
+
+    Raises:
+      UnableToAcquireLockError: If the model is locked (i.e. there is another
+        process currently modifying the model).
+      InvalidStartText: If the sampler start text cannot be encoded.
+      InvalidSymtokTokens: If the sampler symmetrical depth tokens cannot be
+        encoded.
+    """
+    self.Train()
+
+    sample_count = 1
+    with logutil.TeeLogsToFile(
+        f'sampler_{sampler.hash}', self.cache.path / 'logs'):
+      logging.info("Sampling: '%s'", sampler.start_text)
+      sample_start_time = labdate.MillisecondsTimestamp()
+      atomizer = self.corpus.atomizer
+      sampler.Specialize(atomizer)
+      batch_size = self.backend.InitSampling(sampler, seed)
+      samples = []
+
+      # Per-sample batch outer loop. Continues until we have as many samples
+      # as we want.
+      while True:
+        samples_in_progress = [
+          sampler.tokenized_start_text.copy()
+          for _ in range(batch_size)]
+        done = np.zeros(batch_size, dtype=np.bool)
+        start_time = labdate.MillisecondsTimestamp()
+        wall_time_start = start_time
+
+        self.backend.InitSampleBatch(sampler, batch_size)
+
+        # Sampling loop. Continues until all samples in the batch are done.
+        while True:
+          indices = self.backend.SampleNextIndices(sampler, batch_size)
+
+          # Iterate over all samples in batch to determine whether they're
+          # done.
+          for i in range(batch_size):
+            if done[i]:
+              continue
+
+            token = atomizer.decoder[indices[i, 0]]
+            samples_in_progress[i].append(token)
+            if sampler.SampleIsComplete(samples_in_progress[i]):
+              end_time = labdate.MillisecondsTimestamp()
+              done[i] = 1
+              sample = model_pb2.Sample(
+                  text=''.join(samples_in_progress[i]),
+                  sample_start_epoch_ms_utc=start_time,
+                  sample_time_ms=end_time - start_time,
+                  wall_time_ms=end_time - wall_time_start,
+                  num_tokens=len(samples_in_progress[i]))
+              sample_count += 1
+              samples.append(sample)
+              wall_time_start = labdate.MillisecondsTimestamp()
+
+          # Complete the batch.
+          if done.all():
+            break
+
+        # Complete sampling. Note that sample_count starts at 1.
+        if sample_count > min_num_samples:
+          now = labdate.MillisecondsTimestamp()
+          logging.info(
+              'Produced %s samples at a rate of %s ms / sample.',
+              humanize.intcomma(len(samples)),
+              humanize.intcomma(
+                  int((now - sample_start_time) / len(samples))))
+          break
+
+    return samples
 
   def SamplerCache(self, sampler: samplers.Sampler) -> pathlib.Path:
     """Get the path to a sampler cache.
@@ -168,14 +362,6 @@ class ModelBase(object):
     """
     return self.cache.path / 'samples' / sampler.hash
 
-  def GetTrainedModel(self) -> typing.Any:
-    """Implementation-specific method to load / train a model."""
-    raise NotImplementedError
-
-  def GetInferenceModel(self) -> typing.Any:
-    """Implementation-specific method load / train a model for inference."""
-    raise NotImplementedError
-
   def _WriteMetafile(self) -> None:
     pbutil.ToFile(self.meta, pathlib.Path(self.cache.keypath('META.pbtxt')))
 
@@ -184,17 +370,20 @@ class ModelBase(object):
     return telemetry.TrainingLogger(self.cache.path / 'logs').EpochTelemetry()
 
   @property
-  def lock(self) -> lockfile.LockFile:
-    """Get the lockfile."""
-    lockpath = self.cache.keypath("LOCK")
-    return lockfile.LockFile(lockpath)
+  def training_lock(self) -> lockfile.LockFile:
+    """A lockfile for exclusive training."""
+    return lockfile.LockFile(self.cache.keypath('LOCK'))
+
+  @property
+  def is_trained(self) -> bool:
+    return self.backend.is_trained
 
   def __repr__(self) -> str:
     """String representation."""
     return f'model[{self.hash}]'
 
   def __eq__(self, rhs) -> bool:
-    if not isinstance(rhs, ModelBase):
+    if not isinstance(rhs, Model):
       return False
     return rhs.hash == self.hash
 

@@ -1,11 +1,11 @@
 import contextlib
 import os
 import pathlib
+import time
 import typing
 from concurrent import futures
 
 import grpc
-import time
 from absl import app
 from absl import flags
 from absl import logging
@@ -24,7 +24,7 @@ FLAGS = flags.FLAGS
 
 
 def ClgenConfigToGenerator(
-    m: deeplearning.clgen.models.keras_backend.KerasEmbeddingModel,
+    m: deeplearning.clgen.models.keras_backend.KerasBackend,
     s: samplers.Sampler) -> deepsmith_pb2.Generator:
   """Convert a CLgen model+sampler pair to a DeepSmith generator proto."""
   # TODO(cec): Update for new options and add unit tests.
@@ -61,7 +61,7 @@ class ClgenGenerator(generator.GeneratorBase,
   def __init__(self, config: generator_pb2.ClgenGenerator):
     self.config = config
     with self.ClgenWorkingDir():
-      m = deeplearning.clgen.models.keras_backend.KerasEmbeddingModel(
+      m = deeplearning.clgen.models.keras_backend.KerasBackend(
           self.config.model)
       s = samplers.Sampler(self.config.sampler)
       self.generator = ClgenConfigToGenerator(m, s)
@@ -105,7 +105,7 @@ class ClgenGenerator(generator.GeneratorBase,
         generator_pb2.GenerateTestcasesResponse)
     os.environ['CLGEN_CACHE'] = self.config.clgen_working_dir
     with self.ClgenWorkingDir():
-      m = deeplearning.clgen.models.keras_backend.KerasEmbeddingModel(
+      m = deeplearning.clgen.models.keras_backend.KerasBackend(
           self.config.model)
       s = samplers.Sampler(self.config.sampler)
       for sample in m.Sample(s):

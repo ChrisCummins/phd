@@ -1,6 +1,7 @@
 """Unit tests for //deeplearning/clgen/models/models.py."""
-import pytest
 import sys
+
+import pytest
 from absl import app
 
 from deeplearning.clgen import errors
@@ -11,20 +12,20 @@ from lib.labm8 import pbutil
 
 
 # The Model.hash for an instance of abc_model_config.
-ABC_MODEL_HASH = 'a92099940caaa165359e9a250b0620c518fa50a6'
+ABC_MODEL_HASH = 'bf95e335177883a9204a560617990caf3fd1efc6'
 
 
 def test_Model_config_type_error():
   """Test that a TypeError is raised if config is not a Model proto."""
   with pytest.raises(TypeError) as e_info:
-    models.ModelBase(1)
+    models.Model(1)
   assert "Config must be a Model proto. Received: 'int'" == str(e_info.value)
 
 
 def test_Model_hash(clgen_cache_dir, abc_model_config):
   """Test that the ID of a known corpus matches expected value."""
   del clgen_cache_dir
-  m = models.ModelBase(abc_model_config)
+  m = models.Model(abc_model_config)
   assert ABC_MODEL_HASH == m.hash
 
 
@@ -32,9 +33,9 @@ def test_Model_config_hash_different_options(clgen_cache_dir, abc_model_config):
   """Test that model options produce different model hashes."""
   del clgen_cache_dir
   abc_model_config.architecture.neuron_type = model_pb2.NetworkArchitecture.GRU
-  m1 = models.ModelBase(abc_model_config)
+  m1 = models.Model(abc_model_config)
   abc_model_config.architecture.neuron_type = model_pb2.NetworkArchitecture.RNN
-  m2 = models.ModelBase(abc_model_config)
+  m2 = models.Model(abc_model_config)
   assert m1.hash != m2.hash
 
 
@@ -43,9 +44,9 @@ def test_Model_config_hash_different_num_epochs(clgen_cache_dir,
   """Test that different num_eopchs doesn't affect model hash."""
   del clgen_cache_dir
   abc_model_config.training.num_epochs = 10
-  m1 = models.ModelBase(abc_model_config)
+  m1 = models.Model(abc_model_config)
   abc_model_config.training.num_epochs = 20
-  m2 = models.ModelBase(abc_model_config)
+  m2 = models.Model(abc_model_config)
   assert m1.hash == m2.hash
 
 
@@ -53,9 +54,9 @@ def test_Model_config_hash_different_corpus(clgen_cache_dir, abc_model_config):
   """Test that different corpuses produce different model hashes."""
   del clgen_cache_dir
   abc_model_config.corpus.contentfile_separator = '\n\n'
-  m1 = models.ModelBase(abc_model_config)
+  m1 = models.Model(abc_model_config)
   abc_model_config.corpus.contentfile_separator = 'abc'
-  m2 = models.ModelBase(abc_model_config)
+  m2 = models.Model(abc_model_config)
   assert m1.hash != m2.hash
 
 
@@ -65,14 +66,14 @@ def test_Model_config_sequence_length_not_set(clgen_cache_dir,
   del clgen_cache_dir
   abc_model_config.training.sequence_length = -1
   with pytest.raises(errors.UserError):
-    models.ModelBase(abc_model_config)
+    models.Model(abc_model_config)
 
 
 def test_Model_equality(clgen_cache_dir, abc_model_config):
   """Test that two corpuses with identical options are equivalent."""
   del clgen_cache_dir
-  m1 = models.ModelBase(abc_model_config)
-  m2 = models.ModelBase(abc_model_config)
+  m1 = models.Model(abc_model_config)
+  m2 = models.Model(abc_model_config)
   assert m1 == m2
 
 
@@ -80,16 +81,16 @@ def test_Model_inequality(clgen_cache_dir, abc_model_config):
   """Test that two corpuses with different options are not equivalent."""
   del clgen_cache_dir
   abc_model_config.architecture.num_layers = 1
-  m1 = models.ModelBase(abc_model_config)
+  m1 = models.Model(abc_model_config)
   abc_model_config.architecture.num_layers = 2
-  m2 = models.ModelBase(abc_model_config)
+  m2 = models.Model(abc_model_config)
   assert m1 != m2
 
 
 def test_Model_directories(clgen_cache_dir, abc_model_config):
   """A newly instantiated model's cache has checkpoint and sample dirs."""
   del clgen_cache_dir
-  m = models.ModelBase(abc_model_config)
+  m = models.Model(abc_model_config)
   assert (m.cache.path / 'checkpoints').is_dir()
   assert (m.cache.path / 'samples').is_dir()
   # There should be nothing in these directories yet.
@@ -100,7 +101,7 @@ def test_Model_directories(clgen_cache_dir, abc_model_config):
 def test_Model_metafile(clgen_cache_dir, abc_model_config):
   """A newly instantiated model's cache has a metafile."""
   del clgen_cache_dir
-  m = models.ModelBase(abc_model_config)
+  m = models.Model(abc_model_config)
   assert (m.cache.path / 'META.pbtxt').is_file()
   assert pbutil.ProtoIsReadable(m.cache.path / 'META.pbtxt',
                                 internal_pb2.ModelMeta())
@@ -123,7 +124,7 @@ def test_benchmark_Model_instantiation(clgen_cache_dir, abc_model_config,
   time than subsequent iterations since it must create the cache directories.
   """
   del clgen_cache_dir
-  benchmark(models.ModelBase, abc_model_config)
+  benchmark(models.Model, abc_model_config)
 
 
 def main(argv):

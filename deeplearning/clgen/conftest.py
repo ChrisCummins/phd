@@ -80,6 +80,7 @@ def abc_corpus_config(abc_corpus):
 def abc_model_config(abc_corpus_config):
   """The proto config for a simple Model."""
   architecture = model_pb2.NetworkArchitecture(
+      backend=model_pb2.NetworkArchitecture.TENSORFLOW,
       embedding_size=2,
       neuron_type=model_pb2.NetworkArchitecture.LSTM,
       neurons_per_layer=4,

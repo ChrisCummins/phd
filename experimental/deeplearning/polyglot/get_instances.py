@@ -38,7 +38,7 @@ BASE_MODEL = """
 # File: //deeplearning/clgen/proto/model.proto
 # Proto: clgen.Model
 architecture {
-  embedding_size: 32
+  backend: TENSORFLOW
   neuron_type: LSTM
   neurons_per_layer: 512
   num_layers: 2
@@ -90,7 +90,7 @@ def EnumerateLanguageInstances(
         sampler_pb2.Sampler()))
     instance = clgen.Instance(instance_config)
     # Swap the model for a TensorFlow model.
-    instance.model = tensorflow_backend.TensorFlowModel(instance_config.model)
+    instance.model = tensorflow_backend.TensorFlowBackend(instance_config.model)
     instances.append(instance)
   return instances
 

@@ -33,8 +33,6 @@ py_binary(
         ":errors",
         ":samplers",
         "//deeplearning/clgen/models",
-        "//deeplearning/clgen/models:keras_backend",
-        "//deeplearning/clgen/models:tensorflow_backend",
         "//deeplearning/clgen/proto:clgen_py_pb2",
         "//lib/labm8:pbutil",
         "//lib/labm8:prof",

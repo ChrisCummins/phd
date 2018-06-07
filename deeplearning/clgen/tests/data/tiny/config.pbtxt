@@ -21,7 +21,7 @@ model {
     preprocessor: "deeplearning.clgen.preprocessors.opencl:Compile"
   }
   architecture {
-    embedding_size: 32
+    backend: TENSORFLOW
     neuron_type: LSTM
     neurons_per_layer: 128
     num_layers: 2

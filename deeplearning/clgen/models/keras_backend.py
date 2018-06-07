@@ -10,29 +10,26 @@ from absl import logging
 
 from deeplearning.clgen import samplers
 from deeplearning.clgen import telemetry
+from deeplearning.clgen.models import backends
 from deeplearning.clgen.models import builders
 from deeplearning.clgen.models import data_generators
-from deeplearning.clgen.models import models
-from deeplearning.clgen.proto import model_pb2
-from lib.labm8 import crypto
-from lib.labm8 import labdate
 from lib.labm8 import logutil
-from lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS
 
 
-class KerasEmbeddingModel(models.ModelBase):
+class KerasBackend(backends.BackendBase):
   """A model with an embedding layer, using a keras backend."""
 
-  def __init__(self, config: model_pb2.Model):
+  def __init__(self, *args, **kwargs):
     """Instantiate a model.
 
     Args:
-      config: A Model message.
+      args: Arguments to be passed to BackendBase.__init__().
+      kwargs: Arguments to be passed to BackendBase.__init__().
     """
-    super(KerasEmbeddingModel, self).__init__(config)
+    super(KerasBackend, self).__init__(*args, **kwargs)
 
     # Create the necessary cache directories.
     (self.cache.path / 'embeddings').mkdir(exist_ok=True)
@@ -42,56 +39,18 @@ class KerasEmbeddingModel(models.ModelBase):
     self._inference_model: typing.Optional['keras.models.Sequential'] = None
     self._inference_batch_size: typing.Optional[int] = None
 
+    self.inference_indices = None
+    self.inference_model = None
+
   def GetTrainingModel(self) -> 'keras.models.Sequential':
     """Get the Keras model."""
     if self._training_model:
       return self._training_model
     self.corpus.Create()
-    self._training_model = self.GetTrainedModel()
+    self._training_model = self.Train()
     return self._training_model
 
-  def GetInferenceModel(self) -> typing.Tuple['keras.models.Sequential', int]:
-    """Like training model, but with batch size 1."""
-    if self._inference_model:
-      return self._inference_model, self._inference_batch_size
-
-    import keras
-
-    # Deferred importing of Keras so that we don't have to activate the
-    # TensorFlow backend every time we import this module.
-    logging.info('Building inference model.')
-    model = self.GetTrainingModel()
-    config = model.get_config()
-    # TODO(cec): Decide on whether this should be on by default, or in the
-    # sampler.proto.
-    if FLAGS.experimental_batched_sampling:
-      # Read the embedding output size.
-      batch_size = min(config[0]['config']['output_dim'], 32)
-    else:
-      batch_size = 1
-    logging.info('Sampling with batch size %d', batch_size)
-    config[0]['config']['batch_input_shape'] = (batch_size, 1)
-    inference_model = keras.models.Sequential.from_config(config)
-    inference_model.trainable = False
-    inference_model.set_weights(model.get_weights())
-    self._inference_model = inference_model
-    self._inference_batch_size = batch_size
-    return inference_model, batch_size
-
-  def GetTrainedModel(self) -> 'keras.models.Sequential':
-    """Get and return a trained Keras model."""
-    with self.lock.acquire(replace_stale=True, block=True):
-      model = self._LockedTrain()
-    total_time_ms = sum(
-        t.epoch_wall_time_ms
-        for t in self.TrainingTelemetry()[:self.config.training.num_epochs])
-    logging.info('Trained model for %d epochs in %s ms (%s).',
-                 self.config.training.num_epochs,
-                 humanize.intcomma(total_time_ms),
-                 humanize.naturaldelta(total_time_ms / 1000))
-    return model
-
-  def _LockedTrain(self) -> 'keras.models.Sequential':
+  def Train(self) -> 'keras.models.Sequential':
     """Locked training.
 
     If there are cached epoch checkpoints, the one closest to the target number
@@ -188,110 +147,62 @@ class KerasEmbeddingModel(models.ModelBase):
           initial_epoch=starting_epoch, epochs=target_num_epochs)
     return model
 
-  def Sample(self, sampler: samplers.Sampler,
-             min_num_samples: int) -> typing.List[model_pb2.Sample]:
-    """Sample a model.
+  def GetInferenceModel(self) -> typing.Tuple['keras.models.Sequential', int]:
+    """Like training model, but with batch size 1."""
+    if self._inference_model:
+      return self._inference_model, self._inference_batch_size
 
-    If the model is not already trained, calling Sample() first trains the
-    model. Thus a call to Sample() is equivalent to calling Train() then
-    Sample().
+    import keras
 
-    Args:
-      sampler: The sampler to sample using.
-      min_num_samples: The minimum number of samples to return. Note that the
-        true number of samples returned may be higher than this value, as
-        sampling occurs in batches. The model will continue producing samples
-        until the lowest mulitple of the sampler batch size property that is
-        larger than this value. E.g. if min_num_samples is 7 and the Sampler
-        batch size is 10, 10 samples will be returned.
+    # Deferred importing of Keras so that we don't have to activate the
+    # TensorFlow backend every time we import this module.
+    logging.info('Building inference model.')
+    model = self.GetTrainingModel()
+    config = model.get_config()
+    # TODO(cec): Decide on whether this should be on by default, or in the
+    # sampler.proto.
+    if FLAGS.experimental_batched_sampling:
+      # Read the embedding output size.
+      batch_size = min(config[0]['config']['output_dim'], 32)
+    else:
+      batch_size = 1
+    logging.info('Sampling with batch size %d', batch_size)
+    config[0]['config']['batch_input_shape'] = (batch_size, 1)
+    inference_model = keras.models.Sequential.from_config(config)
+    inference_model.trainable = False
+    inference_model.set_weights(model.get_weights())
+    self._inference_model = inference_model
+    self._inference_batch_size = batch_size
+    return inference_model, batch_size
 
-    Returns:
-      A list of Sample protos.
+  def InitSampling(self, sampler: samplers.Sampler,
+                   seed: typing.Optional[int] = None) -> int:
+    self.inference_model, batch_size = self.GetInferenceModel()
+    if seed is not None:
+      np.random.seed(seed)
+    return batch_size
 
-    Raises:
-      UnableToAcquireLockError: If the model is locked (i.e. there is another
-        process currently modifying the model).
-      InvalidStartText: If the sampler start text cannot be encoded.
-      InvalidSymtokTokens: If the sampler symmetrical depth tokens cannot be
-        encoded.
-    """
-    sample_count = 1
-    self.SamplerCache(sampler).mkdir(exist_ok=True)
-    model, batch_size = self.GetInferenceModel()
-    with logutil.TeeLogsToFile(
-        f'sampler_{sampler.hash}', self.cache.path / 'logs'):
-      logging.info("Sampling: '%s'", sampler.start_text)
-      if min_num_samples < 0:
-        logging.warning(
-            'Entering an infinite sample loop, this process will never end!')
-      sample_start_time = labdate.MillisecondsTimestamp()
+  def InitSampleBatch(self, sampler: samplers.Sampler, batch_size: int) -> None:
+    self.inference_model.reset_states()
+    # Set internal states from seed text.
+    for index in sampler.encoded_start_text[:-1]:
+      x = np.array([[index]] * batch_size)
+      # input shape: (batch_size, 1)
+      self.inference_model.predict(x)
 
-      sampler.Specialize(self.corpus.atomizer)
-      samples = []
-      while True:
-        model.reset_states()
-        samples_in_progress = [
-          sampler.tokenized_start_text.copy()
-          for _ in range(batch_size)]
-        start_time = labdate.MillisecondsTimestamp()
-        wall_time_start = start_time
+    self.inference_indices = sampler.encoded_start_text[-1]
 
-        # Set internal states from seed text.
-        for index in sampler.encoded_start_text[:-1]:
-          x = np.array([[index]] * batch_size)
-          # input shape: (batch_size, 1)
-          model.predict(x)
-
-        next_index = sampler.encoded_start_text[-1]
-        done = np.zeros(batch_size)
-        while True:
-          # Predict the next index for the entire batch.
-          x = np.array([[next_index]] * batch_size)
-          # Input shape: (bath_size, 1).
-          probabilities = model.predict(x)
-          # Output shape: (batch_size, 1, vocab_size).
-          next_indices = [
-            WeightedPick(p.squeeze(), sampler.temperature)
-            for p in probabilities
-          ]
-          # Append to sequences.
-          for i, next_index in enumerate(next_indices):
-            if done[i]:
-              continue
-
-            token = self.corpus.atomizer.decoder[next_index]
-            samples_in_progress[i].append(token)
-            if sampler.SampleIsComplete(samples_in_progress[i]):
-              end_time = labdate.MillisecondsTimestamp()
-              done[i] = 1
-              sample = model_pb2.Sample(
-                  text=''.join(samples_in_progress[i]),
-                  sample_start_epoch_ms_utc=start_time,
-                  sample_time_ms=end_time - start_time,
-                  wall_time_ms=end_time - wall_time_start,
-                  num_tokens=len(samples_in_progress[i]))
-              print(f'=== BEGIN CLGEN SAMPLE {sample_count} '
-                    f'===\n\n{sample.text}\n')
-              sample_count += 1
-              sample_id = crypto.sha256_str(sample.text)
-              sample_path = self.SamplerCache(sampler) / f'{sample_id}.pbtxt'
-              pbutil.ToFile(sample, sample_path)
-              if min_num_samples > 0:
-                samples.append(sample)
-              wall_time_start = labdate.MillisecondsTimestamp()
-
-          if done.all():
-            break
-
-        if len(samples) >= min_num_samples:
-          now = labdate.MillisecondsTimestamp()
-          logging.info(
-              'Produced %s samples at a rate of %s ms / sample.',
-              humanize.intcomma(len(samples)),
-              humanize.intcomma(int((now - sample_start_time) / len(samples))))
-          break
-
-    return samples
+  def SampleNextIndices(self, sampler: samplers.Sampler, batch_size: int):
+    # Predict the next index for the entire batch.
+    x = np.array([[self.inference_indices]] * batch_size)
+    # Input shape: (bath_size, 1).
+    probabilities = self.inference_model.predict(x)
+    # Output shape: (batch_size, 1, vocab_size).
+    self.inference_indices = [
+      WeightedPick(p.squeeze(), sampler.temperature)
+      for p in probabilities
+    ]
+    return self.inference_indices
 
   @property
   def epoch_checkpoints(self) -> typing.List[pathlib.Path]:

@@ -33,7 +33,7 @@ flags.DEFINE_integer('output_corpus_size', 5000,
 
 def IsElligible(instance: clgen.Instance):
   """Return whether an instance is elligible for training or sampling."""
-  if instance.model.lock.islocked:
+  if instance.model.training_lock.islocked:
     return False
   sample_dir = instance.model.SamplerCache(instance.sampler)
   sample_lock = lockfile.LockFile(sample_dir / 'LOCK')

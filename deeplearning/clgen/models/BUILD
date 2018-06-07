@@ -1,6 +1,17 @@
 # This package implements the machine learning models for CLgen.
 
 py_library(
+    name = "backends",
+    srcs = ["backends.py"],
+    deps = [
+        "//deeplearning/clgen:samplers",
+        "//deeplearning/clgen/corpuses",
+        "//deeplearning/clgen/proto:model_py_pb2",
+        "//lib/labm8:cache",
+    ],
+)
+
+py_library(
     name = "builders",
     srcs = ["builders.py"],
     deps = [
@@ -47,9 +58,9 @@ py_library(
     srcs = ["keras_backend.py"],
     visibility = ["//visibility:public"],
     deps = [
+        ":backends",
         ":builders",
         ":data_generators",
-        ":models",
         "//deeplearning/clgen:samplers",
         "//deeplearning/clgen:telemetry",
         "//deeplearning/clgen/proto:internal_py_pb2",
@@ -70,6 +81,7 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":keras_backend",
+        ":models",
         "//deeplearning/clgen:conftest",
         "//deeplearning/clgen/proto:model_py_pb2",
         "//deeplearning/clgen/proto:telemetry_py_pb2",
@@ -84,6 +96,8 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":builders",
+        ":keras_backend",
+        ":tensorflow_backend",
         "//deeplearning/clgen:cache",
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen:samplers",
@@ -118,9 +132,9 @@ py_library(
     srcs = ["tensorflow_backend.py"],
     visibility = ["//visibility:public"],
     deps = [
+        ":backends",
         ":builders",
         ":data_generators",
-        ":models",
         "//deeplearning/clgen:samplers",
         "//deeplearning/clgen:telemetry",
         "//deeplearning/clgen/proto:internal_py_pb2",
@@ -140,6 +154,7 @@ py_test(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
+        ":models",
         ":tensorflow_backend",
         "//deeplearning/clgen:conftest",
         "//deeplearning/clgen/proto:model_py_pb2",
