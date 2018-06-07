@@ -181,20 +181,32 @@ def main(argv):
     validation_data = ProtosToModelData(
         validation_protos, sequence_length, atomizer)
 
+  logging.info('Encoding test corpus')
+  test_x, test_y = ProtosToModelData(testing_protos, sequence_length, atomizer)
+
   np.random.seed(FLAGS.seed)
   logging.info('Building Keras model')
   model = BuildKerasModel(
       sequence_length=sequence_length, lstm_size=FLAGS.lstm_size,
       num_layers=FLAGS.num_layers, dnn_size=FLAGS.dnn_size, atomizer=atomizer)
   logging.info('Training model')
+
+  def OnEpochEnd(epoch, logs):
+    """End-of-epoch model evaluate."""
+    del logs
+    logging.info('Evaluating model at epoch %d', epoch)
+    model.evaluate(test_x, test_y, batch_size=FLAGS.batch_size, verbose=1)
+
   model.fit(x, Encode1HotLabels(y), epochs=FLAGS.num_epochs,
             batch_size=FLAGS.batch_size, verbose=True, shuffle=True,
-            validation_data=validation_data)
-  logging.info('Saving model to %s', FLAGS.model_path / 'model.h5')
-  model.save(FLAGS.model_path / 'model.h5')
+            validation_data=validation_data,
+            callbacks=[
+                keras.callbacks.ModelCheckpoint(
+                  '{FLAGS.model_path}/weights_{epoch:03d}.hdf5',
+                  verbose=1, mode="min", save_best_only=False),
+                keras.callbacks.LambdaCallback(on_epoch_end=OnEpochEnd),
+            ])
 
-  logging.info('Encoding test corpus')
-  test_x, test_y = ProtosToModelData(testing_protos, sequence_length, atomizer)
   logging.info('Evaluating model on test corpus')
   model.evaluate(test_x, test_y, batch_size=FLAGS.batch_size, verbose=1)
 
