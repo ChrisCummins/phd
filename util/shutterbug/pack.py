@@ -17,7 +17,7 @@ flags.DEFINE_string(
   'The root directory of the chunks. Each chunk is a directory containing '
   'files and a manifest.')
 flags.DEFINE_integer(
-  'size_mv', 4695,
+  'size_mb', 4695,
   'The smaximum size of each chunk, in megabytes.')
 flags.DEFINE_string(
   'chunk_prefix', 'chunk_',
