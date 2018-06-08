@@ -62,7 +62,7 @@ def main(argv):
     raise app.UsageError("--chunk_prefix cannot contain '/' character.")
 
   shutterbug.mkchunks(
-    src_dir, chunks_dir, size_in_bytes, prefix=chunk_prefix,
+    [src_dir], chunks_dir, size_in_bytes, prefix=chunk_prefix,
     shuffle=FLAGS.random_ordering, seed=FLAGS.random_ordering_seed,
     gzip=FLAGS.gzip_files)
 
