@@ -54,6 +54,7 @@ py_test(
 py_library(
     name = "public",
     srcs = ["public.py"],
+    visibility = ["//datasets/github/scrape_repos:__subpackages__"],
     deps = [
         "//lib/labm8:fs",
     ],
