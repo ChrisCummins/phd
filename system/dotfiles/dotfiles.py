@@ -1108,6 +1108,9 @@ class LaTeX(Task):
   def install_osx(self):
     Homebrew().install_cask("mactex")
     Homebrew().install_cask("texstudio")
+    # The poppler package contains the tool pdffonts, useful detecting Type 3
+    # fonts.
+    Homebrew().install_package('poppler')
     self.install()
 
   def install_linux(self):
