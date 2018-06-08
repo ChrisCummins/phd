@@ -319,7 +319,7 @@ class Model(object):
             if done[i]:
               continue
 
-            token = atomizer.decoder[indices[i, 0]]
+            token = atomizer.decoder[indices[i]]
             samples_in_progress[i].append(token)
             if sampler.SampleIsComplete(samples_in_progress[i]):
               end_time = labdate.MillisecondsTimestamp()
