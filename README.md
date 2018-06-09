@@ -1,1 +1,5 @@
-The journey of a thousand miles begins with a single commit.
+```sh
+$ pdflatex thesis.tex
+$ biber thesis
+$ pdflatex thesis.tex
+```
