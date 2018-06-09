@@ -1,16 +1,5 @@
 # Get a baseline reading from a CLgen model.
 
-filegroup(
-    name = "protos",
-    srcs = glob([
-        "clone_lists/**/*.pbtxt",
-        "corpuses/**/*.pbtxt",
-        "models/**/*.pbtxt",
-        "samplers/**/*.pbtxt",
-    ]),
-    visibility = ["//experimental:__subpackages__"],
-)
-
 py_library(
     name = "get_instances",
     srcs = ["get_instances.py"],
@@ -30,6 +19,30 @@ py_test(
     deps = [
         ":get_instances",
     ],
+)
+
+py_binary(
+    name = "notebooks",
+    srcs = ["notebooks.py"],
+    deps = [
+        "//datasets/github/scrape_repos:contentfiles",
+        "//deeplearning/clgen",
+        "//experimental/deeplearning/polyglot:get_instances",
+        "//lib/labm8:bazelutil",
+        "//lib/labm8:pbutil",
+        "//lib/labm8:viz",
+    ],
+)
+
+filegroup(
+    name = "protos",
+    srcs = glob([
+        "clone_lists/**/*.pbtxt",
+        "corpuses/**/*.pbtxt",
+        "models/**/*.pbtxt",
+        "samplers/**/*.pbtxt",
+    ]),
+    visibility = ["//experimental:__subpackages__"],
 )
 
 py_binary(

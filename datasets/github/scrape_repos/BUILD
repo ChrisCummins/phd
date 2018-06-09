@@ -15,6 +15,7 @@ py_binary(
 py_library(
     name = "contentfiles",
     srcs = ["contentfiles.py"],
+    visibility = ["//visibility:public"],
     deps = [
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
         "//lib/labm8:labdate",
