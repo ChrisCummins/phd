@@ -54,7 +54,7 @@ def Javac(text: str, class_name: str, cflags: typing.List[str],
     with open(path, 'w') as f:
       f.write(text)
     cmd = ['timeout', '-s9', str(timeout_seconds), 'javac', f.name] + cflags
-    logging.info('$ %s', ' '.join(cmd))
+    logging.debug('$ %s', ' '.join(cmd))
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE, universal_newlines=True)
     stdout, stderr = process.communicate()
