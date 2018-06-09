@@ -1,6 +1,7 @@
 """Import files into a ContentFiles database."""
 import hashlib
 import multiprocessing
+import os
 import pathlib
 import random
 import subprocess
@@ -21,6 +22,8 @@ from lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS
+flags.DEFINE_integer('processes', os.cpu_count(),
+                     'The number of simultaneous processes.')
 
 flags.DEFINE_string('clone_list', None, 'The path to a LanguageCloneList file.')
 
@@ -153,7 +156,7 @@ def main(argv):
     for importer in language.importer:
       [preprocessors.GetPreprocessorFunction(p) for p in importer.preprocessor]
 
-  pool = multiprocessing.Pool()
+  pool = multiprocessing.Pool(FLAGS.processes)
   for language in clone_list.language:
     d = pathlib.Path(language.destination_directory)
     d = d.parent / (str(d.name) + '.db')
