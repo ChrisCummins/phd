@@ -1,6 +1,7 @@
 """Run a baseline."""
 import collections
 import pathlib
+import random
 import time
 
 import humanize
@@ -92,7 +93,9 @@ def main(argv):
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
   start_time = time.time()
-  candidate_instances = collections.deque(get_instances.GetInstances())
+  instances = get_instances.GetInstances()
+  random.shuffle(instances)
+  candidate_instances = collections.deque(instances)
   logging.info('Loaded %d instances in %s ms', len(candidate_instances),
                humanize.intcomma(int((time.time() - start_time) * 1000)))
 
