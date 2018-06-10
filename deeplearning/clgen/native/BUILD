@@ -495,8 +495,8 @@ cc_binary(
     }),
     visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = select({
-        "//:darwin": ["@llvm_mac_headers//:headers"],
-        "//conditions:default": ["@llvm_linux_headers//:headers"],
+        "//:darwin": ["@llvm_headers_mac//:headers"],
+        "//conditions:default": ["@llvm_headers_linux//:headers"],
     }),
 )
 
@@ -988,7 +988,7 @@ cc_binary(
     }),
     visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = select({
-        "//:darwin": ["@llvm_mac_headers//:headers"],
-        "//conditions:default": ["@llvm_linux_headers//:headers"],
+        "//:darwin": ["@llvm_headers_mac//:headers"],
+        "//conditions:default": ["@llvm_headers_linux//:headers"],
     }),
 )

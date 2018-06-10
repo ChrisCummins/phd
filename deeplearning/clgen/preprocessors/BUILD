@@ -5,13 +5,13 @@ py_library(
     srcs = ["clang.py"],
     data = select({
         "//:darwin": [
-            "@llvm_mac_headers//:headers",
+            "@llvm_headers_mac//:headers",
             "@llvm_mac//:clang",
             "@llvm_mac//:clang-format",
             "@llvm_mac//:opt",
         ],
         "//conditions:default": [
-            "@llvm_linux_headers//:headers",
+            "@llvm_headers_linux//:headers",
             "@llvm_linux//:clang-format",
             "@llvm_linux//:clang",
             "@llvm_linux//:opt",
@@ -19,6 +19,7 @@ py_library(
     }),
     deps = [
         ":public",
+        "//lib/labm8:bazelutil",
         "//config:getconfig",
         "//deeplearning/clgen:errors",
     ],
