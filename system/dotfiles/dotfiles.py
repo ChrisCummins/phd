@@ -1617,7 +1617,7 @@ class MeCsv(Task):
 class Bazel(Task):
   """ bazel build system """
   __platforms__ = ['linux', 'osx']
-  __deps__ = ['Java']
+  __deps__ = ['Curl', 'Java']
   __osx_deps__ = ['Homebrew']
   __osx_genfiles__ = ['/usr/local/bin/bazel']
   __linux_genfiles__ = ['/usr/bin/bazel']
