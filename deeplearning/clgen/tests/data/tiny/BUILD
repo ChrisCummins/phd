@@ -1,5 +1,7 @@
 # This package contains the data for a tiny CLgen instance.
 
+load("@requirements//:requirements.bzl", "requirement")
+
 filegroup(
     name = "tiny",
     srcs = [
@@ -20,5 +22,7 @@ py_test(
         "//deeplearning/clgen/proto:clgen_py_pb2",
         "//lib/labm8:bazelutil",
         "//lib/labm8:pbutil",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )

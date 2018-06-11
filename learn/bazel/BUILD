@@ -1,5 +1,7 @@
 # Learning to use Bazel.
 
+load("@requirements//:requirements.bzl", "requirement")
+
 py_test(
     name = "python_binary",
     srcs = ["python_binary.py"],
@@ -9,7 +11,10 @@ py_test(
     ],
     default_python_version = "PY3",
     srcs_version = "PY3",
-    deps = ["//lib/labm8:bazelutil"],
+    deps = [
+        "//lib/labm8:bazelutil",
+        requirement("absl-py"),
+    ],
 )
 
 filegroup(

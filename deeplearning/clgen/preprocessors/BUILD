@@ -37,6 +37,7 @@ py_test(
         requirement("absl-py"),
         requirement("pytest"),
         requirement("pytest-benchmark"),
+        requirement("pytest-mock"),
     ],
 )
 

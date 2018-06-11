@@ -1,3 +1,5 @@
+load("@requirements//:requirements.bzl", "requirement")
+
 py_library(
     name = "dpack",
     srcs = ["dpack.py"],
@@ -8,6 +10,7 @@ py_library(
         "//lib/labm8:fs",
         "//lib/labm8:labdate",
         "//lib/labm8:pbutil",
+        requirement("absl-py"),
     ],
 )
 
@@ -19,5 +22,7 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":dpack",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )

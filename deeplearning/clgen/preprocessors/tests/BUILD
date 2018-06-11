@@ -1,5 +1,7 @@
 # Integration tests for CLgen preprocessing pipeline.
 
+load("@requirements//:requirements.bzl", "requirement")
+
 py_test(
     name = "benchmark_test",
     srcs = ["benchmark_test.py"],
@@ -11,5 +13,8 @@ py_test(
         "//deeplearning/clgen/preprocessors:common",
         "//deeplearning/clgen/preprocessors:cxx",
         "//deeplearning/clgen/preprocessors:opencl",
+        requirement("absl-py"),
+        requirement("pytest"),
+        requirement("pytest-benchmark"),
     ],
 )

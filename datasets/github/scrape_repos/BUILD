@@ -77,6 +77,7 @@ py_binary(
         requirement("PyGithub"),
         requirement("humanize"),
         requirement("progressbar2"),
+        requirement("python-utils"),
     ],
 )
 

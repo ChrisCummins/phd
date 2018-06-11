@@ -24,6 +24,7 @@ py_library(
         "//lib/labm8:pbutil",
         requirement("absl-py"),
         requirement("keras"),
+        requirement("tensorflow"),
     ],
 )
 
@@ -63,6 +64,7 @@ py_test(
         "//deeplearning/clgen/proto:model_py_pb2",
         requirement("absl-py"),
         requirement("pytest"),
+        requirement("pytest-benchmark"),
     ],
 )
 

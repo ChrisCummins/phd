@@ -60,6 +60,7 @@ py_test(
         ":public",
         requirement("absl-py"),
         requirement("pytest"),
+        requirement("pytest-benchmark"),
     ],
 )
 

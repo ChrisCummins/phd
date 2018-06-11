@@ -80,6 +80,7 @@ py_library(
         requirement("humanize"),
         requirement("numpy"),
         requirement("progressbar2"),
+        requirement("python-utils"),
         requirement("absl-py"),
         requirement("sqlalchemy"),
     ],
