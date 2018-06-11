@@ -92,7 +92,7 @@ def PostprocessSampleCorpus(instance: clgen.Instance):
   # This depends on corpuses being in directories named after their language,
   # e.g. ~/corpuses/opencl, or ~/corpuses/java.
   language = pathlib.Path(instance.model.corpus.config.local_directory).name
-  output_corpus_config.preprocessors[:] = POSTPROCESSORS[language]
+  output_corpus_config.preprocessor[:] = POSTPROCESSORS[language]
   output_corpus = corpuses.Corpus(output_corpus_config)
   output_corpus.Create()
   return output_corpus
