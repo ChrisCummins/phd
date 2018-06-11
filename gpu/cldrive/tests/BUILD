@@ -1,8 +1,12 @@
+load("@requirements//:requirements.bzl", "requirement")
+
 py_library(
     name = "testlib",
     srcs = ["testlib.py"],
     deps = [
         "//gpu/cldrive",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 

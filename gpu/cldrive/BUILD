@@ -1,3 +1,5 @@
+load("@requirements//:requirements.bzl", "requirement")
+
 licenses(["restricted"])  # GPL v3
 
 exports_files(["LICENSE"])
@@ -18,6 +20,11 @@ py_library(
 py_library(
     name = "args",
     srcs = ["args.py"],
+    deps = [
+        requirement("numpy"),
+        requirement("pycparser"),
+        requirement("pycparserext"),
+    ],
 )
 
 py_library(
@@ -36,6 +43,7 @@ py_library(
         ":args",
         ":driver",
         "//lib/labm8:err",
+        requirement("numpy"),
     ],
 )
 
@@ -46,10 +54,14 @@ py_library(
         ":args",
         ":env",
         "//lib/labm8:err",
+        requirement("numpy"),
     ],
 )
 
 py_library(
     name = "env",
     srcs = ["env.py"],
+    deps = [
+        requirement("pyopencl"),
+    ],
 )
