@@ -203,10 +203,10 @@ def main(argv):
             batch_size=FLAGS.batch_size, verbose=True, shuffle=True,
             validation_data=validation_data,
             callbacks=[
-                keras.callbacks.ModelCheckpoint(
-                    FLAGS.model_path + '/weights_{epoch:03d}.hdf5',
-                    verbose=1, mode="min", save_best_only=False),
-                keras.callbacks.LambdaCallback(on_epoch_end=OnEpochEnd),
+              keras.callbacks.ModelCheckpoint(
+                  FLAGS.model_path + '/weights_{epoch:03d}.hdf5',
+                  verbose=1, mode="min", save_best_only=False),
+              keras.callbacks.LambdaCallback(on_epoch_end=OnEpochEnd),
             ])
 
   logging.info('Evaluating model on test corpus')
