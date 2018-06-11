@@ -108,7 +108,7 @@ def LoadPositiveNegativeProtos(path: pathlib.Path) -> PositiveNegativeDataset:
     for p in path.iterdir() if p.name.startswith('negative-')
   ]
   logging.info(
-      'Loaded %s positive protos', humanize.intcomma(len(negative_protos)))
+      'Loaded %s negative protos', humanize.intcomma(len(negative_protos)))
   return PositiveNegativeDataset(positive_protos, negative_protos)
 
 
