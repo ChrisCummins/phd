@@ -99,22 +99,22 @@ def test_GetPreprocessFunction_mock_preprocessor():
 def test_Preprocess_no_preprocessors(tempdir):
   """Test unmodified output if no preprocessors."""
   MakeFile(tempdir, 'a', 'hello')
-  assert preprocessors.Preprocess(tempdir, 'a', []) == 'hello'
+  assert preprocessors.Preprocess(tempdir, 'a', ['a'], []) == 'hello'
 
 
-@pytest.mark.skip(reason='TODO(cec):')
 def test_Preprocess_mock_preprocessor(tempdir):
   """Test unmodified output if no preprocessors."""
-  assert preprocessors.Preprocess('hello', [
-    'datasets.github.scrape_repos.preprocessors.preprocessors_test:MockPreprocessor']) \
-         == 'PREPROCESSED'
+  MakeFile(tempdir, 'a', 'hello')
+  assert preprocessors.Preprocess(tempdir, 'a', ['a'], [
+    'datasets.github.scrape_repos.preprocessors.preprocessors_test'
+    ':MockPreprocessor']) == 'PREPROCESSED'
 
 
-@pytest.mark.skip(reason='TODO(cec):')
 def test_Preprocess_mock_preprocessor_exception(tempdir):
   """Test that an exception is propagated."""
+  MakeFile(tempdir, 'a', 'hello')
   with pytest.raises(ValueError):
-    preprocessors.Preprocess('', [
+    preprocessors.Preprocess(tempdir, 'a', ['a'], [
       'datasets.github.scrape_repos.preprocessors.preprocessors_test'
       ':MockPreprocessorInternalError'])
 
