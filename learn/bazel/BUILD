@@ -31,8 +31,8 @@ py_test(
     name = "tensorflow_test",
     srcs = ["tensorflow_test.py"],
     deps = [
+        "//third_party/tensorflow",
         requirement("absl-py"),
         requirement("pytest"),
-        requirement("tensorflow"),
     ],
 )

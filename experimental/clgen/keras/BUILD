@@ -12,7 +12,7 @@ py_test(
         requirement("pytest"),
         requirement("pytest-benchmark"),
         requirement("keras"),
-        requirement("tensorflow"),
+        "//third_party/tensorflow",
     ],
 )
 
@@ -26,7 +26,7 @@ py_test(
         requirement("pytest"),
         requirement("pytest-benchmark"),
         requirement("keras"),
-        requirement("tensorflow"),
+        "//third_party/tensorflow",
     ],
 )
 

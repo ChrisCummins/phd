@@ -24,7 +24,7 @@ py_library(
         "//lib/labm8:pbutil",
         requirement("absl-py"),
         requirement("keras"),
-        requirement("tensorflow"),
+        "//third_party/tensorflow",
     ],
 )
 
@@ -88,7 +88,7 @@ py_library(
         requirement("humanize"),
         requirement("numpy"),
         requirement("keras"),
-        requirement("tensorflow"),
+        "//third_party/tensorflow",
     ],
 )
 
@@ -174,7 +174,7 @@ py_library(
         requirement("numpy"),
         requirement("humanize"),
         requirement("progressbar2"),
-        requirement("tensorflow"),
+        "//third_party/tensorflow",
     ],
 )
 
