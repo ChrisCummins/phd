@@ -3,8 +3,13 @@ import importlib
 import typing
 from io import open
 
+from absl import flags
+
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import public
+
+
+FLAGS = flags.FLAGS
 
 
 def GetPreprocessorFunction(name: str) -> public.PreprocessorFunction:

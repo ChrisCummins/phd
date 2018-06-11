@@ -1,5 +1,7 @@
 # This package implements corpuses for training CLgen.
 
+load("@requirements//:requirements.bzl", "requirement")
+
 py_library(
     name = "atomizers",
     srcs = ["atomizers.py"],
@@ -7,6 +9,8 @@ py_library(
     deps = [
         "//deeplearning/clgen:errors",
         "//lib/labm8:labdate",
+        requirement("absl-py"),
+        requirement("numpy"),
     ],
 )
 
@@ -17,6 +21,8 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":atomizers",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -36,6 +42,11 @@ py_library(
         "//lib/labm8:hashcache",
         "//lib/labm8:lockfile",
         "//lib/labm8:pbutil",
+        requirement("absl-py"),
+        requirement("checksumdir"),
+        requirement("humanize"),
+        requirement("numpy"),
+        requirement("sqlalchemy"),
     ],
 )
 
@@ -53,6 +64,8 @@ py_test(
         "//deeplearning/clgen/preprocessors:opencl",
         "//deeplearning/clgen/proto:corpus_py_pb2",
         "//lib/labm8:fs",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -64,6 +77,11 @@ py_library(
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen/preprocessors",
         "//lib/labm8:sqlutil",
+        requirement("humanize"),
+        requirement("numpy"),
+        requirement("progressbar2"),
+        requirement("absl-py"),
+        requirement("sqlalchemy"),
     ],
 )
 
@@ -77,6 +95,8 @@ py_test(
         ":encoded",
         ":preprocessed",
         "//deeplearning/clgen:errors",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -92,6 +112,7 @@ py_library(
         "//deeplearning/clgen:errors",
         "//lib/labm8:bazelutil",
         "//lib/labm8:labmath",
+        requirement("numpy"),
     ],
 )
 
@@ -105,5 +126,8 @@ py_library(
         "//lib/labm8:crypto",
         "//lib/labm8:fs",
         "//lib/labm8:sqlutil",
+        requirement("absl-py"),
+        requirement("progressbar2"),
+        requirement("sqlalchemy"),
     ],
 )

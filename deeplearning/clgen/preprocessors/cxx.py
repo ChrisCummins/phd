@@ -3,12 +3,16 @@ import pathlib
 import re
 import sys
 
+from absl import flags
+
 from config import getconfig
 from deeplearning.clgen.preprocessors import clang
 from deeplearning.clgen.preprocessors import normalizer
 from deeplearning.clgen.preprocessors import public
 from lib.labm8 import bazelutil
 
+
+FLAGS = flags.FLAGS
 
 _config = getconfig.GetGlobalConfig()
 if sys.platform == 'darwin':

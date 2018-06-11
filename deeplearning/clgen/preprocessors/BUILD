@@ -34,6 +34,8 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":clang",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -44,6 +46,7 @@ py_library(
     deps = [
         ":public",
         "//deeplearning/clgen:errors",
+        requirement("absl-py"),
     ],
 )
 
@@ -55,6 +58,8 @@ py_test(
     deps = [
         ":common",
         "//deeplearning/clgen:errors",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -69,6 +74,7 @@ py_library(
         ":public",
         "//config:getconfig",
         "//lib/labm8:bazelutil",
+        requirement("absl-py"),
     ],
 )
 
@@ -80,6 +86,8 @@ py_test(
     deps = [
         ":cxx",
         "//deeplearning/clgen:errors",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -91,6 +99,7 @@ py_library(
         ":clang",
         ":public",
         "//deeplearning/clgen:errors",
+        requirement("absl-py"),
     ],
 )
 
@@ -102,6 +111,8 @@ py_test(
     deps = [
         ":java",
         "//deeplearning/clgen:errors",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -113,6 +124,7 @@ py_library(
         "//config:getconfig",
         "//deeplearning/clgen:errors",
         "//lib/labm8:bazelutil",
+        requirement("absl-py"),
     ],
 )
 
@@ -124,6 +136,8 @@ py_test(
     deps = [
         ":normalizer",
         "//deeplearning/clgen:errors",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -155,6 +169,8 @@ py_test(
         ":opencl",
         "//deeplearning/clgen/proto:corpus_py_pb2",
         "//lib/labm8:bazelutil",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -177,6 +193,7 @@ py_library(
         ":public",
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen/proto:internal_py_pb2",
+        requirement("absl-py"),
     ],
 )
 
@@ -190,6 +207,8 @@ py_test(
         ":public",
         "//deeplearning/clgen:conftest",
         "//deeplearning/clgen:errors",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -197,6 +216,9 @@ py_library(
     name = "public",
     srcs = ["public.py"],
     visibility = ["//visibility:public"],
+    deps = [
+        requirement("absl-py"),
+    ],
 )
 
 py_test(
@@ -207,5 +229,7 @@ py_test(
     deps = [
         ":public",
         "//deeplearning/clgen:errors",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )

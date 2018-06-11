@@ -6,6 +6,8 @@
 # executable programs that are representative of, but distinct from,
 # the programs it learns from.
 
+load("@requirements//:requirements.bzl", "requirement")
+
 licenses(["restricted"])  # GPL v3
 
 exports_files([
@@ -20,6 +22,7 @@ py_library(
     deps = [
         "//lib/labm8:cache",
         "//lib/labm8:fs",
+        requirement("absl-py"),
     ],
 )
 
@@ -36,6 +39,7 @@ py_binary(
         "//deeplearning/clgen/proto:clgen_py_pb2",
         "//lib/labm8:pbutil",
         "//lib/labm8:prof",
+        requirement("absl-py"),
     ],
 )
 
@@ -57,6 +61,8 @@ py_test(
         "//lib/labm8:fs",
         "//lib/labm8:pbutil",
         "//lib/labm8:tar",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -70,6 +76,8 @@ py_library(
         "//deeplearning/clgen/proto:corpus_py_pb2",
         "//deeplearning/clgen/proto:model_py_pb2",
         "//deeplearning/clgen/proto:sampler_py_pb2",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -90,6 +98,7 @@ py_library(
         "//deeplearning/clgen/proto:sampler_py_pb2",
         "//lib/labm8:crypto",
         "//lib/labm8:pbutil",
+        requirement("absl-py"),
     ],
 )
 
@@ -102,6 +111,8 @@ py_test(
         ":conftest",
         ":errors",
         ":samplers",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -114,6 +125,7 @@ py_library(
         "//lib/labm8:jsonutil",
         "//lib/labm8:labdate",
         "//lib/labm8:pbutil",
+        requirement("absl-py"),
     ],
 )
 
@@ -124,5 +136,7 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":telemetry",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )

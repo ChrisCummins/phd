@@ -6,9 +6,13 @@ import typing
 from collections import Counter
 
 import numpy as np
+from absl import flags
 
 from deeplearning.clgen import errors
 from lib.labm8 import labdate
+
+
+FLAGS = flags.FLAGS
 
 
 class AtomizerBase(object):

@@ -5,11 +5,16 @@ determines the shape of the generated samples.
 """
 import typing
 
+from absl import flags
+
 from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.proto import sampler_pb2
 from lib.labm8 import crypto
 from lib.labm8 import pbutil
+
+
+FLAGS = flags.FLAGS
 
 
 def AssertConfigIsValid(config: sampler_pb2.Sampler) -> sampler_pb2.Sampler:
