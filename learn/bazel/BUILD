@@ -26,3 +26,13 @@ cc_binary(
     name = "data_binary",
     srcs = ["data_binary.cc"],
 )
+
+py_test(
+    name = "tensorflow_test",
+    srcs = ["tensorflow_test.py"],
+    deps = [
+        requirement("absl-py"),
+        requirement("pytest"),
+        requirement("tensorflow"),
+    ],
+)
