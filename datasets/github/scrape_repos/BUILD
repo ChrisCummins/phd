@@ -1,5 +1,7 @@
 # This package contains a tool for scraping repos from GitHub.
 
+load("@requirements//:requirements.bzl", "requirement")
+
 py_binary(
     name = "cloner",
     srcs = ["cloner.py"],
@@ -9,6 +11,9 @@ py_binary(
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
         "//lib/labm8:fs",
         "//lib/labm8:pbutil",
+        requirement("absl-py"),
+        requirement("humanize"),
+        requirement("progressbar2"),
     ],
 )
 
@@ -20,6 +25,8 @@ py_library(
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
         "//lib/labm8:labdate",
         "//lib/labm8:sqlutil",
+        requirement("sqlalchemy"),
+        requirement("absl-py"),
     ],
 )
 
@@ -32,6 +39,9 @@ py_binary(
         ":contentfiles",
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
         "//lib/labm8:pbutil",
+        requirement("absl-py"),
+        requirement("humanize"),
+        requirement("sqlalchemy"),
     ],
 )
 
@@ -46,6 +56,10 @@ py_binary(
         "//datasets/github/scrape_repos/preprocessors:public",
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
         "//lib/labm8:pbutil",
+        requirement("absl-py"),
+        requirement("humanize"),
+        requirement("progressbar2"),
+        requirement("sqlalchemy"),
     ],
 )
 
@@ -59,6 +73,10 @@ py_binary(
         "//lib/labm8:fs",
         "//lib/labm8:labdate",
         "//lib/labm8:pbutil",
+        requirement("absl-py"),
+        requirement("PyGithub"),
+        requirement("humanize"),
+        requirement("progressbar2"),
     ],
 )
 
@@ -71,5 +89,7 @@ py_test(
         ":scraper",
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
         "//lib/labm8:labdate",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )

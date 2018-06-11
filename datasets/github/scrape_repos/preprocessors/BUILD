@@ -1,8 +1,13 @@
 # This package defines contentfile preprocessors.
 
+load("@requirements//:requirements.bzl", "requirement")
+
 py_library(
     name = "conftest",
     srcs = ["conftest.py"],
+    deps = [
+        requirement("pytest"),
+    ],
 )
 
 py_library(
@@ -13,6 +18,8 @@ py_library(
     deps = [
         ":public",
         "//lib/labm8:bazelutil",
+        requirement("absl-py"),
+        requirement("fuzzywuzzy"),
     ],
 )
 
@@ -25,6 +32,8 @@ py_test(
     deps = [
         ":conftest",
         ":inliners",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -35,6 +44,7 @@ py_library(
     deps = [
         ":inliners",
         ":public",
+        requirement("absl-py"),
     ],
 )
 
@@ -48,6 +58,8 @@ py_test(
         ":conftest",
         ":preprocessors",
         ":public",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -57,6 +69,7 @@ py_library(
     visibility = ["//datasets/github/scrape_repos:__subpackages__"],
     deps = [
         "//lib/labm8:fs",
+        requirement("absl-py"),
     ],
 )
 
@@ -69,5 +82,7 @@ py_test(
     deps = [
         ":conftest",
         ":public",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
