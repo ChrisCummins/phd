@@ -86,6 +86,7 @@ py_library(
         requirement("humanize"),
         requirement("numpy"),
         requirement("keras"),
+        requirement("tensorflow"),
     ],
 )
 

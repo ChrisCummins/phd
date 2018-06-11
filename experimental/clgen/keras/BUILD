@@ -10,7 +10,9 @@ py_test(
     deps = [
         requirement("absl-py"),
         requirement("pytest"),
+        requirement("pytest-benchmark"),
         requirement("keras"),
+        requirement("tensorflow"),
     ],
 )
 
@@ -22,6 +24,9 @@ py_test(
     deps = [
         requirement("absl-py"),
         requirement("pytest"),
+        requirement("pytest-benchmark"),
+        requirement("keras"),
+        requirement("tensorflow"),
     ],
 )
 
@@ -33,6 +38,7 @@ py_test(
     deps = [
         requirement("absl-py"),
         requirement("pytest"),
+        requirement("pytest-benchmark"),
     ],
 )
 

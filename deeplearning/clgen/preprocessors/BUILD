@@ -36,6 +36,7 @@ py_test(
         ":clang",
         requirement("absl-py"),
         requirement("pytest"),
+        requirement("pytest-benchmark"),
     ],
 )
 
@@ -60,6 +61,7 @@ py_test(
         "//deeplearning/clgen:errors",
         requirement("absl-py"),
         requirement("pytest"),
+        requirement("pytest-benchmark"),
     ],
 )
 
@@ -88,6 +90,7 @@ py_test(
         "//deeplearning/clgen:errors",
         requirement("absl-py"),
         requirement("pytest"),
+        requirement("pytest-benchmark"),
     ],
 )
 
@@ -113,6 +116,7 @@ py_test(
         "//deeplearning/clgen:errors",
         requirement("absl-py"),
         requirement("pytest"),
+        requirement("pytest-benchmark"),
     ],
 )
 
@@ -138,6 +142,7 @@ py_test(
         "//deeplearning/clgen:errors",
         requirement("absl-py"),
         requirement("pytest"),
+        requirement("pytest-benchmark"),
     ],
 )
 
@@ -171,6 +176,8 @@ py_test(
         "//lib/labm8:bazelutil",
         requirement("absl-py"),
         requirement("pytest"),
+        requirement("pytest-mock"),
+        requirement("pytest-benchmark"),
     ],
 )
 
@@ -209,6 +216,7 @@ py_test(
         "//deeplearning/clgen:errors",
         requirement("absl-py"),
         requirement("pytest"),
+        requirement("pytest-benchmark"),
     ],
 )
 
@@ -231,5 +239,6 @@ py_test(
         "//deeplearning/clgen:errors",
         requirement("absl-py"),
         requirement("pytest"),
+        requirement("pytest-benchmark"),
     ],
 )
