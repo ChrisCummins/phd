@@ -5,6 +5,8 @@ from __future__ import print_function
 import re
 from io import StringIO
 
+import pandas
+
 from lib.labm8 import io
 
 
@@ -98,8 +100,6 @@ def table(rows, columns=None, output=None, data_args={}, **kwargs):
         number of columns in rows; or if number of columns is not
         consistent across all rows.
   """
-  import pandas
-
   # Number of columns.
   num_columns = len(rows[0])
 

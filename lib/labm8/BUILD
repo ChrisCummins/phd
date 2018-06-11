@@ -157,6 +157,9 @@ py_library(
     ],
     deps = [
         requirement("pandas"),
+        requirement("numpy"),
+        requirement("pytz"),
+        requirement("python-dateutil"),
     ],
 )
 
@@ -285,7 +288,13 @@ py_library(
     name = "latex",
     srcs = ["latex.py"],
     visibility = ["//visibility:public"],
-    deps = [":io"],
+    deps = [
+        ":io",
+        requirement("pandas"),
+        requirement("numpy"),
+        requirement("pytz"),
+        requirement("python-dateutil"),
+    ],
 )
 
 py_test(
@@ -501,5 +510,6 @@ py_test(
         ":viz",
         requirement("absl-py"),
         requirement("pytest"),
+        requirement("matplotlib"),
     ],
 )
