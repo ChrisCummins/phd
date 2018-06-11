@@ -1,6 +1,7 @@
 """Preprocessor functions for C++."""
 import pathlib
 import re
+import sys
 
 from config import getconfig
 from deeplearning.clgen.preprocessors import clang
@@ -10,7 +11,7 @@ from lib.labm8 import bazelutil
 
 
 _config = getconfig.GetGlobalConfig()
-if _config.uname == 'darwin':
+if sys.platform == 'darwin':
   LIBCXX_HEADERS = pathlib.Path(_config.paths.llvm_prefix) / 'include/c++/v1'
 else:
   LIBCXX_HEADERS = bazelutil.DataPath('libcxx/include')

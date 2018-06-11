@@ -8,25 +8,26 @@ for an example.
 import json
 import re
 import subprocess
+import sys
 import tempfile
 import typing
 
 from absl import flags
 from absl import logging
 
-from config import getconfig
 from deeplearning.clgen import errors
+from lib.labm8 import bazelutil
 
 
 FLAGS = flags.FLAGS
 
-_config = getconfig.GetGlobalConfig()
+_LLVM_REPO = 'llvm_mac' if sys.platform == 'darwin' else 'llvm_linux'
 # Path to clang binary.
-CLANG = _config.paths.cc
+CLANG = bazelutil.DataPath(f'{_LLVM_REPO}/bin/clang')
 # Path to clang-format binary.
-CLANG_FORMAT = _config.paths.clang_format
+CLANG_FORMAT = bazelutil.DataPath(f'{_LLVM_REPO}/bin/clang-format')
 # Path to opt binary.
-OPT = _config.paths.opt
+OPT = bazelutil.DataPath(f'{_LLVM_REPO}/bin/opt')
 # The marker used to mark stdin from clang pre-processor output.
 CLANG_STDIN_MARKER = re.compile(r'# \d+ "<stdin>" 2')
 # Options to pass to clang-format.
@@ -89,7 +90,7 @@ def Preprocess(src: str, cflags: typing.List[str], timeout_seconds: int = 60,
   """
   builtin_cflags = ['-E', '-c', '-', '-o', '-']
   cmd = ['timeout', '-s9', str(timeout_seconds),
-         CLANG] + builtin_cflags + cflags
+         str(CLANG)] + builtin_cflags + cflags
   logging.debug('$ %s', ' '.join(cmd))
   process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE, universal_newlines=True)
@@ -128,7 +129,7 @@ def CompileLlvmBytecode(src: str, suffix: str, cflags: typing.List[str],
                                    suffix=suffix) as f:
     f.write(src)
     f.flush()
-    cmd = ['timeout', '-s9', str(timeout_seconds), CLANG,
+    cmd = ['timeout', '-s9', str(timeout_seconds), str(CLANG),
            f.name] + builtin_cflags + cflags
     logging.debug('$ %s', ' '.join(cmd))
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
@@ -157,7 +158,7 @@ def ClangFormat(text: str, suffix: str, timeout_seconds: int = 60) -> str:
     ClangFormatException: In case of an error.
     ClangTimeout: If clang-format does not complete before timeout_seconds.
   """
-  cmd = ["timeout", "-s9", str(timeout_seconds), CLANG_FORMAT,
+  cmd = ["timeout", "-s9", str(timeout_seconds), str(CLANG_FORMAT),
          '-assume-filename', f'input{suffix}',
          '-style={}'.format(json.dumps(CLANG_FORMAT_CONFIG))]
   logging.debug('$ %s', ' '.join(cmd))

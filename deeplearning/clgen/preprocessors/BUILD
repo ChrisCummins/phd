@@ -19,9 +19,8 @@ py_library(
     }),
     deps = [
         ":public",
-        "//lib/labm8:bazelutil",
-        "//config:getconfig",
         "//deeplearning/clgen:errors",
+        "//lib/labm8:bazelutil",
     ],
 )
 
@@ -41,7 +40,6 @@ py_library(
     visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = [
         ":public",
-        "//config:getconfig",
         "//deeplearning/clgen:errors",
     ],
 )
