@@ -1,0 +1,48 @@
+// The execution ledger.
+
+syntax = "proto2";
+
+// A ledger entry records the invocation and outcome of a single command.
+// A command is a bazel target and a set of arguments.
+message LedgerEntry {
+  // A numeric counter of this entry in the ledger. >= 1.
+  optional int64 id = 1;
+  // The hostname of the machine.
+  optional string hostname = 2;
+  // The user which invoked the command.
+  optional string user = 3;
+  // The start time, in milliseconds since the epoch, UTC time zone.
+  optional int64 start_utc_epoch_ms = 4;
+
+  // The hash of the current git HEAD. Created using:
+  //   $ git rev-parse HEAD
+  optional string git_head_id = 5;
+  // Created by concatenating the output of these commands, which show the
+  // staged changes, unstaged changes, and untracked files, respectively:
+  //   $ git --no-pager diff --cached
+  //   $ git --no-pager diff
+  //   $ for f in $(git ls-files --others --exclude-standard); do \
+  //         git --no-pager diff /dev/null $f; \
+  //     done
+  optional string git_diff = 6;
+
+  // Environment variables.
+  map<string, string> env = 7;
+
+  // The target which is to be built and executed.
+  optional string target = 8;
+  // The list of arguments to be passed to the built target.
+  repeated string args = 9;
+
+  // The command end time, in milliseconds since the epoch, UTC time zone.
+  optional int64 end_utc_epoch_ms = 10;
+  // The integer returncode of the command. In the range 0-255.
+  optional int32 returncode = 11;
+  // The output of the command.
+  optional string stdout_and_stderr = 12;
+}
+
+// A ledger is a list of entries.
+message Ledger {
+  repeated LedgerEntry entries = 1;
+}
