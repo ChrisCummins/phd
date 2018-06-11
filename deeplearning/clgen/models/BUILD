@@ -1,5 +1,7 @@
 # This package implements the machine learning models for CLgen.
 
+load("@requirements//:requirements.bzl", "requirement")
+
 py_library(
     name = "backends",
     srcs = ["backends.py"],
@@ -8,6 +10,8 @@ py_library(
         "//deeplearning/clgen/corpuses",
         "//deeplearning/clgen/proto:model_py_pb2",
         "//lib/labm8:cache",
+        requirement("absl-py"),
+        requirement("numpy"),
     ],
 )
 
@@ -18,6 +22,7 @@ py_library(
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen/proto:model_py_pb2",
         "//lib/labm8:pbutil",
+        requirement("absl-py"),
     ],
 )
 
@@ -30,6 +35,8 @@ py_test(
         ":builders",
         "//deeplearning/clgen:conftest",
         "//deeplearning/clgen/proto:model_py_pb2",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -38,6 +45,9 @@ py_library(
     srcs = ["data_generators.py"],
     deps = [
         "//deeplearning/clgen/corpuses",
+        requirement("absl-py"),
+        requirement("humanize"),
+        requirement("numpy"),
     ],
 )
 
@@ -50,6 +60,8 @@ py_test(
         ":data_generators",
         "//deeplearning/clgen:conftest",
         "//deeplearning/clgen/proto:model_py_pb2",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -70,6 +82,9 @@ py_library(
         "//lib/labm8:labdate",
         "//lib/labm8:logutil",
         "//lib/labm8:pbutil",
+        requirement("humanize"),
+        requirement("numpy"),
+        requirement("keras"),
     ],
 )
 
@@ -87,6 +102,8 @@ py_test(
         "//deeplearning/clgen/proto:telemetry_py_pb2",
         "//lib/labm8:crypto",
         "//lib/labm8:fs",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -109,6 +126,9 @@ py_library(
         "//lib/labm8:crypto",
         "//lib/labm8:lockfile",
         "//lib/labm8:pbutil",
+        requirement("absl-py"),
+        requirement("humanize"),
+        requirement("numpy"),
     ],
 )
 
@@ -124,6 +144,8 @@ py_test(
         "//deeplearning/clgen/proto:telemetry_py_pb2",
         "//lib/labm8:crypto",
         "//lib/labm8:fs",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -144,6 +166,11 @@ py_library(
         "//lib/labm8:labdate",
         "//lib/labm8:logutil",
         "//lib/labm8:pbutil",
+        requirement("absl-py"),
+        requirement("numpy"),
+        requirement("humanize"),
+        requirement("progressbar2"),
+        requirement("tensorflow"),
     ],
 )
 
@@ -161,5 +188,7 @@ py_test(
         "//deeplearning/clgen/proto:telemetry_py_pb2",
         "//lib/labm8:crypto",
         "//lib/labm8:fs",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )

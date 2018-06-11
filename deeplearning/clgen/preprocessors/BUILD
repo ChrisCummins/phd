@@ -1,5 +1,7 @@
 # This package defines the preprocessor pipeline for CLgen.
 
+load("@requirements//:requirements.bzl", "requirement")
+
 py_library(
     name = "clang",
     srcs = ["clang.py"],
@@ -21,6 +23,7 @@ py_library(
         ":public",
         "//deeplearning/clgen:errors",
         "//lib/labm8:bazelutil",
+        requirement("absl-py"),
     ],
 )
 
