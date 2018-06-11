@@ -23,6 +23,7 @@ py_library(
         "//deeplearning/clgen/proto:model_py_pb2",
         "//lib/labm8:pbutil",
         requirement("absl-py"),
+        requirement("keras"),
     ],
 )
 
