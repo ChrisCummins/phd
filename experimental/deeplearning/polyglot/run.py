@@ -25,6 +25,12 @@ flags.DEFINE_integer('output_corpus_size', 10000,
                      'The minimum number of samples to generate in the output'
                      'corpus.')
 
+# A mapping from language name to a list of CLgen pre-processor functions.
+# These pre-processors are used as rejection samplers on the sample corpuses.
+POSTPROCESSORS = {
+    'opencl': ['deeplearning.clgen.preprocessors.opencl:Compile'],
+    'java': ['deeplearning.clgen.preprocessors.java:Compile'],
+}
 
 def IsEligible(instance: clgen.Instance) -> bool:
   """Return whether an instance is eligible for training or sampling."""
@@ -82,6 +88,11 @@ def PostprocessSampleCorpus(instance: clgen.Instance):
   output_corpus_config = corpus_pb2.Corpus()
   output_corpus_config.CopyFrom(instance.model.corpus.config)
   output_corpus_config.local_directory = str(contentfiles_dir)
+  # We derive the programming language name from the input corpus directory.
+  # This depends on corpuses being in directories named after their language,
+  # e.g. ~/corpuses/opencl, or ~/corpuses/java.
+  language = pathlib.Path(instance.model.corpus.config.local_directory).name
+  output_corpus_config.preprocessors[:] = POSTPROCESSORS[language]
   output_corpus = corpuses.Corpus(output_corpus_config)
   output_corpus.Create()
   return output_corpus
