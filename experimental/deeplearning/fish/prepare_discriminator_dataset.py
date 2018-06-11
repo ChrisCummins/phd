@@ -40,7 +40,7 @@ flags.DEFINE_boolean(
 flags.DEFINE_boolean(
     'balance_class_counts', False,
     'If set, balance the number of positive and negative examples. Has no '
-    'effect if --balance_lengths flag is used')
+    'effect if --balance_class_lengths flag is used.')
 flags.DEFINE_boolean(
     'balance_class_lengths', False,
     'If set, balance the length of positive and negative examples. For every '
@@ -89,7 +89,7 @@ def GetNegativeExampleDirs(
 
 def LoadNegativeProtos(
     export_path: pathlib.Path, positive_protos: typing.List[TrainingProto],
-    balance_lengths: bool,
+    balance_class_lengths: bool,
     balance_class_counts: bool,
     include_bf_outcomes_as_negative: bool) -> typing.List[TrainingProto]:
   """Load negative training protos."""
@@ -98,7 +98,7 @@ def LoadNegativeProtos(
         list(d.iterdir()) for d in
         GetNegativeExampleDirs(export_path, include_bf_outcomes_as_negative)]))
 
-  if balance_lengths:
+  if balance_class_lengths:
     positive_proto_sizes = [len(p.src) for p in positive_protos]
     negative_protos = [
       pbutil.FromFile(path, TrainingProto())
@@ -165,7 +165,7 @@ def main(argv):
   # Load protos.
   positive_protos = LoadPositiveProtos(export_path, FLAGS.max_protos)
   negative_protos = LoadNegativeProtos(
-      export_path, positive_protos, FLAGS.balance_lengths,
+      export_path, positive_protos, FLAGS.balance_class_lengths,
       FLAGS.balance_class_counts, FLAGS.include_bf_outcomes_as_negative)
 
   positive_sizes = DatasetSizes(
