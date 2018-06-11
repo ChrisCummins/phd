@@ -1,5 +1,7 @@
 # Library for accessing the global configuration.
 
+load("@requirements//:requirements.bzl", "requirement")
+
 py_library(
     name = "getconfig",
     srcs = ["getconfig.py"],
@@ -16,5 +18,9 @@ py_test(
     srcs = ["getconfig_test.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
-    deps = [":getconfig"],
+    deps = [
+        ":getconfig",
+        requirement("absl-py"),
+        requirement("pytest"),
+    ],
 )
