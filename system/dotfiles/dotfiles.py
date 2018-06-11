@@ -1899,14 +1899,12 @@ class PhdBuildDeps(Task):
   __platforms__ = ['linux', 'osx']
   __deps__ = [
       'Bazel',
-      'Buildifier',
       'Clang',
       'GitLfs',
       'GnuCoreutils',
       'LaTeX',
       'LibExempi',
       'LibMySQL',
-      'Node',
       'Python',
       'Rsync',
   ]
@@ -1916,6 +1914,20 @@ class PhdBuildDeps(Task):
   __osx_deps__= [
       # Needed by //lib/labm8:hashcache.
       'GnuCoreutils',
+  ]
+
+  def install(self):
+    pass
+
+
+class PhdDevDeps(Task):
+  __platforms__ = ['linux', 'osx']
+  __deps__ = [
+      'Buildifier',
+      'Node',
+  ]
+  __linux_deps__ = [
+      'InotifyMaxUserWatchers',
   ]
 
   def install(self):
