@@ -1,4 +1,6 @@
 # Protocol buffers for Clgen.
+
+load("@requirements//:requirements.bzl", "requirement")
 load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
 
 # Default to public visibility so that X_proto_library targets in other packages
@@ -15,11 +17,13 @@ py_proto_library(
         ":sampler_py_pb2",
     ],
     protos = ["clgen.proto"],
+    deps = [requirement("protobuf")],
 )
 
 py_proto_library(
     name = "corpus_py_pb2",
     protos = ["corpus.proto"],
+    deps = [requirement("protobuf")],
 )
 
 py_proto_library(
@@ -30,20 +34,24 @@ py_proto_library(
         ":sampler_py_pb2",
     ],
     protos = ["internal.proto"],
+    deps = [requirement("protobuf")],
 )
 
 py_proto_library(
     name = "model_py_pb2",
     proto_deps = [":corpus_py_pb2"],
     protos = ["model.proto"],
+    deps = [requirement("protobuf")],
 )
 
 py_proto_library(
     name = "sampler_py_pb2",
     protos = ["sampler.proto"],
+    deps = [requirement("protobuf")],
 )
 
 py_proto_library(
     name = "telemetry_py_pb2",
     protos = ["telemetry.proto"],
+    deps = [requirement("protobuf")],
 )

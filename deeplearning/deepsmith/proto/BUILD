@@ -1,5 +1,6 @@
 # Protocol buffers for DeepSmith.
 
+load("@requirements//:requirements.bzl", "requirement")
 load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
 
 py_proto_library(
@@ -11,12 +12,14 @@ py_proto_library(
     protos = ["datastore.proto"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     with_grpc = True,
+    deps = [requirement("protobuf")],
 )
 
 py_proto_library(
     name = "deepsmith_py_pb2",
     protos = ["deepsmith.proto"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
+    deps = [requirement("protobuf")],
 )
 
 py_proto_library(
@@ -30,6 +33,7 @@ py_proto_library(
     protos = ["generator.proto"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     with_grpc = True,
+    deps = [requirement("protobuf")],
 )
 
 py_proto_library(
@@ -41,10 +45,12 @@ py_proto_library(
     protos = ["harness.proto"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     with_grpc = True,
+    deps = [requirement("protobuf")],
 )
 
 py_proto_library(
     name = "service_py_pb2",
     protos = ["service.proto"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
+    deps = [requirement("protobuf")],
 )

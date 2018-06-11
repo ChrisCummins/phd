@@ -4,8 +4,9 @@ load("@requirements//:requirements.bzl", "requirement")
 load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
 
 py_proto_library(
-    name = "proto",
+    name = "proto_py_pb2",
     protos = ["proto.proto"],
+    deps = [requirement("protobuf")],
 )
 
 py_library(
