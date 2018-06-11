@@ -30,6 +30,9 @@ flags.DEFINE_integer(
 flags.DEFINE_boolean(
     'assertions_only', False, 'If set, load only positive protos which raise '
     'compiler assertions.')
+flags.DEFINE_boolean(
+    'uneven_classes', False, 'If set, balance the number of positive and '
+    'negative examples.')
 
 DatasetRatios = collections.namedtuple(
     'DataSetRatios', ['train', 'val', 'test'])
@@ -72,54 +75,61 @@ def main(argv):
   logging.info('Loaded %s positive data protos',
                humanize.intcomma(len(positive_protos)))
   # Load an equal number of negative protos, sorted by result ID.
+  negative_proto_paths = sorted(list((export_path / 'pass').iterdir()))
+  if not FLAGS.uneven_classes:
+    negative_proto_paths = negative_proto_paths[:len(positive_protos)]
   negative_protos = [
     pbutil.FromFile(path, fish_pb2.CompilerCrashDiscriminatorTrainingExample())
-    for path in
-    sorted(list((export_path / 'pass').iterdir()))[:len(positive_protos)]
+    for path in negative_proto_paths
   ]
   logging.info('Loaded %s negative data protos',
                humanize.intcomma(len(negative_protos)))
 
-  training_size = int(len(positive_protos) * FLAGS.training_ratio)
-  validation_size = int(len(positive_protos) * FLAGS.validation_ratio)
-  testing_size = int(len(positive_protos) * FLAGS.testing_ratio)
-
-  assert training_size + validation_size + testing_size <= len(positive_protos)
+  positive_sizes = [
+      int(len(positive_protos) * FLAGS.training_ratio),
+      int(len(positive_protos) * FLAGS.validation_ratio),
+      int(len(positive_protos) * FLAGS.testing_ratio),
+  ]
+  negative_sizes = [
+      int(len(negative_protos) * FLAGS.training_ratio),
+      int(len(negative_protos) * FLAGS.validation_ratio),
+      int(len(negative_protos) * FLAGS.testing_ratio),
+  ]
 
   (dataset_root / 'training').mkdir(exist_ok=True, parents=True)
   (dataset_root / 'validation').mkdir(exist_ok=True, parents=True)
   (dataset_root / 'testing').mkdir(exist_ok=True, parents=True)
 
-  for i, proto in enumerate(positive_protos[:training_size]):
+  for i, proto in enumerate(positive_protos[:positive_sizes[0]]):
     pbutil.ToFile(
         proto, (dataset_root / 'training' / f'positive-{i:04d}.pbtxt'))
-  for i, proto in enumerate(negative_protos[:training_size]):
+  for i, proto in enumerate(negative_protos[:negative_sizes[0]]):
     pbutil.ToFile(
         proto, (dataset_root / 'training' / f'negative-{i:04d}.pbtxt'))
   logging.info('Wrote %s training examples',
-               humanize.intcomma(2 * training_size))
-  positive_protos = positive_protos[training_size:]
-  negative_protos = negative_protos[training_size:]
+               humanize.intcomma(positive_sizes[0] + negative_sizes[0]))
+  positive_protos = positive_protos[positive_sizes[0]:]
+  negative_protos = negative_protos[negative_sizes[0]:]
 
-  for i, proto in enumerate(positive_protos[:validation_size]):
+  for i, proto in enumerate(positive_protos[:positive_sizes[1]]):
     pbutil.ToFile(
         proto, (dataset_root / 'validation' / f'positive-{i:04d}.pbtxt'))
-  for i, proto in enumerate(negative_protos[:validation_size]):
+  for i, proto in enumerate(negative_protos[:negative_sizes[1]]):
     pbutil.ToFile(
         proto, (dataset_root / 'validation' / f'negative-{i:04d}.pbtxt'))
   logging.info('Wrote %s validation examples',
-               humanize.intcomma(2 * validation_size))
-  positive_protos = positive_protos[validation_size:]
-  negative_protos = negative_protos[validation_size:]
+               humanize.intcomma(positive_sizes[1] + negative_sizes[1]))
+  positive_protos = positive_protos[positive_sizes[1]:]
+  negative_protos = negative_protos[negative_sizes[1]:]
 
-  for i, proto in enumerate(positive_protos[:testing_size]):
+  for i, proto in enumerate(positive_protos[:positive_sizes[2]]):
     pbutil.ToFile(
         proto, (dataset_root / 'testing' / f'positive-{i:04d}.pbtxt'))
-  for i, proto in enumerate(negative_protos[:testing_size]):
+  for i, proto in enumerate(negative_protos[:negative_sizes[2]]):
     pbutil.ToFile(
         proto, (dataset_root / 'testing' / f'negative-{i:04d}.pbtxt'))
   logging.info('Wrote %s testing examples',
-               humanize.intcomma(2 * testing_size))
+               humanize.intcomma(positive_sizes[2] + negative_sizes[2]))
 
 
 if __name__ == '__main__':

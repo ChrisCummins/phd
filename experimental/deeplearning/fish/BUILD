@@ -16,6 +16,18 @@ py_binary(
 )
 
 py_binary(
+    name = "notebooks",
+    srcs = ["notebooks.py"],
+    deps = [
+        ":train_discriminator",
+        "//deeplearning/clgen",
+        "//lib/labm8:bazelutil",
+        "//lib/labm8:pbutil",
+        "//lib/labm8:viz",
+    ],
+)
+
+py_binary(
     name = "prepare_discriminator_dataset",
     srcs = ["prepare_discriminator_dataset.py"],
     deps = [
@@ -31,6 +43,7 @@ py_binary(
     name = "train_discriminator",
     srcs = ["train_discriminator.py"],
     deps = [
+        "//deeplearning/clgen",
         "//experimental/deeplearning/fish/proto:fish_py_pb2",
         requirement("absl-py"),
         requirement("humanize"),
