@@ -1254,6 +1254,7 @@ class HomebrewCasks(Task):
       'calibre': '/Applications/calibre.app',
       'dash': '/Applications/Dash.app',
       'disk-inventory-x': '/Applications/Disk Inventory X.app',
+      'etcher': '/Applications/Etcher.app',
       'fantastical': '/Applications/Fantastical 2.app',
       'fluid': '/Applications/Fluid.app',
       'flux': '/Applications/Flux.app',
