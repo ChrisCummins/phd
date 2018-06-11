@@ -2,6 +2,8 @@
 #
 # Each module within labm8 contains a set of related functions.
 
+load("@requirements//:requirements.bzl", "requirement")
+
 licenses(["restricted"])  # GPL v3
 
 exports_files([
@@ -28,6 +30,8 @@ py_test(
     deps = [
         ":bazelutil",
         ":fs",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -52,6 +56,8 @@ py_test(
     deps = [
         ":cache",
         ":fs",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -71,7 +77,11 @@ py_test(
     ],
     default_python_version = "PY3",
     srcs_version = "PY3",
-    deps = [":crypto"],
+    deps = [
+        ":crypto",
+        requirement("absl-py"),
+        requirement("pytest"),
+    ],
 )
 
 py_library(
@@ -82,6 +92,10 @@ py_library(
         ":crypto",
         ":fs",
         ":sqlutil",
+        requirement("checksumdir"),
+        requirement("humanize"),
+        requirement("sqlalchemy"),
+        requirement("absl-py"),
     ],
 )
 
@@ -91,7 +105,11 @@ py_test(
     srcs = ["hashcache_test.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
-    deps = [":hashcache"],
+    deps = [
+        ":hashcache",
+        requirement("absl-py"),
+        requirement("pytest"),
+    ],
 )
 
 py_library(
@@ -104,7 +122,11 @@ py_library(
     name = "fs",
     srcs = ["fs.py"],
     visibility = ["//visibility:public"],
-    deps = [":labtypes"],
+    deps = [
+        ":labtypes",
+        requirement("humanize"),
+        requirement("send2trash"),
+    ],
 )
 
 py_test(
@@ -122,13 +144,20 @@ py_test(
     deps = [
         ":fs",
         ":system",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
 py_library(
     name = "fmt",
     srcs = ["fmt.py"],
-    visibility = ["//visibility:public"],
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [
+        requirement("pandas"),
+    ],
 )
 
 py_test(
@@ -137,7 +166,11 @@ py_test(
     srcs = ["fmt_test.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
-    deps = [":fmt"],
+    deps = [
+        ":fmt",
+        requirement("absl-py"),
+        requirement("pytest"),
+    ],
 )
 
 py_library(
@@ -159,6 +192,8 @@ py_test(
     deps = [
         ":io",
         ":system",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -179,6 +214,8 @@ py_test(
         ":fs",
         ":jsonutil",
         ":system",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -194,14 +231,22 @@ py_test(
     srcs = ["labdate_test.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
-    deps = [":labdate"],
+    deps = [
+        ":labdate",
+        requirement("absl-py"),
+        requirement("pytest"),
+    ],
 )
 
 py_library(
     name = "labmath",
     srcs = ["labmath.py"],
     visibility = ["//visibility:public"],
-    deps = [":system"],
+    deps = [
+        ":system",
+        requirement("numpy"),
+        requirement("scipy"),
+    ],
 )
 
 py_test(
@@ -210,7 +255,11 @@ py_test(
     srcs = ["labmath_test.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
-    deps = [":labmath"],
+    deps = [
+        ":labmath",
+        requirement("absl-py"),
+        requirement("pytest"),
+    ],
 )
 
 py_library(
@@ -227,6 +276,8 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":labtypes",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -245,6 +296,8 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":latex",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -258,6 +311,7 @@ py_library(
         ":pbutil",
         ":system",
         "//lib/labm8/proto:lockfile_py_pb2",
+        requirement("absl-py"),
     ],
 )
 
@@ -269,6 +323,8 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":lockfile",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -279,6 +335,7 @@ py_library(
     deps = [
         ":labdate",
         "//lib/labm8/proto:logging_py_pb2",
+        requirement("absl-py"),
     ],
 )
 
@@ -288,7 +345,11 @@ py_test(
     srcs = ["logutil_test.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
-    deps = [":logutil"],
+    deps = [
+        ":logutil",
+        requirement("absl-py"),
+        requirement("pytest"),
+    ],
 )
 
 py_library(
@@ -311,6 +372,8 @@ py_test(
     deps = [
         ":fs",
         ":make",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -318,7 +381,10 @@ py_library(
     name = "pbutil",
     srcs = ["pbutil.py"],
     visibility = ["//visibility:public"],
-    deps = [":jsonutil"],
+    deps = [
+        ":jsonutil",
+        requirement("protobuf"),
+    ],
 )
 
 py_test(
@@ -329,6 +395,8 @@ py_test(
     deps = [
         ":pbutil",
         "//lib/labm8/proto:test_protos",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -348,6 +416,8 @@ py_test(
     deps = [
         ":prof",
         ":system",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -355,6 +425,10 @@ py_library(
     name = "sqlutil",
     srcs = ["sqlutil.py"],
     visibility = ["//visibility:public"],
+    deps = [
+        requirement("absl-py"),
+        requirement("sqlalchemy"),
+    ],
 )
 
 py_library(
@@ -374,6 +448,8 @@ py_test(
     deps = [
         ":fs",
         ":system",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -402,6 +478,8 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":text",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -421,5 +499,7 @@ py_test(
     deps = [
         ":fs",
         ":viz",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
