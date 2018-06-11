@@ -1,5 +1,7 @@
 # Get a baseline reading from a CLgen model.
 
+load("@requirements//:requirements.bzl", "requirement")
+
 py_library(
     name = "get_instances",
     srcs = ["get_instances.py"],
@@ -8,6 +10,7 @@ py_library(
     deps = [
         "//deeplearning/clgen",
         "//lib/labm8:lockfile",
+        requirement("absl-py"),
     ],
 )
 
@@ -18,6 +21,8 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":get_instances",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )
 
@@ -31,6 +36,8 @@ py_binary(
         "//lib/labm8:bazelutil",
         "//lib/labm8:pbutil",
         "//lib/labm8:viz",
+        requirement("absl-py"),
+        requirement("jupyter-client"),
     ],
 )
 
@@ -61,6 +68,8 @@ py_binary(
         "//deeplearning/clgen/proto:sampler_py_pb2",
         "//lib/labm8:lockfile",
         "//lib/labm8:pbutil",
+        requirement("absl-py"),
+        requirement("humanize"),
     ],
 )
 
@@ -77,5 +86,7 @@ py_test(
         "//deeplearning/clgen/proto:sampler_py_pb2",
         "//lib/labm8:bazelutil",
         "//lib/labm8:pbutil",
+        requirement("absl-py"),
+        requirement("pytest"),
     ],
 )

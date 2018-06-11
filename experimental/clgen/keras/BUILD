@@ -1,10 +1,17 @@
 # Experiments while porting CLgen from Tensorflow to Keras models.
 
+load("@requirements//:requirements.bzl", "requirement")
+
 py_test(
     name = "benchmark_module_import",
     srcs = ["benchmark_module_import.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
+    deps = [
+        requirement("absl-py"),
+        requirement("pytest"),
+        requirement("keras"),
+    ],
 )
 
 py_test(
@@ -12,6 +19,10 @@ py_test(
     srcs = ["benchmark_model_init.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
+    deps = [
+        requirement("absl-py"),
+        requirement("pytest"),
+    ],
 )
 
 py_test(
@@ -19,6 +30,10 @@ py_test(
     srcs = ["benchmark_string_concatenation.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
+    deps = [
+        requirement("absl-py"),
+        requirement("pytest"),
+    ],
 )
 
 py_test(
@@ -26,6 +41,10 @@ py_test(
     srcs = ["log_to_file.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
+    deps = [
+        requirement("absl-py"),
+        requirement("pytest"),
+    ],
 )
 
 py_binary(
@@ -40,5 +59,6 @@ py_binary(
     deps = [
         "//deeplearning/clgen",
         "//lib/labm8:bazelutil",
+        requirement("absl-py"),
     ],
 )
