@@ -1,3 +1,5 @@
+load("@requirements//:requirements.bzl", "requirement")
+
 py_library(
     name = "services",
     srcs = ["services.py"],
