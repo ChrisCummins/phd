@@ -1,4 +1,5 @@
 # Protobufs for project fish.
+load("@requirements//:requirements.bzl", "requirement")
 load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
 
 # Default to public visibility so that X_proto_library targets in other packages
@@ -10,4 +11,5 @@ package(default_visibility = ["//visibility:public"])
 py_proto_library(
     name = "fish_py_pb2",
     protos = ["fish.proto"],
+    deps = [requirement("protobuf")],
 )
