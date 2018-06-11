@@ -295,12 +295,6 @@ def main(argv):
     python_path = '/home/linuxbrew/.linuxbrew/bin/python3'
   assert os.path.isfile(python_path)
 
-  base_requirements_txt_path = os.path.join(
-      PHD_ROOT, 'tools', 'requirements.txt')
-  assert os.path.isfile(base_requirements_txt_path)
-  with open(base_requirements_txt_path) as f:
-    base_requirements = f.read()
-
   tensorflow_build_in_path = os.path.join(
       PHD_ROOT, 'third_party/tensorflow/BUILD.in')
   tensorflow_build_path = os.path.join(
@@ -309,17 +303,9 @@ def main(argv):
     tensorflow_build = f.read()
 
   if args.with_cuda:
-    requirements_txt = base_requirements.replace(
-        'tensorflow=', 'tensorflow-gpu=')
     tensorflow_build = tensorflow_build.replace(
         'requirement("tensorflow")',
         'requirement("tensorflow-gpu")')
-  else:
-    requirements_txt = base_requirements
-
-  requirements_txt_path = os.path.join(PHD_ROOT, 'requirements.txt')
-  with open(requirements_txt_path, 'w') as f:
-    f.write(requirements_txt)
 
   with open(tensorflow_build_path, 'w') as f:
     f.write(tensorflow_build)
