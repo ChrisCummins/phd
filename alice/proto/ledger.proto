@@ -31,15 +31,17 @@ message LedgerEntry {
 
   // The target which is to be built and executed.
   optional string target = 8;
+  // The absolute path to the compiled target binary.
+  optional string binary_path = 9;
   // The list of arguments to be passed to the built target.
-  repeated string args = 9;
+  repeated string args = 10;
 
   // The command end time, in milliseconds since the epoch, UTC time zone.
-  optional int64 end_utc_epoch_ms = 10;
+  optional int64 end_utc_epoch_ms = 11;
   // The integer returncode of the command. In the range 0-255.
-  optional int32 returncode = 11;
+  optional int32 returncode = 12;
   // The output of the command.
-  optional string stdout_and_stderr = 12;
+  optional string stdout_and_stderr = 13;
 }
 
 // A ledger is a list of entries.
