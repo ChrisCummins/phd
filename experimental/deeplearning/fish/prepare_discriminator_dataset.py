@@ -110,12 +110,13 @@ def LoadNegativeProtos(
         [len(p.src) for p in negative_protos], dtype=np.int32)
     outputs = []
     for positive_proto_size in positive_proto_sizes:
-      size_diffs = negative_proto_sizes - positive_proto_size
+      size_diffs = np.abs(negative_proto_sizes - positive_proto_size)
       idx_of_closest: int = np.argmin(size_diffs)
       logging.info('Found negative example of size %s to match positive '
-                   'example of size %s',
+                   'example of size %s (diff %s)',
                    humanize.intcomma(negative_proto_sizes[idx_of_closest]),
-                   humanize.intcomma(positive_proto_size))
+                   humanize.intcomma(positive_proto_size),
+                   size_diffs.min())
       outputs.append(negative_protos[idx_of_closest])
       negative_proto_sizes = np.delete(negative_proto_sizes, [idx_of_closest])
       del negative_protos[idx_of_closest]
