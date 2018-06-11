@@ -143,6 +143,7 @@ py_test(
         "//deeplearning/clgen:errors",
         requirement("absl-py"),
         requirement("pytest"),
+        requirement("pytest-mock"),
         requirement("pytest-benchmark"),
     ],
 )
