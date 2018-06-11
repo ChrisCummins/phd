@@ -5,6 +5,8 @@ py_library(
     deps = [
         "//deeplearning/deepsmith/proto:service_py_pb2",
         "//lib/labm8:pbutil",
+        requirement("absl-py"),
+        requirement("grpcio"),
     ],
 )
 
@@ -18,6 +20,8 @@ py_binary(
         ":services",
         "//deeplearning/deepsmith/proto:datastore_py_pb2",
         "//lib/labm8:pbutil",
+        requirement("grpcio"),
+        requirement("absl-py"),
     ],
 )
 
@@ -45,6 +49,8 @@ py_binary(
         "//deeplearning/clgen/proto:model_py_pb2",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//deeplearning/deepsmith/proto:generator_py_pb2",
+        requirement("grpcio"),
+        requirement("absl-py"),
     ],
 )
 
@@ -69,5 +75,7 @@ py_binary(
         ":services",
         "//deeplearning/deepsmith/proto:harness_py_pb2",
         "//lib/labm8:pbutil",
+        requirement("absl-py"),
+        requirement("grpcio"),
     ],
 )
