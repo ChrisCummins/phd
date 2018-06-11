@@ -1,8 +1,9 @@
 # See: https://bazel.build/versions/master/docs/bazel-user-manual.html#flag--compilation_mode
 
-# Force Python 3:
-test --python_path=python3
-run --python_path=python3
+# Force Python 3.6. This requires that python3.6 is in $PATH. Otherwise,
+# change these values to the absolute path of python3.6.
+test --python_path=python3.6
+run --python_path=python3.6
 
 # Build and test options:
 build --verbose_failures
