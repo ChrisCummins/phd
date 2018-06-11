@@ -4,6 +4,9 @@ package(default_visibility = ["//visibility:public"])
 
 cc_library(
     name = "headers",
-    hdrs = glob(["**/*.h", "**/*.inc", "**/*.def"]),
+    hdrs = glob([
+        "**/*.h",
+        "**/*.inc",
+        "**/*.def",
+    ]),
 )
-
