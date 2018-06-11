@@ -33,9 +33,11 @@ py_binary(
     deps = [
         "//experimental/deeplearning/fish/proto:fish_py_pb2",
         "//lib/labm8:fs",
+        "//lib/labm8:labtypes",
         "//lib/labm8:pbutil",
         requirement("humanize"),
         requirement("absl-py"),
+        requirement("numpy"),
     ],
 )
 
