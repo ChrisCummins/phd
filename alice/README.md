@@ -7,7 +7,7 @@ ledger; not a fancy distributed ledger like all the new kids are using, just a
 good old fashioned list of commands, their output, and some other useful data.
 Basically it's a jazzed up `.bash_history`.
 
-### What it does
+### The life time of an execution
 
 ```sh
 $ alice exec //src:experiment --data_root /tmp/experiment
@@ -23,6 +23,20 @@ $ alice exec //src:experiment --data_root /tmp/experiment
 1. Record end-of-execution stats.
 1. Submit the final `LedgerEntry` to the ledger service.
 1. Exit with the command's return code.
+
+
+### Other commands
+
+```sh
+$ alice status [--host=<hostname>]
+```
+
+Print a list of currently-active jobs.
+
+```sh
+$ alice log [--host=<hostname>] [--with_active] 
+```
+
 
 ### Possible Future Work
 
