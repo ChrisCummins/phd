@@ -37,7 +37,6 @@ cc_binary(
     ],
     data = select({
         "//:darwin": [
-            "@llvm_mac//:libclang_so",
             "@llvm_mac//:libdir",
             "@llvm_mac//:lib_clangARCMigrate",
             "@llvm_mac//:lib_clangFrontend",
@@ -562,7 +561,6 @@ cc_binary(
     ],
     data = select({
         "//:darwin": [
-            "@llvm_mac//:libclang_so",
             "@llvm_mac//:libdir",
             "@llvm_mac//:lib_clangARCMigrate",
             "@llvm_mac//:lib_clangFrontend",
