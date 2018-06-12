@@ -158,7 +158,7 @@ template<typename T, unsigned int n>
 constexpr auto compile_time_fib() {
   static_assert(n > 0, "error");
 
-  std::array<T, n> result;
+  auto result = std::array<T, n>();
   _fib<decltype(result), n>::compute(result);
   return result;
 }
