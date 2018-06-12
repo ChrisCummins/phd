@@ -14,18 +14,18 @@ fi
 
 cd "$PHD"
 package="deeplearning/clgen/preprocessors"
-target="clang_test"
+target="cxx_test"
 
-bazel build "$package":"$target"
+bazel build -c opt "$package":"$target"
 
 cd bazel-phd/bazel-out/"$uname"-py3-opt/bin/"$package"
-tar cjvfh "$target".tar.bz2 \
+tar cjvfh clgen.tar.bz2 \
   --exclude '*.runfiles_manifest' \
   --exclude '*.intellij-info.txt' \
   --exclude 'MANIFEST' \
   --exclude '__pycache__' \
   "$target" "$target".runfiles
-mv "$target".tar.bz2 $PHD/learn/docker/clgen
+mv clgen.tar.bz2 $PHD/learn/docker/clgen
 
 cd $PHD/learn/docker/clgen
 
