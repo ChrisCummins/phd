@@ -57,7 +57,6 @@ def StripPreprocessorLines(src: str) -> str:
     The output with preprocessor output stripped.
   """
   lines = src.split('\n')
-  i = 0
   # Determine when the final included file ends.
   for i in range(len(lines) - 1, -1, -1):
     if CLANG_STDIN_MARKER.match(lines[i]):
