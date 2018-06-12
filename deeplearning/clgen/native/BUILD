@@ -385,7 +385,10 @@ cc_binary(
         "-lclangBasic",
         "-lclangTooling",
         "-lclangToolingCore",
-        "-lclang",
+    ] + select({
+        "//:darwin": [],
+        "//conditions:default": ["-lclang"],
+    }) + [
         "-lLLVMLTO",
         "-lLLVMPasses",
         "-lLLVMObjCARCOpts",
@@ -518,7 +521,10 @@ cc_binary(
         "-lLLVMBinaryFormat",
         "-lLLVMSupport",
         "-lLLVMDemangle",
-    ],
+    ] + select({
+        "//:darwin": ["-lncurses"],
+        "//conditions:default": [],
+    }),
     visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = select({
         "//:darwin": [
@@ -909,7 +915,10 @@ cc_binary(
         "-lclangBasic",
         "-lclangTooling",
         "-lclangToolingCore",
-        "-lclang",
+    ] + select({
+        "//:darwin": [],
+        "//conditions:default": ["-lclang"],
+    }) + [
         "-lLLVMLTO",
         "-lLLVMPasses",
         "-lLLVMObjCARCOpts",
@@ -1042,7 +1051,10 @@ cc_binary(
         "-lLLVMBinaryFormat",
         "-lLLVMSupport",
         "-lLLVMDemangle",
-    ],
+    ] + select({
+        "//:darwin": ["-lncurses"],
+        "//conditions:default": [],
+    }),
     visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = select({
         "//:darwin": [
