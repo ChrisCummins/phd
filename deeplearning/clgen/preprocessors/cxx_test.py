@@ -193,6 +193,27 @@ int main(int argc, char** argv) {
 """
 
 
+# NormalizeIdentifiers() tests.
+
+def test_NormalizeIdentifiers_small_cxx_program():
+  """Test that rewriter performs as expected for a small C++ program."""
+  assert """
+#include <iostream>
+
+int A(int a, char** b) {
+  int c = 2 * a;
+  std::cout << c << ' args' << std::endl;
+}
+""" == cxx.NormalizeIdentifiers("""
+#include <iostream>
+
+int main(int argc, char** argv) {
+  int foo = 2 * argc;
+  std::cout << foo << ' args' << std::endl;
+}
+""")
+
+
 # StripComments() tests.
 
 def test_StripComments_empty_input():
