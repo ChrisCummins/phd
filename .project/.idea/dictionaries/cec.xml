@@ -49,6 +49,7 @@
       <w>relpaths</w>
       <w>rewriter</w>
       <w>runfiles</w>
+      <w>sandboxed</w>
       <w>shimfile</w>
       <w>srcs</w>
       <w>stderrs</w>
