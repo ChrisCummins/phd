@@ -107,8 +107,8 @@ int main(int argc, char** argv) {
   assert 'use of undeclared identifier' in str(e_info.value)
 
 
-def test_Compile_libcxx_header():
-  """Test that Compile accepts a program using a C++ libcxx header."""
+def test_Compile_cxx_header():
+  """Test that Compile accepts a program using a C++ header."""
   src = """
 #include <cassert>
 int main(int argc, char** argv) { return 0; }

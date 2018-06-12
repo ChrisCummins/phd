@@ -6,7 +6,6 @@
 # The abomination of options below works as of the time of writing
 # (2018-05-19), where $(brew --prefix llvm)/bin/llvm-config --version == 6.0.
 
-
 # TODO(cec): Use bazel targets for LLVM linkopts, rather than hard-coded paths.
 # See: https://docs.bazel.build/versions/master/be/c-cpp.html#cc_binary.linkopts
 cc_binary(
