@@ -13,8 +13,8 @@ else
 fi
 
 cd "$PHD"
-package="deeplearning/clgen/preprocessors"
-target="cxx_test"
+package="deeplearning/clgen"
+target="clgen"
 
 bazel build -c opt "$package":"$target"
 
@@ -26,6 +26,8 @@ tar cjvfh clgen.tar.bz2 \
   --exclude '__pycache__' \
   "$target" "$target".runfiles
 mv clgen.tar.bz2 $PHD/learn/docker/clgen
+
+cp ../../../deeplearning/clgen/tests/data/tiny/corpus.tar.bz2 .
 
 cd $PHD/learn/docker/clgen
 
