@@ -166,6 +166,23 @@ kernel void A(global int* a) {
   assert 'implicit declaration of function' in str(e_info.value)
 
 
+# NormalizeIdentifiers() tests.
+
+def test_NormalizeIdentifiers_small_opencl_program():
+  """Test that rewriter performs as expected for a small OpenCL program."""
+  assert """
+void kernel A(global int* a) {
+  int b = 0;
+  a[get_global_id(0)] = b;
+}
+""" == opencl.NormalizeIdentifiers("""
+void kernel foo(global int* bar) {
+  int car = 0;
+  bar[get_global_id(0)] = car;
+}
+""")
+
+
 # SanitizeKernelPrototype() tests.
 
 def test_SanitizeKernelPrototype_empty_input():
