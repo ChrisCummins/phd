@@ -6,10 +6,6 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends language-pack-en
 RUN locale-gen --purge en_GB.UTF-8
 
-# Setup the environment.
-ENV HOME /root
-ENV USER docker
-
 # Install Python 3.6 and symlink it to default python version.
 RUN apt-get update && \
     apt-get install -y python3.6 && \
