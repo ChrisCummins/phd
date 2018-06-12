@@ -1899,7 +1899,6 @@ class PhdBuildDeps(Task):
   __platforms__ = ['linux', 'osx']
   __deps__ = [
       'Bazel',
-      'Clang',
       'GitLfs',
       'GnuCoreutils',
       'LaTeX',
