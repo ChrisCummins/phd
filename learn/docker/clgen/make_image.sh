@@ -27,7 +27,7 @@ tar cjvfh clgen.tar.bz2 \
   "$target" "$target".runfiles
 mv clgen.tar.bz2 $PHD/learn/docker/clgen
 
-cp ../../../deeplearning/clgen/tests/data/tiny/corpus.tar.bz2 .
+cp $PHD/deeplearning/clgen/tests/data/tiny/corpus.tar.bz2 $PHD/learn/docker/clgen
 
 cd $PHD/learn/docker/clgen
 
