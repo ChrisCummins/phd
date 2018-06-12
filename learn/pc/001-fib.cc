@@ -2,9 +2,7 @@
 #pragma GCC diagnostic ignored "-Wdeprecated"
 #pragma GCC diagnostic ignored "-Wmissing-noreturn"
 #pragma GCC diagnostic ignored "-Wpadded"
-#pragma GCC diagnostic ignored "-Wshift-sign-overflow"
 #pragma GCC diagnostic ignored "-Wundef"
-#pragma GCC diagnostic ignored "-Wused-but-marked-unused"
 #include <benchmark/benchmark.h>
 #include <gtest/gtest.h>
 #pragma GCC diagnostic pop
