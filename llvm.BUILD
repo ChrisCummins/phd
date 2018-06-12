@@ -2,7 +2,6 @@
 
 package(default_visibility = ["//visibility:public"])
 
-
 # Pre-compiled binaries.
 
 filegroup(
@@ -31,9 +30,11 @@ filegroup(
 
 cc_library(
     name = "libs",
-    srcs = glob(["lib/lib*.a", "lib/lib*.so"])
+    srcs = glob([
+        "lib/lib*.a",
+        "lib/lib*.so",
+    ]),
 )
-
 
 # Dynamic libraries for LD_PRELOAD.
 
@@ -46,7 +47,6 @@ filegroup(
     name = "liblto_so",
     srcs = ["lib/libLTO.so"],
 )
-
 
 # Static libraries, for us in data attrs of *_binary targets.
 
