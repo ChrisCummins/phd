@@ -284,11 +284,6 @@ def main(argv):
         ['git', '-C', PHD_ROOT, 'submodule', 'update', '--init', '--recursive'],
         stdout=DEVNULL)
 
-  dotfiles_run_path = os.path.join(PHD_ROOT, 'system', 'dotfiles', 'run')
-  assert os.path.isfile(dotfiles_run_path)
-  proc = subprocess.Popen([dotfiles_run_path, 'PhdBuildDeps'])
-  proc.communicate()
-
   if uname == 'darwin':
     python_path = '/usr/local/opt/python/bin/python3'
   else:
@@ -324,18 +319,6 @@ def main(argv):
   with open(tensorflow_build_path, 'w') as f:
     f.write(tensorflow_build)
 
-  pip_packages = RunAsHomebrewUser(
-      [python_path, '-m', 'pip', 'freeze'], subprocess.check_output).decode(
-      'utf-8')
-  if args.with_cuda and 'tensorflow==' in pip_packages:
-    logging.info('Detected CUDA, so uninstalling CPU TensorFlow')
-    RunAsHomebrewUser(
-        [python_path, '-m', 'pip', 'uninstall', '-y', '-q', 'tensorflow'])
-  elif not args.with_cuda and 'tensorflow-gpu==' in pip_packages:
-    logging.info('CUDA not detected, so uninstalling GPU TensorFlow')
-    RunAsHomebrewUser(
-        [python_path, '-m', 'pip', 'uninstall', '-y', '-q', 'tensorflow-gpu'])
-
   if uname == 'darwin':
     assert os.path.isfile('/usr/local/bin/brew')
     brew_prefix = '/usr/local'
@@ -350,17 +333,6 @@ def main(argv):
       proc = subprocess.Popen(
           [npm_path, 'install', '--cwd', PHD_ROOT, 'husky', '--save-dev'])
       proc.communicate()
-
-  llvm_prefix = os.path.join(brew_prefix, 'opt', 'llvm')
-  # Sanity check to ensure that LLVM was installed correctly.
-  assert os.path.isfile(os.path.join(llvm_prefix, 'bin', 'clang'))
-  assert os.path.isfile(os.path.join(llvm_prefix, 'bin', 'clang-format'))
-  assert os.path.isfile(os.path.join(llvm_prefix, 'bin', 'clang++'))
-  assert os.path.isfile(os.path.join(llvm_prefix, 'bin', 'opt'))
-
-  libclang_so_path = os.path.join(llvm_prefix, 'lib', 'libclang.so')
-  if not os.path.isfile(libclang_so_path):
-    libclang_so_path = ''
 
   options_to_exclude = {'print_id', 'noninteractive', 'cache_result'}
   options_to_export = {k: args.__dict__[k] for k in args.__dict__
@@ -382,27 +354,11 @@ options {{
 }}
 paths {{
   repo_root: "{phd_root}"
-  cc: "{llvm_prefix}/bin/clang"
-  cxx: "{llvm_prefix}/bin/clang++"
-  opt: "{llvm_prefix}/bin/opt"
-  libclang_so: "{libclang_so}"
-  clang_format: "{llvm_prefix}/bin/clang-format"
   python: "{python_path}"
-  llvm_prefix: "{llvm_prefix}"
 }}
 """.format(uname=uname, config_id=config_id, phd_root=PHD_ROOT,
            with_cuda='true' if args.with_cuda else 'false',
-           options=options, llvm_prefix=llvm_prefix,
-           libclang_so=libclang_so_path, python_path=python_path))
-
-  # On Linux systems we use the homebrew-installed clang. On macOS we use the
-  # system clang.
-  if uname == 'darwin':
-    cc = 'clang'
-    cxx = 'clang++'
-  else:
-    cc = os.path.join(llvm_prefix, 'bin', 'clang')
-    cxx = os.path.join(llvm_prefix, 'bin', 'clang++')
+           options=options, python_path=python_path))
 
   with open(os.path.join(PHD_ROOT, '.env'), 'w') as f:
     f.write("""\
@@ -419,11 +375,15 @@ export PYTHON="{python_path}"
 
 export PYTHONPATH={phd_root}:{phd_root}/lib:{phd_root}/bazel-genfiles
 
+# TODO(cec): Remove whatever is setting $CC to clang, rather than unset here.
+unset CC
+unset CXX
+
 clgen() {{
   bazel build //deeplearning/clgen
   {phd_root}/bazel-phd/bazel-out/*-py3-opt/bin/deeplearning/clgen/clgen $@
 }}
-""".format(phd_root=PHD_ROOT, cc=cc, cxx=cxx, python_path=python_path))
+""".format(phd_root=PHD_ROOT, python_path=python_path))
 
 
 if __name__ == '__main__':

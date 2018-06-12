@@ -16,8 +16,6 @@ from lib.labm8 import bazelutil
 from lib.labm8 import labmath
 
 
-_config = getconfig.GetGlobalConfig()
-
 CLGEN_FEATURES = bazelutil.DataPath(
     'phd/deeplearning/clgen/native/clgen-features')
 SHIMFILE = bazelutil.DataPath(

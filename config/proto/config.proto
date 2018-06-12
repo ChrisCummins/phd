@@ -32,19 +32,6 @@ message GlobalConfigOptions {
 message GlobalConfigPaths {
   // The root directory of the repository.
   required string repo_root = 1;
-  // The path of the system $CC compiler.
-  required string cc = 2;
-  // The path of the system $CXX compiler.
-  required string cxx = 3;
-  // The path of the system LLVM optimizer.
-  required string opt = 4;
-  // The path of the system libclang.so, if it exists. If there is no
-  // libclang.so, this should be an empty string.
-  required string libclang_so = 5;
-  // The path of the system clang_format.
-  required string clang_format = 6;
   // The path of the system python.
-  required string python = 7;
-  // The path to the project's LLVM root.
-  required string llvm_prefix = 8;
+  required string python = 2;
 }
