@@ -2,6 +2,7 @@
 import collections
 import pathlib
 import re
+import sys
 import typing
 
 from absl import flags
@@ -22,6 +23,17 @@ C99_HEADERS = {
   'stdint.h', 'stdio.h', 'stdlib.h', 'stdnoreturn.h', 'string.h', 'tgmath.h',
   'threads.h', 'time.h', 'uchar.h', 'wchar.h', 'wctype.h',
 }
+
+# The set of headers in the C++ standard library.
+_UNAME = 'mac' if sys.platform == 'darwin' else 'linux'
+CXX_HEADERS = set(
+    public.GetAllFilesRelativePaths(
+        bazelutil.DataPath(f'libcxx_{_UNAME}/include/c++/v1'),
+        follow_symlinks=True) +
+    public.GetAllFilesRelativePaths(
+        bazelutil.DataPath(f'libcxx_{_UNAME}/lib/clang/6.0.0/include'),
+        follow_symlinks=True)
+)
 
 
 @public.dataset_preprocessor
@@ -240,5 +252,4 @@ def FindCandidateInclude(
 
 def GetLibCxxHeaders() -> typing.Set[str]:
   """Enumerate the set of headers in the libcxx standard lib."""
-  return set(public.GetAllFilesRelativePaths(
-      bazelutil.DataPath('libcxx/include'), follow_symlinks=True))
+  return CXX_HEADERS

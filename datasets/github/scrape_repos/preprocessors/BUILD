@@ -14,6 +14,14 @@ py_library(
     name = "inliners",
     srcs = ["inliners.py"],
     data = ["@libcxx//:headers"],
+    data = select({
+        "//:darwin": [
+            "@libcxx_mac//:headers",
+        ],
+        "//conditions:default": [
+            "@libcxx_linux//:headers",
+        ],
+    }),
     visibility = ["//datasets/github/scrape_repos:__subpackages__"],
     deps = [
         ":public",
