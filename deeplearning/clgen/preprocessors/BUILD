@@ -5,15 +5,14 @@ load("@requirements//:requirements.bzl", "requirement")
 py_library(
     name = "clang",
     srcs = ["clang.py"],
-    data = select({
+    data = [
+    ] + select({
         "//:darwin": [
-            "@llvm_headers_mac//:headers",
             "@llvm_mac//:clang",
             "@llvm_mac//:clang-format",
             "@llvm_mac//:opt",
         ],
         "//conditions:default": [
-            "@llvm_headers_linux//:headers",
             "@llvm_linux//:clang-format",
             "@llvm_linux//:clang",
             "@llvm_linux//:opt",
@@ -69,13 +68,19 @@ py_test(
 py_library(
     name = "cxx",
     srcs = ["cxx.py"],
-    data = ["@libcxx//:headers"],
+    data = select({
+        "//:darwin": [
+            "@libcxx_mac//:headers",
+        ],
+        "//conditions:default": [
+            "@libcxx_linux//:headers",
+        ],
+    }),
     visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = [
         ":clang",
         ":normalizer",
         ":public",
-        "//config:getconfig",
         "//lib/labm8:bazelutil",
         requirement("absl-py"),
     ],

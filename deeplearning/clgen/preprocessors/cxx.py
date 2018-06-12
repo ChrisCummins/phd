@@ -1,11 +1,9 @@
 """Preprocessor functions for C++."""
-import pathlib
 import re
 import sys
 
 from absl import flags
 
-from config import getconfig
 from deeplearning.clgen.preprocessors import clang
 from deeplearning.clgen.preprocessors import normalizer
 from deeplearning.clgen.preprocessors import public
@@ -14,25 +12,30 @@ from lib.labm8 import bazelutil
 
 FLAGS = flags.FLAGS
 
-_config = getconfig.GetGlobalConfig()
-if sys.platform == 'darwin':
-  LIBCXX_HEADERS = pathlib.Path(_config.paths.llvm_prefix) / 'include/c++/v1'
-else:
-  LIBCXX_HEADERS = bazelutil.DataPath('libcxx/include')
+_UNAME = 'mac' if sys.platform == 'darwin' else 'linux'
+LIBCXX_HEADERS = bazelutil.DataPath(f'libcxx_{_UNAME}/include/c++/v1')
+CLANG_HEADERS = bazelutil.DataPath(f'libcxx_{_UNAME}/lib/clang/6.0.0/include')
 
 C_COMMENT_RE = re.compile(
     r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
     re.DOTALL | re.MULTILINE)
 
-CLANG_ARGS = ['-xc++', '-isystem', str(LIBCXX_HEADERS),
-              '-Wno-ignored-pragmas', '-ferror-limit=1',
-              '-Wno-implicit-function-declaration',
-              '-Wno-incompatible-library-redeclaration', '-Wno-macro-redefined',
-              '-Wno-unused-parameter', '-Wno-long-long',
-              '-Wcovered-switch-default', '-Wdelete-non-virtual-dtor',
-              '-Wstring-conversion', '-DLLVM_BUILD_GLOBAL_ISEL',
-              '-D__STDC_CONSTANT_MACROS', '-D__STDC_FORMAT_MACROS',
-              '-D__STDC_LIMIT_MACROS', '-D_LIBCPP_HAS_C_ATOMIC_IMP']
+# Flags to compile C++ files with. I've replicated the default search path,
+# but substituted the sandboxed header locations in place of the defaults.
+#   bazel-phd/bazel-out/*-py3-opt/bin/deeplearning/clgen/preprocessors/\
+#     cxx_test.runfiles/llvm_mac/bin/clang -xc++ -E - -v
+CLANG_ARGS = [
+  '-xc++', '-isystem', str(LIBCXX_HEADERS), '-isystem', '/usr/local/include',
+  '-isystem', str(CLANG_HEADERS), '-isystem', '/usr/include',
+  '-Wno-ignored-pragmas', '-ferror-limit=1',
+  '-Wno-implicit-function-declaration',
+  '-Wno-incompatible-library-redeclaration', '-Wno-macro-redefined',
+  '-Wno-unused-parameter', '-Wno-long-long', '-Wcovered-switch-default',
+  '-Wdelete-non-virtual-dtor', '-Wstring-conversion',
+  '-DLLVM_BUILD_GLOBAL_ISEL', '-D__STDC_CONSTANT_MACROS',
+  '-D__STDC_FORMAT_MACROS', '-D__STDC_LIMIT_MACROS',
+  '-D_LIBCPP_HAS_C_ATOMIC_IMP'
+]
 
 
 @public.clgen_preprocessor
