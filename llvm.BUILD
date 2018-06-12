@@ -1,11 +1,16 @@
-# A package for LLVM binaries.
+# A package for LLVM releases.
+# See: http://releases.llvm.org/download.html
 
 package(default_visibility = ["//visibility:public"])
 
-filegroup(
-    name = "libs",
-    srcs = glob(["lib/*"]),
+cc_library(
+    name = "libraries",
+    srcs = glob([
+        "lib/*.a",
+    ]),
 )
+
+# Pre-compiled binaries, for us in data attrs of *_binary targets.
 
 filegroup(
     name = "clang",
