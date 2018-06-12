@@ -8,11 +8,13 @@ py_library(
     data = [
     ] + select({
         "//:darwin": [
+            "@libcxx_mac//:headers",
             "@llvm_mac//:clang",
             "@llvm_mac//:clang-format",
             "@llvm_mac//:opt",
         ],
         "//conditions:default": [
+            "@libcxx_linux//:headers",
             "@llvm_linux//:clang-format",
             "@llvm_linux//:clang",
             "@llvm_linux//:opt",
