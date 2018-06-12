@@ -253,6 +253,7 @@ def test_benchmark_StripComments_hello_world(benchmark):
 def main(argv):
   """Main entry point."""
   del argv
+  flags.FLAGS(['argv[0]', '-v=1'])
   sys.exit(pytest.main([__file__, '-vv']))
 
 

@@ -144,7 +144,8 @@ int main(int argc, char** argv) {
 def main(argv):
   """Main entry point."""
   del argv
-  sys.exit(pytest.main([__file__, '-v']))
+  flags.FLAGS(['argv[0]', '--v=1'])
+  sys.exit(pytest.main([__file__, '-vv']))
 
 
 if __name__ == '__main__':
