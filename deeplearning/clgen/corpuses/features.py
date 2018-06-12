@@ -24,9 +24,11 @@ SHIMFILE = bazelutil.DataPath(
     'phd/deeplearning/clgen/data/include/opencl-shim.h')
 
 # On Linux we must preload the libclang library.
-CLGEN_FEATURES_ENV = os.environ.copy()
-if _config.paths.libclang_so:
-  CLGEN_FEATURES_ENV['LD_PRELOAD'] = _config.paths.libclang_so
+CLGEN_REWRITER_ENV = os.environ.copy()
+_LIBCLANG_SO = bazelutil.DataPath(
+    f'llvm_linux/lib/libclang.so', must_exist=False)
+if _LIBCLANG_SO.is_file():
+  CLGEN_REWRITER_ENV['LD_PRELOAD'] = str(_LIBCLANG_SO)
 
 
 class FeatureExtractionError(errors.CLgenError):

@@ -129,9 +129,15 @@ py_test(
 py_library(
     name = "normalizer",
     srcs = ["normalizer.py"],
-    data = ["//deeplearning/clgen/native:clgen-rewriter"],
+    data = [
+        "//deeplearning/clgen/native:clgen-rewriter",
+    ] + select({
+        "//:darwin": [],
+        "//conditions:default": [
+            "@llvm_linux//:libclang_so",
+        ],
+    }),
     deps = [
-        "//config:getconfig",
         "//deeplearning/clgen:errors",
         "//lib/labm8:bazelutil",
         requirement("absl-py"),

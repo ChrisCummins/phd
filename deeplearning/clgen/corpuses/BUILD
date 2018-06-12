@@ -107,9 +107,13 @@ py_library(
     data = [
         "//deeplearning/clgen/data/include:opencl-shim",
         "//deeplearning/clgen/native:clgen-features",
-    ],
+    ] + select({
+        "//:darwin": [],
+        "//conditions:default": [
+            "@llvm_linux//:libclang_so",
+        ],
+    }),
     deps = [
-        "//config:getconfig",
         "//deeplearning/clgen:errors",
         "//lib/labm8:bazelutil",
         "//lib/labm8:labmath",

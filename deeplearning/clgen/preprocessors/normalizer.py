@@ -7,22 +7,22 @@ import typing
 from absl import flags
 from absl import logging
 
-from config import getconfig
 from deeplearning.clgen import errors
 from lib.labm8 import bazelutil
 
 
 FLAGS = flags.FLAGS
 
-_config = getconfig.GetGlobalConfig()
 CLGEN_REWRITER = bazelutil.DataPath(
     'phd/deeplearning/clgen/native/clgen-rewriter')
 assert CLGEN_REWRITER.is_file()
 
 # On Linux we must preload the libclang library.
 CLGEN_REWRITER_ENV = os.environ.copy()
-if _config.paths.libclang_so:
-  CLGEN_REWRITER_ENV['LD_PRELOAD'] = _config.paths.libclang_so
+_LIBCLANG_SO = bazelutil.DataPath(
+    f'llvm_linux/lib/libclang.so', must_exist=False)
+if _LIBCLANG_SO.is_file():
+  CLGEN_REWRITER_ENV['LD_PRELOAD'] = str(_LIBCLANG_SO)
 
 
 def NormalizeIdentifiers(text: str, suffix: str, cflags: typing.List[str],
