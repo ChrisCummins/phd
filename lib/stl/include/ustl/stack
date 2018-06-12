@@ -241,7 +241,9 @@ class stack {
   // The noexcept specifier matches the swap operation on the
   // underlying container.
   //
-  void swap(stack& x) noexcept(noexcept(std::swap(_container, x._container))) {
+  // This noexecpt clause doesn't work with GCC 5.5.0:
+  // void swap(stack& x) noexcept(noexcept(std::swap(_container, x._container))) {
+  void swap(stack& x) {
     std::swap(_container, x._container);
   }
 
