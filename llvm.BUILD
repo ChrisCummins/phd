@@ -3,6 +3,11 @@
 package(default_visibility = ["//visibility:public"])
 
 filegroup(
+    name = "libs",
+    srcs = glob(["lib/*"]),
+)
+
+filegroup(
     name = "clang",
     srcs = ["bin/clang"],
 )
