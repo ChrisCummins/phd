@@ -13,7 +13,6 @@ py_library(
 py_library(
     name = "inliners",
     srcs = ["inliners.py"],
-    data = ["@libcxx//:headers"],
     data = select({
         "//:darwin": [
             "@libcxx_mac//:headers",
