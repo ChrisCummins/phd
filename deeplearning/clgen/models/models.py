@@ -250,7 +250,7 @@ class Model(object):
               'Produced %s samples at a rate of %s ms / sample.',
               humanize.intcomma(len(samples)),
               humanize.intcomma(
-                  int((now - sample_start_time) / len(samples))))
+                  int((now - sample_start_time) / max(len(samples), 1))))
           break
 
     return samples
