@@ -17,14 +17,14 @@ fi
 
 date="$(date +%s)"
 
-tarball="clgen_""$uname""_$date"
+target="clgen"
 
-bazel build //deeplearning/clgen:clgen_test
+bazel build //deeplearning/clgen:"$target"
 cd bazel-phd/bazel-out/"$uname"-py3-opt/bin/deeplearning/clgen
-tar cjvfh "$tarball".tar.bz2 \
+tar cjvfh "$target".tar.bz2 \
   --exclude '*.runfiles_manifest' \
   --exclude '*.intellij-info.txt' \
   --exclude 'MANIFEST' \
   --exclude '__pycache__' \
-  clgen_test clgen_test.runfiles
-mv "$tarball".tar.bz2 $PHD
+  "$target" "$target".runfiles
+mv "$target".tar.bz2 $PHD
