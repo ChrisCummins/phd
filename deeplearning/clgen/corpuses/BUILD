@@ -111,6 +111,7 @@ py_library(
         "//:darwin": [],
         "//conditions:default": [
             "@llvm_linux//:libclang_so",
+            "@llvm_linux//:liblto_so",
         ],
     }),
     deps = [

@@ -17,13 +17,14 @@ CLGEN_REWRITER = bazelutil.DataPath(
     'phd/deeplearning/clgen/native/clgen-rewriter')
 assert CLGEN_REWRITER.is_file()
 
-# On Linux we must preload the libclang library.
+# On Linux we must preload the LLVM sharded libraries.
 CLGEN_REWRITER_ENV = os.environ.copy()
 _LIBCLANG_SO = bazelutil.DataPath(
     f'llvm_linux/lib/libclang.so', must_exist=False)
-if _LIBCLANG_SO.is_file():
-  CLGEN_REWRITER_ENV['LD_PRELOAD'] = str(_LIBCLANG_SO)
-
+_LIBLTO_SO = bazelutil.DataPath(
+    f'llvm_linux/lib/libLTO.so', must_exist=False)
+if _LIBCLANG_SO.is_file() and _LIBLTO_SO.is_file():
+  CLGEN_REWRITER_ENV['LD_PRELOAD'] = f'{_LIBCLANG_SO}:{_LIBLTO_SO}'
 
 def NormalizeIdentifiers(text: str, suffix: str, cflags: typing.List[str],
                          timeout_seconds: int = 60) -> str:
