@@ -9,14 +9,8 @@ run --python_path=python3.6
 build --verbose_failures
 test --verbose_failures
 
-build --copt='-Wno-unused-command-line-argument'
-test --copt='-Wno-unused-command-line-argument'
-
 build --cxxopt='-std=c++14'
 test --cxxopt='-std=c++14'
-
-build --cxxopt='-Wc++1z-extensions'
-test --cxxopt='-Wc++1z-extensions'
 
 # Build options:
 build --compilation_mode opt
