@@ -128,8 +128,8 @@ def NormalizeIdentifiers(text: str) -> str:
     RewriterException: If rewriter found nothing to rewrite.
     ClangTimeout: If rewriter fails to complete within timeout_seconds.
   """
-  return normalizer.NormalizeIdentifiers(text, '.cl',
-                                         GetClangArgs(use_shim=False))
+  return normalizer.NormalizeIdentifiers(
+      text, '.cl', GetClangArgs(use_shim=False))
 
 
 # TODO(cec): Re-enable GPUVerify support.
