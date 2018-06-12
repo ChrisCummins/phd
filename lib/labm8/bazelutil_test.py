@@ -46,6 +46,14 @@ def test_DataPath_missing_data_dep():
           "'phd/lib/labm8/data/test/diabetes.csv'") in str(e_info)
 
 
+def test_DataPath_missing_data_dep_not_must_exist():
+  """Path is returned if the file doesn't exist."""
+  # The file //lib/labm8/data/test/diabetes.csv exists, but is not a data
+  # dependency of this test target, so is not found.
+  assert bazelutil.DataPath(
+      'phd/lib/labm8/data/test/diabetes.csv', must_exist=False)
+
+
 def test_DataPath_read_file():
   """Test that DataPath is correct for a known data file."""
   with open(bazelutil.DataPath('phd/lib/labm8/data/test/hello_world')) as f:

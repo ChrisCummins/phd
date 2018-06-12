@@ -44,7 +44,8 @@ def FindRunfilesDirectory() -> typing.Optional[pathlib.Path]:
   return None
 
 
-def DataPath(path: typing.Union[str, pathlib.Path]) -> pathlib.Path:
+def DataPath(path: typing.Union[str, pathlib.Path],
+             must_exist: bool = True) -> pathlib.Path:
   """Return the absolute path to a data file.
 
   This allows you to access files from the 'data' attribute of a Python
@@ -54,17 +55,23 @@ def DataPath(path: typing.Union[str, pathlib.Path]) -> pathlib.Path:
 
   Args:
     path: The path to the data, including the name of the workspace.
+    must_exist: Require that the file exists, else raise FileNotFoundError.
 
   Returns:
     An absolute file path.
 
   Raises:
-    FileNotFoundError: If the requested path is not found.
+    FileNotFoundError: If the requested path is not found and must_exist is
+      True.
   """
   if not str(path):
-    raise FileNotFoundError(f"No such file or directory: ''")
+    if must_exist:
+      raise FileNotFoundError(f"No such file or directory: ''")
+    else:
+      # An empty path yields the runfiles directory.
+      return FindRunfilesDirectory()
   runfiles = FindRunfilesDirectory()
   real_path = runfiles / path if runfiles else pathlib.Path(path).absolute()
-  if not (real_path.is_file() or real_path.is_dir()):
+  if must_exist and not (real_path.is_file() or real_path.is_dir()):
     raise FileNotFoundError(f"No such file or directory: '{path}'")
   return real_path
