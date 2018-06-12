@@ -28,8 +28,8 @@ int foobar(const T& val) {
 
 
 int main() {
-  static_assert(is_integral<int>::value);
-  static_assert(is_integral<float>::value == false);
+  static_assert(is_integral<int>::value, "error");
+  static_assert(is_integral<float>::value == false, "error");
 
   foobar(3);
   foobar(-1);

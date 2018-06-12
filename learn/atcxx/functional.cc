@@ -13,7 +13,8 @@ std::ostream& operator<<(std::ostream& out, const std::vector<T, Alloc>& vec) {
 
 template<typename Container, typename T>
 void map_multiply(Container& cont, const T& factor) {
-  static_assert(std::is_same<typename Container::value_type, T>::value);
+  static_assert(std::is_same<typename Container::value_type, T>::value,
+                "error");
   std::transform(cont.begin(), cont.end(), cont.begin(),
                  [& factor](const auto& a){ return a * factor; });
 }
