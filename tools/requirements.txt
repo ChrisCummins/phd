@@ -120,9 +120,8 @@ six==1.11.0
 SQLAlchemy==1.2.4
 statistics==1.0.3.5
 subprocess32==3.5.0
-# The versions for tensorflow and tensorflow-gpu must be kept in lock step.
+# If ./configure detects CUDA, tensorflow-gpu is used.
 tensorflow==1.8.0
-tensorflow-gpu==1.8.0
 terminado==0.8.1
 testpath==0.3.1
 tornado==5.0
