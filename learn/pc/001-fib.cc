@@ -23,7 +23,7 @@
 //
 template<typename T>
 T fib(const T& n) {
-  static_assert(std::is_integral<T>::value);
+  static_assert(std::is_integral<T>::value, "error");
 
   if (!n) {
     return 0;
@@ -57,7 +57,7 @@ T fib(const T& n) {
 //
 template<typename T>
 T fib_iter(T n) {
-  static_assert(std::is_integral<T>::value);
+  static_assert(std::is_integral<T>::value, "error");
 
   T x{0}, y{1}, z{0};
 
@@ -83,7 +83,7 @@ T fib_iter(T n) {
 //
 template<typename T>
 T fib_mem(const T& n) {
-  static_assert(std::is_integral<T>::value);
+  static_assert(std::is_integral<T>::value, "error");
   static std::unordered_map<T, T> lookup_table;
 
   auto it = lookup_table.find(n);
@@ -158,7 +158,7 @@ class _fib<Container, 1> {
 //
 template<typename T, unsigned int n>
 constexpr auto compile_time_fib() {
-  static_assert(n > 0);
+  static_assert(n > 0, "error");
 
   std::array<T, n> result;
   _fib<decltype(result), n>::compute(result);
