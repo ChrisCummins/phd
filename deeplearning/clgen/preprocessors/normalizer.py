@@ -19,12 +19,10 @@ assert CLGEN_REWRITER.is_file()
 
 # On Linux we must preload the LLVM sharded libraries.
 CLGEN_REWRITER_ENV = os.environ.copy()
-_LIBCLANG_SO = bazelutil.DataPath(
-    f'llvm_linux/lib/libclang.so', must_exist=False)
-_LIBLTO_SO = bazelutil.DataPath(
-    f'llvm_linux/lib/libLTO.so', must_exist=False)
-if _LIBCLANG_SO.is_file() and _LIBLTO_SO.is_file():
-  CLGEN_REWRITER_ENV['LD_PRELOAD'] = f'{_LIBCLANG_SO}:{_LIBLTO_SO}'
+if bazelutil.DataPath('llvm_linux', must_exist=False).is_dir():
+  libclang = bazelutil.DataPath('llvm_linux/lib/libclang.so')
+  liblto = bazelutil.DataPath('llvm_linux/lib/libLTO.so')
+  CLGEN_REWRITER_ENV['LD_PRELOAD'] = f'{libclang}:{liblto}'
 
 def NormalizeIdentifiers(text: str, suffix: str, cflags: typing.List[str],
                          timeout_seconds: int = 60) -> str:
@@ -56,7 +54,10 @@ def NormalizeIdentifiers(text: str, suffix: str, cflags: typing.List[str],
     f.flush()
     cmd = ["timeout", "-s9", str(timeout_seconds), str(CLGEN_REWRITER),
            f.name] + ['-extra-arg=' + x for x in cflags] + ['--']
-    logging.debug('$ %s', ' '.join(cmd))
+    logging.debug(
+        '$ %s%s',
+        f'LD_PRELOAD={CLGEN_REWRITER_ENV["LD_PRELOAD"]} '
+        if 'LD_PRELOAD' in CLGEN_REWRITER_ENV else '', ' '.join(cmd))
     process = subprocess.Popen(cmd, stdin=subprocess.PIPE,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                universal_newlines=True, env=CLGEN_REWRITER_ENV)
