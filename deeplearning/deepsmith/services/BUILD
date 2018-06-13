@@ -1,3 +1,6 @@
+# Service processes for DeepSmith.
+
+load("@io_bazel_rules_docker//python3:image.bzl", "py3_image")
 load("@requirements//:requirements.bzl", "requirement")
 
 py_library(
@@ -25,6 +28,14 @@ py_binary(
         requirement("grpcio"),
         requirement("absl-py"),
     ],
+)
+
+py3_image(
+    name = "datastore_image",
+    base = "@python3.6//image",
+    srcs = ["datastore.py"],
+    deps = [":datastore"],
+    main = "datastore.py",
 )
 
 py_library(
@@ -56,6 +67,15 @@ py_binary(
     ],
 )
 
+# TODO(cec): Re-enable once CLgen cyclic symlinks is fixed.
+# py3_image(
+#     name = "clgen_image",
+#     base = "@python3.6//image",
+#     srcs = ["clgen.py"],
+#     deps = [":clgen"],
+#     main = "clgen.py",
+# )
+
 py_library(
     name = "harness",
     srcs = ["harness.py"],
@@ -80,4 +100,12 @@ py_binary(
         requirement("absl-py"),
         requirement("grpcio"),
     ],
+)
+
+py3_image(
+    name = "cldrive_image",
+    base = "@python3.6//image",
+    srcs = ["cldrive.py"],
+    deps = [":cldrive"],
+    main = "cldrive.py",
 )

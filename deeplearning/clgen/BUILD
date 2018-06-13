@@ -6,6 +6,7 @@
 # executable programs that are representative of, but distinct from,
 # the programs it learns from.
 
+load("@io_bazel_rules_docker//python3:image.bzl", "py3_image")
 load("@requirements//:requirements.bzl", "requirement")
 
 licenses(["restricted"])  # GPL v3
@@ -42,6 +43,23 @@ py_binary(
         requirement("absl-py"),
     ],
 )
+
+# TODO(cec): Circular symlinks show up in the runfiles tree.
+# py3_image(
+#     name = "clgen_image",
+#     base = "@python3.6//image",
+#     srcs = ["clgen.py"],
+#     deps = [
+#         ":errors",
+#         ":samplers",
+#         "//deeplearning/clgen/models",
+#         "//deeplearning/clgen/proto:clgen_py_pb2",
+#         "//lib/labm8:pbutil",
+#         "//lib/labm8:prof",
+#         requirement("absl-py"),
+#     ],
+#     main = "clgen.py",
+# )
 
 py_test(
     name = "clgen_test",

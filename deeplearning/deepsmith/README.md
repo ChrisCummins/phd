@@ -56,13 +56,37 @@ $ bazel build //deeplearning/deepsmith/services:clgen && \
     --generator_config=$PHD/deeplearning/deepsmith/proto/generator_opencl_clgen.pbtxt
 ```
 
-Launch an OpenCL harness service for executing OpenCL testcases using cldrive 
+Launch an OpenCL harness service for executing OpenCL testcases using cldrive
 with:
 
 ```sh
 $ bazel build //deeplearning/deepsmith/services:cldrive && \
     ./bazel-phd/bazel-out/*/bin/deeplearning/deepsmith/services/cldrive \
     --harness_config=$PHD/deeplearning/deepsmith/proto/harness_opencl_cldrive.pbtxt
+```
+
+##### Container Services (work in progress)
+
+Build a docker image of the required target using the `_image.tar` suffix:
+
+```sh
+$ bazel build //deeplearning/deepsmith/services:datastore_image.tar
+```
+
+Load the docker image as per normal:
+
+```sh
+$ docker load -i bazel-bin/deeplearning/deepsmith/services/datastore_image.tar
+```
+
+Run a container as per normal. You will probably want to use the `-v` argument
+to share a volume with the host system, since most of the services require
+reading / writing files:
+
+```sh
+$ docker run -v $PHD/deeplearning/deepsmith/proto:/protos \
+    bazel/deeplearning/deepsmith/services:datastore_image \
+    --datastore_config /protos/datastore_sqlite.pbtxt
 ```
 
 #### Running Experiments
