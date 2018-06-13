@@ -76,6 +76,30 @@ def test_TensorFlowBackend_Train_twice(
   assert f1b == f2b
 
 
+def test_TensorFlowBackend_Train_epoch_checkpoints(
+      clgen_cache_dir, abc_tensorflow_model_config):
+  """Test that epoch_checkpoints returns a <int, str> dict."""
+  del clgen_cache_dir
+  abc_tensorflow_model_config.training.num_epochs = 2
+  m = models.Model(abc_tensorflow_model_config)
+  assert not m.backend.epoch_checkpoints
+  m.Train()
+  epoch_checkpoints = m.backend.epoch_checkpoints
+  assert 2 == len(epoch_checkpoints)
+  assert 1 in epoch_checkpoints
+  assert 2 in epoch_checkpoints
+
+
+def test_TensorFlowBackend_Train_is_trained(
+      clgen_cache_dir, abc_tensorflow_model_config):
+  """Test that is_trained is initially false until trained."""
+  del clgen_cache_dir
+  m = models.Model(abc_tensorflow_model_config)
+  assert not m.is_trained
+  m.Train()
+  assert m.is_trained
+
+
 # TODO(cec): Add tests on incrementally trained model predictions and losses.
 
 
