@@ -60,7 +60,6 @@ def test_TensorFlowBackend_Train_telemetry(
     assert isinstance(telemetry, telemetry_pb2.ModelEpochTelemetry)
 
 
-@pytest.mark.skip(reason='TODO(cec): Update checkpoints API.')
 def test_TensorFlowBackend_Train_twice(
     clgen_cache_dir, abc_tensorflow_model_config):
   """Test that TensorFlow checkpoint does not change after training twice."""
@@ -82,7 +81,6 @@ def test_TensorFlowBackend_Train_twice(
 
 # TensorFlowBackend.Sample() tests.
 
-@pytest.mark.skip(reason='TODO(cec): Implement is_trained.')
 def test_TensorFlowBackend_Sample_implicit_train(clgen_cache_dir,
                                                  abc_tensorflow_model_config):
   """Test that Sample() implicitly trains the model."""
