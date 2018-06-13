@@ -2,6 +2,7 @@
 import itertools
 import typing
 
+from absl import app
 from absl import flags
 
 from deeplearning.clgen import clgen
@@ -12,12 +13,12 @@ from deeplearning.clgen.proto import sampler_pb2
 from lib.labm8 import bazelutil
 from lib.labm8 import pbutil
 
+FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
     'working_dir', '/mnt/cc/data/experimental/deeplearning/polyglot/clgen',
     'Path to CLgen working directory')
 
-FLAGS = flags.FLAGS
 
 # Paths to protos within //experimental/polyglot/baselines.
 LANGUAGES = {
@@ -71,11 +72,11 @@ def EnumerateModels() -> typing.List[model_pb2.Model]:
   return models
 
 
-def EnumerateLanguageInstances(
+def EnumerateLanguageInstanceConfigs(
     language: typing.Dict[str, typing.List[str]]) -> typing.List[
-  clgen.Instance]:
+  clgen_pb2.Instance]:
   """Enumerate the options for a language."""
-  instances = []
+  configs = []
   for corpus, model, sampler in itertools.product(
       language['corpuses'], EnumerateModels(), language['samplers']):
     instance_config = clgen_pb2.Instance()
@@ -87,14 +88,28 @@ def EnumerateLanguageInstances(
     instance_config.sampler.CopyFrom(pbutil.FromFile(bazelutil.DataPath(
         f'phd/experimental/deeplearning/polyglot/samplers/{sampler}.pbtxt'),
         sampler_pb2.Sampler()))
-    instance = clgen.Instance(instance_config)
-    instances.append(instance)
+    configs.append(instance_config)
+  return configs
+
+
+def GetInstanceConfigs() -> clgen_pb2.Instances:
+  """Get the list of CLgen instance configs to test."""
+  instances = clgen_pb2.Instances()
+  for _, config in LANGUAGES.items():
+    instances.instance.extend(EnumerateLanguageInstanceConfigs(config))
   return instances
 
 
 def GetInstances() -> typing.List[clgen.Instance]:
   """Get the list of CLgen instances to test."""
-  instances = []
-  for _, config in LANGUAGES.items():
-    instances += EnumerateLanguageInstances(config)
-  return instances
+  return [clgen.Instance(c) for c in GetInstanceConfigs().instance]
+
+
+def main(argv):
+  """Main entry point."""
+  del argv
+  print(GetInstanceConfigs())
+
+
+if __name__ == '__main__':
+  app.run(main)

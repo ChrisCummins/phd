@@ -12,8 +12,18 @@ from experimental.deeplearning.polyglot import get_instances
 FLAGS = flags.FLAGS
 
 
+def test_GetInstanceConfigs_working_dir():
+  """Check the working directory of instance configs."""
+  with tempfile.TemporaryDirectory() as working_dir:
+    flags.FLAGS(['argv[0]', '--working_dir', working_dir])
+    assert FLAGS.working_dir == working_dir
+    configs = get_instances.GetInstanceConfigs()
+    for instance in configs.instance:
+      assert instance.working_dir == working_dir
+
+
 def test_GetInstances():
-  """Short summary of test."""
+  """Instantiate all of the instances."""
   with tempfile.TemporaryDirectory() as working_dir:
     flags.FLAGS(['argv[0]', '--working_dir', working_dir])
     assert FLAGS.working_dir == working_dir

@@ -2,10 +2,12 @@
 
 load("@requirements//:requirements.bzl", "requirement")
 
-py_library(
+py_binary(
     name = "get_instances",
     srcs = ["get_instances.py"],
     data = [":protos"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
     visibility = ["//experimental:__subpackages__"],
     deps = [
         "//deeplearning/clgen",
