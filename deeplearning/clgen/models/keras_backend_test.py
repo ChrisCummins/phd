@@ -63,7 +63,7 @@ def test_KerasBackend_epoch_checkpoints_untrained(clgen_cache_dir,
   """Test that an untrained model has no checkpoint files."""
   del clgen_cache_dir
   m = models.Model(abc_keras_model_config)
-  assert not m.epoch_checkpoints
+  assert not m.backend.epoch_checkpoints
 
 
 def test_KerasBackend_is_trained(clgen_cache_dir,
@@ -95,8 +95,8 @@ def test_KerasBackend_Train_epoch_checkpoints(clgen_cache_dir,
   abc_keras_model_config.training.num_epochs = 2
   m = models.Model(abc_keras_model_config)
   m.Train()
-  assert len(m.epoch_checkpoints) == 2
-  for path in m.epoch_checkpoints:
+  assert len(m.backend.epoch_checkpoints) == 2
+  for path in m.backend.epoch_checkpoints:
     assert path.is_file()
 
 
