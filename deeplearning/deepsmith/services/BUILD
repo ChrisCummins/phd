@@ -32,10 +32,10 @@ py_binary(
 
 py3_image(
     name = "datastore_image",
-    base = "@python3.6//image",
     srcs = ["datastore.py"],
-    deps = [":datastore"],
+    base = "@python3.6//image",
     main = "datastore.py",
+    deps = [":datastore"],
 )
 
 py_library(
@@ -104,8 +104,8 @@ py_binary(
 
 py3_image(
     name = "cldrive_image",
-    base = "@python3.6//image",
     srcs = ["cldrive.py"],
-    deps = [":cldrive"],
+    base = "@python3.6//image",
     main = "cldrive.py",
+    deps = [":cldrive"],
 )
