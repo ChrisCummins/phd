@@ -8,7 +8,9 @@ py3_image(
     srcs = ["test.py"],
     base = "@python3.6//image",
     main = "test.py",
+    data = [":datafile.txt"],
     deps = [
+        "//lib/labm8:bazelutil",
         requirement("absl-py"),
         requirement("pytest"),
     ],
