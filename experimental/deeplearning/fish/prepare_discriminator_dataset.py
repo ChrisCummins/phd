@@ -67,13 +67,14 @@ TrainingProto = fish_pb2.CompilerCrashDiscriminatorTrainingExample
 
 
 def LoadPositiveProtos(
-    export_path: pathlib.Path, max_num: int) -> typing.List[TrainingProto]:
+    export_path: pathlib.Path, max_num: int,
+    assertions_only) -> typing.List[TrainingProto]:
   """Load positive training protos."""
   outputs = []
   for path in sorted(list((export_path / 'build_crash').iterdir()))[:max_num]:
     proto = pbutil.FromFile(
         path, TrainingProto())
-    if FLAGS.assertions_only and not proto.raised_assertion:
+    if assertions_only and not proto.raised_assertion:
       continue
     outputs.append(proto)
   logging.info('Loaded %s positive data protos.',
@@ -168,7 +169,8 @@ def main(argv):
   assert sum(ratios) <= 1
 
   # Load protos.
-  positive_protos = LoadPositiveProtos(export_path, FLAGS.max_protos)
+  positive_protos = LoadPositiveProtos(
+      export_path, FLAGS.max_protos, FLAGS.assertions_only)
   negative_protos = LoadNegativeProtos(
       export_path, positive_protos, FLAGS.balance_class_lengths,
       FLAGS.balance_class_counts, FLAGS.include_bf_outcomes_as_negative)
