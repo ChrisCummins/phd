@@ -133,13 +133,7 @@ py_library(
     srcs = ["normalizer.py"],
     data = [
         "//deeplearning/clgen/native:clgen-rewriter",
-    ] + select({
-        "//:darwin": [],
-        "//conditions:default": [
-            "@llvm_linux//:libclang_so",
-            "@llvm_linux//:liblto_so",
-        ],
-    }),
+    ],
     deps = [
         "//deeplearning/clgen:errors",
         "//lib/labm8:bazelutil",
