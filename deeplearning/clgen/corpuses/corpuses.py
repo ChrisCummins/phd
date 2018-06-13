@@ -100,8 +100,12 @@ class Corpus(object):
     cache.cachepath('corpus').mkdir(parents=True, exist_ok=True)
     hc = hashcache.HashCache(
         cache.cachepath('hashcache.db'), 'sha1')
+    start_time = time.time()
     self.content_id = ResolveContentId(self.config, hc)
-    # Database of pre-processed files
+    logging.debug('Resolved Content ID %s in %s ms.',
+                  self.content_id,
+                  humanize.intcomma(int((time.time() - start_time) * 1000)))
+    # Database of pre-processed files.
     preprocessed_id = ResolvePreprocessedId(self.content_id, self.config)
     cache.cachepath('corpus', 'preprocessed', preprocessed_id).mkdir(
         exist_ok=True, parents=True)
