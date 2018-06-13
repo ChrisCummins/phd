@@ -1,6 +1,7 @@
 """Create directories of training, test, and validation data."""
 import collections
 import pathlib
+import random
 import typing
 
 import humanize
@@ -50,6 +51,9 @@ flags.DEFINE_boolean(
     'include_bf_outcomes_as_negative', False,
     'If set, a build failure outcome is considered a negative training '
     'example. If not set, only pass outcomes are counted as negative examples.')
+flags.DEFINE_integer(
+    'seed', 0,
+    'Random seed to use when splitting data.')
 
 # The size ratios to use for training, validation, and testing. Must sum to 1.
 DatasetRatios = collections.namedtuple(
@@ -184,6 +188,11 @@ def main(argv):
   (dataset_root / 'training').mkdir(exist_ok=True, parents=True)
   (dataset_root / 'validation').mkdir(exist_ok=True, parents=True)
   (dataset_root / 'testing').mkdir(exist_ok=True, parents=True)
+
+  logging.info('Shuffling protos with seed %d', FLAGS.seed)
+  random.seed(FLAGS.seed)
+  random.shuffle(positive_protos)
+  random.shuffle(negative_protos)
 
   for i, proto in enumerate(positive_protos[:positive_sizes[0]]):
     pbutil.ToFile(
