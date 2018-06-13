@@ -1,5 +1,6 @@
 # This package defines the preprocessor pipeline for CLgen.
 
+load("@io_bazel_rules_docker//python3:image.bzl", "py3_image")
 load("@requirements//:requirements.bzl", "requirement")
 
 py_library(
@@ -93,6 +94,20 @@ py_test(
     srcs = ["cxx_test.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
+    deps = [
+        ":cxx",
+        "//deeplearning/clgen:errors",
+        requirement("absl-py"),
+        requirement("pytest"),
+        requirement("pytest-benchmark"),
+    ],
+)
+
+py3_image(
+    name = "cxx_test_image",
+    srcs = ["cxx_test.py"],
+    base = "@python3.6//image",
+    main = "cxx_test.py",
     deps = [
         ":cxx",
         "//deeplearning/clgen:errors",

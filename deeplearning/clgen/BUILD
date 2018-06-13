@@ -44,22 +44,21 @@ py_binary(
     ],
 )
 
-# TODO(cec): Circular symlinks show up in the runfiles tree.
-# py3_image(
-#     name = "clgen_image",
-#     base = "@python3.6//image",
-#     srcs = ["clgen.py"],
-#     deps = [
-#         ":errors",
-#         ":samplers",
-#         "//deeplearning/clgen/models",
-#         "//deeplearning/clgen/proto:clgen_py_pb2",
-#         "//lib/labm8:pbutil",
-#         "//lib/labm8:prof",
-#         requirement("absl-py"),
-#     ],
-#     main = "clgen.py",
-# )
+py3_image(
+    name = "clgen_image",
+    srcs = ["clgen.py"],
+    base = "@python3.6//image",
+    main = "clgen.py",
+    deps = [
+        ":errors",
+        ":samplers",
+        "//deeplearning/clgen/models",
+        "//deeplearning/clgen/proto:clgen_py_pb2",
+        "//lib/labm8:pbutil",
+        "//lib/labm8:prof",
+        requirement("absl-py"),
+    ],
+)
 
 py_test(
     name = "clgen_test",
