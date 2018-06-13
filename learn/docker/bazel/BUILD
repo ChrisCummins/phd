@@ -5,11 +5,11 @@ load("@requirements//:requirements.bzl", "requirement")
 
 py3_image(
     name = "python_image",
-    base = "@python3.6//image",
     srcs = ["test.py"],
+    base = "@python3.6//image",
+    main = "test.py",
     deps = [
         requirement("absl-py"),
         requirement("pytest"),
     ],
-    main = "test.py",
 )
