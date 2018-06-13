@@ -162,6 +162,28 @@ class TensorFlowBackend(backends.BackendBase):
 
     return tf
 
+  @property
+  def epoch_checkpoints(self) -> typing.Set[int]:
+    """Get a mapping of epoch numbers to checkpoint files.
+
+    Note that Tensorflow checkpoint paths don't translate to actual files, but
+    rather a pair of <.index,.meta> files.
+
+    Returns:
+      A mapping of epoch numbers to paths.
+    """
+    if not (self.cache.path / 'checkpoints' / 'checkpoints'):
+      # No saver file means no checkpoints.
+      return {}
+
+    # Count the number of checkpoint files which TensorFlow has created.
+    checkpoint_files = [
+      f.stem for f in (self.cache.path / 'checkpoints').iterdir()
+      if f.name.startswith('checkpoint-') and f.name.endswith('.meta')]
+    # The checkpoint paths are appended with the epoch number.
+    epoch_nums = [int(x.split('-')[-1]) for x in checkpoint_files]
+    return set(epoch_nums)
+
   def GetParamsPath(self, checkpoint_state) -> typing.Tuple[
     typing.Optional[str], typing.List[str]]:
     """Return path to checkpoint closest to target num of epochs."""
