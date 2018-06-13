@@ -361,11 +361,11 @@ class TensorFlowBackend(backends.BackendBase):
   def is_trained(self) -> bool:
     """Determine if model has been trained."""
     # Count the number of checkpoint files which TensorFlow has created.
-    num_checkpoints = len([
-      f for f in (self.cache.path / 'checkpoints').iterdir()
-      if f.name.startswith('checkpoint-') and f.name.endswith('.meta')
-    ])
-    return num_checkpoints >= self.config.training.num_epochs
+    checkpoint_files = [
+      f.stem for f in (self.cache.path / 'checkpoints').iterdir()
+      if f.name.startswith('checkpoint-') and f.name.endswith('.meta')]
+    epoch_nums = [int(x.split('-')[-1]) for x in checkpoint_files]
+    return self.config.training.num_epochs in epoch_nums
 
 
 def WeightedPick(predictions: np.ndarray, temperature: float) -> np.ndarray:
