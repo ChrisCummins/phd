@@ -18,3 +18,9 @@ message Instance {
   // The sampler specification.
   optional Sampler sampler = 3;
 }
+
+
+// A collection of instances.
+message Instances {
+  repeated Instance instance = 1;
+}
