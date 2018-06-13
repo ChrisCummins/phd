@@ -165,7 +165,9 @@ class TensorFlowBackend(backends.BackendBase):
   def GetParamsPath(self, checkpoint_state) -> typing.Tuple[
     typing.Optional[str], typing.List[str]]:
     """Return path to checkpoint closest to target num of epochs."""
-    paths = checkpoint_state.all_model_checkpoint_paths
+    # Checkpoints are saved with relative path, so we must prepend cache paths.
+    paths = [str(self.cache.path / 'checkpoints' / p)
+             for p in checkpoint_state.all_model_checkpoint_paths]
     # The checkpoint paths are appended with the epoch number.
     epoch_nums = [int(x.split('-')[-1]) for x in paths]
     diffs = [self.config.training.num_epochs - e for e in epoch_nums]
@@ -211,7 +213,8 @@ class TensorFlowBackend(backends.BackendBase):
       tf.global_variables_initializer().run()
 
       # Keep all checkpoints.
-      saver = tf.train.Saver(tf.global_variables(), max_to_keep=100)
+      saver = tf.train.Saver(tf.global_variables(), max_to_keep=100,
+                             save_relative_paths=True)
 
       # restore model from closest checkpoint.
       if ckpt_path:
