@@ -311,13 +311,6 @@ def main(argv):
   with open(tensorflow_build_path, 'w') as f:
     f.write(tensorflow_build)
 
-  if uname == 'darwin':
-    assert os.path.isfile('/usr/local/bin/brew')
-    brew_prefix = '/usr/local'
-  else:
-    assert os.path.isfile('/home/linuxbrew/.linuxbrew/bin/brew')
-    brew_prefix = '/home/linuxbrew/.linuxbrew'
-
   options_to_exclude = {'print_id', 'noninteractive', 'cache_result'}
   options_to_export = {k: args.__dict__[k] for k in args.__dict__
                        if k not in options_to_exclude}
