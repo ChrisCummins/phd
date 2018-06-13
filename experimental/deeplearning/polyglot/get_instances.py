@@ -33,7 +33,8 @@ LANGUAGES = {
 }
 
 # The CLgen model to base all permutations off, and the permutation options.
-NUM_NEURONS = [512, 1024]
+NUM_NEURONS = [256, 512, 1024]
+NUM_LAYERS = [2, 3]
 BASE_MODEL = """
 # File: //deeplearning/clgen/proto/model.proto
 # Proto: clgen.Model
@@ -64,10 +65,11 @@ def EnumerateModels() -> typing.List[model_pb2.Model]:
   """Enumerate the model configurations."""
   models = []
   base_model = pbutil.FromString(BASE_MODEL, model_pb2.Model())
-  for num_neurons, in itertools.product(NUM_NEURONS):
+  for num_neurons, num_layers in itertools.product(NUM_NEURONS, NUM_LAYERS):
     model = model_pb2.Model()
     model.CopyFrom(base_model)
     model.architecture.neurons_per_layer = num_neurons
+    model.architecture.num_layers = num_layers
     models.append(model)
   return models
 
