@@ -80,12 +80,17 @@ class Model(object):
     if self.cache.get('META.pbtxt'):
       cached_meta = pbutil.FromFile(pathlib.Path(self.cache['META.pbtxt']),
                                     internal_pb2.ModelMeta())
-      # Exclude num_epochs from metadata comparison.
+      # Exclude num_epochs and corpus location from metadata comparison.
       config_to_compare = model_pb2.Model()
       config_to_compare.CopyFrom(self.config)
+      config_to_compare.corpus.ClearField('contentfiles')
       config_to_compare.training.ClearField('num_epochs')
+      # These fields should have already been cleared, but we'll do it again
+      # so that metadata comparisons don't fail when the cached meta schema
+      # is updated.
       cached_to_compare = model_pb2.Model()
       cached_to_compare.CopyFrom(cached_meta.config)
+      cached_to_compare.corpus.ClearField('contentfiles')
       cached_to_compare.training.ClearField('num_epochs')
       if config_to_compare != cached_to_compare:
         raise errors.InternalError('Metadata mismatch')
