@@ -208,6 +208,9 @@ class TensorFlowBackend(backends.BackendBase):
 
     This method must only be called when the model is locked.
     """
+    if self.is_trained:
+      return
+
     data_generator = data_generators.TensorflowBatchGenerator(
         self.corpus, self.config.training)
     tf = self.InitTfGraph(inference=False)
