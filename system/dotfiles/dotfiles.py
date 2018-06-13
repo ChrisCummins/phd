@@ -1919,20 +1919,6 @@ class PhdBuildDeps(Task):
     pass
 
 
-class PhdDevDeps(Task):
-  __platforms__ = ['linux', 'osx']
-  __deps__ = [
-      'Buildifier',
-      'Node',
-  ]
-  __linux_deps__ = [
-      'InotifyMaxUserWatchers',
-  ]
-
-  def install(self):
-    pass
-
-
 class Phd(Task):
   """PhD repo"""
   __platforms__ = ['linux', 'osx']
@@ -1942,6 +1928,23 @@ class Phd(Task):
   def install(self):
     clone_git_repo(github_repo("ChrisCummins", "phd"), "~/phd")
     shell("~/phd/configure")
+
+
+class PhdDevDeps(Task):
+  __platforms__ = ['linux', 'osx']
+  __deps__ = [
+      'Buildifier',
+      'Homebrew',
+      'Node',
+      'Phd',
+  ]
+  __linux_deps__ = [
+      'InotifyMaxUserWatchers',
+  ]
+
+  def install(self):
+    shell('cd {phd} && {npm} install husky --save-dev'.format(
+        npm=Node.NPM_BINARY, phd=os.path.expanduser('~/phd')))
 
 
 class TransmissionHeadless(Task):
