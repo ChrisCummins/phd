@@ -107,7 +107,7 @@ def LoadNegativeProtos(
     positive_proto_sizes = [len(p.src) for p in positive_protos]
     negative_protos = [
       pbutil.FromFile(path, TrainingProto())
-      for path in list((export_path / 'pass').iterdir())
+      for path in negative_proto_paths
     ]
     logging.info('Loaded %s negative protos. Balancing lengths ...',
                  humanize.intcomma(len(negative_protos)))
