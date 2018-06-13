@@ -152,10 +152,10 @@ class KerasBackend(backends.BackendBase):
     if self._inference_model:
       return self._inference_model, self._inference_batch_size
 
-    import keras
-
     # Deferred importing of Keras so that we don't have to activate the
     # TensorFlow backend every time we import this module.
+    import keras
+
     logging.info('Building inference model.')
     model = self.GetTrainingModel()
     config = model.get_config()
