@@ -194,7 +194,7 @@ class KerasBackend(backends.BackendBase):
 
   def SampleNextIndices(self, sampler: samplers.Sampler, batch_size: int):
     # Predict the next index for the entire batch.
-    x = np.array([[self.inference_indices]] * batch_size)
+    x = np.array([self.inference_indices] * batch_size)
     # Input shape: (bath_size, 1).
     probabilities = self.inference_model.predict(x)
     # Output shape: (batch_size, 1, vocab_size).
