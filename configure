@@ -284,11 +284,13 @@ def main(argv):
         ['git', '-C', PHD_ROOT, 'submodule', 'update', '--init', '--recursive'],
         stdout=DEVNULL)
 
-  if uname == 'darwin':
-    python_path = '/usr/local/opt/python/bin/python3'
-  else:
-    python_path = '/home/linuxbrew/.linuxbrew/bin/python3'
-  assert os.path.isfile(python_path)
+  try:
+    python_path = subprocess.check_output(
+        ['which', 'python3.6'], universal_newlines=True).rstrip()
+    assert os.path.isfile(python_path)
+  except subprocess.SubprocessError:
+    print('fatal: python3.6 not found!', file=sys.stderr)
+    sys.exit(1)
 
   base_requirements_txt_path = os.path.join(
       PHD_ROOT, 'tools', 'requirements.txt')
