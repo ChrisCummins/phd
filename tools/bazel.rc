@@ -9,8 +9,8 @@ run --python_path=python3.6
 build --verbose_failures
 test --verbose_failures
 
-build --cxxopt='-std=c++14'
-test --cxxopt='-std=c++14'
+build --cxxopt='-std=c++17'
+test --cxxopt='-std=c++17'
 
 # Build options:
 build --compilation_mode opt
