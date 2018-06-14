@@ -147,8 +147,8 @@ py_test(
     size = "small",
     srcs = ["021-string-reverse.py"],
     default_python_version = "PY3",
+    main = "021-string-reverse.py",
     srcs_version = "PY3",
-    main = "021-string-reverse.py"
 )
 
 py_test(

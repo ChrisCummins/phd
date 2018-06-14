@@ -5,11 +5,10 @@
 # changing, adding, or removing a character.
 #
 import os
-from collections import deque
-from hashlib import sha1
-
 import pickle
 import timeit
+from collections import deque
+from hashlib import sha1
 from string import ascii_lowercase
 from typing import Iterator, List, Set
 
