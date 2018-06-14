@@ -9,6 +9,7 @@ A monolothic repository for (almost) everything I have done while at the Univers
    "**Compiler Fuzzing through Deep Learning**".
    ISSTA '18.
    [[source code]](/docs/2018-07-issta).
+   [[pdf]](https://chriscummins.cc/pub/2018-issta.pdf).
    Build command: `$ bazel build //docs:2018-07-issta`.
 1. Chris Cummins, Pavlos Petoumenos, Alastair Murray, Hugh Leather.
    "**DeepSmith: Compiler Fuzzing through Deep Learning**".
