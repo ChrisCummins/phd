@@ -1,6 +1,3 @@
-# bazel boiler plate mostly taken from rules_go/.travis.yml. See:
-#   https://github.com/bazelbuild/rules_go/blob/master/.travis.yml
-
 # We need the extra RAM that a non-container build gives us.
 # See: https://docs.travis-ci.com/user/ci-environment/
 # trusty beta image has jdk8, gcc4.8.4
@@ -8,12 +5,9 @@
 sudo: required
 # xcode8 has jdk8
 osx_image: xcode8
-# Not technically required but suppresses 'Ruby' in Job status message.
-# TODO(cec): Does using python as the language help?
-# language: python
-# python:
-#   - "3.6"
-language: java
+
+python:
+  - "3.6"
 
 # workaround submodule public key access.
 # See: http://stackoverflow.com/a/24600210
@@ -29,17 +23,9 @@ os:
 # See: https://github.com/ChrisCummins/phd/blob/2c35bb1ff45665605ebf4ca7b243d3cb277212aa/deeplearning/clgen/install-deps.sh
 addons:
   apt:
-    sources:
-      - llvm-toolchain-precise-3.7
-      - ubuntu-toolchain-r-test
     packages:
       - libtcmalloc-minimal4  # fix for TensorFlow malloc. See: https://github.com/tensorflow/tensorflow/issues/6968#issuecomment-279060156
-      - gcc-5
-      - g++-5
-      - clang-3.6
-      - libhdf5-serial-dev
-      - python-dev
-      - mono-complete
+
 
 env:
   global:
@@ -47,17 +33,8 @@ env:
     - CXX=clang++
     - LD_PRELOAD="/usr/lib/libtcmalloc_minimal.so.4"  # fix for TensorFlow malloc. See: https://github.com/tensorflow/tensorflow/issues/6968#issuecomment-279060156
 
-before_install:
-  - echo $CC && $CC --version
-  - echo $CXX && $CXX --version
-  - ./configure
-  - source .env
-
 script:
-  - bazel query //... | grep -v -f .travisignore  # test targets
-  # - |
-  #   bazel build --local_resources=400,1,1.0 \
-  #       $(bazel query //... | grep -v -f .travisignore)
+  - ./configure --noninteractive
   # - |
   #   bazel test --local_resources=400,1,1.0 \
   #       $(bazel query //... | grep -v -f .travisignore)
