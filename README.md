@@ -150,14 +150,14 @@ A monolothic repository for (almost) everything I have done while at the Univers
   </a>
 </h2>
 
-I use [Bazel](https://bazel.build) as my build system of choice, with a 
+I use [Bazel](https://bazel.build) as my build system of choice, with a
 preliminary [configure](/configure) script to setup the build. I'm gradually
 working towards a completely hermetic build, but for now there remains a couple
 of dependencies on the host C++ toolchain and Python runtime.
 
 This project can only be built on a modern version of Ubuntu Linux or macOS.
-This is a requirement I inherit from my dependencies, which eschew Windows and 
-other Linux distros. Fortunately, it's never been easier to pull a 
+This is a requirement I inherit from my dependencies, which eschew Windows and
+other Linux distros. Fortunately, it's never been easier to pull a
 [Docker](https://www.docker.com/community-edition) `ubuntu:18.04` image and
 follow the Ubuntu instructions (just drop the `sudo` prefixes from commands):
 
@@ -187,7 +187,7 @@ Next, install [Bazel](https://docs.bazel.build/versions/master/install-ubuntu.ht
 
 ```sh
 $ curl -L -o /tmp/bazel.sh https://github.com/bazelbuild/bazel/releases/download/0.14.1/bazel-0.14.1-installer-linux-x86_64.sh
-$ sudo bash /tmp/bazel.sh && rm /tmp/bazel.sh 
+$ sudo bash /tmp/bazel.sh && rm /tmp/bazel.sh
 ```
 
 Finally, install the headers for [OpenCL](https://www.khronos.org/opencl/) 1.2:
