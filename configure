@@ -278,7 +278,7 @@ def main(argv):
     python_path = subprocess.check_output(
         ['which', 'python3.6'], universal_newlines=True).rstrip()
     assert os.path.isfile(python_path)
-  except subprocess.SubprocessError:
+  except subprocess.CalledProcessError:
     print('fatal: python3.6 not found!', file=sys.stderr)
     sys.exit(1)
 
