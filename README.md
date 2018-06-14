@@ -149,49 +149,81 @@ A monolothic repository for (almost) everything I have done while at the Univers
   </a>
 </h2>
 
-I use [Bazel](https://bazel.build) as my build system of choice, with a
-preliminary [configure](/configure) script to setup the build and prepare the
-host toolchain. **WARNING:** the configure process *will* fuck with your system.
-It installs a bunch of packages, and, unless you happen to have exactly the same
-preferences as me as to how to you like your system set up, will likely shit
-all over your preferences. For this reason I *strongly* recommend building in a
-VM or using my docker image.
+I use [Bazel](https://bazel.build) as my build system of choice, with a 
+preliminary [configure](/configure) script to setup the build. I'm gradually
+working towards a completely hermetic build, but for now there remains a couple
+of dependencies on the host C++ toolchain and Python runtime.
 
-#### Docker Image
-
-Download and build from my [Dockerfile](https://github.com/ChrisCummins/phd/blob/master/tools/docker/Dockerfile):
-
-```sh
-$ cd "$(mktemp -d)"
-$ wget https://raw.githubusercontent.com/ChrisCummins/phd/master/tools/docker/Dockerfile
-$ docker build -t phd .
-```
-
-Once built, launch a shell and test the universe using:
-
-```
-$ sudo docker run -it phd /bin/zsh
-# bazel test //...
-```
-
-#### Building Natively
-
-If you're feeling especially reckless or if you have a burner environment,
-try building natively. You could even build as root if you just want to watch
-the world burn. The build requirements are Ubuntu (>=16.04) or macOS, and 
-OpenCL. OpenCL comes free on Apple, for Linux you'll need to install appropriate
-drivers.
-
-Clone this repository and run the configure script:
+This project can only be built on a modern version of Ubuntu Linux or macOS.
+This is a requirement I inherit from my dependencies, which eschew Windows and 
+other Linux distros. Fortunately, it's never been easier to pull a 
+[Docker](https://www.docker.com/community-edition) `ubuntu:18.04` image and
+follow the Ubuntu instructions (just drop the `sudo` prefixes from commands):
 
 ```sh
+$ docker pull ubuntu:18.04
+$ docker run -it ubuntu:18.04 /bin/bash
+```
+
+If you have success building this project on other platforms, I'd love to hear
+about it and accept patches.
+
+#### Installing Ubuntu requirements
+
+First install the required packages:
+
+```sh
+$ sudo apt-get update
+$ sudo apt install -y --no-install-recommends \
+   ca-certificates curl g++ git libmysqlclient-dev ocl-icd-opencl-dev \
+   pkg-config python python-dev python3.6 unzip zip zlib1g-dev
+```
+
+Note that on Ubuntu distributions prior to 16.10, you will need to use a custom
+PPA to provide the `python-3.6` package.
+
+Next, install [Bazel](https://docs.bazel.build/versions/master/install-ubuntu.html#installing-bazel-on-ubuntu):
+
+```sh
+$ curl -L -o /tmp/bazel.sh https://github.com/bazelbuild/bazel/releases/download/0.14.1/bazel-0.14.1-installer-linux-x86_64.sh
+$ sudo bash /tmp/bazel.sh && rm /tmp/bazel.sh 
+```
+
+Finally, install the headers for [OpenCL](https://www.khronos.org/opencl/) 1.2:
+
+```sh
+$ git clone https://github.com/KhronosGroup/OpenCL-Headers.git /tmp/opencl-headers
+$ git -C /tmp/opencl-headers reset --hard e986688daf750633898dfd3994e14a9e618f2aa5
+$ sudo mv /tmp/opencl-headers/opencl12/CL /usr/include/CL
+$ rm -rf /tmp/opencl-headers
+```
+
+Now proceed to the "Build (all platforms)" section.
+
+
+#### Installing macOS requirements
+
+TODO(cec): Update for new build process.
+
+### Build (all platforms)
+
+Clone this project:
+
+```
 $ git clone https://github.com/ChrisCummins/phd.git
 $ cd phd
+```
+
+Configure the build and answer the yes/no questions. The default answers should
+be fine:
+
+```sh
 $ ./configure
 ```
 
-Test the universe using:
+Now build or test whatever bazel targets you'd like. Use `bazel query //...` to
+list the available targets. E.g. to run the entire test suite, run:
 
-```
+```bash
 $ bazel test //...
 ```
