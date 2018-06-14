@@ -96,34 +96,44 @@ cc_test(
     srcs = ["015-longest-path-matrix.cc"],
 )
 
-sh_test(
+py_test(
     name = "016-min-hops",
     size = "small",
     srcs = ["016-min-hops.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
 )
 
-sh_test(
+py_test(
     name = "017-longest-substrings",
     size = "small",
     srcs = ["017-longest-substrings.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
 )
 
-sh_test(
+py_test(
     name = "018-list-binary-tree",
     size = "small",
     srcs = ["018-list-binary-tree.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
 )
 
-sh_test(
+py_test(
     name = "019-validate-bst",
     size = "small",
     srcs = ["019-validate-bst.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
 )
 
-sh_test(
+py_test(
     name = "020-highest-product",
     size = "small",
     srcs = ["020-highest-product.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
 )
 
 cc_test(
@@ -132,20 +142,27 @@ cc_test(
     srcs = ["021-string-reverse.cc"],
 )
 
-sh_test(
+py_test(
     name = "021-string-reverse-py",
     size = "small",
     srcs = ["021-string-reverse.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    main = "021-string-reverse.py"
 )
 
-sh_binary(
+py_test(
     name = "022-multiplication-table",
     srcs = ["022-multiplication-table.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
 )
 
-sh_binary(
+py_test(
     name = "023-all-subsets",
     srcs = ["023-all-subsets.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
 )
 
 cc_test(
@@ -160,9 +177,11 @@ cc_test(
     ],
 )
 
-sh_binary(
+py_test(
     name = "025-first-nonrepeated-char",
     srcs = ["025-first-nonrepeated-char.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
 )
 
 cc_binary(
@@ -170,10 +189,12 @@ cc_binary(
     srcs = ["026-remove-dupes.cc"],
 )
 
-sh_test(
+py_test(
     name = "027-missing-number",
     size = "small",
     srcs = ["027-missing-number.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
 )
 
 cc_test(
