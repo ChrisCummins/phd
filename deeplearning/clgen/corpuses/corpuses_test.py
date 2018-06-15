@@ -123,6 +123,29 @@ def test_Corpus_greedy_multichar_atomizer_empty_atoms(clgen_cache_dir,
       e_info.value)
 
 
+def test_Corpus_content_id(clgen_cache_dir, abc_corpus_config):
+  """Test that the content_id field resolves to the correct corpus."""
+  del clgen_cache_dir
+  c1 = corpuses.Corpus(abc_corpus_config)
+  content_id = c1.content_id
+  # Create an identical corpus but using the content_id field rather than
+  # a local_directory.
+  abc_corpus_config.ClearField('contentfiles')
+  abc_corpus_config.content_id = content_id
+  c2 = corpuses.Corpus(abc_corpus_config)
+  assert c1.hash == c2.hash
+
+
+def test_Corpus_invalid_content_id(clgen_cache_dir, abc_corpus_config):
+  """Test that UserError is raised if content_id does not resolve to cache."""
+  del clgen_cache_dir
+  abc_corpus_config.ClearField('contentfiles')
+  abc_corpus_config.content_id = '1234invalid'
+  with pytest.raises(errors.UserError) as e_ctx:
+    corpuses.Corpus(abc_corpus_config)
+  assert "Content ID not found: '1234invalid'" == str(e_ctx.value)
+
+
 def test_Corpus_Create_num_contentfiles(clgen_cache_dir, abc_corpus_config):
   """Test the number of contentfiles in a known corpus."""
   del clgen_cache_dir

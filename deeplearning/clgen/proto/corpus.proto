@@ -16,7 +16,7 @@ message Corpus {
   // Shell variables are expanded. E.g. $HOME -> /home/<user>.
   oneof contentfiles {
     // The ID of an already-cached corpus.
-    string id = 1;
+    string content_id = 1;
     // The path to a directory on the local system containing content files.
     string local_directory = 2;
     // The path to a tarball archive file containing content files.

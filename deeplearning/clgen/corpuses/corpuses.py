@@ -94,23 +94,21 @@ class Corpus(object):
     self.config.CopyFrom(AssertConfigIsValid(config))
     self._atomizer = None
 
-    # TODO(cec): Lazily set all of these properties, so that __init__() is not
-    # blocked by ResolveContentId(), which can take several minutes on a large
-    # corpus.
     cache.cachepath('corpus').mkdir(parents=True, exist_ok=True)
     hc = hashcache.HashCache(
         cache.cachepath('hashcache.db'), 'sha1')
-    start_time = time.time()
     self.content_id = ResolveContentId(self.config, hc)
-    logging.debug('Resolved Content ID %s in %s ms.',
-                  self.content_id,
-                  humanize.intcomma(int((time.time() - start_time) * 1000)))
     # Database of pre-processed files.
     preprocessed_id = ResolvePreprocessedId(self.content_id, self.config)
     cache.cachepath('corpus', 'preprocessed', preprocessed_id).mkdir(
         exist_ok=True, parents=True)
-    self.preprocessed = preprocessed.PreprocessedContentFiles(cache.cachepath(
-        'corpus', 'preprocessed', preprocessed_id, 'preprocessed.db'))
+    preprocessed_db_path = cache.cachepath(
+        'corpus', 'preprocessed', preprocessed_id, 'preprocessed.db')
+    if (self.config.HasField('content_id') and
+        not preprocessed_db_path.is_file()):
+      raise errors.UserError(f"Content ID not found: '{self.content_id}'")
+    self.preprocessed = preprocessed.PreprocessedContentFiles(
+        preprocessed_db_path)
     # Create symlink to contentfiles.
     symlink = self.preprocessed.database_path.parent / 'contentfiles'
     if not symlink.is_symlink():
@@ -274,15 +272,29 @@ def ExpandConfigPath(path: str) -> pathlib.Path:
 
 def ResolveContentId(config: corpus_pb2.Corpus, hc: hashcache.HashCache) -> str:
   """Compute the hash of the input contentfiles."""
+  # We can take a massive shortcut if the content ID is already set in the
+  # config proto.
+  if config.HasField('content_id'):
+    return config.content_id
+
+  start_time = time.time()
   if config.HasField('local_directory'):
     try:
-      return hc.GetHash(ExpandConfigPath(config.local_directory))
+      content_id = hc.GetHash(ExpandConfigPath(config.local_directory))
     except FileNotFoundError as e:
       raise errors.UserError(e)
   elif config.HasField('local_tar_archive'):
-    return GetHashOfArchiveContents(ExpandConfigPath(config.local_tar_archive))
+    # This if not an efficient means of getting the hash, as it requires always
+    # unpacking the archive and reading the entire contents. It would be nicer
+    # to maintain a cache which maps the mtime of tarballs to their content ID,
+    # similart to how local_directory is implemented.
+    content_id = GetHashOfArchiveContents(
+        ExpandConfigPath(config.local_tar_archive))
   else:
     raise NotImplementedError('Unsupported Corpus.contentfiles field value')
+  logging.debug('Resolved Content ID %s in %s ms.', content_id,
+                humanize.intcomma(int((time.time() - start_time) * 1000)))
+  return content_id
 
 
 def ResolvePreprocessedId(content_id: str, config: corpus_pb2.Corpus) -> str:
