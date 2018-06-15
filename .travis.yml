@@ -31,7 +31,7 @@ env:
     - LD_PRELOAD="/usr/lib/libtcmalloc_minimal.so.4"
 
 before_install:
-  - if [[ "$(uname)" == "Darwin" ]]; then brew install python; fi
+  - if [[ "$(uname)" == "Darwin" ]]; then brew upgrade && brew install python; fi
 
 script:
   - ./configure --noninteractive
