@@ -12,6 +12,7 @@ from absl import flags
 from absl import logging
 from keras.preprocessing import sequence
 
+from deeplearning.clgen import telemetry
 from deeplearning.clgen.corpuses import atomizers
 from experimental.deeplearning.fish.proto import fish_pb2
 from lib.labm8 import pbutil
@@ -199,6 +200,7 @@ def main(argv):
                                      batch_size=FLAGS.batch_size, verbose=0)
     logging.info('Score: %.2f, Accuracy: %.2f', score * 100, accuracy * 100)
 
+  logger = telemetry.TrainingLogger(pathlib.Path(FLAGS.model_path))
   model.fit(x, Encode1HotLabels(y), epochs=FLAGS.num_epochs,
             batch_size=FLAGS.batch_size, verbose=True, shuffle=True,
             validation_data=validation_data,
@@ -207,6 +209,7 @@ def main(argv):
                   FLAGS.model_path + '/weights_{epoch:03d}.hdf5',
                   verbose=1, mode="min", save_best_only=False),
               keras.callbacks.LambdaCallback(on_epoch_end=OnEpochEnd),
+              logger.KerasCallback(keras),
             ])
 
   logging.info('Evaluating model on test corpus')
