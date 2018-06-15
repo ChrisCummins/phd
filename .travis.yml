@@ -36,7 +36,10 @@ env:
 
 before_install:
   # Install python3.6 on macOS.
-  - if [[ "$(uname)" == "Darwin" ]]; then brew upgrade && brew install python; fi
+  - | if [[ "$(uname)" == "Darwin" ]]; then
+      brew update && \
+      brew install python
+    fi
 
 script:
   - ./configure --noninteractive
