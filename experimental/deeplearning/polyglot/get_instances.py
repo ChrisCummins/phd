@@ -107,10 +107,28 @@ def GetInstances() -> typing.List[clgen.Instance]:
   return [clgen.Instance(c) for c in GetInstanceConfigs().instance]
 
 
+def RewriteContentIds(instances: typing.List[clgen.Instance]):
+  for instance in instances:
+    instance.model.config.corpus.ClearField('contentfiles')
+    with instance.Session():
+      instance.model.corpus.Create()
+    instance.model.config.corpus.content_id = instance.model.corpus.content_id
+
+
+def GetInstancesConfig(
+    instances: typing.List[clgen.Instance]) -> clgen_pb2.Instances:
+  """Get an Instances proto from a list of instances."""
+  config = clgen_pb2.Instances()
+  config.instance.extend(instance.ToProto() for instance in instances)
+  return config
+
+
 def main(argv):
   """Main entry point."""
   del argv
-  print(GetInstanceConfigs())
+  instances = GetInstances()
+  RewriteContentIds(instances)
+  print(GetInstancesConfig(instances))
 
 
 if __name__ == '__main__':

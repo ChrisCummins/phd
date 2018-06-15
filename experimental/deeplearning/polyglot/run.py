@@ -12,9 +12,9 @@ from absl import logging
 from deeplearning.clgen import clgen
 from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import corpuses
+from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
-from experimental.deeplearning.polyglot import get_instances
 from lib.labm8 import crypto
 from lib.labm8 import lockfile
 from lib.labm8 import pbutil
@@ -25,6 +25,8 @@ FLAGS = flags.FLAGS
 flags.DEFINE_integer('output_corpus_size', 10000,
                      'The minimum number of samples to generate in the output'
                      'corpus.')
+flags.DEFINE_string('instances', None,
+                    'Path to a clgen.Instances proto')
 
 # A mapping from language name to a list of CLgen pre-processor functions.
 # These pre-processors are used as rejection samplers on the sample corpuses.
@@ -91,8 +93,9 @@ def PostprocessSampleCorpus(instance: clgen.Instance):
   output_corpus_config.local_directory = str(contentfiles_dir)
   # We derive the programming language name from the input corpus directory.
   # This depends on corpuses being in directories named after their language,
-  # e.g. ~/corpuses/opencl, or ~/corpuses/java.
-  language = pathlib.Path(instance.model.corpus.config.local_directory).name
+  # e.g. ~/corpuses/opencl, or ~/corpuses/java.A
+  preprocessed_dir = instance.model.corpus.preprocessed.database_path.parent
+  language = (preprocessed_dir / 'contentfiles').resolve().name
   output_corpus_config.preprocessor[:] = POSTPROCESSORS[language]
   output_corpus = corpuses.Corpus(output_corpus_config)
   try:
@@ -108,7 +111,10 @@ def main(argv):
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
   start_time = time.time()
-  instances = get_instances.GetInstances()
+  instances = [
+      clgen.Instance(p) for p in
+      pbutil.FromFile(pathlib.Path(FLAGS.instances),
+                      clgen_pb2.Instances()).instance]
   random.shuffle(instances)
   candidate_instances = collections.deque(instances)
   logging.info('Loaded %d instances in %s ms', len(candidate_instances),
