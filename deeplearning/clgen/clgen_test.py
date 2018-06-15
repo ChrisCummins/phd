@@ -75,6 +75,12 @@ def test_Instance_Session_yield_value(abc_instance_config):
     assert instance == s
 
 
+def test_Instance_ToProto_equality(abc_instance_config):
+  """Test that ToProto() returns the same as the input config."""
+  instance = clgen.Instance(abc_instance_config)
+  assert abc_instance_config == instance.ToProto()
+
+
 # RunWithErrorHandling() tests.
 
 def test_RunWithErrorHandling_return_value(clgen_cache_dir):

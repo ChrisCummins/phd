@@ -110,6 +110,14 @@ class Instance(object):
     with self.Session():
       return self.model.Sample(self.sampler, *args, **kwargs)
 
+  def ToProto(self) -> clgen_pb2.Instance:
+    """Get the proto config for the instance."""
+    config = clgen_pb2.Instance()
+    config.working_dir = str(self.working_dir)
+    config.model.CopyFrom(self.model.config)
+    config.sampler.CopyFrom(self.sampler.config)
+    return config
+
   @classmethod
   def FromFile(cls, path: pathlib.Path) -> 'Instance':
     return cls(pbutil.FromFile(path, clgen_pb2.Instance()))
