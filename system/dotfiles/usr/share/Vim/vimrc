@@ -89,3 +89,5 @@ set hlsearch
 " iPad keybaord has no escape key
 imap § <Esc>
 
+" Show an 80 char limit.
+set colorcolumn=81
