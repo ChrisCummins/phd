@@ -10,6 +10,7 @@ from absl import flags
 from absl import logging
 
 from deeplearning.clgen import clgen
+from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import corpuses
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
@@ -94,7 +95,10 @@ def PostprocessSampleCorpus(instance: clgen.Instance):
   language = pathlib.Path(instance.model.corpus.config.local_directory).name
   output_corpus_config.preprocessor[:] = POSTPROCESSORS[language]
   output_corpus = corpuses.Corpus(output_corpus_config)
-  output_corpus.Create()
+  try:
+    output_corpus.Create()
+  except errors.EmptyCorpusException:
+    pass
   return output_corpus
 
 
