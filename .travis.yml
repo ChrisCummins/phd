@@ -43,7 +43,4 @@ before_install:
 
 script:
   - ./configure --noninteractive
-  # - |
-  #   bazel test --local_resources=400,1,1.0 \
-  #       $(bazel query //... | grep -v -f .travisignore)
-
+  # - bazel query --local_resources=400,1,1.0 //...
