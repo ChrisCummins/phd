@@ -107,6 +107,29 @@ def test_HashCache_GetHash_unmodified_file(database_path, hash_fn):
 
 
 @pytest.mark.parametrize('hash_fn', HASH_FUNCTIONS)
+def test_HashCache_GetHash_in_memory_modified_file(database_path, hash_fn):
+  """Test that modifying a file does not change the hash if in memory.
+
+  This test emphasizes the danger of the in-memory hash, as it means that the
+  validity of the cache is tied to the lifecycle of the process.
+  """
+  c = hashcache.HashCache(database_path, hash_fn, keep_in_memory=True)
+  with tempfile.TemporaryDirectory() as d:
+    (pathlib.Path(d) / 'a').touch()
+    hash_1 = c.GetHash(pathlib.Path(d) / 'a')
+    time.sleep(1)
+    with open(pathlib.Path(d) / 'a', 'w') as f:
+      f.write('Hello')
+    hash_2 = c.GetHash(pathlib.Path(d) / 'a')
+    assert hash_1 == hash_2
+    # Clear the in-memory cache and re-run the test. Now it will be a cache miss
+    # and the correct hash will be returned.
+    c.Clear()
+    hash_3 = c.GetHash(pathlib.Path(d) / 'a')
+    assert hash_1 != hash_3
+
+
+@pytest.mark.parametrize('hash_fn', HASH_FUNCTIONS)
 def test_HashCache_GetHash_modified_file(database_path, hash_fn):
   """Test that modifying a file changes the hash."""
   c = hashcache.HashCache(database_path, hash_fn)

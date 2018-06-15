@@ -12,6 +12,7 @@ import time
 import typing
 
 import checksumdir
+import collections
 import humanize
 import sqlalchemy as sql
 from absl import flags
@@ -26,6 +27,12 @@ from lib.labm8 import sqlutil
 FLAGS = flags.FLAGS
 
 Base = declarative.declarative_base()
+
+# An in-memory cache which is optionally shared amongst all HashCache instances.
+# The in-memory cache omits timestamps from records.
+InMemoryCacheKey = collections.namedtuple(
+    'InMemoryCacheKey', ['hash_fn', 'path'])
+IN_MEMORY_CACHE: typing.Dict[InMemoryCacheKey, str] = {}
 
 
 class HashCacheRecord(Base):
@@ -71,12 +78,17 @@ def GetDirectoryMTime(path: pathlib.Path) -> int:
 
 class HashCache(sqlutil.Database):
 
-  def __init__(self, path: pathlib.Path, hash_fn: str):
+  def __init__(self, path: pathlib.Path, hash_fn: str,
+               keep_in_memory: bool = False):
     """Instantiate a hash cache.
 
     Args:
       path:
       hash_fn: The name of the hash function. One of: md5, sha1, sha256.
+      keep_in_memory: If True, hashes are kept in memory for the lifespan
+        of the process, or until Clear() is called on any HashCache instance.
+        Use this with caution, as the in-memory cache does not invalidate
+        entries, so cache entries can become stale.
 
     Raises:
       ValueError: If hash_fn not recognized.
@@ -91,6 +103,7 @@ class HashCache(sqlutil.Database):
       self.hash_fn_file = crypto.sha256_file
     else:
       raise ValueError(f"Hash function not recognized: '{hash_fn}'")
+    self.keep_in_memory = keep_in_memory
 
   def GetHash(self, path: pathlib.Path) -> str:
     """Get the hash of a file or directory.
@@ -116,21 +129,45 @@ class HashCache(sqlutil.Database):
       raise FileNotFoundError(f"File not found: '{path}'")
 
   def Clear(self):
-    """Empty the cache."""
+    """Empty the cache.
+
+    If the HashCache was created with keep_in_memory=True, this clears the
+    in-memory cache. Note that the in-memory cache is shared between all
+    instances of HashCache.
+    """
+    IN_MEMORY_CACHE.clear()
     with self.Session(commit=True) as session:
       session.query(HashCacheRecord).delete()
+    logging.debug('Emptied cache')
 
   def _HashDirectory(self, absolute_path: pathlib.Path) -> str:
     if fs.directory_is_empty(absolute_path):
-      last_modified = int(time.time())
+      last_modified_fn = lambda path: int(time.time())
     else:
-      last_modified = GetDirectoryMTime(absolute_path)
-    return self._DoHash(absolute_path, last_modified,
-                        lambda x: checksumdir.dirhash(x, self.hash_fn_name))
+      last_modified_fn = lambda path: GetDirectoryMTime(path)
+    return self._InMemoryWrapper(
+        absolute_path, last_modified_fn,
+        lambda x: checksumdir.dirhash(x, self.hash_fn_name))
 
   def _HashFile(self, absolute_path: pathlib.Path) -> str:
-    return self._DoHash(absolute_path, int(os.path.getmtime(absolute_path)),
-                        self.hash_fn_file)
+    return self._InMemoryWrapper(
+        absolute_path, lambda path: int(os.path.getmtime(path)),
+        self.hash_fn_file)
+
+  def _InMemoryWrapper(self, absolute_path: pathlib.Path,
+                       last_modified_fn: typing.Callable[[pathlib.Path], int],
+                       hash_fn: typing.Callable[[pathlib.Path], str]) -> str:
+    """A wrapper around the persistent hashing to support in-memory cache."""
+    if self.keep_in_memory:
+      in_memory_key = InMemoryCacheKey(self.hash_fn_name, absolute_path)
+      if in_memory_key in IN_MEMORY_CACHE:
+        logging.debug("In-memory cache hit: '%s'", absolute_path)
+        return IN_MEMORY_CACHE[in_memory_key]
+    hash_ = self._DoHash(
+        absolute_path, last_modified_fn(absolute_path), hash_fn)
+    if self.keep_in_memory:
+      IN_MEMORY_CACHE[in_memory_key] = hash_
+    return hash_
 
   def _DoHash(self, absolute_path: pathlib.Path,
               last_modified: int,
