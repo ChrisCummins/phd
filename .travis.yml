@@ -1,36 +1,41 @@
-# We need the extra RAM that a non-container build gives us.
-# See: https://docs.travis-ci.com/user/ci-environment/
-# trusty beta image has jdk8, gcc4.8.4
-# FIXME(linux): dist: trusty
-sudo: required
-# xcode8 has jdk8
-osx_image: xcode8
+# Travis CI configuration.
 
-python:
-  - "3.6"
+notifications:
+  email:
+    on_success: change # [always|never|change]
+    on_failure: change # [always|never|change]
 
-# Defer checkout of submodules until ./configure script.
-git:
-  submodules: false
-
+# Test on Ubuntu 14.04 Trusty and macOS 10.13.
 os:
   - linux
   - osx
+sudo: False
+dist: trust
+osx_image: xcode9.3
+
+# Use a base Python language.
+# Note that this does not affect osx. We use brew's python on osx.
+python:
+  - "3.6"
+
+# Do not try and clone submodules. The ./configure script will do that.
+git:
+  submodules: false
 
 addons:
   apt:
     packages:
       # Fix for TensorFlow malloc.
       # See: https://github.com/tensorflow/tensorflow/issues/6968#issuecomment-279060156
-      - libtcmalloc-minimal4 
+      - libtcmalloc-minimal4
 
 env:
-  global:
-    # Fix for TensorFlow malloc.
-    # See: https://github.com/tensorflow/tensorflow/issues/6968#issuecomment-279060156
-    - LD_PRELOAD="/usr/lib/libtcmalloc_minimal.so.4"
+  # Fix for TensorFlow malloc.
+  # See: https://github.com/tensorflow/tensorflow/issues/6968#issuecomment-279060156
+  - LD_PRELOAD="/usr/lib/libtcmalloc_minimal.so.4"
 
 before_install:
+  # Install python3.6 on macOS.
   - if [[ "$(uname)" == "Darwin" ]]; then brew upgrade && brew install python; fi
 
 script:
@@ -39,7 +44,3 @@ script:
   #   bazel test --local_resources=400,1,1.0 \
   #       $(bazel query //... | grep -v -f .travisignore)
 
-notifications:
-  email:
-    on_success: change # [always|never|change]
-    on_failure: change # [always|never|change]
