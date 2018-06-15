@@ -9,8 +9,7 @@ osx_image: xcode8
 python:
   - "3.6"
 
-# workaround submodule public key access.
-# See: http://stackoverflow.com/a/24600210
+# Defer checkout of submodules until ./configure script.
 git:
   submodules: false
 
@@ -18,20 +17,21 @@ os:
   - linux
   - osx
 
-# Install some of the requirements that the former CLgen install-deps.sh
-# script did.
-# See: https://github.com/ChrisCummins/phd/blob/2c35bb1ff45665605ebf4ca7b243d3cb277212aa/deeplearning/clgen/install-deps.sh
 addons:
   apt:
     packages:
-      - libtcmalloc-minimal4  # fix for TensorFlow malloc. See: https://github.com/tensorflow/tensorflow/issues/6968#issuecomment-279060156
-
+      # Fix for TensorFlow malloc.
+      # See: https://github.com/tensorflow/tensorflow/issues/6968#issuecomment-279060156
+      - libtcmalloc-minimal4 
 
 env:
   global:
-    - CC=clang
-    - CXX=clang++
-    - LD_PRELOAD="/usr/lib/libtcmalloc_minimal.so.4"  # fix for TensorFlow malloc. See: https://github.com/tensorflow/tensorflow/issues/6968#issuecomment-279060156
+    # Fix for TensorFlow malloc.
+    # See: https://github.com/tensorflow/tensorflow/issues/6968#issuecomment-279060156
+    - LD_PRELOAD="/usr/lib/libtcmalloc_minimal.so.4"
+
+before_install:
+  - if [[ "$(uname)" == "Darwin" ]]; then brew install python; fi
 
 script:
   - ./configure --noninteractive
