@@ -9,7 +9,7 @@ notifications:
 os:
   - linux
   - osx
-sudo: False
+sudo: True
 dist: trust
 osx_image: xcode9.3
 
@@ -28,6 +28,18 @@ before_install:
       brew update;
       brew upgrade python;
       brew install bazel;
+    else
+      sudo add-apt-repository ppa:jonathonf/python-3.6;
+      sudo apt-get update;
+      sudo apt-get install -y --no-install-recommends \
+          ca-certificates curl g++ git libmysqlclient-dev ocl-icd-opencl-dev \
+          pkg-config python python-dev python3.6 unzip zip zlib1g-dev;
+      curl -L -o /tmp/bazel.sh https://github.com/bazelbuild/bazel/releases/download/0.14.1/bazel-0.14.1-installer-linux-x86_64.sh;
+      sudo bash /tmp/bazel.sh && rm /tmp/bazel.sh;
+      git clone https://github.com/KhronosGroup/OpenCL-Headers.git /tmp/opencl-headers;
+      git -C /tmp/opencl-headers reset --hard e986688daf750633898dfd3994e14a9e618f2aa5;
+      sudo mv /tmp/opencl-headers/opencl12/CL /usr/include/CL;
+      rm -rf /tmp/opencl-headers;
     fi
 
 script:
