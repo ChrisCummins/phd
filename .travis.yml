@@ -15,19 +15,11 @@ osx_image: xcode9.3
 
 # Use a base Python language.
 # Note that this does not affect osx. We use brew's python on osx.
-python:
-  - "3.6"
+language: java
 
 # Do not try and clone submodules. The ./configure script will do that.
 git:
   submodules: false
-
-addons:
-  apt:
-    packages:
-      # Fix for TensorFlow malloc.
-      # See: https://github.com/tensorflow/tensorflow/issues/6968#issuecomment-279060156
-      - libtcmalloc-minimal4
 
 env:
   # Fix for TensorFlow malloc.
@@ -36,10 +28,10 @@ env:
 
 before_install:
   # Install python3.6 on macOS.
-  - | if [[ "$(uname)" == "Darwin" ]]; then
-      brew update && \
-      brew install python
-    fi
+  - if [[ "$(uname)" == "Darwin" ]]; then brew update && brew install python; fi
+  # Fix for TensorFlow malloc.
+  # See: https://github.com/tensorflow/tensorflow/issues/6968#issuecomment-279060156
+  - if [[ "$(uname)" != "Darwin" ]]; then sudo apt-get update && sudo apt-get install libtcmalloc-minimal4; fi
 
 script:
   - ./configure --noninteractive
