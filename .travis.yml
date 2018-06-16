@@ -21,10 +21,10 @@ language: java
 git:
   submodules: false
 
-env:
-  # Fix for TensorFlow malloc.
-  # See: https://github.com/tensorflow/tensorflow/issues/6968#issuecomment-279060156
-  - LD_PRELOAD="/usr/lib/libtcmalloc_minimal.so.4"
+# TODO(cec): Use LD_PRELOAD if necessary, else remove this.
+# Fix for TensorFlow malloc.
+# See: https://github.com/tensorflow/tensorflow/issues/6968#issuecomment-279060156
+# LD_PRELOAD="/usr/lib/libtcmalloc_minimal.so.4"
 
 before_install:
   # Install python3.6 on macOS.
