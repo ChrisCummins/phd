@@ -24,11 +24,11 @@ git:
 before_install:
   # Install python3.6 on macOS. Note that an outdated brew python package is
   # already installed, so we must use the upgrade command.
-  - if [[ "$(uname)" == "Darwin" ]]; then
-      brew update && \
-      brew upgrade python && \
-      brew install bazel;
-    else
+  - if [[ "$(uname)" == "Darwin" ]]; then export OSX=1; else export LINUX=1; fi
+  - test -z $OSX || brew update
+  - test -z $OSX || brew upgrade python
+  - test -z $OSX || brew install bazel
+  - if [[ "$(uname)" != "Darwin" ]]; then
       sudo add-apt-repository -y ppa:deadsnakes/ppa && \
       sudo apt-get update && \
       sudo apt-get install -y --no-install-recommends \
