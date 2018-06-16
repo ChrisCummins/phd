@@ -32,7 +32,7 @@ before_install:
       sudo add-apt-repository -y ppa:deadsnakes/ppa && \
       sudo apt-get update && \
       sudo apt-get install -y --no-install-recommends \
-          ca-certificates curl g++ git libmysqlclient-dev ocl-icd-opencl-dev \
+          ca-certificates curl g++ git libmysqlclient-dev \
           pkg-config python python-dev python3.6 unzip zip zlib1g-dev && \
       curl -L -o /tmp/bazel.sh https://github.com/bazelbuild/bazel/releases/download/0.14.1/bazel-0.14.1-installer-linux-x86_64.sh && \
       sudo bash /tmp/bazel.sh && \
@@ -40,7 +40,11 @@ before_install:
       git clone https://github.com/KhronosGroup/OpenCL-Headers.git /tmp/opencl-headers && \
       git -C /tmp/opencl-headers reset --hard e986688daf750633898dfd3994e14a9e618f2aa5 && \
       sudo mv /tmp/opencl-headers/opencl12/CL /usr/include/CL && \
-      rm -rf /tmp/opencl-headers;
+      rm -rf /tmp/opencl-headers && \
+      wget http://portablecl.org/downloads/pocl-0.12.tar.gz && \
+      tar xzf pocl-0.12.tar.gz && \
+      cd pocl-0.12/ && ./configure && make && sudo make install && cd .. && \
+      sudo rm -r pocl-0.12;
     fi
 
 script:
