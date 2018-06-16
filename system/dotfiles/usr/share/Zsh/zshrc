@@ -632,3 +632,6 @@ if $(which dircolors &>/dev/null); then
     alias grep='grep --color=auto'
     alias vdir='vdir --color=auto'
 fi
+
+# Add Travis CI completion, if available.
+[ -f /home/cec/.travis/travis.sh ] && source /home/cec/.travis/travis.sh
