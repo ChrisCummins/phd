@@ -27,8 +27,9 @@ git:
 # LD_PRELOAD="/usr/lib/libtcmalloc_minimal.so.4"
 
 before_install:
-  # Install python3.6 on macOS.
-  - if [[ "$(uname)" == "Darwin" ]]; then brew update && brew install python; fi
+  # Install python3.6 on macOS. Note that an outdated brew python package is
+  # already installed, so we must use the upgrade command.
+  - if [[ "$(uname)" == "Darwin" ]]; then brew update && brew upgrade python; fi
   # Fix for TensorFlow malloc.
   # See: https://github.com/tensorflow/tensorflow/issues/6968#issuecomment-279060156
   - if [[ "$(uname)" != "Darwin" ]]; then sudo apt-get update && sudo apt-get install libtcmalloc-minimal4; fi
