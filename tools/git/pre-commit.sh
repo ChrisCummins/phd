@@ -25,6 +25,8 @@ main() {
     echo 'Inspect and re-run git commit'
     exit 1
   fi
+
+  test ! -f /usr/local/bin/travis || /usr/local/bin/travis lint "$ROOT/.travis.yml"
 }
 
 if [[ "$BRANCH_NAME" != '(no branch)' ]]; then
