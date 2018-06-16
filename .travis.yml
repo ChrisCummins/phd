@@ -9,8 +9,8 @@ notifications:
 os:
   - linux
   - osx
-sudo: True
-dist: trust
+sudo: required
+dist: trusty
 osx_image: xcode9.3
 
 # Use a base Python language.
