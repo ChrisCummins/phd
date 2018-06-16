@@ -24,7 +24,11 @@ git:
 before_install:
   # Install python3.6 on macOS. Note that an outdated brew python package is
   # already installed, so we must use the upgrade command.
-  - if [[ "$(uname)" == "Darwin" ]]; then brew update && brew upgrade python; fi
+  - if [[ "$(uname)" == "Darwin" ]]; then
+      brew update;
+      brew upgrade python;
+      brew install bazel;
+    fi
 
 script:
   - ./configure --noninteractive
