@@ -2,6 +2,7 @@
 
 # No arguments: `git status`. With arguments: acts like `git`
 # Extended from: https://github.com/thoughtbot/dotfiles
+unalias g
 g() {
     GIT=/usr/local/bin/git
     test -f /usr/bin/git && GIT=/usr/bin/git
