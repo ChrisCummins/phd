@@ -52,6 +52,9 @@ flags.DEFINE_boolean(
     'If set, a build failure outcome is considered a negative training '
     'example. If not set, only pass outcomes are counted as negative examples.')
 flags.DEFINE_integer(
+    'max_src_len', 10000,
+    'Ignore programs whose sources are longer than this number of characters')
+flags.DEFINE_integer(
     'seed', 0,
     'Random seed to use when splitting data.')
 
@@ -68,13 +71,16 @@ TrainingProto = fish_pb2.CompilerCrashDiscriminatorTrainingExample
 
 def LoadPositiveProtos(
     export_path: pathlib.Path, max_num: int,
-    assertions_only) -> typing.List[TrainingProto]:
+    assertions_only: bool,
+    max_src_len: int) -> typing.List[TrainingProto]:
   """Load positive training protos."""
   outputs = []
   for path in sorted(list((export_path / 'build_crash').iterdir()))[:max_num]:
     proto = pbutil.FromFile(
         path, TrainingProto())
     if assertions_only and not proto.raised_assertion:
+      continue
+    if len(proto.src) > max_src_len:
       continue
     outputs.append(proto)
   logging.info('Loaded %s positive data protos.',
@@ -170,7 +176,8 @@ def main(argv):
 
   # Load protos.
   positive_protos = LoadPositiveProtos(
-      export_path, FLAGS.max_protos, FLAGS.assertions_only)
+      export_path, FLAGS.max_protos, FLAGS.assertions_only,
+      FLAGS.max_src_len)
   negative_protos = LoadNegativeProtos(
       export_path, positive_protos, FLAGS.balance_class_lengths,
       FLAGS.balance_class_counts, FLAGS.include_bf_outcomes_as_negative)
