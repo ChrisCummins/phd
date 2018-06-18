@@ -514,27 +514,27 @@ class SshConfig(Task):
       "~/.ssh/authorized_keys",
       "~/.ssh/known_hosts",
       "~/.ssh/config",
-      "~/.ssh/id_rsa.ppk",
-      "~/.ssh/id_rsa.pub",
-      "~/.ssh/id_rsa",
   ]
 
   def install(self):
-    mkdir("~/.ssh")
-    shell('chmod 600 "' + PRIVATE + '"/ssh/*')
+    # Dropbox doesn't sync file permissions. Restore them here.
+    shell('find {}/ssh -type f -exec chmod 0600 {{}} \;'.format(PRIVATE))
 
-    for file in ['authorized_keys', 'known_hosts', 'config', 'id_rsa.ppk', 'id_rsa.pub']:
+    mkdir("~/.ssh")
+    for file in ['authorized_keys', 'known_hosts', 'config']:
       src = os.path.join(PRIVATE, "ssh", file)
       dst = os.path.join("~/.ssh", file)
-
       if shell_ok("test $(stat -c %U '{src}') = $USER".format(**vars())):
         symlink(src, dst)
       else:
         copy_file(src, dst)
-        shell("chmod 600 {dst}".format(**vars()))
 
-    copy_file(os.path.join(PRIVATE, "ssh", "id_rsa"), "~/.ssh/id_rsa")
-    shell("chmod 600 ~/.ssh/id_rsa")
+    host_dir = os.path.join(PRIVATE, 'ssh', HOSTNAME)
+    if os.path.isdir(host_dir):
+      copy_file(os.path.join(host_dir, "id_rsa"), "~/.ssh/id_rsa")
+      copy_file(os.path.join(host_dir, "id_rsa.pub"), "~/.ssh/id_rsa.pub")
+
+    shell("chmod 600 ~/.ssh/*")
 
 
 class Netdata(Task):
