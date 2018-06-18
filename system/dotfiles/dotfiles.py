@@ -859,7 +859,7 @@ class DiffSoFancy(Task):
 
   __platforms__ = ['linux', 'osx']
   __deps__ = ['Git', 'Node']
-  __genfiles__ = ['/usr/local/bin/diff-so-fancy']
+  __genfiles__ = [Homebrew.bin('diff-so-fancy')]
 
   def install(self):
     Node().npm_install("diff-so-fancy", self.VERSION)
@@ -883,7 +883,7 @@ class GhArchiver(Task):
 
   __platforms__ = ['linux', 'osx']
   __deps__ = ['Python']
-  __genfiles__ = ['/usr/local/bin/gh-archiver']
+  __genfiles__ = [Homebrew.bin('gh-archiver')]
 
   def install(self):
     Python().pip_install("gh-archiver", self.VERSION)
@@ -1717,7 +1717,7 @@ class Emu(Task):
 
   __platforms__ = ['linux', 'osx']
   __deps__ = ['Python']
-  __genfiles__ = ['/usr/local/bin/emu']
+  __genfiles__ = [Homebrew.bin('emu')]
 
   def install(self):
     Python().pip_install("emu", self.VERSION)
