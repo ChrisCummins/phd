@@ -1602,10 +1602,10 @@ class MeCsv(Task):
 class Bazel(Task):
   """ bazel build system """
   __platforms__ = ['linux', 'osx']
-  __deps__ = ['Curl', 'Java']
-  __osx_deps__ = ['Homebrew']
-  __osx_genfiles__ = ['/usr/local/bin/bazel']
-  __linux_genfiles__ = ['/usr/bin/bazel']
+  __deps__ = ['Curl']
+  __osx_deps__ = ['Java', 'Homebrew']
+  __linux_deps__ = ['Zip']
+  __genfiles__ = ['/usr/local/bin/bazel']
 
   def install_osx(self):
     Homebrew().install_package('bazel')
@@ -1614,16 +1614,10 @@ class Bazel(Task):
     # Currently (2018-05-17) I have been unable to get the Linuxbrew
     # distribution of Bazel to build.
     # See: https://docs.bazel.build/versions/master/install-ubuntu.html
-
-    # Add Bazel distribution URY
-    url = "http://storage.googleapis.com/bazel-apt stable jdk1.8"
-    shell('echo "deb [arch=amd64] {url}" | '.format(**vars()) +
-          "sudo tee /etc/apt/sources.list.d/bazel.list")
-    shell('curl https://bazel.build/bazel-release.pub.gpg | sudo apt-key add -')
-
-    # Install and update Bazel
-    Apt().update()
-    Apt().install_package("bazel")
+    if not os.path.isfile('/usr/local/bin/bazel'):
+      shell('curl -L -o /tmp/bazel.sh https://github.com/bazelbuild/bazel/releases/download/0.14.1/bazel-0.14.1-installer-linux-x86_64.sh')
+      shell('sudo bash /tmp/bazel.sh')
+      shell('rm /tmp/bazel.sh')
 
   def upgrade_osx(self):
     Homebrew().upgrade_package("bazel")
