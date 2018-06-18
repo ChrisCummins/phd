@@ -35,6 +35,9 @@ flags.DEFINE_float(
 flags.DEFINE_integer(
     'max_protos', 100000,
     'The maximum number of protos per class to read')
+flags.DEFINE_string(
+    'positive_class_outcome', 'build_crash',
+    'The outcome to select positive training examples from.')
 flags.DEFINE_boolean(
     'assertions_only', False,
     'If set, load only positive protos which raise compiler assertions.')
@@ -71,11 +74,12 @@ TrainingProto = fish_pb2.CompilerCrashDiscriminatorTrainingExample
 
 def LoadPositiveProtos(
     export_path: pathlib.Path, max_num: int,
-    assertions_only: bool,
-    max_src_len: int) -> typing.List[TrainingProto]:
+    assertions_only: bool, max_src_len: int,
+    positive_class_outcome: str) -> typing.List[TrainingProto]:
   """Load positive training protos."""
   outputs = []
-  for path in sorted(list((export_path / 'build_crash').iterdir()))[:max_num]:
+  for path in sorted(list(
+        (export_path / positive_class_outcome).iterdir()))[:max_num]:
     proto = pbutil.FromFile(
         path, TrainingProto())
     if assertions_only and not proto.raised_assertion:
@@ -136,12 +140,17 @@ def LoadNegativeProtos(
         break
   else:
     if balance_class_counts:
-      # Limit the number of negative examples to <= number of positive.
-      negative_proto_paths = negative_proto_paths[:len(positive_protos)]
+      min_count = min(len(positive_protos), len(negative_proto_paths))
+      negative_proto_paths = negative_proto_paths[:min_count]
+      positive_protos = positive_protos[:min_count]
       if len(negative_proto_paths) < len(positive_protos):
         logging.warning('Fewer negative examples (%s) than positive (%s)!',
                         humanize.intcomma(len(negative_proto_paths)),
                         humanize.intcomma(len(positive_protos)))
+      elif len(positive_protos) < len(negative_proto_paths):
+        logging.warning('Fewer positive examples (%s) than negative (%s)!',
+                        humanize.intcomma(len(positive_protos)),
+                        humanize.intcomma(len(negative_proto_paths)))
     outputs = [
       pbutil.FromFile(path, TrainingProto())
       for path in negative_proto_paths
@@ -177,7 +186,7 @@ def main(argv):
   # Load protos.
   positive_protos = LoadPositiveProtos(
       export_path, FLAGS.max_protos, FLAGS.assertions_only,
-      FLAGS.max_src_len)
+      FLAGS.max_src_len, FLAGS.positive_class_outcome)
   negative_protos = LoadNegativeProtos(
       export_path, positive_protos, FLAGS.balance_class_lengths,
       FLAGS.balance_class_counts, FLAGS.include_bf_outcomes_as_negative)
