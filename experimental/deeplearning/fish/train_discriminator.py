@@ -212,9 +212,6 @@ def main(argv):
               logger.KerasCallback(keras),
             ])
 
-  logging.info('Evaluating model on test corpus')
-  model.evaluate(test_x, test_y, batch_size=FLAGS.batch_size, verbose=1)
-
 
 if __name__ == '__main__':
   app.run(main)
