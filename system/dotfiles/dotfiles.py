@@ -731,19 +731,12 @@ class Git(Task):
   __osx_deps__ = ['Homebrew']
   __genfiles__ = ['~/.gitconfig']
 
-  def install_ubuntu(self):
-    Apt().install_package('git')
-    self.install()
-
-  def install_osx(self):
-    Homebrew().install_package('git')
-    self.install()
-
   def install(self):
+    Homebrew().install_package('git')
     if not IS_TRAVIS_CI:
       symlink(usr_share("git/gitconfig"), "~/.gitconfig")
 
-  def upgrade_osx(self):
+  def upgrade(self):
     Homebrew().upgrade_package("git")
 
 
