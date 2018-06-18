@@ -896,18 +896,12 @@ class Tmux(Task):
   __osx_genfiles__ = ['/usr/local/bin/tmux']
   __linux_genfiles__ = ['/usr/bin/tmux']
 
-  def install_osx(self):
+  def install(self):
     Homebrew().install_package("tmux")
     self._install_common()
-
-  def install_ubuntu(self):
-    Apt().install_package("tmux")
-    self._install_common()
-
-  def _install_common(self):
     symlink(usr_share("tmux/tmux.conf"), "~/.tmux.conf")
 
-  def upgrade_osx(self):
+  def upgrade(self):
     Homebrew().upgrade_package("tmux")
 
 
@@ -1346,12 +1340,12 @@ class Emacs(Task):
       "prelude": "f7d5d68d432319bb66a5f9410d2e4eadd584f498",
   }
 
-  def install_osx(self):
+  def install(self):
     Homebrew().install_cask('emacs')
     self._install_common()
 
   def install_ubuntu(self):
-    Apt().install_package('emacs')
+    Homebrew().install_package('emacs')
     self._install_common()
 
   def _install_common(self):
@@ -1360,7 +1354,7 @@ class Emacs(Task):
     # prelude requires there be no ~/.emacs file on first run
     Trash().trash('~/.emacs')
 
-  def upgrade_osx(self):
+  def upgrade(self):
     Homebrew().upgrade_cask('emacs')
 
 
@@ -1481,13 +1475,10 @@ class Ncdu(Task):
   __osx_genfiles__ = ['/usr/local/bin/ncdu']
   __linux_genfiles__ = ['/usr/bin/ncdu']
 
-  def install_osx(self):
+  def install(self):
     Homebrew().install_package("ncdu")
 
-  def install_ubuntu(self):
-    Apt().install_package("ncdu")
-
-  def upgrade_osx(self):
+  def upgrade(self):
     Homebrew().upgrade_package("ncdu")
 
 
@@ -1684,13 +1675,10 @@ class Protobuf(Task):
   __osx_genfiles__ = ['/usr/local/bin/protoc']
   __linux_genfiles__ = ['/usr/bin/protoc']
 
-  def install_osx(self):
+  def install(self):
     Homebrew().install_package('protobuf')
 
-  def install_ubuntu(self):
-    Apt().install_package("protobuf")
-
-  def upgrade_osx(self):
+  def upgrade(self):
     Homebrew().upgrade_package("protobuf")
 
 
@@ -1701,13 +1689,10 @@ class Sloccount(Task):
   __osx_genfiles__ = ['/usr/local/bin/sloccount']
   __linux_genfiles__ = ['/usr/bin/sloccount']
 
-  def install_osx(self):
+  def install(self):
     Homebrew().install_package('sloccount')
 
-  def install_ubuntu(self):
-    Apt().install_package("sloccount")
-
-  def upgrade_osx(self):
+  def upgrade(self):
     Homebrew().upgrade_package("sloccount")
 
 
@@ -1728,22 +1713,15 @@ class JsonUtil(Task):
   __platforms__ = ['linux', 'osx']
   __deps__ = ['Node']
   __osx_deps__ = ['Homebrew']
-  __genfiles__ = ['/usr/local/bin/jsonlint']
+  __genfiles__ = [Homebrew.bin('jsonlint')]
   __osx_genfiles__ = ['/usr/local/bin/jq']
   __linux_genfiles__ = ['/usr/bin/jq']
   __versions__ = {
       "jsonlint": "1.6.2",
   }
 
-  def install_osx(self):
+  def install(self):
     Homebrew().install_package("jq")
-    self._install_common()
-
-  def install_ubuntu(self):
-    Apt().install_package("jq")
-    self._install_common()
-
-  def _install_common(self):
     Node().npm_install("jsonlint", self.__versions__["jsonlint"])
 
   def upgrade_osx(self):
