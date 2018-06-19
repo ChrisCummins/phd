@@ -27,6 +27,7 @@
       <w>issta</w>
       <w>keras</w>
       <w>labm</w>
+      <w>ldrive</w>
       <w>lgen</w>
       <w>libclc</w>
       <w>libcxx</w>
@@ -45,9 +46,11 @@
       <w>petoumenos</w>
       <w>preprocess</w>
       <w>preprocessing</w>
+      <w>proc</w>
       <w>protos</w>
       <w>relpath</w>
       <w>relpaths</w>
+      <w>returncode</w>
       <w>rewriter</w>
       <w>runfiles</w>
       <w>sandboxed</w>
@@ -58,6 +61,8 @@
       <w>subdirs</w>
       <w>subsamples</w>
       <w>tensorflow</w>
+      <w>testcase</w>
+      <w>testcases</w>
       <w>tokencount</w>
       <w>tokenized</w>
       <w>uname</w>
