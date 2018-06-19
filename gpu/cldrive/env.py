@@ -7,7 +7,8 @@ from typing import Iterator, Tuple
 import pyopencl as cl
 
 
-class OpenCLEnvironment(namedtuple('OpenCLEnvironment', ['platform', 'device'])):
+class OpenCLEnvironment(
+    namedtuple('OpenCLEnvironment', ['platform', 'device'])):
   __slots__ = ()  # memory saving
 
   def __repr__(self) -> str:
@@ -206,8 +207,10 @@ def _devtype_matches(device: cl.Device, devtype: cl.device_type) -> bool:
     return actual_devtype == devtype
 
 
-def _lookup_env(return_cl: bool = False, return_ids: bool = False, platform: str = None,
-                device: str = None, devtype: str = "all", profiling: bool = False):
+def _lookup_env(return_cl: bool = False, return_ids: bool = False,
+                platform: str = None,
+                device: str = None, devtype: str = "all",
+                profiling: bool = False):
   """ find a matching OpenCL device """
   cl_devtype = _cl_devtype_from_str(devtype)
 
@@ -240,8 +243,8 @@ def _lookup_env(return_cl: bool = False, return_ids: bool = False, platform: str
             properties = None
 
           ctx = cl.Context(
-            dev_type=cl.device_type.ALL,
-            properties=[(cl.context_properties.PLATFORM, cl_platform)])
+              dev_type=cl.device_type.ALL,
+              properties=[(cl.context_properties.PLATFORM, cl_platform)])
 
           queue = cl.CommandQueue(ctx, device=cl_device,
                                   properties=properties)
@@ -250,15 +253,15 @@ def _lookup_env(return_cl: bool = False, return_ids: bool = False, platform: str
           return platform_id, device_id
         else:
           return OpenCLEnvironment(
-            platform=platform_str, device=device_str)
+              platform=platform_str, device=device_str)
       else:
         if device:
           raise LookupError(
-            f"could not find device '{device}' on platform '{platform}'")
+              f"could not find device '{device}' on platform '{platform}'")
     else:
       if platform:
         raise LookupError(
-          f"could not find platform '{platform}'")
+            f"could not find platform '{platform}'")
 
     raise LookupError(f"could not find a device of type '{devtype}'")
   except cl.RuntimeError as e:
@@ -328,7 +331,7 @@ def opencl_version(platform: cl.Platform) -> str:
     return m.group(1)
   else:
     raise LookupError(
-      f"Could not determine OpenCL version from string '{version}'")
+        f"Could not determine OpenCL version from string '{version}'")
 
 
 def device_type(device: cl.Device) -> str:
