@@ -3,10 +3,15 @@
 load("@io_bazel_rules_docker//python3:image.bzl", "py3_image")
 load("@requirements//:requirements.bzl", "requirement")
 
+package(default_visibility = ["//experimental:__subpackages__"])
+
 py_library(
     name = "services",
     srcs = ["services.py"],
-    visibility = ["//deeplearning/deepsmith/cli:__subpackages__"],
+    visibility = [
+        "//deeplearning/deepsmith/cli:__subpackages__",
+        "//experimental:__subpackages__",
+    ],
     deps = [
         "//deeplearning/deepsmith/proto:service_py_pb2",
         "//lib/labm8:pbutil",
@@ -20,7 +25,10 @@ py_binary(
     srcs = ["datastore.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
-    visibility = ["//deeplearning/deepsmith/cli:__subpackages__"],
+    visibility = [
+        "//deeplearning/deepsmith/cli:__subpackages__",
+        "//experimental:__subpackages__",
+    ],
     deps = [
         ":services",
         "//deeplearning/deepsmith/proto:datastore_py_pb2",
@@ -53,7 +61,10 @@ py_binary(
     srcs = ["clgen.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
-    visibility = ["//deeplearning/deepsmith/cli:__subpackages__"],
+    visibility = [
+        "//deeplearning/deepsmith/cli:__subpackages__",
+        "//experimental:__subpackages__",
+    ],
     deps = [
         ":generator",
         ":services",
@@ -91,7 +102,10 @@ py_binary(
     srcs = ["cldrive.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
-    visibility = ["//deeplearning/deepsmith/cli:__subpackages__"],
+    visibility = [
+        "//deeplearning/deepsmith/cli:__subpackages__",
+        "//experimental:__subpackages__",
+    ],
     deps = [
         ":harness",
         ":services",
