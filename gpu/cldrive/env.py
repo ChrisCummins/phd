@@ -53,6 +53,24 @@ class OpenCLEnvironment(
                        device=self.device)
 
   @property
+  def name(self) -> str:
+    """Get a unique name for the OpenCL device.
+
+    The name is a concatenation of the device type, platform, device, driver
+    version, and OpenCL version, joined using '|' symbols, and with whitespaces
+    in each of the components substituted for '_' symbols. E.g. for an OpenCL
+    1.2 compatible GPU device "OpenCL Dev" on platform "Foo" with driver version
+    "1.10", the name is "GPU|Foo|OpenCL_Dev|1.10|1.2".
+
+    Returns:
+      A concatenation of the platform, device, and driver names.
+    """
+    return '|'.join(
+        '_'.join(' '.join(x.replace('|', ' ').split()).split()) for x in
+        [self.device_type, self.platform_name, self.device_name,
+         self.driver_version, self.opencl_version])
+
+  @property
   def device_name(self) -> str:
     """
     Get the OpenCL device name.
