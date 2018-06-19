@@ -5,6 +5,7 @@ import multiprocessing
 import pathlib
 import pickle
 import time
+import typing
 
 import humanize
 import numpy as np
@@ -94,11 +95,19 @@ class EncodedContentFile(Base):
         date_added=datetime.datetime.utcnow())
 
 
-def EncoderWorker(job: internal_pb2.EncoderWorker) -> EncodedContentFile:
+def EncoderWorker(
+    job: internal_pb2.EncoderWorker) -> typing.Optional[EncodedContentFile]:
   """Encode a single content file."""
-  return EncodedContentFile.FromPreprocessed(
-      preprocessed.PreprocessedContentFile(id=job.id, text=job.text),
-      pickle.loads(job.pickled_atomizer), job.contentfile_separator)
+  # TODO(cec): There is a bug in the atomizer creation logic such that the
+  # derived atomizer is not always capable of encoding the preprocessed files.
+  # Once this has been fixed, there is no need to catch the VocabError here,
+  # and EncoderWorker can always return an EncodedContentFile instance.
+  try:
+    return EncodedContentFile.FromPreprocessed(
+        preprocessed.PreprocessedContentFile(id=job.id, text=job.text),
+        pickle.loads(job.pickled_atomizer), job.contentfile_separator)
+  except errors.VocabError:
+    return None
 
 
 class EncodedContentFiles(sqlutil.Database):
@@ -201,7 +210,10 @@ class EncodedContentFiles(sqlutil.Database):
         wall_time_end = time.time()
         encoded_cf.wall_time_ms = int((wall_time_end - wall_time_start) * 1000)
         wall_time_start = wall_time_end
-        session.add(encoded_cf)
+        # TODO(cec): Remove the if check once EncoderWorker no longer returns
+        # None on atomizer encode error.
+        if encoded_cf:
+          session.add(encoded_cf)
         if wall_time_end - last_commit > 10:
           session.commit()
           last_commit = wall_time_end
