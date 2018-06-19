@@ -23,6 +23,12 @@ flags.DEFINE_string(
 flags.DEFINE_string(
     'dataset_root', '~/data/experimental/deeplearning/fish/crash_dataset',
     'Path to export training / validation / testing data to.')
+flags.DEFINE_list(
+    'positive_class_outcomes', ['build_crash'],
+    'The outcomes to select positive examples from.')
+flags.DEFINE_list(
+    'negative_class_outcomes', ['pass'],
+    'The outcomes to select negative examples from.')
 flags.DEFINE_float(
     'training_ratio', 0.9,
     'Ratio of dataset to use for training.')
@@ -35,9 +41,6 @@ flags.DEFINE_float(
 flags.DEFINE_integer(
     'max_protos', 100000,
     'The maximum number of protos per class to read')
-flags.DEFINE_string(
-    'positive_class_outcome', 'build_crash',
-    'The outcome to select positive training examples from.')
 flags.DEFINE_boolean(
     'assertions_only', False,
     'If set, load only positive protos which raise compiler assertions.')
@@ -72,59 +75,50 @@ DatasetSizes = collections.namedtuple(
 TrainingProto = fish_pb2.CompilerCrashDiscriminatorTrainingExample
 
 
-def LoadPositiveProtos(
-    export_path: pathlib.Path, max_num: int,
-    assertions_only: bool, max_src_len: int,
-    positive_class_outcome: str) -> typing.List[TrainingProto]:
-  """Load positive training protos."""
-  outputs = []
-  for path in sorted(list(
-        (export_path / positive_class_outcome).iterdir()))[:max_num]:
-    proto = pbutil.FromFile(
-        path, TrainingProto())
-    if assertions_only and not proto.raised_assertion:
-      continue
+def GetProtos(
+    export_path: pathlib.Path, outcomes: typing.List[str],
+    max_src_len: int) -> typing.List[TrainingProto]:
+  paths = sorted(labtypes.flatten(
+      [list((export_path / outcome).iterdir()) for outcome in outcomes]))
+  protos = []
+  for path in paths:
+    proto = pbutil.FromFile(path, TrainingProto())
     if len(proto.src) > max_src_len:
       continue
-    outputs.append(proto)
+    protos.append(proto)
+  return protos
+
+
+def LoadPositiveProtos(
+    export_path: pathlib.Path, positive_class_outcomes: typing.List[str],
+    max_src_len: int, max_num: int, assertions_only: bool) -> typing.List[TrainingProto]:
+  """Load positive training protos."""
+  protos = [
+    p for p in GetProtos(export_path, positive_class_outcomes, max_src_len)
+    if (not assertions_only) or p.raised_assertion
+  ][:max_num]
   logging.info('Loaded %s positive data protos.',
-               humanize.intcomma(len(outputs)))
-  return outputs
-
-
-def GetNegativeExampleDirs(
-    export_path: pathlib.Path,
-    include_bf_outcomes_as_negative: bool) -> typing.List[pathlib.Path]:
-  """Get the list of directories to load negative training examples from."""
-  dirs = [(export_path / 'pass')]
-  if include_bf_outcomes_as_negative:
-    dirs.append((export_path / 'build_failure'))
-  return dirs
+               humanize.intcomma(len(protos)))
+  return protos
 
 
 def LoadNegativeProtos(
     export_path: pathlib.Path, positive_protos: typing.List[TrainingProto],
+    negative_class_outcomes: typing.List[str], max_src_len: int,
     balance_class_lengths: bool,
-    balance_class_counts: bool,
-    include_bf_outcomes_as_negative: bool) -> typing.List[TrainingProto]:
+    balance_class_counts: bool) -> typing.List[TrainingProto]:
   """Load negative training protos."""
-  negative_proto_paths = sorted(
-      labtypes.flatten([
-        list(d.iterdir()) for d in
-        GetNegativeExampleDirs(export_path, include_bf_outcomes_as_negative)]))
+  candidate_protos = GetProtos(
+      export_path, negative_class_outcomes, max_src_len)
 
   if balance_class_lengths:
     positive_proto_sizes = [len(p.src) for p in positive_protos]
-    negative_protos = [
-      pbutil.FromFile(path, TrainingProto())
-      for path in negative_proto_paths
-    ]
     logging.info('Loaded %s negative protos. Balancing lengths ...',
-                 humanize.intcomma(len(negative_protos)))
+                 humanize.intcomma(len(candidate_protos)))
     negative_proto_sizes = np.array(
-        [len(p.src) for p in negative_protos], dtype=np.int32)
-    outputs = []
-    for positive_proto_size in positive_proto_sizes:
+        [len(p.src) for p in candidate_protos], dtype=np.int32)
+    negative_protos = []
+    for i, positive_proto_size in enumerate(positive_proto_sizes):
       size_diffs = np.abs(negative_proto_sizes - positive_proto_size)
       idx_of_closest: int = np.argmin(size_diffs)
       logging.info('Found negative example of size %s to match positive '
@@ -132,32 +126,22 @@ def LoadNegativeProtos(
                    humanize.intcomma(negative_proto_sizes[idx_of_closest]),
                    humanize.intcomma(positive_proto_size),
                    size_diffs.min())
-      outputs.append(negative_protos[idx_of_closest])
+      negative_protos.append(candidate_protos[idx_of_closest])
       negative_proto_sizes = np.delete(negative_proto_sizes, [idx_of_closest])
-      del negative_protos[idx_of_closest]
-      if not negative_protos:
+      del candidate_protos[idx_of_closest]
+      if not candidate_protos:
         logging.warning('Ran out of negative examples to choose from!')
         break
+    positive_protos = positive_protos[:i]
   else:
     if balance_class_counts:
-      min_count = min(len(positive_protos), len(negative_proto_paths))
-      negative_proto_paths = negative_proto_paths[:min_count]
+      min_count = min(len(positive_protos), len(negative_protos))
+      candidate_protos = candidate_protos[:min_count]
       positive_protos = positive_protos[:min_count]
-      if len(negative_proto_paths) < len(positive_protos):
-        logging.warning('Fewer negative examples (%s) than positive (%s)!',
-                        humanize.intcomma(len(negative_proto_paths)),
-                        humanize.intcomma(len(positive_protos)))
-      elif len(positive_protos) < len(negative_proto_paths):
-        logging.warning('Fewer positive examples (%s) than negative (%s)!',
-                        humanize.intcomma(len(positive_protos)),
-                        humanize.intcomma(len(negative_proto_paths)))
-    outputs = [
-      pbutil.FromFile(path, TrainingProto())
-      for path in negative_proto_paths
-    ]
+    negative_protos = candidate_protos
   logging.info('Loaded %s negative data protos',
-               humanize.intcomma(len(outputs)))
-  return outputs
+               humanize.intcomma(len(negative_protos)))
+  return positive_protos, negative_protos
 
 
 def main(argv):
@@ -185,11 +169,12 @@ def main(argv):
 
   # Load protos.
   positive_protos = LoadPositiveProtos(
-      export_path, FLAGS.max_protos, FLAGS.assertions_only,
-      FLAGS.max_src_len, FLAGS.positive_class_outcome)
-  negative_protos = LoadNegativeProtos(
-      export_path, positive_protos, FLAGS.balance_class_lengths,
-      FLAGS.balance_class_counts, FLAGS.include_bf_outcomes_as_negative)
+      export_path, FLAGS.positive_class_outcomes, FLAGS.max_src_len,
+      FLAGS.max_protos, FLAGS.assertions_only)
+  positive_protos, negative_protos = LoadNegativeProtos(
+      export_path, positive_protos, FLAGS.negative_class_outcomes,
+      FLAGS.max_src_len, FLAGS.balance_class_lengths,
+      FLAGS.balance_class_counts)
 
   positive_sizes = DatasetSizes(
       int(len(positive_protos) * FLAGS.training_ratio),
