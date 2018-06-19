@@ -332,6 +332,8 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":lockfile",
+        ":pbutil",
+        "//lib/labm8/proto:lockfile_py_pb2",
         requirement("absl-py"),
         requirement("pytest"),
     ],

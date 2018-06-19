@@ -7,10 +7,10 @@ from __future__ import print_function
 import datetime
 import os
 import pathlib
-import typing
-
 import sys
 import time
+import typing
+
 from absl import logging
 
 from lib.labm8 import labdate
@@ -26,13 +26,14 @@ class Error(Exception):
 class UnableToAcquireLockError(Error):
   """ thrown if cannot acquire lock """
 
-  def __init__(self, lock):
+  def __init__(self, lock: 'LockFile'):
     self.lock = lock
 
   def __str__(self):
     return f"""\
 Unable to acquire file lock owned by a different process.
-Lock acquired by process {self.lock.pid} on {self.lock.date}.
+Lock acquired by process {self.lock.pid} on \
+{self.lock.user}@{self.lock.hostname} at {self.lock.date}.
 Lock path: {self.lock.path}"""
 
 
@@ -45,7 +46,8 @@ class UnableToReleaseLockError(Error):
   def __str__(self):
     return f"""\
 Unable to release file lock owned by a different process.
-Lock acquired by process {self.lock.pid} on {self.lock.date}.
+Lock acquired by process {self.lock.pid} on \
+{self.lock.user}@{self.lock.hostname} at {self.lock.date}.
 Lock path: {self.lock.path}"""
 
 
@@ -85,6 +87,24 @@ class LockFile:
       return None
 
   @property
+  def hostname(self) -> typing.Optional[str]:
+    """The hostname of the lock owner. Value is None if lock is unclaimed."""
+    lockfile = self.read(self.path)
+    if lockfile.HasField('owner_hostname'):
+      return lockfile.owner_hostname
+    else:
+      return None
+
+  @property
+  def user(self) -> typing.Optional[str]:
+    """The username of the lock owner. Value is None if lock is unclaimed."""
+    lockfile = self.read(self.path)
+    if lockfile.HasField('owner_user'):
+      return lockfile.owner_user
+    else:
+      return None
+
+  @property
   def islocked(self) -> bool:
     """Whether the directory is locked."""
     return self.path.is_file()
@@ -94,7 +114,7 @@ class LockFile:
     """
     Whether the directory is locked by the current process.
     """
-    return self.pid == os.getpid()
+    return self.hostname == system.HOSTNAME and self.pid == os.getpid()
 
   def acquire(self, replace_stale: bool = False, force: bool = False,
               pid: int = None, block: bool = False) -> 'LockFile':
@@ -108,7 +128,9 @@ class LockFile:
     Args:
       replace_stale: If true, lock can be aquired from stale processes. A stale
         process is one which currently owns the parent lock, but no process with
-        that PID is alive.
+        that PID is alive. A lock which is owned by a different hostname is
+        never stale, since we cannot determine if the PID of a remote system is
+        alive.
       force: If true, ignore any existing lock. If false, fail if lock already
         claimed.
       pid: If provided, force the process ID of the lock to this value.
@@ -129,7 +151,9 @@ class LockFile:
           owner_process_id=os.getpid() if pid is None else pid,
           owner_process_argv=' '.join(sys.argv),
           date_acquired_utc_epoch_ms=labdate.MillisecondsTimestamp(
-              labdate.GetUtcMillisecondsNow()))
+              labdate.GetUtcMillisecondsNow()),
+          owner_hostname=system.HOSTNAME,
+          owner_user=system.USERNAME)
       pbutil.ToFile(lockfile, self.path, assume_filename='LOCK.pbtxt')
 
     while True:
@@ -141,7 +165,8 @@ class LockFile:
         elif force:
           _create_lock()
           break
-        elif replace_stale and not system.isprocess(lock_owner_pid):
+        elif (replace_stale and self.hostname == system.HOSTNAME and
+              not system.isprocess(lock_owner_pid)):
           _create_lock()
           break
         elif not block:

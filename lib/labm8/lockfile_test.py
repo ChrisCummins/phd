@@ -1,13 +1,36 @@
 """Unit tests for //lib/labm8:latex."""
 import pathlib
+import sys
 import tempfile
 
 import pytest
-import sys
 from absl import app
 
 from lib.labm8 import fs
 from lib.labm8 import lockfile
+from lib.labm8 import pbutil
+from lib.labm8.proto import lockfile_pb2
+
+
+@pytest.fixture(scope='function')
+def dummy_lockfile_proto() -> lockfile_pb2.LockFile:
+  """A simple lockfile proto."""
+  return lockfile_pb2.LockFile(
+      owner_process_id=100,
+      owner_process_argv='./foo --bar',
+      date_acquired_utc_epoch_ms=1529403585000,
+      owner_hostname='foo',
+      owner_user='bar',
+  )
+
+
+@pytest.fixture(scope='function')
+def dummy_lockfile_path(
+    dummy_lockfile_proto: lockfile_pb2.LockFile) -> pathlib.Path:
+  """Yield a path to a lockfile proto."""
+  with tempfile.TemporaryDirectory() as d:
+    pbutil.ToFile(dummy_lockfile_proto, pathlib.Path(d) / 'LOCK.pbtxt')
+    yield pathlib.Path(d) / 'LOCK.pbtxt'
 
 
 def test_LockFile_file_exists():
@@ -28,6 +51,18 @@ def test_LockFile_islocked():
     assert not lock.islocked
     lock.acquire()
     assert lock.islocked
+
+
+def test_LockFile_acquire_fail(dummy_lockfile_path):
+  """Test that acquiring a lock owned by a different host fails."""
+  lock = lockfile.LockFile(dummy_lockfile_path)
+  assert lock.islocked
+  with pytest.raises(lockfile.UnableToAcquireLockError) as e_ctx:
+    lock.acquire()
+  assert str(e_ctx.value) == f"""\
+Unable to acquire file lock owned by a different process.
+Lock acquired by process 100 on bar@foo at 2018-06-19 10:19:45.
+Lock path: {dummy_lockfile}"""
 
 
 def test_LockFile_owned_by_self():
