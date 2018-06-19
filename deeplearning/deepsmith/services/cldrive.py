@@ -149,6 +149,7 @@ def RunTestcase(ids: typing.Tuple[int, int],
     runtime.duration_ms = int(round(
         (end_time - start_time).total_seconds() * 1000))
     runtime.event_start_epoch_ms = labdate.MillisecondsTimestamp(start_time)
+    result.outputs['outcome'] = GetResultOutputClass(result)
   finally:
     fs.rm(path)
   return result
@@ -205,6 +206,72 @@ def CompileDriver(src: str, path: str, platform_id,
         f'Driver compilation failed with returncode {proc.returncode}.\n'
         f'Driver source:\n{src}')
   return path
+
+
+def GetResultRuntimeMs(result: deepsmith_pb2.Result) -> int:
+  for event in result.profiling_events:
+    if str(event.type) == 'runtime':
+      return event.duration_ms
+  return 0
+
+
+def GetResultOutputClass(result: deepsmith_pb2.Result) -> str:
+  """Determine the output class of a testcase."""
+
+  def RuntimeCrashOrBuildFailure():
+    if "[cldrive] Kernel: " in result.outputs['stderr']:
+      return 'Runtime Crash'
+    else:
+      return 'Build Failure'
+
+  def RuntimeCrashOrBuildCrash():
+    if "[cldrive] Kernel: " in result.outputs['stderr']:
+      return 'Runtime Crash'
+    else:
+      return 'Build Crash'
+
+  def RuntimeTimeoutOrBuildTimeout():
+    if "[cldrive] Kernel: " in result.outputs['stderr']:
+      return 'Runtime Timeout'
+    else:
+      return 'Build Timeout'
+
+  runtime_ms = GetResultRuntimeMs(result)
+  timeout_ms = int(
+      result.testcase.harness.opts.get('timeout_seconds', 60)) * 1000
+
+  if result.returncode == 0:
+    return 'Pass'
+  # SIGSEV.
+  elif result.returncode == 139 or result.returncode == -11:
+    return RuntimeCrashOrBuildCrash()
+  # SIGTRAP.
+  elif result.returncode == -5:
+    return RuntimeCrashOrBuildCrash()
+  # SIGKILL.
+  elif result.returncode == -9 and runtime_ms >= timeout_ms:
+    return RuntimeTimeoutOrBuildTimeout()
+  elif result.returncode == -9:
+    return RuntimeCrashOrBuildCrash()
+  # SIGILL.
+  elif result.returncode == -4:
+    return RuntimeCrashOrBuildCrash()
+  # SIGFPE.
+  elif result.returncode == -8:
+    return RuntimeCrashOrBuildCrash()
+  # SIGBUS.
+  elif result.returncode == -7:
+    return RuntimeCrashOrBuildCrash()
+  # SIGABRT.
+  elif result.returncode == -6:
+    return RuntimeCrashOrBuildCrash()
+  elif result.returncode == 1 and runtime_ms >= timeout_ms:
+    return RuntimeTimeoutOrBuildTimeout()
+  elif result.returncode == 1:
+    return RuntimeCrashOrBuildFailure()
+  elif result.returncode == 127:
+    return RuntimeCrashOrBuildFailure()
+  raise LookupError('Failed to output class of result.')
 
 
 def main(argv):
