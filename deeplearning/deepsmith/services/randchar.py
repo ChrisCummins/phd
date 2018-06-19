@@ -42,7 +42,6 @@ class RandCharGenerator(generator.GeneratorBase,
       context) -> generator_pb2.GetGeneratorCapabilitiesResponse:
     """Get the generator capabilities."""
     del context
-    logging.info('GetGeneratorCapabilities() client=%s', request.status.client)
     response = services.BuildDefaultResponse(
         generator_pb2.GetGeneratorCapabilitiesRequest)
     response.toolchain = self.config.model.corpus.language
@@ -53,7 +52,6 @@ class RandCharGenerator(generator.GeneratorBase,
                         context) -> generator_pb2.GenerateTestcasesResponse:
     """Generate testcases."""
     del context
-    logging.info('GenerateTestcases() client=%s', request.status.client)
     response = services.BuildDefaultResponse(
         generator_pb2.GenerateTestcasesResponse)
 
@@ -68,7 +66,7 @@ class RandCharGenerator(generator.GeneratorBase,
       testcase.generator.CopyFrom(self.generator)
       start_time = labdate.MillisecondsTimestamp()
       testcase.inputs['src'] = ''.join(
-          random.choice(string.printable) for _ in range(n))
+          random.choice(string.ascii_lowercase) for _ in range(n))
       end_time = labdate.MillisecondsTimestamp()
       p = testcase.profiling_events.add()
       p.type = 'generation'
