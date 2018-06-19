@@ -1,5 +1,6 @@
-import numpy as np
 import typing
+
+import numpy as np
 
 from gpu.cldrive import args as _args
 from gpu.cldrive import driver
@@ -7,7 +8,7 @@ from gpu.cldrive import driver
 
 def escape_c_string(s: str) -> str:
   """ quote and return the given string """
-  return '\n'.join('"{}\\n"'.format(line.replace('"', '\\"'))
+  return '\n'.join('"{}"'.format(line.replace('"', '\\"'))
                    for line in s.split('\n') if len(line.strip()))
 
 
@@ -21,7 +22,8 @@ def to_array_str(array):
   return f"{{ {array_values} }}"
 
 
-def gen_data_blocks(kernel_args: typing.List[_args.KernelArg], inputs: np.array):
+def gen_data_blocks(kernel_args: typing.List[_args.KernelArg],
+                    inputs: np.array):
   setup_c, teardown_c, print_c = [], [], []
   for i, (arg, array) in enumerate(zip(kernel_args, inputs)):
     ctype = _args.OPENCL_TYPES[array.dtype]
