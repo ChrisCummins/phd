@@ -17,10 +17,6 @@ message ServiceStatus {
 
   // If status != SUCCESS, a message describing the error.
   optional string error_message = 3;
-
-  // If status != SUCCESS, whether the client should send a new request for the
-  // same operation, or abort.
-  optional bool should_retry = 4;
 }
 
 message ServiceConfig {
