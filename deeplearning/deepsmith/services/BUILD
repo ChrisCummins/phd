@@ -5,6 +5,27 @@ load("@requirements//:requirements.bzl", "requirement")
 
 package(default_visibility = ["//experimental:__subpackages__"])
 
+py_binary(
+    name = "randchar",
+    srcs = ["randchar.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = [
+        "//deeplearning/deepsmith/cli:__subpackages__",
+        "//experimental:__subpackages__",
+    ],
+    deps = [
+        ":generator",
+        ":services",
+        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
+        "//deeplearning/deepsmith/proto:generator_py_pb2",
+        "//lib/labm8:pbutil",
+        "//lib/labm8:labdate",
+        requirement("grpcio"),
+        requirement("absl-py"),
+    ],
+)
+
 py_library(
     name = "services",
     srcs = ["services.py"],

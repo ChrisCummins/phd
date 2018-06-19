@@ -25,11 +25,24 @@ message GetGeneratorCapabilitiesResponse {
 
 message GenerateTestcasesRequest {
   optional ServiceStatus status = 1;
+  // The minimum number of testcases to generate.
+  optional int32 num_testcases = 2;
 }
 
 message GenerateTestcasesResponse {
   optional ServiceStatus status = 1;
   repeated Testcase testcases = 2;
+}
+
+// A very simple generato which produces strings of random characters.
+message RandCharGenerator {
+  // Configuration of the service host.
+  optional ServiceConfig service = 1;
+  optional string toolchain = 2;
+  repeated Harness harness = 3;
+  // The lower and upper bounds of string lengths to generate.
+  optional int32 string_min_len = 4;
+  optional int32 string_max_len = 5;
 }
 
 // A testcase generator which uses CLgen to generate programs.
