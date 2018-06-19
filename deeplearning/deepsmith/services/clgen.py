@@ -84,11 +84,9 @@ class ClgenGenerator(generator.GeneratorBase,
     finally:
       os.environ['CLGEN_CACHE'] = previous_value
 
-  def GetGeneratorCapabilities(self,
-                               request:
-                               generator_pb2.GetGeneratorCapabilitiesRequest,
-                               context) -> \
-      generator_pb2.GetGeneratorCapabilitiesResponse:
+  def GetGeneratorCapabilities(
+      self, request: generator_pb2.GetGeneratorCapabilitiesRequest,
+      context) -> generator_pb2.GetGeneratorCapabilitiesResponse:
     del context
     logging.info('GetGeneratorCapabilities() client=%s', request.status.client)
     response = services.BuildDefaultResponse(
