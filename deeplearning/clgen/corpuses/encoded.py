@@ -208,12 +208,13 @@ class EncodedContentFiles(sqlutil.Database):
       wall_time_start = time.time()
       for encoded_cf in bar(pool.imap_unordered(EncoderWorker, jobs)):
         wall_time_end = time.time()
-        encoded_cf.wall_time_ms = int((wall_time_end - wall_time_start) * 1000)
-        wall_time_start = wall_time_end
         # TODO(cec): Remove the if check once EncoderWorker no longer returns
         # None on atomizer encode error.
         if encoded_cf:
+          encoded_cf.wall_time_ms = int(
+              (wall_time_end - wall_time_start) * 1000)
           session.add(encoded_cf)
+        wall_time_start = wall_time_end
         if wall_time_end - last_commit > 10:
           session.commit()
           last_commit = wall_time_end
