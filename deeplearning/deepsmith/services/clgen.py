@@ -59,7 +59,7 @@ class ClgenGenerator(generator.GeneratorBase,
                      generator_pb2_grpc.GeneratorServiceServicer):
 
   def __init__(self, config: generator_pb2.ClgenGenerator):
-    self.config = config
+    super(ClgenGenerator, self).__init__(config)
     with self.ClgenWorkingDir():
       m = deeplearning.clgen.models.keras_backend.KerasBackend(
           self.config.model)
@@ -131,8 +131,8 @@ class ClgenGenerator(generator.GeneratorBase,
 def main(argv):
   if len(argv) > 1:
     raise app.UsageError('Unrecognized arguments')
-  generator_config = services.ServiceConfigFromFlag('generator_config',
-                                                    generator_pb2.ClgenGenerator())
+  generator_config = services.ServiceConfigFromFlag(
+      'generator_config', generator_pb2.ClgenGenerator())
   server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
   services.AssertLocalServiceHostname(generator_config.service)
   service = ClgenGenerator(generator_config)
