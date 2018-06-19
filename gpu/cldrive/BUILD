@@ -6,7 +6,10 @@ exports_files(["LICENSE"])
 
 py_library(
     name = "cldrive",
-    srcs = ["__init__.py"],
+    srcs = [
+        "__init__.py",
+        "cldrive.py",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         ":args",
