@@ -18,7 +18,7 @@ message GetHarnessCapabilitiesRequest {
 message GetHarnessCapabilitiesResponse {
   optional ServiceStatus status = 1;
   optional Harness harness = 2;
-  repeated Testbed testbeds = 3;
+  repeated Testbed testbed = 3;
 }
 
 message RunTestcasesRequest {
@@ -35,4 +35,8 @@ message RunTestcasesResponse {
 // A harness which uses cldrive to run testcases.
 message CldriveHarness {
   optional ServiceConfig service = 1;
+  // A list of OpenCL environments to run test cases on.
+  // Use `//gpu/cldrive:cldrive --ls_env` to list the available environments.
+  // If no environments are specified, all available environments will be used.
+  repeated string opencl_env = 2;
 }
