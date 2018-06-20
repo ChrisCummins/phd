@@ -93,6 +93,7 @@ class Corpus(object):
     self.config = corpus_pb2.Corpus()
     self.config.CopyFrom(AssertConfigIsValid(config))
     self._atomizer = None
+    self._created = False
 
     cache.cachepath('corpus').mkdir(parents=True, exist_ok=True)
     hc = hashcache.HashCache(
@@ -138,6 +139,7 @@ class Corpus(object):
       EmptyCorpusException: If there are no content files, or no successfully
         pre-processed files.
     """
+    self._created = True
     logging.info('Content ID: %s', self.content_id)
     preprocessed_lock_path = self.preprocessed.database_path.parent / 'LOCK'
     with lockfile.LockFile(preprocessed_lock_path).acquire(
@@ -217,6 +219,8 @@ class Corpus(object):
   @property
   def atomizer(self) -> atomizers.AtomizerBase:
     """Must call Create() first."""
+    if not self._created:
+      raise ValueError('Must call Create() before accessing atomizer property.')
     if self._atomizer is None:
       if self.atomizer_path.is_file():
         self._atomizer = self._LoadAtomizer()
