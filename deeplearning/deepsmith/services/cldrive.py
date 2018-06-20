@@ -70,7 +70,6 @@ class CldriveHarness(harness.HarnessBase,
                              context) -> harness_pb2.GetHarnessCapabilitiesResponse:
     """Get the harness capabilities."""
     del context
-    logging.info('GetHarnessCapabilities() client=%s', request.status.client)
     response = services.BuildDefaultResponse(
         harness_pb2.GetHarnessCapabilitiesRequest)
     response.harness.name = 'cldrive'
@@ -80,7 +79,6 @@ class CldriveHarness(harness.HarnessBase,
   def RunTestcases(self, request: harness_pb2.RunTestcasesRequest,
                    context) -> harness_pb2.RunTestcasesResponse:
     del context
-    logging.info('RunTestcases() client=%s', request.status.client)
     response = services.BuildDefaultResponse(harness_pb2.RunTestcasesResponse)
     if request.testbed not in self.testbeds:
       response.status.returncode = service_pb2.ServiceStatus.INVALID_REQUEST_PARAMETERS
