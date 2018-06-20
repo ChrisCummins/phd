@@ -11,7 +11,7 @@ from gpu.oclgrind import oclgrind
 FLAGS = flags.FLAGS
 flags.DEFINE_boolean(
     'ls_env', False,
-    'If set, list the names and details of available OpenCL environments, and'
+    'If set, list the names and details of available OpenCL environments, and '
     'exit.')
 
 
