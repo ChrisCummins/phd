@@ -10,12 +10,8 @@ from gpu.oclgrind import oclgrind
 
 FLAGS = flags.FLAGS
 
-
-def test_Exec_version():
-  """Test that the version of oclgrind is as expected."""
-  proc = oclgrind.Exec(['--version'])
-  # This test will of course fail if the @oclgrind package is updated.
-  assert proc.stdout == """
+# The verbatim string printed to stdout by `oclgrind --version`.
+VERSION = """
 Oclgrind 18.3
 
 Copyright (c) 2013-2018
@@ -23,6 +19,20 @@ James Price and Simon McIntosh-Smith, University of Bristol
 https://github.com/jrprice/Oclgrind
 
 """
+
+
+def test_Exec_version():
+  """Test that the version of oclgrind is as expected."""
+  proc = oclgrind.Exec(['--version'])
+  # This test will of course fail if the @oclgrind package is updated.
+  assert proc.stdout == VERSION
+
+
+def test_OpenCLEnvironment_Exec_version():
+  """Test that OpenCLEnvironment.Exec() works as expected for version."""
+  proc = oclgrind.OpenCLEnvironment().Exec(['--version'])
+  # This test will of course fail if the @oclgrind package is updated.
+  assert proc.stdout == VERSION
 
 
 def test_OpenCLEnvironment_name():
