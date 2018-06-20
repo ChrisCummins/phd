@@ -71,6 +71,18 @@ def test_Corpus_archive_cannot_be_unpacked(clgen_cache_dir, abc_corpus_config):
   assert f"Archive unpack failed: '{d}/empty.tar.bz2'" == str(e_ctx.value)
 
 
+def test_Corpus_atomizer_before_Create(clgen_cache_dir, abc_corpus_config):
+  """Test that error is raised if atomizer is accessed before Create()."""
+  del clgen_cache_dir
+  c = corpuses.Corpus(abc_corpus_config)
+  with pytest.raises(ValueError) as e_ctx:
+    c.atomizer
+  assert 'Must call Create() before accessing atomizer property.' == str(
+      e_ctx.value)
+  c.Create()
+  c.atomizer
+
+
 def test_Corpus_config_hash_different_options(clgen_cache_dir,
                                               abc_corpus_config):
   """Test that the corpus ID is changed with a different option value."""
