@@ -29,7 +29,7 @@ $ ./experimental/deeplearning/deepsmith/opencl_fuzz/make_image.sh
 Test a device using:
 
 ```sh
-$ docker run opencl \
+$ docker run opencl_fuzz \
     /app/experimental/deeplearning/deepsmith/opencl_fuzz/opencl_fuzz_image.binary \
     --generator /datasets/generator.pbtxt
 ```
