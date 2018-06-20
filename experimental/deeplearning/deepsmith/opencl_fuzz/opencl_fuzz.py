@@ -33,10 +33,6 @@ flags.DEFINE_integer(
 flags.DEFINE_integer(
     'batch_size', 100,
     'The number of test cases to generate and execute in a single batch.')
-flags.DEFINE_string(
-    'oclgrind', 'oclgrind',
-    'Path to the oclgrind binary. This does not need to be set if oclgring is '
-    'in the system $PATH.')
 
 CLGEN_CONFIG = """
 # File: //deeplearning/deepsmith/proto/generator.proto
