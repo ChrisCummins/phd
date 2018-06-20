@@ -21,6 +21,13 @@ from lib.labm8 import pbutil
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
+    'generator', None,
+    'The path of the generator config proto.')
+flags.DEFINE_string(
+    'dut', 'Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2',
+    'The name of the device under test, as described by cldrive. Run '
+    '//gpu/cldrive --ls_env to see a list of available devices.')
+flags.DEFINE_string(
     'interesting_results_dir', '/tmp/',
     'Directory to write interesting results to.')
 flags.DEFINE_integer(
@@ -33,87 +40,6 @@ flags.DEFINE_integer(
 flags.DEFINE_integer(
     'batch_size', 100,
     'The number of test cases to generate and execute in a single batch.')
-
-CLGEN_CONFIG = """
-# File: //deeplearning/deepsmith/proto/generator.proto
-# Proto: deepsmith.ClgenGenerator
-instance {
-  working_dir: "/mnt/cc/data/experimental/deeplearning/polyglot/clgen"
-  model {
-    corpus {
-      content_id: "ca98cc9e59c73b712d50f099d033ed3dcc6fa10a"
-      ascii_character_atomizer: true
-      preprocessor: "deeplearning.clgen.preprocessors.opencl:ClangPreprocessWithShim"
-      preprocessor: "deeplearning.clgen.preprocessors.opencl:Compile"
-      preprocessor: "deeplearning.clgen.preprocessors.opencl:NormalizeIdentifiers"
-      preprocessor: "deeplearning.clgen.preprocessors.opencl:StripDoubleUnderscorePrefixes"
-      preprocessor: "deeplearning.clgen.preprocessors.common:StripDuplicateEmptyLines"
-      preprocessor: "deeplearning.clgen.preprocessors.opencl:SanitizeKernelPrototype"
-      preprocessor: "deeplearning.clgen.preprocessors.common:StripTrailingWhitespace"
-      preprocessor: "deeplearning.clgen.preprocessors.opencl:ClangFormat"
-      preprocessor: "deeplearning.clgen.preprocessors.common:MinimumLineCount3"
-      preprocessor: "deeplearning.clgen.preprocessors.opencl:Compile"
-      contentfile_separator: "\n\n"
-    }
-    architecture {
-      backend: TENSORFLOW
-      neuron_type: LSTM
-      neurons_per_layer: 256
-      num_layers: 2
-      post_layer_dropout_micros: 0
-    }
-    training {
-      num_epochs: 50
-      sequence_length: 64
-      shuffle_corpus_contentfiles_between_epochs: true
-      batch_size: 64
-      adam_optimizer {
-        initial_learning_rate_micros: 2000
-        learning_rate_decay_per_epoch_micros: 50000
-        beta_1_micros: 900000
-        beta_2_micros: 999000
-        normalized_gradient_clip_micros: 5000000
-      }
-    }
-  }
-  sampler {
-    start_text: "kernel void "
-    batch_size: 1
-    temperature_micros: 750000  # real value = 0.75
-    termination_criteria {
-      symtok {
-        depth_increase_token: "{"
-        depth_decrease_token: "}"
-      }
-    }
-    termination_criteria {
-      maxlen {
-        maximum_tokens_in_sample: 5000
-      }
-    }
-  }
-}
-testcase_skeleton {
-  toolchain: "opencl"
-  harness {
-    name: "cldrive"
-  }
-  inputs {
-    key: "gsize"
-    value: "1,1,1"
-  }
-  inputs {
-    key: "lsize"
-    value: "1,1,1"
-  }
-}
-"""
-
-DUT_HARNESS_CONFIG = """
-# File: //deeplearning/deepsmith/proto/harness.proto
-# Proto: deepsmith.CldriveHarness
-opencl_env: "Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2"
-"""
 
 
 def RunBatch(generator: base_generator.GeneratorBase,
@@ -291,12 +217,17 @@ def main(argv):
   logging.info('Recording interesting results in %s.', interesting_results_dir)
 
   logging.info('Preparing generator.')
-  clgen_config = pbutil.FromString(
-      CLGEN_CONFIG, generator_pb2.ClgenGenerator())
-  generator = clgen.ClgenGenerator(clgen_config)
+  if not FLAGS.generator:
+    raise app.UsageError('--generator must be set')
+  config = pathlib.Path(FLAGS.generator)
+  if not pbutil.ProtoIsReadable(config, generator_pb2.ClgenGenerator()):
+    raise app.UsageError('--generator is not a Generator proto')
+  generator_config = pbutil.FromFile(config, generator_pb2.ClgenGenerator())
+  generator = clgen.ClgenGenerator(generator_config)
 
   logging.info('Preparing device under test.')
-  config = pbutil.FromString(DUT_HARNESS_CONFIG, harness_pb2.CldriveHarness())
+  config = harness_pb2.CldriveHarness()
+  config.opencl_env.extend([FLAGS.dut])
   dut_harness = cldrive.CldriveHarness(config)
   assert len(dut_harness.testbeds) == 1
 
