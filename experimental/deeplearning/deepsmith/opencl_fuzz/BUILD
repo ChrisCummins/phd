@@ -1,3 +1,5 @@
+# Fuzz testing OpenCL devices using CLgen.
+
 load("@requirements//:requirements.bzl", "requirement")
 
 py_binary(
@@ -6,10 +8,9 @@ py_binary(
     deps = [
         "//deeplearning/deepsmith/proto:generator_py_pb2",
         "//deeplearning/deepsmith/proto:harness_py_pb2",
-        # TODO(cec): Re-enable CLgen dependency.
-        # "//deeplearning/deepsmith/services:clgen",
         "//deeplearning/deepsmith/services:cldrive",
-        "//deeplearning/deepsmith/services:randchar",
-        "//deeplearning/deepsmith/services:dummy_generator",
+        "//deeplearning/deepsmith/services:clgen",
+        requirement("absl-py"),
+        requirement("humanize"),
     ],
 )

@@ -11,11 +11,10 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import harness_pb2
 from deeplearning.deepsmith.services import cldrive
-from deeplearning.deepsmith.services import dummy_generator
+from deeplearning.deepsmith.services import clgen
 from deeplearning.deepsmith.services import generator as base_generator
 from deeplearning.deepsmith.services import harness as base_harness
 from gpu.oclgrind import oclgrind
-# from deeplearning.deepsmith.services import clgen
 from lib.labm8 import pbutil
 
 
@@ -28,7 +27,7 @@ flags.DEFINE_integer(
     'min_interesting_results', 1,
     'The minimum number of interesting testcases to discover before stopping.')
 flags.DEFINE_integer(
-    'max_testing_time_seconds', 1,
+    'max_testing_time_seconds', 3600,
     'The maximum number of time to run in seconds. The actual runtime may be '
     'higher, as the in-progress batch must complete.')
 flags.DEFINE_integer(
@@ -39,18 +38,69 @@ flags.DEFINE_string(
     'Path to the oclgrind binary. This does not need to be set if oclgring is '
     'in the system $PATH.')
 
-# TODO(cec): Use a ClgenGenerator, not a RandcharGenerator.
 CLGEN_CONFIG = """
 # File: //deeplearning/deepsmith/proto/generator.proto
 # Proto: deepsmith.ClgenGenerator
-testcase_to_generate {
+instance {
+  working_dir: "/mnt/cc/data/experimental/deeplearning/polyglot/clgen"
+  model {
+    corpus {
+      content_id: "ca98cc9e59c73b712d50f099d033ed3dcc6fa10a"
+      ascii_character_atomizer: true
+      preprocessor: "deeplearning.clgen.preprocessors.opencl:ClangPreprocessWithShim"
+      preprocessor: "deeplearning.clgen.preprocessors.opencl:Compile"
+      preprocessor: "deeplearning.clgen.preprocessors.opencl:NormalizeIdentifiers"
+      preprocessor: "deeplearning.clgen.preprocessors.opencl:StripDoubleUnderscorePrefixes"
+      preprocessor: "deeplearning.clgen.preprocessors.common:StripDuplicateEmptyLines"
+      preprocessor: "deeplearning.clgen.preprocessors.opencl:SanitizeKernelPrototype"
+      preprocessor: "deeplearning.clgen.preprocessors.common:StripTrailingWhitespace"
+      preprocessor: "deeplearning.clgen.preprocessors.opencl:ClangFormat"
+      preprocessor: "deeplearning.clgen.preprocessors.common:MinimumLineCount3"
+      preprocessor: "deeplearning.clgen.preprocessors.opencl:Compile"
+      contentfile_separator: "\n\n"
+    }
+    architecture {
+      backend: TENSORFLOW
+      neuron_type: LSTM
+      neurons_per_layer: 256
+      num_layers: 2
+      post_layer_dropout_micros: 0
+    }
+    training {
+      num_epochs: 50
+      sequence_length: 64
+      shuffle_corpus_contentfiles_between_epochs: true
+      batch_size: 64
+      adam_optimizer {
+        initial_learning_rate_micros: 2000
+        learning_rate_decay_per_epoch_micros: 50000
+        beta_1_micros: 900000
+        beta_2_micros: 999000
+        normalized_gradient_clip_micros: 5000000
+      }
+    }
+  }
+  sampler {
+    start_text: "kernel void "
+    batch_size: 1
+    temperature_micros: 750000  # real value = 0.75
+    termination_criteria {
+      symtok {
+        depth_increase_token: "{"
+        depth_decrease_token: "}"
+      }
+    }
+    termination_criteria {
+      maxlen {
+        maximum_tokens_in_sample: 5000
+      }
+    }
+  }
+}
+testcase_skeleton {
   toolchain: "opencl"
   harness {
     name: "cldrive"
-  }
-  inputs {
-    key: "src"
-    value: "kernel void A(global int* a) {a[get_global_id(0)] /= 2;}"
   }
   inputs {
     key: "gsize"
@@ -245,10 +295,9 @@ def main(argv):
   logging.info('Recording interesting results in %s.', interesting_results_dir)
 
   logging.info('Preparing generator.')
-  # TODO(cec): Use a ClgenGenerator, not a RandcharGenerator.
   clgen_config = pbutil.FromString(
-      CLGEN_CONFIG, generator_pb2.DummyGenerator())
-  generator = dummy_generator.DummyGenerator(clgen_config)
+      CLGEN_CONFIG, generator_pb2.ClgenGenerator())
+  generator = clgen.ClgenGenerator(clgen_config)
 
   logging.info('Preparing device under test.')
   config = pbutil.FromString(DUT_HARNESS_CONFIG, harness_pb2.CldriveHarness())
