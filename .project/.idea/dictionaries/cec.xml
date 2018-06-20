@@ -8,6 +8,7 @@
       <w>capsys</w>
       <w>cflags</w>
       <w>checksums</w>
+      <w>cldrive</w>
       <w>clgen</w>
       <w>clipnorm</w>
       <w>cloner</w>
