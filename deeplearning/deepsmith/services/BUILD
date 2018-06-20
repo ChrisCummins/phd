@@ -26,6 +26,27 @@ py_binary(
     ],
 )
 
+py_binary(
+    name = "dummy_generator",
+    srcs = ["dummy_generator.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = [
+        "//deeplearning/deepsmith/cli:__subpackages__",
+        "//experimental:__subpackages__",
+    ],
+    deps = [
+        ":generator",
+        ":services",
+        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
+        "//deeplearning/deepsmith/proto:generator_py_pb2",
+        "//lib/labm8:labdate",
+        "//lib/labm8:pbutil",
+        requirement("grpcio"),
+        requirement("absl-py"),
+    ],
+)
+
 py_library(
     name = "services",
     srcs = ["services.py"],

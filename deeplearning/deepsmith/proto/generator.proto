@@ -34,7 +34,15 @@ message GenerateTestcasesResponse {
   repeated Testcase testcases = 2;
 }
 
-// A very simple generato which produces strings of random characters.
+// A "generator" which always produces the same output.
+message DummyGenerator {
+  // Configuration of the service host.
+  optional ServiceConfig service = 1;
+  // The testcase which is "generated".
+  optional Testcase testcase_to_generate = 2;
+}
+
+// A very simple generator which produces strings of random characters.
 message RandCharGenerator {
   // Configuration of the service host.
   optional ServiceConfig service = 1;
