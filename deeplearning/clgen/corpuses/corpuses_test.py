@@ -1,6 +1,7 @@
 """Unit tests for //deeplearning/clgen/corpus.py."""
-import sys
+import pathlib
 import tempfile
+import sys
 
 import pytest
 from absl import app
@@ -54,8 +55,9 @@ def test_Corpus_archive_not_found(clgen_cache_dir, abc_corpus_config):
   del clgen_cache_dir
   with tempfile.TemporaryDirectory() as d:
     abc_corpus_config.local_tar_archive = f'{d}/missing_archive.tar.bz2'
-    with pytest.raises(errors.UserError):
+    with pytest.raises(errors.UserError) as e_ctx:
       corpuses.Corpus(abc_corpus_config)
+  assert f"Archive not found: '{d}/missing_archive.tar.bz2'" == str(e_ctx.value)
 
 
 def test_Corpus_config_hash_different_options(clgen_cache_dir,

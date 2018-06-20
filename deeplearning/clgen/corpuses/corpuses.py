@@ -328,7 +328,20 @@ def ResolveEncodedId(content_id: str, config: corpus_pb2.Corpus) -> str:
 
 
 def GetHashOfArchiveContents(archive: pathlib.Path) -> str:
-  """Compute the checksum of the contents of a directory."""
+  """Compute the checksum of the contents of a directory.
+
+  Args:
+    archive: Path of the archive.
+
+  Returns:
+    Checksum of the archive.
+
+  Raises:
+    UserError: If the requested archive does not exist, or cannot be unpacked.
+  """
+  if not archive.is_file():
+    raise errors.UserError(f"Archive not found: '{archive}'")
+
   with tempfile.TemporaryDirectory(prefix='clgen_corpus_') as d:
     cmd = ['tar', '-xf', str(archive), '-C', d]
     subprocess.check_call(cmd)
