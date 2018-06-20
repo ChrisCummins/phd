@@ -72,6 +72,7 @@ py_library(
     deps = [
         requirement("pyopencl"),
         requirement("pytools"),
+        requirement("cffi"),
         requirement("absl-py"),
     ],
 )
