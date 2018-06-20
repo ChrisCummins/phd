@@ -209,7 +209,7 @@ def CompileDriver(src: str, path: str, platform_id,
 
   cmd = ['timeout', '-s9', str(timeout), cc, '-xc', '-', '-o', str(path),
          f'-DPLATFORM_ID={platform_id}', f'-DDEVICE_ID={device_id}'] + cflags
-  logging.debug('$ %s', ' '.join(cmd))
+  # logging.debug('$ %s', ' '.join(cmd))
   proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
   proc.communicate(src.encode('utf-8'))
   if not proc.returncode == 0:

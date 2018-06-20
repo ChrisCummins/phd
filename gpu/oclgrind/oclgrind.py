@@ -44,7 +44,7 @@ def Exec(argv: typing.List[str]) -> subprocess.Popen:
     A Popen instance, with string stdout and stderr attributes set.
   """
   cmd = [str(OCLGRIND_PATH)] + argv
-  logging.debug('$ %s', ' '.join(cmd))
+  # logging.debug('$ %s', ' '.join(cmd))
   process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE, universal_newlines=True)
   stdout, stderr = process.communicate()

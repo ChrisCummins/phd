@@ -118,8 +118,8 @@ def ResultIsInteresting(result: deepsmith_pb2.Result,
     True if the result is interesting, else False.
   """
   outcome = result.outputs['outcome']
-  logging.debug('Stdout: %s', result.outputs['stdout'])
-  logging.debug('Stderr: %s', result.outputs['stderr'])
+  # logging.debug('Stdout: %s', result.outputs['stdout'])
+  # logging.debug('Stderr: %s', result.outputs['stderr'])
 
   if outcome == 'Build Failure':
     # We assume that a
