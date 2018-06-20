@@ -39,5 +39,5 @@ $ docker run \
     --dut 'CPU|ComputeAorta|Codeplay_Software_Ltd._-_host_CPU|1.14|1.2'
 ```
 
-Note the use of `-v` arguments to map various directories  interesting results
-are exported to the host.
+Note the use of `-v` arguments to map directories to host, such as an OpenCL
+implementation, and the directory in which interesting results are written.
