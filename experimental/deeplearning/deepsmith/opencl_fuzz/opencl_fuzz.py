@@ -14,6 +14,7 @@ from deeplearning.deepsmith.services import cldrive
 from deeplearning.deepsmith.services import generator as base_generator
 from deeplearning.deepsmith.services import harness as base_harness
 from deeplearning.deepsmith.services import randchar
+from gpu.oclgrind import oclgrind
 # from deeplearning.deepsmith.services import clgen
 from lib.labm8 import pbutil
 
@@ -54,12 +55,6 @@ DUT_HARNESS_CONFIG = """
 # File: //deeplearning/deepsmith/proto/harness.proto
 # Proto: deepsmith.CldriveHarness
 opencl_env: "CPU|Apple|Intel(R)_Core(TM)_i5-3570K_CPU_@_3.40GHz|1.1|1.2"
-"""
-
-GOLDEN_STANDARD_HARNESS_CONFIG = """
-# File: //deeplearning/deepsmith/proto/harness.proto
-# Proto: deepsmith.CldriveHarness
-opencl_env: "Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_16.10|1.2"
 """
 
 
@@ -183,18 +178,56 @@ def ResultIsInteresting(result: deepsmith_pb2.Result,
       return True
 
 
+def TestingLoop(min_interesting_results: int, max_testing_time_seconds: int,
+                batch_size: int, generator: base_generator.GeneratorBase,
+                dut_harness: base_harness.HarnessBase,
+                gs_harness: base_harness.HarnessBase,
+                interesting_results_dir: pathlib.Path) -> None:
+  """The main fuzzing loop.
+
+  Args:
+    min_interesting_results: The minimum number of interesting results to find.
+    max_testing_time_seconds: The maximum time allowed to find interesting
+      results.
+    batch_size: The number of testcases to generate and execute in each batch.
+    generator: A testcase generator.
+    dut_harness: The device under test.
+    gs_harness: The device to compare outputs against.
+    interesting_results_dir: The directory to write interesting results to.
+  """
+  interesting_results_dir.mkdir(parents=True, exist_ok=True)
+  start_time = time.time()
+  num_interesting_results = 0
+  batch_num = 0
+  while (num_interesting_results < min_interesting_results and
+         time.time() < start_time + max_testing_time_seconds):
+    batch_num += 1
+    logging.info('Starting generate / test / eval batch %d ...', batch_num)
+    interesting_results = RunBatch(
+        generator, dut_harness, gs_harness, batch_size)
+    for result in interesting_results:
+      pbutil.ToFile(
+          result,
+          interesting_results_dir / f'{num_interesting_results:04d}.pbtxt')
+      num_interesting_results += 1
+
+  logging.info('Stopping after %.2f seconds and %s batches (%.2fs / batch).\n'
+               'Found %s interesting results.', time.time() - start_time,
+               humanize.intcomma(batch_num),
+               (time.time() - start_time) / batch_num, len(interesting_results))
+
+
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:
     raise app.UsageError('Unrecognized arguments')
 
-  # Get the directory to write interesting results to.
+  # Parse flags and instantiate testing objects.
   if not FLAGS.interesting_results_dir:
     raise app.UsageError('--interesting_results_dir must be set')
   interesting_results_dir = pathlib.Path(FLAGS.interesting_results_dir)
   if interesting_results_dir.exists() and not interesting_results_dir.is_dir():
     raise app.UsageError('--interesting_results_dir must be a directory')
-  interesting_results_dir.mkdir(parents=True, exist_ok=True)
   logging.info('Recording interesting results in %s.', interesting_results_dir)
 
   logging.info('Preparing generator.')
@@ -209,31 +242,14 @@ def main(argv):
   assert len(dut_harness.testbeds) == 1
 
   logging.info('Preparing gold standard testbed.')
-  config = pbutil.FromString(
-      GOLDEN_STANDARD_HARNESS_CONFIG, harness_pb2.CldriveHarness())
+  config = harness_pb2.CldriveHarness()
+  config.opencl_env.extend([oclgrind.OpenCLEnvironment().name])
   gs_harness = cldrive.CldriveHarness(config)
   assert len(dut_harness.testbeds) >= 1
 
-  start_time = time.time()
-  num_interesting_results = 0
-  batch_num = 0
-  while (num_interesting_results < FLAGS.min_interesting_results and
-         time.time() < start_time + FLAGS.max_testing_time_seconds):
-    batch_num += 1
-    logging.info('Starting generate / test / eval batch %d ...', batch_num)
-    interesting_results = RunBatch(
-        generator, dut_harness, gs_harness, FLAGS.batch_size)
-    for result in interesting_results:
-      pbutil.ToFile(
-          result,
-          interesting_results_dir / f'{num_interesting_results:04d}.pbtxt')
-      num_interesting_results += 1
-
-  logging.info(
-      'Stopping after %.2f seconds and %s batches (%.2fs / batch).\n'
-      'Found %s interesting results.', time.time() - start_time,
-      humanize.intcomma(batch_num), (time.time() - start_time) / batch_num,
-      len(interesting_results))
+  TestingLoop(FLAGS.min_interesting_results, FLAGS.max_testing_time_seconds,
+              FLAGS.batch_size, generator, dut_harness, gs_harness,
+              interesting_results_dir)
 
 
 if __name__ == '__main__':
