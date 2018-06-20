@@ -72,7 +72,7 @@ def RunBatch(generator: base_generator.GeneratorBase,
   res = generator.GenerateTestcases(req, None)
 
   # Evaluate testcases.
-  logging.info('Evaluating %d testcases on %s ...', batch_size,
+  logging.info('Evaluating %d testcases on %s ...', len(res.testcases),
                dut_harness.testbeds[0].opts['platform'][:12])
   results = RunTestcases(dut_harness, res.testcases)
 
