@@ -396,7 +396,7 @@ def device_type(device: cl.Device) -> str:
     try:
       return cl.device_type.to_string(cl_device_type)
     except ValueError:
-      return int(cl_device_type)
+      return str(int(cl_device_type))
 
 
 def clinfo(file=sys.stdout) -> None:
