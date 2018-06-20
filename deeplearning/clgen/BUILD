@@ -104,6 +104,20 @@ py_library(
     visibility = ["//deeplearning/clgen:__subpackages__"],
 )
 
+py_binary(
+    name = "ls_models",
+    srcs = ["ls_models.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deeplearning/clgen/models",
+        "//deeplearning/clgen/proto:model_py_pb2",
+        "//lib/labm8:pbutil",
+        requirement("absl-py"),
+    ],
+)
+
 py_library(
     name = "samplers",
     srcs = ["samplers.py"],
