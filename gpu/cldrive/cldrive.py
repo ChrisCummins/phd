@@ -5,6 +5,7 @@ from absl import app
 from absl import flags
 
 from gpu import cldrive
+from gpu.oclgrind import oclgrind
 
 
 FLAGS = flags.FLAGS
@@ -15,8 +16,15 @@ flags.DEFINE_boolean(
 
 
 def GetOpenClEnvironments() -> typing.List[cldrive.OpenCLEnvironment]:
-  """Get a list of available OpenCL testbeds."""
-  return sorted(cldrive.all_envs(), key=lambda x: x.name)
+  """Get a list of available OpenCL testbeds.
+
+  This includes the local oclgrind device.
+
+  Returns:
+    A list of OpenCLEnvironment instances.
+  """
+  return sorted(list(cldrive.all_envs()) + [oclgrind.OpenCLEnvironment()],
+                key=lambda x: x.name)
 
 
 def GetTestbedNames() -> typing.List[str]:
