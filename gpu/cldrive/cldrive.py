@@ -34,6 +34,7 @@ def PrintOpenClEnvironments() -> None:
     print(f'    Device:       {env.device_name}')
     print(f'    Driver:       {env.driver_version}')
     print(f'    Device Type:  {env.device_type}')
+    print(f'    OpenCL:       {env.opencl_version}')
 
 
 def main(argv):
