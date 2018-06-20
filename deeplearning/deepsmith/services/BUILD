@@ -153,6 +153,7 @@ py_binary(
         ":services",
         "//deeplearning/deepsmith/proto:harness_py_pb2",
         "//gpu/cldrive",
+        "//gpu/oclgrind",
         "//lib/labm8:fs",
         "//lib/labm8:labdate",
         "//lib/labm8:pbutil",

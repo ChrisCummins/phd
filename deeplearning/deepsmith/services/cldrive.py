@@ -46,20 +46,23 @@ class CldriveHarness(harness.HarnessBase,
     # Match and instantiate the OpenCL environments.
     all_envs = {env.name: env for env in cldrive.GetOpenClEnvironments()}
     if self.config.opencl_env:
-      self.envs = []
+      envs = []
       for opencl_env in sorted(set(self.config.opencl_env)):
         if opencl_env in all_envs:
-          self.envs.append(all_envs[opencl_env])
+          envs.append(all_envs[opencl_env])
         else:
+          available = '\n'.join(f'    {n}' for n in sorted(all_envs.keys()))
           raise LookupError(
-              f"Requested OpenCL environment not available: '{opencl_env}'")
+              f"Requested OpenCL environment not available: '{opencl_env}'.\n"
+              f"Available OpenCL devices:\n{available}")
     else:
-      self.envs = all_envs.values()
-    if not self.envs:
+      envs = all_envs.values()
+    if not envs:
       raise EnvironmentError('No OpenCL environments available')
 
-    self.testbeds = [OpenClEnvironmentToTestbed(e) for e in self.envs]
-    self.ids = [e.ids() for e in self.envs]
+    self.envs = envs
+    self.testbeds = [OpenClEnvironmentToTestbed(e) for e in envs]
+    self.ids = [e.ids() for e in envs]
 
     # Logging output.
     for testbed in self.testbeds:
@@ -88,7 +91,7 @@ class CldriveHarness(harness.HarnessBase,
     testbed_idx = self.testbeds.index(request.testbed)
     for testcase in request.testcases:
       response.results.extend([RunTestcase(
-          self.ids[testbed_idx], self.testbeds[testbed_idx], testcase)])
+          self.envs[testbed_idx], self.testbeds[testbed_idx], testcase)])
 
     return response
 
@@ -114,7 +117,7 @@ def OpenClEnvironmentToTestbed(
   return testbed
 
 
-def RunTestcase(ids: typing.Tuple[int, int],
+def RunTestcase(opencl_environment: env.OpenCLEnvironment,
                 testbed: deepsmith_pb2.Testbed,
                 testcase: deepsmith_pb2.Testcase) -> deepsmith_pb2.Result:
   """Run a testcase."""
@@ -122,7 +125,7 @@ def RunTestcase(ids: typing.Tuple[int, int],
   result = deepsmith_pb2.Result()
   result.testcase.CopyFrom(testcase)
   result.testbed.CopyFrom(testbed)
-  platform_id, device_id = ids
+  platform_id, device_id = opencl_environment.ids()
   driver = MakeDriver(testcase)
   # Get a temporary file to write and run the driver from.
   with tempfile.NamedTemporaryFile(prefix='deepsmith_', delete=False) as f:
@@ -131,16 +134,13 @@ def RunTestcase(ids: typing.Tuple[int, int],
     CompileDriver(driver, path, platform_id, device_id)
     timeout = testcase.harness.opts.get('timeout_seconds', '60')
     cmd = ['timeout', '-s9', timeout, f.name]
-    logging.debug('$ %s', ' '.join(cmd))
     start_time = labdate.GetUtcMillisecondsNow()
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                            universal_newlines=True)
-    stdout, stderr = proc.communicate()
+    proc = opencl_environment.Exec(cmd)
     end_time = labdate.GetUtcMillisecondsNow()
     # Build result message.
     result.returncode = proc.returncode
-    result.outputs['stdout'] = stdout
-    result.outputs['stderr'] = stderr
+    result.outputs['stdout'] = proc.stdout
+    result.outputs['stderr'] = proc.stderr
     runtime = result.profiling_events.add()
     runtime.client = system.HOSTNAME
     runtime.type = 'runtime'
