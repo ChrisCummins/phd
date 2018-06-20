@@ -4,12 +4,15 @@ licenses(["restricted"])  # GPL v3
 
 exports_files(["LICENSE"])
 
-py_library(
+py_binary(
     name = "cldrive",
     srcs = [
         "__init__.py",
         "cldrive.py",
     ],
+    default_python_version = "PY3",
+    main = "cldrive.py",
+    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":args",
@@ -17,6 +20,7 @@ py_library(
         ":data",
         ":driver",
         ":env",
+        "//gpu/oclgrind",
     ],
 )
 
