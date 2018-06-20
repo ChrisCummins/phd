@@ -112,7 +112,7 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/clgen/models",
-        "//deeplearning/clgen/proto:model_py_pb2",
+        "//deeplearning/clgen/proto:internal_py_pb2",
         "//lib/labm8:pbutil",
         requirement("absl-py"),
     ],

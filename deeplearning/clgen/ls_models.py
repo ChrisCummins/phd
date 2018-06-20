@@ -6,7 +6,7 @@ from absl import flags
 from absl import logging
 
 from deeplearning.clgen.models import models
-from deeplearning.clgen.proto import model_pb2
+from deeplearning.clgen.proto import internal_pb2
 from lib.labm8 import pbutil
 
 
@@ -20,11 +20,15 @@ flags.DEFINE_string(
 def LsModels(cache_root: pathlib.Path) -> None:
   for model_dir in (cache_root / 'model').iterdir():
     meta_file = model_dir / 'META.pbtxt'
-    if pbutil.ProtoIsReadable(meta_file, model_pb2.Model()):
-      model = models.Model(pbutil.FromFile(meta_file, model_pb2.Model()))
-      telemetry = model.TrainingTelemetry()
+    if pbutil.ProtoIsReadable(meta_file, internal_pb2.ModelMeta()):
+      model = models.Model(
+          pbutil.FromFile(meta_file, internal_pb2.ModelMeta()).config)
+      telemetry = list(model.TrainingTelemetry())
       num_epochs = model.config.training.num_epochs
-      print('%s %d / %d epochs', model_dir, len(telemetry), num_epochs)
+      n = len(telemetry)
+      print(f'{model_dir} {n} / {num_epochs} epochs')
+    elif meta_file.is_file():
+      logging.warning('Meta file %s cannot be read.', meta_file)
     else:
       logging.warning('Meta file %s not found.', meta_file)
 
