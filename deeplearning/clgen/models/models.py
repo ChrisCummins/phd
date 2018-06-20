@@ -74,7 +74,8 @@ class Model(object):
     # Create symlink to encoded corpus.
     symlink = self.cache.path / 'corpus'
     if not symlink.is_symlink():
-      os.symlink(self.corpus.encoded.database_path.parent, symlink)
+      os.symlink(os.path.relpath(
+          self.corpus.encoded.database_path.parent, self.cache.path), symlink)
 
     # Validate metadata against cache.
     if self.cache.get('META.pbtxt'):
