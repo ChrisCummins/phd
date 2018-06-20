@@ -146,6 +146,7 @@ py_binary(
         "//deeplearning/deepsmith/cli:__subpackages__",
         "//experimental:__subpackages__",
     ],
+    data = ["@opencl_headers//:opencl_headers",],
     deps = [
         ":harness",
         ":services",
@@ -154,6 +155,7 @@ py_binary(
         "//gpu/oclgrind",
         "//lib/labm8:fs",
         "//lib/labm8:labdate",
+        "//lib/labm8:bazelutil",
         "//lib/labm8:pbutil",
         "//lib/labm8:system",
         requirement("absl-py"),

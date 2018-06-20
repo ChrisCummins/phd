@@ -18,12 +18,15 @@ from deeplearning.deepsmith.services import services
 from gpu import cldrive as cldrive_lib
 from gpu.cldrive import cldrive
 from gpu.cldrive import env
+from lib.labm8 import bazelutil
 from lib.labm8 import fs
 from lib.labm8 import labdate
 from lib.labm8 import system
 
 
 FLAGS = flags.FLAGS
+
+OPENCL_HEADERS_INCLUDE = bazelutil.DataPath('opencl_headers/')
 
 
 class CldriveHarness(harness.HarnessBase,
@@ -202,6 +205,7 @@ def CompileDriver(src: str, path: str, platform_id,
   """Compile driver binary from source."""
   # Assign default compilation flags.
   cflags = cflags or ["-std=c99", "-Wno-deprecated-declarations"]
+  cflags.append(f'-I{OPENCL_HEADERS_INCLUDE}')
   if system.is_linux():
     cflags.append('-lOpenCL')
   elif system.is_mac():
