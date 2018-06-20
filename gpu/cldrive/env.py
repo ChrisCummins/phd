@@ -1,9 +1,12 @@
 import platform
 import re
+import subprocess
 import sys
+import typing
 from typing import Iterator, Tuple
 
 import pyopencl as cl
+from absl import logging
 
 
 class OpenCLEnvironment(object):
@@ -52,6 +55,29 @@ class OpenCLEnvironment(object):
     """
     return _lookup_env(return_ids=True, platform=self.platform,
                        device=self.device)
+
+  def Exec(self, argv: typing.List[str]) -> subprocess.Popen:
+    """Execute a command in an environment for the OpenCL device.
+
+    This creates a Popen process, executes it, and sets the stdout and stderr
+    attributes to the process output.
+
+    This method can be used to wrap OpenCL devices which require a specific
+    environment to execute, such as by setting a LD_PRELOAD, or running a
+    command inside of another (in the case of oclgrind).
+
+    Args:
+      argv: A list of arguments to execute.
+
+    Returns:
+      A Popen instance, with string stdout and stderr attributes set.
+    """
+    logging.debug('$ %s', ' '.join(argv))
+    process = subprocess.Popen(argv, stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE, universal_newlines=True)
+    stdout, stderr = process.communicate()
+    process.stdout, process.stderr = stdout, stderr
+    return process
 
   @property
   def name(self) -> str:

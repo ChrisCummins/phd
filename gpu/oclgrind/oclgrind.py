@@ -58,6 +58,15 @@ class OpenCLEnvironment(env.OpenCLEnvironment):
   def __init__(self):
     super(OpenCLEnvironment, self).__init__(None, None)
 
+  def ids(self) -> typing.Tuple[int, int]:
+    """Return platform and device ID numbers."""
+    return 0, 0
+
+  def Exec(self, argv: typing.List[str]) -> subprocess.Popen:
+    """Execute a command in the device environment."""
+    return Exec(['--max-errors', '1', '--uninitialized', '--data-races',
+                 '--uniform-writes', '--uniform-writes'] + argv)
+
   @property
   def platform_name(self):
     """The name of the platform."""
