@@ -1,10 +1,10 @@
 # File: //deeplearning/deepsmith/proto/generator.proto
 # Proto: deepsmith.ClgenGenerator
 instance {
-  working_dir: "/var/phd/clgen/tiny"
+  working_dir: "/clgen/cache"
   model {
     corpus {
-      local_tar_archive: "/home/cec/phd/deeplearning/clgen/tests/data/tiny/corpus.tar.bz2"
+      local_directory: "/datasets/corpus/"
       ascii_character_atomizer: true
       contentfile_separator: "\n\n"
       preprocessor: "deeplearning.clgen.preprocessors.opencl:ClangPreprocessWithShim"
