@@ -387,9 +387,11 @@ def device_type(device: cl.Device) -> str:
   """
   cl_device_type = device.get_info(cl.device_info.TYPE)
   if cl_device_type == 15:
-    # add special work-around for non-standard value '15', which is used
-    # by oclgrind.
+    # Non-standard value '15' is used by oclgrind.
     return "Emulator"
+  elif cl_device_type == 3:
+    # Non-standard value '3' is used by pocl.
+    return "CPU"
   else:
     try:
       return cl.device_type.to_string(cl_device_type)
