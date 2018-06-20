@@ -10,5 +10,6 @@ py_binary(
         # "//deeplearning/deepsmith/services:clgen",
         "//deeplearning/deepsmith/services:cldrive",
         "//deeplearning/deepsmith/services:randchar",
+        "//deeplearning/deepsmith/services:dummy_generator",
     ],
 )

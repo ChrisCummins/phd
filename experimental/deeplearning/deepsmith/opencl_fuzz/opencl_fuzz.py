@@ -11,9 +11,9 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import harness_pb2
 from deeplearning.deepsmith.services import cldrive
+from deeplearning.deepsmith.services import dummy_generator
 from deeplearning.deepsmith.services import generator as base_generator
 from deeplearning.deepsmith.services import harness as base_harness
-from deeplearning.deepsmith.services import randchar
 from gpu.oclgrind import oclgrind
 # from deeplearning.deepsmith.services import clgen
 from lib.labm8 import pbutil
@@ -42,19 +42,31 @@ flags.DEFINE_string(
 # TODO(cec): Use a ClgenGenerator, not a RandcharGenerator.
 CLGEN_CONFIG = """
 # File: //deeplearning/deepsmith/proto/generator.proto
-# Proto: deepsmith.RandCharGenerator
-toolchain: "opencl"
-string_min_len: 100
-string_max_len: 200
-harness {
-  name: "cldrive"
+# Proto: deepsmith.ClgenGenerator
+testcase_to_generate {
+  toolchain: "opencl"
+  harness {
+    name: "cldrive"
+  }
+  inputs {
+    key: "src"
+    value: "kernel void A(global int* a) {a[get_global_id(0)] /= 2;}"
+  }
+  inputs {
+    key: "gsize"
+    value: "1,1,1"
+  }
+  inputs {
+    key: "lsize"
+    value: "1,1,1"
+  }
 }
 """
 
 DUT_HARNESS_CONFIG = """
 # File: //deeplearning/deepsmith/proto/harness.proto
 # Proto: deepsmith.CldriveHarness
-opencl_env: "CPU|Apple|Intel(R)_Core(TM)_i5-3570K_CPU_@_3.40GHz|1.1|1.2"
+opencl_env: "Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2"
 """
 
 
@@ -134,6 +146,8 @@ def ResultIsInteresting(result: deepsmith_pb2.Result,
     True if the result is interesting, else False.
   """
   outcome = result.outputs['outcome']
+  logging.debug('Stdout: %s', result.outputs['stdout'])
+  logging.debug('Stderr: %s', result.outputs['stderr'])
 
   if outcome == 'Build Failure':
     # We assume that a
@@ -233,8 +247,8 @@ def main(argv):
   logging.info('Preparing generator.')
   # TODO(cec): Use a ClgenGenerator, not a RandcharGenerator.
   clgen_config = pbutil.FromString(
-      CLGEN_CONFIG, generator_pb2.RandCharGenerator())
-  generator = randchar.RandCharGenerator(clgen_config)
+      CLGEN_CONFIG, generator_pb2.DummyGenerator())
+  generator = dummy_generator.DummyGenerator(clgen_config)
 
   logging.info('Preparing device under test.')
   config = pbutil.FromString(DUT_HARNESS_CONFIG, harness_pb2.CldriveHarness())
