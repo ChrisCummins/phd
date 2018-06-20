@@ -6,10 +6,7 @@ RUN apt-get update
 RUN apt-get install -y --no-install-recommends \
   software-properties-common git curl sudo python
 
-# TODO: Determine if these need installing.
-# python3-distutils python3-venv python3-dev
-
-# Instal Beignet for OpenCL CPU support.
+# Install Beignet for OpenCL CPU support./
 RUN apt-get install -y --no-install-recommends beignet-opencl-icd clinfo
 
 # Add Beignet's libOpenCL to the default LD_LIBRARY_PATH. This is needed
