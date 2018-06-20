@@ -47,8 +47,10 @@ cp "$PHD/bazel-bin/$package/$target-layer.tar" \
     $PHD/experimental/deeplearning/deepsmith/opencl_fuzz
 
 cd $PHD/experimental/deeplearning/deepsmith/opencl_fuzz
-sudo docker build . -t opencl_fuzz
+# Note that the --squash argument requires experimental features. See:
+# https://github.com/docker/docker-ce/blob/master/components/cli/experimental/README.md
+sudo docker build . -t opencl_fuzz --squash
 
-docker run opencl_fuzz \
-    /app/experimental/deeplearning/deepsmith/opencl_fuzz/opencl_fuzz_image.binary \
-    --generator /datasets/generator.pbtxt
+# Export a compressed tarball of the image.
+docker save opencl_fuzz | gzip -c > \
+    $PHD/experimental/deeplearning/deepsmith/opencl_fuzz/docker_image.tar.gz

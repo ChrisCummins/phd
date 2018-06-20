@@ -29,7 +29,15 @@ $ ./experimental/deeplearning/deepsmith/opencl_fuzz/make_image.sh
 Test a device using:
 
 ```sh
-$ docker run opencl_fuzz \
+$ docker run \
+    -v/etc/OpenCL/vendors:/etc/OpenCL/vendors \
+    -v/opt/ComputeAorta:/opt/ComputeAorta \
+    -v$PWD/opencl_fuzz:/interesting_results opencl_fuzz \
     /app/experimental/deeplearning/deepsmith/opencl_fuzz/opencl_fuzz_image.binary \
-    --generator /datasets/generator.pbtxt
+    --generator /datasets/generator.pbtxt \
+    --interesting_results_dir=/interesting_results \
+    --dut 'CPU|ComputeAorta|Codeplay_Software_Ltd._-_host_CPU|1.14|1.2'
 ```
+
+Note the use of `-v` arguments to map various directories  interesting results
+are exported to the host.
