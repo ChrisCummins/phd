@@ -60,6 +60,17 @@ def test_Corpus_archive_not_found(clgen_cache_dir, abc_corpus_config):
   assert f"Archive not found: '{d}/missing_archive.tar.bz2'" == str(e_ctx.value)
 
 
+def test_Corpus_archive_cannot_be_unpacked(clgen_cache_dir, abc_corpus_config):
+  """Test that UserError is raised if cannot untar local_tar_archive."""
+  del clgen_cache_dir
+  with tempfile.TemporaryDirectory() as d:
+    (pathlib.Path(d) / 'empty.tar.bz2').touch()
+    abc_corpus_config.local_tar_archive = str(pathlib.Path(d) / 'empty.tar.bz2')
+    with pytest.raises(errors.UserError) as e_ctx:
+      corpuses.Corpus(abc_corpus_config)
+  assert f"Archive unpack failed: '{d}/empty.tar.bz2'" == str(e_ctx.value)
+
+
 def test_Corpus_config_hash_different_options(clgen_cache_dir,
                                               abc_corpus_config):
   """Test that the corpus ID is changed with a different option value."""

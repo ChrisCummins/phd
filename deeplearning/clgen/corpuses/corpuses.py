@@ -344,5 +344,8 @@ def GetHashOfArchiveContents(archive: pathlib.Path) -> str:
 
   with tempfile.TemporaryDirectory(prefix='clgen_corpus_') as d:
     cmd = ['tar', '-xf', str(archive), '-C', d]
-    subprocess.check_call(cmd)
+    try:
+      subprocess.check_call(cmd)
+    except subprocess.CalledProcessError:
+      raise errors.UserError(f"Archive unpack failed: '{archive}'")
     return checksumdir.dirhash(d, 'sha1')
