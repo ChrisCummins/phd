@@ -214,11 +214,16 @@ def CompileDriver(src: str, path: str, platform_id,
   cmd = ['timeout', '-s9', str(timeout), cc, '-xc', '-', '-o', str(path),
          f'-DPLATFORM_ID={platform_id}', f'-DDEVICE_ID={device_id}'] + cflags
   # logging.debug('$ %s', ' '.join(cmd))
-  proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
-  proc.communicate(src.encode('utf-8'))
+  proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                          stderr=subprocess.PIPE, universal_newlines=True)
+  stdout, stderr = proc.communicate(src.encode('utf-8'))
   if not proc.returncode == 0:
+    argv = ' '.join(cmd)
     raise EnvironmentError(
         f'Driver compilation failed with returncode {proc.returncode}.\n'
+        f'Command: {argv}\n'
+        f'Stdout:\n{stdout}\n'
+        f'Stderr:\n{stderr}\n'
         f'Driver source:\n{src}')
   return path
 
