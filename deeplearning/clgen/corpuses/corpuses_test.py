@@ -49,6 +49,15 @@ def test_Corpus_archive_hash(clgen_cache_dir, abc_corpus_config,
   assert ABC_CORPUS_HASH == c.hash
 
 
+def test_Corpus_archive_not_found(clgen_cache_dir, abc_corpus_config):
+  """Test that UserError is raised if local_tar_archive does not exist."""
+  del clgen_cache_dir
+  with tempfile.TemporaryDirectory() as d:
+    abc_corpus_config.local_tar_archive = f'{d}/missing_archive.tar.bz2'
+    with pytest.raises(errors.UserError):
+      corpuses.Corpus(abc_corpus_config)
+
+
 def test_Corpus_config_hash_different_options(clgen_cache_dir,
                                               abc_corpus_config):
   """Test that the corpus ID is changed with a different option value."""
