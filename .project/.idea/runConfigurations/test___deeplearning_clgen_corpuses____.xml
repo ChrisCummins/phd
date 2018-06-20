@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="test //deeplearning/clgen/corpuses/..." type="BlazeCommandRunConfigurationType" factoryName="Bazel Command">
+    <blaze-settings handler-id="BlazeCommandGenericRunConfigurationHandlerProvider" blaze-command="test">
+      <blaze-target>//deeplearning/clgen/corpuses/...</blaze-target>
+      <blaze-user-flag>--test_output=errors</blaze-user-flag>
+    </blaze-settings>
+    <method />
+  </configuration>
+</component>
