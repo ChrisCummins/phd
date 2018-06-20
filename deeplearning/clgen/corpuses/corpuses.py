@@ -128,7 +128,9 @@ class Corpus(object):
     # Create symlink to preprocessed files.
     symlink = self.encoded.database_path.parent / 'preprocessed'
     if not symlink.is_symlink():
-      os.symlink(self.preprocessed.database_path.parent, symlink)
+      os.symlink(os.path.relpath(
+          self.preprocessed.database_path.parent,
+          self.encoded.database_path.parent), symlink)
     self.hash = encoded_id
     self.cache = cache.mkcache('corpus', 'encoded', encoded_id)
 

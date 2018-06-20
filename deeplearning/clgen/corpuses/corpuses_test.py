@@ -281,6 +281,17 @@ def test_Corpus_GetTrainingData_decode(clgen_cache_dir, abc_corpus):
              'The cat sat on the mat.\n!!\n') == len(decoded)
 
 
+def test_Corpus_preprocessed_symlink(clgen_cache_dir, abc_corpus_config):
+  """Test path of symlink to pre-preprocessed files."""
+  del clgen_cache_dir
+  c = corpuses.Corpus(abc_corpus_config)
+  c.Create()
+  assert (c.encoded.database_path.parent / 'preprocessed').is_symlink()
+  path = str((c.encoded.database_path.parent / 'preprocessed').resolve())
+  # We can't do a literal comparison because of bazel sandboxing.
+  assert path.endswith(str(c.preprocessed.database_path.parent))
+
+
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:
