@@ -19,6 +19,7 @@ from absl import app
 from absl import flags
 from absl import logging
 
+from gpu.cldrive import env
 from lib.labm8 import bazelutil
 from lib.labm8 import system
 
@@ -28,10 +29,6 @@ FLAGS = flags.FLAGS
 # The path to the oclgrind binary.
 _OCLGRIND_PKG = 'oclgrind_linux' if system.is_linux() else 'oclgrind_mac'
 OCLGRIND_PATH = bazelutil.DataPath(f'{_OCLGRIND_PKG}/bin/oclgrind')
-
-# The name of the oclgrind device, as returned by
-# gpu.cldrive.env.OpenClEnvironment.name().
-OCLGRIND_CLDRIVE_NAME = "Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2"
 
 
 def Exec(argv: typing.List[str]) -> subprocess.Popen:
@@ -53,6 +50,40 @@ def Exec(argv: typing.List[str]) -> subprocess.Popen:
   stdout, stderr = process.communicate()
   process.stdout, process.stderr = stdout, stderr
   return process
+
+
+class OpenCLEnvironment(env.OpenCLEnvironment):
+  """A mock cldrive OpenCLEnvironment for oclgrind."""
+
+  def __init__(self):
+    super(OpenCLEnvironment, self).__init__(None, None)
+
+  @property
+  def platform_name(self):
+    """The name of the platform."""
+    return 'Oclgrind'
+
+  @property
+  def device_name(self):
+    """The name of the device."""
+    return 'Oclgrind Simulator'
+
+  @property
+  def driver_version(self):
+    """The driver version."""
+    # This must be updated when @oclgrind package is updated.
+    return 'Oclgrind 18.3'
+
+  @property
+  def opencl_version(self):
+    """The supported OpenCL version."""
+    # This must be updated when @oclgrind package is updated.
+    return '1.2'
+
+  @property
+  def device_type(self):
+    """The name of the device type."""
+    return 'Emulator'
 
 
 def main(argv):

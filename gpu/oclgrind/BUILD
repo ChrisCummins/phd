@@ -4,14 +4,18 @@
 py_binary(
     name = "oclgrind",
     srcs = ["oclgrind.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
-    visibility = ["//visibility:public"],
-    deps = ["//lib/labm8:system", "//lib/labm8:bazelutil"],
     data = select({
         "//:darwin": ["@oclgrind_mac//:oclgrind"],
         "//conditions:default": ["@oclgrind_linux//:oclgrind"],
-    })
+    }),
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//gpu/cldrive:env",
+        "//lib/labm8:bazelutil",
+        "//lib/labm8:system",
+    ],
 )
 
 py_test(

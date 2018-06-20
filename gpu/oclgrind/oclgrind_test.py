@@ -25,6 +25,13 @@ https://github.com/jrprice/Oclgrind
 """
 
 
+def test_OpenCLEnvironment_name():
+  """Test that the OpenCLEnvironment object has a correct 'name' property."""
+  env = oclgrind.OpenCLEnvironment()
+  # This test will of course fail if the @oclgrind package is updated.
+  assert 'Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2' == env.name
+
+
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:

@@ -64,6 +64,7 @@ py_library(
 py_library(
     name = "env",
     srcs = ["env.py"],
+    visibility = ["//gpu:__subpackages__"],
     deps = [
         requirement("pyopencl"),
     ],
