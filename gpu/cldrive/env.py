@@ -1,15 +1,16 @@
 import platform
 import re
 import sys
-from collections import namedtuple
 from typing import Iterator, Tuple
 
 import pyopencl as cl
 
 
-class OpenCLEnvironment(
-    namedtuple('OpenCLEnvironment', ['platform', 'device'])):
-  __slots__ = ()  # memory saving
+class OpenCLEnvironment(object):
+
+  def __init__(self, platform, device):
+    self.platform = platform
+    self.device = device
 
   def __repr__(self) -> str:
     return f"Device: {self.device}, Platform: {self.platform}"
