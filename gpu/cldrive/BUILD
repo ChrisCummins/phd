@@ -67,6 +67,7 @@ py_library(
     visibility = ["//gpu:__subpackages__"],
     deps = [
         requirement("pyopencl"),
+        requirement("pytools"),
         requirement("absl-py"),
     ],
 )
