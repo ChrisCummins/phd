@@ -216,7 +216,7 @@ def CompileDriver(src: str, path: str, platform_id,
   # logging.debug('$ %s', ' '.join(cmd))
   proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                           stderr=subprocess.PIPE, universal_newlines=True)
-  stdout, stderr = proc.communicate(src.encode('utf-8'))
+  stdout, stderr = proc.communicate(src)
   if not proc.returncode == 0:
     argv = ' '.join(cmd)
     raise EnvironmentError(
