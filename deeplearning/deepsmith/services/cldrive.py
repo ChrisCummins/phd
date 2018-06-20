@@ -154,30 +154,43 @@ def RunTestcase(opencl_environment: env.OpenCLEnvironment,
 
 
 def MakeDriver(testcase: deepsmith_pb2.Testcase) -> str:
-  """Generate a self-contained C program for the given test case."""
+  """Generate a self-contained C program for the given test case.
+
+  Args:
+    testcase: The testcase to generate a driver for. Requires three inputs:
+      'src', 'gsize', and 'lsize'.
+
+  Returns:
+    A string of C code.
+
+  Raises:
+    ValueError: In case the testcase is missing the required gsize, lsize, and
+      src inputs.
+  """
+  gsize = cldrive_lib.NDRange(
+      *[int(x) for x in testcase.inputs['gsize'].split(',')])
+  lsize = cldrive_lib.NDRange(
+      *[int(x) for x in testcase.inputs['lsize'].split(',')])
+  size = max(gsize.product * 2, 256)
+  src = testcase.inputs['src']
   try:
     # Generate a compile-and-execute test harness.
-    gsize = cldrive_lib.NDRange(
-        *[int(x) for x in testcase.inputs['gsize'].split(',')])
-    lsize = cldrive_lib.NDRange(
-        *[int(x) for x in testcase.inputs['lsize'].split(',')])
-    size = max(gsize.product * 2, 256)
     inputs = cldrive_lib.make_data(
-        src=testcase.inputs['src'], size=size,
+        src=src, size=size,
         data_generator=cldrive_lib.Generator.ARANGE,
         scalar_val=size)
     src = cldrive_lib.emit_c(
-        src=testcase.inputs['src'], inputs=inputs, gsize=gsize, lsize=lsize)
+        src=src, inputs=inputs, gsize=gsize, lsize=lsize)
   except Exception:
     # Create a compile-only stub if not possible.
     try:
       src = cldrive_lib.emit_c(
-          src=testcase.inputs['src'], inputs=None, gsize=None, lsize=None,
+          src=src, inputs=None, gsize=None, lsize=None,
           compile_only=True)
     except Exception:
       # Create a compiler-only stub without creating kernel.
       src = cldrive_lib.emit_c(
-          src=testcase.inputs['src'], inputs=None, gsize=None, lsize=None,
+          src=src, inputs=None, gsize=None, lsize=None,
           compile_only=True, create_kernel=False)
   return src
 
