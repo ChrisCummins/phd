@@ -87,7 +87,7 @@ def RunBatch(generator: base_generator.GeneratorBase,
 def RunTestcases(harness: base_harness.HarnessBase,
                  testcases: typing.List[deepsmith_pb2.Testcase]
                  ) -> typing.List[deepsmith_pb2.Result]:
-  """Wrapper around RPC calls.
+  """Run a set of testcases on a harness.
 
   Args:
     harness: The harness to drive the testcases with.
@@ -118,11 +118,11 @@ def ResultIsInteresting(result: deepsmith_pb2.Result,
     True if the result is interesting, else False.
   """
   outcome = result.outputs['outcome']
-  # logging.debug('Stdout: %s', result.outputs['stdout'])
-  # logging.debug('Stderr: %s', result.outputs['stderr'])
 
+  # We don't extract anything of interest from a build failure. We *could*
+  # also build on the gold standard harness to see if the build failure is
+  # anomalous.
   if outcome == 'Build Failure':
-    # We assume that a
     return False
 
   # A static failure is of immediate interest.
