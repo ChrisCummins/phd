@@ -98,14 +98,14 @@ def test_Result_ToProto():
       outputset=[
         deeplearning.deepsmith.result.ResultOutput(
             name=deeplearning.deepsmith.result.ResultOutputName(
-              string='stdout'),
+                string='stdout'),
             value=deeplearning.deepsmith.result.ResultOutputValue(
                 truncated_value='Hello, world!'
             ),
         ),
         deeplearning.deepsmith.result.ResultOutput(
             name=deeplearning.deepsmith.result.ResultOutputName(
-              string='stderr'),
+                string='stderr'),
             value=deeplearning.deepsmith.result.ResultOutputValue(
                 truncated_value=''
             ),
