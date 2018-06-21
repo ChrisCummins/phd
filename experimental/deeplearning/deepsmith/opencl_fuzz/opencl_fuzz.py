@@ -201,10 +201,12 @@ def TestingLoop(min_interesting_results: int, max_testing_time_seconds: int,
                     (str(labdate.MillisecondsTimestamp()) + '.pbtxt'))
       num_interesting_results += 1
 
-  logging.info('Stopping after %.2f seconds and %s batches (%.2fs / batch).\n'
-               'Found %s interesting results.', time.time() - start_time,
-               humanize.intcomma(batch_num),
-               (time.time() - start_time) / batch_num, len(interesting_results))
+  logging.info(
+      'Stopping after %.2f seconds and %s batches (%.0fms / testcase).\n'
+      'Found %s interesting results.', time.time() - start_time,
+      humanize.intcomma(batch_num),
+      (((time.time() - start_time) / (batch_num * batch_size)) * 1000),
+      len(interesting_results))
   logging.flush()
 
 
