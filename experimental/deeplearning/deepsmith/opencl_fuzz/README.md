@@ -9,13 +9,32 @@ Build the binary:
 $ bazel build //experimental/deeplearning/deepsmith/opencl_fuzz
 ```
 
-Test a device using:
+Identify the name of an OpenCL device to test:
+
+```sh
+$ bazel run //gpu/cldrive -- --ls_env
+CPU|Intel(R)_OpenCL|Intel(R)_Xeon(R)_CPU_E5-2620_v4_@_2.10GHz|1.2.0.25|2.0
+    Platform:     Intel(R) OpenCL
+    Device:       Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz
+    Driver:       1.2.0.25
+    Device Type:  CPU
+    OpenCL:       2.0
+...
+```
+
+Export the name for convenience:
+
+```sh
+$ export DEVICE_NAME="CPU|Intel(R)_OpenCL|Intel(R)_Xeon(R)_CPU_E5-2620_v4_@_2.10GHz|1.2.0.25|2.0"
+```
+
+Test the device using:
 
 ```sh
 $ bazel-bin/experimental/deeplearning/deepsmith/opencl_fuzz/opencl_fuzz \
     --batch_size 10 --max_testing_time_seconds 60 \
     --generator $PWD/experimental/deeplearning/deepsmith/opencl_fuzz/generator.txt \
-    --dut 'CPU|ComputeAorta|Codeplay_Software_Ltd._-_host_CPU|1.14|1.2'
+    --dut "$DEVICE_NAME"
 ```
 
 ## Usage: Docker Image
@@ -26,18 +45,18 @@ Build the docker image:
 $ ./experimental/deeplearning/deepsmith/opencl_fuzz/make_image.sh
 ```
 
-Test a device using:
+You can test an OpenCL device on the host by mapping the host's ICD files and
+the device installation directory to the image. E.g., assuming you have
+set `$DEVICE_NAME` and `$ICD` to the name of the device and the path to the ICD
+file respectively:
 
 ```sh
 $ docker run \
     -v/etc/OpenCL/vendors:/etc/OpenCL/vendors \
-    -v/opt/ComputeAorta:/opt/ComputeAorta \
+    -v$(dirname $(cat /etc/OpenCL/vendors/$ICD)):$(dirname $(cat /etc/OpenCL/vendors/$ICD)) \
     -v$PWD/opencl_fuzz:/interesting_results opencl_fuzz \
     /app/experimental/deeplearning/deepsmith/opencl_fuzz/opencl_fuzz_image.binary \
     --generator /datasets/generator.pbtxt \
     --interesting_results_dir=/interesting_results \
-    --dut 'CPU|ComputeAorta|Codeplay_Software_Ltd._-_host_CPU|1.14|1.2'
+    --dut "$DEVICE_NAME"
 ```
-
-Note the use of `-v` arguments to map directories to host, such as an OpenCL
-implementation, and the directory in which interesting results are written.
