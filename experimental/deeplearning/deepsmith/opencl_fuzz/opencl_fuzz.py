@@ -170,7 +170,8 @@ def TestingLoop(min_interesting_results: int, max_testing_time_seconds: int,
                 batch_size: int, generator: base_generator.GeneratorBase,
                 dut_harness: base_harness.HarnessBase,
                 gs_harness: base_harness.HarnessBase,
-                interesting_results_dir: pathlib.Path) -> None:
+                interesting_results_dir: pathlib.Path,
+                start_time: float = None) -> None:
   """The main fuzzing loop.
 
   Args:
@@ -182,9 +183,10 @@ def TestingLoop(min_interesting_results: int, max_testing_time_seconds: int,
     dut_harness: The device under test.
     gs_harness: The device to compare outputs against.
     interesting_results_dir: The directory to write interesting results to.
+    start_time: The starting time, as returned by time.time().
   """
+  start_time = start_time or time.time()
   interesting_results_dir.mkdir(parents=True, exist_ok=True)
-  start_time = time.time()
   num_interesting_results = 0
   batch_num = 0
   while (num_interesting_results < min_interesting_results and
@@ -210,6 +212,8 @@ def main(argv):
   """Main entry point."""
   if len(argv) > 1:
     raise app.UsageError('Unrecognized arguments')
+
+  start_time = time.time()
 
   # Parse flags and instantiate testing objects.
   if not FLAGS.interesting_results_dir:
@@ -242,7 +246,7 @@ def main(argv):
 
   TestingLoop(FLAGS.min_interesting_results, FLAGS.max_testing_time_seconds,
               FLAGS.batch_size, generator, dut_harness, gs_harness,
-              interesting_results_dir)
+              interesting_results_dir, start_time=start_time)
 
 
 if __name__ == '__main__':
