@@ -1,15 +1,24 @@
 # OpenCL fuzzing through DeepSmith
 
 
-## Usage
+## Installation
 
-Build the binary:
+Pull the docker image using:
 
 ```sh
-$ bazel build //experimental/deeplearning/deepsmith/opencl_fuzz
+$ docker pull chriscummins/opencl_fuzz
 ```
 
-Identify the name of an OpenCL device to test:
+Alternatively you can build the docker image from source using:
+
+```sh
+$ ./experimental/deeplearning/deepsmith/opencl_fuzz/make_image.sh
+```
+
+## Usage
+
+To test an OpenCL device on the host, identify it's name using `//gpu/cldrive`.
+Let's assume we want to test this Intel OpenCL driver:
 
 ```sh
 $ bazel run //gpu/cldrive -- --ls_env
@@ -22,41 +31,40 @@ CPU|Intel(R)_OpenCL|Intel(R)_Xeon(R)_CPU_E5-2620_v4_@_2.10GHz|1.2.0.25|2.0
 ...
 ```
 
-Export the name for convenience:
+Copy the ICD file for the driver into a new directory which we will map into the
+docker image:
 
 ```sh
-$ export DEVICE_NAME="CPU|Intel(R)_OpenCL|Intel(R)_Xeon(R)_CPU_E5-2620_v4_@_2.10GHz|1.2.0.25|2.0"
+$ mkdir vendors
+$ cp /etc/OpenCL/vendors/intel64.icd vendors
 ```
 
-Test the device using:
+Find out where the driver is installed, so that we can map this directory to the
+docker image too:
 
-```sh
-$ bazel-bin/experimental/deeplearning/deepsmith/opencl_fuzz/opencl_fuzz \
-    --batch_size 10 --max_testing_time_seconds 60 \
-    --generator $PWD/experimental/deeplearning/deepsmith/opencl_fuzz/generator.txt \
-    --dut "$DEVICE_NAME"
+```
+$ cat vendors/intel64.icd
+/opt/intel/opencl-1.2-6.4.0.25/lib64/libintelocl.so
 ```
 
-## Usage: Docker Image
+The docker image creates 
+[Result protos](/phd/deeplearning/deepsmith/proto/deepsmith.proto) for testcases
+it finds interesting in `/interesting_results`. We probably want to map that
+directory to the host machine so that we can get the results out.
 
-Build the docker image:
-
-```sh
-$ ./experimental/deeplearning/deepsmith/opencl_fuzz/make_image.sh
-```
-
-You can test an OpenCL device on the host by mapping the host's ICD files and
-the device installation directory to the image. E.g., assuming you have
-set `$DEVICE_NAME` and `$ICD` to the name of the device and the path to the ICD
-file respectively:
+Finally, run the docker image, mapping the three directories to the host, and
+using the `--dut` flag to pass the name of the driver we identified from
+`//gpu/cldrive`:
 
 ```sh
 $ docker run \
-    -v/etc/OpenCL/vendors:/etc/OpenCL/vendors \
-    -v$(dirname $(cat /etc/OpenCL/vendors/$ICD)):$(dirname $(cat /etc/OpenCL/vendors/$ICD)) \
-    -v$PWD/opencl_fuzz:/interesting_results opencl_fuzz \
-    /app/experimental/deeplearning/deepsmith/opencl_fuzz/opencl_fuzz_image.binary \
-    --generator /datasets/generator.pbtxt \
-    --interesting_results_dir=/interesting_results \
-    --dut "$DEVICE_NAME"
+    -v$PWD:/interesting_results \
+    -v$PWD/vendors:/etc/OpenCL/vendors \
+    -v/opt/intel:/opt/intel \
+    chriscummins/opencl_fuzz \
+    --dut 'CPU|Intel(R)_OpenCL|Intel(R)_Xeon(R)_CPU_E5-2620_v4_@_2.10GHz|1.2.0.25|2.0'
 ```
+
+By default, the image runs until `--min_interesting_results` interesting results
+have been found, or until `--max_testing_time_seconds` have elapsed. Pass values
+for these flags to override the default values.  
