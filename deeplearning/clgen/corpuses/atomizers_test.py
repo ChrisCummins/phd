@@ -1,7 +1,8 @@
 """Unit tests for //deeplearning/clgen/atomizers.py."""
-import sys
-
+import pathlib
 import pytest
+import sys
+import tempfile
 from absl import app
 
 import deeplearning.clgen.errors
@@ -41,6 +42,27 @@ def test_AsciiCharacterAtomizer_FromText():
   assert c.indices == [0, 1, 2]
   assert c.atoms == ['a', 'b', 'c']
   assert c.vocab_size == 3
+
+
+def test_AsciiCharacterAtomizer_ToFile_FromFile_equivalency():
+  """Test that ToFile() and FromFile() produce the same atomizer."""
+  # Create an atomizer.
+  c1 = atomizers.AsciiCharacterAtomizer.FromText('abcabc')
+  assert c1.indices == [0, 1, 2]
+  assert c1.atoms == ['a', 'b', 'c']
+  assert c1.vocab_size == 3
+
+  with tempfile.TemporaryDirectory() as d:
+    # Save atomizer to file.
+    c1.ToFile(pathlib.Path(d) / 'atomizer')
+
+    # Load atomizer from file.
+    c2 = atomizers.AtomizerBase.FromFile(pathlib.Path(d) / 'atomizer')
+    assert type(c2) == atomizers.AsciiCharacterAtomizer
+    assert c2.vocab == c1.vocab
+    assert c2.indices == [0, 1, 2]
+    assert c2.atoms == ['a', 'b', 'c']
+    assert c2.vocab_size == 3
 
 
 def test_AsciiCharacterAtomizer_AtomizeString():

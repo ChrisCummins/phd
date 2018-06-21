@@ -2,10 +2,12 @@
 
 An atomizer converts a block of text into a sequence of vocbulary tokens.
 """
-import typing
 from collections import Counter
 
 import numpy as np
+import pathlib
+import pickle
+import typing
 from absl import flags
 
 from deeplearning.clgen import errors
@@ -96,6 +98,11 @@ class AtomizerBase(object):
     except KeyError:
       raise errors.VocabError
 
+  def ToFile(self, path: pathlib.Path) -> None:
+    """Save an atomizer to file."""
+    with open(path, 'wb') as f:
+      pickle.dump(self, f)
+
   @classmethod
   def FromText(cls, text: str) -> 'AtomizerBase':
     """Instantiate and specialize an atomizer from a corpus text.
@@ -107,6 +114,12 @@ class AtomizerBase(object):
       An atomizer instance.
     """
     raise NotImplementedError("abstract class")
+
+  @classmethod
+  def FromFile(cls, path: pathlib.Path) -> 'AtomizerBase':
+    """Load an atomizer from file."""
+    with open(path, 'rb') as infile:
+      return pickle.load(infile)
 
 
 class AsciiCharacterAtomizer(AtomizerBase):

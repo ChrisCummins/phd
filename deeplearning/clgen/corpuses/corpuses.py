@@ -3,16 +3,14 @@
 A training corpus is a set of one or more "contentfiles", where each contentfile
 is a file containing text to train over.
 """
-import os
-import pathlib
-import pickle
-import subprocess
-import tempfile
-import time
-
 import checksumdir
 import humanize
 import numpy as np
+import os
+import pathlib
+import subprocess
+import tempfile
+import time
 from absl import logging
 from sqlalchemy.sql.expression import func
 
@@ -225,20 +223,14 @@ class Corpus(object):
       raise ValueError('Must call Create() before accessing atomizer property.')
     if self._atomizer is None:
       if self.atomizer_path.is_file():
-        self._atomizer = self._LoadAtomizer()
+        self._atomizer = atomizers.AtomizerBase.FromFile(self.atomizer_pat)
       else:
         self._atomizer = self._CreateAtomizer()
     return self._atomizer
 
-  def _LoadAtomizer(self) -> atomizers.AtomizerBase:
-    """Load an atomizer from cache."""
-    with open(self.atomizer_path, 'rb') as infile:
-      return pickle.load(infile)
-
   def _CreateAtomizer(self) -> atomizers.AtomizerBase:
     """Creates and caches an atomizer."""
     logging.info('Deriving atomizer from preprocessed corpus')
-    start_time = time.time()
     corpus_txt = self.GetTextCorpus(shuffle=False)
 
     if self.config.HasField('ascii_character_atomizer'):
@@ -249,8 +241,7 @@ class Corpus(object):
     else:
       raise NotImplementedError
 
-    with open(self.atomizer_path, 'wb') as f:
-      pickle.dump(atomizer, f)
+    atomizer.ToFile(self.atomizer_path)
     return atomizer
 
   @property
