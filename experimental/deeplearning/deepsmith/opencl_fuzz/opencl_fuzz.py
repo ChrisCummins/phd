@@ -132,7 +132,8 @@ def ResultIsInteresting(result: deepsmith_pb2.Result,
   # Remaining outcomes: {Runtime Crash, Pass}.
   # Run testcases against gold standard devices and apply differential testing.
   gs_result = RunTestcases(gs_harness, [result.testcase])[0]
-  logging.info('Gold standard outcome: %s.', gs_result.outcome)
+  logging.info('Gold standard outcome: %s.',
+               deepsmith_pb2.Result.Outcome.Name(gs_result.outcome))
 
   # Gold standard crashes. Nothing interesting here.
   if (result.outcome == deepsmith_pb2.Result.RUNTIME_CRASH and

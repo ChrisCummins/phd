@@ -15,7 +15,6 @@ RUN ln -s /usr/lib/x86_64-linux-gnu/libOpenCL.so.1 /usr/local/lib/libOpenCL.so
 
 # Add and unpack the pre-trained corpus and config.
 RUN mkdir -p /datasets/
-ADD corpus.tar.bz2 /datasets
 ADD generator.pbtxt /datasets
 ADD cache /clgen/cache
 
