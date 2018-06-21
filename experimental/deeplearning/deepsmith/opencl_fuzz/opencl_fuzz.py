@@ -34,11 +34,11 @@ flags.DEFINE_integer(
     'min_interesting_results', 1,
     'The minimum number of interesting testcases to discover before stopping.')
 flags.DEFINE_integer(
-    'max_testing_time_seconds', 3600,
+    'max_testing_time_seconds', 60,
     'The maximum number of time to run in seconds. The actual runtime may be '
     'higher, as the in-progress batch must complete.')
 flags.DEFINE_integer(
-    'batch_size', 100,
+    'batch_size', 128,
     'The number of test cases to generate and execute in a single batch.')
 
 
