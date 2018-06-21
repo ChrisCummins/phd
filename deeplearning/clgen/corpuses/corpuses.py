@@ -223,7 +223,7 @@ class Corpus(object):
       raise ValueError('Must call Create() before accessing atomizer property.')
     if self._atomizer is None:
       if self.atomizer_path.is_file():
-        self._atomizer = atomizers.AtomizerBase.FromFile(self.atomizer_pat)
+        self._atomizer = atomizers.AtomizerBase.FromFile(self.atomizer_path)
       else:
         self._atomizer = self._CreateAtomizer()
     return self._atomizer
