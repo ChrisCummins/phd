@@ -24,7 +24,7 @@ def ClgenInstanceToGenerator(
   """Convert a CLgen instance to a DeepSmith generator proto."""
   g = deepsmith_pb2.Generator()
   g.name = f'clgen'
-  g.opts['model'] = instance.model.path
+  g.opts['model'] = str(instance.model.path)
   g.opts['sampler'] = instance.sampler.hash
   return g
 
@@ -36,8 +36,6 @@ class ClgenGenerator(generator.GeneratorBase,
     super(ClgenGenerator, self).__init__(config)
     self.instance = sample.Instance(self.config.instance)
     self.generator = ClgenInstanceToGenerator(self.instance)
-    with self.instance.Session():
-      self.instance.model.Train()
 
   def GetGeneratorCapabilities(
       self, request: generator_pb2.GetGeneratorCapabilitiesRequest,
