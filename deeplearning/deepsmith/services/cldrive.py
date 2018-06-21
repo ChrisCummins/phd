@@ -96,9 +96,12 @@ class CldriveHarness(harness.HarnessBase,
       return response
 
     testbed_idx = self.testbeds.index(request.testbed)
-    for testcase in request.testcases:
-      response.results.extend([RunTestcase(
-          self.envs[testbed_idx], self.testbeds[testbed_idx], testcase)])
+    for i, testcase in enumerate(request.testcases):
+      result = RunTestcase(
+          self.envs[testbed_idx], self.testbeds[testbed_idx], testcase)
+      logging.info('Testcase %d: %s.', i + 1,
+                   deepsmith_pb2.Result.Outcome.Name(result.outcome))
+      response.results.extend([result])
 
     return response
 

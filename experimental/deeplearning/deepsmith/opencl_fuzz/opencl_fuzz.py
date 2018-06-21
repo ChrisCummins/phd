@@ -77,7 +77,6 @@ def RunBatch(generator: base_generator.GeneratorBase,
   results = RunTestcases(dut_harness, res.testcases)
 
   for i, result in enumerate(results):
-    logging.info('Result %d: %s.', i + 1, result.outputs['outcome'])
     if ResultIsInteresting(result, gs_harness):
       interesting_results.append(result)
 
