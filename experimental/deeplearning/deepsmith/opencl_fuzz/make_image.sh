@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-# Make a standalone binary release of CLgen.
-# This uses whatever the configuration of the host repository/machine. E.g.
-# a mac/linux build, with/without CUDA support.
 set -eux
 
 source ~/phd/.env
@@ -14,22 +11,18 @@ fi
 
 cd "$PHD"
 
-# The name of the package, *without* leading slashes.
-package="experimental/deeplearning/deepsmith/opencl_fuzz"
-target="opencl_fuzz_image"
-
 # Build and package the app
-bazel build -c opt "//$package":"$target"
+bazel build -c opt //experimental/deeplearning/deepsmith/opencl_fuzz:opencl_fuzz_image
 
-rm -f "$PHD/experimental/deeplearning/deepsmith/opencl_fuzz/$target-layer.tar"
-cp "$PHD/bazel-bin/$package/$target-layer.tar" \
-    $PHD/experimental/deeplearning/deepsmith/opencl_fuzz
+rm -f "$PHD/experimental/deeplearning/deepsmith/opencl_fuzz/opencl_fuzz_image-layer.tar"
+cp "$PHD/bazel-bin/experimental/deeplearning/deepsmith/opencl_fuzz/opencl_fuzz_image-layer.tar" \
+    "$PHD/experimental/deeplearning/deepsmith/opencl_fuzz"
 
-cd $PHD/experimental/deeplearning/deepsmith/opencl_fuzz
+cd "$PHD/experimental/deeplearning/deepsmith/opencl_fuzz"
 # Note that the --squash argument requires experimental features. See:
 # https://github.com/docker/docker-ce/blob/master/components/cli/experimental/README.md
 sudo docker build . -t opencl_fuzz --squash
 
 # Export a compressed tarball of the image.
 # docker save opencl_fuzz | gzip -c > \
-#    $PHD/experimental/deeplearning/deepsmith/opencl_fuzz/docker_image.tar.gz
+#    "$PHD/experimental/deeplearning/deepsmith/opencl_fuzz/docker_image.tar.gz"
