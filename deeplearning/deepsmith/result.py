@@ -42,6 +42,7 @@ class Result(db.Table):
                                sql.ForeignKey('testbeds.id'), nullable=False)
   returncode: int = sql.Column(sql.SmallInteger, nullable=False)
   outputset_id: bytes = sql.Column(_ResultOutputSetId, nullable=False)
+  outcome_num: int = sql.Column(sql.Integer, nullable=False)
 
   # Relationships.
   testcase: deeplearning.deepsmith.testcase.Testcase = orm.relationship(
@@ -58,6 +59,15 @@ class Result(db.Table):
   # Constraints.
   __table_args__ = (
     sql.UniqueConstraint('testcase_id', 'testbed_id', name='unique_result'),)
+
+  @property
+  def outcome(self) -> deepsmith_pb2.Result.Outcome:
+    """Get the symbolic outcome.
+
+    Returns:
+       An Outcome enum instance.
+    """
+    return deepsmith_pb2.Result.Outcome(self.outcome_num)
 
   @property
   def outputs(self) -> typing.Dict[str, str]:
@@ -86,6 +96,7 @@ class Result(db.Table):
     for event in self.profiling_events:
       event_proto = proto.profiling_events.add()
       event.SetProto(event_proto)
+    proto.outcome = self.outcome_num
     return proto
 
   def ToProto(self) -> deepsmith_pb2.Result:
@@ -129,7 +140,8 @@ class Result(db.Table):
     result = lib.labm8.sqlutil.GetOrAdd(session, cls, testcase=testcase,
                                         testbed=testbed,
                                         returncode=proto.returncode,
-                                        outputset_id=outputset_id, )
+                                        outputset_id=outputset_id,
+                                        outcome_num=proto.outcome)
 
     # Add profiling events.
     for event in proto.profiling_events:

@@ -46,11 +46,25 @@ message Testbed {
 }
 
 message Result {
+  // A testcase outcome. This describes the result of the harness execution, not
+  // of differential testing.
+  enum Outcome {
+    UNKNOWWN = 0;
+    BUILD_FAILURE = 1;
+    BUILD_CRASH = 2;
+    BUILD_TIMEOUT = 3;
+    RUNTIME_CRASH = 4;
+    RUNTIME_TIMEOUT = 5;
+    PASS = 6;
+  }
+
   optional Testcase testcase = 1;
   optional Testbed testbed = 2;
   optional int32 returncode = 3;
   // <name, value>
   map<string, string> outputs = 4;
   repeated ProfilingEvent profiling_events = 5;
+  // The testcase outcome.
+  optional Outcome outcome = 6;
 }
 

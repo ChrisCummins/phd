@@ -129,6 +129,7 @@ def test_Result_ToProto():
             event_start=now,
         ),
       ],
+      outcome_num=6,
   )
   proto = result.ToProto()
   assert proto.testcase.toolchain == 'cpp'
@@ -162,6 +163,7 @@ def test_Result_ToProto():
   assert proto.profiling_events[1].duration_ms == 100
   assert (proto.profiling_events[1].event_start_epoch_ms ==
           labdate.MillisecondsTimestamp(now))
+  assert proto.outcome == deepsmith_pb2.Result.PASS
 
 
 def test_Generator_GetOrAdd_ToProto_equivalence(session):
@@ -223,14 +225,15 @@ def test_Generator_GetOrAdd_ToProto_equivalence(session):
             event_start_epoch_ms=1123123123,
         ),
       ],
+      outcome=deepsmith_pb2.Result.PASS,
   )
-  testcase = deeplearning.deepsmith.result.Result.GetOrAdd(
+  result = deeplearning.deepsmith.result.Result.GetOrAdd(
       session, proto_in
   )
 
   # NOTE: We have to flush so that SQLAlchemy resolves all of the object IDs.
   session.flush()
-  proto_out = testcase.ToProto()
+  proto_out = result.ToProto()
   assert proto_in == proto_out
   proto_out.ClearField('outputs')
   assert proto_in != proto_out  # Sanity check.
