@@ -81,9 +81,10 @@ def BuildKerasModel(
       # Note the +1 on atomizer.vocab_size to accommodate the padding character.
       input_dim=atomizer.vocab_size + 1, input_length=sequence_length,
       output_dim=lstm_size, name='embedding')(code_in)
-  for _ in range(num_layers):
+  for i in range(num_layers):
     x = keras.layers.LSTM(
-        lstm_size, implementation=1, return_sequences=True)(x)
+        lstm_size, implementation=1, return_sequences=True,
+        go_backwards=not i)(x)
   x = keras.layers.LSTM(lstm_size, implementation=1)(x)
   x = keras.layers.Dense(dnn_size, activation='relu')(x)
   # There are two output classes.
