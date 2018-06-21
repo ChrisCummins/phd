@@ -164,7 +164,7 @@ class TensorFlowBackend(backends.BackendBase):
 
   @property
   def epoch_checkpoints(self) -> typing.Set[int]:
-    """Get a mapping of epoch numbers to checkpoint files.
+    """Get the set of epoch numbers which we have trained models for.
 
     Note that Tensorflow checkpoint paths don't translate to actual files, but
     rather a pair of <.index,.meta> files.
