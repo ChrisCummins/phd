@@ -15,6 +15,7 @@ from deeplearning.deepsmith.services import clgen
 from deeplearning.deepsmith.services import generator as base_generator
 from deeplearning.deepsmith.services import harness as base_harness
 from gpu.oclgrind import oclgrind
+from lib.labm8 import labdate
 from lib.labm8 import pbutil
 
 
@@ -193,9 +194,9 @@ def TestingLoop(min_interesting_results: int, max_testing_time_seconds: int,
     interesting_results = RunBatch(
         generator, dut_harness, gs_harness, batch_size)
     for result in interesting_results:
-      pbutil.ToFile(
-          result,
-          interesting_results_dir / f'{num_interesting_results:04d}.pbtxt')
+      pbutil.ToFile(result,
+                    interesting_results_dir /
+                    str(labdate.MillisecondsTimestamp()) + '.pbtxt')
       num_interesting_results += 1
 
   logging.info('Stopping after %.2f seconds and %s batches (%.2fs / batch).\n'
