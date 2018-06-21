@@ -150,7 +150,7 @@ def RunTestcase(opencl_environment: env.OpenCLEnvironment,
     runtime.duration_ms = int(round(
         (end_time - start_time).total_seconds() * 1000))
     runtime.event_start_epoch_ms = labdate.MillisecondsTimestamp(start_time)
-    result.outputs['outcome'] = GetResultOutputClass(result)
+    result.outcome = GetResultOutputClass(result)
   finally:
     fs.rm(path)
   return result
@@ -235,33 +235,34 @@ def GetResultRuntimeMs(result: deepsmith_pb2.Result) -> int:
   return 0
 
 
-def GetResultOutputClass(result: deepsmith_pb2.Result) -> str:
+def GetResultOutputClass(
+    result: deepsmith_pb2.Result) -> deepsmith_pb2.Result.Outcome:
   """Determine the output class of a testcase."""
 
   def RuntimeCrashOrBuildFailure():
     if "[cldrive] Kernel: " in result.outputs['stderr']:
-      return 'Runtime Crash'
+      return deepsmith_pb2.Result.BUILD_CRASH
     else:
-      return 'Build Failure'
+      return deepsmith_pb2.Result.BUILD_FAILURE
 
   def RuntimeCrashOrBuildCrash():
     if "[cldrive] Kernel: " in result.outputs['stderr']:
-      return 'Runtime Crash'
+      return deepsmith_pb2.Result.RUNTIME_CRASH
     else:
-      return 'Build Crash'
+      return deepsmith_pb2.Result.BUILD_CRASH
 
   def RuntimeTimeoutOrBuildTimeout():
     if "[cldrive] Kernel: " in result.outputs['stderr']:
-      return 'Runtime Timeout'
+      return deepsmith_pb2.Result.RUNTIME_TIMEOUT
     else:
-      return 'Build Timeout'
+      return deepsmith_pb2.Result.BUILD_TIMEOUT
 
   runtime_ms = GetResultRuntimeMs(result)
   timeout_ms = int(
       result.testcase.harness.opts.get('timeout_seconds', 60)) * 1000
 
   if result.returncode == 0:
-    return 'Pass'
+    return deepsmith_pb2.Result.PASS
   # SIGSEV.
   elif result.returncode == 139 or result.returncode == -11:
     return RuntimeCrashOrBuildCrash()

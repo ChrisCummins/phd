@@ -117,51 +117,52 @@ def ResultIsInteresting(result: deepsmith_pb2.Result,
   Returns:
     True if the result is interesting, else False.
   """
-  outcome = result.outputs['outcome']
-
-  # We don't extract anything of interest from a build failure. We *could*
-  # also build on the gold standard harness to see if the build failure is
-  # anomalous.
-  if outcome == 'Build Failure':
+  # We don't extract anything of interest from runtime timeouts or build
+  # failures. We *could* see if the outcome differs on the gold standard
+  # harness.
+  if (result.outcome == deepsmith_pb2.Result.BUILD_FAILURE or
+      result.outcome == deepsmith_pb2.Result.RUNTIME_TIMEOUT):
     return False
 
   # A static failure is of immediate interest.
-  if outcome == 'Build Crash' or outcome == 'Build Timeout':
+  if (result.outcome == deepsmith_pb2.Result.BUILD_CRASH or
+      result.outcome == deepsmith_pb2.Result.BUILD_TIMEOUT):
     result.outputs['notes'] = 'OpenCL kernel failed to compile'
     return True
 
   # Remaining outcomes: {Runtime Crash, Pass}.
   # Run testcases against gold standard devices and apply differential testing.
-  gs_req = harness_pb2.RunTestcasesRequest()
-  gs_req.testbed.CopyFrom(gs_harness.testbeds[0])
-  gs_req.testcases.extend([result.testcase])
-  gs_res = gs_harness.RunTestcases(gs_req, None)
-  gs_result = gs_res.results[0]
-  gs_outcome = gs_result.outputs['outcome']
-  logging.info('Gold standard outcome: %s.', gs_outcome)
+  gs_result = RunTestcases(gs_harness, [result.testcase])[0]
+  logging.info('Gold standard outcome: %s.', gs_result.outcome)
 
-  if gs_outcome == 'Build Crash' or gs_outcome == 'Build Timeout':
+  # Gold standard crashes. Nothing interesting here.
+  if (result.outcome == deepsmith_pb2.Result.RUNTIME_CRASH and
+      gs_result.outcome == deepsmith_pb2.Result.RUNTIME_CRASH):
+    return False
+
+  # Gold standard device fails to build. This is potentially interesting if the
+  # device under test was incorrect in successfully building the kernel.
+  if (gs_result.outcome == deepsmith_pb2.Result.BUILD_CRASH or
+      gs_result.outcome == deepsmith_pb2.Result.BUILD_TIMEOUT):
     result.outputs['notes'] = (
       'OpenCL kernel failed to compile on gold standard device')
     return True
 
-  if outcome == 'Runtime Crash' and gs_outcome == 'Runtime Crash':
-    # Gold standard crashes. Nothing interesting here.
-    return False
-
-  if outcome == 'Runtime Crash' and gs_outcome == 'Pass':
+  if (result.outcome == deepsmith_pb2.Result.RUNTIME_CRASH and
+      gs_result.outcome == deepsmith_pb2.Result.PASS):
     result.outputs['notes'] = (
       'OpenCL kernel crashed on device under test, but not on gold '
       'standard device')
     return True
 
-  if outcome == 'Pass' and gs_outcome == 'Pass':
-    if gs_result.outputs['stdout'] != result.outputs['stdout']:
-      result.output['notes'] = (
-        'OpenCL kernel produces different output on gold standard device')
-      result.outputs['gs_stdout'] = gs_result.outputs['stdout']
-      result.outputs['gs_stderr'] = gs_result.outputs['stderr']
-      return True
+  if (result.outcome == deepsmith_pb2.Result.PASS and
+      gs_result.outcome == deepsmith_pb2.Result.PASS and
+      gs_result.outputs['stdout'] != result.outputs['stdout']):
+    result.output['notes'] = (
+      'OpenCL kernel produces different output on gold standard device')
+    result.outputs['gs_stdout'] = gs_result.outputs['stdout']
+    result.outputs['gs_stderr'] = gs_result.outputs['stderr']
+    return True
 
 
 def TestingLoop(min_interesting_results: int, max_testing_time_seconds: int,
