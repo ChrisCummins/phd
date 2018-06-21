@@ -68,3 +68,26 @@ message Result {
   optional Outcome outcome = 6;
 }
 
+message DifferentialTest {
+  // A differential test outcome.
+  enum Outcome {
+    UNKNOWWN = 0;
+    ANOMALOUS_BUILD_FAILURE = 1;
+    ANOMALOUS_RUNTIME_CRASH = 2;
+    ANOMALOUS_WRONG_OUTPUT = 3;
+    ANOMALOUS_RUNTIME_TIMEOUT = 4;
+    PASS = 5;
+  }
+
+  // The testcase to apply the differential test to. This supercedes, the
+  // 'testcase' fields of the differential test's results - all results are
+  // assumed to be of this testcase.
+  optional Testcase testcase = 1;
+
+  // The results to differential test. The 'testcase' field of these results
+  // is ignored.
+  repeated Result result = 2;
+  // The outcomes of the differential test. There is one outcome for each
+  // result.
+  repeated Outcome outcome = 3;
+}
