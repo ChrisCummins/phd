@@ -90,6 +90,35 @@ def test_TensorFlowBackend_Train_epoch_checkpoints(
   assert 2 in epoch_checkpoints
 
 
+def test_TensorFlowBackend_Train_missing_intermediate_checkpoints(
+    clgen_cache_dir, abc_tensorflow_model_config):
+  """Test that a missing intermediate checkpoint does not affect training."""
+  del clgen_cache_dir
+  abc_tensorflow_model_config.training.num_epochs = 2
+  m = models.Model(abc_tensorflow_model_config)
+  m.Train()
+  assert 2 == len(m.backend.epoch_checkpoints)
+
+  checkpoints_dir = (m.cache.path / 'checkpoints')
+  for path in checkpoints_dir.iterdir():
+    # Remove all files which are not either the checkpoints list, or the most
+    # recent checkpoint.
+    if (not path.name == 'checkpoint' and not
+    path.name.startswith('checkpoint-2')):
+      path.unlink()
+  f1a = checksumdir.dirhash(checkpoints_dir)
+
+  assert 1 == len(m.backend.epoch_checkpoints)
+  assert 2 in m.backend.epoch_checkpoints
+
+  # Run Train() again to check that nothing is changed.
+  m.Train()
+  assert 1 == len(m.backend.epoch_checkpoints)
+  assert 2 in m.backend.epoch_checkpoints
+  f1b = checksumdir.dirhash(checkpoints_dir)
+  assert f1a == f1b
+
+
 def test_TensorFlowBackend_Train_is_trained(
       clgen_cache_dir, abc_tensorflow_model_config):
   """Test that is_trained is initially false until trained."""
@@ -98,6 +127,9 @@ def test_TensorFlowBackend_Train_is_trained(
   assert not m.is_trained
   m.Train()
   assert m.is_trained
+
+
+# TODO(cec): Add test for InferenceManifest() contents of a simple model.
 
 
 # TODO(cec): Add tests on incrementally trained model predictions and losses.

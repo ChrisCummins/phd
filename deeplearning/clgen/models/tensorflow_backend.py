@@ -1,12 +1,11 @@
 """CLgen models using a Keras backend."""
-import os
-import pathlib
-import time
-import typing
-
 import humanize
 import numpy as np
+import os
+import pathlib
 import progressbar
+import time
+import typing
 from absl import flags
 from absl import logging
 
@@ -88,7 +87,7 @@ class TensorFlowBackend(backends.BackendBase):
     # Corpus attributes.
     sequence_length = 1 if inference else self.config.training.sequence_length
 
-    vocab_size = self.corpus.vocab_size
+    vocab_size = self.atomizer.vocab_size
 
     cell = cell_type(
         self.config.architecture.neurons_per_layer, state_is_tuple=True)
@@ -197,7 +196,36 @@ class TensorFlowBackend(backends.BackendBase):
     positive_only = [p for p in pairs if p[1] >= 0]
     return min(positive_only, key=lambda x: x[1])[0], paths
 
-  def Train(self) -> None:
+  def InferenceManifest(self) -> typing.List[pathlib.Path]:
+    """Return the list of files which are required for model inference.
+
+    Returns:
+      A list of absolute paths.
+    """
+    # The TensorFlow save file.
+    paths = [
+      self.cache.path / 'checkpoints' / 'checkpoint',
+    ]
+    # Export only the TensorFlow checkpoint files for the target number of
+    # epochs.
+    paths += [
+      path.absolute() for path in
+      (self.cache.path / 'checkpoints').iterdir()
+      if path.name.startswith(
+          f'checkpoint-{self.config.training.num_epochs}')
+    ]
+    # Include the epoch telemetry. This is not strictly required, but the files
+    # are small and contain useful information for describing the model, such as
+    # the total training time and model loss.
+    paths += [
+      path.absolute() for path in
+      (self.cache.path / 'logs').iterdir()
+      if (path.name.startswith('epoch_') and
+          path.name.endswith('_telemetry.pbtxt'))
+    ]
+    return sorted(paths)
+
+  def Train(self, corpus) -> None:
     """Locked training.
 
     If there are cached epoch checkpoints, the one closest to the target number
@@ -212,7 +240,7 @@ class TensorFlowBackend(backends.BackendBase):
       return
 
     data_generator = data_generators.TensorflowBatchGenerator(
-        self.corpus, self.config.training)
+        corpus, self.config.training)
     tf = self.InitTfGraph(inference=False)
 
     logger = telemetry.TrainingLogger(self.cache.path / 'logs')

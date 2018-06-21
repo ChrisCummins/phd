@@ -77,6 +77,12 @@ class Model(object):
       os.symlink(os.path.relpath(
           self.corpus.encoded.database_path.parent, self.cache.path), symlink)
 
+    # Create symlink to the atomizer.
+    symlink = self.cache.path / 'atomizer'
+    if not symlink.is_symlink():
+      os.symlink(
+          os.path.relpath(self.corpus.atomizer_path, self.cache.path), symlink)
+
     # Validate metadata against cache.
     if self.cache.get('META.pbtxt'):
       cached_meta = pbutil.FromFile(pathlib.Path(self.cache['META.pbtxt']),
@@ -143,7 +149,7 @@ class Model(object):
     """
     self.corpus.Create()
     with self.training_lock.acquire():
-      self.backend.Train()
+      self.backend.Train(self.corpus)
     total_time_ms = sum(
         t.epoch_wall_time_ms
         for t in self.TrainingTelemetry()[:self.config.training.num_epochs])
@@ -374,6 +380,17 @@ class Model(object):
   def TrainingTelemetry(self) -> typing.List[telemetry_pb2.ModelEpochTelemetry]:
     """Get the training telemetry data."""
     return telemetry.TrainingLogger(self.cache.path / 'logs').EpochTelemetry()
+
+  def InferenceManifest(self) -> typing.List[pathlib.Path]:
+    """Return the list of files which are required for model inference.
+
+    Returns:
+      A list of absolute paths.
+    """
+    return sorted([
+                    self.cache.path / 'atomizer',
+                    self.cache.path / 'META.pbtxt',
+                  ] + self.backend.InferenceManifest())
 
   @property
   def atomizer(self) -> atomizers.AtomizerBase:

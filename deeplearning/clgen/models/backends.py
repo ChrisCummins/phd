@@ -5,7 +5,7 @@ import numpy as np
 from absl import flags
 
 from deeplearning.clgen import samplers
-from deeplearning.clgen.corpuses import corpuses
+from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.proto import model_pb2
 from lib.labm8 import cache
 
@@ -20,12 +20,12 @@ class BackendBase(object):
   """
 
   def __init__(self, config: model_pb2.Model, fs_cache: cache.FSCache,
-               corpus: corpuses.Corpus):
+               atomizer: atomizers.AtomizerBase):
     self.config = config
     self.cache = fs_cache
-    self.corpus = corpus
+    self.atomizer = atomizer
 
-  def Train(self) -> None:
+  def Train(self, corpus: 'Corpus') -> None:
     """Train the backend."""
     raise NotImplementedError
 

@@ -46,11 +46,10 @@ class KerasBackend(backends.BackendBase):
     """Get the Keras model."""
     if self._training_model:
       return self._training_model
-    self.corpus.Create()
     self._training_model = self.Train()
     return self._training_model
 
-  def Train(self) -> 'keras.models.Sequential':
+  def Train(self, corpus) -> 'keras.models.Sequential':
     """Locked training.
 
     If there are cached epoch checkpoints, the one closest to the target number
@@ -64,7 +63,7 @@ class KerasBackend(backends.BackendBase):
     Returns:
       The trained Keras model.
     """
-    model = builders.BuildKerasModel(self.config, self.corpus.vocab_size)
+    model = builders.BuildKerasModel(self.config, self.atomizer.vocab_size)
     with open(self.cache.keypath('model.yaml'), 'w') as f:
       f.write(model.to_yaml())
     model.compile(loss='categorical_crossentropy',
@@ -90,7 +89,7 @@ class KerasBackend(backends.BackendBase):
 
     if not (self.cache.path / 'embeddings' / 'metadata.tsv').is_file():
       with open(self.cache.path / 'embeddings' / 'metadata.tsv', 'w') as f:
-        for _, token in sorted(self.corpus.atomizer.decoder.items(),
+        for _, token in sorted(self.atomizer.decoder.items(),
                                key=lambda x: x[0]):
           f.write(Escape(token) + '\n')
 
@@ -132,9 +131,8 @@ class KerasBackend(backends.BackendBase):
         telemetry.TrainingLogger(self.cache.path / 'logs').KerasCallback(keras),
       ]
 
-      generator = data_generators.AutoGenerator(
-          self.corpus, self.config.training)
-      steps_per_epoch = (self.corpus.encoded.token_count - 1) // (
+      generator = data_generators.AutoGenerator(corpus, self.config.training)
+      steps_per_epoch = (corpus.encoded.token_count - 1) // (
           self.config.training.batch_size *
           self.config.training.sequence_length)
       logging.info('Step counts: %s per epoch, %s left to do, %s total',
@@ -203,6 +201,14 @@ class KerasBackend(backends.BackendBase):
       for p in probabilities
     ]
     return self.inference_indices
+
+  def InferenceManifest(self) -> typing.List[pathlib.Path]:
+    """Return the list of files which are required for model inference.
+
+    Returns:
+      A list of absolute paths.
+    """
+    raise NotImplementedError
 
   @property
   def epoch_checkpoints(self) -> typing.List[pathlib.Path]:

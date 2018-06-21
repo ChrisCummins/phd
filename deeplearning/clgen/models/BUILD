@@ -7,7 +7,7 @@ py_library(
     srcs = ["backends.py"],
     deps = [
         "//deeplearning/clgen:samplers",
-        "//deeplearning/clgen/corpuses",
+        "//deeplearning/clgen/corpuses:atomizers",
         "//deeplearning/clgen/proto:model_py_pb2",
         "//lib/labm8:cache",
         requirement("absl-py"),
@@ -114,6 +114,31 @@ py_test(
 py_library(
     name = "models",
     srcs = ["models.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":builders",
+        ":keras_backend",
+        ":tensorflow_backend",
+        "//deeplearning/clgen:cache",
+        "//deeplearning/clgen:errors",
+        "//deeplearning/clgen:samplers",
+        "//deeplearning/clgen:telemetry",
+        "//deeplearning/clgen/corpuses",
+        "//deeplearning/clgen/proto:internal_py_pb2",
+        "//deeplearning/clgen/proto:model_py_pb2",
+        "//deeplearning/clgen/proto:telemetry_py_pb2",
+        "//lib/labm8:crypto",
+        "//lib/labm8:lockfile",
+        "//lib/labm8:pbutil",
+        requirement("absl-py"),
+        requirement("humanize"),
+        requirement("numpy"),
+    ],
+)
+
+py_library(
+    name = "pretrained",
+    srcs = ["pretrained.py"],
     visibility = ["//visibility:public"],
     deps = [
         ":builders",

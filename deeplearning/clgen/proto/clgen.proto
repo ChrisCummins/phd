@@ -13,8 +13,13 @@ message Instance {
   // caches files, including the corpus, model checkpoints, and sampler outputs.
   // If not provided, the default value of $HOME/.cache/clgen is used.
   optional string working_dir = 1;
-  // The language model specification.
-  optional Model model = 2;
+  // The language model specification. Either the full description of a model,
+  // or the path to a pretrained_model, as created by --export_tf_model option
+  // for clgen.
+  oneof model_specification {
+    Model model = 2;
+    string pretrained_model = 4;
+  }
   // The sampler specification.
   optional Sampler sampler = 3;
 }

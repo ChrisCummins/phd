@@ -37,6 +37,7 @@ py_binary(
         ":errors",
         ":samplers",
         "//deeplearning/clgen/models",
+        "//deeplearning/clgen/models:pretrained",
         "//deeplearning/clgen/proto:clgen_py_pb2",
         "//lib/labm8:pbutil",
         "//lib/labm8:prof",
