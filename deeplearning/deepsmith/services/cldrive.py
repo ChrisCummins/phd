@@ -26,7 +26,11 @@ from lib.labm8 import system
 
 FLAGS = flags.FLAGS
 
-OPENCL_HEADERS_INCLUDE = bazelutil.DataPath('opencl_headers/')
+_LLVM_REPO = 'llvm_linux' if system.is_linux() else 'llvm_mac'
+# Path to clang binary.
+CLANG_PATH = bazelutil.DataPath(f'{_LLVM_REPO}/bin/clang')
+# Path to OpenCL headers.
+OPENCL_HEADERS_INCLUDE = bazelutil.DataPath('opencl_headers')
 
 
 class CldriveHarness(harness.HarnessBase,
@@ -198,21 +202,18 @@ def MakeDriver(testcase: deepsmith_pb2.Testcase) -> str:
   return src
 
 
-def CompileDriver(src: str, path: str, platform_id,
-                  device_id, cc: str = 'gcc',
-                  cflags: typing.Optional[typing.List[str]] = None,
-                  timeout: int = 60) -> None:
+def CompileDriver(src: str, path: str, platform_id: int,
+                  device_id: int, timeout: int = 60) -> None:
   """Compile driver binary from source."""
-  # Assign default compilation flags.
-  cflags = cflags or ["-std=c99", "-Wno-deprecated-declarations"]
-  cflags.append(f'-I{OPENCL_HEADERS_INCLUDE}')
+  cmd = ['timeout', '-s9', str(timeout), str(CLANG_PATH), '-xc', '-', '-o',
+         str(path), f'-DPLATFORM_ID={platform_id}', f'-DDEVICE_ID={device_id}',
+         '-std=c99', '-Wno-deprecated-declarations',
+         f'-I{OPENCL_HEADERS_INCLUDE}']
   if system.is_linux():
-    cflags.append('-lOpenCL')
+    cmd.append('-lOpenCL')
   elif system.is_mac():
-    cflags += ['-framework', 'OpenCL']
+    cmd += ['-framework', 'OpenCL']
 
-  cmd = ['timeout', '-s9', str(timeout), cc, '-xc', '-', '-o', str(path),
-         f'-DPLATFORM_ID={platform_id}', f'-DDEVICE_ID={device_id}'] + cflags
   # logging.debug('$ %s', ' '.join(cmd))
   proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                           stderr=subprocess.PIPE, universal_newlines=True)

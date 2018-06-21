@@ -140,7 +140,10 @@ py_library(
 py_binary(
     name = "cldrive",
     srcs = ["cldrive.py"],
-    data = ["@opencl_headers"],
+    data = ["@opencl_headers"] + select({
+        "//:darwin": ["@llvm_mac//:clang"],
+        "//conditions:default": ["@llvm_linux//:clang"],
+    }),
     default_python_version = "PY3",
     srcs_version = "PY3",
     visibility = [
