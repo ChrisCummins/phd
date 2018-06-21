@@ -14,9 +14,9 @@ RUN apt-get update && \
 RUN ln -s /usr/lib/x86_64-linux-gnu/libOpenCL.so.1 /usr/local/lib/libOpenCL.so
 
 # Add and unpack the pre-trained corpus and config.
-RUN mkdir -p /datasets/
-ADD generator.pbtxt /datasets
-ADD cache /clgen/cache
+RUN mkdir -p /data/
+ADD generator.pbtxt /data
+ADD model /data/model
 
 # Add and unpack the CLgen build archive.
 ADD opencl_fuzz_image-layer.tar /
