@@ -6,9 +6,8 @@ MAINTAINER Chris Cummins <chrisc.101@gmail.com>
 # able to figure out how to install all of them on my own yet. So far I know
 # that ocl-icd-libopencl1 package is needed for libOpenCL.so.1, but that alone
 # is not enough.
-# Also install gcc so that we can compile cldrive harnesses.
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends gcc python3-pyopencl
+    apt-get install -y --no-install-recommends python3-pyopencl
 
 # Link the libOpenCL installed by ocl-icd-libopencl1 into the default library
 # search path, so that cldrive harness can compile binaries using -lOpenCL.
