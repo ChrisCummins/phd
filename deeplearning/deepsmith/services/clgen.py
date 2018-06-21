@@ -1,5 +1,6 @@
 import grpc
 import math
+import sys
 import time
 import typing
 from absl import app
@@ -58,6 +59,9 @@ class ClgenGenerator(generator.GeneratorBase,
       samples = self.instance.model.Sample(self.instance.sampler, num_programs)
       for sample in samples:
         response.testcases.extend(self.SampleToTestcases(sample))
+
+    # Flush any remaining output generated during Sample().
+    sys.stdout.flush()
     return response
 
   def SampleToTestcases(self, sample: model_pb2.Sample) -> typing.List[
