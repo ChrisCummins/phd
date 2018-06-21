@@ -26,3 +26,15 @@ py3_image(
     main = "opencl_fuzz.py",
     deps = [":opencl_fuzz"],
 )
+
+py_binary(
+    name = "print",
+    srcs = ["print.py"],
+    deps = [
+        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
+        "//lib/labm8:fmt",
+        "//lib/labm8:pbutil",
+        requirement("absl-py"),
+        requirement("humanize"),
+    ],
+)
