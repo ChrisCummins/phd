@@ -119,6 +119,23 @@ py_binary(
     ],
 )
 
+py_binary(
+    name = "sample",
+    srcs = ["sample.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":errors",
+        ":samplers",
+        "//deeplearning/clgen/models:pretrained",
+        "//deeplearning/clgen/proto:clgen_py_pb2",
+        "//lib/labm8:pbutil",
+        "//lib/labm8:prof",
+        requirement("absl-py"),
+    ],
+)
+
 py_library(
     name = "samplers",
     srcs = ["samplers.py"],

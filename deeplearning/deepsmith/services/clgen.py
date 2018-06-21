@@ -1,14 +1,13 @@
+import grpc
 import math
 import time
 import typing
-from concurrent import futures
-
-import grpc
 from absl import app
 from absl import flags
 from absl import logging
+from concurrent import futures
 
-from deeplearning.clgen import clgen
+from deeplearning.clgen import sample
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
@@ -21,11 +20,11 @@ FLAGS = flags.FLAGS
 
 
 def ClgenInstanceToGenerator(
-    instance: clgen.Instance) -> deepsmith_pb2.Generator:
+    instance: sample.Instance) -> deepsmith_pb2.Generator:
   """Convert a CLgen instance to a DeepSmith generator proto."""
   g = deepsmith_pb2.Generator()
   g.name = f'clgen'
-  g.opts['model'] = instance.model.hash
+  g.opts['model'] = instance.model.path
   g.opts['sampler'] = instance.sampler.hash
   return g
 
@@ -35,7 +34,7 @@ class ClgenGenerator(generator.GeneratorBase,
 
   def __init__(self, config: generator_pb2.ClgenGenerator):
     super(ClgenGenerator, self).__init__(config)
-    self.instance = clgen.Instance(self.config.instance)
+    self.instance = sample.Instance(self.config.instance)
     self.generator = ClgenInstanceToGenerator(self.instance)
     with self.instance.Session():
       self.instance.model.Train()

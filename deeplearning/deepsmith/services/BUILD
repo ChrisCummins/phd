@@ -110,7 +110,7 @@ py_binary(
     deps = [
         ":generator",
         ":services",
-        "//deeplearning/clgen",
+        "//deeplearning/clgen:sample",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//deeplearning/deepsmith/proto:generator_py_pb2",
         requirement("grpcio"),
