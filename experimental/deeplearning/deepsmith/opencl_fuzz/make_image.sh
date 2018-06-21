@@ -31,5 +31,5 @@ cd $PHD/experimental/deeplearning/deepsmith/opencl_fuzz
 sudo docker build . -t opencl_fuzz --squash
 
 # Export a compressed tarball of the image.
-docker save opencl_fuzz | gzip -c > \
-    $PHD/experimental/deeplearning/deepsmith/opencl_fuzz/docker_image.tar.gz
+# docker save opencl_fuzz | gzip -c > \
+#    $PHD/experimental/deeplearning/deepsmith/opencl_fuzz/docker_image.tar.gz
