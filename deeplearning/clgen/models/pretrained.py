@@ -37,7 +37,7 @@ class PreTrainedModel(object):
 
   def Sample(
       self, sampler: samplers.Sampler, min_num_samples: int,
-      seed: int = None) -> typing.List[model_pb2.Sample]:
+      seed: int = None) -> typing.Iterable[model_pb2.Sample]:
     """Sample a model.
 
     If the model is not already trained, calling Sample() first trains the
@@ -56,7 +56,7 @@ class PreTrainedModel(object):
         seeded randomly.
 
     Returns:
-      A list of Sample protos.
+      A iterator over samples.
 
     Raises:
       UnableToAcquireLockError: If the model is locked (i.e. there is another
@@ -70,7 +70,6 @@ class PreTrainedModel(object):
     sampler.Specialize(atomizer)
     batch_size = self.backend.InitSampling(sampler, seed)
     sample_start_time = labdate.MillisecondsTimestamp()
-    samples = []
     # Per-sample batch outer loop. Continues until we have as many samples
     # as we want.
     while True:
@@ -107,7 +106,7 @@ class PreTrainedModel(object):
             print(f'=== BEGIN CLGEN SAMPLE {sample_count} '
                   f'===\n\n{sample.text}\n')
             sample_count += 1
-            samples.append(sample)
+            yield sample
             wall_time_start = labdate.MillisecondsTimestamp()
 
         # Complete the batch.

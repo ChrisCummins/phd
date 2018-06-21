@@ -56,8 +56,8 @@ class ClgenGenerator(generator.GeneratorBase,
     with self.instance.Session():
       num_programs = math.ceil(
           request.num_testcases / len(self.config.testcase_skeleton))
-      samples = self.instance.model.Sample(self.instance.sampler, num_programs)
-      for sample in samples:
+      for sample in self.instance.model.Sample(
+          self.instance.sampler, num_programs):
         response.testcases.extend(self.SampleToTestcases(sample))
 
     # Flush any remaining output generated during Sample().
