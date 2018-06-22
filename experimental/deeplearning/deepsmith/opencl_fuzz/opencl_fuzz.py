@@ -104,18 +104,21 @@ def RunTestcases(harness: base_harness.HarnessBase,
 
 
 class OutputsEqualityTest(object):
+  """An object which compares result outputs."""
 
   def __call__(self, results: typing.List[deepsmith_pb2.Result]) -> bool:
     raise NotImplementedError
 
 
 class OutputsAreEqual(OutputsEqualityTest):
+  """An outputs equality test which compares all outputs."""
 
   def __call__(self, results: typing.List[deepsmith_pb2.Result]) -> bool:
     return len(set(r.outputs for r in results)) == 1
 
 
 class NamedOutputIsEqual(OutputsEqualityTest):
+  """An outputs equality test which compares a single named output."""
 
   def __init__(self, output_name: str):
     self.output_name = output_name
@@ -139,11 +142,18 @@ class NamedOutputIsEqual(OutputsEqualityTest):
 
 
 class GoldStandardDiffTester(object):
+  """A difftest which compares all results against the first result."""
 
   def __init__(self, outputs_equality_test: OutputsEqualityTest):
     self.outputs_equality_test = outputs_equality_test
 
   def DiffTest(self, difftest: deepsmith_pb2.DifferentialTest) -> None:
+    """Perform a difftest.
+
+    Args:
+      difftest: The difftest inputs. The 'outcome' field is set on this value.
+    """
+      raise ValueError("The 'outcome' field is already set.")
 
     if len(difftest.result) < 2:
       raise ValueError(
@@ -166,6 +176,7 @@ class GoldStandardDiffTester(object):
     else:
       difftest.outcome.extend([deepsmith_pb2.DifferentialTest.PASS])
 
+    # Difftest the results against the gold standard.
     for result in results:
       difftest.outcome.extend([
         self.DiffTestOne(gs_result, result)
@@ -174,6 +185,15 @@ class GoldStandardDiffTester(object):
   def DiffTestOne(self, gs_result: deepsmith_pb2.Result,
                   result: deepsmith_pb2.Result,
                   ) -> deepsmith_pb2.DifferentialTest.Outcome:
+    """Difftest one result against a golden standard.
+
+    Args:
+      gs_result: The golden standard (i.e. ground truth) result.
+      result: The result to compare against the ground truth.
+
+    Returns:
+      The difftest outcome of the result.
+    """
 
     # Short hand variables.
     result_outcome = deepsmith_pb2.Result
