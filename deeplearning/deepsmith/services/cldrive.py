@@ -133,10 +133,12 @@ def RunTestcase(opencl_environment: env.OpenCLEnvironment,
   """Run a testcase."""
   assert testcase.toolchain == 'opencl'
   result = deepsmith_pb2.Result()
-  result.testcase.CopyFrom(testcase)
   result.testbed.CopyFrom(testbed)
   platform_id, device_id = opencl_environment.ids()
   driver = MakeDriver(testcase)
+  # MakeDriver() annotates the testcase, so we must only set the testcase field
+  # of the output result after we have called it.
+  result.testcase.CopyFrom(testcase)
   # Get a temporary file to write and run the driver from.
   with tempfile.NamedTemporaryFile(prefix='deepsmith_', delete=False) as f:
     path = f.name
@@ -157,7 +159,7 @@ def RunTestcase(opencl_environment: env.OpenCLEnvironment,
     runtime.duration_ms = int(round(
         (end_time - start_time).total_seconds() * 1000))
     runtime.event_start_epoch_ms = labdate.MillisecondsTimestamp(start_time)
-    result.outcome = GetResultOutputClass(result)
+    result.outcome = GetResultOutcome(result)
   finally:
     fs.rm(path)
   return result
@@ -191,17 +193,20 @@ def MakeDriver(testcase: deepsmith_pb2.Testcase) -> str:
         scalar_val=size)
     src = cldrive_lib.emit_c(
         src=src, inputs=inputs, gsize=gsize, lsize=lsize)
+    testcase.invariant_opts['driver_type'] = 'compile_and_run'
   except Exception:
     # Create a compile-only stub if not possible.
     try:
       src = cldrive_lib.emit_c(
           src=src, inputs=None, gsize=None, lsize=None,
           compile_only=True)
+      testcase.invariant_opts['driver_type'] = 'compile_and_create_kernel'
     except Exception:
       # Create a compiler-only stub without creating kernel.
       src = cldrive_lib.emit_c(
           src=src, inputs=None, gsize=None, lsize=None,
           compile_only=True, create_kernel=False)
+      testcase.invariant_opts['driver_type'] = 'compile_only'
   return src
 
 
@@ -239,7 +244,7 @@ def GetResultRuntimeMs(result: deepsmith_pb2.Result) -> int:
   return 0
 
 
-def GetResultOutputClass(
+def GetResultOutcome(
     result: deepsmith_pb2.Result) -> deepsmith_pb2.Result.Outcome:
   """Determine the output class of a testcase."""
 
