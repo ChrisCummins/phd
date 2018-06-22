@@ -147,7 +147,7 @@ class GoldStandardDiffTester(object):
   def __init__(self, outputs_equality_test: OutputsEqualityTest):
     self.outputs_equality_test = outputs_equality_test
 
-  def DiffTest(self, difftest: deepsmith_pb2.DifferentialTest) -> None:
+  def __call__(self, difftest: deepsmith_pb2.DifferentialTest) -> None:
     """Perform a difftest.
 
     Args:
