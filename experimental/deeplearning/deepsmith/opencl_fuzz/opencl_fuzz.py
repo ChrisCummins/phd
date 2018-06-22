@@ -286,7 +286,6 @@ def ResultIsInteresting(result: deepsmith_pb2.Result,
   # A static failure is of immediate interest.
   if (result.outcome == deepsmith_pb2.Result.BUILD_CRASH or
       result.outcome == deepsmith_pb2.Result.BUILD_TIMEOUT):
-    result.outputs['notes'] = 'OpenCL kernel failed to compile'
     return True
 
   # Remaining outcomes: {Runtime Crash, Pass}.
