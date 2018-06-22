@@ -442,11 +442,11 @@ generated 33 programs with anomalous wrong-outputs. DeepSmith generated 30.
 
 The Clang front-end to LLVM supports OpenCL, and is commonly used in OpenCL
 drivers. This in turn causes Clang-related defects to potentially affect
-multiple compilers, for example the one in Figure~\ref{lst:almost-everything-
-crash}. To evaluate the impact of Clang, we used debug+assert builds of every
-LLVM release in the past 24 months and processed 75,000 DeepSmith kernels
-through the Clang front-end (this includes the lexer, parser, and type checker,
-but not code generation).
+multiple compilers, for example the one in 
+Figure~\ref{lst:almost-everything-crash}. To evaluate the impact of Clang, we 
+used debug+assert builds of every LLVM release in the past 24 months and 
+processed 75,000 DeepSmith kernels through the Clang front-end (this includes 
+the lexer, parser, and type checker, but not code generation).
 
 Figure~\ref{fig:clangs} shows that the crash rate of the Clang front-end is, for
 the most part, steadily decreasing over time. The number of failing compiler
