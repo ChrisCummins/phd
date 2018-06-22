@@ -50,11 +50,17 @@ message Result {
   // of differential testing.
   enum Outcome {
     UNKNOWN = 0;
+    // The tescase failed to compile.
     BUILD_FAILURE = 1;
+    // The tescase crashed during compilation.
     BUILD_CRASH = 2;
+    // The tescase timed out during compilation.
     BUILD_TIMEOUT = 3;
+    // The tescase crashed after compilation, during execution of the binary.
     RUNTIME_CRASH = 4;
+    // The tescase timed out after compilation, during execution of the binary.
     RUNTIME_TIMEOUT = 5;
+    // The tescase compiled, and the binary terminated gracefully.
     PASS = 6;
   }
 
@@ -72,12 +78,19 @@ message DifferentialTest {
   // A differential test outcome.
   enum Outcome {
     UNKNOWN = 0;
+    // Majority outcome is not a build failure/crash, but this result is.
     ANOMALOUS_BUILD_FAILURE = 1;
+    // Majority outcome is a build failure, but this result builds.
     ANOMALOUS_BUILD_PASS = 2;
+    // Majority outcome is a pass, but this result crashes.
     ANOMALOUS_RUNTIME_CRASH = 3;
+    // Majority outcome is a runtime crash, but this result passes.
     ANOMALOUS_RUNTIME_PASS = 4;
+    // Outputs differ between this result and the majority.
     ANOMALOUS_WRONG_OUTPUT = 5;
+    // Majority pass, but this result times out.
     ANOMALOUS_RUNTIME_TIMEOUT = 6;
+    // Outcome and outputs agrees with majority.
     PASS = 7;
   }
 
