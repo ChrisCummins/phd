@@ -292,37 +292,15 @@ def ResultIsInteresting(result: deepsmith_pb2.Result,
   # Remaining outcomes: {Runtime Crash, Pass}.
   # Run testcases against gold standard devices and apply differential testing.
   gs_result = RunTestcases(gs_harness, [result.testcase])[0]
-  logging.info('Gold standard outcome: %s.',
-               deepsmith_pb2.Result.Outcome.Name(gs_result.outcome))
 
-  # Gold standard crashes. Nothing interesting here.
-  if (result.outcome == deepsmith_pb2.Result.RUNTIME_CRASH and
-      gs_result.outcome == deepsmith_pb2.Result.RUNTIME_CRASH):
-    return False
-
-  # Gold standard device fails to build. This is potentially interesting if the
-  # device under test was incorrect in successfully building the kernel.
-  if (gs_result.outcome == deepsmith_pb2.Result.BUILD_CRASH or
-      gs_result.outcome == deepsmith_pb2.Result.BUILD_TIMEOUT):
-    result.outputs['notes'] = (
-      'OpenCL kernel failed to compile on gold standard device')
-    return True
-
-  if (result.outcome == deepsmith_pb2.Result.RUNTIME_CRASH and
-      gs_result.outcome == deepsmith_pb2.Result.PASS):
-    result.outputs['notes'] = (
-      'OpenCL kernel crashed on device under test, but not on gold '
-      'standard device')
-    return True
-
-  if (result.outcome == deepsmith_pb2.Result.PASS and
-      gs_result.outcome == deepsmith_pb2.Result.PASS and
-      gs_result.outputs['stdout'] != result.outputs['stdout']):
-    result.output['notes'] = (
-      'OpenCL kernel produces different output on gold standard device')
-    result.outputs['gs_stdout'] = gs_result.outputs['stdout']
-    result.outputs['gs_stderr'] = gs_result.outputs['stderr']
-    return True
+  difftester = GoldStandardDiffTester(NamedOutputIsEqual('stdout'))
+  dt = deepsmith_pb2.DifferentialTest()
+  dt.result.extend([gs_result, result])
+  dt_outcome = difftester(dt).outcome[1]
+  logging.info('Differential test outcome: %s.',
+               deepsmith_pb2.DifferentialTest.Outcome.Name(dt_outcome))
+  return (dt_outcome != deepsmith_pb2.DifferentialTest.PASS and
+          dt_outcome != deepsmith_pb2.DifferentialTest.UNKNOWN)
 
 
 def TestingLoop(min_interesting_results: int, max_testing_time_seconds: int,
