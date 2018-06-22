@@ -103,8 +103,6 @@ class PreTrainedModel(object):
                 sample_time_ms=end_time - start_time,
                 wall_time_ms=end_time - wall_time_start,
                 num_tokens=len(samples_in_progress[i]))
-            print(f'=== BEGIN CLGEN SAMPLE {sample_count} '
-                  f'===\n\n{sample.text}\n')
             sample_count += 1
             yield sample
             wall_time_start = labdate.MillisecondsTimestamp()
