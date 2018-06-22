@@ -296,7 +296,8 @@ def ResultIsInteresting(result: deepsmith_pb2.Result,
   difftester = GoldStandardDiffTester(NamedOutputIsEqual('stdout'))
   dt = deepsmith_pb2.DifferentialTest()
   dt.result.extend([gs_result, result])
-  dt_outcome = difftester(dt).outcome[1]
+  difftester(dt)
+  dt_outcome = dt.outcome[1]
   logging.info('Differential test outcome: %s.',
                deepsmith_pb2.DifferentialTest.Outcome.Name(dt_outcome))
   return (dt_outcome != deepsmith_pb2.DifferentialTest.PASS and
