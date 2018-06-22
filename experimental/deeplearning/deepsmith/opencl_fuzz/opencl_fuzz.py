@@ -303,6 +303,8 @@ def ResultIsInteresting(result: deepsmith_pb2.Result,
   result.outputs[
     'difftest_outcome'] = deepsmith_pb2.DifferentialTest.Outcome.Name(
       dt_outcome)
+  result.outputs['gs_stdout'] = gs_result.outputs['stdout']
+  result.outputs['gs_stderr'] = gs_result.outputs['stderr']
   return (dt_outcome != deepsmith_pb2.DifferentialTest.PASS and
           dt_outcome != deepsmith_pb2.DifferentialTest.UNKNOWN)
 
