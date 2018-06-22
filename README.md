@@ -190,15 +190,6 @@ $ curl -L -o /tmp/bazel.sh https://github.com/bazelbuild/bazel/releases/download
 $ sudo bash /tmp/bazel.sh && rm /tmp/bazel.sh
 ```
 
-Finally, install the headers for [OpenCL](https://www.khronos.org/opencl/) 1.2:
-
-```sh
-$ git clone https://github.com/KhronosGroup/OpenCL-Headers.git /tmp/opencl-headers
-$ git -C /tmp/opencl-headers reset --hard e986688daf750633898dfd3994e14a9e618f2aa5
-$ sudo mv /tmp/opencl-headers/opencl12/CL /usr/include/CL
-$ rm -rf /tmp/opencl-headers
-```
-
 Now proceed to the "Build (all platforms)" section.
 
 
