@@ -33,6 +33,11 @@ CLANG_PATH = bazelutil.DataPath(f'{_LLVM_REPO}/bin/clang')
 OPENCL_HEADERS_INCLUDE = bazelutil.DataPath('opencl_headers')
 
 
+class DriverCompilationError(OSError):
+  """Exception raised in case driver compilation fails."""
+  pass
+
+
 class CldriveHarness(harness.HarnessBase,
                      harness_pb2_grpc.HarnessServiceServicer):
   """A harness for running OpenCL testcases using cldrive."""
@@ -160,6 +165,9 @@ def RunTestcase(opencl_environment: env.OpenCLEnvironment,
         (end_time - start_time).total_seconds() * 1000))
     runtime.event_start_epoch_ms = labdate.MillisecondsTimestamp(start_time)
     result.outcome = GetResultOutcome(result)
+  except DriverCompilationError as e:
+    logging.warning('%s', e)
+    result.outcome = deepsmith_pb2.Result.UNKNOWN
   finally:
     fs.rm(path)
   return result
@@ -228,7 +236,7 @@ def CompileDriver(src: str, path: str, platform_id: int,
   stdout, stderr = proc.communicate(src)
   if not proc.returncode == 0:
     argv = ' '.join(cmd)
-    raise EnvironmentError(
+    raise DriverCompilationError(
         f'Driver compilation failed with returncode {proc.returncode}.\n'
         f'Command: {argv}\n'
         f'Stdout:\n{stdout}\n'
