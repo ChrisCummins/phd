@@ -116,8 +116,8 @@ class PreTrainedModel(object):
         now = labdate.MillisecondsTimestamp()
         logging.info(
             'Produced %s samples at a rate of %s ms / sample.',
-            humanize.intcomma(sample_count),
+            humanize.intcomma(sample_count - 1),
             humanize.intcomma(
-                int((now - sample_start_time) / max(sample_count, 1))))
+                int((now - sample_start_time) / max(sample_count - 1, 1))))
         break
 
