@@ -153,28 +153,18 @@ class GoldStandardDiffTester(object):
     Args:
       difftest: The difftest inputs. The 'outcome' field is set on this value.
     """
+    if difftest.outcome:
       raise ValueError("The 'outcome' field is already set.")
 
     if len(difftest.result) < 2:
       raise ValueError(
           'Gold standard differential tester expects exactly two results')
-
     gs_result, *results = difftest.result
 
-    # We can't difftest against an unknown outcome, so we can take a short cut.
-    # if gs_result.outcome == deepsmith_pb2.Result.UNKNOWN:
-    #   difftest.outcome.extend(
-    #       [deepsmith_pb2.DifferentialTest.UNKNOWN] * len(difftest.result))
-    #   return
-
-    if (gs_result.outcome in {deepsmith_pb2.Result.BUILD_CRASH,
-                              deepsmith_pb2.Result.BUILD_TIMEOUT}):
-      difftest.outcome.extend(
-          [deepsmith_pb2.DifferentialTest.ANOMALOUS_BUILD_FAILURE])
-    elif gs_result.outcome == deepsmith_pb2.Result.UNKNOWN:
-      difftest.outcome.extend([deepsmith_pb2.DifferentialTest.UNKNOWN])
-    else:
-      difftest.outcome.extend([deepsmith_pb2.DifferentialTest.PASS])
+    # Determine the outcome of the gold standard.
+    difftest.outcome.extend([
+      self.DiffTestOne(gs_result, gs_result)
+    ])
 
     # Difftest the results against the gold standard.
     for result in results:
