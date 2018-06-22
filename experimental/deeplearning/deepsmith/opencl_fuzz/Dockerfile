@@ -27,4 +27,4 @@ ADD model /data/model
 # Add and unpack the CLgen build archive.
 ADD opencl_fuzz_image-layer.tar /
 
-ENTRYPOINT ["python3.6", "/app/experimental/deeplearning/deepsmith/opencl_fuzz/opencl_fuzz_image.binary", "--generator=/data/generator.pbtxt"]
+ENTRYPOINT ["python3.6", "/app/experimental/deeplearning/deepsmith/opencl_fuzz/opencl_fuzz_image.binary", "--generator=/data/generator.pbtxt", "--interesting_results_dir=/out"]

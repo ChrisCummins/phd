@@ -47,10 +47,10 @@ $ cat vendors/intel64.icd
 /opt/intel/opencl-1.2-6.4.0.25/lib64/libintelocl.so
 ```
 
-The docker image creates 
-[Result protos](/phd/deeplearning/deepsmith/proto/deepsmith.proto) for testcases
-it finds interesting in `/interesting_results`. We probably want to map that
-directory to the host machine so that we can get the results out.
+The docker image creates
+[Result protos](/deeplearning/deepsmith/proto/deepsmith.proto) for testcases
+it finds interesting in `/out`. We should map that directory to the host
+machine so that we can get the results out.
 
 Finally, run the docker image, mapping the three directories to the host, and
 using the `--dut` flag to pass the name of the driver we identified from
@@ -58,7 +58,7 @@ using the `--dut` flag to pass the name of the driver we identified from
 
 ```sh
 $ docker run \
-    -v$PWD:/interesting_results \
+    -v$PWD:/out \
     -v$PWD/vendors:/etc/OpenCL/vendors \
     -v/opt/intel:/opt/intel \
     chriscummins/opencl_fuzz \
@@ -67,4 +67,4 @@ $ docker run \
 
 By default, the image runs until `--min_interesting_results` interesting results
 have been found, or until `--max_testing_time_seconds` have elapsed. Pass values
-for these flags to override the default values.  
+for these flags to override the default values.
