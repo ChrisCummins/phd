@@ -300,6 +300,10 @@ def ResultIsInteresting(result: deepsmith_pb2.Result,
   dt_outcome = dt.outcome[1]
   logging.info('Differential test outcome: %s.',
                deepsmith_pb2.DifferentialTest.Outcome.Name(dt_outcome))
+  # Add the differential test outcome to the result.
+  result.outputs[
+    'difftest_outcome'] = deepsmith_pb2.DifferentialTest.Outcome.Name(
+      dt_outcome)
   return (dt_outcome != deepsmith_pb2.DifferentialTest.PASS and
           dt_outcome != deepsmith_pb2.DifferentialTest.UNKNOWN)
 
