@@ -49,7 +49,7 @@ message Result {
   // A testcase outcome. This describes the result of the harness execution, not
   // of differential testing.
   enum Outcome {
-    UNKNOWWN = 0;
+    UNKNOWN = 0;
     BUILD_FAILURE = 1;
     BUILD_CRASH = 2;
     BUILD_TIMEOUT = 3;
@@ -71,7 +71,7 @@ message Result {
 message DifferentialTest {
   // A differential test outcome.
   enum Outcome {
-    UNKNOWWN = 0;
+    UNKNOWN = 0;
     ANOMALOUS_BUILD_FAILURE = 1;
     ANOMALOUS_BUILD_PASS = 2;
     ANOMALOUS_RUNTIME_CRASH = 3;

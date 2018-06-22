@@ -103,6 +103,155 @@ def RunTestcases(harness: base_harness.HarnessBase,
   return res.results
 
 
+class OutputsEqualityTest(object):
+
+  def __call__(self, results: typing.List[deepsmith_pb2.Result]) -> bool:
+    raise NotImplementedError
+
+
+class OutputsAreEqual(OutputsEqualityTest):
+
+  def __call__(self, results: typing.List[deepsmith_pb2.Result]) -> bool:
+    return len(set(r.outputs for r in results)) == 1
+
+
+class NamedOutputIsEqual(OutputsEqualityTest):
+
+  def __init__(self, output_name: str):
+    self.output_name = output_name
+
+  def __call__(self, results: typing.List[deepsmith_pb2.Result]) -> bool:
+    """Test that a named output is equal in all results.
+
+    Args:
+      results: A list of results to compare the named output of.
+      output_name: The name of the output in the result's outputs map.
+
+    Returns:
+      True if all named outputs are equal, else False.
+
+    Raises:
+      ValueError: if the named output is missing from any of the results.
+    """
+    if any(self.output_name not in r.outputs for r in results):
+      raise ValueError(f"'{self.output_name}' missing in one or more results.")
+    return len(set(r.outputs[self.output_name] for r in results)) == 1
+
+
+class GoldStandardDiffTester(object):
+
+  def __init__(self, outputs_equality_test: OutputsEqualityTest):
+    self.outputs_equality_test = outputs_equality_test
+
+  def DiffTest(self, difftest: deepsmith_pb2.DifferentialTest) -> None:
+
+    if len(difftest.result) < 2:
+      raise ValueError(
+          'Gold standard differential tester expects exactly two results')
+
+    gs_result, *results = difftest.result
+
+    # We can't difftest against an unknown outcome, so we can take a short cut.
+    # if gs_result.outcome == deepsmith_pb2.Result.UNKNOWN:
+    #   difftest.outcome.extend(
+    #       [deepsmith_pb2.DifferentialTest.UNKNOWN] * len(difftest.result))
+    #   return
+
+    if (gs_result.outcome in {deepsmith_pb2.Result.BUILD_CRASH,
+                              deepsmith_pb2.Result.BUILD_TIMEOUT}):
+      difftest.outcome.extend(
+          [deepsmith_pb2.DifferentialTest.ANOMALOUS_BUILD_FAILURE])
+    elif gs_result.outcome == deepsmith_pb2.Result.UNKNOWN:
+      difftest.outcome.extend([deepsmith_pb2.DifferentialTest.UNKNOWN])
+    else:
+      difftest.outcome.extend([deepsmith_pb2.DifferentialTest.PASS])
+
+    for result in results:
+      difftest.outcome.extend([
+        self.DiffTestOne(gs_result, result)
+      ])
+
+  def DiffTestOne(self, gs_result: deepsmith_pb2.Result,
+                  result: deepsmith_pb2.Result,
+                  ) -> deepsmith_pb2.DifferentialTest.Outcome:
+
+    # Short hand variables.
+    result_outcome = deepsmith_pb2.Result
+    difftest_outcome = deepsmith_pb2.DifferentialTest
+
+    # We can't difftest an unknown outcome.
+    if result.outcome == result_outcome.UNKNOWN:
+      return difftest_outcome.UNKNOWN
+
+    # Outcomes which are uninteresting if they match.
+    uninteresting_equal_outcomes = {
+      result_outcome.UNKNOWN,
+      result_outcome.BUILD_FAILURE,
+      result_outcome.RUNTIME_CRASH,
+      result_outcome.RUNTIME_TIMEOUT,
+    }
+
+    # Outcomes which signal build failures.
+    build_failures = {
+      result_outcome.UNKNOWN,
+      result_outcome.BUILD_FAILURE,
+      result_outcome.BUILD_CRASH,
+      result_outcome.BUILD_TIMEOUT,
+    }
+
+    # Outcomes which signal runtime failures.
+    runtime_failures = {
+      result_outcome.RUNTIME_CRASH,
+      result_outcome.RUNTIME_TIMEOUT,
+    }
+
+    # Outcomes which are not interesting if they are equal.
+    if (gs_result.outcome in uninteresting_equal_outcomes and
+        gs_result.outcome == result.outcome):
+      return difftest_outcome.PASS
+    # Build failures which are always interesting.
+    elif (result.outcome in {result_outcome.BUILD_CRASH,
+                             result_outcome.BUILD_TIMEOUT}):
+      return difftest_outcome.ANOMALOUS_BUILD_FAILURE
+    # Gold standard completed testcase, device under test failed to build OR
+    # gold standard failed to build, device under test completed test.
+    elif (gs_result.outcome not in build_failures and
+          result.outcome in build_failures):
+      return deepsmith_pb2.DifferentialTest.ANOMALOUS_BUILD_FAILURE
+    elif (gs_result.outcome == result_outcome.BUILD_FAILURE and
+          result.outcome not in build_failures):
+      return deepsmith_pb2.DifferentialTest.ANOMALOUS_BUILD_PASS
+    # Gold standard completed testcase, device under test crashed OR
+    # gold standard crashed, device under test completed testcase.
+    elif (gs_result.outcome == result_outcome.PASS and
+          result.outcome == result_outcome.RUNTIME_CRASH):
+      return deepsmith_pb2.DifferentialTest.ANOMALOUS_RUNTIME_CRASH
+    elif (gs_result.outcome in runtime_failures and
+          result.outcome == result_outcome.PASS):
+      return deepsmith_pb2.DifferentialTest.ANOMALOUS_RUNTIME_PASS
+    # Gold standard crashed, device under test times out OR
+    # gold standard times out, device under test crashes.
+    elif ((gs_result.outcome == result_outcome.RUNTIME_CRASH and
+           result.outcome == result_outcome.RUNTIME_TIMEOUT) or
+          (gs_result.outcome == result_outcome.RUNTIME_TIMEOUT and
+           result.outcome == result_outcome.RUNTIME_CRASH)):
+      return deepsmith_pb2.DifferentialTest.PASS
+    # Gold standard passes, device under test times out.
+    elif (gs_result.outcome == result_outcome.PASS and
+          result.outcome == result_outcome.RUNTIME_TIMEOUT):
+      return deepsmith_pb2.DifferentialTest.ANOMALOUS_RUNTIME_TIMEOUT
+    # Both devices completed testcase, compare outputs.
+    elif (gs_result.outcome == result_outcome.PASS and
+          result.outcome == result_outcome.PASS):
+      return (
+        difftest_outcome.PASS if
+        self.outputs_equality_test([gs_result, result]) else
+        difftest_outcome.ANOMALOUS_WRONG_OUTPUT
+      )
+
+    return difftest_outcome.UNKNOWN
+
+
 def ResultIsInteresting(result: deepsmith_pb2.Result,
                         gs_harness: base_harness.HarnessBase) -> bool:
   """Determine if a result is interesting.
