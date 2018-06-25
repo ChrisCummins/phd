@@ -32,6 +32,15 @@ message RunTestcasesResponse {
   repeated Result results = 2;
 }
 
+// A harness which passes a source code input to a compiler.
+// The harness drives testcases by running the specified 'argv' string, and
+// passing the 'src' input of a testcase to the command's stdin.
+message CompilerHarness {
+  optional ServiceConfig service = 1;
+  // The command used to invoke the compiler.
+  optional string argv = 2;
+}
+
 // A harness which uses cldrive to run testcases.
 message CldriveHarness {
   optional ServiceConfig service = 1;
