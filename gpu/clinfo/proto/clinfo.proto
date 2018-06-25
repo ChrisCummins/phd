@@ -1,0 +1,23 @@
+// A proto for describing OpenCL devices.
+syntax = "proto2";
+
+package gpu.clinfo;
+
+message OpenClDevice {
+  // The name of the device, which is a concatenation of the device type,
+  // platform, device, and driver versions.
+  optional string name = 1;
+
+  optional string platform_name = 2;
+  optional string device_name = 3;
+  optional string driver_version = 4;
+  optional string opencl_version = 5;
+  optional string device_type = 6;
+
+  optional int32 platform_id = 10;
+  optional int32 device_id = 11;
+}
+
+message OpenClDevices {
+  repeated OpenClDevice device = 1;
+}
