@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="test //experimental/deeplearning/deepsmith/opencl_fuzz:opencl_fuzz_test" type="BlazeCommandRunConfigurationType" factoryName="Bazel Command">
+    <blaze-settings handler-id="BlazePyRunConfigurationHandlerProvider" blaze-command="test">
+      <blaze-target kind="py_test">//experimental/deeplearning/deepsmith/opencl_fuzz:opencl_fuzz_test</blaze-target>
+      <env_state>
+        <envs />
+      </env_state>
+    </blaze-settings>
+    <method />
+  </configuration>
+</component>
