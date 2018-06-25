@@ -19,17 +19,14 @@ DeepSmith uses a service architecture. There are three types of services:
 
 ## Usage
 
-### Installation
+### Building from Source
 
-First checkout this repo and install the build requirements:
+Please follow the instructions in the root of
+[this repository](https://github.com/ChrisCummins/phd) to get a build
+environment up and running.
 
-```sh
-$ git clone https://github.com/ChrisCummins/phd.git
-$ cd phd
-$ ./configure
-```
-
-Then run the unit tests using:
+Check that your environment is set up correctly by running the unit tests for
+DeepSmith using:
 
 ```sh
 
