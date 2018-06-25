@@ -73,16 +73,74 @@ def RunBatch(generator: base_generator.GeneratorBase,
   req.num_testcases = batch_size
   res = generator.GenerateTestcases(req, None)
 
+  # TODO(cec): Pre-exec testcase filters.
+
   # Evaluate testcases.
   logging.info('Evaluating %d testcases on %s ...', len(res.testcases),
                dut_harness.testbeds[0].opts['platform'][:12])
   results = RunTestcases(dut_harness, res.testcases)
 
+  # TODO(cec): Pre-difftest result filters.
+
   for i, result in enumerate(results):
-    if ResultIsInteresting(result, gs_harness):
+    outcome = ResultIsInteresting(result, gs_harness)
+    if (outcome != deepsmith_pb2.DifferentialTest.Outcome.PASS):
       interesting_results.append(result)
 
+  # TODO(cec): Post-difftest result filters.
+
   return interesting_results
+
+
+def PreDifftestFilter(result: deepsmith_pb2.Result,
+                      outcome: deepsmith_pb2.DifferentialTest.Outcome
+                      ) -> bool:
+  # TODO(cec): Complete port of dsmith difftest filters to new format.
+  stderr = result.outputs['stderr']
+  if result.outcome == deepsmith_pb2.Result.BUILD_FAILURE:
+    if (("use of type 'double' requires cl_khr_fp64 extension" or
+         'implicit declaration of function' or
+         'function cannot have argument whose type is, or contains, type size_t' or
+         'unresolved extern function' or
+         'error: cannot increment value of type%' or
+         'subscripted access is not allowed for OpenCL vectors' or
+         'Images are not supported on given device' or
+         'error: variables in function scope cannot be declared' or
+         'error: implicit conversion ' or
+         'Could not find a definition ') in stderr):
+      return False
+    if result.testbed.opts['opencl_version'] == '1.2':
+      return False
+  elif result.outcome == deepsmith_pb2.Result.RUNTIME_CRASH:
+    if ((
+        'clFinish CL_INVALID_COMMAND_QUEUE'
+        'incompatible pointer to integer conversion' or
+        'comparison between pointer and integer' or
+        'warning: incompatible' or
+        'warning: division by zero is undefined' or
+        'warning: comparison of distinct pointer types' or
+        'is past the end of the array' or
+        'warning: comparison between pointer and' or
+        'warning: array index' or
+        'warning: implicit conversion from' or
+        'array index -1 is before the beginning of the array' or
+        'incompatible pointer' or
+        'incompatible integer to pointer ') in stderr):
+      return False
+    # TODO(cec): oclgrind.verify_dsmith_testcase(testcase)
+  elif outcome == deepsmith_pb2.DifferentialTest.ANOMALOUS_WRONG_OUTPUT:
+    if 'float' or 'double' in result.testcase.inputs['src']:
+      return False
+    if program_meta.get_vector_inputs(s):
+      return False
+    if program_meta.get_compiler_warnings(s):
+      return False
+    if not self.get_gpuverified(s):
+      return False
+    if not self.get_oclverified(s):
+      return False
+
+  return True
 
 
 def RunTestcases(harness: base_harness.HarnessBase,
@@ -142,36 +200,81 @@ class NamedOutputIsEqual(OutputsEqualityTest):
     return len(set(r.outputs[self.output_name] for r in results)) == 1
 
 
-class GoldStandardDiffTester(object):
+class DiffTesterBase(object):
+  """Base class for differential testers."""
+
+  def __call__(self, results: typing.List[deepsmith_pb2.Result]
+               ) -> typing.List[deepsmith_pb2.DifferentialTest.Outcome]:
+    """Differential test results and return their outcomes.
+
+    Args:
+      results: A list of Result protos.
+
+    Returns:
+      A list of differential test outcomes, one for each input result.
+    """
+    raise NotImplementedError
+
+
+class UnaryTester(DiffTesterBase):
+
+  def __call__(self, results: typing.List[deepsmith_pb2.Result]
+               ) -> typing.List[deepsmith_pb2.DifferentialTest.Outcome]:
+    """Unary test a result.
+
+    Args:
+      results: A list containing a single Result proto.
+
+    Returns:
+      A list containing one differential test outcome.
+
+    Raises:
+      ValueError: If called with more than or less than one Result proto.
+    """
+    if len(results) != 1:
+      raise ValueError('UnaryTester must be called with exactly one result.')
+
+    return [
+      {
+        deepsmith_pb2.Result.UNKNOWN: deepsmith_pb2.DifferentialTest.UNKNOWN,
+        deepsmith_pb2.Result.BUILD_FAILURE: deepsmith_pb2.DifferentialTest.PASS,
+        deepsmith_pb2.Result.BUILD_CRASH:
+          deepsmith_pb2.DifferentialTest.ANOMALOUS_BUILD_FAILURE,
+        deepsmith_pb2.Result.BUILD_TIMEOUT:
+          deepsmith_pb2.DifferentialTest.ANOMALOUS_BUILD_FAILURE,
+        deepsmith_pb2.Result.RUNTIME_CRASH: deepsmith_pb2.DifferentialTest.PASS,
+        deepsmith_pb2.Result.RUNTIME_TIMEOUT:
+          deepsmith_pb2.DifferentialTest.PASS,
+        deepsmith_pb2.Result.PASS: deepsmith_pb2.DifferentialTest.PASS,
+      }[results[0]]]
+
+
+class GoldStandardDiffTester(DiffTesterBase):
   """A difftest which compares all results against the first result."""
 
   def __init__(self, outputs_equality_test: OutputsEqualityTest):
     self.outputs_equality_test = outputs_equality_test
 
-  def __call__(self, difftest: deepsmith_pb2.DifferentialTest) -> None:
+  def __call__(self, results: typing.List[deepsmith_pb2.Result]
+               ) -> typing.List[deepsmith_pb2.DifferentialTest.Outcome]:
     """Perform a difftest.
 
     Args:
-      difftest: The difftest inputs. The 'outcome' field is set on this value.
-    """
-    if difftest.outcome:
-      raise ValueError("The 'outcome' field is already set.")
+      results: A list of Result protos.
 
-    if len(difftest.result) < 2:
-      raise ValueError(
-          'Gold standard differential tester expects exactly two results')
-    gs_result, *results = difftest.result
+    Returns:
+      The differential test outcomes.
+    """
+    gs_result, *results = results
 
     # Determine the outcome of the gold standard.
-    difftest.outcome.extend([
-      self.DiffTestOne(gs_result, gs_result)
-    ])
+    outcomes = [self.DiffTestOne(gs_result, gs_result)]
 
     # Difftest the results against the gold standard.
     for result in results:
-      difftest.outcome.extend([
-        self.DiffTestOne(gs_result, result)
-      ])
+      outcomes.append(self.DiffTestOne(gs_result, result))
+
+    return outcomes
 
   def DiffTestOne(self, gs_result: deepsmith_pb2.Result,
                   result: deepsmith_pb2.Result,
@@ -264,7 +367,8 @@ class GoldStandardDiffTester(object):
 
 
 def ResultIsInteresting(result: deepsmith_pb2.Result,
-                        gs_harness: base_harness.HarnessBase) -> bool:
+                        gs_harness: base_harness.HarnessBase
+                        ) -> deepsmith_pb2.DifferentialTest.Outcome:
   """Determine if a result is interesting.
 
   If the result is interesting, an output 'notes' is added to explain why.
@@ -277,27 +381,22 @@ def ResultIsInteresting(result: deepsmith_pb2.Result,
   Returns:
     True if the result is interesting, else False.
   """
-  # We don't extract anything of interest from runtime timeouts or build
-  # failures. We *could* see if the outcome differs on the gold standard
-  # harness.
-  if (result.outcome == deepsmith_pb2.Result.BUILD_FAILURE or
-      result.outcome == deepsmith_pb2.Result.RUNTIME_TIMEOUT):
-    return False
+  difftester = UnaryTester()
+  outcome = difftester([result])[0]
 
-  # A static failure is of immediate interest.
-  if (result.outcome == deepsmith_pb2.Result.BUILD_CRASH or
-      result.outcome == deepsmith_pb2.Result.BUILD_TIMEOUT):
-    return True
+  if (outcome != deepsmith_pb2.DifferentialTest.PASS and
+      outcome != deepsmith_pb2.DifferentialTest.UNKNOWN):
+    return outcome
 
-  # Remaining outcomes: {Runtime Crash, Pass}.
+  if not (outcome == deepsmith_pb2.DifferentialTest.PASS and
+          result.outcome == deepsmith_pb2.Result.PASS):
+    return deepsmith_pb2.DifferentialTest.PASS
+
   # Run testcases against gold standard devices and apply differential testing.
   gs_result = RunTestcases(gs_harness, [result.testcase])[0]
 
   difftester = GoldStandardDiffTester(NamedOutputIsEqual('stdout'))
-  dt = deepsmith_pb2.DifferentialTest()
-  dt.result.extend([gs_result, result])
-  difftester(dt)
-  dt_outcome = dt.outcome[1]
+  _, dt_outcome = difftester([gs_result, result])
   logging.info('Differential test outcome: %s.',
                deepsmith_pb2.DifferentialTest.Outcome.Name(dt_outcome))
   # Add the differential test outcome to the result.
@@ -306,8 +405,7 @@ def ResultIsInteresting(result: deepsmith_pb2.Result,
       dt_outcome)
   result.outputs['gs_stdout'] = gs_result.outputs['stdout']
   result.outputs['gs_stderr'] = gs_result.outputs['stderr']
-  return (dt_outcome != deepsmith_pb2.DifferentialTest.PASS and
-          dt_outcome != deepsmith_pb2.DifferentialTest.UNKNOWN)
+  return dt_outcome
 
 
 def TestingLoop(min_interesting_results: int, max_testing_time_seconds: int,
