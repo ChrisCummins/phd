@@ -1,4 +1,5 @@
 import pathlib
+import sys
 import time
 import typing
 
@@ -395,4 +396,11 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  try:
+    app.run(main)
+  except KeyboardInterrupt:
+    logging.flush()
+    sys.stdout.flush()
+    sys.stderr.flush()
+    print('keyboard interrupt')
+    sys.exit(1)
