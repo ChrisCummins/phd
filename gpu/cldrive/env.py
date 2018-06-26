@@ -94,7 +94,7 @@ def all_envs() -> Iterator[OpenCLEnvironment]:
   Iterator[OpenCLEnvironment]
       An iterator over all available OpenCL environments.
   """
-  stdout = subprocess.check_output([CLINFO])
+  stdout = subprocess.check_output([str(CLINFO)])
   devices = pbutil.FromString(stdout, clinfo_pb2.OpenClDevices())
   for device in devices.device:
     yield OpenCLEnvironment(device)
