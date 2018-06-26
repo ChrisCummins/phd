@@ -16,7 +16,7 @@ cc_library(
     linkopts = ["-ldl"],
     deps = [
         "//gpu/clinfo/proto:clinfo_cc_pb2",
-        "@libopencl//:libOpenCL",
         "//third_party/opencl",
+        "@libopencl//:libOpenCL",
     ],
 )
