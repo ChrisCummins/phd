@@ -14,12 +14,11 @@ Usage:
 import subprocess
 import sys
 import typing
-
 from absl import app
 from absl import flags
-from absl import logging
 
 from gpu.cldrive import env
+from gpu.clinfo.proto import clinfo_pb2
 from lib.labm8 import bazelutil
 from lib.labm8 import system
 
@@ -56,43 +55,22 @@ class OpenCLEnvironment(env.OpenCLEnvironment):
   """A mock cldrive OpenCLEnvironment for oclgrind."""
 
   def __init__(self):
-    super(OpenCLEnvironment, self).__init__(None, None)
-
-  def ids(self) -> typing.Tuple[int, int]:
-    """Return platform and device ID numbers."""
-    return 0, 0
+    device = clinfo_pb2.OpenClDevice(
+        name='Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2',
+        platform_name='Oclgrind',
+        device_name='Oclgrind Simulator',
+        driver_version='Oclgrind 18.3',
+        opencl_version='1.2',
+        device_type='Emulator',
+        platform_id=0,
+        device_id=1,
+    )
+    super(OpenCLEnvironment, self).__init__(device)
 
   def Exec(self, argv: typing.List[str]) -> subprocess.Popen:
     """Execute a command in the device environment."""
     return Exec(['--max-errors', '1', '--uninitialized', '--data-races',
                  '--uniform-writes', '--uniform-writes'] + argv)
-
-  @property
-  def platform_name(self):
-    """The name of the platform."""
-    return 'Oclgrind'
-
-  @property
-  def device_name(self):
-    """The name of the device."""
-    return 'Oclgrind Simulator'
-
-  @property
-  def driver_version(self):
-    """The driver version."""
-    # This must be updated when @oclgrind package is updated.
-    return 'Oclgrind 18.3'
-
-  @property
-  def opencl_version(self):
-    """The supported OpenCL version."""
-    # This must be updated when @oclgrind package is updated.
-    return '1.2'
-
-  @property
-  def device_type(self):
-    """The name of the device type."""
-    return 'Emulator'
 
 
 def main(argv):

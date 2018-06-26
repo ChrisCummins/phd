@@ -68,11 +68,12 @@ py_library(
 py_library(
     name = "env",
     srcs = ["env.py"],
+    data = ["//gpu/clinfo"],
     visibility = ["//gpu:__subpackages__"],
     deps = [
-        requirement("pyopencl"),
-        requirement("pytools"),
-        requirement("cffi"),
+        "//gpu/clinfo/proto:clinfo_py_pb2",
+        "//lib/labm8:bazelutil",
+        "//lib/labm8:pbutil",
         requirement("absl-py"),
     ],
 )
