@@ -204,7 +204,7 @@ class DiffTesterBase(object):
   """Base class for differential testers."""
 
   def __call__(self, results: typing.List[deepsmith_pb2.Result]
-               ) -> typing.List[deepsmith_pb2.DifferentialTest.Outcome]:
+               ) -> typing.List['deepsmith_pb2.DifferentialTest.Outcome']:
     """Differential test results and return their outcomes.
 
     Args:
@@ -219,7 +219,7 @@ class DiffTesterBase(object):
 class UnaryTester(DiffTesterBase):
 
   def __call__(self, results: typing.List[deepsmith_pb2.Result]
-               ) -> typing.List[deepsmith_pb2.DifferentialTest.Outcome]:
+               ) -> typing.List['deepsmith_pb2.DifferentialTest.Outcome']:
     """Unary test a result.
 
     Args:
@@ -256,7 +256,7 @@ class GoldStandardDiffTester(DiffTesterBase):
     self.outputs_equality_test = outputs_equality_test
 
   def __call__(self, results: typing.List[deepsmith_pb2.Result]
-               ) -> typing.List[deepsmith_pb2.DifferentialTest.Outcome]:
+               ) -> typing.List['deepsmith_pb2.DifferentialTest.Outcome']:
     """Perform a difftest.
 
     Args:
