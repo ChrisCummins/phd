@@ -1,14 +1,12 @@
-import os
+import grpc
+import pathlib
 import subprocess
 import tempfile
 import time
-import typing
-from concurrent import futures
-
-import grpc
 from absl import app
 from absl import flags
 from absl import logging
+from concurrent import futures
 
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import harness_pb2
@@ -151,7 +149,7 @@ def RunTestcase(opencl_environment: env.OpenCLEnvironment,
   result.testcase.CopyFrom(testcase)
   # Get a temporary file to write and run the driver from.
   with tempfile.NamedTemporaryFile(prefix='deepsmith_', delete=False) as f:
-    path = f.name
+    path = pathlib.Path(f.name)
   try:
     CompileDriver(driver, path, platform_id, device_id)
     timeout = testcase.harness.opts.get('timeout_seconds', '60')
@@ -223,16 +221,30 @@ def MakeDriver(testcase: deepsmith_pb2.Testcase) -> str:
   return src
 
 
-def CompileDriver(src: str, path: str, platform_id: int,
-                  device_id: int, timeout: int = 60) -> None:
-  """Compile driver binary from source."""
-  cmd = ['timeout', '-s9', str(timeout), str(CLANG_PATH),
-         '-xc', '-', '-o', str(path),
-          f'-DPLATFORM_ID={platform_id}', f'-DDEVICE_ID={device_id}',
+def CompileDriver(src: str, output_path: pathlib.Path,
+                  platform_id: int, device_id: int,
+                  timeout_seconds: int = 60) -> pathlib.Path:
+  """Compile driver binary from source.
+
+  Args:
+    src: The C source code to compile.
+    output_path: The path to the binary to generate.
+    platform_id: The OpenCL platform ID.
+    device_id: The OpenCL device ID.
+    timeout_seconds: The number of seconds to allow for compilation.
+
+  Returns:
+    The path to the generated binary, same as output_path.
+
+  Raises:
+    DriverCompilationError: In case compilation fails.
+  """
+  cmd = ['timeout', '-s9', str(timeout_seconds), str(CLANG_PATH),
+         '-xc', '-', '-o', str(output_path),
+         f'-DPLATFORM_ID={platform_id}', f'-DDEVICE_ID={device_id}',
          '-std=c99', '-Wno-deprecated-declarations',
          '-isystem', str(LIBCXX_HEADERS_PATH),
-         '-isystem', str(OPENCL_HEADERS_DIR),
-         ]
+         '-isystem', str(OPENCL_HEADERS_DIR)]
   if system.is_linux():
     cmd += [f'-L{LIBOPENCL_DIR}', f'-Wl,-rpath,{LIBOPENCL_DIR}',
             '-lOpenCL', '-ldl', '-lpthread']
@@ -251,7 +263,7 @@ def CompileDriver(src: str, path: str, platform_id: int,
         f'Stdout:\n{stdout}\n'
         f'Stderr:\n{stderr}\n'
         f'Driver source:\n{src}')
-  return path
+  return output_path
 
 
 def GetResultRuntimeMs(result: deepsmith_pb2.Result) -> int:
