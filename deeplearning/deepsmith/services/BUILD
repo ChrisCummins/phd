@@ -193,6 +193,8 @@ py3_image(
     deps = [":cldrive"],
 )
 
+# A docker image for the cldrive unit tests. This is useful for testing the
+# hemetic-ness (definitely not a word) of the cldrive harness.
 py3_image(
     name = "cldrive_test_image",
     srcs = ["cldrive_test.py"],
