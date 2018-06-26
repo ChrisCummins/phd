@@ -227,8 +227,8 @@ def MakeDriver(testcase: deepsmith_pb2.Testcase) -> str:
 def CompileDriver(src: str, path: str, platform_id: int,
                   device_id: int, timeout: int = 60) -> None:
   """Compile driver binary from source."""
-  cmd = ['timeout', '-s9', str(timeout), #str(CLANG_PATH),
-         'gcc', '-xc', '-', '-o', str(path),
+  cmd = ['timeout', '-s9', str(timeout), str(CLANG_PATH),
+         '-xc', '-', '-o', str(path),
           f'-DPLATFORM_ID={platform_id}', f'-DDEVICE_ID={device_id}',
          '-std=c99', '-Wno-deprecated-declarations',
          '-isystem', str(LIBCXX_HEADERS_PATH),
