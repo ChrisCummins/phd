@@ -84,7 +84,7 @@ def RunBatch(generator: base_generator.GeneratorBase,
 
   for i, result in enumerate(results):
     outcome = ResultIsInteresting(result, gs_harness)
-    if (outcome != deepsmith_pb2.DifferentialTest.Outcome.PASS):
+    if (outcome != deepsmith_pb2.DifferentialTest.PASS):
       interesting_results.append(result)
 
   # TODO(cec): Post-difftest result filters.
@@ -246,7 +246,7 @@ class UnaryTester(DiffTesterBase):
         deepsmith_pb2.Result.RUNTIME_TIMEOUT:
           deepsmith_pb2.DifferentialTest.PASS,
         deepsmith_pb2.Result.PASS: deepsmith_pb2.DifferentialTest.PASS,
-      }[results[0]]]
+      }[results[0].outcome]]
 
 
 class GoldStandardDiffTester(DiffTesterBase):
