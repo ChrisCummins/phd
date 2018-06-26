@@ -140,7 +140,7 @@ py_library(
 py_binary(
     name = "cldrive",
     srcs = ["cldrive.py"],
-    data = ["@opencl_headers"] + select({
+    data = ["@opencl_120_headers"] + select({
         "//:darwin": ["@llvm_mac//:clang"],
         "//conditions:default": ["@llvm_linux//:clang"],
     }),
