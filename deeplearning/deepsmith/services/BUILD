@@ -173,6 +173,18 @@ py_binary(
     ],
 )
 
+py_test(
+    name = "cldrive_test",
+    srcs = ["cldrive_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":cldrive",
+        requirement("absl-py"),
+        requirement("pytest"),
+    ],
+)
+
 py3_image(
     name = "cldrive_image",
     srcs = ["cldrive.py"],
