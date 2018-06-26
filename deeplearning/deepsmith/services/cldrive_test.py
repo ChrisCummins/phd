@@ -140,7 +140,7 @@ def test_MakeDriver_CompileDriver_hello_world():
     binary = cldrive.CompileDriver(
         driver, pathlib.Path(d) / 'exe', 0, 0, timeout_seconds=60)
     proc = oclgrind.Exec([binary])
-  assert '[cldrive] Platform:' in
+  assert '[cldrive] Platform:' in proc.stderr
   assert '[cldrive] Device:' in proc.stderr
   assert '[cldrive] OpenCL optimizations: on\n' in proc.stderr
   assert '[cldrive] Kernel: "A"\n' in proc.stderr
