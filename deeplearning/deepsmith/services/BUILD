@@ -200,7 +200,7 @@ py3_image(
 py3_image(
     name = "cldrive_test_image",
     srcs = ["cldrive_test.py"],
-    base = "@python3.6//image",
+    base = "@base//image",
     main = "cldrive_test.py",
     deps = [
         ":cldrive",
