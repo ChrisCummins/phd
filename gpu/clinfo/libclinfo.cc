@@ -173,8 +173,8 @@ bool BothAre(char lhs, char rhs) {
 }
 
 void EscapeOpenCLString(std::string &string) {
-  std::replace(string.begin(), string.end(), ' ', '.');
-  string.erase(std::unique(string.begin(), string.end(), BothAre<'.'>),
+  std::replace(string.begin(), string.end(), ' ', '_');
+  string.erase(std::unique(string.begin(), string.end(), BothAre<'_'>),
                string.end());
 }
 
