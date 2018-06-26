@@ -15,6 +15,14 @@ filegroup(
 )
 
 filegroup(
+    name = "ld",
+    srcs = [
+        "bin/ld.lld",
+        "bin/lld",
+    ],
+)
+
+filegroup(
     name = "opt",
     srcs = ["bin/opt"],
 )
