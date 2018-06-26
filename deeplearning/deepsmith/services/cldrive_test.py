@@ -6,6 +6,7 @@ import sys
 import tempfile
 from absl import app
 from absl import flags
+from absl import logging
 
 
 FLAGS = flags.FLAGS
@@ -150,7 +151,7 @@ def test_MakeDriver_CompileDriver_hello_world():
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
+    logging.warning("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
   sys.exit(pytest.main([__file__, '-vv']))
 
 
