@@ -6,6 +6,7 @@
 #include <vector>
 #include <algorithm>
 #include <cstdio>
+#include <stdexcept>
 
 #include "gpu/clinfo/libclinfo.h"
 
@@ -198,6 +199,7 @@ std::string GetOpenClDeviceType(const cl::Device &device) {
 }
 
 void SetOpenClDevice(const cl::Platform &platform, const cl::Device &device,
+                     const int platform_id, const int device_id,
                      ::gpu::clinfo::OpenClDevice *const message) {
   std::string platform_name, device_name, driver_version, opencl_version;
   int major, minor = -1;
@@ -230,6 +232,9 @@ void SetOpenClDevice(const cl::Platform &platform, const cl::Device &device,
        << driver_version.c_str() << "|"
        << opencl_version.c_str();
   message->set_name(name.str());
+
+  message->set_platform_id(platform_id);
+  message->set_device_id(device_id);
 }
 
 ::gpu::clinfo::OpenClDevices GetOpenClDevices() {
@@ -237,13 +242,43 @@ void SetOpenClDevice(const cl::Platform &platform, const cl::Device &device,
   std::vector <cl::Platform> platforms;
   cl::Platform::get(&platforms);
   std::vector <cl::Device> devices;
+  int platform_id = 0;
   for (const auto &platform : platforms) {
     platform.getDevices(CL_DEVICE_TYPE_ALL, &devices);
+    int device_id = 0;
     for (const auto &device : devices) {
-      phd::gpu::clinfo::SetOpenClDevice(platform, device, message.add_device());
+      phd::gpu::clinfo::SetOpenClDevice(platform, device, platform_id,
+                                        device_id, message.add_device());
+      ++device_id;
     }
+    ++platform_id;
   }
   return message;
+}
+
+::gpu::clinfo::OpenClDevice GetOpenClDevice(const int platform_id,
+                                            const int device_id) {
+  ::gpu::clinfo::OpenClDevice message;
+  std::vector <cl::Platform> platforms;
+  cl::Platform::get(&platforms);
+  std::vector <cl::Device> devices;
+  int cur_platform = 0;
+  for (const auto &platform : platforms) {
+    if (cur_platform == platform_id) {
+      platform.getDevices(CL_DEVICE_TYPE_ALL, &devices);
+      int cur_device = 0;
+      for (const auto &device : devices) {
+        if (cur_device == device_id) {
+          phd::gpu::clinfo::SetOpenClDevice(platform, device, cur_platform,
+                                            cur_device, &message);
+          return message;
+        }
+        ++cur_device;
+      }
+    }
+    ++cur_platform;
+  }
+  throw std::invalid_argument("Platform and device ID not found");
 }
 
 }  // namespace clinfo

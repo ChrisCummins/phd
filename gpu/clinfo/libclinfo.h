@@ -24,9 +24,13 @@ const char *OpenClErrorString(cl_int err);
 void OpenClCheckError(const char *api_call, cl_int err);
 
 void SetOpenClDevice(const cl::Platform &platform, const cl::Device &device,
+                     const int platform_id, const int device_id,
                      ::gpu::clinfo::OpenClDevice *const message);
 
 ::gpu::clinfo::OpenClDevices GetOpenClDevices();
+
+::gpu::clinfo::OpenClDevice GetOpenClDevice(const int platform_id,
+                                            const int device_id);
 
 }  // namespace clinfo
 
