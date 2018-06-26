@@ -13,10 +13,15 @@ cc_library(
         "libclinfo.cc",
         "libclinfo.h",
     ],
-    linkopts = ["-ldl"],
+    linkopts = ["-ldl"] + select({
+        "//:darwin": ["-framework OpenCL"],
+        "//conditions:default": [],
+    }),
     deps = [
         "//gpu/clinfo/proto:clinfo_cc_pb2",
         "//third_party/opencl",
-        "@libopencl//:libOpenCL",
-    ],
+    ] + select({
+        "//:darwin": [],
+        "//conditions:default": ["@libopencl//:libOpenCL"],
+    }),
 )
