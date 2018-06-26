@@ -190,6 +190,13 @@ def MakeDriver(testcase: deepsmith_pb2.Testcase) -> str:
     ValueError: In case the testcase is missing the required gsize, lsize, and
       src inputs.
   """
+  if 'gsize' not in testcase.inputs:
+    raise ValueError("Field not set: 'Testcase.inputs[\"gsize\"]'")
+  if 'lsize' not in testcase.inputs:
+    raise ValueError("Field not set: 'Testcase.inputs[\"lsize\"]'")
+  if 'src' not in testcase.inputs:
+    raise ValueError("Field not set: 'Testcase.inputs[\"src\"]'")
+
   gsize = cldrive_lib.NDRange(
       *[int(x) for x in testcase.inputs['gsize'].split(',')])
   lsize = cldrive_lib.NDRange(
