@@ -28,8 +28,13 @@ FLAGS = flags.FLAGS
 _UNAME = 'linux' if system.is_linux() else 'mac'
 # Path to clang binary.
 CLANG_PATH = bazelutil.DataPath(f'llvm_{_UNAME}/bin/clang')
-# Path to libcxx headers.
-LIBCXX_HEADERS_PATH = bazelutil.DataPath(f'libcxx_{_UNAME}/include/c++/v1')
+# Flags for compiling with libcxx.
+LIBCXX_LIB_DIR = bazelutil.DataPath(f'llvm_{_UNAME}/lib')
+LIBCXX_FLAGS = [
+  f'-L{LIBCXX_LIB_DIR}', f'-Wl,-rpath,{LIBCXX_LIB_DIR}',
+  '-nodefaultlibs', '-stdlib=libc++', '-lc++', '-lc++abi', '-lm', '-lc',
+  '-lgcc_s', '-lgcc',
+]
 # Path to OpenCL headers.
 OPENCL_HEADERS_DIR = bazelutil.DataPath('opencl_120_headers')
 if system.is_linux():
@@ -246,12 +251,13 @@ def CompileDriver(src: str, output_path: pathlib.Path,
   Raises:
     DriverCompilationError: In case compilation fails.
   """
-  cmd = ['timeout', '-s9', str(timeout_seconds), str(CLANG_PATH),
-         '-xc', '-', '-o', str(output_path),
-         f'-DPLATFORM_ID={platform_id}', f'-DDEVICE_ID={device_id}',
-         '-std=c99', '-Wno-deprecated-declarations',
-         '-isystem', str(LIBCXX_HEADERS_PATH),
-         '-isystem', str(OPENCL_HEADERS_DIR)]
+  cmd = [
+    'timeout', '-s9', str(timeout_seconds),
+    str(CLANG_PATH), '-xc', '-', '-o', str(output_path),
+    f'-DPLATFORM_ID={platform_id}', f'-DDEVICE_ID={device_id}',
+    '-ferror-limit=1', '-std=c99', '-Wno-deprecated-declarations',
+    '-isystem', str(OPENCL_HEADERS_DIR),
+  ] + LIBCXX_FLAGS
   if system.is_linux():
     cmd += [f'-L{LIBOPENCL_DIR}', f'-Wl,-rpath,{LIBOPENCL_DIR}',
             '-lOpenCL', '-ldl', '-lpthread']

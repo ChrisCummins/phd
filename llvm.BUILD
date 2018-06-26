@@ -10,6 +10,21 @@ filegroup(
 )
 
 filegroup(
+    name = "libcxx_headers",
+    srcs = glob([
+        "include/c++/v1/**/*",
+        "lib/clang/6.0.0/include/**/*",
+    ]),
+)
+
+filegroup(
+    name = "libcxx_libs",
+    srcs = glob([
+        "lib/libc++*",
+    ]),
+)
+
+filegroup(
     name = "clang-format",
     srcs = ["bin/clang-format"],
 )

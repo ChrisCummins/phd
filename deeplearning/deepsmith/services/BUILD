@@ -143,11 +143,13 @@ py_binary(
     data = ["@opencl_120_headers//:opencl_headers"] + select({
         "//:darwin": [
             "@llvm_mac//:clang",
-            "@libcxx_mac//:headers",
+            "@llvm_mac//:libcxx_headers",
+            "@llvm_mac//:libcxx_libs",
         ],
         "//conditions:default": [
             "@llvm_linux//:clang",
-            "@libcxx_linux//:headers",
+            "@llvm_linux//:libcxx_headers",
+            "@llvm_linux//:libcxx_libs",
             "@libopencl//:libOpenCL.so",
         ],
     }),
@@ -200,5 +202,9 @@ py3_image(
     srcs = ["cldrive_test.py"],
     base = "@python3.6//image",
     main = "cldrive_test.py",
-    deps = [":cldrive_test"],
+    deps = [
+        ":cldrive",
+        requirement("absl-py"),
+        requirement("pytest"),
+    ],
 )
