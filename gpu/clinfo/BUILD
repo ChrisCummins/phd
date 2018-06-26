@@ -3,6 +3,7 @@
 cc_binary(
     name = "clinfo",
     srcs = ["clinfo.cc"],
+    linkopts = ["-ldl"],
     visibility = ["//visibility:public"],
     deps = [":libclinfo"],
 )
