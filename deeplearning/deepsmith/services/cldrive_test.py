@@ -48,6 +48,20 @@ int main() {
     assert output == "Hello, world!\n"
 
 
+def test_CompileDriver_opencl_header():
+  """Test compile a C program which includes the OpenCL headers."""
+  with tempfile.TemporaryDirectory() as d:
+    p = cldrive.CompileDriver("""
+#ifdef __APPLE__
+#include <OpenCL/opencl.h>
+#else
+#include <CL/cl.h>
+#endif
+int main() {}
+""", pathlib.Path(d) / 'exe', 0, 0, timeout_seconds=60)
+    assert p.is_file()
+
+
 def test_CompileDriver_DriverCompilationError_syntax_error():
   """Test that DriverCompilationError is raised if code does not compile."""
   with tempfile.TemporaryDirectory() as d:
