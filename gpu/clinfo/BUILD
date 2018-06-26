@@ -3,7 +3,6 @@
 cc_binary(
     name = "clinfo",
     srcs = ["clinfo.cc"],
-    linkopts = ["-ldl"],
     visibility = ["//visibility:public"],
     deps = [":libclinfo"],
 )
@@ -14,12 +13,10 @@ cc_library(
         "libclinfo.cc",
         "libclinfo.h",
     ],
-    linkopts = select({
-        "//:darwin": ["-framework OpenCL"],
-        "//conditions:default": ["-lOpenCL"],
-    }),
+    linkopts = ["-ldl"],
     deps = [
         "//gpu/clinfo/proto:clinfo_cc_pb2",
+        "@libopencl//:libOpenCL",
         "//third_party/opencl",
     ],
 )

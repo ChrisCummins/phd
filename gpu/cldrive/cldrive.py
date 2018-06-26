@@ -2,6 +2,7 @@
 import typing
 
 from absl import app
+from absl import logging
 from absl import flags
 
 from gpu import cldrive
@@ -48,7 +49,7 @@ def PrintOpenClEnvironments() -> None:
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
+    logging.warning("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
   if FLAGS.ls_env:
     PrintOpenClEnvironments()
