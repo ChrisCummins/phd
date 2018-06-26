@@ -30,7 +30,7 @@ _LLVM_REPO = 'llvm_linux' if system.is_linux() else 'llvm_mac'
 # Path to clang binary.
 CLANG_PATH = bazelutil.DataPath(f'{_LLVM_REPO}/bin/clang')
 # Path to OpenCL headers.
-OPENCL_HEADERS_INCLUDE = bazelutil.DataPath('opencl_headers')
+OPENCL_HEADERS_INCLUDE = bazelutil.DataPath('opencl_120_headers')
 
 
 class DriverCompilationError(OSError):
