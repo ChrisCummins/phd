@@ -36,7 +36,6 @@ LIBCXX_HEADERS_PATH = bazelutil.DataPath(f'libcxx_{_UNAME}/include/c++/v1')
 OPENCL_HEADERS_DIR = bazelutil.DataPath('opencl_120_headers')
 if system.is_linux():
   LIBOPENCL_DIR = bazelutil.DataPath('libopencl')
-OPENCL_ENV = os.environ.copy()
 
 
 class DriverCompilationError(OSError):
@@ -158,7 +157,7 @@ def RunTestcase(opencl_environment: env.OpenCLEnvironment,
     timeout = testcase.harness.opts.get('timeout_seconds', '60')
     cmd = ['timeout', '-s9', timeout, f.name]
     start_time = labdate.GetUtcMillisecondsNow()
-    proc = opencl_environment.Exec(cmd, env=OPENCL_ENV)
+    proc = opencl_environment.Exec(cmd)
     end_time = labdate.GetUtcMillisecondsNow()
     # Build result message.
     result.returncode = proc.returncode
