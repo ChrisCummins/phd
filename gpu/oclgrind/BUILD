@@ -1,6 +1,8 @@
 # A Python interface to Oclgrind.
 # See: https://github.com/jrprice/Oclgrind
 
+load("@requirements//:requirements.bzl", "requirement")
+
 py_binary(
     name = "oclgrind",
     srcs = ["oclgrind.py"],

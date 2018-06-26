@@ -30,7 +30,8 @@ _OCLGRIND_PKG = 'oclgrind_linux' if system.is_linux() else 'oclgrind_mac'
 OCLGRIND_PATH = bazelutil.DataPath(f'{_OCLGRIND_PKG}/bin/oclgrind')
 
 
-def Exec(argv: typing.List[str]) -> subprocess.Popen:
+def Exec(argv: typing.List[str],
+         env: typing.Dict[str, str] = None) -> subprocess.Popen:
   """Execute a command using oclgrind.
 
   This creates a Popen process, executes it, and sets the stdout and stderr
@@ -38,6 +39,7 @@ def Exec(argv: typing.List[str]) -> subprocess.Popen:
 
   Args:
     argv: A list of arguments to pass to the oclgrind executable.
+    env: An optional environment to use.
 
   Returns:
     A Popen instance, with string stdout and stderr attributes set.
@@ -45,7 +47,8 @@ def Exec(argv: typing.List[str]) -> subprocess.Popen:
   cmd = [str(OCLGRIND_PATH)] + argv
   # logging.debug('$ %s', ' '.join(cmd))
   process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE, universal_newlines=True)
+                             stderr=subprocess.PIPE, universal_newlines=True,
+                             env=env)
   stdout, stderr = process.communicate()
   process.stdout, process.stderr = stdout, stderr
   return process
@@ -63,14 +66,15 @@ class OpenCLEnvironment(env.OpenCLEnvironment):
         opencl_version='1.2',
         device_type='Emulator',
         platform_id=0,
-        device_id=1,
+        device_id=0,
     )
     super(OpenCLEnvironment, self).__init__(device)
 
-  def Exec(self, argv: typing.List[str]) -> subprocess.Popen:
+  def Exec(self, argv: typing.List[str],
+           env: typing.Dict[str, str] = None) -> subprocess.Popen:
     """Execute a command in the device environment."""
     return Exec(['--max-errors', '1', '--uninitialized', '--data-races',
-                 '--uniform-writes', '--uniform-writes'] + argv)
+                 '--uniform-writes', '--uniform-writes'] + argv, env=env)
 
 
 def main(argv):

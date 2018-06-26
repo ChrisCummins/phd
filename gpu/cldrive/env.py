@@ -34,7 +34,8 @@ class OpenCLEnvironment(object):
     """
     return self.platform_id, self.device_id
 
-  def Exec(self, argv: typing.List[str]) -> subprocess.Popen:
+  def Exec(self, argv: typing.List[str],
+           env: typing.Dict[str, str] = None) -> subprocess.Popen:
     """Execute a command in an environment for the OpenCL device.
 
     This creates a Popen process, executes it, and sets the stdout and stderr
@@ -46,13 +47,15 @@ class OpenCLEnvironment(object):
 
     Args:
       argv: A list of arguments to execute.
+      env: An optional environment to use.
 
     Returns:
       A Popen instance, with string stdout and stderr attributes set.
     """
     # logging.debug('$ %s', ' '.join(argv))
     process = subprocess.Popen(argv, stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE, universal_newlines=True)
+                               stderr=subprocess.PIPE, universal_newlines=True,
+                               env=env)
     stdout, stderr = process.communicate()
     process.stdout, process.stderr = stdout, stderr
     return process

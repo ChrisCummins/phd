@@ -1,3 +1,4 @@
+import os
 import subprocess
 import tempfile
 import time
@@ -26,11 +27,16 @@ from lib.labm8 import system
 
 FLAGS = flags.FLAGS
 
-_LLVM_REPO = 'llvm_linux' if system.is_linux() else 'llvm_mac'
+_UNAME = 'linux' if system.is_linux() else 'mac'
 # Path to clang binary.
-CLANG_PATH = bazelutil.DataPath(f'{_LLVM_REPO}/bin/clang')
+CLANG_PATH = bazelutil.DataPath(f'llvm_{_UNAME}/bin/clang')
+# Path to libcxx headers.
+LIBCXX_HEADERS_PATH = bazelutil.DataPath(f'libcxx_{_UNAME}/include/c++/v1')
 # Path to OpenCL headers.
-OPENCL_HEADERS_INCLUDE = bazelutil.DataPath('opencl_120_headers')
+OPENCL_HEADERS_DIR = bazelutil.DataPath('opencl_120_headers')
+if system.is_linux():
+  LIBOPENCL_DIR = bazelutil.DataPath('libopencl')
+OPENCL_ENV = os.environ.copy()
 
 
 class DriverCompilationError(OSError):
@@ -152,7 +158,7 @@ def RunTestcase(opencl_environment: env.OpenCLEnvironment,
     timeout = testcase.harness.opts.get('timeout_seconds', '60')
     cmd = ['timeout', '-s9', timeout, f.name]
     start_time = labdate.GetUtcMillisecondsNow()
-    proc = opencl_environment.Exec(cmd)
+    proc = opencl_environment.Exec(cmd, env=OPENCL_ENV)
     end_time = labdate.GetUtcMillisecondsNow()
     # Build result message.
     result.returncode = proc.returncode
@@ -221,12 +227,16 @@ def MakeDriver(testcase: deepsmith_pb2.Testcase) -> str:
 def CompileDriver(src: str, path: str, platform_id: int,
                   device_id: int, timeout: int = 60) -> None:
   """Compile driver binary from source."""
-  cmd = ['timeout', '-s9', str(timeout), str(CLANG_PATH), '-xc', '-', '-o',
-         str(path), f'-DPLATFORM_ID={platform_id}', f'-DDEVICE_ID={device_id}',
+  cmd = ['timeout', '-s9', str(timeout), #str(CLANG_PATH),
+         'gcc', '-xc', '-', '-o', str(path),
+          f'-DPLATFORM_ID={platform_id}', f'-DDEVICE_ID={device_id}',
          '-std=c99', '-Wno-deprecated-declarations',
-         f'-I{OPENCL_HEADERS_INCLUDE}']
+         '-isystem', str(LIBCXX_HEADERS_PATH),
+         '-isystem', str(OPENCL_HEADERS_DIR),
+         ]
   if system.is_linux():
-    cmd.append('-lOpenCL')
+    cmd += [f'-L{LIBOPENCL_DIR}', f'-Wl,-rpath,{LIBOPENCL_DIR}',
+            '-lOpenCL', '-ldl', '-lpthread']
   elif system.is_mac():
     cmd += ['-framework', 'OpenCL']
 

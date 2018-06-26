@@ -141,8 +141,15 @@ py_binary(
     name = "cldrive",
     srcs = ["cldrive.py"],
     data = ["@opencl_120_headers//:opencl_headers"] + select({
-        "//:darwin": ["@llvm_mac//:clang"],
-        "//conditions:default": ["@llvm_linux//:clang"],
+        "//:darwin": [
+            "@llvm_mac//:clang",
+            "@libcxx_mac//:headers",
+        ],
+        "//conditions:default": [
+            "@llvm_linux//:clang",
+            "@libcxx_linux//:headers",
+            "@libopencl//:libOpenCL.so",
+        ],
     }),
     default_python_version = "PY3",
     srcs_version = "PY3",
