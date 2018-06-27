@@ -128,6 +128,7 @@ py_library(
         "//lib/labm8:sqlutil",
         requirement("absl-py"),
         requirement("progressbar2"),
+        requirement("python-utils"),
         requirement("sqlalchemy"),
     ],
 )
