@@ -80,7 +80,6 @@ py_binary(
         requirement("humanize"),
         requirement("progressbar2"),
         requirement("python-utils"),
-        requirement("python-utils"),
     ],
 )
 
