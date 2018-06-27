@@ -251,13 +251,19 @@ def CompileDriver(src: str, output_path: pathlib.Path,
     str(CLANG_PATH), '-xc', '-', '-o', str(output_path),
     f'-DPLATFORM_ID={platform_id}', f'-DDEVICE_ID={device_id}',
     '-ferror-limit=1', '-std=c99', '-Wno-deprecated-declarations',
+    # Add OpenCL headers.
     '-isystem', str(OPENCL_HEADERS_DIR),
+    # Link against libcxx.
     f'-L{LIBCXX_LIB_DIR}', f'-Wl,-rpath,{LIBCXX_LIB_DIR}',
     '-nodefaultlibs', '-stdlib=libc++', '-lc++', '-lc++abi', '-lm', '-lc',
   ]
   if system.is_linux():
-    cmd += [f'-L{LIBOPENCL_DIR}', f'-Wl,-rpath,{LIBOPENCL_DIR}',
-            '-lOpenCL', '-ldl', '-lpthread' '-lgcc_s', '-lgcc']
+    cmd += [
+      # Additional libraries required to link against libcxxx.
+      '-lgcc_s', '-lgcc', '-ldl', '-lpthread',
+      # Link against libOpenCL.
+      f'-L{LIBOPENCL_DIR}', f'-Wl,-rpath,{LIBOPENCL_DIR}', '-lOpenCL'
+    ]
   elif system.is_mac():
     cmd += ['-framework', 'OpenCL']
 
