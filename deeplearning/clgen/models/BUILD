@@ -46,7 +46,8 @@ py_library(
     name = "data_generators",
     srcs = ["data_generators.py"],
     deps = [
-        "//deeplearning/clgen/corpuses",
+        "//deeplearning/clgen:errors",
+        "//deeplearning/clgen/proto:model_py_pb2",
         requirement("absl-py"),
         requirement("humanize"),
         requirement("numpy"),

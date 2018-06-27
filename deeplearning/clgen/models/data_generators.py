@@ -17,7 +17,6 @@ from absl import flags
 from absl import logging
 
 from deeplearning.clgen import errors
-from deeplearning.clgen.corpuses import corpuses
 from deeplearning.clgen.proto import model_pb2
 
 
@@ -28,7 +27,7 @@ DataBatch = collections.namedtuple('DataBatch', ['X', 'y'])
 
 
 def AutoGenerator(
-    corpus: corpuses.Corpus,
+    corpus: 'corpuses.Corpus',
     training_opts: model_pb2.TrainingOptions) -> typing.Generator[
   DataBatch, typing.Any, None]:
   """Determine and construct what we believe to be the best data generator.
@@ -47,7 +46,7 @@ def AutoGenerator(
 
 
 def BatchGenerator(
-    corpus: corpuses.Corpus,
+    corpus: 'corpuses.Corpus',
     training_opts: model_pb2.TrainingOptions) -> typing.Generator[
   DataBatch, typing.Any, None]:
   """A batch generator which lazily one-hot encodes the y vectors.
@@ -89,7 +88,7 @@ def BatchGenerator(
 
 
 class TensorflowBatchGenerator(object):
-  def __init__(self, corpus: corpuses.Corpus,
+  def __init__(self, corpus: 'corpuses.Corpus',
                training_opts: model_pb2.TrainingOptions):
     self.corpus = corpus
     self.training_opts = training_opts
@@ -157,7 +156,7 @@ class TensorflowBatchGenerator(object):
 
 
 def GetTrainingCorpus(
-    corpus: corpuses.Corpus,
+    corpus: 'corpuses.Corpus',
     training_opts: model_pb2.TrainingOptions) -> typing.Tuple[
   np.ndarray, np.ndarray, int]:
   """Get the corpus to train over.
