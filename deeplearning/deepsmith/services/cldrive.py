@@ -30,11 +30,6 @@ _UNAME = 'linux' if system.is_linux() else 'mac'
 CLANG_PATH = bazelutil.DataPath(f'llvm_{_UNAME}/bin/clang')
 # Flags for compiling with libcxx.
 LIBCXX_LIB_DIR = bazelutil.DataPath(f'llvm_{_UNAME}/lib')
-LIBCXX_FLAGS = [
-  f'-L{LIBCXX_LIB_DIR}', f'-Wl,-rpath,{LIBCXX_LIB_DIR}',
-  '-nodefaultlibs', '-stdlib=libc++', '-lc++', '-lc++abi', '-lm', '-lc',
-  '-lgcc_s', '-lgcc',
-]
 # Path to OpenCL headers.
 OPENCL_HEADERS_DIR = bazelutil.DataPath('opencl_120_headers')
 if system.is_linux():
@@ -257,10 +252,12 @@ def CompileDriver(src: str, output_path: pathlib.Path,
     f'-DPLATFORM_ID={platform_id}', f'-DDEVICE_ID={device_id}',
     '-ferror-limit=1', '-std=c99', '-Wno-deprecated-declarations',
     '-isystem', str(OPENCL_HEADERS_DIR),
-  ] + LIBCXX_FLAGS
+    f'-L{LIBCXX_LIB_DIR}', f'-Wl,-rpath,{LIBCXX_LIB_DIR}',
+    '-nodefaultlibs', '-stdlib=libc++', '-lc++', '-lc++abi', '-lm', '-lc',
+  ]
   if system.is_linux():
     cmd += [f'-L{LIBOPENCL_DIR}', f'-Wl,-rpath,{LIBOPENCL_DIR}',
-            '-lOpenCL', '-ldl', '-lpthread']
+            '-lOpenCL', '-ldl', '-lpthread' '-lgcc_s', '-lgcc']
   elif system.is_mac():
     cmd += ['-framework', 'OpenCL']
 
