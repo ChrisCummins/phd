@@ -153,7 +153,7 @@ A monolothic repository for (almost) everything I have done while at the Univers
 I use [Bazel](https://bazel.build) as my build system of choice, with a
 preliminary [configure](/configure) script to setup the build. I'm gradually
 working towards a completely hermetic build, but for now there remains a couple
-of dependencies on the host C++ toolchain, Python runtime, and OpenCL.
+of dependencies on the host C++ toolchain and Python runtime.
 
 This project can only be built on a modern version of Ubuntu Linux or macOS.
 This is a requirement I inherit from my dependencies, which eschew Windows and
