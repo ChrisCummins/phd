@@ -1,6 +1,6 @@
 load("@requirements//:requirements.bzl", "requirement")
 
-py_library(
+py_binary(
     name = "dpack",
     srcs = ["dpack.py"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
