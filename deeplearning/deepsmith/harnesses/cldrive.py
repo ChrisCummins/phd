@@ -8,12 +8,12 @@ from absl import flags
 from absl import logging
 from concurrent import futures
 
+from deeplearning.deepsmith import services
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import harness_pb2
 from deeplearning.deepsmith.proto import harness_pb2_grpc
 from deeplearning.deepsmith.proto import service_pb2
-from deeplearning.deepsmith.services import harness
-from deeplearning.deepsmith.services import services
+from deeplearning.deepsmith.harnesses import harness
 from gpu import cldrive as cldrive_lib
 from gpu.cldrive import cldrive
 from gpu.cldrive import env

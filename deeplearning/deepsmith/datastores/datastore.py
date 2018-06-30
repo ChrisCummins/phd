@@ -6,9 +6,9 @@ from absl import app
 from absl import flags
 from absl import logging
 
+from deeplearning.deepsmith import services
 from deeplearning.deepsmith.proto import datastore_pb2
 from deeplearning.deepsmith.proto import datastore_pb2_grpc
-from deeplearning.deepsmith.services import services
 
 
 FLAGS = flags.FLAGS

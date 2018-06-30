@@ -7,11 +7,11 @@ py_binary(
     name = "opencl_fuzz",
     srcs = ["opencl_fuzz.py"],
     deps = [
+        "//deeplearning/deepsmith/generators:clgen",
+        "//deeplearning/deepsmith/harnesses:cldrive",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//deeplearning/deepsmith/proto:generator_py_pb2",
         "//deeplearning/deepsmith/proto:harness_py_pb2",
-        "//deeplearning/deepsmith/services:cldrive",
-        "//deeplearning/deepsmith/services:clgen",
         "//gpu/oclgrind",
         "//lib/labm8:labdate",
         "//lib/labm8:pbutil",

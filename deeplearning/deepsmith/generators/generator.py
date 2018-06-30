@@ -1,7 +1,7 @@
 from absl import flags
 
+from deeplearning.deepsmith import services
 from deeplearning.deepsmith.proto import generator_pb2
-from deeplearning.deepsmith.services import services
 from lib.labm8 import pbutil
 
 

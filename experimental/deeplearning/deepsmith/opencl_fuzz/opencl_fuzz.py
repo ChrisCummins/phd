@@ -8,13 +8,13 @@ from absl import app
 from absl import flags
 from absl import logging
 
+from deeplearning.deepsmith.generators import clgen
+from deeplearning.deepsmith.generators import generator as base_generator
+from deeplearning.deepsmith.harnesses import cldrive
+from deeplearning.deepsmith.harnesses import harness as base_harness
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import harness_pb2
-from deeplearning.deepsmith.services import cldrive
-from deeplearning.deepsmith.services import clgen
-from deeplearning.deepsmith.services import generator as base_generator
-from deeplearning.deepsmith.services import harness as base_harness
 from gpu.oclgrind import oclgrind
 from lib.labm8 import labdate
 from lib.labm8 import pbutil

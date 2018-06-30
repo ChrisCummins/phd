@@ -10,11 +10,11 @@ from concurrent import futures
 
 from deeplearning.clgen import sample
 from deeplearning.clgen.proto import model_pb2
+from deeplearning.deepsmith import services
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import generator_pb2_grpc
-from deeplearning.deepsmith.services import generator
-from deeplearning.deepsmith.services import services
+from deeplearning.deepsmith.generators import generator
 
 
 FLAGS = flags.FLAGS

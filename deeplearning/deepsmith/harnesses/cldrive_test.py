@@ -13,7 +13,7 @@ FLAGS = flags.FLAGS
 
 from gpu.oclgrind import oclgrind
 from deeplearning.deepsmith.proto import deepsmith_pb2
-from deeplearning.deepsmith.services import cldrive
+from deeplearning.deepsmith.harnesses import cldrive
 
 
 def test_CompileDriver_returned_path():

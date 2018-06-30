@@ -199,6 +199,21 @@ py_test(
 )
 
 py_library(
+    name = "services",
+    srcs = ["services.py"],
+    visibility = [
+        "//deeplearning/deepsmith:__subpackages__",
+        "//experimental:__subpackages__",
+    ],
+    deps = [
+        "//deeplearning/deepsmith/proto:service_py_pb2",
+        "//lib/labm8:pbutil",
+        requirement("absl-py"),
+        requirement("grpcio"),
+    ],
+)
+
+py_library(
     name = "testbed",
     srcs = ["testbed.py"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
