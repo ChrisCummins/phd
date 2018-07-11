@@ -122,31 +122,44 @@ class Result(db.Table):
     for proto_output_name in sorted(proto.outputs):
       proto_output_value = proto.outputs[proto_output_name]
       md5.update((proto_output_name + proto_output_value).encode('utf-8'))
-      output = lib.labm8.sqlutil.GetOrAdd(session, ResultOutput,
-                                          name=ResultOutputName.GetOrAdd(
-                                              session,
-                                              string=proto_output_name, ),
-                                          value=ResultOutputValue.GetOrAdd(
-                                              session,
-                                              string=proto_output_value), )
+      output = lib.labm8.sqlutil.GetOrAdd(
+          session, ResultOutput,
+          name=ResultOutputName.GetOrAdd(session, string=proto_output_name),
+          value=ResultOutputValue.GetOrAdd(session, string=proto_output_value))
       outputs.append(output)
 
-    # Create invariant optset table entries.
+    # Create output set table entries.
     outputset_id = md5.digest()
     for output in outputs:
-      lib.labm8.sqlutil.GetOrAdd(session, ResultOutputSet, id=outputset_id,
-                                 output=output)
+      lib.labm8.sqlutil.GetOrAdd(
+          session, ResultOutputSet,
+          id=outputset_id,
+          output=output)
 
-    result = lib.labm8.sqlutil.GetOrAdd(session, cls, testcase=testcase,
-                                        testbed=testbed,
-                                        returncode=proto.returncode,
-                                        outputset_id=outputset_id,
-                                        outcome_num=proto.outcome)
-
-    # Add profiling events.
-    for event in proto.profiling_events:
-      deeplearning.deepsmith.profiling_event.ResultProfilingEvent.GetOrAdd(
-          session, event, result)
+    # Create a new result only if everything *except* the profiling events
+    # are unique. This means that if a generator produced the same testcase
+    # twice (on separate occasions), only the first is added to the datastore.
+    result = lib.labm8.sqlutil.Get(
+        session, cls,
+        testcase=testcase,
+        testbed=testbed,
+        returncode=proto.returncode,
+        outputset_id=outputset_id,
+        outcome_num=proto.outcome
+    )
+    if not result:
+      result = cls(
+          testcase=testcase,
+          testbed=testbed,
+          returncode=proto.returncode,
+          outputset_id=outputset_id,
+          outcome_num=proto.outcome
+      )
+      session.add(result)
+      # Add profiling events.
+      for event in proto.profiling_events:
+        deeplearning.deepsmith.profiling_event.ResultProfilingEvent.GetOrAdd(
+            session, event, result)
 
     return result
 

@@ -239,6 +239,88 @@ def test_Generator_GetOrAdd_ToProto_equivalence(session):
   assert proto_in != proto_out  # Sanity check.
 
 
+def test_duplicate_results_ignored(session):
+  """Test that results are only added if they are unique."""
+  proto = deepsmith_pb2.Result(
+      testcase=deepsmith_pb2.Testcase(
+          toolchain='cpp',
+          generator=deepsmith_pb2.Generator(
+              name='generator'
+          ),
+          harness=deepsmith_pb2.Harness(
+              name='harness'
+          ),
+          inputs={
+            'src': 'void main() {}',
+            'data': '[1,2]',
+          },
+          invariant_opts={
+            'config': 'opt',
+          },
+          profiling_events=[
+            deepsmith_pb2.ProfilingEvent(
+                client='localhost',
+                type='generate',
+                duration_ms=100,
+                event_start_epoch_ms=1123123123,
+            ),
+            deepsmith_pb2.ProfilingEvent(
+                client='localhost',
+                type='foo',
+                duration_ms=100,
+                event_start_epoch_ms=1123123123,
+            ),
+          ]
+      ),
+      testbed=deepsmith_pb2.Testbed(
+          toolchain='cpp',
+          name='clang',
+          opts={
+            'arch': 'x86_64',
+            'build': 'debug+assert',
+          },
+      ),
+      returncode=0,
+      outputs={
+        'stdout': 'Hello, world!',
+        'stderr': '',
+      },
+      profiling_events=[
+        deepsmith_pb2.ProfilingEvent(
+            client='localhost',
+            type='exec',
+            duration_ms=100,
+            event_start_epoch_ms=1123123123,
+        ),
+        deepsmith_pb2.ProfilingEvent(
+            client='localhost',
+            type='overhead',
+            duration_ms=100,
+            event_start_epoch_ms=1123123123,
+        ),
+      ],
+      outcome=deepsmith_pb2.Result.PASS,
+  )
+  r1 = deeplearning.deepsmith.result.Result.GetOrAdd(session, proto)
+  session.add(r1)
+  session.flush()
+
+  # Attempt to add a new result which is identical to the first in all fields
+  # except for the profiling events.
+  proto.profiling_events[0].duration_ms = -1
+  r2 = deeplearning.deepsmith.result.Result.GetOrAdd(session, proto)
+  session.add(r2)
+  session.flush()
+
+  # Check that only one result was added.
+  assert session.query(deeplearning.deepsmith.result.Result).count() == 1
+
+  # Check that only the first result was added.
+  r3 = session.query(deeplearning.deepsmith.result.Result).first()
+  assert r3.profiling_events[0].duration_ms == 100
+  assert r3.profiling_events[1].duration_ms == 100
+
+
 def main(argv):  # pylint: disable=missing-docstring
   del argv
   sys.exit(pytest.main([__file__, '-v']))
