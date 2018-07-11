@@ -58,7 +58,7 @@ class OpenCLEnvironment(env.OpenCLEnvironment):
   """A mock cldrive OpenCLEnvironment for oclgrind."""
 
   def __init__(self):
-    device = clinfo_pb2.OpenClDevice(
+    super(OpenCLEnvironment, self).__init__(clinfo_pb2.OpenClDevice(
         name='Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2',
         platform_name='Oclgrind',
         device_name='Oclgrind Simulator',
@@ -67,8 +67,7 @@ class OpenCLEnvironment(env.OpenCLEnvironment):
         device_type='Emulator',
         platform_id=0,
         device_id=0,
-    )
-    super(OpenCLEnvironment, self).__init__(device)
+    ))
 
   def Exec(self, argv: typing.List[str],
            env: typing.Dict[str, str] = None) -> subprocess.Popen:
