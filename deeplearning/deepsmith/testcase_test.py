@@ -24,23 +24,23 @@ def test_Testcase_ToProto():
       inputset=[
         deeplearning.deepsmith.testcase.TestcaseInput(
             name=deeplearning.deepsmith.testcase.TestcaseInputName(
-              string='src'),
+                string='src'),
             value=deeplearning.deepsmith.testcase.TestcaseInputValue(
-              string='void main() {}'),
+                string='void main() {}'),
         ),
         deeplearning.deepsmith.testcase.TestcaseInput(
             name=deeplearning.deepsmith.testcase.TestcaseInputName(
-              string='data'),
+                string='data'),
             value=deeplearning.deepsmith.testcase.TestcaseInputValue(
-              string='[1,2]'),
+                string='[1,2]'),
         ),
       ],
       invariant_optset=[
         deeplearning.deepsmith.testcase.TestcaseInvariantOpt(
             name=deeplearning.deepsmith.testcase.TestcaseInvariantOptName(
-              string='config'),
+                string='config'),
             value=deeplearning.deepsmith.testcase.TestcaseInvariantOptValue(
-              string='opt'),
+                string='opt'),
         ),
       ],
       profiling_events=[
