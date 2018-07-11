@@ -8,7 +8,7 @@ from absl import app
 from absl import flags
 from absl import logging
 
-from deeplearning.deepsmith.generators import clgen
+from deeplearning.deepsmith.generators import clgen_pretrained
 from deeplearning.deepsmith.generators import generator as base_generator
 from deeplearning.deepsmith.harnesses import cldrive
 from deeplearning.deepsmith.harnesses import harness as base_harness
@@ -474,7 +474,7 @@ def main(argv):
   if not pbutil.ProtoIsReadable(config, generator_pb2.ClgenGenerator()):
     raise app.UsageError('--generator is not a Generator proto')
   generator_config = pbutil.FromFile(config, generator_pb2.ClgenGenerator())
-  generator = clgen.ClgenGenerator(generator_config)
+  generator = clgen_pretrained.ClgenGenerator(generator_config)
 
   logging.info('Preparing device under test.')
   config = harness_pb2.CldriveHarness()
@@ -486,7 +486,7 @@ def main(argv):
   config = harness_pb2.CldriveHarness()
   config.opencl_env.extend([oclgrind.OpenCLEnvironment().name])
   gs_harness = cldrive.CldriveHarness(config)
-  assert len(dut_harness.testbeds) >= 1
+  assert len(gs_harness.testbeds) >= 1
 
   TestingLoop(FLAGS.min_interesting_results, FLAGS.max_testing_time_seconds,
               FLAGS.batch_size, generator, dut_harness, gs_harness,
