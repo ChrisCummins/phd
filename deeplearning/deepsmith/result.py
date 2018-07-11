@@ -319,15 +319,15 @@ class ResultOutputValue(db.Table):
       truncated_md5 = original_md5
       truncated_linecount = original_linecount
       truncated_charcount = original_charcount
-    return lib.labm8.sqlutil.GetOrAdd(session, cls, original_md5=original_md5,
-                                      original_linecount=original_linecount,
-                                      original_charcount=original_charcount,
-                                      truncated=True if original_charcount >
-                                                        cls.max_len else False,
-                                      truncated_value=truncated,
-                                      truncated_md5=truncated_md5,
-                                      truncated_linecount=truncated_linecount,
-                                      truncated_charcount=truncated_charcount, )
+    return lib.labm8.sqlutil.GetOrAdd(
+        session, cls,
+        original_md5=original_md5,
+        original_linecount=original_linecount,
+        original_charcount=original_charcount,
+        truncated=True if original_charcount > cls.max_len else False,
+        truncated_value=truncated,
+        truncated_md5=truncated_md5,
+        truncated_linecount=truncated_linecount,
 
   def __repr__(self):
     return self.truncated_value[:50] or ''

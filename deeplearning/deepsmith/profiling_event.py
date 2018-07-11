@@ -46,8 +46,11 @@ class TestcaseProfilingEvent(db.Table):
   type: ProfilingEventType = orm.relationship('ProfilingEventType')
 
   # Constraints:
-  __table_args__ = (sql.UniqueConstraint('testcase_id', 'client_id', 'type_id',
-                                         name='unique_testcase_profiling_event'),)
+  __table_args__ = (
+    sql.UniqueConstraint(
+        'testcase_id', 'client_id', 'type_id',
+        name='unique_testcase_profiling_event'),
+  )
 
   def SetProto(self,
                proto: deepsmith_pb2.ProfilingEvent) -> \
