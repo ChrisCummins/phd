@@ -88,7 +88,7 @@ class ClgenGenerator(generator.GeneratorBase,
       t.CopyFrom(skeleton)
       p = t.profiling_events.add()
       p.type = 'generation'
-      p.duration_ms = sample.sample_time_ms
+      p.duration_ms = sample.wall_time_ms
       p.event_start_epoch_ms = sample.sample_start_epoch_ms_utc
       t.inputs['src'] = sample.text
       testcases.append(t)
