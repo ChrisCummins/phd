@@ -16,6 +16,9 @@ message OpenClDevice {
 
   optional int32 platform_id = 10;
   optional int32 device_id = 11;
+  // If true, OpenCL optimizations are enabled (default). If false, OpenCL
+  // optimizations are disabled.
+  optional bool opencl_opt = 12 [default = true];
 }
 
 message OpenClDevices {

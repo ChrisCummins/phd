@@ -23,6 +23,7 @@ class OpenCLEnvironment(object):
     self.device_type = device.device_type
     self.platform_id = device.platform_id
     self.device_id = device.device_id
+    self.opencl_opt = device.opencl_opt
 
   def ids(self) -> typing.Tuple[int, int]:
     """Return platform and device ID numbers.
