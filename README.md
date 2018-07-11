@@ -188,8 +188,10 @@ $ sudo apt install -y --no-install-recommends \
    pkg-config python python-dev python3.6 unzip zip zlib1g-dev
 ```
 
-Note that on Ubuntu distributions prior to 16.10, you will need to use a custom
-PPA to provide the `python-3.6` package.
+Please note that this list of packages is for Ubuntu 18.04. On older 
+distributions some of the packages may not exist. For example, Ubuntu 
+distributions prior to 16.10 require a custom PPA to provide the `python3.6`
+package.
 
 Next, install [Bazel](https://docs.bazel.build/versions/master/install-ubuntu.html#installing-bazel-on-ubuntu):
 
@@ -203,7 +205,20 @@ Now proceed to the "Build (all platforms)" section.
 
 #### Installing macOS requirements
 
-TODO(cec): Update for new build process.
+Install the [Homebrew](https://brew.sh) package manager:
+
+```sh
+$ yes | /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+```
+
+Install the required packages:
+
+```sh
+$ brew install bazel coreutils exempi findutils gnu-indent gnu-sed gnu-tar \
+    gnu-time gnu-which python  
+```
+
+Now proceed to the "Build (all platforms)" section.
 
 ### Build (all platforms)
 
