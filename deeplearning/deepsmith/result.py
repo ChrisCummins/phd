@@ -111,10 +111,17 @@ class Result(db.Table):
   @classmethod
   def GetOrAdd(cls, session: db.session_t,
                proto: deepsmith_pb2.Result) -> 'Result':
-    testcase = deeplearning.deepsmith.testcase.Testcase.GetOrAdd(session,
-                                                                 proto.testcase)
-    testbed = deeplearning.deepsmith.testbed.Testbed.GetOrAdd(session,
-                                                              proto.testbed)
+    testcase = deeplearning.deepsmith.testcase.Testcase.GetOrAdd(
+        session, proto.testcase)
+    testbed = deeplearning.deepsmith.testbed.Testbed.GetOrAdd(
+        session, proto.testbed)
+
+    # Only add the result if the the <testcase, testbed> tuple is unique. This
+    # is to prevent duplicate results where only the output differs.
+    result = session.query(Result).filter(Result.testcase == testcase,
+                                          Result.testbed == testbed).first()
+    if result:
+      return result
 
     # Build the list of outputs, and md5sum the key value strings.
     outputs = []
