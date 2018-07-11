@@ -230,8 +230,9 @@ available at:
 
     https://github.com/ChrisCummins/phd/tree/master/experimental/dsmith
 
-We extended our neural network program generator CLgen for generating the
-tests used in the review copy of our paper. The documentation for CLgen is
-available at:
+## 5. License
 
-    http://chriscummins.cc/clgen
+Copyright 2017, 2018 Chris Cummins <chrisc.101@gmail.com>.
+
+Released under the terms of the GPLv3 license. See
+[LICENSE](/docs/2018_07_issta/artifact_evaluation/LICENSE) for details.

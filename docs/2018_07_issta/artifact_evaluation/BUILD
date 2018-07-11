@@ -2,6 +2,10 @@
 
 load("@requirements//:requirements.bzl", "requirement")
 
+licenses(["restricted"])  # GPL v3
+
+exports_files(["LICENSE"])
+
 py_binary(
     name = "01_evaluate_generator",
     srcs = ["01_evaluate_generator.py"],
