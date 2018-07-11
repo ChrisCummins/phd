@@ -78,7 +78,7 @@ def test_MakeDriver_ValueError_no_gsize():
     'src': "kernel void A() {}"
   })
   with pytest.raises(ValueError) as e_ctx:
-    cldrive.MakeDriver(testcase)
+    cldrive.MakeDriver(testcase, True)
   assert "Field not set: 'Testcase.inputs[\"gsize\"]'" == str(e_ctx.value)
 
 
@@ -89,7 +89,7 @@ def test_MakeDriver_ValueError_no_lsize():
     'src': "kernel void A() {}"
   })
   with pytest.raises(ValueError) as e_ctx:
-    cldrive.MakeDriver(testcase)
+    cldrive.MakeDriver(testcase, True)
   assert "Field not set: 'Testcase.inputs[\"lsize\"]'" == str(e_ctx.value)
 
 
@@ -100,7 +100,7 @@ def test_MakeDriver_ValueError_no_src():
     'gsize': "1,1,1",
   })
   with pytest.raises(ValueError) as e_ctx:
-    cldrive.MakeDriver(testcase)
+    cldrive.MakeDriver(testcase, True)
   assert "Field not set: 'Testcase.inputs[\"src\"]'" == str(e_ctx.value)
 
 
@@ -112,7 +112,7 @@ def test_MakeDriver_ValueError_invalid_lsize():
     'src': 'kernel void A() {}'
   })
   with pytest.raises(ValueError) as e_ctx:
-    cldrive.MakeDriver(testcase)
+    cldrive.MakeDriver(testcase, True)
   assert "invalid literal for int() with base 10: 'abc'" == str(e_ctx.value)
 
 
@@ -124,7 +124,7 @@ def test_MakeDriver_ValueError_invalid_gsize():
     'src': 'kernel void A() {}'
   })
   with pytest.raises(ValueError) as e_ctx:
-    cldrive.MakeDriver(testcase)
+    cldrive.MakeDriver(testcase, True)
   assert "invalid literal for int() with base 10: 'abc'" == str(e_ctx.value)
 
 
@@ -135,11 +135,11 @@ def test_MakeDriver_CompileDriver_hello_world():
     'gsize': '1,1,1',
     'src': 'kernel void A(global int* a) {a[get_global_id(0)] += 10;}'
   })
-  driver = cldrive.MakeDriver(testcase)
+  driver = cldrive.MakeDriver(testcase, True)
   with tempfile.TemporaryDirectory() as d:
     binary = cldrive.CompileDriver(
         driver, pathlib.Path(d) / 'exe', 0, 0, timeout_seconds=60)
-    proc = oclgrind.Exec([binary])
+    proc = oclgrind.Exec([str(binary)])
   assert '[cldrive] Platform:' in proc.stderr
   assert '[cldrive] Device:' in proc.stderr
   assert '[cldrive] OpenCL optimizations: on\n' in proc.stderr
