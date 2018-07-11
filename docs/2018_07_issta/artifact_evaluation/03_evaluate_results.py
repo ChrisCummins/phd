@@ -232,7 +232,7 @@ def main(argv):
   results_paths = labtypes.flatten(
       [pathlib.Path(x) for x in fs.lsfiles(x, recursive=True, abspaths=True)]
       for x in result_dirs)
-  print('Importing', len(results_paths), 'results into datastore ...')
+  logging.info('Importing %d results into datastore ...', len(results_paths))
   with ds.Session(commit=True) as s:
     for path in progressbar.ProgressBar()(results_paths):
       # Instantiating a result from file has the side effect of adding the
@@ -241,7 +241,8 @@ def main(argv):
 
   with ds.Session() as s:
     testcases = s.query(testcase.Testcase)
-    print('Difftesting the results of', testcases.count(), 'testcases ...')
+    logging.info('Difftesting the results of %d testcases ...',
+                 testcases.count())
     for t in progressbar.ProgressBar(max_value=testcases.count())(testcases):
       DifftestTestcase(s, t, output_dir)
   df = ReadClassificationsToTable(output_dir)
