@@ -33,6 +33,24 @@ def GetOrAdd(session: sql.orm.session.Session, model,
   return instance
 
 
+def Get(session: sql.orm.session.Session, model,
+        defaults: typing.Dict[str, object] = None, **kwargs):
+  """Determine if a database object exists.
+
+  Args:
+    session: The database session.
+    model: The database table class.
+    defaults: Default values for mapped objects.
+    kwargs: The values for the table row.
+
+  Returns:
+    An instance of the model class with the values specified, or None if the
+    object is not in the database.
+  """
+  del defaults
+  return session.query(model).filter_by(**kwargs).first()
+
+
 class Database(object):
   """A base class for implementing database objects."""
 
