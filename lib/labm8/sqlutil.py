@@ -19,6 +19,15 @@ def GetOrAdd(session: sql.orm.session.Session, model,
   If the object is not in the database,
   add it. Note that no change is written to disk until commit() is called on the
   session.
+
+  Args:
+    session: The database session.
+    model: The database table class.
+    defaults: Default values for mapped objects.
+    kwargs: The values for the table row.
+
+  Returns:
+    An instance of the model class, with the values specified.
   """
   instance = session.query(model).filter_by(**kwargs).first()
   if not instance:
