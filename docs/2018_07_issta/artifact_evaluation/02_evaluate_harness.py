@@ -32,6 +32,9 @@ flags.DEFINE_string(
     'output_directory',
     '/tmp/phd/docs/2018_07_issta/artifact_evaluation/results',
     'Directory to write results to.')
+flags.DEFINE_bool(
+    'opencl_opt', True,
+    'If --noopencl_opt is set, disable OpenCL optimizations.')
 
 
 def main(argv):
@@ -42,7 +45,7 @@ def main(argv):
   logging.info('Preparing OpenCL testbed.')
   config = harness_pb2.CldriveHarness()
   config.opencl_env.extend([oclgrind.OpenCLEnvironment().name])
-  config.opencl_opt.extend([True])
+  config.opencl_opt.extend([flags.opencl_opt])
   harness = cldrive.CldriveHarness(config)
   assert len(harness.testbeds) >= 1
 
