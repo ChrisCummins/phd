@@ -80,13 +80,14 @@ class TestcaseProfilingEvent(db.Table):
 
   @classmethod
   def GetOrAdd(cls, session: db.session_t,
-               proto: deepsmith_pb2.ProfilingEvent) -> 'ProfilingEvent':
+               proto: deepsmith_pb2.ProfilingEvent,
+               testcase: 'testcase.Testcase') -> 'ProfilingEvent':
     return sqlutil.GetOrAdd(
         session, cls,
+        testcase=testcase,
         client=deeplearning.deepsmith.client.Client.GetOrAdd(
             session, proto.client),
-        type=ProfilingEventType.GetOrAdd(session,
-                                         proto.type),
+        type=ProfilingEventType.GetOrAdd(session, proto.type),
         duration_ms=proto.duration_ms,
         event_start=labdate.DatetimeFromMillisecondsTimestamp(
             proto.event_start_epoch_ms))
