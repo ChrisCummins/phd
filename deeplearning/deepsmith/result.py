@@ -264,7 +264,7 @@ class ResultOutputValue(db.Table):
   id_t = _ResultOutputValueId
   __tablename__ = 'result_output_values'
 
-  # Truncate everything after
+  # Store up to this many characters of output text.
   max_len = 128000
 
   # Columns.
@@ -307,6 +307,8 @@ class ResultOutputValue(db.Table):
     md5_ = hashlib.md5()
     md5_.update(string.encode('utf-8'))
     original_md5 = md5_.digest()
+    # Truncate the text, if required. Note that we use the MD5 of the text
+    # *after* truncation.
     if original_charcount > cls.max_len:
       truncated = string[:cls.max_len]
       md5_ = hashlib.md5()
@@ -328,6 +330,7 @@ class ResultOutputValue(db.Table):
         truncated_value=truncated,
         truncated_md5=truncated_md5,
         truncated_linecount=truncated_linecount,
+        truncated_charcount=truncated_charcount, )
 
   def __repr__(self):
     return self.truncated_value[:50] or ''
