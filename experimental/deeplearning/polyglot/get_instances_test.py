@@ -22,6 +22,7 @@ def test_GetInstanceConfigs_working_dir():
       assert instance.working_dir == working_dir
 
 
+@pytest.mark.skip(reason='Corpus directories do not exist.')
 def test_GetInstances():
   """Instantiate all of the instances."""
   with tempfile.TemporaryDirectory() as working_dir:
