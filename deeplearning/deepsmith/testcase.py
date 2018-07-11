@@ -139,7 +139,7 @@ class Testcase(db.Table):
       proto: A Testcase message.
 
     Returns:
-      A Testcase instanace.
+      A Testcase instance.
     """
     toolchain = deeplearning.deepsmith.toolchain.Toolchain.GetOrAdd(
         session, proto.toolchain)
