@@ -154,7 +154,10 @@ def RunTestcase(opencl_environment: env.OpenCLEnvironment,
                 testbed: deepsmith_pb2.Testbed,
                 testcase: deepsmith_pb2.Testcase) -> deepsmith_pb2.Result:
   """Run a testcase."""
-  assert testcase.toolchain == 'opencl'
+  if testcase.toolchain != 'opencl':
+    raise ValueError(f"Unsupported testcase toolchain: '{testcase.toolchain}'")
+  if testcase.harness.name != 'cldrive':
+    raise ValueError(f"Unsupported testcase harness: '{testcase.harness.name}'")
   result = deepsmith_pb2.Result()
   result.testbed.CopyFrom(testbed)
   platform_id, device_id = opencl_environment.ids()
