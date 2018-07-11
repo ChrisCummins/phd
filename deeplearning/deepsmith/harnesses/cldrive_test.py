@@ -162,6 +162,32 @@ def test_MakeDriver_CompileDriver_hello_world():
   )
 
 
+def test_MakeDriver_optimizations_on():
+  """Test that OpenCL optimizations are enabled when requested."""
+  testcase = deepsmith_pb2.Testcase(inputs={
+    'lsize': "1,1,1",
+    'gsize': "1,1,1",
+    'src': 'kernel void A() {}'
+  })
+  src = cldrive.MakeDriver(testcase, True)
+  assert '[cldrive] OpenCL optimizations: on' in src
+  assert 'clBuildProgram(program, 0, NULL, NULL, NULL, NULL);' in src
+
+
+def test_MakeDriver_optimizations_off():
+  """Test that OpenCL optimizations are disabled when requested."""
+  testcase = deepsmith_pb2.Testcase(inputs={
+    'lsize': "1,1,1",
+    'gsize': "1,1,1",
+    'src': 'kernel void A() {}'
+  })
+  src = cldrive.MakeDriver(testcase, False)
+  print(src)
+  assert '[cldrive] OpenCL optimizations: off' in src
+  assert (
+      'clBuildProgram(program, 0, NULL, "-cl-opt-disable", NULL, NULL);' in src)
+
+
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:
