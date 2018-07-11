@@ -11,8 +11,8 @@ differential testing methodologies on them to expose bugs in compilers.
 
 DeepSmith uses a service architecture. There are three types of services:
 
- * **DataStore Service** servers as the backend, storing generated testcases,
-   results from executing testcases, and analysis of testcase results.
+ * **DataStore Service** serves as the backend, storing generated testcases,
+   results from executing testcases, and the results of differential tests.
  * **Generator Service** generates testcases.
  * **Harness Service** coordinates the execution of testcases on one or more
    testbeds.
