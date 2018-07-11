@@ -15,7 +15,7 @@ message Instance {
   optional string working_dir = 1;
   // The language model specification. Either the full description of a model,
   // or the path to a pretrained_model, as created by --export_tf_model option
-  // for clgen.
+  // of clgen.
   oneof model_specification {
     Model model = 2;
     string pretrained_model = 4;
@@ -23,7 +23,6 @@ message Instance {
   // The sampler specification.
   optional Sampler sampler = 3;
 }
-
 
 // A collection of instances.
 message Instances {

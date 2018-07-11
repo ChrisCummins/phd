@@ -1,45 +1,47 @@
 """Evaluate testcase results.
 
-This script runs evalutes and difftests the results of DeepSmith testcases
-across devices.
-
-Usage:
-
-    $ python experiments.py --datastore_config <path> --results_dirs <dirs> \
-        --output_dir <dir>
+This program evaluates and difftests the results of DeepSmith testcases across
+devices.
 """
 import collections
 import math
-import pathlib
-import typing
-
 import pandas as pd
+import pathlib
+import progressbar
+import typing
 from absl import app
 from absl import flags
+from absl import logging
 
 from deeplearning.deepsmith import datastore
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith import result
 from deeplearning.deepsmith import testbed
 from deeplearning.deepsmith import testcase
+from lib.labm8 import bazelutil
 from lib.labm8 import fs
 from lib.labm8 import labtypes
 from lib.labm8 import pbutil
 
+
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
-  'datastore_config', './03_evaluate_results/data/datastore.pbtxt',
-  'Path to a datastore configuration file.')
+    'datastore',
+    str(bazelutil.DataPath(
+        'phd/docs/2018_07_issta/artifact_evaluation/data/datastore.pbtxt')),
+    'Path to datastore configuration file.')
 flags.DEFINE_list(
-  'result_dirs', [
-    './02_evaluate_harness/output/results',
-    './03_evaluate_results/data/results'
-  ],
-  'Directories to read results from.')
+    'input_directories', [
+      str(bazelutil.DataPath(
+          'phd/docs/2018_07_issta/artifact_evaluation/data/our_results')),
+      '/tmp/phd/docs/2018_07_issta/artifact_evaluation/results',
+    ],
+    'Directories to read results from.')
 flags.DEFINE_string(
-  'output_dir', './03_evaluate_results/output/classifications',
-  'Directory to write classified results to.')
+    'output_directory',
+    '/tmp/phd/docs/2018_07_issta/artifact_evaluation/difftest_classifications',
+    'Directory to write classified results to.')
 
 
 def GetResultRuntimeMs(r: result.Result) -> int:
@@ -113,10 +115,6 @@ Majority = collections.namedtuple('Majority', [
 ])
 
 
-def FreqTable(lst) -> int:
-  return collections.Counter(lst).most_common(1)[0]
-
-
 def GetMajorityOutput(results: typing.List[result.Result]) -> Majority:
   """Majority vote on testcase outcomes and outputs."""
   majority_outcome, outcome_majority_size = collections.Counter([
@@ -165,7 +163,8 @@ def DifftestTestcase(s: db.session_t, t: testcase.Testcase,
       pbutil.ToFile(r.ToProto(), OutputPath('arc'))
     elif (r.outputs['stdout'] != majority.majority_stdout and
           majority.majority_outcome == 'Pass' and
-          majority.stdout_majority_size >= math.ceil(2 * majority.outcome_majority_size / 3)):
+          majority.stdout_majority_size >= math.ceil(
+            2 * majority.outcome_majority_size / 3)):
       pbutil.ToFile(r.ToProto(), OutputPath('awo'))
     else:
       pbutil.ToFile(r.ToProto(), OutputPath('pass'))
@@ -202,7 +201,7 @@ def ReadClassificationsToTable(output_dir: pathlib.Path) -> pd.DataFrame:
     len(fs.lsfiles(output_dir / 'pass', recursive=True)),
   ])
   df = pd.DataFrame(
-    rows, columns=['Testbed', 'bc', 'bto', 'abf', 'arc', 'awo', 'pass'])
+      rows, columns=['Testbed', 'bc', 'bto', 'abf', 'arc', 'awo', 'pass'])
   df['Total'] = df.sum(axis=1)
   return df
 
@@ -212,46 +211,49 @@ def main(argv):
   if len(argv) > 1:
     unknown_args = ', '.join(argv[1:])
     raise app.UsageError(f'Unknown arguments "{unknown_args}"')
-  datastore_config = pathlib.Path(FLAGS.datastore_config)
-  assert datastore_config.is_file()
-  output_dir = pathlib.Path(FLAGS.output_dir)
+
+  logging.info('Initializing datastore.')
+  config = pathlib.Path(FLAGS.datastore)
+  ds = datastore.DataStore.FromFile(config)
+
+  output_dir = pathlib.Path(FLAGS.output_directory)
   # Make directories to write the classifications to. We use the same shorthand
-  # classification names as in Table 2 of the paper.
+  # classification names as in Table 2 of the paper:
+  #
+  #   http://chriscummins.cc/pub/2018-issta.pdf
   (output_dir / 'bc').mkdir(parents=True, exist_ok=True)
   (output_dir / 'bto').mkdir(exist_ok=True)
   (output_dir / 'abf').mkdir(exist_ok=True)
   (output_dir / 'arc').mkdir(exist_ok=True)
   (output_dir / 'awo').mkdir(exist_ok=True)
   (output_dir / 'pass').mkdir(exist_ok=True)
-  result_dirs = [pathlib.Path(x) for x in FLAGS.result_dirs
+  result_dirs = [pathlib.Path(x) for x in FLAGS.input_directories
                  if pathlib.Path(x).is_dir()]
   results_paths = labtypes.flatten(
-    [pathlib.Path(x) for x in fs.lsfiles(x, recursive=True, abspaths=True)]
-    for x in result_dirs)
-  ds = datastore.DataStore.FromFile(datastore_config)
+      [pathlib.Path(x) for x in fs.lsfiles(x, recursive=True, abspaths=True)]
+      for x in result_dirs)
   print('Importing', len(results_paths), 'results into datastore ...')
-  _ = result
   with ds.Session(commit=True) as s:
-    for path in results_paths:
-      print(f'\r\033[2KProcessing {path}', end='')
+    for path in progressbar.ProgressBar()(results_paths):
+      # Instantiating a result from file has the side effect of adding the
+      # result object to the datastore's session.
       result.Result.FromFile(s, path)
-  print('\r\033[2KDone.')
 
   with ds.Session() as s:
     testcases = s.query(testcase.Testcase)
     print('Difftesting the results of', testcases.count(), 'testcases ...')
-    for t in testcases:
+    for t in progressbar.ProgressBar(max_value=testcases.count())(testcases):
       DifftestTestcase(s, t, output_dir)
   df = ReadClassificationsToTable(output_dir)
   print()
   print('Table of results. For each testbed, this shows the number of results')
-  print('of each class, using the same shortand as in Table 2 of the review ')
-  print('copy of the paper.')
+  print('of each class, using the same shortand as in Table 2 of the paper:')
+  print('http://chriscummins.cc/pub/2018-issta.pdf')
   print()
   print(df.to_string(index=False))
   print()
-  print('Individual classified programs are written to ')
-  print('./03_evaluate_results/output/classifications/<class>/<device>/.')
+  print('Individual classified programs are written to: '
+        f"'{output_dir}/<class>/<device>/'")
 
 
 if __name__ == '__main__':

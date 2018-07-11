@@ -23,10 +23,7 @@ py_binary(
     }),
     default_python_version = "PY3",
     srcs_version = "PY3",
-    visibility = [
-        "//deeplearning/deepsmith/cli:__subpackages__",
-        "//experimental:__subpackages__",
-    ],
+    visibility = ["//visibility:public"],
     deps = [
         ":harness",
         "//deeplearning/deepsmith:services",
@@ -80,6 +77,7 @@ py3_image(
 py_library(
     name = "harness",
     srcs = ["harness.py"],
+    visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/deepsmith:services",
         "//deeplearning/deepsmith/proto:harness_py_pb2",

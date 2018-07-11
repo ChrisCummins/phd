@@ -1,7 +1,8 @@
+# A datastore to put results in.
 # File: //deeplearning/deepsmith/proto/datastore.proto
 # Message: deepsmith.DataStore
 sqlite {
-  path: "./03_evaluate_results/output/datastore.db"
+  path: "/tmp/phd/docs/2018_07_issta/artifact_evaluation/datastore.db"
 }
 testonly: false
 create_database_if_not_exist: true

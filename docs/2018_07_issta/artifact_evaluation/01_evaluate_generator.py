@@ -1,0 +1,76 @@
+"""Train and sample a deep learning model to generate OpenCL testcases."""
+import pathlib
+from absl import app
+from absl import flags
+from absl import logging
+
+from deeplearning.deepsmith.generators import clgen
+from deeplearning.deepsmith.proto import generator_pb2
+from lib.labm8 import bazelutil
+from lib.labm8 import crypto
+from lib.labm8 import pbutil
+
+
+FLAGS = flags.FLAGS
+
+flags.DEFINE_string(
+    'generator', str(
+        bazelutil.DataPath('phd/docs/2018_07_issta/artifact_evaluation/'
+                           'data/clgen.pbtxt')),
+    'The path of the generator config proto.')
+flags.DEFINE_integer(
+    'num_testcases', 1024,
+    'The number of testcases to generate.')
+flags.DEFINE_string(
+    'output_directory',
+    '/tmp/phd/docs/2018_07_issta/artifact_evaluation',
+    'The directory to write generated programs and testcases to.')
+
+
+def main(argv):
+  """Main entry point."""
+  if len(argv) > 1:
+    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
+
+  output_directory = pathlib.Path(FLAGS.output_directory)
+  logging.info('Writing output to %s', output_directory)
+  (output_directory / 'generated_kernels').mkdir(parents=True, exist_ok=True)
+  (output_directory / 'generated_testcases').mkdir(parents=True, exist_ok=True)
+
+  logging.info('Preparing test case generator.')
+  config = pathlib.Path(FLAGS.generator)
+  if not pbutil.ProtoIsReadable(config, generator_pb2.ClgenGenerator()):
+    raise app.UsageError('--generator is not a deepsmith.ClgenGenerator proto')
+  generator_config = pbutil.FromFile(config, generator_pb2.ClgenGenerator())
+  generator = clgen.ClgenGenerator(generator_config)
+
+  # Generate testcases.
+  logging.info('Generating %d testcases ...', FLAGS.num_testcases)
+  req = generator_pb2.GenerateTestcasesRequest()
+  req.num_testcases = FLAGS.num_testcases
+  res = generator.GenerateTestcases(req, None)
+
+  for testcase in res.testcases:
+    # Write kernel to file.
+    kernel = testcase.inputs['src']
+    kernel_id = crypto.md5_str(kernel)
+    with open(output_directory / 'generated_kernels' / f'{kernel_id}.cl',
+              'w') as f:
+      f.write(kernel)
+
+    # Write testcase to file.
+    testcase_id = crypto.md5_str(str(testcase))
+    pbutil.ToFile(
+        testcase,
+        output_directory / 'generated_testcases' / f'{testcase_id}.pbtxt')
+
+  logging.info('%d testcases written to %s', FLAGS.num_testcases,
+               output_directory / 'generated_testcases')
+  generation_times = [testcase.profiling_events[0].duration_ms
+                      for testcase in res.testcases]
+  logging.info('Average time to generate testcase: %.2f ms',
+               sum(generation_times) / len(generation_times))
+
+
+if __name__ == '__main__':
+  app.run(main)

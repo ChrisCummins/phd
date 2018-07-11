@@ -29,7 +29,7 @@ py_library(
 py_library(
     name = "datastore",
     srcs = ["datastore.py"],
-    visibility = ["//deeplearning/deepsmith:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         ":client",
         ":db",
@@ -52,7 +52,7 @@ py_library(
 py_library(
     name = "db",
     srcs = ["db.py"],
-    visibility = ["//deeplearning/deepsmith:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/deepsmith/proto:datastore_py_pb2",
         "//lib/labm8:labdate",
@@ -81,7 +81,7 @@ py_test(
 py_library(
     name = "generator",
     srcs = ["generator.py"],
-    visibility = ["//deeplearning/deepsmith:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         ":db",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
@@ -110,7 +110,7 @@ py_test(
 py_library(
     name = "harness",
     srcs = ["harness.py"],
-    visibility = ["//deeplearning/deepsmith:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         ":db",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
@@ -140,14 +140,14 @@ py_test(
 py_library(
     name = "toolchain",
     srcs = ["toolchain.py"],
-    visibility = ["//deeplearning/deepsmith:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [":db"],
 )
 
 py_library(
     name = "profiling_event",
     srcs = ["profiling_event.py"],
-    visibility = ["//deeplearning/deepsmith:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         ":client",
         ":db",
@@ -161,7 +161,7 @@ py_library(
 py_library(
     name = "result",
     srcs = ["result.py"],
-    visibility = ["//deeplearning/deepsmith:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         ":db",
         ":profiling_event",
@@ -201,10 +201,7 @@ py_test(
 py_library(
     name = "services",
     srcs = ["services.py"],
-    visibility = [
-        "//deeplearning/deepsmith:__subpackages__",
-        "//experimental:__subpackages__",
-    ],
+    visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/deepsmith/proto:service_py_pb2",
         "//lib/labm8:pbutil",
@@ -216,7 +213,7 @@ py_library(
 py_library(
     name = "testbed",
     srcs = ["testbed.py"],
-    visibility = ["//deeplearning/deepsmith:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         ":db",
         ":toolchain",
@@ -247,7 +244,7 @@ py_test(
 py_library(
     name = "testcase",
     srcs = ["testcase.py"],
-    visibility = ["//deeplearning/deepsmith:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         ":db",
         ":generator",

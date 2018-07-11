@@ -10,10 +10,25 @@ py_binary(
     srcs = ["clgen.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
-    visibility = [
-        "//deeplearning/deepsmith/cli:__subpackages__",
-        "//experimental:__subpackages__",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":clgen_pretrained",
+        "//deeplearning/clgen",
+        "//deeplearning/clgen/proto:model_py_pb2",
+        "//deeplearning/deepsmith:services",
+        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
+        "//deeplearning/deepsmith/proto:generator_py_pb2",
+        requirement("grpcio"),
+        requirement("absl-py"),
     ],
+)
+
+py_binary(
+    name = "clgen_pretrained",
+    srcs = ["clgen_pretrained.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
     deps = [
         ":generator",
         "//deeplearning/clgen:sample",
@@ -58,6 +73,7 @@ py_binary(
 py_library(
     name = "generator",
     srcs = ["generator.py"],
+    visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/deepsmith:services",
         "//deeplearning/deepsmith/proto:generator_py_pb2",
@@ -70,10 +86,7 @@ py_binary(
     srcs = ["randchar.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
-    visibility = [
-        "//deeplearning/deepsmith/cli:__subpackages__",
-        "//experimental:__subpackages__",
-    ],
+    visibility = ["//visibility:public"],
     deps = [
         ":generator",
         "//deeplearning/deepsmith:services",

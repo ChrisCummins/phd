@@ -24,8 +24,6 @@ from lib.labm8 import pbutil
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string('datastore', None, 'Path to Datastore config proto.')
-
 
 class InvalidRequest(ValueError):
   """Exception raised if request cannot be served."""

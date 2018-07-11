@@ -1,84 +1,37 @@
 import grpc
-import math
-import sys
 import time
-import typing
 from absl import app
 from absl import flags
 from absl import logging
 from concurrent import futures
 
-from deeplearning.clgen import sample
-from deeplearning.clgen.proto import model_pb2
+from deeplearning.clgen import clgen
 from deeplearning.deepsmith import services
+from deeplearning.deepsmith.generators import clgen_pretrained
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import generator_pb2_grpc
-from deeplearning.deepsmith.generators import generator
 
 
 FLAGS = flags.FLAGS
 
 
 def ClgenInstanceToGenerator(
-    instance: sample.Instance) -> deepsmith_pb2.Generator:
+    instance: clgen.Instance) -> deepsmith_pb2.Generator:
   """Convert a CLgen instance to a DeepSmith generator proto."""
   g = deepsmith_pb2.Generator()
   g.name = f'clgen'
-  g.opts['model'] = str(instance.model.path)
+  g.opts['model'] = instance.model.hash
   g.opts['sampler'] = instance.sampler.hash
   return g
 
 
-class ClgenGenerator(generator.GeneratorBase,
-                     generator_pb2_grpc.GeneratorServiceServicer):
+class ClgenGenerator(clgen_pretrained.ClgenGenerator):
 
   def __init__(self, config: generator_pb2.ClgenGenerator):
-    super(ClgenGenerator, self).__init__(config)
-    self.instance = sample.Instance(self.config.instance)
+    super(ClgenGenerator, self).__init__(config, no_init=True)
+    self.instance = clgen.Instance(self.config.instance)
     self.generator = ClgenInstanceToGenerator(self.instance)
-
-  def GetGeneratorCapabilities(
-      self, request: generator_pb2.GetGeneratorCapabilitiesRequest,
-      context) -> generator_pb2.GetGeneratorCapabilitiesResponse:
-    del context
-    response = services.BuildDefaultResponse(
-        generator_pb2.GetGeneratorCapabilitiesRequest)
-    response.toolchain = self.config.model.corpus.language
-    response.generator = self.generator
-    return response
-
-  def GenerateTestcases(self, request: generator_pb2.GenerateTestcasesRequest,
-                        context) -> generator_pb2.GenerateTestcasesResponse:
-    del context
-    response = services.BuildDefaultResponse(
-        generator_pb2.GenerateTestcasesResponse)
-    with self.instance.Session():
-      num_programs = math.ceil(
-          request.num_testcases / len(self.config.testcase_skeleton))
-      for i, sample in enumerate(self.instance.model.Sample(
-          self.instance.sampler, num_programs)):
-        logging.info('Generated sample %d.', i + 1)
-        response.testcases.extend(self.SampleToTestcases(sample))
-
-    # Flush any remaining output generated during Sample().
-    sys.stdout.flush()
-    return response
-
-  def SampleToTestcases(self, sample: model_pb2.Sample) -> typing.List[
-    deepsmith_pb2.Testcase]:
-    """Convert a CLgen sample to a list of DeepSmith testcase protos."""
-    testcases = []
-    for skeleton in self.config.testcase_skeleton:
-      t = deepsmith_pb2.Testcase()
-      t.CopyFrom(skeleton)
-      p = t.profiling_events.add()
-      p.type = 'generation'
-      p.duration_ms = sample.sample_time_ms
-      p.event_start_epoch_ms = sample.sample_start_epoch_ms_utc
-      t.inputs['src'] = sample.text
-      testcases.append(t)
-    return testcases
 
 
 def main(argv):

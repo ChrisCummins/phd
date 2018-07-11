@@ -32,5 +32,5 @@ filegroup(
         "tiny.tar.bz2",
         "tiny-gh.db.tar.bz2",
     ],
-    visibility = ["//deeplearning/clgen:__subpackages__"],
+    visibility = ["//visibility:public"],
 )

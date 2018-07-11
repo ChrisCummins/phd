@@ -10,10 +10,7 @@ py_proto_library(
         ":service_py_pb2",
     ],
     protos = ["datastore.proto"],
-    visibility = [
-        "//deeplearning/deepsmith:__subpackages__",
-        "//experimental:__subpackages__",
-    ],
+    visibility = ["//visibility:public"],
     with_grpc = True,
     deps = [requirement("protobuf")],
 )
@@ -21,10 +18,7 @@ py_proto_library(
 py_proto_library(
     name = "deepsmith_py_pb2",
     protos = ["deepsmith.proto"],
-    visibility = [
-        "//deeplearning/deepsmith:__subpackages__",
-        "//experimental:__subpackages__",
-    ],
+    visibility = ["//visibility:public"],
     deps = [requirement("protobuf")],
 )
 
@@ -36,10 +30,7 @@ py_proto_library(
         "//deeplearning/clgen/proto:clgen_py_pb2",
     ],
     protos = ["generator.proto"],
-    visibility = [
-        "//deeplearning/deepsmith:__subpackages__",
-        "//experimental:__subpackages__",
-    ],
+    visibility = ["//visibility:public"],
     with_grpc = True,
     deps = [requirement("protobuf")],
 )
@@ -51,10 +42,7 @@ py_proto_library(
         ":service_py_pb2",
     ],
     protos = ["harness.proto"],
-    visibility = [
-        "//deeplearning/deepsmith:__subpackages__",
-        "//experimental:__subpackages__",
-    ],
+    visibility = ["//visibility:public"],
     with_grpc = True,
     deps = [requirement("protobuf")],
 )
@@ -62,9 +50,6 @@ py_proto_library(
 py_proto_library(
     name = "service_py_pb2",
     protos = ["service.proto"],
-    visibility = [
-        "//deeplearning/deepsmith:__subpackages__",
-        "//experimental:__subpackages__",
-    ],
+    visibility = ["//deeplearning/deepsmith:__subpackages__"],
     deps = [requirement("protobuf")],
 )

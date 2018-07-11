@@ -48,4 +48,7 @@ message CldriveHarness {
   // Use `//gpu/cldrive:cldrive --ls_env` to list the available environments.
   // If no environments are specified, all available environments will be used.
   repeated string opencl_env = 2;
+  // A list of bools determining whether OpenCL optimizations should be enabled
+  // for the corresponding opencl_env.
+  repeated bool opencl_opt = 3;
 }

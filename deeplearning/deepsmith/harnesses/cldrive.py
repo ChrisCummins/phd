@@ -1,3 +1,4 @@
+import copy
 import grpc
 import pathlib
 import subprocess
@@ -9,11 +10,11 @@ from absl import logging
 from concurrent import futures
 
 from deeplearning.deepsmith import services
+from deeplearning.deepsmith.harnesses import harness
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import harness_pb2
 from deeplearning.deepsmith.proto import harness_pb2_grpc
 from deeplearning.deepsmith.proto import service_pb2
-from deeplearning.deepsmith.harnesses import harness
 from gpu import cldrive as cldrive_lib
 from gpu.cldrive import cldrive
 from gpu.cldrive import env
@@ -60,18 +61,30 @@ class CldriveHarness(harness.HarnessBase,
 
     # Match and instantiate the OpenCL environments.
     all_envs = {env.name: env for env in cldrive.GetOpenClEnvironments()}
+    envs = []
     if self.config.opencl_env:
-      envs = []
-      for opencl_env in sorted(set(self.config.opencl_env)):
+      for opencl_env, opt in zip(
+          self.config.opencl_env, self.config.opencl_opt):
         if opencl_env in all_envs:
-          envs.append(all_envs[opencl_env])
+          env_ = copy.copy(all_envs[opencl_env])
+          env_.opencl_opt = opt
+          envs.append(env_)
         else:
           available = '\n'.join(f'    {n}' for n in sorted(all_envs.keys()))
           raise LookupError(
               f"Requested OpenCL environment not available: '{opencl_env}'.\n"
               f"Available OpenCL devices:\n{available}")
     else:
-      envs = all_envs.values()
+      # Use all available OpenCL environments.
+      for env_ in all_envs.values():
+        # Create environment with optimizations enabled.
+        env_opt = copy.copy(env_)
+        env_opt.opencl_opt = True
+        envs.append(env_opt)
+        # Create environment with optimizations disabled.
+        env_noopt = copy.copy(env_)
+        env_noopt.opencl_opt = False
+        envs.append(env_noopt)
     if not envs:
       raise EnvironmentError('No OpenCL environments available')
 
@@ -132,6 +145,8 @@ def OpenClEnvironmentToTestbed(
   testbed.opts['driver'] = opencl_environment.driver_version
   testbed.opts['device_type'] = opencl_environment.device_type
   testbed.opts['opencl_version'] = opencl_environment.opencl_version
+  testbed.opts['opencl_opt'] = ('enabled' if opencl_environment.opencl_opt
+                                else 'disabled')
   return testbed
 
 
@@ -143,7 +158,8 @@ def RunTestcase(opencl_environment: env.OpenCLEnvironment,
   result = deepsmith_pb2.Result()
   result.testbed.CopyFrom(testbed)
   platform_id, device_id = opencl_environment.ids()
-  driver = MakeDriver(testcase)
+  driver = MakeDriver(
+      testcase, True if testbed.opts['opencl_opt'] == 'enabled' else False)
   # MakeDriver() annotates the testcase, so we must only set the testcase field
   # of the output result after we have called it.
   result.testcase.CopyFrom(testcase)
@@ -176,7 +192,8 @@ def RunTestcase(opencl_environment: env.OpenCLEnvironment,
   return result
 
 
-def MakeDriver(testcase: deepsmith_pb2.Testcase) -> str:
+def MakeDriver(testcase: deepsmith_pb2.Testcase,
+               optimizations: bool) -> str:
   """Generate a self-contained C program for the given test case.
 
   Args:
@@ -210,20 +227,21 @@ def MakeDriver(testcase: deepsmith_pb2.Testcase) -> str:
         data_generator=cldrive_lib.Generator.ARANGE,
         scalar_val=size)
     src = cldrive_lib.emit_c(
-        src=src, inputs=inputs, gsize=gsize, lsize=lsize)
+        src=src, inputs=inputs, gsize=gsize, lsize=lsize,
+        optimizations=optimizations)
     testcase.invariant_opts['driver_type'] = 'compile_and_run'
   except Exception:
     # Create a compile-only stub if not possible.
     try:
       src = cldrive_lib.emit_c(
           src=src, inputs=None, gsize=None, lsize=None,
-          compile_only=True)
+          compile_only=True, optimizations=optimizations)
       testcase.invariant_opts['driver_type'] = 'compile_and_create_kernel'
     except Exception:
       # Create a compiler-only stub without creating kernel.
       src = cldrive_lib.emit_c(
           src=src, inputs=None, gsize=None, lsize=None,
-          compile_only=True, create_kernel=False)
+          compile_only=True, create_kernel=False, optimizations=optimizations)
       testcase.invariant_opts['driver_type'] = 'compile_only'
   return src
 
