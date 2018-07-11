@@ -141,12 +141,12 @@ class Testcase(db.Table):
     Returns:
       A Testcase instanace.
     """
-    toolchain = deeplearning.deepsmith.toolchain.Toolchain.GetOrAdd(session,
-                                                                    proto.toolchain)
-    generator = deeplearning.deepsmith.generator.Generator.GetOrAdd(session,
-                                                                    proto.generator)
-    harness = deeplearning.deepsmith.harness.Harness.GetOrAdd(session,
-                                                              proto.harness)
+    toolchain = deeplearning.deepsmith.toolchain.Toolchain.GetOrAdd(
+        session, proto.toolchain)
+    generator = deeplearning.deepsmith.generator.Generator.GetOrAdd(
+        session, proto.generator)
+    harness = deeplearning.deepsmith.harness.Harness.GetOrAdd(
+        session, proto.harness)
     # Build the list of inputs, and md5sum the key value strings.
     inputs = []
     md5 = hashlib.md5()
@@ -170,7 +170,7 @@ class Testcase(db.Table):
       proto_invariant_opt_value = proto.invariant_opts[proto_invariant_opt_name]
       md5.update(
           (proto_invariant_opt_name + proto_invariant_opt_value).encode(
-            'utf-8'))
+              'utf-8'))
       invariant_opt = TestcaseInvariantOpt.GetOrAdd(session,
                                                     proto_invariant_opt_name,
                                                     proto_invariant_opt_value)
@@ -179,19 +179,35 @@ class Testcase(db.Table):
     # Create invariant optset table entries.
     invariant_optset_id = md5.digest()
     for invariant_opt in invariant_opts:
-      lib.labm8.sqlutil.GetOrAdd(session, TestcaseInvariantOptSet,
-                                 id=invariant_optset_id,
-                                 invariant_opt=invariant_opt)
+      lib.labm8.sqlutil.GetOrAdd(
+          session, TestcaseInvariantOptSet,
+          id=invariant_optset_id,
+          invariant_opt=invariant_opt)
 
-    testcase = lib.labm8.sqlutil.GetOrAdd(session, cls, toolchain=toolchain,
-                                          generator=generator, harness=harness,
-                                          inputset_id=inputset_id,
-                                          invariant_optset_id=invariant_optset_id, )
-
-    # Add profiling events.
-    for event in proto.profiling_events:
-      deeplearning.deepsmith.profiling_event.TestcaseProfilingEvent.GetOrAdd(
-          session, event).testcase = testcase
+    # Create a new testcase only if everything *except* the profiling events
+    # are unique. This means that if a generator produced the same testcase
+    # twice (on separate occasions), only the first is added to the datastore.
+    testcase = lib.labm8.sqlutil.Get(
+        session, cls,
+        toolchain=toolchain,
+        generator=generator,
+        harness=harness,
+        inputset_id=inputset_id,
+        invariant_optset_id=invariant_optset_id
+    )
+    if not testcase:
+      testcase = cls(
+          toolchain=toolchain,
+          generator=generator,
+          harness=harness,
+          inputset_id=inputset_id,
+          invariant_optset_id=invariant_optset_id
+      )
+      session.add(testcase)
+      # Add profiling events.
+      for event in proto.profiling_events:
+        deeplearning.deepsmith.profiling_event.TestcaseProfilingEvent.GetOrAdd(
+            session, event, testcase)
 
     return testcase
 

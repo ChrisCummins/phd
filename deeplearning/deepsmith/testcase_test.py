@@ -175,6 +175,52 @@ def test_Generator_GetOrAdd_ToProto_equivalence(session):
   assert proto_in != proto_out  # Sanity check.
 
 
+def test_duplicate_testcases_ignored(session):
+  """Test that testcases are only added if they are unique."""
+  proto = deepsmith_pb2.Testcase(
+      toolchain='cpp',
+      generator=deepsmith_pb2.Generator(name='generator'),
+      harness=deepsmith_pb2.Harness(name='harness'),
+      inputs={'src': 'void main() {}', 'data': '[1,2]'},
+      invariant_opts={'config': 'opt'},
+      profiling_events=[
+        deepsmith_pb2.ProfilingEvent(
+            client='localhost',
+            type='generate',
+            duration_ms=100,
+            event_start_epoch_ms=1021312312,
+        ),
+        deepsmith_pb2.ProfilingEvent(
+            client='localhost',
+            type='foo',
+            duration_ms=100,
+            event_start_epoch_ms=1230812312,
+        ),
+      ]
+  )
+  t1 = deeplearning.deepsmith.testcase.Testcase.GetOrAdd(session, proto)
+  session.add(t1)
+  session.flush()
+
+  # Attempt to add a new testcase which is identical to the first in all fields
+  # except for the profiling events.
+  proto.profiling_events[0].duration_ms = -1
+  t2 = deeplearning.deepsmith.testcase.Testcase.GetOrAdd(session, proto)
+  session.add(t2)
+  session.flush()
+
+  # Check that only one testcase was added.
+  assert session.query(deeplearning.deepsmith.testcase.Testcase).count() == 1
+
+  # Check that only the first testcase was added.
+  t3 = session.query(deeplearning.deepsmith.testcase.Testcase).first()
+  assert t3.profiling_events[0].duration_ms == 100
+  assert t3.profiling_events[1].duration_ms == 100
+
+
+# Benchmarks.
+
+
 def _AddRandomNewTestcase(session):
   deeplearning.deepsmith.testcase.Testcase.GetOrAdd(
       session,
