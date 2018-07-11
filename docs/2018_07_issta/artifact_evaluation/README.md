@@ -13,15 +13,15 @@ more details.
 
 ## 1. Artifact Contents
 
- * `01_evaluate_generator/` A demonstration of training a neural network model 
-   to generate programs.
+ * [01_evaluate_generator](01_evaluate_generator.py) A demonstration of training
+   a neural network model to generate programs.
 
- * `02_evaluate_harness/` A demonstration which executes test cases on an OpenCL
-   test bed.
+ * [02_evaluate_harness](02_evaluate_harness.py)` A demonstration which executes
+   test cases on an OpenCL test bed.
 
- * `03_evaluate_results/` A demonstration of our differential testing approach.
-   The results from the prior demonstration are combined with our own data from
-   the paper to perform differential testing.
+ * [03_evaluate_results](03_evaluate_results.py) A demonstration of our 
+   differential testing approach. The results from the prior demonstration are 
+   combined with our own data from the paper to perform differential testing.
 
 
 ## 2. Installation
