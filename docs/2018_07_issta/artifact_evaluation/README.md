@@ -77,6 +77,7 @@ files and training on only a subset, etc.
 
 
 ### 3.2. Evaluate the harness
+
 *(approximate runtime: 30 minutes)*
 
 
@@ -107,7 +108,9 @@ testcases, for example, by changing the `src` field for a testcase to change
 the OpenCL kernel which is evaluated.
 
 
-### 3.3. Evaluate the results (approximate runtime: 5 minutes)
+### 3.3. Evaluate the results
+
+*(approximate runtime: 5 minutes)*
 
 Evaluate the DeepSmith difftester using:
 
