@@ -15,7 +15,7 @@ py_binary(
         "//experimental:__subpackages__",
     ],
     deps = [
-        ":services",
+        "//deeplearning/deepsmith:services",
         "//deeplearning/deepsmith/proto:datastore_py_pb2",
         "//lib/labm8:pbutil",
         requirement("grpcio"),
