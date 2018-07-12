@@ -240,7 +240,20 @@ void SetOpenClDevice(const cl::Platform &platform, const cl::Device &device,
 ::gpu::clinfo::OpenClDevices GetOpenClDevices() {
   ::gpu::clinfo::OpenClDevices message;
   std::vector <cl::Platform> platforms;
-  cl::Platform::get(&platforms);
+
+  try {
+    cl::Platform::get(&platforms);
+  } catch (cl::Error err) {
+    // In environments where there are no OpenCL platforms installed, the call
+    // to clGetPlatformIDs() will throw CL_PLATFORM_NOT_FOUND_KHR. We don't
+    // want to treat that as an error, but instead as a lack of platforms.
+    if (strcmp(err.what(), "clGetPlatformIDs") == 0 &&
+        strcmp(phd::gpu::clinfo::OpenClErrorString(err.err()), "CL_PLATFORM_NOT_FOUND_KHR") == 0) {
+      return message;
+    }
+    throw err;
+  }
+
   std::vector <cl::Device> devices;
   int platform_id = 0;
   for (const auto &platform : platforms) {
