@@ -25,6 +25,21 @@ py_binary(
     ],
 )
 
+py_test(
+    name = "01_evaluate_generator_test",
+    srcs = ["01_evaluate_generator_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        "//deeplearning/clgen:conftest",
+        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
+        "//deeplearning/deepsmith/proto:generator_py_pb2",
+        ":01_evaluate_generator",
+        requirement("absl-py"),
+        requirement("pytest"),
+    ],
+)
+
 py_binary(
     name = "02_evaluate_harness",
     srcs = ["02_evaluate_harness.py"],

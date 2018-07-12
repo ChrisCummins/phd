@@ -27,27 +27,20 @@ flags.DEFINE_string(
     'The directory to write generated programs and testcases to.')
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-
-  output_directory = pathlib.Path(FLAGS.output_directory)
+def GenerateTestcases(generator_config: generator_pb2.ClgenGenerator,
+                      output_directory: pathlib.Path,
+                      num_testcases: int) -> None:
   logging.info('Writing output to %s', output_directory)
   (output_directory / 'generated_kernels').mkdir(parents=True, exist_ok=True)
   (output_directory / 'generated_testcases').mkdir(parents=True, exist_ok=True)
 
   logging.info('Preparing test case generator.')
-  config = pathlib.Path(FLAGS.generator)
-  if not pbutil.ProtoIsReadable(config, generator_pb2.ClgenGenerator()):
-    raise app.UsageError('--generator is not a deepsmith.ClgenGenerator proto')
-  generator_config = pbutil.FromFile(config, generator_pb2.ClgenGenerator())
   generator = clgen.ClgenGenerator(generator_config)
 
   # Generate testcases.
-  logging.info('Generating %d testcases ...', FLAGS.num_testcases)
+  logging.info('Generating %d testcases ...', num_testcases)
   req = generator_pb2.GenerateTestcasesRequest()
-  req.num_testcases = FLAGS.num_testcases
+  req.num_testcases = num_testcases
   res = generator.GenerateTestcases(req, None)
 
   for testcase in res.testcases:
@@ -64,12 +57,25 @@ def main(argv):
         testcase,
         output_directory / 'generated_testcases' / f'{testcase_id}.pbtxt')
 
-  logging.info('%d testcases written to %s', FLAGS.num_testcases,
+  logging.info('%d testcases written to %s', num_testcases,
                output_directory / 'generated_testcases')
   generation_times = [testcase.profiling_events[0].duration_ms
                       for testcase in res.testcases]
   logging.info('Average time to generate testcase: %.2f ms',
                sum(generation_times) / len(generation_times))
+
+
+def main(argv):
+  """Main entry point."""
+  if len(argv) > 1:
+    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
+
+  config = pathlib.Path(FLAGS.generator)
+  if not pbutil.ProtoIsReadable(config, generator_pb2.ClgenGenerator()):
+    raise app.UsageError('--generator is not a deepsmith.ClgenGenerator proto')
+  generator_config = pbutil.FromFile(config, generator_pb2.ClgenGenerator())
+  output_directory = pathlib.Path(FLAGS.output_directory)
+  GenerateTestcases(generator_config, output_directory, FLAGS.num_testcases)
 
 
 if __name__ == '__main__':
