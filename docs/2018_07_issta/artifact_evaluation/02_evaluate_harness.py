@@ -45,7 +45,7 @@ def main(argv):
   logging.info('Preparing OpenCL testbed.')
   config = harness_pb2.CldriveHarness()
   config.opencl_env.extend([oclgrind.OpenCLEnvironment().name])
-  config.opencl_opt.extend([flags.opencl_opt])
+  config.opencl_opt.extend([FLAGS.opencl_opt])
   harness = cldrive.CldriveHarness(config)
   assert len(harness.testbeds) >= 1
 
