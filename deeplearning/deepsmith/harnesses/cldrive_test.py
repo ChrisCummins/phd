@@ -330,6 +330,32 @@ def test_CldriveHarness_RunTestcases_oclgrind_abc_testcase(
     '240 241 242 243 244 245 246 247 248 249 250 251 252 253 254 255\n')
 
 
+def test_CldriveHarness_RunTestcases_driver_cflags(
+    abc_harness_config, abc_run_testcases_request):
+  """Test that valid driver cflags do not break the build."""
+  abc_harness_config.driver_cflags.extend(['-O3', '-g'])
+  harness = cldrive.CldriveHarness(abc_harness_config)
+  res = harness.RunTestcases(abc_run_testcases_request, None)
+  assert res.status.returncode == service_pb2.ServiceStatus.SUCCESS
+  assert len(res.results) == 1
+  result = res.results[0]
+  # Nothing interesting to see here.
+  assert result.outcome == deepsmith_pb2.Result.PASS
+
+
+def test_CldriveHarness_RunTestcases_invalid_driver_cflags(
+    abc_harness_config, abc_run_testcases_request):
+  """Test that invalid driver cflags cause driver to fail to build."""
+  abc_harness_config.driver_cflags.extend(['--not_a_real_flag'])
+  harness = cldrive.CldriveHarness(abc_harness_config)
+  res = harness.RunTestcases(abc_run_testcases_request, None)
+  assert res.status.returncode == service_pb2.ServiceStatus.SUCCESS
+  assert len(res.results) == 1
+  result = res.results[0]
+  # A driver compilation error is an unknown outcome.
+  assert result.outcome == deepsmith_pb2.Result.UNKNOWN
+
+
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:

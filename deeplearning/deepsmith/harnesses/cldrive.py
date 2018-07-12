@@ -127,7 +127,8 @@ class CldriveHarness(harness.HarnessBase,
     testbed_idx = self.testbeds.index(request.testbed)
     for i, testcase in enumerate(request.testcases):
       result = RunTestcase(
-          self.envs[testbed_idx], self.testbeds[testbed_idx], testcase)
+          self.envs[testbed_idx], self.testbeds[testbed_idx], testcase,
+          self.config.driver_cflags)
       logging.info('Testcase %d: %s.', i + 1,
                    deepsmith_pb2.Result.Outcome.Name(result.outcome))
       response.results.extend([result])
@@ -160,7 +161,8 @@ def OpenClEnvironmentToTestbed(
 
 def RunTestcase(opencl_environment: env.OpenCLEnvironment,
                 testbed: deepsmith_pb2.Testbed,
-                testcase: deepsmith_pb2.Testcase) -> deepsmith_pb2.Result:
+                testcase: deepsmith_pb2.Testcase,
+                cflags: typing.List[str]) -> deepsmith_pb2.Result:
   """Run a testcase."""
   if testcase.toolchain != 'opencl':
     raise ValueError(f"Unsupported testcase toolchain: '{testcase.toolchain}'")
@@ -178,7 +180,7 @@ def RunTestcase(opencl_environment: env.OpenCLEnvironment,
   with tempfile.NamedTemporaryFile(prefix='deepsmith_', delete=False) as f:
     path = pathlib.Path(f.name)
   try:
-    CompileDriver(driver, path, platform_id, device_id)
+    CompileDriver(driver, path, platform_id, device_id, cflags=cflags)
     timeout = testcase.harness.opts.get('timeout_seconds', '60')
     cmd = ['timeout', '-s9', timeout, f.name]
     start_time = labdate.GetUtcMillisecondsNow()

@@ -51,4 +51,8 @@ message CldriveHarness {
   // A list of bools determining whether OpenCL optimizations should be enabled
   // for the corresponding opencl_env.
   repeated bool opencl_opt = 3;
+  // A list of additional command line options to pass to the compiler during
+  // compilation of C harness programs. These flags are appended to the existing
+  // command line.
+  repeated string driver_cflags = 4;
 }
