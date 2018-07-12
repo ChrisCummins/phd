@@ -2,9 +2,7 @@
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 #pragma GCC diagnostic ignored "-Wundef"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
-#pragma GCC diagnostic ignored "-Wreserved-id-macro"
 #pragma GCC diagnostic ignored "-Wdeprecated"
-#pragma GCC diagnostic ignored "-Wextra-semi"
 
 /*******************************************************************************
  * Copyright (c) 2008-2015 The Khronos Group Inc.
