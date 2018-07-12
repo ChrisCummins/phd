@@ -289,9 +289,9 @@ def main(argv):
     base_requirements = f.read()
 
   tensorflow_build_in_path = os.path.join(
-      PHD_ROOT, 'third_party/tensorflow/BUILD.in')
+      PHD_ROOT, 'third_party/py/tensorflow/BUILD.in')
   tensorflow_build_path = os.path.join(
-      PHD_ROOT, 'third_party/tensorflow/BUILD')
+      PHD_ROOT, 'third_party/py/tensorflow/BUILD')
   with open(tensorflow_build_in_path) as f:
     tensorflow_build = f.read()
 
