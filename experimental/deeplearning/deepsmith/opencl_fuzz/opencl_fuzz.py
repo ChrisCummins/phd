@@ -35,8 +35,12 @@ flags.DEFINE_bool(
     'opencl_opt', True,
     'If --noopencl_opt, OpenCL optimizations are disabled.')
 flags.DEFINE_string(
-    'interesting_results_dir', '/tmp/',
+    'interesting_results_dir',
+    '/tmp/phd/experimental/deeplearning/opencl_fuzz/interesting_results',
     'Directory to write interesting results to.')
+flags.DEFINE_bool(
+    'all_results_are_interesting', False,
+    'If set, all results are written to interesting_results_dir.')
 flags.DEFINE_integer(
     'min_interesting_results', 1,
     'The minimum number of interesting testcases to discover before stopping.')
@@ -100,50 +104,89 @@ def RunBatch(generator: base_generator.GeneratorBase,
                  len(unfiltered_results) - len(results))
 
   for i, result in enumerate(results):
-    # First perform a unary difftest to see the result is interesting without
-    # needing to difftest, such as a compiler crash.
-    unary_dt_outcome = unary_difftester([result])[0]
-
-    if (unary_dt_outcome != deepsmith_pb2.DifferentialTest.PASS and
-        unary_dt_outcome != deepsmith_pb2.DifferentialTest.UNKNOWN):
-      interesting_results.append(result)
-      continue
-
-    if not (unary_dt_outcome == deepsmith_pb2.DifferentialTest.PASS and
-            result.outcome == deepsmith_pb2.Result.PASS):
-      continue
-
-    # Determine whether we can difftest the testcase.
-    dt = filters.PreDifftest(deepsmith_pb2.DifferentialTest(result=[result]))
-    if not dt:
-      continue
-
-    # Run testcases against gold standard devices and difftest.
-    gs_result = RunTestcases(gs_harness, dt.result[0].testcase)[0]
-
-    dt_outcomes = gs_difftester([gs_result, result])
-    dt_outcome = dt.outcome[1]
-    logging.info('Differential test outcome: %s.',
-                 deepsmith_pb2.DifferentialTest.Outcome.Name(dt_outcome))
-
-    # Determine whether we can use the difftest result.
-    dt = filters.PostDifftest(deepsmith_pb2.DifferentialTest(
-        result=[gs_result, result],
-        outcome=dt_outcomes))
-    if not dt:
-      logging.info('Cannot use gold standard difftest result.')
-      continue
-
-    if dt_outcome != deepsmith_pb2.DifferentialTest.PASS:
-      # Add the differential test outcome to the result.
-      dt.result[1].outputs[
-        'difftest_outcome'] = deepsmith_pb2.DifferentialTest.Outcome.Name(
-          dt_outcome)
-      dt.result[1].outputs['gs_stdout'] = dt.result[0].outputs['stdout']
-      dt.result[1].outputs['gs_stderr'] = dt.result[0].outputs['stderr']
-      interesting_results.append(dt.result[1])
+    interesting_result = ResultIsInteresting(
+        result, unary_difftester, gs_difftester, gs_harness, filters)
+    if interesting_results:
+      interesting_results.append(interesting_result)
 
   return interesting_results
+
+
+def NotInteresting(
+    result: deepsmith_pb2) -> typing.Optional[deepsmith_pb2.Result]:
+  """An uninteresting result wrapper.
+
+  Args:
+    result: The result which is not interesting.
+
+  Returns:
+    The input result if --all_results_are_interesting flag set, else None.
+  """
+  if FLAGS.all_results_are_interesting:
+    return result
+  else:
+    return None
+
+
+def ResultIsInteresting(result: deepsmith_pb2.Result,
+                        unary_difftester: difftests.UnaryTester,
+                        gs_difftester: difftests.GoldStandardDiffTester,
+                        gs_harness: cldrive.CldriveHarness,
+                        filters: difftests.FiltersBase
+                        ) -> typing.Optional[deepsmith_pb2.Result]:
+  """Determine if a result is interesting, and return it if it is.
+
+  Args:
+    result: The result to test.
+    unary_difftester: A unary difftester.
+    gs_difftester: A golden standard difftester.
+    gs_harness: A golden standard test harness.
+    filters: A set of difftest filters.
+
+  Returns:
+    The result if it is interesting, else None.
+  """
+  # First perform a unary difftest to see if the result is interesting without
+  # needing to difftest, such as a compiler crash.
+  unary_dt_outcome = unary_difftester([result])[0]
+
+  if (unary_dt_outcome != deepsmith_pb2.DifferentialTest.PASS and
+      unary_dt_outcome != deepsmith_pb2.DifferentialTest.UNKNOWN):
+    return result
+
+  if not (unary_dt_outcome == deepsmith_pb2.DifferentialTest.PASS and
+          result.outcome == deepsmith_pb2.Result.PASS):
+    return NotInteresting(result)
+
+  # Determine whether we can difftest the testcase.
+  dt = filters.PreDifftest(deepsmith_pb2.DifferentialTest(result=[result]))
+  if not dt:
+    return NotInteresting(result)
+
+  # Run testcases against gold standard devices and difftest.
+  gs_result = RunTestcases(gs_harness, dt.result[0].testcase)[0]
+
+  dt_outcomes = gs_difftester([gs_result, result])
+  dt_outcome = dt.outcome[1]
+  logging.info('Differential test outcome: %s.',
+               deepsmith_pb2.DifferentialTest.Outcome.Name(dt_outcome))
+
+  # Determine whether we can use the difftest result.
+  dt = filters.PostDifftest(deepsmith_pb2.DifferentialTest(
+      result=[gs_result, result],
+      outcome=dt_outcomes))
+  if not dt:
+    logging.info('Cannot use gold standard difftest result.')
+    return NotInteresting(result)
+
+  if dt_outcome != deepsmith_pb2.DifferentialTest.PASS:
+    # Add the differential test outcome to the result.
+    dt.result[1].outputs[
+      'difftest_outcome'] = deepsmith_pb2.DifferentialTest.Outcome.Name(
+        dt_outcome)
+    dt.result[1].outputs['gs_stdout'] = dt.result[0].outputs['stdout']
+    dt.result[1].outputs['gs_stderr'] = dt.result[0].outputs['stderr']
+    return dt.result[1]
 
 
 def RunTestcases(harness: base_harness.HarnessBase,
