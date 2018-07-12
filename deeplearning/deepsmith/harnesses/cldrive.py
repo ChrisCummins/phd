@@ -128,7 +128,7 @@ class CldriveHarness(harness.HarnessBase,
     for i, testcase in enumerate(request.testcases):
       result = RunTestcase(
           self.envs[testbed_idx], self.testbeds[testbed_idx], testcase,
-          self.config.driver_cflags)
+          self.config.driver_cflag)
       logging.info('Testcase %d: %s.', i + 1,
                    deepsmith_pb2.Result.Outcome.Name(result.outcome))
       response.results.extend([result])

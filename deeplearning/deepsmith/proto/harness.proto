@@ -54,5 +54,5 @@ message CldriveHarness {
   // A list of additional command line options to pass to the compiler during
   // compilation of C harness programs. These flags are appended to the existing
   // command line.
-  repeated string driver_cflags = 4;
+  repeated string driver_cflag = 4;
 }

@@ -333,7 +333,7 @@ def test_CldriveHarness_RunTestcases_oclgrind_abc_testcase(
 def test_CldriveHarness_RunTestcases_driver_cflags(
     abc_harness_config, abc_run_testcases_request):
   """Test that valid driver cflags do not break the build."""
-  abc_harness_config.driver_cflags.extend(['-O3', '-g'])
+  abc_harness_config.driver_cflag.extend(['-O3', '-g'])
   harness = cldrive.CldriveHarness(abc_harness_config)
   res = harness.RunTestcases(abc_run_testcases_request, None)
   assert res.status.returncode == service_pb2.ServiceStatus.SUCCESS
@@ -346,7 +346,7 @@ def test_CldriveHarness_RunTestcases_driver_cflags(
 def test_CldriveHarness_RunTestcases_invalid_driver_cflags(
     abc_harness_config, abc_run_testcases_request):
   """Test that invalid driver cflags cause driver to fail to build."""
-  abc_harness_config.driver_cflags.extend(['--not_a_real_flag'])
+  abc_harness_config.driver_cflag.extend(['--not_a_real_flag'])
   harness = cldrive.CldriveHarness(abc_harness_config)
   res = harness.RunTestcases(abc_run_testcases_request, None)
   assert res.status.returncode == service_pb2.ServiceStatus.SUCCESS
