@@ -1,10 +1,12 @@
 """Unit tests for //deeplearning/clgen/corpus.py."""
+import os
 import pathlib
 import tempfile
 import sys
 
 import pytest
 from absl import app
+from absl import flags
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import corpuses
@@ -12,11 +14,36 @@ from deeplearning.clgen.corpuses import preprocessed
 from deeplearning.clgen.proto import corpus_pb2
 
 
+FLAGS = flags.FLAGS
+
 # The Corpus.hash for an OpenCL corpus of the abc_corpus.
 ABC_CORPUS_HASH = 'cb7c7a23c433a1f628c9b120378759f1723fdf42'
 
 
-def test_Sampler_config_type_error():
+# ExpandConfigPath() tests.
+
+def test_ExpandConfigPath_pwd_var_expansion():
+  assert corpuses.ExpandConfigPath('$PWD/') == pathlib.Path(os.getcwd())
+
+
+def test_ExpandConfigPath_home_var_expansion():
+  assert (corpuses.ExpandConfigPath('$HOME/foo') ==
+          pathlib.Path('~/foo').expanduser())
+
+
+def test_ExpandConfigPath_tilde_expansion():
+  assert (corpuses.ExpandConfigPath('~/foo') ==
+          pathlib.Path('~/foo').expanduser())
+
+
+def test_ExpandConfigPath_path_prefix():
+  assert (corpuses.ExpandConfigPath('foo/bar', path_prefix='/tmp/') ==
+          pathlib.Path('/tmp/foo/bar'))
+
+
+# Corpus() tests.
+
+def test_Corpus_config_type_error():
   """Test that a TypeError is raised if config is not a Sampler proto."""
   with pytest.raises(TypeError) as e_info:
     corpuses.Corpus(1)

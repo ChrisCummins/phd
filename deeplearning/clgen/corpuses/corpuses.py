@@ -11,6 +11,7 @@ import pathlib
 import subprocess
 import tempfile
 import time
+from absl import flags
 from absl import logging
 from sqlalchemy.sql.expression import func
 
@@ -25,6 +26,18 @@ from lib.labm8 import crypto
 from lib.labm8 import hashcache
 from lib.labm8 import lockfile
 from lib.labm8 import pbutil
+
+
+FLAGS = flags.FLAGS
+
+flags.DEFINE_string(
+    'clgen_local_path_prefix', None,
+    'An optional prefix to use when resolving the path to a local directory '
+    'or archive. For example, given a corpus which is configured for a '
+    'local_directory with value "foo/bar" and a --clgen_local_path_prefix of '
+    '"/tmp/", the absolute path of the corpus will resolve to "/tmp/foo/bar". '
+    'If the --clgen_local_path_prefix is a directory, the trailing slash must '
+    'not be omitted.')
 
 
 def AssertConfigIsValid(config: corpus_pb2.Corpus) -> corpus_pb2.Corpus:
@@ -112,9 +125,13 @@ class Corpus(object):
     symlink = self.preprocessed.database_path.parent / 'contentfiles'
     if not symlink.is_symlink():
       if config.HasField('local_directory'):
-        os.symlink(str(ExpandConfigPath(config.local_directory)), symlink)
+        os.symlink(str(ExpandConfigPath(
+            config.local_directory, path_prefix=FLAGS.clgen_local_path_prefix)),
+            symlink)
       elif config.HasField('local_tar_archive'):
-        os.symlink(str(ExpandConfigPath(config.local_tar_archive)), symlink)
+        os.symlink(str(ExpandConfigPath(
+            config.local_tar_archive,
+            path_prefix=FLAGS.clgen_local_path_prefix)), symlink)
     # Data of encoded pre-preprocessed files.
     encoded_id = ResolveEncodedId(self.content_id, self.config)
     cache.cachepath('corpus', 'encoded', encoded_id).mkdir(
@@ -263,8 +280,25 @@ class Corpus(object):
     return not self.__eq__(rhs)
 
 
-def ExpandConfigPath(path: str) -> pathlib.Path:
-  return pathlib.Path(os.path.expandvars(path)).expanduser().absolute()
+def ExpandConfigPath(path: str,
+                     path_prefix: str = None) -> pathlib.Path:
+  """Resolve an absolute path from a config proto string field.
+
+  This performs shell-style expansion of $VARS, and prefixes the
+  --clgen_local_path_prefix flag value, if it is set.
+
+  Args:
+    path: The string value as it appears in the proto.
+    path_prefix: An optional string to prepend to the resolved path.
+
+  Returns:
+    An absolute path.
+  """
+  # Set a useful variable for expansion.
+  if 'HOME' not in os.environ:
+    os.environ['HOME'] = str(pathlib.Path('~').expanduser())
+  return pathlib.Path(os.path.expandvars(
+      (path_prefix or '') + path)).expanduser().absolute()
 
 
 def ResolveContentId(config: corpus_pb2.Corpus, hc: hashcache.HashCache) -> str:
@@ -277,7 +311,8 @@ def ResolveContentId(config: corpus_pb2.Corpus, hc: hashcache.HashCache) -> str:
   start_time = time.time()
   if config.HasField('local_directory'):
     try:
-      content_id = hc.GetHash(ExpandConfigPath(config.local_directory))
+      content_id = hc.GetHash(ExpandConfigPath(
+          config.local_directory, path_prefix=FLAGS.clgen_local_path_prefix))
     except FileNotFoundError as e:
       raise errors.UserError(e)
   elif config.HasField('local_tar_archive'):
@@ -286,7 +321,8 @@ def ResolveContentId(config: corpus_pb2.Corpus, hc: hashcache.HashCache) -> str:
     # to maintain a cache which maps the mtime of tarballs to their content ID,
     # similart to how local_directory is implemented.
     content_id = GetHashOfArchiveContents(
-        ExpandConfigPath(config.local_tar_archive))
+        ExpandConfigPath(config.local_tar_archive,
+                         path_prefix=FLAGS.clgen_local_path_prefix))
   else:
     raise NotImplementedError('Unsupported Corpus.contentfiles field value')
   logging.debug('Resolved Content ID %s in %s ms.', content_id,
