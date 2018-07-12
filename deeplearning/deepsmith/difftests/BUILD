@@ -4,7 +4,7 @@ load("@requirements//:requirements.bzl", "requirement")
 
 py_library(
     name = "difftests",
-    srcs = ["difftests/difftests.py"],
+    srcs = ["difftests.py"],
     visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
@@ -14,7 +14,7 @@ py_library(
 
 py_test(
     name = "difftests_test",
-    srcs = ["difftests/difftests_test.py"],
+    srcs = ["difftests_test.py"],
     deps = [
         ":difftests",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
@@ -26,6 +26,7 @@ py_test(
 py_library(
     name = "opencl",
     srcs = ["opencl.py"],
+    visibility = ["//visibility:public"],
     deps = [
         ":difftests",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
