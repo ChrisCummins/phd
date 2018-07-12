@@ -206,6 +206,20 @@ def test_MakeDriver_optimizations_off():
       'clBuildProgram(program, 0, NULL, "-cl-opt-disable", NULL, NULL);' in src)
 
 
+def test_CldriveHarness_oclgrind_testbed():
+  """Test that harness can be made from project-local oclgrind."""
+  config = harness_pb2.CldriveHarness()
+  config.opencl_env.extend([oclgrind.OpenCLEnvironment().name,
+                            oclgrind.OpenCLEnvironment().name])
+  config.opencl_opt.extend([True, False])
+  harness = cldrive.CldriveHarness(config)
+  assert len(harness.testbeds) == 2
+  assert harness.testbeds[0].name == oclgrind.OpenCLEnvironment().name
+  assert harness.testbeds[0].opts['opencl_opt'] == 'enabled'
+  assert harness.testbeds[1].name == oclgrind.OpenCLEnvironment().name
+  assert harness.testbeds[1].opts['opencl_opt'] == 'disabled'
+
+
 def test_CldriveHarness_RunTestcases_no_testbed():
   """Test that invalid request params returned if no testbed requested."""
   config = harness_pb2.CldriveHarness()
@@ -217,7 +231,7 @@ def test_CldriveHarness_RunTestcases_no_testbed():
   assert res.status.error_message == 'Requested testbed not found.'
 
 
-def test_CldriveHarness_RunTestcases_no_tescases():
+def test_CldriveHarness_RunTestcases_no_testcases():
   """Test that empty results returned if no testcase requested."""
   config = harness_pb2.CldriveHarness()
   harness = cldrive.CldriveHarness(config)
@@ -227,6 +241,43 @@ def test_CldriveHarness_RunTestcases_no_tescases():
   res = harness.RunTestcases(req, None)
   assert res.status.returncode == service_pb2.ServiceStatus.SUCCESS
   assert not res.results
+
+
+def test_CldriveHarness_RunTestcases_oclgrind_abc_testcase(
+    abc_harness, abc_run_testcases_request):
+  """And end-to-end test of the abc_testcase on oclgrind."""
+  res = abc_harness.RunTestcases(abc_run_testcases_request, None)
+  assert res.status.returncode == service_pb2.ServiceStatus.SUCCESS
+  assert len(res.results) == 1
+
+  # Check that the driver_type invariant opt has been added to the testcase.
+  result = res.results[0]
+  assert len(result.testcase.invariant_opts) == 1
+  assert result.testcase.invariant_opts['driver_type'] == 'compile_and_run'
+
+  # The returned testcase is identical to the input testcase.
+  assert result.testcase == abc_run_testcases_request.testcases[0]
+
+  # Check the result properties.
+  assert result.outcome == deepsmith_pb2.Result.PASS
+  assert '[cldrive] Platform: Oclgrind' in result.outputs['stderr']
+  assert '[cldrive] Device: Oclgrind Simulator' in result.outputs['stderr']
+  assert '[cldrive] OpenCL optimizations: on' in result.outputs['stderr']
+  assert '[cldrive] Kernel: "A"' in result.outputs['stderr']
+  assert result.outputs['stdout'] == (
+    'global int * a: 10 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 '
+    '22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 '
+    '46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 '
+    '70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 '
+    '94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 '
+    '114 115 116 117 118 119 120 121 122 123 124 125 126 127 128 129 130 131 '
+    '132 133 134 135 136 137 138 139 140 141 142 143 144 145 146 147 148 149 '
+    '150 151 152 153 154 155 156 157 158 159 160 161 162 163 164 165 166 167 '
+    '168 169 170 171 172 173 174 175 176 177 178 179 180 181 182 183 184 185 '
+    '186 187 188 189 190 191 192 193 194 195 196 197 198 199 200 201 202 203 '
+    '204 205 206 207 208 209 210 211 212 213 214 215 216 217 218 219 220 221 '
+    '222 223 224 225 226 227 228 229 230 231 232 233 234 235 236 237 238 239 '
+    '240 241 242 243 244 245 246 247 248 249 250 251 252 253 254 255\n')
 
 
 def main(argv):
