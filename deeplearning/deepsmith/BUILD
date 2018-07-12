@@ -80,6 +80,48 @@ py_test(
     ],
 )
 
+py_binary(
+    name = "difftests",
+    srcs = ["difftests.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
+        requirement("absl-py"),
+    ],
+)
+
+py_test(
+    name = "difftests_test",
+    srcs = ["difftests_test.py"],
+    deps = [
+        ":difftests",
+        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
+        requirement("absl-py"),
+        requirement("pytest"),
+    ],
+)
+
+py_binary(
+    name = "filters",
+    srcs = ["filters.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
+        requirement("absl-py"),
+    ],
+)
+
+py_test(
+    name = "filters_test",
+    srcs = ["filters_test.py"],
+    deps = [
+        ":filters",
+        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
+        requirement("absl-py"),
+        requirement("pytest"),
+    ],
+)
+
 py_library(
     name = "generator",
     srcs = ["generator.py"],

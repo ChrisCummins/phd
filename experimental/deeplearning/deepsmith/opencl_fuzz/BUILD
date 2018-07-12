@@ -7,27 +7,19 @@ py_binary(
     name = "opencl_fuzz",
     srcs = ["opencl_fuzz.py"],
     deps = [
+        "//deeplearning/deepsmith:difftests",
+        "//deeplearning/deepsmith:filters",
         "//deeplearning/deepsmith/generators:clgen_pretrained",
         "//deeplearning/deepsmith/harnesses:cldrive",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//deeplearning/deepsmith/proto:generator_py_pb2",
         "//deeplearning/deepsmith/proto:harness_py_pb2",
+        "//gpu/cldrive",
         "//gpu/oclgrind",
         "//lib/labm8:labdate",
         "//lib/labm8:pbutil",
         requirement("absl-py"),
         requirement("humanize"),
-    ],
-)
-
-py_test(
-    name = "opencl_fuzz_test",
-    srcs = ["opencl_fuzz_test.py"],
-    deps = [
-        ":opencl_fuzz",
-        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
-        requirement("absl-py"),
-        requirement("pytest"),
     ],
 )
 

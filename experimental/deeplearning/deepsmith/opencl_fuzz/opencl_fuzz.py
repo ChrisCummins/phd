@@ -8,6 +8,8 @@ from absl import app
 from absl import flags
 from absl import logging
 
+from deeplearning.deepsmith import difftests
+from deeplearning.deepsmith import filters as filters_base
 from deeplearning.deepsmith.generators import clgen_pretrained
 from deeplearning.deepsmith.generators import generator as base_generator
 from deeplearning.deepsmith.harnesses import cldrive
@@ -15,6 +17,7 @@ from deeplearning.deepsmith.harnesses import harness as base_harness
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import harness_pb2
+from gpu import cldrive as cldrive_lib
 from gpu.oclgrind import oclgrind
 from lib.labm8 import labdate
 from lib.labm8 import pbutil
@@ -65,6 +68,12 @@ def RunBatch(generator: base_generator.GeneratorBase,
   Returns:
     A list of results which are determined to be interesting.
   """
+  # Our differential testers and result filters.
+  unary_difftester = difftests.UnaryTester()
+  gs_difftester = difftests.GoldStandardDiffTester(
+      difftests.NamedOutputIsEqual('stdout'))
+  filters = ClgenOpenClFilters()
+
   interesting_results = []
 
   # Generate testcases.
@@ -72,75 +81,152 @@ def RunBatch(generator: base_generator.GeneratorBase,
   req = generator_pb2.GenerateTestcasesRequest()
   req.num_testcases = batch_size
   res = generator.GenerateTestcases(req, None)
-
-  # TODO(cec): Pre-exec testcase filters.
+  testcases = [testcase for testcase in res.testcases if
+               filters.PreExec(testcase)]
+  logging.info('Discarded %d testcases prior to execution.',
+               len(res.testcases) - len(testcases))
 
   # Evaluate testcases.
-  logging.info('Evaluating %d testcases on %s ...', len(res.testcases),
+  logging.info('Evaluating %d testcases on %s ...', len(testcases),
                dut_harness.testbeds[0].opts['platform'][:12])
-  results = RunTestcases(dut_harness, res.testcases)
-
-  # TODO(cec): Pre-difftest result filters.
+  unfiltered_results = RunTestcases(dut_harness, testcases)
+  results = [result for result in unfiltered_results
+             if filters.PostExec(result)]
+  logging.info('Discarded %d results.', len(unfiltered_results) - len(results))
 
   for i, result in enumerate(results):
-    outcome = ResultIsInteresting(result, gs_harness)
-    if (outcome != deepsmith_pb2.DifferentialTest.PASS):
-      interesting_results.append(result)
+    # First perform a unary difftest to see the result is interesting without
+    # needing to difftest, such as a compiler crash.
+    unary_dt_outcome = unary_difftester([result])[0]
 
-  # TODO(cec): Post-difftest result filters.
+    if (unary_dt_outcome != deepsmith_pb2.DifferentialTest.PASS and
+        unary_dt_outcome != deepsmith_pb2.DifferentialTest.UNKNOWN):
+      interesting_results.append(result)
+      continue
+
+    if not (unary_dt_outcome == deepsmith_pb2.DifferentialTest.PASS and
+            result.outcome == deepsmith_pb2.Result.PASS):
+      continue
+
+    # Determine whether we can difftest the testcase.
+    dt = filters.PreDifftest(deepsmith_pb2.DifferentialTest(result=[result]))
+    if not dt:
+      logging.info('Cannot difftest result.')
+      continue
+
+    # Run testcases against gold standard devices and difftest.
+    gs_result = RunTestcases(gs_harness, dt.result[0].testcase)[0]
+
+    dt_outcomes = gs_difftester([gs_result, result])
+    dt_outcome = dt.outcome[1]
+    logging.info('Differential test outcome: %s.',
+                 deepsmith_pb2.DifferentialTest.Outcome.Name(dt_outcome))
+
+    # Determine whether we can use the difftest result.
+    dt = filters.PostDifftest(deepsmith_pb2.DifferentialTest(
+        result=[gs_result, result],
+        outcome=dt_outcomes))
+    if not dt:
+      logging.info('Cannot use gold standard difftest result.')
+      continue
+
+    if dt_outcome != deepsmith_pb2.DifferentialTest.PASS:
+      # Add the differential test outcome to the result.
+      dt.result[1].outputs[
+        'difftest_outcome'] = deepsmith_pb2.DifferentialTest.Outcome.Name(
+          dt_outcome)
+      dt.result[1].outputs['gs_stdout'] = dt.result[0].outputs['stdout']
+      dt.result[1].outputs['gs_stderr'] = dt.result[0].outputs['stderr']
+      interesting_results.append(dt.result[1])
 
   return interesting_results
 
 
-def PreDifftestFilter(result: deepsmith_pb2.Result,
-                      outcome: deepsmith_pb2.DifferentialTest.Outcome
-                      ) -> bool:
-  # TODO(cec): Complete port of dsmith difftest filters to new format.
-  stderr = result.outputs['stderr']
-  if result.outcome == deepsmith_pb2.Result.BUILD_FAILURE:
-    if (("use of type 'double' requires cl_khr_fp64 extension" or
-         'implicit declaration of function' or
-         'function cannot have argument whose type is, or contains, type size_t' or
-         'unresolved extern function' or
-         'error: cannot increment value of type%' or
-         'subscripted access is not allowed for OpenCL vectors' or
-         'Images are not supported on given device' or
-         'error: variables in function scope cannot be declared' or
-         'error: implicit conversion ' or
-         'Could not find a definition ') in stderr):
-      return False
-    if result.testbed.opts['opencl_version'] == '1.2':
-      return False
-  elif result.outcome == deepsmith_pb2.Result.RUNTIME_CRASH:
-    if ((
-        'clFinish CL_INVALID_COMMAND_QUEUE'
-        'incompatible pointer to integer conversion' or
-        'comparison between pointer and integer' or
-        'warning: incompatible' or
-        'warning: division by zero is undefined' or
-        'warning: comparison of distinct pointer types' or
-        'is past the end of the array' or
-        'warning: comparison between pointer and' or
-        'warning: array index' or
-        'warning: implicit conversion from' or
-        'array index -1 is before the beginning of the array' or
-        'incompatible pointer' or
-        'incompatible integer to pointer ') in stderr):
-      return False
-    # TODO(cec): oclgrind.verify_dsmith_testcase(testcase)
-  elif outcome == deepsmith_pb2.DifferentialTest.ANOMALOUS_WRONG_OUTPUT:
-    if 'float' or 'double' in result.testcase.inputs['src']:
-      return False
-    if program_meta.get_vector_inputs(s):
-      return False
-    if program_meta.get_compiler_warnings(s):
-      return False
-    if not self.get_gpuverified(s):
-      return False
-    if not self.get_oclverified(s):
-      return False
+def RedFlagCompilerWarnings(result: deepsmith_pb2.Result) -> bool:
+  return ('clFinish CL_INVALID_COMMAND_QUEUE' or
+          'incompatible pointer to integer conversion' or
+          'comparison between pointer and integer' or
+          'warning: incompatible' or
+          'warning: division by zero is undefined' or
+          'warning: comparison of distinct pointer types' or
+          'is past the end of the array' or
+          'warning: comparison between pointer and' or
+          'warning: array index' or
+          'warning: implicit conversion from' or
+          'array index -1 is before the beginning of the array' or
+          'incompatible pointer' or
+          'incompatible integer to pointer ') in result.outputs['stderr']
 
-  return True
+
+def LegitimateBuildFailure(result: deepsmith_pb2.Result) -> bool:
+  return ("use of type 'double' requires cl_khr_fp64 extension" or
+          'implicit declaration of function' or
+          ('function cannot have argument whose type is, or '
+           'contains, type size_t') or
+          'unresolved extern function' or
+          'error: cannot increment value of type' or
+          'subscripted access is not allowed for OpenCL vectors' or
+          'Images are not supported on given device' or
+          'error: variables in function scope cannot be declared' or
+          'error: implicit conversion ' or
+          'Could not find a definition ') in result.outputs['stderr']
+
+
+def ContainsFloatingPoint(testcase: deepsmith_pb2.Testcase) -> bool:
+  """Return whether source code contains floating points."""
+  return 'float' or 'double' in testcase.inputs['src']
+
+
+def HasVectorInputs(testcase: deepsmith_pb2.Testcase) -> bool:
+  """Return whether any of the kernel arguments are vector types."""
+  for arg in cldrive_lib.extract_args(testcase.inputs['src']):
+    if arg.is_vector:
+      return True
+  return False
+
+
+class ClgenOpenClFilters(filters_base.FiltersBase):
+
+  def PreDifftest(self, difftest: deepsmith_pb2.DifferentialTest
+                  ) -> typing.Optional[deepsmith_pb2.DifferentialTest]:
+    """Determine whether a difftest should be discarded."""
+    # We cannot difftest the output of OpenCL kernels which contain vector
+    # inputs or floating points. We *can* still difftest these kernels if we're
+    # not comparing the outputs.
+    if difftest.result[0].outcome == deepsmith_pb2.Result.PASS:
+      if ContainsFloatingPoint(difftest.result[0].testcase):
+        return None
+      if HasVectorInputs(difftest.result[0].testcase):
+        return None
+    return difftest
+
+  def PostDifftest(self, difftest: deepsmith_pb2.DifferentialTest
+                   ) -> typing.Optional[deepsmith_pb2.DifferentialTest]:
+    """Determine whether a difftest should be discarded."""
+    for result, outcome in zip(difftest.result, difftest.outcome):
+      # An OpenCL kernel which legitimately failed to build on any testbed
+      # automatically disqualifies from difftesting.
+      if (result.outcome == deepsmith_pb2.Result.BUILD_FAILURE and
+          LegitimateBuildFailure(result)):
+        return None
+      # An anomalous build failure for an earlier OpenCL version can't be
+      # difftested, since we don't know if the failure is legitimate.
+      if (outcome == deepsmith_pb2.DifferentialTest.ANOMALOUS_BUILD_FAILURE and
+          result.testbed.opts['opencl_version'] == '1.2'):
+        # TODO(cec): Determine if build succeeded on any 1.2 testbed before
+        # discarding.
+        return None
+      # An anomalous runtime outcome requires more vigurous examination of the
+      # testcase.
+      if (outcome == deepsmith_pb2.DifferentialTest.ANOMALOUS_RUNTIME_CRASH or
+          outcome == deepsmith_pb2.DifferentialTest.ANOMALOUS_RUNTIME_PASS or
+          outcome == deepsmith_pb2.DifferentialTest.ANOMALOUS_WRONG_OUTPUT or
+          outcome == deepsmith_pb2.DifferentialTest.ANOMALOUS_RUNTIME_TIMEOUT):
+        if RedFlagCompilerWarnings(result):
+          return None
+        # TODO(cec): Verify testcase with oclgrind.
+        # TODO(cec): Verify testcase with gpuverify.
+    return difftest
 
 
 def RunTestcases(harness: base_harness.HarnessBase,
@@ -160,252 +246,6 @@ def RunTestcases(harness: base_harness.HarnessBase,
   req.testcases.extend(testcases)
   res = harness.RunTestcases(req, None)
   return res.results
-
-
-class OutputsEqualityTest(object):
-  """An object which compares result outputs."""
-
-  def __call__(self, results: typing.List[deepsmith_pb2.Result]) -> bool:
-    raise NotImplementedError
-
-
-class OutputsAreEqual(OutputsEqualityTest):
-  """An outputs equality test which compares all outputs."""
-
-  def __call__(self, results: typing.List[deepsmith_pb2.Result]) -> bool:
-    return len(set(r.outputs for r in results)) == 1
-
-
-class NamedOutputIsEqual(OutputsEqualityTest):
-  """An outputs equality test which compares a single named output."""
-
-  def __init__(self, output_name: str):
-    self.output_name = output_name
-
-  def __call__(self, results: typing.List[deepsmith_pb2.Result]) -> bool:
-    """Test that a named output is equal in all results.
-
-    Args:
-      results: A list of results to compare the named output of.
-      output_name: The name of the output in the result's outputs map.
-
-    Returns:
-      True if all named outputs are equal, else False.
-
-    Raises:
-      ValueError: if the named output is missing from any of the results.
-    """
-    if any(self.output_name not in r.outputs for r in results):
-      raise ValueError(f"'{self.output_name}' missing in one or more results.")
-    return len(set(r.outputs[self.output_name] for r in results)) == 1
-
-
-class DiffTesterBase(object):
-  """Base class for differential testers."""
-
-  def __call__(self, results: typing.List[deepsmith_pb2.Result]
-               ) -> typing.List['deepsmith_pb2.DifferentialTest.Outcome']:
-    """Differential test results and return their outcomes.
-
-    Args:
-      results: A list of Result protos.
-
-    Returns:
-      A list of differential test outcomes, one for each input result.
-    """
-    raise NotImplementedError
-
-
-class UnaryTester(DiffTesterBase):
-
-  def __call__(self, results: typing.List[deepsmith_pb2.Result]
-               ) -> typing.List['deepsmith_pb2.DifferentialTest.Outcome']:
-    """Unary test a result.
-
-    Args:
-      results: A list containing a single Result proto.
-
-    Returns:
-      A list containing one differential test outcome.
-
-    Raises:
-      ValueError: If called with more than or less than one Result proto.
-    """
-    if len(results) != 1:
-      raise ValueError('UnaryTester must be called with exactly one result.')
-
-    return [
-      {
-        deepsmith_pb2.Result.UNKNOWN: deepsmith_pb2.DifferentialTest.UNKNOWN,
-        deepsmith_pb2.Result.BUILD_FAILURE: deepsmith_pb2.DifferentialTest.PASS,
-        deepsmith_pb2.Result.BUILD_CRASH:
-          deepsmith_pb2.DifferentialTest.ANOMALOUS_BUILD_FAILURE,
-        deepsmith_pb2.Result.BUILD_TIMEOUT:
-          deepsmith_pb2.DifferentialTest.ANOMALOUS_BUILD_FAILURE,
-        deepsmith_pb2.Result.RUNTIME_CRASH: deepsmith_pb2.DifferentialTest.PASS,
-        deepsmith_pb2.Result.RUNTIME_TIMEOUT:
-          deepsmith_pb2.DifferentialTest.PASS,
-        deepsmith_pb2.Result.PASS: deepsmith_pb2.DifferentialTest.PASS,
-      }[results[0].outcome]]
-
-
-class GoldStandardDiffTester(DiffTesterBase):
-  """A difftest which compares all results against the first result."""
-
-  def __init__(self, outputs_equality_test: OutputsEqualityTest):
-    self.outputs_equality_test = outputs_equality_test
-
-  def __call__(self, results: typing.List[deepsmith_pb2.Result]
-               ) -> typing.List['deepsmith_pb2.DifferentialTest.Outcome']:
-    """Perform a difftest.
-
-    Args:
-      results: A list of Result protos.
-
-    Returns:
-      The differential test outcomes.
-    """
-    gs_result, *results = results
-
-    # Determine the outcome of the gold standard.
-    outcomes = [self.DiffTestOne(gs_result, gs_result)]
-
-    # Difftest the results against the gold standard.
-    for result in results:
-      outcomes.append(self.DiffTestOne(gs_result, result))
-
-    return outcomes
-
-  def DiffTestOne(self, gs_result: deepsmith_pb2.Result,
-                  result: deepsmith_pb2.Result,
-                  ) -> deepsmith_pb2.DifferentialTest.Outcome:
-    """Difftest one result against a golden standard.
-
-    Args:
-      gs_result: The golden standard (i.e. ground truth) result.
-      result: The result to compare against the ground truth.
-
-    Returns:
-      The difftest outcome of the result.
-    """
-
-    # Short hand variables.
-    result_outcome = deepsmith_pb2.Result
-    difftest_outcome = deepsmith_pb2.DifferentialTest
-
-    # We can't difftest an unknown outcome.
-    if result.outcome == result_outcome.UNKNOWN:
-      return difftest_outcome.UNKNOWN
-
-    # Outcomes which are uninteresting if they match.
-    uninteresting_equal_outcomes = {
-      result_outcome.UNKNOWN,
-      result_outcome.BUILD_FAILURE,
-      result_outcome.RUNTIME_CRASH,
-      result_outcome.RUNTIME_TIMEOUT,
-    }
-
-    # Outcomes which signal build failures.
-    build_failures = {
-      result_outcome.UNKNOWN,
-      result_outcome.BUILD_FAILURE,
-      result_outcome.BUILD_CRASH,
-      result_outcome.BUILD_TIMEOUT,
-    }
-
-    # Outcomes which signal runtime failures.
-    runtime_failures = {
-      result_outcome.RUNTIME_CRASH,
-      result_outcome.RUNTIME_TIMEOUT,
-    }
-
-    # Outcomes which are not interesting if they are equal.
-    if (gs_result.outcome in uninteresting_equal_outcomes and
-        gs_result.outcome == result.outcome):
-      return difftest_outcome.PASS
-    # Build failures which are always interesting.
-    elif (result.outcome in {result_outcome.BUILD_CRASH,
-                             result_outcome.BUILD_TIMEOUT}):
-      return difftest_outcome.ANOMALOUS_BUILD_FAILURE
-    # Gold standard completed testcase, device under test failed to build OR
-    # gold standard failed to build, device under test completed test.
-    elif (gs_result.outcome not in build_failures and
-          result.outcome in build_failures):
-      return deepsmith_pb2.DifferentialTest.ANOMALOUS_BUILD_FAILURE
-    elif (gs_result.outcome == result_outcome.BUILD_FAILURE and
-          result.outcome not in build_failures):
-      return deepsmith_pb2.DifferentialTest.ANOMALOUS_BUILD_PASS
-    # Gold standard completed testcase, device under test crashed OR
-    # gold standard crashed, device under test completed testcase.
-    elif (gs_result.outcome == result_outcome.PASS and
-          result.outcome == result_outcome.RUNTIME_CRASH):
-      return deepsmith_pb2.DifferentialTest.ANOMALOUS_RUNTIME_CRASH
-    elif (gs_result.outcome in runtime_failures and
-          result.outcome == result_outcome.PASS):
-      return deepsmith_pb2.DifferentialTest.ANOMALOUS_RUNTIME_PASS
-    # Gold standard crashed, device under test times out OR
-    # gold standard times out, device under test crashes.
-    elif ((gs_result.outcome == result_outcome.RUNTIME_CRASH and
-           result.outcome == result_outcome.RUNTIME_TIMEOUT) or
-          (gs_result.outcome == result_outcome.RUNTIME_TIMEOUT and
-           result.outcome == result_outcome.RUNTIME_CRASH)):
-      return deepsmith_pb2.DifferentialTest.PASS
-    # Gold standard passes, device under test times out.
-    elif (gs_result.outcome == result_outcome.PASS and
-          result.outcome == result_outcome.RUNTIME_TIMEOUT):
-      return deepsmith_pb2.DifferentialTest.ANOMALOUS_RUNTIME_TIMEOUT
-    # Both devices completed testcase, compare outputs.
-    elif (gs_result.outcome == result_outcome.PASS and
-          result.outcome == result_outcome.PASS):
-      return (
-        difftest_outcome.PASS if
-        self.outputs_equality_test([gs_result, result]) else
-        difftest_outcome.ANOMALOUS_WRONG_OUTPUT
-      )
-
-    return difftest_outcome.UNKNOWN
-
-
-def ResultIsInteresting(result: deepsmith_pb2.Result,
-                        gs_harness: base_harness.HarnessBase
-                        ) -> deepsmith_pb2.DifferentialTest.Outcome:
-  """Determine if a result is interesting.
-
-  If the result is interesting, an output 'notes' is added to explain why.
-
-  Args:
-    result: The result to check.
-    gs_harness: A harness for a gold-standard device, which is used to compare
-      output against.
-
-  Returns:
-    True if the result is interesting, else False.
-  """
-  difftester = UnaryTester()
-  outcome = difftester([result])[0]
-
-  if (outcome != deepsmith_pb2.DifferentialTest.PASS and
-      outcome != deepsmith_pb2.DifferentialTest.UNKNOWN):
-    return outcome
-
-  if not (outcome == deepsmith_pb2.DifferentialTest.PASS and
-          result.outcome == deepsmith_pb2.Result.PASS):
-    return deepsmith_pb2.DifferentialTest.PASS
-
-  # Run testcases against gold standard devices and apply differential testing.
-  gs_result = RunTestcases(gs_harness, [result.testcase])[0]
-
-  difftester = GoldStandardDiffTester(NamedOutputIsEqual('stdout'))
-  _, dt_outcome = difftester([gs_result, result])
-  logging.info('Differential test outcome: %s.',
-               deepsmith_pb2.DifferentialTest.Outcome.Name(dt_outcome))
-  # Add the differential test outcome to the result.
-  result.outputs[
-    'difftest_outcome'] = deepsmith_pb2.DifferentialTest.Outcome.Name(
-      dt_outcome)
-  result.outputs['gs_stdout'] = gs_result.outputs['stdout']
-  result.outputs['gs_stderr'] = gs_result.outputs['stderr']
-  return dt_outcome
 
 
 def TestingLoop(min_interesting_results: int, max_testing_time_seconds: int,
@@ -437,18 +277,18 @@ def TestingLoop(min_interesting_results: int, max_testing_time_seconds: int,
     logging.info('Starting generate / test / eval batch %d ...', batch_num)
     interesting_results = RunBatch(
         generator, dut_harness, gs_harness, batch_size)
+    num_interesting_results += len(interesting_results)
     for result in interesting_results:
       pbutil.ToFile(result,
                     interesting_results_dir /
                     (str(labdate.MillisecondsTimestamp()) + '.pbtxt'))
-      num_interesting_results += 1
 
   logging.info(
       'Stopping after %.2f seconds and %s batches (%.0fms / testcase).\n'
       'Found %s interesting results.', time.time() - start_time,
       humanize.intcomma(batch_num),
       (((time.time() - start_time) / (batch_num * batch_size)) * 1000),
-      len(interesting_results))
+      num_interesting_results)
   logging.flush()
 
 

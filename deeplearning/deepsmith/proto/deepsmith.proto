@@ -94,7 +94,7 @@ message DifferentialTest {
     PASS = 7;
   }
 
-  // The testcase to apply the differential test to. This supercedes, the
+  // The testcase to apply the differential test to. This supercedes the
   // 'testcase' fields of the differential test's results - all results are
   // assumed to be of this testcase.
   optional Testcase testcase = 1;
