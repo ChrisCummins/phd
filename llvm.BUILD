@@ -50,7 +50,7 @@ filegroup(
 )
 
 filegroup(
-    name = "libs",
+    name = "libs_files",
     srcs = glob([
         "lib/**/*",
     ]),
