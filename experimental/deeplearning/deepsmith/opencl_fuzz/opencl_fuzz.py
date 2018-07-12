@@ -28,6 +28,10 @@ flags.DEFINE_string(
     'generator', None,
     'The path of the generator config proto.')
 flags.DEFINE_string(
+    'base_harness', None,
+    'The path to an optional base harness config proto. If set, the harness '
+    'configs are copied from this. Else, the default config is used.')
+flags.DEFINE_string(
     'dut', 'Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2',
     'The name of the device under test, as described by cldrive. Run '
     '//gpu/cldrive --ls_env to see a list of available devices.')
@@ -252,6 +256,25 @@ def TestingLoop(min_interesting_results: int, max_testing_time_seconds: int,
   logging.flush()
 
 
+def GetBaseHarnessConfig() -> harness_pb2.CldriveHarness:
+  """Load the base Cldrive harness configuration.
+
+  If --base_harness is set, the config is read from this path. This allows
+  overriding options such as the driver_cflags field.
+
+  Returns:
+    A CldriveHarness proto instance.
+  """
+  if FLAGS.base_harness:
+    config = pbutil.FromFile(pathlib.Path(FLAGS.base_harness),
+                             harness_pb2.CldriveHarness())
+    config.ClearField('opencl_env')
+    config.ClearField('opencl_opt')
+    return config
+  else:
+    return harness_pb2.CldriveHarness()
+
+
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:
@@ -277,14 +300,14 @@ def main(argv):
   generator = clgen_pretrained.ClgenGenerator(generator_config)
 
   logging.info('Preparing device under test.')
-  config = harness_pb2.CldriveHarness()
+  config = GetBaseHarnessConfig()
   config.opencl_env.extend([FLAGS.dut])
   config.opencl_opt.extend([FLAGS.opencl_opt])
   dut_harness = cldrive.CldriveHarness(config)
   assert len(dut_harness.testbeds) == 1
 
   logging.info('Preparing gold standard testbed.')
-  config = harness_pb2.CldriveHarness()
+  config = GetBaseHarnessConfig()
   config.opencl_env.extend([oclgrind.OpenCLEnvironment().name])
   config.opencl_opt.extend([True])
   gs_harness = cldrive.CldriveHarness(config)
