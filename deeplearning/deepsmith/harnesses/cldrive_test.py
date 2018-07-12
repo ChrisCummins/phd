@@ -18,6 +18,51 @@ from deeplearning.deepsmith.proto import service_pb2
 from deeplearning.deepsmith.harnesses import cldrive
 
 
+# Test fixtures.
+
+@pytest.fixture(scope='function')
+def abc_testcase() -> deepsmith_pb2.Testcase():
+  """A test fixture which returns a very simple test case."""
+  return deepsmith_pb2.Testcase(
+      toolchain='opencl',
+      harness=deepsmith_pb2.Harness(name='cldrive'),
+      inputs={
+        'src': 'kernel void A(global int* a) {a[get_global_id(0)] = 10;}',
+        'gsize': '1,1,1',
+        'lsize': '1,1,1',
+      }
+  )
+
+
+@pytest.fixture(scope='function')
+def abc_harness_config() -> harness_pb2.CldriveHarness:
+  """A test fixture which returns an oclgrind harness config."""
+  config = harness_pb2.CldriveHarness()
+  config.opencl_env.extend([oclgrind.OpenCLEnvironment().name])
+  config.opencl_opt.extend([True])
+  return config
+
+
+@pytest.fixture(scope='function')
+def abc_harness(abc_harness_config) -> cldrive.CldriveHarness:
+  """A test fixture which returns an oclgrind harness."""
+  return cldrive.CldriveHarness(abc_harness_config)
+
+
+@pytest.fixture(scope='function')
+def abc_run_testcases_request(
+    abc_testcase, abc_harness) -> harness_pb2.RunTestcasesRequest:
+  """A test fixture which returns a RunTestcasesRequest for the abc_testcase."""
+  return harness_pb2.RunTestcasesRequest(
+      testbed=abc_harness.testbeds[0], testcases=[abc_testcase])
+
+
+# Unit tests.
+
+
+# CompileDriver() tests.
+
+
 def test_CompileDriver_returned_path():
   """Test that output path is returned."""
   with tempfile.TemporaryDirectory() as d:
@@ -87,6 +132,9 @@ def test_CompileDriver_valid_cflags():
     cldrive.CompileDriver('MY_TYPE main() {}', pathlib.Path(d) / 'exe',
                           0, 0, cflags=['-DMY_TYPE=int'])
     assert (pathlib.Path(d) / 'exe').is_file()
+
+
+# MakeDriver() tests.
 
 
 def test_MakeDriver_ValueError_no_gsize():
@@ -205,6 +253,8 @@ def test_MakeDriver_optimizations_off():
   assert (
       'clBuildProgram(program, 0, NULL, "-cl-opt-disable", NULL, NULL);' in src)
 
+
+# CldriveHarness() tests.
 
 def test_CldriveHarness_oclgrind_testbed():
   """Test that harness can be made from project-local oclgrind."""
