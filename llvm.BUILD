@@ -49,6 +49,13 @@ filegroup(
     srcs = ["lib"],
 )
 
+filegroup(
+    name = "libs",
+    srcs = glob([
+        "lib/**/*",
+    ]),
+)
+
 # A globbing of all static and dynamic LLVM libraries, for use in deps attrs.
 
 cc_library(
