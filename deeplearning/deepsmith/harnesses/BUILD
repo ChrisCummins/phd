@@ -45,6 +45,10 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":cldrive",
+        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
+        "//deeplearning/deepsmith/proto:harness_py_pb2",
+        "//deeplearning/deepsmith/proto:service_py_pb2",
+        "//gpu/oclgrind",
         requirement("absl-py"),
         requirement("pytest"),
     ],

@@ -13,6 +13,8 @@ FLAGS = flags.FLAGS
 
 from gpu.oclgrind import oclgrind
 from deeplearning.deepsmith.proto import deepsmith_pb2
+from deeplearning.deepsmith.proto import harness_pb2
+from deeplearning.deepsmith.proto import service_pb2
 from deeplearning.deepsmith.harnesses import cldrive
 
 
@@ -202,6 +204,29 @@ def test_MakeDriver_optimizations_off():
   assert '[cldrive] OpenCL optimizations: off' in src
   assert (
       'clBuildProgram(program, 0, NULL, "-cl-opt-disable", NULL, NULL);' in src)
+
+
+def test_CldriveHarness_RunTestcases_no_testbed():
+  """Test that invalid request params returned if no testbed requested."""
+  config = harness_pb2.CldriveHarness()
+  harness = cldrive.CldriveHarness(config)
+  req = harness_pb2.RunTestcasesRequest(testbed=None, testcases=[])
+  res = harness.RunTestcases(req, None)
+  assert (res.status.returncode ==
+          service_pb2.ServiceStatus.INVALID_REQUEST_PARAMETERS)
+  assert res.status.error_message == 'Requested testbed not found.'
+
+
+def test_CldriveHarness_RunTestcases_no_tescases():
+  """Test that empty results returned if no testcase requested."""
+  config = harness_pb2.CldriveHarness()
+  harness = cldrive.CldriveHarness(config)
+  assert len(harness.testbeds)
+  req = harness_pb2.RunTestcasesRequest(
+      testbed=harness.testbeds[0], testcases=[])
+  res = harness.RunTestcases(req, None)
+  assert res.status.returncode == service_pb2.ServiceStatus.SUCCESS
+  assert not res.results
 
 
 def main(argv):
