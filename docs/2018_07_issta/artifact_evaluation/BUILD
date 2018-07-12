@@ -98,12 +98,12 @@ py3_image(
 )
 
 container_push(
-   name = "push_01_evaluate_generator_image",
-   image = ":01_evaluate_generator_image",
-   format = "Docker",
-   registry = "index.docker.io",
-   repository = "chriscummins/compiler_fuzzing_through_deep_learning_01",
-   tag = "latest",
+    name = "push_01_evaluate_generator_image",
+    format = "Docker",
+    image = ":01_evaluate_generator_image",
+    registry = "index.docker.io",
+    repository = "chriscummins/compiler_fuzzing_through_deep_learning_01",
+    tag = "latest",
 )
 
 py3_image(
