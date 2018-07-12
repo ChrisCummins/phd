@@ -95,7 +95,7 @@ py3_image(
     srcs = ["01_evaluate_generator.py"],
     base = "@base//image",
     main = "01_evaluate_generator.py",
-    deps = [":01_evaluate_generator_test"],
+    deps = [":01_evaluate_generator"],
 )
 
 py3_image(
@@ -103,7 +103,7 @@ py3_image(
     srcs = ["02_evaluate_harness.py"],
     base = "@base//image",
     main = "02_evaluate_harness.py",
-    deps = [":02_evaluate_harness_test"],
+    deps = [":02_evaluate_harness"],
 )
 
 py3_image(
@@ -111,5 +111,5 @@ py3_image(
     srcs = ["03_evaluate_results.py"],
     base = "@base//image",
     main = "03_evaluate_results.py",
-    deps = [":03_evaluate_results_test"],
+    deps = [":03_evaluate_results"],
 )
