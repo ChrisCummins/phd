@@ -82,8 +82,8 @@ py_binary(
         "//lib/labm8:fs",
         "//lib/labm8:labtypes",
         "//lib/labm8:pbutil",
+        "//third_party/py/pandas",
         requirement("absl-py"),
-        requirement("pandas"),
         requirement("progressbar2"),
     ],
 )

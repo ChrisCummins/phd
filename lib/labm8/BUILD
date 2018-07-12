@@ -156,10 +156,7 @@ py_library(
         "//visibility:public",
     ],
     deps = [
-        requirement("pandas"),
-        requirement("numpy"),
-        requirement("pytz"),
-        requirement("python-dateutil"),
+        "//third_party/py/pandas",
     ],
 )
 
@@ -290,10 +287,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":io",
-        requirement("pandas"),
-        requirement("numpy"),
-        requirement("pytz"),
-        requirement("python-dateutil"),
+        "//third_party/py/pandas",
     ],
 )
 
