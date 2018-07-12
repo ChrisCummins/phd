@@ -1,6 +1,7 @@
 # Artifact for the ISSTA'18 paper "Compiler Fuzzing through Deep Learning".
 
 load("@requirements//:requirements.bzl", "requirement")
+load("@io_bazel_rules_docker//python3:image.bzl", "py3_image")
 
 licenses(["restricted"])  # GPL v3
 
@@ -85,4 +86,30 @@ py_binary(
         requirement("pandas"),
         requirement("progressbar2"),
     ],
+)
+
+# Docker images.
+
+py3_image(
+    name = "01_evaluate_generator_image",
+    srcs = ["01_evaluate_generator.py"],
+    base = "@base//image",
+    main = "01_evaluate_generator.py",
+    deps = [":01_evaluate_generator_test"],
+)
+
+py3_image(
+    name = "02_evaluate_harness_image",
+    srcs = ["02_evaluate_harness.py"],
+    base = "@base//image",
+    main = "02_evaluate_harness.py",
+    deps = [":02_evaluate_harness_test"],
+)
+
+py3_image(
+    name = "03_evaluate_results_image",
+    srcs = ["03_evaluate_results.py"],
+    base = "@base//image",
+    main = "03_evaluate_results.py",
+    deps = [":03_evaluate_results_test"],
 )
