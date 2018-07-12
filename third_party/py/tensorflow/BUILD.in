@@ -1,7 +1,7 @@
 # A wrapper around tensorflow pip package to support optional gpu.
 #
 # If a python target requires TensorFlow, it should depend on this package
-# (i.e. //third_party/tensorflow), instead of requirement("tensorflow").
+# (i.e. //third_party/py/tensorflow), instead of requirement("tensorflow").
 # This is because the pip package for TensorFlow with CUDA support has a
 # different name.
 
