@@ -4,7 +4,7 @@ import sys
 from absl import app
 from absl import flags
 
-import deeplearning.deepsmith.difftests
+import deeplearning.deepsmith.difftests.difftests
 from deeplearning.deepsmith.proto import deepsmith_pb2
 
 
@@ -16,8 +16,8 @@ Result = deepsmith_pb2.Result
 
 def test_GoldStandardDiffTester_DiffTestOne_gs_unknown():
   """Test difftest outcomes when gold standard outcome is unknown."""
-  dt = deeplearning.deepsmith.difftests.GoldStandardDiffTester(
-      deeplearning.deepsmith.difftests.NamedOutputIsEqual('stdout'))
+  dt = deeplearning.deepsmith.difftests.difftests.GoldStandardDiffTester(
+      deeplearning.deepsmith.difftests.difftests.NamedOutputIsEqual('stdout'))
   assert DiffTest.UNKNOWN == dt.DiffTestOne(
       Result(outcome=Result.UNKNOWN),
       Result(outcome=Result.UNKNOWN)
@@ -50,8 +50,8 @@ def test_GoldStandardDiffTester_DiffTestOne_gs_unknown():
 
 def test_GoldStandardDiffTester_DiffTestOne_gs_build_failure():
   """Test difftest outcomes when gold standard fails to build."""
-  dt = deeplearning.deepsmith.difftests.GoldStandardDiffTester(
-      deeplearning.deepsmith.difftests.NamedOutputIsEqual('stdout'))
+  dt = deeplearning.deepsmith.difftests.difftests.GoldStandardDiffTester(
+      deeplearning.deepsmith.difftests.difftests.NamedOutputIsEqual('stdout'))
   assert DiffTest.UNKNOWN == dt.DiffTestOne(
       Result(outcome=Result.BUILD_FAILURE),
       Result(outcome=Result.UNKNOWN)
@@ -84,8 +84,8 @@ def test_GoldStandardDiffTester_DiffTestOne_gs_build_failure():
 
 def test_GoldStandardDiffTester_DiffTestOne_gs_build_crash():
   """Test difftest outcomes when gold standard crahses during build."""
-  dt = deeplearning.deepsmith.difftests.GoldStandardDiffTester(
-      deeplearning.deepsmith.difftests.NamedOutputIsEqual('stdout'))
+  dt = deeplearning.deepsmith.difftests.difftests.GoldStandardDiffTester(
+      deeplearning.deepsmith.difftests.difftests.NamedOutputIsEqual('stdout'))
   assert DiffTest.UNKNOWN == dt.DiffTestOne(
       Result(outcome=Result.BUILD_CRASH),
       Result(outcome=Result.UNKNOWN)
@@ -114,8 +114,8 @@ def test_GoldStandardDiffTester_DiffTestOne_gs_build_crash():
 
 def test_GoldStandardDiffTester_DiffTestOne_gs_build_timeout():
   """Test difftest outcomes when gold standard times out during build."""
-  dt = deeplearning.deepsmith.difftests.GoldStandardDiffTester(
-      deeplearning.deepsmith.difftests.NamedOutputIsEqual('stdout'))
+  dt = deeplearning.deepsmith.difftests.difftests.GoldStandardDiffTester(
+      deeplearning.deepsmith.difftests.difftests.NamedOutputIsEqual('stdout'))
   assert DiffTest.UNKNOWN == dt.DiffTestOne(
       Result(outcome=Result.BUILD_TIMEOUT),
       Result(outcome=Result.UNKNOWN)
@@ -144,8 +144,8 @@ def test_GoldStandardDiffTester_DiffTestOne_gs_build_timeout():
 
 def test_GoldStandardDiffTester_DiffTestOne_gs_runtime_crash():
   """Test difftest outcomes when gold standard crashes at runtime."""
-  dt = deeplearning.deepsmith.difftests.GoldStandardDiffTester(
-      deeplearning.deepsmith.difftests.NamedOutputIsEqual('stdout'))
+  dt = deeplearning.deepsmith.difftests.difftests.GoldStandardDiffTester(
+      deeplearning.deepsmith.difftests.difftests.NamedOutputIsEqual('stdout'))
   assert DiffTest.UNKNOWN == dt.DiffTestOne(
       Result(outcome=Result.RUNTIME_CRASH),
       Result(outcome=Result.UNKNOWN)
@@ -178,8 +178,8 @@ def test_GoldStandardDiffTester_DiffTestOne_gs_runtime_crash():
 
 def test_GoldStandardDiffTester_DiffTestOne_gs_runtime_timeout():
   """Test difftest outcomes when gold standard times out."""
-  dt = deeplearning.deepsmith.difftests.GoldStandardDiffTester(
-      deeplearning.deepsmith.difftests.NamedOutputIsEqual('stdout'))
+  dt = deeplearning.deepsmith.difftests.difftests.GoldStandardDiffTester(
+      deeplearning.deepsmith.difftests.difftests.NamedOutputIsEqual('stdout'))
   assert DiffTest.UNKNOWN == dt.DiffTestOne(
       Result(outcome=Result.RUNTIME_TIMEOUT),
       Result(outcome=Result.UNKNOWN)
@@ -212,8 +212,8 @@ def test_GoldStandardDiffTester_DiffTestOne_gs_runtime_timeout():
 
 def test_GoldStandardDiffTester_DiffTestOne_gs_pass():
   """Test difftest outcomes when gold standard passes."""
-  dt = deeplearning.deepsmith.difftests.GoldStandardDiffTester(
-      deeplearning.deepsmith.difftests.NamedOutputIsEqual('stdout'))
+  dt = deeplearning.deepsmith.difftests.difftests.GoldStandardDiffTester(
+      deeplearning.deepsmith.difftests.difftests.NamedOutputIsEqual('stdout'))
   assert DiffTest.UNKNOWN == dt.DiffTestOne(
       Result(outcome=Result.PASS),
       Result(outcome=Result.UNKNOWN)
@@ -258,8 +258,8 @@ def test_GoldStandardDiffTester_DiffTestOne_gs_pass():
 
 def test_GoldStandardDiffTester_DiffTestOne_both_pass_no_stdout():
   """Test that error is raised if stdout is missing from output test."""
-  dt = deeplearning.deepsmith.difftests.GoldStandardDiffTester(
-      deeplearning.deepsmith.difftests.NamedOutputIsEqual('stdout'))
+  dt = deeplearning.deepsmith.difftests.difftests.GoldStandardDiffTester(
+      deeplearning.deepsmith.difftests.difftests.NamedOutputIsEqual('stdout'))
   with pytest.raises(ValueError) as e_ctx:
     dt.DiffTestOne(
         Result(outcome=Result.PASS),

@@ -7,8 +7,8 @@ py_binary(
     name = "opencl_fuzz",
     srcs = ["opencl_fuzz.py"],
     deps = [
-        "//deeplearning/deepsmith:difftests",
-        "//deeplearning/deepsmith:filters",
+        "//deeplearning/deepsmith/difftests",
+        "//deeplearning/deepsmith/difftests:opencl",
         "//deeplearning/deepsmith/generators:clgen_pretrained",
         "//deeplearning/deepsmith/harnesses:cldrive",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
