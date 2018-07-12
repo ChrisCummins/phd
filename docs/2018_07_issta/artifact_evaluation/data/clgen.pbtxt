@@ -5,7 +5,7 @@ instance {
   working_dir: "/tmp/phd/docs/2018_07_issta/artifact_evaluation/clgen"
   model {
     corpus {
-      local_tar_archive: "$PWD/deeplearning/clgen/tests/data/tiny.tar.bz2"
+      local_tar_archive: "$BAZEL_RUNFILES/phd/deeplearning/clgen/tests/data/tiny.tar.bz2"
       ascii_character_atomizer: true
       contentfile_separator: "\n\n"
       preprocessor: "deeplearning.clgen.preprocessors.opencl:ClangPreprocessWithShim"

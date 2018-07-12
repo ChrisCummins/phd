@@ -22,6 +22,7 @@ from deeplearning.clgen.corpuses import encoded
 from deeplearning.clgen.corpuses import preprocessed
 from deeplearning.clgen.preprocessors import preprocessors
 from deeplearning.clgen.proto import corpus_pb2
+from lib.labm8 import bazelutil
 from lib.labm8 import crypto
 from lib.labm8 import hashcache
 from lib.labm8 import lockfile
@@ -297,6 +298,7 @@ def ExpandConfigPath(path: str,
   # Set a useful variable for expansion.
   if 'HOME' not in os.environ:
     os.environ['HOME'] = str(pathlib.Path('~').expanduser())
+  os.environ['BAZEL_RUNFILES'] = str(bazelutil.DataPath('.'))
   return pathlib.Path(os.path.expandvars(
       (path_prefix or '') + path)).expanduser().absolute()
 

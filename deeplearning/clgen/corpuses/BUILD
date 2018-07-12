@@ -38,6 +38,7 @@ py_library(
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen/preprocessors",
         "//deeplearning/clgen/proto:corpus_py_pb2",
+        "//lib/labm8:bazelutil",
         "//lib/labm8:crypto",
         "//lib/labm8:hashcache",
         "//lib/labm8:lockfile",
