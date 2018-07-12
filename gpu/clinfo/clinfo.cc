@@ -40,6 +40,6 @@ int main(int argc, char **argv) {
   } catch (cl::Error err) {
     std::cerr << "OpenCL Error: " << err.what() << " returned "
               << phd::gpu::clinfo::OpenClErrorString(err.err()) << std::endl;
-    exit(1);
+    return 1;
   }
 }
