@@ -97,6 +97,15 @@ py3_image(
     deps = [":01_evaluate_generator"],
 )
 
+container_push(
+   name = "push_01_evaluate_generator_image",
+   image = ":01_evaluate_generator_image",
+   format = "Docker",
+   registry = "index.docker.io",
+   repository = "chriscummins/compiler_fuzzing_through_deep_learning_01",
+   tag = "latest",
+)
+
 py3_image(
     name = "02_evaluate_harness_image",
     srcs = ["02_evaluate_harness.py"],
