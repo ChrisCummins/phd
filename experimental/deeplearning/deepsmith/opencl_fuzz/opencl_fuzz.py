@@ -32,6 +32,9 @@ flags.DEFINE_string(
     'dut', 'Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2',
     'The name of the device under test, as described by cldrive. Run '
     '//gpu/cldrive --ls_env to see a list of available devices.')
+flags.DEFINE_bool(
+    'opencl_opt', True,
+    'If --noopencl_opt, OpenCL optimizations are disabled.')
 flags.DEFINE_string(
     'interesting_results_dir', '/tmp/',
     'Directory to write interesting results to.')
@@ -319,12 +322,14 @@ def main(argv):
   logging.info('Preparing device under test.')
   config = harness_pb2.CldriveHarness()
   config.opencl_env.extend([FLAGS.dut])
+  config.opencl_opt.extend([FLAGS.opencl_opt])
   dut_harness = cldrive.CldriveHarness(config)
   assert len(dut_harness.testbeds) == 1
 
   logging.info('Preparing gold standard testbed.')
   config = harness_pb2.CldriveHarness()
   config.opencl_env.extend([oclgrind.OpenCLEnvironment().name])
+  config.opencl_opt.extend([True])
   gs_harness = cldrive.CldriveHarness(config)
   assert len(gs_harness.testbeds) >= 1
 
