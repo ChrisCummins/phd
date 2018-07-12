@@ -31,10 +31,11 @@ py_test(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
+        ":01_evaluate_generator",
         "//deeplearning/clgen:conftest",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//deeplearning/deepsmith/proto:generator_py_pb2",
-        ":01_evaluate_generator",
+        "//lib/labm8:pbutil",
         requirement("absl-py"),
         requirement("pytest"),
     ],
