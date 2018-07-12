@@ -4,6 +4,7 @@ import pathlib
 import subprocess
 import tempfile
 import time
+import typing
 from absl import app
 from absl import flags
 from absl import logging
@@ -258,7 +259,8 @@ def MakeDriver(testcase: deepsmith_pb2.Testcase,
 
 def CompileDriver(src: str, output_path: pathlib.Path,
                   platform_id: int, device_id: int,
-                  timeout_seconds: int = 60) -> pathlib.Path:
+                  timeout_seconds: int = 60,
+                  cflags: typing.List[str] = None) -> pathlib.Path:
   """Compile driver binary from source.
 
   Args:
@@ -294,6 +296,9 @@ def CompileDriver(src: str, output_path: pathlib.Path,
     ]
   elif system.is_mac():
     cmd += ['-framework', 'OpenCL']
+  # Add any additional cflags.
+  if cflags:
+    cmd += cflags
 
   # logging.debug('$ %s', ' '.join(cmd))
   proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,

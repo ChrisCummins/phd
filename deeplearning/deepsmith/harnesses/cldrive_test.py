@@ -71,6 +71,22 @@ def test_CompileDriver_DriverCompilationError_syntax_error():
     assert not (pathlib.Path(d) / 'exe').is_file()
 
 
+def test_CompileDriver_invalid_cflags():
+  """Test that DriverCompilationError is raised if cflags are invalid."""
+  with tempfile.TemporaryDirectory() as d:
+    with pytest.raises(cldrive.DriverCompilationError):
+      cldrive.CompileDriver('int main() {}', pathlib.Path(d) / 'exe',
+                            0, 0, cflags=['--not_a_real_flag'])
+
+
+def test_CompileDriver_valid_cflags():
+  """Test that additional cflags are passed to build."""
+  with tempfile.TemporaryDirectory() as d:
+    cldrive.CompileDriver('MY_TYPE main() {}', pathlib.Path(d) / 'exe',
+                          0, 0, cflags=['-DMY_TYPE=int'])
+    assert (pathlib.Path(d) / 'exe').is_file()
+
+
 def test_MakeDriver_ValueError_no_gsize():
   """Test that ValueError is raised if gsize input not set."""
   testcase = deepsmith_pb2.Testcase(inputs={
