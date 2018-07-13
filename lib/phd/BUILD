@@ -9,7 +9,7 @@ cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "@benchmark//:main",
+        "@com_github_google_benchmark//:benchmark",
         "@gtest//:main",
     ],
 )

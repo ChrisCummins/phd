@@ -7,7 +7,7 @@ cc_test(
         "-Iexternal/benchmark/include",
     ],
     deps = [
-        "@benchmark//:main",
+        "@com_github_google_benchmark//:benchmark",
         "@gtest//:main",
     ],
 )
@@ -21,7 +21,7 @@ cc_test(
         "-Iexternal/benchmark/include",
     ],
     deps = [
-        "@benchmark//:main",
+        "@com_github_google_benchmark//:benchmark",
         "@gtest//:main",
     ],
 )

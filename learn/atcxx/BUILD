@@ -8,7 +8,7 @@ cc_binary(
     srcs = ["benchmark-argument-type.cc"],
     copts = ["-Iexternal/benchmark/include"],
     linkopts = ["-pthread"],
-    deps = ["@benchmark//:main"],
+    deps = ["@com_github_google_benchmark//:benchmark"],
 )
 
 cc_test(
@@ -47,7 +47,7 @@ cc_binary(
     srcs = ["lambdas.cc"],
     copts = ["-Iexternal/benchmark/include"],
     linkopts = ["-pthread"],
-    deps = ["@benchmark//:main"],
+    deps = ["@com_github_google_benchmark//:benchmark"],
 )
 
 cc_test(

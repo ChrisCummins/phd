@@ -4,7 +4,7 @@ cc_library(
     name = "ctci",
     hdrs = ["ctci.h"],
     deps = [
-        "@benchmark//:main",
+        "@com_github_google_benchmark//:benchmark",
         "@gtest//:main",
     ],
 )
