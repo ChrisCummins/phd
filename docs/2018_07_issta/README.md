@@ -40,3 +40,11 @@
   organization={ACM}
 }
 ```
+
+## Artifact Evaluation
+
+See 
+**[//docs/2018_07_issta/artifact_evaluation](/docs/2018_07_issta/artifact_evaluation/)**
+for the supporting artifact of the paper, and 
+**[//deeplearning/deepsmith](/deeplearning/deepsmith/)** for the DeepSmith 
+source code.
