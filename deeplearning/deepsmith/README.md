@@ -7,104 +7,26 @@ corpus of example programs. Then, it uses the model to automatically generate
 tens of thousands of realistic programs. Finally, it applies established
 differential testing methodologies on them to expose bugs in compilers.
 
-## Implementation Design
+<img src="../../docs/2018_07_issta/img/deepsmith.png" height="500">
 
-DeepSmith uses a service architecture. There are three types of services:
+## Getting Started
 
- * **DataStore Service** serves as the backend, storing generated testcases,
-   results from executing testcases, and the results of differential tests.
- * **Generator Service** generates testcases.
- * **Harness Service** coordinates the execution of testcases on one or more
-   testbeds.
-
-## Usage
-
-### Building from Source
-
-Please follow the instructions in the root of
-[this repository](https://github.com/ChrisCummins/phd) to get a build
-environment up and running.
-
-Check that your environment is set up correctly by running the unit tests for
-DeepSmith using:
+Pull a docker image containing a pre-trained neural network and OpenCL 
+environment for fuzz testing Oclgrind:
 
 ```sh
-
-$ bazel test //deeplearning/deepsmith/...
+$ docker run chriscummins/opencl_fuzz
 ```
 
-### Example: Testing OpenCL compilers using CLgen
+See 
+[//docs/2018_07_issta/artifact_evaluation](/docs/2018_07_issta/artifact_evaluation)
+for the supporting artifact of the original DeepSmith publication.
 
-#### Launching Services
+## Resources
 
-First launch a datastore service using:
-
-```sh
-$ bazel build //deeplearning/deepsmith/services:datastore && \
-    ./bazel-phd/bazel-out/*/bin/deeplearning/deepsmith/services/datastore \
-    --datastore_config=$PHD/deeplearning/deepsmith/proto/datastore_sqlite.pbtxt
-```
-
-Launch a generator for OpenCL testcases using CLgen with:
-
-```sh
-$ bazel build //deeplearning/deepsmith/services:clgen && \
-    ./bazel-phd/bazel-out/*/bin/deeplearning/deepsmith/services/clgen \
-    --generator_config=$PHD/deeplearning/deepsmith/proto/generator_opencl_clgen.pbtxt
-```
-
-Launch an OpenCL harness service for executing OpenCL testcases using cldrive
-with:
-
-```sh
-$ bazel build //deeplearning/deepsmith/services:cldrive && \
-    ./bazel-phd/bazel-out/*/bin/deeplearning/deepsmith/services/cldrive \
-    --harness_config=$PHD/deeplearning/deepsmith/proto/harness_opencl_cldrive.pbtxt
-```
-
-##### Container Services (work in progress)
-
-Build a docker image of the required target using the `_image.tar` suffix:
-
-```sh
-$ bazel build //deeplearning/deepsmith/services:datastore_image.tar
-```
-
-Load the docker image as per normal:
-
-```sh
-$ docker load -i bazel-bin/deeplearning/deepsmith/services/datastore_image.tar
-```
-
-Run a container as per normal. You will probably want to use the `-v` argument
-to share a volume with the host system, since most of the services require
-reading / writing files:
-
-```sh
-$ docker run -v $PHD/deeplearning/deepsmith/proto:/protos \
-    bazel/deeplearning/deepsmith/services:datastore_image \
-    --datastore_config /protos/datastore_sqlite.pbtxt
-```
-
-#### Running Experiments
-
-Generate 1000 testcases using the CLgen generator service with:
-
-```sh
-$ bazel run //deeplearning/deepsmith/cli:generate_testcases -- \
-    --datastore_config=$PHD/deeplearning/deepsmith/proto/datastore_sqlite.pbtxt \
-    --generator_config=$PHD/deeplearning/deepsmith/proto/generator_opencl_clgen.pbtxt \
-    --target_total_testcases=1000
-```
-
-Execute the OpenCL testcases with:
-
-```sh
-$ bazel run //deeplearning/deepsmith/cli:run_testcases -- \
-      --datastore_config=$PHD/deeplearning/deepsmith/proto/datastore_sqlite.pbtxt \
-      --harness_config=$PHD/deeplearning/deepsmith/proto/harness_opencl_cldrive.pbtxt
-```
-
+Publication 
+"[Compiler Fuzzing through Deep Learning](https://chriscummins.cc/pub/2018-issta.pdf)" 
+(ISSTA'18).
 
 ## License
 
