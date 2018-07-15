@@ -167,9 +167,10 @@ def ResultIsInteresting(result: deepsmith_pb2.Result,
   dt = filters.PreDifftest(deepsmith_pb2.DifferentialTest(result=[result]))
   if not dt:
     return NotInteresting(result)
+  result = dt.result[0]
 
   # Run testcases against gold standard devices and difftest.
-  gs_result = RunTestcases(gs_harness, dt.result[0].testcase)[0]
+  gs_result = RunTestcases(gs_harness, result.testcase)[0]
 
   dt_outcomes = gs_difftester([gs_result, result])
   dt_outcome = dt.outcome[1]
@@ -183,15 +184,16 @@ def ResultIsInteresting(result: deepsmith_pb2.Result,
   if not dt:
     logging.info('Cannot use gold standard difftest result.')
     return NotInteresting(result)
+  result = dt.result[1]
 
   if dt_outcome != deepsmith_pb2.DifferentialTest.PASS:
     # Add the differential test outcome to the result.
-    dt.result[1].outputs[
+    result.outputs[
       'difftest_outcome'] = deepsmith_pb2.DifferentialTest.Outcome.Name(
         dt_outcome)
-    dt.result[1].outputs['gs_stdout'] = dt.result[0].outputs['stdout']
-    dt.result[1].outputs['gs_stderr'] = dt.result[0].outputs['stderr']
-    return dt.result[1]
+    result.outputs['gs_stdout'] = dt.result[0].outputs['stdout']
+    result.outputs['gs_stderr'] = dt.result[0].outputs['stderr']
+    return result
 
 
 def RunTestcases(harness: base_harness.HarnessBase,
