@@ -7,7 +7,7 @@
 **Winner of Distinguished Paper Award ISSTA'18**
 
 <a href="https://chriscummins.cc/pub/2018-issta.pdf">
-  <img src="https://chriscummins.cc/pub/2018-issta.png" height="325">
+  <img src="paper.png" height="325">
 </a>
 
 **Abstract**
