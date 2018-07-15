@@ -135,7 +135,7 @@ def NotInteresting(
 def ResultIsInteresting(result: deepsmith_pb2.Result,
                         unary_difftester: difftests.UnaryTester,
                         gs_difftester: difftests.GoldStandardDiffTester,
-                        gs_harness: cldrive.CldriveHarness,
+                        gs_harness: base_harness.HarnessBase,
                         filters: difftests.FiltersBase
                         ) -> typing.Optional[deepsmith_pb2.Result]:
   """Determine if a result is interesting, and return it if it is.
