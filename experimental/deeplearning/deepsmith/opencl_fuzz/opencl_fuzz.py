@@ -153,9 +153,10 @@ def ResultIsInteresting(result: deepsmith_pb2.Result,
   # First perform a unary difftest to see if the result is interesting without
   # needing to difftest, such as a compiler crash.
   unary_dt_outcome = unary_difftester([result])[0]
-
   if (unary_dt_outcome != deepsmith_pb2.DifferentialTest.PASS and
       unary_dt_outcome != deepsmith_pb2.DifferentialTest.UNKNOWN):
+    result.outputs['difftest_outcome'] = (
+      deepsmith_pb2.DifferentialTest.Outcome.Name(unary_dt_outcome))
     return result
 
   if not (unary_dt_outcome == deepsmith_pb2.DifferentialTest.PASS and
