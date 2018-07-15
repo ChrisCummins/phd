@@ -31,6 +31,18 @@ py3_image(
     deps = [":opencl_fuzz"],
 )
 
+py_test(
+    name = "opencl_fuzz_test",
+    srcs = ["opencl_fuzz_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":opencl_fuzz",
+        requirement("absl-py"),
+        requirement("pytest"),
+    ],
+)
+
 py_binary(
     name = "print",
     srcs = ["print.py"],
