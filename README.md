@@ -55,6 +55,10 @@ A monolothic repository for (almost) everything I have done while at the Univers
 
 ## Talks
 
+1. Chris Cummins. "**Compiler Fuzzing through Deep Learning**", 16th July, 2018.
+   ACM SIGSOFT International Symposium on Software Testing and Analysis (ISSTA), Amsterdam, Netherlands.
+   [[files]](/talks/2018_07_issta).
+   [[slides]](https://speakerdeck.com/chriscummins/compiler-fuzzing-through-deep-learning-issta-18).
 1. Chris Cummins. "**End-to-end Deep Learning of Optimization Heuristics**", 23rd March, 2018.
    Facebook, Menlo Park.
    [[files]](/talks/2018_03_facebook).
