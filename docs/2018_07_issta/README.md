@@ -6,6 +6,9 @@
 
 **Winner of Distinguished Paper Award ISSTA'18**
 
+<a href="https://speakerdeck.com/chriscummins/compiler-fuzzing-through-deep-learning-issta-18">
+  <img src="slides.png" height="325">
+</a>
 <a href="https://chriscummins.cc/pub/2018-issta.pdf">
   <img src="paper.png" height="325">
 </a>
