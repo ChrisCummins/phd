@@ -145,13 +145,3 @@ genrule(
     cmd = "$(location //tools:autotex) docs/2017_09_pact/tex/paper.tex $@",
     tools = ["//tools:autotex"],
 )
-
-genrule(
-    name = "cv",
-    srcs = glob([
-        "cv/**/*.tex",
-    ]),
-    outs = ["cv.pdf"],
-    cmd = "$(location //tools:autotex) docs/cv/cv.tex $@",
-    tools = ["//tools:autotex"],
-)
