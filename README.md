@@ -10,47 +10,47 @@ A monolothic repository for (almost) everything I have done while at the Univers
    ISSTA '18.
    [[source code]](/docs/2018_07_issta).
    [[pdf]](https://chriscummins.cc/pub/2018-issta.pdf).
-   Build command: `$ bazel build //docs:2018_07_issta`.
+   Build command: `$ bazel build //docs/2018_07_issta`.
 1. Chris Cummins, Pavlos Petoumenos, Alastair Murray, Hugh Leather.
    "**DeepSmith: Compiler Fuzzing through Deep Learning**".
    ACACES '18.
    [[source code]](/docs/2018_07_acaces).
    [[pdf]](https://chriscummins.cc/pub/2018-acaces.pdf).
-   Build command: `$ bazel build //docs/2018_07_acaces:paper`.
+   Build command: `$ bazel build //docs/2018_07_acaces`.
 1. Chris Cummins, Pavlos Petoumenos, Zheng Wang, Hugh Leather.
    "**End-to-end Deep Learning of Optimization Heuristics**".
    PACT '17.
    [[source code]](https://github.com/ChrisCummins/paper-end2end-dl/).
    [[pdf]](https://github.com/ChrisCummins/paper-end2end-dl/raw/master/paper.pdf).
-   Build command: `$ bazel build //docs:2017_09_pact`.
+   Build command: `$ bazel build //docs/2017_09_pact`.
 1. Chris Cummins, Pavlos Petoumenos, Zheng Wang, Hugh Leather.
    "**Synthesizing Benchmarks for Predictive Modeling**".
    CGO '17.
    [[source code]](https://github.com/ChrisCummins/paper-synthesizing-benchmarks/).
    [[pdf]](https://github.com/ChrisCummins/paper-synthesizing-benchmarks/raw/master/paper.pdf).
    [[acm]](https://dl.acm.org/citation.cfm?id=3049843).
-   Build command: `$ bazel build //docs:2017_02_cgo`.
+   Build command: `$ bazel build //docs/2017_02_cgo`.
 1. Chris Cummins, Pavlos Petoumenos, Michel Steuwer, Hugh Leather.
    "**Autotuning OpenCL Workgroup Sizes**". ACACES '16.
    [[source code]](/docs/2016_07_acaces).
-   Build command: `$ bazel build //docs:2016_07_acaces`.
+   Build command: `$ bazel build //docs/2016_07_acaces`.
 1. Chris Cummins, Pavlos Petoumenos, Michel Steuwer, Hugh Leather.
    "**Towards Collaborative Performance Tuning of Algorithmic Skeletons**".
    HLPGPU '16, HiPEAC.
    [[source code]](https://github.com/ChrisCummins/paper-towards-collaborative-performance-tuning).
    [[pdf]](https://github.com/ChrisCummins/paper-towards-collaborative-performance-tuning/raw/master/paper.pdf).
-   Build command: `$ bazel build //docs:2016_01_hlpgpu`.
+   Build command: `$ bazel build //docs/2016_01_hlpgpu`.
 1. Chris Cummins, Pavlos Petoumenos, Michel Steuwer, Hugh Leather.
    "**Autotuning OpenCL Workgroup Size for Stencil Patterns**".
    ADAPT '16, HiPEAC.
    [[source code]](https://github.com/ChrisCummins/paper-autotuning-opencl-wgsize).
    [[pdf]](https://github.com/ChrisCummins/paper-autotuning-opencl-wgsize/raw/master/paper.pdf).
    [[arxiv]](https://arxiv.org/abs/1511.02490).
-   Build command: `$ bazel build //docs:2016_01_adapt`.
+   Build command: `$ bazel build //docs/2016_01_adapt`.
 1. Chris Cummins. "**Autotuning Stencils Codes with Algorithmic Skeletons**".
    MSc Thesis, 2015. The University of Edinburgh.
    [[source code]](/docs/2015_08_msc_thesis).
-   Build command: `$ bazel build //docs:2015_08_msc_thesis`.
+   Build command: `$ bazel build //docs/2015_08_msc_thesis`.
 
 
 ## Talks
@@ -130,29 +130,29 @@ A monolothic repository for (almost) everything I have done while at the Univers
    [[source code]](/docs/cv).
    [[pdf]](https://chriscummins.cc/cv.pdf).
    [[html]](https://chriscummins.cc/cv/).
-   Build command: `$ bazel build //docs:cv`.
+   Build command: `$ bazel build //docs/cv`.
 1. Chris Cummins, Pavlos Petoumenos, Michel Steuwer, Hugh Leather.
    "**Collaborative Autotuning of Algorithmic Skeletons for GPUs and CPUs**".
    Incomplete journal version of ADAPT and HLPGPU papers.
    [[source code]](/docs/2016_12_wip_taco).
-   Build command: `$ bazel build //docs:2016_12_wip_taco`.
+   Build command: `$ bazel build //docs/2016_12_wip_taco`.
 1. Chris Cummins. "**Deep Learning for Compilers**". PhD First Year Review
    Document, 2016.
    [[source code]](/docs/2016_11_first_year_review).
-   Build command: `$ bazel build //docs:2016_11_first_year_review`.
+   Build command: `$ bazel build //docs/2016_11_first_year_review`.
 1. Chris Cummins, Hugh Leather. "**Autotuning OpenCL Workgroup Sizes**".
    Rejected submission for PACT'16 Student Research Competition.
    [[source code]](/docs/2016_07_pact).
-   Build command: `$ bazel build //docs:2016_07_pact`.
+   Build command: `$ bazel build //docs/2016_07_pact`.
 1. Chris Cummins, Pavlos Petoumenos, Michel Steuwer, Hugh Leather.
    "**Autotuning OpenCL Workgroup Sizes**".
    Submission for PLDI'16 Student Poster Session.
    [[source code]](/docs/2016_06_pldi).
-   Build command: `$ bazel build //docs:2016_06_pldi`.
+   Build command: `$ bazel build //docs/2016_06_pldi`.
 1. Chris Cummins. "**Autotuning and Skeleton-aware Compilation**".
    PhD Progression Review, 2015.
    [[source code]](/docs/2015_09_progression-review).
-   Build command: `$ bazel build //docs:2015_09_progression_review`.
+   Build command: `$ bazel build //docs/2015_09_progression_review`.
 
 
 <h2>

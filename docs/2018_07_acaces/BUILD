@@ -1,9 +1,9 @@
-# DeepSmith: Compiler Fuzzing through Deep Learning, ACACES'18.
+# DeepSmith: Compiler Fuzzing through Deep Learning (ACACES'18).
 
 exports_files(["README.md"])
 
 genrule(
-    name = "paper",
+    name = "2018_07_acaces",
     srcs = glob([
         "**/*.tex",
         "acaces.bst",

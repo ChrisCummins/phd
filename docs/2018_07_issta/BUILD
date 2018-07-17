@@ -1,9 +1,9 @@
-# Compiler Fuzzing through Deep Learning, ISSTA'18.
+# Compiler Fuzzing through Deep Learning (ISSTA'18).
 
 exports_files(["README.md"])
 
 genrule(
-    name = "paper",
+    name = "2018_07_issta",
     srcs = glob([
         "**/*.sty",
         "**/*.tex",
