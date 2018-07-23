@@ -6,11 +6,11 @@
 1. Add PDF of slides to `//talks/YY_MM_NAME/YY_MM_NAME.pdf`.
 1. Move slides sources to `//talks/YY_MM_NAME/YY_MM_NAME/YY_MM_NAME.key`.
 1. Move assets to `//talks/YY_MM_NAME/YY_MM_NAME/assets/`.
-1. Create dpack manifest: `$ bazel run //lib/dpack -- --package ~/phd/talks/YY_MM_NAME/YY_MM_NAME --init`.
+1. Create dpack manifest: `$ bazel run //lib/dpack -- --init --package ~/phd/talks/YY_MM_NAME/YY_MM_NAME`.
 1. Add comments to manifest file.
-1. Create dpack archive: `$ bazel run //lib/dpack -- --package ~/phd/talks/YY_MM_NAME/YY_MM_NAME`.
+1. Create dpack archive: `$ bazel run //lib/dpack -- --pack --package ~/phd/talks/YY_MM_NAME/YY_MM_NAME`.
 1. Add `/talks/YY_MM_NAME/YY_MM_NAME/` to `~/phd/.gitignore`.
-1. Add an entry to Talks section of `//README.txt`.
+1. Add an entry to Talks section of `//README.md`.
 1. (If necessary) Add an entry to talks section of `//http/chriscummins.cc/cv.json`.
 1. (If necessary) Add an entry to talks section of `//docs/cv/sec/invited_talks.tex`.
 1. (If necessary) Build new CV: `bazel build //docs/cv`.
