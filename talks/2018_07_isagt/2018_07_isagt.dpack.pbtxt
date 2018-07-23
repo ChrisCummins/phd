@@ -1,0 +1,12 @@
+comment: "Keynote slides for my talk at ISAGT\'18."
+file {
+  comment: "Keynote slides (with animations removed)."
+  relative_path: "ML for compilers (No animations).key"
+}
+file {
+  comment: "Keynote slides."
+  relative_path: "ML for compilers.key"
+}
+utc_epoch_ms_packaged: 1532327334496
+checksum_hash: SHA256
+checksum: "c2507624a2960c104147465b9eaaa2cd0f345148d00579b23804d9777e7e66ec"

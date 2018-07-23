@@ -55,6 +55,11 @@ A monolothic repository for (almost) everything I have done while at the Univers
 
 ## Talks
 
+1. Chris Cummins. "**Machine Learning for Compilers**", 20th July, 2018.
+   Workshop on Introspective Systems for Automatically Generating Tests (ISAGT),
+   Amsterdam, Netherlands.
+   [[files]](/talks/2018_07_isagt).
+   [[pdf]](https://github.com/ChrisCummins/phd/raw/master/talks/2018_07_isagt/2018_07_isagt.pdf).
 1. Chris Cummins. "**Compiler Fuzzing through Deep Learning**", 16th July, 2018.
    ACM SIGSOFT International Symposium on Software Testing and Analysis (ISSTA), Amsterdam, Netherlands.
    [[files]](/talks/2018_07_issta).
