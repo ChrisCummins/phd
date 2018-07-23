@@ -8,11 +8,13 @@ from absl import logging
 
 from deeplearning.clgen import cache
 from deeplearning.clgen import samplers
+from deeplearning.clgen import telemetry
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.models import keras_backend
 from deeplearning.clgen.models import tensorflow_backend
 from deeplearning.clgen.proto import internal_pb2
 from deeplearning.clgen.proto import model_pb2
+from deeplearning.clgen.proto import telemetry_pb2
 from lib.labm8 import cache
 from lib.labm8 import labdate
 from lib.labm8 import pbutil
@@ -35,6 +37,10 @@ class PreTrainedModel(object):
       model_pb2.NetworkArchitecture.TENSORFLOW: tensorflow_backend.TensorFlowBackend,
       model_pb2.NetworkArchitecture.KERAS: keras_backend.KerasBackend,
     }[self.config.architecture.backend](self.config, self.cache, self.atomizer)
+
+  def TrainingTelemetry(self) -> typing.List[telemetry_pb2.ModelEpochTelemetry]:
+    """Get the training telemetry data."""
+    return telemetry.TrainingLogger(self.cache.path / 'logs').EpochTelemetry()
 
   def Sample(
       self, sampler: samplers.Sampler, min_num_samples: int,
