@@ -10,5 +10,5 @@ py_test(
     deps = [
         requirement("absl-py"),
         requirement("ascii_art"),
-    ]
+    ],
 )
