@@ -27,6 +27,7 @@ class PreTrainedModel(object):
   def __init__(self, path: pathlib.Path):
     self.path = path.absolute()
     self.cache = cache.FSCache(self.path)
+    self.corpus = NullCorpus()
     self.config = pbutil.FromFile(
         self.path / 'META.pbtxt', internal_pb2.ModelMeta()).config
     self.atomizer = atomizers.AtomizerBase.FromFile(self.path / 'atomizer')
@@ -121,3 +122,10 @@ class PreTrainedModel(object):
                 int((now - sample_start_time) / max(sample_count - 1, 1))))
         break
 
+
+class NullCorpus(object):
+  """Corpus for a pre-trained model."""
+
+  def Create(self):
+    """The creation process for a null corpus is a no-op."""
+    pass
