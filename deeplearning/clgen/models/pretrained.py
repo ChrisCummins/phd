@@ -38,6 +38,10 @@ class PreTrainedModel(object):
       model_pb2.NetworkArchitecture.KERAS: keras_backend.KerasBackend,
     }[self.config.architecture.backend](self.config, self.cache, self.atomizer)
 
+  def Train(self):
+    """The training process for a pre-trained model is a no-op."""
+    pass
+
   def TrainingTelemetry(self) -> typing.List[telemetry_pb2.ModelEpochTelemetry]:
     """Get the training telemetry data."""
     return telemetry.TrainingLogger(self.cache.path / 'logs').EpochTelemetry()
