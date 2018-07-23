@@ -174,12 +174,11 @@ of dependencies on the host C++ toolchain and Python runtime.
 
 This project can only be built on a modern version of Ubuntu Linux or macOS.
 This is a requirement I inherit from my dependencies, which eschew Windows and
-other Linux distros. Fortunately, it's never been easier to pull a
-[Docker](https://www.docker.com/community-edition) `ubuntu:18.04` image and
-follow the Ubuntu instructions (just drop the `sudo` prefixes from commands):
+other Linux distros. Fortunately, you can use a
+[Docker](https://www.docker.com/community-edition) image and follow the Ubuntu 
+instructions (just drop the `sudo` prefixes from commands):
 
 ```sh
-$ docker pull ubuntu:18.04
 $ docker run -it ubuntu:18.04 /bin/bash
 ```
 
