@@ -68,3 +68,22 @@ $ docker run \
 By default, the image runs until `--min_interesting_results` interesting results
 have been found, or until `--max_testing_time_seconds` have elapsed. Pass values
 for these flags to override the default values.
+
+
+## Building the pre-trained model
+
+The docker image uses a pre-trained CLgen model. To build a model, modify the
+"working_dir" and "local_directory" fields of the file
+[//experimental/deeplearning/deepsmith/opencl_fuzz/clgen.pbtxt](experimental/deeplearning/deepsmith/opencl_fuzz/clgen.pbtxt)
+to point to your local corpus, then train and export the model using:
+
+```
+$ bazel run //deeplearning/clgen -- \
+    --config ~/phd/experimental/deeplearning/deepsmith/opencl_fuzz/clgen.pbtxt \
+    --stop_after train
+$ bazel run //deeplearning/clgen -- \
+    --config experimental/deeplearning/deepsmith/opencl_fuzz/clgen.pbtxt \
+    --export_model ~/phd/experimental/deeplearning/deepsmith/opencl_fuzz/model
+```
+
+The script `./make_image.sh` will now use the newly exported model.
