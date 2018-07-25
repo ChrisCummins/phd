@@ -1,16 +1,11 @@
-# Towards Collaborative Performance Tuning of Algorithmic Skeletons (HLPGPU'16).
+# Position paper for ISAGT'18.
 
 exports_files(["README.md"])
 
 genrule(
-    name = "2016_01_hlpgpu",
-    srcs = glob([
-        "tex/**/*.bib",
-        "tex/**/*.cls",
-        "tex/**/*.tex",
-        "tex/img/*",
-    ]),
-    outs = ["2016_01_hlpgpu.pdf"],
-    cmd = "$(location //tools:autotex) docs/2016_01_hlpgpu/tex/paper.tex $@",
+    name = "2018_07_isagt",
+    srcs = ["paper.tex"],
+    outs = ["2018_07_isagt.pdf"],
+    cmd = "$(location //tools:autotex) docs/2018_07_isagt/paper.tex $@",
     tools = ["//tools:autotex"],
 )
