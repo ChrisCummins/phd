@@ -5,7 +5,7 @@ from absl import logging
 
 from deeplearning.deepsmith.difftests import difftests
 from deeplearning.deepsmith.proto import deepsmith_pb2
-from gpu import cldrive as cldrive_lib
+from gpu.cldrive import args
 
 
 FLAGS = flags.FLAGS
@@ -100,7 +100,7 @@ def ContainsFloatingPoint(testcase: deepsmith_pb2.Testcase) -> bool:
 
 def HasVectorInputs(testcase: deepsmith_pb2.Testcase) -> bool:
   """Return whether any of the kernel arguments are vector types."""
-  for arg in cldrive_lib.extract_args(testcase.inputs['src']):
+  for arg in args.extract_args(testcase.inputs['src']):
     if arg.is_vector:
       return True
   return False

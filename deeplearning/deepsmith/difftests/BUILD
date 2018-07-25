@@ -30,7 +30,7 @@ py_library(
     deps = [
         ":difftests",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
-        "//gpu/cldrive",
+        "//gpu/cldrive:args",
         requirement("absl-py"),
     ],
 )

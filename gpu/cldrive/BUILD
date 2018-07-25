@@ -38,6 +38,7 @@ py3_image(
 py_library(
     name = "args",
     srcs = ["args.py"],
+    visibility = ["//visibility:public"],
     deps = [
         requirement("numpy"),
         requirement("pycparser"),
