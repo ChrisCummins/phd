@@ -23,7 +23,7 @@ py_binary(
         ":data",
         ":driver",
         ":env",
-        "//gpu/oclgrind",
+        requirement("numpy")
     ],
 )
 
