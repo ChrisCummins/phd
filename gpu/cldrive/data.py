@@ -1,3 +1,4 @@
+"""Generate data for OpenCL arguments."""
 import functools
 import numpy as np
 from enum import Enum
@@ -7,6 +8,7 @@ from lib.labm8 import err
 
 
 class Generator(Enum):
+  """Data generator types."""
   # We wrap functions in a partial so that they are interpreted as attributes
   # rather than methods. See: http://stackoverflow.com/a/40339397
   RAND = functools.partial(np.random.rand)
@@ -19,7 +21,7 @@ class Generator(Enum):
     return self.value(*args, **kwargs).astype(numpy_type)
 
   @staticmethod
-  def from_str(string: str) -> 'Generator':
+  def FromString(string: str) -> 'Generator':
     if string == "rand":
       return Generator.RAND
     elif string == "arange":
@@ -29,13 +31,12 @@ class Generator(Enum):
     elif string == "ones":
       return Generator.ONES
     else:
-      raise TypeError
+      raise ValueError(f"Unknown generator name: '{string}'")
 
 
-def make_data(src: str, size: int, data_generator: Generator,
-              scalar_val: float = None) -> np.array:
-  """
-  Generate data for OpenCL kernels.
+def MakeData(src: str, size: int, data_generator: Generator,
+             scalar_val: float = None) -> np.array:
+  """Generate data for OpenCL kernels.
 
   Creates a numpy array for each OpenCL argument, except arguments with the
   'local' qualifier, since those are instantiated.
@@ -48,22 +49,21 @@ def make_data(src: str, size: int, data_generator: Generator,
     ValueError: If any of the arguments cannot be interpreted.
 
   Examples:
-
-    >>> make_data("kernel void A(global int* a, const int b) {}", 3, Generator.ZEROS)
+    >>> MakeData("kernel void A(global int* a, const int b) {}", 3, Generator.ZEROS)
     array([array([0, 0, 0], dtype=int32), array([3], dtype=int32)],
           dtype=object)
 
-    >>> make_data("kernel void A(global int* a, const int b) {}", 3, Generator.ONES)
+    >>> MakeData("kernel void A(global int* a, const int b) {}", 3, Generator.ONES)
     array([array([1, 1, 1], dtype=int32), array([3], dtype=int32)],
           dtype=object)
 
-    >>> make_data("kernel void A(global int* a, const int b) {}", 3, Generator.ARANGE)
+    >>> MakeData("kernel void A(global int* a, const int b) {}", 3, Generator.ARANGE)
     array([array([0, 1, 2], dtype=int32), array([3], dtype=int32)],
           dtype=object)
 
     Use `scalar_val` parameter to fix the value of scalar arguments:
 
-    >>> make_data("kernel void A(global int* a, const int b) {}", 3, Generator.ARANGE, scalar_val=100)
+    >>> MakeData("kernel void A(global int* a, const int b) {}", 3, Generator.ARANGE, scalar_val=100)
     array([array([0, 1, 2], dtype=int32), array([100], dtype=int32)],
           dtype=object)
   """
@@ -97,17 +97,21 @@ def make_data(src: str, size: int, data_generator: Generator,
   return np.array(data)
 
 
-def zeros(*args, **kwargs) -> np.array:
-  return make_data(*args, data_generator=Generator.ZEROS, **kwargs)
+def MakeZeros(*args, **kwargs) -> np.array:
+  """Make zero-valued arguments."""
+  return MakeData(*args, data_generator=Generator.ZEROS, **kwargs)
 
 
-def ones(*args, **kwargs) -> np.array:
-  return make_data(*args, data_generator=Generator.ONES, **kwargs)
+def MakeOnes(*args, **kwargs) -> np.array:
+  """Make one-valued arguments."""
+  return MakeData(*args, data_generator=Generator.ONES, **kwargs)
 
 
-def arange(*args, **kwargs) -> np.array:
-  return make_data(*args, data_generator=Generator.ARANGE, **kwargs)
+def MakeArange(*args, **kwargs) -> np.array:
+  """Make sequentially valued arguments."""
+  return MakeData(*args, data_generator=Generator.ARANGE, **kwargs)
 
 
-def rand(*args, **kwargs) -> np.array:
-  return make_data(*args, data_generator=Generator.RAND, **kwargs)
+def MakeRand(*args, **kwargs) -> np.array:
+  """Make arguments of random values."""
+  return MakeData(*args, data_generator=Generator.RAND, **kwargs)

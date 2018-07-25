@@ -1,0 +1,14 @@
+import numpy as np
+import typing
+from numpy import testing as nptest
+
+
+def ListOfListsToNumpy(list_of_lists: typing.List[list]) -> np.array:
+  """Convert list of lists to 2D numpy array."""
+  return np.array([np.array(x) for x in list_of_lists])
+
+
+def Assert2DArraysAlmostEqual(l1: np.array, l2: np.array) -> None:
+  """Assert that 2D arrays are almost equal."""
+  for x, y in zip(l1, l2):
+    nptest.assert_almost_equal(ListOfListsToNumpy(x), ListOfListsToNumpy(y))

@@ -79,6 +79,20 @@ py_library(
     ],
 )
 
+py_test(
+    name = "data_test",
+    size = "small",
+    srcs = ["data_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":data",
+        ":testlib",
+        requirement("absl-py"),
+        requirement("pytest"),
+    ],
+)
+
 py_library(
     name = "driver",
     srcs = ["driver.py"],
@@ -102,5 +116,14 @@ py_library(
         "//lib/labm8:bazelutil",
         "//lib/labm8:pbutil",
         requirement("absl-py"),
+    ],
+)
+
+py_library(
+    name = "testlib",
+    srcs = ["testlib.py"],
+    testonly = 1,
+    deps = [
+        requirement("numpy"),
     ],
 )

@@ -236,7 +236,7 @@ def MakeDriver(testcase: deepsmith_pb2.Testcase,
   src = testcase.inputs['src']
   try:
     # Generate a compile-and-execute test harness.
-    inputs = data.make_data(
+    inputs = data.MakeData(
         src=src, size=size,
         data_generator=data.Generator.ARANGE,
         scalar_val=size)
