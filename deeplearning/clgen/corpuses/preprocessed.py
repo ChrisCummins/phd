@@ -201,6 +201,14 @@ class PreprocessedContentFiles(sqlutil.Database):
 
   @contextlib.contextmanager
   def GetContentFileRoot(self, config: corpus_pb2.Corpus) -> pathlib.Path:
+    """Get the path of the directory containing content files.
+
+    Args:
+      config: The corpus config proto.
+
+    Returns:
+      The path of a directory containing content files.
+    """
     if config.HasField('local_directory'):
       yield pathlib.Path(ExpandConfigPath(config.local_directory))
     elif config.HasField('local_tar_archive'):
