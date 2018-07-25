@@ -24,6 +24,9 @@ from lib.labm8 import pbutil
 
 FLAGS = flags.FLAGS
 
+flags.DEFINE_boolean(
+    'ls_env', False,
+    'List the available OpenCL devices and exit.')
 flags.DEFINE_string(
     'generator', None,
     'The path of the generator config proto.')
