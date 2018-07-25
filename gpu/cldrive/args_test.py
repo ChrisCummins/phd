@@ -225,6 +225,10 @@ def test_GetKernelName_no_kernels():
     args.GetKernelName('')
   assert 'Source contains no kernel definitions' == str(e_ctx.value)
 
+  with pytest.raises(args.NoKernelError) as e_ctx:
+    args.GetKernelName('int A() {}')
+  assert 'Source contains no kernel definitions' == str(e_ctx.value)
+
 
 def test_GetKernelName_multiple_kernels():
   """Test that error is raised if multiple kernels are defined."""
@@ -234,6 +238,13 @@ kernel void A() {}
 kernel void B() {}  
 """)
   assert 'Source contains more than one kernel definition' == str(e_ctx.value)
+
+
+def test_GetKernelName_syntax_error():
+  """Test that error is raised if source contains syntax error."""
+  with pytest.raises(args.OpenCLValueError) as e_ctx:
+    args.GetKernelName('!@##syntax error!!!!1')
+  assert "Syntax error: ':1:1: before: !'" == str(e_ctx.value)
 
 
 def main(argv):  # pylint: disable=missing-docstring
