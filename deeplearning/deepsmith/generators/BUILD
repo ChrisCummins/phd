@@ -50,6 +50,38 @@ py_binary(
 # )
 
 py_binary(
+    name = "clsmith",
+    srcs = ["clsmith.py"],
+    data = ["@CLSmith"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":generator",
+        "//deeplearning/deepsmith:services",
+        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
+        "//deeplearning/deepsmith/proto:generator_py_pb2",
+        "//deeplearning/deepsmith/proto:service_py_pb2",
+        "//lib/labm8:bazelutil",
+        "//lib/labm8:labdate",
+        requirement("grpcio"),
+        requirement("absl-py"),
+    ],
+)
+
+py_test(
+    name = "clsmith_test",
+    srcs = ["clsmith_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":clsmith",
+        requirement("pytest"),
+        requirement("absl-py"),
+    ],
+)
+
+py_binary(
     name = "dummy_generator",
     srcs = ["dummy_generator.py"],
     default_python_version = "PY3",

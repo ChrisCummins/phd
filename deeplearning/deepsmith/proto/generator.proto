@@ -63,3 +63,15 @@ message ClgenGenerator {
   // is made and the 'src' input is set as the sample text.
   repeated Testcase testcase_skeleton = 5;
 }
+
+// A testcase generator which uses CLSmith to generate programs.
+message ClsmithGenerator {
+  // Configuration of the service host.
+  optional ServiceConfig service = 1;
+  // A list of command line arguments to invoke CLSmith with.
+  repeated string opt = 2;
+  // The skeleton Testcases used to convert CLgen samples into DeepSmith
+  // testcases. For each CLgen sample, a copy of all of the Testcase skeletons
+  // is made and the 'src' input is set as the sample text.
+  repeated Testcase testcase_skeleton = 3;
+}
