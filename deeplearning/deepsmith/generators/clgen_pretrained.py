@@ -30,7 +30,7 @@ def ClgenInstanceToGenerator(
     instance: sample.Instance) -> deepsmith_pb2.Generator:
   """Convert a CLgen instance to a DeepSmith generator proto."""
   g = deepsmith_pb2.Generator()
-  g.name = f'clgen'
+  g.name = 'clgen'
   g.opts['model'] = str(instance.model.path)
   g.opts['sampler'] = instance.sampler.hash
   return g
