@@ -45,7 +45,7 @@ message CompilerHarness {
 message CldriveHarness {
   optional ServiceConfig service = 1;
   // A list of OpenCL environments to run test cases on.
-  // Use `//gpu/cldrive:cldrive --ls_env` to list the available environments.
+  // Use `//gpu/cldrive --ls_env` to list the available environments.
   // If no environments are specified, all available environments will be used.
   repeated string opencl_env = 2;
   // A list of bools determining whether OpenCL optimizations should be enabled
@@ -55,4 +55,19 @@ message CldriveHarness {
   // compilation of C harness programs. These flags are appended to the existing
   // command line.
   repeated string driver_cflag = 4;
+}
+
+// A harness which uses cldrive to run testcases.
+message ClLauncherHarness {
+  optional ServiceConfig service = 1;
+  // A list of OpenCL environments to run test cases on.
+  // Use `//gpu/cldrive --ls_env` to list the available environments.
+  // If no environments are specified, all available environments will be used.
+  repeated string opencl_env = 2;
+  // A list of bools determining whether OpenCL optimizations should be enabled
+  // for the corresponding opencl_env.
+  repeated bool opencl_opt = 3;
+  // A list of additional command line options to pass to cl_launcher. These
+  // flags are appended to the existing command line.
+  repeated string opts = 4;
 }
