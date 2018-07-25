@@ -81,7 +81,7 @@ class ClsmithGenerator(generator.GeneratorBase,
   def GenerateOneFile(self) -> typing.Tuple[pathlib.Path, int, int]:
     start_epoch_ms_utc = labdate.MillisecondsTimestamp()
     proc = subprocess.Popen(
-        [bazelutil.DataPath('clsmith/CLSmith')] + list(self.config.opt))
+        [bazelutil.DataPath('CLSmith/CLSmith')] + list(self.config.opt))
     proc.communicate()
     if proc.returncode:
       raise CLSmithError(f'CLSmith exited with returncode: {proc.returncode}')
