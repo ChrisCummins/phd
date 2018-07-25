@@ -108,6 +108,11 @@ class HashCache(sqlutil.Database):
   def GetHash(self, path: pathlib.Path) -> str:
     """Get the hash of a file or directory.
 
+    This method is O(n) with respect to the number of files in the directory.
+    The first time this is called for a directory, this method must read every
+    file in the directory. For subsequent calls, this method must check the
+    mtime of every file.
+
     Note that the a file's mtime is used to determine cache hits. This uses
     second granularity, so if a file has been modified within a second, this
     method will erroneously return the cached checksum of the previous version.
