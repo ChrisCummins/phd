@@ -203,6 +203,10 @@ class PreprocessedContentFiles(sqlutil.Database):
   def GetContentFileRoot(self, config: corpus_pb2.Corpus) -> pathlib.Path:
     """Get the path of the directory containing content files.
 
+    If the corpus is a local directory, this simply returns the path. Otherwise,
+    this method creates a temporary copy of the files which can be used within
+    the scope of this context.
+
     Args:
       config: The corpus config proto.
 
