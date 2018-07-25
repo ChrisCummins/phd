@@ -17,6 +17,7 @@ from deeplearning.deepsmith.harnesses import harness as base_harness
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import harness_pb2
+from gpu.cldrive import cldrive as cldrive_lib
 from gpu.oclgrind import oclgrind
 from lib.labm8 import labdate
 from lib.labm8 import pbutil
@@ -282,6 +283,10 @@ def main(argv):
   """Main entry point."""
   if len(argv) > 1:
     raise app.UsageError('Unrecognized arguments')
+
+  if FLAGS.ls_env:
+    cldrive_lib.PrintOpenClEnvironments()
+    return
 
   start_time = time.time()
 
