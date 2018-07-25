@@ -194,7 +194,7 @@ def ResultIsInteresting(result: deepsmith_pb2.Result,
   gs_result = RunTestcases(gs_harness, [result.testcase])[0]
 
   dt_outcomes = gs_difftester([gs_result, result])
-  dt_outcome = dt.outcome[1]
+  dt_outcome = dt_outcomes[1]
   logging.info('Differential test outcome: %s.',
                deepsmith_pb2.DifferentialTest.Outcome.Name(dt_outcome))
 
