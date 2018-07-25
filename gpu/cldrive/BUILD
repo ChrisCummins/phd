@@ -60,6 +60,7 @@ py_test(
 py_library(
     name = "cgen",
     srcs = ["cgen.py"],
+    visibility = ["//visibility:public"],
     deps = [
         ":args",
         ":driver",
@@ -69,6 +70,7 @@ py_library(
 py_library(
     name = "data",
     srcs = ["data.py"],
+    visibility = ["//visibility:public"],
     deps = [
         ":args",
         ":driver",
@@ -80,6 +82,7 @@ py_library(
 py_library(
     name = "driver",
     srcs = ["driver.py"],
+    visibility = ["//visibility:public"],
     deps = [
         ":args",
         ":env",
