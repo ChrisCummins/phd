@@ -112,6 +112,8 @@ class GoldStandardDiffTester(DiffTesterBase):
       The differential test outcomes.
     """
     gs_result, *results = results
+    if not results:
+      raise ValueError('GoldStandardDiffTester called with only one result')
 
     # Determine the outcome of the gold standard.
     outcomes = [self.DiffTestOne(gs_result, gs_result)]
