@@ -72,17 +72,17 @@ for these flags to override the default values.
 
 ## Building the pre-trained model
 
-The docker image uses a pre-trained CLgen model. To build a model, modify the
+The docker image contains a pre-trained CLgen model. To build the model, modify the
 "working_dir" and "local_directory" fields of the file
-[//experimental/deeplearning/deepsmith/opencl_fuzz/clgen.pbtxt](experimental/deeplearning/deepsmith/opencl_fuzz/clgen.pbtxt)
-to point to your local corpus, then train and export the model using:
+[//experimental/deeplearning/deepsmith/opencl_fuzz/clgen_model.pbtxt](experimental/deeplearning/deepsmith/opencl_fuzz/clgen_model.pbtxt)
+to point to a local corpus, then train and export the model using:
 
 ```
 $ bazel run //deeplearning/clgen -- \
-    --config ~/phd/experimental/deeplearning/deepsmith/opencl_fuzz/clgen.pbtxt \
+    --config ~/phd/experimental/deeplearning/deepsmith/opencl_fuzz/clgen_model.pbtxt \
     --stop_after train
 $ bazel run //deeplearning/clgen -- \
-    --config experimental/deeplearning/deepsmith/opencl_fuzz/clgen.pbtxt \
+    --config experimental/deeplearning/deepsmith/opencl_fuzz/clgen_model.pbtxt \
     --export_model ~/phd/experimental/deeplearning/deepsmith/opencl_fuzz/model
 ```
 

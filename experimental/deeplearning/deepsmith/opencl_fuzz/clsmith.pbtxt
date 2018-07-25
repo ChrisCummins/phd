@@ -1,0 +1,16 @@
+# File: //deeplearning/deepsmith/proto/generator.proto
+# Proto: deepsmith.ClsmithGenerator
+testcase_skeleton {
+  toolchain: "opencl"
+  harness {
+    name: "cl_launcher"
+  }
+  inputs {
+    key: "gsize"
+    value: "1,1,1"
+  }
+  inputs {
+    key: "lsize"
+    value: "1,1,1"
+  }
+}

@@ -5,10 +5,11 @@ MAINTAINER Chris Cummins <chrisc.101@gmail.com>
 
 # Add and unpack the pre-trained corpus and config.
 RUN mkdir -p /data/
-ADD generator.pbtxt /data
+ADD clgen.pbtxt /data
+ADD clsmith.pbtxt /data
 ADD model /data/model
 
 # Add and unpack the CLgen build archive.
 ADD opencl_fuzz_image-layer.tar /
 
-ENTRYPOINT ["python", "/app/experimental/deeplearning/deepsmith/opencl_fuzz/opencl_fuzz_image.binary", "--generator=/data/generator.pbtxt", "--interesting_results_dir=/out"]
+ENTRYPOINT ["python", "/app/experimental/deeplearning/deepsmith/opencl_fuzz/opencl_fuzz_image.binary", "--clgen_generator=/data/clgen.pbtxt", "--interesting_results_dir=/out"]

@@ -9,9 +9,11 @@ from absl import logging
 
 import gpu.cldrive.env
 from deeplearning.deepsmith.difftests import difftests
-from deeplearning.deepsmith.difftests import opencl as opencl_difftests
+from deeplearning.deepsmith.difftests import opencl as opencl_filters
 from deeplearning.deepsmith.generators import clgen_pretrained
+from deeplearning.deepsmith.generators import clsmith
 from deeplearning.deepsmith.generators import generator as base_generator
+from deeplearning.deepsmith.harnesses import cl_launcher
 from deeplearning.deepsmith.harnesses import cldrive
 from deeplearning.deepsmith.harnesses import harness as base_harness
 from deeplearning.deepsmith.proto import deepsmith_pb2
@@ -28,12 +30,19 @@ flags.DEFINE_boolean(
     'ls_env', False,
     'List the available OpenCL devices and exit.')
 flags.DEFINE_string(
-    'generator', None,
-    'The path of the generator config proto.')
+    'clgen_generator', None,
+    'The path of a CLGen generator config proto. Cannot be used if '
+    '--clsmith_generator is set.')
+flags.DEFINE_string(
+    'clsmith_generator', None,
+    'The path of a CLSmith generator config proto. Cannot be used if '
+    '--clgen_generator is set.')
 flags.DEFINE_string(
     'base_harness', None,
     'The path to an optional base harness config proto. If set, the harness '
-    'configs are copied from this. Else, the default config is used.')
+    'configs are copied from this. Else, the default config is used. If '
+    '--clgen_generator is set, this must be a cldrive harness proto. If '
+    '--clsmith_generator is set, this must be a cl_launcher harness proto.')
 flags.DEFINE_string(
     'dut', 'Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2',
     'The name of the device under test, as described by cldrive. Run '
@@ -63,6 +72,7 @@ flags.DEFINE_integer(
 def RunBatch(generator: base_generator.GeneratorBase,
              dut_harness: base_harness.HarnessBase,
              gs_harness: base_harness.HarnessBase,
+             filters: difftests.FiltersBase,
              batch_size: int) -> typing.List[deepsmith_pb2.Result]:
   """Run one batch of testing.
 
@@ -76,6 +86,7 @@ def RunBatch(generator: base_generator.GeneratorBase,
     dut_harness: The device under test.
     gs_harness: The gold-standard device, used to compare outputs against the
       device under test.
+    filters: A testcase filters instance.
     batch_size: The number of testcases to generate and evaluate.
 
   Returns:
@@ -85,7 +96,6 @@ def RunBatch(generator: base_generator.GeneratorBase,
   unary_difftester = difftests.UnaryTester()
   gs_difftester = difftests.GoldStandardDiffTester(
       difftests.NamedOutputIsEqual('stdout'))
-  filters = opencl_difftests.ClgenOpenClFilters()
 
   interesting_results = []
 
@@ -173,7 +183,7 @@ def ResultIsInteresting(result: deepsmith_pb2.Result,
   result = dt.result[0]
 
   # Run testcases against gold standard devices and difftest.
-  gs_result = RunTestcases(gs_harness, result.testcase)[0]
+  gs_result = RunTestcases(gs_harness, [result.testcase])[0]
 
   dt_outcomes = gs_difftester([gs_result, result])
   dt_outcome = dt.outcome[1]
@@ -222,6 +232,7 @@ def TestingLoop(min_interesting_results: int, max_testing_time_seconds: int,
                 batch_size: int, generator: base_generator.GeneratorBase,
                 dut_harness: base_harness.HarnessBase,
                 gs_harness: base_harness.HarnessBase,
+                filters: difftests.FiltersBase,
                 interesting_results_dir: pathlib.Path,
                 start_time: float = None) -> None:
   """The main fuzzing loop.
@@ -234,6 +245,7 @@ def TestingLoop(min_interesting_results: int, max_testing_time_seconds: int,
     generator: A testcase generator.
     dut_harness: The device under test.
     gs_harness: The device to compare outputs against.
+    filters: A filters instance for testcases.
     interesting_results_dir: The directory to write interesting results to.
     start_time: The starting time, as returned by time.time().
   """
@@ -246,7 +258,7 @@ def TestingLoop(min_interesting_results: int, max_testing_time_seconds: int,
     batch_num += 1
     logging.info('Starting generate / test / eval batch %d ...', batch_num)
     interesting_results = RunBatch(
-        generator, dut_harness, gs_harness, batch_size)
+        generator, dut_harness, gs_harness, filters, batch_size)
     num_interesting_results += len(interesting_results)
     for result in interesting_results:
       pbutil.ToFile(result,
@@ -262,7 +274,7 @@ def TestingLoop(min_interesting_results: int, max_testing_time_seconds: int,
   logging.flush()
 
 
-def GetBaseHarnessConfig() -> harness_pb2.CldriveHarness:
+def GetBaseHarnessConfig(config_class):
   """Load the base Cldrive harness configuration.
 
   If --base_harness is set, the config is read from this path. This allows
@@ -272,13 +284,23 @@ def GetBaseHarnessConfig() -> harness_pb2.CldriveHarness:
     A CldriveHarness proto instance.
   """
   if FLAGS.base_harness:
-    config = pbutil.FromFile(pathlib.Path(FLAGS.base_harness),
-                             harness_pb2.CldriveHarness())
+    config = pbutil.FromFile(pathlib.Path(FLAGS.base_harness), config_class())
     config.ClearField('opencl_env')
     config.ClearField('opencl_opt')
     return config
   else:
-    return harness_pb2.CldriveHarness()
+    return config_class()
+
+
+def GeneratorFromFlag(flag_name: str, config_class,
+                      generator_class) -> base_generator.GeneratorBase:
+  """Instantiate a generator from a flag."""
+  config_path = pathlib.Path(getattr(FLAGS, flag_name))
+  if not pbutil.ProtoIsReadable(config_path, config_class()):
+    raise app.UsageError(
+        f'--{flag_name} is not a {config_class.__name__} proto')
+  config = pbutil.FromFile(config_path, config_class())
+  return generator_class(config)
 
 
 def main(argv):
@@ -301,31 +323,46 @@ def main(argv):
   logging.info('Recording interesting results in %s.', interesting_results_dir)
 
   logging.info('Preparing generator.')
-  if not FLAGS.generator:
-    raise app.UsageError('--generator must be set')
-  config = pathlib.Path(FLAGS.generator)
-  if not pbutil.ProtoIsReadable(config, generator_pb2.ClgenGenerator()):
-    raise app.UsageError('--generator is not a Generator proto')
-  generator_config = pbutil.FromFile(config, generator_pb2.ClgenGenerator())
-  generator = clgen_pretrained.ClgenGenerator(generator_config)
+  if FLAGS.clgen_generator and FLAGS.clsmith_generator:
+    raise app.UsageError(
+        'Both --clgen_generator and --clsmith_generator are set')
+  elif FLAGS.clgen_generator:
+    generator = GeneratorFromFlag('clgen_generator',
+                                  generator_pb2.ClgenGenerator,
+                                  clgen_pretrained.ClgenGenerator)
+    harness_class = cldrive.CldriveHarness
+    config_class = harness_pb2.CldriveHarness
+    filters = opencl_filters.ClgenOpenClFilters()
+  elif FLAGS.clsmith_generator:
+    generator = GeneratorFromFlag('clsmith_generator',
+                                  generator_pb2.ClsmithGenerator,
+                                  clsmith.ClsmithGenerator)
+    harness_class = cl_launcher.ClLauncherHarness
+    config_class = harness_pb2.ClLauncherHarness
+    # TODO(cec): Replace with CLSmith filters.
+    filters = difftests.FiltersBase()
+  else:
+    raise app.UsageError(
+        'Neither --clgen_generator or --clsmith_generator are set')
+  logging.info('%s:\n %s', type(generator).__name__, generator.config)
 
   logging.info('Preparing device under test.')
-  config = GetBaseHarnessConfig()
+  config = GetBaseHarnessConfig(config_class)
   config.opencl_env.extend([FLAGS.dut])
   config.opencl_opt.extend([FLAGS.opencl_opt])
-  dut_harness = cldrive.CldriveHarness(config)
+  dut_harness = harness_class(config)
   assert len(dut_harness.testbeds) == 1
 
   logging.info('Preparing gold standard testbed.')
-  config = GetBaseHarnessConfig()
+  config = GetBaseHarnessConfig(config_class)
   config.opencl_env.extend([gpu.cldrive.env.OclgrindOpenCLEnvironment().name])
   config.opencl_opt.extend([True])
-  gs_harness = cldrive.CldriveHarness(config)
+  gs_harness = harness_class(config)
   assert len(gs_harness.testbeds) >= 1
 
   TestingLoop(FLAGS.min_interesting_results, FLAGS.max_testing_time_seconds,
               FLAGS.batch_size, generator, dut_harness, gs_harness,
-              interesting_results_dir, start_time=start_time)
+              filters, interesting_results_dir, start_time=start_time)
 
 
 if __name__ == '__main__':

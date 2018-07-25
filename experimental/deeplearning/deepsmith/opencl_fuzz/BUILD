@@ -10,6 +10,8 @@ py_binary(
         "//deeplearning/deepsmith/difftests",
         "//deeplearning/deepsmith/difftests:opencl",
         "//deeplearning/deepsmith/generators:clgen_pretrained",
+        "//deeplearning/deepsmith/generators:clsmith",
+        "//deeplearning/deepsmith/harnesses:cl_launcher",
         "//deeplearning/deepsmith/harnesses:cldrive",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//deeplearning/deepsmith/proto:generator_py_pb2",
