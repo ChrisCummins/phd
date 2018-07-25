@@ -9,15 +9,14 @@ from absl import flags
 from absl import logging
 
 import gpu.cldrive.env
-
-
-FLAGS = flags.FLAGS
-
-from gpu.oclgrind import oclgrind
+from deeplearning.deepsmith.harnesses import cldrive
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import harness_pb2
 from deeplearning.deepsmith.proto import service_pb2
-from deeplearning.deepsmith.harnesses import cldrive
+from gpu.oclgrind import oclgrind
+
+
+FLAGS = flags.FLAGS
 
 
 # Test fixtures.
