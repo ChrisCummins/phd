@@ -1,3 +1,11 @@
+"""A gold-standard fuzzing loop.
+
+This program generates testcases and executes them against them on a device
+under test. If the program produces an output, it is compared against a gold
+standard Oclgrind output and used to determine if the result is interesting.
+
+CLgen and CLSmith generators and harnesses are supported.
+"""
 import humanize
 import pathlib
 import sys
