@@ -17,5 +17,5 @@ py_binary(
     srcs_version = "PY3",
     deps = [
         requirement("humanize"),
-    ]
+    ],
 )
