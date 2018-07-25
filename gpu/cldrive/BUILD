@@ -47,14 +47,14 @@ py_library(
 )
 
 py_test(
- name = "args_test",
- size = "small",
- srcs = ["args_test.py"],
- default_python_version = "PY3",
- srcs_version = "PY3",
- deps = [
-     ":args",
- ],
+    name = "args_test",
+    size = "small",
+    srcs = ["args_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":args",
+    ],
 )
 
 py_library(
