@@ -38,13 +38,13 @@ flags.DEFINE_boolean(
     'ls_env', False,
     'List the available OpenCL devices and exit.')
 flags.DEFINE_string(
-    'clgen_generator', None,
-    'The path of a CLGen generator config proto. Cannot be used if '
-    '--clsmith_generator is set.')
+    'generator', 'clgen',
+    'The type of generator to use. One of: {clgen,clsmith}.')
 flags.DEFINE_string(
-    'clsmith_generator', None,
-    'The path of a CLSmith generator config proto. Cannot be used if '
-    '--clgen_generator is set.')
+    'generator_config', None,
+    'The path of the generator config proto. If --generator=clgen, this must '
+    'be a ClgenGenerator proto. If --generator=clsmith, this must be a '
+    'ClSmithGenerator proto.')
 flags.DEFINE_string(
     'base_harness', None,
     'The path to an optional base harness config proto. If set, the harness '
@@ -300,14 +300,14 @@ def GetBaseHarnessConfig(config_class):
     return config_class()
 
 
-def GeneratorFromFlag(flag_name: str, config_class,
+def GeneratorFromFlag(config_class,
                       generator_class) -> base_generator.GeneratorBase:
-  """Instantiate a generator from a flag."""
-  config_path = pathlib.Path(getattr(FLAGS, flag_name))
-  if not pbutil.ProtoIsReadable(config_path, config_class()):
+  """Instantiate a generator from the --generator_config flag."""
+  if not pbutil.ProtoIsReadable(FLAGS.generator_config, config_class()):
     raise app.UsageError(
         f'--{flag_name} is not a {config_class.__name__} proto')
-  config = pbutil.FromFile(config_path, config_class())
+  config = pbutil.FromFile(pathlib.Path(FLAGS.generator_config),
+                           config_class())
   return generator_class(config)
 
 
@@ -331,19 +331,14 @@ def main(argv):
   logging.info('Recording interesting results in %s.', interesting_results_dir)
 
   logging.info('Preparing generator.')
-  if FLAGS.clgen_generator and FLAGS.clsmith_generator:
-    raise app.UsageError(
-        'Both --clgen_generator and --clsmith_generator are set')
-  elif FLAGS.clgen_generator:
-    generator = GeneratorFromFlag('clgen_generator',
-                                  generator_pb2.ClgenGenerator,
+  if FLAGS.generator == 'clgen':
+    generator = GeneratorFromFlag(generator_pb2.ClgenGenerator,
                                   clgen_pretrained.ClgenGenerator)
     harness_class = cldrive.CldriveHarness
     config_class = harness_pb2.CldriveHarness
     filters = opencl_filters.ClgenOpenClFilters()
-  elif FLAGS.clsmith_generator:
-    generator = GeneratorFromFlag('clsmith_generator',
-                                  generator_pb2.ClsmithGenerator,
+  elif FLAGS.generator == 'clsmith':
+    generator = GeneratorFromFlag(generator_pb2.ClsmithGenerator,
                                   clsmith.ClsmithGenerator)
     harness_class = cl_launcher.ClLauncherHarness
     config_class = harness_pb2.ClLauncherHarness
@@ -351,7 +346,7 @@ def main(argv):
     filters = difftests.FiltersBase()
   else:
     raise app.UsageError(
-        'Neither --clgen_generator or --clsmith_generator are set')
+        f"Unrecognized value for --generator: '{FLAGS.generator}'")
   logging.info('%s:\n %s', type(generator).__name__, generator.config)
 
   logging.info('Preparing device under test.')

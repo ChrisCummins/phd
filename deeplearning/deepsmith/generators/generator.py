@@ -7,10 +7,6 @@ from lib.labm8 import pbutil
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string(
-    'generator_config', None,
-    'Path to a generator config proto.')
-
 
 class GeneratorBase(services.ServiceBase):
 
