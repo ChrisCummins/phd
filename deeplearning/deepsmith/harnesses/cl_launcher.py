@@ -191,9 +191,10 @@ def RunTestcase(opencl_environment: env.OpenCLEnvironment,
     for src in CL_LAUNCHER_RUN_FILES:
       os.symlink(src, str(path / src.name))
 
-    cmd = [str(CL_LAUNCHER), '---debug', '-f', str(path / 'CLProg.c'),
-           '-i', str(path), '-l', testcase.inputs['lsize'],
-           '-g', testcase.inputs['gsize'],
+    timeout = testcase.harness.opts.get('timeout_seconds', '60')
+    cmd = ['timeout', '-s9', timeout, str(CL_LAUNCHER), '---debug',
+           '-f', str(path / 'CLProg.c'), '-i', str(path),
+           '-l', testcase.inputs['lsize'], '-g', testcase.inputs['gsize'],
            '-p', str(platform_id), '-d', str(device_id)] + opts
     if testbed.opts['opencl_opt'] == 'disabled':
       cmd.append('---disable_opts')
