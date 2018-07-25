@@ -11,7 +11,7 @@ from absl import logging
 from deeplearning.deepsmith.harnesses import cldrive
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import harness_pb2
-from gpu.oclgrind import oclgrind
+from gpu.cldrive import env
 from lib.labm8 import bazelutil
 from lib.labm8 import crypto
 from lib.labm8 import fs
@@ -44,7 +44,7 @@ def main(argv):
 
   logging.info('Preparing OpenCL testbed.')
   config = harness_pb2.CldriveHarness()
-  config.opencl_env.extend([oclgrind.OpenCLEnvironment().name])
+  config.opencl_env.extend([env.OclgrindOpenCLEnvironment().name])
   config.opencl_opt.extend([FLAGS.opencl_opt])
   harness = cldrive.CldriveHarness(config)
   assert len(harness.testbeds) >= 1

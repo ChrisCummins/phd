@@ -63,6 +63,21 @@ class OpenCLEnvironment(object):
     return process
 
 
+class OclgrindOpenCLEnvironment(OpenCLEnvironment):
+  """A mock OpenCLEnvironment for oclgrind."""
+
+  def __init__(self):
+    super(OclgrindOpenCLEnvironment, self).__init__(
+        oclgrind.CLINFO_DESCRIPTION)
+
+  def Exec(self, argv: typing.List[str],
+           env: typing.Dict[str, str] = None) -> subprocess.Popen:
+    """Execute a command in the device environment."""
+    return oclgrind.Exec(
+        ['--max-errors', '1', '--uninitialized', '--data-races',
+         '--uniform-writes', '--uniform-writes'] + argv, env=env)
+
+
 def host_os() -> str:
   """
   Get the type and version of the host operating system.
@@ -137,7 +152,7 @@ def GetOpenClEnvironments() -> typing.List[OpenCLEnvironment]:
   Returns:
     A list of OpenCLEnvironment instances.
   """
-  return sorted(list(all_envs()) + [oclgrind.OpenCLEnvironment()],
+  return sorted(list(all_envs()) + [OclgrindOpenCLEnvironment()],
                 key=lambda x: x.name)
 
 

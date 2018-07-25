@@ -14,7 +14,6 @@ py_binary(
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
-        "//gpu/cldrive:env",
         "//gpu/clinfo/proto:clinfo_py_pb2",
         "//lib/labm8:bazelutil",
         "//lib/labm8:system",

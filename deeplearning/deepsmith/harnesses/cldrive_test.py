@@ -8,6 +8,8 @@ from absl import app
 from absl import flags
 from absl import logging
 
+import gpu.cldrive.env
+
 
 FLAGS = flags.FLAGS
 
@@ -38,7 +40,7 @@ def abc_testcase() -> deepsmith_pb2.Testcase():
 def abc_harness_config() -> harness_pb2.CldriveHarness:
   """A test fixture which returns an oclgrind harness config."""
   config = harness_pb2.CldriveHarness()
-  config.opencl_env.extend([oclgrind.OpenCLEnvironment().name])
+  config.opencl_env.extend([gpu.cldrive.env.OclgrindOpenCLEnvironment().name])
   config.opencl_opt.extend([True])
   return config
 
@@ -259,14 +261,16 @@ def test_MakeDriver_optimizations_off():
 def test_CldriveHarness_oclgrind_testbed():
   """Test that harness can be made from project-local oclgrind."""
   config = harness_pb2.CldriveHarness()
-  config.opencl_env.extend([oclgrind.OpenCLEnvironment().name,
-                            oclgrind.OpenCLEnvironment().name])
+  config.opencl_env.extend([gpu.cldrive.env.OclgrindOpenCLEnvironment().name,
+                            gpu.cldrive.env.OclgrindOpenCLEnvironment().name])
   config.opencl_opt.extend([True, False])
   harness = cldrive.CldriveHarness(config)
   assert len(harness.testbeds) == 2
-  assert harness.testbeds[0].name == oclgrind.OpenCLEnvironment().name
+  assert harness.testbeds[
+           0].name == gpu.cldrive.env.OclgrindOpenCLEnvironment().name
   assert harness.testbeds[0].opts['opencl_opt'] == 'enabled'
-  assert harness.testbeds[1].name == oclgrind.OpenCLEnvironment().name
+  assert harness.testbeds[
+           1].name == gpu.cldrive.env.OclgrindOpenCLEnvironment().name
   assert harness.testbeds[1].opts['opencl_opt'] == 'disabled'
 
 

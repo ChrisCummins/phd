@@ -1,13 +1,13 @@
+import humanize
 import pathlib
 import sys
 import time
 import typing
-
-import humanize
 from absl import app
 from absl import flags
 from absl import logging
 
+import gpu.cldrive.env
 from deeplearning.deepsmith.difftests import difftests
 from deeplearning.deepsmith.difftests import opencl as opencl_difftests
 from deeplearning.deepsmith.generators import clgen_pretrained
@@ -18,7 +18,6 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import harness_pb2
 from gpu.cldrive import env
-from gpu.oclgrind import oclgrind
 from lib.labm8 import labdate
 from lib.labm8 import pbutil
 
@@ -316,7 +315,7 @@ def main(argv):
 
   logging.info('Preparing gold standard testbed.')
   config = GetBaseHarnessConfig()
-  config.opencl_env.extend([oclgrind.OpenCLEnvironment().name])
+  config.opencl_env.extend([gpu.cldrive.env.OclgrindOpenCLEnvironment().name])
   config.opencl_opt.extend([True])
   gs_harness = cldrive.CldriveHarness(config)
   assert len(gs_harness.testbeds) >= 1

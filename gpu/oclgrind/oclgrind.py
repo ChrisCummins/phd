@@ -17,7 +17,6 @@ import typing
 from absl import app
 from absl import flags
 
-from gpu.cldrive import env
 from gpu.clinfo.proto import clinfo_pb2
 from lib.labm8 import bazelutil
 from lib.labm8 import system
@@ -25,9 +24,20 @@ from lib.labm8 import system
 
 FLAGS = flags.FLAGS
 
-# The path to the oclgrind binary.
 _OCLGRIND_PKG = 'oclgrind_linux' if system.is_linux() else 'oclgrind_mac'
+# The path to the oclgrind binary.
 OCLGRIND_PATH = bazelutil.DataPath(f'{_OCLGRIND_PKG}/bin/oclgrind')
+# The clinfo description of the local Oclgrind binary.
+CLINFO_DESCRIPTION = clinfo_pb2.OpenClDevice(
+    name='Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2',
+    platform_name='Oclgrind',
+    device_name='Oclgrind Simulator',
+    driver_version='Oclgrind 18.3',
+    opencl_version='1.2',
+    device_type='Emulator',
+    platform_id=0,
+    device_id=0,
+)
 
 
 def Exec(argv: typing.List[str],
@@ -52,28 +62,6 @@ def Exec(argv: typing.List[str],
   stdout, stderr = process.communicate()
   process.stdout, process.stderr = stdout, stderr
   return process
-
-
-class OpenCLEnvironment(env.OpenCLEnvironment):
-  """A mock cldrive OpenCLEnvironment for oclgrind."""
-
-  def __init__(self):
-    super(OpenCLEnvironment, self).__init__(clinfo_pb2.OpenClDevice(
-        name='Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2',
-        platform_name='Oclgrind',
-        device_name='Oclgrind Simulator',
-        driver_version='Oclgrind 18.3',
-        opencl_version='1.2',
-        device_type='Emulator',
-        platform_id=0,
-        device_id=0,
-    ))
-
-  def Exec(self, argv: typing.List[str],
-           env: typing.Dict[str, str] = None) -> subprocess.Popen:
-    """Execute a command in the device environment."""
-    return Exec(['--max-errors', '1', '--uninitialized', '--data-races',
-                 '--uniform-writes', '--uniform-writes'] + argv, env=env)
 
 
 def main(argv):

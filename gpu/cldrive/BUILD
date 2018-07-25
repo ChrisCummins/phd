@@ -95,9 +95,10 @@ py_library(
     name = "env",
     srcs = ["env.py"],
     data = ["//gpu/clinfo"],
-    visibility = ["//gpu:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         "//gpu/clinfo/proto:clinfo_py_pb2",
+        "//gpu/oclgrind",
         "//lib/labm8:bazelutil",
         "//lib/labm8:pbutil",
         requirement("absl-py"),

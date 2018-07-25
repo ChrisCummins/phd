@@ -6,13 +6,13 @@ import typing
 from absl import app
 from absl import flags
 
+import gpu.cldrive.env
 from deeplearning.deepsmith.difftests import difftests
 from deeplearning.deepsmith.harnesses import cldrive
 from deeplearning.deepsmith.harnesses import harness
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import harness_pb2
 from experimental.deeplearning.deepsmith.opencl_fuzz import opencl_fuzz
-from gpu.oclgrind import oclgrind
 
 
 FLAGS = flags.FLAGS
@@ -24,7 +24,7 @@ FLAGS = flags.FLAGS
 def cldrive_harness():
   """Test fixture to return an Cldrive test harness."""
   config = harness_pb2.CldriveHarness()
-  config.opencl_env.extend([oclgrind.OpenCLEnvironment().name])
+  config.opencl_env.extend([gpu.cldrive.env.OclgrindOpenCLEnvironment().name])
   config.opencl_opt.extend([True])
   return cldrive.CldriveHarness(config)
 

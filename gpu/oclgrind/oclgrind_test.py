@@ -1,7 +1,6 @@
 """Unit tests for //gpu/oclgrind/oclgrind.py."""
-import sys
-
 import pytest
+import sys
 from absl import app
 from absl import flags
 
@@ -26,20 +25,6 @@ def test_Exec_version():
   proc = oclgrind.Exec(['--version'])
   # This test will of course fail if the @oclgrind package is updated.
   assert proc.stdout == VERSION
-
-
-def test_OpenCLEnvironment_Exec_version():
-  """Test that OpenCLEnvironment.Exec() works as expected for version."""
-  proc = oclgrind.OpenCLEnvironment().Exec(['--version'])
-  # This test will of course fail if the @oclgrind package is updated.
-  assert proc.stdout == VERSION
-
-
-def test_OpenCLEnvironment_name():
-  """Test that the OpenCLEnvironment object has a correct 'name' property."""
-  env = oclgrind.OpenCLEnvironment()
-  # This test will of course fail if the @oclgrind package is updated.
-  assert 'Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2' == env.name
 
 
 def main(argv):
