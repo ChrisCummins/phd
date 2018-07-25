@@ -87,3 +87,15 @@ $ bazel run //deeplearning/clgen -- \
 ```
 
 The script `./make_image.sh` will now use the newly exported model.
+
+
+## Updating the docker image
+
+```sh
+$ cd ~/phd/experimental/deeplearning/deepsmith/opencl_fuzz
+$ ./make_image.sh
+# Make a note of the last line which prints the image id, something like:
+# "Successfully built da07586b1fa5"
+$ docker tag $ID chriscummins/opencl_fuzz
+$ docker push chriscummins/opencl_fuzz
+```
