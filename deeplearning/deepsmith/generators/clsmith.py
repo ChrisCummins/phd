@@ -69,9 +69,10 @@ class ClsmithGenerator(generator.GeneratorBase,
     with tempfile.TemporaryDirectory(prefix='clsmith_') as d:
       os.chdir(d)
       try:
-        for _ in range(num_programs):
+        for i in range(num_programs):
           response.testcases.extend(
               self.FileToTestcases(*self.GenerateOneFile()))
+          logging.info('Generated file %d.', i + 1)
       except CLSmithError as e:
         response.status.returncode = service_pb2.ServiceStatus.ERROR
         response.status.error_message = str(e)
