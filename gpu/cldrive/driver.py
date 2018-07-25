@@ -1,14 +1,13 @@
 import collections
+import numpy as np
 import os
+import pickle
 import re
 import sys
-from tempfile import NamedTemporaryFile
-
-import numpy as np
-import pickle
 from contextlib import suppress
 from signal import Signals
 from subprocess import PIPE, Popen
+from tempfile import NamedTemporaryFile
 from typing import List, Union
 
 from gpu.cldrive import args as _args
@@ -202,7 +201,7 @@ def drive(env: _env.OpenCLEnvironment, src: str, inputs: np.array,
 
   # parse args in this process since we want to preserve the sueful exception
   # type
-  args = _args.extract_args(src)
+  args = _args.GetKernelArguments(src)
 
   # check that the number of inputs is correct
   args_with_inputs = [i for i, arg in enumerate(args)
@@ -295,7 +294,8 @@ def drive(env: _env.OpenCLEnvironment, src: str, inputs: np.array,
 ArgTuple = collections.namedtuple('ArgTuple', ['hostdata', 'devdata'])
 
 
-def extract_argtuples(ctx, args: List[_args.KernelArg], data: np.array) -> List[ArgTuple]:
+def extract_argtuples(ctx, args: List[_args.KernelArg], data: np.array) -> List[
+  ArgTuple]:
   import pyopencl as cl
   argtuples = []
   data_i = 0

@@ -1,6 +1,5 @@
-import typing
-
 import numpy as np
+import typing
 
 from gpu.cldrive import args as _args
 from gpu.cldrive import driver
@@ -363,7 +362,7 @@ int main(int argc, char** argv) {{
     """
 
   if not compile_only or (compile_only and create_kernel):
-    kernel_name_ = _args.kernel_name(src)
+    kernel_name_ = _args.GetKernelName(src)
     c += f"""
     cl_kernel kernels[128];
     cl_uint num_kernels;
@@ -388,7 +387,7 @@ int main(int argc, char** argv) {{
 """
 
   if not compile_only:
-    args = _args.extract_args(src)
+    args = _args.GetKernelArguments(src)
     setup_block, teardown_block, print_block = gen_data_blocks(args, inputs)
     c += f"""
 {setup_block}

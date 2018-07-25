@@ -1,7 +1,6 @@
 import functools
-from enum import Enum
-
 import numpy as np
+from enum import Enum
 
 from gpu.cldrive import args as _args
 from lib.labm8 import err
@@ -77,7 +76,7 @@ def make_data(src: str, size: int, data_generator: Generator,
     scalar_val = size
 
   data = []
-  for arg in _args.extract_args(src):
+  for arg in _args.GetKernelArguments(src):
     if arg.address_space == "global" or arg.address_space == "constant":
       argdata = data_generator(arg.numpy_type, size * arg.vector_width)
     elif arg.address_space == "local":

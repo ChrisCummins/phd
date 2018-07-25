@@ -100,7 +100,7 @@ def ContainsFloatingPoint(testcase: deepsmith_pb2.Testcase) -> bool:
 
 def HasVectorInputs(testcase: deepsmith_pb2.Testcase) -> bool:
   """Return whether any of the kernel arguments are vector types."""
-  for arg in args.extract_args(testcase.inputs['src']):
+  for arg in args.GetKernelArguments(testcase.inputs['src']):
     if arg.is_vector:
       return True
   return False

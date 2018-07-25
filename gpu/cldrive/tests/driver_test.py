@@ -168,7 +168,7 @@ def test_profiling():
 
   with DevNullRedirect():
     outputs = cldrive.drive(
-      ENV, src, inputs, gsize=(16, 1, 1), lsize=(16, 1, 1), profiling=True)
+        ENV, src, inputs, gsize=(16, 1, 1), lsize=(16, 1, 1), profiling=True)
 
   almost_equal(outputs, outputs_gs)
 
@@ -185,7 +185,7 @@ def test_header():
   inputs = [np.arange(16)]
   outputs_gs = [np.arange(16) * 2]
 
-  pp = cldrive.preprocess(src, include_dirs=[data_path("")])
+  pp = cldrive.PreprocessSource(src, include_dirs=[data_path("")])
   outputs = cldrive.drive(ENV, pp, inputs, gsize=(16, 1, 1), lsize=(16, 1, 1))
   almost_equal(outputs, outputs_gs)
 
@@ -196,7 +196,7 @@ def test_header():
 def main(argv):  # pylint: disable=missing-docstring
   del argv
   sys.exit(pytest.main(
-    [cldrive.driver.__file__, __file__, "-v", "--doctest-modules"]))
+      [cldrive.driver.__file__, __file__, "-v", "--doctest-modules"]))
 
 
 if __name__ == "__main__":

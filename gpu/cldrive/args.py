@@ -1,23 +1,17 @@
-"""
-Attributes
-----------
-NUMPY_TYPES : Dict[str, np.dtype]
-    A lookup table mapping OpenCL data type names to the corresponding numpy
-    data type.
-
-NUMPY_TYPES : Dict[np.dtype, str]
-    The inverse lookup table of NUMPY_TYPES.
-"""
-import re
-
+"""OpenCL argument and type handling."""
 import numpy as np
+import re
+import subprocess
+import typing
 from pathlib import Path
-from pycparser.c_ast import FileAST, IdentifierType, NodeVisitor, PtrDecl, Struct
+from pycparser.c_ast import FileAST, IdentifierType, NodeVisitor, PtrDecl, \
+  Struct
 from pycparser.plyparser import ParseError
 from pycparserext.ext_c_parser import OpenCLCParser
-from subprocess import PIPE, Popen
-from typing import List
 
+
+# A lookup table mapping OpenCL data type names to the corresponding numpy data
+# type.
 NUMPY_TYPES = {
   "bool": np.dtype("bool"),
   "char": np.dtype("int8"),
@@ -38,6 +32,10 @@ NUMPY_TYPES = {
   "ushort": np.dtype("uint16"),
 }
 
+# The inverse lookup table of NUMPY_TYPES.
+OPENCL_TYPES = dict((v, k) for k, v in NUMPY_TYPES.items())
+
+# C printf() function format specifiers for numpy types.
 FORMAT_SPECIFIERS = {
   np.dtype("bool"): "%d",
   np.dtype("float32"): "%.3f",
@@ -52,21 +50,17 @@ FORMAT_SPECIFIERS = {
   np.dtype("uint8"): "%hd",
 }
 
-OPENCL_TYPES = dict((v, k) for k, v in NUMPY_TYPES.items())
+# Private OpenCL parser instance.
+_OPENCL_PARSER = OpenCLCParser()
 
 
 class OpenCLPreprocessError(ValueError):
-  """
-  Raised if pre-processor fails fails.
+  """Raised if pre-processor fails.
 
-  Attributes
-  ----------
-  command : str
-      Pre-processor invocation
-  stdout : str
-      Pre-processor output
-  stderr : str
-      Pre-processor error output
+  Attributes:
+    command: Pre-processor invocation.
+    stdout: Pre-processor output.
+    stderr: Pre-processor error output.
   """
 
   def __init__(self, command: str, stdout: str, stderr: str):
@@ -80,24 +74,31 @@ class OpenCLPreprocessError(ValueError):
 
 
 class OpenCLValueError(ValueError):
-  """ Raised if there is an invalid value OpenCL code """
+  """Raised if there is an invalid OpenCL code."""
+  pass
+
+
+class MultipleKernelsError(LookupError):
+  """Raised if source contains multiple kernels."""
+  pass
+
+
+class NoKernelError(LookupError):
+  """Raised if a source does not contain a kernel."""
   pass
 
 
 class KernelArg(object):
-  """
-  OpenCL kernel argument representation.
+  """OpenCL kernel argument representation.
 
-  TODO
-  ----
-  * Attribute 'numpy_type' should depend on the properties of the device.
-    E.g. not all devices will have 32 bit integer widths.
+  TODO(cec): Attribute 'numpy_type' should depend on the properties of the
+    device. E.g. not all devices will have 32 bit integer widths.
   """
 
   def __init__(self, ast):
     self.ast = ast
 
-    # determine pointer type
+    # Determine pointer type.
     self.is_pointer = isinstance(self.ast.type, PtrDecl)
     self.address_space = "private"
 
@@ -108,19 +109,19 @@ class KernelArg(object):
     else:
       self.quals_str = ""
 
-    # determine tyename
+    # Determine type name.
     try:
       if isinstance(self.ast.type.type, IdentifierType):
-        typenames = self.ast.type.type.names
+        type_names = self.ast.type.type.names
       elif isinstance(self.ast.type.type.type, Struct):
-        typenames = ["struct", self.ast.type.type.type.name]
+        type_names = ["struct", self.ast.type.type.type.name]
       else:
-        typenames = self.ast.type.type.type.names
+        type_names = self.ast.type.type.type.names
     except AttributeError as e:  # e.g. structs
       raise ValueError(
-          f"unsupported data type for argument '{self.name}'") from e
+          f"Unsupported data type for argument: '{self.name}'") from e
 
-    self.typename = " ".join(typenames)
+    self.typename = " ".join(type_names)
     self.bare_type = self.typename.rstrip('0123456789')
 
     try:
@@ -128,11 +129,11 @@ class KernelArg(object):
     except KeyError:
       supported_types_str = ",".join(sorted(NUMPY_TYPES.keys()))
       raise OpenCLValueError(f"""\
-unsupported type '{self.typename}' for argument \
+Unsupported type '{self.typename}' for argument \
 '{self.quals_str}{self.typename} {self.name}'. \
-supported types are: {{{supported_types_str}}}""")
+Supported types are: {{{supported_types_str}}}""")
 
-    # get address space
+    # Get address space.
     if self.is_pointer:
       address_quals = []
       if "local" in self.ast.quals:
@@ -183,27 +184,18 @@ supported types are: {{{supported_types_str}}}""")
 
 
 class ArgumentExtractor(NodeVisitor):
-  """
-  Extract kernel arguments from an OpenCL AST.
+  """Extract kernel arguments from an OpenCL AST.
 
-  Attributes
-  ----------
-  args : List[KernelArg]
-      List of KernelArg instances.
-
-  name : str
-      Kernel name.
-
-  Raises
-  ------
-  ValueError
-      If source contains more than one kernel definition.
-
-  TODO
-  ----
-  * build a table of typedefs and substitute the original types when
+  TODO(cec): Build a table of typedefs and substitute the original types when
     constructing kernel args.
-  * handle structs by creating numpy types.
+  TODO(cec): Handle structs by creating numpy types.
+
+  Attributes:
+    args: typing.List of KernelArg instances.
+    name: Kernel name.
+
+  Raises:
+    ValueError: If source contains more than one kernel definition.
   """
 
   def __init__(self, *args, **kwargs):
@@ -211,10 +203,11 @@ class ArgumentExtractor(NodeVisitor):
 
     super(ArgumentExtractor, self).__init__(*args, **kwargs)
     self.kernel_count = 0
-    self._args: List[KernelArg] = []
+    self._args: typing.List[KernelArg] = []
+    self.name = None
 
   def visit_FuncDef(self, node):
-    # only visit kernels, not allfunctions
+    # Only visit kernels, not all functions.
     if ("kernel" in node.decl.funcspec or
         "__kernel" in node.decl.funcspec):
       self.kernel_count += 1
@@ -222,166 +215,152 @@ class ArgumentExtractor(NodeVisitor):
     else:
       return
 
-    # ensure we've only visited one kernel
+    # Ensure we've only visited one kernel.
     if self.kernel_count > 1:
-      raise LookupError(
-          "source contains more than one kernel definition")
+      raise MultipleKernelsError(
+          "Source contains more than one kernel definition")
 
-    # function may not have arguments
+    # Function may not have arguments
     if self.extract_args and node.decl.type.args:
       for param in node.decl.type.args.params:
         self._args.append(KernelArg(param))
 
   @property
-  def args(self):
+  def args(self) -> typing.List[KernelArg]:
+    """Get the kernels for the kernel."""
     if self.kernel_count != 1:
-      raise LookupError("source contains no kernel definitions.")
+      raise NoKernelError("Source contains no kernel definitions")
     return self._args
 
 
-__parser = OpenCLCParser()
+def PreprocessSource(src: str, include_dirs: typing.List[Path] = None) -> str:
+  """Pre-process a source string.
 
+  Args:
+    src: The source string.
+    include_dirs: A list of directories to include.
 
-def preprocess(src: str, include_dirs: List[Path] = []) -> str:
-  include_dirs = [Path(p).expanduser() for p in include_dirs]  # expand '~'
+  Returns:
+    The pre-processed source.
+
+  Raises:
+    OpenCLPreprocessError: If there is an error in the source.
+    RuntimeError: If the pre-process command fails.
+  """
+  include_dirs = include_dirs or []
+  include_dirs = [Path(p).expanduser() for p in include_dirs]  # Expand '~'.
   command = ['cpp'] + [f"-I{p}" for p in include_dirs] + ['-xc', '-']
 
   try:
-    process = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE,
-                    universal_newlines=True)
+    process = subprocess.Popen(command, stdin=subprocess.PIPE,
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                               universal_newlines=True)
     stdout, stderr = process.communicate(src)
     if process.returncode != 0:
       raise OpenCLPreprocessError(" ".join(command), stdout, stderr)
-
     return stdout
-  except OSError as e:
+  except OSError:
     c = " ".join(command)
-    raise RuntimeError(f"preprocess command {c} failed")
+    raise RuntimeError(f"Preprocess command failed: '{c}'.")
 
 
-def parse(src: str) -> FileAST:
-  """
-  Parse OpenCL source code.
+def ParseSource(src: str) -> FileAST:
+  """Parse OpenCL source code.
 
-  Parameters
-  ----------
-  src : str
-      OpenCL kernel source.
+  Args:
+    src: OpenCL kernel source.
 
-  Returns
-  -------
-  FileAST
-      Parsed AST.
+  Returns:
+    The parsed AST.
 
-  Raises
-  ------
-  OpenCLValueError
-      The source is not well formed, e.g. it contains a syntax error, or
-      invalid types.
+  Raises:
+    OpenCLValueError: If the source is not well formed, e.g. it contains a
+      syntax error, or invalid types.
   """
   try:
-    ast = __parser.parse(src)
-    # strip preprocesor line objects and rebuild the AST.
+    ast = _OPENCL_PARSER.parse(src)
+    # Strip pre-procesor line objects and rebuild the AST.
     # See: https://github.com/inducer/pycparserext/issues/27
     children = [x[1] for x in ast.children() if not isinstance(x[1], list)]
     new_ast = FileAST(ext=children, coord=0)
-
     return new_ast
   except (ParseError, AssertionError) as e:
-    raise OpenCLValueError("syntax error") from e
+    raise OpenCLValueError(f"Syntax error: '{e}'") from e
 
 
-def extract_args(src: str) -> List[KernelArg]:
-  """
-  Extract kernel arguments for an OpenCL kernel.
+def GetKernelArguments(src: str) -> typing.List[KernelArg]:
+  """Extract arguments for an OpenCL kernel.
 
   Accepts the source code for an OpenCL kernel and returns a list of its
   arguments.
 
-  Parameters
-  ----------
-  src : str
-      The OpenCL kernel source.
+  TODO(cec): Pre-process the source code.
 
-  Returns
-  -------
-  List[KernelArg]
-      A list of the kernel's arguments, in order.
+  Args:
+    src: The OpenCL kernel source.
 
-  Raises
-  ------
-  LookupError
-      If the source contains no OpenCL kernel definitions, or more than one.
-  ValueError
-      If one of the kernel's parameter types are unsupported.
+  Returns:
+    A list of the kernel's arguments, in order.
 
-  Examples
-  --------
-  >>> args = extract_args("void kernel A(global float *a, const int b) {}")
-  >>> args
-  [global float * a, const int b]
-  >>> args[0].typename
-  'float'
-  >>> args[0].address_space
-  'global'
-  >>> args[1].is_pointer
-  False
+  Raises:
+    LookupError: If the source contains no OpenCL kernel definitions, or more
+      than one.
+    ValueError: If one of the kernel's parameter types are unsupported.
 
-  >>> extract_args("void kernel A() {}")
-  []
+  Examples:
+    >>> args = GetKernelArguments("void kernel A(global float *a, const int b) {}")
+    >>> args
+    [global float * a, const int b]
+    >>> args[0].typename
+    'float'
+    >>> args[0].address_space
+    'global'
+    >>> args[1].is_pointer
+    False
 
-  >>> extract_args("void /@&&& syn)")  # doctest: +IGNORE_EXCEPTION_DETAIL
-  Traceback (most recent call last):
-  ...
-  OpenCLValueError
+    >>> GetKernelArguments("void kernel A() {}")
+    []
 
-  >>> extract_args("")  # doctest: +IGNORE_EXCEPTION_DETAIL
-  Traceback (most recent call last):
-  ...
-  LookupError
+    >>> GetKernelArguments("void /@&&& syn)")  # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+    ...
+    OpenCLValueError
 
-  >>> extract_args("void kernel A() {} void kernel B() {}")  # doctest: +IGNORE_EXCEPTION_DETAIL
-  Traceback (most recent call last):
-  ...
-  LookupError
-
-  TODO
-  ----
-  * Pre-process source code.
+    >>> GetKernelArguments("")  # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+    ...
+    NoKernelError
   """
   visitor = ArgumentExtractor()
-  visitor.visit(parse(src))
+  visitor.visit(ParseSource(src))
   return visitor.args
 
 
-def kernel_name(src: str) -> str:
-  """
-  Extract the name of an OpenCL kernel.
+def GetKernelName(src: str) -> str:
+  """Extract the name of an OpenCL kernel.
 
   Accepts the source code for an OpenCL kernel and returns its name.
 
-  Parameters
-  ----------
-  src : str
-      The OpenCL kernel source.
+  Args:
+    src: The OpenCL kernel source.
 
-  Returns
-  -------
-  str
-      The kernel name.
+  Returns:
+    str: The kernel name.
 
-  Raises
-  ------
-  LookupError
-      If the source contains no OpenCL kernel definitions, or more than one.
+  Raises:
+    NoKernelError: If the source contains no OpenCL kernel definitions.
+    MultipleKernelsError: If the source contains multiple OpenCL kernel
+      definitions.
 
-  Examples
-  --------
-  >>> kernel_name("void kernel foo() {}")
-  'foo'
-  >>> kernel_name("void kernel A(global float *a, const int b) {}")
-  'A'
+  Examples:
+    >>> GetKernelName("void kernel foo() {}")
+    'foo'
+    >>> GetKernelName("void kernel A(global float *a, const int b) {}")
+    'A'
   """
   visitor = ArgumentExtractor(extract_args=False)
-  visitor.visit(parse(src))
-  return visitor.name
+  visitor.visit(ParseSource(src))
+  if visitor.name:
+    return visitor.name
+  else:
+    raise NoKernelError('Source contains no kernel definitions')

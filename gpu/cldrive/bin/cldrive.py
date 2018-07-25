@@ -1,6 +1,5 @@
-from io import TextIOWrapper
-
 from argparse import ArgumentParser
+from io import TextIOWrapper
 
 from gpu.cldrive import *
 
@@ -45,7 +44,8 @@ suitable device, and prints the outputs. Copyright (C) 2017 Chris Cummins \
       "-s", "--size", metavar="<size>", type=int, default=64,
       help="size of input arrays to generate (default: 64)")
   parser.add_argument(
-      "-i", "--generator", metavar="<{rand,arange,zeros,ones}>", default="arange",
+      "-i", "--generator", metavar="<{rand,arange,zeros,ones}>",
+      default="arange",
       help="input generator to use, one of: {rand,arange,zeros,ones} (default: arange)")
   parser.add_argument(
       "--scalar-val", metavar="<float>", type=float, default=None,
@@ -131,7 +131,7 @@ suitable device, and prints the outputs. Copyright (C) 2017 Chris Cummins \
       print(d.decode('latin-1'), end='', flush=True)
     else:
       np.set_printoptions(threshold=np.nan)
-      args = [arg for arg in extract_args(src)
+      args = [arg for arg in GetKernelArguments(src)
               if not arg.address_space == 'local']
       assert (len(args) == len(outputs))
       for arr, arg in zip(outputs, args):
