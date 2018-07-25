@@ -111,8 +111,8 @@ py_test(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
-        ":driver",
         ":data",
+        ":driver",
         ":testlib",
         requirement("absl-py"),
         requirement("numpy"),
