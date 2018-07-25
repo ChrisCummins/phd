@@ -63,10 +63,10 @@ class CldriveHarness(harness.HarnessBase,
 
     if len(self.config.opencl_env) != len(self.config.opencl_opt):
       raise ValueError(
-        'CldriveHarness.opencl_env and CldriveHarness.opencl_opt lists are '
-        'not the same length:\n'
-        f'    CldriveHarness.opencl_env = {config.opencl_env}\n'
-        f'    CldriveHarness.opencl_opt = {config.opencl_opt}')
+          'CldriveHarness.opencl_env and CldriveHarness.opencl_opt lists are '
+          'not the same length:\n'
+          f'    CldriveHarness.opencl_env = {config.opencl_env}\n'
+          f'    CldriveHarness.opencl_opt = {config.opencl_opt}')
 
     # Match and instantiate the OpenCL environments.
     all_envs = {env.name: env for env in env.GetOpenClEnvironments()}
