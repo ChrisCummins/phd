@@ -14,7 +14,7 @@ py_binary(
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//deeplearning/deepsmith/proto:generator_py_pb2",
         "//deeplearning/deepsmith/proto:harness_py_pb2",
-        "//gpu/cldrive",
+        "//gpu/cldrive:env",
         "//gpu/oclgrind",
         "//lib/labm8:labdate",
         "//lib/labm8:pbutil",

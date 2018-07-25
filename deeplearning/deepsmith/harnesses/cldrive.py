@@ -68,7 +68,7 @@ class CldriveHarness(harness.HarnessBase,
         f'    CldriveHarness.opencl_opt = {config.opencl_opt}')
 
     # Match and instantiate the OpenCL environments.
-    all_envs = {env.name: env for env in cldrive.GetOpenClEnvironments()}
+    all_envs = {env.name: env for env in env.GetOpenClEnvironments()}
     envs = []
     if self.config.opencl_env:
       for opencl_env, opt in zip(

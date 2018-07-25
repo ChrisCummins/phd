@@ -5,6 +5,7 @@ import typing
 from typing import Iterator
 
 from gpu.clinfo.proto import clinfo_pb2
+from gpu.oclgrind import oclgrind
 from lib.labm8 import bazelutil
 from lib.labm8 import pbutil
 
@@ -126,3 +127,33 @@ def has_gpu() -> bool:
       True if device available, else False.
   """
   return any(env.device_type == 'GPU' for env in all_envs())
+
+
+def GetOpenClEnvironments() -> typing.List[OpenCLEnvironment]:
+  """Get a list of available OpenCL testbeds.
+
+  This includes the local oclgrind device.
+
+  Returns:
+    A list of OpenCLEnvironment instances.
+  """
+  return sorted(list(all_envs()) + [oclgrind.OpenCLEnvironment()],
+                key=lambda x: x.name)
+
+
+def GetTestbedNames() -> typing.List[str]:
+  """Get a list of available OpenCL testbed names."""
+  return [env.name for env in GetOpenClEnvironments()]
+
+
+def PrintOpenClEnvironments() -> None:
+  """List the names and details of available OpenCL testbeds."""
+  for i, env in enumerate(GetOpenClEnvironments()):
+    if i:
+      print()
+    print(env.name)
+    print(f'    Platform:     {env.platform_name}')
+    print(f'    Device:       {env.device_name}')
+    print(f'    Driver:       {env.driver_version}')
+    print(f'    Device Type:  {env.device_type}')
+    print(f'    OpenCL:       {env.opencl_version}')
