@@ -12,45 +12,6 @@ from gpu.cldrive import args
 #   assert pp.split("\n")[-2] == "kernel void A() {}"
 #
 #
-# def test_parse():
-#   ast = args.ParseSource("kernel void A() {}")
-#   assert len(ast.children()) >= 1
-#
-#
-# def test_extract_args_syntax_error():
-#   src = "kernel void A(@!"
-#   with pytest.raises(args.OpenCLValueError):
-#     args.ParseSource(src)
-#
-#   # OpenCLValueError extends ValueError
-#   with pytest.raises(ValueError):
-#     args.ParseSource(src)
-#
-#
-# def test_parse_preprocess():
-#   src = """
-#     #define DTYPE float
-#     kernel void A(global DTYPE *a) {}
-#     """
-#
-#   pp = args.PreprocessSource(src)
-#   ast = args.ParseSource(pp)
-#   assert len(ast.children()) >= 1
-#
-#
-# @pytest.mark.skip(reason="FIXME(cec)")
-# def test_parse_header():
-#   src = """
-#     #include "header.h"
-#     kernel void A(global DTYPE* a) {
-#       a[get_global_id(0)] = DOUBLE(a[get_global_id(0)]);
-#     }
-#     """
-#   pp = args.PreprocessSource(src, include_dirs=[data_path("")])
-#   ast = args.ParseSource(pp)
-#   assert len(ast.children()) >= 1
-#
-#
 # def test_extract_args():
 #   src = """
 #     typedef int foobar;

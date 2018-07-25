@@ -1,9 +1,7 @@
 """OpenCL argument and type handling."""
 import numpy as np
 import re
-import subprocess
 import typing
-from pathlib import Path
 from pycparser.c_ast import FileAST, IdentifierType, NodeVisitor, PtrDecl, \
   Struct
 from pycparser.plyparser import ParseError
@@ -231,37 +229,6 @@ class ArgumentExtractor(NodeVisitor):
     if self.kernel_count != 1:
       raise NoKernelError("Source contains no kernel definitions")
     return self._args
-
-
-def PreprocessSource(src: str, include_dirs: typing.List[Path] = None) -> str:
-  """Pre-process a source string.
-
-  Args:
-    src: The source string.
-    include_dirs: A list of directories to include.
-
-  Returns:
-    The pre-processed source.
-
-  Raises:
-    OpenCLPreprocessError: If there is an error in the source.
-    RuntimeError: If the pre-process command fails.
-  """
-  include_dirs = include_dirs or []
-  include_dirs = [Path(p).expanduser() for p in include_dirs]  # Expand '~'.
-  command = ['cpp'] + [f"-I{p}" for p in include_dirs] + ['-xc', '-']
-
-  try:
-    process = subprocess.Popen(command, stdin=subprocess.PIPE,
-                               stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                               universal_newlines=True)
-    stdout, stderr = process.communicate(src)
-    if process.returncode != 0:
-      raise OpenCLPreprocessError(" ".join(command), stdout, stderr)
-    return stdout
-  except OSError:
-    c = " ".join(command)
-    raise RuntimeError(f"Preprocess command failed: '{c}'.")
 
 
 def ParseSource(src: str) -> FileAST:
