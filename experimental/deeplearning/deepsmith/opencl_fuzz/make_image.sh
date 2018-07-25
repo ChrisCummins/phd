@@ -21,7 +21,7 @@ cp "$PHD/bazel-bin/experimental/deeplearning/deepsmith/opencl_fuzz/opencl_fuzz_i
 cd "$PHD/experimental/deeplearning/deepsmith/opencl_fuzz"
 # Note that the --squash argument requires experimental features. See:
 # https://github.com/docker/docker-ce/blob/master/components/cli/experimental/README.md
-sudo docker build . -t opencl_fuzz --squash
+docker build . -t opencl_fuzz --squash
 
 # Export a compressed tarball of the image.
 # docker save opencl_fuzz | gzip -c > \
