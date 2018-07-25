@@ -197,6 +197,39 @@ def test_Corpus_content_id(clgen_cache_dir, abc_corpus_config):
   assert c1.hash == c2.hash
 
 
+def test_Corpus_hash_file(clgen_cache_dir, abc_corpus_config):
+  """Test that content id is written to a file."""
+  del clgen_cache_dir
+  hash_file_path = pathlib.Path(
+      str(pathlib.Path(abc_corpus_config.local_directory)) + '.sha1.txt')
+  assert not hash_file_path.is_file()
+  c = corpuses.Corpus(abc_corpus_config)
+  assert hash_file_path.is_file()
+  with open(hash_file_path) as f:
+    content_id = f.read().strip()
+  assert c.content_id == content_id
+
+
+def test_Corpus_stale_hash_file(clgen_cache_dir, abc_corpus_config):
+  """Test that content_id does not change
+
+  This is to emphasize a limitation in the checksum caching methodology. An
+  ideal system would break this test, since the directory has been modified.
+  However, since we write the directory checksum to a file, the content id does
+  not change.
+  """
+  del clgen_cache_dir
+  c1 = corpuses.Corpus(abc_corpus_config)
+  c1.Create()
+  with open(pathlib.Path(abc_corpus_config.local_directory) / 'z', 'w') as f:
+    f.write('this directory has been modified\n')
+  c2 = corpuses.Corpus(abc_corpus_config)
+  # Even though we have modified the content files directory, this change is not
+  # reflected in the content id, since we use the file created during the
+  # instantiation of c1.
+  assert c1.content_id == c2.content_id
+
+
 def test_Corpus_invalid_content_id(clgen_cache_dir, abc_corpus_config):
   """Test that UserError is raised if content_id does not resolve to cache."""
   del clgen_cache_dir

@@ -108,8 +108,7 @@ class Corpus(object):
     self._created = False
 
     cache.cachepath('corpus').mkdir(parents=True, exist_ok=True)
-    hc = hashcache.HashCache(
-        cache.cachepath('hashcache.db'), 'sha1', keep_in_memory=True)
+    hc = hashcache.HashCache(cache.cachepath('hashcache.db'), 'sha1')
     self.content_id = ResolveContentId(self.config, hc)
     # Database of pre-processed files.
     preprocessed_id = ResolvePreprocessedId(self.content_id, self.config)
@@ -322,11 +321,30 @@ def ResolveContentId(config: corpus_pb2.Corpus, hc: hashcache.HashCache) -> str:
 
   start_time = time.time()
   if config.HasField('local_directory'):
-    try:
-      content_id = hc.GetHash(ExpandConfigPath(
-          config.local_directory, path_prefix=FLAGS.clgen_local_path_prefix))
-    except FileNotFoundError as e:
-      raise errors.UserError(e)
+    # After the first time we compute the hash of a directory, we write it into
+    # a file. This is a shortcut to work around the fact that computing the
+    # directory checksum is O(n) with respect to the number of files in the
+    # directory (even if the directory is already cached by the hash cache).
+    # This means that it is the responsibility of the user to delete this cached
+    # file if the directory is changed.
+    hash_file_path = pathlib.Path(
+        str(pathlib.Path(config.local_directory)) + '.sha1.txt')
+    if hash_file_path.is_file():
+      logging.info("Reading directory hash: '%s'.", hash_file_path)
+      with open(hash_file_path) as f:
+        content_id = f.read().rstrip()
+    else:
+      # No hash file, so compute the directory hash and create it.
+      try:
+        content_id = hc.GetHash(ExpandConfigPath(
+            config.local_directory, path_prefix=FLAGS.clgen_local_path_prefix))
+      except FileNotFoundError as e:
+        raise errors.UserError(e)
+      # Create the hash file in the directory so that next time we don't need
+      # to reference the hash cache.
+      with open(hash_file_path, 'w') as f:
+        print(content_id, file=f)
+      logging.info("Wrote directory hash: '%s'.", hash_file_path)
   elif config.HasField('local_tar_archive'):
     # This if not an efficient means of getting the hash, as it requires always
     # unpacking the archive and reading the entire contents. It would be nicer
