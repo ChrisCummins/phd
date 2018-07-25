@@ -9,10 +9,7 @@ exports_files(["LICENSE"])
 
 py_binary(
     name = "cldrive",
-    srcs = [
-        "__init__.py",
-        "cldrive.py",
-    ],
+    srcs = ["cldrive.py"],
     default_python_version = "PY3",
     main = "cldrive.py",
     srcs_version = "PY3",
@@ -23,7 +20,7 @@ py_binary(
         ":data",
         ":driver",
         ":env",
-        requirement("numpy")
+        requirement("numpy"),
     ],
 )
 
@@ -54,6 +51,8 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":args",
+        requirement("pytest"),
+        requirement("absl-py"),
     ],
 )
 
@@ -105,6 +104,22 @@ py_library(
     ],
 )
 
+py_test(
+    name = "driver_test",
+    size = "small",
+    srcs = ["driver_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":driver",
+        ":data",
+        ":testlib",
+        requirement("absl-py"),
+        requirement("numpy"),
+        requirement("pytest"),
+    ],
+)
+
 py_library(
     name = "env",
     srcs = ["env.py"],
@@ -119,10 +134,23 @@ py_library(
     ],
 )
 
+py_test(
+    name = "env_test",
+    size = "small",
+    srcs = ["env_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":env",
+        requirement("absl-py"),
+        requirement("pytest"),
+    ],
+)
+
 py_library(
     name = "testlib",
-    srcs = ["testlib.py"],
     testonly = 1,
+    srcs = ["testlib.py"],
     deps = [
         requirement("numpy"),
     ],

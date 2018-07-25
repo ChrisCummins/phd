@@ -85,9 +85,9 @@ def main(argv):
   src = sys.stdin.read()
 
   # Parse inputs from strings.
-  gsize = driver.NDRange.from_str(FLAGS.gsize)
-  lsize = driver.NDRange.from_str(FLAGS.lsize)
-  data_generator = data.Generator.from_str(FLAGS.generator)
+  gsize = driver.NDRange.FromString(FLAGS.gsize)
+  lsize = driver.NDRange.FromString(FLAGS.lsize)
+  data_generator = data.Generator.FromString(FLAGS.generator)
   env_ = env.make_env(devtype=FLAGS.devtype,
                       platform=FLAGS.platform,
                       device=FLAGS.device)
@@ -95,9 +95,9 @@ def main(argv):
   if FLAGS.compile_only:
     inputs = []
   else:
-    inputs = data.make_data(src=src, size=FLAGS.size,
-                            data_generator=data_generator,
-                            scalar_val=FLAGS.scalar_val)
+    inputs = data.MakeData(src=src, size=FLAGS.size,
+                           data_generator=data_generator,
+                           scalar_val=FLAGS.scalar_val)
 
   drive_args = {
     "src": src,
@@ -118,7 +118,7 @@ def main(argv):
 
     print(cgen.emit_c(**drive_args, **emit_c_args))
   else:
-    outputs = driver.drive(**drive_args, env=env_)
+    outputs = driver.DriveKernel(**drive_args, env=env_)
 
     # Print result.
     if FLAGS.binary:

@@ -1,3 +1,4 @@
+"""Shared testing utilities."""
 import numpy as np
 import typing
 from numpy import testing as nptest
@@ -12,3 +13,26 @@ def Assert2DArraysAlmostEqual(l1: np.array, l2: np.array) -> None:
   """Assert that 2D arrays are almost equal."""
   for x, y in zip(l1, l2):
     nptest.assert_almost_equal(ListOfListsToNumpy(x), ListOfListsToNumpy(y))
+
+
+class DevNullRedirect(object):
+  """Context manager to redirect stdout and stderr to devnull.
+
+  Examples:
+    >>> with DevNullRedirect(): print("this will not print")
+  """
+
+  def __init__(self):
+    self.stdout = None
+    self.stderr = None
+
+  def __enter__(self):
+    self.stdout = sys.stdout
+    self.stderr = sys.stderr
+
+    sys.stdout = StringIO()
+    sys.stderr = StringIO()
+
+  def __exit__(self, *args):
+    sys.stdout = self.stdout
+    sys.stderr = self.stderr
