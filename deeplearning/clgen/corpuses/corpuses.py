@@ -304,7 +304,17 @@ def ExpandConfigPath(path: str,
 
 
 def ResolveContentId(config: corpus_pb2.Corpus, hc: hashcache.HashCache) -> str:
-  """Compute the hash of the input contentfiles."""
+  """Compute the hash of the input contentfiles.
+
+  This function resolves the unique sha1 checksum of a set of content files.
+
+  Args:
+    config: The corpus config proto.
+    hc: A hashcache database instance, used for resolving directory hashes.
+
+  Returns:
+    A hex encoded sha1 string.
+  """
   # We can take a massive shortcut if the content ID is already set in the
   # config proto.
   if config.HasField('content_id'):
