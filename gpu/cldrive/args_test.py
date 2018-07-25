@@ -6,158 +6,154 @@ from absl import app
 from gpu.cldrive import args
 
 
-# @pytest.mark.skip(reason="FIXME(cec)")
-# def test_preprocess():
-#   pp = args.PreprocessSource("kernel void A() {}")
-#   assert pp.split("\n")[-2] == "kernel void A() {}"
-#
-#
-# def test_extract_args():
-#   src = """
-#     typedef int foobar;
-#
-#     void B(const int e);
-#
-#     __kernel void A(const __global int* data, __local float4 * restrict car,
-#                     __global const float* b, const int foo, int d) {
-#         int tid = get_global_id(0);
-#         data[tid] *= 2.0;
-#     }
-#
-#     void B(const int e) {}
-#     """
-#   args = args.GetKernelArguments(src)
-#
-#   assert len(args) == 5
-#   assert args[0].is_const
-#   assert args[0].is_pointer
-#   assert args[0].typename == "int"
-#   assert args[0].bare_type == "int"
-#
-#
-# def test_extract_args_no_declaration():
-#   with pytest.raises(LookupError):
-#     args.GetKernelArguments("")
-#
-#
-# def test_extract_args_no_definition():
-#   src = "kernel void A();"
-#   with pytest.raises(LookupError):
-#     args.GetKernelArguments(src)
-#
-#
-# def test_extract_args_multiple_kernels():
-#   src = "kernel void A() {} kernel void B() {}"
-#   with pytest.raises(LookupError):
-#     args.GetKernelArguments(src)
-#
-#
-# def test_extract_args_struct():
-#   src = "struct C; kernel void A(struct C a) {}"
-#   with pytest.raises(ValueError):
-#     args.GetKernelArguments(src)
-#
-#
-# def test_extract_args_local_global_qualified():
-#   src = "kernel void A(global local int* a) {}"
-#   with pytest.raises(args.OpenCLValueError):
-#     args.GetKernelArguments(src)
-#
-#
-# def test_extract_args_no_qualifiers():
-#   src = "kernel void A(float* a) {}"
-#   with pytest.raises(args.OpenCLValueError):
-#     args.GetKernelArguments(src)
-#
-#
-# def test_extract_args_no_args():
-#   src = "kernel void A() {}"
-#   assert len(args.GetKernelArguments(src)) == 0
-#
-#
-# def test_extract_args_address_spaces():
-#   src = """
-#     kernel void A(global int* a, local int* b, constant int* c, const int d) {}
-#     """
-#   args = args.GetKernelArguments(src)
-#   assert len(args) == 4
-#   assert args[0].address_space == "global"
-#   assert args[1].address_space == "local"
-#   assert args[2].address_space == "constant"
-#   assert args[3].address_space == "private"
-#
-#
-# def test_extract_args_no_address_space():
-#   src = """
-#     kernel void A(int* a) {}
-#     """
-#   with pytest.raises(args.OpenCLValueError):
-#     args = args.GetKernelArguments(src)
-#
-#
-# def test_extract_args_multiple_address_spaces():
-#   src = """
-#     kernel void A(global local int* a) {}
-#     """
-#   with pytest.raises(args.OpenCLValueError):
-#     args = args.GetKernelArguments(src)
-#
-#
-# def test_extract_args_properties():
-#   src = """
-#     kernel void A(const global int* a, global const float* b,
-#                   local float4 *const c, const int d, float2 e) {}
-#     """
-#   args = args.GetKernelArguments(src)
-#   assert len(args) == 5
-#   assert args[0].is_pointer == True
-#   assert args[0].address_space == "global"
-#   assert args[0].typename == "int"
-#   assert args[0].name == "a"
-#   assert args[0].bare_type == "int"
-#   assert args[0].is_vector == False
-#   assert args[0].vector_width == 1
-#   assert args[0].is_const == True
-#
-#   assert args[1].is_pointer == True
-#   assert args[1].address_space == "global"
-#   assert args[1].typename == "float"
-#   assert args[1].name == "b"
-#   assert args[1].bare_type == "float"
-#   assert args[1].is_vector == False
-#   assert args[1].vector_width == 1
-#   assert args[1].is_const == True
-#
-#   assert args[2].is_pointer == True
-#   assert args[2].address_space == "local"
-#   assert args[2].typename == "float4"
-#   assert args[2].name == "c"
-#   assert args[2].bare_type == "float"
-#   assert args[2].is_vector == True
-#   assert args[2].vector_width == 4
-#   assert args[2].is_const == False
-#
-#
-# def test_extract_args_struct():
-#   src = """
-#     struct s { int a; };
-#
-#     kernel void A(global struct s *a) {}
-#     """
-#   # we can't handle structs yet
-#   with pytest.raises(args.OpenCLValueError):
-#     args.GetKernelArguments(src)
-#
-#
-# def test_extract_args_preprocess():
-#   src = """
-#     #define DTYPE float
-#     kernel void A(global DTYPE *a) {}
-#     """
-#
-#   pp = args.PreprocessSource(src)
-#   args = args.GetKernelArguments(pp)
-#   assert args[0].typename == 'float'
+# GetKernelArguments() tests.
+
+def test_GetKernelArguments_hello_world():
+  """Simple hello world argument type test."""
+  args_ = args.GetKernelArguments("kernel void a(global float* a) {}")
+  assert args_[0].typename == 'float'
+
+
+def test_GetKernelArguments_proper_kernel():
+  """Test kernel arguments of a "real" kernel."""
+  args_ = args.GetKernelArguments("""
+typedef int foobar;
+
+void B(const int e);
+
+__kernel void A(const __global int* data, __local float4 * restrict car,
+                __global const float* b, const int foo, int d) {
+  int tid = get_global_id(0);
+  data[tid] *= 2.0;
+}
+
+void B(const int e) {}
+""")
+  assert len(args_) == 5
+  assert args_[0].is_const
+  assert args_[0].is_pointer
+  assert args_[0].typename == "int"
+  assert args_[0].bare_type == "int"
+
+
+def test_GetKernelArguments_no_definition():
+  """Test that error is raised if no kernel defined."""
+  with pytest.raises(args.NoKernelError):
+    args.GetKernelArguments("")
+
+
+def test_GetKernelArguments_declared_but_not_defined():
+  """Test that error is raised if kernel declared but not defined."""
+  with pytest.raises(args.NoKernelError):
+    args.GetKernelArguments("kernel void A();")
+
+
+def test_GetKernelArguments_multiple_kernels():
+  """Test that error is raised if no kernel defined."""
+  with pytest.raises(args.MultipleKernelsError):
+    args.GetKernelArguments("""
+kernel void A() {}
+kernel void B() {}
+""")
+
+
+def test_GetKernelArguments_struct_not_supported():
+  """Test that error is raised if type is not supported."""
+  with pytest.raises(ValueError) as e_ctx:
+    args.GetKernelArguments("struct C; kernel void A(struct C a) {}")
+  assert "Unsupported data type for argument: 'a'" == str(e_ctx.value)
+
+
+def test_GetKernelArguments_local_global_qualified():
+  """Test that error is raised if address space is invalid."""
+  with pytest.raises(args.OpenCLValueError) as e_ctx:
+    args.GetKernelArguments("kernel void A(global local int* a) {}")
+  assert ("Pointer argument 'global local int *a' has multiple "
+          'address space qualifiers') == str(e_ctx.value)
+
+
+def test_GetKernelArguments_no_qualifiers():
+  """Test that error is raised if argument has no address space qualifier."""
+  with pytest.raises(args.OpenCLValueError) as e_ctx:
+    args.GetKernelArguments("kernel void A(float* a) {}")
+  assert "Pointer argument 'float *a' has no address space qualifier" == str(
+      e_ctx.value)
+
+
+def test_GetKernelArguments_no_args():
+  """Test that no arguments returned for kernel with no args."""
+  assert len(args.GetKernelArguments("kernel void A() {}")) == 0
+
+
+def test_GetKernelArguments_address_spaces():
+  """Test address space types."""
+  args_ = args.GetKernelArguments("""
+kernel void A(global int* a, 
+              local int* b,
+              constant int* c, 
+              const int d) {}
+""")
+  assert len(args_) == 4
+  assert args_[0].address_space == "global"
+  assert args_[1].address_space == "local"
+  assert args_[2].address_space == "constant"
+  assert args_[3].address_space == "private"
+
+
+def test_GetKernelArguments_properties():
+  """Test extracted properties of kernel."""
+  args_ = args.GetKernelArguments("""
+kernel void A(const global int* a, global const float* b,
+              local float4 *const c, const int d, float2 e) {}
+""")
+  assert len(args_) == 5
+  assert args_[0].is_pointer
+  assert args_[0].address_space == "global"
+  assert args_[0].typename == "int"
+  assert args_[0].name == "a"
+  assert args_[0].bare_type == "int"
+  assert not args_[0].is_vector
+  assert args_[0].vector_width == 1
+  assert args_[0].is_const
+
+  assert args_[1].is_pointer
+  assert args_[1].address_space == "global"
+  assert args_[1].typename == "float"
+  assert args_[1].name == "b"
+  assert args_[1].bare_type == "float"
+  assert not args_[1].is_vector
+  assert args_[1].vector_width == 1
+  assert args_[1].is_const
+
+  assert args_[2].is_pointer
+  assert args_[2].address_space == "local"
+  assert args_[2].typename == "float4"
+  assert args_[2].name == "c"
+  assert args_[2].bare_type == "float"
+  assert args_[2].is_vector
+  assert args_[2].vector_width == 4
+  assert not args_[2].is_const
+
+
+# ParseSource() tests.
+
+
+def test_ParseSource_hello_world():
+  """Test simple kernel parse."""
+  ast = args.ParseSource("kernel void A() {}")
+  assert len(ast.children()) >= 1
+
+
+def test_ParseSource_syntax_error():
+  """Test that error is raised if source contains error."""
+  src = "kernel void A(@!"
+  with pytest.raises(args.OpenCLValueError) as e_ctx:
+    args.ParseSource(src)
+  assert "Syntax error: ':1:15: Illegal character '@''" == str(e_ctx.value)
+
+  # OpenCLValueError extends ValueError.
+  with pytest.raises(ValueError):
+    args.ParseSource(src)
 
 
 # GetKernelName() tests.

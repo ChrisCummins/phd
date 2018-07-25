@@ -152,7 +152,8 @@ Supported types are: {{{supported_types_str}}}""")
       if "__constant" in self.ast.quals:
         address_quals.append("constant")
 
-      err_prefix = f"pointer argument '{self.quals_str}{self.typename} {self.name}'"
+      err_prefix = ('Pointer argument '
+                    f"'{self.quals_str}{self.typename} *{self.name}'")
       if len(address_quals) == 1:
         self.address_space = address_quals[0]
       elif len(address_quals) > 1:
