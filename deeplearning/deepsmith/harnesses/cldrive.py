@@ -16,8 +16,9 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import harness_pb2
 from deeplearning.deepsmith.proto import harness_pb2_grpc
 from deeplearning.deepsmith.proto import service_pb2
-from gpu import cldrive as cldrive_lib
-from gpu.cldrive import cldrive
+from gpu.cldrive import cgen
+from gpu.cldrive import data
+from gpu.cldrive import driver
 from gpu.cldrive import env
 from lib.labm8 import bazelutil
 from lib.labm8 import fs
@@ -227,32 +228,32 @@ def MakeDriver(testcase: deepsmith_pb2.Testcase,
   if 'src' not in testcase.inputs:
     raise ValueError("Field not set: 'Testcase.inputs[\"src\"]'")
 
-  gsize = cldrive_lib.NDRange(
+  gsize = driver.NDRange(
       *[int(x) for x in testcase.inputs['gsize'].split(',')])
-  lsize = cldrive_lib.NDRange(
+  lsize = driver.NDRange(
       *[int(x) for x in testcase.inputs['lsize'].split(',')])
   size = max(gsize.product * 2, 256)
   src = testcase.inputs['src']
   try:
     # Generate a compile-and-execute test harness.
-    inputs = cldrive_lib.make_data(
+    inputs = data.make_data(
         src=src, size=size,
-        data_generator=cldrive_lib.Generator.ARANGE,
+        data_generator=data.Generator.ARANGE,
         scalar_val=size)
-    src = cldrive_lib.emit_c(
+    src = cgen.emit_c(
         src=src, inputs=inputs, gsize=gsize, lsize=lsize,
         optimizations=optimizations)
     testcase.invariant_opts['driver_type'] = 'compile_and_run'
   except Exception:
     # Create a compile-only stub if not possible.
     try:
-      src = cldrive_lib.emit_c(
+      src = cgen.emit_c(
           src=src, inputs=None, gsize=None, lsize=None,
           compile_only=True, optimizations=optimizations)
       testcase.invariant_opts['driver_type'] = 'compile_and_create_kernel'
     except Exception:
       # Create a compiler-only stub without creating kernel.
-      src = cldrive_lib.emit_c(
+      src = cgen.emit_c(
           src=src, inputs=None, gsize=None, lsize=None,
           compile_only=True, create_kernel=False, optimizations=optimizations)
       testcase.invariant_opts['driver_type'] = 'compile_only'
