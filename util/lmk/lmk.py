@@ -66,11 +66,13 @@ The file {cfg} contains the configuration settings. Modify
 the smtp and message settings to suit.
 
 Made with \033[1;31m♥\033[0;0m by Chris Cummins.
-<https://github.com/ChrisCummins/lmk>\
+<https://github.com/ChrisCummins/phd>\
 """.format(bin=sys.argv[0], cfg=DEFAULT_CFG_PATH)
 
 DEFAULT_CFG = """\
-; lkm config <https://github.com/ChrisCummins/lmk>
+; lkm config <https://github.com/ChrisCummins/phd>
+; Configure smtp section to your outgoing mailbox.
+; Shell variables are expanded in this file.
 
 [smtp]
 Host: smtp.gmail.com
@@ -447,7 +449,7 @@ def build_html_message_body(output, command=None, returncode=None,
   user = os.environ['USER']
   host = socket.gethostname()
   cwd = os.getcwd()
-  lmk = '<a href="github.com/ChrisCummins/lmk">lmk</a>'
+  lmk = '<a href="github.com/ChrisCummins/phd">lmk</a>'
   me = '<a href="http://chriscummins.cc">Chris Cummins</a>'
 
   prompt_css = ";".join([
