@@ -60,7 +60,7 @@ flags.DEFINE_bool(
     'If --noopencl_opt, OpenCL optimizations are disabled.')
 flags.DEFINE_string(
     'interesting_results_dir',
-    '/tmp/phd/experimental/deeplearning/opencl_fuzz/interesting_results',
+    '/tmp/phd/experimental/deeplearning/deepsmith/opencl_fuzz/interesting_results',
     'Directory to write interesting results to.')
 flags.DEFINE_bool(
     'all_results_are_interesting', False,
