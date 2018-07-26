@@ -305,7 +305,7 @@ def GeneratorFromFlag(config_class,
   """Instantiate a generator from the --generator_config flag."""
   if not pbutil.ProtoIsReadable(FLAGS.generator_config, config_class()):
     raise app.UsageError(
-        f'--{flag_name} is not a {config_class.__name__} proto')
+        f'--generator_config is not a {config_class.__name__} proto')
   config = pbutil.FromFile(pathlib.Path(FLAGS.generator_config),
                            config_class())
   return generator_class(config)
