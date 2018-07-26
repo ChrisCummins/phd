@@ -5,7 +5,6 @@ import os
 import pathlib
 import signal
 import socket
-import subprocess
 import tempfile
 import time
 import typing
@@ -199,17 +198,15 @@ def RunTestcase(opencl_environment: env.OpenCLEnvironment,
     if testbed.opts['opencl_opt'] == 'disabled':
       cmd.append('---disable_opts')
 
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE, universal_newlines=True)
-    stdout, stderr = process.communicate()
+    process = opencl_environment.Exec(cmd)
 
   wall_time = labdate.MillisecondsTimestamp() - start_time_epoch_ms
   result = deepsmith_pb2.Result()
   result.testcase.CopyFrom(testcase)
   result.testbed.CopyFrom(testbed)
   result.returncode = process.returncode
-  result.outputs['stdout'] = stdout
-  result.outputs['stderr'] = stderr
+  result.outputs['stdout'] = process.stdout
+  result.outputs['stderr'] = process.stderr
   prof = result.profiling_events.add()
   prof.client = socket.gethostname()
   prof.type = 'runtime'
