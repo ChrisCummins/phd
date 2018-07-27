@@ -18,6 +18,14 @@ def test_Exec_no_args():
   assert '__kernel void ' in src
 
 
+def test_Exec_invalid_argument():
+  """Test that CLSmithError is raised if invalid args passed to CLSmith."""
+  with pytest.raises(clsmith.CLSmithError) as e_ctx:
+    clsmith.Exec('--invalid_opt')
+  assert '' == str(e_ctx.value)
+  assert e_ctx.value.returncode == 255
+
+
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:
