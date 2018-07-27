@@ -25,6 +25,7 @@ class ClgenGenerator(clgen_pretrained.ClgenGenerator):
   def __init__(self, config: generator_pb2.ClgenGenerator):
     super(ClgenGenerator, self).__init__(config, no_init=True)
     self.instance = clgen.Instance(self.config.instance)
+    self.toolchain = 'opencl'
     self.generator = ClgenInstanceToGenerator(self.instance)
     if not self.config.testcase_skeleton:
       raise ValueError('No testcase skeletons provided')

@@ -36,27 +36,17 @@ def ConfigToGenerator(
   return g
 
 
-class ClsmithGenerator(generator.GeneratorBase,
+class ClsmithGenerator(generator.GeneratorServiceBase,
                        generator_pb2_grpc.GeneratorServiceServicer):
 
   def __init__(self, config: generator_pb2.ClgenGenerator):
     super(ClsmithGenerator, self).__init__(config)
-    self.config = config
+    self.toolchain = 'opencl'
     self.generator = ConfigToGenerator(self.config)
     if not self.config.testcase_skeleton:
       raise ValueError('No testcase skeletons provided')
     for skeleton in self.config.testcase_skeleton:
       skeleton.generator.CopyFrom(self.generator)
-
-  def GetGeneratorCapabilities(
-      self, request: generator_pb2.GetGeneratorCapabilitiesRequest,
-      context) -> generator_pb2.GetGeneratorCapabilitiesResponse:
-    del context
-    response = services.BuildDefaultResponse(
-        generator_pb2.GetGeneratorCapabilitiesRequest)
-    response.toolchain = 'opencl'
-    response.generator = self.generator
-    return response
 
   def GenerateTestcases(self, request: generator_pb2.GenerateTestcasesRequest,
                         context) -> generator_pb2.GenerateTestcasesResponse:

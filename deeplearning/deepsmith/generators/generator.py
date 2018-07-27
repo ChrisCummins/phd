@@ -4,10 +4,12 @@ import time
 import typing
 from absl import app
 from absl import flags
+from absl import logging
 from concurrent import futures
 from phd.lib.labm8 import pbutil
 
 from deeplearning.deepsmith import services
+from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import generator_pb2_grpc
 
@@ -15,25 +17,45 @@ from deeplearning.deepsmith.proto import generator_pb2_grpc
 FLAGS = flags.FLAGS
 
 
-class GeneratorBase(services.ServiceBase):
+class GeneratorServiceBase(services.ServiceBase):
   """Base class for generator implementations."""
 
   def __init__(self, config: pbutil.ProtocolBuffer):
-    super(GeneratorBase, self).__init__(config)
-    self.generator = None
+    super(GeneratorServiceBase, self).__init__(config)
+    # Inheriting subclasses are required to set these parameters.
+    self.toolchain: str = None
+    self.generator: deepsmith_pb2.Generator = None
 
   def GetGeneratorCapabilities(
       self, request: generator_pb2.GetGeneratorCapabilitiesRequest,
       context) -> generator_pb2.GetGeneratorCapabilitiesResponse:
+    """Get the capabilities of the generator service.
+
+    Args:
+      request: A request proto.
+      context: RPC context. Unused.
+
+    Returns:
+      A response proto.
+    """
     del context
     response = services.BuildDefaultResponse(
         generator_pb2.GetGeneratorCapabilitiesRequest)
-    response.toolchain = 'opencl'
+    response.toolchain = self.toolchain
     response.generator = self.generator
     return response
 
   def GenerateTestcases(self, request: generator_pb2.GenerateTestcasesRequest,
                         context) -> generator_pb2.GenerateTestcasesResponse:
+    """Generate testcases using the generator.
+
+    Args:
+      request: A request proto.
+      context: RPC context. Unused.
+
+    Returns:
+      A response proto.
+    """
     del request
     del context
     raise NotImplementedError('abstract class')
@@ -41,7 +63,7 @@ class GeneratorBase(services.ServiceBase):
   @classmethod
   def Main(cls, config_proto_class: pbutil.ProtocolBuffer
            ) -> typing.Callable[[typing.List[str]], None]:
-    """
+    """Return a main method for running this service.
 
     Args:
       config_proto_class: The generator configuration class.

@@ -6,11 +6,7 @@ pulling all of the LLVM libraries required by CLgen's corpus preprocessors.
 """
 import math
 import sys
-import time
 import typing
-from concurrent import futures
-
-import grpc
 from absl import app
 from absl import flags
 from absl import logging
@@ -37,7 +33,7 @@ def ClgenInstanceToGenerator(
   return g
 
 
-class ClgenGenerator(generator.GeneratorBase,
+class ClgenGenerator(generator.GeneratorServiceBase,
                      generator_pb2_grpc.GeneratorServiceServicer):
 
   def __init__(self, config: generator_pb2.ClgenGenerator,
@@ -51,6 +47,7 @@ class ClgenGenerator(generator.GeneratorBase,
     super(ClgenGenerator, self).__init__(config)
     if not no_init:
       self.instance = sample.Instance(self.config.instance)
+      self.toolchain = 'opencl'
       self.generator = ClgenInstanceToGenerator(self.instance)
       if not self.config.testcase_skeleton:
         raise ValueError('No testcase skeletons provided')

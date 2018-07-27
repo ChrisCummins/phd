@@ -77,7 +77,7 @@ flags.DEFINE_integer(
     'The number of test cases to generate and execute in a single batch.')
 
 
-def RunBatch(generator: base_generator.GeneratorBase,
+def RunBatch(generator: base_generator.GeneratorServiceBase,
              dut_harness: base_harness.HarnessBase,
              gs_harness: base_harness.HarnessBase,
              filters: difftests.FiltersBase,
@@ -237,7 +237,7 @@ def RunTestcases(harness: base_harness.HarnessBase,
 
 
 def TestingLoop(min_interesting_results: int, max_testing_time_seconds: int,
-                batch_size: int, generator: base_generator.GeneratorBase,
+                batch_size: int, generator: base_generator.GeneratorServiceBase,
                 dut_harness: base_harness.HarnessBase,
                 gs_harness: base_harness.HarnessBase,
                 filters: difftests.FiltersBase,
@@ -301,7 +301,7 @@ def GetBaseHarnessConfig(config_class):
 
 
 def GeneratorFromFlag(config_class,
-                      generator_class) -> base_generator.GeneratorBase:
+                      generator_class) -> base_generator.GeneratorServiceBase:
   """Instantiate a generator from the --generator_config flag."""
   if not pbutil.ProtoIsReadable(FLAGS.generator_config, config_class()):
     raise app.UsageError(
