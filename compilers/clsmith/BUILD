@@ -11,6 +11,7 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//lib/labm8:bazelutil",
+        "//lib/labm8:fs",
         requirement("absl-py"),
     ],
 )

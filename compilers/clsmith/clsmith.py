@@ -11,16 +11,13 @@ Usage:
 
   bazel run //compilers/clsmith [-- -- <args>]
 """
-import contextlib
-import os
-import pathlib
 import subprocess
 import sys
-import tempfile
 from absl import app
 from absl import flags
 
 from lib.labm8 import bazelutil
+from lib.labm8 import fs
 
 
 FLAGS = flags.FLAGS
@@ -39,15 +36,6 @@ class CLSmithError(EnvironmentError):
     return str(self.msg)
 
 
-@contextlib.contextmanager
-def TemporaryWorkingDir(prefix: str = None) -> pathlib.Path:
-  old_directory = os.getcwd()
-  with tempfile.TemporaryDirectory(prefix=prefix) as d:
-    os.chdir(d)
-    yield pathlib.Path(d)
-  os.chdir(old_directory)
-
-
 def Exec(*opts) -> str:
   """Generate and return a CLSmith program.
 
@@ -57,7 +45,7 @@ def Exec(*opts) -> str:
   Returns:
     The generated source code as a string.
   """
-  with TemporaryWorkingDir(prefix='clsmith_') as d:
+  with fs.TemporaryWorkingDir(prefix='clsmith_') as d:
     proc = subprocess.Popen([CLSMITH] + list(opts), stderr=subprocess.PIPE,
                             universal_newlines=True)
     _, stderr = proc.communicate()

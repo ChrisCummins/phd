@@ -6,6 +6,7 @@ import os.path
 import pathlib
 import re
 import shutil
+import tempfile
 import typing
 from glob import iglob
 from humanize import naturalsize
@@ -565,3 +566,24 @@ def chdir(directory: typing.Union[str, pathlib.Path]) -> pathlib.Path:
     yield pathlib.Path(directory)
   finally:
     os.chdir(str(previous_directory))
+
+
+@contextlib.contextmanager
+def TemporaryWorkingDir(prefix: str = None) -> pathlib.Path:
+  """A context manager which provides a temporary working directory.
+
+  This creates an empty temporary directory, and changes the current working
+  directory to it. Once out of scope, the directory and all it's contents are
+  removed.
+
+  Args:
+    prefix: A prefix for the temporary directory name.
+
+  Returns:
+    The directory which has been changed to.
+  """
+  old_directory = os.getcwd()
+  with tempfile.TemporaryDirectory(prefix=prefix) as d:
+    os.chdir(d)
+    yield pathlib.Path(d)
+  os.chdir(old_directory)
