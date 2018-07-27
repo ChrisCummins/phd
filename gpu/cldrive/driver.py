@@ -75,6 +75,9 @@ class NDRange(collections.namedtuple('NDRange', ['x', 'y', 'z'])):
   def __ge__(self, rhs: 'NDRange') -> bool:
     return self == rhs or self > rhs
 
+  def ToString(self) -> str:
+    return f'{self.x},{self.y},{self.x}'
+
   @staticmethod
   def FromString(string: str) -> 'NDRange':
     """Parse an NDRange from a string of format 'x,y,z'.
