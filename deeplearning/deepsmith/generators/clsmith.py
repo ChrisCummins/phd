@@ -48,6 +48,8 @@ class ClsmithGenerator(generator.GeneratorBase,
     self.generator = ConfigToGenerator(self.config)
     if not self.config.testcase_skeleton:
       raise ValueError('No testcase skeletons provided')
+    for skeleton in self.config.testcase_skeleton:
+      skeleton.generator.CopyFrom(self.generator)
 
   def GetGeneratorCapabilities(
       self, request: generator_pb2.GetGeneratorCapabilitiesRequest,

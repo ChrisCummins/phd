@@ -32,6 +32,10 @@ class ClgenGenerator(clgen_pretrained.ClgenGenerator):
     super(ClgenGenerator, self).__init__(config, no_init=True)
     self.instance = clgen.Instance(self.config.instance)
     self.generator = ClgenInstanceToGenerator(self.instance)
+    if not self.config.testcase_skeleton:
+      raise ValueError('No testcase skeletons provided')
+    for skeleton in self.config.testcase_skeleton:
+      skeleton.generator.CopyFrom(self.generator)
 
 
 def main(argv):

@@ -51,6 +51,10 @@ class ClgenGenerator(generator.GeneratorBase,
     if not no_init:
       self.instance = sample.Instance(self.config.instance)
       self.generator = ClgenInstanceToGenerator(self.instance)
+      if not self.config.testcase_skeleton:
+        raise ValueError('No testcase skeletons provided')
+      for skeleton in self.config.testcase_skeleton:
+        skeleton.generator.CopyFrom(self.generator)
 
   def GetGeneratorCapabilities(
       self, request: generator_pb2.GetGeneratorCapabilitiesRequest,
