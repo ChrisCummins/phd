@@ -27,3 +27,37 @@ py_test(
         requirement("pytest"),
     ],
 )
+
+py_binary(
+    name = "cl_launcher",
+    srcs = ["cl_launcher.py"],
+    data = [
+        "@CLSmith//:cl_launcher",
+        "@CLSmith//:cl_safe_math_macros",
+        "@CLSmith//:runtime_headers",
+        "@CLSmith//:safe_math_macros",
+    ],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//gpu/cldrive:driver",
+        "//gpu/cldrive:env",
+        "//lib/labm8:bazelutil",
+        "//lib/labm8:fs",
+        requirement("absl-py"),
+    ],
+)
+
+py_test(
+    name = "cl_launcher_test",
+    srcs = ["cl_launcher_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":cl_launcher",
+        "//gpu/cldrive:env",
+        requirement("absl-py"),
+        requirement("pytest"),
+    ],
+)
