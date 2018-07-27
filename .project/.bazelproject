@@ -15,5 +15,6 @@ additional_languages:
   # go
   # javascript
   # kotlin
+  python
   # scala
   # typescript

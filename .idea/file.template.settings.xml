@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="ExportableFileTemplateSettings">
-    <internal_templates>
-      <template name="Bash Script.sh" reformat="false" live-template-enabled="false" enabled="true" />
-      <template name="Python Script.py" reformat="false" live-template-enabled="false" enabled="true" />
-    </internal_templates>
-  </component>
-</project>
