@@ -20,10 +20,10 @@ from gpu.cldrive import cgen
 from gpu.cldrive import data
 from gpu.cldrive import driver
 from gpu.cldrive import env
-from lib.labm8 import bazelutil
-from lib.labm8 import fs
-from lib.labm8 import labdate
-from lib.labm8 import system
+from phd.lib.labm8 import bazelutil
+from phd.lib.labm8 import fs
+from phd.lib.labm8 import labdate
+from phd.lib.labm8 import system
 
 
 FLAGS = flags.FLAGS

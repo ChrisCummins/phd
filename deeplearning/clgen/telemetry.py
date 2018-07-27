@@ -2,13 +2,12 @@
 import pathlib
 import re
 import typing
-
 from absl import flags
+from phd.lib.labm8 import jsonutil
+from phd.lib.labm8 import labdate
+from phd.lib.labm8 import pbutil
 
 from deeplearning.clgen.proto import telemetry_pb2
-from lib.labm8 import jsonutil
-from lib.labm8 import labdate
-from lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

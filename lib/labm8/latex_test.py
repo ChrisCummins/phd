@@ -4,7 +4,7 @@ import sys
 import pytest
 from absl import app
 
-from lib.labm8 import latex
+from phd.lib.labm8 import latex
 
 
 # escape()

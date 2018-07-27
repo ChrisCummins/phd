@@ -18,10 +18,10 @@ from deeplearning.deepsmith import db
 from deeplearning.deepsmith import result
 from deeplearning.deepsmith import testbed
 from deeplearning.deepsmith import testcase
-from lib.labm8 import bazelutil
-from lib.labm8 import fs
-from lib.labm8 import labtypes
-from lib.labm8 import pbutil
+from phd.lib.labm8 import bazelutil
+from phd.lib.labm8 import fs
+from phd.lib.labm8 import labtypes
+from phd.lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

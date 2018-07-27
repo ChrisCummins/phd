@@ -22,13 +22,14 @@ What it does
 """
 import faulthandler
 
+
 faulthandler.enable()
 
 import sys
 
 from argparse import ArgumentParser
 from collections import Counter
-from lib.labm8 import fs
+from phd.lib.labm8 import fs
 
 from dsmith import db
 from dsmith.db import *
@@ -178,10 +179,14 @@ if __name__ == "__main__":
   for result in clsmith_wrong_code_programs:
     vendor = vendor_str(result.testbed.platform)
 
-    with open(f"../data/difftest/unreduced/clsmith/wrong_code/{vendor}-{result.program.id}.cl", "w") as outfile:
+    with open(
+        f"../data/difftest/unreduced/clsmith/wrong_code/{vendor}-{result.program.id}.cl",
+        "w") as outfile:
       print(result.program.src, file=outfile)
 
-    with open(f"../data/difftest/unreduced/clsmith/wrong_code/reports/{vendor}-{result.id}.txt", "w") as outfile:
+    with open(
+        f"../data/difftest/unreduced/clsmith/wrong_code/reports/{vendor}-{result.id}.txt",
+        "w") as outfile:
       print(outfile.name)
       print(generate_wrong_code_report(result), file=outfile)
 

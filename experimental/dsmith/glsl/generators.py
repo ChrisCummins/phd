@@ -25,7 +25,7 @@ from time import time
 
 from experimental.dsmith.glsl.db import *
 from experimental.dsmith.langs import Generator
-from lib.labm8 import fs
+from phd.lib.labm8 import fs
 
 
 class GlslGenerator(Generator):

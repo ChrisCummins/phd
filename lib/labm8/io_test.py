@@ -6,7 +6,7 @@ from io import StringIO
 import pytest
 from absl import app
 
-from lib.labm8 import io
+from phd.lib.labm8 import io
 
 
 # colourise()

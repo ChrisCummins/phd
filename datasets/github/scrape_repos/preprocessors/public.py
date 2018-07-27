@@ -5,7 +5,7 @@ import typing
 
 from absl import flags
 
-from lib.labm8 import fs
+from phd.lib.labm8 import fs
 
 
 FLAGS = flags.FLAGS

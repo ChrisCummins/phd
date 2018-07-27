@@ -10,9 +10,9 @@ from absl import flags
 from absl import logging
 
 from deeplearning.deepsmith.proto import deepsmith_pb2
-from lib.labm8 import fs
-from lib.labm8 import labdate
-from lib.labm8 import pbutil
+from phd.lib.labm8 import fs
+from phd.lib.labm8 import labdate
+from phd.lib.labm8 import pbutil
 
 FLAGS = flags.FLAGS
 

@@ -5,7 +5,7 @@
 
 # from argparse import ArgumentParser
 # from collections import namedtuple
-# from lib.labm8 import fs
+# from phd.lib.labm8 import fs
 # from subprocess import Popen, PIPE
 # from time import time
 # from typing import Dict, List, Tuple, NewType

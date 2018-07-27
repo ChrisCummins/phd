@@ -18,9 +18,11 @@
 """
 Interface to CLSmith binaries
 """
+from collections import namedtuple
+
 import logging
 import re
-from collections import namedtuple
+from phd.lib.labm8 import fs
 from subprocess import PIPE, Popen
 from tempfile import NamedTemporaryFile
 from time import time
@@ -28,7 +30,7 @@ from typing import List, NewType, Tuple
 
 from experimental import dsmith
 from experimental.dsmith import Colors
-from lib.labm8 import fs
+
 
 runtime_t = NewType('runtime_t', float)
 status_t = NewType('status_t', int)
@@ -36,7 +38,8 @@ return_t = namedtuple('return_t', ['runtime', 'status', 'stdout', 'stderr'])
 
 # build paths
 exec_path = dsmith.root_path("third_party", "clsmith", "build", "CLSmith")
-cl_launcher_path = dsmith.root_path("third_party", "clsmith", "build", "cl_launcher")
+cl_launcher_path = dsmith.root_path("third_party", "clsmith", "build",
+                                    "cl_launcher")
 include_path = dsmith.root_path("third_party", "clsmith", "runtime")
 
 # sanity checks
@@ -65,8 +68,8 @@ def clsmith(*args, exec_path=exec_path) -> return_t:
   runtime = runtime_t(time() - start_time)
 
   return return_t(
-    runtime=runtime, status=status_t(process.returncode),
-    stdout=stdout.decode('utf-8'), stderr=stderr.decode('utf-8'))
+      runtime=runtime, status=status_t(process.returncode),
+      stdout=stdout.decode('utf-8'), stderr=stderr.decode('utf-8'))
 
 
 def cl_launcher_cli(program_path: str, platform_id: int, device_id: int,
@@ -96,8 +99,8 @@ def cl_launcher(*args, **kwargs) -> return_t:
   runtime = runtime_t(time() - start_time)
 
   return return_t(
-    runtime=runtime, status=status_t(process.returncode),
-    stdout=stdout.decode('utf-8'), stderr=stderr.decode('utf-8'))
+      runtime=runtime, status=status_t(process.returncode),
+      stdout=stdout.decode('utf-8'), stderr=stderr.decode('utf-8'))
 
 
 def cl_launcher_str(src: str, *args, **kwargs) -> Tuple[float, int, str, str]:
@@ -134,12 +137,14 @@ def verify_cl_launcher_run(platform: str, device: str, optimizations: bool,
     elif line.startswith("Device: "):
       actual_device_name = re.sub(r"^Device: ", "", line).rstrip()
     elif line.startswith("OpenCL optimizations: "):
-      actual_optimizations = re.sub(r"^OpenCL optimizations: ", "", line).rstrip()
+      actual_optimizations = re.sub(r"^OpenCL optimizations: ", "",
+                                    line).rstrip()
 
     # global size
     match = re.match('^3-D global size \d+ = \[(\d+), (\d+), (\d+)\]', line)
     if match:
-      actual_global_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
+      actual_global_size = (
+      int(match.group(1)), int(match.group(2)), int(match.group(3)))
     match = re.match('^2-D global size \d+ = \[(\d+), (\d+)\]', line)
     if match:
       actual_global_size = (int(match.group(1)), int(match.group(2)), 0)
@@ -150,7 +155,8 @@ def verify_cl_launcher_run(platform: str, device: str, optimizations: bool,
     # local size
     match = re.match('^3-D local size \d+ = \[(\d+), (\d+), (\d+)\]', line)
     if match:
-      actual_local_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
+      actual_local_size = (
+      int(match.group(1)), int(match.group(2)), int(match.group(3)))
     match = re.match('^2-D local size \d+ = \[(\d+), (\d+)\]', line)
     if match:
       actual_local_size = (int(match.group(1)), int(match.group(2)), 0)

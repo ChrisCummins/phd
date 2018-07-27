@@ -3,12 +3,12 @@ import pathlib
 from absl import app
 from absl import flags
 from absl import logging
+from phd.lib.labm8 import bazelutil
+from phd.lib.labm8 import crypto
+from phd.lib.labm8 import pbutil
 
 from deeplearning.deepsmith.generators import clgen
 from deeplearning.deepsmith.proto import generator_pb2
-from lib.labm8 import bazelutil
-from lib.labm8 import crypto
-from lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

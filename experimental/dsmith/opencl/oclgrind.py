@@ -19,16 +19,18 @@
 Oclgrind module
 """
 import subprocess
+from phd.lib.labm8 import fs
 from tempfile import NamedTemporaryFile
 from typing import List
 
 from experimental import dsmith
 from experimental.dsmith.opencl import cldrive_mkharness as mkharness
 from experimental.dsmith.opencl import clsmith
-from lib.labm8 import fs
+
 
 # build paths
-OCLGRIND = dsmith.root_path("third_party", "clreduce", "build_oclgrind", "oclgrind")
+OCLGRIND = dsmith.root_path("third_party", "clreduce", "build_oclgrind",
+                            "oclgrind")
 
 # sanity checks
 assert fs.isexe(OCLGRIND)
@@ -69,7 +71,7 @@ def verify_clsmith_testcase(testcase: 'Testcase') -> bool:
     with open(src_path, "w") as outfile:
       print(testcase.program.src, file=outfile)
     return oclgrind_verify(clsmith.cl_launcher_cli(
-      src_path, 0, 0, optimizations=True, timeout=None))
+        src_path, 0, 0, optimizations=True, timeout=None))
   finally:
     fs.rm(src_path)
 

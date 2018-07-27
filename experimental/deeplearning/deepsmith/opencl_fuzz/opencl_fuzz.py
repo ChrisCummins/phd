@@ -14,6 +14,8 @@ import typing
 from absl import app
 from absl import flags
 from absl import logging
+from phd.lib.labm8 import labdate
+from phd.lib.labm8 import pbutil
 
 import gpu.cldrive.env
 from deeplearning.deepsmith.difftests import difftests
@@ -28,8 +30,6 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import harness_pb2
 from gpu.cldrive import env
-from lib.labm8 import labdate
-from lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

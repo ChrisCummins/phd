@@ -2,10 +2,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+from phd.lib.labm8 import fs
+from phd.lib.labm8 import viz
 from smith import cgo13
 
-from lib.labm8 import fs
-from lib.labm8 import viz
 
 # Seaborn configuration:
 sns.set(style="ticks", color_codes=True)
@@ -102,7 +102,8 @@ def plot_localmem(*args, **kwargs):
 
 
 def plot_coalesced(*args, **kwargs):
-  _2x2_column_grid("coalesced", "#. Coalesced access to Memory", *args, **kwargs)
+  _2x2_column_grid("coalesced", "#. Coalesced access to Memory", *args,
+                   **kwargs)
 
 
 def plot_wgsize(*args, **kwargs):

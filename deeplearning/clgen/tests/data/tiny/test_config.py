@@ -7,8 +7,8 @@ from absl import app
 
 from deeplearning.clgen import clgen
 from deeplearning.clgen.proto import clgen_pb2
-from lib.labm8 import bazelutil
-from lib.labm8 import pbutil
+from phd.lib.labm8 import bazelutil
+from phd.lib.labm8 import pbutil
 
 
 def test_config_is_valid():

@@ -13,7 +13,7 @@ import smith
 from argparse import ArgumentParser
 from smith import cgo13
 
-from lib.labm8 import fs
+from phd.lib.labm8 import fs
 
 
 class MalformedDataException(smith.SmithException): pass

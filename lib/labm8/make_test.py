@@ -4,8 +4,8 @@ import sys
 import pytest
 from absl import app
 
-from lib.labm8 import fs
-from lib.labm8 import make
+from phd.lib.labm8 import fs
+from phd.lib.labm8 import make
 
 
 # make()

@@ -4,7 +4,7 @@ import sys
 import pytest
 from absl import app
 
-from lib.labm8 import labdate
+from phd.lib.labm8 import labdate
 
 
 def test_GetUtcMillisecondsNow_millisecond_precision():

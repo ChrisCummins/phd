@@ -2,8 +2,8 @@ from __future__ import division
 from __future__ import print_function
 
 from omnitune import llvm
+from phd.lib.labm8 import system
 
-from lib.labm8 import system
 
 if system.HOSTNAME == "tim" or system.HOSTNAME == "zoo":
   from omnitune import opencl_tim as opencl
@@ -74,7 +74,8 @@ def kernel(north, south, east, west, max_wg_size, source):
     ratios.get("ratio ZExt insts", 0),  # ratio_ZExt_insts
     ratios.get("ratio basic blocks", 0),  # ratio_basic_blocks
     ratios.get("ratio memory instructions", 0),  # ratio_memory_instructions
-    ratios.get("ratio non-external functions", 0)  # ratio_non_external_functions
+    ratios.get("ratio non-external functions", 0)
+  # ratio_non_external_functions
   )
 
 

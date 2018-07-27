@@ -6,7 +6,7 @@ from dsmith.db import *
 from pathlib import Path
 from progressbar import ProgressBar
 
-from lib.labm8 import crypto, fs
+from phd.lib.labm8 import crypto, fs
 
 
 def export_todir(s: session_t, table, dir: Path) -> None:

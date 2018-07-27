@@ -10,7 +10,7 @@ from absl import logging
 from fuzzywuzzy import process
 
 from datasets.github.scrape_repos.preprocessors import public
-from lib.labm8 import bazelutil
+from phd.lib.labm8 import bazelutil
 
 
 FLAGS = flags.FLAGS

@@ -4,13 +4,11 @@ import atexit
 import json
 import pathlib
 import re
-import typing
-
 import six
-
-from lib.labm8 import crypto
-from lib.labm8 import fs
-from lib.labm8 import io
+import typing
+from phd.lib.labm8 import crypto
+from phd.lib.labm8 import fs
+from phd.lib.labm8 import io
 
 
 # TODO(cec): Remove type hints on base Cache, place them on FSCache.

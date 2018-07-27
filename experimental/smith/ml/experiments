@@ -1,25 +1,25 @@
 #!/usr/bin/env python3
 #
-import re
-import sys
 from collections import Counter
-from os import system
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import re
 import seaborn as sns
+import sys
 from numpy.random import RandomState
+from os import system
+from phd.lib.labm8 import fs
+from phd.lib.labm8 import io
+from phd.lib.labm8 import math as labmath
+from phd.lib.labm8 import viz
 from sklearn.base import clone
 from sklearn.decomposition import PCA
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier, export_graphviz
 from smith import cgo13
 
-from lib.labm8 import fs
-from lib.labm8 import io
-from lib.labm8 import math as labmath
-from lib.labm8 import viz
 
 # Seaborn configuration:
 sns.set(style="ticks", color_codes=True)
@@ -238,7 +238,8 @@ def motivation():
   X = list(zip(x, y))
 
   correct = [x for x, b in zip(X, B_out.to_dict('records')) if b["p_correct"]]
-  incorrect = [x for x, b in zip(X, B_out.to_dict('records')) if not b["p_correct"]]
+  incorrect = [x for x, b in zip(X, B_out.to_dict('records')) if
+               not b["p_correct"]]
 
   print()
   print("Motivation:")

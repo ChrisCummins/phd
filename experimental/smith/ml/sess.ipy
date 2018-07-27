@@ -18,7 +18,7 @@ from itertools import product
 from scipy import stats
 
 from lib import labm8
-from lib.labm8 import fs
+from phd.lib.labm8 import fs
 
 import smith
 from smith import features

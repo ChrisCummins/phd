@@ -10,7 +10,7 @@ from absl import logging
 import deeplearning.clgen
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import opencl
-from lib.labm8 import bazelutil
+from phd.lib.labm8 import bazelutil
 
 
 FLAGS = flags.FLAGS

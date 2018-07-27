@@ -1,12 +1,11 @@
 """Tests for //datasets/github/scrape_repos:scraper."""
-import sys
-
 import pytest
+import sys
 from absl import app
+from phd.lib.labm8 import labdate
 
 from datasets.github.scrape_repos import scraper
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
-from lib.labm8 import labdate
 
 
 class MockNamedUser(object):

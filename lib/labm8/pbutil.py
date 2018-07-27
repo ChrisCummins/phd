@@ -9,7 +9,7 @@ import google.protobuf.json_format
 import google.protobuf.message
 import google.protobuf.text_format
 
-from lib.labm8 import jsonutil
+from phd.lib.labm8 import jsonutil
 
 
 # A type alias for annotating methods which take or return protocol buffers.

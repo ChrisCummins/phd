@@ -1,17 +1,16 @@
 """Unit tests for //deeplearning/clgen/cli.py."""
 import os
 import pathlib
+import pytest
 import sys
 import tempfile
-
-import pytest
 from absl import app
 from absl import flags
+from phd.lib.labm8 import pbutil
 
 from deeplearning.clgen import clgen
 from deeplearning.clgen import errors
 from deeplearning.clgen.proto import clgen_pb2
-from lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

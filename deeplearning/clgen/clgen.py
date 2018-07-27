@@ -34,8 +34,8 @@ from deeplearning.clgen.models import models
 from deeplearning.clgen.models import pretrained
 from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import model_pb2
-from lib.labm8 import pbutil
-from lib.labm8 import prof
+from phd.lib.labm8 import pbutil
+from phd.lib.labm8 import prof
 
 
 FLAGS = flags.FLAGS

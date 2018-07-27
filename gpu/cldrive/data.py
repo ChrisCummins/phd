@@ -4,7 +4,7 @@ import numpy as np
 from enum import Enum
 
 from gpu.cldrive import args as _args
-from lib.labm8 import err
+from phd.lib.labm8 import err
 
 
 class Generator(Enum):

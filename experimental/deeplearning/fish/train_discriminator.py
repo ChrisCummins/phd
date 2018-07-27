@@ -1,21 +1,20 @@
 """Train a discriminator."""
 import collections
-import pathlib
-import pickle
-import typing
-
 import humanize
 import keras
 import numpy as np
+import pathlib
+import pickle
+import typing
 from absl import app
 from absl import flags
 from absl import logging
 from keras.preprocessing import sequence
+from phd.lib.labm8 import pbutil
 
 from deeplearning.clgen import telemetry
 from deeplearning.clgen.corpuses import atomizers
 from experimental.deeplearning.fish.proto import fish_pb2
-from lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

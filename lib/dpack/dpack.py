@@ -16,10 +16,10 @@ from absl import flags
 from absl import logging
 
 from lib.dpack.proto import dpack_pb2
-from lib.labm8 import crypto
-from lib.labm8 import fs
-from lib.labm8 import labdate
-from lib.labm8 import pbutil
+from phd.lib.labm8 import crypto
+from phd.lib.labm8 import fs
+from phd.lib.labm8 import labdate
+from phd.lib.labm8 import pbutil
 
 FLAGS = flags.FLAGS
 

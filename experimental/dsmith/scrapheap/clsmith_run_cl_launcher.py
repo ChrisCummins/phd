@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
-import os
-import re
 from collections import deque
-from tempfile import NamedTemporaryFile
-from time import strftime
 
+import os
 import progressbar
 import pyopencl as cl
+import re
 from argparse import ArgumentParser
 from dsmith import clsmith
 from dsmith import db
 from dsmith.db import *
 from dsmith.lib import *
+from phd.lib.labm8 import crypto
+from tempfile import NamedTemporaryFile
+from time import strftime
 from typing import Tuple
-
-from lib.labm8 import crypto
 
 
 def get_platform_name(platform_id):
@@ -62,12 +61,14 @@ def verify_params(platform: str, device: str, optimizations: bool,
     elif line.startswith("Device: "):
       actual_device_name = re.sub(r"^Device: ", "", line).rstrip()
     elif line.startswith("OpenCL optimizations: "):
-      actual_optimizations = re.sub(r"^OpenCL optimizations: ", "", line).rstrip()
+      actual_optimizations = re.sub(r"^OpenCL optimizations: ", "",
+                                    line).rstrip()
 
     # global size
     match = re.match('^3-D global size \d+ = \[(\d+), (\d+), (\d+)\]', line)
     if match:
-      actual_global_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
+      actual_global_size = (
+      int(match.group(1)), int(match.group(2)), int(match.group(3)))
     match = re.match('^2-D global size \d+ = \[(\d+), (\d+)\]', line)
     if match:
       actual_global_size = (int(match.group(1)), int(match.group(2)), 0)
@@ -78,7 +79,8 @@ def verify_params(platform: str, device: str, optimizations: bool,
     # local size
     match = re.match('^3-D local size \d+ = \[(\d+), (\d+), (\d+)\]', line)
     if match:
-      actual_local_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
+      actual_local_size = (
+      int(match.group(1)), int(match.group(2)), int(match.group(3)))
     match = re.match('^2-D local size \d+ = \[(\d+), (\d+)\]', line)
     if match:
       actual_local_size = (int(match.group(1)), int(match.group(2)), 0)
@@ -103,7 +105,8 @@ def parse_ndrange(ndrange: str) -> Tuple[int, int, int]:
   return (int(components[0]), int(components[1]), int(components[2]))
 
 
-def get_num_to_run(session: db.session_t, testbed: Testbed, optimizations: int = None):
+def get_num_to_run(session: db.session_t, testbed: Testbed,
+                   optimizations: int = None):
   num_ran = session.query(sql.sql.func.count(CLSmithResult.id)) \
     .filter(CLSmithResult.testbed_id == testbed.id)
   total = session.query(sql.sql.func.count(CLSmithTestCase.id))
@@ -128,7 +131,8 @@ if __name__ == "__main__":
   parser.add_argument(
       "--opt", action="store_true", help="Only test with optimizations on")
   parser.add_argument(
-      "--no-opt", action="store_true", help="Only test with optimizations disabled")
+      "--no-opt", action="store_true",
+      help="Only test with optimizations disabled")
   args = parser.parse_args()
 
   # Parse command line options

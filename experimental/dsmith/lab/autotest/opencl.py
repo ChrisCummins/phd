@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
-import sys
-
 import autotest
 import cldrive
 import json
 import logging
+import sys
 from dsmith.opencl import clsmith
 from pathlib import Path
+from phd.lib.labm8 import crypto
 from typing import List
-
-from lib.labm8 import crypto
 
 
 class OpenCLTestcase(object):

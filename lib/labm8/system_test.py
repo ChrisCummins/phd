@@ -8,8 +8,8 @@ import pytest
 import socket
 from absl import app
 
-from lib.labm8 import fs
-from lib.labm8 import system
+from phd.lib.labm8 import fs
+from phd.lib.labm8 import system
 
 
 def test_hostname():

@@ -10,7 +10,7 @@ from dsmith.clgen_run_cl_launcher import *
 from dsmith.clsmith import *
 from dsmith.db import *
 
-from lib.labm8 import crypto
+from phd.lib.labm8 import crypto
 
 
 def cl_launcher(src: str, platform_id: int, device_id: int,

@@ -7,7 +7,7 @@ from absl import flags
 from absl import logging
 
 from deeplearning.deepsmith.proto import service_pb2
-from lib.labm8 import pbutil
+from phd.lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

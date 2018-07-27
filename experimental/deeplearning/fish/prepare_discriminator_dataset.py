@@ -1,18 +1,17 @@
 """Create directories of training, test, and validation data."""
 import collections
+import humanize
+import numpy as np
 import pathlib
 import random
 import typing
-
-import humanize
-import numpy as np
 from absl import app
 from absl import flags
 from absl import logging
+from phd.lib.labm8 import labtypes
+from phd.lib.labm8 import pbutil
 
 from experimental.deeplearning.fish.proto import fish_pb2
-from lib.labm8 import labtypes
-from lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS
@@ -91,12 +90,14 @@ def GetProtos(
 
 def LoadPositiveProtos(
     export_path: pathlib.Path, positive_class_outcomes: typing.List[str],
-    max_src_len: int, max_num: int, assertions_only: bool) -> typing.List[TrainingProto]:
+    max_src_len: int, max_num: int, assertions_only: bool) -> typing.List[
+  TrainingProto]:
   """Load positive training protos."""
   protos = [
-    p for p in GetProtos(export_path, positive_class_outcomes, max_src_len)
-    if (not assertions_only) or p.raised_assertion
-  ][:max_num]
+             p for p in
+             GetProtos(export_path, positive_class_outcomes, max_src_len)
+             if (not assertions_only) or p.raised_assertion
+           ][:max_num]
   logging.info('Loaded %s positive data protos.',
                humanize.intcomma(len(protos)))
   return protos

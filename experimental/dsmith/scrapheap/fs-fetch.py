@@ -11,7 +11,7 @@ from dsmith.db import *
 from pathlib import Path
 from progressbar import ProgressBar
 
-from lib.labm8 import fs
+from phd.lib.labm8 import fs
 
 if __name__ == "__main__":
   parser = ArgumentParser()

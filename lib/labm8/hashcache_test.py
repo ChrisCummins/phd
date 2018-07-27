@@ -8,7 +8,7 @@ import pytest
 from absl import app
 from absl import flags
 
-from lib.labm8 import hashcache
+from phd.lib.labm8 import hashcache
 
 
 FLAGS = flags.FLAGS

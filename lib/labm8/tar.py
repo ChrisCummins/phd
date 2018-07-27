@@ -3,7 +3,7 @@
 
 import tarfile
 
-from lib.labm8 import fs
+from phd.lib.labm8 import fs
 
 
 def unpack_archive(*components, **kwargs) -> str:

@@ -16,8 +16,8 @@ from absl import flags
 from absl import logging
 
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
-from lib.labm8 import fs
-from lib.labm8 import pbutil
+from phd.lib.labm8 import fs
+from phd.lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

@@ -6,8 +6,8 @@ import tempfile
 import pytest
 from absl import app
 
-from lib.labm8 import pbutil
-from lib.labm8.proto import test_protos_pb2
+from phd.lib.labm8 import pbutil
+from phd.lib.labm8.proto import test_protos_pb2
 
 
 # A list of all of the filename suffixes to test each function with.

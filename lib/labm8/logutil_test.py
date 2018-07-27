@@ -9,9 +9,9 @@ from absl import app
 from absl import flags
 from absl import logging
 
-from lib.labm8 import labdate
-from lib.labm8 import logutil
-from lib.labm8.proto import logging_pb2
+from phd.lib.labm8 import labdate
+from phd.lib.labm8 import logutil
+from phd.lib.labm8.proto import logging_pb2
 
 
 FLAGS = flags.FLAGS

@@ -13,8 +13,8 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import generator_pb2_grpc
 from deeplearning.deepsmith.generators import generator
-from lib.labm8 import labdate
-from lib.labm8 import pbutil
+from phd.lib.labm8 import labdate
+from phd.lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

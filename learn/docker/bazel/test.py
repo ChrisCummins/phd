@@ -1,12 +1,10 @@
 """A test python file."""
-import sys
-
 import pytest
+import sys
 from absl import app
 from absl import flags
 from absl import logging
-
-from lib.labm8 import bazelutil
+from phd.lib.labm8 import bazelutil
 
 
 FLAGS = flags.FLAGS

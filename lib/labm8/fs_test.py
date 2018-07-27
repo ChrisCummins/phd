@@ -7,8 +7,8 @@ import tempfile
 import pytest
 from absl import app
 
-from lib.labm8 import fs
-from lib.labm8 import system
+from phd.lib.labm8 import fs
+from phd.lib.labm8 import system
 
 
 # path()

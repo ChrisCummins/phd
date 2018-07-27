@@ -1,17 +1,16 @@
 """Unit tests for //deeplearning/clgen/models/keras_backend.py."""
-import sys
-
 import checksumdir
 import numpy as np
 import pytest
+import sys
 from absl import app
+from phd.lib.labm8 import crypto
+from phd.lib.labm8 import pbutil
 
 from deeplearning.clgen.models import keras_backend
 from deeplearning.clgen.models import models
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import telemetry_pb2
-from lib.labm8 import crypto
-from lib.labm8 import pbutil
 
 
 class MockSampler(object):

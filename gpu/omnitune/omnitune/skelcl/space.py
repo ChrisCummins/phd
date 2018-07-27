@@ -1,10 +1,9 @@
+import numpy as np
 from itertools import product
 from math import log
+from phd.lib.labm8 import io
+from phd.lib.labm8 import viz
 
-import numpy as np
-
-from lib.labm8 import io
-from lib.labm8 import viz
 from . import hash_params
 from . import unhash_params
 

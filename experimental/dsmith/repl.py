@@ -23,6 +23,7 @@ Attributes:
     __available_commands__ (str): Help string for available commands.
 """
 import datetime
+import humanize
 import logging
 import math
 import os
@@ -30,13 +31,12 @@ import random
 import re
 import sys
 import traceback
-
-import humanize
+from phd.lib.labm8 import fs
 
 from experimental import dsmith
 from experimental.dsmith import Colors
 from experimental.dsmith.langs import Generator, Language, mklang
-from lib.labm8 import fs
+
 
 _lang_str = f"{Colors.RED}<lang>{Colors.END}{Colors.BOLD}"
 _generator_str = f"{Colors.GREEN}<generator>{Colors.END}{Colors.BOLD}"
@@ -202,12 +202,15 @@ def _execute(statement: str, file=sys.stdout) -> None:
     return _test(file=file)
 
   if components[0] == "describe":
-    generators_match = re.match(r'describe (?P<lang>\w+) generators$', statement)
-    testbeds_match = re.match(r'describe (?P<available>available )?(?P<lang>\w+) testbeds$',
-                              statement)
+    generators_match = re.match(r'describe (?P<lang>\w+) generators$',
+                                statement)
+    testbeds_match = re.match(
+      r'describe (?P<available>available )?(?P<lang>\w+) testbeds$',
+      statement)
     programs_match = re.match(r'describe (?P<lang>\w+) programs$', statement)
-    testcases_match = re.match(r'describe (?P<lang>\w+) ((?P<generator>\w+) )?testcases$',
-                               statement)
+    testcases_match = re.match(
+      r'describe (?P<lang>\w+) ((?P<generator>\w+) )?testcases$',
+      statement)
     results_match = re.match(r'describe (?P<lang>\w+) results$', statement)
 
     if generators_match:
@@ -238,11 +241,12 @@ def _execute(statement: str, file=sys.stdout) -> None:
 
   if components[0] == "make":
     programs_match = re.match(
-      r'make ((?P<up_to>up to )?(?P<number>\d+) )?(?P<lang>\w+) program(s)?( using ('
-      r'?P<generator>\w+))?$',
-      statement)
+        r'make ((?P<up_to>up to )?(?P<number>\d+) )?(?P<lang>\w+) program(s)?( using ('
+        r'?P<generator>\w+))?$',
+        statement)
     testcases_match = re.match(
-      r'make (?P<lang>\w+) ((?P<harness>\w+):(?P<generator>\w+)? )?testcases$', statement)
+        r'make (?P<lang>\w+) ((?P<harness>\w+):(?P<generator>\w+)? )?testcases$',
+        statement)
 
     if programs_match:
       number = int(programs_match.group("number") or 0) or math.inf
@@ -250,9 +254,9 @@ def _execute(statement: str, file=sys.stdout) -> None:
       generator = lang.mkgenerator(programs_match.group("generator"))
 
       return _make_programs(
-        lang=lang, generator=generator, n=number,
-        up_to=True if programs_match.group("up_to") else False,
-        file=file)
+          lang=lang, generator=generator, n=number,
+          up_to=True if programs_match.group("up_to") else False,
+          file=file)
 
     elif testcases_match:
       lang = mklang(testcases_match.group("lang"))
@@ -276,8 +280,9 @@ def _execute(statement: str, file=sys.stdout) -> None:
       raise UnrecognizedInput
 
   if components[0] == "import":
-    match = re.match(r'import (?P<generator>\w+) (?P<lang>\w+) program(s)? from (?P<path>.+)$',
-                     statement)
+    match = re.match(
+      r'import (?P<generator>\w+) (?P<lang>\w+) program(s)? from (?P<path>.+)$',
+      statement)
 
     if match:
       lang = mklang(match.group("lang"))
@@ -292,9 +297,9 @@ def _execute(statement: str, file=sys.stdout) -> None:
 
   if components[0] == "run":
     match = re.match(
-      r'run (?P<lang>\w+) ((?P<harness>\w+):(?P<generator>\w+)? )?testcases( on (?P<testbed>['
-      r'\w+-±]+))?$',
-      statement)
+        r'run (?P<lang>\w+) ((?P<harness>\w+):(?P<generator>\w+)? )?testcases( on (?P<testbed>['
+        r'\w+-±]+))?$',
+        statement)
     if match:
       lang = mklang(match.group("lang"))
 

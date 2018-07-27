@@ -1,23 +1,19 @@
 # preamble
 
+from collections import Counter
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pickle
 import seaborn as sns
 import time
-
 from clgen.atomizer import CharacterAtomizer
-
-from collections import defaultdict, Counter
-
-from keras.layers.normalization import BatchNormalization
 from keras.preprocessing.sequence import pad_sequences
-
-from lib.labm8 import fs
-
+from phd.lib.labm8 import fs
 from scipy.stats.mstats import gmean
 from sklearn.model_selection import StratifiedKFold
+
 
 # plotting config:
 sns.set(style="ticks", color_codes=True)
@@ -113,12 +109,14 @@ def get_train_test_splits(D, n_splits=10, seed=1):
 
   skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=seed)
   T = []
-  for train_index, test_index in skf.split(benchmarks.index, benchmarks["oracle_enc"]):
+  for train_index, test_index in skf.split(benchmarks.index,
+                                           benchmarks["oracle_enc"]):
     indices = list(train_index) + list(test_index)
     assert len(indices) == len(benchmarks)
     assert set(benchmarks.index) == set(indices)
 
-    T.append((pd.concat((synthetics, benchmarks.loc[train_index])), benchmarks.loc[test_index]))
+    T.append((pd.concat((synthetics, benchmarks.loc[train_index])),
+              benchmarks.loc[test_index]))
   return T
 
 
@@ -128,7 +126,8 @@ def load_data_desc(platform, source="B",
   """ load experimental results """
 
   def get_benchmarks(platform):
-    B = pd.read_csv(fs.path("runtimes/{platform}-benchmarks.csv".format(**vars())))
+    B = pd.read_csv(
+      fs.path("runtimes/{platform}-benchmarks.csv".format(**vars())))
     B["source"] = [escape_suite_name(x) for x in B["benchmark"]]
     B["synthetic"] = [0] * len(B)
     return B
@@ -153,12 +152,15 @@ def load_data_desc(platform, source="B",
   elif source == "N":
     dataframe = get_npb_benchmarks(platform)
   elif source == "NS":
-    dataframe = pd.concat((get_npb_benchmarks(platform), get_synthetics(platform)))
+    dataframe = pd.concat(
+        (get_npb_benchmarks(platform), get_synthetics(platform)))
   else:
     raise Exception
 
-  dataframe["oracle_enc"] = [1 if x == "GPU" else 0 for x in dataframe["oracle"].values]
-  dataframe["benchmark_name"] = [escape_benchmark_name(b) for b in dataframe["benchmark"].values]
+  dataframe["oracle_enc"] = [1 if x == "GPU" else 0 for x in
+                             dataframe["oracle"].values]
+  dataframe["benchmark_name"] = [escape_benchmark_name(b) for b in
+                                 dataframe["benchmark"].values]
 
   # load source code:
   source_dir = fs.path("kernels")
@@ -202,7 +204,8 @@ def load_data_desc(platform, source="B",
   }
 
 
-def get_training_data(data_desc, *args, seed=204, n_splits=10, split_i=0, **kwargs):
+def get_training_data(data_desc, *args, seed=204, n_splits=10, split_i=0,
+                      **kwargs):
   dataframe = data_desc["dataframe"]
   seq_length = data_desc["seq_length"]
   train, test = get_train_test_splits(
@@ -223,9 +226,11 @@ def get_training_data(data_desc, *args, seed=204, n_splits=10, split_i=0, **kwar
   y2_test = get_y2(test)
 
   return (
-    {"dataframe": train, "x_2": x_train_2, "x_4": x_train_4, "x_11": x_train_11, "x_seq": x_train_seq, "y": y_train,
+    {"dataframe": train, "x_2": x_train_2, "x_4": x_train_4, "x_11": x_train_11,
+     "x_seq": x_train_seq, "y": y_train,
      "y_2": y2_train},
-    {"dataframe": test, "x_2": x_test_2, "x_4": x_test_4, "x_11": x_test_11, "x_seq": x_test_seq, "y": y_test,
+    {"dataframe": test, "x_2": x_test_2, "x_4": x_test_4, "x_11": x_test_11,
+     "x_seq": x_test_seq, "y": y_test,
      "y_2": y2_test},
   )
 
@@ -247,16 +252,20 @@ def analyze(predictions, test):
   zero_r_key = enc2key(zero_r)
 
   speedups = np.array([min(d["runtime_cpu"], d["runtime_gpu"]) / d[enc2key(p)]
-                       for p, d in zip(predictions, frame.T.to_dict().values())])
+                       for p, d in
+                       zip(predictions, frame.T.to_dict().values())])
   speedup_avg = speedups.mean()
   speedup_geo = gmean(speedups)
 
   accuracy = sum(correct) / len(test["dataframe"])
 
   confusion_matrix = np.zeros((2, 2), dtype="int32")
-  confusion_matrix[0][0] = sum(np.logical_and(np.logical_not(predictions), np.logical_not(oracle)))
-  confusion_matrix[0][1] = sum(np.logical_and(predictions, np.logical_not(oracle)))
-  confusion_matrix[1][0] = sum(np.logical_and(np.logical_not(predictions), oracle))
+  confusion_matrix[0][0] = sum(
+    np.logical_and(np.logical_not(predictions), np.logical_not(oracle)))
+  confusion_matrix[0][1] = sum(
+    np.logical_and(predictions, np.logical_not(oracle)))
+  confusion_matrix[1][0] = sum(
+    np.logical_and(np.logical_not(predictions), oracle))
   confusion_matrix[1][1] = sum(np.logical_and(predictions, oracle))
 
   assert (confusion_matrix.sum() == len(test["dataframe"]))
@@ -295,7 +304,8 @@ def train_and_save(model_desc, platform, source,
   np.random.seed(seed)
 
   name = model_desc["name"]
-  outpath = "models/{name}/{platform}-{source}-{atomizer}:{maxlen}-{seed}-{n_splits}-{split_i}.model".format(**vars())
+  outpath = "models/{name}/{platform}-{source}-{atomizer}:{maxlen}-{seed}-{n_splits}-{split_i}.model".format(
+    **vars())
   if not fs.exists(outpath):
     create_fn = model_desc.get("create_model", _nop)
     train_fn = model_desc.get("train_fn", _nop)
@@ -305,7 +315,8 @@ def train_and_save(model_desc, platform, source,
     # load training data
     data_desc = load_data_desc(platform=platform, source=source,
                                max_seq_len=maxlen, atomizer=_atomizer)
-    train, test = get_training_data(data_desc, seed=seed, split_i=split_i, n_splits=n_splits)
+    train, test = get_training_data(data_desc, seed=seed, split_i=split_i,
+                                    n_splits=n_splits)
 
     # create model
     model = create_fn(seed=seed, data_desc=data_desc)
@@ -330,8 +341,10 @@ def load_and_test(model_desc, platform, source,
   np.random.seed(seed)
 
   name = model_desc["name"]
-  inpath = "models/{name}/{platform}-{source}-{atomizer}:{maxlen}-{seed}-{n_splits}-{split_i}.model".format(**vars())
-  outpath = "models/{name}/{platform}-{source}-{atomizer}:{maxlen}-{seed}-{n_splits}-{split_i}.result".format(**vars())
+  inpath = "models/{name}/{platform}-{source}-{atomizer}:{maxlen}-{seed}-{n_splits}-{split_i}.model".format(
+    **vars())
+  outpath = "models/{name}/{platform}-{source}-{atomizer}:{maxlen}-{seed}-{n_splits}-{split_i}.result".format(
+    **vars())
 
   if fs.exists(outpath):
     return load_result(model_desc, platform, source, n_splits=n_splits,
@@ -374,8 +387,10 @@ def benchmark_inference(model_desc, platform, source,
   np.random.seed(seed)
 
   name = model_desc["name"]
-  inpath = "models/{name}/{platform}-{source}-{atomizer}:{maxlen}-{seed}-{n_splits}-{split_i}.model".format(**vars())
-  outpath = "models/{name}/{platform}-{source}-{atomizer}:{maxlen}-{seed}-{n_splits}-{split_i}.result".format(**vars())
+  inpath = "models/{name}/{platform}-{source}-{atomizer}:{maxlen}-{seed}-{n_splits}-{split_i}.model".format(
+    **vars())
+  outpath = "models/{name}/{platform}-{source}-{atomizer}:{maxlen}-{seed}-{n_splits}-{split_i}.result".format(
+    **vars())
 
   if not fs.exists(inpath):
     return False
@@ -430,7 +445,8 @@ def load_result(model_desc, platform, source,
                 atomizer="CharacterAtomizer", maxlen=1024,
                 n_splits=10, split_i=0, seed=204):
   name = model_desc["name"]
-  inpath = "models/{name}/{platform}-{source}-{atomizer}:{maxlen}-{seed}-{n_splits}-{split_i}.result".format(**vars())
+  inpath = "models/{name}/{platform}-{source}-{atomizer}:{maxlen}-{seed}-{n_splits}-{split_i}.result".format(
+    **vars())
   if not fs.exists(inpath):
     return False
 

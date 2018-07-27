@@ -1,6 +1,6 @@
 import itertools
 
-from lib.labm8.tests.testutil import TestCase
+from phd.lib.labm8.tests.testutil import TestCase
 from omnitune import skelcl
 from unittest import main
 

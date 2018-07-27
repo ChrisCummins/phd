@@ -2,10 +2,10 @@ import pathlib
 from absl import app
 from absl import flags
 from absl import logging
+from phd.lib.labm8 import fmt
+from phd.lib.labm8 import pbutil
 
 from deeplearning.deepsmith.proto import deepsmith_pb2
-from lib.labm8 import fmt
-from lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

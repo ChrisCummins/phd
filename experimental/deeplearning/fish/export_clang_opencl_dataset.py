@@ -1,17 +1,16 @@
 """Export a dataset for use in training and testing discriminators."""
+import MySQLdb
 import configparser
+import humanize
 import pathlib
 import typing
-
-import MySQLdb
-import humanize
 from absl import app
 from absl import flags
 from absl import logging
+from phd.lib.labm8 import fs
+from phd.lib.labm8 import pbutil
 
 from experimental.deeplearning.fish.proto import fish_pb2
-from lib.labm8 import fs
-from lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

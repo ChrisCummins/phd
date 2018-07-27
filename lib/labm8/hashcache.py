@@ -17,11 +17,10 @@ import humanize
 import sqlalchemy as sql
 from absl import flags
 from absl import logging
+from phd.lib.labm8 import crypto
+from phd.lib.labm8 import fs
+from phd.lib.labm8 import sqlutil
 from sqlalchemy.ext import declarative
-
-from lib.labm8 import crypto
-from lib.labm8 import fs
-from lib.labm8 import sqlutil
 
 
 FLAGS = flags.FLAGS

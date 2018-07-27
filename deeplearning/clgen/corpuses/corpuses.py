@@ -22,11 +22,11 @@ from deeplearning.clgen.corpuses import encoded
 from deeplearning.clgen.corpuses import preprocessed
 from deeplearning.clgen.preprocessors import preprocessors
 from deeplearning.clgen.proto import corpus_pb2
-from lib.labm8 import bazelutil
-from lib.labm8 import crypto
-from lib.labm8 import hashcache
-from lib.labm8 import lockfile
-from lib.labm8 import pbutil
+from phd.lib.labm8 import bazelutil
+from phd.lib.labm8 import crypto
+from phd.lib.labm8 import hashcache
+from phd.lib.labm8 import lockfile
+from phd.lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

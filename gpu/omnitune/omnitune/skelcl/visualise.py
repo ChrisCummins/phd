@@ -12,10 +12,10 @@ import seaborn as sns
 from matplotlib.ticker import FormatStrFormatter
 
 from lib import labm8 as lab
-from lib.labm8 import math as labmath
-from lib.labm8 import ml
-from lib.labm8 import text
-from lib.labm8 import viz
+from phd.lib.labm8 import math as labmath
+from phd.lib.labm8 import ml
+from phd.lib.labm8 import text
+from phd.lib.labm8 import viz
 from . import space as _space
 
 

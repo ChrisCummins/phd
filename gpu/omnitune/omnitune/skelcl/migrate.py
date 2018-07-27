@@ -1,8 +1,8 @@
-from lib.labm8.db import placeholders
 from omnitune.skelcl import db as _db
+from phd.lib.labm8 import fs
+from phd.lib.labm8 import io
+from phd.lib.labm8.db import placeholders
 
-from lib.labm8 import fs
-from lib.labm8 import io
 from . import hash_dataset
 from . import hash_device
 from . import hash_scenario

@@ -3,7 +3,7 @@ from absl import flags
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.proto import model_pb2
-from lib.labm8 import pbutil
+from phd.lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

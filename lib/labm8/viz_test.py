@@ -10,8 +10,8 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 
-from lib.labm8 import fs
-from lib.labm8 import viz
+from phd.lib.labm8 import fs
+from phd.lib.labm8 import viz
 
 
 def _MakeTestPlot():

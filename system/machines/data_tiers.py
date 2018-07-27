@@ -13,8 +13,8 @@ import subprocess
 from absl import app
 from absl import flags
 from absl import logging
+from phd.lib.labm8 import pbutil
 
-from lib.labm8 import pbutil
 from system.machines.proto import data_tiers_pb2
 
 FLAGS = flags.FLAGS

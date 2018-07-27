@@ -28,7 +28,7 @@ from time import time
 from experimental.dsmith.langs import Generator
 from experimental.dsmith.opencl import clsmith
 from experimental.dsmith.opencl.db import *
-from lib.labm8 import fs
+from phd.lib.labm8 import fs
 
 
 class OpenCLGenerator(Generator):

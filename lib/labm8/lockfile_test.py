@@ -6,10 +6,10 @@ import tempfile
 import pytest
 from absl import app
 
-from lib.labm8 import fs
-from lib.labm8 import lockfile
-from lib.labm8 import pbutil
-from lib.labm8.proto import lockfile_pb2
+from phd.lib.labm8 import fs
+from phd.lib.labm8 import lockfile
+from phd.lib.labm8 import pbutil
+from phd.lib.labm8.proto import lockfile_pb2
 
 
 @pytest.fixture(scope='function')

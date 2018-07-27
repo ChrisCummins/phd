@@ -4,7 +4,7 @@ import sys
 
 from omnitune.skelcl import db as _db
 
-from lib.labm8 import fs
+from phd.lib.labm8 import fs
 
 
 def print_usage_and_exit():

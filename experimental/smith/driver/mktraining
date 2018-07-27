@@ -2,15 +2,13 @@
 #
 # Generate training data files from results.
 #
-import sys
-
 import csv
 import smith
+import sys
 from argparse import ArgumentParser
+from phd.lib.labm8 import fs
+from phd.lib.labm8 import math as labmath
 from smith import features
-
-from lib.labm8 import fs
-from lib.labm8 import math as labmath
 
 
 class MalformedDataException(smith.SmithException): pass
@@ -192,7 +190,8 @@ def print_datapoint(filename, kernel, dataset, kernel_features, cpu, gpu,
       sep=',', file=file)
 
 
-def mktraining(kernels_dir, cpu_path, gpu_path, out=sys.stdout, metaout=sys.stderr):
+def mktraining(kernels_dir, cpu_path, gpu_path, out=sys.stdout,
+               metaout=sys.stderr):
   print("loading kernel features ... ", end='', file=metaout)
   kernel_features = get_kernel_features(kernels_dir)
   print(len(kernel_features), file=metaout)

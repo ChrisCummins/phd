@@ -17,7 +17,7 @@ import socket
 import subprocess
 import threading
 
-from lib.labm8 import fs
+from phd.lib.labm8 import fs
 
 HOSTNAME = socket.gethostname()
 USERNAME = getpass.getuser()

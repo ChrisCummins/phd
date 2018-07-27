@@ -12,11 +12,11 @@ from deeplearning.deepsmith.harnesses import cldrive
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import harness_pb2
 from gpu.cldrive import env
-from lib.labm8 import bazelutil
-from lib.labm8 import crypto
-from lib.labm8 import fs
-from lib.labm8 import labtypes
-from lib.labm8 import pbutil
+from phd.lib.labm8 import bazelutil
+from phd.lib.labm8 import crypto
+from phd.lib.labm8 import fs
+from phd.lib.labm8 import labtypes
+from phd.lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

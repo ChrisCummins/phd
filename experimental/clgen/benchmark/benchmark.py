@@ -11,7 +11,7 @@ from clgen import model
 from clgen import preprocess
 from clgen import sampler
 
-from lib.labm8 import fs
+from phd.lib.labm8 import fs
 
 
 def evaluate(model, sampler):

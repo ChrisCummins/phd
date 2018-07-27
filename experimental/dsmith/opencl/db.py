@@ -37,7 +37,7 @@ from sqlalchemy.sql import func
 from experimental.dsmith import Colors
 from experimental.dsmith import db_base
 from experimental.dsmith.opencl import oclgrind
-from lib.labm8 import crypto, prof
+from phd.lib.labm8 import crypto, prof
 
 # Global state to manage database connections. Must call init() before
 # creating sessions.

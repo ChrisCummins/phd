@@ -3,7 +3,7 @@ from absl import app
 from absl import flags
 
 from deeplearning.clgen import clgen
-from lib.labm8 import bazelutil
+from phd.lib.labm8 import bazelutil
 
 
 FLAGS = flags.FLAGS

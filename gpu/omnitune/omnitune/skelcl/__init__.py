@@ -1,11 +1,9 @@
 from __future__ import print_function
 
-import re
-
 import json
-
-from lib.labm8 import crypto
-from lib.labm8 import fs
+import re
+from phd.lib.labm8 import crypto
+from phd.lib.labm8 import fs
 
 
 class Error(Exception):

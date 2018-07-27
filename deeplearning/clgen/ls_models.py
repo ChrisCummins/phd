@@ -7,7 +7,7 @@ from absl import logging
 
 from deeplearning.clgen.models import models
 from deeplearning.clgen.proto import internal_pb2
-from lib.labm8 import pbutil
+from phd.lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

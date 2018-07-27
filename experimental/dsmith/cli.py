@@ -30,7 +30,7 @@ from typing import List
 from experimental import dsmith
 from experimental.dsmith import Colors
 from experimental.dsmith.repl import repl, run_command
-from lib.labm8 import fs, prof
+from phd.lib.labm8 import fs, prof
 
 __help_epilog__ = """
 Copyright (C) 2017 Chris Cummins <chrisc.101@gmail.com>.

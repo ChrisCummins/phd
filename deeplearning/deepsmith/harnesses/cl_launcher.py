@@ -12,6 +12,8 @@ from absl import app
 from absl import flags
 from absl import logging
 from concurrent import futures
+from phd.lib.labm8 import bazelutil
+from phd.lib.labm8 import labdate
 
 from deeplearning.deepsmith import services
 from deeplearning.deepsmith.harnesses import harness
@@ -20,8 +22,6 @@ from deeplearning.deepsmith.proto import harness_pb2
 from deeplearning.deepsmith.proto import harness_pb2_grpc
 from deeplearning.deepsmith.proto import service_pb2
 from gpu.cldrive import env
-from lib.labm8 import bazelutil
-from lib.labm8 import labdate
 
 
 FLAGS = flags.FLAGS

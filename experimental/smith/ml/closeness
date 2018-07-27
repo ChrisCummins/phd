@@ -2,19 +2,18 @@
 #
 # TODO: Line style http://matplotlib.org/examples/lines_bars_and_markers/line_styles_reference.html
 #
-from math import sqrt
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy
 import seaborn as sns
+from math import sqrt
+from phd.lib.labm8 import fs
+from phd.lib.labm8 import math as labmath
+from phd.lib.labm8 import viz
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import normalize
 
-from lib.labm8 import fs
-from lib.labm8 import math as labmath
-from lib.labm8 import viz
 
 # Seaborn configuration:
 sns.set(style="ticks", color_codes=True)
@@ -373,13 +372,19 @@ def static_kernel_closeness():
   ]
 
   # Ratio improvements:
-  GitHubDistances = get_nearest_neighbour_distance(BenchmarksFeatures, GitHubFeatures)
-  CLSmithDistances = get_nearest_neighbour_distance(BenchmarksFeatures, CLSmithFeatures)
-  CLgenDistances = get_nearest_neighbour_distance(BenchmarksFeatures, CLgenFeatures)
-  CLSmithCloser = [True if y < x else False for x, y in zip(CLSmithDistances, CLgenDistances)]
-  CLgenCloser = [True if y < x else False for x, y in zip(GitHubDistances, CLgenDistances)]
+  GitHubDistances = get_nearest_neighbour_distance(BenchmarksFeatures,
+                                                   GitHubFeatures)
+  CLSmithDistances = get_nearest_neighbour_distance(BenchmarksFeatures,
+                                                    CLSmithFeatures)
+  CLgenDistances = get_nearest_neighbour_distance(BenchmarksFeatures,
+                                                  CLgenFeatures)
+  CLSmithCloser = [True if y < x else False for x, y in
+                   zip(CLSmithDistances, CLgenDistances)]
+  CLgenCloser = [True if y < x else False for x, y in
+                 zip(GitHubDistances, CLgenDistances)]
   print("Closer CLSmith features:  {} ({:.1f} %)"
-        .format(sum(CLSmithCloser), (sum(CLSmithCloser) / len(CLSmithCloser)) * 100))
+        .format(sum(CLSmithCloser),
+                (sum(CLSmithCloser) / len(CLSmithCloser)) * 100))
   print("Closer CLgen features:  {} ({:.1f} %)"
         .format(sum(CLgenCloser), (sum(CLgenCloser) / len(CLgenCloser)) * 100))
 
@@ -657,13 +662,19 @@ def closer_than():
   ]
 
   # Ratio improvements:
-  GitHubDistances = get_nearest_neighbour_distance(BenchmarksFeatures, GitHubFeatures)
-  CLSmithDistances = get_nearest_neighbour_distance(BenchmarksFeatures, CLSmithFeatures)
-  CLgenDistances = get_nearest_neighbour_distance(BenchmarksFeatures, CLgenFeatures)
-  CLSmithCloser = [True if y < x else False for x, y in zip(CLSmithDistances, CLgenDistances)]
-  CLgenCloser = [True if y < x else False for x, y in zip(GitHubDistances, CLgenDistances)]
+  GitHubDistances = get_nearest_neighbour_distance(BenchmarksFeatures,
+                                                   GitHubFeatures)
+  CLSmithDistances = get_nearest_neighbour_distance(BenchmarksFeatures,
+                                                    CLSmithFeatures)
+  CLgenDistances = get_nearest_neighbour_distance(BenchmarksFeatures,
+                                                  CLgenFeatures)
+  CLSmithCloser = [True if y < x else False for x, y in
+                   zip(CLSmithDistances, CLgenDistances)]
+  CLgenCloser = [True if y < x else False for x, y in
+                 zip(GitHubDistances, CLgenDistances)]
   print("Closer CLSmith features:  {} ({:.1f} %)"
-        .format(sum(CLSmithCloser), (sum(CLSmithCloser) / len(CLSmithCloser)) * 100))
+        .format(sum(CLSmithCloser),
+                (sum(CLSmithCloser) / len(CLSmithCloser)) * 100))
   print("Closer CLgen features:  {} ({:.1f} %)"
         .format(sum(CLgenCloser), (sum(CLgenCloser) / len(CLgenCloser)) * 100))
 

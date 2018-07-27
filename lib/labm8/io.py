@@ -4,7 +4,7 @@ from __future__ import print_function
 
 import json
 
-from lib.labm8 import system
+from phd.lib.labm8 import system
 
 
 def colourise(colour, *args):

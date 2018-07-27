@@ -9,9 +9,9 @@ import pathlib
 import pickle
 import typing
 from absl import flags
+from phd.lib.labm8 import labdate
 
 from deeplearning.clgen import errors
-from lib.labm8 import labdate
 
 
 FLAGS = flags.FLAGS

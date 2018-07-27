@@ -18,8 +18,8 @@ from absl import app
 from absl import flags
 
 from gpu.clinfo.proto import clinfo_pb2
-from lib.labm8 import bazelutil
-from lib.labm8 import system
+from phd.lib.labm8 import bazelutil
+from phd.lib.labm8 import system
 
 
 FLAGS = flags.FLAGS

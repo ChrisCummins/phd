@@ -1,10 +1,8 @@
 """Unit tests for //lib/labm8:fmt."""
-import sys
-
 import pytest
+import sys
 from absl import app
-
-from lib.labm8 import fmt
+from phd.lib.labm8 import fmt
 
 
 def test_indent_zero():

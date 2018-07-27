@@ -8,9 +8,9 @@ import json
 from argparse import ArgumentParser
 from db import *
 from pathlib import Path
+from phd.lib.labm8 import fs
 from progressbar import ProgressBar
 
-from lib.labm8 import fs
 
 OUTCOMES = {
   "bf": 1,
@@ -86,7 +86,8 @@ if __name__ == "__main__":
     print(len(todo), "todo")
 
     for harness_id in ProgressBar()(todo):
-      harness == s.query(CLgenHarness).filter(CLgenHarness.id == harness_id).scalar()
+      harness == s.query(CLgenHarness).filter(
+        CLgenHarness.id == harness_id).scalar()
 
       with open(f"export/harness/{harness.id}", "w") as outfile:
         print(json.dumps({
@@ -118,7 +119,8 @@ if __name__ == "__main__":
     print(len(todo), "todo")
 
     for program_id in ProgressBar()(todo):
-      program = s.query(CLgenProgram).filter(CLgenProgram.id == program_id).scalar()
+      program = s.query(CLgenProgram).filter(
+        CLgenProgram.id == program_id).scalar()
 
       with open(f"export/program/{program.id}", "w") as outfile:
         print(json.dumps({
@@ -146,7 +148,8 @@ if __name__ == "__main__":
     print(len(todo), "todo")
 
     for program_id in ProgressBar()(todo):
-      program = s.query(CLSmithProgram).filter(CLSmithProgram.id == program_id).scalar()
+      program = s.query(CLSmithProgram).filter(
+        CLSmithProgram.id == program_id).scalar()
 
       with open(f"export/clsmith/program/{program.id}", "w") as outfile:
         print(json.dumps({
@@ -172,7 +175,8 @@ if __name__ == "__main__":
     print(len(todo), "todo")
 
     for result_id in ProgressBar()(todo):
-      result = s.query(CLSmithResult).filter(CLSmithResult.id == result_id).scalar()
+      result = s.query(CLSmithResult).filter(
+        CLSmithResult.id == result_id).scalar()
 
       with open(f"export/clsmith/result/{result.id}", "w") as outfile:
         print(json.dumps({

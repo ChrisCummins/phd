@@ -13,10 +13,10 @@ import deeplearning.deepsmith.generator
 import deeplearning.deepsmith.harness
 import deeplearning.deepsmith.profiling_event
 import deeplearning.deepsmith.toolchain
-import lib.labm8.sqlutil
+import phd.lib.labm8.sqlutil
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import deepsmith_pb2
-from lib.labm8 import labdate, pbutil
+from phd.lib.labm8 import labdate, pbutil
 
 
 # The index types for tables defined in this file.
@@ -160,7 +160,7 @@ class Testcase(db.Table):
     # Create invariant optset table entries.
     inputset_id = md5.digest()
     for input in inputs:
-      lib.labm8.sqlutil.GetOrAdd(session, TestcaseInputSet, id=inputset_id,
+      phd.lib.labm8.sqlutil.GetOrAdd(session, TestcaseInputSet, id=inputset_id,
                                  input=input)
 
     # Build the list of invariant options, and md5sum the key value strings.
@@ -179,7 +179,7 @@ class Testcase(db.Table):
     # Create invariant optset table entries.
     invariant_optset_id = md5.digest()
     for invariant_opt in invariant_opts:
-      lib.labm8.sqlutil.GetOrAdd(
+      phd.lib.labm8.sqlutil.GetOrAdd(
           session, TestcaseInvariantOptSet,
           id=invariant_optset_id,
           invariant_opt=invariant_opt)
@@ -187,7 +187,7 @@ class Testcase(db.Table):
     # Create a new testcase only if everything *except* the profiling events
     # are unique. This means that if a generator produced the same testcase
     # twice (on separate occasions), only the first is added to the datastore.
-    testcase = lib.labm8.sqlutil.Get(
+    testcase = phd.lib.labm8.sqlutil.Get(
         session, cls,
         toolchain=toolchain,
         generator=generator,
@@ -314,7 +314,7 @@ class TestcaseInput(db.Table):
     Returns:
       A TestcaseInput instance.
     """
-    return lib.labm8.sqlutil.GetOrAdd(session, TestcaseInput,
+    return phd.lib.labm8.sqlutil.GetOrAdd(session, TestcaseInput,
                                       name=TestcaseInputName.GetOrAdd(session,
                                                                       string=name, ),
                                       value=TestcaseInputValue.GetOrAdd(session,
@@ -368,7 +368,7 @@ class TestcaseInputValue(db.Table):
     md5 = hashlib.md5()
     md5.update(string.encode('utf-8'))
 
-    return lib.labm8.sqlutil.GetOrAdd(session, cls, md5=md5.digest(),
+    return phd.lib.labm8.sqlutil.GetOrAdd(session, cls, md5=md5.digest(),
                                       charcount=len(string),
                                       linecount=string.count('\n'),
                                       string=string, )
@@ -452,7 +452,7 @@ class TestcaseInvariantOpt(db.Table):
     Returns:
       A TestcaseInvariantOpt instance.
     """
-    return lib.labm8.sqlutil.GetOrAdd(session, cls,
+    return phd.lib.labm8.sqlutil.GetOrAdd(session, cls,
                                       name=TestcaseInvariantOptName.GetOrAdd(
                                           session, string=name, ),
                                       value=TestcaseInvariantOptValue.GetOrAdd(

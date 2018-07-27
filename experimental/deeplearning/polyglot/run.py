@@ -1,13 +1,15 @@
 """Run a baseline."""
 import collections
+import humanize
 import pathlib
 import random
 import time
-
-import humanize
 from absl import app
 from absl import flags
 from absl import logging
+from phd.lib.labm8 import crypto
+from phd.lib.labm8 import lockfile
+from phd.lib.labm8 import pbutil
 
 from deeplearning.clgen import clgen
 from deeplearning.clgen import errors
@@ -15,9 +17,6 @@ from deeplearning.clgen.corpuses import corpuses
 from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
-from lib.labm8 import crypto
-from lib.labm8 import lockfile
-from lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS
@@ -31,9 +30,10 @@ flags.DEFINE_string('instances', None,
 # A mapping from language name to a list of CLgen pre-processor functions.
 # These pre-processors are used as rejection samplers on the sample corpuses.
 POSTPROCESSORS = {
-    'opencl': ['deeplearning.clgen.preprocessors.opencl:Compile'],
-    'java': ['deeplearning.clgen.preprocessors.java:Compile'],
+  'opencl': ['deeplearning.clgen.preprocessors.opencl:Compile'],
+  'java': ['deeplearning.clgen.preprocessors.java:Compile'],
 }
+
 
 def IsEligible(instance: clgen.Instance) -> bool:
   """Return whether an instance is eligible for training or sampling."""
@@ -112,9 +112,9 @@ def main(argv):
 
   start_time = time.time()
   instances = [
-      clgen.Instance(p) for p in
-      pbutil.FromFile(pathlib.Path(FLAGS.instances),
-                      clgen_pb2.Instances()).instance]
+    clgen.Instance(p) for p in
+    pbutil.FromFile(pathlib.Path(FLAGS.instances),
+                    clgen_pb2.Instances()).instance]
   random.shuffle(instances)
   candidate_instances = collections.deque(instances)
   logging.info('Loaded %d instances in %s ms', len(candidate_instances),

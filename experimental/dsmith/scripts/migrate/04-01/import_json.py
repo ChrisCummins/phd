@@ -9,7 +9,7 @@ import db
 from argparse import ArgumentParser
 from db import *
 
-from lib.labm8 import fs
+from phd.lib.labm8 import fs
 
 if __name__ == "__main__":
   parser = ArgumentParser(description=__doc__)

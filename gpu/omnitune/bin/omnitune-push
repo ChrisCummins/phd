@@ -9,8 +9,8 @@ from omnitune.skelcl import db as _db
 from omnitune.skelcl import load_config
 from omnitune.skelcl.migrate import migrate
 
-from lib.labm8 import fs
-from lib.labm8 import io
+from phd.lib.labm8 import fs
+from phd.lib.labm8 import io
 
 
 def print_usage_and_exit():

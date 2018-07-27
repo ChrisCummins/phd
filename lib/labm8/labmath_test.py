@@ -5,7 +5,7 @@ import sys
 import pytest
 from absl import app
 
-from lib.labm8 import labmath
+from phd.lib.labm8 import labmath
 
 
 def test_ceil():

@@ -1,5 +1,5 @@
-from lib.labm8.tests.testutil import TestCase
 from omnitune import opencl
+from phd.lib.labm8.tests.testutil import TestCase
 from unittest import main
 
 

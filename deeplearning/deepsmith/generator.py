@@ -2,16 +2,15 @@
 import binascii
 import datetime
 import hashlib
-import typing
-
+import phd.lib.labm8.sqlutil
 import sqlalchemy as sql
+import typing
+from phd.lib.labm8 import labdate
 from sqlalchemy import orm
 from sqlalchemy.dialects import mysql
 
-import lib.labm8.sqlutil
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import deepsmith_pb2
-from lib.labm8 import labdate
 
 
 # The index types for tables defined in this file.
@@ -93,21 +92,23 @@ class Generator(db.Table):
     for proto_opt_name in sorted(proto.opts):
       proto_opt_value = proto.opts[proto_opt_name]
       md5.update((proto_opt_name + proto_opt_value).encode('utf-8'))
-      opt = lib.labm8.sqlutil.GetOrAdd(session, GeneratorOpt,
-                                       name=GeneratorOptName.GetOrAdd(session,
-                                                                      proto_opt_name),
-                                       value=GeneratorOptValue.GetOrAdd(session,
-                                                                        proto_opt_value), )
+      opt = phd.lib.labm8.sqlutil.GetOrAdd(session, GeneratorOpt,
+                                           name=GeneratorOptName.GetOrAdd(
+                                             session,
+                                             proto_opt_name),
+                                           value=GeneratorOptValue.GetOrAdd(
+                                             session,
+                                             proto_opt_value), )
       opts.append(opt)
 
     # Create optset table entries.
     optset_id = md5.digest()
     for opt in opts:
-      lib.labm8.sqlutil.GetOrAdd(session, GeneratorOptSet, id=optset_id,
-                                 opt=opt)
+      phd.lib.labm8.sqlutil.GetOrAdd(session, GeneratorOptSet, id=optset_id,
+                                     opt=opt)
 
-    return lib.labm8.sqlutil.GetOrAdd(session, cls, name=proto.name,
-                                      optset_id=optset_id, )
+    return phd.lib.labm8.sqlutil.GetOrAdd(session, cls, name=proto.name,
+                                          optset_id=optset_id, )
 
 
 class GeneratorOptSet(db.Table):

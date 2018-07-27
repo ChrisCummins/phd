@@ -13,10 +13,10 @@ import typing
 
 from absl import logging
 
-from lib.labm8 import labdate
-from lib.labm8 import pbutil
-from lib.labm8 import system
-from lib.labm8.proto import lockfile_pb2
+from phd.lib.labm8 import labdate
+from phd.lib.labm8 import pbutil
+from phd.lib.labm8 import system
+from phd.lib.labm8.proto import lockfile_pb2
 
 
 class Error(Exception):

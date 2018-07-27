@@ -9,7 +9,7 @@ from time import time
 
 import inspect
 
-from lib.labm8 import labtypes
+from phd.lib.labm8 import labtypes
 
 __TIMERS = {}
 

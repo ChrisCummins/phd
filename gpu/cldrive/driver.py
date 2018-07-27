@@ -11,7 +11,7 @@ from tempfile import NamedTemporaryFile
 
 from gpu.cldrive import args as _args
 from gpu.cldrive import env as _env
-from lib.labm8 import err
+from phd.lib.labm8 import err
 
 
 ArgTuple = collections.namedtuple('ArgTuple', ['hostdata', 'devdata'])

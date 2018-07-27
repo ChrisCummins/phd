@@ -2,12 +2,12 @@ import platform
 import subprocess
 import sys
 import typing
+from phd.lib.labm8 import bazelutil
+from phd.lib.labm8 import pbutil
 from typing import Iterator
 
 from gpu.clinfo.proto import clinfo_pb2
 from gpu.oclgrind import oclgrind
-from lib.labm8 import bazelutil
-from lib.labm8 import pbutil
 
 
 CLINFO = bazelutil.DataPath('phd/gpu/clinfo/clinfo')

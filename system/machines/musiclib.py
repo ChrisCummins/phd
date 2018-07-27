@@ -12,7 +12,7 @@ from absl import app
 from absl import flags
 
 from lib.dpack import dpack
-from lib.labm8 import fs
+from phd.lib.labm8 import fs
 
 FLAGS = flags.FLAGS
 

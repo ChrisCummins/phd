@@ -55,7 +55,7 @@ from os import environ
 from re import compile, search, sub
 from sys import stdin, stdout
 
-from lib.labm8 import fmt
+from phd.lib.labm8 import fmt
 
 _FILE_RE = compile("^File: (.+)")
 _WORDS_IN_TEXT_RE = compile("^Words in text: (\d+)")

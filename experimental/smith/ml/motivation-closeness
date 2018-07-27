@@ -14,7 +14,7 @@ from sklearn.decomposition import PCA
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 
-from lib.labm8 import viz
+from phd.lib.labm8 import viz
 
 # Seaborn configuration:
 sns.set(style="ticks", color_codes=True)

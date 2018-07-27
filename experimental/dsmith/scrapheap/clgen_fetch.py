@@ -7,7 +7,7 @@ from pathlib import Path
 from progressbar import ProgressBar
 from typing import List
 
-from lib.labm8 import crypto, fs
+from phd.lib.labm8 import crypto, fs
 
 # Benchmarked CLgen inference rate (characters per second):
 CLGEN_INFERENCE_CPS = 465

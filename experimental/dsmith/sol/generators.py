@@ -25,7 +25,7 @@ from time import time
 
 from experimental.dsmith.langs import Generator
 from experimental.dsmith.sol.db import *
-from lib.labm8 import fs
+from phd.lib.labm8 import fs
 
 
 class SolidityGenerator(Generator):

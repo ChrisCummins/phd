@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
-import sys
 from collections import deque
-from tempfile import NamedTemporaryFile
-from time import strftime, time
 
 import subprocess
+import sys
 from argparse import ArgumentParser
 from dsmith import db
 from dsmith.db import *
 from dsmith.lib import *
+from phd.lib.labm8 import crypto, fs
 from progressbar import ProgressBar
+from tempfile import NamedTemporaryFile
+from time import strftime, time
 from typing import Tuple, Union
 
-from lib.labm8 import crypto, fs
 
-
-def get_num_programs_to_build(session: db.session_t, tables: Tableset, clang: str):
+def get_num_programs_to_build(session: db.session_t, tables: Tableset,
+                              clang: str):
   num_ran = session.query(sql.sql.func.count(tables.clangs.id)) \
     .filter(tables.clangs.clang == clang) \
     .scalar()
@@ -24,7 +24,8 @@ def get_num_programs_to_build(session: db.session_t, tables: Tableset, clang: st
   return num_ran, total
 
 
-def create_stderr(s: session_t, tables: Tableset, stderr: str) -> CLgenClangStderr:
+def create_stderr(s: session_t, tables: Tableset,
+                  stderr: str) -> CLgenClangStderr:
   assertion_ = util.get_assertion(s, tables.clang_assertions, stderr)
   unreachable_ = util.get_unreachable(s, tables.clang_unreachables, stderr)
   terminate_ = util.get_terminate(s, tables.clang_terminates, stderr)
@@ -107,7 +108,8 @@ if __name__ == "__main__":
       Fill the inbox with jobs to run.
       """
       BATCH_SIZE = 1000
-      print(f"\nnext {tables.name} batch for clang {args.clang} at", strftime("%H:%M:%S"))
+      print(f"\nnext {tables.name} batch for clang {args.clang} at",
+            strftime("%H:%M:%S"))
       # update the counters
       num_ran, num_to_run = get_num_programs_to_build(s, tables, args.clang)
       bar.max_value = num_to_run
@@ -129,11 +131,15 @@ if __name__ == "__main__":
       if args.recheck:
         q = s.query(tables.clang_stderrs)
         for stderr in ProgressBar(max_value=q.count())(q):
-          assertion_ = util.get_assertion(s, tables.clang_assertions, stderr.stderr)
-          unreachable_ = util.get_unreachable(s, tables.clang_unreachables, stderr.stderr)
-          terminate_ = util.get_terminate(s, tables.clang_terminates, stderr.stderr)
+          assertion_ = util.get_assertion(s, tables.clang_assertions,
+                                          stderr.stderr)
+          unreachable_ = util.get_unreachable(s, tables.clang_unreachables,
+                                              stderr.stderr)
+          terminate_ = util.get_terminate(s, tables.clang_terminates,
+                                          stderr.stderr)
 
-          errs = sum(1 if x else 0 for x in [assertion_, unreachable_, terminate_])
+          errs = sum(
+              1 if x else 0 for x in [assertion_, unreachable_, terminate_])
           if errs > 1:
             raise LookupError(f"Multiple errors types found in: {stderr}\n\n" +
                               f"Assertion: {assertion_}\n" +

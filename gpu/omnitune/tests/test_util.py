@@ -1,4 +1,4 @@
-from lib.labm8.tests.testutil import TestCase
+from phd.lib.labm8.tests.testutil import TestCase
 from omnitune import util
 from unittest import main
 

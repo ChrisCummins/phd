@@ -13,7 +13,7 @@ from dsmith.db import *
 from dsmith.lib import *
 from typing import NewType
 
-from lib.labm8 import crypto, fs
+from phd.lib.labm8 import crypto, fs
 
 status_t = NewType('status_t', int)
 return_t = namedtuple('return_t', ['runtime', 'status', 'stdout', 'stderr'])

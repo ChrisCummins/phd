@@ -13,7 +13,7 @@ from deeplearning.clgen import telemetry
 from deeplearning.clgen.models import backends
 from deeplearning.clgen.models import builders
 from deeplearning.clgen.models import data_generators
-from lib.labm8 import logutil
+from phd.lib.labm8 import logutil
 
 
 FLAGS = flags.FLAGS

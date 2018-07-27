@@ -12,8 +12,8 @@ import numpy as np
 
 from config import getconfig
 from deeplearning.clgen import errors
-from lib.labm8 import bazelutil
-from lib.labm8 import labmath
+from phd.lib.labm8 import bazelutil
+from phd.lib.labm8 import labmath
 
 
 CLGEN_FEATURES = bazelutil.DataPath(

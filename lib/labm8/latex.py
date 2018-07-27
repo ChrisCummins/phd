@@ -7,7 +7,7 @@ from io import StringIO
 
 import pandas
 
-from lib.labm8 import io
+from phd.lib.labm8 import io
 
 
 class Error(Exception):

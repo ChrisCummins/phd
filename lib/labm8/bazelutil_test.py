@@ -1,12 +1,11 @@
 """Unit tests for //lib/labm8/bazelutil.py."""
+import pytest
 import sys
 import tempfile
-
-import pytest
 from absl import app
 
-from lib.labm8 import bazelutil
-from lib.labm8 import fs
+from phd.lib.labm8 import bazelutil
+from phd.lib.labm8 import fs
 
 
 # IsBazelSandbox() tests.

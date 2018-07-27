@@ -1,17 +1,16 @@
 """Unit tests for //deeplearning/clgen/models/tensorflow_backend.py."""
-import sys
-
 import checksumdir
 import numpy as np
 import pytest
+import sys
 from absl import app
+from phd.lib.labm8 import crypto
+from phd.lib.labm8 import pbutil
 
 from deeplearning.clgen.models import models
 from deeplearning.clgen.models import tensorflow_backend
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import telemetry_pb2
-from lib.labm8 import crypto
-from lib.labm8 import pbutil
 
 
 class MockSampler(object):
@@ -77,7 +76,7 @@ def test_TensorFlowBackend_Train_twice(
 
 
 def test_TensorFlowBackend_Train_epoch_checkpoints(
-      clgen_cache_dir, abc_tensorflow_model_config):
+    clgen_cache_dir, abc_tensorflow_model_config):
   """Test that epoch_checkpoints returns a <int, str> dict."""
   del clgen_cache_dir
   abc_tensorflow_model_config.training.num_epochs = 2
@@ -120,7 +119,7 @@ def test_TensorFlowBackend_Train_missing_intermediate_checkpoints(
 
 
 def test_TensorFlowBackend_Train_is_trained(
-      clgen_cache_dir, abc_tensorflow_model_config):
+    clgen_cache_dir, abc_tensorflow_model_config):
   """Test that is_trained is initially false until trained."""
   del clgen_cache_dir
   m = models.Model(abc_tensorflow_model_config)

@@ -1,10 +1,8 @@
 """Unit tests for //lib/labm8:crypto."""
-import sys
-
 import pytest
+import sys
 from absl import app
-
-from lib.labm8 import crypto
+from phd.lib.labm8 import crypto
 
 
 # sha1()

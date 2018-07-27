@@ -4,9 +4,9 @@ from collections import namedtuple
 import pyopencl as cl
 from dsmith.db import *
 from dsmith.lib import *
+from phd.lib.labm8 import fs
 from typing import NewType
 
-from lib.labm8 import fs
 
 # paths to clreduce library
 CLREDUCE_DIR = fs.abspath('..', 'lib', 'clreduce')

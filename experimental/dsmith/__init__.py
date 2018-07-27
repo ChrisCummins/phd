@@ -39,7 +39,7 @@ from typing import Tuple
 from experimental.dsmith._config import *
 from pkg_resources import require, resource_filename
 
-from lib.labm8 import fs
+from phd.lib.labm8 import fs
 
 __author__ = "Chris Cummins"
 __copyright__ = "Copyright 2017, 2018 Chris Cummins"

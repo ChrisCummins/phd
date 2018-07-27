@@ -8,11 +8,9 @@ import re
 import shutil
 import typing
 from glob import iglob
-
 from humanize import naturalsize
+from phd.lib.labm8 import labtypes
 from send2trash import send2trash
-
-from lib.labm8 import labtypes
 
 
 class Error(Exception):

@@ -9,8 +9,8 @@ import typing
 from absl import flags
 from absl import logging
 
-from lib.labm8 import labdate
-from lib.labm8.proto import logging_pb2
+from phd.lib.labm8 import labdate
+from phd.lib.labm8.proto import logging_pb2
 
 
 FLAGS = flags.FLAGS

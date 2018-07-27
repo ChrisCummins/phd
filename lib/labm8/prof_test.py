@@ -5,9 +5,9 @@ import sys
 
 import pytest
 from absl import app
+from phd.lib.labm8 import prof
+from phd.lib.labm8 import system
 
-from lib.labm8 import prof
-from lib.labm8 import system
 
 if system.is_python3():
   from io import StringIO

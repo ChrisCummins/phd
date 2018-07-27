@@ -10,9 +10,9 @@ import sqlalchemy as sql
 from argparse import ArgumentParser
 from db import *
 from pathlib import Path
+from phd.lib.labm8 import crypto, fs
 from progressbar import ProgressBar
 
-from lib.labm8 import crypto, fs
 
 if __name__ == "__main__":
   parser = ArgumentParser(description=__doc__)
@@ -55,7 +55,8 @@ if __name__ == "__main__":
     flush()
 
     PROGRAMS = dict((old_id, new_id) for old_id, new_id in
-                    s.query(CLgenProgramTranslation.old_id, CLgenProgramTranslation.new_id).all())
+                    s.query(CLgenProgramTranslation.old_id,
+                            CLgenProgramTranslation.new_id).all())
 
     print("Import CLgen results ...")
     paths = [p for p in Path("export/clgen/result").iterdir()]

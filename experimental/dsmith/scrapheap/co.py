@@ -11,7 +11,7 @@ from dsmith.lib import *
 from subprocess import PIPE, Popen
 from typing import List, NewType
 
-from lib.labm8 import fs
+from phd.lib.labm8 import fs
 
 status_t = NewType('status_t', int)
 return_t = namedtuple('return_t', ['runtime', 'status', 'stdout', 'stderr'])

@@ -1,6 +1,6 @@
 """Graphing helper.
 """
-from lib.labm8 import io
+from phd.lib.labm8 import io
 
 
 class Error(Exception):

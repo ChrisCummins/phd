@@ -15,11 +15,11 @@ import deeplearning.deepsmith.testbed
 import deeplearning.deepsmith.testcase
 import deeplearning.deepsmith.testcase
 import deeplearning.deepsmith.toolchain
-import lib.labm8.sqlutil
+import phd.lib.labm8.sqlutil
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import datastore_pb2
 from deeplearning.deepsmith.proto import deepsmith_pb2
-from lib.labm8 import pbutil
+from phd.lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS
@@ -123,7 +123,7 @@ class DataStore(object):
   def _BuildTestcaseRequestQuery(self, session, request) -> db.query_t:
     def _FilterToolchainGeneratorHarness(q):
       if request.HasField('toolchain'):
-        toolchain = lib.labm8.sqlutil.GetOrAdd(session,
+        toolchain = phd.lib.labm8.sqlutil.GetOrAdd(session,
                                                deeplearning.deepsmith.toolchain.Toolchain,
                                                name=request.toolchain)
         if not toolchain:
@@ -162,10 +162,10 @@ class DataStore(object):
 
     testbed_id = None
     if request.HasField('testbed'):
-      toolchain = lib.labm8.sqlutil.GetOrAdd(session,
+      toolchain = phd.lib.labm8.sqlutil.GetOrAdd(session,
                                              deeplearning.deepsmith.toolchain.Toolchain,
                                              name=request.testbed)
-      testbed = lib.labm8.sqlutil.GetOrAdd(session,
+      testbed = phd.lib.labm8.sqlutil.GetOrAdd(session,
                                            deeplearning.deepsmith.testbed.Testbed,
                                            toolchain=toolchain,
                                            name=request.testbed.toolchain,

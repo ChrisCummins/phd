@@ -1,16 +1,16 @@
 """Export dsmith_04 databases to Protos."""
-import os
-
 import MySQLdb
 import configparser
+import os
 import pathlib
 import typing
 from absl import app
 from absl import flags
 from absl import logging
+from phd.lib.labm8 import dateutil
 
 from deeplearning.deepsmith.proto import deepsmith_pb2
-from lib.labm8 import dateutil
+
 
 FLAGS = flags.FLAGS
 
@@ -41,7 +41,8 @@ OPENCL_DEVICE_MAP = {
 }
 
 
-def _SetIf(out: typing.Dict[str, typing.Any], key: typing.Any, value: typing.Any,
+def _SetIf(out: typing.Dict[str, typing.Any], key: typing.Any,
+           value: typing.Any,
            setvalue: typing.Any = None) -> typing.Dict[str, typing.Any]:
   if value:
     out[key] = setvalue or value
@@ -219,7 +220,8 @@ LIMIT %s
             ),
           ]
       )
-      with open(proto_dir / 'opencl' / 'testcases' / str(testcase_id), 'wb') as f:
+      with open(proto_dir / 'opencl' / 'testcases' / str(testcase_id),
+                'wb') as f:
         f.write(proto.SerializeToString())
     if i < batch_size:
       return
@@ -331,7 +333,8 @@ LIMIT %s
         _SetIf(testbed_opts, 'llvm_version', driver_version.strip())
       else:
         _SetIf(testbed_opts, 'driver_version', driver_version.strip())
-        _SetIf(testbed_opts, 'opencl_devtype', OPENCL_DEVTYPE_MAP.get(devtype, devtype))
+        _SetIf(testbed_opts, 'opencl_devtype',
+               OPENCL_DEVTYPE_MAP.get(devtype, devtype))
         _SetIf(testbed_opts, 'opencl_platform', platform_name.strip())
         _SetIf(testbed_opts, 'opencl_opt', 'enabled' if cl_opt else 'disabled')
       invariant_opts = {}
