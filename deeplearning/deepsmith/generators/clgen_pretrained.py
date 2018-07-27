@@ -72,16 +72,16 @@ class ClgenGenerator(generator.GeneratorServiceBase,
     with self.instance.Session():
       num_programs = math.ceil(
           request.num_testcases / len(self.config.testcase_skeleton))
-      for i, sample in enumerate(self.instance.model.Sample(
+      for i, sample_ in enumerate(self.instance.model.Sample(
           self.instance.sampler, num_programs)):
         logging.info('Generated sample %d.', i + 1)
-        response.testcases.extend(self.SampleToTestcases(sample))
+        response.testcases.extend(self.SampleToTestcases(sample_))
 
     # Flush any remaining output generated during Sample().
     sys.stdout.flush()
     return response
 
-  def SampleToTestcases(self, sample: model_pb2.Sample) -> typing.List[
+  def SampleToTestcases(self, sample_: model_pb2.Sample) -> typing.List[
     deepsmith_pb2.Testcase]:
     """Convert a CLgen sample to a list of DeepSmith testcase protos."""
     testcases = []
@@ -90,9 +90,9 @@ class ClgenGenerator(generator.GeneratorServiceBase,
       t.CopyFrom(skeleton)
       p = t.profiling_events.add()
       p.type = 'generation'
-      p.duration_ms = sample.wall_time_ms
-      p.event_start_epoch_ms = sample.sample_start_epoch_ms_utc
-      t.inputs['src'] = sample.text
+      p.duration_ms = sample_.wall_time_ms
+      p.event_start_epoch_ms = sample_.sample_start_epoch_ms_utc
+      t.inputs['src'] = sample_.text
       testcases.append(t)
     return testcases
 
