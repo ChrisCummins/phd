@@ -18,7 +18,6 @@ py_binary(
         "//deeplearning/deepsmith:services",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//deeplearning/deepsmith/proto:generator_py_pb2",
-        requirement("grpcio"),
         requirement("absl-py"),
     ],
 )
@@ -64,7 +63,6 @@ py_binary(
         "//deeplearning/deepsmith/proto:service_py_pb2",
         "//lib/labm8:bazelutil",
         "//lib/labm8:labdate",
-        requirement("grpcio"),
         requirement("absl-py"),
     ],
 )
@@ -110,6 +108,8 @@ py_library(
         "//deeplearning/deepsmith:services",
         "//deeplearning/deepsmith/proto:generator_py_pb2",
         "//lib/labm8:pbutil",
+        requirement("grpcio"),
+        requirement("absl-py"),
     ],
 )
 

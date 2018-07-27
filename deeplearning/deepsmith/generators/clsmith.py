@@ -1,16 +1,13 @@
 """A CLSmith program generator."""
-import grpc
 import math
 import os
 import pathlib
 import subprocess
 import tempfile
-import time
 import typing
 from absl import app
 from absl import flags
 from absl import logging
-from concurrent import futures
 from phd.lib.labm8 import bazelutil
 from phd.lib.labm8 import labdate
 
@@ -110,25 +107,5 @@ class ClsmithGenerator(generator.GeneratorBase,
     return testcases
 
 
-def main(argv):
-  if len(argv) > 1:
-    raise app.UsageError('Unrecognized arguments')
-  generator_config = services.ServiceConfigFromFlag(
-      'generator_config', generator_pb2.ClsmithGenerator())
-  server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-  services.AssertLocalServiceHostname(generator_config.service)
-  service = ClsmithGenerator(generator_config)
-  generator_pb2_grpc.add_GeneratorServiceServicer_to_server(service, server)
-  server.add_insecure_port(f'[::]:{generator_config.service.port}')
-  logging.info('%s listening on %s:%s', type(service).__name__,
-               generator_config.service.hostname, generator_config.service.port)
-  server.start()
-  try:
-    while True:
-      time.sleep(3600 * 24)
-  except KeyboardInterrupt:
-    server.stop(0)
-
-
 if __name__ == '__main__':
-  app.run(main)
+  app.run(ClsmithGenerator.Main(generator_pb2.ClsmithGenerator))
