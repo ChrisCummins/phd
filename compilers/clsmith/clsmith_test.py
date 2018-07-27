@@ -10,9 +10,9 @@ from compilers.clsmith import clsmith
 FLAGS = flags.FLAGS
 
 
-def test_RunClsmith():
+def test_Exec_no_args():
   """Test that CLSmith returns a generated file."""
-  src = clsmith.RunClsmith()
+  src = clsmith.Exec()
   # Check the basic structure of the generated file.
   assert src.startswith('// -g ')
   assert '__kernel void ' in src

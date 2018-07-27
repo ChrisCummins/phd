@@ -48,7 +48,7 @@ def TemporaryWorkingDir(prefix: str = None) -> pathlib.Path:
   os.chdir(old_directory)
 
 
-def RunClsmith(*opts) -> str:
+def Exec(*opts) -> str:
   """Generate and return a CLSmith program.
 
   Args:
@@ -71,7 +71,7 @@ def RunClsmith(*opts) -> str:
 def main(argv):
   """Main entry point."""
   try:
-    print(RunClsmith(*argv[1:]))
+    print(Exec(*argv[1:]))
   except CLSmithError as e:
     print(e, file=sys.stderr)
     sys.exit(e.returncode)
