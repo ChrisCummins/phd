@@ -11,7 +11,7 @@ FLAGS = flags.FLAGS
 class GeneratorBase(services.ServiceBase):
 
   def __init__(self, config: pbutil.ProtocolBuffer):
-    self.config = config
+    super(GeneratorBase, self).__init__(config)
 
   def GetGeneratorCapabilities(
       self, request: generator_pb2.GetGeneratorCapabilitiesRequest,
