@@ -9,7 +9,7 @@ use '--' to prevent this script from attempting to parse the args, and a second
 
 Usage:
 
-  bazel run //gpu/oclgrind -- -- --version
+  bazel run //gpu/oclgrind [-- -- <args>]
 """
 import subprocess
 import sys
