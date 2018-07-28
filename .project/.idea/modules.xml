@@ -3,7 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.blaze/modules/.project-data-dir.iml" filepath="$PROJECT_DIR$/.blaze/modules/.project-data-dir.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.blaze/modules/.workspace.iml" filepath="$PROJECT_DIR$/.blaze/modules/.workspace.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.blaze/modules/workspace.iml" filepath="$PROJECT_DIR$/.blaze/modules/workspace.iml" />
     </modules>
   </component>
 </project>
