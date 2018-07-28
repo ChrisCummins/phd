@@ -9,7 +9,6 @@ from phd.lib.labm8 import cache
 from phd.lib.labm8 import labdate
 from phd.lib.labm8 import pbutil
 
-from deeplearning.clgen import cache
 from deeplearning.clgen import samplers
 from deeplearning.clgen import telemetry
 from deeplearning.clgen.corpuses import atomizers
