@@ -6,13 +6,13 @@ import typing
 from absl import app
 from absl import flags
 
-import gpu.cldrive.env
 from deeplearning.deepsmith.difftests import difftests
 from deeplearning.deepsmith.harnesses import cldrive
 from deeplearning.deepsmith.harnesses import harness
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import harness_pb2
 from experimental.deeplearning.deepsmith.opencl_fuzz import opencl_fuzz
+from gpu.cldrive import env
 
 
 FLAGS = flags.FLAGS
@@ -21,12 +21,36 @@ FLAGS = flags.FLAGS
 # Test fixtures.
 
 @pytest.fixture(scope='function')
-def cldrive_harness():
-  """Test fixture to return an Cldrive test harness."""
+def cldrive_harness_config() -> harness_pb2.CldriveHarness:
+  """Test fixture to return an Cldrive test harness config."""
   config = harness_pb2.CldriveHarness()
-  config.opencl_env.extend([gpu.cldrive.env.OclgrindOpenCLEnvironment().name])
+  config.opencl_env.extend([env.OclgrindOpenCLEnvironment().name])
   config.opencl_opt.extend([True])
-  return cldrive.CldriveHarness(config)
+  return config
+
+
+@pytest.fixture(scope='function')
+def cldrive_harness(cldrive_harness_config: harness_pb2.CldriveHarness
+                    ) -> cldrive.CldriveHarness:
+  """Test fixture to return an Cldrive test harness."""
+  return cldrive.CldriveHarness(cldrive_harness_config)
+
+
+@pytest.fixture(scope='function')
+def cl_launcher_harness_config() -> harness_pb2.ClLauncherHarness:
+  """Test fixture to return a cl_launcher test harness."""
+  config = harness_pb2.ClLauncherHarness()
+  config.opencl_env.extend([env.OclgrindOpenCLEnvironment().name])
+  config.opencl_opt.extend([True])
+  return config
+
+
+@pytest.fixture(scope='function')
+def cl_launcher_harness(
+    cl_launcher_harness_config: harness_pb2.ClLauncherHarness
+) -> harness_pb2.ClLauncherHarness:
+  """Test fixture to return a cl_launcher test harness."""
+  return cldrive.CldriveHarness(cl_launcher_harness_config)
 
 
 # Mock classes.
@@ -106,6 +130,108 @@ class MockHarness(harness.HarnessBase):
     del context
     self.RunTestcases_call_requests.append(request)
     return self.return_val
+
+
+# RunTestcases() tests.
+
+@pytest.mark.parametrize("opencl_opt", [True, False])
+def test_RunTestcases_cldrive_pass(
+    cldrive_harness_config: harness_pb2.CldriveHarness, opencl_opt: bool):
+  """Test execution of a simple test case."""
+  cldrive_harness_config.opencl_opt[0] = opencl_opt
+  harness = cldrive.CldriveHarness(cldrive_harness_config)
+  testcases = [
+    deepsmith_pb2.Testcase(
+        toolchain="opencl",
+        harness=deepsmith_pb2.Harness(name="cldrive"),
+        inputs={
+          'src': 'kernel void A(global int* a) {a[get_global_id(0)] = 10;}',
+          'gsize': '1,1,1',
+          'lsize': '1,1,1',
+          'timeout_seconds': '60',
+        })
+  ]
+  results = opencl_fuzz.RunTestcases(harness, testcases)
+  assert len(results) == 1
+  # Testcase.invariant_opts.driver_type field is set by cldrive harness.
+  testcases[0].invariant_opts['driver_type'] = 'compile_and_run'
+  assert testcases[0] == results[0].testcase
+  assert results[0].testbed == cldrive.OpenClEnvironmentToTestbed(
+      harness.envs[0])
+  assert results[0].outcome == deepsmith_pb2.Result.PASS
+  assert results[0].outputs['stdout'] == (
+    'global int * a: 10 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 '
+    '22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 '
+    '46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 '
+    '70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 '
+    '94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 '
+    '114 115 116 117 118 119 120 121 122 123 124 125 126 127 128 129 130 131 '
+    '132 133 134 135 136 137 138 139 140 141 142 143 144 145 146 147 148 149 '
+    '150 151 152 153 154 155 156 157 158 159 160 161 162 163 164 165 166 167 '
+    '168 169 170 171 172 173 174 175 176 177 178 179 180 181 182 183 184 185 '
+    '186 187 188 189 190 191 192 193 194 195 196 197 198 199 200 201 202 203 '
+    '204 205 206 207 208 209 210 211 212 213 214 215 216 217 218 219 220 221 '
+    '222 223 224 225 226 227 228 229 230 231 232 233 234 235 236 237 238 239 '
+    '240 241 242 243 244 245 246 247 248 249 250 251 252 253 254 255\n')
+  opt_str = 'on' if opencl_opt else 'off'
+  assert results[0].outputs['stderr'] == f"""\
+[cldrive] Platform: Oclgrind
+[cldrive] Device: Oclgrind Simulator
+[cldrive] OpenCL optimizations: {opt_str}
+[cldrive] Kernel: "A"
+done.
+"""
+
+
+@pytest.mark.parametrize("opencl_opt", [True, False])
+def test_RunTestcases_cldrive_syntax_error(
+    cldrive_harness_config: harness_pb2.CldriveHarness, opencl_opt: bool):
+  """Test execution of a test case with invalid syntax."""
+  cldrive_harness_config.opencl_opt[0] = opencl_opt
+  harness = cldrive.CldriveHarness(cldrive_harness_config)
+  testcases = [
+    deepsmith_pb2.Testcase(
+        toolchain="opencl",
+        harness=deepsmith_pb2.Harness(name="cldrive"),
+        inputs={
+          'src': 'kernel void A(global int* a) {\n!11@invalid syntax!',
+          'gsize': '1,1,1',
+          'lsize': '1,1,1',
+          'timeout_seconds': '60',
+        })
+  ]
+  results = opencl_fuzz.RunTestcases(harness, testcases)
+  assert len(results) == 1
+  # Testcase.invariant_opts.driver_type field is set by cldrive harness.
+  testcases[0].invariant_opts['driver_type'] = 'compile_only'
+  assert testcases[0] == results[0].testcase
+  assert results[0].testbed == cldrive.OpenClEnvironmentToTestbed(
+      harness.envs[0])
+  assert results[0].outcome == deepsmith_pb2.Result.BUILD_FAILURE
+  assert results[0].outputs['stdout'] == ''
+  print(results[0].outputs['stderr'])
+  opt_str = 'on' if opencl_opt else 'off'
+  assert results[0].outputs['stderr'] == f"""\
+[cldrive] Platform: Oclgrind
+[cldrive] Device: Oclgrind Simulator
+[cldrive] OpenCL optimizations: {opt_str}
+1 warning and 3 errors generated.
+input.cl:1:34: error: expected ';' after expression
+kernel void A(global int* a) {{!11@invalid syntax!
+                                 ^
+                                 ;
+input.cl:1:34: error: expected expression
+input.cl:1:50: error: expected '}}'
+kernel void A(global int* a) {{!11@invalid syntax!
+                                                 ^
+input.cl:1:30: note: to match this '{{'
+kernel void A(global int* a) {{!11@invalid syntax!
+                             ^
+input.cl:1:31: warning: expression result unused
+kernel void A(global int* a) {{!11@invalid syntax!
+                              ^~~
+clBuildProgram CL_BUILD_PROGRAM_FAILURE
+"""
 
 
 # ResultIsInteresting() tests.
