@@ -76,8 +76,8 @@ def gen_data_blocks(kernel_args: typing.List[_args.KernelArg],
   )
 
 
-def emit_c(src: str, inputs: np.array,
-           gsize: driver.NDRange, lsize: driver.NDRange, timeout: int = -1,
+def emit_c(src: str, inputs: np.array, gsize: typing.Optional[driver.NDRange],
+           lsize: typing.Optional[driver.NDRange], timeout: int = -1,
            optimizations: bool = True, profiling: bool = False,
            debug: bool = False, compile_only: bool = False,
            create_kernel: bool = True) -> np.array:
