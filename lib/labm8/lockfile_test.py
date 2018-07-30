@@ -62,7 +62,11 @@ def test_LockFile_acquire_fail(dummy_lockfile_path):
   assert str(e_ctx.value) == f"""\
 Unable to acquire file lock owned by a different process.
 Lock acquired by process 100 on bar@foo at 2018-06-19 10:19:45.
-Lock path: {dummy_lockfile_path}"""
+
+If you believe that this is an error and that no other
+process holds the lock, you may remove the lock file:
+
+   {dummy_lockfile_path}"""
 
 
 def test_LockFile_owned_by_self():
