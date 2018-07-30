@@ -51,18 +51,29 @@ CL_LAUNCHER_RUN_FILES = [
 ]
 
 
-def Exec(*opts, timeout_seconds: int = 60,
+def Exec(opencl_environment: env.OpenCLEnvironment, *opts,
+         timeout_seconds: int = 60,
          env: typing.Dict[str, str] = None) -> subprocess.Popen:
+  """Execute cl_launcher.
+
+  This creates a Popen process, executes it, and sets the stdout and stderr
+  attributes to the process output.
+
+  Args:
+    opencl_environment: The OpenCL environment to execute cl_launcher with.
+    opts: A list of arguments to pass to the cl_launcher binary.
+    timeout_seconds: The maximum number of seconds to execute cl_launcher for.
+    env: An optional environment to run cl_launcher under.
+
+  Returns:
+    A Popen instance, with string stdout and stderr attributes set.
+  """
   with fs.TemporaryWorkingDir(prefix='cl_launcher_') as d:
     for src in CL_LAUNCHER_RUN_FILES:
       os.symlink(src, str(d / src.name))
     cmd = ['timeout', '-s9', str(timeout_seconds), str(CL_LAUNCHER),
            '-i', str(d)] + list(opts)
-    process = subprocess.Popen(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-        universal_newlines=True, env=env)
-    stdout, stderr = process.communicate()
-    process.stdout, process.stderr = stdout, stderr
+    process = opencl_environment.Exec(cmd, env=env)
   return process
 
 
@@ -70,7 +81,7 @@ def ExecClsmithSource(
     opencl_environment: env.OpenCLEnvironment, src: str, gsize: driver.NDRange,
     lsize: driver.NDRange, *opts, timeout_seconds: int = 60,
     env: typing.Dict[str, str] = None) -> subprocess.Popen:
-  """Execute a command using cl_launcher.
+  """Execute a CLsmith source program using cl_launcher.
 
   This creates a Popen process, executes it, and sets the stdout and stderr
   attributes to the process output.
@@ -81,7 +92,7 @@ def ExecClsmithSource(
     gsize: Kernel global size.
     lsize: Kernel local size.
     opts: A list of optional command line flags.
-    timeout_seconds: The maximum number of seconds to execute a program for.
+    timeout_seconds: The maximum number of seconds to execute cl_launcher for.
     env: An optional environment to run the program under.
 
   Returns:
@@ -91,10 +102,10 @@ def ExecClsmithSource(
   with fs.TemporaryWorkingDir(prefix='cl_launcher_') as d:
     with open(d / 'CLProg.c', 'w') as f:
       f.write(src)
-    proc = Exec('-f', str(d / 'CLProg.c'), '-g', gsize.ToString(),
-                '-l', lsize.ToString(), '-p', str(platform_id),
-                '-d', str(device_id), *opts, timeout_seconds=timeout_seconds,
-                env=env)
+    proc = Exec(opencl_environment, '-f', str(d / 'CLProg.c'),
+                '-g', gsize.ToString(), '-l', lsize.ToString(),
+                '-p', str(platform_id), '-d', str(device_id),
+                *opts, timeout_seconds=timeout_seconds, env=env)
   return proc
 
 
