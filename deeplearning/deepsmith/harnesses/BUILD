@@ -82,21 +82,16 @@ py3_image(
 py_binary(
     name = "cl_launcher",
     srcs = ["cl_launcher.py"],
-    data = [
-        "@CLSmith//:cl_launcher",
-        "@CLSmith//:cl_safe_math_macros",
-        "@CLSmith//:runtime_headers",
-        "@CLSmith//:safe_math_macros",
-    ],
     default_python_version = "PY3",
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":harness",
+        "//compilers/clsmith:cl_launcher",
         "//deeplearning/deepsmith:services",
         "//deeplearning/deepsmith/proto:harness_py_pb2",
+        "//gpu/cldrive:driver",
         "//gpu/cldrive:env",
-        "//lib/labm8:bazelutil",
         "//lib/labm8:labdate",
         requirement("absl-py"),
         requirement("grpcio"),

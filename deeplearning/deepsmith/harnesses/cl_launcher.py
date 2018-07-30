@@ -1,54 +1,29 @@
 """The cl_launcher harness for CLSmith."""
 import copy
-import grpc
-import os
-import pathlib
 import signal
 import socket
-import tempfile
 import time
 import typing
+from concurrent import futures
+
+import grpc
 from absl import app
 from absl import flags
 from absl import logging
-from concurrent import futures
-from phd.lib.labm8 import bazelutil
 from phd.lib.labm8 import labdate
 
+from compilers.clsmith import cl_launcher
 from deeplearning.deepsmith import services
 from deeplearning.deepsmith.harnesses import harness
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import harness_pb2
 from deeplearning.deepsmith.proto import harness_pb2_grpc
 from deeplearning.deepsmith.proto import service_pb2
+from gpu.cldrive import driver
 from gpu.cldrive import env
 
 
 FLAGS = flags.FLAGS
-
-# The path to cl_launcher.
-CL_LAUNCHER = bazelutil.DataPath('CLSmith/cl_launcher')
-
-# The header files required by generated CLProg.c files.
-CL_LAUNCHER_RUN_FILES = [
-  bazelutil.DataPath('CLSmith/cl_safe_math_macros.h'),
-  bazelutil.DataPath('CLSmith/safe_math_macros.h'),
-  bazelutil.DataPath('CLSmith/runtime/CLSmith.h'),
-  bazelutil.DataPath('CLSmith/runtime/csmith.h'),
-  bazelutil.DataPath('CLSmith/runtime/csmith_minimal.h'),
-  bazelutil.DataPath('CLSmith/runtime/custom_limits.h'),
-  bazelutil.DataPath('CLSmith/runtime/custom_stdint_x86.h'),
-  bazelutil.DataPath('CLSmith/runtime/platform_avr.h'),
-  bazelutil.DataPath('CLSmith/runtime/platform_generic.h'),
-  bazelutil.DataPath('CLSmith/runtime/platform_msp430.h'),
-  bazelutil.DataPath('CLSmith/runtime/random_inc.h'),
-  bazelutil.DataPath('CLSmith/runtime/safe_abbrev.h'),
-  bazelutil.DataPath('CLSmith/runtime/stdint_avr.h'),
-  bazelutil.DataPath('CLSmith/runtime/stdint_ia32.h'),
-  bazelutil.DataPath('CLSmith/runtime/stdint_ia64.h'),
-  bazelutil.DataPath('CLSmith/runtime/stdint_msp430.h'),
-  bazelutil.DataPath('CLSmith/runtime/volatile_runtime.h')
-]
 
 
 class ClLauncherHarness(harness.HarnessBase,
@@ -179,26 +154,20 @@ def RunTestcase(opencl_environment: env.OpenCLEnvironment,
     raise ValueError(f"Unsupported testcase harness: '{testcase.harness.name}'")
   result = deepsmith_pb2.Result()
   result.testbed.CopyFrom(testbed)
-  platform_id, device_id = opencl_environment.ids()
   result.testcase.CopyFrom(testcase)
 
+  # Set up additional command line flags for cl_launcher. We always run with
+  # debugging output enabled.
+  opts.append('---debug')
+  if testbed.opts['opencl_opt'] == 'disabled':
+    opts.append('---disable_opts')
+
   start_time_epoch_ms = labdate.MillisecondsTimestamp()
-  with tempfile.TemporaryDirectory(prefix='cl_launcher_') as d:
-    path = pathlib.Path(d)
-    with open(path / 'CLProg.c', 'w') as f:
-      f.write(testcase.inputs['src'])
-    for src in CL_LAUNCHER_RUN_FILES:
-      os.symlink(src, str(path / src.name))
-
-    timeout = testcase.harness.opts.get('timeout_seconds', '60')
-    cmd = ['timeout', '-s9', timeout, str(CL_LAUNCHER), '---debug',
-           '-f', str(path / 'CLProg.c'), '-i', str(path),
-           '-l', testcase.inputs['lsize'], '-g', testcase.inputs['gsize'],
-           '-p', str(platform_id), '-d', str(device_id)] + opts
-    if testbed.opts['opencl_opt'] == 'disabled':
-      cmd.append('---disable_opts')
-
-    process = opencl_environment.Exec(cmd)
+  process = cl_launcher.ExecClsmithSource(
+      opencl_environment, testcase.inputs['src'],
+      driver.NDRange.FromString(testcase.inputs['gsize']),
+      driver.NDRange.FromString(testcase.inputs['lsize']),
+      *opts, timeout_seconds=testcase.harness.opts.get('timeout_seconds', '60'))
 
   wall_time = labdate.MillisecondsTimestamp() - start_time_epoch_ms
   result = deepsmith_pb2.Result()
