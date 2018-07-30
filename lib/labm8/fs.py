@@ -582,8 +582,17 @@ def TemporaryWorkingDir(prefix: str = None) -> pathlib.Path:
   Returns:
     The directory which has been changed to.
   """
-  old_directory = os.getcwd()
+  # getcwd() will raise FileNotFoundError if the current workind directory
+  # does not exist.
+  old_directory = None
+  try:
+    old_directory = os.getcwd()
+  except FileNotFoundError:
+    pass
+  # Create a temporary directory, change to it, and return the path to the user.
   with tempfile.TemporaryDirectory(prefix=prefix) as d:
     os.chdir(d)
     yield pathlib.Path(d)
-  os.chdir(old_directory)
+  # Rever to previous working directory, if there was one.
+  if old_directory:
+    os.chdir(old_directory)
