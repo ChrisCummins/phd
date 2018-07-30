@@ -189,7 +189,7 @@ def GetResultRuntimeMs(result: deepsmith_pb2.Result) -> int:
   for event in result.profiling_events:
     if str(event.type) == 'runtime':
       return event.duration_ms
-  return 0
+  raise ValueError('Result contains no runtime profiling event!')
 
 
 def GetResultOutcome(
