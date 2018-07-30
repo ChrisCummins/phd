@@ -51,17 +51,16 @@ py_binary(
 py_binary(
     name = "clsmith",
     srcs = ["clsmith.py"],
-    data = ["@CLSmith"],
     default_python_version = "PY3",
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":generator",
+        "//compilers/clsmith",
         "//deeplearning/deepsmith:services",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//deeplearning/deepsmith/proto:generator_py_pb2",
         "//deeplearning/deepsmith/proto:service_py_pb2",
-        "//lib/labm8:bazelutil",
         "//lib/labm8:labdate",
         requirement("absl-py"),
     ],

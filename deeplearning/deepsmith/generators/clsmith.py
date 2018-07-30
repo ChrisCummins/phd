@@ -1,16 +1,13 @@
 """A CLSmith program generator."""
 import math
-import os
-import pathlib
-import subprocess
-import tempfile
 import typing
+
 from absl import app
 from absl import flags
 from absl import logging
-from phd.lib.labm8 import bazelutil
 from phd.lib.labm8 import labdate
 
+from compilers.clsmith import clsmith
 from deeplearning.deepsmith import services
 from deeplearning.deepsmith.generators import generator
 from deeplearning.deepsmith.proto import deepsmith_pb2
@@ -20,11 +17,6 @@ from deeplearning.deepsmith.proto import service_pb2
 
 
 FLAGS = flags.FLAGS
-
-
-class CLSmithError(EnvironmentError):
-  """Error thrown in case CLSmith fails."""
-  pass
 
 
 def ConfigToGenerator(
@@ -51,38 +43,37 @@ class ClsmithGenerator(generator.GeneratorServiceBase,
   def GenerateTestcases(self, request: generator_pb2.GenerateTestcasesRequest,
                         context) -> generator_pb2.GenerateTestcasesResponse:
     del context
-    num_programs = math.ceil(
-        request.num_testcases / len(self.config.testcase_skeleton))
+    num_programs = int(math.ceil(
+        request.num_testcases / len(self.config.testcase_skeleton)))
     response = services.BuildDefaultResponse(
         generator_pb2.GenerateTestcasesResponse)
-    with tempfile.TemporaryDirectory(prefix='clsmith_') as d:
-      os.chdir(d)
-      try:
-        for i in range(num_programs):
-          response.testcases.extend(
-              self.FileToTestcases(*self.GenerateOneFile()))
-          logging.info('Generated file %d.', i + 1)
-      except CLSmithError as e:
-        response.status.returncode = service_pb2.ServiceStatus.ERROR
-        response.status.error_message = str(e)
+    try:
+      for i in range(num_programs):
+        response.testcases.extend(
+            self.SourceToTestcases(*self.GenerateOneSource()))
+        logging.info('Generated file %d.', i + 1)
+    except clsmith.CLSmithError as e:
+      response.status.returncode = service_pb2.ServiceStatus.ERROR
+      response.status.error_message = str(e)
     return response
 
-  def GenerateOneFile(self) -> typing.Tuple[pathlib.Path, int, int]:
-    start_epoch_ms_utc = labdate.MillisecondsTimestamp()
-    proc = subprocess.Popen(
-        [bazelutil.DataPath('CLSmith/CLSmith')] + list(self.config.opt))
-    proc.communicate()
-    if proc.returncode:
-      raise CLSmithError(f'CLSmith exited with returncode: {proc.returncode}')
-    wall_time_ms = labdate.MillisecondsTimestamp() - start_epoch_ms_utc
-    return (
-      pathlib.Path(os.getcwd()) / 'CLProg.c', wall_time_ms, start_epoch_ms_utc)
+  def GenerateOneSource(self) -> typing.Tuple[str, int, int]:
+    """Generate and return a single CLSmith program.
 
-  def FileToTestcases(self, path: pathlib.Path,
-                      wall_time_ms: int,
-                      start_epoch_ms_utc: int) -> typing.List[
+    Returns:
+      A tuple of the source code as a string, the generation time, and the start
+      time.
+    """
+    start_epoch_ms_utc = labdate.MillisecondsTimestamp()
+    src = clsmith.Exec(*list(self.config.opt))
+    wall_time_ms = labdate.MillisecondsTimestamp() - start_epoch_ms_utc
+    return src, wall_time_ms, start_epoch_ms_utc
+
+  def SourceToTestcases(self, src: str,
+                        wall_time_ms: int,
+                        start_epoch_ms_utc: int) -> typing.List[
     deepsmith_pb2.Testcase]:
-    """Make testcases from a CLSmith generated file."""
+    """Make testcases from a CLSmith generated source."""
     testcases = []
     for skeleton in self.config.testcase_skeleton:
       t = deepsmith_pb2.Testcase()
@@ -91,8 +82,7 @@ class ClsmithGenerator(generator.GeneratorServiceBase,
       p.type = 'generation'
       p.duration_ms = wall_time_ms
       p.event_start_epoch_ms = start_epoch_ms_utc
-      with open(path) as f:
-        t.inputs['src'] = f.read().strip()
+      t.inputs['src'] = src
       testcases.append(t)
     return testcases
 

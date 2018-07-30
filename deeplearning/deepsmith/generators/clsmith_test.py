@@ -1,6 +1,5 @@
 """Unit tests for //deeplearning/deepsmith/generators/clsmith.py."""
 import os
-import pathlib
 import pytest
 import sys
 import tempfile
@@ -45,26 +44,20 @@ def abc_generator(
   return clsmith.ClsmithGenerator(abc_config)
 
 
-def test_ClsmithGenerator_GenerateOneFile(
+def test_ClsmithGenerator_GenerateOneSource(
     abc_generator: clsmith.ClsmithGenerator):
   """Test that CLSmith generates a source file."""
   with tempfile.TemporaryDirectory(prefix='clsmith_') as d:
     os.chdir(d)
-    path, wall_time, start_time = abc_generator.GenerateOneFile()
-    assert isinstance(path, pathlib.Path)
-    assert path.is_file()
-    # We can't compare abspath because of bazel sandboxing.
-    assert str(path).endswith(str(pathlib.Path(d) / 'CLProg.c'))
+    src, wall_time, start_time = abc_generator.GenerateOneSource()
+    # Check the basic structure of the generated file.
+    assert src.startswith('// -g ')
+    assert 'kernel void ' in src
+    # We don't check the actual values, just the types.
     assert isinstance(wall_time, int)
     assert wall_time
     assert isinstance(start_time, int)
     assert start_time
-    with open(path) as f:
-      src = f.read()
-
-    # Check the basic structure of the generated file.
-    assert src.startswith('// -g ')
-    assert 'kernel void ' in src
 
 
 def test_ClsmithGenerator_GenerateTestcases(
