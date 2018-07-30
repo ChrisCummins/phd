@@ -69,6 +69,22 @@ process holds the lock, you may remove the lock file:
    {dummy_lockfile_path}"""
 
 
+def test_LockFile_release_fail(dummy_lockfile_path):
+  """Test that releasing a lock owned by a different host fails."""
+  lock = lockfile.LockFile(dummy_lockfile_path)
+  assert lock.islocked
+  with pytest.raises(lockfile.UnableToReleaseLockError) as e_ctx:
+    lock.release()
+  assert str(e_ctx.value) == f"""\
+Unable to release file lock owned by a different process.
+Lock acquired by process 100 on bar@foo at 2018-06-19 10:19:45.
+
+If you believe that this is an error and that no other
+process holds the lock, you may remove the lock file:
+
+   {dummy_lockfile_path}"""
+
+
 def test_LockFile_owned_by_self():
   """Test that lockfile.owned_by_self returns True after acquired."""
   with tempfile.TemporaryDirectory() as d:

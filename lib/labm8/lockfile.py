@@ -52,7 +52,11 @@ class UnableToReleaseLockError(Error):
 Unable to release file lock owned by a different process.
 Lock acquired by process {self.lock.pid} on \
 {self.lock.user}@{self.lock.hostname} at {self.lock.date}.
-Lock path: {self.lock.path}"""
+
+If you believe that this is an error and that no other
+process holds the lock, you may remove the lock file:
+
+   {self.lock.path}"""
 
 
 class LockFile:
