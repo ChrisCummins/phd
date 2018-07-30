@@ -7,6 +7,7 @@ from absl import app
 from absl import flags
 
 from deeplearning.deepsmith.difftests import difftests
+from deeplearning.deepsmith.harnesses import cl_launcher
 from deeplearning.deepsmith.harnesses import cldrive
 from deeplearning.deepsmith.harnesses import harness
 from deeplearning.deepsmith.proto import deepsmith_pb2
@@ -191,8 +192,8 @@ def test_RunTestcases_cldrive_syntax_error(
   harness = cldrive.CldriveHarness(cldrive_harness_config)
   testcases = [
     deepsmith_pb2.Testcase(
-        toolchain="opencl",
-        harness=deepsmith_pb2.Harness(name="cldrive"),
+        toolchain='opencl',
+        harness=deepsmith_pb2.Harness(name='cldrive'),
         inputs={
           'src': 'kernel void A(global int* a) {\n!11@invalid syntax!',
           'gsize': '1,1,1',
@@ -231,6 +232,153 @@ input.cl:1:31: warning: expression result unused
 kernel void A(global int* a) {{!11@invalid syntax!
                               ^~~
 clBuildProgram CL_BUILD_PROGRAM_FAILURE
+"""
+
+
+@pytest.mark.parametrize("opencl_opt", [True, False])
+def test_RunTestcases_cl_launcher_pass(
+    cl_launcher_harness_config: harness_pb2.ClLauncherHarness,
+    opencl_opt: bool):
+  """Test execution of a simple test case."""
+  cl_launcher_harness_config.opencl_opt[0] = opencl_opt
+  harness = cl_launcher.ClLauncherHarness(cl_launcher_harness_config)
+  testcases = [
+    deepsmith_pb2.Testcase(
+        toolchain='opencl',
+        harness=deepsmith_pb2.Harness(name='cl_launcher'),
+        inputs={
+          'src': """\
+// -g 1,1,1 -l 1,1,1
+#define int64_t long
+#define uint64_t ulong
+#define int_least64_t long
+#define uint_least64_t ulong
+#define int_fast64_t long
+#define uint_fast64_t ulong
+#define intmax_t long
+#define uintmax_t ulong
+#define int32_t int
+#define uint32_t uint
+#define int16_t short
+#define uint16_t ushort
+#define int8_t char
+#define uint8_t uchar
+
+#define INT64_MIN LONG_MIN
+#define INT64_MAX LONG_MAX
+#define INT32_MIN INT_MIN
+#define INT32_MAX INT_MAX
+#define INT16_MIN SHRT_MIN
+#define INT16_MAX SHRT_MAX
+#define INT8_MIN CHAR_MIN
+#define INT8_MAX CHAR_MAX
+#define UINT64_MIN ULONG_MIN
+#define UINT64_MAX ULONG_MAX
+#define UINT32_MIN UINT_MIN
+#define UINT32_MAX UINT_MAX
+#define UINT16_MIN USHRT_MIN
+#define UINT16_MAX USHRT_MAX
+#define UINT8_MIN UCHAR_MIN
+#define UINT8_MAX UCHAR_MAX
+
+#define transparent_crc(X, Y, Z) transparent_crc_(&crc64_context, X, Y, Z)
+
+#define VECTOR(X , Y) VECTOR_(X, Y)
+#define VECTOR_(X, Y) X##Y
+
+#ifndef NO_GROUP_DIVERGENCE
+#define GROUP_DIVERGE(x, y) get_group_id(x)
+#else
+#define GROUP_DIVERGE(x, y) (y)
+#endif
+
+#ifndef NO_FAKE_DIVERGENCE
+#define FAKE_DIVERGE(x, y, z) (x - y)
+#else
+#define FAKE_DIVERGE(x, y, z) (z)
+#endif
+
+#include "CLSmith.h"
+
+__kernel void entry(__global ulong *result) {
+    uint64_t crc64_context = 0xFFFFFFFFFFFFFFFFUL;
+    result[get_linear_global_id()] = crc64_context ^ 0xFFFFFFFFFFFFFFFFUL;
+}""",
+          'gsize': '1,1,1',
+          'lsize': '1,1,1',
+          'timeout_seconds': '60',
+        })
+  ]
+  results = opencl_fuzz.RunTestcases(harness, testcases)
+  assert len(results) == 1
+  print(results[0].outputs['stderr'])
+  assert testcases[0] == results[0].testcase
+  assert results[0].testbed == cldrive.OpenClEnvironmentToTestbed(
+      harness.envs[0])
+  assert results[0].outcome == deepsmith_pb2.Result.PASS
+  assert results[0].outputs['stdout'] == '0,'
+  opt_str = 'on' if opencl_opt else 'off'
+  assert results[0].outputs['stderr'] == f"""\
+3-D global size 1 = [1, 1, 1]
+3-D local size 1 = [1, 1, 1]
+OpenCL optimizations: {opt_str}
+Platform: Oclgrind
+Device: Oclgrind Simulator
+Compilation terminated successfully...
+"""
+
+
+@pytest.mark.parametrize("opencl_opt", [True, False])
+def test_RunTestcases_cl_launcher_syntax_error(
+    cl_launcher_harness_config: harness_pb2.ClLauncherHarness,
+    opencl_opt: bool):
+  """Test execution of a simple test case."""
+  cl_launcher_harness_config.opencl_opt[0] = opencl_opt
+  harness = cl_launcher.ClLauncherHarness(cl_launcher_harness_config)
+  testcases = [
+    deepsmith_pb2.Testcase(
+        toolchain='opencl',
+        harness=deepsmith_pb2.Harness(name='cl_launcher'),
+        inputs={
+          'src': '__kernel void entry(\n!11@invalid syntax!',
+          'gsize': '1,1,1',
+          'lsize': '1,1,1',
+          'timeout_seconds': '60',
+        })
+  ]
+  results = opencl_fuzz.RunTestcases(harness, testcases)
+  assert len(results) == 1
+  print(results[0].outputs['stderr'])
+  assert testcases[0] == results[0].testcase
+  assert results[0].testbed == cldrive.OpenClEnvironmentToTestbed(
+      harness.envs[0])
+  assert results[0].outcome == deepsmith_pb2.Result.BUILD_FAILURE
+  assert results[0].outputs['stdout'] == ''
+  opt_str = 'on' if opencl_opt else 'off'
+  assert results[0].outputs['stderr'] == f"""\
+3-D global size 1 = [1, 1, 1]
+3-D local size 1 = [1, 1, 1]
+OpenCL optimizations: {opt_str}
+Platform: Oclgrind
+Device: Oclgrind Simulator
+3 errors generated.
+Error found (callback):
+
+Oclgrind - OpenCL runtime error detected
+\tFunction: clBuildProgram
+\tError:    CL_BUILD_PROGRAM_FAILURE
+
+Error building program: -11
+input.cl:2:1: error: expected parameter declarator
+!11@invalid syntax!
+^
+input.cl:2:1: error: expected ')'
+input.cl:1:20: note: to match this '('
+__kernel void entry(
+                   ^
+input.cl:2:20: error: expected function body after function declarator
+!11@invalid syntax!
+                   ^
 """
 
 
