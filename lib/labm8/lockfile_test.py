@@ -107,7 +107,7 @@ def test_LockFile_replace_stale():
     assert not lock.path.is_file()
 
 
-def test_LockFile_replace_stale():
+def test_LockFile_force_replace_stale():
   """Test that lockfile is replaced if forced."""
   with tempfile.TemporaryDirectory() as d:
     path = pathlib.Path(d) / 'LOCK'
