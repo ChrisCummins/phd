@@ -247,7 +247,7 @@ def GetResultOutcome(
     return deepsmith_pb2.Result.UNKNOWN
   else:
     logging.error("Stderr: " + result.outputs['stderr'][:200])
-    logging.error(f"Runtime: {runtime:.1f}s (timeout = {timeout:.0f}s)")
+    logging.error(f"Runtime: {runtime_ms} ms (timeout = {timeout_ms} ms)")
     try:
       logging.error("Signal: " + str(signal.Signals(-result.returncode).name))
     except ValueError:
