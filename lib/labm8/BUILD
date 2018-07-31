@@ -85,6 +85,16 @@ py_test(
 )
 
 py_library(
+    name = "graph",
+    srcs = ["graph.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":fmt",
+        requirement("absl-py"),
+    ],
+)
+
+py_library(
     name = "hashcache",
     srcs = ["hashcache.py"],
     visibility = ["//visibility:public"],
