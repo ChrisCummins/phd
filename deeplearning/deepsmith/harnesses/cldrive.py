@@ -327,7 +327,17 @@ def GetResultRuntimeMs(result: deepsmith_pb2.Result) -> int:
 
 def GetResultOutcome(
     result: deepsmith_pb2.Result) -> deepsmith_pb2.Result.Outcome:
-  """Determine the output class of a testcase."""
+  """Determine the output class of a testcase.
+
+  Args:
+    result: The result to determine the output class of.
+
+  Returns:
+    The result outcome.
+
+  Raises:
+    ValueError: If the outcome class could not be determined.
+  """
 
   def RuntimeCrashOrBuildFailure():
     if "[cldrive] Kernel: " in result.outputs['stderr']:
@@ -353,28 +363,28 @@ def GetResultOutcome(
 
   if result.returncode == 0:
     return deepsmith_pb2.Result.PASS
-  # SIGSEV.
   elif result.returncode == 139 or result.returncode == -11:
+    # SIGSEV.
     return RuntimeCrashOrBuildCrash()
-  # SIGTRAP.
   elif result.returncode == -5:
+    # SIGTRAP.
     return RuntimeCrashOrBuildCrash()
-  # SIGKILL.
   elif result.returncode == -9 and runtime_ms >= timeout_ms:
+    # SIGKILL.
     return RuntimeTimeoutOrBuildTimeout()
   elif result.returncode == -9:
     return RuntimeCrashOrBuildCrash()
-  # SIGILL.
   elif result.returncode == -4:
+    # SIGILL.
     return RuntimeCrashOrBuildCrash()
-  # SIGFPE.
   elif result.returncode == -8:
+    # SIGFPE.
     return RuntimeCrashOrBuildCrash()
-  # SIGBUS.
   elif result.returncode == -7:
+    # SIGBUS.
     return RuntimeCrashOrBuildCrash()
-  # SIGABRT.
   elif result.returncode == -6:
+    # SIGABRT.
     return RuntimeCrashOrBuildCrash()
   elif result.returncode == 1 and runtime_ms >= timeout_ms:
     return RuntimeTimeoutOrBuildTimeout()

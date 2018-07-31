@@ -194,7 +194,17 @@ def GetResultRuntimeMs(result: deepsmith_pb2.Result) -> int:
 
 def GetResultOutcome(
     result: deepsmith_pb2.Result) -> deepsmith_pb2.Result.Outcome:
-  """Determine the output class of a result."""
+  """Determine the output class of a result.
+
+  Args:
+    result: The result to determine the output class of.
+
+  Returns:
+    The result outcome.
+
+  Raises:
+    ValueError: If the outcome class could not be determined.
+  """
 
   def RuntimeCrashOrBuildCrash():
     if "Compilation terminated successfully..." in result.outputs['stderr']:
