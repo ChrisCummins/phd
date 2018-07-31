@@ -392,7 +392,7 @@ def GetResultOutcome(
     return RuntimeCrashOrBuildFailure()
   elif result.returncode == 127:
     return RuntimeCrashOrBuildFailure()
-  raise LookupError('Failed to output class of result.')
+  raise ValueError(f'Failed to output class of result: {result}')
 
 
 def main(argv):

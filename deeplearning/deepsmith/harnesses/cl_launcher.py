@@ -255,14 +255,7 @@ def GetResultOutcome(
   elif result.returncode == 1:
     # cl_launcher error
     return deepsmith_pb2.Result.UNKNOWN
-  else:
-    logging.error("Stderr: " + result.outputs['stderr'][:200])
-    logging.error(f"Runtime: {runtime_ms} ms (timeout = {timeout_ms} ms)")
-    try:
-      logging.error("Signal: " + str(signal.Signals(-result.returncode).name))
-    except ValueError:
-      logging.error("Returncode: " + str(result.returncode))
-    raise ValueError(f"Failed to determine outcome of cl_launcher result")
+  raise ValueError(f'Failed to output class of result: {result}')
 
 
 def main(argv):
