@@ -55,6 +55,10 @@ A monolothic repository for (almost) everything I have done while at the Univers
 
 ## Talks
 
+1. Chris Cummins. "**Compiler Fuzzing through Deep Learning**", 3rd August, 2018.
+   Codeplay, Edinburgh, Scotland.
+   [[files]](/talks/2018_08_codeplay).
+   [[slides]](https://speakerdeck.com/chriscummins/compiler-fuzzing-through-deep-learning-issta-18).
 1. Chris Cummins. "**Machine Learning for Compilers**", 20th July, 2018.
    Workshop on Introspective Systems for Automatically Generating Tests (ISAGT),
    Amsterdam, Netherlands.
@@ -175,7 +179,7 @@ of dependencies on the host C++ toolchain and Python runtime.
 This project can only be built on a modern version of Ubuntu Linux or macOS.
 This is a requirement I inherit from my dependencies, which eschew Windows and
 other Linux distros. Fortunately, you can use a
-[Docker](https://www.docker.com/community-edition) image and follow the Ubuntu 
+[Docker](https://www.docker.com/community-edition) image and follow the Ubuntu
 instructions (just drop the `sudo` prefixes from commands):
 
 ```sh
@@ -196,8 +200,8 @@ $ sudo apt install -y --no-install-recommends \
    pkg-config python python-dev python3.6 unzip zip zlib1g-dev
 ```
 
-Please note that this list of packages is for Ubuntu 18.04. On older 
-distributions some of the packages may not exist. For example, Ubuntu 
+Please note that this list of packages is for Ubuntu 18.04. On older
+distributions some of the packages may not exist. For example, Ubuntu
 distributions prior to 16.10 require a custom PPA to provide the `python3.6`
 package.
 
@@ -223,7 +227,7 @@ Install the required packages:
 
 ```sh
 $ brew install bazel coreutils exempi findutils gnu-indent gnu-sed gnu-tar \
-    gnu-time gnu-which python  
+    gnu-time gnu-which python
 ```
 
 Now proceed to the "Build (all platforms)" section.
