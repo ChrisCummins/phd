@@ -1,0 +1,31 @@
+// Protos for reachability analysis.
+
+syntax = "proto2";
+package phd.experimental.compilers.reachability;
+
+message ControlFlowGraphNode {
+  // The name of the graph node.
+  optional string name = 1;
+  // A list of children graph nodes.
+  repeated string child = 2;
+}
+
+message ControlFlowGraph {
+  // The graph nodes.
+  repeated ControlFlowGraphNode node = 1;
+}
+
+message ReachabilityTrainingDataPoint {
+  // The graph.
+  optional ControlFlowGraph graph = 1;
+  // A list of boolean values corresponding to whether a given node in the
+  // control flow graph is reachable from the first node.
+  repeated bool reachable = 2;
+
+  optional int32 seed = 3;
+}
+
+message ReachabilityTrainingData {
+  // The training data.
+  repeated ReachabilityTrainingDataPoint entry = 1;
+}
