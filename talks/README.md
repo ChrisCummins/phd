@@ -14,6 +14,6 @@
 1. (If necessary) Add an entry to talks section of `//http/chriscummins.cc/cv.json`.
 1. (If necessary) Add an entry to talks section of `//docs/cv/sec/invited_talks.tex`.
 1. (If necessary) Build new CV: `bazel build //docs/cv`.
-1. (If necessary) Update CV file: `cp ~/phd/bazel-genfiles/docs/cv/cv.pdf ~/phd/http/chriscummins/cv.pdf`.
+1. (If necessary) Update CV file: `cp ~/phd/bazel-genfiles/docs/cv/cv.pdf ~/phd/http/chriscummins.cc/cv.pdf`.
 1. (If necessary) Commit and bump changes in `//http/chriscummins.cc`.
 1. Commit changes.
