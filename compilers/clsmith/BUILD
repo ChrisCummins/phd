@@ -36,6 +36,7 @@ py_binary(
         "@CLSmith//:cl_safe_math_macros",
         "@CLSmith//:runtime_headers",
         "@CLSmith//:safe_math_macros",
+        "@libopencl//:libOpenCL.so",
     ],
     default_python_version = "PY3",
     srcs_version = "PY3",
@@ -45,6 +46,7 @@ py_binary(
         "//gpu/cldrive:env",
         "//lib/labm8:bazelutil",
         "//lib/labm8:fs",
+        "//lib/labm8:system",
         requirement("absl-py"),
     ],
 )

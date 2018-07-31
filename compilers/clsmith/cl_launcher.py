@@ -20,8 +20,9 @@ from absl import flags
 
 from gpu.cldrive import driver
 from gpu.cldrive import env
-from lib.labm8 import bazelutil
-from lib.labm8 import fs
+from phd.lib.labm8 import bazelutil
+from phd.lib.labm8 import fs
+from phd.lib.labm8 import system
 
 
 FLAGS = flags.FLAGS
@@ -50,6 +51,27 @@ CL_LAUNCHER_RUN_FILES = [
   bazelutil.DataPath('CLSmith/runtime/volatile_runtime.h')
 ]
 
+# The path to libOpenCL.so.
+LIBOPENCL_SO = bazelutil.DataPath('libopencl/libOpenCL.so')
+
+
+def PrependToPath(path_to_prepend: str, path: typing.Optional[str]) -> str:
+  """Prepend a path to a path environment variable.
+
+  This uses ':' to separate path components, as used in system $PATH variables.
+
+  Args:
+    path_to_prepend: The path to prepend.
+    path: The environment variable.
+
+  Returns:
+    A concatenation of the path to prepend and the existing path.
+  """
+  if path:
+    return f'{path_to_prepend}:{path}'
+  else:
+    return path_to_prepend
+
 
 def Exec(opencl_environment: env.OpenCLEnvironment, *opts,
          timeout_seconds: int = 60,
@@ -68,6 +90,9 @@ def Exec(opencl_environment: env.OpenCLEnvironment, *opts,
   Returns:
     A Popen instance, with string stdout and stderr attributes set.
   """
+  if system.is_linux():
+    env = env or {}
+    env['LD_PRELOAD'] = PrependToPath(str(LIBOPENCL_SO), env.get('LD_PRELOAD'))
   with fs.TemporaryWorkingDir(prefix='cl_launcher_') as d:
     for src in CL_LAUNCHER_RUN_FILES:
       os.symlink(src, str(d / src.name))
