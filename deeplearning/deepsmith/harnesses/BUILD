@@ -16,7 +16,6 @@ py_binary(
             "@llvm_linux//:clang",
             "@llvm_linux//:libcxx_headers",
             "@llvm_linux//:libcxx_libs",
-            "@libopencl//:libOpenCL.so",
         ],
     }),
     default_python_version = "PY3",
