@@ -1,6 +1,7 @@
 """String formatting utils.
 """
 import pandas as pd
+import typing
 
 
 class Error(Exception):
@@ -23,8 +24,13 @@ def Indent(num_spaces: int, text: str) -> str:
   Returns:
     The indented string.
   """
+  return IndentList(num_spaces, text.split('\n'))
+
+
+def IndentList(num_spaces: int, lines: typing.List[str],
+               sep: str = '\n') -> str:
   prefix = ''.join([' '] * num_spaces)
-  return f'\n{prefix}'.join((prefix + str(text)).split('\n'))
+  return f'{sep}{prefix}'.join(f'{prefix}{line}' for line in lines)
 
 
 def table(rows, columns=None, output=None, data_args={}, **kwargs) -> str:
