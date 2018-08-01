@@ -18,7 +18,7 @@ class Graph(object):
     else:
       self.children = set()
 
-  def _ToDot(self, strings, visited: typing.Set['Graph']) -> str:
+  def _ToDot(self, strings, visited: typing.Set['Graph']) -> None:
     if self in visited:
       return
     visited.add(self)
