@@ -51,8 +51,9 @@ CL_LAUNCHER_RUN_FILES = [
   bazelutil.DataPath('CLSmith/runtime/volatile_runtime.h')
 ]
 
-# The path to libOpenCL.so.
-LIBOPENCL_SO = bazelutil.DataPath('libopencl/libOpenCL.so')
+# The path to libOpenCL.so, needed on Linux.
+if system.is_linux():
+  LIBOPENCL_SO = bazelutil.DataPath('libopencl/libOpenCL.so')
 
 
 def PrependToPath(path_to_prepend: str, path: typing.Optional[str]) -> str:

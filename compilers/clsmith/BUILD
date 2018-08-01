@@ -36,8 +36,12 @@ py_binary(
         "@CLSmith//:cl_safe_math_macros",
         "@CLSmith//:runtime_headers",
         "@CLSmith//:safe_math_macros",
-        "@libopencl//:libOpenCL.so",
-    ],
+    ] + select({
+        "//:darwin": [],
+        "//conditions:default": [
+            "@libopencl//:libOpenCL.so",
+        ],
+    }),
     default_python_version = "PY3",
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
