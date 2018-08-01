@@ -166,7 +166,7 @@ py_test(
 py_library(
     name = "telemetry",
     srcs = ["telemetry.py"],
-    visibility = ["//deeplearning/clgen:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/clgen/proto:telemetry_py_pb2",
         "//lib/labm8:jsonutil",

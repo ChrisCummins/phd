@@ -5,7 +5,7 @@ load("@requirements//:requirements.bzl", "requirement")
 py_library(
     name = "atomizers",
     srcs = ["atomizers.py"],
-    visibility = ["//deeplearning/clgen:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/clgen:errors",
         "//lib/labm8:labdate",

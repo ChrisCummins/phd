@@ -111,18 +111,18 @@ class ControlFlowGraph(libgraph.Graph):
     src = self.all_nodes[0]
     return [src.IsReachable(node) for node in self.all_nodes]
 
-  def SetReachabilityTrainingDataPointProto(
-      self, proto: reachability_pb2.ReachabilityTrainingDataPoint) -> None:
+  def SetCfgWithReachabilityProto(
+      self, proto: reachability_pb2.CfgWithReachability) -> None:
     for node in self.all_nodes:
       proto_node = proto.graph.node.add()
       proto_node.name = node.name
       proto_node.child.extend([c.name for c in node.children])
     proto.reachable.extend(self.Reachables())
 
-  def ToReachabilityTrainingDataPointProto(
-      self) -> reachability_pb2.ReachabilityTrainingDataPoint:
-    data = reachability_pb2.ReachabilityTrainingDataPoint()
-    self.SetReachabilityTrainingDataPointProto(data)
+  def ToCfgWithReachabilityProto(
+      self) -> reachability_pb2.CfgWithReachability:
+    data = reachability_pb2.CfgWithReachability()
+    self.SetCfgWithReachabilityProto(data)
     return data
 
 

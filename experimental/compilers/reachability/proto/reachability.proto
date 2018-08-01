@@ -15,7 +15,7 @@ message ControlFlowGraph {
   repeated ControlFlowGraphNode node = 1;
 }
 
-message ReachabilityTrainingDataPoint {
+message CfgWithReachability {
   // The graph.
   optional ControlFlowGraph graph = 1;
   // A list of boolean values corresponding to whether a given node in the
@@ -25,7 +25,7 @@ message ReachabilityTrainingDataPoint {
   optional int32 seed = 3;
 }
 
-message ReachabilityTrainingData {
+message ReachabilityDataset {
   // The training data.
-  repeated ReachabilityTrainingDataPoint entry = 1;
+  repeated CfgWithReachability entry = 1;
 }
