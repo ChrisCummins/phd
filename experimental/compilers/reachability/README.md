@@ -11,13 +11,12 @@ $ bazel run //experimental/compilers/reachability -- \
 
 The output is a list of node names and successors.
 
-**To generate training data:**
+**To train a model:**
 
 ```sh
-$ bazel run //experimental/compilers/reachability:make_training_data -- \
+$ bazel run //experimental/compilers/reachability:train_model -- \
     --reachability_num_training_graphs=10000 \
+    --reachability_num_testing_graphs=1000 \
     --reachability_scaling_param=.57 \
     --reachability_num_nodes=5
 ```
-
-The output is a training data proto.
