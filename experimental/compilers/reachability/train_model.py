@@ -52,15 +52,21 @@ flags.DEFINE_integer(
 
 def MakeReachabilityDataset(
     num_data_points: int) -> reachability_pb2.ReachabilityDataset:
-  """Generate a training data proto."""
+  """Generate a training data proto of unique CFGs."""
+  seqs = set()
   data = reachability_pb2.ReachabilityDataset()
-  for i in range(num_data_points):
+  seed = 0
+  while len(data.entry) < num_data_points:
     graph = reachability.ControlFlowGraph.GenerateRandom(
-        FLAGS.reachability_num_nodes, seed=i,
+        FLAGS.reachability_num_nodes, seed=seed,
         connections_scaling_param=FLAGS.reachability_scaling_param)
-    proto = data.entry.add()
-    graph.SetCfgWithReachabilityProto(proto)
-    proto.seed = i
+    seed += 1
+    seq = graph.ToSuccessorsList()
+    if seq not in seqs:
+      seqs.add(seq)
+      proto = data.entry.add()
+      graph.SetCfgWithReachabilityProto(proto)
+      proto.seed = seed
   return data
 
 
@@ -128,7 +134,7 @@ def ProtosToModelData(data: reachability_pb2.ReachabilityDataset,
 def ControlFlowGraphToSequence(graph: reachability_pb2.ControlFlowGraph) -> str:
   s = []
   for node in graph.node:
-    successors = ' '.join(node.child)
+    successors = ' '.join(sorted(node.child))
     s.append(f'{node.name}: {successors}\n')
   return ''.join(s)
 
@@ -155,8 +161,10 @@ def main(argv):
   (model_dir / 'logs').mkdir(exist_ok=True)
   (model_dir / 'checkpoints').mkdir(exist_ok=True)
 
+  logging.info('Generating graphs dataset ...')
   data = MakeReachabilityDataset(
-      FLAGS.reachability_num_training_graphs + FLAGS.reachability_num_testing_graphs)
+      FLAGS.reachability_num_training_graphs +
+      FLAGS.reachability_num_testing_graphs)
   training_data = reachability_pb2.ReachabilityDataset()
   training_data.entry.extend(
       data.entry[:FLAGS.reachability_num_training_graphs])

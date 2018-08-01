@@ -86,19 +86,12 @@ class ControlFlowGraph(libgraph.Graph):
         node.children.add(nodes[j])
     return nodes[0]
 
-  def _ToSucessorsList(self, successors, visited) -> None:
-    if self in visited:
-      return
-    visited.add(self)
-    s = ' '.join(child.name for child in self.children)
-    successors.append(f'{self.name}: {s}')
-    for child in self.children:
-      child._ToSucessorsList(successors, visited)
-
-  def ToSuccessorsList(self) -> typing.List[str]:
-    successors = []
-    self._ToSucessorsList(successors, set())
-    return list(sorted(successors))
+  def ToSuccessorsList(self) -> str:
+    s = []
+    for node in self.all_nodes:
+      successors = ' '.join(child.name for child in sorted(node.children))
+      s.append(f'{node.name}: {successors}\n')
+    return ''.join(s)
 
   def ToDot(self) -> str:
     strings = []
