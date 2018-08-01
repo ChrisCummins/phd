@@ -20,10 +20,10 @@ py_binary(
     srcs = ["train_model.py"],
     deps = [
         ":reachability",
-        "//deeplearning/clgen/corpuses:atomizers",
         "//deeplearning/clgen:telemetry",
-        "//lib/labm8:pbutil",
+        "//deeplearning/clgen/corpuses:atomizers",
         "//experimental/compilers/reachability/proto:reachability_py_pb2",
+        "//lib/labm8:pbutil",
         requirement("absl-py"),
         requirement("keras"),
         requirement("numpy"),
