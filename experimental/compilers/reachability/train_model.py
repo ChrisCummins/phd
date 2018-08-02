@@ -223,6 +223,11 @@ def main(argv):
       lstm_size=FLAGS.lstm_size, num_layers=FLAGS.num_layers,
       dnn_size=FLAGS.dnn_size, atomizer=atomizer)
 
+  model_json = model.to_json()
+  with open(model_dir / 'model.json', 'w') as f:
+    f.write(model_json)
+  logging.info('Wrote model to %s', model_dir / 'model.json')
+
   logging.info('Training model ...')
 
   def OnEpochEnd(epoch, logs):
