@@ -6,6 +6,7 @@ Creates a config.pbtxt proto.
 from __future__ import print_function
 
 import argparse
+import errno
 import hashlib
 import logging
 import os
@@ -69,6 +70,21 @@ def YesNoPrompt(question, default, noninteractive):
     else:
       sys.stdout.write("Please respond with 'yes' or 'no' "
                        "(or 'y' or 'n').\n")
+
+
+def Mkdir(path):
+  """Create a directory, including any parent directories.
+
+  Args:
+    path: The directory to create.
+  """
+  try:
+    os.makedirs(path)
+  except OSError as exc:  # Python >2.5
+    if exc.errno == errno.EEXIST and os.path.isdir(path):
+      pass
+    else:
+      raise
 
 
 def GetConfigId(args):
@@ -222,6 +238,17 @@ def GetConfigurationOptions(argv):
   parser.set_defaults(update_git_submodules=True)
   yes_no_prompts.append(('update_git_submodules', 'Update git submodules?'))
 
+  # --[no]symlink_python.
+  parser.add_argument(
+      '--symlink_python', dest='symlink_python',
+      action='store_true', help='Symlink python3.6 to ~/.local/bin/python.')
+  parser.add_argument(
+      '--nosymlink_python', dest='symlink_python',
+      action='store_false', help='Do not symlink python3.6.')
+  parser.set_defaults(symlink_python=True)
+  yes_no_prompts.append(
+      ('symlink_python', 'Symlink python3.6 to ~/.local/bin/python?'))
+
   args = parser.parse_args(argv)
 
   # Prompt the user for options.
@@ -311,6 +338,15 @@ def main(argv):
   with open(tensorflow_build_path, 'w') as f:
     f.write(tensorflow_build)
 
+  # Symlink python3.6 to ~/.local/bin/python.
+  if args.symlink_python:
+    Mkdir(os.path.expanduser('~/.local/bin'))
+    if not os.path.islink(os.path.expanduser('~/.local/bin/python')):
+      print('Created ~/.local/bin/python')
+      subprocess.check_call(
+          ['ln', '-s', python_path, os.path.expanduser('~/.local/bin/python')])
+
+  # Create //config.pbtxt.
   options_to_exclude = {'print_id', 'noninteractive', 'cache_result'}
   options_to_export = {k: args.__dict__[k] for k in args.__dict__
                        if k not in options_to_exclude}
@@ -346,6 +382,9 @@ paths {{
 # TODO(cec): Add a better way of signalling that we're in the phd env from
 # the command line.
 export VIRTUAL_ENV=phd
+
+# Ensure that default python is 3.6.
+echo $PATH | grep $HOME/.local/bin >/dev/null || export PATH="$HOME/.local/bin:$PATH"
 
 export PHD="{phd_root}"
 export PYTHON="{python_path}"
