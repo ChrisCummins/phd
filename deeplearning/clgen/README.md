@@ -23,17 +23,18 @@ programs it learns from.
 
 ## Getting Started
 
-Build CLgen:
+After following the [install instructions](/README.md) for this project, I'd
+recommend running the test suite to ensure that everything is set up correctly:
 
 ```sh
-$ bazel build //deeplearning/clgen
+$ bazel test //deeplearning/clgen/...
 ```
 
 Use our tiny example dataset to train and sample your first CLgen model:
 
 ```sh
-$ bazel-out/*-py3-opt/bin/deeplearning/clgen/clgen \
-    --config deeplearning/clgen/test/data/tiny/config.pbtxt
+$ bazel run //deeplearning/clgen -- \
+    --config $PWD/deeplearning/clgen/tests/data/tiny/config.pbtxt
 ```
 
 <img src="https://raw.githubusercontent.com/ChrisCummins/phd/master/deeplearning/clgen/docs/assets/clgen.gif" width="500">
