@@ -175,6 +175,7 @@ py_test(
         "//lib/labm8:fs",
         requirement("absl-py"),
         requirement("pytest"),
+        requirement("pytest-benchmark"),
     ],
 )
 
