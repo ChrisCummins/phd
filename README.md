@@ -249,6 +249,14 @@ be fine:
 $ ./configure
 ```
 
+Finally, we must set up the shell environment for running bazel. The file `.env`
+is created by the configure process and must be sourced for every shell we want 
+to use bazel with:
+
+```sh
+$ source $PWD/.env
+```
+
 Now build or test whatever bazel targets you'd like. Use `bazel query //...` to
 list the available targets. E.g. to run the entire test suite, run:
 
