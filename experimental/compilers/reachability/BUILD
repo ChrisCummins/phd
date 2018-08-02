@@ -3,6 +3,23 @@
 load("@requirements//:requirements.bzl", "requirement")
 
 py_binary(
+    name = "eval_model",
+    srcs = ["eval_model.py"],
+    deps = [
+        ":reachability",
+        ":train_model",
+        "//deeplearning/clgen:telemetry",
+        "//deeplearning/clgen/corpuses:atomizers",
+        "//experimental/compilers/reachability/proto:reachability_py_pb2",
+        "//lib/labm8:pbutil",
+        requirement("absl-py"),
+        requirement("keras"),
+        requirement("numpy"),
+        requirement("humanize"),
+    ],
+)
+
+py_binary(
     name = "reachability",
     srcs = ["reachability.py"],
     deps = [

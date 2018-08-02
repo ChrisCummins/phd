@@ -117,6 +117,19 @@ def BuildKerasModel(
   return model
 
 
+def GetSequenceLength(num_nodes: int) -> int:
+  """Get the sequence length for a given number of nodes.
+
+  Maximum sequence length for successor lists is a fully connected graph,
+  e.g. for a three node CFG:
+      A: B C
+      B: A C
+      C: A B
+  Each line is 3 + (n-1) * 2 characters long.
+  """
+  return num_nodes * (3 + (num_nodes - 1) * 2)
+
+
 def ProtosToModelData(data: reachability_pb2.ReachabilityDataset,
                       sequence_length: int,
                       atomizer: atomizers.AtomizerBase
@@ -179,14 +192,8 @@ def main(argv):
   logging.info('Number of testing examples: %s.',
                humanize.intcomma(len(testing_data.entry)))
 
-  # Maximum sequence length for successor lists is a fully connected graph,
-  # e.g. for a three node CFG:
-  #     A: B C
-  #     B: A C
-  #     C: A B
-  # Each line is 3 + (n-1) * 2 characters long.
   n = FLAGS.reachability_num_nodes
-  sequence_length = n * (3 + (n - 1) * 2)
+  sequence_length = GetSequenceLength(FLAGS.reachability_num_nodes)
   logging.info('Using sequence length %s.', humanize.intcomma(sequence_length))
   seqs = [ControlFlowGraphToSequence(entry.graph) for entry in data.entry]
   text = '\n'.join(seqs)
