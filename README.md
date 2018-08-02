@@ -197,7 +197,8 @@ First install the required packages:
 $ sudo apt-get update
 $ sudo apt install -y --no-install-recommends \
    ca-certificates curl g++ git libmysqlclient-dev ocl-icd-opencl-dev \
-   pkg-config python python-dev python3.6 unzip zip zlib1g-dev
+   pkg-config python python-dev python3.6 python3.6-dev python3-distutils \
+   unzip zip zlib1g-dev openjdk-11-jdk
 ```
 
 Please note that this list of packages is for Ubuntu 18.04. On older
