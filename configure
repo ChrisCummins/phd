@@ -55,7 +55,7 @@ def YesNoPrompt(question, default, noninteractive):
 
     if noninteractive:
       sys.stdout.write(default + '\n')
-      return default
+      return valid[default]
 
     # Python3 renamed raw_input() to input().
     # https://docs.python.org/3/whatsnew/3.0.html
