@@ -105,6 +105,10 @@ def main(argv):
   test_x, test_y = train_model.ProtosToModelData(
       testing_data, sequence_length, atomizer)
 
+  zero_r_acc = sum(sum(x) for x in test_y) / len(testing_data.entry) / num_nodes
+  zero_r_acc = max(zero_r_acc[0], 1 - zero_r_acc[0])
+  print('Zero-R accuracy: {:.2%}'.format(zero_r_acc))
+
   row = model.evaluate(
       test_x, test_y, batch_size=FLAGS.batch_size, verbose=0)
   overall_loss, losses, accuracies = (
@@ -112,10 +116,7 @@ def main(argv):
   print('Accuracy: {:.2%}'.format(sum(accuracies) / len(accuracies)))
   print('Accuracy (excluding first class): {:.2%}'.format(
       sum(accuracies[1:]) / len(accuracies[1:])))
-
-  zero_r_acc = sum(sum(x) for x in test_y) / len(testing_data.entry) / num_nodes
-  zero_r_acc = max(zero_r_acc[0], 1 - zero_r_acc[0])
-  print('Zero-R accuracy: {:.2%}'.format(zero_r_acc))
+  print('done.')
 
 
 if __name__ == '__main__':
