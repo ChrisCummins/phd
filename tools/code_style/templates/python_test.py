@@ -1,5 +1,6 @@
 """Unit tests for //TODO:${PACKAGE_NAME}/${NAME}."""
 import sys
+import typing
 
 import pytest
 from absl import app
@@ -14,7 +15,7 @@ def test_TODO():
   assert True
 
 
-def main(argv):
+def main(argv: typing.List[str]):
   """Main entry point."""
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
