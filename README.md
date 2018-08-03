@@ -198,7 +198,8 @@ $ sudo apt-get update
 $ sudo apt install -y --no-install-recommends \
    ca-certificates curl g++ git libmysqlclient-dev ocl-icd-opencl-dev \
    pkg-config python python-dev python3.6 python3.6-dev python3-distutils \
-   unzip zip zlib1g-dev openjdk-11-jdk
+   unzip zip zlib1g-dev openjdk-11-jdk  m4 libexempi-dev rsync texlive-full \
+   python3-numpy
 ```
 
 Please note that this list of packages is for Ubuntu 18.04. On older
@@ -228,7 +229,7 @@ Install the required packages:
 
 ```sh
 $ brew install bazel coreutils exempi findutils gnu-indent gnu-sed gnu-tar \
-    gnu-time gnu-which python
+    gnu-time gnu-which python mactex
 ```
 
 Now proceed to the "Build (all platforms)" section.
