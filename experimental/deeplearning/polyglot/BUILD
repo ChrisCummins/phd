@@ -72,7 +72,7 @@ py_binary(
         "//lib/labm8:lockfile",
         "//lib/labm8:pbutil",
         "//third_party/py/absl",
-        requirement("humanize"),
+        "//third_party/py/humanize",
     ],
 )
 

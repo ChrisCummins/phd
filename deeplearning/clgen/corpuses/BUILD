@@ -45,9 +45,9 @@ py_library(
         "//lib/labm8:pbutil",
         "//third_party/py/absl",
         requirement("checksumdir"),
-        requirement("humanize"),
+        "//third_party/py/humanize",
         "//third_party/py/numpy",
-        requirement("sqlalchemy"),
+        "//third_party/py/sqlalchemy",
     ],
 )
 
@@ -78,12 +78,12 @@ py_library(
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen/preprocessors",
         "//lib/labm8:sqlutil",
-        requirement("humanize"),
+        "//third_party/py/humanize",
         "//third_party/py/numpy",
-        requirement("progressbar2"),
+        "//third_party/py/progressbar",
         requirement("python-utils"),
         "//third_party/py/absl",
-        requirement("sqlalchemy"),
+        "//third_party/py/sqlalchemy",
     ],
 )
 
@@ -128,8 +128,8 @@ py_library(
         "//lib/labm8:fs",
         "//lib/labm8:sqlutil",
         "//third_party/py/absl",
-        requirement("progressbar2"),
+        "//third_party/py/progressbar",
         requirement("python-utils"),
-        requirement("sqlalchemy"),
+        "//third_party/py/sqlalchemy",
     ],
 )

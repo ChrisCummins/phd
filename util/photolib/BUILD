@@ -35,7 +35,7 @@ py_library(
         ":common",
         ":linters",
         "//third_party/py/absl",
-        requirement("sqlalchemy"),
+        "//third_party/py/sqlalchemy",
     ],
 )
 
@@ -46,7 +46,7 @@ py_library(
         ":common",
         "//third_party/py/absl",
         requirement("python-xmp-toolkit"),
-        requirement("sqlalchemy"),
+        "//third_party/py/sqlalchemy",
         requirement("pytz"),
     ],
 )
@@ -58,7 +58,7 @@ py_library(
         ":common",
         ":lightroom",
         "//third_party/py/absl",
-        requirement("protobuf"),
+        "//third_party/py/protobuf",
     ],
 )
 

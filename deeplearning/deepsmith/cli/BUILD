@@ -34,7 +34,7 @@ py_binary(
         "//deeplearning/deepsmith:testcase",
         "//lib/labm8:pbutil",
         "//third_party/py/absl",
-        requirement("progressbar2"),
+        "//third_party/py/progressbar",
         requirement("python-utils"),
     ],
 )

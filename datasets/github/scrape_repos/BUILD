@@ -12,8 +12,8 @@ py_binary(
         "//lib/labm8:fs",
         "//lib/labm8:pbutil",
         "//third_party/py/absl",
-        requirement("humanize"),
-        requirement("progressbar2"),
+        "//third_party/py/humanize",
+        "//third_party/py/progressbar",
         requirement("python-utils"),
     ],
 )
@@ -26,8 +26,8 @@ py_library(
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
         "//lib/labm8:labdate",
         "//lib/labm8:sqlutil",
-        requirement("sqlalchemy"),
         "//third_party/py/absl",
+        "//third_party/py/sqlalchemy",
     ],
 )
 
@@ -41,8 +41,8 @@ py_binary(
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
         "//lib/labm8:pbutil",
         "//third_party/py/absl",
-        requirement("humanize"),
-        requirement("sqlalchemy"),
+        "//third_party/py/humanize",
+        "//third_party/py/sqlalchemy",
     ],
 )
 
@@ -58,10 +58,10 @@ py_binary(
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
         "//lib/labm8:pbutil",
         "//third_party/py/absl",
-        requirement("humanize"),
-        requirement("progressbar2"),
+        "//third_party/py/humanize",
+        "//third_party/py/progressbar",
         requirement("python-utils"),
-        requirement("sqlalchemy"),
+        "//third_party/py/sqlalchemy",
     ],
 )
 
@@ -76,9 +76,9 @@ py_binary(
         "//lib/labm8:labdate",
         "//lib/labm8:pbutil",
         "//third_party/py/absl",
-        requirement("PyGithub"),
-        requirement("humanize"),
-        requirement("progressbar2"),
+        "//third_party/py/github",
+        "//third_party/py/humanize",
+        "//third_party/py/progressbar",
         requirement("python-utils"),
     ],
 )

@@ -19,6 +19,6 @@ py_library(
     deps = [
         requirement("tensorflow"),
         "//third_party/py/numpy",
-        requirement("protobuf"),
+        "//third_party/py/protobuf",
     ],
 )

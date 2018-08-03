@@ -37,7 +37,7 @@ py_binary(
         "//lib/labm8:pbutil",
         "//lib/labm8:system",
         "//third_party/py/absl",
-        requirement("grpcio"),
+        "//third_party/py/grpcio",
     ],
 )
 
@@ -94,7 +94,7 @@ py_binary(
         "//gpu/cldrive:env",
         "//lib/labm8:labdate",
         "//third_party/py/absl",
-        requirement("grpcio"),
+        "//third_party/py/grpcio",
     ],
 )
 

@@ -13,9 +13,9 @@ py_binary(
         "//experimental/compilers/reachability/proto:reachability_py_pb2",
         "//lib/labm8:pbutil",
         "//third_party/py/absl",
-        requirement("keras"),
+        "//third_party/py/humanize",
+        "//third_party/py/keras",
         "//third_party/py/numpy",
-        requirement("humanize"),
     ],
 )
 
@@ -42,8 +42,8 @@ py_binary(
         "//experimental/compilers/reachability/proto:reachability_py_pb2",
         "//lib/labm8:pbutil",
         "//third_party/py/absl",
-        requirement("keras"),
+        "//third_party/py/humanize",
+        "//third_party/py/keras",
         "//third_party/py/numpy",
-        requirement("humanize"),
     ],
 )

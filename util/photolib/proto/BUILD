@@ -7,5 +7,5 @@ py_proto_library(
     name = "photolint_py_pb2",
     protos = ["photolint.proto"],
     visibility = ["//util/photolib:__subpackages__"],
-    deps = [requirement("protobuf")],
+    deps = ["//third_party/py/protobuf"],
 )

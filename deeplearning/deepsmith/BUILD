@@ -46,7 +46,7 @@ py_library(
         "//lib/labm8:pbutil",
         "//lib/labm8:sqlutil",
         "//third_party/py/absl",
-        requirement("sqlalchemy"),
+        "//third_party/py/sqlalchemy",
     ],
 )
 
@@ -59,7 +59,7 @@ py_library(
         "//lib/labm8:labdate",
         "//lib/labm8:pbutil",
         "//third_party/py/absl",
-        requirement("sqlalchemy"),
+        "//third_party/py/sqlalchemy",
     ],
 )
 
@@ -87,7 +87,7 @@ py_library(
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//lib/labm8:labdate",
         "//lib/labm8:sqlutil",
-        requirement("sqlalchemy"),
+        "//third_party/py/sqlalchemy",
     ],
 )
 
@@ -116,7 +116,7 @@ py_library(
         "//lib/labm8:labdate",
         "//lib/labm8:sqlutil",
         "//lib/labm8:system",
-        requirement("sqlalchemy"),
+        "//third_party/py/sqlalchemy",
     ],
 )
 
@@ -152,7 +152,7 @@ py_library(
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//lib/labm8:labdate",
         "//lib/labm8:sqlutil",
-        requirement("sqlalchemy"),
+        "//third_party/py/sqlalchemy",
     ],
 )
 
@@ -169,7 +169,7 @@ py_library(
         "//lib/labm8:labdate",
         "//lib/labm8:pbutil",
         "//lib/labm8:sqlutil",
-        requirement("sqlalchemy"),
+        "//third_party/py/sqlalchemy",
     ],
 )
 
@@ -203,7 +203,7 @@ py_library(
         "//deeplearning/deepsmith/proto:service_py_pb2",
         "//lib/labm8:pbutil",
         "//third_party/py/absl",
-        requirement("grpcio"),
+        "//third_party/py/grpcio",
     ],
 )
 
@@ -217,7 +217,7 @@ py_library(
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//lib/labm8:labdate",
         "//lib/labm8:sqlutil",
-        requirement("sqlalchemy"),
+        "//third_party/py/sqlalchemy",
     ],
 )
 
@@ -251,7 +251,7 @@ py_library(
         "//lib/labm8:labdate",
         "//lib/labm8:pbutil",
         "//lib/labm8:sqlutil",
-        requirement("sqlalchemy"),
+        "//third_party/py/sqlalchemy",
     ],
 )
 

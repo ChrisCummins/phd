@@ -84,7 +84,7 @@ py_binary(
         "//lib/labm8:pbutil",
         "//third_party/py/absl",
         "//third_party/py/pandas",
-        requirement("progressbar2"),
+        "//third_party/py/progressbar",
     ],
 )
 

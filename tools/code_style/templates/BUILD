@@ -6,7 +6,7 @@ load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
 py_proto_library(
     name = "proto_py_pb2",
     protos = ["proto.proto"],
-    deps = [requirement("protobuf")],
+    deps = ["//third_party/py/protobuf"],
 )
 
 py_library(

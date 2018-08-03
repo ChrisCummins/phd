@@ -16,6 +16,6 @@ py_binary(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
-        requirement("humanize"),
+        "//third_party/py/humanize",
     ],
 )

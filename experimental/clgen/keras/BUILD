@@ -9,8 +9,8 @@ py_test(
     srcs_version = "PY3",
     deps = [
         "//third_party/py/absl",
+        "//third_party/py/keras",
         "//third_party/py/pytest",
-        requirement("keras"),
         "//third_party/py/tensorflow",
     ],
 )
@@ -22,8 +22,8 @@ py_test(
     srcs_version = "PY3",
     deps = [
         "//third_party/py/absl",
+        "//third_party/py/keras",
         "//third_party/py/pytest",
-        requirement("keras"),
         "//third_party/py/tensorflow",
     ],
 )

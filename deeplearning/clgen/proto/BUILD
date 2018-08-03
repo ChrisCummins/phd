@@ -17,13 +17,13 @@ py_proto_library(
         ":sampler_py_pb2",
     ],
     protos = ["clgen.proto"],
-    deps = [requirement("protobuf")],
+    deps = ["//third_party/py/protobuf"],
 )
 
 py_proto_library(
     name = "corpus_py_pb2",
     protos = ["corpus.proto"],
-    deps = [requirement("protobuf")],
+    deps = ["//third_party/py/protobuf"],
 )
 
 py_proto_library(
@@ -34,24 +34,24 @@ py_proto_library(
         ":sampler_py_pb2",
     ],
     protos = ["internal.proto"],
-    deps = [requirement("protobuf")],
+    deps = ["//third_party/py/protobuf"],
 )
 
 py_proto_library(
     name = "model_py_pb2",
     proto_deps = [":corpus_py_pb2"],
     protos = ["model.proto"],
-    deps = [requirement("protobuf")],
+    deps = ["//third_party/py/protobuf"],
 )
 
 py_proto_library(
     name = "sampler_py_pb2",
     protos = ["sampler.proto"],
-    deps = [requirement("protobuf")],
+    deps = ["//third_party/py/protobuf"],
 )
 
 py_proto_library(
     name = "telemetry_py_pb2",
     protos = ["telemetry.proto"],
-    deps = [requirement("protobuf")],
+    deps = ["//third_party/py/protobuf"],
 )

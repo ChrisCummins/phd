@@ -38,8 +38,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//third_party/py/numpy",
-        requirement("pycparser"),
-        requirement("pycparserext"),
+        "//third_party/py/pycparser",
     ],
 )
 

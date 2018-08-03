@@ -21,7 +21,7 @@ py_binary(
         "//lib/labm8:labdate",
         "//lib/labm8:pbutil",
         "//third_party/py/absl",
-        requirement("humanize"),
+        "//third_party/py/humanize",
     ],
 )
 
@@ -53,6 +53,6 @@ py_binary(
         "//lib/labm8:fmt",
         "//lib/labm8:pbutil",
         "//third_party/py/absl",
-        requirement("humanize"),
+        "//third_party/py/humanize",
     ],
 )

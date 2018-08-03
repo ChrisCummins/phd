@@ -103,9 +103,9 @@ py_library(
         ":fs",
         ":sqlutil",
         requirement("checksumdir"),
-        requirement("humanize"),
-        requirement("sqlalchemy"),
         "//third_party/py/absl",
+        "//third_party/py/humanize",
+        "//third_party/py/sqlalchemy",
     ],
 )
 
@@ -134,7 +134,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":labtypes",
-        requirement("humanize"),
+        "//third_party/py/humanize",
         requirement("send2trash"),
     ],
 )
@@ -398,7 +398,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":jsonutil",
-        requirement("protobuf"),
+        "//third_party/py/protobuf",
     ],
 )
 
@@ -442,7 +442,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//third_party/py/absl",
-        requirement("sqlalchemy"),
+        "//third_party/py/sqlalchemy",
     ],
 )
 

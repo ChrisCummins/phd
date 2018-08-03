@@ -7,5 +7,5 @@ py_proto_library(
     name = "reachability_py_pb2",
     protos = ["reachability.proto"],
     visibility = ["//experimental/compilers/reachability:__subpackages__"],
-    deps = [requirement("protobuf")],
+    deps = ["//third_party/py/protobuf"],
 )

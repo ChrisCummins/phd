@@ -11,5 +11,5 @@ package(default_visibility = ["//visibility:public"])
 py_proto_library(
     name = "fish_py_pb2",
     protos = ["fish.proto"],
-    deps = [requirement("protobuf")],
+    deps = ["//third_party/py/protobuf"],
 )

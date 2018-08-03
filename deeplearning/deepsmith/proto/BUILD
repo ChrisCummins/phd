@@ -12,14 +12,14 @@ py_proto_library(
     protos = ["datastore.proto"],
     visibility = ["//visibility:public"],
     with_grpc = True,
-    deps = [requirement("protobuf")],
+    deps = ["//third_party/py/protobuf"],
 )
 
 py_proto_library(
     name = "deepsmith_py_pb2",
     protos = ["deepsmith.proto"],
     visibility = ["//visibility:public"],
-    deps = [requirement("protobuf")],
+    deps = ["//third_party/py/protobuf"],
 )
 
 py_proto_library(
@@ -32,7 +32,7 @@ py_proto_library(
     protos = ["generator.proto"],
     visibility = ["//visibility:public"],
     with_grpc = True,
-    deps = [requirement("protobuf")],
+    deps = ["//third_party/py/protobuf"],
 )
 
 py_proto_library(
@@ -44,12 +44,12 @@ py_proto_library(
     protos = ["harness.proto"],
     visibility = ["//visibility:public"],
     with_grpc = True,
-    deps = [requirement("protobuf")],
+    deps = ["//third_party/py/protobuf"],
 )
 
 py_proto_library(
     name = "service_py_pb2",
     protos = ["service.proto"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
-    deps = [requirement("protobuf")],
+    deps = ["//third_party/py/protobuf"],
 )

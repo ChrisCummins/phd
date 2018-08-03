@@ -2,8 +2,11 @@
 import numpy as np
 import re
 import typing
-from pycparser.c_ast import FileAST, IdentifierType, NodeVisitor, PtrDecl, \
-  Struct
+from pycparser.c_ast import FileAST
+from pycparser.c_ast import IdentifierType
+from pycparser.c_ast import NodeVisitor
+from pycparser.c_ast import PtrDecl
+from pycparser.c_ast import Struct
 from pycparser.plyparser import ParseError
 from pycparserext.ext_c_parser import OpenCLCParser
 

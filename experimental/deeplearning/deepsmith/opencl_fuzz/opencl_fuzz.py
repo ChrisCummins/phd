@@ -75,6 +75,12 @@ flags.DEFINE_integer(
 flags.DEFINE_integer(
     'batch_size', 128,
     'The number of test cases to generate and execute in a single batch.')
+flags.DEFINE_string(
+    'rerun_result', None,
+    'The path of a Result proto to re-run.')
+flags.DEFINE_string(
+    'run_result_filters', None,
+    'A ')
 
 
 def RunBatch(generator: base_generator.GeneratorServiceBase,
@@ -321,6 +327,17 @@ def main(argv):
     return
 
   start_time = time.time()
+
+  if FLAGS.rerun_result:
+    result_to_rerun_path = pathlib.Path(FLAGS.rerun_result)
+    if not result_to_rerun_path.is_file():
+      raise app.UsageError('--rerun_result must be the path of a Result proto.')
+    if not pbutil.ProtoIsReadable(result_to_rerun_path, deepsmith_pb2.Result()):
+      raise app.UsageError(
+          "Cannot read Result proto: '{result_to_rerun_path}'.")
+    result_to_rerun = pbutil.FromFile(
+        result_to_rerun_path, deepsmith_pb2.Result())
+    # harness_class = cldrive.CldriveHarness if result_to_rerun.
 
   # Parse flags and instantiate testing objects.
   if not FLAGS.interesting_results_dir:
