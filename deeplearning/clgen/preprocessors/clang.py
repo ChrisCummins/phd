@@ -15,6 +15,8 @@ from absl import flags
 from absl import logging
 from phd.lib.labm8 import bazelutil
 
+from compilers.llvm import clang_format
+from compilers.llvm import llvm
 from deeplearning.clgen import errors
 
 
@@ -23,10 +25,6 @@ FLAGS = flags.FLAGS
 _LLVM_REPO = 'llvm_mac' if sys.platform == 'darwin' else 'llvm_linux'
 # Path to clang binary.
 CLANG = bazelutil.DataPath(f'{_LLVM_REPO}/bin/clang')
-# Path to clang-format binary.
-CLANG_FORMAT = bazelutil.DataPath(f'{_LLVM_REPO}/bin/clang-format')
-# Path to opt binary.
-OPT = bazelutil.DataPath(f'{_LLVM_REPO}/bin/opt')
 # The marker used to mark stdin from clang pre-processor output.
 CLANG_STDIN_MARKER = re.compile(r'# \d+ "<stdin>" 2')
 # Options to pass to clang-format.
@@ -156,16 +154,12 @@ def ClangFormat(text: str, suffix: str, timeout_seconds: int = 60) -> str:
     ClangFormatException: In case of an error.
     ClangTimeout: If clang-format does not complete before timeout_seconds.
   """
-  cmd = ["timeout", "-s9", str(timeout_seconds), str(CLANG_FORMAT),
-         '-assume-filename', f'input{suffix}',
-         '-style={}'.format(json.dumps(CLANG_FORMAT_CONFIG))]
-  logging.debug('$ %s', ' '.join(cmd))
-  process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE, universal_newlines=True)
-  stdout, stderr = process.communicate(text)
-  if process.returncode == 9:
+  try:
+    return clang_format.Exec(text, suffix, [
+      '-style={}'.format(json.dumps(CLANG_FORMAT_CONFIG))
+    ], timeout_seconds)
+  except llvm.LlvmTimeout:
     raise errors.ClangTimeout(
         f'Clang-format timed out after {timeout_seconds}s')
-  elif process.returncode != 0:
-    raise errors.ClangFormatException(stderr)
-  return stdout
+  except clang_format.ClangFormatException as e:
+    raise errors.ClangFormatException(str(e))
