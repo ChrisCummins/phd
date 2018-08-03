@@ -92,6 +92,7 @@ def Encode1HotLabels(y: np.array) -> np.array:
 def BuildKerasModel(
     sequence_length: int, num_classes: int, lstm_size: int, num_layers: int,
     dnn_size: int, atomizer: atomizers.AtomizerBase):
+  """Instantiate reachability classifier model."""
   code_in = keras.layers.Input(
       shape=(sequence_length,), dtype='int32', name='code_in')
   x = keras.layers.Embedding(
@@ -134,6 +135,16 @@ def ProtosToModelData(data: reachability_pb2.ReachabilityDataset,
                       sequence_length: int,
                       atomizer: atomizers.AtomizerBase
                       ) -> typing.Tuple[np.ndarray, typing.List[np.ndarray]]:
+  """Convert proto dataset into x,y data for model.
+
+  Args:
+    data: The dataset proto.
+    sequence_length: The length of encoded sequences.
+    atomizer: The encoding atomizer.
+
+  Returns:
+    x,y data for feeding into keras model.
+  """
   x = EncodeAndPad(
       [ControlFlowGraphToSequence(entry.graph) for entry in data.entry],
       sequence_length, atomizer).astype(np.int32)
@@ -145,6 +156,14 @@ def ProtosToModelData(data: reachability_pb2.ReachabilityDataset,
 
 
 def ControlFlowGraphToSequence(graph: reachability_pb2.ControlFlowGraph) -> str:
+  """Encode control flow graph as text sequence.
+
+  Args:
+    graph: A graph instance.
+
+  Returns:
+    The string representation.
+  """
   s = []
   for node in graph.node:
     successors = ' '.join(sorted(node.child))

@@ -1,4 +1,4 @@
-"""A generator for reachability graphs."""
+"""A generator for Control Flow Graphs."""
 import numpy as np
 import pathlib
 import random
@@ -31,12 +31,14 @@ flags.DEFINE_string(
 
 
 def NumberToLetters(num: int) -> str:
+  """Convert number to name, e.g. 0 -> 'A', 1 -> 'B'."""
   if num >= 26:
     raise ValueError
   return chr(ord('A') + num)
 
 
 class ControlFlowGraph(libgraph.Graph):
+  """A control flow graph."""
 
   def __init__(self, name: str):
     super(ControlFlowGraph, self).__init__(name)
@@ -61,6 +63,17 @@ class ControlFlowGraph(libgraph.Graph):
   def GenerateRandom(cls, num_nodes: int,
                      connections_scaling_param: float = 1.0,
                      seed: typing.Optional[int] = None) -> 'ControlFlowGraph':
+    """Create a random CFG.
+
+    Args:
+      num_nodes: The number of CFG nodes.
+      connections_scaling_param: Scaling parameter to use to determine the
+        likelihood of edges between CFG nodes.
+      seed: Random number seed.
+
+    Returns:
+      A ControlFlowGraph instance.
+    """
     if isinstance(seed, int):
       np.random.seed(seed)
       random.seed(seed)
@@ -87,6 +100,7 @@ class ControlFlowGraph(libgraph.Graph):
     return nodes[0]
 
   def ToSuccessorsList(self) -> str:
+    """Get a list of successors for all nodes in the graph."""
     s = []
     for node in self.all_nodes:
       successors = ' '.join(child.name for child in sorted(node.children))
@@ -94,6 +108,7 @@ class ControlFlowGraph(libgraph.Graph):
     return ''.join(s)
 
   def ToDot(self) -> str:
+    """Get dot syntax graph."""
     strings = []
     for node in self.all_nodes:
       strings += [f'{node.name} -> {child}' for child in node.children]
@@ -101,11 +116,13 @@ class ControlFlowGraph(libgraph.Graph):
     return f"digraph graphname {{\n  {dot}\n}}"
 
   def Reachables(self) -> typing.List[bool]:
+    """Return whether each node is reachable from the root node."""
     src = self.all_nodes[0]
     return [src.IsReachable(node) for node in self.all_nodes]
 
   def SetCfgWithReachabilityProto(
       self, proto: reachability_pb2.CfgWithReachability) -> None:
+    """Set proto fields from graph instance."""
     for node in self.all_nodes:
       proto_node = proto.graph.node.add()
       proto_node.name = node.name
@@ -114,6 +131,7 @@ class ControlFlowGraph(libgraph.Graph):
 
   def ToCfgWithReachabilityProto(
       self) -> reachability_pb2.CfgWithReachability:
+    """Create proto from graph instance."""
     data = reachability_pb2.CfgWithReachability()
     self.SetCfgWithReachabilityProto(data)
     return data
