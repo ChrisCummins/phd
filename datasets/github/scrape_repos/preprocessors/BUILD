@@ -1,7 +1,5 @@
 # This package defines contentfile preprocessors.
 
-load("@requirements//:requirements.bzl", "requirement")
-
 py_library(
     name = "conftest",
     srcs = ["conftest.py"],
@@ -26,7 +24,7 @@ py_library(
         ":public",
         "//lib/labm8:bazelutil",
         "//third_party/py/absl",
-        requirement("fuzzywuzzy"),
+        "//third_party/py/fuzzywuzzy",
     ],
 )
 

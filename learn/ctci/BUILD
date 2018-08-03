@@ -1,4 +1,5 @@
-load("@requirements//:requirements.bzl", "requirement")
+# My solutions to problems from "Cracking the Coding Interview: 150
+# Programming Questions and Solutions", Gayle Laakmann McDowell, 2011.
 
 cc_library(
     name = "ctci",

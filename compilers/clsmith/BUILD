@@ -1,7 +1,5 @@
 # A python wrapper around CLSmith, a random generator of OpenCL C programs.
 
-load("@requirements//:requirements.bzl", "requirement")
-
 py_binary(
     name = "clsmith",
     srcs = ["clsmith.py"],

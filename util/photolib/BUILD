@@ -45,9 +45,8 @@ py_library(
     deps = [
         ":common",
         "//third_party/py/absl",
-        requirement("python-xmp-toolkit"),
+        "//third_party/py/libxmp",
         "//third_party/py/sqlalchemy",
-        requirement("pytz"),
     ],
 )
 

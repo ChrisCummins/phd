@@ -40,7 +40,7 @@ py_binary(
         "//lib/labm8:pbutil",
         "//lib/labm8:viz",
         "//third_party/py/absl",
-        requirement("jupyter-client"),
+        "//third_party/py/jupyter",
     ],
 )
 

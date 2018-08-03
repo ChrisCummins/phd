@@ -44,7 +44,7 @@ py_library(
         "//lib/labm8:lockfile",
         "//lib/labm8:pbutil",
         "//third_party/py/absl",
-        requirement("checksumdir"),
+        "//third_party/py/checksumdir",
         "//third_party/py/humanize",
         "//third_party/py/numpy",
         "//third_party/py/sqlalchemy",

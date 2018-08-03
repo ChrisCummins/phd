@@ -9,9 +9,9 @@ py_binary(
         "//experimental/deeplearning/fish/proto:fish_py_pb2",
         "//lib/labm8:fs",
         "//lib/labm8:pbutil",
-        requirement("mysqlclient"),
         "//third_party/py/absl",
         "//third_party/py/humanize",
+        "//third_party/py/mysql",
     ],
 )
 

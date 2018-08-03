@@ -2,8 +2,6 @@
 #
 # Each module within labm8 contains a set of related functions.
 
-load("@requirements//:requirements.bzl", "requirement")
-
 licenses(["restricted"])  # GPL v3
 
 exports_files([
@@ -102,8 +100,8 @@ py_library(
         ":crypto",
         ":fs",
         ":sqlutil",
-        requirement("checksumdir"),
         "//third_party/py/absl",
+        "//third_party/py/checksumdir",
         "//third_party/py/humanize",
         "//third_party/py/sqlalchemy",
     ],
@@ -135,7 +133,7 @@ py_library(
     deps = [
         ":labtypes",
         "//third_party/py/humanize",
-        requirement("send2trash"),
+        "//third_party/py/send2trash",
     ],
 )
 
@@ -255,7 +253,7 @@ py_library(
     deps = [
         ":system",
         "//third_party/py/numpy",
-        requirement("scipy"),
+        "//third_party/py/scipy",
     ],
 )
 
@@ -515,7 +513,7 @@ py_test(
         ":fs",
         ":viz",
         "//third_party/py/absl",
+        "//third_party/py/matplotlib",
         "//third_party/py/pytest",
-        requirement("matplotlib"),
     ],
 )
