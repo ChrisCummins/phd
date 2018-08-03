@@ -14,7 +14,6 @@ py_binary(
         "//third_party/py/absl",
         "//third_party/py/humanize",
         "//third_party/py/progressbar",
-        requirement("python-utils"),
     ],
 )
 
@@ -60,7 +59,6 @@ py_binary(
         "//third_party/py/absl",
         "//third_party/py/humanize",
         "//third_party/py/progressbar",
-        requirement("python-utils"),
         "//third_party/py/sqlalchemy",
     ],
 )
@@ -79,7 +77,6 @@ py_binary(
         "//third_party/py/github",
         "//third_party/py/humanize",
         "//third_party/py/progressbar",
-        requirement("python-utils"),
     ],
 )
 

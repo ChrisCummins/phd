@@ -35,7 +35,6 @@ py_binary(
         "//lib/labm8:pbutil",
         "//third_party/py/absl",
         "//third_party/py/progressbar",
-        requirement("python-utils"),
     ],
 )
 

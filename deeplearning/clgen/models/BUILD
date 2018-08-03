@@ -198,7 +198,6 @@ py_library(
         "//third_party/py/humanize",
         "//third_party/py/numpy",
         "//third_party/py/progressbar",
-        requirement("python-utils"),
         "//third_party/py/tensorflow",
     ],
 )

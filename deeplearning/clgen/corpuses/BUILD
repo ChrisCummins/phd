@@ -81,7 +81,6 @@ py_library(
         "//third_party/py/humanize",
         "//third_party/py/numpy",
         "//third_party/py/progressbar",
-        requirement("python-utils"),
         "//third_party/py/absl",
         "//third_party/py/sqlalchemy",
     ],
@@ -129,7 +128,6 @@ py_library(
         "//lib/labm8:sqlutil",
         "//third_party/py/absl",
         "//third_party/py/progressbar",
-        requirement("python-utils"),
         "//third_party/py/sqlalchemy",
     ],
 )
