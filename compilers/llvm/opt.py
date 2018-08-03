@@ -40,28 +40,25 @@ class OptException(llvm.LlvmError):
   pass
 
 
-def Exec(args: typing.List[str], timeout_seconds: int = 60) -> str:
-  """Run clang-format on a source.
+def Exec(args: typing.List[str], timeout_seconds: int = 60) -> subprocess.Popen:
+  """Run LLVM's optimizer.
 
   Args:
-    text: The source code to run through clang-format.
-    suffix: The suffix to append to the source code temporary file. E.g. '.c'
-      for a C program.
+    args: A list of arguments to pass to binary.
     timeout_seconds: The number of seconds to allow clang-format to run for.
 
   Returns:
-    The output of clang-format.
-
-  Raises:
-    ClangFormatException: In case of an error.
-    LlvmTimeout: If clang-format does not complete before timeout_seconds.
+    A Popen instance with stdout and stderr set to strings.
   """
   cmd = ['timeout', '-s9', str(timeout_seconds), str(OPT)] + args
   logging.debug('$ %s', ' '.join(cmd))
-  process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE, universal_newlines=True)
+  process = subprocess.Popen(
+      cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+      universal_newlines=True)
   stdout, stderr = process.communicate()
-  print(stdout, stderr)
+  process.stdout = stdout
+  process.stderr = stderr
+  return process
 
 
 def main(argv):
