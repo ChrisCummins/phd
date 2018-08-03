@@ -62,11 +62,10 @@ def Exec(args: typing.List[str], timeout_seconds: int = 60) -> subprocess.Popen:
 
 def main(argv):
   """Main entry point."""
-  try:
-    print(Exec(argv[1:], timeout_seconds=FLAGS.opt_timeout_seconds))
-  except (llvm.LlvmTimeout, OptException) as e:
-    print(e, file=sys.stderr)
-    sys.exit(1)
+  proc = Exec(argv[1:], timeout_seconds=FLAGS.opt_timeout_seconds)
+  print(proc.stdout)
+  print(proc.stderr, file=sys.stderr)
+  sys.exit(proc.returncode)
 
 
 if __name__ == '__main__':
