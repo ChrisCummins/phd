@@ -29,7 +29,6 @@ py_test(
     srcs_version = "PY3",
     deps = [
         "//third_party/py/absl",
-        requirement("six"),
     ],
 )
 
@@ -64,7 +63,6 @@ py_test(
     srcs_version = "PY3",
     deps = [
         "//third_party/py/absl",
-        requirement("six"),
     ],
 )
 
@@ -88,7 +86,6 @@ py_test(
     srcs_version = "PY3",
     deps = [
         "//third_party/py/absl",
-        requirement("six"),
     ],
 )
 
@@ -145,7 +142,6 @@ py_test(
     srcs_version = "PY3",
     deps = [
         "//third_party/py/absl",
-        requirement("six"),
     ],
 )
 
