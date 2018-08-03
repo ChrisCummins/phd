@@ -4,7 +4,6 @@ py_binary(
     name = "eval_model",
     srcs = ["eval_model.py"],
     deps = [
-        ":reachability",
         ":train_model",
         "//deeplearning/clgen:telemetry",
         "//deeplearning/clgen/corpuses:atomizers",

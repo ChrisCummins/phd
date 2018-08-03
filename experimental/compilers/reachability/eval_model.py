@@ -9,7 +9,6 @@ from phd.lib.labm8 import pbutil
 
 from deeplearning.clgen import telemetry
 from deeplearning.clgen.corpuses import atomizers
-from experimental.compilers.reachability import reachability
 from experimental.compilers.reachability import train_model
 from experimental.compilers.reachability.proto import reachability_pb2
 
@@ -21,9 +20,6 @@ def main(argv):
   """Main entry point."""
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-
-  _ = train_model
-  _ = reachability
 
   model_dir = pathlib.Path(FLAGS.reachability_model_dir)
   if not model_dir.is_dir():
