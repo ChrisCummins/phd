@@ -6,7 +6,7 @@ py_binary(
     name = "json_to_acm_proceedings",
     srcs = ["json_to_acm_proceedings.py"],
     deps = [
-        requirement("absl-py"),
+        "//third_party/py/absl",
     ],
 )
 
@@ -15,7 +15,7 @@ py_test(
     srcs = ["json_to_acm_proceedings_test.py"],
     deps = [
         ":json_to_acm_proceedings",
-        requirement("absl-py"),
-        requirement("pytest"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )

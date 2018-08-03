@@ -16,8 +16,7 @@ py_library(
         ":datastore",
         ":db",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
-        requirement("pytest"),
-        requirement("pytest-benchmark"),
+        "//third_party/py/pytest",
     ],
 )
 
@@ -46,7 +45,7 @@ py_library(
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//lib/labm8:pbutil",
         "//lib/labm8:sqlutil",
-        requirement("absl-py"),
+        "//third_party/py/absl",
         requirement("sqlalchemy"),
     ],
 )
@@ -59,7 +58,7 @@ py_library(
         "//deeplearning/deepsmith/proto:datastore_py_pb2",
         "//lib/labm8:labdate",
         "//lib/labm8:pbutil",
-        requirement("absl-py"),
+        "//third_party/py/absl",
         requirement("sqlalchemy"),
     ],
 )
@@ -74,9 +73,8 @@ py_test(
         ":conftest",
         ":db",
         ":toolchain",
-        requirement("absl-py"),
-        requirement("pytest"),
-        requirement("pytest-benchmark"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -103,9 +101,8 @@ py_test(
         ":conftest",
         ":generator",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
-        requirement("absl-py"),
-        requirement("pytest"),
-        requirement("pytest-benchmark"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -133,9 +130,8 @@ py_test(
         ":conftest",
         ":harness",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
-        requirement("absl-py"),
-        requirement("pytest"),
-        requirement("pytest-benchmark"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -194,9 +190,8 @@ py_test(
         ":testcase",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//lib/labm8:labdate",
-        requirement("absl-py"),
-        requirement("pytest"),
-        requirement("pytest-benchmark"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -207,7 +202,7 @@ py_library(
     deps = [
         "//deeplearning/deepsmith/proto:service_py_pb2",
         "//lib/labm8:pbutil",
-        requirement("absl-py"),
+        "//third_party/py/absl",
         requirement("grpcio"),
     ],
 )
@@ -237,9 +232,8 @@ py_test(
         ":testbed",
         ":toolchain",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
-        requirement("absl-py"),
-        requirement("pytest"),
-        requirement("pytest-benchmark"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -277,8 +271,7 @@ py_test(
         ":toolchain",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//lib/labm8:labdate",
-        requirement("absl-py"),
-        requirement("pytest"),
-        requirement("pytest-benchmark"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )

@@ -11,7 +11,7 @@ py_binary(
         "//lib/labm8:pbutil",
         requirement("mysqlclient"),
         requirement("humanize"),
-        requirement("absl-py"),
+        "//third_party/py/absl",
     ],
 )
 
@@ -36,8 +36,8 @@ py_binary(
         "//lib/labm8:labtypes",
         "//lib/labm8:pbutil",
         requirement("humanize"),
-        requirement("absl-py"),
-        requirement("numpy"),
+        "//third_party/py/absl",
+        "//third_party/py/numpy",
     ],
 )
 
@@ -47,9 +47,9 @@ py_binary(
     deps = [
         "//deeplearning/clgen",
         "//experimental/deeplearning/fish/proto:fish_py_pb2",
-        requirement("absl-py"),
+        "//third_party/py/absl",
         requirement("humanize"),
         requirement("keras"),
-        requirement("numpy"),
+        "//third_party/py/numpy",
     ],
 )

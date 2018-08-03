@@ -36,7 +36,7 @@ py_binary(
         "//lib/labm8:labdate",
         "//lib/labm8:pbutil",
         "//lib/labm8:system",
-        requirement("absl-py"),
+        "//third_party/py/absl",
         requirement("grpcio"),
     ],
 )
@@ -52,8 +52,8 @@ py_test(
         "//deeplearning/deepsmith/proto:harness_py_pb2",
         "//deeplearning/deepsmith/proto:service_py_pb2",
         "//gpu/oclgrind",
-        requirement("absl-py"),
-        requirement("pytest"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -74,8 +74,8 @@ py3_image(
     main = "cldrive_test.py",
     deps = [
         ":cldrive",
-        requirement("absl-py"),
-        requirement("pytest"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -93,7 +93,7 @@ py_binary(
         "//gpu/cldrive:driver",
         "//gpu/cldrive:env",
         "//lib/labm8:labdate",
-        requirement("absl-py"),
+        "//third_party/py/absl",
         requirement("grpcio"),
     ],
 )
@@ -109,8 +109,8 @@ py_test(
         "//deeplearning/deepsmith/proto:harness_py_pb2",
         "//deeplearning/deepsmith/proto:service_py_pb2",
         "//gpu/cldrive:env",
-        requirement("absl-py"),
-        requirement("pytest"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 

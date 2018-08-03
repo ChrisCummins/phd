@@ -25,7 +25,7 @@ py_library(
         ":public",
         "//deeplearning/clgen:errors",
         "//lib/labm8:bazelutil",
-        requirement("absl-py"),
+        "//third_party/py/absl",
     ],
 )
 
@@ -36,10 +36,8 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":clang",
-        requirement("absl-py"),
-        requirement("pytest"),
-        requirement("pytest-benchmark"),
-        requirement("pytest-mock"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -50,7 +48,7 @@ py_library(
     deps = [
         ":public",
         "//deeplearning/clgen:errors",
-        requirement("absl-py"),
+        "//third_party/py/absl",
     ],
 )
 
@@ -62,9 +60,8 @@ py_test(
     deps = [
         ":common",
         "//deeplearning/clgen:errors",
-        requirement("absl-py"),
-        requirement("pytest"),
-        requirement("pytest-benchmark"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -85,7 +82,7 @@ py_library(
         ":normalizer",
         ":public",
         "//lib/labm8:bazelutil",
-        requirement("absl-py"),
+        "//third_party/py/absl",
     ],
 )
 
@@ -97,9 +94,8 @@ py_test(
     deps = [
         ":cxx",
         "//deeplearning/clgen:errors",
-        requirement("absl-py"),
-        requirement("pytest"),
-        requirement("pytest-benchmark"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -111,9 +107,8 @@ py3_image(
     deps = [
         ":cxx",
         "//deeplearning/clgen:errors",
-        requirement("absl-py"),
-        requirement("pytest"),
-        requirement("pytest-benchmark"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -125,7 +120,7 @@ py_library(
         ":clang",
         ":public",
         "//deeplearning/clgen:errors",
-        requirement("absl-py"),
+        "//third_party/py/absl",
     ],
 )
 
@@ -137,9 +132,8 @@ py_test(
     deps = [
         ":java",
         "//deeplearning/clgen:errors",
-        requirement("absl-py"),
-        requirement("pytest"),
-        requirement("pytest-benchmark"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -152,7 +146,7 @@ py_library(
     deps = [
         "//deeplearning/clgen:errors",
         "//lib/labm8:bazelutil",
-        requirement("absl-py"),
+        "//third_party/py/absl",
     ],
 )
 
@@ -164,10 +158,8 @@ py_test(
     deps = [
         ":normalizer",
         "//deeplearning/clgen:errors",
-        requirement("absl-py"),
-        requirement("pytest"),
-        requirement("pytest-mock"),
-        requirement("pytest-benchmark"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -199,10 +191,8 @@ py_test(
         ":opencl",
         "//deeplearning/clgen/proto:corpus_py_pb2",
         "//lib/labm8:bazelutil",
-        requirement("absl-py"),
-        requirement("pytest"),
-        requirement("pytest-mock"),
-        requirement("pytest-benchmark"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -225,7 +215,7 @@ py_library(
         ":public",
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen/proto:internal_py_pb2",
-        requirement("absl-py"),
+        "//third_party/py/absl",
     ],
 )
 
@@ -239,9 +229,8 @@ py_test(
         ":public",
         "//deeplearning/clgen:conftest",
         "//deeplearning/clgen:errors",
-        requirement("absl-py"),
-        requirement("pytest"),
-        requirement("pytest-benchmark"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -250,7 +239,7 @@ py_library(
     srcs = ["public.py"],
     visibility = ["//visibility:public"],
     deps = [
-        requirement("absl-py"),
+        "//third_party/py/absl",
     ],
 )
 
@@ -262,8 +251,7 @@ py_test(
     deps = [
         ":public",
         "//deeplearning/clgen:errors",
-        requirement("absl-py"),
-        requirement("pytest"),
-        requirement("pytest-benchmark"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )

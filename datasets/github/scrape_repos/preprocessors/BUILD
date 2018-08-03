@@ -6,7 +6,7 @@ py_library(
     name = "conftest",
     srcs = ["conftest.py"],
     deps = [
-        requirement("pytest"),
+        "//third_party/py/pytest",
     ],
 )
 
@@ -25,7 +25,7 @@ py_library(
     deps = [
         ":public",
         "//lib/labm8:bazelutil",
-        requirement("absl-py"),
+        "//third_party/py/absl",
         requirement("fuzzywuzzy"),
     ],
 )
@@ -39,8 +39,8 @@ py_test(
     deps = [
         ":conftest",
         ":inliners",
-        requirement("absl-py"),
-        requirement("pytest"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -51,7 +51,7 @@ py_library(
     deps = [
         ":inliners",
         ":public",
-        requirement("absl-py"),
+        "//third_party/py/absl",
     ],
 )
 
@@ -65,9 +65,8 @@ py_test(
         ":conftest",
         ":preprocessors",
         ":public",
-        requirement("absl-py"),
-        requirement("pytest"),
-        requirement("pytest-benchmark"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -77,7 +76,7 @@ py_library(
     visibility = ["//datasets/github/scrape_repos:__subpackages__"],
     deps = [
         "//lib/labm8:fs",
-        requirement("absl-py"),
+        "//third_party/py/absl",
     ],
 )
 
@@ -90,7 +89,7 @@ py_test(
     deps = [
         ":conftest",
         ":public",
-        requirement("absl-py"),
-        requirement("pytest"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )

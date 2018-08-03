@@ -13,7 +13,7 @@ py_library(
     name = "python",
     srcs = ["python.py"],
     deps = [
-        requirement("absl-py"),
+        "//third_party/py/absl",
     ],
 )
 
@@ -24,7 +24,7 @@ py_test(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
-        requirement("absl-py"),
-        requirement("pytest"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )

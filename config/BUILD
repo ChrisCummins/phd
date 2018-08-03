@@ -20,7 +20,7 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":getconfig",
-        requirement("absl-py"),
-        requirement("pytest"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )

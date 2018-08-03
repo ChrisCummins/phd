@@ -8,7 +8,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
-        requirement("absl-py"),
+        "//third_party/py/absl",
     ],
 )
 
@@ -18,8 +18,8 @@ py_test(
     deps = [
         ":difftests",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
-        requirement("absl-py"),
-        requirement("pytest"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -31,6 +31,6 @@ py_library(
         ":difftests",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//gpu/cldrive:args",
-        requirement("absl-py"),
+        "//third_party/py/absl",
     ],
 )

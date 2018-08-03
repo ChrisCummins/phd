@@ -12,9 +12,9 @@ py_binary(
         "//deeplearning/clgen/corpuses:atomizers",
         "//experimental/compilers/reachability/proto:reachability_py_pb2",
         "//lib/labm8:pbutil",
-        requirement("absl-py"),
+        "//third_party/py/absl",
         requirement("keras"),
-        requirement("numpy"),
+        "//third_party/py/numpy",
         requirement("humanize"),
     ],
 )
@@ -27,8 +27,8 @@ py_binary(
         "//lib/labm8:fmt",
         "//lib/labm8:fs",
         "//lib/labm8:graph",
-        requirement("absl-py"),
-        requirement("numpy"),
+        "//third_party/py/absl",
+        "//third_party/py/numpy",
     ],
 )
 
@@ -41,9 +41,9 @@ py_binary(
         "//deeplearning/clgen/corpuses:atomizers",
         "//experimental/compilers/reachability/proto:reachability_py_pb2",
         "//lib/labm8:pbutil",
-        requirement("absl-py"),
+        "//third_party/py/absl",
         requirement("keras"),
-        requirement("numpy"),
+        "//third_party/py/numpy",
         requirement("humanize"),
     ],
 )

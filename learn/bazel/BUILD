@@ -13,7 +13,7 @@ py_test(
     srcs_version = "PY3",
     deps = [
         "//lib/labm8:bazelutil",
-        requirement("absl-py"),
+        "//third_party/py/absl",
     ],
 )
 
@@ -31,8 +31,8 @@ py_test(
     name = "tensorflow_test",
     srcs = ["tensorflow_test.py"],
     deps = [
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
         "//third_party/py/tensorflow",
-        requirement("absl-py"),
-        requirement("pytest"),
     ],
 )

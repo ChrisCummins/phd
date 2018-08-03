@@ -7,7 +7,7 @@ py_test(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
-        requirement("absl-py"),
+        "//third_party/py/absl",
         requirement("six"),
     ],
 )

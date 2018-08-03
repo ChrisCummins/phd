@@ -9,8 +9,8 @@ py_library(
     deps = [
         "//deeplearning/clgen:errors",
         "//lib/labm8:labdate",
-        requirement("absl-py"),
-        requirement("numpy"),
+        "//third_party/py/absl",
+        "//third_party/py/numpy",
     ],
 )
 
@@ -21,8 +21,8 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":atomizers",
-        requirement("absl-py"),
-        requirement("pytest"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -43,10 +43,10 @@ py_library(
         "//lib/labm8:hashcache",
         "//lib/labm8:lockfile",
         "//lib/labm8:pbutil",
-        requirement("absl-py"),
+        "//third_party/py/absl",
         requirement("checksumdir"),
         requirement("humanize"),
-        requirement("numpy"),
+        "//third_party/py/numpy",
         requirement("sqlalchemy"),
     ],
 )
@@ -65,8 +65,8 @@ py_test(
         "//deeplearning/clgen/preprocessors:opencl",
         "//deeplearning/clgen/proto:corpus_py_pb2",
         "//lib/labm8:fs",
-        requirement("absl-py"),
-        requirement("pytest"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -79,10 +79,10 @@ py_library(
         "//deeplearning/clgen/preprocessors",
         "//lib/labm8:sqlutil",
         requirement("humanize"),
-        requirement("numpy"),
+        "//third_party/py/numpy",
         requirement("progressbar2"),
         requirement("python-utils"),
-        requirement("absl-py"),
+        "//third_party/py/absl",
         requirement("sqlalchemy"),
     ],
 )
@@ -97,8 +97,8 @@ py_test(
         ":encoded",
         ":preprocessed",
         "//deeplearning/clgen:errors",
-        requirement("absl-py"),
-        requirement("pytest"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -113,7 +113,7 @@ py_library(
         "//deeplearning/clgen:errors",
         "//lib/labm8:bazelutil",
         "//lib/labm8:labmath",
-        requirement("numpy"),
+        "//third_party/py/numpy",
     ],
 )
 
@@ -127,7 +127,7 @@ py_library(
         "//lib/labm8:crypto",
         "//lib/labm8:fs",
         "//lib/labm8:sqlutil",
-        requirement("absl-py"),
+        "//third_party/py/absl",
         requirement("progressbar2"),
         requirement("python-utils"),
         requirement("sqlalchemy"),

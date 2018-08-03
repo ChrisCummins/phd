@@ -12,7 +12,7 @@ py_binary(
     deps = [
         "//deeplearning/clgen",
         "//lib/labm8:lockfile",
-        requirement("absl-py"),
+        "//third_party/py/absl",
     ],
 )
 
@@ -24,8 +24,8 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":get_instances",
-        requirement("absl-py"),
-        requirement("pytest"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -39,7 +39,7 @@ py_binary(
         "//lib/labm8:bazelutil",
         "//lib/labm8:pbutil",
         "//lib/labm8:viz",
-        requirement("absl-py"),
+        "//third_party/py/absl",
         requirement("jupyter-client"),
     ],
 )
@@ -71,7 +71,7 @@ py_binary(
         "//deeplearning/clgen/proto:sampler_py_pb2",
         "//lib/labm8:lockfile",
         "//lib/labm8:pbutil",
-        requirement("absl-py"),
+        "//third_party/py/absl",
         requirement("humanize"),
     ],
 )
@@ -89,7 +89,7 @@ py_test(
         "//deeplearning/clgen/proto:sampler_py_pb2",
         "//lib/labm8:bazelutil",
         "//lib/labm8:pbutil",
-        requirement("absl-py"),
-        requirement("pytest"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )

@@ -12,7 +12,7 @@ py_binary(
     deps = [
         "//lib/labm8:bazelutil",
         "//lib/labm8:fs",
-        requirement("absl-py"),
+        "//third_party/py/absl",
     ],
 )
 
@@ -23,8 +23,8 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":clsmith",
-        requirement("absl-py"),
-        requirement("pytest"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -51,7 +51,7 @@ py_binary(
         "//lib/labm8:bazelutil",
         "//lib/labm8:fs",
         "//lib/labm8:system",
-        requirement("absl-py"),
+        "//third_party/py/absl",
     ],
 )
 
@@ -63,7 +63,7 @@ py_test(
     deps = [
         ":cl_launcher",
         "//gpu/cldrive:env",
-        requirement("absl-py"),
-        requirement("pytest"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )

@@ -28,7 +28,7 @@ py_test(
     main = "0101-unique-chars-in-string.py",
     srcs_version = "PY3",
     deps = [
-        requirement("absl-py"),
+        "//third_party/py/absl",
         requirement("six"),
     ],
 )
@@ -63,7 +63,7 @@ py_test(
     main = "0103-permutations.py",
     srcs_version = "PY3",
     deps = [
-        requirement("absl-py"),
+        "//third_party/py/absl",
         requirement("six"),
     ],
 )
@@ -87,7 +87,7 @@ py_test(
     main = "0104-escape-string.py",
     srcs_version = "PY3",
     deps = [
-        requirement("absl-py"),
+        "//third_party/py/absl",
         requirement("six"),
     ],
 )
@@ -144,7 +144,7 @@ py_test(
     main = "0201-list-remove-dups.py",
     srcs_version = "PY3",
     deps = [
-        requirement("absl-py"),
+        "//third_party/py/absl",
         requirement("six"),
     ],
 )

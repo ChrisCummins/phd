@@ -10,8 +10,8 @@ py_library(
         "//deeplearning/clgen/corpuses:atomizers",
         "//deeplearning/clgen/proto:model_py_pb2",
         "//lib/labm8:cache",
-        requirement("absl-py"),
-        requirement("numpy"),
+        "//third_party/py/absl",
+        "//third_party/py/numpy",
     ],
 )
 
@@ -22,7 +22,7 @@ py_library(
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen/proto:model_py_pb2",
         "//lib/labm8:pbutil",
-        requirement("absl-py"),
+        "//third_party/py/absl",
         requirement("keras"),
         "//third_party/py/tensorflow",
     ],
@@ -37,8 +37,8 @@ py_test(
         ":builders",
         "//deeplearning/clgen:conftest",
         "//deeplearning/clgen/proto:model_py_pb2",
-        requirement("absl-py"),
-        requirement("pytest"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -48,9 +48,9 @@ py_library(
     deps = [
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen/proto:model_py_pb2",
-        requirement("absl-py"),
+        "//third_party/py/absl",
         requirement("humanize"),
-        requirement("numpy"),
+        "//third_party/py/numpy",
     ],
 )
 
@@ -63,9 +63,8 @@ py_test(
         ":data_generators",
         "//deeplearning/clgen:conftest",
         "//deeplearning/clgen/proto:model_py_pb2",
-        requirement("absl-py"),
-        requirement("pytest"),
-        requirement("pytest-benchmark"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -87,7 +86,7 @@ py_library(
         "//lib/labm8:logutil",
         "//lib/labm8:pbutil",
         requirement("humanize"),
-        requirement("numpy"),
+        "//third_party/py/numpy",
         requirement("keras"),
         "//third_party/py/tensorflow",
     ],
@@ -107,8 +106,8 @@ py_test(
         "//deeplearning/clgen/proto:telemetry_py_pb2",
         "//lib/labm8:crypto",
         "//lib/labm8:fs",
-        requirement("absl-py"),
-        requirement("pytest"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -131,9 +130,9 @@ py_library(
         "//lib/labm8:crypto",
         "//lib/labm8:lockfile",
         "//lib/labm8:pbutil",
-        requirement("absl-py"),
+        "//third_party/py/absl",
         requirement("humanize"),
-        requirement("numpy"),
+        "//third_party/py/numpy",
     ],
 )
 
@@ -155,9 +154,9 @@ py_library(
         "//lib/labm8:cache",
         "//lib/labm8:labdate",
         "//lib/labm8:pbutil",
-        requirement("absl-py"),
+        "//third_party/py/absl",
         requirement("humanize"),
-        requirement("numpy"),
+        "//third_party/py/numpy",
     ],
 )
 
@@ -173,9 +172,8 @@ py_test(
         "//deeplearning/clgen/proto:telemetry_py_pb2",
         "//lib/labm8:crypto",
         "//lib/labm8:fs",
-        requirement("absl-py"),
-        requirement("pytest"),
-        requirement("pytest-benchmark"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -196,8 +194,8 @@ py_library(
         "//lib/labm8:labdate",
         "//lib/labm8:logutil",
         "//lib/labm8:pbutil",
-        requirement("absl-py"),
-        requirement("numpy"),
+        "//third_party/py/absl",
+        "//third_party/py/numpy",
         requirement("humanize"),
         requirement("progressbar2"),
         requirement("python-utils"),
@@ -219,8 +217,7 @@ py_test(
         "//deeplearning/clgen/proto:telemetry_py_pb2",
         "//lib/labm8:crypto",
         "//lib/labm8:fs",
-        requirement("absl-py"),
-        requirement("pytest"),
-        requirement("pytest-benchmark"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )

@@ -17,7 +17,7 @@ py_binary(
         "//gpu/clinfo/proto:clinfo_py_pb2",
         "//lib/labm8:bazelutil",
         "//lib/labm8:system",
-        requirement("absl-py"),
+        "//third_party/py/absl",
     ],
 )
 
@@ -28,7 +28,7 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":oclgrind",
-        requirement("absl-py"),
-        requirement("pytest"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )

@@ -10,7 +10,7 @@ py_binary(
         "//lib/labm8:fs",
         "//lib/labm8:labdate",
         "//lib/labm8:pbutil",
-        requirement("absl-py"),
+        "//third_party/py/absl",
     ],
 )
 
@@ -22,7 +22,7 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":dpack",
-        requirement("absl-py"),
-        requirement("pytest"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )

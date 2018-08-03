@@ -8,7 +8,7 @@ py_binary(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
-        requirement("absl-py"),
-        requirement("pytest"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )

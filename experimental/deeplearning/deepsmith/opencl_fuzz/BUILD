@@ -20,7 +20,7 @@ py_binary(
         "//gpu/oclgrind",
         "//lib/labm8:labdate",
         "//lib/labm8:pbutil",
-        requirement("absl-py"),
+        "//third_party/py/absl",
         requirement("humanize"),
     ],
 )
@@ -40,8 +40,8 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":opencl_fuzz",
-        requirement("absl-py"),
-        requirement("pytest"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -52,7 +52,7 @@ py_binary(
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//lib/labm8:fmt",
         "//lib/labm8:pbutil",
-        requirement("absl-py"),
+        "//third_party/py/absl",
         requirement("humanize"),
     ],
 )

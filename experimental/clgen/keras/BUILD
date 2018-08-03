@@ -8,9 +8,8 @@ py_test(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
-        requirement("absl-py"),
-        requirement("pytest"),
-        requirement("pytest-benchmark"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
         requirement("keras"),
         "//third_party/py/tensorflow",
     ],
@@ -22,9 +21,8 @@ py_test(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
-        requirement("absl-py"),
-        requirement("pytest"),
-        requirement("pytest-benchmark"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
         requirement("keras"),
         "//third_party/py/tensorflow",
     ],
@@ -36,9 +34,8 @@ py_test(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
-        requirement("absl-py"),
-        requirement("pytest"),
-        requirement("pytest-benchmark"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -48,8 +45,8 @@ py_test(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
-        requirement("absl-py"),
-        requirement("pytest"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -65,6 +62,6 @@ py_binary(
     deps = [
         "//deeplearning/clgen",
         "//lib/labm8:bazelutil",
-        requirement("absl-py"),
+        "//third_party/py/absl",
     ],
 )

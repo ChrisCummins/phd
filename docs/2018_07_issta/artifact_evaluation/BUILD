@@ -23,7 +23,7 @@ py_binary(
         "//lib/labm8:bazelutil",
         "//lib/labm8:crypto",
         "//lib/labm8:pbutil",
-        requirement("absl-py"),
+        "//third_party/py/absl",
     ],
 )
 
@@ -38,8 +38,8 @@ py_test(
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//deeplearning/deepsmith/proto:generator_py_pb2",
         "//lib/labm8:pbutil",
-        requirement("absl-py"),
-        requirement("pytest"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -59,7 +59,7 @@ py_binary(
         "//lib/labm8:fs",
         "//lib/labm8:labtypes",
         "//lib/labm8:pbutil",
-        requirement("absl-py"),
+        "//third_party/py/absl",
     ],
 )
 
@@ -82,8 +82,8 @@ py_binary(
         "//lib/labm8:fs",
         "//lib/labm8:labtypes",
         "//lib/labm8:pbutil",
+        "//third_party/py/absl",
         "//third_party/py/pandas",
-        requirement("absl-py"),
         requirement("progressbar2"),
     ],
 )

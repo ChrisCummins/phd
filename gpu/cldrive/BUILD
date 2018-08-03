@@ -20,7 +20,7 @@ py_binary(
         ":data",
         ":driver",
         ":env",
-        requirement("numpy"),
+        "//third_party/py/numpy",
     ],
 )
 
@@ -37,7 +37,7 @@ py_library(
     srcs = ["args.py"],
     visibility = ["//visibility:public"],
     deps = [
-        requirement("numpy"),
+        "//third_party/py/numpy",
         requirement("pycparser"),
         requirement("pycparserext"),
     ],
@@ -51,8 +51,8 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":args",
-        requirement("pytest"),
-        requirement("absl-py"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -74,7 +74,7 @@ py_library(
         ":args",
         ":driver",
         "//lib/labm8:err",
-        requirement("numpy"),
+        "//third_party/py/numpy",
     ],
 )
 
@@ -87,8 +87,8 @@ py_test(
     deps = [
         ":data",
         ":testlib",
-        requirement("absl-py"),
-        requirement("pytest"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -100,7 +100,7 @@ py_library(
         ":args",
         ":env",
         "//lib/labm8:err",
-        requirement("numpy"),
+        "//third_party/py/numpy",
     ],
 )
 
@@ -114,9 +114,9 @@ py_test(
         ":data",
         ":driver",
         ":testlib",
-        requirement("absl-py"),
-        requirement("numpy"),
-        requirement("pytest"),
+        "//third_party/py/absl",
+        "//third_party/py/numpy",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -130,7 +130,7 @@ py_library(
         "//gpu/oclgrind",
         "//lib/labm8:bazelutil",
         "//lib/labm8:pbutil",
-        requirement("absl-py"),
+        "//third_party/py/absl",
     ],
 )
 
@@ -142,8 +142,8 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":env",
-        requirement("absl-py"),
-        requirement("pytest"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -152,6 +152,6 @@ py_library(
     testonly = 1,
     srcs = ["testlib.py"],
     deps = [
-        requirement("numpy"),
+        "//third_party/py/numpy",
     ],
 )

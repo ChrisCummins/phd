@@ -11,7 +11,7 @@ py3_image(
     main = "test.py",
     deps = [
         "//lib/labm8:bazelutil",
-        requirement("absl-py"),
-        requirement("pytest"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )

@@ -34,7 +34,7 @@ py_library(
     deps = [
         ":common",
         ":linters",
-        requirement("absl-py"),
+        "//third_party/py/absl",
         requirement("sqlalchemy"),
     ],
 )
@@ -44,7 +44,7 @@ py_library(
     srcs = ["lightroom.py"],
     deps = [
         ":common",
-        requirement("absl-py"),
+        "//third_party/py/absl",
         requirement("python-xmp-toolkit"),
         requirement("sqlalchemy"),
         requirement("pytz"),
@@ -57,7 +57,7 @@ py_library(
     deps = [
         ":common",
         ":lightroom",
-        requirement("absl-py"),
+        "//third_party/py/absl",
         requirement("protobuf"),
     ],
 )
@@ -66,8 +66,8 @@ py_library(
     name = "common",
     srcs = ["common.py"],
     deps = [
+        "//third_party/py/absl",
         "//util/photolib/proto:photolint_py_pb2",
-        requirement("absl-py"),
     ],
 )
 
@@ -79,8 +79,8 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":linters",
-        requirement("absl-py"),
-        requirement("pytest"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -92,7 +92,7 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":workspace",
-        requirement("absl-py"),
-        requirement("pytest"),
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
