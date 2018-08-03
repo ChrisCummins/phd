@@ -1,6 +1,5 @@
 # Cldrive drives arbitrary OpenCL kernels.
 
-load("@requirements//:requirements.bzl", "requirement")
 load("@io_bazel_rules_docker//python3:image.bzl", "py3_image")
 
 licenses(["restricted"])  # GPL v3

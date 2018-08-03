@@ -7,7 +7,6 @@
 # the programs it learns from.
 
 load("@io_bazel_rules_docker//python3:image.bzl", "py3_image")
-load("@requirements//:requirements.bzl", "requirement")
 
 licenses(["restricted"])  # GPL v3
 

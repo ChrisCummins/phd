@@ -1,6 +1,5 @@
 # Artifact for the ISSTA'18 paper "Compiler Fuzzing through Deep Learning".
 
-load("@requirements//:requirements.bzl", "requirement")
 load("@io_bazel_rules_docker//container:container.bzl", "container_push")
 load("@io_bazel_rules_docker//python3:image.bzl", "py3_image")
 

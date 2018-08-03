@@ -1,5 +1,3 @@
-load("@requirements//:requirements.bzl", "requirement")
-
 py_test(
     name = "batch_linear_regression",
     size = "small",

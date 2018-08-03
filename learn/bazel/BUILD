@@ -1,7 +1,5 @@
 # Learning to use Bazel.
 
-load("@requirements//:requirements.bzl", "requirement")
-
 py_test(
     name = "python_binary",
     srcs = ["python_binary.py"],

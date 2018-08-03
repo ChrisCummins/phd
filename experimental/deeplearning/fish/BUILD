@@ -1,7 +1,5 @@
 # Experiments in machine learning for compiler test case analysis.
 
-load("@requirements//:requirements.bzl", "requirement")
-
 py_binary(
     name = "export_clang_opencl_dataset",
     srcs = ["export_clang_opencl_dataset.py"],

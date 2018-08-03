@@ -1,7 +1,6 @@
 # Generator implementations.
 
 load("@io_bazel_rules_docker//python3:image.bzl", "py3_image")
-load("@requirements//:requirements.bzl", "requirement")
 
 package(default_visibility = ["//experimental:__subpackages__"])
 

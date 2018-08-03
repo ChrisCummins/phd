@@ -1,7 +1,5 @@
 # Library for accessing the global configuration.
 
-load("@requirements//:requirements.bzl", "requirement")
-
 py_library(
     name = "getconfig",
     srcs = ["getconfig.py"],

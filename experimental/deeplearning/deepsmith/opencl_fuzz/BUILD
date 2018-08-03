@@ -1,6 +1,5 @@
 # Fuzz testing OpenCL devices using CLgen.
 
-load("@requirements//:requirements.bzl", "requirement")
 load("@io_bazel_rules_docker//python3:image.bzl", "py3_image")
 
 py_binary(

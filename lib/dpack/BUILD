@@ -1,5 +1,3 @@
-load("@requirements//:requirements.bzl", "requirement")
-
 py_binary(
     name = "dpack",
     srcs = ["dpack.py"],

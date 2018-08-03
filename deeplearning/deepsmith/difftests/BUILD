@@ -1,7 +1,5 @@
 # Differential tests for DeepSmith.
 
-load("@requirements//:requirements.bzl", "requirement")
-
 py_library(
     name = "difftests",
     srcs = ["difftests.py"],

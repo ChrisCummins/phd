@@ -1,7 +1,5 @@
 # Get a baseline reading from a CLgen model.
 
-load("@requirements//:requirements.bzl", "requirement")
-
 py_binary(
     name = "get_instances",
     srcs = ["get_instances.py"],

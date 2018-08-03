@@ -1,7 +1,5 @@
 # lmk - An alarm clock for the command line.
 
-load("@requirements//:requirements.bzl", "requirement")
-
 licenses(["notice"])  # MIT
 
 exports_files([

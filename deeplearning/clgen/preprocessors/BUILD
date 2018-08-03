@@ -1,7 +1,6 @@
 # This package defines the preprocessor pipeline for CLgen.
 
 load("@io_bazel_rules_docker//python3:image.bzl", "py3_image")
-load("@requirements//:requirements.bzl", "requirement")
 
 py_library(
     name = "clang",

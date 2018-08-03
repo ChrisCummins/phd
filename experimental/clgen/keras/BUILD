@@ -1,7 +1,5 @@
 # Experiments while porting CLgen from Tensorflow to Keras models.
 
-load("@requirements//:requirements.bzl", "requirement")
-
 py_test(
     name = "benchmark_module_import",
     srcs = ["benchmark_module_import.py"],

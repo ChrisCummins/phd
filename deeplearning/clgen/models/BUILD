@@ -1,7 +1,5 @@
 # This package implements the machine learning models for CLgen.
 
-load("@requirements//:requirements.bzl", "requirement")
-
 py_library(
     name = "backends",
     srcs = ["backends.py"],

@@ -1,6 +1,5 @@
 # Protocol buffers for Clgen.
 
-load("@requirements//:requirements.bzl", "requirement")
 load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
 
 # Default to public visibility so that X_proto_library targets in other packages

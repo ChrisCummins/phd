@@ -1,7 +1,5 @@
 # Experiments in learning reachability analysis.
 
-load("@requirements//:requirements.bzl", "requirement")
-
 py_binary(
     name = "eval_model",
     srcs = ["eval_model.py"],

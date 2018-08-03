@@ -1,7 +1,5 @@
 # This package contains the data for a tiny CLgen instance.
 
-load("@requirements//:requirements.bzl", "requirement")
-
 filegroup(
     name = "tiny",
     srcs = [

@@ -1,7 +1,5 @@
 # This package implements corpuses for training CLgen.
 
-load("@requirements//:requirements.bzl", "requirement")
-
 py_library(
     name = "atomizers",
     srcs = ["atomizers.py"],

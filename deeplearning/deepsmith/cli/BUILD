@@ -1,5 +1,3 @@
-load("@requirements//:requirements.bzl", "requirement")
-
 py_binary(
     name = "explore",
     srcs = ["explore.py"],

@@ -1,7 +1,5 @@
 # Experiments in deep learning for source code loops.
 
-load("@requirements//:requirements.bzl", "requirement")
-
 py_binary(
     name = "generate_loops",
     srcs = ["generate_loops.py"],

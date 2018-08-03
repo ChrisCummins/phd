@@ -1,7 +1,5 @@
 # This package contains a tool for scraping repos from GitHub.
 
-load("@requirements//:requirements.bzl", "requirement")
-
 py_binary(
     name = "cloner",
     srcs = ["cloner.py"],
