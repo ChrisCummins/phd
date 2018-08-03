@@ -5,11 +5,23 @@ from absl import app
 from phd.lib.labm8 import fmt
 
 
-def test_indent_zero():
+def test_IndentList_zero():
+  """Indent with 0 spaces is equivalent to the input strings."""
+  assert fmt.IndentList(0, ['abc', 'd']) == ['abc', 'd']
+
+
+def test_IndentList_two():
+  """Test indent with two spaces."""
+  assert fmt.IndentList(2, ['abc', 'd']) == ['  abc', '  d']
+
+
+def test_Indent_zero():
+  """Indent with 0 spaces is equivalent to the input string."""
   assert fmt.Indent(0, 'abc\nd') == 'abc\nd'
 
 
-def test_indent_two():
+def test_Indent_two():
+  """Test indent with two spaces."""
   assert fmt.Indent(2, 'abc\nd') == '  abc\n  d'
 
 

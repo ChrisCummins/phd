@@ -11,6 +11,21 @@ class Error(Exception):
   pass
 
 
+def IndentList(num_spaces: int, strings: typing.List[str]) -> typing.List[str]:
+  """Indent each string in a list of strings by a number of spaces.
+
+  Args:
+      num_spaces: The number of spacces to indent by. Must be greater than or
+        equal to zero.
+      strings: The list of strings to indent.
+
+  Returns:
+    A list of indented strings.
+  """
+  prefix = ''.join([' '] * num_spaces)
+  return [f'{prefix}{string}' for string in strings]
+
+
 def Indent(num_spaces: int, text: str) -> str:
   """Indent a string by a number of spaces.
 
@@ -24,13 +39,7 @@ def Indent(num_spaces: int, text: str) -> str:
   Returns:
     The indented string.
   """
-  return IndentList(num_spaces, text.split('\n'))
-
-
-def IndentList(num_spaces: int, lines: typing.List[str],
-               sep: str = '\n') -> str:
-  prefix = ''.join([' '] * num_spaces)
-  return f'{sep}{prefix}'.join(f'{prefix}{line}' for line in lines)
+  return '\n'.join(IndentList(num_spaces, text.split('\n')))
 
 
 def table(rows, columns=None, output=None, data_args={}, **kwargs) -> str:

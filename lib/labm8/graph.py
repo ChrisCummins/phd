@@ -30,7 +30,7 @@ class Graph(object):
   def ToDot(self) -> str:
     strings = []
     self._ToDot(strings, set())
-    dot = fmt.IndentList(2, strings)
+    dot = '\n'.join(fmt.IndentList(2, strings))
     return f"digraph graphname {{\n  {dot}\n}}"
 
   def __eq__(self, other):
