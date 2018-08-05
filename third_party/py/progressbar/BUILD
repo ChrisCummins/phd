@@ -11,5 +11,8 @@ py_library(
     srcs = ["progressbar.py"],
     deps = [
         requirement("progressbar2"),
+        # Progress bar has an undeclared dependency on python_utils.time module,
+        # see issue #27.
+        requirement("python-utils"),
     ],
 )
