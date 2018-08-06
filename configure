@@ -114,29 +114,6 @@ def GetConfigId(args):
   return sha256.hexdigest()
 
 
-def GetCachedConfigId():
-  """Get the ID of the last run configuration, if any.
-
-  Returns:
-    A 64 character hexadecimal string, or None if ./configure has not been run
-    before.
-  """
-  if not os.path.isfile(CONFIG_PROTO_PATH):
-    return None
-
-  with open(CONFIG_PROTO_PATH) as f:
-    # Very crude text_format proto parsing!
-    for line in f.readlines():
-      if 'configure_id:' in line:
-        try:
-          return re.search(r'configure_id:\s*"([0-9a-f]{64})"', line).group(1)
-        except AttributeError:
-          pass
-  logging.warning(
-      "Could not find field 'configure_id' in proto: '%s'", CONFIG_PROTO_PATH)
-  return None
-
-
 def GetCudaHome():
   """Get the CUDA home directory.
 
@@ -278,9 +255,6 @@ def main(argv):
   config_id = GetConfigId(args)
   if args.print_id:
     print(config_id)
-    return
-  cached_config_id = GetCachedConfigId()
-  if args.cache_result and config_id == cached_config_id:
     return
 
   logging.info('Config ID: %s', config_id)
