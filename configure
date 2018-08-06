@@ -138,8 +138,12 @@ def GetCachedConfigId():
 
 
 def GetCudaHome():
-  """Get the CUDA home directory."""
-  return os.environ.get('CUDA_HOME', '/usr/local/cuda')
+  """Get the CUDA home directory.
+
+  This is hardcoded to the version of CUDA which the version of TensorFlow used
+  in this repo requires.
+  """
+  return os.environ.get('CUDA_HOME', '/usr/local/cuda-9.0')
 
 
 def GuessIfCudaIsAvailable():
