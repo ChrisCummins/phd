@@ -27,16 +27,26 @@ class MockRepository(object):
     self.clone_url = 'url'
 
 
-def test_ReadGitHubCredentials():
+@pytest.fixture(scope='function')
+def credentials_file() -> pathlib.Path:
+  """A test fixture to yield a GitHub credentials file."""
+  with tempfile.TemporaryDirectory() as d:
+    with open(pathlib.Path(d) / 'credentials', 'w') as f:
+      f.write("""
+[User]
+Username = foo
+Password = bar
+""")
+    yield pathlib.Path(d) / 'credentials'
+
+
+def test_ReadGitHubCredentials(credentials_file: pathlib.Path):
   """Test that GitHub credentials are read from the filesystem."""
-  # Note that the function ReadGitHubCredentials() depends on a file
-  # (~/.githubrc) which is outside of this repo and not tracked. This will
-  # fail on machines where we don't have this file.
-  credentials = scraper.ReadGitHubCredentials()
+  credentials = scraper.ReadGitHubCredentials(credentials_file)
   assert credentials.HasField('username')
-  assert credentials.username
+  assert credentials.username == 'foo'
   assert credentials.HasField('password')
-  assert credentials.password
+  assert credentials.password == 'bar'
 
 
 def test_GetRepositoryMetadata():
