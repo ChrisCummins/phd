@@ -5,10 +5,10 @@ py_binary(
     name = "q_learning_frozen_lake",
     srcs = ["q_learning_frozen_lake.py"],
     deps = [
-        "//third_party/py/gym",
         "//third_party/py/absl",
+        "//third_party/py/gym",
         "//third_party/py/humanize",
-    ]
+    ],
 )
 
 py_test(
@@ -18,5 +18,5 @@ py_test(
         ":q_learning_frozen_lake",
         "//third_party/py/absl",
         "//third_party/py/pytest",
-    ]
+    ],
 )
