@@ -250,6 +250,11 @@ be fine:
 $ ./configure
 ```
 
+Note that CUDA support requires CUDA to have been installed separately,
+see the [TensorFlow build docs](https://www.tensorflow.org/install/) for
+instructions. CUDA support has only been tested for Linux builds, not macOS or
+Docker containers.
+
 Finally, we must set up the shell environment for running bazel. The file `.env`
 is created by the configure process and must be sourced for every shell we want 
 to use bazel with:
