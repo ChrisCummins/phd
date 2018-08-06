@@ -1,6 +1,8 @@
 """Tests for //datasets/github/scrape_repos:scraper."""
+import pathlib
 import pytest
 import sys
+import tempfile
 from absl import app
 from phd.lib.labm8 import labdate
 
