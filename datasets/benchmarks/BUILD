@@ -4,12 +4,12 @@ py_binary(
     name = "bzip2",
     srcs = ["bzip2.py"],
     data = [
-        "@bzip2//:bzip2",
+        "@bzip2",
         "@bzip2//:bzip2_srcs",
     ],
     deps = [
-        "//third_party/py/absl",
         "//lib/labm8:bazelutil",
+        "//third_party/py/absl",
     ],
 )
 
@@ -20,5 +20,5 @@ py_test(
         ":bzip2",
         "//third_party/py/absl",
         "//third_party/py/pytest",
-    ]
+    ],
 )
