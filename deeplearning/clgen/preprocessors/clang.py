@@ -84,9 +84,8 @@ def Preprocess(src: str, cflags: typing.List[str], timeout_seconds: int = 60,
     ClangException: In case of an error.
     ClangTimeout: If clang does not complete before timeout_seconds.
   """
-  builtin_cflags = ['-E', '-c', '-', '-o', '-']
   cmd = ['timeout', '-s9', str(timeout_seconds),
-         str(CLANG)] + builtin_cflags + cflags
+         str(CLANG), '-E', '-c', '-', '-o', '-'] + cflags
   logging.debug('$ %s', ' '.join(cmd))
   process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE, universal_newlines=True)
