@@ -7,6 +7,7 @@ py_binary(
         "@bzip2",
         "@bzip2//:bzip2_srcs",
     ],
+    visibility = ["//visibility:public"],
     deps = [
         "//lib/labm8:bazelutil",
         "//third_party/py/absl",
