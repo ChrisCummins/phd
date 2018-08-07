@@ -4,23 +4,82 @@ syntax = "proto2";
 
 package phd.experimental.compilers.random_opt;
 
-message RandomOptStep {
-  optional string input_src = 1;
-  optional string opt_pass = 2;
-  optional string opt_stderr = 3;
-  repeated int32 runtime_ms = 4;
-  optional int64 start_time_epoch_ms = 5;
-}
+// A random optimization environment.
+message Environment {
+  /////////////////////////////////////////////////////////////////////////////
+  // TARGET PROGRAM:
 
-message RandomOptRun {
-  repeated RandomOptStep step = 1;
-}
-
-message RandomOptExperiment {
+  // A list of input sources to compile into LLVM bitcode files, which will be
+  // linked to produce a single bytecode target.
   repeated string input_src = 1;
-  // $@ is substituted with the binary path.
-  optional string binary_cmd = 2;
-  optional int32 num_steps = 3;
+  // A list of additional flags to pass to clang when producing bitcode files
+  // from input sources.
+  repeated string copt = 2;
+  // A list of additional flags to pass to llvm-link when linking bitcode files
+  // to produce a bytecode target.
+  repeated string linkopt = 3;
 
-  optional RandomOptRun results = 15;
+  // Target program execution:
+  // Each of these fields is a string passed to `bash -c`. The following make
+  // variables are substituted: $@ is the compiled target binary, $< is the
+  // input bytecode file, and @D is a temporary working directory.
+
+  // A command ran during environment initialization. Use it to create test
+  // data, create transient files, etc. Note that there is no teardown command.
+  optional string setup_cmd = 4;
+  // The command to execute the target binary ($@). This run multiple times
+  // during every step to determine the runtime.
+  optional string exec_cmd = 6;
+  // The command to evaluate that the target binary is behaving correctly. Run
+  // after every step. This command should return a non-zero returncode if the
+  // binary is not behaving correctly.
+  optional string eval_cmd = 7;
+
+  /////////////////////////////////////////////////////////////////////////////
+  // ACTION AND OBSERVATION SPACE:
+
+  // The list of candidate opt passes to run. This specifies the action space
+  // of the reinforcement learning environment.
+  repeated string candidate_pass = 8;
+}
+
+// A single reinforcement learning step.
+message Step {
+  // The start time of the step, in milliseconds since the epoch in UTC.
+  optional int64 start_time_epoch_ms = 1;
+  // The total number of milliseconds during step execution.
+  optional int32 total_step_runtime_ms = 2;
+
+  // The input LLVM bytecode source.
+  optional string input_src = 3;
+  // The names of opt passes run during the step.
+  repeated string opt_pass = 4;
+
+  enum Status {
+    PASS = 0;
+    OPT_FAILED = 1;
+    EVAL_FAILED = 2;
+  };
+  optional Status status = 5;
+  // An optional message providing additional information about non-PASS
+  // statuses.
+  optional string status_msg = 6;
+
+  // The runtimes of the binary.
+  repeated int32 binary_runtime_ms = 7;
+
+  optional float reward = 8;
+  optional float total_reward = 9;
+  optional float speedup = 10;
+  optional float total_speedup = 11;
+}
+
+// An episode is a sequence of steps.
+message Episode {
+  repeated Step step = 1;
+}
+
+message Experiment {
+  optional Environment env = 1;
+  repeated Episode episode = 2;
 }
