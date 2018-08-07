@@ -8,9 +8,9 @@ py_binary(
         "//compilers/llvm:llvm_link",
         "//compilers/llvm:opt",
         "//datasets/benchmarks:bzip2",
-        "//lib/labm8:labdate",
-        "//lib/labm8:crypto",
         "//experimental/compilers/random_opt/proto:random_opt_py_pb2",
+        "//lib/labm8:crypto",
+        "//lib/labm8:labdate",
         "//third_party/py/absl",
-    ]
+    ],
 )
