@@ -8,7 +8,8 @@ second '--' if invoked using bazel, to prevent bazel from parsing the args.
 
 Usage:
 
-  bazel run //compilers/llvm:opt [-- <script_args> [-- <clang_format_args>]]
+  bazel run //compilers/llvm:clang_format \
+     [-- <script_args> [-- <clang_format_args>]]
 """
 import fileinput
 import subprocess
