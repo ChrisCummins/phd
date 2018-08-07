@@ -18,7 +18,8 @@ message RandomOptRun {
 
 message RandomOptExperiment {
   repeated string input_src = 1;
-  repeated string binary_arg = 2;
+  // $@ is substituted with the binary path.
+  optional string binary_cmd = 2;
   optional int32 num_steps = 3;
 
   optional RandomOptRun results = 15;

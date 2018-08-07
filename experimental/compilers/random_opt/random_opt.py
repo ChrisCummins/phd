@@ -18,23 +18,22 @@ from lib.labm8 import labdate
 FLAGS = flags.FLAGS
 
 
-def GetRuntime(cmd: typing.List[str],
+def GetRuntime(cmd: str,
                proto: random_opt_pb2.RandomOptStep,
                timeout_seconds: int = 5) -> None:
   for _ in range(3):
     start_ms = labdate.MillisecondsTimestamp()
-    cmd = ['timeout', '-s9', str(timeout_seconds)] + cmd
-    logging.debug('%s', ' '.join(cmd))
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                            universal_newlines=True)
+    exec_cmd = f"timeout -s9 {timeout_seconds} bash -c '{cmd}'"
+    logging.debug('%s', exec_cmd)
+    proc = subprocess.Popen(exec_cmd, shell=True)
     proc.communicate()
     if proc.returncode == 9:
-      raise ValueError(f'{binary} timed out after {timeout_seconds} seconds')
-    # TODO(cec): Continue from here.
-    print(proc.stdout)
-    print(proc.stderr)
+      raise ValueError(
+          f"Command timed out after {timeout_seconds} seconds: '{cmd}'")
+    elif proc.returncode:
+      raise ValueError(
+          f"Command exited with return code {proc.returncode}: '{cmd}'")
     end_ms = labdate.MillisecondsTimestamp()
-    logging.debug('%s: %d ms', cmd[0], end_ms - start_ms)
     proto.runtime_ms.extend([end_ms - start_ms])
 
 
@@ -51,12 +50,12 @@ def CompileBytecodeToBinary(input_path: pathlib.Path,
 def EvaluateBytecodeFile(
     input_path: pathlib.Path,
     binary_path: pathlib.Path,
-    binary_args: typing.List[str]) -> random_opt_pb2.RandomOptStep:
+    cmd: str) -> random_opt_pb2.RandomOptStep:
   proto = random_opt_pb2.RandomOptStep(
       start_time_epoch_ms=labdate.MillisecondsTimestamp()
   )
   CompileBytecodeToBinary(input_path, binary_path)
-  GetRuntime([str(binary_path)] + binary_args, proto)
+  GetRuntime(cmd.replace('$@', str(binary_path)), proto)
   return proto
 
 
@@ -154,9 +153,12 @@ def RandomOpt(
     binary_path = d / 'binary'
     ProduceBytecodeFromSources(srcs, bytecode_path)
     proto = EvaluateBytecodeFile(bytecode_path, binary_path,
-                                 list(experiment.binary_arg))
+                                 experiment.binary_cmd)
+    with open(bytecode_path) as f:
+      # TODO(cec): Remove truncate.
+      proto.input_src = f.read()[:300]
     print(proto)
-    for _ in range(experiment.max_steps):
+    for _ in range(experiment.num_steps):
       pass
 
 
@@ -165,11 +167,15 @@ def main(argv: typing.List[str]):
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
-  experiment = RandomOpt(random_opt_pb2.RandomOptExperiment(
-      input_src=[str(x) for x in bzip2.BZIP2_SRCS],
-      binary_arg=[],
-      num_steps=10,
-  ))
+  with tempfile.TemporaryDirectory() as d:
+    with open(pathlib.Path(d) / 'input.dat', 'w') as f:
+      f.write('Hello world')
+    experiment = RandomOpt(random_opt_pb2.RandomOptExperiment(
+        input_src=[str(x) for x in bzip2.BZIP2_SRCS],
+        binary_cmd=(f'$@ -z < {d}/input.dat > {d}/output.dat && '
+                    f'$@ -d < {d}/output.dat > /dev/null'),
+        num_steps=10,
+    ))
   print(experiment)
   logging.info('done')
 
