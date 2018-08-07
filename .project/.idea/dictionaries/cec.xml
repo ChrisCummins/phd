@@ -18,6 +18,7 @@
       <w>contentfile</w>
       <w>contentfiles</w>
       <w>corpuses</w>
+      <w>cout</w>
       <w>crossentropy</w>
       <w>cummins</w>
       <w>dataset</w>
@@ -29,6 +30,7 @@
       <w>difftester</w>
       <w>difftesting</w>
       <w>distros</w>
+      <w>endl</w>
       <w>githubrc</w>
       <w>gsize</w>
       <w>inlined</w>
@@ -62,6 +64,7 @@
       <w>popen</w>
       <w>preprocess</w>
       <w>preprocessing</w>
+      <w>printf</w>
       <w>proc</w>
       <w>protos</w>
       <w>randchar</w>
