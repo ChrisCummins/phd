@@ -18,6 +18,7 @@
       <w>clsmith</w>
       <w>contentfile</w>
       <w>contentfiles</w>
+      <w>copts</w>
       <w>corpuses</w>
       <w>cout</w>
       <w>crossentropy</w>
@@ -45,6 +46,7 @@
       <w>lgen</w>
       <w>libclc</w>
       <w>libcxx</w>
+      <w>linkopts</w>
       <w>logdir</w>
       <w>logtostderr</w>
       <w>lsize</w>
@@ -75,6 +77,7 @@
       <w>returncode</w>
       <w>rewriter</w>
       <w>runfiles</w>
+      <w>runtimes</w>
       <w>sandboxed</w>
       <w>sandboxing</w>
       <w>shimfile</w>
