@@ -1,6 +1,37 @@
 # A python wrapper around LLVM binaries.
 
 py_binary(
+    name = "clang",
+    srcs = ["clang.py"],
+    data = select({
+        "//:darwin": [
+            "@llvm_mac//:clang",
+        ],
+        "//conditions:default": [
+            "@llvm_linux//:clang",
+        ],
+    }),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":llvm",
+        "//lib/labm8:bazelutil",
+        "//lib/labm8:system",
+        "//third_party/py/absl",
+    ],
+)
+
+py_test(
+    name = "clang_test",
+    srcs = ["clang_test.py"],
+    deps = [
+        ":clang",
+        ":llvm",
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
+    ],
+)
+
+py_binary(
     name = "clang_format",
     srcs = ["clang_format.py"],
     data = select({
