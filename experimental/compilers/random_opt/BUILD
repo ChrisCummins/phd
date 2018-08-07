@@ -23,6 +23,7 @@ py_binary(
         "//compilers/llvm:opt",
         "//datasets/benchmarks:bzip2",
         "//experimental/compilers/random_opt/proto:random_opt_py_pb2",
+        "//lib/labm8:pbutil",
         "//third_party/py/absl",
         "//third_party/py/gym",
     ],

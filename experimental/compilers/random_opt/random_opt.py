@@ -1,5 +1,6 @@
 """Random optimizer."""
 import gym
+import pathlib
 import typing
 from absl import app
 from absl import flags
@@ -9,6 +10,7 @@ from gym.envs import registration
 from compilers.llvm import opt
 from datasets.benchmarks import bzip2
 from experimental.compilers.random_opt.proto import random_opt_pb2
+from lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS
@@ -20,11 +22,14 @@ flags.DEFINE_integer(
     'num_episodes', 3,
     'The number of episodes to run for.')
 flags.DEFINE_integer(
-    'max_steps', 5,
+    'max_steps', 100,
     'The maximum number of steps per episode.')
 flags.DEFINE_boolean(
     'render', True,
     'Render the environment after every step.')
+flags.DEFINE_string(
+    'proto_out', '/tmp/phd/experimental/compilers/random_opt/random_opt.pbtxt',
+    'The output path to write experiment proto to.')
 
 # Register the LLVM environments for use in gym.make().
 
@@ -69,6 +74,10 @@ def main(argv: typing.List[str]):
       if done:
         break
 
+  out_path = pathlib.Path(FLAGS.proto_out)
+  out_path.parent.mkdir(parents=True, exist_ok=True)
+  pbutil.ToFile(env.ToProto(), out_path)
+  logging.info('Wrote experimental results to: %s', out_path)
   logging.info('Done.')
 
 

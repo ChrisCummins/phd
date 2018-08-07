@@ -66,6 +66,7 @@ class LlvmOptEnv(gym.Env):
     subprocess.check_call(
         self._MakeVariableSubstitution(self.config.setup_cmd), shell=True)
 
+    self.episodes = []
     self.reset()
     if not ValidateBinary(self.eval_cmd):
       raise ValueError(f"Failed to validate base binary.")
@@ -95,7 +96,7 @@ class LlvmOptEnv(gym.Env):
     return self.observation_space.sample()
 
   def reset(self):
-    self.steps = [self.InitStep()]
+    self.episodes.append(random_opt_pb2.Episode(step=[self.InitStep()]))
     shutil.copyfile(self.base_bytecode_path, self.bytecode_path)
 
   def InitStep(self):
@@ -123,15 +124,16 @@ class LlvmOptEnv(gym.Env):
     """
     outfile.write(f'''\
 ==================================================
-STEP #{len(self.steps) - 1}
+STEP #{len(self.episodes[-1].step) - 1}
 
-  Passes Run: {self.steps[-1].opt_pass}.
-  Binary Runtimes: {self.steps[-1].binary_runtime_ms} ms.
-  Reward: {self.steps[-1].reward:.3f} ({self.steps[-1].total_reward:.3f} total)
-  Speedup: {self.steps[-1].speedup:.2f}x ({self.steps[-1].total_speedup:.2f}x total)
+  Passes Run: {self.episodes[-1].step[-1].opt_pass}.
+  Binary Runtimes: {self.episodes[-1].step[-1].binary_runtime_ms} ms.
+  Reward: {self.episodes[-1].step[-1].reward:.3f} ({self.episodes[-1].step[-1].total_reward:.3f} total)
+  Speedup: {self.episodes[-1].step[-1].speedup:.2f}x ({self.episodes[-1].step[-1].total_speedup:.2f}x total)
 ''')
-    if self.steps[-1].status != random_opt_pb2.Step.PASS:
-      last_status = random_opt_pb2.Step.Status.Name(self.steps[-1].status)
+    if self.episodes[-1].step[-1].status != random_opt_pb2.Step.PASS:
+      last_status = random_opt_pb2.Step.Status.Name(
+          self.episodes[-1].step[-1].status)
       outfile.write(f'  Status: {last_status}\n')
     outfile.write('\n')
     return outfile
@@ -164,20 +166,20 @@ STEP #{len(self.steps) - 1}
       step.binary_runtime_ms.extend(GetRuntimeMs(self.exec_cmd))
       if ValidateBinary(self.eval_cmd):
         step.speedup = (
-            (sum(self.steps[-1].binary_runtime_ms) / len(
-                self.steps[-1].binary_runtime_ms)) /
+            (sum(self.episodes[-1].step[-1].binary_runtime_ms) / len(
+                self.episodes[-1].step[-1].binary_runtime_ms)) /
             (sum(step.binary_runtime_ms) / len(step.binary_runtime_ms)))
         step.total_speedup = (
-            (sum(self.steps[0].binary_runtime_ms) / len(
-                self.steps[0].binary_runtime_ms)) / (
+            (sum(self.episodes[-1].step[0].binary_runtime_ms) / len(
+                self.episodes[-1].step[0].binary_runtime_ms)) / (
                 sum(step.binary_runtime_ms) / len(step.binary_runtime_ms)))
         step.reward = step.speedup - 1
       else:
         step.status = random_opt_pb2.Step.EVAL_FAILED
 
-    step.total_reward = self.steps[-1].total_reward + step.reward
+    step.total_reward = self.episodes[-1].step[-1].total_reward + step.reward
     step.total_step_runtime_ms = labdate.MillisecondsTimestamp() - start_time
-    self.steps.append(step)
+    self.episodes[-1].step.extend([step])
     return step
 
   def step(self, action: int):
@@ -189,6 +191,12 @@ STEP #{len(self.steps) - 1}
     reward = proto.reward
     done = False if proto.status == random_opt_pb2.Step.PASS else True
     return obs, reward, done, {}
+
+  def ToProto(self) -> random_opt_pb2.Experiment:
+    return random_opt_pb2.Experiment(
+        env=self.config,
+        episode=self.episodes
+    )
 
 
 def GetRuntimeMs(cmd: str, num_runs: int = 3, timeout_seconds: int = 60) -> int:
