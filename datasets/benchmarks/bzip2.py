@@ -22,14 +22,18 @@ BZIP2 = bazelutil.DataPath('bzip2/bzip2')
 BZIP2_SRCS = [
   bazelutil.DataPath('bzip2/blocksort.c'),
   bazelutil.DataPath('bzip2/bzlib.c'),
-  bazelutil.DataPath('bzip2/bzlib.h'),
-  bazelutil.DataPath('bzip2/bzlib_private.h'),
   bazelutil.DataPath('bzip2/compress.c'),
   bazelutil.DataPath('bzip2/crctable.c'),
   bazelutil.DataPath('bzip2/decompress.c'),
   bazelutil.DataPath('bzip2/huffman.c'),
   bazelutil.DataPath('bzip2/randtable.c'),
   bazelutil.DataPath('bzip2/bzip2.c'),
+]
+
+# Header files for bzip2.
+BZIP2_HEADERS = [
+  bazelutil.DataPath('bzip2/bzlib.h'),
+  bazelutil.DataPath('bzip2/bzlib_private.h'),
 ]
 
 
