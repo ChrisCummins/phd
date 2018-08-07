@@ -55,6 +55,8 @@ def Exec(args: typing.List[str], timeout_seconds: int = 60) -> subprocess.Popen:
       cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
       universal_newlines=True)
   stdout, stderr = process.communicate()
+  if process.returncode == 9:
+    raise llvm.LlvmTimeout(f'clang timed out after {timeout_seconds}s')
   process.stdout = stdout
   process.stderr = stderr
   return process
@@ -62,10 +64,16 @@ def Exec(args: typing.List[str], timeout_seconds: int = 60) -> subprocess.Popen:
 
 def main(argv):
   """Main entry point."""
-  proc = Exec(argv[1:], timeout_seconds=FLAGS.opt_timeout_seconds)
-  print(proc.stdout)
-  print(proc.stderr, file=sys.stderr)
-  sys.exit(proc.returncode)
+  try:
+    proc = Exec(argv[1:], timeout_seconds=FLAGS.opt_timeout_seconds)
+    if proc.stdout:
+      print(proc.stdout)
+    if proc.stderr:
+      print(proc.stderr, file=sys.stderr)
+    sys.exit(proc.returncode)
+  except llvm.LlvmTimeout as e:
+    print(e, file=sys.stderr)
+    sys.exit(1)
 
 
 if __name__ == '__main__':
