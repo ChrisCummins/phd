@@ -6,6 +6,7 @@
       <w>arange</w>
       <w>bazel</w>
       <w>bazelutil</w>
+      <w>bitcode</w>
       <w>capsys</w>
       <w>cflags</w>
       <w>checksums</w>
