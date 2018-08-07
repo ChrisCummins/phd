@@ -62,6 +62,37 @@ py_test(
     ],
 )
 
+py_binary(
+    name = "llvm_link",
+    srcs = ["llvm_link.py"],
+    data = select({
+        "//:darwin": [
+            "@llvm_mac//:llvm-link",
+        ],
+        "//conditions:default": [
+            "@llvm_linux//:llvm-link",
+        ],
+    }),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":llvm",
+        "//lib/labm8:bazelutil",
+        "//lib/labm8:system",
+        "//third_party/py/absl",
+    ],
+)
+
+py_test(
+    name = "llvm_link_test",
+    srcs = ["llvm_link_test.py"],
+    deps = [
+        ":llvm_link",
+        ":llvm",
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
+    ],
+)
+
 py_library(
     name = "llvm",
     srcs = ["llvm.py"],
