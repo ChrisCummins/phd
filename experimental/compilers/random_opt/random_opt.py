@@ -69,6 +69,8 @@ def main(argv: typing.List[str]):
     env.reset()
     Render(env)
     for _ in range(FLAGS.max_steps):
+      # We don't yet have an observation space, so all we can do is take random
+      # choices.
       obs, reward, done, _ = env.step(env.action_space.sample())
       Render(env)
       if done:
