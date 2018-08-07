@@ -86,8 +86,8 @@ py_test(
     name = "llvm_link_test",
     srcs = ["llvm_link_test.py"],
     deps = [
-        ":llvm_link",
         ":llvm",
+        ":llvm_link",
         "//third_party/py/absl",
         "//third_party/py/pytest",
     ],
