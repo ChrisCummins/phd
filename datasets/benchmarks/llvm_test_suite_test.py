@@ -20,6 +20,8 @@ def test_benchmarks(benchmark: benchmark_pb2.Benchmark):
   assert pathlib.Path(benchmark.binary).is_file()
   for path in benchmark.srcs:
     assert pathlib.Path(path).is_file()
+  for path in benchmark.hdrs:
+    assert pathlib.Path(path).is_file()
 
 
 def main(argv: typing.List[str]):
