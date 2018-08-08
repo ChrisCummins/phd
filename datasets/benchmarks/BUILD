@@ -72,6 +72,7 @@ py_test(
     srcs = ["llvm_test_suite_test.py"],
     deps = [
         ":llvm_test_suite",
+        "//compilers/llvm:clang",
         "//datasets/benchmarks/proto:benchmarks_py_pb2",
         "//third_party/py/absl",
         "//third_party/py/pytest",
