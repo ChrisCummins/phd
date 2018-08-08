@@ -46,7 +46,9 @@ registration.register(
           input_src=
           llvm_test_suite.BENCHMARKS['SingleSource']['McGill']['queens'][
             'srcs'],
-          exec_cmd='$@ 14 >/dev/null',
+          setup_cmd='$@ 14 > @D/gold_standard_output.txt',
+          exec_cmd='$@ 14 > @D/output.txt',
+          eval_cmd='cmp --silent @D/gold_standard_output.txt @D/output.txt',
           candidate_pass=list(opt.ALL_PASSES),
       )
     }
