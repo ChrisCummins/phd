@@ -32,7 +32,7 @@ registration.register(
           setup_cmd='head -c 512K </dev/urandom > @D/input.dat',
           exec_cmd=('$@ -z < @D/input.dat > @D/input.dat.bz2 && '
                     '$@ -d < @D/input.dat.bz2 > @D/output.dat'),
-          eval_cmd=f'cmp --silent @D/input.dat @D/output.dat',
+          eval_cmd='cmp --silent @D/input.dat @D/output.dat',
           candidate_pass=list(opt.ALL_PASSES),
       )
     },
