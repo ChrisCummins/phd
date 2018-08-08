@@ -36,6 +36,7 @@
       <w>endl</w>
       <w>githubrc</w>
       <w>gsize</w>
+      <w>heapsort</w>
       <w>inlined</w>
       <w>inliners</w>
       <w>inlines</w>
@@ -85,6 +86,7 @@
       <w>srcs</w>
       <w>stderrs</w>
       <w>stdin</w>
+      <w>strcat</w>
       <w>subdirs</w>
       <w>subsamples</w>
       <w>tensorflow</w>
