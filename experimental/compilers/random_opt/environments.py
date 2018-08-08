@@ -46,7 +46,7 @@ def Bzip2Environment(dataset_size: str):
 def QueensEnvironment(n: int):
   return {
     'config': random_opt_pb2.Environment(
-        input_src=llvm_test_suite.SingleSource.McGill.queens.srcs,
+        input_src=llvm_test_suite.SingleSource.Benchmarks.McGill.queens.srcs,
         # Generate a gold standard using the binary. The assumes that the base
         # build (before any opt passes have been run) is correct.
         setup_cmd=f'$@ {n} > @D/gold_standard_output.txt',

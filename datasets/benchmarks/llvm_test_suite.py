@@ -12,8 +12,8 @@ from lib.labm8 import bazelutil
 FLAGS = flags.FLAGS
 
 
-class McGillBenchmarks(object):
-  """The McGill Benchmarks."""
+class _SingleSource_Benchmarks_McGill(object):
+  """The McGill benchmarks."""
   queens = benchmarks_pb2.Benchmark(
       name='queens',
       usage='queens [-ac] <n>',
@@ -24,7 +24,7 @@ class McGillBenchmarks(object):
   )
 
 
-class ShootoutBenchmarks(object):
+class _SingleSource_Benchmarks_Shootout(object):
   """The Programming Language Shootout benchmarks."""
   ackermann = benchmarks_pb2.Benchmark(
       name='ackermann',
@@ -138,29 +138,34 @@ class ShootoutBenchmarks(object):
   )
 
 
-class SingleSourceBenchmarks(object):
-  """The single source benchmarks."""
-  McGill = McGillBenchmarks()
-  Shootout = ShootoutBenchmarks()
+class _SingleSource_Benchmarks(object):
+  """Single source benchmarks."""
+  McGill = _SingleSource_Benchmarks_McGill()
+  Shootout = _SingleSource_Benchmarks_Shootout()
 
 
-SingleSource = SingleSourceBenchmarks()
+class _SingleSource(object):
+  """The single source files."""
+  Benchmarks = _SingleSource_Benchmarks()
+
+
+SingleSource = _SingleSource()
 
 # A list of all benchmarks defined in this file.
 BENCHMARKS: typing.List[benchmarks_pb2.Benchmark] = [
-  SingleSource.McGill.queens,
-  SingleSource.Shootout.ackermann,
-  SingleSource.Shootout.ary3,
-  SingleSource.Shootout.fib2,
-  SingleSource.Shootout.hash,
-  SingleSource.Shootout.heapsort,
-  SingleSource.Shootout.hello,
-  SingleSource.Shootout.lists,
-  SingleSource.Shootout.matrix,
-  SingleSource.Shootout.methcall,
-  SingleSource.Shootout.nestedloop,
-  SingleSource.Shootout.objinst,
-  SingleSource.Shootout.random,
-  SingleSource.Shootout.sieve,
-  SingleSource.Shootout.strcat,
+  SingleSource.Benchmarks.McGill.queens,
+  SingleSource.Benchmarks.Shootout.ackermann,
+  SingleSource.Benchmarks.Shootout.ary3,
+  SingleSource.Benchmarks.Shootout.fib2,
+  SingleSource.Benchmarks.Shootout.hash,
+  SingleSource.Benchmarks.Shootout.heapsort,
+  SingleSource.Benchmarks.Shootout.hello,
+  SingleSource.Benchmarks.Shootout.lists,
+  SingleSource.Benchmarks.Shootout.matrix,
+  SingleSource.Benchmarks.Shootout.methcall,
+  SingleSource.Benchmarks.Shootout.nestedloop,
+  SingleSource.Benchmarks.Shootout.objinst,
+  SingleSource.Benchmarks.Shootout.random,
+  SingleSource.Benchmarks.Shootout.sieve,
+  SingleSource.Benchmarks.Shootout.strcat,
 ]

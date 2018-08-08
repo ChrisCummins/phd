@@ -15,7 +15,8 @@ FLAGS = flags.FLAGS
 
 @pytest.mark.parametrize('benchmark', llvm_test_suite.BENCHMARKS)
 def test_benchmarks(benchmark: benchmark_pb2.Benchmark):
-  """Simple black-box tests."""
+  """Test attributes of protos."""
+  assert benchmark.name
   assert pathlib.Path(benchmark.binary).is_file()
   for path in benchmark.srcs:
     assert pathlib.Path(path).is_file()
