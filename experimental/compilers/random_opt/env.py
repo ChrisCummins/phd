@@ -42,6 +42,7 @@ class LlvmOptEnv(gym.Env):
       if pass_name not in opt.ALL_PASSES:
         raise ValueError(f"Unrecognized opt pass: '{pass_name}'")
 
+    self.episodes = []
     self.action_space = spaces.Discrete(len(self.config.candidate_pass))
     # TODO(cec): Decide on observation space. For now we use a dummy variable.
     self.observation_space = spaces.Discrete(10)
@@ -57,23 +58,14 @@ class LlvmOptEnv(gym.Env):
     self.bytecode_path = self.working_dir / 'input.ll'
     self.base_bytecode_path = self.working_dir / 'base_input.ll'
     ProduceBytecodeFromSources(srcs, self.bytecode_path)
+    logging.debug('$ cp %s %s', self.bytecode_path, self.base_bytecode_path)
     shutil.copyfile(self.bytecode_path, self.base_bytecode_path)
 
     self.binary_path = self.working_dir / 'binary'
-    CompileBytecodeToBinary(self.working_dir / 'input.ll', self.binary_path)
     self.exec_cmd = self._MakeVariableSubstitution(self.config.exec_cmd)
     self.eval_cmd = None
     if self.config.HasField('eval_cmd'):
       self.eval_cmd = self._MakeVariableSubstitution(self.config.eval_cmd)
-
-    # Run the user setup command.
-    if self.config.HasField('setup_cmd'):
-      subprocess.check_call(
-          self._MakeVariableSubstitution(self.config.setup_cmd), shell=True)
-
-    self.episodes = []
-    if not self.StepIsValid():
-      raise ValueError(f"Failed to validate base binary.")
 
   def __del__(self):
     """Environment destructor. Clean up working dir."""
@@ -97,6 +89,8 @@ class LlvmOptEnv(gym.Env):
       return speedup - 1
     elif status == random_opt_pb2.Step.OPT_FAILED:
       return -5
+    elif status == random_opt_pb2.Step.COMPILE_FAILED:
+      return -5
     elif status == random_opt_pb2.Step.EVAL_FAILED:
       return -5
     else:
@@ -117,22 +111,27 @@ class LlvmOptEnv(gym.Env):
     return [seed]
 
   def reset(self):
-    self.episodes.append(random_opt_pb2.Episode(step=[self.InitStep()]))
+    logging.debug('$ cp %s %s', self.base_bytecode_path, self.bytecode_path)
     shutil.copyfile(self.base_bytecode_path, self.bytecode_path)
-
-  def InitStep(self):
+    CompileBytecodeToBinary(self.bytecode_path, self.binary_path)
+    self.RunSetup()
+    self.RunBinary()
+    if not self.StepIsValid():
+      raise ValueError(f"Failed to validate base binary.")
     start_time = labdate.MillisecondsTimestamp()
-    step = random_opt_pb2.Step(
-        start_time_epoch_ms=start_time,
-        status=random_opt_pb2.Step.PASS,
-        binary_runtime_ms=GetRuntimeMs(self.exec_cmd),
-        reward=0,
-        total_reward=0,
-        speedup=1.0,
-        total_speedup=1.0,
-    )
-    step.total_step_runtime_ms = labdate.MillisecondsTimestamp() - start_time
-    return step
+    self.episodes.append(random_opt_pb2.Episode(step=[
+      random_opt_pb2.Step(
+          start_time_epoch_ms=start_time,
+          status=random_opt_pb2.Step.PASS,
+          binary_runtime_ms=self.GetRuntimeMs(),
+          reward=0,
+          total_reward=0,
+          speedup=1.0,
+          total_speedup=1.0,
+      )
+    ]))
+    self.episodes[-1].step[0].total_step_runtime_ms = (
+        labdate.MillisecondsTimestamp() - start_time)
 
   def render(self, outfile=sys.stdout):
     """Render text representation of environment.
@@ -172,19 +171,35 @@ EPISODE #{len(self.episodes)}, STEP #{len(self.episodes[-1].step) - 1}:
     start_time = labdate.MillisecondsTimestamp()
     step.start_time_epoch_ms = start_time
     step.status = random_opt_pb2.Step.PASS
-    temp_path = self.working_dir / 'temp.ll'
+    temp_bytecode = self.working_dir / 'temp_src.ll'
+    temp_binary = self.workind_dir / 'temp_binary'
 
     # Run the pass.
     try:
-      RunOptPassOnBytecode(self.bytecode_path, temp_path, list(step.opt_pass))
+      RunOptPassOnBytecode(self.bytecode_path, temp_bytecode,
+                           list(step.opt_pass))
     except ValueError as e:
       step.status = random_opt_pb2.Step.OPT_FAILED
       step.status_msg = str(e)
 
     if step.status == random_opt_pb2.Step.PASS:
       # Update bytecode file.
-      os.rename(str(temp_path), str(self.bytecode_path))
-      step.binary_runtime_ms.extend(GetRuntimeMs(self.exec_cmd))
+      logging.debug('$ mv %s %s', temp_bytecode, self.bytecode_path)
+      step.bytecode_changed = BytecodesAreEqual(temp_bytecode,
+                                                self.bytecode_path)
+      os.rename(str(temp_bytecode), str(self.bytecode_path))
+      # Compile a new binary.
+      try:
+        CompileBytecodeToBinary(self.bytecode_path, temp_binary)
+        step.binary_changed = BinariesAreEqual(temp_binary, self.binary_path)
+        os.rename(str(temp_binary), str(self.binary_path))
+      except ValueError as e:
+        step.status = random_opt_pb2.Step.COMPILE_FAILED
+        step.status_msg = str(e)
+
+    if step.status == random_opt_pb2.Step.PASS:
+      # Get the binary runtime.
+      step.binary_runtime_ms.extend(self.GetRuntimeMs())
       if self.StepIsValid():
         step.speedup = (
             (sum(self.episodes[-1].step[-1].binary_runtime_ms) / len(
@@ -203,12 +218,57 @@ EPISODE #{len(self.episodes)}, STEP #{len(self.episodes[-1].step) - 1}:
     self.episodes[-1].step.extend([step])
     return step
 
-  def StepIsValid(self):
+  def StepIsValid(self, timeout_seconds: int = 60) -> bool:
     """Valid the current step. Should only be called after exec_cmd has run."""
     if self.eval_cmd:
-      return ValidateBinary(self.eval_cmd)
+      try:
+        cmd = f"timeout -s9 {timeout_seconds} bash -c '{self.eval_cmd}'"
+        logging.debug('$ %s', cmd)
+        subprocess.check_call(cmd, shell=True)
+        return True
+      except subprocess.CalledProcessError:
+        return False
     else:
       return True
+
+  def RunSetup(self, timeout_seconds: int = 60) -> None:
+    if self.config.HasField('setup_cmd'):
+      cmd = self._MakeVariableSubstitution(self.config.setup_cmd)
+      cmd = f"timeout -s9 {timeout_seconds} bash -c '{cmd}'"
+      logging.debug('$ %s', cmd)
+      subprocess.check_call(cmd, shell=True)
+
+  def RunBinary(self, timeout_seconds: int = 60) -> None:
+    """Run the binary. Requires that binary has been compiled."""
+    exec_cmd = f"timeout -s9 {timeout_seconds} bash -c '{self.exec_cmd}'"
+    logging.debug('$ %s', exec_cmd)
+    proc = subprocess.Popen(exec_cmd, shell=True)
+    proc.communicate()
+    if proc.returncode == 9:
+      raise ValueError(
+          f"Command timed out after {timeout_seconds} seconds: '{cmd}'")
+    elif proc.returncode:
+      raise ValueError(
+          f"Command exited with return code {proc.returncode}: '{cmd}'")
+
+  def GetRuntimeMs(self, num_runs: int = 3) -> int:
+    """Get runtime.
+
+    Args:
+      cmd: The command to execute.
+      num_runs: The number of runs to execute.
+      timeout_seconds: The maximum runtime of the command.
+
+    Returns:
+      The average runtime after num_runs executions, in milliseconds.
+    """
+    runtimes = []
+    for _ in range(num_runs):
+      start_ms = labdate.MillisecondsTimestamp()
+      self.RunBinary()
+      end_ms = labdate.MillisecondsTimestamp()
+      runtimes.append(end_ms - start_ms)
+    return runtimes
 
   def step(self, action: int):
     if not self.action_space.contains(action):
@@ -226,53 +286,6 @@ EPISODE #{len(self.episodes)}, STEP #{len(self.episodes[-1].step) - 1}:
     return random_opt_pb2.Experiment(
         env=self.config,
         episode=self.episodes)
-
-
-def GetRuntimeMs(cmd: str, num_runs: int = 3, timeout_seconds: int = 60) -> int:
-  """Get runtime.
-
-  Args:
-    cmd: The command to execute.
-    num_runs: The number of runs to execute.
-    timeout_seconds: The maximum runtime of the command.
-
-  Returns:
-    The average runtime after num_runs executions, in milliseconds.
-  """
-  runtimes = []
-  for _ in range(num_runs):
-    start_ms = labdate.MillisecondsTimestamp()
-    exec_cmd = f"timeout -s9 {timeout_seconds} bash -c '{cmd}'"
-    logging.debug('%s', exec_cmd)
-    proc = subprocess.Popen(exec_cmd, shell=True)
-    proc.communicate()
-    if proc.returncode == 9:
-      raise ValueError(
-          f"Command timed out after {timeout_seconds} seconds: '{cmd}'")
-    elif proc.returncode:
-      raise ValueError(
-          f"Command exited with return code {proc.returncode}: '{cmd}'")
-    end_ms = labdate.MillisecondsTimestamp()
-    runtimes.append(end_ms - start_ms)
-  return runtimes
-
-
-def ValidateBinary(cmd: str, timeout_seconds: int = 60) -> bool:
-  """Run the validation command.
-
-  Args:
-    cmd: The command to execute.
-    timeout_seconds: The maximum number of seconds to run for.
-
-  Returns:
-    True if the command executed successfully, else False.
-  """
-  try:
-    subprocess.check_call(
-        f"timeout -s9 {timeout_seconds} bash -c '{cmd}'", shell=True)
-    return True
-  except subprocess.CalledProcessError:
-    return False
 
 
 def CompileBytecodeToBinary(input_path: pathlib.Path,
@@ -394,3 +407,11 @@ def ProduceBytecodeFromSources(
     # Link the separate bytecode files.
     LinkBitcodeFilesToBytecode(input_srcs, output_path, linkopts)
   return output_path
+
+
+def BytecodesAreEqual(a: pathlib.Path, b: pathlib.Path) -> bool:
+  pass
+
+
+def BinariesAreEqual(a: pathlib.Path, b: pathlib.Path) -> bool:
+  return True
