@@ -18,6 +18,7 @@ from compilers.llvm import opt
 from experimental.compilers.random_opt.proto import random_opt_pb2
 from lib.labm8 import crypto
 from lib.labm8 import labdate
+from lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS
@@ -36,6 +37,7 @@ class LlvmOptEnv(gym.Env):
         tempfile.mkdtemp(prefix='phd_llvm_opt_env_'))
     self.config = config
 
+    # Validate the user configuration.
     for pass_name in self.config.candidate_pass:
       if pass_name not in opt.ALL_PASSES:
         raise ValueError(f"Unrecognized opt pass: '{pass_name}'")
@@ -60,16 +62,45 @@ class LlvmOptEnv(gym.Env):
     self.binary_path = self.working_dir / 'binary'
     CompileBytecodeToBinary(self.working_dir / 'input.ll', self.binary_path)
     self.exec_cmd = self._MakeVariableSubstitution(self.config.exec_cmd)
-    self.eval_cmd = self._MakeVariableSubstitution(self.config.eval_cmd)
+    self.eval_cmd = None
+    if self.config.HasField('eval_cmd'):
+      self.eval_cmd = self._MakeVariableSubstitution(self.config.eval_cmd)
 
     # Run the user setup command.
-    subprocess.check_call(
-        self._MakeVariableSubstitution(self.config.setup_cmd), shell=True)
+    if self.config.HasField('setup_cmd'):
+      subprocess.check_call(
+          self._MakeVariableSubstitution(self.config.setup_cmd), shell=True)
 
     self.episodes = []
-    self.reset()
-    if not ValidateBinary(self.eval_cmd):
+    if not self.StepIsValid():
       raise ValueError(f"Failed to validate base binary.")
+
+  def __del__(self):
+    """Environment destructor. Clean up working dir."""
+    shutil.rmtree(self.working_dir)
+
+  def Reward(self, status: pbutil.Enum,
+             speedup: typing.Optional[float]) -> float:
+    """Get the reward for a step.
+
+    Args:
+      status: A Step.Status enum value.
+      speedup: The speedup, if there is one.
+
+    Returns:
+      The immediate reward value.
+
+    Raises:
+      ValueError: If the status is not recognized.
+    """
+    if status == random_opt_pb2.Step.PASS:
+      return speedup - 1
+    elif status == random_opt_pb2.Step.OPT_FAILED:
+      return -5
+    elif status == random_opt_pb2.Step.EVAL_FAILED:
+      return -5
+    else:
+      raise ValueError(f"Unrecognized Step.status value: '{status}'.")
 
   def _MakeVariableSubstitution(self, cmd: str) -> str:
     substitutions = {
@@ -81,19 +112,9 @@ class LlvmOptEnv(gym.Env):
       cmd = cmd.replace(src, dst)
     return cmd
 
-  def __del__(self):
-    """Environment destructor. Clean up working dir."""
-    shutil.rmtree(self.working_dir)
-
   def seed(self, seed=None):
     self.np_random, seed = seeding.np_random(seed)
     return [seed]
-
-  def _get_obs(self):
-    """Return an observation corresponding to the given state."""
-    # TODO(cec): Implement once observation_space is set. For now just return a
-    # random value.
-    return self.observation_space.sample()
 
   def reset(self):
     self.episodes.append(random_opt_pb2.Episode(step=[self.InitStep()]))
@@ -124,8 +145,9 @@ class LlvmOptEnv(gym.Env):
     """
     outfile.write(f'''\
 ==================================================
-STEP #{len(self.episodes[-1].step) - 1}
+EPISODE #{len(self.episodes)}, STEP #{len(self.episodes[-1].step) - 1}:
 
+  Step time: {self.episodes[-1].step[-1].total_step_runtime_ms} ms.
   Passes Run: {self.episodes[-1].step[-1].opt_pass}.
   Binary Runtimes: {self.episodes[-1].step[-1].binary_runtime_ms} ms.
   Reward: {self.episodes[-1].step[-1].reward:.3f} ({self.episodes[-1].step[-1].total_reward:.3f} total)
@@ -150,7 +172,6 @@ STEP #{len(self.episodes[-1].step) - 1}
     start_time = labdate.MillisecondsTimestamp()
     step.start_time_epoch_ms = start_time
     step.status = random_opt_pb2.Step.PASS
-    step.reward = self.failure_reward
     temp_path = self.working_dir / 'temp.ll'
 
     # Run the pass.
@@ -164,7 +185,7 @@ STEP #{len(self.episodes[-1].step) - 1}
       # Update bytecode file.
       os.rename(str(temp_path), str(self.bytecode_path))
       step.binary_runtime_ms.extend(GetRuntimeMs(self.exec_cmd))
-      if ValidateBinary(self.eval_cmd):
+      if self.StepIsValid():
         step.speedup = (
             (sum(self.episodes[-1].step[-1].binary_runtime_ms) / len(
                 self.episodes[-1].step[-1].binary_runtime_ms)) /
@@ -173,30 +194,38 @@ STEP #{len(self.episodes[-1].step) - 1}
             (sum(self.episodes[-1].step[0].binary_runtime_ms) / len(
                 self.episodes[-1].step[0].binary_runtime_ms)) / (
                 sum(step.binary_runtime_ms) / len(step.binary_runtime_ms)))
-        step.reward = step.speedup - 1
       else:
         step.status = random_opt_pb2.Step.EVAL_FAILED
 
+    step.reward = self.Reward(step.status, step.speedup)
     step.total_reward = self.episodes[-1].step[-1].total_reward + step.reward
     step.total_step_runtime_ms = labdate.MillisecondsTimestamp() - start_time
     self.episodes[-1].step.extend([step])
     return step
+
+  def StepIsValid(self):
+    """Valid the current step. Should only be called after exec_cmd has run."""
+    if self.eval_cmd:
+      return ValidateBinary(self.eval_cmd)
+    else:
+      return True
 
   def step(self, action: int):
     if not self.action_space.contains(action):
       raise ValueError(f"Unknown action: '{action}'")
     proto = self.Step(
         random_opt_pb2.Step(opt_pass=[self.config.candidate_pass[action]]))
-    obs = self._get_obs()
+    # TODO(cec): Calculate observation once observation space is implemented.
+    obs = self.observation_space.sample()
     reward = proto.reward
     done = False if proto.status == random_opt_pb2.Step.PASS else True
     return obs, reward, done, {}
 
   def ToProto(self) -> random_opt_pb2.Experiment:
+    """Return proto representation of environment."""
     return random_opt_pb2.Experiment(
         env=self.config,
-        episode=self.episodes
-    )
+        episode=self.episodes)
 
 
 def GetRuntimeMs(cmd: str, num_runs: int = 3, timeout_seconds: int = 60) -> int:
