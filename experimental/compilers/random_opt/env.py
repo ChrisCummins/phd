@@ -172,7 +172,7 @@ EPISODE #{len(self.episodes)}, STEP #{len(self.episodes[-1].step) - 1}:
     step.start_time_epoch_ms = start_time
     step.status = random_opt_pb2.Step.PASS
     temp_bytecode = self.working_dir / 'temp_src.ll'
-    temp_binary = self.workind_dir / 'temp_binary'
+    temp_binary = self.working_dir / 'temp_binary'
 
     # Run the pass.
     try:
