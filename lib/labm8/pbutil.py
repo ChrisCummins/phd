@@ -15,6 +15,9 @@ from phd.lib.labm8 import jsonutil
 # A type alias for annotating methods which take or return protocol buffers.
 ProtocolBuffer = typing.Any
 
+# A type alias for protocol enum fields.
+Enum = int
+
 
 class ProtoValueError(ValueError):
   """Raised in case of a value error from a proto."""
