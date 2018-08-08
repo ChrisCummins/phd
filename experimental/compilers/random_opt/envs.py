@@ -15,7 +15,7 @@ from experimental.compilers.random_opt.proto import random_opt_pb2
 FLAGS = flags.FLAGS
 
 # A default environment name, registered below.
-DEFAULT_ENV_ID = 'LLVM-queens-14x14-v0'
+DEFAULT_ENV_ID = 'LLVM-bzip2-512K-v0'
 
 # A list of all environments registered in this file.
 ENVIRONMENTS = [
