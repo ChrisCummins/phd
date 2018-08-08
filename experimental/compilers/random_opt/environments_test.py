@@ -1,4 +1,4 @@
-"""Unit tests for //experimental/compilers/random_opt/envs.py."""
+"""Unit tests for //experimental/compilers/random_opt/environments.py."""
 import gym
 import pytest
 import sys

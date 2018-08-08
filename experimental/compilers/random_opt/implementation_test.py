@@ -1,4 +1,4 @@
-"""Unit tests for //experimental/compilers/random_opt/env.py."""
+"""Unit tests for //experimental/compilers/random_opt/implementation.py."""
 import pathlib
 import pytest
 import sys

@@ -1,8 +1,8 @@
 # Experiemnts in random optimization.
 
 py_library(
-    name = "env",
-    srcs = ["env.py"],
+    name = "implementation",
+    srcs = ["implementation.py"],
     deps = [
         "//compilers/llvm:clang",
         "//compilers/llvm:llvm_link",
@@ -17,10 +17,10 @@ py_library(
 )
 
 py_test(
-    name = "env_test",
-    srcs = ["env_test.py"],
+    name = "implementation_test",
+    srcs = ["implementation_test.py"],
     deps = [
-        ":env",
+        ":implementation",
         "//compilers/llvm:clang",
         "//third_party/py/absl",
         "//third_party/py/pytest",
@@ -28,12 +28,12 @@ py_test(
 )
 
 py_library(
-    name = "envs",
-    srcs = ["envs.py"],
+    name = "environments",
+    srcs = ["environments.py"],
     deps = [
-        # Note that :env is not directly imported, but required by the gym
-        # registration process.
-        ":env",
+        # Note that :implementation is not directly imported, but required by
+        # the gym registration process.
+        ":implementation",
         "//compilers/llvm:opt",
         "//third_party/py/absl",
         "//datasets/benchmarks:bzip2",
@@ -43,10 +43,10 @@ py_library(
 )
 
 py_test(
-    name = "envs_test",
-    srcs = ["envs_test.py"],
+    name = "environments_test",
+    srcs = ["environments_test.py"],
     deps = [
-        ":envs",
+        ":environments",
         "//third_party/py/absl",
         "//third_party/py/gym",
         "//third_party/py/pytest",
@@ -57,8 +57,8 @@ py_binary(
     name = "random_opt",
     srcs = ["random_opt.py"],
     deps = [
-        ":env",
-        ":envs",
+        ":environments",
+        ":implementation",
         "//experimental/compilers/random_opt/proto:random_opt_py_pb2",
         "//lib/labm8:pbutil",
         "//third_party/py/absl",
