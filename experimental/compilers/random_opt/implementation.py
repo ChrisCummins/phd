@@ -14,6 +14,7 @@ from gym import spaces
 from gym.utils import seeding
 
 from compilers.llvm import clang
+from compilers.llvm import llvm
 from compilers.llvm import llvm_link
 from compilers.llvm import opt
 from experimental.compilers.random_opt.proto import random_opt_pb2
@@ -114,7 +115,7 @@ class LlvmOptEnv(gym.Env):
   def reset(self):
     logging.debug('$ cp %s %s', self.base_bytecode_path, self.bytecode_path)
     shutil.copyfile(self.base_bytecode_path, self.bytecode_path)
-    CompileBytecodeToBinary(self.bytecode_path, self.binary_path)
+    clang.Compile(self.bytecode_path, self.binary_path, copts=['-O0'])
     self.RunSetup()
     self.RunBinary()
     if not self.StepIsValid():
@@ -182,9 +183,9 @@ EPISODE #{len(self.episodes)}, STEP #{len(self.episodes[-1].step) - 1}:
 
     # Run the pass.
     try:
-      RunOptPassOnBytecode(self.bytecode_path, temp_bytecode,
-                           list(step.opt_pass))
-    except ValueError as e:
+      opt.RunOptPassOnBytecode(self.bytecode_path, temp_bytecode,
+                               list(step.opt_pass))
+    except llvm.LlvmError as e:
       step.status = random_opt_pb2.Step.OPT_FAILED
       step.status_msg = str(e)
 
@@ -196,10 +197,10 @@ EPISODE #{len(self.episodes)}, STEP #{len(self.episodes[-1].step) - 1}:
       os.rename(str(temp_bytecode), str(self.bytecode_path))
       # Compile a new binary.
       try:
-        CompileBytecodeToBinary(self.bytecode_path, temp_binary)
+        clang.Compile(self.bytecode_path, temp_binary, copts=['-O0'])
         step.binary_changed = BinariesAreEqual(temp_binary, self.binary_path)
         os.rename(str(temp_binary), str(self.binary_path))
-      except ValueError as e:
+      except llvm.LlvmError as e:
         step.status = random_opt_pb2.Step.COMPILE_FAILED
         step.status_msg = str(e)
 
@@ -294,101 +295,12 @@ EPISODE #{len(self.episodes)}, STEP #{len(self.episodes[-1].step) - 1}:
         episode=self.episodes)
 
 
-def CompileBytecodeToBinary(input_path: pathlib.Path,
-                            binary_path: pathlib.Path) -> pathlib.Path:
-  """Compile bytecode file to a binary.
-
-  Args:
-    input_path: The path of the input bytecode file.
-    binary_path: The path of the binary to generate.
-
-  Returns:
-    The binary_path.
-  """
-  proc = clang.Exec([str(input_path), '-O0', '-o', str(binary_path)])
-  if proc.returncode:
-    raise ValueError(f'Failed to compile binary: {proc.stderr}')
-  if not binary_path.is_file():
-    raise ValueError(f'Binary file {binary_path} not generated.')
-  return binary_path
-
-
-def RunOptPassOnBytecode(input_path: pathlib.Path,
-                         output_path: pathlib.Path,
-                         opts: typing.List[str]) -> pathlib.Path:
-  """Run opt pass on a bytecode file.
-
-  Args:
-    input_path: The input bytecode file.
-    output_path: The file to generate.
-    opts: Additional flags to pass to opt.
-
-  Returns:
-    The output_path.
-  """
-  proc = opt.Exec([str(input_path), '-o', str(output_path), '-S'] + opts)
-  if proc.returncode:
-    raise ValueError(f'Failed to run opt pass: {proc.stderr}')
-  if not output_path.is_file():
-    raise ValueError(f'Bytecode file {output_path} not generated')
-  return output_path
-
-
-def ProduceBitcode(
-    input_src: pathlib.Path,
-    output_path: pathlib.Path,
-    copts: typing.Optional[typing.List[str]] = None) -> pathlib.Path:
-  """Generate bitcode for a source file.
-
-  Args:
-    input_src: The input source file.
-    output_path: The file to generate.
-    copts: A list of additional flags to pass to clang.
-
-  Returns:
-    The output_path.
-  """
-  copts = copts or []
-  proc = clang.Exec([str(input_src), '-o', str(output_path), '-emit-llvm',
-                     '-S', '-c', '-O0'] + copts)
-  if proc.returncode:
-    raise ValueError(f'Failed to compile bytecode: {proc.stderr}')
-  if not output_path.is_file():
-    raise ValueError(f'Bytecode file {out_path} not generated.')
-  return output_path
-
-
-def LinkBitcodeFilesToBytecode(
-    input_paths: typing.List[pathlib.Path],
-    output_path: pathlib.Path,
-    linkopts: typing.Optional[typing.List[str]] = None) -> pathlib.Path:
-  """Link multiple bitcode files to a single bytecode file.
-
-  Args:
-    input_paths: A list of input bitcode files.
-    output_path: The bytecode file to generate.
-    linkopts: A list of additional flags to pass to llvm-link.
-
-  Returns:
-    The output_path.
-  """
-  if output_path.is_file():
-    output_path.unlink()
-  linkopts = linkopts or []
-  proc = llvm_link.Exec(
-      [str(x) for x in input_paths] + ['-o', str(output_path), '-S'] + linkopts)
-  if proc.returncode:
-    raise ValueError(f'Failed to link bytecode: {proc.stderr}')
-  if not output_path.is_file():
-    raise ValueError(f'Bytecode file {output_path} not linked.')
-  return output_path
-
-
 def ProduceBytecodeFromSources(
     input_paths: typing.List[pathlib.Path],
     output_path: pathlib.Path,
     copts: typing.Optional[typing.List[str]] = None,
-    linkopts: typing.Optional[typing.List[str]] = None) -> pathlib.Path:
+    linkopts: typing.Optional[typing.List[str]] = None,
+    timeout_seconds: int = 60) -> pathlib.Path:
   """Produce a single bytecode file for a set of sources.
 
   Args:
@@ -396,10 +308,12 @@ def ProduceBytecodeFromSources(
     output_path: The file to generate.
     copts: A list of additional flags to pass to clang.
     linkopts: A list of additional flags to pass to llvm-link.
+    timeout_seconds: The number of seconds to allow clang to run for.
 
   Returns:
     The output_path.
   """
+  copts = copts or []
   if output_path.is_file():
     output_path.unlink()
 
@@ -409,9 +323,12 @@ def ProduceBytecodeFromSources(
     input_srcs = [
       d / (crypto.sha256_str(str(src)) + '.l') for src in input_paths]
     for src, input_src in zip(input_paths, input_srcs):
-      ProduceBitcode(src, input_src, copts)
+      clang.Compile(src, input_src,
+                    copts=copts + ['-O0', '-emit-llvm', '-S', '-c'],
+                    timeout_seconds=timeout_seconds)
     # Link the separate bytecode files.
-    LinkBitcodeFilesToBytecode(input_srcs, output_path, linkopts)
+    llvm_link.LinkBitcodeFilesToBytecode(input_srcs, output_path, linkopts,
+                                         timeout_seconds=timeout_seconds)
   return output_path
 
 

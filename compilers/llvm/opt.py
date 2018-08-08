@@ -10,6 +10,7 @@ Usage:
 
   bazel run //compilers/llvm:opt [-- <script_args> [-- <opt_args>]]
 """
+import pathlib
 import subprocess
 import sys
 import typing
@@ -433,7 +434,7 @@ def Exec(args: typing.List[str], timeout_seconds: int = 60) -> subprocess.Popen:
 
   Args:
     args: A list of arguments to pass to binary.
-    timeout_seconds: The number of seconds to allow clang-format to run for.
+    timeout_seconds: The number of seconds to allow opt to run for.
 
   Returns:
     A Popen instance with stdout and stderr set to strings.
@@ -449,6 +450,35 @@ def Exec(args: typing.List[str], timeout_seconds: int = 60) -> subprocess.Popen:
   process.stdout = stdout
   process.stderr = stderr
   return process
+
+
+def RunOptPassOnBytecode(input_path: pathlib.Path,
+                         output_path: pathlib.Path,
+                         opts: typing.List[str],
+                         timeout_seconds: int = 60) -> pathlib.Path:
+  """Run opt pass(es) on a bytecode file.
+
+  Args:
+    input_path: The input bytecode file.
+    output_path: The file to generate.
+    opts: Additional flags to pass to opt.
+    timeout_seconds: The number of seconds to allow opt to run for.
+
+  Returns:
+    The output_path.
+
+  Raises:
+    ValueError: In case of error, or timeout.
+  """
+  proc = Exec([str(input_path), '-o', str(output_path), '-S'] + opts,
+              timeout_seconds=timeout_seconds)
+  if proc.returncode == 9:
+    raise llvm.LlvmTimeout(f'opt timed out after {timeout_seconds} seconds')
+  elif proc.returncode:
+    raise OptException(f'Failed to run opt pass: {proc.stderr}')
+  if not output_path.is_file():
+    raise OptException(f'Bytecode file {output_path} not generated')
+  return output_path
 
 
 def main(argv):

@@ -10,6 +10,7 @@ Usage:
 
   bazel run //compilers/llvm:clang [-- <script_args> [-- <clang_args>]]
 """
+import pathlib
 import subprocess
 import sys
 import typing
@@ -63,6 +64,37 @@ def Exec(args: typing.List[str], timeout_seconds: int = 60) -> subprocess.Popen:
   process.stdout = stdout
   process.stderr = stderr
   return process
+
+
+def Compile(input_path: pathlib.Path,
+            binary_path: pathlib.Path,
+            copts: typing.Optional[typing.List[str]] = None,
+            timeout_seconds: int = 60) -> pathlib.Path:
+  """Compile bytecode file to a binary.
+
+  Args:
+    input_path: The path of the input bytecode file.
+    binary_path: The path of the binary to generate.
+    copts: A list of additional flags to pass to the compiler.
+    timeout_seconds: The number of seconds to allow clang to run for.
+
+  Returns:
+    The binary_path.
+
+  Raises:
+    ValueError: If the compilation fails.
+  """
+  copts = copts or []
+  proc = Exec([str(input_path), '-o', str(binary_path)] + copts,
+              timeout_seconds=timeout_seconds)
+  if proc.returncode == 9:
+    raise llvm.LlvmTimeout(f'opt timed out after {timeout_seconds} seconds')
+  elif proc.returncode:
+    raise ClangException(
+        f'clang exited with returncode {proc.returncode}: {proc.stderr}')
+  if not binary_path.is_file():
+    raise ClangException(f"Binary file not generated: '{binary_path}'")
+  return binary_path
 
 
 def main(argv):

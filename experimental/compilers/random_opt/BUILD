@@ -5,6 +5,7 @@ py_library(
     srcs = ["implementation.py"],
     deps = [
         "//compilers/llvm:clang",
+        "//compilers/llvm:llvm",
         "//compilers/llvm:llvm_link",
         "//compilers/llvm:opt",
         "//experimental/compilers/random_opt/proto:random_opt_py_pb2",

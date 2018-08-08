@@ -10,6 +10,7 @@ Usage:
 
   bazel run //compilers/llvm:llvm_link [-- <script_args> [-- <llvm_link_args>]]
 """
+import pathlib
 import subprocess
 import sys
 import typing
@@ -55,6 +56,35 @@ def Exec(args: typing.List[str], timeout_seconds: int = 60) -> subprocess.Popen:
   process.stdout = stdout
   process.stderr = stderr
   return process
+
+
+def LinkBitcodeFilesToBytecode(
+    input_paths: typing.List[pathlib.Path],
+    output_path: pathlib.Path,
+    linkopts: typing.Optional[typing.List[str]] = None,
+    timeout_seconds: int = 60) -> pathlib.Path:
+  """Link multiple bitcode files to a single bytecode file.
+
+  Args:
+    input_paths: A list of input bitcode files.
+    output_path: The bytecode file to generate.
+    linkopts: A list of additional flags to pass to llvm-link.
+    timeout_seconds: The number of seconds to allow llvm-link to run for.
+
+  Returns:
+    The output_path.
+  """
+  if output_path.is_file():
+    output_path.unlink()
+  linkopts = linkopts or []
+  proc = Exec(
+      [str(x) for x in input_paths] + ['-o', str(output_path), '-S'] + linkopts,
+      timeout_seconds=timeout_seconds)
+  if proc.returncode:
+    raise ValueError(f'Failed to link bytecode: {proc.stderr}')
+  if not output_path.is_file():
+    raise ValueError(f'Bytecode file {output_path} not linked.')
+  return output_path
 
 
 def main(argv):
