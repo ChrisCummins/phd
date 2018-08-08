@@ -1,0 +1,15 @@
+// Protos for benchmarks.
+
+syntax = "proto2";
+
+// A single benchmark.
+message Benchmark {
+  // The name of the benchmark.
+  optional string name = 1;
+  // The usage instructions for the binary.
+  optional string usage = 2;
+  // The path to the compiled binary.
+  optional string binary = 3;
+  // The list of source files.
+  repeated string srcs = 4;
+}
