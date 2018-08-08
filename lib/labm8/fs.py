@@ -569,7 +569,7 @@ def chdir(directory: typing.Union[str, pathlib.Path]) -> pathlib.Path:
 
 
 @contextlib.contextmanager
-def TemporaryWorkingDir(prefix: str = None) -> pathlib.Path:
+def TemporaryWorkingDir(prefix: str = 'phd_') -> pathlib.Path:
   """A context manager which provides a temporary working directory.
 
   This creates an empty temporary directory, and changes the current working
