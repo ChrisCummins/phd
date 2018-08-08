@@ -66,35 +66,48 @@ def Exec(args: typing.List[str], timeout_seconds: int = 60) -> subprocess.Popen:
   return process
 
 
-def Compile(input_path: pathlib.Path,
-            binary_path: pathlib.Path,
+def Compile(srcs: typing.List[pathlib.Path],
+            out: pathlib.Path,
             copts: typing.Optional[typing.List[str]] = None,
             timeout_seconds: int = 60) -> pathlib.Path:
-  """Compile bytecode file to a binary.
+  """Compile input sources.
+
+  This has some minor behavioural differences from calling into clang directly.
+  The first is that necessary parent directories for the output path are created
+  if necessary, rather than raising an error.
 
   Args:
-    input_path: The path of the input bytecode file.
-    binary_path: The path of the binary to generate.
+    srcs: The path of the input bytecode file.
+    out: The path of the binary to generate.
     copts: A list of additional flags to pass to the compiler.
     timeout_seconds: The number of seconds to allow clang to run for.
 
   Returns:
-    The binary_path.
+    The output path.
 
   Raises:
-    ValueError: If the compilation fails.
+    FileNotFoundError: If any of the srcs do not exist.
+    LlvmTimeout: If the compiler times out.
+    ClangException: If the compilation fails.
   """
   copts = copts or []
-  proc = Exec([str(input_path), '-o', str(binary_path)] + copts,
+  # Validate the input srcs.
+  for src in srcs:
+    if not src.is_file():
+      raise FileNotFoundError(f"File not found: '{src}'")
+  # Ensure the output directory exists.
+  out.parent.mkdir(parents=True, exist_ok=True)
+
+  proc = Exec([str(srcs), '-o', str(out)] + copts,
               timeout_seconds=timeout_seconds)
   if proc.returncode == 9:
-    raise llvm.LlvmTimeout(f'opt timed out after {timeout_seconds} seconds')
+    raise llvm.LlvmTimeout(f'clang timed out after {timeout_seconds} seconds')
   elif proc.returncode:
     raise ClangException(
         f'clang exited with returncode {proc.returncode}: {proc.stderr}')
-  if not binary_path.is_file():
-    raise ClangException(f"Binary file not generated: '{binary_path}'")
-  return binary_path
+  if not out.is_file():
+    raise ClangException(f"Binary file not generated: '{out}'")
+  return out
 
 
 def main(argv):

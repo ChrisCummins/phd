@@ -115,7 +115,7 @@ class LlvmOptEnv(gym.Env):
   def reset(self):
     logging.debug('$ cp %s %s', self.base_bytecode_path, self.bytecode_path)
     shutil.copyfile(self.base_bytecode_path, self.bytecode_path)
-    clang.Compile(self.bytecode_path, self.binary_path, copts=['-O0'])
+    clang.Compile([self.bytecode_path], self.binary_path, copts=['-O0'])
     self.RunSetup()
     self.RunBinary()
     if not self.StepIsValid():
@@ -197,7 +197,7 @@ EPISODE #{len(self.episodes)}, STEP #{len(self.episodes[-1].step) - 1}:
       os.rename(str(temp_bytecode), str(self.bytecode_path))
       # Compile a new binary.
       try:
-        clang.Compile(self.bytecode_path, temp_binary, copts=['-O0'])
+        clang.Compile([self.bytecode_path], temp_binary, copts=['-O0'])
         step.binary_changed = BinariesAreEqual(temp_binary, self.binary_path)
         os.rename(str(temp_binary), str(self.binary_path))
       except llvm.LlvmError as e:
@@ -323,7 +323,7 @@ def ProduceBytecodeFromSources(
     input_srcs = [
       d / (crypto.sha256_str(str(src)) + '.l') for src in input_paths]
     for src, input_src in zip(input_paths, input_srcs):
-      clang.Compile(src, input_src,
+      clang.Compile([src], input_src,
                     copts=copts + ['-O0', '-emit-llvm', '-S', '-c'],
                     timeout_seconds=timeout_seconds)
     # Link the separate bytecode files.
