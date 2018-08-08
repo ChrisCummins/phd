@@ -9,6 +9,7 @@ py_binary(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        "//datasets/benchmarks/proto:benchmarks_py_pb2",
         "//lib/labm8:bazelutil",
         "//third_party/py/absl",
     ],

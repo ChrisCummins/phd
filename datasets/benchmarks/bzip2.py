@@ -6,6 +6,7 @@ from absl import app
 from absl import flags
 from absl import logging
 
+from datasets.benchmarks.proto import benchmarks_pb2
 from lib.labm8 import bazelutil
 
 
@@ -64,6 +65,18 @@ def Exec(data: str, args: typing.List[str],
   process.stdout = stdout
   process.stderr = stderr
   return process
+
+
+Bzip2 = benchmarks_pb2.Benchmark(
+    name='bzip2',
+    binary=BZIP2,
+    srcs=BZIP2_SRCS,
+)
+
+# A list of all benchmarks in this file.
+BENCHMARKS = [
+  Bzip2,
+]
 
 
 def main(argv):
