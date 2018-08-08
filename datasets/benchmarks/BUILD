@@ -23,3 +23,16 @@ py_test(
         "//third_party/py/pytest",
     ],
 )
+
+py_binary(
+    name = "llvm_test_suite",
+    srcs = ["llvm_test_suite.py"],
+    data = [
+        "@llvm_test_suite//:queens",
+        "@llvm_test_suite//:queens_srcs",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//lib/labm8:bazelutil",
+    ],
+)
