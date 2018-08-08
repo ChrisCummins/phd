@@ -98,7 +98,7 @@ def Compile(srcs: typing.List[pathlib.Path],
   # Ensure the output directory exists.
   out.parent.mkdir(parents=True, exist_ok=True)
 
-  proc = Exec([str(srcs), '-o', str(out)] + copts,
+  proc = Exec([str(x) for x in srcs] + ['-o', str(out)] + copts,
               timeout_seconds=timeout_seconds)
   if proc.returncode == 9:
     raise llvm.LlvmTimeout(f'clang timed out after {timeout_seconds} seconds')
