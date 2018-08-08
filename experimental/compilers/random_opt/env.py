@@ -1,4 +1,5 @@
 """A Gym environment for the LLVM optimizer."""
+import filecmp
 import gym
 import os
 import pathlib
@@ -142,12 +143,17 @@ class LlvmOptEnv(gym.Env):
     Returns:
       The outfile.
     """
+    bin_changed = (
+      'changed' if self.episodes[-1].step[-1].binary_changed else 'unchanged')
+    bytecode_changed = (
+      'changed' if self.episodes[-1].step[-1].bytecode_changed else 'unchanged')
     outfile.write(f'''\
 ==================================================
 EPISODE #{len(self.episodes)}, STEP #{len(self.episodes[-1].step) - 1}:
 
   Step time: {self.episodes[-1].step[-1].total_step_runtime_ms} ms.
   Passes Run: {self.episodes[-1].step[-1].opt_pass}.
+  Binary {bin_changed}, bytecode {bytecode_changed}.
   Binary Runtimes: {self.episodes[-1].step[-1].binary_runtime_ms} ms.
   Reward: {self.episodes[-1].step[-1].reward:.3f} ({self.episodes[-1].step[-1].total_reward:.3f} total)
   Speedup: {self.episodes[-1].step[-1].speedup:.2f}x ({self.episodes[-1].step[-1].total_speedup:.2f}x total)
@@ -410,8 +416,13 @@ def ProduceBytecodeFromSources(
 
 
 def BytecodesAreEqual(a: pathlib.Path, b: pathlib.Path) -> bool:
-  pass
+  # TODO(cec): Just ignoring the first line is not enough.
+  with open(a) as f:
+    a_src = '\n'.join(f.read().split('\n')[1:])
+  with open(b) as f:
+    b_src = '\n'.join(f.read().split('\n')[1:])
+  return a_src == b_src
 
 
 def BinariesAreEqual(a: pathlib.Path, b: pathlib.Path) -> bool:
-  return True
+  return filecmp.cmp(a, b)

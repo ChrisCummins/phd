@@ -16,6 +16,17 @@ py_library(
     ],
 )
 
+py_test(
+    name = "env_test",
+    srcs = ["env_test.py"],
+    deps = [
+        ":env",
+        "//compilers/llvm:clang",
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
+    ],
+)
+
 py_library(
     name = "envs",
     srcs = ["envs.py"],

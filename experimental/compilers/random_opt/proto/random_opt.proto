@@ -58,20 +58,26 @@ message Step {
   enum Status {
     PASS = 0;
     OPT_FAILED = 1;
-    EVAL_FAILED = 2;
+    COMPILE_FAILED = 2;
+    EVAL_FAILED = 3;
   };
   optional Status status = 5;
   // An optional message providing additional information about non-PASS
   // statuses.
   optional string status_msg = 6;
 
-  // The runtimes of the binary.
-  repeated int32 binary_runtime_ms = 7;
+  // Whether the bytecode and binary have changed since the last step,
+  // respectively.
+  optional bool bytecode_changed = 8;
+  optional bool binary_changed = 9;
 
-  optional float reward = 8;
-  optional float total_reward = 9;
-  optional float speedup = 10;
-  optional float total_speedup = 11;
+  // The runtimes of the binary.
+  repeated int32 binary_runtime_ms = 10;
+
+  optional float reward = 11;
+  optional float total_reward = 12;
+  optional float speedup = 13;
+  optional float total_speedup = 14;
 }
 
 // An episode is a sequence of steps.
