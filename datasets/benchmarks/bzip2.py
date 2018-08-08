@@ -71,6 +71,7 @@ Bzip2 = benchmarks_pb2.Benchmark(
     name='bzip2',
     binary=str(BZIP2),
     srcs=[str(x) for x in BZIP2_SRCS],
+    hdrs=[str(x) for x in BZIP2_HEADERS],
 )
 
 # A list of all benchmarks in this file.
