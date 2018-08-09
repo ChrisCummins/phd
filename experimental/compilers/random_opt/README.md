@@ -3,6 +3,20 @@
 This is an [OpenAI Gym](https://gym.openai.com) environment for the LLVM 
 optimizer.
 
+Example usage:
+
+```py
+env = gym.make(FLAGS.env)
+env.reset()
+for _ in range(10):
+  # We don't yet have an observation space, so all we can do is take random
+  # choices.
+  obs, reward, done, info = env.step(env.action_space.sample())
+  env.render()
+  if done:
+    break
+```
+
 Example run:
 
 ```sh
