@@ -24,7 +24,7 @@ ENVIRONMENTS = [
 ]
 
 # A default environment name, registered below.
-DEFAULT_ENV_ID = 'LLVM-bzip2-512K-v0'
+DEFAULT_ENV_ID = 'LLVM-queens-14x14-v0'
 
 
 # Environment generator functions.
