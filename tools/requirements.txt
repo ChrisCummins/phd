@@ -113,6 +113,7 @@ qtconsole==4.3.1
 requests==2.18.4
 scandir==1.7
 scikit-learn==0.19.1
+scikit-image==0.14.0
 scipy==1.0.0
 seaborn==0.8.1
 Send2Trash==1.5.0
@@ -130,6 +131,7 @@ traitlets==4.3.2
 trash-cli==0.17.1.14
 urllib3==1.22
 virtualenv==15.1.0
+vizdoom==1.1.6
 wcwidth==0.1.7
 webencodings==0.5.1
 widgetsnbextension==3.1.4
