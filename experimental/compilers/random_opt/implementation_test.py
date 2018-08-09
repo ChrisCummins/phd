@@ -8,7 +8,7 @@ from absl import app
 from absl import flags
 
 from compilers.llvm import clang
-from experimental.compilers.random_opt import env
+from experimental.compilers.random_opt import implementation
 
 
 FLAGS = flags.FLAGS
@@ -47,9 +47,9 @@ int main(int argc, char** argv) {
     a_src = f.read()
   print(a_src)
 
-  assert env.BytecodesAreEqual(a, b)
-  assert not env.BytecodesAreEqual(a, a_opt)
-  assert env.BytecodesAreEqual(a_opt, b_opt)
+  assert implementation.BytecodesAreEqual(a, b)
+  assert not implementation.BytecodesAreEqual(a, a_opt)
+  assert implementation.BytecodesAreEqual(a_opt, b_opt)
 
 
 def test_BinariesAreEqual(tempdir: pathlib.Path):
@@ -73,9 +73,9 @@ int main(int argc, char** argv) {
   clang.Exec([str(src), '-o', str(b), '-O0'])
   clang.Exec([str(src), '-o', str(b_opt), '-O3'])
 
-  assert env.BinariesAreEqual(a, b)
-  assert not env.BinariesAreEqual(a, a_opt)
-  assert env.BinariesAreEqual(a_opt, b_opt)
+  assert implementation.BinariesAreEqual(a, b)
+  assert not implementation.BinariesAreEqual(a, a_opt)
+  assert implementation.BinariesAreEqual(a_opt, b_opt)
 
 
 def main(argv: typing.List[str]):
