@@ -6,15 +6,15 @@ from absl import app
 from absl import flags
 from absl import logging
 
-from experimental.compilers.random_opt import env as llvm_env
-from experimental.compilers.random_opt import envs
+from experimental.compilers.random_opt import environments
+from experimental.compilers.random_opt import implementation as implementation
 from lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
-    'env', envs.DEFAULT_ENV_ID,
+    'env', environments.DEFAULT_ENV_ID,
     'The name of the environment to use.')
 flags.DEFINE_integer(
     'num_episodes', 3,
@@ -36,7 +36,7 @@ def Render(env: gym.Env) -> None:
     env.render()
 
 
-def ToFile(env: llvm_env.LlvmOptEnv) -> None:
+def ToFile(env: implementation.LlvmOptEnv) -> None:
   """Save environment to file --proto_out."""
   out_path = pathlib.Path(FLAGS.proto_out)
   out_path.parent.mkdir(parents=True, exist_ok=True)
