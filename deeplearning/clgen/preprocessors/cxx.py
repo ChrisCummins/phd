@@ -4,6 +4,9 @@ import sys
 from absl import flags
 from phd.lib.labm8 import bazelutil
 
+from compilers.llvm import clang as clanglib
+from compilers.llvm import llvm
+from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import clang
 from deeplearning.clgen.preprocessors import normalizer
 from deeplearning.clgen.preprocessors import public
@@ -39,7 +42,10 @@ CLANG_ARGS = [
 
 @public.clgen_preprocessor
 def ClangPreprocess(text: str) -> str:
-  return clang.Preprocess(text, CLANG_ARGS)
+  try:
+    return clang.StripPreprocessorLines(clanglib.Preprocess(text, CLANG_ARGS))
+  except llvm.LlvmError as e:
+    raise errors.ClangException(str(e))
 
 
 @public.clgen_preprocessor

@@ -116,6 +116,32 @@ def Compile(srcs: typing.List[pathlib.Path],
   return out
 
 
+def Preprocess(src: str, copts: typing.Optional[typing.List[str]] = None,
+               timeout_seconds: int = 60):
+  """Run input code through the compiler frontend to inline macros.
+
+  Args:
+    src: The source code to preprocess.
+    copts: A list of flags to be passed to clang.
+    timeout_seconds: The number of seconds to allow before killing clang.
+
+  Returns:
+    The preprocessed code.
+
+  Raises:
+    ClangException: In case of an error.
+    ClangTimeout: If clang does not complete before timeout_seconds.
+  """
+  copts = copts or []
+  cmd = ['-E', '-c', '-', '-o', '-'] + copts
+  logging.debug('$ %s', ' '.join(cmd))
+  process = Exec(cmd, timeout_seconds=timeout_seconds, stdin=src)
+  if process.returncode:
+    raise ClangException(
+        f'clang exited with returncode {process.returncode}: {process.stderr}')
+  return process.stdout
+
+
 def main(argv):
   """Main entry point."""
   try:

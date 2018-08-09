@@ -77,6 +77,7 @@ py_library(
         ":clang",
         ":normalizer",
         ":public",
+        "//compilers/llvm:clang",
         "//lib/labm8:bazelutil",
         "//third_party/py/absl",
     ],

@@ -19,6 +19,10 @@ def tempdir() -> pathlib.Path:
     yield pathlib.Path(d)
 
 
+def _StripPreprocessorLines(out: str):
+  return '\n'.join(line for line in out.split('\n') if not line.startswith('#'))
+
+
 # Exec() tests.
 
 def test_Exec_compile_bytecode(tempdir: pathlib.Path):
@@ -56,6 +60,37 @@ int main() {
   assert not p.stderr
   assert not p.stdout
   assert (tempdir / 'foo.ll').is_file()
+
+
+# Preprocess() tests.
+
+def test_Preprocess_empty_input():
+  """Test that Preprocess accepts an empty input."""
+  assert _StripPreprocessorLines(clang.Preprocess('')) == '\n'
+
+
+def test_Preprocess_small_cxx_program():
+  """Test pre-processing a small C++ program."""
+  assert clang.Preprocess("""
+#define FOO T
+template<typename FOO>
+FOO foobar(const T& a) {return a;}
+
+int foo() { return foobar<int>(10); }
+""", copts=['-xc++']).endswith("""
+
+template<typename T>
+T foobar(const T& a) {return a;}
+
+int foo() { return foobar<int>(10); }
+""")
+
+
+def test_Preprocess_missing_include():
+  """Test that Preprocessor error is raised on missing #include."""
+  with pytest.raises(clang.ClangException) as e_info:
+    clang.Preprocess('#include "my-missing-file.h"')
+  assert "'my-missing-file.h' file not found" in str(e_info)
 
 
 def main(argv: typing.List[str]):
