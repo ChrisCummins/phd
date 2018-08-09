@@ -1,7 +1,6 @@
 # Deep Reinforcement Learning Course.
 # See: https://simoninithomas.github.io/Deep_reinforcement_learning_Course/
 
-
 py_binary(
     name = "deep_q_doom",
     srcs = ["deep_q_doom.py"],
@@ -26,7 +25,7 @@ py_test(
         ":deep_q_doom",
         "//third_party/py/absl",
         "//third_party/py/pytest",
-    ]
+    ],
 )
 
 py_binary(
