@@ -26,7 +26,8 @@ def test_benchmarks(benchmark: benchmarks_pb2.Benchmark):
     assert pathlib.Path(path).is_file()
   # Compile the sources.
   with tempfile.TemporaryDirectory() as d:
-    clang.Compile(list(benchmark.srcs), pathlib.Path(d) / 'exe')
+    clang.Compile([pathlib.Path(x) for x in benchmark.srcs],
+                  pathlib.Path(d) / 'exe')
     assert (pathlib.Path(d) / 'exe').is_file()
 
 
