@@ -252,11 +252,11 @@ EPISODE #{len(self.episodes)}, STEP #{len(self.episodes[-1].step) - 1}:
     proc = subprocess.Popen(exec_cmd, shell=True)
     proc.communicate()
     if proc.returncode == 9:
-      raise ValueError(
-          f"Command timed out after {timeout_seconds} seconds: '{cmd}'")
+      raise ValueError(f"Command timed out after {timeout_seconds} seconds: "
+                       f"'{self.exec_cmd}'")
     elif proc.returncode:
-      raise ValueError(
-          f"Command exited with return code {proc.returncode}: '{cmd}'")
+      raise ValueError(f"Command exited with return code {proc.returncode}: "
+                       f"'{self.exec_cmd}'")
 
   def GetRuntimeMs(self, num_runs: int = 3) -> int:
     """Get runtime.
