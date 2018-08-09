@@ -82,6 +82,16 @@ registration.register(
 )
 
 registration.register(
+    id='LLVM-queens-10x10-v0',
+    **QueensEnvironment(10)
+)
+
+registration.register(
+    id='LLVM-queens-12x12-v0',
+    **QueensEnvironment(12)
+)
+
+registration.register(
     id='LLVM-queens-14x14-v0',
     **QueensEnvironment(14)
 )
