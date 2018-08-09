@@ -12,6 +12,7 @@ py_library(
         "//lib/labm8:crypto",
         "//lib/labm8:labdate",
         "//lib/labm8:pbutil",
+        "//lib/labm8:text",
         "//third_party/py/absl",
         "//third_party/py/gym",
     ],

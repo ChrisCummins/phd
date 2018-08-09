@@ -21,6 +21,7 @@ from experimental.compilers.random_opt.proto import random_opt_pb2
 from lib.labm8 import crypto
 from lib.labm8 import labdate
 from lib.labm8 import pbutil
+from lib.labm8 import text
 
 
 FLAGS = flags.FLAGS
@@ -187,7 +188,7 @@ EPISODE #{len(self.episodes)}, STEP #{len(self.episodes[-1].step) - 1}:
                                list(step.opt_pass))
     except llvm.LlvmError as e:
       step.status = random_opt_pb2.Step.OPT_FAILED
-      step.status_msg = str(e)
+      step.status_msg = text.truncate(str(e), 255)
 
     if step.status == random_opt_pb2.Step.PASS:
       # Update bytecode file.
@@ -202,7 +203,7 @@ EPISODE #{len(self.episodes)}, STEP #{len(self.episodes[-1].step) - 1}:
         os.rename(str(temp_binary), str(self.binary_path))
       except llvm.LlvmError as e:
         step.status = random_opt_pb2.Step.COMPILE_FAILED
-        step.status_msg = str(e)
+        step.status_msg = text.truncate(str(e), 255)
 
     if step.status == random_opt_pb2.Step.PASS:
       # Get the binary runtime.
