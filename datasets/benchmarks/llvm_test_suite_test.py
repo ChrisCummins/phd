@@ -15,15 +15,6 @@ from datasets.benchmarks.proto import benchmarks_pb2
 FLAGS = flags.FLAGS
 
 
-def Compile(srcs: typing.List[str]) -> None:
-  """Compile a benchmark and assert that a binary is produced."""
-  with tempfile.TemporaryDirectory() as d:
-    path = pathlib.Path(d) / 'exe'
-    proc = clang.Exec(list(srcs) + ['-o', str(path)])
-    assert not proc.returncode
-    assert path.is_file()
-
-
 @pytest.mark.parametrize('benchmark', llvm_test_suite.BENCHMARKS)
 def test_benchmarks(benchmark: benchmarks_pb2.Benchmark):
   """Test attributes of protos."""
@@ -33,7 +24,10 @@ def test_benchmarks(benchmark: benchmarks_pb2.Benchmark):
     assert pathlib.Path(path).is_file()
   for path in benchmark.hdrs:
     assert pathlib.Path(path).is_file()
-  Compile(benchmark.srcs)
+  # Compile the sources.
+  with tempfile.TemporaryDirectory() as d:
+    clang.Compile(list(benchmark.srcs), pathlib.Path(d) / 'exe')
+    assert (pathlib.Path(d) / 'exe').is_file()
 
 
 def main(argv: typing.List[str]):
