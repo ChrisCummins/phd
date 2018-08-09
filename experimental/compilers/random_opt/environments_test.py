@@ -6,13 +6,13 @@ import typing
 from absl import app
 from absl import flags
 
-from experimental.compilers.random_opt import envs
+from experimental.compilers.random_opt import environments
 
 
 FLAGS = flags.FLAGS
 
 
-@pytest.mark.parametrize('environment', envs.ENVIRONMENTS)
+@pytest.mark.parametrize('environment', environments.ENVIRONMENTS)
 def test_environments(environment: str):
   """Simple black box test of environment."""
   env = gym.make(environment)
