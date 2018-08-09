@@ -19,6 +19,8 @@ def tempdir() -> pathlib.Path:
     yield pathlib.Path(d)
 
 
+# Exec() tests.
+
 def test_Exec_compile_bytecode(tempdir: pathlib.Path):
   """Test bytecode generation."""
   with open(tempdir / 'foo.cc', 'w') as f:
@@ -32,6 +34,24 @@ int main() {
 """)
   p = clang.Exec([str(tempdir / 'foo.cc'), '-xc++', '-S', '-emit-llvm', '-c',
                   '-o', str(tempdir / 'foo.ll')])
+  assert not p.returncode
+  assert not p.stderr
+  assert not p.stdout
+  assert (tempdir / 'foo.ll').is_file()
+
+
+def test_Exec_compile_bytecode_stdin(tempdir: pathlib.Path):
+  """Test bytecode generation."""
+  p = clang.Exec(['-xc++', '-S', '-emit-llvm', '-c',
+                  '-o', str(tempdir / 'foo.ll'), '-'], stdin="""
+#include <iostream>
+
+int main() {
+  std::cout << "Hello, world!" << std::endl;
+  return 0;
+}
+""")
+  print(p.stderr)
   assert not p.returncode
   assert not p.stderr
   assert not p.stdout

@@ -40,11 +40,14 @@ class ClangException(llvm.LlvmError):
   pass
 
 
-def Exec(args: typing.List[str], timeout_seconds: int = 60) -> subprocess.Popen:
+def Exec(args: typing.List[str],
+         stdin: typing.Optional[str] = None,
+         timeout_seconds: int = 60) -> subprocess.Popen:
   """Run clang.
 
   Args:
     args: A list of arguments to pass to binary.
+    stdin: Optional input string to pass to binary.
     timeout_seconds: The number of seconds to allow clang to run for.
 
   Returns:
@@ -57,8 +60,11 @@ def Exec(args: typing.List[str], timeout_seconds: int = 60) -> subprocess.Popen:
   logging.debug('$ %s', ' '.join(cmd))
   process = subprocess.Popen(
       cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-      universal_newlines=True)
-  stdout, stderr = process.communicate()
+      stdin=subprocess.PIPE if stdin else None, universal_newlines=True)
+  if stdin:
+    stdout, stderr = process.communicate(stdin)
+  else:
+    stdout, stderr = process.communicate()
   if process.returncode == 9:
     raise llvm.LlvmTimeout(f'clang timed out after {timeout_seconds}s')
   process.stdout = stdout
