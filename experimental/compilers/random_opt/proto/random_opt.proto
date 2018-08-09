@@ -59,7 +59,8 @@ message Step {
     PASS = 0;
     OPT_FAILED = 1;
     COMPILE_FAILED = 2;
-    EVAL_FAILED = 3;
+    EXEC_FAILED = 3;
+    EVAL_FAILED = 4;
   };
   optional Status status = 5;
   // An optional message providing additional information about non-PASS

@@ -94,6 +94,8 @@ class LlvmOptEnv(gym.Env):
       return -5
     elif status == random_opt_pb2.Step.COMPILE_FAILED:
       return -5
+    elif status == random_opt_pb2.Step.EXEC_FAILED:
+      return -5
     elif status == random_opt_pb2.Step.EVAL_FAILED:
       return -5
     else:
@@ -207,7 +209,13 @@ EPISODE #{len(self.episodes)}, STEP #{len(self.episodes[-1].step) - 1}:
 
     if step.status == random_opt_pb2.Step.PASS:
       # Get the binary runtime.
-      step.binary_runtime_ms.extend(self.GetRuntimeMs())
+      try:
+        step.binary_runtime_ms.extend(self.GetRuntimeMs())
+      except ValueError as e:
+        step.status = random_opt_pb2.Step.EXEC_FAILED
+        step.status_msg = text.truncate(str(e), 255)
+
+    if step.status == random_opt_pb2.Step.PASS:
       if self.StepIsValid():
         step.speedup = (
             (sum(self.episodes[-1].step[-1].binary_runtime_ms) / len(
