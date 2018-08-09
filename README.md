@@ -199,7 +199,9 @@ $ sudo apt install -y --no-install-recommends \
    ca-certificates curl g++ git libmysqlclient-dev ocl-icd-opencl-dev \
    pkg-config python python-dev python3.6 python3.6-dev python3-distutils \
    unzip zip zlib1g-dev openjdk-11-jdk  m4 libexempi-dev rsync texlive-full \
-   python3-numpy
+   python3-numpy build-essential libsdl2-dev libjpeg-dev nasm tar libbz2-dev \
+   libgtk2.0-dev cmake libfluidsynth-dev libgme-dev libopenal-dev timidity \
+   libwildmidi-dev
 ```
 
 Please note that this list of packages is for Ubuntu 18.04. On older
@@ -229,12 +231,19 @@ Install the required packages:
 
 ```sh
 $ brew install bazel coreutils exempi findutils gnu-indent gnu-sed gnu-tar \
-    gnu-time gnu-which python mactex
+    gnu-time gnu-which python mactex cmake boost sdl2 wget
+$ brew cask install julia
 ```
 
 Now proceed to the "Build (all platforms)" section.
 
 ### Build (all platforms)
+
+Install the requirements which are common across platforms:
+
+```sh
+$ julia -e 'Pkg.add("CxxWrap")'
+```
 
 Clone this project:
 
