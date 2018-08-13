@@ -267,7 +267,7 @@ EPISODE #{len(self.episodes)}, STEP #{len(self.episodes[-1].step) - 1}:
       raise ValueError(f"Command exited with return code {proc.returncode}: "
                        f"'{self.exec_cmd}'")
 
-  def GetRuntimeMs(self, num_runs: int = 3) -> int:
+  def GetRuntimeMs(self, num_runs: int = 5) -> int:
     """Get runtime.
 
     Args:
