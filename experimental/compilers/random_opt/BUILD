@@ -59,9 +59,7 @@ py_binary(
     name = "notebooks",
     srcs = ["notebooks.py"],
     deps = [
-        "//datasets/github/scrape_repos:contentfiles",
-        "//deeplearning/clgen",
-        "//experimental/deeplearning/polyglot:get_instances",
+        "//experimental/compilers/random_opt/proto:random_opt_py_pb2",
         "//lib/labm8:bazelutil",
         "//lib/labm8:pbutil",
         "//lib/labm8:viz",
