@@ -429,12 +429,14 @@ class OptException(llvm.LlvmError):
   pass
 
 
-def Exec(args: typing.List[str], timeout_seconds: int = 60) -> subprocess.Popen:
+def Exec(args: typing.List[str], timeout_seconds: int = 60,
+         universal_newlines: bool = True) -> subprocess.Popen:
   """Run LLVM's optimizer.
 
   Args:
     args: A list of arguments to pass to binary.
     timeout_seconds: The number of seconds to allow opt to run for.
+    universal_newlines: Argument passed to Popen() of opt process.
 
   Returns:
     A Popen instance with stdout and stderr set to strings.
@@ -443,7 +445,7 @@ def Exec(args: typing.List[str], timeout_seconds: int = 60) -> subprocess.Popen:
   logging.debug('$ %s', ' '.join(cmd))
   process = subprocess.Popen(
       cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-      universal_newlines=True)
+      universal_newlines=universal_newlines)
   stdout, stderr = process.communicate()
   if process.returncode == 9:
     raise llvm.LlvmTimeout(f'clang timed out after {timeout_seconds}s')
@@ -468,14 +470,22 @@ def RunOptPassOnBytecode(input_path: pathlib.Path,
     The output_path.
 
   Raises:
-    ValueError: In case of error, or timeout.
+    OptException: In case of error.
+    LlvmTimeout: If the process times out.
   """
+  # We don't care about the output of opt, but we will try and decode it if
+  # opt fails.
   proc = Exec([str(input_path), '-o', str(output_path), '-S'] + opts,
-              timeout_seconds=timeout_seconds)
+              timeout_seconds=timeout_seconds, universal_newlines=False)
   if proc.returncode == 9:
     raise llvm.LlvmTimeout(f'opt timed out after {timeout_seconds} seconds')
   elif proc.returncode:
-    raise OptException(f'Failed to run opt pass: {proc.stderr}')
+    try:
+      stderr = proc.stderr.decode('utf-8')
+      raise OptException(
+          f'clang exited with returncode {proc.returncode}: {stderr}')
+    except UnicodeDecodeError:
+      raise OptException(f'clang exited with returncode {proc.returncode}')
   if not output_path.is_file():
     raise OptException(f'Bytecode file {output_path} not generated')
   return output_path
