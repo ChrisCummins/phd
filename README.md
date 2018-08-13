@@ -201,7 +201,7 @@ $ sudo apt install -y --no-install-recommends \
    unzip zip zlib1g-dev openjdk-11-jdk  m4 libexempi-dev rsync texlive-full \
    python3-numpy build-essential libsdl2-dev libjpeg-dev nasm tar libbz2-dev \
    libgtk2.0-dev cmake libfluidsynth-dev libgme-dev libopenal-dev timidity \
-   libwildmidi-dev
+   libwildmidi-dev libboost-all-dev julia libsdl2-dev
 ```
 
 Please note that this list of packages is for Ubuntu 18.04. On older
