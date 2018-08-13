@@ -56,6 +56,21 @@ py_test(
 )
 
 py_binary(
+    name = "notebooks",
+    srcs = ["notebooks.py"],
+    deps = [
+        "//datasets/github/scrape_repos:contentfiles",
+        "//deeplearning/clgen",
+        "//experimental/deeplearning/polyglot:get_instances",
+        "//lib/labm8:bazelutil",
+        "//lib/labm8:pbutil",
+        "//lib/labm8:viz",
+        "//third_party/py/absl",
+        "//third_party/py/jupyter",
+    ],
+)
+
+py_binary(
     name = "random_opt",
     srcs = ["random_opt.py"],
     deps = [
