@@ -142,6 +142,65 @@ def Preprocess(src: str, copts: typing.Optional[typing.List[str]] = None,
   return process.stdout
 
 
+def GetOptArgs(cflags: typing.Optional[typing.List[str]] = None,
+               language: typing.Optional[str] = 'c',
+               stubfile: typing.Optional[str] = 'int main() {}'
+               ) -> typing.List[typing.List[str]]:
+  """Get the arguments passed to opt.
+
+  Args:
+    cflags: The cflags passed to clang. Defaults to -O0.
+    language: The language to get the args for.
+    stubfile: The dummy stub file to get the args list from.
+
+  Returns:
+    A list of invocation arguments.
+  """
+  cflags = cflags or ['-O0']
+  process = Exec(
+      cflags + ['-mllvm', '-debug-pass=Arguments', f'-x{language}', '-'],
+      stdin=stubfile)
+  if process.returncode:
+    raise ClangException(process.stderr)
+  args = []
+  for line in process.stderr.rstrip().split('\n'):
+    if not line.startswith('Pass Arguments:'):
+      raise ClangException(f'Cannot interpret line: {line}')
+    line = line[len('Pass Arguments:'):]
+    args.append(line.split())
+    for arg in args[-1]:
+      if not arg[0] == '-':
+        raise ClangException(f'Cannot interpret clang argument: {arg}')
+  return args
+
+
+def GetOptPasses(cflags: typing.Optional[typing.List[str]] = None,
+                 language: typing.Optional[str] = 'c',
+                 stubfile: typing.Optional[str] = 'int main() {}'
+                 ) -> typing.List[str]:
+  """Get the list of passes run by opt.
+
+  Args:
+    cflags: The cflags passed to clang. Defaults to -O0.
+    language: The language to get the pass list for.
+    stubfile: The dummy stub file to get the pass list from.
+
+  Returns:
+    A list of passes.
+  """
+  cflags = cflags or ['-O0']
+  process = Exec(
+      cflags + ['-mllvm', '-opt-bisect-limit=-1', f'-x{language}', '-'],
+      stdin=stubfile)
+  if process.returncode:
+    raise ClangException(process.stderr)
+  lines = process.stderr.rstrip().split('\n')
+  for line in lines:
+    if not line.startswith('BISECT:'):
+      raise ClangException(f'Cannot interpret line: {line}')
+  return lines
+
+
 def main(argv):
   """Main entry point."""
   try:
