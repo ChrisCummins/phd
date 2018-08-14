@@ -231,8 +231,8 @@ Install the required packages:
 
 ```sh
 $ brew install bazel coreutils exempi findutils gnu-indent gnu-sed gnu-tar \
-    gnu-time gnu-which python mactex cmake boost sdl2 wget
-$ brew cask install julia
+    gnu-time gnu-which python cmake boost sdl2 wget
+$ brew cask install julia mactex
 ```
 
 Now proceed to the "Build (all platforms)" section.
@@ -265,7 +265,7 @@ instructions. CUDA support has only been tested for Linux builds, not macOS or
 Docker containers.
 
 Finally, we must set up the shell environment for running bazel. The file `.env`
-is created by the configure process and must be sourced for every shell we want 
+is created by the configure process and must be sourced for every shell we want
 to use bazel with:
 
 ```sh
