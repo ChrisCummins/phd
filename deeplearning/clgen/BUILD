@@ -47,7 +47,7 @@ py_binary(
 py3_image(
     name = "clgen_image",
     srcs = ["clgen.py"],
-    base = "@python3.6//image",
+    base = "@base//image",
     main = "clgen.py",
     deps = [
         ":errors",

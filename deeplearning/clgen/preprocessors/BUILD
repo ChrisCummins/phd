@@ -99,7 +99,7 @@ py_test(
 py3_image(
     name = "cxx_test_image",
     srcs = ["cxx_test.py"],
-    base = "@python3.6//image",
+    base = "@base//image",
     main = "cxx_test.py",
     deps = [
         ":cxx",
