@@ -2,6 +2,9 @@
 
 # Force Python 3.6. This requires that python3.6 is in $PATH. Otherwise,
 # change these values to the absolute path of python3.6.
+# TODO(cec): Try removing this to see if it still works. We'll either need to
+# remove this, or generate this file during ./configure, if we are to add
+# python 3.7 support.
 test --python_path=python3.6
 run --python_path=python3.6
 
