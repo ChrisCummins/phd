@@ -104,7 +104,7 @@ py_library(
     srcs = ["features.py"],
     data = [
         "//deeplearning/clgen/data/include:opencl-shim",
-        "//deeplearning/clgen/native:clgen-features",
+        "//deeplearning/clgen/native:opencl_kernel_features",
     ],
     deps = [
         "//deeplearning/clgen:errors",

@@ -34,8 +34,8 @@ def features_from_file(path):
   Returns:
       np.array: Feature values.
   """
-  # hacky call to clgen-features and parse output
-  cmd = ['clgen-features', path]
+  # hacky call to opencl_kernel_features and parse output
+  cmd = ['opencl_kernel_features', path]
   proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
   cout, _ = proc.communicate()
   features = [float(x) for x in

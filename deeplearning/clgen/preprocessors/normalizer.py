@@ -1,4 +1,4 @@
-"""Python entry point to the clgen-rewriter binary."""
+"""Python entry point to the clang_rewriter binary."""
 import os
 import subprocess
 import tempfile
@@ -14,7 +14,7 @@ from phd.lib.labm8 import bazelutil
 FLAGS = flags.FLAGS
 
 CLGEN_REWRITER = bazelutil.DataPath(
-    'phd/deeplearning/clgen/native/clgen-rewriter')
+    'phd/deeplearning/clgen/native/clang_rewriter')
 assert CLGEN_REWRITER.is_file()
 
 # On Linux we must preload the LLVM sharded libraries.
@@ -70,7 +70,7 @@ def NormalizeIdentifiers(text: str, suffix: str, cflags: typing.List[str],
     raise errors.RewriterException(stderr)
   elif process.returncode == 9:
     raise errors.ClangTimeout(
-        f'clgen-rewriter failed to complete after {timeout_seconds}s')
+        f'clang_rewriter failed to complete after {timeout_seconds}s')
   # The rewriter process can still fail because of some other compilation
   # problem, e.g. for some reason the 'enable 64bit support' pragma which should
   # be included in the shim isn't being propogated correctly to the rewriter.

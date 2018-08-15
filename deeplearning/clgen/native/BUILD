@@ -9,8 +9,8 @@
 # and the sandboxing of bazel's build.
 
 cc_binary(
-    name = "clgen-features",
-    srcs = ["clgen-features.cpp"],
+    name = "opencl_kernel_features",
+    srcs = ["opencl_kernel_features.cpp"],
     copts = [
         "-fPIC",
         "-fvisibility-inlines-hidden",
@@ -228,8 +228,8 @@ cc_binary(
 )
 
 cc_binary(
-    name = "clgen-rewriter",
-    srcs = ["clgen-rewriter.cpp"],
+    name = "clang_rewriter",
+    srcs = ["clang_rewriter.cpp"],
     copts = [
         "-fPIC",
         "-fvisibility-inlines-hidden",

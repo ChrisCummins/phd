@@ -17,7 +17,7 @@ from phd.lib.labm8 import labmath
 
 
 CLGEN_FEATURES = bazelutil.DataPath(
-    'phd/deeplearning/clgen/native/clgen-features')
+    'phd/deeplearning/clgen/native/opencl_kernel_features')
 SHIMFILE = bazelutil.DataPath(
     'phd/deeplearning/clgen/data/include/opencl-shim.h')
 

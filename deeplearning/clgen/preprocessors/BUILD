@@ -138,7 +138,7 @@ py_library(
     name = "normalizer",
     srcs = ["normalizer.py"],
     data = [
-        "//deeplearning/clgen/native:clgen-rewriter",
+        "//deeplearning/clgen/native:clang_rewriter",
     ],
     deps = [
         "//deeplearning/clgen:errors",

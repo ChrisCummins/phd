@@ -24,7 +24,7 @@ class MockProcess():
 
 
 def test_NormalizeIdentifiers_process_command(mocker):
-  """Test the clgen-rewriter comand which is run."""
+  """Test the clang_rewriter comand which is run."""
   mock_Popen = mocker.patch('subprocess.Popen')
   mock_Popen.return_value = MockProcess(0)
   normalizer.NormalizeIdentifiers('', '.c', ['-foo'])
@@ -34,7 +34,7 @@ def test_NormalizeIdentifiers_process_command(mocker):
 
 
 def test_NormalizeIdentifiers_ClangTimeout(mocker):
-  """Test that ClangTimeout is raised if clgen-rewriter returns with SIGKILL."""
+  """Test that ClangTimeout is raised if clang_rewriter returns with SIGKILL."""
   mock_Popen = mocker.patch('subprocess.Popen')
   mock_Popen.return_value = MockProcess(9)
   with pytest.raises(errors.ClangTimeout):
@@ -45,7 +45,7 @@ def test_NormalizeIdentifiers_ClangTimeout(mocker):
 
 
 def test_NormalizeIdentifiers_RewriterException(mocker):
-  """Test that ClangException is raised if clgen-rewriter returns 204."""
+  """Test that ClangException is raised if clang_rewriter returns 204."""
   mock_Popen = mocker.patch('subprocess.Popen')
   mock_Popen.return_value = MockProcess(204)
   with pytest.raises(errors.RewriterException):
