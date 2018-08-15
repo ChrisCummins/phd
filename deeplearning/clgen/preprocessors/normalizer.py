@@ -14,7 +14,7 @@ from phd.lib.labm8 import bazelutil
 FLAGS = flags.FLAGS
 
 CLGEN_REWRITER = bazelutil.DataPath(
-    'phd/deeplearning/clgen/native/clang_rewriter')
+    'phd/deeplearning/clgen/preprocessors/clang_rewriter')
 assert CLGEN_REWRITER.is_file()
 
 # On Linux we must preload the LLVM sharded libraries.

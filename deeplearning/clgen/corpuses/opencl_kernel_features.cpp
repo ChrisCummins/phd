@@ -631,7 +631,7 @@ std::string getexepath() {
 // Return path to OpenCL platform header.
 // WARNING this path is hardcoded to the current location of these two files:
 //
-//   //deeplearning/clgen/native/opencl_kernel_features.cpp
+//   //deeplearning/clgen/corpuses/opencl_kernel_features.cpp
 //   //third_party/opencl/inlined/include/cl.h
 //
 // If either of these files is moved, this path must be updated!
