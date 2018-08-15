@@ -7,4 +7,6 @@ dirs=(
 )
 
 sudo apt-get autoremove -y
+which brew &>/dev/null && brew cleanup
+which brew &>/dev/null && brew cask cleanup
 apt-get clean

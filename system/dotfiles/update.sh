@@ -58,17 +58,12 @@ update_brew() {
             echo_ok "\nbrew:"
             brew outdated | sed 's/^/  /'
             echo_ok "\nbrew casks:"
-            brew-cask-outdated | sed 's/^/  /'
+            brew cask outdated | sed 's/^/  /'
         else
-            for package in $(brew oudated); do
-                echo_ok "upgrading brew package $package"
-                brew upgrade "$package"
-            done
-
-            for package in $(brew-cask-outdated | awk '{print $1}'); do
-                echo_ok "upgrading brew cask $package"
-                brew cask install --force "$package"
-            done
+            brew upgrade
+            brew cask upgrade
+            brew cleanup
+            brew cask cleanup
         fi
     fi
 }
