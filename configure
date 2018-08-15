@@ -224,13 +224,13 @@ def GetConfigurationOptions(argv):
   # --[no]symlink_python.
   parser.add_argument(
       '--symlink_python', dest='symlink_python',
-      action='store_true', help='Symlink python3.6 to ~/.local/bin/python.')
+      action='store_true', help='Symlink python to ~/.local/bin/python.')
   parser.add_argument(
       '--nosymlink_python', dest='symlink_python',
-      action='store_false', help='Do not symlink python3.6.')
+      action='store_false', help='Do not symlink Python.')
   parser.set_defaults(symlink_python=True)
   yes_no_prompts.append(
-      ('symlink_python', 'Symlink python3.6 to ~/.local/bin/python?'))
+      ('symlink_python', 'Symlink python to ~/.local/bin/python?'))
 
   args = parser.parse_args(argv)
 
@@ -281,13 +281,21 @@ def main(argv):
         ['git', '-C', PHD_ROOT, 'submodule', 'update', '--init', '--recursive'],
         stdout=DEVNULL)
 
-  try:
-    python_path = subprocess.check_output(
-        ['which', 'python3.6'], universal_newlines=True).rstrip()
-    assert os.path.isfile(python_path)
-  except subprocess.CalledProcessError:
-    print('fatal: python3.6 not found!', file=sys.stderr)
+  # Find the path of a supported python binary.
+  SUPPORTED_PYTHON_VERSIONS = ['python3.6', 'python3.7']
+  python_path = None
+  for python in SUPPORTED_PYTHON_VERSIONS:
+    try:
+      python_path = subprocess.check_output(
+          ['which', python], universal_newlines=True).rstrip()
+      break
+    except subprocess.CalledProcessError:
+      pass
+  if not python_path:
+    print('fatal: no suitable python version found!\nAcceptable versions: {}'
+          .format(SUPPORTED_PYTHON_VERSIONS), file=sys.stderr)
     sys.exit(1)
+  assert os.path.isfile(python_path)
 
   base_requirements_txt_path = os.path.join(
       PHD_ROOT, 'tools', 'requirements.txt')
@@ -318,7 +326,7 @@ def main(argv):
   with open(tensorflow_build_path, 'w') as f:
     f.write(tensorflow_build)
 
-  # Symlink python3.6 to ~/.local/bin/python.
+  # Symlink python to ~/.local/bin/python.
   if args.symlink_python:
     Mkdir(os.path.expanduser('~/.local/bin'))
     if not os.path.islink(os.path.expanduser('~/.local/bin/python')):
