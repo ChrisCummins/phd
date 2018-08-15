@@ -1,6 +1,7 @@
 # Protocol buffers for Clgen.
 
 load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
+load("@org_pubref_rules_protobuf//java:rules.bzl", "java_proto_library")
 
 # Default to public visibility so that X_proto_library targets in other packages
 # may depend on these protos using proto_deps. Specifying individual targets as
@@ -34,6 +35,16 @@ py_proto_library(
     ],
     protos = ["internal.proto"],
     deps = ["//third_party/py/protobuf"],
+)
+
+java_proto_library(
+  name = "internal_java",
+  proto_deps = [
+      ":corpus_py_pb2",
+  ":model_py_pb2",
+          ":sampler_py_pb2",
+      ],
+      protos = ["internal.proto"],
 )
 
 py_proto_library(

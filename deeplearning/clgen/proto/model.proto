@@ -9,6 +9,8 @@
 syntax = "proto2";
 package clgen;
 
+option java_package = "deeplearning.clgen";
+
 import "deeplearning/clgen/proto/corpus.proto";
 
 // The specification of a CLgen model.

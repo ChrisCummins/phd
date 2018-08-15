@@ -9,6 +9,8 @@
 syntax = "proto2";
 package clgen;
 
+option java_package = "deeplearning.clgen";
+
 // The specification of a CLgen sampler.
 message Sampler {
   // The initial text to the seed the language model with. Each sample will
