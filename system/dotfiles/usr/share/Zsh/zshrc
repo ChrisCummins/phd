@@ -583,9 +583,10 @@ path_dirs=( \
     /usr/local/opt/findutils/libexec/gnubin \
     /usr/local/opt/gnu-sed/libexec/gnubin \
     /usr/local/opt/gnu-tar/libexec/gnubin \
+    /usr/local/opt/mysql@5.7/bin \
+    /usr/local/opt/ofexport/bin \
     /usr/local/opt/python/libexec/bin \
     /usr/local/opt/unzip/bin \
-    /usr/local/opt/ofexport/bin \
     /usr/local/bin \
     /usr/contrib/bin \
     /usr/local/cuda/bin \
