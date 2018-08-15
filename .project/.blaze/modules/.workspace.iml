@@ -17,6 +17,19 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="org.eclipse.osgi.util-3.5.0-ijar_8a9115cf" level="project" />
+    <orderEntry type="library" name="org.eclipse.core.contenttype-3.7.0-ijar_7dba52d9" level="project" />
+    <orderEntry type="library" name="org.osgi.framework-1.9.0-ijar_11c4c18d" level="project" />
+    <orderEntry type="library" name="org.eclipse.equinox.preferences-3.7.100-ijar_1e661ef" level="project" />
+    <orderEntry type="library" name="org.osgi.service.prefs-1.1.1-ijar_ce174d5d" level="project" />
+    <orderEntry type="library" name="org.eclipse.equinox.common-3.10.0-ijar_c66cb299" level="project" />
+    <orderEntry type="library" name="text-3.2.0-v20060605-1400-ijar_26457a8d" level="project" />
+    <orderEntry type="library" name="org.eclipse.core.runtime-3.14.0-ijar_3c1658a3" level="project" />
+    <orderEntry type="library" name="org.eclipse.jface.text-3.13.0-ijar_a24d2dcf" level="project" />
+    <orderEntry type="library" name="org.eclipse.jdt.core-3.14.0-ijar_b122e2bb" level="project" />
+    <orderEntry type="library" name="org.eclipse.osgi-3.13.0-ijar_3bb99dbf" level="project" />
+    <orderEntry type="library" name="org.eclipse.core.jobs-3.10.0-ijar_ccd392df" level="project" />
+    <orderEntry type="library" name="org.eclipse.core.resources-3.13.0-ijar_534dc60f" level="project" />
     <orderEntry type="library" name="Python 3.6 interpreter library" level="application" />
   </component>
 </module>
