@@ -1,5 +1,5 @@
 #!/bin/bash
-# A Python3 wrapper which selects python2 for bazel tools.
+# Select python 2 for bazel tools and python 3 for everything else.
 #
 # This is to workaround a known bug in the rules_docker bazel package, which
 # depends on code which is not Python 3 compatible.
