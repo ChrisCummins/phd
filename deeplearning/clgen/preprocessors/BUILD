@@ -359,6 +359,27 @@ py_test(
     ],
 )
 
+java_binary(
+    name = "JavaRewriter",
+    srcs = ["JavaRewriter.java"],
+    main_class = "deeplearning.clgen.preprocessors.JavaRewriter",
+    deps = [
+        "@org_eclipse_core_contenttype//jar",
+        "@org_eclipse_core_runtime//jar",
+        "@org_eclipse_equinox_common//jar",
+        "@org_eclipse_equinox_preferences//jar",
+        "@org_eclipse_jdt_core//jar",
+        "@org_eclipse_jface//jar",
+        "@org_eclipse_jobs//jar",
+        "@org_eclipse_osgi//jar",
+        "@org_eclipse_osgi_util//jar",
+        "@org_eclipse_resources//jar",
+        "@org_eclipse_text//jar",
+        "@org_osgi_framework//jar",
+        "@org_osgi_service_prefs//jar",
+    ],
+)
+
 py_library(
     name = "normalizer",
     srcs = ["normalizer.py"],
