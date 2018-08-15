@@ -19,38 +19,43 @@ import org.eclipse.text.edits.TextEdit;
 
 public class JavaRewriter {
 
+  private static String FormatJavaSource(final String source) {
+    IDocument doc = new Document(source);
+
+    Properties codeFormatterPreferences = new Properties();
+    codeFormatterPreferences.setProperty(
+        JavaCore.COMPILER_SOURCE, CompilerOptions.VERSION_1_8);
+    codeFormatterPreferences.setProperty(
+        JavaCore.COMPILER_COMPLIANCE, CompilerOptions.VERSION_1_8);
+    codeFormatterPreferences.setProperty(
+        JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.VERSION_1_8);
+    CodeFormatter codeFormatter = ToolFactory.createCodeFormatter(
+        codeFormatterPreferences);
+
+    try {
+      TextEdit edit = codeFormatter.format(
+          CodeFormatter.K_COMPILATION_UNIT | CodeFormatter.F_INCLUDE_COMMENTS,
+          source, 0, source.length(), 0, null);
+      if (edit != null) {
+        edit.apply(doc);
+        return doc.get();
+      } else {
+        return source;
+      }
+    } catch (BadLocationException e) {
+      return null;
+    }
+  }
+
   private static void FormatterDemo() {
     System.out.println("=> Formatter Demo\n");
-    String result;
-
     String javaCode = "public class MyClass{ "
         + "public static void main(String[] args) { "
         + "System.out.println(\"Hello World\");"
         + " }"
         + " }";
     System.out.println("Unformatted source code:\n\n" + javaCode + "\n");
-
-    Properties prefs = new Properties();
-    prefs.setProperty(JavaCore.COMPILER_SOURCE, CompilerOptions.VERSION_1_8);
-    prefs.setProperty(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.VERSION_1_8);
-    prefs.setProperty(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.VERSION_1_8);
-
-    CodeFormatter codeFormatter = ToolFactory.createCodeFormatter(prefs);
-    IDocument doc = new Document(javaCode);
-    try {
-      TextEdit edit = codeFormatter
-          .format(CodeFormatter.K_COMPILATION_UNIT | CodeFormatter.F_INCLUDE_COMMENTS,
-              javaCode, 0, javaCode.length(), 0, null);
-      if (edit != null) {
-        edit.apply(doc);
-        result = doc.get();
-      } else {
-        result = javaCode;
-      }
-    } catch (BadLocationException e) {
-      throw new RuntimeException(e);
-    }
-
+    String result = FormatJavaSource(javaCode);
     System.out.println("Formatted source code:\n\n" + result + "\n");
   }
 
