@@ -1728,12 +1728,14 @@ class Scripts(Task):
   __genfiles__ = [
       '~/.local/bin/mkepisodal',
       '~/.local/bin/rm-dsstore',
+      '~/.local/bin/mp3_transcode',
   ]
 
   def install(self):
     mkdir("~/.local/bin")
     symlink(usr_share("scripts/mkepisodal.py"), "~/.local/bin/mkepisodal")
     symlink(usr_share("scripts/rm-dsstore.sh"), "~/.local/bin/rm-dsstore")
+    symlink(usr_share("scripts/mp3_transcode.sh"), "~/.local/bin/mp3_transcode")
 
   def uninstall(self):
     task_print("Removing scripts")
