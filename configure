@@ -282,7 +282,10 @@ def main(argv):
         stdout=DEVNULL)
 
   # Find the path of a supported python binary.
-  SUPPORTED_PYTHON_VERSIONS = ['python3.6', 'python3.7']
+  # TODO(cec): Add 'python3.7' to list once this issue is fixed:
+  #   https://github.com/tensorflow/tensorflow/issues/20517
+  # Homebrew has updated to python3.7, but TensorFlow does not yet support it.
+  SUPPORTED_PYTHON_VERSIONS = ['python3.6']
   python_path = None
   for python in SUPPORTED_PYTHON_VERSIONS:
     try:
@@ -292,7 +295,7 @@ def main(argv):
     except subprocess.CalledProcessError:
       pass
   if not python_path:
-    print('fatal: no suitable python version found!\nAcceptable versions: {}'
+    print('fatal: no suitable python version found!\nSupported versions: {}'
           .format(SUPPORTED_PYTHON_VERSIONS), file=sys.stderr)
     sys.exit(1)
   assert os.path.isfile(python_path)
