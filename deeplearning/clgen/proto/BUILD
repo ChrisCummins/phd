@@ -38,13 +38,13 @@ py_proto_library(
 )
 
 java_proto_library(
-  name = "internal_java",
-  proto_deps = [
-      ":corpus_py_pb2",
-  ":model_py_pb2",
-          ":sampler_py_pb2",
-      ],
-      protos = ["internal.proto"],
+    name = "internal_java",
+    proto_deps = [
+        ":corpus_py_pb2",
+        ":model_py_pb2",
+        ":sampler_py_pb2",
+    ],
+    protos = ["internal.proto"],
 )
 
 py_proto_library(
