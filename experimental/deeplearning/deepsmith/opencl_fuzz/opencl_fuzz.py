@@ -261,7 +261,10 @@ def TestingLoop(min_interesting_results: int, max_testing_time_seconds: int,
     gs_harness: The device to compare outputs against.
     filters: A filters instance for testcases.
     interesting_results_dir: The directory to write interesting results to.
-    start_time: The starting time, as returned by time.time().
+    start_time: The starting time, as returned by time.time(). If not provided,
+      the starting time will be the moment that this function is called. Set
+      this value if you would like to include initialization overhead in the
+      calculated testing time.
   """
   start_time = start_time or time.time()
   interesting_results_dir.mkdir(parents=True, exist_ok=True)
@@ -317,6 +320,90 @@ def GeneratorFromFlag(config_class,
   return generator_class(config)
 
 
+def GetDeviceUnderTestHarness() -> base_harness.HarnessBase:
+  """Instantiate the device under test harness.
+
+  Uses the global FLAGS to determine the harness to instantiate.
+
+  Returns:
+    A Harness instance.
+  """
+  if FLAGS.generator == 'clgen':
+    harness_class = cldrive.CldriveHarness
+    config_class = harness_pb2.CldriveHarness
+  elif FLAGS.generator == 'clsmith':
+    harness_class = cl_launcher.ClLauncherHarness
+    config_class = harness_pb2.ClLauncherHarness
+  else:
+    raise app.UsageError(
+        f"Unrecognized value for --generator: '{FLAGS.generator}'")
+  logging.info('Preparing device under test.')
+  config = GetBaseHarnessConfig(config_class)
+  config.opencl_env.extend([FLAGS.dut])
+  config.opencl_opt.extend([FLAGS.opencl_opt])
+  dut_harness = harness_class(config)
+  assert len(dut_harness.testbeds) == 1
+  return dut_harness
+
+
+def GetGoldStandardTestHarness() -> base_harness.HarnessBase:
+  """Instantiate the gold standard test harness.
+
+  Uses the global FLAGS to determine the harness to instantiate.
+
+  Returns:
+    A Harness instance.
+  """
+  if FLAGS.generator == 'clgen':
+    harness_class = cldrive.CldriveHarness
+    config_class = harness_pb2.CldriveHarness
+  elif FLAGS.generator == 'clsmith':
+    harness_class = cl_launcher.ClLauncherHarness
+    config_class = harness_pb2.ClLauncherHarness
+  else:
+    raise app.UsageError(
+        f"Unrecognized value for --generator: '{FLAGS.generator}'")
+  logging.info('Preparing gold standard testbed.')
+  config = GetBaseHarnessConfig(config_class)
+  config.opencl_env.extend([gpu.cldrive.env.OclgrindOpenCLEnvironment().name])
+  config.opencl_opt.extend([True])
+  gs_harness = harness_class(config)
+  assert len(gs_harness.testbeds) >= 1
+  return gs_harness
+
+
+def GetGenerator() -> base_generator.GeneratorServiceBase:
+  logging.info('Preparing generator.')
+  if FLAGS.generator == 'clgen':
+    generator = GeneratorFromFlag(generator_pb2.ClgenGenerator,
+                                  clgen_pretrained.ClgenGenerator)
+  elif FLAGS.generator == 'clsmith':
+    generator = GeneratorFromFlag(generator_pb2.ClsmithGenerator,
+                                  clsmith.ClsmithGenerator)
+  else:
+    raise app.UsageError(
+        f"Unrecognized value for --generator: '{FLAGS.generator}'")
+  logging.info('%s:\n %s', type(generator).__name__, generator.config)
+  return generator
+
+
+def GetFilters() -> difftests.FiltersBase:
+  if FLAGS.generator == 'clgen':
+    return opencl_filters.ClgenOpenClFilters()
+  elif FLAGS.generator == 'clsmith':
+    # TODO(cec): Replace with CLSmith filters.
+    return difftests.FiltersBase()
+  else:
+    raise app.UsageError(
+        f"Unrecognized value for --generator: '{FLAGS.generator}'")
+
+
+def ReRunResult(result: deepsmith_pb2.Result,
+                dut_harness: base_harness.HarnessBase,
+                filters: difftests.FiltersBase) -> None:
+  pass
+
+
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:
@@ -337,52 +424,25 @@ def main(argv):
           "Cannot read Result proto: '{result_to_rerun_path}'.")
     result_to_rerun = pbutil.FromFile(
         result_to_rerun_path, deepsmith_pb2.Result())
-    # harness_class = cldrive.CldriveHarness if result_to_rerun.
-
-  # Parse flags and instantiate testing objects.
-  if not FLAGS.interesting_results_dir:
-    raise app.UsageError('--interesting_results_dir must be set')
-  interesting_results_dir = pathlib.Path(FLAGS.interesting_results_dir)
-  if interesting_results_dir.exists() and not interesting_results_dir.is_dir():
-    raise app.UsageError('--interesting_results_dir must be a directory')
-  logging.info('Recording interesting results in %s.', interesting_results_dir)
-
-  logging.info('Preparing generator.')
-  if FLAGS.generator == 'clgen':
-    generator = GeneratorFromFlag(generator_pb2.ClgenGenerator,
-                                  clgen_pretrained.ClgenGenerator)
-    harness_class = cldrive.CldriveHarness
-    config_class = harness_pb2.CldriveHarness
-    filters = opencl_filters.ClgenOpenClFilters()
-  elif FLAGS.generator == 'clsmith':
-    generator = GeneratorFromFlag(generator_pb2.ClsmithGenerator,
-                                  clsmith.ClsmithGenerator)
-    harness_class = cl_launcher.ClLauncherHarness
-    config_class = harness_pb2.ClLauncherHarness
-    # TODO(cec): Replace with CLSmith filters.
-    filters = difftests.FiltersBase()
+    filters = GetFilters()
+    dut_harness = GetDeviceUnderTestHarness()
+    ReRunResult(result_to_rerun, dut_harness, filters)
   else:
-    raise app.UsageError(
-        f"Unrecognized value for --generator: '{FLAGS.generator}'")
-  logging.info('%s:\n %s', type(generator).__name__, generator.config)
+    if not FLAGS.interesting_results_dir:
+      raise app.UsageError('--interesting_results_dir must be set')
+    interesting_results_dir = pathlib.Path(FLAGS.interesting_results_dir)
+    if interesting_results_dir.exists() and not interesting_results_dir.is_dir():
+      raise app.UsageError('--interesting_results_dir must be a directory')
+    logging.info('Recording interesting results in %s.',
+                 interesting_results_dir)
 
-  logging.info('Preparing device under test.')
-  config = GetBaseHarnessConfig(config_class)
-  config.opencl_env.extend([FLAGS.dut])
-  config.opencl_opt.extend([FLAGS.opencl_opt])
-  dut_harness = harness_class(config)
-  assert len(dut_harness.testbeds) == 1
-
-  logging.info('Preparing gold standard testbed.')
-  config = GetBaseHarnessConfig(config_class)
-  config.opencl_env.extend([gpu.cldrive.env.OclgrindOpenCLEnvironment().name])
-  config.opencl_opt.extend([True])
-  gs_harness = harness_class(config)
-  assert len(gs_harness.testbeds) >= 1
-
-  TestingLoop(FLAGS.min_interesting_results, FLAGS.max_testing_time_seconds,
-              FLAGS.batch_size, generator, dut_harness, gs_harness,
-              filters, interesting_results_dir, start_time=start_time)
+    generator = GetGenerator()
+    filters = GetFilters()
+    dut_harness = GetDeviceUnderTestHarness()
+    gs_harness = GetGoldStandardTestHarness()
+    TestingLoop(FLAGS.min_interesting_results, FLAGS.max_testing_time_seconds,
+                FLAGS.batch_size, generator, dut_harness, gs_harness,
+                filters, interesting_results_dir, start_time=start_time)
 
 
 if __name__ == '__main__':
