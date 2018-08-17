@@ -78,7 +78,9 @@ flags.DEFINE_integer(
     'The number of test cases to generate and execute in a single batch.')
 flags.DEFINE_string(
     'rerun_result', None,
-    'The path of a Result proto to re-run.')
+    'If --rerun_result point to the path of a Result proto, the result '
+    'testcase is executed under the specified --dut, and the new Result is '
+    'printed to stdout.')
 flags.DEFINE_string(
     'run_result_filters', None,
     'A ')
@@ -331,7 +333,19 @@ def GetDeviceUnderTestHarness() -> base_harness.HarnessBase:
   Returns:
     A Harness instance.
   """
-  if FLAGS.generator == 'clgen':
+  if FLAGS.rerun_result:
+    result = pbutil.FromFile(
+        pathlib.Path(FLAGS.rerun_result), deepsmith_pb2.Result())
+    if result.testcase.harness.name == 'cldrive':
+      harness_class = cldrive.CldriveHarness
+      config_class = harness_pb2.CldriveHarness
+    elif result.testcase.harness.name == 'cl_launcher':
+      harness_class = cl_launcher.ClLauncherHarness
+      config_class = harness_pb2.ClLauncherHarness
+    else:
+      raise app.UsageError(
+          f"Unrecognized harness: '{result.testcase.harness.name}'")
+  elif FLAGS.generator == 'clgen':
     harness_class = cldrive.CldriveHarness
     config_class = harness_pb2.CldriveHarness
   elif FLAGS.generator == 'clsmith':
@@ -402,9 +416,29 @@ def GetFilters() -> difftests.FiltersBase:
 
 
 def ReRunResult(result: deepsmith_pb2.Result,
-                dut_harness: base_harness.HarnessBase,
-                filters: difftests.FiltersBase) -> None:
-  pass
+                dut_harness: base_harness.HarnessBase) -> deepsmith_pb2.Result:
+  """Re-run a result.
+
+  Args:
+    result: The result to re-run.
+    dut_harness: The device harness to re-run the result using.
+  """
+  if dut_harness.testbeds[0] != result.testbed:
+    logging.warning('Re-running result on a different testbed!')
+  results = RunTestcases(dut_harness, [result.testcase])
+  assert len(results) == 1
+  new_result = results[0]
+  logging.warning(f'Re-run result has same outcome: '
+                  f'{new_result.outcome == result.outcome}.')
+  logging.warning(f'Re-run result has same returncode: '
+                  f'{new_result.returncode == result.returncode}.')
+  logging.warning(
+      'Re-run result has same stdout: '
+      f"{new_result.outputs['stdout'] == result.outputs['stdout']}.")
+  logging.warning(
+      'Re-run result has same stderr: '
+      f"{new_result.outputs['stderr'] == result.outputs['stderr']}.")
+  return result
 
 
 def main(argv):
@@ -416,8 +450,6 @@ def main(argv):
     env.PrintOpenClEnvironments()
     return
 
-  start_time = time.time()
-
   if FLAGS.rerun_result:
     result_to_rerun_path = pathlib.Path(FLAGS.rerun_result)
     if not result_to_rerun_path.is_file():
@@ -427,25 +459,26 @@ def main(argv):
           "Cannot read Result proto: '{result_to_rerun_path}'.")
     result_to_rerun = pbutil.FromFile(
         result_to_rerun_path, deepsmith_pb2.Result())
-    filters = GetFilters()
     dut_harness = GetDeviceUnderTestHarness()
-    ReRunResult(result_to_rerun, dut_harness, filters)
-  else:
-    if not FLAGS.interesting_results_dir:
-      raise app.UsageError('--interesting_results_dir must be set')
-    interesting_results_dir = pathlib.Path(FLAGS.interesting_results_dir)
-    if interesting_results_dir.exists() and not interesting_results_dir.is_dir():
-      raise app.UsageError('--interesting_results_dir must be a directory')
-    logging.info('Recording interesting results in %s.',
-                 interesting_results_dir)
+    print(ReRunResult(result_to_rerun, dut_harness))
+    sys.exit(0)
 
-    generator = GetGenerator()
-    filters = GetFilters()
-    dut_harness = GetDeviceUnderTestHarness()
-    gs_harness = GetGoldStandardTestHarness()
-    TestingLoop(FLAGS.min_interesting_results, FLAGS.max_testing_time_seconds,
-                FLAGS.batch_size, generator, dut_harness, gs_harness,
-                filters, interesting_results_dir, start_time=start_time)
+  start_time = time.time()
+  if not FLAGS.interesting_results_dir:
+    raise app.UsageError('--interesting_results_dir must be set')
+  interesting_results_dir = pathlib.Path(FLAGS.interesting_results_dir)
+  if interesting_results_dir.exists() and not interesting_results_dir.is_dir():
+    raise app.UsageError('--interesting_results_dir must be a directory')
+  logging.info('Recording interesting results in %s.',
+               interesting_results_dir)
+
+  generator = GetGenerator()
+  filters = GetFilters()
+  dut_harness = GetDeviceUnderTestHarness()
+  gs_harness = GetGoldStandardTestHarness()
+  TestingLoop(FLAGS.min_interesting_results, FLAGS.max_testing_time_seconds,
+              FLAGS.batch_size, generator, dut_harness, gs_harness,
+              filters, interesting_results_dir, start_time=start_time)
 
 
 if __name__ == '__main__':
