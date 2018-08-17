@@ -223,6 +223,8 @@ def ResultIsInteresting(result: deepsmith_pb2.Result,
     result.outputs['gs_stderr'] = dt.result[0].outputs['stderr']
     return result
 
+  return NotInteresting(result)
+
 
 def RunTestcases(harness: base_harness.HarnessBase,
                  testcases: typing.List[deepsmith_pb2.Testcase]
