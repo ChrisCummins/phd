@@ -138,7 +138,7 @@ def RunBatch(generator: base_generator.GeneratorServiceBase,
   for i, result in enumerate(results):
     interesting_result = ResultIsInteresting(
         result, unary_difftester, gs_difftester, gs_harness, filters)
-    if interesting_results:
+    if interesting_result:
       interesting_results.append(interesting_result)
 
   return interesting_results
