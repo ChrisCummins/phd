@@ -149,7 +149,7 @@ std::string get_next_name(rewrite_table_t& rewrites,
     invalid_identifier << "\t!@invalid@!\t" << rewrites.size();
 
     rewrites[invalid_identifier.str()] = s;
-    return get_next_name(rewrites, name, base_char);
+    return get_next_name(rewrites, name, base_char, prefix);
   }
 
   // insert the re-write name
