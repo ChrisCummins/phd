@@ -74,6 +74,7 @@ class LlvmOptEnv(gym.Env):
     """Environment destructor. Clean up working dir."""
     shutil.rmtree(self.working_dir)
 
+  @staticmethod
   def Reward(self, status: pbutil.Enum,
              speedup: typing.Optional[float]) -> float:
     """Get the reward for a step.
