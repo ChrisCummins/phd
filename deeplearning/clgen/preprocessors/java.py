@@ -12,11 +12,16 @@ from absl import logging
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import clang
 from deeplearning.clgen.preprocessors import public
+from lib.labm8 import bazelutil
 
 
 FLAGS = flags.FLAGS
 
 CLASS_NAME_RE = re.compile(r'public\s+class\s+(\w+)')
+
+# Path to the compiled java rewriter.
+JAVA_REWRITER = bazelutil.DataPath(
+    'phd/deeplearning/clgen/preprocessors/JavaRewriter')
 
 
 @public.clgen_preprocessor
@@ -80,3 +85,30 @@ def Compile(text: str) -> str:
     raise errors.BadCodeException('Failed to determine class name')
   class_name = match.group(1)
   return Javac(text, class_name, [])
+
+
+@public.clgen_preprocessor
+def JavaRewrite(text: str) -> str:
+  """Run the Java rewriter on the text.
+
+  Args:
+    text: The source code to rewrite.
+
+  Returns:
+    Source code with identifier names normalized.
+
+  Raises:
+    RewriterError: If rewriter found nothing to rewrite.
+    ClangTimeout: If rewriter fails to complete within timeout_seconds.
+  """
+  cmd = ['timeout', '-s9', '60', str(JAVA_REWRITER)]
+  process = subprocess.Popen(cmd, stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                             universal_newlines=True)
+  logging.debug('$ %s', ' '.join(cmd))
+  stdout, stderr = process.communicate(text)
+  if process.returncode == 9:
+    raise errors.RewriterException('JavaRewriter failed to complete after 60s')
+  elif process.returncode:
+    raise errors.RewriterException(stderr)
+  return stdout

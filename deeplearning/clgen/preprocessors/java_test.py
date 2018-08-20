@@ -86,6 +86,11 @@ class     HelloWorld {
 """
 
 
+def test_JavaRewrite_hello_world():
+  """Java rewriter returns unmodified input for bad code."""
+  assert java.JavaRewrite("hello, world") == "hello, world\n"
+
+
 def main(argv):
   """Main entry point."""
   del argv

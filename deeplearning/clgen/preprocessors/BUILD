@@ -337,11 +337,13 @@ py3_image(
 py_library(
     name = "java",
     srcs = ["java.py"],
+    data = [":JavaRewriter"],
     visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = [
         ":clang",
         ":public",
         "//deeplearning/clgen:errors",
+        "//lib/labm8:bazelutil",
         "//third_party/py/absl",
     ],
 )
