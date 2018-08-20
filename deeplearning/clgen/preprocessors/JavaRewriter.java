@@ -1,36 +1,26 @@
 // Work in progress on Java AST rewriter.
 package deeplearning.clgen.preprocessors;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Properties;
+import java.util.Set;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
-import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Comment;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.ExpressionStatement;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.ImportDeclaration;
-import org.eclipse.jdt.core.dom.Initializer;
-import org.eclipse.jdt.core.dom.MemberRef;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.MethodRef;
-import org.eclipse.jdt.core.dom.NameQualifiedType;
-import org.eclipse.jdt.core.dom.PackageDeclaration;
-import org.eclipse.jdt.core.dom.QualifiedName;
-import org.eclipse.jdt.core.dom.QualifiedType;
-import org.eclipse.jdt.core.dom.SimpleName;
-import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.formatter.CodeFormatter;
@@ -44,6 +34,56 @@ import org.eclipse.text.edits.TextEdit;
  * A rewriter for Java source code.
  */
 public class JavaRewriter {
+
+  private static final String[] RESERVED_WORDS_ = new String[]{
+      "abstract", "assert", "boolean", "break", "byte", "case", "catch", "char",
+      "class", "const", "continue", "default", "do", "double", "else", "enum",
+      "extends", "false", "final", "finally", "float", "for", "goto", "if",
+      "implements", "import", "instanceof", "int", "interface", "long",
+      "native", "new", "null", "package", "private", "protected", "public",
+      "return", "short", "static", "strictfp", "super", "switch",
+      "synchronized", "this", "throw", "throws", "transient", "true", "try",
+      "void", "volatile", "while",
+  };
+  private static final Set<String> RESERVED_WORDS = new HashSet<>(
+      Arrays.asList(RESERVED_WORDS_));
+
+  private String GetNextName(HashMap<String, String> rewrites,
+      final String name, final char base_char) {
+    return GetNextName(rewrites, name, base_char, "");
+  }
+
+  private String GetNextName(HashMap<String, String> rewrites,
+      final String name, final char base_char,
+      final String name_prefix) {
+    int i = rewrites.size();
+    StringBuilder s = new StringBuilder();
+
+    s.append(name_prefix);
+    // Build the new name character by character
+    while (i > 25) {
+      int k = i / 26;
+      i %= 26;
+      s.append((char) (base_char - 1 + k));
+    }
+    s.append((char) (base_char + i));
+
+    final String newName = s.toString();
+
+    // Check that it isn't a reserved word, or else generate a new one.
+    if (RESERVED_WORDS.contains(newName)) {
+      // Insert a "dummy" value using an illegal identifier name.
+      s.append("\t!@invalid@!\t");
+      s.append(rewrites.size());
+      final String invalidIdentifier = s.toString();
+      rewrites.put(invalidIdentifier, invalidIdentifier);
+      return GetNextName(rewrites, name, base_char, name_prefix);
+    }
+
+    // insert the re-write name
+    rewrites.put(name, newName);
+    return newName;
+  }
 
   /**
    * Strip the comments from a compilation unit.
@@ -140,19 +180,40 @@ public class JavaRewriter {
     Document document = new Document(source);
     CompilationUnit compilationUnit = GetCompilationUnit(document);
     ArrayList<TextEdit> edits = new ArrayList<>();
+    // First strip the comments.
     StripComments(edits, compilationUnit);
     ApplyEdits(edits, document);
     source = document.get();
     edits.clear();
+    // Rewrite the source code.
     document = new Document(source);
     compilationUnit = GetCompilationUnit(document);
+    // Foo(edits, compilationUnit, document);
     RewriteIdentifiers(edits, compilationUnit, document);
     ApplyEdits(edits, document);
+    // Format the source code.
     return FormatSource(document.get());
   }
 
   private ASTRewrite traversalRewrite;
   private AST traversalAST;
+
+  private void Foo(ArrayList<TextEdit> edits,
+      final CompilationUnit compilationUnit,
+      final Document document) {
+    for (Object node : compilationUnit.types()) {
+      System.err.println("Type!");
+      if (node instanceof TypeDeclaration) {
+        TypeDeclaration type = (TypeDeclaration) node;
+        System.err.println("Type declaration!");
+        System.err.println(type.toString());
+        type.getTypes();
+      }
+    }
+  }
+
+  private HashMap<String, String> methodRewrites = new HashMap<>();
+  private HashMap<String, String> typeRewrites = new HashMap<>();
 
   private void RewriteIdentifiers(ArrayList<TextEdit> edits,
       final CompilationUnit compilationUnit,
@@ -161,121 +222,97 @@ public class JavaRewriter {
     this.traversalAST = compilationUnit.getAST();
 
     System.err.println("\n==========================\nBEGIN AST TRAVERSAL\n");
+
+    // Rewrite declarations.
+
     compilationUnit.accept(new ASTVisitor() {
-
-      private boolean ReplaceIdentifier(SimpleName old, final String newName) {
-        traversalRewrite.replace(
-            old, traversalAST.newSimpleName(newName), null);
-        return true;
-      }
-
-      public boolean visit(Assignment node) {
-        System.err.println("=> Assignment: " + node.toString());
-        return true;
-      }
-
-      public boolean visit(ExpressionStatement node) {
-        System.err.println("=> ExpressionStatement: " + node.toString());
-        return true;
-      }
-
-      public boolean visit(FieldDeclaration node) {
-        System.err.println("=> FieldDeclaration: " + node.toString());
-        return true;
-      }
-
-      public boolean visit(ImportDeclaration node) {
-        System.err.println("=> ImportDeclaration: " + node.toString());
-        return true;
-      }
-
-      public boolean visit(Initializer node) {
-        System.err.println("=> Initializer: " + node.toString());
-        return true;
-      }
-
-      public boolean visit(MemberRef node) {
-        System.err.println("=> MemberRef: " + node.toString());
-        return true;
-      }
-
-      public boolean visit(MethodDeclaration node) {
-        System.err.println("=> MethodDeclaration: " + node.toString());
-        return true;
-      }
-
-      public boolean visit(MethodInvocation node) {
-        // System.err.println("=> MethodInvocation: " + node.toString());
-        return ReplaceIdentifier(node.getName(), "METHOD_INVOCATION");
-      }
-
-      public boolean visit(MethodRef node) {
-        System.err.println("=> MethodRef: " + node.toString());
-        return true;
-      }
-
-      public boolean visit(NameQualifiedType node) {
-        System.err.println("=> NameQualifiedType: " + node.toString());
-        return true;
-      }
-
-      public boolean visit(PackageDeclaration node) {
-        System.err.println("=> PackageDeclaration: " + node.toString());
-        return true;
-      }
-
-      public boolean visit(QualifiedName node) {
-        System.err.println("=> QualifiedName: " + node.toString());
-        return true;
-      }
-
-      public boolean visit(QualifiedType node) {
-        System.err.println("=> QualifiedType: " + node.toString());
-        return true;
-      }
-
-      public boolean visit(SimpleName node) {
-        // System.err.println("=> SimpleName: " + node.toString());
-        return ReplaceIdentifier(node, "SIMPLE_NAME");
-      }
-
-      public boolean visit(SimpleType node) {
-        System.err.println("=> SimpleType: " + node.toString());
-        return true;
-      }
-
       public boolean visit(TypeDeclaration node) {
-        System.err.println("=> TypeDeclaration: " + node.toString());
+        final String oldName = node.getName().toString();
+        final String newName = GetNextName(typeRewrites, oldName, 'A');
+        traversalRewrite.replace(
+            node.getName(), traversalAST.newSimpleName(newName), null);
+        System.err.println(
+            "=> TypeDeclaration: " + oldName + " -> " + newName);
         return true;
       }
+
+//      public boolean visit(MethodDeclaration node) {
+//        final String oldName = node.getName().toString();
+//        if (!oldName.equals("main")) {
+//          final String newName = GetNextName(methodRewrites, oldName, 'A');
+//          traversalRewrite.replace(
+//              node.getName(), traversalAST.newSimpleName(newName), null);
+////          System.err.println(
+////              "=> MethodDeclaration: " + oldName + " -> " + newName);
+//        }
+//        return true;
+//      }
+    });
+
+    // Rewrite usage.
+
+    compilationUnit.accept(new ASTVisitor() {
+//      public boolean visit(MethodInvocation node) {
+//        final String oldName = node.getName().toString();
+//        if (methodRewrites.containsKey(oldName)) {
+//          final String newName = methodRewrites.get(oldName);
+//          traversalRewrite.replace(
+//              node.getName(), traversalAST.newSimpleName(newName), null);
+////          System.err.println(
+////              "=> MethodInvocation: " + oldName + " -> " + newName);
+//        }
+//        return true;
+//      }
     });
     System.err.println("END AST TRAVERSAL\n==========================\n");
 
     edits.add(this.traversalRewrite.rewriteAST(document, null));
   }
 
+  /**
+   * Read a file and return its contents as a string.
+   *
+   * @param path The path of the file to read.
+   * @param encoding The encoding of the file.
+   * @return A string of the file contents.
+   * @throws IOException In case of IO error.
+   */
   private static String ReadFile(String path, Charset encoding)
       throws IOException {
     byte[] encoded = Files.readAllBytes(Paths.get(path));
     return new String(encoded, encoding);
   }
 
+  /**
+   * Read stdin to string.
+   *
+   * @return A string of the stdin.
+   * @throws IOException In case of IO error.
+   */
+  private static String ReadStdin() throws IOException {
+    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+    byte[] buffer = new byte[32 * 1024];
+    int bytesRead;
+    while ((bytesRead = System.in.read(buffer)) > 0) {
+      stream.write(buffer, 0, bytesRead);
+    }
+    return stream.toString();
+  }
+
   public static void main(final String[] args) {
     JavaRewriter rewriter = new JavaRewriter();
-    // TODO(cec): Pass flags.
-    final String path = args[0];
+
     try {
-      final String input = ReadFile(path, Charset.defaultCharset());
+      // final String input =ReadFile(args[0], Charset.defaultCharset());
+      final String input = ReadStdin();
       final String source = rewriter.RewriteSource(input);
       if (source == null) {
         System.out.println("fatal: RewriteSource() returned null.");
         System.exit(1);
       }
-
       System.out.println(source);
-      // rewriter.TraverseAST(source);
     } catch (IOException e) {
-      System.err.println("fatal: Could not read file: '" + path + "'.");
+      System.err.println("fatal: I/O error");
       System.exit(1);
     }
   }
