@@ -7,7 +7,7 @@ name to the ENVIRONMENTS list. The environment class is defined in:
 from absl import flags
 from gym.envs import registration
 
-from compilers.llvm import opt
+from compilers.llvm import util as llvm_util
 from datasets.benchmarks import bzip2
 from datasets.benchmarks import llvm_test_suite
 from experimental.compilers.random_opt.proto import random_opt_pb2
@@ -26,6 +26,9 @@ ENVIRONMENTS = [
 # A default environment name, registered below.
 DEFAULT_ENV_ID = 'LLVM-queens-14x14-v0'
 
+# The list of opt passes which defines the action space.
+DEFAULT_PASS_LIST = list(sorted(llvm_util.GetOptArgs(['-O3'])))
+
 
 # Environment generator functions.
 
@@ -40,7 +43,7 @@ def Bzip2Environment(dataset_size: str):
           exec_cmd=('$@ -z < @D/input.dat > @D/input.dat.bz2 && '
                     '$@ -d < @D/input.dat.bz2 > @D/output.dat'),
           eval_cmd='cmp --silent @D/input.dat @D/output.dat',
-          candidate_pass=list(opt.ALL_PASSES),
+          candidate_pass=DEFAULT_PASS_LIST,
       )
     }
   }
@@ -58,7 +61,7 @@ def QueensEnvironment(n: int):
           setup_cmd=f'$@ {n} > @D/gold_standard_output.txt',
           exec_cmd=f'$@ {n} > @D/output.txt',
           eval_cmd='cmp --silent @D/gold_standard_output.txt @D/output.txt',
-          candidate_pass=list(opt.ALL_PASSES),
+          candidate_pass=DEFAULT_PASS_LIST,
       )
     }
   }
