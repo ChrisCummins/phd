@@ -476,8 +476,6 @@ OPTIMIZATION_LEVELS = {
   '-O3',
 }
 
-ALL_PASSES = TRANSFORM_PASSES.union(OPTIMIZATION_LEVELS)
-
 
 class OptException(llvm.LlvmError):
   """An error from opt."""
@@ -544,6 +542,45 @@ def RunOptPassOnBytecode(input_path: pathlib.Path,
   if not output_path.is_file():
     raise OptException(f'Bytecode file {output_path} not generated')
   return output_path
+
+
+def GetAllOptimizationsAvailable() -> typing.List[str]:
+  """Return the full list of optimizations available.
+
+  Returns:
+    A list of strings, where each string is an LLVM opt flag to enable an
+    optimization.
+
+  Raises:
+    OptException: If unable to interpret opt output.
+  """
+  proc = Exec(['-help-list-hidden'])
+  lines = proc.stdout.split('\n')
+  # Find the start of the list of optimizations.
+  for i in range(len(lines)):
+    if lines[i] == '  Optimizations available:':
+      break
+  else:
+    raise OptException
+  # Find the end of the list of optimizations.
+  for j in range(i + 1, len(lines)):
+    if not lines[j].startswith('    -'):
+      break
+  else:
+    raise OptException
+
+  # Extract the list of optimizations.
+  optimizations = [line[len('    '):].split()[0] for line in lines[i + 1:j]]
+  if len(optimizations) < 2:
+    raise OptException
+
+  return optimizations
+
+
+OPTIMIZATION_PASSES = set(GetAllOptimizationsAvailable())
+
+ALL_PASSES = TRANSFORM_PASSES.union(
+    OPTIMIZATION_LEVELS).union(OPTIMIZATION_PASSES)
 
 
 def main(argv):
