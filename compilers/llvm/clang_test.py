@@ -93,14 +93,6 @@ def test_Preprocess_missing_include():
   assert "'my-missing-file.h' file not found" in str(e_info)
 
 
-def test_GetOptArgs_O0():
-  """Black box opt args test for -O0."""
-  args = clang.GetOptArgs(['-O0'])
-  assert args
-  for invocation in args:
-    assert invocation
-
-
 def test_GetOptPasses_O0():
   """Black box opt passes test for -O0."""
   args = clang.GetOptPasses(['-O0'])

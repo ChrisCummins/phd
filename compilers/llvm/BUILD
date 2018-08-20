@@ -152,3 +152,25 @@ py_test(
         "//third_party/py/pytest",
     ],
 )
+
+py_binary(
+    name = "util",
+    srcs = ["util.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":llvm",
+        ":llvm_as",
+        ":opt",
+    ],
+)
+
+py_test(
+    name = "util_test",
+    srcs = ["util_test.py"],
+    deps = [
+        ":util",
+        ":llvm",
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
+    ],
+)
