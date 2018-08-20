@@ -75,8 +75,7 @@ class LlvmOptEnv(gym.Env):
     shutil.rmtree(self.working_dir)
 
   @staticmethod
-  def Reward(self, status: pbutil.Enum,
-             speedup: typing.Optional[float]) -> float:
+  def Reward(status: pbutil.Enum, speedup: typing.Optional[float]) -> float:
     """Get the reward for a step.
 
     Args:
