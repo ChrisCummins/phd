@@ -96,6 +96,60 @@ class ContentFile(Base):
     """Return the 64 character hexadecimal representation of binary sha256."""
     return binascii.hexlify(self.sha256).decode('utf-8')
 
+  @staticmethod
+  def _GetArgsFromProto(
+      proto: scrape_repos_pb2.ContentFile) -> typing.Dict[str, typing.Any]:
+    return {"clone_from_url": proto.clone_from_url, "relpath": proto.relpath,
+            'artifact_index': proto.artifact_index, 'sha256': proto.sha256,
+            'charcount': proto.charcount, 'linecount': proto.linecount,
+            'text': proto.text}
+
+  @classmethod
+  def FromProto(cls,
+                proto: scrape_repos_pb2.ContentFile) -> 'ContentFile':
+    """Instantiate a record from a proto buffer.
+
+    Args:
+      proto: A ContentFile proto.
+
+    Returns:
+      A record instance.
+    """
+    return cls(**cls._GetArgsFromProto(proto))
+
+  def SetProto(
+      self,
+      proto: scrape_repos_pb2.ContentFile) -> scrape_repos_pb2.ContentFile:
+    """Set fields of a protocol buffer representation.
+
+    Returns:
+      The proto buffer.
+    """
+    proto.clone_from_url = self.clone_from_url,
+    proto.relpath = self.relpath,
+    proto.artifact_index = self.artifact_index,
+    proto.sha256 = self.sha256,
+    proto.charcount = self.charcount,
+    proto.linecount = self.linecount,
+    proto.text = self.text
+    return proto
+
+  def ToProto(self) -> scrape_repos_pb2.ContentFile:
+    """Create protocol buffer representation.
+
+    Returns:
+      A ContentFile message.
+    """
+    return scrape_repos_pb2.ContentFile(
+        clone_from_url=self.clone_from_url,
+        relpath=self.relpath,
+        artifact_index=self.artifact_index,
+        sha256=self.sha256,
+        charcount=self.charcount,
+        linecount=self.linecount,
+        text=self.text
+    )
+
 
 class ContentFiles(sqlutil.Database):
   """A database consisting of a table of ContentFiles and GitHub repos."""
