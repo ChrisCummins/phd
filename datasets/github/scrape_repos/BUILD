@@ -67,8 +67,8 @@ py_test(
     deps = [
         ":contentfiles",
         ":importer",
-        "//lib/labm8:pbutil",
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
+        "//lib/labm8:pbutil",
         "//third_party/py/absl",
         "//third_party/py/pytest",
     ],
