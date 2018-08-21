@@ -77,6 +77,9 @@ class ContentFile(Base):
       'repositories.clone_from_url'))
   # Relative path within the repository. This can be a duplicate.
   relpath: str = sql.Column(sql.String(1024), nullable=False)
+  # Index into the content file. Use this to differentiate multiple content
+  # files which come from the same source file.
+  artifact_index: int = sql.Column(sql.Integer, nullable=False, default=0)
   sha256: str = sql.Column(sql.Binary(32), nullable=False)
   charcount = sql.Column(sql.Integer, nullable=False)
   linecount = sql.Column(sql.Integer, nullable=False)

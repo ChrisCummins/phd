@@ -1,8 +1,9 @@
 """Import files into a ContentFiles database."""
-import hashlib
-import humanize
 import multiprocessing
 import os
+
+import hashlib
+import humanize
 import pathlib
 import progressbar
 import random
@@ -47,22 +48,25 @@ def ShouldImportRepo(session: orm.session.Session,
 
 
 def ImportWorker(
-    job: scrape_repos_pb2.ImportWorker) -> typing.Optional[
-  contentfiles.ContentFile]:
+    job: scrape_repos_pb2.ImportWorker
+) -> typing.List[contentfiles.ContentFile]:
   """Import a content file."""
   relpath = job.abspath[len(str(job.clone_dir)) + 1:]
-  try:
-    text = preprocessors.Preprocess(pathlib.Path(job.clone_dir), relpath,
-                                    job.all_files_relpaths, job.preprocessors)
-    sha256 = hashlib.sha256(text.encode('utf-8'))
-    return contentfiles.ContentFile(
-        clone_from_url=job.clone_from_url,
-        relpath=relpath,
-        sha256=sha256.digest(), charcount=len(text),
-        linecount=len(text.split('\n')), text=text)
-  except UnicodeDecodeError:
-    logging.warning('Failed to decode %s', relpath)
-    return None
+  outputs: typing.List[contentfiles.ContentFile] = []
+  texts = preprocessors.Preprocess(pathlib.Path(job.clone_dir), relpath,
+                                   job.all_files_relpaths, job.preprocessors)
+  for i, text in enumerate(texts):
+    try:
+      sha256 = hashlib.sha256(text.encode('utf-8'))
+      outputs.append(contentfiles.ContentFile(
+          clone_from_url=job.clone_from_url,
+          relpath=relpath,
+          artifact_index=i,
+          sha256=sha256.digest(), charcount=len(text),
+          linecount=len(text.split('\n')), text=text))
+    except UnicodeDecodeError:
+      logging.warning('Failed to decode %s', relpath)
+  return outputs
 
 
 def ImportRepo(session: orm.session.Session,
@@ -91,6 +95,7 @@ def ImportRepo(session: orm.session.Session,
     pat = f'{clone_dir}/{pat[1:]}' if pat[0] == '^' else f'{clone_dir}/{pat}'
     cmd = ['find', str(clone_dir), '-type', 'f', '-regex', pat, '-not',
            '-path', '*/.git/*']
+    logging.debug('$ %s', ' '.join(cmd))
     paths = subprocess.check_output(
         cmd, universal_newlines=True).rstrip().split('\n')
     if len(paths) == 1 and not paths[0]:
@@ -110,9 +115,9 @@ def ImportRepo(session: orm.session.Session,
       ) for p in paths
     ]
     bar = progressbar.ProgressBar(max_value=len(jobs))
-    for maybe_contentfile in bar(pool.imap_unordered(ImportWorker, jobs)):
-      if maybe_contentfile:
-        session.add(maybe_contentfile)
+    for outputs in bar(pool.imap_unordered(ImportWorker, jobs)):
+      for output in outputs:
+        session.add(output)
 
 
 def ImportFromLanguage(db: contentfiles.ContentFiles,
@@ -124,7 +129,13 @@ def ImportFromLanguage(db: contentfiles.ContentFiles,
     db: The database to import to.
     language: The language to import.
     pool: A multiprocessing pool.
+
+  Raises:
+    ValueError: If importer field not set.
   """
+  if not language.importer:
+    raise ValueError('LanguageToClone.importer field not set')
+
   with db.Session() as session:
     repos_to_import = [pathlib.Path(language.destination_directory / f) for f in
                        pathlib.Path(language.destination_directory).iterdir() if

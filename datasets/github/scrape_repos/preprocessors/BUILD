@@ -101,6 +101,9 @@ py_library(
     srcs = ["preprocessors.py"],
     visibility = ["//datasets/github/scrape_repos:__subpackages__"],
     deps = [
+        # This target should depend on every target defining preprocessors, so
+        # that the runfiles can be resolved.
+        ":extractors",
         ":inliners",
         ":public",
         "//third_party/py/absl",

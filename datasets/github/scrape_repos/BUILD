@@ -61,6 +61,19 @@ py_binary(
     ],
 )
 
+py_test(
+    name = "importer_test",
+    srcs = ["importer_test.py"],
+    deps = [
+        ":contentfiles",
+        ":importer",
+        "//lib/labm8:pbutil",
+        "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
+    ],
+)
+
 py_binary(
     name = "scraper",
     srcs = ["scraper.py"],
