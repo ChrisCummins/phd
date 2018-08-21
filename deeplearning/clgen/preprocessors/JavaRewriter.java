@@ -17,11 +17,26 @@ import java.util.Set;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.ArrayAccess;
+import org.eclipse.jdt.core.dom.ArrayCreation;
 import org.eclipse.jdt.core.dom.Comment;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.IfStatement;
+import org.eclipse.jdt.core.dom.InfixExpression;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.PostfixExpression;
+import org.eclipse.jdt.core.dom.PrefixExpression;
+import org.eclipse.jdt.core.dom.QualifiedName;
+import org.eclipse.jdt.core.dom.ReturnStatement;
+import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SimpleType;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.formatter.CodeFormatter;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
@@ -197,23 +212,10 @@ public class JavaRewriter {
 
   private ASTRewrite traversalRewrite;
   private AST traversalAST;
-
-  private void Foo(ArrayList<TextEdit> edits,
-      final CompilationUnit compilationUnit,
-      final Document document) {
-    for (Object node : compilationUnit.types()) {
-      System.err.println("Type!");
-      if (node instanceof TypeDeclaration) {
-        TypeDeclaration type = (TypeDeclaration) node;
-        System.err.println("Type declaration!");
-        System.err.println(type.toString());
-        type.getTypes();
-      }
-    }
-  }
-
   private HashMap<String, String> methodRewrites = new HashMap<>();
   private HashMap<String, String> typeRewrites = new HashMap<>();
+  private HashMap<String, String> fieldRewrites = new HashMap<>();
+  private HashMap<String, String> variableRewrites = new HashMap<>();
 
   private void RewriteIdentifiers(ArrayList<TextEdit> edits,
       final CompilationUnit compilationUnit,
@@ -226,43 +228,99 @@ public class JavaRewriter {
     // Rewrite declarations.
 
     compilationUnit.accept(new ASTVisitor() {
-      public boolean visit(TypeDeclaration node) {
-        final String oldName = node.getName().toString();
-        final String newName = GetNextName(typeRewrites, oldName, 'A');
+      private boolean Rename(final String type_name,
+          final HashMap<String, String> rewriteTable,
+          final ASTNode node, final char base_char, final String name_prefix) {
+        final String oldName = node.toString();
+        final String newName = GetNextName(rewriteTable, oldName, base_char,
+            name_prefix);
         traversalRewrite.replace(
-            node.getName(), traversalAST.newSimpleName(newName), null);
+            node, traversalAST.newSimpleName(newName), null);
         System.err.println(
-            "=> TypeDeclaration: " + oldName + " -> " + newName);
+            "=> " + type_name + ": " + oldName + " -> " + newName);
         return true;
       }
 
-//      public boolean visit(MethodDeclaration node) {
-//        final String oldName = node.getName().toString();
-//        if (!oldName.equals("main")) {
-//          final String newName = GetNextName(methodRewrites, oldName, 'A');
-//          traversalRewrite.replace(
-//              node.getName(), traversalAST.newSimpleName(newName), null);
-////          System.err.println(
-////              "=> MethodDeclaration: " + oldName + " -> " + newName);
-//        }
-//        return true;
-//      }
+      public boolean visit(TypeDeclaration node) {
+        return Rename("TypeDeclaration", typeRewrites, node.getName(), 'A', "");
+      }
+
+      public boolean visit(MethodDeclaration node) {
+        if (!node.getName().toString().equals("main")) {
+          Rename("MethodDeclaration", methodRewrites, node.getName(), 'A',
+              "fn_");
+        }
+        return true;
+      }
+
+      public boolean visit(SingleVariableDeclaration node) {
+        return Rename("SingleVariableDeclaration", variableRewrites,
+            node.getName(), 'a', "");
+      }
+
+      public boolean visit(VariableDeclarationFragment node) {
+        return Rename("VariableDeclarationFragment", variableRewrites,
+            node.getName(), 'a', "");
+      }
     });
 
-    // Rewrite usage.
+    // Rewrite usages.
 
     compilationUnit.accept(new ASTVisitor() {
-//      public boolean visit(MethodInvocation node) {
-//        final String oldName = node.getName().toString();
-//        if (methodRewrites.containsKey(oldName)) {
-//          final String newName = methodRewrites.get(oldName);
-//          traversalRewrite.replace(
-//              node.getName(), traversalAST.newSimpleName(newName), null);
-////          System.err.println(
-////              "=> MethodInvocation: " + oldName + " -> " + newName);
-//        }
-//        return true;
-//      }
+
+      private void Rename(final String type_name,
+          final HashMap<String, String> rewriteTable,
+          final ASTNode node) {
+        final String oldName = node.toString();
+        if (rewriteTable.containsKey(oldName)) {
+          final String newName = rewriteTable.get(oldName);
+          traversalRewrite.replace(
+              node, traversalAST.newSimpleName(newName), null);
+          System.err.println(
+              "=> " + type_name + ": " + oldName + " -> " + newName);
+        }
+
+        // IJavaRefactorings foo;
+      }
+
+      public boolean visit(SimpleName node) {
+        final ASTNode parent = node.getParent();
+
+        if (parent instanceof MethodInvocation) {
+          MethodInvocation m = (MethodInvocation) parent;
+          m.arguments();
+          Rename("MethodInvocation", methodRewrites, node);
+        } else if (parent instanceof SimpleType) {
+          Rename("SimpleType", typeRewrites, node);
+        } else if (parent instanceof InfixExpression) {
+          Rename("InfixExpression", variableRewrites, node);
+        } else if (parent instanceof PostfixExpression) {
+          Rename("PostfixExpression", variableRewrites, node);
+        } else if (parent instanceof PrefixExpression) {
+          Rename("PrefixExpression", variableRewrites, node);
+        } else if (parent instanceof ReturnStatement) {
+          Rename("ReturnStatement", variableRewrites, node);
+        } else if (parent instanceof ArrayAccess) {
+          Rename("ArrayAccess", variableRewrites, node);
+        } else if (parent instanceof QualifiedName) {
+          Rename("QualifiedName", variableRewrites, node);
+        } else if (parent instanceof IfStatement) {
+          Rename("IfStatement", variableRewrites, node);
+        } else if (parent instanceof ArrayCreation) {
+          Rename("ArrayCreation", variableRewrites, node);
+        } else if (parent instanceof MethodDeclaration ||
+            parent instanceof VariableDeclarationFragment ||
+            parent instanceof SingleVariableDeclaration ||
+            parent instanceof TypeDeclaration) {
+          // Ignore
+        } else {
+          System.err.println(
+              "Unknown type " + parent.getClass().getName() + " for name "
+                  + node.toString());
+        }
+
+        return true;
+      }
     });
     System.err.println("END AST TRAVERSAL\n==========================\n");
 
