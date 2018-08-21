@@ -22,6 +22,7 @@ import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.ArrayAccess;
 import org.eclipse.jdt.core.dom.ArrayCreation;
+import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Comment;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IfStatement;
@@ -63,11 +64,17 @@ public class JavaRewriter {
   private static final Set<String> RESERVED_WORDS = new HashSet<>(
       Arrays.asList(RESERVED_WORDS_));
 
-  private String GetNextName(HashMap<String, String> rewrites,
-      final String name, final char base_char) {
-    return GetNextName(rewrites, name, base_char, "");
-  }
 
+  /**
+   * Generate a new rewrite name.
+   *
+   * @param rewrites The rewrite table. The new name is added to this table.
+   * @param name The current name.
+   * @param base_char The base character to use for generating new names, e.g.
+   * 'A' to produce the sequence 'A', 'B', 'C'...
+   * @param name_prefix An optional prefix to prepend to generated names.
+   * @return The replacement name.
+   */
   private String GetNextName(HashMap<String, String> rewrites,
       final String name, final char base_char,
       final String name_prefix) {
@@ -228,6 +235,7 @@ public class JavaRewriter {
     // Rewrite declarations.
 
     compilationUnit.accept(new ASTVisitor() {
+      /* Private helper method for renaming declarations. */
       private boolean Rename(final String type_name,
           final HashMap<String, String> rewriteTable,
           final ASTNode node, final char base_char, final String name_prefix) {
@@ -246,7 +254,8 @@ public class JavaRewriter {
       }
 
       public boolean visit(MethodDeclaration node) {
-        if (!node.getName().toString().equals("main")) {
+        if (!node.getName().toString().equals("main") &&
+            !node.isConstructor()) {
           Rename("MethodDeclaration", methodRewrites, node.getName(), 'A',
               "fn_");
         }
@@ -266,8 +275,11 @@ public class JavaRewriter {
 
     // Rewrite usages.
 
+    System.err.println("\n==== REWRITING USAGES ====\n");
+
     compilationUnit.accept(new ASTVisitor() {
 
+      /* Private helper method to rename usages. */
       private void Rename(final String type_name,
           final HashMap<String, String> rewriteTable,
           final ASTNode node) {
@@ -278,9 +290,9 @@ public class JavaRewriter {
               node, traversalAST.newSimpleName(newName), null);
           System.err.println(
               "=> " + type_name + ": " + oldName + " -> " + newName);
+        } else {
+          System.err.println("!! " + type_name + ": miss for " + oldName);
         }
-
-        // IJavaRefactorings foo;
       }
 
       public boolean visit(SimpleName node) {
@@ -288,7 +300,9 @@ public class JavaRewriter {
 
         if (parent instanceof MethodInvocation) {
           MethodInvocation m = (MethodInvocation) parent;
-          m.arguments();
+          for (final Object arg : m.arguments()) {
+            Rename("MethodArgument", variableRewrites, (ASTNode) node);
+          }
           Rename("MethodInvocation", methodRewrites, node);
         } else if (parent instanceof SimpleType) {
           Rename("SimpleType", typeRewrites, node);
@@ -308,11 +322,13 @@ public class JavaRewriter {
           Rename("IfStatement", variableRewrites, node);
         } else if (parent instanceof ArrayCreation) {
           Rename("ArrayCreation", variableRewrites, node);
+        } else if (parent instanceof Assignment) {
+          Rename("Assignment", variableRewrites, node);
         } else if (parent instanceof MethodDeclaration ||
             parent instanceof VariableDeclarationFragment ||
             parent instanceof SingleVariableDeclaration ||
             parent instanceof TypeDeclaration) {
-          // Ignore
+          // These have already been re-written.
         } else {
           System.err.println(
               "Unknown type " + parent.getClass().getName() + " for name "
