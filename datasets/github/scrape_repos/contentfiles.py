@@ -1,18 +1,16 @@
 """This file defines a database for importing cloned GitHub repos."""
 import binascii
-import contextlib
 import datetime
 import pathlib
-import typing
-
 import sqlalchemy as sql
+import typing
 from absl import flags
+from phd.lib.labm8 import labdate
+from phd.lib.labm8 import sqlutil
 from sqlalchemy import orm
 from sqlalchemy.ext import declarative
 
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
-from phd.lib.labm8 import labdate
-from phd.lib.labm8 import sqlutil
 
 
 FLAGS = flags.FLAGS
@@ -95,7 +93,7 @@ class ContentFile(Base):
     return binascii.hexlify(self.sha256).decode('utf-8')
 
 
-class ContentFiles(object):
+class ContentFiles(sqlutil.Database):
 
   def __init__(self, path: pathlib.Path):
     self.database_path = path.absolute()
@@ -104,24 +102,3 @@ class ContentFiles(object):
     Base.metadata.create_all(self.engine)
     Base.metadata.bind = self.engine
     self.make_session = orm.sessionmaker(bind=self.engine)
-
-  @contextlib.contextmanager
-  def Session(self, commit: bool = False) -> orm.session.Session:
-    """Provide a transactional scope around a session.
-
-    Args:
-      commit: If true, commit session at the end of scope.
-
-    Returns:
-      A database session.
-    """
-    session = self.make_session()
-    try:
-      yield session
-      if commit:
-        session.commit()
-    except:
-      session.rollback()
-      raise
-    finally:
-      session.close()
