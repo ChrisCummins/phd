@@ -24,5 +24,6 @@ language {
   }
   importer {
     source_code_pattern: ".*\\.java"
+    preprocessor: "datasets.github.scrape_repos.preprocessors.extractors:JavaMethods"
   }
 }
