@@ -38,7 +38,7 @@ CXX_HEADERS = set(
 
 @public.dataset_preprocessor
 def CxxHeaders(import_root: pathlib.Path, file_relpath: str, text: str,
-               all_file_relpaths: typing.List[str]) -> str:
+               all_file_relpaths: typing.List[str]) -> typing.List[str]:
   """Inline C++ includes.
 
   Searches for occurrences of '#include <$file>' and attempts to resolve $file
@@ -56,14 +56,15 @@ def CxxHeaders(import_root: pathlib.Path, file_relpath: str, text: str,
   Returns:
     The contents of the file file_relpath, with included headers inlined.
   """
-  return _InlineCSyntax(import_root, file_relpath, text, all_file_relpaths,
-                        False, GetLibCxxHeaders().union(C99_HEADERS))
+  return [_InlineCSyntax(import_root, file_relpath, text, all_file_relpaths,
+                         False, GetLibCxxHeaders().union(C99_HEADERS))]
 
 
 @public.dataset_preprocessor
-def CxxHeadersDiscardUnknown(import_root: pathlib.Path,
-                             file_relpath: str, text: str,
-                             all_file_relpaths: typing.List[str]) -> str:
+def CxxHeadersDiscardUnknown(
+    import_root: pathlib.Path,
+    file_relpath: str, text: str,
+    all_file_relpaths: typing.List[str]) -> typing.List[str]:
   """Inline C++ includes, but discard include directives that were not found.
 
   Like CxxHeaders(), but if a file included by '#include' is not found, the
@@ -80,8 +81,8 @@ def CxxHeadersDiscardUnknown(import_root: pathlib.Path,
   Returns:
     The contents of the file file_relpath, with included headers inlined.
   """
-  return _InlineCSyntax(import_root, file_relpath, text, all_file_relpaths,
-                        True, GetLibCxxHeaders().union(C99_HEADERS))
+  return [_InlineCSyntax(import_root, file_relpath, text, all_file_relpaths,
+                         True, GetLibCxxHeaders().union(C99_HEADERS))]
 
 
 def _InlineCSyntax(import_root: pathlib.Path, file_relpath: str,

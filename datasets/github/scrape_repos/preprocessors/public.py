@@ -11,7 +11,7 @@ from phd.lib.labm8 import fs
 FLAGS = flags.FLAGS
 
 # Type hint for a preprocessor function. See @clgen_preprocess for details.
-PreprocessorFunction = typing.Callable[[str], str]
+PreprocessorFunction = typing.Callable[[str], typing.List[str]]
 
 
 def dataset_preprocessor(func: PreprocessorFunction) -> PreprocessorFunction:
@@ -39,7 +39,7 @@ def dataset_preprocessor(func: PreprocessorFunction) -> PreprocessorFunction:
     'file_relpath': str,
     'all_file_relpaths': typing.List[str],
     'text': str,
-    'return': str,
+    'return': typing.List[str],
   }
   if typing.get_type_hints(func) != expected_type_hints:
     return_type = expected_type_hints.pop('return').__name__

@@ -48,7 +48,7 @@ def GetPreprocessorFunction(name: str) -> public.PreprocessorFunction:
 
 def Preprocess(import_root: pathlib.Path, file_relpath: str,
                all_file_relpaths: typing.List[str],
-               preprocessors: typing.List[str]) -> str:
+               preprocessors: typing.List[str]) -> typing.List[str]:
   """Preprocess a text using the given preprocessor pipeline.
 
   If preprocessing succeeds, the preprocessed text is returned. If preprocessing
@@ -65,7 +65,7 @@ def Preprocess(import_root: pathlib.Path, file_relpath: str,
       passed to GetPreprocessorFunction() to resolve the python implementations.
 
   Returns:
-    Preprocessed source input as a string.
+    Preprocessed sources.
 
   Raises:
     FileNotFoundError: If the file does not exist.
@@ -78,11 +78,14 @@ def Preprocess(import_root: pathlib.Path, file_relpath: str,
     raise FileNotFoundError(f"File not found: {path}")
 
   with open(path) as f:
-    text = f.read()
+    texts = [f.read()]
 
   preprocessor_functions = [GetPreprocessorFunction(p) for p in preprocessors]
+  next_texts = []
   for preprocessor in preprocessor_functions:
-    text = preprocessor(import_root=import_root,
-                        file_relpath=file_relpath, text=text,
-                        all_file_relpaths=all_file_relpaths)
-  return text
+    for text in texts:
+      next_texts += preprocessor(import_root=import_root,
+                                 file_relpath=file_relpath, text=text,
+                                 all_file_relpaths=all_file_relpaths)
+    texts = next_texts
+  return texts
