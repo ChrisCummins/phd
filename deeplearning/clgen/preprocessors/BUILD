@@ -366,6 +366,7 @@ java_binary(
     srcs = ["JavaRewriter.java"],
     main_class = "deeplearning.clgen.preprocessors.JavaRewriter",
     deps = [
+        "@com_google_guava//jar",
         "@org_eclipse_core_contenttype//jar",
         "@org_eclipse_core_runtime//jar",
         "@org_eclipse_equinox_common//jar",

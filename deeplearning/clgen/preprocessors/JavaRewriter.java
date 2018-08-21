@@ -1,7 +1,7 @@
 // Work in progress on Java AST rewriter.
 package deeplearning.clgen.preprocessors;
 
-import java.io.ByteArrayOutputStream;
+import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -340,29 +340,13 @@ public class JavaRewriter {
     byte[] encoded = Files.readAllBytes(Paths.get(path));
     return new String(encoded, encoding);
   }
-
-  /**
-   * Read stdin to string.
-   *
-   * @return A string of the stdin.
-   * @throws IOException In case of IO error.
-   */
-  private static String ReadStdin() throws IOException {
-    ByteArrayOutputStream stream = new ByteArrayOutputStream();
-    byte[] buffer = new byte[32 * 1024];
-    int bytesRead;
-    while ((bytesRead = System.in.read(buffer)) > 0) {
-      stream.write(buffer, 0, bytesRead);
-    }
-    return stream.toString();
-  }
-
+  
   public static void main(final String[] args) {
     JavaRewriter rewriter = new JavaRewriter();
 
     try {
       // final String input =ReadFile(args[0], Charset.defaultCharset());
-      final String input = ReadStdin();
+      final String input = new String(ByteStreams.toByteArray(System.in));
       final String source = rewriter.RewriteSource(input);
       if (source == null) {
         System.out.println("fatal: RewriteSource() returned null.");
