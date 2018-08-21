@@ -40,8 +40,9 @@ class GitHubRepository(Base):
   language: str = sql.Column(sql.String(16), nullable=False)
 
   @staticmethod
-  def _GetArgsFromProto(proto: scrape_repos_pb2.GitHubRepoMetadata) -> \
-      typing.Dict[str, typing.Any]:
+  def _GetArgsFromProto(
+      proto: scrape_repos_pb2.GitHubRepoMetadata
+  ) -> typing.Dict[str, typing.Any]:
     date_scraped = labdate.DatetimeFromMillisecondsTimestamp(
         proto.scraped_utc_epoch_ms)
     return {"clone_from_url": proto.clone_from_url, "owner": proto.owner,
