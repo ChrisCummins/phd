@@ -75,13 +75,23 @@ message GitHubRepoMetadata {
   optional int32 num_watchers = 6;
 }
 
-
 message ImportWorker {
   optional string clone_from_url = 1;
   optional string clone_dir = 2;
   optional string abspath = 3;
   repeated string all_files_relpaths = 4;
   repeated string preprocessors = 5;
+}
+
+// A single content file record.
+message ContentFile {
+  optional string clone_from_url = 1;
+  optional string relpath = 2;
+  optional int32 artifact_index = 3;
+  optional string sha256 = 4;
+  optional int32 charcount = 5;
+  optional int32 linecount = 6;
+  optional string text = 7;
 }
 
 // Used by JavaMethodsExtractor to extract a list of methods from an input
