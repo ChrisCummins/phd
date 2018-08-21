@@ -2,6 +2,9 @@
 syntax = "proto2";
 package scrape_repos;
 
+option java_package = "datasets.github.scrape_repos";
+option java_outer_classname = "ScrapeReposProtos";
+
 // A GitHub user's credentials and API token, used for authenticating API calls.
 message GitHubCredentials {
   optional string username = 1;
@@ -79,4 +82,10 @@ message ImportWorker {
   optional string abspath = 3;
   repeated string all_files_relpaths = 4;
   repeated string preprocessors = 5;
+}
+
+// Used by JavaMethodsExtractor to extract a list of methods from an input
+// source.
+message MethodsList {
+  repeated string method = 1;
 }
