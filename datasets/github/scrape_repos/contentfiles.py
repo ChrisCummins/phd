@@ -19,6 +19,7 @@ Base = declarative.declarative_base()
 
 
 class Meta(Base):
+  """The meta table."""
   __tablename__ = 'meta'
 
   key: str = sql.Column(sql.String(1024), primary_key=True)
@@ -26,6 +27,7 @@ class Meta(Base):
 
 
 class GitHubRepository(Base):
+  """A GitHub repository record."""
   __tablename__ = 'repositories'
 
   owner: str = sql.Column(sql.String(512), nullable=False)
@@ -68,6 +70,7 @@ class GitHubRepository(Base):
 
 
 class ContentFile(Base):
+  """A single content file record."""
   __tablename__ = 'contentfiles'
 
   id: int = sql.Column(sql.Integer, primary_key=True)
@@ -95,6 +98,7 @@ class ContentFile(Base):
 
 
 class ContentFiles(sqlutil.Database):
+  """A database consisting of a table of ContentFiles and GitHub repos."""
 
   def __init__(self, path: pathlib.Path):
     self.database_path = path.absolute()
