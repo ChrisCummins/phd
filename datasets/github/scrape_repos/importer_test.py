@@ -43,7 +43,7 @@ def test_ImportFromLanguage_no_importer(test_db: contentfiles.ContentFiles,
 
 def test_ImportFromLanguage_Java_repo(test_db: contentfiles.ContentFiles,
                                       tempdir: pathlib.Path):
-  """Test that error is raised if no importer specified."""
+  """An end-to-end test of a Java importer."""
   (tempdir / 'Owner_Name' / '.git').mkdir(parents=True)
   (tempdir / 'Owner_Name' / 'src').mkdir(parents=True)
 
