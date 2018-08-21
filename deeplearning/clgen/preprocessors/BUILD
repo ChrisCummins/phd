@@ -375,6 +375,7 @@ java_binary(
         "@org_eclipse_jface//jar",
         "@org_eclipse_jobs//jar",
         "@org_eclipse_ltk_core_refactoring//jar",
+        "@org_eclipse_ltk_ui_refactoring//jar",
         "@org_eclipse_osgi//jar",
         "@org_eclipse_osgi_util//jar",
         "@org_eclipse_resources//jar",
