@@ -85,7 +85,8 @@ class ContentFile(Base):
   date_added: datetime.datetime = sql.Column(sql.DateTime, nullable=False,
                                              default=datetime.datetime.utcnow)
   __table_args__ = (
-    sql.UniqueConstraint('clone_from_url', 'relpath', name='uniq_contentfile'),)
+    sql.UniqueConstraint('clone_from_url', 'relpath', 'artifact_index',
+                         name='uniq_contentfile'),)
 
   @property
   def sha256_hex(self) -> str:
