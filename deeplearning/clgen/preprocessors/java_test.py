@@ -86,6 +86,30 @@ class     HelloWorld {
 """
 
 
+def test_Compile_WrapMethodInClass_hello_world():
+  assert 'System.out.println(' in java.Compile(java.WrapMethodInClass("""
+private static Hello() {
+  System.out.println("Hello, world!");
+}
+"""))
+
+
+def test_Compile_WrapMethodInClass_syntax_error():
+  """Test that error is raised if method contains a syntax error."""
+  with pytest.raises(errors.BadCodeException):
+    java.Compile(java.WrapMethodInClass("!@///"))
+
+
+def test_Compile_WrapMethodInClass_undefined_symbol():
+  """Test that error is raised if method has undefined symbols."""
+  with pytest.raises(errors.BadCodeException):
+    java.Compile(java.WrapMethodInClass("""
+private static Hello() {
+  UndefinedMethod(5);
+}
+"""))
+
+
 def test_JavaRewrite_hello_world():
   """Java rewriter returns unmodified input for bad code."""
   assert java.JavaRewrite("hello, world") == "hello, world\n"

@@ -88,6 +88,36 @@ def Compile(text: str) -> str:
 
 
 @public.clgen_preprocessor
+def WrapMethodInClass(text: str) -> str:
+  """A preprocessor which wraps a method into a class definition.
+
+  Args:
+    text: Method to wrap in a class.
+
+  Returns:
+    A class definition.
+  """
+  return f"""\
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Properties;
+import java.util.Set;
+
+public class A {{
+  {text}
+}}
+"""
+
+
+@public.clgen_preprocessor
 def JavaRewrite(text: str) -> str:
   """Run the Java rewriter on the text.
 
