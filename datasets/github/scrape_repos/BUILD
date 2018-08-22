@@ -101,6 +101,36 @@ py_test(
 )
 
 py_binary(
+    name = "indexer",
+    srcs = ["indexer.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        "//datasets/github/scrape_repos/preprocessors",
+        "//datasets/github/scrape_repos/preprocessors:public",
+        "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
+        "//lib/labm8:pbutil",
+        "//third_party/py/absl",
+        "//third_party/py/humanize",
+        "//third_party/py/progressbar",
+        "//third_party/py/sqlalchemy",
+    ],
+)
+
+py_test(
+    name = "indexer_test",
+    srcs = ["indexer_test.py"],
+    deps = [
+        ":github_repo",
+        ":indexer",
+        "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
+        "//lib/labm8:pbutil",
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
+    ],
+)
+
+py_binary(
     name = "scraper",
     srcs = ["scraper.py"],
     default_python_version = "PY3",
