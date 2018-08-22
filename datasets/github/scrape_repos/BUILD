@@ -43,6 +43,32 @@ py_binary(
     ],
 )
 
+py_library(
+    name = "github_repo",
+    srcs = ["github_repo.py"],
+    deps = [
+        ":contentfiles",
+        "//datasets/github/scrape_repos/preprocessors",
+        "//datasets/github/scrape_repos/preprocessors:public",
+        "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
+        "//lib/labm8:pbutil",
+        "//third_party/py/absl",
+    ],
+)
+
+py_test(
+    name = "github_repo_test",
+    srcs = ["github_repo_test.py"],
+    deps = [
+        ":github_repo",
+        "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
+        "//lib/labm8:fs",
+        "//lib/labm8:pbutil",
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
+    ],
+)
+
 py_binary(
     name = "importer",
     srcs = ["importer.py"],
