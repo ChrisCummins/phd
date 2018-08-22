@@ -53,19 +53,18 @@ def ImportWorker(
   """Import a content file."""
   relpath = job.abspath[len(str(job.clone_dir)) + 1:]
   outputs: typing.List[contentfiles.ContentFile] = []
-  texts = preprocessors.Preprocess(pathlib.Path(job.clone_dir), relpath,
-                                   job.all_files_relpaths, job.preprocessors)
-  for i, text in enumerate(texts):
-    try:
+  try:
+    texts = preprocessors.Preprocess(pathlib.Path(job.clone_dir), relpath,
+                                     job.all_files_relpaths, job.preprocessors)
+    for i, text in enumerate(texts):
       sha256 = hashlib.sha256(text.encode('utf-8'))
       outputs.append(contentfiles.ContentFile(
           clone_from_url=job.clone_from_url,
-          relpath=relpath,
-          artifact_index=i,
+          relpath=relpath, artifact_index=i,
           sha256=sha256.digest(), charcount=len(text),
           linecount=len(text.split('\n')), text=text))
-    except UnicodeDecodeError:
-      logging.warning('Failed to decode %s', relpath)
+  except UnicodeDecodeError:
+    logging.warning('Failed to decode %s', relpath)
   return outputs
 
 
