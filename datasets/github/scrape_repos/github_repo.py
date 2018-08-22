@@ -1,6 +1,6 @@
 """This file defines the GitHubRepo class."""
+import binascii
 import multiprocessing
-
 import hashlib
 import humanize
 import pathlib
@@ -95,13 +95,12 @@ class GitHubRepo(object):
           abspath=p,
           all_files_relpaths=all_files_relpaths,
           preprocessors=indexer.preprocessor,
+          index_dir=str(self.index_dir),
       ) for p in paths
     ]
     bar = progressbar.ProgressBar(max_value=len(jobs))
-    for outputs in bar(pool.imap_unordered(ImportWorker, jobs)):
-      for output in outputs:
-        proto_path = self.index_dir / (output.sha256_hex + '.pbtxt')
-        pbutil.ToFile(output.ToProto(), proto_path)
+    for outputs in bar(pool.imap_unordered(IndexContentFiles, jobs)):
+      pass
 
   def ContentFiles(self) -> typing.Iterable[scrape_repos_pb2.ContentFile]:
     """Return an iterator over all contentfiles in the repo."""
@@ -112,25 +111,24 @@ class GitHubRepo(object):
       return []
 
 
-def ImportWorker(
-    job: scrape_repos_pb2.ImportWorker
-) -> typing.List[contentfiles.ContentFile]:
-  """Import content files."""
+def IndexContentFiles(job: scrape_repos_pb2.ImportWorker) -> None:
+  """Index content files."""
   relpath = job.abspath[len(str(job.clone_dir)) + 1:]
-  outputs: typing.List[contentfiles.ContentFile] = []
   try:
     texts = preprocessors.Preprocess(pathlib.Path(job.clone_dir), relpath,
                                      job.all_files_relpaths, job.preprocessors)
     for i, text in enumerate(texts):
       sha256 = hashlib.sha256(text.encode('utf-8'))
-      outputs.append(contentfiles.ContentFile(
+      proto = scrape_repos_pb2.ContentFile(
           clone_from_url=job.clone_from_url,
           relpath=relpath,
           artifact_index=i,
           sha256=sha256.digest(),
           charcount=len(text),
           linecount=len(text.split('\n')),
-          text=text))
+          text=text)
+      path = pathlib.Path(job.index_dir) / (
+          binascii.hexlify(proto.sha256).decode('utf-8') + '.pbtxt')
+      pbutil.ToFile(proto, path)
   except UnicodeDecodeError:
     logging.warning('Failed to decode %s', relpath)
-  return outputs

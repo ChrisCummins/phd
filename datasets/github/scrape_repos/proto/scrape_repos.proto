@@ -82,6 +82,7 @@ message ImportWorker {
   optional string abspath = 3;
   repeated string all_files_relpaths = 4;
   repeated string preprocessors = 5;
+  optional string index_dir = 6;
 }
 
 // A single content file record.
