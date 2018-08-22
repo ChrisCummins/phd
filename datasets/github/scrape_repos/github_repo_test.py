@@ -80,16 +80,14 @@ public class B {
   with open(test_repo.clone_dir / 'README.txt', 'w') as f:
     f.write('Hello, world!')
 
-  indexers = [
+  assert not test_repo.index_dir.is_dir()
+  assert not list(test_repo.ContentFiles())
+  test_repo.Index([
     scrape_repos_pb2.ContentFilesImporterConfig(
         source_code_pattern='.*\\.java',
         preprocessor=["datasets.github.scrape_repos.preprocessors."
                       "extractors:JavaMethods"]),
-  ]
-
-  assert not test_repo.index_dir.is_dir()
-  assert not list(test_repo.ContentFiles())
-  test_repo.Index(indexers, multiprocessing.Pool(1))
+  ], multiprocessing.Pool(1))
   assert test_repo.index_dir.is_dir()
 
   assert (test_repo.index_dir / 'DONE.txt').is_file()
