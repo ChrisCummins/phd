@@ -24,9 +24,20 @@ class GitHubRepo(object):
   """Representation of a GitHub repo."""
 
   def __init__(self, metafile: pathlib.Path):
+    """Instantiate a github repo.
+
+    Args:
+      metafile: The path to the github meta file proto.
+
+    Raises:
+      ValueError: In case the metafile cannot be read.
+    """
     self.metafile: pathlib.Path = metafile
-    self.meta: scrape_repos_pb2.GitHubRepoMetadata = pbutil.FromFile(
-        metafile, scrape_repos_pb2.GitHubRepoMetadata())
+    try:
+      self.meta: scrape_repos_pb2.GitHubRepoMetadata = pbutil.FromFile(
+          metafile, scrape_repos_pb2.GitHubRepoMetadata())
+    except pbutil.DecodeError as e:
+      raise ValueError(f"Failed to read metafile '{self.metafile}' {e}")
     self.name: str = f'{self.meta.owner}_{self.meta.name}'
     self.clone_dir: pathlib.Path = metafile.parent / self.name
     self.index_dir = (
