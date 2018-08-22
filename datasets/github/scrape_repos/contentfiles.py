@@ -126,12 +126,12 @@ class ContentFile(Base):
     Returns:
       The proto buffer.
     """
-    proto.clone_from_url = self.clone_from_url,
-    proto.relpath = self.relpath,
-    proto.artifact_index = self.artifact_index,
-    proto.sha256 = self.sha256,
-    proto.charcount = self.charcount,
-    proto.linecount = self.linecount,
+    proto.clone_from_url = self.clone_from_url
+    proto.relpath = self.relpath
+    proto.artifact_index = self.artifact_index
+    proto.sha256 = self.sha256
+    proto.charcount = self.charcount
+    proto.linecount = self.linecount
     proto.text = self.text
     return proto
 
@@ -141,15 +141,8 @@ class ContentFile(Base):
     Returns:
       A ContentFile message.
     """
-    return scrape_repos_pb2.ContentFile(
-        clone_from_url=self.clone_from_url,
-        relpath=self.relpath,
-        artifact_index=self.artifact_index,
-        sha256=self.sha256,
-        charcount=self.charcount,
-        linecount=self.linecount,
-        text=self.text
-    )
+    proto = scrape_repos_pb2.ContentFile()
+    return self.SetProto(proto)
 
 
 class ContentFiles(sqlutil.Database):
