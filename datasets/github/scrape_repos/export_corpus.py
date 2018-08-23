@@ -1,4 +1,7 @@
 """Export ContentFiles to a directory."""
+import os
+
+import binascii
 import humanize
 import pathlib
 from absl import app
@@ -32,6 +35,23 @@ def ExportDatabase(session: orm.session.Session,
       f.write(contentfile.text)
 
 
+def ExportIndex(index_path: pathlib.Path, export_path: pathlib.Path) -> None:
+  """Export the contents of an index directory to a directory."""
+  contentfile = scrape_repos_pb2.ContentFile()
+  for subdir, dirs, files in os.walk(index_path):
+    for file in files:
+      if file.endswith('.pbtxt'):
+        try:
+          pbutil.FromFile(pathlib.Path(os.path.join(subdir, file)), contentfile)
+          sha256 = binascii.hexlify(contentfile.sha256)
+          out_path = export_path / (sha256 + '.txt')
+          logging.debug(out_path)
+          with open(out_path, 'w') as f:
+            f.write(contentfile.text)
+        except pbutil.DecodeError:
+          pass
+
+
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:
@@ -48,13 +68,20 @@ def main(argv):
   export_path = pathlib.Path(FLAGS.export_path)
   export_path.mkdir(parents=True, exist_ok=True)
 
+  # To export from contentfiles database.
+  # for language in clone_list.language:
+  #   d = pathlib.Path(language.destination_directory)
+  #   d = d.parent / (str(d.name) + '.db')
+  #   db = contentfiles.ContentFiles(d)
+  #   with db.Session() as session:
+  #     (export_path / language.language).mkdir(exist_ok=True)
+  #     ExportDatabase(session, export_path / language.language)
+
+  # To export from index directory.
   for language in clone_list.language:
-    d = pathlib.Path(language.destination_directory)
-    d = d.parent / (str(d.name) + '.db')
-    db = contentfiles.ContentFiles(d)
-    with db.Session() as session:
-      (export_path / language.language).mkdir(exist_ok=True)
-      ExportDatabase(session, export_path / language.language)
+    index_path = pathlib.Path(language.destination_directory + '.index')
+    if index_path.is_dir():
+      ExportIndex(index_path, export_path / language.language)
 
 
 if __name__ == '__main__':
