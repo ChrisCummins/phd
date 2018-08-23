@@ -41,7 +41,7 @@ class GitHubRepo(object):
     self.name: str = f'{self.meta.owner}_{self.meta.name}'
     self.clone_dir: pathlib.Path = metafile.parent / self.name
     self.index_dir = (
-        pathlib.Path(str(metafile.parent.parent) + '.index') / self.name)
+        pathlib.Path(str(metafile.parent) + '.index') / self.name)
 
   def IsCloned(self) -> bool:
     """Return whether the repo has been cloned."""

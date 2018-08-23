@@ -102,6 +102,19 @@ public class B {
   }
 
 
+def test_GitHubRepo_Index_index_dir_paths(tempdir: pathlib.Path):
+  """Test that index directories are produced in the correct location."""
+  repo = _CreateTestRepo(tempdir / 'java', 'Foo', 'Bar')
+  repo.Index([
+    scrape_repos_pb2.ContentFilesImporterConfig(
+        source_code_pattern='.*\\.java',
+        preprocessor=["datasets.github.scrape_repos.preprocessors."
+                      "extractors:JavaMethods"]),
+  ], multiprocessing.Pool(1))
+  assert (tempdir / 'java.index').is_dir()
+  assert (tempdir / 'java.index' / 'Foo_Bar').is_dir()
+
+
 def main(argv: typing.List[str]):
   """Main entry point."""
   if len(argv) > 1:
