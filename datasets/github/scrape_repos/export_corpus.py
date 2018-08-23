@@ -43,11 +43,12 @@ def ExportIndex(index_path: pathlib.Path, export_path: pathlib.Path) -> None:
       if file.endswith('.pbtxt'):
         try:
           pbutil.FromFile(pathlib.Path(os.path.join(subdir, file)), contentfile)
-          sha256 = binascii.hexlify(contentfile.sha256)
+          sha256 = binascii.hexlify(contentfile.sha256).decode('utf-8')
           out_path = export_path / (sha256 + '.txt')
-          logging.debug(out_path)
-          with open(out_path, 'w') as f:
-            f.write(contentfile.text)
+          if not out_path.is_file():
+            with open(out_path, 'w') as f:
+              f.write(contentfile.text)
+              logging.debug(out_path)
         except pbutil.DecodeError:
           pass
 
@@ -81,6 +82,7 @@ def main(argv):
   for language in clone_list.language:
     index_path = pathlib.Path(language.destination_directory + '.index')
     if index_path.is_dir():
+      (export_path / language.language).mkdir(exist_ok=True)
       ExportIndex(index_path, export_path / language.language)
 
 
