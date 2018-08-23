@@ -11,7 +11,6 @@ from absl import flags
 from absl import logging
 from phd.lib.labm8 import pbutil
 
-from datasets.github.scrape_repos import contentfiles
 from datasets.github.scrape_repos.preprocessors import preprocessors
 from datasets.github.scrape_repos.preprocessors import public
 from datasets.github.scrape_repos.proto import scrape_repos_pb2

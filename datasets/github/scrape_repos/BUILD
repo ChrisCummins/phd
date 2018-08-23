@@ -47,7 +47,6 @@ py_library(
     name = "github_repo",
     srcs = ["github_repo.py"],
     deps = [
-        ":contentfiles",
         "//datasets/github/scrape_repos/preprocessors",
         "//datasets/github/scrape_repos/preprocessors:public",
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
