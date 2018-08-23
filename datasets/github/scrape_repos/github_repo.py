@@ -98,7 +98,7 @@ class GitHubRepo(object):
       ) for p in paths
     ]
     bar = progressbar.ProgressBar(max_value=len(jobs))
-    for outputs in bar(pool.imap_unordered(IndexContentFiles, jobs)):
+    for _ in bar(pool.imap_unordered(IndexContentFiles, jobs)):
       pass
 
   def ContentFiles(self) -> typing.Iterable[scrape_repos_pb2.ContentFile]:
