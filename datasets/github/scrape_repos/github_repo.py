@@ -107,7 +107,7 @@ class GitHubRepo(object):
           index_dir=str(self.index_dir),
       ) for p in paths
     )
-    progress_bar = progressbar.ProgressBar()
+    progress_bar = progressbar.ProgressBar(max_value=len(paths))
     for _ in progress_bar(pool.imap_unordered(IndexContentFiles, jobs)):
       pass
 
