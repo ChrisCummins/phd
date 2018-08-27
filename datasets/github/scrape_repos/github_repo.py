@@ -1,10 +1,8 @@
 """This file defines the GitHubRepo class."""
 import binascii
-import multiprocessing
 import hashlib
 import humanize
 import pathlib
-import progressbar
 import subprocess
 import typing
 from absl import flags
@@ -58,19 +56,19 @@ class GitHubRepo(object):
     raise NotImplementedError
 
   def Index(self,
-            indexers: typing.List[scrape_repos_pb2.ContentFilesImporterConfig],
-            pool: multiprocessing.Pool) -> 'GitHubRepo':
+            indexers: typing.List[scrape_repos_pb2.ContentFilesImporterConfig]
+            ) -> 'GitHubRepo':
     """Index the repo."""
     if self.IsIndexed():
       return self
 
     self.index_dir.mkdir(parents=True, exist_ok=True)
     for indexer in indexers:
-      self._IndexPattern(indexer, pool)
+      self._IndexPattern(indexer)
     (self.index_dir / 'DONE.txt').touch()
 
-  def _IndexPattern(self, indexer: scrape_repos_pb2.ContentFilesImporterConfig,
-                    pool: multiprocessing.Pool) -> 'GitHubRepo':
+  def _IndexPattern(self, indexer: scrape_repos_pb2.ContentFilesImporterConfig
+                    ) -> 'GitHubRepo':
     """Index the repo."""
     pattern = indexer.source_code_pattern
     pattern = (f'{self.clone_dir}/{pattern[1:]}'
@@ -97,9 +95,8 @@ class GitHubRepo(object):
           index_dir=str(self.index_dir),
       ) for p in paths
     )
-    progress_bar = progressbar.ProgressBar()
-    for _ in progress_bar(pool.imap_unordered(IndexContentFiles, jobs)):
-      pass
+    for job in jobs:
+      IndexContentFiles(job)
 
   def ContentFiles(self) -> typing.Iterable[scrape_repos_pb2.ContentFile]:
     """Return an iterator over all contentfiles in the repo."""
