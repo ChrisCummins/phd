@@ -91,7 +91,7 @@ class GitHubRepo(object):
       logging.debug('No files to import from %s', self.clone_dir)
       return self
     if i:
-      logging.info("[%s/%s] Importing %s files from %s ...",
+      logging.info("[%s / %s] Importing %s files from %s ...",
                    i.i, i.n, humanize.intcomma(len(paths)), self.name)
     else:
       logging.info("Importing %s files from %s ...",
