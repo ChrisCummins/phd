@@ -87,7 +87,7 @@ class GitHubRepo(object):
     logging.info("Importing %s files from %s ...",
                  humanize.intcomma(len(paths)), self.name)
     all_files_relpaths = public.GetAllFilesRelativePaths(self.clone_dir)
-    jobs = [
+    jobs = (
       scrape_repos_pb2.ImportWorker(
           clone_from_url=self.meta.clone_from_url,
           clone_dir=str(self.clone_dir),
@@ -96,9 +96,9 @@ class GitHubRepo(object):
           preprocessors=indexer.preprocessor,
           index_dir=str(self.index_dir),
       ) for p in paths
-    ]
-    bar = progressbar.ProgressBar(max_value=len(jobs))
-    for _ in bar(pool.imap_unordered(IndexContentFiles, jobs)):
+    )
+    progress_bar = progressbar.ProgressBar()
+    for _ in progress_bar(pool.imap_unordered(IndexContentFiles, jobs)):
       pass
 
   def ContentFiles(self) -> typing.Iterable[scrape_repos_pb2.ContentFile]:
