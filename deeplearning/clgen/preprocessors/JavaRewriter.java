@@ -230,8 +230,6 @@ public class JavaRewriter {
     this.traversalRewrite = ASTRewrite.create(compilationUnit.getAST());
     this.traversalAST = compilationUnit.getAST();
 
-    System.err.println("\n==========================\nBEGIN AST TRAVERSAL\n");
-
     // Rewrite declarations.
 
     compilationUnit.accept(new ASTVisitor() {
@@ -274,8 +272,6 @@ public class JavaRewriter {
     });
 
     // Rewrite usages.
-
-    System.err.println("\n==== REWRITING USAGES ====\n");
 
     compilationUnit.accept(new ASTVisitor() {
 
@@ -338,7 +334,6 @@ public class JavaRewriter {
         return true;
       }
     });
-    System.err.println("END AST TRAVERSAL\n==========================\n");
 
     edits.add(this.traversalRewrite.rewriteAST(document, null));
   }
@@ -356,7 +351,7 @@ public class JavaRewriter {
     byte[] encoded = Files.readAllBytes(Paths.get(path));
     return new String(encoded, encoding);
   }
-  
+
   public static void main(final String[] args) {
     JavaRewriter rewriter = new JavaRewriter();
 
