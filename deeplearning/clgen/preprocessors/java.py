@@ -141,4 +141,4 @@ def JavaRewrite(text: str) -> str:
     raise errors.RewriterException('JavaRewriter failed to complete after 60s')
   elif process.returncode:
     raise errors.RewriterException(stderr)
-  return stdout
+  return stdout.strip() + '\n'
