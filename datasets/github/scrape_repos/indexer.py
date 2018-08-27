@@ -49,8 +49,9 @@ def ImportFromLanguage(language: scrape_repos_pb2.LanguageToClone,
   logging.info('Importing %s %s repos ...',
                humanize.intcomma(len(repos_to_import)),
                language.language.capitalize())
-  for repo in repos_to_import:
-    repo.Index(list(language.importer), pool)
+  for i, repo in enumerate(repos_to_import):
+    repo.Index(list(language.importer), pool,
+               github_repo.IndexProgress(i, len(repos_to_import)))
 
 
 def main(argv):

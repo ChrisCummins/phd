@@ -1,6 +1,8 @@
 """This file defines the GitHubRepo class."""
-import binascii
 import multiprocessing
+
+import binascii
+import collections
 import hashlib
 import humanize
 import pathlib
@@ -17,6 +19,8 @@ from datasets.github.scrape_repos.proto import scrape_repos_pb2
 
 
 FLAGS = flags.FLAGS
+
+IndexProgress = collections.namedtuple('IndexProgress', ['i', 'n'])
 
 
 class GitHubRepo(object):
@@ -59,18 +63,20 @@ class GitHubRepo(object):
 
   def Index(self,
             indexers: typing.List[scrape_repos_pb2.ContentFilesImporterConfig],
-            pool: multiprocessing.Pool) -> 'GitHubRepo':
+            pool: multiprocessing.Pool,
+            i: IndexProgress = None) -> 'GitHubRepo':
     """Index the repo."""
     if self.IsIndexed():
       return self
 
     self.index_dir.mkdir(parents=True, exist_ok=True)
     for indexer in indexers:
-      self._IndexPattern(indexer, pool)
+      self._IndexPattern(indexer, pool, i)
     (self.index_dir / 'DONE.txt').touch()
 
   def _IndexPattern(self, indexer: scrape_repos_pb2.ContentFilesImporterConfig,
-                    pool: multiprocessing.Pool) -> 'GitHubRepo':
+                    pool: multiprocessing.Pool,
+                    i: IndexProgress) -> 'GitHubRepo':
     """Index the repo."""
     pattern = indexer.source_code_pattern
     pattern = (f'{self.clone_dir}/{pattern[1:]}'
@@ -84,8 +90,12 @@ class GitHubRepo(object):
     if len(paths) == 1 and not paths[0]:
       logging.debug('No files to import from %s', self.clone_dir)
       return self
-    logging.info("Importing %s files from %s ...",
-                 humanize.intcomma(len(paths)), self.name)
+    if i:
+      logging.info("[%s/%s] Importing %s files from %s ...",
+                   i.i, i.n, humanize.intcomma(len(paths)), self.name)
+    else:
+      logging.info("Importing %s files from %s ...",
+                   humanize.intcomma(len(paths)), self.name)
     all_files_relpaths = public.GetAllFilesRelativePaths(self.clone_dir)
     jobs = (
       scrape_repos_pb2.ImportWorker(
