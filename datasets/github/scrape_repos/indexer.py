@@ -44,14 +44,18 @@ def ImportFromLanguage(language: scrape_repos_pb2.LanguageToClone,
     for f in pathlib.Path(language.destination_directory).iterdir()
     if f.name.endswith('.pbtxt')]
   logging.info('Pruning indexed repos ...')
+  num_repos = len(all_repos)
   repos_to_import = [repo for repo in all_repos if not repo.IsIndexed()]
+  num_todo = len(repos_to_import)
+  num_pruned = num_repos - num_todo
   random.shuffle(repos_to_import)
-  logging.info('Importing %s %s repos ...',
-               humanize.intcomma(len(repos_to_import)),
+  logging.info('Importing %s of %s %s repos ...',
+               humanize.intcomma(num_todo),
+               humanize.intcomma(num_repos),
                language.language.capitalize())
   for i, repo in enumerate(repos_to_import):
     repo.Index(list(language.importer), pool,
-               github_repo.IndexProgress(i, len(repos_to_import)))
+               github_repo.IndexProgress(num_pruned + i, num_repos))
 
 
 def main(argv):
