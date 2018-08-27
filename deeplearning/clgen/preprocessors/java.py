@@ -98,22 +98,30 @@ def WrapMethodInClass(text: str) -> str:
     A class definition.
   """
   return f"""\
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Properties;
-import java.util.Set;
-
 public class A {{
   {text}
 }}
+"""
+
+
+@public.clgen_preprocessor
+def InsertShimImports(text: str) -> str:
+  """A preprocessor which inserts a set of shim imports.
+
+  Args:
+    text: Text to prepend imports to.
+
+  Returns:
+    The text with imports prepended.
+  """
+  return f"""\
+import java.io.*;
+import java.nio.charset.*;
+import java.nio.file.*;
+import java.util.*;
+import java.time.format.*;
+
+{text}  
 """
 
 

@@ -86,12 +86,20 @@ class     HelloWorld {
 """
 
 
+# WrapMethodInClass() tests.
+
 def test_Compile_WrapMethodInClass_hello_world():
-  assert 'System.out.println(' in java.Compile(java.WrapMethodInClass("""
-private static Hello() {
+  """Test output of wrapping a method in a class."""
+  assert java.Compile(java.WrapMethodInClass("""\
+private static void Hello() {
+  System.out.println("Hello, world!");
+}""")) == """\
+public class A {
+  private static void Hello() {
   System.out.println("Hello, world!");
 }
-"""))
+}
+"""
 
 
 def test_Compile_WrapMethodInClass_syntax_error():
@@ -104,11 +112,31 @@ def test_Compile_WrapMethodInClass_undefined_symbol():
   """Test that error is raised if method has undefined symbols."""
   with pytest.raises(errors.BadCodeException):
     java.Compile(java.WrapMethodInClass("""
-private static Hello() {
+private static void Hello() {
   UndefinedMethod(5);
 }
 """))
 
+
+# InsertShimImports() tests.
+
+
+def test_Compile_InsertShimImports_WrapMethodInClass_array_list():
+  """Test output of wrapping a method in a class."""
+  assert """\
+private static void Hello() {
+  ArrayList<Object> a = new ArrayList<>();
+  System.out.println("Hello, world!");
+}
+""" in java.Compile(java.InsertShimImports(java.WrapMethodInClass("""\
+private static void Hello() {
+  ArrayList<Object> a = new ArrayList<>();
+  System.out.println("Hello, world!");
+}
+""")))
+
+
+# JavaRewrite() tests.
 
 def test_JavaRewrite_hello_world():
   """Java rewriter returns unmodified input for bad code."""
