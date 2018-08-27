@@ -1,4 +1,5 @@
 """Unit tests for //datasets/github/scrape_repos/github_repo.py."""
+import multiprocessing
 
 import pathlib
 import pytest
@@ -86,7 +87,7 @@ public class B {
         source_code_pattern='.*\\.java',
         preprocessor=["datasets.github.scrape_repos.preprocessors."
                       "extractors:JavaMethods"]),
-  ])
+  ], multiprocessing.Pool(1))
   assert test_repo.index_dir.is_dir()
 
   assert (test_repo.index_dir / 'DONE.txt').is_file()
@@ -109,7 +110,7 @@ def test_GitHubRepo_Index_index_dir_paths(tempdir: pathlib.Path):
         source_code_pattern='.*\\.java',
         preprocessor=["datasets.github.scrape_repos.preprocessors."
                       "extractors:JavaMethods"]),
-  ])
+  ], multiprocessing.Pool(1))
   assert (tempdir / 'java.index').is_dir()
   assert (tempdir / 'java.index' / 'Foo_Bar').is_dir()
 

@@ -4,7 +4,6 @@ import os
 
 import humanize
 import pathlib
-import progressbar
 import random
 from absl import app
 from absl import flags
@@ -50,9 +49,8 @@ def ImportFromLanguage(language: scrape_repos_pb2.LanguageToClone,
   logging.info('Importing %s %s repos ...',
                humanize.intcomma(len(repos_to_import)),
                language.language.capitalize())
-  progress_bar = progressbar.ProgressBar()
-  for repo in progress_bar(repos_to_import):
-    repo.Index(list(language.importer))
+  for repo in repos_to_import:
+    repo.Index(list(language.importer), pool)
 
 
 def main(argv):
