@@ -143,6 +143,83 @@ def test_JavaRewrite_hello_world():
   assert java.JavaRewrite("hello, world") == "hello, world\n"
 
 
+def test_JavaRewrite_delete_comment():
+  """Comment(s) are deleted."""
+  assert java.JavaRewrite('/* This is a comment */') == '\n'
+  assert java.JavaRewrite('//Line comment') == '\n'
+  assert java.JavaRewrite("""
+/**
+ * Docstring format comment.
+ */
+// And a line comment.
+/* And a C syntax style comment. */
+""") == '\n'
+
+
+def test_JavaRewrite_whitespace():
+  """Multiple blank lines and whitespace is stripped."""
+  assert java.JavaRewrite('\n\n  \n\t\n') == '\n'
+
+
+def test_JavaRewrite_rewrite_class_name():
+  """Test that class is renamed."""
+  assert java.JavaRewrite("""
+public class MyJavaClass {
+}
+""") == """\
+public class A {
+}
+"""
+
+
+def test_JavaRewrite_rewrite_anonymous_class_names():
+  """Test that anonymous classes are renamed."""
+  assert java.JavaRewrite("""
+public class MyJavaClass {
+  private class AnonymousClassA {
+  }
+  
+  private class AnotherPrivateClass {
+  }
+}
+""") == """\
+public class A {
+\tprivate class B {
+\t}
+
+\tprivate class C {
+\t}
+}
+"""
+
+
+def test_JavaRewrite_rewrite_static_method_argument_names():
+  """Test that arguments are renamed."""
+  assert java.JavaRewrite("""
+public class A {
+  public static int myMethod(final int foo, int bar) {
+    System.out.println("Hello world! " + bar); 
+    return foo + bar;
+  }
+}
+""") == """\
+public class A {
+\tpublic static int fn_A(final int a, int b) {
+\t\tSystem.out.println("Hello world! " + b);
+\t\treturn a + b;
+\t}
+}
+"""
+
+  """
+private static boolean slowEquals(byte[] a,byte[] b){
+  int diff=a.length ^ b.length;
+  for (int i=0; i < a.length && i < b.length; i++)   diff|=a[i] ^ b[i];
+  return diff == 0;
+}
+"""
+
+
 def main(argv):
   """Main entry point."""
   del argv
