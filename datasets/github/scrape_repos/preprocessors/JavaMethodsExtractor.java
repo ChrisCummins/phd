@@ -1,9 +1,19 @@
-/* Extract methods from Java source file. */
+/* Extract methods from Java source file and return a MethodsList proto.
+ *
+ * Usage:
+ *     bazel run \
+ *         //datasets/github/scrape_repos/preprocessors:JavaMethodsExtractor \
+ *         < /path/to/file.java
+ *
+ * If environment variable $JAVA_METHOD_EXTRACTOR_STATIC_ONLY is set, only
+ * static methods are returned.
+ */
 package datasets.github.scrape_repos.preprocessors;
 
 import com.google.common.io.ByteStreams;
 import datasets.github.scrape_repos.ScrapeReposProtos.MethodsList;
 import java.io.IOException;
+import java.lang.reflect.Modifier;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -40,12 +50,28 @@ public class JavaMethodsExtractor {
     Document document = new Document(source);
     CompilationUnit compilationUnit = GetCompilationUnit(document);
     message = MethodsList.newBuilder();
-    compilationUnit.accept(new ASTVisitor() {
-      public boolean visit(MethodDeclaration node) {
-        message.addMethod(node.toString());
-        return true;
-      }
-    });
+
+    final boolean staticOnly = !(
+        System.getenv("JAVA_METHOD_EXTRACTOR_STATIC_ONLY") == null ||
+            System.getenv("JAVA_METHOD_EXTRACTOR_STATIC_ONLY").equals(""));
+
+    if (staticOnly) {
+      compilationUnit.accept(new ASTVisitor() {
+        public boolean visit(MethodDeclaration node) {
+          if ((node.getModifiers() & Modifier.STATIC) != 0) {
+            message.addMethod(node.toString());
+          }
+          return true;
+        }
+      });
+    } else {
+      compilationUnit.accept(new ASTVisitor() {
+        public boolean visit(MethodDeclaration node) {
+          message.addMethod(node.toString());
+          return true;
+        }
+      });
+    }
     return message.build();
   }
 
