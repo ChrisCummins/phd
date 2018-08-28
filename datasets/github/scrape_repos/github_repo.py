@@ -52,7 +52,7 @@ class GitHubRepo(object):
 
   def IsIndexed(self) -> bool:
     """Return whether the repo has been indexed."""
-    return self.IsCloned() and (self.index_dir / 'DONE.txt').is_file()
+    return (self.index_dir / 'DONE.txt').is_file()
 
   def Clone(self) -> 'GitHubRepo':
     """Clone the repo."""
@@ -66,13 +66,12 @@ class GitHubRepo(object):
             pool: multiprocessing.Pool,
             i: IndexProgress = None) -> 'GitHubRepo':
     """Index the repo."""
-    if self.IsIndexed():
-      return self
-
-    self.index_dir.mkdir(parents=True, exist_ok=True)
-    for indexer in indexers:
-      self._IndexPattern(indexer, pool, i)
-    (self.index_dir / 'DONE.txt').touch()
+    if self.IsCloned() and not self.IsIndexed():
+      self.index_dir.mkdir(parents=True, exist_ok=True)
+      for indexer in indexers:
+        self._IndexPattern(indexer, pool, i)
+      (self.index_dir / 'DONE.txt').touch()
+    return self
 
   def _IndexPattern(self, indexer: scrape_repos_pb2.ContentFilesImporterConfig,
                     pool: multiprocessing.Pool,

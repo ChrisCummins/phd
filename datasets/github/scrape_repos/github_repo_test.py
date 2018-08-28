@@ -60,6 +60,19 @@ def test_GitHubRepo_IsIndexed(test_repo: github_repo.GitHubRepo):
   assert test_repo.IsIndexed()
 
 
+def test_GitHubRepo_Index_not_cloned(test_repo: github_repo.GitHubRepo):
+  """Indexing a repo which is not cloned does nothing."""
+  fs.rm(test_repo.clone_dir)
+  assert not test_repo.IsIndexed()
+  test_repo.Index([
+    scrape_repos_pb2.ContentFilesImporterConfig(
+        source_code_pattern='.*\\.java',
+        preprocessor=["datasets.github.scrape_repos.preprocessors."
+                      "extractors:JavaMethods"]),
+  ], multiprocessing.Pool(1))
+  assert not test_repo.IsIndexed()
+
+
 def test_GitHubRepo_Index_Java_repo(test_repo: github_repo.GitHubRepo):
   """An end-to-end test of a Java indexer."""
   (test_repo.clone_dir / 'src').mkdir(exist_ok=True)
