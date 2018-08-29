@@ -24,7 +24,7 @@ def md5sum(path):
   return m.hexdigest()
 
 
-def chunk_files(paths, outdir, maxsize, prefix='chunk', shuffle=True,
+def chunk_files(paths, outdir, maxsize, prefix='chunk_', shuffle=True,
                 seed=None, gzip=False):
   """Create chunk files.
 
@@ -133,7 +133,7 @@ line in the manifest file:
 
   def _init_chunk(outdir, prefix, chunk_count):
     chunk_path = os.path.join(
-        outdir, prefix + '_{:03}'.format(chunk_count + 1))
+        outdir, prefix + '{:03}'.format(chunk_count + 1))
 
     if os.path.exists(chunk_path):
       print('fatal: refusing to overwrite', chunk_path, file=sys.stderr)
