@@ -4,18 +4,19 @@ import pathlib
 from absl import app
 from absl import flags
 
-from util.shutterbug import shutterbug
+from util.photolib.shutterbug import shutterbug
+
 
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
-  'chunks_dir', None,
-  'The root directory of the chunks. Each chunk is a directory containing '
-  'files and a manifest.')
+    'chunks_dir', None,
+    'The root directory of the chunks. Each chunk is a directory containing '
+    'files and a manifest.')
 flags.DEFINE_string(
-  'out_dir', None,
-  'The directory to write the unpacked chunks to. Each chunk contains files '
-  'which are unpacked to a path relative to this directory.')
+    'out_dir', None,
+    'The directory to write the unpacked chunks to. Each chunk contains files '
+    'which are unpacked to a path relative to this directory.')
 
 
 def main(argv):

@@ -17,7 +17,9 @@ strategies:
   it. *The best way to prevent irrecoverable data loss is to make more copies of
   your data to begin with.*
 
+
 ## Usage
+
 
 ### Archiving to disc
 
@@ -26,7 +28,8 @@ folder into "chunks" using shutterbug:
 
 ```
 $ mkdir ~/chunks
-$ bazel run //util/shutterbug:pack --gzip --size=4695 --chunk_prefix=chunk_ \
+$ bazel run //util/photolib/shutterbug:pack \
+    --gzip --size=4695 --chunk_prefix=chunk_ \
     --src_dir=$HOME/Pictures/2016 --chunks_dir=$HOME/chunks
 chunk_001/ae3d47f87af176b74e1ec30599a7b31a.jpg.gz 4.93MB -> 4.90MB
 chunk_001/631600d1e11339794e81d75f104e9f19.jpg.gz 7.40MB -> 7.38MB
@@ -44,6 +47,7 @@ chunk_002/bc17480a318e7ba9a3e4e2e57538917d.jpg.gz 9.63MB -> 9.60MB
 
 Burn each of the resulting folders in `~/chunks` to DVDs.
 
+
 ### Restoring from disc
 
 Copy each chunk from your DVDs back to disc, e.g. `~/import/chunk_001`,
@@ -52,7 +56,7 @@ shutterbug from the output directory:
 
 ```
 $ mkdir ~/Pictures/2016
-$ bazel run //util/shutterbug:unpack \
+$ bazel run //util/photolib/shutterbug:unpack \
     --chunks_dir=$HOME/import --out_dir=$HOME/Pictures/2016
 ~/import/chunk_001/ae3d47f87af176b74e1ec30599a7b31a.jpg.gz -> ./2016-12 NYC (2434 of 5025).jpg
 ~/import/chunk_001/631600d1e11339794e81d75f104e9f19.jpg.gz -> ./2016-12 NYC (4411 of 5025).jpg

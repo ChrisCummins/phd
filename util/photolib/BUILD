@@ -1,3 +1,5 @@
+# A set of tools for managing my library of photographs.
+
 licenses(["notice"])  # Apache 2.0
 
 exports_files([
