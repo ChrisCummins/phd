@@ -6,10 +6,13 @@ import gzip
 import os
 import random
 import sys
+from absl import flags
 from datetime import datetime
 from hashlib import md5
 from shutil import copy, copyfileobj
 
+
+FLAGS = flags.FLAGS
 
 # Metadata used in README.txt files.
 __author__ = 'Chris Cummins'
