@@ -10,13 +10,11 @@ from datetime import datetime
 from hashlib import md5
 from shutil import copy, copyfileobj
 
+
+# Metadata used in README.txt files.
 __author__ = 'Chris Cummins'
-__copyright__ = 'Copyright 2017, 2018, Chris Cummins'
-__license__ = 'GPL v3'
 __version__ = '0.0.4'
-__maintainer__ = __author__
 __email__ = 'chrisc.101@gmail.com'
-__status__ = 'Development'
 
 
 def md5sum(path):
