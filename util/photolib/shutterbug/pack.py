@@ -1,6 +1,5 @@
 """This file is the entry point for creating chunks."""
 import pathlib
-
 from absl import app
 from absl import flags
 
@@ -63,7 +62,7 @@ def main(argv):
   if '/' in chunk_prefix:
     raise app.UsageError("--chunk_prefix cannot contain '/' character.")
 
-  shutterbug.mkchunks(
+  shutterbug.MakeChunks(
       [src_dir], chunks_dir, size_in_bytes, prefix=chunk_prefix,
       shuffle=FLAGS.random_ordering, seed=FLAGS.random_ordering_seed,
       gzip=FLAGS.gzip_files)

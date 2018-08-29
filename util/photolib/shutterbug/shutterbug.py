@@ -2,10 +2,13 @@
 
 Shutterbug is a library for creating DVD backups of photo libraries.
 """
-import gzip
 import os
+
+import gzip
+import pathlib
 import random
 import sys
+import typing
 from absl import flags
 from datetime import datetime
 from hashlib import md5
@@ -194,23 +197,49 @@ line in the manifest file:
   return chunks
 
 
-def mkchunks(src_dirs, chunks_dir, chunksize, **kwargs):
+def PathTuplesToChunk(src_dirs: typing.List[pathlib.Path]):
+  """Enumerate files in a source directories to chunk.
+
+  Args:
+    src_dirs: A list of source directories.
+
+  Returns:
+    A list of absolute paths.
+
+  Raises:
+    ValueError
+  """
   files = []
   for directory in src_dirs:
-    if not os.path.exists(directory):
-      print('fatal: {} not found'.format(directory), file=sys.stderr)
-      sys.exit(1)
-
-    # TODO: Rather than remove .DS_Store files from the source directory, just
-    # exclude them from the os.walk results, and add a flag --exclude_pattern
-    # to control the list of files which are excluded.
-    os.system(f"rm-dsstore '{directory}'")
+    if not directory.is_dir():
+      raise ValueError(f'{directory} not found')
 
     for dirpath, _, filenames in os.walk(directory):
-      files += [(os.path.join(dirpath, filename), dirpath)
-                for filename in filenames]
+      files += [
+        (os.path.join(dirpath, filename), dirpath) for filename in filenames
+        if not filename.startswith('._') and not filename == '.DS_Store'
+      ]
+  return files
 
-  chunks = chunk_files(files, chunks_dir, chunksize, **kwargs)
+
+def MakeChunks(src_dirs: typing.List[pathlib.Path],
+               chunks_dir: pathlib.Path, chunk_size_in_bytes: int,
+               **kwargs) -> None:
+  """Create chunk directories.
+
+  Args:
+    src_dirs: A list of source directories to chunk.
+    chunks_dir: The root path to create chunk directories in.
+    chunk_size_in_bytes: The maximum size of each chunk.
+    kwargs: Additional arguments to ChunkFiles().
+  """
+  try:
+    files = PathTuplesToChunk(src_dirs)
+  except ValueError as e:
+    print(f'fatal: {e}', file=sys.stderr)
+    sys.exit(1)
+
+  chunks = chunk_files(files, chunks_dir, chunk_size_in_bytes, **kwargs)
 
   chunksizes_mb = [chunk[1] / 1000 ** 2 for chunk in chunks]
   totalsize_mb = sum(chunksizes_mb)
@@ -295,6 +324,7 @@ def unchunk_chunk(chunk_path, out_path):
             file=sys.stderr)
 
 
-def unchunk(chunks_dir, out_dir):
-  for directory in chunks_dir:
+def unchunk(chunks_dir: pathlib.Path, out_dir: pathlib.Path):
+  chunk_dirs = [d.absolute() for d in chunks_dir.iterdir() if d.is_dir()]
+  for directory in chunk_dirs:
     unchunk_chunk(directory, out_dir)

@@ -30,6 +30,9 @@ def photodir(tempdir: pathlib.Path) -> pathlib.Path:
     f.write('Image B')
   with open(tempdir / 'c.jpg', 'w') as f:
     f.write('Image C')
+  # Create fake DS_Store files.
+  (tempdir / '.DS_Store').touch()
+  (tempdir / '._DS_Store').touch()
   yield tempdir
 
 
@@ -49,13 +52,41 @@ def _AssertIsPhotoDir(path: pathlib.Path) -> None:
     assert 'Image C' == f.read()
 
 
+# PathTuplesToChunk() tests.
+
+def test_PathTuplesToChunk_directory_not_found(
+    tempdir: pathlib.Path, photodir: pathlib.Path):
+  """A ValueError is raised if any of the source directories do not exist."""
+  with pytest.raises(ValueError) as e_ctx:
+    shutterbug.PathTuplesToChunk([photodir, tempdir / 'foo'])
+  assert str(e_ctx.value) == f'{tempdir}/foo not found'
+
+
+def test_PathTuplesToChunk_photodir(photodir: pathlib.Path):
+  """Test return value of path tuples."""
+  files = sorted(shutterbug.PathTuplesToChunk([photodir]))
+  print('FILES', files)
+  assert files == [
+    (str(photodir / 'a.jpg'), str(photodir)),
+    (str(photodir / 'b.jpg'), str(photodir)),
+    (str(photodir / 'c.jpg'), str(photodir)),
+  ]
+
+
 # Integration tests.
 
 def test_end_to_end(tempdir: pathlib.Path, photodir: pathlib.Path):
-  """Test end to end packing and unpacking a photodir."""
+  """Test end to end packing and unpacking a photo directory."""
   _AssertIsPhotoDir(photodir)
   _ = shutterbug
-  # TODO: shutterbug.mkchunks()
+  shutterbug.MakeChunks([photodir], tempdir, int(1e6))
+  assert (tempdir / 'chunk_001').is_dir()
+  assert (tempdir / 'chunk_001' / 'README.txt').is_file()
+  assert (tempdir / 'chunk_001' / 'MANIFEST.txt').is_file()
+  with tempfile.TemporaryDirectory(prefix='phd_') as d:
+    out_dir = pathlib.Path(d)
+    shutterbug.unchunk(tempdir, out_dir)
+    _AssertIsPhotoDir(out_dir)
 
 
 def main(argv: typing.List[str]):
