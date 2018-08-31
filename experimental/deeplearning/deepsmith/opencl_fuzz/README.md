@@ -1,7 +1,7 @@
 # OpenCL fuzzing through DeepSmith
 
 
-## Installation
+## 1. Installation
 
 Pull the docker image using:
 
@@ -15,7 +15,10 @@ Alternatively you can build the docker image from source using:
 $ ./experimental/deeplearning/deepsmith/opencl_fuzz/make_image.sh
 ```
 
-## Usage
+
+## 2. Usage
+
+### 2.1. Fuzz testing an OpenCL device
 
 To test an OpenCL device on the host, identify it's name using `//gpu/cldrive`.
 Let's assume we want to test this Intel OpenCL driver:
@@ -70,7 +73,22 @@ have been found, or until `--max_testing_time_seconds` have elapsed. Pass values
 for these flags to override the default values.
 
 
-## Building the pre-trained model
+## 2.2. Re-running a result
+
+By default, `opencl_fuzz` will generate new testcases and execute them using the
+specified testcase. Once an in interesting result has been found, a Result proto
+is generated. To re-run the testcase of a Result proto, use the `--rerun_result`
+flag to specify the path of a Result proto:
+
+```sh
+$ cat result.pbtxt
+...
+$ docker run -v$PWD:/out chriscummins/opencl_fuzz \
+    --rerun_result=/out/result.pbtxt
+```
+
+
+## 3. Building the pre-trained model
 
 The docker image contains a pre-trained CLgen model. To build the model, modify the
 "working_dir" and "local_directory" fields of the file
@@ -89,7 +107,7 @@ $ bazel run //deeplearning/clgen -- \
 The script `./make_image.sh` will now use the newly exported model.
 
 
-## Updating the docker image
+## 4. Updating the docker image
 
 ```sh
 $ cd ~/phd/experimental/deeplearning/deepsmith/opencl_fuzz

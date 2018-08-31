@@ -78,7 +78,7 @@ flags.DEFINE_integer(
     'The number of test cases to generate and execute in a single batch.')
 flags.DEFINE_string(
     'rerun_result', None,
-    'If --rerun_result point to the path of a Result proto, the result '
+    'If --rerun_result points to the path of a Result proto, the result '
     'testcase is executed under the specified --dut, and the new Result is '
     'printed to stdout.')
 flags.DEFINE_string(
