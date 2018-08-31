@@ -8,12 +8,14 @@ CLgen and CLSmith generators and harnesses are supported.
 """
 import humanize
 import pathlib
+import shutil
 import sys
 import time
 import typing
 from absl import app
 from absl import flags
 from absl import logging
+from phd.lib.labm8 import bazelutil
 from phd.lib.labm8 import labdate
 from phd.lib.labm8 import pbutil
 
@@ -82,8 +84,13 @@ flags.DEFINE_string(
     'testcase is executed under the specified --dut, and the new Result is '
     'printed to stdout.')
 flags.DEFINE_string(
-    'run_result_filters', None,
-    'A ')
+    'unpack_result', None,
+    'If --unpack_result points to the path of a Result proto, the result '
+    'proto is unpacked into the testcase OpenCL kernel, and C source code. '
+    'Files are written to the directory containing the result.')
+
+# The path of the CLSmith cl_launcher C program source.
+CL_LAUNCHER_SRC = bazelutil.DataPath('CLSmith/src/CLSmith/cl_launcher.c')
 
 
 def RunBatch(generator: base_generator.GeneratorServiceBase,
@@ -441,6 +448,66 @@ def ReRunResult(result: deepsmith_pb2.Result,
   return result
 
 
+def ResultProtoFromFlag(flag: typing.Optional[str]) -> deepsmith_pb2.Result:
+  """Read a result proto from a --flag path.
+
+  Args:
+    flag: The value of the flag which points to a result proto.
+
+  Returns:
+    The Result proto.
+
+  Raises:
+    UsageError: If the flag is not set or the flag does not point to a Result
+      proto.
+  """
+  if not flag:
+    raise app.UsageError('Path is not set.')
+  path = pathlib.Path(flag)
+  if not path.is_file():
+    raise app.UsageError(f"File not found: '{path}'.")
+  if not pbutil.ProtoIsReadable(path, deepsmith_pb2.Result()):
+    raise app.UsageError(f"Cannot read Result proto: '{path}'.")
+  return pbutil.FromFile(path, deepsmith_pb2.Result())
+
+
+def WriteFile(path: pathlib.Path, text: str) -> None:
+  """Write the given text to a file.
+
+  Args:
+    path: The path of the file to write.
+    text: The file contents.
+  """
+  with open(path, 'w') as f:
+    f.write(text)
+  logging.info('Wrote %s', path)
+
+
+def UnpackResult(result_path: typing.Optional[str]) -> None:
+  """Unpack a result proto into its components.
+
+  Args:
+    result_path: The path of the result to unpack.
+
+  Raises:
+    UsageError: In case of error.
+  """
+  result_to_unpack = ResultProtoFromFlag(result_path)
+  unpack_dir = pathlib.Path(result_path).parent
+  WriteFile(unpack_dir / 'kernel.cl', result_to_unpack.testcase.inputs['src'])
+  WriteFile(unpack_dir / 'stdout.txt', result_to_unpack.outputs['stdout'])
+  WriteFile(unpack_dir / 'stderr.txt', result_to_unpack.outputs['stderr'])
+
+  if result_to_unpack.testcase.harness.name == 'cldrive':
+    WriteFile(unpack_dir / 'driver.c',
+              cldrive.MakeDriver(result_to_unpack.testcase, FLAGS.opencl_opt))
+  elif result_to_unpack.testcase.harness.name == 'cl_launcher':
+    shutil.copyfile(CL_LAUNCHER_SRC, unpack_dir / 'driver.c')
+  else:
+    raise app.UsageError(
+        f"Unrecognized harness: '{result.testcase.harness.name}'")
+
+
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:
@@ -450,19 +517,19 @@ def main(argv):
     env.PrintOpenClEnvironments()
     return
 
+  # Unpack a result.
+  if FLAGS.unpack_result:
+    UnpackResult(FLAGS.unpack_result)
+    sys.exit(0)
+
+  # Re-run a result.
   if FLAGS.rerun_result:
-    result_to_rerun_path = pathlib.Path(FLAGS.rerun_result)
-    if not result_to_rerun_path.is_file():
-      raise app.UsageError('--rerun_result must be the path of a Result proto.')
-    if not pbutil.ProtoIsReadable(result_to_rerun_path, deepsmith_pb2.Result()):
-      raise app.UsageError(
-          "Cannot read Result proto: '{result_to_rerun_path}'.")
-    result_to_rerun = pbutil.FromFile(
-        result_to_rerun_path, deepsmith_pb2.Result())
+    result_to_rerun = ResultProtoFromFlag(FLAGS.rerun_result)
     dut_harness = GetDeviceUnderTestHarness()
     print(ReRunResult(result_to_rerun, dut_harness))
     sys.exit(0)
 
+  # "Normal" fuzzing routine.
   start_time = time.time()
   if not FLAGS.interesting_results_dir:
     raise app.UsageError('--interesting_results_dir must be set')

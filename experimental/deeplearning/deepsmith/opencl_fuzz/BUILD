@@ -5,6 +5,9 @@ load("@io_bazel_rules_docker//python3:image.bzl", "py3_image")
 py_binary(
     name = "opencl_fuzz",
     srcs = ["opencl_fuzz.py"],
+    data = [
+        "@CLSmith//:cl_launcher_src",
+    ],
     deps = [
         "//deeplearning/deepsmith/difftests",
         "//deeplearning/deepsmith/difftests:opencl",
@@ -17,6 +20,7 @@ py_binary(
         "//deeplearning/deepsmith/proto:harness_py_pb2",
         "//gpu/cldrive:env",
         "//gpu/oclgrind",
+        "//lib/labm8:bazelutil",
         "//lib/labm8:labdate",
         "//lib/labm8:pbutil",
         "//third_party/py/absl",
@@ -39,6 +43,7 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":opencl_fuzz",
+        "//lib/labm8:pbutil",
         "//third_party/py/absl",
         "//third_party/py/pytest",
     ],

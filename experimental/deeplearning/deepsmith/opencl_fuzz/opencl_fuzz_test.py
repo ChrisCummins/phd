@@ -1,10 +1,13 @@
 """Unit tests for //experimental/deeplearning/deepsmith/opencl_fuzz/opencl_fuzz.py."""
 
+import pathlib
 import pytest
 import sys
+import tempfile
 import typing
 from absl import app
 from absl import flags
+from phd.lib.labm8 import pbutil
 
 from deeplearning.deepsmith.difftests import difftests
 from deeplearning.deepsmith.harnesses import cl_launcher
@@ -52,6 +55,34 @@ def cl_launcher_harness(
 ) -> harness_pb2.ClLauncherHarness:
   """Test fixture to return a cl_launcher test harness."""
   return cldrive.CldriveHarness(cl_launcher_harness_config)
+
+
+@pytest.fixture(scope='function')
+def dummy_result() -> deepsmith_pb2.Result:
+  """A test fixture which returns a dummy result."""
+  return deepsmith_pb2.Result(
+      testcase=deepsmith_pb2.Testcase(
+          harness=deepsmith_pb2.Harness(name='name'),
+          inputs={
+            'src': 'Kernel source.',
+            'gsize': '1,1,1',
+            'lsize': '2,2,2',
+          }
+      ),
+      outputs={
+        'stdout': 'Standard output.',
+        'stderr': 'Standard error.',
+      }
+  )
+
+
+@pytest.fixture(scope='function')
+def clsmith_result(dummy_result: deepsmith_pb2.Result) -> pathlib.Path:
+  """A test fixture which returns a dummy CLSmith result."""
+  dummy_result.testcase.harness.name = 'cl_launcher'
+  with tempfile.TemporaryDirectory(prefix='phd_') as d:
+    pbutil.ToFile(dummy_result, pathlib.Path(d) / 'result.pbtxt')
+    yield pathlib.Path(d) / 'result.pbtxt'
 
 
 # Mock classes.
@@ -433,6 +464,46 @@ def test_ResultIsInteresting_build_timeout():
   # Only the unary tester was called, no differential test was required.
   assert not gs_harness.RunTestcases_call_requests
   assert len(filters.PreDifftest_call_args) == 0
+
+
+# UnpackResult() tests.
+
+
+@pytest.fixture(scope='function')
+def clgen_result(dummy_result: deepsmith_pb2.Result) -> pathlib.Path:
+  """A test fixture which returns a dummy CLgen result."""
+  dummy_result.testcase.harness.name = 'cldrive'
+  with tempfile.TemporaryDirectory(prefix='phd_') as d:
+    pbutil.ToFile(dummy_result, pathlib.Path(d) / 'result.pbtxt')
+    yield pathlib.Path(d) / 'result.pbtxt'
+
+
+def test_UnpackResult_no_result():
+  """An error raised if no result to unpack is provided."""
+  with pytest.raises(app.UsageError):
+    opencl_fuzz.UnpackResult(None)
+  with pytest.raises(app.UsageError):
+    opencl_fuzz.UnpackResult('')
+
+
+def test_UnpackResult_clsmith_result(clsmith_result: deepsmith_pb2.Result):
+  """Unpacking a CLSmith result creates expected files."""
+  result_dir = clsmith_result.parent
+  opencl_fuzz.UnpackResult(str(clsmith_result))
+  assert (result_dir / 'stdout.txt').is_file()
+  assert (result_dir / 'stderr.txt').is_file()
+  assert (result_dir / 'kernel.cl').is_file()
+  assert (result_dir / 'driver.c').is_file()
+
+
+def test_UnpackResult_clgen_result(clgen_result: deepsmith_pb2.Result):
+  """Unpacking a CLgen result creates expected files."""
+  result_dir = clgen_result.parent
+  opencl_fuzz.UnpackResult(str(clgen_result))
+  assert (result_dir / 'stdout.txt').is_file()
+  assert (result_dir / 'stderr.txt').is_file()
+  assert (result_dir / 'kernel.cl').is_file()
+  assert (result_dir / 'driver.c').is_file()
 
 
 def main(argv):
