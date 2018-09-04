@@ -60,7 +60,7 @@ PHOTOLIB_LEAF_DIR_RE = re.compile(
 )
 
 
-def md5(string: str) -> hashlib.md5:
+def Md5String(string: str) -> hashlib.md5:
   """
   Compute md5sum of string.
 

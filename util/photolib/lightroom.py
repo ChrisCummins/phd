@@ -24,7 +24,7 @@ FLAGS = flags.FLAGS
 Base = declarative.declarative_base()  # pylint: disable=invalid-name
 
 # Global state for the keywords cache database is initialized by
-# a call to init_keywords_cache().
+# a call to InitializeKeywordsCache().
 ENGINE = None
 MAKE_SESSION = None
 SESSION = None
@@ -54,7 +54,7 @@ class KeywordCacheEntry(Base):
   keywords: Keywords = orm.relationship("Keywords")
 
 
-def init_keywords_cache(workspace_abspath: str) -> None:
+def InitializeKeywordsCache(workspace_abspath: str) -> None:
   """
   Initialize the keywords cache database.
 
@@ -66,7 +66,7 @@ def init_keywords_cache(workspace_abspath: str) -> None:
   global SESSION
 
   if ENGINE:
-    raise ValueError("init_keywords_cache() already called.")
+    raise ValueError("InitializeKeywordsCache() already called.")
 
   cache_dir = os.path.join(workspace_abspath, ".cache")
   os.makedirs(cache_dir, exist_ok=True)
@@ -82,8 +82,8 @@ def init_keywords_cache(workspace_abspath: str) -> None:
   SESSION = MAKE_SESSION()
 
 
-def get_or_add(session, model, defaults: typing.Dict[str, typing.Any] = None,
-               **kwargs) -> object:
+def GetOrAdd(session, model, defaults: typing.Dict[str, typing.Any] = None,
+             **kwargs) -> object:
   """
   Instantiate a mapped database object. If the object is not in the database,
   add it.
@@ -102,8 +102,8 @@ def get_or_add(session, model, defaults: typing.Dict[str, typing.Any] = None,
   return instance
 
 
-def _add_keywords_to_cache(relpath_md5: str, mtime: float,
-                           keywords: typing.Set[str]) -> None:
+def _AddKeywordsToCache(relpath_md5: str, mtime: float,
+                        keywords: typing.Set[str]) -> None:
   """
   Add a new database entry for the given values.
 
@@ -112,7 +112,7 @@ def _add_keywords_to_cache(relpath_md5: str, mtime: float,
     mtime: Seconds since the epoch that the file was last modified.
     keywords: The set of keywords to record.
   """
-  keywords_ = get_or_add(SESSION, Keywords, keywords=",".join(keywords))
+  keywords_ = GetOrAdd(SESSION, Keywords, keywords=",".join(keywords))
   entry = KeywordCacheEntry(
       relpath_md5=relpath_md5,
       mtime=int(mtime),
@@ -122,7 +122,7 @@ def _add_keywords_to_cache(relpath_md5: str, mtime: float,
   SESSION.commit()
 
 
-def _read_keywords_from_file(abspath: str) -> typing.Set[str]:
+def _ReadKeywordsFromFile(abspath: str) -> typing.Set[str]:
   """
   Read the lightroom keywords for a file.
 
@@ -142,7 +142,7 @@ def _read_keywords_from_file(abspath: str) -> typing.Set[str]:
     return set()
 
 
-def get_lightroom_keywords(abspath: str, relpath: str) -> typing.Set[str]:
+def GetLightroomKeywords(abspath: str, relpath: str) -> typing.Set[str]:
   """Fetch the lightroom keywords for the given file.
 
   Nested keywords are separated using the '|' symbol.
@@ -154,9 +154,8 @@ def get_lightroom_keywords(abspath: str, relpath: str) -> typing.Set[str]:
   Returns:
     A set of lightroom keywords. An empty set is returned on failure.
   """
-  relpath_md5 = common.md5(relpath).digest()
+  relpath_md5 = common.Md5String(relpath).digest()
   mtime = int(os.path.getmtime(abspath))
-
   entry = SESSION \
     .query(KeywordCacheEntry) \
     .filter(KeywordCacheEntry.relpath_md5 == relpath_md5) \
@@ -167,12 +166,12 @@ def get_lightroom_keywords(abspath: str, relpath: str) -> typing.Set[str]:
     keywords = set(entry.keywords.keywords.split(","))
   elif entry and entry.mtime != mtime and not abspath.endswith('.mov'):
     SESSION.delete(entry)
-    keywords = _read_keywords_from_file(abspath)
-    _add_keywords_to_cache(relpath_md5, mtime, keywords)
+    keywords = _ReadKeywordsFromFile(abspath)
+    _AddKeywordsToCache(relpath_md5, mtime, keywords)
     logging.debug("refreshed keywords cache %s", relpath)
   else:
-    keywords = _read_keywords_from_file(abspath)
-    _add_keywords_to_cache(relpath_md5, mtime, keywords)
+    keywords = _ReadKeywordsFromFile(abspath)
+    _AddKeywordsToCache(relpath_md5, mtime, keywords)
     logging.debug("cached keywords %s", relpath)
 
   return keywords

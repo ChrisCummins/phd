@@ -29,7 +29,7 @@ FLAGS = flags.FLAGS
 Base = declarative.declarative_base()  # pylint: disable=invalid-name
 
 # Global state for the keywords cache database is initialized by
-# a call to init_errors_cache().
+# a call to InitializeErrorsCache().
 ENGINE = None
 MAKE_SESSION = None
 SESSION = None
@@ -81,7 +81,7 @@ class CachedError(Base):
             f'{shell.ShellEscapeCodes.END}  [{self.category}]')
 
 
-def init_errors_cache(workspace_abspath: str) -> None:
+def InitializeErrorsCache(workspace_abspath: str) -> None:
   """
   Initialize the keywords cache database.
 
@@ -93,7 +93,7 @@ def init_errors_cache(workspace_abspath: str) -> None:
   global SESSION
 
   if ENGINE:
-    raise ValueError("init_errors_cache() already called.")
+    raise ValueError("InitializeErrorsCache() already called.")
 
   cache_dir = os.path.join(workspace_abspath, ".cache")
   os.makedirs(cache_dir, exist_ok=True)
@@ -102,17 +102,14 @@ def init_errors_cache(workspace_abspath: str) -> None:
   logging.debug("Errors cache %s", uri)
 
   ENGINE = sql.create_engine(uri, encoding="utf-8")
-
   Base.metadata.create_all(ENGINE)
   Base.metadata.bind = ENGINE
   MAKE_SESSION = orm.sessionmaker(bind=ENGINE)
-
   SESSION = MAKE_SESSION()
+  RefreshLintersVersion()
 
-  refresh_linters_version()
 
-
-def refresh_linters_version():
+def RefreshLintersVersion():
   """Check that """
   meta_key = "linters.py md5"
 
@@ -124,7 +121,7 @@ def refresh_linters_version():
 
   with open(linters.__file__) as f:
     actual_linters_version = Meta(
-        key=meta_key, value=common.md5(f.read()).hexdigest())
+        key=meta_key, value=common.Md5String(f.read()).hexdigest())
 
   if cached_checksum != actual_linters_version.value:
     logging.debug("linters.py has changed, emptying cache ...")
@@ -148,8 +145,8 @@ class CacheLookupResult(object):
     self.errors = errors
 
 
-def add_linter_errors(entry: CacheLookupResult,
-                      errors: typing.List[str]) -> None:
+def AddLinterErrors(entry: CacheLookupResult,
+                    errors: typing.List[str]) -> None:
   """Record linter errors in the cache."""
   # Create a directory cache entry.
   directory = Directory(relpath_md5=entry.relpath_md5, checksum=entry.checksum)
@@ -169,7 +166,7 @@ def add_linter_errors(entry: CacheLookupResult,
   logging.debug("cached directory %s", entry.relpath)
 
 
-def get_directory_mtime(abspath) -> int:
+def GetDirectoryMTime(abspath) -> int:
   """Get the timestamp of the most recently modified file/dir in directory.
 
   Params:
@@ -186,7 +183,7 @@ def get_directory_mtime(abspath) -> int:
     return 0
 
 
-def get_directory_checksum(abspath: pathlib.Path) -> str:
+def GetDirectoryChecksum(abspath: pathlib.Path) -> str:
   """Compute a checksum to determine the contents and status of the directory.
 
   The checksum is computed
@@ -206,12 +203,12 @@ def get_directory_checksum(abspath: pathlib.Path) -> str:
   return hash
 
 
-def get_linter_errors(abspath: str, relpath: str) -> CacheLookupResult:
+def GetLinterErrors(abspath: str, relpath: str) -> CacheLookupResult:
   """Looks up the given directory and returns cached results (if any)."""
-  relpath_md5 = common.md5(relpath).digest()
+  relpath_md5 = common.Md5String(relpath).digest()
 
   # Get the time of the most-recently modified file in the directory.
-  checksum = get_directory_checksum(abspath).digest()
+  checksum = GetDirectoryChecksum(abspath).digest()
 
   ret = CacheLookupResult(
       exists=False,

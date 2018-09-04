@@ -38,7 +38,7 @@ ERROR_CATEGORIES = set([
 ERROR_COUNTS: typing.Dict[str, int] = defaultdict(int)
 
 
-def print_error_counts() -> None:
+def PrintErrorCounts() -> None:
   """Print the current error counters to stderr."""
   counts = [f"{k} = {v}" for k, v in sorted(ERROR_COUNTS.items())]
   counts_str = ", ".join(counts)
@@ -97,10 +97,10 @@ class Linter(object):
     raise NotImplementedError("abstract class")
 
 
-def get_linters(base_linter: Linter) -> typing.List[Linter]:
+def GetLinters(base_linter: Linter) -> typing.List[Linter]:
   """Return a list of linters to run."""
 
-  def is_runnable_linter(obj):
+  def _IsRunnableLinter(obj):
     """Return true if obj is a runnable linter."""
     if not inspect.isclass(obj):
       return False
@@ -110,7 +110,7 @@ def get_linters(base_linter: Linter) -> typing.List[Linter]:
       return False
     return True
 
-  members = inspect.getmembers(sys.modules[__name__], is_runnable_linter)
+  members = inspect.getmembers(sys.modules[__name__], _IsRunnableLinter)
   return [member[1]() for member in members]
 
 
@@ -233,7 +233,7 @@ class PanoramaKeyword(PhotolibFileLinter, GalleryFileLinter):
 
     errors = []
 
-    keywords = lightroom.get_lightroom_keywords(abspath, workspace_relpath)
+    keywords = lightroom.GetLightroomKeywords(abspath, workspace_relpath)
     if "ATTR|PanoPart" not in keywords:
       errors.append(Error(workspace_relpath, "keywords/panorama",
                           "keyword 'ATTR >> PanoPart' not set on suspected panorama"))
@@ -253,7 +253,7 @@ class FilmFormat(PhotolibFileLinter):
     if not common.PHOTO_LIB_SCAN_PATH_COMPONENTS_RE.match(filename_noext):
       return []
 
-    keywords = lightroom.get_lightroom_keywords(abspath, workspace_relpath)
+    keywords = lightroom.GetLightroomKeywords(abspath, workspace_relpath)
     if not any(k.startswith("ATTR|Film Format") for k in keywords):
       return [Error(workspace_relpath, "keywords/film_format",
                     "keyword 'ATTR >> Film Format' not set on film scan")]
@@ -264,7 +264,7 @@ class ThirdPartyInPhotolib(PhotolibFileLinter):
   """Checks that 'third_party' keyword is not set on files in //photos."""
 
   def __call__(self, abspath: str, workspace_relpath: str, filename: str):
-    keywords = lightroom.get_lightroom_keywords(abspath, workspace_relpath)
+    keywords = lightroom.GetLightroomKeywords(abspath, workspace_relpath)
     if "ATTR|third_party" in keywords:
       return [Error(workspace_relpath, "keywords/third_party",
                     "third_party file should be in //gallery")]
@@ -275,7 +275,7 @@ class ThirdPartyInGallery(GalleryFileLinter):
   """Checks that 'third_party' keyword is set on files in //gallery."""
 
   def __call__(self, abspath: str, workspace_relpath: str, filename: str):
-    keywords = lightroom.get_lightroom_keywords(abspath, workspace_relpath)
+    keywords = lightroom.GetLightroomKeywords(abspath, workspace_relpath)
     if "ATTR|third_party" not in keywords:
       return [Error(workspace_relpath, "keywords/third_party",
                     "files in //gallery should have third_party keyword set")]
@@ -286,7 +286,7 @@ class SingularEvents(PhotolibFileLinter):
   """Checks that only a single 'EVENT' keyword is set."""
 
   def __call__(self, abspath: str, workspace_relpath: str, filename: str):
-    keywords = lightroom.get_lightroom_keywords(abspath, workspace_relpath)
+    keywords = lightroom.GetLightroomKeywords(abspath, workspace_relpath)
     num_events = sum(1 if k.startswith("EVENT|") else 0 for k in keywords)
 
     if num_events > 1:

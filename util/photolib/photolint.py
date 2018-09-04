@@ -40,17 +40,18 @@ class ToplevelLinter(linters.Linter):
     super(ToplevelLinter, self).__init__()
     self.workspace = workspace_abspath
     self.toplevel_dir = toplevel_dir
-    self.dirlinters = linters.get_linters(dirlinters)
-    self.filelinters = linters.get_linters(filelinters)
+    self.dirlinters = linters.GetLinters(dirlinters)
+    self.filelinters = linters.GetLinters(filelinters)
 
     linter_names = list(
         type(lin).__name__ for lin in self.dirlinters + self.filelinters)
     logging.debug("Running //%s linters: %s",
                   self.toplevel_dir, ", ".join(linter_names))
 
-  def _lint_this_dir(self, abspath: str, relpath: str,
-                     dirnames: typing.List[str],
-                     filenames: typing.List[str]) -> typing.List[linters.Error]:
+  def _LintThisDirectory(
+      self, abspath: str, relpath: str,
+      dirnames: typing.List[str],
+      filenames: typing.List[str]) -> typing.List[linters.Error]:
     """Run linters in this directory."""
     errors = []
 
@@ -76,7 +77,7 @@ class ToplevelLinter(linters.Linter):
       _start = time.time()
       relpath = workspace.get_workspace_relpath(self.workspace, abspath)
 
-      cache_entry = lintercache.get_linter_errors(abspath, relpath)
+      cache_entry = lintercache.GetLinterErrors(abspath, relpath)
 
       if cache_entry.exists:
         for error in cache_entry.errors:
@@ -86,13 +87,13 @@ class ToplevelLinter(linters.Linter):
         sys.stderr.flush()
 
         if FLAGS.counts:
-          linters.print_error_counts()
+          linters.PrintErrorCounts()
 
         TIMERS.cached_seconds += time.time() - _start
       else:
-        errors = self._lint_this_dir(
+        errors = self._LintThisDirectory(
             abspath, relpath, dirnames, filenames)
-        lintercache.add_linter_errors(cache_entry, errors)
+        lintercache.AddLinterErrors(cache_entry, errors)
         TIMERS.linting_seconds += time.time() - _start
 
     TIMERS.total_seconds += time.time() - start_
@@ -126,8 +127,8 @@ def main(argv):  # pylint: disable=missing-docstring
     print(f"Cannot find workspace in '{FLAGS.workspace}'", file=sys.stderr)
     sys.exit(1)
 
-  lightroom.init_keywords_cache(abspath)
-  lintercache.init_errors_cache(abspath)
+  lightroom.InitializeKeywordsCache(abspath)
+  lintercache.InitializeErrorsCache(abspath)
 
   WorkspaceLinter(abspath)()
 
@@ -142,8 +143,8 @@ def main(argv):  # pylint: disable=missing-docstring
     cached_time = TIMERS.cached_seconds
     overhead = total_time - linting_time - cached_time
 
-    print(f"linting={linting_time:.3f}s, cached={cached_time:.3f}s, "
-          f"overhead={overhead:.3f}s, total={total_time:.3f}s",
+    print(f'linting={linting_time:.3f}s, cached={cached_time:.3f}s, '
+          f'overhead={overhead:.3f}s, total={total_time:.3f}s',
           file=sys.stderr)
 
 
