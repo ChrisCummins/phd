@@ -1,6 +1,8 @@
 """This file defines a cache for linting results."""
 import datetime
 import os
+import hashlib
+import pathlib
 import sqlalchemy as sql
 import typing
 from absl import flags
@@ -13,6 +15,7 @@ from sqlalchemy import Integer
 from sqlalchemy import String
 from sqlalchemy import UniqueConstraint
 from sqlalchemy import orm
+from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
 from util.photolib import common
@@ -41,7 +44,8 @@ class Directory(Base):
   __tablename__ = "directories"
 
   relpath_md5: str = Column(Binary(16), primary_key=True)
-  mtime: int = Column(Integer, nullable=False)
+  checksum: bytes = Column(
+      sql.Binary(16).with_variant(mysql.BINARY(16), 'mysql'), nullable=False)
   date_added: datetime.datetime = Column(
     DateTime, nullable=False, default=datetime.datetime.utcnow)
 
@@ -131,10 +135,10 @@ def refresh_linters_version():
 class CacheLookupResult(object):
   """Contains results of a cache lookup."""
 
-  def __init__(self, exists: bool, mtime: int, relpath: str,
+  def __init__(self, exists: bool, checksum: bytes, relpath: str,
                relpath_md5: str, errors: typing.List[CachedError]):
     self.exists = exists
-    self.mtime = mtime
+    self.checksum = checksum
     self.relpath = relpath
     self.relpath_md5 = relpath_md5
     self.errors = errors
@@ -144,7 +148,7 @@ def add_linter_errors(entry: CacheLookupResult,
                       errors: typing.List[str]) -> None:
   """Record linte rerrors in the cache."""
   # Create a directory cache entry.
-  directory = Directory(relpath_md5=entry.relpath_md5, mtime=entry.mtime)
+  directory = Directory(relpath_md5=entry.relpath_md5, checksum=entry.checksum)
   SESSION.add(directory)
 
   # Create entries for the errors.
@@ -168,10 +172,34 @@ def get_directory_mtime(abspath) -> int:
     abspath: The absolute path to the directory.
 
   Returns:
-    The seconds since epoch of the last modification.
+    The seconds since epoch of the last modification. If the directory is
+    empty, zero is returned.
   """
-  paths = (os.path.join(abspath, filename) for filename in os.listdir(abspath))
-  return int(max(os.path.getmtime(path) for path in paths))
+  paths = [os.path.join(abspath, filename) for filename in os.listdir(abspath)]
+  if paths:
+    return int(max(os.path.getmtime(path) for path in paths))
+  else:
+    return 0
+
+
+def get_directory_checksum(abspath: pathlib.Path) -> str:
+  """Compute a checksum to determine the contents and status of the directory.
+
+  The checksum is computed
+
+  Params:
+    abspath:
+  :return:
+  """
+  hash = hashlib.md5()
+  paths = [os.path.join(abspath, filename) for filename in os.listdir(abspath)]
+  if paths:
+    directory_mtime = int(max(os.path.getmtime(path) for path in paths))
+    hash.update(str(directory_mtime).encode('utf-8'))
+    for path in paths:
+      if os.path.isfile(path):
+        hash.update(str(path).encode('utf-8'))
+  return hash
 
 
 def get_linter_errors(abspath: str, relpath: str) -> CacheLookupResult:
@@ -179,14 +207,14 @@ def get_linter_errors(abspath: str, relpath: str) -> CacheLookupResult:
   relpath_md5 = common.md5(relpath).digest()
 
   # Get the time of the most-recently modified file in the directory.
-  mtime = get_directory_mtime(abspath)
+  checksum = get_directory_checksum(abspath).digest()
 
   ret = CacheLookupResult(
-    exists=False,
-    mtime=mtime,
-    relpath=relpath,
-    relpath_md5=relpath_md5,
-    errors=[]
+      exists=False,
+      checksum=checksum,
+      relpath=relpath,
+      relpath_md5=relpath_md5,
+      errors=[]
   )
 
   directory = SESSION \
@@ -194,7 +222,7 @@ def get_linter_errors(abspath: str, relpath: str) -> CacheLookupResult:
     .filter(Directory.relpath_md5 == ret.relpath_md5) \
     .first()
 
-  if directory and directory.mtime == ret.mtime:
+  if directory and directory.checksum == ret.checksum:
     ret.exists = True
     ret.errors = SESSION \
       .query(CachedError) \
