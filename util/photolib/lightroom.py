@@ -164,7 +164,7 @@ def get_lightroom_keywords(abspath: str, relpath: str) -> typing.Set[str]:
   if entry and entry.mtime == mtime:
     # logging.debug("keywords cache hit %s", relpath)
     keywords = set(entry.keywords.keywords.split(","))
-  elif entry and entry.mtime != mtime:
+  elif entry and entry.mtime != mtime and not abspath.endswith('.mov'):
     SESSION.delete(entry)
     keywords = _read_keywords_from_file(abspath)
     _add_keywords_to_cache(relpath_md5, mtime, keywords)
