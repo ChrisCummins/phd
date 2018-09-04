@@ -228,6 +228,7 @@ def get_linter_errors(abspath: str, relpath: str) -> CacheLookupResult:
     ret.errors = SESSION \
       .query(CachedError) \
       .filter(CachedError.dir == ret.relpath_md5)
+    logging.debug("cache hit %s", relpath)
   elif directory:
     logging.debug("removing stale directory cache %s", relpath)
 
