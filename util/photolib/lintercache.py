@@ -147,7 +147,7 @@ class CacheLookupResult(object):
 
 def add_linter_errors(entry: CacheLookupResult,
                       errors: typing.List[str]) -> None:
-  """Record linte rerrors in the cache."""
+  """Record linter errors in the cache."""
   # Create a directory cache entry.
   directory = Directory(relpath_md5=entry.relpath_md5, checksum=entry.checksum)
   SESSION.add(directory)
