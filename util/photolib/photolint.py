@@ -1,8 +1,8 @@
 """A linter for ensuring that a Photo Library is organized correctly."""
+import os
+
 import sys
 import time
-
-import os
 import typing
 from absl import app
 from absl import flags
@@ -13,6 +13,7 @@ from util.photolib import lightroom
 from util.photolib import lintercache
 from util.photolib import linters
 from util.photolib import workspace
+
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string("workspace", os.getcwd(), "Path to workspace root")
@@ -43,7 +44,7 @@ class ToplevelLinter(linters.Linter):
     self.filelinters = linters.get_linters(filelinters)
 
     linter_names = list(
-      type(lin).__name__ for lin in self.dirlinters + self.filelinters)
+        type(lin).__name__ for lin in self.dirlinters + self.filelinters)
     logging.debug("Running //%s linters: %s",
                   self.toplevel_dir, ", ".join(linter_names))
 
@@ -90,7 +91,7 @@ class ToplevelLinter(linters.Linter):
         TIMERS.cached_seconds += time.time() - _start
       else:
         errors = self._lint_this_dir(
-          abspath, relpath, dirnames, filenames)
+            abspath, relpath, dirnames, filenames)
         lintercache.add_linter_errors(cache_entry, errors)
         TIMERS.linting_seconds += time.time() - _start
 
@@ -107,11 +108,11 @@ class WorkspaceLinter(linters.Linter):
 
   def __call__(self, *args, **kwargs):
     photolib_linter = ToplevelLinter(
-      self.workspace, "photos",
-      linters.PhotolibDirLinter, linters.PhotolibFileLinter)
+        self.workspace, "photos",
+        linters.PhotolibDirLinter, linters.PhotolibFileLinter)
     gallery_linter = ToplevelLinter(
-      self.workspace, "gallery",
-      linters.GalleryDirLinter, linters.GalleryFileLinter)
+        self.workspace, "gallery",
+        linters.GalleryDirLinter, linters.GalleryFileLinter)
 
     photolib_linter()
     gallery_linter()
@@ -120,7 +121,7 @@ class WorkspaceLinter(linters.Linter):
 def main(argv):  # pylint: disable=missing-docstring
   del argv
   abspath = workspace.find_workspace_rootpath(
-    os.path.expanduser(FLAGS.workspace))
+      os.path.expanduser(FLAGS.workspace))
   if not abspath:
     print(f"Cannot find workspace in '{FLAGS.workspace}'", file=sys.stderr)
     sys.exit(1)

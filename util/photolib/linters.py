@@ -1,16 +1,17 @@
 """This file contains the linter implementations for photolint."""
-import inspect
 import os
+from collections import defaultdict
+
+import inspect
 import re
 import sys
 import typing
-from collections import defaultdict
-
 from absl import flags
 
 from util.photolib import common
 from util.photolib import lightroom
 from util.photolib.proto import photolint_pb2
+
 
 FLAGS = flags.FLAGS
 flags.DEFINE_boolean("counts", False, "Show only the counts of errors.")
@@ -46,7 +47,8 @@ def print_error_counts() -> None:
 class Error(object):
   """A linter error."""
 
-  def __init__(self, relpath: str, category: str, message: str, fix_it: str = None):
+  def __init__(self, relpath: str, category: str, message: str,
+               fix_it: str = None):
     """Report an error.
 
     If --counts flag was passed, this updates the running totals of error counts.
@@ -180,9 +182,11 @@ class GalleryFilename(GalleryFileLinter):
             errors.append(Error(workspace_relpath, "file/name",
                                 f"filename is out-of-sequence"))
       except ValueError:
-        errors.append(Error(workspace_relpath, "file/name", f"'{seq}' not a number"))
+        errors.append(
+            Error(workspace_relpath, "file/name", f"'{seq}' not a number"))
     else:
-      errors.append(Error(workspace_relpath, "file/name", f"should be '{topdir}-<num>'"))
+      errors.append(
+          Error(workspace_relpath, "file/name", f"should be '{topdir}-<num>'"))
 
     return errors
 
@@ -327,7 +331,8 @@ class DirEmpty(PhotolibDirLinter, GalleryDirLinter):
                dirnames: typing.List[str], filenames: typing.List[str]):
     if not filenames and not dirnames:
       return [Error(workspace_relpath, "dir/empty",
-                    "directory is empty, remove it", fix_it=f"rm -rv '{abspath}'")]
+                    "directory is empty, remove it",
+                    fix_it=f"rm -rv '{abspath}'")]
     return []
 
 

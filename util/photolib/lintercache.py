@@ -1,6 +1,7 @@
 """This file defines a cache for linting results."""
-import datetime
 import os
+
+import datetime
 import hashlib
 import pathlib
 import sqlalchemy as sql
@@ -20,6 +21,7 @@ from sqlalchemy.ext import declarative
 
 from util.photolib import common
 from util.photolib import linters
+
 
 FLAGS = flags.FLAGS
 
@@ -47,7 +49,7 @@ class Directory(Base):
   checksum: bytes = Column(
       sql.Binary(16).with_variant(mysql.BINARY(16), 'mysql'), nullable=False)
   date_added: datetime.datetime = Column(
-    DateTime, nullable=False, default=datetime.datetime.utcnow)
+      DateTime, nullable=False, default=datetime.datetime.utcnow)
 
   def __repr__(self):
     return (f"{self.relpath}:  "
@@ -70,7 +72,7 @@ class CachedError(Base):
   directory: Directory = orm.relationship("Directory")
 
   __table_args__ = (UniqueConstraint(
-    'dir', 'relpath', 'category', 'message', 'fix_it', name='unique_error'),)
+      'dir', 'relpath', 'category', 'message', 'fix_it', name='unique_error'),)
 
   def __repr__(self):
     return (f"{self.relpath}:  "
@@ -121,7 +123,7 @@ def refresh_linters_version():
 
   with open(linters.__file__) as f:
     actual_linters_version = Meta(
-      key=meta_key, value=common.md5(f.read()).hexdigest())
+        key=meta_key, value=common.md5(f.read()).hexdigest())
 
   if cached_checksum != actual_linters_version.value:
     logging.debug("linters.py has changed, emptying cache ...")
@@ -154,11 +156,11 @@ def add_linter_errors(entry: CacheLookupResult,
 
   # Create entries for the errors.
   errors_ = [CachedError(
-    dir=directory.relpath_md5,
-    relpath=e.relpath,
-    category=e.category,
-    message=e.message,
-    fix_it=e.fix_it or ""
+      dir=directory.relpath_md5,
+      relpath=e.relpath,
+      category=e.category,
+      message=e.message,
+      fix_it=e.fix_it or ""
   ) for e in errors]
   if errors_:
     SESSION.bulk_save_objects(errors_)

@@ -1,6 +1,7 @@
 """Functions for working with Lightroom."""
-import datetime
 import os
+
+import datetime
 import sqlalchemy as sql
 import typing
 from absl import flags
@@ -16,6 +17,7 @@ from sqlalchemy import orm
 from sqlalchemy.ext import declarative
 
 from util.photolib import common
+
 
 FLAGS = flags.FLAGS
 
@@ -47,7 +49,7 @@ class KeywordCacheEntry(Base):
   mtime: int = Column(Integer, nullable=False)
   keywords_id: int = Column(Integer, ForeignKey("keywords.id"), nullable=False)
   date_added: datetime.datetime = Column(
-    DateTime, nullable=False, default=datetime.datetime.utcnow)
+      DateTime, nullable=False, default=datetime.datetime.utcnow)
 
   keywords: Keywords = orm.relationship("Keywords")
 
@@ -111,11 +113,10 @@ def _add_keywords_to_cache(relpath_md5: str, mtime: float,
     keywords: The set of keywords to record.
   """
   keywords_ = get_or_add(SESSION, Keywords, keywords=",".join(keywords))
-
   entry = KeywordCacheEntry(
-    relpath_md5=relpath_md5,
-    mtime=int(mtime),
-    keywords=keywords_,
+      relpath_md5=relpath_md5,
+      mtime=int(mtime),
+      keywords=keywords_,
   )
   SESSION.add(entry)
   SESSION.commit()
