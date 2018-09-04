@@ -8,6 +8,7 @@ import sqlalchemy as sql
 import typing
 from absl import flags
 from absl import logging
+from phd.lib.labm8 import shell
 from sqlalchemy import Binary
 from sqlalchemy import Column
 from sqlalchemy import DateTime
@@ -52,9 +53,9 @@ class Directory(Base):
       DateTime, nullable=False, default=datetime.datetime.utcnow)
 
   def __repr__(self):
-    return (f"{self.relpath}:  "
-            f"{common.Colors.YELLOW}{self.message}{common.Colors.END}  "
-            f"[{self.category}]")
+    return (f'{self.relpath}:  '
+            f'{shell.ShellEscapeCodes.YELLOW}{self.message}'
+            f'{shell.ShellEscapeCodes.END}  [{self.category}]')
 
 
 class CachedError(Base):
@@ -75,9 +76,9 @@ class CachedError(Base):
       'dir', 'relpath', 'category', 'message', 'fix_it', name='unique_error'),)
 
   def __repr__(self):
-    return (f"{self.relpath}:  "
-            f"{common.Colors.YELLOW}{self.message}{common.Colors.END}  "
-            f"[{self.category}]")
+    return (f'{self.relpath}:  '
+            f'{shell.ShellEscapeCodes.YELLOW}{self.message}'
+            f'{shell.ShellEscapeCodes.END}  [{self.category}]')
 
 
 def init_errors_cache(workspace_abspath: str) -> None:

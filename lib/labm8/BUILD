@@ -435,6 +435,15 @@ py_test(
 )
 
 py_library(
+    name = "shell",
+    srcs = ["shell.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//third_party/py/absl",
+    ],
+)
+
+py_library(
     name = "sqlutil",
     srcs = ["sqlutil.py"],
     visibility = ["//visibility:public"],

@@ -7,6 +7,7 @@ import re
 import sys
 import typing
 from absl import flags
+from phd.lib.labm8 import shell
 
 from util.photolib import common
 from util.photolib import lightroom
@@ -65,8 +66,9 @@ class Error(object):
     ERROR_COUNTS[category] += 1
 
     if not FLAGS.counts:
-      print(f"{relpath}:  {common.Colors.YELLOW}{message}{common.Colors.END}  "
-            f"[{category}]", file=sys.stderr)
+      print(f'{relpath}:  '
+            f'{shell.ShellEscapeCodes.YELLOW}{message}'
+            f'{shell.ShellEscapeCodes.END}  [{category}]', file=sys.stderr)
       sys.stderr.flush()
 
     if FLAGS.fix_it and fix_it:
