@@ -127,7 +127,8 @@ def refresh_linters_version():
     logging.debug("linters.py has changed, emptying cache ...")
     SESSION.query(Directory).delete()
     SESSION.query(CachedError).delete()
-    SESSION.delete(cached_linters_version)
+    if cached_linters_version:
+      SESSION.delete(cached_linters_version)
     SESSION.add(actual_linters_version)
     SESSION.commit()
 
