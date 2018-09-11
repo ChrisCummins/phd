@@ -10,6 +10,12 @@ py_binary(
 py_proto_library(
     name = "freefocus_py_pb2",
     srcs = ["freefocus.proto"],
-    deps = ["//third_party/py/protobuf"],
     visibility = ["//visibility:public"],
+    deps = ["//third_party/py/protobuf"],
+)
+
+py_library(
+    name = "sql",
+    srcs = ["sql.py"],
+    visibility = ["//util/freefocus:__subpackages__"],
 )
