@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 """Run a REST server."""
 import flask
+import flask_cors
 import sqlalchemy
+import typing
 from argparse import ArgumentParser
 from contextlib import contextmanager
-from flask import Flask, abort, jsonify, make_response, request
-from flask_cors import CORS
-from typing import Iterable
+from flask import abort, jsonify, make_response, request
 
 from util.freefocus import freefocus
 from util.freefocus import sql
 
 
-app = Flask(__name__)
-CORS(app)
+app = flask.Flask(__name__)
+flask_cors.CORS(app)
 app.config.from_object('config')
 
 make_session = None
@@ -83,7 +83,7 @@ def response(data):
   return jsonify(data)
 
 
-def paginated_response(iterable: Iterable):
+def paginated_response(iterable: typing.Iterable):
   """ make a paginated API response """
   # TODO: chunk and paginate
   return response(list(iterable))

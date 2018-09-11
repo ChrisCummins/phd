@@ -6,5 +6,7 @@ py_binary(
     deps = [
         "//util/freefocus",
         "//util/freefocus:sql",
+        "//third_party/py/sqlalchemy",
+        "//third_party/py/flask",
     ],
 )

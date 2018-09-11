@@ -26,6 +26,8 @@ docutils==0.14
 editdistance==0.3.1
 entrypoints==0.2.3
 enum34==1.1.6
+Flask==1.0.2
+flask-cors==3.0.6
 funcsigs==1.0.2
 futures==3.1.1
 fuzzywuzzy==0.16.0
