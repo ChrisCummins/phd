@@ -1,0 +1,3 @@
+graft freefocus/templates
+graft freefocus/static
+include freefocus/schema.sql

@@ -1,0 +1,232 @@
+/*
+ * Draft message protocol for FreeFocus 1.0.0. See @OmniOutline//:FreeFocus
+ */
+syntax = "proto3";
+package freefocus;
+
+
+/*
+ * Core Building Blocks.
+ */
+
+message Person {
+  string uid = 1;
+  string name = 2;
+
+  repeated Group groups = 3;
+  repeated string email = 4;
+
+  int64 created = 5;
+}
+
+
+message Workspace {
+  string uid = 1;
+  repeated Group groups = 2;
+  repeated Task tasks = 3;
+  repeated Tag tags = 4;
+  repeated Asset assets = 5;
+
+  repeated Group owners = 6;
+  repeated Group friends = 7;
+
+  // Accountability
+  int64 created = 8;
+  Person created_by = 9;
+
+  repeated Comment comments = 10;
+}
+
+
+message Group {
+  message Parent {
+    enum Type {
+      WORKSPACE = 0;
+      GROUP = 1;
+    }
+
+    Type type = 1;
+    Workspace workspace = 2;
+    Group group = 3;
+  }
+
+  message Member {
+    enum Type {
+      PERSON = 0;
+      GROUP = 1;
+    }
+
+    Type type = 1;
+    Person person = 2;
+    Group group = 3;
+  }
+
+  string id = 1;
+  Parent parent = 2;
+  repeated Group owners = 3;
+  repeated Group friends = 4;
+
+  string body = 5;
+  repeated Member members = 6;
+
+  // Accountability
+  Person created_by = 7;
+  int64 created = 8;
+  Person modified_by = 9;
+  int64 modified = 10;
+
+  repeated Comment comments = 11;
+}
+
+
+message Task {
+
+  message Parent {
+    enum Type {
+      WORKSPACE = 0;
+      TASK = 1;
+    }
+
+    Type type = 1;
+    Workspace workspace = 2;
+    Task task = 3;
+  }
+
+  enum Status {
+    ACTIVE = 0;
+    INACTIVE = 1;
+  }
+
+  string id = 1;
+  Parent parent = 2;
+  repeated Task children = 3;
+
+  repeated Group assigned = 4;
+  repeated Group owners = 5;
+  repeated Group friends = 6;
+
+  string body = 7;
+
+  repeated Tag tags = 8;
+  repeated Asset assets = 9;
+
+  repeated Task deps = 10;
+
+  int64 defer = 11;
+  int64 due = 12;
+  int64 estimated_duration = 13;
+
+  int64 started = 14;
+  int64 completed = 15;
+  int64 duration = 16;
+
+  Status status = 17;
+
+  // Self-duplicating tasks
+  int64 duplicate_after = 18;
+  Task duplicated_from = 19;
+
+  // Accountability
+  Person created_by = 20;
+  int64 created = 21;
+  Person modified_by = 22;
+  int64 modified = 23;
+
+  repeated Comment comments = 24;
+}
+
+
+message Tag {
+
+  message Parent {
+    enum Type {
+      WORKSPACE = 0;
+      TAG = 1;
+    }
+
+    Type type = 1;
+    Workspace workspace = 2;
+    Tag tag = 3;
+  }
+
+  string id = 1;
+  Parent parent = 2;
+  repeated Tag children = 3;
+
+  string body = 4;
+
+  repeated Group owners = 5;
+  repeated Group friends = 6;
+
+  // Accountability
+  Person created_by = 7;
+  int64 created = 8;
+  Person modified_by = 9;
+  int64 modified = 10;
+
+  repeated Comment comments = 11;
+}
+
+
+message Asset {
+  message Parent {
+    enum Type {
+      WORKSPACE = 0;
+      ASSET = 1;
+    }
+
+    Type type = 1;
+    Workspace workspace = 2;
+    Asset asset = 3;
+  }
+
+  string id = 1;
+  Parent parent = 2;
+  repeated Asset children = 3;
+
+  repeated Group owners = 4;
+  repeated Group friends = 5;
+
+  string type = 6;
+  string body = 7;
+
+  // Accountability
+  Person created_by = 8;
+  int64 created = 9;
+  Person modified_by = 10;
+  int64 modified = 11;
+
+  repeated Comment comments = 12;
+}
+
+
+message Comment {
+
+  message Parent {
+    enum Type {
+      WORKSPACE = 0;
+      TASK = 1;
+      ASSET = 2;
+      TAG = 3;
+      COMMENT = 4;
+    }
+
+    Type type = 1;
+    Workspace workspace = 2;
+    Task task = 3;
+    Asset asset = 4;
+    Tag tag = 5;
+    Comment comment = 6;
+  }
+
+  string id = 1;
+  Parent parent = 2;
+  repeated Comment comments = 3;
+
+  string body = 4;
+
+  // Accountability
+  Person created_by = 5;
+  int64 created = 6;
+  int64 modified = 7;
+}

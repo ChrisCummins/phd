@@ -1,0 +1,6 @@
+#!/usr/bin/env python
+
+import freefocus
+
+if __name__ == "__main__":
+    freefocus.main()

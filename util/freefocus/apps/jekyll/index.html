@@ -1,0 +1,24 @@
+---
+js:
+  - /js/markdown.min.js
+  - /js/app.js
+---
+{% include navbar.html %}
+
+<div class="container-fluid">
+  <div id="app">
+    <div id="main-panel">
+      <div class="tasks">
+      </div>
+    </div>
+
+    <div id="details-panel">
+      <div class="affix">
+        <div class="details">
+          {% include task-details.html %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div> <!-- /.container -->
+</div> <!-- #app -->
