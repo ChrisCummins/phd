@@ -57,7 +57,7 @@ message Workspace {
   // created.
   optional int64 created_at_utc_epoch_ms = 8;
   // The root of a Workspace's comment trees.
-  repeated Comment comment = 10;
+  repeated int64 comment_cid = 10;
 }
 
 // A Group represents a collection of Persons.
@@ -93,7 +93,7 @@ message Group {
   // created.
   optional int64 most_recently_modified_at_utc_epoch_ms = 10;
   // The root of a Group's comment trees.
-  repeated Comment comments = 11;
+  repeated int64 comment_cid = 11;
 }
 
 // A Task is a unit of work.
@@ -123,9 +123,9 @@ message Task {
   // group. Markdown format is accepted.
   optional string description = 8;
   // A list of zero or more Task Tags.
-  repeated string tag_tid = 8;
+  repeated string tag_tid = 9;
   // A list of zero or more Assets associated with a Task.
-  repeated string asset_aid = 9;
+  repeated string asset_aid = 10;
 
   // The state of a Task. This defines a set of mutually-exlcusive states that
   // a Task can be in. Note that there is a further state, OVERDUE, but this is
@@ -155,10 +155,10 @@ message Task {
     // READ
     DROPPED = 5;
   }
-  optional TaskState state = 10;
-  optional int64 ready_at_utc_epoch_ms = 11;
-  repeated int64 blocked_by_id = 12;
-  optional string completed_by_pid = 13;
+  optional TaskState state = 11;
+  optional int64 ready_at_utc_epoch_ms = 12;
+  repeated int64 blocked_by_id = 13;
+  optional string completed_by_pid = 28;
   optional int64 completed_at_utc_epoch_ms = 14;
   // An optional number of milliseconds since the epoch (UTC) that the a Task is
   // due at. A task is OVERDUE if this value is in the past and the Task state
@@ -197,7 +197,7 @@ message Task {
   // created.
   optional int64 most_recently_modified_at_utc_epoch_ms = 26;
   // The root of the Tasks' comment tree.
-  repeated Comment comments = 27;
+  repeated int64 comment_cid = 27;
 }
 
 
@@ -229,74 +229,57 @@ message Tag {
   optional Person modified_by = 9;
   optional int64 modified = 10;
 
-  repeated Comment comments = 11;
+  repeated int64 comment_cid = 11;
 }
 
 
 message Asset {
-  message Parent {
-    enum Type {
-      WORKSPACE = 0;
-      ASSET = 1;
-    }
-
-    optional Type type = 1;
-    optional Workspace workspace = 2;
-    optional Asset asset = 3;
+  optional string aid = 1;
+  oneof parent {
+    string parent_wid = 2;
+    string parent_aid = 3;
   }
-
-  oneof location {
-    string uri = 1;
-    string urn = 2;
+  oneof address {
+    string uri = 4;
+    string urn = 5;
+    string location = 6;
   }
+  optional string address_type = 7;
 
-  optional string id = 1;
-  optional Parent parent = 2;
-  repeated Asset children = 3;
+  repeated string child_aid = 8;
 
-  repeated Group owners = 4;
-  repeated Group friends = 5;
+  repeated string owner_gid = 9;
+  repeated string friend_gid = 10;
 
-  optional string type = 6;
-  optional string body = 7;
+  optional string secription = 11;
 
-  // Accountability
-  optional Person created_by = 8;
-  optional int64 created = 9;
-  optional Person modified_by = 10;
-  optional int64 modified = 11;
 
-  repeated Comment comments = 12;
+  repeated int64 comment_cid = 12;
 }
 
 
 message Comment {
-
-  message Parent {
-    enum Type {
-      WORKSPACE = 0;
-      TASK = 1;
-      ASSET = 2;
-      TAG = 3;
-      COMMENT = 4;
-    }
-
-    optional Type type = 1;
-    optional Workspace workspace = 2;
-    optional Task task = 3;
-    optional Asset asset = 4;
-    optional Tag tag = 5;
-    optional Comment comment = 6;
+  optional int64 cid = 1;
+  oneof parent {
+    string parent_wid = 2;
+    string parent_id = 3;
+    string parent_aid = 4;
+    int64 parent_tid = 5;
+    int64 parent_cid = 6;
   }
 
-  optional string id = 1;
-  optional Parent parent = 2;
-  repeated Comment comments = 3;
+  repeated Comment child_cid = 7;
 
-  optional string body = 4;
+  optional string body = 8;
 
-  // Accountability
-  optional Person created_by = 5;
-  optional int64 created = 6;
-  optional int64 modified = 7;
+  // The pid of the Person who created the comment.
+  optional string created_by_pid = 9;
+  // The number of milliseconds since the epoch (UTC) that the comment was
+  // created.
+  optional int64 created_at_utc_epoch_ms = 10;
+  // The pid of the Person who most recently modified the comment.
+  optional string most_recently_modified_by_pid = 11;
+  // The number of milliseconds since the epoch (UTC) that the comment was
+  // most recently modified.
+  optional int64 most_recently_modified_at_utc_epoch_ms = 12;
 }
