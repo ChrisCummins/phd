@@ -19,3 +19,9 @@ py_library(
     srcs = ["sql.py"],
     visibility = ["//util/freefocus:__subpackages__"],
 )
+
+py_library(
+    name = "sql_ops",
+    srcs = ["sql_ops.py"],
+    visibility = ["//util/freefocus:__subpackages__"],
+)

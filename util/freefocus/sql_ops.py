@@ -1,10 +1,9 @@
 """
 SQL schema for FreeFocus.
 """
-import freefocus
 import sqlalchemy as sqlalchemy
 
-from freefocus import sql
+from util.freefocus import sql
 
 make_session = None
 
