@@ -1,6 +1,4 @@
-"""
-me - Aggregate health and time tracking data.
-"""
+"""me - Aggregate health and time tracking data."""
 import csv
 import datetime
 import logging
