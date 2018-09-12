@@ -10,7 +10,7 @@ py_library(
     deps = [
         ":me",
         ":spreadsheet",
-    ]
+    ],
 )
 
 py_binary(
@@ -20,17 +20,16 @@ py_binary(
         ":aggregate",
         ":healthkit",
         ":omnifocus",
-        ":healthkit",
         ":toggl",
-    ]
+    ],
 )
 
 py_library(
     name = "healthkit",
     srcs = ["healthkit.py"],
     deps = [
-        ":me"
-    ]
+        ":me",
+    ],
 )
 
 py_library(
@@ -42,8 +41,8 @@ py_library(
     name = "omnifocus",
     srcs = ["omnifocus.py"],
     deps = [
-        ":me"
-    ]
+        ":me",
+    ],
 )
 
 py_library(
@@ -56,5 +55,5 @@ py_library(
     srcs = ["toggl.py"],
     deps = [
         ":me",
-    ]
+    ],
 )
