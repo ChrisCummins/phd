@@ -6,10 +6,10 @@ package freefocus;
 
 // A Person represents a user in a system.
 message Person {
-  // The pid is a string of one or more characters which uniquely identifies
-  // the Person amongst all other Persons in a system. Markdown format is
-  // accepted, but text must be only a single line.
-  optional string pid = 1;
+  // The Person id is a string of one or more characters which uniquely
+  // identifies the Person amongst all other Persons in a system. Markdown
+  // format is accepted, but text must be only a single line.
+  optional string id = 1;
   // The name of a Person is a string of one or more characters. A Person may
   // have multiple names. Each name for a Person must be unique, but multiple
   // Persons in a system may have the same name. Markdown format is
@@ -24,21 +24,21 @@ message Person {
   optional int64 created_at_utc_epoch_ms = 5;
 
   // A list of Groups and the Workspace they belong to. This is required because
-  // the gid is unique only to a Workspace. Groups do not need to be top-level
-  // in that Workspace.
+  // a Group's ID is unique only to a Workspace. Groups do not need to be
+  // top-level in that Workspace.
   message WorkspaceGroups {
-    optional string wid = 1;
-    repeated string gid = 2;
+    optional string workspace_id = 1;
+    repeated string group_id = 2;
   }
 }
 
 // A Workspace represents the root object for a collection of Groups, Tasks,
 // Tags, and Assets.
 message Workspace {
-  // The wid is a string of one or more characters which uniquely identifies the
-  // Workspace amongst all other Workspaces in a system. Markdown format is
-  // accepted, but text must be only a single line.
-  optional string wid = 1;
+  // The ID of a Workspace is a string of one or more characters which uniquely
+  // identifies the Workspace in a system. Markdown format is accepted, but text
+  // must be only a single line.
+  optional string id = 1;
   // The root of the Workspace's Groups, Tasks, Tags, and Assets trees.
   repeated Group group = 2;
   repeated Task task = 3;
@@ -48,38 +48,38 @@ message Workspace {
   // may create new top-level groups, tasks, tags, and assets. Members of owner
   // groups may add Workspace comments. Owner groups must belong to the
   // workspace.
-  repeated string owner_gid = 6;
+  repeated string owner_group_id = 6;
   // A list of Groups which are friends of this workspace. Members of friend
   // groups have read-only access to the Workspace, but can add comments. Friend
   // groups must belong to the workspace.
-  repeated string friend_gid = 7;
+  repeated string friend_group_id = 7;
   // The number of milliseconds since the epoch (UTC) that the Workspace was
   // created.
   optional int64 created_at_utc_epoch_ms = 8;
   // The root of a Workspace's comment trees.
-  repeated int64 comment_cid = 10;
+  repeated int64 comment_id = 10;
 }
 
 // A Group represents a collection of Persons.
 message Group {
-  // The gid is a string of one or more characters which uniquely identifies the
-  // Group amongst all other Groups in a Workspace. Markdown format is accepted,
-  // but text must be only a single line.
-  optional string gid = 1;
+  // A Group's ID is a string of one or more characters which uniquely
+  // identifies the Group in a Workspace. Markdown format is accepted, but text
+  // must be only a single line.
+  optional string id = 1;
   // A Group belongs to either a Workspace or another Group.
   oneof parent {
-    string parent_wid = 2;
-    string parent_gid = 3;
+    string parent_workspace_id = 2;
+    string parent_group_id = 3;
   }
   // An optional string of one or more characters providing a description of the
   // group. Markdown format is accepted.
   optional string description = 4;
   // Lists of a Group's members. A group member is either another Group or a
   // Person. If a group has no Group or Person members, it is destroyed.
-  repeated string member_gid = 5;
-  repeated string member_pid = 6;
-  // The pid of the Person who created the group.
-  optional string created_by_pid = 7;
+  repeated string member_group_id = 5;
+  repeated string member_person_id = 6;
+  // The ID of the Person who created the group.
+  optional string created_by_person_id = 7;
   // The number of milliseconds since the epoch (UTC) that the Group was
   // created.
   optional int64 created_at_utc_epoch_ms = 8;
@@ -87,13 +87,13 @@ message Group {
   // modifications to a group, not just the ID and timestamp of the most recent
   // modification.
   //
-  // The pid of the Person who most recently modified the group.
-  optional string most_recently_modified_by_pid = 9;
+  // The ID of the Person who most recently modified the group.
+  optional string most_recently_modified_by_person_id = 9;
   // The number of milliseconds since the epoch (UTC) that the Group was
   // created.
   optional int64 most_recently_modified_at_utc_epoch_ms = 10;
   // The root of a Group's comment trees.
-  repeated int64 comment_cid = 11;
+  repeated int64 comment_id = 11;
 }
 
 // A Task is a unit of work.
@@ -104,29 +104,28 @@ message Task {
   optional int64 id = 1;
   // A Task belongs to either a Workspace or another Task.
   oneof parent {
-    string parent_wid = 2;
-    string parent_id = 3;
+    string parent_workspace_id = 2;
+    string parent_task_id = 3;
   }
   // A list of zero or more child Tasks.
-  repeated int64 child_id = 4;
+  repeated int64 child_task_id = 4;
   // A list of Groups for which the Task is assigned. When a Task is created,
   // no Group is assigned. Members of assigned Groups may complete the Task,
   // but make no other alterations.
-  repeated string assigned_gid = 5;
+  repeated string assigned_group_id = 5;
   // A list of Groups which own this Task. Members of these groups may modify
   // the Task.
-  repeated string owner_gid = 6;
+  repeated string owner_group_id = 6;
   // A list of Friends of the Task. Members of friend groups may view the Task,
   // but not modify it.
-  repeated string friend_gid = 7;
+  repeated string friend_group_id = 7;
   // An optional string of one or more characters providing a description of the
   // group. Markdown format is accepted.
   optional string description = 8;
   // A list of zero or more Task Tags.
-  repeated string tag_tid = 9;
+  repeated string tag_id = 9;
   // A list of zero or more Assets associated with a Task.
-  repeated string asset_aid = 10;
-
+  repeated string asset_id = 10;
   // The state of a Task. This defines a set of mutually-exlcusive states that
   // a Task can be in. Note that there is a further state, OVERDUE, but this is
   // not exclusive. A task can be OVERDUE in the READY, BLOCKED, and IN_PROGRESS
@@ -148,7 +147,7 @@ message Task {
     // transition to either COMPLETE or DROPPED state.
     IN_PROGRESS = 3;
     // The task has been completed. A Task which has been completed cannot
-    // change state. If a Task is complete, the completed_by_pid and
+    // change state. If a Task is complete, the completed_by_person_id and
     // completed_at_utc_epoch_ms fields must be set.
     COMPLETE = 4;
     // The task has been dropped. A dropped task can transition to READY, NOT
@@ -158,12 +157,12 @@ message Task {
   optional TaskState state = 11;
   optional int64 ready_at_utc_epoch_ms = 12;
   repeated int64 blocked_by_id = 13;
-  optional string completed_by_pid = 28;
+  optional string completed_by_person_id = 28;
   optional int64 completed_at_utc_epoch_ms = 14;
   // An optional number of milliseconds since the epoch (UTC) that the a Task is
   // due at. A task is OVERDUE if this value is in the past and the Task state
   // is one of {READY,BLOCKED,IN_PROGRESS}.
-  optional int64 dueat_utc_epoch_ms = 15;
+  optional int64 due_at_utc_epoch_ms = 15;
   // An optional estimate for the amount of time taken to complete a task.
   optional int64 estimated_duration_ms = 16;
   // An optional record of the amount of time that a Task has been worked on
@@ -186,94 +185,123 @@ message Task {
   // used if duplicate_after field is set. If this value is < 0, there is no
   // limit on the remaining duplications.
   optional int32 remaining_duplications = 22;
-
-  // The pid of the Person who created the task.
-  optional string created_by_pid = 23;
+  // The ID of the Person who created the task.
+  optional string created_by_person_id = 23;
   // The number of milliseconds since the epoch (UTC) that the task was created.
   optional int64 created_at_utc_epoch_ms = 24;
-  // The pid of the Person who most recently modified the group.
-  optional string most_recently_modified_by_pid = 25;
+  // The ID of the Person who most recently modified the group.
+  optional string most_recently_modified_by_person_id = 25;
   // The number of milliseconds since the epoch (UTC) that the Group was
   // created.
   optional int64 most_recently_modified_at_utc_epoch_ms = 26;
-  // The root of the Tasks' comment tree.
-  repeated int64 comment_cid = 27;
+  // The root of the Task's comment tree.
+  repeated int64 comment_id = 27;
 }
 
-
+// Tags provide auxiliary labels for Tasks.
 message Tag {
-
-  message Parent {
-    enum Type {
-      WORKSPACE = 0;
-      TAG = 1;
-    }
-
-    optional Type type = 1;
-    optional Workspace workspace = 2;
-    optional Tag tag = 3;
-  }
-
+  // A Tag's ID is a string of one or more characters which uniquely identifies
+  // the Tag in a Workspace. Markdown format is accepted, but text must be only
+  // a single line.
   optional string id = 1;
-  optional Parent parent = 2;
-  repeated Tag children = 3;
-
-  optional string body = 4;
-
-  repeated Group owners = 5;
-  repeated Group friends = 6;
-
-  // Accountability
-  optional Person created_by = 7;
-  optional int64 created = 8;
-  optional Person modified_by = 9;
-  optional int64 modified = 10;
-
-  repeated int64 comment_cid = 11;
+  // A Task belongs to either a Workspace or another Tag.
+  oneof parent {
+    string parent_workspace_id = 2;
+    string parent_tag_id = 3;
+  }
+  // A list of zero or more child Tags.
+  repeated string child_tag_id = 4;
+  // A list of Groups which own this Tag. Members of these groups may modify
+  // the Tag.
+  repeated string owner_group_id = 5;
+  // A list of Friends of the Task. Members of friend groups may view the Tag,
+  // but not modify it.
+  repeated string friend_group_id = 6;
+  // An optional string of one or more characters providing a description of the
+  // tag. Markdown format is accepted.
+  optional string description = 7;
+  // The ID of the Person who created the tag.
+  optional string created_by_person_id = 23;
+  // The number of milliseconds since the epoch (UTC) that the tag was created.
+  optional int64 created_at_utc_epoch_ms = 24;
+  // The ID of the Person who most recently modified the tag.
+  optional string most_recently_modified_by_person_id = 25;
+  // The number of milliseconds since the epoch (UTC) that the tag was
+  // created.
+  optional int64 most_recently_modified_at_utc_epoch_ms = 26;
+  // The root of the Tag's comment tree.
+  repeated int64 comment_id = 11;
 }
 
-
+// An Asset describes a reference to something outside the task manager. It
+// could be a digital asset, e.g. a URL, or a refernce to a physicial object,
+// such as a notebook.
 message Asset {
-  optional string aid = 1;
+  // An Asset's ID is a string of one or more characters which uniquely
+  // identifies the Asset in a Workspace. Markdown format is accepted, but text
+  // must be only a single line.
+  optional string id = 1;
+  // An Asset belongs to either a Workspace or another Asset.
   oneof parent {
-    string parent_wid = 2;
-    string parent_aid = 3;
+    string parent_workspace_id = 2;
+    string parent_asset_id = 3;
   }
-  oneof address {
-    string uri = 4;
-    string urn = 5;
-    string location = 6;
-  }
-  optional string address_type = 7;
-
-  repeated string child_aid = 8;
-
-  repeated string owner_gid = 9;
-  repeated string friend_gid = 10;
-
-  optional string secription = 11;
-
-
-  repeated int64 comment_cid = 12;
+  // An address is an optional string of one or more characters used to locate
+  // the asset, and the address_type identifies the type of the address. It is
+  // up to the implementation to decide how to use addresses, but one example
+  // could be to use address_type "url" to signal that an address field (as it
+  // appears in a GUI) is a clickable link that will open a browser to the given
+  // address. Plain text format is used for both fields.
+  optional string address = 4;
+  optional string address_type = 5;
+  // A list of zero or more child Assets.
+  repeated string child_asset_id = 8;
+  // A list of Groups which own this Asset. Members of these groups may modify
+  // the Asset.
+  repeated string owner_group_id = 9;
+  // A list of Friends of the Asset. Members of friend groups may view the
+  // Asset, but not modify it.
+  repeated string friend_group_id = 10;
+  // An optional string of one or more characters providing a description of the
+  // asset. Markdown format is accepted.
+  optional string description = 11;
+  // The ID of the Person who created the asset.
+  optional string created_by_person_id = 12;
+  // The number of milliseconds since the epoch (UTC) that the asset was
+  // created.
+  optional int64 created_at_utc_epoch_ms = 13;
+  // The ID of the Person who most recently modified the asset.
+  optional string most_recently_modified_by_person_id = 14;
+  // The number of milliseconds since the epoch (UTC) that the asset was
+  // created.
+  optional int64 most_recently_modified_at_utc_epoch_ms = 15;
+  // The roof of the Asset's comment tree.
+  repeated int64 comment_id = 16;
 }
 
-
+// Comments provide a means for discussions of Tasks, Groups, Workspaces, and
+// Assets.
 message Comment {
-  optional int64 cid = 1;
+  // The id is a positive integer which uniquely identifies the Comment amongst
+  // all other Comments in a Workspace. The id is a counter: the first Comment
+  // is assigned id 1, the second comment id 2, etc.
+  optional int64 id = 1;
+  // A Comment belongs to either a Workspace, Task, Asset, Tag, or another
+  // Comment.
   oneof parent {
-    string parent_wid = 2;
-    string parent_id = 3;
-    string parent_aid = 4;
-    int64 parent_tid = 5;
-    int64 parent_cid = 6;
+    string parent_workspace_id = 2;
+    string parent_task_id = 3;
+    string parent_asset_id = 4;
+    int64 parent_tag_id = 5;
+    int64 parent_comment_id = 6;
   }
-
-  repeated Comment child_cid = 7;
-
+  // A list of zero or more child Comments.
+  repeated int64 child_comment_id = 7;
+  // A string of one or more characters providing the text body of the comment.
+  // Markdown format is accepted.
   optional string body = 8;
-
-  // The pid of the Person who created the comment.
-  optional string created_by_pid = 9;
+  // The ID of the Person who created the comment.
+  optional string created_by_person_id = 9;
   // The number of milliseconds since the epoch (UTC) that the comment was
   // created.
   optional int64 created_at_utc_epoch_ms = 10;
