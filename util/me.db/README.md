@@ -1,14 +1,9 @@
 # Me.db [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://opensource.org/licenses/MIT)
 
+Aggregate personal data from several sources to enable data-driven decision 
+making.
+
 ## Usage
-
-### Installation
-
-```sh
-$ virtualenv -p python3.6 build/me
-$ source build/me/bin/activate
-$ pip install -r requirements.txt
-```
 
 ### Configuration
 
@@ -53,9 +48,3 @@ Create file `~/.me.json`:
 2. Set path to the service key file in `~/.my.json` > "exports" > "gsheet" > "keypath".
 3. Set the name of the spreadsheet to export to in `~/.my.json` > "exports" > "gsheet" > "name".
 4. Set the email address linked to your Drive account in `~/.my.json` > "exports" > "gsheet" > "share_with".
-
-### Running
-
-```
-$ me.csv
-```
