@@ -1,4 +1,4 @@
-# Me.csv [![Release 0.0.1.dev1](https://img.shields.io/badge/release-0.0.1.dev1-blue.svg?style=flat)](https://github.com/ChrisCummins/me.csv/releases) [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://opensource.org/licenses/MIT)
+# Me.db [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://opensource.org/licenses/MIT)
 
 ## Usage
 
@@ -26,10 +26,10 @@ Create file `~/.me.json`:
   },
   "exports": {
     "csv": {
-      "path": "~/Documents/me.csv/"
+      "path": "~/Documents/me.db/"
     },
     "gsheet": {
-      "name": "me.csv",
+      "name": "me.db",
       "keypath": "~/google-service-key.json",
       "share_with": "me@example.com"
     }
