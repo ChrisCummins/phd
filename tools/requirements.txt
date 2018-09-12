@@ -31,6 +31,7 @@ flask-cors==3.0.6
 funcsigs==1.0.2
 futures==3.1.1
 fuzzywuzzy==0.16.0
+graphviz==0.9
 grpcio-tools==1.10.0
 grpcio==1.10.0
 gym==0.10.5
