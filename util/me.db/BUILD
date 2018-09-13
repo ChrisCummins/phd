@@ -29,6 +29,7 @@ py_library(
     srcs = ["healthkit.py"],
     deps = [
         ":me",
+        "//third_party/py/numpy",
     ],
 )
 
@@ -48,6 +49,10 @@ py_library(
 py_library(
     name = "spreadsheet",
     srcs = ["spreadsheet.py"],
+    deps = [
+        "//third_party/py/gspread",
+        "//third_party/py/oauth2client",
+    ],
 )
 
 py_library(
