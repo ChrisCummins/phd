@@ -101,3 +101,6 @@ class Database(object):
       raise
     finally:
       session.close()
+
+  def __repr__(self) -> str:
+    return f'Database[{self.database_uri}]'
