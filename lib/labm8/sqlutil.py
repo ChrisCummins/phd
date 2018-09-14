@@ -12,7 +12,7 @@ from sqlalchemy import orm
 FLAGS = flags.FLAGS
 
 flags.DEFINE_bool(
-    'sqlutil_echo', True,
+    'sqlutil_echo', False,
     'If True, the Engine will log all statements as well as a repr() of their '
     'parameter lists to the engines logger, which defaults to sys.stdout.')
 
