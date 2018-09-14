@@ -13,7 +13,7 @@ py_binary(
 
 py_proto_library(
     name = "freefocus_py_pb2",
-    srcs = ["freefocus.proto"],
+    protos = ["freefocus.proto"],
     visibility = ["//visibility:public"],
     deps = ["//third_party/py/protobuf"],
 )
@@ -23,8 +23,21 @@ py_library(
     srcs = ["sql.py"],
     visibility = ["//util/freefocus:__subpackages__"],
     deps = [
+        ":freefocus_py_pb2",
+        "//lib/labm8:labdate",
         "//lib/labm8:sqlutil",
         "//third_party/py/absl",
+    ],
+)
+
+py_test(
+    name = "sql_test",
+    srcs = ["sql_test.py"],
+    deps = [
+        ":freefocus_py_pb2",
+        ":sql",
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
