@@ -11,6 +11,11 @@ from sqlalchemy import orm
 
 FLAGS = flags.FLAGS
 
+flags.DEFINE_bool(
+    'sqlutil_echo', True,
+    'If True, the Engine will log all statements as well as a repr() of their '
+    'parameter lists to the engines logger, which defaults to sys.stdout.')
+
 
 def GetOrAdd(session: sql.orm.session.Session, model,
              defaults: typing.Dict[str, object] = None, **kwargs):
@@ -70,7 +75,8 @@ class Database(object):
     if not self.database_path.is_file():
       logging.info("Creating sqlite database: '%s'.", self.database_path)
     self.database_uri = f'sqlite:///{self.database_path}'
-    self.engine = sql.create_engine(self.database_uri, encoding='utf-8')
+    self.engine = sql.create_engine(
+        self.database_uri, encoding='utf-8', echo=FLAGS.sqlutil_echo)
     declarative_base.metadata.create_all(self.engine)
     declarative_base.metadata.bind = self.engine
     self.make_session = orm.sessionmaker(bind=self.engine)
