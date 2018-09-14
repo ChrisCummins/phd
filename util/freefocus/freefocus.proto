@@ -17,11 +17,14 @@ message Person {
   repeated string name = 2;
   // A Person belongs to zero or more groups, each of which belong to a
   // Workspace.
-  repeated WorkspaceGroups workspace_group = 3;
+  repeated WorkspaceGroups workspace_groups = 3;
   // A list of one or more email addresses for a Person.
   repeated string email = 4;
   // The number of milliseconds since the epoch (UTC) that a Person was created.
   optional int64 created_at_utc_epoch_ms = 5;
+  // The number of milliseconds since the epoch (UTC) that the Person was
+  // most recently modified.
+  optional int64 most_recently_modified_at_utc_epoch_ms = 6;
 
   // A list of Groups and the Workspace they belong to. This is required because
   // a Group's ID is unique only to a Workspace. Groups do not need to be
@@ -90,7 +93,7 @@ message Group {
   // The ID of the Person who most recently modified the group.
   optional string most_recently_modified_by_person_id = 9;
   // The number of milliseconds since the epoch (UTC) that the Group was
-  // created.
+  // most recently modified.
   optional int64 most_recently_modified_at_utc_epoch_ms = 10;
   // The root of a Group's comment trees.
   repeated int64 comment_id = 11;
