@@ -1,80 +1,59 @@
 """SQL schema for FreeFocus."""
+import pathlib
 import sqlalchemy as sql
-
+from absl import flags
 from datetime import datetime
-from sqlalchemy import Column
-from sqlalchemy import DateTime
-from sqlalchemy import ForeignKey
-from sqlalchemy import Integer
-from sqlalchemy import PrimaryKeyConstraint
-from sqlalchemy import String
-from sqlalchemy import UnicodeText
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import backref, relationship
-from typing import Dict
+from sqlalchemy import orm
+from sqlalchemy.ext import declarative
+
+from lib.labm8 import sqlutil
 
 
-Base = declarative_base()
+FLAGS = flags.FLAGS
 
-
-def get_or_create(session: sql.orm.session.Session, model,
-                  defaults: Dict[str, object] = None, **kwargs) -> object:
-  """
-  Instantiate a mapped database object. If the object is not in the database,
-  add it.
-  """
-  instance = session.query(model).filter_by(**kwargs).first()
-
-  if not instance:
-    params = dict((k, v) for k, v in kwargs.items()
-                  if not isinstance(v, sql.sql.expression.ClauseElement))
-    params.update(defaults or {})
-    instance = model(**params)
-    session.add(instance)
-
-  return instance
+Base = declarative.declarative_base()
 
 
 class Meta(Base):
-  __tablename__ = "meta"
+  __tablename__ = 'meta'
 
-  key = Column(String(255), primary_key=True)
-  value = Column(String(255), nullable=False)
+  key = sql.Column(sql.String(255), primary_key=True)
+  value = sql.Column(sql.String(255), nullable=False)
 
 
-### Persons
+# Person.
 
 
 class Person(Base):
-  __tablename__ = "persons"
+  __tablename__ = 'persons'
 
-  uid = Column(Integer, primary_key=True)
-  name = Column(UnicodeText(length=255), nullable=False)
+  uid = sql.Column(sql.Integer, primary_key=True)
+  name = sql.Column(sql.UnicodeText(length=255), nullable=False)
 
-  emails = relationship("Email")
-  groups = relationship("Group", secondary="person_group_associations")
+  emails = orm.relationship('Email')
+  groups = orm.relationship('Group', secondary='person_group_associations')
 
-  created = Column(
-      DateTime, nullable=False, default=datetime.utcnow)
+  created = sql.Column(
+      sql.DateTime, nullable=False, default=datetime.utcnow)
 
   def json(self):
     return {
-      "uid": self.uid,
-      "name": self.name,
-      "created": str(self.created),
+      'uid': self.uid,
+      'name': self.name,
+      'created': str(self.created),
     }
 
 
 class Email(Base):
-  __tablename__ = "email_addresses"
+  __tablename__ = 'email_addresses'
 
-  person_uid = Column(Integer, ForeignKey("persons.uid"),
-                      nullable=False)
-  person = relationship("Person")
-  address = Column(String(255), nullable=False)
+  person_uid = sql.Column(sql.Integer, sql.ForeignKey('persons.uid'),
+                          nullable=False)
+  person = orm.relationship('Person')
+  address = sql.Column(sql.String(255), nullable=False)
 
   __table_args__ = (
-    PrimaryKeyConstraint('person_uid', 'address', name='_uid'),)
+    sql.PrimaryKeyConstraint('person_uid', 'address', name='_uid'),)
 
 
 ### Workspace
@@ -82,105 +61,111 @@ class Email(Base):
 
 class Workspace(Base):
   """ only one Workspace per database """
-  __tablename__ = "workspaces"
+  __tablename__ = 'workspaces'
 
-  uid = Column(String(255), primary_key=True)
-  created = Column(DateTime, nullable=False, default=datetime.utcnow)
+  uid = sql.Column(sql.String(255), primary_key=True)
+  created = sql.Column(sql.DateTime, nullable=False, default=datetime.utcnow)
 
-  owners = relationship(
-      "Group", secondary="workspace_owner_associations",
-      primaryjoin="WorkspaceOwnerAssociation.workspace_uid == Group.id",
-      secondaryjoin="WorkspaceOwnerAssociation.owner_id == Group.id")
+  owners = orm.relationship(
+      'Group', secondary='workspace_owner_associations',
+      primaryjoin='WorkspaceOwnerAssociation.workspace_uid == Group.id',
+      secondaryjoin='WorkspaceOwnerAssociation.owner_id == Group.id')
 
-  friends = relationship(
-      "Group", secondary="workspace_friend_associations",
-      primaryjoin="WorkspaceFriendAssociation.workspace_uid == Group.id",
-      secondaryjoin="WorkspaceFriendAssociation.friend_id == Group.id")
+  friends = orm.relationship(
+      'Group', secondary='workspace_friend_associations',
+      primaryjoin='WorkspaceFriendAssociation.workspace_uid == Group.id',
+      secondaryjoin='WorkspaceFriendAssociation.friend_id == Group.id')
 
-  comments = relationship("WorkspaceComment")
+  comments = orm.relationship('WorkspaceComment')
 
 
 class WorkspaceOwnerAssociation(Base):
-  __tablename__ = "workspace_owner_associations"
-  workspace_uid = Column(Integer, ForeignKey("workspaces.uid"), nullable=False)
-  owner_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+  __tablename__ = 'workspace_owner_associations'
+  workspace_uid = sql.Column(sql.Integer, sql.ForeignKey('workspaces.uid'),
+                             nullable=False)
+  owner_id = sql.Column(sql.Integer, sql.ForeignKey('groups.id'),
+                        nullable=False)
   __table_args__ = (
-    PrimaryKeyConstraint('workspace_uid', 'owner_id', name='_uid'),)
+    sql.PrimaryKeyConstraint('workspace_uid', 'owner_id', name='_uid'),)
 
 
 class WorkspaceFriendAssociation(Base):
-  __tablename__ = "workspace_friend_associations"
-  workspace_uid = Column(Integer, ForeignKey("workspaces.uid"), nullable=False)
-  friend_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+  __tablename__ = 'workspace_friend_associations'
+  workspace_uid = sql.Column(sql.Integer, sql.ForeignKey('workspaces.uid'),
+                             nullable=False)
+  friend_id = sql.Column(sql.Integer, sql.ForeignKey('groups.id'),
+                         nullable=False)
   __table_args__ = (
-    PrimaryKeyConstraint('workspace_uid', 'friend_id', name='_uid'),)
+    sql.PrimaryKeyConstraint('workspace_uid', 'friend_id', name='_uid'),)
 
 
 class WorkspaceComment(Base):
-  __tablename__ = "workspace_comments"
-  id = Column(Integer, primary_key=True)
+  __tablename__ = 'workspace_comments'
+  id = sql.Column(sql.Integer, primary_key=True)
 
   # a workspace comment's parent is either a workspace or another comment
-  workspace_uid = Column(Integer, ForeignKey("workspaces.uid"))
-  workspace = relationship("Workspace")
-  parent_id = Column(Integer, ForeignKey("workspace_comments.id"))
-  children = relationship(
-      "WorkspaceComment", backref=backref('parent', remote_side=[id]))
+  workspace_uid = sql.Column(sql.Integer, sql.ForeignKey('workspaces.uid'))
+  workspace = orm.relationship('Workspace')
+  parent_id = sql.Column(sql.Integer, sql.ForeignKey('workspace_comments.id'))
+  children = orm.relationship(
+      'WorkspaceComment', backref=orm.backref('parent', remote_side=[id]))
 
-  body = Column(UnicodeText(length=2 ** 31), nullable=False)
+  body = sql.Column(sql.UnicodeText(length=2 ** 31), nullable=False)
 
   # Accountability
-  created_by_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
-  created_by = relationship("Group")
-  created = Column(
-      DateTime, nullable=False, default=datetime.utcnow)
+  created_by_id = sql.Column(sql.Integer, sql.ForeignKey('groups.id'),
+                             nullable=False)
+  created_by = orm.relationship('Group')
+  created = sql.Column(
+      sql.DateTime, nullable=False, default=datetime.utcnow)
 
-  modified = Column(DateTime)  # comments may only be modified by the creator
+  modified = sql.Column(
+      sql.DateTime)  # comments may only be modified by the creator
 
 
 ### Groups
 
 
 class Group(Base):
-  __tablename__ = "groups"
+  __tablename__ = 'groups'
 
-  id = Column(Integer, primary_key=True)
+  id = sql.Column(sql.Integer, primary_key=True)
 
   # null parent ID means the group belongs to the workspace.
-  parent_id = Column(Integer, ForeignKey("groups.id"))
-  children = relationship(
-      "Group", primaryjoin="Group.parent_id == Group.id",
-      backref=backref('parent', remote_side=[id]))
+  parent_id = sql.Column(sql.Integer, sql.ForeignKey('groups.id'))
+  children = orm.relationship(
+      'Group', primaryjoin='Group.parent_id == Group.id',
+      backref=orm.backref('parent', remote_side=[id]))
 
-  owners = relationship(
-      "Group", secondary="group_owner_associations",
-      primaryjoin="GroupOwnerAssociation.group_id == Group.id",
-      secondaryjoin="GroupOwnerAssociation.owner_id == Group.id")
+  owners = orm.relationship(
+      'Group', secondary='group_owner_associations',
+      primaryjoin='GroupOwnerAssociation.group_id == Group.id',
+      secondaryjoin='GroupOwnerAssociation.owner_id == Group.id')
 
-  friends = relationship(
-      "Group", secondary="group_friend_associations",
-      primaryjoin="GroupFriendAssociation.group_id == Group.id",
-      secondaryjoin="GroupFriendAssociation.friend_id == Group.id")
+  friends = orm.relationship(
+      'Group', secondary='group_friend_associations',
+      primaryjoin='GroupFriendAssociation.group_id == Group.id',
+      secondaryjoin='GroupFriendAssociation.friend_id == Group.id')
 
-  body = Column(UnicodeText(length=2 ** 31), nullable=False)
+  body = sql.Column(sql.UnicodeText(length=2 ** 31), nullable=False)
 
-  members = relationship("Person", secondary="person_group_associations")
+  members = orm.relationship('Person', secondary='person_group_associations')
 
   # Accountability
-  created_by_id = Column(
-      Integer, ForeignKey("groups.id"), nullable=True)
-  created_by = relationship(
-      "Group", primaryjoin="Group.id == Group.created_by_id")
-  created = Column(
-      DateTime, nullable=False, default=datetime.utcnow)
+  created_by_id = sql.Column(
+      sql.Integer, sql.ForeignKey('groups.id'), nullable=True)
+  created_by = orm.relationship(
+      'Group', primaryjoin='Group.id == Group.created_by_id')
+  created = sql.Column(
+      sql.DateTime, nullable=False, default=datetime.utcnow)
 
-  modified_by_id = Column(Integer, ForeignKey("persons.uid"))
-  modified_by = relationship(
-      "Person", primaryjoin="Person.uid == Group.modified_by_id")
-  modified = Column(DateTime)
+  modified_by_id = sql.Column(sql.Integer, sql.ForeignKey('persons.uid'))
+  modified_by = orm.relationship(
+      'Person', primaryjoin='Person.uid == Group.modified_by_id')
+  modified = sql.Column(sql.DateTime)
 
-  comments = relationship(
-      "GroupComment", primaryjoin="GroupComment.group_id == Group.id")
+  comments = orm.relationship(
+      'GroupComment', primaryjoin='GroupComment.group_id == Group.id')
 
   def validate(self):
     for owner in self.owners:
@@ -193,275 +178,293 @@ class Group(Base):
 
   def json(self):
     return {
-      "id": self.id,
-      "parent": self.parent,
-      "body": self.body,
-      "members": [p.uid for p in self.members],
-      "created": str(self.created),
-      "created_by": self.created_by_id
+      'id': self.id,
+      'parent': self.parent,
+      'body': self.body,
+      'members': [p.uid for p in self.members],
+      'created': str(self.created),
+      'created_by': self.created_by_id
     }
 
 
 class GroupComment(Base):
-  __tablename__ = "group_comments"
-  id = Column(Integer, primary_key=True)
+  __tablename__ = 'group_comments'
+  id = sql.Column(sql.Integer, primary_key=True)
 
   # a group comment's parent is either a group or another comment
-  group_id = Column(Integer, ForeignKey("groups.id"))
-  group = relationship(
-      "Group", primaryjoin="Group.id == GroupComment.group_id")
-  parent_id = Column(Integer, ForeignKey("group_comments.id"))
-  children = relationship(
-      "GroupComment", backref=backref('parent', remote_side=[id]))
+  group_id = sql.Column(sql.Integer, sql.ForeignKey('groups.id'))
+  group = orm.relationship(
+      'Group', primaryjoin='Group.id == GroupComment.group_id')
+  parent_id = sql.Column(sql.Integer, sql.ForeignKey('group_comments.id'))
+  children = orm.relationship(
+      'GroupComment', backref=orm.backref('parent', remote_side=[id]))
 
-  body = Column(UnicodeText(length=2 ** 31), nullable=False)
+  body = sql.Column(sql.UnicodeText(length=2 ** 31), nullable=False)
 
   # Accountability
-  created_by_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
-  created_by = relationship(
-      "Group", primaryjoin="Group.id == GroupComment.created_by_id")
-  created = Column(
-      DateTime, nullable=False, default=datetime.utcnow)
+  created_by_id = sql.Column(sql.Integer, sql.ForeignKey('groups.id'),
+                             nullable=False)
+  created_by = orm.relationship(
+      'Group', primaryjoin='Group.id == GroupComment.created_by_id')
+  created = sql.Column(
+      sql.DateTime, nullable=False, default=datetime.utcnow)
 
-  modified = Column(DateTime)  # comments may only be modified by the creator
+  modified = sql.Column(
+      sql.DateTime)  # comments may only be modified by the creator
 
 
 class PersonGroupAssociation(Base):
-  __tablename__ = "person_group_associations"
-  person_uid = Column(Integer, ForeignKey("persons.uid"), nullable=False)
-  group_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+  __tablename__ = 'person_group_associations'
+  person_uid = sql.Column(sql.Integer, sql.ForeignKey('persons.uid'),
+                          nullable=False)
+  group_id = sql.Column(sql.Integer, sql.ForeignKey('groups.id'),
+                        nullable=False)
   __table_args__ = (
-    PrimaryKeyConstraint('person_uid', 'group_id', name='_uid'),)
+    sql.PrimaryKeyConstraint('person_uid', 'group_id', name='_uid'),)
 
 
 class GroupOwnerAssociation(Base):
-  __tablename__ = "group_owner_associations"
-  group_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
-  owner_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+  __tablename__ = 'group_owner_associations'
+  group_id = sql.Column(sql.Integer, sql.ForeignKey('groups.id'),
+                        nullable=False)
+  owner_id = sql.Column(sql.Integer, sql.ForeignKey('groups.id'),
+                        nullable=False)
   __table_args__ = (
-    PrimaryKeyConstraint('group_id', 'owner_id', name='_uid'),)
+    sql.PrimaryKeyConstraint('group_id', 'owner_id', name='_uid'),)
 
 
 class GroupFriendAssociation(Base):
-  __tablename__ = "group_friend_associations"
-  group_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
-  friend_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+  __tablename__ = 'group_friend_associations'
+  group_id = sql.Column(sql.Integer, sql.ForeignKey('groups.id'),
+                        nullable=False)
+  friend_id = sql.Column(sql.Integer, sql.ForeignKey('groups.id'),
+                         nullable=False)
   __table_args__ = (
-    PrimaryKeyConstraint('group_id', 'friend_id', name='_uid'),)
+    sql.PrimaryKeyConstraint('group_id', 'friend_id', name='_uid'),)
 
 
 ### Assets
 
 
 class Asset(Base):
-  __tablename__ = "assets"
+  __tablename__ = 'assets'
 
-  id = Column(Integer, primary_key=True)
+  id = sql.Column(sql.Integer, primary_key=True)
 
   # null parent ID means the group belongs to the workspace.
-  parent_id = Column(Integer, ForeignKey("assets.id"))
-  children = relationship(
-      "Asset", backref=backref('parent', remote_side=[id]))
+  parent_id = sql.Column(sql.Integer, sql.ForeignKey('assets.id'))
+  children = orm.relationship(
+      'Asset', backref=orm.backref('parent', remote_side=[id]))
 
-  owners = relationship("Group", secondary="asset_owner_associations")
-  friends = relationship("Group", secondary="asset_friend_associations")
+  owners = orm.relationship('Group', secondary='asset_owner_associations')
+  friends = orm.relationship('Group', secondary='asset_friend_associations')
 
-  body = Column(UnicodeText(length=2 ** 31), nullable=False)
+  body = sql.Column(sql.UnicodeText(length=2 ** 31), nullable=False)
 
-  tasks = relationship("Task", secondary="task_asset_associations")
+  tasks = orm.relationship('Task', secondary='task_asset_associations')
 
   # Accountability
-  created_by_id = Column(
-      Integer, ForeignKey("groups.id"), nullable=False)
-  created_by = relationship(
-      "Group", primaryjoin="Group.id == Asset.created_by_id")
-  created = Column(
-      DateTime, nullable=False, default=datetime.utcnow)
+  created_by_id = sql.Column(
+      sql.Integer, sql.ForeignKey('groups.id'), nullable=False)
+  created_by = orm.relationship(
+      'Group', primaryjoin='Group.id == Asset.created_by_id')
+  created = sql.Column(
+      sql.DateTime, nullable=False, default=datetime.utcnow)
 
-  modified_by_id = Column(Integer, ForeignKey("persons.uid"))
-  modified_by = relationship(
-      "Person", primaryjoin="Person.uid == Asset.modified_by_id")
-  modified = Column(DateTime)
+  modified_by_id = sql.Column(sql.Integer, sql.ForeignKey('persons.uid'))
+  modified_by = orm.relationship(
+      'Person', primaryjoin='Person.uid == Asset.modified_by_id')
+  modified = sql.Column(sql.DateTime)
 
-  comments = relationship("AssetComment")
+  comments = orm.relationship('AssetComment')
 
 
 class AssetOwnerAssociation(Base):
-  __tablename__ = "asset_owner_associations"
-  asset_id = Column(Integer, ForeignKey("assets.id"), nullable=False)
-  owner_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+  __tablename__ = 'asset_owner_associations'
+  asset_id = sql.Column(sql.Integer, sql.ForeignKey('assets.id'),
+                        nullable=False)
+  owner_id = sql.Column(sql.Integer, sql.ForeignKey('groups.id'),
+                        nullable=False)
   __table_args__ = (
-    PrimaryKeyConstraint('asset_id', 'owner_id', name='_uid'),)
+    sql.PrimaryKeyConstraint('asset_id', 'owner_id', name='_uid'),)
 
 
 class AssetFriendAssociation(Base):
-  __tablename__ = "asset_friend_associations"
-  asset_id = Column(Integer, ForeignKey("assets.id"), nullable=False)
-  friend_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+  __tablename__ = 'asset_friend_associations'
+  asset_id = sql.Column(sql.Integer, sql.ForeignKey('assets.id'),
+                        nullable=False)
+  friend_id = sql.Column(sql.Integer, sql.ForeignKey('groups.id'),
+                         nullable=False)
   __table_args__ = (
-    PrimaryKeyConstraint('asset_id', 'friend_id', name='_uid'),)
+    sql.PrimaryKeyConstraint('asset_id', 'friend_id', name='_uid'),)
 
 
 class AssetComment(Base):
-  __tablename__ = "asset_comments"
-  id = Column(Integer, primary_key=True)
+  __tablename__ = 'asset_comments'
+  id = sql.Column(sql.Integer, primary_key=True)
 
   # a asset comment's parent is either a asset or another comment
-  asset_id = Column(Integer, ForeignKey("assets.id"))
-  asset = relationship("Asset")
-  parent_id = Column(Integer, ForeignKey("asset_comments.id"))
-  children = relationship(
-      "AssetComment", backref=backref('parent', remote_side=[id]))
+  asset_id = sql.Column(sql.Integer, sql.ForeignKey('assets.id'))
+  asset = orm.relationship('Asset')
+  parent_id = sql.Column(sql.Integer, sql.ForeignKey('asset_comments.id'))
+  children = orm.relationship(
+      'AssetComment', backref=orm.backref('parent', remote_side=[id]))
 
-  body = Column(UnicodeText(length=2 ** 31), nullable=False)
+  body = sql.Column(sql.UnicodeText(length=2 ** 31), nullable=False)
 
   # Accountability
-  created_by_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
-  created_by = relationship("Group")
-  created = Column(
-      DateTime, nullable=False, default=datetime.utcnow)
+  created_by_id = sql.Column(sql.Integer, sql.ForeignKey('groups.id'),
+                             nullable=False)
+  created_by = orm.relationship('Group')
+  created = sql.Column(
+      sql.DateTime, nullable=False, default=datetime.utcnow)
 
-  modified = Column(DateTime)  # comments may only be modified by the creator
+  modified = sql.Column(
+      sql.DateTime)  # comments may only be modified by the creator
 
 
 ### Tags
 
 
 class Tag(Base):
-  __tablename__ = "tags"
+  __tablename__ = 'tags'
 
-  id = Column(Integer, primary_key=True)
+  id = sql.Column(sql.Integer, primary_key=True)
 
   # null parent ID means the group belongs to the workspace.
-  parent_id = Column(Integer, ForeignKey("tags.id"))
-  children = relationship(
-      "Tag", backref=backref('parent', remote_side=[id]))
+  parent_id = sql.Column(sql.Integer, sql.ForeignKey('tags.id'))
+  children = orm.relationship(
+      'Tag', backref=orm.backref('parent', remote_side=[id]))
 
-  owners = relationship("Group", secondary="tag_owner_associations")
-  friends = relationship("Group", secondary="tag_friend_associations")
+  owners = orm.relationship('Group', secondary='tag_owner_associations')
+  friends = orm.relationship('Group', secondary='tag_friend_associations')
 
-  body = Column(UnicodeText(length=2 ** 31), nullable=False)
+  body = sql.Column(sql.UnicodeText(length=2 ** 31), nullable=False)
 
   # Accountability
-  created_by_id = Column(
-      Integer, ForeignKey("groups.id"), nullable=False)
-  created_by = relationship(
-      "Group", primaryjoin="Group.id == Tag.created_by_id")
-  created = Column(
-      DateTime, nullable=False, default=datetime.utcnow)
+  created_by_id = sql.Column(
+      sql.Integer, sql.ForeignKey('groups.id'), nullable=False)
+  created_by = orm.relationship(
+      'Group', primaryjoin='Group.id == Tag.created_by_id')
+  created = sql.Column(
+      sql.DateTime, nullable=False, default=datetime.utcnow)
 
-  modified_by_id = Column(Integer, ForeignKey("persons.uid"))
-  modified_by = relationship(
-      "Person", primaryjoin="Person.uid == Tag.modified_by_id")
-  modified = Column(DateTime)
+  modified_by_id = sql.Column(sql.Integer, sql.ForeignKey('persons.uid'))
+  modified_by = orm.relationship(
+      'Person', primaryjoin='Person.uid == Tag.modified_by_id')
+  modified = sql.Column(sql.DateTime)
 
-  comments = relationship("TagComment")
+  comments = orm.relationship('TagComment')
 
-  tasks = relationship("Task", secondary="task_tag_associations")
+  tasks = orm.relationship('Task', secondary='task_tag_associations')
 
 
 class TagOwnerAssociation(Base):
-  __tablename__ = "tag_owner_associations"
-  tag_id = Column(Integer, ForeignKey("tags.id"), nullable=False)
-  owner_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+  __tablename__ = 'tag_owner_associations'
+  tag_id = sql.Column(sql.Integer, sql.ForeignKey('tags.id'), nullable=False)
+  owner_id = sql.Column(sql.Integer, sql.ForeignKey('groups.id'),
+                        nullable=False)
   __table_args__ = (
-    PrimaryKeyConstraint('tag_id', 'owner_id', name='_uid'),)
+    sql.PrimaryKeyConstraint('tag_id', 'owner_id', name='_uid'),)
 
 
 class TagFriendAssociation(Base):
-  __tablename__ = "tag_friend_associations"
-  tag_id = Column(Integer, ForeignKey("tags.id"), nullable=False)
-  friend_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+  __tablename__ = 'tag_friend_associations'
+  tag_id = sql.Column(sql.Integer, sql.ForeignKey('tags.id'), nullable=False)
+  friend_id = sql.Column(sql.Integer, sql.ForeignKey('groups.id'),
+                         nullable=False)
   __table_args__ = (
-    PrimaryKeyConstraint('tag_id', 'friend_id', name='_uid'),)
+    sql.PrimaryKeyConstraint('tag_id', 'friend_id', name='_uid'),)
 
 
 class TagComment(Base):
-  __tablename__ = "tag_comments"
-  id = Column(Integer, primary_key=True)
+  __tablename__ = 'tag_comments'
+  id = sql.Column(sql.Integer, primary_key=True)
 
   # a tag comment's parent is either a tag or another comment
-  tag_id = Column(Integer, ForeignKey("tags.id"))
-  tag = relationship("Tag")
-  parent_id = Column(Integer, ForeignKey("tag_comments.id"))
-  children = relationship(
-      "TagComment", backref=backref('parent', remote_side=[id]))
+  tag_id = sql.Column(sql.Integer, sql.ForeignKey('tags.id'))
+  tag = orm.relationship('Tag')
+  parent_id = sql.Column(sql.Integer, sql.ForeignKey('tag_comments.id'))
+  children = orm.relationship(
+      'TagComment', backref=orm.backref('parent', remote_side=[id]))
 
-  body = Column(UnicodeText(length=2 ** 31), nullable=False)
+  body = sql.Column(sql.UnicodeText(length=2 ** 31), nullable=False)
 
   # Accountability
-  created_by_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
-  created_by = relationship("Group")
-  created = Column(
-      DateTime, nullable=False, default=datetime.utcnow)
+  created_by_id = sql.Column(sql.Integer, sql.ForeignKey('groups.id'),
+                             nullable=False)
+  created_by = orm.relationship('Group')
+  created = sql.Column(
+      sql.DateTime, nullable=False, default=datetime.utcnow)
 
-  modified = Column(DateTime)  # comments may only be modified by the creator
+  modified = sql.Column(
+      sql.DateTime)  # comments may only be modified by the creator
 
 
 ### Tasks
 
 
 class Task(Base):
-  __tablename__ = "tasks"
+  __tablename__ = 'tasks'
 
-  id = Column(Integer, primary_key=True)
+  id = sql.Column(sql.Integer, primary_key=True)
 
   # null parent ID means the group belongs to the workspace.
-  parent_id = Column(Integer, ForeignKey("tasks.id"))
-  children = relationship(
-      "Task", backref=backref('parent', remote_side=[id]))
+  parent_id = sql.Column(sql.Integer, sql.ForeignKey('tasks.id'))
+  children = orm.relationship(
+      'Task', backref=orm.backref('parent', remote_side=[id]))
 
-  assigned = relationship("Group", secondary="task_assigned_associations")
-  owners = relationship("Group", secondary="task_owner_associations")
-  friends = relationship("Group", secondary="task_friend_associations")
+  assigned = orm.relationship('Group', secondary='task_assigned_associations')
+  owners = orm.relationship('Group', secondary='task_owner_associations')
+  friends = orm.relationship('Group', secondary='task_friend_associations')
 
-  body = Column(UnicodeText(length=2 ** 31), nullable=False)
+  body = sql.Column(sql.UnicodeText(length=2 ** 31), nullable=False)
 
-  defer_until = Column(DateTime)
-  due = Column(DateTime)
-  estimated_duration = Column(Integer)
-  start_on = Column(DateTime)
-  started = Column(DateTime)
-  completed = Column(DateTime)
-  duration = Column(Integer)
+  defer_until = sql.Column(sql.DateTime)
+  due = sql.Column(sql.DateTime)
+  estimated_duration = sql.Column(sql.Integer)
+  start_on = sql.Column(sql.DateTime)
+  started = sql.Column(sql.DateTime)
+  completed = sql.Column(sql.DateTime)
+  duration = sql.Column(sql.Integer)
 
-  tags = relationship("Tag", secondary="task_tag_associations")
-  assets = relationship("Asset", secondary="task_asset_associations")
-  deps = relationship(
-      "Task", secondary="task_dep_associations",
-      primaryjoin="TaskDepAssociation.task_id == Task.id",
-      secondaryjoin="TaskDepAssociation.dep_id == Task.id",
-      backref="dependees")
+  tags = orm.relationship('Tag', secondary='task_tag_associations')
+  assets = orm.relationship('Asset', secondary='task_asset_associations')
+  deps = orm.relationship(
+      'Task', secondary='task_dep_associations',
+      primaryjoin='TaskDepAssociation.task_id == Task.id',
+      secondaryjoin='TaskDepAssociation.dep_id == Task.id',
+      backref='dependees')
 
   # Accountability
-  created_by_id = Column(
-      Integer, ForeignKey("groups.id"), nullable=False)
-  created_by = relationship(
-      "Group", primaryjoin="Group.id == Task.created_by_id")
-  created = Column(
-      DateTime, nullable=False, default=datetime.utcnow)
+  created_by_id = sql.Column(
+      sql.Integer, sql.ForeignKey('groups.id'), nullable=False)
+  created_by = orm.relationship(
+      'Group', primaryjoin='Group.id == Task.created_by_id')
+  created = sql.Column(
+      sql.DateTime, nullable=False, default=datetime.utcnow)
 
-  modified_by_id = Column(Integer, ForeignKey("persons.uid"))
-  modified_by = relationship(
-      "Person", primaryjoin="Person.uid == Task.modified_by_id")
-  modified = Column(DateTime)
+  modified_by_id = sql.Column(sql.Integer, sql.ForeignKey('persons.uid'))
+  modified_by = orm.relationship(
+      'Person', primaryjoin='Person.uid == Task.modified_by_id')
+  modified = sql.Column(sql.DateTime)
 
-  comments = relationship("TaskComment")
+  comments = orm.relationship('TaskComment')
 
   @property
   def status(self):
     if self.is_deferred:
-      return "deferred"
+      return 'deferred'
     elif self.completed:
-      return "complete"
+      return 'complete'
     elif self.is_blocked:
-      return "blocked"
+      return 'blocked'
     elif self.is_overdue:
-      return "overdue"
+      return 'overdue'
     elif self.started:
-      return "started"
+      return 'started'
     else:
-      return "active"
+      return 'active'
 
   @property
   def is_blocked(self):
@@ -489,70 +492,83 @@ class Task(Base):
 
 
 class TaskAssignedAssociation(Base):
-  __tablename__ = "task_assigned_associations"
-  task_id = Column(Integer, ForeignKey("tasks.id"), nullable=False)
-  assigned_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+  __tablename__ = 'task_assigned_associations'
+  task_id = sql.Column(sql.Integer, sql.ForeignKey('tasks.id'), nullable=False)
+  assigned_id = sql.Column(sql.Integer, sql.ForeignKey('groups.id'),
+                           nullable=False)
   __table_args__ = (
-    PrimaryKeyConstraint('task_id', 'assigned_id', name='_uid'),)
+    sql.PrimaryKeyConstraint('task_id', 'assigned_id', name='_uid'),)
 
 
 class TaskOwnerAssociation(Base):
-  __tablename__ = "task_owner_associations"
-  task_id = Column(Integer, ForeignKey("tasks.id"), nullable=False)
-  owner_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+  __tablename__ = 'task_owner_associations'
+  task_id = sql.Column(sql.Integer, sql.ForeignKey('tasks.id'), nullable=False)
+  owner_id = sql.Column(sql.Integer, sql.ForeignKey('groups.id'),
+                        nullable=False)
   __table_args__ = (
-    PrimaryKeyConstraint('task_id', 'owner_id', name='_uid'),)
+    sql.PrimaryKeyConstraint('task_id', 'owner_id', name='_uid'),)
 
 
 class TaskFriendAssociation(Base):
-  __tablename__ = "task_friend_associations"
-  task_id = Column(Integer, ForeignKey("tasks.id"), nullable=False)
-  friend_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+  __tablename__ = 'task_friend_associations'
+  task_id = sql.Column(sql.Integer, sql.ForeignKey('tasks.id'), nullable=False)
+  friend_id = sql.Column(sql.Integer, sql.ForeignKey('groups.id'),
+                         nullable=False)
   __table_args__ = (
-    PrimaryKeyConstraint('task_id', 'friend_id', name='_uid'),)
+    sql.PrimaryKeyConstraint('task_id', 'friend_id', name='_uid'),)
 
 
 class TaskAssetAssociation(Base):
-  __tablename__ = "task_asset_associations"
-  task_id = Column(Integer, ForeignKey("tasks.id"), nullable=False)
-  asset_id = Column(Integer, ForeignKey("assets.id"), nullable=False)
+  __tablename__ = 'task_asset_associations'
+  task_id = sql.Column(sql.Integer, sql.ForeignKey('tasks.id'), nullable=False)
+  asset_id = sql.Column(sql.Integer, sql.ForeignKey('assets.id'),
+                        nullable=False)
   __table_args__ = (
-    PrimaryKeyConstraint('task_id', 'asset_id', name='_uid'),)
+    sql.PrimaryKeyConstraint('task_id', 'asset_id', name='_uid'),)
 
 
 class TaskTagAssociation(Base):
-  __tablename__ = "task_tag_associations"
-  task_id = Column(Integer, ForeignKey("tasks.id"), nullable=False)
-  tag_id = Column(Integer, ForeignKey("tags.id"), nullable=False)
+  __tablename__ = 'task_tag_associations'
+  task_id = sql.Column(sql.Integer, sql.ForeignKey('tasks.id'), nullable=False)
+  tag_id = sql.Column(sql.Integer, sql.ForeignKey('tags.id'), nullable=False)
   __table_args__ = (
-    PrimaryKeyConstraint('task_id', 'tag_id', name='_uid'),)
+    sql.PrimaryKeyConstraint('task_id', 'tag_id', name='_uid'),)
 
 
 class TaskDepAssociation(Base):
-  __tablename__ = "task_dep_associations"
-  task_id = Column(Integer, ForeignKey("tasks.id"), nullable=False)
-  dep_id = Column(Integer, ForeignKey("tasks.id"), nullable=False)
+  __tablename__ = 'task_dep_associations'
+  task_id = sql.Column(sql.Integer, sql.ForeignKey('tasks.id'), nullable=False)
+  dep_id = sql.Column(sql.Integer, sql.ForeignKey('tasks.id'), nullable=False)
   __table_args__ = (
-    PrimaryKeyConstraint('task_id', 'dep_id', name='_uid'),)
+    sql.PrimaryKeyConstraint('task_id', 'dep_id', name='_uid'),)
 
 
 class TaskComment(Base):
-  __tablename__ = "task_comments"
-  id = Column(Integer, primary_key=True)
+  __tablename__ = 'task_comments'
+  id = sql.Column(sql.Integer, primary_key=True)
 
   # a task comment's parent is either a task or another comment
-  task_id = Column(Integer, ForeignKey("tasks.id"))
-  task = relationship("Task")
-  parent_id = Column(Integer, ForeignKey("task_comments.id"))
-  children = relationship(
-      "TaskComment", backref=backref('parent', remote_side=[id]))
+  task_id = sql.Column(sql.Integer, sql.ForeignKey('tasks.id'))
+  task = orm.relationship('Task')
+  parent_id = sql.Column(sql.Integer, sql.ForeignKey('task_comments.id'))
+  children = orm.relationship(
+      'TaskComment', backref=orm.backref('parent', remote_side=[id]))
 
-  body = Column(UnicodeText(length=2 ** 31), nullable=False)
+  body = sql.Column(sql.UnicodeText(length=2 ** 31), nullable=False)
 
   # Accountability
-  created_by_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
-  created_by = relationship("Group")
-  created = Column(
-      DateTime, nullable=False, default=datetime.utcnow)
+  created_by_id = sql.Column(sql.Integer, sql.ForeignKey('groups.id'),
+                             nullable=False)
+  created_by = orm.relationship('Group')
+  created = sql.Column(
+      sql.DateTime, nullable=False, default=datetime.utcnow)
 
-  modified = Column(DateTime)  # comments may only be modified by the creator
+  modified = sql.Column(
+      sql.DateTime)  # comments may only be modified by the creator
+
+
+class Database(sqlutil.Database):
+  """The FreeFocus database."""
+
+  def __init__(self, path: pathlib.Path):
+    super(Database, self).__init__(path, Base)

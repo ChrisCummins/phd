@@ -18,6 +18,10 @@ py_library(
     name = "sql",
     srcs = ["sql.py"],
     visibility = ["//util/freefocus:__subpackages__"],
+    deps = [
+        "//lib/labm8:sqlutil",
+        "//third_party/py/absl",
+    ]
 )
 
 py_library(
