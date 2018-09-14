@@ -5,6 +5,10 @@ load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
 py_binary(
     name = "freefocus",
     srcs = ["freefocus.py"],
+    deps = [
+        ":sql",
+        "//third_party/py/absl",
+    ],
 )
 
 py_proto_library(
