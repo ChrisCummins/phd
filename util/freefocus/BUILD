@@ -21,7 +21,7 @@ py_library(
     deps = [
         "//lib/labm8:sqlutil",
         "//third_party/py/absl",
-    ]
+    ],
 )
 
 py_library(
