@@ -40,6 +40,7 @@ h5py==2.7.1
 html5lib==1.0.1
 humanize==0.5.1
 idna==2.6
+ipdb==0.11
 ipykernel==4.8.2
 ipython-genutils==0.2.0
 ipython==5.7.0

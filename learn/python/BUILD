@@ -11,3 +11,12 @@ py_test(
         "//third_party/py/pytest",
     ],
 )
+
+py_binary(
+    name = "debugger",
+    srcs = ["debugger.py"],
+    deps = [
+        "//third_party/py/absl",
+        "//third_party/py/ipdb",
+    ]
+)
