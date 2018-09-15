@@ -43,11 +43,13 @@ def MillisecondsTimestamp(
   return int(date.strftime('%s%f')[:-3])
 
 
-def DatetimeFromMillisecondsTimestamp(timestamp: int) -> datetime.datetime:
+def DatetimeFromMillisecondsTimestamp(
+    timestamp: int = None) -> datetime.datetime:
   """Get the date of a millisecond timestamp.
 
   Args:
-    timestamp: Milliseconds since the epoch.
+    timestamp: Milliseconds since the epoch. If not provided, or if value is
+      zero, the current time is used.
 
   Returns:
     A datetime instance.
@@ -56,8 +58,10 @@ def DatetimeFromMillisecondsTimestamp(timestamp: int) -> datetime.datetime:
     TypeError: If the argument is of incorrect type.
     ValueError: If the argument is not a positive integer.
   """
-  if not isinstance(timestamp, int):
+  if not (isinstance(timestamp, int) or timestamp is None):
     raise TypeError('Timestamp must be an integer')
+  if not timestamp:
+    timestamp = MillisecondsTimestamp()
   if timestamp < 0:
     raise ValueError('Negative timestamp not allowed')
   return datetime.datetime.fromtimestamp(timestamp / 1000)

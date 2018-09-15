@@ -18,6 +18,11 @@ def test_MillisecondsTimestamp_invalid_argument():
     labdate.MillisecondsTimestamp('not a date')
 
 
+def test_DatetimeFromMillisecondsTimestamp_default_argument():
+  """Current time is used if no timestamp provided."""
+  assert labdate.DatetimeFromMillisecondsTimestamp()
+
+
 def test_DatetimeFromMillisecondsTimestamp_invalid_argument():
   with pytest.raises(TypeError):
     labdate.DatetimeFromMillisecondsTimestamp('not a timestamp')
