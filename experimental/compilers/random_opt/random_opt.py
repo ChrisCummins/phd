@@ -17,10 +17,10 @@ flags.DEFINE_string(
     'env', environments.DEFAULT_ENV_ID,
     'The name of the environment to use.')
 flags.DEFINE_integer(
-    'num_episodes', 3,
+    'num_episodes', 10,
     'The number of episodes to run for.')
 flags.DEFINE_integer(
-    'max_steps', 100,
+    'max_steps', 200,
     'The maximum number of steps per episode.')
 flags.DEFINE_boolean(
     'render', True,
