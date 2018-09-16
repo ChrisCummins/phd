@@ -91,3 +91,44 @@ message Experiment {
   optional Environment env = 1;
   repeated Episode episode = 2;
 }
+
+// Delayed reward enviornment.
+
+// A reinforcement learning step with delayed reward.
+message DelayedRewardStep {
+  // The names of opt passes run during the step.
+  repeated string opt_pass = 1;
+  // The step reward.
+  optional int32 reward = 2;
+}
+
+// An episode for delayed-reward random opt.
+message DelayedRewardEpisode {
+  // The start time of the step, in milliseconds since the epoch in UTC.
+  optional int64 start_time_epoch_ms = 1;
+
+  // The input LLVM bytecode source.
+  optional string input_src = 2;
+  // The sequence of steps for the episode.
+  repeated DelayedRewardStep step = 3;
+
+  enum Status {
+    PASS = 0;
+    OPT_FAILED = 1;
+    COMPILE_FAILED = 2;
+    EXEC_FAILED = 3;
+    EVAL_FAILED = 4;
+  };
+  optional Status status = 4;
+  // An optional message providing additional information about non-PASS
+  // statuses.
+  optional string status_msg = 5;
+
+  // The runtimes of the binary. These are produced at the endo f the
+  repeated int32 binary_runtime_ms = 6;
+}
+
+message DelayedRewardExperiment {
+  optional Environment env = 1;
+  repeated DelayedRewardEpisode episode = 2;
+}
