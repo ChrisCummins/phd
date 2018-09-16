@@ -106,6 +106,8 @@ message DelayedRewardStep {
   optional string opt_error_msg = 5;
   // The step reward.
   optional int32 reward = 6;
+  // Whether the bytecode changed since the last step.
+  optional bool bytecode_changed = 7;
 }
 
 // An episode for delayed-reward random opt.

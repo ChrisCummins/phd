@@ -375,6 +375,8 @@ class LlvmOptDelayedRewardEnv(LlvmOptEnv):
 
     # Reward constants and functions.
     self.runtime_reward = lambda x: -int(round(x))
+    self.bytecode_changed_reward = 0
+    self.bytecode_unchanged_reward = -1
     self.opt_failed_reward = -5000
     self.exec_failed_reward = -5000
     self.eval_failed_reward = -5000
@@ -416,9 +418,13 @@ class LlvmOptDelayedRewardEnv(LlvmOptEnv):
     # Run the full list of passes and update working_bytecode file.
     try:
       all_passes = [step.opt_pass for step in self.episodes[-1].step[1:]]
-      opt.RunOptPassOnBytecode(self.bytecode_path,
-                               self.working_bytecode_path, all_passes)
-      step.reward = 0
+      opt.RunOptPassOnBytecode(self.bytecode_path, self.working_dir / 'temp.ll',
+                               all_passes)
+      step.bytecode_changed = BytecodesAreEqual(self.working_dir / 'teml.ll',
+                                                self.working_bytecode_path)
+      shutil.copyfile(self.working_dir / 'temp.ll', self.working_bytecode_path)
+      step.reward = (self.bytecode_changed_reward if step.bytecode_changed
+                     else step.bytecode_unchanged_reward)
     except llvm.LlvmError as e:
       # Opt failed, set the error message.
       step.reward = self.opt_failed_reward
@@ -468,14 +474,15 @@ class LlvmOptDelayedRewardEnv(LlvmOptEnv):
 
   def render(self, outfile=sys.stdout):
     """Render text representation of environment."""
-    episode = self.episodes[-1]
-    step = episode.step[-1]
+    episode, step = self.episodes[-1], self.episodes[-1].step[-1]
+    bytecode_changed = (
+      'changed' if step.bytecode_changed else 'unchanged')
     outfile.write(f'''\
 ==================================================
 EPISODE #{len(self.episodes)}, STEP #{len(episode.step) - 1}:
 
   Step time: {step.total_step_runtime_ms} ms.
-  Opt pass: {step.opt_pass}.
+  Opt pass: {step.opt_pass} (bytecode {bytecode_changed}).
   Reward: {step.reward:.3f}.
 ''')
     if step.opt_error_msg:
