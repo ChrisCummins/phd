@@ -483,7 +483,7 @@ EPISODE #{len(self.episodes)}, STEP #{len(episode.step) - 1}:
 
   Step time: {step.total_step_runtime_ms} ms.
   Opt pass: {step.opt_pass} (bytecode {bytecode_changed}).
-  Reward: {step.reward:.3f}.
+  Reward: {step.reward}.
 ''')
     if step.opt_error_msg:
       outfile.write(
