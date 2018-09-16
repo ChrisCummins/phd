@@ -72,6 +72,17 @@ py_binary(
 )
 
 py_binary(
+    name = "results_to_dot",
+    srcs = ["results_to_dot.py"],
+    deps = [
+        "//experimental/compilers/random_opt/proto:random_opt_py_pb2",
+        "//lib/labm8:graph",
+        "//lib/labm8:pbutil",
+        "//third_party/py/absl",
+    ],
+)
+
+py_binary(
     name = "random_opt",
     srcs = ["random_opt.py"],
     deps = [
