@@ -420,11 +420,11 @@ class LlvmOptDelayedRewardEnv(LlvmOptEnv):
       all_passes = [step.opt_pass for step in self.episodes[-1].step[1:]]
       opt.RunOptPassOnBytecode(self.bytecode_path, self.working_dir / 'temp.ll',
                                all_passes)
-      step.bytecode_changed = BytecodesAreEqual(self.working_dir / 'teml.ll',
+      step.bytecode_changed = BytecodesAreEqual(self.working_dir / 'temp.ll',
                                                 self.working_bytecode_path)
       shutil.copyfile(self.working_dir / 'temp.ll', self.working_bytecode_path)
-      step.reward = (self.bytecode_changed_reward if step.bytecode_changed
-                     else step.bytecode_unchanged_reward)
+      step.reward = (self.bytecode_changed_reward if step.bytecode_changed else
+                     self.bytecode_unchanged_reward)
     except llvm.LlvmError as e:
       # Opt failed, set the error message.
       step.reward = self.opt_failed_reward
