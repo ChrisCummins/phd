@@ -36,7 +36,7 @@ def Render(env: gym.Env) -> None:
     env.render()
 
 
-def ToFile(env: implementation.LlvmOptEnv) -> None:
+def ToFile(env: implementation.Environment) -> None:
   """Save environment to file --proto_out."""
   out_path = pathlib.Path(FLAGS.proto_out)
   out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -64,6 +64,10 @@ def main(argv: typing.List[str]):
       Render(env)
       if done:
         break
+    else:
+      # If we didn't naturally end the episode, explicitly stop it.
+      env.step(len(env.config.candidate_pass))
+      Render(env)
 
   ToFile(env)
   logging.info('Done.')

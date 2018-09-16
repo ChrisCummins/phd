@@ -96,36 +96,35 @@ message Experiment {
 
 // A reinforcement learning step with delayed reward.
 message DelayedRewardStep {
-  // The names of opt passes run during the step.
-  repeated string opt_pass = 1;
+  // The start time of the step, in milliseconds since the epoch in UTC.
+  optional int64 start_time_epoch_ms = 1;
+  // The total number of milliseconds during step execution.
+  optional int32 total_step_runtime_ms = 2;
+  // The name of the opt pass (action).
+  optional string opt_pass = 3;
+  // An optional error message produced by opt.
+  optional string opt_error_msg = 5;
   // The step reward.
-  optional int32 reward = 2;
+  optional int32 reward = 6;
 }
 
 // An episode for delayed-reward random opt.
 message DelayedRewardEpisode {
-  // The start time of the step, in milliseconds since the epoch in UTC.
-  optional int64 start_time_epoch_ms = 1;
-
-  // The input LLVM bytecode source.
-  optional string input_src = 2;
   // The sequence of steps for the episode.
-  repeated DelayedRewardStep step = 3;
-
-  enum Status {
+  repeated DelayedRewardStep step = 1;
+  // The outcome of the episode.
+  enum Outcome {
     PASS = 0;
-    OPT_FAILED = 1;
-    COMPILE_FAILED = 2;
-    EXEC_FAILED = 3;
-    EVAL_FAILED = 4;
+    COMPILE_FAILED = 1;
+    EXEC_FAILED = 2;
+    EVAL_FAILED = 3;
   };
-  optional Status status = 4;
+  optional Outcome outcome = 2;
   // An optional message providing additional information about non-PASS
   // statuses.
-  optional string status_msg = 5;
-
+  optional string outcome_error_msg = 3;
   // The runtimes of the binary. These are produced at the endo f the
-  repeated int32 binary_runtime_ms = 6;
+  repeated int32 binary_runtime_ms = 4;
 }
 
 message DelayedRewardExperiment {

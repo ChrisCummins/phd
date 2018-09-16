@@ -10,11 +10,13 @@ py_library(
         "//compilers/llvm:opt",
         "//experimental/compilers/random_opt/proto:random_opt_py_pb2",
         "//lib/labm8:crypto",
+        "//lib/labm8:jsonutil",
         "//lib/labm8:labdate",
         "//lib/labm8:pbutil",
         "//lib/labm8:text",
         "//third_party/py/absl",
         "//third_party/py/gym",
+        "//third_party/py/numpy",
     ],
 )
 
@@ -36,7 +38,8 @@ py_library(
         # Note that :implementation is not directly imported, but required by
         # the gym registration process.
         ":implementation",
-        "//compilers/llvm:opt",
+        "//compilers/llvm:util",
+        "//lib/labm8:labtypes",
         "//third_party/py/absl",
         "//datasets/benchmarks:bzip2",
         "//datasets/benchmarks:llvm_test_suite",
