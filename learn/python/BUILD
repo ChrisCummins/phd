@@ -18,5 +18,5 @@ py_binary(
     deps = [
         "//third_party/py/absl",
         "//third_party/py/ipdb",
-    ]
+    ],
 )
