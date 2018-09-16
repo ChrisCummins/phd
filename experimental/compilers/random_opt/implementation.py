@@ -413,11 +413,11 @@ class LlvmOptDelayedRewardEnv(LlvmOptEnv):
         opt_pass=opt_pass,
     )
 
-    # Run the pass and replace the working_bytecode file with the new version.
+    # Run the full list of passes and update working_bytecode file.
     try:
-      opt.RunOptPassOnBytecode(self.working_bytecode_path,
-                               self.working_dir / 'temp.ll', [opt_pass])
-      shutil.copy(self.working_dir / 'temp.ll', self.working_bytecode_path)
+      all_passes = [step.opt_pass for step in self.episodes[-1].step[1:]]
+      opt.RunOptPassOnBytecode(self.bytecode_path,
+                               self.working_bytecode_path, all_passes)
       step.reward = 0
     except llvm.LlvmError as e:
       # Opt failed, set the error message.
