@@ -408,8 +408,8 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":bazelutil",
-        ":viz",
         ":pbutil",
+        ":viz",
         "//third_party/py/absl",
         "//third_party/py/jupyter",
         "//third_party/py/matplotlib",
