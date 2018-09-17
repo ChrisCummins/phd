@@ -31,7 +31,7 @@ class Graph(object):
     strings = []
     self._ToDot(strings, set())
     dot = '\n'.join(fmt.IndentList(2, strings))
-    return f"digraph graphname {{\n  {dot}\n}}"
+    return f"digraph graphname {{\n{dot}\n}}"
 
   def _PreOrderApply(self, callback: typing.Callable[['Graph'], None],
                      visited: typing.Set['Graph']) -> None:
