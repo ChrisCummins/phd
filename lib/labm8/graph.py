@@ -33,6 +33,23 @@ class Graph(object):
     dot = '\n'.join(fmt.IndentList(2, strings))
     return f"digraph graphname {{\n  {dot}\n}}"
 
+  def _PreOrderApply(self, callback: typing.Callable[['Graph'], None],
+                     visited: typing.Set['Graph']) -> None:
+    if self in visited:
+      return
+    visited.add(self)
+    for child in self.children:
+      self._PreOrderApply(callback, visited)
+
+  def PreOrderApply(self, callback: typing.Callable[['Graph'], None]) -> None:
+    """Apply the given callback to all nodes in the graph.
+
+    Args:
+      callback: A callback function whose sole arguments accepts a Graph
+        instance.
+    """
+    self._PreOrderApply(callback, set())
+
   def __eq__(self, other):
     return self.name == other.name
 
