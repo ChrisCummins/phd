@@ -428,7 +428,7 @@ class LlvmOptDelayedRewardEnv(LlvmOptEnv):
     except llvm.LlvmError as e:
       # Opt failed, set the error message.
       step.reward = self.opt_failed_reward
-      step.status_msg = text.truncate(str(e), 255)
+      step.opt_error_msg = text.truncate(str(e), 255)
 
     step.total_step_runtime_ms = labdate.MillisecondsTimestamp() - start_ms
     self.episodes[-1].step.extend([step])
