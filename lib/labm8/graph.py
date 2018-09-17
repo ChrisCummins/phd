@@ -22,6 +22,7 @@ class Graph(object):
     if self in visited:
       return
     visited.add(self)
+    strings.append(f'{self.name}[label="{self.name}"]')
     for child in self.children:
       strings.append(f'{self.name} -> {child.name}')
     for child in self.children:
