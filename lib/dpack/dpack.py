@@ -243,7 +243,7 @@ def CreatePackageArchive(package_dir: pathlib.Path,
   # Change to the package directory so that relative paths within the archive
   # are preserved.
   os.chdir(package_dir.parent)
-  with tarfile.open(archive_path.absolute(), 'w') as tar:
+  with tarfile.open(archive_path.absolute(), 'w:bz2') as tar:
     path = os.path.join(package_dir.name, 'MANIFEST.pbtxt')
     logging.info('+ %s', path)
     tar.add(path)
