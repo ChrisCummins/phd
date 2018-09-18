@@ -6,7 +6,7 @@ py_binary(
     deps = [
         "//third_party/py/absl",
         "//third_party/py/gym",
-    ]
+    ],
 )
 
 py_binary(
