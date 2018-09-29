@@ -6,7 +6,7 @@ import sqlalchemy
 import typing
 from argparse import ArgumentParser
 from contextlib import contextmanager
-from flask import abort, jsonify, make_response, request
+from flask import abort, request
 
 from util.freefocus import freefocus
 from util.freefocus import sql
@@ -34,7 +34,7 @@ def Session(commit: bool = False) -> sqlalchemy.orm.session.Session:
     session.close()
 
 
-API_BASE = f"/api/v{freefocus.SPEC_MAJOR}.{freefocus.SPEC_MINOR}"
+API_BASE = f'/api/v{freefocus.SPEC_MAJOR}.{freefocus.SPEC_MINOR}'
 URL_STUB = 'http://' + app.config.get('SERVER_NAME', '') + API_BASE
 
 
