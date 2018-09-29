@@ -9,6 +9,7 @@ py_binary(
         ":sql",
         "//third_party/py/absl",
     ],
+    visibility = ["//visibility:public"],
 )
 
 py_proto_library(
