@@ -1,8 +1,8 @@
 # FreeFocus scripts.
 
 py_binary(
-    name = "github_to_protobuf",
-    srcs = ["github_to_protobuf.py"],
+    name = "github_to_proto",
+    srcs = ["github_to_proto.py"],
     deps = ["//util/freefocus:freefocus_py_pb2"],
 )
 
