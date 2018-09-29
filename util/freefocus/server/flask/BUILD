@@ -1,8 +1,8 @@
 # FreeFocus REST server.
 
 py_binary(
-    name = "server",
-    srcs = ["server.py"],
+    name = "flask",
+    srcs = ["flask.py"],
     deps = [
         "//third_party/py/flask",
         "//third_party/py/sqlalchemy",
