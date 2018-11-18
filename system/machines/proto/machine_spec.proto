@@ -1,0 +1,27 @@
+// This file defines the specification for machines.
+
+syntax = "proto2";
+
+message MachineSpec {
+  repeated Host host = 1;
+  repeated MirroredDirectory synchronizable_thing = 2;
+}
+
+message Host {
+  optional string host = 1;
+  optional int32 port = 2;
+}
+
+// A mirrored directory is a directory that is mirrored between a local and
+// remote machine.
+message MirroredDirectory {
+  // An arbitrary name for the mirrored directory.
+  optional string name = 1;
+  // The absolute path of the directory as it exists on the "remote" machine.
+  optional string remote_path = 2;
+  // The absolute path of the directory as it exists on the local machine.
+  optional string local_path = 3;
+  // A list of exclude patterns passed to rsync when push or pulling changes
+  // between local and remote machines.
+  repeated string rsync_exclude = 4;
+}
