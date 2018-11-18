@@ -1,7 +1,12 @@
-"""This file implements the Machine class."""
+"""This file implements the Machine class.
+
+When executed as a script, it provides basic functionality to push and pull
+mirrored directories.
+"""
 import pathlib
 import subprocess
 import typing
+from absl import app
 from absl import flags
 from absl import logging
 
@@ -11,6 +16,13 @@ from system.machines.proto import machine_spec_pb2
 
 
 FLAGS = flags.FLAGS
+
+flags.DEFINE_string('machine', None, 'Path to MachineSpec proto.')
+flags.DEFINE_list('push', [], 'Mirrored directories to push.')
+flags.DEFINE_list('pull', [], 'Mirrored directories to push.')
+flags.DEFINE_bool('dry_run', True, 'Whether to run ops without making changes.')
+flags.DEFINE_bool('delete', False, 'Whether to delete files during push/pull'
+                                   'mirroring.')
 
 
 def RespondsToPing(host: str) -> typing.Optional[str]:
@@ -23,7 +35,7 @@ def RespondsToPing(host: str) -> typing.Optional[str]:
     The host if it responds to ping, else None.
   """
   try:
-    subprocess.check_call(['ping', '-c1', '-W1', host])
+    subprocess.check_output(['ping', '-c1', '-W1', host])
     return host
   except subprocess.CalledProcessError:
     return None
@@ -93,3 +105,27 @@ class Machine(object):
   def FromFile(cls, path: pathlib.Path) -> 'Machine':
     """Instantiate machine from proto file path."""
     return cls.FromProto(pbutil.FromFile(path, machine_spec_pb2.MachineSpec()))
+
+
+def main(argv):
+  if len(argv) > 1:
+    raise app.UsageError('Unknown arguments')
+
+  machine_proto_path = pathlib.Path(FLAGS.machine)
+  if not machine_proto_path.is_file():
+    raise app.UsageError(f"Cannot find --machine proto '{machine_proto_path}'")
+  machine = Machine.FromFile(machine_proto_path)
+
+  for mirrored_dir_name in FLAGS.pull:
+    mirrored_dir = machine.MirroredDirectory(mirrored_dir_name)
+    mirrored_dir.PullFromRemoteToLocal(dry_run=FLAGS.dry_run, verbose=True,
+                                       delete=FLAGS.delete)
+
+  for mirrored_dir_name in FLAGS.push:
+    mirrored_dir = machine.MirroredDirectory(mirrored_dir_name)
+    mirrored_dir.PushFromLocalToRemote(dry_run=FLAGS.dry_run, verbose=True,
+                                       delete=FLAGS.delete)
+
+
+if __name__ == '__main__':
+  app.run(main)
