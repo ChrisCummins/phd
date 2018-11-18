@@ -1,18 +1,13 @@
-"""Dpack creates structured packages of data files.
-
-Dpack creates an archive of a directory with a manifest. The manifest describes
-each of the files within the directory. Use dpack to create consistent and well
-documented collections of data files.
-"""
-
-import sys
+"""Verify music library."""
 
 import pathlib
+import sys
 from absl import app
 from absl import flags
+from phd.lib.labm8 import fs
 
 from lib.dpack import dpack
-from phd.lib.labm8 import fs
+
 
 FLAGS = flags.FLAGS
 
