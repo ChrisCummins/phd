@@ -3,8 +3,9 @@
 syntax = "proto2";
 
 message MachineSpec {
-  repeated Host host = 1;
-  repeated MirroredDirectory mirrored_directory = 2;
+  optional string name = 1;
+  repeated Host host = 2;
+  repeated MirroredDirectory mirrored_directory = 3;
 }
 
 message Host {
