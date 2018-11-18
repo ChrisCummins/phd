@@ -79,6 +79,7 @@
       <w>relu</w>
       <w>returncode</w>
       <w>rewriter</w>
+      <w>rsync</w>
       <w>runfiles</w>
       <w>runtimes</w>
       <w>sandboxed</w>
