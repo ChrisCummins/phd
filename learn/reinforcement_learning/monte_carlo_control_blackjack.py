@@ -14,7 +14,7 @@ from absl import logging
 FLAGS = flags.FLAGS
 
 flags.DEFINE_integer(
-    'num_episodes', 10,
+    'num_episodes', 10000,
     'The number of episodes to run.')
 flags.DEFINE_bool(
     'casino_blackjack_reward', True,
@@ -54,19 +54,28 @@ class MonteCarloControlBlackjack(object):
     self.environment = gym.make('Blackjack-v0')
     self.environment.natural = casino_blackjack_reward
     self.policy = policy
-    # Value table. The dimensions are: [player_score, dealer_score, usable_ace]
-    self.N = np.zeros([21, 10, 2], dtype=np.int32)
-    self.S = np.zeros([21, 10, 2], dtype=np.float)
-    self.V = np.zeros([21, 10, 2], dtype=np.float)
+    # Table dimensions are:
+    #   [player_score, dealer_score, usable_ace, action]
+    self.N = np.zeros([21, 10, 2, 2], dtype=np.int32)
+    self.S = np.zeros([21, 10, 2, 2], dtype=np.float)
+    self.Q = np.zeros([21, 10, 2, 2], dtype=np.float)
+    # Table dimensions are:
+    #   [player_score, dealer_score, usable_ace]
+    self.pi = np.zeros([21, 10, 2], dtype=np.bool)
     # The total number of episodes.
     self.num_episodes = 0
+    self.num_wins = 0
+    self.num_losses = 0
 
   def Reset(self):
     """Reset the internal state."""
     self.N.fill(0)
     self.S.fill(0)
-    self.V.fill(0)
+    self.Q.fill(0)
+    self.pi.fill(False)
     self.num_episodes = 0
+    self.num_wins = 0
+    self.num_losses = 0
 
   def GetAnEpisode(self) -> typing.List[Step]:
     """Run an episode.
@@ -78,8 +87,18 @@ class MonteCarloControlBlackjack(object):
     """
     done = False
     steps = [Step(Observation(*self.environment.reset()), None, None)]
+    started = False
     while not done:
-      action = self.policy(steps[-1].observation)
+      if started:
+        action = self.pi[
+          steps[-1].observation.player_score - 1,
+          steps[-1].observation.dealer_score - 1,
+          1 if steps[-1].observation.usable_ace else 0,
+        ]
+      else:
+        action = np.random.randint(0, 2, dtype=np.bool)
+        started = True
+      # self.policy(steps[-1].observation)
       obs_, reward_, done, _ = self.environment.step(action)
       steps.append(Step(Observation(*obs_), action, reward_))
     return steps
@@ -93,15 +112,47 @@ class MonteCarloControlBlackjack(object):
           i, len(episode), episode[-1].observation.player_score,
           episode[-1].observation.dealer_score, episode[-1].reward)
       for j in range(1, len(episode)):
-        step = episode[j]
-        indices = (step.observation.player_score - 1,
-                   step.observation.dealer_score - 1,
-                   1 if step.observation.usable_ace else 0)
-        if j < len(episode) - 1:
-          self.N[indices] += 1
-          self.S[indices] += sum(
-              episode[k].reward for k in range(j, len(episode)))
-          self.V[indices] = self.S[indices] / self.N[indices]
+        state = episode[j - 1].observation
+        indices = (state.player_score - 1,
+                   state.dealer_score - 1,
+                   1 if state.usable_ace else 0,
+                   1 if episode[j].action else 0)
+        self.N[indices] += 1
+        self.S[indices] += sum(
+            episode[k].reward for k in range(j, len(episode)))
+        self.Q[indices] = self.S[indices] / self.N[indices]
+
+      for j in range(0, len(episode) - 1):
+        state = episode[j].observation
+        indices = (state.player_score - 1,
+                   state.dealer_score - 1,
+                   1 if state.usable_ace else 0)
+        self.pi[indices] = (
+          True if self.Q[(*indices, 1)] > self.Q[(*indices, 0)] else False)
+
+      if episode[-1].reward > 0:
+        self.num_wins += 1
+      elif episode[-1].reward < 0:
+        self.num_losses += 1
+
+  @property
+  def win_ratio(self) -> float:
+    return self.num_wins / max(self.num_episodes, 1)
+
+
+def main(argv):
+  del argv
+  agent = MonteCarloControlBlackjack(
+      casino_blackjack_reward=FLAGS.casino_blackjack_reward,
+      policy=lambda obs: obs.player_score < 17
+  )
+  agent.Run(FLAGS.num_episodes)
+  print('Policy (no usable ace):')
+  print(agent.pi[10:, :, 0])
+  print('\nPolicy (usable ace):')
+  print(agent.pi[10:, :, 1])
+  print(f'After {agent.num_episodes} iterations, '
+        f'win ratio {agent.win_ratio:.1%}')
 
 
 if __name__ == '__main__':
