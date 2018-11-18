@@ -32,8 +32,8 @@ funcsigs==1.0.2
 futures==3.1.1
 fuzzywuzzy==0.16.0
 graphviz==0.9
-grpcio-tools==1.10.0
-grpcio==1.10.0
+grpcio-tools==1.15.0
+grpcio==1.15.0
 gspread==3.0.1
 gym==0.10.5
 h5py==2.7.1
@@ -78,7 +78,7 @@ ply==3.11
 prettytable==0.7.2
 progressbar2==3.37.1
 prompt-toolkit==1.0.15
-protobuf==3.5.1
+protobuf==3.6.1
 psutil==5.4.5
 psycopg2-binary==2.7.4
 ptyprocess==0.5.2
