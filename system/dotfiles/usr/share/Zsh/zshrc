@@ -582,6 +582,7 @@ path_dirs=( \
     /usr/local/opt/coreutils/libexec/gnubin \
     /usr/local/opt/findutils/libexec/gnubin \
     /usr/local/opt/gnu-sed/libexec/gnubin \
+    /usr/local/opt/sqlite/bin \
     /usr/local/opt/gnu-tar/libexec/gnubin \
     /usr/local/opt/mysql@5.7/bin \
     /usr/local/opt/ofexport/bin \
