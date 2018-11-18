@@ -1,15 +1,22 @@
 """Unit tests for //lib/labm8:system."""
 
 import os
-import sys
 
 import getpass
 import pytest
 import socket
+import sys
+import tempfile
 from absl import app
-
 from phd.lib.labm8 import fs
 from phd.lib.labm8 import system
+
+
+@pytest.fixture(scope='function')
+def tempfile_path() -> str:
+  """Test fixture which returns the path to a temporary file."""
+  with tempfile.NamedTemporaryFile(prefix='phd_test_') as f:
+    yield f.name
 
 
 def test_hostname():
@@ -227,6 +234,45 @@ def test_is_python3():
     assert system.is_python3()
   else:
     assert not system.is_python3()
+
+
+def test_ProcessFileAndReplace_ok(tempfile_path: str):
+  """Test ProcessFileAndReplace with a callback which reverses a file."""
+  with open(tempfile_path, 'w') as f:
+    f.write('Hello, world!')
+
+  def ReverseFile(a: str, b: str):
+    with open(a) as af:
+      with open(b, 'w') as bf:
+        bf.write(''.join(reversed(af.read())))
+
+  system.ProcessFileAndReplace(tempfile_path, ReverseFile)
+
+  with open(tempfile_path) as f:
+    output = f.read()
+
+  assert output == '!dlrow ,olleH'
+
+
+def test_ProcessFileAndReplace_exception(tempfile_path: str):
+  """Test that file is not modified in case of exception."""
+  with open(tempfile_path, 'w') as f:
+    f.write('Hello, world!')
+
+  def BrokenFunction(a: str, b: str):
+    del a
+    del b
+    raise ValueError('Broken function!')
+
+  # Test that error is propagated.
+  with pytest.raises(ValueError) as e_ctx:
+    system.ProcessFileAndReplace(tempfile_path, BrokenFunction)
+  assert str(e_ctx.value) == 'Broken function!'
+
+  # Test that file is not modified.
+  with open(tempfile_path) as f:
+    contents = f.read()
+  assert contents == 'Hello, world!'
 
 
 def main(argv):  # pylint: disable=missing-docstring

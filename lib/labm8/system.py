@@ -9,15 +9,17 @@ Variables:
 from __future__ import print_function
 
 import os
-import sys
-from sys import platform
 
 import getpass
 import socket
 import subprocess
+import sys
+import tempfile
 import threading
-
+import typing
 from phd.lib.labm8 import fs
+from sys import platform
+
 
 HOSTNAME = socket.gethostname()
 USERNAME = getpass.getuser()
@@ -364,3 +366,35 @@ def is_python3():
       bool: True if Python >= 3, else False.
   """
   return sys.version_info >= (3, 0)
+
+
+def ProcessFileAndReplace(
+    path: str,
+    process_file_callback: typing.Callable[[str, str], None],
+    tempfile_prefix: str = 'phd_lib_labm8_system_',
+    tempfile_suffix: str = None) -> None:
+  """Process a file and replace with the generated file.
+
+  This function provides the functionality of inplace file modification for
+  functions which take an input file and produce an output file. It does this
+  by creating a temporary file which, if the function returns successfully (i.e.
+  without exception), will overwrite the original file.
+
+  Args:
+    path: The path of the file to process inplace.
+    process_file_callback: A function which takes two arguments - the path of
+      an input file, and the path of an output file.
+    tempfile_prefix: An optional name prefix for the temporary file.
+    tempfile_suffix: An optional name suffix for the temporary file.
+  """
+  with tempfile.NamedTemporaryFile(
+      prefix=tempfile_prefix,
+      suffix=tempfile_suffix,
+      delete=False) as f:
+    tmp_path = f.name
+    try:
+      process_file_callback(path, tmp_path)
+      os.rename(tmp_path, path)
+    finally:
+      if os.path.isfile(tmp_path):
+        os.unlink(tmp_path)
