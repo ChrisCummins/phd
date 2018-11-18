@@ -4,7 +4,7 @@ syntax = "proto2";
 
 message MachineSpec {
   repeated Host host = 1;
-  repeated MirroredDirectory synchronizable_thing = 2;
+  repeated MirroredDirectory mirrored_directory = 2;
 }
 
 message Host {
