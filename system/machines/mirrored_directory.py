@@ -61,17 +61,17 @@ class MirroredDirectory(object):
     return pathlib.Path(self.local_path).is_dir()
 
   def PushFromLocalToRemote(self, dry_run: bool = False,
-                            verbose: bool = False) -> None:
+                            verbose: bool = False, delete: bool = True) -> None:
     """Push from local to remote paths."""
     self.Rsync(self.local_path,
                self.rsync_remote_path, self.host.port, self.spec.rsync_exclude,
-               dry_run, verbose)
+               dry_run, verbose, delete)
 
   def PullFromRemoteToLocal(self, dry_run: bool = False,
-                            verbose: bool = False) -> None:
+                            verbose: bool = False, delete: bool = True) -> None:
     """Pull from remote to local paths."""
     self.Rsync(self.rsync_remote_path, self.local_path, self.host.port,
-               self.spec.rsync_exclude, dry_run, verbose)
+               self.spec.rsync_exclude, dry_run, verbose, delete)
 
   def __repr__(self) -> str:
     return (f"MirroredDirectory(name={self.name}, "
@@ -80,16 +80,17 @@ class MirroredDirectory(object):
 
   @staticmethod
   def Rsync(src: str, dst: str, host_port: int, excludes: typing.List[str],
-            dry_run: bool, verbose: bool):
+            dry_run: bool, verbose: bool, delete: bool):
     """Private helper method to invoke rsync with appropriate arguments."""
     cmd = [
-            'rsync', '-ah', '--delete', str(src),
-            str(dst), '-e', f'ssh -p {host_port}',
+            'rsync', '-ah', str(src), str(dst), '-e', f'ssh -p {host_port}',
           ] + labtypes.flatten([['--exclude', p] for p in excludes])
     if dry_run:
       cmd.append('--dry-run')
     if verbose:
       cmd.append('--verbose')
+    if delete:
+      cmd.append('--delete')
     logging.info(' '.join(cmd))
     p = subprocess.Popen(cmd)
     p.communicate()

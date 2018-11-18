@@ -40,17 +40,19 @@ class LocalMirroredDirectory(mirrored_directory.MirroredDirectory):
 
   @staticmethod
   def Rsync(src: str, dst: str, host_port: int, excludes: typing.List[str],
-            dry_run: bool, verbose: bool):
+            dry_run: bool, verbose: bool, delete: bool):
     """Private helper method to invoke rsync with appropriate arguments."""
     del host_port
     src = str(src).replace('localhost:', '')
     dst = str(dst).replace('localhost:', '')
-    cmd = ['rsync', '-ah', '--delete', str(src), str(dst)] + labtypes.flatten(
+    cmd = ['rsync', '-ah', str(src), str(dst)] + labtypes.flatten(
         [['--exclude', p] for p in excludes])
     if dry_run:
       cmd.append('--dry-run')
     if verbose:
       cmd.append('--verbose')
+    if delete:
+      cmd.append('--delete')
     logging.info(' '.join(cmd))
     p = subprocess.Popen(cmd)
     p.communicate()
