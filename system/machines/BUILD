@@ -9,15 +9,38 @@ py_binary(
     ],
 )
 
+py_binary(
+    name = "machine",
+    srcs = ["machine.py"],
+    visibility = ["//system/machines:__subpackages__"],
+    deps = [
+        ":mirrored_directory",
+        "//lib/labm8:pbutil",
+        "//system/machines/proto:machine_spec_pb2_py",
+        "//third_party/py/absl",
+    ],
+)
+
+py_test(
+    name = "machine_test",
+    srcs = ["machine_test.py"],
+    deps = [
+        ":machine",
+        "//system/machines/proto:machine_spec_pb2_py",
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
+    ],
+)
+
 py_library(
     name = "mirrored_directory",
     srcs = ["mirrored_directory.py"],
+    visibility = ["//system/machines:__subpackages__"],
     deps = [
+        "//lib/labm8:labtypes",
         "//system/machines/proto:machine_spec_pb2_py",
         "//third_party/py/absl",
-        "//lib/labm8:labtypes",
     ],
-    visibility=["//system/machines:__subpackages__"],
 )
 
 py_test(
