@@ -1,0 +1,106 @@
+// Draft system RPC calls for FreeFocus 1.0.0.
+syntax = "proto2";
+
+package freefocus;
+import "util/freefocus/freefocus.proto";
+
+service FreeFocusSystem {
+  rpc CreatePersonOrWorkspace (CreatePersonOrWorkspaceRequest) returns (CreatePersonOrWorkspaceResponse);
+  rpc DestroyPersonOrWorkspace (DestroyPersonOrWorkspaceRequest) returns (DestroyPersonOrWorkspaceResponse);
+  rpc UpdatePerson (UpdatePersonRequest) returns (UpdatePersonResponse);
+
+  rpc CreateGroup (CreateGroupRequest) returns (CreateGroupResponse);
+  // TODO(cec): UpdateGroup
+
+  rpc CreateTask (CreateTaskRequest) returns (CreateTaskRequest);
+}
+
+message CreatePersonOrWorkspaceRequest {
+  oneof person_or_workspace {
+    Person person_to_create = 1;
+    Workspace workspace_to_create = 2;
+  }
+}
+
+message CreatePersonOrWorkspaceResponse {
+  enum Status {
+    UNKNOWN_ERROR = 0;
+    SUCCESS = 1;
+    MISSING_FIELD = 2;
+    INVALID_FIELD_VALUE = 3;
+    ID_NOT_UNIQUE = 4;
+  }
+  optional Status status = 1;
+}
+
+message DestroyPersonOrWorkspaceRequest {
+  oneof person_or_workspace {
+    string person_id_to_destroy = 1;
+    string workspace_id_to_destroy = 2;
+  }
+}
+
+message DestroyPersonOrWorkspaceResponse {
+  enum Status {
+    UNKNOWN_ERROR = 0;
+    SUCCESS = 1;
+    MISSING_FIELD = 2;
+    ID_NOT_FOUND = 3;
+  }
+  optional Status status = 1;
+  optional string error_message = 2;
+}
+
+message UpdatePersonRequest {
+  optional string person_to_update_id = 1;
+  optional Person updated_person = 2;
+}
+
+message UpdatePersonResponse {
+  enum Status {
+    UNKNOWN_ERROR = 0;
+    SUCCESS = 1;
+    PERSON_ID_NOT_FOUND = 2;
+    MISSING_PERSON_FIELD = 3;
+    INVALID_PERSON_FIELD_VALUE = 4;
+    ID_NOT_UNIQUE = 5;
+  }
+  optional Status status = 1;
+  optional string error_message = 2;
+}
+
+message CreateGroupRequest {
+  optional string person_creating_group = 1;
+  optional string workspace_id = 2;
+  optional Group group_to_create = 3;
+}
+
+message CreateGroupResponse {
+  enum Status {
+    UNKNOWN_ERROR = 0;
+    SUCCESS = 1;
+    // Raised if person ID not found, or if person does not have permission.
+    INVALID_PERSON_ID = 2;
+    MISSING_GROUP_FIELD = 3;
+    INVALID_GROUP_FIELD_VALUE = 4;
+  }
+  optional Status status = 1;
+}
+
+message CreateTaskRequest {
+  optional string person_creating_task = 1;
+  optional string workspace_id = 2;
+  optional Task task_to_create = 3;
+}
+
+message CreateTaskResponse {
+  enum Status {
+    UNKNOWN_ERROR = 0;
+    SUCCESS = 1;
+    // Raised if person ID not found, or if person does not have permission.
+    INVALID_PERSON_ID = 2;
+    MISSING_TASK_FIELD = 3;
+    INVALID_TASK_FIELD_VALUE = 4;
+  }
+  optional Status status = 1;
+}
