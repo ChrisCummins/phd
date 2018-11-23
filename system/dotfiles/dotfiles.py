@@ -1742,24 +1742,6 @@ class Scripts(Task):
     Trash().trash(*self.__genfiles__)
 
 
-class DianaScripts(Task):
-  """Scripts just for florence."""
-  __platforms__ = ['osx']
-  __hosts__ = ['diana']
-  __deps__ = ['Scripts']
-  __genfiles__ = [
-      "~/.zsh/ryangosling.zsh",
-  ]
-
-  def install(self):
-    symlink("~/phd/system/machines/ryangosling/ryangosling.zsh",
-            "~/.zsh/ryangosling.zsh")
-
-  def uninstall(self):
-    task_print("Removing diana scripts")
-    Trash().trash(*self.__genfiles__)
-
-
 class FlorenceScripts(Task):
   """Scripts just for florence."""
   __platforms__ = ['osx']
@@ -1767,14 +1749,11 @@ class FlorenceScripts(Task):
   __deps__ = ["Scripts"]
   __genfiles__ = [
       "~/.local/bin/orange_you_glad_you_backup",
-      "~/.zsh/ryangosling.zsh",
   ]
 
   def install(self):
     symlink(usr_share("scripts/orange_you_glad_you_backup.sh"),
             "~/.local/bin/orange_you_glad_you_backup")
-    symlink("~/phd/system/machines/ryangosling/ryangosling.zsh",
-            "~/.zsh/ryangosling.zsh")
 
   def uninstall(self):
     task_print("Removing florence scripts")
