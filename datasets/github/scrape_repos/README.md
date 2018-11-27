@@ -41,14 +41,14 @@ See schema defined in
 Scrape GitHub to create `GitHubRepositoryMeta` messages of repos using:
 
 ```sh
-$ bazel run //datasets/github/scrape_repos/scraper -- \
+$ bazel run //datasets/github/scrape_repos:scraper -- \
     --clone_list $PWD/clone_list.pbtxt
 ```
 
 Run the cloner to download the repos scraped in the previous step:
 
 ```sh
-$ bazel run //datasets/github/scrape_repos/cloner -- \
+$ bazel run //datasets/github/scrape_repos:cloner -- \
     --clone_list $PWD/clone_list.pbtxt
 ```
 
@@ -56,14 +56,14 @@ Extract individual source files from the cloned repos and import them into a
 [contentfiles database](/datasets/github/scrape_repos/contentfiles.py) using:
 
 ```sh
-$ bazel run //datasets/github/scrape_repos/importer -- \
+$ bazel run //datasets/github/scrape_repos:importer -- \
     --clone_list $PWD/clone_list.pbtxt
 ```
 
 Export the source files from the corpus database to a directory:
 
 ```sh
-$ bazel run //datasets/github/scrape_repos/export_corpus -- \
+$ bazel run //datasets/github/scrape_repos:export_corpus -- \
     --clone_list $PWD/clone_list.pbtxt \
     --export_path /tmp/phd/datasets/github/scrape_repos/corpuses/java
 ```
