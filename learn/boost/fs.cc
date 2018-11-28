@@ -1,4 +1,3 @@
-#if 0
 #include <algorithm>
 #include <future>
 #include <iomanip>
@@ -15,9 +14,9 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
+#include "third_party/boost/md5.hpp"
 
 #include <fcntl.h>
-#include <openssl/md5.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -103,15 +102,13 @@ std::string md5sum(const fs::path& path) {
       mmap(0, file_size, PROT_READ, MAP_SHARED, file_descript, 0));
   close(file_descript);
 
-  unsigned char md5[MD5_DIGEST_LENGTH];
-  MD5(file_buffer, file_size, md5);
+  boost::md5 md5(file_buffer, file_size);
   munmap(file_buffer, file_size);
 
   std::ostringstream os;
   os << std::hex << std::setfill('0');
 
-  for (int i = 0; i < MD5_DIGEST_LENGTH; ++i)
-    os << std::setw(2) << static_cast<int>(md5[i]);
+  os << md5.digest().hex_str_value();
 
   return os.str();
 }
@@ -239,6 +236,8 @@ void dir_diff(const fs::path& lhs, const fs::path& rhs) {
 // sub directories, starting at root.
 //
 void print_dir_md5sums(const fs::path& root) {
+  std::cout << "Printing directory md5sums for " << root << "\n";
+
   //
   // Our file operator. Prints the checksum and path.
   //
@@ -252,12 +251,10 @@ void print_dir_md5sums(const fs::path& root) {
 
   file::walk_files(root, op, false);
 }
-#endif  // 0
 
 
 int main(int argc, char** argv) {
-#if 0
-  file::recursive_directory_iterator first{argv[1]}, last{};
+  std::cout << "Hello, boost!\n";
 
   if (argc == 1) {
     print_dir_md5sums(".");
@@ -267,5 +264,4 @@ int main(int argc, char** argv) {
     for (auto i = 1; i < argc; i++)
       print_dir_md5sums(argv[i]);
   }
-#endif  // 0
 }
