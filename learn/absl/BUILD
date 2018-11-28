@@ -6,13 +6,13 @@ cc_binary(
     name = "hello_absl",
     srcs = ["hello_absl.cc"],
     deps = [
-        "@com_google_absl//absl/strings:str_format",
-        "@com_google_absl//absl/container:flat_hash_map",
         ":message",
-    ]
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/strings:str_format",
+    ],
 )
 
 cc_proto_library(
-  name = "message",
-  protos = ["message.proto"],
+    name = "message",
+    protos = ["message.proto"],
 )
