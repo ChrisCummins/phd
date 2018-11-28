@@ -1,0 +1,5 @@
+syntax = "proto2";
+
+message MyMessage {
+  optional string name = 1;
+}
