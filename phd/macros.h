@@ -41,7 +41,7 @@
 // Check that `conditional` is true else fail fatally.
 #define CHECK(conditional) \
   {  \
-    if (!conditional) { \
+    if (!(conditional)) { \
       FATAL("CHECK(" #conditional ") failed!"); \
     } \
   }
