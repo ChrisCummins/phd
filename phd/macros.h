@@ -26,7 +26,7 @@
 // Log the given message with varying levels of severity. The arguments should
 // be a format string. A newline is appended to the message when printed.
 #define DEBUG(...) LOG_WITH_PREFIX("D", __VA_ARGS__)
-#define LOG(...) LOG_WITH_PREFIX("I", __VA_ARGS__)
+#define INFO(...) LOG_WITH_PREFIX("I", __VA_ARGS__)
 #define WARN(...) LOG_WITH_PREFIX("W", __VA_ARGS__)
 #define ERROR(...) LOG_WITH_PREFIX("E", __VA_ARGS__)
 // Terminate the program with exit code 1, printing the given message to
