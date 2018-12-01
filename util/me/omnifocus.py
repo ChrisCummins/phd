@@ -7,7 +7,7 @@ import datetime
 import subprocess
 from tempfile import TemporaryDirectory
 
-from util import me
+from util.me import utils as me
 
 
 def count_tasks(count, data, complete: bool):
@@ -110,7 +110,7 @@ def export_csvs(of2path, outpath):
   with TemporaryDirectory(prefix="me.csv-") as tmpdir:
     pwd = os.getcwd()
     os.chdir(tmpdir)
-    jsonpath = me.omnifocus.generate_json(of2path, "omnifocus.json")
+    jsonpath = generate_json(of2path, "omnifocus.json")
     with open(jsonpath) as infile:
-      me.omnifocus.process_json(infile, f"{outpath}/Tasks.csv")
+      process_json(infile, f"{outpath}/Tasks.csv")
     os.chdir(pwd)

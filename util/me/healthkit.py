@@ -8,7 +8,7 @@ from tempfile import TemporaryDirectory
 from xml.dom import minidom
 from zipfile import ZipFile
 
-from util import me
+from util.me import utils as me
 
 
 def get_all_atributes(records, excludes=[]):

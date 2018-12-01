@@ -1,6 +1,6 @@
 # me.db - Aggregate personal data from several sources.
 
-licenses(["restricted"])  # GPL v3
+licenses(["restricted"])  # MIT
 
 exports_files(["LICENSE"])
 
@@ -8,19 +8,8 @@ py_library(
     name = "aggregate",
     srcs = ["aggregate.py"],
     deps = [
-        ":me",
+        ":utils",
         ":spreadsheet",
-    ],
-)
-
-py_binary(
-    name = "cli",
-    srcs = ["cli.py"],
-    deps = [
-        ":aggregate",
-        ":healthkit",
-        ":omnifocus",
-        ":toggl",
     ],
 )
 
@@ -28,21 +17,28 @@ py_library(
     name = "healthkit",
     srcs = ["healthkit.py"],
     deps = [
-        ":me",
+        ":utils",
         "//third_party/py/numpy",
     ],
 )
 
-py_library(
+py_binary(
     name = "me",
     srcs = ["me.py"],
+    deps = [
+        ":aggregate",
+        ":healthkit",
+        ":omnifocus",
+        ":toggl_import",
+        "//third_party/py/absl",
+    ],
 )
 
 py_library(
     name = "omnifocus",
     srcs = ["omnifocus.py"],
     deps = [
-        ":me",
+        ":utils",
     ],
 )
 
@@ -56,9 +52,15 @@ py_library(
 )
 
 py_library(
-    name = "toggl",
-    srcs = ["toggl.py"],
+    name = "toggl_import",
+    srcs = ["toggl_import.py"],
     deps = [
-        ":me",
+        ":utils",
+        "//third_party/py/toggl",
     ],
+)
+
+py_library(
+    name = "utils",
+    srcs = ["utils.py"],
 )

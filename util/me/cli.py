@@ -4,10 +4,11 @@ import os
 
 import sys
 from argparse import ArgumentParser
+
 from util.me import aggregate
 from util.me import healthkit
 from util.me import omnifocus
-from util.me import toggl
+from util.me import toggl_import as toggl
 
 
 def get_config(path):

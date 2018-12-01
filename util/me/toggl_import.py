@@ -3,9 +3,9 @@ from collections import defaultdict
 
 import csv
 import datetime
-from TogglPy import TogglPy
+from toggl import TogglPy
 
-from util import me
+from util.me import utils as me
 
 
 def get_toggl(api_path):

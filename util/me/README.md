@@ -1,4 +1,4 @@
-# Me.db [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://opensource.org/licenses/MIT)
+# Me [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://opensource.org/licenses/MIT)
 
 Aggregate personal data from several sources to enable data-driven decision 
 making.

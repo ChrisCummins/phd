@@ -1,9 +1,13 @@
-"""me - Aggregate health and time tracking data."""
-import logging
+"""Utility code for me.db."""
 import os
 
 import csv
 import datetime
+from absl import flags
+from absl import logging
+
+
+FLAGS = flags.FLAGS
 
 
 def daterange(start_date, end_date, reverse=False):
@@ -26,7 +30,7 @@ def mkdir(path):
 
 def create_csv(rows, outpath):
   with open(outpath, "w") as outfile:
-    logging.debug(f"Creating CSV file {outfile.name}")
+    logging.info(f"Creating CSV file {outfile.name}")
 
     writer = csv.writer(outfile, delimiter=",", quoting=csv.QUOTE_MINIMAL)
     for row in rows:

@@ -3,8 +3,8 @@ import logging
 import csv
 import datetime
 
-from util import me
-from util import spreadsheet as spreadsheet_lib
+from util.me import spreadsheet as spreadsheet_lib
+from util.me import utils as me
 
 
 def parse_date(string):
