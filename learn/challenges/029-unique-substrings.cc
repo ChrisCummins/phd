@@ -143,3 +143,8 @@ TEST(unique_substrings, nonunique) {
   auto out = substrings(in);
   ASSERT_EQ(out.size(), 0);
 }
+
+int main(int argc, char **argv) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
