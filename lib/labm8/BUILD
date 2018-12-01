@@ -440,6 +440,34 @@ py_test(
 )
 
 py_library(
+    name = "ppar",
+    srcs = ["ppar.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":bazelutil",
+        ":pbutil",
+        "//third_party/py/absl",
+    ],
+)
+
+py_test(
+    name = "ppar_test",
+    srcs = ["ppar_test.py"],
+    data = [
+        "//lib/labm8/data/test/ppar:proto_worker",
+        "//lib/labm8/data/test/ppar:proto_worker_requires_args",
+        "//lib/labm8/data/test/ppar:unexpected_output_proto_worker",
+    ],
+    deps = [
+        ":ppar",
+        "//lib/labm8/data/test/ppar:protos_py_pb2",
+        "//third_party/py/absl",
+        "//third_party/py/progressbar",
+        "//third_party/py/pytest",
+    ],
+)
+
+py_library(
     name = "prof",
     srcs = ["prof.py"],
     visibility = ["//visibility:public"],
