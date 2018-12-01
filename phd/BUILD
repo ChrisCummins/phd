@@ -9,6 +9,15 @@ cc_library(
     ],
 )
 
+cc_test(
+    name = "macros_test",
+    srcs = ["macros_test.cc"],
+    deps = [
+        ":macros",
+        ":test",
+    ],
+)
+
 cc_library(
     name = "test",
     hdrs = ["test.h"],
