@@ -16,4 +16,10 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$DIR/.."
 
 buildifier WORKSPACE
-git ls-files | grep BUILD | xargs buildifier
+# Git ls-files will return files that do not exist if a file has been removed
+# but not committed.
+for f in $(git ls-files | grep BUILD); do
+  if [[ -f "$f" ]]; then
+    buildifier "$f"
+  fi
+done
