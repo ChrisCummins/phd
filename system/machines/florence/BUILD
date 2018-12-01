@@ -4,8 +4,8 @@ py_binary(
     name = "transcode_musiclib",
     srcs = ["transcode_musiclib.py"],
     deps = [
-        "//lib/labm:fs",
-        "//lib/labm:system",
+        "//lib/labm8:fs",
+        "//lib/labm8:system",
         "//third_party/py/absl",
     ],
 )
