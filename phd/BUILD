@@ -19,6 +19,23 @@ cc_test(
 )
 
 cc_library(
+    name = "pbutil",
+    hdrs = ["pbutil.h"],
+    visibility = ["//visibility:public"],
+    deps = [":macros"],
+)
+
+cc_test(
+    name = "pbutil_test",
+    srcs = ["pbutil_test.cc"],
+    deps = [
+        ":pbutil",
+        ":test",
+        "//phd/test:protos_cc",
+    ],
+)
+
+cc_library(
     name = "test",
     hdrs = ["test.h"],
     visibility = ["//visibility:public"],
