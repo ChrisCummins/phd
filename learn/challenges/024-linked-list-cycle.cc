@@ -94,3 +94,8 @@ TEST(cycles, pointers) {
   // c.next = &c;
   // ASSERT_EQ(contains_cycle(&a), true);
 }
+
+int main(int argc, char **argv) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
