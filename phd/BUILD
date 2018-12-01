@@ -8,3 +8,13 @@ cc_library(
         "//phd/private:macros_impl",
     ],
 )
+
+cc_library(
+    name = "test",
+    hdrs = ["test.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@com_github_google_benchmark//:benchmark",
+        "@gtest",
+    ],
+)
