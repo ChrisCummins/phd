@@ -33,7 +33,6 @@ cc_binary(
     ],
 )
 
-
 cc_binary(
     name = "unexpected_output_proto_worker",
     srcs = ["unexpected_output_proto_worker.cc"],
