@@ -9,6 +9,7 @@
       <w>bazelutil</w>
       <w>bitcode</w>
       <w>capsys</w>
+      <w>cerr</w>
       <w>cflags</w>
       <w>checksums</w>
       <w>cldrive</w>
@@ -63,6 +64,7 @@
       <w>nvidia</w>
       <w>oclgrind</w>
       <w>opencl</w>
+      <w>ostream</w>
       <w>parallelized</w>
       <w>pavlos</w>
       <w>pbtxt</w>
