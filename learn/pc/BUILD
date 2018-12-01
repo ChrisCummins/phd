@@ -24,8 +24,6 @@ cc_test(
     srcs = ["003-string-inc.cc"],
     copts = [
         "-Ilib/phd/include",
-        "-Iexternal/gtest/include",
-        "-Iexternal/benchmark/include",
     ],
     deps = ["//lib/phd:main"],
 )
@@ -36,8 +34,6 @@ cc_test(
     srcs = ["004-fractal.cc"],
     copts = [
         "-Ilib/phd/include",
-        "-Iexternal/gtest/include",
-        "-Iexternal/benchmark/include",
     ],
     deps = ["//lib/phd:main"],
 )

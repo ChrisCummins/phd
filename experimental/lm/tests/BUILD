@@ -9,8 +9,6 @@ cc_test(
     copts = [
         "-Iexperimental/lm/include",
         "-Ilib/phd/include",
-        "-Iexternal/gtest/include",
-        "-Iexternal/benchmark/include",
     ],
     deps = [
         "//experimental/lm:main",

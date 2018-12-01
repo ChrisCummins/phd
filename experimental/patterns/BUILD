@@ -13,8 +13,6 @@ cc_library(
 #     ],
 #     copts = [
 #         "-Ilib/phd/include",
-#         "-Iexternal/gtest/include",
-#         "-Iexternal/benchmark/include",
 #     ],
 #     deps = [
 #         ":container",

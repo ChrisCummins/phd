@@ -41,8 +41,6 @@ cc_test(
     srcs = ["010-inc-int-arr.cc"],
     copts = [
         "-Ilib/phd/include",
-        "-Iexternal/gtest/include",
-        "-Iexternal/benchmark/include",
     ],
     deps = [
         "//lib/phd:main",
@@ -67,8 +65,6 @@ cc_test(
     srcs = ["012-simple-cyphers.cc"],
     copts = [
         "-Ilib/phd/include",
-        "-Iexternal/gtest/include",
-        "-Iexternal/benchmark/include",
     ],
     deps = [
         "//lib/phd:main",
@@ -193,6 +189,5 @@ cc_test(
     name = "029-unique-substrings",
     size = "small",
     srcs = ["029-unique-substrings.cc"],
-    copts = ["-Iexternal/gtest/include"],
     deps = ["@gtest"],
 )

@@ -4,8 +4,6 @@ cc_library(
     hdrs = glob(["include/phd/*"]),
     copts = [
         "-Ilib/phd/include",
-        "-Iexternal/gtest/include",
-        "-Iexternal/benchmark/include",
     ],
     visibility = ["//visibility:public"],
     deps = [

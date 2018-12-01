@@ -217,10 +217,6 @@ cc_test(
 # cc_test(
 #     name =  "1310-2d-alloc-cpp",
 #     srcs = ["1310-2d-alloc.cc"],
-#     copts = [
-#         "-Iexternal/gtest/include",
-#         "-Iexternal/benchmark/include",
-#     ],
 #     deps = [":ctci"],
 # )
 

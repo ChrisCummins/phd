@@ -6,7 +6,6 @@ cc_binary(
 cc_binary(
     name = "benchmark-argument-type",
     srcs = ["benchmark-argument-type.cc"],
-    copts = ["-Iexternal/benchmark/include"],
     linkopts = ["-pthread"],
     deps = ["@com_github_google_benchmark//:benchmark"],
 )
@@ -15,7 +14,6 @@ cc_test(
     name = "constructors",
     size = "small",
     srcs = ["constructors.cc"],
-    copts = ["-Iexternal/gtest/include"],
     deps = ["@gtest"],
 )
 
@@ -45,7 +43,6 @@ cc_binary(
 cc_binary(
     name = "lambdas",
     srcs = ["lambdas.cc"],
-    copts = ["-Iexternal/benchmark/include"],
     linkopts = ["-pthread"],
     deps = ["@com_github_google_benchmark//:benchmark"],
 )

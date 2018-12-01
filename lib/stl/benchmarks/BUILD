@@ -8,8 +8,6 @@ cc_binary(
     copts = [
         "-Ilib/stl/include",
         "-Ilib/phd/include",
-        "-Iexternal/gtest/include",
-        "-Iexternal/benchmark/include",
     ],
     deps = [
         "//lib/phd:main",
@@ -27,8 +25,6 @@ cc_binary(
     copts = [
         "-Ilib/stl/include",
         "-Ilib/phd/include",
-        "-Iexternal/gtest/include",
-        "-Iexternal/benchmark/include",
     ],
     deps = [
         "//lib/phd:main",
@@ -46,8 +42,6 @@ cc_binary(
     copts = [
         "-Ilib/stl/include",
         "-Ilib/phd/include",
-        "-Iexternal/gtest/include",
-        "-Iexternal/benchmark/include",
     ],
     deps = [
         "//lib/phd:main",
@@ -65,8 +59,6 @@ cc_binary(
     copts = [
         "-Ilib/stl/include",
         "-Ilib/phd/include",
-        "-Iexternal/gtest/include",
-        "-Iexternal/benchmark/include",
     ],
     deps = [
         "//lib/phd:main",
@@ -84,8 +76,6 @@ cc_binary(
     copts = [
         "-Ilib/stl/include",
         "-Ilib/phd/include",
-        "-Iexternal/gtest/include",
-        "-Iexternal/benchmark/include",
     ],
     deps = [
         "//lib/phd:main",
@@ -103,8 +93,6 @@ cc_binary(
     copts = [
         "-Ilib/stl/include",
         "-Ilib/phd/include",
-        "-Iexternal/gtest/include",
-        "-Iexternal/benchmark/include",
     ],
     deps = [
         "//lib/phd:main",
@@ -122,8 +110,6 @@ cc_binary(
     copts = [
         "-Ilib/stl/include",
         "-Ilib/phd/include",
-        "-Iexternal/gtest/include",
-        "-Iexternal/benchmark/include",
     ],
     deps = [
         "//lib/phd:main",
@@ -141,8 +127,6 @@ cc_binary(
     copts = [
         "-Ilib/stl/include",
         "-Ilib/phd/include",
-        "-Iexternal/gtest/include",
-        "-Iexternal/benchmark/include",
     ],
     deps = [
         "//lib/phd:main",
@@ -160,8 +144,6 @@ cc_binary(
     copts = [
         "-Ilib/stl/include",
         "-Ilib/phd/include",
-        "-Iexternal/gtest/include",
-        "-Iexternal/benchmark/include",
     ],
     deps = [
         "//lib/phd:main",
@@ -179,8 +161,6 @@ cc_binary(
     copts = [
         "-Ilib/stl/include",
         "-Ilib/phd/include",
-        "-Iexternal/gtest/include",
-        "-Iexternal/benchmark/include",
     ],
     deps = [
         "//lib/phd:main",
