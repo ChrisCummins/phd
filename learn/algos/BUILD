@@ -47,6 +47,6 @@ cc_test(
         "-Iexternal/gtest/include",
     ],
     deps = [
-        "@gtest//:main",
+        "@gtest",
     ],
 )

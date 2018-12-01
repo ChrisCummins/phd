@@ -16,7 +16,7 @@ cc_test(
     size = "small",
     srcs = ["constructors.cc"],
     copts = ["-Iexternal/gtest/include"],
-    deps = ["@gtest//:main"],
+    deps = ["@gtest"],
 )
 
 cc_binary(

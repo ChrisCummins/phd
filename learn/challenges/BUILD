@@ -2,13 +2,9 @@ cc_test(
     name = "001-int-average",
     size = "small",
     srcs = ["001-int-average.cc"],
-    copts = [
-        "-Iexternal/gtest/include",
-        "-Iexternal/benchmark/include",
-    ],
     deps = [
         "@com_github_google_benchmark//:benchmark",
-        "@gtest//:main",
+        "@gtest",
     ],
 )
 
@@ -25,7 +21,7 @@ cc_test(
         "-Iexternal/gtest/include",
     ],
     deps = [
-        "@gtest//:main",
+        "@gtest",
     ],
 )
 
@@ -33,13 +29,9 @@ cc_test(
     name = "009-longest-substr",
     size = "small",
     srcs = ["009-longest-substr.cc"],
-    copts = [
-        "-Iexternal/gtest/include",
-        "-Iexternal/benchmark/include",
-    ],
     deps = [
         "@com_github_google_benchmark//:benchmark",
-        "@gtest//:main",
+        "@gtest",
     ],
 )
 
@@ -173,7 +165,7 @@ cc_test(
         "-Iexternal/gtest/include",
     ],
     deps = [
-        "@gtest//:main",
+        "@gtest",
     ],
 )
 
@@ -202,5 +194,5 @@ cc_test(
     size = "small",
     srcs = ["029-unique-substrings.cc"],
     copts = ["-Iexternal/gtest/include"],
-    deps = ["@gtest//:main"],
+    deps = ["@gtest"],
 )

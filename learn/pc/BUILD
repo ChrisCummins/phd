@@ -2,13 +2,9 @@ cc_test(
     name = "001-fib",
     size = "small",
     srcs = ["001-fib.cc"],
-    copts = [
-        "-Iexternal/gtest/include",
-        "-Iexternal/benchmark/include",
-    ],
     deps = [
         "@com_github_google_benchmark//:benchmark",
-        "@gtest//:main",
+        "@gtest",
     ],
 )
 
@@ -16,13 +12,9 @@ cc_test(
     name = "002-linked-lists",
     size = "small",
     srcs = ["002-linked-lists.cc"],
-    copts = [
-        "-Iexternal/gtest/include",
-        "-Iexternal/benchmark/include",
-    ],
     deps = [
         "@com_github_google_benchmark//:benchmark",
-        "@gtest//:main",
+        "@gtest",
     ],
 )
 
