@@ -2,6 +2,8 @@
 
 These tests will NOT pass if run on one of my personal machines.
 """
+import os
+
 import pytest
 import sys
 import typing
@@ -29,6 +31,8 @@ def test_Ryangosling_mirrored_directories(ryangosling: machine.Machine):
   assert len(ryangosling.mirrored_directories) == 4
 
 
+@pytest.mark.skipif(not os.path.isdir('/Volumes/Orange'),
+                    reason='Orange drive not mounted')
 def test_Ryangosling_photos(ryangosling: machine.Machine):
   """Test that mirrored directory exists."""
   d = ryangosling.MirroredDirectory('photos')
