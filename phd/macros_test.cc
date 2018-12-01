@@ -1,4 +1,5 @@
 #include "phd/macros.h"
+
 #include "phd/test.h"
 
 TEST(Macros, LoggingMacros) {
