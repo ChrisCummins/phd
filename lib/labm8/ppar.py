@@ -19,15 +19,13 @@ FLAGS = flags.FLAGS
 class MapWorkerError(EnvironmentError):
   """Resulting error from a _MapWorker that fails."""
 
-  def __init__(self, returncode: int, stderr_binary: str):
+  def __init__(self, returncode: int):
     """Create a _MapWorker error.
 
     Args:
       returncode: The process return code.
-      stderr_binary: The stderr of the command that failed.
     """
     self._returncode = returncode
-    self._stderr_binary = stderr_binary
 
   def __repr__(self) -> str:
     return f"Command exited with code {self.returncode}"
@@ -36,14 +34,6 @@ class MapWorkerError(EnvironmentError):
   def returncode(self) -> int:
     """Get the return code of the process."""
     return self._returncode
-
-  def error_message(self) -> str:
-    """Get the stderr of the process that failed.
-
-    Raises:
-      UnicodeError: In case the stderr cannot be decoded to UTF-8.
-    """
-    return self._stderr_binary.decode('utf-8')
 
 
 class _MapWorker(object):
@@ -90,21 +80,16 @@ class _MapWorker(object):
 
     # Run the C++ worker process, capturing it's output.
     process = subprocess.Popen(
-        self._cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE)
+        self._cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     # Send the input proto to the C++ worker process.
     # TODO: Add timeout.
-    stdout, stderr = process.communicate(self._input_proto_string)
+    stdout, _ = process.communicate(self._input_proto_string)
     self._returncode = process.returncode
     del self._input_proto_string
 
-    if process.returncode:
-      self._returncode = process.returncode
-      self._error_message_binary = stderr[:1024]
-      return
-
-    # Store the C++ binary output in wire format.
-    self._output_proto_string = stdout
+    if not process.returncode:
+      # Store the C++ binary output in wire format.
+      self._output_proto_string = stdout
 
   def SetProtos(self, input_proto: pbutil.ProtocolBuffer,
                 output_proto_class: typing.Type) -> None:
