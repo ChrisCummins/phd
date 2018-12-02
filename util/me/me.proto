@@ -15,19 +15,13 @@ message Measurement {
 // A series of data points.
 message Series {
   optional string name = 1;
-  repeated Measurement measurement = 2;
+  optional string family = 2;
   optional string unit = 3;
-  // {sum,min,avg,max}
-  optional string aggregator = 4;
-}
-
-// Series extracted from a path.
-message SeriesFromPath {
-  optional string path = 1;
-  repeated Series series = 2;
+  repeated Measurement measurement = 4;
 }
 
 // A collection of series.
 message SeriesCollection {
   repeated Series series = 1;
+  optional string source = 2;
 }

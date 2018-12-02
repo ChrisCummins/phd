@@ -1,15 +1,22 @@
 """Utility code for data importers."""
+import collections
 import pathlib
 import sys
 import typing
 from absl import flags
-from absl import logging
 
 from lib.labm8 import labtypes
 from util.me import me_pb2
 
 
 FLAGS = flags.FLAGS
+
+# An importer task is a function that takes no arguments, and returns a
+# generator
+ImporterTask = typing.Callable[[], typing.Iterator[me_pb2.SeriesCollection]]
+
+# A iterator of ImporterTasks.
+ImporterTasks = typing.Iterator[ImporterTask]
 
 
 class ImporterError(EnvironmentError):
@@ -44,32 +51,67 @@ class ImporterError(EnvironmentError):
     return repr(self)
 
 
-def MergeSeriesFromPaths(
-    series: typing.Iterator[me_pb2.SeriesFromPath]) -> me_pb2.SeriesCollection:
-  """Merge the given series into a SeriesCollection.
+def ConcatenateSeries(series: typing.Iterator[
+  me_pb2.SeriesCollection]) -> me_pb2.SeriesCollection:
+  if len({s.name for s in series}) != 1:
+    raise ValueError("Multiple names")
+  if len({s.family for s in series}) != 1:
+    raise ValueError("Multiple families")
+  if len({s.unit for s in series}) != 1:
+    raise ValueError("Multiple units")
+
+  concat_series = me_pb2.Series()
+  concat_series.CopyFrom(series[0])
+  for s in series[1:]:
+    series[0].measurement.extend(s.measurement)
+  return concat_series
+
+
+def MergeSeriesCollections(
+    series: typing.Iterator[
+      me_pb2.SeriesCollection]) -> me_pb2.SeriesCollection:
+  """Merge the given series collections into a single SeriesCollection.
 
   Args:
-    series: An iterator of SeriesFromPath messages.
+    series: The SeriesCollection messages to merge.
 
   Returns:
     A SeriesCollection message.
+
+  Raises:
+    ValueError: If there are Series with duplicate names.
   """
   series = list(labtypes.flatten(list(f.series) for f in series))
-  s_names = set(s.name for s in series)
 
-  if len(s_names) != len(series):
-    for s in series:
-      logging.error('  Merging series: `%s`', s.name)
-    raise ValueError("Duplicate series names")
+  # Create a map from series name to a list of series protos.
+  names_to_series = collections.defaultdict(list)
+  for s in series:
+    names_to_series[s.name].append(s)
 
-  return me_pb2.SeriesCollection(series=sorted(series, key=lambda s: s.name))
+  # Concatenate each list of series with the same name.
+  concatenated_series = [
+    ConcatenateSeries(s) for s in names_to_series.values()
+  ]
+  return me_pb2.SeriesCollection(
+      series=sorted(concatenated_series, key=lambda s: s.name))
 
 
-def MergeSeriesAndExit(
-    series: typing.Iterator[me_pb2.SeriesFromPath]) -> None:
-  """Merge the given series to a SeriesCollection and exit."""
+def RunTasksAndExit(tasks: typing.Iterator[ImporterTask]) -> None:
+  series_collections = []
+  for task in tasks:
+    series_collections += list(task())
+  MergeAndPrintSeriesAndExit(series_collections)
+
+
+def MergeAndPrintSeriesAndExit(
+    series: typing.Iterator[me_pb2.SeriesCollection]) -> None:
+  """Merge the given series to a SeriesCollection and exit.
+
+  This is convenience function wrap MergeSeriesCollections() with printing to
+  stdout / stderr.
+  """
   try:
-    print(MergeSeriesFromPaths(series))
+    print(MergeSeriesCollections(series))
     sys.exit(0)
   except ImporterError as e:
     print(e, file=sys.stderr)
