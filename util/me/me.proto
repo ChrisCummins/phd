@@ -1,27 +1,89 @@
-// Protocol buffers for me.
+// Protocol buffers for aggregating personal data from various sources.
+//
+// This project is a data processing pipeline which aggregates data from third
+// party sources to a shared database. Protocol buffers are used as the
+// intermediate representation - data is aggregated from third party sources
+// to protocol buffers, then uniform logic handles the conversion from protobuf
+// to the database.
+//
+// Since protocol buffers are only used as an intermediate representation before
+// data is imported into a database, the protobufs defined in this file are not
+// designed to be used for long term storage of data. The schema may change at
+// any time, and most fields are marked as required.
+//
+// The data hiearchy used by the project groups measurements into series, and
+// series into families:
+//
+//                  Family
+//                  /   \
+//               Series  ...
+//                /  \
+//             Group  ...
+//               |
+//         [Measurement ...]
+//
 
 syntax = "proto2";
 
 package me;
 
-// A single data point.
+// A single data point as aggregated from some third party data source. This
+// is the smallest unit within the data hierachy.
 message Measurement {
-  optional int64 ms_since_epoch_utc = 1;
-  optional int64 value = 2;
-  optional string group = 3;
-  optional string source = 4;
+  // The datetime that the measurement was made, as a number of milliseconds
+  // since the epoch in UTC time. This is the datetime that will be associated
+  // with the value, not the date that the measurement was accessed, saved, etc.
+  // If you were to plot a series of these measurements over time, this field
+  // would be the X axis.
+  required int64 ms_since_epoch_utc = 1;
+  // The value that has been measured, as a signed int64 value. If you were to
+  // plot a series of these measurements over time, this field would be the Y
+  // axis.
+  //
+  // Real-valued measurements will need to be converted to integers in some
+  // manner that can be reflected in the Series.unit field of the series that
+  // this measurement belongs to. Usually this means multiplying the real value
+  // by some power of ten and adding a suffix to the unit. E.g. If the value
+  // being measured was USD, you could convert to cents by storing
+  // int(dollars * 100), with unit "usd_cents".
+  required int64 value = 2;
+  // A group that the measurement belongs to. The meaning of a measurment group
+  // will depend on the thing being measured. E.g. for a series of measurements
+  // tracking transactions for a bank account, the group might be the "payee" of
+  // transactions. If logical grouping is not needed for a thing being measured
+  // use the default group "default".
+  required string group = 3 [default = "default"];
+  // The name of the source for the measurement. This could be the name of an
+  // app, the path of a file that the data was taken from, etc. No special
+  // meaning is intended to be derived from this field, it is mostly for
+  // debugging purposes.
+  required string source = 4;
 }
 
-// A series of data points.
+// A series is a collection of measurements. All measurements in a Series belong
+// to the same measurable "thing". E.g. a series of weight measurements. All
+// measurements within a Series use the same unit.
 message Series {
-  optional string name = 1;
-  optional string family = 2;
-  optional string unit = 3;
+  // The name of the series, which groups the series within a family.
+  required string name = 1;
+  // The name of the family that the Series belongs to. The family is the
+  // highest point in the data hiearchy: Family > Series > Group > Measurement.
+  required string family = 2;
+  // The unit of each measurement. The same unit is used forall measurements in
+  // a series.
+  required string unit = 3;
+  // The measurements within the series.
   repeated Measurement measurement = 4;
 }
 
-// A collection of series.
+// A container for Series messages. The series contained in this message do not
+// need to be related.
 message SeriesCollection {
   repeated Series series = 1;
+  // An optional field used to track the source of the collection of series.
+  // This is purely optional, and is not imported into the database. It's main
+  // use is to simplify the interface to data importing "worker" jobs. A worker
+  // job can take as input a SeriesCollection message, where the source field
+  // is the path of a file to process.
   optional string source = 2;
 }
