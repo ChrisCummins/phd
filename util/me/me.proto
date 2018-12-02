@@ -1,0 +1,33 @@
+// Protocol buffers for me.
+
+syntax = "proto2";
+
+package me;
+
+// A single data point.
+message Measurement {
+  optional int64 ms_since_epoch_utc = 1;
+  optional int64 value = 2;
+  optional string group = 3;
+  optional string source = 4;
+}
+
+// A series of data points.
+message Series {
+  optional string name = 1;
+  repeated Measurement measurement = 2;
+  optional string unit = 3;
+  // {sum,min,avg,max}
+  optional string aggregator = 4;
+}
+
+// Series extracted from a path.
+message SeriesFromPath {
+  optional string path = 1;
+  repeated Series series = 2;
+}
+
+// A collection of series.
+message SeriesCollection {
+  repeated Series series = 1;
+}

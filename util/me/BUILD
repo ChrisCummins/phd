@@ -34,6 +34,18 @@ py_binary(
     ],
 )
 
+py_proto_library(
+    name = "me_proto_pb2",
+    protos = ["me.proto"],
+    visibility = ["//util/me:__subpackages__"],
+)
+
+cc_proto_library(
+    name = "me_proto_cc",
+    protos = ["me.proto"],
+    visibility = ["//util/me:__subpackages__"],
+)
+
 py_library(
     name = "omnifocus",
     srcs = ["omnifocus.py"],
