@@ -17,17 +17,6 @@ py_library(
 )
 
 py_library(
-    name = "db",
-    srcs = ["db.py"],
-    deps = [
-        "//lib/labm8:labdate",
-        "//lib/labm8:sqlutil",
-        "//third_party/py/absl",
-        "//third_party/py/sqlalchemy",
-    ],
-)
-
-py_library(
     name = "healthkit",
     srcs = ["healthkit.py"],
     deps = [
@@ -50,13 +39,18 @@ py_library(
 py_binary(
     name = "me",
     srcs = ["me.py"],
+    visibility = ["//visibility:public"],
     deps = [
         ":aggregate",
         ":db",
         ":healthkit",
         ":omnifocus",
         ":toggl_import",
+        "//lib/labm8:labdate",
+        "//lib/labm8:sqlutil",
         "//third_party/py/absl",
+        "//third_party/py/sqlalchemy",
+        "//util/me/healthkit",
         "//util/me/life_cycle",
         "//util/me/ynab",
     ],
