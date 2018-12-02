@@ -192,7 +192,51 @@ def MapNativeProtoProcessingBinary(
     _MapWorker(i, cmd, input_proto) for
     i, input_proto in enumerate(input_protos))
 
-  for map_worker in pool.imap_unordered(_RunNativeProtoProcessingWorker,
-                                        map_worker_iterator):
+  for map_worker in pool.imap_unordered(
+      _RunNativeProtoProcessingWorker, map_worker_iterator):
     map_worker.SetProtos(input_protos[map_worker.id], output_proto_class)
+    yield map_worker
+
+
+def MapNativeProcessingBinaries(
+    binaries: typing.List[str],
+    input_protos: typing.List[pbutil.ProtocolBuffer],
+    output_proto_classes: typing.List[typing.Type],
+    pool: typing.Optional[multiprocessing.Pool] = None,
+    num_processes: typing.Optional[int] = None) -> typing.Iterator[_MapWorker]:
+  """Run a protocol buffer processing binary over a set of inputs.
+
+  Args:
+    binary_data_path: The path of the binary to execute, as provied to
+      bazelutil.DataPath().
+    input_protos: An iterable list of input protos.
+    output_proto_class: The proto class of the output.
+    binary_args: An optional list of additional arguments to pass to binaries.
+    pool: The multiprocessing pool to use.
+    num_processes: The number of processes for the multiprocessing pool.
+
+  Returns:
+    A generator of _MapWorker instances. The order is random.
+  """
+  if not len(binaries) == len(input_protos):
+    raise ValueError('Number of binaries does not equal protos')
+
+  cmds = [[bazelutil.DataPath(b)] for b in binaries]
+
+  # Read all inputs to a list. We need the inputs in a list so that we can
+  # map an inputs position in the list to a _MapWorker.id.
+  input_protos = list(input_protos)
+  output_proto_classes = list(output_proto_classes)
+
+  # Create the multiprocessing pool to use, if not provided.
+  pool = pool or multiprocessing.Pool(processes=num_processes)
+
+  map_worker_iterator = (
+    _MapWorker(id, cmd, input_proto) for
+    id, (cmd, input_proto) in enumerate(zip(cmds, input_protos)))
+
+  for map_worker in pool.imap_unordered(
+      _RunNativeProtoProcessingWorker, map_worker_iterator):
+    map_worker.SetProtos(
+        input_protos[map_worker.id], output_proto_classes[map_worker.id])
     yield map_worker
