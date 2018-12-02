@@ -20,8 +20,8 @@ py_binary(
     testonly = 1,
     srcs = ["make_dataset.py"],
     deps = [
-        "//third_party/py/absl",
         "//lib/labm8:jsonutil",
+        "//third_party/py/absl",
     ],
 )
 
@@ -31,11 +31,11 @@ py_binary(
     data = [":json_budget_worker"],
     visibility = ["//util/me:__pkg__"],
     deps = [
-        "//lib/labm8:pbutil",
         "//lib/labm8:bazelutil",
+        "//lib/labm8:pbutil",
         "//third_party/py/absl",
-        "//util/me:me_proto_pb2",
         "//util/me:importers",
+        "//util/me:me_proto_pb2",
     ],
 )
 
@@ -43,11 +43,10 @@ py_test(
     name = "ynab_test",
     srcs = ["ynab_test.py"],
     deps = [
-        ":ynab",
         ":make_dataset",
+        ":ynab",
         "//third_party/py/absl",
         "//third_party/py/pytest",
         "//util/me:me_proto_pb2",
     ],
 )
-
