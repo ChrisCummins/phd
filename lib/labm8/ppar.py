@@ -168,7 +168,14 @@ def MapNativeProtoProcessingBinary(
   Args:
     binary_data_path: The path of the binary to execute, as provied to
       bazelutil.DataPath().
-    binary_args:
+    input_protos: An iterable list of input protos.
+    output_proto_class: The proto class of the output.
+    binary_args: An optional list of additional arguments to pass to binaries.
+    pool: The multiprocessing pool to use.
+    num_processes: The number of processes for the multiprocessing pool.
+
+  Returns:
+    A generator of _MapWorker instances. The order is random.
   """
   binary_path = bazelutil.DataPath(binary_data_path)
   binary_args = binary_args or []
