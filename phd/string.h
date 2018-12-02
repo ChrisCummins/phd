@@ -1,6 +1,9 @@
 // Utility code for working with strings.
 #pragma once
 
+#include "absl/strings/str_cat.h"
+#include "absl/strings/str_split.h"
+
 using std::string;
 
 namespace phd {
@@ -52,6 +55,24 @@ bool EndsWith(const string& full_string, const string& suffix) {
   } else {
     return false;
   }
+}
+
+// Convert a string to CamelCase. E.g. "hello world" -> "HelloWorld".
+string ToCamelCase(const string& full_string) {
+  // Split string into a vector of space separated components.
+  auto split_on_whitespace = absl::StrSplit(
+      full_string, ' ');
+  std::vector<string> space_separated_components(
+      split_on_whitespace.begin(), split_on_whitespace.end());
+
+  // Convert starting letters to uppercase and append to string.
+  string camel_case = "";
+  for (auto component : space_separated_components) {
+    component[0] = std::toupper(component[0]);
+    absl::StrAppend(&camel_case, component);
+  }
+
+  return camel_case;
 }
 
 }  // namespace phd
