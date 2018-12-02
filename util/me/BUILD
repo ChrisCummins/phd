@@ -1,5 +1,8 @@
 # me.db - Aggregate personal data from several sources.
 
+load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
+load("@org_pubref_rules_protobuf//cpp:rules.bzl", "cc_proto_library")
+
 licenses(["restricted"])  # MIT
 
 exports_files(["LICENSE"])
@@ -8,8 +11,8 @@ py_library(
     name = "aggregate",
     srcs = ["aggregate.py"],
     deps = [
-        ":utils",
         ":spreadsheet",
+        ":utils",
     ],
 )
 
@@ -19,6 +22,17 @@ py_library(
     deps = [
         ":utils",
         "//third_party/py/numpy",
+    ],
+)
+
+py_library(
+    name = "importers",
+    srcs = ["importers.py"],
+    visibility = ["//util/me:__subpackages__"],
+    deps = [
+        ":me_proto_pb2",
+        "//lib/labm8:ppar",
+        "//third_party/py/absl",
     ],
 )
 
