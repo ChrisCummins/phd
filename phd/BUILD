@@ -39,6 +39,9 @@ cc_library(
     name = "string",
     hdrs = ["string.h"],
     visibility = ["//visibility:public"],
+    deps = [
+        "@com_google_absl//absl/strings",
+    ],
 )
 
 cc_library(
