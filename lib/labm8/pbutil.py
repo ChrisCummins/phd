@@ -1,14 +1,14 @@
 """Utility code for working with Protocol Buffers."""
-import collections
-import gzip
 import json
-import pathlib
-import typing
 
+import collections
 import google.protobuf.json_format
 import google.protobuf.message
 import google.protobuf.text_format
-
+import gzip
+import pathlib
+import subprocess
+import typing
 from phd.lib.labm8 import jsonutil
 
 
@@ -373,3 +373,36 @@ def AssertFieldConstraint(proto: ProtocolBuffer, field_name: str,
         f"Field fails constraint check: '{proto_class_name}.{field_name}'")
   else:
     return value
+
+
+def RunProcessMessageBinary(cmd: typing.List[str], input_proto: ProtocolBuffer,
+                            output_proto: ProtocolBuffer):
+  # Run the C++ worker process, capturing it's output.
+  process = subprocess.Popen(
+      cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+  # Send the input proto to the C++ worker process.
+  # TODO: Add timeout.
+  stdout, _ = process.communicate(input_proto.SerializeToString())
+
+  if process.returncode:
+    raise EnvironmentError(
+        f"Process failed with returncode {process.returncode}")
+
+  output_proto.ParseFromString(stdout)
+  return output_proto
+
+
+def RunProcessMessageInPlace(cmd: typing.List[str],
+                             input_proto: ProtocolBuffer):
+  # Run the C++ worker process, capturing it's output.
+  process = subprocess.Popen(
+      cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+  # Send the input proto to the C++ worker process.
+  # TODO: Add timeout.
+  stdout, _ = process.communicate(input_proto.SerializeToString())
+
+  if process.returncode:
+    raise subprocess.CalledProcessError(process.returncode, cmd)
+
+  input_proto.ParseFromString(stdout)
+  return input_proto
