@@ -42,7 +42,6 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":aggregate",
-        ":db",
         ":healthkit",
         ":omnifocus",
         ":toggl_import",
