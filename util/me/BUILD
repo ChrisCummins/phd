@@ -17,6 +17,17 @@ py_library(
 )
 
 py_library(
+    name = "db",
+    srcs = ["db.py"],
+    deps = [
+        "//lib/labm8:labdate",
+        "//lib/labm8:sqlutil",
+        "//third_party/py/absl",
+        "//third_party/py/sqlalchemy",
+    ],
+)
+
+py_library(
     name = "healthkit",
     srcs = ["healthkit.py"],
     deps = [
