@@ -102,7 +102,11 @@ void ProcessLcExportCsv(SeriesCollection* proto) {
     Measurement* measurement = series->add_measurement();
     measurement->set_ms_since_epoch_utc(start_time);
     measurement->set_value(end_time - start_time);
-    measurement->set_group(phd::ToCamelCase(location));
+    if (location.empty()) {
+      measurement->set_group("default");
+    } else {
+      measurement->set_group(phd::ToCamelCase(location));
+    }
     measurement->set_source("LifeCycle");
   }
 }

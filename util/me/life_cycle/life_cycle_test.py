@@ -50,11 +50,13 @@ def test_ProcessDirectory(temp_dataset: pathlib.Path):
   assert len(series[0].measurement) + len(series[1].measurement) == 100
 
   for measurement in series[0].measurement:
+    assert measurement.group
     assert measurement.source == 'LifeCycle'
 
   assert series[1].name == 'WorkTime'
   assert series[1].unit == 'milliseconds'
   for measurement in series[1].measurement:
+    assert measurement.group
     assert measurement.source == 'LifeCycle'
 
 
