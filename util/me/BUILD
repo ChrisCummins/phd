@@ -52,10 +52,13 @@ py_binary(
     srcs = ["me.py"],
     deps = [
         ":aggregate",
+        ":db",
         ":healthkit",
         ":omnifocus",
         ":toggl_import",
         "//third_party/py/absl",
+        "//util/me/life_cycle",
+        "//util/me/ynab",
     ],
 )
 
