@@ -62,9 +62,11 @@ def test_ProcessDirectory(temp_dir: pathlib.Path):
 
   for measurement in transactions_series.measurement:
     assert measurement.source == 'YNAB'
+    assert measurement.group
 
   for measurement in budget_series.measurement:
     assert measurement.source == 'YNAB'
+    assert measurement.group
 
 
 def main(argv: typing.List[str]):
