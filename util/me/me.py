@@ -15,6 +15,7 @@ from lib.labm8 import labdate
 from lib.labm8 import sqlutil
 from util.me import importers
 from util.me import me_pb2
+from util.me.healthkit import healthkit
 from util.me.life_cycle import life_cycle
 from util.me.ynab import ynab
 
@@ -99,8 +100,9 @@ class Database(sqlutil.Database):
 
 def CreateTasksFromInbox(inbox: pathlib.Path) -> typing.Iterator[
   importers.ImporterTask]:
-  yield from life_cycle.CreateTasksFromInbox(inbox)
+  yield from healthkit.CreateTasksFromInbox(inbox)
   yield from ynab.CreateTasksFromInbox(inbox)
+  yield from life_cycle.CreateTasksFromInbox(inbox)
 
 
 def main(argv):
