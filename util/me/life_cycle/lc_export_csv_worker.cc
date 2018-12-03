@@ -88,7 +88,7 @@ void ProcessLcExportCsv(SeriesCollection* proto) {
     // does not exist, create it.
     Series* series = FindOrAdd<string, Series*>(
         &name_to_series_map, name,
-        [&](const string& name) -> Series* {
+        [&name_to_series_map,proto](const string& name) -> Series* {
       Series* series = proto->add_series();
       series->set_name(absl::StrCat(phd::ToCamelCase(name), "Time"));
       series->set_family("TimeTracking");
