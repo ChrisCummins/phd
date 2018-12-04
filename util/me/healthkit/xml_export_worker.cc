@@ -389,7 +389,7 @@ class RecordAttributes {
       series_->set_family(family);
       series_->set_unit(unit);
     }
-    measurement_->set_ms_since_epoch_utc(ParseDateOrDie(startDate_));
+    measurement_->set_ms_since_unix_epoch(ParseDateOrDie(startDate_));
     measurement_->set_value(value);
     measurement_->set_group(group);
 

@@ -62,7 +62,7 @@ def MeasurementsFromSeries(series: me_pb2.Series) -> typing.List[Measurement]:
   return [
     Measurement(series=series.name,
                 date=labdate.DatetimeFromMillisecondsTimestamp(
-                    m.ms_since_epoch_utc),
+                    m.ms_since_unix_epoch),
                 family=series.family,
                 group=m.group,
                 value=m.value,

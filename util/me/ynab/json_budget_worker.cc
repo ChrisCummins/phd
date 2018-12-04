@@ -110,7 +110,7 @@ void TryAddTransactionMeasurementToSeries(
   }
 
   Measurement* measurement = series->add_measurement();
-  measurement->set_ms_since_epoch_utc(date);
+  measurement->set_ms_since_unix_epoch(date);
   measurement->set_value(static_cast<int64_t>(amount * 100));
   measurement->set_group(*category);
   measurement->set_source("YNAB");
@@ -185,7 +185,7 @@ Series CreateBudgetSeries(
       CHECK(amount >= 0.0);  // No negative budgets.
 
       Measurement* measurement = series.add_measurement();
-      measurement->set_ms_since_epoch_utc(date);
+      measurement->set_ms_since_unix_epoch(date);
       measurement->set_value(static_cast<int64_t>(amount * 100));
       measurement->set_group(category);
       measurement->set_source("YNAB");

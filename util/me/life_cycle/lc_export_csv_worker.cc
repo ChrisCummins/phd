@@ -29,8 +29,8 @@
 //     Series.family      "TimeTracking"
 //     Series.unit        "milliseconds"
 //     Measurement.group  "${LOCATION}", if set, else "default"
-//     Measurement.ms_since_epoch_utc  UTC encoded START DATE.
-//     Measurement.value  END DATE* - START DATE in milliseconds.
+//     Measurement.ms_since_unix_epoch  The START DATE (see below).
+//     Measurement.value  END DATE - START DATE in milliseconds (see below).
 //     Measurement.source "LifeCycle"
 //
 // The NOTE field is not exported.
@@ -63,11 +63,11 @@ constexpr int64_t MILLISECONDS_IN_DAY =
 
 // Round a timestamp, as milliseconds since the epoch in UTC, up to the "zeroth"
 // millisecond of the next day.
-int64_t RoundToStartOfNextDay(const int64_t ms_set_ms_since_epoch_utc) {
+int64_t RoundToStartOfNextDay(const int64_t ms_since_unix_epoch) {
   // Divide by milliseconds in day to produce the number of days elapsed since
   // epoch. Since this is integer division, this rounds down.
   const int64_t days_since_epoch_utc =
-      ms_set_ms_since_epoch_utc / MILLISECONDS_IN_DAY;
+      ms_since_unix_epoch / MILLISECONDS_IN_DAY;
 
   // Add one to day count and multiply back to milliseconds.
   return (days_since_epoch_utc + 1) * MILLISECONDS_IN_DAY;
@@ -99,9 +99,9 @@ absl::Time ParseLifeCycleDatetimeOrDie(const string& date) {
   return time;
 }
 
-// Convert an absl::time instance to the number of milliseconds since the Unix
+// Convert an absl::Time instance to the number of milliseconds since the Unix
 // epoch.
-int64_t ToMillisecondsSinceUnixEpoch(const absl::time& time) {
+int64_t ToMillisecondsSinceUnixEpoch(const absl::Time& time) {
   absl::Duration d = time - absl::UnixEpoch();
   return d / absl::Milliseconds(1);
 }
@@ -168,7 +168,7 @@ void ProcessLineAndAddMeasurementsOrDie(
 
     // Create the new measurement.
     Measurement* measurement = series->add_measurement();
-    measurement->set_ms_since_epoch_utc(start_time);
+    measurement->set_ms_since_unix_epoch(start_time);
     measurement->set_value(duration);
     measurement->set_group(location);
     measurement->set_source("LifeCycle");
