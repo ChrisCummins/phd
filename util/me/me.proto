@@ -64,11 +64,11 @@ message Measurement {
 // to the same measurable "thing". E.g. a series of weight measurements. All
 // measurements within a Series use the same unit.
 message Series {
-  // The name of the series, which groups the series within a family.
-  required string name = 1;
   // The name of the family that the Series belongs to. The family is the
   // highest point in the data hiearchy: Family > Series > Group > Measurement.
-  required string family = 2;
+  required string family = 1;
+  // The name of the series, which groups the series within a family.
+  required string name = 2;
   // The unit of each measurement. The same unit is used forall measurements in
   // a series.
   required string unit = 3;
