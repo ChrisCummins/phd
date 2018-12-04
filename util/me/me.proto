@@ -27,6 +27,34 @@ syntax = "proto2";
 
 package me;
 
+// A container for Series messages. The series contained in this message do not
+// need to be related.
+message SeriesCollection {
+  repeated Series series = 1;
+  // An optional field used to track the source of the collection of series.
+  // This is purely optional, and is not imported into the database. It's main
+  // use is to simplify the interface to data importing "worker" jobs. A worker
+  // job can take as input a SeriesCollection message, where the source field
+  // is the path of a file to process.
+  optional string source = 2;
+}
+
+// A series is a collection of measurements. All measurements in a Series belong
+// to the same measurable "thing". E.g. a series of weight measurements. All
+// measurements within a Series use the same unit.
+message Series {
+  // The name of the family that the Series belongs to. The family is the
+  // highest point in the data hiearchy: Family > Series > Group > Measurement.
+  required string family = 1;
+  // The name of the series, which groups the series within a family.
+  required string name = 2;
+  // The unit of each measurement. The same unit is used forall measurements in
+  // a series.
+  required string unit = 3;
+  // The measurements within the series.
+  repeated Measurement measurement = 4;
+}
+
 // A single data point as aggregated from some third party data source. This
 // is the smallest unit within the data hierachy.
 message Measurement {
@@ -58,32 +86,4 @@ message Measurement {
   // meaning is intended to be derived from this field, it is mostly for
   // debugging purposes.
   required string source = 4;
-}
-
-// A series is a collection of measurements. All measurements in a Series belong
-// to the same measurable "thing". E.g. a series of weight measurements. All
-// measurements within a Series use the same unit.
-message Series {
-  // The name of the family that the Series belongs to. The family is the
-  // highest point in the data hiearchy: Family > Series > Group > Measurement.
-  required string family = 1;
-  // The name of the series, which groups the series within a family.
-  required string name = 2;
-  // The unit of each measurement. The same unit is used forall measurements in
-  // a series.
-  required string unit = 3;
-  // The measurements within the series.
-  repeated Measurement measurement = 4;
-}
-
-// A container for Series messages. The series contained in this message do not
-// need to be related.
-message SeriesCollection {
-  repeated Series series = 1;
-  // An optional field used to track the source of the collection of series.
-  // This is purely optional, and is not imported into the database. It's main
-  // use is to simplify the interface to data importing "worker" jobs. A worker
-  // job can take as input a SeriesCollection message, where the source field
-  // is the path of a file to process.
-  optional string source = 2;
 }
