@@ -91,11 +91,18 @@ void ProcessLcExportCsv(SeriesCollection* proto) {
   CHECK(csv.is_open());
 
   string line;
-  // Skip the first line which is the header.
+  // Process the header.
   std::getline(csv, line);
-  // Skip the second line, which should be empty.
+  if (line != ("START DATE(UTC),END DATE(UTC),START TIME(LOCAL),"
+               "END TIME(LOCAL),DURATION,NAME,LOCATION,NOTE\r")) {
+    FATAL("Expected first line of `%s` to contain column names. Actual "
+          "value: `%s`.", csv_path.string(), line);
+  }
   std::getline(csv, line);
-  CHECK(phd::TrimRightCopy(line).empty());
+  if (line != "\r") {
+    FATAL("Expected second line of `%s` to be empty. Actual value: `%s`",
+          csv_path.string(), line);
+  }
 
   // Keep a map from name columns to series. Measurements are assigned to named
   // Series. We use this map to determine which Series to add each Measurement
