@@ -33,11 +33,17 @@
 //     Measurement.value  END DATE - START DATE in milliseconds (see below).
 //     Measurement.source "LifeCycle"
 //
-// The NOTE field is not exported.
+// If the entry has a start date different from the end date, it is split into
+// multiple Measurements, one per day. This is to ensure that summing the
+// measurements for a day is always <= 24 hours. For example, an entry has a
+// start date of 2017-01-01 18:00, and an end date of 2017-01-03 12:00, three
+// measurements will be created:
 //
-// If entry has a start date different from the end date, it is split into
-// multiple Measurements, one per day. This means that summing the measurements
-// for a day is always <= 24 hours.
+//     1.  2017-01-01 18:00 - 2017-01-02 00:00
+//     2.  2017-01-02 00:00 - 2017-01-03 00:00
+//     3.  2017-01-03 00:00 - 2017-01-03 12:00
+//
+// The NOTE field is not exported.
 //
 #include "phd/macros.h"
 #include "phd/pbutil.h"
