@@ -25,15 +25,16 @@ class RandomDatasetGenerator(object):
 
   def Sample(self, writer: csv.writer, num_rows: int) -> None:
     """Generate num_rows random rows and write to given CSV."""
+    # LifeCycle CSV file has whitespace after commas.
     writer.writerow([
       'START DATE(UTC)',
-      'END DATE(UTC)',
-      'START TIME(LOCAL)',
-      'END TIME(LOCAL)',
-      'DURATION',
-      'NAME',
-      'LOCATION',
-      'NOTE',
+      ' END DATE(UTC)',
+      ' START TIME(LOCAL)',
+      ' END TIME(LOCAL)',
+      ' DURATION',
+      ' NAME',
+      ' LOCATION',
+      ' NOTE',
     ])
     writer.writerow([])
     start_time = self.start_time_seconds_since_epoch + random.randint(
@@ -46,19 +47,19 @@ class RandomDatasetGenerator(object):
         time.strftime(
             '%Y-%m-%d %H:%M:%S', time.localtime(start_time)),  # START DATE(UTC)
         time.strftime(
-            '%Y-%m-%d %H:%M:%S', time.localtime(end_time)),  # END DATE(UTC)
-        'unused',  # START TIME(LOCAL)
-        'unused',  # END TIME(LOCAL)
-        'unused',  # DURATION
-        random.choice(self.names),  # NAME
-        random.choice(self.locations),  # LOCATION
-        'unused',  # NOTE
+            ' %Y-%m-%d %H:%M:%S', time.localtime(end_time)),  # END DATE(UTC)
+        ' unused',  # START TIME(LOCAL)
+        ' unused',  # END TIME(LOCAL)
+        ' unused',  # DURATION
+        ' ' + random.choice(self.names),  # NAME
+        ' ' + random.choice(self.locations),  # LOCATION
+        ' unused',  # NOTE
       ])
 
   def SampleFile(self, path: pathlib.Path, *sample_args) -> pathlib.Path:
     """Run sample and write result to a file."""
     with open(path, 'w') as f:
-      writer = csv.writer(f)
+      writer = csv.writer(f, lineterminator='\n')
       self.Sample(writer, *sample_args)
     return path
 

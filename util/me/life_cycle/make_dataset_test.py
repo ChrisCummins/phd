@@ -82,7 +82,7 @@ def test_RandomDatasetGenerator_SampleZip(temp_dir: pathlib.Path):
     with z.open('LC_export.csv') as f:
       # Read and decode the compressed CSV into a string.
       string = f.read().decode('utf-8')
-      reader = csv.reader(string.split('\r\n'))
+      reader = csv.reader(string.split('\n'))
       rows = [row for row in reader]
 
   # One line for the header.
