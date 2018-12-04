@@ -35,10 +35,9 @@
 //
 // The NOTE field is not exported.
 //
-// TODO(cec): If an entry overflows to subsequent dates it should be split into
-// multiple Measurements, one per day. Currently, measurements are allowed to
-// overflow the day boundary, meaning that sum of all measurements for a day
-// can be > 24 hours.
+// If entry has a start date different from the end date, it is split into
+// multiple Measurements, one per day. This means that summing the measurements
+// for a day is always <= 24 hours.
 //
 #include "phd/macros.h"
 #include "phd/pbutil.h"
@@ -56,6 +55,25 @@
 
 namespace me {
 
+namespace {
+
+// The number of milliseconds in a day.
+constexpr int64_t MILLISECONDS_IN_DAY =
+    /*second=*/1000 * /*hour=*/3600 * /*day=*/24;
+
+// Round a timestamp, as milliseconds since the epoch in UTC, up to the "zeroth"
+// millisecond of the next day.
+int64_t RoundToStartOfNextDay(const int64_t ms_set_ms_since_epoch_utc) {
+  // Divide by milliseconds in day to produce the number of days elapsed since
+  // epoch. Since this is integer division, this rounds down.
+  const int64_t days_since_epoch_utc =
+      ms_set_ms_since_epoch_utc / MILLISECONDS_IN_DAY;
+
+  // Add one to day count and multiply back to milliseconds.
+  return (days_since_epoch_utc + 1) * MILLISECONDS_IN_DAY;
+}
+
+
 template<typename K, typename V>
 V FindOrAdd(absl::flat_hash_map<K, V>* map, const K& key,
             std::function<V(const K&)> add_callback) {
@@ -69,17 +87,99 @@ V FindOrAdd(absl::flat_hash_map<K, V>* map, const K& key,
 }
 
 
-int64_t ParseTimeOrDie(const string& date) {
+// Parse a (START|END)_DATE or (START|END)_TIME column to an absl::Time
+// instance, or fatally error.
+absl::Time ParseLifeCycleDatetimeOrDie(const string& date) {
   absl::Time time;
   std::string err;
   bool succeeded = absl::ParseTime("%Y-%m-%d %H:%M:%S", date, &time, &err);
   if (!succeeded) {
     FATAL("Failed to parse '%s': %s", date, err);
   }
+  return time;
+}
+
+// Convert an absl::time instance to the number of milliseconds since the Unix
+// epoch.
+int64_t ToMillisecondsSinceUnixEpoch(const absl::time& time) {
   absl::Duration d = time - absl::UnixEpoch();
   return d / absl::Milliseconds(1);
 }
 
+
+string LocationToGroup(const string& location) {
+  if (location.empty()) {
+    return "default";
+  } else {
+    return phd::ToCamelCase(location);
+  }
+}
+
+// Process a line from a LifeCycle CSV file and add Measurement(s) to Series
+// map. Each line produces one or more Measurements.
+void ProcessLineAndAddMeasurementsOrDie(
+    const std::string& line, const int64_t line_num,
+    const boost::filesystem::path csv_path, SeriesCollection* const proto,
+    absl::flat_hash_map<string, Series*>* const name_to_series_map) {
+  // Split the comma separated line.
+  std::vector<absl::string_view> components = absl::StrSplit(line, ',');
+  if (components.size() < 8) {
+    FATAL("Line %d of `%s` does not have 8 columns: '%s'",
+          line_num, csv_path.string(), line);
+  }
+
+  // Split out the variables from the line.
+  const string start_date_str = string(components[0]);
+  const string end_date_str = string(components[1]);
+  const string name = phd::TrimLeftCopy(string(components[5]));
+  const string location = LocationToGroup(
+      phd::TrimLeftCopy(string(components[6])));
+
+  // Find the series that the measurements should belong to. If the Series
+  // does not exist, create it.
+  Series* series = FindOrAdd<string, Series*>(
+      name_to_series_map, name,
+      [name_to_series_map,proto](const string& name) -> Series* {
+    Series* series = proto->add_series();
+    series->set_name(absl::StrCat(phd::ToCamelCase(name), "Time"));
+    series->set_family("TimeTracking");
+    series->set_unit("milliseconds");
+    name_to_series_map->insert(
+        std::make_pair(name, series));
+    return series;
+  });
+
+  // Parse the timestamps.
+  int64_t start_time = ToMillisecondsSinceUnixEpoch(
+    ParseLifeCycleDatetimeOrDie(start_date_str));
+  const int64_t end_time = ToMillisecondsSinceUnixEpoch(
+    ParseLifeCycleDatetimeOrDie(end_date_str));
+  CHECK(start_time);
+  CHECK(end_time);
+
+  // Create measurements for the duration. If the duration overflows to
+  // subsequent dates, it is split into multiple Measurements, one per day.
+  // This means that summing the measurements for a day is always <= 24 hours.
+  int64_t remaining_time_to_allocate = end_time - start_time;
+  int64_t end_of_day = RoundToStartOfNextDay(start_time);
+
+  while (remaining_time_to_allocate > 0) {
+    int64_t duration = std::min(remaining_time_to_allocate, end_of_day);
+
+    // Create the new measurement.
+    Measurement* measurement = series->add_measurement();
+    measurement->set_ms_since_epoch_utc(start_time);
+    measurement->set_value(duration);
+    measurement->set_group(location);
+    measurement->set_source("LifeCycle");
+
+    start_time = end_of_day;
+    remaining_time_to_allocate -= MILLISECONDS_IN_DAY;
+    end_of_day += MILLISECONDS_IN_DAY;
+  }
+}
+
+}  // namespace
 
 void ProcessLcExportCsv(SeriesCollection* proto) {
   const boost::filesystem::path csv_path(proto->source());
@@ -91,15 +191,17 @@ void ProcessLcExportCsv(SeriesCollection* proto) {
   CHECK(csv.is_open());
 
   string line;
-  // Process the header.
+  // Process the first line of the header.
   std::getline(csv, line);
-  if (line != ("START DATE(UTC),END DATE(UTC),START TIME(LOCAL),"
-               "END TIME(LOCAL),DURATION,NAME,LOCATION,NOTE\r")) {
+  if (line != ("START DATE(UTC), END DATE(UTC), START TIME(LOCAL), "
+               "END TIME(LOCAL), DURATION, NAME, LOCATION, NOTE")) {
     FATAL("Expected first line of `%s` to contain column names. Actual "
           "value: `%s`.", csv_path.string(), line);
   }
+
+  // Process the second line of the header.
   std::getline(csv, line);
-  if (line != "\r") {
+  if (line == "\n") {
     FATAL("Expected second line of `%s` to be empty. Actual value: `%s`",
           csv_path.string(), line);
   }
@@ -113,49 +215,8 @@ void ProcessLcExportCsv(SeriesCollection* proto) {
   int line_num = 2;  // We skipped the first two lines.
   while (std::getline(csv, line)) {
     ++line_num;
-    // Split the comma separated line.
-    std::vector<absl::string_view> components = absl::StrSplit(line, ',');
-    if (components.size() < 8) {
-      FATAL("Line %d of %s does not have 8 columns: '%s'",
-            line_num, csv_path.string(), line);
-    }
-
-    // Split out the variables from the line.
-    const string start_date_str = string(components[0]);
-    const string end_date_str = string(components[1]);
-    const string name = phd::TrimCopy(string(components[5]));
-    const string location = phd::TrimCopy(string(components[6]));
-
-    // Parse the timestamps.
-    int64_t start_time = ParseTimeOrDie(start_date_str);
-    int64_t end_time = ParseTimeOrDie(end_date_str);
-    CHECK(start_time);
-    CHECK(end_time);
-
-    // Find the series that the new measurement should belong to. If the Series
-    // does not exist, create it.
-    Series* series = FindOrAdd<string, Series*>(
-        &name_to_series_map, name,
-        [&name_to_series_map,proto](const string& name) -> Series* {
-      Series* series = proto->add_series();
-      series->set_name(absl::StrCat(phd::ToCamelCase(name), "Time"));
-      series->set_family("TimeTracking");
-      series->set_unit("milliseconds");
-      name_to_series_map.insert(
-          std::make_pair(name, series));
-      return series;
-    });
-
-    // Create the new measurement.
-    Measurement* measurement = series->add_measurement();
-    measurement->set_ms_since_epoch_utc(start_time);
-    measurement->set_value(end_time - start_time);
-    if (location.empty()) {
-      measurement->set_group("default");
-    } else {
-      measurement->set_group(phd::ToCamelCase(location));
-    }
-    measurement->set_source("LifeCycle");
+    ProcessLineAndAddMeasurementsOrDie(line, line_num, csv_path, proto,
+                                       &name_to_series_map);
   }
 }
 
