@@ -24,6 +24,8 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_string('inbox', None, 'Path to inbox.')
 flags.DEFINE_string('db', 'me.db', 'Path to database.')
+flags.DEFINE_bool('replace_existing', False,
+                  'Remove existing database, if it exists.')
 
 Base = declarative.declarative_base()
 
@@ -109,7 +111,22 @@ def main(argv):
   if len(argv) > 1:
     raise app.UsageError('Unrecognized command line flags.')
 
-  db = Database(pathlib.Path(FLAGS.db))
+  db_path = pathlib.Path(FLAGS.db)
+  inbox_path = pathlib.Path(FLAGS.inbox)
+
+  # Validate the flags paths.
+  if not inbox_path.is_dir():
+    raise app.UsageError(f'Inbox is not a directory: "{inbox_path}"')
+
+  if not db_path.parent.is_dir():
+    raise app.UsageError(
+        f'Database path parent is not a directory: "{db_path.parent}"')
+
+  # Remove the existing database if requested.
+  if FLAGS.replace_existing and db_path.exists():
+    db_path.unlink()
+
+  db = Database(db_path)
   logging.info('Using database `%s`', db.database_path)
 
   tasks = CreateTasksFromInbox(pathlib.Path(FLAGS.inbox))
