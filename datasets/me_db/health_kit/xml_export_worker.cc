@@ -2,4 +2,5 @@
 
 #include "phd/pbutil.h"
 
-PBUTIL_INPLACE_PROCESS_MAIN(me::ProcessHealthKitXmlExport, me::SeriesCollection);
+PBUTIL_INPLACE_PROCESS_MAIN(me::ProcessHealthKitXmlExportOrDie,
+                            me::SeriesCollection);

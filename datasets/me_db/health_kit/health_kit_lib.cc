@@ -4,26 +4,25 @@
 
 namespace me {
 
-int64_t ParseDateOrDie(const string& date) {
+int64_t ParseHealthKitDatetimeOrDie(const string& date) {
   absl::Time time;
   std::string err;
   bool succeeded = absl::ParseTime("%Y-%m-%d %H:%M:%S %z", date, &time, &err);
   if (!succeeded) {
-    FATAL("Failed to parse date '%s': %s", date, err);
+    FATAL("Failed to parse HealthKit datetime '%s': %s", date, err);
   }
   absl::Duration d = time - absl::UnixEpoch();
   return d / absl::Milliseconds(1);
 }
 
-bool TryConsumeAttribute(
+bool SetAttributeIfMatch(
     const boost::property_tree::ptree::value_type& attribute,
     const string attribute_name, string* attribute_value) {
-  if (attribute.first != attribute_name) {
-    return false;
+  if (attribute.first == attribute_name) {
+    *attribute_value = attribute.second.data();
+    return true;
   }
-  CHECK(attribute_value->empty());
-  *attribute_value = attribute.second.data();
-  return true;
+  return false;
 }
 
 int64_t ParseIntOrDie(const string& integer_string) {
@@ -45,37 +44,47 @@ double ParseDoubleOrDie(const string& double_string) {
   return number;
 }
 
-void RecordAttributes::ParseFromXmlOrDie(
+void HealthKitRecordImporter::InitFromRecordOrDie(
     const boost::property_tree::ptree& record) {
   int attribute_count = 0;
 
+  // Clear the member variables which might not be set by the for loop below.
+  // This allows instances of this class to be reused to process multiple
+  // records. Member variables not cleared here *must* cause an error if they
+  // are not found in the attributes of the record currently being processed.
+  unit_.clear();
+  value_.clear();
+
   for (const boost::property_tree::ptree::value_type& attr :
        record.get_child("<xmlattr>")) {
-    if (TryConsumeAttribute(attr, "type", &type_) ||
-        TryConsumeAttribute(attr, "unit", &unit_) ||
-        TryConsumeAttribute(attr, "value", &value_) ||
-        TryConsumeAttribute(attr, "sourceName", &sourceName_) ||
-        TryConsumeAttribute(attr, "startDate", &startDate_) ||
-        TryConsumeAttribute(attr, "endDate", &endDate_)) {
+    if (SetAttributeIfMatch(attr, "type", &type_) ||
+        SetAttributeIfMatch(attr, "unit", &unit_) ||
+        SetAttributeIfMatch(attr, "value", &value_) ||
+        SetAttributeIfMatch(attr, "sourceName", &sourceName_) ||
+        SetAttributeIfMatch(attr, "startDate", &startDate_) ||
+        SetAttributeIfMatch(attr, "endDate", &endDate_)) {
       ++attribute_count;
     }
 
+    // If we have already gotten the six fields we are interested in, we can
+    // break out of the loop early.
     if (attribute_count == 6) {
       return;
     }
   }
-  // Not all Records have a unit field. This is the only case in which having
-  // less than the full 6 attributes is *not* an error.
+
+  // Not all Records have a unit or value field, so it is possible to iterate
+  // over all attributes without finding these values.
   if (!(attribute_count == 5 && unit_.empty()) &&
-      !(attribute_count == 4 && unit_.empty() &&
-        value_.empty())) {
+      !(attribute_count == 4 && unit_.empty() && value_.empty())) {
     FATAL("Failed to parse necessary attributes from Record: %s",
           DebugString());
   }
+
   return;
 }
 
-Series* RecordAttributes::GetOrCreateSeries(
+Series* HealthKitRecordImporter::GetOrCreateSeries(
     SeriesCollection* series_collection,
     absl::flat_hash_map<string, Series*>* type_to_series_map) {
   bool* new_series = &new_series_;
@@ -95,13 +104,9 @@ Series* RecordAttributes::GetOrCreateSeries(
     });
 }
 
-void RecordAttributes::AddMeasurementsFromXmlOrDie(
-      const boost::property_tree::ptree& record,
+void HealthKitRecordImporter::AddMeasurementsOrDie(
       SeriesCollection* series_collection,
       absl::flat_hash_map<string, Series*>* type_to_series_map) {
-  // Set the member variables from the record.
-  ParseFromXmlOrDie(record);
-
   // Get the series to associate with new measurements.
   series_ = GetOrCreateSeries(series_collection, type_to_series_map);
 
@@ -176,22 +181,18 @@ void RecordAttributes::AddMeasurementsFromXmlOrDie(
   }
 }
 
-string RecordAttributes::ToString() const {
-  return absl::StrFormat("%s %s %s %s %s %s", type_, value_, unit_, sourceName_, startDate_, endDate_);
+string HealthKitRecordImporter::DebugString() const {
+  return absl::StrFormat("type=%s\nvalue=%s\nunit=%s\nsource=%s\nstart_date=%s\nend_date=%s", type_, value_, unit_, sourceName_, startDate_, endDate_);
 }
 
-string RecordAttributes::DebugString() const {
-  return absl::StrFormat("\ntype=%s\nvalue=%s\nunit=%s\nsource=%s\nstart_date=%s\nend_date=%s", type_, value_, unit_, sourceName_, startDate_, endDate_);
-}
-
-void RecordAttributes::ConsumeCountOrDie(
+void HealthKitRecordImporter::ConsumeCountOrDie(
     const string& family, const string& name, const string& group) {
   CHECK(unit_ == "count");
   *series_->add_measurement() = CreateMeasurement(
       family, name, group, "count", ParseIntOrDie(value_));
 }
 
-void RecordAttributes::ConsumeBodyMassIndexOrDie(
+void HealthKitRecordImporter::ConsumeBodyMassIndexOrDie(
     const string& family, const string& name, const string& group) {
   CHECK(unit_ == "count");
   *series_->add_measurement() = CreateMeasurement(
@@ -199,7 +200,7 @@ void RecordAttributes::ConsumeBodyMassIndexOrDie(
       ParseDoubleOrDie(value_) * 1000000);
 }
 
-void RecordAttributes::ConsumePercentageOrDie(
+void HealthKitRecordImporter::ConsumePercentageOrDie(
     const string& family, const string& name, const string& group) {
   if (unit_ != "%") {
     FATAL("Expected unit %%, received unit %s", unit_);
@@ -209,7 +210,7 @@ void RecordAttributes::ConsumePercentageOrDie(
       ParseDoubleOrDie(value_) * 1000000);
 }
 
-void RecordAttributes::ConsumeCountsPerMinuteOrDie(
+void HealthKitRecordImporter::ConsumeCountsPerMinuteOrDie(
     const string& family, const string& name, const string& group) {
   CHECK(unit_ == "count/min");
   *series_->add_measurement() = CreateMeasurement(
@@ -217,7 +218,7 @@ void RecordAttributes::ConsumeCountsPerMinuteOrDie(
       ParseDoubleOrDie(value_) * 1000000);
 }
 
-void RecordAttributes::ConsumeMillilitersPerKilogramMinuteOrDie(
+void HealthKitRecordImporter::ConsumeMillilitersPerKilogramMinuteOrDie(
     const string& family, const string& name, const string& group) {
   CHECK(unit_ == "mL/min·kg");
   *series_->add_measurement() = CreateMeasurement(
@@ -226,56 +227,56 @@ void RecordAttributes::ConsumeMillilitersPerKilogramMinuteOrDie(
       ParseDoubleOrDie(value_) * 1000000);
 }
 
-void RecordAttributes::ConsumeKCalOrDie(
+void HealthKitRecordImporter::ConsumeKCalOrDie(
     const string& family, const string& name, const string& group) {
   CHECK(unit_ == "kcal");
   *series_->add_measurement() = CreateMeasurement(
       family, name, group, "calories", ParseDoubleOrDie(value_) * 1000);
 }
 
-void RecordAttributes::ConsumeKilometersOrDie(
+void HealthKitRecordImporter::ConsumeKilometersOrDie(
     const string& family, const string& name, const string& group) {
   CHECK(unit_ == "km");
   *series_->add_measurement() = CreateMeasurement(
       family, name, group, "millimeters", ParseDoubleOrDie(value_) * 1000000);
 }
 
-void RecordAttributes::ConsumeCentimetersOrDie(
+void HealthKitRecordImporter::ConsumeCentimetersOrDie(
     const string& family, const string& name, const string& group) {
   CHECK(unit_ == "cm");
   *series_->add_measurement() = CreateMeasurement(
       family, name, group, "millimeters", ParseDoubleOrDie(value_) * 10);
 }
 
-void RecordAttributes::ConsumeMillilitersOrDie(
+void HealthKitRecordImporter::ConsumeMillilitersOrDie(
     const string& family, const string& name, const string& group) {
   CHECK(unit_ == "mL");
   *series_->add_measurement() = CreateMeasurement(
       family, name, group, "milliliters", ParseIntOrDie(value_));
 }
 
-void RecordAttributes::ConsumeKilogramsOrDie(
+void HealthKitRecordImporter::ConsumeKilogramsOrDie(
     const string& family, const string& name, const string& group) {
   CHECK(unit_ == "kg");
   *series_->add_measurement() = CreateMeasurement(
       family, name, group, "milligrams", ParseDoubleOrDie(value_) * 1000000);
 }
 
-void RecordAttributes::ConsumeGramsOrDie(
+void HealthKitRecordImporter::ConsumeGramsOrDie(
     const string& family, const string& name, const string& group) {
   CHECK(unit_ == "g");
   *series_->add_measurement() = CreateMeasurement(
       family, name, group, "milligrams", ParseDoubleOrDie(value_) * 1000);
 }
 
-void RecordAttributes::ConsumeMilligramsOrDie(
+void HealthKitRecordImporter::ConsumeMilligramsOrDie(
     const string& family, const string& name, const string& group) {
   CHECK(unit_ == "mg");
   *series_->add_measurement() = CreateMeasurement(
       family, name, group, "milligrams", ParseDoubleOrDie(value_));
 }
 
-void RecordAttributes::ConsumeMinutesOrDie(
+void HealthKitRecordImporter::ConsumeMinutesOrDie(
     const string& family, const string& name, const string& group) {
   CHECK(unit_ == "min");
   *series_->add_measurement() = CreateMeasurement(
@@ -283,23 +284,23 @@ void RecordAttributes::ConsumeMinutesOrDie(
       ParseDoubleOrDie(value_) * 60 * 1000);
 }
 
-void RecordAttributes::ConsumeMillisecondsOrDie(
+void HealthKitRecordImporter::ConsumeMillisecondsOrDie(
     const string& family, const string& name, const string& group) {
   CHECK(unit_ == "ms");
   *series_->add_measurement() = CreateMeasurement(
       family, name, group, "milliseconds", ParseDoubleOrDie(value_));
 }
 
-void RecordAttributes::ConsumeDurationOrDie(
+void HealthKitRecordImporter::ConsumeDurationOrDie(
     const string& family, const string& name, const string& group) {
   CHECK(value_.empty());
   CHECK(unit_.empty());
-  int64_t duration_ms = ParseDateOrDie(endDate_) - ParseDateOrDie(startDate_);
+  int64_t duration_ms = ParseHealthKitDatetimeOrDie(endDate_) - ParseHealthKitDatetimeOrDie(startDate_);
   *series_->add_measurement() = CreateMeasurement(
       family, name, group, "milliseconds", duration_ms);
 }
 
-void RecordAttributes::ConsumeSleepAnalysisOrDie(
+void HealthKitRecordImporter::ConsumeSleepAnalysisOrDie(
     const string& family, const string& group) {
   CHECK(unit_.empty());
   string name;
@@ -313,12 +314,12 @@ void RecordAttributes::ConsumeSleepAnalysisOrDie(
     FATAL("Could not handle the value field of "
           "sleep analysis Record: %s", DebugString());
   }
-  int64_t duration_ms = ParseDateOrDie(endDate_) - ParseDateOrDie(startDate_);
+  int64_t duration_ms = ParseHealthKitDatetimeOrDie(endDate_) - ParseHealthKitDatetimeOrDie(startDate_);
   *series_->add_measurement() = CreateMeasurement(
       family, name, group, "milliseconds", duration_ms);
 }
 
-void RecordAttributes::ConsumeStandHourOrDie(
+void HealthKitRecordImporter::ConsumeStandHourOrDie(
     const string& family, const string& group) {
   CHECK(unit_.empty());
   string name;
@@ -334,14 +335,14 @@ void RecordAttributes::ConsumeStandHourOrDie(
       family, name, group, "count", 1);
 }
 
-void RecordAttributes::ConsumeCountableEventOrDie(
+void HealthKitRecordImporter::ConsumeCountableEventOrDie(
     const string& family, const string& name, const string& group) {
   CHECK(unit_.empty());
   *series_->add_measurement() = CreateMeasurement(
       family, name, group, "count", 1);
 }
 
-Measurement RecordAttributes::CreateMeasurement(
+Measurement HealthKitRecordImporter::CreateMeasurement(
     const string& family, const string& name, const string& group,
     const string& unit, const int64_t value) {
   if (new_series_) {
@@ -352,7 +353,7 @@ Measurement RecordAttributes::CreateMeasurement(
   }
 
   Measurement measurement;
-  measurement.set_ms_since_unix_epoch(ParseDateOrDie(startDate_));
+  measurement.set_ms_since_unix_epoch(ParseHealthKitDatetimeOrDie(startDate_));
   measurement.set_value(value);
   measurement.set_group(group);
 
@@ -365,7 +366,7 @@ Measurement RecordAttributes::CreateMeasurement(
 }
 
 
-void ProcessHealthKitXmlExport(SeriesCollection* series_collection) {
+void ProcessHealthKitXmlExportOrDie(SeriesCollection* series_collection) {
   const boost::filesystem::path xml_path(series_collection->source());
 
   CHECK(boost::filesystem::is_regular_file(xml_path));
@@ -381,6 +382,8 @@ void ProcessHealthKitXmlExport(SeriesCollection* series_collection) {
   // Series. We use this map to determine which Series to add each Measurement
   // to.
   absl::flat_hash_map<string, Series*> type_to_series_map;
+
+  HealthKitRecordImporter record_importer;
 
   // Iterate over all "HealthData" elements.
   for (const boost::property_tree::ptree::value_type& health_elem :
@@ -421,9 +424,9 @@ void ProcessHealthKitXmlExport(SeriesCollection* series_collection) {
     //       appleStandHoursGoal      CDATA #IMPLIED
     //     >
     if (health_elem.first == "Record") {
-      RecordAttributes record;
-      record.AddMeasurementsFromXmlOrDie(health_elem.second, series_collection,
-                                         &type_to_series_map);
+      record_importer.InitFromRecordOrDie(health_elem.second);
+      record_importer.AddMeasurementsOrDie(series_collection,
+                                           &type_to_series_map);
     }
   }
 }
