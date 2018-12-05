@@ -30,7 +30,7 @@ int64_t ParseIntOrDie(const string& integer_string) {
   int64_t number = std::strtol(integer_string.c_str(), &endptr, 10);
   if (endptr == integer_string.c_str() || *endptr != '\0') {
     // Not a valid number at all
-    FATAL("Cannot convert string to integer: `%s`", integer_string);
+    FATAL("Failed to parse integer '%s'", integer_string);
   }
   return number;
 }
@@ -39,7 +39,7 @@ double ParseDoubleOrDie(const string& double_string) {
   char* endptr;
   double number = std::strtod(double_string.c_str(), &endptr);
   if (endptr == double_string.c_str() || *endptr != '\0') {
-    FATAL("Cannot convert string to double: `%s`", double_string);
+    FATAL("Failed to parse double '%s'", double_string);
   }
   return number;
 }
@@ -177,7 +177,7 @@ void HealthKitRecordImporter::AddMeasurementsOrDie(
   } else if (type_ == "HKQuantityTypeIdentifierDietaryPotassium") {
     ConsumeMilligramsOrDie("Diet", "PotassiumConsumed");
   } else {
-    FATAL("Unhandled type for record: %s", DebugString());
+    FATAL("Unhandled type '%s' for HealthKit record: %s", type_, DebugString());
   }
 }
 

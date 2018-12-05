@@ -39,18 +39,18 @@ V FindOrAdd(absl::flat_hash_map<K, V>* map, const K& key,
 // used by HealthKit: %Y-%m-%d %H:%M:%S %z.
 int64_t ParseHealthKitDatetimeOrDie(const string& date);
 
+// Parse an integer from a string or crash fatally.
+int64_t ParseIntOrDie(const string& integer_string);
+
+// Parse a double from a string or crash fatally.
+double ParseDoubleOrDie(const string& double_string);
+
 // If the given attribute's name matches attribute_name, set attribute_value and
 // return true. If the names do not match, attribute_value is not set, and
 // returns false.
 bool SetAttributeIfMatch(
     const boost::property_tree::ptree::value_type& attribute,
     const string attribute_name, string* attribute_value);
-
-// Parse an integer from a string or crash fatally.
-int64_t ParseIntOrDie(const string& integer_string);
-
-// Parse a double from a string or crash fatally.
-double ParseDoubleOrDie(const string& double_string);
 
 // A class for processing the Record elements in HealthKit XML files.
 //
@@ -72,6 +72,14 @@ double ParseDoubleOrDie(const string& double_string);
 class HealthKitRecordImporter {
  public:
   HealthKitRecordImporter() : new_series_(false) {}
+
+  // Constructor that explicitly sets all fields that would otherwise be set by
+  // InitFromRecordOrDie(). Used for testing.
+  HealthKitRecordImporter(
+      const string& type, const string& unit, const string& value,
+      const string& sourceName, const string& startDate, const string& endDate)
+    : type_(type), unit_(unit), value_(value), sourceName_(sourceName),
+      startDate_(startDate), endDate_(endDate) {}
 
   // Initialize the member variables by parsing the XML Record attributes.
   // Instances of this class can be reused by calling this method with different

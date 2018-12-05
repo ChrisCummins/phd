@@ -29,6 +29,16 @@ cc_library(
     ],
 )
 
+cc_test(
+    name = "health_kit_lib_test",
+    srcs = ["health_kit_lib_test.cc"],
+    deps = [
+        ":health_kit_lib",
+        "//datasets/me_db:me_proto_cc",
+        "//phd:test",
+    ],
+)
+
 cc_binary(
     name = "xml_export_worker",
     srcs = ["xml_export_worker.cc"],
