@@ -39,9 +39,6 @@ class Measurement(Base):
   __tablename__ = 'measurements'
 
   id: int = sql.Column(sql.Integer, primary_key=True)
-  date_added: datetime.datetime = sql.Column(
-      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-      nullable=False, default=labdate.GetUtcMillisecondsNow)
 
   series: str = sql.Column(sql.String(512), nullable=False)
   date: datetime.datetime = sql.Column(
