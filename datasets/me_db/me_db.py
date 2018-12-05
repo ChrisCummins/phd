@@ -13,7 +13,7 @@ from sqlalchemy.ext import declarative
 
 from datasets.me_db import importers
 from datasets.me_db import me_pb2
-from datasets.me_db.healthkit import healthkit
+from datasets.me_db.health_kit import health_kit
 from datasets.me_db.life_cycle import life_cycle
 from datasets.me_db.ynab import ynab
 from lib.labm8 import labdate
@@ -33,7 +33,7 @@ Base = declarative.declarative_base()
 def CreateTasksFromInbox(inbox: pathlib.Path) -> typing.Iterator[
   importers.ImporterTask]:
   """Return ImporterTasks for all importers."""
-  yield from healthkit.CreateTasksFromInbox(inbox)
+  yield from health_kit.CreateTasksFromInbox(inbox)
   yield from ynab.CreateTasksFromInbox(inbox)
   yield from life_cycle.CreateTasksFromInbox(inbox)
 

@@ -6,5 +6,5 @@ decision making.
 ## Data sources supported
 
 * [LifeCycle](/datasets/me_db/life_cycle) time tracking data.
-* [HealthKit](/datasets/me_db/healthkit) iPhone and Apple Watch measurements.
+* [HealthKit](/datasets/me_db/health_kit) iPhone and Apple Watch measurements.
 * [YNAB](/datasets/me_db/ynab) budgeting and transactions ledger.

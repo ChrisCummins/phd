@@ -37,7 +37,7 @@ def ProcessXmlFile(path: pathlib.Path) -> me_pb2.SeriesCollection:
     return pbutil.RunProcessMessageInPlace(
         [str(
             bazelutil.DataPath(
-                'phd/datasets/me_db/healthkit/xml_export_worker'))],
+                'phd/datasets/me_db/health_kit/xml_export_worker'))],
         me_pb2.SeriesCollection(source=str(path)))
   except subprocess.CalledProcessError as e:
     raise importers.ImporterError('HealthKit', path, str(e)) from e

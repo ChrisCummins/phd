@@ -45,7 +45,7 @@ py_binary(
         ":healthkit",
         ":omnifocus",
         ":toggl_import",
-        "//datasets/me_db/healthkit",
+        "//datasets/me_db/health_kit",
         "//datasets/me_db/life_cycle",
         "//datasets/me_db/ynab",
         "//lib/labm8:labdate",
