@@ -45,20 +45,65 @@ double ParseDoubleOrDie(const string& double_string) {
   return number;
 }
 
-string RecordAttributes::ToString() const {
-  return absl::StrFormat("%s %s %s %s %s %s", type_, value_, unit_, sourceName_, startDate_, endDate_);
+void RecordAttributes::ParseFromXmlOrDie(
+    const boost::property_tree::ptree& record) {
+  int attribute_count = 0;
+
+  for (const boost::property_tree::ptree::value_type& attr :
+       record.get_child("<xmlattr>")) {
+    if (TryConsumeAttribute(attr, "type", &type_) ||
+        TryConsumeAttribute(attr, "unit", &unit_) ||
+        TryConsumeAttribute(attr, "value", &value_) ||
+        TryConsumeAttribute(attr, "sourceName", &sourceName_) ||
+        TryConsumeAttribute(attr, "startDate", &startDate_) ||
+        TryConsumeAttribute(attr, "endDate", &endDate_)) {
+      ++attribute_count;
+    }
+
+    if (attribute_count == 6) {
+      return;
+    }
+  }
+  // Not all Records have a unit field. This is the only case in which having
+  // less than the full 6 attributes is *not* an error.
+  if (!(attribute_count == 5 && unit_.empty()) &&
+      !(attribute_count == 4 && unit_.empty() &&
+        value_.empty())) {
+    FATAL("Failed to parse necessary attributes from Record: %s",
+          DebugString());
+  }
+  return;
 }
 
-string RecordAttributes::DebugString() const {
-  return absl::StrFormat("\ntype=%s\nvalue=%s\nunit=%s\nsource=%s\nstart_date=%s\nend_date=%s", type_, value_, unit_, sourceName_, startDate_, endDate_);
+Series* RecordAttributes::GetOrCreateSeries(
+    SeriesCollection* series_collection,
+    absl::flat_hash_map<string, Series*>* type_to_series_map) {
+  bool* new_series = &new_series_;
+  return FindOrAdd<string, Series*>(
+        type_to_series_map, type_,
+        [&type_to_series_map, series_collection, new_series](
+            const string& name) -> Series* {
+      // Create the new series. We don't set series field values immediately,
+      // since we handle the conversion from XML Record values to our values
+      // at the same time we create measurements. So instead we set the
+      // new_series_ member variable to true and defer until SetMeasurement()
+      // is called.
+      Series* series = series_collection->add_series();
+      *new_series = true;
+      type_to_series_map->insert(std::make_pair(name, series));
+      return series;
+    });
 }
 
-void RecordAttributes::AddMeasurementToSeries(
-    Series*const series, const bool new_series) {
-  // Create the new measurement.
-  series_ = series;
-  measurement_ = series->add_measurement();
-  new_series_ = new_series;
+void RecordAttributes::AddMeasurementsFromXmlOrDie(
+      const boost::property_tree::ptree& record,
+      SeriesCollection* series_collection,
+      absl::flat_hash_map<string, Series*>* type_to_series_map) {
+  // Set the member variables from the record.
+  ParseFromXmlOrDie(record);
+
+  // Get the series to associate with new measurements.
+  series_ = GetOrCreateSeries(series_collection, type_to_series_map);
 
   if (type_ == "HKQuantityTypeIdentifierDietaryWater") {
     ConsumeMillilitersOrDie("Diet", "WaterConsumed");
@@ -131,49 +176,27 @@ void RecordAttributes::AddMeasurementToSeries(
   }
 }
 
-/*static*/ RecordAttributes RecordAttributes::CreateFromXmlRecord(
-    const boost::property_tree::basic_ptree<std::__1::basic_string<char>, std::__1::basic_string<char>, std::__1::less<std::__1::basic_string<char> > >& record) {
-  RecordAttributes attributes;
-  int attribute_count = 0;
+string RecordAttributes::ToString() const {
+  return absl::StrFormat("%s %s %s %s %s %s", type_, value_, unit_, sourceName_, startDate_, endDate_);
+}
 
-  for (const boost::property_tree::ptree::value_type& attr :
-       record.get_child("<xmlattr>")) {
-    if (TryConsumeAttribute(attr, "type", &attributes.type_) ||
-        TryConsumeAttribute(attr, "unit", &attributes.unit_) ||
-        TryConsumeAttribute(attr, "value", &attributes.value_) ||
-        TryConsumeAttribute(attr, "sourceName", &attributes.sourceName_) ||
-        TryConsumeAttribute(attr, "startDate", &attributes.startDate_) ||
-        TryConsumeAttribute(attr, "endDate", &attributes.endDate_)) {
-      ++attribute_count;
-    }
-
-    if (attribute_count == 6) {
-      return attributes;
-    }
-  }
-  // Not all Records have a unit field. This is the only case in which having
-  // less than the full 6 attributes is *not* an error.
-  if (!(attribute_count == 5 && attributes.unit_.empty()) &&
-      !(attribute_count == 4 && attributes.unit_.empty() &&
-        attributes.value_.empty())) {
-    FATAL("Failed to parse necessary attributes from Record: %s",
-          attributes.DebugString());
-  }
-  return attributes;
+string RecordAttributes::DebugString() const {
+  return absl::StrFormat("\ntype=%s\nvalue=%s\nunit=%s\nsource=%s\nstart_date=%s\nend_date=%s", type_, value_, unit_, sourceName_, startDate_, endDate_);
 }
 
 void RecordAttributes::ConsumeCountOrDie(
     const string& family, const string& name, const string& group) {
   CHECK(unit_ == "count");
-  SetMeasurement(family, name, group, /*unit=*/"count",
-                 /*value=*/ParseIntOrDie(value_));
+  *series_->add_measurement() = CreateMeasurement(
+      family, name, group, "count", ParseIntOrDie(value_));
 }
 
 void RecordAttributes::ConsumeBodyMassIndexOrDie(
     const string& family, const string& name, const string& group) {
   CHECK(unit_ == "count");
-  SetMeasurement(family, name, group, /*unit=*/"body_mass_index_millis",
-                 /*value=*/ParseDoubleOrDie(value_) * 1000000);
+  *series_->add_measurement() = CreateMeasurement(
+      family, name, group, "body_mass_index_millis",
+      ParseDoubleOrDie(value_) * 1000000);
 }
 
 void RecordAttributes::ConsumePercentageOrDie(
@@ -181,86 +204,90 @@ void RecordAttributes::ConsumePercentageOrDie(
   if (unit_ != "%") {
     FATAL("Expected unit %%, received unit %s", unit_);
   }
-  SetMeasurement(family, name, group, /*unit=*/"percentage_millis",
-                 /*value=*/ParseDoubleOrDie(value_) * 1000000);
+  *series_->add_measurement() = CreateMeasurement(
+      family, name, group, "percentage_millis",
+      ParseDoubleOrDie(value_) * 1000000);
 }
 
 void RecordAttributes::ConsumeCountsPerMinuteOrDie(
     const string& family, const string& name, const string& group) {
   CHECK(unit_ == "count/min");
-  SetMeasurement(family, name, group, /*unit=*/"beats_per_minute_millis",
-                 /*value=*/ParseDoubleOrDie(value_) * 1000000);
+  *series_->add_measurement() = CreateMeasurement(
+      family, name, group, "beats_per_minute_millis",
+      ParseDoubleOrDie(value_) * 1000000);
 }
 
 void RecordAttributes::ConsumeMillilitersPerKilogramMinuteOrDie(
     const string& family, const string& name, const string& group) {
   CHECK(unit_ == "mL/min·kg");
-  SetMeasurement(family, name, group,
-                 /*unit=*/"milliliters_per_kilogram_per_minute_millis",
-                 /*value=*/ParseDoubleOrDie(value_) * 1000000);
+  *series_->add_measurement() = CreateMeasurement(
+      family, name, group,
+      "milliliters_per_kilogram_per_minute_millis",
+      ParseDoubleOrDie(value_) * 1000000);
 }
 
 void RecordAttributes::ConsumeKCalOrDie(
     const string& family, const string& name, const string& group) {
   CHECK(unit_ == "kcal");
-  SetMeasurement(family, name, group, /*unit=*/"calories",
-                 /*value=*/ParseDoubleOrDie(value_) * 1000);
+  *series_->add_measurement() = CreateMeasurement(
+      family, name, group, "calories", ParseDoubleOrDie(value_) * 1000);
 }
 
 void RecordAttributes::ConsumeKilometersOrDie(
     const string& family, const string& name, const string& group) {
   CHECK(unit_ == "km");
-  SetMeasurement(family, name, group, /*unit=*/"millimeters",
-                 /*value=*/ParseDoubleOrDie(value_) * 1000000);
+  *series_->add_measurement() = CreateMeasurement(
+      family, name, group, "millimeters", ParseDoubleOrDie(value_) * 1000000);
 }
 
 void RecordAttributes::ConsumeCentimetersOrDie(
     const string& family, const string& name, const string& group) {
   CHECK(unit_ == "cm");
-  SetMeasurement(family, name, group, /*unit=*/"millimeters",
-                 /*value=*/ParseDoubleOrDie(value_) * 10);
+  *series_->add_measurement() = CreateMeasurement(
+      family, name, group, "millimeters", ParseDoubleOrDie(value_) * 10);
 }
 
 void RecordAttributes::ConsumeMillilitersOrDie(
     const string& family, const string& name, const string& group) {
   CHECK(unit_ == "mL");
-  SetMeasurement(family, name, group, /*unit=*/"milliliters",
-                 /*value=*/ParseIntOrDie(value_));
+  *series_->add_measurement() = CreateMeasurement(
+      family, name, group, "milliliters", ParseIntOrDie(value_));
 }
 
 void RecordAttributes::ConsumeKilogramsOrDie(
     const string& family, const string& name, const string& group) {
   CHECK(unit_ == "kg");
-  SetMeasurement(family, name, group, /*unit=*/"milligrams",
-                 /*value=*/ParseDoubleOrDie(value_) * 1000000);
+  *series_->add_measurement() = CreateMeasurement(
+      family, name, group, "milligrams", ParseDoubleOrDie(value_) * 1000000);
 }
 
 void RecordAttributes::ConsumeGramsOrDie(
     const string& family, const string& name, const string& group) {
   CHECK(unit_ == "g");
-  SetMeasurement(family, name, group, /*unit=*/"milligrams",
-                 /*value=*/ParseDoubleOrDie(value_) * 1000);
+  *series_->add_measurement() = CreateMeasurement(
+      family, name, group, "milligrams", ParseDoubleOrDie(value_) * 1000);
 }
 
 void RecordAttributes::ConsumeMilligramsOrDie(
     const string& family, const string& name, const string& group) {
   CHECK(unit_ == "mg");
-  SetMeasurement(family, name, group, /*unit=*/"milligrams",
-                 /*value=*/ParseDoubleOrDie(value_));
+  *series_->add_measurement() = CreateMeasurement(
+      family, name, group, "milligrams", ParseDoubleOrDie(value_));
 }
 
 void RecordAttributes::ConsumeMinutesOrDie(
     const string& family, const string& name, const string& group) {
   CHECK(unit_ == "min");
-  SetMeasurement(family, name, group, /*unit=*/"milliseconds",
-                 /*value=*/ParseDoubleOrDie(value_) * 60 * 1000);
+  *series_->add_measurement() = CreateMeasurement(
+      family, name, group, "milliseconds",
+      ParseDoubleOrDie(value_) * 60 * 1000);
 }
 
 void RecordAttributes::ConsumeMillisecondsOrDie(
     const string& family, const string& name, const string& group) {
   CHECK(unit_ == "ms");
-  SetMeasurement(family, name, group, /*unit=*/"milliseconds",
-                 /*value=*/ParseDoubleOrDie(value_));
+  *series_->add_measurement() = CreateMeasurement(
+      family, name, group, "milliseconds", ParseDoubleOrDie(value_));
 }
 
 void RecordAttributes::ConsumeDurationOrDie(
@@ -268,8 +295,8 @@ void RecordAttributes::ConsumeDurationOrDie(
   CHECK(value_.empty());
   CHECK(unit_.empty());
   int64_t duration_ms = ParseDateOrDie(endDate_) - ParseDateOrDie(startDate_);
-  SetMeasurement(family, name, group, /*unit=*/"milliseconds",
-                 /*value=*/duration_ms);
+  *series_->add_measurement() = CreateMeasurement(
+      family, name, group, "milliseconds", duration_ms);
 }
 
 void RecordAttributes::ConsumeSleepAnalysisOrDie(
@@ -287,8 +314,8 @@ void RecordAttributes::ConsumeSleepAnalysisOrDie(
           "sleep analysis Record: %s", DebugString());
   }
   int64_t duration_ms = ParseDateOrDie(endDate_) - ParseDateOrDie(startDate_);
-  SetMeasurement(family, name, group, /*unit=*/"milliseconds",
-                 /*value=*/duration_ms);
+  *series_->add_measurement() = CreateMeasurement(
+      family, name, group, "milliseconds", duration_ms);
 }
 
 void RecordAttributes::ConsumeStandHourOrDie(
@@ -303,31 +330,38 @@ void RecordAttributes::ConsumeStandHourOrDie(
     FATAL("Could not handle the value field of "
           "stand hour Record: %s", DebugString());
   }
-  SetMeasurement(family, name, group, /*unit=*/"count", /*value=*/1);
+  *series_->add_measurement() = CreateMeasurement(
+      family, name, group, "count", 1);
 }
 
 void RecordAttributes::ConsumeCountableEventOrDie(
     const string& family, const string& name, const string& group) {
   CHECK(unit_.empty());
-  SetMeasurement(family, name, group, /*unit=*/"count", /*value=*/1);
+  *series_->add_measurement() = CreateMeasurement(
+      family, name, group, "count", 1);
 }
 
-void RecordAttributes::SetMeasurement(
+Measurement RecordAttributes::CreateMeasurement(
     const string& family, const string& name, const string& group,
     const string& unit, const int64_t value) {
   if (new_series_) {
     series_->set_name(name);
     series_->set_family(family);
     series_->set_unit(unit);
+    new_series_ = false;
   }
-  measurement_->set_ms_since_unix_epoch(ParseDateOrDie(startDate_));
-  measurement_->set_value(value);
-  measurement_->set_group(group);
+
+  Measurement measurement;
+  measurement.set_ms_since_unix_epoch(ParseDateOrDie(startDate_));
+  measurement.set_value(value);
+  measurement.set_group(group);
 
   // Set the source as the device name.
   CHECK(!sourceName_.empty());
-  measurement_->set_source(
+  measurement.set_source(
       absl::StrFormat("HealthKit:%s", phd::ToCamelCase(sourceName_)));
+
+  return measurement;
 }
 
 
@@ -349,39 +383,48 @@ void ProcessHealthKitXmlExport(SeriesCollection* series_collection) {
   absl::flat_hash_map<string, Series*> type_to_series_map;
 
   // Iterate over all "HealthData" elements.
-  int record_index = 0;
   for (const boost::property_tree::ptree::value_type& health_elem :
        root.get_child("HealthData")) {
 
     // There are multiple types for HealthData elements. We're only interested
     // in records.
-    if (health_elem.first != "Record") {
-      continue;
+    // TODO(cec): Add support for ActivitySummary and Workout elements.
+    //
+    // Schema for workouts:
+    //
+    //     <!ATTLIST Workout
+    //       workoutActivityType   CDATA #REQUIRED
+    //       duration              CDATA #IMPLIED
+    //       durationUnit          CDATA #IMPLIED
+    //       totalDistance         CDATA #IMPLIED
+    //       totalDistanceUnit     CDATA #IMPLIED
+    //       totalEnergyBurned     CDATA #IMPLIED
+    //       totalEnergyBurnedUnit CDATA #IMPLIED
+    //       sourceName            CDATA #REQUIRED
+    //       sourceVersion         CDATA #IMPLIED
+    //       device                CDATA #IMPLIED
+    //       creationDate          CDATA #IMPLIED
+    //       startDate             CDATA #REQUIRED
+    //       endDate               CDATA #REQUIRED
+    //     >
+    //
+    // Schema for activity summaries:
+    //
+    //     <!ATTLIST ActivitySummary
+    //       dateComponents           CDATA #IMPLIED
+    //       activeEnergyBurned       CDATA #IMPLIED
+    //       activeEnergyBurnedGoal   CDATA #IMPLIED
+    //       activeEnergyBurnedUnit   CDATA #IMPLIED
+    //       appleExerciseTime        CDATA #IMPLIED
+    //       appleExerciseTimeGoal    CDATA #IMPLIED
+    //       appleStandHours          CDATA #IMPLIED
+    //       appleStandHoursGoal      CDATA #IMPLIED
+    //     >
+    if (health_elem.first == "Record") {
+      RecordAttributes record;
+      record.AddMeasurementsFromXmlOrDie(health_elem.second, series_collection,
+                                         &type_to_series_map);
     }
-
-    ++record_index;
-    RecordAttributes record = RecordAttributes::CreateFromXmlRecord(
-        health_elem.second);
-
-    bool set_properties_on_series = false;
-    // Add a pointer to the flag so that the FindOrAdd lambda can capture it by
-    // reference.
-    bool *new_series = &set_properties_on_series;
-
-    // Find the series that the new measurement should belong to. If the Series
-    // does not exist, create it.
-    Series* series = FindOrAdd<string, Series*>(
-        &type_to_series_map, record.type_,
-        [&type_to_series_map,series_collection,new_series](
-            const string& name) -> Series* {
-      *new_series = true;
-      Series* series = series_collection->add_series();
-      type_to_series_map.insert(
-          std::make_pair(name, series));
-      return series;
-    });
-
-    record.AddMeasurementToSeries(series, set_properties_on_series);
   }
 }
 

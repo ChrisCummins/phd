@@ -62,28 +62,32 @@ double ParseDoubleOrDie(const string& double_string);
 //
 class RecordAttributes {
  public:
-  string type_;
-  string unit_;
-  string value_;
-  string sourceName_;
-  string startDate_;
-  string endDate_;
+  RecordAttributes() : new_series_(false) {}
+
+  // Initialize values from an XML Record entry. On error, crash fatally.
+  void AddMeasurementsFromXmlOrDie(
+      const boost::property_tree::ptree& record,
+      SeriesCollection* series_collection,
+      absl::flat_hash_map<string, Series*>* type_to_series_map);
+
+  void ParseFromXmlOrDie(const boost::property_tree::ptree& record);
+
+  // Find the series that the new measurement should belong to. If the Series
+  // does not exist, create it, and add it to the type_to_series_map.
+  Series* GetOrCreateSeries(
+      SeriesCollection* series_collection,
+      absl::flat_hash_map<string, Series*>* type_to_series_map);
 
   string ToString() const;
 
   string DebugString() const;
 
-  void AddMeasurementToSeries(Series*const series, const bool new_series);
-
-  static RecordAttributes CreateFromXmlRecord(
-      const boost::property_tree::basic_ptree<std::__1::basic_string<char>, std::__1::basic_string<char>, std::__1::less<std::__1::basic_string<char> > >& record);
-
  private:
   void ConsumeCountOrDie(const string& family, const string& name,
                          const string& group = "default");
 
- void ConsumeBodyMassIndexOrDie(const string& family, const string& name,
-                                const string& group = "default");
+  void ConsumeBodyMassIndexOrDie(const string& family, const string& name,
+                                 const string& group = "default");
 
   void ConsumePercentageOrDie(const string& family, const string& name,
                               const string& group = "default");
@@ -144,12 +148,25 @@ class RecordAttributes {
   void ConsumeCountableEventOrDie(const string& family, const string& name,
                                   const string& group = "default");
 
-  void SetMeasurement(const string& family, const string& name,
-                      const string& group, const string& unit,
-                      const int64_t value);
+  Measurement CreateMeasurement(
+      const string& family, const string& name, const string& group,
+      const string& unit, const int64_t value);
 
+  // The string values parsed from the XML Record. Set by ParseFromXmlOrDie().
+  string type_;
+  string unit_;
+  string value_;
+  string sourceName_;
+  string startDate_;
+  string endDate_;
+
+  // The series that the XML Record belongs to. Set by
+  // AddMeasurementsFromXmlOrDie().
   Series* series_;
-  Measurement* measurement_;
+
+  // Indicates whether the series was created by the call to
+  // GetOrCreateSeries(). If true, the Series fields will be set. Else, just
+  // the measurement will be added.
   bool new_series_;
 };
 
