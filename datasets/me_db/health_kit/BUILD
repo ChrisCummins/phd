@@ -1,8 +1,8 @@
 # Package to handle data from HealthKit.
 
 py_binary(
-    name = "healthkit",
-    srcs = ["healthkit.py"],
+    name = "health_kit",
+    srcs = ["health_kit.py"],
     data = [":xml_export_worker"],
     visibility = ["//datasets/me_db:__pkg__"],
     deps = [
