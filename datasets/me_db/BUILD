@@ -45,13 +45,13 @@ py_binary(
         ":healthkit",
         ":omnifocus",
         ":toggl_import",
+        "//datasets/me_db/healthkit",
+        "//datasets/me_db/life_cycle",
+        "//datasets/me_db/ynab",
         "//lib/labm8:labdate",
         "//lib/labm8:sqlutil",
         "//third_party/py/absl",
         "//third_party/py/sqlalchemy",
-        "//datasets/me_db/healthkit",
-        "//datasets/me_db/life_cycle",
-        "//datasets/me_db/ynab",
     ],
 )
 

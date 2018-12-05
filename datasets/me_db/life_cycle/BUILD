@@ -16,9 +16,9 @@ cc_library(
     srcs = ["life_cycle_lib.cc"],
     hdrs = ["life_cycle_lib.h"],
     deps = [
+        "//datasets/me_db:me_proto_cc",
         "//phd:macros",
         "//phd:string",
-        "//datasets/me_db:me_proto_cc",
         "@boost//:filesystem",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/strings",
@@ -31,8 +31,8 @@ cc_test(
     srcs = ["life_cycle_lib_test.cc"],
     deps = [
         ":life_cycle_lib",
-        "//phd:test",
         "//datasets/me_db:me_proto_cc",
+        "//phd:test",
     ],
 )
 
@@ -42,11 +42,11 @@ py_binary(
     data = [":lc_export_csv_worker"],
     visibility = ["//datasets/me_db:__pkg__"],
     deps = [
+        "//datasets/me_db:importers",
+        "//datasets/me_db:me_proto_pb2",
         "//lib/labm8:bazelutil",
         "//lib/labm8:pbutil",
         "//third_party/py/absl",
-        "//datasets/me_db:importers",
-        "//datasets/me_db:me_proto_pb2",
     ],
 )
 
@@ -56,9 +56,9 @@ py_test(
     deps = [
         ":life_cycle",
         ":make_dataset",
+        "//datasets/me_db:me_proto_pb2",
         "//third_party/py/absl",
         "//third_party/py/pytest",
-        "//datasets/me_db:me_proto_pb2",
     ],
 )
 
