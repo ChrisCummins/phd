@@ -41,10 +41,6 @@ py_binary(
     srcs = ["me_db.py"],
     visibility = ["//visibility:public"],
     deps = [
-        ":aggregate",
-        ":healthkit",
-        ":omnifocus",
-        ":toggl_import",
         "//datasets/me_db/health_kit",
         "//datasets/me_db/life_cycle",
         "//datasets/me_db/ynab",
