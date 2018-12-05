@@ -8,3 +8,12 @@ decision making.
 * [LifeCycle](/datasets/me_db/life_cycle) time tracking data.
 * [HealthKit](/datasets/me_db/health_kit) iPhone and Apple Watch measurements.
 * [YNAB](/datasets/me_db/ynab) budgeting and transactions ledger.
+
+
+### Future plans
+
+I have plans to add support for the following additional sources:
+
+* Google Calendar - duration and times of calendar events.
+* OmniFocus - number of tasks completed / added per day.
+* Timing.app - time tracking from macOS.
