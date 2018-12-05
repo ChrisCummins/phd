@@ -1,6 +1,8 @@
 // Utility code for working with strings.
 #pragma once
 
+#include <string>
+
 using std::string;
 
 namespace phd {
