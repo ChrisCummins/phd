@@ -38,6 +38,7 @@ cc_test(
 cc_library(
     name = "string",
     hdrs = ["string.h"],
+    srcs = ["string.cc"],
     visibility = ["//visibility:public"],
     deps = [
         "@com_google_absl//absl/strings",
