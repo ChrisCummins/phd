@@ -1,17 +1,38 @@
 # Package to handle data from Life Cycle.
 
+# lc_export_csv_worker rule split into two, since cc_test can only depend on
+# cc_binary.
 cc_binary(
     name = "lc_export_csv_worker",
     srcs = ["lc_export_csv_worker.cc"],
     deps = [
-        "//phd:macros",
+        ":life_cycle_lib",
         "//phd:pbutil",
+    ],
+)
+
+cc_library(
+    name = "life_cycle_lib",
+    srcs = ["life_cycle_lib.cc"],
+    hdrs = ["life_cycle_lib.h"],
+    deps = [
+        "//phd:macros",
         "//phd:string",
         "//util/me:me_proto_cc",
         "@boost//:filesystem",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/time",
+    ],
+)
+
+cc_test(
+    name = "life_cycle_lib_test",
+    srcs = ["life_cycle_lib_test.cc"],
+    deps = [
+        ":life_cycle_lib",
+        "//phd:test",
+        "//util/me:me_proto_cc",
     ],
 )
 
