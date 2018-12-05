@@ -14,17 +14,26 @@ py_binary(
     ],
 )
 
-cc_binary(
-    name = "xml_export_worker",
-    srcs = ["xml_export_worker.cc"],
+cc_library(
+    name = "health_kit_lib",
+    srcs = ["health_kit_lib.cc"],
+    hdrs = ["health_kit_lib.h"],
     deps = [
         "//datasets/me_db:me_proto_cc",
         "//phd:macros",
-        "//phd:pbutil",
         "//phd:string",
         "@boost//:filesystem",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/time",
+    ],
+)
+
+cc_binary(
+    name = "xml_export_worker",
+    srcs = ["xml_export_worker.cc"],
+    deps = [
+        ":health_kit_lib",
+        "//phd:pbutil",
     ],
 )
