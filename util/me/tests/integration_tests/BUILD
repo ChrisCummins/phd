@@ -3,9 +3,9 @@
 
 py_library(
     name = "conftest",
+    testonly = 1,
     srcs = ["conftest.py"],
     data = ["//util/me/tests:test_inbox_files"],
-    testonly = 1,
 )
 
 py_test(
@@ -13,8 +13,8 @@ py_test(
     srcs = ["life_cycle_integration_test.py"],
     deps = [
         ":conftest",
-        "//util/me",
         "//third_party/py/absl",
         "//third_party/py/pytest",
-    ]
+        "//util/me",
+    ],
 )
