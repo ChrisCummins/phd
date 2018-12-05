@@ -55,7 +55,7 @@ def ProcessDirectory(directory: pathlib.Path) -> typing.Iterator[
 def CreateTasksFromInbox(inbox: pathlib.Path) -> importers.ImporterTasks:
   """Generate an iterator of import tasks from an "inbox" directory."""
   if (inbox / 'YNAB').exists():
-    yield lambda: ProcessDirectory(inbox / 'YNAB')
+    yield lambda: ProcessDirectory(inbox / 'ynab')
 
 
 def main(argv: typing.List[str]):
