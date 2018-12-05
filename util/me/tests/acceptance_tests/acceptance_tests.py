@@ -1,0 +1,163 @@
+"""Acceptance tests that perform dataset-agnostic, high level tests of a
+database after importing an inbox.
+
+These are implemented in a single file so that they can run in a single pytest
+session. When running the integration tests with large datasets, the amount of
+time taken to prepare the pytest fixtures becomes prohibitively expensive.
+
+Usage:
+
+    bazel test //util/me/tests/acceptance_tests --test_output=streamed
+        --test_flag=--medb_acceptance_tests_inbox=/path/to/inbox
+"""
+import datetime
+import pandas as pd
+import pathlib
+import pytest
+import sys
+import tempfile
+import typing
+from absl import app
+from sqlalchemy.sql.expression import func
+
+from lib.labm8 import bazelutil
+from util.me import me
+from util.me.tests.acceptance_tests import flags
+
+
+FLAGS = flags.FLAGS
+
+TEST_INBOX_PATH = bazelutil.DataPath('phd/util/me/tests/test_inbox')
+
+MILLISECONDS_IN_A_DAY = 1000 * 3600 * 24
+
+
+def GetInboxPath() -> pathlib.Path:
+  """Get the path of the inbox to populate a test database with."""
+  # FLAGS.medb_acceptance_tests_inbox is defined in :flags.py.
+  #
+  # A quirk in the combination of pytest and absl flags is that you can't define
+  # a flag in the same file that you invoke pytest.main(). This is because the
+  # pytest collector re-imports the file, causing absl to error because the
+  # flags have already been defined.
+  if FLAGS.medb_acceptance_tests_inbox:
+    return pathlib.Path(FLAGS.medb_acceptance_tests_inbox)
+  else:
+    return TEST_INBOX_PATH
+
+
+# Pytest fixtures cannot be moved out to a conftest.py file since they need to
+# access FLAGS, and conftest loading occurs before app.run().
+@pytest.fixture(scope='function')
+def mutable_db() -> me.Database:
+  """Returns a populated database for the scope of the function."""
+  with tempfile.TemporaryDirectory(prefix='phd_') as d:
+    db = me.Database(pathlib.Path(d) / 'me.db')
+    db.ImportMeasurementsFromInbox(GetInboxPath())
+    yield db
+
+
+@pytest.fixture(scope='session')
+def db() -> me.Database:
+  """Returns a populated database that is reused for all tests.
+
+  DO NOT MODIFY THE TEST DATABASE. This will break other tests. For a test that
+  modifies the database, use the `mutable_db` fixture.
+  """
+  with tempfile.TemporaryDirectory(prefix='phd_') as d:
+    db = me.Database(pathlib.Path(d) / 'me.db')
+    db.ImportMeasurementsFromInbox(GetInboxPath())
+    yield db
+
+
+def test_num_measurements(db: me.Database):
+  """Test that at least measurement has been imported."""
+  with db.Session() as s:
+    q = s.query(me.Measurement)
+
+    assert q.count() > 1
+
+
+def test_groups_not_empty(db: me.Database):
+  """Test the number of measurements."""
+  with db.Session() as s:
+    q = s.query(me.Measurement) \
+      .filter(me.Measurement.group == '')
+
+    # There should be no missing "group" field. Instead of an empty group, use
+    # the value "default".
+    assert q.count() == 0
+
+
+def test_no_dates_in_the_future(db: me.Database):
+  """Test that there are no dates in the future."""
+  now = datetime.datetime.now()
+  with db.Session() as s:
+    q = s.query(me.Measurement) \
+      .filter(me.Measurement.date > now)
+
+    assert q.count() == 0
+
+
+def test_lifecycle_daily_total(db: me.Database):
+  """Test that the sum of all measurements for a day is <= 24 hours."""
+  with db.Session() as s:
+    q = s.query(func.DATE(me.Measurement.date).label('date'),
+                (func.sum(me.Measurement.value)).label('time')) \
+      .filter(me.Measurement.source == 'LifeCycle') \
+      .group_by(me.Measurement.date)
+    df = pd.read_sql(q.statement, q.session.bind)
+
+    assert df[df.time > MILLISECONDS_IN_A_DAY].empty
+
+
+def test_lifecycle_dates_do_not_overflow(db: me.Database):
+  """Test that no LifeCycle measurements overflow to the next day."""
+  with db.Session() as s:
+    q = s.query(me.Measurement.date, me.Measurement.value) \
+      .filter(me.Measurement.source == 'LifeCycle')
+
+    for start_date, value in q.distinct():
+      end_date = start_date + datetime.timedelta(milliseconds=value)
+      if start_date.day == end_date.day:
+        continue
+      # The only case where the end date is allowed to differ from the start
+      # date is when we have overflowed to midnight (00:00:00) the next day.
+      if not (end_date.day == start_date.day + 1 and
+              end_date.hour == 0 and
+              end_date.minute == 0 and
+              end_date.second == 0):
+        pytest.fail(
+            f'Date {start_date} overflows when adding measurement {value} ms '
+            f'(calculated end date: {end_date})')
+
+
+def test_lifecycle_dates_are_unique(db: me.Database):
+  """There can be no duplicate dates in Life Cycle measurements."""
+  with db.Session() as s:
+    q = s.query(me.Measurement.date) \
+      .filter(me.Measurement.source == 'LifeCycle')
+    num_lifecycle_dates = q.count()
+
+    q = s.query(me.Measurement.date) \
+      .filter(me.Measurement.source == 'LifeCycle') \
+      .distinct()
+    num_distinct_lifecycle_dates = q.count()
+
+    # There are no duplicate start dates.
+    assert num_distinct_lifecycle_dates == num_lifecycle_dates
+
+
+def main(argv: typing.List[str]):
+  """Main entry point."""
+  import pytest
+
+  if len(argv) > 1:
+    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
+
+  sys.exit(pytest.main([__file__, '-vv']))
+
+
+if __name__ == '__main__':
+  flags.FLAGS(['argv[0]', '-v=1'])
+  app.run(main)
