@@ -59,12 +59,14 @@ py_proto_library(
     name = "me_proto_pb2",
     protos = ["me.proto"],
     visibility = ["//util/me:__subpackages__"],
+    with_grpc = False,
 )
 
 cc_proto_library(
     name = "me_proto_cc",
     protos = ["me.proto"],
     visibility = ["//util/me:__subpackages__"],
+    with_grpc = False,
 )
 
 py_library(
