@@ -40,7 +40,7 @@ class Graph(object):
       return
     visited.add(self)
     for child in self.children:
-      self._PreOrderApply(callback, visited)
+      child._PreOrderApply(callback, visited)
 
   def PreOrderApply(self, callback: typing.Callable[['Graph'], None]) -> None:
     """Apply the given callback to all nodes in the graph.
