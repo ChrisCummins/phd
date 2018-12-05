@@ -30,6 +30,14 @@ flags.DEFINE_bool('replace_existing', False,
 Base = declarative.declarative_base()
 
 
+def CreateTasksFromInbox(inbox: pathlib.Path) -> typing.Iterator[
+  importers.ImporterTask]:
+  """Return ImporterTasks for all importers."""
+  yield from healthkit.CreateTasksFromInbox(inbox)
+  yield from ynab.CreateTasksFromInbox(inbox)
+  yield from life_cycle.CreateTasksFromInbox(inbox)
+
+
 class Measurement(Base):
   """The measurements table.
 
@@ -96,12 +104,12 @@ class Database(sqlutil.Database):
                      len(series.measurement), series.family, series.name)
         session.add_all(MeasurementsFromSeries(series))
 
-
-def CreateTasksFromInbox(inbox: pathlib.Path) -> typing.Iterator[
-  importers.ImporterTask]:
-  yield from healthkit.CreateTasksFromInbox(inbox)
-  yield from ynab.CreateTasksFromInbox(inbox)
-  yield from life_cycle.CreateTasksFromInbox(inbox)
+  def ImportMeasurementsFromInbox(self, inbox: pathlib.Path):
+    """Import and commit measurements from inbox directory."""
+    tasks = CreateTasksFromInbox(inbox)
+    with self.Session(commit=True) as session:
+      self.AddMeasurementsFromImporterTasks(session, tasks)
+      logging.info('Committing records to database')
 
 
 def main(argv):
@@ -126,10 +134,7 @@ def main(argv):
   db = Database(db_path)
   logging.info('Using database `%s`', db.database_path)
 
-  tasks = CreateTasksFromInbox(pathlib.Path(FLAGS.inbox))
-  with db.Session(commit=True) as session:
-    db.AddMeasurementsFromImporterTasks(session, tasks)
-    logging.info('Committing records to database')
+  db.ImportMeasurementsFromInbox(inbox_path)
 
 
 if __name__ == '__main__':
