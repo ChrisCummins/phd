@@ -212,9 +212,6 @@ TEST(RegressionTest, TroublesomeA) {
   ASSERT_EQ(series_collection.series(0).measurement_size(), 3);
   Measurement measurement = series_collection.series(0).measurement(0);
 
-  absl::Time time = (absl::UnixEpoch() +
-                     absl::Milliseconds(measurement.ms_since_unix_epoch()));
-
   EXPECT_EQ(measurement.ms_since_unix_epoch(), 1484877301000);
 }
 
