@@ -79,8 +79,6 @@ def main(argv: typing.List[str]):
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
-  # print(ProcessXmlFile(
-  #     pathlib.Path('/Users/cec/Downloads/apple_health_export/export.xml')))
   importers.RunTasksAndExit(
       CreateTasksFromInbox(pathlib.Path(FLAGS.healthkit_inbox)))
 
