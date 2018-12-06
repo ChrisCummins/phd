@@ -17,22 +17,28 @@ def escape_path(path: str):
     quoted = path.replace('"', '\\"')
     return f'"{quoted}"'
 
+
 def mkepisodal(show_name: str, season_num: int, directory: Path,
-               start_at: int=1):
-    files = sorted(list(directory.iterdir()), key=lambda s: s.name.lower())
+               start_at: int = 1):
+  files = sorted(list(directory.iterdir()), key=lambda s: s.name.lower())
 
-    # Ignore files that begin with a "." (i.e. hidden):
-    files = [x for x in files if not str(x).startswith(".")]
-
+  # Consider each file extension seperately. This is because in most cases,
+  # the file types for a set of videos is homogeneous, but there may be
+  # subtitle (.srt) files running in tamden.
+  extensions = set({f.suffix for f in files})
+  for extension in extensions:
+    # Ignore files that begin with a "." (i.e. hidden files on Unix).
+    files = [x for x in files
+             if x.suffix == extension and not str(x).startswith(".")]
     for i, episode in enumerate(files):
-        episode_num = i + start_at
-        ext = episode.suffix
-        newname = f"{show_name} S{season_num:02d}E{episode_num:02d}{ext}"
+      episode_num = i + start_at
+      ext = episode.suffix
+      newname = f"{show_name} S{season_num:02d}E{episode_num:02d}{ext}"
 
-        src_path = escape_path(str(directory / episode.name))
-        dst_path = escape_path(str(directory / newname))
+      src_path = escape_path(str(directory / episode.name))
+      dst_path = escape_path(str(directory / newname))
 
-        print(f"mv -v {src_path} {dst_path}")
+      print(f"mv -v {src_path} {dst_path}")
 
 
 def main():
