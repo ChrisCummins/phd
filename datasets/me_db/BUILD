@@ -8,24 +8,6 @@ licenses(["restricted"])  # MIT
 exports_files(["LICENSE"])
 
 py_library(
-    name = "aggregate",
-    srcs = ["aggregate.py"],
-    deps = [
-        ":spreadsheet",
-        ":utils",
-    ],
-)
-
-py_library(
-    name = "healthkit",
-    srcs = ["healthkit.py"],
-    deps = [
-        ":utils",
-        "//third_party/py/numpy",
-    ],
-)
-
-py_library(
     name = "importers",
     srcs = ["importers.py"],
     visibility = ["//datasets/me_db:__subpackages__"],
