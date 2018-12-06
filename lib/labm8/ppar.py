@@ -65,7 +65,6 @@ class _MapWorker(object):
     self._output_proto: typing.Optional[pbutil.ProtocolBuffer] = None
     self._output_proto_decoded = False
     self._returncode: typing.Optional[int] = None
-    self._error_message_binary: typing.Optional[str] = None
     self._done = False
 
   def Run(self) -> None:
@@ -139,7 +138,7 @@ class _MapWorker(object):
     If the process succeeded (e.g. _MapWorker.ok()), None is returned.
     """
     if self._returncode:
-      return MapWorkerError(self._returncode, self._error_message_binary)
+      return MapWorkerError(self._returncode)
 
   def ok(self) -> bool:
     """Return whether binary execution succeeded."""
