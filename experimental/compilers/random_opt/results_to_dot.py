@@ -4,10 +4,10 @@ import pathlib
 import typing
 from absl import app
 from absl import flags
+from phd.lib.labm8 import graph
+from phd.lib.labm8 import pbutil
 
 from experimental.compilers.random_opt.proto import random_opt_pb2
-from lib.labm8 import graph
-from lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

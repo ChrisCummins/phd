@@ -8,9 +8,8 @@ import multiprocessing
 import subprocess
 import typing
 from absl import flags
-
-from lib.labm8 import bazelutil
-from lib.labm8 import pbutil
+from phd.lib.labm8 import bazelutil
+from phd.lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

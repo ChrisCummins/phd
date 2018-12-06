@@ -4,9 +4,9 @@ import pathlib
 import sys
 import typing
 from absl import flags
+from phd.lib.labm8 import labtypes
 
 from datasets.me_db import me_pb2
-from lib.labm8 import labtypes
 
 
 FLAGS = flags.FLAGS

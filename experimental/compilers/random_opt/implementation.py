@@ -15,17 +15,17 @@ from absl import flags
 from absl import logging
 from gym import spaces
 from gym.utils import seeding
+from phd.lib.labm8 import crypto
+from phd.lib.labm8 import jsonutil
+from phd.lib.labm8 import labdate
+from phd.lib.labm8 import pbutil
+from phd.lib.labm8 import text
 
 from compilers.llvm import clang
 from compilers.llvm import llvm
 from compilers.llvm import llvm_link
 from compilers.llvm import opt
 from experimental.compilers.random_opt.proto import random_opt_pb2
-from lib.labm8 import crypto
-from lib.labm8 import jsonutil
-from lib.labm8 import labdate
-from lib.labm8 import pbutil
-from lib.labm8 import text
 
 
 # WARNING: No flags can be defined in this file, because it is loaded at runtime

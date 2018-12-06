@@ -7,8 +7,8 @@ import subprocess
 import typing
 from absl import flags
 from absl import logging
+from phd.lib.labm8 import labtypes
 
-from lib.labm8 import labtypes
 from system.machines.proto import machine_spec_pb2
 
 

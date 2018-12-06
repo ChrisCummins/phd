@@ -7,9 +7,9 @@ import subprocess
 import sys
 from absl import app
 from absl import flags
+from phd.lib.labm8 import bazelutil
 
 from learn.python import cpp_interop_pb2
-from lib.labm8 import bazelutil
 
 
 FLAGS = flags.FLAGS

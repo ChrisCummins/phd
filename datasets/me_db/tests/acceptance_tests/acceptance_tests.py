@@ -18,11 +18,11 @@ import sys
 import tempfile
 import typing
 from absl import app
+from phd.lib.labm8 import bazelutil
 from sqlalchemy.sql.expression import func
 
 from datasets.me_db import me_db
 from datasets.me_db.tests.acceptance_tests import flags
-from lib.labm8 import bazelutil
 
 
 FLAGS = flags.FLAGS
@@ -129,7 +129,8 @@ def test_life_cycle_dates_do_not_overflow(db: me_db.Database):
               end_date.second == 0):
         pytest.fail(
             f'Date {start_date} overflows when adding measurement {value} ms '
-            f'(calculated end date: {end_date})')
+            f'(calculated end date: {end_date}, hour={end_date.hour}, '
+            f'minute={end_date.minute}, second={end_date.second})')
 
 
 def test_life_cycle_dates_are_unique(db: me_db.Database):

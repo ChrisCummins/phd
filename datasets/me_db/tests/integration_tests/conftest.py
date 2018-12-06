@@ -4,9 +4,9 @@ import pathlib
 import pytest
 import tempfile
 from absl import flags
+from phd.lib.labm8 import bazelutil
 
 from datasets.me_db import me_db
-from lib.labm8 import bazelutil
 
 
 FLAGS = flags.FLAGS

@@ -7,7 +7,7 @@ import typing
 from absl import app
 from absl import flags
 
-from lib.labm8 import jsonutil
+from phd.lib.labm8 import jsonutil
 
 
 FLAGS = flags.FLAGS

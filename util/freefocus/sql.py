@@ -5,11 +5,11 @@ import pathlib
 import sqlalchemy as sql
 import typing
 from absl import flags
+from phd.lib.labm8 import labdate
+from phd.lib.labm8 import sqlutil
 from sqlalchemy import orm
 from sqlalchemy.ext import declarative
 
-from lib.labm8 import labdate
-from lib.labm8 import sqlutil
 from util.freefocus import freefocus_pb2
 
 

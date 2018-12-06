@@ -9,8 +9,8 @@ import sys
 import typing
 from absl import app
 from absl import flags
+from phd.lib.labm8 import bazelutil
 
-from lib.labm8 import bazelutil
 from system.machines import machine
 from system.machines import mirrored_directory
 

@@ -13,9 +13,8 @@ import typing
 from absl import app
 from absl import flags
 from absl import logging
-
-from lib.labm8 import fs
-from lib.labm8 import system
+from phd.lib.labm8 import fs
+from phd.lib.labm8 import system
 
 
 FLAGS = flags.FLAGS

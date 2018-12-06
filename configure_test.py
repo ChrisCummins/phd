@@ -1,13 +1,13 @@
 """Unit tests for //configure."""
 import os
+
 import pathlib
 import pytest
 import sys
 import tempfile
 from absl import app
 from absl import flags
-
-from lib.labm8 import bazelutil
+from phd.lib.labm8 import bazelutil
 
 
 FLAGS = flags.FLAGS
