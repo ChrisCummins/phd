@@ -371,11 +371,11 @@ paths {{
 
 export PHD="{phd_root}"
 
-if [[ -d "$PHD/venv/phd/bin" ]]; then
+if [[ -d "$HOME/venv/phd/bin" ]]; then
   # If there is a virtualenv, use it. Note that even if it does exist, bazel
   # will go ahead and ignore it, so we still need to rely on the system python
   # being the required version.
-  . "$PHD/venv/phd/bin/activate"
+  . "$HOME/venv/phd/bin/activate"
 else
   # Export a dummy virtualenv.
   # TODO(cec): Add a better way of signalling that we're in the phd env from
