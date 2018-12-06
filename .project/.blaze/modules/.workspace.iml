@@ -2,7 +2,7 @@
 <module external.system.id="Blaze" type="JAVA_MODULE" version="4">
   <component name="FacetManager">
     <facet type="Python" name="Python">
-      <configuration sdkName="Python 3.6" />
+      <configuration sdkName="Python 3.6 (phd)" />
     </facet>
   </component>
   <component name="NewModuleRootManager">
@@ -24,6 +24,6 @@
     <orderEntry type="library" name="guava-23.5-jre-ijar_cde79a79" level="project" />
     <orderEntry type="library" name="org.eclipse.jdt.core-3.14.0-ijar_b122e2bb" level="project" />
     <orderEntry type="library" name="protobuf-java-3.5.1-ijar_f5bc8568" level="project" />
-    <orderEntry type="library" name="Python 3.6 interpreter library" level="application" />
+    <orderEntry type="library" name="Python 3.6 (phd) interpreter library" level="application" />
   </component>
 </module>
