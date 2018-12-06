@@ -11,12 +11,18 @@ from lib.dpack.proto import dpack_pb2
 
 
 # The sha256sum of an empty file.
-SHA256_EMPTY_FILE = ('e3b0c44298fc1c149afbf4c8996fb924'
-                     '27ae41e4649b934ca495991b7852b855')
+SHA256_EMPTY_FILE = (
+  'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
+
+
+@pytest.fixture(scope='function')
+def tempdir() -> pathlib.Path:
+  with tempfile.TemporaryDirectory(prefix='phd_') as d:
+    yield pathlib.Path(d)
 
 
 def test_IsPackage_files():
-  # Test that _IsPackage() accepts files with '.dpack.tar.bz2' extension).
+  """Test that _IsPackage() accepts files with '.dpack.tar.bz2' extension."""
   with tempfile.NamedTemporaryFile() as f:
     assert not dpack._IsPackage(pathlib.Path(f.name))
   with tempfile.NamedTemporaryFile(suffix='.txt') as f:
@@ -27,97 +33,85 @@ def test_IsPackage_files():
     assert dpack._IsPackage(pathlib.Path(f.name))
 
 
-def test_IsPackage_directory():
-  # Test that _IsPackage() accepts a directory.
-  with tempfile.TemporaryDirectory() as d:
-    assert dpack._IsPackage(pathlib.Path(d))
+def test_IsPackage_directory(tempdir: pathlib.Path):
+  """Test that _IsPackage() accepts a directory."""
+  assert dpack._IsPackage(tempdir)
 
 
-def test_GetFilesInDirectory_empty_dir():
-  # Test that an empty directory has no contents.
-  with tempfile.TemporaryDirectory() as tmp:
-    path = pathlib.Path(tmp)
-    assert not dpack.GetFilesInDirectory(path, [])
+def test_GetFilesInDirectory_empty_dir(tempdir: pathlib.Path):
+  """Test that an empty directory has no contents."""
+  assert not dpack.GetFilesInDirectory(tempdir, [])
 
 
-def test_GetFilesInDirectory_leaf_files():
-  # Test that files in the directory are returned.
-  with tempfile.TemporaryDirectory() as tmp:
-    path = pathlib.Path(tmp)
-    # Start with one file.
-    (path / 'a').touch()
-    assert set(dpack.GetFilesInDirectory(path, [])) == {
-      pathlib.Path('a')
-    }
-    # Add a second file.
-    (path / 'b').touch()
-    assert set(dpack.GetFilesInDirectory(path, [])) == {
-      pathlib.Path('a'), pathlib.Path('b'),
-    }
-    # Add a third file.
-    (path / 'c').touch()
-    assert set(dpack.GetFilesInDirectory(path, [])) == {
-      pathlib.Path('a'), pathlib.Path('b'), pathlib.Path('c'),
-    }
+def test_GetFilesInDirectory_leaf_files(tempdir: pathlib.Path):
+  """Test that files in the directory are returned."""
+  # Start with one file.
+  (tempdir / 'a').touch()
+  assert set(dpack.GetFilesInDirectory(tempdir, [])) == {
+    pathlib.Path('a')
+  }
+  # Add a second file.
+  (tempdir / 'b').touch()
+  assert set(dpack.GetFilesInDirectory(tempdir, [])) == {
+    pathlib.Path('a'), pathlib.Path('b'),
+  }
+  # Add a third file.
+  (tempdir / 'c').touch()
+  assert set(dpack.GetFilesInDirectory(tempdir, [])) == {
+    pathlib.Path('a'), pathlib.Path('b'), pathlib.Path('c'),
+  }
 
 
-def test_GetFilesInDirectory_subdir_relpath():
-  # Test that relative paths to files in a subdirectory are returned.
-  with tempfile.TemporaryDirectory() as tmp:
-    # Create files: [ sub/a, sub/sub/b ]
-    path = pathlib.Path(tmp)
-    (path / 'sub').mkdir()
-    (path / 'sub' / 'a').touch()
-    (path / 'sub' / 'sub').mkdir()
-    (path / 'sub' / 'sub' / 'b').touch()
-    assert set(dpack.GetFilesInDirectory(path, [])) == {
-      pathlib.Path('sub/a'), pathlib.Path('sub/sub/b')
-    }
+def test_GetFilesInDirectory_subdir_relpath(tempdir: pathlib.Path):
+  """Test that relative paths to files in a subdirectory are returned."""
+  # Create files: [ sub/a, sub/sub/b ]
+  (tempdir / 'sub').mkdir()
+  (tempdir / 'sub' / 'a').touch()
+  (tempdir / 'sub' / 'sub').mkdir()
+  (tempdir / 'sub' / 'sub' / 'b').touch()
+  assert set(dpack.GetFilesInDirectory(tempdir, [])) == {
+    pathlib.Path('sub/a'), pathlib.Path('sub/sub/b')
+  }
 
 
-def test_GetFilesInDirectory_exclude_by_name():
-  # Test that filenames which exactly match an exclude pattern are excluded.
-  with tempfile.TemporaryDirectory() as tmp:
-    # Create files: [ a, foo, sub/foo ]
-    path = pathlib.Path(tmp)
-    (path / 'a').touch()
-    (path / 'foo').touch()
-    (path / 'sub').mkdir()
-    (path / 'sub' / 'foo').touch()
-    # Exclude pattern 'foo' does not exclude subdir 'foo'.
-    assert set(dpack.GetFilesInDirectory(path, ['foo'])) == {
-      pathlib.Path('a'), pathlib.Path('sub/foo')
-    }
+def test_GetFilesInDirectory_exclude_by_name(tempdir: pathlib.Path):
+  """Test that filenames which exactly match an exclude pattern are excluded."""
+  # Create files: [ a, foo, sub/foo ]
+  (tempdir / 'a').touch()
+  (tempdir / 'foo').touch()
+  (tempdir / 'sub').mkdir()
+  (tempdir / 'sub' / 'foo').touch()
+  # Exclude pattern 'foo' does not exclude subdir 'foo'.
+  assert set(dpack.GetFilesInDirectory(tempdir, ['foo'])) == {
+    pathlib.Path('a'), pathlib.Path('sub/foo')
+  }
 
 
-def test_GetFilesInDirectory_exclude_subdir():
-  # Test that files in subdirs can be excluded.
-  with tempfile.TemporaryDirectory() as tmp:
-    # Create files: [ a, foo, sub/foo ]
-    path = pathlib.Path(tmp)
-    (path / 'a').touch()
-    (path / 'foo').touch()
-    (path / 'sub').mkdir()
-    (path / 'sub' / 'foo').touch()
-    (path / 'sub' / 'sub').mkdir()
-    (path / 'sub' / 'sub' / 'foo').touch()
-    assert set(dpack.GetFilesInDirectory(path, ['sub/foo'])) == {
-      pathlib.Path('a'), pathlib.Path('foo'), pathlib.Path('sub/sub/foo')
-    }
-    assert set(dpack.GetFilesInDirectory(path, ['*/foo'])) == {
-      pathlib.Path('a'), pathlib.Path('foo')
-    }
-    assert set(dpack.GetFilesInDirectory(path, ['*/foo*'])) == {
-      pathlib.Path('a'), pathlib.Path('foo')
-    }
+def test_GetFilesInDirectory_exclude_subdir(tempdir: pathlib.Path):
+  """Test that files in subdirs can be excluded."""
+  # Create files: [ a, foo, sub/foo ]
+  (tempdir / 'a').touch()
+  (tempdir / 'foo').touch()
+  (tempdir / 'sub').mkdir()
+  (tempdir / 'sub' / 'foo').touch()
+  (tempdir / 'sub' / 'sub').mkdir()
+  (tempdir / 'sub' / 'sub' / 'foo').touch()
+  assert set(dpack.GetFilesInDirectory(tempdir, ['sub/foo'])) == {
+    pathlib.Path('a'), pathlib.Path('foo'), pathlib.Path('sub/sub/foo')
+  }
+  assert set(dpack.GetFilesInDirectory(tempdir, ['*/foo'])) == {
+    pathlib.Path('a'), pathlib.Path('foo')
+  }
+  assert set(dpack.GetFilesInDirectory(tempdir, ['*/foo*'])) == {
+    pathlib.Path('a'), pathlib.Path('foo')
+  }
 
 
-def test_SetDataPackageFileAttributes_empty_file():
-  # Test that file attributes are set.
+def test_SetDataPackageFileAttributes_empty_file(tempdir: pathlib.Path):
+  """Test that file attributes are set."""
   df = dpack_pb2.DataPackageFile()
-  with tempfile.TemporaryDirectory() as d:
-    (pathlib.Path(d) / 'a').touch()
-    dpack.SetDataPackageFileAttributes(pathlib.Path(d), 'a', df)
+  (tempdir / 'a').touch()
+  dpack.SetDataPackageFileAttributes(tempdir, 'a', df)
 
   assert df.relative_path == 'a'
   assert not df.size_in_bytes
@@ -125,53 +119,56 @@ def test_SetDataPackageFileAttributes_empty_file():
   assert df.checksum == SHA256_EMPTY_FILE
 
 
-def test_DataPackageFileAttributesAreValid_missing_file():
+def test_DataPackageFileAttributesAreValid_missing_file(tempdir: pathlib.Path):
+  """If a file does not exist, attributes are not valid."""
   df = dpack_pb2.DataPackageFile()
   df.relative_path = 'a'
-  with tempfile.TemporaryDirectory() as d:
-    assert not dpack.DataPackageFileAttributesAreValid(pathlib.Path(d), df)
+  assert not dpack.DataPackageFileAttributesAreValid(tempdir, df)
 
 
-def test_DataPackageFileAttributesAreValid_unknown_checksum_hash():
+def test_DataPackageFileAttributesAreValid_unknown_checksum_hash(
+    tempdir: pathlib.Path):
+  """If no checksum hash is declared, attributes are not valid."""
   df = dpack_pb2.DataPackageFile()
   df.relative_path = 'a'
-  with tempfile.TemporaryDirectory() as d:
-    (pathlib.Path(d) / 'a').touch()
-    assert not dpack.DataPackageFileAttributesAreValid(pathlib.Path(d), df)
+  (tempdir / 'a').touch()
+  assert not dpack.DataPackageFileAttributesAreValid(tempdir, df)
 
 
-def test_DataPackageFileAttributesAreValid_different_checksum():
+def test_DataPackageFileAttributesAreValid_different_checksum(
+    tempdir: pathlib.Path):
+  """If checksum of file differs, attributes are not valid."""
   df = dpack_pb2.DataPackageFile()
   df.relative_path = 'a'
   df.checksum_hash = dpack_pb2.SHA256
-  with tempfile.TemporaryDirectory() as d:
-    (pathlib.Path(d) / 'a').touch()
-    assert not dpack.DataPackageFileAttributesAreValid(pathlib.Path(d), df)
+  (tempdir / 'a').touch()
+  assert not dpack.DataPackageFileAttributesAreValid(tempdir, df)
 
 
-def test_DataPackageFileAttributesAreValid_different_size():
+def test_DataPackageFileAttributesAreValid_different_size(
+    tempdir: pathlib.Path):
+  """If the size of a file is incorect, attributes are not valid."""
   df = dpack_pb2.DataPackageFile()
   df.relative_path = 'a'
   df.checksum_hash = dpack_pb2.SHA256
   df.checksum = SHA256_EMPTY_FILE
   df.size_in_bytes = 10  # An empty file has size 0
-  with tempfile.TemporaryDirectory() as d:
-    (pathlib.Path(d) / 'a').touch()
-    assert not dpack.DataPackageFileAttributesAreValid(pathlib.Path(d), df)
+  (tempdir / 'a').touch()
+  assert not dpack.DataPackageFileAttributesAreValid(tempdir, df)
 
 
-def test_DataPackageFileAttributesAreValid_match():
+def test_DataPackageFileAttributesAreValid_match(tempdir: pathlib.Path):
+  """Test that file attributes can be correct."""
   df = dpack_pb2.DataPackageFile()
   df.relative_path = 'a'
   df.checksum_hash = dpack_pb2.SHA256
   df.checksum = SHA256_EMPTY_FILE
-  with tempfile.TemporaryDirectory() as d:
-    (pathlib.Path(d) / 'a').touch()
-    assert dpack.DataPackageFileAttributesAreValid(pathlib.Path(d), df)
+  (tempdir / 'a').touch()
+  assert dpack.DataPackageFileAttributesAreValid(tempdir, df)
 
 
 def test_MergeManifests_comments():
-  # Test that the comments from the old manifest are copied to the new.
+  """Test that comments from old manifests are copied to the new ones."""
   d1 = dpack_pb2.DataPackage()
   f1 = d1.file.add()
   f1.relative_path = 'a'
@@ -186,7 +183,7 @@ def test_MergeManifests_comments():
 
 
 def test_MergeManifests_file_attributes():
-  # Test that file attributes are not merged.
+  """Test that file attributes are not merged."""
   d1 = dpack_pb2.DataPackage()
   f1 = d1.file.add()
   f1.relative_path = 'a'
@@ -206,7 +203,7 @@ def test_MergeManifests_file_attributes():
 
 
 def test_MergeManifests_missing_files():
-  # Test that files that only appear in one manifest are not modified.
+  """Test that files that only appear in one manifest are not modified."""
   d1 = dpack_pb2.DataPackage()
   f1 = d1.file.add()
   f1.relative_path = 'a'
@@ -220,20 +217,18 @@ def test_MergeManifests_missing_files():
   assert d2.file[0].comment == 'def'
 
 
-def test_CreatePackageManifest_empty_directory():
-  # Test the manifest of an empty directory.
-  with tempfile.TemporaryDirectory() as d:
-    m = dpack.CreatePackageManifest(pathlib.Path(d), [])
+def test_CreatePackageManifest_empty_directory(tempdir: pathlib.Path):
+  """Test the manifest of an empty directory."""
+  m = dpack.CreatePackageManifest(tempdir, [])
   assert m.comment == ''
   assert m.utc_epoch_ms_packaged
   assert not len(m.file)
 
 
-def test_CreatePackageManifest():
-  # Test the manifest of an empty directory.
-  with tempfile.TemporaryDirectory() as d:
-    (pathlib.Path(d) / 'a').touch()
-    m = dpack.CreatePackageManifest(pathlib.Path(d), [pathlib.Path('a')])
+def test_CreatePackageManifest(tempdir: pathlib.Path):
+  """Test the manifest of an empty directory."""
+  (tempdir / 'a').touch()
+  m = dpack.CreatePackageManifest(tempdir, [pathlib.Path('a')])
   assert len(m.file) == 1
   assert m.file[0].comment == ''
   assert not m.file[0].size_in_bytes
@@ -242,8 +237,10 @@ def test_CreatePackageManifest():
 
 
 def main(argv):  # pylint: disable=missing-docstring
-  del argv
-  sys.exit(pytest.main([__file__, '-v']))
+  """Main entry point."""
+  if len(argv) > 1:
+    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
+  sys.exit(pytest.main([__file__, '-vv']))
 
 
 if __name__ == '__main__':
