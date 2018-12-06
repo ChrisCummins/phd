@@ -9,6 +9,17 @@ py_library(
 )
 
 py_test(
+    name = "health_kit_integration_test",
+    srcs = ["health_kit_integration_test.py"],
+    deps = [
+        ":conftest",
+        "//datasets/me_db",
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
+    ],
+)
+
+py_test(
     name = "life_cycle_integration_test",
     srcs = ["life_cycle_integration_test.py"],
     deps = [
