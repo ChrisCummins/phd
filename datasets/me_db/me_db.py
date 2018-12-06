@@ -1,5 +1,4 @@
 """me - Aggregate health and time tracking data."""
-
 import datetime
 import pathlib
 import typing
@@ -20,7 +19,6 @@ from datasets.me_db.ynab import ynab
 from labm8 import labdate
 from labm8 import sqlutil
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('inbox', None, 'Path to inbox.')
@@ -33,7 +31,16 @@ Base = declarative.declarative_base()
 
 def CreateTasksFromInbox(inbox: pathlib.Path) -> typing.Iterator[
   importers.ImporterTask]:
-  """Return ImporterTasks for all importers."""
+  """Return ImporterTasks for all importers.
+
+  Args:
+    inbox: The inbox path.
+
+  Returns:
+    An iterator of ImporterTask objects.
+  """
+  if not inbox.is_dir():
+    raise FileNotFoundError(f"Directory not found: '{inbox}'")
   yield from health_kit.CreateTasksFromInbox(inbox)
   yield from ynab.CreateTasksFromInbox(inbox)
   yield from life_cycle.CreateTasksFromInbox(inbox)
