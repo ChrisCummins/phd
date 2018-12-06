@@ -123,14 +123,13 @@ def test_life_cycle_dates_do_not_overflow(db: me_db.Database):
         continue
       # The only case where the end date is allowed to differ from the start
       # date is when we have overflowed to midnight (00:00:00) the next day.
-      if not (end_date.day == start_date.day + 1 and
+      if not ((end_date - start_date).days == 1 and
               end_date.hour == 0 and
               end_date.minute == 0 and
               end_date.second == 0):
         pytest.fail(
             f'Date {start_date} overflows when adding measurement {value} ms '
-            f'(calculated end date: {end_date}, hour={end_date.hour}, '
-            f'minute={end_date.minute}, second={end_date.second})')
+            f'(calculated end date: {end_date})')
 
 
 def test_life_cycle_dates_are_unique(db: me_db.Database):
