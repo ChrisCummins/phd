@@ -1,81 +1,75 @@
-#include "phd/pbutil.h"
+#include "phd/string.h"
 
-#include "phd/test/protos.pb.h"
 #include "phd/test.h"
 
-#include <sstream>
-
-void AddXandYInPlaceCallback(AddXandY* message) {
-  message->set_result(message->x() + message->y());
-}
 
 namespace phd {
 namespace {
 
-TEST(Trim, Null) {
+TEST(TrimTest, Null) {
   string s;
   Trim(s);
   EXPECT_TRUE(s.empty());
 }
 
-TEST(Trim, EmptyString) {
+TEST(TrimTest, EmptyString) {
   string s = "";
   Trim(s);
   EXPECT_EQ(s, "");
 }
 
-TEST(Trim, NoWhitespace) {
+TEST(TrimTest, NoWhitespace) {
   string s = "hello";
   Trim(s);
-  EXPECT_EQ(s == "hello");
+  EXPECT_EQ(s, "hello");
 }
 
-TEST(Trim, LeadingWhitespace) {
+TEST(TrimTest, LeadingWhitespace) {
   string s = "  hello";
   Trim(s);
-  EXPECT_EQ(s == "hello");
+  EXPECT_EQ(s, "hello");
 }
 
-TEST(Trim, TrailingWhitespace) {
+TEST(TrimTest, TrailingWhitespace) {
   string s = "hello  ";
   Trim(s);
-  EXPECT_EQ(s == "hello");
+  EXPECT_EQ(s, "hello");
 }
 
-TEST(Trim, LeadingAndTrailingWhitespace) {
+TEST(TrimTest, LeadingAndTrailingWhitespace) {
   string s = "  hello   ";
   Trim(s);
-  EXPECT_EQ(s == "hello");
+  EXPECT_EQ(s, "hello");
 }
 
-TEST(CopyAndTrim, Null) {
+TEST(CopyAndTrimTest, Null) {
   string s;
   EXPECT_TRUE(CopyAndTrim(s).empty());
 }
 
-TEST(CopyAndTrim, EmptyString) {
+TEST(CopyAndTrimTest, EmptyString) {
   string s = "";
   EXPECT_EQ(CopyAndTrim(s), "");
 }
 
-TEST(CopyAndTrim, NoWhitespace) {
+TEST(CopyAndTrimTest, NoWhitespace) {
   string s = "hello";
-  CopyAndTrim(s == "hello");
+  EXPECT_EQ(CopyAndTrim(s), "hello");
 }
 
-TEST(CopyAndTrim, LeadingWhitespace) {
+TEST(CopyAndTrimTest, LeadingWhitespace) {
   string s = "  hello";
-  EXPECT_EQ(CopyAndTrim(s) == "hello");
+  EXPECT_EQ(CopyAndTrim(s), "hello");
 }
 
-TEST(CopyAndTrim, TrailingWhitespace) {
+TEST(CopyAndTrimTest, TrailingWhitespace) {
   string s = "hello  ";
-  EXPECT_EQ(CopyAndTrim(s) == "hello");
+  EXPECT_EQ(CopyAndTrim(s), "hello");
 }
 
-TEST(CopyAndTrim, LeadingAndTrailingWhitespace) {
+TEST(CopyAndTrimTest, LeadingAndTrailingWhitespace) {
   string s = "  hello   ";
-  EXPECT_EQ(CopyAndTrim(s) == "hello");
+  EXPECT_EQ(CopyAndTrim(s), "hello");
 }
 
 }  // namespace
