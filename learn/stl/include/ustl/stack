@@ -1,7 +1,7 @@
 // -*-c++-*-
 //
-#ifndef USTL_STACK_H
-#define USTL_STACK_H
+#ifndef LEARN_STL_INCLUDE_USTL_STACK_H
+#define LEARN_STL_INCLUDE_USTL_STACK_H
 
 #include <deque>
 
@@ -313,4 +313,4 @@ void swap(stack<T, Container>& x, stack<T, Container>& y)  // NOLINT
 
 }  // namespace ustl
 
-#endif  // USTL_STACK_H
+#endif  // LEARN_STL_INCLUDE_USTL_STACK_H

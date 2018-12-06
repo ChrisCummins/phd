@@ -1,7 +1,7 @@
 // -*-c++-*-
 //
-#ifndef USTL_TYPE_TRAITS_H
-#define USTL_TYPE_TRAITS_H
+#ifndef LEARN_STL_INCLUDE_USTL_TYPE_TRAITS_H
+#define LEARN_STL_INCLUDE_USTL_TYPE_TRAITS_H
 
 //
 // This is only a partial implementation of some of the code which
@@ -454,4 +454,4 @@ template<typename T> struct enable_if<true, T> { using type = T; };
 
 }  // namespace ustl
 
-#endif  // USTL_TYPE_TRAITS_H
+#endif  // LEARN_STL_INCLUDE_USTL_TYPE_TRAITS_H

@@ -2,8 +2,8 @@
 //
 // Common test header.
 //
-#ifndef USTL_TESTS_H
-#define USTL_TESTS_H
+#ifndef LEARN_STL_INCLUDE_USTL_TESTS_H
+#define LEARN_STL_INCLUDE_USTL_TESTS_H
 
 #include <phd/test>
 
@@ -58,4 +58,4 @@ bool vector_equal(const VectorType &v, std::initializer_list<T> il) {
   return true;
 }
 
-#endif  // USTL_TESTS_H
+#endif  // LEARN_STL_INCLUDE_USTL_TESTS_H

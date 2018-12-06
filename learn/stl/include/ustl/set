@@ -1,7 +1,7 @@
 // -*-c++-*-
 //
-#ifndef USTL_SET_H
-#define USTL_SET_H
+#ifndef LEARN_STL_INCLUDE_USTL_SET_H
+#define LEARN_STL_INCLUDE_USTL_SET_H
 
 #include <algorithm>
 #include <functional>
@@ -342,4 +342,4 @@ void swap(multiset<Key, Compare, Alloc>& lhs,
 
 }  // namespace ustl
 
-#endif  // USTL_SET_H
+#endif  // LEARN_STL_INCLUDE_USTL_SET_H

@@ -1,7 +1,7 @@
 // -*-c++-*-
 //
-#ifndef USTL_VECTOR_H
-#define USTL_VECTOR_H
+#ifndef LEARN_STL_INCLUDE_USTL_VECTOR_H
+#define LEARN_STL_INCLUDE_USTL_VECTOR_H
 
 #include <cstddef>
 #include <iterator>
@@ -1215,4 +1215,4 @@ void swap(vector<T, Alloc>& x, vector<T, Alloc>& y) {  // NOLINT
 
 }  // namespace ustl
 
-#endif  // USTL_VECTOR_H
+#endif  // LEARN_STL_INCLUDE_USTL_VECTOR_H

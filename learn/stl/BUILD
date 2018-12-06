@@ -1,5 +1,5 @@
 cc_library(
     name = "main",
     hdrs = glob(["include/ustl/*"]),
-    visibility = ["//lib/stl:__subpackages__"],
+    visibility = ["//learn/stl:__subpackages__"],
 )

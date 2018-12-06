@@ -1,7 +1,7 @@
 // -*-c++-*-
 //
-#ifndef USTL_MAP_H
-#define USTL_MAP_H
+#ifndef LEARN_STL_INCLUDE_USTL_MAP_H
+#define LEARN_STL_INCLUDE_USTL_MAP_H
 
 #include <iterator>
 #include <functional>
@@ -909,4 +909,4 @@ template<typename Key,
 
 }  // namespace ustl
 
-#endif  // USTL_MAP_H
+#endif  // LEARN_STL_INCLUDE_USTL_MAP_H

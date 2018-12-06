@@ -6,12 +6,12 @@ cc_binary(
         "benchmarks.h",
     ],
     copts = [
-        "-Ilib/stl/include",
+        "-Ilearn/stl/include",
         "-Ilib/phd/include",
     ],
     deps = [
         "//lib/phd:main",
-        "//lib/stl:main",
+        "//learn/stl:main",
     ],
 )
 
@@ -23,12 +23,12 @@ cc_binary(
         "benchmarks.h",
     ],
     copts = [
-        "-Ilib/stl/include",
+        "-Ilearn/stl/include",
         "-Ilib/phd/include",
     ],
     deps = [
         "//lib/phd:main",
-        "//lib/stl:main",
+        "//learn/stl:main",
     ],
 )
 
@@ -40,12 +40,12 @@ cc_binary(
         "forward_list.cc",
     ],
     copts = [
-        "-Ilib/stl/include",
+        "-Ilearn/stl/include",
         "-Ilib/phd/include",
     ],
     deps = [
         "//lib/phd:main",
-        "//lib/stl:main",
+        "//learn/stl:main",
     ],
 )
 
@@ -57,12 +57,12 @@ cc_binary(
         "list.cc",
     ],
     copts = [
-        "-Ilib/stl/include",
+        "-Ilearn/stl/include",
         "-Ilib/phd/include",
     ],
     deps = [
         "//lib/phd:main",
-        "//lib/stl:main",
+        "//learn/stl:main",
     ],
 )
 
@@ -74,12 +74,12 @@ cc_binary(
         "map.cc",
     ],
     copts = [
-        "-Ilib/stl/include",
+        "-Ilearn/stl/include",
         "-Ilib/phd/include",
     ],
     deps = [
         "//lib/phd:main",
-        "//lib/stl:main",
+        "//learn/stl:main",
     ],
 )
 
@@ -91,12 +91,12 @@ cc_binary(
         "set.cc",
     ],
     copts = [
-        "-Ilib/stl/include",
+        "-Ilearn/stl/include",
         "-Ilib/phd/include",
     ],
     deps = [
         "//lib/phd:main",
-        "//lib/stl:main",
+        "//learn/stl:main",
     ],
 )
 
@@ -108,12 +108,12 @@ cc_binary(
         "stack.cc",
     ],
     copts = [
-        "-Ilib/stl/include",
+        "-Ilearn/stl/include",
         "-Ilib/phd/include",
     ],
     deps = [
         "//lib/phd:main",
-        "//lib/stl:main",
+        "//learn/stl:main",
     ],
 )
 
@@ -125,12 +125,12 @@ cc_binary(
         "type_traits.cc",
     ],
     copts = [
-        "-Ilib/stl/include",
+        "-Ilearn/stl/include",
         "-Ilib/phd/include",
     ],
     deps = [
         "//lib/phd:main",
-        "//lib/stl:main",
+        "//learn/stl:main",
     ],
 )
 
@@ -142,12 +142,12 @@ cc_binary(
         "unordered_map.cc",
     ],
     copts = [
-        "-Ilib/stl/include",
+        "-Ilearn/stl/include",
         "-Ilib/phd/include",
     ],
     deps = [
         "//lib/phd:main",
-        "//lib/stl:main",
+        "//learn/stl:main",
     ],
 )
 
@@ -159,11 +159,11 @@ cc_binary(
         "vector.cc",
     ],
     copts = [
-        "-Ilib/stl/include",
+        "-Ilearn/stl/include",
         "-Ilib/phd/include",
     ],
     deps = [
         "//lib/phd:main",
-        "//lib/stl:main",
+        "//learn/stl:main",
     ],
 )

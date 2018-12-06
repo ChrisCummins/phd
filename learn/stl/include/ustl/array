@@ -1,7 +1,7 @@
 // -*-c++-*-
 //
-#ifndef USTL_ARRAY_H
-#define USTL_ARRAY_H
+#ifndef LEARN_STL_INCLUDE_USTL_ARRAY_H
+#define LEARN_STL_INCLUDE_USTL_ARRAY_H
 
 #include <cstddef>
 #include <iterator>
@@ -525,4 +525,4 @@ bool operator>=(const array<T, N>& lhs, const array<T, N>& rhs) {
 
 }  // namespace ustl
 
-#endif  // USTL_ARRAY_H
+#endif  // LEARN_STL_INCLUDE_USTL_ARRAY_H

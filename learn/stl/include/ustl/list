@@ -1,7 +1,7 @@
 // -*-c++-*-
 //
-#ifndef USTL_LIST_H
-#define USTL_LIST_H
+#ifndef LEARN_STL_INCLUDE_USTL_LIST_H
+#define LEARN_STL_INCLUDE_USTL_LIST_H
 
 #include <ustl/algorithm>
 #include <ustl/vector>
@@ -1354,4 +1354,4 @@ void swap(list<T, Alloc>& x, list<T, Alloc>& y) {  // NOLINT
 
 }  // namespace ustl
 
-#endif  // USTL_LIST_H
+#endif  // LEARN_STL_INCLUDE_USTL_LIST_H

@@ -12,8 +12,8 @@
 // structure of any possible container (it never affects the size or
 // storage allocation of the container).
 //
-#ifndef USTL_ALGORITHM_H
-#define USTL_ALGORITHM_H
+#ifndef LEARN_STL_INCLUDE_USTL_ALGORITHM_H
+#define LEARN_STL_INCLUDE_USTL_ALGORITHM_H
 
 #include <cstddef>
 #include <memory>
@@ -863,4 +863,4 @@ constexpr std::pair<T, T> minmax(std::initializer_list<T> il) {
 
 }  // namespace ustl
 
-#endif  // USTL_ALGORITHM_H
+#endif  // LEARN_STL_INCLUDE_USTL_ALGORITHM_H

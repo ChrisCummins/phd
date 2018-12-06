@@ -7,12 +7,12 @@ cc_test(
         "tests.h",
     ],
     copts = [
-        "-Ilib/stl/include",
+        "-Ilearn/stl/include",
         "-Ilib/phd/include",
     ],
     deps = [
         "//lib/phd:main",
-        "//lib/stl:main",
+        "//learn/stl:main",
     ],
 )
 
@@ -25,12 +25,12 @@ cc_test(
         "tests.h",
     ],
     copts = [
-        "-Ilib/stl/include",
+        "-Ilearn/stl/include",
         "-Ilib/phd/include",
     ],
     deps = [
         "//lib/phd:main",
-        "//lib/stl:main",
+        "//learn/stl:main",
     ],
 )
 
@@ -43,12 +43,12 @@ cc_test(
         "tests.h",
     ],
     copts = [
-        "-Ilib/stl/include",
+        "-Ilearn/stl/include",
         "-Ilib/phd/include",
     ],
     deps = [
         "//lib/phd:main",
-        "//lib/stl:main",
+        "//learn/stl:main",
     ],
 )
 
@@ -61,12 +61,12 @@ cc_test(
         "tests.h",
     ],
     copts = [
-        "-Ilib/stl/include",
+        "-Ilearn/stl/include",
         "-Ilib/phd/include",
     ],
     deps = [
         "//lib/phd:main",
-        "//lib/stl:main",
+        "//learn/stl:main",
     ],
 )
 
@@ -79,12 +79,12 @@ cc_test(
         "tests.h",
     ],
     copts = [
-        "-Ilib/stl/include",
+        "-Ilearn/stl/include",
         "-Ilib/phd/include",
     ],
     deps = [
         "//lib/phd:main",
-        "//lib/stl:main",
+        "//learn/stl:main",
     ],
 )
 
@@ -97,12 +97,12 @@ cc_test(
         "tests.h",
     ],
     copts = [
-        "-Ilib/stl/include",
+        "-Ilearn/stl/include",
         "-Ilib/phd/include",
     ],
     deps = [
         "//lib/phd:main",
-        "//lib/stl:main",
+        "//learn/stl:main",
     ],
 )
 
@@ -115,12 +115,12 @@ cc_test(
         "tests.h",
     ],
     copts = [
-        "-Ilib/stl/include",
+        "-Ilearn/stl/include",
         "-Ilib/phd/include",
     ],
     deps = [
         "//lib/phd:main",
-        "//lib/stl:main",
+        "//learn/stl:main",
     ],
 )
 
@@ -133,12 +133,12 @@ cc_test(
         "type_traits.cc",
     ],
     copts = [
-        "-Ilib/stl/include",
+        "-Ilearn/stl/include",
         "-Ilib/phd/include",
     ],
     deps = [
         "//lib/phd:main",
-        "//lib/stl:main",
+        "//learn/stl:main",
     ],
 )
 
@@ -151,12 +151,12 @@ cc_test(
         "unordered_map.cc",
     ],
     copts = [
-        "-Ilib/stl/include",
+        "-Ilearn/stl/include",
         "-Ilib/phd/include",
     ],
     deps = [
         "//lib/phd:main",
-        "//lib/stl:main",
+        "//learn/stl:main",
     ],
 )
 
@@ -169,11 +169,11 @@ cc_test(
         "vector.cc",
     ],
     copts = [
-        "-Ilib/stl/include",
+        "-Ilearn/stl/include",
         "-Ilib/phd/include",
     ],
     deps = [
         "//lib/phd:main",
-        "//lib/stl:main",
+        "//learn/stl:main",
     ],
 )

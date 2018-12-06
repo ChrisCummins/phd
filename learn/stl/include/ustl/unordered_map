@@ -1,7 +1,7 @@
 // -*-c++-*-
 //
-#ifndef USTL_UNORDERED_MAP_H
-#define USTL_UNORDERED_MAP_H
+#ifndef LEARN_STL_INCLUDE_USTL_UNORDERED_MAP_H
+#define LEARN_STL_INCLUDE_USTL_UNORDERED_MAP_H
 
 #include <functional>
 #include <iterator>
@@ -1466,4 +1466,4 @@ void swap(unordered_map<Key, T, Hash, Pred, Alloc>& lhs,  // NOLINT
 
 }  // namespace ustl
 
-#endif  // USTL_UNORDERED_MAP_H
+#endif  // LEARN_STL_INCLUDE_USTL_UNORDERED_MAP_H
