@@ -78,7 +78,6 @@ def test_MapWorker_one_failure():
   error = workers[1].error()
   assert type(error) is ppar.MapWorkerError
   assert error.returncode == 1
-  "CHECK(x != 10)" in error.error_message()
 
 
 def test_MapWorker_wrap_progressbar():
@@ -190,7 +189,6 @@ def test_MapWorker_binary_args():
       protos_pb2.AddXandY))
   assert len(results) == 1
   assert not results[0].ok()
-  assert "CHECK(argc == 2)" in results[0].error().error_message()
 
 
 def main(argv):
