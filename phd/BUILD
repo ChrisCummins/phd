@@ -45,6 +45,15 @@ cc_library(
     ],
 )
 
+cc_test(
+    name = "string_test",
+    srcs = ["string_test.cc"],
+    deps = [
+        ":string",
+        ":test",
+    ],
+)
+
 cc_library(
     name = "test",
     hdrs = ["test.h"],

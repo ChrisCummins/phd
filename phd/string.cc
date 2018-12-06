@@ -28,19 +28,19 @@ string& Trim(string &s) {
 }
 
 // Trim a string from the left.
-string TrimLeftCopy(string s) {
+string CopyAndTrimLeft(string s) {
     TrimLeft(s);
     return s;
 }
 
 // Trim a string from the right.
-string TrimRightCopy(string s) {
+string CopyAndTrimRight(string s) {
     TrimRight(s);
     return s;
 }
 
 // Trim a string from both ends.
-string TrimCopy(string s) {
+string CopyAndTrim(string s) {
     Trim(s);
     return s;
 }

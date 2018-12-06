@@ -72,7 +72,7 @@ void AddMeasurementsFromDurationOrDie(int64_t start_time, int64_t end_time,
 
 
 string LocationToGroup(const string& location) {
-  const string location_stripped = phd::TrimLeftCopy(location);
+  const string location_stripped = phd::CopyAndTrimLeft(location);
   if (location_stripped == "") {
     return "default";
   } else {
@@ -104,7 +104,7 @@ void ProcessLineOrDie(
   // [unused] [3] END TIME(LOCAL)     Datetime.
   // [unused] [4] DURATION            (end-start) in seconds.
   // [5] NAME (optional)              Category name.
-  const string name = phd::TrimLeftCopy(string(components[5]));
+  const string name = phd::CopyAndTrimLeft(string(components[5]));
   // [6] LOCATION (optional)          Location name.
   const string location = LocationToGroup(string(components[6]));
   // [unused] [7] NOTE (optional)     Notes field.
