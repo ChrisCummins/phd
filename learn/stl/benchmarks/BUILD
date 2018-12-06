@@ -10,8 +10,8 @@ cc_binary(
         "-Ilib/phd/include",
     ],
     deps = [
-        "//lib/phd:main",
         "//learn/stl:main",
+        "//lib/phd:main",
     ],
 )
 
@@ -27,8 +27,8 @@ cc_binary(
         "-Ilib/phd/include",
     ],
     deps = [
-        "//lib/phd:main",
         "//learn/stl:main",
+        "//lib/phd:main",
     ],
 )
 
@@ -44,8 +44,8 @@ cc_binary(
         "-Ilib/phd/include",
     ],
     deps = [
-        "//lib/phd:main",
         "//learn/stl:main",
+        "//lib/phd:main",
     ],
 )
 
@@ -61,8 +61,8 @@ cc_binary(
         "-Ilib/phd/include",
     ],
     deps = [
-        "//lib/phd:main",
         "//learn/stl:main",
+        "//lib/phd:main",
     ],
 )
 
@@ -78,8 +78,8 @@ cc_binary(
         "-Ilib/phd/include",
     ],
     deps = [
-        "//lib/phd:main",
         "//learn/stl:main",
+        "//lib/phd:main",
     ],
 )
 
@@ -95,8 +95,8 @@ cc_binary(
         "-Ilib/phd/include",
     ],
     deps = [
-        "//lib/phd:main",
         "//learn/stl:main",
+        "//lib/phd:main",
     ],
 )
 
@@ -112,8 +112,8 @@ cc_binary(
         "-Ilib/phd/include",
     ],
     deps = [
-        "//lib/phd:main",
         "//learn/stl:main",
+        "//lib/phd:main",
     ],
 )
 
@@ -129,8 +129,8 @@ cc_binary(
         "-Ilib/phd/include",
     ],
     deps = [
-        "//lib/phd:main",
         "//learn/stl:main",
+        "//lib/phd:main",
     ],
 )
 
@@ -146,8 +146,8 @@ cc_binary(
         "-Ilib/phd/include",
     ],
     deps = [
-        "//lib/phd:main",
         "//learn/stl:main",
+        "//lib/phd:main",
     ],
 )
 
@@ -163,7 +163,7 @@ cc_binary(
         "-Ilib/phd/include",
     ],
     deps = [
-        "//lib/phd:main",
         "//learn/stl:main",
+        "//lib/phd:main",
     ],
 )
