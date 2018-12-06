@@ -24,15 +24,16 @@ Clone and update a GitHub user's repos locally.
 import os
 import shutil
 import sys
-
-import requests
 from argparse import ArgumentParser, FileType, RawDescriptionHelpFormatter
 from configparser import ConfigParser
+from pathlib import Path
+from typing import Iterator, List, TextIO, Tuple
+
+import requests
 from git import Repo
 from github import Github, NamedUser
 from github.Repository import Repository as GithubRepository
-from pathlib import Path
-from typing import Iterator, List, TextIO, Tuple
+
 
 __copyright__ = "Copyright (C) 2017 Chris Cummins <chrisc.101@gmail.com>."
 
