@@ -12,7 +12,8 @@ import progressbar
 from dsmith import db
 from dsmith.db import *
 from dsmith.lib import *
-from phd.lib.labm8 import crypto, fs
+
+from labm8 import crypto, fs
 
 
 status_t = NewType('status_t', int)
@@ -42,17 +43,17 @@ def verify_params(platform: str, device: str, optimizations: bool,
 
     # global size
     match = re.match(
-      '^\[cldrive\] 3-D global size \d+ = \[(\d+), (\d+), (\d+)\]', line)
+        '^\[cldrive\] 3-D global size \d+ = \[(\d+), (\d+), (\d+)\]', line)
     if match:
       actual_global_size = (
-      int(match.group(1)), int(match.group(2)), int(match.group(3)))
+        int(match.group(1)), int(match.group(2)), int(match.group(3)))
 
     # local size
     match = re.match(
-      '^\[cldrive\] 3-D local size \d+ = \[(\d+), (\d+), (\d+)\]', line)
+        '^\[cldrive\] 3-D local size \d+ = \[(\d+), (\d+), (\d+)\]', line)
     if match:
       actual_local_size = (
-      int(match.group(1)), int(match.group(2)), int(match.group(3)))
+        int(match.group(1)), int(match.group(2)), int(match.group(3)))
 
     # check if we've collected everything:
     if (actual_platform and actual_device and actual_optimizations and

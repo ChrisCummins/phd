@@ -7,12 +7,12 @@ import grpc
 from absl import app
 from absl import flags
 from absl import logging
-from phd.lib.labm8 import pbutil
 
 from deeplearning.deepsmith import services
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import generator_pb2_grpc
+from labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

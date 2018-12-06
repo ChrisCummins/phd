@@ -11,7 +11,7 @@ py_binary(
 
 py_binary(
     name = "notebooks",
-    srcs = ["//lib/labm8:notebooks"],
+    srcs = ["//labm8:notebooks"],
     deps = [
         ":monte_carlo_control_blackjack",
         "//third_party/py/absl",

@@ -6,12 +6,12 @@ import tempfile
 
 import pytest
 from absl import flags
-from phd.lib.labm8 import pbutil
 
 from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
+from labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

@@ -11,8 +11,9 @@ from random import random
 import numpy as np
 import pandas as pd
 import smith
-from phd.lib.labm8 import fs
 from smith import cgo13
+
+from labm8 import fs
 
 
 class MalformedDataException(smith.SmithException): pass

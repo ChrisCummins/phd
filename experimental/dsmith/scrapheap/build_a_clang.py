@@ -10,8 +10,9 @@ from typing import Tuple, Union
 from dsmith import db
 from dsmith.db import *
 from dsmith.lib import *
-from phd.lib.labm8 import crypto, fs
 from progressbar import ProgressBar
+
+from labm8 import crypto, fs
 
 
 def get_num_programs_to_build(session: db.session_t, tables: Tableset,

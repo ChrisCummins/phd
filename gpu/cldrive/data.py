@@ -3,9 +3,9 @@ import functools
 from enum import Enum
 
 import numpy as np
-from phd.lib.labm8 import err
 
 from gpu.cldrive import args as _args
+from labm8 import err
 
 
 class Generator(Enum):

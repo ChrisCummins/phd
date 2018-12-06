@@ -18,12 +18,12 @@ import typing
 
 from absl import app
 from absl import flags
-from phd.lib.labm8 import bazelutil
-from phd.lib.labm8 import fs
-from phd.lib.labm8 import system
 
 from gpu.cldrive import driver
 from gpu.cldrive import env
+from labm8 import bazelutil
+from labm8 import fs
+from labm8 import system
 
 
 FLAGS = flags.FLAGS

@@ -6,12 +6,12 @@ import pathlib
 import typing
 
 from absl import flags
-from phd.lib.labm8 import pbutil
 
 from deeplearning.clgen import errors
 from deeplearning.clgen import samplers
 from deeplearning.clgen.models import pretrained
 from deeplearning.clgen.proto import clgen_pb2
+from labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

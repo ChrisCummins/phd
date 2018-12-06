@@ -10,7 +10,8 @@ from typing import List, NewType
 
 from dsmith.db import *
 from dsmith.lib import *
-from phd.lib.labm8 import fs
+
+from labm8 import fs
 
 
 status_t = NewType('status_t', int)

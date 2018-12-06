@@ -29,7 +29,7 @@ import sys
 
 from argparse import ArgumentParser
 from collections import Counter
-from phd.lib.labm8 import fs
+from labm8 import fs
 
 from dsmith import db
 from dsmith.db import *

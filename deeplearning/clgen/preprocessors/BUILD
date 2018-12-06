@@ -20,7 +20,7 @@ py_library(
         "//compilers/llvm",
         "//compilers/llvm:clang_format",
         "//deeplearning/clgen:errors",
-        "//lib/labm8:bazelutil",
+        "//labm8:bazelutil",
         "//third_party/py/absl",
     ],
 )
@@ -303,7 +303,7 @@ py_library(
         ":normalizer",
         ":public",
         "//compilers/llvm:clang",
-        "//lib/labm8:bazelutil",
+        "//labm8:bazelutil",
         "//third_party/py/absl",
     ],
 )
@@ -343,7 +343,7 @@ py_library(
         ":clang",
         ":public",
         "//deeplearning/clgen:errors",
-        "//lib/labm8:bazelutil",
+        "//labm8:bazelutil",
         "//third_party/py/absl",
     ],
 )
@@ -393,7 +393,7 @@ py_library(
     ],
     deps = [
         "//deeplearning/clgen:errors",
-        "//lib/labm8:bazelutil",
+        "//labm8:bazelutil",
         "//third_party/py/absl",
     ],
 )
@@ -424,7 +424,7 @@ py_library(
         ":clang",
         ":normalizer",
         ":public",
-        "//lib/labm8:bazelutil",
+        "//labm8:bazelutil",
     ],
 )
 
@@ -438,7 +438,7 @@ py_test(
         ":clang",
         ":opencl",
         "//deeplearning/clgen/proto:corpus_py_pb2",
-        "//lib/labm8:bazelutil",
+        "//labm8:bazelutil",
         "//third_party/py/absl",
         "//third_party/py/pytest",
     ],

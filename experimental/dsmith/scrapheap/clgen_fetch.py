@@ -6,8 +6,9 @@ from typing import List
 import cldrive
 from dsmith import db
 from dsmith.db import *
-from phd.lib.labm8 import crypto, fs
 from progressbar import ProgressBar
+
+from labm8 import crypto, fs
 
 
 # Benchmarked CLgen inference rate (characters per second):

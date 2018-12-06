@@ -4,7 +4,8 @@ import sqlite3
 from argparse import ArgumentParser
 
 import smith
-from phd.lib.labm8 import fs
+
+from labm8 import fs
 
 
 def sanitize_id(id):

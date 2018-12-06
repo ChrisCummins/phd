@@ -11,11 +11,11 @@ from absl import app
 from absl import flags
 from absl import logging
 from keras.preprocessing import sequence
-from phd.lib.labm8 import pbutil
 
 from deeplearning.clgen import telemetry
 from deeplearning.clgen.corpuses import atomizers
 from experimental.deeplearning.fish.proto import fish_pb2
+from labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

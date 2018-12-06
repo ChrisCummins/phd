@@ -6,10 +6,10 @@ import gym
 from absl import app
 from absl import flags
 from absl import logging
-from phd.lib.labm8 import pbutil
 
 from experimental.compilers.random_opt import environments
 from experimental.compilers.random_opt import implementation as implementation
+from labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

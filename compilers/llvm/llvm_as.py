@@ -17,10 +17,10 @@ import typing
 from absl import app
 from absl import flags
 from absl import logging
-from phd.lib.labm8 import bazelutil
-from phd.lib.labm8 import system
 
 from compilers.llvm import llvm
+from labm8 import bazelutil
+from labm8 import system
 
 
 FLAGS = flags.FLAGS

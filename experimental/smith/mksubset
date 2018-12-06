@@ -8,8 +8,9 @@
 import re
 
 import pandas as pd
-from phd.lib.labm8 import fs
-from phd.lib.labm8 import io
+
+from labm8 import fs
+from labm8 import io
 
 
 def intersect(a, b):

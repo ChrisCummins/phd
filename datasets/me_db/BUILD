@@ -13,7 +13,7 @@ py_library(
     visibility = ["//datasets/me_db:__subpackages__"],
     deps = [
         ":me_proto_pb2",
-        "//lib/labm8:ppar",
+        "//labm8:ppar",
         "//third_party/py/absl",
     ],
 )
@@ -26,8 +26,8 @@ py_binary(
         "//datasets/me_db/health_kit",
         "//datasets/me_db/life_cycle",
         "//datasets/me_db/ynab",
-        "//lib/labm8:labdate",
-        "//lib/labm8:sqlutil",
+        "//labm8:labdate",
+        "//labm8:sqlutil",
         "//third_party/py/absl",
         "//third_party/py/sqlalchemy",
     ],

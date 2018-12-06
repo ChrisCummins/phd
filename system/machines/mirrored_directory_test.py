@@ -9,9 +9,9 @@ import pytest
 from absl import app
 from absl import flags
 from absl import logging
-from phd.lib.labm8 import fs
-from phd.lib.labm8 import labtypes
 
+from labm8 import fs
+from labm8 import labtypes
 from system.machines import mirrored_directory
 from system.machines.proto import machine_spec_pb2
 

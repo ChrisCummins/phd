@@ -37,8 +37,9 @@ from pathlib import Path
 from typing import Tuple
 
 from experimental.dsmith._config import *
-from phd.lib.labm8 import fs
 from pkg_resources import require, resource_filename
+
+from labm8 import fs
 
 
 __author__ = "Chris Cummins"

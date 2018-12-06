@@ -9,9 +9,9 @@ from collections import Counter
 
 import numpy as np
 from absl import flags
-from phd.lib.labm8 import labdate
 
 from deeplearning.clgen import errors
+from labm8 import labdate
 
 
 FLAGS = flags.FLAGS

@@ -2,9 +2,10 @@
 
 import sys
 
-from phd.lib.labm8 import crypto
-from phd.lib.labm8 import fs
 from progressbar import ProgressBar
+
+from labm8 import crypto
+from labm8 import fs
 
 
 if __name__ == "__main__":

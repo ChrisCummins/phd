@@ -18,8 +18,8 @@ py_library(
     deps = [
         ":public",
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
-        "//lib/labm8:bazelutil",
-        "//lib/labm8:pbutil",
+        "//labm8:bazelutil",
+        "//labm8:pbutil",
         "//third_party/py/absl",
     ],
 )
@@ -52,7 +52,7 @@ py_library(
     visibility = ["//datasets/github/scrape_repos:__subpackages__"],
     deps = [
         ":public",
-        "//lib/labm8:bazelutil",
+        "//labm8:bazelutil",
         "//third_party/py/absl",
         "//third_party/py/fuzzywuzzy",
     ],
@@ -130,7 +130,7 @@ py_library(
     srcs = ["public.py"],
     visibility = ["//datasets/github/scrape_repos:__subpackages__"],
     deps = [
-        "//lib/labm8:fs",
+        "//labm8:fs",
         "//third_party/py/absl",
     ],
 )

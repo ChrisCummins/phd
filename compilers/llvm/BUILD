@@ -14,8 +14,8 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":llvm",
-        "//lib/labm8:bazelutil",
-        "//lib/labm8:system",
+        "//labm8:bazelutil",
+        "//labm8:system",
         "//third_party/py/absl",
     ],
 )
@@ -45,8 +45,8 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":llvm",
-        "//lib/labm8:bazelutil",
-        "//lib/labm8:system",
+        "//labm8:bazelutil",
+        "//labm8:system",
         "//third_party/py/absl",
     ],
 )
@@ -76,8 +76,8 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":llvm",
-        "//lib/labm8:bazelutil",
-        "//lib/labm8:system",
+        "//labm8:bazelutil",
+        "//labm8:system",
         "//third_party/py/absl",
     ],
 )
@@ -96,8 +96,8 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":llvm",
-        "//lib/labm8:bazelutil",
-        "//lib/labm8:system",
+        "//labm8:bazelutil",
+        "//labm8:system",
         "//third_party/py/absl",
     ],
 )
@@ -136,8 +136,8 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":llvm",
-        "//lib/labm8:bazelutil",
-        "//lib/labm8:system",
+        "//labm8:bazelutil",
+        "//labm8:system",
         "//third_party/py/absl",
     ],
 )

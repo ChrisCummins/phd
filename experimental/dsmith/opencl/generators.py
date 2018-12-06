@@ -25,11 +25,10 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from time import time
 
-from phd.lib.labm8 import fs
-
 from experimental.dsmith.langs import Generator
 from experimental.dsmith.opencl import clsmith
 from experimental.dsmith.opencl.db import *
+from labm8 import fs
 
 
 class OpenCLGenerator(Generator):

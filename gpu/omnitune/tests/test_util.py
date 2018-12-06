@@ -1,7 +1,7 @@
 from unittest import main
 
+from labm8.tests.testutil import TestCase
 from omnitune import util
-from phd.lib.labm8.tests.testutil import TestCase
 
 
 class TestUtil(TestCase):

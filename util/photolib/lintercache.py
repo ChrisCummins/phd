@@ -8,7 +8,6 @@ import typing
 import sqlalchemy as sql
 from absl import flags
 from absl import logging
-from phd.lib.labm8 import shell
 from sqlalchemy import Binary
 from sqlalchemy import Column
 from sqlalchemy import DateTime
@@ -20,6 +19,7 @@ from sqlalchemy import orm
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
+from labm8 import shell
 from util.photolib import common
 from util.photolib import linters
 

@@ -9,10 +9,10 @@ from subprocess import PIPE, Popen
 from tempfile import NamedTemporaryFile
 
 import numpy as np
-from phd.lib.labm8 import err
 
 from gpu.cldrive import args as _args
 from gpu.cldrive import env as _env
+from labm8 import err
 
 
 ArgTuple = collections.namedtuple('ArgTuple', ['hostdata', 'devdata'])

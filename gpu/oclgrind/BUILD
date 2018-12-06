@@ -13,8 +13,8 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//gpu/clinfo/proto:clinfo_py_pb2",
-        "//lib/labm8:bazelutil",
-        "//lib/labm8:system",
+        "//labm8:bazelutil",
+        "//labm8:system",
         "//third_party/py/absl",
     ],
 )

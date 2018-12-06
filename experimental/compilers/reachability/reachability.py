@@ -6,11 +6,11 @@ import typing
 import numpy as np
 from absl import app
 from absl import flags
-from phd.lib.labm8 import fmt
-from phd.lib.labm8 import fs
-from phd.lib.labm8 import graph as libgraph
 
 from experimental.compilers.reachability.proto import reachability_pb2
+from labm8 import fmt
+from labm8 import fs
+from labm8 import graph as libgraph
 
 
 FLAGS = flags.FLAGS

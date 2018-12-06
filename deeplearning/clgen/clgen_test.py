@@ -7,11 +7,11 @@ import tempfile
 import pytest
 from absl import app
 from absl import flags
-from phd.lib.labm8 import pbutil
 
 from deeplearning.clgen import clgen
 from deeplearning.clgen import errors
 from deeplearning.clgen.proto import clgen_pb2
+from labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

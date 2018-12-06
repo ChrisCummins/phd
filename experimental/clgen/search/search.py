@@ -13,10 +13,10 @@ import numpy as np
 from clgen import log as clgen_log
 from clgen import model
 from clgen import preprocess
-from phd.lib.labm8 import fs
-from phd.lib.labm8.time import nowstr
+from labm8.time import nowstr
 
-from lib import labm8
+from labm8 import fs
+from phd import labm8
 
 
 if labm8.is_python3():

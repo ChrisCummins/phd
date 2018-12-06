@@ -7,18 +7,18 @@ import random
 import subprocess
 
 import omnitune
+from labm8.db import placeholders
+from labm8.db import where
 from omnitune.skelcl import features
-from phd.lib.labm8 import db
-from phd.lib.labm8 import fs
-from phd.lib.labm8 import io
-from phd.lib.labm8 import math as labmath
-from phd.lib.labm8 import prof
-from phd.lib.labm8.db import placeholders
-from phd.lib.labm8.db import where
 from pkg_resources import resource_string
 from space import ParamSpace
 
-from lib import labm8 as lab
+from labm8 import db
+from labm8 import fs
+from labm8 import io
+from labm8 import math as labmath
+from labm8 import prof
+from phd import labm8 as lab
 from . import get_kernel_name_and_type
 from . import hash_dataset
 from . import hash_device

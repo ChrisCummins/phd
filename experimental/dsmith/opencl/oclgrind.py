@@ -22,11 +22,10 @@ import subprocess
 from tempfile import NamedTemporaryFile
 from typing import List
 
-from phd.lib.labm8 import fs
-
 from experimental import dsmith
 from experimental.dsmith.opencl import cldrive_mkharness as mkharness
 from experimental.dsmith.opencl import clsmith
+from labm8 import fs
 
 
 # build paths

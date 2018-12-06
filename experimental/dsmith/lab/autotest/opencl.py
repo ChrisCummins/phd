@@ -8,7 +8,8 @@ from typing import List
 import autotest
 import cldrive
 from dsmith.opencl import clsmith
-from phd.lib.labm8 import crypto
+
+from labm8 import crypto
 
 
 class OpenCLTestcase(object):

@@ -5,7 +5,7 @@ py_binary(
         "//deeplearning/deepsmith:datastore",
         "//deeplearning/deepsmith:db",
         "//deeplearning/deepsmith:result",
-        "//lib/labm8:pbutil",
+        "//labm8:pbutil",
         "//third_party/py/absl",
     ],
 )
@@ -30,7 +30,7 @@ py_binary(
         "//deeplearning/deepsmith:db",
         "//deeplearning/deepsmith:result",
         "//deeplearning/deepsmith:testcase",
-        "//lib/labm8:pbutil",
+        "//labm8:pbutil",
         "//third_party/py/absl",
         "//third_party/py/progressbar",
     ],

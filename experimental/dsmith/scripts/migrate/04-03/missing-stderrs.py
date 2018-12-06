@@ -10,8 +10,9 @@ from pathlib import Path
 import db
 import sqlalchemy as sql
 from db import *
-from phd.lib.labm8 import crypto, fs
 from progressbar import ProgressBar
+
+from labm8 import crypto, fs
 
 
 if __name__ == "__main__":

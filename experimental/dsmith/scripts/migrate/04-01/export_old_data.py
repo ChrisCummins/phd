@@ -9,8 +9,9 @@ from pathlib import Path
 import analyze
 import db
 from db import *
-from phd.lib.labm8 import fs
 from progressbar import ProgressBar
+
+from labm8 import fs
 
 
 OUTCOMES = {

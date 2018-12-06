@@ -2,11 +2,11 @@
 import typing
 
 from absl import flags
-from phd.lib.labm8 import bazelutil
 
 from deeplearning.clgen.preprocessors import clang
 from deeplearning.clgen.preprocessors import normalizer
 from deeplearning.clgen.preprocessors import public
+from labm8 import bazelutil
 
 
 FLAGS = flags.FLAGS
@@ -157,7 +157,7 @@ def NormalizeIdentifiers(text: str) -> str:
 #   InternalError
 #       If GPUverify fails.
 #   """
-#   from phd.lib.labm8 import system
+#   from labm8 import system
 #   if not system.is_linux():
 #     raise errors.InternalError("GPUVerify only supported on Linux!")
 #

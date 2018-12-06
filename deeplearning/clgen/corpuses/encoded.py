@@ -13,7 +13,6 @@ import progressbar
 import sqlalchemy as sql
 from absl import flags
 from absl import logging
-from phd.lib.labm8 import sqlutil
 from sqlalchemy.ext import declarative
 from sqlalchemy.sql import func
 
@@ -21,6 +20,7 @@ from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.corpuses import preprocessed
 from deeplearning.clgen.proto import internal_pb2
+from labm8 import sqlutil
 
 
 FLAGS = flags.FLAGS

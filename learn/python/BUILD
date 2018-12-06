@@ -58,7 +58,7 @@ py_test(
     ],
     deps = [
         ":cpp_interop_proto_py_pb2",
-        "//lib/labm8:bazelutil",
+        "//labm8:bazelutil",
         "//third_party/py/absl",
         "//third_party/py/pytest",
     ],

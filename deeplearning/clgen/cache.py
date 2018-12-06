@@ -3,8 +3,9 @@ import os
 import pathlib
 
 from absl import flags
-from phd.lib.labm8 import cache
-from phd.lib.labm8 import fs
+
+from labm8 import cache
+from labm8 import fs
 
 
 FLAGS = flags.FLAGS

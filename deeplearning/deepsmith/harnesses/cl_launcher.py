@@ -9,7 +9,6 @@ import grpc
 from absl import app
 from absl import flags
 from absl import logging
-from phd.lib.labm8 import labdate
 
 from compilers.clsmith import cl_launcher
 from deeplearning.deepsmith import services
@@ -20,6 +19,7 @@ from deeplearning.deepsmith.proto import harness_pb2_grpc
 from deeplearning.deepsmith.proto import service_pb2
 from gpu.cldrive import driver
 from gpu.cldrive import env
+from labm8 import labdate
 
 
 FLAGS = flags.FLAGS

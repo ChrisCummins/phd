@@ -11,9 +11,10 @@ from clgen import log
 from clgen import model
 from clgen import preprocess
 from clgen import sampler
-from phd.lib.labm8 import fs
-from phd.lib.labm8 import system
-from phd.lib.labm8 import time
+
+from labm8 import fs
+from labm8 import system
+from labm8 import time
 
 
 def evaluate(model, sampler):

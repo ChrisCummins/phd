@@ -9,10 +9,10 @@ import numpy as np
 from absl import app
 from absl import flags
 from absl import logging
-from phd.lib.labm8 import labtypes
-from phd.lib.labm8 import pbutil
 
 from experimental.deeplearning.fish.proto import fish_pb2
+from labm8 import labtypes
+from labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

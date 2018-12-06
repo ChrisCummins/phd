@@ -6,8 +6,8 @@ import tempfile
 import pytest
 from absl import app
 
-from lib.dpack import dpack
-from lib.dpack.proto import dpack_pb2
+from system.dpack import dpack
+from system.dpack.proto import dpack_pb2
 
 
 # The sha256sum of an empty file.

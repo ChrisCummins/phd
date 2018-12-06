@@ -10,7 +10,7 @@ class Apt(object):
     if not CheckShellCommand(
         "dpkg -s '{package}' &>/dev/null".format(package=package)):
       ShellCommand(
-        "sudo apt-get install -y '{package}'".format(package=package))
+          "sudo apt-get install -y '{package}'".format(package=package))
       return True
 
   def update(self):

@@ -7,8 +7,8 @@ import typing
 from collections import defaultdict
 
 from absl import flags
-from phd.lib.labm8 import shell
 
+from labm8 import shell
 from util.photolib import common
 from util.photolib import lightroom
 from util.photolib.proto import photolint_pb2

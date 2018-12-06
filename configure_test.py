@@ -7,7 +7,8 @@ import tempfile
 import pytest
 from absl import app
 from absl import flags
-from phd.lib.labm8 import bazelutil
+
+from labm8 import bazelutil
 
 
 FLAGS = flags.FLAGS

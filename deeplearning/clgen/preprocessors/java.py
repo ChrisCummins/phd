@@ -8,11 +8,11 @@ import typing
 
 from absl import flags
 from absl import logging
-from phd.lib.labm8 import bazelutil
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import clang
 from deeplearning.clgen.preprocessors import public
+from labm8 import bazelutil
 
 
 FLAGS = flags.FLAGS

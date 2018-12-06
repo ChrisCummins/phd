@@ -37,7 +37,7 @@ class Homebrew(object):
       io.Print("Installing Homebrew")
       url = 'https://raw.githubusercontent.com/Homebrew/install/master/install'
       host.ShellCommand(
-        'yes | /usr/bin/ruby -e "$(curl -fsSL {url})"'.format(**vars()))
+          'yes | /usr/bin/ruby -e "$(curl -fsSL {url})"'.format(**vars()))
       host.ShellCommand('brew doctor')
 
   @classmethod
@@ -59,9 +59,9 @@ class Homebrew(object):
     """ return True if package is installed """
     if not os.path.isfile(self.PKG_LIST):
       host.ShellCommand(
-        "{self.BREW_BINARY} list > {self.PKG_LIST}".format(**vars()))
+          "{self.BREW_BINARY} list > {self.PKG_LIST}".format(**vars()))
     return host.CheckShellCommand(
-      "grep '^{package}$' <{self.PKG_LIST}".format(**vars()))
+        "grep '^{package}$' <{self.PKG_LIST}".format(**vars()))
 
   def install_package(self, package):
     """ install a package using homebrew, return True if installed """
@@ -74,13 +74,13 @@ class Homebrew(object):
     """ returns True if package is outdated """
     if not self.package_is_installed(package):
       raise task.InvalidTaskError(
-        "homebrew package '{package}' cannot be upgraded "
-        "as it is not installed".format(**vars()))
+          "homebrew package '{package}' cannot be upgraded "
+          "as it is not installed".format(**vars()))
 
     if not os.path.isfile(self.OUTDATED_PKG_LIST):
       host.ShellCommand(
-        "{self.BREW_BINARY} outdated | awk '{{print $1}}' >{self.OUTDATED_PKG_LIST}"
-        .format(**vars()))
+          "{self.BREW_BINARY} outdated | awk '{{print $1}}' >{self.OUTDATED_PKG_LIST}"
+            .format(**vars()))
 
     package_stump = package.split('/')[-1]
     return host.CheckShellCommand(
@@ -97,18 +97,18 @@ class Homebrew(object):
     """ return True if cask is installed """
     if not os.path.isfile(self.CASK_LIST):
       host.ShellCommand(
-        "{self.BREW_BINARY} cask list > {self.CASK_LIST}".format(**vars()))
+          "{self.BREW_BINARY} cask list > {self.CASK_LIST}".format(**vars()))
 
     cask_stump = cask.split('/')[-1]
     return host.CheckShellCommand(
-      "grep '^{cask_stump}$' <{self.CASK_LIST}".format(**vars()))
+        "grep '^{cask_stump}$' <{self.CASK_LIST}".format(**vars()))
 
   def install_cask(self, cask):
     """ install a homebrew cask, return True if installed """
     if not self.cask_is_installed(cask):
       io.Print("brew cask install " + cask)
       host.ShellCommand(
-        "{self.BREW_BINARY} cask install {cask}".format(**vars()))
+          "{self.BREW_BINARY} cask install {cask}".format(**vars()))
       return True
 
   def cask_is_outdated(self, cask):
@@ -121,7 +121,7 @@ class Homebrew(object):
     if not os.path.isfile(self.OUTDATED_CASK_LIST):
       host.ShellCommand("{self.BREW_BINARY} cask outdated ".format(**vars()) +
                         "| awk '{{print $1}}' >{self.OUTDATED_CASK_LIST}".format(
-                          **vars()))
+                            **vars()))
 
     cask_stump = cask.split('/')[-1]
     return host.CheckShellCommand(
@@ -132,7 +132,7 @@ class Homebrew(object):
     if self.cask_is_outdated(cask):
       io.Print("brew cask upgrade {cask}".format(**vars()))
       host.ShellCommand(
-        "{self.BREW_BINARY} cask upgrade {cask}".format(**vars()))
+          "{self.BREW_BINARY} cask upgrade {cask}".format(**vars()))
       return True
 
   def uninstall_cask(self, cask):

@@ -15,7 +15,7 @@ py_test(
     srcs = ["ryangosling_test.py"],
     data = [":ryangosling_proto"],
     deps = [
-        "//lib/labm8:bazelutil",
+        "//labm8:bazelutil",
         "//system/machines:machine",
         "//system/machines:mirrored_directory",
         "//third_party/py/absl",

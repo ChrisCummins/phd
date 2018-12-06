@@ -8,11 +8,11 @@ import zipfile
 from absl import app
 from absl import flags
 from absl import logging
-from phd.lib.labm8 import bazelutil
-from phd.lib.labm8 import pbutil
 
 from datasets.me_db import importers
 from datasets.me_db import me_pb2
+from labm8 import bazelutil
+from labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

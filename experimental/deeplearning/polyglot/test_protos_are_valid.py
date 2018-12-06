@@ -3,12 +3,12 @@ import sys
 
 import pytest
 from absl import app
-from phd.lib.labm8 import bazelutil
-from phd.lib.labm8 import pbutil
 
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import sampler_pb2
+from labm8 import bazelutil
+from labm8 import pbutil
 
 
 def DirContainsProtos(data_path: str, proto_class) -> None:

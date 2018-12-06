@@ -14,12 +14,12 @@ import typing
 from absl import app
 from absl import flags
 from absl import logging
-from phd.lib.labm8 import crypto
-from phd.lib.labm8 import fs
-from phd.lib.labm8 import labdate
-from phd.lib.labm8 import pbutil
 
-from lib.dpack.proto import dpack_pb2
+from labm8 import crypto
+from labm8 import fs
+from labm8 import labdate
+from labm8 import pbutil
+from system.dpack.proto import dpack_pb2
 
 
 FLAGS = flags.FLAGS

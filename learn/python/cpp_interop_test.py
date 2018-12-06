@@ -1,6 +1,6 @@
 """Test of Python calling into C++ library.
 
-NOTE: this code has been librified and moved into //lib/labm8:ppar.
+NOTE: this code has been librified and moved into //labm8:ppar.
 """
 import subprocess
 import sys
@@ -8,8 +8,8 @@ import sys
 import pytest
 from absl import app
 from absl import flags
-from phd.lib.labm8 import bazelutil
 
+from labm8 import bazelutil
 from learn.python import cpp_interop_pb2
 
 

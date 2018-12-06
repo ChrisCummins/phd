@@ -14,11 +14,6 @@ import humanize
 import numpy as np
 from absl import flags
 from absl import logging
-from phd.lib.labm8 import bazelutil
-from phd.lib.labm8 import crypto
-from phd.lib.labm8 import hashcache
-from phd.lib.labm8 import lockfile
-from phd.lib.labm8 import pbutil
 from sqlalchemy.sql.expression import func
 
 from deeplearning.clgen import cache
@@ -28,6 +23,11 @@ from deeplearning.clgen.corpuses import encoded
 from deeplearning.clgen.corpuses import preprocessed
 from deeplearning.clgen.preprocessors import preprocessors
 from deeplearning.clgen.proto import corpus_pb2
+from labm8 import bazelutil
+from labm8 import crypto
+from labm8 import hashcache
+from labm8 import lockfile
+from labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

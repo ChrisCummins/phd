@@ -5,9 +5,9 @@ See: https://llvm.org/docs/TestingGuide.html#test-suite-overview
 import typing
 
 from absl import flags
-from phd.lib.labm8 import bazelutil
 
 from datasets.benchmarks.proto import benchmarks_pb2
+from labm8 import bazelutil
 
 
 FLAGS = flags.FLAGS

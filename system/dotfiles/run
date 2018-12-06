@@ -195,7 +195,7 @@ def main(*args):
                   shell_ok("sudo test -f '{file}'".format(**vars())) or
                   shell_ok("sudo test -d '{file}'".format(**vars()))):
             raise InvalidTaskError(
-              'genfile "{file}" not created'.format(**vars()))
+                'genfile "{file}" not created'.format(**vars()))
       runtime = time() - start_time
 
       logging.debug("{task} task completed in {runtime:.3f}s".format(**vars()))

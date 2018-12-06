@@ -59,7 +59,7 @@ py_binary(
     srcs_version = "PY3",
     deps = [
         "//deeplearning/clgen",
-        "//lib/labm8:bazelutil",
+        "//labm8:bazelutil",
         "//third_party/py/absl",
     ],
 )

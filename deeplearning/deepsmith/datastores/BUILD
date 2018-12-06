@@ -16,7 +16,7 @@ py_binary(
     deps = [
         "//deeplearning/deepsmith:services",
         "//deeplearning/deepsmith/proto:datastore_py_pb2",
-        "//lib/labm8:pbutil",
+        "//labm8:pbutil",
         "//third_party/py/absl",
         "//third_party/py/grpcio",
     ],

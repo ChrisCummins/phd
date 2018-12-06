@@ -23,10 +23,9 @@ import random
 import string
 from time import time
 
-from phd.lib.labm8 import fs
-
 from experimental.dsmith.glsl.db import *
 from experimental.dsmith.langs import Generator
+from labm8 import fs
 
 
 class GlslGenerator(Generator):

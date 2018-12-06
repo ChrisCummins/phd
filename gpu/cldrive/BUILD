@@ -71,7 +71,7 @@ py_library(
     deps = [
         ":args",
         ":driver",
-        "//lib/labm8:err",
+        "//labm8:err",
         "//third_party/py/numpy",
     ],
 )
@@ -97,7 +97,7 @@ py_library(
     deps = [
         ":args",
         ":env",
-        "//lib/labm8:err",
+        "//labm8:err",
         "//third_party/py/numpy",
     ],
 )
@@ -126,8 +126,8 @@ py_library(
     deps = [
         "//gpu/clinfo/proto:clinfo_py_pb2",
         "//gpu/oclgrind",
-        "//lib/labm8:bazelutil",
-        "//lib/labm8:pbutil",
+        "//labm8:bazelutil",
+        "//labm8:pbutil",
         "//third_party/py/absl",
     ],
 )

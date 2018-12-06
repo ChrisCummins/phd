@@ -15,7 +15,7 @@ py_test(
     deps = [
         ":flags",
         "//datasets/me_db",
-        "//lib/labm8:labdate",
+        "//labm8:labdate",
         "//third_party/py/absl",
         "//third_party/py/pandas",
         "//third_party/py/pytest",

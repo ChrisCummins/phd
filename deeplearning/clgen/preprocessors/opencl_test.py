@@ -6,11 +6,11 @@ import pytest
 from absl import app
 from absl import flags
 from absl import logging
-from phd.lib.labm8 import bazelutil
 
 import deeplearning.clgen
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import opencl
+from labm8 import bazelutil
 
 
 FLAGS = flags.FLAGS

@@ -8,9 +8,8 @@ script.
 import os
 import pathlib
 
-from phd.lib.labm8 import pbutil
-
 from config.proto import config_pb2
+from labm8 import pbutil
 
 
 # The path of the generated config file, which is //config.pbtxt.

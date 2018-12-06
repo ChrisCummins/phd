@@ -8,8 +8,8 @@ py_binary(
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
-        "//lib/labm8:bazelutil",
-        "//lib/labm8:fs",
+        "//labm8:bazelutil",
+        "//labm8:fs",
         "//third_party/py/absl",
     ],
 )
@@ -46,9 +46,9 @@ py_binary(
     deps = [
         "//gpu/cldrive:driver",
         "//gpu/cldrive:env",
-        "//lib/labm8:bazelutil",
-        "//lib/labm8:fs",
-        "//lib/labm8:system",
+        "//labm8:bazelutil",
+        "//labm8:fs",
+        "//labm8:system",
         "//third_party/py/absl",
     ],
 )

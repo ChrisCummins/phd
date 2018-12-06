@@ -5,8 +5,8 @@ py_binary(
     srcs = ["export_clang_opencl_dataset.py"],
     deps = [
         "//experimental/deeplearning/fish/proto:fish_py_pb2",
-        "//lib/labm8:fs",
-        "//lib/labm8:pbutil",
+        "//labm8:fs",
+        "//labm8:pbutil",
         "//third_party/py/absl",
         "//third_party/py/humanize",
         "//third_party/py/mysql",
@@ -19,9 +19,9 @@ py_binary(
     deps = [
         ":train_discriminator",
         "//deeplearning/clgen",
-        "//lib/labm8:bazelutil",
-        "//lib/labm8:pbutil",
-        "//lib/labm8:viz",
+        "//labm8:bazelutil",
+        "//labm8:pbutil",
+        "//labm8:viz",
     ],
 )
 
@@ -30,9 +30,9 @@ py_binary(
     srcs = ["prepare_discriminator_dataset.py"],
     deps = [
         "//experimental/deeplearning/fish/proto:fish_py_pb2",
-        "//lib/labm8:fs",
-        "//lib/labm8:labtypes",
-        "//lib/labm8:pbutil",
+        "//labm8:fs",
+        "//labm8:labtypes",
+        "//labm8:pbutil",
         "//third_party/py/absl",
         "//third_party/py/humanize",
         "//third_party/py/numpy",

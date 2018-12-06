@@ -7,7 +7,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//config/proto:config",
-        "//lib/labm8:pbutil",
+        "//labm8:pbutil",
     ],
 )
 

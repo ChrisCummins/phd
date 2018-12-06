@@ -6,12 +6,12 @@ import typing
 
 import sqlalchemy as sql
 from absl import flags
-from phd.lib.labm8 import labdate
-from phd.lib.labm8 import sqlutil
 from sqlalchemy import orm
 from sqlalchemy.ext import declarative
 
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
+from labm8 import labdate
+from labm8 import sqlutil
 
 
 FLAGS = flags.FLAGS

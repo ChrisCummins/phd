@@ -26,10 +26,9 @@ from tempfile import NamedTemporaryFile
 from time import time
 from typing import List, NewType, Tuple
 
-from phd.lib.labm8 import fs
-
 from experimental import dsmith
 from experimental.dsmith import Colors
+from labm8 import fs
 
 
 runtime_t = NewType('runtime_t', float)

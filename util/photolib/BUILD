@@ -34,7 +34,7 @@ py_library(
     deps = [
         ":common",
         ":linters",
-        "//lib/labm8:shell",
+        "//labm8:shell",
         "//third_party/py/absl",
         "//third_party/py/sqlalchemy",
     ],
@@ -57,7 +57,7 @@ py_library(
     deps = [
         ":common",
         ":lightroom",
-        "//lib/labm8:shell",
+        "//labm8:shell",
         "//third_party/py/absl",
         "//third_party/py/protobuf",
     ],

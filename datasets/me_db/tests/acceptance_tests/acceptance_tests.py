@@ -19,11 +19,11 @@ import typing
 import pandas as pd
 import pytest
 from absl import app
-from phd.lib.labm8 import bazelutil
 from sqlalchemy.sql.expression import func
 
 from datasets.me_db import me_db
 from datasets.me_db.tests.acceptance_tests import flags
+from labm8 import bazelutil
 
 
 FLAGS = flags.FLAGS

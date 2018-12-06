@@ -13,16 +13,16 @@ import progressbar
 from absl import app
 from absl import flags
 from absl import logging
-from phd.lib.labm8 import bazelutil
-from phd.lib.labm8 import fs
-from phd.lib.labm8 import labtypes
-from phd.lib.labm8 import pbutil
 
 from deeplearning.deepsmith import datastore
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith import result
 from deeplearning.deepsmith import testbed
 from deeplearning.deepsmith import testcase
+from labm8 import bazelutil
+from labm8 import fs
+from labm8 import labtypes
+from labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

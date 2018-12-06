@@ -5,8 +5,9 @@ import dsmith
 import sqlalchemy as sql
 from dsmith import db
 from dsmith.db import *
-from phd.lib.labm8 import fs
 from progressbar import ProgressBar
+
+from labm8 import fs
 
 
 __description__ = """ Export a CLSmith program codes for assembling CLgen

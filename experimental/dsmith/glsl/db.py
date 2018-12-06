@@ -31,13 +31,13 @@ import humanize
 import progressbar
 import sqlalchemy as sql
 from experimental.dsmith.db_base import *
-from phd.lib.labm8 import crypto, fs
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
 
 from experimental import dsmith
 from experimental.dsmith import Colors
 from experimental.dsmith import db_base
+from labm8 import crypto, fs
 
 
 # Global state to manage database connections. Must call init() before

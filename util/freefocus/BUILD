@@ -25,8 +25,8 @@ py_library(
     visibility = ["//util/freefocus:__subpackages__"],
     deps = [
         ":freefocus_py_pb2",
-        "//lib/labm8:labdate",
-        "//lib/labm8:sqlutil",
+        "//labm8:labdate",
+        "//labm8:sqlutil",
         "//third_party/py/absl",
     ],
 )

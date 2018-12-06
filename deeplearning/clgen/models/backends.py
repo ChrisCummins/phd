@@ -3,11 +3,11 @@ import typing
 
 import numpy as np
 from absl import flags
-from phd.lib.labm8 import cache
 
 from deeplearning.clgen import samplers
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.proto import model_pb2
+from labm8 import cache
 
 
 FLAGS = flags.FLAGS

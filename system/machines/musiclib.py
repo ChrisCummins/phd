@@ -5,9 +5,9 @@ import sys
 
 from absl import app
 from absl import flags
-from phd.lib.labm8 import fs
 
-from lib.dpack import dpack
+from labm8 import fs
+from system.dpack import dpack
 
 
 FLAGS = flags.FLAGS

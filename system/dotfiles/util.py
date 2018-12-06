@@ -432,7 +432,8 @@ def get_task_method(task, method_name):
     fn = getattr(task, method_name, None)
   if fn is None:
     raise InvalidTaskError(
-      "failed to resolve {method_name} method of Task {task}".format(**vars()))
+        "failed to resolve {method_name} method of Task {task}".format(
+            **vars()))
   return fn
 
 

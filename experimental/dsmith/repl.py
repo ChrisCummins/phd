@@ -32,11 +32,11 @@ import sys
 import traceback
 
 import humanize
-from phd.lib.labm8 import fs
 
 from experimental import dsmith
 from experimental.dsmith import Colors
 from experimental.dsmith.langs import Generator, Language, mklang
+from labm8 import fs
 
 
 _lang_str = f"{Colors.RED}<lang>{Colors.END}{Colors.BOLD}"

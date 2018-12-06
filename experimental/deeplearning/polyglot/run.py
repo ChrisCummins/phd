@@ -8,9 +8,6 @@ import humanize
 from absl import app
 from absl import flags
 from absl import logging
-from phd.lib.labm8 import crypto
-from phd.lib.labm8 import lockfile
-from phd.lib.labm8 import pbutil
 
 from deeplearning.clgen import clgen
 from deeplearning.clgen import errors
@@ -18,6 +15,9 @@ from deeplearning.clgen.corpuses import corpuses
 from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
+from labm8 import crypto
+from labm8 import lockfile
+from labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

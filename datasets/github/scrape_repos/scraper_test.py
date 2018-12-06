@@ -5,10 +5,10 @@ import tempfile
 
 import pytest
 from absl import app
-from phd.lib.labm8 import labdate
 
 from datasets.github.scrape_repos import scraper
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
+from labm8 import labdate
 
 
 class MockNamedUser(object):

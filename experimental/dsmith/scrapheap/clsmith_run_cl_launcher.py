@@ -13,7 +13,8 @@ from dsmith import clsmith
 from dsmith import db
 from dsmith.db import *
 from dsmith.lib import *
-from phd.lib.labm8 import crypto
+
+from labm8 import crypto
 
 
 def get_platform_name(platform_id):

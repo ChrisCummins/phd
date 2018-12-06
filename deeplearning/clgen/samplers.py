@@ -6,12 +6,12 @@ determines the shape of the generated samples.
 import typing
 
 from absl import flags
-from phd.lib.labm8 import crypto
-from phd.lib.labm8 import pbutil
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.proto import sampler_pb2
+from labm8 import crypto
+from labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

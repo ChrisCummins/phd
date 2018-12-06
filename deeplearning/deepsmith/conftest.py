@@ -9,11 +9,11 @@ https://docs.pytest.org/en/latest/fixture.html#conftest-py-sharing-fixture-funct
 import pathlib
 
 import pytest
-from phd.lib.labm8 import pbutil
 
 from deeplearning.deepsmith import datastore
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import datastore_pb2
+from labm8 import pbutil
 
 
 def _ReadTestDataStoreFiles() -> datastore_pb2.DataStoreTestSet:

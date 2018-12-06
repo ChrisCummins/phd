@@ -5,11 +5,11 @@ py_binary(
     srcs = ["dpack.py"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     deps = [
-        "//lib/dpack/proto:dpack_pb2_py",
-        "//lib/labm8:crypto",
-        "//lib/labm8:fs",
-        "//lib/labm8:labdate",
-        "//lib/labm8:pbutil",
+        "//labm8:crypto",
+        "//labm8:fs",
+        "//labm8:labdate",
+        "//labm8:pbutil",
+        "//system/dpack/proto:dpack_pb2_py",
         "//third_party/py/absl",
     ],
 )

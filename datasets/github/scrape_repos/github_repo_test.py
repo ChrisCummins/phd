@@ -8,11 +8,11 @@ import typing
 import pytest
 from absl import app
 from absl import flags
-from phd.lib.labm8 import fs
-from phd.lib.labm8 import pbutil
 
 from datasets.github.scrape_repos import github_repo
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
+from labm8 import fs
+from labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

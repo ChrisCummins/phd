@@ -9,11 +9,12 @@ import numpy as np
 import pandas as pd
 import scipy
 import seaborn as sns
-from phd.lib.labm8 import fs
-from phd.lib.labm8 import math as labmath
-from phd.lib.labm8 import viz
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import normalize
+
+from labm8 import fs
+from labm8 import math as labmath
+from labm8 import viz
 
 
 # Seaborn configuration:

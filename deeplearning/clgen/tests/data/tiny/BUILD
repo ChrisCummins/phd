@@ -18,8 +18,8 @@ py_test(
     deps = [
         "//deeplearning/clgen",
         "//deeplearning/clgen/proto:clgen_py_pb2",
-        "//lib/labm8:bazelutil",
-        "//lib/labm8:pbutil",
+        "//labm8:bazelutil",
+        "//labm8:pbutil",
         "//third_party/py/absl",
         "//third_party/py/pytest",
     ],

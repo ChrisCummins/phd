@@ -8,7 +8,8 @@ from collections import deque
 
 import db
 from db import *
-from phd.lib.labm8 import fs
+
+from labm8 import fs
 
 
 if __name__ == "__main__":

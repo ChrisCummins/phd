@@ -10,7 +10,8 @@ from clgen import log
 from clgen import model
 from clgen import preprocess
 from clgen import sampler
-from phd.lib.labm8 import fs
+
+from labm8 import fs
 
 
 def evaluate(model, sampler):

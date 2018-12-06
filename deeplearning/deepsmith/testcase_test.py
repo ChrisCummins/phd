@@ -4,7 +4,6 @@ import sys
 
 import pytest
 from absl import app
-from phd.lib.labm8 import labdate
 
 import deeplearning.deepsmith.client
 import deeplearning.deepsmith.generator
@@ -12,6 +11,7 @@ import deeplearning.deepsmith.harness
 import deeplearning.deepsmith.profiling_event
 import deeplearning.deepsmith.testcase
 from deeplearning.deepsmith.proto import deepsmith_pb2
+from labm8 import labdate
 
 
 def test_Testcase_ToProto():

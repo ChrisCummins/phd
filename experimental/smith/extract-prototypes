@@ -5,8 +5,9 @@
 import sys
 from argparse import ArgumentParser
 
-from phd.lib.labm8 import fs
 from smith import clutil
+
+from labm8 import fs
 
 
 def features_dir(csv_path):

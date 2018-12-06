@@ -2,9 +2,9 @@ from itertools import product
 from math import log
 
 import numpy as np
-from phd.lib.labm8 import io
-from phd.lib.labm8 import viz
 
+from labm8 import io
+from labm8 import viz
 from . import hash_params
 from . import unhash_params
 

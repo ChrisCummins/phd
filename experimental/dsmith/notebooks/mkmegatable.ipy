@@ -68,13 +68,13 @@ def get_classification_columns(tables: Tableset, testbed: Testbed,
       (CLASSIFICATIONS[classification], count) for classification, count in
       session.query(tables.classifications.classification,
                     sql.sql.func.count(tables.classifications.classification)) \
-      .join(tables.results) \
-      .join(tables.meta) \
-      .join(tables.testcases) \
-      .filter(tables.results.testbed_id == testbed.id,
-              tables.testcases.params_id.in_(param_ids),
-              tables.meta.cumtime < TIME_LIMIT) \
-      .group_by(tables.classifications.classification))
+        .join(tables.results) \
+        .join(tables.meta) \
+        .join(tables.testcases) \
+        .filter(tables.results.testbed_id == testbed.id,
+                tables.testcases.params_id.in_(param_ids),
+                tables.meta.cumtime < TIME_LIMIT) \
+        .group_by(tables.classifications.classification))
 
   num_interesting = sum(counts.values())
 
@@ -104,10 +104,10 @@ def get_classification_totals(tables: Tableset):
       (CLASSIFICATIONS[classification], count) for classification, count in
       session.query(tables.classifications.classification,
                     sql.sql.func.count(tables.classifications.classification)) \
-      .join(tables.results) \
-      .join(tables.meta) \
-      .filter(tables.meta.cumtime < TIME_LIMIT) \
-      .group_by(tables.classifications.classification))
+        .join(tables.results) \
+        .join(tables.meta) \
+        .filter(tables.meta.cumtime < TIME_LIMIT) \
+        .group_by(tables.classifications.classification))
 
   num_interesting = sum(counts.values())
 

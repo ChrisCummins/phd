@@ -7,7 +7,8 @@
   </metadata>
   <defs>
     <font-face ascent="966.9952" cap-height="714" descent="-212.99744"
-      font-family="Helvetica Neue" font-size="60" font-weight="300" panose-1="2 11 4 3 2 2 2 2 2 4" slope="0"
+      font-family="Helvetica Neue" font-size="60" font-weight="300" panose-1="2 11 4 3 2 2 2 2 2 4"
+      slope="0"
       underline-position="-75" underline-thickness="50" units-per-em="1000" x-height="514">
       <font-face-src>
         <font-face-name name="HelveticaNeue-Thin"/>
@@ -19,10 +20,12 @@
     <g>
       <title>Title</title>
       <text fill="#a5a5a5" transform="translate(176 -176.8702)">
-        <tspan fill="#a5a5a5" font-family="Helvetica Neue" font-size="60" font-weight="300" textLength="30.84"
+        <tspan fill="#a5a5a5" font-family="Helvetica Neue" font-size="60" font-weight="300"
+          textLength="30.84"
           x="0" y="58">F
         </tspan>
-        <tspan fill="#a5a5a5" font-family="Helvetica Neue" font-size="60" font-weight="300" textLength="16.68"
+        <tspan fill="#a5a5a5" font-family="Helvetica Neue" font-size="60" font-weight="300"
+          textLength="16.68"
           x="29.4" y="58">r
         </tspan>
         <tspan fill="#a5a5a5" font-family="Helvetica Neue" font-size="60" font-weight="300"
@@ -30,7 +33,8 @@
         </tspan>
       </text>
       <text fill="#a5a5a5" transform="translate(350 -176.8702)">
-        <tspan fill="#a5a5a5" font-family="Helvetica Neue" font-size="60" font-weight="300" textLength="91.14"
+        <tspan fill="#a5a5a5" font-family="Helvetica Neue" font-size="60" font-weight="300"
+          textLength="91.14"
           x="0" y="58">cus
         </tspan>
       </text>

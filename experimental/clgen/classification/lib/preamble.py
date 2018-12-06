@@ -10,9 +10,10 @@ import pandas as pd
 import seaborn as sns
 from clgen.atomizer import CharacterAtomizer
 from keras.preprocessing.sequence import pad_sequences
-from phd.lib.labm8 import fs
 from scipy.stats.mstats import gmean
 from sklearn.model_selection import StratifiedKFold
+
+from labm8 import fs
 
 
 # plotting config:

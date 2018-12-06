@@ -1,9 +1,9 @@
 """This file builds Keras models from CLgen Model config protos."""
 from absl import flags
-from phd.lib.labm8 import pbutil
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.proto import model_pb2
+from labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

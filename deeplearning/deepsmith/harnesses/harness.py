@@ -1,8 +1,8 @@
 from absl import flags
-from phd.lib.labm8 import pbutil
 
 from deeplearning.deepsmith import services
 from deeplearning.deepsmith.proto import harness_pb2
+from labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

@@ -44,8 +44,8 @@ py_binary(
     deps = [
         "//datasets/me_db:importers",
         "//datasets/me_db:me_proto_pb2",
-        "//lib/labm8:bazelutil",
-        "//lib/labm8:pbutil",
+        "//labm8:bazelutil",
+        "//labm8:pbutil",
         "//third_party/py/absl",
     ],
 )

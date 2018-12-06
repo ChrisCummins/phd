@@ -7,8 +7,9 @@ import sys
 from argparse import ArgumentParser
 
 import smith
-from phd.lib.labm8 import fs
 from smith import cgo13
+
+from labm8 import fs
 
 
 def main():

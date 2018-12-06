@@ -6,9 +6,6 @@ import humanize
 import numpy as np
 from absl import flags
 from absl import logging
-from phd.lib.labm8 import cache
-from phd.lib.labm8 import labdate
-from phd.lib.labm8 import pbutil
 
 from deeplearning.clgen import samplers
 from deeplearning.clgen import telemetry
@@ -18,6 +15,9 @@ from deeplearning.clgen.models import tensorflow_backend
 from deeplearning.clgen.proto import internal_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import telemetry_pb2
+from labm8 import cache
+from labm8 import labdate
+from labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

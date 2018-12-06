@@ -14,11 +14,11 @@ import typing
 
 from absl import flags
 from absl import logging
-from phd.lib.labm8 import bazelutil
 
 from compilers.llvm import clang_format
 from compilers.llvm import llvm
 from deeplearning.clgen import errors
+from labm8 import bazelutil
 
 
 FLAGS = flags.FLAGS

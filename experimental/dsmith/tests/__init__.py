@@ -23,11 +23,11 @@ from io import StringIO
 from pathlib import Path
 
 import pytest
-from phd.lib.labm8 import fs
-from phd.lib.labm8 import system
-from phd.lib.labm8 import tar
 
 from experimental import dsmith
+from labm8 import fs
+from labm8 import system
+from labm8 import tar
 
 
 class Data404(Exception):

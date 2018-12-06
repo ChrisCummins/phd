@@ -6,13 +6,13 @@ import pathlib
 import sqlalchemy as sql
 from absl import flags
 from absl import logging
-from phd.lib.labm8 import labdate
-from phd.lib.labm8 import pbutil
-from phd.lib.labm8.sqlutil import GetOrAdd
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext.declarative import declarative_base
 
 from deeplearning.deepsmith.proto import datastore_pb2
+from labm8 import labdate
+from labm8 import pbutil
+from labm8.sqlutil import GetOrAdd
 
 
 FLAGS = flags.FLAGS

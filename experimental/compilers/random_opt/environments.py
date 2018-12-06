@@ -6,12 +6,12 @@ name to the ENVIRONMENTS list. The environment class is defined in:
 """
 from absl import flags
 from gym.envs import registration
-from phd.lib.labm8 import labtypes
 
 from compilers.llvm import util as llvm_util
 from datasets.benchmarks import bzip2
 from datasets.benchmarks import llvm_test_suite
 from experimental.compilers.random_opt.proto import random_opt_pb2
+from labm8 import labtypes
 
 
 FLAGS = flags.FLAGS

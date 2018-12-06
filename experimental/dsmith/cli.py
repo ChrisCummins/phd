@@ -27,11 +27,10 @@ import traceback
 from argparse import ArgumentParser, FileType, RawDescriptionHelpFormatter
 from typing import List
 
-from phd.lib.labm8 import fs, prof
-
 from experimental import dsmith
 from experimental.dsmith import Colors
 from experimental.dsmith.repl import repl, run_command
+from labm8 import fs, prof
 
 
 __help_epilog__ = """

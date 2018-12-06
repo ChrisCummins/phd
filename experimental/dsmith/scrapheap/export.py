@@ -5,8 +5,9 @@ from pathlib import Path
 import sqlalchemy as sql
 from dsmith import db
 from dsmith.db import *
-from phd.lib.labm8 import crypto, fs
 from progressbar import ProgressBar
+
+from labm8 import crypto, fs
 
 
 def export_todir(s: session_t, table, dir: Path) -> None:

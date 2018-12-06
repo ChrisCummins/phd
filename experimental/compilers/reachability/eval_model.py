@@ -6,12 +6,12 @@ import humanize
 import keras
 from absl import app
 from absl import flags
-from phd.lib.labm8 import pbutil
 
 from deeplearning.clgen import telemetry
 from deeplearning.clgen.corpuses import atomizers
 from experimental.compilers.reachability import train_model
 from experimental.compilers.reachability.proto import reachability_pb2
+from labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

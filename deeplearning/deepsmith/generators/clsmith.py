@@ -5,7 +5,6 @@ import typing
 from absl import app
 from absl import flags
 from absl import logging
-from phd.lib.labm8 import labdate
 
 from compilers.clsmith import clsmith
 from deeplearning.deepsmith import services
@@ -14,6 +13,7 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import generator_pb2_grpc
 from deeplearning.deepsmith.proto import service_pb2
+from labm8 import labdate
 
 
 FLAGS = flags.FLAGS

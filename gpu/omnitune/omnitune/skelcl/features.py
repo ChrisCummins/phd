@@ -2,7 +2,8 @@ from __future__ import division
 from __future__ import print_function
 
 from omnitune import llvm
-from phd.lib.labm8 import system
+
+from labm8 import system
 
 
 if system.HOSTNAME == "tim" or system.HOSTNAME == "zoo":

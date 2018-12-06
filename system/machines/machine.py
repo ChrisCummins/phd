@@ -10,8 +10,8 @@ import typing
 from absl import app
 from absl import flags
 from absl import logging
-from phd.lib.labm8 import pbutil
 
+from labm8 import pbutil
 from system.machines.mirrored_directory import MirroredDirectory
 from system.machines.proto import machine_spec_pb2
 

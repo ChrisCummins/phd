@@ -2,9 +2,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-from phd.lib.labm8 import fs
-from phd.lib.labm8 import viz
 from smith import cgo13
+
+from labm8 import fs
+from labm8 import viz
 
 
 # Seaborn configuration:

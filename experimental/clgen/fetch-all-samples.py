@@ -22,7 +22,7 @@ from clgen import dbutil
 from clgen import explore
 from clgen import log
 
-from phd.lib.labm8 import fs
+from labm8 import fs
 
 
 __description__ = """

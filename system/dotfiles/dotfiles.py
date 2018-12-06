@@ -1868,7 +1868,7 @@ class PhdBuildDeps(Task):
     'InotifyMaxUserWatchers',
   ]
   __osx_deps__ = [
-    # Needed by //lib/labm8:hashcache.
+    # Needed by //labm8:hashcache.
     'GnuCoreutils',
   ]
 

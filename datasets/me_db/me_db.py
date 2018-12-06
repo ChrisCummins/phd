@@ -9,8 +9,6 @@ import sqlalchemy as sql
 from absl import app
 from absl import flags
 from absl import logging
-from phd.lib.labm8 import labdate
-from phd.lib.labm8 import sqlutil
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
@@ -19,6 +17,8 @@ from datasets.me_db import me_pb2
 from datasets.me_db.health_kit import health_kit
 from datasets.me_db.life_cycle import life_cycle
 from datasets.me_db.ynab import ynab
+from labm8 import labdate
+from labm8 import sqlutil
 
 
 FLAGS = flags.FLAGS

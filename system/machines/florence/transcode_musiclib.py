@@ -13,8 +13,9 @@ import humanize
 from absl import app
 from absl import flags
 from absl import logging
-from phd.lib.labm8 import fs
-from phd.lib.labm8 import system
+
+from labm8 import fs
+from labm8 import system
 
 
 FLAGS = flags.FLAGS
