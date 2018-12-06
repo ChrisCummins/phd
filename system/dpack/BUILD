@@ -1,3 +1,5 @@
+# A tool for creating structured packages of data files.
+
 py_binary(
     name = "dpack",
     srcs = ["dpack.py"],
