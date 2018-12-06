@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-from collections import deque
-
 import subprocess
 import sys
 from argparse import ArgumentParser
+from collections import deque
+from tempfile import NamedTemporaryFile
+from time import strftime, time
+from typing import Tuple, Union
+
 from dsmith import db
 from dsmith.db import *
 from dsmith.lib import *
 from phd.lib.labm8 import crypto, fs
 from progressbar import ProgressBar
-from tempfile import NamedTemporaryFile
-from time import strftime, time
-from typing import Tuple, Union
 
 
 def get_num_programs_to_build(session: db.session_t, tables: Tableset,

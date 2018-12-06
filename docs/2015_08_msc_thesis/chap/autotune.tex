@@ -14,13 +14,13 @@ set of interfaces exposed by Omnitune.
 \section{Predicting Optimisation Parameter Values}
 
 \begin{figure}[b]
-\centering
-\includegraphics[width=\textwidth]{img/omnitune-system-flow.pdf}
-\caption[Optimisation parameter selection with OmniTune]{%
+  \centering
+  \includegraphics[width=\textwidth]{img/omnitune-system-flow.pdf}
+  \caption[Optimisation parameter selection with OmniTune]{%
   The process of selecting optimisation parameter values for a given
   user program with OmniTune.%
-}
-\label{fig:omnitune-system-flow}
+  }
+  \label{fig:omnitune-system-flow}
 \end{figure}
 
 The goal of machine learning-enabled autotuning is to \emph{predict}
@@ -39,12 +39,12 @@ Figure~\ref{fig:omnitune-system-flow} shows this process.
 \section{System Architecture and Interface}
 
 \begin{figure}
-\centering
-\includegraphics[width=.9\textwidth]{img/omnitune-system-overview.pdf}
-\caption[OmniTune system diagram]{%
+  \centering
+  \includegraphics[width=.9\textwidth]{img/omnitune-system-overview.pdf}
+  \caption[OmniTune system diagram]{%
   High level overview of OmniTune components.%
-}
-\label{fig:omnitune-system-overview}
+  }
+  \label{fig:omnitune-system-overview}
 \end{figure}
 
 Common implementations of autotuning in the literature either: embed
@@ -58,7 +58,7 @@ added to each program run. The standalone approach separates the
 autotuning logic, at the expense of adding one additional step to the
 build process. The approach taken in OmniTune aims to capture the
 advantages of both techniques by implementing a autotuning \emph{as a
-  service}, with only the lightweight communication logic embedded in
+service}, with only the lightweight communication logic embedded in
 the target applications.
 
 Omnitune is built around a three tier client-server model. The
@@ -89,13 +89,13 @@ describe the interfaces between the three components.
 
 
 \begin{figure}[b]
-\centering
-\includegraphics[width=.7\textwidth]{img/omnitune-comms}
-\caption[Communication pattern between OmniTune components]{%
+  \centering
+  \includegraphics[width=.7\textwidth]{img/omnitune-comms}
+  \caption[Communication pattern between OmniTune components]{%
   An example communication pattern between OmniTune components,
   showing an offline training phase.%
-}
-\label{fig:omnitune-comms}
+  }
+  \label{fig:omnitune-comms}
 \end{figure}
 
 
@@ -105,14 +105,14 @@ Client applications communicate with an OmniTune server through four
 operations:
 %
 \begin{itemize}
-\item \textsc{Request}$(x) \to p$ Given a set of explanatory variables
+  \item \textsc{Request}$(x) \to p$ Given a set of explanatory variables
   $x$, request a set of parameter values $p$ to maximise performance.
-\item \textsc{RequestTraining}$(x) \to p$ Given a set of explanatory
+  \item \textsc{RequestTraining}$(x) \to p$ Given a set of explanatory
   variables $x$, allow the server to select a set of parameter values
   $p$ for evaluating their fitness.
-\item \textsc{Submit}$(x, p, y)$ Submit an observed measurement of
+  \item \textsc{Submit}$(x, p, y)$ Submit an observed measurement of
   fitness $y$ of parameters $p$, given explantory variables $x$.
-\item \textsc{Refuse}$(x, p)$ Refuse a set of parameters $p$ given a
+  \item \textsc{Refuse}$(x, p)$ Refuse a set of parameters $p$ given a
   set of explanatory variables $x$. Once refused, those parameters
   will not be returned by any subsequent calls to \textsc{Request()}
   or \textsc{RequestTraining()}.
@@ -156,9 +156,9 @@ remotes by submitting or requesting training data in batches, using
 two operations:
 %
 \begin{itemize}
-\item \textsc{Push}$(\bf{f}, \bf{c})$ Submit a set of labelled training
+  \item \textsc{Push}$(\bf{f}, \bf{c})$ Submit a set of labelled training
   points as pairs $(f,c)$.
-\item \textsc{Pull}$() \to (\bf{f}, \bf{c})$ Request training data as a
+  \item \textsc{Pull}$() \to (\bf{f}, \bf{c})$ Request training data as a
   set of labelled $(f,c)$ pairs.
 \end{itemize}
 

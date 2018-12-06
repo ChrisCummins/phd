@@ -9,12 +9,12 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from numpy.random import RandomState
+from phd.lib.labm8 import viz
 from sklearn.base import clone
 from sklearn.decomposition import PCA
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 
-from phd.lib.labm8 import viz
 
 # Seaborn configuration:
 sns.set(style="ticks", color_codes=True)

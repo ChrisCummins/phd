@@ -167,77 +167,77 @@ Syntax: cpplint.py [--verbose=#] [--output=vs7] [--filter=-x,+y,...]
 # If you add a new error message with a new category, add it to the list
 # here!  cpplint_unittest.py should tell you if you forget to do this.
 _ERROR_CATEGORIES = [
-    'build/class',
-    'build/c++11',
-    'build/deprecated',
-    'build/endif_comment',
-    'build/explicit_make_pair',
-    'build/forward_decl',
-    'build/header_guard',
-    'build/include',
-    'build/include_alpha',
-    'build/include_order',
-    'build/include_what_you_use',
-    'build/namespaces',
-    'build/printf_format',
-    'build/storage_class',
-    'legal/copyright',
-    'readability/alt_tokens',
-    'readability/braces',
-    'readability/casting',
-    'readability/check',
-    'readability/constructors',
-    'readability/fn_size',
-    'readability/function',
-    'readability/inheritance',
-    'readability/multiline_comment',
-    'readability/multiline_string',
-    'readability/namespace',
-    'readability/nolint',
-    'readability/nul',
-    'readability/strings',
-    'readability/todo',
-    'readability/utf8',
-    'runtime/arrays',
-    'runtime/casting',
-    'runtime/explicit',
-    'runtime/int',
-    'runtime/init',
-    'runtime/invalid_increment',
-    'runtime/member_string_references',
-    'runtime/memset',
-    'runtime/indentation_namespace',
-    'runtime/operator',
-    'runtime/printf',
-    'runtime/printf_format',
-    'runtime/references',
-    'runtime/string',
-    'runtime/threadsafe_fn',
-    'runtime/vlog',
-    'whitespace/blank_line',
-    'whitespace/braces',
-    'whitespace/comma',
-    'whitespace/comments',
-    'whitespace/empty_conditional_body',
-    'whitespace/empty_loop_body',
-    'whitespace/end_of_line',
-    'whitespace/ending_newline',
-    'whitespace/forcolon',
-    'whitespace/indent',
-    'whitespace/line_length',
-    'whitespace/newline',
-    'whitespace/operators',
-    'whitespace/parens',
-    'whitespace/semicolon',
-    'whitespace/tab',
-    'whitespace/todo',
-    ]
+  'build/class',
+  'build/c++11',
+  'build/deprecated',
+  'build/endif_comment',
+  'build/explicit_make_pair',
+  'build/forward_decl',
+  'build/header_guard',
+  'build/include',
+  'build/include_alpha',
+  'build/include_order',
+  'build/include_what_you_use',
+  'build/namespaces',
+  'build/printf_format',
+  'build/storage_class',
+  'legal/copyright',
+  'readability/alt_tokens',
+  'readability/braces',
+  'readability/casting',
+  'readability/check',
+  'readability/constructors',
+  'readability/fn_size',
+  'readability/function',
+  'readability/inheritance',
+  'readability/multiline_comment',
+  'readability/multiline_string',
+  'readability/namespace',
+  'readability/nolint',
+  'readability/nul',
+  'readability/strings',
+  'readability/todo',
+  'readability/utf8',
+  'runtime/arrays',
+  'runtime/casting',
+  'runtime/explicit',
+  'runtime/int',
+  'runtime/init',
+  'runtime/invalid_increment',
+  'runtime/member_string_references',
+  'runtime/memset',
+  'runtime/indentation_namespace',
+  'runtime/operator',
+  'runtime/printf',
+  'runtime/printf_format',
+  'runtime/references',
+  'runtime/string',
+  'runtime/threadsafe_fn',
+  'runtime/vlog',
+  'whitespace/blank_line',
+  'whitespace/braces',
+  'whitespace/comma',
+  'whitespace/comments',
+  'whitespace/empty_conditional_body',
+  'whitespace/empty_loop_body',
+  'whitespace/end_of_line',
+  'whitespace/ending_newline',
+  'whitespace/forcolon',
+  'whitespace/indent',
+  'whitespace/line_length',
+  'whitespace/newline',
+  'whitespace/operators',
+  'whitespace/parens',
+  'whitespace/semicolon',
+  'whitespace/tab',
+  'whitespace/todo',
+]
 
 # These error categories are no longer enforced by cpplint, but for backwards-
 # compatibility they may still appear in NOLINT comments.
 _LEGACY_ERROR_CATEGORIES = [
-    'readability/streams',
-    ]
+  'readability/streams',
+]
 
 # The default state of the category filter. This is overridden by the --filter=
 # flag. By default all errors are on, so only add here categories that should be
@@ -251,140 +251,139 @@ _DEFAULT_FILTERS = ['-build/include_alpha']
 
 # C++ headers
 _CPP_HEADERS = frozenset([
-    # Legacy
-    'algobase.h',
-    'algo.h',
-    'alloc.h',
-    'builtinbuf.h',
-    'bvector.h',
-    'complex.h',
-    'defalloc.h',
-    'deque.h',
-    'editbuf.h',
-    'fstream.h',
-    'function.h',
-    'hash_map',
-    'hash_map.h',
-    'hash_set',
-    'hash_set.h',
-    'hashtable.h',
-    'heap.h',
-    'indstream.h',
-    'iomanip.h',
-    'iostream.h',
-    'istream.h',
-    'iterator.h',
-    'list.h',
-    'map.h',
-    'multimap.h',
-    'multiset.h',
-    'ostream.h',
-    'pair.h',
-    'parsestream.h',
-    'pfstream.h',
-    'procbuf.h',
-    'pthread_alloc',
-    'pthread_alloc.h',
-    'rope',
-    'rope.h',
-    'ropeimpl.h',
-    'set.h',
-    'slist',
-    'slist.h',
-    'stack.h',
-    'stdiostream.h',
-    'stl_alloc.h',
-    'stl_relops.h',
-    'streambuf.h',
-    'stream.h',
-    'strfile.h',
-    'strstream.h',
-    'tempbuf.h',
-    'tree.h',
-    'type_traits.h',
-    'vector.h',
-    # 17.6.1.2 C++ library headers
-    'algorithm',
-    'array',
-    'atomic',
-    'bitset',
-    'chrono',
-    'codecvt',
-    'complex',
-    'condition_variable',
-    'deque',
-    'exception',
-    'forward_list',
-    'fstream',
-    'functional',
-    'future',
-    'initializer_list',
-    'iomanip',
-    'ios',
-    'iosfwd',
-    'iostream',
-    'istream',
-    'iterator',
-    'limits',
-    'list',
-    'locale',
-    'map',
-    'memory',
-    'mutex',
-    'new',
-    'numeric',
-    'ostream',
-    'queue',
-    'random',
-    'ratio',
-    'regex',
-    'set',
-    'sstream',
-    'stack',
-    'stdexcept',
-    'streambuf',
-    'string',
-    'strstream',
-    'system_error',
-    'thread',
-    'tuple',
-    'typeindex',
-    'typeinfo',
-    'type_traits',
-    'unordered_map',
-    'unordered_set',
-    'utility',
-    'valarray',
-    'vector',
-    # 17.6.1.2 C++ headers for C library facilities
-    'cassert',
-    'ccomplex',
-    'cctype',
-    'cerrno',
-    'cfenv',
-    'cfloat',
-    'cinttypes',
-    'ciso646',
-    'climits',
-    'clocale',
-    'cmath',
-    'csetjmp',
-    'csignal',
-    'cstdalign',
-    'cstdarg',
-    'cstdbool',
-    'cstddef',
-    'cstdint',
-    'cstdio',
-    'cstdlib',
-    'cstring',
-    'ctgmath',
-    'ctime',
-    'cuchar',
-    'cwchar',
-    'cwctype',
-    ])
-
+  # Legacy
+  'algobase.h',
+  'algo.h',
+  'alloc.h',
+  'builtinbuf.h',
+  'bvector.h',
+  'complex.h',
+  'defalloc.h',
+  'deque.h',
+  'editbuf.h',
+  'fstream.h',
+  'function.h',
+  'hash_map',
+  'hash_map.h',
+  'hash_set',
+  'hash_set.h',
+  'hashtable.h',
+  'heap.h',
+  'indstream.h',
+  'iomanip.h',
+  'iostream.h',
+  'istream.h',
+  'iterator.h',
+  'list.h',
+  'map.h',
+  'multimap.h',
+  'multiset.h',
+  'ostream.h',
+  'pair.h',
+  'parsestream.h',
+  'pfstream.h',
+  'procbuf.h',
+  'pthread_alloc',
+  'pthread_alloc.h',
+  'rope',
+  'rope.h',
+  'ropeimpl.h',
+  'set.h',
+  'slist',
+  'slist.h',
+  'stack.h',
+  'stdiostream.h',
+  'stl_alloc.h',
+  'stl_relops.h',
+  'streambuf.h',
+  'stream.h',
+  'strfile.h',
+  'strstream.h',
+  'tempbuf.h',
+  'tree.h',
+  'type_traits.h',
+  'vector.h',
+  # 17.6.1.2 C++ library headers
+  'algorithm',
+  'array',
+  'atomic',
+  'bitset',
+  'chrono',
+  'codecvt',
+  'complex',
+  'condition_variable',
+  'deque',
+  'exception',
+  'forward_list',
+  'fstream',
+  'functional',
+  'future',
+  'initializer_list',
+  'iomanip',
+  'ios',
+  'iosfwd',
+  'iostream',
+  'istream',
+  'iterator',
+  'limits',
+  'list',
+  'locale',
+  'map',
+  'memory',
+  'mutex',
+  'new',
+  'numeric',
+  'ostream',
+  'queue',
+  'random',
+  'ratio',
+  'regex',
+  'set',
+  'sstream',
+  'stack',
+  'stdexcept',
+  'streambuf',
+  'string',
+  'strstream',
+  'system_error',
+  'thread',
+  'tuple',
+  'typeindex',
+  'typeinfo',
+  'type_traits',
+  'unordered_map',
+  'unordered_set',
+  'utility',
+  'valarray',
+  'vector',
+  # 17.6.1.2 C++ headers for C library facilities
+  'cassert',
+  'ccomplex',
+  'cctype',
+  'cerrno',
+  'cfenv',
+  'cfloat',
+  'cinttypes',
+  'ciso646',
+  'climits',
+  'clocale',
+  'cmath',
+  'csetjmp',
+  'csignal',
+  'cstdalign',
+  'cstdarg',
+  'cstdbool',
+  'cstddef',
+  'cstdint',
+  'cstdio',
+  'cstdlib',
+  'cstring',
+  'ctgmath',
+  'ctime',
+  'cuchar',
+  'cwchar',
+  'cwctype',
+])
 
 # These headers are excluded from [build/include] and [build/include_order]
 # checks:
@@ -394,17 +393,16 @@ _CPP_HEADERS = frozenset([
 _THIRD_PARTY_HEADERS_PATTERN = re.compile(
     r'^(?:[^/]*[A-Z][^/]*\.h|lua\.h|lauxlib\.h|lualib\.h)$')
 
-
 # Assertion macros.  These are defined in base/logging.h and
 # testing/base/gunit.h.  Note that the _M versions need to come first
 # for substring matching to work.
 _CHECK_MACROS = [
-    'DCHECK', 'CHECK',
-    'EXPECT_TRUE_M', 'EXPECT_TRUE',
-    'ASSERT_TRUE_M', 'ASSERT_TRUE',
-    'EXPECT_FALSE_M', 'EXPECT_FALSE',
-    'ASSERT_FALSE_M', 'ASSERT_FALSE',
-    ]
+  'DCHECK', 'CHECK',
+  'EXPECT_TRUE_M', 'EXPECT_TRUE',
+  'ASSERT_TRUE_M', 'ASSERT_TRUE',
+  'EXPECT_FALSE_M', 'EXPECT_FALSE',
+  'ASSERT_FALSE_M', 'ASSERT_FALSE',
+]
 
 # Replacement macros for CHECK/DCHECK/EXPECT_TRUE/EXPECT_FALSE
 _CHECK_REPLACEMENT = dict([(m, {}) for m in _CHECK_MACROS])
@@ -433,18 +431,18 @@ for op, inv_replacement in [('==', 'NE'), ('!=', 'EQ'),
 # Digraphs (such as '%:') are not included here since it's a mess to
 # match those on a word boundary.
 _ALT_TOKEN_REPLACEMENT = {
-    'and': '&&',
-    'bitor': '|',
-    'or': '||',
-    'xor': '^',
-    'compl': '~',
-    'bitand': '&',
-    'and_eq': '&=',
-    'or_eq': '|=',
-    'xor_eq': '^=',
-    'not': '!',
-    'not_eq': '!='
-    }
+  'and': '&&',
+  'bitor': '|',
+  'or': '||',
+  'xor': '^',
+  'compl': '~',
+  'bitand': '&',
+  'and_eq': '&=',
+  'or_eq': '|=',
+  'xor_eq': '^=',
+  'not': '!',
+  'not_eq': '!='
+}
 
 # Compile regular expression that matches all the above keywords.  The "[ =()]"
 # bit is meant to avoid matching these keywords outside of boolean expressions.
@@ -453,7 +451,6 @@ _ALT_TOKEN_REPLACEMENT = {
 # but those have always been troublesome for cpplint.
 _ALT_TOKEN_REPLACEMENT_PATTERN = re.compile(
     r'[ =()](' + ('|'.join(_ALT_TOKEN_REPLACEMENT.keys())) + r')(?=[ (]|$)')
-
 
 # These constants define types of headers for use with
 # _IncludeState.CheckNextIncludeOrder().
@@ -464,16 +461,15 @@ _POSSIBLE_MY_HEADER = 4
 _OTHER_HEADER = 5
 
 # These constants define the current inline assembly state
-_NO_ASM = 0       # Outside of inline assembly block
-_INSIDE_ASM = 1   # Inside inline assembly block
-_END_ASM = 2      # Last line of inline assembly block
-_BLOCK_ASM = 3    # The whole block is an inline assembly block
+_NO_ASM = 0  # Outside of inline assembly block
+_INSIDE_ASM = 1  # Inside inline assembly block
+_END_ASM = 2  # Last line of inline assembly block
+_BLOCK_ASM = 3  # The whole block is an inline assembly block
 
 # Match start of assembly blocks
 _MATCH_ASM = re.compile(r'^\s*(?:asm|_asm|__asm|__asm__)'
                         r'(?:\s+(volatile|__volatile__))?'
                         r'\s*[{(]')
-
 
 _regexp_compile_cache = {}
 
@@ -488,6 +484,7 @@ _root = None
 # The allowed line length of files.
 # This is set by --linelength flag.
 _line_length = 80
+
 
 def ParseNolintSuppressions(filename, raw_line, linenum, error):
   """Updates the global list of error-suppressions.
@@ -598,19 +595,19 @@ class _IncludeState(object):
   _OTHER_H_SECTION = 4
 
   _TYPE_NAMES = {
-      _C_SYS_HEADER: 'C system header',
-      _CPP_SYS_HEADER: 'C++ system header',
-      _LIKELY_MY_HEADER: 'header this file implements',
-      _POSSIBLE_MY_HEADER: 'header this file may implement',
-      _OTHER_HEADER: 'other header',
-      }
+    _C_SYS_HEADER: 'C system header',
+    _CPP_SYS_HEADER: 'C++ system header',
+    _LIKELY_MY_HEADER: 'header this file implements',
+    _POSSIBLE_MY_HEADER: 'header this file may implement',
+    _OTHER_HEADER: 'other header',
+  }
   _SECTION_NAMES = {
-      _INITIAL_SECTION: "... nothing. (This can't be an error.)",
-      _MY_H_SECTION: 'a header this file implements',
-      _C_SECTION: 'C system header',
-      _CPP_SECTION: 'C++ system header',
-      _OTHER_H_SECTION: 'other header',
-      }
+    _INITIAL_SECTION: "... nothing. (This can't be an error.)",
+    _MY_H_SECTION: 'a header this file implements',
+    _C_SECTION: 'C system header',
+    _CPP_SECTION: 'C++ system header',
+    _OTHER_H_SECTION: 'other header',
+  }
 
   def __init__(self):
     self.include_list = [[]]
@@ -747,7 +744,7 @@ class _CppLintState(object):
 
   def __init__(self):
     self.verbose_level = 1  # global setting.
-    self.error_count = 0    # global count of reported errors
+    self.error_count = 0  # global count of reported errors
     # filters to apply when emitting error messages
     self.filters = _DEFAULT_FILTERS[:]
     # backup of filter list. Used to restore the state after each file.
@@ -833,6 +830,7 @@ class _CppLintState(object):
                        (category, count))
     sys.stderr.write('Total errors found: %d\n' % self.error_count)
 
+
 _cpplint_state = _CppLintState()
 
 
@@ -878,6 +876,7 @@ def _SetFilters(filters):
   """
   _cpplint_state.SetFilters(filters)
 
+
 def _AddFilters(filters):
   """Adds more filter overrides.
 
@@ -890,19 +889,22 @@ def _AddFilters(filters):
   """
   _cpplint_state.AddFilters(filters)
 
+
 def _BackupFilters():
   """ Saves the current filter list to backup storage."""
   _cpplint_state.BackupFilters()
+
 
 def _RestoreFilters():
   """ Restores filters previously backed up."""
   _cpplint_state.RestoreFilters()
 
+
 class _FunctionState(object):
   """Tracks current function name and the number of lines in its body."""
 
   _NORMAL_TRIGGER = 250  # for --v=0, 500 for --v=1, etc.
-  _TEST_TRIGGER = 400    # about 50% more than _NORMAL_TRIGGER.
+  _TEST_TRIGGER = 400  # about 50% more than _NORMAL_TRIGGER.
 
   def __init__(self):
     self.in_a_function = False
@@ -936,7 +938,7 @@ class _FunctionState(object):
       base_trigger = self._TEST_TRIGGER
     else:
       base_trigger = self._NORMAL_TRIGGER
-    trigger = base_trigger * 2**_VerboseLevel()
+    trigger = base_trigger * 2 ** _VerboseLevel()
 
     if self.lines_in_function > trigger:
       error_level = int(math.log(self.lines_in_function / base_trigger, 2))
@@ -946,8 +948,8 @@ class _FunctionState(object):
       error(filename, linenum, 'readability/fn_size', error_level,
             'Small and focused functions are preferred:'
             ' %s has %d non-comment lines'
-            ' (error triggered by exceeding %d lines).'  % (
-                self.current_function, self.lines_in_function, trigger))
+            ' (error triggered by exceeding %d lines).' % (
+              self.current_function, self.lines_in_function, trigger))
 
   def End(self):
     """Stop analyzing function body."""
@@ -1103,13 +1105,13 @@ def Error(filename, linenum, category, confidence, message):
     _cpplint_state.IncrementErrorCount(category)
     if _cpplint_state.output_format == 'vs7':
       sys.stderr.write('%s(%s):  %s  [%s] [%d]\n' % (
-          filename, linenum, message, category, confidence))
+        filename, linenum, message, category, confidence))
     elif _cpplint_state.output_format == 'eclipse':
       sys.stderr.write('%s:%s: warning: %s  [%s] [%d]\n' % (
-          filename, linenum, message, category, confidence))
+        filename, linenum, message, category, confidence))
     else:
       sys.stderr.write('%s:%s:  %s  [%s] [%d]\n' % (
-          filename, linenum, message, category, confidence))
+        filename, linenum, message, category, confidence))
 
 
 # Matches standard C++ escape sequences per 2.13.2.3 of the C++ standard.
@@ -1614,7 +1616,7 @@ def CheckForCopyright(filename, lines, error):
   # dummy line at the front.
   for line in xrange(1, min(len(lines), 11)):
     if re.search(r'Copyright', lines[line], re.I): break
-  else:                       # means no copyright line was found
+  else:  # means no copyright line was found
     error(filename, 0, 'legal/copyright', 5,
           'No copyright message found.  '
           'You should have a line: "Copyright [year] <Copyright Owner>"')
@@ -1880,20 +1882,20 @@ def CheckForMultilineCommentsAndStrings(filename, clean_lines, linenum, error):
 # member function calls.
 _UNSAFE_FUNC_PREFIX = r'(?:[-+*/=%^&|(<]\s*|>\s+)'
 _THREADING_LIST = (
-    ('asctime(', 'asctime_r(', _UNSAFE_FUNC_PREFIX + r'asctime\([^)]+\)'),
-    ('ctime(', 'ctime_r(', _UNSAFE_FUNC_PREFIX + r'ctime\([^)]+\)'),
-    ('getgrgid(', 'getgrgid_r(', _UNSAFE_FUNC_PREFIX + r'getgrgid\([^)]+\)'),
-    ('getgrnam(', 'getgrnam_r(', _UNSAFE_FUNC_PREFIX + r'getgrnam\([^)]+\)'),
-    ('getlogin(', 'getlogin_r(', _UNSAFE_FUNC_PREFIX + r'getlogin\(\)'),
-    ('getpwnam(', 'getpwnam_r(', _UNSAFE_FUNC_PREFIX + r'getpwnam\([^)]+\)'),
-    ('getpwuid(', 'getpwuid_r(', _UNSAFE_FUNC_PREFIX + r'getpwuid\([^)]+\)'),
-    ('gmtime(', 'gmtime_r(', _UNSAFE_FUNC_PREFIX + r'gmtime\([^)]+\)'),
-    ('localtime(', 'localtime_r(', _UNSAFE_FUNC_PREFIX + r'localtime\([^)]+\)'),
-    ('rand(', 'rand_r(', _UNSAFE_FUNC_PREFIX + r'rand\(\)'),
-    ('strtok(', 'strtok_r(',
-     _UNSAFE_FUNC_PREFIX + r'strtok\([^)]+\)'),
-    ('ttyname(', 'ttyname_r(', _UNSAFE_FUNC_PREFIX + r'ttyname\([^)]+\)'),
-    )
+  ('asctime(', 'asctime_r(', _UNSAFE_FUNC_PREFIX + r'asctime\([^)]+\)'),
+  ('ctime(', 'ctime_r(', _UNSAFE_FUNC_PREFIX + r'ctime\([^)]+\)'),
+  ('getgrgid(', 'getgrgid_r(', _UNSAFE_FUNC_PREFIX + r'getgrgid\([^)]+\)'),
+  ('getgrnam(', 'getgrnam_r(', _UNSAFE_FUNC_PREFIX + r'getgrnam\([^)]+\)'),
+  ('getlogin(', 'getlogin_r(', _UNSAFE_FUNC_PREFIX + r'getlogin\(\)'),
+  ('getpwnam(', 'getpwnam_r(', _UNSAFE_FUNC_PREFIX + r'getpwnam\([^)]+\)'),
+  ('getpwuid(', 'getpwuid_r(', _UNSAFE_FUNC_PREFIX + r'getpwuid\([^)]+\)'),
+  ('gmtime(', 'gmtime_r(', _UNSAFE_FUNC_PREFIX + r'gmtime\([^)]+\)'),
+  ('localtime(', 'localtime_r(', _UNSAFE_FUNC_PREFIX + r'localtime\([^)]+\)'),
+  ('rand(', 'rand_r(', _UNSAFE_FUNC_PREFIX + r'rand\(\)'),
+  ('strtok(', 'strtok_r(',
+   _UNSAFE_FUNC_PREFIX + r'strtok\([^)]+\)'),
+  ('ttyname(', 'ttyname_r(', _UNSAFE_FUNC_PREFIX + r'ttyname\([^)]+\)'),
+)
 
 
 def CheckPosixThreading(filename, clean_lines, linenum, error):
@@ -1939,6 +1941,7 @@ def CheckVlogArguments(filename, clean_lines, linenum, error):
     error(filename, linenum, 'runtime/vlog', 5,
           'VLOG() should be used with numeric verbosity level.  '
           'Use LOG() if you want symbolic severity levels.')
+
 
 # Matches invalid increment: *count++, which moves pointer instead of
 # incrementing a value.
@@ -2483,7 +2486,7 @@ class NestingState(object):
             slots = access_match.group(3)
           error(filename, linenum, 'whitespace/indent', 3,
                 '%s%s: should be indented +1 space inside %s' % (
-                    access_match.group(2), slots, parent))
+                  access_match.group(2), slots, parent))
 
     # Consume braces or semicolons from what's left of the line
     while True:
@@ -2737,14 +2740,14 @@ def CheckSpacingForFunctionCall(filename, clean_lines, linenum, error):
   # expressions - which have their own, more liberal conventions - we
   # first see if we should be looking inside such an expression for a
   # function call, to which we can apply more strict standards.
-  fncall = line    # if there's no control flow construct, look at whole line
+  fncall = line  # if there's no control flow construct, look at whole line
   for pattern in (r'\bif\s*\((.*)\)\s*{',
                   r'\bfor\s*\((.*)\)\s*{',
                   r'\bwhile\s*\((.*)\)\s*[{;]',
                   r'\bswitch\s*\((.*)\)\s*{'):
     match = Search(pattern, line)
     if match:
-      fncall = match.group(1)    # look inside the parens for function calls
+      fncall = match.group(1)  # look inside the parens for function calls
       break
 
   # Except in if/for/while/switch, there should never be space
@@ -2767,7 +2770,7 @@ def CheckSpacingForFunctionCall(filename, clean_lines, linenum, error):
       not Search(r' \([^)]+\)\([^)]*(\)|,$)', fncall) and
       # Ignore pointers/references to arrays.
       not Search(r' \([^)]+\)\[[^\]]+\]', fncall)):
-    if Search(r'\w\s*\(\s(?!\s*\\$)', fncall):      # a ( used for a fn call
+    if Search(r'\w\s*\(\s(?!\s*\\$)', fncall):  # a ( used for a fn call
       error(filename, linenum, 'whitespace/parens', 4,
             'Extra space after ( in function call')
     elif Search(r'\(\s+(?!(\s*\\)|\()', fncall):
@@ -2872,13 +2875,13 @@ def CheckForFunctionLengths(filename, clean_lines, linenum,
       joined_line += ' ' + start_line.lstrip()
       if Search(r'(;|})', start_line):  # Declarations and trivial functions
         body_found = True
-        break                              # ... ignore
+        break  # ... ignore
       elif Search(r'{', start_line):
         body_found = True
         function = Search(r'((\w|:)*)\(', line).group(1)
-        if Match(r'TEST', function):    # Handle TEST... macros
+        if Match(r'TEST', function):  # Handle TEST... macros
           parameter_regexp = Search(r'(\(.*\))', joined_line)
-          if parameter_regexp:             # Ignore bad syntax
+          if parameter_regexp:  # Ignore bad syntax
             function += parameter_regexp.group(1)
         else:
           function += '()'
@@ -2913,13 +2916,13 @@ def CheckComment(line, filename, linenum, next_line_start, error):
     # Check if the // may be in quotes.  If so, ignore it
     # Comparisons made explicit for clarity -- pylint: disable=g-explicit-bool-comparison
     if (line.count('"', 0, commentpos) -
-        line.count('\\"', 0, commentpos)) % 2 == 0:   # not in quotes
+        line.count('\\"', 0, commentpos)) % 2 == 0:  # not in quotes
       # Allow one space for new scopes, two spaces otherwise:
       if (not (Match(r'^.*{ *//', line) and next_line_start == commentpos) and
           ((commentpos >= 1 and
-            line[commentpos-1] not in string.whitespace) or
+            line[commentpos - 1] not in string.whitespace) or
            (commentpos >= 2 and
-            line[commentpos-2] not in string.whitespace))):
+            line[commentpos - 2] not in string.whitespace))):
         error(filename, linenum, 'whitespace/comments', 2,
               'At least two spaces is best between code and comments')
 
@@ -3045,7 +3048,7 @@ def CheckSpacing(filename, clean_lines, linenum, nesting_state, error):
       if Match(r' {6}\w', prev_line):  # Initializer list?
         # We are looking for the opening column of initializer list, which
         # should be indented 4 spaces to cause 6 space indentation afterwards.
-        search_position = linenum-2
+        search_position = linenum - 2
         while (search_position >= 0
                and Match(r' {6}\w', elided[search_position])):
           search_position -= 1
@@ -3869,7 +3872,7 @@ def GetPreviousNonBlankLine(clean_lines, linenum):
   prevlinenum = linenum - 1
   while prevlinenum >= 0:
     prevline = clean_lines.elided[prevlinenum]
-    if not IsBlankLine(prevline):     # if not a blank line...
+    if not IsBlankLine(prevline):  # if not a blank line...
       return (prevline, prevlinenum)
     prevlinenum -= 1
   return ('', -1)
@@ -3885,7 +3888,7 @@ def CheckBraces(filename, clean_lines, linenum, error):
     error: The function to call with any errors found.
   """
 
-  line = clean_lines.elided[linenum]        # get rid of comments and strings
+  line = clean_lines.elided[linenum]  # get rid of comments and strings
 
   if Match(r'\s*{\s*$', line):
     # We allow an open brace to start a line in the case where someone is using
@@ -3910,7 +3913,7 @@ def CheckBraces(filename, clean_lines, linenum, error):
 
   # If braces come on one side of an else, they should be on both.
   # However, we have to worry about "else if" that spans multiple lines!
-  if Search(r'else if\s*\(', line):       # could be multi-line if
+  if Search(r'else if\s*\(', line):  # could be multi-line if
     brace_on_left = bool(Search(r'}\s*else if\s*\(', line))
     # find the ( after the if
     pos = line.find('else if')
@@ -3918,7 +3921,7 @@ def CheckBraces(filename, clean_lines, linenum, error):
     if pos > 0:
       (endline, _, endpos) = CloseExpression(clean_lines, linenum, pos)
       brace_on_right = endline[endpos:].find('{') != -1
-      if brace_on_left != brace_on_right:    # must be brace after if
+      if brace_on_left != brace_on_right:  # must be brace after if
         error(filename, linenum, 'readability/braces', 5,
               'If an else has a brace on one side, it should have it on both')
   elif Search(r'}\s*else[^{]*$', line) or Match(r'[^}]*else\s*{', line):
@@ -4300,8 +4303,8 @@ def CheckCheck(filename, clean_lines, linenum, error):
     # or rhs gets long, the error message might become unreadable.
     error(filename, linenum, 'readability/check', 2,
           'Consider using %s instead of %s(a %s b)' % (
-              _CHECK_REPLACEMENT[check_macro][operator],
-              check_macro, operator))
+            _CHECK_REPLACEMENT[check_macro][operator],
+            check_macro, operator))
 
 
 def CheckAltTokens(filename, clean_lines, linenum, error):
@@ -4333,7 +4336,7 @@ def CheckAltTokens(filename, clean_lines, linenum, error):
   for match in _ALT_TOKEN_REPLACEMENT_PATTERN.finditer(line):
     error(filename, linenum, 'readability/alt_tokens', 2,
           'Use operator %s instead of %s' % (
-              _ALT_TOKEN_REPLACEMENT[match.group(1)], match.group(1)))
+            _ALT_TOKEN_REPLACEMENT[match.group(1)], match.group(1)))
 
 
 def GetLineWidth(line):
@@ -4568,7 +4571,7 @@ def _ClassifyInclude(fileinfo, include, is_system):
   # basename when we drop common extensions, and the include
   # lives in . , then it's likely to be owned by the target file.
   target_dir, target_base = (
-      os.path.split(_DropCommonSuffixes(fileinfo.RepositoryName())))
+    os.path.split(_DropCommonSuffixes(fileinfo.RepositoryName())))
   include_dir, include_base = os.path.split(_DropCommonSuffixes(include))
   if target_base == include_base and (
       include_dir == target_dir or
@@ -4587,7 +4590,6 @@ def _ClassifyInclude(fileinfo, include, is_system):
     return _POSSIBLE_MY_HEADER
 
   return _OTHER_HEADER
-
 
 
 def CheckIncludeLine(filename, clean_lines, linenum, include_state, error):
@@ -4632,7 +4634,8 @@ def CheckIncludeLine(filename, clean_lines, linenum, include_state, error):
             '"%s" already included at %s:%s' %
             (include, filename, duplicate_line))
     elif (include.endswith('.cc') and
-          os.path.dirname(fileinfo.RepositoryName()) != os.path.dirname(include)):
+          os.path.dirname(fileinfo.RepositoryName()) != os.path.dirname(
+            include)):
       error(filename, linenum, 'build/include', 4,
             'Do not include .cc files from other packages')
     elif not _THIRD_PARTY_HEADERS_PATTERN.match(include):
@@ -4661,7 +4664,6 @@ def CheckIncludeLine(filename, clean_lines, linenum, include_state, error):
         error(filename, linenum, 'build/include_alpha', 4,
               'Include "%s" not in alphabetical order' % include)
       include_state.SetLastHeader(canonical_include)
-
 
 
 def _GetTextInside(text, start_pattern):
@@ -4698,9 +4700,9 @@ def _GetTextInside(text, start_pattern):
   start_position = match.end(0)
 
   assert start_position > 0, (
-      'start_pattern must ends with an opening punctuation.')
+    'start_pattern must ends with an opening punctuation.')
   assert text[start_position - 1] in matching_punctuation, (
-      'start_pattern must ends with an opening punctuation.')
+    'start_pattern must ends with an opening punctuation.')
   # Stack of closing punctuations we expect to have in text after position.
   punctuation_stack = [matching_punctuation[text[start_position - 1]]]
   position = start_position
@@ -4731,14 +4733,14 @@ def _GetTextInside(text, start_pattern):
 #   >
 _RE_PATTERN_IDENT = r'[_a-zA-Z]\w*'  # =~ [[:alpha:]][[:alnum:]]*
 _RE_PATTERN_TYPE = (
-    r'(?:const\s+)?(?:typename\s+|class\s+|struct\s+|union\s+|enum\s+)?'
-    r'(?:\w|'
-    r'\s*<(?:<(?:<[^<>]*>|[^<>])*>|[^<>])*>|'
-    r'::)+')
+  r'(?:const\s+)?(?:typename\s+|class\s+|struct\s+|union\s+|enum\s+)?'
+  r'(?:\w|'
+  r'\s*<(?:<(?:<[^<>]*>|[^<>])*>|[^<>])*>|'
+  r'::)+')
 # A call-by-reference parameter ends with '& identifier'.
 _RE_PATTERN_REF_PARAM = re.compile(
     r'(' + _RE_PATTERN_TYPE + r'(?:\s*(?:\bconst\b|[*]))*\s*'
-    r'&\s*' + _RE_PATTERN_IDENT + r')\s*(?:=[^,()]+)?[,)]')
+                              r'&\s*' + _RE_PATTERN_IDENT + r')\s*(?:=[^,()]+)?[,)]')
 # A call-by-const-reference parameter either ends with 'const& identifier'
 # or looks like 'const type& identifier' when 'type' is atomic.
 _RE_PATTERN_CONST_REF_PARAM = (
@@ -5449,42 +5451,42 @@ def ExpectingFunctionArgs(clean_lines, linenum):
 
 
 _HEADERS_CONTAINING_TEMPLATES = (
-    ('<deque>', ('deque',)),
-    ('<functional>', ('unary_function', 'binary_function',
-                      'plus', 'minus', 'multiplies', 'divides', 'modulus',
-                      'negate',
-                      'equal_to', 'not_equal_to', 'greater', 'less',
-                      'greater_equal', 'less_equal',
-                      'logical_and', 'logical_or', 'logical_not',
-                      'unary_negate', 'not1', 'binary_negate', 'not2',
-                      'bind1st', 'bind2nd',
-                      'pointer_to_unary_function',
-                      'pointer_to_binary_function',
-                      'ptr_fun',
-                      'mem_fun_t', 'mem_fun', 'mem_fun1_t', 'mem_fun1_ref_t',
-                      'mem_fun_ref_t',
-                      'const_mem_fun_t', 'const_mem_fun1_t',
-                      'const_mem_fun_ref_t', 'const_mem_fun1_ref_t',
-                      'mem_fun_ref',
-                     )),
-    ('<limits>', ('numeric_limits',)),
-    ('<list>', ('list',)),
-    ('<map>', ('map', 'multimap',)),
-    ('<memory>', ('allocator',)),
-    ('<queue>', ('queue', 'priority_queue',)),
-    ('<set>', ('set', 'multiset',)),
-    ('<stack>', ('stack',)),
-    ('<string>', ('char_traits', 'basic_string',)),
-    ('<tuple>', ('tuple',)),
-    ('<utility>', ('pair',)),
-    ('<vector>', ('vector',)),
+  ('<deque>', ('deque',)),
+  ('<functional>', ('unary_function', 'binary_function',
+                    'plus', 'minus', 'multiplies', 'divides', 'modulus',
+                    'negate',
+                    'equal_to', 'not_equal_to', 'greater', 'less',
+                    'greater_equal', 'less_equal',
+                    'logical_and', 'logical_or', 'logical_not',
+                    'unary_negate', 'not1', 'binary_negate', 'not2',
+                    'bind1st', 'bind2nd',
+                    'pointer_to_unary_function',
+                    'pointer_to_binary_function',
+                    'ptr_fun',
+                    'mem_fun_t', 'mem_fun', 'mem_fun1_t', 'mem_fun1_ref_t',
+                    'mem_fun_ref_t',
+                    'const_mem_fun_t', 'const_mem_fun1_t',
+                    'const_mem_fun_ref_t', 'const_mem_fun1_ref_t',
+                    'mem_fun_ref',
+                    )),
+  ('<limits>', ('numeric_limits',)),
+  ('<list>', ('list',)),
+  ('<map>', ('map', 'multimap',)),
+  ('<memory>', ('allocator',)),
+  ('<queue>', ('queue', 'priority_queue',)),
+  ('<set>', ('set', 'multiset',)),
+  ('<stack>', ('stack',)),
+  ('<string>', ('char_traits', 'basic_string',)),
+  ('<tuple>', ('tuple',)),
+  ('<utility>', ('pair',)),
+  ('<vector>', ('vector',)),
 
-    # gcc extensions.
-    # Note: std::hash is their hash, ::hash is our hash
-    ('<hash_map>', ('hash_map', 'hash_multimap',)),
-    ('<hash_set>', ('hash_set', 'hash_multiset',)),
-    ('<slist>', ('slist',)),
-    )
+  # gcc extensions.
+  # Note: std::hash is their hash, ::hash is our hash
+  ('<hash_map>', ('hash_map', 'hash_multimap',)),
+  ('<hash_set>', ('hash_set', 'hash_multiset',)),
+  ('<slist>', ('slist',)),
+)
 
 _RE_PATTERN_STRING = re.compile(r'\bstring\b')
 
@@ -5608,7 +5610,7 @@ def CheckForIncludeWhatYouUse(filename, clean_lines, include_state, error,
         injection.
   """
   required = {}  # A map of header name to linenumber and the template entity.
-                 # Example of required: { '<functional>': (1219, 'less<>') }
+  # Example of required: { '<functional>': (1219, 'less<>') }
 
   for linenum in xrange(clean_lines.NumLines()):
     line = clean_lines.elided[linenum]
@@ -5825,8 +5827,6 @@ def CheckRedundantOverrideOrFinal(filename, clean_lines, linenum, error):
            'already declared as "final"'))
 
 
-
-
 # Returns true if we are at a new block, and it is directly
 # inside of a namespace.
 def IsBlockInNameSpace(nesting_state, is_forward_declaration):
@@ -5936,6 +5936,7 @@ def ProcessLine(filename, file_extension, clean_lines, line,
   for check_fn in extra_check_functions:
     check_fn(filename, clean_lines, line, error)
 
+
 def FlagCxx11Features(filename, clean_lines, linenum, error):
   """Flag those c++11 features that we only allow in certain places.
 
@@ -5959,7 +5960,7 @@ def FlagCxx11Features(filename, clean_lines, linenum, error):
                                       'ratio',
                                       'regex',
                                       'system_error',
-                                     ):
+                                      ):
     error(filename, linenum, 'build/c++11', 5,
           ('<%s> is an unapproved C++11 header.') % include.group(1))
 
@@ -5974,7 +5975,7 @@ def FlagCxx11Features(filename, clean_lines, linenum, error):
       # type_traits
       'alignment_of',
       'aligned_union',
-      ):
+  ):
     if Search(r'\bstd::%s\b' % top_name, line):
       error(filename, linenum, 'build/c++11', 5,
             ('std::%s is an unapproved C++11 class or function.  Send c-style '
@@ -6033,6 +6034,7 @@ def ProcessFileData(filename, file_extension, lines, error,
 
   CheckForNewlineAtEOF(filename, lines, error)
 
+
 def ProcessConfigOverrides(filename):
   """ Loads the configuration files and processes the config overrides.
 
@@ -6088,9 +6090,9 @@ def ProcessConfigOverrides(filename):
           elif name == 'linelength':
             global _line_length
             try:
-                _line_length = int(val)
+              _line_length = int(val)
             except ValueError:
-                sys.stderr.write('Line length must be numeric.')
+              sys.stderr.write('Line length must be numeric.')
           else:
             sys.stderr.write(
                 'Invalid configuration option (%s) in file %s\n' %
@@ -6104,7 +6106,7 @@ def ProcessConfigOverrides(filename):
   # Apply all the accumulated filters in reverse order (top-level directory
   # config options having the least priority).
   for filter in reversed(cfg_filters):
-     _AddFilters(filter)
+    _AddFilters(filter)
 
   return True
 
@@ -6244,7 +6246,8 @@ def ParseArguments(args):
       PrintUsage(None)
     elif opt == '--output':
       if val not in ('emacs', 'vs7', 'eclipse'):
-        PrintUsage('The only allowed output formats are emacs, vs7 and eclipse.')
+        PrintUsage(
+            'The only allowed output formats are emacs, vs7 and eclipse.')
       output_format = val
     elif opt == '--verbose':
       verbosity = int(val)
@@ -6262,9 +6265,9 @@ def ParseArguments(args):
     elif opt == '--linelength':
       global _line_length
       try:
-          _line_length = int(val)
+        _line_length = int(val)
       except ValueError:
-          PrintUsage('Line length must be digits.')
+        PrintUsage('Line length must be digits.')
 
   if not filenames:
     PrintUsage('No files were specified.')

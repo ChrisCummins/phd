@@ -1,14 +1,14 @@
 """This file defines the GitHubRepo class."""
-import multiprocessing
-
 import binascii
 import collections
 import hashlib
-import humanize
+import multiprocessing
 import pathlib
-import progressbar
 import subprocess
 import typing
+
+import humanize
+import progressbar
 from absl import flags
 from absl import logging
 from phd.lib.labm8 import pbutil

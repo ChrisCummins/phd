@@ -7,6 +7,7 @@ import progressbar
 # from dsmith.sol.db import *
 from dsmith.opencl.db import *
 
+
 if __name__ == "__main__":
   # dsmith.langs.mklang("solidity")
   dsmith.langs.mklang("opencl")

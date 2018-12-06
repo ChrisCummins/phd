@@ -8,17 +8,17 @@ Variables:
 """
 from __future__ import print_function
 
-import os
-
 import getpass
+import os
 import socket
 import subprocess
 import sys
 import tempfile
 import threading
 import typing
-from phd.lib.labm8 import fs
 from sys import platform
+
+from phd.lib.labm8 import fs
 
 
 HOSTNAME = socket.gethostname()

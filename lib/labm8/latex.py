@@ -6,7 +6,6 @@ import re
 from io import StringIO
 
 import pandas
-
 from phd.lib.labm8 import io
 
 

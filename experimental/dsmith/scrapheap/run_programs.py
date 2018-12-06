@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
+from argparse import ArgumentParser
 from itertools import product
+from subprocess import Popen
 
 import pyopencl as cl
-from argparse import ArgumentParser
 from dsmith import db
 from dsmith.db import *
-from subprocess import Popen
 
 
 def get_platform_name(platform_id):
@@ -68,11 +68,13 @@ def main():
 
   timeout = str(args.timeout)
   cl_launcher_jobs = [
-    ['timeout', '-s9', timeout, 'python', script, "--hostname", db_hostname, str(platform_id), str(device_id)] + args
+    ['timeout', '-s9', timeout, 'python', script, "--hostname", db_hostname,
+     str(platform_id), str(device_id)] + args
     for script, args in product(cl_launcher_scripts, script_args)
   ]
   cldrive_jobs = [
-    ['timeout', '-s9', timeout, 'python', script, "--hostname", db_hostname, platform_name, device_name] + args
+    ['timeout', '-s9', timeout, 'python', script, "--hostname", db_hostname,
+     platform_name, device_name] + args
     for script, args in product(cldrive_scripts, script_args)
   ]
 

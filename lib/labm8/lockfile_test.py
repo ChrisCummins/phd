@@ -5,7 +5,6 @@ import tempfile
 
 import pytest
 from absl import app
-
 from phd.lib.labm8 import fs
 from phd.lib.labm8 import lockfile
 from phd.lib.labm8 import pbutil

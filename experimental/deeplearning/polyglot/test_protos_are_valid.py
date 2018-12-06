@@ -1,6 +1,7 @@
 """Test that //experimental/polyglot/baselines:protos are valid."""
-import pytest
 import sys
+
+import pytest
 from absl import app
 from phd.lib.labm8 import bazelutil
 from phd.lib.labm8 import pbutil

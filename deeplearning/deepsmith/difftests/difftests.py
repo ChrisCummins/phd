@@ -1,5 +1,6 @@
 """This module defines differential tests for results."""
 import typing
+
 from absl import flags
 
 from deeplearning.deepsmith.proto import deepsmith_pb2

@@ -4,21 +4,21 @@ import typing
 
 from absl import app
 from absl import flags
+from phd.lib.labm8 import bazelutil
+from phd.lib.labm8 import pbutil
 
 from deeplearning.clgen import clgen
 from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
-from phd.lib.labm8 import bazelutil
-from phd.lib.labm8 import pbutil
+
 
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
     'working_dir', '/mnt/cc/data/experimental/deeplearning/polyglot/clgen',
     'Path to CLgen working directory')
-
 
 # Paths to protos within //experimental/polyglot/baselines.
 LANGUAGES = {

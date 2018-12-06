@@ -1,10 +1,11 @@
 """Unit tests for //datasets/me_db/ynab."""
 import pathlib
-import pytest
 import sys
 import tempfile
 import time
 import typing
+
+import pytest
 from absl import app
 from absl import flags
 

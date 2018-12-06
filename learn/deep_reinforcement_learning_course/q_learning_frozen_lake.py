@@ -2,11 +2,12 @@
 
 See: https://github.com/simoninithomas/Deep_reinforcement_learning_Course/blob/master/Q%20learning/FrozenLake/Q%20Learning%20with%20FrozenLake.ipynb
 """
+import random
+import typing
+
 import gym
 import humanize
 import numpy as np
-import random
-import typing
 from absl import app
 from absl import flags
 from absl import logging

@@ -3,16 +3,22 @@
 A training corpus is a set of one or more "contentfiles", where each contentfile
 is a file containing text to train over.
 """
-import checksumdir
-import humanize
-import numpy as np
 import os
 import pathlib
 import subprocess
 import tempfile
 import time
+
+import checksumdir
+import humanize
+import numpy as np
 from absl import flags
 from absl import logging
+from phd.lib.labm8 import bazelutil
+from phd.lib.labm8 import crypto
+from phd.lib.labm8 import hashcache
+from phd.lib.labm8 import lockfile
+from phd.lib.labm8 import pbutil
 from sqlalchemy.sql.expression import func
 
 from deeplearning.clgen import cache
@@ -22,11 +28,6 @@ from deeplearning.clgen.corpuses import encoded
 from deeplearning.clgen.corpuses import preprocessed
 from deeplearning.clgen.preprocessors import preprocessors
 from deeplearning.clgen.proto import corpus_pb2
-from phd.lib.labm8 import bazelutil
-from phd.lib.labm8 import crypto
-from phd.lib.labm8 import hashcache
-from phd.lib.labm8 import lockfile
-from phd.lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

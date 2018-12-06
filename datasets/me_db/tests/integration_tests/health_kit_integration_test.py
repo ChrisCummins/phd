@@ -1,7 +1,8 @@
 """Integration tests for HealthKit import to me_db."""
-import pytest
 import sys
 import typing
+
+import pytest
 from absl import app
 from absl import flags
 

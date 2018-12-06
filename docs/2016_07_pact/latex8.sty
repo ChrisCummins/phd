@@ -1,5 +1,4 @@
-
-% --------------------------------------------------------------- 
+% ---------------------------------------------------------------
 %
 % $Id: latex8.sty,v 1.1 2009/06/30 00:49:20 rajeev Exp $
 % 
@@ -83,55 +82,55 @@
 % \Huge{\@setfontsize\Huge\@xxvpt{30}}
 
 \def\@maketitle
-   {
-   \newpage
-   \null
-   \vskip .375in 
-   \begin{center}
-      {\Large \bf \@title \par} 
-      % additional two empty lines at the end of the title 
-      \vspace*{24pt} 
-      {
-      \large 
-      \lineskip .5em
-      \begin{tabular}[t]{c}
-         \@author 
-      \end{tabular}
-      \par
-      } 
-      % additional small space at the end of the author name 
-      \vskip .5em 
-      {
-       \large 
-      \begin{tabular}[t]{c}
-         \@affiliation 
-      \end{tabular}
-      \par 
-      \ifx \@empty \@email
-      \else
-         \begin{tabular}{r@{~}l}
-            E-mail: & {\tt \@email}
-         \end{tabular}
-         \par
-      \fi
-      }
-      % additional empty line at the end of the title block 
-      \vspace*{12pt} 
-   \end{center}
-   } 
+{
+\newpage
+\null
+\vskip .375in
+\begin{center}
+{\Large \bf \@title \par}
+  % additional two empty lines at the end of the title
+  \vspace*{24pt}
+  {
+  \large
+  \lineskip .5em
+  \begin{tabular}[t]{c}
+    \@author
+  \end{tabular}
+  \par
+  }
+  % additional small space at the end of the author name
+  \vskip .5em
+  {
+  \large
+  \begin{tabular}[t]{c}
+    \@affiliation
+  \end{tabular}
+  \par
+  \ifx \@empty \@email
+  \else
+  \begin{tabular}{r@{~}l}
+    E-mail: & {\tt \@email}
+  \end{tabular}
+  \par
+  \fi
+  }
+  % additional empty line at the end of the title block
+  \vspace*{12pt}
+\end{center}
+}
 
 \def\abstract
-   {%
-   \centerline{\large\bf Abstract}%
-   \vspace*{12pt}%
-   \it%
-   }
+{%
+\centerline{\large\bf Abstract}%
+\vspace*{12pt}%
+\it%
+}
 
 \def\endabstract
-   {
-   % additional empty line at the end of the abstract 
-   \vspace*{12pt} 
-   }
+{
+% additional empty line at the end of the abstract
+\vspace*{12pt}
+}
 
 \def\affiliation#1{\gdef\@affiliation{#1}} \gdef\@affiliation{}
 
@@ -143,29 +142,29 @@
 \setlength{\@figindent}{1pc}
 
 \long\def\@makecaption#1#2{
-   \vskip 10pt
-   \setbox\@tempboxa\hbox{\tenhv\noindent #1.~#2} 
-   \setlength{\@ctmp}{\hsize}
-   \addtolength{\@ctmp}{-\@figindent}\addtolength{\@ctmp}{-\@figindent} 
-   % IF longer than one indented paragraph line
-   \ifdim \wd\@tempboxa >\@ctmp
-      % THEN set as an indented paragraph
-      \begin{list}{}{\leftmargin\@figindent \rightmargin\leftmargin} 
-         \item[]\tenhv #1.~#2\par
-      \end{list}
-   \else
-      % ELSE center
-      \hbox to\hsize{\hfil\box\@tempboxa\hfil} 
-   \fi}
+\vskip 10pt
+\setbox\@tempboxa\hbox{\tenhv\noindent #1.~#2}
+\setlength{\@ctmp}{\hsize}
+\addtolength{\@ctmp}{-\@figindent}\addtolength{\@ctmp}{-\@figindent}
+% IF longer than one indented paragraph line
+\ifdim \wd\@tempboxa >\@ctmp
+% THEN set as an indented paragraph
+\begin{list}{}{\leftmargin\@figindent \rightmargin\leftmargin}
+  \item[]\tenhv #1.~#2\par
+\end{list}
+\else
+% ELSE center
+\hbox to\hsize{\hfil\box\@tempboxa\hfil}
+\fi}
 
 % correct heading spacing and type
 \def\section{\@startsection {section}{1}{\z@}
-   {14pt plus 2pt minus 2pt}{14pt plus 2pt minus 2pt} {\large\bf}} 
+{14pt plus 2pt minus 2pt}{14pt plus 2pt minus 2pt} {\large\bf}}
 \def\subsection{\@startsection {subsection}{2}{\z@}
-   {13pt plus 2pt minus 2pt}{13pt plus 2pt minus 2pt} {\elvbf}}
+{13pt plus 2pt minus 2pt}{13pt plus 2pt minus 2pt} {\elvbf}}
 
 % add the period after section numbers 
-\newcommand{\Section}[1]{\section{\hskip -1em.~#1}} 
+\newcommand{\Section}[1]{\section{\hskip -1em.~#1}}
 \newcommand{\SubSection}[1]{\subsection{\hskip -1em.~#1}}
 
 % end of file latex8.sty

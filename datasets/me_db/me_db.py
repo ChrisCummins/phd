@@ -2,12 +2,13 @@
 
 import datetime
 import pathlib
-import sqlalchemy as sql
 import typing
+from concurrent import futures
+
+import sqlalchemy as sql
 from absl import app
 from absl import flags
 from absl import logging
-from concurrent import futures
 from phd.lib.labm8 import labdate
 from phd.lib.labm8 import sqlutil
 from sqlalchemy.dialects import mysql

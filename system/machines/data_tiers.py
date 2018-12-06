@@ -5,17 +5,18 @@ Data directories are classified by a "tier", described in
 these data directories.
 """
 import os
+import pathlib
+import subprocess
 
 import humanize
 import pandas as pd
-import pathlib
-import subprocess
 from absl import app
 from absl import flags
 from absl import logging
 from phd.lib.labm8 import pbutil
 
 from system.machines.proto import data_tiers_pb2
+
 
 FLAGS = flags.FLAGS
 

@@ -8,9 +8,9 @@ import typing
 from absl import flags
 from absl import logging
 from fuzzywuzzy import process
+from phd.lib.labm8 import bazelutil
 
 from datasets.github.scrape_repos.preprocessors import public
-from phd.lib.labm8 import bazelutil
 
 
 FLAGS = flags.FLAGS

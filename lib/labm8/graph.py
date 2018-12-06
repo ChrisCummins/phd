@@ -1,7 +1,7 @@
 """This module defines classes and helper functions for working with graphs."""
 import typing
-from absl import flags
 
+from absl import flags
 from phd.lib.labm8 import fmt
 
 

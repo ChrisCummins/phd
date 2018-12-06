@@ -2,9 +2,10 @@
 import binascii
 import datetime
 import hashlib
+import typing
+
 import phd.lib.labm8.sqlutil
 import sqlalchemy as sql
-import typing
 from phd.lib.labm8 import labdate
 from phd.lib.labm8 import system
 from sqlalchemy import orm
@@ -97,8 +98,8 @@ class Harness(db.Table):
                                            name=HarnessOptName.GetOrAdd(session,
                                                                         proto_opt_name),
                                            value=HarnessOptValue.GetOrAdd(
-                                             session,
-                                             proto_opt_value), )
+                                               session,
+                                               proto_opt_value), )
       opts.append(opt)
 
     # Create optset table entries.

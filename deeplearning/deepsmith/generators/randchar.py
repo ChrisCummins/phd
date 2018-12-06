@@ -1,6 +1,7 @@
 """A very basic "generator" which produces strings of random characters."""
 import random
 import string
+
 from absl import app
 from absl import flags
 from phd.lib.labm8 import labdate

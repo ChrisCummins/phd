@@ -19,12 +19,12 @@
 """
 Converting & encoding text streams into vocabularies for machine learning.
 """
+import string
 from collections import Counter
+from timeit import timeit
 
 import clgen
 import numpy as np
-import string
-from timeit import timeit
 
 
 class VocabError(clgen.CLgenError):

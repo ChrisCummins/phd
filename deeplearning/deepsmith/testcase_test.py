@@ -1,7 +1,8 @@
 """Tests for //deeplearning/deepsmith:testcase."""
-import pytest
 import random
 import sys
+
+import pytest
 from absl import app
 from phd.lib.labm8 import labdate
 

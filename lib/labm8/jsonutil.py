@@ -1,9 +1,9 @@
 """JSON parser which supports comments.
 """
-import re
-
 import json
+import re
 import typing
+
 from phd.lib.labm8 import fs
 
 

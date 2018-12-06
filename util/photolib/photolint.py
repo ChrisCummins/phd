@@ -1,9 +1,9 @@
 """A linter for ensuring that a Photo Library is organized correctly."""
 import os
-
 import sys
 import time
 import typing
+
 from absl import app
 from absl import flags
 from absl import logging

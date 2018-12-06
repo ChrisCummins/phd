@@ -1,6 +1,5 @@
 """Utilities for working with workspaces."""
 import os
-
 import typing
 
 from util.photolib import common

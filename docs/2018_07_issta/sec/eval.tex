@@ -6,24 +6,24 @@
 \begin{figure}
   \centering %
   \subfloat[Testbeds $10\pm$ assertion \emph{Uncorrected typos!} during semantic analysis.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\OclgrindUncorrectedTypos}}}%
-    \label{lst:oclgrind-uncorrected-typos}
+  \noindent\mbox{\parbox{\columnwidth}{\usebox{\OclgrindUncorrectedTypos}}}%
+  \label{lst:oclgrind-uncorrected-typos}
   }\\%
   \subfloat[Testbeds $1\pm$, $2\pm$ segmentation fault due to implicit address space conversion.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaRecursionSegfault}}}%
-    \label{lst:nvidia-recursion-segfault}
+  \noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaRecursionSegfault}}}%
+  \label{lst:nvidia-recursion-segfault}
   }\\%
   \subfloat[Testbeds $3\pm$ assertion \emph{sel.hasDoubleType()} during code generation.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelGtDoubleAssertion}}}%
-    \label{lst:intel-gt2-double-assertion}
+  \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelGtDoubleAssertion}}}%
+  \label{lst:intel-gt2-double-assertion}
   }\\%
   \subfloat[Testbeds $3\pm$ assertion \emph{scalarizeInsert} during code generation.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\BeignetScalarizeInsert}}}%
-    \label{lst:beignet-scalarize-insert}
+  \noindent\mbox{\parbox{\columnwidth}{\usebox{\BeignetScalarizeInsert}}}%
+  \label{lst:beignet-scalarize-insert}
   }\\%
   \subfloat[Of the 10 compilers we tested, 6 crash with segfault when compiling this kernel.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\AlmostEverythingCrash}}}%
-    \label{lst:almost-everything-crash}
+  \noindent\mbox{\parbox{\columnwidth}{\usebox{\AlmostEverythingCrash}}}%
+  \label{lst:almost-everything-crash}
   }\\%
   \caption{Example kernels which crash compilers.}%
   \vspace{-1.1em}
@@ -68,17 +68,18 @@ compiler crashes.
 \begin{figure}
   \centering %
   \subfloat[Reduced from 48 line kernel.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\ParserFailOne}}}%
+  \noindent\mbox{\parbox{\columnwidth}{\usebox{\ParserFailOne}}}%
   }\\%
   \subfloat[Reduced from 52 line kernel.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\ParserFailTwo}}}%
+  \noindent\mbox{\parbox{\columnwidth}{\usebox{\ParserFailTwo}}}%
   }\\%
   \subfloat[Reduced from 68 line kernel.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\ParserFailThree}}}%
+  \noindent\mbox{\parbox{\columnwidth}{\usebox{\ParserFailThree}}}%
   }\\%
   \caption{Example codes which crash parsers.}%
-    \vspace{-1.1em}
-  \label{lst:parser-crashes}%
+  \vspace{-1.1em}
+  \label{lst:parser-crashes}
+  %
 \end{figure}
 
 \paragraph{Semantic Analysis Failures}
@@ -134,24 +135,25 @@ parsing.
 \begin{figure}
   \centering %
   \subfloat[Testbeds $3\pm$ loop indefinitely, leaking memory until the entire system memory is depleted and the process crashes.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\BeignetPtrIntSpin}}}%
-    \label{lst:beignet-ptr-int-spin}
+  \noindent\mbox{\parbox{\columnwidth}{\usebox{\BeignetPtrIntSpin}}}%
+  \label{lst:beignet-ptr-int-spin}
   }\\%
   \subfloat[Testbed $1+$ hangs during optimization of kernels with large loop bounds. Testbeds $1-$ and $2\pm$ compile in under 1 second.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaOptLoopHang}}}%
-    \label{lst:nvidia-opt-loop-hang}
+  \noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaOptLoopHang}}}%
+  \label{lst:nvidia-opt-loop-hang}
   }\\%
   \subfloat[Testbeds $4+$, $5+$, $6+$, $7+$ hang during optimization of kernels with non-terminating loops.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelOptLoopHang}}}%
-    \label{lst:intel-inf-loop}
+  \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelOptLoopHang}}}%
+  \label{lst:intel-inf-loop}
   }\\%
   \subfloat[Testbeds $7\pm$ loops indefinitely, consuming 100\% CPU usage.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\XeonPhiSpin}}}%
-    \label{lst:xeon-phi-spin}
+  \noindent\mbox{\parbox{\columnwidth}{\usebox{\XeonPhiSpin}}}%
+  \label{lst:xeon-phi-spin}
   }\\%
   \caption{Example kernels which hang compilers.}%
   \vspace{-1.3em}
-  \label{lst:compiler-hangs}%
+  \label{lst:compiler-hangs}
+  %
 \end{figure}
 
 \paragraph{Compiler Hangs}
@@ -186,20 +188,20 @@ as ambiguous.
 \begin{figure}
   \centering %
   \subfloat[Testbeds $4+$, $6+$ incorrectly optimize the \texttt{if} statement, causing the conditional branch to execute (it shouldn't). This pattern of integer comparison to thread ID is widely used.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelSizetIntUnreduced}}}%
-    \label{lst:intel-size_t-int-unreduced}
+  \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelSizetIntUnreduced}}}%
+  \label{lst:intel-size_t-int-unreduced}
   }\\%
   \subfloat[A race condition in \texttt{switch} statement evaluation causes $10\pm$ to sporadically crash when executed with a number of threads $> 1$.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\OclgrindRaceSwitch}}}%
-    \label{lst:oclgrind-race-switch}
+  \noindent\mbox{\parbox{\columnwidth}{\usebox{\OclgrindRaceSwitch}}}%
+  \label{lst:oclgrind-race-switch}
   }\\%
   \subfloat[Testbeds $3\pm$ silently miscompile ternary assignments in which the operands are different global buffers.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\BeignetTernary}}}%
-    \label{lst:beig-ternary-ops}
+  \noindent\mbox{\parbox{\columnwidth}{\usebox{\BeignetTernary}}}%
+  \label{lst:beig-ternary-ops}
   }\\%
   \subfloat[Compilation should fail due to call to undefined function \texttt{B()}; Testbeds $8\pm$ silently succeed then crash upon kernel execution.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\PoclUndefinedSymbols}}}%
-    \label{lst:pocl-undefined-symbols}
+  \noindent\mbox{\parbox{\columnwidth}{\usebox{\PoclUndefinedSymbols}}}%
+  \label{lst:pocl-undefined-symbols}
   }\\%
   \caption{Example kernels which are miscompiled.}%
   \vspace{-1.3em}
@@ -265,12 +267,12 @@ capabilities of DeepSmith and CLSmith.
   \scriptsize %
   \centering %
   \caption{%
-   Results from 48 hours of testing using CLSmith and DeepSmith. System \#. as
-   per Table~\ref{tab:platforms}. $\pm$ denotes optimizations off ($-$) vs on
-   ($+$). The remaining columns denote the number of build crash (\bc), build
-   timeout (\bto), anomalous build failure (\abf), anomalous runtime crash
-   (\arc), anomalous wrong-output (\awo), and pass (\textbf{\cmark}) results.
-   \vspace{-1.1em}
+  Results from 48 hours of testing using CLSmith and DeepSmith. System \#. as
+  per Table~\ref{tab:platforms}. $\pm$ denotes optimizations off ($-$) vs on
+  ($+$). The remaining columns denote the number of build crash (\bc), build
+  timeout (\bto), anomalous build failure (\abf), anomalous runtime crash
+  (\arc), anomalous wrong-output (\awo), and pass (\textbf{\cmark}) results.
+  \vspace{-1.1em}
   }
   \input{tab/megatable}
   \vspace{-1.1em}
@@ -282,15 +284,16 @@ capabilities of DeepSmith and CLSmith.
   \includegraphics[width=\columnwidth]{img/vs-clsmith}%
   \vspace{-1em}
   \caption{%
-    Comparison of runtimes (a) and test case sizes (b). DeepSmith test cases
-    are on average evaluated $3.03\times$ faster than CLSmith ($2.45\times$,
-    and $4.46\times$ for generation and execution, respectively), and are two
-    orders of magnitude smaller. Timings do not include the cost of timeouts
-    which would increase the performance gains of DeepSmith by nearly a factor
-    of two.
+  Comparison of runtimes (a) and test case sizes (b). DeepSmith test cases
+  are on average evaluated $3.03\times$ faster than CLSmith ($2.45\times$,
+  and $4.46\times$ for generation and execution, respectively), and are two
+  orders of magnitude smaller. Timings do not include the cost of timeouts
+  which would increase the performance gains of DeepSmith by nearly a factor
+  of two.
   }%
   \vspace{-1.3em}
-  \label{fig:vs-clsmith} %
+  \label{fig:vs-clsmith}
+  %
 \end{figure}
 
 Table~\ref{tab:megatable} shows the results of 48 hours of consecutive testing
@@ -358,32 +361,32 @@ optimizations enabled and disabled.
   \centering
   % Result id: 110876
   \subfloat[\emph{Post-Dominance Frontier Construction} pass.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelPostDominanceFrontier}}}%
+  \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelPostDominanceFrontier}}}%
   }\\%
   \subfloat[\emph{Simplify the CFG} pass.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\SimplifyTheCFGPass}}}%
+  \noindent\mbox{\parbox{\columnwidth}{\usebox{\SimplifyTheCFGPass}}}%
   }\\%
   % Program id: 31656
   \subfloat[\emph{Predicator} pass.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelPredicator}}}%
+  \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelPredicator}}}%
   }\\%
   \subfloat[\emph{Combine redundant instructions} pass.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelCombineRedundant}}}%
+  \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelCombineRedundant}}}%
   }\\%
   % Program id: 10596
   \subfloat[\emph{PrepareKernelArgs} pass.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelPrepareKernelArgs}}}%
+  \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelPrepareKernelArgs}}}%
   }\\%
   % Program id: 37443
   \subfloat[\emph{Add SPIR related module scope metadata} pass.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelSPIRMetadata}}}%
+  \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelSPIRMetadata}}}%
   }\\%
   % Program id: 44105
   \subfloat[\emph{Intel OpenCL RemoveDuplicationBarrier} pass.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelRemoveDupeBarrier}}}%
+  \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelRemoveDupeBarrier}}}%
   }\\%
   \subfloat[\emph{X86 DAG->DAG Instruction Selection} pass.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\DagPass}}}%
+  \noindent\mbox{\parbox{\columnwidth}{\usebox{\DagPass}}}%
   }\\%
   \caption{Example kernels which crash Intel compiler passes.}%
   \label{lst:intel-passes}
@@ -402,12 +405,12 @@ underlying problem.
 \begin{figure}
   \centering %
   \subfloat[Assertion \emph{storing/loading pointers only support private array}.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\BeigPtrAssertion}}}%
-    \label{lst:beig-ptr-assertion}
+  \noindent\mbox{\parbox{\columnwidth}{\usebox{\BeigPtrAssertion}}}%
+  \label{lst:beig-ptr-assertion}
   }\\%
   \subfloat[Assertion \emph{iter != pointerOrigMap.end()}.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\BeigIterAssertion}}}%
-    \label{lst:beig-iter-assertion}
+  \noindent\mbox{\parbox{\columnwidth}{\usebox{\BeigIterAssertion}}}%
+  \label{lst:beig-iter-assertion}
   }\\%
   \caption{Example kernels which trigger compiler assertions which both CLSmith and DeepSmith exposed.}%
   \vspace{-1.5em}
@@ -478,7 +481,7 @@ A large portion of the DeepSmith architecture is language-agnostic, requiring
 only a corpus, encoder, and harness for each new language. This potentially
 significantly lowers the barrier-to-entry compared with prior grammar-based
 fuzzers. To explore this, we report on initial results in extending DeepSmith to
-the Solidity programming language.  Solidity is the smart contract programming
+the Solidity programming language. Solidity is the smart contract programming
 language of the Ethereum blockchain. At less than four years old, it lacks much
 of the tooling of more established programming languages. Yet, it is an
 important candidate for rigorous testing, as exploitable bugs may undermine the
@@ -488,7 +491,7 @@ integrity of the blockchain and lead to fraudulent transactions.
 
 We applied the same methodology to train the program generator as for OpenCL. We
 assembled a corpus of Solidity contracts from GitHub, recursively inlining
-imported modules where  possible. We used the same tokenizer as for OpenCL, only
+imported modules where possible. We used the same tokenizer as for OpenCL, only
 changing the list of language keywords and builtins. Code style was enforced
 using clang-format. We trained the model in the same manner as OpenCL. No
 modification to either the language model or generator code was required. We

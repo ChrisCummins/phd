@@ -1,7 +1,8 @@
 """Unit tests for //gpu/cldrive/data.py."""
+import sys
+
 import numpy as np
 import pytest
-import sys
 from absl import app
 
 from gpu.cldrive import data

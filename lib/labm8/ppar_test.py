@@ -1,9 +1,9 @@
 """Unit tests for //lib/labm8:ppar."""
 import multiprocessing
+import sys
 
 import progressbar
 import pytest
-import sys
 from absl import app
 from phd.lib.labm8 import ppar
 from phd.lib.labm8.data.test.ppar import protos_pb2

@@ -8,11 +8,12 @@ import MySQLdb
 from absl import app
 from absl import flags
 from absl import logging
-
-from deeplearning.deepsmith.proto import deepsmith_pb2
 from phd.lib.labm8 import fs
 from phd.lib.labm8 import labdate
 from phd.lib.labm8 import pbutil
+
+from deeplearning.deepsmith.proto import deepsmith_pb2
+
 
 FLAGS = flags.FLAGS
 
@@ -46,7 +47,8 @@ OPENCL_DEVICE_MAP = {
 }
 
 
-def _SetIf(out: typing.Dict[str, typing.Any], key: typing.Any, value: typing.Any,
+def _SetIf(out: typing.Dict[str, typing.Any], key: typing.Any,
+           value: typing.Any,
            setvalue: typing.Any = None) -> typing.Dict[str, typing.Any]:
   if value:
     out[key] = setvalue or value
@@ -56,28 +58,28 @@ def _SetIf(out: typing.Dict[str, typing.Any], key: typing.Any, value: typing.Any
 def _GetOpenCLGenerator(generator_id) -> deepsmith_pb2.Generator:
   if generator_id == 0:
     return deepsmith_pb2.Generator(
-      name="clsmith",
-      opts={
-        "git_commit": "b637b31c31e0f90ef199ca492af05172400df050",
-        "git_remote": "https://github.com/ChrisCummins/CLSmith.git",
-      }
+        name="clsmith",
+        opts={
+          "git_commit": "b637b31c31e0f90ef199ca492af05172400df050",
+          "git_remote": "https://github.com/ChrisCummins/CLSmith.git",
+        }
     )
   elif generator_id == 1:
     return deepsmith_pb2.Generator(
-      name="clgen",
-      opts={
-        "git_commit": "9556e7112ba2bd6f79ee59eef74f0a2304efa007",
-        "git_remote": "https://github.com/ChrisCummins/clgen.git",
-        "version": "0.4.0.dev0",
-      }
+        name="clgen",
+        opts={
+          "git_commit": "9556e7112ba2bd6f79ee59eef74f0a2304efa007",
+          "git_remote": "https://github.com/ChrisCummins/clgen.git",
+          "version": "0.4.0.dev0",
+        }
     )
   elif generator_id == 2:
     return deepsmith_pb2.Generator(
-      name="randchar",
-      opts={
-        "url": "https://github.com/ChrisCummins/dsmith/blob"
-               "/fd986a36a23b2a398f33d5b5852d930b462401b1/dsmith/opencl/generators.py#L175",
-      }
+        name="randchar",
+        opts={
+          "url": "https://github.com/ChrisCummins/dsmith/blob"
+                 "/fd986a36a23b2a398f33d5b5852d930b462401b1/dsmith/opencl/generators.py#L175",
+        }
     )
   else:
     raise LookupError
@@ -86,31 +88,31 @@ def _GetOpenCLGenerator(generator_id) -> deepsmith_pb2.Generator:
 def _GetOpenCLHarness(harness_id, timeout) -> deepsmith_pb2.Harness:
   if harness_id == -1:
     return deepsmith_pb2.Harness(
-      name="clang",
-      opts={
-        "timeout_seconds": str(int(timeout)),
-        "url": "https://github.com/ChrisCummins/dsmith/blob"
-               "/fd986a36a23b2a398f33d5b5852d930b462401b1/dsmith/opencl/harnesses.py#L292",
-      }
+        name="clang",
+        opts={
+          "timeout_seconds": str(int(timeout)),
+          "url": "https://github.com/ChrisCummins/dsmith/blob"
+                 "/fd986a36a23b2a398f33d5b5852d930b462401b1/dsmith/opencl/harnesses.py#L292",
+        }
     )
   elif harness_id == 0:
     return deepsmith_pb2.Harness(
-      name="cl_launcher",
-      opts={
-        "timeout_seconds": str(int(timeout)),
-        "git_commit": "b637b31c31e0f90ef199ca492af05172400df050",
-        "git_remote": "https://github.com/ChrisCummins/CLSmith.git",
-      }
+        name="cl_launcher",
+        opts={
+          "timeout_seconds": str(int(timeout)),
+          "git_commit": "b637b31c31e0f90ef199ca492af05172400df050",
+          "git_remote": "https://github.com/ChrisCummins/CLSmith.git",
+        }
     )
   elif harness_id == 1:
     return deepsmith_pb2.Harness(
-      name="cldrive",
-      opts={
-        "timeout_seconds": str(int(timeout)),
-        "git_commit": "9556e7112ba2bd6f79ee59eef74f0a2304efa007",
-        "git_remote": "https://github.com/ChrisCummins/clgen.git",
-        "version": "0.4.0.dev0",
-      }
+        name="cldrive",
+        opts={
+          "timeout_seconds": str(int(timeout)),
+          "git_commit": "9556e7112ba2bd6f79ee59eef74f0a2304efa007",
+          "git_remote": "https://github.com/ChrisCummins/clgen.git",
+          "version": "0.4.0.dev0",
+        }
     )
   else:
     raise LookupError
@@ -221,7 +223,8 @@ WHERE programs.id = %s AND platforms.platform <> 'clang'
       _SetIf(testbed_opts, 'llvm_version', driver_version.strip())
     else:
       _SetIf(testbed_opts, 'driver_version', driver_version.strip())
-      _SetIf(testbed_opts, 'opencl_devtype', OPENCL_DEVTYPE_MAP.get(devtype, devtype))
+      _SetIf(testbed_opts, 'opencl_devtype',
+             OPENCL_DEVTYPE_MAP.get(devtype, devtype))
       _SetIf(testbed_opts, 'opencl_platform', platform_name.strip())
       _SetIf(testbed_opts, 'opencl_opt', 'enabled' if cl_opt else 'disabled')
     invariant_opts = {}
@@ -250,48 +253,48 @@ WHERE programs.id = %s AND platforms.platform <> 'clang'
     elif dsmith_program_compiler_warnings == 1:
       invariant_opts['kernel_throws_compiler_warning'] = 'true'
     testbed = deepsmith_pb2.Testbed(
-      toolchain='opencl',
-      name=testbed_name,
-      opts=testbed_opts,
+        toolchain='opencl',
+        name=testbed_name,
+        opts=testbed_opts,
     )
 
     testcase = deepsmith_pb2.Testcase(
-      toolchain="opencl",
-      generator=_GetOpenCLGenerator(generator_id),
-      harness=_GetOpenCLHarness(harness_id, harness_timeout),
-      inputs=inputs,
-      invariant_opts=invariant_opts,
-      profiling_events=[
-        deepsmith_pb2.ProfilingEvent(
-          client="cc1",
-          type="generation",
-          duration_ms=int(program_generation_time * 1000),
-          event_start_epoch_ms=labdate.MillisecondsTimestamp(
-            program_date),
-        ),
-      ]
+        toolchain="opencl",
+        generator=_GetOpenCLGenerator(generator_id),
+        harness=_GetOpenCLHarness(harness_id, harness_timeout),
+        inputs=inputs,
+        invariant_opts=invariant_opts,
+        profiling_events=[
+          deepsmith_pb2.ProfilingEvent(
+              client="cc1",
+              type="generation",
+              duration_ms=int(program_generation_time * 1000),
+              event_start_epoch_ms=labdate.MillisecondsTimestamp(
+                  program_date),
+          ),
+        ]
     )
     result = deepsmith_pb2.Result(
-      testcase=testcase,
-      testbed=testbed,
-      returncode=returncode,
-      outputs={
-        "stdout": stdout,
-        "stderr": stderr,
-      },
-      profiling_events=[
-        deepsmith_pb2.ProfilingEvent(
-          client={
-            'Ubuntu 16.04 64bit': 'cc1',
-            'CentOS Linux 7.1.1503 64bit': 'fuji',
-            'openSUSE  13.1 64bit': 'kobol',
-          }[host_os],
-          type="runtime",
-          duration_ms=int(runtime * 1000),
-          event_start_epoch_ms=labdate.MillisecondsTimestamp(
-            result_date),
-        ),
-      ],
+        testcase=testcase,
+        testbed=testbed,
+        returncode=returncode,
+        outputs={
+          "stdout": stdout,
+          "stderr": stderr,
+        },
+        profiling_events=[
+          deepsmith_pb2.ProfilingEvent(
+              client={
+                'Ubuntu 16.04 64bit': 'cc1',
+                'CentOS Linux 7.1.1503 64bit': 'fuji',
+                'openSUSE  13.1 64bit': 'kobol',
+              }[host_os],
+              type="runtime",
+              duration_ms=int(runtime * 1000),
+              event_start_epoch_ms=labdate.MillisecondsTimestamp(
+                  result_date),
+          ),
+        ],
     )
     # Write the testcase to file.
     outpath = proto_dir / 'testcases' / (str(testcase_id) + '.pbtxt')

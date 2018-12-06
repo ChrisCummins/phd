@@ -90,16 +90,16 @@ parallel programmability crisis.
 The key contributions of this thesis are:
 
 \begin{itemize}
-\item The development of \emph{OmniTune} --- a novel and extensible
+  \item The development of \emph{OmniTune} --- a novel and extensible
   framework for the collaborative autotuning of optimisation
   parameters across the life cycle of programs.
-\item The application of OmniTune for tuning of the SkelCL algorithmic
+  \item The application of OmniTune for tuning of the SkelCL algorithmic
   skeleton library. When tasked with predicting the workgroup sizes of
   stencil skeletons on both GPUs and CPUs, OmniTune achieves 94\% of
   the available performance, providing a median speedup of
   $1.33\times$ over values predicted by human experts, or $3.79\times$
   over the best possible statically chosen parameter values.
-\item The novel application of procedurally generated benchmark
+  \item The novel application of procedurally generated benchmark
   programs for training machine learning-enabled autotuners. This
   reduces the cost of training while increasing the size of the space
   which can be explored. The effectiveness of this approach is
@@ -107,12 +107,12 @@ The key contributions of this thesis are:
   synthetic benchmarks against 68 configurations of real world stencil
   kernels, achieving comparable autotuning performance with that of
   cross-validation.
-\item An empirical evaluation of the performance of workgroup size to
+  \item An empirical evaluation of the performance of workgroup size to
   parameterise high-level parallel patterns. I enumerate the
   optimisation space of workgroup sizes for SkelCL stencil kernels
   across 269813 test cases, demonstrating an average performance loss
   of up to $15.14\times$ if workgroup size is not correctly tuned.
-\item A comparison of multiple approaches for runtime autotuning:
+  \item A comparison of multiple approaches for runtime autotuning:
   using classifiers to predict optimal parameter values, using
   regressors to predict the absolute runtime of programs, and using
   regressors to predict the relative performance of different
@@ -123,57 +123,57 @@ The key contributions of this thesis are:
 \section{Motivation}
 
 \begin{figure}
-\centering
-\begin{subfigure}[h]{.49\textwidth}
-\centering
-\includegraphics[width=1.0\textwidth]{img/motivation_1}
-\vspace{-1.5em} % Shrink vertical padding
-\caption{}
-\label{fig:motivation-1}
-\end{subfigure}
-~%
-\begin{subfigure}[h]{.49\textwidth}
-\centering
-\includegraphics[width=1.0\textwidth]{img/motivation_2}
-\vspace{-1.5em} % Shrink vertical padding
-\caption{}
-\label{fig:motivation-2}
-\end{subfigure}
-\caption[Workgroup size optimisation space across devices]{%
+  \centering
+  \begin{subfigure}[h]{.49\textwidth}
+    \centering
+    \includegraphics[width=1.0\textwidth]{img/motivation_1}
+    \vspace{-1.5em} % Shrink vertical padding
+    \caption{}
+    \label{fig:motivation-1}
+  \end{subfigure}
+  ~%
+  \begin{subfigure}[h]{.49\textwidth}
+    \centering
+    \includegraphics[width=1.0\textwidth]{img/motivation_2}
+    \vspace{-1.5em} % Shrink vertical padding
+    \caption{}
+    \label{fig:motivation-2}
+  \end{subfigure}
+  \caption[Workgroup size optimisation space across devices]{%
   Workgroup size optimisation space of a stencil benchmark across
   devices: (\subref{fig:motivation-1}) Intel CPU,
   (\subref{fig:motivation-2}) NVIDIA GPU. This shows that stencil
   performance is dependent on properties of the underlying
   architecture, with different optimal workgroup sizes ($56 \times 20$
   vs.\ $64 \times 4$) for the two devices shown.%
-}
-\label{fig:motivation-arch}
+  }
+  \label{fig:motivation-arch}
 \end{figure}
 
 \begin{figure}
-\begin{subfigure}[h]{.49\textwidth}
-\centering
-\includegraphics[width=1.0\textwidth]{img/motivation_3}
-\vspace{-1.5em} % Shrink vertical padding
-\caption{}
-\label{fig:motivation-3}
-\end{subfigure}
-~%
-\begin{subfigure}[h]{.49\textwidth}
-\centering
-\includegraphics[width=1.0\textwidth]{img/motivation_4}
-\vspace{-1.5em} % Shrink vertical padding
-\caption{}
-\label{fig:motivation-4}
-\end{subfigure}
-\caption[Workgroup size optimisation space across stencils]{%
+  \begin{subfigure}[h]{.49\textwidth}
+    \centering
+    \includegraphics[width=1.0\textwidth]{img/motivation_3}
+    \vspace{-1.5em} % Shrink vertical padding
+    \caption{}
+    \label{fig:motivation-3}
+  \end{subfigure}
+  ~%
+  \begin{subfigure}[h]{.49\textwidth}
+    \centering
+    \includegraphics[width=1.0\textwidth]{img/motivation_4}
+    \vspace{-1.5em} % Shrink vertical padding
+    \caption{}
+    \label{fig:motivation-4}
+  \end{subfigure}
+  \caption[Workgroup size optimisation space across stencils]{%
   Workgroup size optimisation space of two stencils on the same
   device. Despite the underlying hardware being the same, the relative
   performance of workgroup sizes varies greatly between the two
   programs. The optimal workgroup sizes are $128\times2$ and
   $256\times4$ respectively.%
-}
-\label{fig:motivation-prog}
+  }
+  \label{fig:motivation-prog}
 \end{figure}
 
 In this section I present the case for autotuning the workgroup size
@@ -257,25 +257,25 @@ work from expert programmers to develop.
 The remainder of the document is structured as follows:
 %
 \begin{itemize}
-\item Chapter~\ref{chap:background} contains necessary background
+  \item Chapter~\ref{chap:background} contains necessary background
   material, an introduction to the SkelCL framework, and a description
   of the techniques used throughout the thesis;
-\item Chapter~\ref{chap:related} contains an exposition of relevant
+  \item Chapter~\ref{chap:related} contains an exposition of relevant
   literature in the field of autotuning and heterogeneous parallelism,
   contrasting the related research with my own;
-\item Chapter~\ref{chap:autotune} presents OmniTune, an extensible and
+  \item Chapter~\ref{chap:autotune} presents OmniTune, an extensible and
   distributed autotuner capable of predicting optimisation parameter
   values for unseen programs and devices at runtime;
-\item Chapter~\ref{chap:omnitune-skelcl} describes the application of
+  \item Chapter~\ref{chap:omnitune-skelcl} describes the application of
   OmniTune for selecting the workgroup size of SkelCL stencils;
-\item Chapter~\ref{chap:methodology} describes a comprehensive
+  \item Chapter~\ref{chap:methodology} describes a comprehensive
   exploration of the workgroup size optimisation space for stencil
   skeletons, including the methodology for obtaining performance data
   and experimental setup;
-\item Chapter~\ref{chap:evaluation} evaluates the effectiveness of
+  \item Chapter~\ref{chap:evaluation} evaluates the effectiveness of
   OmniTune with respect to its accuracy, performance compared to human
   experts, and a cost benefit analysis of autotuning;
-\item Chapter~\ref{chap:conclusions} contains concluding remarks, a
+  \item Chapter~\ref{chap:conclusions} contains concluding remarks, a
   critical evaluation of the presented work, and plans for future
   research.
 \end{itemize}

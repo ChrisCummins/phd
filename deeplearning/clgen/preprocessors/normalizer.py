@@ -6,9 +6,9 @@ import typing
 
 from absl import flags
 from absl import logging
+from phd.lib.labm8 import bazelutil
 
 from deeplearning.clgen import errors
-from phd.lib.labm8 import bazelutil
 
 
 FLAGS = flags.FLAGS
@@ -23,6 +23,7 @@ if bazelutil.DataPath('llvm_linux', must_exist=False).is_dir():
   libclang = bazelutil.DataPath('llvm_linux/lib/libclang.so')
   liblto = bazelutil.DataPath('llvm_linux/lib/libLTO.so')
   CLGEN_REWRITER_ENV['LD_PRELOAD'] = f'{libclang}:{liblto}'
+
 
 def NormalizeIdentifiers(text: str, suffix: str, cflags: typing.List[str],
                          timeout_seconds: int = 60) -> str:

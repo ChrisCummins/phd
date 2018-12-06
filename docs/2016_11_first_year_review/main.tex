@@ -5,47 +5,47 @@
 % Document starts
 \begin{document}
 
-\begin{titlepage}
-  \begin{center}
+  \begin{titlepage}
+    \begin{center}
     {\LARGE Deep Learning for Compilers \par}
-    \vskip 2em
-    First Year Review Document \\
-    {\tiny by} \\
-    Chris Cummins \\
-    \vskip 2em
-    Supervisors: \par
-    Hugh Leather, Pavlos Petoumenos, Richard Mayr \par
-    {\Large \makebox[3in]{\hrulefill} \par}
-    \vskip 1em
-    {\small
+      \vskip 2em
+      First Year Review Document \\
+      {\tiny by} \\
+      Chris Cummins \\
+      \vskip 2em
+      Supervisors: \par
+      Hugh Leather, Pavlos Petoumenos, Richard Mayr \par
+      {\Large \makebox[3in]{\hrulefill} \par}
+      \vskip 1em
+      {\small
       \today \\
       Institute for Computing Systems Architecture,\\ School of Informatics,\\ University of Edinburgh}
-  \end{center}
-  \par
-\end{titlepage}
+    \end{center}
+    \par
+  \end{titlepage}
 
-\begin{abstract}
-Continued advancements in machine learning have increasingly extended the state-of-the art in language modelling for natural language processing. Coupled with the increasing popularity of websites such as GitHub for hosting software projects, this raises the potential for large scale language modelling over open source code to build probabilistic models which capture both the semantics of a programming language and its common usage in real world applications. This document describes my work towards the development of systems for automatically generating programs in a given programming language. The aim of this work is improvements to predictive modelling for compiler optimisation and compiler testing. In my first year I have applied LSTMs to large corpuses of code mined from open source in order to generate executable OpenCL kernels. These generated programs have been shown to improve the performance of state-of-the-art predictive models; though the programs are typically short and limited to operating only on scalars and vectors of numerical values. This document describes the plans for future work to extend this initial proof-of-concept through the use of formal grammars to generate programs in arbitrary languages, capable of satisfying arbitrary properties of interest. This will enable the automatic generation of programs in any language for a which a large corpus of real world codes is available, with a range of applications including exploration of unknown parts of program feature spaces, and identifying bugs in compilers.
-\end{abstract}
+  \begin{abstract}
+    Continued advancements in machine learning have increasingly extended the state-of-the art in language modelling for natural language processing. Coupled with the increasing popularity of websites such as GitHub for hosting software projects, this raises the potential for large scale language modelling over open source code to build probabilistic models which capture both the semantics of a programming language and its common usage in real world applications. This document describes my work towards the development of systems for automatically generating programs in a given programming language. The aim of this work is improvements to predictive modelling for compiler optimisation and compiler testing. In my first year I have applied LSTMs to large corpuses of code mined from open source in order to generate executable OpenCL kernels. These generated programs have been shown to improve the performance of state-of-the-art predictive models; though the programs are typically short and limited to operating only on scalars and vectors of numerical values. This document describes the plans for future work to extend this initial proof-of-concept through the use of formal grammars to generate programs in arbitrary languages, capable of satisfying arbitrary properties of interest. This will enable the automatic generation of programs in any language for a which a large corpus of real world codes is available, with a range of applications including exploration of unknown parts of program feature spaces, and identifying bugs in compilers.
+  \end{abstract}
 
-\newpage
-\tableofcontents
-\newpage
+  \newpage
+  \tableofcontents
+  \newpage
 
-\input{sec/introduction}
-\input{sec/lit-review}
-\input{sec/progress}
-\input{sec/proposal}
-\input{sec/conclusion}
+  \input{sec/introduction}
+  \input{sec/lit-review}
+  \input{sec/progress}
+  \input{sec/proposal}
+  \input{sec/conclusion}
 
-\newpage
-\label{bibliography}
-\printbibliography
+  \newpage
+  \label{bibliography}
+  \printbibliography
 
-\begin{appendices}
-\input{app/adapt}
-\input{app/hlpgpu}
-\input{app/cgo}
-\end{appendices}
+  \begin{appendices}
+    \input{app/adapt}
+    \input{app/hlpgpu}
+    \input{app/cgo}
+  \end{appendices}
 
 \end{document}

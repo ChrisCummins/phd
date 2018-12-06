@@ -1,48 +1,73 @@
 ---
 ---
+
 @import 'bootstrap';
 
 html {
-    min-width: 320px;
+  min-width: 320px;
 }
 
 body {
-    padding-top: $navbar-height;
+  padding-top: $navbar-height;
 }
 
 .swatch {
-    display: inline-block;
-    min-width: 40px;
-    min-height: 40px;
-    border-radius: 12px;
+  display: inline-block;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 12px;
 
-    &.red { background-color: $red; }
-    &.vivid.red { background-color: $vivid-red; }
-    &.green { background-color: $green; }
-    &.vivid.green { background-color: $vivid-green; }
-    &.orange { background-color: $orange; }
-    &.vivid.orange { background-color: $vivid-orange; }
-    &.yellow { background-color: $yellow; }
-    &.vivid.yellow { background-color: $vivid-yellow; }
-    &.blue { background-color: $blue; }
-    &.vivid.blue { background-color: $vivid-blue; }
-    &.cyan { background-color: $cyan; }
-    &.vivid.cyan { background-color: $vivid-cyan; }
+  &.red {
+    background-color: $red;
+  }
+  &.vivid.red {
+    background-color: $vivid-red;
+  }
+  &.green {
+    background-color: $green;
+  }
+  &.vivid.green {
+    background-color: $vivid-green;
+  }
+  &.orange {
+    background-color: $orange;
+  }
+  &.vivid.orange {
+    background-color: $vivid-orange;
+  }
+  &.yellow {
+    background-color: $yellow;
+  }
+  &.vivid.yellow {
+    background-color: $vivid-yellow;
+  }
+  &.blue {
+    background-color: $blue;
+  }
+  &.vivid.blue {
+    background-color: $vivid-blue;
+  }
+  &.cyan {
+    background-color: $cyan;
+  }
+  &.vivid.cyan {
+    background-color: $vivid-cyan;
+  }
 }
 
 #app {
-    @include make-row();
-    min-height: 100%;
+  @include make-row();
+  min-height: 100%;
 
-    > #main-panel {
-        @include make-sm-column(8);
+  > #main-panel {
+    @include make-sm-column(8);
 
-        background-color: $main-panel-background-color;
-    }
+    background-color: $main-panel-background-color;
+  }
 
-    > #details-panel {
-        @include make-sm-column(4);
-    }
+  > #details-panel {
+    @include make-sm-column(4);
+  }
 }
 
 .tasks {
@@ -53,7 +78,7 @@ body {
     list-style-type: none;
     padding-left: 1.5em;
   }
-  &> ul {
+  & > ul {
     padding-left: 0;
   }
 
@@ -66,9 +91,9 @@ body {
     padding: .4em 0;
 
     .see-more {
-        color: #333333;
-        font-size: 24px;
-        padding-right: .4em;
+      color: #333333;
+      font-size: 24px;
+      padding-right: .4em;
     }
 
     .status {
@@ -87,7 +112,7 @@ body {
     }
 
     span {
-        padding-left: .5em;
+      padding-left: .5em;
     }
   }
 }

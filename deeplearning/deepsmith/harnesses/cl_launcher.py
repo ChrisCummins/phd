@@ -1,6 +1,5 @@
 """The cl_launcher harness for CLSmith."""
 import copy
-import signal
 import socket
 import time
 import typing

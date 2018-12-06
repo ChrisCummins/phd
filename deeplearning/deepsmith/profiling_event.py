@@ -1,5 +1,6 @@
 """This file implements profiling events."""
 import datetime
+
 import sqlalchemy as sql
 from phd.lib.labm8 import labdate
 from phd.lib.labm8 import sqlutil

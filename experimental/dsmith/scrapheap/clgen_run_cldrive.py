@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 import re
+import subprocess
+from argparse import ArgumentParser
 from collections import deque, namedtuple
 from tempfile import NamedTemporaryFile
 from time import strftime, time
+from typing import NewType
 
 import cldrive
 import progressbar
-import subprocess
-from argparse import ArgumentParser
 from dsmith import db
 from dsmith.db import *
 from dsmith.lib import *
-from typing import NewType
-
 from phd.lib.labm8 import crypto, fs
+
 
 status_t = NewType('status_t', int)
 return_t = namedtuple('return_t', ['runtime', 'status', 'stdout', 'stderr'])
@@ -32,21 +32,27 @@ def verify_params(platform: str, device: str, optimizations: bool,
   actual_local_size = None
   for line in stderr.split('\n'):
     if line.startswith("[cldrive] Platform: "):
-      actual_platform_name = re.sub(r"^\[cldrive\] Platform: ", "", line).rstrip()
+      actual_platform_name = re.sub(r"^\[cldrive\] Platform: ", "",
+                                    line).rstrip()
     elif line.startswith("[cldrive] Device: "):
       actual_device_name = re.sub(r"^\[cldrive\] Device: ", "", line).rstrip()
     elif line.startswith("[cldrive] OpenCL optimizations: "):
-      actual_optimizations = re.sub(r"^\[cldrive\] OpenCL optimizations: ", "", line).rstrip()
+      actual_optimizations = re.sub(r"^\[cldrive\] OpenCL optimizations: ", "",
+                                    line).rstrip()
 
     # global size
-    match = re.match('^\[cldrive\] 3-D global size \d+ = \[(\d+), (\d+), (\d+)\]', line)
+    match = re.match(
+      '^\[cldrive\] 3-D global size \d+ = \[(\d+), (\d+), (\d+)\]', line)
     if match:
-      actual_global_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
+      actual_global_size = (
+      int(match.group(1)), int(match.group(2)), int(match.group(3)))
 
     # local size
-    match = re.match('^\[cldrive\] 3-D local size \d+ = \[(\d+), (\d+), (\d+)\]', line)
+    match = re.match(
+      '^\[cldrive\] 3-D local size \d+ = \[(\d+), (\d+), (\d+)\]', line)
     if match:
-      actual_local_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
+      actual_local_size = (
+      int(match.group(1)), int(match.group(2)), int(match.group(3)))
 
     # check if we've collected everything:
     if (actual_platform and actual_device and actual_optimizations and
@@ -94,7 +100,8 @@ def drive_testcase(s: db.session_t, testcase: CLgenTestCase,
     fs.rm(path)
 
 
-def get_num_to_run(session: db.session_t, testbed: Testbed, optimizations: int = None):
+def get_num_to_run(session: db.session_t, testbed: Testbed,
+                   optimizations: int = None):
   num_ran = session.query(sql.sql.func.count(CLgenResult.id)) \
     .filter(CLgenResult.testbed_id == testbed.id)
   total = session.query(sql.sql.func.count(CLgenTestCase.id))
@@ -120,7 +127,8 @@ if __name__ == "__main__":
   parser.add_argument(
       "--opt", action="store_true", help="Only test with optimizations on")
   parser.add_argument(
-      "--no-opt", action="store_true", help="Only test with optimizations disabled")
+      "--no-opt", action="store_true",
+      help="Only test with optimizations disabled")
   args = parser.parse_args()
 
   env = cldrive.make_env(platform=args.platform, device=args.device)
@@ -170,9 +178,9 @@ if __name__ == "__main__":
         .filter(~CLgenTestCase.id.in_(done)) \
         .order_by(CLgenTestCase.id) \
  \
-      if optimizations is not None:
-        todo = todo.join(cldriveParams) \
-          .filter(cldriveParams.optimizations == optimizations)
+          if optimizations is not None:
+            todo = todo.join(cldriveParams) \
+              .filter(cldriveParams.optimizations == optimizations)
 
       todo = todo.limit(BATCH_SIZE)
       for testcase in todo:
@@ -200,7 +208,8 @@ if __name__ == "__main__":
           if stderr != '<-- UTF-ERROR -->':
             verify_params(platform=args.platform, device=args.device,
                           optimizations=testcase.params.optimizations,
-                          global_size=testcase.params.gsize, local_size=testcase.params.lsize,
+                          global_size=testcase.params.gsize,
+                          local_size=testcase.params.lsize,
                           stderr=stderr)
 
           # create new result

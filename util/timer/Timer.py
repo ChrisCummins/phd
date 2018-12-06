@@ -1,9 +1,10 @@
+import json
 from os import path
 
-import json
 import requests
 import rumps
 from pync import Notifier
+
 
 # Read global configuration file
 with open(path.expanduser("~/.config/toggl.json")) as infile:

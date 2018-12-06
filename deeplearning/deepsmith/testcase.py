@@ -5,7 +5,9 @@ import hashlib
 import pathlib
 import typing
 
+import phd.lib.labm8.sqlutil
 import sqlalchemy as sql
+from phd.lib.labm8 import labdate, pbutil
 from sqlalchemy import orm
 from sqlalchemy.dialects import mysql
 
@@ -13,10 +15,8 @@ import deeplearning.deepsmith.generator
 import deeplearning.deepsmith.harness
 import deeplearning.deepsmith.profiling_event
 import deeplearning.deepsmith.toolchain
-import phd.lib.labm8.sqlutil
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import deepsmith_pb2
-from phd.lib.labm8 import labdate, pbutil
 
 
 # The index types for tables defined in this file.
@@ -161,7 +161,7 @@ class Testcase(db.Table):
     inputset_id = md5.digest()
     for input in inputs:
       phd.lib.labm8.sqlutil.GetOrAdd(session, TestcaseInputSet, id=inputset_id,
-                                 input=input)
+                                     input=input)
 
     # Build the list of invariant options, and md5sum the key value strings.
     invariant_opts = []
@@ -315,10 +315,12 @@ class TestcaseInput(db.Table):
       A TestcaseInput instance.
     """
     return phd.lib.labm8.sqlutil.GetOrAdd(session, TestcaseInput,
-                                      name=TestcaseInputName.GetOrAdd(session,
-                                                                      string=name, ),
-                                      value=TestcaseInputValue.GetOrAdd(session,
-                                                                        string=value, ), )
+                                          name=TestcaseInputName.GetOrAdd(
+                                              session,
+                                              string=name, ),
+                                          value=TestcaseInputValue.GetOrAdd(
+                                              session,
+                                              string=value, ), )
 
 
 class TestcaseInputName(db.StringTable):
@@ -369,9 +371,9 @@ class TestcaseInputValue(db.Table):
     md5.update(string.encode('utf-8'))
 
     return phd.lib.labm8.sqlutil.GetOrAdd(session, cls, md5=md5.digest(),
-                                      charcount=len(string),
-                                      linecount=string.count('\n'),
-                                      string=string, )
+                                          charcount=len(string),
+                                          linecount=string.count('\n'),
+                                          string=string, )
 
   def __repr__(self):
     return self.string[:50] or ''
@@ -453,10 +455,10 @@ class TestcaseInvariantOpt(db.Table):
       A TestcaseInvariantOpt instance.
     """
     return phd.lib.labm8.sqlutil.GetOrAdd(session, cls,
-                                      name=TestcaseInvariantOptName.GetOrAdd(
-                                          session, string=name, ),
-                                      value=TestcaseInvariantOptValue.GetOrAdd(
-                                          session, string=value, ), )
+                                          name=TestcaseInvariantOptName.GetOrAdd(
+                                              session, string=name, ),
+                                          value=TestcaseInvariantOptValue.GetOrAdd(
+                                              session, string=value, ), )
 
 
 class TestcaseInvariantOptName(db.StringTable):

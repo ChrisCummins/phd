@@ -1,7 +1,8 @@
 """Unit tests for //lib/labm8:cache."""
-import pytest
 import sys
 import tempfile
+
+import pytest
 from absl import app
 from phd.lib.labm8 import cache
 from phd.lib.labm8 import fs

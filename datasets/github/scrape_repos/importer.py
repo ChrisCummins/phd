@@ -1,14 +1,14 @@
 """Import files into a ContentFiles database."""
+import hashlib
 import multiprocessing
 import os
-
-import hashlib
-import humanize
 import pathlib
-import progressbar
 import random
 import subprocess
 import typing
+
+import humanize
+import progressbar
 from absl import app
 from absl import flags
 from absl import logging

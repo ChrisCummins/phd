@@ -3,12 +3,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import sys
-import time
-
 import argparse
 import logging
 import os
+import sys
+import time
 
 from experimental.system.dotfiles.implementation import context
 from experimental.system.dotfiles.implementation import host
@@ -93,7 +92,8 @@ def main(argv):
       task_name = type(t).__name__
 
       j = i + 1
-      msg = "[{j:2d}/{ntasks:2d}] {fmt_bld}{task_name}{fmt_end} ...".format(**vars())
+      msg = "[{j:2d}/{ntasks:2d}] {fmt_bld}{task_name}{fmt_end} ...".format(
+          **vars())
       logging.info(msg)
 
       start_time = time.time()
@@ -108,12 +108,16 @@ def main(argv):
           file = os.path.abspath(os.path.expanduser(file))
           logging.debug("assert exists: '{file}'".format(**vars()))
           if not (os.path.exists(file) or
-                  host.CheckShellCommand("sudo test -f '{file}'".format(**vars())) or
-                  host.CheckShellCommand("sudo test -d '{file}'".format(**vars()))):
-            raise task.InvalidTaskError('genfile "{file}" not created'.format(**vars()))
+                  host.CheckShellCommand(
+                      "sudo test -f '{file}'".format(**vars())) or
+                  host.CheckShellCommand(
+                      "sudo test -d '{file}'".format(**vars()))):
+            raise task.InvalidTaskError(
+                'genfile "{file}" not created'.format(**vars()))
       runtime = time.time() - start_time
 
-      logging.debug("{task_name} task completed in {runtime:.3f}s".format(**vars()))
+      logging.debug(
+          "{task_name} task completed in {runtime:.3f}s".format(**vars()))
       sys.stdout.flush()
   except KeyboardInterrupt:
     logging.info("\ninterrupt")

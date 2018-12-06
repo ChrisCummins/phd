@@ -1,14 +1,14 @@
 """Test that //deeplearning/clgen/tests/data/tiny/config.pbtxt is valid."""
+import sys
 import tempfile
 
 import pytest
-import sys
 from absl import app
+from phd.lib.labm8 import bazelutil
+from phd.lib.labm8 import pbutil
 
 from deeplearning.clgen import clgen
 from deeplearning.clgen.proto import clgen_pb2
-from phd.lib.labm8 import bazelutil
-from phd.lib.labm8 import pbutil
 
 
 def test_config_is_valid():

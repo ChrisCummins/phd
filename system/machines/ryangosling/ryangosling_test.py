@@ -3,10 +3,10 @@
 These tests will NOT pass if run on one of my personal machines.
 """
 import os
-
-import pytest
 import sys
 import typing
+
+import pytest
 from absl import app
 from absl import flags
 from phd.lib.labm8 import bazelutil

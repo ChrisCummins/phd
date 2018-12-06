@@ -1,12 +1,13 @@
 #!/usr/bin/env python
+from argparse import ArgumentParser
+
 import dsmith
 import sqlalchemy as sql
-from argparse import ArgumentParser
 from dsmith import db
 from dsmith.db import *
+from phd.lib.labm8 import fs
 from progressbar import ProgressBar
 
-from phd.lib.labm8 import fs
 
 __description__ = """ Export a CLSmith program codes for assembling CLgen
 training corpuses. This requires inlining CLSmith headers.

@@ -1,10 +1,10 @@
-import math
-from collections import Counter, namedtuple
-
 import json
 import logging
+import math
+from collections import Counter, namedtuple
 from pathlib import Path
 from typing import List, NewType
+
 
 testcase_t = NewType('testcase_t', object)
 output_t = NewType('output_t', object)
@@ -93,7 +93,8 @@ def autotest(num_batches: int, generator: Generator,
   outbox = []
 
   for i in range(1, num_batches + 1):
-    logging.info(f"generating {batch_size} testcases, batch {i} of {num_batches}")
+    logging.info(
+        f"generating {batch_size} testcases, batch {i} of {num_batches}")
     testcases = generator.next_batch(batch_size)
 
     assert len(testcases)

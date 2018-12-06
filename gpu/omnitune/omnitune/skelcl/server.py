@@ -10,11 +10,12 @@ import training
 from db import Database
 from migrate import migrate
 from omnitune import util
-
-from lib import labm8 as lab
 from phd.lib.labm8 import cache
 from phd.lib.labm8 import fs
 from phd.lib.labm8 import io
+
+from lib import labm8 as lab
+
 
 SESSION_NAME = "org.omnitune"
 INTERFACE_NAME = "org.omnitune.skelcl"

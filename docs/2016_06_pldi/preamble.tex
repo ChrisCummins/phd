@@ -54,20 +54,20 @@
 % Bibliography %
 %%%%%%%%%%%%%%%%
 \usepackage[%
-    backend=biber,
-    style=ieee,
-    % style=numeric-comp,
-    % style=numeric-comp,  % numerical-compressed
-    sorting=none,        % nty,nyt,nyvt,anyt,anyvt,ynt,ydnt,none
-    sortcites=true,      % sort \cite{b a d c}: true,false
-    block=none,          % space between blocks: none,space,par,nbpar,ragged
-    indexing=false,      % indexing options: true,false,cite,bib
-    citereset=none,      % don't reset cites
-    isbn=false,          % print ISBN?
-    url=true,            % print URL?
-    doi=false,           % print DOI?
-    natbib=true,         % natbib compatability
-   ]{biblatex}
+backend=biber,
+style=ieee,
+% style=numeric-comp,
+% style=numeric-comp,  % numerical-compressed
+sorting=none,        % nty,nyt,nyvt,anyt,anyvt,ynt,ydnt,none
+sortcites=true,      % sort \cite{b a d c}: true,false
+block=none,          % space between blocks: none,space,par,nbpar,ragged
+indexing=false,      % indexing options: true,false,cite,bib
+citereset=none,      % don't reset cites
+isbn=false,          % print ISBN?
+url=true,            % print URL?
+doi=false,           % print DOI?
+natbib=true,         % natbib compatability
+]{biblatex}
 
 % Filter annoying and unavoidable biblatex warning:
 \WarningFilter{biblatex}{Patching footnotes failed}
@@ -85,8 +85,8 @@
 \newcommand{\BibResourceLocal}{refs.bib}
 
 \IfFileExists{\BibResourceGlobal}
-  {\newcommand{\BibResource}{\BibResourceGlobal}}
-  {\newcommand{\BibResource}{\BibResourceLocal}}
+{\newcommand{\BibResource}{\BibResourceGlobal}}
+{\newcommand{\BibResource}{\BibResourceLocal}}
 
 \addbibresource{\BibResource}
 
@@ -170,14 +170,14 @@
 \usepackage{courier}
 
 \lstset{frame=bt,                    % Add top and bottom frame lines
-        breaklines=true,             % Force line wrapping
-        captionpos=b,                % Place caption below listing
-        numbers=left,                % Add left-side line numbers
-        basicstyle=\scriptsize\ttfamily, % Set font size and type
-        showstringspaces=false,      % Don't show visible whitespace
-        numberstyle=\tiny,
-        upquote=true,                % Use upright quotes, not curly
-        commentstyle=\bfseries}      % Embolden comments
+breaklines=true,             % Force line wrapping
+captionpos=b,                % Place caption below listing
+numbers=left,                % Add left-side line numbers
+basicstyle=\scriptsize\ttfamily, % Set font size and type
+showstringspaces=false,      % Don't show visible whitespace
+numberstyle=\tiny,
+upquote=true,                % Use upright quotes, not curly
+commentstyle=\bfseries}      % Embolden comments
 
 % Use (*@ @*) to escape LaTeX commands within listings.
 \lstset{escapeinside={(*@}{@*)}}
@@ -218,9 +218,9 @@
 % vertical top and bottom padding. See:
 %     http://www.latex-community.org/forum/viewtopic.php?f=5&t=1890
 \newenvironment{myalignat}[1]{%
-  \setlength{\abovedisplayskip}{-.7\baselineskip}%
-  \setlength{\abovedisplayshortskip}{\abovedisplayskip}%
-  \start@align\z@\st@rredtrue#1
+\setlength{\abovedisplayskip}{-.7\baselineskip}%
+\setlength{\abovedisplayshortskip}{\abovedisplayskip}%
+\start@align\z@\st@rredtrue#1
 }%
 {\endalign}
 
@@ -256,30 +256,30 @@
 
 % Fix milestone aspect ratio by defining a custom element.
 \newganttchartelement*{mymilestone}{
-  mymilestone/.style={
-    shape=diamond,
-    inner sep=2pt,
-    draw=black,
-    top color=black,
-    bottom color=black,
-  }
+mymilestone/.style={
+shape=diamond,
+inner sep=2pt,
+draw=black,
+top color=black,
+bottom color=black,
+}
 }
 
 % Tikz flowchart configuration.
 \usetikzlibrary{shapes,arrows,shadows,fit,backgrounds}
 \tikzstyle{decision} = [diamond,
-                        draw,
-                        text width=4.5em,
-                        text badly centered,
-                        node distance=3cm,
-                        inner sep=0pt]
+draw,
+text width=4.5em,
+text badly centered,
+node distance=3cm,
+inner sep=0pt]
 \tikzstyle{block}    = [rectangle,
-                        draw,
-                        text width=5em,
-                        text centered,
-                        node distance=3cm,
-                        minimum height=4em,
-                        inner sep=.2cm]
+draw,
+text width=5em,
+text centered,
+node distance=3cm,
+minimum height=4em,
+inner sep=.2cm]
 \tikzstyle{line}     = [draw, -latex']
 
 % Add dirtree picture style, see:
@@ -290,28 +290,28 @@
 \newcount\dirtree@plvl
 \newcount\dirtree@clvl
 \def\dirtree@growth{%
-  \ifnum\tikznumberofcurrentchild=1\relax
-    \global\advance\dirtree@plvl by 1
-    \expandafter\xdef\csname dirtree@p@\the\dirtree@plvl\endcsname{\the\dirtree@lvl}
-  \fi
-  \global\advance\dirtree@lvl by 1\relax
-  \dirtree@clvl=\dirtree@lvl
-  \advance\dirtree@clvl by -\csname dirtree@p@\the\dirtree@plvl\endcsname
-  \pgf@xa=0.33cm\relax
-  \pgf@ya=-\baselineskip\relax
-  \pgf@ya=\dirtree@clvl\pgf@ya
-  \pgftransformshift{\pgfqpoint{\the\pgf@xa}{\the\pgf@ya}}%
-  \ifnum\tikznumberofcurrentchild=\tikznumberofchildren
-    \global\advance\dirtree@plvl by -1
-  \fi
+\ifnum\tikznumberofcurrentchild=1\relax
+\global\advance\dirtree@plvl by 1
+\expandafter\xdef\csname dirtree@p@\the\dirtree@plvl\endcsname{\the\dirtree@lvl}
+\fi
+\global\advance\dirtree@lvl by 1\relax
+\dirtree@clvl=\dirtree@lvl
+\advance\dirtree@clvl by -\csname dirtree@p@\the\dirtree@plvl\endcsname
+\pgf@xa=0.33cm\relax
+\pgf@ya=-\baselineskip\relax
+\pgf@ya=\dirtree@clvl\pgf@ya
+\pgftransformshift{\pgfqpoint{\the\pgf@xa}{\the\pgf@ya}}%
+\ifnum\tikznumberofcurrentchild=\tikznumberofchildren
+\global\advance\dirtree@plvl by -1
+\fi
 }
 \tikzset{
-  dirtree/.style={
-    growth function=\dirtree@growth,
-    every node/.style={anchor=north},
-    every child node/.style={anchor=west},
-    edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}
-  }
+dirtree/.style={
+growth function=\dirtree@growth,
+every node/.style={anchor=north},
+every child node/.style={anchor=west},
+edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}
+}
 }
 
 % UML sequence diagram macros, see:
@@ -402,11 +402,11 @@
 
 % Define a command to create centred page titles.
 \newcommand{\centredtitle}[1]{
-  \begin{center}
-    \large
-    \vspace{0.9cm}
-    \textbf{#1}
-  \end{center}}
+\begin{center}
+  \large
+  \vspace{0.9cm}
+  \textbf{#1}
+\end{center}}
 
 % Support hyperlinks using the \hyperref, \url and \href
 % macros. Usage:

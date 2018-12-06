@@ -1,10 +1,11 @@
 """Generate data for OpenCL arguments."""
 import functools
-import numpy as np
 from enum import Enum
 
-from gpu.cldrive import args as _args
+import numpy as np
 from phd.lib.labm8 import err
+
+from gpu.cldrive import args as _args
 
 
 class Generator(Enum):

@@ -201,8 +201,8 @@ class RegressionDataset(Dataset):
     # Create nominal->binary type attribute filter, ignoring the
     # first attribute (scenario ID), since we're not classifying with it.
     n2b = WekaFilter(
-      classname="weka.filters.unsupervised.attribute.NominalToBinary",
-      options=["-R", "2-last"])
+        classname="weka.filters.unsupervised.attribute.NominalToBinary",
+        options=["-R", "2-last"])
     n2b.inputformat(filtered)
 
     dataset.instances = n2b.filter(filtered)

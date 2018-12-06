@@ -3,10 +3,6 @@
 
 The format for renamed files is: "<show> S<season>E<episode>.<ext>" format.
 """
-import os
-import re
-import shutil
-import sys
 from argparse import ArgumentParser
 from pathlib import Path
 

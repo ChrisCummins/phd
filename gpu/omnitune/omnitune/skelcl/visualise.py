@@ -10,12 +10,12 @@ import numpy as np
 import pandas
 import seaborn as sns
 from matplotlib.ticker import FormatStrFormatter
-
-from lib import labm8 as lab
 from phd.lib.labm8 import math as labmath
 from phd.lib.labm8 import ml
 from phd.lib.labm8 import text
 from phd.lib.labm8 import viz
+
+from lib import labm8 as lab
 from . import space as _space
 
 
@@ -565,7 +565,8 @@ def classification(db, output=None, job="xval", **kwargs):
   # Add baseline results.
   baseline = ("4x4")
   correct = db.execute("SELECT Count(*) * 1.0 / 3 FROM classification_results "
-                       "WHERE job=? AND actual=?", (job, baseline)).fetchone()[0]
+                       "WHERE job=? AND actual=?", (job, baseline)).fetchone()[
+    0]
   illegal = 0
   refused = 0
   time = 0
@@ -630,7 +631,8 @@ def classification(db, output=None, job="xval", **kwargs):
       for err_fn in err_fns
     ]
 
-    results.append([basename, correct, illegal, refused, time, terr] + speedups + perfs)
+    results.append(
+        [basename, correct, illegal, refused, time, terr] + speedups + perfs)
 
   # Zip into lists.
   labels, correct, illegal, refused, time, terr = zip(*[

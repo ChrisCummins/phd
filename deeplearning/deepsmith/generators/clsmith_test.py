@@ -1,8 +1,9 @@
 """Unit tests for //deeplearning/deepsmith/generators/clsmith.py."""
 import os
-import pytest
 import sys
 import tempfile
+
+import pytest
 from absl import app
 from absl import flags
 

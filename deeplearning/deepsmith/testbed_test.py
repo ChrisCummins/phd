@@ -19,12 +19,12 @@ def test_Testbed_ToProto():
         deeplearning.deepsmith.testbed.TestbedOpt(
             name=deeplearning.deepsmith.testbed.TestbedOptName(string='arch'),
             value=deeplearning.deepsmith.testbed.TestbedOptValue(
-              string='x86_64'),
+                string='x86_64'),
         ),
         deeplearning.deepsmith.testbed.TestbedOpt(
             name=deeplearning.deepsmith.testbed.TestbedOptName(string='build'),
             value=deeplearning.deepsmith.testbed.TestbedOptValue(
-              string='debug+assert'),
+                string='debug+assert'),
         ),
       ],
   )
@@ -49,12 +49,12 @@ def test_Testbed_GetOrAdd(session):
       session, proto
   )
   assert session.query(
-    deeplearning.deepsmith.testbed.TestbedOptSet).count() == 2
+      deeplearning.deepsmith.testbed.TestbedOptSet).count() == 2
   assert session.query(deeplearning.deepsmith.testbed.TestbedOpt).count() == 2
   assert session.query(
-    deeplearning.deepsmith.testbed.TestbedOptName).count() == 2
+      deeplearning.deepsmith.testbed.TestbedOptName).count() == 2
   assert session.query(
-    deeplearning.deepsmith.testbed.TestbedOptValue).count() == 2
+      deeplearning.deepsmith.testbed.TestbedOptValue).count() == 2
 
   assert testbed.toolchain.string == 'cpp'
   assert testbed.name == 'clang'
@@ -68,12 +68,12 @@ def test_Testbed_GetOrAdd_duplicates(session):
   assert session.query(deeplearning.deepsmith.testbed.Testbed).count() == 0
   assert session.query(deeplearning.deepsmith.testbed.TestbedOpt).count() == 0
   assert session.query(
-    deeplearning.deepsmith.testbed.TestbedOptSet).count() == 0
+      deeplearning.deepsmith.testbed.TestbedOptSet).count() == 0
   assert session.query(deeplearning.deepsmith.toolchain.Toolchain).count() == 0
   assert session.query(
-    deeplearning.deepsmith.testbed.TestbedOptName).count() == 0
+      deeplearning.deepsmith.testbed.TestbedOptName).count() == 0
   assert session.query(
-    deeplearning.deepsmith.testbed.TestbedOptValue).count() == 0
+      deeplearning.deepsmith.testbed.TestbedOptValue).count() == 0
   proto_a1 = deepsmith_pb2.Testbed(
       toolchain='cpp',
       name='clang',
@@ -103,35 +103,35 @@ def test_Testbed_GetOrAdd_duplicates(session):
   assert session.query(deeplearning.deepsmith.testbed.Testbed).count() == 1
   assert session.query(deeplearning.deepsmith.testbed.TestbedOpt).count() == 2
   assert session.query(
-    deeplearning.deepsmith.testbed.TestbedOptSet).count() == 2
+      deeplearning.deepsmith.testbed.TestbedOptSet).count() == 2
   assert session.query(deeplearning.deepsmith.toolchain.Toolchain).count() == 1
   assert session.query(
-    deeplearning.deepsmith.testbed.TestbedOptName).count() == 2
+      deeplearning.deepsmith.testbed.TestbedOptName).count() == 2
   assert session.query(
-    deeplearning.deepsmith.testbed.TestbedOptValue).count() == 2
+      deeplearning.deepsmith.testbed.TestbedOptValue).count() == 2
   deeplearning.deepsmith.testbed.Testbed.GetOrAdd(session, proto_a2)
   # proto_a1 == proto_a2, so the counts should remain unchanged.
   assert session.query(deeplearning.deepsmith.testbed.Testbed).count() == 1
   assert session.query(deeplearning.deepsmith.testbed.TestbedOpt).count() == 2
   assert session.query(
-    deeplearning.deepsmith.testbed.TestbedOptSet).count() == 2
+      deeplearning.deepsmith.testbed.TestbedOptSet).count() == 2
   assert session.query(deeplearning.deepsmith.toolchain.Toolchain).count() == 1
   assert session.query(
-    deeplearning.deepsmith.testbed.TestbedOptName).count() == 2
+      deeplearning.deepsmith.testbed.TestbedOptName).count() == 2
   assert session.query(
-    deeplearning.deepsmith.testbed.TestbedOptValue).count() == 2
+      deeplearning.deepsmith.testbed.TestbedOptValue).count() == 2
   deeplearning.deepsmith.testbed.Testbed.GetOrAdd(session, proto_b)
   # proto_b adds a new testbed, new opt (note the duplicate arch), and
   # two new entries in the TestbedOptSet table.
   assert session.query(deeplearning.deepsmith.testbed.Testbed).count() == 2
   assert session.query(deeplearning.deepsmith.testbed.TestbedOpt).count() == 3
   assert session.query(
-    deeplearning.deepsmith.testbed.TestbedOptSet).count() == 4
+      deeplearning.deepsmith.testbed.TestbedOptSet).count() == 4
   assert session.query(deeplearning.deepsmith.toolchain.Toolchain).count() == 1
   assert session.query(
-    deeplearning.deepsmith.testbed.TestbedOptName).count() == 2
+      deeplearning.deepsmith.testbed.TestbedOptName).count() == 2
   assert session.query(
-    deeplearning.deepsmith.testbed.TestbedOptValue).count() == 3
+      deeplearning.deepsmith.testbed.TestbedOptValue).count() == 3
 
 
 def test_Testbed_GetOrAdd_ToProto_equivalence(session):
@@ -168,11 +168,11 @@ def test_Testbed_GetOrAdd_no_opts(session):
   assert session.query(deeplearning.deepsmith.testbed.Testbed).count() == 1
   assert session.query(deeplearning.deepsmith.testbed.TestbedOpt).count() == 0
   assert session.query(
-    deeplearning.deepsmith.testbed.TestbedOptSet).count() == 0
+      deeplearning.deepsmith.testbed.TestbedOptSet).count() == 0
   assert session.query(
-    deeplearning.deepsmith.testbed.TestbedOptName).count() == 0
+      deeplearning.deepsmith.testbed.TestbedOptName).count() == 0
   assert session.query(
-    deeplearning.deepsmith.testbed.TestbedOptValue).count() == 0
+      deeplearning.deepsmith.testbed.TestbedOptValue).count() == 0
 
 
 def test_Testbed_GetOrAdd_only_different_optset(session):
@@ -206,11 +206,11 @@ def test_Testbed_GetOrAdd_only_different_optset(session):
   assert session.query(deeplearning.deepsmith.testbed.Testbed).count() == 3
   assert session.query(deeplearning.deepsmith.testbed.TestbedOpt).count() == 4
   assert session.query(
-    deeplearning.deepsmith.testbed.TestbedOptSet).count() == 4
+      deeplearning.deepsmith.testbed.TestbedOptSet).count() == 4
   assert session.query(
-    deeplearning.deepsmith.testbed.TestbedOptName).count() == 4
+      deeplearning.deepsmith.testbed.TestbedOptName).count() == 4
   assert session.query(
-    deeplearning.deepsmith.testbed.TestbedOptValue).count() == 4
+      deeplearning.deepsmith.testbed.TestbedOptValue).count() == 4
   assert len(testbed_a.optset) == 3
   assert len(testbed_b.optset) == 1
   assert len(testbed_c.optset) == 0
@@ -231,20 +231,20 @@ def test_Testbed_GetOrAdd_rollback(session):
   assert session.query(deeplearning.deepsmith.testbed.Testbed).count() == 1
   assert session.query(deeplearning.deepsmith.testbed.TestbedOpt).count() == 2
   assert session.query(
-    deeplearning.deepsmith.testbed.TestbedOptSet).count() == 2
+      deeplearning.deepsmith.testbed.TestbedOptSet).count() == 2
   assert session.query(
-    deeplearning.deepsmith.testbed.TestbedOptName).count() == 2
+      deeplearning.deepsmith.testbed.TestbedOptName).count() == 2
   assert session.query(
-    deeplearning.deepsmith.testbed.TestbedOptValue).count() == 2
+      deeplearning.deepsmith.testbed.TestbedOptValue).count() == 2
   session.rollback()
   assert session.query(deeplearning.deepsmith.testbed.Testbed).count() == 0
   assert session.query(deeplearning.deepsmith.testbed.TestbedOpt).count() == 0
   assert session.query(
-    deeplearning.deepsmith.testbed.TestbedOptSet).count() == 0
+      deeplearning.deepsmith.testbed.TestbedOptSet).count() == 0
   assert session.query(
-    deeplearning.deepsmith.testbed.TestbedOptName).count() == 0
+      deeplearning.deepsmith.testbed.TestbedOptName).count() == 0
   assert session.query(
-    deeplearning.deepsmith.testbed.TestbedOptValue).count() == 0
+      deeplearning.deepsmith.testbed.TestbedOptValue).count() == 0
 
 
 def _AddRandomNewTestbed(session):

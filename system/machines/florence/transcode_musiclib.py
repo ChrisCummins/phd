@@ -2,14 +2,14 @@
 
 This file depends on external binaries 'find' and 'ffmpeg'.
 """
-import os
-
 import csv
 import datetime
-import humanize
+import os
 import re
 import subprocess
 import typing
+
+import humanize
 from absl import app
 from absl import flags
 from absl import logging

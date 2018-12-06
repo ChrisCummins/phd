@@ -1,8 +1,8 @@
 import itertools
-
-from phd.lib.labm8.tests.testutil import TestCase
-from omnitune import skelcl
 from unittest import main
+
+from omnitune import skelcl
+from phd.lib.labm8.tests.testutil import TestCase
 
 
 class TestSkelCL(TestCase):

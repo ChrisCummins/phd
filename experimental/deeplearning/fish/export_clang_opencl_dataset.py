@@ -1,9 +1,10 @@
 """Export a dataset for use in training and testing discriminators."""
-import MySQLdb
 import configparser
-import humanize
 import pathlib
 import typing
+
+import MySQLdb
+import humanize
 from absl import app
 from absl import flags
 from absl import logging

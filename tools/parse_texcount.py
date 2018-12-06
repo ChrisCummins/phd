@@ -57,6 +57,7 @@ from sys import stdin, stdout
 
 from phd.lib.labm8 import fmt
 
+
 _FILE_RE = compile("^File: (.+)")
 _WORDS_IN_TEXT_RE = compile("^Words in text: (\d+)")
 

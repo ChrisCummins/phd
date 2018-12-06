@@ -1,6 +1,7 @@
 """Neural network backends for CLgen models."""
-import numpy as np
 import typing
+
+import numpy as np
 from absl import flags
 from phd.lib.labm8 import cache
 

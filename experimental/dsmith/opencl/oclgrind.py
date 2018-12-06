@@ -19,9 +19,10 @@
 Oclgrind module
 """
 import subprocess
-from phd.lib.labm8 import fs
 from tempfile import NamedTemporaryFile
 from typing import List
+
+from phd.lib.labm8 import fs
 
 from experimental import dsmith
 from experimental.dsmith.opencl import cldrive_mkharness as mkharness

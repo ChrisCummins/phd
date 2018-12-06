@@ -23,9 +23,10 @@ import random
 import string
 from time import time
 
+from phd.lib.labm8 import fs
+
 from experimental.dsmith.glsl.db import *
 from experimental.dsmith.langs import Generator
-from phd.lib.labm8 import fs
 
 
 class GlslGenerator(Generator):
@@ -97,7 +98,8 @@ class GlslGenerator(Generator):
       # Print a preamble message:
       num_to_generate = max_value - num_progs
       if num_to_generate < math.inf:
-        estimated_time = (self.generation_time(s) / max(num_progs, 1)) * num_to_generate
+        estimated_time = (self.generation_time(s) / max(num_progs,
+                                                        1)) * num_to_generate
         eta = humanize.naturaldelta(datetime.timedelta(seconds=estimated_time))
         print(f"{Colors.BOLD}{num_to_generate}{Colors.END} programs are "
               "to be generated. Estimated generation time is " +
@@ -141,11 +143,13 @@ class GlslGenerator(Generator):
         sys.exit(0)
 
         # Filter duplicates in the set of new records:
-        programs = dict((program.sha1, program) for program in programs).values()
+        programs = dict(
+            (program.sha1, program) for program in programs).values()
 
         # Fetch a list of dupe keys already in the database:
         sha1s = [program.sha1 for program in programs]
-        dupes = set(x[0] for x in s.query(Program.sha1).filter(Program.sha1.in_(sha1s)))
+        dupes = set(
+            x[0] for x in s.query(Program.sha1).filter(Program.sha1.in_(sha1s)))
 
         # Filter the list of records to import, excluding dupes:
         uniq = [program for program in programs if program.sha1 not in dupes]
@@ -184,11 +188,13 @@ class GlslGenerator(Generator):
           f"{Colors.BOLD}{num_progs}{Colors.END} {self} programs in the "
           "database")
 
-  def import_from_file(self, session: session_t, path: Path) -> Union[None, ProgramProxy]:
+  def import_from_file(self, session: session_t, path: Path) -> Union[
+    None, ProgramProxy]:
     """ Import a program from a file. """
     # logging.debug(f"importing '{path}'")
     # Simply ignore non-ASCII chars:
-    src = ''.join([i if ord(i) < 128 else '' for i in fs.read_file(path).strip()])
+    src = ''.join(
+        [i if ord(i) < 128 else '' for i in fs.read_file(path).strip()])
     return ProgramProxy(generator=self.id, generation_time=0, src=src)
 
 

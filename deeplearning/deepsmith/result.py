@@ -3,9 +3,10 @@ import binascii
 import datetime
 import hashlib
 import pathlib
+import typing
+
 import phd.lib.labm8.sqlutil
 import sqlalchemy as sql
-import typing
 from phd.lib.labm8 import labdate, pbutil
 from sqlalchemy import orm
 from sqlalchemy.dialects import mysql

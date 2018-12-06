@@ -1,10 +1,9 @@
 """TODO."""
 
-import sys
-
 import os
 import platform
 import subprocess
+import sys
 from distutils import spawn
 
 from experimental.system.dotfiles.implementation import io
@@ -81,7 +80,8 @@ def MakeSymlink(src, dst, sudo=False):
   use_sudo = "sudo -H " if sudo else ""
   if (CheckShellCommand("{use_sudo}test -f '{dst}'".format(**vars())) or
       CheckShellCommand("{use_sudo}test -d '{dst}'".format(**vars()))):
-    linkdest = ShellCommand("{use_sudo}readlink {dst}".format(**vars())).rstrip()
+    linkdest = ShellCommand(
+        "{use_sudo}readlink {dst}".format(**vars())).rstrip()
     if linkdest.startswith("/"):
       linkdest_abs = linkdest
     else:

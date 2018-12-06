@@ -7,6 +7,7 @@ import dsmith
 import progressbar
 from dsmith.opencl.db import *
 
+
 if __name__ == "__main__":
   dsmith.langs.mklang("opencl")  # Initializes database engine
 

@@ -1,8 +1,8 @@
 import re
-
 import subprocess
 
 from phd.lib.labm8 import fs
+
 
 _LINE_RE = re.compile("^(?P<count>\d+) instcount - Number of (?P<type>.+)")
 

@@ -1,7 +1,8 @@
 """Output a tree of explored """
-import graphviz
 import pathlib
 import typing
+
+import graphviz
 from absl import app
 from absl import flags
 from phd.lib.labm8 import graph

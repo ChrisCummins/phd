@@ -16,11 +16,10 @@
 # You should have received a copy of the GNU General Public License along with
 # DeepSmith.  If not, see <http://www.gnu.org/licenses/>.
 #
-import os
-import sys
-
 import json
+import os
 import subprocess
+import sys
 from argparse import ArgumentParser
 from configparser import ConfigParser
 
@@ -122,17 +121,23 @@ def main():
                       help="enable OpenCL fuzzing")
   parser.add_argument("--with-llvm-trunk", action="store_true",
                       help="build with LLVM trunk testbed")
-  parser.add_argument("--with-llvm-5.0", action="store_true", dest="with_llvm_50",
+  parser.add_argument("--with-llvm-5.0", action="store_true",
+                      dest="with_llvm_50",
                       help="build with LLVM 5.0 testbed")
-  parser.add_argument("--with-llvm-4.0", action="store_true", dest="with_llvm_40",
+  parser.add_argument("--with-llvm-4.0", action="store_true",
+                      dest="with_llvm_40",
                       help="build with LLVM 4.0 testbed")
-  parser.add_argument("--with-llvm-3.9", action="store_true", dest="with_llvm_39",
+  parser.add_argument("--with-llvm-3.9", action="store_true",
+                      dest="with_llvm_39",
                       help="build with LLVM 3.9 testbed")
-  parser.add_argument("--with-llvm-3.8", action="store_true", dest="with_llvm_38",
+  parser.add_argument("--with-llvm-3.8", action="store_true",
+                      dest="with_llvm_38",
                       help="build with LLVM 3.8 testbed")
-  parser.add_argument("--with-llvm-3.7", action="store_true", dest="with_llvm_37",
+  parser.add_argument("--with-llvm-3.7", action="store_true",
+                      dest="with_llvm_37",
                       help="build with LLVM 3.7 testbed")
-  parser.add_argument("--with-llvm-3.6", action="store_true", dest="with_llvm_36",
+  parser.add_argument("--with-llvm-3.6", action="store_true",
+                      dest="with_llvm_36",
                       help="build with LLVM 3.6 testbed")
   parser.add_argument("--with-solidity", action="store_true",
                       help="enable Solidity fuzzing")
@@ -173,10 +178,12 @@ def main():
       "rc": default_rc,
     }
 
-  cfg["cuda"] = yes_no(batch, "Enable CUDA backend? (requires CUDA)", default=cfg["cuda"])
+  cfg["cuda"] = yes_no(batch, "Enable CUDA backend? (requires CUDA)",
+                       default=cfg["cuda"])
 
   # OpenCL settings:
-  cfg["opencl"] = yes_no(batch, "Enable OpenCL fuzzing? (requires OpenCL)", default=cfg["opencl"])
+  cfg["opencl"] = yes_no(batch, "Enable OpenCL fuzzing? (requires OpenCL)",
+                         default=cfg["opencl"])
   if cfg["opencl"]:
     if yes_no(batch, "Build all OpenCL LLVM testbeds?", default=(
         cfg["llvm_trunk"] and
@@ -194,13 +201,20 @@ def main():
       cfg["llvm_37"] = True
       cfg["llvm_36"] = True
     else:
-      cfg["llvm_trunk"] = yes_no(batch, "Build OpenCL LLMV trunk testbed?", default=args.with_llvm_trunk)
-      cfg["llvm_50"] = yes_no(batch, "Build OpenCL LLMV 5.0 testbed?", default=args.with_llvm_50)
-      cfg["llvm_40"] = yes_no(batch, "Build OpenCL LLMV 4.0 testbed?", default=args.with_llvm_40)
-      cfg["llvm_39"] = yes_no(batch, "Build OpenCL LLMV 3.9 testbed?", default=args.with_llvm_39)
-      cfg["llvm_38"] = yes_no(batch, "Build OpenCL LLMV 3.8 testbed?", default=args.with_llvm_38)
-      cfg["llvm_37"] = yes_no(batch, "Build OpenCL LLMV 3.7 testbed?", default=args.with_llvm_37)
-      cfg["llvm_36"] = yes_no(batch, "Build OpenCL LLMV 3.6 testbed?", default=args.with_llvm_36)
+      cfg["llvm_trunk"] = yes_no(batch, "Build OpenCL LLMV trunk testbed?",
+                                 default=args.with_llvm_trunk)
+      cfg["llvm_50"] = yes_no(batch, "Build OpenCL LLMV 5.0 testbed?",
+                              default=args.with_llvm_50)
+      cfg["llvm_40"] = yes_no(batch, "Build OpenCL LLMV 4.0 testbed?",
+                              default=args.with_llvm_40)
+      cfg["llvm_39"] = yes_no(batch, "Build OpenCL LLMV 3.9 testbed?",
+                              default=args.with_llvm_39)
+      cfg["llvm_38"] = yes_no(batch, "Build OpenCL LLMV 3.8 testbed?",
+                              default=args.with_llvm_38)
+      cfg["llvm_37"] = yes_no(batch, "Build OpenCL LLMV 3.7 testbed?",
+                              default=args.with_llvm_37)
+      cfg["llvm_36"] = yes_no(batch, "Build OpenCL LLMV 3.6 testbed?",
+                              default=args.with_llvm_36)
   else:
     cfg["llvm_trunk"] = False
     cfg["llvm_50"] = False
@@ -211,12 +225,14 @@ def main():
     cfg["llvm_36"] = False
 
   # Solidity settings:
-  cfg["solidity"] = yes_no(batch, "Enable Solidity fuzzing? (requires solc)", default=cfg["solidity"])
+  cfg["solidity"] = yes_no(batch, "Enable Solidity fuzzing? (requires solc)",
+                           default=cfg["solidity"])
 
   # GLSL settings
   cfg["glsl"] = yes_no(batch, "Enable GLSL fuzzing?", default=cfg["glsl"])
 
-  cfg["rc_path"] = textinput(batch, "Path to configuration file", default=cfg["rc"])
+  cfg["rc_path"] = textinput(batch, "Path to configuration file",
+                             default=cfg["rc"])
 
   # generate JSON config file
   with open(".config.json", "w") as outfile:
@@ -235,7 +251,8 @@ def main():
     print("WITH_GLSL := " + to_make(cfg["glsl"]), file=outfile)
     for llvm in ["trunk", "50", "40", "39", "38", "37", "36"]:
       key = llvm.upper()
-      print("WITH_LLVM_{key} := ".format(**vars()) + to_make(cfg.get("llvm_{llvm}".format(**vars()), False)),
+      print("WITH_LLVM_{key} := ".format(**vars()) + to_make(
+          cfg.get("llvm_{llvm}".format(**vars()), False)),
             file=outfile)
 
   # generate python config file
@@ -280,7 +297,8 @@ It looks like that file does not exist.
 The following questions will create it for you:""")
     config = ConfigParser()
 
-    engine = textinput(batch, "Select database engine: {sqlite,mysql}", default="mysql")
+    engine = textinput(batch, "Select database engine: {sqlite,mysql}",
+                       default="mysql")
     if engine == "sqlite":
       config['database'] = {
         "engine": "sqlite",
@@ -293,7 +311,8 @@ The following questions will create it for you:""")
         "engine": "mysql",
         "schema": "dsmith_04_opencl",
         "buffer_size": 250,
-        "hostname": textinput(batch, "Hostname of database Server", default="localhost"),
+        "hostname": textinput(batch, "Hostname of database Server",
+                              default="localhost"),
         "port": int(textinput(batch, "Database server port", default="3306")),
         "username": textinput(batch, "Database username:"),
         "password": textinput(batch, "Database password:"),
@@ -313,7 +332,8 @@ The following questions will create it for you:""")
 
   try:
     # Recursive checkout all git submodules:
-    subprocess.check_call(['git', 'submodule', 'update', '--init', '--recursive'])
+    subprocess.check_call(
+        ['git', 'submodule', 'update', '--init', '--recursive'])
     # Install any required system-wide dependencies:
     # TODO: Pipe output into bash shell:
     subprocess.check_call(['bash', os.path.join('tools', 'install-deps.sh')])

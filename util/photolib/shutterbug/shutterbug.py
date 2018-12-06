@@ -2,17 +2,17 @@
 
 Shutterbug is a library for creating DVD backups of photo libraries.
 """
-import os
-
 import gzip
+import os
 import pathlib
 import random
 import sys
 import typing
-from absl import flags
 from datetime import datetime
 from hashlib import md5
 from shutil import copy, copyfileobj
+
+from absl import flags
 
 
 FLAGS = flags.FLAGS

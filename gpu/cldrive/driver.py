@@ -1,5 +1,4 @@
 import collections
-import numpy as np
 import pickle
 import re
 import sys
@@ -9,9 +8,11 @@ from signal import Signals
 from subprocess import PIPE, Popen
 from tempfile import NamedTemporaryFile
 
+import numpy as np
+from phd.lib.labm8 import err
+
 from gpu.cldrive import args as _args
 from gpu.cldrive import env as _env
-from phd.lib.labm8 import err
 
 
 ArgTuple = collections.namedtuple('ArgTuple', ['hostdata', 'devdata'])

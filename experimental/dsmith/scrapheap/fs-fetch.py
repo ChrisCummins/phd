@@ -3,15 +3,15 @@
 Fetch OpenCL kernels from file system
 """
 import os
+from argparse import ArgumentParser
+from pathlib import Path
 from random import shuffle
 
-from argparse import ArgumentParser
 from dsmith import db
 from dsmith.db import *
-from pathlib import Path
+from phd.lib.labm8 import fs
 from progressbar import ProgressBar
 
-from phd.lib.labm8 import fs
 
 if __name__ == "__main__":
   parser = ArgumentParser()

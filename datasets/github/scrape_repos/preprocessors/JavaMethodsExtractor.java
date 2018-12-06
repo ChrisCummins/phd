@@ -40,6 +40,18 @@ public class JavaMethodsExtractor {
     return (CompilationUnit) parser.createAST(null);
   }
 
+  public static void main(final String[] args) {
+    JavaMethodsExtractor extractor = new JavaMethodsExtractor();
+
+    try {
+      final String input = new String(ByteStreams.toByteArray(System.in));
+      System.out.println(extractor.ExtractMethods(input).toString());
+    } catch (IOException e) {
+      System.err.println("fatal: I/O error");
+      System.exit(1);
+    }
+  }
+
   /**
    * Extract all methods from a Java source.
    *
@@ -73,17 +85,5 @@ public class JavaMethodsExtractor {
       });
     }
     return message.build();
-  }
-
-  public static void main(final String[] args) {
-    JavaMethodsExtractor extractor = new JavaMethodsExtractor();
-
-    try {
-      final String input = new String(ByteStreams.toByteArray(System.in));
-      System.out.println(extractor.ExtractMethods(input).toString());
-    } catch (IOException e) {
-      System.err.println("fatal: I/O error");
-      System.exit(1);
-    }
   }
 }

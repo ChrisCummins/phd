@@ -1,8 +1,9 @@
 """A generator for Control Flow Graphs."""
-import numpy as np
 import pathlib
 import random
 import typing
+
+import numpy as np
 from absl import app
 from absl import flags
 from phd.lib.labm8 import fmt

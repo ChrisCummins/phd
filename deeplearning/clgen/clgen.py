@@ -27,6 +27,8 @@ import typing
 from absl import app
 from absl import flags
 from absl import logging
+from phd.lib.labm8 import pbutil
+from phd.lib.labm8 import prof
 
 from deeplearning.clgen import errors
 from deeplearning.clgen import samplers
@@ -34,8 +36,6 @@ from deeplearning.clgen.models import models
 from deeplearning.clgen.models import pretrained
 from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import model_pb2
-from phd.lib.labm8 import pbutil
-from phd.lib.labm8 import prof
 
 
 FLAGS = flags.FLAGS

@@ -2,14 +2,13 @@
 from __future__ import division
 from __future__ import print_function
 
+import csv
 import re
 import sys
-
-import csv
-import editdistance
-import smith
 from argparse import ArgumentParser
 
+import editdistance
+import smith
 from phd.lib.labm8 import fs
 
 

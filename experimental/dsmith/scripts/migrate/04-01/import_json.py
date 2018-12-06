@@ -3,13 +3,13 @@
 Create test harnesses for CLgen programs using cldrive.
 """
 
+from argparse import ArgumentParser
 from collections import deque
 
 import db
-from argparse import ArgumentParser
 from db import *
-
 from phd.lib.labm8 import fs
+
 
 if __name__ == "__main__":
   parser = ArgumentParser(description=__doc__)

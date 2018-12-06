@@ -140,7 +140,8 @@ def test_algo(fn):
     ((['abc', 'abcd', 'abcde'], 'abc', 'abcde'), 2),  # add letters
     ((['abc', 'abcd', 'abcde'], 'abcde', 'abc'), 2),  # remove letters
     ((['abcde', 'abcee', 'abeee'], 'abcde', 'abeee'), 2),  # remove letters
-    ((['abcdef', 'abcdefg', 'abcde', 'abcdeg', 'abc', 'abcd'], 'abcdef', 'abc'), 3),  # remove letters
+    ((['abcdef', 'abcdefg', 'abcde', 'abcdeg', 'abc', 'abcd'], 'abcdef', 'abc'),
+     3),  # remove letters
   ]
   for ins, outs in tests:
     if fn(*ins) != outs:

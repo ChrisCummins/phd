@@ -7,7 +7,6 @@ import time
 import pytest
 from absl import app
 from absl import flags
-
 from phd.lib.labm8 import hashcache
 
 

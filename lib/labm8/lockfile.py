@@ -12,7 +12,6 @@ import time
 import typing
 
 from absl import logging
-
 from phd.lib.labm8 import labdate
 from phd.lib.labm8 import pbutil
 from phd.lib.labm8 import system

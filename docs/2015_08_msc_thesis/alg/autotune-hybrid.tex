@@ -1,43 +1,43 @@
 \begin{algorithmic}[1]
-\Require kernel features $k$, hardware features $h$, dataset features $d$.
-\Ensure workgroup size $w$
+  \Require kernel features $k$, hardware features $h$, dataset features $d$.
+  \Ensure workgroup size $w$
 
-\State $r \leftarrow \underset{w \in W_{legal}(s)}{\min} f(k,h,d,w)$
-\Comment Predict minimum runtime.
-\State $w \leftarrow \underset{w \in W_{legal}(s)}{\argmin} f(k,h,d,w)$
-\Comment Workgroup size for $r$.
-\State $t_r \leftarrow$ measure runtime of program with $w$
-\State \textsc{Submit}$\left( f(s), w, t_r \right)$
-\Comment Submit observed runtime
-\If{$t_r \approx r$}
+  \State $r \leftarrow \underset{w \in W_{legal}(s)}{\min} f(k,h,d,w)$
+  \Comment Predict minimum runtime.
+  \State $w \leftarrow \underset{w \in W_{legal}(s)}{\argmin} f(k,h,d,w)$
+  \Comment Workgroup size for $r$.
+  \State $t_r \leftarrow$ measure runtime of program with $w$
+  \State \textsc{Submit}$\left( f(s), w, t_r \right)$
+  \Comment Submit observed runtime
+  \If{$t_r \approx r$}
   \State \textbf{return} $w$
-\Comment Predicted runtime is accurate.
-\Else
-   \State $W \leftarrow \left\{ w | w < W_{\max}(s) \right\}$
-   \State converged $\leftarrow$ false
-   \State $w_b \leftarrow$ baseline parameter
-   \State $t_b \leftarrow$ measure runtime of runtime of program with
-   $w_b$
-   \State \textsc{Submit}$\left( f(s), w_b, t_b \right)$
-   \Comment Submit observed runtime
-   \While{not converged}
-     \State $s \leftarrow \underset{w \in W}{\max} g(k,h,d,w)$
-     \Comment Predict best speedup.
-     \State $w \leftarrow \underset{w \in W}{\argmax} g(k,h,d,w)$
-     \Comment Workgroup size for $s$.
-     \State $t \leftarrow$ measure runtime of program with $s$
-     \State \textsc{Submit}$\left( f(s), w, t \right)$
-     \Comment Submit observed runtime
-     \State $s_w \leftarrow t_t / t$
-     \State \textsc{Submit}$\left( f(s), w, s_w \right)$
-     \Comment Submit observed speedup
-     \If{$s_w \approx s$}
-       \State converged = true
-       \Comment Predicted speedup is accurate.
-     \Else
-       \State $W = W - \{ w \}$
-     \EndIf
-   \EndWhile
-   \State \textbf{return} $w$
-\EndIf
+  \Comment Predicted runtime is accurate.
+  \Else
+  \State $W \leftarrow \left\{ w | w < W_{\max}(s) \right\}$
+  \State converged $\leftarrow$ false
+  \State $w_b \leftarrow$ baseline parameter
+  \State $t_b \leftarrow$ measure runtime of runtime of program with
+  $w_b$
+  \State \textsc{Submit}$\left( f(s), w_b, t_b \right)$
+  \Comment Submit observed runtime
+  \While{not converged}
+  \State $s \leftarrow \underset{w \in W}{\max} g(k,h,d,w)$
+  \Comment Predict best speedup.
+  \State $w \leftarrow \underset{w \in W}{\argmax} g(k,h,d,w)$
+  \Comment Workgroup size for $s$.
+  \State $t \leftarrow$ measure runtime of program with $s$
+  \State \textsc{Submit}$\left( f(s), w, t \right)$
+  \Comment Submit observed runtime
+  \State $s_w \leftarrow t_t / t$
+  \State \textsc{Submit}$\left( f(s), w, s_w \right)$
+  \Comment Submit observed speedup
+  \If{$s_w \approx s$}
+  \State converged = true
+  \Comment Predicted speedup is accurate.
+  \Else
+  \State $W = W - \{ w \}$
+  \EndIf
+  \EndWhile
+  \State \textbf{return} $w$
+  \EndIf
 \end{algorithmic}

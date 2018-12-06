@@ -3,16 +3,17 @@ import binascii
 import contextlib
 import datetime
 import hashlib
-import humanize
 import multiprocessing
 import os
 import pathlib
-import progressbar
-import sqlalchemy as sql
 import subprocess
 import tempfile
 import time
 import typing
+
+import humanize
+import progressbar
+import sqlalchemy as sql
 from absl import flags
 from absl import logging
 from phd.lib.labm8 import fs

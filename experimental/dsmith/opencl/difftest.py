@@ -41,7 +41,8 @@ def create_results_metas(s: session_t):
   class Worker(threading.Thread):
     """ worker thread to run testcases asynchronously """
 
-    def __init__(self, testbeds_harnesses: List[Tuple['Testbed.id_t', 'Harnesses.column_t']]):
+    def __init__(self, testbeds_harnesses: List[
+      Tuple['Testbed.id_t', 'Harnesses.column_t']]):
       self.ndone = 0
       self.testbeds_harnesses = testbeds_harnesses
       super(Worker, self).__init__()
@@ -309,7 +310,8 @@ def prune_abf_classifications(s: session_t) -> None:
 
   prune_stderr_like("use of type 'double' requires cl_khr_fp64 extension")
   prune_stderr_like("implicit declaration of function")
-  prune_stderr_like("function cannot have argument whose type is, or contains, type size_t")
+  prune_stderr_like(
+      "function cannot have argument whose type is, or contains, type size_t")
   prune_stderr_like("unresolved extern function")
   prune_stderr_like("error: cannot increment value of type%")
   prune_stderr_like("subscripted access is not allowed for OpenCL vectors")

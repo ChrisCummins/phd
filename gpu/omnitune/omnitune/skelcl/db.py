@@ -1,24 +1,24 @@
 from __future__ import division
 from __future__ import print_function
 
-import random
-
 import csv
 import json
-import omnitune
+import random
 import subprocess
-from phd.lib.labm8.db import placeholders
-from phd.lib.labm8.db import where
-from omnitune.skelcl import features
-from pkg_resources import resource_string
-from space import ParamSpace
 
-from lib import labm8 as lab
+import omnitune
+from omnitune.skelcl import features
 from phd.lib.labm8 import db
 from phd.lib.labm8 import fs
 from phd.lib.labm8 import io
 from phd.lib.labm8 import math as labmath
 from phd.lib.labm8 import prof
+from phd.lib.labm8.db import placeholders
+from phd.lib.labm8.db import where
+from pkg_resources import resource_string
+from space import ParamSpace
+
+from lib import labm8 as lab
 from . import get_kernel_name_and_type
 from . import hash_dataset
 from . import hash_device
@@ -29,6 +29,7 @@ from . import hash_ml_job
 from . import hash_params
 from . import hash_scenario
 from . import unhash_params
+
 
 DEFAULT_PATH = fs.path("/usr/share/omnitune/db/skelcl.db")
 
@@ -677,7 +678,8 @@ class Database(db.Database):
     # Query lookup table.
     query = self.execute("SELECT id\n"
                          "FROM " + lookup_table + "\n"
-                                                  "WHERE " + where(*lookup_columns),
+                                                  "WHERE " + where(
+        *lookup_columns),
                          lookup_vals).fetchone()
 
     # If there's an entry in the lookup table, return.
@@ -1193,7 +1195,8 @@ class Database(db.Database):
       samples.append(runtimes)
       prof.stop(timer)
 
-      json.dump(runtimes, open("/tmp/omnitune.export/{}.json".format(i + 1), "wb"))
+      json.dump(runtimes,
+                open("/tmp/omnitune.export/{}.json".format(i + 1), "wb"))
 
     runtimes = [
       json.load(open(file)) for file in
@@ -1808,8 +1811,9 @@ class Database(db.Database):
     # TODO: Document!
     """
     """
-    return self.execute("SELECT worst_param FROM scenario_stats WHERE scenario=?",
-                        (scenario,)).fetchone()[0]
+    return \
+      self.execute("SELECT worst_param FROM scenario_stats WHERE scenario=?",
+                   (scenario,)).fetchone()[0]
 
   def oracle_runtime(self, scenario):
     """

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import sys
+from typing import Tuple
 
 import numpy as np
 from progressbar import ProgressBar
-from typing import Tuple
 
 
 def brute_force(stock_prices):

@@ -1,13 +1,14 @@
 """Unit tests for //lib/dpack:dpack."""
+import pathlib
 import sys
 import tempfile
 
-import pathlib
 import pytest
 from absl import app
 
 from lib.dpack import dpack
 from lib.dpack.proto import dpack_pb2
+
 
 # The sha256sum of an empty file.
 SHA256_EMPTY_FILE = ('e3b0c44298fc1c149afbf4c8996fb924'

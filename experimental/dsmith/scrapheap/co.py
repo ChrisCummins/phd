@@ -3,15 +3,15 @@ Code for compile-only experiments.
 """
 import re
 from collections import namedtuple
+from subprocess import PIPE, Popen
 from tempfile import NamedTemporaryFile
 from time import time
+from typing import List, NewType
 
 from dsmith.db import *
 from dsmith.lib import *
-from subprocess import PIPE, Popen
-from typing import List, NewType
-
 from phd.lib.labm8 import fs
+
 
 status_t = NewType('status_t', int)
 return_t = namedtuple('return_t', ['runtime', 'status', 'stdout', 'stderr'])
@@ -28,11 +28,13 @@ def verify_params(platform: str, device: str, optimizations: str,
 
   for line in stderr.split('\n'):
     if line.startswith("[cldrive] Platform: "):
-      actual_platform_name = re.sub(r"^\[cldrive\] Platform: ", "", line).rstrip()
+      actual_platform_name = re.sub(r"^\[cldrive\] Platform: ", "",
+                                    line).rstrip()
     elif line.startswith("[cldrive] Device: "):
       actual_device_name = re.sub(r"^\[cldrive\] Device: ", "", line).rstrip()
     elif line.startswith("[cldrive] OpenCL optimizations: "):
-      actual_optimizations = re.sub(r"^\[cldrive\] OpenCL optimizations: ", "", line).rstrip()
+      actual_optimizations = re.sub(r"^\[cldrive\] OpenCL optimizations: ", "",
+                                    line).rstrip()
 
     # check if we've collected everything:
     if (actual_platform and actual_device and actual_optimizations):

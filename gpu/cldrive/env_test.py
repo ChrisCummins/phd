@@ -1,6 +1,7 @@
 """Unit tests for //gpu/cldrive/env.py."""
-import pytest
 import sys
+
+import pytest
 from absl import app
 
 from gpu.cldrive import env

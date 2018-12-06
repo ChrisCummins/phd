@@ -3,9 +3,9 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(global double* a) {
-      int b = get_global_id(0);
-      if (b < -1)
-        a[b] = 1;
+    int b = get_global_id(0);
+    if (b < -1)
+    a[b] = 1;
     }
   \end{lstlisting}
 \end{lrbox}
@@ -14,19 +14,19 @@
 \begin{lrbox}{\OclgrindRaceSwitch}
   \hspace{1.5em}
   \begin{lstlisting}
-  kernel void A(global int* a, global int* b) {
+    kernel void A(global int* a, global int* b) {
     switch (get_global_id(0)) {
     case 0:
-      a[get_global_id(0)]=b[get_global_id(0)+13];
-      break;
+    a[get_global_id(0)]=b[get_global_id(0)+13];
+    break;
     case 2:
-      a[get_global_id(0)]=b[get_global_id(0)+11];
-      break;
+    a[get_global_id(0)]=b[get_global_id(0)+11];
+    break;
     case 6:
-      a[get_global_id(0)]=b[get_global_id(0)+128];
+    a[get_global_id(0)]=b[get_global_id(0)+128];
     }
     barrier(2);
-  }
+    }
   \end{lstlisting}
 \end{lrbox}
 
@@ -35,7 +35,7 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A() {
-      __builtin_astype(d, uint4);
+    __builtin_astype(d, uint4);
     }
   \end{lstlisting}
 \end{lrbox}
@@ -45,8 +45,8 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(global unsigned char* a, global unsigned char* b) {
-      unsigned long c = get_global_id(0);
-      d[0] = (mad24(f, (int)(a[0], b[get_global_id(0)])) % (d * (d + 3)) + (c / 2))] * a[c + 1];
+    unsigned long c = get_global_id(0);
+    d[0] = (mad24(f, (int)(a[0], b[get_global_id(0)])) % (d * (d + 3)) + (c / 2))] * a[c + 1];
     }
   \end{lstlisting}
 \end{lrbox}
@@ -60,7 +60,7 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(global ulong* a) {
-      a[get_global_id(0)] = (ulong)(a + 1);
+    a[get_global_id(0)] = (ulong)(a + 1);
     }
   \end{lstlisting}
 \end{lrbox}
@@ -82,11 +82,11 @@
   % CLgenProgram.id = 6992
   \begin{lstlisting}
     kernel void A(global float* a, global float* b,
-                  global float* c) {
-      int d, e, f;
-      d = get_local_id(0);
-      for (int g = 0; g < 100000; g++)
-        barrier(1);
+    global float* c) {
+    int d, e, f;
+    d = get_local_id(0);
+    for (int g = 0; g < 100000; g++)
+    barrier(1);
     }
   \end{lstlisting}
 \end{lrbox}
@@ -96,9 +96,9 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(global unsigned char* a,
-                  unsigned b) {
-      a[get_global_id(0)] %= 42;
-      barrier(1);
+    unsigned b) {
+    a[get_global_id(0)] %= 42;
+    barrier(1);
     }
   \end{lstlisting}
 \end{lrbox}
@@ -119,8 +119,8 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(global int* a) {
-      int b = get_global_id(0);
-      while (b < 512) { }
+    int b = get_global_id(0);
+    while (b < 512) { }
     }
   \end{lstlisting}
 \end{lrbox}
@@ -135,11 +135,11 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(float4 a, global float4* b,
-                  global float4* c, unsigned int d,
-                  global double* e, global int2* f, 
-                  global int4* g, constant int* h, 
-                  constant int* i) {
-      A(a, b, c, d, d, e, f, g, h);
+    global float4* c, unsigned int d,
+    global double* e, global int2* f,
+    global int4* g, constant int* h,
+    constant int* i) {
+    A(a, b, c, d, d, e, f, g, h);
     }
   \end{lstlisting}
 \end{lrbox}
@@ -151,7 +151,7 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void B(constant int2* a, global int* b) {
-      A(b, a);
+    A(b, a);
     }
   \end{lstlisting}
 \end{lrbox}
@@ -161,8 +161,8 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(global float4* a) {
-      a[get_local_id(0) / 8][get_local_id(0)] = 
-          get_local_id(0);
+    a[get_local_id(0) / 8][get_local_id(0)] =
+    get_local_id(0);
     }
   \end{lstlisting}
 \end{lrbox}
@@ -172,7 +172,7 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(global float* a, global float* b) {
-      a[0] = max(a[c], b[2]);
+    a[0] = max(a[c], b[2]);
     }
   \end{lstlisting}
 \end{lrbox}
@@ -182,8 +182,8 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(global int* a) {
-      int b = get_global_id(0);
-      a[b] = (6 * 32) + 4 * (32 / 32) + a;
+    int b = get_global_id(0);
+    a[b] = (6 * 32) + 4 * (32 / 32) + a;
     }
   \end{lstlisting}
 \end{lrbox}
@@ -193,13 +193,13 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(global float* a, local float* b, local float* c, int d, int e) {
-      int f, g;
-      int h = get_local_id(0);
-      int i = get_local_id(1);
-      int j = get_global_id(0);
-      global char* k = c + f * g + f;
-      if (f + 1 < h)
-        b[f * d + g * h + g] = g * f;
+    int f, g;
+    int h = get_local_id(0);
+    int i = get_local_id(1);
+    int j = get_global_id(0);
+    global char* k = c + f * g + f;
+    if (f + 1 < h)
+    b[f * d + g * h + g] = g * f;
     }
   \end{lstlisting}
 \end{lrbox}
@@ -209,15 +209,15 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(void) {
-      global int* a;
-      unsigned int* b;
-      b = a[0];
-      a[0] = b;
-      a[0] = b;
-      barrier(1);
-      if (get_global_id(0) == 0)
-        *a = 0;
-      a[get_local_id(0)] = 0;
+    global int* a;
+    unsigned int* b;
+    b = a[0];
+    a[0] = b;
+    a[0] = b;
+    barrier(1);
+    if (get_global_id(0) == 0)
+    *a = 0;
+    a[get_local_id(0)] = 0;
     }
   \end{lstlisting}
 \end{lrbox}
@@ -227,9 +227,9 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A() {
-      while (true) {
-        barrier(1);
-      }
+    while (true) {
+    barrier(1);
+    }
     }
   \end{lstlisting}
 \end{lrbox}
@@ -239,11 +239,11 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(global double* a, global double* b,
-                  global double* c, int d, int e) {
-      double f;
-      int g = get_global_id(0);
-      if (g < e - d - 1)
-        c[g] = (((e) / d) % 5) % (e + d);
+    global double* c, int d, int e) {
+    double f;
+    int g = get_global_id(0);
+    if (g < e - d - 1)
+    c[g] = (((e) / d) % 5) % (e + d);
     }
   \end{lstlisting}
 \end{lrbox}
@@ -253,8 +253,8 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(local int* a) {
-      for (int b = 0; b < 100; b++)
-        B(a);
+    for (int b = 0; b < 100; b++)
+    B(a);
     }
   \end{lstlisting}
 \end{lrbox}
@@ -265,10 +265,10 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(global float* a, global float* b, global float* c, const int d) {
-      int e = get_global_id(0);
-      if (e < d)
-        c[e] = a[e] + b[e];
-      b[e] = (char)(c[e] + d);
+    int e = get_global_id(0);
+    if (e < d)
+    c[e] = a[e] + b[e];
+    b[e] = (char)(c[e] + d);
     }
   \end{lstlisting}
 \end{lrbox}
@@ -278,9 +278,9 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(global int* a) {
-      a[0] = 1;
-      a[-1] = 2;
-      a[0] = 3;
+    a[0] = 1;
+    a[-1] = 2;
+    a[0] = 3;
     }
   \end{lstlisting}
 \end{lrbox}
@@ -289,11 +289,11 @@
 \begin{lrbox}{\UninitRead}
   \hspace{1.5em}
   \begin{lstlisting}
-      kernel void A(global int* a, global int* b) {
-        int c[16];
-        int d = get_global_id(0);
-        a[d] = b[d] + c[d];
-      }
+    kernel void A(global int* a, global int* b) {
+    int c[16];
+    int d = get_global_id(0);
+    a[d] = b[d] + c[d];
+    }
   \end{lstlisting}
 \end{lrbox}
 
@@ -302,8 +302,8 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(global int* a, global int* b) {
-      int c = (int)get_global_id(0);
-      a[c] += b;
+    int c = (int)get_global_id(0);
+    a[c] += b;
     }
   \end{lstlisting}
 \end{lrbox}
@@ -313,8 +313,8 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(global float* a, global float* b, global float* c, local float* d, unsigned int e, unsigned int f) {
-      for (unsigned int g = get_local_id(0) + get_local_size(0); g < get_local_size(0); g += get_local_size(0))
-        a[2 * get_local_id(0) + 1] = get_local_id(0);
+    for (unsigned int g = get_local_id(0) + get_local_size(0); g < get_local_size(0); g += get_local_size(0))
+    a[2 * get_local_id(0) + 1] = get_local_id(0);
     }
   \end{lstlisting}
 \end{lrbox}
@@ -323,12 +323,12 @@
 \begin{lrbox}{\BeignetTernary}
   \hspace{1.5em}
   \begin{lstlisting}
-    kernel void A(global int* a, global int* b, 
-                  global int* c) {
-      c[0] = (a[0] > b[0]) ? a[0] : 0;
-      c[2] = (a[3] <= b[3]) ? a[4] : b[5];
-      c[4] = (a[4] <= b[5]) ? a[7] : b[7];
-      c[7] = (a[7] < b[0]) ? a[0] : (a[0] > b[1]);
+    kernel void A(global int* a, global int* b,
+    global int* c) {
+    c[0] = (a[0] > b[0]) ? a[0] : 0;
+    c[2] = (a[3] <= b[3]) ? a[4] : b[5];
+    c[4] = (a[4] <= b[5]) ? a[7] : b[7];
+    c[7] = (a[7] < b[0]) ? a[0] : (a[0] > b[1]);
     }
   \end{lstlisting}
 \end{lrbox}
@@ -344,8 +344,8 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(global int* a, global int* b, global int* c) {
-      c[0] = (a[0] > 0) ? a[0] : b[1];
-      c[1] = (a[1] <= b[1]) ? a[0] : b[0];
+    c[0] = (a[0] > 0) ? a[0] : b[1];
+    c[1] = (a[1] <= b[1]) ? a[0] : b[0];
     }
   \end{lstlisting}
 \end{lrbox}
@@ -354,9 +354,9 @@
 \begin{lrbox}{\IntelGtDoubleAssertion}
   \hspace{1.5em}
   \begin{lstlisting}
-    kernel void A(read_only image2d_t a, 
-                  global double2* b) {
-      b[0] = get_global_id(0);
+    kernel void A(read_only image2d_t a,
+    global double2* b) {
+    b[0] = get_global_id(0);
     }
   \end{lstlisting}
 \end{lrbox}
@@ -366,9 +366,9 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A() {
-      char a;
-      int b;
-      int const;
+    char a;
+    int b;
+    int const;
     }
   \end{lstlisting}
 \end{lrbox}
@@ -378,10 +378,10 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(global float4* a, global float4* b, global float4* c, global float4* d, global float4* e, float f) {
-      unsigned int g = get_global_id(0);
-      int h = get_global_size(0);
-      constant sampler_t i = 0x0000 | 0x0004 | 0x0000;
-      unsigned int j = g * (1 << ((h % 4) - (2)));
+    unsigned int g = get_global_id(0);
+    int h = get_global_size(0);
+    constant sampler_t i = 0x0000 | 0x0004 | 0x0000;
+    unsigned int j = g * (1 << ((h % 4) - (2)));
     }
   \end{lstlisting}
 \end{lrbox}
@@ -391,9 +391,9 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(global int* a) {
-      local int b[2][3][4][5];
-      if (get_global_id(0) == 0)
-        a = b[0];
+    local int b[2][3][4][5];
+    if (get_global_id(0) == 0)
+    a = b[0];
     }
   \end{lstlisting}
 \end{lrbox}
@@ -403,9 +403,9 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(global uchar4* a, const int b) {
-      local int c[16];
-      local float8* d = a + 133;
-      atomic_cmpxchg(c, 10, 13);
+    local int c[16];
+    local float8* d = a + 133;
+    atomic_cmpxchg(c, 10, 13);
     }
   \end{lstlisting}
 \end{lrbox}
@@ -417,8 +417,8 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A() {
-      while (true)
-        barrier(1);
+    while (true)
+    barrier(1);
     }
   \end{lstlisting}
 \end{lrbox}
@@ -449,10 +449,10 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(global int* a) {
-      int b = get_global_id(0);
-      while (b < *a)
-        if (a[0] < 0)
-          a[1] = b / b * get_local_id(0);
+    int b = get_global_id(0);
+    while (b < *a)
+    if (a[0] < 0)
+    a[1] = b / b * get_local_id(0);
     }
   \end{lstlisting}
 \end{lrbox}
@@ -462,9 +462,9 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(int a, global int* b) {
-      int c = get_global_id(0);
-      int d = work_group_scan_inclusive_max(c);
-      b[c] = c;
+    int c = get_global_id(0);
+    int d = work_group_scan_inclusive_max(c);
+    b[c] = c;
     }
   \end{lstlisting}
 \end{lrbox}
@@ -474,10 +474,10 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(global half* a, global int* b, global bool* c, int d, int e) {
-      int f = get_global_id(0);
-      int g = get_global_id(1) * e;
-      if (f < e)
-        a[f] = b[f];
+    int f = get_global_id(0);
+    int g = get_global_id(1) * e;
+    if (f < e)
+    a[f] = b[f];
     }
   \end{lstlisting}
 \end{lrbox}
@@ -487,7 +487,7 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A() {
-      local float a; A(a);
+    local float a; A(a);
     }
   \end{lstlisting}
 \end{lrbox}
@@ -497,11 +497,11 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A() {
-      local int a[10];
-      local int b[16][16];
-      a[1024 + (2 * get_local_id(1) +
-        get_local_id(0)) + get_local_id(0)] = 6;
-      barrier(b);
+    local int a[10];
+    local int b[16][16];
+    a[1024 + (2 * get_local_id(1) +
+    get_local_id(0)) + get_local_id(0)] = 6;
+    barrier(b);
     }
   \end{lstlisting}
 \end{lrbox}
@@ -511,11 +511,11 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(global float* a, global float* b,
-                  global float* c, const int d) {
-      for (unsigned int e = get_global_id(0);
-           e < d; e += get_global_size(0))
-        for (unsigned f = 0; f < d; ++f)
-          e += a[f];
+    global float* c, const int d) {
+    for (unsigned int e = get_global_id(0);
+    e < d; e += get_global_size(0))
+    for (unsigned f = 0; f < d; ++f)
+    e += a[f];
     }
   \end{lstlisting}
 \end{lrbox}
@@ -526,8 +526,8 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(global int* a, global int* b,
-                  global int* c) {
-      a[get_global_id(0)] = a[get_global_id(0)] > b;
+    global int* c) {
+    a[get_global_id(0)] = a[get_global_id(0)] > b;
     }
   \end{lstlisting}
 \end{lrbox}
@@ -537,8 +537,8 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(global int* a) {
-      global int* b = ((void*)0);
-      b[0] = a;
+    global int* b = ((void*)0);
+    b[0] = a;
     }
   \end{lstlisting}
 \end{lrbox}
@@ -572,8 +572,8 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(global half* a) {
-      int b = get_global_id(0);
-      a[b] = b * b;
+    int b = get_global_id(0);
+    a[b] = b * b;
     }
   \end{lstlisting}
 \end{lrbox}
@@ -583,10 +583,10 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(global float* a, global float* b,
-                  const int c) {
-      for (int d = 0; d < c; d++)
-        for (d = 0; d < a; d += 32)
-          b[d] = 0;
+    const int c) {
+    for (int d = 0; d < c; d++)
+    for (d = 0; d < a; d += 32)
+    b[d] = 0;
     }
   \end{lstlisting}
 \end{lrbox}
@@ -596,15 +596,15 @@
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(global int* a, const int b, const int c) {
-      int d; int e; int f = 0;
-      for (int g = b >> 1; g > 1; g >>= 1) {
-        barrier(1);
-        for (int h = c; h < g; h += d) {
-          int i = f * (2 * h + 1) - 1;
-          int j = f * (2 * h + 2) - 1;
-          a[j] += a[i];
-        }
-      }
+    int d; int e; int f = 0;
+    for (int g = b >> 1; g > 1; g >>= 1) {
+    barrier(1);
+    for (int h = c; h < g; h += d) {
+    int i = f * (2 * h + 1) - 1;
+    int j = f * (2 * h + 2) - 1;
+    a[j] += a[i];
+    }
+    }
     }
   \end{lstlisting}
 \end{lrbox}

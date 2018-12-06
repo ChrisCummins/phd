@@ -1,11 +1,11 @@
 """Unit tests for //datasets/github/scrape_repos/importer.py."""
 import multiprocessing
-
 import pathlib
-import pytest
 import sys
 import tempfile
 import typing
+
+import pytest
 from absl import app
 from absl import flags
 from phd.lib.labm8 import pbutil

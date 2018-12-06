@@ -1,10 +1,11 @@
 """End-to-end compilation pipeline."""
 import pathlib
-import pytest
 import subprocess
 import sys
 import tempfile
 import typing
+
+import pytest
 from absl import app
 from absl import flags
 

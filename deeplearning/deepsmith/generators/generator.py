@@ -1,11 +1,12 @@
 """This file defines the base class for generator implementations."""
-import grpc
 import time
 import typing
+from concurrent import futures
+
+import grpc
 from absl import app
 from absl import flags
 from absl import logging
-from concurrent import futures
 from phd.lib.labm8 import pbutil
 
 from deeplearning.deepsmith import services

@@ -2,11 +2,11 @@
 #
 # Generate training data files from results.
 #
-import sys
-
 import csv
-import smith
+import sys
 from argparse import ArgumentParser
+
+import smith
 
 
 class MalformedDataException(smith.SmithException): pass

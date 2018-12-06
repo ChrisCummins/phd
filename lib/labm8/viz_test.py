@@ -5,6 +5,7 @@ import matplotlib
 import pytest
 from absl import app
 
+
 matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt

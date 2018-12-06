@@ -1,8 +1,8 @@
 \begin{algorithmic}[1]
-\Require kernel features $k$, hardware features $h$, dataset features
-$d$.
-\Ensure workgroup size $w$
-\State $C \leftarrow \{c_1, c_2, \ldots, c_n \}$
-\Comment Set of all workgroup sizes $\le k.\text{max\_wgsize}$
-\State \textbf{return} $\underset{c \in C}{\argmax} f(k,h,d,c)$
+  \Require kernel features $k$, hardware features $h$, dataset features
+  $d$.
+  \Ensure workgroup size $w$
+  \State $C \leftarrow \{c_1, c_2, \ldots, c_n \}$
+  \Comment Set of all workgroup sizes $\le k.\text{max\_wgsize}$
+  \State \textbf{return} $\underset{c \in C}{\argmax} f(k,h,d,c)$
 \end{algorithmic}

@@ -3,13 +3,13 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+import inspect
 import os
 import sys
 from time import time
 
-import inspect
-
 from phd.lib.labm8 import labtypes
+
 
 __TIMERS = {}
 

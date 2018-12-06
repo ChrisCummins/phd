@@ -11,12 +11,13 @@ Usage:
         --test_flag=--me_db_acceptance_tests_inbox=/path/to/inbox
 """
 import datetime
-import pandas as pd
 import pathlib
-import pytest
 import sys
 import tempfile
 import typing
+
+import pandas as pd
+import pytest
 from absl import app
 from phd.lib.labm8 import bazelutil
 from sqlalchemy.sql.expression import func

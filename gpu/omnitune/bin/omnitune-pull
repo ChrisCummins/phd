@@ -4,6 +4,7 @@ from __future__ import division
 from __future__ import print_function
 
 import sys
+
 from omnitune.skelcl import db as _db
 from omnitune.skelcl import load_config
 from omnitune.skelcl.migrate import migrate

@@ -1,14 +1,14 @@
 """Utility code for working with Protocol Buffers."""
-import json
-
 import collections
-import google.protobuf.json_format
-import google.protobuf.message
-import google.protobuf.text_format
 import gzip
+import json
 import pathlib
 import subprocess
 import typing
+
+import google.protobuf.json_format
+import google.protobuf.message
+import google.protobuf.text_format
 from phd.lib.labm8 import jsonutil
 
 

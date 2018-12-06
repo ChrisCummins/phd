@@ -5,7 +5,8 @@ from collections import deque
 from typing import Tuple
 
 
-def routes_through_grid_bfs(start: Tuple[int, int], end: Tuple[int, int]) -> int:
+def routes_through_grid_bfs(start: Tuple[int, int],
+                            end: Tuple[int, int]) -> int:
   """
   breadth first search
 
@@ -27,7 +28,8 @@ def routes_through_grid_bfs(start: Tuple[int, int], end: Tuple[int, int]) -> int
   return count
 
 
-def routes_through_grid_dfs(start: Tuple[int, int], end: Tuple[int, int]) -> int:
+def routes_through_grid_dfs(start: Tuple[int, int],
+                            end: Tuple[int, int]) -> int:
   """
   depth first search
 

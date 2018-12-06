@@ -2,12 +2,12 @@
 
 An atomizer converts a block of text into a sequence of vocbulary tokens.
 """
-from collections import Counter
-
-import numpy as np
 import pathlib
 import pickle
 import typing
+from collections import Counter
+
+import numpy as np
 from absl import flags
 from phd.lib.labm8 import labdate
 

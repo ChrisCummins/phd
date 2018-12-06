@@ -1,9 +1,10 @@
 """Export dsmith_04 databases to Protos."""
-import MySQLdb
 import configparser
 import os
 import pathlib
 import typing
+
+import MySQLdb
 from absl import app
 from absl import flags
 from absl import logging

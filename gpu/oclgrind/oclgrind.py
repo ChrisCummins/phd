@@ -14,12 +14,13 @@ Usage:
 import subprocess
 import sys
 import typing
+
 from absl import app
 from absl import flags
-
-from gpu.clinfo.proto import clinfo_pb2
 from phd.lib.labm8 import bazelutil
 from phd.lib.labm8 import system
+
+from gpu.clinfo.proto import clinfo_pb2
 
 
 FLAGS = flags.FLAGS

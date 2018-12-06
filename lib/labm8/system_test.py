@@ -1,12 +1,12 @@
 """Unit tests for //lib/labm8:system."""
 
-import os
-
 import getpass
-import pytest
+import os
 import socket
 import sys
 import tempfile
+
+import pytest
 from absl import app
 from phd.lib.labm8 import fs
 from phd.lib.labm8 import system

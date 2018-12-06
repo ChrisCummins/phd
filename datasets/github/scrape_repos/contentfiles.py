@@ -2,8 +2,9 @@
 import binascii
 import datetime
 import pathlib
-import sqlalchemy as sql
 import typing
+
+import sqlalchemy as sql
 from absl import flags
 from phd.lib.labm8 import labdate
 from phd.lib.labm8 import sqlutil

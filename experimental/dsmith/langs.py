@@ -131,7 +131,8 @@ class Language(dsmith.ReprComparable):
 
   # Abstract methods (must be implemented):
 
-  def describe_testbeds(self, available_only: bool = False, file=sys.stdout) -> None:
+  def describe_testbeds(self, available_only: bool = False,
+                        file=sys.stdout) -> None:
     """ describe testbeds """
     raise NotImplementedError("abstract class")
 

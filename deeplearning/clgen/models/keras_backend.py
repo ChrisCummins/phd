@@ -7,13 +7,13 @@ import humanize
 import numpy as np
 from absl import flags
 from absl import logging
+from phd.lib.labm8 import logutil
 
 from deeplearning.clgen import samplers
 from deeplearning.clgen import telemetry
 from deeplearning.clgen.models import backends
 from deeplearning.clgen.models import builders
 from deeplearning.clgen.models import data_generators
-from phd.lib.labm8 import logutil
 
 
 FLAGS = flags.FLAGS

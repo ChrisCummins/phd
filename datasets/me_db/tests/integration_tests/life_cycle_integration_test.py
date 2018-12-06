@@ -1,8 +1,9 @@
 """Integration tests for Life Cycle import to me_db."""
 import datetime
-import pytest
 import sys
 import typing
+
+import pytest
 from absl import app
 from absl import flags
 

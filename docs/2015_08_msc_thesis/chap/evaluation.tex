@@ -29,8 +29,8 @@ runtimes for each test case is 83 (min \checkme{33}, total
 \section{Statistical Soundness}
 
 \begin{figure}
-\input{fig/runtime-histograms}
-\caption[Distribution of stencil code runtimes]{%
+  \input{fig/runtime-histograms}
+  \caption[Distribution of stencil code runtimes]{%
   Distribution of runtime samples for test cases from three
   devices. Each plot contains a 35-bin histogram of 1000 samples, and
   a fitted kernel density estimate with bandwidth 0.3. The sample mean
@@ -39,8 +39,8 @@ runtimes for each test case is 83 (min \checkme{33}, total
   from the AMD Tahiti 7970. In some of the plots, the distribution of
   runtimes is bimodal, and skewed to the lower end of the runtimes
   range.%
-}
-\label{fig:runtime-histograms}
+  }
+  \label{fig:runtime-histograms}
 \end{figure}
 
 The complex interaction between processes competing for the finite
@@ -79,15 +79,15 @@ size. Increasing the sample size from 30 to 50 results in only a 25\%
 reduction.
 
 \begin{figure}
-\centering
-\includegraphics{img/ci_trend}
-\caption[Confidence interval size vs.\ sample count]{%
+  \centering
+  \includegraphics{img/ci_trend}
+  \caption[Confidence interval size vs.\ sample count]{%
   Ratio of confidence interval to mean as a function of sample
   count. Two dashed lines indicate the confidence intervals at the
   minimum (3.7\%) and mean (2.5\%) number of samples used in the
   experimental dataset.%
-}
-\label{fig:ci-trends}
+  }
+  \label{fig:ci-trends}
 \end{figure}
 
 By comparing the average confidence interval at different sample
@@ -111,15 +111,15 @@ optimisation space has on the performance of stencil codes.
 \subsection{Oracle Workgroup Sizes}
 
 \begin{figure}
-\centering
-\includegraphics{img/num_params_oracle.pdf}
-\caption[Oracle accuracy vs.\ number of workgroup sizes]{%
+  \centering
+  \includegraphics{img/num_params_oracle.pdf}
+  \caption[Oracle accuracy vs.\ number of workgroup sizes]{%
   Accuracy compared to the oracle as a function of the number of
   workgroup sizes used. The best accuracy that can be achieved using a
   single statically chosen workgroup size is 15\%. Achieving 50\%
   oracle accuracy requires a minimum of 14 distinct workgroup sizes.%
-}
-\label{fig:oracle-accuracy}
+  }
+  \label{fig:oracle-accuracy}
 \end{figure}
 
 For each scenario $s$, the oracle workgroup size $\Omega(s)$ is the
@@ -149,22 +149,22 @@ $w_{(64 \times 4)} \not\in W_{safe}$.
 \subsection{Workgroup Size Legality}\label{subsec:legality}
 
 \begin{figure}
-\begin{subfigure}[t]{0.98\textwidth}
-\centering
-\includegraphics{img/oracle_param_space.pdf}
-\vspace{-1.5em} % Shrink vertical padding
-\caption{}
-\label{fig:oracle-wgsizes}
-\end{subfigure}
-\\
-\begin{subfigure}[t]{0.98\textwidth}
-\centering
-\includegraphics{img/coverage_space.pdf}
-\vspace{-1.5em} % Shrink vertical padding
-\caption{}
-\label{fig:coverage}
-\end{subfigure}
-\caption[Workgroup size legality and optimality]{%
+  \begin{subfigure}[t]{0.98\textwidth}
+    \centering
+    \includegraphics{img/oracle_param_space.pdf}
+    \vspace{-1.5em} % Shrink vertical padding
+    \caption{}
+    \label{fig:oracle-wgsizes}
+  \end{subfigure}
+  \\
+  \begin{subfigure}[t]{0.98\textwidth}
+    \centering
+    \includegraphics{img/coverage_space.pdf}
+    \vspace{-1.5em} % Shrink vertical padding
+    \caption{}
+    \label{fig:coverage}
+  \end{subfigure}
+  \caption[Workgroup size legality and optimality]{%
   Log frequency counts for: (\subref{fig:oracle-wgsizes}) optimality,
   and (\subref{fig:coverage}) legality for a subset of the aggregated
   workgroup size optimisation space, $w_c \le 100, w_r \le 100$. The
@@ -173,8 +173,8 @@ $w_{(64 \times 4)} \not\in W_{safe}$.
   frequencies are highest for smaller row and column counts (where
   $w < W_{\max}(s) \forall s \in S$), and $w_c$ and $w_r$ values which
   are multiples of 8.%
-}
-\label{fig:heatmaps}
+  }
+  \label{fig:heatmaps}
 \end{figure}
 
 As explained in Section~\ref{sec:op-params}, the space of legal
@@ -190,18 +190,18 @@ runtime.
   \includegraphics{img/max_wgsizes.pdf}
   \vspace{-1.5em} % Shrink vertical padding
   \caption[Workgroup size coverage]{%
-    A subset of the aggregated workgroup size optimisation space,
-    $w_c \le 100, w_r \le 100$, showing the \emph{coverage} of each
-    workgroup size, i.e.\ the ratio of scenarios for which a workgroup
-    size satisfies architecture and kernel enforced constraints
-    ($W_{\max}(s)$). Workgroup sizes with a coverage of $< 1$ fail to
-    satisfy these constraints for one or more scenarios. Only
-    workgroup sizes with a coverage of 1 may be used for static
-    tuning, which greatly reduces the size of the optimisation
-    space. Observed $W_{\max}(s)$ values are multiples of 256, hence
-    the abrupt ``steps'' in coverage.%
+  A subset of the aggregated workgroup size optimisation space,
+  $w_c \le 100, w_r \le 100$, showing the \emph{coverage} of each
+  workgroup size, i.e.\ the ratio of scenarios for which a workgroup
+  size satisfies architecture and kernel enforced constraints
+  ($W_{\max}(s)$). Workgroup sizes with a coverage of $< 1$ fail to
+  satisfy these constraints for one or more scenarios. Only
+  workgroup sizes with a coverage of 1 may be used for static
+  tuning, which greatly reduces the size of the optimisation
+  space. Observed $W_{\max}(s)$ values are multiples of 256, hence
+  the abrupt ``steps'' in coverage.%
   }
-\label{fig:max-wgsizes}
+  \label{fig:max-wgsizes}
 \end{figure}
 
 We define the \emph{coverage} of a workgroup size to be the ratio
@@ -227,59 +227,59 @@ the optimisation space when $W_{\max}(s) = 8192$, even though only
 \subsubsection{Refused Parameters}
 
 \begin{table}
-\parbox{.32\linewidth}{
+  \parbox{.32\linewidth}{
   \centering
   \scriptsize
   \rowcolors{2}{white}{gray!25}
   \input{tab/top_refused_params_1}
-}
-\hfill
-\parbox{.32\linewidth}{
+  }
+  \hfill
+  \parbox{.32\linewidth}{
   \centering
   \scriptsize
   \rowcolors{2}{white}{gray!25}
   \input{tab/top_refused_params_2}
-}
-\hfill
-\parbox{.32\linewidth}{
+  }
+  \hfill
+  \parbox{.32\linewidth}{
   \centering
   \scriptsize
   \rowcolors{2}{white}{gray!25}
   \input{tab/top_refused_params_3}
-}
-\caption[Workgroup sizes most frequently refused]{%
+  }
+  \caption[Workgroup sizes most frequently refused]{%
   The thirty most refused parameters, ranked in descending
   order. There is little correlation between the size of workgroup and the
   likelihood that it is refused, suggesting that the cause of refused
   parameters is not a resource constraint, but a behavioural issue.%
-}
-\label{tab:top-refused-params}
+  }
+  \label{tab:top-refused-params}
 \end{table}
 
 \begin{figure}
-\centering
-\begin{subfigure}[h]{.45\textwidth}
   \centering
-  \includegraphics{img/refused_params_by_device}
-  \caption{}
-  \label{fig:refused-params-by-device}
-\end{subfigure}
-\hfill
-\begin{subfigure}[h]{.45\textwidth}
-  \centering
-  \includegraphics{img/refused_params_by_vendor}
-  \caption{}
-  \label{fig:refused-params-by-vendor}
-\end{subfigure}
-\caption[Refused workgroup sizes by device and vendor]{%
+  \begin{subfigure}[h]{.45\textwidth}
+    \centering
+    \includegraphics{img/refused_params_by_device}
+    \caption{}
+    \label{fig:refused-params-by-device}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[h]{.45\textwidth}
+    \centering
+    \includegraphics{img/refused_params_by_vendor}
+    \caption{}
+    \label{fig:refused-params-by-vendor}
+  \end{subfigure}
+  \caption[Refused workgroup sizes by device and vendor]{%
   The ratio of test cases with refused workgroup sizes, grouped by:
   (\subref{fig:refused-params-by-device}) OpenCL device ID;\
   (\subref{fig:refused-params-by-vendor}) device vendor ID. Parameters
   were refused most frequently by Intel i5 CPUs, then by
   previous-generation NVIDIA GPUs. No parameters were refused by AMD
   devices.%
-}
-\label{fig:refused-params-by-dev-vendor}
+  }
+  \label{fig:refused-params-by-dev-vendor}
 \end{figure}
 
 In addition to the hard constraints imposed by the maximum workgroup
@@ -366,42 +366,42 @@ possible performance which can be expected from autotuning.
 
 
 \begin{figure}
-\centering
-\includegraphics{img/params_summary.pdf}
-\caption[Workgroup size legality vs.\ performance]{%
+  \centering
+  \includegraphics{img/params_summary.pdf}
+  \caption[Workgroup size legality vs.\ performance]{%
   Average legality and performance relative to the oracle of all
   workgroup sizes. Clearly, the relationship between legality and
   performance is not linear. Distinct vertical ``bands'' appear
   between regions of legality caused by the different $W_{\max}(s)$
   values of devices. The irregular jitter between these vertical bands
   is caused by refused parameters.%
-}
-\label{fig:performance-legality}
+  }
+  \label{fig:performance-legality}
 \end{figure}
 
 
 \begin{table}[t]
   \parbox{.45\linewidth}{
-    \centering
-    \scriptsize
-    \rowcolors{2}{white}{gray!25}
-    \input{tab/top_params_coverage}
-    \caption[Workgroup sizes with greatest legality]{%
-      The 25 workgroup sizes with the greatest legality.%
-    }
-\label{tab:highest-legality}
+  \centering
+  \scriptsize
+  \rowcolors{2}{white}{gray!25}
+  \input{tab/top_params_coverage}
+  \caption[Workgroup sizes with greatest legality]{%
+  The 25 workgroup sizes with the greatest legality.%
+  }
+  \label{tab:highest-legality}
   }
   \hfill
   \parbox{.45\linewidth}{
-    \centering
-    \scriptsize
-    \rowcolors{2}{white}{gray!25}
-    \input{tab/top_params_perf}
-    \caption[Workgroup sizes with greatest performance]{%
-      The 25 workgroup sizes with the greatest mean
-      performance.%
-    }
-\label{tab:highest-performance}
+  \centering
+  \scriptsize
+  \rowcolors{2}{white}{gray!25}
+  \input{tab/top_params_perf}
+  \caption[Workgroup sizes with greatest performance]{%
+  The 25 workgroup sizes with the greatest mean
+  performance.%
+  }
+  \label{tab:highest-performance}
   }
 \end{table}
 
@@ -411,14 +411,14 @@ possible performance which can be expected from autotuning.
 \begin{figure}[t]
   \includegraphics{img/max_speedups}
   \caption[Workgroup size speedups]{%
-    Speedup of oracle workgroup size over: the worst performing
-    workgroup size for each scenario (\emph{Max}), the statically
-    chosen workgroup size that provides the best overall performance
-    ($w_{(4 \times 4)}$), and the human expert selected parameter
-    ($w_{(32 \times 4)}$). Note that the human expert parameter is not
-    legal for all scenarios.%
+  Speedup of oracle workgroup size over: the worst performing
+  workgroup size for each scenario (\emph{Max}), the statically
+  chosen workgroup size that provides the best overall performance
+  ($w_{(4 \times 4)}$), and the human expert selected parameter
+  ($w_{(32 \times 4)}$). Note that the human expert parameter is not
+  legal for all scenarios.%
   }
-\label{fig:speedups}
+  \label{fig:speedups}
 \end{figure}
 
 For a given scenario $s$, the ratio of the workgroups sizes from
@@ -427,7 +427,7 @@ used to calculate an upper bound for the possible performance
 influence of workgroup size:
 %
 \begin{equation}
-r_{max}(s) = r(s, \argmax_{w \in W_{legal}(s)} t(s,w), \Omega(s))
+  r_{max}(s) = r(s, \argmax_{w \in W_{legal}(s)} t(s,w), \Omega(s))
 \end{equation}
 %
 When applied to each scenario $s \in S$ of the experimental results,
@@ -515,17 +515,17 @@ maximum.
 \subsubsection{Per-device workgroup sizes}
 
 \begin{table}
-\scriptsize
-\centering
-\rowcolors{2}{white}{gray!25}
-\input{tab/heuristics-dev}
-\caption[Performance of tuning with a per-device heuristic]{%
+  \scriptsize
+  \centering
+  \rowcolors{2}{white}{gray!25}
+  \input{tab/heuristics-dev}
+  \caption[Performance of tuning with a per-device heuristic]{%
   Selecting workgroup size using a per-device heuristic. The mode
   optimal workgroup size for each device type $\bar{w}$ is evaluated
   based on legality, and relative performance to the oracle (minimum
   and average) when legal.%
-}
-\label{tab:heuristic-dev}
+  }
+  \label{tab:heuristic-dev}
 \end{table}
 
 One possible technique to selecting workgroup size is to tune
@@ -569,25 +569,25 @@ capable of reliably informing the choice of workgroup size.
 
 \cleardoublepage
 \begin{figure}
-\input{fig/performance-wgsizes}
-\caption[Workgroup size performances vs.\ size]{%
+  \input{fig/performance-wgsizes}
+  \caption[Workgroup size performances vs.\ size]{%
   Comparing workgroup performance relative to the oracle as function
   of: (\subref{fig:performance-max-wgsize})~maximum legal size,
   (\subref{fig:performance-wg-c})~number of columns, and
   (\subref{fig:performance-wg-r})~ number of rows. Each workgroup
   size is normalised to the maximum allowed for that scenario, $W_{\max}(s)$.%
-}
-\label{fig:performance-wgsizes}
+  }
+  \label{fig:performance-wgsizes}
 \end{figure}
 \begin{figure}
-\input{fig/performances}
-\caption[Workgroup size performances across device, kernel, and dataset]{%
+  \input{fig/performances}
+  \caption[Workgroup size performances across device, kernel, and dataset]{%
   Performance relative to the oracle of workgroup sizes across all
   test cases, grouped by: (\subref{fig:performance-kernels})~kernels,
   (\subref{fig:performance-devices})~devices, and
   (\subref{fig:performance-datasets})~datasets.%
-}
-\label{fig:performances}
+  }
+  \label{fig:performances}
 \end{figure}
 
 
@@ -599,15 +599,15 @@ performance of an average of 629 workgroup sizes for each of 429
 scenarios, the following conclusions can be drawn:
 
 \begin{enumerate}
-\item The performance of a workgroup size for a particular scenario
+  \item The performance of a workgroup size for a particular scenario
   depends properties of the hardware, software, and dataset.
-\item The performance gap between the best and workgroup sizes for a
+  \item The performance gap between the best and workgroup sizes for a
   particular combination of hardware, software, and dataset is up to
   $207.72\times$.
-\item Not all workgroup sizes are legal, and the space of legal
+  \item Not all workgroup sizes are legal, and the space of legal
   workgroup sizes cannot statically be determined. Adaptive tuning of
   workgroup size is required to ensure reliable performance.
-\item Differing scenarios have wildly different optimal workgroup
+  \item Differing scenarios have wildly different optimal workgroup
   sizes, and the best performance can be achieved using static tuning
   is optimal for only 15\% of scenarios.
 \end{enumerate}
@@ -634,20 +634,20 @@ to evaluate the prediction quality under different scenarios. The
 processes for generating validation sets are:
 %
 \begin{itemize}
-\item 10-fold --- shuffle the set of all data and divide into 10
+  \item 10-fold --- shuffle the set of all data and divide into 10
   validation sets, each containing 10\% of the data. This process is
   repeated for 10 rounds, resulting in 100 validations of 10
   permutations of the data.
-\item Synthetic --- divide the training data such that it consists
+  \item Synthetic --- divide the training data such that it consists
   solely of data collected from synthetic benchmarks, and use data
   collected from real-world benchmarks to test.
-\item Device --- partition the training data into $n$ sets, one for
+  \item Device --- partition the training data into $n$ sets, one for
   each device. Use $n-1$ sets for training, repeating until every
   partition has been used for testing once.
-\item Kernel --- partition the training data into $n$ sets, one for
+  \item Kernel --- partition the training data into $n$ sets, one for
   each kernel. Use $n-1$ sets for training, repeating until every
   partition has been used for testing once.
-\item Dataset --- partition the training data into $n$ sets, one for
+  \item Dataset --- partition the training data into $n$ sets, one for
   each type of dataset. Use $n-1$ sets for training, repeating until
   every partition has been used for testing once.
 \end{itemize}
@@ -695,21 +695,21 @@ quality of the predicted workgroup size is evaluated using the
 following metrics:
 %
 \begin{itemize}
-\item accuracy (binary) --- whether the predicted workgroup size is
+  \item accuracy (binary) --- whether the predicted workgroup size is
   the true oracle, $p(f(s)) = \Omega(s)$.
-\item validity (binary) --- whether the classifier predicted a
+  \item validity (binary) --- whether the classifier predicted a
   workgroup size which satisfies the workgroup size constraints
   constraints, $p(f(s)) < W_{\max}(s)$.
-\item refused (binary) --- whether the classifier predicted a
+  \item refused (binary) --- whether the classifier predicted a
   workgroup size which is refused, $p(f(s)) \in W_{refused}(s)$.
-\item performance (real) --- the relative performance of the predicted
+  \item performance (real) --- the relative performance of the predicted
   workgroup size relative to the oracle,
   $0 \le r(p(f(s)), \Omega(s)) \le 1$.
-\item speedups (real) --- the relative performance of the predicted
+  \item speedups (real) --- the relative performance of the predicted
   workgroup size relative to the baseline workgroup size
   $w_{(4 \times 4)}$, and human expert workgroup size
   $w_{(32 \times 4)}$ (where applicable).
-\item time (real) --- the round trip time required to make the prediction,
+  \item time (real) --- the round trip time required to make the prediction,
   as measured by the OmniTune client. This includes classification
   time and inter-process communication overheads between the client
   and server.
@@ -753,16 +753,16 @@ The quality of predicted workgroup sizes is evaluated using the
 following metrics:
 %
 \begin{itemize}
-\item accuracy (binary) --- whether the predicted workgroup size is
+  \item accuracy (binary) --- whether the predicted workgroup size is
   the true oracle, $p(f(s)) = \Omega(s)$.
-\item performance (real) --- the relative performance of the predicted
+  \item performance (real) --- the relative performance of the predicted
   workgroup size relative to the oracle,
   $0 \le r(p(f(s)), \Omega(s)) \le 1$.
-\item speedups (real) --- the relative performance of the predicted
+  \item speedups (real) --- the relative performance of the predicted
   workgroup size relative to the baseline workgroup size
   $w_{(4 \times 4)}$, and human expert workgroup size
   $w_{(32 \times 4)}$ (where applicable).
-\item time (real) --- the round trip time required to make the
+  \item time (real) --- the round trip time required to make the
   prediction, as measured by the OmniTune client. This includes
   classification time and inter-process communication overheads
   between the client and server.
@@ -784,48 +784,48 @@ classifiers.
 
 \cleardoublepage
 \begin{figure}
-\centering
-\includegraphics{img/classification-syn-real}
-\caption[Classification results using synthetic benchmarks]{%
+  \centering
+  \includegraphics{img/classification-syn-real}
+  \caption[Classification results using synthetic benchmarks]{%
   Classification results for synthetic benchmarks. Each classifier is
   trained on data from synthetic stencils, and tested for prediction
   quality using data from 6 real world benchmarks.%
-}
-\label{fig:class-syn}
+  }
+  \label{fig:class-syn}
 \end{figure}
 \newpage
 \begin{figure}
-\centering
-\includegraphics{img/classification-arch}
-\caption[Classification results using cross-device evaluation]{%
+  \centering
+  \includegraphics{img/classification-arch}
+  \caption[Classification results using cross-device evaluation]{%
   Classification results of cross-device evaluation. Each classifier
   is trained using data from $n-1$ devices, and tested for prediction
   quality using data for the $n^{th}$ device.%
-}
-\label{fig:class-arch}
+  }
+  \label{fig:class-arch}
 \end{figure}
 \begin{figure}
-\centering
-\begin{subfigure}[h]{.45\textwidth}
-\centering
-\includegraphics{img/runtime-class-xval}
-\caption{}
-\label{fig:runtime-class-xval}
-\end{subfigure}
-~%
-\begin{subfigure}[h]{.45\textwidth}
-\centering
-\includegraphics{img/speedup-class-xval}
-\caption{}
-\label{fig:speedup-class-xval}
-\end{subfigure}
-\caption[Autotuning performance using regressors]{%
+  \centering
+  \begin{subfigure}[h]{.45\textwidth}
+    \centering
+    \includegraphics{img/runtime-class-xval}
+    \caption{}
+    \label{fig:runtime-class-xval}
+  \end{subfigure}
+  ~%
+  \begin{subfigure}[h]{.45\textwidth}
+    \centering
+    \includegraphics{img/speedup-class-xval}
+    \caption{}
+    \label{fig:speedup-class-xval}
+  \end{subfigure}
+  \caption[Autotuning performance using regressors]{%
   Evaluating the effectiveness of classification using regressors, by
   predicting: (\subref{fig:runtime-class-xval}) the workgroup size
   with the minimal runtime, and (\subref{fig:speedup-class-xval}) the
   workgroup size with the greatest speedup over a baseline.%
-}
-\label{fig:regression-class}
+  }
+  \label{fig:regression-class}
 \end{figure}
 
 With the exception of the ZeroR, which predicts \emph{only} the
@@ -834,7 +834,7 @@ classifiers achieve good speedups over the baseline. Average
 classification speedups across all validation sets range between
 $4.61\times$ and $5.05\times$. Figures~\ref{fig:class-syn}
 and~\ref{fig:class-arch} show a summary of results using 10-fold
-cross-validation and cross-device validation, respectively.  The
+cross-validation and cross-device validation, respectively. The
 highest average speedup is achieved by SMO, and the lowest by Naive
 Bayes. The difference between average speedups is not significant
 between the types of classifier, with the exception of SimpleLogistic,
@@ -845,14 +845,14 @@ shared by the real-world
 tests.
 
 \begin{figure}
-\centering
-\includegraphics{img/fallback_speedups}
-\caption[Comparison of fallback handler speedups]{%
+  \centering
+  \includegraphics{img/fallback_speedups}
+  \caption[Comparison of fallback handler speedups]{%
   Comparison of fallback handlers, showing the speedup over baseline
   parameter for all test cases where a classifier predicted an illegal
   workgroup size.%
-}
-\label{fig:fallback-speedups}
+  }
+  \label{fig:fallback-speedups}
 \end{figure}
 
 By isolating the test cases where classifiers predicted an illegal or
@@ -913,16 +913,16 @@ the human expert selected workgroup size.
 
 
 \begin{figure}
-\centering
-\includegraphics{img/speedup-distributions}
-\caption[Speedup results over human expert]{%
+  \centering
+  \includegraphics{img/speedup-distributions}
+  \caption[Speedup results over human expert]{%
   Distributions of speedups over \emph{human expert}, ignoring cases
   where human expert prediction is invalid. Classifiers are using
   \textsc{NearestNeighbour} fallback handlers. The speedup axis is
   fixed to the range 0--2.5 to highlight the IQRs, which results in
   some outliers > 2.5 being clipped.%
-}
-\label{fig:speedup-distributions}
+  }
+  \label{fig:speedup-distributions}
 \end{figure}
 
 
@@ -931,91 +931,91 @@ the human expert selected workgroup size.
 
 
 \begin{table}
-\scriptsize
-\centering
-\rowcolors{2}{white}{gray!25}
-\input{tab/class}
-\caption{Validation results for J48 and \textsc{NearestNeighbour}
+  \scriptsize
+  \centering
+  \rowcolors{2}{white}{gray!25}
+  \input{tab/class}
+  \caption{Validation results for J48 and \textsc{NearestNeighbour}
   classification.}
-\label{tab:class}
+  \label{tab:class}
 \end{table}
 \begin{table}
-\scriptsize
-\centering
-\rowcolors{2}{white}{gray!25}
-\input{tab/class-runtime}
-\caption{Validation results for runtime regression.}
-\label{tab:runtime-class}
+  \scriptsize
+  \centering
+  \rowcolors{2}{white}{gray!25}
+  \input{tab/class-runtime}
+  \caption{Validation results for runtime regression.}
+  \label{tab:runtime-class}
 \end{table}
 \begin{table}
-\scriptsize
-\centering
-\rowcolors{2}{white}{gray!25}
-\input{tab/class-speedup}
-\caption{Validation results for speedup regression.}
-\label{tab:speedup-class}
+  \scriptsize
+  \centering
+  \rowcolors{2}{white}{gray!25}
+  \input{tab/class-speedup}
+  \caption{Validation results for speedup regression.}
+  \label{tab:speedup-class}
 \end{table}
 
 
 % \subsection{Visualising Prediction Errors}
 
 \begin{figure}
-\centering
-\begin{subfigure}[t]{0.45\textwidth}
-\centering
-\includegraphics{img/heatmap_1}
-\vspace{-1.5em} % Shrink vertical padding
-\caption{}
-\label{fig:class-hmaps-1}
-\end{subfigure}
-~%
-\begin{subfigure}[t]{0.45\textwidth}
-\centering
-\includegraphics{img/heatmap_2}
-\vspace{-1.5em} % Shrink vertical padding
-\caption{}
-\label{fig:class-hmaps-2}
-\end{subfigure}
-\\
-\begin{subfigure}[t]{0.45\textwidth}
-\centering
-\includegraphics{img/heatmap_3}
-\vspace{-1.5em} % Shrink vertical padding
-\caption{}
-\label{fig:class-hmaps-3}
-\end{subfigure}
-~%
-\begin{subfigure}[t]{0.45\textwidth}
-\centering
-\includegraphics{img/heatmap_5}
-\vspace{-1.5em} % Shrink vertical padding
-\caption{}
-\label{fig:class-hmaps-4}
-\end{subfigure}
-\\
-\begin{subfigure}[t]{0.45\textwidth}
-\centering
-\includegraphics{img/reg_runtime_heatmap}
-\vspace{-1.5em} % Shrink vertical padding
-\caption{}
-\label{fig:class-hmaps-5}
-\end{subfigure}
-~%
-\begin{subfigure}[t]{0.45\textwidth}
-\centering
-\includegraphics{img/reg_speedup_heatmap}
-\vspace{-1.5em} % Shrink vertical padding
-\caption{}
-\label{fig:class-hmaps-6}
-\end{subfigure}
-\caption[Classification error heatmaps]{%
+  \centering
+  \begin{subfigure}[t]{0.45\textwidth}
+    \centering
+    \includegraphics{img/heatmap_1}
+    \vspace{-1.5em} % Shrink vertical padding
+    \caption{}
+    \label{fig:class-hmaps-1}
+  \end{subfigure}
+  ~%
+  \begin{subfigure}[t]{0.45\textwidth}
+    \centering
+    \includegraphics{img/heatmap_2}
+    \vspace{-1.5em} % Shrink vertical padding
+    \caption{}
+    \label{fig:class-hmaps-2}
+  \end{subfigure}
+  \\
+  \begin{subfigure}[t]{0.45\textwidth}
+    \centering
+    \includegraphics{img/heatmap_3}
+    \vspace{-1.5em} % Shrink vertical padding
+    \caption{}
+    \label{fig:class-hmaps-3}
+  \end{subfigure}
+  ~%
+  \begin{subfigure}[t]{0.45\textwidth}
+    \centering
+    \includegraphics{img/heatmap_5}
+    \vspace{-1.5em} % Shrink vertical padding
+    \caption{}
+    \label{fig:class-hmaps-4}
+  \end{subfigure}
+  \\
+  \begin{subfigure}[t]{0.45\textwidth}
+    \centering
+    \includegraphics{img/reg_runtime_heatmap}
+    \vspace{-1.5em} % Shrink vertical padding
+    \caption{}
+    \label{fig:class-hmaps-5}
+  \end{subfigure}
+  ~%
+  \begin{subfigure}[t]{0.45\textwidth}
+    \centering
+    \includegraphics{img/reg_speedup_heatmap}
+    \vspace{-1.5em} % Shrink vertical padding
+    \caption{}
+    \label{fig:class-hmaps-6}
+  \end{subfigure}
+  \caption[Classification error heatmaps]{%
   Heatmaps of classification errors for 10-fold cross-validation,
   showing a subset of the optimisation space. The shading in each
   cells indicates if it is predicted less frequently (blue), ore more
   frequently (red) than it is optimal. Colour gradients are normalised
   across plots.%
-}
-\label{fig:class-hmaps}
+  }
+  \label{fig:class-hmaps}
 \end{figure}
 
 
@@ -1045,18 +1045,18 @@ different types of validation sets, the following conclusions about
 autotuning performance can be drawn:
 %
 \begin{itemize}
-\item In the case of classifiers predicting illegal workgroup sizes,
+  \item In the case of classifiers predicting illegal workgroup sizes,
   the best fallback strategy is to select the closest legal workgroup
   size.
-\item The performance of predicted workgroup sizes for unseen devices
+  \item The performance of predicted workgroup sizes for unseen devices
   is within 8\% of the performance for known devices.
-\item Predicting the \emph{runtime} of stencils is the least effective
+  \item Predicting the \emph{runtime} of stencils is the least effective
   of the evaluated autotuning techniques, achieving an average of only
   68\% of the available performance.
-\item Predicting the \emph{speedup} of workgroup sizes provides the
+  \item Predicting the \emph{speedup} of workgroup sizes provides the
   highest median speedup, but more frequently predicts a poorly
   performing workgroup size then the classifiers.
-\item Classification using regression costs an order of magnitude more
+  \item Classification using regression costs an order of magnitude more
   time than using classifiers. The J48 classifier has the lowest
   overhead.
 \end{itemize}

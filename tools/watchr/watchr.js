@@ -40,75 +40,82 @@ global.run_lock = false;
  * Get the project source route.
  */
 var getProjectRoot = function (dir) {
-    if (dir === '/') {
-        console.log('fatal: Unable to locate project base directory!');
-        process.exit(3);
+  if (dir === '/') {
+    console.log('fatal: Unable to locate project base directory!');
+    process.exit(3);
+  } else {
+    if (fs.existsSync(dir + ROOT_MARKER)) {
+      return dir;
     } else {
-        if (fs.existsSync(dir + ROOT_MARKER))
-            return dir;
-        else
-            return getProjectRoot(path.resolve(dir + '/..'));
+      return getProjectRoot(path.resolve(dir + '/..'));
     }
+  }
 };
 
 // Print a message
 var message = function (msg) {
-    if (process.env.EMACS)
-        console.log(msg); // Colour deficient Emacs
-    else
-        console.log(msg.green);
+  if (process.env.EMACS) {
+    console.log(msg);
+  }// Colour deficient Emacs
+  else {
+    console.log(msg.green);
+  }
 };
 
 // Print an error message
 var errorMessage = function (msg) {
-    if (process.env.EMACS)
-        console.log(msg); // Colour deficient Emacs
-    else
-        console.log(msg.red);
+  if (process.env.EMACS) {
+    console.log(msg);
+  }// Colour deficient Emacs
+  else {
+    console.log(msg.red);
+  }
 };
 
 var run = function (cmd, opts) {
-    // If this is locked, do nothing.
-    if (global.run_lock)
-        return;
+  // If this is locked, do nothing.
+  if (global.run_lock) {
+    return;
+  }
 
-    try {
-        // Lock:
-        global.run_lock = true;
-        var worker = spawn(cmd, opts);
+  try {
+    // Lock:
+    global.run_lock = true;
+    var worker = spawn(cmd, opts);
 
-        worker.stdout.on('data', function (data) {
-            process.stdout.write(data);
-        });
+    worker.stdout.on('data', function (data) {
+      process.stdout.write(data);
+    });
 
-        worker.stderr.on('data', function (data) {
-            process.stderr.write(data);
-        });
+    worker.stderr.on('data', function (data) {
+      process.stderr.write(data);
+    });
 
-        worker.on('exit', function (code) {
-            // Unlock global state:
-            global.run_lock = false;
-            if (code !== 0)
-                console.log('Child process exited with code ' + code);
-        });
-    } catch (err) {
-        // Unlock global state:
-        global.run_lock = false;
-        console.log('error!');
-        console.log(err);
-    }
+    worker.on('exit', function (code) {
+      // Unlock global state:
+      global.run_lock = false;
+      if (code !== 0) {
+        console.log('Child process exited with code ' + code);
+      }
+    });
+  } catch (err) {
+    // Unlock global state:
+    global.run_lock = false;
+    console.log('error!');
+    console.log(err);
+  }
 };
 
 // Determine if file is ignored
 var ignoredFile = function (filename) {
-    return filename.match(/\/.git\//);
+  return filename.match(/\/.git\//);
 }
 
 // Source code modified callback
 var fileModified = function (filename) {
-    if (!ignoredFile(filename)) {
-        run('pmake');
-    }
+  if (!ignoredFile(filename)) {
+    run('pmake');
+  }
 };
 
 // Register our handler:

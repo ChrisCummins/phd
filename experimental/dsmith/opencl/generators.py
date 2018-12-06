@@ -25,10 +25,11 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from time import time
 
+from phd.lib.labm8 import fs
+
 from experimental.dsmith.langs import Generator
 from experimental.dsmith.opencl import clsmith
 from experimental.dsmith.opencl.db import *
-from phd.lib.labm8 import fs
 
 
 class OpenCLGenerator(Generator):
@@ -104,7 +105,8 @@ class OpenCLGenerator(Generator):
       # Print a preamble message:
       num_to_generate = max_value - num_progs
       if num_to_generate < math.inf:
-        estimated_time = (self.generation_time(s) / max(num_progs, 1)) * num_to_generate
+        estimated_time = (self.generation_time(s) / max(num_progs,
+                                                        1)) * num_to_generate
         eta = humanize.naturaldelta(datetime.timedelta(seconds=estimated_time))
         print(f"{Colors.BOLD}{num_to_generate}{Colors.END} programs are "
               "to be generated. Estimated generation time is " +

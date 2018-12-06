@@ -1,7 +1,8 @@
 """Unit tests for //datasets/benchmarks/bzip2.py."""
-import pytest
 import sys
 import typing
+
+import pytest
 from absl import app
 from absl import flags
 

@@ -1,7 +1,8 @@
 """Simple demo using ascii art package."""
+import sys
+
 import ascii_art
 import pytest
-import sys
 from absl import app
 from absl import flags
 

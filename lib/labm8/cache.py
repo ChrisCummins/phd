@@ -4,8 +4,9 @@ import atexit
 import json
 import pathlib
 import re
-import six
 import typing
+
+import six
 from phd.lib.labm8 import crypto
 from phd.lib.labm8 import fs
 from phd.lib.labm8 import io

@@ -1,8 +1,9 @@
 """Evaluate a reachability classifier."""
-import humanize
-import keras
 import pathlib
 import pickle
+
+import humanize
+import keras
 from absl import app
 from absl import flags
 from phd.lib.labm8 import pbutil

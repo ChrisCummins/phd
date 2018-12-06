@@ -1,9 +1,9 @@
 """Unit tests for //lib/labm8/bazelutil.py."""
-import pytest
 import sys
 import tempfile
-from absl import app
 
+import pytest
+from absl import app
 from phd.lib.labm8 import bazelutil
 from phd.lib.labm8 import fs
 

@@ -5,7 +5,6 @@ from io import StringIO
 
 import pytest
 from absl import app
-
 from phd.lib.labm8 import io
 
 

@@ -2,11 +2,13 @@
 """
 Run GPUverify on CLgen programs.
 """
-import clgen
 from argparse import ArgumentParser
+
+import clgen
 from dsmith import db
 from dsmith.db import *
 from progressbar import ProgressBar
+
 
 if __name__ == "__main__":
   parser = ArgumentParser(description=__doc__)

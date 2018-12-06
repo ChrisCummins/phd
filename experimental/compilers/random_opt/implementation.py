@@ -1,9 +1,6 @@
 """A Gym environment for the LLVM optimizer."""
-import os
-
 import filecmp
-import gym
-import numpy as np
+import os
 import pathlib
 import shutil
 import subprocess
@@ -11,6 +8,9 @@ import sys
 import tempfile
 import time
 import typing
+
+import gym
+import numpy as np
 from absl import flags
 from absl import logging
 from gym import spaces

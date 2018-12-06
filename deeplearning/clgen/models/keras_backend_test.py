@@ -1,8 +1,9 @@
 """Unit tests for //deeplearning/clgen/models/keras_backend.py."""
+import sys
+
 import checksumdir
 import numpy as np
 import pytest
-import sys
 from absl import app
 from phd.lib.labm8 import crypto
 from phd.lib.labm8 import pbutil

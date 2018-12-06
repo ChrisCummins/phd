@@ -12,8 +12,8 @@ for differential testing.
   \includegraphics[width=.75\columnwidth]{img/deepsmith}
   \vspace{-1em}
   \caption{%
-    DeepSmith system overview.
-    \vspace{-1em}
+  DeepSmith system overview.
+  \vspace{-1em}
   }%
   \label{fig:deeptune}
 \end{figure}
@@ -112,11 +112,11 @@ for compiler testing.
 \begin{table*}[t!]
   \footnotesize %
   \centering %
- 	\caption{%
-    OpenCL systems and the number of bug reports submitted to date (22\% of 
-    which have been fixed, the remainder are pending). For each system, two 
-    testbeds are created, one with compiler optimizations, the other without.%
-    \vspace{-.8em}
+  \caption{%
+  OpenCL systems and the number of bug reports submitted to date (22\% of
+  which have been fixed, the remainder are pending). For each system, two
+  testbeds are created, one with compiler optimizations, the other without.%
+  \vspace{-.8em}
   }
   \input{tab/platforms}
   \vspace{-.7em}
@@ -158,10 +158,11 @@ consisting of a few hundred lines of Python.
   \includegraphics[width=.7\columnwidth]{img/testprocess-long}
   \vspace{-.5em}
   \caption{%
-    Test case execution, and possible results.%
-    \vspace{-1.5em}
+  Test case execution, and possible results.%
+  \vspace{-1.5em}
   }%
-  \label{fig:test-process} %
+  \label{fig:test-process}
+  %
 \end{figure}
 Executing a test case on a testbed leads to one of seven possible outcomes,
 illustrated in Figure~\ref{fig:test-process}. A \emph{build failure} occurs when
@@ -209,7 +210,7 @@ CSmith is designed specifically to target this class of bug.
 
 Generated programs may contain undefined or non-deterministic behavior which
 will incorrectly be labeled as anomalous. CSmith circumvents this problem by
-performing  complex analyses during generation so as to minimize the chance of
+performing complex analyses during generation so as to minimize the chance of
 producing programs with undefined behavior. Although similar analyses could be
 created as filters for our system, we take a simpler approach, filtering only
 the few types of non-deterministic behavior we have actually observed to happen

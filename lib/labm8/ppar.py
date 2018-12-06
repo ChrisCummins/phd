@@ -4,9 +4,9 @@ The goal of the module is to provide easy to use implementations of typical
 parallel workloads, such as data parallel map operations.
 """
 import multiprocessing
-
 import subprocess
 import typing
+
 from absl import flags
 from phd.lib.labm8 import bazelutil
 from phd.lib.labm8 import pbutil

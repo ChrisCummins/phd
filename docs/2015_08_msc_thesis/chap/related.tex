@@ -25,9 +25,9 @@ review~\cite{Banerjee1993} on the subject, they outline the key
 challenges of automatic parallelisation:
 %
 \begin{itemize}
-\item determining whether sequential code can be legally transformed
+  \item determining whether sequential code can be legally transformed
   for parallel execution; and
-\item identifying the transformation which will provide the highest
+  \item identifying the transformation which will provide the highest
   performance improvement for a given piece of code.
 \end{itemize}
 %
@@ -47,7 +47,7 @@ issue of having incomplete dependency information by speculatively
 executing code regions in parallel while performing dependency tests
 at runtime, with the possibility to fall back to ``safe'' sequential
 execution if correctness guarantees are not
-met~\cite{Prabhu2010,Trachsel2010}.  In~\cite{Jimborean2014},
+met~\cite{Prabhu2010,Trachsel2010}. In~\cite{Jimborean2014},
 \citeauthor{Jimborean2014} present a system which combines polyhedral
 transformations of user code with binary algorithmic skeleton
 implementations for speculative parallelisation, reporting speedups
@@ -55,7 +55,7 @@ over sequential code of up to $15.62\times$ on a 24 core processor.
 
 Another example is PetaBricks, which is a language and compiler
 enabling parallelism through ``algorithmic choice''~\cite{Ansel2009,
-  Ansel2010}. With PetaBricks, users provide multiple implementations
+Ansel2010}. With PetaBricks, users provide multiple implementations
 of algorithms, optimised for different parameters or use cases. This
 creates a search space of possible execution paths for a given
 program. This has been combined with autotuning techniques for
@@ -86,14 +86,14 @@ these patterns on the skeleton author.
 
 
 \section{Iterative Compilation \& Machine
-  Learning}\label{sec:iterative-compilation}
+Learning}\label{sec:iterative-compilation}
 
 Iterative compilation is the method of performance tuning in which a
 program is compiled and profiled using multiple different
 configurations of optimisations in order to find the configuration
 which maximises performance. One of the the first formalised
 publications of the technique appeared in \citeyear{Bodin1998} by
-\citeauthor{Bodin1998}~\cite{Bodin1998}.  Iterative compilation has
+\citeauthor{Bodin1998}~\cite{Bodin1998}. Iterative compilation has
 since been demonstrated to be a highly effective form of empirical
 performance tuning for selecting compiler optimisations.
 

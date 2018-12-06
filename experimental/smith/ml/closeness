@@ -2,12 +2,13 @@
 #
 # TODO: Line style http://matplotlib.org/examples/lines_bars_and_markers/line_styles_reference.html
 #
+from math import sqrt
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy
 import seaborn as sns
-from math import sqrt
 from phd.lib.labm8 import fs
 from phd.lib.labm8 import math as labmath
 from phd.lib.labm8 import viz

@@ -1,10 +1,10 @@
 """Index ContentFiles from cloned GitHub repos."""
 import multiprocessing
 import os
-
-import humanize
 import pathlib
 import random
+
+import humanize
 from absl import app
 from absl import flags
 from absl import logging

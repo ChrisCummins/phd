@@ -2,20 +2,20 @@
 // Tables
 // --------------------------------------------------
 
-
 table {
   background-color: $table-bg;
 }
+
 caption {
   padding-top: $table-cell-padding;
   padding-bottom: $table-cell-padding;
   color: $text-muted;
   text-align: left;
 }
+
 th {
   text-align: left;
 }
-
 
 // Baseline styles
 
@@ -64,7 +64,6 @@ th {
   }
 }
 
-
 // Condensed table w/ half padding
 
 .table-condensed {
@@ -79,7 +78,6 @@ th {
     }
   }
 }
-
 
 // Bordered version
 //
@@ -105,7 +103,6 @@ th {
   }
 }
 
-
 // Zebra-striping
 //
 // Default zebra-stripe styles (alternating gray and transparent backgrounds)
@@ -115,7 +112,6 @@ th {
     background-color: $table-bg-accent;
   }
 }
-
 
 // Hover effect
 //
@@ -127,7 +123,6 @@ th {
   }
 }
 
-
 // Table cell sizing
 //
 // Reset default table behavior
@@ -137,6 +132,7 @@ table col[class*="col-"] {
   float: none;
   display: table-column;
 }
+
 table {
   td,
   th {
@@ -147,7 +143,6 @@ table {
     }
   }
 }
-
 
 // Table backgrounds
 //
@@ -160,7 +155,6 @@ table {
 @include table-row-variant('info', $state-info-bg);
 @include table-row-variant('warning', $state-warning-bg);
 @include table-row-variant('danger', $state-danger-bg);
-
 
 // Responsive tables
 //

@@ -1,9 +1,9 @@
 """Get a baseline reading of CLgen OpenCL models."""
 from absl import app
 from absl import flags
+from phd.lib.labm8 import bazelutil
 
 from deeplearning.clgen import clgen
-from phd.lib.labm8 import bazelutil
 
 
 FLAGS = flags.FLAGS

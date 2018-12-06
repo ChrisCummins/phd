@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-from collections import deque
-
 import os
-import progressbar
-import pyopencl as cl
 import re
 from argparse import ArgumentParser
+from collections import deque
+from tempfile import NamedTemporaryFile
+from time import strftime
+from typing import Tuple
+
+import progressbar
+import pyopencl as cl
 from dsmith import clsmith
 from dsmith import db
 from dsmith.db import *
 from dsmith.lib import *
 from phd.lib.labm8 import crypto
-from tempfile import NamedTemporaryFile
-from time import strftime
-from typing import Tuple
 
 
 def get_platform_name(platform_id):
@@ -68,7 +68,7 @@ def verify_params(platform: str, device: str, optimizations: bool,
     match = re.match('^3-D global size \d+ = \[(\d+), (\d+), (\d+)\]', line)
     if match:
       actual_global_size = (
-      int(match.group(1)), int(match.group(2)), int(match.group(3)))
+        int(match.group(1)), int(match.group(2)), int(match.group(3)))
     match = re.match('^2-D global size \d+ = \[(\d+), (\d+)\]', line)
     if match:
       actual_global_size = (int(match.group(1)), int(match.group(2)), 0)
@@ -80,7 +80,7 @@ def verify_params(platform: str, device: str, optimizations: bool,
     match = re.match('^3-D local size \d+ = \[(\d+), (\d+), (\d+)\]', line)
     if match:
       actual_local_size = (
-      int(match.group(1)), int(match.group(2)), int(match.group(3)))
+        int(match.group(1)), int(match.group(2)), int(match.group(3)))
     match = re.match('^2-D local size \d+ = \[(\d+), (\d+)\]', line)
     if match:
       actual_local_size = (int(match.group(1)), int(match.group(2)), 0)

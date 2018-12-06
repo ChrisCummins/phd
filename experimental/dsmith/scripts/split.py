@@ -1,6 +1,7 @@
 #!/usr/bin/env python3.6
 
 import sys
+
 from phd.lib.labm8 import crypto
 from phd.lib.labm8 import fs
 from progressbar import ProgressBar

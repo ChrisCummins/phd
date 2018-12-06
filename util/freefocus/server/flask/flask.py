@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 """Run a REST server."""
-import flask
-import flask_cors
-import sqlalchemy
 import typing
 from argparse import ArgumentParser
 from contextlib import contextmanager
+
+import flask
+import flask_cors
+import sqlalchemy
 from flask import abort, request
 
 from util.freefocus import freefocus

@@ -7,11 +7,12 @@ Usage:
 
 from __future__ import print_function
 
-import filters
-import google.protobuf.text_format
 import os
 import pkgutil
 import sys
+
+import filters
+import google.protobuf.text_format
 from proto import deepsmith_pb2
 
 

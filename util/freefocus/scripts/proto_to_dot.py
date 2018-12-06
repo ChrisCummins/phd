@@ -1,6 +1,7 @@
 """Convert a protobuf format workspace to dot source."""
 import sys
 from argparse import ArgumentParser
+
 from google.protobuf import json_format
 from graphviz import Digraph
 

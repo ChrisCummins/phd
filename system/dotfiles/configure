@@ -25,7 +25,6 @@ from __future__ import print_function
 import json
 import os
 import sys
-
 from argparse import ArgumentParser
 
 
@@ -57,10 +56,12 @@ def main():
   parser = ArgumentParser(description="Configure dotfiles install.")
   parser.add_argument(
       "--dotfiles", metavar="<path>", default=DEFAULTS["dotfiles"],
-      help="path to dotfiles directory (default: {})".format(DEFAULTS["dotfiles"]))
+      help="path to dotfiles directory (default: {})".format(
+          DEFAULTS["dotfiles"]))
   parser.add_argument(
       "--private", metavar="<path>", default=DEFAULTS["private"],
-      help="path to private directory (default: {})".format(DEFAULTS["private"]))
+      help="path to private directory (default: {})".format(
+          DEFAULTS["private"]))
   parser.add_argument(
       "--apple-id", metavar="<email>", default=DEFAULTS["apple_id"],
       help="Apple ID (e.g. example@email.com)")
@@ -79,7 +80,8 @@ def main():
   cfg["dotfiles"] = args.dotfiles if args.dotfiles else cfg["dotfiles"]
   cfg["private"] = args.private if args.private else cfg["private"]
   cfg["apple_id"] = args.apple_id if args.apple_id else cfg["apple_id"]
-  cfg["excludes"] = args.excludes.split(",") if args.excludes else cfg["excludes"]
+  cfg["excludes"] = args.excludes.split(",") if args.excludes else cfg[
+    "excludes"]
 
   # generate JSON config file
   with open(os.path.join(cfg["dotfiles"], "config.json"), "w") as outfile:

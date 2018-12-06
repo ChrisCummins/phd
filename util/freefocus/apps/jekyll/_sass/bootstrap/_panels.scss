@@ -2,14 +2,13 @@
 // Panels
 // --------------------------------------------------
 
-
 // Base class
 .panel {
   margin-bottom: $line-height-computed;
   background-color: $panel-bg;
   border: 1px solid transparent;
   border-radius: $panel-border-radius;
-  @include box-shadow(0 1px 1px rgba(0,0,0,.05));
+  @include box-shadow(0 1px 1px rgba(0, 0, 0, .05));
 }
 
 // Panel contents
@@ -53,7 +52,6 @@
   @include border-bottom-radius(($panel-border-radius - 1));
 }
 
-
 // List groups in panels
 //
 // By default, space out list group content from panel headings to account for
@@ -91,12 +89,14 @@
     }
   }
 }
+
 // Collapse space between when there's no additional content.
 .panel-heading + .list-group {
   .list-group-item:first-child {
     border-top-width: 0;
   }
 }
+
 .list-group + .panel-footer {
   border-top-width: 0;
 }
@@ -213,7 +213,6 @@
   }
 }
 
-
 // Collapsible panels (aka, accordion)
 //
 // Wrap a series of panels in `.panel-group` to turn them into an accordion with
@@ -249,23 +248,27 @@
   }
 }
 
-
 // Contextual variations
 .panel-default {
   @include panel-variant($panel-default-border, $panel-default-text, $panel-default-heading-bg, $panel-default-border);
 }
+
 .panel-primary {
   @include panel-variant($panel-primary-border, $panel-primary-text, $panel-primary-heading-bg, $panel-primary-border);
 }
+
 .panel-success {
   @include panel-variant($panel-success-border, $panel-success-text, $panel-success-heading-bg, $panel-success-border);
 }
+
 .panel-info {
   @include panel-variant($panel-info-border, $panel-info-text, $panel-info-heading-bg, $panel-info-border);
 }
+
 .panel-warning {
   @include panel-variant($panel-warning-border, $panel-warning-text, $panel-warning-heading-bg, $panel-warning-border);
 }
+
 .panel-danger {
   @include panel-variant($panel-danger-border, $panel-danger-text, $panel-danger-heading-bg, $panel-danger-border);
 }

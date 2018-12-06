@@ -1,14 +1,15 @@
 """Unit tests for //datasets/me_db/life_cycle."""
 
 import pathlib
-import pytest
 import sys
 import tempfile
 import time
 import typing
+from concurrent import futures
+
+import pytest
 from absl import app
 from absl import flags
-from concurrent import futures
 
 from datasets.me_db.life_cycle import life_cycle
 from datasets.me_db.life_cycle import make_dataset

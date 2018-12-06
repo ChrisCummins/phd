@@ -1,11 +1,12 @@
 """Train a reachability classifier."""
-import humanize
-import keras
-import numpy as np
 import pathlib
 import pickle
 import random
 import typing
+
+import humanize
+import keras
+import numpy as np
 from absl import app
 from absl import flags
 from absl import logging

@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 import os
 import re
+from argparse import ArgumentParser
 from tempfile import NamedTemporaryFile
+from typing import Tuple
 
 import progressbar
 import pyopencl as cl
-from argparse import ArgumentParser
 from dsmith import clsmith
 from dsmith import db
 from dsmith.db import *
 from dsmith.lib import *
-from typing import Tuple
 
 
 def get_platform_name(platform_id):
@@ -60,12 +60,14 @@ def verify_params(platform: str, device: str, optimizations: bool,
     elif line.startswith("Device: "):
       actual_device_name = re.sub(r"^Device: ", "", line).rstrip()
     elif line.startswith("OpenCL optimizations: "):
-      actual_optimizations = re.sub(r"^OpenCL optimizations: ", "", line).rstrip()
+      actual_optimizations = re.sub(r"^OpenCL optimizations: ", "",
+                                    line).rstrip()
 
     # global size
     match = re.match('^3-D global size \d+ = \[(\d+), (\d+), (\d+)\]', line)
     if match:
-      actual_global_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
+      actual_global_size = (
+        int(match.group(1)), int(match.group(2)), int(match.group(3)))
     match = re.match('^2-D global size \d+ = \[(\d+), (\d+)\]', line)
     if match:
       actual_global_size = (int(match.group(1)), int(match.group(2)), 0)
@@ -76,7 +78,8 @@ def verify_params(platform: str, device: str, optimizations: bool,
     # local size
     match = re.match('^3-D local size \d+ = \[(\d+), (\d+), (\d+)\]', line)
     if match:
-      actual_local_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
+      actual_local_size = (
+        int(match.group(1)), int(match.group(2)), int(match.group(3)))
     match = re.match('^2-D local size \d+ = \[(\d+), (\d+)\]', line)
     if match:
       actual_local_size = (int(match.group(1)), int(match.group(2)), 0)
@@ -147,8 +150,10 @@ if __name__ == "__main__":
     testbed = get_testbed(session, platform_name, device_name)
 
     params = db.get_or_create(session, threads_id,
-                              gsize_x=gsize[0], gsize_y=gsize[1], gsize_z=gsize[2],
-                              lsize_x=lsize[0], lsize_y=lsize[1], lsize_z=lsize[2])
+                              gsize_x=gsize[0], gsize_y=gsize[1],
+                              gsize_z=gsize[2],
+                              lsize_x=lsize[0], lsize_y=lsize[1],
+                              lsize_z=lsize[2])
     flags = params.to_flags()
 
     print(testbed)

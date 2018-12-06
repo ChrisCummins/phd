@@ -1,11 +1,11 @@
 """This file contains the linter implementations for photolint."""
-import os
-from collections import defaultdict
-
 import inspect
+import os
 import re
 import sys
 import typing
+from collections import defaultdict
+
 from absl import flags
 from phd.lib.labm8 import shell
 

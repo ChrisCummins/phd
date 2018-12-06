@@ -27,11 +27,11 @@ import smtplib
 import socket
 import string
 import subprocess
+import sys
 from datetime import datetime
 from email.mime.application import MIMEApplication
 
 import humanize
-import sys
 
 
 # Python 2 and 3 have different email module layouts:

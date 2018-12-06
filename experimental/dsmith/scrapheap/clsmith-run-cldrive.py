@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 import re
+from argparse import ArgumentParser
 from collections import namedtuple
+from subprocess import PIPE, Popen
 from time import time
+from typing import List, NewType
 
 import cldrive
 import progressbar
-from argparse import ArgumentParser
 from dsmith import db
 from dsmith.db import *
 from dsmith.lib import *
-from subprocess import PIPE, Popen
-from typing import List, NewType
+
 
 status_t = NewType('status_t', int)
 return_t = namedtuple('return_t', ['status', 'stdout', 'stderr'])
@@ -38,21 +39,27 @@ def verify_params(platform: str, device: str, optimizations: bool,
   actual_local_size = None
   for line in stderr.split('\n'):
     if line.startswith("[cldrive] Platform: "):
-      actual_platform_name = re.sub(r"^\[cldrive\] Platform: ", "", line).rstrip()
+      actual_platform_name = re.sub(r"^\[cldrive\] Platform: ", "",
+                                    line).rstrip()
     elif line.startswith("[cldrive] Device: "):
       actual_device_name = re.sub(r"^\[cldrive\] Device: ", "", line).rstrip()
     elif line.startswith("[cldrive] OpenCL optimizations: "):
-      actual_optimizations = re.sub(r"^\[cldrive\] OpenCL optimizations: ", "", line).rstrip()
+      actual_optimizations = re.sub(r"^\[cldrive\] OpenCL optimizations: ", "",
+                                    line).rstrip()
 
     # global size
-    match = re.match('^\[cldrive\] 3-D global size \d+ = \[(\d+), (\d+), (\d+)\]', line)
+    match = re.match(
+        '^\[cldrive\] 3-D global size \d+ = \[(\d+), (\d+), (\d+)\]', line)
     if match:
-      actual_global_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
+      actual_global_size = (
+        int(match.group(1)), int(match.group(2)), int(match.group(3)))
 
     # local size
-    match = re.match('^\[cldrive\] 3-D local size \d+ = \[(\d+), (\d+), (\d+)\]', line)
+    match = re.match(
+        '^\[cldrive\] 3-D local size \d+ = \[(\d+), (\d+), (\d+)\]', line)
     if match:
-      actual_local_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
+      actual_local_size = (
+        int(match.group(1)), int(match.group(2)), int(match.group(3)))
 
     # check if we've collected everything:
     if (actual_platform and actual_device and actual_optimizations and
@@ -68,8 +75,10 @@ def verify_params(platform: str, device: str, optimizations: bool,
 def get_num_progs_to_run(session: db.session_t,
                          testbed: Testbed, params: cldriveParams):
   subquery = session.query(cldriveCLSmithResult.program_id).filter(
-      cldriveCLSmithResult.testbed == testbed, cldriveCLSmithResult.params == params)
-  num_ran = session.query(CLSmithProgram.id).filter(CLSmithProgram.id.in_(subquery)).count()
+      cldriveCLSmithResult.testbed == testbed,
+      cldriveCLSmithResult.params == params)
+  num_ran = session.query(CLSmithProgram.id).filter(
+      CLSmithProgram.id.in_(subquery)).count()
   subquery = session.query(cldriveCLSmithResult.program_id).filter(
       cldriveCLSmithResult.testbed == testbed)
   total = session.query(CLSmithProgram.id).count()
@@ -92,7 +101,8 @@ if __name__ == "__main__":
       "-s", "--size", metavar="<size>", type=int, default=64,
       help="size of input arrays to generate (default: 64)")
   parser.add_argument(
-      "-i", "--generator", metavar="<{rand,arange,zeros,ones}>", default="arange",
+      "-i", "--generator", metavar="<{rand,arange,zeros,ones}>",
+      default="arange",
       help="input generator to use, one of: {rand,arange,zeros,ones} (default: arange)")
   parser.add_argument(
       "--scalar-val", metavar="<float>", type=float, default=None,
@@ -132,7 +142,8 @@ if __name__ == "__main__":
     while True:
       # get the next program to run
       subquery = session.query(cldriveCLSmithResult.program_id).filter(
-          cldriveCLSmithResult.testbed == testbed, cldriveCLSmithResult.params == params)
+          cldriveCLSmithResult.testbed == testbed,
+          cldriveCLSmithResult.params == params)
       program = session.query(CLSmithProgram).filter(
           ~CLSmithProgram.id.in_(subquery)).order_by(CLSmithProgram.id).first()
 

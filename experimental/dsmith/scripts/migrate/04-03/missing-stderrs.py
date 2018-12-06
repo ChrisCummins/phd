@@ -2,14 +2,14 @@
 """
 Create test harnesses for CLgen programs using cldrive.
 """
+import json
+from argparse import ArgumentParser
 from collections import deque
+from pathlib import Path
 
 import db
-import json
 import sqlalchemy as sql
-from argparse import ArgumentParser
 from db import *
-from pathlib import Path
 from phd.lib.labm8 import crypto, fs
 from progressbar import ProgressBar
 

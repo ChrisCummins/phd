@@ -7,8 +7,10 @@ import progressbar
 # from dsmith.sol.db import *
 from dsmith.opencl.db import *
 
+
 if __name__ == "__main__":
   import logging
+
 
   logging.getLogger().setLevel(logging.DEBUG)
   dsmith.langs.mklang("opencl")

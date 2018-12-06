@@ -5,14 +5,15 @@ in the LanguageCloneList specifies a programming language on GitHub and a number
 of repositories of this language to clone.
 """
 import configparser
-import github
-import humanize
 import pathlib
-import progressbar
 import sys
 import threading
 import time
 import typing
+
+import github
+import humanize
+import progressbar
 from absl import app
 from absl import flags
 from absl import logging

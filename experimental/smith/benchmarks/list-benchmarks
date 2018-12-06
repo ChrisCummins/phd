@@ -2,12 +2,12 @@
 from __future__ import division
 from __future__ import print_function
 
+import csv
 import re
 import sys
-
-import csv
-import smith
 from argparse import ArgumentParser
+
+import smith
 
 
 def read_csv(path):

@@ -1,8 +1,9 @@
 """Unit tests for //experimental/compilers/random_opt/environments.py."""
-import gym
-import pytest
 import sys
 import typing
+
+import gym
+import pytest
 from absl import app
 from absl import flags
 

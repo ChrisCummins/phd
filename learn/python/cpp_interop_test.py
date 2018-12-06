@@ -2,9 +2,10 @@
 
 NOTE: this code has been librified and moved into //lib/labm8:ppar.
 """
-import pytest
 import subprocess
 import sys
+
+import pytest
 from absl import app
 from absl import flags
 from phd.lib.labm8 import bazelutil

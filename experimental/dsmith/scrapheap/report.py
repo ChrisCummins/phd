@@ -7,7 +7,8 @@ from dsmith.db import *
 
 
 def comment(*msg, prefix=''):
-  return '\n'.join(f'// {prefix}{line}' for line in " ".join(msg).strip().split('\n'))
+  return '\n'.join(
+      f'// {prefix}{line}' for line in " ".join(msg).strip().split('\n'))
 
 # def get_bug_report(session: session_t, tables: Tableset, result_id: int, report_type: str="bf"):
 #     with Session(commit=False) as s:

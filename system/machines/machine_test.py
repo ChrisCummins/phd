@@ -1,8 +1,9 @@
 """Unit tests for //system/machines:machine.py."""
-import pytest
 import sys
 import tempfile
 import typing
+
+import pytest
 from absl import app
 from absl import flags
 

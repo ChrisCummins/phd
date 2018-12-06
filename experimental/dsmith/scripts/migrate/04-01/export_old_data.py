@@ -2,12 +2,13 @@
 """
 Create test harnesses for CLgen programs using cldrive.
 """
-import analyze
-import db
 import json
 from argparse import ArgumentParser
-from db import *
 from pathlib import Path
+
+import analyze
+import db
+from db import *
 from phd.lib.labm8 import fs
 from progressbar import ProgressBar
 
@@ -87,7 +88,7 @@ if __name__ == "__main__":
 
     for harness_id in ProgressBar()(todo):
       harness == s.query(CLgenHarness).filter(
-        CLgenHarness.id == harness_id).scalar()
+          CLgenHarness.id == harness_id).scalar()
 
       with open(f"export/harness/{harness.id}", "w") as outfile:
         print(json.dumps({
@@ -120,7 +121,7 @@ if __name__ == "__main__":
 
     for program_id in ProgressBar()(todo):
       program = s.query(CLgenProgram).filter(
-        CLgenProgram.id == program_id).scalar()
+          CLgenProgram.id == program_id).scalar()
 
       with open(f"export/program/{program.id}", "w") as outfile:
         print(json.dumps({
@@ -149,7 +150,7 @@ if __name__ == "__main__":
 
     for program_id in ProgressBar()(todo):
       program = s.query(CLSmithProgram).filter(
-        CLSmithProgram.id == program_id).scalar()
+          CLSmithProgram.id == program_id).scalar()
 
       with open(f"export/clsmith/program/{program.id}", "w") as outfile:
         print(json.dumps({
@@ -176,7 +177,7 @@ if __name__ == "__main__":
 
     for result_id in ProgressBar()(todo):
       result = s.query(CLSmithResult).filter(
-        CLSmithResult.id == result_id).scalar()
+          CLSmithResult.id == result_id).scalar()
 
       with open(f"export/clsmith/result/{result.id}", "w") as outfile:
         print(json.dumps({

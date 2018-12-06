@@ -1,6 +1,7 @@
 """Shared testing utilities."""
-import numpy as np
 import typing
+
+import numpy as np
 from numpy import testing as nptest
 
 

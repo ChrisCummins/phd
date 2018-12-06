@@ -16,14 +16,14 @@ def test_Harness_ToProto():
       optset=[
         deeplearning.deepsmith.harness.HarnessOpt(
             name=deeplearning.deepsmith.harness.HarnessOptName(
-              string='version'),
+                string='version'),
             value=deeplearning.deepsmith.harness.HarnessOptValue(
-              string='1.0.0'),
+                string='1.0.0'),
         ),
         deeplearning.deepsmith.harness.HarnessOpt(
             name=deeplearning.deepsmith.harness.HarnessOptName(string='build'),
             value=deeplearning.deepsmith.harness.HarnessOptValue(
-              string='debug+assert'),
+                string='debug+assert'),
         ),
       ],
   )
@@ -47,12 +47,12 @@ def test_Harness_GetOrAdd(session):
   )
 
   assert session.query(
-    deeplearning.deepsmith.harness.HarnessOptSet).count() == 2
+      deeplearning.deepsmith.harness.HarnessOptSet).count() == 2
   assert session.query(deeplearning.deepsmith.harness.HarnessOpt).count() == 2
   assert session.query(
-    deeplearning.deepsmith.harness.HarnessOptName).count() == 2
+      deeplearning.deepsmith.harness.HarnessOptName).count() == 2
   assert session.query(
-    deeplearning.deepsmith.harness.HarnessOptValue).count() == 2
+      deeplearning.deepsmith.harness.HarnessOptValue).count() == 2
 
   assert harness.name == 'name'
   assert len(harness.optset) == 2
@@ -65,11 +65,11 @@ def test_Harness_duplicates(session):
   assert session.query(deeplearning.deepsmith.harness.Harness).count() == 0
   assert session.query(deeplearning.deepsmith.harness.HarnessOpt).count() == 0
   assert session.query(
-    deeplearning.deepsmith.harness.HarnessOptSet).count() == 0
+      deeplearning.deepsmith.harness.HarnessOptSet).count() == 0
   assert session.query(
-    deeplearning.deepsmith.harness.HarnessOptName).count() == 0
+      deeplearning.deepsmith.harness.HarnessOptName).count() == 0
   assert session.query(
-    deeplearning.deepsmith.harness.HarnessOptValue).count() == 0
+      deeplearning.deepsmith.harness.HarnessOptValue).count() == 0
   proto_a1 = deepsmith_pb2.Harness(
       name='a',
       opts={
@@ -96,32 +96,32 @@ def test_Harness_duplicates(session):
   assert session.query(deeplearning.deepsmith.harness.Harness).count() == 1
   assert session.query(deeplearning.deepsmith.harness.HarnessOpt).count() == 2
   assert session.query(
-    deeplearning.deepsmith.harness.HarnessOptSet).count() == 2
+      deeplearning.deepsmith.harness.HarnessOptSet).count() == 2
   assert session.query(
-    deeplearning.deepsmith.harness.HarnessOptName).count() == 2
+      deeplearning.deepsmith.harness.HarnessOptName).count() == 2
   assert session.query(
-    deeplearning.deepsmith.harness.HarnessOptValue).count() == 2
+      deeplearning.deepsmith.harness.HarnessOptValue).count() == 2
   deeplearning.deepsmith.harness.Harness.GetOrAdd(session, proto_a2)
   # proto_a1 == proto_a2, so the counts should remain unchanged.
   assert session.query(deeplearning.deepsmith.harness.Harness).count() == 1
   assert session.query(deeplearning.deepsmith.harness.HarnessOpt).count() == 2
   assert session.query(
-    deeplearning.deepsmith.harness.HarnessOptSet).count() == 2
+      deeplearning.deepsmith.harness.HarnessOptSet).count() == 2
   assert session.query(
-    deeplearning.deepsmith.harness.HarnessOptName).count() == 2
+      deeplearning.deepsmith.harness.HarnessOptName).count() == 2
   assert session.query(
-    deeplearning.deepsmith.harness.HarnessOptValue).count() == 2
+      deeplearning.deepsmith.harness.HarnessOptValue).count() == 2
   deeplearning.deepsmith.harness.Harness.GetOrAdd(session, proto_b)
   # proto_b adds a new harness, new opt (note the duplicate arch), and
   # two new entries in the HarnessOptSet table.
   assert session.query(deeplearning.deepsmith.harness.Harness).count() == 2
   assert session.query(deeplearning.deepsmith.harness.HarnessOpt).count() == 3
   assert session.query(
-    deeplearning.deepsmith.harness.HarnessOptSet).count() == 4
+      deeplearning.deepsmith.harness.HarnessOptSet).count() == 4
   assert session.query(
-    deeplearning.deepsmith.harness.HarnessOptName).count() == 2
+      deeplearning.deepsmith.harness.HarnessOptName).count() == 2
   assert session.query(
-    deeplearning.deepsmith.harness.HarnessOptValue).count() == 3
+      deeplearning.deepsmith.harness.HarnessOptValue).count() == 3
 
 
 def test_Harness_GetOrAdd_ToProto_equivalence(session):
@@ -157,11 +157,11 @@ def test_Harness_GetOrAdd_no_opts(session):
   assert session.query(deeplearning.deepsmith.harness.Harness).count() == 1
   assert session.query(deeplearning.deepsmith.harness.HarnessOpt).count() == 0
   assert session.query(
-    deeplearning.deepsmith.harness.HarnessOptSet).count() == 0
+      deeplearning.deepsmith.harness.HarnessOptSet).count() == 0
   assert session.query(
-    deeplearning.deepsmith.harness.HarnessOptName).count() == 0
+      deeplearning.deepsmith.harness.HarnessOptName).count() == 0
   assert session.query(
-    deeplearning.deepsmith.harness.HarnessOptValue).count() == 0
+      deeplearning.deepsmith.harness.HarnessOptValue).count() == 0
 
 
 def test_Harness_GetOrAdd_only_different_optset(session):
@@ -192,11 +192,11 @@ def test_Harness_GetOrAdd_only_different_optset(session):
   assert session.query(deeplearning.deepsmith.harness.Harness).count() == 3
   assert session.query(deeplearning.deepsmith.harness.HarnessOpt).count() == 4
   assert session.query(
-    deeplearning.deepsmith.harness.HarnessOptSet).count() == 4
+      deeplearning.deepsmith.harness.HarnessOptSet).count() == 4
   assert session.query(
-    deeplearning.deepsmith.harness.HarnessOptName).count() == 4
+      deeplearning.deepsmith.harness.HarnessOptName).count() == 4
   assert session.query(
-    deeplearning.deepsmith.harness.HarnessOptValue).count() == 4
+      deeplearning.deepsmith.harness.HarnessOptValue).count() == 4
   assert len(harness_a.optset) == 3
   assert len(harness_b.optset) == 1
   assert len(harness_c.optset) == 0
@@ -216,20 +216,20 @@ def test_Harness_GetOrAdd_rollback(session):
   assert session.query(deeplearning.deepsmith.harness.Harness).count() == 1
   assert session.query(deeplearning.deepsmith.harness.HarnessOpt).count() == 2
   assert session.query(
-    deeplearning.deepsmith.harness.HarnessOptSet).count() == 2
+      deeplearning.deepsmith.harness.HarnessOptSet).count() == 2
   assert session.query(
-    deeplearning.deepsmith.harness.HarnessOptName).count() == 2
+      deeplearning.deepsmith.harness.HarnessOptName).count() == 2
   assert session.query(
-    deeplearning.deepsmith.harness.HarnessOptValue).count() == 2
+      deeplearning.deepsmith.harness.HarnessOptValue).count() == 2
   session.rollback()
   assert session.query(deeplearning.deepsmith.harness.Harness).count() == 0
   assert session.query(deeplearning.deepsmith.harness.HarnessOpt).count() == 0
   assert session.query(
-    deeplearning.deepsmith.harness.HarnessOptSet).count() == 0
+      deeplearning.deepsmith.harness.HarnessOptSet).count() == 0
   assert session.query(
-    deeplearning.deepsmith.harness.HarnessOptName).count() == 0
+      deeplearning.deepsmith.harness.HarnessOptName).count() == 0
   assert session.query(
-    deeplearning.deepsmith.harness.HarnessOptValue).count() == 0
+      deeplearning.deepsmith.harness.HarnessOptValue).count() == 0
 
 
 def _AddRandomNewHarness(session):

@@ -4,6 +4,10 @@
 #   ./search.py ~/src/clgen/model.json ~/src/clgen/tests/data/cl/sample-1.gs \
 #       ~/src/clgen/tests/data/tiny/corpus/3.cl || less search.log
 #
+from random import randint
+from subprocess import PIPE, Popen
+from tempfile import NamedTemporaryFile
+
 import clgen
 import numpy as np
 from clgen import log as clgen_log
@@ -11,9 +15,6 @@ from clgen import model
 from clgen import preprocess
 from phd.lib.labm8 import fs
 from phd.lib.labm8.time import nowstr
-from random import randint
-from subprocess import PIPE, Popen
-from tempfile import NamedTemporaryFile
 
 from lib import labm8
 

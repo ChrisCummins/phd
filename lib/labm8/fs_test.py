@@ -6,7 +6,6 @@ import tempfile
 
 import pytest
 from absl import app
-
 from phd.lib.labm8 import fs
 from phd.lib.labm8 import system
 
@@ -122,7 +121,7 @@ def test_read():
   assert ['Hello, world!'] == fs.read("lib/labm8/data/test/hello_world")
   assert (['# data1 - test file', 'This', 'is a test file', 'With',
            'trailing  # comment', '', '', '', 'whitespace', '0.344'] == fs.read(
-    "lib/labm8/data/test/data1"))
+      "lib/labm8/data/test/data1"))
 
 
 def test_read_no_rstrip():
@@ -220,7 +219,7 @@ def test_rm_glob():
 
 # rmtrash()
 @pytest.mark.skip(
-  reason='Insufficient access privileges for operation on macOS')
+    reason='Insufficient access privileges for operation on macOS')
 def test_rmtrash():
   with tempfile.NamedTemporaryFile(prefix='labm8_') as f:
     assert fs.isfile(f.name)

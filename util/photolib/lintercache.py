@@ -1,11 +1,11 @@
 """This file defines a cache for linting results."""
-import os
-
 import datetime
 import hashlib
+import os
 import pathlib
-import sqlalchemy as sql
 import typing
+
+import sqlalchemy as sql
 from absl import flags
 from absl import logging
 from phd.lib.labm8 import shell

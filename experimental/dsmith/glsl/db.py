@@ -19,20 +19,21 @@
 GLSL database backend.
 """
 import datetime
-import humanize
 import logging
-import progressbar
 import re
-import sqlalchemy as sql
 import subprocess
 import threading
 from contextlib import contextmanager
-from experimental.dsmith.db_base import *
 from pathlib import Path
+from typing import Iterable, List, Union
+
+import humanize
+import progressbar
+import sqlalchemy as sql
+from experimental.dsmith.db_base import *
 from phd.lib.labm8 import crypto, fs
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
-from typing import Iterable, List, Union
 
 from experimental import dsmith
 from experimental.dsmith import Colors
@@ -296,7 +297,7 @@ class Testbed(Base):
       .filter(Testcase.harness == harness.id,
               Program.generator == generator.id,
               ~Testcase.id.in_(
-                self._testcase_ids_ran(session, harness, generator))) \
+                  self._testcase_ids_ran(session, harness, generator))) \
       .order_by(Program.date,
                 Program.id,
                 Testcase.timeout.desc())
@@ -355,7 +356,7 @@ class Testbed(Base):
       ntodo = todo.count()
 
       logging.debug(
-        f"run {ntodo} {harness}:{generator} testcases on {self}, {ndone} done")
+          f"run {ntodo} {harness}:{generator} testcases on {self}, {ndone} done")
 
       # Break early if we have nothing to do
       if not ntodo:

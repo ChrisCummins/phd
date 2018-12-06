@@ -1,7 +1,8 @@
 """Random optimizer."""
-import gym
 import pathlib
 import typing
+
+import gym
 from absl import app
 from absl import flags
 from absl import logging

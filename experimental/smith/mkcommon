@@ -4,8 +4,9 @@
 # for which there is not a corresponding <benchmark,dataset> pair in both.
 #
 
-import smith
 from argparse import ArgumentParser
+
+import smith
 
 
 def intersect(a, b):

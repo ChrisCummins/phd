@@ -1,13 +1,13 @@
 # preamble
 
+import pickle
+import time
 from collections import Counter
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import pickle
 import seaborn as sns
-import time
 from clgen.atomizer import CharacterAtomizer
 from keras.preprocessing.sequence import pad_sequences
 from phd.lib.labm8 import fs
@@ -127,7 +127,7 @@ def load_data_desc(platform, source="B",
 
   def get_benchmarks(platform):
     B = pd.read_csv(
-      fs.path("runtimes/{platform}-benchmarks.csv".format(**vars())))
+        fs.path("runtimes/{platform}-benchmarks.csv".format(**vars())))
     B["source"] = [escape_suite_name(x) for x in B["benchmark"]]
     B["synthetic"] = [0] * len(B)
     return B
@@ -261,11 +261,11 @@ def analyze(predictions, test):
 
   confusion_matrix = np.zeros((2, 2), dtype="int32")
   confusion_matrix[0][0] = sum(
-    np.logical_and(np.logical_not(predictions), np.logical_not(oracle)))
+      np.logical_and(np.logical_not(predictions), np.logical_not(oracle)))
   confusion_matrix[0][1] = sum(
-    np.logical_and(predictions, np.logical_not(oracle)))
+      np.logical_and(predictions, np.logical_not(oracle)))
   confusion_matrix[1][0] = sum(
-    np.logical_and(np.logical_not(predictions), oracle))
+      np.logical_and(np.logical_not(predictions), oracle))
   confusion_matrix[1][1] = sum(np.logical_and(predictions, oracle))
 
   assert (confusion_matrix.sum() == len(test["dataframe"]))
@@ -305,7 +305,7 @@ def train_and_save(model_desc, platform, source,
 
   name = model_desc["name"]
   outpath = "models/{name}/{platform}-{source}-{atomizer}:{maxlen}-{seed}-{n_splits}-{split_i}.model".format(
-    **vars())
+      **vars())
   if not fs.exists(outpath):
     create_fn = model_desc.get("create_model", _nop)
     train_fn = model_desc.get("train_fn", _nop)
@@ -342,9 +342,9 @@ def load_and_test(model_desc, platform, source,
 
   name = model_desc["name"]
   inpath = "models/{name}/{platform}-{source}-{atomizer}:{maxlen}-{seed}-{n_splits}-{split_i}.model".format(
-    **vars())
+      **vars())
   outpath = "models/{name}/{platform}-{source}-{atomizer}:{maxlen}-{seed}-{n_splits}-{split_i}.result".format(
-    **vars())
+      **vars())
 
   if fs.exists(outpath):
     return load_result(model_desc, platform, source, n_splits=n_splits,
@@ -388,9 +388,9 @@ def benchmark_inference(model_desc, platform, source,
 
   name = model_desc["name"]
   inpath = "models/{name}/{platform}-{source}-{atomizer}:{maxlen}-{seed}-{n_splits}-{split_i}.model".format(
-    **vars())
+      **vars())
   outpath = "models/{name}/{platform}-{source}-{atomizer}:{maxlen}-{seed}-{n_splits}-{split_i}.result".format(
-    **vars())
+      **vars())
 
   if not fs.exists(inpath):
     return False
@@ -446,7 +446,7 @@ def load_result(model_desc, platform, source,
                 n_splits=10, split_i=0, seed=204):
   name = model_desc["name"]
   inpath = "models/{name}/{platform}-{source}-{atomizer}:{maxlen}-{seed}-{n_splits}-{split_i}.result".format(
-    **vars())
+      **vars())
   if not fs.exists(inpath):
     return False
 

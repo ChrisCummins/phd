@@ -5,6 +5,7 @@ not been modified, subsequent hashes are cache hits. Hashes are recomputed
 lazily, when a directory (or any of its subdirectories) have been modified.
 """
 
+import collections
 import os
 import pathlib
 import subprocess
@@ -12,7 +13,6 @@ import time
 import typing
 
 import checksumdir
-import collections
 import humanize
 import sqlalchemy as sql
 from absl import flags

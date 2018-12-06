@@ -1,10 +1,10 @@
 \begin{algorithmic}[1]
-\Require current cell value $d_t$, neighbouring cell values $D_t$.
-\Ensure new cell value $d_{t+1}$
-\State $n \leftarrow $sum$(D_t)$
-\If{$n = 3$ OR $(n = 2$ AND $d_t = 1)$}
+  \Require current cell value $d_t$, neighbouring cell values $D_t$.
+  \Ensure new cell value $d_{t+1}$
+  \State $n \leftarrow $sum$(D_t)$
+  \If{$n = 3$ OR $(n = 2$ AND $d_t = 1)$}
   \State \textbf{return} 1
-\Else
+  \Else
   \State \textbf{return} 0
-\EndIf
+  \EndIf
 \end{algorithmic}

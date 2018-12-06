@@ -1,10 +1,11 @@
 """Unit tests for //system/machines:mirrored_directory.py."""
 import pathlib
-import pytest
 import subprocess
 import sys
 import tempfile
 import typing
+
+import pytest
 from absl import app
 from absl import flags
 from absl import logging

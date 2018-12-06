@@ -1,6 +1,7 @@
 """Unit tests for //deeplearning/deepsmith/difftests/difftests.py."""
-import pytest
 import sys
+
+import pytest
 from absl import app
 from absl import flags
 

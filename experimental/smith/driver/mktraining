@@ -3,9 +3,10 @@
 # Generate training data files from results.
 #
 import csv
-import smith
 import sys
 from argparse import ArgumentParser
+
+import smith
 from phd.lib.labm8 import fs
 from phd.lib.labm8 import math as labmath
 from smith import features

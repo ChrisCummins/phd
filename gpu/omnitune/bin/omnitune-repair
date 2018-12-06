@@ -3,7 +3,6 @@
 import sys
 
 from omnitune.skelcl import db as _db
-
 from phd.lib.labm8 import fs
 
 

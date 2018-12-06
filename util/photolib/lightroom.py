@@ -1,9 +1,9 @@
 """Functions for working with Lightroom."""
-import os
-
 import datetime
-import sqlalchemy as sql
+import os
 import typing
+
+import sqlalchemy as sql
 from absl import flags
 from absl import logging
 from libxmp import utils as xmputils

@@ -1,9 +1,10 @@
 """The CLgen language model."""
-import humanize
-import numpy as np
 import os
 import pathlib
 import typing
+
+import humanize
+import numpy as np
 from absl import flags
 from absl import logging
 from phd.lib.labm8 import crypto

@@ -23,12 +23,12 @@
 \newpage
 \subsection{Work plan}
 
-\paragraph{Year 2} The year will begin with extensions to previous work on CLgen\footnote{\url{http://chriscummins.cc/clgen/}}: 
+\paragraph{Year 2} The year will begin with extensions to previous work on CLgen\footnote{\url{http://chriscummins.cc/clgen/}}:
 %
 \begin{itemize}
-        \item adding support for alternate vocabularies, to enable learning models at the token or AST-level, as opposed to the current character-based approach;
-        \item adding support for alternative encodings, enabling additional corpus transformations, for example, by reversing the character sequence, or interleaving characters from the start and end of sequences.
-        \item implementing an iterative hill climb search of the program feature space using mutations to model seed text and random number generator state;
+  \item adding support for alternate vocabularies, to enable learning models at the token or AST-level, as opposed to the current character-based approach;
+  \item adding support for alternative encodings, enabling additional corpus transformations, for example, by reversing the character sequence, or interleaving characters from the start and end of sequences.
+  \item implementing an iterative hill climb search of the program feature space using mutations to model seed text and random number generator state;
 \end{itemize}
 %
 The goal of these extensions is incremental improvements to my current work on deep learning program synthesis (Appendix~\ref{app:cgo}), by demonstrating the ability to enumerate feature spaces, and reducing the rejection rate of synthesised programs. The deliverable for this work would be either an extended journal publication of Appendix~\ref{app:cgo}, or a new publication \emph{``Directed exploration of program feature spaces''}. This outcome would depend on the extend to which these changes improve CLgen. At a minimum, the rejection rate would be measurably decreased so that programs can be generated a faster rate, and an iterative process of sample rejection would be shown to produce programs which converge towards specific feature values.

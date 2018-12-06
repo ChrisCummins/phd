@@ -63,49 +63,12 @@ public class JavaRewriter {
   };
   private static final Set<String> RESERVED_WORDS = new HashSet<>(
       Arrays.asList(RESERVED_WORDS_));
-
-
-  /**
-   * Generate a new rewrite name.
-   *
-   * @param rewrites The rewrite table. The new name is added to this table.
-   * @param name The current name.
-   * @param base_char The base character to use for generating new names, e.g.
-   * 'A' to produce the sequence 'A', 'B', 'C'...
-   * @param name_prefix An optional prefix to prepend to generated names.
-   * @return The replacement name.
-   */
-  private String GetNextName(HashMap<String, String> rewrites,
-      final String name, final char base_char,
-      final String name_prefix) {
-    int i = rewrites.size();
-    StringBuilder s = new StringBuilder();
-
-    s.append(name_prefix);
-    // Build the new name character by character
-    while (i > 25) {
-      int k = i / 26;
-      i %= 26;
-      s.append((char) (base_char - 1 + k));
-    }
-    s.append((char) (base_char + i));
-
-    final String newName = s.toString();
-
-    // Check that it isn't a reserved word, or else generate a new one.
-    if (RESERVED_WORDS.contains(newName)) {
-      // Insert a "dummy" value using an illegal identifier name.
-      s.append("\t!@invalid@!\t");
-      s.append(rewrites.size());
-      final String invalidIdentifier = s.toString();
-      rewrites.put(invalidIdentifier, invalidIdentifier);
-      return GetNextName(rewrites, name, base_char, name_prefix);
-    }
-
-    // insert the re-write name
-    rewrites.put(name, newName);
-    return newName;
-  }
+  private ASTRewrite traversalRewrite;
+  private AST traversalAST;
+  private HashMap<String, String> methodRewrites = new HashMap<>();
+  private HashMap<String, String> typeRewrites = new HashMap<>();
+  private HashMap<String, String> fieldRewrites = new HashMap<>();
+  private HashMap<String, String> variableRewrites = new HashMap<>();
 
   /**
    * Strip the comments from a compilation unit.
@@ -193,6 +156,80 @@ public class JavaRewriter {
   }
 
   /**
+   * Read a file and return its contents as a string.
+   *
+   * @param path The path of the file to read.
+   * @param encoding The encoding of the file.
+   * @return A string of the file contents.
+   * @throws IOException In case of IO error.
+   */
+  private static String ReadFile(String path, Charset encoding)
+      throws IOException {
+    byte[] encoded = Files.readAllBytes(Paths.get(path));
+    return new String(encoded, encoding);
+  }
+
+  public static void main(final String[] args) {
+    JavaRewriter rewriter = new JavaRewriter();
+
+    try {
+      // final String input =ReadFile(args[0], Charset.defaultCharset());
+      final String input = new String(ByteStreams.toByteArray(System.in));
+      final String source = rewriter.RewriteSource(input);
+      if (source == null) {
+        System.out.println("fatal: RewriteSource() returned null.");
+        System.exit(1);
+      }
+      System.out.println(source);
+    } catch (IOException e) {
+      System.err.println("fatal: I/O error");
+      System.exit(1);
+    }
+  }
+
+  /**
+   * Generate a new rewrite name.
+   *
+   * @param rewrites The rewrite table. The new name is added to this table.
+   * @param name The current name.
+   * @param base_char The base character to use for generating new names, e.g.
+   * 'A' to produce the sequence 'A', 'B', 'C'...
+   * @param name_prefix An optional prefix to prepend to generated names.
+   * @return The replacement name.
+   */
+  private String GetNextName(HashMap<String, String> rewrites,
+      final String name, final char base_char,
+      final String name_prefix) {
+    int i = rewrites.size();
+    StringBuilder s = new StringBuilder();
+
+    s.append(name_prefix);
+    // Build the new name character by character
+    while (i > 25) {
+      int k = i / 26;
+      i %= 26;
+      s.append((char) (base_char - 1 + k));
+    }
+    s.append((char) (base_char + i));
+
+    final String newName = s.toString();
+
+    // Check that it isn't a reserved word, or else generate a new one.
+    if (RESERVED_WORDS.contains(newName)) {
+      // Insert a "dummy" value using an illegal identifier name.
+      s.append("\t!@invalid@!\t");
+      s.append(rewrites.size());
+      final String invalidIdentifier = s.toString();
+      rewrites.put(invalidIdentifier, invalidIdentifier);
+      return GetNextName(rewrites, name, base_char, name_prefix);
+    }
+
+    // insert the re-write name
+    rewrites.put(name, newName);
+    return newName;
+  }
+
+  /**
    * Rewrite a Java source file to make it more amenable to machine learning.
    *
    * @param source The source code to rewrite.
@@ -216,13 +253,6 @@ public class JavaRewriter {
     // Format the source code.
     return FormatSource(document.get());
   }
-
-  private ASTRewrite traversalRewrite;
-  private AST traversalAST;
-  private HashMap<String, String> methodRewrites = new HashMap<>();
-  private HashMap<String, String> typeRewrites = new HashMap<>();
-  private HashMap<String, String> fieldRewrites = new HashMap<>();
-  private HashMap<String, String> variableRewrites = new HashMap<>();
 
   private void RewriteIdentifiers(ArrayList<TextEdit> edits,
       final CompilationUnit compilationUnit,
@@ -336,37 +366,5 @@ public class JavaRewriter {
     });
 
     edits.add(this.traversalRewrite.rewriteAST(document, null));
-  }
-
-  /**
-   * Read a file and return its contents as a string.
-   *
-   * @param path The path of the file to read.
-   * @param encoding The encoding of the file.
-   * @return A string of the file contents.
-   * @throws IOException In case of IO error.
-   */
-  private static String ReadFile(String path, Charset encoding)
-      throws IOException {
-    byte[] encoded = Files.readAllBytes(Paths.get(path));
-    return new String(encoded, encoding);
-  }
-
-  public static void main(final String[] args) {
-    JavaRewriter rewriter = new JavaRewriter();
-
-    try {
-      // final String input =ReadFile(args[0], Charset.defaultCharset());
-      final String input = new String(ByteStreams.toByteArray(System.in));
-      final String source = rewriter.RewriteSource(input);
-      if (source == null) {
-        System.out.println("fatal: RewriteSource() returned null.");
-        System.exit(1);
-      }
-      System.out.println(source);
-    } catch (IOException e) {
-      System.err.println("fatal: I/O error");
-      System.exit(1);
-    }
   }
 }

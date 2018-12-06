@@ -4,12 +4,11 @@
 #
 import re
 import sys
+from argparse import ArgumentParser
 
 import smith
-from argparse import ArgumentParser
-from smith import cgo13
-
 from phd.lib.labm8 import fs
+from smith import cgo13
 
 
 def main():

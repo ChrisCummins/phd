@@ -3,13 +3,14 @@
 # Challenge: Plot the distribution of commit message lengths in each
 # of my public GitHub repos.
 #
+import json
 import os
 import sys
 
-import json
 import matplotlib.pyplot as plt
 import seaborn as sns
 from github import Github
+
 
 sns.set(color_codes=True)
 

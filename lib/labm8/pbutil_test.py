@@ -5,7 +5,6 @@ import tempfile
 
 import pytest
 from absl import app
-
 from phd.lib.labm8 import pbutil
 from phd.lib.labm8.proto import test_protos_pb2
 

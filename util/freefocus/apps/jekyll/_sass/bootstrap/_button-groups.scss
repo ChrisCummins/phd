@@ -59,6 +59,7 @@
     @include border-right-radius(0);
   }
 }
+
 // Need .dropdown-toggle since :last-child doesn't apply, given that a .dropdown-menu is used immediately after it
 .btn-group > .btn:last-child:not(:first-child),
 .btn-group > .dropdown-toggle:not(:first-child) {
@@ -69,15 +70,18 @@
 .btn-group > .btn-group {
   float: left;
 }
+
 .btn-group > .btn-group:not(:first-child):not(:last-child) > .btn {
   border-radius: 0;
 }
+
 .btn-group > .btn-group:first-child:not(:last-child) {
   > .btn:last-child,
   > .dropdown-toggle {
     @include border-right-radius(0);
   }
 }
+
 .btn-group > .btn-group:last-child:not(:first-child) > .btn:first-child {
   @include border-left-radius(0);
 }
@@ -88,15 +92,21 @@
   outline: 0;
 }
 
-
 // Sizing
 //
 // Remix the default button sizing classes into new ones for easier manipulation.
 
-.btn-group-xs > .btn { @extend .btn-xs; }
-.btn-group-sm > .btn { @extend .btn-sm; }
-.btn-group-lg > .btn { @extend .btn-lg; }
+.btn-group-xs > .btn {
+  @extend .btn-xs;
+}
 
+.btn-group-sm > .btn {
+  @extend .btn-sm;
+}
+
+.btn-group-lg > .btn {
+  @extend .btn-lg;
+}
 
 // Split button dropdowns
 // ----------------------
@@ -106,6 +116,7 @@
   padding-left: 8px;
   padding-right: 8px;
 }
+
 .btn-group > .btn-lg + .dropdown-toggle {
   padding-left: 12px;
   padding-right: 12px;
@@ -114,7 +125,7 @@
 // The clickable button for toggling the menu
 // Remove the gradient and set the same inset shadow as the :active state
 .btn-group.open .dropdown-toggle {
-  @include box-shadow(inset 0 3px 5px rgba(0,0,0,.125));
+  @include box-shadow(inset 0 3px 5px rgba(0, 0, 0, .125));
 
   // Show no shadow for `.btn-link` since it has no other button styles.
   &.btn-link {
@@ -122,21 +133,21 @@
   }
 }
 
-
 // Reposition the caret
 .btn .caret {
   margin-left: 0;
 }
+
 // Carets in other button sizes
 .btn-lg .caret {
   border-width: $caret-width-large $caret-width-large 0;
   border-bottom-width: 0;
 }
+
 // Upside down carets for .dropup
 .dropup .btn-lg .caret {
   border-width: 0 $caret-width-large $caret-width-large;
 }
-
 
 // Vertical button groups
 // ----------------------
@@ -181,19 +192,21 @@
     @include border-bottom-radius($btn-border-radius-base);
   }
 }
+
 .btn-group-vertical > .btn-group:not(:first-child):not(:last-child) > .btn {
   border-radius: 0;
 }
+
 .btn-group-vertical > .btn-group:first-child:not(:last-child) {
   > .btn:last-child,
   > .dropdown-toggle {
     @include border-bottom-radius(0);
   }
 }
+
 .btn-group-vertical > .btn-group:last-child:not(:first-child) > .btn:first-child {
   @include border-top-radius(0);
 }
-
 
 // Justified button groups
 // ----------------------
@@ -218,7 +231,6 @@
   }
 }
 
-
 // Checkbox and radio options
 //
 // In order to support the browser's form validation feedback, powered by the
@@ -237,7 +249,7 @@
     input[type="radio"],
     input[type="checkbox"] {
       position: absolute;
-      clip: rect(0,0,0,0);
+      clip: rect(0, 0, 0, 0);
       pointer-events: none;
     }
   }

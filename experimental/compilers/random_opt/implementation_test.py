@@ -1,9 +1,10 @@
 """Unit tests for //experimental/compilers/random_opt/implementation.py."""
 import pathlib
-import pytest
 import sys
 import tempfile
 import typing
+
+import pytest
 from absl import app
 from absl import flags
 

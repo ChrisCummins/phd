@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 from collections import namedtuple
+from typing import NewType
 
 import pyopencl as cl
 from dsmith.db import *
 from dsmith.lib import *
 from phd.lib.labm8 import fs
-from typing import NewType
 
 
 # paths to clreduce library

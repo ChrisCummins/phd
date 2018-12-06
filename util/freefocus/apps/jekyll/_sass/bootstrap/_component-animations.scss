@@ -18,14 +18,20 @@
 .collapse {
   display: none;
 
-  &.in      { display: block; }
+  &.in {
+    display: block;
+  }
   // [converter] extracted tr&.in to tr.collapse.in
   // [converter] extracted tbody&.in to tbody.collapse.in
 }
 
-tr.collapse.in    { display: table-row; }
+tr.collapse.in {
+  display: table-row;
+}
 
-tbody.collapse.in { display: table-row-group; }
+tbody.collapse.in {
+  display: table-row-group;
+}
 
 .collapsing {
   position: relative;

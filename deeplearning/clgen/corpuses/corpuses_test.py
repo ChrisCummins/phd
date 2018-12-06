@@ -1,8 +1,8 @@
 """Unit tests for //deeplearning/clgen/corpus.py."""
 import os
 import pathlib
-import tempfile
 import sys
+import tempfile
 
 import pytest
 from absl import app

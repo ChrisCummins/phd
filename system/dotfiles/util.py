@@ -38,11 +38,11 @@ def get_platform():
   distro = platform.linux_distribution()
   if not distro[0]:
     return {
-        "darwin": "osx",
+      "darwin": "osx",
     }.get(sys.platform, sys.platform)
   else:
     return {
-        "debian": "ubuntu",
+      "debian": "ubuntu",
     }.get(distro[0].lower(), distro[0].lower())
 
 
@@ -93,7 +93,6 @@ def shell_ok(cmd):
   except subprocess.CalledProcessError as e:
     _log_shell_output("-> " + str(e.returncode))
     return False
-
 
 
 # Run the configure script and read the resulting config.json file.
@@ -220,7 +219,8 @@ class Task(object):
     if hasattr(task, "__versions__"):
       _versions = merge_dicts(_versions, getattr(task, "__versions__"))
     if hasattr(task, "__" + get_platform() + "_version__"):
-      _versions = merge_dicts(_versions, getattr(task, "__" + get_platform() + "_version__"))
+      _versions = merge_dicts(_versions, getattr(task,
+                                                 "__" + get_platform() + "_version__"))
     return versions
 
 
@@ -431,7 +431,8 @@ def get_task_method(task, method_name):
   if fn is None:
     fn = getattr(task, method_name, None)
   if fn is None:
-    raise InvalidTaskError("failed to resolve {method_name} method of Task {task}".format(**vars()))
+    raise InvalidTaskError(
+      "failed to resolve {method_name} method of Task {task}".format(**vars()))
   return fn
 
 

@@ -23,6 +23,7 @@ from random import randint
 from re import compile, search, sub
 from sys import argv, exit, stdout
 
+
 verbosity = {
   "debug": {
     "file_paths": True,

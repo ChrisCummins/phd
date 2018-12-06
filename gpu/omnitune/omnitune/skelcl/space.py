@@ -1,6 +1,7 @@
-import numpy as np
 from itertools import product
 from math import log
+
+import numpy as np
 from phd.lib.labm8 import io
 from phd.lib.labm8 import viz
 

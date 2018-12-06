@@ -1,8 +1,9 @@
 """Unit tests for //deeplearning/clgen/atomizers.py."""
 import pathlib
-import pytest
 import sys
 import tempfile
+
+import pytest
 from absl import app
 
 import deeplearning.clgen.errors

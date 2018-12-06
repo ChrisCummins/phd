@@ -1,17 +1,19 @@
 #!/usr/bin/env python
 
-import sys
-
 import argparse
 import logging
 import subprocess
+import sys
 import threading
+
 from dsmith import clsmith
+
 
 LAUNCHER = clsmith.cl_launcher_path
 LAUNCHER_OPTS = ["-l", "1,1,1", "-g", "1,1,1"]
 OCLGRIND = "oclgrind"
-OCLGRIND_OPTS = ["--max-errors", "16", "--build-options", "-O0", "-Wall", "--uninitialized"]
+OCLGRIND_OPTS = ["--max-errors", "16", "--build-options", "-O0", "-Wall",
+                 "--uninitialized"]
 
 reference_platforms = ["AMD", "Intel"]
 device = 0
@@ -54,7 +56,8 @@ def verify_with_oclgrind(clprogram):
   # Execute Oclgrind in a separate thread
   run = RunInThread(
       [OCLGRIND] + OCLGRIND_OPTS + [LAUNCHER, "-f", clprogram, "-p",
-                                    "0", "-d", "0"] + LAUNCHER_OPTS, timeout * 30)
+                                    "0", "-d", "0"] + LAUNCHER_OPTS,
+      timeout * 30)
 
   # Check to see if Oclgrind actually completed successfully
   if run.timed_out:
@@ -92,7 +95,8 @@ def get_reference_run(clprogram):
                       timeout)
 
     stdout, stderr = run.stdout, run.stderr
-    logging.debug("Reference[%s]:\nOut: %r\nErr: %r\n", platform_name, stdout, stderr)
+    logging.debug("Reference[%s]:\nOut: %r\nErr: %r\n", platform_name, stdout,
+                  stderr)
 
     compiled = "ompilation terminated successfully" in stderr
     if compiled and not run.timed_out:
@@ -177,12 +181,14 @@ def run(clprogram, no_oclgrind, vectors=True):
 def main(argv):
   global logfile
 
-  argparser = argparse.ArgumentParser(description="Check if the OpenCL kernel is interesting.")
+  argparser = argparse.ArgumentParser(
+      description="Check if the OpenCL kernel is interesting.")
   argparser.add_argument('--logfile', action='store')
   argparser.add_argument('--loglevel', action='store')
   argparser.add_argument('--vectors', action='store', default=True)
   argparser.add_argument('--no-oclgrind', action='store_true')
-  argparser.add_argument('clprogram', metavar="KERNEL", nargs='?', default="CLProgram.cl",
+  argparser.add_argument('clprogram', metavar="KERNEL", nargs='?',
+                         default="CLProgram.cl",
                          help="The kernel file to run (CLProgram.cl by default)")
   args = argparser.parse_args(argv[1:])
 

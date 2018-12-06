@@ -9,11 +9,10 @@ from subprocess import PIPE, Popen
 from typing import List, TextIO
 
 import numpy as np
-
-from config import getconfig
-from deeplearning.clgen import errors
 from phd.lib.labm8 import bazelutil
 from phd.lib.labm8 import labmath
+
+from deeplearning.clgen import errors
 
 
 CLGEN_FEATURES = bazelutil.DataPath(

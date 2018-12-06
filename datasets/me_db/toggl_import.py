@@ -1,8 +1,8 @@
+import csv
+import datetime
 import logging
 from collections import defaultdict
 
-import csv
-import datetime
 from toggl import TogglPy
 
 from datasets.me_db import utils as me

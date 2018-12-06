@@ -41,16 +41,16 @@ include \emph{pipe}, \emph{task farm}, and \emph{for loops}.
 \subsection{Algorithmic Skeleton Frameworks}
 
 \begin{figure}
-\centering
-\includegraphics[width=0.99\textwidth]{img/askf}
-\caption[Overview of an Algorithmic Skeleton Framework]{%
+  \centering
+  \includegraphics[width=0.99\textwidth]{img/askf}
+  \caption[Overview of an Algorithmic Skeleton Framework]{%
   Typical usage of a library based Algorithmic Skeleton
   Framework. Other approaches to algorithmic skeletons involve
   embedding the API into the core language itself, or using template
   and macro substitution to remove the need for linking with a
   library.%
-}
-\label{fig:askf}
+  }
+  \label{fig:askf}
 \end{figure}
 
 Algorithmic Skeleton Frameworks (ASkFs) provide concrete parallel
@@ -104,17 +104,17 @@ made by hand or by the compiler~\cite{Komatsu2010,Karimi2010}.
 \subsection{The OpenCL Programming Model}
 
 \begin{figure}
-\centering
-\includegraphics[width=0.5
-\textwidth]{img/opencl-memory}
-\caption[The OpenCL memory model]{%
+  \centering
+  \includegraphics[width=0.5
+  \textwidth]{img/opencl-memory}
+  \caption[The OpenCL memory model]{%
   The OpenCL memory model. The host communicates with each device
   through transfers between global memory spaces. The capacity of each
   type of memory is dependent on the device hardware. In general,
   private memory is the fastest and smallest, and global memory is the
   largest and slowest.%
-}
-\label{fig:opencl-memory}
+  }
+  \label{fig:opencl-memory}
 \end{figure}
 
 OpenCL is a parallel programming framework which targets CPUs, GPUs,
@@ -125,7 +125,7 @@ a central host. Programs written for these devices are called
 \emph{kernels}, and are compiled by platform-specific tool chains. At
 runtime, an OpenCL \emph{platform} is selected and a \emph{context}
 object is created which exposes access to each supported compute
-device through \emph{command queues}.  When a kernel is executed, each
+device through \emph{command queues}. When a kernel is executed, each
 unit of computation is referred to as a \emph{workitem}, and these
 workitems are grouped into \emph{workgroups}. The sum of all workgroup
 dimensions defines the \emph{global size}. For GPUs, workgroups
@@ -194,7 +194,7 @@ of abstraction above OpenCL and CUDA respectively in order to simplify
 GPGPU programming~\cite{Enmyren2010}.
 
 \section{High-Level GPU Programming with
-  SkelCL}\label{sec:skelcl-intro}
+SkelCL}\label{sec:skelcl-intro}
 
 Introduced in~\cite{Steuwer2011}, SkelCL is an object oriented C++
 library that provides OpenCL implementations of data parallel
@@ -240,24 +240,24 @@ element $x_1, x_2, \ldots, x_n$, returning a vector of the same
 length:
 %
 \begin{equation}
-\map\left(f, [x_1,x_2,\ldots,x_n]\right) \to [f(x_1),f(x_2),\ldots,f(x_n)]
+  \map\left(f, [x_1,x_2,\ldots,x_n]\right) \to [f(x_1),f(x_2),\ldots,f(x_n)]
 \end{equation}
 %
 The process is the same for an $n \times m$ matrix:
 %
 \begin{equation}
-\map\left(f,
-\begin{bmatrix}
-  x_{11} & \cdots & x_{1m} \\
-  \vdots & \ddots & \vdots \\
-  x_{n1} & \cdots & x_{nm}
-\end{bmatrix}\right)
-\to
-\begin{bmatrix}
-  f(x_{11}) & \cdots & f(x_{1m}) \\
-  \vdots & \ddots & \vdots \\
-  f(x_{n1}) & \cdots & f(x_{nm})
-\end{bmatrix}
+  \map\left(f,
+  \begin{bmatrix}
+    x_{11} & \cdots & x_{1m} \\
+    \vdots & \ddots & \vdots \\
+    x_{n1} & \cdots & x_{nm}
+  \end{bmatrix}\right)
+  \to
+  \begin{bmatrix}
+    f(x_{11}) & \cdots & f(x_{1m}) \\
+    \vdots & \ddots & \vdots \\
+    f(x_{n1}) & \cdots & f(x_{nm})
+  \end{bmatrix}
 \end{equation}
 %
 Execution of the customising function can be parallelised as each
@@ -272,33 +272,33 @@ binary operator $\oplus$ and two vectors $x$ and $y$ of $n$ elements
 each:
 %
 \begin{equation}
-\zip\left( \oplus, [x_1,x_2,\ldots,x_n], [y_1,y_2,\ldots,y_n] \right)
-\to
-\left[ x_1 \oplus y_1, x_2 \oplus y_2, \ldots, x_n \oplus y_n \right]
+  \zip\left( \oplus, [x_1,x_2,\ldots,x_n], [y_1,y_2,\ldots,y_n] \right)
+  \to
+  \left[ x_1 \oplus y_1, x_2 \oplus y_2, \ldots, x_n \oplus y_n \right]
 \end{equation}
 %
 For two matrices of $n \times m$ elements each:
 %
 \begin{equation}
-\begin{split}
-\zip \left( \oplus,
-\begin{bmatrix}
-  x_{11} & \cdots & x_{1m} \\
-  \vdots & \ddots & \vdots \\
-  x_{n1} & \cdots & x_{nm}
-\end{bmatrix},
-\begin{bmatrix}
-  y_{11} & \cdots & y_{1m} \\
-  \vdots & \ddots & \vdots \\
-  y_{n1} & \cdots & y_{nm}
-\end{bmatrix} \right) \\
-\to
-\begin{bmatrix}
-  x_{11} \oplus y_{11} & \cdots & x_{1m} \oplus y_{1m} \\
-  \vdots & \ddots & \vdots \\
-  x_{n1} \oplus y_{n1} & \cdots & x_{nm} \oplus y_{nm}
-\end{bmatrix}
-\end{split}
+  \begin{split}
+    \zip \left( \oplus,
+    \begin{bmatrix}
+      x_{11} & \cdots & x_{1m} \\
+      \vdots & \ddots & \vdots \\
+      x_{n1} & \cdots & x_{nm}
+    \end{bmatrix},
+    \begin{bmatrix}
+      y_{11} & \cdots & y_{1m} \\
+      \vdots & \ddots & \vdots \\
+      y_{n1} & \cdots & y_{nm}
+    \end{bmatrix} \right) \\
+    \to
+    \begin{bmatrix}
+      x_{11} \oplus y_{11} & \cdots & x_{1m} \oplus y_{1m} \\
+      \vdots & \ddots & \vdots \\
+      x_{n1} \oplus y_{n1} & \cdots & x_{nm} \oplus y_{nm}
+    \end{bmatrix}
+  \end{split}
 \end{equation}
 %
 The $\zip$ operation is parallelised in the same manner as $\map$.
@@ -319,14 +319,14 @@ $\bm{i}$ and a vector $x$ of $n$ elements:
 For a $n \times m$ matrix:
 %
 \begin{equation}
-\reduce \left( \oplus, i,
-\begin{bmatrix}
-  x_{11} & \cdots & x_{1m} \\
-  \vdots & \ddots & \vdots \\
-  x_{n1} & \cdots & x_{nm}
-\end{bmatrix} \right)
-\to
-x_{11} \oplus x_{12} \oplus \ldots \oplus x_{nm}
+  \reduce \left( \oplus, i,
+  \begin{bmatrix}
+    x_{11} & \cdots & x_{1m} \\
+    \vdots & \ddots & \vdots \\
+    x_{n1} & \cdots & x_{nm}
+  \end{bmatrix} \right)
+  \to
+  x_{11} \oplus x_{12} \oplus \ldots \oplus x_{nm}
 \end{equation}
 %
 Reduction operates by recursively combining elements, storing
@@ -359,41 +359,41 @@ operations, introduced in~\cite{Steuwer2014}. Given two matrices of
 size $n \times d$ and $n \times m$, a binary operator $\oplus$:
 %
 \begin{equation}
-\allpairs \left( \oplus,
-\begin{bmatrix}
-  x_{11} & \cdots & x_{1d} \\
-  \vdots & \ddots & \vdots \\
-  x_{n1} & \cdots & x_{nd}
-\end{bmatrix},
-\begin{bmatrix}
-  y_{11} & \cdots & y_{1m} \\
-  \vdots & \ddots & \vdots \\
-  y_{n1} & \cdots & y_{nm}
-\end{bmatrix} \right)
-\to
-\begin{bmatrix}
-  z_{11} & \cdots & z_{1m} \\
-  \vdots & \ddots & \vdots \\
-  z_{n1} & \cdots & z_{nm}
-\end{bmatrix}
+  \allpairs \left( \oplus,
+  \begin{bmatrix}
+    x_{11} & \cdots & x_{1d} \\
+    \vdots & \ddots & \vdots \\
+    x_{n1} & \cdots & x_{nd}
+  \end{bmatrix},
+  \begin{bmatrix}
+    y_{11} & \cdots & y_{1m} \\
+    \vdots & \ddots & \vdots \\
+    y_{n1} & \cdots & y_{nm}
+  \end{bmatrix} \right)
+  \to
+  \begin{bmatrix}
+    z_{11} & \cdots & z_{1m} \\
+    \vdots & \ddots & \vdots \\
+    z_{n1} & \cdots & z_{nm}
+  \end{bmatrix}
 \end{equation}
 %
 where:
 %
 \begin{equation}
-z_{ij} =
-\left[ x_{i1}, x_{i2}, \ldots, x_{id} \right] \oplus
-\left[ y_{j1}, y_{j2}, \ldots, y_{jd} \right]
+  z_{ij} =
+  \left[ x_{i1}, x_{i2}, \ldots, x_{id} \right] \oplus
+  \left[ y_{j1}, y_{j2}, \ldots, y_{jd} \right]
 \end{equation}
 %
 An additional implementation is provided for when the $\oplus$
 operator is known to match that of a zip pattern:
 %
 \begin{equation}
-z_{ij} =
-\left[
+  z_{ij} =
+  \left[
   x_{i1}, \oplus y_{j1}, x_{i2} \oplus y_{j2}, \ldots, x_{id} \oplus y_{jd}
-\right]
+  \right]
 \end{equation}
 %
 This pattern has applications from bioinformatics to matrix
@@ -404,14 +404,14 @@ for repeated reads.
 \subsubsection{Stencil}
 
 \begin{figure}
-\centering
-\includegraphics[width=.6\textwidth]{img/stencil-shape}
-\caption[Stencil border region]{%
+  \centering
+  \includegraphics[width=.6\textwidth]{img/stencil-shape}
+  \caption[Stencil border region]{%
   The border region of a stencil is defined using a stencil shape $S$,
   consisting of the four independent components describing the number
   of cells north $S_n$, east $S_e$, west $S_w$, and south $S_s$.%
-}
-\label{fig:stencil-shape}
+  }
+  \label{fig:stencil-shape}
 \end{figure}
 
 Stencils are patterns of computation which operate on uniform grids of
@@ -431,29 +431,29 @@ Figure~\ref{fig:stencil-shape}. Given a customising function $f$, a
 stencil shape $S$, and an $n \times m$ matrix:
 %
 \begin{equation}
-\stencil \left( f, S,
-\begin{bmatrix}
-  x_{11} & \cdots & x_{1m} \\
-  \vdots & \ddots & \vdots \\
-  x_{n1} & \cdots & x_{nm}
-\end{bmatrix} \right)
-\to
-\begin{bmatrix}
-  z_{11} & \cdots & z_{1m} \\
-  \vdots & \ddots & \vdots \\
-  z_{n1} & \cdots & z_{nm}
-\end{bmatrix}
+  \stencil \left( f, S,
+  \begin{bmatrix}
+    x_{11} & \cdots & x_{1m} \\
+    \vdots & \ddots & \vdots \\
+    x_{n1} & \cdots & x_{nm}
+  \end{bmatrix} \right)
+  \to
+  \begin{bmatrix}
+    z_{11} & \cdots & z_{1m} \\
+    \vdots & \ddots & \vdots \\
+    z_{n1} & \cdots & z_{nm}
+  \end{bmatrix}
 \end{equation}
 %
 where:
 %
 \begin{equation}
-z_{ij} = f \left(
-\begin{bmatrix}
-  z_{i-S_n,j-S_w} & \cdots & z_{i-S_n,j+S_e} \\
-  \vdots & \ddots & \vdots \\
-  z_{i+S_s,j-S_w} & \cdots & z_{i+S_s,j+S_e}
-\end{bmatrix} \right)
+  z_{ij} = f \left(
+  \begin{bmatrix}
+    z_{i-S_n,j-S_w} & \cdots & z_{i-S_n,j+S_e} \\
+    \vdots & \ddots & \vdots \\
+    z_{i+S_s,j-S_w} & \cdots & z_{i+S_s,j+S_e}
+  \end{bmatrix} \right)
 \end{equation}
 %
 Note that a stencil operation in which the size of the stencil shape
@@ -471,11 +471,11 @@ shape $S$, and a matrix $M$ with initial values $M_{init}$. The value
 of an iterative stencil can be defined recursively as:
 %
 \begin{equation}
-g(f, S, M, t) =
-\begin{cases}
-  \stencil \left( f, S, g(f, S, M, t-1) \right),& \text{if } t \geq 1\\
-  M_{init}, & \text{otherwise}
-\end{cases}
+  g(f, S, M, t) =
+  \begin{cases}
+    \stencil \left( f, S, g(f, S, M, t-1) \right),& \text{if } t \geq 1\\
+    M_{init}, & \text{otherwise}
+  \end{cases}
 \end{equation}
 %
 Examples of iterative stencils are cellular automata. Another
@@ -518,16 +518,16 @@ responsibility of the SkelCL stencil implementation to select an
 appropriate workgroup size to use.
 
 \begin{figure}
-\centering
-\includegraphics[width=.75\textwidth]{img/stencil-wg}
-\caption[Workgroup decomposition in stencils]{%
+  \centering
+  \includegraphics[width=.75\textwidth]{img/stencil-wg}
+  \caption[Workgroup decomposition in stencils]{%
   The components of a stencil: a grid of cells is decomposed into
   workgroups, consisting of multiple workitems. Each work item
   operates on a border region, and the size of the workgroup and outer
   border region defines a tile, which is a region of local memory
   allocated to each workgroup.%
-}
-\label{fig:stencil-wg}
+  }
+  \label{fig:stencil-wg}
 \end{figure}
 
 
@@ -694,7 +694,7 @@ The above calculations assumes that the sample variance ($\sigma^2$)
 is an accurate estimation of the true population variance. This relies
 on the assumption of an underlying Gaussian distribution, which,
 according to the central limit theorem, is true of large sample sizes
-(typically $n \ge 30$).  In cases of smaller sample sizes, the sample
+(typically $n \ge 30$). In cases of smaller sample sizes, the sample
 and population variances can differ significantly, so one must instead
 use a Student's $t$-distribution, $t_{1-\alpha/2}$, in place of
 $z_{1-\alpha/2}$.
@@ -742,12 +742,12 @@ Box plots are used to show the distribution of quartile ranges for
 grouped data. The contain the following features:
 %
 \begin{itemize}
-\item Horizontal lines at the lower quartile, median and upper
+  \item Horizontal lines at the lower quartile, median and upper
   quartile.
-\item Vertical lines above and below the upper and lower quartiles to
+  \item Vertical lines above and below the upper and lower quartiles to
   the most extreme data point within 1.5 IQR of the upper/lower
   quartile, with horizontal whiskers at the end of the vertical lines.
-\item Dots beyond the ends of the vertical lines to show outliers.
+  \item Dots beyond the ends of the vertical lines to show outliers.
 \end{itemize}
 %
 A variation of box plots used in this thesis is the violin plot, which

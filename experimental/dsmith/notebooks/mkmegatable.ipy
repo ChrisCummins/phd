@@ -38,7 +38,8 @@ def get_outcome_columns(tables: Tableset, testbed: Testbed, no_opt: bool):
                  .filter(tables.params.optimizations == optimizations)]
 
   counts = dict((OUTCOMES[outcome], count) for outcome, count in
-                session.query(tables.results.outcome, sql.sql.func.count(tables.results.outcome)) \
+                session.query(tables.results.outcome,
+                              sql.sql.func.count(tables.results.outcome)) \
                 .join(tables.meta) \
                 .join(tables.testcases) \
                 .filter(tables.results.testbed_id == testbed.id,
@@ -49,10 +50,12 @@ def get_outcome_columns(tables: Tableset, testbed: Testbed, no_opt: bool):
   counts['total'] = sum(counts.values())
 
   print(' ', device_str(testbed.device), tables.name, no_opt, counts)
-  return " & ".join(str(counts.get(x, 0)) for x in ["bf", "bc", "bto", "c", "to", "pass", "total"])
+  return " & ".join(str(counts.get(x, 0)) for x in
+                    ["bf", "bc", "bto", "c", "to", "pass", "total"])
 
 
-def get_classification_columns(tables: Tableset, testbed: Testbed, no_opt: bool):
+def get_classification_columns(tables: Tableset, testbed: Testbed,
+                               no_opt: bool):
   """
   Return results for the specified time limit.
   """
@@ -61,16 +64,17 @@ def get_classification_columns(tables: Tableset, testbed: Testbed, no_opt: bool)
                session.query(tables.params.id) \
                  .filter(tables.params.optimizations == optimizations)]
 
-  counts = dict((CLASSIFICATIONS[classification], count) for classification, count in
-                session.query(tables.classifications.classification,
-                              sql.sql.func.count(tables.classifications.classification)) \
-                .join(tables.results) \
-                .join(tables.meta) \
-                .join(tables.testcases) \
-                .filter(tables.results.testbed_id == testbed.id,
-                        tables.testcases.params_id.in_(param_ids),
-                        tables.meta.cumtime < TIME_LIMIT) \
-                .group_by(tables.classifications.classification))
+  counts = dict(
+      (CLASSIFICATIONS[classification], count) for classification, count in
+      session.query(tables.classifications.classification,
+                    sql.sql.func.count(tables.classifications.classification)) \
+      .join(tables.results) \
+      .join(tables.meta) \
+      .join(tables.testcases) \
+      .filter(tables.results.testbed_id == testbed.id,
+              tables.testcases.params_id.in_(param_ids),
+              tables.meta.cumtime < TIME_LIMIT) \
+      .group_by(tables.classifications.classification))
 
   num_interesting = sum(counts.values())
 
@@ -88,20 +92,22 @@ def get_classification_columns(tables: Tableset, testbed: Testbed, no_opt: bool)
   # counts["ratio"] = f"{ratio:.2f}\\%"
 
   print(" ", device_str(testbed.device), tables.name, no_opt, counts)
-  return " & ".join(str(counts.get(x, 0)) for x in ["bc", "bto", "bf", "c", "w", "pass", "total"])
+  return " & ".join(str(counts.get(x, 0)) for x in
+                    ["bc", "bto", "bf", "c", "w", "pass", "total"])
 
 
 def get_classification_totals(tables: Tableset):
   """
   Return results for the specified time limit.
   """
-  counts = dict((CLASSIFICATIONS[classification], count) for classification, count in
-                session.query(tables.classifications.classification,
-                              sql.sql.func.count(tables.classifications.classification)) \
-                .join(tables.results) \
-                .join(tables.meta) \
-                .filter(tables.meta.cumtime < TIME_LIMIT) \
-                .group_by(tables.classifications.classification))
+  counts = dict(
+      (CLASSIFICATIONS[classification], count) for classification, count in
+      session.query(tables.classifications.classification,
+                    sql.sql.func.count(tables.classifications.classification)) \
+      .join(tables.results) \
+      .join(tables.meta) \
+      .filter(tables.meta.cumtime < TIME_LIMIT) \
+      .group_by(tables.classifications.classification))
 
   num_interesting = sum(counts.values())
 
@@ -117,7 +123,8 @@ def get_classification_totals(tables: Tableset):
 
   print("  Totals", tables.name, counts)
   return " & ".join(
-      "\\multirow{{ 2}}{{*}}{{{}}}".format(counts.get(x, 0)) for x in ["bc", "bto", "bf", "c", "w", "pass", "total"])
+      "\\multirow{{ 2}}{{*}}{{{}}}".format(counts.get(x, 0)) for x in
+      ["bc", "bto", "bf", "c", "w", "pass", "total"])
 
 
 def get_row(config_id, testbed_id, get_columns):
@@ -177,7 +184,8 @@ def get_classifications_table():
 \\\\
 """
 
-  rows = "\n\\hline\n".join(get_row(*x, get_classification_columns) for x in CONFIGURATIONS)
+  rows = "\n\\hline\n".join(
+      get_row(*x, get_classification_columns) for x in CONFIGURATIONS)
 
   return f"""\
 \\begin{{tabular}}{{lll | {cols_format} | {cols_format} }}
@@ -223,7 +231,9 @@ if __name__ == "__main__":
   #     print(get_outcomes_table(), file=outfile)
 
   print("\nGenerating classifications table ...")
-  with open(os.path.expanduser("~/docs/paper-project_b/build/tab/megatable.tex"), "w") as outfile:
+  with open(
+      os.path.expanduser("~/docs/paper-project_b/build/tab/megatable.tex"),
+      "w") as outfile:
     print(get_classifications_table(), file=outfile)
 
   !cd

@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-import cldrive
 from argparse import ArgumentParser
-from dsmith import db
-from dsmith.db import *
 from pathlib import Path
-from progressbar import ProgressBar
 from typing import List
 
+import cldrive
+from dsmith import db
+from dsmith.db import *
 from phd.lib.labm8 import crypto, fs
+from progressbar import ProgressBar
+
 
 # Benchmarked CLgen inference rate (characters per second):
 CLGEN_INFERENCE_CPS = 465

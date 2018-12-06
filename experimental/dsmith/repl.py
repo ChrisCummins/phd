@@ -23,7 +23,6 @@ Attributes:
     __available_commands__ (str): Help string for available commands.
 """
 import datetime
-import humanize
 import logging
 import math
 import os
@@ -31,6 +30,8 @@ import random
 import re
 import sys
 import traceback
+
+import humanize
 from phd.lib.labm8 import fs
 
 from experimental import dsmith
@@ -205,12 +206,12 @@ def _execute(statement: str, file=sys.stdout) -> None:
     generators_match = re.match(r'describe (?P<lang>\w+) generators$',
                                 statement)
     testbeds_match = re.match(
-      r'describe (?P<available>available )?(?P<lang>\w+) testbeds$',
-      statement)
+        r'describe (?P<available>available )?(?P<lang>\w+) testbeds$',
+        statement)
     programs_match = re.match(r'describe (?P<lang>\w+) programs$', statement)
     testcases_match = re.match(
-      r'describe (?P<lang>\w+) ((?P<generator>\w+) )?testcases$',
-      statement)
+        r'describe (?P<lang>\w+) ((?P<generator>\w+) )?testcases$',
+        statement)
     results_match = re.match(r'describe (?P<lang>\w+) results$', statement)
 
     if generators_match:
@@ -281,8 +282,8 @@ def _execute(statement: str, file=sys.stdout) -> None:
 
   if components[0] == "import":
     match = re.match(
-      r'import (?P<generator>\w+) (?P<lang>\w+) program(s)? from (?P<path>.+)$',
-      statement)
+        r'import (?P<generator>\w+) (?P<lang>\w+) program(s)? from (?P<path>.+)$',
+        statement)
 
     if match:
       lang = mklang(match.group("lang"))

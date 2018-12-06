@@ -1,7 +1,8 @@
 """Unit tests for //experimental/hotcrp/json_to_acm_proceedings.py."""
 import io
-import pytest
 import sys
+
+import pytest
 from absl import app
 from absl import flags
 

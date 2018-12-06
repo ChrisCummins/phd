@@ -2,9 +2,10 @@
 import binascii
 import datetime
 import hashlib
+import typing
+
 import phd.lib.labm8.sqlutil
 import sqlalchemy as sql
-import typing
 from phd.lib.labm8 import labdate
 from sqlalchemy import orm
 from sqlalchemy.dialects import mysql
@@ -94,11 +95,11 @@ class Generator(db.Table):
       md5.update((proto_opt_name + proto_opt_value).encode('utf-8'))
       opt = phd.lib.labm8.sqlutil.GetOrAdd(session, GeneratorOpt,
                                            name=GeneratorOptName.GetOrAdd(
-                                             session,
-                                             proto_opt_name),
+                                               session,
+                                               proto_opt_name),
                                            value=GeneratorOptValue.GetOrAdd(
-                                             session,
-                                             proto_opt_value), )
+                                               session,
+                                               proto_opt_value), )
       opts.append(opt)
 
     # Create optset table entries.

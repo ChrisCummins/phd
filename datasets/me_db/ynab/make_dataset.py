@@ -4,9 +4,9 @@ import pathlib
 import random
 import time
 import typing
+
 from absl import app
 from absl import flags
-
 from phd.lib.labm8 import jsonutil
 
 

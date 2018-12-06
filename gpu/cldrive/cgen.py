@@ -1,5 +1,6 @@
-import numpy as np
 import typing
+
+import numpy as np
 
 from gpu.cldrive import args as _args
 from gpu.cldrive import driver

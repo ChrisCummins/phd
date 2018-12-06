@@ -18,15 +18,15 @@
 """
 Interface to CLSmith binaries
 """
-from collections import namedtuple
-
 import logging
 import re
-from phd.lib.labm8 import fs
+from collections import namedtuple
 from subprocess import PIPE, Popen
 from tempfile import NamedTemporaryFile
 from time import time
 from typing import List, NewType, Tuple
+
+from phd.lib.labm8 import fs
 
 from experimental import dsmith
 from experimental.dsmith import Colors
@@ -144,7 +144,7 @@ def verify_cl_launcher_run(platform: str, device: str, optimizations: bool,
     match = re.match('^3-D global size \d+ = \[(\d+), (\d+), (\d+)\]', line)
     if match:
       actual_global_size = (
-      int(match.group(1)), int(match.group(2)), int(match.group(3)))
+        int(match.group(1)), int(match.group(2)), int(match.group(3)))
     match = re.match('^2-D global size \d+ = \[(\d+), (\d+)\]', line)
     if match:
       actual_global_size = (int(match.group(1)), int(match.group(2)), 0)
@@ -156,7 +156,7 @@ def verify_cl_launcher_run(platform: str, device: str, optimizations: bool,
     match = re.match('^3-D local size \d+ = \[(\d+), (\d+), (\d+)\]', line)
     if match:
       actual_local_size = (
-      int(match.group(1)), int(match.group(2)), int(match.group(3)))
+        int(match.group(1)), int(match.group(2)), int(match.group(3)))
     match = re.match('^2-D local size \d+ = \[(\d+), (\d+)\]', line)
     if match:
       actual_local_size = (int(match.group(1)), int(match.group(2)), 0)

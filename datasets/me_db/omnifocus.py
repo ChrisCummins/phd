@@ -1,9 +1,8 @@
+import csv
+import datetime
 import json
 import logging
 import os
-
-import csv
-import datetime
 import subprocess
 from tempfile import TemporaryDirectory
 

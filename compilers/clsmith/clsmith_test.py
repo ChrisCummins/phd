@@ -1,6 +1,7 @@
 """Unit tests for //compilers/clsmith/clsmith.py."""
-import pytest
 import sys
+
+import pytest
 from absl import app
 from absl import flags
 

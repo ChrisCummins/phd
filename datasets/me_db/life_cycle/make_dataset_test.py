@@ -1,12 +1,13 @@
 """Unit tests for //datasets/me_db/life_cycle:make_dataset."""
 import csv
 import pathlib
-import pytest
 import sys
 import tempfile
 import time
 import typing
 import zipfile
+
+import pytest
 from absl import app
 from absl import flags
 

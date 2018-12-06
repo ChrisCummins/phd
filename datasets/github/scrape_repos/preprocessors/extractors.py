@@ -1,9 +1,9 @@
 """Preprocessors to extract from source code."""
 import os
-
 import pathlib
 import subprocess
 import typing
+
 from absl import flags
 from absl import logging
 from phd.lib.labm8 import bazelutil

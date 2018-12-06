@@ -1,7 +1,8 @@
 """Unit tests for //compilers/llvm/clang_format.py."""
-import pytest
 import subprocess
 import sys
+
+import pytest
 from absl import app
 from absl import flags
 

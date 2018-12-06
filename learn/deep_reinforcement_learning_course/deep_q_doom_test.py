@@ -1,8 +1,9 @@
 """Unit tests for //learn/deep_reinforcement_learning_course/deep_q_doom.py."""
-import pytest
 import random
 import sys
 import typing
+
+import pytest
 from absl import app
 from absl import flags
 

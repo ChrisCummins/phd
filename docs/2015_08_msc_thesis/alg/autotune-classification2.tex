@@ -1,23 +1,23 @@
 \begin{algorithmic}[1]
-\Require kernel features $k$, hardware features $h$, dataset features
-$d$.
-\Ensure workgroup size $w$
+  \Require kernel features $k$, hardware features $h$, dataset features
+  $d$.
+  \Ensure workgroup size $w$
 
-\State $C \leftarrow \phi$
-\Comment Set of classifiers.
-\State $W_{training} \leftarrow \{ W_{legal}(s) | s \in S_{training}
-\}$
+  \State $C \leftarrow \phi$
+  \Comment Set of classifiers.
+  \State $W_{training} \leftarrow \{ W_{legal}(s) | s \in S_{training}
+  \}$
 
-\For{$W_c \in W_{training}$}
+  \For{$W_c \in W_{training}$}
   \State $S_c \leftarrow \{ s | s \in S_{training}, W_{legal}(s) = W_c
   \}$
   \Comment Training data with same legal params.
   \State $c \leftarrow \text{\sc{TrainClassifier}}(S_c)$
   \Comment Build a classifier with training data.
   \State $C \leftarrow C \cup \{ c \}$
-\EndFor
+  \EndFor
 
-\State $c \leftarrow C_{W_{legal}(s)}$
+  \State $c \leftarrow C_{W_{legal}(s)}$
 
-\State \textbf{return} $c(a, k, d)$
+  \State \textbf{return} $c(a, k, d)$
 \end{algorithmic}

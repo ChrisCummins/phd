@@ -4,19 +4,20 @@ This program runs DeepSmith testcases on an OpenCL testbed, and records the
 results.
 """
 import pathlib
+
 from absl import app
 from absl import flags
 from absl import logging
-
-from deeplearning.deepsmith.harnesses import cldrive
-from deeplearning.deepsmith.proto import deepsmith_pb2
-from deeplearning.deepsmith.proto import harness_pb2
-from gpu.cldrive import env
 from phd.lib.labm8 import bazelutil
 from phd.lib.labm8 import crypto
 from phd.lib.labm8 import fs
 from phd.lib.labm8 import labtypes
 from phd.lib.labm8 import pbutil
+
+from deeplearning.deepsmith.harnesses import cldrive
+from deeplearning.deepsmith.proto import deepsmith_pb2
+from deeplearning.deepsmith.proto import harness_pb2
+from gpu.cldrive import env
 
 
 FLAGS = flags.FLAGS

@@ -6,20 +6,21 @@ documented collections of data files.
 """
 import fnmatch
 import os
+import pathlib
 import sys
 import tarfile
-
-import pathlib
 import typing
+
 from absl import app
 from absl import flags
 from absl import logging
-
-from lib.dpack.proto import dpack_pb2
 from phd.lib.labm8 import crypto
 from phd.lib.labm8 import fs
 from phd.lib.labm8 import labdate
 from phd.lib.labm8 import pbutil
+
+from lib.dpack.proto import dpack_pb2
+
 
 FLAGS = flags.FLAGS
 
@@ -292,7 +293,8 @@ def PackDataPackage(package_dir: pathlib.Path) -> None:
   manifest = pbutil.FromFile(
       package_dir / 'MANIFEST.pbtxt', dpack_pb2.DataPackage())
   PackageManifestIsValid(package_dir, manifest)
-  archive_path = (package_dir / f'../{package_dir.name}.dpack.tar.bz2').resolve()
+  archive_path = (
+      package_dir / f'../{package_dir.name}.dpack.tar.bz2').resolve()
   sidecar_path = (package_dir / f'../{package_dir.name}.dpack.pbtxt').resolve()
   CreatePackageArchive(package_dir, manifest, archive_path)
   CreatePackageArchiveSidecar(archive_path, manifest, sidecar_path)

@@ -1,6 +1,7 @@
 """Unit tests for //lib/labm8:fmt."""
-import pytest
 import sys
+
+import pytest
 from absl import app
 from phd.lib.labm8 import fmt
 

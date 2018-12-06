@@ -4,10 +4,10 @@ import pathlib
 from absl import app
 from absl import flags
 from absl import logging
+from phd.lib.labm8 import pbutil
 
 from deeplearning.clgen.models import models
 from deeplearning.clgen.proto import internal_pb2
-from phd.lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

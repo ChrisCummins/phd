@@ -77,7 +77,8 @@ def get_tasks_to_run(*task_names):
   task_names = set(task_names)
 
   # Build a list of available task names:
-  all_tasks = set([type(x[1]()).__name__ for x in inspect.getmembers(sys.modules[__name__], is_runnable_task)])
+  all_tasks = set([type(x[1]()).__name__ for x in
+                   inspect.getmembers(sys.modules[__name__], is_runnable_task)])
 
   # Determine the tasks which need scheduling:
   to_schedule = task_names if len(task_names) else list(all_tasks)
@@ -193,7 +194,8 @@ def main(*args):
           if not (os.path.exists(file) or
                   shell_ok("sudo test -f '{file}'".format(**vars())) or
                   shell_ok("sudo test -d '{file}'".format(**vars()))):
-            raise InvalidTaskError('genfile "{file}" not created'.format(**vars()))
+            raise InvalidTaskError(
+              'genfile "{file}" not created'.format(**vars()))
       runtime = time() - start_time
 
       logging.debug("{task} task completed in {runtime:.3f}s".format(**vars()))

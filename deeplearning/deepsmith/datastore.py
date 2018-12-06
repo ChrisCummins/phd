@@ -3,8 +3,10 @@
 import contextlib
 import pathlib
 
+import phd.lib.labm8.sqlutil
 from absl import flags
 from absl import logging
+from phd.lib.labm8 import pbutil
 from sqlalchemy import orm
 
 import deeplearning.deepsmith.client
@@ -15,11 +17,9 @@ import deeplearning.deepsmith.testbed
 import deeplearning.deepsmith.testcase
 import deeplearning.deepsmith.testcase
 import deeplearning.deepsmith.toolchain
-import phd.lib.labm8.sqlutil
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import datastore_pb2
 from deeplearning.deepsmith.proto import deepsmith_pb2
-from phd.lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS
@@ -124,8 +124,8 @@ class DataStore(object):
     def _FilterToolchainGeneratorHarness(q):
       if request.HasField('toolchain'):
         toolchain = phd.lib.labm8.sqlutil.GetOrAdd(session,
-                                               deeplearning.deepsmith.toolchain.Toolchain,
-                                               name=request.toolchain)
+                                                   deeplearning.deepsmith.toolchain.Toolchain,
+                                                   name=request.toolchain)
         if not toolchain:
           raise LookupError
         q = q.filter(
@@ -163,13 +163,13 @@ class DataStore(object):
     testbed_id = None
     if request.HasField('testbed'):
       toolchain = phd.lib.labm8.sqlutil.GetOrAdd(session,
-                                             deeplearning.deepsmith.toolchain.Toolchain,
-                                             name=request.testbed)
+                                                 deeplearning.deepsmith.toolchain.Toolchain,
+                                                 name=request.testbed)
       testbed = phd.lib.labm8.sqlutil.GetOrAdd(session,
-                                           deeplearning.deepsmith.testbed.Testbed,
-                                           toolchain=toolchain,
-                                           name=request.testbed.toolchain,
-                                           version=request.testbed.version)
+                                               deeplearning.deepsmith.testbed.Testbed,
+                                               toolchain=toolchain,
+                                               name=request.testbed.toolchain,
+                                               version=request.testbed.version)
       testbed_id = testbed.id
 
     if testbed_id and not request.include_testcases_with_results:

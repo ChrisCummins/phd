@@ -1,6 +1,5 @@
 """Convert a SQL workspace to a js timeline."""
 import json
-
 from argparse import ArgumentParser
 
 from util.freefocus.sql import *

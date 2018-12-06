@@ -33,13 +33,14 @@ import humanize
 import progressbar
 import sqlalchemy as sql
 from experimental.dsmith.db_base import *
+from phd.lib.labm8 import crypto, fs
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
 
 from experimental import dsmith
 from experimental.dsmith import Colors
 from experimental.dsmith import db_base
-from phd.lib.labm8 import crypto, fs
+
 
 # Global state to manage database connections. Must call init() before
 # creating sessions.
@@ -126,7 +127,8 @@ class Program(Base):
   id = sql.Column(id_t, primary_key=True)
   generator = sql.Column(Generators.column_t, nullable=False)
   sha1 = sql.Column(sql.String(40), nullable=False)
-  date = sql.Column(sql.DateTime, nullable=False, default=datetime.datetime.utcnow)
+  date = sql.Column(sql.DateTime, nullable=False,
+                    default=datetime.datetime.utcnow)
   generation_time = sql.Column(sql.Float, nullable=False)
   linecount = sql.Column(sql.Integer, nullable=False)
   charcount = sql.Column(sql.Integer, nullable=False)
@@ -162,13 +164,13 @@ class ProgramProxy(Proxy):
 
   def to_record(self, session: session_t) -> Program:
     return Program(
-      generator=self.generator,
-      sha1=self.sha1,
-      date=self.date,
-      generation_time=self.generation_time,
-      linecount=self.linecount,
-      charcount=self.charcount,
-      src=self.src)
+        generator=self.generator,
+        sha1=self.sha1,
+        date=self.date,
+        generation_time=self.generation_time,
+        linecount=self.linecount,
+        charcount=self.charcount,
+        src=self.src)
 
 
 # Testcases ###################################################################
@@ -194,7 +196,8 @@ class Testcase(Base):
 
   # Fields
   id = sql.Column(id_t, primary_key=True)
-  program_id = sql.Column(Program.id_t, sql.ForeignKey("programs.id"), nullable=False)
+  program_id = sql.Column(Program.id_t, sql.ForeignKey("programs.id"),
+                          nullable=False)
   harness = sql.Column(Harnesses.column_t, nullable=False)
   timeout = sql.Column(sql.Integer, nullable=False)
 
@@ -263,7 +266,8 @@ class Testbed(Base):
 
   # Fields
   id = sql.Column(id_t, primary_key=True)
-  platform_id = sql.Column(Platform.id_t, sql.ForeignKey("platforms.id"), nullable=False)
+  platform_id = sql.Column(Platform.id_t, sql.ForeignKey("platforms.id"),
+                           nullable=False)
   optimizations = sql.Column(sql.Boolean, nullable=False)
 
   # Constraints
@@ -277,7 +281,8 @@ class Testbed(Base):
   def __repr__(self) -> str:
     return f"{Colors.BOLD}{Colors.PURPLE}{self.platform.platform_name}{self.plus_minus}{Colors.END}"
 
-  def _testcase_ids_ran(self, session: session_t, harness, generator) -> query_t:
+  def _testcase_ids_ran(self, session: session_t, harness,
+                        generator) -> query_t:
     """ return IDs of testcases with results """
     return session.query(Result.testcase_id) \
       .join(Testcase) \
@@ -286,13 +291,15 @@ class Testbed(Base):
               Testcase.harness == harness.id,
               Program.generator == generator.id)
 
-  def _testcases_to_run(self, session: session_t, harness, generator) -> query_t:
+  def _testcases_to_run(self, session: session_t, harness,
+                        generator) -> query_t:
     """ return testcases which do not have results """
     return session.query(Testcase) \
       .join(Program) \
       .filter(Testcase.harness == harness.id,
               Program.generator == generator.id,
-              ~Testcase.id.in_(self._testcase_ids_ran(session, harness, generator))) \
+              ~Testcase.id.in_(
+                  self._testcase_ids_ran(session, harness, generator))) \
       .order_by(Program.date,
                 Program.id,
                 Testcase.timeout.desc())
@@ -321,9 +328,9 @@ class Testbed(Base):
             .scalar()
 
           already_done = testbed._testcase_ids_ran(
-            s, self.harness, self.generator)
+              s, self.harness, self.generator)
           todo = testbed._testcases_to_run(
-            s, self.harness, self.generator)
+              s, self.harness, self.generator)
 
           self.ndone = already_done.count()
           ntodo = todo.count()
@@ -350,7 +357,8 @@ class Testbed(Base):
       ndone = already_done.count()
       ntodo = todo.count()
 
-      logging.debug(f"run {ntodo} {harness}:{generator} testcases on {self}, {ndone} done")
+      logging.debug(
+          f"run {ntodo} {harness}:{generator} testcases on {self}, {ndone} done")
 
       # Break early if we have nothing to do
       if not ntodo:
@@ -400,7 +408,8 @@ class Testbed(Base):
       solc, the solidity compiler commandline interface
       Version: 0.4.18+commit.9cf6e910.Linux.g++
     """
-    output = subprocess.check_output([path, '--version'], universal_newlines=True)
+    output = subprocess.check_output([path, '--version'],
+                                     universal_newlines=True)
     line = output.split("\n")[-2]
     return re.sub(r'^Version: +', '', line)
 
@@ -425,7 +434,8 @@ class Testbed(Base):
     return f"{system} {release} {arch}"
 
   @staticmethod
-  def from_bin(path: Path = "solc", session: session_t = None) -> List['Testbed']:
+  def from_bin(path: Path = "solc", session: session_t = None) -> List[
+    'Testbed']:
     with ReuseSession(session) as s:
       basename = fs.basename(path)
       version = Testbed._get_version(path)
@@ -443,26 +453,27 @@ class Testbed(Base):
   def from_str(string: str, session: session_t = None) -> List['Testbed']:
     """ instantiate testbed(s) from shorthand string, e.g. '1+', '5±', etc. """
 
-    def try_and_match(string: str, testbeds: Iterable[Testbed]) -> Union[None, List[Testbed]]:
+    def try_and_match(string: str, testbeds: Iterable[Testbed]) -> Union[
+      None, List[Testbed]]:
       for testbed in testbeds:
         if str(testbed.platform.platform) == string[:-1]:
           if string[-1] == "±":
             return [
               get_or_add(
-                s, Testbed,
-                platform_id=testbed.platform.id,
-                optimizations=True),
+                  s, Testbed,
+                  platform_id=testbed.platform.id,
+                  optimizations=True),
               get_or_add(
-                s, Testbed,
-                platform_id=testbed.platform.id,
-                optimizations=False)
+                  s, Testbed,
+                  platform_id=testbed.platform.id,
+                  optimizations=False)
             ]
           else:
             return [
               get_or_add(
-                s, Testbed,
-                platform_id=testbed.platform.id,
-                optimizations=True if string[-1] == "+" else False)
+                  s, Testbed,
+                  platform_id=testbed.platform.id,
+                  optimizations=True if string[-1] == "+" else False)
             ]
 
     # Strip shell formatting
@@ -541,9 +552,9 @@ class Stdout(Base):
     string = Stdout._escape(string)
 
     stdout = get_or_add(
-      session, Stdout,
-      sha1=crypto.sha1_str(string),
-      stdout=string)
+        session, Stdout,
+        sha1=crypto.sha1_str(string),
+        stdout=string)
     return stdout
 
 
@@ -589,12 +600,12 @@ class Stderr(Base):
     sha1 = crypto.sha1_str(string)
 
     stderr = get_or_add(
-      session, Stderr,
-      sha1=sha1,
-      linecount=len(string.split("\n")),
-      charcount=len(string),
-      truncated=len(string) > Stderr.MAX_CHARS,
-      stderr=string[:Stderr.MAX_CHARS])
+        session, Stderr,
+        sha1=sha1,
+        linecount=len(string.split("\n")),
+        charcount=len(string),
+        truncated=len(string) > Stderr.MAX_CHARS,
+        stderr=string[:Stderr.MAX_CHARS])
     return stderr
 
 
@@ -633,19 +644,25 @@ class Result(Base):
 
   # Fields
   id = sql.Column(id_t, primary_key=True)
-  testbed_id = sql.Column(Testbed.id_t, sql.ForeignKey("testbeds.id"), nullable=False, index=True)
-  testcase_id = sql.Column(Testcase.id_t, sql.ForeignKey("testcases.id"), nullable=False,
+  testbed_id = sql.Column(Testbed.id_t, sql.ForeignKey("testbeds.id"),
+                          nullable=False, index=True)
+  testcase_id = sql.Column(Testcase.id_t, sql.ForeignKey("testcases.id"),
+                           nullable=False,
                            index=True)
-  date = sql.Column(sql.DateTime, nullable=False, index=True, default=datetime.datetime.utcnow)
+  date = sql.Column(sql.DateTime, nullable=False, index=True,
+                    default=datetime.datetime.utcnow)
   returncode = sql.Column(sql.SmallInteger, nullable=False)
   outcome = sql.Column(Outcomes.column_t, nullable=False, index=True)
   runtime = sql.Column(sql.Float, nullable=False)
-  stdout_id = sql.Column(Stdout.id_t, sql.ForeignKey("stdouts.id"), nullable=False)
-  stderr_id = sql.Column(Stderr.id_t, sql.ForeignKey("stderrs.id"), nullable=False)
+  stdout_id = sql.Column(Stdout.id_t, sql.ForeignKey("stdouts.id"),
+                         nullable=False)
+  stderr_id = sql.Column(Stderr.id_t, sql.ForeignKey("stderrs.id"),
+                         nullable=False)
 
   # Constraints
   __table_args__ = (
-    sql.UniqueConstraint('testbed_id', 'testcase_id', name='unique_result_triple'),
+    sql.UniqueConstraint('testbed_id', 'testcase_id',
+                         name='unique_result_triple'),
   )
 
   # Relationships
@@ -685,19 +702,20 @@ class ResultProxy(object):
     session.flush()  # required to get IDs
 
     return Result(
-      testbed_id=self.testbed_id,
-      testcase_id=self.testcase_id,
-      returncode=self.returncode,
-      outcome=self.outcome,
-      runtime=self.runtime,
-      stdout=stdout,
-      stderr=stderr,
-      date=self.date)
+        testbed_id=self.testbed_id,
+        testcase_id=self.testcase_id,
+        returncode=self.returncode,
+        outcome=self.outcome,
+        runtime=self.runtime,
+        stdout=stdout,
+        stderr=stderr,
+        date=self.date)
 
 
 class SolcResult(Result):
   @staticmethod
-  def get_outcome(returncode: int, stderr: str, runtime: float, timeout: int) -> Outcomes.type:
+  def get_outcome(returncode: int, stderr: str, runtime: float,
+                  timeout: int) -> Outcomes.type:
     """
     Given a result, determine its outcome.
     See Outcomes for list of possible outcomes.
@@ -719,8 +737,10 @@ class ResultMeta(Base):
 
   # Fields
   id = sql.Column(id_t, sql.ForeignKey("results.id"), primary_key=True)
-  total_time = sql.Column(sql.Float, nullable=False)  # time to generate and run test case
-  cumtime = sql.Column(sql.Float, nullable=False)  # culumative time for this testbed time
+  total_time = sql.Column(sql.Float,
+                          nullable=False)  # time to generate and run test case
+  cumtime = sql.Column(sql.Float,
+                       nullable=False)  # culumative time for this testbed time
 
   # Relationships
   result = sql.orm.relationship("Result", back_populates="meta")

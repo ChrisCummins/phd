@@ -56,9 +56,9 @@
 %% - xspace if abbreviations are used
 \usepackage[paper=a4paper]{geometry}
 \RequirePackage{ifthen,%  
-    graphics,%
-    xspace,
-    eushield}
+graphics,%
+xspace,
+eushield}
 
 
 %%%% The following packages are also used but are included further on rather
@@ -146,45 +146,45 @@ Computer Science}}
 
 % Degree
 \def\@researchdegree#1{%
-    \renewcommand{\@degreetext}{#1 \\ 
-    \ifx\@empty\@institute
-        \PackageWarning{infthesis}{No institute specified for research
-        degree}
-    \else
-        \@institute \\
-    \fi
-    \@infschool \\ \@university}
-    \setboolean{strict}{true}}
+\renewcommand{\@degreetext}{#1 \\
+\ifx\@empty\@institute
+\PackageWarning{infthesis}{No institute specified for research
+degree}
+\else
+\@institute \\
+\fi
+\@infschool \\ \@university}
+\setboolean{strict}{true}}
 \DeclareOption{phdproposal}{\@researchdegree{PhD Proposal}}
 \DeclareOption{phd}{\@researchdegree{Doctor of Philosophy}}
 \DeclareOption{mphil}{\@researchdegree{Master of Philosophy}}
 \DeclareOption{mscres}{\@researchdegree{Master of Science by Research}}
 
 \def\@taughtdegree#1#2{%
-    \renewcommand{\@degreetext}{#1 \\ 
-    \ifx\@empty#2
-        % \PackageWarning{infthesis}{No course/school specified for taught
-        % degree}
-    \else
-        #2 \\
-    \fi
-    \@infschool \\ \@university}%
-    \setboolean{strict}{false}}
+\renewcommand{\@degreetext}{#1 \\
+\ifx\@empty#2
+% \PackageWarning{infthesis}{No course/school specified for taught
+% degree}
+\else
+#2 \\
+\fi
+\@infschool \\ \@university}%
+\setboolean{strict}{false}}
 \DeclareOption{msc}{\@taughtdegree{Master of Science}{\@mscdegree}}
 \DeclareOption{minf}{\@taughtdegree{Master of Informatics}{~}}
 \DeclareOption{bsc}{\@taughtdegree{\@project}{\@course}}
 
 %% Chapter header alignment, font of headings
 \DeclareOption{centerchapter,centrechapter}
-   {\renewcommand{\@chapteralignment}{\centering}}
+{\renewcommand{\@chapteralignment}{\centering}}
 \DeclareOption{leftchapter}
-   {\renewcommand{\@chapteralignment}{\raggedright}}
+{\renewcommand{\@chapteralignment}{\raggedright}}
 \DeclareOption{rightchapter}
-   {\renewcommand{\@chapteralignment}{\raggedleft}}
+{\renewcommand{\@chapteralignment}{\raggedleft}}
 \DeclareOption{sansheadings}{%
-    \setboolean{sansheadings}{true}}
+\setboolean{sansheadings}{true}}
 \DeclareOption{normalheadings}{%
-    \setboolean{sansheadings}{false}}
+\setboolean{sansheadings}{false}}
 
 %% Sidedness, openright-ness, and font size (so that the draft option can
 %% override them as needed. 
@@ -202,9 +202,9 @@ Computer Science}}
 
 %% Whether it's a draft (if so, single space and wider margins to fit more)
 \DeclareOption{draft}{
-   \setboolean{draftthesis}{true}
-   \ExecuteOptions{10pt,openany,twoside}
-   \renewcommand{\@draftmessage}{(Draft Copy)}}
+\setboolean{draftthesis}{true}
+\ExecuteOptions{10pt,openany,twoside}
+\renewcommand{\@draftmessage}{(Draft Copy)}}
 
 %% Use quotation marks in quotation environment?
 \DeclareOption{usequotes}{\setboolean{usequotemarks}{true}}
@@ -220,16 +220,16 @@ Computer Science}}
 %% Options to control the format of the cover page
 \DeclareOption{deptreport}{\setboolean{usedeptreport}{true}}
 \DeclareOption{logo}{%
-    \setboolean{logo}{true}}
+\setboolean{logo}{true}}
 \DeclareOption{frontabs}{%
-    \setboolean{frontabs}{true}}
+\setboolean{frontabs}{true}}
 
 %% Use parskip formatting of paragraphs
 \DeclareOption{parskip}{\AtEndOfClass{\RequirePackage{parskip}}}
 
 %% Whether to put list of figures and tables into TOC (default: no)
 \DeclareOption{listsintoc}{%
-    \setboolean{ltoc}{true}}
+\setboolean{ltoc}{true}}
 
 %% Pre pages can be numbered separately or with the rest of the thesis.
 \DeclareOption{romanprepages}{\setboolean{romanpre}{true}}
@@ -240,7 +240,7 @@ Computer Science}}
 
 %% Set default options and process the ones we were given.
 \ExecuteOptions{phd,centerchapter,romanprepages,%
-    sansheadings,openright,oneside,12pt,timesfonts} 
+sansheadings,openright,oneside,12pt,timesfonts}
 \ProcessOptions
 
 %%
@@ -249,16 +249,16 @@ Computer Science}}
 
 \LoadClass[a4paper,\@thesispoints,\@thesisside,\@thesisopen]{report}
 \ifthenelse{\boolean{draftthesis}}
-    {}
-    {\ifthenelse{\boolean{strict}}
-        {\if@twoside
-            \if@openright
-            \else
-                \PackageWarning{infthesis}{A two-sided PhD or MPhil thesis must
-                not use the "openany" option}
-            \fi
-        \fi}
-        {}}
+{}
+{\ifthenelse{\boolean{strict}}
+{\if@twoside
+\if@openright
+\else
+\PackageWarning{infthesis}{A two-sided PhD or MPhil thesis must
+not use the "openany" option}
+\fi
+\fi}
+{}}
 
 %%
 %% --- Main Code ---
@@ -288,19 +288,19 @@ Computer Science}}
 %% to compensate for particular printers in the Department of Computer
 %% Science.
 \ifthenelse{\boolean{draftthesis}}
-    {\geometry{a4paper,margin=2cm,twoside}}
-    {\if@twoside
-        \geometry{a4paper,left=4cm,top=2cm,right=2.5cm,bottom=4cm,twoside}
-     \else
-        \geometry{a4paper,left=4cm,top=2cm,right=2.5cm,bottom=4cm}
-    \fi}
+{\geometry{a4paper,margin=2cm,twoside}}
+{\if@twoside
+\geometry{a4paper,left=4cm,top=2cm,right=2.5cm,bottom=4cm,twoside}
+\else
+\geometry{a4paper,left=4cm,top=2cm,right=2.5cm,bottom=4cm}
+\fi}
 
 %% We should make pages created by "cleardoublepage" be
 %% really empty. Taken from titlesec.sty
 
 \def\cleardoublepage{%
-    \clearpage{\ps@empty\if@twoside\ifodd\c@page\else
-    \hbox{}\newpage\if@twocolumn\hbox{}\newpage\fi\fi\fi}}
+\clearpage{\ps@empty\if@twoside\ifodd\c@page\else
+\hbox{}\newpage\if@twocolumn\hbox{}\newpage\fi\fi\fi}}
 
 %%
 %% Hack to make minitoc work with csthesis. We declare a new chapter
@@ -327,36 +327,36 @@ Computer Science}}
 %% Toronto.
 \if@twoside % if two-sided printing
 \renewcommand{\ps@headings}{
-   \let\@mkboth\markboth
-   \def\@oddfoot{}
-   \let\@evenfoot\@oddfoot
-   \def\@oddhead{{\headfootstyle\itshape \rightmark}\hfil \headfootstyle\thepage}%
-   \def\@evenhead{\headfootstyle\thepage\hfil
-      {\headfootstyle\itshape\leftmark}}%
-   \def\chaptermark##1{\markboth
-      {\ifnum\c@secnumdepth >\m@ne
-         \@chapapp\ \thechapter. \ \fi ##1}{}}%
-   \def\sectionmark##1{\markright
-      {\ifnum\c@secnumdepth >\z@
-         \thesection. \ \fi ##1}}%
+\let\@mkboth\markboth
+\def\@oddfoot{}
+\let\@evenfoot\@oddfoot
+\def\@oddhead{{\headfootstyle\itshape \rightmark}\hfil \headfootstyle\thepage}%
+\def\@evenhead{\headfootstyle\thepage\hfil
+{\headfootstyle\itshape\leftmark}}%
+\def\chaptermark##1{\markboth
+{\ifnum\c@secnumdepth >\m@ne
+\@chapapp\ \thechapter. \ \fi ##1}{}}%
+\def\sectionmark##1{\markright
+{\ifnum\c@secnumdepth >\z@
+\thesection. \ \fi ##1}}%
 }%ps@headings
 \else % if one-sided printing
 \renewcommand{\ps@headings}{
-   \let\@mkboth\markboth
-   \def\@oddfoot{}
-   \def\@oddhead{{\headfootstyle\itshape\rightmark}\hfil
-      \headfootstyle\thepage}%
-   \def\chaptermark##1{\markright
-      {\ifnum\c@secnumdepth >\m@ne
-         \@chapapp\ \thechapter. \ \fi ##1}}%
+\let\@mkboth\markboth
+\def\@oddfoot{}
+\def\@oddhead{{\headfootstyle\itshape\rightmark}\hfil
+\headfootstyle\thepage}%
+\def\chaptermark##1{\markright
+{\ifnum\c@secnumdepth >\m@ne
+\@chapapp\ \thechapter. \ \fi ##1}}%
 }%ps@headings
 \fi%@twoside
 
 \renewcommand{\ps@plain}{
-  \renewcommand{\@oddfoot}{\hfil\headfootstyle\thepage\hfil}
-  \renewcommand{\@evenfoot}{\hfil\headfootstyle\thepage\hfil}
-  \renewcommand{\@evenhead}{}
-  \renewcommand{\@oddhead}{}
+\renewcommand{\@oddfoot}{\hfil\headfootstyle\thepage\hfil}
+\renewcommand{\@evenfoot}{\hfil\headfootstyle\thepage\hfil}
+\renewcommand{\@evenhead}{}
+\renewcommand{\@oddhead}{}
 }
 
 %%
@@ -388,24 +388,24 @@ Computer Science}}
 %%
 
 \ifthenelse{\boolean{useabbrevs}}
- {\newcommand{\NB}{N.B.\@\xspace}
-  \newcommand{\eg}{e.g.\@\xspace}
-  \newcommand{\Eg}{E.g.\@\xspace}
-  \newcommand{\ie}{i.e.\@\xspace}
-  \newcommand{\Ie}{I.e.\@\xspace}
-  \newcommand{\etc}{etc.\@\xspace}
-  \newcommand{\etal}{{\em et al}.\@\xspace}
-  \newcommand{\etseq}{{\em et seq}.\@\xspace}
-  \newcommand{\precis}{pr\'ecis\xspace}
-  \newcommand{\Precis}{Pr\'ecis\xspace}
-  \newcommand{\role}{r\^ole\xspace}
-  \newcommand{\Role}{R\^ole\xspace}
-  \newcommand{\naive}{na\"\i ve\xspace}
-  \newcommand{\Naive}{Na\"\i ve\xspace}
-  \newcommand{\tm}{\raisebox{1ex}{\tiny TM}\xspace}
-  \newcommand{\cpright}{\raisebox{1ex}{\tiny\copyright}\xspace}
-  \newcommand{\degrees}{\raisebox{1.2ex}{\tiny\ensuremath{\circ}}\xspace}}
- {}
+{\newcommand{\NB}{N.B.\@\xspace}
+\newcommand{\eg}{e.g.\@\xspace}
+\newcommand{\Eg}{E.g.\@\xspace}
+\newcommand{\ie}{i.e.\@\xspace}
+\newcommand{\Ie}{I.e.\@\xspace}
+\newcommand{\etc}{etc.\@\xspace}
+\newcommand{\etal}{{\em et al}.\@\xspace}
+\newcommand{\etseq}{{\em et seq}.\@\xspace}
+\newcommand{\precis}{pr\'ecis\xspace}
+\newcommand{\Precis}{Pr\'ecis\xspace}
+\newcommand{\role}{r\^ole\xspace}
+\newcommand{\Role}{R\^ole\xspace}
+\newcommand{\naive}{na\"\i ve\xspace}
+\newcommand{\Naive}{Na\"\i ve\xspace}
+\newcommand{\tm}{\raisebox{1ex}{\tiny TM}\xspace}
+\newcommand{\cpright}{\raisebox{1ex}{\tiny\copyright}\xspace}
+\newcommand{\degrees}{\raisebox{1.2ex}{\tiny\ensuremath{\circ}}\xspace}}
+{}
 
 %%
 %% Set up the double spacing and provide commands to alter the
@@ -415,25 +415,25 @@ Computer Science}}
 %%
 
 \newcommand{\doublespace}{%
-    \renewcommand{\baselinestretch}{1.66}\normalsize}
+\renewcommand{\baselinestretch}{1.66}\normalsize}
 \newcommand{\oneandahalfspace}{%
-    \renewcommand{\baselinestretch}{1.33}\normalsize}
+\renewcommand{\baselinestretch}{1.33}\normalsize}
 \newcommand{\singlespace}{%
-    \renewcommand{\baselinestretch}{1}\normalsize}
+\renewcommand{\baselinestretch}{1}\normalsize}
 
 \ifthenelse{\boolean{draftthesis}}
-   {\AtBeginDocument{\singlespace}}% \SetPrinterDraft}
-   {\ifthenelse{\boolean{usesinglespacing}}
-      {\AtBeginDocument{\singlespace}%
-       \ifthenelse{\boolean{strict}}
-        {\PackageWarning{infthesis}{Single spacing is not permitted in the
-        regulations for PhD and MPhil theses}}
-        {}}
-      {\ifthenelse{\boolean{usedoublespacing}}
-         {\AtBeginDocument{\doublespace}}
-         {\AtBeginDocument{\oneandahalfspace}}
-      }
-   }
+{\AtBeginDocument{\singlespace}}% \SetPrinterDraft}
+{\ifthenelse{\boolean{usesinglespacing}}
+{\AtBeginDocument{\singlespace}%
+\ifthenelse{\boolean{strict}}
+{\PackageWarning{infthesis}{Single spacing is not permitted in the
+regulations for PhD and MPhil theses}}
+{}}
+{\ifthenelse{\boolean{usedoublespacing}}
+{\AtBeginDocument{\doublespace}}
+{\AtBeginDocument{\oneandahalfspace}}
+}
+}
 
 %%
 %% We must ensure that the thesis ends on a lef-hand page. We
@@ -449,9 +449,9 @@ Computer Science}}
 %%
 
 \newcommand{\thesiscaption}[3][]{
-   \ifthenelse{\equal{#1}{}}
-     {\parbox{5in}{\caption{{\em #2\/}}\label{#3}}}
-     {\parbox{5in}{\caption[#1]{{\em #2\/}}\label{#3}}}
+\ifthenelse{\equal{#1}{}}
+{\parbox{5in}{\caption{{\em #2\/}}\label{#3}}}
+{\parbox{5in}{\caption[#1]{{\em #2\/}}\label{#3}}}
 }
 
 %%
@@ -475,16 +475,16 @@ Computer Science}}
 %    {\ifthenelse{\boolean{usequotemarks}}{''}{}\end{quote}}
 
 \newenvironment{iquote}
-    {\begin{quote}\it}
-    {\rm\end{quote}}
+{\begin{quote}\it}
+{\rm\end{quote}}
 
 \newcommand{\quotationname}{}
 \newenvironment{quotetext}[1]
-   {\renewcommand{\quotationname}{#1}\begin{iquote}\singlespace
-    \ifthenelse{\boolean{usequotemarks}}{``}{}\it}
-   {\ifthenelse{\boolean{usequotemarks}}{\rm''}{}
-    \hspace*{\fill}\nolinebreak[1]\hspace*{\fill}
-    \rm (\quotationname)\end{iquote}}
+{\renewcommand{\quotationname}{#1}\begin{iquote}\singlespace
+\ifthenelse{\boolean{usequotemarks}}{``}{}\it}
+{\ifthenelse{\boolean{usequotemarks}}{\rm''}{}
+\hspace*{\fill}\nolinebreak[1]\hspace*{\fill}
+\rm (\quotationname)\end{iquote}}
 
 %%
 %% Footnotes should also be single-spaced.
@@ -492,7 +492,7 @@ Computer Science}}
 
 \let\tmp@footnotetext=\@footnotetext
 \renewcommand{\@footnotetext}[1]%
-    {{\singlespace\tmp@footnotetext{#1}}}
+{{\singlespace\tmp@footnotetext{#1}}}
 
 %% "preliminary" environment to control numbering of pages between title and
 %% first chapter. This will only kick in if romanprepages is specificed (the
@@ -500,22 +500,22 @@ Computer Science}}
 %% Based on Francois Pitt's ut-thesis.cls from University of Toronto.
 
 \newenvironment{preliminary}
-    {\ifthenelse{\boolean{romanpre}}%
-        {\pagestyle{plain}\pagenumbering{roman}}
-        {\pagestyle{empty}}}%
-    {\cleardoublepage%
-     \ifthenelse{\boolean{romanpre}}%
-        {\pagenumbering{arabic}}%
-        {}}
+{\ifthenelse{\boolean{romanpre}}%
+{\pagestyle{plain}\pagenumbering{roman}}
+{\pagestyle{empty}}}%
+{\cleardoublepage%
+\ifthenelse{\boolean{romanpre}}%
+{\pagenumbering{arabic}}%
+{}}
 
 %%
 %% Let's have a dedication page so I can thank my mummy.
 %%
 
 \newcommand{\dedication}[1]
-   {\vspace*{\fill}
-    \begin{center}#1\end{center}
-    \vspace*{\fill}}
+{\vspace*{\fill}
+\begin{center}#1\end{center}
+\vspace*{\fill}}
 
 
 %% A generic "frontmatter" environment, for use with abstract, dedication etc.
@@ -523,11 +523,11 @@ Computer Science}}
 %% both normal abstracts and those on the front page can be accommodated.)
 
 \newenvironment{frontenv}[2]
-  {\vspace{1cm}
-   \begin{center}
-       \@chapterfont\bfseries \LARGE#1
-   \end{center}}
-  {\par\vfil}
+{\vspace{1cm}
+\begin{center}
+\@chapterfont\bfseries \LARGE#1
+\end{center}}
+{\par\vfil}
 
 %% You specify the abstract with the \abs command; it gets automatically
 %% inserted into the document where appropriate (title page or first main
@@ -537,12 +537,12 @@ Computer Science}}
 \renewcommand{\abstract}[1]{\gdef\@abs{#1}}
 
 \newenvironment{mainabs}
-   {\begin{frontenv}{\abstractname}{\LARGE}}
-   {\end{frontenv}\newpage}
+{\begin{frontenv}{\abstractname}{\LARGE}}
+{\end{frontenv}\newpage}
 \newenvironment{frontabs}
-    {\begin{frontenv}{\abstractname}{\large}
-     \begin{quotation}\rm}
-    {\end{quotation}\end{frontenv}}
+{\begin{frontenv}{\abstractname}{\large}
+\begin{quotation}\rm}
+{\end{quotation}\end{frontenv}}
 
 %%
 %% Based upon the above abstract env., provide wrappers for
@@ -550,22 +550,22 @@ Computer Science}}
 %%
 
 \newenvironment{acknowledgements}
-   {\renewcommand{\abstractname}{Acknowledgements}\begin{mainabs}}
-   {\end{mainabs}\renewcommand{\abstractname}{Abstract}}   
+{\renewcommand{\abstractname}{Acknowledgements}\begin{mainabs}}
+{\end{mainabs}\renewcommand{\abstractname}{Abstract}}
 
 \newenvironment{declaration}
-   {\renewcommand{\abstractname}{Declaration}\begin{mainabs}}
-   {\end{mainabs}\renewcommand{\abstractname}{Abstract}}   
+{\renewcommand{\abstractname}{Declaration}\begin{mainabs}}
+{\end{mainabs}\renewcommand{\abstractname}{Abstract}}
 
 \newcommand{\standarddeclaration}{
-   \begin{declaration}
-   I declare that this thesis was composed by myself,
-   that the work contained herein is my own 
-   except where explicitly stated otherwise in the text,
-   and that this work has not been submitted for any other degree or
-   professional qualification except as specified.\par
-   \vspace{1in}\raggedleft({\em \@author\/})
-   \end{declaration}
+\begin{declaration}
+I declare that this thesis was composed by myself,
+that the work contained herein is my own
+except where explicitly stated otherwise in the text,
+and that this work has not been submitted for any other degree or
+professional qualification except as specified.\par
+\vspace{1in}\raggedleft({\em \@author\/})
+\end{declaration}
 }
 
 %%
@@ -587,75 +587,75 @@ Computer Science}}
 %% of the actual document.
 
 \ifthenelse{\boolean{usedeptreport}}{
-   \renewcommand{\maketitle}{
-      \begin{titlepage}
-      \addtolength{\oddsidemargin}{-0.75cm}
-      \begin{center}
-      \null\vskip 6.1cm
-      \begin{minipage}[t][7.6cm]{10.5cm}
-         \begin{center}
-         {\LARGE\bfseries \@chapterfont \@title \par
-            \ifthenelse{\boolean{draftthesis}}{\large \@draftmessage}{}
-         }\vfil
-         {\Large\itshape \@author \par}
-         \end{center}
-      \end{minipage}\\
-      {\large \@degreetext \par \@submityear \par}
-      \ifthenelse{\equal{\@graduationdate}{}}{}
-         {\vskip 1cm {\large \ttfamily (Graduation date: \@graduationdate)}}
-      \end{center}
-      \end{titlepage}\cleardoublepage
-      \begin{mainabs}\@abs\end{mainabs}
-   }}{\ifthenelse{\boolean{frontabs}}{
-     \ifthenelse{\boolean{strict}}
-        {\PackageWarning{infthesis}{The regulations for PhD and MPhil theses
-        do not permit the abstract on the front page}}
-        {}
-     \renewcommand{\maketitle}{
-        \begin{titlepage}\begin{center}
-        {\LARGE\bfseries \@chapterfont \@title \par
-          \ifthenelse{\boolean{draftthesis}}{\large (Draft Copy)}{}
-        }\vspace{3cm}
-        {\Large\itshape \@author \par}\vspace{3cm}
-        {\large \@degreetext \par \@submityear \par}
-        \vskip 1cm 
-        \ifthenelse{\equal{\@graduationdate}{}}{}
-           {{\large \ttfamily (Graduation date: \@graduationdate)}}
-        \end{center}
-        \begin{frontabs}\@abs\end{frontabs}
-        \end{titlepage}
-     }}{
-     \renewcommand{\maketitle}{
-        \begin{titlepage}\begin{center}
-        \null\vfil\vskip 60\p@
-        {\LARGE\bfseries \@chapterfont \@title \par
-           \ifthenelse{\boolean{draftthesis}}{\large (Draft Copy)}{}
-        }\vfill
-        {\Large\itshape \@author \par}\vskip 1cm\vfill
-        \ifthenelse{\boolean{logo}}%
-            {\resizebox{30mm}{!}{\includeshield}\\\vfill}
-            {}
-        {\large \@degreetext \par \@submityear \par}
-        \vskip 1cm 
-        \ifthenelse{\equal{\@graduationdate}{}}{}
-           {{\large \ttfamily (Graduation date: \@graduationdate)}}
-        \end{center}
-        \end{titlepage}\cleardoublepage
-        \begin{mainabs}\@abs\end{mainabs}
-   }}}
+\renewcommand{\maketitle}{
+\begin{titlepage}
+\addtolength{\oddsidemargin}{-0.75cm}
+\begin{center}
+\null\vskip 6.1cm
+\begin{minipage}[t][7.6cm]{10.5cm}
+\begin{center}
+{\LARGE\bfseries \@chapterfont \@title \par
+\ifthenelse{\boolean{draftthesis}}{\large \@draftmessage}{}
+}\vfil
+{\Large\itshape \@author \par}
+\end{center}
+\end{minipage}\\
+{\large \@degreetext \par \@submityear \par}
+\ifthenelse{\equal{\@graduationdate}{}}{}
+{\vskip 1cm {\large \ttfamily (Graduation date: \@graduationdate)}}
+\end{center}
+\end{titlepage}\cleardoublepage
+\begin{mainabs}\@abs\end{mainabs}
+}}{\ifthenelse{\boolean{frontabs}}{
+\ifthenelse{\boolean{strict}}
+{\PackageWarning{infthesis}{The regulations for PhD and MPhil theses
+do not permit the abstract on the front page}}
+{}
+\renewcommand{\maketitle}{
+\begin{titlepage}\begin{center}
+{\LARGE\bfseries \@chapterfont \@title \par
+\ifthenelse{\boolean{draftthesis}}{\large (Draft Copy)}{}
+}\vspace{3cm}
+{\Large\itshape \@author \par}\vspace{3cm}
+{\large \@degreetext \par \@submityear \par}
+\vskip 1cm
+\ifthenelse{\equal{\@graduationdate}{}}{}
+{{\large \ttfamily (Graduation date: \@graduationdate)}}
+\end{center}
+\begin{frontabs}\@abs\end{frontabs}
+\end{titlepage}
+}}{
+\renewcommand{\maketitle}{
+\begin{titlepage}\begin{center}
+\null\vfil\vskip 60\p@
+{\LARGE\bfseries \@chapterfont \@title \par
+\ifthenelse{\boolean{draftthesis}}{\large (Draft Copy)}{}
+}\vfill
+{\Large\itshape \@author \par}\vskip 1cm\vfill
+\ifthenelse{\boolean{logo}}%
+{\resizebox{30mm}{!}{\includeshield}\\\vfill}
+{}
+{\large \@degreetext \par \@submityear \par}
+\vskip 1cm
+\ifthenelse{\equal{\@graduationdate}{}}{}
+{{\large \ttfamily (Graduation date: \@graduationdate)}}
+\end{center}
+\end{titlepage}\cleardoublepage
+\begin{mainabs}\@abs\end{mainabs}
+}}}
 
 
 %% If requested, put the list of figures and list of tables into the table of
 %% contents.
 
 \ifthenelse{\boolean{ltoc}}
-    {\RequirePackage[nottoc,notbib]{tocbibind}}
-    {}
+{\RequirePackage[nottoc,notbib]{tocbibind}}
+{}
 
 %% Use the "pslatex" fonts unless they told us not to
 \ifthenelse{\boolean{timesfonts}}
-    {\RequirePackage{pslatex}}
-    {}
+{\RequirePackage{pslatex}}
+{}
 
 %% ALWAYS put the bibliography into the TOC.
 %% Thanks to Peter Wilson <peter.r.wilson@boeing.com> for pointing me in the
@@ -666,10 +666,10 @@ Computer Science}}
 %% However the bibliography is defined, this will append the \addcontentsline
 %% statement to it. Also, it will put the bibname into the page headers.
 \AtBeginDocument{%
-    \expandafter\def\expandafter\thebibliography\expandafter
-        #\expandafter1\expandafter{\thebibliography{#1}%
-        {\addcontentsline{toc}{chapter}{\bibname}}
-        \markboth{\bibname}{\bibname}}}
+\expandafter\def\expandafter\thebibliography\expandafter
+#\expandafter1\expandafter{\thebibliography{#1}%
+{\addcontentsline{toc}{chapter}{\bibname}}
+\markboth{\bibname}{\bibname}}}
 
 %% Do what is requested with headings and captions... can't include these
 %% packages above because sectsty won't work except from within report.cls
@@ -677,11 +677,11 @@ Computer Science}}
 %% etc) also need to use it.
 \RequirePackage{sectsty,caption}
 \ifthenelse{\boolean{sansheadings}}
-    {\allsectionsfont{\sffamily}
-     \renewcommand{\@chapterfont}{\sffamily}
-     \renewcommand{\captionfont}{\sffamily}
-     \renewcommand{\headfootstyle}{\normalsize\sffamily}}
-    {}
+{\allsectionsfont{\sffamily}
+\renewcommand{\@chapterfont}{\sffamily}
+\renewcommand{\captionfont}{\sffamily}
+\renewcommand{\headfootstyle}{\normalsize\sffamily}}
+{}
 %% To make sure we get chapters aligned correctly, we set it here instead.
 \chapterfont{\@chapterfont\@chapteralignment}
 

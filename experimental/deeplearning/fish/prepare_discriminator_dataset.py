@@ -1,10 +1,11 @@
 """Create directories of training, test, and validation data."""
 import collections
-import humanize
-import numpy as np
 import pathlib
 import random
 import typing
+
+import humanize
+import numpy as np
 from absl import app
 from absl import flags
 from absl import logging

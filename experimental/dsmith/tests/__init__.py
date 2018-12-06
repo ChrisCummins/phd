@@ -18,10 +18,11 @@
 import contextlib
 import logging
 import os
-import pytest
 import sys
 from io import StringIO
 from pathlib import Path
+
+import pytest
 from phd.lib.labm8 import fs
 from phd.lib.labm8 import system
 from phd.lib.labm8 import tar

@@ -1,5 +1,6 @@
 """Differential tests for the OpenCL programming language."""
 import typing
+
 from absl import flags
 from absl import logging
 

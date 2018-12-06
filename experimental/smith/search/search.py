@@ -4,12 +4,12 @@
 #
 import os
 from random import randint
+from subprocess import PIPE, Popen
 from sys import exit
 from tempfile import NamedTemporaryFile
 
 import numpy as np
 from smith import preprocess
-from subprocess import PIPE, Popen
 
 
 def sample(seed, mutate_idx=-1, mutate_seed=0, start="start.txt"):

@@ -68,8 +68,8 @@ class Homebrew(Task):
   OUTDATED_CASK_LIST = "/tmp/dotfiles_brew_outdated_casks.txt"
 
   BREW_BINARY = {
-      'osx': '/usr/local/bin/brew',
-      'ubuntu': '/home/linuxbrew/.linuxbrew/bin/brew',
+    'osx': '/usr/local/bin/brew',
+    'ubuntu': '/home/linuxbrew/.linuxbrew/bin/brew',
   }[get_platform()]
 
   __platforms__ = ['linux', 'osx']
@@ -118,7 +118,8 @@ class Homebrew(Task):
     python's pip) can write to their installation directories.
     """
     if PLATFORM in LINUX_DISTROS:
-      shell('find /home/linuxbrew/.linuxbrew/ -type d | xargs -L 500 sudo chmod 777')
+      shell(
+          'find /home/linuxbrew/.linuxbrew/ -type d | xargs -L 500 sudo chmod 777')
 
   @staticmethod
   def _as_linuxbrew_user(cmd):
@@ -157,7 +158,7 @@ class Homebrew(Task):
       self.shell("{self.BREW_BINARY} list > {self.PKG_LIST}".format(**vars()))
 
     return self.shell_ok(
-      "grep '^{package}$' <{self.PKG_LIST}".format(**vars()))
+        "grep '^{package}$' <{self.PKG_LIST}".format(**vars()))
 
   def install_package(self, package, *opts):
     """ install a package using homebrew, return True if installed """
@@ -175,12 +176,12 @@ class Homebrew(Task):
 
     if not os.path.isfile(self.OUTDATED_PKG_LIST):
       self.shell(
-        "{self.BREW_BINARY} outdated | awk '{{print $1}}' >{self.OUTDATED_PKG_LIST}"
-        .format(**vars()))
+          "{self.BREW_BINARY} outdated | awk '{{print $1}}' >{self.OUTDATED_PKG_LIST}"
+            .format(**vars()))
 
     package_stump = package.split('/')[-1]
     return self.shell_ok("grep '^{package_stump}$' <{self.OUTDATED_PKG_LIST}"
-                          .format(**vars()))
+                         .format(**vars()))
 
   def upgrade_package(self, package):
     """ upgrade package, return True if upgraded """
@@ -194,11 +195,11 @@ class Homebrew(Task):
     """ return True if cask is installed """
     if not os.path.isfile(self.CASK_LIST):
       self.shell("{self.BREW_BINARY} cask list > {self.CASK_LIST}"
-                  .format(**vars()))
+                 .format(**vars()))
 
     cask_stump = cask.split('/')[-1]
     return self.shell_ok(
-      "grep '^{cask_stump}$' <{self.CASK_LIST}".format(**vars()))
+        "grep '^{cask_stump}$' <{self.CASK_LIST}".format(**vars()))
 
   def install_cask(self, cask):
     """ install a homebrew cask, return True if installed """
@@ -213,7 +214,7 @@ class Homebrew(Task):
     if not self.cask_is_installed(cask):
       raise InvalidTaskError(
           "homebrew cask '{package}' cannot be upgraded as it is not installed"
-          .format(**vars()))
+            .format(**vars()))
 
     if not os.path.isfile(self.OUTDATED_CASK_LIST):
       self.shell(
@@ -251,7 +252,6 @@ class Homebrew(Task):
     home = cls._home()
     return '{home}/bin/{name}'.format(**vars())
 
-
   @classmethod
   def lib(cls, name):
     home = cls._home()
@@ -270,14 +270,14 @@ class Python(Task):
   __deps__ = ['Homebrew']
   __genfiles__ = []
   __genfiles__ = [
-      PYTHON2_BINARY,
-      PYTHON3_BINARY,
-      Homebrew.bin('virtualenv'),
+    PYTHON2_BINARY,
+    PYTHON3_BINARY,
+    Homebrew.bin('virtualenv'),
   ]
   __tmpfiles__ = [PIP_LIST]
   __versions__ = {
-      "pip": "10.0.1",
-      "virtualenv": "15.1.0",
+    "pip": "10.0.1",
+    "virtualenv": "15.1.0",
   }
 
   def install(self):
@@ -298,11 +298,14 @@ class Python(Task):
     shell('mkdir -p ~/.local/bin')
     symlink(self.PYTHON3_BINARY, "~/.local/bin/python")
 
-
   def _install_pip_version(self, python, version):
-    if not shell_ok("test $({python} -m pip --version | awk '{{print $2}}') = {version}".format(**vars())):
-      task_print("{python} -m pip install --upgrade 'pip=={version}'".format(**vars()))
-      Homebrew.shell('{python} -m pip install --upgrade "pip=={version}"'.format(**vars()))
+    if not shell_ok(
+        "test $({python} -m pip --version | awk '{{print $2}}') = {version}".format(
+            **vars())):
+      task_print(
+          "{python} -m pip install --upgrade 'pip=={version}'".format(**vars()))
+      Homebrew.shell(
+          '{python} -m pip install --upgrade "pip=={version}"'.format(**vars()))
 
   def upgrade(self):
     Homebrew().upgrade_package("python")
@@ -318,15 +321,18 @@ class Python(Task):
       data = {}
 
     if python not in data:
-      freeze = Homebrew.shell("{python} -m pip freeze 2>/dev/null".format(**vars()))
+      freeze = Homebrew.shell(
+          "{python} -m pip freeze 2>/dev/null".format(**vars()))
       data[python] = freeze.strip().split("\n")
       with open(self.PIP_LIST, "w") as outfile:
         json.dump(data, outfile)
 
     pkg_str = package + '==' + version
     if pkg_str not in data[python]:
-      task_print("{python} -m pip install {package}=={version}".format(**vars()))
-      Homebrew.shell("{python} -m pip install {package}=={version}".format(**vars()))
+      task_print(
+          "{python} -m pip install {package}=={version}".format(**vars()))
+      Homebrew.shell(
+          "{python} -m pip install {package}=={version}".format(**vars()))
       return True
 
 
@@ -382,7 +388,7 @@ class Ruby(Task):
   __osx_deps__ = ['Homebrew']
   __genfiles__ = ['~/.rbenv']
   __versions__ = {
-      "ruby": "2.4.1"
+    "ruby": "2.4.1"
   }
 
   def install_osx(self):
@@ -469,7 +475,8 @@ class Dropbox(Task):
     if (not os.path.exists(os.path.expanduser("~/.dropbox-dist/dropboxd"))
         and not IS_TRAVIS_CI):  # skip on Travis CI:
       task_print("Installing Dropbox")
-      shell('cd - && wget -O - "{self.UBUNTU_URL}" | tar xzf -'.format(**vars()))
+      shell(
+          'cd - && wget -O - "{self.UBUNTU_URL}" | tar xzf -'.format(**vars()))
       self.installed_on_ubuntu = True
     self._install_common()
 
@@ -479,7 +486,8 @@ class Dropbox(Task):
   def teardown(self):
     if self.installed_on_ubuntu:
       logging.info("")
-      logging.info("NOTE: manual step required to complete dropbox installation:")
+      logging.info(
+          "NOTE: manual step required to complete dropbox installation:")
       logging.info("    $ " + Colors.BOLD + Colors.RED +
                    "~/.dropbox-dist/dropboxd" + Colors.END)
 
@@ -511,9 +519,9 @@ class SshConfig(Task):
   __platforms__ = ['linux', 'osx']
   __reqs__ = [lambda: os.path.isdir(PRIVATE + "/ssh")]
   __genfiles__ = [
-      "~/.ssh/authorized_keys",
-      "~/.ssh/known_hosts",
-      "~/.ssh/config",
+    "~/.ssh/authorized_keys",
+    "~/.ssh/known_hosts",
+    "~/.ssh/config",
   ]
 
   def install(self):
@@ -554,8 +562,10 @@ class Netdata(Task):
   def teardown(self):
     if self.installed:
       logging.info("")
-      logging.info("NOTE: manual steps required to complete netdata installation:")
-      logging.info("    $ " + Colors.BOLD + Colors.RED + "crontab -e" + Colors.END)
+      logging.info(
+          "NOTE: manual steps required to complete netdata installation:")
+      logging.info(
+          "    $ " + Colors.BOLD + Colors.RED + "crontab -e" + Colors.END)
       logging.info("    # append the following line to the end and save:")
       logging.info("    @reboot ~/.dotfiles/usr/share/crontab/start-netdata.sh")
 
@@ -579,7 +589,8 @@ class WacomDriver(Task):
   def teardown(self):
     if self.installed:
       logging.info("")
-      logging.info("NOTE: manual steps required to complete Wacom driver setup:")
+      logging.info(
+          "NOTE: manual steps required to complete Wacom driver setup:")
       logging.info("    " + Colors.BOLD + Colors.RED +
                    "Enable Wacom kernel extension in System Preferences > Security & Privacy" +
                    Colors.END)
@@ -594,8 +605,8 @@ class Node(Task):
   __platforms__ = ['linux', 'osx']
   __deps__ = ['Homebrew']
   __genfiles__ = [
-      NPM_BINARY,
-      NODE_BINARY,
+    NPM_BINARY,
+    NODE_BINARY,
   ]
   __tmpfiles__ = [PKG_LIST]
 
@@ -611,7 +622,8 @@ class Node(Task):
     if not os.path.isfile(self.PKG_LIST):
       shell("{self.NPM_BINARY} list -g > {self.PKG_LIST}".format(**vars()))
 
-    if not shell_ok("grep '{package}@{version}' <{self.PKG_LIST}".format(**vars())):
+    if not shell_ok(
+        "grep '{package}@{version}' <{self.PKG_LIST}".format(**vars())):
       task_print("npm install -g {package}@{version}".format(**vars()))
       shell("{self.NPM_BINARY} install -g {package}@{version}".format(**vars()))
       return True
@@ -622,18 +634,18 @@ class Zsh(Task):
   __platforms__ = ['linux', 'osx']
   __deps__ = ['Homebrew']
   __genfiles__ = [
-      '~/.oh-my-zsh',
-      '~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting',
-      '~/.zsh',
-      '~/.zsh/cec.zsh-theme',
-      '~/.zshenv',
-      '~/.zshrc',
+    '~/.oh-my-zsh',
+    '~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting',
+    '~/.zsh',
+    '~/.zsh/cec.zsh-theme',
+    '~/.zshenv',
+    '~/.zshrc',
   ]
   __osx_genfiles__ = ['/usr/local/bin/zsh']
   __linux_genfiles__ = ['/usr/bin/zsh']
   __versions__ = {
-      "oh-my-zsh": "c3b072eace1ce19a48e36c2ead5932ae2d2e06d9",
-      "zsh-syntax-highlighting": "b07ada1255b74c25fbc96901f2b77dc4bd81de1a",
+    "oh-my-zsh": "c3b072eace1ce19a48e36c2ead5932ae2d2e06d9",
+    "zsh-syntax-highlighting": "b07ada1255b74c25fbc96901f2b77dc4bd81de1a",
   }
 
   def install(self):
@@ -675,13 +687,13 @@ class ZshBazelCompletion(Task):
   __deps__ = ['Zsh']
   __genfiles__ = ['~/.zsh/completion/_bazel', '~/.zsh/cache']
   __versions__ = {
-      "bazel_completion": "30af177d5cd2188ee6e23ba849d865b8a42ad8f8",
+    "bazel_completion": "30af177d5cd2188ee6e23ba849d865b8a42ad8f8",
   }
 
   def install(self):
     url = ('https://raw.githubusercontent.com/bazelbuild/bazel/{}/'
            'scripts/zsh_completion/_bazel').format(
-              self.__versions__['bazel_completion'])
+        self.__versions__['bazel_completion'])
     bazel = os.path.expanduser("~/.bazel_tmp")
     shell("rm -rf {bazel}".format(**vars()))
 
@@ -778,7 +790,7 @@ class Gogs(Task):
   __deps__ = ["MySQL"]
   __genfiles__ = ["/opt/gogs"]
   __versions__ = {
-      "gogs": "0.11.34",
+    "gogs": "0.11.34",
   }
 
   def install(self):
@@ -806,8 +818,8 @@ class GogsConfig(Task):
 class Wallpaper(Task):
   """ set desktop background """
   WALLPAPERS = {
-      "diana": "~/Dropbox/Pictures/desktops/diana/Manhattan.jpg",
-      "florence": "~/Dropbox/Pictures/desktops/florence/Uluru.jpg",
+    "diana": "~/Dropbox/Pictures/desktops/diana/Manhattan.jpg",
+    "florence": "~/Dropbox/Pictures/desktops/florence/Uluru.jpg",
   }
   __hosts__ = WALLPAPERS.keys()
   __platforms__ = ['osx']
@@ -825,9 +837,9 @@ class GnuCoreutils(Task):
   __platforms__ = ['linux', 'osx']
   __osx_deps__ = ['Homebrew']
   __osx_genfiles__ = [
-      '/usr/local/opt/coreutils/libexec/gnubin/cp',
-      '/usr/local/opt/gnu-sed/libexec/gnubin/sed',
-      '/usr/local/opt/gnu-tar/libexec/gnubin/tar',
+    '/usr/local/opt/coreutils/libexec/gnubin/cp',
+    '/usr/local/opt/gnu-sed/libexec/gnubin/sed',
+    '/usr/local/opt/gnu-tar/libexec/gnubin/tar',
   ]
 
   def install_linux(self):
@@ -913,7 +925,7 @@ class Vim(Task):
   __osx_genfiles__ = ['/usr/local/bin/vim']
   __linux_genfiles__ = ['/usr/bin/vim']
   __versions__ = {
-      "vundle": "fcc204205e3305c4f86f07e09cd756c7d06f0f00",
+    "vundle": "fcc204205e3305c4f86f07e09cd756c7d06f0f00",
   }
 
   def install(self):
@@ -936,27 +948,28 @@ class Linters(Task):
   __platforms__ = ['osx']
   __osx_deps__ = ['Node', 'Python', 'Go']
   __osx_genfiles__ = [
-      '/usr/local/bin/cpplint',
-      '/usr/local/bin/csslint',
-      '/usr/local/bin/pycodestyle',
-      '~/.config/pycodestyle',
-      '~/go/bin/protoc-gen-lint',
-      '/usr/local/bin/write-good',
-      '/usr/local/bin/writegood',
-      Homebrew.bin("tidy"),
-      Homebrew.bin("buildifier"),
+    '/usr/local/bin/cpplint',
+    '/usr/local/bin/csslint',
+    '/usr/local/bin/pycodestyle',
+    '~/.config/pycodestyle',
+    '~/go/bin/protoc-gen-lint',
+    '/usr/local/bin/write-good',
+    '/usr/local/bin/writegood',
+    Homebrew.bin("tidy"),
+    Homebrew.bin("buildifier"),
   ]
   __versions__ = {
-      "cpplint": "1.3.0",
-      "csslint": "1.0.5",
-      "pycodestyle": "2.3.1",
-      "write-good": "0.11.3",
+    "cpplint": "1.3.0",
+    "csslint": "1.0.5",
+    "pycodestyle": "2.3.1",
+    "write-good": "0.11.3",
   }
 
   def install_osx(self):
     Python().pip_install("cpplint", version=self.__versions__["cpplint"])
     Node().npm_install("csslint", version=self.__versions__["csslint"])
-    Python().pip_install("pycodestyle", version=self.__versions__["pycodestyle"],
+    Python().pip_install("pycodestyle",
+                         version=self.__versions__["pycodestyle"],
                          python=Python.PYTHON3_BINARY)
     Homebrew().install_package("tidy-html5")
     Homebrew().install_package("buildifier")
@@ -972,11 +985,11 @@ class SublimeText(Task):
   __platforms__ = ['linux', 'osx']
   __osx_deps__ = ['Homebrew', 'Linters']
   __genfiles__ = [
-      '/usr/local/bin/rsub'
+    '/usr/local/bin/rsub'
   ]
   __osx_genfiles__ = [
-      '/usr/local/bin/subl',
-      '/Applications/Sublime Text.app'
+    '/usr/local/bin/subl',
+    '/Applications/Sublime Text.app'
   ]
 
   def install_osx(self):
@@ -1003,9 +1016,9 @@ class SublimeConfig(Task):
   __osx_deps__ = ['SublimeText']
   __reqs__ = [lambda: os.path.isdir(os.path.join(PRIVATE, "subl"))]
   __genfiles__ = [
-      "~/.subl",
-      "~/.subl/Packages/User",
-      "~/.subl/Packages/INI",
+    "~/.subl",
+    "~/.subl/Packages/User",
+    "~/.subl/Packages/INI",
   ]
 
   def install_osx(self):
@@ -1016,11 +1029,11 @@ class SublimeConfig(Task):
 class JetbrainsIDEs(Task):
   # A map of homebrew cask names to local apps.
   IDES = {
-      "datagrip": "/Applications/DataGrip.app",
-      "goland": "/Applications/GoLand.app",
-      "clion": "/Applications/CLion.app",
-      "intellij-idea": "/Applications/IntelliJ IDEA.app",
-      "pycharm": "/Applications/PyCharm.app",
+    "datagrip": "/Applications/DataGrip.app",
+    "goland": "/Applications/GoLand.app",
+    "clion": "/Applications/CLion.app",
+    "intellij-idea": "/Applications/IntelliJ IDEA.app",
+    "pycharm": "/Applications/PyCharm.app",
   }
 
   __platforms__ = ['osx']
@@ -1088,8 +1101,8 @@ class LaTeX(Task):
   __platforms__ = ['linux', 'osx']
   __osx_deps__ = ['Homebrew']
   __osx_genfiles__ = [
-      '/Library/TeX/Distributions/.DefaultTeX/Contents/Programs/texbin/pdflatex',
-      '/Applications/texstudio.app',
+    '/Library/TeX/Distributions/.DefaultTeX/Contents/Programs/texbin/pdflatex',
+    '/Applications/texstudio.app',
   ]
 
   def install_osx(self):
@@ -1115,8 +1128,8 @@ class LaTeXScripts(Task):
   __osx_deps__ = ['LaTeX']
   __reqs__ = [lambda: which("pdflatex")]
   __genfiles__ = [
-      "~/.local/bin/autotex",
-      "~/.local/bin/cleanbib"
+    "~/.local/bin/autotex",
+    "~/.local/bin/cleanbib"
   ]
 
   def install(self):
@@ -1129,8 +1142,8 @@ class AdobeCreativeCloud(Task):
   """ adobe creative cloud """
   __platforms__ = ['osx']
   __genfiles__ = [
-      '/usr/local/Caskroom/adobe-creative-cloud/latest/Creative Cloud Installer.app',
-      '/usr/local/Caskroom/google-nik-collection/1.2.11/Nik Collection.app',
+    '/usr/local/Caskroom/adobe-creative-cloud/latest/Creative Cloud Installer.app',
+    '/usr/local/Caskroom/google-nik-collection/1.2.11/Nik Collection.app',
   ]
   __deps__ = ['Homebrew']
 
@@ -1138,7 +1151,8 @@ class AdobeCreativeCloud(Task):
     self.installed = False
 
   def install(self):
-    if not os.path.exists('/Applications/Adobe Lightroom CC/Adobe Lightroom CC.app'):
+    if not os.path.exists(
+        '/Applications/Adobe Lightroom CC/Adobe Lightroom CC.app'):
       Homebrew().install_cask('adobe-creative-cloud')
       self.installed = True
     if not os.path.exists('/Applications/Nik Collection'):
@@ -1152,7 +1166,8 @@ class AdobeCreativeCloud(Task):
   def teardown(self):
     if self.installed:
       logging.info("")
-      logging.info("NOTE: manual step required to complete creative cloud installation:")
+      logging.info(
+          "NOTE: manual step required to complete creative cloud installation:")
       logging.info("    $ " + Colors.BOLD + Colors.RED +
                    "open '/usr/local/Caskroom/adobe-creative-cloud/latest/Creative Cloud Installer.app'" +
                    Colors.END)
@@ -1196,8 +1211,10 @@ class MacOSConfig(Task):
     shell("defaults write NSGlobalDomain KeyRepeat -int 1")
 
     # Set the Finder prefs for showing a few different volumes on the Desktop.
-    shell("defaults write com.apple.finder ShowExternalHardDrivesOnDesktop -bool false")
-    shell("defaults write com.apple.finder ShowRemovableMediaOnDesktop -bool false")
+    shell(
+        "defaults write com.apple.finder ShowExternalHardDrivesOnDesktop -bool false")
+    shell(
+        "defaults write com.apple.finder ShowRemovableMediaOnDesktop -bool false")
 
     # Run the screensaver if we're in the bottom-left hot corner.
     shell("defaults write com.apple.dock wvous-bl-corner -int 5")
@@ -1206,7 +1223,8 @@ class MacOSConfig(Task):
     # Set up Safari for development.
     shell("defaults write com.apple.Safari IncludeInternalDebugMenu -bool true")
     shell("defaults write com.apple.Safari IncludeDevelopMenu -bool true")
-    shell("defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true")
+    shell(
+        "defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true")
     shell(
         'defaults write com.apple.Safari "com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled" -bool true')
     shell("defaults write NSGlobalDomain WebKitDeveloperExtras -bool true")
@@ -1234,38 +1252,38 @@ class Caffeine(Task):
 class HomebrewCasks(Task):
   """ macOS homebrew binaries """
   CASKS = {
-      'alfred': '/Applications/Alfred 3.app',
-      'anki': '/Applications/Anki.app',
-      'bartender': '/Applications/Bartender 3.app',
-      'bettertouchtool': '/Applications/BetterTouchTool.app',
-      'calibre': '/Applications/calibre.app',
-      'dash': '/Applications/Dash.app',
-      'disk-inventory-x': '/Applications/Disk Inventory X.app',
-      'etcher': '/Applications/Etcher.app',
-      'fantastical': '/Applications/Fantastical 2.app',
-      'fluid': '/Applications/Fluid.app',
-      'flux': '/Applications/Flux.app',
-      'google-earth-pro': '/Applications/Google Earth Pro.app',
-      'google-photos-backup-and-sync': '/Applications/Backup and Sync.app',
-      'hipchat': '/Applications/HipChat.app',
-      'imageoptim': '/Applications/ImageOptim.app',
-      'istat-menus': '/Applications/iStat Menus.app',
-      'iterm2': '/Applications/iTerm.app',
-      'mendeley': '/Applications/Mendeley Desktop.app',
-      'microsoft-office': '/Applications/Microsoft Word.app',
-      'mysqlworkbench': '/Applications/MySQLWorkbench.app',
-      'omnigraffle': '/Applications/OmniGraffle.app',
-      'omnioutliner': '/Applications/OmniOutliner.app',
-      'omnipresence': '/Applications/OmniPresence.app',
-      # TODO(cec): Issue post-install message for Rocket telling the user to
-      # launch the app, make the changes to Accessibility seettings, and hide
-      # the menubar icon using Bartender.
-      'rocket': '/Applications/Rocket.app',
-      'skype': '/Applications/Skype.app',
-      'steam': '/Applications/Steam.app',
-      'transmission': '/Applications/Transmission.app',
-      'tunnelblick': '/Applications/Tunnelblick.app',
-      'vlc': '/Applications/VLC.app',
+    'alfred': '/Applications/Alfred 3.app',
+    'anki': '/Applications/Anki.app',
+    'bartender': '/Applications/Bartender 3.app',
+    'bettertouchtool': '/Applications/BetterTouchTool.app',
+    'calibre': '/Applications/calibre.app',
+    'dash': '/Applications/Dash.app',
+    'disk-inventory-x': '/Applications/Disk Inventory X.app',
+    'etcher': '/Applications/Etcher.app',
+    'fantastical': '/Applications/Fantastical 2.app',
+    'fluid': '/Applications/Fluid.app',
+    'flux': '/Applications/Flux.app',
+    'google-earth-pro': '/Applications/Google Earth Pro.app',
+    'google-photos-backup-and-sync': '/Applications/Backup and Sync.app',
+    'hipchat': '/Applications/HipChat.app',
+    'imageoptim': '/Applications/ImageOptim.app',
+    'istat-menus': '/Applications/iStat Menus.app',
+    'iterm2': '/Applications/iTerm.app',
+    'mendeley': '/Applications/Mendeley Desktop.app',
+    'microsoft-office': '/Applications/Microsoft Word.app',
+    'mysqlworkbench': '/Applications/MySQLWorkbench.app',
+    'omnigraffle': '/Applications/OmniGraffle.app',
+    'omnioutliner': '/Applications/OmniOutliner.app',
+    'omnipresence': '/Applications/OmniPresence.app',
+    # TODO(cec): Issue post-install message for Rocket telling the user to
+    # launch the app, make the changes to Accessibility seettings, and hide
+    # the menubar icon using Bartender.
+    'rocket': '/Applications/Rocket.app',
+    'skype': '/Applications/Skype.app',
+    'steam': '/Applications/Steam.app',
+    'transmission': '/Applications/Transmission.app',
+    'tunnelblick': '/Applications/Tunnelblick.app',
+    'vlc': '/Applications/VLC.app',
   }
 
   __platforms__ = ['osx']
@@ -1286,8 +1304,8 @@ class Plex(Task):
   __platforms__ = ['osx']
   __deps__ = ['Homebrew']
   __genfiles__ = [
-      '/Applications/Plex Media Player.app',
-      '/Applications/Plex Media Server.app',
+    '/Applications/Plex Media Player.app',
+    '/Applications/Plex Media Server.app',
   ]
 
   def __init__(self):
@@ -1337,7 +1355,7 @@ class Emacs(Task):
   __deps__ = ['Trash']
   __osx_deps__ = ['Homebrew']
   __versions__ = {
-      "prelude": "f7d5d68d432319bb66a5f9410d2e4eadd584f498",
+    "prelude": "f7d5d68d432319bb66a5f9410d2e4eadd584f498",
   }
 
   def install(self):
@@ -1377,7 +1395,8 @@ class AppStore(Task):
 
     # Check that dotfiles was configured with Apple ID
     if not APPLE_ID:
-      logging.critical("\nerror: Apple ID not set! Run ./configure --apple-id <email>")
+      logging.critical(
+          "\nerror: Apple ID not set! Run ./configure --apple-id <email>")
       sys.exit(1)
 
     # Sign in to App Store using Apple ID. Note that if the user is
@@ -1405,20 +1424,20 @@ class AppStore(Task):
 class AppStoreApps(Task):
   """ install macOS apps from App Store """
   APPS = {
-      443987910: '/Applications/1Password.app',
-      961632517: '/Applications/Be Focused Pro.app',
-      425264550: '/Applications/Blackmagic Disk Speed Test.app',
-      420212497: '/Applications/Byword.app',
-      563362017: '/Applications/CloudClip Manager.app',
-      668208984: '/Applications/GIPHY CAPTURE.app',
-      1026566364: '/Applications/GoodNotes.app',
-      409183694: '/Applications/Keynote.app',
-      784801555: '/Applications/Microsoft OneNote.app',
-      823766827: '/Applications/OneDrive.app',
-      409201541: '/Applications/Pages.app',
-      425424353: '/Applications/The Unarchiver.app',
-      1147396723: '/Applications/WhatsApp.app',
-      410628904: '/Applications/Wunderlist.app',
+    443987910: '/Applications/1Password.app',
+    961632517: '/Applications/Be Focused Pro.app',
+    425264550: '/Applications/Blackmagic Disk Speed Test.app',
+    420212497: '/Applications/Byword.app',
+    563362017: '/Applications/CloudClip Manager.app',
+    668208984: '/Applications/GIPHY CAPTURE.app',
+    1026566364: '/Applications/GoodNotes.app',
+    409183694: '/Applications/Keynote.app',
+    784801555: '/Applications/Microsoft OneNote.app',
+    823766827: '/Applications/OneDrive.app',
+    409201541: '/Applications/Pages.app',
+    425424353: '/Applications/The Unarchiver.app',
+    1147396723: '/Applications/WhatsApp.app',
+    410628904: '/Applications/Wunderlist.app',
   }
 
   __platforms__ = ['osx']
@@ -1432,7 +1451,7 @@ class AppStoreApps(Task):
 
 class DianaApps(Task):
   APPS = {
-      883878097: '/Applications/Server.app'
+    883878097: '/Applications/Server.app'
   }
 
   __platforms__ = ['osx']
@@ -1452,7 +1471,7 @@ class GpuStat(Task):
   __deps__ = ['Python']
   __reqs__ = [lambda: which("nvidia-smi")]
   __genfiles__ = [
-      '/usr/local/bin/gpustat',
+    '/usr/local/bin/gpustat',
   ]
 
   def install(self):
@@ -1530,21 +1549,23 @@ class OmniFocus(Task):
   __osx_deps__ = ['Homebrew', 'Java']
   __genfiles__ = ["/usr/local/bin/omni"]
   __osx_genfiles__ = [
-      "/Applications/OmniFocus.app",
-      "/usr/local/opt/ofexport/bin/of2",
+    "/Applications/OmniFocus.app",
+    "/usr/local/opt/ofexport/bin/of2",
   ]
   __versions__ = {
-      "ofexport": "1.0.20",
+    "ofexport": "1.0.20",
   }
 
-  OFEXPORT_URL = "https://github.com/psidnell/ofexport2/archive/ofexport-v2-" + __versions__["ofexport"] + ".zip"
+  OFEXPORT_URL = "https://github.com/psidnell/ofexport2/archive/ofexport-v2-" + \
+                 __versions__["ofexport"] + ".zip"
 
   def install_osx(self):
     Homebrew().install_cask('omnifocus')
 
     # Check that of2 is installed and is the correct version
     if (not os.path.exists("/usr/local/opt/ofexport/bin/of2") and
-        shell("/usr/local/opt/ofexport/bin/of2 -h").split("\n")[2] != "Version: " + self.__versions__["ofexport"]):
+        shell("/usr/local/opt/ofexport/bin/of2 -h").split("\n")[
+          2] != "Version: " + self.__versions__["ofexport"]):
       task_print("Downloading ofexport")
       shell("rm -rf /usr/local/opt/ofexport")
       url, ver = self.OFEXPORT_URL, self.__versions__["ofexport"]
@@ -1552,7 +1573,8 @@ class OmniFocus(Task):
       task_print("Installing ofexport")
       shell("unzip -o /tmp/ofexport.zip")
       shell("rm -f /tmp/ofexport.zip")
-      shell("mv ofexport2-ofexport-v2-{ver} /usr/local/opt/ofexport".format(**vars()))
+      shell("mv ofexport2-ofexport-v2-{ver} /usr/local/opt/ofexport".format(
+          **vars()))
 
     # Run common-install commands:
     self.install()
@@ -1590,8 +1612,8 @@ class MeCsv(Task):
   __osx_deps__ = ['OmniFocus']
   __reqs__ = [lambda: os.path.isdir(os.path.join(PRIVATE, "me.csv"))]
   __genfiles__ = [
-      "~/.me.json",
-      "~/me.csv"
+    "~/.me.json",
+    "~/me.csv"
   ]
 
   def install_osx(self):
@@ -1615,7 +1637,8 @@ class Bazel(Task):
     # distribution of Bazel to build.
     # See: https://docs.bazel.build/versions/master/install-ubuntu.html
     if not os.path.isfile('/usr/local/bin/bazel'):
-      shell('curl -L -o /tmp/bazel.sh https://github.com/bazelbuild/bazel/releases/download/0.14.1/bazel-0.14.1-installer-linux-x86_64.sh')
+      shell(
+          'curl -L -o /tmp/bazel.sh https://github.com/bazelbuild/bazel/releases/download/0.14.1/bazel-0.14.1-installer-linux-x86_64.sh')
       shell('sudo bash /tmp/bazel.sh')
       shell('rm /tmp/bazel.sh')
 
@@ -1711,7 +1734,7 @@ class JsonUtil(Task):
   __osx_genfiles__ = ['/usr/local/bin/jq']
   __linux_genfiles__ = ['/usr/bin/jq']
   __versions__ = {
-      "jsonlint": "1.6.2",
+    "jsonlint": "1.6.2",
   }
 
   def install(self):
@@ -1726,9 +1749,9 @@ class Scripts(Task):
   """ scripts and utils """
   __platforms__ = ['linux', 'osx']
   __genfiles__ = [
-      '~/.local/bin/mkepisodal',
-      '~/.local/bin/rm-dsstore',
-      '~/.local/bin/mp3_transcode',
+    '~/.local/bin/mkepisodal',
+    '~/.local/bin/rm-dsstore',
+    '~/.local/bin/mp3_transcode',
   ]
 
   def install(self):
@@ -1748,7 +1771,7 @@ class FlorenceScripts(Task):
   __hosts__ = ['florence']
   __deps__ = ["Scripts"]
   __genfiles__ = [
-      "~/.local/bin/orange_you_glad_you_backup",
+    "~/.local/bin/orange_you_glad_you_backup",
   ]
 
   def install(self):
@@ -1818,13 +1841,13 @@ class Rsync(Task):
     Apt().install_package('rsync')
 
 
-
 class InotifyMaxUserWatchers(Task):
   __platforms__ = ['linux']
 
   def install_linux(self):
     if not shell_ok('grep fs.inotify.max_user_watches /etc/sysctl.conf'):
-      shell("sudo sh -c 'echo fs.inotify.max_user_watches=1048576 >> /etc/sysctl.conf'")
+      shell(
+          "sudo sh -c 'echo fs.inotify.max_user_watches=1048576 >> /etc/sysctl.conf'")
       shell('sudo sysctl -p')
 
 
@@ -1832,21 +1855,21 @@ class PhdBuildDeps(Task):
   """ phd repo dependencies"""
   __platforms__ = ['linux', 'osx']
   __deps__ = [
-      'Bazel',
-      'GitLfs',
-      'GnuCoreutils',
-      'LaTeX',
-      'LibExempi',
-      'LibMySQL',
-      'Python',
-      'Rsync',
+    'Bazel',
+    'GitLfs',
+    'GnuCoreutils',
+    'LaTeX',
+    'LibExempi',
+    'LibMySQL',
+    'Python',
+    'Rsync',
   ]
   __linux_deps__ = [
-      'InotifyMaxUserWatchers',
+    'InotifyMaxUserWatchers',
   ]
-  __osx_deps__= [
-      # Needed by //lib/labm8:hashcache.
-      'GnuCoreutils',
+  __osx_deps__ = [
+    # Needed by //lib/labm8:hashcache.
+    'GnuCoreutils',
   ]
 
   def install(self):
@@ -1866,13 +1889,13 @@ class Phd(Task):
 class PhdDevDeps(Task):
   __platforms__ = ['linux', 'osx']
   __deps__ = [
-      'Buildifier',
-      'Homebrew',
-      'Node',
-      'Phd',
+    'Buildifier',
+    'Homebrew',
+    'Node',
+    'Phd',
   ]
   __linux_deps__ = [
-      'InotifyMaxUserWatchers',
+    'InotifyMaxUserWatchers',
   ]
 
   def install(self):
@@ -1881,39 +1904,39 @@ class PhdDevDeps(Task):
 
 
 class TransmissionHeadless(Task):
-    """Headless bittorrent client."""
-    __platforms__ = ['linux']
-    __hosts__ = ['ryangosling']
-    __linux_genfiles__ = [
-        '/usr/share/transmission',
-        '/usr/bin/transmission-cli',
-        '/etc/transmission-daemon',
-        '/usr/bin/transmission-daemon',
-    ]
+  """Headless bittorrent client."""
+  __platforms__ = ['linux']
+  __hosts__ = ['ryangosling']
+  __linux_genfiles__ = [
+    '/usr/share/transmission',
+    '/usr/bin/transmission-cli',
+    '/etc/transmission-daemon',
+    '/usr/bin/transmission-daemon',
+  ]
 
-    def install(self):
-        shell("sudo add-apt-repository -y ppa:transmissionbt/ppa")
-        Apt().update()
-        Apt().install_package("transmission-cli")
-        Apt().install_package("transmission-common")
-        Apt().install_package("transmission-daemon")
+  def install(self):
+    shell("sudo add-apt-repository -y ppa:transmissionbt/ppa")
+    Apt().update()
+    Apt().install_package("transmission-cli")
+    Apt().install_package("transmission-common")
+    Apt().install_package("transmission-daemon")
 
 
 class TransmissionConfig(Task):
-    """User config for transmission."""
-    CFG = '/etc/transmission-daemon/settings.json'
+  """User config for transmission."""
+  CFG = '/etc/transmission-daemon/settings.json'
 
-    __platforms__ = ['linux']
-    __hosts__ = ['ryangosling']
-    __linux_genfiles__ = [CFG]
-    __linux_deps__ = ['TransmissionHeadless']
+  __platforms__ = ['linux']
+  __hosts__ = ['ryangosling']
+  __linux_genfiles__ = [CFG]
+  __linux_deps__ = ['TransmissionHeadless']
 
-    def install(self):
-        if not os.path.islink(self.CFG):
-            shell('sudo service transmission-daemon stop')
-            symlink('{private}/transmission/settings.json'
-                    .format(private=PRIVATE), self.CFG, sudo=True)
-            shell('sudo service transmission-daemon start')
+  def install(self):
+    if not os.path.islink(self.CFG):
+      shell('sudo service transmission-daemon stop')
+      symlink('{private}/transmission/settings.json'
+              .format(private=PRIVATE), self.CFG, sudo=True)
+      shell('sudo service transmission-daemon start')
 
 
 class DefaultApps(Task):
@@ -1921,39 +1944,39 @@ class DefaultApps(Task):
   # Use `duti -x epub` to list current file associations.
   __platforms__ = ['osx']
   __deps__ = [
-      'AppStoreApps',
-      'Homebrew',
-      'HomebrewCasks',
-      'LaTeX',
-      'SublimeText',
+    'AppStoreApps',
+    'Homebrew',
+    'HomebrewCasks',
+    'LaTeX',
+    'SublimeText',
   ]
 
   # run `duti -x <extension>` to show associated app
   FILE_ASSOCIATIONS = {
-      "7z": "cx.c3.theunarchiver",
-      "avi": "org.videolan.vlc",
-      "bst": "com.sublimetext.3",
-      "c": "com.sublimetext.3",
-      "cls": "com.sublimetext.3",
-      "cpp": "com.sublimetext.3",
-      "cxx": "com.sublimetext.3",
-      "gz": "cx.c3.theunarchiver",
-      "log": "com.sublimetext.3",
-      "markdown": "com.sublimetext.3",
-      "md": "com.sublimetext.3",
-      "mkv": "org.videolan.vlc",
-      "mov": "org.videolan.vlc",
-      "mp4": "org.videolan.vlc",
-      "mpg": "org.videolan.vlc",
-      "nfo": "com.sublimetext.3",
-      "py": "com.sublimetext.3",
-      "rar": "cx.c3.theunarchiver",
-      "tex": "texstudio",
-      "text": "com.sublimetext.3",
-      "torrent": "org.m0k.transmission",
-      "txt": "com.sublimetext.3",
-      "xml": "com.sublimetext.3",
-      "zip": "cx.c3.theunarchiver",
+    "7z": "cx.c3.theunarchiver",
+    "avi": "org.videolan.vlc",
+    "bst": "com.sublimetext.3",
+    "c": "com.sublimetext.3",
+    "cls": "com.sublimetext.3",
+    "cpp": "com.sublimetext.3",
+    "cxx": "com.sublimetext.3",
+    "gz": "cx.c3.theunarchiver",
+    "log": "com.sublimetext.3",
+    "markdown": "com.sublimetext.3",
+    "md": "com.sublimetext.3",
+    "mkv": "org.videolan.vlc",
+    "mov": "org.videolan.vlc",
+    "mp4": "org.videolan.vlc",
+    "mpg": "org.videolan.vlc",
+    "nfo": "com.sublimetext.3",
+    "py": "com.sublimetext.3",
+    "rar": "cx.c3.theunarchiver",
+    "tex": "texstudio",
+    "text": "com.sublimetext.3",
+    "torrent": "org.m0k.transmission",
+    "txt": "com.sublimetext.3",
+    "xml": "com.sublimetext.3",
+    "zip": "cx.c3.theunarchiver",
   }
 
   def install(self):
@@ -2007,7 +2030,7 @@ class DnsTest(Task):
   __osx_deps__ = ['Wget']
   __genfiles__ = ['~/.local/bin/dnstest']
   __versions__ = {
-      'dnstest': '80341abdd2afc12cd18ce6404bb3c937b16ccfa7',
+    'dnstest': '80341abdd2afc12cd18ce6404bb3c937b16ccfa7',
   }
 
   def install(self):

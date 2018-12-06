@@ -10,14 +10,14 @@ workgroup sizes, and the steps necessary to obtain repeatable results.
 \section{Experimental Setup}
 
 \begin{table}
-\input{tab/hosts}
-\caption[Specification of experimental platforms]{%
+  \input{tab/hosts}
+  \caption[Specification of experimental platforms]{%
   Specification of experimental platforms.%
-}
-\label{tab:hosts}
+  }
+  \label{tab:hosts}
 \end{table}
 
-Table~\ref{tab:hosts} describes the experimental platforms used.  All
+Table~\ref{tab:hosts} describes the experimental platforms used. All
 runtimes were recorded with millisecond precision using either the
 system clock or OpenCL's Profiling API. Measurement noise was
 minimised by reducing system load through disabling all unwanted
@@ -30,11 +30,11 @@ an in-memory file system.
 \subsection{Devices}
 
 \begin{table}
-\input{tab/devices}
-\caption[Specification of experimental OpenCL devices]{%
+  \input{tab/devices}
+  \caption[Specification of experimental OpenCL devices]{%
   Specification of experimental OpenCL devices.%
-}
-\label{tab:hw}
+  }
+  \label{tab:hw}
 \end{table}
 
 Table~\ref{tab:hw} describes the OpenCL devices used for testing, as
@@ -49,26 +49,26 @@ fields of image processing, cellular automata, and partial
 differential equation solvers are used:
 %
 \begin{itemize}
-\item \textbf{Game of Life} Conway's Game of Life~\cite{Conway1970} is
+  \item \textbf{Game of Life} Conway's Game of Life~\cite{Conway1970} is
   a cellular automaton which models the evolution of a regular grid of
   cells over discrete time steps. At each time step, each cell value
   is updated to be either \emph{live} or \emph{dead} based on it's
   current state and the state of the one immediately neighbouring cell
   to the north, south, east, and west.
-\item \textbf{Heat Equation} The heat equation is a partial
+  \item \textbf{Heat Equation} The heat equation is a partial
   differential equation which describes the distribution of heat in a
   given region over time. Each iteration of the stencil represents a
   discrete time step, and the value of each cell (i.e.\ the
   temperature) is smoothed based on the temperatures of surrounding
   cells and the thermal conductivity of the material being simulated.
-\item \textbf{Gaussian Blur} The Gaussian blur is a common image
+  \item \textbf{Gaussian Blur} The Gaussian blur is a common image
   processing algorithm, used to reduce noise and detail in an image. A
   two dimensional Gaussian blur defines a function to compute a pixel
   value based on the value of neighbouring pixels. Gaussian blurs are
   parameterised by a radius which define symmetric, square stencil
   regions about the centre pixel. Unlike the previous two
   applications, the Gaussian blur is not an iterative stencil.
-\item \textbf{Canny Edge Detection} The Canny edge detection algorithm
+  \item \textbf{Canny Edge Detection} The Canny edge detection algorithm
   is a multi-stage approach to detecting edges in
   images~\cite{Canny1986}. It consists of four distinct stages: a
   noise reduction operation, an edge detection operation, a
@@ -82,12 +82,12 @@ these reference applications, and the synthetic training benchmarks
 used.
 
 \begin{table}
-\input{tab/kernels}
-\caption[Description of stencil kernels]{%
+  \input{tab/kernels}
+  \caption[Description of stencil kernels]{%
   Stencil kernels, border sizes (north, south, east, and west),
   and static instruction counts.
-}
-\label{tab:kernels}
+  }
+  \label{tab:kernels}
 \end{table}
 
 
@@ -97,11 +97,11 @@ For each benchmark, multiple dataset sizes were used, as shown in
 Table~\ref{tab:datasets}.
 
 \begin{table}
-\input{tab/datasets}
-\caption[Description of experimental datasets]{%
+  \input{tab/datasets}
+  \caption[Description of experimental datasets]{%
   Description of experimental datasets.%
-}
-\label{tab:datasets}
+  }
+  \label{tab:datasets}
 \end{table}
 
 
@@ -117,37 +117,37 @@ collecting data.
 \subsubsection{Isolating the Impact of Workgroup Size}
 
 \begin{table}
-\include{tab/stencil-runtime-components}
-\caption[SkelCL stencil execution phases]{%
+  \include{tab/stencil-runtime-components}
+  \caption[SkelCL stencil execution phases]{%
   Execution phases of a SkelCL stencil skeleton. ``Fixed''
   costs are those which occur up to once per stencil
   invocation. ``Iterative'' costs are those which scale with the
   number of iterations of a stencil.%
-}
-\label{tab:stencil-runtime-components}
+  }
+  \label{tab:stencil-runtime-components}
 \end{table}
 
 The execution of a SkelCL stencil application can be divided into 6
 distinct phases, shown in Table~\ref{tab:stencil-runtime-components}.
 %
 \begin{itemize}
-\item \textbf{Kernel compilation times} Upon invocation, template
+  \item \textbf{Kernel compilation times} Upon invocation, template
   substitution is performed of the user code into the stencil skeleton
   implementation, then compiled into an OpenCL program. Once compiled,
   the program binary is cached for the lifetime of the host program.
-\item \textbf{Skeleton preparation times} Before a kernel is executed,
+  \item \textbf{Skeleton preparation times} Before a kernel is executed,
   a preparation phase is required to allocate buffers for the input
   and output data on each execution device.
-\item \textbf{Host $\rightarrow$ Device and Device $\rightarrow$ Host
-    transfer times} Data must be copied to and from the execution
+  \item \textbf{Host $\rightarrow$ Device and Device $\rightarrow$ Host
+  transfer times} Data must be copied to and from the execution
   devices before and after execution of the stencils,
   respectively. Note that this is performed lazily, so iterative
   stencils do not require repeated transfers between host and device
   memory.
-\item \textbf{Kernel execution times} This is the time elapsed
+  \item \textbf{Kernel execution times} This is the time elapsed
   executing the stencil kernel, and is representative of ``work
   done''.
-\item \textbf{Devices $\leftrightarrow$ Host (sync) transfer times}
+  \item \textbf{Devices $\leftrightarrow$ Host (sync) transfer times}
   For iterative stencils on multiple execution devices, an overlapping
   halo region is shared at the border between the devices' grids. This
   must be synchronised between iterations, requiring an intermediate
@@ -163,7 +163,7 @@ total time $t$ of a SkelCL stencil application is simply the sum of
 all times recorded for each distinct phase:
 %
 \begin{equation}
-t = \bm{1c^T} + \bm{1p^T} + \bm{1u^T} + \bm{1k^T} + \bm{1d^T}
+  t = \bm{1c^T} + \bm{1p^T} + \bm{1u^T} + \bm{1k^T} + \bm{1d^T}
 \end{equation}
 %
 Note that there are no synchronisation costs $s$. For applications
@@ -172,7 +172,7 @@ of the sequential host-side phases, and the sum of the device-side
 phases divided by the number of devices:
 %
 \begin{equation}
-t \approx \sum_{i=1}^n{(\bm{1c^T}_{i})} + \bm{1p^T} + \bm{1s^T} +
+  t \approx \sum_{i=1}^n{(\bm{1c^T}_{i})} + \bm{1p^T} + \bm{1s^T} +
   \frac{\sum_{i=1}^n{\bm{1u^T}_{i} + \bm{1k^T}_{i} + \bm{1d^T}_{i}}}{n}
 \end{equation}
 %

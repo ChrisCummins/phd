@@ -3,9 +3,10 @@
 Uses the OpenAI Gym Blackjack environment.
 """
 import collections
+import typing
+
 import gym
 import numpy as np
-import typing
 from absl import app
 from absl import flags
 from absl import logging

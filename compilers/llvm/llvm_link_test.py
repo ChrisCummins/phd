@@ -1,7 +1,8 @@
 """Unit tests for //compilers/llvm/llvm_link.py."""
-import pytest
 import sys
 import typing
+
+import pytest
 from absl import app
 from absl import flags
 

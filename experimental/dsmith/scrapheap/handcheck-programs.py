@@ -2,8 +2,8 @@
 
 import random
 import sys
-
 from argparse import ArgumentParser
+
 from dsmith import db
 from dsmith.db import *
 

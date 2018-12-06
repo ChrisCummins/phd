@@ -1,9 +1,10 @@
 """Run a baseline."""
 import collections
-import humanize
 import pathlib
 import random
 import time
+
+import humanize
 from absl import app
 from absl import flags
 from absl import logging

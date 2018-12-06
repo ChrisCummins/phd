@@ -2,8 +2,8 @@
 
 import random
 import sys
-
 from argparse import ArgumentParser
+
 from dsmith import db
 from dsmith.db import *
 
@@ -47,7 +47,8 @@ def handcheck(recheck=False, include_all=False):
   program = None
   with Session() as session:
     q = session.query(CLgenProgram).distinct() \
-      .join(cl_launcherCLgenResult, cl_launcherCLgenResult.program_id == CLgenProgram.id) \
+      .join(cl_launcherCLgenResult,
+            cl_launcherCLgenResult.program_id == CLgenProgram.id) \
       .filter(CLgenProgram.gpuverified == 1)
 
     if not include_all:

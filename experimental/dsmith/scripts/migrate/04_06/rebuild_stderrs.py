@@ -7,11 +7,13 @@ import progressbar
 import sqlalchemy as sql
 from dsmith.sol.db import *
 
+
 # from dsmith.opencl.db import *
 
 
 if __name__ == "__main__":
   import logging
+
 
   logging.getLogger().setLevel(logging.INFO)
   dsmith.langs.mklang("sol")

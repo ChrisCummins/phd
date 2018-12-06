@@ -91,7 +91,8 @@ class OpenCLHarness(Harness):
         ndone = already_exists.count()
         ntodo = todo.count()
         ntotal = ndone + ntodo
-        logging.debug(f"{self}:{generator} {threads} testcases = {ndone} / {ntotal}")
+        logging.debug(
+            f"{self}:{generator} {threads} testcases = {ndone} / {ntotal}")
 
         # Break early if there's nothing to do:
         if not ntodo:
@@ -103,11 +104,11 @@ class OpenCLHarness(Harness):
 
         # Bulk insert new testcases:
         s.add_all(Testcase(
-          program_id=program.id,
-          threads_id=threads.id,
-          harness=self.id,
-          input_seed=self.default_seed,
-          timeout=self.default_timeout,
+            program_id=program.id,
+            threads_id=threads.id,
+            harness=self.id,
+            input_seed=self.default_seed,
+            timeout=self.default_timeout,
         ) for program in todo)
         s.commit()
 
@@ -126,7 +127,8 @@ class OpenCLHarness(Harness):
                      Testbed.from_env(env, session=s)]
       return sorted(testbeds)
 
-  def num_results(self, generator: Generator, testbed: str, session: session_t = None):
+  def num_results(self, generator: Generator, testbed: str,
+                  session: session_t = None):
     with ReuseSession(session) as s:
       testbed_ = Testbed.from_str(testbed, session=s)[0]
       n = s.query(func.count(Result.id)) \
@@ -161,9 +163,9 @@ class Cl_launcher(OpenCLHarness):
     # run testcase
     platform_id, device_id = testbed.ids
     runtime, returncode, stdout, stderr = clsmith.cl_launcher_str(
-      src=testcase.program.src, platform_id=platform_id,
-      device_id=device_id, optimizations=testbed.optimizations,
-      timeout=testcase.timeout)
+        src=testcase.program.src, platform_id=platform_id,
+        device_id=device_id, optimizations=testbed.optimizations,
+        timeout=testcase.timeout)
 
     # assert that executed params match expected
     clsmith.verify_cl_launcher_run(platform=testbed.platform.platform,
@@ -175,17 +177,17 @@ class Cl_launcher(OpenCLHarness):
 
     # outcome
     outcome = Cl_launcherResult.get_outcome(
-      returncode, stderr, runtime, testcase.timeout)
+        returncode, stderr, runtime, testcase.timeout)
     _log_outcome(outcome, runtime)
 
     return ResultProxy(
-      testbed_id=testbed.id,
-      testcase_id=testcase.id,
-      returncode=returncode,
-      outcome=outcome,
-      runtime=runtime,
-      stdout=stdout,
-      stderr=stderr)
+        testbed_id=testbed.id,
+        testcase_id=testcase.id,
+        returncode=returncode,
+        outcome=outcome,
+        runtime=runtime,
+        stdout=stdout,
+        stderr=stderr)
 
 
 class Cldrive(OpenCLHarness):
@@ -215,21 +217,27 @@ class Cldrive(OpenCLHarness):
     actual_local_size = None
     for line in stderr.split('\n'):
       if line.startswith("[cldrive] Platform: "):
-        actual_platform_name = re.sub(r"^\[cldrive\] Platform: ", "", line).rstrip()
+        actual_platform_name = re.sub(r"^\[cldrive\] Platform: ", "",
+                                      line).rstrip()
       elif line.startswith("[cldrive] Device: "):
         actual_device_name = re.sub(r"^\[cldrive\] Device: ", "", line).rstrip()
       elif line.startswith("[cldrive] OpenCL optimizations: "):
-        actual_optimizations = re.sub(r"^\[cldrive\] OpenCL optimizations: ", "", line).rstrip()
+        actual_optimizations = re.sub(r"^\[cldrive\] OpenCL optimizations: ",
+                                      "", line).rstrip()
 
       # global size
-      match = re.match('^\[cldrive\] 3-D global size \d+ = \[(\d+), (\d+), (\d+)\]', line)
+      match = re.match(
+          '^\[cldrive\] 3-D global size \d+ = \[(\d+), (\d+), (\d+)\]', line)
       if match:
-        actual_global_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
+        actual_global_size = (
+          int(match.group(1)), int(match.group(2)), int(match.group(3)))
 
       # local size
-      match = re.match('^\[cldrive\] 3-D local size \d+ = \[(\d+), (\d+), (\d+)\]', line)
+      match = re.match(
+          '^\[cldrive\] 3-D local size \d+ = \[(\d+), (\d+), (\d+)\]', line)
       if match:
-        actual_local_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
+        actual_local_size = (
+          int(match.group(1)), int(match.group(2)), int(match.group(3)))
 
       # check if we've collected everything:
       if (actual_platform and actual_device and actual_optimizations and
@@ -254,14 +262,15 @@ class Cldrive(OpenCLHarness):
       path = tmpfile.name
     try:
       cldrive_mkharness.compile_harness(
-        harness.src, path, platform_id=platform_id, device_id=device_id)
+          harness.src, path, platform_id=platform_id, device_id=device_id)
 
       cmd = ['timeout', '-s9', str(testcase.timeout), tmpfile.name]
 
       logging.debug(f"{Colors.BOLD}${Colors.END} " + " ".join(cmd))
 
       start_time = time()
-      proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+      proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                              stderr=subprocess.PIPE,
                               universal_newlines=True)
       stdout, stderr = proc.communicate()
       runtime = time() - start_time
@@ -273,13 +282,13 @@ class Cldrive(OpenCLHarness):
                                         testcase.timeout)
 
     return ResultProxy(
-      testbed_id=testbed.id,
-      testcase_id=testcase.id,
-      returncode=returncode,
-      outcome=outcome,
-      runtime=runtime,
-      stdout=stdout,
-      stderr=stderr)
+        testbed_id=testbed.id,
+        testcase_id=testcase.id,
+        returncode=returncode,
+        outcome=outcome,
+        runtime=runtime,
+        stdout=stdout,
+        stderr=stderr)
 
 
 class Clang(OpenCLHarness):
@@ -374,14 +383,15 @@ class Clang(OpenCLHarness):
         print(self._inline_clsmith_header(testcase.program), file=outfile)
 
       # Construct compile command
-      cmd = ['timeout', '-s9', str(testcase.timeout), clang, '-cc1', '-xcl', src_path]
+      cmd = ['timeout', '-s9', str(testcase.timeout), clang, '-cc1', '-xcl',
+             src_path]
 
       logging.debug(f"{Colors.BOLD}${Colors.END} " + " ".join(cmd))
 
       start_time = time()
       process = subprocess.Popen(
-        cmd, universal_newlines=True,
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+          cmd, universal_newlines=True,
+          stdout=subprocess.PIPE, stderr=subprocess.PIPE)
       _, stderr = process.communicate()
 
       returncode = process.returncode
@@ -392,14 +402,14 @@ class Clang(OpenCLHarness):
 
     # outcome
     outcome = ClangResult.get_outcome(
-      returncode, stderr, runtime, testcase.timeout)
+        returncode, stderr, runtime, testcase.timeout)
     _log_outcome(outcome, runtime)
 
     return ResultProxy(
-      testbed_id=testbed.id,
-      testcase_id=testcase.id,
-      returncode=returncode,
-      outcome=outcome,
-      runtime=runtime,
-      stdout="",
-      stderr=stderr)
+        testbed_id=testbed.id,
+        testcase_id=testcase.id,
+        returncode=returncode,
+        outcome=outcome,
+        runtime=runtime,
+        stdout="",
+        stderr=stderr)

@@ -1,7 +1,8 @@
 """OpenCL argument and type handling."""
-import numpy as np
 import re
 import typing
+
+import numpy as np
 from pycparser.c_ast import FileAST
 from pycparser.c_ast import IdentifierType
 from pycparser.c_ast import NodeVisitor

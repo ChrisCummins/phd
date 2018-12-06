@@ -6,12 +6,13 @@ standard Oclgrind output and used to determine if the result is interesting.
 
 CLgen and CLSmith generators and harnesses are supported.
 """
-import humanize
 import pathlib
 import shutil
 import sys
 import time
 import typing
+
+import humanize
 from absl import app
 from absl import flags
 from absl import logging

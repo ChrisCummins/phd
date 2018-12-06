@@ -1,9 +1,9 @@
 """Convert a SQL workspace to dot source."""
 import json
-
 from argparse import ArgumentParser
-from graphviz import Digraph
 from typing import List
+
+from graphviz import Digraph
 
 from util.freefocus.sql import *
 

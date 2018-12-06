@@ -1,7 +1,8 @@
 """String formatting utils.
 """
-import pandas as pd
 import typing
+
+import pandas as pd
 
 
 class Error(Exception):

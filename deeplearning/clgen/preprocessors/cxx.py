@@ -1,6 +1,7 @@
 """Preprocessor functions for C++."""
 import re
 import sys
+
 from absl import flags
 from phd.lib.labm8 import bazelutil
 

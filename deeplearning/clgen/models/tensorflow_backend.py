@@ -1,11 +1,12 @@
 """CLgen models using a Keras backend."""
-import humanize
-import numpy as np
 import os
 import pathlib
-import progressbar
 import time
 import typing
+
+import humanize
+import numpy as np
+import progressbar
 from absl import flags
 from absl import logging
 

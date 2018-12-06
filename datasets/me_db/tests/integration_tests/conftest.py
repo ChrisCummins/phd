@@ -1,8 +1,9 @@
 """Pytest fixtures for me.db tests."""
 
 import pathlib
-import pytest
 import tempfile
+
+import pytest
 from absl import flags
 from phd.lib.labm8 import bazelutil
 

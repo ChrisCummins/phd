@@ -1,8 +1,8 @@
-import sys
-
 import collections
 import logging
 import socket
+import sys
+
 
 TASKS = {}
 
@@ -48,6 +48,7 @@ class Task(object):
 
   def TearDown(self, ctx):
     pass
+
 
 from experimental.system.dotfiles.implementation.tasks import *
 
@@ -119,7 +120,8 @@ def GetTasksToRun(task_names):
   # Remove duplicate task names:
   task_names = set(task_names)
 
-  with open(os.path.expanduser('~/phd/experimental/system/dotfiles/test.py')) as f:
+  with open(
+      os.path.expanduser('~/phd/experimental/system/dotfiles/test.py')) as f:
     exec(f.read(), globals(), locals())
 
   # Determine the tasks which need scheduling:

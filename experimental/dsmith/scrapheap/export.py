@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-import sqlalchemy as sql
 from argparse import ArgumentParser
+from pathlib import Path
+
+import sqlalchemy as sql
 from dsmith import db
 from dsmith.db import *
-from pathlib import Path
-from progressbar import ProgressBar
-
 from phd.lib.labm8 import crypto, fs
+from progressbar import ProgressBar
 
 
 def export_todir(s: session_t, table, dir: Path) -> None:

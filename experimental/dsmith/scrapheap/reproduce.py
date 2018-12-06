@@ -1,15 +1,14 @@
 #!/usr/bin/env python
 
+import datetime
 import os
 import sys
-
-import datetime
 from argparse import ArgumentParser
+
 from dsmith import db
 from dsmith.clgen_run_cl_launcher import *
 from dsmith.clsmith import *
 from dsmith.db import *
-
 from phd.lib.labm8 import crypto
 
 
@@ -86,7 +85,8 @@ echo "kernel written to 'kernel.cl'"
       if args['report'] == "w":
         expected_output, majority_devs = util.get_majority_output(
             s, result, cl_launcherCLgenResult)
-        majority_dev_str = "\n".join([f"#   - {d.platform} {d.device}" for d in majority_devs])
+        majority_dev_str = "\n".join(
+            [f"#   - {d.platform} {d.device}" for d in majority_devs])
         print(f"""
 # Expected output:
 cat << EOF > expected-output.txt
@@ -168,9 +168,11 @@ def main():
   parser = ArgumentParser(description="Collect difftest results for a device")
   parser.add_argument("-H", "--hostname", type=str, default="cc1",
                       help="MySQL database hostname")
-  parser.add_argument("-r", "--result", dest="result_id", type=int, default=None,
+  parser.add_argument("-r", "--result", dest="result_id", type=int,
+                      default=None,
                       help="results ID")
-  parser.add_argument("-t", "--table", dest="tablename", default="cl_launcherCLgenResult")
+  parser.add_argument("-t", "--table", dest="tablename",
+                      default="cl_launcherCLgenResult")
   parser.add_argument("--report",
                       help="generate bug report of type: {w,bc}")
   parser.add_argument("-v", "--verbose", action="store_true")

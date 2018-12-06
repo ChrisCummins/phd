@@ -1,47 +1,47 @@
 \begin{algorithmic}[1]
-\Require scenario $s$
-$d$.
-\Ensure workgroup size $w$
+  \Require scenario $s$
+  $d$.
+  \Ensure workgroup size $w$
 
-\Procedure{Baseline}{s}
-\Comment Select the best $w$ from $W_{safe}$.
-\State $w \leftarrow \text{classify}(f(s))$
-\If{$w \in W_{legal}(s)$}
-    \State \textbf{return} $w$
-\Else
+  \Procedure{Baseline}{s}
+  \Comment Select the best $w$ from $W_{safe}$.
+  \State $w \leftarrow \text{classify}(f(s))$
+  \If{$w \in W_{legal}(s)$}
+  \State \textbf{return} $w$
+  \Else
   \State \textbf{return} $\underset{w \in W_{safe}}{\argmax}
-\left(
+  \left(
   \prod_{s \in S_{training}} p(s, w)
-\right)^{1/|S_{training}|}$
-\EndIf
-\EndProcedure
-\item[] % line break
+  \right)^{1/|S_{training}|}$
+  \EndIf
+  \EndProcedure
+  \item[] % line break
 
-\Procedure{Random}{s}
-\Comment Select a random workgroup size.
-\State $w \leftarrow \text{classify}(f(s))$
-\While{$w \not\in W_{legal}(s)$}
+  \Procedure{Random}{s}
+  \Comment Select a random workgroup size.
+  \State $w \leftarrow \text{classify}(f(s))$
+  \While{$w \not\in W_{legal}(s)$}
   \State $w \leftarrow $ random choice $w \in \left\{ w | w < W_{max}(s), w \not\in W_{refused}(s) \right\}$
-\EndWhile
-\State \textbf{return} $w$
-\EndProcedure
-\item[] % line break
+  \EndWhile
+  \State \textbf{return} $w$
+  \EndProcedure
+  \item[] % line break
 
-\Procedure{NearestNeighbour}{s}
-\Comment Select the closest workgroup size to prediction.
-\State $w \leftarrow \text{classify}(f(s))$
-\While{$w \not\in W_{legal}(s)$}
+  \Procedure{NearestNeighbour}{s}
+  \Comment Select the closest workgroup size to prediction.
+  \State $w \leftarrow \text{classify}(f(s))$
+  \While{$w \not\in W_{legal}(s)$}
   \State $d_{min} \leftarrow \infty$
   \State $w_{closest} \leftarrow \text{null}$
   \For{$c \in \left\{ w | w < W_{\max}(s), w \not\in W_{refused}(s) \right\}$}
-    \State $d \leftarrow \sqrt{\left(c_r - w_r\right)^2 + \left(c_c - w_c\right)^2}$
-    \If{$d < d_{min}$}
-      \State $d_{min} \leftarrow d$
-      \State $w_{closest} \leftarrow c$
-    \EndIf
+  \State $d \leftarrow \sqrt{\left(c_r - w_r\right)^2 + \left(c_c - w_c\right)^2}$
+  \If{$d < d_{min}$}
+  \State $d_{min} \leftarrow d$
+  \State $w_{closest} \leftarrow c$
+  \EndIf
   \EndFor
   \State $w \leftarrow w_{closest}$
-\EndWhile
-\State \textbf{return} $w$
-\EndProcedure
+  \EndWhile
+  \State \textbf{return} $w$
+  \EndProcedure
 \end{algorithmic}

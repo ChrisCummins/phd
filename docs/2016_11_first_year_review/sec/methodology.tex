@@ -11,23 +11,23 @@ systems~\cite{Belli2015}.
 First steps:
 %
 \begin{enumerate}
-\item Write a test case program
-\item Compile to bytecode and check optimisation is not applied
-\item Implement optimisation by hand to source code
-\item Measure performance improvement
-\item Implement compiler pass to apply optimisation to bytecode
-\item Test on real world benchmarks
+  \item Write a test case program
+  \item Compile to bytecode and check optimisation is not applied
+  \item Implement optimisation by hand to source code
+  \item Measure performance improvement
+  \item Implement compiler pass to apply optimisation to bytecode
+  \item Test on real world benchmarks
 \end{enumerate}
 %
 Example: constant propagation across muscle functions in pipe:
 %
 \begin{enumerate}
-\item Write a pipeline of 100 "+1” functions.
-\item Compile to bytecode and check that pipeline isn’t collapsed.
-\item Collapse pipeline to single stage.
-\item Measure performance improvement.
-\item Implement compiler pass to apply optimisation to bytecode.
-\item Test on real world benchmarks.
+  \item Write a pipeline of 100 "+1” functions.
+  \item Compile to bytecode and check that pipeline isn’t collapsed.
+  \item Collapse pipeline to single stage.
+  \item Measure performance improvement.
+  \item Implement compiler pass to apply optimisation to bytecode.
+  \item Test on real world benchmarks.
 \end{enumerate}
 %
 Next step: load balancing across pipelines - stream partitioning?

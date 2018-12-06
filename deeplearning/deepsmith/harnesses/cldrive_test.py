@@ -1,9 +1,10 @@
 """Unit tests for //deeplearning/deepsmith/services/cldrive.py."""
 import pathlib
-import pytest
 import subprocess
 import sys
 import tempfile
+
+import pytest
 from absl import app
 from absl import flags
 from absl import logging

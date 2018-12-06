@@ -3,11 +3,11 @@ import random
 
 from absl import app
 from absl import flags
+from phd.lib.labm8 import pbutil
 
 import deeplearning.deepsmith.result
 from deeplearning.deepsmith import datastore
 from deeplearning.deepsmith import db
-from phd.lib.labm8 import pbutil
 
 
 FLAGS = flags.FLAGS

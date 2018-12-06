@@ -1,6 +1,5 @@
 """Import OmniFocus database into FreeFocus Protobuf messages."""
 import os
-
 from argparse import ArgumentParser
 
 from util.freefocus.sql import *

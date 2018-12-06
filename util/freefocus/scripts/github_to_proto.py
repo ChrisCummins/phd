@@ -1,11 +1,11 @@
 """Convert a GitHub issue tracker into FreeFocus Protobuf messages."""
-import os
-
 import calendar
+import os
 import sys
 import time
 from argparse import ArgumentParser
 from configparser import ConfigParser
+
 from github import Github
 from google.protobuf.json_format import MessageToJson
 
@@ -110,7 +110,7 @@ if __name__ == "__main__":
       task.parent.task.id = repo_subtree.id
 
     task.body = (
-          f"{issue.title}\n\n" + issue.body.replace('\r\n', '\n')).rstrip()
+        f"{issue.title}\n\n" + issue.body.replace('\r\n', '\n')).rstrip()
     task.status = freefocus_pb2.Task.ACTIVE
 
     for i, comment in enumerate(issue.get_comments()):

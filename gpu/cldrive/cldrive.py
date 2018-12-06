@@ -4,9 +4,10 @@ Reads an OpenCL kernel from stdin, generates data for it, executes it on a
 suitable device, and prints the outputs.
 """
 import io
-import numpy as np
 import pickle
 import sys
+
+import numpy as np
 from absl import app
 from absl import flags
 from absl import logging

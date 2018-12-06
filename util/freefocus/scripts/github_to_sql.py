@@ -1,9 +1,9 @@
 """Convert a GitHub issue tracker into FreeFocus Protobuf messages."""
 import os
-
 import sys
 from argparse import ArgumentParser
 from configparser import ConfigParser
+
 from github import Github
 
 from util.freefocus.sql import *
