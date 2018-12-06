@@ -99,7 +99,7 @@ def test_no_dates_in_the_future(db: me_db.Database):
     assert q.count() == 0
 
 
-def test_lifecycle_daily_total(db: me_db.Database):
+def test_life_cycle_daily_total(db: me_db.Database):
   """Test that the sum of all measurements for a day is <= 24 hours."""
   with db.Session() as s:
     q = s.query(func.DATE(me_db.Measurement.date).label('date'),
@@ -111,7 +111,7 @@ def test_lifecycle_daily_total(db: me_db.Database):
     assert df[df.time > MILLISECONDS_IN_A_DAY].empty
 
 
-def test_lifecycle_dates_do_not_overflow(db: me_db.Database):
+def test_life_cycle_dates_do_not_overflow(db: me_db.Database):
   """Test that no LifeCycle measurements overflow to the next day."""
   with db.Session() as s:
     q = s.query(me_db.Measurement.date, me_db.Measurement.value) \
@@ -132,20 +132,20 @@ def test_lifecycle_dates_do_not_overflow(db: me_db.Database):
             f'(calculated end date: {end_date})')
 
 
-def test_lifecycle_dates_are_unique(db: me_db.Database):
+def test_life_cycle_dates_are_unique(db: me_db.Database):
   """There can be no duplicate dates in Life Cycle measurements."""
   with db.Session() as s:
     q = s.query(me_db.Measurement.date) \
       .filter(me_db.Measurement.source == 'LifeCycle')
-    num_lifecycle_dates = q.count()
+    num_life_cycle_dates = q.count()
 
     q = s.query(me_db.Measurement.date) \
       .filter(me_db.Measurement.source == 'LifeCycle') \
       .distinct()
-    num_distinct_lifecycle_dates = q.count()
+    num_distinct_life_cycle_dates = q.count()
 
     # There are no duplicate start dates.
-    assert num_distinct_lifecycle_dates == num_lifecycle_dates
+    assert num_distinct_life_cycle_dates == num_life_cycle_dates
 
 
 def main(argv: typing.List[str]):
