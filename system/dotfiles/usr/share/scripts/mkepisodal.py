@@ -1,21 +1,19 @@
 #!/usr/bin/env python3.6
-"""
-Print commands to rename files in directory into
-"<show> S<season>E<episode>.<ext>" format.
-"""
+"""Print the commands to rename files in directory to a sequential order.
 
-import sys
+The format for renamed files is: "<show> S<season>E<episode>.<ext>" format.
+"""
 import os
-import shutil
 import re
-
+import shutil
+import sys
 from argparse import ArgumentParser
 from pathlib import Path
 
 
 def escape_path(path: str):
-    quoted = path.replace('"', '\\"')
-    return f'"{quoted}"'
+  quoted = path.replace('"', '\\"')
+  return f'"{quoted}"'
 
 
 def mkepisodal(show_name: str, season_num: int, directory: Path,
@@ -42,20 +40,21 @@ def mkepisodal(show_name: str, season_num: int, directory: Path,
 
 
 def main():
-    parser = ArgumentParser(description=__doc__)
-    parser.add_argument("show_name", metavar="<show-name>",
-                        help="Name of the show, e.g. 'The Simponsons'")
-    parser.add_argument("season_num", metavar="<season number>", type=int,
-                        help="Season number, e.g. '1'")
-    parser.add_argument("directory", metavar="[directory]", nargs="?", default=".",
-                        help="Path to the directory containing the show's files")
-    parser.add_argument("--start-at", metavar="<num>", type=int, default="1",
-                        help="Episode start number (default: 1)")
-    args = parser.parse_args()
+  parser = ArgumentParser(description=__doc__)
+  parser.add_argument("show_name", metavar="<show-name>",
+                      help="Name of the show, e.g. 'The Simponsons'")
+  parser.add_argument("season_num", metavar="<season number>", type=int,
+                      help="Season number, e.g. '1'")
+  parser.add_argument("directory", metavar="[directory]", nargs="?",
+                      default=".",
+                      help="Path to the directory containing the show's files")
+  parser.add_argument("--start-at", metavar="<num>", type=int, default="1",
+                      help="Episode start number (default: 1)")
+  args = parser.parse_args()
 
-    mkepisodal(args.show_name, args.season_num, Path(args.directory),
-               start_at=args.start_at)
+  mkepisodal(args.show_name, args.season_num, Path(args.directory),
+             start_at=args.start_at)
 
 
 if __name__ == "__main__":
-    main()
+  main()
