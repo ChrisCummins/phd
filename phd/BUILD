@@ -41,6 +41,7 @@ cc_library(
     hdrs = ["string.h"],
     visibility = ["//visibility:public"],
     deps = [
+        "@boost//:algorithm",
         "@com_google_absl//absl/strings",
     ],
 )

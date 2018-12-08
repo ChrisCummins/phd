@@ -3,6 +3,9 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"
 
+#include <boost/algorithm/string/replace.hpp>
+
+#include <algorithm>
 
 namespace phd {
 
@@ -76,6 +79,25 @@ string ToCamelCase(const string& full_string) {
   }
 
   return camel_case;
+}
+
+string ReplaceChar(string& s, const char src, const char dst) {
+  std::replace(s.begin(), s.end(), src, dst);
+  return s;
+}
+
+string CopyAndReplaceChar(const string& s, const char src, const char dst) {
+  string output_string(s);
+  return ReplaceChar(output_string, src, dst);
+}
+
+string ReplaceSubstr(string& s, const string& src, const string& dst) {
+  boost::replace_all(s, src, dst);
+  return s;
+}
+
+string CopyAndReplaceSubstr(const string& s, const string& src, const string& dst) {
+  return boost::replace_all_copy(s, src, dst);
 }
 
 }  // namespace phd

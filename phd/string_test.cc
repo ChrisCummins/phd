@@ -98,6 +98,78 @@ TEST(ToCamelCase, MultipleInnerWhitespace) {
   EXPECT_EQ(ToCamelCase("hello    world"), "HelloWorld");
 }
 
+TEST(ReplaceChar, Null) {
+  string s;
+  ReplaceChar(s, 'a', 'b');
+  EXPECT_TRUE(s.empty());
+}
+
+TEST(ReplaceChar, EmptyString) {
+  string s = "";
+  ReplaceChar(s, 'a', 'b');
+  EXPECT_EQ(s, "");
+}
+
+TEST(ReplaceChar, Occurrences) {
+  string s = "abcdeabc";
+  ReplaceChar(s, 'a', 'b');
+  EXPECT_EQ(s, "bbcdebbc");
+}
+
+TEST(ReplaceChar, NoOccurrences) {
+  string s = "bcdebc";
+  ReplaceChar(s, 'a', 'b');
+  EXPECT_EQ(s, "bcdebc");
+}
+
+TEST(CopyAndReplaceChar, EmptyString) {
+  EXPECT_EQ(CopyAndReplaceChar("", 'a', 'b'), "");
+}
+
+TEST(CopyAndReplaceChar, Occurrences) {
+  EXPECT_EQ(CopyAndReplaceChar("abcdeabc", 'a', 'b'), "bbcdebbc");
+}
+
+TEST(CopyAndReplaceChar, NoOccurrences) {
+  EXPECT_EQ(CopyAndReplaceChar("bcdebc", 'a', 'b'), "bcdebc");
+}
+
+TEST(ReplaceSubstr, Null) {
+  string s;
+  ReplaceSubstr(s, "a", "b");
+  EXPECT_TRUE(s.empty());
+}
+
+TEST(ReplaceSubstr, EmptyString) {
+  string s = "";
+  ReplaceSubstr(s, "a", "b");
+  EXPECT_EQ(s, "");
+}
+
+TEST(ReplaceSubstr, Occurrences) {
+  string s = "abcdeabc";
+  ReplaceSubstr(s, "a", "b");
+  EXPECT_EQ(s, "bbcdebbc");
+}
+
+TEST(ReplaceSubstr, NoOccurrences) {
+  string s = "bcdebc";
+  ReplaceSubstr(s, "a", "b");
+  EXPECT_EQ(s, "bcdebc");
+}
+
+TEST(CopyAndReplaceSubstr, EmptyString) {
+  EXPECT_EQ(CopyAndReplaceSubstr("", "a", "b"), "");
+}
+
+TEST(CopyAndReplaceSubstr, Occurrences) {
+  EXPECT_EQ(CopyAndReplaceSubstr("abcdeabc", "a", "b"), "bbcdebbc");
+}
+
+TEST(CopyAndReplaceSubstr, NoOccurrences) {
+  EXPECT_EQ(CopyAndReplaceSubstr("bcdebc", "a", "b"), "bcdebc");
+}
+
 }  // namespace
 }  // namespace phd
 
