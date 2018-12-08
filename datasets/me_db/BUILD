@@ -25,10 +25,12 @@ py_binary(
     deps = [
         "//datasets/me_db/providers/health_kit",
         "//datasets/me_db/providers/life_cycle",
+        "//datasets/me_db/providers/timing",
         "//datasets/me_db/providers/ynab",
         "//labm8:labdate",
         "//labm8:sqlutil",
         "//third_party/py/absl",
+        "//third_party/py/humanize",
         "//third_party/py/sqlalchemy",
     ],
 )
