@@ -17,6 +17,7 @@ from datasets.me_db import importers
 from datasets.me_db import me_pb2
 from datasets.me_db.providers.health_kit import health_kit
 from datasets.me_db.providers.life_cycle import life_cycle
+from datasets.me_db.providers.timing import timing
 from datasets.me_db.providers.ynab import ynab
 from labm8 import labdate
 from labm8 import sqlutil
@@ -37,6 +38,7 @@ Base = declarative.declarative_base()
 INBOX_IMPORTERS: typing.List[importers.InboxImporter] = [
   health_kit.ProcessInboxToQueue,
   life_cycle.ProcessInboxToQueue,
+  timing.ProcessInboxToQueue,
   ynab.ProcessInboxToQueue,
 ]
 
