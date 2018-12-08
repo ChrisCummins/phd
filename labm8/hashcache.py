@@ -93,7 +93,8 @@ class HashCache(sqlutil.Database):
     Raises:
       ValueError: If hash_fn not recognized.
     """
-    super(HashCache, self).__init__(path, Base)
+    super(HashCache, self).__init__(
+        f'sqlite:///{path}', Base, create_if_not_exist=True)
     self.hash_fn_name = hash_fn
     if hash_fn == 'md5':
       self.hash_fn_file = crypto.md5_file

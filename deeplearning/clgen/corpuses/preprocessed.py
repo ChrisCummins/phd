@@ -124,7 +124,8 @@ class PreprocessedContentFiles(sqlutil.Database):
   """A database of pre-processed contentfiles."""
 
   def __init__(self, path: pathlib.Path):
-    super(PreprocessedContentFiles, self).__init__(path, Base)
+    super(PreprocessedContentFiles, self).__init__(
+        f'sqlite:///{path}', Base, create_if_not_exist=True)
 
   def Create(self, config: corpus_pb2.Corpus):
     with self.Session() as session:

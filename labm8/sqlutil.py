@@ -199,17 +199,31 @@ def CreateEngine(url: str,
 
 
 class Database(object):
-  """A base class for implementing database objects."""
+  """A base class for implementing databases."""
 
   session_t = orm.session.Session
 
-  def __init__(self, path: pathlib.Path, declarative_base):
-    self.database_path = path.absolute()
-    if not self.database_path.is_file():
-      logging.info("Creating sqlite database: '%s'.", self.database_path)
-    self.database_uri = f'sqlite:///{self.database_path}'
-    self.engine = sql.create_engine(
-        self.database_uri, encoding='utf-8', echo=FLAGS.sqlutil_echo)
+  def __init__(self, url: str, declarative_base,
+               create_if_not_exist: bool = False):
+    """Instantiate a database object.
+
+    Example:
+      >>> db = Database('sqlite:////tmp/foo.db',
+                        sqlalchemy.ext.declarative.declarative_base(),
+                        create_if_not_exist=True)
+
+    Args:
+      url: The URL of the database to connect to.
+      declarative_base: The SQLAlchemy declarative base instance.
+      create_if_not_exist: If True, create database if it doesn't exist.
+
+    Raises:
+      DatabaseNotFound: If the database does not exist and create_if_not_exist
+        not set.
+      ValueError: If the datastore backend is not supported.
+    """
+    self._url = url
+    self.engine = CreateEngine(url, create_if_not_exist=create_if_not_exist)
     declarative_base.metadata.create_all(self.engine)
     declarative_base.metadata.bind = self.engine
     self.make_session = orm.sessionmaker(bind=self.engine)

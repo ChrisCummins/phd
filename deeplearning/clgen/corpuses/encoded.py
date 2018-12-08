@@ -114,7 +114,8 @@ class EncodedContentFiles(sqlutil.Database):
   """A database of encoded pre-processed contentfiles."""
 
   def __init__(self, path: pathlib.Path):
-    super(EncodedContentFiles, self).__init__(path, Base)
+    super(EncodedContentFiles, self).__init__(
+        f'sqlite:///{path}', Base, create_if_not_exist=True)
 
   def Create(self, p: preprocessed.PreprocessedContentFiles,
              atomizer: atomizers.AtomizerBase,
@@ -195,7 +196,7 @@ class EncodedContentFiles(sqlutil.Database):
       if not jobs:
         raise errors.EmptyCorpusException(
             "Pre-processed corpus contains no files: "
-            f"'{preprocessed_db.database_path}'")
+            f"'{preprocessed_db.url}'")
 
       logging.info('Encoding %s of %s preprocessed files',
                    humanize.intcomma(query.count()),

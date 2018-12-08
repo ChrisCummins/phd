@@ -5,7 +5,9 @@ import sys
 import tempfile
 
 import pytest
+import sqlalchemy as sql
 from absl import app
+from sqlalchemy.ext import declarative
 
 from labm8 import sqlutil
 
@@ -36,7 +38,7 @@ def test_CreateEngine_sqlite_invalid_relpath():
 
 def test_CreateEngine_sqlite_created(tempdir: pathlib.Path):
   """Test that SQLite database is found."""
-  sqlutil.CreateEngine(f'sqlite:///{tempdir.absolute()}/db.db',
+  sqlutil.CreateEngine(f'sqlite:///{tempdir}/db.db',
                        create_if_not_exist=True)
   assert (tempdir / 'db.db').is_file()
 

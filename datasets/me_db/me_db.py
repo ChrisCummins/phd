@@ -81,7 +81,8 @@ def MeasurementsFromSeries(series: me_pb2.Series) -> typing.List[Measurement]:
 class Database(sqlutil.Database):
 
   def __init__(self, path: pathlib.Path):
-    super(Database, self).__init__(path, Base)
+    super(Database, self).__init__(
+        f'sqlite:///{path}', Base, create_if_not_exist=True)
 
   @staticmethod
   def AddSeriesCollection(session: sqlutil.Database.session_t,
@@ -136,7 +137,7 @@ def main(argv):
     db_path.unlink()
 
   db = Database(db_path)
-  logging.info('Using database `%s`', db.database_path)
+  logging.info('Using database `%s`', db.url)
 
   db.ImportMeasurementsFromInboxImporters(inbox_path)
 

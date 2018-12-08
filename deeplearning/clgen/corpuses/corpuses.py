@@ -123,7 +123,7 @@ class Corpus(object):
     self.preprocessed = preprocessed.PreprocessedContentFiles(
         preprocessed_db_path)
     # Create symlink to contentfiles.
-    symlink = self.preprocessed.database_path.parent / 'contentfiles'
+    symlink = pathlib.Path(self.preprocessed.url['sqlite:///']) / 'contentfiles'
     if not symlink.is_symlink():
       if config.HasField('local_directory'):
         os.symlink(str(ExpandConfigPath(
@@ -142,11 +142,12 @@ class Corpus(object):
     self.atomizer_path = cache.cachepath(
         'corpus', 'encoded', encoded_id, 'atomizer.pkl')
     # Create symlink to preprocessed files.
-    symlink = self.encoded.database_path.parent / 'preprocessed'
+    symlink = pathlib.Path(
+        self.encoded.url[len('sqlite:///'):]) / 'preprocessed'
     if not symlink.is_symlink():
       os.symlink(os.path.relpath(
-          self.preprocessed.database_path.parent,
-          self.encoded.database_path.parent), symlink)
+          pathlib.Path(self.preprocessed.url[len('sqlite:///'):]).parent,
+          pathlib.Path(self.encoded.url[len('sqlite:///'):]).parent), symlink)
     self.hash = encoded_id
     self.cache = cache.mkcache('corpus', 'encoded', encoded_id)
 
@@ -159,7 +160,8 @@ class Corpus(object):
     """
     self._created = True
     logging.info('Content ID: %s', self.content_id)
-    preprocessed_lock_path = self.preprocessed.database_path.parent / 'LOCK'
+    preprocessed_lock_path = pathlib.Path(
+        self.preprocessed.url['sqlite:///':]).parent / 'LOCK'
     with lockfile.LockFile(preprocessed_lock_path).acquire(
         replace_stale=True, block=True):
       self.preprocessed.Create(self.config)
@@ -167,7 +169,8 @@ class Corpus(object):
       raise errors.EmptyCorpusException(
           "Pre-processed corpus contains no files: "
           f"'{self.preprocessed.database_path}'")
-    encoded_lock_path = self.encoded.database_path.parent / 'LOCK'
+    encoded_lock_path = pathlib.Path(
+        self.encoded.url['sqlite:///':]).parent / 'LOCK'
     with lockfile.LockFile(encoded_lock_path).acquire(
         replace_stale=True, block=True):
       start_time = time.time()
@@ -181,10 +184,12 @@ class Corpus(object):
   @property
   def is_locked(self) -> bool:
     """Return whether the corpus is locked."""
-    preprocessed_lock_path = self.preprocessed.database_path.parent / 'LOCK'
+    preprocessed_lock_path = pathlib.Path(
+        self.preprocessed.url['sqlite:///':]).parent / 'LOCK'
     if lockfile.LockFile(preprocessed_lock_path).islocked:
       return True
-    encoded_lock_path = self.encoded.database_path.parent / 'LOCK'
+    encoded_lock_path = pathlib.Path(
+        self.encoded.url['sqlite:///':]).parent / 'LOCK'
     if lockfile.LockFile(encoded_lock_path).islocked:
       return True
     return False
