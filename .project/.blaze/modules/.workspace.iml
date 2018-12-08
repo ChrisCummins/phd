@@ -26,4 +26,11 @@
     <orderEntry type="library" name="protobuf-java-3.5.1-ijar_f5bc8568" level="project" />
     <orderEntry type="library" name="Python 3.6 (phd) interpreter library" level="application" />
   </component>
+  <component name="PyDocumentationSettings">
+    <option name="myDocStringFormat" value="Google" />
+  </component>
+  <component name="TestRunnerService">
+    <option name="projectConfiguration" value="py.test" />
+    <option name="PROJECT_TEST_RUNNER" value="py.test" />
+  </component>
 </module>
