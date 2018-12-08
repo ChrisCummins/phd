@@ -53,12 +53,12 @@ class Measurement(Base):
 
   id: int = sql.Column(sql.Integer, primary_key=True)
 
+  family: str = sql.Column(sql.String(512), nullable=False)
   series: str = sql.Column(sql.String(512), nullable=False)
+  group: str = sql.Column(sql.String(512), nullable=False)
   date: datetime.datetime = sql.Column(
       sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
       nullable=False)
-  family: str = sql.Column(sql.String(512), nullable=False)
-  group: str = sql.Column(sql.String(512), nullable=False)
   value: int = sql.Column(sql.Integer, nullable=False)
   unit: str = sql.Column(sql.String(512), nullable=False)
   source: str = sql.Column(sql.String(512), nullable=False)
