@@ -256,6 +256,11 @@ class Database(object):
     # functionality.
     self.make_session = orm.sessionmaker(bind=self.engine, class_=Session)
 
+  @property
+  def url(self) -> str:
+    """Return the URL of the database."""
+    return self._url
+
   @contextlib.contextmanager
   def Session(self, commit: bool = False) -> Session:
     """Provide a transactional scope around a session.
