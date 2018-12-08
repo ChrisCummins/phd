@@ -5,6 +5,6 @@ package tools.code_style.templates; // TODO: ${PACKAGE}
 
 // TODO: Detailed desription of message purpose and usage.
 message Todo {
-  // TODO: One line summary of each field.
+  // TODO: Description of field, if not trivially obvious.
   optional string field = 1;
 }
