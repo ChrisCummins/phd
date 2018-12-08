@@ -1,4 +1,10 @@
-"""me - Aggregate health and time tracking data."""
+"""me - Aggregate health and time tracking data.
+
+Usage:
+
+  bazel run -c opt //datasets/me_db --
+      --inbox=$HOME/inbox --db="sqlite:///$HOME/me.db"
+"""
 import datetime
 import multiprocessing
 import pathlib
@@ -83,9 +89,8 @@ def MeasurementsFromSeries(series: me_pb2.Series) -> typing.List[Measurement]:
 
 class Database(sqlutil.Database):
 
-  def __init__(self, path: pathlib.Path):
-    super(Database, self).__init__(
-        f'sqlite:///{path}', Base, create_if_not_exist=True)
+  def __init__(self, url: str):
+    super(Database, self).__init__(url, Base)
 
   @staticmethod
   def AddSeriesCollection(session: sqlutil.Session,
@@ -133,22 +138,16 @@ def main(argv):
   if len(argv) > 1:
     raise app.UsageError('Unrecognized command line flags.')
 
-  db_path = pathlib.Path(FLAGS.db)
   inbox_path = pathlib.Path(FLAGS.inbox)
 
   # Validate the flags paths.
   if not inbox_path.is_dir():
     raise app.UsageError(f'Inbox is not a directory: "{inbox_path}"')
 
-  if not db_path.parent.is_dir():
-    raise app.UsageError(
-        f'Database path parent is not a directory: "{db_path.parent}"')
-
-  # Remove the existing database if requested.
-  if FLAGS.replace_existing and db_path.exists():
-    db_path.unlink()
-
-  db = Database(db_path)
+  # TODO(cec): Handle FLAGS.replace_existing.
+  if FLAGS.replace_existing:
+    raise NotImplementedError('--replace_existing not implemented!')
+  db = Database(FLAGS.db)
   logging.info('Using database `%s`', db.url)
 
   db.ImportMeasurementsFromInboxImporters(inbox_path)

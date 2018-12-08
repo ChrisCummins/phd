@@ -1,6 +1,5 @@
 """Pytest fixtures for me.db tests."""
 
-import pathlib
 import tempfile
 
 import pytest
@@ -23,7 +22,7 @@ TEST_INBOX_PATH = bazelutil.DataPath('phd/datasets/me_db/tests/test_inbox')
 def mutable_db() -> me_db.Database:
   """Returns a populated database for the scope of the function."""
   with tempfile.TemporaryDirectory(prefix='phd_') as d:
-    db = me_db.Database(pathlib.Path(d) / 'me.db')
+    db = me_db.Database(f'sqlite:///{d}/me.db')
     db.ImportMeasurementsFromInboxImporters(TEST_INBOX_PATH)
     yield db
 
@@ -36,6 +35,6 @@ def db() -> me_db.Database:
   modifies the database, use the `mutable_db` fixture.
   """
   with tempfile.TemporaryDirectory(prefix='phd_') as d:
-    db = me_db.Database(pathlib.Path(d) / 'me.db')
+    db = me_db.Database(f'sqlite:///{d}/me.db')
     db.ImportMeasurementsFromInboxImporters(TEST_INBOX_PATH)
     yield db
