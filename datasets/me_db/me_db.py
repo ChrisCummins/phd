@@ -123,8 +123,10 @@ class Database(sqlutil.Database):
         num_measurements += self.AddSeriesCollection(
             session, series_collections)
 
-    logging.info('Processed %s records in %.3f seconds',
-                 humanize.intcomma(num_measurements), time.time() - start_time)
+    duration_seconds = time.time() - start_time
+    logging.info('Processed %s records in %.3f seconds (%.2f rows per second)',
+                 humanize.intcomma(num_measurements), duration_seconds,
+                 num_measurements / duration_seconds)
 
 
 def main(argv):
