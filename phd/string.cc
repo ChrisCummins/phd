@@ -63,10 +63,15 @@ string ToCamelCase(const string& full_string) {
   std::vector<string> space_separated_components(
       split_on_whitespace.begin(), split_on_whitespace.end());
 
-  // Convert starting letters to uppercase and append to string.
   string camel_case = "";
   for (auto component : space_separated_components) {
+    // Convert starting letter to uppercase.
     component[0] = std::toupper(component[0]);
+    // Convert all other letters to lowercase.
+    for (size_t i = 1; i < component.size(); ++i) {
+      component[i] = std::tolower(component[i]);
+    }
+    // Append component to output string.
     absl::StrAppend(&camel_case, component);
   }
 

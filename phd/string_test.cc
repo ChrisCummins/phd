@@ -72,6 +72,32 @@ TEST(CopyAndTrimTest, LeadingAndTrailingWhitespace) {
   EXPECT_EQ(CopyAndTrim(s), "hello");
 }
 
+TEST(ToCamelCase, EmptyString) {
+  EXPECT_EQ(ToCamelCase(""), "");
+}
+
+TEST(ToCamelCase, Hello) {
+  EXPECT_EQ(ToCamelCase("hello"), "Hello");
+  EXPECT_EQ(ToCamelCase("Hello"), "Hello");
+  EXPECT_EQ(ToCamelCase("HELLO"), "Hello");
+}
+
+TEST(ToCamelCase, LeadingWhitespace) {
+  EXPECT_EQ(ToCamelCase("   hello"), "Hello");
+}
+
+TEST(ToCamelCase, TrailingWhitespace) {
+  EXPECT_EQ(ToCamelCase("hello   "), "Hello");
+}
+
+TEST(ToCamelCase, MultipleComponents) {
+  EXPECT_EQ(ToCamelCase("hello world"), "HelloWorld");
+}
+
+TEST(ToCamelCase, MultipleInnerWhitespace) {
+  EXPECT_EQ(ToCamelCase("hello    world"), "HelloWorld");
+}
+
 }  // namespace
 }  // namespace phd
 
