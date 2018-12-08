@@ -507,6 +507,19 @@ py_library(
     ],
 )
 
+py_test(
+    name = "sqlutil_test",
+    size = "small",
+    srcs = ["sqlutil_test.py"],
+    default_python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":sqlutil",
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
+    ],
+)
+
 py_library(
     name = "system",
     srcs = ["system.py"],
