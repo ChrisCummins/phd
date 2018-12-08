@@ -409,10 +409,15 @@ py_binary(
     deps = [
         ":bazelutil",
         ":pbutil",
+        ":sqlutil",
         ":viz",
         "//third_party/py/absl",
+        "//third_party/py/bokeh",
         "//third_party/py/jupyter",
         "//third_party/py/matplotlib",
+        "//third_party/py/numpy",
+        "//third_party/py/pandas",
+        "//third_party/py/seaborn",
     ],
 )
 
