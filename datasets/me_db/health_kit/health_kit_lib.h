@@ -7,16 +7,12 @@
 
 #include "datasets/me_db/me.pb.h"
 
-#include "phd/macros.h"
 #include "phd/string.h"
 
-#include "absl/strings/str_cat.h"
-#include "absl/strings/str_split.h"
-#include "absl/time/time.h"
 #include "absl/container/flat_hash_map.h"
 
-#include <boost/tokenizer.hpp>
-#include <boost/filesystem.hpp>
+#include "boost/tokenizer.hpp"
+#include "boost/filesystem.hpp"
 #include <boost/filesystem/fstream.hpp>
 #include <boost/property_tree/ptree.hpp>
 
@@ -50,7 +46,7 @@ double ParseDoubleOrDie(const string& double_string);
 // returns false.
 bool SetAttributeIfMatch(
     const boost::property_tree::ptree::value_type& attribute,
-    const string attribute_name, string* attribute_value);
+    const string& attribute_name, string* attribute_value);
 
 // A class for processing the Record elements in HealthKit XML files.
 //
@@ -78,8 +74,8 @@ class HealthKitRecordImporter {
   HealthKitRecordImporter(
       const string& type, const string& unit, const string& value,
       const string& sourceName, const string& startDate, const string& endDate)
-    : type_(type), unit_(unit), value_(value), sourceName_(sourceName),
-      startDate_(startDate), endDate_(endDate) {}
+      : type_(type), unit_(unit), value_(value), sourceName_(sourceName),
+        startDate_(startDate), endDate_(endDate) {}
 
   // Initialize the member variables by parsing the XML Record attributes.
   // Instances of this class can be reused by calling this method with different
@@ -111,7 +107,7 @@ class HealthKitRecordImporter {
                               const string& group = "default");
 
   void ConsumeCountsPerMinuteOrDie(const string& family, const string& name,
-                                  const string& group = "default");
+                                   const string& group = "default");
 
   void ConsumeMillilitersPerKilogramMinuteOrDie(
       const string& family, const string& name,
@@ -139,7 +135,7 @@ class HealthKitRecordImporter {
                              const string& group = "default");
 
   void ConsumeGramsOrDie(const string& family, const string& name,
-                           const string& group = "default");
+                         const string& group = "default");
 
   void ConsumeMilligramsOrDie(const string& family, const string& name,
                               const string& group = "default");

@@ -1,5 +1,11 @@
 #include "datasets/me_db/health_kit/health_kit_lib.h"
 
+#include "phd/macros.h"
+
+#include "absl/strings/str_cat.h"
+#include "absl/strings/str_split.h"
+#include "absl/time/time.h"
+
 #include <boost/property_tree/xml_parser.hpp>
 
 namespace me {
@@ -17,7 +23,7 @@ int64_t ParseHealthKitDatetimeOrDie(const string& date) {
 
 bool SetAttributeIfMatch(
     const boost::property_tree::ptree::value_type& attribute,
-    const string attribute_name, string* attribute_value) {
+    const string& attribute_name, string* attribute_value) {
   if (attribute.first == attribute_name) {
     *attribute_value = attribute.second.data();
     return true;
@@ -56,7 +62,7 @@ void HealthKitRecordImporter::InitFromRecordOrDie(
   value_.clear();
 
   for (const boost::property_tree::ptree::value_type& attr :
-       record.get_child("<xmlattr>")) {
+      record.get_child("<xmlattr>")) {
     if (SetAttributeIfMatch(attr, "type", &type_) ||
         SetAttributeIfMatch(attr, "unit", &unit_) ||
         SetAttributeIfMatch(attr, "value", &value_) ||
@@ -66,7 +72,7 @@ void HealthKitRecordImporter::InitFromRecordOrDie(
       ++attribute_count;
     }
 
-    // If we have already gotten the six fields we are interested in, we can
+    // If we have already found the six fields we are interested in, we can
     // break out of the loop early.
     if (attribute_count == 6) {
       return;
@@ -80,8 +86,6 @@ void HealthKitRecordImporter::InitFromRecordOrDie(
     FATAL("Failed to parse necessary attributes from Record: %s",
           DebugString());
   }
-
-  return;
 }
 
 Series* HealthKitRecordImporter::GetOrCreateSeries(
@@ -89,24 +93,24 @@ Series* HealthKitRecordImporter::GetOrCreateSeries(
     absl::flat_hash_map<string, Series*>* type_to_series_map) {
   bool* new_series = &new_series_;
   return FindOrAdd<string, Series*>(
-        type_to_series_map, type_,
-        [&type_to_series_map, series_collection, new_series](
-            const string& name) -> Series* {
-      // Create the new series. We don't set series field values immediately,
-      // since we handle the conversion from XML Record values to our values
-      // at the same time we create measurements. So instead we set the
-      // new_series_ member variable to true and defer until SetMeasurement()
-      // is called.
-      Series* series = series_collection->add_series();
-      *new_series = true;
-      type_to_series_map->insert(std::make_pair(name, series));
-      return series;
-    });
+      type_to_series_map, type_,
+      [&type_to_series_map, series_collection, new_series](
+          const string& name) -> Series* {
+        // Create the new series. We don't set series field values immediately,
+        // since we handle the conversion from XML Record values to our values
+        // at the same time we create measurements. So instead we set the
+        // new_series_ member variable to true and defer until SetMeasurement()
+        // is called.
+        Series* series = series_collection->add_series();
+        *new_series = true;
+        type_to_series_map->insert(std::make_pair(name, series));
+        return series;
+      });
 }
 
 void HealthKitRecordImporter::AddMeasurementsOrDie(
-      SeriesCollection* series_collection,
-      absl::flat_hash_map<string, Series*>* type_to_series_map) {
+    SeriesCollection* series_collection,
+    absl::flat_hash_map<string, Series*>* type_to_series_map) {
   // Get the series to associate with new measurements.
   series_ = GetOrCreateSeries(series_collection, type_to_series_map);
 
@@ -182,7 +186,14 @@ void HealthKitRecordImporter::AddMeasurementsOrDie(
 }
 
 string HealthKitRecordImporter::DebugString() const {
-  return absl::StrFormat("type=%s\nvalue=%s\nunit=%s\nsource=%s\nstart_date=%s\nend_date=%s", type_, value_, unit_, sourceName_, startDate_, endDate_);
+  return absl::StrFormat(
+      "type=%s\nvalue=%s\nunit=%s\nsource=%s\nstart_date=%s\nend_date=%s",
+      type_,
+      value_,
+      unit_,
+      sourceName_,
+      startDate_,
+      endDate_);
 }
 
 void HealthKitRecordImporter::ConsumeCountOrDie(
@@ -295,7 +306,8 @@ void HealthKitRecordImporter::ConsumeDurationOrDie(
     const string& family, const string& name, const string& group) {
   CHECK(value_.empty());
   CHECK(unit_.empty());
-  int64_t duration_ms = ParseHealthKitDatetimeOrDie(endDate_) - ParseHealthKitDatetimeOrDie(startDate_);
+  int64_t duration_ms = ParseHealthKitDatetimeOrDie(endDate_)
+      - ParseHealthKitDatetimeOrDie(startDate_);
   *series_->add_measurement() = CreateMeasurement(
       family, name, group, "milliseconds", duration_ms);
 }
@@ -312,9 +324,10 @@ void HealthKitRecordImporter::ConsumeSleepAnalysisOrDie(
     name = "AwakeTime";
   } else {
     FATAL("Could not handle the value field of "
-          "sleep analysis Record: %s", DebugString());
+              "sleep analysis Record: %s", DebugString());
   }
-  int64_t duration_ms = ParseHealthKitDatetimeOrDie(endDate_) - ParseHealthKitDatetimeOrDie(startDate_);
+  int64_t duration_ms = ParseHealthKitDatetimeOrDie(endDate_)
+      - ParseHealthKitDatetimeOrDie(startDate_);
   *series_->add_measurement() = CreateMeasurement(
       family, name, group, "milliseconds", duration_ms);
 }
@@ -329,7 +342,7 @@ void HealthKitRecordImporter::ConsumeStandHourOrDie(
     name = "StandHours";
   } else {
     FATAL("Could not handle the value field of "
-          "stand hour Record: %s", DebugString());
+              "stand hour Record: %s", DebugString());
   }
   *series_->add_measurement() = CreateMeasurement(
       family, name, group, "count", 1);
@@ -387,7 +400,7 @@ void ProcessHealthKitXmlExportOrDie(SeriesCollection* series_collection) {
 
   // Iterate over all "HealthData" elements.
   for (const boost::property_tree::ptree::value_type& health_elem :
-       root.get_child("HealthData")) {
+      root.get_child("HealthData")) {
 
     // There are multiple types for HealthData elements. We're only interested
     // in records.
