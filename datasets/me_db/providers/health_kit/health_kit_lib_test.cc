@@ -1,4 +1,4 @@
-#include "datasets/me_db/health_kit/health_kit_lib.h"
+#include "datasets/me_db/providers/health_kit/health_kit_lib.h"
 
 #include "datasets/me_db/me.pb.h"
 

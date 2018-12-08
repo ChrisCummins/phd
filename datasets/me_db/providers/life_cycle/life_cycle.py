@@ -1,4 +1,4 @@
-"""Import data from HealthKit."""
+"""Import data from Life Cycle."""
 import multiprocessing
 import pathlib
 import subprocess
@@ -8,7 +8,6 @@ import zipfile
 
 from absl import app
 from absl import flags
-from absl import logging
 
 from datasets.me_db import importers
 from datasets.me_db import me_pb2
@@ -18,14 +17,14 @@ from labm8 import pbutil
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string('healthkit_inbox', None, 'Inbox to process.')
+flags.DEFINE_string('life_cycle_inbox', None, 'Inbox to process.')
 
 
-def ProcessXmlFile(path: pathlib.Path) -> me_pb2.SeriesCollection:
-  """Process a HealthKit XML data export.
+def ProcessCsvFile(path: pathlib.Path) -> me_pb2.SeriesCollection:
+  """Process a LifeCycle CSV data export.
 
   Args:
-    path: Path of the XML file.
+    path: Path of the CSV file.
 
   Returns:
     A SeriesCollection message.
@@ -39,14 +38,14 @@ def ProcessXmlFile(path: pathlib.Path) -> me_pb2.SeriesCollection:
     return pbutil.RunProcessMessageInPlace(
         [str(
             bazelutil.DataPath(
-                'phd/datasets/me_db/health_kit/xml_export_worker'))],
+                'phd/datasets/me_db/providers/life_cycle/lc_export_csv_worker'))],
         me_pb2.SeriesCollection(source=str(path)))
   except subprocess.CalledProcessError as e:
-    raise importers.ImporterError('HealthKit', path, str(e)) from e
+    raise importers.ImporterError('LifeCycle', path, str(e)) from e
 
 
 def ProcessInbox(inbox: pathlib.Path) -> me_pb2.SeriesCollection:
-  """Process a directory of HealthKit data.
+  """Process Life Cycle data in an inbox.
 
   Args:
     inbox: The inbox path.
@@ -54,19 +53,18 @@ def ProcessInbox(inbox: pathlib.Path) -> me_pb2.SeriesCollection:
   Returns:
     A SeriesCollection message.
   """
-  # Do nothing is there is there's no HealthKit export.zip file.
-  if not (inbox / 'health_kit' / 'export.zip').is_file():
+  # Do nothing is there is no LC_export.zip file.
+  if not (inbox / 'life_cycle' / 'LC_export.zip').is_file():
     return me_pb2.SeriesCollection()
 
-  logging.info('Unpacking %s', inbox / 'health_kit' / 'export.zip')
   with tempfile.TemporaryDirectory(prefix='phd_') as d:
-    temp_xml = pathlib.Path(d) / 'export.xml'
-    with zipfile.ZipFile(inbox / 'health_kit' / 'export.zip') as z:
-      with z.open('apple_health_export/export.xml') as xml_in:
-        with open(temp_xml, 'wb') as f:
-          f.write(xml_in.read())
+    temp_csv = pathlib.Path(d) / 'LC_export.csv'
+    with zipfile.ZipFile(inbox / 'life_cycle' / 'LC_export.zip') as z:
+      with z.open('LC_export.csv') as csv_in:
+        with open(temp_csv, 'wb') as f:
+          f.write(csv_in.read())
 
-    return ProcessXmlFile(temp_xml)
+    return ProcessCsvFile(temp_csv)
 
 
 def ProcessInboxToQueue(inbox: pathlib.Path, queue: multiprocessing.Queue):
@@ -78,7 +76,7 @@ def main(argv: typing.List[str]):
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
-  print(ProcessInbox(pathlib.Path(FLAGS.healthkit_inbox)))
+  print(pathlib.Path(FLAGS.life_cycle_inbox))
 
 
 if __name__ == '__main__':

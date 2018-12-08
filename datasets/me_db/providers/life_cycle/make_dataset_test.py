@@ -1,4 +1,4 @@
-"""Unit tests for //datasets/me_db/life_cycle:make_dataset."""
+"""Unit tests for //datasets/me_db/providers/life_cycle:make_dataset."""
 import csv
 import pathlib
 import sys
@@ -11,7 +11,7 @@ import pytest
 from absl import app
 from absl import flags
 
-from datasets.me_db.life_cycle import make_dataset
+from datasets.me_db.providers.life_cycle import make_dataset
 
 
 FLAGS = flags.FLAGS

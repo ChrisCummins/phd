@@ -1,6 +1,6 @@
 // Library for processing Life Cycle CSV files.
 //
-// See //datasets/me_db/life_cycle:README.md for an overview of the schema that
+// See //datasets/me_db/providers/life_cycle:README.md for an overview of the schema that
 // is processed, and the measurements produced.
 //
 #pragma once

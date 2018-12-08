@@ -1,4 +1,4 @@
-"""Unit tests for //datasets/me_db/ynab."""
+"""Unit tests for //datasets/me_db/providers/ynab."""
 import pathlib
 import sys
 import tempfile
@@ -9,8 +9,8 @@ import pytest
 from absl import app
 from absl import flags
 
-from datasets.me_db.ynab import make_dataset
-from datasets.me_db.ynab import ynab
+from datasets.me_db.providers.ynab import make_dataset
+from datasets.me_db.providers.ynab import ynab
 
 
 FLAGS = flags.FLAGS

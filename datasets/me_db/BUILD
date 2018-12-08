@@ -23,9 +23,9 @@ py_binary(
     srcs = ["me_db.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//datasets/me_db/health_kit",
-        "//datasets/me_db/life_cycle",
-        "//datasets/me_db/ynab",
+        "//datasets/me_db/providers/health_kit",
+        "//datasets/me_db/providers/life_cycle",
+        "//datasets/me_db/providers/ynab",
         "//labm8:labdate",
         "//labm8:sqlutil",
         "//third_party/py/absl",

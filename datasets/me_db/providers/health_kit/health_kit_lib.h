@@ -1,6 +1,6 @@
 // Library for processing HealthKit export.xml files.
 //
-// See //datasets/me_db/health_kit:README.md for an overview of the schema that
+// See //datasets/me_db/providers/health_kit:README.md for an overview of the schema that
 // is processed, and the measurements produced.
 //
 #pragma once

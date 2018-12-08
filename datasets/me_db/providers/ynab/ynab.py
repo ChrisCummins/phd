@@ -1,10 +1,8 @@
-"""Import data from Life Cycle."""
+"""Import data from YNAB."""
 import multiprocessing
 import pathlib
 import subprocess
-import tempfile
 import typing
-import zipfile
 
 from absl import app
 from absl import flags
@@ -17,35 +15,24 @@ from labm8 import pbutil
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string('life_cycle_inbox', None, 'Inbox to process.')
+flags.DEFINE_string('ynab_inbox', None, 'Inbox to process.')
 
 
-def ProcessCsvFile(path: pathlib.Path) -> me_pb2.SeriesCollection:
-  """Process a LifeCycle CSV data export.
-
-  Args:
-    path: Path of the CSV file.
-
-  Returns:
-    A SeriesCollection message.
-
-  Raises:
-    FileNotFoundError: If the requested file is not found.
-  """
+def ProcessBudgetJsonFile(path: pathlib.Path) -> me_pb2.SeriesCollection:
   if not path.is_file():
     raise FileNotFoundError(str(path))
   try:
     return pbutil.RunProcessMessageInPlace(
         [str(
             bazelutil.DataPath(
-                'phd/datasets/me_db/life_cycle/lc_export_csv_worker'))],
+                'phd/datasets/me_db/providers/ynab/json_budget_worker'))],
         me_pb2.SeriesCollection(source=str(path)))
   except subprocess.CalledProcessError as e:
     raise importers.ImporterError('LifeCycle', path, str(e)) from e
 
 
 def ProcessInbox(inbox: pathlib.Path) -> me_pb2.SeriesCollection:
-  """Process Life Cycle data in an inbox.
+  """Process a directory of YNAB data.
 
   Args:
     inbox: The inbox path.
@@ -53,18 +40,22 @@ def ProcessInbox(inbox: pathlib.Path) -> me_pb2.SeriesCollection:
   Returns:
     A SeriesCollection message.
   """
-  # Do nothing is there is no LC_export.zip file.
-  if not (inbox / 'life_cycle' / 'LC_export.zip').is_file():
+  if not (inbox / 'ynab').is_dir():
     return me_pb2.SeriesCollection()
 
-  with tempfile.TemporaryDirectory(prefix='phd_') as d:
-    temp_csv = pathlib.Path(d) / 'LC_export.csv'
-    with zipfile.ZipFile(inbox / 'life_cycle' / 'LC_export.zip') as z:
-      with z.open('LC_export.csv') as csv_in:
-        with open(temp_csv, 'wb') as f:
-          f.write(csv_in.read())
+  files = subprocess.check_output(
+      ['find', '-L', str(inbox / 'ynab'), '-name', 'Budget.yfull'],
+      universal_newlines=True).rstrip().split('\n')
 
-    return ProcessCsvFile(temp_csv)
+  # TODO(cec): There can be multiple directories for a single budget. Do we need
+  # to de-duplicate them?
+  files = [pathlib.Path(f) for f in files]
+
+  series_collections = []
+  if files and files[0]:
+    for file in files:
+      series_collections.append(ProcessBudgetJsonFile(file))
+  return importers.MergeSeriesCollections(series_collections)
 
 
 def ProcessInboxToQueue(inbox: pathlib.Path, queue: multiprocessing.Queue):
@@ -76,7 +67,7 @@ def main(argv: typing.List[str]):
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
-  print(pathlib.Path(FLAGS.life_cycle_inbox))
+  print(ProcessInbox(pathlib.Path(FLAGS.ynab_inbox)))
 
 
 if __name__ == '__main__':

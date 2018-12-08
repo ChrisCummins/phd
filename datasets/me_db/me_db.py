@@ -14,9 +14,9 @@ from sqlalchemy.ext import declarative
 
 from datasets.me_db import importers
 from datasets.me_db import me_pb2
-from datasets.me_db.health_kit import health_kit
-from datasets.me_db.life_cycle import life_cycle
-from datasets.me_db.ynab import ynab
+from datasets.me_db.providers.health_kit import health_kit
+from datasets.me_db.providers.life_cycle import life_cycle
+from datasets.me_db.providers.ynab import ynab
 from labm8 import labdate
 from labm8 import sqlutil
 
