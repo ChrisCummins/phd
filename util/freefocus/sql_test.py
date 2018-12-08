@@ -8,6 +8,7 @@ import pytest
 from absl import app
 from absl import flags
 
+from labm8 import sqlutil
 from util.freefocus import freefocus_pb2
 from util.freefocus import sql
 
@@ -27,12 +28,12 @@ def db(tempdir: pathlib.Path) -> sql.Database:
 
 
 @pytest.fixture(scope='function')
-def session(db) -> sql.Database.session_t:
+def session(db) -> sqlutil.Session:
   with db.Session() as session:
     yield session
 
 
-def test_Person_CreateFromProto(session: sql.Database.session_t):
+def test_Person_CreateFromProto(session: sqlutil.Session):
   """Short summary of test."""
   proto = freefocus_pb2.Person(
       id='cec',

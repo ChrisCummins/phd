@@ -53,7 +53,7 @@ class Person(Base):
     return (entry.email for entry in self.emails_entries)
 
   @classmethod
-  def CreateFromProto(cls, session: sqlutil.Database.session_t,
+  def CreateFromProto(cls, session: sqlutil.Session,
                       proto: freefocus_pb2.Person) -> 'Person':
     person = sqlutil.GetOrAdd(
         session, cls,
@@ -633,4 +633,5 @@ class Database(sqlutil.Database):
   """The FreeFocus database."""
 
   def __init__(self, path: pathlib.Path):
-    super(Database, self).__init__(path, Base)
+    super(Database, self).__init__(
+        f'sqlite:///{path}', Base, create_if_not_exist=True)
