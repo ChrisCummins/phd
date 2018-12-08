@@ -120,11 +120,13 @@ def test_life_cycle_dates_do_not_overflow(db: me_db.Database):
 
     for start_date, value in q.distinct():
       end_date = start_date + datetime.timedelta(milliseconds=value)
-      if start_date.day == end_date.day:
+      # The number of days between the end and start of the measurement.
+      day_diff = (end_date - start_date).days
+      if not day_diff:
         continue
       # The only case where the end date is allowed to differ from the start
       # date is when we have overflowed to midnight (00:00:00) the next day.
-      if not ((end_date - start_date).days == 1 and
+      if not (day_diff == 1 and
               end_date.hour == 0 and
               end_date.minute == 0 and
               end_date.second == 0):
