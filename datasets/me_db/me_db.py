@@ -5,6 +5,7 @@ import pathlib
 import time
 import typing
 
+import humanize
 import sqlalchemy as sql
 from absl import app
 from absl import flags
@@ -86,12 +87,16 @@ class Database(sqlutil.Database):
 
   @staticmethod
   def AddSeriesCollection(session: sqlutil.Session,
-                          series_collection: me_pb2.SeriesCollection) -> None:
+                          series_collection: me_pb2.SeriesCollection) -> int:
     """Import the given series_collections to database."""
+    num_measurements = 0
     for series in series_collection.series:
-      logging.info('Importing %d %s:%s measurements',
-                   len(series.measurement), series.family, series.name)
+      num_measurements += len(series.measurement)
+      logging.info('Importing %s %s:%s measurements',
+                   humanize.intcomma(len(series.measurement)), series.family,
+                   series.name)
       session.add_all(MeasurementsFromSeries(series))
+    return num_measurements
 
   def ImportMeasurementsFromInboxImporters(
       self, inbox: pathlib.Path, inbox_importers: typing.Iterator[
@@ -109,12 +114,15 @@ class Database(sqlutil.Database):
     logging.info('Started %d importer processes', len(processes))
 
     # Get the results of each process as it finishes.
+    num_measurements = 0
     for _ in range(len(processes)):
       series_collections = queue.get()
       with self.Session(commit=True) as session:
-        self.AddSeriesCollection(session, series_collections)
+        num_measurements += self.AddSeriesCollection(
+            session, series_collections)
 
-    logging.info('Processed records in %s seconds', time.time() - start_time)
+    logging.info('Processed %s records in %.3f seconds',
+                 humanize.intcomma(num_measurements), time.time() - start_time)
 
 
 def main(argv):
