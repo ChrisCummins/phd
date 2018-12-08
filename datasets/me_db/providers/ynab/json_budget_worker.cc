@@ -232,7 +232,8 @@ void ProcessJsonBudgetFile(SeriesCollection* proto) {
       // The category name is a concatenation of the master and subcategory
       // names.
       const string category_name = absl::StrFormat(
-          "%s > %s", master_category_name, subcategory_name);
+          "%s:%s", phd::ToCamelCase(master_category_name),
+          phd::ToCamelCase(subcategory_name));
 
       const string subcategory_id = subcategory.get<string>("entityId", "");
       CHECK(!subcategory_id.empty());
