@@ -131,7 +131,7 @@ def CreateEngine(url: str,
 
     # We create a throwaway engine that we use to check if the requested
     # database exists.
-    engine = sql.create_engine(url)
+    engine = sql.create_engine('/'.join(url.split('/')[:-1]))
     database = url.split('/')[-1].split('?')[0]
     query = engine.execute(sql.text('SELECT SCHEMA_NAME FROM '
                                     'INFORMATION_SCHEMA.SCHEMATA WHERE '
