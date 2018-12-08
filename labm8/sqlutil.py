@@ -170,9 +170,9 @@ def CreateEngine(url: str,
   elif url.startswith('postgresql://'):
     # Support for PostgreSQL dialect.
 
-    database = url.split('/')[-1]
-    engine = sql.create_engine(f'{url_base}/postgres')
+    engine = sql.create_engine('/'.join(url.split('/')[:-1] + ['postgres']))
     conn = engine.connect()
+    database = url.split('/')[-1]
     query = conn.execute(
         sql.text('SELECT 1 FROM pg_database WHERE datname = :database'),
         database=database)
