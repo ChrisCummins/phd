@@ -25,7 +25,8 @@ def temp_dir() -> pathlib.Path:
 
 
 @pytest.fixture(scope='function')
-def temp_dataset(temp_dir: pathlib.Path) -> pathlib.Path:
+def temp_inbox(temp_dir: pathlib.Path) -> pathlib.Path:
+  (temp_dir / 'life_cycle').mkdir()
   generator = make_dataset.RandomDatasetGenerator(time.mktime(
       time.strptime('1/1/2018', '%m/%d/%Y')), locations=[
     'My House',
@@ -34,16 +35,14 @@ def temp_dataset(temp_dir: pathlib.Path) -> pathlib.Path:
     'Work',
     'Home',
   ])
-  generator.SampleZip(temp_dir / 'LC_export.zip', 100)
+  generator.SampleZip(temp_dir / 'life_cycle' / 'LC_export.zip', 100)
   yield temp_dir
 
 
-def test_ProcessDirectory(temp_dataset: pathlib.Path):
+def ProcessInbox(temp_inbox: pathlib.Path):
   """Test generated series."""
-  protos = list(life_cycle.ProcessDirectory(temp_dataset))
-  assert len(protos) == 1
-  series_proto = protos[0]
-  series = list(series_proto.series)
+  series_collection = life_cycle.ProcessInbox(temp_inbox)
+  series = list(series_collection.series)
   assert len(series) == 2
   series = sorted(series, key=lambda s: s.name)
   assert series[0].name == 'HomeTime'
@@ -61,13 +60,12 @@ def test_ProcessDirectory(temp_dataset: pathlib.Path):
     assert measurement.source == 'LifeCycle'
 
 
-def test_ProcessDirectory_future(temp_dataset: pathlib.Path):
-  """Test that ProcessDirectory() can be called async."""
+def test_ProcessInbox_future(temp_inbox: pathlib.Path):
+  """Test that ProcessInbox() can be called async."""
   with futures.ThreadPoolExecutor(max_workers=1) as executor:
-    future = executor.submit(life_cycle.ProcessDirectory, temp_dataset)
-  protos = list(future.result())
-  assert len(protos) == 1
-  assert len(protos[0].series) == 2
+    future = executor.submit(life_cycle.ProcessInbox, temp_inbox)
+  series_collection = future.result()
+  assert len(series_collection.series) == 2
 
 
 def main(argv: typing.List[str]):

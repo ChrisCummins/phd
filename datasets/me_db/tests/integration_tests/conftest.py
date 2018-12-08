@@ -24,7 +24,7 @@ def mutable_db() -> me_db.Database:
   """Returns a populated database for the scope of the function."""
   with tempfile.TemporaryDirectory(prefix='phd_') as d:
     db = me_db.Database(pathlib.Path(d) / 'me.db')
-    db.ImportMeasurementsFromInbox(TEST_INBOX_PATH)
+    db.ImportMeasurementsFromInboxImporters(TEST_INBOX_PATH)
     yield db
 
 
@@ -37,5 +37,5 @@ def db() -> me_db.Database:
   """
   with tempfile.TemporaryDirectory(prefix='phd_') as d:
     db = me_db.Database(pathlib.Path(d) / 'me.db')
-    db.ImportMeasurementsFromInbox(TEST_INBOX_PATH)
+    db.ImportMeasurementsFromInboxImporters(TEST_INBOX_PATH)
     yield db

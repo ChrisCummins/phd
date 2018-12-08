@@ -1,4 +1,5 @@
 """Import data from YNAB."""
+import multiprocessing
 import pathlib
 import subprocess
 import typing
@@ -29,34 +30,35 @@ def ProcessBudgetJsonFile(path: pathlib.Path) -> me_pb2.SeriesCollection:
     raise importers.ImporterError('LifeCycle', path, str(e)) from e
 
 
-def ProcessDirectory(directory: pathlib.Path) -> typing.Iterator[
-  me_pb2.SeriesCollection]:
+def ProcessInbox(inbox: pathlib.Path) -> me_pb2.SeriesCollection:
   """Process a directory of YNAB data.
 
   Args:
-    directory: The directory containing the YNAB data.
+    inbox: The inbox path.
 
   Returns:
-    A generator for SeriesCollection messages.
+    A SeriesCollection message.
   """
+  if not (inbox / 'ynab').is_dir():
+    return me_pb2.SeriesCollection()
+
   files = subprocess.check_output(
-      ['find', '-L', str(directory), '-name', 'Budget.yfull'],
+      ['find', '-L', str(inbox / 'ynab'), '-name', 'Budget.yfull'],
       universal_newlines=True).rstrip().split('\n')
 
   # TODO(cec): There can be multiple directories for a single budget. Do we need
   # to de-duplicate them?
   files = [pathlib.Path(f) for f in files]
 
+  series_collections = []
   if files and files[0]:
-    print("FILES!!", files)
     for file in files:
-      yield ProcessBudgetJsonFile(file)
+      series_collections.append(ProcessBudgetJsonFile(file))
+  return importers.MergeSeriesCollections(series_collections)
 
 
-def CreateTasksFromInbox(inbox: pathlib.Path) -> importers.ImporterTasks:
-  """Generate an iterator of import tasks from an "inbox" directory."""
-  if (inbox / 'YNAB').exists():
-    yield lambda: ProcessDirectory(inbox / 'ynab')
+def ProcessInboxToQueue(inbox: pathlib.Path, queue: multiprocessing.Queue):
+  queue.put(ProcessInbox(inbox))
 
 
 def main(argv: typing.List[str]):
@@ -64,8 +66,7 @@ def main(argv: typing.List[str]):
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
-  importers.RunTasksAndExit(
-      CreateTasksFromInbox(pathlib.Path(FLAGS.ynab_inbox)))
+  print(ProcessInbox(pathlib.Path(FLAGS.ynab_inbox)))
 
 
 if __name__ == '__main__':

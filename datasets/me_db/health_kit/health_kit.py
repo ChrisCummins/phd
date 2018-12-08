@@ -1,4 +1,5 @@
 """Import data from HealthKit."""
+import multiprocessing
 import pathlib
 import subprocess
 import tempfile
@@ -44,35 +45,32 @@ def ProcessXmlFile(path: pathlib.Path) -> me_pb2.SeriesCollection:
     raise importers.ImporterError('HealthKit', path, str(e)) from e
 
 
-def ProcessDirectory(directory: pathlib.Path) -> typing.Iterator[
-  me_pb2.SeriesCollection]:
+def ProcessInbox(inbox: pathlib.Path) -> me_pb2.SeriesCollection:
   """Process a directory of HealthKit data.
 
   Args:
-    directory: The directory containing the HealthKit data.
+    inbox: The inbox path.
 
   Returns:
-    A generator for SeriesCollection messages.
+    A SeriesCollection message.
   """
-  # Do nothing is there is no LC_export.zip file.
-  if not (directory / 'export.zip').is_file():
-    return
+  # Do nothing is there is there's no HealthKit export.zip file.
+  if not (inbox / 'health_kit' / 'export.zip').is_file():
+    return me_pb2.SeriesCollection()
 
-  logging.info('Unpacking %s', directory / 'export.zip')
+  logging.info('Unpacking %s', inbox / 'health_kit' / 'export.zip')
   with tempfile.TemporaryDirectory(prefix='phd_') as d:
     temp_xml = pathlib.Path(d) / 'export.xml'
-    with zipfile.ZipFile(directory / 'export.zip') as z:
+    with zipfile.ZipFile(inbox / 'health_kit' / 'export.zip') as z:
       with z.open('apple_health_export/export.xml') as xml_in:
         with open(temp_xml, 'wb') as f:
           f.write(xml_in.read())
 
-    yield ProcessXmlFile(temp_xml)
+    return ProcessXmlFile(temp_xml)
 
 
-def CreateTasksFromInbox(inbox: pathlib.Path) -> importers.ImporterTasks:
-  """Generate an iterator of import tasks from an "inbox" directory."""
-  if (inbox / 'health_kit').exists():
-    yield lambda: ProcessDirectory(inbox / 'health_kit')
+def ProcessInboxToQueue(inbox: pathlib.Path, queue: multiprocessing.Queue):
+  queue.put(ProcessInbox(inbox))
 
 
 def main(argv: typing.List[str]):
@@ -80,8 +78,7 @@ def main(argv: typing.List[str]):
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
-  importers.RunTasksAndExit(
-      CreateTasksFromInbox(pathlib.Path(FLAGS.healthkit_inbox)))
+  print(ProcessInbox(pathlib.Path(FLAGS.healthkit_inbox)))
 
 
 if __name__ == '__main__':

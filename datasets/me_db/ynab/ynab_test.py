@@ -24,7 +24,6 @@ def temp_dir() -> pathlib.Path:
 
 def test_ProcessDirectory(temp_dir: pathlib.Path):
   """Test values on fake data."""
-  _ = ynab
   generator = make_dataset.RandomDatasetGenerator(
       start_date_seconds_since_epoch=time.mktime(
           time.strptime('1/1/2018', '%m/%d/%Y')),
@@ -32,20 +31,20 @@ def test_ProcessDirectory(temp_dir: pathlib.Path):
         'Rainy Day': ['Savings', 'Pension'],
         'Everyday Expenses': ['Groceries', 'Clothes'],
       })
-  dir = (temp_dir / 'Personal Finances~B0DA25C7.ynab4' / 'data1~8E111055' /
-         '12345D63-B6C2-CD11-6666-C7D8733E20AB')
+  dir = (temp_dir / 'ynab' / 'Personal Finances~B0DA25C7.ynab4' /
+         'data1~8E111055' / '12345D63-B6C2-CD11-6666-C7D8733E20AB')
   dir.mkdir(parents=True)
   generator.SampleFile(dir / 'Budget.yfull', 100)
 
   # One SeriesCollection is generated for each input file.
-  series_from_collections = list(ynab.ProcessDirectory(temp_dir))
-  assert len(series_from_collections) == 1
+  series_collection = ynab.ProcessInbox(temp_dir)
 
   # Two Series are produce for each file.
-  series_collection = series_from_collections[0]
   assert len(series_collection.series) == 2
 
-  transactions_series, budget_series = series_collection.series
+  # Sort series by name since the order of series isn't guaranteed.
+  budget_series, transactions_series = sorted(
+      series_collection.series, key=lambda s: s.name)
 
   # The series name is a CamelCase version of 'Personal Finances' with suffix.
   assert transactions_series.name == 'PersonalFinancesTransactions'

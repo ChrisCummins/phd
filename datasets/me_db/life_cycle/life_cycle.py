@@ -1,4 +1,5 @@
 """Import data from Life Cycle."""
+import multiprocessing
 import pathlib
 import subprocess
 import tempfile
@@ -43,34 +44,31 @@ def ProcessCsvFile(path: pathlib.Path) -> me_pb2.SeriesCollection:
     raise importers.ImporterError('LifeCycle', path, str(e)) from e
 
 
-def ProcessDirectory(directory: pathlib.Path) -> typing.Iterator[
-  me_pb2.SeriesCollection]:
-  """Process a directory of Life Cycle data.
+def ProcessInbox(inbox: pathlib.Path) -> me_pb2.SeriesCollection:
+  """Process Life Cycle data in an inbox.
 
   Args:
-    directory: The directory containing the Life Cycle data.
+    inbox: The inbox path.
 
   Returns:
-    A generator for SeriesCollection messages.
+    A SeriesCollection message.
   """
   # Do nothing is there is no LC_export.zip file.
-  if not (directory / 'LC_export.zip').is_file():
-    return
+  if not (inbox / 'life_cycle' / 'LC_export.zip').is_file():
+    return me_pb2.SeriesCollection()
 
   with tempfile.TemporaryDirectory(prefix='phd_') as d:
     temp_csv = pathlib.Path(d) / 'LC_export.csv'
-    with zipfile.ZipFile(directory / 'LC_export.zip') as z:
+    with zipfile.ZipFile(inbox / 'life_cycle' / 'LC_export.zip') as z:
       with z.open('LC_export.csv') as csv_in:
         with open(temp_csv, 'wb') as f:
           f.write(csv_in.read())
 
-    yield ProcessCsvFile(temp_csv)
+    return ProcessCsvFile(temp_csv)
 
 
-def CreateTasksFromInbox(inbox: pathlib.Path) -> importers.ImporterTasks:
-  """Generate an iterator of import tasks from an "inbox" directory."""
-  if (inbox / 'life_cycle').exists():
-    yield lambda: ProcessDirectory(inbox / 'life_cycle')
+def ProcessInboxToQueue(inbox: pathlib.Path, queue: multiprocessing.Queue):
+  queue.put(ProcessInbox(inbox))
 
 
 def main(argv: typing.List[str]):
@@ -78,8 +76,7 @@ def main(argv: typing.List[str]):
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
-  importers.RunTasksAndExit(
-      CreateTasksFromInbox(pathlib.Path(FLAGS.life_cycle_inbox)))
+  print(pathlib.Path(FLAGS.life_cycle_inbox))
 
 
 if __name__ == '__main__':

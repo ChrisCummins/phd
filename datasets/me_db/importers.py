@@ -1,7 +1,7 @@
 """Utility code for data importers."""
 import collections
+import multiprocessing
 import pathlib
-import sys
 import typing
 
 from absl import flags
@@ -12,12 +12,11 @@ from labm8 import labtypes
 
 FLAGS = flags.FLAGS
 
-# An importer task is a function that takes no arguments, and returns a
-# generator
-ImporterTask = typing.Callable[[], typing.Iterator[me_pb2.SeriesCollection]]
-
-# A iterator of ImporterTasks.
-ImporterTasks = typing.Iterator[ImporterTask]
+# An inbox importer is a function that takes a path to a directory (the inbox)
+# and a Queue. When called, the function places a SeriesCollection proto on the
+# queue.
+InboxImporter = typing.Callable[
+  [pathlib.Path, multiprocessing.Queue], me_pb2.SeriesCollection]
 
 
 class ImporterError(EnvironmentError):
@@ -86,8 +85,7 @@ def MergeSeriesCollections(
 
   # Create a map from series name to a list of series protos.
   names_to_series = collections.defaultdict(list)
-  for s in series:
-    names_to_series[s.name].append(s)
+  [names_to_series[s.name].append(s) for s in series]
 
   # Concatenate each list of series with the same name.
   concatenated_series = [
@@ -95,25 +93,3 @@ def MergeSeriesCollections(
   ]
   return me_pb2.SeriesCollection(
       series=sorted(concatenated_series, key=lambda s: s.name))
-
-
-def RunTasksAndExit(tasks: typing.Iterator[ImporterTask]) -> None:
-  series_collections = []
-  for task in tasks:
-    series_collections += list(task())
-  MergeAndPrintSeriesAndExit(series_collections)
-
-
-def MergeAndPrintSeriesAndExit(
-    series: typing.Iterator[me_pb2.SeriesCollection]) -> None:
-  """Merge the given series to a SeriesCollection and exit.
-
-  This is convenience function wrap MergeSeriesCollections() with printing to
-  stdout / stderr.
-  """
-  try:
-    print(MergeSeriesCollections(series))
-    sys.exit(0)
-  except ImporterError as e:
-    print(e, file=sys.stderr)
-    sys.exit(1)

@@ -1,8 +1,9 @@
 """me - Aggregate health and time tracking data."""
 import datetime
+import multiprocessing
 import pathlib
+import time
 import typing
-from concurrent import futures
 
 import sqlalchemy as sql
 from absl import app
@@ -19,6 +20,7 @@ from datasets.me_db.ynab import ynab
 from labm8 import labdate
 from labm8 import sqlutil
 
+
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('inbox', None, 'Path to inbox.')
@@ -28,22 +30,14 @@ flags.DEFINE_bool('replace_existing', False,
 
 Base = declarative.declarative_base()
 
-
-def CreateTasksFromInbox(inbox: pathlib.Path) -> typing.Iterator[
-  importers.ImporterTask]:
-  """Return ImporterTasks for all importers.
-
-  Args:
-    inbox: The inbox path.
-
-  Returns:
-    An iterator of ImporterTask objects.
-  """
-  if not inbox.is_dir():
-    raise FileNotFoundError(f"Directory not found: '{inbox}'")
-  yield from health_kit.CreateTasksFromInbox(inbox)
-  yield from ynab.CreateTasksFromInbox(inbox)
-  yield from life_cycle.CreateTasksFromInbox(inbox)
+# The list of inbox importers. An inbox importer is a function that takes a
+# path to a directory (the inbox) and a Queue. The function, when called, must
+# place a single SeriesCollection proto on the queue.
+INBOX_IMPORTERS: typing.List[importers.InboxImporter] = [
+  health_kit.ProcessInboxToQueue,
+  life_cycle.ProcessInboxToQueue,
+  ynab.ProcessInboxToQueue,
+]
 
 
 class Measurement(Base):
@@ -89,35 +83,37 @@ class Database(sqlutil.Database):
   def __init__(self, path: pathlib.Path):
     super(Database, self).__init__(path, Base)
 
-  @classmethod
-  def AddMeasurementsFromImporterTasks(
-      cls, session: sqlutil.Database.session_t,
-      importer_tasks: importers.ImporterTasks):
-    """Schedule and execute the given importer_tasks, and import to database."""
-    with futures.ThreadPoolExecutor() as executor:
-      scheduled_tasks = [executor.submit(task) for task in importer_tasks]
-      logging.info('Submitted %d tasks', len(scheduled_tasks))
-
-      for future in futures.as_completed(scheduled_tasks):
-        executor.submit(cls.AddSeriesCollections(session, future.result()))
-
   @staticmethod
-  def AddSeriesCollections(session: sqlutil.Database.session_t,
-                           series_collections: typing.Iterator[
-                             me_pb2.SeriesCollection]) -> None:
+  def AddSeriesCollection(session: sqlutil.Database.session_t,
+                          series_collection: me_pb2.SeriesCollection) -> None:
     """Import the given series_collections to database."""
-    for proto in series_collections:
-      for series in proto.series:
-        logging.info('Importing %d %s:%s measurements',
-                     len(series.measurement), series.family, series.name)
-        session.add_all(MeasurementsFromSeries(series))
+    for series in series_collection.series:
+      logging.info('Importing %d %s:%s measurements',
+                   len(series.measurement), series.family, series.name)
+      session.add_all(MeasurementsFromSeries(series))
 
-  def ImportMeasurementsFromInbox(self, inbox: pathlib.Path):
+  def ImportMeasurementsFromInboxImporters(
+      self, inbox: pathlib.Path, inbox_importers: typing.Iterator[
+        importers.InboxImporter] = INBOX_IMPORTERS):
     """Import and commit measurements from inbox directory."""
-    tasks = CreateTasksFromInbox(inbox)
-    with self.Session(commit=True) as session:
-      self.AddMeasurementsFromImporterTasks(session, tasks)
-      logging.info('Committing records to database')
+    start_time = time.time()
+    queue = multiprocessing.Queue()
+
+    # Start each importer in a separate process.
+    processes = []
+    for importer in inbox_importers:
+      process = multiprocessing.Process(target=importer, args=(inbox, queue))
+      process.start()
+      processes.append(process)
+    logging.info('Started %d importer processes', len(processes))
+
+    # Get the results of each process as it finishes.
+    for _ in range(len(processes)):
+      series_collections = queue.get()
+      with self.Session(commit=True) as session:
+        self.AddSeriesCollection(session, series_collections)
+
+    logging.info('Processed records in %s seconds', time.time() - start_time)
 
 
 def main(argv):
@@ -142,7 +138,7 @@ def main(argv):
   db = Database(db_path)
   logging.info('Using database `%s`', db.database_path)
 
-  db.ImportMeasurementsFromInbox(inbox_path)
+  db.ImportMeasurementsFromInboxImporters(inbox_path)
 
 
 if __name__ == '__main__':
