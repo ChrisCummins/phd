@@ -9,6 +9,8 @@ from absl import logging
 from sqlalchemy import orm
 from sqlalchemy.ext import declarative
 
+from labm8 import pbutil
+
 
 FLAGS = flags.FLAGS
 
@@ -277,3 +279,88 @@ class Database(object):
 
   def __repr__(self) -> str:
     return f'Database[{self.database_uri}]'
+
+
+class TablenameFromClassNameMixin(object):
+  """A class mixin which derives __tablename__ from the class name.
+
+  Add this mixin to a mapped table class to automatically set the set the
+  __tablename__ property of a class to the lowercase name of the Python class.
+  """
+
+  @declarative.declared_attr
+  def __tablename__(self):
+    return self.__name__.lower()
+
+
+class ProtoBackedMixin(object):
+  """A database table backed by protocol buffers.
+
+  This class provides the abstract interface for sqlalchemy table classes which
+  support serialization to and from protocol buffers.
+
+  This is only an interface - inheriting classes must still inherit from
+  sqlalchemy.ext.declarative.declarative_base().
+  """
+  proto_t = None
+
+  def SetProto(self, proto: pbutil.ProtocolBuffer) -> None:
+    """Set the fields of a protocol buffer with the values from the instance.
+
+    Args:
+      proto: A protocol buffer.
+    """
+    raise NotImplementedError(
+        f'{type(self).__name__}.SetProto() not implemented')
+
+  def ToProto(self) -> pbutil.ProtocolBuffer:
+    """Serialize the instance to protocol buffer.
+
+    Returns:
+      A protocol buffer.
+    """
+    proto = self.proto_t()
+    self.SetProto(proto)
+    return proto
+
+  @classmethod
+  def FromProto(cls, proto: pbutil.ProtocolBuffer) -> typing.Dict[
+    str, typing.Any]:
+    """Return a dictionary of instance constructor args from proto.
+
+    Examples:
+      Construct a table instance from proto:
+      >>> table = Table(**Table.FromProto(proto))
+
+      Construct a table instance and add to session:
+      >>> session.GetOrAdd(Table, **Table.FromProto(proto))
+
+    Args:
+      proto: A protocol buffer.
+
+    Returns:
+      A dictionary of constructor arguments.
+    """
+    raise NotImplementedError(
+        f'{type(self).__name__}.FromProto() not implemented')
+
+  @classmethod
+  def FromFile(cls, path: pathlib.Path) -> typing.Dict[
+    str, typing.Any]:
+    """Return a dictionary of instance constructor args from proto file.
+
+    Examples:
+      Construct a table instance from proto file:
+      >>> table = Table(**Table.FromFile(path))
+
+      Construct a table instance and add to session:
+      >>> session.GetOrAdd(Table, **Table.FromFile(path))
+
+    Args:
+      path: Path to a proto file.
+
+    Returns:
+      An instance.
+    """
+    proto = pbutil.FromFile(path, cls.proto_t())
+    return cls.FromProto(proto)

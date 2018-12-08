@@ -502,6 +502,7 @@ py_library(
     srcs = ["sqlutil.py"],
     visibility = ["//visibility:public"],
     deps = [
+        ":pbutil",
         "//third_party/py/absl",
         "//third_party/py/sqlalchemy",
     ],
@@ -515,6 +516,7 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":sqlutil",
+        "//labm8/proto:test_protos",
         "//third_party/py/absl",
         "//third_party/py/pytest",
     ],
