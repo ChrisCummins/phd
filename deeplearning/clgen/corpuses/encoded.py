@@ -169,16 +169,16 @@ class EncodedContentFiles(sqlutil.Database):
     with self.Session() as session:
       return session.query(func.sum(EncodedContentFile.tokencount)).scalar()
 
-  def IsDone(self, session: sqlutil.Database.session_t):
+  def IsDone(self, session: sqlutil.Session):
     if session.query(Meta).filter(Meta.key == 'done').first():
       return True
     else:
       return False
 
-  def SetDone(self, session: sqlutil.Database.session_t):
+  def SetDone(self, session: sqlutil.Session):
     session.add(Meta(key='done', value='yes'))
 
-  def Import(self, session: sqlutil.Database.session_t,
+  def Import(self, session: sqlutil.Session,
              preprocessed_db: preprocessed.PreprocessedContentFiles,
              atomizer: atomizers.AtomizerBase,
              contentfile_separator: str) -> None:

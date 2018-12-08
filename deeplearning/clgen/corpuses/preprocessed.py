@@ -162,16 +162,16 @@ class PreprocessedContentFiles(sqlutil.Database):
                  humanize.intcomma(char_count), humanize.intcomma(line_count),
                  humanize.intcomma(num_files))
 
-  def IsDone(self, session: sqlutil.Database.session_t):
+  def IsDone(self, session: sqlutil.Session):
     if session.query(Meta).filter(Meta.key == 'done').first():
       return True
     else:
       return False
 
-  def SetDone(self, session: sqlutil.Database.session_t):
+  def SetDone(self, session: sqlutil.Session):
     session.add(Meta(key='done', value='yes'))
 
-  def Import(self, session: sqlutil.Database.session_t,
+  def Import(self, session: sqlutil.Session,
              config: corpus_pb2.Corpus) -> None:
     with self.GetContentFileRoot(config) as contentfile_root:
       relpaths = set(self.GetImportRelpaths(contentfile_root))

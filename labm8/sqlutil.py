@@ -7,6 +7,7 @@ import sqlalchemy as sql
 from absl import flags
 from absl import logging
 from sqlalchemy import orm
+from sqlalchemy.ext import declarative
 
 
 FLAGS = flags.FLAGS
@@ -83,7 +84,7 @@ def Get(session: sql.orm.session.Session, model,
 
 
 def CreateEngine(url: str,
-                 create_if_not_exist: bool = False) -> sql.engine.Engine:
+                 create_if_not_exist: bool = True) -> sql.engine.Engine:
   """Create an sqlalchemy database engine.
 
   This is a convenience wrapper for creating an sqlalchemy engine, that also
@@ -95,7 +96,7 @@ def CreateEngine(url: str,
   See https://docs.sqlalchemy.org/en/latest/core/engines.html for details.
 
   Examples:
-    Create in memory SQLite database:
+    Create in-memory SQLite database:
     >>> engine = CreateEngine('sqlite://')
 
     Connect to an SQLite database at relative.db:
@@ -198,19 +199,40 @@ def CreateEngine(url: str,
   return engine
 
 
+class Session(orm.session.Session):
+  """A subclass of the default SQLAlchemy Session with added functionality.
+
+  An instance of this class is returned by Database.Session().
+  """
+
+  def GetOrAdd(self, model, defaults: typing.Dict[str, object] = None,
+               **kwargs):
+    """Instantiate a mapped database object.
+
+    If the object is not in the database, add it. Note that no change is written
+    to disk until commit() is called on the session.
+
+    Args:
+      model: The database table class.
+      defaults: Default values for mapped objects.
+      kwargs: The values for the table row.
+
+    Returns:
+      An instance of the model class, with the values specified.
+    """
+    return GetOrAdd(self, model, defaults, **kwargs)
+
+
 class Database(object):
   """A base class for implementing databases."""
 
-  session_t = orm.session.Session
-
   def __init__(self, url: str, declarative_base,
-               create_if_not_exist: bool = False):
+               create_if_not_exist: bool = True):
     """Instantiate a database object.
 
     Example:
       >>> db = Database('sqlite:////tmp/foo.db',
-                        sqlalchemy.ext.declarative.declarative_base(),
-                        create_if_not_exist=True)
+                        sqlalchemy.ext.declarative.declarative_base())
 
     Args:
       url: The URL of the database to connect to.
@@ -226,10 +248,14 @@ class Database(object):
     self.engine = CreateEngine(url, create_if_not_exist=create_if_not_exist)
     declarative_base.metadata.create_all(self.engine)
     declarative_base.metadata.bind = self.engine
-    self.make_session = orm.sessionmaker(bind=self.engine)
+
+    # Bind the Engine to a session maker, which instantiates our own Session
+    # class, which is a subclass of the default SQLAlchemy Session with added
+    # functionality.
+    self.make_session = orm.sessionmaker(bind=self.engine, class_=Session)
 
   @contextlib.contextmanager
-  def Session(self, commit: bool = False) -> session_t:
+  def Session(self, commit: bool = False) -> Session:
     """Provide a transactional scope around a session.
 
     Args:

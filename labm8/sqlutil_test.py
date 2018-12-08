@@ -36,11 +36,50 @@ def test_CreateEngine_sqlite_invalid_relpath():
   assert str(e_ctx.value) == "Relative path to SQLite database is not allowed"
 
 
+def test_CreateEngine_sqlite_in_memory_not_new():
+  """Test that error is raised if in-memory table created when not new."""
+  with pytest.raises(ValueError) as e_ctx:
+    sqlutil.CreateEngine(f'sqlite://', create_if_not_exist=False)
+  assert str(e_ctx.value) == ("create_if_exist=False not valid for in-memory "
+                              "SQLite database")
+
+
 def test_CreateEngine_sqlite_created(tempdir: pathlib.Path):
   """Test that SQLite database is found."""
   sqlutil.CreateEngine(f'sqlite:///{tempdir}/db.db',
                        create_if_not_exist=True)
   assert (tempdir / 'db.db').is_file()
+
+
+def test_Session_GetOrAdd():
+  """Test that GetOrAdd() does not create duplicates."""
+  base = declarative.declarative_base()
+
+  class Table(base, sqlutil.TablenameFromClassNameMixin):
+    """A table containing a single 'value' primary key."""
+    value = sql.Column(sql.Integer, primary_key=True)
+
+  # Create the database.
+  db = sqlutil.Database(f'sqlite://', base)
+
+  # Create an entry in the database.
+  with db.Session(commit=True) as s:
+    s.GetOrAdd(Table, value=42)
+
+  # Check that the entry has been added.
+  with db.Session() as s:
+    assert s.query(Table).count() == 1
+    assert s.query(Table).one().value == 42
+
+  # Create another entry. Since a row already exists in the database, this
+  # doesn't add anything.
+  with db.Session(commit=True) as s:
+    s.GetOrAdd(Table, value=42)
+
+  # Check that the database is unchanged.
+  with db.Session() as s:
+    assert s.query(Table).count() == 1
+    assert s.query(Table).one().value == 42
 
 
 def main(argv):  # pylint: disable=missing-docstring

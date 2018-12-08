@@ -85,7 +85,7 @@ class Database(sqlutil.Database):
         f'sqlite:///{path}', Base, create_if_not_exist=True)
 
   @staticmethod
-  def AddSeriesCollection(session: sqlutil.Database.session_t,
+  def AddSeriesCollection(session: sqlutil.Session,
                           series_collection: me_pb2.SeriesCollection) -> None:
     """Import the given series_collections to database."""
     for series in series_collection.series:
