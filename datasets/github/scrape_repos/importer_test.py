@@ -26,7 +26,7 @@ def tempdir() -> pathlib.Path:
 
 @pytest.fixture(scope='function')
 def test_db(tempdir) -> contentfiles.ContentFiles:
-  yield contentfiles.ContentFiles(f'{tempdir}/test.db')
+  yield contentfiles.ContentFiles(f'sqlite:///{tempdir}/test.db')
 
 
 def test_ImportFromLanguage_no_importer(test_db: contentfiles.ContentFiles,
