@@ -144,9 +144,13 @@ def main(argv):
   if not inbox_path.is_dir():
     raise app.UsageError(f'Inbox is not a directory: "{inbox_path}"')
 
-  # TODO(cec): Handle FLAGS.replace_existing.
+  # If we are replacing an existing database, connect to it (which may include
+  # creating it it), drop it, then immediately connect again (which will this
+  # time create it).
   if FLAGS.replace_existing:
-    raise NotImplementedError('--replace_existing not implemented!')
+    db = Database(FLAGS.db)
+    db.Drop(are_you_sure_about_this_flag=True)
+
   db = Database(FLAGS.db)
   logging.info('Using database `%s`', db.url)
 

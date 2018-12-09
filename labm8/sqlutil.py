@@ -256,6 +256,34 @@ class Database(object):
     # functionality.
     self.make_session = orm.sessionmaker(bind=self.engine, class_=Session)
 
+  def Drop(self, are_you_sure_about_this_flag: bool = False):
+    """Drop the database, irreverisbly destroying it.
+
+    Be careful with this! After calling this method an a Database instance, no
+    further operations can be made on it, and any Sessions should be discarded.
+
+    Args:
+      are_you_sure_about_this_flag: You should be sure.
+
+    Raises:
+      ValueError: In case you're not 100% sure.
+    """
+    if not are_you_sure_about_this_flag:
+      raise ValueError("Let's take a minute to think things over")
+
+    if self.url.startswith('mysql://'):
+      engine = sql.create_engine('/'.join(self.url.split('/')[:-1]))
+      database = self.url.split('/')[-1].split('?')[0]
+      engine.execute(sql.text('DROP DATABASE IF EXISTS :database'),
+                     database=database)
+    elif self.url.startswith('sqlite://'):
+      path = pathlib.Path(self.url[len('sqlite:///'):])
+      assert path.is_file()
+      path.unlink()
+    else:
+      raise NotImplementedError(
+          "Unsupported operation DROP for database: '{self.url}'")
+
   @property
   def url(self) -> str:
     """Return the URL of the database."""
