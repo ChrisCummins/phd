@@ -1,4 +1,5 @@
 """Unit tests for //deeplearning/clgen/models/models.py."""
+import pathlib
 import sys
 
 import pytest
@@ -114,7 +115,8 @@ def test_Model_corpus_symlink(clgen_cache_dir, abc_model_config):
   assert (m.cache.path / 'corpus').is_symlink()
   path = str((m.cache.path / 'corpus').resolve())
   # We can't do a literal comparison because of bazel sandboxing.
-  assert path.endswith(str(m.corpus.encoded.database_path.parent))
+  assert path.endswith(
+      str(pathlib.Path(m.corpus.encoded.url[len('sqlite:///'):]).parent))
 
 
 def test_Model_atomizer_symlink(clgen_cache_dir, abc_model_config):

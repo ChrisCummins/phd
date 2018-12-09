@@ -95,7 +95,8 @@ def PostprocessSampleCorpus(instance: clgen.Instance):
   # We derive the programming language name from the input corpus directory.
   # This depends on corpuses being in directories named after their language,
   # e.g. ~/corpuses/opencl, or ~/corpuses/java.A
-  preprocessed_dir = instance.model.corpus.preprocessed.database_path.parent
+  preprocessed_dir = instance.model.corpus.preprocessed.url[
+                     len('sqlite:///'):].parent
   language = (preprocessed_dir / 'contentfiles').resolve().name
   output_corpus_config.preprocessor[:] = POSTPROCESSORS[language]
   output_corpus = corpuses.Corpus(output_corpus_config)

@@ -159,8 +159,9 @@ def test_Corpus_Create_empty_preprocessed_raises_error(clgen_cache_dir,
     session.query(preprocessed.PreprocessedContentFile).delete()
   with pytest.raises(errors.EmptyCorpusException) as e_info:
     c.Create()
-  assert ("Pre-processed corpus contains no files: "
-          f"'{c.preprocessed.database_path}'") == str(e_info.value)
+  assert isinstance(e_info.value, errors.EmptyCorpusException)
+  assert str(e_info.value).startswith(
+      "Pre-processed corpus contains no files: 'sqlite:////")
 
 
 def test_Corpus_greedy_multichar_atomizer_no_atoms(clgen_cache_dir,
@@ -346,10 +347,13 @@ def test_Corpus_preprocessed_symlink(clgen_cache_dir, abc_corpus_config):
   del clgen_cache_dir
   c = corpuses.Corpus(abc_corpus_config)
   c.Create()
-  assert (c.encoded.database_path.parent / 'preprocessed').is_symlink()
-  path = str((c.encoded.database_path.parent / 'preprocessed').resolve())
+  assert (pathlib.Path(
+      c.encoded.url[len('sqlite:///'):]).parent / 'preprocessed').is_symlink()
+  path = (pathlib.Path(
+      c.encoded.url[len('sqlite:///'):]).parent / 'preprocessed').resolve()
   # We can't do a literal comparison because of bazel sandboxing.
-  assert path.endswith(str(c.preprocessed.database_path.parent))
+  assert str(path).endswith(
+      str(pathlib.Path(c.preprocessed.url[len('sqlite:///'):]).parent))
 
 
 def main(argv):

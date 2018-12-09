@@ -169,7 +169,7 @@ def main(argv):
   for language in clone_list.language:
     d = pathlib.Path(language.destination_directory)
     d = d.parent / (str(d.name) + '.db')
-    db = contentfiles.ContentFiles(d)
+    db = contentfiles.ContentFiles(f'sqlite:///{d}')
     if pathlib.Path(language.destination_directory).is_dir():
       ImportFromLanguage(db, language, pool)
 

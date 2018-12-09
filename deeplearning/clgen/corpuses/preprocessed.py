@@ -125,7 +125,7 @@ class PreprocessedContentFiles(sqlutil.Database):
 
   def __init__(self, path: pathlib.Path):
     super(PreprocessedContentFiles, self).__init__(
-        f'sqlite:///{path}', Base, create_if_not_exist=True)
+        f'sqlite:///{path.absolute()}', Base)
 
   def Create(self, config: corpus_pb2.Corpus):
     with self.Session() as session:

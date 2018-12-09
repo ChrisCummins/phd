@@ -76,7 +76,8 @@ class Model(object):
     symlink = self.cache.path / 'corpus'
     if not symlink.is_symlink():
       os.symlink(os.path.relpath(
-          self.corpus.encoded.database_path.parent, self.cache.path), symlink)
+          pathlib.Path(self.corpus.encoded.url[len('sqlite:///'):]).parent,
+          self.cache.path), symlink)
 
     # Create symlink to the atomizer.
     symlink = self.cache.path / 'atomizer'

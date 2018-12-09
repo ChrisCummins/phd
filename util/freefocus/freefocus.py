@@ -29,7 +29,7 @@ def main(argv: typing.List[str]):
   database_path = pathlib.Path(FLAGS.database_path)
 
   database_path.parent.mkdir(parents=True, exist_ok=True)
-  db = sql.Database(database_path)
+  db = sql.Database(f'sqlite:///{database_path}')
   logging.info(db)
 
 

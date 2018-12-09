@@ -1,7 +1,6 @@
 """This file defines a database for importing cloned GitHub repos."""
 import binascii
 import datetime
-import pathlib
 import typing
 
 import sqlalchemy as sql
@@ -148,11 +147,3 @@ class ContentFile(Base):
 
 class ContentFiles(sqlutil.Database):
   """A database consisting of a table of ContentFiles and GitHub repos."""
-
-  def __init__(self, path: pathlib.Path):
-    self.database_path = path.absolute()
-    self.database_uri = f'sqlite:///{self.database_path}'
-    self.engine = sql.create_engine(self.database_uri, encoding='utf-8')
-    Base.metadata.create_all(self.engine)
-    Base.metadata.bind = self.engine
-    self.make_session = orm.sessionmaker(bind=self.engine)
