@@ -40,7 +40,7 @@ def test_measurements_by_source_count(db: me_db.Database):
              .count() == 5
 
     assert s.query(me_db.Measurement) \
-             .filter(me_db.Measurement.source == 'HealthKit:IPhone') \
+             .filter(me_db.Measurement.source == 'HealthKit:Iphone') \
              .count() == 6
 
     assert s.query(me_db.Measurement) \
