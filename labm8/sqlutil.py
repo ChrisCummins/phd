@@ -117,6 +117,8 @@ def CreateEngine(url: str,
 
   Args:
     url: The URL of the database to connect to.
+    create_if_not_exist: If True, create the database if it does not already
+      exist. Else DatabaseNotFound raised.
 
   Returns:
     An SQLalchemy Engine instance.
