@@ -85,8 +85,7 @@ def Get(session: sql.orm.session.Session, model,
   return session.query(model).filter_by(**kwargs).first()
 
 
-def CreateEngine(url: str,
-                 create_if_not_exist: bool = True) -> sql.engine.Engine:
+def CreateEngine(url: str, must_exist: bool = False) -> sql.engine.Engine:
   """Create an sqlalchemy database engine.
 
   This is a convenience wrapper for creating an sqlalchemy engine, that also
@@ -117,15 +116,14 @@ def CreateEngine(url: str,
 
   Args:
     url: The URL of the database to connect to.
-    create_if_not_exist: If True, create the database if it does not already
-      exist. Else DatabaseNotFound raised.
+    must_exist: If True, raise DatabaseNotFound if it doesn't exist. Else,
+        database is created if it doesn't exist.
 
   Returns:
     An SQLalchemy Engine instance.
 
   Raises:
-    DatabaseNotFound: If the database does not exist and create_if_not_exist not
-      set.
+    DatabaseNotFound: If the database does not exist and must_exist is set.
     ValueError: If the datastore backend is not supported.
   """
   if url.startswith('mysql://'):
@@ -140,13 +138,13 @@ def CreateEngine(url: str,
                                     'SCHEMA_NAME = :database'),
                            database=database)
     if not query.first():
-      if create_if_not_exist:
+      if must_exist:
+        raise DatabaseNotFound(url)
+      else:
         # We can't use sql.text() escaping here because it uses single quotes
         # for escaping. MySQL only accepts backticks for quoting database
         # names.
         engine.execute(f'CREATE DATABASE `{database}`')
-      else:
-        raise DatabaseNotFound(url)
     engine.dispose()
   elif url.startswith('sqlite://'):
     # Support for SQLite dialect.
@@ -157,18 +155,18 @@ def CreateEngine(url: str,
       raise ValueError("Relative path to SQLite database is not allowed")
 
     if url == 'sqlite://':
-      if not create_if_not_exist:
+      if must_exist:
         raise ValueError(
-            'create_if_exist=False not valid for in-memory SQLite database')
+            'must_exist=True not valid for in-memory SQLite database')
     else:
       path = pathlib.Path(url[len('sqlite:///'):])
-      if create_if_not_exist:
+      if must_exist:
+        if not path.is_file():
+          raise DatabaseNotFound(url)
+      else:
         # Make the parent directory for SQLite database if creating a new
         # database.
         path.parent.mkdir(parents=True, exist_ok=True)
-      else:
-        if not path.is_file():
-          raise DatabaseNotFound(url)
   elif url.startswith('postgresql://'):
     # Support for PostgreSQL dialect.
 
@@ -179,14 +177,14 @@ def CreateEngine(url: str,
         sql.text('SELECT 1 FROM pg_database WHERE datname = :database'),
         database=database)
     if not query.first():
-      if create_if_not_exist:
+      if must_exist:
+        raise DatabaseNotFound(url)
+      else:
         # PostgreSQL does not let you create databases within a transaction, so
         # manually complete the transaction before creating the database.
         conn.execute(sql.text('COMMIT'))
         # PostgreSQL does not allow single quoting of database names.
         conn.execute(f'CREATE DATABASE {database}')
-      else:
-        raise DatabaseNotFound(url)
     conn.close()
     engine.dispose()
   else:
@@ -231,7 +229,7 @@ class Database(object):
   """A base class for implementing databases."""
 
   def __init__(self, url: str, declarative_base,
-               create_if_not_exist: bool = True):
+               must_exist: bool = False):
     """Instantiate a database object.
 
     Example:
@@ -241,15 +239,15 @@ class Database(object):
     Args:
       url: The URL of the database to connect to.
       declarative_base: The SQLAlchemy declarative base instance.
-      create_if_not_exist: If True, create database if it doesn't exist.
+      must_exist: If True, raise DatabaseNotFound if it doesn't exist. Else,
+        database is created if it doesn't exist.
 
     Raises:
-      DatabaseNotFound: If the database does not exist and create_if_not_exist
-        not set.
+      DatabaseNotFound: If the database does not exist and must_exist is set.
       ValueError: If the datastore backend is not supported.
     """
     self._url = url
-    self.engine = CreateEngine(url, create_if_not_exist=create_if_not_exist)
+    self.engine = CreateEngine(url, must_exist=must_exist)
     declarative_base.metadata.create_all(self.engine)
     declarative_base.metadata.bind = self.engine
 
@@ -313,7 +311,7 @@ class Database(object):
       session.close()
 
   def __repr__(self) -> str:
-    return f'Database[{self.database_uri}]'
+    return self.url
 
 
 class TablenameFromClassNameMixin(object):

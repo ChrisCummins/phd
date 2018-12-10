@@ -26,7 +26,7 @@ def test_CreateEngine_sqlite_not_found(tempdir: pathlib.Path):
   """Test DatabaseNotFound for non-existent SQLite database."""
   with pytest.raises(sqlutil.DatabaseNotFound) as e_ctx:
     sqlutil.CreateEngine(f'sqlite:///{tempdir.absolute()}/db.db',
-                         create_if_not_exist=False)
+                         must_exist=True)
   assert e_ctx.value.url == f'sqlite:///{tempdir.absolute()}/db.db'
   assert str(e_ctx.value) == (f"Database not found: "
                               f"'sqlite:///{tempdir.absolute()}/db.db'")
@@ -39,18 +39,17 @@ def test_CreateEngine_sqlite_invalid_relpath():
   assert str(e_ctx.value) == "Relative path to SQLite database is not allowed"
 
 
-def test_CreateEngine_sqlite_in_memory_not_new():
-  """Test that error is raised if in-memory table created when not new."""
+def test_CreateEngine_error_if_sqlite_in_memory_must_exist():
+  """Error is raised if in-memory "must exist" database requested."""
   with pytest.raises(ValueError) as e_ctx:
-    sqlutil.CreateEngine(f'sqlite://', create_if_not_exist=False)
-  assert str(e_ctx.value) == ("create_if_exist=False not valid for in-memory "
+    sqlutil.CreateEngine(f'sqlite://', must_exist=True)
+  assert str(e_ctx.value) == ("must_exist=True not valid for in-memory "
                               "SQLite database")
 
 
 def test_CreateEngine_sqlite_created(tempdir: pathlib.Path):
   """Test that SQLite database is found."""
-  sqlutil.CreateEngine(f'sqlite:///{tempdir}/db.db',
-                       create_if_not_exist=True)
+  sqlutil.CreateEngine(f'sqlite:///{tempdir}/db.db')
   assert (tempdir / 'db.db').is_file()
 
 
@@ -98,7 +97,7 @@ class AbstractTestMessage(sqlutil.ProtoBackedMixin,
     """Set a protocol buffer representation."""
     proto.string = self.string
     proto.number = self.number
-    
+
   @staticmethod
   def FromProto(proto) -> typing.Dict[
     str, typing.Any]:

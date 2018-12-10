@@ -634,4 +634,4 @@ class Database(sqlutil.Database):
 
   def __init__(self, path: pathlib.Path):
     super(Database, self).__init__(
-        f'sqlite:///{path}', Base, create_if_not_exist=True)
+        f'sqlite:///{path}', Base)
