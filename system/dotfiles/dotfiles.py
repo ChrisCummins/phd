@@ -788,7 +788,10 @@ class Gogs(Task):
   __platforms__ = ["linux"]
   __hosts__ = ["ryangosling"]
   __deps__ = ["MySQL"]
-  __genfiles__ = ["/opt/gogs"]
+  __genfiles__ = [
+      "/opt/gogs",
+      '/var/log/gogs.log',
+  ]
   __versions__ = {
     "gogs": "0.11.34",
   }
@@ -801,6 +804,8 @@ class Gogs(Task):
     shell("rm linux_amd64.tar.gz")
     shell("sudo mv gogs /opt/gogs")
     shell("sudo chown -R cec:cec /opt/gogs")
+    if not os.path.isfile('/var/log/gogs.log'):
+      shell("sudo ln -s /opt/gogs/log/gogs.log /var/log/gogs.log")
 
 
 class GogsConfig(Task):
