@@ -62,26 +62,30 @@ class MirroredDirectory(object):
     return pathlib.Path(self.local_path).is_dir()
 
   def PushFromLocalToRemote(self, dry_run: bool = False,
-                            verbose: bool = False, delete: bool = True) -> None:
+                            verbose: bool = False, delete: bool = True,
+                            progress: bool = False) -> None:
     """Push from local to remote paths."""
     self.Rsync(self.local_path,
                self.rsync_remote_path, self.host.port, self.spec.rsync_exclude,
-               dry_run, verbose, delete)
+               dry_run, verbose, delete, progress)
 
   def PullFromRemoteToLocal(self, dry_run: bool = False,
-                            verbose: bool = False, delete: bool = True) -> None:
+                            verbose: bool = False, delete: bool = True,
+                            progress: bool = False) -> None:
     """Pull from remote to local paths."""
     self.Rsync(self.rsync_remote_path, self.local_path, self.host.port,
-               self.spec.rsync_exclude, dry_run, verbose, delete)
+               self.spec.rsync_exclude, dry_run, verbose, delete, progress)
 
   def __repr__(self) -> str:
     return (f"MirroredDirectory(name={self.name}, "
             f"local_path='{self.local_path}', "
             f"remote_path='{self.rsync_remote_path}')")
 
+  # TODO(cec): Put this in it's own module, with a class RsyncOptions to
+  # replace the enormous argument list.
   @staticmethod
   def Rsync(src: str, dst: str, host_port: int, excludes: typing.List[str],
-            dry_run: bool, verbose: bool, delete: bool):
+            dry_run: bool, verbose: bool, delete: bool, progress: bool):
     """Private helper method to invoke rsync with appropriate arguments."""
     cmd = [
             'rsync', '-ah', str(src), str(dst), '-e', f'ssh -p {host_port}',
@@ -92,6 +96,8 @@ class MirroredDirectory(object):
       cmd.append('--verbose')
     if delete:
       cmd.append('--delete')
+    if progress:
+      cmd.append('--progress')
     logging.info(' '.join(cmd))
     p = subprocess.Popen(cmd)
     p.communicate()

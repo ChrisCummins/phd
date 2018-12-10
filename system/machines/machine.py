@@ -24,6 +24,7 @@ flags.DEFINE_list('pull', [], 'Mirrored directories to push.')
 flags.DEFINE_bool('dry_run', True, 'Whether to run ops without making changes.')
 flags.DEFINE_bool('delete', False, 'Whether to delete files during push/pull'
                                    'mirroring.')
+flags.DEFINE_bool('progress', False, 'Show progress during file transfers.')
 
 
 def RespondsToPing(host: str) -> typing.Optional[str]:
@@ -119,13 +120,15 @@ def main(argv):
 
   for mirrored_dir_name in FLAGS.pull:
     mirrored_dir = machine.MirroredDirectory(mirrored_dir_name)
-    mirrored_dir.PullFromRemoteToLocal(dry_run=FLAGS.dry_run, verbose=True,
-                                       delete=FLAGS.delete)
+    mirrored_dir.PullFromRemoteToLocal(
+        dry_run=FLAGS.dry_run, verbose=True, delete=FLAGS.delete,
+        progress=FLAGS.progress)
 
   for mirrored_dir_name in FLAGS.push:
     mirrored_dir = machine.MirroredDirectory(mirrored_dir_name)
-    mirrored_dir.PushFromLocalToRemote(dry_run=FLAGS.dry_run, verbose=True,
-                                       delete=FLAGS.delete)
+    mirrored_dir.PushFromLocalToRemote(
+        dry_run=FLAGS.dry_run, verbose=True, delete=FLAGS.delete,
+        progress=FLAGS.progress)
 
 
 if __name__ == '__main__':
