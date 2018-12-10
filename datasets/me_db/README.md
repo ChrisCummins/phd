@@ -12,8 +12,9 @@ decision making.
 
 ### Future plans
 
-I have plans to add support for the following additional sources:
+I have plans to add support for the following additional providers:
 
 * Google Calendar - duration and times of calendar events.
 * OmniFocus - number of tasks completed / added per day.
-
+* Git repo - measurements for diff sizes over time.
+* Lightroom - lightroom catalog by date.
