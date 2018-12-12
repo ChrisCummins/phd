@@ -3,8 +3,10 @@ py_library(
     srcs = ["graph_util.py"],
     visibility = ["//learn/daily/d181212_graph_nets_shortest_path:__subpackages__"],
     deps = [
+        "//labm8:labtypes",
         "//third_party/py/absl",
         "//third_party/py/networkx",
+        "//third_party/py/scipy",
     ],
 )
 
