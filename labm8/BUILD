@@ -390,42 +390,6 @@ py_test(
     ],
 )
 
-# A Jupyter notebook launcher that includes a bunch of dependencies which I
-# find useful. If you would like to include extra dependencies, create a new
-# py_binary target with this file as the srcs, and add the dependencies, like
-# this:
-#
-#    py_binary(
-#      name = "notebooks",
-#      srcs = ["//labm8:notebooks"],
-#      deps = [
-#          # Your dependencies here.
-#      ],
-#    )
-py_binary(
-    name = "notebooks",
-    srcs = ["notebooks.py"],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":bazelutil",
-        ":labdate",
-        ":pbutil",
-        ":sqlutil",
-        ":viz",
-        "//third_party/py/absl",
-        "//third_party/py/bokeh",
-        "//third_party/py/graph_nets",
-        "//third_party/py/jupyter",
-        "//third_party/py/keras",
-        "//third_party/py/matplotlib",
-        "//third_party/py/numpy",
-        "//third_party/py/pandas",
-        "//third_party/py/seaborn",
-        "//third_party/py/sonnet",
-        "//third_party/py/tensorflow",
-    ],
-)
-
 py_library(
     name = "pbutil",
     srcs = ["pbutil.py"],

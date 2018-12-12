@@ -59,19 +59,6 @@ py_test(
 )
 
 py_binary(
-    name = "notebooks",
-    srcs = ["notebooks.py"],
-    deps = [
-        "//experimental/compilers/random_opt/proto:random_opt_py_pb2",
-        "//labm8:bazelutil",
-        "//labm8:pbutil",
-        "//labm8:viz",
-        "//third_party/py/absl",
-        "//third_party/py/jupyter",
-    ],
-)
-
-py_binary(
     name = "results_to_dot",
     srcs = ["results_to_dot.py"],
     deps = [
