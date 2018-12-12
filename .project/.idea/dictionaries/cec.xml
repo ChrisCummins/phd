@@ -58,6 +58,7 @@
       <w>logtostderr</w>
       <w>lsize</w>
       <w>lstm</w>
+      <w>memoized</w>
       <w>menlo</w>
       <w>metafile</w>
       <w>mkdir</w>

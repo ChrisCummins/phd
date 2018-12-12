@@ -121,6 +121,26 @@ py_test(
 )
 
 py_library(
+    name = "decorators",
+    srcs = ["decorators.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//third_party/py/absl",
+    ]
+)
+
+py_test(
+    name = "decorators_test",
+    srcs = ["decorators_test.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":decorators",
+        "//third_party/py/pytest",
+        "//third_party/py/absl",
+    ]
+)
+
+py_library(
     name = "err",
     srcs = ["err.py"],
     visibility = ["//visibility:public"],
