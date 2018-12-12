@@ -126,7 +126,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//third_party/py/absl",
-    ]
+    ],
 )
 
 py_test(
@@ -135,9 +135,9 @@ py_test(
     visibility = ["//visibility:public"],
     deps = [
         ":decorators",
-        "//third_party/py/pytest",
         "//third_party/py/absl",
-    ]
+        "//third_party/py/pytest",
+    ],
 )
 
 py_library(
