@@ -137,6 +137,72 @@ def test_AddShortestPath_simple_graph_path():
   assert not digraph.node['G']['end']
 
 
+def test_GraphToInputTarget_number_of_nodes():
+  """Test number of nodes in feature graphs."""
+  digraph = graph_util.AddShortestPath(
+      np.random.RandomState(seed=1),
+      graph_util.GenerateGraph(np.random.RandomState(seed=1), [10, 15]))
+  igraph, tgraph = graph_util.GraphToInputTarget(digraph)
+
+  assert tgraph.number_of_nodes() == digraph.number_of_nodes()
+  assert igraph.number_of_nodes() == digraph.number_of_nodes()
+
+
+def test_GraphToInputTarget_number_of_edges():
+  """Test number of edges in feature graphs."""
+  digraph = graph_util.AddShortestPath(
+      np.random.RandomState(seed=1),
+      graph_util.GenerateGraph(np.random.RandomState(seed=1), [10, 15]))
+  igraph, tgraph = graph_util.GraphToInputTarget(digraph)
+
+  assert igraph.number_of_edges() == digraph.number_of_edges()
+  assert tgraph.number_of_edges() == digraph.number_of_edges()
+
+
+def test_GraphToInputTarget_graph_features_shape():
+  """Test number of features graphs."""
+  digraph = graph_util.AddShortestPath(
+      np.random.RandomState(seed=1),
+      graph_util.GenerateGraph(np.random.RandomState(seed=1), [10, 15]))
+  igraph, tgraph = graph_util.GraphToInputTarget(digraph)
+
+  assert igraph.graph['features'].shape == (1,)
+  assert tgraph.graph['features'].shape == (1,)
+
+
+def test_GraphToInputTarget_node_features_shape():
+  """Test number of features in nodes."""
+  digraph = graph_util.AddShortestPath(
+      np.random.RandomState(seed=1),
+      graph_util.GenerateGraph(np.random.RandomState(seed=1), [10, 15]))
+  igraph, tgraph = graph_util.GraphToInputTarget(digraph)
+
+  for node_idx in igraph.nodes:
+    assert igraph.node[node_idx]['features'].shape == (5,)
+    assert tgraph.node[node_idx]['features'].shape == (2,)
+
+
+def test_GraphToInputTarget_edge_features_shape():
+  """Test number of features in edges."""
+  digraph = graph_util.AddShortestPath(
+      np.random.RandomState(seed=1),
+      graph_util.GenerateGraph(np.random.RandomState(seed=1), [10, 15]))
+  igraph, tgraph = graph_util.GraphToInputTarget(digraph)
+
+  for from_idx, to_idx in igraph.edges:
+    assert igraph.edges[from_idx, to_idx]['features'].shape == (1,)
+    assert tgraph.edges[from_idx, to_idx]['features'].shape == (2,)
+
+
+def test_GenerateGraphs_number_of_graphs():
+  """Test that correct number of graphs are generated."""
+  i, t, g = graph_util.GenerateGraphs(
+      np.random.RandomState(seed=1), 100, [10, 12], 1000)
+  assert len(i) == 100
+  assert len(t) == 100
+  assert len(g) == 100
+
+
 def main(argv: typing.List[str]):
   """Main entry point."""
   if len(argv) > 1:

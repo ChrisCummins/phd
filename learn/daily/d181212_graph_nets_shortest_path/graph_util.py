@@ -1,5 +1,6 @@
 """Graph utilities for the shortest path model."""
 import collections
+import typing
 
 import networkx as nx
 import numpy as np
@@ -13,9 +14,9 @@ FLAGS = flags.FLAGS
 
 
 def GenerateGraph(
-    rand: np.random.RandomState,
-    num_nodes_min_max, dimensions=2,
-    theta=1000.0, rate=1.0, weight_name: str = "distance") -> nx.Graph:
+    rand: np.random.RandomState, num_nodes_min_max, dimensions: int = 2,
+    theta: float = 1000.0, rate: float = 1.0,
+    weight_name: str = "distance") -> nx.Graph:
   """Creates a connected graph.
 
   The graphs are geographic threshold graphs, but with added edges via a
@@ -66,7 +67,9 @@ def GenerateGraph(
   return combined_graph
 
 
-def AddShortestPath(rand, graph, min_length=1, weight_name: str = "distance"):
+def AddShortestPath(rand: np.random.RandomState, graph: nx.Graph,
+                    min_length: int = 1,
+                    weight_name: str = "distance") -> nx.DiGraph:
   """Samples a shortest path from A to B and adds attributes to indicate it.
 
   Args:
@@ -107,7 +110,6 @@ def AddShortestPath(rand, graph, min_length=1, weight_name: str = "distance"):
   start, end = node_pairs[i]
   path = nx.shortest_path(
       graph, source=start, target=end, weight=weight_name)
-  print(path)
 
   # Creates a directed graph, to store the directed path from start to end.
   directed_graph = graph.to_directed()
@@ -131,3 +133,99 @@ def AddShortestPath(rand, graph, min_length=1, weight_name: str = "distance"):
   directed_graph.add_edges_from(path_edges, solution=True)
 
   return directed_graph
+
+
+def GraphToInputTarget(
+    graph: nx.DiGraph) -> typing.Tuple[nx.DiGraph, nx.DiGraph]:
+  """Returns 2 graphs with input and target feature vectors for training.
+
+  Args:
+    graph: An `nx.DiGraph` instance.
+
+  Returns:
+    The input `nx.DiGraph` instance.
+    The target `nx.DiGraph` instance.
+
+  Raises:
+    ValueError: unknown node type
+  """
+
+  def CreateFeature(data_dict: typing.Dict[str, typing.Any],
+                    feature_names: typing.List[str]):
+    return np.hstack([np.array(data_dict[feature], dtype=float) for feature in
+                      feature_names])
+
+  def ToOneHot(indices: typing.Iterator[int], max_value: int, axis: int = -1):
+    one_hot = np.eye(max_value)[indices]
+    if axis not in (-1, one_hot.ndim):
+      one_hot = np.moveaxis(one_hot, -1, axis)
+    return one_hot
+
+  input_node_fields = ("pos", "weight", "start", "end")
+  input_edge_fields = ("distance",)
+  target_node_fields = ("solution",)
+  target_edge_fields = ("solution",)
+
+  input_graph = graph.copy()
+  target_graph = graph.copy()
+
+  solution_length = 0
+  # Set node features.
+  for node_index, node_feature in graph.nodes(data=True):
+    input_graph.add_node(
+        node_index, features=CreateFeature(node_feature, input_node_fields))
+    target_node = ToOneHot(
+        CreateFeature(node_feature, target_node_fields).astype(int), 2)[0]
+    target_graph.add_node(node_index, features=target_node)
+    solution_length += int(node_feature["solution"])
+  solution_length /= graph.number_of_nodes()
+
+  # Set edge features.
+  for receiver, sender, features in graph.edges(data=True):
+    input_graph.add_edge(
+        sender, receiver, features=CreateFeature(features, input_edge_fields))
+    target_edge = ToOneHot(
+        CreateFeature(features, target_edge_fields).astype(int), 2)[0]
+    target_graph.add_edge(sender, receiver, features=target_edge)
+
+  # Set graph features.
+  input_graph.graph["features"] = np.array([0.0])
+  target_graph.graph["features"] = np.array([solution_length], dtype=float)
+
+  return input_graph, target_graph
+
+
+def GenerateGraphs(
+    rand: np.random.RandomState, n: int,
+    num_nodes_min_max: typing.Tuple[int, int],
+    theta: float) -> typing.Tuple[
+  typing.List[nx.DiGraph], typing.List[nx.DiGraph], typing.List[nx.DiGraph]]:
+  """Generate graphs for training.
+
+  Args:
+    rand: A random seed (np.RandomState instance).
+    n: Total number of graphs to generate.
+    num_nodes_min_max: A 2-tuple with the [lower, upper) number of nodes per
+      graph. The number of nodes for a graph is uniformly sampled within this
+      range.
+    theta: (optional) A `float` threshold parameters for the geographic
+      threshold graph's threshold. Default= the number of nodes.
+
+  Returns:
+    input_graphs: The list of input graphs.
+    target_graphs: The list of output graphs.
+    graphs: The list of generated graphs.
+  """
+  input_graphs: typing.List[nx.DiGraph] = []
+  target_graphs: typing.List[nx.DiGraph] = []
+  graphs: typing.List[nx.DiGraph] = []
+  for _ in range(n):
+    graph = GenerateGraph(rand, num_nodes_min_max, theta=theta)
+    graph = AddShortestPath(rand, graph)
+    input_graph, target_graph = GraphToInputTarget(graph)
+
+    graphs.append(graph)
+    input_graphs.append(input_graph)
+    target_graphs.append(target_graph)
+
+  return input_graphs, target_graphs, graphs
