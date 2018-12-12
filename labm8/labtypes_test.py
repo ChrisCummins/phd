@@ -88,9 +88,76 @@ def test_flatten():
   assert labtypes.flatten([[1], [2, 3]]) == [1, 2, 3]
 
 
+# PairwiseIterator()
+
+def test_PairwiseIterator_empty_list():
+  """Test that empty list produces no output."""
+  assert list(labtypes.PairwiseIterator([])) == []
+
+
+def test_PairwiseIterator_input_is_list():
+  """Test when input is list."""
+  generator = labtypes.PairwiseIterator([0, 1, 2, 3])
+  assert next(generator) == (0, 1)
+  assert next(generator) == (1, 2)
+  assert next(generator) == (2, 3)
+  with pytest.raises(StopIteration):
+    next(generator)
+
+
+def test_PairwiseIterator_input_is_iterator():
+  """Test when input is iterator."""
+  generator = labtypes.PairwiseIterator(range(4))
+  assert next(generator) == (0, 1)
+  assert next(generator) == (1, 2)
+  assert next(generator) == (2, 3)
+
+
+def test_PairwiseIterator_input_is_string():
+  """Test when input is list."""
+  generator = labtypes.PairwiseIterator('hello')
+  assert next(generator) == ('h', 'e')
+  assert next(generator) == ('e', 'l')
+  assert next(generator) == ('l', 'l')
+  assert next(generator) == ('l', 'o')
+
+
+# SetDiff()
+
+def test_SetDiff_empty_inputs():
+  """Test when inputs are empty."""
+  assert labtypes.SetDiff([], []) == set()
+
+
+def test_SetDiff_one_input_is_empty():
+  """Test when one input is empty."""
+  assert labtypes.SetDiff([1, 2, 3], []) == {1, 2, 3}
+  assert labtypes.SetDiff([], [1, 2, 3]) == {1, 2, 3}
+
+
+def test_SetDiff_matching_inputs():
+  """Test when both inputs are the same."""
+  assert labtypes.SetDiff([1, 2, 3], [1, 2, 3]) == set()
+
+
+def test_SetDiff_overlapping_inputs():
+  """Test when inputs overlap."""
+  assert labtypes.SetDiff([1, 2], [1, 2, 3]) == {3}
+
+
+def test_SetDiff_unmatching_types():
+  """Test when inputs are of different types."""
+  assert labtypes.SetDiff([1, 2, 3], ['a', 'b']) == {1, 2, 3, 'a', 'b'}
+
+
+def test_SetDiff_input_ranges():
+  """Test when inputs are iterators."""
+  assert labtypes.SetDiff(range(3), range(4)) == {3}
+
+
 def main(argv):  # pylint: disable=missing-docstring
   del argv
-  sys.exit(pytest.main([__file__, '-v']))
+  sys.exit(pytest.main([__file__, '-vv']))
 
 
 if __name__ == '__main__':

@@ -1,7 +1,9 @@
 """Python type utilities.
 """
 import inspect
+import itertools
 import sys
+import typing
 from collections import Mapping
 
 from six import string_types
@@ -144,3 +146,41 @@ class ReprComparable(object):
 
   def __ge__(self, other):
     return str(self) >= str(other)
+
+
+def PairwiseIterator(iterable: typing.Iterator[typing.Any]
+                     ) -> typing.Iterator[typing.Tuple[typing.Any, typing.Any]]:
+  """Construct a pairwise iterator for a input generator.
+
+  Given an iterator, produces an iterator of overlapping pairs from the input:
+  s -> (s0,s1), (s1,s2), (s2, s3), ...
+
+  Args:
+    iterable: The input iterable. Once called, this iterable should not be
+      used any more.
+
+  Returns:
+    An iterator of pairs.
+  """
+  # Split the iterable into two.
+  a, b = itertools.tee(iterable)
+  # Advance the second iterable by one.
+  next(b, None)
+  # Return the pairs.
+  return zip(a, b)
+
+
+def SetDiff(a: typing.Iterator[typing.Any],
+            b: typing.Iterator[typing.Any]) -> typing.List[typing.Any]:
+  """Return the set difference between two sequences.
+
+  Args:
+    a: An iterable.
+    b: An iterable.
+
+  Returns:
+    The difference between the elements in the two iterables as a set.
+  """
+  set_a = set(a)
+  set_b = set(b)
+  return (set_a - set_b).union(set_b - set_a)
