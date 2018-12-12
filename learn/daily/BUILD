@@ -1,9 +1,13 @@
 # Daily programming challenges.
 
+# Targets in this package are prefixed by the letter "d" followed by their date
+# in YYMMDD format. The "d" prefix is to ensure that python module names are
+# legal.
+
 cc_library(
-    name = "181211_matrix_multiplication",
-    srcs = ["181211_matrix_multiplication.cc"],
-    hdrs = ["181211_matrix_multiplication.h"],
+    name = "d181211_matrix_multiplication",
+    srcs = ["d181211_matrix_multiplication.cc"],
+    hdrs = ["d181211_matrix_multiplication.h"],
     deps = [
         "//phd:macros",
         "@boost//:numeric",
@@ -12,10 +16,10 @@ cc_library(
 )
 
 cc_test(
-    name = "181211_matrix_multiplication_test",
-    srcs = ["181211_matrix_multiplication_test.cc"],
+    name = "d181211_matrix_multiplication_test",
+    srcs = ["d181211_matrix_multiplication_test.cc"],
     deps = [
-        ":181211_matrix_multiplication",
+        ":d181211_matrix_multiplication",
         "//phd:test",
     ],
 )
