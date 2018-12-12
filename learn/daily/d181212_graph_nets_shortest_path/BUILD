@@ -5,7 +5,7 @@ py_library(
     deps = [
         "//third_party/py/absl",
         "//third_party/py/networkx",
-    ]
+    ],
 )
 
 py_test(
@@ -15,7 +15,7 @@ py_test(
         ":graph_util",
         "//third_party/py/absl",
         "//third_party/py/pytest",
-    ]
+    ],
 )
 
 py_library(
@@ -24,8 +24,8 @@ py_library(
     visibility = ["//learn/daily/d181212_graph_nets_shortest_path:__subpackages__"],
     deps = [
         "//third_party/py/absl",
-        "//third_party/py/networkx",
         "//third_party/py/graph_nets",
+        "//third_party/py/networkx",
         "//third_party/py/tensorflow",
     ],
 )
