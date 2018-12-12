@@ -24,7 +24,7 @@ def memoized_property(function: AnyFunction) -> AnyFunction:
   Returns:
     The decorated property function.
   """
-  # Based on Danijar Hafner's implementation of a lazy property, avaiable at:
+  # Based on Danijar Hafner's implementation of a lazy property, available at:
   # https://danijar.com/structuring-your-tensorflow-models/
   attribute_name = '_memoized_property_' + function.__name__
 
