@@ -20,22 +20,3 @@
     benchmark::RunSpecifiedBenchmarks(); \
     return ret; \
   }
-
-namespace test {
-namespace debug {
-
-// Debug type:
-template<typename T> struct debug_t {};
-
-}  // debug namespace
-}  // test namespace
-
-// Macros for debugging types:
-//
-// Fatally crash the compiler by attempting to construct an object of
-// 'type' using an unknown argument.
-#define PRINT_TYPENAME(type) type _____{test::debug::debug_t<type>};
-//
-// Fatally crash the compiler by attempting to cast 'variable' to an
-// unknown type.
-#define PRINT_TYPE(variable) static_cast<test::debug::debug_t<type>>(variable);
