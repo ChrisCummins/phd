@@ -1,3 +1,5 @@
+// An implementation of multithreaded matrix multiplication. The idea is not to
+// be especially efficient or fast, but to be a clean implementation.
 #pragma once
 
 #include <boost/numeric/ublas/matrix.hpp>
