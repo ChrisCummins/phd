@@ -1,6 +1,7 @@
 // Protos for reachability analysis.
 
 syntax = "proto2";
+
 package phd.experimental.compilers.reachability;
 
 message ControlFlowGraphNode {

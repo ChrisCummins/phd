@@ -10,12 +10,12 @@ import numpy as np
 from absl import app
 from absl import flags
 from absl import logging
+from experimental.compilers.reachability.proto import reachability_pb2
 from keras.preprocessing import sequence
 
 from deeplearning.clgen import telemetry
 from deeplearning.clgen.corpuses import atomizers
-from experimental.compilers.reachability import reachability
-from experimental.compilers.reachability.proto import reachability_pb2
+from experimental.compilers.reachability import control_flow_graph
 from labm8 import pbutil
 
 
@@ -58,15 +58,15 @@ def MakeReachabilityDataset(
   data = reachability_pb2.ReachabilityDataset()
   seed = 0
   while len(data.entry) < num_data_points:
-    graph = reachability.ControlFlowGraph.GenerateRandom(
+    graph = control_flow_graph.ControlFlowGraph.GenerateRandom(
         FLAGS.reachability_num_nodes, seed=seed,
         connections_scaling_param=FLAGS.reachability_scaling_param)
     seed += 1
-    seq = graph.ToSuccessorsList()
+    seq = graph.ToSuccessorsListString()
     if seq not in seqs:
       seqs.add(seq)
       proto = data.entry.add()
-      graph.SetCfgWithReachabilityProto(proto)
+      graph.SetProto(proto)
       proto.seed = seed
   return data
 
@@ -108,7 +108,7 @@ def BuildKerasModel(
   x = keras.layers.Dense(dnn_size, activation='relu')(x)
   outs = [
     keras.layers.Dense(1, activation='sigmoid',
-                       name=reachability.NumberToLetters(i))(x)
+                       name=control_flow_graph.NumberToLetters(i))(x)
     for i in range(num_classes)
   ]
 
