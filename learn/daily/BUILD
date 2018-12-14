@@ -23,3 +23,23 @@ cc_test(
         "//phd:test",
     ],
 )
+
+cc_library(
+    name = "d181213_kruskal_spanning_tree",
+    srcs = ["d181213_kruskal_spanning_tree.cc"],
+    hdrs = ["d181213_kruskal_spanning_tree.h"],
+    deps = [
+        "//phd:macros",
+        "@boost//:numeric",
+        "@com_google_absl//absl/container:flat_hash_map",
+    ],
+)
+
+cc_test(
+    name = "d181213_kruskal_spanning_tree_test",
+    srcs = ["d181213_kruskal_spanning_tree_test.cc"],
+    deps = [
+        ":d181213_kruskal_spanning_tree",
+        "//phd:test",
+    ],
+)
