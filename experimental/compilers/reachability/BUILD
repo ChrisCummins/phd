@@ -5,11 +5,11 @@ load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
 py_library(
     name = "control_flow_graph",
     srcs = ["control_flow_graph.py"],
+    visibility = ["//experimental/compilers/reachability:__subpackages__"],
     deps = [
         "//third_party/py/absl",
         "//third_party/py/networkx",
     ],
-    visibility = ["//experimental/compilers/reachability:__subpackages__"],
 )
 
 py_test(
@@ -26,13 +26,13 @@ py_test(
 py_library(
     name = "control_flow_graph_generator",
     srcs = ["control_flow_graph_generator.py"],
+    visibility = ["//experimental/compilers/reachability:__subpackages__"],
     deps = [
         ":control_flow_graph",
         "//third_party/py/absl",
         "//third_party/py/networkx",
         "//third_party/py/numpy",
     ],
-    visibility = ["//experimental/compilers/reachability:__subpackages__"],
 )
 
 py_test(
@@ -65,8 +65,8 @@ py_binary(
 py_proto_library(
     name = "reachability_py_pb2",
     protos = ["reachability.proto"],
-    deps = ["//third_party/py/protobuf"],
     visibility = ["//experimental/compilers/reachability:__subpackages__"],
+    deps = ["//third_party/py/protobuf"],
 )
 
 py_binary(
