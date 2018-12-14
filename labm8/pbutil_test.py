@@ -16,6 +16,13 @@ SUFFIXES_TO_TEST = [
   '.unknown-suffix', '.unknown-suffix.gz']
 
 
+@pytest.fixture(scope='function')
+def tempdir() -> pathlib.Path:
+  """A pytest fixture for a temporary directory."""
+  with tempfile.TemporaryDirectory(prefix='phd_') as d:
+    yield pathlib.Path(d)
+
+
 # ToFile() tests.
 
 @pytest.mark.parametrize('suffix', SUFFIXES_TO_TEST)
@@ -273,6 +280,63 @@ def test_AssertFieldConstraint_user_callback_custom_fail_message():
   with pytest.raises(pbutil.ProtoValueError) as e_info:
     pbutil.AssertFieldConstraint(t, 'number', fail_message='Hello, world!')
   assert 'Hello, world!' == str(e_info.value)
+
+
+# ProtoBackedMixin tests.
+
+class TestMessage(pbutil.ProtoBackedMixin):
+  """Example class which implements ProtoBackedMixin interface."""
+  proto_t = test_protos_pb2.TestMessage
+
+  def __init__(self, string: str, number: int):
+    self.string = string
+    self.number = number
+
+  def SetProto(self, proto: test_protos_pb2.TestMessage) -> None:
+    """Set a protocol buffer representation."""
+    proto.string = self.string
+    proto.number = self.number
+
+  @staticmethod
+  def FromProto(proto) -> 'TestMessage':
+    """Instantiate an object from protocol buffer message."""
+    return TestMessage(proto.string, proto.number)
+
+
+def test_ProtoBackedMixin_FromProto():
+  """Test FromProto constructor for proto backed class."""
+  proto = test_protos_pb2.TestMessage(string="Hello, world!", number=42)
+  instance = TestMessage.FromProto(proto)
+  assert instance.string == "Hello, world!"
+  assert instance.number == 42
+
+
+def test_ProtoBackedMixin_SetProto():
+  """Test SetProto method for proto backed class."""
+  proto = test_protos_pb2.TestMessage()
+  TestMessage(string="Hello, world!", number=42).SetProto(proto)
+  assert proto.string == "Hello, world!"
+  assert proto.number == 42
+
+
+def test_ProtoBackedMixin_ToProto():
+  """Test FromProto constructor for proto backed class."""
+  instance = TestMessage(string="Hello, world!", number=42)
+  proto = instance.ToProto()
+  assert proto.string == "Hello, world!"
+  assert proto.number == 42
+
+
+@pytest.mark.parametrize('suffix', SUFFIXES_TO_TEST)
+def test_ProtoBackedMixin_FromProtoFile(suffix: str, tempdir: pathlib.Path):
+  """Test FromProtoFile constructor for proto backed class."""
+  proto_path = tempdir / f'proto{suffix}'
+  pbutil.ToFile(test_protos_pb2.TestMessage(string="Hello, world!", number=42),
+                proto_path)
+
+  instance = TestMessage.FromProtoFile(proto_path)
+  assert instance.string == "Hello, world!"
+  assert instance.number == 42
 
 
 def main(argv):

@@ -407,3 +407,74 @@ def RunProcessMessageInPlace(cmd: typing.List[str],
 
   input_proto.ParseFromString(stdout)
   return input_proto
+
+
+class ProtoBackedMixin(object):
+  """A class backed by protocol buffers.
+
+  This mixin provides the abstract interface for classes which support
+  serialization of instances to and from protocol buffers.
+
+  Inheriting classes must set the proto_t class attribute, and  implement the
+  SetProto() and FromProto() methods.
+
+  Attributes:
+    proto_t: The protocol buffer class that backs instances of this class.
+  """
+  # Inheritinc classes must set this attribute to the Protocol Buffer class.
+  proto_t = None
+
+  def SetProto(self, proto: ProtocolBuffer) -> None:
+    """Set the fields of a protocol buffer with the values of the instance.
+
+    It is the responsibility of the inheriting class to ensure that all required
+    instance variables are recorded as fields in this proto.
+
+    Args:
+      proto: A protocol buffer.
+    """
+    # ABSTRACT METHOD. Inheriting classes must implement!
+    raise NotImplementedError(
+        f'{type(self).__name__}.SetProto() not implemented')
+
+  @classmethod
+  def FromProto(cls, proto: ProtocolBuffer) -> 'ProtoBackednMixin':
+    """Return an instance of the class from proto.
+
+    It is the responsibility of the inheriting class to ensure that all required
+    instance variables are set according to the fields in the proto.
+
+    Args:
+      proto: A protocol buffer.
+
+    Returns:
+      An instance of the class.
+    """
+    # ABSTRACT METHOD. Inheriting classes must implement!
+    raise NotImplementedError(
+        f'{type(self).__name__}.FromProto() not implemented')
+
+  def ToProto(self) -> ProtocolBuffer:
+    """Serialize the instance to protocol buffer.
+
+    It is the responsibility of the inheriting class to set the proto_t class
+    attribute to the
+
+    Returns:
+      A protocol buffer.
+    """
+    proto = self.proto_t()
+    self.SetProto(proto)
+    return proto
+
+  @classmethod
+  def FromProtoFile(cls, path: pathlib.Path) -> 'ProtoBackedMixin':
+    """Return an instance of the class from serialized proto file.
+
+    Args:
+      path: Path to a proto file.
+
+    Returns:
+      An instance.
+    """
+    return cls.FromProto(FromFile(path, cls.proto_t()))
