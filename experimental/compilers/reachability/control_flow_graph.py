@@ -214,6 +214,10 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
     # Validate the proto.
     return instance.ValidateControlFlowGraph(strict=False)
 
+  def Checksum(self) -> str:
+    # TODO:
+    raise NotImplementedError()
+
   def __eq__(self, other) -> bool:
     """Compare control flow graphs.
 

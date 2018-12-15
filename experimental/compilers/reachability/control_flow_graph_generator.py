@@ -213,7 +213,12 @@ class ControlFlowGraphGenerator(object):
       n: The number of unique graphs to generate.
 
     Returns:
-      An iterator unique graphs, where g0 != g1 != ... != gn.
+      An iterator of unique graphs, where g0 != g1 != ... != gn.
     """
-    # TODO(cec): Add a ControlFlowGraph.Checksum() method and implement.
-    raise NotImplementedError()
+    graph_checksums = set()
+    while len(graph_checksums) < n:
+      graph = self.GenerateOne()
+      checksum = graph.Checksum()
+      if checksum not in graph_checksums:
+        graph_checksums.add(checksum)
+        yield graph
