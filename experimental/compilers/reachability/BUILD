@@ -64,6 +64,28 @@ py_binary(
     ],
 )
 
+py_library(
+    name = "llvm_util",
+    srcs = ["llvm_util.py"],
+    visibility = ["//experimental/compilers/reachability:__subpackages__"],
+    deps = [
+        ":control_flow_graph",
+        "//compilers/llvm:opt",
+        "//third_party/py/absl",
+        "//third_party/py/networkx",
+    ],
+)
+
+py_test(
+    name = "llvm_util_test",
+    srcs = ["llvm_util_test.py"],
+    deps = [
+        ":llvm_util",
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
+    ],
+)
+
 py_proto_library(
     name = "reachability_py_pb2",
     protos = ["reachability.proto"],
