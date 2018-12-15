@@ -11,6 +11,7 @@ from datasets.opencl.device_mapping import \
   opencl_device_mapping_dataset as ocl_dataset
 from deeplearning.clgen.preprocessors import opencl
 from experimental.compilers.reachability import llvm_util
+from experimental.compilers.reachability import control_flow_graph as cfg
 from experimental.compilers.reachability import reachability_pb2
 from labm8 import decorators
 
@@ -117,7 +118,8 @@ class OpenClDeviceMappingsDataset(ocl_dataset.OpenClDeviceMappingsDataset):
     # Process each row of the table in parallel.
     pool = multiprocessing.Pool()
     rows = []
-    for row in pool.map_async(ProcessProgramDfIterItem, programs_df.iterrows()):
+    for row in pool.imap_unordered(
+        ProcessProgramDfIterItem, [d for i, d in programs_df.iterrows()]):
       if row:
         rows.append(row)
 
