@@ -2,7 +2,6 @@
 import pandas as pd
 from absl import app
 from absl import flags
-from absl import logging
 
 from compilers.llvm import clang
 from datasets.opencl.device_mapping import \
@@ -20,18 +19,22 @@ class OpenClDeviceMappingsDataset(ocl_dataset.OpenClDeviceMappingsDataset):
   """An extension of the OpenCL device mapping dataset for control flow graphs.
   """
 
-  def BytecodeFromOpenClKernel(self, opencl_kernel: str) -> str:
+  @staticmethod
+  def BytecodeFromOpenClKernel(opencl_kernel: str) -> str:
     clang_args = opencl.GetClangArgs(use_shim=False) + [
-      '-O0', '-S', '-emit-llvm', '-o', '-']
-    clang_process = clang.Exec(clang_args, stdin=opencl_kernel)
-    return clang_process.stdout
+      '-O0', '-S', '-emit-llvm', '-o', '-', '-i', '-']
+    process = clang.Exec(clang_args, stdin=opencl_kernel)
+    if process.returncode:
+      raise clang.ClangException("clang failed with returncode "
+                                 f"{process.returncode}:\n{process.stderr}")
+    return process.stdout
 
+  @classmethod
   def CreateControlFlowGraphSetFromOpenClKernel(
-      self, opencl_kernel: str) -> reachability_pb2.ControlFlowGraphSet:
+      cls, opencl_kernel: str) -> reachability_pb2.ControlFlowGraphSet:
     cfg_set = reachability_pb2.ControlFlowGraphSet()
-    bytecode = self.BytecodeFromOpenClKernel(opencl_kernel)
+    bytecode = cls.BytecodeFromOpenClKernel(opencl_kernel)
     for dot in llvm_util.DotCfgsFromBytecode(bytecode):
-      logging.info('Processing dot')
       graph = llvm_util.ControlFlowGraphFromDotSource(dot)
       graph_proto = cfg_set.graph.add()
       graph.SetProto(graph_proto)
@@ -39,7 +42,8 @@ class OpenClDeviceMappingsDataset(ocl_dataset.OpenClDeviceMappingsDataset):
 
   @decorators.memoized_property
   def cfgs_df(self) -> pd.DataFrame:
-    # TODO(cec): Create bytecodes, create CFGS, add to data frame.
+    # TODO(cec): Create one row per CFG, with CFG name and proto columns, not
+    # multiple CFGs per benchmark.
     df = self.programs_df.copy()
     df['program:cfg_set_proto'] = [
       self.CreateControlFlowGraphSetFromOpenClKernel(x)
