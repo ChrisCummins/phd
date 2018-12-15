@@ -108,6 +108,16 @@ def test_ControlFlowGraphGenerator_generates_unique_graphs():
   assert len(edge_sets) > 1
 
 
+def test_ControlFlowGraphGenerator_GenerateUnique():
+  """Test that unique graphs are generated."""
+  generator = control_flow_graph_generator.ControlFlowGraphGenerator(
+      np.random.RandomState(1), (10, 10), 0.5)
+  uniq_graphs = list(generator.GenerateUnique(100))
+  assert len(uniq_graphs) == 100
+  checksums = {g.Checksum() for g in uniq_graphs}
+  assert len(checksums) == 100
+
+
 def main(argv: typing.List[str]):
   """Main entry point."""
   if len(argv) > 1:
