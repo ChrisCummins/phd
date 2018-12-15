@@ -73,6 +73,7 @@ py_library(
         "//compilers/llvm:opt",
         "//third_party/py/absl",
         "//third_party/py/networkx",
+        "//third_party/py/pydot",
     ],
 )
 
@@ -81,6 +82,7 @@ py_test(
     srcs = ["llvm_util_test.py"],
     deps = [
         ":llvm_util",
+        "//compilers/llvm:opt",
         "//third_party/py/absl",
         "//third_party/py/pytest",
     ],

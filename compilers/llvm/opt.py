@@ -483,12 +483,16 @@ class OptException(llvm.LlvmError):
   pass
 
 
-def Exec(args: typing.List[str], timeout_seconds: int = 60,
+def Exec(args: typing.List[str],
+         stdin: typing.Optional[typing.Union[str, bytes]] = None,
+         timeout_seconds: int = 60,
          universal_newlines: bool = True) -> subprocess.Popen:
   """Run LLVM's optimizer.
 
   Args:
     args: A list of arguments to pass to binary.
+    stdin: Optional input to pass to binary. If universal_newlines is set, this
+      should be a string. If not, it should be bytes.
     timeout_seconds: The number of seconds to allow opt to run for.
     universal_newlines: Argument passed to Popen() of opt process.
 
@@ -499,8 +503,12 @@ def Exec(args: typing.List[str], timeout_seconds: int = 60,
   logging.debug('$ %s', ' '.join(cmd))
   process = subprocess.Popen(
       cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+      stdin=subprocess.PIPE if stdin else None,
       universal_newlines=universal_newlines)
-  stdout, stderr = process.communicate()
+  if stdin:
+    stdout, stderr = process.communicate(stdin)
+  else:
+    stdout, stderr = process.communicate()
   if process.returncode == 9:
     raise llvm.LlvmTimeout(f'clang timed out after {timeout_seconds}s')
   process.stdout = stdout
