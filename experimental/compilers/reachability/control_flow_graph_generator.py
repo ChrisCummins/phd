@@ -103,6 +103,9 @@ class ControlFlowGraphGenerator(object):
     return self
 
   def __next__(self) -> cfg.ControlFlowGraph:
+    return self.GenerateOne()
+
+  def GenerateOne(self) -> cfg.ControlFlowGraph:
     """Create a random CFG.
 
     Returns:
@@ -191,3 +194,26 @@ class ControlFlowGraphGenerator(object):
       AddRandomIncomingEdge(exit_block)
 
     return graph.ValidateControlFlowGraph()
+
+  def Generate(self, n: int) -> typing.Iterator[cfg.ControlFlowGraph]:
+    """Generate a sequence of graphs.
+
+    Args:
+      n: The number of graphs to generate.
+
+    Returns:
+      An iterator of graphs.
+    """
+    return (self.GenerateOne() for _ in range(n))
+
+  def GenerateUnique(self, n: int) -> typing.Iterator[cfg.ControlFlowGraph]:
+    """Generate a sequence of unique graphs.
+
+    Args:
+      n: The number of unique graphs to generate.
+
+    Returns:
+      An iterator unique graphs, where g0 != g1 != ... != gn.
+    """
+    # TODO(cec): Add a ControlFlowGraph.Checksum() method and implement.
+    raise NotImplementedError()
