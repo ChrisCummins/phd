@@ -42,85 +42,82 @@ target triple = "x86_64-apple-macosx10.12.0"
 
 @.str = private unnamed_addr constant [18 x i8] c"Computed value %d\00", align 1
 
-; Function Attrs: nounwind ssp uwtable
+; Function Attrs: norecurse nounwind readnone ssp uwtable
 define i32 @DoSomething(i32, i32) #0 {
-  %3 = alloca i32, align 4
-  %4 = alloca i32, align 4
-  %5 = alloca i32, align 4
-  store i32 %0, i32* %4, align 4
-  store i32 %1, i32* %5, align 4
-  %6 = load i32, i32* %4, align 4
-  %7 = srem i32 %6, 5
-  %8 = icmp ne i32 %7, 0
-  br i1 %8, label %9, label %12
+  %3 = srem i32 %0, 5
+  %4 = icmp eq i32 %3, 0
+  br i1 %4, label %7, label %5
 
-; <label>:9                                       ; preds = %2
-  %10 = load i32, i32* %4, align 4
-  %11 = mul nsw i32 %10, 10
-  store i32 %11, i32* %3, align 4
-  br label %18
+; <label>:5                                       ; preds = %2
+  %6 = mul nsw i32 %0, 10
+  br label %12
 
-; <label>:12                                      ; preds = %2
-  %13 = load i32, i32* %4, align 4
-  %14 = sitofp i32 %13 to float
-  %15 = fpext float %14 to double
-  %16 = call double @llvm.pow.f64(double %15, double 2.500000e+00)
-  %17 = fptosi double %16 to i32
-  store i32 %17, i32* %3, align 4
-  br label %18
+; <label>:7                                       ; preds = %2
+  %8 = sitofp i32 %0 to float
+  %9 = fpext float %8 to double
+  %10 = tail call double @llvm.pow.f64(double %9, double 2.500000e+00)
+  %11 = fptosi double %10 to i32
+  br label %12
 
-; <label>:18                                      ; preds = %12, %9
-  %19 = load i32, i32* %3, align 4
-  ret i32 %19
+; <label>:12                                      ; preds = %7, %5
+  %13 = phi i32 [ %6, %5 ], [ %11, %7 ]
+  ret i32 %13
 }
 
 ; Function Attrs: nounwind readnone
 declare double @llvm.pow.f64(double, double) #1
 
 ; Function Attrs: nounwind ssp uwtable
-define i32 @main(i32, i8**) #0 {
-  %3 = alloca i32, align 4
-  %4 = alloca i32, align 4
-  %5 = alloca i8**, align 8
-  %6 = alloca i32, align 4
-  store i32 0, i32* %3, align 4
-  store i32 %0, i32* %4, align 4
-  store i8** %1, i8*** %5, align 8
-  store i32 0, i32* %6, align 4
+define i32 @main(i32, i8** nocapture readnone) #2 {
+  %3 = icmp sgt i32 %0, 0
+  br i1 %3, label %4, label %7
+
+; <label>:4                                       ; preds = %2
+  br label %10
+
+; <label>:5                                       ; preds = %22
+  %6 = phi i32 [ %24, %22 ]
   br label %7
 
-; <label>:7                                       ; preds = %17, %2
-  %8 = load i32, i32* %6, align 4
-  %9 = load i32, i32* %4, align 4
-  %10 = icmp slt i32 %8, %9
-  br i1 %10, label %11, label %20
-
-; <label>:11                                      ; preds = %7
-  %12 = load i32, i32* %4, align 4
-  %13 = load i32, i32* %6, align 4
-  %14 = call i32 @DoSomething(i32 %12, i32 %13)
-  %15 = load i32, i32* %4, align 4
-  %16 = add nsw i32 %15, %14
-  store i32 %16, i32* %4, align 4
-  br label %17
-
-; <label>:17                                      ; preds = %11
-  %18 = load i32, i32* %6, align 4
-  %19 = add nsw i32 %18, 1
-  store i32 %19, i32* %6, align 4
-  br label %7
-
-; <label>:20                                      ; preds = %7
-  %21 = load i32, i32* %4, align 4
-  %22 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([18 x i8], [18 x i8]* @.str, i32 0, i32 0), i32 %21)
+; <label>:7                                       ; preds = %5, %2
+  %8 = phi i32 [ %0, %2 ], [ %6, %5 ]
+  %9 = tail call i32 (i8*, ...) @printf(i8* nonnull getelementptr inbounds ([18 x i8], [18 x i8]* @.str, i64 0, i64 0), i32 %8)
   ret i32 0
+
+; <label>:10                                      ; preds = %4, %22
+  %11 = phi i32 [ %25, %22 ], [ 0, %4 ]
+  %12 = phi i32 [ %24, %22 ], [ %0, %4 ]
+  %13 = srem i32 %12, 5
+  %14 = icmp eq i32 %13, 0
+  br i1 %14, label %17, label %15
+
+; <label>:15                                      ; preds = %10
+  %16 = mul nsw i32 %12, 10
+  br label %22
+
+; <label>:17                                      ; preds = %10
+  %18 = sitofp i32 %12 to float
+  %19 = fpext float %18 to double
+  %20 = tail call double @llvm.pow.f64(double %19, double 2.500000e+00) #4
+  %21 = fptosi double %20 to i32
+  br label %22
+
+; <label>:22                                      ; preds = %15, %17
+  %23 = phi i32 [ %16, %15 ], [ %21, %17 ]
+  %24 = add nsw i32 %23, %12
+  %25 = add nuw nsw i32 %11, 1
+  %26 = icmp slt i32 %25, %24
+  br i1 %26, label %10, label %5
 }
 
-declare i32 @printf(i8*, ...) #2
+; Function Attrs: nounwind
+declare i32 @printf(i8* nocapture readonly, ...) #3
 
-attributes #0 = { nounwind ssp uwtable "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+fxsr,+mmx,+sse,+sse2,+sse3,+sse4.1,+ssse3" "unsafe-fp-math"="false" "use-soft-float"="false" }
+attributes #0 = { norecurse nounwind readnone ssp uwtable "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+fxsr,+mmx,+sse,+sse2,+sse3,+sse4.1,+ssse3" "unsafe-fp-math"="false" "use-soft-float"="false" }
 attributes #1 = { nounwind readnone }
-attributes #2 = { "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+fxsr,+mmx,+sse,+sse2,+sse3,+sse4.1,+ssse3" "unsafe-fp-math"="false" "use-soft-float"="false" }
+attributes #2 = { nounwind ssp uwtable "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+fxsr,+mmx,+sse,+sse2,+sse3,+sse4.1,+ssse3" "unsafe-fp-math"="false" "use-soft-float"="false" }
+attributes #3 = { nounwind "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+fxsr,+mmx,+sse,+sse2,+sse3,+sse4.1,+ssse3" "unsafe-fp-math"="false" "use-soft-float"="false" }
+attributes #4 = { nounwind }
 
 !llvm.module.flags = !{!0}
 !llvm.ident = !{!1}
@@ -183,6 +180,21 @@ def test_DotCfgsFromBytecode_invalid_bytecode():
   assert str(e_ctx.value).startswith("opt failed with return code ")
 
 
+def test_GetBasicBlockNameFromLabel_unrecognized_label():
+  """Test that error is raised if label is not recognized."""
+  with pytest.raises(ValueError):
+    llvm_util.GetBasicBlockNameFromLabel('invalid label')
+
+
+def test_GetBasicBlockNameFromLabel_label():
+  label = ('"{%2:\l  %3 = alloca i32, align 4\l  %4 = alloca i32, align 4\l  '
+           '%5 = alloca i8**, align 8\l  %6 = alloca i32, align 4\l  '
+           'store i32 0, i32* %3, align 4\l  store i32 %0, i32* %4, '
+           'align 4\l  store i8** %1, i8*** %5, align 8\l  store i32 0, '
+           'i32* %6, align 4\l  br label %7\l}"')
+  assert llvm_util.GetBasicBlockNameFromLabel(label) == "%2"
+
+
 def test_ControlFlowGraphFromDotSource_invalid_source():
   """Test that exception is raised if dot can't be parsed."""
   with pytest.raises(pyparsing.ParseException):
@@ -199,6 +211,41 @@ def test_ControlFlowGraphFromDotSource_num_nodes():
   """Test that CFG has correct number of nodes."""
   g = llvm_util.ControlFlowGraphFromDotSource(SIMPLE_C_DOT)
   assert g.number_of_nodes() == 4
+
+
+def test_ControlFlowGraphFromDotSource_num_edges():
+  """Test that CFG has correct number of edges."""
+  g = llvm_util.ControlFlowGraphFromDotSource(SIMPLE_C_DOT)
+  assert g.number_of_edges() == 4
+
+
+def test_ControlFlowGraphFromDotSource_is_valid():
+  """Test that CFG is valid."""
+  g = llvm_util.ControlFlowGraphFromDotSource(SIMPLE_C_DOT)
+  # Control flow graphs are not guaranteed to be valid. That is, the may contain
+  # fusible basic blocks. This can happen if the creating the graph from
+  # unoptimized bytecode.
+  assert g.ValidateControlFlowGraph()
+
+
+def test_ControlFlowGraphFromDotSource_node_names():
+  """Test that CFG names are as expected."""
+  g = llvm_util.ControlFlowGraphFromDotSource(SIMPLE_C_DOT)
+  node_names = sorted([g.nodes[n]['name'] for n in g.nodes],
+                      key=lambda x: int(x[1:]))
+  assert node_names == ['%2', '%9', '%12', '%18']
+
+
+def test_ControlFlowGraphFromDotSource_edges():
+  """Test that CFG edges are as expected."""
+  g = llvm_util.ControlFlowGraphFromDotSource(SIMPLE_C_DOT)
+  node_name_to_index_map = {g.nodes[n]["name"]: n for n in g.nodes}
+  edges = set(g.edges)
+
+  assert (node_name_to_index_map['%2'], node_name_to_index_map['%9']) in edges
+  assert (node_name_to_index_map['%2'], node_name_to_index_map['%12']) in edges
+  assert (node_name_to_index_map['%9'], node_name_to_index_map['%18']) in edges
+  assert (node_name_to_index_map['%12'], node_name_to_index_map['%18']) in edges
 
 
 def test_ControlFlowGraphsFromBytecodes_num_graphs():
