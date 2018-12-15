@@ -14,6 +14,7 @@ py_library(
     name = "opencl_device_mapping_dataset",
     srcs = ["opencl_device_mapping_dataset.py"],
     data = [":csv_files"],
+    visibility = ["//visibility:public"],
     deps = [
         "//labm8:bazelutil",
         "//labm8:decorators",

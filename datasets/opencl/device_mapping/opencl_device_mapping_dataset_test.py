@@ -20,9 +20,27 @@ def dataset() -> ocl_dataset.OpenClDeviceMappingsDataset:
 
 def test_programs_df_row_count(
     dataset: ocl_dataset.OpenClDeviceMappingsDataset):
-  """Short summary of test."""
-  # TODO
-  assert len(dataset.programs_df) == 1
+  """Test that the dataset has 256 rows."""
+  # There are 256 unique OpenCL kernels in the dataset.
+  assert len(dataset.programs_df) == 256
+
+
+def test_programs_df_index_names(
+    dataset: ocl_dataset.OpenClDeviceMappingsDataset):
+  """Test the name of index columns."""
+  assert list(level.name for level in dataset.programs_df.index.levels) == [
+    'program:benchmark_suite_name',
+    'program:benchmark_name',
+    'program:opencl_kernel_name',
+  ]
+
+
+def test_programs_df_column_names(
+    dataset: ocl_dataset.OpenClDeviceMappingsDataset):
+  """Test the name of columns."""
+  assert list(dataset.programs_df.columns.values) == [
+    'program:opencl_src',
+  ]
 
 
 def main(argv: typing.List[str]):
