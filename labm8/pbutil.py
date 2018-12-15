@@ -438,7 +438,7 @@ class ProtoBackedMixin(object):
         f'{type(self).__name__}.SetProto() not implemented')
 
   @classmethod
-  def FromProto(cls, proto: ProtocolBuffer) -> 'ProtoBackednMixin':
+  def FromProto(cls, proto: ProtocolBuffer) -> 'ProtoBackedMixin':
     """Return an instance of the class from proto.
 
     It is the responsibility of the inheriting class to ensure that all required
