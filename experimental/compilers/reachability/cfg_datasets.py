@@ -88,7 +88,7 @@ def ProcessProgramDfIterItem(
   try:
     graph_proto = CreateControlFlowGraphProtoFromOpenClKernel(
         kernel_name, src)
-  except clang.ClangException:
+  except (clang.ClangException, cfg.MalformedControlFlowGraphError):
     return None
 
   return {
