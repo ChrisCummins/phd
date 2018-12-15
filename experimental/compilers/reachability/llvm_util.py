@@ -67,6 +67,17 @@ def DotCfgsFromBytecode(
           yield f.read()
 
 
+def GetBasicBlockNameFromLabel(label: str):
+  """Get the name of a basic block from the label.
+
+  Labels have the form: "{%1:\l  ....". We use the %n identifier as the basic
+  block name.
+  """
+  if not label.startswith('"{'):
+    raise ValueError(f"Unhandled label: '{label}'")
+  return label.split('\n')[0][len('"{'):].split(":")[0]
+
+
 def ControlFlowGraphFromDotSource(
     source: str) -> cfg.ControlFlowGraph:
   """Create a control flow graph from an LLVM-generated dot file.
@@ -99,7 +110,8 @@ def ControlFlowGraphFromDotSource(
   for i, node in enumerate(dot.get_nodes()):
     node_name_to_index_map[node.get_name()] = i
     # TODO(cec): Add node label code string.
-    graph.add_node(i, name=node.get_name())
+    graph.add_node(
+        i, name=GetBasicBlockNameFromLabel(node.get_attributes()['label']))
 
   def NodeIndex(node: pydot.Node) -> int:
     return node_name_to_index_map[node.get_name()]
