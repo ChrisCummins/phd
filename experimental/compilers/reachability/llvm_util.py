@@ -10,7 +10,6 @@ import pydot
 import pyparsing
 from absl import app
 from absl import flags
-from absl import logging
 
 from compilers.llvm import opt
 from experimental.compilers.reachability import control_flow_graph as cfg
@@ -118,10 +117,8 @@ def ControlFlowGraphFromDotSource(
     label = node.get_attributes().get('label', '')
     # Node labels use \l to escape newlines.
     label_lines = label.split('\l')
-    logging.info('LABEL: %s', label_lines)
     # The very last line is just a closing brace.
     last_line_with_instructions = label_lines[-2]
-    logging.info("LAST LINE: %s", last_line_with_instructions)
     return last_line_with_instructions.lstrip().startswith('ret ')
 
   # Set the exit node.
