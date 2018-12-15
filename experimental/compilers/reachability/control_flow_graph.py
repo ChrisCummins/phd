@@ -79,8 +79,14 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
     """Return whether each node is reachable from the src node."""
     return (self.IsReachable(src, dst) for dst in self.nodes)
 
-  def ValidateControlFlowGraph(self) -> 'ControlFlowGraph':
-    """Return true if the graph is a valid control flow graph."""
+  def ValidateControlFlowGraph(self, strict: bool = True) -> 'ControlFlowGraph':
+    """Return true if the graph is a valid control flow graph.
+
+    Args:
+      strict: If True, check that the graph follows all properties of a CFG,
+        i.e. that all nodes have the expected degrees of inputs and outputs, so
+        that no edges can be fused.
+    """
     number_of_nodes = self.number_of_nodes()
 
     # CFGs must contain > 1 node.
@@ -119,31 +125,33 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
     # The entry node has an additional input, since it must entered.
     in_degrees[entry_node] += 1
 
-    # Validate edge attributes.
-    for src, dst in self.edges:
-      if src == dst:
-        raise GraphContainsSelfLoops(f"Self loops: {src} -> {dst}")
-
-      # Each node in a CFG must have more than one output, or more than one
-      # input. This is because nodes represent basic blocks: a node with only a
-      # single output should have been fused with the consuming node (i.e. they
-      # are the same basic block).
-      if not (out_degrees[src] > 1 or in_degrees[dst] > 1):
-        raise InvalidNodeDegree(
-            f"outdegree({self.nodes[src]['name']}) = {out_degrees[src]}, "
-            f"indegree({self.nodes[dst]['name']}) = {in_degrees[dst]}")
-
     # The exit block cannot have outputs.
     if out_degrees[exit_node]:
       raise InvalidNodeDegree(
           f"Exit block outdegree({self.nodes[exit_node]['name']}) = "
           f"{out_degrees[exit_node]}")
 
+    # Additional "strict" CFG tests.
+    if strict:
+      # Validate edge attributes.
+      for src, dst in self.edges:
+        if src == dst:
+          raise GraphContainsSelfLoops(f"Self loops: {src} -> {dst}")
+
+        # Each node in a CFG must have more than one output, or more than one
+        # input. This is because nodes represent basic blocks: a node with only
+        # a single output should have been fused with the consuming node (i.e.
+        # they are the same basic block).
+        if not (out_degrees[src] > 1 or in_degrees[dst] > 1):
+          raise InvalidNodeDegree(
+              f"outdegree({self.nodes[src]['name']}) = {out_degrees[src]}, "
+              f"indegree({self.nodes[dst]['name']}) = {in_degrees[dst]}")
+
     return self
 
-  def IsValidControlFlowGraph(self) -> bool:
+  def IsValidControlFlowGraph(self, strict: bool = True) -> bool:
     try:
-      self.ValidateControlFlowGraph()
+      self.ValidateControlFlowGraph(strict=strict)
       return True
     except MalformedControlFlowGraphError:
       return False
@@ -175,7 +183,7 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
   def SetProto(self, proto: ProtocolBuffer) -> None:
     # Ensure that graph is valid. This will raise exception if graph is not
     # valid.
-    self.ValidateControlFlowGraph()
+    self.ValidateControlFlowGraph(strict=False)
 
     # Set the graph-level properties.
     proto.name = self.graph['name']
@@ -204,7 +212,7 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
     for edge in proto.edge:
       instance.add_edge(edge.src_index, edge.dst_index)
     # Validate the proto.
-    return instance.ValidateControlFlowGraph()
+    return instance.ValidateControlFlowGraph(strict=False)
 
   def __eq__(self, other) -> bool:
     """Compare control flow graphs.
