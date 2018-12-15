@@ -18,9 +18,18 @@ def opencl_dataset() -> datasets.OpenClDeviceMappingsDataset:
   yield datasets.OpenClDeviceMappingsDataset()
 
 
-def test_TODO(opencl_dataset: datasets.OpenClDeviceMappingsDataset):
-  """Short summary of test."""
-  df = opencl_dataset.cfgs_df
+def test_OpenClDeviceMappingsDataset_cfgs_df_count(
+      opencl_dataset: datasets.OpenClDeviceMappingsDataset):
+  """Test that dataset has expected number of rows."""
+  assert len(opencl_dataset.cfgs_df) == 195
+
+
+def test_OpenClDeviceMappingsDataset_cfgs_df_contains_valid_protos(
+      opencl_dataset: datasets.OpenClDeviceMappingsDataset):
+  """Test that proto columns can be parsed."""
+  for cfg_proto in opencl_dataset.cfgs_df['program:cfg_proto'].values:
+    proto = reachability_pb2.ControlFlowGraph.FromString(cfg_proto)
+    cfg.ControlFlowGraph.FromProto(proto)
 
 
 def main(argv):
