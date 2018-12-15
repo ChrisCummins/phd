@@ -114,8 +114,7 @@ def test_ControlFlowGraphGenerator_GenerateUnique():
       np.random.RandomState(1), (10, 10), 0.5)
   uniq_graphs = list(generator.GenerateUnique(100))
   assert len(uniq_graphs) == 100
-  checksums = {g.Checksum() for g in uniq_graphs}
-  assert len(checksums) == 100
+  assert len(set(uniq_graphs)) == 100
 
 
 def main(argv: typing.List[str]):

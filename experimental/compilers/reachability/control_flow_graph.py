@@ -214,10 +214,6 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
     # Validate the proto.
     return instance.ValidateControlFlowGraph(strict=False)
 
-  def Checksum(self) -> str:
-    # TODO:
-    raise NotImplementedError()
-
   def __eq__(self, other) -> bool:
     """Compare control flow graphs.
 
@@ -260,3 +256,10 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
 
   def __ne__(self, other):
     return not self.__eq__(other)
+
+  def __hash__(self) -> int:
+    """Return the numeric hash of the instance."""
+    # The hash is based on the graph topology and node and edge attributes.
+    return hash((tuple(self.nodes), tuple(self.edges),
+                 tuple([str(self.nodes[n]) for n in self.nodes]),
+                 tuple([str(self.edges[i, j]) for i, j in self.edges])))

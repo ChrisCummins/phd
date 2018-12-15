@@ -455,6 +455,45 @@ def test_ControlFlowGraph_ToProto_FromProto_equivalency():
   assert g1.name == g2.name
 
 
+def test_ControlFlowGraph_equivalent_hashes():
+  """Test equivalent hashes, despite different graph names."""
+  # Graph 1: A --> B
+  g1 = control_flow_graph.ControlFlowGraph(name='foo')
+  g1.add_node(0, name='A', entry=True)
+  g1.add_node(1, name='B', exit=True)
+  g1.add_edge(0, 1)
+
+  # Graph 2: A --> B
+  g2 = control_flow_graph.ControlFlowGraph(name='bar')
+  g2.add_node(0, name='A', entry=True)
+  g2.add_node(1, name='B', exit=True)
+  g2.add_edge(0, 1)
+
+  assert hash(g1) == hash(g2)
+
+
+def test_ControlFlowGraph_node_name_changes_hash():
+  """Test that hash depends on node name."""
+  g1 = control_flow_graph.ControlFlowGraph()
+  g1.add_node(0, name='A', entry=True)
+
+  g2 = control_flow_graph.ControlFlowGraph()
+  g2.add_node(0, name='B', entry=True)
+
+  assert hash(g1) != hash(g2)
+
+
+def test_ControlFlowGraph_node_attribute_changes_hash():
+  """Test that hash depends on node attributes."""
+  g1 = control_flow_graph.ControlFlowGraph()
+  g1.add_node(0, name='A')
+
+  g2 = control_flow_graph.ControlFlowGraph()
+  g2.add_node(0, name='A', entry=True)
+
+  assert hash(g1) != hash(g2)
+
+
 def main(argv: typing.List[str]):
   """Main entry point."""
   if len(argv) > 1:
