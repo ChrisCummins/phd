@@ -31,8 +31,9 @@ def BytecodeFromOpenClString(opencl_string: str) -> str:
   Raises:
     ClangException: If compiling to bytecode fails.
   """
+  # Use -O3 to reduce CFGs.
   clang_args = opencl.GetClangArgs(use_shim=False) + [
-    '-O0', '-S', '-emit-llvm', '-o', '-', '-i', '-']
+    '-O3', '-S', '-emit-llvm', '-o', '-', '-i', '-']
   process = clang.Exec(clang_args, stdin=opencl_string)
   if process.returncode:
     raise clang.ClangException("clang failed with returncode "
