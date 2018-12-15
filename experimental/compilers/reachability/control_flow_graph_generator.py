@@ -11,15 +11,42 @@ FLAGS = flags.FLAGS
 
 
 class UniqueNameSequence(object):
+  """A unique name sequence generator.
 
-  def __init__(self, base_char: str, prefix: str = ''):
+  Generates name sequences from a base characeter.
+  E.g. 'a', 'b', 'c', ... 'aa', 'ab', ...
+  """
+
+  def __init__(self, base_char: str, prefix: str = '', suffix: str = ''):
+    """Instantiate a unique name sequence.
+
+    Args:
+      base_char: The first character in the sequence. Must be 'a' or 'A'.
+      prefix: An optional prefix to include in sequence names.
+      suffix: An optional suffix to include in sequence names.
+
+    Raises:
+      ValueError: If base_char is not 'a' or 'A'.
+    """
     if base_char not in {'a', 'A'}:
       raise ValueError(f"Invalid base_char '{base_char}'")
     self._base_ord = ord(base_char)
     self._prefix = prefix
+    self._suffix = suffix
     self._i = 0
 
   def StringInSequence(self, i: int) -> str:
+    """Return the i-th string in the sequence.
+
+    Args:
+      i: The index into the name sequence.
+
+    Returns:
+      The i-th name in the sequence.
+
+    Raises:
+      ValueError: If i is out of range (negative).
+    """
     if i < 0:
       raise ValueError
     s = [self._prefix]
@@ -30,9 +57,15 @@ class UniqueNameSequence(object):
       s.append(chr(self._base_ord - 1 + k))
     s.append(chr(self._base_ord + i))
 
+    s.append(self._suffix)
+
     return ''.join(s)
 
-  def __next__(self):
+  def __iter__(self):
+    return self
+
+  def __next__(self) -> str:
+    """Generate the next name in the sequence."""
     s = self.StringInSequence(self._i)
     self._i += 1
     return s
@@ -43,57 +76,118 @@ class ControlFlowGraphGenerator(object):
 
   def __init__(self, rand: np.random.RandomState,
                num_nodes_min_max: typing.Tuple[int, int],
-               connections_scaling_param: float):
+               edge_density: float):
     """Instantiate a control flow graph generator.
 
     Args:
       rand: A random state instance.
       num_nodes: The number of CFG nodes.
-      connections_scaling_param: Scaling parameter to use to determine the
-        likelihood of edges between CFG nodes.
+      edge_density: The edge edge_density, in range (0,1], where 1.0 will produce fully
+        connected graphs, and lower numbers will produce more sparsely connected
+        graphs.
     """
+    # Validate inputs.
+    if num_nodes_min_max[0] > num_nodes_min_max[1]:
+      raise ValueError("Upper bound of num nodes must be >= lower bound")
+    if num_nodes_min_max[0] < 2:
+      raise ValueError("Lower bound for num nodes must be >= 2")
+    if not 0 < edge_density <= 1:
+      raise ValueError('Edge density must be in range (0,1]')
+
     self._rand = rand
     self._num_nodes_min_max = num_nodes_min_max
-    self._connections_scaling_param = connections_scaling_param
+    self._edge_density = edge_density
+    self._graph_name_sequence = UniqueNameSequence('A', prefix='cfg_')
 
-  @property
-  def rand(self) -> np.random.RandomState:
-    return self._rand
+  def __iter__(self):
+    return self
 
-  @property
-  def num_nodes_min_max(self) -> typing.Tuple[int, int]:
-    return self._num_nodes_min_max
-
-  @property
-  def connections_scaling_param(self) -> float:
-    return self._connections_scaling_param
-
-  def GenerateOne(self) -> 'ControlFlowGraph':
+  def __next__(self) -> cfg.ControlFlowGraph:
     """Create a random CFG.
 
     Returns:
       A ControlFlowGraph instance.
     """
-    num_nodes = self.rand.randint(*self.num_nodes_min_max)
+    # Sample the number of nodes to put in the graph, unless min == max.
+    if self._num_nodes_min_max[0] == self._num_nodes_min_max[1]:
+      num_nodes = self._num_nodes_min_max[0]
+    else:
+      num_nodes = self._rand.randint(*self._num_nodes_min_max)
 
-    nodes = [cfg.ControlFlowGraph(NumberToLetters(i)) for i in range(num_nodes)]
-    for node in nodes:
-      node.all_nodes = nodes
-    adjacency_matrix = (
-        self.rand.rand(num_nodes, num_nodes) * self.connections_scaling_param)
-    adjacency_matrix = np.clip(adjacency_matrix, 0, 1)
-    adjacency_matrix = np.rint(adjacency_matrix)
-    # CFG nodes cannot be connected to self.
-    for i in range(len(adjacency_matrix)):
-      adjacency_matrix[i][i] = 0
+    # Generate the graph and create the named nodes.
+    graph = cfg.ControlFlowGraph(name=next(self._graph_name_sequence))
+    node_name_sequence = UniqueNameSequence('A')
+    [graph.add_node(i, name=next(node_name_sequence)) for i in range(num_nodes)]
+
+    # Set the entry and exit blocks.
+    entry_block = 0
+    exit_block = num_nodes - 1
+    graph.nodes[entry_block]['entry'] = True
+    graph.nodes[exit_block]['exit'] = True
+
+    # Generate an adjacency matrix of random binary values.
+    adjacency_matrix = self._rand.rand(num_nodes, num_nodes)
+    adjacency_matrix = np.rint(adjacency_matrix).astype(np.int32)
+
+    # Add the edges to the graph, subject to the contraints of CFGs.
+    def NotSelfLoop(i, j):
+      """Self loops are not allowed in CFGs."""
+      return i != j
+
+    def NotExitNodeOutput(i, j):
+      """Outputs are not allowed from the exit block."""
+      del j
+      return i != exit_block
+
+    def IsEdge(i, j):
+      """Return whether edge is set in adjacency matrix."""
+      return adjacency_matrix[i, j]
+
     for j, row in enumerate(adjacency_matrix):
-      for i, col in enumerate(row):
-        if col:
-          nodes[j].children.add(nodes[i])
-    for i, node in enumerate(nodes):
-      if not node.children:
-        j = i
-        while j == i:
-          j = self.rand.randint(0, len(nodes) - 1)
-        node.children.add(nodes[j])
-    return nodes[0]
+      for i in row:
+        # CFG nodes cannot be connected to themselves.
+        if NotSelfLoop(i, j) and NotExitNodeOutput(i, j) and IsEdge(i, j):
+          graph.add_edge(i, j)
+
+    # Apply finishing touches to the graph to make it a valid CFG.
+    def AddRandomEdge(src):
+      """Add an outgoing edge from src to a random destination."""
+      dst = src
+      while dst == src:
+        dst = self._rand.randint(0, num_nodes)
+      graph.add_edge(src, dst)
+
+    def AddRandomIncomingEdge(dst):
+      """Add an incoming edge to dst from a random source."""
+      src = dst
+      while src == dst or src == exit_block:
+        src = self._rand.randint(0, num_nodes)
+      graph.add_edge(src, dst)
+
+    # Make sure that every node has one output. This will also include
+    modified = True
+    while modified:
+      for node in graph.nodes:
+        if NotExitNodeOutput(node, 0) and not graph.out_degree(node):
+          AddRandomEdge(node)
+          break
+      else:
+        modified = False
+
+    modified = True
+    while modified:
+      for src, dst in graph.edges:
+        if not (graph.out_degree(src) > 1 or graph.in_degree(dst) > 1) and (
+            NotExitNodeOutput(src, dst)):
+          AddRandomEdge(src)
+          break
+      else:
+        # We iterated through all nodes without making any modifications: we're
+        # done.
+        modified = False
+
+    # Make sure the exit block has at least one incoming edge.
+    if not graph.in_degree(exit_block):
+      AddRandomIncomingEdge(exit_block)
+
+    return graph.ValidateControlFlowGraph()

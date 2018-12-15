@@ -2,6 +2,7 @@
 import sys
 import typing
 
+import numpy as np
 import pytest
 from absl import app
 from absl import flags
@@ -43,6 +44,12 @@ def test_UniqueNameSequence_StringInSequence_prefix():
   assert g.StringInSequence(0) == 'prefix_a'
 
 
+def test_UniqueNameSequence_StringInSequence_prefix():
+  """Test suffix."""
+  g = control_flow_graph_generator.UniqueNameSequence('a', suffix='_suffix')
+  assert g.StringInSequence(0) == 'a_suffix'
+
+
 def test_UniqueNameSequence_StringInSequence_base_char():
   """Test different base char."""
   g = control_flow_graph_generator.UniqueNameSequence('A')
@@ -53,6 +60,52 @@ def test_UniqueNameSequence_StringInSequence_invalid_base_char():
   """Test that invalid base char raises error."""
   with pytest.raises(ValueError):
     control_flow_graph_generator.UniqueNameSequence('AA')
+
+
+def test_ControlFlowGraphGenerator_invalid_edge_density():
+  """Test that invalid edge densities raise error."""
+  with pytest.raises(ValueError):
+    control_flow_graph_generator.ControlFlowGraphGenerator(
+        np.random.RandomState(1), (10, 10), 0)
+  with pytest.raises(ValueError):
+    control_flow_graph_generator.ControlFlowGraphGenerator(
+        np.random.RandomState(1), (10, 10), -1)
+  with pytest.raises(ValueError):
+    control_flow_graph_generator.ControlFlowGraphGenerator(
+        np.random.RandomState(1), (10, 10), 1.1)
+
+
+def test_ControlFlowGraphGenerator_generates_valid_graphs():
+  """Test that generator produces valid graphs."""
+  generator = control_flow_graph_generator.ControlFlowGraphGenerator(
+      np.random.RandomState(1), (10, 10), 0.5)
+  g = next(generator)
+  assert g.ValidateControlFlowGraph() == g
+  g = next(generator)
+  assert g.ValidateControlFlowGraph() == g
+  g = next(generator)
+  assert g.ValidateControlFlowGraph() == g
+
+
+def test_ControlFlowGraphGenerator_num_nodes():
+  """Test that generator produces graphs with expected number of nodes."""
+  generator = control_flow_graph_generator.ControlFlowGraphGenerator(
+      np.random.RandomState(1), (10, 10), 0.5)
+  assert next(generator).number_of_nodes() == 10
+
+  generator = control_flow_graph_generator.ControlFlowGraphGenerator(
+      np.random.RandomState(1), (5, 5), 0.5)
+  assert next(generator).number_of_nodes() == 5
+
+
+def test_ControlFlowGraphGenerator_generates_unique_graphs():
+  """Test that generator produces unique graphs."""
+  generator = control_flow_graph_generator.ControlFlowGraphGenerator(
+      np.random.RandomState(1), (10, 10), 0.5)
+  # Flaky test, but unlikely to fail in practise.
+  graphs = [g for g, _ in zip(generator, range(50))]
+  edge_sets = {'.'.join(f'{s}-{d}' for s, d in g.edges) for g in graphs}
+  assert len(edge_sets) > 1
 
 
 def main(argv: typing.List[str]):

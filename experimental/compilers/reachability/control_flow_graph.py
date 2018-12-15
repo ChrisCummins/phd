@@ -4,11 +4,53 @@ import typing
 import networkx as nx
 from absl import flags
 
+from experimental.compilers.reachability import reachability_pb2
+from labm8 import pbutil
+from labm8.pbutil import ProtocolBuffer
+
 
 FLAGS = flags.FLAGS
 
 
-class ControlFlowGraph(nx.DiGraph):
+class MalformedControlFlowGraphError(ValueError):
+  """Base class for errors raised by ValidateControlFlowGraph."""
+  pass
+
+
+class NotEnoughNodes(MalformedControlFlowGraphError): pass
+
+
+class GraphContainsSelfLoops(MalformedControlFlowGraphError): pass
+
+
+class UnconnectedNode(MalformedControlFlowGraphError): pass
+
+
+class InvalidNodeDegree(MalformedControlFlowGraphError): pass
+
+
+class MissingNodeName(MalformedControlFlowGraphError): pass
+
+
+class DuplicateNodeName(MalformedControlFlowGraphError): pass
+
+
+class InvalidSpecialBlock(MalformedControlFlowGraphError): pass
+
+
+class NoEntryBlock(InvalidSpecialBlock): pass
+
+
+class MultipleEntryBlocks(InvalidSpecialBlock): pass
+
+
+class NoExitBlock(InvalidSpecialBlock): pass
+
+
+class MultipleExitBlocks(InvalidSpecialBlock): pass
+
+
+class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
   """A control flow graph.
 
   For a control flow graph to be considered "valid", the following properties
@@ -22,6 +64,8 @@ class ControlFlowGraph(nx.DiGraph):
   these properties.
   """
 
+  proto_t = reachability_pb2.ControlFlowGraph
+
   def __init__(self, name: str = "cfg"):
     super(ControlFlowGraph, self).__init__(name=name)
 
@@ -29,28 +73,178 @@ class ControlFlowGraph(nx.DiGraph):
     """Return whether dst node is reachable from src."""
     # TODO(cec): It seems that descendants() does not include self loops, so
     # test for the node in both descendants and self loops.
-    return ((dst in nx.descendants(self, src)) or
-            (dst in self.nodes_with_selfloops()))
+    return dst in nx.descendants(self, src)
 
   def Reachables(self, src) -> typing.Iterator[bool]:
     """Return whether each node is reachable from the src node."""
     return (self.IsReachable(src, dst) for dst in self.nodes)
 
-  def IsValidControlFlowGraph(self) -> bool:
+  def ValidateControlFlowGraph(self) -> 'ControlFlowGraph':
     """Return true if the graph is a valid control flow graph."""
     number_of_nodes = self.number_of_nodes()
-    # CFGs must contain a node.
-    if not number_of_nodes:
+
+    # CFGs must contain > 1 node.
+    if number_of_nodes < 2:
+      raise NotEnoughNodes(f"Graph has {number_of_nodes} nodes")
+
+    out_degrees = [self.out_degree(n) for n in self.nodes]
+    in_degrees = [self.in_degree(n) for n in self.nodes]
+
+    # Get the entry and exit blocks. These properties will raise exceptions
+    # if they are not found / duplicates found.
+    entry_node = self.entry_block
+    exit_node = self.exit_block
+
+    if entry_node == exit_node:
+      raise InvalidSpecialBlock(f"Exit and entry nodes are the same: "
+                                f"'{self.nodes[entry_node]['name']}'")
+
+    # Validate node attributes.
+    node_names = set()
+    for node in self.nodes:
+      # All nodes must have a name.
+      if not 'name' in self.nodes[node]:
+        raise MissingNodeName(f"Node {node} has no name")
+
+      # All node names must be unique.
+      node_name = self.nodes[node]['name']
+      if node_name in node_names:
+        raise DuplicateNodeName(f"Duplicate node name '{node_name}'")
+      node_names.add(node_name)
+
+      # All nodes must be connected.
+      if not out_degrees[node] + in_degrees[node]:
+        raise UnconnectedNode(f"Unconnected node '{self.nodes[node]['name']}'")
+
+    # The entry node has an additional input, since it must entered.
+    in_degrees[entry_node] += 1
+
+    # Validate edge attributes.
+    for src, dst in self.edges:
+      if src == dst:
+        raise GraphContainsSelfLoops(f"Self loops: {src} -> {dst}")
+
+      # Each node in a CFG must have more than one output, or more than one
+      # input. This is because nodes represent basic blocks: a node with only a
+      # single output should have been fused with the consuming node (i.e. they
+      # are the same basic block).
+      if not (out_degrees[src] > 1 or in_degrees[dst] > 1):
+        raise InvalidNodeDegree(
+            f"outdegree({self.nodes[src]['name']}) = {out_degrees[src]}, "
+            f"indegree({self.nodes[dst]['name']}) = {in_degrees[dst]}")
+
+    # The exit block cannot have outputs.
+    if out_degrees[exit_node]:
+      raise InvalidNodeDegree(
+          f"Exit block outdegree({self.nodes[exit_node]['name']}) = "
+          f"{out_degrees[exit_node]}")
+
+    return self
+
+  def IsValidControlFlowGraph(self) -> bool:
+    try:
+      self.ValidateControlFlowGraph()
+      return True
+    except MalformedControlFlowGraphError:
       return False
-    # CFGs must be fully connected.
-    # TODO:
-    # if nx.number_connected_components(self) != number_of_nodes:
-    #   return False
-    # All nodes must have a name.
-    if not all('name' in self.nodes[node] for node in self.nodes):
+
+  def IsEntryBlock(self, node) -> bool:
+    return self.nodes[node].get('entry', False)
+
+  def IsExitBlock(self, node) -> bool:
+    return self.nodes[node].get('exit', False)
+
+  @property
+  def entry_block(self) -> int:
+    entry_blocks = [n for n in self.nodes if self.IsEntryBlock(n)]
+    if not entry_blocks:
+      raise NoEntryBlock()
+    elif len(entry_blocks) > 1:
+      raise MultipleEntryBlocks()
+    return entry_blocks[0]
+
+  @property
+  def exit_block(self) -> int:
+    exit_blocks = [n for n in self.nodes if self.IsExitBlock(n)]
+    if not exit_blocks:
+      raise NoExitBlock()
+    elif len(exit_blocks) > 1:
+      raise MultipleExitBlocks()
+    return exit_blocks[0]
+
+  def SetProto(self, proto: ProtocolBuffer) -> None:
+    # Ensure that graph is valid. This will raise exception if graph is not
+    # valid.
+    self.ValidateControlFlowGraph()
+
+    # Set the graph-level properties.
+    proto.name = self.graph['name']
+    proto.entry_block_index = self.entry_block
+    proto.exit_block_index = self.exit_block
+    # Create the block protos.
+    for node in self.nodes:
+      block = proto.add_block()
+      block.name = self.nodes[node]['name']
+    # Creat the edge protos.
+    for src, dst in self.edges:
+      edge = proto.add_edge()
+      edge.src_index = src
+      edge.dst_index = dst
+
+  @classmethod
+  def FromProto(cls, proto: ProtocolBuffer) -> 'ProtoBackedMixin':
+    instance = cls(name=proto.name)
+    # Create the nodes from the block protos.
+    for i, block in enumerate(proto.block):
+      instance.add_node(i, name=block.name)
+    # Set the special block attributes.
+    instance.nodes[proto.entry_block_index]['entry'] = True
+    instance.nodes[proto.exit_block_index]['exit'] = True
+    # Create the edges from protos.
+    for edge in proto.edge:
+      instance.add_edge(edge.src_index, edge.dst_index)
+    # Validate the proto.
+    return instance.ValidateControlFlowGraph()
+
+  def __eq__(self, other) -> bool:
+    """Compare control flow graphs.
+
+    This performs a "logical" comparison between graphs, excluding attributes
+    that do not affect the graph, e.g. the name of the graph.
+
+    Args:
+      other: Another control flow graph.
+
+    Returns:
+      True if graphs are equal, else false.
+    """
+    if not isinstance(other, self.__class__):
       return False
-    # All node names must be unique.
-    node_names_set = set(self.nodes[n]['name'] for n in self.nodes)
-    if len(node_names_set) != number_of_nodes:
+
+    if self.number_of_nodes() != other.number_of_nodes():
       return False
+    if self.number_of_edges() != other.number_of_edges():
+      return False
+
+    if list(self.nodes) != list(other.nodes):
+      return False
+
+    # Compare node data.
+    for i in self.nodes:
+      # TODO(cec): We may want to exclude the 'name' attribute from comparisons,
+      # assuming it has no logical meaning.
+      if self.nodes[i] != other.nodes[i]:
+        return False
+
+    if list(self.edges) != list(other.edges):
+      return False
+
+    for i, j in self.edges:
+      # Compare edge data.
+      if self.edges[i, j] != other.edges[i, j]:
+        return False
+
     return True
+
+  def __ne__(self, other):
+    return not self.__eq__(other)

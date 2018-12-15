@@ -4,29 +4,29 @@ syntax = "proto2";
 
 package phd.experimental.compilers.reachability;
 
-message ControlFlowGraphNode {
-  // The name of the graph node.
-  optional string name = 1;
-  // A list of children graph nodes.
-  repeated string child = 2;
+// A collection of control flow graphs.
+message ControlFlowGraphSet {
+  repeated ControlFlowGraph graph = 1;
+  optional int64 initial_random_seed = 2;
 }
 
+// A control flow graph is a collection of basic blocks and edges between them.
 message ControlFlowGraph {
-  // The graph nodes.
-  repeated ControlFlowGraphNode node = 1;
+  optional string name = 1;
+  repeated BasicBlock block = 2;
+  repeated ControlFlowGraphEdge edge = 3;
+  optional int64 entry_block_index = 4;
+  optional int64 exit_block_index = 5;
 }
 
-message CfgWithReachability {
-  // The graph.
-  optional ControlFlowGraph graph = 1;
-  // A list of boolean values corresponding to whether a given node in the
-  // control flow graph is reachable from the first node.
-  repeated bool reachable = 2;
-
-  optional int32 seed = 3;
+// A basic block.
+message BasicBlock {
+  optional string name = 1;
 }
 
-message ReachabilityDataset {
-  // The training data.
-  repeated CfgWithReachability entry = 1;
+// A CFG edge is a pair of indices into a ControlFlowGraph.block list that
+// identifies the source and destination BasicBlocks.
+message ControlFlowGraphEdge {
+  optional int64 src_index = 1;
+  optional int64 dst_index = 2;
 }

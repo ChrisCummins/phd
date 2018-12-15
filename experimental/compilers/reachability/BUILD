@@ -7,6 +7,8 @@ py_library(
     srcs = ["control_flow_graph.py"],
     visibility = ["//experimental/compilers/reachability:__subpackages__"],
     deps = [
+        ":reachability_py_pb2",
+        "//labm8:pbutil",
         "//third_party/py/absl",
         "//third_party/py/networkx",
     ],
