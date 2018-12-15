@@ -49,8 +49,8 @@ py_test(
 )
 
 py_library(
-    name = "datasets",
-    srcs = ["datasets.py"],
+    name = "cfg_datasets",
+    srcs = ["cfg_datasets.py"],
     visibility = ["//experimental/compilers/reachability:__subpackages__"],
     deps = [
         ":llvm_util",
@@ -65,10 +65,10 @@ py_library(
 )
 
 py_test(
-    name = "datasets_test",
-    srcs = ["datasets_test.py"],
+    name = "cfg_datasets_test",
+    srcs = ["cfg_datasets_test.py"],
     deps = [
-        ":datasets",
+        ":cfg_datasets",
         "//third_party/py/absl",
         "//third_party/py/pytest",
     ],

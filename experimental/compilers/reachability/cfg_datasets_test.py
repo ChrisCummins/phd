@@ -5,7 +5,9 @@ import pytest
 from absl import app
 from absl import flags
 
-from experimental.compilers.reachability import datasets
+from experimental.compilers.reachability import control_flow_graph as cfg
+from experimental.compilers.reachability import reachability_pb2
+from experimental.compilers.reachability import cfg_datasets as datasets
 
 
 FLAGS = flags.FLAGS
