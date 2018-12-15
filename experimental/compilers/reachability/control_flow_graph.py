@@ -183,11 +183,11 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
     proto.exit_block_index = self.exit_block
     # Create the block protos.
     for node in self.nodes:
-      block = proto.add_block()
+      block = proto.block.add()
       block.name = self.nodes[node]['name']
-    # Creat the edge protos.
+    # Create the edge protos.
     for src, dst in self.edges:
-      edge = proto.add_edge()
+      edge = proto.edge.add()
       edge.src_index = src
       edge.dst_index = dst
 
