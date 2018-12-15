@@ -107,8 +107,8 @@ class OpenClDeviceMappingsDataset(object):
       program:benchmark_suite_name (str): The name of the benchmark suite.
       program:benchmark_name (str): The name of the benchmark program.
       program:opencl_kernel_name (str): The name of the OpenCL kernel.
-      program:opencl_preprocessed_src (str): Entire source code of the
-        preprocessed OpenCL kernel.
+      program:opencl_src (str): Entire source code of the preprocessed OpenCL
+        kernel.
     """
     df = self._df.groupby('benchmark').min()
     df = df[[
