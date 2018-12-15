@@ -48,6 +48,32 @@ py_test(
     ],
 )
 
+py_library(
+    name = "datasets",
+    srcs = ["datasets.py"],
+    visibility = ["//experimental/compilers/reachability:__subpackages__"],
+    deps = [
+        ":llvm_util",
+        ":reachability_py_pb2",
+        "//compilers/llvm:clang",
+        "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
+        "//deeplearning/clgen/preprocessors:opencl",
+        "//labm8:decorators",
+        "//third_party/py/absl",
+        "//third_party/py/pandas",
+    ],
+)
+
+py_test(
+    name = "datasets_test",
+    srcs = ["datasets_test.py"],
+    deps = [
+        ":datasets",
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
+    ],
+)
+
 py_binary(
     name = "eval_model",
     srcs = ["eval_model.py"],

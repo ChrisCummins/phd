@@ -419,7 +419,7 @@ py_library(
         "//deeplearning/clgen/data/include:opencl-shim",
         "//third_party/libclc/generic/include:headers",
     ],
-    visibility = ["//deeplearning/clgen:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         ":clang",
         ":normalizer",
