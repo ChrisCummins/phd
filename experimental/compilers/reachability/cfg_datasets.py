@@ -10,9 +10,8 @@ from compilers.llvm import clang
 from datasets.opencl.device_mapping import \
   opencl_device_mapping_dataset as ocl_dataset
 from deeplearning.clgen.preprocessors import opencl
-from experimental.compilers.reachability import llvm_util
 from experimental.compilers.reachability import control_flow_graph as cfg
-from experimental.compilers.reachability import reachability_pb2
+from experimental.compilers.reachability import llvm_util
 from labm8 import decorators
 
 
@@ -41,9 +40,9 @@ def BytecodeFromOpenClString(opencl_string: str) -> str:
   return process.stdout
 
 
-def CreateControlFlowGraphProtoFromOpenClKernel(
-    kernel_name: str, opencl_kernel: str) -> typing.Optional[
-  reachability_pb2.ControlFlowGraph]:
+def CreateControlFlowGraphFromOpenClKernel(
+    kernel_name: str,
+    opencl_kernel: str) -> typing.Optional[cfg.ControlFlowGraph]:
   """Try to create a CFG proto from an opencl kernel.
 
   Args:
@@ -52,7 +51,7 @@ def CreateControlFlowGraphProtoFromOpenClKernel(
       definition.
 
   Returns:
-    A ControlFlowGraph proto, or None if compilation to bytecode fails.
+    A ControlFlowGraph instance, or None if compilation to bytecode fails.
 
   Raises:
     ClangException: If compiling to bytecode fails.
@@ -76,8 +75,7 @@ def CreateControlFlowGraphProtoFromOpenClKernel(
   # has been preprocessed, so that each kernel is named 'A'.
   graph.graph['name'] = kernel_name
 
-  # Return the graph as a proto.
-  return graph.ToProto()
+  return graph
 
 
 def ProcessProgramDfIterItem(
@@ -88,7 +86,7 @@ def ProcessProgramDfIterItem(
   src = row['program:opencl_src']
 
   try:
-    graph_proto = CreateControlFlowGraphProtoFromOpenClKernel(
+    graph = CreateControlFlowGraphFromOpenClKernel(
         kernel_name, src)
   except (clang.ClangException, cfg.MalformedControlFlowGraphError):
     return None
@@ -97,7 +95,11 @@ def ProcessProgramDfIterItem(
     'program:benchmark_suite_name': benchmark_suite_name,
     'program:benchmark_name': benchmark_name,
     'program:opencl_kernel_name': kernel_name,
-    'program:cfg_proto': graph_proto.SerializeToString(),
+    'cfg:graph': graph,
+    'cfg:block_count': graph.number_of_edges(),
+    'cfg:edge_count': graph.number_of_edges(),
+    'cfg:edge_density': graph.number_of_edges() / (
+        graph.number_of_nodes() * graph.number_of_nodes()),
   }
 
 
@@ -109,7 +111,10 @@ class OpenClDeviceMappingsDataset(ocl_dataset.OpenClDeviceMappingsDataset):
     program:benchmark_suite_name (str): The name of the benchmark suite.
     program:benchmark_name (str): The name of the benchmark program.
     program:opencl_kernel_name (str): The name of the OpenCL kernel.
-    program:cfg_proto (bytes): A serialized ControlFlowGraph proto.
+    cfg:graph (ControlFlowGraph): A control flow graph instance.
+    cfg:block_count (int): The number of basic blocks in the CFG.
+    cfg:edge_count (int): The number of edges in the CFG.
+    cfg:edge_density (float): Number of edges / possible edges, in range [0,1].
   """
 
   @decorators.memoized_property
@@ -129,7 +134,10 @@ class OpenClDeviceMappingsDataset(ocl_dataset.OpenClDeviceMappingsDataset):
       'program:benchmark_suite_name',
       'program:benchmark_name',
       'program:opencl_kernel_name',
-      'program:cfg_proto',
+      'cfg:graph',
+      'cfg:block_count',
+      'cfg:edge_count',
+      'cfg:edge_density',
     ])
 
     df.set_index([

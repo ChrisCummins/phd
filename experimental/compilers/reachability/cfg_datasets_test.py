@@ -5,8 +5,6 @@ import pytest
 from absl import app
 from absl import flags
 
-from experimental.compilers.reachability import control_flow_graph as cfg
-from experimental.compilers.reachability import reachability_pb2
 from experimental.compilers.reachability import cfg_datasets as datasets
 
 
@@ -19,17 +17,16 @@ def opencl_dataset() -> datasets.OpenClDeviceMappingsDataset:
 
 
 def test_OpenClDeviceMappingsDataset_cfgs_df_count(
-      opencl_dataset: datasets.OpenClDeviceMappingsDataset):
+    opencl_dataset: datasets.OpenClDeviceMappingsDataset):
   """Test that dataset has expected number of rows."""
-  assert len(opencl_dataset.cfgs_df) == 195
+  assert len(opencl_dataset.cfgs_df) == 190
 
 
-def test_OpenClDeviceMappingsDataset_cfgs_df_contains_valid_protos(
-      opencl_dataset: datasets.OpenClDeviceMappingsDataset):
-  """Test that proto columns can be parsed."""
-  for cfg_proto in opencl_dataset.cfgs_df['program:cfg_proto'].values:
-    proto = reachability_pb2.ControlFlowGraph.FromString(cfg_proto)
-    cfg.ControlFlowGraph.FromProto(proto)
+def test_OpenClDeviceMappingsDataset_cfgs_df_contains_valid_graphs(
+    opencl_dataset: datasets.OpenClDeviceMappingsDataset):
+  """Test that graph instances are valid."""
+  for cfg in opencl_dataset.cfgs_df['cfg:graph'].values:
+    assert cfg.ValidateControlFlowGraph(strict=False)
 
 
 def main(argv):
