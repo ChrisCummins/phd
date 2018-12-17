@@ -87,7 +87,7 @@ def ProcessProgramDfIterItem(
 
   try:
     graph = CreateControlFlowGraphFromOpenClKernel(
-        kernel_name, src)
+        kernel_name, src).ValidateControlFlowGraph(strict=False)
   except (clang.ClangException, cfg.MalformedControlFlowGraphError):
     return None
 

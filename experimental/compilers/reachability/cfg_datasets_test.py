@@ -19,7 +19,7 @@ def opencl_dataset() -> datasets.OpenClDeviceMappingsDataset:
 def test_OpenClDeviceMappingsDataset_cfgs_df_count(
     opencl_dataset: datasets.OpenClDeviceMappingsDataset):
   """Test that dataset has expected number of rows."""
-  assert len(opencl_dataset.cfgs_df) == 190
+  assert len(opencl_dataset.cfgs_df) == 189
 
 
 def test_OpenClDeviceMappingsDataset_cfgs_df_contains_valid_graphs(
