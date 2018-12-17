@@ -91,15 +91,24 @@ def ProcessProgramDfIterItem(
   except (clang.ClangException, cfg.MalformedControlFlowGraphError):
     return None
 
-  return {
+  row = CfgDfRowFromControlFlowGraph(graph)
+  row.update({
     'program:benchmark_suite_name': benchmark_suite_name,
     'program:benchmark_name': benchmark_name,
     'program:opencl_kernel_name': kernel_name,
+  })
+  return row
+
+
+def CfgDfRowFromControlFlowGraph(
+    graph: cfg.ControlFlowGraph) -> typing.Dict[str, str]:
+  return {
     'cfg:graph': graph,
     'cfg:block_count': graph.number_of_edges(),
     'cfg:edge_count': graph.number_of_edges(),
     'cfg:edge_density': graph.number_of_edges() / (
         graph.number_of_nodes() * graph.number_of_nodes()),
+    'cfg:is_valid': graph.IsValidControlFlowGraph(strict=True),
   }
 
 
@@ -115,6 +124,7 @@ class OpenClDeviceMappingsDataset(ocl_dataset.OpenClDeviceMappingsDataset):
     cfg:block_count (int): The number of basic blocks in the CFG.
     cfg:edge_count (int): The number of edges in the CFG.
     cfg:edge_density (float): Number of edges / possible edges, in range [0,1].
+    cfg:is_valid (bool): Whether the CFG is valid.
   """
 
   @decorators.memoized_property
@@ -138,6 +148,7 @@ class OpenClDeviceMappingsDataset(ocl_dataset.OpenClDeviceMappingsDataset):
       'cfg:block_count',
       'cfg:edge_count',
       'cfg:edge_density',
+      'cfg:is_valid',
     ])
 
     df.set_index([
