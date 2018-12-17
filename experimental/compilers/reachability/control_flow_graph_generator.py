@@ -215,10 +215,10 @@ class ControlFlowGraphGenerator(object):
     Returns:
       An iterator of unique graphs, where g0 != g1 != ... != gn.
     """
-    graph_checksums = set()
-    while len(graph_checksums) < n:
+    graph_hashes = set()
+    while len(graph_hashes) < n:
       graph = self.GenerateOne()
-      checksum = graph.Checksum()
-      if checksum not in graph_checksums:
-        graph_checksums.add(checksum)
+      graph_hash = hash(graph)
+      if graph_hash not in graph_hashes:
+        graph_hashes.add(graph_hash)
         yield graph
