@@ -92,6 +92,10 @@ def ControlFlowGraphFromDotSource(
 
   Returns:
     A ControlFlowGraph instance.
+
+  Raises:
+    pyparsing.ParseException: If dotfile could not be parsed.
+    ValueError: If dotfile could not be interpretted / is malformed.
   """
   try:
     parsed_dots = pydot.graph_from_dot_data(dot_source)
