@@ -4,6 +4,7 @@ py_library(
     name = "linux",
     srcs = ["linux.py"],
     data = [
+        "//datasets/linux/generated_headers",
         "@linux_srcs//:includes",
         "@linux_srcs//:kernel_c_hdrs",
         "@linux_srcs//:kernel_c_srcs",

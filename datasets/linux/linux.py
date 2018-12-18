@@ -28,9 +28,8 @@ class LinuxSourcesDataset(object):
 
   def __init__(self):
     self._src_tree_root = pathlib.Path(bazelutil.DataPath("linux_srcs"))
-    if not self._src_tree_root.is_dir():
-      raise EnvironmentError(
-          f"Could not locate Linux sources {self._src_tree_root}")
+    self.generated_hdrs_root = pathlib.Path(bazelutil.DataPath(
+        "phd/datasets/linux/generated_headers"))
 
   @property
   def src_tree_root(self) -> pathlib.Path:
