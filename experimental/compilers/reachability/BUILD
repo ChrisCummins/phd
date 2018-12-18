@@ -56,6 +56,7 @@ py_library(
         ":llvm_util",
         ":reachability_py_pb2",
         "//compilers/llvm:clang",
+        "//datasets/linux",
         "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
         "//deeplearning/clgen/preprocessors:opencl",
         "//labm8:decorators",
@@ -69,6 +70,7 @@ py_test(
     srcs = ["cfg_datasets_test.py"],
     deps = [
         ":cfg_datasets",
+        "//labm8:system",
         "//third_party/py/absl",
         "//third_party/py/pytest",
     ],
