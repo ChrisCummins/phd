@@ -42,6 +42,10 @@ def test_ControlFlowGraph_IsReachable_non_existent_node_raises_error():
     g.IsReachable(1, 0)
 
 
+# TODO(cec): Add more tests for IsReachable using common real-world graphs,
+# e.g. for loop.
+
+
 def test_ControlFlowGraph_Reachables_empty_graph():
   """An empty graph has no reachables."""
   g = control_flow_graph.ControlFlowGraph()
@@ -51,6 +55,9 @@ def test_ControlFlowGraph_Reachables_empty_graph():
 def test_ControlFlowGraph_Reachables_simple_graph():
   """An empty graph has no reachables."""
   g = control_flow_graph.ControlFlowGraph()
+  # Graph:
+  #
+  #   A  ->  B  ->  C
   g.add_edge(0, 1)
   g.add_edge(1, 2)
   assert list(g.Reachables(0)) == [False, True, True]
@@ -61,11 +68,17 @@ def test_ControlFlowGraph_Reachables_simple_graph():
 def test_ControlFlowGraph_Reachables_back_edge():
   """Test reachability with a back edge in the graph."""
   g = control_flow_graph.ControlFlowGraph()
+  # Graph:
+  #
+  #   A  ->  B  ->  C
+  #   ^      |
+  #   +------+
   g.add_edge(0, 1)
   g.add_edge(1, 0)
   g.add_edge(1, 2)
-  assert list(g.Reachables(0)) == [False, True, True]  # FIXME
-  assert list(g.Reachables(1)) == [True, False, True]  # FIXME
+  # FIXME(cec): I don't belive these values.
+  assert list(g.Reachables(0)) == [False, True, True]
+  assert list(g.Reachables(1)) == [True, False, True]
   assert list(g.Reachables(2)) == [False, False, False]
 
 
@@ -123,9 +136,9 @@ def test_ControlFlowGraph_IsValidControlFlowGraph_unamed_nodes():
   #
   #     +----> B -----+
   #     |             |
-  #     v             v
+  #     |             v
   #     A             D
-  #     ^             ^
+  #     |             ^
   #     |             |
   #     +---->   -----+
   g.add_node(0, name='A', entry=True)
@@ -149,9 +162,9 @@ def test_ControlFlowGraph_IsValidControlFlowGraph_duplicate_names():
   #
   #     +----> B -----+
   #     |             |
-  #     v             v
+  #     |             v
   #     A             D
-  #     ^             ^
+  #     |             ^
   #     |             |
   #     +----> B -----+
   g.add_node(0, name='A', entry=True)
@@ -173,13 +186,13 @@ def test_ControlFlowGraph_IsValidControlFlowGraph_exit_block_has_output():
   g = control_flow_graph.ControlFlowGraph()
   # Graph:
   #
-  #     +----> B +----+
+  #     +----> B -----+
   #     |             |
-  #     v             v
+  #     |             v
   #     A<-----------+D
-  #     ^             ^
+  #     |             ^
   #     |             |
-  #     +----> C +----+
+  #     +----> C -----+
   g.add_node(0, name='A', entry=True)
   g.add_node(1, name='B')
   g.add_node(2, name='C')
@@ -202,9 +215,9 @@ def test_ControlFlowGraph_IsValidControlFlowGraph_if_else_loop():
   #
   #     +----> B -----+
   #     |             |
-  #     v             v
+  #     |             v
   #     A             D
-  #     ^             ^
+  #     |             ^
   #     |             |
   #     +----> C -----+
   g.add_node(0, name='A', entry=True)
@@ -226,9 +239,9 @@ def test_ControlFlowGraph_IsValidControlFlowGraph_while_loop():
   #
   #     +--------+
   #     |        |
-  #     v        +
+  #     v        |
   #     A+------>B       C
-  #     +                ^
+  #     |                ^
   #     |                |
   #     +----------------+
   g.add_node(0, name='A', entry=True)
@@ -248,9 +261,9 @@ def test_ControlFlowGraph_IsValidControlFlowGraph_while_loop_with_exit():
   #
   #     +----------------+
   #     |                |
-  #     v                +
+  #     v                |
   #     A+------>B+----->C       D
-  #     +        +               ^
+  #     |        |               ^
   #     |        |               |
   #     +------->+---------------+
   g.add_node(0, name='A', entry=True)
@@ -272,9 +285,9 @@ def test_ControlFlowGraph_IsValidControlFlowGraph_irreducible_loop():
   # Graph:
   #              +-------+
   #              |       |
-  #              v       +
-  #     A+------>B+----->C
-  #     +        +       ^
+  #              v       |
+  #     A------->B+----->C
+  #     |        |       ^
   #     |        |       |
   #     |        v       |
   #     |        D       |
@@ -299,9 +312,9 @@ def test_ControlFlowGraph_entry_block():
   #
   #     +----> B -----+
   #     |             |
-  #     v             v
+  #     |             v
   #     A             D
-  #     ^             ^
+  #     |             ^
   #     |             |
   #     +----> C -----+
   g.add_node(0, name='A', entry=True)
@@ -322,9 +335,9 @@ def test_ControlFlowGraph_exit_block():
   #
   #     +----> B -----+
   #     |             |
-  #     v             v
+  #     |             v
   #     A             D
-  #     ^             ^
+  #     |             ^
   #     |             |
   #     +----> C -----+
   g.add_node(0, name='A', entry=True)
