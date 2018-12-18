@@ -20,6 +20,10 @@ def dataset() -> linux.LinuxSourcesDataset:
 # that is defined the WORKSPACE file. Changing the linux version will require
 # updating these tests.
 
+def test_version(dataset: linux.LinuxSourcesDataset):
+  assert dataset.version == '4.19'
+
+
 def test_known_file_locations(dataset: linux.LinuxSourcesDataset):
   """Test that known files exist."""
   assert (dataset.src_tree_root / 'kernel' / 'kexec.c').is_file()

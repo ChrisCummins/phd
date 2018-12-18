@@ -23,6 +23,8 @@ class LinuxSourcesDataset(object):
   This is assembled from a fresh clone of the source tree, without configuration
   or building.
   """
+  # This value must be changed if the WORKSPACE @linux_srcs archive is changed!
+  version = '4.19'
 
   def __init__(self):
     self._src_tree_root = pathlib.Path(bazelutil.DataPath("linux_srcs"))
