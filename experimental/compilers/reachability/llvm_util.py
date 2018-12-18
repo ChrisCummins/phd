@@ -31,6 +31,7 @@ def DotCfgsFromBytecode(
 
   Raises:
     OptException: In case the opt pass fails.
+    UnicodeDecodeError: If generated dotfile can't be read.
   """
   with tempfile.TemporaryDirectory(prefix='phd_') as d:
     output_dir = pathlib.Path(d)
