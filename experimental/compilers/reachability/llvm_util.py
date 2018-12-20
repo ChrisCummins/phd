@@ -92,8 +92,27 @@ def NodeAttributesToBasicBlock(
 
 
 class LlvmControlFlowGraph(cfg.ControlFlowGraph):
-  """A subclass of the generic control flow graph for LLVM CFGs."""
-  pass
+  """A subclass of the generic control flow graph for LLVM CFGs.
+
+  Each node in an LlvmControlFlowGraph has an additional "text" attribute which
+  contains the LLVM instructions for the basic block as a string.
+  """
+
+  def GetSingleInstructionBlocks(self) -> 'LlvmControlFlowGraph':
+    raise NotImplementedError()
+
+  def ValidateControlFlowGraph(
+      self, strict: bool = True) -> 'LlvmControlFlowGraph':
+    """Validate the control flow graph."""
+    super(LlvmControlFlowGraph, self).ValidateControlFlowGraph(strict=strict)
+
+    # Check that each basic block has a text section.
+    for _, data in self.nodes(data=True):
+      if not data.get('text'):
+        raise cfg.MalformedControlFlowGraphError(
+            f"Missing 'text' attribute from node '{data}'")
+
+    return self
 
 
 def ControlFlowGraphFromDotSource(
