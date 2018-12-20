@@ -5,8 +5,8 @@ py_library(
     srcs = ["linux.py"],
     data = [
         "//datasets/linux/generated_headers",
-        "@linux_srcs//:includes",
         "@linux_srcs//:hdrs",
+        "@linux_srcs//:includes",
         "@linux_srcs//:srcs",
     ],
     visibility = ["//visibility:public"],
