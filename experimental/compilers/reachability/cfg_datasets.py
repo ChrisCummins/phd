@@ -231,7 +231,7 @@ def BytecodeFromLinuxSrc(path: pathlib.Path) -> str:
 
 
 def TryToCreateControlFlowGraphsFromLinuxSrc(
-    path: pathlib.Path) -> typing.Optional[cfg.ControlFlowGraph]:
+    path: pathlib.Path) -> typing.List[cfg.ControlFlowGraph]:
   """Try to create CFGs from a Linux C source file.
 
   On failure, an empty list is returned.
