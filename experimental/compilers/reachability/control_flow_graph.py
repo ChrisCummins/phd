@@ -269,3 +269,8 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
     return hash((tuple(self.nodes), tuple(self.edges),
                  tuple([str(self.nodes[n]) for n in self.nodes]),
                  tuple([str(self.edges[i, j]) for i, j in self.edges])))
+
+  def IsomorphicHash(self) -> int:
+    """Return a numeric hash of the graph shape."""
+    # The hash is based on the nodes and edges, not their attributes.
+    return hash((tuple(self.nodes), tuple(self.edges)))
