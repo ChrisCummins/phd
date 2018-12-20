@@ -91,8 +91,13 @@ def NodeAttributesToBasicBlock(
   }
 
 
+class LlvmControlFlowGraph(cfg.ControlFlowGraph):
+  """A subclass of the generic control flow graph for LLVM CFGs."""
+  pass
+
+
 def ControlFlowGraphFromDotSource(
-    dot_source: str) -> cfg.ControlFlowGraph:
+    dot_source: str) -> LlvmControlFlowGraph:
   """Create a control flow graph from an LLVM-generated dot file.
 
   The control flow graph generated from the dot source is not guaranteed to
@@ -125,7 +130,7 @@ def ControlFlowGraphFromDotSource(
     raise ValueError(f"Could not interpret graph name '{dot.get_name()}'")
 
   # Create the ControlFlowGraph instance.
-  graph = cfg.ControlFlowGraph(name=graph_re_match.group(1))
+  graph = LlvmControlFlowGraph(name=graph_re_match.group(1))
 
   # Create the nodes and build a map from node names to indices.
   node_name_to_index_map = {}
