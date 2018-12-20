@@ -159,8 +159,7 @@ def Preprocess(src: str, copts: typing.Optional[typing.List[str]] = None,
   logging.debug('$ %s', ' '.join(cmd))
   process = Exec(cmd, timeout_seconds=timeout_seconds, stdin=src)
   if process.returncode:
-    raise ClangException(
-        f'clang exited with returncode {process.returncode}: {process.stderr}')
+    raise ClangException(returncode=process.returncode, stderr=process.stderr)
   return process.stdout
 
 

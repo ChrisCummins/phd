@@ -109,7 +109,7 @@ def test_Preprocess_missing_include():
   """Test that Preprocessor error is raised on missing #include."""
   with pytest.raises(clang.ClangException) as e_info:
     clang.Preprocess('#include "my-missing-file.h"')
-  assert "'my-missing-file.h' file not found" in str(e_info)
+  assert "'my-missing-file.h' file not found" in str(e_info.value.stderr)
 
 
 def test_GetOptPasses_O0():

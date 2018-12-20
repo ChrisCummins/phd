@@ -177,7 +177,8 @@ def test_DotCfgsFromBytecode_invalid_bytecode():
   """Test that exception is raised if bytecode is invalid."""
   with pytest.raises(opt.OptException) as e_ctx:
     next(llvm_util.DotCfgsFromBytecode("invalid bytecode!"))
-  assert str(e_ctx.value).startswith("opt failed with return code ")
+  assert e_ctx.value.returncode
+  assert e_ctx.value.stderr
 
 
 def test_NodeAttributesToBasicBlock_unrecognized_label():

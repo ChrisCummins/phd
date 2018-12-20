@@ -48,8 +48,7 @@ def DotCfgsFromBytecode(
 
       # Propagate failures from opt as OptExceptions.
       if process.returncode:
-        raise opt.OptException(
-            f"opt failed with return code {process.returncode}:\n{stderr}")
+        raise opt.OptException(returncode=process.returncode, stderr=stderr)
 
       for file in output_dir.iterdir():
         # Opt pass prints the name of the dot files it generates, e.g.:
