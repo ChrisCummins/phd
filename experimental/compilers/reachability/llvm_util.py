@@ -86,8 +86,8 @@ def NodeAttributesToBasicBlock(
   return {
     # The name is in the first line.
     'name': lines[0][len('"{'):].split(':')[0],
-    # All other lines except the last contain instructions.
-    'text': '\n'.join(x.lstrip() for x in lines[1:-1]),
+    # All other lines except the last are either blank or contain instructions.
+    'text': '\n'.join(x.lstrip() for x in lines[1:-1] if x.lstrip()),
   }
 
 
