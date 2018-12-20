@@ -98,6 +98,16 @@ def test_ControlFlowGraphGenerator_num_nodes():
   assert next(generator).number_of_nodes() == 5
 
 
+@pytest.mark.parametrize("edge_density", [0.1, 0.5, 0.8])
+def test_ControlFlowGraphGenerator_minimum_edge_density(edge_density: float):
+  """Test that edge density >= minimum."""
+  generator = control_flow_graph_generator.ControlFlowGraphGenerator(
+      np.random.RandomState(1), (10, 10), edge_density, strict=False)
+  graphs = generator.GenerateUnique(10)
+  for g in graphs:
+    assert g.edge_density >= edge_density
+
+
 def test_ControlFlowGraphGenerator_generates_unique_graphs():
   """Test that generator produces unique graphs."""
   generator = control_flow_graph_generator.ControlFlowGraphGenerator(

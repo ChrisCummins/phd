@@ -203,6 +203,10 @@ class ControlFlowGraphGenerator(object):
     if not graph.in_degree(exit_block):
       AddRandomIncomingEdge(exit_block)
 
+    # Continue adding random edges until we reach the target edge density.
+    while graph.edge_density < self._edge_density:
+      AddRandomEdge(self._rand.randint(0, exit_block))
+
     return graph.ValidateControlFlowGraph(strict=self._strict)
 
   def Generate(self, n: int) -> typing.Iterator[cfg.ControlFlowGraph]:
