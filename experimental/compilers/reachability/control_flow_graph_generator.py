@@ -114,6 +114,13 @@ class ControlFlowGraphGenerator(object):
     Returns:
       A ControlFlowGraph instance.
     """
+    # TODO(cec): Several issues here:
+    #   * Non-terminating while loops when we can't match the expected edge
+    #     density.
+    #   * Parallel edges being created.
+    #   * In "real" CFGs, does outgree(n) ever exceed 2? If not, this should be
+    #     reflected here.
+
     # Sample the number of nodes to put in the graph, unless min == max.
     if self._num_nodes_min_max[0] == self._num_nodes_min_max[1]:
       num_nodes = self._num_nodes_min_max[0]
