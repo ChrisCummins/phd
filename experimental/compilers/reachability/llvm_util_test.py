@@ -180,19 +180,40 @@ def test_DotCfgsFromBytecode_invalid_bytecode():
   assert str(e_ctx.value).startswith("opt failed with return code ")
 
 
-def test_GetBasicBlockNameFromLabel_unrecognized_label():
+def test_NodeAttributesToBasicBlock_unrecognized_label():
   """Test that error is raised if label is not recognized."""
   with pytest.raises(ValueError):
-    llvm_util.GetBasicBlockNameFromLabel('invalid label')
+    llvm_util.NodeAttributesToBasicBlock({'label': 'invalid label'})
 
 
-def test_GetBasicBlockNameFromLabel_label():
+def test_NodeAttributesToBasicBlock_name():
+  """Test name extraction."""
   label = ('"{%2:\l  %3 = alloca i32, align 4\l  %4 = alloca i32, align 4\l  '
            '%5 = alloca i8**, align 8\l  %6 = alloca i32, align 4\l  '
            'store i32 0, i32* %3, align 4\l  store i32 %0, i32* %4, '
            'align 4\l  store i8** %1, i8*** %5, align 8\l  store i32 0, '
            'i32* %6, align 4\l  br label %7\l}"')
-  assert llvm_util.GetBasicBlockNameFromLabel(label) == "%2"
+  assert llvm_util.NodeAttributesToBasicBlock({'label': label})['name'] == "%2"
+
+
+def test_NodeAttributesToBasicBlock_text():
+  """Test text extraction."""
+  label = ('"{%2:\l  %3 = alloca i32, align 4\l  %4 = alloca i32, align 4\l  '
+           '%5 = alloca i8**, align 8\l  %6 = alloca i32, align 4\l  '
+           'store i32 0, i32* %3, align 4\l  store i32 %0, i32* %4, '
+           'align 4\l  store i8** %1, i8*** %5, align 8\l  store i32 0, '
+           'i32* %6, align 4\l  br label %7\l}"')
+  assert llvm_util.NodeAttributesToBasicBlock({'label': label})['text'] == """\
+%3 = alloca i32, align 4
+%4 = alloca i32, align 4
+%5 = alloca i8**, align 8
+%6 = alloca i32, align 4
+store i32 0, i32* %3, align 4
+store i32 %0, i32* %4, align 4
+store i8** %1, i8*** %5, align 8
+store i32 0, i32* %6, align 4
+br label %7\
+"""
 
 
 def test_ControlFlowGraphFromDotSource_invalid_source():

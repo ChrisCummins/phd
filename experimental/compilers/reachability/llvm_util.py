@@ -68,15 +68,27 @@ def DotCfgsFromBytecode(
           yield f.read()
 
 
-def GetBasicBlockNameFromLabel(label: str):
-  """Get the name of a basic block from the label.
+def NodeAttributesToBasicBlock(
+    node_attributes: typing.Dict[str, str]) -> typing.Dict[str, str]:
+  """Get the basic block graph node attributes from a dot graph node.
 
-  Labels have the form: "{%1:\l  ....". We use the %n identifier as the basic
-  block name.
+  Args:
+    node_attributes: The dictionary of dot graph information.
+
+  Returns:
+    A dictionary of node attributes.
   """
+  label = node_attributes.get('label', '')
   if not label.startswith('"{'):
     raise ValueError(f"Unhandled label: '{label}'")
-  return label.split('\n')[0][len('"{'):].split(":")[0]
+  # Lines are separated using '\l' in the dot label.
+  lines = label.split('\l')
+  return {
+    # The name is in the first line.
+    'name': lines[0][len('"{'):].split(':')[0],
+    # All other lines except the last contain instructions.
+    'text': '\n'.join(x.lstrip() for x in lines[1:-1]),
+  }
 
 
 def ControlFlowGraphFromDotSource(
@@ -121,9 +133,7 @@ def ControlFlowGraphFromDotSource(
     if node.get_name() in node_name_to_index_map:
       raise ValueError(f"Duplicate node name! '{node.get_name()}'")
     node_name_to_index_map[node.get_name()] = i
-    # TODO(cec): Add node label code string.
-    graph.add_node(
-        i, name=GetBasicBlockNameFromLabel(node.get_attributes()['label']))
+    graph.add_node(i, **NodeAttributesToBasicBlock(node.get_attributes()))
 
   def NodeIndex(node: pydot.Node) -> int:
     """Get the index of a node."""
