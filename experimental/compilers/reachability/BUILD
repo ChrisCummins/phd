@@ -48,11 +48,12 @@ py_test(
     ],
 )
 
-py_library(
+py_binary(
     name = "cfg_datasets",
     srcs = ["cfg_datasets.py"],
     visibility = ["//experimental/compilers/reachability:__subpackages__"],
     deps = [
+        ":database",
         ":llvm_util",
         ":reachability_py_pb2",
         "//compilers/llvm:clang",
@@ -62,6 +63,7 @@ py_library(
         "//labm8:decorators",
         "//third_party/py/absl",
         "//third_party/py/pandas",
+        "//third_party/py/progressbar",
     ],
 )
 
@@ -73,6 +75,17 @@ py_test(
         "//labm8:system",
         "//third_party/py/absl",
         "//third_party/py/pytest",
+    ],
+)
+
+py_library(
+    name = "database",
+    srcs = ["database.py"],
+    deps = [
+        ":reachability_py_pb2",
+        "//labm8:pbutil",
+        "//labm8:sqlutil",
+        "//third_party/py/sqlalchemy",
     ],
 )
 

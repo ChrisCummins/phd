@@ -4,6 +4,7 @@ import pathlib
 import typing
 
 import pandas as pd
+import progressbar
 import pyparsing
 from absl import app
 from absl import flags
@@ -15,11 +16,15 @@ from datasets.opencl.device_mapping import \
   opencl_device_mapping_dataset as ocl_dataset
 from deeplearning.clgen.preprocessors import opencl
 from experimental.compilers.reachability import control_flow_graph as cfg
+from experimental.compilers.reachability import database
 from experimental.compilers.reachability import llvm_util
+from experimental.compilers.reachability import reachability_pb2
 from labm8 import decorators
 
 
 FLAGS = flags.FLAGS
+
+flags.DEFINE_string('db', None, 'Path of database to populate.')
 
 
 def BytecodeFromOpenClString(opencl_string: str,
@@ -32,7 +37,7 @@ def BytecodeFromOpenClString(opencl_string: str,
         {-O0,-O1,-O2,-O3,-Ofast,-Os,-Oz}.
 
   Returns:
-    The bytecode as a string.
+    A tuple of the arguments to clang, and the bytecode as a string.
 
   Raises:
     ClangException: If compiling to bytecode fails.
@@ -45,9 +50,10 @@ def BytecodeFromOpenClString(opencl_string: str,
   ]
   process = clang.Exec(clang_args, stdin=opencl_string)
   if process.returncode:
-    raise clang.ClangException("clang failed with returncode "
-                               f"{process.returncode}:\n{process.stderr}")
-  return process.stdout
+    raise clang.ClangException(
+        "clang failed", returncode=process.returncode, stderr=process.stderr,
+        command=clang_args)
+  return clang_args, process.stdout
 
 
 def CreateControlFlowGraphFromOpenClKernel(
@@ -67,7 +73,7 @@ def CreateControlFlowGraphFromOpenClKernel(
     ClangException: If compiling to bytecode fails.
     ValueError: If opencl_kernel contains multiple functions.
   """
-  bytecode = BytecodeFromOpenClString(opencl_kernel, '-O0')
+  bytecode, _ = BytecodeFromOpenClString(opencl_kernel, '-O0')
 
   # Extract a single dot source from the bytecode.
   dot_generator = llvm_util.DotCfgsFromBytecode(bytecode)
@@ -123,6 +129,35 @@ def CfgDfRowFromControlFlowGraph(
   }
 
 
+def ProcessOpenClProgramDfBytecode(
+    row: typing.Dict[str, str]
+) -> reachability_pb2.LlvmBytecode:
+  benchmark_suite_name = row['program:benchmark_suite_name']
+  benchmark_name = row['program:benchmark_name']
+  kernel_name = row['program:opencl_kernel_name']
+  src = row['program:opencl_src']
+
+  try:
+    bytecode, cflags = BytecodeFromOpenClString(src, '-O0')
+    clang_returncode = 0
+    error_message = ''
+  except clang.ClangException as e:
+    bytecode = ''
+    cflags = e.command
+    clang_returncode = e.returncode
+    error_message = e.stderr
+
+  return reachability_pb2.LlvmBytecode(
+      source_name=f'{benchmark_suite_name}:{benchmark_name}',
+      relpath=kernel_name,
+      lang='OpenCL',
+      cflags=' '.join(cflags),
+      bytecode=bytecode,
+      clang_returncode=clang_returncode,
+      error_message=error_message,
+  )
+
+
 class OpenClDeviceMappingsDataset(ocl_dataset.OpenClDeviceMappingsDataset):
   """An extension of the OpenCL device mapping dataset for control flow graphs.
 
@@ -138,6 +173,22 @@ class OpenClDeviceMappingsDataset(ocl_dataset.OpenClDeviceMappingsDataset):
     cfg:is_valid (bool): Whether the CFG is valid.
     cfg:is_strict_valid (bool): Whether the CFG is valid when strict.
   """
+
+  def PopulateDatabase(self, db: database.Database, commit_every: int = 10):
+    programs_df = self.programs_df.reset_index()
+    bar = progressbar.ProgressBar()
+    bar.max_value = len(programs_df)
+
+    # Process each row of the table in parallel.
+    pool = multiprocessing.Pool()
+    with db.Session(commit=True) as s:
+      for i, proto in enumerate(pool.imap_unordered(
+          ProcessOpenClProgramDfBytecode,
+          [d for _, d in programs_df.iterrows()])):
+        bar.update(i)
+        s.GetOrAdd(**database.Bytecode.FromProto(proto))
+        if not (i % commit_every):
+          s.commit()
 
   @decorators.memoized_property
   def cfgs_df(self) -> pd.DataFrame:
@@ -341,6 +392,8 @@ def main(argv):
   """Main entry point."""
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
+
+  OpenClDeviceMappingsDataset().PopulateDatabase(database.Database(FLAGS.db))
 
 
 if __name__ == '__main__':

@@ -31,3 +31,14 @@ message ControlFlowGraphEdge {
   required int64 src_index = 1;
   required int64 dst_index = 2;
 }
+
+// The result of attempting to extract LLVM bytecode from an input source.
+message LlvmBytecode {
+  optional string source_name = 1;
+  optional string relpath = 2;
+  optional string lang = 3;
+  optional string cflags = 4;
+  optional string bytecode = 5;
+  optional int32 clang_returncode = 6;
+  optional string error_message = 7;
+}
