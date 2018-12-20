@@ -76,7 +76,7 @@ class ControlFlowGraphGenerator(object):
 
   def __init__(self, rand: np.random.RandomState,
                num_nodes_min_max: typing.Tuple[int, int],
-               edge_density: float):
+               edge_density: float, strict: bool):
     """Instantiate a control flow graph generator.
 
     Args:
@@ -85,6 +85,8 @@ class ControlFlowGraphGenerator(object):
       edge_density: The edge edge_density, in range (0,1], where 1.0 will produce fully
         connected graphs, and lower numbers will produce more sparsely connected
         graphs.
+      strict: If True, generate strictly valid control flow graphs. A valid
+        control flow graph has no unreachable nodes.
     """
     # Validate inputs.
     if num_nodes_min_max[0] > num_nodes_min_max[1]:
@@ -98,6 +100,7 @@ class ControlFlowGraphGenerator(object):
     self._num_nodes_min_max = num_nodes_min_max
     self._edge_density = edge_density
     self._graph_name_sequence = UniqueNameSequence('A', prefix='cfg_')
+    self._strict = strict
 
   def __iter__(self):
     return self
@@ -132,7 +135,8 @@ class ControlFlowGraphGenerator(object):
     adjacency_matrix = self._rand.rand(num_nodes, num_nodes)
     adjacency_matrix = np.rint(adjacency_matrix).astype(np.int32)
 
-    # Add the edges to the graph, subject to the contraints of CFGs.
+    # Helper methods.
+
     def NotSelfLoop(i, j):
       """Self loops are not allowed in CFGs."""
       return i != j
@@ -146,13 +150,6 @@ class ControlFlowGraphGenerator(object):
       """Return whether edge is set in adjacency matrix."""
       return adjacency_matrix[i, j]
 
-    for j, row in enumerate(adjacency_matrix):
-      for i in row:
-        # CFG nodes cannot be connected to themselves.
-        if NotSelfLoop(i, j) and NotExitNodeOutput(i, j) and IsEdge(i, j):
-          graph.add_edge(i, j)
-
-    # Apply finishing touches to the graph to make it a valid CFG.
     def AddRandomEdge(src):
       """Add an outgoing edge from src to a random destination."""
       dst = src
@@ -167,7 +164,16 @@ class ControlFlowGraphGenerator(object):
         src = self._rand.randint(0, num_nodes)
       graph.add_edge(src, dst)
 
-    # Make sure that every node has one output. This will also include
+    # Add the edges to the graph, subject to the constraints of CFGs.
+    for j, row in enumerate(adjacency_matrix):
+      for i in row:
+        # CFG nodes cannot be connected to themselves.
+        if NotSelfLoop(i, j) and NotExitNodeOutput(i, j) and IsEdge(i, j):
+          graph.add_edge(i, j)
+
+    # Make sure that every node has one output. This ensures that the graph is
+    # fully connected, but does not ensure that each node has an incoming
+    # edge (i.e. is unreachable).
     modified = True
     while modified:
       for node in graph.nodes:
@@ -175,25 +181,29 @@ class ControlFlowGraphGenerator(object):
           AddRandomEdge(node)
           break
       else:
-        modified = False
-
-    modified = True
-    while modified:
-      for src, dst in graph.edges:
-        if not (graph.out_degree(src) > 1 or graph.in_degree(dst) > 1) and (
-            NotExitNodeOutput(src, dst)):
-          AddRandomEdge(src)
-          break
-      else:
         # We iterated through all nodes without making any modifications: we're
         # done.
         modified = False
+
+    if self._strict:
+      # Make sure that every node is reachable, and no edge can be fused.
+      modified = True
+      while modified:
+        for src, dst in graph.edges:
+          if (not (graph.out_degree(src) > 1 or graph.in_degree(dst) > 1) and
+              NotExitNodeOutput(src, dst)):
+            AddRandomEdge(src)
+            break
+        else:
+          # We iterated through all nodes without making any modifications:
+          # we're done.
+          modified = False
 
     # Make sure the exit block has at least one incoming edge.
     if not graph.in_degree(exit_block):
       AddRandomIncomingEdge(exit_block)
 
-    return graph.ValidateControlFlowGraph()
+    return graph.ValidateControlFlowGraph(strict=self._strict)
 
   def Generate(self, n: int) -> typing.Iterator[cfg.ControlFlowGraph]:
     """Generate a sequence of graphs.
