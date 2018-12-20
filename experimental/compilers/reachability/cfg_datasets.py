@@ -8,6 +8,7 @@ import progressbar
 import pyparsing
 from absl import app
 from absl import flags
+from absl import logging
 
 from compilers.llvm import clang
 from compilers.llvm import opt
@@ -53,7 +54,7 @@ def BytecodeFromOpenClString(opencl_string: str,
     raise clang.ClangException(
         "clang failed", returncode=process.returncode, stderr=process.stderr,
         command=clang_args)
-  return clang_args, process.stdout
+  return process.stdout, clang_args
 
 
 def CreateControlFlowGraphFromOpenClKernel(
@@ -174,7 +175,7 @@ class OpenClDeviceMappingsDataset(ocl_dataset.OpenClDeviceMappingsDataset):
     cfg:is_strict_valid (bool): Whether the CFG is valid when strict.
   """
 
-  def PopulateDatabase(self, db: database.Database, commit_every: int = 10):
+  def PopulateDatabase(self, db: database.Database, commit_every: int = 1000):
     programs_df = self.programs_df.reset_index()
     bar = progressbar.ProgressBar()
     bar.max_value = len(programs_df)
@@ -186,7 +187,8 @@ class OpenClDeviceMappingsDataset(ocl_dataset.OpenClDeviceMappingsDataset):
           ProcessOpenClProgramDfBytecode,
           [d for _, d in programs_df.iterrows()])):
         bar.update(i)
-        s.GetOrAdd(**database.Bytecode.FromProto(proto))
+        s.GetOrAdd(database.LlvmBytecode,
+                   **database.LlvmBytecode.FromProto(proto))
         if not (i % commit_every):
           s.commit()
 
@@ -284,9 +286,9 @@ def BytecodeFromLinuxSrc(path: pathlib.Path, optimization_level: str) -> str:
   ]
   process = clang.Exec(clang_args)
   if process.returncode:
-    raise clang.ClangException("clang failed with returncode "
-                               f"{process.returncode}:\n{process.stderr}")
-  return process.stdout
+    raise clang.ClangException(returncode=process.returncode,
+                stderr=process.stderr, command=clang_args)
+  return process.stdout, clang_args
 
 
 def TryToCreateControlFlowGraphsFromLinuxSrc(
@@ -307,7 +309,7 @@ def TryToCreateControlFlowGraphsFromLinuxSrc(
   graphs = []
 
   try:
-    bytecode = BytecodeFromLinuxSrc(path, '-O0')
+    bytecode, _ = BytecodeFromLinuxSrc(path, '-O0')
   except clang.ClangException:
     return graphs
 
@@ -345,6 +347,31 @@ def ProcessLinuxSrc(
 
   return rows
 
+def ProcessLinuxSrcToBytecode(
+    path: pathlib.Path) -> reachability_pb2.LlvmBytecode:
+  src_root = LinuxSourcesDataset().src_tree_root
+  version = LinuxSourcesDataset().version
+
+  try:
+    bytecode, cflags = BytecodeFromLinuxSrc(path, '-O0')
+    clang_returncode = 0
+    error_message = ''
+  except clang.ClangException as e:
+    bytecode = ''
+    cflags = e.command
+    clang_returncode = e.returncode
+    error_message = e.stderr
+
+  return reachability_pb2.LlvmBytecode(
+      source_name=f'linux-{version}',
+      relpath=str(path)[len(str(src_root)) + 1:],
+      lang='C',
+      cflags=' '.join(cflags),
+      bytecode=bytecode,
+      clang_returncode=clang_returncode,
+      error_message=error_message,
+  )
+
 
 class LinuxSourcesDataset(linux.LinuxSourcesDataset):
   """Control flow graphs from a subset of the Linux source tree.
@@ -360,6 +387,21 @@ class LinuxSourcesDataset(linux.LinuxSourcesDataset):
     cfg:is_valid (bool): Whether the CFG is valid.
     cfg:is_strict_valid (bool): Whether the CFG is valid when strict.
   """
+
+  def PopulateDatabase(self, db: database.Database, commit_every: int = 1000):
+    bar = progressbar.ProgressBar()
+    bar.max_value = len(self.kernel_srcs)
+
+    # Process each row of the table in parallel.
+    pool = multiprocessing.Pool()
+    with db.Session(commit=True) as s:
+      for i, proto in enumerate(
+          pool.imap_unordered(ProcessLinuxSrcToBytecode, self.kernel_srcs)):
+        bar.update(i)
+        s.GetOrAdd(database.LlvmBytecode,
+                   **database.LlvmBytecode.FromProto(proto))
+        if not (i % commit_every):
+          s.commit()
 
   @decorators.memoized_property
   def cfgs_df(self) -> pd.DataFrame:
@@ -393,7 +435,10 @@ def main(argv):
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
+  logging.info("Processing OpenCL dataset ...")
   OpenClDeviceMappingsDataset().PopulateDatabase(database.Database(FLAGS.db))
+  logging.info("Processing Linux dataset ...")
+  LinuxSourcesDataset().PopulateDatabase(database.Database(FLAGS.db))
 
 
 if __name__ == '__main__':

@@ -1,4 +1,6 @@
 """Database backend for experimental data."""
+import typing
+
 import sqlalchemy as sql
 from absl import app
 from absl import flags
@@ -13,10 +15,10 @@ FLAGS = flags.FLAGS
 Base = declarative.declarative_base()
 
 
-class Bytecode(Base, sqlutil.ProtoBackedMixin,
-               sqlutil.TablenameFromClassNameMixin):
+class LlvmBytecode(Base, sqlutil.ProtoBackedMixin,
+                   sqlutil.TablenameFromClassNameMixin):
   """A table of Llvm bytecodes."""
-  proto_t = reachability_pb2.Bytecode
+  proto_t = reachability_pb2.LlvmBytecode
 
   id: int = sql.Column(sql.Integer, primary_key=True)
 
@@ -36,9 +38,26 @@ class Bytecode(Base, sqlutil.ProtoBackedMixin,
   def SetProto(self, proto: proto_t) -> None:
     raise NotImplementedError
 
+  @classmethod
+  def FromProto(cls, proto: proto_t) -> typing.Dict[str, typing.Any]:
+    """Return a dictionary of instance constructor args from proto."""
+    return {
+      'source_name': proto.source_name,
+      'relpath': proto.relpath,
+      'lang': proto.lang,
+      'cflags': proto.cflags,
+      'charcount': len(proto.bytecode),
+      'linecount': len(proto.bytecode.split('\n')),
+      'bytecode': proto.bytecode,
+      'clang_returncode': proto.clang_returncode,
+      'error_message': proto.error_message,
+    }
+
 
 class Database(sqlutil.Database):
-  pass
+
+  def __init__(self, url: str):
+    super(Database, self).__init__(url, Base)
 
 
 def main(argv):
