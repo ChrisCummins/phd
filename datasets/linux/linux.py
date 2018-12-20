@@ -63,6 +63,16 @@ class LinuxSourcesDataset(object):
     return [p for p in paths if p.is_file()]
 
   @decorators.memoized_property
+  def all_srcs(self) -> typing.List[pathlib.Path]:
+    """Return all C files."""
+    return self.ListFiles('', '*.c')
+
+  @decorators.memoized_property
+  def all_hdrs(self) -> typing.List[pathlib.Path]:
+    """Return all header files."""
+    return self.ListFiles('', '*.h')
+
+  @decorators.memoized_property
   def kernel_srcs(self) -> typing.List[pathlib.Path]:
     """Return the src files in 'kernel/'."""
     return self.ListFiles('kernel', '*.c')
