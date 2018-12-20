@@ -46,7 +46,7 @@ def test_BytecodeFromLinuxSrc_known_file():
   path = linux.LinuxSourcesDataset().src_tree_root / 'kernel' / 'kmod.c'
   assert path.is_file()  # If this fails, the linux source tree is broken.
 
-  bytecode = datasets.BytecodeFromLinuxSrc(path)
+  bytecode = datasets.BytecodeFromLinuxSrc(path, '-O0')
   assert bytecode
 
 
