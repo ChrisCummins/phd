@@ -390,13 +390,13 @@ class LinuxSourcesDataset(linux.LinuxSourcesDataset):
 
   def PopulateDatabase(self, db: database.Database, commit_every: int = 1000):
     bar = progressbar.ProgressBar()
-    bar.max_value = len(self.kernel_srcs)
+    bar.max_value = len(self.all_srcs)
 
     # Process each row of the table in parallel.
     pool = multiprocessing.Pool()
     with db.Session(commit=True) as s:
       for i, proto in enumerate(
-          pool.imap_unordered(ProcessLinuxSrcToBytecode, self.kernel_srcs)):
+          pool.imap_unordered(ProcessLinuxSrcToBytecode, self.all_srcs)):
         bar.update(i)
         s.GetOrAdd(database.LlvmBytecode,
                    **database.LlvmBytecode.FromProto(proto))
