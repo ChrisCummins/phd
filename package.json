@@ -23,5 +23,8 @@
   },
   "devDependencies": {
     "husky": "^0.14.3"
+  },
+  "dependencies": {
+    "npm": "^6.5.0"
   }
 }
