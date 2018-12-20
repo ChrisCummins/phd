@@ -349,6 +349,135 @@ def test_ControlFlowGraphFromDotSource_fizz_buzz():
   assert cfg.has_edge(name_to_node['%8'], name_to_node['%9'])
 
 
+def test_BuildSingleInstructionFormGraph_fizz_buzz():
+  """Test single-instruction form graph name."""
+  # This test assumes that ControlFlowGraphFromDotSource() behaves as expected.
+  # test_ControlFlowGraphFromDotSource_fizz_buzz() will fail if this is not the
+  # case.
+  cfg = llvm_util.ControlFlowGraphFromDotSource(FIZZBUZZ_DOT)
+  sig = cfg.BuildSingleInstructionFormGraph()
+
+  assert sig.graph['name'] == 'FizzBuzz'
+
+
+def test_BuildSingleInstructionFormGraph_num_nodes():
+  """Test single-instruction form graph node count."""
+  # This test assumes that ControlFlowGraphFromDotSource() behaves as expected.
+  # test_ControlFlowGraphFromDotSource_fizz_buzz() will fail if this is not the
+  # case.
+  cfg = llvm_util.ControlFlowGraphFromDotSource(FIZZBUZZ_DOT)
+  sig = cfg.BuildSingleInstructionFormGraph()
+
+  assert sig.number_of_nodes() == 11
+
+
+def test_BuildSingleInstructionFormGraph_node_text():
+  """Test single-instruction form graph nodes have expected text."""
+  # This test assumes that ControlFlowGraphFromDotSource() behaves as expected.
+  # test_ControlFlowGraphFromDotSource_fizz_buzz() will fail if this is not the
+  # case.
+  cfg = llvm_util.ControlFlowGraphFromDotSource(FIZZBUZZ_DOT)
+  sig = cfg.BuildSingleInstructionFormGraph()
+
+  # Create a map of node names to indices.
+  name_to_node = {data['name']: node for node, data in sig.nodes(data=True)}
+
+  # Block %1.
+  assert sig.nodes[name_to_node['%1.0']]['text'] == '%2 = alloca i32, align 4'
+  assert sig.nodes[name_to_node['%1.1']]['text'] == '%3 = alloca i32, align 4'
+  assert sig.nodes[name_to_node['%1.2']][
+           'text'] == 'store i32 %0, i32* %3, align 4'
+  assert sig.nodes[name_to_node['%1.3']][
+           'text'] == '%4 = load i32, i32* %3, align 4'
+  assert sig.nodes[name_to_node['%1.4']]['text'] == '%5 = srem i32 %4, 15'
+  assert sig.nodes[name_to_node['%1.5']]['text'] == '%6 = icmp eq i32 %5, 0'
+  # Note the conditional branch instruction has had the labels stripped.
+  assert sig.nodes[name_to_node['%1.6']]['text'] == 'br i1 %6'
+
+  # Block %7.
+  assert sig.nodes[name_to_node['%7.0']][
+           'text'] == 'store i32 1, i32* %2, align 4'
+
+  # Block %8.
+  assert sig.nodes[name_to_node['%8.0']][
+           'text'] == 'store i32 0, i32* %2, align 4'
+
+  # Block %9.
+  assert sig.nodes[name_to_node['%9.0']][
+           'text'] == '%10 = load i32, i32* %2, align 4'
+  assert sig.nodes[name_to_node['%9.1']]['text'] == 'ret i32 %10'
+
+
+def test_BuildSingleInstructionFormGraph_num_edges():
+  """Test single-instruction form graph edge count."""
+  # This test assumes that ControlFlowGraphFromDotSource() behaves as expected.
+  # test_ControlFlowGraphFromDotSource_fizz_buzz() will fail if this is not the
+  # case.
+  cfg = llvm_util.ControlFlowGraphFromDotSource(FIZZBUZZ_DOT)
+  sig = cfg.BuildSingleInstructionFormGraph()
+
+  assert sig.number_of_edges() == 11
+
+
+def test_BuildSingleInstructionFormGraph_edges():
+  """Test single-instruction form graph has expected edges."""
+  # This test assumes that ControlFlowGraphFromDotSource() behaves as expected.
+  # test_ControlFlowGraphFromDotSource_fizz_buzz() will fail if this is not the
+  # case.
+  cfg = llvm_util.ControlFlowGraphFromDotSource(FIZZBUZZ_DOT)
+  sig = cfg.BuildSingleInstructionFormGraph()
+
+  # Create a map of node names to indices.
+  name_to_node = {data['name']: node for node, data in sig.nodes(data=True)}
+
+  # Block %1.
+  assert sig.has_edge(name_to_node['%1.0'], name_to_node['%1.1'])
+  assert sig.has_edge(name_to_node['%1.1'], name_to_node['%1.2'])
+  assert sig.has_edge(name_to_node['%1.2'], name_to_node['%1.3'])
+  assert sig.has_edge(name_to_node['%1.3'], name_to_node['%1.4'])
+  assert sig.has_edge(name_to_node['%1.4'], name_to_node['%1.5'])
+  assert sig.has_edge(name_to_node['%1.5'], name_to_node['%1.6'])
+  assert sig.has_edge(name_to_node['%1.6'], name_to_node['%7.0'])
+  assert sig.has_edge(name_to_node['%1.6'], name_to_node['%8.0'])
+
+  # Block %7.
+  assert sig.has_edge(name_to_node['%7.0'], name_to_node['%9.0'])
+
+  # Block %8.
+  assert sig.has_edge(name_to_node['%8.0'], name_to_node['%9.0'])
+
+  # Block %9.
+  assert sig.has_edge(name_to_node['%9.0'], name_to_node['%9.1'])
+
+
+def test_BuildSingleInstructionFormGraph_entry_block():
+  """Test single-instruction form graph has expected entry block."""
+  # This test assumes that ControlFlowGraphFromDotSource() behaves as expected.
+  # test_ControlFlowGraphFromDotSource_fizz_buzz() will fail if this is not the
+  # case.
+  cfg = llvm_util.ControlFlowGraphFromDotSource(FIZZBUZZ_DOT)
+  sig = cfg.BuildSingleInstructionFormGraph()
+
+  # Create a map of node names to indices.
+  name_to_node = {data['name']: node for node, data in sig.nodes(data=True)}
+
+  assert sig.nodes[name_to_node['%1.0']]['entry']
+
+
+def test_BuildSingleInstructionFormGraph_exit_block():
+  """Test single-instruction form graph has expected exit block."""
+  # This test assumes that ControlFlowGraphFromDotSource() behaves as expected.
+  # test_ControlFlowGraphFromDotSource_fizz_buzz() will fail if this is not the
+  # case.
+  cfg = llvm_util.ControlFlowGraphFromDotSource(FIZZBUZZ_DOT)
+  sig = cfg.BuildSingleInstructionFormGraph()
+
+  # Create a map of node names to indices.
+  name_to_node = {data['name']: node for node, data in sig.nodes(data=True)}
+
+  assert sig.nodes[name_to_node['%9.1']]['exit']
+
+
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:
