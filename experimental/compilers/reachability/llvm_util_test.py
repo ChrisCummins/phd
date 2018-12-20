@@ -305,6 +305,49 @@ def test_ControlFlowGraphsFromBytecodes_one_failure():
   assert isinstance(e_ctx.value.errors[0].error, opt.OptException)
 
 
+# LLVM-generated dot file for a FizzBuzz() function.
+# Original C source code:
+#
+#    int FizzBuzz(int i) {
+#      if (i % 15 == 0) {
+#        return 1;
+#      }
+#      return 0;
+#    }
+#
+# I converted tabs to spaces in the following string.
+FIZZBUZZ_DOT = """
+digraph "CFG for 'FizzBuzz' function" {
+  label="CFG for 'FizzBuzz' function";
+  
+  Node0x7f8d5f507570 [shape=record,label="{%1:\l  %2 = alloca i32, align 4\l  %3 = alloca i32, align 4\l  store i32 %0, i32* %3, align 4\l  %4 = load i32, i32* %3, align 4\l  %5 = srem i32 %4, 15\l  %6 = icmp eq i32 %5, 0\l  br i1 %6, label %7, label %8\l|{<s0>T|<s1>F}}"];
+  Node0x7f8d5f507570:s0 -> Node0x7f8d5f507930;
+  Node0x7f8d5f507570:s1 -> Node0x7f8d5f5079c0;
+  Node0x7f8d5f507930 [shape=record,label="{%7:\l\l  store i32 1, i32* %2, align 4\l  br label %9\l}"];
+  Node0x7f8d5f507930 -> Node0x7f8d5f507b50;
+  Node0x7f8d5f5079c0 [shape=record,label="{%8:\l\l  store i32 0, i32* %2, align 4\l  br label %9\l}"];
+  Node0x7f8d5f5079c0 -> Node0x7f8d5f507b50;
+  Node0x7f8d5f507b50 [shape=record,label="{%9:\l\l  %10 = load i32, i32* %2, align 4\l  ret i32 %10\l}"];
+}
+"""
+
+
+def test_ControlFlowGraphFromDotSource_fizz_buzz():
+  """Test the fizz buzz graph properties."""
+  cfg = llvm_util.ControlFlowGraphFromDotSource(FIZZBUZZ_DOT)
+  assert cfg.number_of_nodes() == 4
+  assert cfg.number_of_edges() == 4
+
+  # Create a map of node names to indices.
+  name_to_node = {data['name']: node for node, data in cfg.nodes(data=True)}
+
+  # Test that graph has required edges.
+  assert cfg.has_edge(name_to_node['%1'], name_to_node['%7'])
+  assert cfg.has_edge(name_to_node['%1'], name_to_node['%8'])
+  assert cfg.has_edge(name_to_node['%7'], name_to_node['%9'])
+  assert cfg.has_edge(name_to_node['%8'], name_to_node['%9'])
+
+
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:
