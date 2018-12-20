@@ -22,6 +22,7 @@ message ControlFlowGraph {
 // A basic block.
 message BasicBlock {
   required string name = 1;
+  optional string text = 2;
 }
 
 // A CFG edge is a pair of indices into a ControlFlowGraph.block list that

@@ -195,22 +195,33 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
     proto.name = self.graph['name']
     proto.entry_block_index = self.entry_block
     proto.exit_block_index = self.exit_block
+
+    # We translate node IDs to indexes into the node list.
+    node_to_index: typing.Dict[int, int] = {}
+
     # Create the block protos.
-    for node in self.nodes:
+    for i, (node, data) in enumerate(self.nodes(data=True)):
+      node_to_index[node] = i
       block = proto.block.add()
-      block.name = self.nodes[node]['name']
+      block.name = data['name']
+      text = data.get('text')
+      if text:
+        block.text = data.get('text')
     # Create the edge protos.
     for src, dst in self.edges:
       edge = proto.edge.add()
-      edge.src_index = src
-      edge.dst_index = dst
+      edge.src_index = node_to_index[src]
+      edge.dst_index = node_to_index[dst]
 
   @classmethod
   def FromProto(cls, proto: ProtocolBuffer) -> 'ProtoBackedMixin':
     instance = cls(name=proto.name)
     # Create the nodes from the block protos.
     for i, block in enumerate(proto.block):
-      instance.add_node(i, name=block.name)
+      data = {'name': block.name}
+      if block.text:
+        data['text'] = block.text
+      instance.add_node(i, **data)
     # Set the special block attributes.
     instance.nodes[proto.entry_block_index]['entry'] = True
     instance.nodes[proto.exit_block_index]['exit'] = True
