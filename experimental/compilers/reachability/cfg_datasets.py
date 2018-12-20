@@ -110,7 +110,7 @@ def CfgDfRowFromControlFlowGraph(
     graph: cfg.ControlFlowGraph) -> typing.Dict[str, typing.Any]:
   return {
     'cfg:graph': graph,
-    'cfg:block_count': graph.number_of_edges(),
+    'cfg:block_count': graph.number_of_nodes(),
     'cfg:edge_count': graph.number_of_edges(),
     'cfg:edge_density': graph.number_of_edges() / (
         graph.number_of_nodes() * graph.number_of_nodes()),
