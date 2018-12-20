@@ -63,6 +63,24 @@ int main() {
   assert (tempdir / 'foo.ll').is_file()
 
 
+@pytest.mark.parametrize(
+    "opt", ("-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os", "-Oz"))
+def test_ValidateOptimizationLevel_valid(opt: str):
+  """Test that valid optimization levels are returned."""
+  assert clang.ValidateOptimizationLevel(opt) == opt
+
+
+@pytest.mark.parametrize(
+    "opt", ("O0",  # missing leading '-'
+            "-O4",  # not a real value
+            "foo"))  # not a real value
+def test_ValidateOptimizationLevel_invalid(opt: str):
+  """Test that invalid optimization levels raise an error."""
+  with pytest.raises(ValueError) as e_ctx:
+    clang.ValidateOptimizationLevel(opt)
+  assert opt in str(e_ctx.value)
+
+
 # Preprocess() tests.
 
 def test_Preprocess_empty_input():

@@ -35,10 +35,31 @@ _LLVM_REPO = 'llvm_linux' if system.is_linux() else 'llvm_mac'
 # Path to clang binary.
 CLANG = bazelutil.DataPath(f'{_LLVM_REPO}/bin/clang')
 
+# Valid optimization levels.
+OPTIMIZATION_LEVELS = {"-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os", "-Oz"}
+
 
 class ClangException(llvm.LlvmError):
   """An error from clang."""
   pass
+
+
+def ValidateOptimizationLevel(opt: str) -> str:
+  """Check that the requested optimization level is valid.
+
+  Args:
+    opt: The optimization level.
+
+  Returns:
+    The input argument.
+
+  Raises:
+    ValueError: If optimization level is not valid.
+  """
+  if opt in OPTIMIZATION_LEVELS:
+    return opt
+  raise ValueError(f"Invalid clang optimization level '{opt}'. "
+                   f"Valid levels are: {OPTIMIZATION_LEVELS}")
 
 
 def Exec(args: typing.List[str],

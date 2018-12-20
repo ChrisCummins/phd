@@ -470,17 +470,31 @@ TRANSFORM_PASSES = {
   '-xray-instrumentation',
 }
 
-OPTIMIZATION_LEVELS = {
-  '-O0',
-  '-O1',
-  '-O2',
-  '-O3',
-}
+# Valid optimization levels. Same as for clang, but without -Ofast.
+OPTIMIZATION_LEVELS = {"-O0", "-O1", "-O2", "-O3", "-Os", "-Oz"}
 
 
 class OptException(llvm.LlvmError):
   """An error from opt."""
   pass
+
+
+def ValidateOptimizationLevel(opt: str) -> str:
+  """Check that the requested optimization level is valid.
+
+  Args:
+    opt: The optimization level.
+
+  Returns:
+    The input argument.
+
+  Raises:
+    ValueError: If optimization level is not valid.
+  """
+  if opt in OPTIMIZATION_LEVELS:
+    return opt
+  raise ValueError(f"Invalid opt optimization level '{opt}'. "
+                   f"Valid levels are: {OPTIMIZATION_LEVELS}")
 
 
 def Exec(args: typing.List[str],
