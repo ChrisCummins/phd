@@ -99,7 +99,21 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
   contains the LLVM instructions for the basic block as a string.
   """
 
-  def BuildSingleInstructionFormGraph(self) -> 'LlvmControlFlowGraph':
+  def BuildFullFlowGraph(self) -> 'LlvmControlFlowGraph':
+    """Build a full program flow graph from the Control Flow Graph.
+
+    This expands the control flow graph so that every node contains a single
+    LLVM instruction. The "text" attribute of nodes contains the instruction.
+
+    Unconditional branch instructions are ignored.
+
+    Node and edge indices cannot be compared between the original graph and
+    the flow graph.
+
+    Returns:
+      A new LlvmControlFlowGraph in which every node contains a single
+      instruction.
+    """
     self.ValidateControlFlowGraph()
 
     # Create a new graph.
@@ -180,7 +194,7 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
     new_exit_block = node_translation_map[self.exit_block].end
     sig.nodes[new_exit_block]['exit'] = True
 
-    return sig
+    return sig.ValidateControlFlowGraph(strict=False)
 
   def ValidateControlFlowGraph(
       self, strict: bool = True) -> 'LlvmControlFlowGraph':

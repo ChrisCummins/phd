@@ -349,35 +349,35 @@ def test_ControlFlowGraphFromDotSource_fizz_buzz():
   assert cfg.has_edge(name_to_node['%8'], name_to_node['%9'])
 
 
-def test_BuildSingleInstructionFormGraph_fizz_buzz():
-  """Test single-instruction form graph name."""
+def test_BuildFullFlowGraph_fizz_buzz():
+  """Test flow graph name."""
   # This test assumes that ControlFlowGraphFromDotSource() behaves as expected.
   # test_ControlFlowGraphFromDotSource_fizz_buzz() will fail if this is not the
   # case.
   cfg = llvm_util.ControlFlowGraphFromDotSource(FIZZBUZZ_DOT)
-  sig = cfg.BuildSingleInstructionFormGraph()
+  sig = cfg.BuildFullFlowGraph()
 
   assert sig.graph['name'] == 'FizzBuzz'
 
 
-def test_BuildSingleInstructionFormGraph_num_nodes():
-  """Test single-instruction form graph node count."""
+def test_BuildFullFlowGraph_num_nodes():
+  """Test flow graph node count."""
   # This test assumes that ControlFlowGraphFromDotSource() behaves as expected.
   # test_ControlFlowGraphFromDotSource_fizz_buzz() will fail if this is not the
   # case.
   cfg = llvm_util.ControlFlowGraphFromDotSource(FIZZBUZZ_DOT)
-  sig = cfg.BuildSingleInstructionFormGraph()
+  sig = cfg.BuildFullFlowGraph()
 
   assert sig.number_of_nodes() == 11
 
 
-def test_BuildSingleInstructionFormGraph_node_text():
-  """Test single-instruction form graph nodes have expected text."""
+def test_BuildFullFlowGraph_node_text():
+  """Test flow graph nodes have expected text."""
   # This test assumes that ControlFlowGraphFromDotSource() behaves as expected.
   # test_ControlFlowGraphFromDotSource_fizz_buzz() will fail if this is not the
   # case.
   cfg = llvm_util.ControlFlowGraphFromDotSource(FIZZBUZZ_DOT)
-  sig = cfg.BuildSingleInstructionFormGraph()
+  sig = cfg.BuildFullFlowGraph()
 
   # Create a map of node names to indices.
   name_to_node = {data['name']: node for node, data in sig.nodes(data=True)}
@@ -408,24 +408,24 @@ def test_BuildSingleInstructionFormGraph_node_text():
   assert sig.nodes[name_to_node['%9.1']]['text'] == 'ret i32 %10'
 
 
-def test_BuildSingleInstructionFormGraph_num_edges():
-  """Test single-instruction form graph edge count."""
+def test_BuildFullFlowGraph_num_edges():
+  """Test flow graph edge count."""
   # This test assumes that ControlFlowGraphFromDotSource() behaves as expected.
   # test_ControlFlowGraphFromDotSource_fizz_buzz() will fail if this is not the
   # case.
   cfg = llvm_util.ControlFlowGraphFromDotSource(FIZZBUZZ_DOT)
-  sig = cfg.BuildSingleInstructionFormGraph()
+  sig = cfg.BuildFullFlowGraph()
 
   assert sig.number_of_edges() == 11
 
 
-def test_BuildSingleInstructionFormGraph_edges():
-  """Test single-instruction form graph has expected edges."""
+def test_BuildFullFlowGraph_edges():
+  """Test flow graph has expected edges."""
   # This test assumes that ControlFlowGraphFromDotSource() behaves as expected.
   # test_ControlFlowGraphFromDotSource_fizz_buzz() will fail if this is not the
   # case.
   cfg = llvm_util.ControlFlowGraphFromDotSource(FIZZBUZZ_DOT)
-  sig = cfg.BuildSingleInstructionFormGraph()
+  sig = cfg.BuildFullFlowGraph()
 
   # Create a map of node names to indices.
   name_to_node = {data['name']: node for node, data in sig.nodes(data=True)}
@@ -450,13 +450,13 @@ def test_BuildSingleInstructionFormGraph_edges():
   assert sig.has_edge(name_to_node['%9.0'], name_to_node['%9.1'])
 
 
-def test_BuildSingleInstructionFormGraph_entry_block():
-  """Test single-instruction form graph has expected entry block."""
+def test_BuildFullFlowGraph_entry_block():
+  """Test flow graph has expected entry block."""
   # This test assumes that ControlFlowGraphFromDotSource() behaves as expected.
   # test_ControlFlowGraphFromDotSource_fizz_buzz() will fail if this is not the
   # case.
   cfg = llvm_util.ControlFlowGraphFromDotSource(FIZZBUZZ_DOT)
-  sig = cfg.BuildSingleInstructionFormGraph()
+  sig = cfg.BuildFullFlowGraph()
 
   # Create a map of node names to indices.
   name_to_node = {data['name']: node for node, data in sig.nodes(data=True)}
@@ -464,13 +464,13 @@ def test_BuildSingleInstructionFormGraph_entry_block():
   assert sig.nodes[name_to_node['%1.0']]['entry']
 
 
-def test_BuildSingleInstructionFormGraph_exit_block():
-  """Test single-instruction form graph has expected exit block."""
+def test_BuildFullFlowGraph_exit_block():
+  """Test flow graph has expected exit block."""
   # This test assumes that ControlFlowGraphFromDotSource() behaves as expected.
   # test_ControlFlowGraphFromDotSource_fizz_buzz() will fail if this is not the
   # case.
   cfg = llvm_util.ControlFlowGraphFromDotSource(FIZZBUZZ_DOT)
-  sig = cfg.BuildSingleInstructionFormGraph()
+  sig = cfg.BuildFullFlowGraph()
 
   # Create a map of node names to indices.
   name_to_node = {data['name']: node for node, data in sig.nodes(data=True)}
