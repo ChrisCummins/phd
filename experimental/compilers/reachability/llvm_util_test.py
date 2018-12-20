@@ -335,6 +335,7 @@ digraph "CFG for 'FizzBuzz' function" {
 def test_ControlFlowGraphFromDotSource_fizz_buzz():
   """Test the fizz buzz graph properties."""
   cfg = llvm_util.ControlFlowGraphFromDotSource(FIZZBUZZ_DOT)
+  assert cfg.graph['name'] == 'FizzBuzz'
   assert cfg.number_of_nodes() == 4
   assert cfg.number_of_edges() == 4
 
