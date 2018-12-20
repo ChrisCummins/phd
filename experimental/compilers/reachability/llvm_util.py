@@ -1,5 +1,6 @@
 """Utility code for working with LLVM."""
 
+import collections
 import multiprocessing
 import pathlib
 import re
@@ -98,8 +99,88 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
   contains the LLVM instructions for the basic block as a string.
   """
 
-  def GetSingleInstructionBlocks(self) -> 'LlvmControlFlowGraph':
-    raise NotImplementedError()
+  def BuildSingleInstructionFormGraph(self) -> 'LlvmControlFlowGraph':
+    self.ValidateControlFlowGraph()
+
+    # Create a new graph.
+    sig = LlvmControlFlowGraph(name=self.graph['name'])
+
+    # A global node count used to assign unique IDs to nodes in the new graph.
+    sig_node_count = 0
+
+    # When expanding the CFG to have a single block for every instruction, we
+    # replace a single node with a contiguous run of nodes. We construct a map
+    # of self.node IDs to (start,end) tuples of g.node IDs, allowing us to
+    # translate node IDs for adding edges.
+    NodeTranslationMapValue = collections.namedtuple(
+        'NodeTranslationMapValue', ['start', 'end'])
+    node_translation_map: typing.Dict[int, NodeTranslationMapValue] = {}
+
+    # Iterate through all blocks in the source graph.
+    for node, data in self.nodes(data=True):
+      instructions = data['text'].split('\n')
+      last_instruction = len(instructions) - 1
+
+      # Split a block into a list of instructions and create a new destination
+      # node for each instruction.
+      for instruction_count, instruction in enumerate(data['text'].split('\n')):
+        # The ID of the new node is the global node count, plus the offset into
+        # the basic block instructions.
+        new_node_id = sig_node_count + instruction_count
+        # The new node name is a concatenation of the basic block name and the
+        # instruction count.
+        new_node_name = f"{data['name']}.{instruction_count}"
+
+        # Add a new node to the graph for the instruction.
+        if (instruction_count == last_instruction and
+            instruction.startswith('br ')):
+          # Branches can either be conditional, e.g.
+          #     br il %6, label %7, label %8
+          # or unconditional, e.g.
+          #     br label %9
+          # Unconditional branches can be skipped - they contain no useful
+          # information. Conditional branches can have the labels stripped.
+          instruction_components = instruction.split(', ')
+          if len(instruction_components) == 1:
+            # Unconditional branches are ignored - they provide no meaningful
+            # information beyond what the edge already includes.
+            instruction_count -= 1
+          else:
+            # TODO(cec): Do we want to preserve the "true" "false" information
+            # for outgoing edges? We currently throw it away.
+            sig.add_node(new_node_id, name=new_node_name,
+                         text=instruction_components[0])
+        else:
+          sig.add_node(new_node_id, name=new_node_name, text=instruction)
+
+      # Add an entry to the node translation map for the start and end nodes
+      # of this basic block.
+      node_translation_map[node] = NodeTranslationMapValue(
+          start=sig_node_count, end=sig_node_count + instruction_count)
+
+      # Create edges between the sequential instruction nodes we just added
+      # to the graph.
+      [sig.add_edge(i, i + 1) for i in
+       range(sig_node_count, sig_node_count + instruction_count)]
+
+      # Update the global node count to be the value of the next unused node ID.
+      sig_node_count += instruction_count + 1
+
+    # Iterate through the edges in the source graph, translating their IDs to
+    # IDs in the new graph using the node_translation_map.
+    for src, dst in self.edges:
+      new_src = node_translation_map[src].end
+      new_dst = node_translation_map[dst].start
+      sig.add_edge(new_src, new_dst)
+
+    # Set the "entry" and "exit" blocks.
+    new_entry_block = node_translation_map[self.entry_block].start
+    sig.nodes[new_entry_block]['entry'] = True
+
+    new_exit_block = node_translation_map[self.exit_block].end
+    sig.nodes[new_exit_block]['exit'] = True
+
+    return sig
 
   def ValidateControlFlowGraph(
       self, strict: bool = True) -> 'LlvmControlFlowGraph':
