@@ -1,11 +1,10 @@
 """Reachability analysis datasets."""
 import multiprocessing
 import pathlib
-import tempfile
 import typing
 
-import pyparsing
 import pandas as pd
+import pyparsing
 from absl import app
 from absl import flags
 
@@ -112,9 +111,9 @@ def CfgDfRowFromControlFlowGraph(
     'cfg:graph': graph,
     'cfg:block_count': graph.number_of_nodes(),
     'cfg:edge_count': graph.number_of_edges(),
-    'cfg:edge_density': graph.number_of_edges() / (
-        graph.number_of_nodes() * graph.number_of_nodes()),
-    'cfg:is_valid': graph.IsValidControlFlowGraph(strict=True),
+    'cfg:edge_density': graph.edge_density,
+    'cfg:is_valid': graph.IsValidControlFlowGraph(strict=False),
+    'cfg:is_strict_valid': graph.IsValidControlFlowGraph(strict=True),
   }
 
 
@@ -131,6 +130,7 @@ class OpenClDeviceMappingsDataset(ocl_dataset.OpenClDeviceMappingsDataset):
     cfg:edge_count (int): The number of edges in the CFG.
     cfg:edge_density (float): Number of edges / possible edges, in range [0,1].
     cfg:is_valid (bool): Whether the CFG is valid.
+    cfg:is_strict_valid (bool): Whether the CFG is valid when strict.
   """
 
   @decorators.memoized_property
@@ -155,6 +155,7 @@ class OpenClDeviceMappingsDataset(ocl_dataset.OpenClDeviceMappingsDataset):
       'cfg:edge_count',
       'cfg:edge_density',
       'cfg:is_valid',
+      'cfg:is_strict_valid',
     ])
 
     df.set_index([
@@ -296,6 +297,7 @@ class LinuxSourcesDataset(linux.LinuxSourcesDataset):
     cfg:edge_count (int): The number of edges in the CFG.
     cfg:edge_density (float): Number of edges / possible edges, in range [0,1].
     cfg:is_valid (bool): Whether the CFG is valid.
+    cfg:is_strict_valid (bool): Whether the CFG is valid when strict.
   """
 
   @decorators.memoized_property
@@ -315,6 +317,7 @@ class LinuxSourcesDataset(linux.LinuxSourcesDataset):
       'cfg:edge_count',
       'cfg:edge_density',
       'cfg:is_valid',
+      'cfg:is_strict_valid',
     ])
 
     df.set_index([
