@@ -274,11 +274,13 @@ def ProcessLinuxSrc(
     path: pathlib.Path) -> typing.Optional[typing.Dict[str, typing.Any]]:
   graphs = TryToCreateControlFlowGraphsFromLinuxSrc(path)
 
+  src_root = LinuxSourcesDataset().src_tree_root
+
   rows = []
   for graph in graphs:
     row = CfgDfRowFromControlFlowGraph(graph)
     row.update({
-      'program:src_relpath': str(path),
+      'program:src_relpath': str(path)[len(str(src_root)) + 1:],
     })
     rows.append(row)
 
