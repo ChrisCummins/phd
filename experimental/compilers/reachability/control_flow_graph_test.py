@@ -444,9 +444,9 @@ def test_ControlFlowGraph_ToProto_FromProto_equivalency():
   #
   #     +----> B -----+
   #     |             |
-  #     v             v
+  #     |             v
   #     A             D
-  #     ^             ^
+  #     |             ^
   #     |             |
   #     +----> C -----+
   g1.add_node(0, name='A', entry=True)
@@ -483,6 +483,32 @@ def test_ControlFlowGraph_equivalent_hashes():
   g2.add_edge(0, 1)
 
   assert hash(g1) == hash(g2)
+
+
+def test_ControlFlowGraph_edge_density():
+  """Test edge density property."""
+  # Graph:
+  #
+  #     +----> B -----+
+  #     |             |
+  #     |             v
+  #     A             D
+  #     |             ^
+  #     |             |
+  #     +----> C -----+
+  g = control_flow_graph.ControlFlowGraph()
+  g.add_node(0, name='A', entry=True)
+  g.add_node(1, name='B')
+  g.add_node(2, name='C')
+  g.add_node(3, name='D', exit=True)
+  g.add_edge(0, 1)
+  g.add_edge(0, 2)
+  g.add_edge(1, 3)
+
+  assert g.edge_density == pytest.approx(3 / 16)
+
+  g.add_edge(2, 3)
+  assert g.edge_density == pytest.approx(4 / 16)
 
 
 def test_ControlFlowGraph_node_name_changes_hash():

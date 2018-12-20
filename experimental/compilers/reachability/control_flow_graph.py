@@ -180,6 +180,12 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
       raise MultipleExitBlocks()
     return exit_blocks[0]
 
+  @property
+  def edge_density(self) -> float:
+    """The edge density is the ratio of edges to fully connected, [0,1]."""
+    return self.number_of_edges() / (
+        self.number_of_nodes() * self.number_of_nodes())
+
   def SetProto(self, proto: ProtocolBuffer) -> None:
     # Ensure that graph is valid. This will raise exception if graph is not
     # valid.
