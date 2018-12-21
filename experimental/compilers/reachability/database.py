@@ -33,10 +33,8 @@ class LlvmBytecode(Base, sqlutil.ProtoBackedMixin,
       nullable=False)
   clang_returncode: int = sql.Column(sql.Integer, nullable=False)
   error_message: str = sql.Column(
-      sql.UnicodeText().with_variant(sql.UnicodeText(2 ** 31), 'mysql'))
-
-  def SetProto(self, proto: proto_t) -> None:
-    raise NotImplementedError
+      sql.UnicodeText().with_variant(sql.UnicodeText(2 ** 31), 'mysql'),
+      nullable=False)
 
   @classmethod
   def FromProto(cls, proto: proto_t) -> typing.Dict[str, typing.Any]:
