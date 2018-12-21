@@ -25,7 +25,7 @@ class LlvmBytecode(Base, sqlutil.ProtoBackedMixin,
   source_name: str = sql.Column(sql.String(256), nullable=False)
   relpath: str = sql.Column(sql.String(256), nullable=False)
   lang: str = sql.Column(sql.String(32), nullable=False)
-  cflags: str = sql.Column(sql.String(1024), nullable=False)
+  cflags: str = sql.Column(sql.String(4096), nullable=False)
   charcount: int = sql.Column(sql.Integer, nullable=False)
   linecount: int = sql.Column(sql.Integer, nullable=False)
   bytecode: str = sql.Column(
