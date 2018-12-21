@@ -53,6 +53,24 @@ def test_CreateEngine_sqlite_created(tempdir: pathlib.Path):
   assert (tempdir / 'db.db').is_file()
 
 
+def test_CreateEngine_sqlite_from_file(tempdir: pathlib.Path):
+  """Test file:// sqlite URL."""
+  db_path = tempdir / 'sqlite.db'
+  with open(tempdir / 'sqlite.txt', 'w') as f:
+    f.write(f'sqlite:///{db_path}')
+  sqlutil.CreateEngine(f'file://{tempdir}/sqlite.txt')
+  assert db_path.is_file()
+
+
+def test_CreateEngine_sqlite_from_file_with_suffix(tempdir: pathlib.Path):
+  """Test file:// sqlite URL with suffix."""
+  db_path = tempdir / 'sqlite.db'
+  with open(tempdir / 'sqlite.txt', 'w') as f:
+    f.write(f'sqlite:///{tempdir}')
+  sqlutil.CreateEngine(f'file://{tempdir}/sqlite.txt?/sqlite.db')
+  assert db_path.is_file()
+
+
 def test_Session_GetOrAdd():
   """Test that GetOrAdd() does not create duplicates."""
   base = declarative.declarative_base()

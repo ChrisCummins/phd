@@ -96,6 +96,11 @@ def CreateEngine(url: str, must_exist: bool = False) -> sql.engine.Engine:
 
   See https://docs.sqlalchemy.org/en/latest/core/engines.html for details.
 
+  Additionally, this implements a custom 'file://' handler, which reads a URL
+  from a local file, and returns a connection to the database addressed by the
+  URL. Use this if you would like to keep sensitive information such as a MySQL
+  database password out of your .bash_history.
+
   Examples:
     Create in-memory SQLite database:
     >>> engine = CreateEngine('sqlite://')
@@ -113,6 +118,13 @@ def CreateEngine(url: str, must_exist: bool = False) -> sql.engine.Engine:
     Connect to PostgreSQL database:
     >>> engine.CreateEngine(
       'postgresql://bob:password@localhost:1234/database')
+
+    Connect to a URL specified in the file /tmp/url.txt:
+    >>> engine.CreateEngine('file:///tmp/url.txt')
+
+    Connect to a URL specified in the file /tmp/url.txt, with the suffix
+    '/database?charset=utf8':
+    >>> engine.CreateEngine('file:///tmp/url.txt?/database?charset=utf8')
 
   Args:
     url: The URL of the database to connect to.
@@ -187,6 +199,33 @@ def CreateEngine(url: str, must_exist: bool = False) -> sql.engine.Engine:
         conn.execute(f'CREATE DATABASE {database}')
     conn.close()
     engine.dispose()
+  elif url.startswith('file://'):
+    # Read URL from a file.
+
+    # Split the URL into the file path, and the optional suffix.
+    components = url.split('?')
+    path, suffix = components[0], '?'.join(components[1:])
+
+    # Strip the file:// prefix from the path.
+    path = pathlib.Path(path[len('file://'):])
+
+    if not path.is_absolute():
+      raise ValueError('Relative path to file:// is not allowed')
+
+    if not path.is_file():
+      raise FileNotFoundError(f"File '{path}' not found")
+
+    # Read the contents of the file, ignoring lines starting with '#'.
+    with open(path) as f:
+      file_url = '\n'.join(
+        x for x in f.read().split('\n')
+        if not x.lstrip().startswith('#')).strip()
+
+    # Append the suffix.
+    file_url += suffix
+
+    # Recurse so that we can build the engine from the URL in the file.
+    return CreateEngine(file_url, must_exist=must_exist)
   else:
     raise ValueError(f"Unsupported database URL='{url}'")
 
