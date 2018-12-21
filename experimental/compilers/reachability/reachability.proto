@@ -34,11 +34,22 @@ message ControlFlowGraphEdge {
 
 // The result of attempting to extract LLVM bytecode from an input source.
 message LlvmBytecode {
-  optional string source_name = 1;
-  optional string relpath = 2;
-  optional string lang = 3;
-  optional string cflags = 4;
-  optional string bytecode = 5;
-  optional int32 clang_returncode = 6;
-  optional string error_message = 7;
+  required string source_name = 1;
+  required string relpath = 2;
+  required string lang = 3;
+  required string cflags = 4;
+  required string bytecode = 5;
+  required int32 clang_returncode = 6;
+  required string error_message = 7;
+}
+
+message ControlFlowGraphFromLlvmBytecode {
+  required int64 bytecode_id = 1;
+  required int64 cfg_id = 2;
+  required ControlFlowGraph control_flow_graph = 3;
+  required int32 status = 4;
+  required string error_message = 5;
+  required int64 block_count = 6;
+  required int64 edge_count = 7;
+  required bool is_strict_valid = 8;
 }
