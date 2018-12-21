@@ -521,7 +521,7 @@ def PopulateControlFlowGraphTable(db: database.Database):
       s.add_all(rows)
 
       # Commit every 10 seconds.
-      if last_commit_time - the_time > 10:
+      if the_time - last_commit_time > 10:
         s.commit()
         last_commit_time = the_time
 
