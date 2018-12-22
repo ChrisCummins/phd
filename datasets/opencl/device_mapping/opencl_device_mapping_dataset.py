@@ -32,7 +32,6 @@ class OpenClDeviceMappingsDataset(object):
   When using this dataset, please cite as:
 
       ﻿@inproceedings{Cummins2017a,
-          annote = {NULL},
           author = {Cummins, C. and Petoumenos, P. and Zang, W. and Leather, H.},
           booktitle = {CGO},
           publisher = {IEEE},
@@ -52,12 +51,12 @@ class OpenClDeviceMappingsDataset(object):
     nvidia_df.drop('Unnamed: 0', axis='columns', inplace=True)
 
     # Join the AMD and NVIDIA tables.
-    self._df = amd_df.join(nvidia_df, lsuffix='_amd', rsuffix='_nvidia')
+    df = amd_df.join(nvidia_df, lsuffix='_amd', rsuffix='_nvidia')
 
     # Check that the join has joined the correct benchmarks.
     def JoinedColumnsAreIdentical(column_name: str):
       return all(
-          x == y for x, y in self._df[
+          x == y for x, y in df[
             [f'{column_name}_amd', f'{column_name}_nvidia']].values)
 
     assert JoinedColumnsAreIdentical('dataset')
@@ -75,50 +74,113 @@ class OpenClDeviceMappingsDataset(object):
     # '<suite>-<benchmark>-<kernel>.cl'. Extract the
     # '<suite>-<benchmark>-<kernel>' component of each row and assign to new
     # columns.
-    self._df['program:benchmark_suite_name'] = [
-      '-'.join(b.split('-')[:-2]) for b in self._df['benchmark_amd']]
-    self._df['program:benchmark_name'] = [
-      b.split('-')[-2] for b in self._df['benchmark_amd']]
-    self._df['program:opencl_kernel_name'] = [
-      b.split('-')[-1] for b in self._df['benchmark_amd']]
+    df['program:benchmark_suite_name'] = [
+      '-'.join(b.split('-')[:-2]) for b in df['benchmark_amd']]
+    df['program:benchmark_name'] = [
+      b.split('-')[-2] for b in df['benchmark_amd']]
+    df['program:opencl_kernel_name'] = [
+      b.split('-')[-1] for b in df['benchmark_amd']]
 
     # Rename columns that we keep unmodified.
-    self._df.rename({
+    df.rename({
       'benchmark_amd': 'benchmark',
       'dataset_amd': 'data:dataset_name',
       'wgsize_amd': 'wgsize',
+      'rational_amd': 'feature:rational',
+      'runtime_cpu_amd': 'runtime:intel_core_i7_3820',
+      'runtime_gpu_amd': 'runtime:amd_tahiti_7970',
+      'runtime_gpu_nvidia': 'runtime:nvidia_gtx_960',
       'src_amd': 'program:opencl_src',
+      'transfer_amd': 'feature:transfer',
+      'comp_amd': 'feature:comp',
+      'atomic_amd': 'feature:atomic',
+      'mem_amd': 'feature:mem',
+      'coalesced_amd': 'feature:coalesced',
+      'localmem_amd': 'feature:localmem',
+      'wgsize_amd': 'param:wgsize',
     }, axis='columns', inplace=True)
 
-    # Drop redundant columns.
-    self._df.drop([
-      'benchmark_nvidia',
-      'dataset_nvidia',
-      'wgsize_nvidia',
-      'src_nvidia',
-    ], axis='columns', inplace=True)
+    # Sort the table values.
+    df.sort_values(by=[
+      'program:benchmark_suite_name',
+      'program:benchmark_name',
+      'program:opencl_kernel_name',
+      'data:dataset_name',
+      'param:wgsize',
+    ], inplace=True)
 
-  @decorators.memoized_property
-  def programs_df(self) -> pd.DataFrame:
-    """Return the a DataFrame view of the programs in the dataset.
+    # Reset to default integer index.
+    df.reset_index(inplace=True, drop=True)
 
-    The returned DataFrame has the following schema:
-
-      program:benchmark_suite_name (str): The name of the benchmark suite.
-      program:benchmark_name (str): The name of the benchmark program.
-      program:opencl_kernel_name (str): The name of the OpenCL kernel.
-      program:opencl_src (str): Entire source code of the preprocessed OpenCL
-        kernel.
-    """
-    df = self._df.groupby('benchmark').min()
-    df = df[[
+    # Rearrange a subset of the columns to create the final table.
+    self._df = df[[
       'program:benchmark_suite_name',
       'program:benchmark_name',
       'program:opencl_kernel_name',
       'program:opencl_src',
+      'data:dataset_name',
+      'param:wgsize',
+      'feature:mem',
+      'feature:comp',
+      'feature:localmem',
+      'feature:coalesced',
+      'feature:transfer',
+      'feature:atomic',
+      'feature:rational',
+      'runtime:intel_core_i7_3820',
+      'runtime:amd_tahiti_7970',
+      'runtime:nvidia_gtx_960',
     ]]
-    df.set_index(['program:benchmark_suite_name',
-                  'program:benchmark_name',
-                  'program:opencl_kernel_name'], inplace=True)
+
+  @property
+  def df(self) -> pd.DataFrame:
+    return self._df
+
+  @property
+  def grewe_features_df(self) -> pd.DataFrame:
+    """Return the Grewe et al. features as a table.
+
+    These are the features used in the publication:
+
+    ﻿    Grewe, D., Wang, Z., & O’Boyle, M. (2013). Portable Mapping of Data
+        Parallel Programs to OpenCL for Heterogeneous Systems. In CGO. IEEE.
+        https://doi.org/10.1109/CGO.2013.6494993
+    """
+    transfer = self.df['feature:transfer'].values
+    comp = self.df['feature:comp'].values
+    mem = self.df['feature:mem'].values
+    localmem = self.df['feature:localmem'].values
+    coalesced = self.df['feature:coalesced'].values
+    wgsize = self.df['param:wgsize'].values
+
+    df = pd.DataFrame({
+      'feature:grewe1': transfer / (comp + mem),
+      'feature:grewe2': coalesced / mem,
+      'feature:grewe3': (localmem / mem) * wgsize,
+      'feature:grewe4': comp / mem,
+    })
+
+    return df
+
+  @decorators.memoized_property
+  def programs_df(self) -> pd.DataFrame:
+    """Return a DataFrame containing the unique programs in the dataset.
+
+    The returned DataFrame has the following schema:
+
+      Index:
+        program:benchmark_suite_name (str): The name of the benchmark suite.
+        program:benchmark_name (str): The name of the benchmark program.
+        program:opencl_kernel_name (str): The name of the OpenCL kernel.
+      Columns:
+        program:opencl_src (str): Entire source code of the preprocessed OpenCL
+          kernel.
+    """
+    df = self._df.groupby([
+      'program:benchmark_suite_name',
+      'program:benchmark_name',
+      'program:opencl_kernel_name',
+    ]).min()
+    df = df[['program:opencl_src', ]]
     df.sort_index(inplace=True)
     return df
