@@ -22,53 +22,56 @@
 # ==============================================================================
 """Main inst2vec and ncc workflow"""
 
-
 import os
 import pickle
+
+from absl import app, flags
 from inst2vec import inst2vec_datagen as i2v_datagen
-from inst2vec import inst2vec_preprocess as i2v_prep
-from inst2vec import inst2vec_vocabulary as i2v_vocab
 from inst2vec import inst2vec_embedding as i2v_emb
 from inst2vec import inst2vec_evaluate as i2v_eval
-from inst2vec import inst2vec_appflags
-from absl import flags, app
+from inst2vec import inst2vec_preprocess as i2v_prep
+from inst2vec import inst2vec_vocabulary as i2v_vocab
+
 
 FLAGS = flags.FLAGS
 
 
 def main(argv):
-    del argv  # unused
+  del argv  # unused
 
-    data_folder = os.path.join(FLAGS.data_folder, FLAGS.data)
-    if not os.path.exists(FLAGS.embeddings_file):
+  data_folder = os.path.join(FLAGS.data_folder, FLAGS.data)
+  if not os.path.exists(FLAGS.embeddings_file):
 
-        if FLAGS.data == "data" and len(os.listdir(data_folder)) <= 1:
-            # Generate the data set
-            print('Folder', data_folder, 'is empty - preparing to download training data')
-            i2v_datagen.datagen(data_folder)
-        else:
-            # Assert the data folder's existence
-            assert os.path.exists(data_folder), "Folder " + data_folder + " does not exist"
-
-        # Build XFGs from raw code
-        data_folders = i2v_prep.construct_xfg(data_folder)
-
-        # Build vocabulary
-        i2v_vocab.construct_vocabulary(data_folder, data_folders)
-
-        # Train embeddings
-        embedding_matrix, embeddings_file = i2v_emb.train_embeddings(data_folder, data_folders)
-
+    if FLAGS.data == "data" and len(os.listdir(data_folder)) <= 1:
+      # Generate the data set
+      print('Folder', data_folder,
+            'is empty - preparing to download training data')
+      i2v_datagen.datagen(data_folder)
     else:
+      # Assert the data folder's existence
+      assert os.path.exists(
+        data_folder), "Folder " + data_folder + " does not exist"
 
-        print('Loading pre-trained embeddings from', FLAGS.embeddings_file)
-        with open(FLAGS.embeddings_file, 'rb') as f:
-            embedding_matrix = pickle.load(f)
-        embeddings_file = FLAGS.embeddings_file
+    # Build XFGs from raw code
+    data_folders = i2v_prep.construct_xfg(data_folder)
 
-    # Evaluate embeddings (intrinsic evaluation)
-    i2v_eval.evaluate_embeddings(data_folder, embedding_matrix, embeddings_file)
+    # Build vocabulary
+    i2v_vocab.construct_vocabulary(data_folder, data_folders)
+
+    # Train embeddings
+    embedding_matrix, embeddings_file = i2v_emb.train_embeddings(data_folder,
+                                                                 data_folders)
+
+  else:
+
+    print('Loading pre-trained embeddings from', FLAGS.embeddings_file)
+    with open(FLAGS.embeddings_file, 'rb') as f:
+      embedding_matrix = pickle.load(f)
+    embeddings_file = FLAGS.embeddings_file
+
+  # Evaluate embeddings (intrinsic evaluation)
+  i2v_eval.evaluate_embeddings(data_folder, embedding_matrix, embeddings_file)
 
 
 if __name__ == '__main__':
-    app.run(main)
+  app.run(main)

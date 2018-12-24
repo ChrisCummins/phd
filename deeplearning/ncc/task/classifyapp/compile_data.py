@@ -22,88 +22,91 @@
 # ==============================================================================
 """Compile classifyapp data to LLVM IR"""
 
-from absl import app, flags
 import os
 import random
 import subprocess
+
 import template_vars
+from absl import app, flags
 
 
 class CompilerArgumentGenerator(object):
-    def __init__(self):
-        self.compiler = template_vars.ValueListVar(
-            ['g++ -fplugin=dragonegg.so -S -fplugin-arg-dragonegg-emit-ir -std=c++11', 
-             'clang++ -S -emit-llvm -std=c++11'])
-        self.optimization = template_vars.ValueListVar(['-O0','-O1','-O2','-O3'])
-        self.fastmath = template_vars.ValueListVar(['', '-ffast-math'])
-        self.native = template_vars.ValueListVar(['', '-march=native'])
+  def __init__(self):
+    self.compiler = template_vars.ValueListVar(
+        [
+          'g++ -fplugin=dragonegg.so -S -fplugin-arg-dragonegg-emit-ir -std=c++11',
+          'clang++ -S -emit-llvm -std=c++11'])
+    self.optimization = template_vars.ValueListVar(['-O0', '-O1', '-O2', '-O3'])
+    self.fastmath = template_vars.ValueListVar(['', '-ffast-math'])
+    self.native = template_vars.ValueListVar(['', '-march=native'])
 
-    # Returns a tuple (cmdline, output_filename) -- for indexing purposes
-    def get_cmdline(self, input_path, input_filename, additional_flags):        
-        # file.cpp -> file_RANDOM.ll
-        output_filename = (input_filename[:-4] + '_' +
-                           template_vars.RandomStrVar()[0] + '.ll')
+  # Returns a tuple (cmdline, output_filename) -- for indexing purposes
+  def get_cmdline(self, input_path, input_filename, additional_flags):
+    # file.cpp -> file_RANDOM.ll
+    output_filename = (input_filename[:-4] + '_' +
+                       template_vars.RandomStrVar()[0] + '.ll')
 
-        args = [self.compiler, self.optimization, self.fastmath, self.native]
-        arg_strs = [str(random.choice(arg)) for arg in args]
-        return (' '.join(arg_strs) + ' ' + input_path+'/'+input_filename + 
-                ' '+ additional_flags + ' -o ', output_filename)
+    args = [self.compiler, self.optimization, self.fastmath, self.native]
+    arg_strs = [str(random.choice(arg)) for arg in args]
+    return (' '.join(arg_strs) + ' ' + input_path + '/' + input_filename +
+            ' ' + additional_flags + ' -o ', output_filename)
 
 
 flags.DEFINE_string('input_path', None, 'Input path of rendered .cpp files')
 flags.DEFINE_string('output_path', None, 'Output path to store .ll files')
 flags.DEFINE_string('compile_one', None, 'Define a single template to compile')
-flags.DEFINE_integer('ir_per_file', 32, 'Number of .ll files generated per input')
+flags.DEFINE_integer('ir_per_file', 32,
+                     'Number of .ll files generated per input')
 flags.DEFINE_string('compiler_flags', '', 'Additional compiler flags')
 FLAGS = flags.FLAGS
 
 
 def _createdir(dname):
-    try:
-        os.makedirs(dname)
-    except FileExistsError:
-        pass
+  try:
+    os.makedirs(dname)
+  except FileExistsError:
+    pass
 
 
 def main(argv):
-    del argv
+  del argv
 
-    cag = CompilerArgumentGenerator()
+  cag = CompilerArgumentGenerator()
 
-    cwd = os.path.dirname(os.path.abspath(__file__))
+  cwd = os.path.dirname(os.path.abspath(__file__))
 
-    inpath = cwd + '/code'
-    outpath = cwd + '/llvm_ir'
-    if FLAGS.input_path is not None:
-        inpath = FLAGS.input_path
-    if FLAGS.output_path is not None:
-        outpath = FLAGS.output_path
+  inpath = cwd + '/code'
+  outpath = cwd + '/llvm_ir'
+  if FLAGS.input_path is not None:
+    inpath = FLAGS.input_path
+  if FLAGS.output_path is not None:
+    outpath = FLAGS.output_path
 
-    # Create output directory
-    _createdir(outpath)
+  # Create output directory
+  _createdir(outpath)
 
-    classlist = [f for f in os.listdir(inpath)]
-    if FLAGS.compile_one is not None:
-        classlist = [FLAGS.compile_one]
+  classlist = [f for f in os.listdir(inpath)]
+  if FLAGS.compile_one is not None:
+    classlist = [FLAGS.compile_one]
 
-    for clazz in classlist:
-        filelist = [f for f in os.listdir(inpath + '/' + clazz) if '.cpp' in f]
-        _createdir(outpath + '/' + clazz)
+  for clazz in classlist:
+    filelist = [f for f in os.listdir(inpath + '/' + clazz) if '.cpp' in f]
+    _createdir(outpath + '/' + clazz)
 
-        for file in filelist:
-            for i in range(FLAGS.ir_per_file):
-                cmdline, outfile = \
-                    cag.get_cmdline('%s/%s' % (inpath, clazz), file, 
-                                    FLAGS.compiler_flags)
+    for file in filelist:
+      for i in range(FLAGS.ir_per_file):
+        cmdline, outfile = \
+          cag.get_cmdline('%s/%s' % (inpath, clazz), file,
+                          FLAGS.compiler_flags)
 
-                # Append mapping of file to cmdline in logfile
-                with open('%s/%s/flags.log' % (outpath, clazz), 'a') as f:
-                    f.write(outfile + ': ' + cmdline + '\n')
+        # Append mapping of file to cmdline in logfile
+        with open('%s/%s/flags.log' % (outpath, clazz), 'a') as f:
+          f.write(outfile + ': ' + cmdline + '\n')
 
-                fullopath = '%s/%s/%s' % (outpath, clazz, outfile)
-                print(cmdline + fullopath)
-                subprocess.call(cmdline + fullopath, shell=True)
+        fullopath = '%s/%s/%s' % (outpath, clazz, outfile)
+        print(cmdline + fullopath)
+        subprocess.call(cmdline + fullopath, shell=True)
 
 
 if __name__ == '__main__':
-    app.run(main)
+  app.run(main)

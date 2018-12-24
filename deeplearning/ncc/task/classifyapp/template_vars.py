@@ -23,93 +23,96 @@
 """Template variations"""
 
 import itertools
+import math
 import random
 import string
-import math
 
 
 class TemplateVar(object):
-    def __iter__(self):
-        raise NotImplementedError
-    def __getitem__(self, index):
-        raise NotImplementedError
-    def __len__(self):
-        raise NotImplementedError
+  def __iter__(self):
+    raise NotImplementedError
+
+  def __getitem__(self, index):
+    raise NotImplementedError
+
+  def __len__(self):
+    raise NotImplementedError
 
 
 class RangeVar(TemplateVar):
-    def __init__(self, start, stop, skip, *args, **kwargs):
-        self.start = start
-        self.stop = stop
-        self.skip = skip
-        return super().__init__(*args, **kwargs)
+  def __init__(self, start, stop, skip, *args, **kwargs):
+    self.start = start
+    self.stop = stop
+    self.skip = skip
+    return super().__init__(*args, **kwargs)
 
-    def __len__(self):
-        return len(range(self.start, self.stop, self.skip))
+  def __len__(self):
+    return len(range(self.start, self.stop, self.skip))
 
-    def __getitem__(self, index):
-        return list(range(self.start, self.stop, self.skip))[index]
+  def __getitem__(self, index):
+    return list(range(self.start, self.stop, self.skip))[index]
 
-    def __iter__(self):
-        yield from range(self.start, self.stop, self.skip)
+  def __iter__(self):
+    yield from range(self.start, self.stop, self.skip)
 
 
 class ValueListVar(TemplateVar):
-    def __init__(self, values, *args, **kwargs):
-        self.values = values
-        return super().__init__(*args, **kwargs)
+  def __init__(self, values, *args, **kwargs):
+    self.values = values
+    return super().__init__(*args, **kwargs)
 
-    def __len__(self):
-        return len(self.values)
+  def __len__(self):
+    return len(self.values)
 
-    def __getitem__(self, index):
-        return self.values[index]
+  def __getitem__(self, index):
+    return self.values[index]
 
-    def __iter__(self):
-        yield from iter(self.values)
+  def __iter__(self):
+    yield from iter(self.values)
 
 
 class BoolVar(ValueListVar):
-    def __init__(self):
-        super().__init__(['false', 'true'])
+  def __init__(self):
+    super().__init__(['false', 'true'])
 
 
 class PermutationVar(TemplateVar):
-    def __init__(self, values):
-        self.values = values
+  def __init__(self, values):
+    self.values = values
 
-    def __len__(self):
-        return math.factorial(len(self.values))
+  def __len__(self):
+    return math.factorial(len(self.values))
 
-    def __getitem__(self, index):
-        return list(itertools.permutations(self.values))[index]
+  def __getitem__(self, index):
+    return list(itertools.permutations(self.values))[index]
 
-    def __iter__(self):
-        yield from itertools.permutations(self.values)
+  def __iter__(self):
+    yield from itertools.permutations(self.values)
 
 
 class RandomStrVar(TemplateVar):
-    def __len__(self):
-        return 1
-    
-    def _randomize(self):
-        return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(10))
+  def __len__(self):
+    return 1
 
-    def __getitem__(self, index):
-        return self._randomize()
+  def _randomize(self):
+    return ''.join(
+        random.choice(string.ascii_letters + string.digits) for _ in range(10))
 
-    def __iter__(self):
-        while True:
-            yield self._randomize()
+  def __getitem__(self, index):
+    return self._randomize()
+
+  def __iter__(self):
+    while True:
+      yield self._randomize()
 
 
 _TYPES = [
-    'int8_t', 'int16_t', 'int32_t', 'int64_t',
-    'uint8_t', 'uint16_t', 'uint32_t', 'uint64_t',
-    'float', 'double', 'std::complex<float>', 'std::complex<double>'
+  'int8_t', 'int16_t', 'int32_t', 'int64_t',
+  'uint8_t', 'uint16_t', 'uint32_t', 'uint64_t',
+  'float', 'double', 'std::complex<float>', 'std::complex<double>'
 ]
 
 
 class TypeVar(ValueListVar):
-    def __init__(self):
-        return super().__init__(_TYPES)
+  def __init__(self):
+    return super().__init__(_TYPES)
