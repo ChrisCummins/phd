@@ -11,7 +11,7 @@ FLAGS = flags.FLAGS
 
 _AMD_CSV_PATH = bazelutil.DataPath('phd/datasets/opencl/device_mapping/amd.csv')
 _NVIDIA_CSV_PATH = bazelutil.DataPath(
-    'phd/datasets/opencl/device_mapping/amd.csv')
+    'phd/datasets/opencl/device_mapping/nvidia.csv')
 
 
 class OpenClDeviceMappingsDataset(object):
