@@ -3,6 +3,7 @@ import sys
 import typing
 
 import numpy as np
+import pandas as pd
 import pytest
 from absl import app
 from absl import flags
@@ -44,16 +45,25 @@ def test_programs_df_column_names(
   ]
 
 
-def test_grewe_features_df_row_count(
+def test_ComputeGreweFeaturesForGpu_row_count(
     dataset: ocl_dataset.OpenClDeviceMappingsDataset):
   """Test the number of rows."""
-  assert len(dataset.grewe_features_df) == 680
+  assert len(dataset.ComputeGreweFeaturesForGpu('amd_tahiti_7970')) == 680
+  assert len(dataset.ComputeGreweFeaturesForGpu('nvidia_gtx_960')) == 680
+
+
+def test_ComputeGreweFeaturesForGpu_unknown_device(
+    dataset: ocl_dataset.OpenClDeviceMappingsDataset):
+  """Test that error is raised for unknown device."""
+  with pytest.raises(KeyError):
+    dataset.ComputeGreweFeaturesForGpu('not a device')
 
 
 def test_grewe_features_df_columns(
     dataset: ocl_dataset.OpenClDeviceMappingsDataset):
   """Test the column names."""
-  np.testing.assert_array_equal(dataset.grewe_features_df.columns.values, [
+  df = dataset.ComputeGreweFeaturesForGpu('amd_tahiti_7970')
+  np.testing.assert_array_equal(df.columns.values, [
     'feature:grewe1',
     'feature:grewe2',
     'feature:grewe3',
@@ -78,25 +88,42 @@ def test_df_columns(
     'program:opencl_kernel_name',
     'program:opencl_src',
     'data:dataset_name',
-    'param:wgsize',
+    'param:amd_tahiti_7970:wgsize',
+    'param:nvidia_gtx_960:wgsize',
     'feature:mem',
     'feature:comp',
     'feature:localmem',
     'feature:coalesced',
-    'feature:transfer',
     'feature:atomic',
     'feature:rational',
+    'feature:amd_tahiti_7970:transfer',
+    'feature:nvidia_gtx_960:transfer',
     'runtime:intel_core_i7_3820',
     'runtime:amd_tahiti_7970',
     'runtime:nvidia_gtx_960',
   ])
 
 
-@pytest.mark.parametrize('property_name', ('df', 'grewe_features_df'))
+def test_df_gpu_runtimes_not_equal(
+    dataset: ocl_dataset.OpenClDeviceMappingsDataset):
+  """Test that the two GPU runtime columns are not equal."""
+  assert not all(
+      x == pytest.approx(y) for x, y in
+      dataset.df[['runtime:amd_tahiti_7970', 'runtime:nvidia_gtx_960']].values)
+
+
+@pytest.mark.parametrize(
+    'table_getter', (
+        lambda x: x.df,
+        lambda x: x.ComputeGreweFeaturesForGpu('amd_tahiti_7970'),
+        lambda x: x.ComputeGreweFeaturesForGpu('nvidia_gtx_960'),
+    ))
 def test_df_nan(
-    dataset: ocl_dataset.OpenClDeviceMappingsDataset, property_name: str):
+    dataset: ocl_dataset.OpenClDeviceMappingsDataset,
+    table_getter: typing.Callable[
+      [ocl_dataset.OpenClDeviceMappingsDataset], pd.DataFrame]):
   """Test that tables have no NaNs."""
-  df = getattr(dataset, property_name)
+  df = table_getter(dataset)
   assert not df.isnull().values.any()
 
 

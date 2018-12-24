@@ -1,5 +1,8 @@
 """A dataset of OpenCL Device Mappings."""
 
+import functools
+
+import numpy as np
 import pandas as pd
 from absl import flags
 
@@ -54,21 +57,19 @@ class OpenClDeviceMappingsDataset(object):
     df = amd_df.join(nvidia_df, lsuffix='_amd', rsuffix='_nvidia')
 
     # Check that the join has joined the correct benchmarks.
-    def JoinedColumnsAreIdentical(column_name: str):
-      return all(
-          x == y for x, y in df[
-            [f'{column_name}_amd', f'{column_name}_nvidia']].values)
+    def AssertJoinedColumnsAreIdentical(column_name: str):
+      np.testing.assert_array_equal(
+          df[f'{column_name}_amd'].values,
+          df[f'{column_name}_nvidia'].values)
 
-    assert JoinedColumnsAreIdentical('dataset')
-    assert JoinedColumnsAreIdentical('comp')
-    assert JoinedColumnsAreIdentical('rational')
-    assert JoinedColumnsAreIdentical('mem')
-    assert JoinedColumnsAreIdentical('localmem')
-    assert JoinedColumnsAreIdentical('coalesced')
-    assert JoinedColumnsAreIdentical('atomic')
-    assert JoinedColumnsAreIdentical('transfer')
-    assert JoinedColumnsAreIdentical('wgsize')
-    assert JoinedColumnsAreIdentical('runtime_cpu')
+    AssertJoinedColumnsAreIdentical('dataset')
+    AssertJoinedColumnsAreIdentical('comp')
+    AssertJoinedColumnsAreIdentical('rational')
+    AssertJoinedColumnsAreIdentical('mem')
+    AssertJoinedColumnsAreIdentical('localmem')
+    AssertJoinedColumnsAreIdentical('coalesced')
+    AssertJoinedColumnsAreIdentical('atomic')
+    AssertJoinedColumnsAreIdentical('runtime_cpu')
 
     # Each row in the CSV file has a benchmark name format:
     # '<suite>-<benchmark>-<kernel>.cl'. Extract the
@@ -91,13 +92,15 @@ class OpenClDeviceMappingsDataset(object):
       'runtime_gpu_amd': 'runtime:amd_tahiti_7970',
       'runtime_gpu_nvidia': 'runtime:nvidia_gtx_960',
       'src_amd': 'program:opencl_src',
-      'transfer_amd': 'feature:transfer',
+      'wgsize_amd': 'param:amd_tahiti_7970:wgsize',
+      'wgsize_nvidia': 'param:nvidia_gtx_960:wgsize',
+      'transfer_amd': 'feature:amd_tahiti_7970:transfer',
+      'transfer_nvidia': 'feature:nvidia_gtx_960:transfer',
       'comp_amd': 'feature:comp',
       'atomic_amd': 'feature:atomic',
       'mem_amd': 'feature:mem',
       'coalesced_amd': 'feature:coalesced',
       'localmem_amd': 'feature:localmem',
-      'wgsize_amd': 'param:wgsize',
     }, axis='columns', inplace=True)
 
     # Sort the table values.
@@ -106,7 +109,6 @@ class OpenClDeviceMappingsDataset(object):
       'program:benchmark_name',
       'program:opencl_kernel_name',
       'data:dataset_name',
-      'param:wgsize',
     ], inplace=True)
 
     # Reset to default integer index.
@@ -119,14 +121,16 @@ class OpenClDeviceMappingsDataset(object):
       'program:opencl_kernel_name',
       'program:opencl_src',
       'data:dataset_name',
-      'param:wgsize',
+      'param:amd_tahiti_7970:wgsize',
+      'param:nvidia_gtx_960:wgsize',
       'feature:mem',
       'feature:comp',
       'feature:localmem',
       'feature:coalesced',
-      'feature:transfer',
       'feature:atomic',
       'feature:rational',
+      'feature:amd_tahiti_7970:transfer',
+      'feature:nvidia_gtx_960:transfer',
       'runtime:intel_core_i7_3820',
       'runtime:amd_tahiti_7970',
       'runtime:nvidia_gtx_960',
@@ -136,8 +140,8 @@ class OpenClDeviceMappingsDataset(object):
   def df(self) -> pd.DataFrame:
     return self._df
 
-  @property
-  def grewe_features_df(self) -> pd.DataFrame:
+  @functools.lru_cache()
+  def ComputeGreweFeaturesForGpu(self, gpu: str) -> pd.DataFrame:
     """Return the Grewe et al. features as a table.
 
     These are the features used in the publication:
@@ -145,13 +149,17 @@ class OpenClDeviceMappingsDataset(object):
     ﻿    Grewe, D., Wang, Z., & O’Boyle, M. (2013). Portable Mapping of Data
         Parallel Programs to OpenCL for Heterogeneous Systems. In CGO. IEEE.
         https://doi.org/10.1109/CGO.2013.6494993
+
+    Args:
+      gpu: The name of the GPU platform to compute the features for: one of
+        {amd_tahiti_7970,nvidia_gtx_960}.
     """
-    transfer = self.df['feature:transfer'].values
+    transfer = self.df[f'feature:{gpu}:transfer'].values
     comp = self.df['feature:comp'].values
     mem = self.df['feature:mem'].values
     localmem = self.df['feature:localmem'].values
     coalesced = self.df['feature:coalesced'].values
-    wgsize = self.df['param:wgsize'].values
+    wgsize = self.df[f'param:{gpu}:wgsize'].values
 
     df = pd.DataFrame({
       'feature:grewe1': transfer / (comp + mem),
