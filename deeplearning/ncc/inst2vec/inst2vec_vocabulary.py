@@ -118,8 +118,8 @@ def print_vocabulary(mylist_freq, filename):
   # Print statistics
   with open(filename + '_class.txt', 'w') as f:
     f.write(
-      '{:>6}   {:<30}{:<25}{}\n'.format('# occ', 'tag level 1', 'tag level 2',
-                                        'tag level 3'))
+        '{:>6}   {:<30}{:<25}{}\n'.format('# occ', 'tag level 1', 'tag level 2',
+                                          'tag level 3'))
 
     # Print all level 1
     for tag1 in to_iterate1:
@@ -183,8 +183,8 @@ def print_vocabulary_metadata(reverse_dictionary, source_data_freq, filename):
   with open(filename, 'w') as f:
     # Write file header
     f.write(
-      '{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format('stmt', 'count', 'tag1', 'tag2',
-                                            'tag3', 'newtagA', 'newtagB'))
+        '{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format('stmt', 'count', 'tag1', 'tag2',
+                                              'tag3', 'newtagA', 'newtagB'))
 
     # Loop over all words in dictionary
     vocabulary_size = len(reverse_dictionary)
@@ -225,8 +225,8 @@ def print_vocabulary_metadata(reverse_dictionary, source_data_freq, filename):
       if '\n' in word:
         word = make_one_line_stmt(word)
       f.write(
-        '{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(word, count, t1, t2, t3, tnA,
-                                              tnB))
+          '{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(word, count, t1, t2, t3, tnA,
+                                                tnB))
 
 
 ########################################################################################################################
@@ -462,7 +462,7 @@ def generate_data_pairs_from_H_dictionary(H_dic, t):
 
   # Return
   print('\nNumber of generated data pairs in file  : {:>12,d}'.format(
-    len(data_pairs)))
+      len(data_pairs)))
   return data_pairs
 
 
@@ -535,15 +535,15 @@ def construct_vocabulary(data_folder, folders):
 
             # Add to cummulated list
             source_data_list_combined = add_to_vocabulary(
-              source_data_list_combined, source_data_list_)
+                source_data_list_combined, source_data_list_)
 
             # Get numbers
             num_statements_in_file = len(source_data_list_)
             num_statements_total += num_statements_in_file
             print('\tRead        {:>10,d} statements in this file'.format(
-              num_statements_in_file))
+                num_statements_in_file))
             print('\tAccumulated {:>10,d} statements so far'.format(
-              num_statements_total))
+                num_statements_total))
             del source_data_list_
             count += 1
 
@@ -554,7 +554,7 @@ def construct_vocabulary(data_folder, folders):
 
     # Prune data
     source_data_list_combined, stmts_cut_off = prune_vocabulary(
-      source_data_list_combined, cutoff_unknown)
+        source_data_list_combined, cutoff_unknown)
 
     # Get statistics of the combined list after pruning
     print('\n--- Compute some statistics on the combined data')
@@ -629,7 +629,7 @@ def construct_vocabulary(data_folder, folders):
 
   # Generate
   print(
-    '\n--- Generating data pair dictionary from dual graphs and dump to files')
+      '\n--- Generating data pair dictionary from dual graphs and dump to files')
 
   for folder in folders:
 
@@ -651,7 +651,7 @@ def construct_vocabulary(data_folder, folders):
       base_filename = D_file[:-2]
       D_file_open = os.path.join(folder_Dfiles, D_file)
       to_dump = os.path.join(folder_H, base_filename + "_H_dic_cw_" + str(
-        context_width) + '.p')
+          context_width) + '.p')
       if not os.path.exists(to_dump):
 
         # Load dual graph

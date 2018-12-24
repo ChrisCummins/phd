@@ -142,7 +142,7 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
   ####################################################################################################################
   # Set up for analogies
   analogies, analogy_types, n_questions_total, n_questions_relevant = i2v_eval.load_analogies(
-    data_folder)
+      data_folder)
   folder_evaluation = embeddings_pickle.replace('.p', '') + 'eval'
   if not os.path.exists(folder_evaluation):
     os.makedirs(folder_evaluation)
@@ -170,7 +170,7 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
     dataset = dataset_raw.map(record_parser)
     dataset = dataset.shuffle(int(1e5))
     dataset_batched = dataset.apply(
-      tf.contrib.data.batch_and_drop_remainder(mini_batch_size))
+        tf.contrib.data.batch_and_drop_remainder(mini_batch_size))
     dataset_batched = dataset_batched.prefetch(int(100000000))
     iterator = dataset_batched.make_initializable_iterator()
     saveable_iterator = tf.contrib.data.make_saveable_from_iterator(iterator)
@@ -202,12 +202,12 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
   with tf.name_scope("Output_Layer") as scope:
     if FLAGS.softmax:
       W_out = tf.Variable(
-        tf.truncated_normal([N, V], stddev=1.0 / math.sqrt(N)),
-        name="output_embeddings")
+          tf.truncated_normal([N, V], stddev=1.0 / math.sqrt(N)),
+          name="output_embeddings")
     else:
       W_out = tf.Variable(
-        tf.truncated_normal([V, N], stddev=1.0 / math.sqrt(N)),
-        name="output_embeddings")
+          tf.truncated_normal([V, N], stddev=1.0 / math.sqrt(N)),
+          name="output_embeddings")
 
     # Biases between hidden layer and output layer
     b_out = tf.Variable(tf.zeros([V]), name="nce_bias")
@@ -244,10 +244,10 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
     # Optimizer
     if FLAGS.optimizer == 'adam':
       optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(
-        loss)
+          loss)
     elif FLAGS.optimizer == 'nadam':
       optimizer = tf.contrib.opt.NadamOptimizer(
-        learning_rate=learning_rate).minimize(loss)
+          learning_rate=learning_rate).minimize(loss)
     elif FLAGS.optimizer == 'momentum':
       global_train_step = tf.Variable(0, trainable=False, dtype=tf.int32,
                                       name="global_step")
@@ -344,7 +344,7 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
       # If restoring a previous training session, set the right training epoch
       if restore_variables and not restore_completed:
         epoch = int(math.floor(
-          global_train_step.eval() / (dataset_size / mini_batch_size)))
+            global_train_step.eval() / (dataset_size / mini_batch_size)))
         global_step = global_train_step.eval()
         print('Starting from epoch', epoch)
 
@@ -375,9 +375,9 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
                 options=options,
                 run_metadata=metadata)
             assert not np.isnan(loss_val), "Loss at step " + str(
-              step) + " is nan"
+                step) + " is nan"
             assert not np.isinf(loss_val), "Loss at step " + str(
-              step) + " is inf"
+                step) + " is inf"
             avg_loss += loss_val
 
             if step > 0:
@@ -392,7 +392,7 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
                                                         print=i2v_eval.nop)
             total_analogy_score = sum([a[0] for a in analogy_score])
             analogy_score_tensor.assign(
-              total_analogy_score).eval()  # for tf.summary
+                total_analogy_score).eval()  # for tf.summary
 
             [summary, W_in_val] = sess.run([summary_op, W_in])
 
@@ -498,7 +498,7 @@ def train_embeddings(data_folder, data_folders):
   data_pair_files = get_data_pair_files(data_folders, context_width)
   for data_pair_file in data_pair_files:
     filesize_bytes = os.path.getsize(
-      data_pair_file)  # num pairs = filesize_bytes / 2 (pairs) / 4 (32-bit integers)
+        data_pair_file)  # num pairs = filesize_bytes / 2 (pairs) / 4 (32-bit integers)
     file_pairs = int(filesize_bytes / 8)
     num_data_pairs += file_pairs
     out_ = '\t{:<60}: {:>12,d} pairs'.format(data_pair_file, file_pairs)
@@ -585,7 +585,7 @@ def train_embeddings(data_folder, data_folders):
   # Train the embeddings (Skip-Gram model)
   print('\n--- Setup completed, starting to train the embeddings')
   folder_embeddings = os.path.join(outfolder, 'emb_cw_' + str(
-    context_width) + '_embeddings')
+      context_width) + '_embeddings')
   if not os.path.exists(folder_embeddings):
     os.makedirs(folder_embeddings)
   embeddings_pickle = os.path.join(folder_embeddings,

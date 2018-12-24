@@ -71,16 +71,16 @@ def get_embeddings():
   :return:
   """
   assert os.path.exists(
-    FLAGS.embeddings_file), "File " + FLAGS.embeddings_file + " does not exist"
+      FLAGS.embeddings_file), "File " + FLAGS.embeddings_file + " does not exist"
   print('Loading pre-trained embeddings from', FLAGS.embeddings_file)
   with open(FLAGS.embeddings_file, 'rb') as f:
     embedding_matrix = pickle.load(f)
   vocabulary_size, embedding_dimension = embedding_matrix.shape
   print('\n--- Loaded embeddings with vocabulary size    : {}\n'.format(
-    vocabulary_size),
-        '\t                  with embedding dimension: {}'.format(
+      vocabulary_size),
+      '\t                  with embedding dimension: {}'.format(
           embedding_dimension),
-        '\n\tfrom file:', FLAGS.embeddings_file)
+      '\n\tfrom file:', FLAGS.embeddings_file)
   return embedding_matrix
 
 
@@ -271,7 +271,7 @@ def llvm_ir_to_trainable(folder_ir):
   ####################################################################################################################
   # Setup
   assert len(
-    folder_ir) > 0, "Please specify a folder containing the raw LLVM IR"
+      folder_ir) > 0, "Please specify a folder containing the raw LLVM IR"
   assert os.path.exists(folder_ir), "Folder not found: " + folder_ir
   folder_seq = re.sub('ir', 'seq', folder_ir)
   if len(folder_seq) > 0:
@@ -319,7 +319,7 @@ def llvm_ir_to_trainable(folder_ir):
       # Source code transformation: simple pre-processing
       print('\n--- Pre-process code')
       preprocessed_data, functions_declared_in_files = i2v_prep.preprocess(
-        raw_data)
+          raw_data)
       preprocessed_data_with_structure_def = raw_data
 
       ############################################################################################################
@@ -346,8 +346,8 @@ def llvm_ir_to_trainable(folder_ir):
       # Source code transformation: inline structure types
       print('\n--- Inline structure types')
       processed_data, structures_dictionary = inline_struct_types_txt(
-        preprocessed_data,
-        preprocessed_data_with_structure_def)
+          preprocessed_data,
+          preprocessed_data_with_structure_def)
 
       # Source code transformation: identifier processing (abstract statements)
       print('\n--- Abstract statements from identifiers')
@@ -406,26 +406,26 @@ def llvm_ir_to_trainable(folder_ir):
 
       # Print stats
       out = '\n\nFolder: ' + raw_ir_folder + '(' + str(i) + '/' + str(
-        num_folders) + ')'
+          num_folders) + ')'
       out += '\n\nNumber of files processed: ' + str(len(seq_length_folder))
       out += '\n--- Sequence length stats:'
       out += '\nMin seq length    : {}'.format(min(seq_length_folder))
       out += '\nMax seq length    : {}'.format(max(seq_length_folder))
       out += '\nAvg seq length    : {}'.format(
-        sum(seq_length_folder) / len(seq_length_folder))
+          sum(seq_length_folder) / len(seq_length_folder))
       out += '\nTotal number stmts: {}'.format(sum(seq_length_folder))
       out += '\n--- UNK count stats:'
       out += '\nMin #UNKS in a sequence  : {}'.format(
-        min(unknown_counter_folder))
+          min(unknown_counter_folder))
       out += '\nMax #UNKS in a sequence  : {}'.format(
-        max(unknown_counter_folder))
+          max(unknown_counter_folder))
       out += '\nAvg #UNKS in a sequence  : {}'.format(
-        sum(unknown_counter_folder) / len(unknown_counter_folder))
+          sum(unknown_counter_folder) / len(unknown_counter_folder))
       out += '\nSum #UNKS in all sequence: {} / {}, {}%'.format(
-        sum(unknown_counter_folder),
-        sum(seq_length_folder),
-        sum(unknown_counter_folder) * 100 / sum(
-            seq_length_folder))
+          sum(unknown_counter_folder),
+          sum(seq_length_folder),
+          sum(unknown_counter_folder) * 100 / sum(
+              seq_length_folder))
       print(out)
       summary += '\n' + out
 

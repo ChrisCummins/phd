@@ -144,10 +144,10 @@ def encode_srcs(data_folder, df: pd.DataFrame):
     maxlen = max(seq_lengths)
     print('\tLongest sequence     : {:>5}'.format(maxlen))
     print('\tMean sequence length : {:>5} (rounded down)'.format(
-      math.floor(np.mean(seq_lengths))))
+        math.floor(np.mean(seq_lengths))))
     print('\tNumber of \'UNK\'      : {:>5}'.format(num_unks))
     print('\tPercentage of \'UNK\'  : {:>8.4} (% among all stmts)'.format(
-      (num_unks * 100) / sum(seq_lengths)))
+        (num_unks * 100) / sum(seq_lengths)))
     print('\t\'UNK\' index          : {:>5}'.format(unk_index))
 
   encoded = np.array(pad_sequences(seqs, maxlen=maxlen, value=unk_index))
@@ -212,7 +212,7 @@ class NCC_threadcoarsening:
   def predict(self, sequences: np.array, batch_size: int) -> np.array:
     # directly predict optimal thread coarsening factor from source sequences:
     p = np.array(
-      self.model.predict(sequences, batch_size=batch_size, verbose=0))
+        self.model.predict(sequences, batch_size=batch_size, verbose=0))
     indices = [np.argmax(x) for x in p]
     return [cfs[x] for x in indices]
 
@@ -237,7 +237,7 @@ def evaluate(model, device, data_folder, out_folder, embeddings,
 
   for i, platform in enumerate(device_list):
     print(
-      '\n------------------------------------------------------------------')
+        '\n------------------------------------------------------------------')
     print('--- Platform', platform, '[', i + 1, '/ 4 ]')
     print('------------------------------------------------------------------')
     platform_name = platform2str(platform)
@@ -396,8 +396,8 @@ def main(argv):
   if not os.path.exists(os.path.join(input_data, 'kernels_ir')):
     # Download data
     task_utils.download_and_unzip(
-      'https://polybox.ethz.ch/index.php/s/Dl8v8dKbuoWS3Ck/download',
-      'threadcoarsening_training_data', input_data)
+        'https://polybox.ethz.ch/index.php/s/Dl8v8dKbuoWS3Ck/download',
+        'threadcoarsening_training_data', input_data)
 
   task_utils.llvm_ir_to_trainable(os.path.join(input_data, 'kernels_ir'))
 
@@ -434,8 +434,8 @@ def main(argv):
   d.append(np.append(deeptune_pl_sp_vals, deeptune_sp_mean))
   d.append(np.append(deeptuneTL_pl_sp_vals, deeptuneTL_sp_mean))
   d.append(np.append(
-    ncc_threadcoarsening.groupby(['Platform'])['Speedup'].mean().values,
-    ncc_threadcoarsening['Speedup'].mean()))
+      ncc_threadcoarsening.groupby(['Platform'])['Speedup'].mean().values,
+      ncc_threadcoarsening['Speedup'].mean()))
   if FLAGS.device == 'all':
     d = np.array(d).T.reshape(5, 4)
     devs = ['AMD Radeon HD 5900', 'AMD Tahiti 7970',

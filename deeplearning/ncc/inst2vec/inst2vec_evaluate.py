@@ -58,7 +58,7 @@ def write_score_summary(scores, analogy_types, filename):
 
   # Header
   out = '-' * int(w) + '\n' + filename + ': score summary' + '\n' + '-' * int(
-    w) + '\n'
+      w) + '\n'
   out += '{:<65}\t{:>12}\t{:>12}\t{:>15}\n'.format(
       'Analogy type', '#corr answ', '#questions', 'corr answ [%]')
 
@@ -241,12 +241,12 @@ def load_analogies(data_folder):
     print('\n--- Loading analogies from file ', analogy_questions_file_dump)
     with open(analogy_questions_file_dump, 'rb') as f:
       analogies, analogy_types, n_questions_total, n_questions_relevant = pickle.load(
-        f)
+          f)
 
   # Print info
   print('\tFound    {:>10,d} analogy-questions, '.format(n_questions_total))
   print('\tof which {:>10,d} are compatible with this vocabulary'.format(
-    n_questions_relevant))
+      n_questions_relevant))
 
   return analogies, analogy_types, n_questions_total, n_questions_relevant
 
@@ -286,7 +286,7 @@ def evaluate_analogies(W, reverse_dictionary, analogies, analogy_types,
   assert vocabulary_size_dic == vocabulary_size, \
     "Vocabulary size of embedding matrix (" + str(vocabulary_size) + \
     ") does not match vocabulary size of dictionary (" + str(
-      vocabulary_size_dic) + ")"
+        vocabulary_size_dic) + ")"
 
   # Embedding vectors corresponding to the input words (dim = [N, embedding dimension])
   embedded_a = tf.nn.embedding_lookup(embedding_matrix, analogy_a)
@@ -448,16 +448,16 @@ def evaluate_analogies(W, reverse_dictionary, analogies, analogy_types,
         f.write('\n')
         for q in range(len(incorrect_answers_q[i])):
           f.write(
-            line_q.format(reverse_dictionary[incorrect_answers_q[i][q][0]],
-                          reverse_dictionary[incorrect_answers_q[i][q][1]],
-                          reverse_dictionary[incorrect_answers_q[i][q][2]],
-                          reverse_dictionary[incorrect_answers_q[i][q][3]]))
+              line_q.format(reverse_dictionary[incorrect_answers_q[i][q][0]],
+                            reverse_dictionary[incorrect_answers_q[i][q][1]],
+                            reverse_dictionary[incorrect_answers_q[i][q][2]],
+                            reverse_dictionary[incorrect_answers_q[i][q][3]]))
           f.write(
-            line_a.format(reverse_dictionary[incorrect_answers_a[i][q][0]],
-                          reverse_dictionary[incorrect_answers_a[i][q][1]],
-                          reverse_dictionary[incorrect_answers_a[i][q][2]],
-                          reverse_dictionary[incorrect_answers_a[i][q][3]],
-                          reverse_dictionary[incorrect_answers_a[i][q][4]]))
+              line_a.format(reverse_dictionary[incorrect_answers_a[i][q][0]],
+                            reverse_dictionary[incorrect_answers_a[i][q][1]],
+                            reverse_dictionary[incorrect_answers_a[i][q][2]],
+                            reverse_dictionary[incorrect_answers_a[i][q][3]],
+                            reverse_dictionary[incorrect_answers_a[i][q][4]]))
       else:
         f.write('None')
 
@@ -507,13 +507,13 @@ def analogies(eval_folder, embeddings, embeddings_file, dictionary,
     print('\n--- Loading analogies from file ', analogy_questions_file_dump)
     with open(analogy_questions_file_dump, 'rb') as f:
       analogies, analogy_types, n_questions_total, n_questions_relevant = pickle.load(
-        f)
+          f)
 
   # Print info
   print('\tFound    {:>10,d} analogy-questions in total, '.format(
-    n_questions_total))
+      n_questions_total))
   print('\tof which {:>10,d} are compatible with this vocabulary'.format(
-    n_questions_relevant))
+      n_questions_relevant))
 
   # Evaluate
   summary = ''
@@ -611,7 +611,7 @@ def test_distances(category, dictionary, W):
           # d(fadd, br) > d(br, invoke)
           # d(f*, br) > d(invoke, br)
           res.append(
-            np.dot(W[out, :], W[in1, :]) < np.dot(W[in2, :], W[in1, :]))
+              np.dot(W[out, :], W[in1, :]) < np.dot(W[in2, :], W[in1, :]))
 
   return res, out_
 
@@ -719,7 +719,7 @@ def plot_clustering(eval_folder, embeddings, embeddings_file,
 
   if FLAGS.tsne:
     embedding = TSNE(metric=FLAGS.metric, verbose=FLAGS.verbose).fit_transform(
-      embeddings)
+        embeddings)
     np_file = os.path.join(folder_clusterplot,
                            'tsne_' + embeddings_file[:-2].replace('/',
                                                                   '_') + '.np')

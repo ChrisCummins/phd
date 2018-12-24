@@ -437,8 +437,8 @@ def main(argv):
   d.append(np.append(deeptune_pred_vals, deeptune_pred_mean))
   d.append(
       np.append(
-        ncc_devmap.groupby(['Platform'])['Correct?'].mean().values * 100,
-        ncc_devmap['Correct?'].mean() * 100))
+          ncc_devmap.groupby(['Platform'])['Correct?'].mean().values * 100,
+          ncc_devmap['Correct?'].mean() * 100))
   d = np.array(d).T.reshape(3, 4)
   print('\n', pd.DataFrame(d, columns=['Static mapping', 'Grewe et al.',
                                        'DeepTune', 'DeepTuneInst2Vec'],

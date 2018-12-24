@@ -50,7 +50,7 @@ def main(argv):
     else:
       # Assert the data folder's existence
       assert os.path.exists(
-        data_folder), "Folder " + data_folder + " does not exist"
+          data_folder), "Folder " + data_folder + " does not exist"
 
     # Build XFGs from raw code
     data_folders = i2v_prep.construct_xfg(data_folder)
