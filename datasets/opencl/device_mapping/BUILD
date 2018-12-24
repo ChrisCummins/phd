@@ -29,6 +29,7 @@ py_test(
     deps = [
         ":opencl_device_mapping_dataset",
         "//third_party/py/absl",
+        "//third_party/py/numpy",
         "//third_party/py/pytest",
     ],
 )
