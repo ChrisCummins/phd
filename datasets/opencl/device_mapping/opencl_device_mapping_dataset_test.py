@@ -92,10 +92,12 @@ def test_df_columns(
   ])
 
 
+@pytest.mark.parametrize('property_name', ('df', 'grewe_features_df'))
 def test_df_nan(
-    dataset: ocl_dataset.OpenClDeviceMappingsDataset):
-  """Test that table has no NaNs."""
-  assert not dataset.df.isnull().values.any()
+    dataset: ocl_dataset.OpenClDeviceMappingsDataset, property_name: str):
+  """Test that tables have no NaNs."""
+  df = getattr(dataset, property_name)
+  assert not df.isnull().values.any()
 
 
 def main(argv: typing.List[str]):
