@@ -27,8 +27,6 @@ import pickle
 import struct
 
 import numpy as np
-import rgx_utils as rgx
-import task_utils
 import tensorflow as tf
 from absl import app
 from absl import flags
@@ -36,6 +34,8 @@ from keras import utils
 from keras.callbacks import Callback
 from sklearn.utils import resample
 
+from deeplearning.ncc import rgx_utils as rgx
+from deeplearning.ncc import task_utils
 from deeplearning.ncc import vocabulary
 from labm8 import fs
 
