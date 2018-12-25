@@ -457,7 +457,8 @@ def evaluate(model, embeddings, folder_data, samples_per_class, folder_results,
 # Main
 ########################################################################################################################
 def main(argv):
-  del argv  # unused
+  if len(argv) > 1:
+    raise app.UsageError('Unrecognized command line flags.')
 
   ####################################################################################################################
   # Setup

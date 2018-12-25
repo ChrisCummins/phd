@@ -373,7 +373,8 @@ def evaluate(model, device, data_folder, out_folder, embeddings,
 # Main
 ########################################################################################################################
 def main(argv):
-  del argv  # unused
+  if len(argv) > 1:
+    raise app.UsageError('Unrecognized command line flags.')
 
   ####################################################################################################################
   # Setup

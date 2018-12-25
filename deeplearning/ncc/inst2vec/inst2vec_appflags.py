@@ -24,9 +24,7 @@
 from absl import flags
 
 
-# Data set parameters
-flags.DEFINE_string('data', 'data', 'Dataset to use')
-flags.DEFINE_string('data_folder', '', 'Dataset folder prefix')
+FLAGS = flags.FLAGS
 
 # Vocabulary parameters
 flags.DEFINE_integer('context_width', 2, 'width of skip-gram context')

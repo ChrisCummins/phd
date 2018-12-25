@@ -23,11 +23,13 @@
 """Main inst2vec and ncc workflow"""
 
 import os
+import pathlib
 import pickle
 
 from absl import app
 from absl import flags
 
+from deeplearning.ncc.inst2vec import inst2vec_appflags
 from deeplearning.ncc.inst2vec import inst2vec_datagen as i2v_datagen
 from deeplearning.ncc.inst2vec import inst2vec_embedding as i2v_emb
 from deeplearning.ncc.inst2vec import inst2vec_evaluate as i2v_eval
@@ -35,16 +37,27 @@ from deeplearning.ncc.inst2vec import inst2vec_preprocess as i2v_prep
 from deeplearning.ncc.inst2vec import inst2vec_vocabulary as i2v_vocab
 
 
-FLAGS = flags.FLAGS
+# Get the app flags from a file.
+FLAGS = inst2vec_appflags.FLAGS
+
+# Data set parameters.
+flags.DEFINE_string('data_folder', '/tmp/deeplearning/ncc/inst2vec/data',
+                    'Dataset folder path.')
+flags.DEFINE_bool('use_default_dataset', True,
+                  'Whether to use default dataset.')
 
 
 def main(argv):
-  del argv  # unused
+  if len(argv) > 1:
+    raise app.UsageError('Unrecognized command line flags.')
 
-  data_folder = os.path.join(FLAGS.data_folder, FLAGS.data)
+  data_folder = os.path.join(FLAGS.data_folder)
+
+  # Make the data folder if it does not exist.
+  pathlib.Path(data_folder).mkdir(parents=True, exist_ok=True)
+
   if not os.path.exists(FLAGS.embeddings_file):
-
-    if FLAGS.data == "data" and len(os.listdir(data_folder)) <= 1:
+    if FLAGS.use_default_dataset:
       # Generate the data set
       print('Folder', data_folder,
             'is empty - preparing to download training data')

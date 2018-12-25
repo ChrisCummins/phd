@@ -9,5 +9,7 @@ set -eux
 # but with all other parameters reduced to small values to minimize execution
 # time.
 deeplearning/ncc/train_inst2vec \
-    --v=1
+    --v=1 \
+    --data_folder=/tmp/deeplearning/ncc/inst2vec/data \
+    --use_default_dataset
     # TODO(cec): Add flags from //deeplearning/ncc/inst2vec:inst2vec_appflags.
