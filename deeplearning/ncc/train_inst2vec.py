@@ -25,12 +25,14 @@
 import os
 import pickle
 
-from absl import app, flags
-from inst2vec import inst2vec_datagen as i2v_datagen
-from inst2vec import inst2vec_embedding as i2v_emb
-from inst2vec import inst2vec_evaluate as i2v_eval
-from inst2vec import inst2vec_preprocess as i2v_prep
-from inst2vec import inst2vec_vocabulary as i2v_vocab
+from absl import app
+from absl import flags
+
+from deeplearning.ncc.inst2vec import inst2vec_datagen as i2v_datagen
+from deeplearning.ncc.inst2vec import inst2vec_embedding as i2v_emb
+from deeplearning.ncc.inst2vec import inst2vec_evaluate as i2v_eval
+from deeplearning.ncc.inst2vec import inst2vec_preprocess as i2v_prep
+from deeplearning.ncc.inst2vec import inst2vec_vocabulary as i2v_vocab
 
 
 FLAGS = flags.FLAGS

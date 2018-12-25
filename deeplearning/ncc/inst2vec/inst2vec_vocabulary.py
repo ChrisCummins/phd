@@ -33,10 +33,11 @@ import struct
 import sys
 
 import networkx as nx
-import rgx_utils as rgx
 from absl import flags
-from inst2vec import inst2vec_utils as i2v_utils
 from scipy import sparse
+
+from deeplearning.ncc import rgx_utils as rgx
+from deeplearning.ncc.inst2vec import inst2vec_utils as i2v_utils
 
 
 FLAGS = flags.FLAGS
