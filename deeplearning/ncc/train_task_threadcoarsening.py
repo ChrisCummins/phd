@@ -29,17 +29,19 @@ import pickle
 
 import numpy as np
 import pandas as pd
-import rgx_utils as rgx
-import task_utils
 from absl import app
 from absl import flags
 from sklearn.model_selection import KFold
 
+from deeplearning.ncc import rgx_utils as rgx
+from deeplearning.ncc import task_utils
+from deeplearning.ncc import vocabulary
 from labm8 import fs
 
 
-flags.DEFINE_string('input_data', 'task/threadcoarsening', 'Path to input data')
-flags.DEFINE_string('out', 'task/threadcoarsening',
+flags.DEFINE_string('input_data', '/tmp/deeplearning/ncc/task/threadcoarsening',
+                    'Path to input data')
+flags.DEFINE_string('out', '/tmp/deeplearning/ncc/task/threadcoarsening',
                     'Path to folder in which to write saved Keras models and predictions')
 flags.DEFINE_string('device', 'all',
                     'Device to evaluate model on. Options: all, Cypress, Tahiti, Fermi, Kepler')
@@ -112,11 +114,10 @@ def encode_srcs(data_folder, df: pd.DataFrame):
   from keras.preprocessing.sequence import pad_sequences
 
   # Load dictionary and cutoff statements
-  folder_vocabulary = FLAGS.vocabulary_dir
-  dictionary_pickle = os.path.join(folder_vocabulary, 'dic_pickle')
-  print('\tLoading dictionary from file', dictionary_pickle)
-  with open(dictionary_pickle, 'rb') as f:
-    dictionary = pickle.load(f)
+  with vocabulary.VocabularyZipFile(FLAGS.vocabulary_zip_path) as vocab:
+    print('\tLoading dictionary from file', vocab.dictionary_pickle)
+    with open(vocab.dictionary_pickle, 'rb') as f:
+      dictionary = pickle.load(f)
   unk_index = dictionary[rgx.unknown_token]
   del dictionary
 

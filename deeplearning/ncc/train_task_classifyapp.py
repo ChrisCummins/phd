@@ -36,12 +36,14 @@ from keras import utils
 from keras.callbacks import Callback
 from sklearn.utils import resample
 
+from deeplearning.ncc import vocabulary
 from labm8 import fs
 
 
 # Parameters of classifyapp
-flags.DEFINE_string('input_data', 'task/classifyapp/ir', 'Path to input data')
-flags.DEFINE_string('out', 'task/classifyapp',
+flags.DEFINE_string('input_data', '/tmp/deeplearning/ncc/task/classifyapp/ir',
+                    'Path to input data')
+flags.DEFINE_string('out', '/tmp/deeplearning/ncc/task/classifyapp',
                     'Path to folder in which to write saved Keras models and predictions')
 flags.DEFINE_integer('num_epochs', 50, 'number of training epochs')
 flags.DEFINE_integer('batch_size', 64, 'training batch size')
@@ -345,11 +347,10 @@ def evaluate(model, embeddings, folder_data, samples_per_class, folder_results,
         [y_test, np.array([int(i)] * len(seq_files), dtype=np.int32)])
 
   # Load dictionary and cutoff statements
-  folder_vocabulary = FLAGS.vocabulary_dir
-  dictionary_pickle = os.path.join(folder_vocabulary, 'dic_pickle')
-  print('\tLoading dictionary from file', dictionary_pickle)
-  with open(dictionary_pickle, 'rb') as f:
-    dictionary = pickle.load(f)
+  with vocabulary.VocabularyZipFile(FLAGS.vocabulary_zip_path) as vocab:
+    print('\tLoading dictionary from file', vocab.dictionary_pickle)
+    with open(vocab.dictionary_pickle, 'rb') as f:
+      dictionary = pickle.load(f)
   unk_index = dictionary[rgx.unknown_token]
   del dictionary
 

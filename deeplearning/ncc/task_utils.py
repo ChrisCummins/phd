@@ -28,17 +28,21 @@ import struct
 import zipfile
 from collections import defaultdict
 
-import rgx_utils as rgx
 import wget
 from absl import flags
-from inst2vec import inst2vec_preprocess as i2v_prep
+
+from deeplearning.ncc import rgx_utils as rgx
+from deeplearning.ncc import vocabulary
+from deeplearning.ncc.inst2vec import inst2vec_preprocess as i2v_prep
 
 
 # Embedding and vocabulary file paths
-flags.DEFINE_string('embeddings_file', 'published_results/emb.p',
-                    'Path to the embeddings file')
-flags.DEFINE_string('vocabulary_dir', 'published_results/vocabulary',
-                    'Path to the vocabulary folder associated with those embeddings')
+flags.DEFINE_string(
+    'embeddings_file', None,
+    'Path to the embeddings file')
+flags.DEFINE_string(
+    'vocabulary_zip_path', None,
+    'Path to the vocabulary zip file associated with those embeddings')
 
 FLAGS = flags.FLAGS
 
@@ -325,20 +329,16 @@ def llvm_ir_to_trainable(folder_ir):
       ############################################################################################################
       # Load vocabulary and cut off statements
 
-      # Vocabulary files
-      folder_vocabulary = FLAGS.vocabulary_dir
-      dictionary_pickle = os.path.join(folder_vocabulary, 'dic_pickle')
-      cutoff_stmts_pickle = os.path.join(folder_vocabulary,
-                                         'cutoff_stmts_pickle')
-
-      # Load dictionary and cutoff statements
-      print('\tLoading dictionary from file', dictionary_pickle)
-      with open(dictionary_pickle, 'rb') as f:
-        dictionary = pickle.load(f)
-      print('\tLoading cut off statements from file', cutoff_stmts_pickle)
-      with open(cutoff_stmts_pickle, 'rb') as f:
-        stmts_cut_off = pickle.load(f)
-      stmts_cut_off = set(stmts_cut_off)
+      # Load dictionary and cutoff statements from vocabulary files.
+      with vocabulary.VocabularyZipFile(FLAGS.vocabulary_zip_path) as vocab:
+        print('\tLoading dictionary from file', vocab.dictionary_pickle)
+        with open(vocab.dictionary_pickle, 'rb') as f:
+          dictionary = pickle.load(f)
+        print('\tLoading cut off statements from file',
+              vocab.cutoff_stmts_pickle)
+        with open(vocab.cutoff_stmts_pickle, 'rb') as f:
+          stmts_cut_off = pickle.load(f)
+        stmts_cut_off = set(stmts_cut_off)
 
       ############################################################################################################
       # IR processing (inline structures, abstract statements)
