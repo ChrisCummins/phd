@@ -5,7 +5,11 @@
 
 set -eux
 
+# Runs the classification task using the published datasets used in the paper,
+# but with all other parameters reduced to small values to minimize execution
+# time.
 deeplearning/ncc/train_task_threadcoarsening \
     --v=1 \
     --num_epochs=1 \
-    --embeddings_file=deeplearning/ncc/published_results/emb.p
+    --embeddings_file=deeplearning/ncc/published_results/emb.p \
+    --vocabulary_zip_path=deeplearning/ncc/published_results/vocabulary.zip

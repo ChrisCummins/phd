@@ -5,6 +5,9 @@
 
 set -eux
 
+# Runs the classification task using the published datasets used in the paper,
+# but with all other parameters reduced to small values to minimize execution
+# time.
 deeplearning/ncc/train_task_devmap \
     --v=1 \
     --num_epochs=1 \
