@@ -43,7 +43,7 @@ def datagen(data_folder):
   download_and_unzip(
       'https://polybox.ethz.ch/index.php/s/SaKQ9L7dGs9zJXK/download',
       data_folder)
-  # BLAZ.
+  # BLAS.
   download_and_unzip(
       'https://polybox.ethz.ch/index.php/s/5ASMNv6dYsPKjyQ/download',
       data_folder)
