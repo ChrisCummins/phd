@@ -1,4 +1,5 @@
 """Unit tests for //labm8/bazelutil.py."""
+import pathlib
 import sys
 import tempfile
 
@@ -7,6 +8,12 @@ from absl import app
 
 from labm8 import bazelutil
 from labm8 import fs
+
+
+@pytest.fixture(scope='function')
+def tempdir() -> pathlib.Path:
+  with tempfile.TemporaryDirectory(prefix='phd_') as d:
+    yield pathlib.Path(d)
 
 
 # IsBazelSandbox() tests.
@@ -74,6 +81,15 @@ def test_DataPath_different_working_dir():
   with tempfile.TemporaryDirectory() as d:
     with fs.chdir(d):
       assert bazelutil.DataPath('phd/labm8/data/test/hello_world') == p
+
+
+def test_DataArchive_path_not_found(tempdir: pathlib.Path):
+  """Test that FileNotFound raised if path doesn't exist."""
+  with pytest.raises(FileNotFoundError) as e_ctx:
+    bazelutil.DataArchive(tempdir / 'a.zip')
+  # The exception is raised by bazelutil.DataPath(), so has a slightly different
+  # message than the one raised by Archive.__init__().
+  assert str(e_ctx.value).startswith("No such file or directory: '")
 
 
 def main(argv):

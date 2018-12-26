@@ -66,7 +66,7 @@ def DataPath(path: typing.Union[str, pathlib.Path],
   """
   if not str(path):
     if must_exist:
-      raise FileNotFoundError(f"No such file or directory: ''")
+      raise FileNotFoundError(f"No such file or directory: '{path}'")
     else:
       # An empty path yields the runfiles directory.
       return FindRunfilesDirectory()
@@ -75,3 +75,29 @@ def DataPath(path: typing.Union[str, pathlib.Path],
   if must_exist and not (real_path.is_file() or real_path.is_dir()):
     raise FileNotFoundError(f"No such file or directory: '{path}'")
   return real_path
+
+
+class DataArchive(object):
+  """A compressed zip file.
+
+  TODO: data=[...] attribute of target.
+
+  Provides access to an unzipped data file when used as a context manager by
+  extracting the zip contents to a temporary directory.
+
+  Example:
+    >>> with DataArchive("phd/data.zip") as uncompressed_root:
+    ...   print(uncompressed_root.iterdir())
+    ['a', 'README.txt']
+  """
+
+  def __init__(self, path: typing.Union[str, pathlib.Path]):
+    """Constructor.
+
+    Args:
+      path: The path to the data, including the name of the workspace.
+
+    Raises:
+      FileNotFoundError: If path is not a file.
+    """
+    super(DataArchive, self).__init__(DataPath(path))

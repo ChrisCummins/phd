@@ -32,6 +32,7 @@ py_library(
     srcs = ["bazelutil.py"],
     visibility = ["//visibility:public"],
     deps = [
+        ":archive",
         "//config:getconfig",
     ],
 )
