@@ -384,7 +384,7 @@ def main(argv):
   ####################################################################################################################
   # Setup
   # Get flag values
-  embeddings = task_utils.get_embeddings()
+  embeddings = task_utils.ReadEmbeddingFileFromFlags()
   input_data = FLAGS.input_data
   out = FLAGS.out
   if not os.path.exists(out):
@@ -402,7 +402,7 @@ def main(argv):
         'https://polybox.ethz.ch/index.php/s/Dl8v8dKbuoWS3Ck/download',
         'threadcoarsening_training_data', input_data)
 
-  task_utils.llvm_ir_to_trainable(os.path.join(input_data, 'kernels_ir'))
+  task_utils.LlvmIrToTrainable(os.path.join(input_data, 'kernels_ir'))
 
   ####################################################################################################################
   # Reference values

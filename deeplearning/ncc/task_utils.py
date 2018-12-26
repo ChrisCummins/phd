@@ -30,6 +30,7 @@ from collections import defaultdict
 
 import wget
 from absl import flags
+from absl import logging
 
 from deeplearning.ncc import rgx_utils as rgx
 from deeplearning.ncc import vocabulary
@@ -69,22 +70,16 @@ def download_and_unzip(url, dataset_name, data_folder):
 ########################################################################################################################
 # Reading, writing and dumping files
 ########################################################################################################################
-def get_embeddings():
-  """
-  Load embedding matrix from file
-  :return:
-  """
+def ReadEmbeddingFileFromFlags():
+  """Load embedding matrix from file"""
   assert os.path.exists(
       FLAGS.embeddings_file), "File " + FLAGS.embeddings_file + " does not exist"
-  print('Loading pre-trained embeddings from', FLAGS.embeddings_file)
+  logging.info('Loading pre-trained embeddings from %s', FLAGS.embeddings_file)
   with open(FLAGS.embeddings_file, 'rb') as f:
     embedding_matrix = pickle.load(f)
   vocabulary_size, embedding_dimension = embedding_matrix.shape
-  print('\n--- Loaded embeddings with vocabulary size    : {}\n'.format(
-      vocabulary_size),
-      '\t                  with embedding dimension: {}'.format(
-          embedding_dimension),
-      '\n\tfrom file:', FLAGS.embeddings_file)
+  logging.info('Loaded embeddings with vocabulary size: %d and '
+               'embedding dimension: %d', vocabulary_size, embedding_dimension)
   return embedding_matrix
 
 
@@ -200,12 +195,15 @@ def remove_global_identifiers(data):
 
 
 def remove_labels(data):
+  """Replace label declarations by token '<LABEL>'.
+
+  Args:
+    data: A list of list of strings to modify.
+
+  Returns:
+     The list of list of strings.
   """
-  Replace label declarations by token '<LABEL>'
-  :param data: input data as a list of files where each file is a list of strings
-  :return: modified input data
-  """
-  print('\tRemoving labels ...')
+  logging.info('Removing labels')
   for i in range(len(data)):
     for j in range(len(data[i])):
       if re.match(r'; <label>:\d+:?(\s+; preds = )?', data[i][j]):
@@ -225,25 +223,32 @@ def remove_labels(data):
 
 
 def replace_unnamed_values(data):
+  """Replace unnamed_values with abstract tokens.
+
+  Abstract tokens map:
+    integers: <INT>
+    floating points: <FLOAT> (whether in decimal or hexadecimal notation)
+    string: <STRING>
+
+  Args:
+    data: A list of list of strings to modify.
+
+  Returns:
+     The list of list of strings.
   """
-  Replace unnamed_values by abstract token:
-      integers: <INT>
-      floating points: <FLOAT> (whether in decimal or hexadecimal notation)
-      string: <STRING>
-  :param data: input data as a list of files where each file is a list of strings
-  :return: modified input data
-  """
-  print('\tRemoving immediate values ...')
+  logging.info('Removing immediate values ...')
   for i in range(len(data)):
     for j in range(len(data[i])):
-      data[i][j] = re.sub(r' ' + rgx.immediate_value_float_hexa, " <FLOAT>",
-                          data[i][j])  # hexadecimal notation
-      data[i][j] = re.sub(r' ' + rgx.immediate_value_float_sci, " <FLOAT>",
-                          data[i][j])  # decimal / scientific
-      if re.match("<%ID> = extractelement", data[i][j]) is None and \
-          re.match("<%ID> = extractvalue", data[i][j]) is None and \
-          re.match("<%ID> = insertelement", data[i][j]) is None and \
-          re.match("<%ID> = insertvalue", data[i][j]) is None:
+      # Hexadecimal notation.
+      data[i][j] = re.sub(
+          r' ' + rgx.immediate_value_float_hexa, " <FLOAT>", data[i][j])
+      # Decimal / scientific notation.
+      data[i][j] = re.sub(
+          r' ' + rgx.immediate_value_float_sci, " <FLOAT>", data[i][j])
+      if (re.match("<%ID> = extractelement", data[i][j]) is None and
+          re.match("<%ID> = extractvalue", data[i][j]) is None and
+          re.match("<%ID> = insertelement", data[i][j]) is None and
+          re.match("<%ID> = insertvalue", data[i][j]) is None):
         data[i][j] = re.sub(r'(?<!align)(?<!\[) ' + rgx.immediate_value_int,
                             " <INT>", data[i][j])
 
@@ -253,33 +258,40 @@ def replace_unnamed_values(data):
 
 
 def remove_index_types(data):
+  """Replace the index type in expressions containing "extractelement" or
+  "insertelement" by token <TYP>.
+
+  Args:
+    data: A list of list of strings to modify.
+
+  Returns:
+     The list of list of strings.
   """
-  Replace the index type in expressions containing "extractelement" or "insertelement" by token <TYP>
-  :param data: input data as a list of files where each file is a list of strings
-  :return: modified input data
-  """
-  print('\tRemoving index types ...')
+  logging.info('Removing index types ...')
   for i in range(len(data)):
     for j in range(len(data[i])):
-      if re.match("<%ID> = extractelement", data[i][j]) is not None or \
-          re.match("<%ID> = insertelement", data[i][j]) is not None:
+      if (re.match("<%ID> = extractelement", data[i][j]) is not None or
+          re.match("<%ID> = insertelement", data[i][j]) is not None):
         data[i][j] = re.sub(r'i\d+ ', '<TYP> ', data[i][j])
 
   return data
 
 
-########################################################################################################################
-# Transform a folder of raw IR into trainable data to be used as input data in tasks
-########################################################################################################################
-def llvm_ir_to_trainable(folder_ir):
-  ####################################################################################################################
+def LlvmIrToTrainable(folder_ir: str) -> str:
+  """Transform a folder of raw IR into trainable data to be used as input data in tasks.
+
+  Args:
+    folder_ir: The folder of LLVM IR to read. Must end in '_ir'.
+
+  Returns:
+    The path of the folder of sequences, ending in '_seq'.
+  """
   # Setup
-  assert len(
-      folder_ir) > 0, "Please specify a folder containing the raw LLVM IR"
+  assert folder_ir, "Please specify a folder containing the raw LLVM IR"
   assert os.path.exists(folder_ir), "Folder not found: " + folder_ir
-  folder_seq = re.sub('ir', 'seq', folder_ir)
-  if len(folder_seq) > 0:
-    print('Preparing to write LLVM IR index sequences to', folder_seq)
+  folder_seq = re.sub('_ir$', '_seq', folder_ir)
+  if folder_seq:
+    logging.info('Preparing to write LLVM IR index sequences to %s', folder_seq)
     if not os.path.exists(folder_seq):
       os.makedirs(folder_seq)
 
@@ -294,66 +306,57 @@ def llvm_ir_to_trainable(folder_ir):
       folders_seq.append(os.path.join(folder_seq, path))
       found_subfolder = True
   if found_subfolder:
-    print('Found', len(folders_ir), 'subfolders')
+    logging.info('Found %d subfolders', len(folders_ir))
   else:
-    print('No subfolders found in', folder_ir)
+    logging.info('No subfolders found in %s', folder_ir)
     folders_ir = [folder_ir]
     folders_seq = [folder_seq]
 
   # Loop over sub-folders
-  summary = ''
   num_folders = len(folders_ir)
   for i, raw_ir_folder in enumerate(folders_ir):
 
     l = folders_seq[i] + '/'
-    if not os.path.exists(l) or len(os.listdir(l)) == 0:
-
-      ############################################################################################################
+    if not os.path.exists(l) or not os.listdir(l):
       # Read files
 
       # Read data from folder
-      print('\n--- Read data from folder ', raw_ir_folder)
+      logging.info('Reading data from folder %s', raw_ir_folder)
       raw_data, file_names = i2v_prep.read_data_files_from_folder(raw_ir_folder)
 
       # Print data statistics and release memory
-      source_data_list, source_data = i2v_prep.data_statistics(raw_data,
-                                                               descr="reading data from source files")
+      source_data_list, source_data = i2v_prep.data_statistics(
+          raw_data, descr="reading data from source files")
       del source_data_list
 
       # Source code transformation: simple pre-processing
-      print('\n--- Pre-process code')
+      logging.info('Pre-processing code')
       preprocessed_data, functions_declared_in_files = i2v_prep.preprocess(
           raw_data)
       preprocessed_data_with_structure_def = raw_data
 
-      ############################################################################################################
-      # Load vocabulary and cut off statements
-
       # Load dictionary and cutoff statements from vocabulary files.
       with vocabulary.VocabularyZipFile(FLAGS.vocabulary_zip_path) as vocab:
-        print('\tLoading dictionary from file', vocab.dictionary_pickle)
+        logging.info('Loading dictionary from file %s', vocab.dictionary_pickle)
         with open(vocab.dictionary_pickle, 'rb') as f:
           dictionary = pickle.load(f)
-        print('\tLoading cut off statements from file',
-              vocab.cutoff_stmts_pickle)
+        logging.info('Loading cut off statements from file %s',
+                     vocab.cutoff_stmts_pickle)
         with open(vocab.cutoff_stmts_pickle, 'rb') as f:
           stmts_cut_off = pickle.load(f)
         stmts_cut_off = set(stmts_cut_off)
 
-      ############################################################################################################
       # IR processing (inline structures, abstract statements)
 
       # Source code transformation: inline structure types
-      print('\n--- Inline structure types')
-      processed_data, structures_dictionary = inline_struct_types_txt(
-          preprocessed_data,
-          preprocessed_data_with_structure_def)
+      logging.info('Inlining structure types')
+      processed_data, _ = inline_struct_types_txt(
+          preprocessed_data, preprocessed_data_with_structure_def)
 
       # Source code transformation: identifier processing (abstract statements)
-      print('\n--- Abstract statements from identifiers')
+      logging.info('Creating abstract statements from identifiers')
       processed_data = abstract_statements_from_identifiers_txt(processed_data)
 
-      ############################################################################################################
       # Write indexed sequence of statements
       seq_folder = folders_seq[i]
       if not os.path.exists(seq_folder):
@@ -380,55 +383,47 @@ def llvm_ir_to_trainable(folder_ir):
 
           # lookup and add to list
           if stmt not in dictionary.keys():
-            print("NOT IN DICTIONARY:", stmt)
+            logging.error("NOT IN DICTIONARY: %s", stmt)
             stmt = rgx.unknown_token
             unknown_counter += 1
 
           stmt_indexed.append(dictionary[stmt])
 
         # Write to csv
-        file_name_csv = os.path.join(seq_folder,
-                                     file_names[file_counter][:-3] + '_seq.csv')
-        file_name_rec = os.path.join(seq_folder,
-                                     file_names[file_counter][:-3] + '_seq.rec')
+        file_name_csv = os.path.join(
+            seq_folder, file_names[file_counter][:-3] + '_seq.csv')
+        file_name_rec = os.path.join(
+            seq_folder, file_names[file_counter][:-3] + '_seq.rec')
         with open(file_name_csv, 'w') as csv, open(file_name_rec, 'wb') as rec:
           for ind in stmt_indexed:
             csv.write(str(ind) + '\n')
             rec.write(struct.pack('I', int(ind)))
-        print('\tPrinted data pairs to file', file_name_csv)
-        print('\tPrinted data pairs to file', file_name_rec)
-        print('\t#UNKS', unknown_counter)
+        logging.info('Printed data pairs to %s', file_name_csv)
+        logging.info('Printed data pairs to %s', file_name_rec)
+        logging.info('#UNKS: %d', unknown_counter)
 
         # Increment counter
         unknown_counter_folder.append(unknown_counter)
         seq_length_folder.append(len(stmt_indexed))
         file_counter += 1
 
-      # Print stats
-      out = '\n\nFolder: ' + raw_ir_folder + '(' + str(i) + '/' + str(
-          num_folders) + ')'
-      out += '\n\nNumber of files processed: ' + str(len(seq_length_folder))
-      out += '\n--- Sequence length stats:'
-      out += '\nMin seq length    : {}'.format(min(seq_length_folder))
-      out += '\nMax seq length    : {}'.format(max(seq_length_folder))
-      out += '\nAvg seq length    : {}'.format(
-          sum(seq_length_folder) / len(seq_length_folder))
-      out += '\nTotal number stmts: {}'.format(sum(seq_length_folder))
-      out += '\n--- UNK count stats:'
-      out += '\nMin #UNKS in a sequence  : {}'.format(
-          min(unknown_counter_folder))
-      out += '\nMax #UNKS in a sequence  : {}'.format(
-          max(unknown_counter_folder))
-      out += '\nAvg #UNKS in a sequence  : {}'.format(
-          sum(unknown_counter_folder) / len(unknown_counter_folder))
-      out += '\nSum #UNKS in all sequence: {} / {}, {}%'.format(
-          sum(unknown_counter_folder),
-          sum(seq_length_folder),
-          sum(unknown_counter_folder) * 100 / sum(
-              seq_length_folder))
-      print(out)
-      summary += '\n' + out
+      # Print stats for folder.
+      logging.info('Processed %s (%d / %d)', raw_ir_folder, i + 1, num_folders)
+      logging.info('Number of files processed in %s: %d',
+                   raw_ir_folder, len(seq_length_folder))
+      logging.info('Sequence lengths in %s: min=%d avg=%.2f max=%d',
+                   raw_ir_folder, min(seq_length_folder),
+                   sum(seq_length_folder) / len(seq_length_folder),
+                   max(seq_length_folder))
+      logging.info('Total number stmts in %s: %d', raw_ir_folder,
+                   sum(seq_length_folder))
+      logging.info('#UNKS in sequences in %s: min=%d, avg=%.2f, max=%d',
+                   raw_ir_folder, min(unknown_counter_folder),
+                   sum(unknown_counter_folder) / len(unknown_counter_folder),
+                   max(unknown_counter_folder))
+      logging.info('Sum #UNKS in all sequences in %s: %d / %d, %.2f %%',
+                   raw_ir_folder, sum(unknown_counter_folder),
+                   sum(seq_length_folder),
+                   sum(unknown_counter_folder) * 100 / sum(seq_length_folder))
 
-  # When all is done, print a summary:
-  print(summary)
   return folder_seq

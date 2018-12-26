@@ -21,7 +21,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ==============================================================================
 """Training workflow for optimal device mapping prediction"""
-import math
 import os
 import pickle
 
@@ -29,6 +28,7 @@ import numpy as np
 import pandas as pd
 from absl import app
 from absl import flags
+from absl import logging
 
 from deeplearning.ncc import rgx_utils as rgx
 from deeplearning.ncc import task_utils
@@ -53,9 +53,6 @@ flags.DEFINE_bool('print_summary', False, 'Print summary of Keras model')
 FLAGS = flags.FLAGS
 
 
-########################################################################################################################
-# Utils
-########################################################################################################################
 def platform2str(platform: str) -> str:
   if platform == "amd":
     return "AMD Tahiti 7970"
@@ -101,7 +98,7 @@ def encode_srcs(data_folder, df: pd.DataFrame) -> np.array:
 
   # Load dictionary and cutoff statements
   with vocabulary.VocabularyZipFile(FLAGS.vocabulary_zip_path) as vocab:
-    print('\tLoading dictionary from file', vocab.dictionary_pickle)
+    logging.info('Loading dictionary from file %s', vocab.dictionary_pickle)
     with open(vocab.dictionary_pickle, 'rb') as f:
       dictionary = pickle.load(f)
   unk_index = dictionary[rgx.unknown_token]
@@ -115,8 +112,8 @@ def encode_srcs(data_folder, df: pd.DataFrame) -> np.array:
   num_unks = 0
   seq_lengths = list()
 
-  print('\n--- Preparing to read', num_files, 'input files from folder',
-        data_folder)
+  logging.info('Preparing to read %d input files from folder %s', num_files,
+               data_folder)
   seqs = list()
   for i in range(num_files):
     file = input_files[i]
@@ -136,18 +133,17 @@ def encode_srcs(data_folder, df: pd.DataFrame) -> np.array:
     else:
       assert True, 'input file not found: ' + file
 
-  print('\tShortest sequence    : {:>5}'.format(min(seq_lengths)))
-  maxlen = max(seq_lengths)
-  print('\tLongest sequence     : {:>5}'.format(maxlen))
-  print('\tMean sequence length : {:>5} (rounded down)'.format(
-      math.floor(np.mean(seq_lengths))))
-  print('\tNumber of \'UNK\'      : {:>5}'.format(num_unks))
-  print('\tPercentage of \'UNK\'  : {:>8.4} (% among all stmts)'.format(
-      (num_unks * 100) / sum(seq_lengths)))
-  print('\t\'UNK\' index          : {:>5}'.format(unk_index))
+  max_len = max(seq_lengths)
+  logging.info('Sequence lengths: min=%d, avg=%.2f, max=%d',
+               min(seq_lengths), np.mean(seq_lengths), max_len)
+  logging.info('Number of \'UNK\': %d', num_unks)
+  logging.info('Percentage of \'UNK\': %.3f %% among all stmts',
+               (num_unks * 100) / sum(seq_lengths))
+  logging.info('\'UNK\' index: %d', unk_index)
 
-  encoded = np.array(pad_sequences(seqs, maxlen=maxlen, value=unk_index))
-  return np.vstack([np.expand_dims(x, axis=0) for x in encoded]), maxlen
+  encoded = np.array(
+      pad_sequences(seqs, maxlen=max_len, value=unk_index))
+  return np.vstack([np.expand_dims(x, axis=0) for x in encoded]), max_len
 
 
 # TODO(cec): Code duplication with
@@ -186,7 +182,7 @@ class NCC_devmap:
         metrics=['accuracy'],
         loss=["categorical_crossentropy", "categorical_crossentropy"],
         loss_weights=[1., .2])
-    print('\tbuilt Keras model')
+    logging.info('Built Keras model')
 
     return self
 
@@ -374,7 +370,7 @@ def main(argv):
 
   # Setup
   # Get flag values
-  embeddings = task_utils.get_embeddings()
+  embeddings = task_utils.ReadEmbeddingFileFromFlags()
   out = FLAGS.out
   if not os.path.exists(out):
     os.makedirs(out)
@@ -392,7 +388,7 @@ def main(argv):
         'https://polybox.ethz.ch/index.php/s/U08Z3xLhvbLk8io/download',
         'devmap_training_data', input_data)
 
-  task_utils.llvm_ir_to_trainable(os.path.join(input_data, 'kernels_ir'))
+  task_utils.LlvmIrToTrainable(os.path.join(input_data, 'kernels_ir'))
 
   # Reference values copied from:
   # https://github.com/ChrisCummins/paper-end2end-dl/blob/master/code/Case%20Study%20A.ipynb
@@ -410,22 +406,22 @@ def main(argv):
   deeptune_sp_mean = 2.373917
 
   # Train model
-  print("Evaluating DeepTuneInst2Vec ...")
+  logging.info("Evaluating ncc model")
   ncc_devmap = evaluate(NCC_devmap(), device, input_data, out, embeddings,
                         dense_layer_size, print_summary,
                         num_epochs, batch_size)
 
   # Print results
-  print('\n--- Prediction results')
+  print('--- Prediction results')
   print(ncc_devmap.groupby(['Platform', 'Benchmark Suite'])[
           'Platform', 'Correct?', 'Speedup'].mean())
-  print('\n--- Prediction results (summarized)')
+  print('--- Prediction results (summarized)')
   print(
       ncc_devmap.groupby(['Platform'])[
         'Platform', 'Correct?', 'Speedup'].mean())
 
   # Model comparison: prediction accuracy
-  print('\n--- Model comparison: prediction accuracy')
+  print('--- Model comparison: prediction accuracy')
   d = list()
   d.append(np.append(static_pred_vals, static_pred_mean))
   d.append(np.append(grewe_pred_vals, grewe_pred_mean))
@@ -435,13 +431,13 @@ def main(argv):
           ncc_devmap.groupby(['Platform'])['Correct?'].mean().values * 100,
           ncc_devmap['Correct?'].mean() * 100))
   d = np.array(d).T.reshape(3, 4)
-  print('\n', pd.DataFrame(d, columns=['Static mapping', 'Grewe et al.',
-                                       'DeepTune', 'DeepTuneInst2Vec'],
-                           index=['AMD Tahiti 7970', 'NVIDIA GTX 970',
-                                  'Average']))
+  print(pd.DataFrame(d, columns=['Static mapping', 'Grewe et al.',
+                                 'DeepTune', 'DeepTuneInst2Vec'],
+                     index=['AMD Tahiti 7970', 'NVIDIA GTX 970',
+                            'Average']))
 
   # Model comparison: speedups
-  print('\n--- Model comparison: speedups')
+  print('--- Model comparison: speedups')
   d = list()
   d.append(np.append(static_sp_vals, static_sp_mean))
   d.append(np.append(grewe_sp_vals, grewe_sp_mean))
@@ -449,10 +445,10 @@ def main(argv):
   d.append(np.append(ncc_devmap.groupby(['Platform'])['Speedup'].mean().values,
                      ncc_devmap['Speedup'].mean()))
   d = np.array(d).T.reshape(3, 4)
-  print('\n', pd.DataFrame(d, columns=['Static mapping', 'Grewe et al.',
-                                       'DeepTune', 'DeepTuneInst2Vec'],
-                           index=['AMD Tahiti 7970', 'NVIDIA GTX 970',
-                                  'Average']))
+  print(pd.DataFrame(d, columns=['Static mapping', 'Grewe et al.',
+                                 'DeepTune', 'DeepTuneInst2Vec'],
+                     index=['AMD Tahiti 7970', 'NVIDIA GTX 970',
+                            'Average']))
 
 
 if __name__ == '__main__':

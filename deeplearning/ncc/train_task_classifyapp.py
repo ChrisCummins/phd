@@ -464,7 +464,7 @@ def main(argv):
   ####################################################################################################################
   # Setup
   # Get flag values
-  embeddings = task_utils.get_embeddings()
+  embeddings = task_utils.ReadEmbeddingFileFromFlags()
   folder_results = FLAGS.out
   assert len(
       folder_results) > 0, "Please specify a path to the results folder using --folder_results"
@@ -482,13 +482,13 @@ def main(argv):
         'https://polybox.ethz.ch/index.php/s/JOBjrfmAjOeWCyl/download',
         'classifyapp_training_data', folder_data)
 
-  task_utils.llvm_ir_to_trainable(folder_data + '_train')
+  task_utils.LlvmIrToTrainable(folder_data + '_train')
   assert os.path.exists(
       folder_data + '_val'), "Folder not found: " + folder_data + '_val'
-  task_utils.llvm_ir_to_trainable(folder_data + '_val')
+  task_utils.LlvmIrToTrainable(folder_data + '_val')
   assert os.path.exists(
       folder_data + '_test'), "Folder not found: " + folder_data + '_test'
-  task_utils.llvm_ir_to_trainable(folder_data + '_test')
+  task_utils.LlvmIrToTrainable(folder_data + '_test')
 
   # Create directories if they do not exist
   if not os.path.exists(folder_results):
