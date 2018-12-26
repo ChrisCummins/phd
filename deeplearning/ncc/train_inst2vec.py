@@ -43,8 +43,11 @@ FLAGS = inst2vec_appflags.FLAGS
 # Data set parameters.
 flags.DEFINE_string('data_folder', '/tmp/phd/deeplearning/ncc/inst2vec/data',
                     'Dataset folder path.')
-flags.DEFINE_bool('use_default_dataset', True,
+flags.DEFINE_bool('download_datasets', True,
                   'Whether to use default dataset.')
+flags.DEFINE_list(
+    'dataset_urls', [],
+    'URLs of datasets to download. If not provided, all datasets will be used.')
 
 
 def main(argv):
@@ -57,11 +60,11 @@ def main(argv):
   pathlib.Path(data_folder).mkdir(parents=True, exist_ok=True)
 
   if not os.path.exists(FLAGS.embeddings_file):
-    if FLAGS.use_default_dataset:
+    if FLAGS.download_datasets:
       # Generate the data set
       print('Folder', data_folder,
             'is empty - preparing to download training data')
-      i2v_datagen.datagen(data_folder)
+      i2v_datagen.DownloadDatasets(data_folder, urls=FLAGS.dataset_urls)
     else:
       # Assert the data folder's existence
       assert os.path.exists(
