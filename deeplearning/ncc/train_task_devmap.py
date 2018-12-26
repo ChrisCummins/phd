@@ -38,10 +38,10 @@ from labm8 import fs
 
 # Parameters of devmap
 flags.DEFINE_string(
-    'input_data', '/tmp/deeplearning/ncc/task/devmap',
+    'input_data', '/tmp/phd/deeplearning/ncc/task/devmap',
     'Path to input data')
 flags.DEFINE_string(
-    'out', '/tmp/deeplearning/ncc/task/devmap',
+    'out', '/tmp/phd/deeplearning/ncc/task/devmap',
     'Path to folder in which to write saved Keras models and predictions')
 flags.DEFINE_string('device', 'all',
                     'Device to evaluate model on. Options: all, amd, nvidia')

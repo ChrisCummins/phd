@@ -10,6 +10,6 @@ set -eux
 # time.
 deeplearning/ncc/train_inst2vec \
     --v=1 \
-    --data_folder=/tmp/deeplearning/ncc/inst2vec/data \
+    --data_folder=/tmp/phd/deeplearning/ncc/inst2vec/data \
     --use_default_dataset
     # TODO(cec): Add flags from //deeplearning/ncc/inst2vec:inst2vec_appflags.

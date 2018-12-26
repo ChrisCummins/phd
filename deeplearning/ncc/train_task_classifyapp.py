@@ -41,9 +41,10 @@ from labm8 import fs
 
 
 # Parameters of classifyapp
-flags.DEFINE_string('input_data', '/tmp/deeplearning/ncc/task/classifyapp/ir',
+flags.DEFINE_string('input_data',
+                    '/tmp/phd/deeplearning/ncc/task/classifyapp/ir',
                     'Path to input data')
-flags.DEFINE_string('out', '/tmp/deeplearning/ncc/task/classifyapp',
+flags.DEFINE_string('out', '/tmp/phd/deeplearning/ncc/task/classifyapp',
                     'Path to folder in which to write saved Keras models and predictions')
 flags.DEFINE_integer('num_epochs', 50, 'number of training epochs')
 flags.DEFINE_integer('batch_size', 64, 'training batch size')

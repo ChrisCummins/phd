@@ -39,9 +39,10 @@ from deeplearning.ncc import vocabulary
 from labm8 import fs
 
 
-flags.DEFINE_string('input_data', '/tmp/deeplearning/ncc/task/threadcoarsening',
+flags.DEFINE_string('input_data',
+                    '/tmp/phd/deeplearning/ncc/task/threadcoarsening',
                     'Path to input data')
-flags.DEFINE_string('out', '/tmp/deeplearning/ncc/task/threadcoarsening',
+flags.DEFINE_string('out', '/tmp/phd/deeplearning/ncc/task/threadcoarsening',
                     'Path to folder in which to write saved Keras models and predictions')
 flags.DEFINE_string('device', 'all',
                     'Device to evaluate model on. Options: all, Cypress, Tahiti, Fermi, Kepler')

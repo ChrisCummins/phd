@@ -41,7 +41,7 @@ from deeplearning.ncc.inst2vec import inst2vec_vocabulary as i2v_vocab
 FLAGS = inst2vec_appflags.FLAGS
 
 # Data set parameters.
-flags.DEFINE_string('data_folder', '/tmp/deeplearning/ncc/inst2vec/data',
+flags.DEFINE_string('data_folder', '/tmp/phd/deeplearning/ncc/inst2vec/data',
                     'Dataset folder path.')
 flags.DEFINE_bool('use_default_dataset', True,
                   'Whether to use default dataset.')

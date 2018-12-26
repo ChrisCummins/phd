@@ -19,7 +19,7 @@ from labm8 import decorators
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('cache_directory',
-                    '/tmp/deeplearning/deeptune/opencl/heterogeneous_mapping',
+                    '/tmp/phd/deeplearning/deeptune/opencl/heterogeneous_mapping',
                     'Path to working dir.')
 
 
