@@ -10,6 +10,24 @@ exports_files([
 ])
 
 py_library(
+    name = "archive",
+    srcs = ["archive.py"],
+    deps = [
+        "//third_party/py/absl",
+    ]
+)
+
+py_test(
+    name = "archive_test",
+    srcs = ["archive_test.py"],
+    deps = [
+        ":archive",
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
+    ]
+)
+
+py_library(
     name = "bazelutil",
     srcs = ["bazelutil.py"],
     visibility = ["//visibility:public"],
