@@ -22,6 +22,7 @@
 # ==============================================================================
 """Training workflow for optimal device mapping prediction"""
 import os
+import pathlib
 import pickle
 
 import numpy as np
@@ -33,6 +34,7 @@ from absl import logging
 from deeplearning.ncc import rgx_utils as rgx
 from deeplearning.ncc import task_utils
 from deeplearning.ncc import vocabulary
+from labm8 import bazelutil
 from labm8 import fs
 
 
@@ -261,7 +263,6 @@ def evaluate(model, device, data_folder, out_folder, embeddings,
     for j, (train_index, test_index) in enumerate(kf.split(sequences, y)):
       print('--- Cross validation step [', j, '/ ', n_splits, ']')
 
-      model_name = model.__name__
       model_basename = model.__basename__
       model_path = os.path.join(out_folder,
                                 "models/{model_basename}-{platform}-{j}.model".format(
@@ -368,6 +369,10 @@ def main(argv):
   if len(argv) > 1:
     raise app.UsageError('Unrecognized command line flags.')
 
+  # Don't truncate output when printing pandas tables.
+  pd.set_option('display.max_columns', None)
+  pd.set_option('display.max_rows', None)
+
   # Setup
   # Get flag values
   embeddings = task_utils.ReadEmbeddingFileFromFlags()
@@ -383,10 +388,9 @@ def main(argv):
   batch_size = FLAGS.batch_size
   input_data = FLAGS.input_data
   if not os.path.exists(os.path.join(input_data, 'kernels_ir')):
-    # Download data
-    task_utils.download_and_unzip(
-        'https://polybox.ethz.ch/index.php/s/U08Z3xLhvbLk8io/download',
-        'devmap_training_data', input_data)
+    dataset = bazelutil.DataArchive(
+        'phd/deeplearning/ncc/published_results/task_devmap.zip')
+    dataset.ExtractAll(pathlib.Path(input_data))
 
   task_utils.LlvmIrToTrainable(os.path.join(input_data, 'kernels_ir'))
 
@@ -449,6 +453,7 @@ def main(argv):
                                  'DeepTune', 'DeepTuneInst2Vec'],
                      index=['AMD Tahiti 7970', 'NVIDIA GTX 970',
                             'Average']))
+  logging.info('done')
 
 
 if __name__ == '__main__':

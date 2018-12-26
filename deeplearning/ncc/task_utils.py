@@ -236,7 +236,7 @@ def replace_unnamed_values(data):
   Returns:
      The list of list of strings.
   """
-  logging.info('Removing immediate values ...')
+  logging.info('Removing immediate values')
   for i in range(len(data)):
     for j in range(len(data[i])):
       # Hexadecimal notation.
