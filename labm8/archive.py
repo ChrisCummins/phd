@@ -77,21 +77,34 @@ class Archive(object):
     """Return the path of the archive."""
     return self._compressed_path
 
+  def ExtractAll(self, path: pathlib.Path) -> pathlib.Path:
+    """Extract the archive contents to a directory.
+
+    Args:
+      path: The directory to extract to.
+
+    Returns:
+      The path of the extracted archive.
+    """
+    with self._open_function(str(self._compressed_path)) as f:
+      f.extractall(path=str(path))
+    return path
+
   def __enter__(self) -> pathlib.Path:
     """Unpack the archive and return the uncompressed path.
 
     Returns:
       The path of the directory containing the uncompressed archive.
     """
+    assert not self._uncompressed_path
     self._uncompressed_path = pathlib.Path(tempfile.mkdtemp(prefix='phd_'))
-    with zipfile.ZipFile(str(self._compressed_path)) as f:
-      f.extractall(path=str(self._uncompressed_path))
-    return self._uncompressed_path
+    return self.ExtractAll(self._uncompressed_path)
 
   def __exit__(self, *args):
     """Exit the scope of the archive.
 
     This deletes the temporary directory that the archive has been unpacked to.
     """
+    assert self._uncompressed_path
     shutil.rmtree(self._uncompressed_path)
     self._uncompressed_path = None

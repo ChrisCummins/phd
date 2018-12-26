@@ -62,11 +62,10 @@ def test_Archive_unsupported_suffixes(tempdir: pathlib.Path, suffix: str):
                   str(e_ctx.value))
 
 
-@pytest.mark.parametrize('suffix', ('.zip',))
-def test_Archive_single_file_zip(tempdir: pathlib.Path, suffix: str):
-  """Short summary of test."""
+def test_Archive_single_file_zip(tempdir: pathlib.Path):
+  """Test context manager for a single file zip."""
   # Create an archive with a single file.
-  path = tempdir / f'a{suffix}'
+  path = tempdir / 'a.zip'
   with zipfile.ZipFile(path, "w") as a:
     with a.open('a.txt', 'w') as f:
       f.write("Hello, world!".encode("utf-8"))
@@ -77,6 +76,44 @@ def test_Archive_single_file_zip(tempdir: pathlib.Path, suffix: str):
     assert len(list(d.iterdir())) == 1
     with open(d / 'a.txt') as f:
       assert f.read() == "Hello, world!"
+
+
+def test_Archive_single_file_zip_ExtractAll(tempdir: pathlib.Path):
+  """Test ExtractAll for a single file zip."""
+  # Create an archive with a single file.
+  path = tempdir / 'a.zip'
+  with zipfile.ZipFile(path, "w") as a:
+    with a.open('a.txt', 'w') as f:
+      f.write("Hello, world!".encode("utf-8"))
+
+  # Open the archive and check that it still exists.
+  archive.Archive(path).ExtractAll(tempdir)
+  assert (tempdir / 'a.zip').is_file()
+
+  # Check the archive contents.
+  assert (tempdir / 'a.txt').is_file()
+  assert len(list(tempdir.iterdir())) == 2  # the zip file and a.txt
+  with open(tempdir / 'a.txt') as f:
+    assert f.read() == "Hello, world!"
+
+
+def test_Archive_single_file_zip_ExtractAll_parents(tempdir: pathlib.Path):
+  """Test that ExtractAll creates necessary parent directories"""
+  # Create an archive with a single file.
+  path = tempdir / 'a.zip'
+  with zipfile.ZipFile(path, "w") as a:
+    with a.open('a.txt', 'w') as f:
+      f.write("Hello, world!".encode("utf-8"))
+
+  # Open the archive and check that it still exists.
+  archive.Archive(path).ExtractAll(tempdir / 'foo/bar/car')
+  assert (tempdir / 'a.zip').is_file()
+
+  # Check the archive contents.
+  assert (tempdir / 'foo/bar/car/a.txt').is_file()
+  assert len(list(tempdir.iterdir())) == 2  # the zip file and 'foo/'
+  with open(tempdir / 'foo/bar/car/a.txt') as f:
+    assert f.read() == "Hello, world!"
 
 
 def main(argv: typing.List[str]):
