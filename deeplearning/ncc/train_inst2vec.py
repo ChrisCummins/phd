@@ -71,7 +71,7 @@ def main(argv):
           data_folder), "Folder " + data_folder + " does not exist"
 
     # Build XFGs from raw code
-    data_folders = i2v_prep.construct_xfg(data_folder)
+    data_folders = i2v_prep.CreateContextualFlowGraphsFromBytecodes(data_folder)
 
     # Build vocabulary
     i2v_vocab.construct_vocabulary(data_folder, data_folders)
