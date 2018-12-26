@@ -23,10 +23,12 @@
 """Generate dataset for inst2vec training"""
 
 import os
+import pathlib
 import shutil
 import zipfile
 
 import wget
+from absl import logging
 
 
 ########################################################################################################################
@@ -37,63 +39,71 @@ def datagen(data_folder):
   Download and unzip training data for inst2vec
   :param data_folder: folder in which to put the downloaded data
   """
-
-  ####################################################################################################################
-  # Download and unzip inst2vec training data
+  # AMD.
   download_and_unzip(
-      'https://polybox.ethz.ch/index.php/s/SaKQ9L7dGs9zJXK/download', 'AMD',
+      'https://polybox.ethz.ch/index.php/s/SaKQ9L7dGs9zJXK/download',
       data_folder)
+  # BLAZ.
   download_and_unzip(
-      'https://polybox.ethz.ch/index.php/s/5ASMNv6dYsPKjyQ/download', 'BLAS',
+      'https://polybox.ethz.ch/index.php/s/5ASMNv6dYsPKjyQ/download',
       data_folder)
+  # Eigen synthetic.
   download_and_unzip(
       'https://polybox.ethz.ch/index.php/s/52wWiK5fjRGHLJR/download',
-      'eigen_synthetic', data_folder)
+      data_folder)
+  # gemm_synthetic.
   download_and_unzip(
       'https://polybox.ethz.ch/index.php/s/Bm6cwAY3eVkR6v3/download',
-      'gemm_synthetic', data_folder)
+      data_folder)
+  # linux-4.15
   download_and_unzip(
       'https://polybox.ethz.ch/index.php/s/uxAAONROj1Id65y/download',
-      'linux-4.15', data_folder)
-  download_and_unzip(
-      'https://polybox.ethz.ch/index.php/s/KnWjolzAL2xxKWN/download', 'opencv',
       data_folder)
+  # opencv
+  download_and_unzip(
+      'https://polybox.ethz.ch/index.php/s/KnWjolzAL2xxKWN/download',
+      data_folder)
+  # polybenchGPU
   download_and_unzip(
       'https://polybox.ethz.ch/index.php/s/nomO17gdAfHjqFQ/download',
-      'polybenchGPU', data_folder)
+      data_folder)
+  # rodinia_3.1
   download_and_unzip(
       'https://polybox.ethz.ch/index.php/s/J93jGpevs0lHsHM/download',
-      'rodinia_3.1', data_folder)
-  download_and_unzip(
-      'https://polybox.ethz.ch/index.php/s/7KGEq1Q45Xg0IeL/download', 'shoc',
       data_folder)
+  # shoc
+  download_and_unzip(
+      'https://polybox.ethz.ch/index.php/s/7KGEq1Q45Xg0IeL/download',
+      data_folder)
+  # stencil_synthetic
   download_and_unzip(
       'https://polybox.ethz.ch/index.php/s/OOmylxGcBxQM1D3/download',
-      'stencil_synthetic', data_folder)
+      data_folder)
+  # tensorflow
   download_and_unzip(
       'https://polybox.ethz.ch/index.php/s/ojd0RPFOtUTPPRr/download',
-      'tensorflow', data_folder)
+      data_folder)
 
-  ####################################################################################################################
-  # Remove __MACOSX directory resulting from unzipping
+  # Remove __MACOSX directory resulting from unzipping.
   if os.path.exists(os.path.join(data_folder, '__MACOSX')):
     shutil.rmtree(os.path.join(data_folder, '__MACOSX'))
 
 
-########################################################################################################################
-# Helper function
-########################################################################################################################
-def download_and_unzip(url, dataset_name, data_folder):
+def download_and_unzip(url, data_folder,
+                       delete_after_download: bool = True):
+  """Download and unzip data set folder from url.
+
+  Args:
+    url: from which to download
+    data_folder: folder in which to put the downloaded data
+    delete_after_download: If True, delete the file after downloading and
+      unzipping.
   """
-  Download and unzip data set folder from url
-  :param url: from which to download
-  :param dataset_name: name of data set (for printing)
-  :param data_folder: folder in which to put the downloaded data
-  """
-  print('Downloading', dataset_name, 'data set...')
+  logging.info('Downloading dataset from %s', url)
   data_zip = wget.download(url, out=data_folder)
-  print('\tunzipping...')
-  zip_ = zipfile.ZipFile(data_zip, 'r')
-  zip_.extractall(data_folder)
-  zip_.close()
-  print('\tdone')
+  logging.info('Unzipping %s to %s', data_zip, data_folder)
+  with zipfile.ZipFile(data_zip, 'r') as f:
+    f.extractall(path=data_folder)
+  # Delete the zip.
+  if delete_after_download:
+    pathlib.Path(data_zip).unlink()
