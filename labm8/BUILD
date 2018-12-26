@@ -14,7 +14,7 @@ py_library(
     srcs = ["archive.py"],
     deps = [
         "//third_party/py/absl",
-    ]
+    ],
 )
 
 py_test(
@@ -24,7 +24,7 @@ py_test(
         ":archive",
         "//third_party/py/absl",
         "//third_party/py/pytest",
-    ]
+    ],
 )
 
 py_library(
