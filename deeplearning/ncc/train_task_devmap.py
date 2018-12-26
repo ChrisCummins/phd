@@ -150,9 +150,8 @@ def encode_srcs(data_folder, df: pd.DataFrame) -> np.array:
   return np.vstack([np.expand_dims(x, axis=0) for x in encoded]), maxlen
 
 
-########################################################################################################################
-# Model
-########################################################################################################################
+# TODO(cec): Code duplication with
+# //deeplearning/deeptune/opencl/heterogeneous_mapping:models.
 class NCC_devmap:
   __name__ = "NCC_devmap"
   __basename__ = "ncc_devmap"
@@ -369,14 +368,10 @@ def evaluate(model, device, data_folder, out_folder, embeddings,
       ])
 
 
-########################################################################################################################
-# Main
-########################################################################################################################
 def main(argv):
   if len(argv) > 1:
     raise app.UsageError('Unrecognized command line flags.')
 
-  ####################################################################################################################
   # Setup
   # Get flag values
   embeddings = task_utils.get_embeddings()
@@ -399,9 +394,7 @@ def main(argv):
 
   task_utils.llvm_ir_to_trainable(os.path.join(input_data, 'kernels_ir'))
 
-  ####################################################################################################################
-  # Reference values
-  # Values copied from:
+  # Reference values copied from:
   # https://github.com/ChrisCummins/paper-end2end-dl/blob/master/code/Case%20Study%20A.ipynb
   static_pred_vals = [58.823529, 56.911765]
   static_pred_mean = 57.867647
@@ -416,14 +409,12 @@ def main(argv):
   deeptune_sp_vals = [3.335612, 1.412222]
   deeptune_sp_mean = 2.373917
 
-  ####################################################################################################################
   # Train model
   print("Evaluating DeepTuneInst2Vec ...")
   ncc_devmap = evaluate(NCC_devmap(), device, input_data, out, embeddings,
                         dense_layer_size, print_summary,
                         num_epochs, batch_size)
 
-  ####################################################################################################################
   # Print results
   print('\n--- Prediction results')
   print(ncc_devmap.groupby(['Platform', 'Benchmark Suite'])[

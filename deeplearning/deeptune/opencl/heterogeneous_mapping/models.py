@@ -192,6 +192,12 @@ class DeepTune(HeterogemeousMappingModel):
   __name__ = "DeepTune"
   __basename__ = "deeptune"
 
+  def __init__(self, num_epochs: int = 50, batch_size: int = 64,
+               dense_layer_size: int = 32):
+    self.num_epochs = num_epochs
+    self.batch_size = batch_size
+    self.dense_layer_size = dense_layer_size
+
   def init(self, seed: int, atomizer: atomizers.AtomizerBase):
     np.random.seed(seed)
 
@@ -210,7 +216,7 @@ class DeepTune(HeterogemeousMappingModel):
     #   outputs 1-hot encoded device mapping
     x = Concatenate()([auxiliary_inputs, x])
     x = BatchNormalization()(x)
-    x = Dense(32, activation="relu")(x)
+    x = Dense(self.dense_layer_size, activation="relu")(x)
     out = Dense(2, activation="sigmoid")(x)
 
     self.model = Model(inputs=[auxiliary_inputs, code_in],
@@ -231,8 +237,8 @@ class DeepTune(HeterogemeousMappingModel):
   def train(self, **train):
     self.model.fit([train["aux_in"], train["sequences"]],
                    [train["y_1hot"], train["y_1hot"]],
-                   epochs=50, batch_size=64, verbose=train["verbose"],
-                   shuffle=True)
+                   epochs=self.num_epochs, batch_size=self.batch_size,
+                   verbose=train["verbose"], shuffle=True)
 
   def predict(self, **test):
     p = np.array(self.model.predict(
@@ -240,3 +246,51 @@ class DeepTune(HeterogemeousMappingModel):
         verbose=test["verbose"]))
     indices = [np.argmax(x) for x in p[0]]
     return indices
+
+
+class NCC(DeepTune):
+  """Neural code comprehension predictive model for device mapping.
+
+  Described in:
+
+      ﻿Ben-Nun, T., Jakobovits, A. S., & Hoefler, T. (2018). Neural Code 
+      Comprehension: A Learnable Representation of Code Semantics. In NeurIPS. 
+      https://doi.org/arXiv:1806.07336v3
+  """
+  __name__ = "NCC"
+  __basename__ = "ncc"
+
+  def __init__(self, embedding_dim: int, **kwargs):
+    super(NCC, self).__init__(**kwargs)
+    self.embedding_dim = embedding_dim
+
+  def init(self, seed: int, atomizer: atomizers.AtomizerBase):
+    # This is the same as DeepTune init, except that both LSTM layers have
+    # a number of neurons equal to the embedding dimensionality, rather than
+    # 64 neurons per layer.
+    np.random.seed(seed)
+
+    # Keras model
+    inp = Input(shape=(1024, self.embedding_dim,), dtype="float32",
+                name="code_in")
+    x = LSTM(self.embedding_dim, implementation=1, return_sequences=True,
+             name="lstm_1")(inp)
+    x = LSTM(self.embedding_dim, implementation=1, name="lstm_2")(x)
+    langmodel_out = Dense(2, activation="sigmoid")(x)
+
+    # Auxiliary inputs. wgsize and dsize.
+    auxiliary_inputs = Input(shape=(2,))
+    x = Concatenate()([auxiliary_inputs, x])
+    x = BatchNormalization()(x)
+    x = Dense(self.dense_layer_size, activation="relu")(x)
+    out = Dense(2, activation="sigmoid")(x)
+
+    self.model = Model(inputs=[auxiliary_inputs, inp],
+                       outputs=[out, langmodel_out])
+    self.model.compile(
+        optimizer="adam",
+        metrics=['accuracy'],
+        loss=["categorical_crossentropy", "categorical_crossentropy"],
+        loss_weights=[1., .2])
+
+    return self
