@@ -134,8 +134,8 @@ def evaluate(model: 'HeterogemeousMappingModel', dataset, atomizer,
     y_1hot = encode_1hot(y)
 
     # 10-fold cross-validation
-    kf = model_selection.StratifiedKFold(n_splits=10, shuffle=True,
-                                         random_state=seed)
+    kf = model_selection.StratifiedKFold(
+        n_splits=10, shuffle=True, random_state=seed)
     for j, (train_index, test_index) in enumerate(kf.split(features, y)):
       # Path of cached model and predictions.
       model_path = workdir / f"{model.__basename__}-{gpu_name}-{j:02d}.model"
