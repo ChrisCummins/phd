@@ -7,6 +7,7 @@ import pathlib
 import sys
 import typing
 
+import pandas as pd
 from absl import app
 from absl import flags
 
@@ -28,6 +29,24 @@ class ExperimentalResults(object):
   def __init__(self, cache_dir: pathlib.Path):
     self._cache_dir = cache_dir
 
+  def EvaluateModel(self, model: models.HeterogemeousMappingModel,
+                    df: typing.Optional[pd.DataFrame] = None):
+    """Evaluate a model.
+
+    Args:
+      model: The model to evaluate.
+      df: The dataframe to use for evaluation.
+
+    Returns:
+      A DataFrame of evaluation results.
+    """
+    return utils.evaluate(
+        model=model,
+        df=self.dataset.df if df is None else df,
+        atomizer=self.atomizer,
+        workdir=self._cache_dir,
+        seed=0x204)
+
   @decorators.memoized_property
   def dataset(self):
     return opencl_device_mapping_dataset.OpenClDeviceMappingsDataset()
@@ -44,12 +63,7 @@ class ExperimentalResults(object):
 
   @decorators.memoized_property
   def baseline_df(self):
-    return utils.evaluate(
-        model=self.baseline_model,
-        dataset=self.dataset,
-        atomizer=self.atomizer,
-        workdir=self._cache_dir,
-        seed=0x204)
+    return self.EvaluateModel(self.baseline_model)
 
   @decorators.memoized_property
   def grewe_model(self):
@@ -57,12 +71,7 @@ class ExperimentalResults(object):
 
   @decorators.memoized_property
   def grewe_df(self):
-    return utils.evaluate(
-        model=self.grewe_model,
-        dataset=self.dataset,
-        atomizer=self.atomizer,
-        workdir=self._cache_dir,
-        seed=0x204)
+    return self.EvaluateModel(self.grewe_model)
 
   @decorators.memoized_property
   def deeptune_model(self):
@@ -70,12 +79,7 @@ class ExperimentalResults(object):
 
   @decorators.memoized_property
   def deeptune_df(self):
-    return utils.evaluate(
-        model=self.deeptune_model,
-        dataset=self.dataset,
-        atomizer=self.atomizer,
-        workdir=self._cache_dir,
-        seed=0x204)
+    return self.EvaluateModel(self.deeptune_model)
 
 
 def main(argv: typing.List[str]):

@@ -1,5 +1,6 @@
 """Models for predicting heterogeneous device mapping."""
 import pickle
+import typing
 from collections import Counter
 
 import numpy as np
@@ -11,6 +12,7 @@ from keras.layers import Dense, Embedding, Input, LSTM
 from keras.layers.merge import Concatenate
 from keras.layers.normalization import BatchNormalization
 from keras.models import Model
+from keras.preprocessing import sequence as keras_sequence
 from sklearn import tree as sktree
 
 from deeplearning.clgen.corpuses import atomizers
@@ -116,13 +118,13 @@ class StaticMapping(HeterogemeousMappingModel):
     with open(inpath, "rb") as infile:
       self.model = pickle.load(infile)
 
-  def train(self, dataset=None, **train):
+  def train(self, df=None, **train):
     platform_name = train.get('platform_name')
     if not platform_name:
       raise ValueError('platform_name kwarg not set!')
 
     # select the Zero-R device: the most frequently optimal device
-    cpu_gpu_runtimes = dataset.df[[
+    cpu_gpu_runtimes = df[[
       'runtime:intel_core_i7_3820',
       f'runtime:{platform_name}'
     ]].values
@@ -177,6 +179,17 @@ class Grewe(HeterogemeousMappingModel):
     return self.model.predict(test["features"])
 
 
+def EncodeAndPadSources(atomizer: atomizers.AtomizerBase,
+                        srcs: typing.List[str],
+                        maxlen: int) -> np.array:
+  """Encode and pad source code for learning."""
+  seqs = [atomizer.AtomizeString(src) for src in srcs]
+  pad_val = atomizer.vocab_size
+  encoded = np.array(keras_sequence.pad_sequences(
+      seqs, maxlen=maxlen, value=pad_val))
+  return np.vstack([np.expand_dims(x, axis=0) for x in encoded])
+
+
 class DeepTune(HeterogemeousMappingModel):
   """DeepTune predictive model for heterogeneous device mapping.
 
@@ -192,28 +205,44 @@ class DeepTune(HeterogemeousMappingModel):
   __name__ = "DeepTune"
   __basename__ = "deeptune"
 
-  def __init__(self, num_epochs: int = 50, batch_size: int = 64,
-               dense_layer_size: int = 32):
+  def __init__(self, lstm_layer_size: int = 64, dense_layer_size: int = 32,
+               num_epochs: int = 50, batch_size: int = 64,
+               max_sequence_length: int = 1024):
+    """Constructor.
+
+    Args:
+      lstm_layer_size: The number of neurons in the LSTM layers.
+      dense_layer_size: The number of neurons in the dense layers.
+      num_epochs: The number of epochs to train for.
+      batch_size: The training and inference batch sizes.
+    """
     self.num_epochs = num_epochs
     self.batch_size = batch_size
+    self.lstm_layer_size = lstm_layer_size
     self.dense_layer_size = dense_layer_size
+    self.max_sequence_length = max_sequence_length
+    self.atomizer = None
 
   def init(self, seed: int, atomizer: atomizers.AtomizerBase):
     np.random.seed(seed)
 
+    self.atomizer = atomizer
+
     # Language model. Takes as inputs source code sequences.
     code_in = Input(shape=(1024,), dtype="int32", name="code_in")
-    x = Embedding(input_dim=atomizer.vocab_size + 1, input_length=1024,
-                  output_dim=64, name="embedding")(code_in)
-    x = LSTM(64, implementation=1, return_sequences=True, name="lstm_1")(x)
-    x = LSTM(64, implementation=1, name="lstm_2")(x)
+    x = Embedding(input_dim=atomizer.vocab_size + 1,
+                  input_length=self.max_sequence_length,
+                  output_dim=self.lstm_layer_size, name="embedding")(code_in)
+    x = LSTM(self.lstm_layer_size, implementation=1, return_sequences=True,
+             name="lstm_1")(x)
+    x = LSTM(self.lstm_layer_size, implementation=1, name="lstm_2")(x)
     langmodel_out = Dense(2, activation="sigmoid")(x)
 
     # Auxiliary inputs. wgsize and dsize.
     auxiliary_inputs = Input(shape=(2,))
 
-    # Heuristic model. Takes as inputs the language model,
-    #   outputs 1-hot encoded device mapping
+    # Heuristic model. Takes as inputs a concatenation of the language model
+    # and auxiliary inputs, outputs 1-hot encoded device mapping.
     x = Concatenate()([auxiliary_inputs, x])
     x = BatchNormalization()(x)
     x = Dense(self.dense_layer_size, activation="relu")(x)
@@ -235,14 +264,20 @@ class DeepTune(HeterogemeousMappingModel):
     self.model = keras_models.load_model(inpath)
 
   def train(self, **train):
-    self.model.fit([train["aux_in"], train["sequences"]],
+    sequences = EncodeAndPadSources(
+        self.atomizer, train['srcs'], self.max_sequence_length)
+
+    self.model.fit([train["aux_in"], sequences],
                    [train["y_1hot"], train["y_1hot"]],
                    epochs=self.num_epochs, batch_size=self.batch_size,
                    verbose=train["verbose"], shuffle=True)
 
   def predict(self, **test):
+    sequences = EncodeAndPadSources(
+        self.atomizer, test['srcs'], self.max_sequence_length)
+
     p = np.array(self.model.predict(
-        [test["aux_in"], test["sequences"]], batch_size=64,
+        [test["aux_in"], sequences], batch_size=self.batch_size,
         verbose=test["verbose"]))
     indices = [np.argmax(x) for x in p[0]]
     return indices

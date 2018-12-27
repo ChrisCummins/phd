@@ -10,6 +10,7 @@ from absl import flags
 from absl import logging
 from sklearn import model_selection
 
+from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.clgen.corpuses import atomizers
 
 
@@ -53,17 +54,6 @@ def encode_1hot(y: np.array) -> np.array:
   return np.array(list(zip(l1, l2)), dtype=np.int32)
 
 
-def encode_srcs(atomizer: atomizers.AtomizerBase,
-                srcs: typing.List[str]) -> np.array:
-  """Encode and pad source code for learning."""
-  from keras.preprocessing.sequence import pad_sequences
-
-  seqs = [atomizer.AtomizeString(src) for src in srcs]
-  pad_val = atomizer.vocab_size
-  encoded = np.array(pad_sequences(seqs, maxlen=1024, value=pad_val))
-  return np.vstack([np.expand_dims(x, axis=0) for x in encoded])
-
-
 # Taken from the C99 spec, OpenCL spec 1.2, and bag-of-words analysis of
 # GitHub corpus:
 OPENCL_ATOMS = set(
@@ -89,12 +79,11 @@ OPENCL_ATOMS = set(
 def GetAtomizerFromOpenClSources(
     opencl_srcs: typing.Iterator[str]) -> atomizers.AtomizerBase:
   """Derive a greedy atomizer from a concatenation of OpenCL sources."""
-
   srcs = '\n'.join(opencl_srcs)
   return atomizers.GreedyAtomizer.FromText(srcs, OPENCL_ATOMS)
 
 
-def evaluate(model: 'HeterogemeousMappingModel', dataset, atomizer,
+def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
              workdir: pathlib.Path, seed: int) -> pd.DataFrame:
   """Evaluate a model.
 
@@ -103,7 +92,7 @@ def evaluate(model: 'HeterogemeousMappingModel', dataset, atomizer,
 
   Args:
     model: The predictive model to evaluate.
-    dataset: The dataset to use.
+    df: The dataset to use.
     atomizer: The atomizer to encode source sequences.
     workdir: The path to working directory.
     seed: A random seed value.
@@ -114,19 +103,19 @@ def evaluate(model: 'HeterogemeousMappingModel', dataset, atomizer,
   bar_tuple = [0, progressbar.ProgressBar(max_value=10 * 2)]
 
   data = []
-  sequences = None  # defer sequence encoding until needed (it's expensive)
 
   for gpu_name in ["amd_tahiti_7970", "nvidia_gtx_960"]:
     # Values used for training & predictions.
-    features = dataset.ComputeGreweFeaturesForGpu(gpu_name).values
+    features = opencl_device_mapping_dataset.ComputeGreweFeaturesForGpu(
+        gpu_name, df).values
     aux_in = np.array([
-      dataset.df[f"feature:{gpu_name}:transfer"].values,
-      dataset.df[f"param:{gpu_name}:wgsize"].values,
+      df[f"feature:{gpu_name}:transfer"].values,
+      df[f"param:{gpu_name}:wgsize"].values,
     ]).T
 
     # Determine the array of optimal mappings 'y'. If y_i is 1, that means that
     # the GPU was faster than the CPU for result i.
-    cpu_gpu_runtimes = dataset.df[[
+    cpu_gpu_runtimes = df[[
       'runtime:intel_core_i7_3820',
       f'runtime:{gpu_name}',
     ]].values
@@ -153,12 +142,6 @@ def evaluate(model: 'HeterogemeousMappingModel', dataset, atomizer,
         with open(predictions_path, 'rb') as f:
           predictions = pickle.load(f)
       else:
-        # Encode source codes if needed.
-        if sequences is None:
-          logging.info('Encoding sequences ...')
-          sequences = encode_srcs(
-              atomizer, dataset.df["program:opencl_src"].values)
-
         if model_path.is_file():
           logging.info('Loading trained model ...')
           # Restore trained model from cache.
@@ -170,13 +153,12 @@ def evaluate(model: 'HeterogemeousMappingModel', dataset, atomizer,
           model.init(seed=seed, atomizer=atomizer)
           train_features = features[train_index]
           train_aux_in = aux_in[train_index]
-          train_sequences = sequences[train_index]
           train_y = y[train_index]
           train_y_1hot = y_1hot[train_index]
-          model.train(dataset=dataset,
+          model.train(df=df,
                       features=train_features,
                       aux_in=train_aux_in,
-                      sequences=train_sequences,
+                      srcs=df["program:opencl_src"].values[train_index],
                       y=train_y,
                       y_1hot=train_y_1hot,
                       platform_name=gpu_name,
@@ -187,7 +169,7 @@ def evaluate(model: 'HeterogemeousMappingModel', dataset, atomizer,
         predictions = model.predict(
             features=features[test_index],
             aux_in=aux_in[test_index],
-            sequences=sequences[test_index],
+            srcs=df["program:opencl_src"].values[test_index],
             y=y[test_index],
             y_1hot=y_1hot[test_index],
             platform_name=gpu_name,
@@ -198,9 +180,9 @@ def evaluate(model: 'HeterogemeousMappingModel', dataset, atomizer,
           pickle.dump(predictions, outfile)
 
       # benchmarks
-      benchmarks = dataset.df['program:opencl_kernel_name'].values[test_index]
+      benchmarks = df['program:opencl_kernel_name'].values[test_index]
       benchmark_suites = (
-        dataset.df['program:benchmark_suite_name'].values[test_index])
+        df['program:benchmark_suite_name'].values[test_index])
 
       # oracle device mappings
       oracle_device_mappings = y[test_index]
@@ -212,10 +194,10 @@ def evaluate(model: 'HeterogemeousMappingModel', dataset, atomizer,
         zero_r_runtime_column = "runtime:intel_core_i7_3820"
       elif gpu_name == "nvidia_gtx_960":
         zero_r_runtime_column = "runtime:nvidia_gtx_960"
-      zero_r_runtimes = dataset.df[zero_r_runtime_column][test_index]
+      zero_r_runtimes = df[zero_r_runtime_column][test_index]
 
       # speedups of predictions
-      cpu_gpu_runtimes = dataset.df[[
+      cpu_gpu_runtimes = df[[
         'runtime:intel_core_i7_3820',
         f'runtime:{gpu_name}'
       ]].values[test_index]

@@ -17,6 +17,40 @@ _NVIDIA_CSV_PATH = bazelutil.DataPath(
     'phd/datasets/opencl/device_mapping/nvidia.csv')
 
 
+def ComputeGreweFeaturesForGpu(gpu: str, df: pd.DataFrame) -> pd.DataFrame:
+  """Return the Grewe et al. features as a table.
+
+  These are the features used in the publication:
+
+  ﻿    Grewe, D., Wang, Z., & O’Boyle, M. (2013). Portable Mapping of Data
+      Parallel Programs to OpenCL for Heterogeneous Systems. In CGO. IEEE.
+      https://doi.org/10.1109/CGO.2013.6494993
+
+  Args:
+    gpu: The name of the GPU platform to compute the features for: one of
+      {amd_tahiti_7970,nvidia_gtx_960}.
+    df: The DataFrame.
+
+  Returns:
+    A table with the feature values.
+  """
+  transfer = df[f'feature:{gpu}:transfer'].values
+  comp = df['feature:comp'].values
+  mem = df['feature:mem'].values
+  localmem = df['feature:localmem'].values
+  coalesced = df['feature:coalesced'].values
+  wgsize = df[f'param:{gpu}:wgsize'].values
+
+  df = pd.DataFrame({
+    'feature:grewe1': transfer / (comp + mem),
+    'feature:grewe2': coalesced / mem,
+    'feature:grewe3': (localmem / mem) * wgsize,
+    'feature:grewe4': comp / mem,
+  })
+
+  return df
+
+
 class OpenClDeviceMappingsDataset(object):
   """A dataset of OpenCL Device Mappings.
 
@@ -141,7 +175,8 @@ class OpenClDeviceMappingsDataset(object):
     return self._df
 
   @functools.lru_cache()
-  def ComputeGreweFeaturesForGpu(self, gpu: str) -> pd.DataFrame:
+  def ComputeGreweFeaturesForGpu(
+      self, gpu: str, df: pd.DataFrame = None) -> pd.DataFrame:
     """Return the Grewe et al. features as a table.
 
     These are the features used in the publication:
@@ -153,22 +188,11 @@ class OpenClDeviceMappingsDataset(object):
     Args:
       gpu: The name of the GPU platform to compute the features for: one of
         {amd_tahiti_7970,nvidia_gtx_960}.
+
+    Returns:
+      A table with the feature values.
     """
-    transfer = self.df[f'feature:{gpu}:transfer'].values
-    comp = self.df['feature:comp'].values
-    mem = self.df['feature:mem'].values
-    localmem = self.df['feature:localmem'].values
-    coalesced = self.df['feature:coalesced'].values
-    wgsize = self.df[f'param:{gpu}:wgsize'].values
-
-    df = pd.DataFrame({
-      'feature:grewe1': transfer / (comp + mem),
-      'feature:grewe2': coalesced / mem,
-      'feature:grewe3': (localmem / mem) * wgsize,
-      'feature:grewe4': comp / mem,
-    })
-
-    return df
+    return ComputeGreweFeaturesForGpu(gpu, self.df if df is None else df)
 
   @decorators.memoized_property
   def programs_df(self) -> pd.DataFrame:
