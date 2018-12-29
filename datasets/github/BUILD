@@ -3,11 +3,11 @@
 py_library(
     name = "non_hemetic_credentials_file",
     srcs = ["non_hemetic_credentials_file.py"],
+    visibility = ["//datasets/github:__subpackages__"],
     deps = [
         "//third_party/py/absl",
         "//third_party/py/github",
     ],
-    visibility = ["//datasets/github:__subpackages__"]
 )
 
 py_test(
@@ -17,5 +17,5 @@ py_test(
         ":non_hemetic_credentials_file",
         "//third_party/py/absl",
         "//third_party/py/pytest",
-    ]
+    ],
 )
