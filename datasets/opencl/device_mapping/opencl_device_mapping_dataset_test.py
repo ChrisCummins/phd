@@ -117,6 +117,7 @@ def test_df_gpu_runtimes_not_equal(
         lambda x: x.df,
         lambda x: x.ComputeGreweFeaturesForGpu('amd_tahiti_7970'),
         lambda x: x.ComputeGreweFeaturesForGpu('nvidia_gtx_960'),
+        lambda x: x.AugmentWithDeadcodeMutations(np.random.RandomState(0))
     ))
 def test_df_nan(
     dataset: ocl_dataset.OpenClDeviceMappingsDataset,
@@ -125,6 +126,29 @@ def test_df_nan(
   """Test that tables have no NaNs."""
   df = table_getter(dataset)
   assert not df.isnull().values.any()
+
+
+def test_AugmentWithDeadcodeMutations_num_output_rows(
+    dataset: ocl_dataset.OpenClDeviceMappingsDataset):
+  """Test the number of rows in generated table."""
+  df = dataset.AugmentWithDeadcodeMutations(
+      np.random.RandomState(0), num_permutations_of_kernel=5)
+  # the original kernel + 5 mutations
+  assert len(df) == len(dataset.df) * (5 + 1)
+
+
+def test_AugmentWithDeadcodeMutations_identical_columns(
+    dataset: ocl_dataset.OpenClDeviceMappingsDataset):
+  """Test the number of unique values in columns."""
+  df = dataset.AugmentWithDeadcodeMutations(
+      np.random.RandomState(0), num_permutations_of_kernel=5)
+  for column in df.columns.values:
+    if column == 'program:opencl_src':
+      # There should be more unique OpenCL kernels than we started with.
+      assert len(set(df[column])) > len(set(dataset.df[column]))
+    else:
+      # There should be exactly the same unique cols as we started with.
+      assert len(set(df[column])) == len(set(dataset.df[column]))
 
 
 def main(argv: typing.List[str]):

@@ -186,7 +186,7 @@ class OpenClDeadcodeInserter(object):
     self._functions = [
       OpenClFunction(_PreprocessKernel(kernel), is_kernel=True)]
 
-    if not candidate_kernels:
+    if not len(candidate_kernels):
       raise ValueError("Must have one or more candidate kernels.")
 
     self._candidates = [_PreprocessKernel(k) for k in candidate_kernels]

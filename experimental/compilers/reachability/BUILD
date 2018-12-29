@@ -28,7 +28,7 @@ py_test(
 py_library(
     name = "control_flow_graph_generator",
     srcs = ["control_flow_graph_generator.py"],
-    visibility = ["//experimental/compilers/reachability:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         ":control_flow_graph",
         "//third_party/py/absl",

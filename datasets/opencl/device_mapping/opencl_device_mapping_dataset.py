@@ -1,11 +1,14 @@
 """A dataset of OpenCL Device Mappings."""
 
 import functools
+import typing
 
 import numpy as np
 import pandas as pd
 from absl import flags
 
+from deeplearning.deeptune.opencl.adversary import \
+  opencl_deadcode_inserter as dci
 from labm8 import bazelutil
 from labm8 import decorators
 
@@ -216,3 +219,58 @@ class OpenClDeviceMappingsDataset(object):
     df = df[['program:opencl_src', ]]
     df.sort_index(inplace=True)
     return df
+
+  def AugmentWithDeadcodeMutations(
+      self, rand: np.random.RandomState,
+      num_permutations_of_kernel: int = 5,
+      mutations_per_kernel_min_max: typing.Tuple[int, int] = (1, 5),
+      df: pd.DataFrame = None):
+    """Return a table with dead code mutations for each kernel.
+
+    This adds num_permutations_of_kernel * len(df) new rows to the data frame,
+    where each new row is a duplicate of an existing row, but with dead code
+    mutations applied to the OpenCL kernel. An additional column
+    `program:is_mutation` marks the new rows.
+
+    Args:
+      rand: A random number seed.
+      num_permutations_of_kernel: The number of permutations of each kernel to
+        produce. The number of rows in the output table is
+        num_rows * num_permutations_of_kernel.
+      mutations_per_kernel_min_max: The number of mutations to apply to each
+        kernel, as a uniform distribution [low,high].
+      df: The DataFrame to augment with deadcode mutations.
+
+    Returns:
+      The table with num_rows * num_permutations_of_kernel rows, and an
+      additional `program:is_mutation` column.
+    """
+    df = self.df if df is None else df
+
+    new_columns = df.columns.values + ['program:is_mutation']
+
+    # The mutation generator is initialized with the programs it will mutate.
+    g = dci.GenerateDeadcodeMutations(
+        df['program:opencl_src'].values, rand, num_permutations_of_kernel,
+        mutations_per_kernel_min_max)
+
+    # Generate the mutations and update the kernel column in the original table.
+    new_rows = []
+    for _, row in df.iterrows():
+      # Make a copy to allow modifications.
+      row = row.copy()
+      row['program:is_mutation'] = False
+      new_rows.append(row)
+      for _ in range(num_permutations_of_kernel):
+        row['program:is_mutation'] = True
+        row['program:opencl_src'] = next(g)
+        new_rows.append(row)
+
+    # Sanity check that the generator has been exhausted.
+    try:
+      next(g)
+      raise ValueError("Ney horsey!")
+    except StopIteration:
+      pass
+
+    return pd.DataFrame(new_rows, columns=new_columns)

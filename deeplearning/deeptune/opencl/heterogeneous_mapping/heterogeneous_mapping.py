@@ -81,6 +81,16 @@ class ExperimentalResults(object):
   def deeptune_df(self):
     return self.EvaluateModel(self.deeptune_model)
 
+  @decorators.memoized_property
+  def adversarial_deeptune_df(self):
+    adversarial_df = self.dataset.AugmentWithDeadcodeMutations(
+        rand=np.random.RandomState(0xCEC),
+        num_permutations_of_kernel=5,
+        num_mutations_per_kernel=(1, 5))
+    return self.EvaluateModel(
+        models.DeepTune(),
+        df=adversarial_df)
+
 
 def main(argv: typing.List[str]):
   """Main entry point."""
