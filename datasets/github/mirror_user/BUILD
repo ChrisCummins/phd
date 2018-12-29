@@ -10,8 +10,8 @@ py_binary(
     deps = [
         "//datasets/github:non_hemetic_credentials_file",
         "//labm8:jsonutil",
-        "//third_party/py/github",
         "//third_party/py/absl",
+        "//third_party/py/github",
     ],
 )
 
@@ -19,9 +19,9 @@ py_test(
     name = "mirror_user_test",
     srcs = ["mirror_user_test.py"],
     deps = [
-        "//datasets/github:non_hemetic_credentials_file",
         ":mirror_user",
+        "//datasets/github:non_hemetic_credentials_file",
         "//third_party/py/absl",
         "//third_party/py/pytest",
-    ]
+    ],
 )
