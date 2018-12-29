@@ -1,8 +1,8 @@
 # Mirror a GitHub user's repos 
 
-This package can be used to mirror a GitHub user's repositories locally. I use
-it to keep a "backup" of my GitHub repositories automatically synced to a local
-NAS server running [gogs](https://gogs.io).
+This package can be used to mirror a GitHub user's repositories. I use it to 
+keep a "backup" of my GitHub repositories automatically synced to a local NAS
+server running [gogs](https://gogs.io).
 
 ## Pre-requisites
 
@@ -14,7 +14,7 @@ Username = your-github-username
 Password = your-github-password
 ```
 
-## Mirror repositories locally
+## Mirror repos locally
 
 Clone and update a GitHub user's repositories locally:
 
@@ -23,7 +23,7 @@ $ bazel run //datasets/github/mirror_user -- \
     --user=ChrisCummins --dst=$HOME/src/GitHub/
 ```
 
-## Mirror to Gogs serer
+## Mirror repos to Gogs serer
 
 Create a credentials file `~/.gogsrc` with your Gogs server address and 
 [token](https://github.com/gogs/docs-api#access-token):
