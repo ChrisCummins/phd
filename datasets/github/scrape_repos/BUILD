@@ -136,6 +136,7 @@ py_binary(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
+        "//datasets/github:non_hemetic_credentials_file",
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
         "//labm8:fs",
         "//labm8:labdate",

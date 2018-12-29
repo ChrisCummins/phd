@@ -4,7 +4,6 @@ This program reads a LanguageCloneList input, where each LanguageToClone entry
 in the LanguageCloneList specifies a programming language on GitHub and a number
 of repositories of this language to clone.
 """
-import configparser
 import pathlib
 import sys
 import threading
@@ -19,6 +18,7 @@ from absl import flags
 from absl import logging
 from github import Repository
 
+from datasets.github import non_hemetic_credentials_file
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
 from labm8 import labdate
 from labm8 import pbutil
@@ -29,25 +29,6 @@ FLAGS = flags.FLAGS
 flags.DEFINE_string(
     'clone_list', None,
     'The path to a LanguageCloneList file.')
-flags.DEFINE_string(
-    'github_credentials_path', '~/.githubrc',
-    'The path to a file containing GitHub login credentials. See '
-    '//datasets/github/scrape_repos/README.md for details.')
-
-
-def ReadGitHubCredentials(
-    path: pathlib.Path) -> scrape_repos_pb2.GitHubCredentials:
-  """Read user GitHub credentials from the local file system.
-
-  Returns:
-    A GitHubCredentials instance.
-  """
-  cfg = configparser.ConfigParser()
-  cfg.read(path)
-  credentials = scrape_repos_pb2.GitHubCredentials()
-  credentials.username = cfg["User"]["Username"]
-  credentials.password = cfg["User"]["Password"]
-  return credentials
 
 
 class QueryScraper(threading.Thread):
@@ -73,9 +54,7 @@ class QueryScraper(threading.Thread):
     self.repo_query = query
     self.destination_directory = pathlib.Path(language.destination_directory)
     self.i = 0
-    credentials = ReadGitHubCredentials(github_credentials_path)
-    github_connection = github.Github(credentials.username,
-                                      credentials.password)
+    github_connection = non_hemetic_credentials_file.GetGitHubConnection()
     # Any access to the query properties can cause the rate limit to be
     # exceeded.
     while True:
