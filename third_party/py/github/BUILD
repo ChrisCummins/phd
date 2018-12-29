@@ -10,6 +10,7 @@ py_library(
     name = "github",
     srcs = ["github.py"],
     deps = [
+        requirement("GitPython"),
         requirement("PyGithub"),
     ],
 )
