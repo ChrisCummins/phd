@@ -47,7 +47,8 @@ def GitHubCredentialsFromFile(path: pathlib.Path) -> GitHubCredentials:
 
 def GitHubCredentialsFromFlag() -> GitHubCredentials:
   """Read GitHub credentials from a flag."""
-  return GitHubCredentialsFromFile(FLAGS.github_credentials_path)
+  return GitHubCredentialsFromFile(
+      pathlib.Path(FLAGS.github_credentials_path).expanduser())
 
 
 def GetGitHubConnection(
