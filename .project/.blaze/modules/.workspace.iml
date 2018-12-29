@@ -17,7 +17,6 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="error_prone_annotations-2.1.2-ijar_3715ae35" level="project" />
     <orderEntry type="library" name="libscrape_repos_java-hjar_cfcc6865" level="project" />
     <orderEntry type="library" name="org.eclipse.equinox.common-3.10.0-ijar_c66cb299" level="project" />
     <orderEntry type="library" name="text-3.2.0-v20060605-1400-ijar_26457a8d" level="project" />
@@ -25,7 +24,6 @@
     <orderEntry type="library" name="guava-23.5-jre-ijar_cde79a79" level="project" />
     <orderEntry type="library" name="org.eclipse.jdt.core-3.14.0-ijar_b122e2bb" level="project" />
     <orderEntry type="library" name="protobuf-java-3.5.1-ijar_f5bc8568" level="project" />
-    <orderEntry type="library" name="jsr305-3.0.0-ijar_f26494ea" level="project" />
     <orderEntry type="library" name="Python 3.6 (phd) interpreter library" level="application" />
   </component>
   <component name="PyDocumentationSettings">
