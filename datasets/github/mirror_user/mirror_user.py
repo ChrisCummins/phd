@@ -31,7 +31,7 @@ flags.DEFINE_list('excludes', [], 'List of repository names to exclude.')
 flags.DEFINE_bool('gogs', False, 'Mirror repositories to gogs instance.')
 flags.DEFINE_integer('gogs_uid', 1, 'Gogs UID.')
 flags.DEFINE_string(
-    'gogs_rc', None, "Read Gogs server address and token from path.")
+    'gogsrc', '~/.gogsrc', "Read Gogs server address and token from path.")
 
 
 def GogsCredentialsFromFileOrDie(path: pathlib.Path) -> typing.Tuple[str, str]:
@@ -105,9 +105,22 @@ def main(argv) -> None:
 
     if FLAGS.gogs:
       gogs_server, gogs_token = GogsCredentialsFromFileOrDie(
-          pathlib.Path(FLAGS.gogsrc))
+          pathlib.Path(FLAGS.gogsrc).expanduser())
+      logging.info('Using gogs server %s', gogs_server)
+      gogs_headers = {
+        "Authorization": f"token {gogs_token}",
+      }
+      # Make a quick API call so that we fail now if connection does not
+      # succeed.
+      # TODO(cec): Neater error handling.
+      r = requests.get(gogs_server + "/api/v1/repos/search", data={
+        "limit": 1,
+      })
+      assert r.status_code == 200
 
     # Create the destination directory.
+    if not FLAGS.dst:
+      raise app.UsageError("--dst must be set")
     outdir = pathlib.Path(FLAGS.dst)
     outdir.mkdir(parents=True, exist_ok=True)
 
@@ -140,11 +153,10 @@ def main(argv) -> None:
 
       if FLAGS.gogs:
         # Mirror to gogs instance
-        if not local_path.is_dir():
-          sys.stdout.write(f"mirroring {repo.name} ... ")
-          headers = {
-            "Authorization": f"token {gogs_token}",
-          }
+        if local_path.is_dir():
+          logging.info("Already mirrored %s", repo.name)
+        else:
+          logging.info("Mirroring %s from %s", repo.name, repo.clone_url)
           data = {
             "auth_username": github_credentials.username,
             "auth_password": github_credentials.password,
@@ -157,8 +169,8 @@ def main(argv) -> None:
           }
 
           r = requests.post(gogs_server + "/api/v1/repos/migrate",
-                            headers=headers, data=data)
-          logging.info("%s", r.status_code)
+                            headers=gogs_headers, data=data)
+          logging.info("Mirrored %s: %s", repo.name, r.status_code)
           if r.status_code < 200 or r.status_code >= 300:
             logging.error("Headers: %s", jsonutil.format_json(headers))
             logging.error("Data: %s", jsonutil.format_json(data))
