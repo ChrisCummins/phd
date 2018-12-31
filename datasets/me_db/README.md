@@ -17,4 +17,7 @@ I have plans to add support for the following additional providers:
 * Google Calendar - duration and times of calendar events.
 * OmniFocus - number of tasks completed / added per day.
 * Git repo - measurements for diff sizes over time.
-* Lightroom - lightroom catalog by date.
+* Adobe Lightroom - lightroom catalog by date.
+* [Apple Screen Time](https://support.apple.com/en-gb/HT208982) - time tracking
+  reports.
+* [emu](https://github.com/ChrisCummins/emu) - backup reports.
