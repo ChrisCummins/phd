@@ -220,6 +220,7 @@ class OpenClDeviceMappingsDataset(object):
     df.sort_index(inplace=True)
     return df
 
+  @functools.lru_cache()
   def AugmentWithDeadcodeMutations(
       self, rand: np.random.RandomState,
       num_permutations_of_kernel: int = 5,
@@ -247,7 +248,7 @@ class OpenClDeviceMappingsDataset(object):
     """
     df = self.df if df is None else df
 
-    new_columns = df.columns.values + ['program:is_mutation']
+    new_columns = list(df.columns.values) + ['program:is_mutation']
 
     # The mutation generator is initialized with the programs it will mutate.
     g = dci.GenerateDeadcodeMutations(
