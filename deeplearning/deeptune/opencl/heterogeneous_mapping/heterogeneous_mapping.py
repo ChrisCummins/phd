@@ -7,6 +7,7 @@ import pathlib
 import sys
 import typing
 
+import numpy as np
 import pandas as pd
 from absl import app
 from absl import flags
@@ -19,9 +20,10 @@ from labm8 import decorators
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string('cache_directory',
-                    '/tmp/phd/deeplearning/deeptune/opencl/heterogeneous_mapping',
-                    'Path to working dir.')
+flags.DEFINE_string(
+    'cache_directory',
+    '/tmp/phd/deeplearning/deeptune/opencl/heterogeneous_mapping',
+    'Path to working dir.')
 
 
 class ExperimentalResults(object):
@@ -83,6 +85,7 @@ class ExperimentalResults(object):
 
   @decorators.memoized_property
   def adversarial_deeptune_df(self):
+    # Augment training dataset with dead code.
     adversarial_df = self.dataset.AugmentWithDeadcodeMutations(
         rand=np.random.RandomState(0xCEC),
         num_permutations_of_kernel=5,
@@ -121,6 +124,13 @@ def main(argv: typing.List[str]):
 
   print("Overview of DeepTune model", file=sys.stderr)
   results.deeptune_model.model.summary()
+
+  print("Evaluating adversarial DeepTune model ...", file=sys.stderr)
+  print(
+      results.adversarial_deeptune_df.groupby(['Platform', 'Benchmark Suite'])[
+        'Platform', 'Correct?', 'Speedup'].mean())
+  print(results.adversarial_deeptune_df.groupby(['Platform'])[
+          'Platform', 'Correct?', 'Speedup'].mean())
 
 
 if __name__ == '__main__':

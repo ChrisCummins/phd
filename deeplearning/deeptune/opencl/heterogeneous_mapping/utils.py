@@ -83,6 +83,19 @@ def GetAtomizerFromOpenClSources(
   return atomizers.GreedyAtomizer.FromText(srcs, OPENCL_ATOMS)
 
 
+def MakeModelInputDataFrame(df: pd.DataFrame, gpu_name: str) -> pd.DataFrame:
+  # Determine the array of optimal mappings 'y'. If y_i is 1, that means that
+  # the GPU was faster than the CPU for result i.
+  cpu_gpu_runtimes = df[[
+    'runtime:intel_core_i7_3820',
+    f'runtime:{gpu_name}',
+  ]].values
+  y = np.array([1 if gpu < cpu else 0 for cpu, gpu in cpu_gpu_runtimes])
+  df['y'] = y
+  df['y_1hot'] = encode_1hot(y)
+  return df
+
+
 def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
              workdir: pathlib.Path, seed: int) -> pd.DataFrame:
   """Evaluate a model.
