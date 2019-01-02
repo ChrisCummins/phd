@@ -221,10 +221,16 @@ def StripDoubleUnderscorePrefixes(text: str) -> str:
     OpenCL source with __ stripped from OpenCL keywords.
   """
   # List of keywords taken from the OpenCL 1.2. specification, page 169.
-  replacements = {'__constant': 'constant', '__global': 'global',
-                  '__kernel': 'kernel', '__local': 'local',
-                  '__private': 'private', '__read_only': 'read_only',
-                  '__read_write': 'read_write', '__write_only': 'write_only', }
+  replacements = {
+      '__constant': 'constant',
+      '__global': 'global',
+      '__kernel': 'kernel',
+      '__local': 'local',
+      '__private': 'private',
+      '__read_only': 'read_only',
+      '__read_write': 'read_write',
+      '__write_only': 'write_only',
+  }
   for old, new in replacements.items():
     text = text.replace(old, new)
   return text
