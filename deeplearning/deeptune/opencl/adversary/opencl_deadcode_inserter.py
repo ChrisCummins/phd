@@ -111,6 +111,26 @@ class OpenClFunction(object):
     self.src = '\n'.join(pre + [block] + post)
 
 
+def GetKernelArguments(kernel: str):
+  try:
+    # Extract everything up to the function body, and use an empty function
+    # body for parsing. This means that errors that are in the function body
+    # will not cause this to fail. E.g. given kernel:
+    #
+    #   kernel void A(const int a, global float* b) {
+    #     b[0] += a;
+    #   }
+    #
+    # This will parse:
+    #
+    #   kernel void A(const int a, global float* b) {}
+    kernel_declaration = kernel[:kernel.index('{')] + '{}'
+    return args.GetKernelArguments(kernel_declaration)
+  except ValueError as e:
+    logging.error("Failure processing kernel: '%s'", kernel)
+    raise e
+
+
 def KernelToFunctionDeclaration(kernel: str) -> OpenClFunction:
   """Build a function declaration for an OpenCL kernel.
 
@@ -127,7 +147,7 @@ def KernelToFunctionDeclaration(kernel: str) -> OpenClFunction:
   if not match:
     raise ValueError("Not a valid OpenCL function")
   name = match.group(2)
-  args_string = ', '.join(str(a) for a in args.GetKernelArguments(kernel))
+  args_string = ', '.join(str(a) for a in GetKernelArguments(kernel))
   return OpenClFunction(f'void {name}({args_string});', is_kernel=False)
 
 
@@ -149,7 +169,7 @@ def KernelToDeadCodeBlock(kernel: str) -> str:
   # Convert arguments to variable declarations.
   declarations = [
     KernelArgumentToVariableDeclaration(a) for a in
-    args.GetKernelArguments(kernel)
+    GetKernelArguments(kernel)
   ]
   # The block header is the list of argument variable declarations.
   header = '\n'.join(fmt.IndentList(2, declarations))
