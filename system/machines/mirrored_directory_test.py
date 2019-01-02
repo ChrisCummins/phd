@@ -113,6 +113,28 @@ def test_PushLocalToRemote_exclude(
   assert not (pathlib.Path(m.remote_path) / 'a').is_file()
 
 
+def test_PushLocalToRemote_pull_only_push_error(
+    test_host: machine_spec_pb2.Host,
+    test_mirrored_directory: machine_spec_pb2.MirroredDirectory):
+  """Test that pull_only disables push."""
+  test_mirrored_directory.pull_only = True
+  m = LocalMirroredDirectory(test_host, test_mirrored_directory)
+
+  with pytest.raises(mirrored_directory.InvalidOperation):
+    m.PushFromLocalToRemote()
+
+
+def test_PushLocalToRemote_push_only_pull_error(
+    test_host: machine_spec_pb2.Host,
+    test_mirrored_directory: machine_spec_pb2.MirroredDirectory):
+  """Test that push_only disables pull."""
+  test_mirrored_directory.push_only = True
+  m = LocalMirroredDirectory(test_host, test_mirrored_directory)
+
+  with pytest.raises(mirrored_directory.InvalidOperation):
+    m.PullFromRemoteToLocal()
+
+
 def main(argv: typing.List[str]):
   """Main entry point."""
   if len(argv) > 1:

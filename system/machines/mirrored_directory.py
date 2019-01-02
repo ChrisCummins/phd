@@ -16,6 +16,11 @@ from system.machines.proto import machine_spec_pb2
 FLAGS = flags.FLAGS
 
 
+class InvalidOperation(ValueError):
+  """Error raised when trying to perform an invalid operation."""
+  pass
+
+
 class MirroredDirectory(object):
   """Provides interface for a mirrored directory.
 
@@ -65,6 +70,8 @@ class MirroredDirectory(object):
                             verbose: bool = False, delete: bool = True,
                             progress: bool = False) -> None:
     """Push from local to remote paths."""
+    if self.spec.pull_only:
+      raise InvalidOperation("Mirrored directory has been marked 'pull_only'")
     self.Rsync(self.local_path,
                self.rsync_remote_path, self.host.port, self.spec.rsync_exclude,
                dry_run, verbose, delete, progress)
@@ -73,6 +80,8 @@ class MirroredDirectory(object):
                             verbose: bool = False, delete: bool = True,
                             progress: bool = False) -> None:
     """Pull from remote to local paths."""
+    if self.spec.push_only:
+      raise InvalidOperation("Mirrored directory has been marked 'push_only'")
     self.Rsync(self.rsync_remote_path, self.local_path, self.host.port,
                self.spec.rsync_exclude, dry_run, verbose, delete, progress)
 
