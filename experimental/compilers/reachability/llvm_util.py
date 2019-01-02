@@ -113,7 +113,7 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
       A new LlvmControlFlowGraph in which every node contains a single
       instruction.
     """
-    self.ValidateControlFlowGraph()
+    self.ValidateControlFlowGraph(strict=False)
 
     # Create a new graph.
     sig = LlvmControlFlowGraph(name=self.graph['name'])

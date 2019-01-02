@@ -22,6 +22,7 @@ from experimental.compilers.reachability import database
 from experimental.compilers.reachability import llvm_util
 from experimental.compilers.reachability import reachability_pb2
 from labm8 import decorators
+from labm8 import pbutil
 
 
 FLAGS = flags.FLAGS
@@ -526,18 +527,88 @@ def PopulateControlFlowGraphTable(db: database.Database):
         last_commit_time = the_time
 
 
+def CreateFullFlowGraphFromCfg(
+      cfg_tuple: typing.Tuple[int, int, str]
+) -> typing.List[reachability_pb2.ControlFlowGraphFromLlvmBytecode]:
+  """Parallel worker process for extracting CFGs from bytecode."""
+  # Expand the input tuple.
+  bytecode_id, cfg_id, proto_txt = cfg_tuple
+
+  proto = pbutil.FromString(proto_txt, reachability_pb2.ControlFlowGraph())
+  try:
+    original_graph = llvm_util.LlvmControlFlowGraph.FromProto(proto)
+
+    graph = original_graph.BuildFullFlowGraph()
+
+    return reachability_pb2.ControlFlowGraphFromLlvmBytecode(
+        bytecode_id=bytecode_id,
+        cfg_id=cfg_id,
+        control_flow_graph=graph.ToProto(),
+        status=0,
+        error_message='',
+        block_count=graph.number_of_nodes(),
+        edge_count=graph.number_of_edges(),
+        is_strict_valid=graph.IsValidControlFlowGraph(strict=True)
+    )
+  except Exception as e:
+    return reachability_pb2.ControlFlowGraphFromLlvmBytecode(
+        bytecode_id=bytecode_id,
+        cfg_id=cfg_id,
+        control_flow_graph=reachability_pb2.ControlFlowGraph(),
+        status=1,
+        error_message=str(e),
+        block_count=0,
+        edge_count=0,
+        is_strict_valid=False,
+    )
+
+
+def PopulateFullFlowGraphTable(db: database.Database):
+  """Populate the full flow graph table from CFGs."""
+  with db.Session(commit=True) as s:
+    # Query that returns (bytecode_id,cfg_id) tuples for all CFGs.
+    # TODO(cec): Exclude values already in the FFG table.
+    todo = s.query(database.ControlFlowGraphProto.bytecode_id,
+                   database.ControlFlowGraphProto.cfg_id,
+                   database.ControlFlowGraphProto.proto)\
+        .filter(database.ControlFlowGraphProto.status == 0)
+
+    bar = progressbar.ProgressBar()
+    bar.max_value = todo.count()
+
+    # Process CFGs in parallel.
+    pool = multiprocessing.Pool()
+    last_commit_time = time.time()
+    for i, proto in enumerate(pool.imap_unordered(
+        CreateFullFlowGraphFromCfg, todo)):
+      the_time = time.time()
+      bar.update(i)
+
+      s.add(database.FullFlowGraphProto(
+          **database.FullFlowGraphProto.FromProto(proto)))
+
+      # Commit every 10 seconds.
+      if the_time - last_commit_time > 10:
+        s.commit()
+        last_commit_time = the_time
+
+
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
+  db = database.Database(FLAGS.db)
   logging.info("Processing OpenCL dataset ...")
-  OpenClDeviceMappingsDataset().PopulateBytecodeTable(database.Database(FLAGS.db))
+  OpenClDeviceMappingsDataset().PopulateBytecodeTable(db)
   logging.info("Processing Linux dataset ...")
-  LinuxSourcesDataset().PopulateBytecodeTable(database.Database(FLAGS.db))
+  LinuxSourcesDataset().PopulateBytecodeTable(db)
 
   logging.info("Processing CFGs ...")
-  PopulateControlFlowGraphTable(database.Database(FLAGS.db))
+  PopulateControlFlowGraphTable(db)
+
+  logging.info("Processing full flow graphs ...")
+  PopulateFullFlowGraphTable(db)
 
 
 if __name__ == '__main__':
