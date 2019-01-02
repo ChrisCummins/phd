@@ -5,7 +5,7 @@ load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
 py_library(
     name = "control_flow_graph",
     srcs = ["control_flow_graph.py"],
-    visibility = ["//experimental/compilers/reachability:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         ":reachability_py_pb2",
         "//labm8:pbutil",
@@ -51,7 +51,7 @@ py_test(
 py_binary(
     name = "cfg_datasets",
     srcs = ["cfg_datasets.py"],
-    visibility = ["//experimental/compilers/reachability:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         ":database",
         ":llvm_util",
@@ -108,7 +108,7 @@ py_binary(
 py_library(
     name = "llvm_util",
     srcs = ["llvm_util.py"],
-    visibility = ["//experimental/compilers/reachability:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         ":control_flow_graph",
         "//compilers/llvm:opt",
@@ -132,7 +132,7 @@ py_test(
 py_proto_library(
     name = "reachability_py_pb2",
     protos = ["reachability.proto"],
-    visibility = ["//experimental/compilers/reachability:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = ["//third_party/py/protobuf"],
 )
 
