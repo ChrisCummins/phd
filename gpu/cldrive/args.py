@@ -126,15 +126,6 @@ class KernelArg(object):
     self.typename = " ".join(type_names)
     self.bare_type = self.typename.rstrip('0123456789')
 
-    try:
-      self.numpy_type = NUMPY_TYPES[self.bare_type]
-    except KeyError:
-      supported_types_str = ",".join(sorted(NUMPY_TYPES.keys()))
-      raise OpenCLValueError(f"""\
-Unsupported type '{self.typename}' for argument \
-'{self.quals_str}{self.typename} {self.name}'. \
-Supported types are: {{{supported_types_str}}}""")
-
     # Get address space.
     if self.is_pointer:
       address_quals = []
@@ -175,6 +166,18 @@ Supported types are: {{{supported_types_str}}}""")
       self.vector_width = int(m.group(1))
     else:
       self.vector_width = 1
+
+  @property
+  def numpy_type(self):
+    """Get the numpy equivalent for the argument."""
+    try:
+      return NUMPY_TYPES[self.bare_type]
+    except KeyError:
+      supported_types_str = ",".join(sorted(NUMPY_TYPES.keys()))
+      raise OpenCLValueError(f"""\
+Unsupported type '{self.typename}' for argument \
+'{self.quals_str}{self.typename} {self.name}'. \
+Supported types are: {{{supported_types_str}}}""")
 
   def __repr__(self):
     s = self.quals if len(self.quals) else []
