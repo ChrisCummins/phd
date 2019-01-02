@@ -4,6 +4,8 @@ py_binary(
     name = "notebooks",
     srcs = ["//notebooks"],
     deps = [
+        "//deeplearning/deeptune/opencl/adversary:opencl_deadcode_inserter",
+        "//deeplearning/deeptune/opencl/heterogeneous_mapping",
         "//experimental/compilers/reachability:cfg_datasets",
         "//experimental/compilers/reachability:control_flow_graph",
         "//experimental/compilers/reachability:control_flow_graph_generator",
