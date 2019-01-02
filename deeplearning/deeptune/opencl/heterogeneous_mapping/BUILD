@@ -3,6 +3,7 @@
 py_binary(
     name = "heterogeneous_mapping",
     srcs = ["heterogeneous_mapping.py"],
+    visibility = ["//visibility:public"],
     deps = [
         ":models",
         ":utils",
