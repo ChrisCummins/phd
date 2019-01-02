@@ -64,6 +64,7 @@ mirrored_directory {
 mirrored_directory {
   name: "diana"
   local_path: "/"
+  push_only: true
   remote_path: "/home/cec/docs/Chris/backups/diana/macOS"
   rsync_exclude: "._.DS_Store"
   rsync_exclude: ".DS_Store"
