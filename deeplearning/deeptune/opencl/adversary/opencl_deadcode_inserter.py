@@ -1,4 +1,14 @@
-"""Create and insert dead code into an OpenCL kernel."""
+"""Create and insert dead code into an OpenCL kernel.
+
+***WARNING***
+
+  This is NOT suitable for general purpose code manipulation. The functions
+  here assume that the source code has been formatted according the CLgen
+  OpenCL code rewriter. This allows it to make several simplifying assumptions
+  about the code, e.g. that the indentation is 2 spaces, that kernel signatures
+  have a fixed formatting, etc. If you try this on unformatted code, it will
+  likely break (silently).
+"""
 import re
 import typing
 
