@@ -84,15 +84,16 @@ class ExperimentalResults(object):
     return self.EvaluateModel(self.deeptune_model)
 
   @decorators.memoized_property
-  def adversarial_deeptune_df(self):
-    # Augment training dataset with dead code.
-    adversarial_df = self.dataset.AugmentWithDeadcodeMutations(
+  def adversarial_df(self):
+    """Augment dataset with dead code."""
+    return self.dataset.AugmentWithDeadcodeMutations(
         rand=np.random.RandomState(0xCEC),
         num_permutations_of_kernel=5,
-        num_mutations_per_kernel=(1, 5))
-    return self.EvaluateModel(
-        models.DeepTune(),
-        df=adversarial_df)
+        mutations_per_kernel_min_max=(1, 5))
+
+  @decorators.memoized_property
+  def adversarial_deeptune_df(self):
+    return self.EvaluateModel(models.DeepTune(), df=self.adversarial_df)
 
 
 def main(argv: typing.List[str]):

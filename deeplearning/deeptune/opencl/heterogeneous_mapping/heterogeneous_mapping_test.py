@@ -87,6 +87,11 @@ def test_deeptune_smoke_test(r: heterogeneous_mapping.ExperimentalResults,
   assert df['Correct?'].mean() > 0
 
 
+def test_adversarial_df(r: heterogeneous_mapping.ExperimentalResults):
+  """Test that adversarial dataframe can be produced."""
+  assert len(r.adversarial_df)
+
+
 @pytest.mark.parametrize('table', ('baseline_df', 'grewe_df'))
 def test_cached_model_evaluation_results_are_equal(
     r: heterogeneous_mapping.ExperimentalResults, table: str):
