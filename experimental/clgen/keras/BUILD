@@ -38,8 +38,8 @@ py_test(
 )
 
 py_test(
-    name = "log_to_file",
-    srcs = ["log_to_file.py"],
+    name = "log_to_file_test",
+    srcs = ["log_to_file_test.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
