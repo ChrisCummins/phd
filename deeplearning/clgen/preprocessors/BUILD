@@ -321,18 +321,20 @@ py_test(
     ],
 )
 
-py3_image(
-    name = "cxx_test_image",
-    srcs = ["cxx_test.py"],
-    base = "@base//image",
-    main = "cxx_test.py",
-    deps = [
-        ":cxx",
-        "//deeplearning/clgen:errors",
-        "//labm8:test",
-        "//third_party/py/absl",
-    ],
-)
+# FIXME(cec): py3_image is not a test rule, but //labm8:test is marked
+# test-only.
+# py3_image(
+#     name = "cxx_test_image",
+#     srcs = ["cxx_test.py"],
+#     base = "@base//image",
+#     main = "cxx_test.py",
+#     deps = [
+#         ":cxx",
+#         "//deeplearning/clgen:errors",
+#         "//labm8:test",
+#         "//third_party/py/absl",
+#     ],
+# )
 
 py_library(
     name = "java",

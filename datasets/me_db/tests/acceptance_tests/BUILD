@@ -25,6 +25,7 @@ py_test(
 
 py_library(
     name = "flags",
+    testonly = 1,
     srcs = ["flags.py"],
     deps = [
         "//datasets/me_db",

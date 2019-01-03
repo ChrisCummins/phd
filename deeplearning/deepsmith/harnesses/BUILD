@@ -66,17 +66,18 @@ py3_image(
 
 # A docker image for the cldrive unit tests. This is useful for testing the
 # hemetic-ness (definitely not a word) of the cldrive harness.
-py3_image(
-    name = "cldrive_test_image",
-    srcs = ["cldrive_test.py"],
-    base = "@base//image",
-    main = "cldrive_test.py",
-    deps = [
-        ":cldrive",
-        "//labm8:test",
-        "//third_party/py/absl",
-    ],
-)
+# FIXME(cec): //labm8:test is marked test-only so cannot be depended on.
+# py3_image(
+#     name = "cldrive_test_image",
+#     srcs = ["cldrive_test.py"],
+#     base = "@base//image",
+#     main = "cldrive_test.py",
+#     deps = [
+#         ":cldrive",
+#         "//labm8:test",
+#         "//third_party/py/absl",
+#     ],
+# )
 
 py_binary(
     name = "cl_launcher",
