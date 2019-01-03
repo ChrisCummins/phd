@@ -26,11 +26,13 @@ def ryangosling() -> machine.Machine:
 
 def test_Ryangosling_mirrored_directories(ryangosling: machine.Machine):
   """Test that mirrored directories exists."""
-  assert len(ryangosling.mirrored_directories) == 4
+  assert len(ryangosling.mirrored_directories) == 5
 
 
+@pytest.mark.diana
+@pytest.mark.florence
 @pytest.mark.skipif(not os.path.isdir('/Volumes/Orange'),
-                    reason='Orange drive not mounted')
+                    reason='Orange drive not found')
 def test_Ryangosling_photos(ryangosling: machine.Machine):
   """Test that mirrored directory exists."""
   d = ryangosling.MirroredDirectory('photos')
@@ -39,27 +41,43 @@ def test_Ryangosling_photos(ryangosling: machine.Machine):
   assert d.LocalExists()
 
 
-def test_Ryangosling_music(ryangosling: machine.Machine):
+@pytest.mark.diana
+def test_Ryangosling_photos(ryangosling: machine.Machine):
   """Test that mirrored directory exists."""
-  d = ryangosling.MirroredDirectory('music')
+  d = ryangosling.MirroredDirectory('diana')
   assert isinstance(d, mirrored_directory.MirroredDirectory)
   assert d.RemoteExists()
   assert d.LocalExists()
 
 
-def test_Ryangosling_movies(ryangosling: machine.Machine):
+@pytest.mark.diana
+@pytest.mark.florence
+@pytest.mark.parametrize('dir', ('music', 'movies', 'tv'))
+def test_Ryangosling_mirrored_directory_exists(
+    ryangosling: machine.Machine, dir: str):
   """Test that mirrored directory exists."""
-  d = ryangosling.MirroredDirectory('movies')
+  d = ryangosling.MirroredDirectory(dir)
   assert isinstance(d, mirrored_directory.MirroredDirectory)
+
+
+@pytest.mark.diana
+@pytest.mark.florence
+@pytest.mark.parametrize('dir', ('music', 'movies', 'tv'))
+def test_Ryangosling_mirrored_directory_remote_exists(
+    ryangosling: machine.Machine, dir: str):
+  """Test that mirrored directory remote exists."""
+  d = ryangosling.MirroredDirectory(dir)
   assert d.RemoteExists()
   assert d.LocalExists()
 
 
-def test_Ryangosling_tv(ryangosling: machine.Machine):
-  """Test that mirrored directory exists."""
-  d = ryangosling.MirroredDirectory('tv')
-  assert isinstance(d, mirrored_directory.MirroredDirectory)
-  assert d.RemoteExists()
+@pytest.mark.diana
+@pytest.mark.florence
+@pytest.mark.parametrize('dir', ('music', 'movies', 'tv'))
+def test_Ryangosling_mirrored_directory_local_exists(
+    ryangosling: machine.Machine, dir: str):
+  """Test that mirrored directory local exists."""
+  d = ryangosling.MirroredDirectory(dir)
   assert d.LocalExists()
 
 
