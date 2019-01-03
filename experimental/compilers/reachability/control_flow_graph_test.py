@@ -1,15 +1,11 @@
 """Unit tests for //experimental/compilers/reachability:control_flow_graph."""
-import sys
-import typing
 
 import networkx as nx
 import pytest
-from absl import app
-from absl import flags
 
 from experimental.compilers.reachability import control_flow_graph
-
-
+from labm8 import test
+from absl import flags
 FLAGS = flags.FLAGS
 
 
@@ -551,13 +547,5 @@ def test_ControlFlowGraph_IsomorphicHash_equivalency():
   assert g1.IsomorphicHash() == g2.IsomorphicHash()
 
 
-def main(argv: typing.List[str]):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  flags.FLAGS(['argv[0]', '-v=1'])
-  app.run(main)
+  test.Main()

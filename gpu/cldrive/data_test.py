@@ -1,12 +1,14 @@
 """Unit tests for //gpu/cldrive/data.py."""
-import sys
 
 import numpy as np
-import pytest
-from absl import app
+from absl import flags
 
 from gpu.cldrive import data
 from gpu.cldrive import testlib
+from labm8 import test
+
+
+FLAGS = flags.FLAGS
 
 
 def test_MakeZeros():
@@ -40,12 +42,5 @@ def test_MakeRand():
   assert outputs.shape == (2, 16)
 
 
-def main(argv):  # pylint: disable=missing-docstring
-  """Main entry point."""
-  del argv
-  sys.exit(pytest.main(
-      [data.__file__, __file__, "-vv", "--doctest-modules"]))
-
-
 if __name__ == "__main__":
-  app.run(main)
+  test.Main()

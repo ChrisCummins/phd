@@ -20,9 +20,9 @@ py_test(
     deps = [
         ":opencl_deadcode_inserter",
         "//compilers/llvm:clang",
+        "//labm8:test",
         "//third_party/py/absl",
         "//third_party/py/numpy",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -35,8 +35,8 @@ py_test(
         "//deeplearning/deepsmith/harnesses:cldrive",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//gpu/oclgrind",
+        "//labm8:test",
         "//third_party/py/absl",
         "//third_party/py/numpy",
-        "//third_party/py/pytest",
     ],
 )

@@ -1,13 +1,16 @@
 """Unit tests for //labm8:ppar."""
 import multiprocessing
-import sys
 
 import progressbar
 import pytest
-from absl import app
+from absl import flags
 
 from labm8 import ppar
+from labm8 import test
 from labm8.data.test.ppar import protos_pb2
+
+
+FLAGS = flags.FLAGS
 
 
 def test_MapWorker_okay():
@@ -192,10 +195,5 @@ def test_MapWorker_binary_args():
   assert not results[0].ok()
 
 
-def main(argv):
-  del argv
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

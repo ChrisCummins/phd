@@ -1,15 +1,18 @@
 """Unit tests for //labm8:latex."""
 import pathlib
-import sys
 import tempfile
 
 import pytest
-from absl import app
+from absl import flags
 
 from labm8 import fs
 from labm8 import lockfile
 from labm8 import pbutil
+from labm8 import test
 from labm8.proto import lockfile_pb2
+
+
+FLAGS = flags.FLAGS
 
 
 @pytest.fixture(scope='function')
@@ -141,10 +144,5 @@ def test_LockFile_force_replace_stale():
     assert not fs.exists(lock.path)
 
 
-def main(argv):  # pylint: disable=missing-docstring
-  del argv
-  sys.exit(pytest.main([__file__, '-v']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

@@ -1,15 +1,12 @@
 """Unit tests for //experimental/compilers/reachability:datasets."""
-import sys
 
 import pytest
-from absl import app
-from absl import flags
 
 from datasets.linux import linux
 from experimental.compilers.reachability import cfg_datasets as datasets
 from labm8 import system
-
-
+from labm8 import test
+from absl import flags
 FLAGS = flags.FLAGS
 
 
@@ -58,6 +55,7 @@ def test_TryToCreateControlFlowGraphsFromLinuxSrc_known_file():
   # TODO(cec): Debug why this file doesn't produce graphs.
   assert len(datasets.TryToCreateControlFlowGraphsFromLinuxSrc(path)) == 0
 
+
 def test_TryToCreateControlFlowGraphsFromLinuxSrc_graphs_are_valid():
   """Test that a known file produces valid graphs."""
   path = linux.LinuxSourcesDataset().src_tree_root / 'kernel' / 'kmod.c'
@@ -74,13 +72,5 @@ def test_LinuxSourcesDataset_df_count(
   assert len(linux_dataset.cfgs_df) >= 1600
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  flags.FLAGS(['argv[0]', '-v=1'])
-  app.run(main)
+  test.Main()

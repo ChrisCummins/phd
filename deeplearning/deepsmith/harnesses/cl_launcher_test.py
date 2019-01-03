@@ -1,17 +1,14 @@
 """Unit tests for //deeplearning/deepsmith/harnesses/cl_launcher.py."""
 
-import sys
-
 import pytest
-from absl import app
 from absl import flags
-from absl import logging
 
 from deeplearning.deepsmith.harnesses import cl_launcher
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import harness_pb2
 from deeplearning.deepsmith.proto import service_pb2
 from gpu.cldrive import env
+from labm8 import test
 
 
 FLAGS = flags.FLAGS
@@ -192,13 +189,5 @@ def test_ClLauncherHarness_RunTestcases_oclgrind_syntax_error(
   assert result.outcome == deepsmith_pb2.Result.BUILD_FAILURE
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    logging.warning("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  flags.FLAGS(['argv[0]', '-v=1'])
-  app.run(main)
+  test.Main()

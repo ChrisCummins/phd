@@ -78,8 +78,8 @@ py_test(
         "//labm8:fs",
         "//labm8:pbutil",
         "//labm8:tar",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -94,8 +94,8 @@ py_library(
         "//deeplearning/clgen/proto:model_py_pb2",
         "//deeplearning/clgen/proto:sampler_py_pb2",
         "//labm8:pbutil",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -157,8 +157,8 @@ py_test(
         ":conftest",
         ":errors",
         ":samplers",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -182,7 +182,7 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":telemetry",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )

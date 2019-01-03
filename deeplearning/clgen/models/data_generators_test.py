@@ -1,12 +1,13 @@
 """Unit tests for //deeplearning/clgen/models/data_generators.py."""
-import sys
 
 import numpy as np
 import pytest
-from absl import app
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.models import data_generators
+from labm8 import test
+from absl import flags
+FLAGS = flags.FLAGS
 
 
 class CorpusMock(object):
@@ -82,12 +83,5 @@ def test_benchmark_OneHotEncode(benchmark, sequence_length, vocabulary_size):
   benchmark(data_generators.OneHotEncode, data, vocabulary_size)
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError('Unrecognized command line flags.')
-  sys.exit(pytest.main([__file__, '-v']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

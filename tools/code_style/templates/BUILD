@@ -23,7 +23,7 @@ py_test(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )

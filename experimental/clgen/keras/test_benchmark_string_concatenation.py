@@ -20,11 +20,11 @@ test_string_concat[5000]     610.3570 (130.98)     773.2060 (14.27)    622.5233 
 There is essentially no difference in performance. Maybe concat is slightly
 faster (!).
 """
-import sys
 
 import pytest
-from absl import app
 from absl import flags
+
+from labm8 import test
 
 
 FLAGS = flags.FLAGS
@@ -58,12 +58,5 @@ def test_string_join(benchmark, iterations):
   benchmark(Benchmark)
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments '{}'".format(', '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

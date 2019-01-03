@@ -1,14 +1,10 @@
 """Unit tests for //gpu/oclgrind/oclgrind.py."""
-import sys
-
-import pytest
-from absl import app
-from absl import flags
 
 from gpu.oclgrind import oclgrind
-
-
+from labm8 import test
+from absl import flags
 FLAGS = flags.FLAGS
+
 
 # The verbatim string printed to stdout by `oclgrind --version`.
 VERSION = """
@@ -28,13 +24,5 @@ def test_Exec_version():
   assert proc.stdout == VERSION
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  flags.FLAGS(['argv[0]', '-v=1'])
-  app.run(main)
+  test.Main()

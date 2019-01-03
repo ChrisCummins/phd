@@ -1,17 +1,16 @@
 """Unit tests for //system/machines:mirrored_directory.py."""
 import pathlib
 import subprocess
-import sys
 import tempfile
 import typing
 
 import pytest
-from absl import app
 from absl import flags
 from absl import logging
 
 from labm8 import fs
 from labm8 import labtypes
+from labm8 import test
 from system.machines import mirrored_directory
 from system.machines.proto import machine_spec_pb2
 
@@ -135,13 +134,5 @@ def test_PushLocalToRemote_push_only_pull_error(
     m.PullFromRemoteToLocal()
 
 
-def main(argv: typing.List[str]):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  flags.FLAGS(['argv[0]', '-v=1'])
-  app.run(main)
+  test.Main()

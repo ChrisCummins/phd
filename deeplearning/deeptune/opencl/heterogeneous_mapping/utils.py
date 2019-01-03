@@ -1,4 +1,5 @@
 """Utility code for heterogeneous mapping experiment."""
+import collections
 import pathlib
 import pickle
 import typing
@@ -90,6 +91,26 @@ def AddClassificationTargetToDataFrame(
   return df
 
 
+# A train+test data batch for evaluation.
+TrainTestSplit = collections.namedtuple(
+    'TrainTestSplit', ['i', 'train_df', 'test_df', 'gpu_name'])
+
+
+def TrainTestSplitGenerator(df: pd.DataFrame, seed: int):
+  for gpu_name in ["amd_tahiti_7970", "nvidia_gtx_960"]:
+    # Add the classification target columns `y` and `y_1hot`.
+    df = AddClassificationTargetToDataFrame(df, gpu_name)
+
+    # Split into train/test indices for stratified 10-fold cross-validation.
+    dataset_splitter = model_selection.StratifiedKFold(
+        n_splits=10, shuffle=True, random_state=seed)
+    dataset_splits = dataset_splitter.split(np.zeros(len(df)), df['y'].values)
+
+    for i, (train_index, test_index) in enumerate(dataset_splits):
+      yield TrainTestSplit(i=i, train_df=df[train_index],
+                           test_df=df[test_index], gpu_name=gpu_name)
+
+
 def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
              workdir: pathlib.Path, seed: int) -> pd.DataFrame:
   """Evaluate a model.
@@ -107,108 +128,103 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
   Returns:
     Evaluation results.
   """
-  bar_tuple = [0, progressbar.ProgressBar(max_value=10 * 2)]
+  bar = progressbar.ProgressBar(max_value=10 * 2)
 
   data = []
 
-  for gpu_name in ["amd_tahiti_7970", "nvidia_gtx_960"]:
-    # Add the classification target columns `y` and `y_1hot`.
-    df = AddClassificationTargetToDataFrame(df, gpu_name)
+  for split in TrainTestSplitGenerator(df, seed):
+    # Path of cached model and predictions.
+    model_path = (
+        workdir / f"{model.__basename__}-{split.gpu_name}-{split.i:02d}.model")
+    predictions_path = (
+        workdir / f"{model.__basename__}-{split.gpu_name}-{split.i:02d}.pred")
 
-    # Split into train/test indices for stratified 10-fold cross-validation.
-    dataset_splitter = model_selection.StratifiedKFold(
-        n_splits=10, shuffle=True, random_state=seed)
-    dataset_splits = dataset_splitter.split(np.zeros(len(df)), df['y'].values)
+    # Create cache directories.
+    model_path.parent.mkdir(parents=True, exist_ok=True)
+    predictions_path.parent.mkdir(parents=True, exist_ok=True)
 
-    for j, (train_index, test_index) in enumerate(dataset_splits):
-      # Path of cached model and predictions.
-      model_path = workdir / f"{model.__basename__}-{gpu_name}-{j:02d}.model"
-      predictions_path = (
-          workdir / f"{model.__basename__}-{gpu_name}-{j:02d}.pred")
-
-      # Create cache directories.
-      model_path.parent.mkdir(parents=True, exist_ok=True)
-      predictions_path.parent.mkdir(parents=True, exist_ok=True)
-
-      if predictions_path.is_file():
-        # Load predctions from cache, which means we don't need to train a
-        # model.
-        logging.info('Loading predictions from cache ...')
-        with open(predictions_path, 'rb') as f:
-          predictions = pickle.load(f)
+    if predictions_path.is_file():
+      # Load predctions from cache, which means we don't need to train a
+      # model.
+      logging.info('Loading predictions from cache ...')
+      with open(predictions_path, 'rb') as f:
+        predictions = pickle.load(f)
+    else:
+      if model_path.is_file():
+        logging.info('Loading trained model ...')
+        # Restore trained model from cache.
+        model.restore(model_path)
       else:
-        if model_path.is_file():
-          logging.info('Loading trained model ...')
-          # Restore trained model from cache.
-          model.restore(model_path)
-        else:
-          # Train and cache a model.
-          logging.info('Training new model ...')
-          model.init(seed=seed, atomizer=atomizer)
-          model.train(df=df[train_index], platform_name=gpu_name, verbose=False)
-          model.save(model_path)
+        # Train and cache a model.
+        logging.info('Training new model ...')
+        model.init(seed=seed, atomizer=atomizer)
+        model.train(
+            df=split.train_df, platform_name=split.gpu_name, verbose=False)
+        model.save(model_path)
 
-        # Test the model.
-        predictions = model.predict(
-            df[test_index], platform_name=gpu_name, verbose=False)
+      # Test the model.
+      predictions = model.predict(
+          df=split.test_df, platform_name=split.gpu_name, verbose=False)
 
-        # cache results
-        with open(predictions_path, 'wb') as outfile:
-          pickle.dump(predictions, outfile)
+      # cache results
+      with open(predictions_path, 'wb') as outfile:
+        pickle.dump(predictions, outfile)
 
-      # benchmarks
-      benchmarks = df['program:opencl_kernel_name'].values[test_index]
-      benchmark_suites = (
-        df['program:benchmark_suite_name'].values[test_index])
+    # benchmarks
+    benchmarks = split.test_df['program:opencl_kernel_name'].values
+    benchmark_suites = (
+      split.test_df['program:benchmark_suite_name'].values)
 
-      # oracle device mappings
-      oracle_device_mappings = y[test_index]
-      # whether predictions were correct or not
-      predicted_is_correct = predictions == oracle_device_mappings
+    # oracle device mappings
+    oracle_device_mappings = split.test_df['y']
+    # whether predictions were correct or not
+    predicted_is_correct = (predictions == oracle_device_mappings)
 
-      # Runtimes of baseline mapping (CPU on AMD, GPU on NVIDIA).
-      if gpu_name == "amd_tahiti_7970":
-        zero_r_runtime_column = "runtime:intel_core_i7_3820"
-      elif gpu_name == "nvidia_gtx_960":
-        zero_r_runtime_column = "runtime:nvidia_gtx_960"
-      zero_r_runtimes = df[zero_r_runtime_column][test_index]
+    # Runtimes of baseline mapping (CPU on AMD, GPU on NVIDIA).
+    if split.gpu_name == "amd_tahiti_7970":
+      zero_r_runtime_column = "runtime:intel_core_i7_3820"
+    elif split.gpu_name == "nvidia_gtx_960":
+      zero_r_runtime_column = "runtime:nvidia_gtx_960"
+    else:
+      raise ValueError(split.gpu_name)
 
-      # speedups of predictions
-      cpu_gpu_runtimes = df[[
-        'runtime:intel_core_i7_3820',
-        f'runtime:{gpu_name}'
-      ]].values[test_index]
-      p_runtimes = [
-        cpu_gpu_runtime[predicted_device]
-        for predicted_device, cpu_gpu_runtime in
-        zip(predictions, cpu_gpu_runtimes)]
-      p_speedup = zero_r_runtimes / p_runtimes
+    zero_r_runtimes = split.test_df[zero_r_runtime_column]
 
-      # sanity check
-      assert (len(benchmarks) == len(oracle_device_mappings) == len(
-          predicted_is_correct) == len(predictions) == len(
-          p_speedup))
+    # speedups of predictions
+    cpu_gpu_runtimes = split.test_df[[
+      'runtime:intel_core_i7_3820',
+      f'runtime:{gpu_name}'
+    ]]
+    p_runtimes = [
+      cpu_gpu_runtime[predicted_device]
+      for predicted_device, cpu_gpu_runtime in
+      zip(predictions, cpu_gpu_runtimes)]
+    p_speedup = zero_r_runtimes / p_runtimes
 
-      # record results
-      for (benchmark, benchmark_suite, oracle_device_mapping, predicted,
-           is_correct, predicted_speedup) in zip(
-          benchmarks, benchmark_suites, oracle_device_mappings, predictions,
-          predicted_is_correct,
-          p_speedup):
-        data.append({
-          "Model": model.__name__,
-          "Platform": gpu_name,
-          'Benchmark': benchmark,
-          'Benchmark Suite': benchmark_suite,
-          "Oracle Mapping": oracle_device_mapping,
-          "Predicted Mapping": predicted,
-          "Correct?": is_correct,
-          "Speedup": predicted_speedup,
-        })
+    # sanity check
+    assert (
+        len(benchmarks) == len(oracle_device_mappings) == len(p_speedup) ==
+        len(predicted_is_correct) == len(predictions))
 
-      # update progress bar
-      bar_tuple[0] += 1
-      bar_tuple[1].update(bar_tuple[0])
+    # record results
+    for (benchmark, benchmark_suite, oracle_device_mapping, predicted,
+         is_correct, predicted_speedup) in zip(
+        benchmarks, benchmark_suites, oracle_device_mappings, predictions,
+        predicted_is_correct,
+        p_speedup):
+      data.append({
+        "Model": model.__name__,
+        "Platform": split.gpu_name,
+        'Benchmark': benchmark,
+        'Benchmark Suite': benchmark_suite,
+        "Oracle Mapping": oracle_device_mapping,
+        "Predicted Mapping": predicted,
+        "Correct?": is_correct,
+        "Speedup": predicted_speedup,
+      })
+
+    # update progress bar
+    bar.update(split.i)
 
   return pd.DataFrame(
       data, index=range(1, len(data) + 1), columns=[

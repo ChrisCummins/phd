@@ -1,14 +1,10 @@
 """Fuzz test for :opencl_deadcode_inserter."""
 import pathlib
 import random
-import sys
 import tempfile
-import typing
 
 import numpy as np
 import pytest
-from absl import app
-from absl import flags
 from absl import logging
 
 from deeplearning.deepsmith.harnesses import cldrive
@@ -16,9 +12,10 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deeptune.opencl.adversary import \
   opencl_deadcode_inserter as dci
 from gpu.oclgrind import oclgrind
-
-
+from labm8 import test
+from absl import flags
 FLAGS = flags.FLAGS
+
 
 # The number of tests to run.
 # TODO(cec): Can this be a flag?
@@ -172,15 +169,5 @@ def test_GenerateDeadcodeMutations_fuzz_test_batch(i: int):
   assert i + 1 == len(kernels) * num_permutations_of_kernel
 
 
-def main(argv: typing.List[str]):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-  # '-s' switch disables pytest stdout/stderr capturing, which is useful for a
-  # single-test file. See: https://docs.pytest.org/en/latest/capture.html
-  sys.exit(pytest.main([__file__, '-vv', '--maxfail=1']))  # , '-s']))
-
-
 if __name__ == '__main__':
-  flags.FLAGS(['argv[0]', '-v=1'])
-  app.run(main)
+  test.Main()

@@ -1,12 +1,14 @@
 """Unit tests for //deeplearning/clgen/telemetry.py."""
 import pathlib
-import sys
 import tempfile
 
-import pytest
-from absl import app
+from absl import flags
 
 from deeplearning.clgen import telemetry
+from labm8 import test
+
+
+FLAGS = flags.FLAGS
 
 
 # TrainingLogger tests.
@@ -34,12 +36,5 @@ def test_TrainingLogger_EpochTelemetry():
     assert len(logger.EpochTelemetry()) == 2
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError('Unrecognized command line flags.')
-  sys.exit(pytest.main([__file__, '-v']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

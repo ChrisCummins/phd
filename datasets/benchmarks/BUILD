@@ -20,8 +20,8 @@ py_test(
     srcs = ["bzip2_test.py"],
     deps = [
         ":bzip2",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -74,7 +74,7 @@ py_test(
         ":llvm_test_suite",
         "//compilers/llvm:clang",
         "//datasets/benchmarks/proto:benchmarks_py_pb2",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )

@@ -1,24 +1,19 @@
 """Unit tests for //lib/dpack:dpack."""
 import pathlib
-import sys
 import tempfile
 
-import pytest
-from absl import app
+from absl import flags
 
+from labm8 import test
 from system.dpack import dpack
 from system.dpack.proto import dpack_pb2
 
 
+FLAGS = flags.FLAGS
+
 # The sha256sum of an empty file.
 SHA256_EMPTY_FILE = (
   'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
-
-
-@pytest.fixture(scope='function')
-def tempdir() -> pathlib.Path:
-  with tempfile.TemporaryDirectory(prefix='phd_') as d:
-    yield pathlib.Path(d)
 
 
 def test_IsPackage_files():
@@ -236,12 +231,5 @@ def test_CreatePackageManifest(tempdir: pathlib.Path):
   assert m.file[0].checksum == SHA256_EMPTY_FILE
 
 
-def main(argv):  # pylint: disable=missing-docstring
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

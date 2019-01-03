@@ -49,8 +49,8 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":args",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -85,8 +85,8 @@ py_test(
     deps = [
         ":data",
         ":testlib",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -112,9 +112,9 @@ py_test(
         ":data",
         ":driver",
         ":testlib",
+        "//labm8:test",
         "//third_party/py/absl",
         "//third_party/py/numpy",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -140,8 +140,8 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":env",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 

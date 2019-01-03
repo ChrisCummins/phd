@@ -1,13 +1,11 @@
 """Unit tests for :control_flow_graph_generator."""
-import sys
-import typing
 
 import numpy as np
 import pytest
-from absl import app
 from absl import flags
 
 from experimental.compilers.reachability import control_flow_graph_generator
+from labm8 import test
 
 
 FLAGS = flags.FLAGS
@@ -127,13 +125,5 @@ def test_ControlFlowGraphGenerator_GenerateUnique():
   assert len(set(uniq_graphs)) == 100
 
 
-def main(argv: typing.List[str]):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  flags.FLAGS(['argv[0]', '-v=1'])
-  app.run(main)
+  test.Main()

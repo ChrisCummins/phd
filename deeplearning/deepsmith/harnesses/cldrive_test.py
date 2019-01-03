@@ -1,13 +1,9 @@
 """Unit tests for //deeplearning/deepsmith/services/cldrive.py."""
 import pathlib
 import subprocess
-import sys
 import tempfile
 
 import pytest
-from absl import app
-from absl import flags
-from absl import logging
 
 import gpu.cldrive.env
 from deeplearning.deepsmith.harnesses import cldrive
@@ -15,8 +11,8 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import harness_pb2
 from deeplearning.deepsmith.proto import service_pb2
 from gpu.oclgrind import oclgrind
-
-
+from labm8 import test
+from absl import flags
 FLAGS = flags.FLAGS
 
 
@@ -360,13 +356,5 @@ def test_CldriveHarness_RunTestcases_invalid_driver_cflags(
   assert result.outcome == deepsmith_pb2.Result.UNKNOWN
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    logging.warning("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  flags.FLAGS(['argv[0]', '-v=1'])
-  app.run(main)
+  test.Main()

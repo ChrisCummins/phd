@@ -51,8 +51,8 @@ py_test(
         "//deeplearning/deepsmith/proto:harness_py_pb2",
         "//deeplearning/deepsmith/proto:service_py_pb2",
         "//gpu/oclgrind",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -73,8 +73,8 @@ py3_image(
     main = "cldrive_test.py",
     deps = [
         ":cldrive",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -108,8 +108,8 @@ py_test(
         "//deeplearning/deepsmith/proto:harness_py_pb2",
         "//deeplearning/deepsmith/proto:service_py_pb2",
         "//gpu/cldrive:env",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 

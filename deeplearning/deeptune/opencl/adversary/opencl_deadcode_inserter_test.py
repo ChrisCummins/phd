@@ -1,16 +1,12 @@
 """Unit tests for :opencl_deadcode_inserter."""
-import sys
-import typing
 
 import numpy as np
 import pytest
-from absl import app
-from absl import flags
 
 from deeplearning.deeptune.opencl.adversary import \
   opencl_deadcode_inserter as dci
-
-
+from labm8 import test
+from absl import flags
 FLAGS = flags.FLAGS
 
 
@@ -102,13 +98,5 @@ kernel void A(const int b) {}
 void B(global int * a);"""
 
 
-def main(argv: typing.List[str]):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  flags.FLAGS(['argv[0]', '-v=1'])
-  app.run(main)
+  test.Main()

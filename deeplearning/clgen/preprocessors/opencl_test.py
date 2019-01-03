@@ -1,16 +1,14 @@
 """Unit tests for //deeplearning/clgen/preprocessors/opencl.py."""
 import subprocess
-import sys
 
 import pytest
-from absl import app
 from absl import flags
-from absl import logging
 
 import deeplearning.clgen
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import opencl
 from labm8 import bazelutil
+from labm8 import test
 
 
 FLAGS = flags.FLAGS
@@ -275,13 +273,5 @@ __kernel void A(__global float* a) {
     opencl.GpuVerify(code, ["--local_size=64", "--num_groups=128"])
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError('Unrecognized command line flags.')
-  logging.set_verbosity(logging.DEBUG)
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

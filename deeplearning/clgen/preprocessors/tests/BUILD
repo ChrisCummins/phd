@@ -11,7 +11,7 @@ py_test(
         "//deeplearning/clgen/preprocessors:common",
         "//deeplearning/clgen/preprocessors:cxx",
         "//deeplearning/clgen/preprocessors:opencl",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )

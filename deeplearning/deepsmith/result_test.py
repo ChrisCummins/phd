@@ -1,9 +1,7 @@
 """Tests for //deeplearning/deepsmith:result."""
 import datetime
-import sys
 
-import pytest
-from absl import app
+from absl import flags
 
 import deeplearning.deepsmith.client
 import deeplearning.deepsmith.generator
@@ -13,6 +11,10 @@ import deeplearning.deepsmith.result
 import deeplearning.deepsmith.testcase
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from labm8 import labdate
+from labm8 import test
+
+
+FLAGS = flags.FLAGS
 
 
 def test_Result_ToProto():
@@ -380,10 +382,5 @@ def test_duplicate_results_ignored(session):
   assert r3.profiling_events[1].duration_ms == 100
 
 
-def main(argv):  # pylint: disable=missing-docstring
-  del argv
-  sys.exit(pytest.main([__file__, '-v']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

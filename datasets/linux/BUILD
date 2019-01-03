@@ -23,7 +23,7 @@ py_test(
     srcs = ["linux_test.py"],
     deps = [
         ":linux",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )

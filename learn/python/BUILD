@@ -9,9 +9,9 @@ py_test(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
+        "//labm8:test",
         "//third_party/py/absl",
         "//third_party/py/ascii_art",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -59,8 +59,8 @@ py_test(
     deps = [
         ":cpp_interop_proto_py_pb2",
         "//labm8:bazelutil",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 

@@ -1,39 +1,39 @@
 # Experiments while porting CLgen from Tensorflow to Keras models.
 
 py_test(
-    name = "benchmark_module_import",
-    srcs = ["benchmark_module_import.py"],
+    name = "test_benchmark_module_import",
+    srcs = ["test_benchmark_module_import.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
+        "//labm8:test",
         "//third_party/py/absl",
         "//third_party/py/keras",
-        "//third_party/py/pytest",
         "//third_party/py/tensorflow",
     ],
 )
 
 py_test(
-    name = "benchmark_model_init",
-    srcs = ["benchmark_model_init.py"],
+    name = "test_benchmark_model_init",
+    srcs = ["test_benchmark_model_init.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
+        "//labm8:test",
         "//third_party/py/absl",
         "//third_party/py/keras",
-        "//third_party/py/pytest",
         "//third_party/py/tensorflow",
     ],
 )
 
 py_test(
-    name = "benchmark_string_concatenation",
-    srcs = ["benchmark_string_concatenation.py"],
+    name = "test_benchmark_string_concatenation",
+    srcs = ["test_benchmark_string_concatenation.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -43,8 +43,8 @@ py_test(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 

@@ -6,14 +6,13 @@ Things I learned from this file:
  * Model compilation is not time consuming.
  * model_from_yaml() takes as long as instantiating a new model.
 """
-import sys
 import tempfile
 
-import pytest
-from absl import app
 from absl import flags
 from keras import layers
 from keras import models
+
+from labm8 import test
 
 
 FLAGS = flags.FLAGS
@@ -104,12 +103,5 @@ def test_from_yaml(benchmark):
   benchmark(models.model_from_yaml, model.to_yaml())
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments '{}'".format(', '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

@@ -1,13 +1,15 @@
 """Tests for //deeplearning/deepsmith:harness."""
 import hashlib
 import random
-import sys
 
-import pytest
-from absl import app
+from absl import flags
 
 import deeplearning.deepsmith.harness
 from deeplearning.deepsmith.proto import deepsmith_pb2
+from labm8 import test
+
+
+FLAGS = flags.FLAGS
 
 
 def test_Harness_ToProto():
@@ -270,10 +272,5 @@ def test_benchmark_Harness_GetOrAdd_existing(session, benchmark):
   benchmark(_AddExistingHarness, session)
 
 
-def main(argv):  # pylint: disable=missing-docstring
-  del argv
-  sys.exit(pytest.main([__file__, '-v']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

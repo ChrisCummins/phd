@@ -1,8 +1,5 @@
 """Unit tests for :01_evaluate_generator.py."""
 import importlib
-import sys
-
-from absl import app
 
 # Import the CLgen test fixtures into the global namespace. Note we can't import
 # only the fixtures we need here, since we must also import any dependent
@@ -17,8 +14,6 @@ from deeplearning.deepsmith.proto import generator_pb2
 # keyword.
 evaluate_generator = importlib.import_module(
     'docs.2018_07_issta.artifact_evaluation.01_evaluate_generator')
-
-FLAGS = flags.FLAGS
 
 
 def test_GenerateTestcases(abc_instance_config):
@@ -47,13 +42,5 @@ def test_GenerateTestcases(abc_instance_config):
       assert pbutil.ProtoIsReadable(f, deepsmith_pb2.Testcase())
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  flags.FLAGS(['argv[0]', '-v=1'])
-  app.run(main)
+  test.Main()

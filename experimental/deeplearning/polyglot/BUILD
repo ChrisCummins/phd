@@ -22,8 +22,8 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":get_instances",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -87,7 +87,7 @@ py_test(
         "//deeplearning/clgen/proto:sampler_py_pb2",
         "//labm8:bazelutil",
         "//labm8:pbutil",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )

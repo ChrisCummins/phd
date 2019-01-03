@@ -1,7 +1,6 @@
 """Unit tests for //deeplearning/clgen/cli.py."""
 import os
 import pathlib
-import sys
 import tempfile
 
 import pytest
@@ -12,6 +11,7 @@ from deeplearning.clgen import clgen
 from deeplearning.clgen import errors
 from deeplearning.clgen.proto import clgen_pb2
 from labm8 import pbutil
+from labm8 import test
 
 
 FLAGS = flags.FLAGS
@@ -203,12 +203,5 @@ def test_main_stop_after_train(abc_instance_file):
   assert instance.model.is_trained
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError('Unrecognized command line flags.')
-  sys.exit(pytest.main([__file__, '-v']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

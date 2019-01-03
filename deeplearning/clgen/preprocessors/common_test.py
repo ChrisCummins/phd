@@ -1,12 +1,11 @@
 """Unit tests for ///common_test.py."""
-import sys
 
 import pytest
-from absl import app
 from absl import flags
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import common
+from labm8 import test
 
 
 FLAGS = flags.FLAGS
@@ -68,11 +67,5 @@ def test_benchmark_StripDuplicateEmptyLines_c_hello_world(benchmark):
   benchmark(common.StripDuplicateEmptyLines, HELLO_WORLD_C)
 
 
-def main(argv):
-  """Main entry point."""
-  del argv
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

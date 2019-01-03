@@ -1,12 +1,15 @@
 """Unit tests for //labm8:text."""
 import re
-import sys
 from io import StringIO
 
 import pytest
-from absl import app
+from absl import flags
 
 from labm8 import io
+from labm8 import test
+
+
+FLAGS = flags.FLAGS
 
 
 # colourise()
@@ -83,10 +86,5 @@ def test_prof():
   assert "PROF" == re.search("PROF", out.getvalue()).group(0)
 
 
-def main(argv):  # pylint: disable=missing-docstring
-  del argv
-  sys.exit(pytest.main([__file__, '-v']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

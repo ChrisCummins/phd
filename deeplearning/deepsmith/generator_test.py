@@ -1,13 +1,15 @@
 """Tests for //deeplearning/deepsmith:generator."""
 import hashlib
 import random
-import sys
 
-import pytest
-from absl import app
+from absl import flags
 
 import deeplearning.deepsmith.generator
 from deeplearning.deepsmith.proto import deepsmith_pb2
+from labm8 import test
+
+
+FLAGS = flags.FLAGS
 
 
 def test_Generator_ToProto():
@@ -280,10 +282,5 @@ def test_benchmark_Generator_GetOrAdd_existing(session, benchmark):
   benchmark(_AddExistingGenerator, session)
 
 
-def main(argv):  # pylint: disable=missing-docstring
-  del argv
-  sys.exit(pytest.main([__file__, '-v']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

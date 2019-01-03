@@ -23,6 +23,7 @@
 """Training workflow for app classification"""
 import math
 import os
+import pathlib
 import pickle
 import struct
 
@@ -472,6 +473,8 @@ def main(argv):
   num_epochs = FLAGS.num_epochs
   batch_size = FLAGS.batch_size
   train_samples = FLAGS.train_samples
+
+  pathlib.Path(folder_data).parent.mkdir(parents=True, exist_ok=True)
 
   # Acquire data
   if not os.path.exists(folder_data + '_train'):

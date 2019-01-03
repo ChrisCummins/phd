@@ -1,13 +1,11 @@
 """Unit tests for //compilers/clsmith/cl_launcher.py."""
-import sys
 
-import pytest
-from absl import app
 from absl import flags
 
 from compilers.clsmith import cl_launcher
 from gpu.cldrive import driver
 from gpu.cldrive import env
+from labm8 import test
 
 
 FLAGS = flags.FLAGS
@@ -102,13 +100,5 @@ def test_ExecClsmithSource_syntax_error():
   assert 'Error building program: -11' in proc.stderr
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  flags.FLAGS(['argv[0]', '-v=1'])
-  app.run(main)
+  test.Main()

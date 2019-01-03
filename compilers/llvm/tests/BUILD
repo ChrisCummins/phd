@@ -8,7 +8,7 @@ py_test(
     deps = [
         "//compilers/llvm:clang",
         "//compilers/llvm:opt",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )

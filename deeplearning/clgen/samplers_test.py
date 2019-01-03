@@ -1,14 +1,17 @@
 """Unit tests for //deeplearning/clgen/sampler.py."""
-import sys
 import typing
 
 import numpy as np
 import pytest
-from absl import app
+from absl import flags
 
 from deeplearning.clgen import errors
 from deeplearning.clgen import samplers
 from deeplearning.clgen.proto import sampler_pb2
+from labm8 import test
+
+
+FLAGS = flags.FLAGS
 
 
 class AtomizerMock(object):
@@ -262,12 +265,5 @@ def test_Sampler_Specialize_encoded_start_text(
   np.testing.assert_array_equal(np.array([1]), s.encoded_start_text)
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError('Unrecognized command line flags.')
-  sys.exit(pytest.main([__file__, '-v']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

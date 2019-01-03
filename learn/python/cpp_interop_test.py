@@ -3,13 +3,11 @@
 NOTE: this code has been librified and moved into //labm8:ppar.
 """
 import subprocess
-import sys
 
-import pytest
-from absl import app
 from absl import flags
 
 from labm8 import bazelutil
+from labm8 import test
 from learn.python import cpp_interop_pb2
 
 
@@ -66,12 +64,5 @@ def test_AddXandY_in_place():
   assert proto.result == 2 + 3
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError('Unrecognized command line flags.')
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

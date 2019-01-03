@@ -1,10 +1,13 @@
 """Unit tests for //labm8:labdate."""
-import sys
 
 import pytest
-from absl import app
+from absl import flags
 
 from labm8 import labdate
+from labm8 import test
+
+
+FLAGS = flags.FLAGS
 
 
 def test_GetUtcMillisecondsNow_millisecond_precision():
@@ -47,10 +50,5 @@ def test_default_timestamp_datetime_equivalence():
   assert now.date() == date_out.date()
 
 
-def main(argv):  # pylint: disable=missing-docstring
-  del argv
-  sys.exit(pytest.main([__file__, '-v']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

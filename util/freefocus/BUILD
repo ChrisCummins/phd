@@ -37,8 +37,8 @@ py_test(
     deps = [
         ":freefocus_py_pb2",
         ":sql",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 

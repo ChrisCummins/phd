@@ -1,15 +1,16 @@
 """Unit tests for //deeplearning/clgen/models/models.py."""
 import pathlib
-import sys
 
 import pytest
-from absl import app
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.models import models
 from deeplearning.clgen.proto import internal_pb2
 from deeplearning.clgen.proto import model_pb2
 from labm8 import pbutil
+from labm8 import test
+from absl import flags
+FLAGS = flags.FLAGS
 
 
 # The Model.hash for an instance of abc_model_config.
@@ -149,12 +150,5 @@ def test_benchmark_Model_instantiation(clgen_cache_dir, abc_model_config,
   benchmark(models.Model, abc_model_config)
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError('Unrecognized command line flags.')
-  sys.exit(pytest.main([__file__, '-v']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

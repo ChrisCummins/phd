@@ -20,8 +20,8 @@ py_test(
     srcs = ["heterogeneous_mapping_test.py"],
     deps = [
         ":heterogeneous_mapping",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -60,7 +60,7 @@ py_test(
     deps = [
         ":utils",
         "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )

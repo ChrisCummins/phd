@@ -1,12 +1,11 @@
 """Unit tests for //deeplearning/deepsmith/difftests/difftests.py."""
-import sys
 
 import pytest
-from absl import app
 from absl import flags
 
 import deeplearning.deepsmith.difftests.difftests
 from deeplearning.deepsmith.proto import deepsmith_pb2
+from labm8 import test
 
 
 FLAGS = flags.FLAGS
@@ -269,13 +268,5 @@ def test_GoldStandardDiffTester_DiffTestOne_both_pass_no_stdout():
   assert "'stdout' missing in one or more results." == str(e_ctx.value)
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  flags.FLAGS(['argv[0]', '-v=1'])
-  app.run(main)
+  test.Main()

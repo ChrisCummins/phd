@@ -32,8 +32,8 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":clang",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -281,8 +281,8 @@ py_test(
     deps = [
         ":common",
         "//deeplearning/clgen:errors",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -316,8 +316,8 @@ py_test(
     deps = [
         ":cxx",
         "//deeplearning/clgen:errors",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -329,8 +329,8 @@ py3_image(
     deps = [
         ":cxx",
         "//deeplearning/clgen:errors",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -356,8 +356,8 @@ py_test(
     deps = [
         ":java",
         "//deeplearning/clgen:errors",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -406,8 +406,8 @@ py_test(
     deps = [
         ":normalizer",
         "//deeplearning/clgen:errors",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -439,8 +439,8 @@ py_test(
         ":opencl",
         "//deeplearning/clgen/proto:corpus_py_pb2",
         "//labm8:bazelutil",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -477,8 +477,8 @@ py_test(
         ":public",
         "//deeplearning/clgen:conftest",
         "//deeplearning/clgen:errors",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -499,7 +499,7 @@ py_test(
     deps = [
         ":public",
         "//deeplearning/clgen:errors",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )

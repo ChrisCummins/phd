@@ -63,8 +63,8 @@ py_test(
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
         "//labm8:fs",
         "//labm8:pbutil",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -94,8 +94,8 @@ py_test(
         ":importer",
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
         "//labm8:pbutil",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -125,8 +125,8 @@ py_test(
         ":indexer",
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
         "//labm8:pbutil",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -156,7 +156,7 @@ py_test(
         ":scraper",
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
         "//labm8:labdate",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )

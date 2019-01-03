@@ -1,15 +1,12 @@
 """Unit tests for //compilers/llvm/clang_format.py."""
 import subprocess
-import sys
 
 import pytest
-from absl import app
-from absl import flags
 
 from compilers.llvm import clang_format
 from compilers.llvm import llvm
-
-
+from labm8 import test
+from absl import flags
 FLAGS = flags.FLAGS
 
 
@@ -60,13 +57,5 @@ def test_Exec_empty_file():
   assert clang_format.Exec('', '.cpp', []) == ''
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  flags.FLAGS(['argv[0]', '-v=1'])
-  app.run(main)
+  test.Main()

@@ -10,7 +10,7 @@ py3_image(
     main = "test.py",
     deps = [
         "//labm8:bazelutil",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )

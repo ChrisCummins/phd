@@ -1,14 +1,17 @@
 """Unit tests for //gpu/cldrive/driver.py."""
-import sys
 
 import numpy as np
 import pytest
-from absl import app
+from absl import flags
 
 from gpu.cldrive import data
 from gpu.cldrive import driver
 from gpu.cldrive import env
 from gpu.cldrive import testlib
+from labm8 import test
+
+
+FLAGS = flags.FLAGS
 
 
 @pytest.mark.skip(reason="FIXME(cec)")
@@ -244,11 +247,5 @@ def test_vector_input_switch():
   testlib.Assert2DArraysAlmostEqual(outputs, outputs_gs)
 
 
-def main(argv):  # pylint: disable=missing-docstring
-  del argv
-  sys.exit(pytest.main(
-      [driver.__file__, __file__, "-v", "--doctest-modules"]))
-
-
 if __name__ == "__main__":
-  app.run(main)
+  test.Main()

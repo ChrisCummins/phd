@@ -1,14 +1,16 @@
 """Unit tests for //labm8:prof."""
 import os
 import re
-import sys
 
 import pytest
-from absl import app
+from absl import flags
 
 from labm8 import prof
 from labm8 import system
+from labm8 import test
 
+
+FLAGS = flags.FLAGS
 
 if system.is_python3():
   from io import StringIO
@@ -97,10 +99,5 @@ def test_timers(profiling_env):
   assert len(list(prof.timers())) == x
 
 
-def main(argv):  # pylint: disable=missing-docstring
-  del argv
-  sys.exit(pytest.main([__file__, '-v']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

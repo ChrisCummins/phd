@@ -1,25 +1,20 @@
 """Unit tests for //labm8:sqlutil."""
 
 import pathlib
-import sys
-import tempfile
 import typing
 
 import pytest
 import sqlalchemy as sql
-from absl import app
+from absl import flags
 from sqlalchemy.ext import declarative
 
 from labm8 import pbutil
 from labm8 import sqlutil
+from labm8 import test
 from labm8.proto import test_protos_pb2
 
 
-@pytest.fixture(scope='function')
-def tempdir() -> pathlib.Path:
-  """A pytest fixture for a temporary directory."""
-  with tempfile.TemporaryDirectory(prefix='phd_') as d:
-    yield pathlib.Path(d)
+FLAGS = flags.FLAGS
 
 
 def test_CreateEngine_sqlite_not_found(tempdir: pathlib.Path):
@@ -180,11 +175,5 @@ def test_ProtoBackedMixin_FromFile(tempdir: pathlib.Path):
   assert row.number == 42
 
 
-def main(argv):
-  if len(argv) > 1:
-    raise app.UsageError('Unrecognized command line flags.')
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

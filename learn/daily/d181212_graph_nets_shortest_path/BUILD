@@ -15,8 +15,8 @@ py_test(
     srcs = ["graph_util_test.py"],
     deps = [
         ":graph_util",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -37,7 +37,7 @@ py_test(
     srcs = ["model_test.py"],
     deps = [
         ":model",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )

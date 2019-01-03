@@ -1,13 +1,12 @@
 """Unit tests for //deeplearning/clgen/preprocessors/clang.py."""
 import subprocess
-import sys
 
 import pytest
-from absl import app
 from absl import flags
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import clang
+from labm8 import test
 
 
 FLAGS = flags.FLAGS
@@ -310,11 +309,5 @@ def test_benchmark_CompileLlvmBytecode_c_hello_world(benchmark):
   benchmark(clang.CompileLlvmBytecode, HELLO_WORLD_C, '.c', [])
 
 
-def main(argv):
-  """Main entry point."""
-  del argv
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

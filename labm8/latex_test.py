@@ -1,10 +1,13 @@
 """Unit tests for //labm8:latex."""
-import sys
 
 import pytest
-from absl import app
+from absl import flags
 
 from labm8 import latex
+from labm8 import test
+
+
+FLAGS = flags.FLAGS
 
 
 # escape()
@@ -101,10 +104,5 @@ def test_table_bad_rows():
     latex.table((("foo", 1), ("bar", 2), ("car",)))
 
 
-def main(argv):  # pylint: disable=missing-docstring
-  del argv
-  sys.exit(pytest.main([__file__, '-v']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

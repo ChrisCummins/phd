@@ -1,17 +1,16 @@
 """Unit tests for ///cxx_test."""
 import pathlib
-import sys
 import tempfile
 
 import numpy as np
 import pytest
-from absl import app
 from absl import flags
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.corpuses import encoded
 from deeplearning.clgen.corpuses import preprocessed
+from labm8 import test
 
 
 FLAGS = flags.FLAGS
@@ -133,11 +132,5 @@ def test_EncodedContentFiles_empty_preprocessed_db(
       temp_db.Create(p, abc_atomizer, '\n\n')
 
 
-def main(argv):
-  """Main entry point."""
-  del argv
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

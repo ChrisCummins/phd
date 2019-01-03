@@ -14,8 +14,8 @@ py_test(
     deps = [
         ":conftest",
         "//datasets/me_db",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -25,7 +25,7 @@ py_test(
     deps = [
         ":conftest",
         "//datasets/me_db",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )

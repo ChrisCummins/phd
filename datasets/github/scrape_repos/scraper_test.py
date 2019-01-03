@@ -1,14 +1,18 @@
 """Tests for //datasets/github/scrape_repos:scraper."""
 import pathlib
-import sys
 import tempfile
 
 import pytest
 from absl import app
+from absl import flags
 
 from datasets.github.scrape_repos import scraper
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
 from labm8 import labdate
+from labm8 import test
+
+
+FLAGS = flags.FLAGS
 
 
 class MockNamedUser(object):
@@ -75,12 +79,5 @@ def test_main_unrecognized_arguments():
     scraper.main(['./scraper', '--unrecognized_argument'])
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError('Too many command-line arguments.')
-  sys.exit(pytest.main([__file__, '-v']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

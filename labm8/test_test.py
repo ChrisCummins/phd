@@ -8,6 +8,8 @@ import pytest
 from absl import logging
 
 from labm8 import test
+from absl import flags
+FLAGS = flags.FLAGS
 
 
 # The //:conftest is included implicitly when you depend on //labm8:test.
@@ -26,6 +28,7 @@ def test_tempdir_fixture_directory_is_empty(tempdir: pathlib.Path):
 # file.
 @pytest.fixture(scope='function')
 def tempdir() -> pathlib.Path:
+  """Override the tempdir fixture in //:conftest."""
   with tempfile.TemporaryDirectory(prefix='phd_fixture_override_') as d:
     yield pathlib.Path(d)
 

@@ -1,12 +1,14 @@
 """Unit tests for workspace.py."""
 import os
-import sys
 from tempfile import TemporaryDirectory
 
-import pytest
-from absl import app
+from absl import flags
 
+from labm8 import test
 from util.photolib import workspace
+
+
+FLAGS = flags.FLAGS
 
 
 def test_find_workspace_rootpath():
@@ -49,10 +51,5 @@ def test_get_workspace_relpath():
   assert workspace.get_workspace_relpath("/a/b", "/a") == "/"
 
 
-def main(argv):  # pylint: disable=missing-docstring
-  del argv
-  sys.exit(pytest.main([__file__, "-v"]))
-
-
 if __name__ == "__main__":
-  app.run(main)
+  test.Main()

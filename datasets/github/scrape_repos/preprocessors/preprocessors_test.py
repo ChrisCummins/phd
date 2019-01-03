@@ -1,14 +1,16 @@
 """Unit tests for //datasets/github/scrape_repos/preprocessors.py."""
 import pathlib
-import sys
 import typing
 
 import pytest
-from absl import app
-from absl import logging
+from absl import flags
 
 from datasets.github.scrape_repos.preprocessors import preprocessors
 from datasets.github.scrape_repos.preprocessors import public
+from labm8 import test
+
+
+FLAGS = flags.FLAGS
 
 
 def MakeFile(directory: pathlib.Path, relpath: str, contents: str) -> None:
@@ -131,13 +133,5 @@ def test_benchmark_GetPreprocessFunction_mock(benchmark):
             ':MockPreprocessor')
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError('Unrecognized command line flags.')
-  logging.set_verbosity(logging.DEBUG)
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

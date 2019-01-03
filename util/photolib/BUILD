@@ -80,8 +80,8 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":linters",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -93,7 +93,7 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":workspace",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )

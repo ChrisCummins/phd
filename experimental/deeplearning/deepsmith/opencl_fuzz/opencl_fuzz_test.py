@@ -1,13 +1,11 @@
 """Unit tests for //experimental/deeplearning/deepsmith/opencl_fuzz/opencl_fuzz.py."""
 
 import pathlib
-import sys
 import tempfile
 import typing
 
 import pytest
 from absl import app
-from absl import flags
 
 from deeplearning.deepsmith.difftests import difftests
 from deeplearning.deepsmith.harnesses import cl_launcher
@@ -18,8 +16,8 @@ from deeplearning.deepsmith.proto import harness_pb2
 from experimental.deeplearning.deepsmith.opencl_fuzz import opencl_fuzz
 from gpu.cldrive import env
 from labm8 import pbutil
-
-
+from labm8 import test
+from absl import flags
 FLAGS = flags.FLAGS
 
 
@@ -507,13 +505,5 @@ def test_UnpackResult_clgen_result(clgen_result: deepsmith_pb2.Result):
   assert (result_dir / 'driver.c').is_file()
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  flags.FLAGS(['argv[0]', '-v=1'])
-  app.run(main)
+  test.Main()

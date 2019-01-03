@@ -36,6 +36,8 @@ def pytest_collection_modifyitems(config, items):
   slow_skip_marker = pytest.mark.skip(reason='Use --notest_skip_slow to run')
 
   for item in items:
+    # TODO(cec): Skip benchmarks by default.
+
     # Skip tests if they been marked for an incompatible platform. To mark a
     # test for a platform, wrap the test function with a decorator. Example:
     #

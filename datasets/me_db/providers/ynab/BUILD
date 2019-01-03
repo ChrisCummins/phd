@@ -46,7 +46,7 @@ py_test(
         ":make_dataset",
         ":ynab",
         "//datasets/me_db:me_proto_pb2",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )

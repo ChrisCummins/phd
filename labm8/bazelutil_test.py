@@ -1,19 +1,16 @@
 """Unit tests for //labm8/bazelutil.py."""
 import pathlib
-import sys
 import tempfile
 
 import pytest
-from absl import app
+from absl import flags
 
 from labm8 import bazelutil
 from labm8 import fs
+from labm8 import test
 
 
-@pytest.fixture(scope='function')
-def tempdir() -> pathlib.Path:
-  with tempfile.TemporaryDirectory(prefix='phd_') as d:
-    yield pathlib.Path(d)
+FLAGS = flags.FLAGS
 
 
 # IsBazelSandbox() tests.
@@ -92,11 +89,5 @@ def test_DataArchive_path_not_found(tempdir: pathlib.Path):
   assert str(e_ctx.value).startswith("No such file or directory: '")
 
 
-def main(argv):
-  if len(argv) > 1:
-    raise app.UsageError('Unrecognized command line flags.')
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

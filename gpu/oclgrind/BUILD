@@ -26,7 +26,7 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":oclgrind",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )

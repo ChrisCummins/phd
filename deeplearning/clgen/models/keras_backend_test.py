@@ -1,10 +1,8 @@
 """Unit tests for //deeplearning/clgen/models/keras_backend.py."""
-import sys
 
 import checksumdir
 import numpy as np
 import pytest
-from absl import app
 
 from deeplearning.clgen.models import keras_backend
 from deeplearning.clgen.models import models
@@ -12,6 +10,9 @@ from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import telemetry_pb2
 from labm8 import crypto
 from labm8 import pbutil
+from labm8 import test
+from absl import flags
+FLAGS = flags.FLAGS
 
 
 class MockSampler(object):
@@ -203,12 +204,5 @@ def test_benchmark_KerasBackend_Train_already_trained(
   benchmark(m.Train)
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError('Unrecognized command line flags.')
-  sys.exit(pytest.main([__file__, '-v']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

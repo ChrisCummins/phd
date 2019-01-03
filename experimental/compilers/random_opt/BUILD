@@ -26,8 +26,8 @@ py_test(
     deps = [
         ":implementation",
         "//compilers/llvm:clang",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -52,9 +52,9 @@ py_test(
     srcs = ["environments_test.py"],
     deps = [
         ":environments",
+        "//labm8:test",
         "//third_party/py/absl",
         "//third_party/py/gym",
-        "//third_party/py/pytest",
     ],
 )
 

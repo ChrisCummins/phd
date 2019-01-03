@@ -1,25 +1,14 @@
 """Unit tests for //experimental/compilers/random_opt/implementation.py."""
 import pathlib
-import sys
-import tempfile
-import typing
 
-import pytest
-from absl import app
 from absl import flags
 
 from compilers.llvm import clang
 from experimental.compilers.random_opt import implementation
+from labm8 import test
 
 
 FLAGS = flags.FLAGS
-
-
-@pytest.fixture(scope='function')
-def tempdir() -> pathlib.Path:
-  """Test fixture which returns a temporary directory."""
-  with tempfile.TemporaryDirectory(prefix='env_test_') as d:
-    yield pathlib.Path(d)
 
 
 def test_BytecodesAreEqual(tempdir: pathlib.Path):
@@ -79,13 +68,5 @@ int main(int argc, char** argv) {
   assert implementation.BinariesAreEqual(a_opt, b_opt)
 
 
-def main(argv: typing.List[str]):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  flags.FLAGS(['argv[0]', '-v=1'])
-  app.run(main)
+  test.Main()

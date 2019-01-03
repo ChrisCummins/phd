@@ -1,14 +1,17 @@
 """Unit tests for //labm8:fs."""
 import os
 import pathlib
-import sys
 import tempfile
 
 import pytest
-from absl import app
+from absl import flags
 
 from labm8 import fs
 from labm8 import system
+from labm8 import test
+
+
+FLAGS = flags.FLAGS
 
 
 # path()
@@ -478,10 +481,5 @@ def test_chdir_file_argument():
     assert f.name in str(e_info)
 
 
-def main(argv):  # pylint: disable=missing-docstring
-  del argv
-  sys.exit(pytest.main([__file__, '-v']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

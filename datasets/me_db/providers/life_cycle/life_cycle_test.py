@@ -1,20 +1,16 @@
 """Unit tests for //datasets/me_db/providers/life_cycle."""
 
 import pathlib
-import sys
 import tempfile
 import time
-import typing
 from concurrent import futures
 
 import pytest
-from absl import app
-from absl import flags
 
 from datasets.me_db.providers.life_cycle import life_cycle
 from datasets.me_db.providers.life_cycle import make_dataset
-
-
+from labm8 import test
+from absl import flags
 FLAGS = flags.FLAGS
 
 
@@ -68,13 +64,5 @@ def test_ProcessInbox_future(temp_inbox: pathlib.Path):
   assert len(series_collection.series) == 2
 
 
-def main(argv: typing.List[str]):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  flags.FLAGS(['argv[0]', '-v=1'])
-  app.run(main)
+  test.Main()

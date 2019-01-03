@@ -35,8 +35,8 @@ py_test(
         ":builders",
         "//deeplearning/clgen:conftest",
         "//deeplearning/clgen/proto:model_py_pb2",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -61,8 +61,8 @@ py_test(
         ":data_generators",
         "//deeplearning/clgen:conftest",
         "//deeplearning/clgen/proto:model_py_pb2",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -104,8 +104,8 @@ py_test(
         "//deeplearning/clgen/proto:telemetry_py_pb2",
         "//labm8:crypto",
         "//labm8:fs",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -170,8 +170,8 @@ py_test(
         "//deeplearning/clgen/proto:telemetry_py_pb2",
         "//labm8:crypto",
         "//labm8:fs",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -214,7 +214,7 @@ py_test(
         "//deeplearning/clgen/proto:telemetry_py_pb2",
         "//labm8:crypto",
         "//labm8:fs",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )

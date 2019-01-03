@@ -4,14 +4,14 @@ import typing
 
 import pytest
 from absl import app
-from absl import flags
 from absl import logging
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import preprocessors
-
-
+from labm8 import test
+from absl import flags
 FLAGS = flags.FLAGS
+
 
 # A full preprocessing pipeline for the C++ programming language.
 CXX_PREPROCESSORS = ['deeplearning.clgen.preprocessors.cxx:ClangPreprocess',
@@ -105,13 +105,5 @@ def test_benchmark_opencl_invalid_syntax(benchmark):
             'inva@asd!!!')
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError('Unrecognized command line flags.')
-  logging.set_verbosity(logging.DEBUG)
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

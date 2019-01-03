@@ -1,14 +1,13 @@
 """Unit tests for //labm8/hashcache.py."""
 import pathlib
-import sys
 import tempfile
 import time
 
 import pytest
-from absl import app
 from absl import flags
 
 from labm8 import hashcache
+from labm8 import test
 
 
 FLAGS = flags.FLAGS
@@ -143,12 +142,5 @@ def test_HashCache_GetHash_modified_file(database_path, hash_fn):
     assert hash_1 != hash_2
 
 
-def main(argv):
-  """Main entry point."""
-  del argv
-  flags.FLAGS(['argv[0]', '-v=1'])
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

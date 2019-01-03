@@ -1,13 +1,14 @@
 """Unit tests for //deeplearning/clgen/atomizers.py."""
 import pathlib
-import sys
 import tempfile
 
 import pytest
-from absl import app
 
 import deeplearning.clgen.errors
 from deeplearning.clgen.corpuses import atomizers
+from labm8 import test
+from absl import flags
+FLAGS = flags.FLAGS
 
 
 # The set of multichar tokens for the OpenCL programming language.
@@ -170,12 +171,5 @@ __kernel void A(__global float* a, __global float* b, const int c) {
   assert c.vocab_size == len(tokens)
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError('Unrecognized command line flags.')
-  sys.exit(pytest.main([__file__, '-v']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

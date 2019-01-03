@@ -1,15 +1,11 @@
 """Unit tests for //deeplearning/deeptune/opencl/heterogeneous_mapping:utils."""
-import sys
-import typing
 
 import pytest
-from absl import app
-from absl import flags
 
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.deeptune.opencl.heterogeneous_mapping import utils
-
-
+from labm8 import test
+from absl import flags
 FLAGS = flags.FLAGS
 
 
@@ -37,13 +33,5 @@ def test_AddClassificationTargetToDataFrame_ocl_dataset_1hot(gpu_name: str):
     assert sum(onehot) == 1
 
 
-def main(argv: typing.List[str]):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  flags.FLAGS(['argv[0]', '-v=1'])
-  app.run(main)
+  test.Main()

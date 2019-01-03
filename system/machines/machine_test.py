@@ -1,12 +1,10 @@
 """Unit tests for //system/machines:machine.py."""
-import sys
 import tempfile
-import typing
 
 import pytest
-from absl import app
 from absl import flags
 
+from labm8 import test
 from system.machines import machine
 from system.machines.proto import machine_spec_pb2
 
@@ -51,13 +49,5 @@ def test_MirroredDirectory_not_found(test_machine: machine.Machine):
   assert str(e_ctx.value) == "Cannot find mirrored directory 'not_found'"
 
 
-def main(argv: typing.List[str]):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  flags.FLAGS(['argv[0]', '-v=1'])
-  app.run(main)
+  test.Main()

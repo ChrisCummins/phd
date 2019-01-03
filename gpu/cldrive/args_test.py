@@ -1,10 +1,13 @@
 """Unit tests for //gpu/cldrive/args.py."""
-import sys
 
 import pytest
-from absl import app
+from absl import flags
 
 from gpu.cldrive import args
+from labm8 import test
+
+
+FLAGS = flags.FLAGS
 
 
 # GetKernelArguments() tests.
@@ -205,11 +208,5 @@ def test_GetKernelName_syntax_error():
   assert "Syntax error: ':1:1: before: !'" == str(e_ctx.value)
 
 
-def main(argv):  # pylint: disable=missing-docstring
-  del argv
-  sys.exit(pytest.main(
-      [args.__file__, __file__, "-vv", "--doctest-modules"]))
-
-
 if __name__ == "__main__":
-  app.run(main)
+  test.Main()

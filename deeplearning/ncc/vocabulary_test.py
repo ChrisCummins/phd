@@ -1,16 +1,13 @@
 """Unit tests for //deeplearning/ncc:vocabulary."""
-import sys
-import typing
 
 import pytest
-from absl import app
-from absl import flags
 
 from deeplearning.ncc import vocabulary
 from labm8 import bazelutil
-
-
+from labm8 import test
+from absl import flags
 FLAGS = flags.FLAGS
+
 
 VOCABULARY_PATH = bazelutil.DataPath(
     'phd/deeplearning/ncc/published_results/vocabulary.zip')
@@ -67,13 +64,5 @@ def test_VocabularyZipFile_unknown_token_index_value(
   assert vocab.unknown_token_index > 0
 
 
-def main(argv: typing.List[str]):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  flags.FLAGS(['argv[0]', '-v=1'])
-  app.run(main)
+  test.Main()

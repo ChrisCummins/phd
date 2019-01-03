@@ -13,7 +13,7 @@ py_test(
     srcs = ["json_to_acm_proceedings_test.py"],
     deps = [
         ":json_to_acm_proceedings",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )

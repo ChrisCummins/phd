@@ -1,11 +1,14 @@
 """Unit tests for //labm8:labmath."""
 import math
-import sys
 
 import pytest
-from absl import app
+from absl import flags
 
 from labm8 import labmath
+from labm8 import test
+
+
+FLAGS = flags.FLAGS
 
 
 def test_ceil():
@@ -191,10 +194,5 @@ def test_confinterval_error_only():
       0.47140452079103223)
 
 
-def main(argv):  # pylint: disable=missing-docstring
-  del argv
-  sys.exit(pytest.main([__file__, '-v']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

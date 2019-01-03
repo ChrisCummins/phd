@@ -23,8 +23,8 @@ py_test(
     srcs = ["deep_q_doom_test.py"],
     deps = [
         ":deep_q_doom",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -43,7 +43,7 @@ py_test(
     srcs = ["q_learning_frozen_lake_test.py"],
     deps = [
         ":q_learning_frozen_lake",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )

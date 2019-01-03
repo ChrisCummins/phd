@@ -1,25 +1,16 @@
 """Unit tests for //util/freefocus/sql.py"""
 import pathlib
-import sys
-import tempfile
-import typing
 
 import pytest
-from absl import app
 from absl import flags
 
 from labm8 import sqlutil
+from labm8 import test
 from util.freefocus import freefocus_pb2
 from util.freefocus import sql
 
 
 FLAGS = flags.FLAGS
-
-
-@pytest.fixture(scope='function')
-def tempdir() -> pathlib.Path:
-  with tempfile.TemporaryDirectory(prefix='phd_') as d:
-    yield pathlib.Path(d)
 
 
 @pytest.fixture(scope='function')
@@ -49,13 +40,5 @@ def test_Person_CreateFromProto(session: sqlutil.Session):
   assert True
 
 
-def main(argv: typing.List[str]):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  flags.FLAGS(['argv[0]', '-v=1'])
-  app.run(main)
+  test.Main()

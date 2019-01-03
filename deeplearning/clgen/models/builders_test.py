@@ -1,15 +1,12 @@
 """Unit tests for //deeplearning/clgen/models/builders.py."""
-import sys
 
 import pytest
-from absl import app
-from absl import flags
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.models import builders
 from deeplearning.clgen.proto import model_pb2
-
-
+from labm8 import test
+from absl import flags
 FLAGS = flags.FLAGS
 
 
@@ -262,11 +259,5 @@ def test_BuildOptimizer_rmsprop():
   assert pytest.approx(optimizer_config['epsilon']) == 1e-7
 
 
-def main(argv):
-  """Main entry point."""
-  del argv
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

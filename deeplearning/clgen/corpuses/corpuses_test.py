@@ -1,17 +1,16 @@
 """Unit tests for //deeplearning/clgen/corpus.py."""
 import os
 import pathlib
-import sys
 import tempfile
 
 import pytest
-from absl import app
 from absl import flags
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import corpuses
 from deeplearning.clgen.corpuses import preprocessed
 from deeplearning.clgen.proto import corpus_pb2
+from labm8 import test
 
 
 FLAGS = flags.FLAGS
@@ -356,12 +355,5 @@ def test_Corpus_preprocessed_symlink(clgen_cache_dir, abc_corpus_config):
       str(pathlib.Path(c.preprocessed.url[len('sqlite:///'):]).parent))
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError('Unrecognized command line flags.')
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

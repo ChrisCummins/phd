@@ -30,8 +30,8 @@ py_test(
     srcs = ["opencl_device_mapping_dataset_test.py"],
     deps = [
         ":opencl_device_mapping_dataset",
+        "//labm8:test",
         "//third_party/py/absl",
         "//third_party/py/numpy",
-        "//third_party/py/pytest",
     ],
 )

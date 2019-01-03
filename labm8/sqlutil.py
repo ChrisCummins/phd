@@ -218,8 +218,8 @@ def CreateEngine(url: str, must_exist: bool = False) -> sql.engine.Engine:
     # Read the contents of the file, ignoring lines starting with '#'.
     with open(path) as f:
       file_url = '\n'.join(
-        x for x in f.read().split('\n')
-        if not x.lstrip().startswith('#')).strip()
+          x for x in f.read().split('\n')
+          if not x.lstrip().startswith('#')).strip()
 
     # Append the suffix.
     file_url += suffix

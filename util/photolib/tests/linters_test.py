@@ -1,10 +1,13 @@
 """Unit tests for linters.py."""
-import sys
 
 import pytest
-from absl import app
+from absl import flags
 
+from labm8 import test
 from util.photolib import linters
+
+
+FLAGS = flags.FLAGS
 
 
 def test_error():
@@ -112,10 +115,5 @@ def test_GalleryFilename():
   bad_name("photos-2")
 
 
-def main(argv):  # pylint: disable=missing-docstring
-  del argv
-  sys.exit(pytest.main([__file__, "-v"]))
-
-
 if __name__ == "__main__":
-  app.run(main)
+  test.Main()

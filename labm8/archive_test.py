@@ -1,25 +1,14 @@
 """Unit tests for //labm8:archive."""
 import pathlib
 import re
-import sys
-import tempfile
-import typing
 import zipfile
 
 import pytest
-from absl import app
-from absl import flags
 
 from labm8 import archive
-
-
+from labm8 import test
+from absl import flags
 FLAGS = flags.FLAGS
-
-
-@pytest.fixture(scope='function')
-def tempdir() -> pathlib.Path:
-  with tempfile.TemporaryDirectory(prefix='phd_') as d:
-    yield pathlib.Path(d)
 
 
 def Touch(path: pathlib.Path) -> pathlib.Path:
@@ -116,13 +105,5 @@ def test_Archive_single_file_zip_ExtractAll_parents(tempdir: pathlib.Path):
     assert f.read() == "Hello, world!"
 
 
-def main(argv: typing.List[str]):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  flags.FLAGS(['argv[0]', '-v=1'])
-  app.run(main)
+  test.Main()

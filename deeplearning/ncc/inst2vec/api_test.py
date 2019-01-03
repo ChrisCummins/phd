@@ -1,17 +1,14 @@
 """Unit tests for //deeplearning/ncc/inst2vec:api."""
 import pathlib
-import sys
-import tempfile
 
 import pytest
-from absl import app
-from absl import flags
 
 from deeplearning.ncc import vocabulary
 from labm8 import bazelutil
-
-
+from labm8 import test
+from absl import flags
 FLAGS = flags.FLAGS
+
 
 VOCABULARY_PATH = bazelutil.DataPath(
     'phd/deeplearning/ncc/published_results/vocabulary.zip')
@@ -69,13 +66,6 @@ attributes #3 = { nounwind readnone }
 
 
 @pytest.fixture(scope='function')
-def tempdir() -> pathlib.Path:
-  """A test fixture which yields a temporary directory."""
-  with tempfile.TemporaryDirectory(prefix='phd_') as d:
-    yield pathlib.Path(d)
-
-
-@pytest.fixture(scope='function')
 def llvm_ir_dir(tempdir: pathlib.Path) -> str:
   """A test fixture which returns the path to a directory containing LLVM IR."""
   (tempdir / 'llvm_ir').mkdir()
@@ -96,13 +86,5 @@ def test_TODO():
   assert True
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  flags.FLAGS(['argv[0]', '-v=1'])
-  app.run(main)
+  test.Main()

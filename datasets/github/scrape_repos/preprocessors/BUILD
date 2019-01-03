@@ -4,7 +4,7 @@ py_library(
     name = "conftest",
     srcs = ["conftest.py"],
     deps = [
-        "//third_party/py/pytest",
+        "//labm8:test",
     ],
 )
 
@@ -33,8 +33,8 @@ py_test(
     deps = [
         ":conftest",
         ":extractors",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -67,8 +67,8 @@ py_test(
     deps = [
         ":conftest",
         ":inliners",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -120,8 +120,8 @@ py_test(
         ":conftest",
         ":preprocessors",
         ":public",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -144,7 +144,7 @@ py_test(
     deps = [
         ":conftest",
         ":public",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )

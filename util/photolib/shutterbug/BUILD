@@ -13,8 +13,8 @@ py_test(
     srcs = ["shutterbug_test.py"],
     deps = [
         ":shutterbug",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 

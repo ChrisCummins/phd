@@ -1,16 +1,15 @@
 """Unit tests for //labm8/logutil.py."""
 import datetime
 import pathlib
-import sys
 import tempfile
 
 import pytest
-from absl import app
 from absl import flags
 from absl import logging
 
 from labm8 import labdate
 from labm8 import logutil
+from labm8 import test
 from labm8.proto import logging_pb2
 
 
@@ -222,12 +221,5 @@ def test_TeeLogsToFile_contextmanager(capsys):
     assert lines[2].endswith('This is not going in a file')
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments '{}'".format(', '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

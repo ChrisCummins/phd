@@ -19,8 +19,8 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":atomizers",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -63,8 +63,8 @@ py_test(
         "//deeplearning/clgen/preprocessors:opencl",
         "//deeplearning/clgen/proto:corpus_py_pb2",
         "//labm8:fs",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -94,8 +94,8 @@ py_test(
         ":encoded",
         ":preprocessed",
         "//deeplearning/clgen:errors",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 

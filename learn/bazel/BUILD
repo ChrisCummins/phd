@@ -29,8 +29,8 @@ py_test(
     name = "tensorflow_test",
     srcs = ["tensorflow_test.py"],
     deps = [
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
         "//third_party/py/tensorflow",
     ],
 )

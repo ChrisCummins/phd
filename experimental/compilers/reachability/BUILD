@@ -19,9 +19,9 @@ py_test(
     srcs = ["control_flow_graph_test.py"],
     deps = [
         ":control_flow_graph",
+        "//labm8:test",
         "//third_party/py/absl",
         "//third_party/py/networkx",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -42,9 +42,9 @@ py_test(
     srcs = ["control_flow_graph_generator_test.py"],
     deps = [
         ":control_flow_graph_generator",
+        "//labm8:test",
         "//third_party/py/absl",
         "//third_party/py/networkx",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -73,8 +73,8 @@ py_test(
     deps = [
         ":cfg_datasets",
         "//labm8:system",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -124,8 +124,8 @@ py_test(
     deps = [
         ":llvm_util",
         "//compilers/llvm:opt",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 

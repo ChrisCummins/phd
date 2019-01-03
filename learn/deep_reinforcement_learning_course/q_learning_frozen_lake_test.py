@@ -1,12 +1,9 @@
 """Unit tests for :q_learning_frozen_lake.py."""
-import sys
-import typing
 
 import gym
-import pytest
-from absl import app
 from absl import flags
 
+from labm8 import test
 from learn.deep_reinforcement_learning_course import q_learning_frozen_lake
 
 
@@ -22,13 +19,5 @@ def test_Train():
   assert q_table.shape == (16, 4)
 
 
-def main(argv: typing.List[str]):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  flags.FLAGS(['argv[0]', '-v=1'])
-  app.run(main)
+  test.Main()

@@ -1,10 +1,7 @@
 """Unit tests for //TODO:${PACKAGE_NAME}/${NAME}."""
-import sys
-import typing
-
-import pytest
-from absl import app
 from absl import flags
+
+from labm8 import test
 
 
 FLAGS = flags.FLAGS
@@ -12,16 +9,8 @@ FLAGS = flags.FLAGS
 
 def test_TODO():
   """Short summary of test."""
-  assert True
-
-
-def main(argv: typing.List[str]):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
+  assert False
 
 
 if __name__ == '__main__':
-  flags.FLAGS(['argv[0]', '-v=1'])
-  app.run(main)
+  test.Main()

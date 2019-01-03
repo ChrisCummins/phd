@@ -26,8 +26,8 @@ py_test(
     deps = [
         ":clang",
         ":llvm",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -57,8 +57,8 @@ py_test(
     deps = [
         ":clang_format",
         ":llvm",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -108,8 +108,8 @@ py_test(
     deps = [
         ":llvm",
         ":llvm_link",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -148,8 +148,8 @@ py_test(
     deps = [
         ":llvm",
         ":opt",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -170,7 +170,7 @@ py_test(
     deps = [
         ":llvm",
         ":util",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )

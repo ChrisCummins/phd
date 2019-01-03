@@ -1,10 +1,13 @@
 """Unit tests for //labm8:fmt."""
-import sys
 
 import pytest
-from absl import app
+from absl import flags
 
 from labm8 import fmt
+from labm8 import test
+
+
+FLAGS = flags.FLAGS
 
 
 def test_IndentList_zero():
@@ -49,10 +52,5 @@ def test_table_bad_rows():
     fmt.table((("foo", 1), ("bar", 2), ("car",)))
 
 
-def main(argv):  # pylint: disable=missing-docstring
-  del argv
-  sys.exit(pytest.main([__file__, '-v']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

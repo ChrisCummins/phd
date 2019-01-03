@@ -1,14 +1,16 @@
 """Tests for //deeplearning/deepsmith:testbed."""
 import hashlib
 import random
-import sys
 
-import pytest
-from absl import app
+from absl import flags
 
 import deeplearning.deepsmith.testbed
 import deeplearning.deepsmith.toolchain
 from deeplearning.deepsmith.proto import deepsmith_pb2
+from labm8 import test
+
+
+FLAGS = flags.FLAGS
 
 
 def test_Testbed_ToProto():
@@ -287,10 +289,5 @@ def test_benchmark_Testbed_GetOrAdd_existing(session, benchmark):
   benchmark(_AddExistingTestbed, session)
 
 
-def main(argv):  # pylint: disable=missing-docstring
-  del argv
-  sys.exit(pytest.main([__file__, '-v']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

@@ -1,9 +1,7 @@
 """Tests for //deeplearning/deepsmith:testcase."""
 import random
-import sys
 
-import pytest
-from absl import app
+from absl import flags
 
 import deeplearning.deepsmith.client
 import deeplearning.deepsmith.generator
@@ -12,6 +10,10 @@ import deeplearning.deepsmith.profiling_event
 import deeplearning.deepsmith.testcase
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from labm8 import labdate
+from labm8 import test
+
+
+FLAGS = flags.FLAGS
 
 
 def test_Testcase_ToProto():
@@ -317,10 +319,5 @@ def test_benchmark_Generator_GetOrAdd_existing(session, benchmark):
   benchmark(_AddExistingTestcase, session)
 
 
-def main(argv):  # pylint: disable=missing-docstring
-  del argv
-  sys.exit(pytest.main([__file__, '-v']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

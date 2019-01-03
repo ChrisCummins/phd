@@ -1,10 +1,13 @@
 """Unit tests for //labm8:fmt."""
-import sys
 
 import pytest
-from absl import app
+from absl import flags
 
 from labm8 import labtypes
+from labm8 import test
+
+
+FLAGS = flags.FLAGS
 
 
 # is_str()
@@ -155,10 +158,5 @@ def test_SetDiff_input_ranges():
   assert labtypes.SetDiff(range(3), range(4)) == {3}
 
 
-def main(argv):  # pylint: disable=missing-docstring
-  del argv
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

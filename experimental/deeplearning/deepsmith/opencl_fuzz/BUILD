@@ -44,8 +44,8 @@ py_test(
     deps = [
         ":opencl_fuzz",
         "//labm8:pbutil",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 

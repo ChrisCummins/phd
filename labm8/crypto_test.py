@@ -1,10 +1,12 @@
 """Unit tests for //labm8:crypto."""
-import sys
 
-import pytest
-from absl import app
+from absl import flags
 
 from labm8 import crypto
+from labm8 import test
+
+
+FLAGS = flags.FLAGS
 
 
 # sha1()
@@ -112,10 +114,5 @@ def test_sha256_file_hello_world():
           crypto.sha256_file("labm8/data/test/hello_world"))
 
 
-def main(argv):  # pylint: disable=missing-docstring
-  del argv
-  sys.exit(pytest.main([__file__, '-v']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

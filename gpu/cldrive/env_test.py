@@ -1,10 +1,12 @@
 """Unit tests for //gpu/cldrive/env.py."""
-import sys
 
-import pytest
-from absl import app
+from absl import flags
 
 from gpu.cldrive import env
+from labm8 import test
+
+
+FLAGS = flags.FLAGS
 
 
 def test_OclgrindOpenCLEnvironment_Exec_version():
@@ -28,12 +30,5 @@ def test_OclgrindOpenCLEnvironment_name():
   assert 'Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2' == env_.name
 
 
-def main(argv):  # pylint: disable=missing-docstring
-  """Main entry point."""
-  del argv
-  sys.exit(pytest.main(
-      [env.__file__, __file__, "-vv", "--doctest-modules"]))
-
-
 if __name__ == "__main__":
-  app.run(main)
+  test.Main()

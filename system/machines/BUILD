@@ -26,9 +26,9 @@ py_test(
     srcs = ["machine_test.py"],
     deps = [
         ":machine",
+        "//labm8:test",
         "//system/machines/proto:machine_spec_pb2_py",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -49,7 +49,7 @@ py_test(
     deps = [
         ":mirrored_directory",
         "//labm8:fs",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )

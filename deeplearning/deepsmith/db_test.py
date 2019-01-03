@@ -1,11 +1,14 @@
 """Unit tests for :db."""
-import sys
 
 import pytest
-from absl import app
+from absl import flags
 
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith import toolchain
+from labm8 import test
+
+
+FLAGS = flags.FLAGS
 
 
 def HasFieldMock(self, name):
@@ -113,10 +116,5 @@ def test_MakeEngine_postgresql_database_quote():
     db.MakeEngine(config)
 
 
-def main(argv):  # pylint: disable=missing-docstring
-  del argv
-  sys.exit(pytest.main([__file__, '-v']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

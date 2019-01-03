@@ -20,7 +20,7 @@ py_test(
         "//deeplearning/clgen/proto:clgen_py_pb2",
         "//labm8:bazelutil",
         "//labm8:pbutil",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )

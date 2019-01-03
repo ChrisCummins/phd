@@ -57,8 +57,8 @@ py_test(
         ":life_cycle",
         ":make_dataset",
         "//datasets/me_db:me_proto_pb2",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )
 
@@ -76,7 +76,7 @@ py_test(
     srcs = ["make_dataset_test.py"],
     deps = [
         ":make_dataset",
+        "//labm8:test",
         "//third_party/py/absl",
-        "//third_party/py/pytest",
     ],
 )

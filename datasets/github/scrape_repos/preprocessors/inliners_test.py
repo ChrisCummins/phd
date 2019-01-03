@@ -1,23 +1,10 @@
 """Tests for //datasets/github.scrape_repos.preprocessors/inliners_test.py."""
 import pathlib
-import sys
-import tempfile
-
-import pytest
-from absl import app
-from absl import flags
 
 from datasets.github.scrape_repos.preprocessors import inliners
-
-
+from labm8 import test
+from absl import flags
 FLAGS = flags.FLAGS
-
-
-@pytest.fixture(scope='function')
-def tempdir() -> pathlib.Path:
-  """Test fixture for an empty temporary directory."""
-  with tempfile.TemporaryDirectory() as d:
-    yield pathlib.Path(d)
 
 
 def MakeFile(directory: pathlib.Path, relpath: str, contents: str):
@@ -157,13 +144,5 @@ def test_GetLibCxxHeaders():
   assert 'string' in headers
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  flags.FLAGS(['argv[0]', '-v=1'])
-  app.run(main)
+  test.Main()

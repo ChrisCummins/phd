@@ -1,19 +1,15 @@
 """Unit tests for //datasets/me_db/providers/life_cycle:make_dataset."""
 import csv
 import pathlib
-import sys
 import tempfile
 import time
-import typing
 import zipfile
 
 import pytest
-from absl import app
-from absl import flags
 
 from datasets.me_db.providers.life_cycle import make_dataset
-
-
+from labm8 import test
+from absl import flags
 FLAGS = flags.FLAGS
 
 
@@ -95,13 +91,5 @@ def test_RandomDatasetGenerator_SampleZip(temp_dir: pathlib.Path):
     assert len(row) == 8
 
 
-def main(argv: typing.List[str]):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  flags.FLAGS(['argv[0]', '-v=1'])
-  app.run(main)
+  test.Main()

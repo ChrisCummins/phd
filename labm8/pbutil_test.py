@@ -1,26 +1,21 @@
 """Unit tests for //labm8:pbutil."""
 import pathlib
-import sys
 import tempfile
 
 import pytest
-from absl import app
+from absl import flags
 
 from labm8 import pbutil
+from labm8 import test
 from labm8.proto import test_protos_pb2
 
+
+FLAGS = flags.FLAGS
 
 # A list of all of the filename suffixes to test each function with.
 SUFFIXES_TO_TEST = [
   '', '.gz', '.txt', '.txt.gz', '.pbtxt', '.pbtxt.gz', '.json', '.json.gz',
   '.unknown-suffix', '.unknown-suffix.gz']
-
-
-@pytest.fixture(scope='function')
-def tempdir() -> pathlib.Path:
-  """A pytest fixture for a temporary directory."""
-  with tempfile.TemporaryDirectory(prefix='phd_') as d:
-    yield pathlib.Path(d)
 
 
 # ToFile() tests.
@@ -339,10 +334,5 @@ def test_ProtoBackedMixin_FromProtoFile(suffix: str, tempdir: pathlib.Path):
   assert instance.number == 42
 
 
-def main(argv):
-  del argv
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

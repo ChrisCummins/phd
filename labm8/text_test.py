@@ -1,10 +1,13 @@
 """Unit tests for //labm8:text."""
-import sys
 
 import pytest
-from absl import app
+from absl import flags
 
+from labm8 import test
 from labm8 import text
+
+
+FLAGS = flags.FLAGS
 
 
 # get_substring_idxs()
@@ -47,10 +50,5 @@ def test_diff():
   assert (1 / 3) == text.diff("123", "1 3")
 
 
-def main(argv):  # pylint: disable=missing-docstring
-  del argv
-  sys.exit(pytest.main([__file__, '-v']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

@@ -1,13 +1,11 @@
 """Unit tests for //util/photolib/shutterbug/shutterbug.py."""
 import pathlib
-import sys
 import tempfile
-import typing
 
 import pytest
-from absl import app
 from absl import flags
 
+from labm8 import test
 from util.photolib.shutterbug import shutterbug
 
 
@@ -15,12 +13,6 @@ FLAGS = flags.FLAGS
 
 
 # Test fixtures.
-
-@pytest.fixture(scope='function')
-def tempdir() -> pathlib.Path:
-  with tempfile.TemporaryDirectory(prefix='phd_') as d:
-    yield pathlib.Path(d)
-
 
 @pytest.fixture(scope='function')
 def photodir(tempdir: pathlib.Path) -> pathlib.Path:
@@ -90,13 +82,5 @@ def test_end_to_end(tempdir: pathlib.Path, photodir: pathlib.Path):
     _AssertIsPhotoDir(out_dir)
 
 
-def main(argv: typing.List[str]):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  flags.FLAGS(['argv[0]', '-v=1'])
-  app.run(main)
+  test.Main()

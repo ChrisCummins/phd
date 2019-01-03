@@ -1,11 +1,14 @@
 """Unit tests for //labm8:make."""
-import sys
 
 import pytest
-from absl import app
+from absl import flags
 
 from labm8 import fs
 from labm8 import make
+from labm8 import test
+
+
+FLAGS = flags.FLAGS
 
 
 # make()
@@ -46,10 +49,5 @@ def test_make_clean():
   fs.cdpop()
 
 
-def main(argv):  # pylint: disable=missing-docstring
-  del argv
-  sys.exit(pytest.main([__file__, '-v']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

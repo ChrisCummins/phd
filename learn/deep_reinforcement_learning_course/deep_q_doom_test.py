@@ -1,12 +1,9 @@
 """Unit tests for //learn/deep_reinforcement_learning_course/deep_q_doom.py."""
 import random
-import sys
-import typing
 
-import pytest
-from absl import app
 from absl import flags
 
+from labm8 import test
 from learn.deep_reinforcement_learning_course import deep_q_doom
 
 
@@ -31,13 +28,5 @@ def test_environment():
   game.close()
 
 
-def main(argv: typing.List[str]):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  flags.FLAGS(['argv[0]', '-v=1'])
-  app.run(main)
+  test.Main()
