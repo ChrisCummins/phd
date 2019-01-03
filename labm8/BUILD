@@ -22,7 +22,7 @@ py_test(
     srcs = ["archive_test.py"],
     deps = [
         ":archive",
-        "//labm8:test",
+        ":test",
         "//third_party/py/absl",
     ],
 )
@@ -47,7 +47,7 @@ py_test(
     deps = [
         ":bazelutil",
         ":fs",
-        "//labm8:test",
+        ":test",
         "//third_party/py/absl",
     ],
 )
@@ -73,7 +73,7 @@ py_test(
     deps = [
         ":cache",
         ":fs",
-        "//labm8:test",
+        ":test",
         "//third_party/py/absl",
     ],
 )
@@ -96,7 +96,7 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":crypto",
-        "//labm8:test",
+        ":test",
         "//third_party/py/absl",
     ],
 )
@@ -134,7 +134,7 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":hashcache",
-        "//labm8:test",
+        ":test",
         "//third_party/py/absl",
     ],
 )
@@ -154,7 +154,7 @@ py_test(
     visibility = ["//visibility:public"],
     deps = [
         ":decorators",
-        "//labm8:test",
+        ":test",
         "//third_party/py/absl",
     ],
 )
@@ -191,7 +191,7 @@ py_test(
     deps = [
         ":fs",
         ":system",
-        "//labm8:test",
+        ":test",
         "//third_party/py/absl",
     ],
 )
@@ -215,7 +215,7 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":fmt",
-        "//labm8:test",
+        ":test",
         "//third_party/py/absl",
     ],
 )
@@ -239,7 +239,7 @@ py_test(
     deps = [
         ":io",
         ":system",
-        "//labm8:test",
+        ":test",
         "//third_party/py/absl",
     ],
 )
@@ -261,7 +261,7 @@ py_test(
         ":fs",
         ":jsonutil",
         ":system",
-        "//labm8:test",
+        ":test",
         "//third_party/py/absl",
     ],
 )
@@ -280,7 +280,7 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":labdate",
-        "//labm8:test",
+        ":test",
         "//third_party/py/absl",
     ],
 )
@@ -304,7 +304,7 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":labmath",
-        "//labm8:test",
+        ":test",
         "//third_party/py/absl",
     ],
 )
@@ -323,7 +323,7 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":labtypes",
-        "//labm8:test",
+        ":test",
         "//third_party/py/absl",
     ],
 )
@@ -346,7 +346,7 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":latex",
-        "//labm8:test",
+        ":test",
         "//third_party/py/absl",
     ],
 )
@@ -374,7 +374,7 @@ py_test(
     deps = [
         ":lockfile",
         ":pbutil",
-        "//labm8:test",
+        ":test",
         "//labm8/proto:lockfile_py_pb2",
         "//third_party/py/absl",
     ],
@@ -399,7 +399,7 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":logutil",
-        "//labm8:test",
+        ":test",
         "//third_party/py/absl",
     ],
 )
@@ -424,7 +424,7 @@ py_test(
     deps = [
         ":fs",
         ":make",
-        "//labm8:test",
+        ":test",
         "//third_party/py/absl",
     ],
 )
@@ -446,7 +446,7 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":pbutil",
-        "//labm8:test",
+        ":test",
         "//labm8/proto:test_protos",
         "//third_party/py/absl",
     ],
@@ -473,7 +473,7 @@ py_test(
     ],
     deps = [
         ":ppar",
-        "//labm8:test",
+        ":test",
         "//labm8/data/test/ppar:protos_py_pb2",
         "//third_party/py/absl",
         "//third_party/py/progressbar",
@@ -496,7 +496,7 @@ py_test(
     deps = [
         ":prof",
         ":system",
-        "//labm8:test",
+        ":test",
         "//third_party/py/absl",
     ],
 )
@@ -529,7 +529,7 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":sqlutil",
-        "//labm8:test",
+        ":test",
         "//labm8/proto:test_protos",
         "//third_party/py/absl",
     ],
@@ -552,7 +552,7 @@ py_test(
     deps = [
         ":fs",
         ":system",
-        "//labm8:test",
+        ":test",
         "//third_party/py/absl",
     ],
 )
@@ -601,8 +601,8 @@ py_test(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
+        ":test",
         ":text",
-        "//labm8:test",
         "//third_party/py/absl",
     ],
 )
@@ -622,8 +622,8 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":fs",
+        ":test",
         ":viz",
-        "//labm8:test",
         "//third_party/py/absl",
         "//third_party/py/matplotlib",
     ],
