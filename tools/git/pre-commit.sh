@@ -26,6 +26,8 @@ main() {
     git -C "$ROOT" stash pop --index
     echo 'Inspect and re-run git commit'
     exit 1
+  else
+    echo "Current branch is up to date with $REMOTE_NAME/$BRANCH_NAME"
   fi
 
   test ! -f /usr/local/bin/travis || /usr/local/bin/travis lint "$ROOT/.travis.yml"
