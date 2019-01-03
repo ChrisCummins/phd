@@ -7,7 +7,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 # as while rebasing).
 BRANCH_NAME="$(git -C "$ROOT" branch | grep '*' | sed 's/* //')"
 # The name of the remote, e.g. "origin".
-REMOTE_NAME="$(git rev-parse --abbrev-ref $BRANCH_NAME@{upstream} | sed -r 's,/.+,,')"
+REMOTE_NAME="$(git rev-parse --abbrev-ref $BRANCH_NAME@{upstream} | cut -d'/' -f1)"
 
 main() {
   source "$ROOT/.env"
