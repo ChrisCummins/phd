@@ -1,10 +1,12 @@
 """Unit tests for //compilers/clsmith/clsmith.py."""
 
 import pytest
+from absl import flags
 
 from compilers.clsmith import clsmith
 from labm8 import test
-from absl import flags
+
+
 FLAGS = flags.FLAGS
 
 

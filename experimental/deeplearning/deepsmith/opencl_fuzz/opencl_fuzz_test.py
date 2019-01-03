@@ -6,6 +6,7 @@ import typing
 
 import pytest
 from absl import app
+from absl import flags
 
 from deeplearning.deepsmith.difftests import difftests
 from deeplearning.deepsmith.harnesses import cl_launcher
@@ -17,7 +18,8 @@ from experimental.deeplearning.deepsmith.opencl_fuzz import opencl_fuzz
 from gpu.cldrive import env
 from labm8 import pbutil
 from labm8 import test
-from absl import flags
+
+
 FLAGS = flags.FLAGS
 
 

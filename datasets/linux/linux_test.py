@@ -1,10 +1,12 @@
 """Unit tests for //datasets/linux."""
 
 import pytest
+from absl import flags
 
 from datasets.linux import linux
 from labm8 import test
-from absl import flags
+
+
 FLAGS = flags.FLAGS
 
 

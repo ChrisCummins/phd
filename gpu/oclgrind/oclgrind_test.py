@@ -1,10 +1,12 @@
 """Unit tests for //gpu/oclgrind/oclgrind.py."""
 
+from absl import flags
+
 from gpu.oclgrind import oclgrind
 from labm8 import test
-from absl import flags
-FLAGS = flags.FLAGS
 
+
+FLAGS = flags.FLAGS
 
 # The verbatim string printed to stdout by `oclgrind --version`.
 VERSION = """

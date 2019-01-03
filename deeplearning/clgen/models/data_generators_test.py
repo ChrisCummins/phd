@@ -2,11 +2,13 @@
 
 import numpy as np
 import pytest
+from absl import flags
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.models import data_generators
 from labm8 import test
-from absl import flags
+
+
 FLAGS = flags.FLAGS
 
 

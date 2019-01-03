@@ -2,14 +2,15 @@
 import pathlib
 
 import pytest
+from absl import flags
 
 from deeplearning.ncc import task_utils
 from deeplearning.ncc import vocabulary
 from labm8 import bazelutil
 from labm8 import test
-from absl import flags
-FLAGS = flags.FLAGS
 
+
+FLAGS = flags.FLAGS
 
 VOCABULARY_PATH = bazelutil.DataPath(
     'phd/deeplearning/ncc/published_results/vocabulary.zip')

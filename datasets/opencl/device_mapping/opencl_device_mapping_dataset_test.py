@@ -4,11 +4,13 @@ import typing
 import numpy as np
 import pandas as pd
 import pytest
+from absl import flags
 
 from datasets.opencl.device_mapping import \
   opencl_device_mapping_dataset as ocl_dataset
 from labm8 import test
-from absl import flags
+
+
 FLAGS = flags.FLAGS
 
 

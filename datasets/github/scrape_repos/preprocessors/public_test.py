@@ -1,9 +1,12 @@
 """Unit tests for //datasets/github/scrape_repos/public.py."""
 import pathlib
 
+from absl import flags
+
 from datasets.github.scrape_repos.preprocessors import public
 from labm8 import test
-from absl import flags
+
+
 FLAGS = flags.FLAGS
 
 

@@ -1,12 +1,14 @@
 """Unit tests for //experimental/compilers/reachability:datasets."""
 
 import pytest
+from absl import flags
 
 from datasets.linux import linux
 from experimental.compilers.reachability import cfg_datasets as datasets
 from labm8 import system
 from labm8 import test
-from absl import flags
+
+
 FLAGS = flags.FLAGS
 
 

@@ -2,10 +2,12 @@
 
 import gym
 import pytest
+from absl import flags
 
 from experimental.compilers.random_opt import environments
 from labm8 import test
-from absl import flags
+
+
 FLAGS = flags.FLAGS
 
 

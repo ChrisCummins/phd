@@ -1,7 +1,10 @@
 """Unit tests for //compilers/llvm/llvm_link.py."""
 
-from labm8 import test
 from absl import flags
+
+from labm8 import test
+
+
 FLAGS = flags.FLAGS
 
 

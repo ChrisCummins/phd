@@ -1,9 +1,12 @@
 """Unit tests for //experimental/hotcrp/json_to_acm_proceedings.py."""
 import io
 
+from absl import flags
+
 from experimental.hotcrp import json_to_acm_proceedings
 from labm8 import test
-from absl import flags
+
+
 FLAGS = flags.FLAGS
 
 

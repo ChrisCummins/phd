@@ -37,7 +37,6 @@ class GraphGeneratorOptions(object):
   weight_name = "distance"
 
 
-
 class GraphGenerator(object):
 
   def __init__(self, rand: np.random.RandomState,
@@ -303,8 +302,6 @@ def GenerateGraph(
     combined_graph.get_edge_data(i, j).setdefault(weight_name,
                                                   distances[i, j])
   return combined_graph
-
-
 
 
 def AddShortestPath(rand: np.random.RandomState, graph: nx.Graph,

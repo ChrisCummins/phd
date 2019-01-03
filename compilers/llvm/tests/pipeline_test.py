@@ -2,10 +2,13 @@
 import pathlib
 import subprocess
 
+from absl import flags
+
 from compilers.llvm import clang
 from compilers.llvm import opt
 from labm8 import test
-from absl import flags
+
+
 FLAGS = flags.FLAGS
 
 

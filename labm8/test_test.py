@@ -5,10 +5,12 @@ import sys
 import tempfile
 
 import pytest
+from absl import flags
 from absl import logging
 
 from labm8 import test
-from absl import flags
+
+
 FLAGS = flags.FLAGS
 
 

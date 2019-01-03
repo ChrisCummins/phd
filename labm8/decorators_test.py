@@ -1,8 +1,11 @@
 """Unit tests for //labm8:decorators.py."""
 
+from absl import flags
+
 from labm8 import decorators
 from labm8 import test
-from absl import flags
+
+
 FLAGS = flags.FLAGS
 
 

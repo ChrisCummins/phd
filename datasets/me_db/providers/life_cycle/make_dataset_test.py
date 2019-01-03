@@ -6,10 +6,12 @@ import time
 import zipfile
 
 import pytest
+from absl import flags
 
 from datasets.me_db.providers.life_cycle import make_dataset
 from labm8 import test
-from absl import flags
+
+
 FLAGS = flags.FLAGS
 
 

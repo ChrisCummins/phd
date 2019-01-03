@@ -178,7 +178,7 @@ class OpenClDeviceMappingsDataset(ocl_dataset.OpenClDeviceMappingsDataset):
   """
 
   def PopulateBytecodeTable(
-        self, db: database.Database, commit_every: int = 1000):
+      self, db: database.Database, commit_every: int = 1000):
     programs_df = self.programs_df.reset_index()
     bar = progressbar.ProgressBar()
     bar.max_value = len(programs_df)
@@ -289,7 +289,7 @@ def BytecodeFromLinuxSrc(path: pathlib.Path, optimization_level: str) -> str:
   process = clang.Exec(clang_args)
   if process.returncode:
     raise clang.ClangException(returncode=process.returncode,
-                stderr=process.stderr, command=clang_args)
+                               stderr=process.stderr, command=clang_args)
   return process.stdout, clang_args
 
 
@@ -349,6 +349,7 @@ def ProcessLinuxSrc(
 
   return rows
 
+
 def ProcessLinuxSrcToBytecode(
     path: pathlib.Path) -> reachability_pb2.LlvmBytecode:
   src_root = LinuxSourcesDataset().src_tree_root
@@ -391,7 +392,7 @@ class LinuxSourcesDataset(linux.LinuxSourcesDataset):
   """
 
   def PopulateBytecodeTable(
-        self, db: database.Database, commit_every: int = 1000):
+      self, db: database.Database, commit_every: int = 1000):
     bar = progressbar.ProgressBar()
     bar.max_value = len(self.all_srcs)
 
@@ -433,7 +434,7 @@ class LinuxSourcesDataset(linux.LinuxSourcesDataset):
 
 
 def CreateControlFlowGraphsFromLlvmBytecode(
-      bytecode_tuple: typing.Tuple[int, str]
+    bytecode_tuple: typing.Tuple[int, str]
 ) -> typing.List[reachability_pb2.ControlFlowGraphFromLlvmBytecode]:
   """Parallel worker process for extracting CFGs from bytecode."""
   # Expand the input tuple.
@@ -442,7 +443,7 @@ def CreateControlFlowGraphsFromLlvmBytecode(
 
   # Extract the dot sources from the bytecode.
   dot_generator = llvm_util.DotCfgsFromBytecode(bytecode)
-  cfg_id=0
+  cfg_id = 0
   # We use a while loop here rather than iterating over the dot_generator
   # directly because the dot_generator can raise an exception, and we don't
   # want to lose all of the dot files if only one of them would raise an
@@ -454,26 +455,26 @@ def CreateControlFlowGraphsFromLlvmBytecode(
       graph = llvm_util.ControlFlowGraphFromDotSource(dot)
       graph.ValidateControlFlowGraph(strict=False)
       protos.append(reachability_pb2.ControlFlowGraphFromLlvmBytecode(
-        bytecode_id=bytecode_id,
-        cfg_id=cfg_id,
-        control_flow_graph=graph.ToProto(),
-        status=0,
-        error_message='',
-        block_count=graph.number_of_nodes(),
-        edge_count=graph.number_of_edges(),
-        is_strict_valid=graph.IsValidControlFlowGraph(strict=True)
+          bytecode_id=bytecode_id,
+          cfg_id=cfg_id,
+          control_flow_graph=graph.ToProto(),
+          status=0,
+          error_message='',
+          block_count=graph.number_of_nodes(),
+          edge_count=graph.number_of_edges(),
+          is_strict_valid=graph.IsValidControlFlowGraph(strict=True)
       ))
     except (UnicodeDecodeError, cfg.MalformedControlFlowGraphError,
             ValueError, opt.OptException, pyparsing.ParseException) as e:
       protos.append(reachability_pb2.ControlFlowGraphFromLlvmBytecode(
-        bytecode_id=bytecode_id,
-        cfg_id=cfg_id,
-        control_flow_graph=reachability_pb2.ControlFlowGraph(),
-        status=1,
-        error_message=str(e),
-        block_count=0,
-        edge_count=0,
-        is_strict_valid=False,
+          bytecode_id=bytecode_id,
+          cfg_id=cfg_id,
+          control_flow_graph=reachability_pb2.ControlFlowGraph(),
+          status=1,
+          error_message=str(e),
+          block_count=0,
+          edge_count=0,
+          is_strict_valid=False,
       ))
     except StopIteration:
       # Stop once the dot generator has nothing more to give.
@@ -495,9 +496,9 @@ def PopulateControlFlowGraphTable(db: database.Database):
     already_done_ids = s.query(database.ControlFlowGraphProto.bytecode_id)
     # Query that returns (id,bytecode) tuples for all bytecode files that were
     # successfully generated and have not been entered into the CFG table yet.
-    todo = s.query(database.LlvmBytecode.id, database.LlvmBytecode.bytecode)\
-        .filter(database.LlvmBytecode.clang_returncode == 0)\
-        .filter(~database.LlvmBytecode.id.in_(already_done_ids))
+    todo = s.query(database.LlvmBytecode.id, database.LlvmBytecode.bytecode) \
+      .filter(database.LlvmBytecode.clang_returncode == 0) \
+      .filter(~database.LlvmBytecode.id.in_(already_done_ids))
 
     bar = progressbar.ProgressBar()
     bar.max_value = todo.count()
@@ -528,7 +529,7 @@ def PopulateControlFlowGraphTable(db: database.Database):
 
 
 def CreateFullFlowGraphFromCfg(
-      cfg_tuple: typing.Tuple[int, int, str]
+    cfg_tuple: typing.Tuple[int, int, str]
 ) -> typing.List[reachability_pb2.ControlFlowGraphFromLlvmBytecode]:
   """Parallel worker process for extracting CFGs from bytecode."""
   # Expand the input tuple.
@@ -570,8 +571,8 @@ def PopulateFullFlowGraphTable(db: database.Database):
     # TODO(cec): Exclude values already in the FFG table.
     todo = s.query(database.ControlFlowGraphProto.bytecode_id,
                    database.ControlFlowGraphProto.cfg_id,
-                   database.ControlFlowGraphProto.proto)\
-        .filter(database.ControlFlowGraphProto.status == 0)
+                   database.ControlFlowGraphProto.proto) \
+      .filter(database.ControlFlowGraphProto.status == 0)
 
     bar = progressbar.ProgressBar()
     bar.max_value = todo.count()

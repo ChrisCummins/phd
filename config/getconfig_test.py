@@ -3,9 +3,12 @@ import os
 import pathlib
 import subprocess
 
+from absl import flags
+
 from config import getconfig
 from labm8 import test
-from absl import flags
+
+
 FLAGS = flags.FLAGS
 
 

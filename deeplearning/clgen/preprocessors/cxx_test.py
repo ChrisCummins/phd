@@ -1,11 +1,13 @@
 """Unit tests for ///cxx_test."""
 
 import pytest
+from absl import flags
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import cxx
 from labm8 import test
-from absl import flags
+
+
 FLAGS = flags.FLAGS
 
 

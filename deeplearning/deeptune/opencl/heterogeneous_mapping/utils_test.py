@@ -1,11 +1,13 @@
 """Unit tests for //deeplearning/deeptune/opencl/heterogeneous_mapping:utils."""
 
 import pytest
+from absl import flags
 
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.deeptune.opencl.heterogeneous_mapping import utils
 from labm8 import test
-from absl import flags
+
+
 FLAGS = flags.FLAGS
 
 

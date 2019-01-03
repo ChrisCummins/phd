@@ -2,11 +2,13 @@
 
 import numpy as np
 import pytest
+from absl import flags
 
 from deeplearning.deeptune.opencl.adversary import \
   opencl_deadcode_inserter as dci
 from labm8 import test
-from absl import flags
+
+
 FLAGS = flags.FLAGS
 
 

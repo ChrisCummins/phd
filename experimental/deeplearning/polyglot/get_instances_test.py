@@ -6,7 +6,8 @@ from absl import flags
 
 from experimental.deeplearning.polyglot import get_instances
 from labm8 import test
-from absl import flags
+
+
 FLAGS = flags.FLAGS
 
 

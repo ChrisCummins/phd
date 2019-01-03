@@ -4,10 +4,12 @@ import re
 import zipfile
 
 import pytest
+from absl import flags
 
 from labm8 import archive
 from labm8 import test
-from absl import flags
+
+
 FLAGS = flags.FLAGS
 
 

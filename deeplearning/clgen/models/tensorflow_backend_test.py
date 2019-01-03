@@ -3,6 +3,7 @@
 import checksumdir
 import numpy as np
 import pytest
+from absl import flags
 
 from deeplearning.clgen.models import models
 from deeplearning.clgen.models import tensorflow_backend
@@ -11,7 +12,8 @@ from deeplearning.clgen.proto import telemetry_pb2
 from labm8 import crypto
 from labm8 import pbutil
 from labm8 import test
-from absl import flags
+
+
 FLAGS = flags.FLAGS
 
 

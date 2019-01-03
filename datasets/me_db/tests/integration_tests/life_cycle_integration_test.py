@@ -1,9 +1,12 @@
 """Integration tests for Life Cycle import to me_db."""
 import datetime
 
+from absl import flags
+
 from datasets.me_db import me_db
 from labm8 import test
-from absl import flags
+
+
 FLAGS = flags.FLAGS
 
 

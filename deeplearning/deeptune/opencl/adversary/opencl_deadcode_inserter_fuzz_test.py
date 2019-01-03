@@ -5,6 +5,7 @@ import tempfile
 
 import numpy as np
 import pytest
+from absl import flags
 from absl import logging
 
 from deeplearning.deepsmith.harnesses import cldrive
@@ -13,9 +14,9 @@ from deeplearning.deeptune.opencl.adversary import \
   opencl_deadcode_inserter as dci
 from gpu.oclgrind import oclgrind
 from labm8 import test
-from absl import flags
-FLAGS = flags.FLAGS
 
+
+FLAGS = flags.FLAGS
 
 # The number of tests to run.
 # TODO(cec): Can this be a flag?

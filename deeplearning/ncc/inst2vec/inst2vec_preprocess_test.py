@@ -3,10 +3,12 @@ import pathlib
 import tempfile
 
 import pytest
+from absl import flags
 
 from deeplearning.ncc.inst2vec import inst2vec_preprocess
 from labm8 import test
-from absl import flags
+
+
 FLAGS = flags.FLAGS
 
 

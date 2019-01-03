@@ -4,6 +4,7 @@ import subprocess
 import tempfile
 
 import pytest
+from absl import flags
 
 import gpu.cldrive.env
 from deeplearning.deepsmith.harnesses import cldrive
@@ -12,7 +13,8 @@ from deeplearning.deepsmith.proto import harness_pb2
 from deeplearning.deepsmith.proto import service_pb2
 from gpu.oclgrind import oclgrind
 from labm8 import test
-from absl import flags
+
+
 FLAGS = flags.FLAGS
 
 

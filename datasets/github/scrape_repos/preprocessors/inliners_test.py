@@ -1,9 +1,12 @@
 """Tests for //datasets/github.scrape_repos.preprocessors/inliners_test.py."""
 import pathlib
 
+from absl import flags
+
 from datasets.github.scrape_repos.preprocessors import inliners
 from labm8 import test
-from absl import flags
+
+
 FLAGS = flags.FLAGS
 
 

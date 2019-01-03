@@ -1,17 +1,15 @@
 """Benchmarks for the preprocessing pipeline."""
-import sys
 import typing
 
 import pytest
-from absl import app
-from absl import logging
+from absl import flags
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import preprocessors
 from labm8 import test
-from absl import flags
-FLAGS = flags.FLAGS
 
+
+FLAGS = flags.FLAGS
 
 # A full preprocessing pipeline for the C++ programming language.
 CXX_PREPROCESSORS = ['deeplearning.clgen.preprocessors.cxx:ClangPreprocess',

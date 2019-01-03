@@ -6,11 +6,11 @@ import humanize
 import keras
 from absl import app
 from absl import flags
+from experimental.compilers.reachability.proto import reachability_pb2
 
 from deeplearning.clgen import telemetry
 from deeplearning.clgen.corpuses import atomizers
 from experimental.compilers.reachability import train_model
-from experimental.compilers.reachability.proto import reachability_pb2
 from labm8 import pbutil
 
 

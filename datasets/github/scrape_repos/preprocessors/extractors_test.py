@@ -1,8 +1,11 @@
 """Unit tests for //datasets/github/scrape_repos/preprocessors/extractors.py"""
 
+from absl import flags
+
 from datasets.github.scrape_repos.preprocessors import extractors
 from labm8 import test
-from absl import flags
+
+
 FLAGS = flags.FLAGS
 
 
