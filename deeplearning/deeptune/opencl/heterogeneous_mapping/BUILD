@@ -30,6 +30,7 @@ py_library(
     srcs = ["models.py"],
     deps = [
         ":utils",
+        "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
         "//deeplearning/clgen/corpuses:atomizers",
         "//third_party/py/absl",
         "//third_party/py/keras",
@@ -44,7 +45,6 @@ py_library(
     name = "utils",
     srcs = ["utils.py"],
     deps = [
-        "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
         "//deeplearning/clgen/corpuses:atomizers",
         "//third_party/py/absl",
         "//third_party/py/numpy",

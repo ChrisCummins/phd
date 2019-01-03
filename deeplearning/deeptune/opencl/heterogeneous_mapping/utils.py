@@ -10,7 +10,6 @@ from absl import flags
 from absl import logging
 from sklearn import model_selection
 
-from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.clgen.corpuses import atomizers
 
 
@@ -116,31 +115,12 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
     # Add the classification target columns `y` and `y_1hot`.
     df = AddClassificationTargetToDataFrame(df, gpu_name)
 
-    # Values used for training & predictions.
-    features = opencl_device_mapping_dataset.ComputeGreweFeaturesForGpu(
-        gpu_name, df).values
-    aux_in = np.array([
-      df[f"feature:{gpu_name}:transfer"].values,
-      df[f"param:{gpu_name}:wgsize"].values,
-    ]).T
+    # Split into train/test indices for stratified 10-fold cross-validation.
+    dataset_splitter = model_selection.StratifiedKFold(
+        n_splits=10, shuffle=True, random_state=dataset_splitter)
+    dataset_splits = dataset_splitter.split(np.zeros(len(df)), df['y'].values)
 
-    # Sanity check.
-    assert len(features) == len(df)
-    assert len(aux_in) == len(df)
-
-    # Determine the array of optimal mappings 'y'. If y_i is 1, that means that
-    # the GPU was faster than the CPU for result i.
-    cpu_gpu_runtimes = df[[
-      'runtime:intel_core_i7_3820',
-      f'runtime:{gpu_name}',
-    ]].values
-    y = np.array([1 if gpu < cpu else 0 for cpu, gpu in cpu_gpu_runtimes])
-    y_1hot = encode_1hot(y)
-
-    # 10-fold cross-validation
-    kf = model_selection.StratifiedKFold(
-        n_splits=10, shuffle=True, random_state=seed)
-    for j, (train_index, test_index) in enumerate(kf.split(features, y)):
+    for j, (train_index, test_index) in enumerate(dataset_splits):
       # Path of cached model and predictions.
       model_path = workdir / f"{model.__basename__}-{gpu_name}-{j:02d}.model"
       predictions_path = (
@@ -163,32 +143,14 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
           model.restore(model_path)
         else:
           # Train and cache a model.
-
           logging.info('Training new model ...')
           model.init(seed=seed, atomizer=atomizer)
-          train_features = features[train_index]
-          train_aux_in = aux_in[train_index]
-          train_y = y[train_index]
-          train_y_1hot = y_1hot[train_index]
-          model.train(df=df,
-                      features=train_features,
-                      aux_in=train_aux_in,
-                      srcs=df["program:opencl_src"].values[train_index],
-                      y=train_y,
-                      y_1hot=train_y_1hot,
-                      platform_name=gpu_name,
-                      verbose=False)
+          model.train(df=df[train_index], platform_name=gpu_name, verbose=False)
           model.save(model_path)
 
         # Test the model.
         predictions = model.predict(
-            features=features[test_index],
-            aux_in=aux_in[test_index],
-            srcs=df["program:opencl_src"].values[test_index],
-            y=y[test_index],
-            y_1hot=y_1hot[test_index],
-            platform_name=gpu_name,
-            verbose=False)
+            df[test_index], platform_name=gpu_name, verbose=False)
 
         # cache results
         with open(predictions_path, 'wb') as outfile:

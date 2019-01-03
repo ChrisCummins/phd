@@ -15,6 +15,7 @@ from keras.models import Model
 from keras.preprocessing import sequence as keras_sequence
 from sklearn import tree as sktree
 
+from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.clgen.corpuses import atomizers
 
 
@@ -68,34 +69,25 @@ class HeterogemeousMappingModel(object):
     """
     raise NotImplementedError
 
-  def train(self, df: pd.DataFrame, features: np.array, sequences: np.array,
-            y: np.array, y_1hot: np.array, verbose: bool = False) -> None:
+  def train(self, df: pd.DataFrame, platform_name: str,
+            verbose: bool = False) -> None:
     """Train a model.
 
     Args:
-      df: The platform dataframe.
-      features: An array of feature vectors of shape (n,4).
-      sequences: An array of encoded source code sequences of shape
-        (n,seq_length).
-      y: An array of optimal device mappings of shape (n,1).
-      y_1hot: An array of optimal device mappings of shape (n,2), in 1-hot
-        encoding.
+      df: The dataframe of training data.
+      platform_name: The name of the gpu being trained for
       verbose: Whether to print verbose status messages during training.
     """
     raise NotImplementedError
 
-  def predict(self, features: np.array, sequences: np.array, y: np.array,
-              y_1hot: np.array, verbose: bool = False) -> np.array:
+  def predict(self, df: pd.DataFrame, platform_name: str,
+              verbose: bool = False) -> np.array:
     """Make predictions for programs.
 
     Args:
-      features: An array of feature vectors of shape (n,4).
-      sequences: An array of encoded source code sequences of shape
-        (n,seq_length).
-      y: An array of optimal device mappings of shape (n,1).
-      y_1hot: An array of optimal device mappings of shape (n,2), in 1-hot
-        encoding.
-      verbose: Whether to print verbose status messages.
+      df: The dataframe of training data.
+      platform_name: The name of the gpu being trained for
+      verbose: Whether to print verbose status messages during training.
 
     Returns:
       Predicted 'y' values (optimal device mappings) with shape (n,1).
@@ -118,11 +110,9 @@ class StaticMapping(HeterogemeousMappingModel):
     with open(inpath, "rb") as infile:
       self.model = pickle.load(infile)
 
-  def train(self, df=None, **train):
-    platform_name = train.get('platform_name')
-    if not platform_name:
-      raise ValueError('platform_name kwarg not set!')
-
+  def train(self, df: pd.DataFrame, platform_name: str,
+            verbose: bool = False):
+    del verbose
     # select the Zero-R device: the most frequently optimal device
     cpu_gpu_runtimes = df[[
       'runtime:intel_core_i7_3820',
@@ -133,13 +123,15 @@ class StaticMapping(HeterogemeousMappingModel):
 
     self.model = Counter(oracles).most_common(1)[0][0]
 
-  def predict(self, **test):
+  def predict(self, df: pd.DataFrame, platform_name: str,
+              verbose: bool = False):
+    del verbose
     logging.info("Predicting %d %s mappings for device %s",
-                 len(test['features']), self.model, test['platform_name'])
+                 len(df), self.model, platform_name)
     if self.model == "GPU":
-      return np.ones(len(test['features']), dtype=np.int32)
+      return np.ones(len(df), dtype=np.int32)
     elif self.model == "CPU":
-      return np.zeros(len(test['features']), dtype=np.int32)
+      return np.zeros(len(df), dtype=np.int32)
     else:
       return LookupError
 
@@ -172,11 +164,19 @@ class Grewe(HeterogemeousMappingModel):
     with open(inpath, "rb") as infile:
       self.model = pickle.load(infile)
 
-  def train(self, **train):
-    self.model.fit(train["features"], train["y"])
+  def train(self, df: pd.DataFrame, platform_name: str,
+            verbose: bool = False):
+    del verbose
+    features = opencl_device_mapping_dataset.ComputeGreweFeaturesForGpu(
+        platform_name, df).values
+    self.model.fit(features, df["y"])
 
-  def predict(self, **test):
-    return self.model.predict(test["features"])
+  def predict(self, df: pd.DataFrame, platform_name: str,
+              verbose: bool = False):
+    del verbose
+    features = opencl_device_mapping_dataset.ComputeGreweFeaturesForGpu(
+        platform_name, df).values
+    return self.model.predict(features)
 
 
 def EncodeAndPadSources(atomizer: atomizers.AtomizerBase,
@@ -263,24 +263,31 @@ class DeepTune(HeterogemeousMappingModel):
   def restore(self, inpath):
     self.model = keras_models.load_model(inpath)
 
-  def train(self, **train):
-    sequences = EncodeAndPadSources(
-        self.atomizer, train['srcs'], self.max_sequence_length)
-
-    self.model.fit([train["aux_in"], sequences],
-                   [train["y_1hot"], train["y_1hot"]],
+  def train(self, df: pd.DataFrame, platform_name: str,
+            verbose: bool = False):
+    self.model.fit(self.DataFrameToModelInputs(df),
+                   [df["y_1hot"], df["y_1hot"]],
                    epochs=self.num_epochs, batch_size=self.batch_size,
-                   verbose=train["verbose"], shuffle=True)
+                   verbose=verbose, shuffle=True)
 
-  def predict(self, **test):
-    sequences = EncodeAndPadSources(
-        self.atomizer, test['srcs'], self.max_sequence_length)
-
+  def predict(self, df: pd.DataFrame, platform_name: str,
+              verbose: bool = False):
     p = np.array(self.model.predict(
-        [test["aux_in"], sequences], batch_size=self.batch_size,
-        verbose=test["verbose"]))
+        self.DataFrameToModelInputs(df),
+        batch_size=self.batch_size, verbose=verbose))
     indices = [np.argmax(x) for x in p[0]]
     return indices
+
+  def DataFrameToModelInputs(
+      self, df: pd.DataFrame) -> typing.Tuple[np.ndarray, np.ndarray]:
+    """Convert a pandas table to a tuple of model inputs."""
+    sequences = EncodeAndPadSources(
+        self.atomizer, df['program:opencl_src'], self.max_sequence_length)
+    aux_in = np.array([
+      df[f"feature:{gpu_name}:transfer"].values,
+      df[f"param:{gpu_name}:wgsize"].values,
+    ]).T
+    return aux_in, sequences
 
 
 class NCC(DeepTune):
