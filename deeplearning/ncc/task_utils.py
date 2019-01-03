@@ -274,8 +274,8 @@ def remove_index_types(data):
   return data
 
 
-def LlvmIrToTrainable(folder_ir: str,
-                      vocab: vocabulary.VocabularyZipFile) -> str:
+def CreateSeqDirFromIr(folder_ir: str,
+                       vocab: vocabulary.VocabularyZipFile) -> str:
   """Transform a folder of raw IR into trainable data to be used as input data
   in tasks.
 
@@ -391,8 +391,7 @@ def LlvmIrToTrainable(folder_ir: str,
           for ind in stmt_indexed:
             csv.write(str(ind) + '\n')
             rec.write(struct.pack('I', int(ind)))
-        logging.info('Printed data pairs to %s', file_name_csv)
-        logging.info('Printed data pairs to %s', file_name_rec)
+        logging.info('Created data pair %s %s', file_name_csv, file_name_rec)
         logging.info('#UNKS: %d', unknown_counter)
 
         # Increment counter

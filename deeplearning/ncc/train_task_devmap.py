@@ -394,7 +394,7 @@ def main(argv):
     dataset.ExtractAll(pathlib.Path(input_data))
 
   with vocabulary.VocabularyZipFile(FLAGS.vocabulary_zip_path) as vocab:
-    task_utils.LlvmIrToTrainable(os.path.join(input_data, 'kernels_ir'), vocab)
+    task_utils.CreateSeqDirFromIr(os.path.join(input_data, 'kernels_ir'), vocab)
 
   # Reference values copied from:
   # https://github.com/ChrisCummins/paper-end2end-dl/blob/master/code/Case%20Study%20A.ipynb

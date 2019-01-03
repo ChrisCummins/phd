@@ -92,27 +92,27 @@ def vocab() -> vocabulary.VocabularyZipFile:
     yield v
 
 
-def test_LlvmIrToTrainable_creates_directory(
+def test_CreateSeqDirFromIr_creates_directory(
     llvm_ir_dir: str, vocab: vocabulary.VocabularyZipFile):
   """Test that sequence directory is returned."""
   sequence_folder = pathlib.Path(
-      task_utils.LlvmIrToTrainable(llvm_ir_dir, vocab))
+      task_utils.CreateSeqDirFromIr(llvm_ir_dir, vocab))
   assert sequence_folder.is_dir()
 
 
-def test_LlvmIrToTrainable_creates_csv_file(
+def test_CreateSeqDirFromIr_creates_csv_file(
     llvm_ir_dir: str, vocab: vocabulary.VocabularyZipFile):
   """Test that CSV file is created."""
   sequence_folder = pathlib.Path(
-      task_utils.LlvmIrToTrainable(llvm_ir_dir, vocab))
+      task_utils.CreateSeqDirFromIr(llvm_ir_dir, vocab))
   assert (sequence_folder / 'program_seq.csv').is_file()
 
 
-def test_LlvmIrToTrainable_creates_rec_file(
+def test_CreateSeqDirFromIr_creates_rec_file(
     llvm_ir_dir: str, vocab: vocabulary.VocabularyZipFile):
   """Test that REC file is created."""
   sequence_folder = pathlib.Path(
-      task_utils.LlvmIrToTrainable(llvm_ir_dir, vocab))
+      task_utils.CreateSeqDirFromIr(llvm_ir_dir, vocab))
   assert (sequence_folder / 'program_seq.rec').is_file()
 
 

@@ -481,13 +481,13 @@ def main(argv):
         'classifyapp_training_data', folder_data)
 
   with vocabulary.VocabularyZipFile(FLAGS.vocabulary_zip_path) as vocab:
-    task_utils.LlvmIrToTrainable(folder_data + '_train', vocab)
+    task_utils.CreateSeqDirFromIr(folder_data + '_train', vocab)
     assert os.path.exists(
         folder_data + '_val'), "Folder not found: " + folder_data + '_val'
-    task_utils.LlvmIrToTrainable(folder_data + '_val', vocab)
+    task_utils.CreateSeqDirFromIr(folder_data + '_val', vocab)
     assert os.path.exists(
         folder_data + '_test'), "Folder not found: " + folder_data + '_test'
-    task_utils.LlvmIrToTrainable(folder_data + '_test', vocab)
+    task_utils.CreateSeqDirFromIr(folder_data + '_test', vocab)
 
   # Create directories if they do not exist
   if not os.path.exists(folder_results):

@@ -404,7 +404,7 @@ def main(argv):
     dataset.ExtractAll(pathlib.Path(input_data))
 
   with vocabulary.VocabularyZipFile(FLAGS.vocabulary_zip_path) as vocab:
-    task_utils.LlvmIrToTrainable(os.path.join(input_data, 'kernels_ir'), vocab)
+    task_utils.CreateSeqDirFromIr(os.path.join(input_data, 'kernels_ir'), vocab)
 
   ####################################################################################################################
   # Reference values
