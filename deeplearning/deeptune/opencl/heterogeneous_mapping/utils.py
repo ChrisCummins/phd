@@ -113,6 +113,9 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
   data = []
 
   for gpu_name in ["amd_tahiti_7970", "nvidia_gtx_960"]:
+    # Add the classification target columns `y` and `y_1hot`.
+    df = AddClassificationTargetToDataFrame(df, gpu_name)
+
     # Values used for training & predictions.
     features = opencl_device_mapping_dataset.ComputeGreweFeaturesForGpu(
         gpu_name, df).values
