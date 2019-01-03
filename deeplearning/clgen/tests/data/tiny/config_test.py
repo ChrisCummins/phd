@@ -1,14 +1,11 @@
 """Test that //deeplearning/clgen/tests/data/tiny/config.pbtxt is valid."""
-import sys
 import tempfile
-
-import pytest
-from absl import app
 
 from deeplearning.clgen import clgen
 from deeplearning.clgen.proto import clgen_pb2
 from labm8 import bazelutil
 from labm8 import pbutil
+from labm8 import test
 
 
 def test_config_is_valid():
@@ -25,12 +22,5 @@ def test_config_is_valid():
     clgen.Instance(config)
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError('Unrecognized command line flags.')
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()
