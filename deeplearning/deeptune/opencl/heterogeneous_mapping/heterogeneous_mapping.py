@@ -123,8 +123,8 @@ def main(argv: typing.List[str]):
   print(results.deeptune_df.groupby(['Platform'])[
           'Platform', 'Correct?', 'Speedup'].mean())
 
-  print("Overview of DeepTune model", file=sys.stderr)
-  results.deeptune_model.model.summary()
+  # print("Overview of DeepTune model", file=sys.stderr)
+  # results.deeptune_model.model.summary()
 
   print("Evaluating adversarial DeepTune model ...", file=sys.stderr)
   print(
