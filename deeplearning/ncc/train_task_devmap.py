@@ -31,7 +31,6 @@ from absl import app
 from absl import flags
 from absl import logging
 
-from deeplearning.ncc import rgx_utils as rgx
 from deeplearning.ncc import task_utils
 from deeplearning.ncc import vocabulary
 from labm8 import bazelutil
@@ -95,16 +94,13 @@ def encode_1hot(y: np.array) -> np.array:
   return np.array(list(zip(l1, l2)), dtype=np.int32)
 
 
+# TODO(cec): Actually encode the srcs, don't read CSV files.
 def encode_srcs(data_folder, df: pd.DataFrame) -> np.array:
   from keras.preprocessing.sequence import pad_sequences
 
-  # Load dictionary and cutoff statements
-  with vocabulary.VocabularyZipFile(FLAGS.vocabulary_zip_path) as vocab:
-    logging.info('Loading dictionary from file %s', vocab.dictionary_pickle)
-    with open(vocab.dictionary_pickle, 'rb') as f:
-      dictionary = pickle.load(f)
-  unk_index = dictionary[rgx.unknown_token]
-  del dictionary
+  # Get the 'unknown' vocab index.
+  vocab = vocabulary.VocabularyZipFile(FLAGS.vocabulary_zip_path)
+  unk_index = vocab.unknown_token_index
 
   # Get list of source file names
   data_folder = os.path.join(data_folder, 'kernels_seq')

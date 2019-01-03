@@ -34,7 +34,6 @@ from keras import utils
 from keras.callbacks import Callback
 from sklearn.utils import resample
 
-from deeplearning.ncc import rgx_utils as rgx
 from deeplearning.ncc import task_utils
 from deeplearning.ncc import vocabulary
 from labm8 import fs
@@ -347,13 +346,9 @@ def evaluate(model, embeddings, folder_data, samples_per_class, folder_results,
     y_test = np.concatenate(
         [y_test, np.array([int(i)] * len(seq_files), dtype=np.int32)])
 
-  # Load dictionary and cutoff statements
-  with vocabulary.VocabularyZipFile(FLAGS.vocabulary_zip_path) as vocab:
-    print('\tLoading dictionary from file', vocab.dictionary_pickle)
-    with open(vocab.dictionary_pickle, 'rb') as f:
-      dictionary = pickle.load(f)
-  unk_index = dictionary[rgx.unknown_token]
-  del dictionary
+  # Get the 'unknown' vocab index.
+  vocab = vocabulary.VocabularyZipFile(FLAGS.vocabulary_zip_path)
+  unk_index = vocab.unknown_token_index
 
   # Encode source codes and get max. sequence length
   X_seq_train, maxlen_train = encode_srcs(X_train, 'training', unk_index)

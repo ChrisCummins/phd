@@ -35,6 +35,13 @@ def test_VocabularyZipFile_cutoff_stmts_pickle_path(
   assert vocab.cutoff_stmts_pickle.is_file()
 
 
+def test_VocabularyZipFile_unknown_token_index(
+    vocab: vocabulary.VocabularyZipFile):
+  """Test that unknown token index is a positive integer."""
+  assert isinstance(vocab.unknown_token_index, int)
+  assert vocab.unknown_token_index > 0
+
+
 def main(argv: typing.List[str]):
   """Main entry point."""
   if len(argv) > 1:
