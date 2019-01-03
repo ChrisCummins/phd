@@ -45,6 +45,9 @@ flags.DEFINE_string('input_data',
                     'Path to input data')
 flags.DEFINE_string('out', '/tmp/phd/deeplearning/ncc/task/threadcoarsening',
                     'Path to folder in which to write saved Keras models and predictions')
+flags.DEFINE_string(
+    'vocabulary_zip_path', None,
+    'Path to the vocabulary zip file associated with those embeddings')
 flags.DEFINE_string('device', 'all',
                     'Device to evaluate model on. Options: all, Cypress, Tahiti, Fermi, Kepler')
 flags.DEFINE_integer('num_epochs', 50, 'number of training epochs')
@@ -400,7 +403,8 @@ def main(argv):
         'phd/deeplearning/ncc/published_results/task_threadcoarsening.zip')
     dataset.ExtractAll(pathlib.Path(input_data))
 
-  task_utils.LlvmIrToTrainable(os.path.join(input_data, 'kernels_ir'))
+  with vocabulary.VocabularyZipFile(FLAGS.vocabulary_zip_path) as vocab:
+    task_utils.LlvmIrToTrainable(os.path.join(input_data, 'kernels_ir'), vocab)
 
   ####################################################################################################################
   # Reference values

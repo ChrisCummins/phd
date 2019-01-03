@@ -45,6 +45,9 @@ flags.DEFINE_string('input_data',
                     'Path to input data')
 flags.DEFINE_string('out', '/tmp/phd/deeplearning/ncc/task/classifyapp',
                     'Path to folder in which to write saved Keras models and predictions')
+flags.DEFINE_string(
+    'vocabulary_zip_path', None,
+    'Path to the vocabulary zip file associated with those embeddings')
 flags.DEFINE_integer('num_epochs', 50, 'number of training epochs')
 flags.DEFINE_integer('batch_size', 64, 'training batch size')
 flags.DEFINE_integer('dense_layer', 32, 'dense layer size')
@@ -477,13 +480,14 @@ def main(argv):
         'https://polybox.ethz.ch/index.php/s/JOBjrfmAjOeWCyl/download',
         'classifyapp_training_data', folder_data)
 
-  task_utils.LlvmIrToTrainable(folder_data + '_train')
-  assert os.path.exists(
-      folder_data + '_val'), "Folder not found: " + folder_data + '_val'
-  task_utils.LlvmIrToTrainable(folder_data + '_val')
-  assert os.path.exists(
-      folder_data + '_test'), "Folder not found: " + folder_data + '_test'
-  task_utils.LlvmIrToTrainable(folder_data + '_test')
+  with vocabulary.VocabularyZipFile(FLAGS.vocabulary_zip_path) as vocab:
+    task_utils.LlvmIrToTrainable(folder_data + '_train', vocab)
+    assert os.path.exists(
+        folder_data + '_val'), "Folder not found: " + folder_data + '_val'
+    task_utils.LlvmIrToTrainable(folder_data + '_val', vocab)
+    assert os.path.exists(
+        folder_data + '_test'), "Folder not found: " + folder_data + '_test'
+    task_utils.LlvmIrToTrainable(folder_data + '_test', vocab)
 
   # Create directories if they do not exist
   if not os.path.exists(folder_results):

@@ -41,9 +41,6 @@ from deeplearning.ncc.inst2vec import inst2vec_preprocess as i2v_prep
 flags.DEFINE_string(
     'embeddings_file', None,
     'Path to the embeddings file')
-flags.DEFINE_string(
-    'vocabulary_zip_path', None,
-    'Path to the vocabulary zip file associated with those embeddings')
 
 FLAGS = flags.FLAGS
 
@@ -277,11 +274,14 @@ def remove_index_types(data):
   return data
 
 
-def LlvmIrToTrainable(folder_ir: str) -> str:
-  """Transform a folder of raw IR into trainable data to be used as input data in tasks.
+def LlvmIrToTrainable(folder_ir: str,
+                      vocab: vocabulary.VocabularyZipFile) -> str:
+  """Transform a folder of raw IR into trainable data to be used as input data
+  in tasks.
 
   Args:
     folder_ir: The folder of LLVM IR to read. Must end in '_ir'.
+    vocab: The vocabulary to use to encode IR.
 
   Returns:
     The path of the folder of sequences, ending in '_seq'.
@@ -336,15 +336,8 @@ def LlvmIrToTrainable(folder_ir: str) -> str:
       preprocessed_data_with_structure_def = raw_data
 
       # Load dictionary and cutoff statements from vocabulary files.
-      with vocabulary.VocabularyZipFile(FLAGS.vocabulary_zip_path) as vocab:
-        logging.info('Loading dictionary from file %s', vocab.dictionary_pickle)
-        with open(vocab.dictionary_pickle, 'rb') as f:
-          dictionary = pickle.load(f)
-        logging.info('Loading cut off statements from file %s',
-                     vocab.cutoff_stmts_pickle)
-        with open(vocab.cutoff_stmts_pickle, 'rb') as f:
-          stmts_cut_off = pickle.load(f)
-        stmts_cut_off = set(stmts_cut_off)
+      dictionary = vocab.dictionary
+      stmts_cut_off = vocab.cutoff_stmts
 
       # IR processing (inline structures, abstract statements)
 
