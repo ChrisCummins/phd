@@ -4,8 +4,8 @@ load("@org_pubref_rules_protobuf//cpp:rules.bzl", "cc_proto_library")
 load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
 
 py_test(
-    name = "ascii_chart",
-    srcs = ["ascii_chart.py"],
+    name = "ascii_chart_test",
+    srcs = ["ascii_chart_test.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
