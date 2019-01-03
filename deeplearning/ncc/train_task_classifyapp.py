@@ -474,7 +474,7 @@ def main(argv):
   batch_size = FLAGS.batch_size
   train_samples = FLAGS.train_samples
 
-  pathlib.Path(folder_data).parent.mkdir(parents=True, exist_ok=True)
+  pathlib.Path(folder_data).mkdir(parents=True, exist_ok=True)
 
   # Acquire data
   if not os.path.exists(folder_data + '_train'):
