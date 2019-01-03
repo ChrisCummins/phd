@@ -565,6 +565,26 @@ py_library(
 )
 
 py_library(
+    name = "test",
+    srcs = ["test.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
+        "//:conftest",
+    ],
+    testonly = 1,
+)
+
+py_test(
+    name = "test_test",
+    srcs = ["test_test.py"],
+    deps = [
+        ":test",
+    ],
+)
+
+py_library(
     name = "text",
     srcs = ["text.py"],
     visibility = ["//visibility:public"],

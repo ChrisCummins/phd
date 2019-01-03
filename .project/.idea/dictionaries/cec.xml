@@ -82,6 +82,7 @@
       <w>printf</w>
       <w>proc</w>
       <w>protos</w>
+      <w>pytest</w>
       <w>randchar</w>
       <w>reachability</w>
       <w>reachables</w>
