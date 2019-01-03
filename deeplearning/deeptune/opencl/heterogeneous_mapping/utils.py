@@ -117,7 +117,7 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
 
     # Split into train/test indices for stratified 10-fold cross-validation.
     dataset_splitter = model_selection.StratifiedKFold(
-        n_splits=10, shuffle=True, random_state=dataset_splitter)
+        n_splits=10, shuffle=True, random_state=seed)
     dataset_splits = dataset_splitter.split(np.zeros(len(df)), df['y'].values)
 
     for j, (train_index, test_index) in enumerate(dataset_splits):
