@@ -46,14 +46,6 @@ def escape_benchmark_name(g: str) -> str:
   return escape_suite_name(c[0]).split()[0] + "." + c[-2]
 
 
-def encode_1hot(y: np.array) -> np.array:
-  """1-hot encode labels"""
-  labels = np.vstack([np.expand_dims(x, axis=0) for x in y])
-  l2 = [x[0] for x in labels]
-  l1 = [not x for x in l2]
-  return np.array(list(zip(l1, l2)), dtype=np.int32)
-
-
 # Taken from the C99 spec, OpenCL spec 1.2, and bag-of-words analysis of
 # GitHub corpus:
 OPENCL_ATOMS = set(
@@ -83,16 +75,19 @@ def GetAtomizerFromOpenClSources(
   return atomizers.GreedyAtomizer.FromText(srcs, OPENCL_ATOMS)
 
 
-def MakeModelInputDataFrame(df: pd.DataFrame, gpu_name: str) -> pd.DataFrame:
+def AddClassificationTargetToDataFrame(
+    df: pd.DataFrame, gpu_name: str) -> pd.DataFrame:
   # Determine the array of optimal mappings 'y'. If y_i is 1, that means that
   # the GPU was faster than the CPU for result i.
   cpu_gpu_runtimes = df[[
     'runtime:intel_core_i7_3820',
     f'runtime:{gpu_name}',
   ]].values
-  y = np.array([1 if gpu < cpu else 0 for cpu, gpu in cpu_gpu_runtimes])
+  y = [1 if gpu < cpu else 0 for cpu, gpu in cpu_gpu_runtimes]
   df['y'] = y
-  df['y_1hot'] = encode_1hot(y)
+  # Add a column which contains a [bool,bool] array with a 1-hot encoded optimal
+  # value.
+  df['y_1hot'] = [np.array([not y_, y_], dtype=np.int32) for y_ in y]
   return df
 
 
@@ -125,6 +120,10 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
       df[f"feature:{gpu_name}:transfer"].values,
       df[f"param:{gpu_name}:wgsize"].values,
     ]).T
+
+    # Sanity check.
+    assert len(features) == len(df)
+    assert len(aux_in) == len(df)
 
     # Determine the array of optimal mappings 'y'. If y_i is 1, that means that
     # the GPU was faster than the CPU for result i.
