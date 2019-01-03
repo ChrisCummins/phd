@@ -1,4 +1,4 @@
-"""Unit tests for //TODO:deeplearning.ncc.inst2vec/api_test."""
+"""Unit tests for //deeplearning/ncc/inst2vec:api."""
 import pathlib
 import sys
 import tempfile
