@@ -9,6 +9,7 @@ import re
 import typing
 
 from config import getconfig
+from labm8 import archive
 
 
 # Regular expression to everything in a path up until the '*.runfiles'
@@ -77,7 +78,7 @@ def DataPath(path: typing.Union[str, pathlib.Path],
   return real_path
 
 
-class DataArchive(object):
+class DataArchive(archive.Archive):
   """A compressed zip file.
 
   TODO: data=[...] attribute of target.
