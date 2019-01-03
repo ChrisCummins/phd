@@ -25,6 +25,7 @@
 
 import math
 import os
+import pathlib
 import pickle
 
 import numpy as np
@@ -35,6 +36,7 @@ from sklearn.model_selection import KFold
 
 from deeplearning.ncc import task_utils
 from deeplearning.ncc import vocabulary
+from labm8 import bazelutil
 from labm8 import fs
 
 
@@ -391,11 +393,12 @@ def main(argv):
   print_summary = FLAGS.print_summary
   num_epochs = FLAGS.num_epochs
   batch_size = FLAGS.batch_size
+
+  # Unpack data archive if necessary.
   if not os.path.exists(os.path.join(input_data, 'kernels_ir')):
-    # Download data
-    task_utils.download_and_unzip(
-        'https://polybox.ethz.ch/index.php/s/Dl8v8dKbuoWS3Ck/download',
-        'threadcoarsening_training_data', input_data)
+    dataset = bazelutil.DataArchive(
+        'phd/deeplearning/ncc/published_results/task_threadcoarsening.zip')
+    dataset.ExtractAll(pathlib.Path(input_data))
 
   task_utils.LlvmIrToTrainable(os.path.join(input_data, 'kernels_ir'))
 

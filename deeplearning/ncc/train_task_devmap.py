@@ -383,6 +383,8 @@ def main(argv):
   num_epochs = FLAGS.num_epochs
   batch_size = FLAGS.batch_size
   input_data = FLAGS.input_data
+
+  # Unpack data archive if necessary.
   if not os.path.exists(os.path.join(input_data, 'kernels_ir')):
     dataset = bazelutil.DataArchive(
         'phd/deeplearning/ncc/published_results/task_devmap.zip')
