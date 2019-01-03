@@ -2,6 +2,7 @@
 
 py_library(
     name = "conftest",
+    testonly = 1,
     srcs = ["conftest.py"],
     deps = [
         "//labm8:test",
