@@ -6,7 +6,8 @@ import pathlib
 import typing
 
 import skimage
-import vizdoom
+# FIXME(cec): Vizdoom currently disabled.
+# import vizdoom
 from absl import app
 from absl import flags
 from absl import logging

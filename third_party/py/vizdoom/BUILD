@@ -14,6 +14,7 @@ py_library(
         # Note that the PyPi vizdoom package has a number of dependencies which
         # must be installed to build the package, see the official docs:
         # https://github.com/mwydmuch/ViZDoom/blob/master/doc/Building.md
-        requirement("vizdoom"),
+        # FIXME(cec): Missing dependencies on ubuntu build.
+        # requirement("vizdoom"),
     ],
 )
