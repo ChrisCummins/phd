@@ -10,8 +10,8 @@ filegroup(
 )
 
 py_test(
-    name = "test_config",
-    srcs = ["test_config.py"],
+    name = "config_test",
+    srcs = ["config_test.py"],
     data = [":tiny"],
     default_python_version = "PY3",
     srcs_version = "PY3",
