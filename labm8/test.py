@@ -17,7 +17,7 @@ from absl import logging
 FLAGS = flags.FLAGS
 
 flags.DEFINE_boolean(
-    'test_color_output', True,
+    'test_color_output', False,
     'Colorize pytest output.')
 flags.DEFINE_boolean(
     'test_skip_slow', True,
