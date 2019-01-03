@@ -3,13 +3,15 @@ import pathlib
 import tempfile
 
 import pytest
+from absl import flags
 
 from deeplearning.deeptune.opencl.heterogeneous_mapping import \
   heterogeneous_mapping
 from deeplearning.deeptune.opencl.heterogeneous_mapping import \
   models
 from labm8 import test
-from absl import flags
+
+
 FLAGS = flags.FLAGS
 
 
@@ -55,16 +57,14 @@ def test_grewe_speedup(r: heterogeneous_mapping.ExperimentalResults):
   assert r.grewe_df['Speedup'].mean() == pytest.approx(2.094359)
 
 
-# TODO(cec): Can we set a flag to run huge tests? Something like
-# bazel test //... --test_arg=--phd_run_huge_tests
-@pytest.mark.skipif(True, reason='Huge test!')
+@pytest.mark.slow(reason='Takes several hours to train full model')
 def test_deeptune_accuracy(r: heterogeneous_mapping.ExperimentalResults):
   """Test the accuracy of the DeepTune model."""
   assert r.deeptune_df['Correct?'].mean() == pytest.approx(
       .819853)
 
 
-@pytest.mark.skipif(True, reason='Huge test!')
+@pytest.mark.slow(reason='Takes several hours to train full model')
 def test_deeptune_speedup(r: heterogeneous_mapping.ExperimentalResults):
   """Test the speedup of the DeepTune model."""
   assert r.deeptune_df['Speedup'].mean() == pytest.approx(
