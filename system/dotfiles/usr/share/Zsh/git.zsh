@@ -24,7 +24,7 @@ alias gf='git pull'
 alias gfr='git pull --rebase'
 alias gl='git log'
 alias glp='git log -p'
-alias gp='git push'
+alias gp='git pull --rebase && git push'
 alias gz='git fetch'
 alias gza='git fetch --all'
 
