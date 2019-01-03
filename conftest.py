@@ -36,6 +36,15 @@ def pytest_collection_modifyitems(config, items):
   """A pytest hook to modify the configuration and items to run."""
   del config
 
+  # Fail early and verbosely if the flags cannot be accessed. This is a sign
+  # that this file is being used incorrectly. To use this file, you must
+  # use labm8.test.Main() as the entry point to your tests.
+  try:
+    FLAGS.test_color_output
+  except AttributeError:
+    logging.fatal("Failed to access flags defined in //labm8:test. Are you "
+                  "sure you are running this test using labm8.test.Main()?")
+
   this_platform = sys.platform
   this_host = socket.gethostname()
   slow_skip_marker = pytest.mark.skip(reason='Use --notest_skip_slow to run')
