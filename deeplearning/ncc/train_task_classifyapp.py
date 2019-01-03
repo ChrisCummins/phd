@@ -350,8 +350,8 @@ def evaluate(model, embeddings, folder_data, samples_per_class, folder_results,
         [y_test, np.array([int(i)] * len(seq_files), dtype=np.int32)])
 
   # Get the 'unknown' vocab index.
-  vocab = vocabulary.VocabularyZipFile(FLAGS.vocabulary_zip_path)
-  unk_index = vocab.unknown_token_index
+  with vocabulary.VocabularyZipFile(FLAGS.vocabulary_zip_path) as vocab:
+    unk_index = vocab.unknown_token_index
 
   # Encode source codes and get max. sequence length
   X_seq_train, maxlen_train = encode_srcs(X_train, 'training', unk_index)

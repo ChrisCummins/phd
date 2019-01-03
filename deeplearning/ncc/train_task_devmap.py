@@ -102,8 +102,8 @@ def encode_srcs(data_folder, df: pd.DataFrame) -> np.array:
   from keras.preprocessing.sequence import pad_sequences
 
   # Get the 'unknown' vocab index.
-  vocab = vocabulary.VocabularyZipFile(FLAGS.vocabulary_zip_path)
-  unk_index = vocab.unknown_token_index
+  with vocabulary.VocabularyZipFile(FLAGS.vocabulary_zip_path) as vocab:
+    unk_index = vocab.unknown_token_index
 
   # Get list of source file names
   data_folder = os.path.join(data_folder, 'kernels_seq')
