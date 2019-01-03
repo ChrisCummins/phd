@@ -9,6 +9,7 @@ from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import sampler_pb2
 from labm8 import bazelutil
 from labm8 import pbutil
+from labm8 import test
 
 
 def DirContainsProtos(data_path: str, proto_class) -> None:
@@ -45,4 +46,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()

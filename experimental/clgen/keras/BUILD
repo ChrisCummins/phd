@@ -1,8 +1,8 @@
 # Experiments while porting CLgen from Tensorflow to Keras models.
 
 py_test(
-    name = "test_benchmark_module_import",
-    srcs = ["test_benchmark_module_import.py"],
+    name = "benchmark_module_import_test",
+    srcs = ["benchmark_module_import_test.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
@@ -14,8 +14,8 @@ py_test(
 )
 
 py_test(
-    name = "test_benchmark_model_init",
-    srcs = ["test_benchmark_model_init.py"],
+    name = "benchmark_model_init_test",
+    srcs = ["benchmark_model_init_test.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
@@ -27,8 +27,8 @@ py_test(
 )
 
 py_test(
-    name = "test_benchmark_string_concatenation",
-    srcs = ["test_benchmark_string_concatenation.py"],
+    name = "benchmark_string_concatenation_test",
+    srcs = ["benchmark_string_concatenation_test.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [

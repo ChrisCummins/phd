@@ -75,8 +75,8 @@ py_binary(
 )
 
 py_test(
-    name = "test_protos_are_valid",
-    srcs = ["test_protos_are_valid.py"],
+    name = "protos_are_valid_test",
+    srcs = ["protos_are_valid_test.py"],
     data = [":protos"],
     default_python_version = "PY3",
     srcs_version = "PY3",
