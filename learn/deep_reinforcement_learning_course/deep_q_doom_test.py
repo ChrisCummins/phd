@@ -1,6 +1,7 @@
 """Unit tests for //learn/deep_reinforcement_learning_course/deep_q_doom.py."""
 import random
 
+import pytest
 from absl import flags
 
 from labm8 import test
@@ -10,6 +11,7 @@ from learn.deep_reinforcement_learning_course import deep_q_doom
 FLAGS = flags.FLAGS
 
 
+@pytest.mark.xfail(reason='Vizdoom not working')
 def test_environment():
   """Random action tests."""
   game, actions = deep_q_doom.CreateEnvironment()
