@@ -30,7 +30,7 @@ py_library(
     srcs = ["models.py"],
     data = [
         "//deeplearning/ncc/published_results:embeddings",
-        "//deeplearning/ncc/published_results:task_devmap",
+        "//deeplearning/ncc/published_results:task_devmap_kernels",
         "//deeplearning/ncc/published_results:vocabulary",
     ],
     deps = [

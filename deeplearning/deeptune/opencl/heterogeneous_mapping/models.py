@@ -45,7 +45,7 @@ DEEPTUNE_INST2VEC_VOCAB_PATH = bazelutil.DataPath(
 # TODO(cec): Encode sequences at runtime, don't use the pre-baked ones.
 # The zip file containing encoded sequences.
 DEEPTUNE_INST2VEC_DATA_ARCHIVE = bazelutil.DataArchive(
-    'phd/deeplearning/ncc/published_results/task_devmap.zip')
+    'phd/deeplearning/ncc/published_results/task_devmap_kernels.zip')
 
 
 class HeterogeneousMappingModel(object):
