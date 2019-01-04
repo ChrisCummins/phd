@@ -217,26 +217,25 @@ def EncodeAndPadSources(atomizer: atomizers.AtomizerBase,
   return np.vstack([np.expand_dims(x, axis=0) for x in encoded])
 
 
-def DataFrameRowToSequenceFilePath(row: typing.Dict[str, typing.Any],
+def DataFrameRowToBytecodeFilePath(row: typing.Dict[str, typing.Any],
                                    datafolder: pathlib.Path) -> pathlib.Path:
   """Translate row into a pre-encoded sequence path."""
-  # TODO(cec): This won't be necessary once we actually encode things at
-  # runtime.
+  # TODO(cec): This won't be necessary once we get the bytecode at runtime.
   file_name = '-'.join([
-      row['program:benchmark_suite_name'], row['program:benchmark_name'],
-      row['program:opencl_kernel_name']
+    row['program:benchmark_suite_name'], row['program:benchmark_name'],
+    row['program:opencl_kernel_name']
   ])
 
   if file_name[:3] == 'npb':
     file_name += '_' + str(row['data:dataset_name'])
 
-  file_name += '_seq.csv'
+  file_name += '.ll'
 
-  sequence_file_path = datafolder / 'kernels_seq' / file_name
-  if not sequence_file_path.is_file():
-    raise FileNotFoundError(f"File not found: '{sequence_file_path}'")
+  bytecode_file_path = datafolder / 'kernels_ir' / file_name
+  if not bytecode_file_path.is_file():
+    raise FileNotFoundError(f"File not found: '{bytecode_file_path}'")
 
-  return sequence_file_path
+  return bytecode_file_path
 
 
 def EncodeAndPadSourcesWithInst2Vec(
@@ -247,18 +246,16 @@ def EncodeAndPadSourcesWithInst2Vec(
   sequence_lengths = []
   sequences = []
 
-  inst2vec_utils.CreateSeqDirFromIr(str(datafolder / 'kernels_ir'), vocab)
-
   for _, row in df.iterrows():
-    # TODO(cec): Encode program at runtime, don't use pre-encoded sequence.
-    sequence_file_path = DataFrameRowToSequenceFilePath(row, datafolder)
-    with open(sequence_file_path, 'r') as f:
-      sequence = f.read().splitlines()
-      if not sequence:
-        raise ValueError(f"File is empty: {sequence_file_path}")
+    # TODO(cec): Get bytecode at runtime, don't use pre-baked bytecodes.
+    bytecode_file_path = DataFrameRowToBytecodeFilePath(row, datafolder)
+    with open(bytecode_file_path, 'r') as f:
+      bytecode = f.read()
+
+    sequence = list(vocab.EncodeLlvmBytecode(bytecode).encoded)
 
     sequence_lengths.append(len(sequence))
-    sequences.append([int(s) for s in sequence])
+    sequences.append(sequence)
 
   if max_sequence_len is None:
     max_sequence_len = max(sequence_lengths)
