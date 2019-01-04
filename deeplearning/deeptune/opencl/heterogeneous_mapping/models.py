@@ -1,5 +1,8 @@
 """Models for predicting heterogeneous device mapping."""
+import pathlib
 import pickle
+import tempfile
+import tarfile
 import typing
 from collections import Counter
 
@@ -221,12 +224,12 @@ class DeepTune(HeterogemeousMappingModel):
     self.lstm_layer_size = lstm_layer_size
     self.dense_layer_size = dense_layer_size
     self.max_sequence_length = max_sequence_length
-    self.atomizer = None
+    self._atomizer = None
 
   def init(self, seed: int, atomizer: atomizers.AtomizerBase):
     np.random.seed(seed)
 
-    self.atomizer = atomizer
+    self._atomizer = atomizer
 
     # Language model. Takes as inputs source code sequences.
     code_in = Input(shape=(1024,), dtype="int32", name="code_in")
@@ -257,11 +260,43 @@ class DeepTune(HeterogemeousMappingModel):
 
     return self
 
+  @property
+  def atomizer(self):
+    if self._atomizer is None:
+      raise ValueError("Cannot acccess atomizer before init() called")
+    return self._atomizer
+
   def save(self, outpath):
-    self.model.save(outpath)
+    # DeepTune modles are stored as an uncompressed tarball with the following
+    # contents:
+    #     /keras_model.h5 - Full keras model.
+    #     /atomizer.pkl - Pickled atomizer.
+    with tempfile.TemporaryDirectory(prefix='phd_') as d:
+      d = pathlib.Path(d)
+
+      # Write the model files to a temporary directory.
+      self.model.save(d / 'keras_model.h5')
+      with open(d / 'atomizer.pkl', 'w') as outfile:
+        pickle.dump(self.model, outfile)
+
+      # Package the files as an uncompressed tarball.
+      with tarfile.open(outpath, mode='w') as tar:
+        tar.add(d / 'keras_model.h5', arcname='keras_model.h5')
+        tar.add(d / 'atomizer.pkl', arcname='atomizer.pkl')
+
 
   def restore(self, inpath):
-    self.model = keras_models.load_model(inpath)
+    with tempfile.TemporaryDirectory(prefix='phd_') as d:
+      d = pathlib.Path(d)
+
+      # Unpack the tarball to a temporary directory.
+      with tarfile.open(inpath) as tar:
+        tar.extractall(d)
+
+      # Restore model properties from files.
+      self.model = keras_models.load_model(d / 'keras_model.h5')
+      with open(d / 'atomizer.pkl', 'rb') as f:
+        self._atomizer = pickle.load(f)
 
   def train(self, df: pd.DataFrame, platform_name: str,
             verbose: bool = False):
