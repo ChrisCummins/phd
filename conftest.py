@@ -40,7 +40,7 @@ def pytest_collection_modifyitems(config, items):
   # that this file is being used incorrectly. To use this file, you must
   # use labm8.test.Main() as the entry point to your tests.
   try:
-    FLAGS.test_color_output
+    FLAGS.test_color
   except AttributeError:
     logging.fatal("Failed to access flags defined in //labm8:test. Are you "
                   "sure you are running this test using labm8.test.Main()?")
