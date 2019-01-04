@@ -47,5 +47,12 @@ def test_TrainTestSplitGenerator_num_splits(df: pd.DataFrame):
   assert len(list(utils.TrainTestSplitGenerator(df, 0))) == 20
 
 
+def test_TrainTestSplitGenerator_dataframe_types(df: pd.DataFrame):
+  """Test that train/test splitter returns data frames."""
+  for split in utils.TrainTestSplitGenerator(df, 0):
+    assert isinstance(split.train_df, pd.DataFrame)
+    assert isinstance(split.test_df, pd.DataFrame)
+
+
 if __name__ == '__main__':
   test.Main()

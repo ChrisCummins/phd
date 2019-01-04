@@ -265,29 +265,36 @@ class DeepTune(HeterogemeousMappingModel):
 
   def train(self, df: pd.DataFrame, platform_name: str,
             verbose: bool = False):
-    self.model.fit(self.DataFrameToModelInputs(df),
-                   [df["y_1hot"], df["y_1hot"]],
+    self.model.fit(self.DataFrameToModelInputs(df, platform_name),
+                   self.DataFrameToModelTargets(df),
                    epochs=self.num_epochs, batch_size=self.batch_size,
                    verbose=verbose, shuffle=True)
 
   def predict(self, df: pd.DataFrame, platform_name: str,
               verbose: bool = False):
     p = np.array(self.model.predict(
-        self.DataFrameToModelInputs(df),
+        self.DataFrameToModelInputs(df, platform_name),
         batch_size=self.batch_size, verbose=verbose))
     indices = [np.argmax(x) for x in p[0]]
     return indices
 
   def DataFrameToModelInputs(
-      self, df: pd.DataFrame) -> typing.Tuple[np.ndarray, np.ndarray]:
-    """Convert a pandas table to a tuple of model inputs."""
+      self, df: pd.DataFrame,
+      gpu_name: str) -> typing.List[np.ndarray]:
+    """Convert a pandas table to a list of model inputs."""
     sequences = EncodeAndPadSources(
         self.atomizer, df['program:opencl_src'], self.max_sequence_length)
     aux_in = np.array([
       df[f"feature:{gpu_name}:transfer"].values,
       df[f"param:{gpu_name}:wgsize"].values,
     ]).T
-    return aux_in, sequences
+    return [aux_in, sequences]
+
+  @staticmethod
+  def DataFrameToModelTargets(
+      df: pd.DataFrame) -> typing.List[np.ndarray]:
+    """Convert a pandas table to a list of model targets."""
+    return [np.vstack(df['y_1hot'].values), np.vstack(df['y_1hot'].values)]
 
 
 class NCC(DeepTune):
@@ -295,8 +302,8 @@ class NCC(DeepTune):
 
   Described in:
 
-      ﻿Ben-Nun, T., Jakobovits, A. S., & Hoefler, T. (2018). Neural Code 
-      Comprehension: A Learnable Representation of Code Semantics. In NeurIPS. 
+      ﻿Ben-Nun, T., Jakobovits, A. S., & Hoefler, T. (2018). Neural Code
+      Comprehension: A Learnable Representation of Code Semantics. In NeurIPS.
       https://doi.org/arXiv:1806.07336v3
   """
   __name__ = "NCC"

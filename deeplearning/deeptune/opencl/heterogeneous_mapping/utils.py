@@ -99,7 +99,7 @@ TrainTestSplit = collections.namedtuple(
 def TrainTestSplitGenerator(df: pd.DataFrame, seed: int):
   for gpu_name in ["amd_tahiti_7970", "nvidia_gtx_960"]:
     # Add the classification target columns `y` and `y_1hot`.
-    df = AddClassificationTargetToDataFrame(df, gpu_name)
+    df = AddClassificationTargetToDataFrame(df, gpu_name).reset_index()
 
     # Split into train/test indices for stratified 10-fold cross-validation.
     dataset_splitter = model_selection.StratifiedKFold(
@@ -107,8 +107,9 @@ def TrainTestSplitGenerator(df: pd.DataFrame, seed: int):
     dataset_splits = dataset_splitter.split(np.zeros(len(df)), df['y'].values)
 
     for i, (train_index, test_index) in enumerate(dataset_splits):
-      yield TrainTestSplit(i=i, train_df=df[train_index],
-                           test_df=df[test_index], gpu_name=gpu_name)
+      yield TrainTestSplit(i=i, train_df=df.iloc[train_index,:].copy(),
+                           test_df=df.iloc[test_index,:].copy(),
+                           gpu_name=gpu_name)
 
 
 def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
@@ -188,16 +189,16 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
     else:
       raise ValueError(split.gpu_name)
 
-    zero_r_runtimes = split.test_df[zero_r_runtime_column]
+    zero_r_runtimes = split.test_df[zero_r_runtime_column].values
 
     # speedups of predictions
     cpu_gpu_runtimes = split.test_df[[
       'runtime:intel_core_i7_3820',
-      f'runtime:{gpu_name}'
-    ]]
+      f'runtime:{split.gpu_name}'
+    ]].values
     p_runtimes = [
-      cpu_gpu_runtime[predicted_device]
-      for predicted_device, cpu_gpu_runtime in
+      cpu_gpu_runtime_row[prections_row]
+      for prections_row, cpu_gpu_runtime_row in
       zip(predictions, cpu_gpu_runtimes)]
     p_speedup = zero_r_runtimes / p_runtimes
 
