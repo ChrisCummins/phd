@@ -107,6 +107,9 @@ class StaticMapping(HeterogeneousMappingModel):
   __name__ = "Static mapping"
   __basename__ = "static"
 
+  def __init__(self):
+    self.model = None
+
   def init(self, seed: int, atomizer: atomizers.AtomizerBase):
     return self
 
@@ -156,6 +159,9 @@ class Grewe(HeterogeneousMappingModel):
   """
   __name__ = "Grewe et al."
   __basename__ = "grewe"
+
+  def __init__(self):
+    self.model = None
 
   def init(self, seed: int, atomizer: atomizers.AtomizerBase):
     self.model = sktree.DecisionTreeClassifier(
@@ -213,22 +219,30 @@ class DeepTune(HeterogeneousMappingModel):
   __name__ = "DeepTune"
   __basename__ = "deeptune"
 
-  def __init__(self, lstm_layer_size: int = 64, dense_layer_size: int = 32,
-               num_epochs: int = 50, batch_size: int = 64,
-               max_sequence_length: int = 1024):
+  def __init__(self, embedding_dim: int = None, lstm_layer_size: int = 64,
+               dense_layer_size: int = 32, num_epochs: int = 50,
+               batch_size: int = 64, max_sequence_length: int = 1024,
+               seqlen: int = 1024):
     """Constructor.
 
     Args:
+      embedding_dim: The size of the embedding. If not provided, an embedding
+        size of `atomizer.vocab_size + 1` is set, when the atomizer is provided
+        during init().
       lstm_layer_size: The number of neurons in the LSTM layers.
       dense_layer_size: The number of neurons in the dense layers.
       num_epochs: The number of epochs to train for.
       batch_size: The training and inference batch sizes.
+      seqlen: The number of tokens in sequences. All tokens are truncated or
+        padded to this length.
     """
+    self.embedding_dim = embedding_dim
     self.num_epochs = num_epochs
     self.batch_size = batch_size
     self.lstm_layer_size = lstm_layer_size
     self.dense_layer_size = dense_layer_size
     self.max_sequence_length = max_sequence_length
+    self.seqlen = seqlen
     self._atomizer = None
 
   def init(self, seed: int, atomizer: atomizers.AtomizerBase):
@@ -236,9 +250,12 @@ class DeepTune(HeterogeneousMappingModel):
 
     self._atomizer = atomizer
 
+    # Use atomizer vocab size as default embedding size.
+    embedding_dim = self.embedding_dim or atomizer.vocab_size + 1
+
     # Language model. Takes as inputs source code sequences.
-    code_in = Input(shape=(1024,), dtype="int32", name="code_in")
-    x = Embedding(input_dim=atomizer.vocab_size + 1,
+    code_in = Input(shape=(self.seqlen,), dtype="int32", name="code_in")
+    x = Embedding(input_dim=embedding_dim,
                   input_length=self.max_sequence_length,
                   output_dim=self.lstm_layer_size, name="embedding")(code_in)
     x = LSTM(self.lstm_layer_size, implementation=1, return_sequences=True,
@@ -337,51 +354,24 @@ class DeepTune(HeterogeneousMappingModel):
 
 
 class DeepTuneInst2Vec(DeepTune):
-  """Neural code comprehension predictive model for device mapping.
+  """DeepTune model using inst2vec neural code comprehension embeddings.
 
-  Described in:
+  The inst2vec embeddings are described in:
 
       ﻿Ben-Nun, T., Jakobovits, A. S., & Hoefler, T. (2018). Neural Code
       Comprehension: A Learnable Representation of Code Semantics. In NeurIPS.
       https://doi.org/arXiv:1806.07336v3
   """
-  __name__ = "ncc"
-  __basename__ = "ncc"
+  __name__ = "DeepTuneInst2Vec"
+  __basename__ = "deeptune_inst2vec"
 
-  def __init__(self, embedding_dim: int, **kwargs):
-    super(DeepTuneInst2Vec, self).__init__(**kwargs)
-    self.embedding_dim = embedding_dim
-
-  def init(self, seed: int, atomizer: atomizers.AtomizerBase):
-    # This is the same as DeepTune init, except that both LSTM layers have
-    # a number of neurons equal to the embedding dimensionality, rather than
-    # 64 neurons per layer.
-    np.random.seed(seed)
-
-    # Keras model
-    inp = Input(shape=(1024, self.embedding_dim,), dtype="float32",
-                name="code_in")
-    x = LSTM(self.embedding_dim, implementation=1, return_sequences=True,
-             name="lstm_1")(inp)
-    x = LSTM(self.embedding_dim, implementation=1, name="lstm_2")(x)
-    langmodel_out = Dense(2, activation="sigmoid")(x)
-
-    # Auxiliary inputs. wgsize and dsize.
-    auxiliary_inputs = Input(shape=(2,))
-    x = Concatenate()([auxiliary_inputs, x])
-    x = BatchNormalization()(x)
-    x = Dense(self.dense_layer_size, activation="relu")(x)
-    out = Dense(2, activation="sigmoid")(x)
-
-    self.model = Model(inputs=[auxiliary_inputs, inp],
-                       outputs=[out, langmodel_out])
-    self.model.compile(
-        optimizer="adam",
-        metrics=['accuracy'],
-        loss=["categorical_crossentropy", "categorical_crossentropy"],
-        loss_weights=[1., .2])
-
-    return self
+  def __init__(self, embedding_dim: int = 200, **deeptune_opts):
+    # This model has the same architecture as DeepTune, except that both LSTM
+    # layers have a number of neurons equal to the embedding dimensionality,
+    # rather than 64 neurons per layer.
+    deeptune_opts['embedding_dim'] = embedding_dim
+    deeptune_opts['lstm_layer_size'] = embedding_dim
+    super(DeepTuneInst2Vec, self).__init__(**deeptune_opts)
 
 
 ALL_MODELS = labtypes.AllSubclassesOfClass(HeterogeneousMappingModel)

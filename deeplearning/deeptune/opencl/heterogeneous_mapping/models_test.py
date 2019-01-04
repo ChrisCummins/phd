@@ -1,5 +1,6 @@
 """Unit tests for //deeplearning/deeptune/opencl/heterogeneous_mapping:models."""
 import pathlib
+import typing
 
 import pytest
 
@@ -21,7 +22,7 @@ def test_num_models():
 
 @pytest.mark.parametrize('model_cls', models.ALL_MODELS)
 def test_HeterogeneousMappingModel_init(
-    atomizer: atomizers.AsciiCharacterAtomizer, model_cls: models.Type):
+    atomizer: atomizers.AsciiCharacterAtomizer, model_cls: typing.Type):
   """Test that init() can be called without error."""
   model = model_cls()
   model.init(0, atomizer)
@@ -30,7 +31,7 @@ def test_HeterogeneousMappingModel_init(
 @pytest.mark.parametrize('model_cls', models.ALL_MODELS)
 def test_HeterogeneousMappingModel_save_restore(
     atomizer: atomizers.AsciiCharacterAtomizer, tempdir: pathlib.Path,
-    model_cls: models.Type):
+    model_cls: typing.Type):
   """Test that models can be saved and restored from file."""
   model_to_file = model_cls()
   model_to_file.init(0, atomizer)

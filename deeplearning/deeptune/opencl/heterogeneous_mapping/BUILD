@@ -48,6 +48,7 @@ py_test(
     deps = [
         ":models",
         "//labm8:test",
+        "//third_party/py/pytest",
     ],
 )
 
