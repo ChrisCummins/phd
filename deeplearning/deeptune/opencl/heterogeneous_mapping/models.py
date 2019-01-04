@@ -24,6 +24,7 @@ from sklearn import tree as sktree
 
 from compilers.llvm import clang
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
+from deeplearning.clgen.preprocessors import opencl
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.ncc import task_utils as inst2vec_utils
 from deeplearning.ncc import vocabulary as inst2vec_vocabulary
@@ -223,21 +224,24 @@ def DataFrameRowToKernelSrcPath(row: typing.Dict[str, typing.Any],
   """Translate row into an OpenCL kernel path."""
   # TODO(cec): This won't be necessary once we add the original OpenCL srcs to
   # the dataframe.
-  file_name = '-'.join([
+  file_name_stub = '-'.join([
     row['program:benchmark_suite_name'], row['program:benchmark_name'],
     row['program:opencl_kernel_name']
   ])
 
-  if file_name[:3] == 'npb':
-    file_name += '_' + str(row['data:dataset_name'])
+  bytecode_file_path = datafolder / 'kernels_cl' /  (file_name_stub + '.cl')
+  if bytecode_file_path.is_file():
+    return bytecode_file_path
 
-  file_name += '.cl'
+  # Some of the benchmark sources are dataset dependent. This is reflected by
+  # the dataset name being concatenated to the path.
+  bytecode_file_path = (
+    datafolder / 'kernels_cl' /
+    (file_name_stub + '_' + str(row['data:dataset_name']) + '.cl'))
+  if bytecode_file_path.is_file():
+    return bytecode_file_path
 
-  bytecode_file_path = datafolder / 'kernels_cl' / file_name
-  if not bytecode_file_path.is_file():
-    raise FileNotFoundError(f"File not found: '{bytecode_file_path}'")
-
-  return bytecode_file_path
+  raise FileNotFoundError(f"File not found: '{bytecode_file_path}'")
 
 
 def EncodeAndPadSourcesWithInst2Vec(
@@ -258,13 +262,26 @@ def EncodeAndPadSourcesWithInst2Vec(
         .decode('ascii')
 
     # Compile src to bytecode.
-    clang_args = [
-      '-xcl', '-O0', '-S', '-emit-llvm', '-o', '-', '-i', '-',
-      '-Wno-everything', '-I', str(datafolder / 'kernels_cl'),
+    clang_args = opencl.GetClangArgs(use_shim=False) + [
+      '-O0', '-S', '-emit-llvm', '-o', '-', '-i', '-',
+      # No warnings, and fail immediately on error.
+      '-Wno-everything', '-ferror-limit=1',
+      # Kernels have headers.
+      '-I', str(datafolder / 'kernels_cl'),
+      # NPB benchmarks require a #define CLASS macro to be set to the
+      # single-character name of the dataset.
+      f"-DCLASS='{row['data:dataset_name']}'",
+      # Benchmark 'npb-3.3-CG-main_0.cl' requires that an LSIZE macro be
+      # defined to the local work group size. Since the inst2vec pre-processing
+      # strips literals, any value will do here.
+      '-DLSIZE=64',
+      # Same as above, but for benchmark npb-3.3-MG-kernel_interp_1.cl.
+      '-DM=128',
     ]
     process = clang.Exec(clang_args, stdin=src)
     if process.returncode:
-      logging.error("stderr:", process.stderr)
+      logging.error("Failed to compile %s", src_file_path)
+      logging.error("stderr: %s", process.stderr)
       logging.fatal(f"clang failed with returncode {process.returncode}")
     bytecode = process.stdout
 
