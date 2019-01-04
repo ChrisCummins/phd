@@ -112,6 +112,16 @@ def TrainTestSplitGenerator(df: pd.DataFrame, seed: int):
                            gpu_name=gpu_name)
 
 
+def LoadPredictionsFromFile(predictions_path: pathlib.Path):
+  with open(predictions_path, 'rb') as f:
+    return pickle.load(f)
+
+
+def SavePredictionsToFile(predictions, predictions_path: pathlib.Path):
+  with open(predictions_path, 'wb') as outfile:
+    pickle.dump(predictions, outfile)
+
+
 def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
              workdir: pathlib.Path, seed: int) -> pd.DataFrame:
   """Evaluate a model.
@@ -145,14 +155,12 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
     predictions_path.parent.mkdir(parents=True, exist_ok=True)
 
     if predictions_path.is_file():
-      # Load predctions from cache, which means we don't need to train a
-      # model.
-      logging.info('Loading predictions from cache ...')
-      with open(predictions_path, 'rb') as f:
-        predictions = pickle.load(f)
+      # Load predctions from cache, which means we don't need to train a model.
+      logging.info('Loading %s', predictions_path)
+      predictions = LoadPredictionsFromFile(predictions_path)
     else:
       if model_path.is_file():
-        logging.info('Loading trained model ...')
+        logging.info('Loading %s', model_path)
         # Restore trained model from cache.
         model.restore(model_path)
       else:
@@ -166,10 +174,8 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
       # Test the model.
       predictions = model.predict(
           df=split.test_df, platform_name=split.gpu_name, verbose=False)
-
-      # cache results
-      with open(predictions_path, 'wb') as outfile:
-        pickle.dump(predictions, outfile)
+      logging.info('Writing %s', predictions_path)
+      SavePredictionsToFile(predictions, predictions_path)
 
     # benchmarks
     benchmarks = split.test_df['program:opencl_kernel_name'].values
@@ -177,7 +183,7 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
       split.test_df['program:benchmark_suite_name'].values)
 
     # oracle device mappings
-    oracle_device_mappings = split.test_df['y']
+    oracle_device_mappings = split.test_df['y'].values
     # whether predictions were correct or not
     predicted_is_correct = (predictions == oracle_device_mappings)
 
