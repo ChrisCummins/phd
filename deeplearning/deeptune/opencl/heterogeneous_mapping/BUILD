@@ -28,7 +28,11 @@ py_test(
 py_library(
     name = "models",
     srcs = ["models.py"],
-    data = ["//deeplearning/ncc/published_results:embeddings"],
+    data = [
+        "//deeplearning/ncc/published_results:embeddings",
+        "//deeplearning/ncc/published_results:task_devmap",
+        "//deeplearning/ncc/published_results:vocabulary",
+    ],
     deps = [
         ":utils",
         "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",

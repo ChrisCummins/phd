@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 from absl import flags
+from absl import logging
 from keras import models as keras_models
 from keras.layers import Dense, Embedding, Input, LSTM
 from keras.layers.merge import Concatenate
@@ -24,16 +25,25 @@ from sklearn import tree as sktree
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.ncc import task_utils as inst2vec_utils
+from deeplearning.ncc import vocabulary as inst2vec_vocabulary
 from labm8 import bazelutil
 from labm8 import labtypes
 
 
 FLAGS = flags.FLAGS
 
-
 # The pre-trained embeddings used by default by DeepTuneInst2Vec models.
 DEEPTUNE_INST2VEC_EMBEDDINGS = bazelutil.DataPath(
-  'phd/deeplearning/ncc/published_results/emb.p')
+    'phd/deeplearning/ncc/published_results/emb.p')
+
+# The vocabulary to use for encoding sequences used by DeepTuneInst2Vec models.
+DEEPTUNE_INST2VEC_VOCAB_PATH = bazelutil.DataPath(
+    'phd/deeplearning/ncc/published_results/vocabulary.zip')
+
+# TODO(cec): Encode sequences at runtime, don't use the pre-baked ones.
+# The zip file containing encoded sequences.
+DEEPTUNE_INST2VEC_DATA_ARCHIVE = bazelutil.DataArchive(
+    'phd/deeplearning/ncc/published_results/task_devmap.zip')
 
 
 class HeterogeneousMappingModel(object):
@@ -207,10 +217,55 @@ def EncodeAndPadSources(atomizer: atomizers.AtomizerBase,
   return np.vstack([np.expand_dims(x, axis=0) for x in encoded])
 
 
-def EncodeAndPadSourcesWithInst2Vec(df: pd.DataFrame, maxlen: int):
+def DataFrameRowToSequenceFilePath(row: typing.Dict[str, typing.Any],
+                                   datafolder: pathlib.Path) -> pathlib.Path:
+  """Translate row into a pre-encoded sequence path."""
+  # TODO(cec): This won't be necessary once we actually encode things at
+  # runtime.
+  file_name = '-'.join(
+      row['program:benchmark_suite_name'], row['program:benchamrk_name'],
+      row['program:opencl_kernel_name'])
+
+  if file_name[:3] == 'npb':
+    file_name += '_' + str(row['data:dataset_name'])
+
+  file_name += '_seq.csv'
+
+  sequence_file_path = datafolder / 'kernels_seq' / file_name
+  if not sequence_file_path.is_file():
+    raise FileNotFoundError(f"File not found: '{sequence_file_path}'")
+
+  return sequence_file_path
+
+
+def EncodeAndPadSourcesWithInst2Vec(
+    df: pd.DataFrame, vocab: inst2vec_vocabulary.VocabularyZipFile,
+    datafolder: pathlib.Path) -> typing.Tuple[np.array, int]:
   """Encode and pad source code using inst2vec translation."""
-  # TODO(cec): Implement! For now, we return placeholders of the correct size.
-  return [np.zeros(maxlen) for _ in range(len(df))]
+  sequence_lengths = []
+  sequences = []
+
+  for _, row in df.iterrows():
+    # TODO(cec): Encode program at runtime, don't use pre-encoded sequence.
+    sequence_file_path = DataFrameRowToSequenceFilePath(row, datafolder)
+    with open(sequence_file_path, 'r') as f:
+      sequence = f.read().splitlines()
+      if not sequence:
+        raise ValueError(f"File is empty: {sequence_file_path}")
+
+    sequence_lengths.append(len(sequence))
+    sequences.append([int(s) for s in sequence])
+
+  max_sequence_len = max(sequence_lengths)
+  logging.info('Sequence lengths: min=%d, avg=%.2f, max=%d',
+               min(sequence_lengths), np.mean(sequence_lengths),
+               max_sequence_len)
+
+  encoded = np.array(keras_sequence.pad_sequences(
+      sequences, maxlen=max_sequence_len, value=vocab.unknown_token_index))
+  encoded = np.vstack([np.expand_dims(x, axis=0) for x in encoded])
+
+  return encoded, max_sequence_len
 
 
 class DeepTune(HeterogeneousMappingModel):
@@ -268,7 +323,7 @@ class DeepTune(HeterogeneousMappingModel):
     # layers of LSTM network, returning a single vector of size
     # self.lstm_layer_size.
     input_layer = Input(
-      shape=self.input_shape, dtype=self.input_type, name="model_in")
+        shape=self.input_shape, dtype=self.input_type, name="model_in")
     lstm_input = input_layer
 
     if self.with_embedding_layer:
@@ -385,12 +440,14 @@ class DeepTuneInst2Vec(DeepTune):
   __basename__ = "deeptune_inst2vec"
 
   def __init__(self, embedding_matrix: np.ndarray = None,
+               vocabulary_file: typing.Optional[pathlib.Path] = None,
                input_shape: typing.List[int] = (1024,), **deeptune_opts):
-
     # If no embedding matrix is provided, the default is used.
     if embedding_matrix is None:
       embedding_matrix = inst2vec_utils.ReadEmbeddingFile(
           DEEPTUNE_INST2VEC_EMBEDDINGS)
+    if vocabulary_file is None:
+      vocabulary_file = DEEPTUNE_INST2VEC_VOCAB_PATH
 
     # This model has the same architecture as DeepTune, except that both LSTM
     # layers have a number of neurons equal to the embedding dimensionality,
@@ -406,7 +463,8 @@ class DeepTuneInst2Vec(DeepTune):
     # Embedding vectors are floats.
     deeptune_opts['input_type'] = 'float32'
 
-    self._embedding_matrix = embedding_matrix
+    self.embedding_matrix = embedding_matrix
+    self.vocabulary_file = vocabulary_file
 
     super(DeepTuneInst2Vec, self).__init__(**deeptune_opts)
 
@@ -416,12 +474,15 @@ class DeepTuneInst2Vec(DeepTune):
     This override of DeepTune.DataFrameToModelInputs() provides the inst2vec
     functionality, returning embeddings.
     """
-    sequences = EncodeAndPadSourcesWithInst2Vec(df, self.input_shape[0])
+    with DEEPTUNE_INST2VEC_DATA_ARCHIVE as datafolder:
+      with inst2vec_vocabulary.VocabularyZipFile(self.vocabulary_file) as vocab:
+        sequences = EncodeAndPadSourcesWithInst2Vec(
+            df, self.input_shape[0], vocab, datafolder)
 
     # Translate encoded sequences into sequences of normalized embeddings.
     sequence_ph = tf.placeholder(dtype=tf.int32)
     normalized_embedding_matrix = tf.nn.l2_normalize(
-        self._embedding_matrix, axis=1)
+        self.embedding_matrix, axis=1)
     embedding_input_op = tf.nn.embedding_lookup(
         normalized_embedding_matrix, sequence_ph)
 
