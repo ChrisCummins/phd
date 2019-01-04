@@ -476,7 +476,8 @@ class DeepTuneInst2Vec(DeepTune):
     # slow.
     logging.info('Determining max sequence length')
     _, maxlen = self.DataFrameToModelInputs(
-        opencl_device_mapping_dataset.OpenClDeviceMappingsDataset().df)
+        opencl_device_mapping_dataset.OpenClDeviceMappingsDataset().df,
+        'amd_tahiti_7970')
     logging.info('Max sequence length = %d', maxlen)
     return maxlen
 
