@@ -31,7 +31,7 @@ class ExperimentalResults(object):
   def __init__(self, cache_dir: pathlib.Path):
     self._cache_dir = cache_dir
 
-  def EvaluateModel(self, model: models.HeterogemeousMappingModel,
+  def EvaluateModel(self, model: models.HeterogeneousMappingModel,
                     df: typing.Optional[pd.DataFrame] = None):
     """Evaluate a model.
 
