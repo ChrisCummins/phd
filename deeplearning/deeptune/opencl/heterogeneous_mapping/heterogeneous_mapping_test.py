@@ -22,15 +22,6 @@ def r() -> heterogeneous_mapping.ExperimentalResults:
     yield heterogeneous_mapping.ExperimentalResults(pathlib.Path(d))
 
 
-@pytest.fixture(scope='function')
-def mini_deeptune_model() -> models.DeepTune:
-  """Test fixture that returns a small DeepTune model.
-
-  The idea is that this model is quick to train / evaluate.
-  """
-  return models.DeepTune(num_epochs=1, lstm_layer_size=4, dense_layer_size=4)
-
-
 def test_atomizer_vocab_size(r: heterogeneous_mapping.ExperimentalResults):
   """Test that atomizer has expected vocab size."""
   assert r.atomizer.vocab_size == 128
@@ -71,19 +62,7 @@ def test_deeptune_speedup(r: heterogeneous_mapping.ExperimentalResults):
       2.373917)
 
 
-def test_deeptune_smoke_test(r: heterogeneous_mapping.ExperimentalResults,
-                             mini_deeptune_model: models.DeepTune):
-  """Test that a small deeptune model can be evaluated."""
-  # Test only on the first 30 rows of the full dataset.
-  num_rows_to_test_on = 30
-  df = r.EvaluateModel(
-      mini_deeptune_model,
-      df=r.dataset.df.iloc[range(num_rows_to_test_on):].copy())
-  # Flaky test: it's possible that the model could get *everything* wrong, but
-  # this is unlikely.
-  assert df['Correct?'].mean() > 0
-
-
+@pytest.mark.slow(reason='Takes 10 minutes')
 def test_adversarial_df(r: heterogeneous_mapping.ExperimentalResults):
   """Test that adversarial dataframe can be produced."""
   assert len(r.adversarial_df)
