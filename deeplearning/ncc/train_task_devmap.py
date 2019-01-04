@@ -20,7 +20,49 @@
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ==============================================================================
-"""Training workflow for optimal device mapping prediction"""
+"""Training workflow for optimal device mapping prediction
+
+Output when reproducing published results:
+
+$ bazel run //deeplearning/ncc:train_task_devmap -- --v=1 \
+    --embeddings_file=$PHD/deeplearning/ncc/published_results/emb.p \
+    --vocabulary_zip_path=$PHD/deeplearning/ncc/published_results/vocabulary.zip
+
+# ... snip ...
+
+--- Prediction results
+                                 Correct?    Speedup
+Platform        Benchmark Suite
+AMD Tahiti 7970 AMD SDK          0.500000   0.860580
+                NPB              0.834915   2.926740
+                NVIDIA SDK       0.583333   2.158376
+                Parboil          0.894737   6.350277
+                Polybench        0.740741  13.994454
+                Rodinia          0.645161   3.781416
+                SHOC             0.729167   1.006453
+NVIDIA GTX 970  AMD SDK          0.500000   0.781197
+                NPB              0.853890   1.417215
+                NVIDIA SDK       0.666667   1.151123
+                Parboil          0.789474   1.397015
+                Polybench        0.777778   1.155757
+                Rodinia          0.516129   1.082831
+                SHOC             0.770833   1.877359
+--- Prediction results (summarized)
+                 Correct?   Speedup
+Platform
+AMD Tahiti 7970  0.804412  3.303089
+NVIDIA GTX 970   0.816176  1.403845
+--- Model comparison: prediction accuracy
+                 Static mapping  Grewe et al.   DeepTune  DeepTuneInst2Vec
+AMD Tahiti 7970       58.823529     73.382353  83.676471         80.441176
+NVIDIA GTX 970        56.911765     72.941176  80.294118         81.617647
+Average               57.867647     73.161765  81.985294         81.029412
+--- Model comparison: speedups
+                 Static mapping  Grewe et al.  DeepTune  DeepTuneInst2Vec
+AMD Tahiti 7970             1.0      2.905822  3.335612          3.303089
+NVIDIA GTX 970              1.0      1.264801  1.412222          1.403845
+Average                     1.0      2.085312  2.373917          2.353467
+"""
 import os
 import pathlib
 import pickle
