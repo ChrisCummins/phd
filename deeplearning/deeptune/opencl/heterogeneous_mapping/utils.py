@@ -85,8 +85,8 @@ def AddClassificationTargetToDataFrame(
   ]].values
   y = [1 if gpu < cpu else 0 for cpu, gpu in cpu_gpu_runtimes]
   df['y'] = y
-  # Add a column which contains a [bool,bool] array with a 1-hot encoded optimal
-  # value.
+  # Add a column which contains a [bool,bool] array with a 1-hot encoded
+  # optimal value.
   df['y_1hot'] = [np.array([not y_, y_], dtype=np.int32) for y_ in y]
   return df
 
