@@ -1,8 +1,12 @@
-"""Models for predicting heterogeneous device mapping."""
+"""Models for predicting heterogeneous device mapping.
+
+Attributes:
+  ALL_MODELS: A set of HeterogeneousMappingModel subclasses.
+"""
 import pathlib
 import pickle
-import tempfile
 import tarfile
+import tempfile
 import typing
 from collections import Counter
 
@@ -20,12 +24,13 @@ from sklearn import tree as sktree
 
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.clgen.corpuses import atomizers
+from labm8 import labtypes
 
 
 FLAGS = flags.FLAGS
 
 
-class HeterogemeousMappingModel(object):
+class HeterogeneousMappingModel(object):
   """A model for predicting OpenCL heterogeneous device mappings.
 
   Attributes:
@@ -98,7 +103,7 @@ class HeterogemeousMappingModel(object):
     raise NotImplementedError
 
 
-class StaticMapping(HeterogemeousMappingModel):
+class StaticMapping(HeterogeneousMappingModel):
   __name__ = "Static mapping"
   __basename__ = "static"
 
@@ -139,7 +144,7 @@ class StaticMapping(HeterogemeousMappingModel):
       return LookupError
 
 
-class Grewe(HeterogemeousMappingModel):
+class Grewe(HeterogeneousMappingModel):
   """Grewe et al. predictive model for heterogeneous device mapping.
 
   The Grewe et al. predictive model uses decision trees and hand engineered
@@ -193,7 +198,7 @@ def EncodeAndPadSources(atomizer: atomizers.AtomizerBase,
   return np.vstack([np.expand_dims(x, axis=0) for x in encoded])
 
 
-class DeepTune(HeterogemeousMappingModel):
+class DeepTune(HeterogeneousMappingModel):
   """DeepTune predictive model for heterogeneous device mapping.
 
   DeepTune predicts optimal device mapping from raw source code inputs, and the
@@ -284,7 +289,6 @@ class DeepTune(HeterogemeousMappingModel):
         tar.add(d / 'keras_model.h5', arcname='keras_model.h5')
         tar.add(d / 'atomizer.pkl', arcname='atomizer.pkl')
 
-
   def restore(self, inpath):
     with tempfile.TemporaryDirectory(prefix='phd_') as d:
       d = pathlib.Path(d)
@@ -332,7 +336,7 @@ class DeepTune(HeterogemeousMappingModel):
     return [np.vstack(df['y_1hot'].values), np.vstack(df['y_1hot'].values)]
 
 
-class NCC(DeepTune):
+class DeepTuneInst2Vec(DeepTune):
   """Neural code comprehension predictive model for device mapping.
 
   Described in:
@@ -341,11 +345,11 @@ class NCC(DeepTune):
       Comprehension: A Learnable Representation of Code Semantics. In NeurIPS.
       https://doi.org/arXiv:1806.07336v3
   """
-  __name__ = "NCC"
+  __name__ = "ncc"
   __basename__ = "ncc"
 
   def __init__(self, embedding_dim: int, **kwargs):
-    super(NCC, self).__init__(**kwargs)
+    super(DeepTuneInst2Vec, self).__init__(**kwargs)
     self.embedding_dim = embedding_dim
 
   def init(self, seed: int, atomizer: atomizers.AtomizerBase):
@@ -378,3 +382,6 @@ class NCC(DeepTune):
         loss_weights=[1., .2])
 
     return self
+
+
+ALL_MODELS = labtypes.AllSubclassesOfClass(HeterogeneousMappingModel)

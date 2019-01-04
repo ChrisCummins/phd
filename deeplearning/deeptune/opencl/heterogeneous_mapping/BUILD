@@ -32,12 +32,22 @@ py_library(
         ":utils",
         "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
         "//deeplearning/clgen/corpuses:atomizers",
+        "//labm8:labtypes",
         "//third_party/py/absl",
         "//third_party/py/keras",
         "//third_party/py/numpy",
         "//third_party/py/pandas",
         "//third_party/py/progressbar",
         "//third_party/py/scipy:scikit_learn",
+    ],
+)
+
+py_test(
+    name = "models_test",
+    srcs = ["models_test.py"],
+    deps = [
+        ":models",
+        "//labm8:test",
     ],
 )
 
