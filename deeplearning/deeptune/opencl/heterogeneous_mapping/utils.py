@@ -149,9 +149,11 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
 
     # Path of cached model and predictions.
     model_path = (
-        workdir / f"{model.__basename__}-{split.gpu_name}-{split.i:02d}.model")
+        workdir /
+        f"{model.__basename__}-{split.gpu_name}-{split.i:02d}.trained_model")
     predictions_path = (
-        workdir / f"{model.__basename__}-{split.gpu_name}-{split.i:02d}.pred")
+        workdir /
+        f"{model.__basename__}-{split.gpu_name}-{split.i:02d}.predictions")
 
     # Create cache directories.
     model_path.parent.mkdir(parents=True, exist_ok=True)
