@@ -28,6 +28,7 @@ import struct
 import zipfile
 from collections import defaultdict
 
+import numpy as np
 import wget
 from absl import flags
 from absl import logging
@@ -67,7 +68,7 @@ def download_and_unzip(url, dataset_name, data_folder):
 ########################################################################################################################
 # Reading, writing and dumping files
 ########################################################################################################################
-def ReadEmbeddingFileFromFlags():
+def ReadEmbeddingFileFromFlags() -> np.ndarray:
   """Load embedding matrix from file"""
   assert os.path.exists(
       FLAGS.embeddings_file), "File " + FLAGS.embeddings_file + " does not exist"
