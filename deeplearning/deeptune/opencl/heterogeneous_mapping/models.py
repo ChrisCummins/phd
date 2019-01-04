@@ -281,7 +281,7 @@ class DeepTune(HeterogeneousMappingModel):
 
       # Write the model files to a temporary directory.
       self.model.save(d / 'keras_model.h5')
-      with open(d / 'atomizer.pkl', 'w') as outfile:
+      with open(d / 'atomizer.pkl', 'wb') as outfile:
         pickle.dump(self._atomizer, outfile)
 
       # Package the files as an uncompressed tarball.
