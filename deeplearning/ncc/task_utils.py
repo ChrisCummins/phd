@@ -74,7 +74,7 @@ def ReadEmbeddingFile(path: pathlib.Path) -> np.ndarray:
   """Load embedding matrix from file"""
   if not path.is_file():
     raise app.UsageError(
-      f"Embedding file not found: '{path}'")
+        f"Embedding file not found: '{path}'")
   logging.info('Loading pre-trained embeddings from %s', path)
   with open(path, 'rb') as f:
     embedding_matrix = pickle.load(f)
@@ -88,7 +88,7 @@ def ReadEmbeddingFileFromFlags() -> np.ndarray:
   """Load embedding matrix from file"""
   if not FLAGS.embeddings_file:
     raise app.UsageError("--embeddings_file not set")
-  return ReadEmbeddingFile(pathlit.Path(FLAGS.embeddings_file))
+  return ReadEmbeddingFile(pathlib.Path(FLAGS.embeddings_file))
 
 
 ########################################################################################################################
