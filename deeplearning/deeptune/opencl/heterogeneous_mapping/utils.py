@@ -139,11 +139,14 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
   Returns:
     Evaluation results.
   """
-  bar = progressbar.ProgressBar(max_value=10 * 2)
-
   data = []
 
   for split in TrainTestSplitGenerator(df, seed):
+    logging.info(
+        'Evaluating model %s for device %s, split %d of train=%d/test=%d '
+        'programs', model.__name__, split.gpu_name, split.i,
+        len(split.train_df), len(split.test_df))
+
     # Path of cached model and predictions.
     model_path = (
         workdir / f"{model.__basename__}-{split.gpu_name}-{split.i:02d}.model")
@@ -165,7 +168,6 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
         model.restore(model_path)
       else:
         # Train and cache a model.
-        logging.info('Training new model ...')
         model.init(seed=seed, atomizer=atomizer)
         model.train(
             df=split.train_df, platform_name=split.gpu_name, verbose=False)
@@ -232,8 +234,6 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
         "Speedup": predicted_speedup,
       })
 
-    # update progress bar
-    bar.update(split.i)
 
   return pd.DataFrame(
       data, index=range(1, len(data) + 1), columns=[

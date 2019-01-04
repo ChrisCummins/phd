@@ -59,6 +59,8 @@ class ExperimentalResults(object):
         self.dataset.programs_df['program:opencl_src'].values)
     return atomizer
 
+  # Baseline.
+
   @decorators.memoized_property
   def baseline_model(self):
     return models.StaticMapping()
@@ -66,6 +68,8 @@ class ExperimentalResults(object):
   @decorators.memoized_property
   def baseline_df(self):
     return self.EvaluateModel(self.baseline_model)
+
+  # Grewe et. al.
 
   @decorators.memoized_property
   def grewe_model(self):
@@ -75,6 +79,8 @@ class ExperimentalResults(object):
   def grewe_df(self):
     return self.EvaluateModel(self.grewe_model)
 
+  # DeepTune
+
   @decorators.memoized_property
   def deeptune_model(self):
     return models.DeepTune()
@@ -82,6 +88,18 @@ class ExperimentalResults(object):
   @decorators.memoized_property
   def deeptune_df(self):
     return self.EvaluateModel(self.deeptune_model)
+
+  # DeepTuneInst2Vec
+
+  @decorators.memoized_property
+  def deeptune_inst2vec_model(self):
+    return models.DeepTuneInst2Vec()
+
+  @decorators.memoized_property
+  def deeptune_inst2vec_df(self):
+    return self.EvaluateModel(self.deeptune_inst2vec_model)
+
+  # Models trained with adversarial data.
 
   @decorators.memoized_property
   def adversarial_df(self):

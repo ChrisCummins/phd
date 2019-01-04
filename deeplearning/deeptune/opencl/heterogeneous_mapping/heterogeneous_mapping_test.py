@@ -48,6 +48,16 @@ def test_grewe_speedup(r: heterogeneous_mapping.ExperimentalResults):
   assert r.grewe_df['Speedup'].mean() == pytest.approx(2.094359)
 
 
+def test_deeptune_model(r: heterogeneous_mapping.ExperimentalResults):
+  """Test that model property can be accessed."""
+  assert r.deeptune_model
+
+
+def test_deeptune_inst2vec_model(r: heterogeneous_mapping.ExperimentalResults):
+  """Test that model property can be accessed."""
+  assert r.deeptune_inst2vec_model
+
+
 @pytest.mark.slow(reason='Takes several hours to train full model')
 def test_deeptune_accuracy(r: heterogeneous_mapping.ExperimentalResults):
   """Test the accuracy of the DeepTune model."""

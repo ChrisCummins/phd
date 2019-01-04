@@ -385,7 +385,7 @@ class DeepTuneInst2Vec(DeepTune):
   __basename__ = "deeptune_inst2vec"
 
   def __init__(self, embedding_matrix: np.ndarray = None,
-               **deeptune_opts):
+               input_shape: typing.List[int] = (1024,), **deeptune_opts):
 
     # If no embedding matrix is provided, the default is used.
     if embedding_matrix is None:
@@ -398,8 +398,7 @@ class DeepTuneInst2Vec(DeepTune):
 
     # Append the embedding dimensionality to the input shape.
     _, embedding_dim = embedding_matrix.shape
-    deeptune_opts['input_shape'] = (
-        deeptune_opts['input_shape'][0], embedding_dim)
+    deeptune_opts['input_shape'] = (input_shape[0], embedding_dim)
 
     deeptune_opts['with_embedding_layer'] = False
     deeptune_opts['lstm_layer_size'] = embedding_dim
