@@ -123,39 +123,42 @@ def main(argv: typing.List[str]):
 
   print(results.atomizer)
 
-  print("Evaluating static mapping ...", file=sys.stderr)
+  print('\n=== STATIC MAPPING ===============================================')
+  print("Evaluating static mapping ...")
   print(results.baseline_df.groupby(['Platform', 'Benchmark Suite'])[
           'Platform', 'Correct?', 'Speedup'].mean())
   print(results.baseline_df.groupby(['Platform'])[
           'Platform', 'Correct?', 'Speedup'].mean())
+  print('=== END STATIC MAPPING ===========================================\n')
 
-  print("Evaluating Grewe et. al model ...", file=sys.stderr)
+  print('\n=== GREWE ET AL ==================================================')
   print(results.grewe_df.groupby(['Platform', 'Benchmark Suite'])[
           'Platform', 'Correct?', 'Speedup'].mean())
   print(results.grewe_df.groupby(['Platform'])[
           'Platform', 'Correct?', 'Speedup'].mean())
+  print('=== END GREWE ET AL ==============================================\n')
 
-  print("Evaluating DeepTune model ...", file=sys.stderr)
+  print('\n=== DEEPTUNE =====================================================')
   print(results.deeptune_df.groupby(['Platform', 'Benchmark Suite'])[
           'Platform', 'Correct?', 'Speedup'].mean())
   print(results.deeptune_df.groupby(['Platform'])[
           'Platform', 'Correct?', 'Speedup'].mean())
+  print('=== END DEEPTUNE =================================================\n')
 
-  print("Evaluating DeepTuneInst2Vec model ...", file=sys.stderr)
+  print('\n=== DEEPTUNE INST2VEC ============================================')
   print(results.deeptune_inst2vec_df.groupby(['Platform', 'Benchmark Suite'])[
           'Platform', 'Correct?', 'Speedup'].mean())
   print(results.deeptune_inst2vec_df.groupby(['Platform'])[
           'Platform', 'Correct?', 'Speedup'].mean())
+  print('=== END DEEPTUNE INST2VEC ========================================\n')
 
-  # print("Overview of DeepTune model", file=sys.stderr)
-  # results.deeptune_model.model.summary()
-
-  print("Evaluating adversarial DeepTune model ...", file=sys.stderr)
+  print('\n=== ADVERSARIAL DEEPTUNE =========================================')
   print(
       results.adversarial_deeptune_df.groupby(['Platform', 'Benchmark Suite'])[
         'Platform', 'Correct?', 'Speedup'].mean())
   print(results.adversarial_deeptune_df.groupby(['Platform'])[
           'Platform', 'Correct?', 'Speedup'].mean())
+  print('=== END ADVERSARIAL DEEPTUNE =====================================\n')
 
 
 if __name__ == '__main__':
