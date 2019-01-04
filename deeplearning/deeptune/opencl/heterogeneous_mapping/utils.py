@@ -236,8 +236,8 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
         "Speedup": predicted_speedup,
       })
 
-    logging.info('model=%s, platform=%s, split=%s, n=%d, '
-                 'acc=%.2f %%, avg speedup=%.2f x',
+    logging.info('Results: model=%s, platform=%s, split=%s, n=%d, '
+                 'accuracy=%.2f%%, speedup=%.2fx',
                  model.__basename__, split.gpu_name, split.i,
                  len(split.test_df),
                  np.mean([r['Correct?'] for r in split_data]) * 100,
