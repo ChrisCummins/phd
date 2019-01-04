@@ -39,6 +39,7 @@ py_library(
         "//third_party/py/pandas",
         "//third_party/py/progressbar",
         "//third_party/py/scipy:scikit_learn",
+        "//third_party/py/tensorflow",
     ],
 )
 

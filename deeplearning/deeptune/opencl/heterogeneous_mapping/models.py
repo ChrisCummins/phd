@@ -8,12 +8,11 @@ import pickle
 import tarfile
 import tempfile
 import typing
-from collections import Counter
 
 import numpy as np
 import pandas as pd
+import tensorflow as tf
 from absl import flags
-from absl import logging
 from keras import models as keras_models
 from keras.layers import Dense, Embedding, Input, LSTM
 from keras.layers.merge import Concatenate
@@ -24,6 +23,7 @@ from sklearn import tree as sktree
 
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.clgen.corpuses import atomizers
+from deeplearning.ncc import task_utils as inst2vec_utils
 from labm8 import labtypes
 
 
@@ -54,7 +54,8 @@ class HeterogeneousMappingModel(object):
     """
     pass
 
-  def save(self, outpath: str) -> None:
+  # TODO(cec): Switch to exclusively pathlib.Path for argument.
+  def save(self, outpath: typing.Union[str, pathlib.Path]) -> None:
     """Save model state.
 
     This must capture all of the relevant state of the model. It is up
@@ -65,7 +66,8 @@ class HeterogeneousMappingModel(object):
     """
     raise NotImplementedError
 
-  def restore(self, inpath: str) -> None:
+  # TODO(cec): Switch to exclusively pathlib.Path for argument.
+  def restore(self, inpath: typing.Union[str, pathlib.Path]) -> None:
     """Load a trained model from file.
 
     This is called in place of init() if a saved model file exists. It
@@ -199,6 +201,12 @@ def EncodeAndPadSources(atomizer: atomizers.AtomizerBase,
   return np.vstack([np.expand_dims(x, axis=0) for x in encoded])
 
 
+def EncodeAndPadSourcesWithInst2Vec(df: pd.DataFrame, maxlen: int):
+  """Encode and pad source code using inst2vec translation."""
+  # TODO(cec): Implement! For now, we return placeholders of the correct size.
+  return [np.zeros(maxlen) for _ in range(len(df))]
+
+
 class DeepTune(HeterogeneousMappingModel):
   """DeepTune predictive model for heterogeneous device mapping.
 
@@ -214,45 +222,55 @@ class DeepTune(HeterogeneousMappingModel):
   __name__ = "DeepTune"
   __basename__ = "deeptune"
 
-  def __init__(self, embedding_dim: int = None, lstm_layer_size: int = 64,
-               dense_layer_size: int = 32, num_epochs: int = 50,
-               batch_size: int = 64, seqlen: int = 1024):
+  def __init__(self, lstm_layer_size: int = 64, dense_layer_size: int = 32,
+               num_epochs: int = 50, batch_size: int = 64, seqlen: int = 1024,
+               with_embedding_layer: bool = True):
     """Constructor.
 
     Args:
-      embedding_dim: The size of the embedding. If not provided, an embedding
-        size of `atomizer.vocab_size + 1` is set, when the atomizer is provided
-        during init().
       lstm_layer_size: The number of neurons in the LSTM layers.
       dense_layer_size: The number of neurons in the dense layers.
       num_epochs: The number of epochs to train for.
       batch_size: The training and inference batch sizes.
       seqlen: The number of tokens in sequences. All tokens are truncated or
         padded to this length.
+      with_embedding_layer: If True, feed inputs into an embedding layer prior
+        to input into the LSTMs. Else, the values returned by
+        DataFrameToModelInputs() are fed directly into the LSTMs.
     """
-    self.embedding_dim = embedding_dim
     self.num_epochs = num_epochs
     self.batch_size = batch_size
     self.lstm_layer_size = lstm_layer_size
     self.dense_layer_size = dense_layer_size
     self.seqlen = seqlen
     self._atomizer = None
+    self.with_embedding_layer = with_embedding_layer
 
   def init(self, seed: int, atomizer: atomizers.AtomizerBase):
     np.random.seed(seed)
 
     self._atomizer = atomizer
 
-    # Use atomizer vocab size as default embedding size.
-    embedding_dim = self.embedding_dim or atomizer.vocab_size + 1
+    # Language model. It begins with an optional embedding layer, then has two
+    # layers of LSTM network, returning a single vector of size
+    # self.lstm_layer_size.
+    input_layer_name = "code_in" if self.with_embedding_layer else "model_in"
 
-    # Language model. Takes as inputs source code sequences.
-    code_in = Input(shape=(self.seqlen,), dtype="int32", name="code_in")
-    x = Embedding(input_dim=embedding_dim,
-                  input_length=self.seqlen,
-                  output_dim=self.lstm_layer_size, name="embedding")(code_in)
+    input_layer = Input(shape=(self.seqlen,), dtype="int32",
+                        name=input_layer_name)
+
+    # The embedding layer is optional. This allows the DeepTuneInst2Vec subclass
+    # to feed the pre-trained embeddings directly into the LSTMs.
+    lstm_input = input_layer
+    if self.with_embedding_layer:
+      embedding_dim = atomizer.vocab_size + 1
+      embedding = Embedding(
+          input_dim=embedding_dim, input_length=self.seqlen,
+          output_dim=self.lstm_layer_size, name="embedding")(input_layer)
+      lstm_input = embedding
+
     x = LSTM(self.lstm_layer_size, implementation=1, return_sequences=True,
-             name="lstm_1")(x)
+             name="lstm_1")(lstm_input)
     x = LSTM(self.lstm_layer_size, implementation=1, name="lstm_2")(x)
     langmodel_out = Dense(2, activation="sigmoid")(x)
 
@@ -266,7 +284,7 @@ class DeepTune(HeterogeneousMappingModel):
     x = Dense(self.dense_layer_size, activation="relu")(x)
     out = Dense(2, activation="sigmoid")(x)
 
-    self.model = Model(inputs=[auxiliary_inputs, code_in],
+    self.model = Model(inputs=[auxiliary_inputs, input_layer],
                        outputs=[out, langmodel_out])
     self.model.compile(
         optimizer="adam", metrics=['accuracy'],
@@ -358,14 +376,52 @@ class DeepTuneInst2Vec(DeepTune):
   __name__ = "DeepTuneInst2Vec"
   __basename__ = "deeptune_inst2vec"
 
-  def __init__(self, embedding_dim: int = 200, **deeptune_opts):
+  def __init__(self, embedding_matrix: np.ndarry = None,
+               **deeptune_opts):
     # This model has the same architecture as DeepTune, except that both LSTM
     # layers have a number of neurons equal to the embedding dimensionality,
     # rather than 64 neurons per layer.
-    # TODO(cec): Re-enable this once train() and predict() are implemented.
-    # deeptune_opts['embedding_dim'] = embedding_dim
-    # deeptune_opts['lstm_layer_size'] = embedding_dim
+
+    # If no embedding matrix is provided, it is read from system flags.
+    if embedding_matrix is None:
+      embedding_matrix = inst2vec_utils.ReadEmbeddingFileFromFlags()
+
+    # Get the embedding dimensions from the embedding matrix.
+    _, embedding_dim = embedding_matrix.shape
+    deeptune_opts['lstm_layer_size'] = embedding_dim
+    deeptune_opts['with_embedding_layer'] = False
+
+    self._embedding_matrix = embedding_matrix
+
     super(DeepTuneInst2Vec, self).__init__(**deeptune_opts)
+
+  def DataFrameToModelInputs(self, df: pd.DataFrame, gpu_name: str):
+    """Convert a pandas table to a list of model inputs.
+
+    This override of DeepTune.DataFrameToModelInputs() provides the inst2vec
+    functionality, returning embeddings.
+    """
+    sequences = EncodeAndPadSourcesWithInst2Vec(df, self.seqlen)
+
+    # Translate encoded sequences into sequences of normalized embeddings.
+    sequence_ph = tf.placeholder(dtype=tf.int32)
+    normalized_embedding_matrix = tf.nn.l2_normalize(
+        self._embedding_matrix, axis=1)
+    embedding_input_op = tf.nn.embedding_lookup(
+        normalized_embedding_matrix, sequence_ph)
+
+    with tf.Session() as sess:
+      # Tensor of shape (len(df), sequence length, embedding dimension).
+      embedding_input = sess.run(
+          embedding_input_op, feed_dict={sequence_ph: sequences})
+
+    # Get the auxiliary inputs.
+    aux_in = np.array([
+      df[f"feature:{gpu_name}:transfer"].values,
+      df[f"param:{gpu_name}:wgsize"].values,
+    ]).T
+
+    return [aux_in, embedding_input]
 
 
 ALL_MODELS = labtypes.AllSubclassesOfClass(HeterogeneousMappingModel)

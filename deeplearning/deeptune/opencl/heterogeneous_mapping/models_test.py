@@ -24,12 +24,13 @@ def df() -> pd.DataFrame:
   dataset = opencl_device_mapping_dataset.OpenClDeviceMappingsDataset()
   # Use the first 10 rows, and set classification target.
   yield utils.AddClassificationTargetToDataFrame(
-      dataset.df.iloc[range(10),:].copy(), 'amd_tahiti_7970')
+      dataset.df.iloc[range(10), :].copy(), 'amd_tahiti_7970')
+
 
 @pytest.fixture(scope='session')
 def df_atomizer(df: pd.DataFrame) -> pd.DataFrame:
   yield atomizers.AsciiCharacterAtomizer.FromText(
-    '\n'.join(df['program:opencl_src'].values))
+      '\n'.join(df['program:opencl_src'].values))
 
 
 def _InstantiateModelWithTestOptions(
