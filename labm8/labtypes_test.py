@@ -158,5 +158,57 @@ def test_SetDiff_input_ranges():
   assert labtypes.SetDiff(range(3), range(4)) == {3}
 
 
+# AllSubclassesOfClass()
+
+class A(object):
+  """Class for AllSubclassesOfClass() tests."""
+  pass
+
+
+def test_AllSubclassesOfClass_no_subclasses():
+  """Test that class with no subclasses returns empty set."""
+  assert not labtypes.AllSubclassesOfClass(A)
+
+
+class B(object):
+  """Class for AllSubclassesOfClass() tests."""
+  pass
+
+
+class C(B):
+  """Class for AllSubclassesOfClass() tests."""
+  pass
+
+
+class D(B):
+  """Class for AllSubclassesOfClass() tests."""
+  pass
+
+
+def test_AllSubclassesOfClass_direct_subclasses():
+  """Test that direct subclasses are returned."""
+  assert labtypes.AllSubclassesOfClass(B) == {C, D}
+
+
+class E(object):
+  """Class for AllSubclassesOfClass() tests."""
+  pass
+
+
+class F(E):
+  """Class for AllSubclassesOfClass() tests."""
+  pass
+
+
+class G(F):
+  """Class for AllSubclassesOfClass() tests."""
+  pass
+
+
+def test_AllSubclassesOfClass_direct_subclasses():
+  """Test that direct subclasses are returned."""
+  assert labtypes.AllSubclassesOfClass(E) == {F, G}
+
+
 if __name__ == '__main__':
   test.Main()

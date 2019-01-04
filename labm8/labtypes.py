@@ -184,3 +184,25 @@ def SetDiff(a: typing.Iterator[typing.Any],
   set_a = set(a)
   set_b = set(b)
   return (set_a - set_b).union(set_b - set_a)
+
+
+def AllSubclassesOfClass(cls: typing.Type) -> typing.Set[typing.Type]:
+  """Return the set of subclasses of a base class.
+
+  This recursively returns all nested subclasses of a base class.
+
+  Example:
+    >>> class A(object): pass
+    >>> class B(A): pass
+    >>> class C(B): pass
+    >>> AllSubclassesOfClass(A)
+    {B, C}
+
+  Args:
+    cls: The class to return subclasses of.
+
+  Returns:
+    A set of class types.
+  """
+  return set(cls.__subclasses__()).union(
+      [s for c in cls.__subclasses__() for s in AllSubclassesOfClass(c)])
