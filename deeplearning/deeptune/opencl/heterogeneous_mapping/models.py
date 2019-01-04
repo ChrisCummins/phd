@@ -267,7 +267,7 @@ class DeepTune(HeterogemeousMappingModel):
     return self._atomizer
 
   def save(self, outpath):
-    # DeepTune modles are stored as an uncompressed tarball with the following
+    # DeepTune models are stored as an uncompressed tarball with the following
     # contents:
     #     /keras_model.h5 - Full keras model.
     #     /atomizer.pkl - Pickled atomizer.
@@ -277,7 +277,7 @@ class DeepTune(HeterogemeousMappingModel):
       # Write the model files to a temporary directory.
       self.model.save(d / 'keras_model.h5')
       with open(d / 'atomizer.pkl', 'w') as outfile:
-        pickle.dump(self.model, outfile)
+        pickle.dump(self._atomizer, outfile)
 
       # Package the files as an uncompressed tarball.
       with tarfile.open(outpath, mode='w') as tar:
