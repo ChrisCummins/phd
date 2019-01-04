@@ -141,6 +141,12 @@ def main(argv: typing.List[str]):
   print(results.deeptune_df.groupby(['Platform'])[
           'Platform', 'Correct?', 'Speedup'].mean())
 
+  print("Evaluating DeepTuneInst2Vec model ...", file=sys.stderr)
+  print(results.deeptune_inst2vec_df.groupby(['Platform', 'Benchmark Suite'])[
+          'Platform', 'Correct?', 'Speedup'].mean())
+  print(results.deeptune_inst2vec_df.groupby(['Platform'])[
+          'Platform', 'Correct?', 'Speedup'].mean())
+
   # print("Overview of DeepTune model", file=sys.stderr)
   # results.deeptune_model.model.summary()
 
