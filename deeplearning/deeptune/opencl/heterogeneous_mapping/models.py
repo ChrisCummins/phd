@@ -24,8 +24,8 @@ from sklearn import tree as sktree
 
 from compilers.llvm import clang
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
-from deeplearning.clgen.preprocessors import opencl
 from deeplearning.clgen.corpuses import atomizers
+from deeplearning.clgen.preprocessors import opencl
 from deeplearning.ncc import task_utils as inst2vec_utils
 from deeplearning.ncc import vocabulary as inst2vec_vocabulary
 from labm8 import bazelutil
@@ -229,15 +229,15 @@ def DataFrameRowToKernelSrcPath(row: typing.Dict[str, typing.Any],
     row['program:opencl_kernel_name']
   ])
 
-  bytecode_file_path = datafolder / 'kernels_cl' /  (file_name_stub + '.cl')
+  bytecode_file_path = datafolder / 'kernels_cl' / (file_name_stub + '.cl')
   if bytecode_file_path.is_file():
     return bytecode_file_path
 
   # Some of the benchmark sources are dataset dependent. This is reflected by
   # the dataset name being concatenated to the path.
   bytecode_file_path = (
-    datafolder / 'kernels_cl' /
-    (file_name_stub + '_' + str(row['data:dataset_name']) + '.cl'))
+      datafolder / 'kernels_cl' /
+      (file_name_stub + '_' + str(row['data:dataset_name']) + '.cl'))
   if bytecode_file_path.is_file():
     return bytecode_file_path
 
@@ -248,9 +248,9 @@ def _EncodeSource(row, src_file_path, vocab, datafolder):
   logging.info('Processing %s', src_file_path.name)
 
   with open(src_file_path, 'rb') as f:
-      src = f.read().decode('unicode_escape') \
-        .encode('ascii', 'ignore') \
-        .decode('ascii')
+    src = f.read().decode('unicode_escape') \
+      .encode('ascii', 'ignore') \
+      .decode('ascii')
 
   # Compile src to bytecode.
   clang_args = opencl.GetClangArgs(use_shim=False) + [
@@ -296,7 +296,7 @@ def EncodeAndPadSourcesWithInst2Vec(
     src_file_path = DataFrameRowToKernelSrcPath(row, datafolder)
 
     sequence = src_path_to_sequence.get(
-      src_file_path, _EncodeSource(row, src_file_path, vocab, datafolder))
+        src_file_path, _EncodeSource(row, src_file_path, vocab, datafolder))
 
     sequence_lengths.append(len(sequence))
     sequences.append(sequence)
