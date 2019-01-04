@@ -143,9 +143,9 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
 
   for split in TrainTestSplitGenerator(df, seed):
     logging.info(
-        'Evaluating model %s for device %s, split %d of train=%d/test=%d '
-        'programs', model.__name__, split.gpu_name, split.i + 1,
-        len(split.train_df), len(split.test_df))
+        'Evaluating %s for device %s, split %d of train=%d/test=%d programs',
+        model.__name__, split.gpu_name, split.i + 1, len(split.train_df),
+        len(split.test_df))
 
     # Path of cached model and predictions.
     model_path = (
