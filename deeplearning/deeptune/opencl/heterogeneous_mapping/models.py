@@ -474,8 +474,10 @@ class DeepTuneInst2Vec(DeepTune):
     """Determine the max sequence length to use."""
     # TODO(cec): This is hardcoded to OpenClDeviceMappingsDataset, and is mighty
     # slow.
+    logging.info('Determining max sequence length')
     _, maxlen = self.DataFrameToModelInputs(
         opencl_device_mapping_dataset.OpenClDeviceMappingsDataset().df)
+    logging.info('Max sequence length = %d', maxlen)
     return maxlen
 
   def DataFrameToModelInputs(self, df: pd.DataFrame, gpu_name: str):
