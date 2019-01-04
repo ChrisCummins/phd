@@ -38,6 +38,7 @@ py_library(
         "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
         "//deeplearning/clgen/corpuses:atomizers",
         "//deeplearning/ncc:task_utils",
+        "//experimental/compilers/reachability:cfg_datasets",
         "//labm8:labtypes",
         "//third_party/py/absl",
         "//third_party/py/keras",

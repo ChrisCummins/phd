@@ -26,6 +26,7 @@ from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.ncc import task_utils as inst2vec_utils
 from deeplearning.ncc import vocabulary as inst2vec_vocabulary
+from experimental.compilers.reachability import cfg_datasets
 from labm8 import bazelutil
 from labm8 import labtypes
 
@@ -217,10 +218,11 @@ def EncodeAndPadSources(atomizer: atomizers.AtomizerBase,
   return np.vstack([np.expand_dims(x, axis=0) for x in encoded])
 
 
-def DataFrameRowToBytecodeFilePath(row: typing.Dict[str, typing.Any],
-                                   datafolder: pathlib.Path) -> pathlib.Path:
-  """Translate row into a pre-encoded sequence path."""
-  # TODO(cec): This won't be necessary once we get the bytecode at runtime.
+def DataFrameRowToKernelSrcPath(row: typing.Dict[str, typing.Any],
+                                datafolder: pathlib.Path) -> pathlib.Path:
+  """Translate row into an OpenCL kernel path."""
+  # TODO(cec): This won't be necessary once we add the original OpenCL srcs to
+  # the dataframe.
   file_name = '-'.join([
     row['program:benchmark_suite_name'], row['program:benchmark_name'],
     row['program:opencl_kernel_name']
@@ -229,9 +231,9 @@ def DataFrameRowToBytecodeFilePath(row: typing.Dict[str, typing.Any],
   if file_name[:3] == 'npb':
     file_name += '_' + str(row['data:dataset_name'])
 
-  file_name += '.ll'
+  file_name += '.cl'
 
-  bytecode_file_path = datafolder / 'kernels_ir' / file_name
+  bytecode_file_path = datafolder / 'kernels_cl' / file_name
   if not bytecode_file_path.is_file():
     raise FileNotFoundError(f"File not found: '{bytecode_file_path}'")
 
@@ -247,10 +249,12 @@ def EncodeAndPadSourcesWithInst2Vec(
   sequences = []
 
   for _, row in df.iterrows():
-    # TODO(cec): Get bytecode at runtime, don't use pre-baked bytecodes.
-    bytecode_file_path = DataFrameRowToBytecodeFilePath(row, datafolder)
-    with open(bytecode_file_path, 'r') as f:
-      bytecode = f.read()
+    # TODO(cec): Add original src to the dataframe and use that.
+    src_file_path = DataFrameRowToKernelSrcPath(row, datafolder)
+    with open(src_file_path, 'r') as f:
+      src = f.read()
+
+    bytecode = cfg_datasets.BytecodeFromOpenClString(src, '-O0')
 
     sequence = list(vocab.EncodeLlvmBytecode(bytecode).encoded)
 
