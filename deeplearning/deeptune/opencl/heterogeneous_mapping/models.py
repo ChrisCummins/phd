@@ -22,11 +22,11 @@ from keras.models import Model
 from keras.preprocessing import sequence as keras_sequence
 from sklearn import tree as sktree
 
+from compilers.llvm import clang
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.ncc import task_utils as inst2vec_utils
 from deeplearning.ncc import vocabulary as inst2vec_vocabulary
-from experimental.compilers.reachability import cfg_datasets
 from labm8 import bazelutil
 from labm8 import labtypes
 
@@ -249,13 +249,26 @@ def EncodeAndPadSourcesWithInst2Vec(
   sequences = []
 
   for _, row in df.iterrows():
+    # Get program source.
     # TODO(cec): Add original src to the dataframe and use that.
     src_file_path = DataFrameRowToKernelSrcPath(row, datafolder)
-    with open(src_file_path, 'r') as f:
-      src = f.read()
+    with open(src_file_path, 'rb') as f:
+      src = f.read().decode('unicode_escape') \
+        .encode('ascii', 'ignore') \
+        .decode('ascii')
 
-    bytecode = cfg_datasets.BytecodeFromOpenClString(src, '-O0')
+    # Compile src to bytecode.
+    clang_args = [
+      '-xcl', '-O0', '-S', '-emit-llvm', '-o', '-', '-i', '-',
+      '-Wno-everything', '-I', str(datafolder / 'kernels_cl'),
+    ]
+    process = clang.Exec(clang_args, stdin=src)
+    if process.returncode:
+      logging.error("stderr:", process.stderr)
+      logging.fatal(f"clang failed with returncode {process.returncode}")
+    bytecode = process.stdout
 
+    # Encode src.
     sequence = list(vocab.EncodeLlvmBytecode(bytecode).encoded)
 
     sequence_lengths.append(len(sequence))
