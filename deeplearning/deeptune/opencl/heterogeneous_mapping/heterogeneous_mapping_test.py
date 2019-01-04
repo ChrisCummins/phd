@@ -77,7 +77,8 @@ def test_deeptune_smoke_test(r: heterogeneous_mapping.ExperimentalResults,
   # Test only on the first 30 rows of the full dataset.
   num_rows_to_test_on = 30
   df = r.EvaluateModel(
-      mini_deeptune_model, df=r.dataset.df[:num_rows_to_test_on])
+      mini_deeptune_model,
+      df=r.dataset.df.iloc[range(num_rows_to_test_on):].copy())
   # Flaky test: it's possible that the model could get *everything* wrong, but
   # this is unlikely.
   assert df['Correct?'].mean() > 0

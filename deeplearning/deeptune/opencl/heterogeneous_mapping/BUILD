@@ -47,6 +47,8 @@ py_test(
     srcs = ["models_test.py"],
     deps = [
         ":models",
+        ":utils",
+        "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
         "//labm8:test",
         "//third_party/py/pytest",
     ],

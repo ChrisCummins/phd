@@ -124,21 +124,16 @@ class StaticMapping(HeterogeneousMappingModel):
   def train(self, df: pd.DataFrame, platform_name: str,
             verbose: bool = False):
     del verbose
-    # select the Zero-R device: the most frequently optimal device
-    cpu_gpu_runtimes = df[[
-      'runtime:intel_core_i7_3820',
-      f'runtime:{platform_name}'
-    ]].values
-    oracles = np.array(
-        ["GPU" if gpu < cpu else "CPU" for cpu, gpu in cpu_gpu_runtimes])
 
-    self.model = Counter(oracles).most_common(1)[0][0]
+    if np.mean(df['y']) >= 0.5:
+      self.model == "GPU"
+    else:
+      self.model == "CPU"
 
   def predict(self, df: pd.DataFrame, platform_name: str,
               verbose: bool = False):
+    del platform_name
     del verbose
-    logging.info("Predicting %d %s mappings for device %s",
-                 len(df), self.model, platform_name)
     if self.model == "GPU":
       return np.ones(len(df), dtype=np.int32)
     elif self.model == "CPU":
@@ -221,8 +216,7 @@ class DeepTune(HeterogeneousMappingModel):
 
   def __init__(self, embedding_dim: int = None, lstm_layer_size: int = 64,
                dense_layer_size: int = 32, num_epochs: int = 50,
-               batch_size: int = 64, max_sequence_length: int = 1024,
-               seqlen: int = 1024):
+               batch_size: int = 64, seqlen: int = 1024):
     """Constructor.
 
     Args:
@@ -241,7 +235,6 @@ class DeepTune(HeterogeneousMappingModel):
     self.batch_size = batch_size
     self.lstm_layer_size = lstm_layer_size
     self.dense_layer_size = dense_layer_size
-    self.max_sequence_length = max_sequence_length
     self.seqlen = seqlen
     self._atomizer = None
 
@@ -256,7 +249,7 @@ class DeepTune(HeterogeneousMappingModel):
     # Language model. Takes as inputs source code sequences.
     code_in = Input(shape=(self.seqlen,), dtype="int32", name="code_in")
     x = Embedding(input_dim=embedding_dim,
-                  input_length=self.max_sequence_length,
+                  input_length=self.seqlen,
                   output_dim=self.lstm_layer_size, name="embedding")(code_in)
     x = LSTM(self.lstm_layer_size, implementation=1, return_sequences=True,
              name="lstm_1")(x)
@@ -339,7 +332,7 @@ class DeepTune(HeterogeneousMappingModel):
       gpu_name: str) -> typing.List[np.ndarray]:
     """Convert a pandas table to a list of model inputs."""
     sequences = EncodeAndPadSources(
-        self.atomizer, df['program:opencl_src'], self.max_sequence_length)
+        self.atomizer, df['program:opencl_src'], self.seqlen)
     aux_in = np.array([
       df[f"feature:{gpu_name}:transfer"].values,
       df[f"param:{gpu_name}:wgsize"].values,
@@ -369,8 +362,9 @@ class DeepTuneInst2Vec(DeepTune):
     # This model has the same architecture as DeepTune, except that both LSTM
     # layers have a number of neurons equal to the embedding dimensionality,
     # rather than 64 neurons per layer.
-    deeptune_opts['embedding_dim'] = embedding_dim
-    deeptune_opts['lstm_layer_size'] = embedding_dim
+    # TODO(cec): Re-enable this once train() and predict() are implemented.
+    # deeptune_opts['embedding_dim'] = embedding_dim
+    # deeptune_opts['lstm_layer_size'] = embedding_dim
     super(DeepTuneInst2Vec, self).__init__(**deeptune_opts)
 
 

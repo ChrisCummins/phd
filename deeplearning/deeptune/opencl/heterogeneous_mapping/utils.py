@@ -172,6 +172,8 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
         model.save(model_path)
 
       # Test the model.
+      logging.info("Predicting %d %s mappings for device %s",
+         len(split.test_df), model.__name__, split.gpu_name)
       predictions = model.predict(
           df=split.test_df, platform_name=split.gpu_name, verbose=False)
       logging.info('Writing %s', predictions_path)
