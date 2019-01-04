@@ -17,7 +17,7 @@ from absl import logging
 FLAGS = flags.FLAGS
 
 flags.DEFINE_boolean(
-    'test_color_output', False,
+    'test_color', False,
     'Colorize pytest output.')
 flags.DEFINE_boolean(
     'test_skip_slow', True,
@@ -67,7 +67,7 @@ def RunPytestOnFileAndExit(file_path: str, argv: typing.List[str]):
     '-vv',
   ]
 
-  if FLAGS.test_color_output:
+  if FLAGS.test_color:
     pytest_args.append('--color=yes')
 
   if FLAGS.test_maxfail != 0:
