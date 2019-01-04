@@ -107,7 +107,7 @@ def TrainTestSplitGenerator(df: pd.DataFrame, seed: int):
     dataset_splits = dataset_splitter.split(np.zeros(len(df)), df['y'].values)
 
     for i, (train_index, test_index) in enumerate(dataset_splits):
-      yield TrainTestSplit(i=i, train_df=df.iloc[train_index,:].copy(),
+      yield TrainTestSplit(i=i + 1, train_df=df.iloc[train_index,:].copy(),
                            test_df=df.iloc[test_index,:].copy(),
                            gpu_name=gpu_name)
 
