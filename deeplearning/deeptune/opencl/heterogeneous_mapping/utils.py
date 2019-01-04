@@ -6,7 +6,6 @@ import typing
 
 import numpy as np
 import pandas as pd
-import progressbar
 from absl import flags
 from absl import logging
 from sklearn import model_selection
@@ -107,8 +106,8 @@ def TrainTestSplitGenerator(df: pd.DataFrame, seed: int):
     dataset_splits = dataset_splitter.split(np.zeros(len(df)), df['y'].values)
 
     for i, (train_index, test_index) in enumerate(dataset_splits):
-      yield TrainTestSplit(i=i + 1, train_df=df.iloc[train_index,:].copy(),
-                           test_df=df.iloc[test_index,:].copy(),
+      yield TrainTestSplit(i=i + 1, train_df=df.iloc[train_index, :].copy(),
+                           test_df=df.iloc[test_index, :].copy(),
                            gpu_name=gpu_name)
 
 
@@ -143,7 +142,7 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
 
   for split in TrainTestSplitGenerator(df, seed):
     logging.info(
-        'Evaluating %s for device %s, split %d of train=%d/test=%d programs',
+        'Evaluating %s on %s, split %d with train=%d/test=%d programs',
         model.__name__, split.gpu_name, split.i + 1, len(split.train_df),
         len(split.test_df))
 
@@ -177,7 +176,7 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
 
       # Test the model.
       logging.info("Predicting %d %s mappings for device %s",
-         len(split.test_df), model.__name__, split.gpu_name)
+                   len(split.test_df), model.__name__, split.gpu_name)
       predictions = model.predict(
           df=split.test_df, platform_name=split.gpu_name, verbose=False)
       logging.info('Writing %s', predictions_path)
@@ -235,7 +234,6 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
         "Correct?": is_correct,
         "Speedup": predicted_speedup,
       })
-
 
   return pd.DataFrame(
       data, index=range(1, len(data) + 1), columns=[
