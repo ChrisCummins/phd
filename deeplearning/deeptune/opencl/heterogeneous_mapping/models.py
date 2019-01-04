@@ -222,9 +222,10 @@ def DataFrameRowToSequenceFilePath(row: typing.Dict[str, typing.Any],
   """Translate row into a pre-encoded sequence path."""
   # TODO(cec): This won't be necessary once we actually encode things at
   # runtime.
-  file_name = '-'.join(
-      row['program:benchmark_suite_name'], row['program:benchamrk_name'],
-      row['program:opencl_kernel_name'])
+  file_name = '-'.join([
+      row['program:benchmark_suite_name'], row['program:benchmark_name'],
+      row['program:opencl_kernel_name']
+  ])
 
   if file_name[:3] == 'npb':
     file_name += '_' + str(row['data:dataset_name'])
@@ -240,10 +241,13 @@ def DataFrameRowToSequenceFilePath(row: typing.Dict[str, typing.Any],
 
 def EncodeAndPadSourcesWithInst2Vec(
     df: pd.DataFrame, vocab: inst2vec_vocabulary.VocabularyZipFile,
-    datafolder: pathlib.Path) -> typing.Tuple[np.array, int]:
+    datafolder: pathlib.Path, max_sequence_len: typing.Optional[int] = None
+) -> typing.Tuple[np.array, int]:
   """Encode and pad source code using inst2vec translation."""
   sequence_lengths = []
   sequences = []
+
+  inst2vec_utils.CreateSeqDirFromIr(str(datafolder / 'kernels_ir'), vocab)
 
   for _, row in df.iterrows():
     # TODO(cec): Encode program at runtime, don't use pre-encoded sequence.
@@ -256,7 +260,8 @@ def EncodeAndPadSourcesWithInst2Vec(
     sequence_lengths.append(len(sequence))
     sequences.append([int(s) for s in sequence])
 
-  max_sequence_len = max(sequence_lengths)
+  if max_sequence_len is None:
+    max_sequence_len = max(sequence_lengths)
   logging.info('Sequence lengths: min=%d, avg=%.2f, max=%d',
                min(sequence_lengths), np.mean(sequence_lengths),
                max_sequence_len)
@@ -338,7 +343,7 @@ class DeepTune(HeterogeneousMappingModel):
     langmodel_out = Dense(2, activation="sigmoid")(x)
 
     # Auxiliary inputs. wgsize and dsize.
-    auxiliary_inputs = Input(shape=(2,))
+    auxiliary_inputs = Input(shape=(2,), name="aux_in")
 
     # Heuristic model. Takes as inputs a concatenation of the language model
     # and auxiliary inputs, outputs 1-hot encoded device mapping.
@@ -470,14 +475,21 @@ class DeepTuneInst2Vec(DeepTune):
 
     super(DeepTuneInst2Vec, self).__init__(**deeptune_opts)
 
+  def EncodeAndPadSources(
+      self, df: pd.DataFrame,
+      maxlen: typing.Optional[int] = None) -> typing.Tuple[np.array, int]:
+    """Encode and pad source sequences."""
+    # TODO(cec): This is hardcoded to OpenClDeviceMappingsDataset, and is
+    # mighty slow.
+    with DEEPTUNE_INST2VEC_DATA_ARCHIVE as datafolder:
+      with inst2vec_vocabulary.VocabularyZipFile(self.vocabulary_file) as vocab:
+        return EncodeAndPadSourcesWithInst2Vec(df, vocab, datafolder, maxlen)
+
   def GetMaxSeqLen(self) -> int:
     """Determine the max sequence length to use."""
-    # TODO(cec): This is hardcoded to OpenClDeviceMappingsDataset, and is mighty
-    # slow.
     logging.info('Determining max sequence length')
-    _, maxlen = self.DataFrameToModelInputs(
-        opencl_device_mapping_dataset.OpenClDeviceMappingsDataset().df,
-        'amd_tahiti_7970')
+    _, maxlen = self.EncodeAndPadSources(
+        opencl_device_mapping_dataset.OpenClDeviceMappingsDataset().df)
     logging.info('Max sequence length = %d', maxlen)
     return maxlen
 
@@ -487,10 +499,7 @@ class DeepTuneInst2Vec(DeepTune):
     This override of DeepTune.DataFrameToModelInputs() provides the inst2vec
     functionality, returning embeddings.
     """
-    with DEEPTUNE_INST2VEC_DATA_ARCHIVE as datafolder:
-      with inst2vec_vocabulary.VocabularyZipFile(self.vocabulary_file) as vocab:
-        sequences = EncodeAndPadSourcesWithInst2Vec(
-            df, vocab, datafolder)
+    sequences, _ = self.EncodeAndPadSources(df, self.input_shape[0])
 
     # Translate encoded sequences into sequences of normalized embeddings.
     sequence_ph = tf.placeholder(dtype=tf.int32)

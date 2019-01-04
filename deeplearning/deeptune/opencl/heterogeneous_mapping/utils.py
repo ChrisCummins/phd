@@ -219,12 +219,13 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
         len(predicted_is_correct) == len(predictions))
 
     # record results
+    split_data = []
     for (benchmark, benchmark_suite, oracle_device_mapping, predicted,
          is_correct, predicted_speedup) in zip(
         benchmarks, benchmark_suites, oracle_device_mappings, predictions,
         predicted_is_correct,
         p_speedup):
-      data.append({
+      split_data.append({
         "Model": model.__name__,
         "Platform": split.gpu_name,
         'Benchmark': benchmark,
@@ -234,6 +235,16 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
         "Correct?": is_correct,
         "Speedup": predicted_speedup,
       })
+
+    logging.info('model=%s, platform=%s, split=%s, n=%d, '
+                 'acc=%.2f %%, avg speedup=%.2f x',
+                 model.__basename__, split.gpu_name, split.i,
+                 len(split.test_df),
+                 np.mean([r['Correct?'] for r in split_data]) * 100,
+                 np.mean([r['Speedup'] for r in split_data]))
+
+    data += split_data
+
 
   return pd.DataFrame(
       data, index=range(1, len(data) + 1), columns=[

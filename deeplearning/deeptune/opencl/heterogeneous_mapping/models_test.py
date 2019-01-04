@@ -46,8 +46,7 @@ def _InstantiateModelWithTestOptions(
       'input_shape': (10,),
     },
     models.DeepTuneInst2Vec: {
-      # Same as DeepTune, but with embedding matrix.
-      'embedding_matrix': np.ones((10, 10)),
+      # Same as DeepTune.
       'lstm_layer_size': 8,
       'dense_layer_size': 4,
       'num_epochs': 2,
