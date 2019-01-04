@@ -2,6 +2,7 @@
 import pathlib
 import typing
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -42,16 +43,16 @@ def _InstantiateModelWithTestOptions(
       'dense_layer_size': 4,
       'num_epochs': 2,
       'batch_size': 4,
-      'seqlen': 10,
+      'input_shape': (10,),
     },
     models.DeepTuneInst2Vec: {
-      # Same as DeepTune, but with explicit embedding_dim.
-      'embedding_dim': 10,
+      # Same as DeepTune, but with embedding matrix.
+      'embedding_matrix': np.ones((10, 10)),
       'lstm_layer_size': 8,
       'dense_layer_size': 4,
       'num_epochs': 2,
       'batch_size': 4,
-      'seqlen': 10,
+      'input_shape': (10,),
     },
   }.get(model_cls, {})
 

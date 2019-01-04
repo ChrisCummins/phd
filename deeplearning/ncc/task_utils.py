@@ -22,6 +22,7 @@
 """Helper variables and functions for NCC task training"""
 
 import os
+import pathlib
 import pickle
 import re
 import struct
@@ -30,6 +31,7 @@ from collections import defaultdict
 
 import numpy as np
 import wget
+from absl import app
 from absl import flags
 from absl import logging
 
@@ -68,17 +70,25 @@ def download_and_unzip(url, dataset_name, data_folder):
 ########################################################################################################################
 # Reading, writing and dumping files
 ########################################################################################################################
-def ReadEmbeddingFileFromFlags() -> np.ndarray:
+def ReadEmbeddingFile(path: pathlib.Path) -> np.ndarray:
   """Load embedding matrix from file"""
-  assert os.path.exists(
-      FLAGS.embeddings_file), "File " + FLAGS.embeddings_file + " does not exist"
-  logging.info('Loading pre-trained embeddings from %s', FLAGS.embeddings_file)
-  with open(FLAGS.embeddings_file, 'rb') as f:
+  if not path.is_file():
+    raise app.UsageError(
+      f"Embedding file not found: '{path}'")
+  logging.info('Loading pre-trained embeddings from %s', path)
+  with open(path, 'rb') as f:
     embedding_matrix = pickle.load(f)
   vocabulary_size, embedding_dimension = embedding_matrix.shape
-  logging.info('Loaded embeddings with vocabulary size: %d and '
+  logging.info('Loaded pre-trained embeddings with vocabulary size: %d and '
                'embedding dimension: %d', vocabulary_size, embedding_dimension)
   return embedding_matrix
+
+
+def ReadEmbeddingFileFromFlags() -> np.ndarray:
+  """Load embedding matrix from file"""
+  if not FLAGS.embeddings_file:
+    raise app.UsageError("--embeddings_file not set")
+  return ReadEmbeddingFile(pathlit.Path(FLAGS.embeddings_file))
 
 
 ########################################################################################################################

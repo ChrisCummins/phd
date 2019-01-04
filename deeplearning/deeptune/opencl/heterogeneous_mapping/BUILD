@@ -28,10 +28,12 @@ py_test(
 py_library(
     name = "models",
     srcs = ["models.py"],
+    data = ["//deeplearning/ncc/published_results:embeddings"],
     deps = [
         ":utils",
         "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
         "//deeplearning/clgen/corpuses:atomizers",
+        "//deeplearning/ncc:task_utils",
         "//labm8:labtypes",
         "//third_party/py/absl",
         "//third_party/py/keras",
