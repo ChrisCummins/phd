@@ -126,9 +126,9 @@ class StaticMapping(HeterogeneousMappingModel):
     del verbose
 
     if np.mean(df['y']) >= 0.5:
-      self.model == "GPU"
+      self.model = "GPU"
     else:
-      self.model == "CPU"
+      self.model = "CPU"
 
   def predict(self, df: pd.DataFrame, platform_name: str,
               verbose: bool = False):
@@ -139,7 +139,7 @@ class StaticMapping(HeterogeneousMappingModel):
     elif self.model == "CPU":
       return np.zeros(len(df), dtype=np.int32)
     else:
-      return LookupError
+      raise LookupError
 
 
 class Grewe(HeterogeneousMappingModel):
