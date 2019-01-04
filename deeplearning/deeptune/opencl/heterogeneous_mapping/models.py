@@ -441,7 +441,9 @@ class DeepTuneInst2Vec(DeepTune):
 
   def __init__(self, embedding_matrix: np.ndarray = None,
                vocabulary_file: typing.Optional[pathlib.Path] = None,
-               input_shape: typing.List[int] = (1024,), **deeptune_opts):
+               **deeptune_opts):
+    # input_shape, lstm_layer_size, and input_type args are ignored.
+
     # If no embedding matrix is provided, the default is used.
     if embedding_matrix is None:
       embedding_matrix = inst2vec_utils.ReadEmbeddingFile(
@@ -449,13 +451,16 @@ class DeepTuneInst2Vec(DeepTune):
     if vocabulary_file is None:
       vocabulary_file = DEEPTUNE_INST2VEC_VOCAB_PATH
 
+    self.embedding_matrix = embedding_matrix
+    self.vocabulary_file = vocabulary_file
+
     # This model has the same architecture as DeepTune, except that both LSTM
     # layers have a number of neurons equal to the embedding dimensionality,
     # rather than 64 neurons per layer.
 
     # Append the embedding dimensionality to the input shape.
     _, embedding_dim = embedding_matrix.shape
-    deeptune_opts['input_shape'] = (input_shape[0], embedding_dim)
+    deeptune_opts['input_shape'] = (self.GetMaxSeqLen(), embedding_dim)
 
     deeptune_opts['with_embedding_layer'] = False
     deeptune_opts['lstm_layer_size'] = embedding_dim
@@ -463,10 +468,15 @@ class DeepTuneInst2Vec(DeepTune):
     # Embedding vectors are floats.
     deeptune_opts['input_type'] = 'float32'
 
-    self.embedding_matrix = embedding_matrix
-    self.vocabulary_file = vocabulary_file
-
     super(DeepTuneInst2Vec, self).__init__(**deeptune_opts)
+
+  def GetMaxSeqLen(self) -> int:
+    """Determine the max sequence length to use."""
+    # TODO(cec): This is hardcoded to OpenClDeviceMappingsDataset, and is mighty
+    # slow.
+    _, maxlen = self.DataFrameToModelInputs(
+        opencl_device_mapping_dataset.OpenClDeviceMappingsDataset().df)
+    return maxlen
 
   def DataFrameToModelInputs(self, df: pd.DataFrame, gpu_name: str):
     """Convert a pandas table to a list of model inputs.
@@ -477,7 +487,7 @@ class DeepTuneInst2Vec(DeepTune):
     with DEEPTUNE_INST2VEC_DATA_ARCHIVE as datafolder:
       with inst2vec_vocabulary.VocabularyZipFile(self.vocabulary_file) as vocab:
         sequences = EncodeAndPadSourcesWithInst2Vec(
-            df, self.input_shape[0], vocab, datafolder)
+            df, vocab, datafolder)
 
     # Translate encoded sequences into sequences of normalized embeddings.
     sequence_ph = tf.placeholder(dtype=tf.int32)
