@@ -56,6 +56,53 @@ mirrored_directory {
   rsync_exclude: ".DS_Store"
   rsync_exclude: ".localized"
 }
+# A system backup of macOS on florence.
+#
+# This is not a full backup, excluding as many of the easy-to-replace
+# directories as possible. This is also run at user level, so has limited
+# access to root-owned files.
+mirrored_directory {
+  name: "florence"
+  local_path: "/"
+  push_only: true
+  remote_path: "/home/cec/docs/Chris/backups/florence"
+  rsync_exclude: "._.DS_Store"
+  rsync_exclude: ".DS_Store"
+  rsync_exclude: "/.DocumentRevisions-V100"
+  rsync_exclude: "/.fseventsd"
+  rsync_exclude: "/.Spotlight-V100"
+  rsync_exclude: "/Applications"
+  rsync_exclude: "/dev"
+  rsync_exclude: "/Library/Application Support/Apple/ParentalControls/Users"
+  rsync_exclude: "/Library/Application Support/ApplePushService"
+  rsync_exclude: "/Library/Caches"
+  rsync_exclude: "/Library/Server"
+  rsync_exclude: "/Library/SystemMigration/History"
+  rsync_exclude: "/private/etc/cups/certs"
+  rsync_exclude: "/private/tmp"
+  rsync_exclude: "/private/var"
+  rsync_exclude: "/System/Library/Caches"
+  rsync_exclude: "/System/Library/DirectoryServices"
+  rsync_exclude: "/System/Library/User Template"
+  rsync_exclude: "/tmp"
+  rsync_exclude: "/Users/cec/.cache"
+  rsync_exclude: "/Users/cec/.Trash"
+  rsync_exclude: "/Users/cec/Application Support/Steam"
+  rsync_exclude: "/Users/cec/Dropbox"
+  rsync_exclude: "/Users/cec/go"
+  rsync_exclude: "/Users/cec/Google Drive"
+  rsync_exclude: "/Users/cec/Music"
+  rsync_exclude: "/Users/cec/OmniPresence"
+  rsync_exclude: "/Users/cec/OneDrive"
+  rsync_exclude: "/Users/cec/phd"
+  rsync_exclude: "/Users/cec/tmp"
+  rsync_exclude: "/Users/cec/venv"
+  rsync_exclude: "/Users/Guest"
+  rsync_exclude: "/usr/local/Cellar"
+  rsync_exclude: "/usr/local/texlive"
+  rsync_exclude: "/usr/sbin"
+  rsync_exclude: "/Volumes"
+}
 # A system backup of macOS on diana.
 #
 # This is not a full backup, excluding as many of the easy-to-replace

@@ -24,3 +24,9 @@ ryan_gosling_have_my_movies() {
      --machine=$HOME/phd/system/machines/ryangosling/ryangosling.pbtxt \
      --push movies,tv --nodelete --nodry_run $@)
 }
+
+ryan_gosling_have_my_files() {
+  (cd ~/phd && bazel run //system/machines:machine -- \
+     --machine=$HOME/phd/system/machines/ryangosling/ryangosling.pbtxt \
+     --push $(hostname) --delete --nodry_run $@)
+}
