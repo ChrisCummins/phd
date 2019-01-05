@@ -292,8 +292,8 @@ def EncodeAndPadSourcesWithInst2Vec(
   # entries in the dataframe using the same sequence.
   src_path_to_sequence = {}
 
-  src_paths = set(DataFrameRowToKernelSrcPath(row, datafolder) for _, row in
-                  df.iterrows())
+  src_paths = list(set(
+      DataFrameRowToKernelSrcPath(row, datafolder) for _, row in df.iterrows()))
 
   # Chunk the srcs and process in parallel.
   srcs_per_process = 16
