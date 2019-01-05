@@ -81,6 +81,7 @@ py_test(
 py_library(
     name = "database",
     srcs = ["database.py"],
+    visibility = ["//visibility:public"],
     deps = [
         ":reachability_py_pb2",
         "//labm8:pbutil",
