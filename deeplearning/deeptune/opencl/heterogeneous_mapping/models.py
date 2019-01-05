@@ -270,7 +270,6 @@ def _EncodeSource(row, src_file_path, vocab, datafolder):
   if process.returncode:
     logging.error("Failed to compile %s", src_file_path)
     logging.error("stderr: %s", process.stderr)
-    return []
     logging.fatal(f"clang failed with returncode {process.returncode}")
   bytecode = process.stdout
 
@@ -285,28 +284,20 @@ def EncodeAndPadSourcesWithInst2Vec(
   sequence_lengths = []
   sequences = []
 
-  # There can be multiple entries per dataset.
+  # A map from source files to encoded sequences, as there can be multiple
+  # entries in the dataframe using the same sequence.
   src_path_to_sequence = {}
 
-  contains_errors = False
   for _, row in df.iterrows():
-    # Get program source.
-    try:
-      src_file_path = DataFrameRowToKernelSrcPath(row, datafolder)
-      sequence = src_path_to_sequence.get(src_file_path)
-      if not sequence:
-        sequence = _EncodeSource(row, src_file_path, vocab, datafolder)
-        src_path_to_sequence[src_file_path] = sequence
-      if not sequence:
-        contains_errors = True
-    except FileNotFoundError as e:
-      sequence = []
+    # Encode a source sequence.
+    src_file_path = DataFrameRowToKernelSrcPath(row, datafolder)
+    sequence = src_path_to_sequence.get(src_file_path)
+    if not sequence:
+      sequence = _EncodeSource(row, src_file_path, vocab, datafolder)
+      src_path_to_sequence[src_file_path] = sequence
 
     sequence_lengths.append(len(sequence))
     sequences.append(sequence)
-
-  if contains_errors:
-    logging.fatal("errors occurred!")
 
   if max_sequence_len is None:
     max_sequence_len = max(sequence_lengths)
