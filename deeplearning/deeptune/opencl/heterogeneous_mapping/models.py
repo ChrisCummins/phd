@@ -3,6 +3,7 @@
 Attributes:
   ALL_MODELS: A set of HeterogeneousMappingModel subclasses.
 """
+import multiprocessing
 import pathlib
 import pickle
 import tarfile
@@ -244,7 +245,7 @@ def DataFrameRowToKernelSrcPath(row: typing.Dict[str, typing.Any],
   raise FileNotFoundError(f"File not found: '{bytecode_file_path}'")
 
 
-def _EncodeSource(row, src_file_path, vocab, datafolder):
+def _EncodeSource(src_file_path, vocab, datafolder):
   logging.info('Processing %s', src_file_path.name)
 
   # Read the source file and strip any non-ascii characters.
@@ -259,9 +260,6 @@ def _EncodeSource(row, src_file_path, vocab, datafolder):
     '-Wno-everything', '-ferror-limit=1',
     # Kernels have headers.
     '-I', str(datafolder / 'kernels_cl'),
-    # NPB benchmarks require a #define CLASS macro to be set to the
-    # single-character name of the dataset.
-    f"-DCLASS='{row['data:dataset_name']}'",
     # We don't need the full shim header, just the common constants:
     '-DCLGEN_OPENCL_SHIM_NO_COMMON_TYPES',
     '-DCLGEN_OPENCL_SHIM_NO_UNSUPPORTED_STORAGE_CLASSES_AND_QUALIFIERS',
@@ -273,7 +271,7 @@ def _EncodeSource(row, src_file_path, vocab, datafolder):
     logging.fatal(f"clang failed with returncode {process.returncode}")
   bytecode = process.stdout
 
-  return list(vocab.EncodeLlvmBytecode(bytecode).encoded)
+  return src_file_path, list(vocab.EncodeLlvmBytecode(bytecode).encoded)
 
 
 def EncodeAndPadSourcesWithInst2Vec(
@@ -288,13 +286,18 @@ def EncodeAndPadSourcesWithInst2Vec(
   # entries in the dataframe using the same sequence.
   src_path_to_sequence = {}
 
+  src_paths = set(DataFrameRowToKernelSrcPath(row, datafolder) for _, row in
+                  df.iterrows())
+
+  encoder_args = [(s, vocab, datafolder) for s in src_paths]
+  for src_file_path, sequence in multiprocessing.Pool().starmap(
+      _EncodeSource, encoder_args):
+    src_path_to_sequence[src_file_path] = sequence
+
   for _, row in df.iterrows():
     # Encode a source sequence.
     src_file_path = DataFrameRowToKernelSrcPath(row, datafolder)
-    sequence = src_path_to_sequence.get(src_file_path)
-    if not sequence:
-      sequence = _EncodeSource(row, src_file_path, vocab, datafolder)
-      src_path_to_sequence[src_file_path] = sequence
+    sequence = src_path_to_sequence[src_file_path]
 
     sequence_lengths.append(len(sequence))
     sequences.append(sequence)
