@@ -245,33 +245,39 @@ def DataFrameRowToKernelSrcPath(row: typing.Dict[str, typing.Any],
   raise FileNotFoundError(f"File not found: '{bytecode_file_path}'")
 
 
-def _EncodeSource(src_file_path, vocab, datafolder):
-  logging.info('Processing %s', src_file_path.name)
+def _EncodeSourceBatch(src_file_paths, vocab, datafolder):
+  batch = []
 
-  # Read the source file and strip any non-ascii characters.
-  with open(src_file_path, 'rb') as f:
-    src = f.read().decode('unicode_escape')
-  src = src.encode('ascii', 'ignore').decode('ascii')
+  for src_file_path in src_file_paths:
+    logging.info('Processing %s', src_file_path.name)
 
-  # Compile src to bytecode.
-  clang_args = opencl.GetClangArgs(use_shim=True) + [
-    '-O0', '-S', '-emit-llvm', '-o', '-', '-i', '-',
-    # No warnings, and fail immediately on error.
-    '-Wno-everything', '-ferror-limit=1',
-    # Kernels have headers.
-    '-I', str(datafolder / 'kernels_cl'),
-    # We don't need the full shim header, just the common constants:
-    '-DCLGEN_OPENCL_SHIM_NO_COMMON_TYPES',
-    '-DCLGEN_OPENCL_SHIM_NO_UNSUPPORTED_STORAGE_CLASSES_AND_QUALIFIERS',
-  ]
-  process = clang.Exec(clang_args, stdin=src)
-  if process.returncode:
-    logging.error("Failed to compile %s", src_file_path)
-    logging.error("stderr: %s", process.stderr)
-    logging.fatal(f"clang failed with returncode {process.returncode}")
-  bytecode = process.stdout
+    # Read the source file and strip any non-ascii characters.
+    with open(src_file_path, 'rb') as f:
+      src = f.read().decode('unicode_escape')
+    src = src.encode('ascii', 'ignore').decode('ascii')
 
-  return src_file_path, list(vocab.EncodeLlvmBytecode(bytecode).encoded)
+    # Compile src to bytecode.
+    clang_args = opencl.GetClangArgs(use_shim=True) + [
+      '-O0', '-S', '-emit-llvm', '-o', '-', '-i', '-',
+      # No warnings, and fail immediately on error.
+      '-Wno-everything', '-ferror-limit=1',
+      # Kernels have headers.
+      '-I', str(datafolder / 'kernels_cl'),
+      # We don't need the full shim header, just the common constants:
+      '-DCLGEN_OPENCL_SHIM_NO_COMMON_TYPES',
+      '-DCLGEN_OPENCL_SHIM_NO_UNSUPPORTED_STORAGE_CLASSES_AND_QUALIFIERS',
+    ]
+    process = clang.Exec(clang_args, stdin=src)
+    if process.returncode:
+      logging.error("Failed to compile %s", src_file_path)
+      logging.error("stderr: %s", process.stderr)
+      logging.fatal(f"clang failed with returncode {process.returncode}")
+    bytecode = process.stdout
+
+    batch.append((src_file_path,
+                  list(vocab.EncodeLlvmBytecode(bytecode).encoded)))
+
+  return batch
 
 
 def EncodeAndPadSourcesWithInst2Vec(
@@ -289,13 +295,17 @@ def EncodeAndPadSourcesWithInst2Vec(
   src_paths = set(DataFrameRowToKernelSrcPath(row, datafolder) for _, row in
                   df.iterrows())
 
-  encoder_args = [(s, vocab, datafolder) for s in src_paths]
-  for src_file_path, sequence in multiprocessing.Pool().starmap(
-      _EncodeSource, encoder_args):
-    src_path_to_sequence[src_file_path] = sequence
+  # Chunk the srcs and process in parallel.
+  srcs_per_process = 16
+  encode_args = [
+    (src_paths[i:i + srcs_per_process], vocab, datafolder)
+    for i in range(0, len(src_paths), srcs_per_process)
+  ]
+  for batch in multiprocessing.Pool().starmap(_EncodeSourceBatch, encode_args):
+    for src_file_path, sequence in batch:
+      src_path_to_sequence[src_file_path] = sequence
 
   for _, row in df.iterrows():
-    # Encode a source sequence.
     src_file_path = DataFrameRowToKernelSrcPath(row, datafolder)
     sequence = src_path_to_sequence[src_file_path]
 
