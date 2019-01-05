@@ -64,6 +64,7 @@
 #define BETA 0.5
 #define BINS_PER_BLOCK 8
 #define BITMAP_SIZE 1024
+#define BLACK 0
 #define BLK_X 8
 #define BLK_Y 8
 #define BLOCK 32
@@ -143,6 +144,7 @@
 #define MAXWORKY 8
 #define MERGE_WORKGROUP_SIZE 32
 #define MOD 16
+#define MT_RNG_COUNT 8
 #define MULT 4
 #define N_CELL_ENTRIES 128
 #define N_GP 8
