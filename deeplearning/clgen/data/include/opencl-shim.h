@@ -1,9 +1,23 @@
+// A shim header providing common definitions.
+//
+// Coarse grained control is provided over what is defined using include guards.
+// To prevent the definition of unsupported storage classes and qualifiers:
+//   -DCLGEN_OPENCL_SHIM_NO_UNSUPPORTED_STORAGE_CLASSES_AND_QUALIFIERS
+// To prevent the definition of common types:
+//   -DCLGEN_OPENCL_SHIM_NO_COMMON_TYPES
+// To prevent the definition of common constants:
+//   -DCLGEN_OPENCL_SHIM_NO_COMMON_CONSTANTS
+
 // Unsupported OpenCL storage classes and qualifiers.
+#ifndef CLGEN_OPENCL_SHIM_NO_UNSUPPORTED_STORAGE_CLASSES_AND_QUALIFIERS
 #define static
 #define generic
 #define AS
+#endif  // CLGEN_OPENCL_SHIM_NO_UNSUPPORTED_STORAGE_CLASSES_AND_QUALIFIERS
+
 
 // Common types.
+#ifndef CLGEN_OPENCL_SHIM_NO_COMMON_TYPES
 #define CONVT float
 #define DATA_TYPE float
 #define DATATYPE float
@@ -41,8 +55,10 @@
 #define Tp int
 #define Pixel int3
 #define uint32_t unsigned int
+#endif  // CLGEN_OPENCL_SHIM_NO_COMMON_TYPES
 
 // Common constants
+#ifndef CLGEN_OPENCL_SHIM_NO_COMMON_CONSTANTS
 #define ACCESSES 16
 #define AVER 2
 #define BETA 0.5
@@ -233,3 +249,4 @@
 #define ZDIR 2
 #define ZERO 0
 #define ZSIZE 128
+#endif  // CLGEN_OPENCL_SHIM_NO_COMMON_CONSTANTS
