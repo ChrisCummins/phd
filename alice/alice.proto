@@ -48,3 +48,39 @@ message LedgerEntry {
 message Ledger {
   repeated LedgerEntry entries = 1;
 }
+
+service ExecService {
+  rpc Run (RunRequest) returns (RunResponse);
+  rpc Status (Null) returns (ExecServiceStatus)
+}
+
+message RepoState {
+  optional string git_head_id = 1;
+}
+
+message RunRequest {
+  repeated RepoState repo_state = 1;
+
+  // The target which is to be built and executed.
+  optional string target = 2;
+
+  repeated string bazel_args = 3;
+
+  // The list of arguments to be passed to the built target.
+  repeated string bin_args = 4;
+
+  // The number of seconds to allow for execution.
+  optional int64 timeout_seconds = 5;
+}
+
+message RunResponse {
+  // TODO(cec): Error if git checkout fails.
+  // TODO(cec): Error if bazel build fails.
+}
+
+message Null {
+}
+
+message ExecServiceStatus {
+  // TODO(cec): Currently active jobs.
+}
