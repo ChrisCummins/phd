@@ -487,6 +487,7 @@ class DeepTuneInst2Vec(DeepTune):
   __basename__ = "deeptune_inst2vec"
 
   def __init__(self, embedding_matrix: np.ndarray = None,
+               input_shape: typing.List[int] = (4075,),
                vocabulary_file: typing.Optional[pathlib.Path] = None,
                **deeptune_opts):
     # input_shape, lstm_layer_size, and input_type args are ignored.
@@ -507,7 +508,7 @@ class DeepTuneInst2Vec(DeepTune):
 
     # Append the embedding dimensionality to the input shape.
     _, embedding_dim = embedding_matrix.shape
-    deeptune_opts['input_shape'] = (self.GetMaxSeqLen(), embedding_dim)
+    deeptune_opts['input_shape'] = (input_shape[0], embedding_dim)
 
     deeptune_opts['with_embedding_layer'] = False
     deeptune_opts['lstm_layer_size'] = embedding_dim
@@ -526,14 +527,6 @@ class DeepTuneInst2Vec(DeepTune):
     with DEEPTUNE_INST2VEC_DATA_ARCHIVE as datafolder:
       with inst2vec_vocabulary.VocabularyZipFile(self.vocabulary_file) as vocab:
         return EncodeAndPadSourcesWithInst2Vec(df, vocab, datafolder, maxlen)
-
-  def GetMaxSeqLen(self) -> int:
-    """Determine the max sequence length to use."""
-    logging.info('Determining max sequence length')
-    _, maxlen = self.EncodeAndPadSources(
-        opencl_device_mapping_dataset.OpenClDeviceMappingsDataset().df)
-    logging.info('Max sequence length = %d', maxlen)
-    return maxlen
 
   def DataFrameToModelInputs(self, df: pd.DataFrame, gpu_name: str):
     """Convert a pandas table to a list of model inputs.
