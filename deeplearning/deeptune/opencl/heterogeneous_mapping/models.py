@@ -247,13 +247,13 @@ def DataFrameRowToKernelSrcPath(row: typing.Dict[str, typing.Any],
 def _EncodeSource(row, src_file_path, vocab, datafolder):
   logging.info('Processing %s', src_file_path.name)
 
+  # Read the source file and strip any non-ascii characters.
   with open(src_file_path, 'rb') as f:
-    src = f.read().decode('unicode_escape') \
-      .encode('ascii', 'ignore') \
-      .decode('ascii')
+    src = f.read().decode('unicode_escape')
+  src = src.encode('ascii', 'ignore').decode('ascii')
 
   # Compile src to bytecode.
-  clang_args = opencl.GetClangArgs(use_shim=False) + [
+  clang_args = opencl.GetClangArgs(use_shim=True) + [
     '-O0', '-S', '-emit-llvm', '-o', '-', '-i', '-',
     # No warnings, and fail immediately on error.
     '-Wno-everything', '-ferror-limit=1',
@@ -262,17 +262,15 @@ def _EncodeSource(row, src_file_path, vocab, datafolder):
     # NPB benchmarks require a #define CLASS macro to be set to the
     # single-character name of the dataset.
     f"-DCLASS='{row['data:dataset_name']}'",
-    # Benchmark 'npb-3.3-CG-main_0.cl' requires that an LSIZE macro be
-    # defined to the local work group size. Since the inst2vec pre-processing
-    # strips literals, any value will do here.
-    '-DLSIZE=64',
-    # Same as above, but for benchmark npb-3.3-MG-kernel_interp_1.cl.
-    '-DM=128',
+    # We don't need the full shim header, just the common constants:
+    '-DCLGEN_OPENCL_SHIM_NO_COMMON_TYPES',
+    '-DCLGEN_OPENCL_SHIM_NO_UNSUPPORTED_STORAGE_CLASSES_AND_QUALIFIERS',
   ]
   process = clang.Exec(clang_args, stdin=src)
   if process.returncode:
     logging.error("Failed to compile %s", src_file_path)
     logging.error("stderr: %s", process.stderr)
+    return []
     logging.fatal(f"clang failed with returncode {process.returncode}")
   bytecode = process.stdout
 
@@ -290,16 +288,23 @@ def EncodeAndPadSourcesWithInst2Vec(
   # There can be multiple entries per dataset.
   src_path_to_sequence = {}
 
+  contains_errors = False
   for _, row in df.iterrows():
     # Get program source.
-    # TODO(cec): Add original src to the dataframe and use that.
-    src_file_path = DataFrameRowToKernelSrcPath(row, datafolder)
-
-    sequence = src_path_to_sequence.get(
-        src_file_path, _EncodeSource(row, src_file_path, vocab, datafolder))
+    try:
+      src_file_path = DataFrameRowToKernelSrcPath(row, datafolder)
+      sequence = src_path_to_sequence.get(
+          src_file_path, _EncodeSource(row, src_file_path, vocab, datafolder))
+      if not sequence:
+        contains_errors = True
+    except FileNotFoundError as e:
+      sequence = []
 
     sequence_lengths.append(len(sequence))
     sequences.append(sequence)
+
+  if contains_errors:
+    logging.fatal("errors occurred!")
 
   if max_sequence_len is None:
     max_sequence_len = max(sequence_lengths)
