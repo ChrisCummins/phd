@@ -293,9 +293,10 @@ def EncodeAndPadSourcesWithInst2Vec(
     # Get program source.
     try:
       src_file_path = DataFrameRowToKernelSrcPath(row, datafolder)
-      sequence = src_path_to_sequence.get(
-          src_file_path, _EncodeSource(row, src_file_path, vocab, datafolder))
-      src_path_to_sequence[src_file_path] = sequence
+      sequence = src_path_to_sequence.get(src_file_path)
+      if not sequence:
+        sequence = _EncodeSource(row, src_file_path, vocab, datafolder)
+        src_path_to_sequence[src_file_path] = sequence
       if not sequence:
         contains_errors = True
     except FileNotFoundError as e:
