@@ -3,6 +3,7 @@ import multiprocessing
 
 from absl import app
 from absl import flags
+from absl import logging
 
 from compilers.llvm import clang
 from datasets.github.scrape_repos import contentfiles
@@ -29,8 +30,8 @@ def BytecodeFromSrc(src: str) -> str:
     ClangException: If compiling to bytecode fails.
   """
   clang_args = [
-    '-S', '-emit-llvm', '-', '-o', '-', '-O0',
-    '-Wno-everything',  # No warnings please.
+    '-xc', '-S', '-emit-llvm', '-', '-o', '-', '-O0',
+    '-ferror-limit=1', '-Wno-everything',  # No warnings please.
   ]
   process = clang.Exec(clang_args, stdin=src)
   if process.returncode:
@@ -45,22 +46,19 @@ def ProcessContentFile(cf_url: str, cf_id: int,
   try:
     bytecode, cflags = BytecodeFromSrc(text)
     clang_returncode = 0
-    error_message = ''
-  except clang.ClangException as e:
-    bytecode = ''
-    cflags = e.command
-    clang_returncode = e.returncode
-    error_message = e.stderr
 
-  return reachability_pb2.LlvmBytecode(
+    return reachability_pb2.LlvmBytecode(
       source_name=cf_url,
       relpath=str(cf_id),
       lang='C',
       cflags=' '.join(cflags),
       bytecode=bytecode,
       clang_returncode=clang_returncode,
-      error_message=error_message,
-  )
+      error_message='',
+    )
+  except clang.ClangException as e:
+    return None
+
 
 
 def PopulateBytecodeTable(
@@ -70,14 +68,20 @@ def PopulateBytecodeTable(
   pool = multiprocessing.Pool()
 
   with cf.Session() as cf_s:
-    q = cf_s.query(cf.ContentFile.id, cf.ContentFile.text).limit(100)
+    q = cf_s.query(
+        contentfiles.ContentFile.id, contentfiles.ContentFile.text)\
+        .yield_per(100)
 
-    process_args = [(cf.url, cf_id, text) for cf_id, text in q]
-    with db.Session(commit=True) as s:
-      for i, proto in enumerate(pool.starmap(ProcessContentFile, process_args)):
-        s.add(database.LlvmBytecode(**database.LlvmBytecode.FromProto(proto)))
-        if not (i % commit_every):
-          s.commit()
+    for i, batch in enumerate(q):
+      # TODO(cec): Itertools slice
+      logging.info('batch %d', i + 1)
+      process_args = [(cf.url, cf_id, text) for cf_id, text in batch]
+      with db.Session(commit=True) as s:
+        for i, proto in enumerate(pool.starmap(ProcessContentFile, process_args)):
+          if proto:
+            s.add(database.LlvmBytecode(**database.LlvmBytecode.FromProto(proto)))
+          if not (i % commit_every):
+            s.commit()
 
 
 def main(argv):
@@ -88,3 +92,7 @@ def main(argv):
   db = database.Database(FLAGS.db)
   cf = contentfiles.ContentFiles(FLAGS.cf)
   PopulateBytecodeTable(cf, db)
+
+
+if __name__ == '__main__':
+  app.run(main)
