@@ -1,4 +1,4 @@
-"""Dataset mined by //datasets/github/scrape_repos"""
+"""Dataset of GitHub C repos mined by //datasets/github/scrape_repos"""
 import multiprocessing
 
 from absl import app
@@ -60,28 +60,36 @@ def ProcessContentFile(cf_url: str, cf_id: int,
     return None
 
 
+def BatchedQuery(query, yield_per: int = 1000):
+  i = 0
+  batch = []
+  while True:
+    batch = query.offset(i).limit(yield_per).all()
+    if batch:
+      yield batch
+      i += len(batch)
+    else:
+      break
+
 
 def PopulateBytecodeTable(
     cf: contentfiles.ContentFiles,
     db: database.Database, commit_every: int = 1000):
-  # Process each row of the table in parallel.
   pool = multiprocessing.Pool()
 
   with cf.Session() as cf_s:
     q = cf_s.query(
         contentfiles.ContentFile.id, contentfiles.ContentFile.text)\
-        .yield_per(100)
 
-    for i, batch in enumerate(q):
-      # TODO(cec): Itertools slice
-      logging.info('batch %d', i + 1)
+    chunk_size = 100
+    for i, batch in enumerate(BatchedQuery(q, yield_per=chunk_size)):
+      logging.info('processing file %d', (i + 1) * chunk_size)
       process_args = [(cf.url, cf_id, text) for cf_id, text in batch]
       with db.Session(commit=True) as s:
-        for i, proto in enumerate(pool.starmap(ProcessContentFile, process_args)):
+        for proto in pool.starmap(ProcessContentFile, process_args):
           if proto:
-            s.add(database.LlvmBytecode(**database.LlvmBytecode.FromProto(proto)))
-          if not (i % commit_every):
-            s.commit()
+            s.add(database.LlvmBytecode
+                **database.LlvmBytecode.FromProto(proto)))
 
 
 def main(argv):
