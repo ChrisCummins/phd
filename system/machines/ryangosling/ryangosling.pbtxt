@@ -91,6 +91,8 @@ mirrored_directory {
   rsync_exclude: "/Users/cec/Dropbox"
   rsync_exclude: "/Users/cec/go"
   rsync_exclude: "/Users/cec/Google Drive"
+  rsync_exclude: "/Users/cec/Library/Safari"
+  rsync_exclude: "/Users/cec/Library/Suggestions"
   rsync_exclude: "/Users/cec/Music"
   rsync_exclude: "/Users/cec/OmniPresence"
   rsync_exclude: "/Users/cec/OneDrive"
