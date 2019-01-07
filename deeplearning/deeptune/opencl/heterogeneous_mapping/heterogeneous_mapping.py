@@ -99,7 +99,14 @@ class ExperimentalResults(object):
   def deeptune_inst2vec_df(self):
     return self.EvaluateModel(self.deeptune_inst2vec_model)
 
-  # Models trained with adversarial data.
+  # DeepTune Adversarial
+
+  @decorators.memoized_property
+  def deeptune_adversarial_model(self):
+    model = models.DeepTune()
+    model.__name__ = 'DeepTune Adversarial'
+    model.__basename__ = 'deeptune_adversarial'
+    return model
 
   @decorators.memoized_property
   def adversarial_df(self):
@@ -111,7 +118,8 @@ class ExperimentalResults(object):
 
   @decorators.memoized_property
   def adversarial_deeptune_df(self):
-    return self.EvaluateModel(models.DeepTune(), df=self.adversarial_df)
+    return self.EvaluateModel(
+        self.deeptune_adversarial_model, df=self.adversarial_df)
 
 
 def main(argv: typing.List[str]):
