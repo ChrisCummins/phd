@@ -2,15 +2,16 @@
 import pathlib
 import typing
 
-import networkx as nx
-import numpy as np
 import pandas as pd
 import pytest
 
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.clgen.corpuses import atomizers
-from deeplearning.deeptune.opencl.heterogeneous_mapping import models
 from deeplearning.deeptune.opencl.heterogeneous_mapping import utils
+from deeplearning.deeptune.opencl.heterogeneous_mapping.models import base
+from deeplearning.deeptune.opencl.heterogeneous_mapping.models import deeptune
+from deeplearning.deeptune.opencl.heterogeneous_mapping.models import models
+from deeplearning.deeptune.opencl.heterogeneous_mapping.models import ncc
 from labm8 import test
 
 
@@ -36,17 +37,17 @@ def df_atomizer(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _InstantiateModelWithTestOptions(
-    model_cls: typing.Type) -> models.HeterogeneousMappingModel:
+    model_cls: typing.Type) -> base.HeterogeneousMappingModel:
   """Instantiate a model with arguments set for testing, i.e. tiny params."""
   init_opts = {
-    models.DeepTune: {
+    deeptune.DeepTune: {
       'lstm_layer_size': 8,
       'dense_layer_size': 4,
       'num_epochs': 2,
       'batch_size': 4,
       'input_shape': (10,),
     },
-    models.DeepTuneInst2Vec: {
+    ncc.DeepTuneInst2Vec: {
       # Same as DeepTune.
       'lstm_layer_size': 8,
       'dense_layer_size': 4,
@@ -96,50 +97,6 @@ def test_HeterogeneousMappingModel_train_predict(
   model.init(0, df_atomizer)
   model.train(df, 'amd_tahiti_7970')
   model.predict(df, 'amd_tahiti_7970')
-
-
-def test_Lda_GraphToInputTarget():
-  g = nx.Digraph()
-  g.add_node(0, inst2vec='foo')
-  g.add_node(1, inst2vec='bar')
-  g.add_node(2, inst2vec='car')
-  g.add_edge(0, 1)
-  g.add_edge(1, 2)
-
-  input_graph, target_graph = models.Lda.GraphToInputTarget(
-      {'y_1hot': 'dar'}, g)
-
-  # Test input graph node features.
-  assert input_graph.nodes[0]['features'] == 'foo'
-  assert input_graph.nodes[1]['features'] == 'bar'
-  assert input_graph.nodes[2]['features'] == 'car'
-
-  # Test target graph node features.
-  assert np.testing.assert_array_almost_equal(
-      target_graph.nodes[0]['features'], np.ones(1))
-  assert np.testing.assert_array_almost_equal(
-      target_graph.nodes[1]['features'], np.ones(1))
-  assert np.testing.assert_array_almost_equal(
-      target_graph.nodes[2]['features'], np.ones(1))
-
-  # Test input graph edge features.
-  np.testing.assert_array_almost_equal(
-      input_graph.edges[0, 1]['features'], np.ones(1))
-  np.testing.assert_array_almost_equal(
-      input_graph.edges[1, 2]['features'], np.ones(1))
-
-  # Test target graph edge features.
-  np.testing.assert_array_almost_equal(
-      target_graph.edges[0, 1]['features'], np.ones(1))
-  np.testing.assert_array_almost_equal(
-      target_graph.edges[1, 2]['features'], np.ones(1))
-
-  # Test input graph global features.
-  np.testing.assert_array_almost_equal(
-      input_graph.graph['features'], np.ones(1))
-
-  # Test target graph global features.
-  assert target_graph.graph['features'] == 'dar'
 
 
 if __name__ == '__main__':

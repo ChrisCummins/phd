@@ -5,9 +5,9 @@ py_binary(
     srcs = ["heterogeneous_mapping.py"],
     visibility = ["//visibility:public"],
     deps = [
-        ":models",
         ":utils",
         "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
+        "//deeplearning/deeptune/opencl/heterogeneous_mapping/models",
         "//third_party/py/absl",
         "//third_party/py/numpy",
         "//third_party/py/pandas",
@@ -26,49 +26,9 @@ py_test(
 )
 
 py_library(
-    name = "models",
-    srcs = ["models.py"],
-    data = [
-        "//deeplearning/ncc/published_results:embeddings",
-        "//deeplearning/ncc/published_results:task_devmap_kernels",
-        "//deeplearning/ncc/published_results:vocabulary",
-    ],
-    deps = [
-        ":utils",
-        "//compilers/llvm:clang",
-        "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
-        "//deeplearning/clgen/corpuses:atomizers",
-        "//deeplearning/clgen/preprocessors:opencl",
-        "//deeplearning/ncc:task_utils",
-        "//experimental/compilers/reachability:llvm_util",
-        "//labm8:labtypes",
-        "//third_party/py/absl",
-        "//third_party/py/graph_nets",
-        "//third_party/py/keras",
-        "//third_party/py/networkx",
-        "//third_party/py/numpy",
-        "//third_party/py/pandas",
-        "//third_party/py/progressbar",
-        "//third_party/py/scipy:scikit_learn",
-        "//third_party/py/tensorflow",
-    ],
-)
-
-py_test(
-    name = "models_test",
-    srcs = ["models_test.py"],
-    deps = [
-        ":models",
-        ":utils",
-        "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
-        "//labm8:test",
-        "//third_party/py/pytest",
-    ],
-)
-
-py_library(
     name = "utils",
     srcs = ["utils.py"],
+    visibility = ["//deeplearning/deeptune/opencl/heterogeneous_mapping:__subpackages__"],
     deps = [
         "//deeplearning/clgen/corpuses:atomizers",
         "//third_party/py/absl",

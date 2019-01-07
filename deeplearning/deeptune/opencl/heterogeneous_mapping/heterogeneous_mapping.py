@@ -4,17 +4,15 @@ This is a port of the Jupyter notebook
 "//docs/2017_09_pact/code:Case Study A.ipynb".
 """
 import pathlib
-import sys
 import typing
 
-import numpy as np
 import pandas as pd
 from absl import app
 from absl import flags
 
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
-from deeplearning.deeptune.opencl.heterogeneous_mapping import models
 from deeplearning.deeptune.opencl.heterogeneous_mapping import utils
+from deeplearning.deeptune.opencl.heterogeneous_mapping.models import models
 from labm8 import decorators
 
 
@@ -23,31 +21,13 @@ FLAGS = flags.FLAGS
 flags.DEFINE_string(
     'cache_directory',
     '/tmp/phd/deeplearning/deeptune/opencl/heterogeneous_mapping',
-    'Path to working dir.')
+    'Path of directory to store cached models and predictions in.')
 
 
-class ExperimentalResults(object):
+class HeterogeneousMappingExperiment(object):
 
   def __init__(self, cache_dir: pathlib.Path):
     self._cache_dir = cache_dir
-
-  def EvaluateModel(self, model: models.HeterogeneousMappingModel,
-                    df: typing.Optional[pd.DataFrame] = None):
-    """Evaluate a model.
-
-    Args:
-      model: The model to evaluate.
-      df: The dataframe to use for evaluation.
-
-    Returns:
-      A DataFrame of evaluation results.
-    """
-    return utils.evaluate(
-        model=model,
-        df=self.dataset.df if df is None else df,
-        atomizer=self.atomizer,
-        workdir=self._cache_dir,
-        seed=0x204)
 
   @decorators.memoized_property
   def dataset(self):
@@ -59,67 +39,24 @@ class ExperimentalResults(object):
         self.dataset.programs_df['program:opencl_src'].values)
     return atomizer
 
-  # Baseline.
+  def ResultsDataFrame(self, model_class: typing.Type,
+                       df: typing.Optional[pd.DataFrame] = None):
+    """Run experiment on model.
 
-  @decorators.memoized_property
-  def baseline_model(self):
-    return models.StaticMapping()
+    Args:
+      model_class: The model class to evaluate.
+      df: The dataframe to use for evaluation.
 
-  @decorators.memoized_property
-  def baseline_df(self):
-    return self.EvaluateModel(self.baseline_model)
-
-  # Grewe et. al.
-
-  @decorators.memoized_property
-  def grewe_model(self):
-    return models.Grewe()
-
-  @decorators.memoized_property
-  def grewe_df(self):
-    return self.EvaluateModel(self.grewe_model)
-
-  # DeepTune
-
-  @decorators.memoized_property
-  def deeptune_model(self):
-    return models.DeepTune()
-
-  @decorators.memoized_property
-  def deeptune_df(self):
-    return self.EvaluateModel(self.deeptune_model)
-
-  # DeepTuneInst2Vec
-
-  @decorators.memoized_property
-  def deeptune_inst2vec_model(self):
-    return models.DeepTuneInst2Vec()
-
-  @decorators.memoized_property
-  def deeptune_inst2vec_df(self):
-    return self.EvaluateModel(self.deeptune_inst2vec_model)
-
-  # DeepTune Adversarial
-
-  @decorators.memoized_property
-  def deeptune_adversarial_model(self):
-    model = models.DeepTune()
-    model.__name__ = 'DeepTune Adversarial'
-    model.__basename__ = 'deeptune_adversarial'
-    return model
-
-  @decorators.memoized_property
-  def adversarial_df(self):
-    """Augment dataset with dead code."""
-    return self.dataset.AugmentWithDeadcodeMutations(
-        rand=np.random.RandomState(0xCEC),
-        num_permutations_of_kernel=5,
-        mutations_per_kernel_min_max=(1, 5))
-
-  @decorators.memoized_property
-  def adversarial_deeptune_df(self):
-    return self.EvaluateModel(
-        self.deeptune_adversarial_model, df=self.adversarial_df)
+    Returns:
+      A DataFrame of evaluation results.
+    """
+    model = model_class()
+    return utils.evaluate(
+        model=model,
+        df=self.dataset.df if df is None else df,
+        atomizer=self.atomizer,
+        workdir=self._cache_dir,
+        seed=0x204)
 
 
 def main(argv: typing.List[str]):
@@ -127,46 +64,29 @@ def main(argv: typing.List[str]):
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
-  results = ExperimentalResults(pathlib.Path(FLAGS.cache_directory))
+  experiment = HeterogeneousMappingExperiment(
+      pathlib.Path(FLAGS.cache_directory))
 
-  print(results.atomizer)
+  # TODO(cec): Support dead code augmentation.
+  # return self.dataset.AugmentWithDeadcodeMutations(
+  #     rand=np.random.RandomState(0xCEC),
+  #     num_permutations_of_kernel=5,
+  #     mutations_per_kernel_min_max=(1, 5))
 
-  print('\n=== STATIC MAPPING ===============================================')
-  print("Evaluating static mapping ...")
-  print(results.baseline_df.groupby(['Platform', 'Benchmark Suite'])[
-          'Platform', 'Correct?', 'Speedup'].mean())
-  print(results.baseline_df.groupby(['Platform'])[
-          'Platform', 'Correct?', 'Speedup'].mean())
-  print('=== END STATIC MAPPING ===========================================\n')
+  print(experiment.atomizer)
 
-  print('\n=== GREWE ET AL ==================================================')
-  print(results.grewe_df.groupby(['Platform', 'Benchmark Suite'])[
-          'Platform', 'Correct?', 'Speedup'].mean())
-  print(results.grewe_df.groupby(['Platform'])[
-          'Platform', 'Correct?', 'Speedup'].mean())
-  print('=== END GREWE ET AL ==============================================\n')
-
-  print('\n=== DEEPTUNE =====================================================')
-  print(results.deeptune_df.groupby(['Platform', 'Benchmark Suite'])[
-          'Platform', 'Correct?', 'Speedup'].mean())
-  print(results.deeptune_df.groupby(['Platform'])[
-          'Platform', 'Correct?', 'Speedup'].mean())
-  print('=== END DEEPTUNE =================================================\n')
-
-  print('\n=== DEEPTUNE INST2VEC ============================================')
-  print(results.deeptune_inst2vec_df.groupby(['Platform', 'Benchmark Suite'])[
-          'Platform', 'Correct?', 'Speedup'].mean())
-  print(results.deeptune_inst2vec_df.groupby(['Platform'])[
-          'Platform', 'Correct?', 'Speedup'].mean())
-  print('=== END DEEPTUNE INST2VEC ========================================\n')
-
-  print('\n=== ADVERSARIAL DEEPTUNE =========================================')
-  print(
-      results.adversarial_deeptune_df.groupby(['Platform', 'Benchmark Suite'])[
-        'Platform', 'Correct?', 'Speedup'].mean())
-  print(results.adversarial_deeptune_df.groupby(['Platform'])[
-          'Platform', 'Correct?', 'Speedup'].mean())
-  print('=== END ADVERSARIAL DEEPTUNE =====================================\n')
+  for model in models.ALL_MODELS:
+    df = experiment.ResultsDataFrame(model)
+    print(f'\n=== {model.__name__} ===========================================')
+    print("Results by benchmark suite ...")
+    print(df.groupby(['Platform', 'Benchmark Suite'])[
+            'Platform', 'Correct?', 'Speedup'].mean())
+    print("Results by platform ...")
+    print(df.groupby(['Platform'])[
+            'Platform', 'Correct?', 'Speedup'].mean())
+    print("Results ...")
+    print(df['Platform', 'Correct?', 'Speedup'].mean())
+    print(f'=== END {model.__name__} =======================================\n')
 
 
 if __name__ == '__main__':
