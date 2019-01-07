@@ -262,7 +262,17 @@ class AutoLockFile(LockFile):
 
   def __init__(
       self,
-      root: typing.Union[str, pathlib.Path] = '/tmp/phd/labm8/autolockfiles'):
+      root: typing.Union[str, pathlib.Path] = '/tmp/phd/labm8/autolockfiles',
+      granularity: str = 'line'):
+    """Constructor
+
+    Args:
+      root: The directory to place the lock file in.
+      granularity: The granularity of the lock, one of {line,function,module}.
+        'line' means that the lock is unique to the calling line. 'function'
+        means that the lock is unique to the calling function. 'module' means
+        that the lock is unique to the calling module.
+    """
     root = pathlib.Path(root)
 
     # Unlike the regular LockFile, an AutoLockFile will create the necessary
@@ -275,5 +285,15 @@ class AutoLockFile(LockFile):
     function_name = frame.function
     lineno = frame.lineno
 
-    path = root / f'{module_name}_{function_name}_{lineno}.pbtxt'
+    if granularity == 'line':
+      path = root / f'{module_name}_{function_name}_{lineno}.pbtxt'
+    elif granularity == 'function':
+      path = root / f'{module_name}_{function_name}.pbtxt'
+    elif granularity == 'module':
+      path = root / f'{module_name}.pbtxt'
+    else:
+      raise TypeError(
+          f"Invalid granularity '{granularity}'. Must be one of: "
+          f"{{line,function,module}}")
+
     super(AutoLockFile, self).__init__(path)
