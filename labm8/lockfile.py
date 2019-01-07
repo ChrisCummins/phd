@@ -5,6 +5,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import datetime
+import inspect
 import os
 import pathlib
 import sys
@@ -233,3 +234,46 @@ class LockFile:
                              assume_filename='LOCK.pbtxt')
     else:
       return lockfile_pb2.LockFile()
+
+
+class AutoLockFile(LockFile):
+  """A lockfile which derives it's path automatically.
+
+  This LockFile suclass automatically derives its path from its position in
+  the calling code. The path is:
+
+    <root>/<calling_module>_<calling_method>_<calling_lineno>.pbtxt
+
+  Where `root` is a root directory (by default, /tmp/phd/labm8/autolockfiles),
+  `calling_file` is the name of the module containing the calling code,
+  `calling_method` is the name of the method containing the calling code, and
+  `calling_lineno` is the line number of the calling code.
+
+  Use this class to conveniently mark sections of code that can only be executed
+  by a single process at a time, e.g.
+
+      def MyFunc():
+        mutex = AutoLockFile()
+        with mutex:
+          DoSomeWork()
+
+  Now, if MyFunc is invoked by two separate processes, one of them will fail.
+  """
+
+  def __init__(
+      self,
+      root: typing.Union[str, pathlib.Path] = '/tmp/phd/labm8/autolockfiles'):
+    root = pathlib.Path(root)
+
+    # Unlike the regular LockFile, an AutoLockFile will create the necessary
+    # parent directory.
+    root.mkdir(parents=True, exist_ok=True)
+
+    # Inspect the calling code to get the lockfile path components.
+    frame = inspect.stack()[1]
+    module_name = pathlib.Path(frame.filename).stem
+    function_name = frame.function
+    lineno = frame.lineno
+
+    path = root / f'{module_name}_{function_name}_{lineno}.pbtxt'
+    super(AutoLockFile, self).__init__(path)

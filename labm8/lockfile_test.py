@@ -144,5 +144,36 @@ def test_LockFile_force_replace_stale():
     assert not fs.exists(lock.path)
 
 
+def test_AutoLockFile_path():
+  """Test the path of an automatic lock file."""
+  # FRAGILE TEST: Moving this line of code requires updating the path tested!
+  lock = lockfile.AutoLockFile()
+  # This is a fragile test: if the position of the line above changes, this test
+  # will fail. To fix it, change the number at the end of the path below to the
+  # line number of the lockfile declaration:
+  assert lock.path == pathlib.Path(
+      '/tmp/phd/labm8/autolockfiles/'
+      'lockfile_test_test_AutoLockFile_path_150.pbtxt')
+
+
+def test_AutoLockFile_acquire():
+  """Test that an auto lockfile can be acquired."""
+  lock = lockfile.AutoLockFile()
+
+  lock.acquire()
+  assert lock.islocked
+
+
+def test_AutoLockFile_acquire_fail(dummy_lockfile_proto: lockfile_pb2.LockFile):
+  """Test that acquiring a lock owned by a different host fails."""
+  lock = lockfile.AutoLockFile()
+
+  # Mock that the lock has been "acquired" by another process.
+  pbutil.ToFile(dummy_lockfile_proto, lock.path)
+
+  with pytest.raises(lockfile.UnableToAcquireLockError):
+    lock.acquire()
+
+
 if __name__ == '__main__':
   test.Main()
