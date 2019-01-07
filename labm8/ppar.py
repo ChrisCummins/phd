@@ -244,38 +244,80 @@ def MapNativeProcessingBinaries(
     yield map_worker
 
 
-def BatchedQuery(query, start_at: int = 0, yield_per: int = 1000):
-  i = start_at
-  while True:
-    batch = query.offset(i).limit(yield_per).all()
-    if batch:
-      yield batch
-      i += len(batch)
-    else:
-      break
+# Type annotations for MapDatabaseRowBatchProcessor().
+WorkUnitType = typing.Callable[[typing.List[typing.Any]], typing.Any]
+WorkUnitArgGenerator = typing.Callable[[typing.Any], typing.Any]
+ResultCallback = typing.Callable[[typing.Any], None]
+BatchCallback = typing.Callable[[], None]
 
 
-def MapDatabaseRowCreator(
-    session: sqlutil.Session, query, work_unit, proto_backed_output_row,
-    generate_work_unit_args=lambda rows: rows,
+def MapDatabaseRowBatchProcessor(
+    work_unit: WorkUnitType,
+    query: sqlutil.Query,
+    generate_work_unit_args: WorkUnitArgGenerator = lambda rows: rows,
+    work_unit_result_callback: ResultCallback = lambda result: None,
+    end_of_batch_callback: BatchCallback = lambda: None,
     batch_size: int = 256, rows_per_work_unit: int = 5,
-    start_at: int = 0, n: int = None,
-    pool: typing.Optional[multiprocessing.Pool] = None):
+    start_at: int = 0, query_row_count: int = None,
+    pool: typing.Optional[multiprocessing.Pool] = None,
+    input_rows_name: str = 'rows',
+    output_rows_name: str = 'rows') -> None:
+  """Execute a database row-processesing function in parallel.
+
+  Use this function to orchestrate the parallel execution of a function that
+  takes batches of rows from the result set of a query.
+
+  This is equivalent to a serial implementation:
+
+    for row in query:
+      work_unit_result_callback(work_unit(generate_work_unit_args)))
+    end_of_batch_callback()
+
+  Args:
+    work_unit: A function which takes an input a list of the values returned
+      by generate_work_unit_args callback, and produces a list of zero or more
+      instances of output_table_class.
+    query: The query which produces inputs to the work units.
+    generate_work_unit_args: A callback which transforms a single result of the
+      query into an input to a work unit.
+    batch_size:
+    rows_per_work_unit:
+    start_at:
+    query_row_count: The total number of rows in the query.
+    pool:
+    input_rows_name:
+    output_rows_name:
+
+  Returns:
+    Foo.
+  """
+
+  def _MaxSuffix(i: int) -> str:
+    if query_row_count:
+      return f' {humanize.intcomma(query_row_count)} ({i/query_row_count:.1%})'
+    else:
+      return ''
+
   pool = pool or multiprocessing.Pool()
 
-  max_suffix = f' {humanize.intcomma(n)}' if n else ''
-  logging.info('Starting at row %s%s', humanize.intcomma(start_at), max_suffix)
+  i = start_at
+  row_batches = sqlutil.OffsetLimitBatchedQuery(query, batch_size=batch_size)
 
-  for batch in sqlutil.BatchedQuery(query, yield_per=batch_size):
-    i = batch[0][0]  # The ID of the first content file in the batch.
-    logging.info('Processing %d rows, %s%s',
-                 batch_size, humanize.intcomma(i), max_suffix)
+  logging.info('Starting at row %s%s', humanize.intcomma(start_at),
+               _MaxSuffix(i))
+
+  for rows_batch in row_batches:
+    logging.info('Processing batch of %d %s -> %s, %s%s',
+                 len(rows_batch), input_rows_name, output_rows_name,
+                 humanize.intcomma(i), _MaxSuffix(i))
     work_unit_args = [
-      generate_work_unit_args(batch[i:i + rows_per_work_unit])
-      for i in range(0, len(batch), rows_per_work_unit)
+      generate_work_unit_args(rows_batch[i:i + rows_per_work_unit])
+      for i in range(0, len(rows_batch), rows_per_work_unit)
     ]
-    for protos in pool.starmap(work_unit, work_unit_args):
-      for proto in protos:
-        session.add(proto_backed_output_row(
-            **proto_backed_output_row.FromProto(proto)))
-    session.commit()
+
+    for result in pool.starmap(work_unit, work_unit_args):
+      work_unit_result_callback(result)
+
+    i += len(rows_batch)
+
+    end_of_batch_callback()

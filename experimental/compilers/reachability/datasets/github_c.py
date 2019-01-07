@@ -81,9 +81,9 @@ def PopulateBytecodeTable(
         .limit(1).first() or (0,))[0]
 
     # Get the ID of the last contentfile to process.
-    n: str = (cf_s.query(contentfiles.ContentFile.id)
-              .order_by(contentfiles.ContentFile.id.desc())
-              .limit(1).one_or_none() or (0,))[0]
+    n = (cf_s.query(contentfiles.ContentFile.id)
+         .order_by(contentfiles.ContentFile.id.desc())
+         .limit(1).one_or_none() or (0,))[0]
 
     # A query to return the IDs and sources of files to process.
     q = cf_s.query(
@@ -91,10 +91,23 @@ def PopulateBytecodeTable(
       .filter(contentfiles.ContentFile.id > resume_from) \
       .order_by(contentfiles.ContentFile.id)
 
-    ppar.MapDatabaseRowCreator(
-        s, q, GetBytecodesFromContentFiles, database.LlvmBytecode,
+    def _AddProtosToDatabase(
+        protos: typing.List[reachability_pb2.LlvmBytecode]) -> None:
+      for proto in protos:
+        s.add(database.LlvmBytecode(**database.LlvmBytecode.FromProto(proto)))
+
+    ppar.MapDatabaseRowBatchProcessor(
+        GetBytecodesFromContentFiles, q,
         generate_work_unit_args=lambda rows: (cf.url, rows),
-        batch_size=256, rows_per_work_unit=5, n=n, pool=pool)
+        work_unit_result_callback=_AddProtosToDatabase,
+        end_of_batch_callback=lambda: s.commit(),
+        batch_size=256,
+        rows_per_work_unit=5,
+        query_row_count=n,
+        pool=pool,
+        input_rows_name='contentfiles',
+        output_rows_name='bytecodes',
+    )
 
 
 def main(argv):

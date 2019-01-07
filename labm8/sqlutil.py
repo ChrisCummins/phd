@@ -19,6 +19,10 @@ flags.DEFINE_bool(
     'If True, the Engine will log all statements as well as a repr() of their '
     'parameter lists to the engines logger, which defaults to sys.stdout.')
 
+# The Query type is returned by Session.query(). This is a convenience for type
+# annotations.
+Query = orm.query.Query
+
 
 class DatabaseNotFound(FileNotFoundError):
   """An error that is raised if the requested database cannot be found."""
@@ -438,10 +442,31 @@ class ProtoBackedMixin(object):
     return cls.FromProto(proto)
 
 
-def BatchedQuery(query, start_at: int = 0, yield_per: int = 1000):
+def OffsetLimitBatchedQuery(
+    query: Query, batch_size: int = 1000,
+    start_at: int = 0) -> typing.Iterator[typing.List[typing.Any]]:
+  """Split and return the rows resulting from a query in to batches.
+
+  This iteratively runs the query `SELECT * FROM * OFFSET i LIMIT batch_size;`
+  with `i` initialized to `start_at` and increasing by `batch_size` per
+  iteration. Iteration terminates when the query returns no rows.
+
+  This function is useful for returning row sets from enormous tables, where
+  loading the full query results in to memory would take prohibitive time or
+  resources.
+
+  Args:
+    query: The query to run.
+    batch_size: The number of rows to return per batch.
+    start_at: The initial offset into the table.
+
+  Returns:
+    A generator of lists of rows, where the number of rows in each batch is
+    `batch_size`, or <= `batch_size` and >= 1 for the last iteration.
+  """
   i = start_at
   while True:
-    batch = query.offset(i).limit(yield_per).all()
+    batch = query.offset(i).limit(batch_size).all()
     if batch:
       yield batch
       i += len(batch)
