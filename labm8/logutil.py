@@ -33,17 +33,38 @@ ABSL_LEVEL_TO_LOG_RECORD_LEVEL = {
 }
 
 
-def DatetimeFromAbslTimestamp(timestamp: str) -> datetime.datetime:
-  dt = datetime.datetime.strptime(
-      str(datetime.datetime.utcnow().year) + timestamp, '%Y%m%d %H:%M:%S.%f')
+def DatetimeFromAbslTimestamp(
+    timestamp: str,
+    year: int = datetime.datetime.utcnow().year) -> datetime.datetime:
+  """Convert absl logging timestamp to datetime.
+
+  WARNING: Absl logs do not include the year, so if parsing logs from previous
+  years, be sure to set the year argument! The default value assumes the logs
+  are from the current year.
+
+  Args:
+    timestamp: The string timestamp.
+    year: The year, as an integer. E.g. 2019.
+
+  Returns:
+    A datetime.
+  """
+  dt = datetime.datetime.strptime(str(year) + timestamp, '%Y%m%d %H:%M:%S.%f')
   return dt
 
 
-def ConertAbslLogToProtos(logs: str) -> typing.List[logging_pb2.LogRecord]:
+def ConertAbslLogToProtos(
+    logs: str, year: int = datetime.datetime.utcnow().year
+) -> typing.List[logging_pb2.LogRecord]:
   """Convert the output of logging with absl logging to LogRecord protos.
+
+  WARNING: Absl logs do not include the year, so if parsing logs from previous
+  years, be sure to set the year argument! The default value assumes the logs
+  are from the current year.
 
   Args:
     logs: The output from logging with absl.
+    year: The year, as an integer. E.g. 2019.
 
   Returns:
     A list of LogRecord messages.
