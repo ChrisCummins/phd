@@ -61,9 +61,9 @@ py_test(
     deps = [
         ":models",
         "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
+        "//deeplearning/deeptune/opencl/heterogeneous_mapping:utils",
         "//labm8:test",
         "//third_party/py/networkx",
-        "//deeplearning/deeptune/opencl/heterogeneous_mapping:utils",
         "//third_party/py/numpy",
         "//third_party/py/pandas",
         "//third_party/py/pytest",
