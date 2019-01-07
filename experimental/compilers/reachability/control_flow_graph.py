@@ -109,7 +109,7 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
     node_names = set()
     for node in self.nodes:
       # All nodes must have a name.
-      if not 'name' in self.nodes[node]:
+      if 'name' not in self.nodes[node]:
         raise MissingNodeName(f"Node {node} has no name")
 
       # All node names must be unique.
