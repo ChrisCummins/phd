@@ -22,7 +22,7 @@ flags.DEFINE_string('cf', None, 'Path of contentfiles database.')
 def GetBytecodesFromContentFiles(
     source_name: str,
     content_files: typing.List[typing.Tuple[int, str]]
-    ) -> typing.List[reachability_pb2.LlvmBytecode]:
+) -> typing.List[reachability_pb2.LlvmBytecode]:
   """Extract LLVM bytecode from a contentfile, or return None.
 
   Args:
@@ -47,13 +47,13 @@ def GetBytecodesFromContentFiles(
       continue
 
     protos.append(reachability_pb2.LlvmBytecode(
-      source_name=source_name,
-      relpath=str(content_file_id),
-      lang='C',
-      cflags=' '.join(clang_args),
-      bytecode=process.stdout,
-      clang_returncode=0,
-      error_message='',
+        source_name=source_name,
+        relpath=str(content_file_id),
+        lang='C',
+        cflags=' '.join(clang_args),
+        bytecode=process.stdout,
+        clang_returncode=0,
+        error_message='',
     ))
 
   return protos
@@ -85,34 +85,35 @@ def PopulateBytecodeTable(
   # files sorted by their numeric ID in the contentfiles database, so that if
   with mutex, cf.Session() as cf_s, db.Session(commit=True) as s:
     # Get the ID of the last-processed bytecode file to resume from.
-    resume_from = (s.query(database.LlvmBytecode.relpath)\
-        .filter(database.LlvmBytecode.source_name == cf.url)\
-        .order_by(database.LlvmBytecode.relpath.desc())\
-        .limit(1).first() or (0,))[0]
-    logging.info('Starting at ID %s', resume_from)
+    resume_from = (s.query(database.LlvmBytecode.relpath)
+                   .filter(database.LlvmBytecode.source_name == cf.url)
+                   .order_by(database.LlvmBytecode.relpath.desc())
+                   .limit(1).first() or (0,))[0]
 
-    # Get the IDs and C srcs of files to process.
+    # Get the ID of the last contentfile to process.
+    n = (cf_s.query(contentfiles.ContentFile.id)
+         .order_by(contentfiles.ContentFile.id.desc())
+         .limit(1).one_or_none() or (0,))[0]
+
+    logging.info('Starting at ID %d / %d', resume_from)
+
+    # A query to return the IDs and sources of files to process.
     q = cf_s.query(
-        contentfiles.ContentFile.id, contentfiles.ContentFile.text)\
-        .filter(contentfiles.ContentFile.id > resume_from)\
-        .order_by(contentfiles.ContentFile.id)
+        contentfiles.ContentFile.id, contentfiles.ContentFile.text) \
+      .filter(contentfiles.ContentFile.id > resume_from) \
+      .order_by(contentfiles.ContentFile.id)
 
-    # The ID of the last contentfile to process.
-    n = (cf_s.query(contentfiles.ContentFile.id)\
-        .order_by(contentfiles.ContentFile.id.desc())\
-        .one_or_none() or (0,))[0]
-
-    # Process the soure files in batches. For each batch: convert to bytecode
+    # Process the source files in batches. For each batch: convert to bytecode
     # and store in the database. Files in batches are processed in parallel.
     # Database commits are per-batch.
     batch_size = 256
     for batch in BatchedQuery(q, yield_per=batch_size):
       i = batch[0][0]  # The ID of the first content file in the batch.
-      logging.info('Processing contentfiles to bytecode %d / %d', batch[0][0], n)
+      logging.info('Processing contentfiles -> bytecode %d / %d', i, n)
       content_files_per_process = 5
       process_args = [
-          (cf.url, batch[i:i+content_files_per_process])
-          for i in range(0, len(batch), content_files_per_process)
+        (cf.url, batch[i:i + content_files_per_process])
+        for i in range(0, len(batch), content_files_per_process)
       ]
       for protos in pool.starmap(GetBytecodesFromContentFiles, process_args):
         for proto in protos:
