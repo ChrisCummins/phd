@@ -7,6 +7,7 @@ py_binary(
         "//experimental/compilers/reachability:database",
         "//experimental/compilers/reachability:reachability_py_pb2",
         "//labm8:lockfile",
+        "//labm8:ppar",
         "//third_party/py/absl",
         "//third_party/py/sqlalchemy",
     ],

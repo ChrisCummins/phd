@@ -9,7 +9,6 @@ import typing
 
 import humanize
 from absl import flags
-from absl import logging
 
 from labm8 import bazelutil
 from labm8 import pbutil
@@ -248,7 +247,7 @@ def MapNativeProcessingBinaries(
 WorkUnitType = typing.Callable[[typing.List[typing.Any]], typing.Any]
 WorkUnitArgGenerator = typing.Callable[[typing.Any], typing.Any]
 ResultCallback = typing.Callable[[typing.Any], None]
-BatchCallback = typing.Callable[[], None]
+BatchCallback = typing.Callable[[int], None]
 
 
 def MapDatabaseRowBatchProcessor(
@@ -256,12 +255,11 @@ def MapDatabaseRowBatchProcessor(
     query: sqlutil.Query,
     generate_work_unit_args: WorkUnitArgGenerator = lambda rows: rows,
     work_unit_result_callback: ResultCallback = lambda result: None,
-    end_of_batch_callback: BatchCallback = lambda: None,
+    start_of_batch_callback: BatchCallback = lambda i: None,
+    end_of_batch_callback: BatchCallback = lambda i: None,
     batch_size: int = 256, rows_per_work_unit: int = 5,
-    start_at: int = 0, query_row_count: int = None,
-    pool: typing.Optional[multiprocessing.Pool] = None,
-    input_rows_name: str = 'rows',
-    output_rows_name: str = 'rows') -> None:
+    start_at: int = 0,
+    pool: typing.Optional[multiprocessing.Pool] = None) -> None:
   """Execute a database row-processesing function in parallel.
 
   Use this function to orchestrate the parallel execution of a function that
@@ -283,33 +281,20 @@ def MapDatabaseRowBatchProcessor(
     batch_size:
     rows_per_work_unit:
     start_at:
-    query_row_count: The total number of rows in the query.
     pool:
-    input_rows_name:
-    output_rows_name:
 
   Returns:
     Foo.
   """
-
-  def _MaxSuffix(i: int) -> str:
-    if query_row_count:
-      return f' {humanize.intcomma(query_row_count)} ({i/query_row_count:.1%})'
-    else:
-      return ''
 
   pool = pool or multiprocessing.Pool()
 
   i = start_at
   row_batches = sqlutil.OffsetLimitBatchedQuery(query, batch_size=batch_size)
 
-  logging.info('Starting at row %s%s', humanize.intcomma(start_at),
-               _MaxSuffix(i))
-
   for rows_batch in row_batches:
-    logging.info('Processing batch of %d %s -> %s, %s%s',
-                 len(rows_batch), input_rows_name, output_rows_name,
-                 humanize.intcomma(i), _MaxSuffix(i))
+    start_of_batch_callback(i)
+
     work_unit_args = [
       generate_work_unit_args(rows_batch[i:i + rows_per_work_unit])
       for i in range(0, len(rows_batch), rows_per_work_unit)
@@ -320,4 +305,4 @@ def MapDatabaseRowBatchProcessor(
 
     i += len(rows_batch)
 
-    end_of_batch_callback()
+    end_of_batch_callback(i)

@@ -1,10 +1,12 @@
 """Dataset of GitHub C repos mined by //datasets/github/scrape_repos"""
+import humanize
 import multiprocessing
 import typing
 
 import sqlalchemy as sql
 from absl import app
 from absl import flags
+from absl import logging
 
 from compilers.llvm import clang
 from datasets.github.scrape_repos import contentfiles
@@ -70,20 +72,24 @@ def PopulateBytecodeTable(
   # Read source files from the contenfiles database, process them into
   # bytecodes, and, if successful, write them into the database. We process
   # files sorted by their numeric ID in the contentfiles database, so that if
-  with cf.Session() as cf_s, db.Session() as s:
+  with db.Session() as s:
     # Get the ID of the last-processed bytecode file to resume from.
-    resume_from = (
+    resume_from = int((
         s.query(database.LlvmBytecode.relpath)
         .filter(database.LlvmBytecode.source_name == cf.url)
         # Note the cast to integer: relpath is a string column, sorting by it
         # in its native type would sort the string (e.g. '9' > '10'.
         .order_by(sql.cast(database.LlvmBytecode.relpath, sql.Integer).desc())
-        .limit(1).first() or (0,))[0]
+        .limit(1).first() or (0,))[0])
+
+  with cf.Session() as cf_s:
 
     # Get the ID of the last contentfile to process.
     n = (cf_s.query(contentfiles.ContentFile.id)
          .order_by(contentfiles.ContentFile.id.desc())
          .limit(1).one_or_none() or (0,))[0]
+    logging.info('Starting at row %s / %s',
+                 humanize.intcomma(resume_from), humanize.intcomma(n))
 
     # A query to return the IDs and sources of files to process.
     q = cf_s.query(
@@ -93,20 +99,27 @@ def PopulateBytecodeTable(
 
     def _AddProtosToDatabase(
         protos: typing.List[reachability_pb2.LlvmBytecode]) -> None:
-      for proto in protos:
-        s.add(database.LlvmBytecode(**database.LlvmBytecode.FromProto(proto)))
+      bytecodes = [
+        database.LlvmBytecode(**database.LlvmBytecode.FromProto(proto))
+        for proto in protos
+      ]
+      with db.Session(commit=True) as s:
+        s.add_all(bytecodes)
+
+    def _StartBatch(i: int):
+      logging.info(
+        'Processing batch of contentfiles -> bytecodes, %s / %s (%.1f%%)',
+        humanize.intcomma((i + resume_from)), humanize.intcomma(n),
+        ((i + resume_from) / n) * 100)
 
     ppar.MapDatabaseRowBatchProcessor(
         GetBytecodesFromContentFiles, q,
         generate_work_unit_args=lambda rows: (cf.url, rows),
         work_unit_result_callback=_AddProtosToDatabase,
-        end_of_batch_callback=lambda: s.commit(),
+        start_of_batch_callback=_StartBatch,
         batch_size=256,
         rows_per_work_unit=5,
-        query_row_count=n,
         pool=pool,
-        input_rows_name='contentfiles',
-        output_rows_name='bytecodes',
     )
 
 
