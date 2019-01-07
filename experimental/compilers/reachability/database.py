@@ -24,7 +24,7 @@ class LlvmBytecode(Base, sqlutil.ProtoBackedMixin,
 
   source_name: str = sql.Column(sql.String(256), nullable=False)
   relpath: str = sql.Column(sql.String(256), nullable=False)
-  lang: str = sql.Column(sql.String(32), nullable=False)
+  language: str = sql.Column(sql.String(32), nullable=False)
   cflags: str = sql.Column(sql.String(4096), nullable=False)
   charcount: int = sql.Column(sql.Integer, nullable=False)
   linecount: int = sql.Column(sql.Integer, nullable=False)
@@ -36,13 +36,15 @@ class LlvmBytecode(Base, sqlutil.ProtoBackedMixin,
       sql.UnicodeText().with_variant(sql.UnicodeText(2 ** 31), 'mysql'),
       nullable=False)
 
+  # TODO(cec): Add unique constraint on source_name and relpath.
+
   @classmethod
   def FromProto(cls, proto: proto_t) -> typing.Dict[str, typing.Any]:
     """Return a dictionary of instance constructor args from proto."""
     return {
       'source_name': proto.source_name,
       'relpath': proto.relpath,
-      'lang': proto.lang,
+      'language': proto.lang,
       'cflags': proto.cflags,
       'charcount': len(proto.bytecode),
       'linecount': len(proto.bytecode.split('\n')),
