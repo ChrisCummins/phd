@@ -1,5 +1,6 @@
 """Dataset of GitHub C repos mined by //datasets/github/scrape_repos"""
 import multiprocessing
+import typing
 
 from absl import app
 from absl import flags

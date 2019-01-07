@@ -6,6 +6,7 @@ py_binary(
         "//datasets/github/scrape_repos:contentfiles",
         "//experimental/compilers/reachability:database",
         "//experimental/compilers/reachability:reachability_py_pb2",
+        "//labm8:lockfile",
         "//third_party/py/absl",
     ],
 )
