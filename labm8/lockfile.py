@@ -230,8 +230,8 @@ class LockFile:
     """
     path = pathlib.Path(path)
     if path.is_file():
-      return pbutil.FromFile(path, lockfile_pb2.LockFile(),
-                             assume_filename='LOCK.pbtxt')
+      return pbutil.FromFile(
+          path, lockfile_pb2.LockFile(), assume_filename='LOCK.pbtxt')
     else:
       return lockfile_pb2.LockFile()
 
