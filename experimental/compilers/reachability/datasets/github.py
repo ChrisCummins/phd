@@ -82,7 +82,7 @@ def PopulateBytecodeTable(
     db: database.Database,
     pool: typing.Optional[multiprocessing.Pool] = None):
   # Only one process at a time can run this method.
-  lockfile.AutoLockFile(granularity='function').acquire()
+  mutex = lockfile.AutoLockFile(granularity='function')
 
   # We use the database URL as the name of the source.
   source_name = cf.url
@@ -101,11 +101,12 @@ def PopulateBytecodeTable(
         .order_by(sql.cast(database.LlvmBytecode.relpath, sql.Integer).desc())
         .limit(1).first() or (0,))[0])
 
-  with cf.Session() as cf_s:
+  with mutex, cf.Session() as cf_s:
 
     # Get the ID of the last contentfile to process.
     n = (cf_s.query(contentfiles.ContentFile.id)
-         .filter(contentfiles.ContentFile.language == language)
+         .join(contentfiles.GitHubRepository)
+         .filter(contentfiles.GitHubRepository.language == language)
          .order_by(contentfiles.ContentFile.id.desc())
          .limit(1).one_or_none() or (0,))[0]
     logging.info('Starting at row %s / %s',
@@ -114,8 +115,11 @@ def PopulateBytecodeTable(
     # A query to return the <id,text> tuples of files to process.
     q = (cf_s.query(contentfiles.ContentFile.id, contentfiles.ContentFile.text)
          .filter(contentfiles.ContentFile.id > resume_from)
-         .filter(contentfiles.ContentFile.language == language)
+         .join(contentfiles.GitHubRepository)
+         .filter(contentfiles.GitHubRepository.language == language)
          .order_by(contentfiles.ContentFile.id))
+
+    batch_size = 256
 
     def _AddProtosToDatabase(
         protos: typing.List[reachability_pb2.LlvmBytecode]) -> None:
@@ -128,8 +132,8 @@ def PopulateBytecodeTable(
 
     def _StartBatch(i: int):
       logging.info(
-        'Processing batch of contentfiles -> bytecodes, %s / %s (%.1f%%)',
-        humanize.intcomma((i + resume_from)), humanize.intcomma(n),
+        'Processing batch of %d contentfiles -> bytecodes, %s / %s (%.1f%%)',
+        batch_size, humanize.intcomma((i + resume_from)), humanize.intcomma(n),
         ((i + resume_from) / n) * 100)
 
     ppar.MapDatabaseRowBatchProcessor(
@@ -137,7 +141,7 @@ def PopulateBytecodeTable(
         generate_work_unit_args=lambda rows: (source_name, language, rows),
         work_unit_result_callback=_AddProtosToDatabase,
         start_of_batch_callback=_StartBatch,
-        batch_size=256,
+        batch_size=batch_size,
         rows_per_work_unit=5,
         pool=pool,
     )
