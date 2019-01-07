@@ -2,6 +2,7 @@
 import pathlib
 import typing
 
+import networkx as nx
 import numpy as np
 import pandas as pd
 import pytest
@@ -60,7 +61,7 @@ def _InstantiateModelWithTestOptions(
 
 def test_num_models():
   """Test that the number of models. This will change"""
-  assert len(models.ALL_MODELS) == 4
+  assert len(models.ALL_MODELS) == 5
 
 
 @pytest.mark.parametrize('model_cls', models.ALL_MODELS)
@@ -95,6 +96,50 @@ def test_HeterogeneousMappingModel_train_predict(
   model.init(0, df_atomizer)
   model.train(df, 'amd_tahiti_7970')
   model.predict(df, 'amd_tahiti_7970')
+
+
+def test_Lda_GraphToInputTarget():
+  g = nx.Digraph()
+  g.add_node(0, inst2vec='foo')
+  g.add_node(1, inst2vec='bar')
+  g.add_node(2, inst2vec='car')
+  g.add_edge(0, 1)
+  g.add_edge(1, 2)
+
+  input_graph, target_graph = models.Lda.GraphToInputTarget(
+      {'y_1hot': 'dar'}, g)
+
+  # Test input graph node features.
+  assert input_graph.nodes[0]['features'] == 'foo'
+  assert input_graph.nodes[1]['features'] == 'bar'
+  assert input_graph.nodes[2]['features'] == 'car'
+
+  # Test target graph node features.
+  assert np.testing.assert_array_almost_equal(
+      target_graph.nodes[0]['features'], np.ones(1))
+  assert np.testing.assert_array_almost_equal(
+      target_graph.nodes[1]['features'], np.ones(1))
+  assert np.testing.assert_array_almost_equal(
+      target_graph.nodes[2]['features'], np.ones(1))
+
+  # Test input graph edge features.
+  np.testing.assert_array_almost_equal(
+      input_graph.edges[0, 1]['features'], np.ones(1))
+  np.testing.assert_array_almost_equal(
+      input_graph.edges[1, 2]['features'], np.ones(1))
+
+  # Test target graph edge features.
+  np.testing.assert_array_almost_equal(
+      target_graph.edges[0, 1]['features'], np.ones(1))
+  np.testing.assert_array_almost_equal(
+      target_graph.edges[1, 2]['features'], np.ones(1))
+
+  # Test input graph global features.
+  np.testing.assert_array_almost_equal(
+      input_graph.graph['features'], np.ones(1))
+
+  # Test target graph global features.
+  assert target_graph.graph['features'] == 'dar'
 
 
 if __name__ == '__main__':

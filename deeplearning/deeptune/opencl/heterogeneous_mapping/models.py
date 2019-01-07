@@ -3,6 +3,7 @@
 Attributes:
   ALL_MODELS: A set of HeterogeneousMappingModel subclasses.
 """
+import collections
 import multiprocessing
 import pathlib
 import pickle
@@ -10,11 +11,13 @@ import tarfile
 import tempfile
 import typing
 
+import networkx as nx
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 from absl import flags
 from absl import logging
+from graph_nets.demos import models as gn_models
 from keras import models as keras_models
 from keras.layers import Dense, Embedding, Input, LSTM
 from keras.layers.merge import Concatenate
@@ -29,6 +32,7 @@ from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.preprocessors import opencl
 from deeplearning.ncc import task_utils as inst2vec_utils
 from deeplearning.ncc import vocabulary as inst2vec_vocabulary
+from experimental.compilers.reachability import llvm_util
 from labm8 import bazelutil
 from labm8 import labtypes
 
@@ -43,8 +47,8 @@ DEEPTUNE_INST2VEC_EMBEDDINGS = bazelutil.DataPath(
 DEEPTUNE_INST2VEC_VOCAB_PATH = bazelutil.DataPath(
     'phd/deeplearning/ncc/published_results/vocabulary.zip')
 
-# TODO(cec): Encode sequences at runtime, don't use the pre-baked ones.
-# The zip file containing encoded sequences.
+# TODO(cec): Add original OpenCL sources to dataframe, then this won't be
+# necessary.
 DEEPTUNE_INST2VEC_DATA_ARCHIVE = bazelutil.DataArchive(
     'phd/deeplearning/ncc/published_results/task_devmap_kernels.zip')
 
@@ -230,50 +234,54 @@ def DataFrameRowToKernelSrcPath(row: typing.Dict[str, typing.Any],
     row['program:opencl_kernel_name']
   ])
 
-  bytecode_file_path = datafolder / 'kernels_cl' / (file_name_stub + '.cl')
-  if bytecode_file_path.is_file():
-    return bytecode_file_path
+  opencl_src_path = datafolder / 'kernels_cl' / (file_name_stub + '.cl')
+  if opencl_src_path.is_file():
+    return opencl_src_path
 
   # Some of the benchmark sources are dataset dependent. This is reflected by
   # the dataset name being concatenated to the path.
-  bytecode_file_path = (
+  opencl_src_path = (
       datafolder / 'kernels_cl' /
       (file_name_stub + '_' + str(row['data:dataset_name']) + '.cl'))
-  if bytecode_file_path.is_file():
-    return bytecode_file_path
+  if opencl_src_path.is_file():
+    return opencl_src_path
 
-  raise FileNotFoundError(f"File not found: '{bytecode_file_path}'")
+  raise FileNotFoundError(f"File not found: '{opencl_src_path}'")
+
+
+def _ExtractLlvmByteCodeOrDie(src_file_path: pathlib.Path,
+                              datafolder: pathlib.Path):
+  """Read and compile to bytecode or die."""
+  # Read the source file and strip any non-ascii characters.
+  with open(src_file_path, 'rb') as f:
+    src = f.read().decode('unicode_escape')
+  src = src.encode('ascii', 'ignore').decode('ascii')
+
+  # Compile src to bytecode.
+  clang_args = opencl.GetClangArgs(use_shim=True) + [
+    '-O0', '-S', '-emit-llvm', '-o', '-', '-i', '-',
+    # No warnings, and fail immediately on error.
+    '-Wno-everything', '-ferror-limit=1',
+    # Kernels have headers.
+    '-I', str(datafolder / 'kernels_cl'),
+    # We don't need the full shim header, just the common constants:
+    '-DCLGEN_OPENCL_SHIM_NO_COMMON_TYPES',
+    '-DCLGEN_OPENCL_SHIM_NO_UNSUPPORTED_STORAGE_CLASSES_AND_QUALIFIERS',
+  ]
+  process = clang.Exec(clang_args, stdin=src)
+  if process.returncode:
+    logging.error("Failed to compile %s", src_file_path)
+    logging.error("stderr: %s", process.stderr)
+    logging.fatal(f"clang failed with returncode {process.returncode}")
+  return process.stdout
 
 
 def _EncodeSourceBatch(src_file_paths, vocab, datafolder):
   batch = []
 
   for src_file_path in src_file_paths:
-    logging.info('Processing %s', src_file_path.name)
-
-    # Read the source file and strip any non-ascii characters.
-    with open(src_file_path, 'rb') as f:
-      src = f.read().decode('unicode_escape')
-    src = src.encode('ascii', 'ignore').decode('ascii')
-
-    # Compile src to bytecode.
-    clang_args = opencl.GetClangArgs(use_shim=True) + [
-      '-O0', '-S', '-emit-llvm', '-o', '-', '-i', '-',
-      # No warnings, and fail immediately on error.
-      '-Wno-everything', '-ferror-limit=1',
-      # Kernels have headers.
-      '-I', str(datafolder / 'kernels_cl'),
-      # We don't need the full shim header, just the common constants:
-      '-DCLGEN_OPENCL_SHIM_NO_COMMON_TYPES',
-      '-DCLGEN_OPENCL_SHIM_NO_UNSUPPORTED_STORAGE_CLASSES_AND_QUALIFIERS',
-    ]
-    process = clang.Exec(clang_args, stdin=src)
-    if process.returncode:
-      logging.error("Failed to compile %s", src_file_path)
-      logging.error("stderr: %s", process.stderr)
-      logging.fatal(f"clang failed with returncode {process.returncode}")
-    bytecode = process.stdout
-
+    logging.info('Compiling and encoding %s', src_file_path.name)
+    bytecode = _ExtractLlvmByteCodeOrDie(src_file_path, datafolder)
     batch.append((src_file_path,
                   list(vocab.EncodeLlvmBytecode(bytecode).encoded)))
 
@@ -565,6 +573,210 @@ class DeepTuneInst2Vec(DeepTune):
     ]).T
 
     return [aux_in, embedding_input]
+
+
+def _ExtractGraphBatch(src_file_paths: typing.List[pathlib.Path],
+                       datafolder: pathlib.Path):
+  batch = []
+
+  for src_file_path in src_file_paths:
+    logging.info('Compiling %s', src_file_path.name)
+    bytecode = _ExtractLlvmByteCodeOrDie(src_file_path, datafolder)
+    dot_strings = list(llvm_util.DotCfgsFromBytecode(bytecode))
+    if len(dot_strings) != 1:
+      logging.fatal('Found %d CFGs in %s', len(dot_strings), src_file_path.name)
+    cfg = llvm_util.ControlFlowGraphFromDotSource(dot_strings[0])
+    ffg = cfg.BuildFullFlowGraph()
+    batch.append((src_file_path, ffg))
+
+  return batch
+
+
+# A model parameter which has different values for training and testing.
+TrainTestParam = collections.namedtuple('TrainTestParam', ['train', 'test'])
+
+
+class Lda(HeterogeneousMappingModel):
+  """Work in progress."""
+  __name__ = "lda"
+  __basename__ = "lda"
+
+  def __init__(self, embedding_matrix: np.ndarray = None,
+               vocabulary_file: typing.Optional[pathlib.Path] = None,
+               batch_size: TrainTestParam = TrainTestParam(32, 100)):
+
+    # If no embedding matrix is provided, the default is used.
+    if embedding_matrix is None:
+      embedding_matrix = inst2vec_utils.ReadEmbeddingFile(
+          DEEPTUNE_INST2VEC_EMBEDDINGS)
+    if vocabulary_file is None:
+      vocabulary_file = DEEPTUNE_INST2VEC_VOCAB_PATH
+
+    self.embedding_matrix = embedding_matrix
+    self.vocabulary_file = vocabulary_file
+    self.batch_size = batch_size
+
+  def init(self, seed: int, atomizer: atomizers.AtomizerBase):
+    # tf.reset_default_graph()
+
+    _, embedding_dim = self.embedding_matrix.shape
+    self.model = gn_models.EncodeProcessDecode(global_output_size=2)
+    # input_ph, target_ph = CreatePlaceholdersFromGraphs(specs_tr, self.batch_size.train)
+    # num_processing_steps = GetNumberOfMessagePassingSteps(specs_tr)
+
+    # A list of outputs, one per processing step.
+    # output_ops_tr = model(input_ph, num_processing_steps_tr)
+    # output_ops_ge = model(input_ph, num_processing_steps_ge)
+
+    # Training loss.
+    # loss_ops_tr = CreateLossOps(target_ph, output_ops_tr)
+    # # Loss across processing steps.
+    # loss_op_tr = sum(loss_ops_tr) / num_processing_steps_tr
+    # # Test/generalization loss.
+    # loss_ops_ge = CreateLossOps(target_ph, output_ops_ge)
+    # loss_op_ge = loss_ops_ge[-1]  # Loss from final processing step.
+    #
+    # # Optimizer.
+    # learning_rate = 1e-3
+    # optimizer = tf.train.AdamOptimizer(learning_rate)
+    # step_op = optimizer.minimize(loss_op_tr)
+    #
+    # # Lets an iterable of TF graphs be output from a session as NP graphs.
+    # input_ph, target_ph = MakeRunnableInSession(input_ph, target_ph)
+
+  def save(self, outpath: typing.Union[str, pathlib.Path]) -> None:
+    """Save model state."""
+    pass
+
+  def restore(self, inpath: typing.Union[str, pathlib.Path]) -> None:
+    """Load a trained model from file.
+
+    This is called in place of init() if a saved model file exists. It
+    must restore all of the required model state.
+
+    Args:
+      inpath (str): The path to load the model from. This is the same path as
+        was passed to save() to create the file.
+    """
+    pass
+
+  def train(self, df: pd.DataFrame, platform_name: str,
+            verbose: bool = False) -> None:
+    """Train a model."""
+    feed_dict = self.InputAndTargetGraphsToFeedDict(
+        self.DataFrameToInputAndTargetGraphs(df))
+
+  def predict(self, df: pd.DataFrame, platform_name: str,
+              verbose: bool = False) -> np.array:
+    """Make predictions for programs."""
+    return np.ones(len(df))
+
+  def ExtractGraphs(
+      self, df: pd.DataFrame, datafolder: pathlib.Path
+  ) -> typing.List[llvm_util.LlvmControlFlowGraph]:
+    """Extract LLVM full flow graphs for kernels in dataframe."""
+    # A map from source files to graphs, as there can be multiple entries in the
+    # dataframe using the source.
+    src_path_to_graph = {}
+
+    src_paths = list(set(
+        DataFrameRowToKernelSrcPath(row, datafolder) for _, row in
+        df.iterrows()))
+
+    # Chunk the srcs and process in parallel.
+    srcs_per_process = 16
+    encode_args = [
+      (src_paths[i:i + srcs_per_process], datafolder)
+      for i in range(0, len(src_paths), srcs_per_process)
+    ]
+    for batch in multiprocessing.Pool().starmap(_ExtractGraphBatch,
+                                                encode_args):
+      for src_file_path, graph in batch:
+        src_path_to_graph[src_file_path] = graph
+
+    return [src_path_to_graph[DataFrameRowToKernelSrcPath(row, datafolder)]
+            for _, row in df.iterrows()]
+
+  def EncodeGraphsWithInst2Vec(
+      self, graphs: typing.Iterable[llvm_util.LlvmControlFlowGraph]
+  ) -> typing.Iterable[llvm_util.LlvmControlFlowGraph]:
+    with inst2vec_vocabulary.VocabularyZipFile(self.vocabulary_file) as vocab:
+      for graph in graphs:
+        yield graph
+
+  def DataFrameToInputAndTargetGraphs(self, df: pd.DataFrame):
+    with DEEPTUNE_INST2VEC_DATA_ARCHIVE as datafolder:
+      graphs = list(
+          self.EncodeGraphsWithInst2Vec(self.ExtractGraphs(df, datafolder)))
+
+    model_inputs_ands_targets = []
+    for (_, row), graph in zip(df.iterrows(), graphs):
+      model_inputs_ands_targets.append(self.GraphToInputTarget(row, graph))
+
+    input_graphs, target_graphs = zip(model_inputs_ands_targets)
+    return input_graphs, target_graphs
+
+  def InputAndTargetGraphsToFeedDict(self, input_graphs, target_graphs):
+    """Creates placeholders for the model training and evaluation.
+
+    Args:
+        graphs: A list of graphs that will be inspected for vector sizes.
+            batch_size: Total number of graphs per batch.
+        input_ph: The input graph's placeholders, as a graph namedtuple.
+        target_ph: The target graph's placeholders, as a graph namedtuple.
+
+    Returns:
+        feed_dict: The feed `dict` of input and target placeholders and data.
+        raw_graphs: The `dict` of raw networkx graphs.
+    """
+    # input_graphs = graph_net_utils_np.networkxs_to_graphs_tuple(input_graphs)
+    # target_graphs = graph_net_utils_np.networkxs_to_graphs_tuple(target_graphs)
+    # feed_dict = {input_ph: input_graphs, target_ph: target_graphs}
+    # return feed_dict, graphs
+
+  @staticmethod
+  def GraphToInputTarget(
+      row: typing.Dict[str, typing.Any],
+      graph: llvm_util.LlvmControlFlowGraph
+  ) -> typing.Tuple[nx.DiGraph, nx.DiGraph]:
+    """Produce two graphs with input and target feature vectors for training.
+
+    A 'features' attributes is added with to nodes, edges, and the global graph,
+    which are numpy arrays. The shape of arrays is consistent across input and
+    target nodes, edges, and graphs.
+    """
+    input_graph = graph.copy()
+    target_graph = graph.copy()
+
+    # Set node features.
+    for _, data in input_graph.nodes(data=True):
+      data['features'] = data['inst2vec']
+
+    for _, data in target_graph.nodes(data=True):
+      data['features'] = np.ones(1, dtype=float)
+
+    # Set edge features.
+    for _, data in input_graph.edges(data=True):
+      data['features'] = np.ones(1, dtype=float)
+
+    for _, data in target_graph.edges(data=True):
+      data['features'] = np.ones(1, dtype=float)
+
+    # Set global (graph) features.
+    input_graph.graph['features'] = np.ones(1, dtype=float)
+
+    target_graph.graph['features'] = row['y_1hot']
+
+    return input_graph, target_graph
+
+  @staticmethod
+  def CreateLossOps(target_op, output_ops):
+    # TODO(cec): Replace with graph features.
+    return [
+      tf.losses.softmax_cross_entropy(target_op.nodes, output_op.nodes) +
+      tf.losses.softmax_cross_entropy(target_op.edges, output_op.edges)
+      for output_op in output_ops
+    ]
 
 
 ALL_MODELS = labtypes.AllSubclassesOfClass(HeterogeneousMappingModel)
