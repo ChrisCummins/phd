@@ -89,19 +89,19 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
     """
     number_of_nodes = self.number_of_nodes()
 
-    # CFGs must contain > 1 node.
-    if number_of_nodes < 2:
-      raise NotEnoughNodes(f"Graph has {number_of_nodes} nodes")
-
-    out_degrees = [self.out_degree(n) for n in self.nodes]
-    in_degrees = [self.in_degree(n) for n in self.nodes]
+    # CFGs must contain one or more nodes.
+    if number_of_nodes < 1:
+      raise NotEnoughNodes(f"Graph has no nodes")
 
     # Get the entry and exit blocks. These properties will raise exceptions
     # if they are not found / duplicates found.
     entry_node = self.entry_block
     exit_node = self.exit_block
 
-    if entry_node == exit_node:
+    out_degrees = [self.out_degree(n) for n in self.nodes]
+    in_degrees = [self.in_degree(n) for n in self.nodes]
+
+    if number_of_nodes > 1 and entry_node == exit_node:
       raise InvalidSpecialBlock(f"Exit and entry nodes are the same: "
                                 f"'{self.nodes[entry_node]['name']}'")
 
@@ -118,8 +118,8 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
         raise DuplicateNodeName(f"Duplicate node name '{node_name}'")
       node_names.add(node_name)
 
-      # All nodes must be connected.
-      if not out_degrees[node] + in_degrees[node]:
+      # All nodes must be connected (except for 1-node graphs).
+      if number_of_nodes > 1 and not out_degrees[node] + in_degrees[node]:
         raise UnconnectedNode(f"Unconnected node '{self.nodes[node]['name']}'")
 
     # The entry node has an additional input, since it must entered.

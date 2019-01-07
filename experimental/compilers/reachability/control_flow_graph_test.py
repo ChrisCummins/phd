@@ -74,7 +74,7 @@ def test_ControlFlowGraph_Reachables_back_edge():
   g.add_edge(0, 1)
   g.add_edge(1, 0)
   g.add_edge(1, 2)
-  # FIXME(cec): I don't belive these values.
+  # FIXME(cec): I don't believe these values. Isn't A reachable from A?
   assert list(g.Reachables(0)) == [False, True, True]
   assert list(g.Reachables(1)) == [True, False, True]
   assert list(g.Reachables(2)) == [False, False, False]
@@ -85,18 +85,15 @@ def test_ControlFlowGraph_validate_empty_graph():
   g = control_flow_graph.ControlFlowGraph()
   with pytest.raises(control_flow_graph.NotEnoughNodes) as e_ctx:
     g.ValidateControlFlowGraph()
-  assert str(e_ctx.value) == "Graph has 0 nodes"
+  assert str(e_ctx.value) == "Graph has no nodes"
   assert not g.IsValidControlFlowGraph()
 
 
 def test_ControlFlowGraph_validate_one_node():
-  """Test that empty graph is invalid."""
+  """Test that single-node graph is valid."""
   g = control_flow_graph.ControlFlowGraph()
-  g.add_node(0, name='A')
-  with pytest.raises(control_flow_graph.NotEnoughNodes) as e_ctx:
-    g.ValidateControlFlowGraph()
-  assert str(e_ctx.value) == "Graph has 1 nodes"
-  assert not g.IsValidControlFlowGraph()
+  g.add_node(0, name='A', entry=True, exit=True)
+  g.ValidateControlFlowGraph()
 
 
 def test_ControlFlowGraph_IsValidControlFlowGraph_disconnected_graph():
