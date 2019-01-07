@@ -2,6 +2,7 @@
 import multiprocessing
 import typing
 
+import humanize
 from absl import app
 from absl import flags
 from absl import logging
@@ -91,11 +92,11 @@ def PopulateBytecodeTable(
                    .limit(1).first() or (0,))[0]
 
     # Get the ID of the last contentfile to process.
-    n = (cf_s.query(contentfiles.ContentFile.id)
-         .order_by(contentfiles.ContentFile.id.desc())
-         .limit(1).one_or_none() or (0,))[0]
+    n: str = humanize.intcomma((cf_s.query(contentfiles.ContentFile.id)
+                                .order_by(contentfiles.ContentFile.id.desc())
+                                .limit(1).one_or_none() or (0,))[0])
 
-    logging.info('Starting at ID %d / %d', resume_from)
+    logging.info('Starting at %s / %s', humanize.intcomma(resume_from), n)
 
     # A query to return the IDs and sources of files to process.
     q = cf_s.query(
@@ -109,7 +110,8 @@ def PopulateBytecodeTable(
     batch_size = 256
     for batch in BatchedQuery(q, yield_per=batch_size):
       i = batch[0][0]  # The ID of the first content file in the batch.
-      logging.info('Processing contentfiles -> bytecode %d / %d', i, n)
+      logging.info('Processing %d contentfiles -> bytecodes %s / %s',
+                   batch_size, humanize.intcomma(i), n)
       content_files_per_process = 5
       process_args = [
         (cf.url, batch[i:i + content_files_per_process])
