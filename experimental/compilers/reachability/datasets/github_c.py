@@ -3,6 +3,7 @@ import multiprocessing
 import typing
 
 import humanize
+import sqlalchemy as sql
 from absl import app
 from absl import flags
 from absl import logging
@@ -86,10 +87,13 @@ def PopulateBytecodeTable(
   # files sorted by their numeric ID in the contentfiles database, so that if
   with mutex, cf.Session() as cf_s, db.Session(commit=True) as s:
     # Get the ID of the last-processed bytecode file to resume from.
-    resume_from = (s.query(database.LlvmBytecode.relpath)
-                   .filter(database.LlvmBytecode.source_name == cf.url)
-                   .order_by(database.LlvmBytecode.relpath.desc())
-                   .limit(1).first() or (0,))[0]
+    resume_from = (
+        s.query(database.LlvmBytecode.relpath)
+        .filter(database.LlvmBytecode.source_name == cf.url)
+        # Note the cast to integer: relpath is a string column, sorting by it
+        # in its native type would sort the string (e.g. '9' > '10'.
+        .order_by(sql.cast(database.LlvmBytecode.relpath, sql.Integer).desc())
+        .limit(1).first() or (0,))[0]
 
     # Get the ID of the last contentfile to process.
     n: str = humanize.intcomma((cf_s.query(contentfiles.ContentFile.id)
