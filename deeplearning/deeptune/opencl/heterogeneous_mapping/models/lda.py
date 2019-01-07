@@ -123,9 +123,9 @@ class Lda(base.HeterogeneousMappingModel):
             verbose: bool = False) -> None:
     """Train a model."""
     feed_dict = self.InputTargetsToFeedDict(
-        zip(*self.GraphsToInputTargets(
+        self.GraphsToInputTargets(
             self.EncodeGraphs(
-                self.ExtractGraphs(df)))))
+                self.ExtractGraphs(df))))
 
   def predict(self, df: pd.DataFrame, platform_name: str,
               verbose: bool = False) -> np.array:
@@ -230,7 +230,8 @@ class Lda(base.HeterogeneousMappingModel):
       graph = src_path_to_graph[src_path]
       yield row, graph
 
-  def InputTargetsToFeedDict(self, input_graphs, target_graphs):
+  def InputTargetsToFeedDict(
+      self, data: typing.Iterable[typing.Tuple[nx.DiGraph, nx.DiGraph]]):
     """Creates placeholders for the model training and evaluation.
 
     Args:
@@ -243,6 +244,7 @@ class Lda(base.HeterogeneousMappingModel):
         feed_dict: The feed `dict` of input and target placeholders and data.
         raw_graphs: The `dict` of raw networkx graphs.
     """
+    input_graphs, target_graphs = zip(*data)
     # input_graphs = graph_net_utils_np.networkxs_to_graphs_tuple(input_graphs)
     # target_graphs = graph_net_utils_np.networkxs_to_graphs_tuple(target_graphs)
     # feed_dict = {input_ph: input_graphs, target_ph: target_graphs}
