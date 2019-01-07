@@ -459,7 +459,9 @@ py_library(
     deps = [
         ":bazelutil",
         ":pbutil",
+        ":sqlutil",
         "//third_party/py/absl",
+        "//third_party/py/humanize",
     ],
 )
 

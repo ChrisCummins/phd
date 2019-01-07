@@ -436,3 +436,14 @@ class ProtoBackedMixin(object):
     """
     proto = pbutil.FromFile(path, cls.proto_t())
     return cls.FromProto(proto)
+
+
+def BatchedQuery(query, start_at: int = 0, yield_per: int = 1000):
+  i = start_at
+  while True:
+    batch = query.offset(i).limit(yield_per).all()
+    if batch:
+      yield batch
+      i += len(batch)
+    else:
+      break

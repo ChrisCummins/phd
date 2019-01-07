@@ -7,10 +7,13 @@ import multiprocessing
 import subprocess
 import typing
 
+import humanize
 from absl import flags
+from absl import logging
 
 from labm8 import bazelutil
 from labm8 import pbutil
+from labm8 import sqlutil
 
 
 FLAGS = flags.FLAGS
@@ -239,3 +242,40 @@ def MapNativeProcessingBinaries(
     map_worker.SetProtos(
         input_protos[map_worker.id], output_proto_classes[map_worker.id])
     yield map_worker
+
+
+def BatchedQuery(query, start_at: int = 0, yield_per: int = 1000):
+  i = start_at
+  while True:
+    batch = query.offset(i).limit(yield_per).all()
+    if batch:
+      yield batch
+      i += len(batch)
+    else:
+      break
+
+
+def MapDatabaseRowCreator(
+    session: sqlutil.Session, query, work_unit, proto_backed_output_row,
+    generate_work_unit_args=lambda rows: rows,
+    batch_size: int = 256, rows_per_work_unit: int = 5,
+    start_at: int = 0, n: int = None,
+    pool: typing.Optional[multiprocessing.Pool] = None):
+  pool = pool or multiprocessing.Pool()
+
+  max_suffix = f' {humanize.intcomma(n)}' if n else ''
+  logging.info('Starting at row %s%s', humanize.intcomma(start_at), max_suffix)
+
+  for batch in sqlutil.BatchedQuery(query, yield_per=batch_size):
+    i = batch[0][0]  # The ID of the first content file in the batch.
+    logging.info('Processing %d rows, %s%s',
+                 batch_size, humanize.intcomma(i), max_suffix)
+    work_unit_args = [
+      generate_work_unit_args(batch[i:i + rows_per_work_unit])
+      for i in range(0, len(batch), rows_per_work_unit)
+    ]
+    for protos in pool.starmap(work_unit, work_unit_args):
+      for proto in protos:
+        session.add(proto_backed_output_row(
+            **proto_backed_output_row.FromProto(proto)))
+    session.commit()
