@@ -1,9 +1,10 @@
 py_binary(
-    name = "github_c",
-    srcs = ["github_c.py"],
+    name = "github",
+    srcs = ["github.py"],
     deps = [
         "//compilers/llvm:clang",
         "//datasets/github/scrape_repos:contentfiles",
+        "//deeplearning/clgen/preprocessors:opencl",
         "//experimental/compilers/reachability:database",
         "//experimental/compilers/reachability:reachability_py_pb2",
         "//labm8:lockfile",
