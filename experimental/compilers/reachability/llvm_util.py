@@ -136,7 +136,7 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
 
       # Split a block into a list of instructions and create a new destination
       # node for each instruction.
-      for instruction_count, instruction in enumerate(data['text'].split('\n')):
+      for instruction_count, instruction in enumerate(instructions):
         # The ID of the new node is the global node count, plus the offset into
         # the basic block instructions.
         new_node_id = sig_node_count + instruction_count
