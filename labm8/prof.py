@@ -139,7 +139,9 @@ def Profile(name: str = '',
   name = name or 'completed'
   start_time = time.time()
   yield
-  print_to(f"{name} in {time.time() - start_time:.3f} seconds")
+  elapsed = time.time() - start_time
+  print_to(f"{name} in {elapsed:.3f} seconds "
+           f"(started {humanize.naturaltime(elapsed)})")
 
 
 def ProfileToStdout(name: str = ''):
