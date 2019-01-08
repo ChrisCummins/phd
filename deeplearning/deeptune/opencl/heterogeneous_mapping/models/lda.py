@@ -44,10 +44,11 @@ def _ExtractGraphBatchOrDie(
     logging.info('Compiling %s', src_file_path.name)
     bytecode = ncc.ExtractLlvmByteCodeOrDie(src_file_path, headers_dir)
     dot_strings = list(llvm_util.DotCfgsFromBytecode(bytecode))
-    if len(dot_strings) != 1:
-      logging.fatal('Found %d CFGs in %s', len(dot_strings), src_file_path.name)
-    cfg = llvm_util.ControlFlowGraphFromDotSource(dot_strings[0])
-    ffg = cfg.BuildFullFlowGraph()
+    cfgs = [llvm_util.ControlFlowGraphFromDotSource(dot) for dot in dot_strings]
+    if len(cfgs) != 1:
+      logging.fatal('Found %d CFGs in %s: %s', len(dot_strings),
+                    src_file_path.name, [c.graph['name'] for c in cfgs])
+    ffg = cfgs[0].BuildFullFlowGraph()
 
     # Set the input bytecode as a graph property.
     ffg.graph['llvm_bytecode'] = bytecode
