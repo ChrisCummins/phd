@@ -2,39 +2,27 @@
 
 syntax = "proto2";
 
+import "config/proto/config.proto";
+
+package phd;
+
 // A ledger entry records the invocation and outcome of a single command.
 // A command is a bazel target and a set of arguments.
 message LedgerEntry {
   // A numeric counter of this entry in the ledger. >= 1.
   optional int64 id = 1;
-  // The hostname of the machine.
-  optional string hostname = 2;
-  // The user which invoked the command.
-  optional string user = 3;
+  
+  optional ExecHost exec_host = 2;
   // The start time, in milliseconds since the epoch, UTC time zone.
   optional int64 start_utc_epoch_ms = 4;
 
-  // The hash of the current git HEAD. Created using:
-  //   $ git rev-parse HEAD
-  optional string git_head_id = 5;
-  // Created by concatenating the output of these commands, which show the
-  // staged changes, unstaged changes, and untracked files, respectively:
-  //   $ git --no-pager diff --cached
-  //   $ git --no-pager diff
-  //   $ for f in $(git ls-files --others --exclude-standard); do \
-  //         git --no-pager diff /dev/null $f; \
-  //     done
-  optional string git_diff = 6;
-
-  // Environment variables.
-  map<string, string> env = 7;
+  optional RepoState repo_state = 5;
 
   // The target which is to be built and executed.
   optional string target = 8;
-  // The absolute path to the compiled target binary.
-  optional string binary_path = 9;
-  // The list of arguments to be passed to the built target.
-  repeated string args = 10;
+  repeated string bazel_args = 9;
+  // The list of arguments passed to the binary target.
+  repeated string bin_args = 10;
 
   // The command end time, in milliseconds since the epoch, UTC time zone.
   optional int64 end_utc_epoch_ms = 11;
@@ -49,13 +37,30 @@ message Ledger {
   repeated LedgerEntry entries = 1;
 }
 
+message ExecHost {
+  optional string hostname = 1;
+  optional string user = 2;
+  optional RepoState repo_state_at_service_launch = 3;
+}
+
 service ExecService {
   rpc Run (RunRequest) returns (RunResponse);
   rpc Status (Null) returns (ExecServiceStatus)
 }
 
 message RepoState {
+  // The hash of the current git HEAD. Created using:
+  //   $ git rev-parse HEAD
   optional string git_head_id = 1;
+  // Created by concatenating the output of these commands, which show the
+  // staged changes, unstaged changes, and untracked files, respectively:
+  //   $ git --no-pager diff --cached
+  //   $ git --no-pager diff
+  //   $ for f in $(git ls-files --others --exclude-standard); do \
+  //         git --no-pager diff /dev/null $f; \
+  //     done
+  optional string git_diff = 2;
+  optional phd.GlobalConfig config = 3;
 }
 
 message RunRequest {
