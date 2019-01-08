@@ -78,8 +78,8 @@ py_library(
 
 py_test(
     name = "lda_test",
-    srcs = ["lda_test.py"],
     timeout = "long",
+    srcs = ["lda_test.py"],
     deps = [
         ":models",
         ":testlib",
