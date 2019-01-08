@@ -26,6 +26,19 @@ def g() -> nx.DiGraph:
   yield g
 
 
+@pytest.fixture(scope='function')
+def single_program_df() -> pd.DataFrame:
+  """Test fixture which returns a single program dataframe."""
+  return pd.DataFrame([{
+    'y_1hot': np.array([0, 1]),
+    'program:opencl_src': """\
+kernel void Foo(global int* a, const int b) {
+  a[get_global_id(0)] *= b;
+}
+""",
+  }])
+
+
 def test_model(classify_df, classify_df_atomizer):
   """Run common model tests."""
   testlib.HeterogeneousMappingModelTest(
@@ -33,6 +46,7 @@ def test_model(classify_df, classify_df_atomizer):
 
 
 def test_Lda_ExtractGraphs_returns_cfgs(classify_df: pd.DataFrame):
+  """Test that CFGs are returned."""
   rows, graphs = zip(*lda.Lda.ExtractGraphs(classify_df[:3]))
   assert len(rows) == 3
   assert isinstance(graphs[0], llvm_util.LlvmControlFlowGraph)
@@ -40,11 +54,13 @@ def test_Lda_ExtractGraphs_returns_cfgs(classify_df: pd.DataFrame):
   assert isinstance(graphs[2], llvm_util.LlvmControlFlowGraph)
 
 
-def test_Lda_ExtractGraphs_cfgs_have_bytecode(classify_df: pd.DataFrame):
-  rows, graphs = zip(*lda.Lda.ExtractGraphs(classify_df[:1]))
+def test_Lda_ExtractGraphs_cfgs_have_bytecode(single_program_df: pd.DataFrame):
+  """Test that CFG has bytecode set."""
+  rows, graphs = zip(*lda.Lda.ExtractGraphs(single_program_df))
   assert len(rows) == 1
-  graph = graphs[0]
-  assert graph.graph['llvm_bytecode']
+  assert graphs[0].graph['llvm_bytecode'] == """\
+FIXME
+"""
 
 
 def test_Lda_GraphToInputTarget_input_graph_node_features(g: nx.DiGraph):
