@@ -95,11 +95,6 @@ py_test(
 py_library(
     name = "models",
     srcs = ["models.py"],
-    data = [
-        "//deeplearning/ncc/published_results:embeddings",
-        "//deeplearning/ncc/published_results:task_devmap_kernels",
-        "//deeplearning/ncc/published_results:vocabulary",
-    ],
     visibility = ["//visibility:public"],
     deps = [
         ":base",
@@ -126,6 +121,11 @@ py_test(
 py_library(
     name = "ncc",
     srcs = ["ncc.py"],
+    data = [
+        "//deeplearning/ncc/published_results:embeddings",
+        "//deeplearning/ncc/published_results:task_devmap_kernels",
+        "//deeplearning/ncc/published_results:vocabulary",
+    ],
     deps = [
         ":base",
         ":deeptune",
