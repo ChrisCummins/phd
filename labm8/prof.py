@@ -1,17 +1,18 @@
 """Profiling API for timing critical paths in code.
 """
-from __future__ import absolute_import
-from __future__ import print_function
-
+import contextlib
 import inspect
 import os
 import sys
+import typing
 from time import time
+
+from absl import logging
 
 from labm8 import labtypes
 
 
-__TIMERS = {}
+_TIMERS = {}
 
 
 def is_enabled():
@@ -38,7 +39,7 @@ def isrunning(name):
 
       bool: True if timer is running, else False.
   """
-  return name in _timers
+  return name in _TIMERS
 
 
 def start(name):
@@ -59,7 +60,7 @@ def start(name):
       bool: Whether or not profiling is enabled.
   """
   if is_enabled():
-    __TIMERS[name] = time()
+    _TIMERS[name] = time()
   return is_enabled()
 
 
@@ -81,7 +82,7 @@ def stop(name, file=sys.stderr):
       KeyError: If the named timer does not exist.
   """
   if is_enabled():
-    elapsed = (time() - __TIMERS[name])
+    elapsed = (time() - _TIMERS[name])
     if elapsed > 60:
       elapsed_str = '{:.1f} m'.format(elapsed / 60)
     elif elapsed > 1:
@@ -89,7 +90,7 @@ def stop(name, file=sys.stderr):
     else:
       elapsed_str = '{:.1f} ms'.format(elapsed * 1000)
 
-    del __TIMERS[name]
+    del _TIMERS[name]
     print("[prof]", name, elapsed_str, file=file)
   return is_enabled()
 
@@ -122,5 +123,30 @@ def timers():
   Returns:
       Iterable[str]: An iterator over all time names.
   """
-  for name in __TIMERS:
+  for name in _TIMERS:
     yield name
+
+
+@contextlib.contextmanager
+def Profile(name: str = '',
+            print_to: typing.Callable[[str], None] = logging.debug):
+  """A context manager which prints the elapsed time upon exit.
+
+  Args:
+    name: The name of the task being profiled.
+    print_to: The function to print the result to.
+  """
+  name = name or 'completed'
+  start_time = time.time()
+  yield
+  print_to(f"{name} in {time.time() - start_time:.3f} seconds")
+
+
+def ProfileToStdout(name: str = ''):
+  """A context manager which prints the elapsed time to stdout on exit.
+
+  Args:
+    name: The name of the task being profiled.
+  """
+  with Profile(name, print_to=print):
+    yield
