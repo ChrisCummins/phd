@@ -158,12 +158,12 @@ class Lda(base.HeterogeneousMappingModel):
                   vocab: inst2vec_vocabulary.VocabularyZipFile,
                   embedding_matrix: np.array) -> llvm_util.LlvmControlFlowGraph:
     """Encode inst2vec attributes on a graph.
-    
+
     Args:
-      graph: The graph to encode. 
-      vocab: The vocabulary to encode. 
-      embedding_matrix: The embedding matrix. 
-      
+      graph: The graph to encode.
+      vocab: The vocabulary to encode.
+      embedding_matrix: The embedding matrix.
+
     Returns:
       The graph.
     """
@@ -175,7 +175,7 @@ class Lda(base.HeterogeneousMappingModel):
             set_struct_dict=True,
         ))
 
-    graph.graph['num_unknown_statements'] = len(result.set_unknown_statements)
+    graph.graph['num_unknown_statements'] = len(result.unknown_statements)
     struct_dict = result.struct_dict
 
     # Translate encoded sequences into sequences of normalized embeddings.

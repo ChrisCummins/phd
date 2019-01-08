@@ -39,12 +39,6 @@ kernel void Foo(global int* a, const int b) {
   }])
 
 
-def test_model(classify_df, classify_df_atomizer):
-  """Run common model tests."""
-  testlib.HeterogeneousMappingModelTest(
-      lda.Lda, classify_df, classify_df_atomizer, {})
-
-
 def test_Lda_ExtractGraphs_returns_cfgs(classify_df: pd.DataFrame):
   """Test that CFGs are returned."""
   rows, graphs = zip(*lda.Lda.ExtractGraphs(classify_df[:3]))
@@ -123,6 +117,12 @@ def test_Lda_GraphToInputTarget_target_graph_global_features(g: nx.DiGraph):
       {'y_1hot': 'dar'}, g)
 
   assert target_graph.graph['features'] == 'dar'
+
+
+def test_model(classify_df, classify_df_atomizer):
+  """Run common model tests."""
+  testlib.HeterogeneousMappingModelTest(
+      lda.Lda, classify_df, classify_df_atomizer, {})
 
 
 if __name__ == '__main__':
