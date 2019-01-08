@@ -132,3 +132,22 @@ py_library(
         "//third_party/py/pandas",
     ],
 )
+
+py_test(
+    name = "static_mapping_test",
+    srcs = ["static_mapping_test.py"],
+    deps = [
+        ":static_mapping",
+        ":testlib",
+        "//labm8:test",
+    ],
+)
+
+py_library(
+    name = "testlib",
+    testonly = 1,
+    srcs = ["testlib.py"],
+    deps = [
+        "//third_party/py/absl",
+    ],
+)
