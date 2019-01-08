@@ -18,9 +18,9 @@ FLAGS = flags.FLAGS
 def g() -> nx.DiGraph:
   """Test fixture that returns a graph."""
   g = nx.DiGraph()
-  g.add_node(0, inst2vec='foo')
-  g.add_node(1, inst2vec='bar')
-  g.add_node(2, inst2vec='car')
+  g.add_node(0, inst2vec=np.array([1, 2, 3]))
+  g.add_node(1, inst2vec=np.array([4, 5, 6]))
+  g.add_node(2, inst2vec=np.array([7, 8, 9]))
   g.add_edge(0, 1)
   g.add_edge(1, 2)
   yield g
@@ -98,17 +98,20 @@ def test_Lda_EncodeGraphs_unique_encoded(single_program_df: pd.DataFrame):
 def test_Lda_GraphToInputTarget_input_graph_node_features(g: nx.DiGraph):
   """Test input graph node features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
-      {'y_1hot': 'dar'}, g)
+      {'y_1hot': np.array([0, 1])}, g)
 
-  assert input_graph.nodes[0]['features'] == 'foo'
-  assert input_graph.nodes[1]['features'] == 'bar'
-  assert input_graph.nodes[2]['features'] == 'car'
+  np.testing.assert_array_almost_equal(
+      input_graph.nodes[0]['features'], np.array([1, 2, 3]))
+  np.testing.assert_array_almost_equal(
+      input_graph.nodes[1]['features'], np.array([4, 5, 6]))
+  np.testing.assert_array_almost_equal(
+      input_graph.nodes[2]['features'], np.array([7, 8, 9]))
 
 
 def test_Lda_GraphToInputTarget_target_graph_node_features(g: nx.DiGraph):
   """Test target graph node features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
-      {'y_1hot': 'dar'}, g)
+      {'y_1hot': np.array([0, 1])}, g)
 
   np.testing.assert_array_almost_equal(
       target_graph.nodes[0]['features'], np.ones(1))
@@ -121,7 +124,7 @@ def test_Lda_GraphToInputTarget_target_graph_node_features(g: nx.DiGraph):
 def test_Lda_GraphToInputTarget_input_graph_edge_features(g: nx.DiGraph):
   """Test input graph edge features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
-      {'y_1hot': 'dar'}, g)
+      {'y_1hot': np.array([0, 1])}, g)
 
   np.testing.assert_array_almost_equal(
       input_graph.edges[0, 1]['features'], np.ones(1))
@@ -132,7 +135,7 @@ def test_Lda_GraphToInputTarget_input_graph_edge_features(g: nx.DiGraph):
 def test_Lda_GraphToInputTarget_target_graph_edge_features(g: nx.DiGraph):
   """Test target graph edge features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
-      {'y_1hot': 'dar'}, g)
+      {'y_1hot': np.array([0, 1])}, g)
 
   np.testing.assert_array_almost_equal(
       target_graph.edges[0, 1]['features'], np.ones(1))
@@ -143,7 +146,7 @@ def test_Lda_GraphToInputTarget_target_graph_edge_features(g: nx.DiGraph):
 def test_Lda_GraphToInputTarget_input_graph_global_features(g: nx.DiGraph):
   """Test input graph global features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
-      {'y_1hot': 'dar'}, g)
+      {'y_1hot': np.array([0, 1])}, g)
 
   np.testing.assert_array_almost_equal(
       input_graph.graph['features'], np.ones(1))
@@ -152,9 +155,10 @@ def test_Lda_GraphToInputTarget_input_graph_global_features(g: nx.DiGraph):
 def test_Lda_GraphToInputTarget_target_graph_global_features(g: nx.DiGraph):
   """Test target graph global features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
-      {'y_1hot': 'dar'}, g)
+      {'y_1hot': np.array([0, 1])}, g)
 
-  assert target_graph.graph['features'] == 'dar'
+  np.testing.assert_array_almost_equal(
+      target_graph.graph['features'], np.array([0, 1]))
 
 
 def test_Lda_GraphsToInputTargets_node_features_shape(

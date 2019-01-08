@@ -93,8 +93,6 @@ class Lda(base.HeterogeneousMappingModel):
 
   def init(self, seed: int, atomizer):
     # tf.reset_default_graph()
-
-    _, embedding_dim = self.embedding_matrix.shape
     self.model = gn_models.EncodeProcessDecode(global_output_size=2)
 
     # Extract input and target graphs from the full dataset.
@@ -189,7 +187,7 @@ class Lda(base.HeterogeneousMappingModel):
     """
     with inst2vec_vocabulary.VocabularyZipFile(self.vocabulary_file) as vocab:
       # Create embedding lookup op.
-      embedding_lookup_input_ph = tf.placeholder(dtype=tf.int64)
+      embedding_lookup_input_ph = tf.placeholder(dtype=tf.int32)
       normalized_embedding_matrix = tf.nn.l2_normalize(
           self.embedding_matrix, axis=1)
       embedding_lookup_op = tf.nn.embedding_lookup(
@@ -373,7 +371,7 @@ class Lda(base.HeterogeneousMappingModel):
 
     # Set node features.
     for _, data in input_graph.nodes(data=True):
-      data['features'] = data['inst2vec']
+      data['features'] = data['inst2vec'].astype(np.float64)
 
     for _, data in target_graph.nodes(data=True):
       data['features'] = np.ones(1, dtype=np.float64)
@@ -388,7 +386,7 @@ class Lda(base.HeterogeneousMappingModel):
     # Set global (graph) features.
     input_graph.graph['features'] = np.ones(1, dtype=np.float64)
 
-    target_graph.graph['features'] = row['y_1hot']
+    target_graph.graph['features'] = row['y_1hot'].astype(np.float64)
 
     return input_graph, target_graph
 
