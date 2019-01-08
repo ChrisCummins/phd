@@ -10,9 +10,11 @@ import pandas as pd
 import tensorflow as tf
 from absl import flags
 from absl import logging
+from graph_nets import utils_np as graph_net_utils_np
 from graph_nets import utils_tf as graph_net_utils_tf
 from graph_nets.demos import models as gn_models
 
+from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import base
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import ncc
 from deeplearning.ncc import inst2vec_pb2
@@ -23,8 +25,11 @@ from experimental.compilers.reachability import llvm_util
 
 FLAGS = flags.FLAGS
 
-# A model parameter which has different values for training and testing.
-TrainTestParam = collections.namedtuple('TrainTestParam', ['train', 'test'])
+# A value which has different values for training and testing.
+TrainTestValue = collections.namedtuple('TrainTestValue', ['train', 'test'])
+
+InputTargetValue = collections.namedtuple('InputTargetValue',
+                                          ['input', 'target'])
 
 
 def _ExtractGraphBatchOrDie(
@@ -66,7 +71,7 @@ class Lda(base.HeterogeneousMappingModel):
 
   def __init__(self, embedding_matrix: np.ndarray = None,
                vocabulary_file: typing.Optional[pathlib.Path] = None,
-               batch_size: TrainTestParam = TrainTestParam(32, 100)):
+               batch_size: TrainTestValue = TrainTestValue(32, 100)):
 
     # If no embedding matrix is provided, the default is used.
     if embedding_matrix is None:
@@ -79,33 +84,57 @@ class Lda(base.HeterogeneousMappingModel):
     self.vocabulary_file = vocabulary_file
     self.batch_size = batch_size
 
+    # Initialized in init().
+    self.model: typing.Optional[gn_models.EncodeProcessDecode] = None
+    self.num_processing_steps: typing.Optional[TrainTestValue] = None
+    self.loss_ops: typing.Optional[TrainTestValue] = None
+    self.train_op: typing.Optional[tf.Operation] = None
+    self.placeholders: typing.Optional[TrainTestValue] = None
+
   def init(self, seed: int, atomizer):
     # tf.reset_default_graph()
 
     _, embedding_dim = self.embedding_matrix.shape
     self.model = gn_models.EncodeProcessDecode(global_output_size=2)
-    # input_ph, target_ph = self.CreatePlaceholdersFromGraphs(specs_tr, self.batch_size.train)
-    # num_processing_steps = GetNumberOfMessagePassingSteps(specs_tr)
+
+    # Extract input and target graphs from the full dataset.
+    full_df = opencl_device_mapping_dataset.OpenClDeviceMappingsDataset().df
+    input_graphs, target_graphs = self.GraphsToInputTargets(
+        self.EncodeGraphs(
+            self.ExtractGraphs(full_df)))
+
+    # Create the placeholders.
+    placeholders = self.CreatePlaceholdersFromGraphs(
+        input_graphs, target_graphs)
+
+    # TODO(cec): Consider whether this should be an __init__ arg.
+    num_processing_steps = self.GetNumberOfMessagePassingSteps(
+        input_graphs, target_graphs)
+    self.num_processing_steps = TrainTestValue(
+        num_processing_steps, num_processing_steps)
 
     # A list of outputs, one per processing step.
-    # output_ops_tr = model(input_ph, num_processing_steps_tr)
-    # output_ops_ge = model(input_ph, num_processing_steps_ge)
+    output_ops = TrainTestValue(
+        self.model(placeholders.input, self.num_processing_steps.train),
+        self.model(placeholders.input, self.num_processing_steps.test))
 
     # Training loss.
-    # loss_ops_tr = CreateLossOps(target_ph, output_ops_tr)
-    # # Loss across processing steps.
-    # loss_op_tr = sum(loss_ops_tr) / num_processing_steps_tr
-    # # Test/generalization loss.
-    # loss_ops_ge = CreateLossOps(target_ph, output_ops_ge)
-    # loss_op_ge = loss_ops_ge[-1]  # Loss from final processing step.
-    #
-    # # Optimizer.
-    # learning_rate = 1e-3
-    # optimizer = tf.train.AdamOptimizer(learning_rate)
-    # step_op = optimizer.minimize(loss_op_tr)
-    #
-    # # Lets an iterable of TF graphs be output from a session as NP graphs.
-    # input_ph, target_ph = self.MakeRunnableInSession(input_ph, target_ph)
+    loss_ops_tr = self.CreateLossOps(placeholders.target, output_ops.train)
+    self.loss_ops = TrainTestValue(
+        # Training loss is across processing steps.
+        sum(loss_ops_tr) / self.num_processing_steps.train,
+        # Test loss is from the final processing step.
+        self.CreateLossOps(placeholders.target, output_ops.test)[-1],
+    )
+
+    # Optimizer.
+    learning_rate = 1e-3
+    optimizer = tf.train.AdamOptimizer(learning_rate)
+    self.train_op = optimizer.minimize(self.loss_ops.train)
+
+    # Lets an iterable of TF graphs be output from a session as NP graphs.
+    self.placeholders = InputTargetValue(
+        *self.MakeRunnableInSession(*placeholders))
 
   @property
   def embedding_dim(self):
@@ -134,10 +163,11 @@ class Lda(base.HeterogeneousMappingModel):
   def train(self, df: pd.DataFrame, platform_name: str,
             verbose: bool = False) -> None:
     """Train a model."""
-    feed_dict = self.InputTargetsToFeedDict(
-        self.GraphsToInputTargets(
+    graphs = InputTargetValue(
+        zip(*self.GraphsToInputTargets(
             self.EncodeGraphs(
-                self.ExtractGraphs(df))))
+                self.ExtractGraphs(df)))))
+    feed_dict = self.CreateFeedDict(graphs)
 
   def predict(self, df: pd.DataFrame, platform_name: str,
               verbose: bool = False) -> np.array:
@@ -274,6 +304,13 @@ class Lda(base.HeterogeneousMappingModel):
 
     return src_path_to_graph
 
+  @staticmethod
+  def GetNumberOfMessagePassingSteps(
+      input_graphs: typing.List[nx.DiGraph],
+      target_graphs: typing.List[nx.DiGraph]) -> int:
+    del target_graphs
+    return max([g.number_of_edges() for g in input_graphs])
+
   @classmethod
   def ExtractGraphs(
       cls, df: pd.DataFrame
@@ -300,26 +337,6 @@ class Lda(base.HeterogeneousMappingModel):
     for (_, row), src_path in zip(df.iterrows(), src_paths):
       graph = src_path_to_graph[src_path]
       yield row, graph
-
-  def InputTargetsToFeedDict(
-      self, data: typing.Iterable[typing.Tuple[nx.DiGraph, nx.DiGraph]]):
-    """Creates placeholders for the model training and evaluation.
-
-    Args:
-        graphs: A list of graphs that will be inspected for vector sizes.
-            batch_size: Total number of graphs per batch.
-        input_ph: The input graph's placeholders, as a graph namedtuple.
-        target_ph: The target graph's placeholders, as a graph namedtuple.
-
-    Returns:
-        feed_dict: The feed `dict` of input and target placeholders and data.
-        raw_graphs: The `dict` of raw networkx graphs.
-    """
-    input_graphs, target_graphs = zip(*data)
-    # input_graphs = graph_net_utils_np.networkxs_to_graphs_tuple(input_graphs)
-    # target_graphs = graph_net_utils_np.networkxs_to_graphs_tuple(target_graphs)
-    # feed_dict = {input_ph: input_graphs, target_ph: target_graphs}
-    # return feed_dict, graphs
 
   @classmethod
   def GraphsToInputTargets(cls, data: typing.Iterable[
@@ -389,14 +406,12 @@ class Lda(base.HeterogeneousMappingModel):
 
   @staticmethod
   def CreatePlaceholdersFromGraphs(input_graphs: typing.List[nx.DiGraph],
-                                   target_graphs: typing.List[nx.DiGraph],
-                                   batch_size: int):
+                                   target_graphs: typing.List[nx.DiGraph]):
     """Creates placeholders for the model training and evaluation.
 
     Args:
       input_graphs: A list of input graphs.
       target_graphs: A list of input graphs.
-      batch_size: Total number of graphs per batch.
 
     Returns:
       A tuple of the input graph's and target graph's placeholders, as a
@@ -407,3 +422,20 @@ class Lda(base.HeterogeneousMappingModel):
     target_ph = graph_net_utils_tf.placeholders_from_networkxs(
         target_graphs, force_dynamic_num_graphs=True)
     return input_ph, target_ph
+
+  def CreateFeedDict(self, graphs: InputTargetValue):
+    """Creates placeholders for the model training and evaluation.
+
+    Args:
+        graphs: A list of graphs that will be inspected for vector sizes.
+
+    Returns:
+        The feed `dict` of input and target placeholders and data.
+    """
+    input_graphs = graph_net_utils_np.networkxs_to_graphs_tuple(graphs.input)
+    target_graphs = graph_net_utils_np.networkxs_to_graphs_tuple(graphs.target)
+    feed_dict = {
+      self.placeholders.input: input_graphs,
+      self.placeholders.target: target_graphs
+    }
+    return feed_dict
