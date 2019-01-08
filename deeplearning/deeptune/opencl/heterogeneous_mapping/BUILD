@@ -1,5 +1,16 @@
 # Port of "Case Study A" from "//docs/2017_09_pact/code:Case Study A.ipynb".
 
+py_library(
+    name = "conftest",
+    testonly = 1,
+    srcs = ["conftest.py"],
+    visibility = ["//deeplearning/deeptune/opencl/heterogeneous_mapping:__subpackages__"],
+    deps = [
+        "//deeplearning/clgen/corpuses:atomizers",
+        "//third_party/py/pytest",
+    ],
+)
+
 py_binary(
     name = "heterogeneous_mapping",
     srcs = ["heterogeneous_mapping.py"],
