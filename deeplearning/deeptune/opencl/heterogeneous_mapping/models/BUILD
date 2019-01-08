@@ -61,6 +61,7 @@ py_test(
         ":models",
         "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
         "//deeplearning/deeptune/opencl/heterogeneous_mapping:utils",
+        "//experimental/compilers/reachability:llvm_util",
         "//labm8:test",
         "//third_party/py/networkx",
         "//third_party/py/numpy",

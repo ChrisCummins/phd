@@ -8,6 +8,7 @@ from absl import flags
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.deeptune.opencl.heterogeneous_mapping import utils
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import lda
+from experimental.compilers.reachability import llvm_util
 from labm8 import test
 
 
@@ -33,6 +34,21 @@ def df() -> pd.DataFrame:
   # Use the first 10 rows, and set classification target.
   yield utils.AddClassificationTargetToDataFrame(
       dataset.df.iloc[range(10), :].copy(), 'amd_tahiti_7970')
+
+
+def test_Lda_ExtractGraphs_returns_cfgs(df: pd.DataFrame):
+  rows, graphs = zip(*lda.ExtractGraphs(df[:3]))
+  assert len(rows) == 3
+  assert isinstance(graphs[0], llvm_util.LlvmControlFlowGraph)
+  assert isinstance(graphs[1], llvm_util.LlvmControlFlowGraph)
+  assert isinstance(graphs[2], llvm_util.LlvmControlFlowGraph)
+
+
+def test_Lda_ExtractGraphs_cfgs_have_bytecode(df: pd.DataFrame):
+  rows, graphs = zip(*lda.ExtractGraphs(df[:1]))
+  assert len(rows) == 1
+  graph = graphs[0]
+  assert graph.graph['llvm_bytecode']
 
 
 def test_Lda_GraphToInputTarget_input_graph_node_features(g: nx.DiGraph):
