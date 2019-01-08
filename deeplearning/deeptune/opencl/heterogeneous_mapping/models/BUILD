@@ -139,6 +139,7 @@ py_test(
     deps = [
         ":static_mapping",
         ":testlib",
+        "//deeplearning/deeptune/opencl/heterogeneous_mapping:conftest",
         "//labm8:test",
     ],
 )

@@ -9,7 +9,7 @@ FLAGS = flags.FLAGS
 
 
 # def _InstantiateModelWithTestOptions(
-#     model_cls: typing.Type) -> base.HeterogeneousMappingModel:
+#     model_class: typing.Type) -> base.HeterogeneousMappingModel:
 #   """Instantiate a model with arguments set for testing, i.e. tiny params."""
 #   init_opts = {
 #     deeptune.DeepTune: {
@@ -27,9 +27,9 @@ FLAGS = flags.FLAGS
 #       'batch_size': 4,
 #       'input_shape': (10,),
 #     },
-#   }.get(model_cls, {})
+#   }.get(model_class, {})
 #
-#   return model_cls(**init_opts)
+#   return model_class(**init_opts)
 
 
 class HeterogeneousMappingModelTest(object):
@@ -47,7 +47,7 @@ class HeterogeneousMappingModelTest(object):
 
   def test_init(self):
     """Test that init() can be called without error."""
-    model = self.model_cls(**self.model_init_opts)
+    model = self.model_class(**self.model_init_opts)
     model.init(0, self.atomizer)
 
   def test_save_restore(self):
@@ -55,18 +55,18 @@ class HeterogeneousMappingModelTest(object):
     with tempfile.TemporaryDirectory(prefix='phd_') as d:
       tempdir = pathlib.Path(d)
 
-      model_to_file = self.model_cls(**self.model_init_opts)
+      model_to_file = self.model_class(**self.model_init_opts)
       model_to_file.init(0, self.atomizer)
       model_to_file.save(tempdir / 'model')
 
-      model_from_file = self.model_cls(**self.model_init_opts)
+      model_from_file = self.model_class(**self.model_init_opts)
       model_from_file.restore(tempdir / 'model')
       # We can't test that restoring the model from file actually does anything,
       # since we don't have __eq__ operator implemented for models.
 
   def test_train_predict(self):
     """Test that models can be trained, and used to make predictions."""
-    model = self.model_cls(**self.model_init_opts)
+    model = self.model_class(**self.model_init_opts)
     model.init(0, self.atomizer)
     model.train(self.df, 'amd_tahiti_7970')
     model.predict(self.df, 'amd_tahiti_7970')
