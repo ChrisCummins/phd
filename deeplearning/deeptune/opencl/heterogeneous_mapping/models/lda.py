@@ -112,7 +112,6 @@ class Lda(base.HeterogeneousMappingModel):
     _, embedding_dim = self.embedding_matrix.shape
     return embedding_dim
 
-
   def save(self, outpath: typing.Union[str, pathlib.Path]) -> None:
     """Save model state."""
     # TODO(cec): Implement.
@@ -158,7 +157,6 @@ class Lda(base.HeterogeneousMappingModel):
       An iterator <row,cfg> tuples.
     """
     with inst2vec_vocabulary.VocabularyZipFile(self.vocabulary_file) as vocab:
-
       # Create embedding lookup op.
       embedding_lookup_input_ph = tf.placeholder(dtype=tf.int32)
       normalized_embedding_matrix = tf.nn.l2_normalize(
@@ -169,7 +167,8 @@ class Lda(base.HeterogeneousMappingModel):
       with tf.Session() as session:
         for row, graph in data:
           yield row, self.EncodeGraph(
-              graph, vocab, session, embedding_lookup_op, embedding_lookup_input_ph)
+              graph, vocab, session, embedding_lookup_op,
+              embedding_lookup_input_ph)
 
   @staticmethod
   def EncodeGraph(graph: llvm_util.LlvmControlFlowGraph,
@@ -211,7 +210,8 @@ class Lda(base.HeterogeneousMappingModel):
     # Set debug info as global graph attributes.
     graph.graph['num_unknown_statements'] = len(result.unknown_statements)
     graph.graph['struct_dict'] = struct_dict
-    graph.graph['llvm_bytecode_preprocessed'] = result.bytecode_after_preprocessing
+    graph.graph[
+      'llvm_bytecode_preprocessed'] = result.bytecode_after_preprocessing
 
     for _, data in graph.nodes(data=True):
       bytecode = data['text']
@@ -358,17 +358,17 @@ class Lda(base.HeterogeneousMappingModel):
       data['features'] = data['inst2vec']
 
     for _, data in target_graph.nodes(data=True):
-      data['features'] = np.ones(1, dtype=float)
+      data['features'] = np.ones(1, dtype=np.float32)
 
     # Set edge features.
     for _, _, data in input_graph.edges(data=True):
-      data['features'] = np.ones(1, dtype=float)
+      data['features'] = np.ones(1, dtype=np.float32)
 
     for _, _, data in target_graph.edges(data=True):
-      data['features'] = np.ones(1, dtype=float)
+      data['features'] = np.ones(1, dtype=np.float32)
 
     # Set global (graph) features.
-    input_graph.graph['features'] = np.ones(1, dtype=float)
+    input_graph.graph['features'] = np.ones(1, dtype=np.float32)
 
     target_graph.graph['features'] = row['y_1hot']
 
