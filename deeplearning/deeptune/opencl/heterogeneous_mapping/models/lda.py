@@ -157,13 +157,25 @@ class Lda(base.HeterogeneousMappingModel):
       An iterator <row,cfg> tuples.
     """
     with inst2vec_vocabulary.VocabularyZipFile(self.vocabulary_file) as vocab:
-      for row, graph in data:
-        yield row, self.EncodeGraph(graph, vocab, self.embedding_matrix)
+
+      # Create embedding lookup op.
+      embedding_lookup_input_ph = tf.placeholder(dtype=tf.int32)
+      normalized_embedding_matrix = tf.nn.l2_normalize(
+          self.embedding_matrix, axis=1)
+      embedding_lookup_op = tf.nn.embedding_lookup(
+          normalized_embedding_matrix, embedding_lookup_input_ph)
+
+      with tf.Session() as session:
+        for row, graph in data:
+          yield row, self.EncodeGraph(
+              graph, vocab, session, embedding_lookup_op, embedding_lookup_input_ph)
 
   @staticmethod
   def EncodeGraph(graph: llvm_util.LlvmControlFlowGraph,
                   vocab: inst2vec_vocabulary.VocabularyZipFile,
-                  embedding_matrix: np.array) -> llvm_util.LlvmControlFlowGraph:
+                  session: tf.Session,
+                  embedding_lookup_op,
+                  embedding_lookup_input_ph) -> llvm_util.LlvmControlFlowGraph:
     """Encode inst2vec attributes on a graph.
 
     Args:
@@ -200,32 +212,28 @@ class Lda(base.HeterogeneousMappingModel):
     graph.graph['struct_dict'] = struct_dict
     graph.graph['llvm_bytecode_preprocessed'] = result.bytecode_after_preprocessing
 
-    # Translate encoded sequences into sequences of normalized embeddings.
-    sequence_ph = tf.placeholder(dtype=tf.int32)
-    normalized_embedding_matrix = tf.nn.l2_normalize(
-        embedding_matrix, axis=1)
-    embedding_input_op = tf.nn.embedding_lookup(
-        normalized_embedding_matrix, sequence_ph)
+    for _, data in graph.nodes(data=True):
+      bytecode = data['text']
 
-    with tf.Session() as sess:
-      for _, data in graph.nodes(data=True):
-        bytecode = data['text']
+      # Encode the node's bytecode using the struct dict we derived from the
+      # entire file. Since this is a full-flow graph, each instruction's
+      # bytecode is a single statement.
+      encoded = vocab.EncodeLlvmBytecode(
+          bytecode, struct_dict=struct_dict).encoded
+      if len(encoded) != 1:
+        raise ValueError(
+            f"Encoded line `{bytecode}` to {len(encoded)} statements")
+      data['inst2vec_encoded'] = encoded[0]
 
-        # Encode the node's bytecode using the struct dict we derived from the
-        # entire file. Since this is a full-flow graph, each instruction's
-        # bytecode is a single statement.
-        encoded = vocab.EncodeLlvmBytecode(
-            bytecode, struct_dict=struct_dict).encoded
-        if len(encoded) != 1:
-          raise ValueError(
-              f"Encoded line `{bytecode}` to {len(encoded)} statements")
-        data['inst2vec_encoded'] = encoded[0]
-
-        # Lookup the encoded value in the embedding matrix.
-        sequences = np.array(encoded, dtype=np.int32).reshape((1, 1))
-        embedding_vector = sess.run(
-            embedding_input_op, feed_dict={sequence_ph: sequences})
-        data['inst2vec'] = embedding_vector[0][0]
+      # Lookup the encoded value in the embedding matrix.
+      # TODO(cec): This is a very slow way of doing it. Better would be to
+      # collect the encoded values into an array and perform the embedding
+      # lookup once.
+      sequences = np.array(encoded, dtype=np.int32).reshape((1, 1))
+      embedding_vector = session.run(
+          embedding_lookup_op,
+          feed_dict={embedding_lookup_input_ph: sequences})
+      data['inst2vec'] = embedding_vector[0][0]
 
     return graph
 

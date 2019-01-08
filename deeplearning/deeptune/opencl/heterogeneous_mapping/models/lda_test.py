@@ -81,6 +81,20 @@ def test_Lda_EncodeGraphs_num_unknown_statements(
   assert graphs[0].graph['num_unknown_statements'] >= 0
 
 
+def test_Lda_EncodeGraphs_unique_encoded(single_program_df: pd.DataFrame):
+  """Test that CFG has multiple unique encoded nodes."""
+  model = lda.Lda()
+  rows, graphs = zip(*model.EncodeGraphs(
+      model.ExtractGraphs(single_program_df)))
+  assert len(rows) == 1
+  assert len(graphs[0].nodes)
+
+  uniq_encoded = set(
+      data['inst2vec_encoded'] for _, data in graphs[0].nodes(data=True))
+
+  assert len(uniq_encoded) > 1
+
+
 def test_Lda_GraphToInputTarget_input_graph_node_features(g: nx.DiGraph):
   """Test input graph node features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
