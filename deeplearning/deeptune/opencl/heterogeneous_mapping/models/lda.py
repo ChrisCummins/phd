@@ -173,8 +173,9 @@ class Lda(base.HeterogeneousMappingModel):
 
     return graph
 
+  @staticmethod
   def BuildSrcPathToGraphMap(
-      self, df: pd.DataFrame, headers_dir: pathlib.Path
+      df: pd.DataFrame, headers_dir: pathlib.Path
   ) -> typing.Dict[pathlib.Path, llvm_util.LlvmControlFlowGraph]:
     """Construct a map of OpenCL sources to control flow graphs.
 
@@ -207,8 +208,9 @@ class Lda(base.HeterogeneousMappingModel):
 
     return src_path_to_graph
 
+  @classmethod
   def ExtractGraphs(
-      self, df: pd.DataFrame
+      cls, df: pd.DataFrame
   ) -> typing.Iterable[typing.Tuple[typing.Dict[str, typing.Any],
                                     llvm_util.LlvmControlFlowGraph]]:
     """Extract control flow graphs from a dataframe.
@@ -227,7 +229,7 @@ class Lda(base.HeterogeneousMappingModel):
         for _, row in df.iterrows()
       ]
       # Build a map of src paths to graphs.
-      src_path_to_graph = self.BuildSrcPathToGraphMap(df, headers_dir)
+      src_path_to_graph = cls.BuildSrcPathToGraphMap(df, headers_dir)
 
     for (_, row), src_path in zip(df.iterrows(), src_paths):
       graph = src_path_to_graph[src_path]
