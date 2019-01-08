@@ -6,6 +6,7 @@ import pytest
 from absl import flags
 
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import lda
+from deeplearning.deeptune.opencl.heterogeneous_mapping.models import testlib
 from experimental.compilers.reachability import llvm_util
 from labm8 import test
 
@@ -23,6 +24,12 @@ def g() -> nx.DiGraph:
   g.add_edge(0, 1)
   g.add_edge(1, 2)
   yield g
+
+
+def test_model(classify_df, classify_df_atomizer):
+  """Run common model tests."""
+  testlib.HeterogeneousMappingModelTest(
+      lda.Lda, classify_df, classify_df_atomizer, {})
 
 
 def test_Lda_ExtractGraphs_returns_cfgs(classify_df: pd.DataFrame):

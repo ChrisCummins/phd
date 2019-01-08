@@ -8,30 +8,6 @@ from absl import flags
 FLAGS = flags.FLAGS
 
 
-# def _InstantiateModelWithTestOptions(
-#     model_class: typing.Type) -> base.HeterogeneousMappingModel:
-#   """Instantiate a model with arguments set for testing, i.e. tiny params."""
-#   init_opts = {
-#     deeptune.DeepTune: {
-#       'lstm_layer_size': 8,
-#       'dense_layer_size': 4,
-#       'num_epochs': 2,
-#       'batch_size': 4,
-#       'input_shape': (10,),
-#     },
-#     ncc.DeepTuneInst2Vec: {
-#       # Same as DeepTune.
-#       'lstm_layer_size': 8,
-#       'dense_layer_size': 4,
-#       'num_epochs': 2,
-#       'batch_size': 4,
-#       'input_shape': (10,),
-#     },
-#   }.get(model_class, {})
-#
-#   return model_class(**init_opts)
-
-
 class HeterogeneousMappingModelTest(object):
   """Common tests for heterogeneous mapping models."""
 

@@ -81,6 +81,7 @@ py_test(
     srcs = ["lda_test.py"],
     deps = [
         ":models",
+        ":testlib",
         "//deeplearning/deeptune/opencl/heterogeneous_mapping:conftest",
         "//experimental/compilers/reachability:llvm_util",
         "//labm8:test",
@@ -118,11 +119,7 @@ py_test(
     srcs = ["models_test.py"],
     deps = [
         ":models",
-        "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
-        "//deeplearning/deeptune/opencl/heterogeneous_mapping:conftest",
-        "//deeplearning/deeptune/opencl/heterogeneous_mapping:utils",
         "//labm8:test",
-        "//third_party/py/pytest",
     ],
 )
 
