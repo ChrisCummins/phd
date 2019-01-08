@@ -154,6 +154,106 @@ br label <%ID>
 ret i32 <%ID>"""
 
 
+# LLVM IR for the following C code:
+#
+#     struct Foo {
+#       int x;
+#       int y;
+#     };
+#
+#     void DoFoo(struct Foo* foo) {
+#       foo->x += foo->y;
+#     }
+#
+# Generated using:
+#
+#   bazel run //compilers/llvm:clang -- /tmp/foo.c -- \
+#       -emit-llvm -S -o /tmp/foo.ll
+#
+BYTECODE_WITH_STRUCT = """\
+; ModuleID = 'foo.c'
+source_filename = "foo.c"
+target datalayout = "e-m:o-i64:64-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-apple-macosx10.12.0"
+
+%struct.Foo = type { i32, i32 }
+
+; Function Attrs: nounwind ssp uwtable
+define void @DoFoo(%struct.Foo*) #0 {
+  %2 = alloca %struct.Foo*, align 8
+  store %struct.Foo* %0, %struct.Foo** %2, align 8
+  %3 = load %struct.Foo*, %struct.Foo** %2, align 8
+  %4 = getelementptr inbounds %struct.Foo, %struct.Foo* %3, i32 0, i32 1
+  %5 = load i32, i32* %4, align 4
+  %6 = load %struct.Foo*, %struct.Foo** %2, align 8
+  %7 = getelementptr inbounds %struct.Foo, %struct.Foo* %6, i32 0, i32 0
+  %8 = load i32, i32* %7, align 4
+  %9 = add nsw i32 %8, %5
+  store i32 %9, i32* %7, align 4
+  ret void
+}
+
+attributes #0 = { nounwind ssp uwtable "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+fxsr,+mmx,+sse,+sse2,+sse3,+sse4.1,+ssse3" "unsafe-fp-math"="false" "use-soft-float"="false" }
+
+!llvm.module.flags = !{!0}
+!llvm.ident = !{!1}
+
+!0 = !{i32 1, !"PIC Level", i32 2}
+!1 = !{!"Apple LLVM version 8.0.0 (clang-800.0.42.1)"}
+"""
+
+
+def test_VocabularyZipFile_EncodeLlvmBytecode_struct_dict(
+    vocab: vocabulary.VocabularyZipFile):
+  """Test that struct appears in struct_dict."""
+  options = inst2vec_pb2.EncodeBytecodeOptions(
+      set_struct_dict=True)
+  result = vocab.EncodeLlvmBytecode(BYTECODE_WITH_STRUCT, options)
+
+  assert dict(result.struct_dict) == {
+    '%struct.Foo': '{ i32, i32 }'
+  }
+
+
+def test_VocabularyZipFile_EncodeLlvmBytecode_struct_not_in_preprocessed(
+    vocab: vocabulary.VocabularyZipFile):
+  """Test that struct is inlined during pre-processing."""
+  options = inst2vec_pb2.EncodeBytecodeOptions(
+      set_bytecode_after_preprocessing=True)
+  result = vocab.EncodeLlvmBytecode(BYTECODE_WITH_STRUCT, options)
+
+  assert result.bytecode_after_preprocessing == """\
+define void <@ID>({ i32, i32 }*)
+<%ID> = alloca { i32, i32 }*, align 8
+store { i32, i32 }* <%ID>, { i32, i32 }** <%ID>, align 8
+<%ID> = load { i32, i32 }*, { i32, i32 }** <%ID>, align 8
+<%ID> = getelementptr inbounds { i32, i32 }, { i32, i32 }* <%ID>, i32 <INT>, i32 <INT>
+<%ID> = load i32, i32* <%ID>, align 4
+<%ID> = load { i32, i32 }*, { i32, i32 }** <%ID>, align 8
+<%ID> = getelementptr inbounds { i32, i32 }, { i32, i32 }* <%ID>, i32 <INT>, i32 <INT>
+<%ID> = load i32, i32* <%ID>, align 4
+<%ID> = add nsw i32 <%ID>, <%ID>
+store i32 <%ID>, i32* <%ID>, align 4
+ret void"""
+
+
+def test_VocabularyZipFile_EncodeLlvmBytecode_encode_single_line(
+    vocab: vocabulary.VocabularyZipFile):
+  """Test encoding a single line of bytecode."""
+  # A single line of bytecode which references a struct.
+  result = vocab.EncodeLlvmBytecode(
+      "store %struct.Foo* %0, %struct.Foo** %2, align 8",
+      options=inst2vec_pb2.EncodeBytecodeOptions(
+          set_bytecode_after_preprocessing=True,
+      ),
+      struct_dict={
+        '%struct.Foo': '{ i32, i32 }'
+      })
+
+  assert (result.bytecode_after_preprocessing ==
+          "store { i32, i32 }* <%ID>, { i32, i32 }** <%ID>, align 8")
+
+
 def test_VocabularyZipFile_EncodeLlvmBytecode_sequence(
     vocab: vocabulary.VocabularyZipFile):
   # Function contains 14 statements.
