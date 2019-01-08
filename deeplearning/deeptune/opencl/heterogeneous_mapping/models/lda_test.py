@@ -157,6 +157,50 @@ def test_Lda_GraphToInputTarget_target_graph_global_features(g: nx.DiGraph):
   assert target_graph.graph['features'] == 'dar'
 
 
+def test_Lda_GraphsToInputTargets_node_features_shape(
+    single_program_df: pd.DataFrame):
+  """Test that node features have correct shape."""
+  model = lda.Lda()
+  input_graphs, target_graphs = zip(*model.GraphsToInputTargets(
+      model.EncodeGraphs(model.ExtractGraphs(single_program_df))))
+  assert len(input_graphs) == 1
+  assert input_graphs[0].nodes[0]['features'].shape == (model.embedding_dim,)
+  assert target_graphs[0].nodes[0]['features'].shape == (model.embedding_dim,)
+
+
+def test_Lda_GraphsToInputTargets_node_features_dtype(
+    single_program_df: pd.DataFrame):
+  """Test that node features have correct type."""
+  model = lda.Lda()
+  input_graphs, target_graphs = zip(*model.GraphsToInputTargets(
+      model.EncodeGraphs(model.ExtractGraphs(single_program_df))))
+  assert len(input_graphs) == 1
+  assert input_graphs[0].nodes[0]['features'].dtype == np.float32
+  assert target_graphs[0].nodes[0]['features'].dtype == np.float32
+
+
+def test_Lda_GraphsToInputTargets_global_features_shape(
+    single_program_df: pd.DataFrame):
+  """Test that node features have correct shape."""
+  model = lda.Lda()
+  input_graphs, target_graphs = zip(*model.GraphsToInputTargets(
+      model.EncodeGraphs(model.ExtractGraphs(single_program_df))))
+  assert len(input_graphs) == 1
+  assert input_graphs[0].graph['features'].shape == (2,)
+  assert target_graphs[0].graph['features'].shape == (2,)
+
+
+def test_Lda_GraphsToInputTargets_global_features_dtype(
+    single_program_df: pd.DataFrame):
+  """Test that graph features have correct type."""
+  model = lda.Lda()
+  input_graphs, target_graphs = zip(*model.GraphsToInputTargets(
+      model.EncodeGraphs(model.ExtractGraphs(single_program_df))))
+  assert len(input_graphs) == 1
+  assert input_graphs[0].graph['features'].dtype == np.float32
+  assert target_graphs[0].graph['features'].dtype == np.float32
+
+
 def test_model(classify_df, classify_df_atomizer):
   """Run common model tests."""
   testlib.HeterogeneousMappingModelTest(
