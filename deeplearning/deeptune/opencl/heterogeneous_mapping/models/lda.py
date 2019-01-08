@@ -14,6 +14,7 @@ from graph_nets.demos import models as gn_models
 
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import base
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import ncc
+from deeplearning.ncc import inst2vec_pb2
 from deeplearning.ncc import task_utils as inst2vec_utils
 from deeplearning.ncc import vocabulary as inst2vec_vocabulary
 from experimental.compilers.reachability import llvm_util
@@ -166,10 +167,44 @@ class Lda(base.HeterogeneousMappingModel):
     Returns:
       The graph.
     """
-    for _, data in graph.nodes(data=True):
-      # TODO(cec): Pre-process the instruction, lookup in vocabulary,
-      # lookup embedding.
-      data['inst2vec'] = 'TODO'
+    # Encode the entire file, not
+    result = vocab.EncodeLlvmBytecode(
+        graph.graph['llvm_bytecode'],
+        inst2vec_pb2.EncodeBytecodeOptions(
+            set_unknown_statements=True,
+            set_struct_dict=True,
+        ))
+
+    graph.graph['num_unknown_statements'] = len(result.set_unknown_statements)
+    struct_dict = result.struct_dict
+
+    # Translate encoded sequences into sequences of normalized embeddings.
+    sequence_ph = tf.placeholder(dtype=tf.int32)
+    normalized_embedding_matrix = tf.nn.l2_normalize(
+        embedding_matrix, axis=1)
+    embedding_input_op = tf.nn.embedding_lookup(
+        normalized_embedding_matrix, sequence_ph)
+
+    with tf.Session() as sess:
+      for _, data in graph.nodes(data=True):
+        bytecode = data['text']
+
+        # Encode the node's bytecode using the struct dict we derived from the
+        # entire file. Since this is a full-flow graph, each instruction's
+        # bytecode is a single statement.
+        encoded = vocab.EncodeLlvmBytecode(
+            bytecode, struct_dict=struct_dict).encoded
+        if len(encoded) != 1:
+          raise ValueError(
+              f"Encoded line `{bytecode}` to {len(encoded)} statements")
+        data['inst2vec_encoded'] = encoded[0]
+
+        # Lookup the encoded value in the embedding matrix.
+        sequences = np.array(encoded, dtype=np.int32).reshape((1, 1))
+        embedding_vector = sess.run(
+            embedding_input_op, feed_dict={sequence_ph: sequences})
+        logging.info('VECTOR %s', embedding_vector.shape)
+        data['inst2vec'] = embedding_vector[0][0]
 
     return graph
 
