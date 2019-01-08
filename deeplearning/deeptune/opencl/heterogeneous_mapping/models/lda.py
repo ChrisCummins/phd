@@ -47,6 +47,10 @@ def _ExtractGraphBatchOrDie(
       logging.fatal('Found %d CFGs in %s', len(dot_strings), src_file_path.name)
     cfg = llvm_util.ControlFlowGraphFromDotSource(dot_strings[0])
     ffg = cfg.BuildFullFlowGraph()
+
+    # Set the input bytecode as a graph property.
+    ffg.graph['llvm_bytecode'] = bytecode
+
     batch.append((src_file_path, ffg))
 
   return batch
