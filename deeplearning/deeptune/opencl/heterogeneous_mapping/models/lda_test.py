@@ -26,19 +26,6 @@ def g() -> nx.DiGraph:
   yield g
 
 
-@pytest.fixture(scope='function')
-def single_program_df() -> pd.DataFrame:
-  """Test fixture which returns a single program dataframe."""
-  return pd.DataFrame([{
-    'y_1hot': np.array([0, 1]),
-    'program:opencl_src': """\
-kernel void Foo(global int* a, const int b) {
-  a[get_global_id(0)] *= b;
-}
-""",
-  }])
-
-
 def test_Lda_ExtractGraphs_returns_cfgs(classify_df: pd.DataFrame):
   """Test that CFGs are returned."""
   rows, graphs = zip(*lda.Lda.ExtractGraphs(classify_df[:3]))
@@ -52,9 +39,46 @@ def test_Lda_ExtractGraphs_cfgs_have_bytecode(single_program_df: pd.DataFrame):
   """Test that CFG has bytecode set."""
   rows, graphs = zip(*lda.Lda.ExtractGraphs(single_program_df))
   assert len(rows) == 1
-  assert graphs[0].graph['llvm_bytecode'] == """\
-FIXME
-"""
+  assert graphs[0].graph['llvm_bytecode']
+
+
+def test_Lda_EncodeGraphs_inst2vec_vectors(single_program_df: pd.DataFrame):
+  """Test that CFG has inst2vec attribute set."""
+  model = lda.Lda()
+  rows, graphs = zip(*model.EncodeGraphs(
+      model.ExtractGraphs(single_program_df)))
+  assert len(rows) == 1
+  assert len(graphs[0].nodes)
+
+  for _, data in graphs[0].nodes(data=True):
+    assert 'inst2vec' in data
+    # Check the shape of the embedding vector.
+    assert data['inst2vec'].shape == (model.embedding_dim,)
+
+
+def test_Lda_EncodeGraphs_inst2vec_encoded(single_program_df: pd.DataFrame):
+  """Test that CFG has inst2vec_encoded attribute set."""
+  model = lda.Lda()
+  rows, graphs = zip(*model.EncodeGraphs(
+      model.ExtractGraphs(single_program_df)))
+  assert len(rows) == 1
+  assert len(graphs[0].nodes)
+
+  for _, data in graphs[0].nodes(data=True):
+    assert 'inst2vec_encoded' in data
+    # Vocabulary elements are non-negative integers.
+    assert data['inst2vec_encoded'] > 0
+
+
+def test_Lda_EncodeGraphs_num_unknown_statements(
+    single_program_df: pd.DataFrame):
+  """Test that num_unknown_statements is set on graph."""
+  model = lda.Lda()
+  rows, graphs = zip(*model.EncodeGraphs(
+      model.ExtractGraphs(single_program_df)))
+  assert len(rows) == 1
+
+  assert graphs[0].graph['num_unknown_statements'] >= 0
 
 
 def test_Lda_GraphToInputTarget_input_graph_node_features(g: nx.DiGraph):

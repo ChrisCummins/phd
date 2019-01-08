@@ -105,6 +105,13 @@ class Lda(base.HeterogeneousMappingModel):
     # # Lets an iterable of TF graphs be output from a session as NP graphs.
     # input_ph, target_ph = MakeRunnableInSession(input_ph, target_ph)
 
+  @property
+  def embedding_dim(self):
+    """Return the embedding dimensionality."""
+    _, embedding_dim = self.embedding_matrix.shape
+    return embedding_dim
+
+
   def save(self, outpath: typing.Union[str, pathlib.Path]) -> None:
     """Save model state."""
     # TODO(cec): Implement.
@@ -167,16 +174,31 @@ class Lda(base.HeterogeneousMappingModel):
     Returns:
       The graph.
     """
-    # Encode the entire file, not
+    # Encode the entire file with debugging options set. We need to process
+    # the entire file so that we can get the struct_dict, which we will need
+    # when encoding individual nodes. This could be made faster by simply
+    # calling `vocab.GetStructDict(graph.graph['llvm_bytecode'].split('\n'))`,
+    # but the extra debug information is useful.
     result = vocab.EncodeLlvmBytecode(
         graph.graph['llvm_bytecode'],
         inst2vec_pb2.EncodeBytecodeOptions(
+            set_bytecode_after_preprocessing=True,
             set_unknown_statements=True,
             set_struct_dict=True,
         ))
 
+    # if len(result.encoded) != graph.number_of_nodes():
+    #   raise ValueError(
+    #       f"Encoded bytecode file contains {len(result.encoded)} statements, "
+    #       f"but full flow graph contains {graph.number_of_nodes()} nodes. The "
+    #       "two should be equal")
+
+    struct_dict = dict(result.struct_dict)
+
+    # Set debug info as global graph attributes.
     graph.graph['num_unknown_statements'] = len(result.unknown_statements)
-    struct_dict = result.struct_dict
+    graph.graph['struct_dict'] = struct_dict
+    graph.graph['llvm_bytecode_preprocessed'] = result.bytecode_after_preprocessing
 
     # Translate encoded sequences into sequences of normalized embeddings.
     sequence_ph = tf.placeholder(dtype=tf.int32)
@@ -203,7 +225,6 @@ class Lda(base.HeterogeneousMappingModel):
         sequences = np.array(encoded, dtype=np.int32).reshape((1, 1))
         embedding_vector = sess.run(
             embedding_input_op, feed_dict={sequence_ph: sequences})
-        logging.info('VECTOR %s', embedding_vector.shape)
         data['inst2vec'] = embedding_vector[0][0]
 
     return graph
