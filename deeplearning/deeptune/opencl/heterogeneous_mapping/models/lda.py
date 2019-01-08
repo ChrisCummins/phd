@@ -158,7 +158,7 @@ class Lda(base.HeterogeneousMappingModel):
     """
     with inst2vec_vocabulary.VocabularyZipFile(self.vocabulary_file) as vocab:
       # Create embedding lookup op.
-      embedding_lookup_input_ph = tf.placeholder(dtype=tf.int32)
+      embedding_lookup_input_ph = tf.placeholder(dtype=tf.int64)
       normalized_embedding_matrix = tf.nn.l2_normalize(
           self.embedding_matrix, axis=1)
       embedding_lookup_op = tf.nn.embedding_lookup(
@@ -358,17 +358,17 @@ class Lda(base.HeterogeneousMappingModel):
       data['features'] = data['inst2vec']
 
     for _, data in target_graph.nodes(data=True):
-      data['features'] = np.ones(1, dtype=np.float32)
+      data['features'] = np.ones(1, dtype=np.float64)
 
     # Set edge features.
     for _, _, data in input_graph.edges(data=True):
-      data['features'] = np.ones(1, dtype=np.float32)
+      data['features'] = np.ones(1, dtype=np.float64)
 
     for _, _, data in target_graph.edges(data=True):
-      data['features'] = np.ones(1, dtype=np.float32)
+      data['features'] = np.ones(1, dtype=np.float64)
 
     # Set global (graph) features.
-    input_graph.graph['features'] = np.ones(1, dtype=np.float32)
+    input_graph.graph['features'] = np.ones(1, dtype=np.float64)
 
     target_graph.graph['features'] = row['y_1hot']
 
