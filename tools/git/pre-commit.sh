@@ -13,7 +13,7 @@ main() {
   source "$ROOT/.env"
   "$PHD/tools/buildifier.sh"
 
-  git -C "$ROOT" fetch origin
+  git -C "$ROOT" fetch "$REMOTE_NAME"
 
   COMMITS_BEHIND_UPSTREAM="$(git rev-list --left-right --count $REMOTE_NAME/$BRANCH_NAME...@ | cut -f1)"
 
