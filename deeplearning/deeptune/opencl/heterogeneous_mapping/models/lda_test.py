@@ -26,7 +26,7 @@ def g() -> nx.DiGraph:
 
 
 def test_Lda_ExtractGraphs_returns_cfgs(classify_df: pd.DataFrame):
-  rows, graphs = zip(*lda.ExtractGraphs(classify_df[:3]))
+  rows, graphs = zip(*lda.Lda.ExtractGraphs(classify_df[:3]))
   assert len(rows) == 3
   assert isinstance(graphs[0], llvm_util.LlvmControlFlowGraph)
   assert isinstance(graphs[1], llvm_util.LlvmControlFlowGraph)
@@ -34,7 +34,7 @@ def test_Lda_ExtractGraphs_returns_cfgs(classify_df: pd.DataFrame):
 
 
 def test_Lda_ExtractGraphs_cfgs_have_bytecode(classify_df: pd.DataFrame):
-  rows, graphs = zip(*lda.ExtractGraphs(classify_df[:1]))
+  rows, graphs = zip(*lda.Lda.ExtractGraphs(classify_df[:1]))
   assert len(rows) == 1
   graph = graphs[0]
   assert graph.graph['llvm_bytecode']
