@@ -165,7 +165,7 @@ def test_Lda_GraphsToInputTargets_node_features_shape(
       model.EncodeGraphs(model.ExtractGraphs(single_program_df))))
   assert len(input_graphs) == 1
   assert input_graphs[0].nodes[0]['features'].shape == (model.embedding_dim,)
-  assert target_graphs[0].nodes[0]['features'].shape == (model.embedding_dim,)
+  assert target_graphs[0].nodes[0]['features'].shape == (1,)
 
 
 def test_Lda_GraphsToInputTargets_node_features_dtype(
