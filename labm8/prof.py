@@ -4,8 +4,8 @@ import contextlib
 import inspect
 import os
 import sys
+import time
 import typing
-from time import time
 
 from absl import logging
 
@@ -60,7 +60,7 @@ def start(name):
       bool: Whether or not profiling is enabled.
   """
   if is_enabled():
-    _TIMERS[name] = time()
+    _TIMERS[name] = time.time()
   return is_enabled()
 
 
@@ -82,7 +82,7 @@ def stop(name, file=sys.stderr):
       KeyError: If the named timer does not exist.
   """
   if is_enabled():
-    elapsed = (time() - _TIMERS[name])
+    elapsed = (time.time() - _TIMERS[name])
     if elapsed > 60:
       elapsed_str = '{:.1f} m'.format(elapsed / 60)
     elif elapsed > 1:
@@ -144,6 +144,7 @@ def Profile(name: str = '',
            f"(started {humanize.naturaltime(elapsed)})")
 
 
+@contextlib.contextmanager
 def ProfileToStdout(name: str = ''):
   """A context manager which prints the elapsed time to stdout on exit.
 
