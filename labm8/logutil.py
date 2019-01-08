@@ -79,7 +79,8 @@ def ConertAbslLogToProtos(
       records.append(logging_pb2.LogRecord(
           level=ABSL_LEVEL_TO_LOG_RECORD_LEVEL[starting_match.group('lvl')],
           date_utc_epoch_ms=labdate.MillisecondsTimestamp(
-              DatetimeFromAbslTimestamp(starting_match.group('timestamp'))),
+              DatetimeFromAbslTimestamp(
+                  starting_match.group('timestamp'), year=year)),
           thread_id=int(starting_match.group('thread_id')),
           file_name=starting_match.group('filename'),
           line_number=int(starting_match.group('lineno')),
