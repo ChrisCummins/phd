@@ -486,7 +486,11 @@ py_library(
     name = "prof",
     srcs = ["prof.py"],
     visibility = ["//visibility:public"],
-    deps = [":labtypes"],
+    deps = [
+        ":labtypes",
+        "//third_party/py/absl",
+        "//third_party/py/humanize",
+    ],
 )
 
 py_test(

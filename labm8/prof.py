@@ -7,6 +7,7 @@ import sys
 import time
 import typing
 
+import humanize
 from absl import logging
 
 from labm8 import labtypes
