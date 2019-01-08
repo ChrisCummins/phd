@@ -10,6 +10,7 @@ import pandas as pd
 import tensorflow as tf
 from absl import flags
 from absl import logging
+from graph_nets import utils_tf as graph_net_utils_tf
 from graph_nets.demos import models as gn_models
 
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import base
@@ -83,7 +84,7 @@ class Lda(base.HeterogeneousMappingModel):
 
     _, embedding_dim = self.embedding_matrix.shape
     self.model = gn_models.EncodeProcessDecode(global_output_size=2)
-    # input_ph, target_ph = CreatePlaceholdersFromGraphs(specs_tr, self.batch_size.train)
+    # input_ph, target_ph = self.CreatePlaceholdersFromGraphs(specs_tr, self.batch_size.train)
     # num_processing_steps = GetNumberOfMessagePassingSteps(specs_tr)
 
     # A list of outputs, one per processing step.
@@ -104,7 +105,7 @@ class Lda(base.HeterogeneousMappingModel):
     # step_op = optimizer.minimize(loss_op_tr)
     #
     # # Lets an iterable of TF graphs be output from a session as NP graphs.
-    # input_ph, target_ph = MakeRunnableInSession(input_ph, target_ph)
+    # input_ph, target_ph = self.MakeRunnableInSession(input_ph, target_ph)
 
   @property
   def embedding_dim(self):
@@ -376,9 +377,33 @@ class Lda(base.HeterogeneousMappingModel):
 
   @staticmethod
   def CreateLossOps(target_op, output_ops):
-    # TODO(cec): Replace with graph features.
     return [
-      tf.losses.softmax_cross_entropy(target_op.nodes, output_op.nodes) +
-      tf.losses.softmax_cross_entropy(target_op.edges, output_op.edges)
+      tf.losses.softmax_cross_entropy(target_op.globals, output_op.globals)
       for output_op in output_ops
     ]
+
+  @staticmethod
+  def MakeRunnableInSession(*args):
+    """Lets an iterable of TF graphs be output from a session as NP graphs."""
+    return [graph_net_utils_tf.make_runnable_in_session(a) for a in args]
+
+  @staticmethod
+  def CreatePlaceholdersFromGraphs(input_graphs: typing.List[nx.DiGraph],
+                                   target_graphs: typing.List[nx.DiGraph],
+                                   batch_size: int):
+    """Creates placeholders for the model training and evaluation.
+
+    Args:
+      input_graphs: A list of input graphs.
+      target_graphs: A list of input graphs.
+      batch_size: Total number of graphs per batch.
+
+    Returns:
+      A tuple of the input graph's and target graph's placeholders, as a
+      graph namedtuple.
+    """
+    input_ph = graph_net_utils_tf.placeholders_from_networkxs(
+        input_graphs, force_dynamic_num_graphs=True)
+    target_ph = graph_net_utils_tf.placeholders_from_networkxs(
+        target_graphs, force_dynamic_num_graphs=True)
+    return input_ph, target_ph
