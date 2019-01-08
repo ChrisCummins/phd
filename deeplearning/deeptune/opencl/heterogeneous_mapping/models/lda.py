@@ -12,7 +12,6 @@ from absl import flags
 from absl import logging
 from graph_nets.demos import models as gn_models
 
-from deeplearning.clgen.corpuses import atomizers
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import base
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import ncc
 from deeplearning.ncc import task_utils as inst2vec_utils
@@ -73,7 +72,7 @@ class Lda(base.HeterogeneousMappingModel):
     self.vocabulary_file = vocabulary_file
     self.batch_size = batch_size
 
-  def init(self, seed: int, atomizer: atomizers.AtomizerBase):
+  def init(self, seed: int, atomizer):
     # tf.reset_default_graph()
 
     _, embedding_dim = self.embedding_matrix.shape

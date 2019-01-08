@@ -43,7 +43,6 @@ py_library(
     deps = [
         ":base",
         ":ncc",
-        "//deeplearning/clgen/corpuses:atomizers",
         "//deeplearning/ncc:task_utils",
         "//deeplearning/ncc:vocabulary",
         "//experimental/compilers/reachability:llvm_util",
