@@ -24,6 +24,17 @@ py_library(
     ],
 )
 
+py_test(
+    name = "deeptune_test",
+    srcs = ["deeptune_test.py"],
+    deps = [
+        ":deeptune",
+        ":testlib",
+        "//deeplearning/deeptune/opencl/heterogeneous_mapping:conftest",
+        "//labm8:test",
+    ],
+)
+
 py_library(
     name = "grewe",
     srcs = ["grewe.py"],
@@ -34,6 +45,17 @@ py_library(
         "//third_party/py/absl",
         "//third_party/py/pandas",
         "//third_party/py/scipy:scikit_learn",
+    ],
+)
+
+py_test(
+    name = "grewe_test",
+    srcs = ["grewe_test.py"],
+    deps = [
+        ":grewe",
+        ":testlib",
+        "//deeplearning/deeptune/opencl/heterogeneous_mapping:conftest",
+        "//labm8:test",
     ],
 )
 
@@ -119,6 +141,17 @@ py_library(
         "//third_party/py/numpy",
         "//third_party/py/pandas",
         "//third_party/py/tensorflow",
+    ],
+)
+
+py_test(
+    name = "ncc_test",
+    srcs = ["ncc_test.py"],
+    deps = [
+        ":ncc",
+        ":testlib",
+        "//deeplearning/deeptune/opencl/heterogeneous_mapping:conftest",
+        "//labm8:test",
     ],
 )
 
