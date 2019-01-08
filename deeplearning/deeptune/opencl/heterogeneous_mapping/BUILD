@@ -6,6 +6,8 @@ py_library(
     srcs = ["conftest.py"],
     visibility = ["//deeplearning/deeptune/opencl/heterogeneous_mapping:__subpackages__"],
     deps = [
+        ":utils",
+        "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
         "//deeplearning/clgen/corpuses:atomizers",
         "//third_party/py/pytest",
     ],
@@ -30,6 +32,7 @@ py_test(
     size = "enormous",
     srcs = ["heterogeneous_mapping_test.py"],
     deps = [
+        ":conftest",
         ":heterogeneous_mapping",
         "//labm8:test",
         "//third_party/py/absl",
@@ -53,6 +56,7 @@ py_test(
     name = "utils_test",
     srcs = ["utils_test.py"],
     deps = [
+        ":conftest",
         ":utils",
         "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
         "//labm8:test",

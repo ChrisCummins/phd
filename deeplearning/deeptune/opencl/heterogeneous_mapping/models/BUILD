@@ -97,6 +97,7 @@ py_test(
     deps = [
         ":models",
         "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
+        "//deeplearning/deeptune/opencl/heterogeneous_mapping:conftest",
         "//deeplearning/deeptune/opencl/heterogeneous_mapping:utils",
         "//labm8:test",
         "//third_party/py/pytest",
