@@ -500,7 +500,8 @@ def ValidateOptimizationLevel(opt: str) -> str:
 def Exec(args: typing.List[str],
          stdin: typing.Optional[typing.Union[str, bytes]] = None,
          timeout_seconds: int = 60,
-         universal_newlines: bool = True) -> subprocess.Popen:
+         universal_newlines: bool = True,
+         log: bool = True) -> subprocess.Popen:
   """Run LLVM's optimizer.
 
   Args:
@@ -509,12 +510,14 @@ def Exec(args: typing.List[str],
       should be a string. If not, it should be bytes.
     timeout_seconds: The number of seconds to allow opt to run for.
     universal_newlines: Argument passed to Popen() of opt process.
+    log: If true, print executed command to DEBUG log.
 
   Returns:
     A Popen instance with stdout and stderr set to strings.
   """
   cmd = ['timeout', '-s9', str(timeout_seconds), str(OPT)] + args
-  logging.debug('$ %s', ' '.join(cmd))
+  if log:
+    logging.debug('$ %s', ' '.join(cmd))
   process = subprocess.Popen(
       cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
       stdin=subprocess.PIPE if stdin else None,

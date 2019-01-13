@@ -64,13 +64,15 @@ def ValidateOptimizationLevel(opt: str) -> str:
 
 def Exec(args: typing.List[str],
          stdin: typing.Optional[str] = None,
-         timeout_seconds: int = 60) -> subprocess.Popen:
+         timeout_seconds: int = 60,
+         log: bool=True) -> subprocess.Popen:
   """Run clang.
 
   Args:
     args: A list of arguments to pass to binary.
     stdin: Optional input string to pass to binary.
     timeout_seconds: The number of seconds to allow clang to run for.
+    log: If true, print executed command to DEBUG log.
 
   Returns:
     A Popen instance with stdout and stderr set to strings.
@@ -79,7 +81,8 @@ def Exec(args: typing.List[str],
     LlvmTimeout: If clang does not complete before timeout_seconds.
   """
   cmd = ['timeout', '-s9', str(timeout_seconds), str(CLANG)] + args
-  logging.debug('$ %s', ' '.join(cmd))
+  if log:
+    logging.debug('$ %s', ' '.join(cmd))
   process = subprocess.Popen(
       cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
       stdin=subprocess.PIPE if stdin else None, universal_newlines=True)
