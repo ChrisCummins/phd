@@ -158,8 +158,13 @@ class Lda(base.HeterogeneousMappingModel):
       inpath (str): The path to load the model from. This is the same path as
         was passed to save() to create the file.
     """
-    # TODO(cec): Implement.
-    pass
+    # TODO(cec): Extract checkpoint_dir from inpath.
+    checkpoint_dir = inpath
+    session_opts = {
+      'checkpoint_dir': checkpoint_dir,
+    }
+    with tf.train.SingularMonitoredSession(**session_opts) as sess:
+      pass
 
   def train(self, df: pd.DataFrame, platform_name: str,
             verbose: bool = False) -> None:
@@ -168,7 +173,16 @@ class Lda(base.HeterogeneousMappingModel):
         zip(*self.GraphsToInputTargets(
             self.EncodeGraphs(
                 self.ExtractGraphs(df)))))
+    # TODO(cec): Implement.
+    checkpoint_dir = '/tmp'
     feed_dict = self.CreateFeedDict(graphs)
+    session_opts = {
+      'is_chief': True,
+      'checkpoint_dir': checkpoint_dir,
+      'save_summaries_secs': 10,
+    }
+    with tf.train.MonitoredTrainingSession(session_opts) as sess:
+      pass
 
   def predict(self, df: pd.DataFrame, platform_name: str,
               verbose: bool = False) -> np.array:
