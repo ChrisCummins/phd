@@ -168,8 +168,24 @@ def test_Lda_GraphsToInputTargets_node_features_shape(
   input_graphs, target_graphs = zip(*model.GraphsToInputTargets(
       model.EncodeGraphs(model.ExtractGraphs(single_program_df))))
   assert len(input_graphs) == 1
-  assert input_graphs[0].nodes[0]['features'].shape == (model.embedding_dim,)
+  assert input_graphs[0].nodes[0]['features'].shape == (
+    model.embedding_dim + 2,)
   assert target_graphs[0].nodes[0]['features'].shape == (1,)
+
+
+def test_Lda_GraphsToInputTargets_node_features_entry_exit_blocks(
+    single_program_df: pd.DataFrame):
+  """Assert that only a single entry node is set."""
+  model = lda.Lda()
+  input_graphs, target_graphs = zip(*model.GraphsToInputTargets(
+      model.EncodeGraphs(model.ExtractGraphs(single_program_df))))
+  assert len(input_graphs) == 1
+  node_features = np.vstack(
+      [d['features'] for _, d in input_graphs[0].nodes(data=True)])
+  # The 'entry' and 'exit' blocks are the first two elements of the feature
+  # vector. Only a single value should be set for each.
+  assert sum(node_features[0]) == 1
+  assert sum(node_features[1]) == 1
 
 
 def test_Lda_GraphsToInputTargets_node_features_dtype(

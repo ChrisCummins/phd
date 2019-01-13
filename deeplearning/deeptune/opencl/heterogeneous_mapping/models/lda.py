@@ -388,8 +388,11 @@ class Lda(base.HeterogeneousMappingModel):
     target_graph = graph.copy()
 
     # Set node features.
-    for _, data in input_graph.nodes(data=True):
-      data['features'] = data['inst2vec'].astype(np.float64)
+    # The input graph's features are a concatenation: [entry,exit,embedding...].
+    for node, data in input_graph.nodes(data=True):
+      data['features'] = np.concatenate(
+          (input_graph.IsEntryBlock(node), input_graph.IsExitBlock(node),
+           data['inst2vec'])).astype(np.float64)
 
     for _, data in target_graph.nodes(data=True):
       data['features'] = np.ones(1, dtype=np.float64)
