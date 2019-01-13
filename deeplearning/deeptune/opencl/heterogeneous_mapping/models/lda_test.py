@@ -15,12 +15,12 @@ FLAGS = flags.FLAGS
 
 
 @pytest.fixture(scope='function')
-def g() -> nx.DiGraph:
+def g() -> llvm_util.LlvmControlFlowGraph:
   """Test fixture that returns a graph."""
-  g = nx.DiGraph()
-  g.add_node(0, inst2vec=np.array([1, 2, 3]))
+  g = llvm_util.LlvmControlFlowGraph()
+  g.add_node(0, inst2vec=np.array([1, 2, 3]), entry=True)
   g.add_node(1, inst2vec=np.array([4, 5, 6]))
-  g.add_node(2, inst2vec=np.array([7, 8, 9]))
+  g.add_node(2, inst2vec=np.array([7, 8, 9]), exit=True)
   g.add_edge(0, 1)
   g.add_edge(1, 2)
   yield g
@@ -95,20 +95,23 @@ def test_Lda_EncodeGraphs_unique_encoded(single_program_df: pd.DataFrame):
   assert len(uniq_encoded) > 1
 
 
-def test_Lda_GraphToInputTarget_input_graph_node_features(g: nx.DiGraph):
+def test_Lda_GraphToInputTarget_input_graph_node_features(
+      g: llvm_util.LlvmControlFlowGraph):
   """Test input graph node features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
       {'y_1hot': np.array([0, 1])}, g)
 
+  # Each feature vector is a concatenation of [entry, exit, inst2vec]
   np.testing.assert_array_almost_equal(
-      input_graph.nodes[0]['features'], np.array([1, 2, 3]))
+      input_graph.nodes[0]['features'], np.array([1, 0, 1, 2, 3]))
   np.testing.assert_array_almost_equal(
-      input_graph.nodes[1]['features'], np.array([4, 5, 6]))
+      input_graph.nodes[1]['features'], np.array([0, 0, 4, 5, 6]))
   np.testing.assert_array_almost_equal(
-      input_graph.nodes[2]['features'], np.array([7, 8, 9]))
+      input_graph.nodes[2]['features'], np.array([0, 1, 7, 8, 9]))
 
 
-def test_Lda_GraphToInputTarget_target_graph_node_features(g: nx.DiGraph):
+def test_Lda_GraphToInputTarget_target_graph_node_features(
+      g: llvm_util.LlvmControlFlowGraph):
   """Test target graph node features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
       {'y_1hot': np.array([0, 1])}, g)
@@ -121,7 +124,8 @@ def test_Lda_GraphToInputTarget_target_graph_node_features(g: nx.DiGraph):
       target_graph.nodes[2]['features'], np.ones(1))
 
 
-def test_Lda_GraphToInputTarget_input_graph_edge_features(g: nx.DiGraph):
+def test_Lda_GraphToInputTarget_input_graph_edge_features(
+      g: llvm_util.LlvmControlFlowGraph):
   """Test input graph edge features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
       {'y_1hot': np.array([0, 1])}, g)
@@ -132,7 +136,8 @@ def test_Lda_GraphToInputTarget_input_graph_edge_features(g: nx.DiGraph):
       input_graph.edges[1, 2]['features'], np.ones(1))
 
 
-def test_Lda_GraphToInputTarget_target_graph_edge_features(g: nx.DiGraph):
+def test_Lda_GraphToInputTarget_target_graph_edge_features(
+      g: llvm_util.LlvmControlFlowGraph):
   """Test target graph edge features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
       {'y_1hot': np.array([0, 1])}, g)
@@ -143,7 +148,8 @@ def test_Lda_GraphToInputTarget_target_graph_edge_features(g: nx.DiGraph):
       target_graph.edges[1, 2]['features'], np.ones(1))
 
 
-def test_Lda_GraphToInputTarget_input_graph_global_features(g: nx.DiGraph):
+def test_Lda_GraphToInputTarget_input_graph_global_features(
+      g: llvm_util.LlvmControlFlowGraph):
   """Test input graph global features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
       {'y_1hot': np.array([0, 1])}, g)
@@ -152,7 +158,8 @@ def test_Lda_GraphToInputTarget_input_graph_global_features(g: nx.DiGraph):
       input_graph.graph['features'], np.ones(1))
 
 
-def test_Lda_GraphToInputTarget_target_graph_global_features(g: nx.DiGraph):
+def test_Lda_GraphToInputTarget_target_graph_global_features(
+      g: llvm_util.LlvmControlFlowGraph):
   """Test target graph global features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
       {'y_1hot': np.array([0, 1])}, g)
@@ -183,9 +190,9 @@ def test_Lda_GraphsToInputTargets_node_features_entry_exit_blocks(
   node_features = np.vstack(
       [d['features'] for _, d in input_graphs[0].nodes(data=True)])
   # The 'entry' and 'exit' blocks are the first two elements of the feature
-  # vector. Only a single value should be set for each.
-  assert sum(node_features[0]) == 1
-  assert sum(node_features[1]) == 1
+  # vector. Only a single value in each column should be set.
+  assert sum(node_features[:,0]) == pytest.approx(1)
+  assert sum(node_features[:,1]) == pytest.approx(1)
 
 
 def test_Lda_GraphsToInputTargets_node_features_dtype(
