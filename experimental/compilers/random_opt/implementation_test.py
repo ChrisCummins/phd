@@ -19,7 +19,13 @@ def test_BytecodesAreEqual(tempdir: pathlib.Path):
   with open(src, 'w') as f:
     f.write("""
 int DoFoo(int x) {
-  return 2 * x;
+  // Easily optimizable code: true branch is not reachable, therefore always
+  // return 1, and probably inline calls to DoFoo with const 1.
+  if (0) {{
+    return 2 * x;
+  }} else {{
+    return 1;
+  }}
 }
 
 int main(int argc, char** argv) {
@@ -27,7 +33,8 @@ int main(int argc, char** argv) {
 }
 """)
 
-  clang.Exec([str(src), '-o', str(a), '-O0', '-S', '-c', '-emit-llvm'])
+  p = clang.Exec([str(src), '-o', str(a), '-O0', '-S', '-c', '-emit-llvm'])
+  assert not p.returncode  # Sanity check that compilation succeeded.
   clang.Exec([str(src), '-o', str(a_opt), '-O3', '-S', '-c', '-emit-llvm'])
   clang.Exec([str(src), '-o', str(b), '-O0', '-S', '-c', '-emit-llvm'])
   clang.Exec([str(src), '-o', str(b_opt), '-O3', '-S', '-c', '-emit-llvm'])
@@ -50,7 +57,13 @@ def test_BinariesAreEqual(tempdir: pathlib.Path):
   with open(src, 'w') as f:
     f.write("""
 int DoFoo(int x) {
-  return 2 * x;
+  // Easily optimizable code: true branch is not reachable, therefore always
+  // return 1, and probably inline calls to DoFoo with const 1.
+  if (0) {{
+    return 2 * x;
+  }} else {{
+    return 1;
+  }}
 }
 
 int main(int argc, char** argv) {
@@ -58,7 +71,8 @@ int main(int argc, char** argv) {
 }
 """)
 
-  clang.Exec([str(src), '-o', str(a), '-O0'])
+  p = clang.Exec([str(src), '-o', str(a), '-O0'])
+  assert not p.returncode  # Sanity check that compilation succeeded.
   clang.Exec([str(src), '-o', str(a_opt), '-O3'])
   clang.Exec([str(src), '-o', str(b), '-O0'])
   clang.Exec([str(src), '-o', str(b_opt), '-O3'])
