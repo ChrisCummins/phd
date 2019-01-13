@@ -26,7 +26,9 @@ def ryangosling() -> machine.Machine:
 
 def test_Ryangosling_mirrored_directories(ryangosling: machine.Machine):
   """Test that mirrored directories exists."""
-  assert len(ryangosling.mirrored_directories) == 5
+  # FRAGILE TEST: This may need to be updated whenever
+  # //system/machines/ryangosling/ryangosling.pbtxt is modified!
+  assert len(ryangosling.mirrored_directories) == 6
 
 
 @pytest.mark.diana
