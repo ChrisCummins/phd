@@ -1,4 +1,20 @@
-"""Dataset of GitHub C repos mined by //datasets/github/scrape_repos"""
+"""Dataset of GitHub C repos mined by //datasets/github/scrape_repos.
+
+Usage:
+
+  bazel run //experimental/compilers/reachability/datasets:github
+      -- --cf=sqlite:////path/to/db.db
+      --db='file:///path/to/db.mysql?reachability?charset=utf8'
+      --lang=opencl
+
+**NOTE ON MYSQL BACKEND** When using MySQL as the `--db` backend, I found that
+I was occasionally getting errors about write size. To fix this, set a larger
+buffer and packet values:
+
+  $ mysql
+  mysql> set global net_buffer_length=1000000;
+  mysql> set global max_allowed_packet=1000000000;
+"""
 import humanize
 import multiprocessing
 import typing
