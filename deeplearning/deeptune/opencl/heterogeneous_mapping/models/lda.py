@@ -15,6 +15,7 @@ from graph_nets import utils_tf as graph_net_utils_tf
 from graph_nets.demos import models as gn_models
 
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
+from deeplearning.deeptune.opencl.heterogeneous_mapping import utils
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import base
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import ncc
 from deeplearning.ncc import inst2vec_pb2
@@ -96,10 +97,12 @@ class Lda(base.HeterogeneousMappingModel):
     self.model = gn_models.EncodeProcessDecode(global_output_size=2)
 
     # Extract input and target graphs from the full dataset.
-    full_df = opencl_device_mapping_dataset.OpenClDeviceMappingsDataset().df
-    input_graphs, target_graphs = self.GraphsToInputTargets(
+    full_df = utils.AddClassificationTargetToDataFrame(
+        opencl_device_mapping_dataset.OpenClDeviceMappingsDataset().df,
+        "amd_tahiti_7970")
+    input_graphs, target_graphs = zip(*self.GraphsToInputTargets(
         self.EncodeGraphs(
-            self.ExtractGraphs(full_df)))
+            self.ExtractGraphs(full_df))))
 
     # Create the placeholders.
     placeholders = self.CreatePlaceholdersFromGraphs(
@@ -194,7 +197,8 @@ class Lda(base.HeterogeneousMappingModel):
           normalized_embedding_matrix, embedding_lookup_input_ph)
 
       with tf.Session() as session:
-        for row, graph in data:
+        for i, (row, graph) in enumerate(data):
+          logging.info('Encoding graph %d %s', i, row['program:benchmark_name'])
           yield row, self.EncodeGraph(
               graph, vocab, session, embedding_lookup_op,
               embedding_lookup_input_ph)
@@ -419,7 +423,7 @@ class Lda(base.HeterogeneousMappingModel):
         input_graphs, force_dynamic_num_graphs=True)
     target_ph = graph_net_utils_tf.placeholders_from_networkxs(
         target_graphs, force_dynamic_num_graphs=True)
-    return input_ph, target_ph
+    return InputTargetValue(input_ph, target_ph)
 
   def CreateFeedDict(self, graphs: InputTargetValue):
     """Creates placeholders for the model training and evaluation.

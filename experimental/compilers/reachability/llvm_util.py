@@ -43,7 +43,7 @@ def DotCfgsFromBytecode(
       # binary bitcode, which we completely ignore (we're only interested in
       # stderr). This means we must encode stdin and decode stderr ourselves.
       process = opt.Exec(['-dot-cfg'], stdin=bytecode.encode('utf-8'),
-                         universal_newlines=False)
+                         universal_newlines=False, log=False)
       stderr = process.stderr.decode('utf-8')
 
       # Propagate failures from opt as OptExceptions.

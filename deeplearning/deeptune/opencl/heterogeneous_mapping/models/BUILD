@@ -65,6 +65,7 @@ py_library(
     deps = [
         ":base",
         ":ncc",
+        "//deeplearning/deeptune/opencl/heterogeneous_mapping:utils",
         "//deeplearning/ncc:task_utils",
         "//deeplearning/ncc:vocabulary",
         "//experimental/compilers/reachability:llvm_util",
@@ -78,7 +79,7 @@ py_library(
 
 py_test(
     name = "lda_test",
-    timeout = "long",
+    timeout = "eternal",
     srcs = ["lda_test.py"],
     deps = [
         ":models",

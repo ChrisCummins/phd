@@ -51,7 +51,7 @@ def ExtractLlvmByteCodeOrDie(src_file_path: pathlib.Path,
     '-DCLGEN_OPENCL_SHIM_NO_COMMON_TYPES',
     '-DCLGEN_OPENCL_SHIM_NO_UNSUPPORTED_STORAGE_CLASSES_AND_QUALIFIERS',
   ]
-  process = clang.Exec(clang_args, stdin=src)
+  process = clang.Exec(clang_args, stdin=src, log=False)
   if process.returncode:
     logging.error("Failed to compile %s", src_file_path)
     logging.error("stderr: %s", process.stderr)
