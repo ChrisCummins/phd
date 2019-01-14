@@ -4,6 +4,7 @@
       <w>absl</w>
       <w>acaces</w>
       <w>arange</w>
+      <w>arduino</w>
       <w>basenames</w>
       <w>bazel</w>
       <w>bazelutil</w>
@@ -82,6 +83,7 @@
       <w>printf</w>
       <w>proc</w>
       <w>protos</w>
+      <w>pullup</w>
       <w>pytest</w>
       <w>randchar</w>
       <w>reachability</w>
