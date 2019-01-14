@@ -33,11 +33,10 @@ platformio_library(
 platformio_project(
     name = "arduino_uno_program",
     src = "arduino_uno_program.cc",
-    board = "megaatmega2560",
+    board = "uno",
     # If you need to you can pass multiple string key-value pairs directly
     # to PlatformIO. All of these will appear under the environment section in
-    # the generated platformio.ini file. That would be "[env:megaatmega2560]" in
-    # this example. For the available options see:
+    # the generated platformio.ini file. For the available options see:
     # http://docs.platformio.org/en/stable/projectconf.html
     environment_kwargs = {
         "board_build.f_cpu": "16000000L",
