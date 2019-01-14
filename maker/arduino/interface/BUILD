@@ -24,6 +24,7 @@ platformio_library(
 
 cc_library(
     name = "mock_arduino_interface",
+    testonly = 1,
     hdrs = ["mock_arduino_interface.h"],
     visibility = ["//maker/arduino:__subpackages__"],
     deps = [
