@@ -7,12 +7,13 @@ namespace arduino {
 
 ArduinoImpl::~ArduinoImpl() {}
 
-DigitalValue ArduinoImpl::DigitalRead(uint8_t pin) const {
-  return digitalRead(pin) ? DigitalValue::High() : DigitalValue::Low();
+DigitalValue ArduinoImpl::DigitalRead(const Pin& pin) const {
+  return digitalRead(uint8_t(pin)) ? DigitalValue::High() : DigitalValue::Low();
 }
 
-void ArduinoImpl::DigitalWrite(uint8_t pin, const DigitalValue& value) const {
-  return digitalWrite(pin, uint8_t(value));
+void ArduinoImpl::DigitalWrite(
+    const Pin& pin, const DigitalValue& value) const {
+  return digitalWrite(uint8_t(pin), uint8_t(value));
 }
 
 unsigned long ArduinoImpl::Millis(void) const {
@@ -23,10 +24,10 @@ void ArduinoImpl::Delay(unsigned long ms) const {
   delay(ms);
 }
 
-void ArduinoImpl::SetPinMode(uint8_t pin, const PinMode& mode) const {
-  pinMode(pin, uint8_t(mode));
+void ArduinoImpl::SetPinMode(const Pin& pin, const PinMode& mode) const {
+  pinMode(uint8_t(pin), uint8_t(mode));
 }
 
-/* static */ const uint8_t ArduinoInterface::kBuiltInLedPin = LED_BUILTIN;
+/* static */ const Pin ArduinoInterface::kBuiltInLedPin = Pin(LED_BUILTIN);
 
 } // namespace arduino

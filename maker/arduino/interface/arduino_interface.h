@@ -30,9 +30,11 @@
 #ifdef ARDUINO
 #include <Arduino_interface_digital_value.h>
 #include <Arduino_interface_pin_mode.h>
+#include <Arduino_interface_pin.h>
 #else
 #include "maker/arduino/interface/digital_value.h"
 #include "maker/arduino/interface/pin_mode.h"
+#include "maker/arduino/interface/pin.h"
 #endif
 
 #include <stdint.h>
@@ -46,17 +48,18 @@ public:
 
   // Reads the value from a specified digital pin.
   // https://www.arduino.cc/en/Reference/DigitalRead
-  virtual DigitalValue DigitalRead(uint8_t pin) const = 0;
+  virtual DigitalValue DigitalRead(const Pin& pin) const = 0;
 
   // Write a value to a digital pin.
   // https://www.arduino.cc/en/Reference/DigitalWrite
-  virtual void DigitalWrite(uint8_t pin, const DigitalValue& value) const = 0;
+  virtual void DigitalWrite(
+      const Pin& pin, const DigitalValue& value) const = 0;
 
   // Returns the number of milliseconds since the Arduino board began running
   // the current program. This number will overflow (go back to zero), after
   // approximately 50 days.
   // https://www.arduino.cc/en/Reference/Millis
-  virtual unsigned long Millis(void) const = 0;
+  virtual unsigned long Millis() const = 0;
 
   // Pauses the program for the amount of time (in miliseconds) specified as
   // parameter. (There are 1000 milliseconds in a second.)
@@ -65,10 +68,10 @@ public:
 
   // Configures the specified pin to behave either as an input or an output.
   // https://www.arduino.cc/en/Reference/PinMode
-  virtual void SetPinMode(uint8_t pin, const PinMode& mode) const = 0;
+  virtual void SetPinMode(const Pin& pin, const PinMode& mode) const = 0;
 
   // The pin number of the built in LED.
-  static const uint8_t kBuiltInLedPin;
+  static const Pin kBuiltInLedPin;
 };
 
 } // namespace arduino

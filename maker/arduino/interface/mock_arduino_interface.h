@@ -11,11 +11,11 @@ namespace arduino {
 // A mock of the ArduinoInterface.
 class MockArduinoInterface : public ArduinoInterface {
 public:
-  MOCK_CONST_METHOD1(DigitalRead, DigitalValue(uint8_t pin));
-  MOCK_CONST_METHOD2(DigitalWrite, void(uint8_t pin, const DigitalValue& value));
+  MOCK_CONST_METHOD1(DigitalRead, DigitalValue(const Pin& pin));
+  MOCK_CONST_METHOD2(DigitalWrite, void(const Pin& pin, const DigitalValue& value));
   MOCK_CONST_METHOD0(Millis, unsigned long());
   MOCK_CONST_METHOD1(Delay, void(unsigned long ms));
-  MOCK_CONST_METHOD2(SetPinMode, void(uint8_t pin, const PinMode& mode));
+  MOCK_CONST_METHOD2(SetPinMode, void(const Pin& pin, const PinMode& mode));
 };
 
 } // namespace arduino

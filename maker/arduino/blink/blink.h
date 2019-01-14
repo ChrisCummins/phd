@@ -12,13 +12,10 @@
 namespace arduino {
 namespace blink {
 
-// The pin number of the LED to flash.
-static const uint8_t kLedToFlash = 13;
-
 // Set a pin high, weight for a number of milliseconds, then set the pin the low
 // and weight for another number of milliseconds.
 template<typename ArduinoInterface>
-void HighDelayLow(const ArduinoInterface& interface, const uint8_t& pin,
+void HighDelayLow(const ArduinoInterface& interface, const Pin& pin,
                   const int high_duration_ms, const int low_duration_ms) {
   interface.DigitalWrite(pin, DigitalValue::High());
   interface.Delay(high_duration_ms);

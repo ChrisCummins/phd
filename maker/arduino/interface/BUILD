@@ -8,6 +8,7 @@ cc_library(
     visibility = ["//maker/arduino:__subpackages__"],
     deps = [
         ":digital_value",
+        ":pin",
         ":pin_mode",
     ],
 )
@@ -18,6 +19,7 @@ platformio_library(
     visibility = ["//maker/arduino:__subpackages__"],
     deps = [
         ":Arduino_interface_digital_value",
+        ":Arduino_interface_pin",
         ":Arduino_interface_pin_mode",
     ],
 )
@@ -54,6 +56,18 @@ platformio_library(
     name = "Arduino_interface_digital_value",
     src = "digital_value_hardware.cc",
     hdr = "digital_value.h",
+)
+
+# Pin.
+
+cc_library(
+    name = "pin",
+    hdrs = ["pin.h"],
+)
+
+platformio_library(
+    name = "Arduino_interface_pin",
+    hdr = "pin.h",
 )
 
 # Pin mode.

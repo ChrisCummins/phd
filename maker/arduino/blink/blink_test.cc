@@ -12,14 +12,16 @@ using ::testing::AtLeast;
 
 TEST(Setup, PinModeIsCalled) {
   Blink<MockArduinoInterface> program;
-  EXPECT_CALL(program.interface(), SetPinMode(kLedToFlash, _)).Times(1);
+  EXPECT_CALL(program.interface(),
+              SetPinMode(MockArduinoInterface::kBuiltInLedPin, _)).Times(1);
   program.Setup();
 }
 
 TEST(Loop, DigitalWriteIsCalled) {
   Blink<MockArduinoInterface> program;
-  EXPECT_CALL(program.interface(), DigitalWrite(kLedToFlash, _)).Times(
-      AtLeast(2));
+  EXPECT_CALL(program.interface(),
+              DigitalWrite(MockArduinoInterface::kBuiltInLedPin, _))
+              .Times(AtLeast(2));
   program.Loop();
 }
 
