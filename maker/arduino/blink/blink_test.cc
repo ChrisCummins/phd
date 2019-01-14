@@ -8,6 +8,7 @@ namespace blink {
 namespace {
 
 using ::testing::_;
+using ::testing::AtLeast;
 
 TEST(Setup, PinModeIsCalled) {
   Blink<MockArduinoInterface> program;
@@ -15,15 +16,16 @@ TEST(Setup, PinModeIsCalled) {
   program.Setup();
 }
 
-TEST(Loop, DigitalWriteIsCalledTwice) {
+TEST(Loop, DigitalWriteIsCalled) {
   Blink<MockArduinoInterface> program;
-  EXPECT_CALL(program.interface(), DigitalWrite(kLedToFlash, _)).Times(2);
+  EXPECT_CALL(program.interface(), DigitalWrite(kLedToFlash, _)).Times(
+      AtLeast(2));
   program.Loop();
 }
 
-TEST(Loop, DelayIsCalledTwice) {
+TEST(Loop, DelayIsCalled) {
   Blink<MockArduinoInterface> program;
-  EXPECT_CALL(program.interface(), Delay(_)).Times(2);
+  EXPECT_CALL(program.interface(), Delay(_)).Times(AtLeast(2));
   program.Loop();
 }
 
