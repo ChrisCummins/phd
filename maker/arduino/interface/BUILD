@@ -26,6 +26,7 @@ cc_library(
     name = "mock_arduino_interface",
     testonly = 1,
     hdrs = ["mock_arduino_interface.h"],
+    srcs = ["mock_arduino_interface.cc"],
     visibility = ["//maker/arduino:__subpackages__"],
     deps = [
         ":arduino_interface",

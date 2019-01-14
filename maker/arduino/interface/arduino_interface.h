@@ -66,6 +66,9 @@ public:
   // Configures the specified pin to behave either as an input or an output.
   // https://www.arduino.cc/en/Reference/PinMode
   virtual void SetPinMode(uint8_t pin, const PinMode& mode) const = 0;
+
+  // The pin number of the built in LED.
+  static const uint8_t kBuiltInLedPin;
 };
 
 } // namespace arduino

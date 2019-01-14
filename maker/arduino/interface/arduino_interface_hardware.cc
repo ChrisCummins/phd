@@ -27,4 +27,6 @@ void ArduinoImpl::SetPinMode(uint8_t pin, const PinMode& mode) const {
   pinMode(pin, uint8_t(mode));
 }
 
+/* static */ const uint8_t ArduinoInterface::kBuiltInLedPin = LED_BUILTIN;
+
 } // namespace arduino
