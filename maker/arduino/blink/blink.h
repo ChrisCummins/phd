@@ -35,7 +35,7 @@ class Blink {
     interface_.Delay(kDelayMilliseconds);
   }
 
-  const ArduinoInterface interface() const { return interface_; }
+  const ArduinoInterface& interface() const { return interface_; }
 
  private:
   const ArduinoInterface interface_;
