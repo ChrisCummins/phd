@@ -73,7 +73,7 @@ class HeterogeneousMappingExperiment(object):
     print(df.groupby(['Platform'])[
             'Platform', 'Correct?', 'Speedup'].mean())
     print("Results ...")
-    print(df['Platform', 'Correct?', 'Speedup'].mean())
+    print(df[['Platform', 'Correct?', 'Speedup']].mean())
     print(f'=== END {model_class.__name__} =================================\n')
 
 
