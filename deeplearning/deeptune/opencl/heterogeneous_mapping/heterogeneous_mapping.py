@@ -88,6 +88,9 @@ def main(argv: typing.List[str]):
   print(experiment.atomizer)
 
   for model in models.ALL_MODELS:
+    # TODO(cec): Re-enable LDA once it's implemented.
+    if model == models.Lda:
+      continue
     experiment.PrintResultsSummary(model)
 
 
