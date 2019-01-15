@@ -6,9 +6,8 @@ package(default_visibility = ["//visibility:public"])
 
 licenses(["restricted"])  # GPL v2.
 
-
 platformio_library(
     name = "LiquidCrystal",
-    hdr = "src/LiquidCrystal.h",
     src = "src/LiquidCrystal.cpp",
+    hdr = "src/LiquidCrystal.h",
 )
