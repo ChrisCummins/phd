@@ -59,14 +59,13 @@ def ExtractLlvmByteCodeOrDie(src_file_path: pathlib.Path,
   return process.stdout
 
 
-def _EncodeSourceBatchOrDie(src_file_paths, vocab, datafolder):
+def _EncodeSourceBatchOrDie(src_file_paths, datafolder):
   batch = []
 
   for src_file_path in src_file_paths:
-    logging.info('Compiling and encoding %s', src_file_path.name)
+    logging.info('Compiling %s', src_file_path.name)
     bytecode = ExtractLlvmByteCodeOrDie(src_file_path, datafolder)
-    batch.append((src_file_path,
-                  list(vocab.EncodeLlvmBytecode(bytecode).encoded)))
+    batch.append((src_file_path, bytecode))
 
   return batch
 
@@ -89,12 +88,14 @@ def EncodeAndPadSourcesWithInst2Vec(
   # Chunk the srcs and process in parallel.
   srcs_per_process = 16
   encode_args = [
-    (src_paths[i:i + srcs_per_process], vocab, datafolder)
+    (src_paths[i:i + srcs_per_process], datafolder)
     for i in range(0, len(src_paths), srcs_per_process)
   ]
   batches = multiprocessing.Pool().starmap(_EncodeSourceBatchOrDie, encode_args)
   for batch in batches:
-    for src_file_path, sequence in batch:
+    for src_file_path, bytecode in batch:
+      logging.info('Encoding %s', src_file_path.name)
+      sequence = list(vocab.EncodeLlvmBytecode(bytecode).encoded)
       src_path_to_sequence[src_file_path] = sequence
 
   for _, row in df.iterrows():
