@@ -58,6 +58,24 @@ class HeterogeneousMappingExperiment(object):
         workdir=self._cache_dir,
         seed=0x204)
 
+  def PrintResultsSummary(self, model_class: typing.Type) -> None:
+    """Evaluate and print summary of model results.
+
+    Args:
+      model_class: The model class to evaluate.
+    """
+    df = self.ResultsDataFrame(model_class)
+    print(f'\n=== {model_class.__name__} =====================================')
+    print("Results by benchmark suite ...")
+    print(df.groupby(['Platform', 'Benchmark Suite'])[
+            'Platform', 'Correct?', 'Speedup'].mean())
+    print("Results by platform ...")
+    print(df.groupby(['Platform'])[
+            'Platform', 'Correct?', 'Speedup'].mean())
+    print("Results ...")
+    print(df['Platform', 'Correct?', 'Speedup'].mean())
+    print(f'=== END {model_class.__name__} =================================\n')
+
 
 def main(argv: typing.List[str]):
   """Main entry point."""
@@ -67,26 +85,10 @@ def main(argv: typing.List[str]):
   experiment = HeterogeneousMappingExperiment(
       pathlib.Path(FLAGS.cache_directory))
 
-  # TODO(cec): Support dead code augmentation.
-  # return self.dataset.AugmentWithDeadcodeMutations(
-  #     rand=np.random.RandomState(0xCEC),
-  #     num_permutations_of_kernel=5,
-  #     mutations_per_kernel_min_max=(1, 5))
-
   print(experiment.atomizer)
 
   for model in models.ALL_MODELS:
-    df = experiment.ResultsDataFrame(model)
-    print(f'\n=== {model.__name__} ===========================================')
-    print("Results by benchmark suite ...")
-    print(df.groupby(['Platform', 'Benchmark Suite'])[
-            'Platform', 'Correct?', 'Speedup'].mean())
-    print("Results by platform ...")
-    print(df.groupby(['Platform'])[
-            'Platform', 'Correct?', 'Speedup'].mean())
-    print("Results ...")
-    print(df['Platform', 'Correct?', 'Speedup'].mean())
-    print(f'=== END {model.__name__} =======================================\n')
+    experiment.PrintResultsSummary(model)
 
 
 if __name__ == '__main__':
