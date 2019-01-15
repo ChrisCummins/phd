@@ -1,6 +1,7 @@
 #pragma once
 
 #include "maker/arduino/interface/arduino_interface.h"
+#include "maker/arduino/interface/mock_liquid_crystal.h"
 
 #include "gmock/gmock.h"
 

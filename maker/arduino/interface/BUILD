@@ -32,6 +32,16 @@ cc_library(
     visibility = ["//maker/arduino:__subpackages__"],
     deps = [
         ":arduino_interface",
+        ":mock_liquid_crystal",
+        "@gtest",
+    ],
+)
+
+cc_library(
+    name = "mock_liquid_crystal",
+    testonly = 1,
+    hdrs = ["mock_liquid_crystal.h"],
+    deps = [
         "@gtest",
     ],
 )
