@@ -104,13 +104,14 @@ class Lda(base.HeterogeneousMappingModel):
         self.EncodeGraphs(
             self.ExtractGraphs(full_df))))
 
+    num_processing_steps = self.GetNumberOfMessagePassingSteps(
+        input_graphs, target_graphs)
+
     # Create the placeholders.
     placeholders = self.CreatePlaceholdersFromGraphs(
         input_graphs, target_graphs)
 
     # TODO(cec): Consider whether this should be an __init__ arg.
-    num_processing_steps = self.GetNumberOfMessagePassingSteps(
-        input_graphs, target_graphs)
     self.num_processing_steps = TrainTestValue(
         num_processing_steps, num_processing_steps)
 
@@ -175,7 +176,9 @@ class Lda(base.HeterogeneousMappingModel):
                 self.ExtractGraphs(df)))))
     # TODO(cec): Implement.
     checkpoint_dir = '/tmp'
-    feed_dict = self.CreateFeedDict(graphs)
+    feed_dict = self.CreateFeedDict(
+        graphs.input, graphs.target, self.placeholders.input,
+        self.placeholders.target)
     session_opts = {
       'is_chief': True,
       'checkpoint_dir': checkpoint_dir,
@@ -442,7 +445,8 @@ class Lda(base.HeterogeneousMappingModel):
         target_graphs, force_dynamic_num_graphs=True)
     return InputTargetValue(input_ph, target_ph)
 
-  def CreateFeedDict(self, graphs: InputTargetValue):
+  @staticmethod
+  def CreateFeedDict(input_graphs, target_graphs, input_ph, target_ph):
     """Creates placeholders for the model training and evaluation.
 
     Args:
@@ -451,10 +455,10 @@ class Lda(base.HeterogeneousMappingModel):
     Returns:
         The feed `dict` of input and target placeholders and data.
     """
-    input_graphs = graph_net_utils_np.networkxs_to_graphs_tuple(graphs.input)
-    target_graphs = graph_net_utils_np.networkxs_to_graphs_tuple(graphs.target)
+    input_graphs = graph_net_utils_np.networkxs_to_graphs_tuple(input_graphs)
+    target_graphs = graph_net_utils_np.networkxs_to_graphs_tuple(target_graphs)
     feed_dict = {
-      self.placeholders.input: input_graphs,
-      self.placeholders.target: target_graphs
+      input_ph: input_graphs,
+      target_ph: target_graphs
     }
     return feed_dict
