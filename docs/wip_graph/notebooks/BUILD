@@ -18,7 +18,7 @@ py_binary(
     name = "04_train_model",
     srcs = ["04_train_model.py"],
     deps = [
-        "//deeplearning/deeptune/opencl/heterogeneous_mapping:utils",
+        "//deeplearning/deeptune/opencl/heterogeneous_mapping",
         "//deeplearning/deeptune/opencl/heterogeneous_mapping/models",
         "//labm8:prof",
         "//third_party/py/absl",
