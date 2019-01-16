@@ -63,7 +63,7 @@ def _EncodeSourceBatchOrDie(src_file_paths, datafolder):
   batch = []
 
   for src_file_path in src_file_paths:
-    logging.info('Compiling %s', src_file_path.name)
+    logging.debug('Compiling %s', src_file_path.name)
     bytecode = ExtractLlvmByteCodeOrDie(src_file_path, datafolder)
     batch.append((src_file_path, bytecode))
 
@@ -94,7 +94,7 @@ def EncodeAndPadSourcesWithInst2Vec(
   batches = multiprocessing.Pool().starmap(_EncodeSourceBatchOrDie, encode_args)
   for batch in batches:
     for src_file_path, bytecode in batch:
-      logging.info('Encoding %s', src_file_path.name)
+      logging.debug('Encoding %s', src_file_path.name)
       sequence = list(vocab.EncodeLlvmBytecode(bytecode).encoded)
       src_path_to_sequence[src_file_path] = sequence
 
@@ -107,9 +107,9 @@ def EncodeAndPadSourcesWithInst2Vec(
 
   if max_sequence_len is None:
     max_sequence_len = max(sequence_lengths)
-  logging.info('Sequence lengths: min=%d, avg=%.2f, max=%d',
-               min(sequence_lengths), np.mean(sequence_lengths),
-               max_sequence_len)
+  logging.debug('Sequence lengths: min=%d, avg=%.2f, max=%d',
+                min(sequence_lengths), np.mean(sequence_lengths),
+                max_sequence_len)
 
   encoded = np.array(keras_sequence.pad_sequences(
       sequences, maxlen=max_sequence_len, value=vocab.unknown_token_index))
