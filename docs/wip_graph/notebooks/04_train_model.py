@@ -151,7 +151,7 @@ def main(argv):
       test_values = sess.run({
         "step": step_op,
         "target": target_ph,
-        "loss": loss_op_tr,
+        "loss": loss_op_ge,
         "outputs": output_ops_tr
       }, feed_dict=feed_dict)
 
