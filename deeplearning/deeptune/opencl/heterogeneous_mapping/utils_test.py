@@ -47,5 +47,13 @@ def test_TrainTestSplitGenerator_dataframe_types(full_df: pd.DataFrame):
     assert isinstance(split.test_df, pd.DataFrame)
 
 
+def test_TrainTestSplitGenerator_custom_split_count(full_df: pd.DataFrame):
+  """Test that 2 * split_count splits is returned."""
+  # The reason that twice as many splits are returned as requested is because
+  # there are two devices.
+  splits = utils.TrainTestSplitGenerator(full_df, 0, split_count=5)
+  assert len(list(splits)) == 10
+
+
 if __name__ == '__main__':
   test.Main()

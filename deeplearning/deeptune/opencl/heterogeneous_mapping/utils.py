@@ -65,14 +65,14 @@ TrainTestSplit = collections.namedtuple(
     'TrainTestSplit', ['i', 'train_df', 'test_df', 'gpu_name'])
 
 
-def TrainTestSplitGenerator(df: pd.DataFrame, seed: int):
+def TrainTestSplitGenerator(df: pd.DataFrame, seed: int, split_count: int = 10):
   for gpu_name in ["amd_tahiti_7970", "nvidia_gtx_960"]:
     # Add the classification target columns `y` and `y_1hot`.
     df = AddClassificationTargetToDataFrame(df, gpu_name).reset_index()
 
     # Split into train/test indices for stratified 10-fold cross-validation.
     dataset_splitter = model_selection.StratifiedKFold(
-        n_splits=10, shuffle=True, random_state=seed)
+        n_splits=split_count, shuffle=True, random_state=seed)
     dataset_splits = dataset_splitter.split(np.zeros(len(df)), df['y'].values)
 
     for i, (train_index, test_index) in enumerate(dataset_splits):
