@@ -2045,3 +2045,28 @@ class DnsTest(Task):
       mkdir("~/.local/bin")
       shell("wget '{url}' -O ~/.local/bin/dnstest".format(url=url))
       shell('chmod +x ~/.local/bin/dnstest')
+
+
+class PlatformIO(Task):
+  """ Command line tools for building Arduino code. """
+  # See https://platformio.org/
+  __platforms__ = ['linux', 'osx']
+  __deps__ = ['Python']
+  __genfiles__ = ['/usr/local/bin/platformio']
+  __versions__ = {
+    'platformio': '3.6.3'
+  }
+
+  def install_linux(self):
+    self.install()
+    # Linuxbrew installs binaries in ~linuxbrew/.linuxbrew/bin, but the
+    # bazel platformio rules are hardcoded to use only path /usr/local/bin.
+    symlink('/usr/local/bin/platformio',
+            '/home/linuxbrew/.linuxbrew/bin/platformio')
+
+  def install(self):
+    Python().pip_install("autoenv", self.__versions__['platformio'])
+
+  def uninstall_linux(self):
+    # Remove the symlink we created.
+    os.unlink('/usr/local/bin/platformio')
