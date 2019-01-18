@@ -17,7 +17,7 @@ from deeplearning.deeptune.opencl.heterogeneous_mapping.models import models
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
-    'cache_directory',
+    'adversary_cache_directory',
     '/tmp/phd/deeplearning/deeptune/opencl/heterogeneous_mapping',
     'Path of directory to store cached models and predictions in.')
 
@@ -33,12 +33,12 @@ def main(argv: typing.List[str]):
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
-  assert FLAGS.cache_directory
-  cache_directory = pathlib.Path(FLAGS.cache_directory)
+  assert FLAGS.adversary_cache_directory
+  cache_directory = pathlib.Path(FLAGS.adversary_cache_directory)
   cache_directory.mkdir(parents=True, exist_ok=True)
 
   experiment = heterogeneous_mapping.HeterogeneousMappingExperiment(
-      pathlib.Path(FLAGS.cache_directory))
+      cache_directory)
 
   augmented_df_path = cache_directory / 'augmented_df.pkl'
   if not augmented_df_path.is_file():
