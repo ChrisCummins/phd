@@ -218,7 +218,7 @@ def test_Lda_GraphsToInputTargets_global_features_shape(
   input_graphs, target_graphs = zip(*model.GraphsToInputTargets(
       model.EncodeGraphs(model.ExtractGraphs(single_program_df))))
   assert len(input_graphs) == 1
-  assert input_graphs[0].graph['features'].shape == (1,)
+  assert input_graphs[0].graph['features'].shape == (2,)
   assert target_graphs[0].graph['features'].shape == (2,)
 
 
