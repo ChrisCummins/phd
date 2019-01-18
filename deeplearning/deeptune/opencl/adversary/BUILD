@@ -1,5 +1,17 @@
 # Adverserial counter-examples for sequential modeling of source code.
 
+py_binary(
+    name = "adversary",
+    srcs = ["adversary.py"],
+    deps = [
+        "//deeplearning/deeptune/opencl/heterogeneous_mapping",
+        "//deeplearning/deeptune/opencl/heterogeneous_mapping/models",
+        "//third_party/py/absl",
+        "//third_party/py/numpy",
+        "//third_party/py/pandas",
+    ],
+)
+
 py_library(
     name = "opencl_deadcode_inserter",
     srcs = ["opencl_deadcode_inserter.py"],
