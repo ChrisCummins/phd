@@ -393,17 +393,17 @@ class Lda(base.HeterogeneousMappingModel):
     for node, data in input_graph.nodes(data=True):
       data['features'] = np.concatenate(
           ([graph.IsEntryBlock(node), graph.IsExitBlock(node)],
-           data['inst2vec'])).astype(np.float64)
+           data['inst2vec'])).astype(np.float32)
 
     for _, data in target_graph.nodes(data=True):
-      data['features'] = np.ones(1, dtype=np.float64)
+      data['features'] = np.ones(1, dtype=np.float32)
 
     # Set edge features.
     for _, _, data in input_graph.edges(data=True):
-      data['features'] = np.ones(1, dtype=np.float64)
+      data['features'] = np.ones(1, dtype=np.float32)
 
     for _, _, data in target_graph.edges(data=True):
-      data['features'] = np.ones(1, dtype=np.float64)
+      data['features'] = np.ones(1, dtype=np.float32)
 
     # Set global (graph) features.
 
@@ -413,10 +413,10 @@ class Lda(base.HeterogeneousMappingModel):
     input_graph.graph['features'] = np.array([
       row[f"feature:{gpu_name}:transfer"],
       row[f"param:{gpu_name}:wgsize"],
-    ], dtype=np.float64)
+    ], dtype=np.float32)
 
     # The target graph's features is the optimization target.
-    target_graph.graph['features'] = row['y_1hot'].astype(np.float64)
+    target_graph.graph['features'] = row['y_1hot'].astype(np.float32)
 
     return input_graph, target_graph
 

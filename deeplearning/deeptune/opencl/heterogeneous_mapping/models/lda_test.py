@@ -207,8 +207,8 @@ def test_Lda_GraphsToInputTargets_node_features_dtype(
   input_graphs, target_graphs = zip(*model.GraphsToInputTargets(
       model.EncodeGraphs(model.ExtractGraphs(single_program_df))))
   assert len(input_graphs) == 1
-  assert input_graphs[0].nodes[0]['features'].dtype == np.float64
-  assert target_graphs[0].nodes[0]['features'].dtype == np.float64
+  assert input_graphs[0].nodes[0]['features'].dtype == np.float32
+  assert target_graphs[0].nodes[0]['features'].dtype == np.float32
 
 
 def test_Lda_GraphsToInputTargets_global_features_shape(
@@ -229,8 +229,8 @@ def test_Lda_GraphsToInputTargets_global_features_dtype(
   input_graphs, target_graphs = zip(*model.GraphsToInputTargets(
       model.EncodeGraphs(model.ExtractGraphs(single_program_df))))
   assert len(input_graphs) == 1
-  assert input_graphs[0].graph['features'].dtype == np.float64
-  assert target_graphs[0].graph['features'].dtype == np.float64
+  assert input_graphs[0].graph['features'].dtype == np.float32
+  assert target_graphs[0].graph['features'].dtype == np.float32
 
 
 def test_model(classify_df, classify_df_atomizer):
