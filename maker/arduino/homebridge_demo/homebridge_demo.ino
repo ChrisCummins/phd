@@ -70,6 +70,16 @@ const IPAddress subnet(255, 255, 255, 0);
 // The pin of the LED to control.
 const int led_pin = 15;
 
+// Keep track of the current and target brightness, so that we can smoothly
+// transition between them.
+int current_brightness = 0;
+int target_brightness = 0;
+
+// Configurable fading speed and time.
+const int brightness_step_delta_increase = 1;
+const int brightness_step_delta_decrease = 2;
+const int step_duration_ms = 5;
+
 // Create an instance of the server
 // specify the port to listen on as an argument
 WiFiServer server(80);
@@ -134,10 +144,10 @@ HttpJsonResponse HandleRequest(const String& request_line) {
   };
 
   if (request_line.startsWith("GET /led/off ")) {
-    digitalWrite(led_pin, LOW);
+    target_brightness = 0;
     return HttpJsonResponse {"200 OK", "{ \"message\": \"LED off\" }"};
   } else if (request_line.startsWith("GET /led/on ")) {
-    digitalWrite(led_pin, HIGH);
+    target_brightness = 255;
     return HttpJsonResponse {"200 OK", "{ \"message\": \"LED on\" }"};
   } else if (request_line.startsWith("GET /led/brightness/")) {
     // Strip the start of the request.
@@ -154,7 +164,7 @@ HttpJsonResponse HandleRequest(const String& request_line) {
     const int new_brightness = tail.toInt();
     if (0 <= new_brightness && new_brightness <= 255) {
       // If requested brightness is in range, set it.
-      analogWrite(led_pin, new_brightness);
+      target_brightness = new_brightness;
       return HttpJsonResponse{
           "200 OK",
           (String("{ \"message \": \"Setting LED brightness to ") +
@@ -194,6 +204,30 @@ void loop() {
 
   // Process request and return response.
   auto response = HandleRequest(req);
+
+  // Smoothly transition between brightnesses. This is blocking - the HTTP
+  // reponse won't be transmitted until this has completed. I'm unsure whether
+  // that's the right way to do it, or whether we should instead send the
+  // response first, or whether this loop should be integrated into the outer
+  // loop().
+  while (current_brightness != target_brightness) {
+    // Update brightness value.
+    if (current_brightness < target_brightness) {
+      current_brightness += brightness_step_delta_increase;
+      // Overshoot.
+      if (current_brightness > 255) {
+        current_brightness = 255;
+      }
+    } else if (current_brightness > target_brightness) {
+      current_brightness -= brightness_step_delta_decrease;
+      // Undershoot.
+      if (current_brightness < 0) {
+        current_brightness = 0;
+      }
+    }
+    analogWrite(led_pin, current_brightness);
+    delay(step_duration_ms);
+  }
 
   Serial.println(response.response_line);
   response.SendToClient(client);
