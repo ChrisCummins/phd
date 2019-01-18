@@ -31,8 +31,8 @@ platformio_library(
 )
 
 platformio_project(
-    name = "arduino_uno_program",
-    src = "arduino_uno_program.cc",
+    name = "arduino_uno",
+    src = "arduino_uno.cc",
     board = "uno",
     # If you need to you can pass multiple string key-value pairs directly
     # to PlatformIO. All of these will appear under the environment section in

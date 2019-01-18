@@ -32,8 +32,8 @@ platformio_library(
 )
 
 platformio_project(
-    name = "arduino_uno_program",
-    src = "arduino_uno_program.cc",
+    name = "arduino_uno",
+    src = "arduino_uno.cc",
     board = "uno",
     framework = "arduino",
     platform = "atmelavr",
