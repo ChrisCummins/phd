@@ -58,6 +58,11 @@ class HeterogeneousMappingExperiment(object):
         workdir=self._cache_dir,
         seed=0x204)
 
+  @property
+  def cache_dir(self) -> pathlib.Path:
+    """Return the cache directory."""
+    return self._cache_dir
+
   def PrintResultsSummary(self, model_class: typing.Type) -> None:
     """Evaluate and print summary of model results.
 
