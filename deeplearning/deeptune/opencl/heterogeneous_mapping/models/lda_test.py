@@ -1,5 +1,4 @@
 """Unit tests for //deeplearning/deeptune/opencl/heterogeneous_mapping/models:lda."""
-import networkx as nx
 import numpy as np
 import pandas as pd
 import pytest
@@ -96,10 +95,11 @@ def test_Lda_EncodeGraphs_unique_encoded(single_program_df: pd.DataFrame):
 
 
 def test_Lda_GraphToInputTarget_input_graph_node_features(
-      g: llvm_util.LlvmControlFlowGraph):
+    g: llvm_util.LlvmControlFlowGraph):
   """Test input graph node features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
-      {'y_1hot': np.array([0, 1])}, g)
+      {'y_1hot': np.array([0, 1]), 'target_gpu_name': 'a',
+       'feature:a:transfer': 128, 'param:a:wgsize': 64}, g)
 
   # Each feature vector is a concatenation of [entry, exit, inst2vec]
   np.testing.assert_array_almost_equal(
@@ -111,10 +111,11 @@ def test_Lda_GraphToInputTarget_input_graph_node_features(
 
 
 def test_Lda_GraphToInputTarget_target_graph_node_features(
-      g: llvm_util.LlvmControlFlowGraph):
+    g: llvm_util.LlvmControlFlowGraph):
   """Test target graph node features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
-      {'y_1hot': np.array([0, 1])}, g)
+      {'y_1hot': np.array([0, 1]), 'target_gpu_name': 'a',
+       'feature:a:transfer': 128, 'param:a:wgsize': 64}, g)
 
   np.testing.assert_array_almost_equal(
       target_graph.nodes[0]['features'], np.ones(1))
@@ -125,10 +126,11 @@ def test_Lda_GraphToInputTarget_target_graph_node_features(
 
 
 def test_Lda_GraphToInputTarget_input_graph_edge_features(
-      g: llvm_util.LlvmControlFlowGraph):
+    g: llvm_util.LlvmControlFlowGraph):
   """Test input graph edge features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
-      {'y_1hot': np.array([0, 1])}, g)
+      {'y_1hot': np.array([0, 1]), 'target_gpu_name': 'a',
+       'feature:a:transfer': 128, 'param:a:wgsize': 64}, g)
 
   np.testing.assert_array_almost_equal(
       input_graph.edges[0, 1]['features'], np.ones(1))
@@ -137,10 +139,11 @@ def test_Lda_GraphToInputTarget_input_graph_edge_features(
 
 
 def test_Lda_GraphToInputTarget_target_graph_edge_features(
-      g: llvm_util.LlvmControlFlowGraph):
+    g: llvm_util.LlvmControlFlowGraph):
   """Test target graph edge features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
-      {'y_1hot': np.array([0, 1])}, g)
+      {'y_1hot': np.array([0, 1]), 'target_gpu_name': 'a',
+       'feature:a:transfer': 128, 'param:a:wgsize': 64}, g)
 
   np.testing.assert_array_almost_equal(
       target_graph.edges[0, 1]['features'], np.ones(1))
@@ -149,20 +152,22 @@ def test_Lda_GraphToInputTarget_target_graph_edge_features(
 
 
 def test_Lda_GraphToInputTarget_input_graph_global_features(
-      g: llvm_util.LlvmControlFlowGraph):
+    g: llvm_util.LlvmControlFlowGraph):
   """Test input graph global features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
-      {'y_1hot': np.array([0, 1])}, g)
+      {'y_1hot': np.array([0, 1]), 'target_gpu_name': 'a',
+       'feature:a:transfer': 128, 'param:a:wgsize': 64}, g)
 
   np.testing.assert_array_almost_equal(
-      input_graph.graph['features'], np.ones(1))
+      input_graph.graph['features'], [128, 64])
 
 
 def test_Lda_GraphToInputTarget_target_graph_global_features(
-      g: llvm_util.LlvmControlFlowGraph):
+    g: llvm_util.LlvmControlFlowGraph):
   """Test target graph global features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
-      {'y_1hot': np.array([0, 1])}, g)
+      {'y_1hot': np.array([0, 1]), 'target_gpu_name': 'a',
+       'feature:a:transfer': 128, 'param:a:wgsize': 64}, g)
 
   np.testing.assert_array_almost_equal(
       target_graph.graph['features'], np.array([0, 1]))
@@ -191,8 +196,8 @@ def test_Lda_GraphsToInputTargets_node_features_entry_exit_blocks(
       [d['features'] for _, d in input_graphs[0].nodes(data=True)])
   # The 'entry' and 'exit' blocks are the first two elements of the feature
   # vector. Only a single value in each column should be set.
-  assert sum(node_features[:,0]) == pytest.approx(1)
-  assert sum(node_features[:,1]) == pytest.approx(1)
+  assert sum(node_features[:, 0]) == pytest.approx(1)
+  assert sum(node_features[:, 1]) == pytest.approx(1)
 
 
 def test_Lda_GraphsToInputTargets_node_features_dtype(

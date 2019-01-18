@@ -412,7 +412,7 @@ class Lda(base.HeterogeneousMappingModel):
     gpu_name = row['target_gpu_name']
     input_graph.graph['features'] = np.array([
       row[f"feature:{gpu_name}:transfer"],
-      row[f"feature:{gpu_name}:wgsize"],
+      row[f"param:{gpu_name}:wgsize"],
     ], dtype=np.float64)
 
     # The target graph's features is the optimization target.

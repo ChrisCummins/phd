@@ -79,7 +79,6 @@ py_library(
 
 py_test(
     name = "lda_test",
-    timeout = "eternal",
     srcs = ["lda_test.py"],
     deps = [
         ":models",
