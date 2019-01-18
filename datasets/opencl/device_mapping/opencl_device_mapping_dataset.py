@@ -225,7 +225,7 @@ class OpenClDeviceMappingsDataset(object):
       self, rand: np.random.RandomState,
       num_permutations_of_kernel: int = 5,
       mutations_per_kernel_min_max: typing.Tuple[int, int] = (1, 5),
-      df: pd.DataFrame = None):
+      df: pd.DataFrame = None) -> pd.DataFrame:
     """Return a table with dead code mutations for each kernel.
 
     This adds num_permutations_of_kernel * len(df) new rows to the data frame,
