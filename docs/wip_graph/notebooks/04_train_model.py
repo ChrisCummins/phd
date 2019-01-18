@@ -47,7 +47,7 @@ def main(argv):
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
   logging.info('Hello!')
-  tf.logging.set_verbosity(tf.logging.INFO)
+  tf.logging.set_verbosity(tf.logging.DEBUG)
 
   # Load graphs from file
   df_path = pathlib.Path(FLAGS.df)
@@ -86,8 +86,8 @@ def main(argv):
   # A list of outputs, one per processing step.
   with prof.Profile('create train model'):
     output_ops_tr = model(input_ph, num_processing_steps)
-  with prof.Profile('create test model'):
-    output_ops_ge = model(input_ph, num_processing_steps)
+  # with prof.Profile('create test model'):
+  #   output_ops_ge = model(input_ph, num_processing_steps)
 
   # Create loss ops.
   with prof.Profile('training loss'):
@@ -95,9 +95,9 @@ def main(argv):
     # Loss across processing steps.
     loss_op_tr = sum(loss_ops_tr) / num_processing_steps
 
-  with prof.Profile('test loss'):
-    loss_ops_ge = lda.CreateLossOps(target_ph, output_ops_ge)
-    loss_op_ge = loss_ops_ge[-1]  # Loss from final processing step.
+  # with prof.Profile('test loss'):
+  #   loss_ops_ge = lda.CreateLossOps(target_ph, output_ops_ge)
+  #   loss_op_ge = loss_ops_ge[-1]  # Loss from final processing step.
 
   # Optimizer and training step.
   with prof.Profile('optimizer'):
@@ -144,22 +144,22 @@ def main(argv):
       with open(path, 'wb') as f:
         pickle.dump(train_values, f)
 
-    with prof.Profile('test step'):
-      feed_dict = lda.CreateFeedDict(
-          split.test_df['lda:input_graph'], split.test_df['lda:target_graph'],
-          input_ph, target_ph)
-      test_values = sess.run({
-        "step": step_op,
-        "target": target_ph,
-        "loss": loss_op_ge,
-        "outputs": output_ops_tr
-      }, feed_dict=feed_dict)
+    # with prof.Profile('test step'):
+    #   feed_dict = lda.CreateFeedDict(
+    #       split.test_df['lda:input_graph'], split.test_df['lda:target_graph'],
+    #       input_ph, target_ph)
+    #   test_values = sess.run({
+    #     "step": step_op,
+    #     "target": target_ph,
+    #     "loss": loss_op_ge,
+    #     "outputs": output_ops_tr
+    #   }, feed_dict=feed_dict)
 
-    with prof.Profile('save file'):
-      path = outdir / f'test_{split.i}.pkl'
-      logging.info('Writing %s', path)
-      with open(path, 'wb') as f:
-        pickle.dump(test_values, f)
+    # with prof.Profile('save file'):
+    #   path = outdir / f'test_{split.i}.pkl'
+    #   logging.info('Writing %s', path)
+    #   with open(path, 'wb') as f:
+    #     pickle.dump(test_values, f)
 
     # TODO(cec): Continue from here.
     break
