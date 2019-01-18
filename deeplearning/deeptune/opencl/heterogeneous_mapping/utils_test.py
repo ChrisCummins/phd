@@ -22,6 +22,7 @@ def test_AddClassificationTargetToDataFrame_ocl_dataset_columns(
     full_df: pd.DataFrame, gpu_name: str):
   """Test that expected columns are added to dataframe."""
   full_df = utils.AddClassificationTargetToDataFrame(full_df, gpu_name)
+  assert 'target_gpu_name' in full_df.columns.values
   assert 'y' in full_df.columns.values
   assert 'y_1hot' in full_df.columns.values
 

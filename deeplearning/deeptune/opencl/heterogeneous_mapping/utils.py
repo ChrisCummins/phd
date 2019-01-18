@@ -53,6 +53,7 @@ def AddClassificationTargetToDataFrame(
     f'runtime:{gpu_name}',
   ]].values
   y = [1 if gpu < cpu else 0 for cpu, gpu in cpu_gpu_runtimes]
+  df['target_gpu_name'] = [gpu_name] * len(df)
   df['y'] = y
   # Add a column which contains a [bool,bool] array with a 1-hot encoded
   # optimal value.
