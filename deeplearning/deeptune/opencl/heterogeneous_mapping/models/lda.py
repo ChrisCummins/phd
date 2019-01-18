@@ -14,8 +14,6 @@ from graph_nets import utils_np as graph_net_utils_np
 from graph_nets import utils_tf as graph_net_utils_tf
 from graph_nets.demos import models as gn_models
 
-from datasets.opencl.device_mapping import opencl_device_mapping_dataset
-from deeplearning.deeptune.opencl.heterogeneous_mapping import utils
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import base
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import ncc
 from deeplearning.ncc import inst2vec_pb2
@@ -96,47 +94,47 @@ class Lda(base.HeterogeneousMappingModel):
     # tf.reset_default_graph()
     self.model = gn_models.EncodeProcessDecode(global_output_size=2)
 
-    # Extract input and target graphs from the full dataset.
-    full_df = utils.AddClassificationTargetToDataFrame(
-        opencl_device_mapping_dataset.OpenClDeviceMappingsDataset().df,
-        "amd_tahiti_7970")
-    input_graphs, target_graphs = zip(*self.GraphsToInputTargets(
-        self.EncodeGraphs(
-            self.ExtractGraphs(full_df))))
-
-    num_processing_steps = self.GetNumberOfMessagePassingSteps(
-        input_graphs, target_graphs)
-
-    # Create the placeholders.
-    placeholders = self.CreatePlaceholdersFromGraphs(
-        input_graphs, target_graphs)
-
-    # TODO(cec): Consider whether this should be an __init__ arg.
-    self.num_processing_steps = TrainTestValue(
-        num_processing_steps, num_processing_steps)
-
-    # A list of outputs, one per processing step.
-    output_ops = TrainTestValue(
-        self.model(placeholders.input, self.num_processing_steps.train),
-        self.model(placeholders.input, self.num_processing_steps.test))
-
-    # Training loss.
-    loss_ops_tr = self.CreateLossOps(placeholders.target, output_ops.train)
-    self.loss_ops = TrainTestValue(
-        # Training loss is across processing steps.
-        sum(loss_ops_tr) / self.num_processing_steps.train,
-        # Test loss is from the final processing step.
-        self.CreateLossOps(placeholders.target, output_ops.test)[-1],
-    )
-
-    # Optimizer.
-    learning_rate = 1e-3
-    optimizer = tf.train.AdamOptimizer(learning_rate)
-    self.train_op = optimizer.minimize(self.loss_ops.train)
-
-    # Lets an iterable of TF graphs be output from a session as NP graphs.
-    self.placeholders = InputTargetValue(
-        *self.MakeRunnableInSession(*placeholders))
+    # # Extract input and target graphs from the full dataset.
+    # full_df = utils.AddClassificationTargetToDataFrame(
+    #     opencl_device_mapping_dataset.OpenClDeviceMappingsDataset().df,
+    #     "amd_tahiti_7970")
+    # input_graphs, target_graphs = zip(*self.GraphsToInputTargets(
+    #     self.EncodeGraphs(
+    #         self.ExtractGraphs(full_df))))
+    #
+    # num_processing_steps = self.GetNumberOfMessagePassingSteps(
+    #     input_graphs, target_graphs)
+    #
+    # # Create the placeholders.
+    # placeholders = self.CreatePlaceholdersFromGraphs(
+    #     input_graphs, target_graphs)
+    #
+    # # TODO(cec): Consider whether this should be an __init__ arg.
+    # self.num_processing_steps = TrainTestValue(
+    #     num_processing_steps, num_processing_steps)
+    #
+    # # A list of outputs, one per processing step.
+    # output_ops = TrainTestValue(
+    #     self.model(placeholders.input, self.num_processing_steps.train),
+    #     self.model(placeholders.input, self.num_processing_steps.test))
+    #
+    # # Training loss.
+    # loss_ops_tr = self.CreateLossOps(placeholders.target, output_ops.train)
+    # self.loss_ops = TrainTestValue(
+    #     # Training loss is across processing steps.
+    #     sum(loss_ops_tr) / self.num_processing_steps.train,
+    #     # Test loss is from the final processing step.
+    #     self.CreateLossOps(placeholders.target, output_ops.test)[-1],
+    # )
+    #
+    # # Optimizer.
+    # learning_rate = 1e-3
+    # optimizer = tf.train.AdamOptimizer(learning_rate)
+    # self.train_op = optimizer.minimize(self.loss_ops.train)
+    #
+    # # Lets an iterable of TF graphs be output from a session as NP graphs.
+    # self.placeholders = InputTargetValue(
+    #     *self.MakeRunnableInSession(*placeholders))
 
   @property
   def embedding_dim(self):
@@ -170,22 +168,22 @@ class Lda(base.HeterogeneousMappingModel):
   def train(self, df: pd.DataFrame, platform_name: str,
             verbose: bool = False) -> None:
     """Train a model."""
-    graphs = InputTargetValue(
-        zip(*self.GraphsToInputTargets(
-            self.EncodeGraphs(
-                self.ExtractGraphs(df)))))
     # TODO(cec): Implement.
-    checkpoint_dir = '/tmp'
-    feed_dict = self.CreateFeedDict(
-        graphs.input, graphs.target, self.placeholders.input,
-        self.placeholders.target)
-    session_opts = {
-      'is_chief': True,
-      'checkpoint_dir': checkpoint_dir,
-      'save_summaries_secs': 10,
-    }
-    with tf.train.MonitoredTrainingSession(session_opts) as sess:
-      pass
+    # graphs = InputTargetValue(
+    #     zip(*self.GraphsToInputTargets(
+    #         self.EncodeGraphs(
+    #             self.ExtractGraphs(df)))))
+    # checkpoint_dir = '/tmp'
+    # feed_dict = self.CreateFeedDict(
+    #     graphs.input, graphs.target, self.placeholders.input,
+    #     self.placeholders.target)
+    # session_opts = {
+    #   'is_chief': True,
+    #   'checkpoint_dir': checkpoint_dir,
+    #   'save_summaries_secs': 10,
+    # }
+    # with tf.train.MonitoredTrainingSession(session_opts) as sess:
+    #   pass
 
   def predict(self, df: pd.DataFrame, platform_name: str,
               verbose: bool = False) -> np.array:
