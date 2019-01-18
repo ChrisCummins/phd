@@ -406,8 +406,16 @@ class Lda(base.HeterogeneousMappingModel):
       data['features'] = np.ones(1, dtype=np.float64)
 
     # Set global (graph) features.
-    input_graph.graph['features'] = np.ones(1, dtype=np.float64)
 
+    # The input graph's features are the auxiliary inputs (dynamic attributes
+    # not captured by code).
+    gpu_name = row['target_gpu_name']
+    input_graph.graph['features'] = np.array([
+      row[f"feature:{gpu_name}:transfer"],
+      row[f"feature:{gpu_name}:wgsize"],
+    ], dtype=np.float64)
+
+    # The target graph's features is the optimization target.
     target_graph.graph['features'] = row['y_1hot'].astype(np.float64)
 
     return input_graph, target_graph
