@@ -6,6 +6,8 @@
 
 // A quick and hacky mock for a handful of the LiquidCrystal class functions I'm
 // using.
+// TODO(cec): Re-write this as a LiquidCrystalInterface, like with
+// ArduinoInterface.
 class LiquidCrystal {
 public:
   LiquidCrystal(uint8_t rs, uint8_t enable,
