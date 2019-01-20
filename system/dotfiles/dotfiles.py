@@ -2033,3 +2033,24 @@ class DnsTest(Task):
       mkdir("~/.local/bin")
       shell("wget '{url}' -O ~/.local/bin/dnstest".format(url=url))
       shell('chmod +x ~/.local/bin/dnstest')
+
+class HomeBridge(Task):
+  """ homebridge server and configuration """
+  __platforms__ = ["linux"]
+  __hosts__ = ["ryangosling"]
+  __deps__ = ['Homebrew', 'Node']
+  __versions__ = {
+    'homebridge': '0.4.45',
+    'homebridge-http': '0.0.9',
+  }
+  __genfiles__ = [
+    Homebrew.bin('homebridge'),
+    '~/.homebridge/config.json'
+  ]
+
+  def install(self):
+    Apt().install_package('libavahi-compat-libdnssd-dev')
+    Node().npm_install('homebridge', self.__versions__['homebridge'])
+    Node().npm_install('homebridge-http', self.__versions__['homebridge-http'])
+    symlink("{private}/homebridge/config.json".format(private=PRIVATE),
+            "~/.homebridge/config.json")
