@@ -327,14 +327,16 @@ def ResolveContentId(config: corpus_pb2.Corpus, hc: hashcache.HashCache) -> str:
 
   start_time = time.time()
   if config.HasField('local_directory'):
+    local_directory = ExpandConfigPath(
+        config.local_directory, path_prefix=FLAGS.clgen_local_path_prefix)
+
     # After the first time we compute the hash of a directory, we write it into
     # a file. This is a shortcut to work around the fact that computing the
     # directory checksum is O(n) with respect to the number of files in the
     # directory (even if the directory is already cached by the hash cache).
     # This means that it is the responsibility of the user to delete this cached
     # file if the directory is changed.
-    hash_file_path = pathlib.Path(
-        str(pathlib.Path(config.local_directory)) + '.sha1.txt')
+    hash_file_path = pathlib.Path(str(local_directory) + '.sha1.txt')
     if hash_file_path.is_file():
       logging.info("Reading directory hash: '%s'.", hash_file_path)
       with open(hash_file_path) as f:
@@ -342,8 +344,7 @@ def ResolveContentId(config: corpus_pb2.Corpus, hc: hashcache.HashCache) -> str:
     else:
       # No hash file, so compute the directory hash and create it.
       try:
-        content_id = hc.GetHash(ExpandConfigPath(
-            config.local_directory, path_prefix=FLAGS.clgen_local_path_prefix))
+        content_id = hc.GetHash(local_directory)
       except FileNotFoundError as e:
         raise errors.UserError(e)
       # Create the hash file in the directory so that next time we don't need
