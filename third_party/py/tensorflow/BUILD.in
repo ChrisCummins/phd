@@ -22,11 +22,3 @@ py_library(
         "//third_party/py/protobuf",
     ],
 )
-
-py_binary(
-    name = "tensorboard",
-    srcs = ["tensorboard.py"],
-    deps = [
-        ":tensorflow",
-    ]
-)
