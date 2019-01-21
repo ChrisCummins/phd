@@ -53,3 +53,20 @@ cc_binary(
     name = "humble-003-vector",
     srcs = ["humble-003-vector.cc"],
 )
+
+cc_test(
+    name = "add_up_to_k",
+    srcs = ["add_up_to_k.cc"],
+    deps = ["//phd:test"],
+)
+
+py_test(
+    name = "serialize_binary_tree",
+    srcs = ["serialize_binary_tree.py"],
+)
+
+cc_test(
+    name = "vector_of_products",
+    srcs = ["vector_of_products.cc"],
+    deps = ["//phd:test"],
+)
