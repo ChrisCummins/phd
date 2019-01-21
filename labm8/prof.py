@@ -146,6 +146,22 @@ def Profile(name: str = '',
 
 
 @contextlib.contextmanager
+def ProfileToFile(file_object, name: str = ''):
+  """A context manager which prints profiling output to a file.
+
+  Args:
+    file_object: A file object to write
+    name: The name of the task being profiled.
+  """
+
+  def _WriteToFile(message: str):
+    """Print message to file, appending a newline."""
+    file_object.write(f'{message}\n')
+
+  yield Profile(name=name, print_to=_WriteToFile)
+
+
+@contextlib.contextmanager
 def ProfileToStdout(name: str = ''):
   """A context manager which prints the elapsed time to stdout on exit.
 
