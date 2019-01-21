@@ -35,10 +35,29 @@ flags.DEFINE_integer('batch_size', 32, 'Batch size')
 flags.DEFINE_integer('num_splits', 10, 'The number of train splits')
 
 
+# Experimental flags.
+
+flags.DEFINE_integer('experimental_force_num_processing_steps', 0,
+                     'If > 0, sets the nummber of processing steps.')
+
+
 def GraphsTupleToStr(graph_tuple):
   """Format and print a GraphTuple"""
   return '\n'.join(
       [f'    {k:10s} {v}' for k, v in graph_tuple._asdict().items()])
+
+
+def CreateVariableSummaries(var):
+  """Attach a lot of summaries to a Tensor (for TensorBoard visualization)."""
+  with tf.name_scope('summaries'):
+    mean = tf.reduce_mean(var)
+    tf.summary.scalar('mean', mean)
+    with tf.name_scope('stddev'):
+      stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
+    tf.summary.scalar('stddev', stddev)
+    tf.summary.scalar('max', tf.reduce_max(var))
+    tf.summary.scalar('min', tf.reduce_min(var))
+    tf.summary.histogram('histogram', var)
 
 
 def main(argv):
@@ -49,13 +68,14 @@ def main(argv):
   logging.info('Hello!')
   tf.logging.set_verbosity(tf.logging.DEBUG)
 
-  # Load graphs from file
+  # Load graphs from file.
   df_path = pathlib.Path(FLAGS.df)
   assert df_path.is_file()
 
   assert FLAGS.outdir
   outdir = pathlib.Path(FLAGS.outdir)
   outdir.mkdir(parents=True, exist_ok=True)
+  (outdir / 'values').mkdir(exist_ok=True, parents=True)
 
   with prof.Profile('load dataframe'):
     df = pd.read_pickle(df_path)
@@ -68,6 +88,8 @@ def main(argv):
   # Get the number of message passing steps.
   num_processing_steps = lda.GetNumberOfMessagePassingSteps(
       df['lda:input_graph'], df['lda:target_graph'])
+  if FLAGS.experimental_force_num_processing_steps:
+    num_processing_steps = FLAGS.experimental_force_num_processing_steps
 
   logging.info('Number of processing steps: %d', num_processing_steps)
 
@@ -84,20 +106,25 @@ def main(argv):
   # Instantiate the model.
   model = gn_models.EncodeProcessDecode(global_output_size=2)
   # A list of outputs, one per processing step.
-  with prof.Profile('create train model'):
+  with prof.Profile('create train model'), tf.name_scope('training_model'):
     output_ops_tr = model(input_ph, num_processing_steps)
-  # with prof.Profile('create test model'):
-  #   output_ops_ge = model(input_ph, num_processing_steps)
+  with prof.Profile('create test model'), tf.name_scope('test_model'):
+    output_ops_ge = model(input_ph, num_processing_steps)
 
   # Create loss ops.
-  with prof.Profile('training loss'):
+  with prof.Profile('training loss'), tf.name_scope('training_loss'):
     loss_ops_tr = lda.CreateLossOps(target_ph, output_ops_tr)
     # Loss across processing steps.
     loss_op_tr = sum(loss_ops_tr) / num_processing_steps
 
-  # with prof.Profile('test loss'):
-  #   loss_ops_ge = lda.CreateLossOps(target_ph, output_ops_ge)
-  #   loss_op_ge = loss_ops_ge[-1]  # Loss from final processing step.
+  with prof.Profile('test loss'), tf.name_scope('test_loss'):
+    loss_ops_ge = lda.CreateLossOps(target_ph, output_ops_ge)
+    # Loss from final processing step.
+    loss_op_ge = loss_ops_ge[-1]
+
+  with tf.name_scope('loss'):
+    CreateVariableSummaries(loss_ops_tr)
+    CreateVariableSummaries(loss_op_ge)
 
   # Optimizer and training step.
   with prof.Profile('optimizer'):
@@ -110,9 +137,18 @@ def main(argv):
     input_ph, target_ph = lda.MakeRunnableInSession(input_ph, target_ph)
 
   # Reset Session.
-
   tf.set_random_seed(FLAGS.seed)
   sess = tf.Session()
+  # sess =  tf.train.SingularMonitoredSession({
+  #   'checkpoint_dir': str(outdir / 'tf_checkpoints'),
+  # })
+
+  # Log writers.
+  merged = tf.summary.merge_all()
+  logging.info("Connect to this session with Tensorboard using: "
+               "python -m tensorboard.main --logdir='%s/tf_logs'", outdir)
+  writer_tr = tf.summary.FileWriter(str(outdir / 'tf_logs/train'), sess.graph)
+  writer_ge = tf.summary.FileWriter(str(outdir / 'tf_logs/test'), sess.graph)
 
   sess.run(tf.global_variables_initializer())
 
@@ -122,9 +158,12 @@ def main(argv):
   splits = utils.TrainTestSplitGenerator(
       df, seed=FLAGS.seed, split_count=FLAGS.num_splits)
 
-  for split in splits:
+  # FIXME(cec): TrainTestSplitGenerator() returns a train/test split which must
+  # be evaluated independently of all other splits, since they contain
+  # overlapping information.
+  for i, split in enumerate(splits):
     logging.info("Split %d / %d with %d train graphs, %d test graphs",
-                 split.i, 2 * FLAGS.num_splits, len(split.train_df),
+                 i, 2 * FLAGS.num_splits, len(split.train_df),
                  len(split.test_df))
 
     with prof.Profile('train step'):
@@ -132,43 +171,36 @@ def main(argv):
           split.train_df['lda:input_graph'], split.train_df['lda:target_graph'],
           input_ph, target_ph)
       train_values = sess.run({
+        "summary": merged,
         "step": step_op,
         "target": target_ph,
         "loss": loss_op_tr,
         "outputs": output_ops_tr
       }, feed_dict=feed_dict)
+      writer_tr.add_summary(train_values['summary'], i)
+      logging.info('Training loss: %.4f', train_values['loss'])
 
-    with prof.Profile('save file'):
-      path = outdir / f'train_{split.i}.pkl'
-      logging.info('Writing %s', path)
-      with open(path, 'wb') as f:
-        pickle.dump(train_values, f)
+    with open(outdir / 'values/train_{i}.pkl', 'wb') as f:
+      pickle.dump(train_values, f)
 
-    # with prof.Profile('test step'):
-    #   feed_dict = lda.CreateFeedDict(
-    #       split.test_df['lda:input_graph'], split.test_df['lda:target_graph'],
-    #       input_ph, target_ph)
-    #   test_values = sess.run({
-    #     "step": step_op,
-    #     "target": target_ph,
-    #     "loss": loss_op_ge,
-    #     "outputs": output_ops_tr
-    #   }, feed_dict=feed_dict)
+    with prof.Profile('test step'):
+      feed_dict = lda.CreateFeedDict(
+          split.test_df['lda:input_graph'], split.test_df['lda:target_graph'],
+          input_ph, target_ph)
+      test_values = sess.run({
+        "summary": merged,
+        "step": step_op,
+        "target": target_ph,
+        "loss": loss_op_ge,
+        "outputs": output_ops_ge
+      }, feed_dict=feed_dict)
+      writer_ge.add_summary(test_values['summary'], i)
+      logging.info('Test loss: %.4f', test_values['loss'])
 
-    # with prof.Profile('save file'):
-    #   path = outdir / f'test_{split.i}.pkl'
-    #   logging.info('Writing %s', path)
-    #   with open(path, 'wb') as f:
-    #     pickle.dump(test_values, f)
+    with open(outdir / 'values/test_{i}.pkl', 'wb') as f:
+      pickle.dump(test_values, f)
 
-    # TODO(cec): Continue from here.
-    break
-
-  logging.info('done (for now)')
-  #     eval_dicts_tr.append(train_results)
-  #     eval_dicts_ge.append(test_results)
-  #     print(f'#{split.i}  Train loss {train_values["loss"]:.4f}  '
-  #           f'Test loss {test_values["loss"]:.4f}')
+  logging.info('done')
 
 
 if __name__ == '__main__':
