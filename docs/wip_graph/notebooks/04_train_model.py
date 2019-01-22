@@ -6,6 +6,7 @@ Usage:
     --df=/var/phd/shared/docs/wip_graph/lda_opencl_device_mapping_dataset.pkl
     --outdir=/var/phd/shared/docs/wip_graph/model_files
 """
+import collections
 import pathlib
 import pickle
 
@@ -68,6 +69,89 @@ def CreateVariableSummaries(var):
   tf.summary.scalar('max', tf.reduce_max(var))
   tf.summary.scalar('min', tf.reduce_min(var))
   tf.summary.histogram('histogram', var)
+
+
+# A value which has different values for training and testing.
+TrainTestValue = collections.namedtuple('TrainTestValue', ['train', 'test'])
+
+InputTargetValue = collections.namedtuple('InputTargetValue',
+                                          ['input', 'target'])
+
+Model = collections.namedtuple(['Model', [
+  'placeholders',
+  'summary_op',
+  'step_op',
+  'loss_op',
+  'output_op',
+  'summary_writer',
+]])
+
+
+def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
+                          model: Model):
+  # Each split must be evaluated independently of other splits since they
+  # contain overlapping information. Reset the model at the start of each
+  # split.
+  sess.run(tf.global_variables_initializer())
+  logging.info("Split %d / %d with %d train graphs, %d test graphs",
+               split.global_step, 2 * FLAGS.num_splits, len(split.train_df),
+               len(split.test_df))
+
+  with prof.Profile('train split'):
+    batches = list(range(0, len(split.train_df), FLAGS.batch_size))
+    with prof.Profile('train epoch'):
+      # Make a copy of the training data that we can shuffle.
+      train_df = split.train_df.copy()
+
+      for e in range(FLAGS.num_epochs):
+        for j, b in enumerate(batches):
+          feed_dict = models.Lda.CreateFeedDict(
+              train_df['lda:input_graph'].iloc[b:b + FLAGS.batch_size],
+              train_df['lda:target_graph'].iloc[b:b + FLAGS.batch_size],
+              model.placeholders.input, model.placeholders.target)
+          train_values = sess.run({
+            "summary": model.summary_op,
+            "step": model.step_op,
+            "target": model.placeholders.target,
+            "loss": model.loss_op.train,
+            "outputs": model.output_op.train,
+          }, feed_dict=feed_dict)
+          # FIXME(cec): Global step.
+          model.summary_writer.train.add_summary(train_values['summary'],
+                                                 split.global_step)
+          logging.info('Step %d / %d, epoch %d / %d, batch %d / %d, '
+                       'training loss: %.4f', split.global_step,
+                       2 * FLAGS.num_splits, e + 1, FLAGS.num_epochs,
+                       j + 1, len(batches), train_values['loss'])
+
+      # Shuffle the training data at the end of each epoch.
+      train_df = train_df.sample(frac=1).reset_index(drop=True)
+
+  predictions = []
+  with prof.Profile('test split'):
+    for j, b in enumerate(range(0, len(split.test_df), FLAGS.batch_size)):
+      feed_dict = models.Lda.CreateFeedDict(
+          split.test_df['lda:input_graph'].iloc[b:b + FLAGS.batch_size],
+          split.test_df['lda:target_graph'].iloc[b:b + FLAGS.batch_size],
+          model.placeholders.input, model.placeholders.target)
+      test_values = sess.run({
+        "summary": model.summary_op,
+        "target": model.placeholders.target,
+        "loss": model.loss_op.test,
+        "outputs": model.output_op.test,
+      }, feed_dict=feed_dict)
+      model.summary_writer.test.add_summary(test_values['summary'],
+                                            split.global_step)
+      logging.info('Step %d, batch %d, test loss: %.4f', split.global_step,
+                   j + 1, test_values['loss'])
+
+      predictions += [
+        np.argmax(d['globals']) for d in
+        graph_net_utils_np.graphs_tuple_to_data_dicts(
+            test_values["outputs"][-1])
+      ]
+
+  return predictions
 
 
 def main(argv):
@@ -146,80 +230,35 @@ def main(argv):
 
   # Reset Session.
   tf.set_random_seed(FLAGS.seed)
-  sess = tf.Session()
 
   # Log writers.
-  merged = tf.summary.merge_all()
   logging.info("Connect to this session with Tensorboard using:\n"
                "    python -m tensorboard.main --logdir='%s/tf_logs'", outdir)
   writer_tr = tf.summary.FileWriter(str(outdir / 'tf_logs/train'), sess.graph)
   writer_ge = tf.summary.FileWriter(str(outdir / 'tf_logs/test'), sess.graph)
 
+  # Assemble model components into a tuple.
+  model = Model(
+      placeholders=InputTargetValue(input=input_ph, target=target_ph),
+      summary_op=tf.summary.merge_all(),
+      step_op=step_op,
+      loss_op=TrainTestValue(train=loss_op_tr, test=loss_op_ge),
+      output_op=TrainTestValue(train=output_ops_tr, test=output_ops_ge),
+      summary_writer=TrainTestValue(train=writer_tr, test=writer_ge)
+  )
+
+  # Split the data into independent train/test splits.
   splits = utils.TrainTestSplitGenerator(
       df, seed=FLAGS.seed, split_count=FLAGS.num_splits)
 
   eval_data = []
-  for i, split in enumerate(splits):
-    # Each split must be evaluated independently of other splits since they
-    # contain overlapping information. Reset the model at the start of each
-    # split.
-    sess.run(tf.global_variables_initializer())
-    logging.info("Split %d / %d with %d train graphs, %d test graphs",
-                 i + 1, 2 * FLAGS.num_splits, len(split.train_df),
-                 len(split.test_df))
-
-    with prof.Profile('train split'):
-      batches = list(range(0, len(split.train_df), FLAGS.batch_size))
-      with prof.Profile('train epoch'):
-        for e in range(FLAGS.num_epochs):
-          for j, b in enumerate(batches):
-            feed_dict = lda.CreateFeedDict(
-                split.train_df['lda:input_graph'].iloc[b:b + FLAGS.batch_size],
-                split.train_df['lda:target_graph'].iloc[b:b + FLAGS.batch_size],
-                input_ph, target_ph)
-            train_values = sess.run({
-              "summary": merged,
-              "step": step_op,
-              "target": target_ph,
-              "loss": loss_op_tr,
-              "outputs": output_ops_tr
-            }, feed_dict=feed_dict)
-            writer_tr.add_summary(train_values['summary'], i)
-            logging.info('Split %d / %d, epoch %d / %d, batch %d / %d, '
-                         'training loss: %.4f', i + 1, 2 * FLAGS.num_splits,
-                         e + 1, FLAGS.num_epochs, j + 1, len(batches),
-                         train_values['loss'])
-
-        # Shuffle the training data at the end of each epoch.
-        split.train_df = split.train_df.sample(frac=1).reset_index(drop=True)
-
-    with prof.Profile('test split'):
-      predictions = []
-      for j, b in enumerate(range(0, len(split.test_df), FLAGS.batch_size)):
-        feed_dict = lda.CreateFeedDict(
-            split.test_df['lda:input_graph'].iloc[b:b + FLAGS.batch_size],
-            split.test_df['lda:target_graph'].iloc[b:b + FLAGS.batch_size],
-            input_ph, target_ph)
-        test_values = sess.run({
-          "summary": merged,
-          "target": target_ph,
-          "loss": loss_op_ge,
-          "outputs": output_ops_ge
-        }, feed_dict=feed_dict)
-        writer_ge.add_summary(test_values['summary'], i)
-        logging.info('Step %d, batch %d, test loss: %.4f', i, j + 1,
-                     test_values['loss'])
-
-        predictions += [
-          np.argmax(d['globals']) for d in
-          graph_net_utils_np.graphs_tuple_to_data_dicts(
-              test_values["outputs"][-1])
-        ]
+  with tf.Session() as sess:
+    for i, split in enumerate(splits):
+      predictions = TrainAndEvaluateSplit(sess, split, model)
+      with open(outdir / f'values/test_{i}.pkl', 'wb') as f:
+        pickle.dump(predictions, f)
 
       eval_data += utils.EvaluatePredictions(lda, split, predictions)
-
-    with open(outdir / f'values/test_{i}.pkl', 'wb') as f:
-      pickle.dump(predictions, f)
 
   df = utils.PredictionEvaluationsToTable(eval_data)
   with open(outdir / 'results.pkl', 'wb') as f:
