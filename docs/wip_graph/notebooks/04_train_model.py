@@ -100,7 +100,7 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
     batches = list(range(0, len(split.train_df), FLAGS.batch_size))
 
     # A counter of the global training step.
-    training_step = (sess.global_step - 1) * len(batches)
+    training_step = (split.global_step - 1) * len(batches)
     with prof.Profile('train epoch'):
       # Make a copy of the training data that we can shuffle.
       train_df = split.train_df.copy()
