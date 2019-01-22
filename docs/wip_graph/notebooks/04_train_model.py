@@ -126,10 +126,13 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
           summary_writers.train.add_summary(
               train_values['summary'], tensorboard_step)
 
-          # Run a testing set.
+          # Feed a single batch of the testing set through so that we can log
+          # testing loss to tensorboard. These aren't the values we will be
+          # using to return the actual predictions, we do that at the end of
+          # training.
           feed_dict = models.Lda.CreateFeedDict(
-              split.test_df['lda:input_graph'].iloc[b:b + FLAGS.batch_size],
-              split.test_df['lda:target_graph'].iloc[b:b + FLAGS.batch_size],
+              split.test_df['lda:input_graph'].iloc[:FLAGS.batch_size],
+              split.test_df['lda:target_graph'].iloc[:FLAGS.batch_size],
               model.placeholders.input, model.placeholders.target)
           test_values = sess.run({
             "summary": model.summary_op,
