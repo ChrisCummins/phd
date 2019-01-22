@@ -264,6 +264,15 @@ def main(argv):
 
     eval_data = []
     for i, split in enumerate(splits):
+      # Experimental early exit using a flag. Use this for quickly running
+      # reduced-size experiments. This will be removed later.
+      if (FLAGS.experimental_maximum_split_count and
+          i >= FLAGS.experimental_maximum_split_count):
+        logging.warning("Terminating early because "
+                        "--experimental_maximum_split_count=%d reached",
+                        FLAGS.experimental_maximum_split_count)
+        break
+
       # Reset TensorFlow seed at every split, since we train and test each split
       # independently.
       tf.set_random_seed(FLAGS.seed + i)
@@ -272,14 +281,6 @@ def main(argv):
         pickle.dump(predictions, f)
 
       eval_data += utils.EvaluatePredictions(lda, split, predictions)
-
-      # Experimental early exit using a flag. Use this for quickly running
-      # reduced-size experiments.
-      if (FLAGS.experimental_maximum_split_count and
-          i >= FLAGS.experimental_maximum_split_count):
-        logging.warning("Terminating early because "
-                        "--experimental_maximum_split_count=%d reached",
-                        FLAGS.experimental_maximum_split_count)
 
   df = utils.PredictionEvaluationsToTable(eval_data)
   with open(outdir / 'results.pkl', 'wb') as f:
