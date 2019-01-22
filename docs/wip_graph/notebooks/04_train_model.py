@@ -145,7 +145,7 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
                        'training loss: %.4f, test loss: %.4f',
                        split.global_step, 2 * FLAGS.num_splits, e + 1,
                        FLAGS.num_epochs, j + 1, len(batches),
-                       train_values['loss'])
+                       train_values['loss'], test_values['loss'])
           tensorboard_step += 1
           summary_writers.test.add_summary(
               test_values['summary'], tensorboard_step)
