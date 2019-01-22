@@ -246,7 +246,7 @@ def EvaluatePredictions(
       "Speedup": predicted_speedup,
     })
 
-  gpu_predicted_count = sum(d['predicted'] for d in split_data)
+  gpu_predicted_count = sum(d['Predicted Mapping'] for d in split_data)
   cpu_predicted_count = len(split_data) - gpu_predicted_count
 
   logging.info('Results: model=%s, platform=%s, split=%s, n=%d, '
