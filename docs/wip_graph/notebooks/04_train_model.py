@@ -180,6 +180,8 @@ def main(argv):
   outdir.mkdir(parents=True, exist_ok=True)
   (outdir / 'values').mkdir(exist_ok=True, parents=True)
 
+  tensorboard_outdir = outdir / 'tensorboard'
+
   with prof.Profile('load dataframe'):
     df = pd.read_pickle(df_path)
 
@@ -244,9 +246,12 @@ def main(argv):
   with tf.Session() as sess:
     # Log writers.
     logging.info("Connect to this session with Tensorboard using:\n"
-                 "    python -m tensorboard.main --logdir='%s/tf_logs'", outdir)
-    writer_tr = tf.summary.FileWriter(str(outdir / 'tf_logs/train'), sess.graph)
-    writer_ge = tf.summary.FileWriter(str(outdir / 'tf_logs/test'), sess.graph)
+                 "    python -m tensorboard.main --logdir='%s'",
+                 tensorboard_outdir)
+    writer_tr = tf.summary.FileWriter(
+        str(tensorboard_outdir / 'train'), sess.graph)
+    writer_ge = tf.summary.FileWriter(
+        str(tensorboard_outdir / 'test'), sess.graph)
 
     # Assemble model components into a tuple.
     model = Model(
@@ -290,7 +295,8 @@ def main(argv):
   heterogeneous_mapping.HeterogeneousMappingExperiment.PrintResultsSummary(df)
 
   logging.info("Connect to this session with Tensorboard using:\n"
-               "    python -m tensorboard.main --logdir='%s/tf_logs'", outdir)
+               "    python -m tensorboard.main --logdir='%s'",
+               tensorboard_outdir)
   logging.info('done')
 
 
