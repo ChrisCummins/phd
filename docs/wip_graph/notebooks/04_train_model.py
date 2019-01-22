@@ -125,7 +125,8 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
                        j + 1, len(batches), train_values['loss'])
 
         # Shuffle the training data at the end of each epoch.
-        train_df = train_df.sample(frac=1).reset_index(drop=True)
+        train_df = train_df.sample(
+            frac=1, random_state=seed).reset_index(drop=True)
 
   predictions = []
   with prof.Profile('test split'):
@@ -229,6 +230,7 @@ def main(argv):
     input_ph, target_ph = lda.MakeRunnableInSession(input_ph, target_ph)
 
   # Reset Session.
+  seed = np.random.RandomState(FLAGS.seed)
   tf.set_random_seed(FLAGS.seed)
 
   with tf.Session() as sess:
@@ -254,7 +256,7 @@ def main(argv):
 
     eval_data = []
     for i, split in enumerate(splits):
-      predictions = TrainAndEvaluateSplit(sess, split, model)
+      predictions = TrainAndEvaluateSplit(sess, split, model, seed)
       with open(outdir / f'values/test_{i}.pkl', 'wb') as f:
         pickle.dump(predictions, f)
 
