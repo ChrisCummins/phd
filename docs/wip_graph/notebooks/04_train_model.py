@@ -273,9 +273,13 @@ def main(argv):
 
       eval_data += utils.EvaluatePredictions(lda, split, predictions)
 
+      # Experimental early exit using a flag. Use this for quickly running
+      # reduced-size experiments.
       if (FLAGS.experimental_maximum_split_count and
           i >= FLAGS.experimental_maximum_split_count):
-        break
+        logging.warning("Terminating early because "
+                        "--experimental_maximum_split_count=%d reached",
+                        FLAGS.experimental_maximum_split_count)
 
   df = utils.PredictionEvaluationsToTable(eval_data)
   with open(outdir / 'results.pkl', 'wb') as f:
