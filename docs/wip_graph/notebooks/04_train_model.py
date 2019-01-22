@@ -85,12 +85,12 @@ Model = collections.namedtuple('Model', [
   'step_op',
   'loss_op',
   'output_op',
-  'summary_writer',
 ])
 
 
 def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
-                          model: Model, seed: np.random.RandomState):
+                          model: Model, seed: np.random.RandomState,
+                          summary_writers: TrainTestValue):
   # Reset the model at the start of each split - each split must be evaluated
   # independently of other splits since they contain overlapping information.
   sess.run(tf.global_variables_initializer())
@@ -128,7 +128,7 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
                        2 * FLAGS.num_splits, e + 1, FLAGS.num_epochs,
                        j + 1, len(batches), train_values['loss'])
           training_step += 1
-          model.summary_writer.train.add_summary(
+          summary_writers.train.add_summary(
               train_values['summary'], training_step)
 
       # Shuffle the training data at the end of each epoch.
@@ -149,8 +149,7 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
         "outputs": model.output_op.test,
       }, feed_dict=feed_dict)
       # FIXME(cec): Temporarily disabling test summaries.
-      # model.summary_writer.test.add_summary(test_values['summary'],
-      #                                       split.global_step)
+      # summary_writers.test.add_summary(test_values['summary'], training_step)
       logging.info('Step %d, batch %d, test loss: %.4f', split.global_step,
                    j + 1, test_values['loss'])
 
@@ -248,10 +247,6 @@ def main(argv):
     logging.info("Connect to this session with Tensorboard using:\n"
                  "    python -m tensorboard.main --logdir='%s'",
                  tensorboard_outdir)
-    writer_tr = tf.summary.FileWriter(
-        str(tensorboard_outdir / 'train'), sess.graph)
-    writer_ge = tf.summary.FileWriter(
-        str(tensorboard_outdir / 'test'), sess.graph)
 
     # Assemble model components into a tuple.
     model = Model(
@@ -260,7 +255,6 @@ def main(argv):
         step_op=step_op,
         loss_op=TrainTestValue(train=loss_op_tr, test=loss_op_ge),
         output_op=TrainTestValue(train=output_ops_tr, test=output_ops_ge),
-        summary_writer=TrainTestValue(train=writer_tr, test=writer_ge)
     )
 
     # Split the data into independent train/test splits.
@@ -278,10 +272,17 @@ def main(argv):
                         FLAGS.experimental_maximum_split_count)
         break
 
+      # Create the summary writers.
+      writer_base_path = f'{tensorboard_outdir}/{split.gpu_name}_{split.i}'
+      summary_writers = TrainTestValue(
+          train=tf.summary.FileWriter(f'{writer_base_path}_train', sess.graph),
+          test=tf.summary.FileWriter(f'{writer_base_path}_test', sess.graph))
+
       # Reset TensorFlow seed at every split, since we train and test each split
       # independently.
       tf.set_random_seed(FLAGS.seed + i)
-      predictions = TrainAndEvaluateSplit(sess, split, model, seed)
+      predictions = TrainAndEvaluateSplit(sess, split, model, seed,
+                                          summary_writers)
       with open(outdir / f'values/test_{i}.pkl', 'wb') as f:
         pickle.dump(predictions, f)
 
