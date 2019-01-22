@@ -72,7 +72,7 @@ class HeterogeneousMappingExperiment(object):
     """
     # Get the model name from the "Model" column of the table.
     model_names = set(df['Model'].values)
-    if model_names != 1:
+    if len(model_names) != 1:
       raise ValueError("Results table should contain a single model name. "
                        f"Found: {model_names}")
     model_name = list(model_names)[0]
