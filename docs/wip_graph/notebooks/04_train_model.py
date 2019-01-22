@@ -101,11 +101,13 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
 
     # A counter of the global training step.
     training_step = (split.global_step - 1) * len(batches)
-    with prof.Profile('train epoch'):
-      # Make a copy of the training data that we can shuffle.
-      train_df = split.train_df.copy()
 
-      for e in range(FLAGS.num_epochs):
+    # Make a copy of the training data that we can shuffle.
+    train_df = split.train_df.copy()
+
+    for e in range(FLAGS.num_epochs):
+      with prof.Profile('train epoch'):
+        # Iterate over all training data in batches.
         for j, b in enumerate(batches):
           feed_dict = models.Lda.CreateFeedDict(
               train_df['lda:input_graph'].iloc[b:b + FLAGS.batch_size],
@@ -127,9 +129,9 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
           model.summary_writer.train.add_summary(
               train_values['summary'], training_step)
 
-        # Shuffle the training data at the end of each epoch.
-        train_df = train_df.sample(
-            frac=1, random_state=seed).reset_index(drop=True)
+      # Shuffle the training data at the end of each epoch.
+      train_df = train_df.sample(
+          frac=1, random_state=seed).reset_index(drop=True)
 
   predictions = []
   with prof.Profile('test split'):
