@@ -63,14 +63,14 @@ class HeterogeneousMappingExperiment(object):
     """Return the cache directory."""
     return self._cache_dir
 
-  def PrintResultsSummary(self, model_class: typing.Type) -> None:
+  @staticmethod
+  def PrintResultsSummary(df: pd.DataFrame) -> None:
     """Evaluate and print summary of model results.
 
     Args:
-      model_class: The model class to evaluate.
+      df: A results table.
     """
-    df = self.ResultsDataFrame(model_class)
-    print(f'\n=== {model_class.__name__} =====================================')
+    print(f'\n=== {df["Model"][0]} ==========================================')
     print("Results by benchmark suite ...")
     print(df.groupby(['Platform', 'Benchmark Suite'])[
             'Platform', 'Correct?', 'Speedup'].mean())
@@ -79,7 +79,7 @@ class HeterogeneousMappingExperiment(object):
             'Platform', 'Correct?', 'Speedup'].mean())
     print("Results ...")
     print(df[['Platform', 'Correct?', 'Speedup']].mean())
-    print(f'=== END {model_class.__name__} =================================\n')
+    print(f'=== END {df["Model"][0]} ======================================\n')
 
 
 def main(argv: typing.List[str]):
@@ -96,7 +96,7 @@ def main(argv: typing.List[str]):
     # TODO(cec): Re-enable LDA once it's implemented.
     if model == models.Lda:
       continue
-    experiment.PrintResultsSummary(model)
+    experiment.PrintResultsSummary(experiment.ResultsDataFrame(model))
 
 
 if __name__ == '__main__':
