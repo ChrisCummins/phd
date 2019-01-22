@@ -51,6 +51,8 @@ flags.DEFINE_integer(
 
 flags.DEFINE_integer('experimental_force_num_processing_steps', 0,
                      'If > 0, sets the number of processing steps.')
+flags.DEFINE_integer('experimental_maximum_split_count', 0,
+                     'If > 0, sets the number of splits before stopping.')
 
 
 def GraphsTupleToStr(graph_tuple):
@@ -270,6 +272,10 @@ def main(argv):
         pickle.dump(predictions, f)
 
       eval_data += utils.EvaluatePredictions(lda, split, predictions)
+
+      if (FLAGS.experimental_maximum_split_count and
+          i >= FLAGS.experimental_maximum_split_count):
+        break
 
   df = utils.PredictionEvaluationsToTable(eval_data)
   with open(outdir / 'results.pkl', 'wb') as f:
