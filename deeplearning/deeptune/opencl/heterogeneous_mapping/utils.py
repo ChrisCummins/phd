@@ -63,7 +63,7 @@ def AddClassificationTargetToDataFrame(
 
 # A train+test data batch for evaluation.
 TrainTestSplit = collections.namedtuple(
-    'TrainTestSplit', ['i', 'train_df', 'test_df', 'gpu_name'])
+    'TrainTestSplit', ['i', 'train_df', 'test_df', 'gpu_name', 'global_step'])
 
 
 def TrainTestSplitGenerator(df: pd.DataFrame, seed: int, split_count: int = 10):
@@ -76,10 +76,12 @@ def TrainTestSplitGenerator(df: pd.DataFrame, seed: int, split_count: int = 10):
         n_splits=split_count, shuffle=True, random_state=seed)
     dataset_splits = dataset_splitter.split(np.zeros(len(df)), df['y'].values)
 
+    global_step = 0
     for i, (train_index, test_index) in enumerate(dataset_splits):
+      global_step + 1
       yield TrainTestSplit(i=i + 1, train_df=df.iloc[train_index, :].copy(),
                            test_df=df.iloc[test_index, :].copy(),
-                           gpu_name=gpu_name)
+                           gpu_name=gpu_name, global_step=global_step)
 
 
 def LoadPredictionsFromFile(predictions_path: pathlib.Path):
