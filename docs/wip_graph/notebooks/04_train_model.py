@@ -9,14 +9,17 @@ Usage:
 import pathlib
 import pickle
 
+import numpy as np
 import pandas as pd
 import tensorflow as tf
 from absl import app
 from absl import flags
 from absl import logging
-from graph_nets.demos import models as gn_models
 from graph_nets import utils_np as graph_net_utils_np
+from graph_nets.demos import models as gn_models
 
+from deeplearning.deeptune.opencl.heterogeneous_mapping import \
+  heterogeneous_mapping
 from deeplearning.deeptune.opencl.heterogeneous_mapping import utils
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import models
 from labm8 import prof
@@ -40,11 +43,10 @@ flags.DEFINE_integer(
     'The number of train/test splits per device. There are two devices, so '
     'the total number of splits evaluated will be 2 * num_splits.')
 
-
 # Experimental flags.
 
 flags.DEFINE_integer('experimental_force_num_processing_steps', 0,
-                     'If > 0, sets the nummber of processing steps.')
+                     'If > 0, sets the number of processing steps.')
 
 
 def GraphsTupleToStr(graph_tuple):
@@ -142,9 +144,6 @@ def main(argv):
   # Reset Session.
   tf.set_random_seed(FLAGS.seed)
   sess = tf.Session()
-  # sess =  tf.train.SingularMonitoredSession({
-  #   'checkpoint_dir': str(outdir / 'tf_checkpoints'),
-  # })
 
   # Log writers.
   merged = tf.summary.merge_all()
@@ -153,25 +152,21 @@ def main(argv):
   writer_tr = tf.summary.FileWriter(str(outdir / 'tf_logs/train'), sess.graph)
   writer_ge = tf.summary.FileWriter(str(outdir / 'tf_logs/test'), sess.graph)
 
-  sess.run(tf.global_variables_initializer())
-
-  # Training step stats.
-  step_stats = []
-
   splits = utils.TrainTestSplitGenerator(
       df, seed=FLAGS.seed, split_count=FLAGS.num_splits)
 
-  # FIXME(cec): TrainTestSplitGenerator() returns a train/test split which must
-  # be evaluated independently of all other splits, since they contain
-  # overlapping information.
-  i = 0
-  for split in splits:
-    i += 1
+  eval_data = []
+  for i, split in enumerate(splits):
+    # Each split must be evaluated independently of other splits since they
+    # contain overlapping information. Reset the model at the start of each
+    # split.
+    sess.run(tf.global_variables_initializer())
     logging.info("Split %d / %d with %d train graphs, %d test graphs",
                  i, 2 * FLAGS.num_splits, len(split.train_df),
                  len(split.test_df))
 
     with prof.Profile('train split'):
+      # TODO(cec): Wrap in another loop and repeat for X epochs.
       for j, b in enumerate(range(0, len(split.train_df), FLAGS.batch_size)):
         feed_dict = lda.CreateFeedDict(
             split.train_df['lda:input_graph'].iloc[b:b + FLAGS.batch_size],
@@ -190,7 +185,6 @@ def main(argv):
 
     with prof.Profile('test split'):
       predictions = []
-
       for j, b in enumerate(range(0, len(split.test_df), FLAGS.batch_size)):
         feed_dict = lda.CreateFeedDict(
             split.test_df['lda:input_graph'].iloc[b:b + FLAGS.batch_size],
@@ -207,14 +201,23 @@ def main(argv):
                      test_values['loss'])
 
         predictions += [
-            np.argmax(d['globals']) for d in
-            graph_net_utils_np.graphs_tuple_to_data_dicts(vals["outputs"][-1])
+          np.argmax(d['globals']) for d in
+          graph_net_utils_np.graphs_tuple_to_data_dicts(
+              test_values["outputs"][-1])
         ]
+
+      eval_data += utils.EvaluatePredictions(lda, split, predictions)
 
     with open(outdir / f'values/test_{i}.pkl', 'wb') as f:
       pickle.dump(predictions, f)
 
-  logging.info("Files written to %s", outdir)
+  df = utils.PredictionEvaluationsToTable(eval_data)
+  with open(outdir / 'results.pkl', 'wb') as f:
+    pickle.dump(df, f)
+    logging.info("Results written to %s", outdir / 'results.pkl')
+
+  heterogeneous_mapping.HeterogeneousMappingExperiment.PrintResultsSummary(df)
+
   logging.info("Connect to this session with Tensorboard using:\n"
                "    python -m tensorboard.main --logdir='%s/tf_logs'", outdir)
   logging.info('done')
