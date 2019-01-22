@@ -15,6 +15,7 @@ from absl import app
 from absl import flags
 from absl import logging
 from graph_nets.demos import models as gn_models
+from graph_nets import utils_np as graph_net_utils_np
 
 from deeplearning.deeptune.opencl.heterogeneous_mapping import utils
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import models
@@ -31,8 +32,13 @@ flags.DEFINE_string(
     'Path of directory to generate files')
 flags.DEFINE_integer(
     'seed', 0, 'Seed to use for reproducible results')
-flags.DEFINE_integer('batch_size', 32, 'Batch size')
-flags.DEFINE_integer('num_splits', 10, 'The number of train splits')
+flags.DEFINE_integer(
+    'batch_size', 32,
+    'Batch size.')
+flags.DEFINE_integer(
+    'num_splits', 10,
+    'The number of train/test splits per device. There are two devices, so '
+    'the total number of splits evaluated will be 2 * num_splits.')
 
 
 # Experimental flags.
@@ -49,15 +55,14 @@ def GraphsTupleToStr(graph_tuple):
 
 def CreateVariableSummaries(var):
   """Attach a lot of summaries to a Tensor (for TensorBoard visualization)."""
-  with tf.name_scope('summaries'):
-    mean = tf.reduce_mean(var)
-    tf.summary.scalar('mean', mean)
-    with tf.name_scope('stddev'):
-      stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
-    tf.summary.scalar('stddev', stddev)
-    tf.summary.scalar('max', tf.reduce_max(var))
-    tf.summary.scalar('min', tf.reduce_min(var))
-    tf.summary.histogram('histogram', var)
+  mean = tf.reduce_mean(var)
+  tf.summary.scalar('mean', mean)
+  with tf.name_scope('stddev'):
+    stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
+  tf.summary.scalar('stddev', stddev)
+  tf.summary.scalar('max', tf.reduce_max(var))
+  tf.summary.scalar('min', tf.reduce_min(var))
+  tf.summary.histogram('histogram', var)
 
 
 def main(argv):
@@ -116,14 +121,12 @@ def main(argv):
     loss_ops_tr = lda.CreateLossOps(target_ph, output_ops_tr)
     # Loss across processing steps.
     loss_op_tr = sum(loss_ops_tr) / num_processing_steps
+    CreateVariableSummaries(loss_ops_tr)
 
   with prof.Profile('test loss'), tf.name_scope('test_loss'):
     loss_ops_ge = lda.CreateLossOps(target_ph, output_ops_ge)
     # Loss from final processing step.
     loss_op_ge = loss_ops_ge[-1]
-
-  with tf.name_scope('loss'):
-    CreateVariableSummaries(loss_ops_tr)
     CreateVariableSummaries(loss_op_ge)
 
   # Optimizer and training step.
@@ -145,8 +148,8 @@ def main(argv):
 
   # Log writers.
   merged = tf.summary.merge_all()
-  logging.info("Connect to this session with Tensorboard using: "
-               "python -m tensorboard.main --logdir='%s/tf_logs'", outdir)
+  logging.info("Connect to this session with Tensorboard using:\n"
+               "    python -m tensorboard.main --logdir='%s/tf_logs'", outdir)
   writer_tr = tf.summary.FileWriter(str(outdir / 'tf_logs/train'), sess.graph)
   writer_ge = tf.summary.FileWriter(str(outdir / 'tf_logs/test'), sess.graph)
 
@@ -161,45 +164,59 @@ def main(argv):
   # FIXME(cec): TrainTestSplitGenerator() returns a train/test split which must
   # be evaluated independently of all other splits, since they contain
   # overlapping information.
-  for i, split in enumerate(splits):
+  i = 0
+  for split in splits:
+    i += 1
     logging.info("Split %d / %d with %d train graphs, %d test graphs",
                  i, 2 * FLAGS.num_splits, len(split.train_df),
                  len(split.test_df))
 
-    with prof.Profile('train step'):
-      feed_dict = lda.CreateFeedDict(
-          split.train_df['lda:input_graph'], split.train_df['lda:target_graph'],
-          input_ph, target_ph)
-      train_values = sess.run({
-        "summary": merged,
-        "step": step_op,
-        "target": target_ph,
-        "loss": loss_op_tr,
-        "outputs": output_ops_tr
-      }, feed_dict=feed_dict)
-      writer_tr.add_summary(train_values['summary'], i)
-      logging.info('Training loss: %.4f', train_values['loss'])
+    with prof.Profile('train split'):
+      for j, b in enumerate(range(0, len(split.train_df), FLAGS.batch_size)):
+        feed_dict = lda.CreateFeedDict(
+            split.train_df['lda:input_graph'].iloc[b:b + FLAGS.batch_size],
+            split.train_df['lda:target_graph'].iloc[b:b + FLAGS.batch_size],
+            input_ph, target_ph)
+        train_values = sess.run({
+          "summary": merged,
+          "step": step_op,
+          "target": target_ph,
+          "loss": loss_op_tr,
+          "outputs": output_ops_tr
+        }, feed_dict=feed_dict)
+        writer_tr.add_summary(train_values['summary'], i)
+        logging.info('Step %d, batch %d, training loss: %.4f', i, j + 1,
+                     train_values['loss'])
 
-    with open(outdir / 'values/train_{i}.pkl', 'wb') as f:
-      pickle.dump(train_values, f)
+    with prof.Profile('test split'):
+      predictions = []
 
-    with prof.Profile('test step'):
-      feed_dict = lda.CreateFeedDict(
-          split.test_df['lda:input_graph'], split.test_df['lda:target_graph'],
-          input_ph, target_ph)
-      test_values = sess.run({
-        "summary": merged,
-        "step": step_op,
-        "target": target_ph,
-        "loss": loss_op_ge,
-        "outputs": output_ops_ge
-      }, feed_dict=feed_dict)
-      writer_ge.add_summary(test_values['summary'], i)
-      logging.info('Test loss: %.4f', test_values['loss'])
+      for j, b in enumerate(range(0, len(split.test_df), FLAGS.batch_size)):
+        feed_dict = lda.CreateFeedDict(
+            split.test_df['lda:input_graph'].iloc[b:b + FLAGS.batch_size],
+            split.test_df['lda:target_graph'].iloc[b:b + FLAGS.batch_size],
+            input_ph, target_ph)
+        test_values = sess.run({
+          "summary": merged,
+          "target": target_ph,
+          "loss": loss_op_ge,
+          "outputs": output_ops_ge
+        }, feed_dict=feed_dict)
+        writer_ge.add_summary(test_values['summary'], i)
+        logging.info('Step %d, batch %d, test loss: %.4f', i, j + 1,
+                     test_values['loss'])
 
-    with open(outdir / 'values/test_{i}.pkl', 'wb') as f:
-      pickle.dump(test_values, f)
+        predictions += [
+            np.argmax(d['globals']) for d in
+            graph_net_utils_np.graphs_tuple_to_data_dicts(vals["outputs"][-1])
+        ]
 
+    with open(outdir / f'values/test_{i}.pkl', 'wb') as f:
+      pickle.dump(predictions, f)
+
+  logging.info("Files written to %s", outdir)
+  logging.info("Connect to this session with Tensorboard using:\n"
+               "    python -m tensorboard.main --logdir='%s/tf_logs'", outdir)
   logging.info('done')
 
 
