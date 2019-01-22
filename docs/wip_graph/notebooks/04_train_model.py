@@ -102,7 +102,7 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
     batches = list(range(0, len(split.train_df), FLAGS.batch_size))
 
     # A counter of the global training step.
-    training_step = (split.global_step - 1) * len(batches)
+    tensorboard_step = 0
 
     # Make a copy of the training data that we can shuffle.
     train_df = split.train_df.copy()
@@ -111,6 +111,7 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
       with prof.Profile('train epoch'):
         # Iterate over all training data in batches.
         for j, b in enumerate(batches):
+          # Run a training set.
           feed_dict = models.Lda.CreateFeedDict(
               train_df['lda:input_graph'].iloc[b:b + FLAGS.batch_size],
               train_df['lda:target_graph'].iloc[b:b + FLAGS.batch_size],
@@ -122,18 +123,34 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
             "loss": model.loss_op.train,
             "outputs": model.output_op.train,
           }, feed_dict=feed_dict)
+          summary_writers.train.add_summary(
+              train_values['summary'], tensorboard_step)
+
+          # Run a testing set.
+          feed_dict = models.Lda.CreateFeedDict(
+              split.test_df['lda:input_graph'].iloc[b:b + FLAGS.batch_size],
+              split.test_df['lda:target_graph'].iloc[b:b + FLAGS.batch_size],
+              model.placeholders.input, model.placeholders.target)
+          test_values = sess.run({
+            "summary": model.summary_op,
+            "target": model.placeholders.target,
+            "loss": model.loss_op.test,
+            "outputs": model.output_op.test,
+          }, feed_dict=feed_dict)
 
           logging.info('Step %d / %d, epoch %d / %d, batch %d / %d, '
-                       'training loss: %.4f', split.global_step,
-                       2 * FLAGS.num_splits, e + 1, FLAGS.num_epochs,
-                       j + 1, len(batches), train_values['loss'])
-          training_step += 1
-          summary_writers.train.add_summary(
-              train_values['summary'], training_step)
+                       'training loss: %.4f, test loss: %.4f',
+                       split.global_step, 2 * FLAGS.num_splits, e + 1,
+                       FLAGS.num_epochs, j + 1, len(batches),
+                       train_values['loss'])
+          tensorboard_step += 1
+          summary_writers.test.add_summary(
+              test_values['summary'], tensorboard_step)
 
       # Shuffle the training data at the end of each epoch.
-      train_df = train_df.sample(
-          frac=1, random_state=seed).reset_index(drop=True)
+      with prof.Profile('shuffle training data'):
+        train_df = train_df.sample(
+            frac=1, random_state=seed).reset_index(drop=True)
 
   predictions = []
   with prof.Profile('test split'):
