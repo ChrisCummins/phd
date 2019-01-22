@@ -61,6 +61,15 @@ cc_test(
 )
 
 py_test(
+    name = "binary_search_second_largest_test",
+    srcs = ["binary_search_second_largest_test.py"],
+    deps = [
+        "//labm8:test",
+        "//third_party/py/pytest",
+    ],
+)
+
+py_test(
     name = "serialize_binary_tree",
     srcs = ["serialize_binary_tree.py"],
 )
