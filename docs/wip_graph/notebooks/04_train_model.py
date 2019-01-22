@@ -98,6 +98,9 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
 
   with prof.Profile('train split'):
     batches = list(range(0, len(split.train_df), FLAGS.batch_size))
+
+    # A counter of the global training step.
+    training_step = (sess.global_step - 1) * len(batches)
     with prof.Profile('train epoch'):
       # Make a copy of the training data that we can shuffle.
       train_df = split.train_df.copy()
@@ -115,13 +118,14 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
             "loss": model.loss_op.train,
             "outputs": model.output_op.train,
           }, feed_dict=feed_dict)
-          # FIXME(cec): Global step.
-          model.summary_writer.train.add_summary(train_values['summary'],
-                                                 split.global_step)
+
           logging.info('Step %d / %d, epoch %d / %d, batch %d / %d, '
                        'training loss: %.4f', split.global_step,
                        2 * FLAGS.num_splits, e + 1, FLAGS.num_epochs,
                        j + 1, len(batches), train_values['loss'])
+          training_step += 1
+          model.summary_writer.train.add_summary(
+              train_values['summary'], training_step)
 
         # Shuffle the training data at the end of each epoch.
         train_df = train_df.sample(
@@ -140,8 +144,9 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
         "loss": model.loss_op.test,
         "outputs": model.output_op.test,
       }, feed_dict=feed_dict)
-      model.summary_writer.test.add_summary(test_values['summary'],
-                                            split.global_step)
+      # FIXME(cec): Temporarily disabling test summaries.
+      # model.summary_writer.test.add_summary(test_values['summary'],
+      #                                       split.global_step)
       logging.info('Step %d, batch %d, test loss: %.4f', split.global_step,
                    j + 1, test_values['loss'])
 
@@ -206,20 +211,20 @@ def main(argv):
     output_ops_ge = model(input_ph, num_processing_steps)
 
   # Create loss ops.
-  with prof.Profile('training loss'), tf.name_scope('training_loss'):
+  with prof.Profile('create training loss'), tf.name_scope('training_loss'):
     loss_ops_tr = lda.CreateLossOps(target_ph, output_ops_tr)
     # Loss across processing steps.
     loss_op_tr = sum(loss_ops_tr) / num_processing_steps
     CreateVariableSummaries(loss_ops_tr)
 
-  with prof.Profile('test loss'), tf.name_scope('test_loss'):
+  with prof.Profile('create test loss'), tf.name_scope('test_loss'):
     loss_ops_ge = lda.CreateLossOps(target_ph, output_ops_ge)
     # Loss from final processing step.
     loss_op_ge = loss_ops_ge[-1]
     CreateVariableSummaries(loss_op_ge)
 
   # Optimizer and training step.
-  with prof.Profile('optimizer'):
+  with prof.Profile('create optimizer'):
     learning_rate = 1e-3
     optimizer = tf.train.AdamOptimizer(learning_rate)
     step_op = optimizer.minimize(loss_op_tr)
@@ -230,7 +235,6 @@ def main(argv):
 
   # Reset Session.
   seed = np.random.RandomState(FLAGS.seed)
-  tf.set_random_seed(FLAGS.seed)
 
   with tf.Session() as sess:
     # Log writers.
@@ -255,6 +259,9 @@ def main(argv):
 
     eval_data = []
     for i, split in enumerate(splits):
+      # Reset TensorFlow seed at every split, since we train and test each split
+      # independently.
+      tf.set_random_seed(FLAGS.seed + i)
       predictions = TrainAndEvaluateSplit(sess, split, model, seed)
       with open(outdir / f'values/test_{i}.pkl', 'wb') as f:
         pickle.dump(predictions, f)
