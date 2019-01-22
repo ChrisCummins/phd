@@ -2,7 +2,6 @@
 import pathlib
 import typing
 
-import numpy as np
 import pandas as pd
 from absl import flags
 
@@ -73,7 +72,7 @@ class HeterogeneousMappingModel(object):
     raise NotImplementedError
 
   def predict(self, df: pd.DataFrame, platform_name: str,
-              verbose: bool = False) -> np.array:
+              verbose: bool = False) -> typing.Iterable[int]:
     """Make predictions for programs.
 
     Args:
@@ -82,6 +81,6 @@ class HeterogeneousMappingModel(object):
       verbose: Whether to print verbose status messages during training.
 
     Returns:
-      Predicted 'y' values (optimal device mappings) with shape (n,1).
+      A sequence of predicted 'y' values (optimal device mappings).
     """
     raise NotImplementedError
