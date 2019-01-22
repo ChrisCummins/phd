@@ -77,14 +77,14 @@ TrainTestValue = collections.namedtuple('TrainTestValue', ['train', 'test'])
 InputTargetValue = collections.namedtuple('InputTargetValue',
                                           ['input', 'target'])
 
-Model = collections.namedtuple(['Model', [
+Model = collections.namedtuple('Model', [
   'placeholders',
   'summary_op',
   'step_op',
   'loss_op',
   'output_op',
   'summary_writer',
-]])
+])
 
 
 def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
