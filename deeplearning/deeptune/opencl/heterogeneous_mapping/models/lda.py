@@ -70,7 +70,8 @@ class Lda(base.HeterogeneousMappingModel):
 
   def __init__(self, embedding_matrix: np.ndarray = None,
                vocabulary_file: typing.Optional[pathlib.Path] = None,
-               batch_size: TrainTestValue = TrainTestValue(32, 100)):
+               batch_size: TrainTestValue = TrainTestValue(32, 32),
+               num_processing_steps: typing.Optional[int] = 10):
 
     # If no embedding matrix is provided, the default is used.
     if embedding_matrix is None:
@@ -82,13 +83,14 @@ class Lda(base.HeterogeneousMappingModel):
     self.embedding_matrix = embedding_matrix
     self.vocabulary_file = vocabulary_file
     self.batch_size = batch_size
+    self.num_processing_steps = num_processing_steps
 
     # Initialized in init().
     self.model: typing.Optional[gn_models.EncodeProcessDecode] = None
     self.num_processing_steps: typing.Optional[TrainTestValue] = None
     self.loss_ops: typing.Optional[TrainTestValue] = None
     self.train_op: typing.Optional[tf.Operation] = None
-    self.placeholders: typing.Optional[TrainTestValue] = None
+    self.placeholders: typing.Optional[InputTargetValue] = None
 
   def init(self, seed: int, atomizer):
     # tf.reset_default_graph()
@@ -102,8 +104,11 @@ class Lda(base.HeterogeneousMappingModel):
     #     self.EncodeGraphs(
     #         self.ExtractGraphs(full_df))))
     #
-    # num_processing_steps = self.GetNumberOfMessagePassingSteps(
-    #     input_graphs, target_graphs)
+    # if self.num_processing_steps is None:
+    #   self.num_processing_steps = self.GetNumberOfMessagePassingSteps(
+    #       input_graphs, target_graphs)
+    #   logging.info("Derived processing step count of %d",
+    #                self.num_processing_steps)
     #
     # # Create the placeholders.
     # placeholders = self.CreatePlaceholdersFromGraphs(
