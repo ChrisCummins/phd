@@ -231,28 +231,28 @@ def main(argv):
   # Reset Session.
   tf.set_random_seed(FLAGS.seed)
 
-  # Log writers.
-  logging.info("Connect to this session with Tensorboard using:\n"
-               "    python -m tensorboard.main --logdir='%s/tf_logs'", outdir)
-  writer_tr = tf.summary.FileWriter(str(outdir / 'tf_logs/train'), sess.graph)
-  writer_ge = tf.summary.FileWriter(str(outdir / 'tf_logs/test'), sess.graph)
-
-  # Assemble model components into a tuple.
-  model = Model(
-      placeholders=InputTargetValue(input=input_ph, target=target_ph),
-      summary_op=tf.summary.merge_all(),
-      step_op=step_op,
-      loss_op=TrainTestValue(train=loss_op_tr, test=loss_op_ge),
-      output_op=TrainTestValue(train=output_ops_tr, test=output_ops_ge),
-      summary_writer=TrainTestValue(train=writer_tr, test=writer_ge)
-  )
-
-  # Split the data into independent train/test splits.
-  splits = utils.TrainTestSplitGenerator(
-      df, seed=FLAGS.seed, split_count=FLAGS.num_splits)
-
-  eval_data = []
   with tf.Session() as sess:
+    # Log writers.
+    logging.info("Connect to this session with Tensorboard using:\n"
+                 "    python -m tensorboard.main --logdir='%s/tf_logs'", outdir)
+    writer_tr = tf.summary.FileWriter(str(outdir / 'tf_logs/train'), sess.graph)
+    writer_ge = tf.summary.FileWriter(str(outdir / 'tf_logs/test'), sess.graph)
+
+    # Assemble model components into a tuple.
+    model = Model(
+        placeholders=InputTargetValue(input=input_ph, target=target_ph),
+        summary_op=tf.summary.merge_all(),
+        step_op=step_op,
+        loss_op=TrainTestValue(train=loss_op_tr, test=loss_op_ge),
+        output_op=TrainTestValue(train=output_ops_tr, test=output_ops_ge),
+        summary_writer=TrainTestValue(train=writer_tr, test=writer_ge)
+    )
+
+    # Split the data into independent train/test splits.
+    splits = utils.TrainTestSplitGenerator(
+        df, seed=FLAGS.seed, split_count=FLAGS.num_splits)
+
+    eval_data = []
     for i, split in enumerate(splits):
       predictions = TrainAndEvaluateSplit(sess, split, model)
       with open(outdir / f'values/test_{i}.pkl', 'wb') as f:
