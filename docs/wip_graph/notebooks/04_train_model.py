@@ -36,6 +36,9 @@ flags.DEFINE_string(
 flags.DEFINE_integer(
     'seed', 0, 'Seed to use for reproducible results')
 flags.DEFINE_integer(
+    'num_epochs', 3,
+    'The number of epochs to train for.')
+flags.DEFINE_integer(
     'batch_size', 32,
     'Batch size.')
 flags.DEFINE_integer(
@@ -162,26 +165,33 @@ def main(argv):
     # split.
     sess.run(tf.global_variables_initializer())
     logging.info("Split %d / %d with %d train graphs, %d test graphs",
-                 i, 2 * FLAGS.num_splits, len(split.train_df),
+                 i + 1, 2 * FLAGS.num_splits, len(split.train_df),
                  len(split.test_df))
 
     with prof.Profile('train split'):
-      # TODO(cec): Wrap in another loop and repeat for X epochs.
-      for j, b in enumerate(range(0, len(split.train_df), FLAGS.batch_size)):
-        feed_dict = lda.CreateFeedDict(
-            split.train_df['lda:input_graph'].iloc[b:b + FLAGS.batch_size],
-            split.train_df['lda:target_graph'].iloc[b:b + FLAGS.batch_size],
-            input_ph, target_ph)
-        train_values = sess.run({
-          "summary": merged,
-          "step": step_op,
-          "target": target_ph,
-          "loss": loss_op_tr,
-          "outputs": output_ops_tr
-        }, feed_dict=feed_dict)
-        writer_tr.add_summary(train_values['summary'], i)
-        logging.info('Step %d, batch %d, training loss: %.4f', i, j + 1,
-                     train_values['loss'])
+      batches = list(range(0, len(split.train_df), FLAGS.batch_size))
+      with prof.Profile('train epoch'):
+        for e in range(FLAGS.num_epochs):
+          for j, b in enumerate(batches):
+            feed_dict = lda.CreateFeedDict(
+                split.train_df['lda:input_graph'].iloc[b:b + FLAGS.batch_size],
+                split.train_df['lda:target_graph'].iloc[b:b + FLAGS.batch_size],
+                input_ph, target_ph)
+            train_values = sess.run({
+              "summary": merged,
+              "step": step_op,
+              "target": target_ph,
+              "loss": loss_op_tr,
+              "outputs": output_ops_tr
+            }, feed_dict=feed_dict)
+            writer_tr.add_summary(train_values['summary'], i)
+            logging.info('Split %d / %d, epoch %d / %d, batch %d / %d, '
+                         'training loss: %.4f', i + 1, 2 * FLAGS.num_splits,
+                         e + 1, FLAGS.num_epochs, j + 1, len(batches),
+                         train_values['loss'])
+
+        # Shuffle the training data at the end of each epoch.
+        split.train_df = split.train_df.sample(frac=1).reset_index(drop=True)
 
     with prof.Profile('test split'):
       predictions = []
