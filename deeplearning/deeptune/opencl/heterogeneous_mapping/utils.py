@@ -153,69 +153,15 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
       logging.info('Writing %s', predictions_path)
       SavePredictionsToFile(predictions, predictions_path)
 
-    # benchmarks
-    benchmarks = split.test_df['program:opencl_kernel_name'].values
-    benchmark_suites = (
-      split.test_df['program:benchmark_suite_name'].values)
+    data += EvaluatePredictions(model, split, predictions)
 
-    # oracle device mappings
-    oracle_device_mappings = split.test_df['y'].values
-    # whether predictions were correct or not
-    predicted_is_correct = (predictions == oracle_device_mappings)
+  return PredictionEvaluationsToTable(data)
 
-    # Runtimes of baseline mapping (CPU on AMD, GPU on NVIDIA).
-    if split.gpu_name == "amd_tahiti_7970":
-      zero_r_runtime_column = "runtime:intel_core_i7_3820"
-    elif split.gpu_name == "nvidia_gtx_960":
-      zero_r_runtime_column = "runtime:nvidia_gtx_960"
-    else:
-      raise ValueError(split.gpu_name)
 
-    zero_r_runtimes = split.test_df[zero_r_runtime_column].values
-
-    # speedups of predictions
-    cpu_gpu_runtimes = split.test_df[[
-      'runtime:intel_core_i7_3820',
-      f'runtime:{split.gpu_name}'
-    ]].values
-    p_runtimes = [
-      cpu_gpu_runtime_row[prections_row]
-      for prections_row, cpu_gpu_runtime_row in
-      zip(predictions, cpu_gpu_runtimes)]
-    p_speedup = zero_r_runtimes / p_runtimes
-
-    # sanity check
-    assert (
-        len(benchmarks) == len(oracle_device_mappings) == len(p_speedup) ==
-        len(predicted_is_correct) == len(predictions))
-
-    # record results
-    split_data = []
-    for (benchmark, benchmark_suite, oracle_device_mapping, predicted,
-         is_correct, predicted_speedup) in zip(
-        benchmarks, benchmark_suites, oracle_device_mappings, predictions,
-        predicted_is_correct,
-        p_speedup):
-      split_data.append({
-        "Model": model.__name__,
-        "Platform": split.gpu_name,
-        'Benchmark': benchmark,
-        'Benchmark Suite': benchmark_suite,
-        "Oracle Mapping": oracle_device_mapping,
-        "Predicted Mapping": predicted,
-        "Correct?": is_correct,
-        "Speedup": predicted_speedup,
-      })
-
-    logging.info('Results: model=%s, platform=%s, split=%s, n=%d, '
-                 'accuracy=%.2f%%, speedup=%.2fx',
-                 model.__basename__, split.gpu_name, split.i,
-                 len(split.test_df),
-                 np.mean([r['Correct?'] for r in split_data]) * 100,
-                 np.mean([r['Speedup'] for r in split_data]))
-
-    data += split_data
-
+def PredictionEvaluationsToTable(
+    data: typing.Iterable[typing.Dict[str, typing.Union[str, float, int]]]
+) -> pd.DataFrame:
+  """Create a table from the results of EvaluatePredictions()."""
   return pd.DataFrame(
       data, index=range(1, len(data) + 1), columns=[
         "Model",
@@ -227,3 +173,83 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
         "Correct?",
         "Speedup"
       ])
+
+
+def EvaluatePredictions(
+    model: 'HeterogeneousMappingModel',
+    split: TrainTestSplit,
+    predictions: typing.Iterable[int]
+) -> typing.List[typing.Dict[str, typing.Union[str, float, int]]]:
+  """Get dictionaries of prediction results.
+
+  Args:
+    model: The model instance.
+    split: The split being evaluated.
+    predictions: The predictions that the model produced for the split.test_df.
+
+  Returns:
+    A list of dicts of len(predictions), where each element is a dict of stats.
+  """
+  predictions = list(predictions)
+
+  # benchmarks
+  benchmarks = split.test_df['program:opencl_kernel_name'].values
+  benchmark_suites = (
+    split.test_df['program:benchmark_suite_name'].values)
+
+  # oracle device mappings
+  oracle_device_mappings = split.test_df['y'].values
+  # whether predictions were correct or not
+  predicted_is_correct = (predictions == oracle_device_mappings)
+
+  # Runtimes of baseline mapping (CPU on AMD, GPU on NVIDIA).
+  if split.gpu_name == "amd_tahiti_7970":
+    zero_r_runtime_column = "runtime:intel_core_i7_3820"
+  elif split.gpu_name == "nvidia_gtx_960":
+    zero_r_runtime_column = "runtime:nvidia_gtx_960"
+  else:
+    raise ValueError(split.gpu_name)
+
+  zero_r_runtimes = split.test_df[zero_r_runtime_column].values
+
+  # speedups of predictions
+  cpu_gpu_runtimes = split.test_df[[
+    'runtime:intel_core_i7_3820',
+    f'runtime:{split.gpu_name}'
+  ]].values
+  p_runtimes = [
+    cpu_gpu_runtime_row[prections_row]
+    for prections_row, cpu_gpu_runtime_row in
+    zip(predictions, cpu_gpu_runtimes)]
+  p_speedup = zero_r_runtimes / p_runtimes
+
+  # sanity check
+  assert (
+      len(benchmarks) == len(oracle_device_mappings) == len(p_speedup) ==
+      len(predicted_is_correct) == len(predictions))
+
+  # record results
+  split_data = []
+  for (benchmark, benchmark_suite, oracle_device_mapping, predicted,
+       is_correct, predicted_speedup) in zip(
+      benchmarks, benchmark_suites, oracle_device_mappings, predictions,
+      predicted_is_correct,
+      p_speedup):
+    split_data.append({
+      "Model": model.__name__,
+      "Platform": split.gpu_name,
+      'Benchmark': benchmark,
+      'Benchmark Suite': benchmark_suite,
+      "Oracle Mapping": oracle_device_mapping,
+      "Predicted Mapping": predicted,
+      "Correct?": is_correct,
+      "Speedup": predicted_speedup,
+    })
+
+  logging.info('Results: model=%s, platform=%s, split=%s, n=%d, '
+               'accuracy=%.2f%%, speedup=%.2fx',
+               model.__basename__, split.gpu_name, split.i,
+               len(split.test_df),
+               np.mean([r['Correct?'] for r in split_data]) * 100,
+               np.mean([r['Speedup'] for r in split_data]))
+  return split_data
