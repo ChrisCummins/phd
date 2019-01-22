@@ -70,7 +70,14 @@ class HeterogeneousMappingExperiment(object):
     Args:
       df: A results table.
     """
-    print(f'\n=== {df["Model"][0]} ==========================================')
+    # Get the model name from the "Model" column of the table.
+    model_names = set(df['Model'].values)
+    if model_names != 1:
+      raise ValueError("Results table should contain a single model name. "
+                       f"Found: {model_names}")
+    model_name = list(model_names)[0]
+
+    print(f'\n=== {model_name} ==========================================')
     print("Results by benchmark suite ...")
     print(df.groupby(['Platform', 'Benchmark Suite'])[
             'Platform', 'Correct?', 'Speedup'].mean())
@@ -79,7 +86,7 @@ class HeterogeneousMappingExperiment(object):
             'Platform', 'Correct?', 'Speedup'].mean())
     print("Results ...")
     print(df[['Platform', 'Correct?', 'Speedup']].mean())
-    print(f'=== END {df["Model"][0]} ======================================\n')
+    print(f'=== END {model_name} ======================================\n')
 
 
 def main(argv: typing.List[str]):
