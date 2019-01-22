@@ -246,10 +246,13 @@ def EvaluatePredictions(
       "Speedup": predicted_speedup,
     })
 
+  gpu_predicted_count = sum(d['predicted'] for d in split_data)
+  cpu_predicted_count = len(split_data) - gpu_predicted_count
+
   logging.info('Results: model=%s, platform=%s, split=%s, n=%d, '
-               'accuracy=%.2f%%, speedup=%.2fx',
+               'predictions=(cpu=%d,gpu=%d) accuracy=%.2f%%, speedup=%.2fx',
                model.__basename__, split.gpu_name, split.i,
-               len(split.test_df),
+               len(split.test_df), cpu_predicted_count, gpu_predicted_count,
                np.mean([r['Correct?'] for r in split_data]) * 100,
                np.mean([r['Speedup'] for r in split_data]))
   return split_data
