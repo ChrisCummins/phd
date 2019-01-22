@@ -56,6 +56,13 @@ def test_grewe_speedup(r: heterogeneous_mapping.HeterogeneousMappingExperiment):
       2.094359)
 
 
+def test_PrintResultsSummary_smoke_test(
+    r: heterogeneous_mapping.HeterogeneousMappingExperiment):
+  """Test that PrintResultsSummary() doesn't blow up."""
+  df = r.ResultsDataFrame(models.StaticMapping)
+  heterogeneous_mapping.HeterogeneousMappingExperiment.PrintResultsSummary(df)
+
+
 @pytest.mark.slow(reason='Takes several hours to train full model')
 def test_deeptune_accuracy(
     r: heterogeneous_mapping.HeterogeneousMappingExperiment):
