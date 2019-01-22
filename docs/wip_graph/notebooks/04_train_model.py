@@ -124,8 +124,8 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
                        2 * FLAGS.num_splits, e + 1, FLAGS.num_epochs,
                        j + 1, len(batches), train_values['loss'])
 
-      # Shuffle the training data at the end of each epoch.
-      train_df = train_df.sample(frac=1).reset_index(drop=True)
+        # Shuffle the training data at the end of each epoch.
+        train_df = train_df.sample(frac=1).reset_index(drop=True)
 
   predictions = []
   with prof.Profile('test split'):
