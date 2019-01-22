@@ -89,9 +89,8 @@ Model = collections.namedtuple('Model', [
 
 def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
                           model: Model, seed: np.random.RandomState):
-  # Each split must be evaluated independently of other splits since they
-  # contain overlapping information. Reset the model at the start of each
-  # split.
+  # Reset the model at the start of each split - each split must be evaluated
+  # independently of other splits since they contain overlapping information.
   sess.run(tf.global_variables_initializer())
   logging.info("Split %d / %d with %d train graphs, %d test graphs",
                split.global_step, 2 * FLAGS.num_splits, len(split.train_df),
