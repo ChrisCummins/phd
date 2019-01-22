@@ -203,12 +203,13 @@ def main(argv):
 
   # Connect the data to the model.
   # Instantiate the model.
-  model = gn_models.EncodeProcessDecode(global_output_size=2)
-  # A list of outputs, one per processing step.
-  with prof.Profile('create train model'), tf.name_scope('training_model'):
-    output_ops_tr = model(input_ph, num_processing_steps)
-  with prof.Profile('create test model'), tf.name_scope('test_model'):
-    output_ops_ge = model(input_ph, num_processing_steps)
+  with tf.name_scope('model'):
+    model = gn_models.EncodeProcessDecode(global_output_size=2)
+    # A list of outputs, one per processing step.
+    with prof.Profile('create train model'), tf.name_scope('training_model'):
+      output_ops_tr = model(input_ph, num_processing_steps)
+    with prof.Profile('create test model'), tf.name_scope('test_model'):
+      output_ops_ge = model(input_ph, num_processing_steps)
 
   # Create loss ops.
   with prof.Profile('create training loss'), tf.name_scope('training_loss'):
@@ -224,7 +225,7 @@ def main(argv):
     CreateVariableSummaries(loss_op_ge)
 
   # Optimizer and training step.
-  with prof.Profile('create optimizer'):
+  with prof.Profile('create optimizer'), tf.name_scope('optimizer'):
     learning_rate = 1e-3
     optimizer = tf.train.AdamOptimizer(learning_rate)
     step_op = optimizer.minimize(loss_op_tr)
