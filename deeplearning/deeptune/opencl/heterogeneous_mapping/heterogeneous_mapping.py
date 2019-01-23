@@ -2,6 +2,13 @@
 
 This is a port of the Jupyter notebook
 "//docs/2017_09_pact/code:Case Study A.ipynb".
+
+Example run:
+
+    $ bazel run //deeplearning/deeptune/opencl/heterogeneous_mapping --
+        --cache_directory=/var/phd/shared/deeplearning/deeptune/opencl/heterogeneous_mapping
+        --summary_csv_path=$PHD/deeplearning/deeptune/opencl/heterogeneous_mapping/results.csv
+
 """
 import pathlib
 import typing
@@ -127,8 +134,22 @@ def main(argv: typing.List[str]):
       df = pd.concat((df, model_df))
 
   assert df is not None
+
+  # Write results to file.
   logging.info('Writing results to %s', summary_csv_path)
-  df.to_csv(str(summary_csv_path))
+  df.sort_values(
+      by=['Benchmark Suite', 'Benchmark', 'Platform', 'Model'],
+      inplace=True)
+  df['Correct?'] = df['Correct?'].astype(int)
+  df.to_csv(str(summary_csv_path), index=False)
+
+  # Print results summary.
+  print("\nMODEL                 ACC        SPEEDUP")
+  for model in sorted(set(df['Model'])):
+    accuracy = df[df['Model'] == model]['Correct?'].mean()
+    speedup = df[df['Model'] == model]['Speedup'].mean()
+    print(f"{model:20s} {accuracy:8.3%} {speedup:8.3f}x")
+
 
 
 if __name__ == '__main__':
