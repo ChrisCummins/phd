@@ -292,19 +292,28 @@ def main(argv):
                         FLAGS.experimental_maximum_split_count)
         break
 
-      # Create the summary writers.
-      writer_base_path = f'{tensorboard_outdir}/{split.gpu_name}_{split.i}'
-      summary_writers = TrainTestValue(
-          train=tf.summary.FileWriter(f'{writer_base_path}_train', sess.graph),
-          test=tf.summary.FileWriter(f'{writer_base_path}_test', sess.graph))
+      cached_predictions_path = outdir / f'values/test_{i}.pkl'
+      if cached_predictions_path.is_file():
+        # Read the predictions made a previously trained model.
+        with open(cached_predictions_path, 'rb') as f:
+          predictions = pickle.load(f)
+      else:
+        # Create a new set of predictions.
 
-      # Reset TensorFlow seed at every split, since we train and test each split
-      # independently.
-      tf.set_random_seed(FLAGS.seed + i)
-      predictions = TrainAndEvaluateSplit(sess, split, model, seed,
-                                          summary_writers)
-      with open(outdir / f'values/test_{i}.pkl', 'wb') as f:
-        pickle.dump(predictions, f)
+        # Create the summary writers.
+        writer_base_path = f'{tensorboard_outdir}/{split.gpu_name}_{split.i}'
+        summary_writers = TrainTestValue(
+            train=tf.summary.FileWriter(f'{writer_base_path}_train',
+                                        sess.graph),
+            test=tf.summary.FileWriter(f'{writer_base_path}_test', sess.graph))
+
+        # Reset TensorFlow seed at every split, since we train and test each
+        # split independently.
+        tf.set_random_seed(FLAGS.seed + i)
+        predictions = TrainAndEvaluateSplit(sess, split, model, seed,
+                                            summary_writers)
+        with open(outdir / f'values/test_{i}.pkl', 'wb') as f:
+          pickle.dump(predictions, f)
 
       eval_data += utils.EvaluatePredictions(lda, split, predictions)
 
