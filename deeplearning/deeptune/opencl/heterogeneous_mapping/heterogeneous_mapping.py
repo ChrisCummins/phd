@@ -9,6 +9,7 @@ import typing
 import pandas as pd
 from absl import app
 from absl import flags
+from absl import logging
 
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.deeptune.opencl.heterogeneous_mapping import utils
@@ -22,6 +23,10 @@ flags.DEFINE_string(
     'cache_directory',
     '/tmp/phd/deeplearning/deeptune/opencl/heterogeneous_mapping',
     'Path of directory to store cached models and predictions in.')
+flags.DEFINE_string(
+    'summary_csv_path',
+    '/tmp/phd/deeplearning/deeptune/opencl/heterogeneous_mapping/results.csv',
+    'A path which is used to store a CSV summary of results.')
 
 
 class HeterogeneousMappingExperiment(object):
@@ -94,16 +99,36 @@ def main(argv: typing.List[str]):
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
+  # Create the directory to write results summary to.
+  summary_csv_path = pathlib.Path(FLAGS.summary_csv_path)
+  summary_csv_path.parent.mkdir(parents=True, exist_ok=True)
+
   experiment = HeterogeneousMappingExperiment(
       pathlib.Path(FLAGS.cache_directory))
 
   print(experiment.atomizer)
 
+  df = None
   for model in models.ALL_MODELS:
     # TODO(cec): Re-enable LDA once it's implemented.
     if model == models.Lda:
       continue
-    experiment.PrintResultsSummary(experiment.ResultsDataFrame(model))
+
+    # Compute the table of results.
+    model_df = experiment.ResultsDataFrame(model)
+
+    # Print a summary of the table of results.
+    experiment.PrintResultsSummary(model_df)
+
+    # Concatenate the model's results to the full results table.
+    if df is None:
+      df = model_df
+    else:
+      df = pd.concat((df, model_df))
+
+  assert df is not None
+  logging.info('Writing results to %s', summary_csv_path)
+  df.to_csv(str(summary_csv_path))
 
 
 if __name__ == '__main__':
