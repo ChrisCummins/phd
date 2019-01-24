@@ -6,6 +6,7 @@ py_binary(
     deps = [
         "//deeplearning/deeptune/opencl/heterogeneous_mapping",
         "//deeplearning/deeptune/opencl/heterogeneous_mapping/models",
+        "//labm8:prof",
         "//third_party/py/absl",
         "//third_party/py/numpy",
         "//third_party/py/pandas",
