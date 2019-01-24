@@ -144,14 +144,16 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
         # Train and cache a model.
         model.init(seed=seed, atomizer=atomizer)
         model.train(
-            df=split.train_df, platform_name=split.gpu_name, verbose=False)
+            df=split.train_df, platform_name=split.gpu_name,
+            verbose=FLAGS.verbosity)
         model.save(model_path)
 
       # Test the model.
       logging.info("Predicting %d %s mappings for device %s",
                    len(split.test_df), model.__name__, split.gpu_name)
       predictions = model.predict(
-          df=split.test_df, platform_name=split.gpu_name, verbose=False)
+          df=split.test_df, platform_name=split.gpu_name,
+          verbose=FLAGS.verbosity)
       logging.info('Writing %s', predictions_path)
       SavePredictionsToFile(predictions, predictions_path)
 
