@@ -8,7 +8,7 @@ FLAGS = flags.FLAGS
 
 
 def test_TODO():
-  """Short summary of test."""
+  """TODO: Short summary of test."""
   assert True
 
 
