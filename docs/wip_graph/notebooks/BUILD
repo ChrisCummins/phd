@@ -11,6 +11,7 @@ py_binary(
         "//experimental/compilers/reachability:cfg_datasets",
         "//experimental/compilers/reachability:control_flow_graph",
         "//experimental/compilers/reachability:control_flow_graph_generator",
+        "//gpu/portable_mapping_of_data_parallel_programs_to_opencl:feature_extractor",
     ],
 )
 
