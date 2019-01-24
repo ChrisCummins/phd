@@ -631,13 +631,13 @@ std::string getexepath() {
 // Return path to OpenCL platform header.
 // WARNING this path is hardcoded to the current location of these two files:
 //
-//   //deeplearning/clgen/corpuses/opencl_kernel_features.cpp
+//   //gpu/portable_mapping_of_data_parallel_programs_to_opencl:feature_extractor.cc
 //   //third_party/opencl/inlined/include/cl.h
 //
 // If either of these files is moved, this path must be updated!
 // TODO(cec): Fix this to match runfiles tree on Linux.
 std::string cl_header() {
-  return dirname(getexepath()) + "/../../../third_party/opencl/inlined/include/cl.h";
+  return dirname(getexepath()) + "/../../third_party/opencl/inlined/include/cl.h";
 }
 
 
@@ -713,21 +713,6 @@ void extract_features(std::string path, std::ostream &out,
 }
 
 
-void print_csv_header(std::ostream& out) {
-  // Print CSV header
-  out << "file,"
-      << "kernel,"
-      << "comp,"
-      << "rational,"
-      << "mem,"
-      << "localmem,"
-      << "coalesced,"
-      << "atomic,"
-      << "F2:coalesced/mem,"
-      << "F4:comp/mem\n";
-}
-
-
 bool file_exists(const std::string& path) {
   struct stat buffer;
   return (stat(path.c_str(), &buffer) == 0);
@@ -758,12 +743,6 @@ int main(int argc, char** argv) {
   std::vector<std::string> paths, compiler_args;
 
   for (const auto& arg : args) {
-    // Only print the CSV header, then quit.
-    if (arg == "-header-only") {
-      print_csv_header(std::cout);
-      return 0;
-    }
-
     std::string carg = get_compiler_arg(arg);
 
     if (carg.size())
@@ -776,8 +755,6 @@ int main(int argc, char** argv) {
     usage(basename(argv[0]), std::cerr);
     return 1;
   }
-
-  print_csv_header(std::cout);
 
   int ret = 0;
   for (const std::string& path : paths) {
