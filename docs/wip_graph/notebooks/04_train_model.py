@@ -225,8 +225,8 @@ class MLPGraphNetwork(snt.AbstractModule):
   def __init__(self, name="MLPGraphNetwork"):
     super(MLPGraphNetwork, self).__init__(name=name)
     with self._enter_variable_scope():
-      self._network = modules.GraphNetwork(make_mlp_model, make_mlp_model,
-                                           make_mlp_model)
+      self._network = modules.GraphNetwork(
+          make_mlp_model, make_mlp_model, make_mlp_model)
 
   def _build(self, inputs):
     return self._network(inputs)
@@ -260,9 +260,6 @@ class EncodeProcessDecode(snt.AbstractModule):
                global_output_size=None,
                name="EncodeProcessDecode"):
     super(EncodeProcessDecode, self).__init__(name=name)
-    self._encoder = MLPGraphIndependent()
-    self._core = MLPGraphNetwork()
-    self._decoder = MLPGraphIndependent()
     # Transforms the outputs into the appropriate shapes.
     if edge_output_size is None:
       edge_fn = None
@@ -276,9 +273,13 @@ class EncodeProcessDecode(snt.AbstractModule):
       global_fn = None
     else:
       global_fn = lambda: snt.Linear(global_output_size, name="global_output")
+
     with self._enter_variable_scope():
+      self._encoder = MLPGraphIndependent(name="encoder")
+      self._core = MLPGraphNetwork(name="core")
+      self._decoder = MLPGraphIndependent(name="decoder")
       self._output_transform = modules.GraphIndependent(
-          edge_fn, node_fn, global_fn)
+          edge_fn, node_fn, global_fn, name="output_transform")
 
   def _build(self, input_op, num_processing_steps):
     latent = self._encoder(input_op)
