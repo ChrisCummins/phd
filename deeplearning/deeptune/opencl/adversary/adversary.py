@@ -90,7 +90,8 @@ def main(argv: typing.List[str]):
 
   results_path = cache_directory / 'adversarial_results.pkl'
   if not results_path.is_file():
-    model = AdversarialDeeptune(input_shape=(longest_seq,))
+    # TODO(cec): Dervice input_shape from maxlen.
+    model = AdversarialDeeptune(input_shape=(4096,))
     logging.info('Model: %s', model)
 
     logging.info('Evaluating model ...')
