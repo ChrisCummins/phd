@@ -24,7 +24,7 @@ py_test(
         "//labm8:test",
         "//third_party/py/absl",
         "//third_party/py/pytest",
-    ]
+    ],
 )
 
 # The rather ludicrous combination of data, of copts and linkopts is a result
