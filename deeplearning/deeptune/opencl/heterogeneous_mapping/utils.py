@@ -170,8 +170,9 @@ def PredictionEvaluationsToTable(
       data, index=range(1, len(data) + 1), columns=[
         "Model",
         "Platform",
-        "Benchmark",
         "Benchmark Suite",
+        "Benchmark",
+        "Dataset",
         "Oracle Mapping",
         "Predicted Mapping",
         "Correct?",
@@ -195,11 +196,6 @@ def EvaluatePredictions(
     A list of dicts of len(predictions), where each element is a dict of stats.
   """
   predictions = list(predictions)
-
-  # benchmarks
-  benchmarks = split.test_df['program:opencl_kernel_name'].values
-  benchmark_suites = (
-    split.test_df['program:benchmark_suite_name'].values)
 
   # oracle device mappings
   oracle_device_mappings = split.test_df['y'].values
@@ -228,22 +224,24 @@ def EvaluatePredictions(
   p_speedup = zero_r_runtimes / p_runtimes
 
   # sanity check
-  assert (
-      len(benchmarks) == len(oracle_device_mappings) == len(p_speedup) ==
-      len(predicted_is_correct) == len(predictions))
+  assert (len(oracle_device_mappings) == len(p_speedup) ==
+          len(predicted_is_correct) == len(predictions))
 
   # record results
   split_data = []
-  for (benchmark, benchmark_suite, oracle_device_mapping, predicted,
+  for (benchmark, benchmark_suite, dataset, oracle_device_mapping, predicted,
        is_correct, predicted_speedup) in zip(
-      benchmarks, benchmark_suites, oracle_device_mappings, predictions,
-      predicted_is_correct,
-      p_speedup):
+      split.test_df['program:opencl_kernel_name'].values,
+      split.test_df['program:benchmark_suite_name'].values,
+      split.test_df['data:dataset_name'].values,
+      oracle_device_mappings,
+      predictions, predicted_is_correct, p_speedup):
     split_data.append({
       "Model": model.__name__,
       "Platform": split.gpu_name,
-      'Benchmark': benchmark,
       'Benchmark Suite': benchmark_suite,
+      'Benchmark': benchmark,
+      'Dataset': dataset,
       "Oracle Mapping": oracle_device_mapping,
       "Predicted Mapping": predicted,
       "Correct?": is_correct,
