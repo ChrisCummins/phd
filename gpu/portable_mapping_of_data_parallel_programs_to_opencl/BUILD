@@ -10,6 +10,7 @@ py_binary(
     data = [
         ":feature_extractor_binary",
     ],
+    visibility = ["//visibility:public"],
     deps = [
         "//labm8:bazelutil",
         "//third_party/py/absl",
