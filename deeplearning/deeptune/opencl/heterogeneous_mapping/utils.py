@@ -116,7 +116,7 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
   for split in TrainTestSplitGenerator(df, seed):
     logging.info(
         'Evaluating %s on %s, split %d with train=%d/test=%d programs',
-        model.__name__, split.gpu_name, split.i + 1, len(split.train_df),
+        model.__name__, split.gpu_name, split.i, len(split.train_df),
         len(split.test_df))
 
     # Path of cached model and predictions.
@@ -132,7 +132,7 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
     predictions_path.parent.mkdir(parents=True, exist_ok=True)
 
     if predictions_path.is_file():
-      # Load predctions from cache, which means we don't need to train a model.
+      # Load predictions from cache, which means we don't need to train a model.
       logging.info('Loading %s', predictions_path)
       predictions = LoadPredictionsFromFile(predictions_path)
     else:
