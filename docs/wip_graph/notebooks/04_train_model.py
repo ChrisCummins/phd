@@ -12,11 +12,14 @@ import pickle
 
 import numpy as np
 import pandas as pd
+import sonnet as snt
 import tensorflow as tf
 from absl import app
 from absl import flags
 from absl import logging
+from graph_nets import modules
 from graph_nets import utils_np as graph_net_utils_np
+from graph_nets import utils_tf
 from graph_nets.demos import models as gn_models
 
 from deeplearning.deeptune.opencl.heterogeneous_mapping import \
@@ -40,7 +43,7 @@ flags.DEFINE_integer(
     'num_epochs', 3,
     'The number of epochs to train for.')
 flags.DEFINE_integer(
-    'batch_size', 32,
+    'batch_size', 64,
     'Batch size.')
 flags.DEFINE_integer(
     'num_splits', 10,
@@ -81,7 +84,7 @@ InputTargetValue = collections.namedtuple('InputTargetValue',
 
 Model = collections.namedtuple('Model', [
   'placeholders',
-  'summary_op',
+  'loss_summary_op',
   'step_op',
   'loss_op',
   'output_op',
@@ -117,29 +120,32 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
               train_df['lda:target_graph'].iloc[b:b + FLAGS.batch_size],
               model.placeholders.input, model.placeholders.target)
           train_values = sess.run({
-            "summary": model.summary_op,
+            "summary": model.loss_summary_op.train,
             "step": model.step_op,
             "target": model.placeholders.target,
             "loss": model.loss_op.train,
-            "outputs": model.output_op.train,
+            "output": model.output_op.train,
           }, feed_dict=feed_dict)
           summary_writers.train.add_summary(
               train_values['summary'], tensorboard_step)
 
-          # Feed a single batch of the testing set through so that we can log
-          # testing loss to tensorboard. These aren't the values we will be
-          # using to return the actual predictions, we do that at the end of
-          # training.
-          feed_dict = models.Lda.CreateFeedDict(
-              split.test_df['lda:input_graph'].iloc[:FLAGS.batch_size],
-              split.test_df['lda:target_graph'].iloc[:FLAGS.batch_size],
-              model.placeholders.input, model.placeholders.target)
-          test_values = sess.run({
-            "summary": model.summary_op,
-            "target": model.placeholders.target,
-            "loss": model.loss_op.test,
-            "outputs": model.output_op.test,
-          }, feed_dict=feed_dict)
+          if not j % 10:
+            # Feed a single batch of the testing set through so that we can log
+            # testing loss to tensorboard. These aren't the values we will be
+            # using to return the actual predictions, we do that at the end of
+            # training.
+            feed_dict = models.Lda.CreateFeedDict(
+                split.test_df['lda:input_graph'].iloc[:FLAGS.batch_size],
+                split.test_df['lda:target_graph'].iloc[:FLAGS.batch_size],
+                model.placeholders.input, model.placeholders.target)
+            test_values = sess.run({
+              "summary": model.loss_summary_op.test,
+              "target": model.placeholders.target,
+              "loss": model.loss_op.test,
+              "output": model.output_op.test,
+            }, feed_dict=feed_dict)
+            summary_writers.test.add_summary(
+              test_values['summary'], tensorboard_step)
 
           logging.info('Step %d / %d, epoch %d / %d, batch %d / %d, '
                        'training loss: %.4f, test loss: %.4f',
@@ -147,8 +153,7 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
                        FLAGS.num_epochs, j + 1, len(batches),
                        train_values['loss'], test_values['loss'])
           tensorboard_step += 1
-          summary_writers.test.add_summary(
-              test_values['summary'], tensorboard_step)
+
 
       # Shuffle the training data at the end of each epoch.
       with prof.Profile('shuffle training data'):
@@ -163,10 +168,10 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
           split.test_df['lda:target_graph'].iloc[b:b + FLAGS.batch_size],
           model.placeholders.input, model.placeholders.target)
       test_values = sess.run({
-        "summary": model.summary_op,
+        # "summary": model.summary_op,
         "target": model.placeholders.target,
         "loss": model.loss_op.test,
-        "outputs": model.output_op.test,
+        "output": model.output_op.test,
       }, feed_dict=feed_dict)
       # FIXME(cec): Temporarily disabling test summaries.
       # summary_writers.test.add_summary(test_values['summary'], training_step)
@@ -176,10 +181,74 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
       predictions += [
         np.argmax(d['globals']) for d in
         graph_net_utils_np.graphs_tuple_to_data_dicts(
-            test_values["outputs"][-1])
+            test_values["output"])
       ]
 
   return predictions
+
+
+class EncodeProcessDecode(snt.AbstractModule):
+  """Full encode-process-decode model.
+
+  The model includes three components:
+  - An "Encoder" graph net, which independently encodes the edge, node, and
+    global attributes (does not compute relations etc.).
+  - A "Core" graph net, which performs N rounds of processing (message-passing)
+    steps. The input to the Core is the concatenation of the Encoder's output
+    and the previous output of the Core (labeled "Hidden(t)" below, where "t"
+    is the processing step).
+  - A "Decoder" graph net, which independently decodes the edge, node, and
+    global attributes (does not compute relations etc.), on the final
+    message-passing step.
+                      Hidden(t)   Hidden(t+1)
+                         |            ^
+            *---------*  |  *------*  |  *---------*
+            |         |  |  |      |  |  |         |
+  Input --->| Encoder |  *->| Core |--*->| Decoder |---> Output(t)
+            |         |---->|      |     |         |
+            *---------*     *------*     *---------*
+  """
+
+  def __init__(self,
+               edge_output_size=None,
+               node_output_size=None,
+               global_output_size=None,
+               name="EncodeProcessDecode"):
+    super(EncodeProcessDecode, self).__init__(name=name)
+    self._encoder = gn_models.MLPGraphIndependent()
+    self._core = gn_models.MLPGraphNetwork()
+    self._decoder = gn_models.MLPGraphIndependent()
+    # Transforms the outputs into the appropriate shapes.
+    if edge_output_size is None:
+      edge_fn = None
+    else:
+      edge_fn = lambda: snt.Linear(edge_output_size, name="edge_output")
+    if node_output_size is None:
+      node_fn = None
+    else:
+      node_fn = lambda: snt.Linear(node_output_size, name="node_output")
+    if global_output_size is None:
+      global_fn = None
+    else:
+      global_fn = lambda: snt.Linear(global_output_size, name="global_output")
+    with self._enter_variable_scope():
+      self._output_transform = modules.GraphIndependent(
+          edge_fn, node_fn, global_fn)
+
+  def _build(self, input_op, num_processing_steps):
+    latent = self._encoder(input_op)
+    latent0 = latent
+    output_ops = []
+    for _ in range(num_processing_steps):
+      core_input = utils_tf.concat([latent0, latent], axis=1)
+      latent = self._core(core_input)
+
+    # We differ here from the demo graph net model in that we include only an
+    # output for the final step of message passing, rather than an output for
+    # each step of message passing.
+    decoded_op = self._decoder(latent)
+    output_op = self._output_transform(decoded_op)
+    return output_op
 
 
 def main(argv):
@@ -226,28 +295,27 @@ def main(argv):
   logging.info("Input placeholders:\n%s", GraphsTupleToStr(input_ph))
   logging.info("Target placeholders:\n%s", GraphsTupleToStr(target_ph))
 
-  # Connect the data to the model.
   # Instantiate the model.
   with tf.name_scope('model'):
-    model = gn_models.EncodeProcessDecode(global_output_size=2)
-    # A list of outputs, one per processing step.
-    with prof.Profile('create train model'), tf.name_scope('training_model'):
-      output_ops_tr = model(input_ph, num_processing_steps)
-    with prof.Profile('create test model'), tf.name_scope('test_model'):
-      output_ops_ge = model(input_ph, num_processing_steps)
+    model = EncodeProcessDecode(global_output_size=2)
 
   # Create loss ops.
-  with prof.Profile('create training loss'), tf.name_scope('training_loss'):
-    loss_ops_tr = lda.CreateLossOps(target_ph, output_ops_tr)
-    # Loss across processing steps.
-    loss_op_tr = sum(loss_ops_tr) / num_processing_steps
-    CreateVariableSummaries(loss_ops_tr)
+  with tf.name_scope('train'):
+    with prof.Profile('create train model'):
+      # A list of outputs, one per processing step.
+      output_op_tr = model(input_ph, num_processing_steps)
+    with prof.Profile('create training loss'):
+      loss_op_tr = tf.losses.softmax_cross_entropy(
+        target_ph.globals, output_op_tr.globals)
+      loss_summary_op_tr = tf.summary.scalar("loss", loss_op_tr)
 
-  with prof.Profile('create test loss'), tf.name_scope('test_loss'):
-    loss_ops_ge = lda.CreateLossOps(target_ph, output_ops_ge)
-    # Loss from final processing step.
-    loss_op_ge = loss_ops_ge[-1]
-    CreateVariableSummaries(loss_op_ge)
+  with tf.name_scope('test'):
+    with prof.Profile('create test model'):
+      output_op_ge = model(input_ph, num_processing_steps)
+    with prof.Profile('create test loss'):
+      loss_op_ge = tf.losses.softmax_cross_entropy(
+        target_ph.globals, output_op_ge.globals)
+      loss_summary_op_ge = tf.summary.scalar("loss", loss_op_ge)
 
   # Optimizer and training step.
   with prof.Profile('create optimizer'), tf.name_scope('optimizer'):
@@ -271,10 +339,11 @@ def main(argv):
     # Assemble model components into a tuple.
     model = Model(
         placeholders=InputTargetValue(input=input_ph, target=target_ph),
-        summary_op=tf.summary.merge_all(),
+        loss_summary_op=TrainTestValue(
+            train=loss_summary_op_tr, test=loss_summary_op_ge),
         step_op=step_op,
         loss_op=TrainTestValue(train=loss_op_tr, test=loss_op_ge),
-        output_op=TrainTestValue(train=output_ops_tr, test=output_ops_ge),
+        output_op=TrainTestValue(train=output_op_tr, test=output_op_ge),
     )
 
     # Split the data into independent train/test splits.
@@ -324,6 +393,11 @@ def main(argv):
 
   heterogeneous_mapping.HeterogeneousMappingExperiment.PrintResultsSummary(df)
 
+  gpu_predicted_count = sum(df['Predicted Mapping'])
+  cpu_predicted_count = len(df) - gpu_predicted_count
+
+  logging.info("Final predictions count: cpu=%d, gpu=%d", cpu_predicted_count,
+               gpu_predicted_count)
   logging.info("Connect to this session with Tensorboard using:\n"
                "    python -m tensorboard.main --logdir='%s'",
                tensorboard_outdir)
