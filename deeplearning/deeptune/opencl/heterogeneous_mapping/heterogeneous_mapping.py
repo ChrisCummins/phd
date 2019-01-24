@@ -138,7 +138,7 @@ def main(argv: typing.List[str]):
   # Write results to file.
   logging.info('Writing results to %s', summary_csv_path)
   df.sort_values(
-      by=['Benchmark Suite', 'Benchmark', 'Platform', 'Model'],
+      by=['Benchmark Suite', 'Benchmark', 'Dataset', 'Platform', 'Model'],
       inplace=True)
   df['Correct?'] = df['Correct?'].astype(int)
   df.to_csv(str(summary_csv_path), index=False)
