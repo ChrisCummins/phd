@@ -8,10 +8,12 @@ from absl import app
 from absl import flags
 from absl import logging
 
+from deeplearning.deeptune.opencl.adversary import opencl_deadcode_inserter
 from deeplearning.deeptune.opencl.heterogeneous_mapping import \
   heterogeneous_mapping
 from deeplearning.deeptune.opencl.heterogeneous_mapping import utils
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import models
+from labm8 import prof
 
 
 FLAGS = flags.FLAGS
@@ -28,6 +30,37 @@ class AdversarialDeeptune(models.DeepTune):
   __name__ = 'Adversarial DeepTune'
 
 
+def CreateAugmentedDataset(df: pd.DataFrame) -> pd.DataFrame:
+  """Augment the dataset with dead code mutations."""
+  with prof.Profile('dead code mutations'):
+    seed = np.random.RandomState(0xCEC)
+
+    candidate_kernels = df['program:opencl_src'].values.copy()
+
+    new_columns = list(df.columns.values) + ['program:is_mutation']
+    new_rows = []
+
+    for _, row in df.iterrows():
+      kernel = row['program:opencl_src']
+
+      # Insert the original row.
+      row['program:is_mutation'] = False
+      new_rows.append(row)
+
+      # Create and insert mutation rows.
+      for _ in range(3):
+        row = row.copy()
+        row['program:is_mutation'] = True
+        # Insert a single dead kernel into each original kernel.
+        dci = opencl_deadcode_inserter.OpenClDeadcodeInserter(
+            seed, kernel, candidate_kernels=candidate_kernels)
+        dci.InsertBlockIntoKernel()
+        row['program:opencl_src'] = dci.opencl_source
+        new_rows.append(row)
+
+  return pd.DataFrame(new_rows, columns=new_columns)
+
+
 def main(argv: typing.List[str]):
   """Main entry point."""
   if len(argv) > 1:
@@ -41,18 +74,13 @@ def main(argv: typing.List[str]):
       cache_directory)
 
   augmented_df_path = cache_directory / 'augmented_df.pkl'
+  # Create the augmented dataset if required.
   if not augmented_df_path.is_file():
-    logging.info('Creating augmented dataframe')
-    augmented_df = experiment.dataset.AugmentWithDeadcodeMutations(
-        rand=np.random.RandomState(0xCEC),
-        num_permutations_of_kernel=5,
-        mutations_per_kernel_min_max=(1, 5)
-    )
-    logging.info('Writing %s', augmented_df_path)
-    augmented_df.to_pickle(str(augmented_df_path))
-  else:
-    logging.info('Reading %s', augmented_df_path)
-    augmented_df = pd.read_pickle(str(augmented_df_path))
+    adversarial_df = CreateAugmentedDataset(experiment.dataset.df)
+    adversarial_df.to_pickle(str(augmented_df_path))
+
+  logging.info('Reading %s', augmented_df_path)
+  augmented_df = pd.read_pickle(str(augmented_df_path))
 
   logging.info('Augmented dataframe: %s', augmented_df.shape)
   logging.info('Atomizer: %s', experiment.atomizer)
