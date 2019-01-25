@@ -9,6 +9,7 @@ Usage:
 import collections
 import pathlib
 import pickle
+import time
 
 import numpy as np
 import pandas as pd
@@ -117,10 +118,14 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
       with prof.Profile('train epoch'):
         # Iterate over all training data in batches.
         for j, b in enumerate(batches):
+          batch_start_time = time.time()
+
           # Run a training set.
+          input_graphs = train_df['lda:input_graph'].iloc[b:b + FLAGS.batch_size]
+          target_graphs = train_df['lda:target_graph'].iloc[b:b + FLAGS.batch_size]
+          num_graphs_processed = len(input_graphs)
           feed_dict = models.Lda.CreateFeedDict(
-              train_df['lda:input_graph'].iloc[b:b + FLAGS.batch_size],
-              train_df['lda:target_graph'].iloc[b:b + FLAGS.batch_size],
+              input_graphs, target_graphs,
               model.placeholders.input, model.placeholders.target)
           train_values = sess.run({
             "summary": model.loss_summary_op.train,
@@ -137,9 +142,11 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
             # testing loss to tensorboard. These aren't the values we will be
             # using to return the actual predictions, we do that at the end of
             # training.
+            input_graphs = split.test_df['lda:input_graph'].iloc[:FLAGS.batch_size]
+            target_graphs = split.test_df['lda:target_graph'].iloc[:FLAGS.batch_size]
+            num_graphs_processed += len(input_graphs)
             feed_dict = models.Lda.CreateFeedDict(
-                split.test_df['lda:input_graph'].iloc[:FLAGS.batch_size],
-                split.test_df['lda:target_graph'].iloc[:FLAGS.batch_size],
+                input_graphs, target_graphs,
                 model.placeholders.input, model.placeholders.target)
             test_values = sess.run({
               "summary": model.loss_summary_op.test,
@@ -150,10 +157,16 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
             summary_writers.test.add_summary(
               test_values['summary'], tensorboard_step)
 
-          logging.info('Step %d / %d, epoch %d / %d, batch %d / %d, '
+          batch_runtime = time.time() - batch_start_time
+          graphs_per_second = num_graphs_processed / batch_runtime
+
+          # Although it prints test loss for every step, it is only evaluated
+          # and updated every 10 batches.
+          logging.info('Step %02d / %02d in %.3fs (%02d graphs/sec), epoch %02d / %02d, batch %02d / %02d, '
                        'training loss: %.4f, test loss: %.4f',
-                       split.global_step, 2 * FLAGS.num_splits, e + 1,
-                       FLAGS.num_epochs, j + 1, len(batches),
+                       split.global_step, 2 * FLAGS.num_splits,
+                       batch_runtime * 1000, int(graphs_per_second),
+                       e + 1, FLAGS.num_epochs, j + 1, len(batches),
                        train_values['loss'], test_values['loss'])
           tensorboard_step += 1
 
