@@ -7,6 +7,8 @@ Usage:
     --outdir=/var/phd/shared/docs/wip_graph/model_files
 """
 import collections
+import contextlib
+import json
 import pathlib
 import pickle
 import time
@@ -49,6 +51,9 @@ flags.DEFINE_integer(
     'num_splits', 10,
     'The number of train/test splits per device. There are two devices, so '
     'the total number of splits evaluated will be 2 * num_splits.')
+flags.DEFINE_bool(
+    'profile_tensorflow', False,
+    'Enable profiling of tensorflow.')
 
 # Experimental flags.
 
@@ -97,7 +102,8 @@ Model = collections.namedtuple('Model', [
 
 def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
                           model: Model, seed: np.random.RandomState,
-                          summary_writers: TrainTestValue):
+                          summary_writers: TrainTestValue,
+                          outdir: pathlib.Path):
   # Reset the model at the start of each split - each split must be evaluated
   # independently of other splits since they contain overlapping information.
   sess.run(tf.global_variables_initializer())
@@ -113,6 +119,17 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
 
     # Make a copy of the training data that we can shuffle.
     train_df = split.train_df.copy()
+
+    # Per-epoch log to be written to file.
+    log = {
+        'batch_runtime_ms': [],
+        'num_graphs_processed_in_batch': [],
+        'training_losses': [],
+        'test_losses': [],
+        'training_graph_count': len(split.train_df),
+        'test_predictions': [],
+        'test_accuracy': 0,
+    }
 
     for e in range(FLAGS.num_epochs):
       with prof.Profile('train epoch'):
@@ -156,49 +173,73 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
             }, feed_dict=feed_dict)
             summary_writers.test.add_summary(
               test_values['summary'], tensorboard_step)
+            log['test_losses'].append(float(test_values['loss']))
 
           batch_runtime = time.time() - batch_start_time
           graphs_per_second = num_graphs_processed / batch_runtime
 
+          log['batch_runtime_ms'].append(int(batch_runtime * 1000))
+          log['num_graphs_processed_in_batch'].append(num_graphs_processed)
+          log['training_losses'].append(float(train_values['loss']))
+
           # Although it prints test loss for every step, it is only evaluated
           # and updated every 10 batches.
-          logging.info('Step %02d / %02d in %.3fs (%02d graphs/sec), epoch %02d / %02d, batch %02d / %02d, '
+          logging.info('Step %02d / %02d in %.3fs (%02d graphs/sec), '
+                       'epoch %02d / %02d, batch %02d / %02d, '
                        'training loss: %.4f, test loss: %.4f',
                        split.global_step, 2 * FLAGS.num_splits,
-                       batch_runtime * 1000, int(graphs_per_second),
+                       batch_runtime, int(graphs_per_second),
                        e + 1, FLAGS.num_epochs, j + 1, len(batches),
                        train_values['loss'], test_values['loss'])
           tensorboard_step += 1
 
+      # End of epoch. Get predictions for the test set.
+      predictions, ground_truth = [], []
+      test_start_time = time.time()
+      test_runtime = 0
+      num_graphs_processed = 0
+
+      for j, b in enumerate(range(0, len(split.test_df), FLAGS.batch_size)):
+        input_graphs = split.test_df['lda:input_graph'].iloc[b:b + FLAGS.batch_size]
+        target_graphs = split.test_df['lda:target_graph'].iloc[b:b + FLAGS.batch_size]
+        num_graphs_processed += len(input_graphs)
+        feed_dict = models.Lda.CreateFeedDict(
+            input_graphs, target_graphs,
+            model.placeholders.input, model.placeholders.target)
+        test_values = sess.run({
+          "target": model.placeholders.target,
+          "output": model.output_op.test,
+        }, feed_dict=feed_dict)
+
+        # Exclude data wrangling from prediction time - we're only interested
+        # in measuring inference rate, not the rate of the python util code.
+        test_runtime += time.time() - test_start_time
+        ground_truth += [
+          int(np.argmax(d.graph['features'])) for d in target_graphs
+        ]
+        predictions += [
+          int(np.argmax(d['globals'])) for d in
+          utils_np.graphs_tuple_to_data_dicts(test_values["output"])
+        ]
+        test_start_time = time.time()
+      graphs_per_second = num_graphs_processed / test_runtime
+      logging.info('test split in %.3f seconds (%02d graphs/sec)',
+                   test_runtime, graphs_per_second)
+
+      log['test_predictions'] = predictions
+      log['test_accuracy'] = sum(
+          np.array(ground_truth) == np.array(predictions)) / len(predictions)
+
+      # Dump epoch log to file.
+      log_name = f'step_{split.global_step}.epoch_{e+1}.json'
+      with open(outdir / log_name, 'w') as f:
+        json.dump(log, f)
 
       # Shuffle the training data at the end of each epoch.
-      with prof.Profile('shuffle training data'):
-        train_df = train_df.sample(
-            frac=1, random_state=seed).reset_index(drop=True)
+      train_df = train_df.sample(
+          frac=1, random_state=seed).reset_index(drop=True)
 
-  predictions = []
-  with prof.Profile('test split'):
-    for j, b in enumerate(range(0, len(split.test_df), FLAGS.batch_size)):
-      feed_dict = models.Lda.CreateFeedDict(
-          split.test_df['lda:input_graph'].iloc[b:b + FLAGS.batch_size],
-          split.test_df['lda:target_graph'].iloc[b:b + FLAGS.batch_size],
-          model.placeholders.input, model.placeholders.target)
-      test_values = sess.run({
-        # "summary": model.summary_op,
-        "target": model.placeholders.target,
-        "loss": model.loss_op.test,
-        "output": model.output_op.test,
-      }, feed_dict=feed_dict)
-      # FIXME(cec): Temporarily disabling test summaries.
-      # summary_writers.test.add_summary(test_values['summary'], training_step)
-      logging.info('Step %d, batch %d, test loss: %.4f', split.global_step,
-                   j + 1, test_values['loss'])
-
-      predictions += [
-        np.argmax(d['globals']) for d in
-        utils_np.graphs_tuple_to_data_dicts(test_values["output"])
-      ]
-
+  # Return the predictions from the final epoch.
   return predictions
 
 
@@ -310,13 +351,35 @@ class EncodeProcessDecode(snt.AbstractModule):
     return output_op
 
 
+class NoOpProfileContext():
+  """A profiling context which does no profiling.
+
+  This is used a return value of ProfileContext() which allows the
+  unconditional execution of profiling code, irrespective of profiling being
+  enabled.
+  """
+
+  def add_auto_profiling(self, *args, **kwargs):
+    """No-op."""
+    pass
+
+
+@contextlib.contextmanager
+def GetProfileContext(outdir: pathlib.Path, profile: bool=True):
+  """Return a profile context."""
+  if profile:
+    yield tf.contrib.tfprof.ProfileContext(str(outdir))
+  else:
+    yield NoOpProfileContext()
+
+
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
   logging.info('Hello!')
-  tf.logging.set_verbosity(tf.logging.DEBUG)
+  # tf.logging.set_verbosity(tf.logging.DEBUG)
 
   # Load graphs from file.
   df_path = pathlib.Path(FLAGS.df)
@@ -324,8 +387,9 @@ def main(argv):
 
   assert FLAGS.outdir
   outdir = pathlib.Path(FLAGS.outdir)
-  outdir.mkdir(parents=True, exist_ok=True)
+  # Make the output directories.
   (outdir / 'values').mkdir(exist_ok=True, parents=True)
+  (outdir / 'json_logs').mkdir(exist_ok=True, parents=True)
 
   tensorboard_outdir = outdir / 'tensorboard'
 
@@ -351,8 +415,8 @@ def main(argv):
     input_ph, target_ph = lda.CreatePlaceholdersFromGraphs(
         df['lda:input_graph'], df['lda:target_graph'])
 
-  logging.info("Input placeholders:\n%s", GraphsTupleToStr(input_ph))
-  logging.info("Target placeholders:\n%s", GraphsTupleToStr(target_ph))
+  logging.debug("Input placeholders:\n%s", GraphsTupleToStr(input_ph))
+  logging.debug("Target placeholders:\n%s", GraphsTupleToStr(target_ph))
 
   # Instantiate the model.
   with tf.name_scope('model'):
@@ -389,61 +453,72 @@ def main(argv):
   # Reset Session.
   seed = np.random.RandomState(FLAGS.seed)
 
-  with tf.Session() as sess:
-    # Log writers.
-    logging.info("Connect to this session with Tensorboard using:\n"
-                 "    python -m tensorboard.main --logdir='%s'",
-                 tensorboard_outdir)
+  params = {
+      'num_processing_steps': num_processing_steps,
+  }
 
-    # Assemble model components into a tuple.
-    model = Model(
-        placeholders=InputTargetValue(input=input_ph, target=target_ph),
-        loss_summary_op=TrainTestValue(
-            train=loss_summary_op_tr, test=loss_summary_op_ge),
-        step_op=step_op,
-        loss_op=TrainTestValue(train=loss_op_tr, test=loss_op_ge),
-        output_op=TrainTestValue(train=output_op_tr, test=output_op_ge),
-    )
+  builder = tf.profiler.ProfileOptionBuilder
+  opts = builder(builder.time_and_memory()).order_by('micros').build()
+  opts2 = tf.profiler.ProfileOptionBuilder.trainable_variables_parameter()
+  profile_context = GetProfileContext(
+      outdir / 'profile', FLAGS.profile_tensorflow)
 
-    # Split the data into independent train/test splits.
-    splits = utils.TrainTestSplitGenerator(
-        df, seed=FLAGS.seed, split_count=FLAGS.num_splits)
+  with profile_context as pctx, tf.Session() as sess:
+      # Set up profiling. Note that if not FLAGS.profile_tensorflow, these
+      # methods are no-ops.
+      pctx.add_auto_profiling('op', opts, [15, 50, 100])
+      pctx.add_auto_profiling('scope', opts2, [14, 49, 99])
 
-    eval_data = []
-    for i, split in enumerate(splits):
-      # Experimental early exit using a flag. Use this for quickly running
-      # reduced-size experiments. This will be removed later.
-      if (FLAGS.experimental_maximum_split_count and
-          i >= FLAGS.experimental_maximum_split_count):
-        logging.warning("Terminating early because "
-                        "--experimental_maximum_split_count=%d reached",
-                        FLAGS.experimental_maximum_split_count)
-        break
+      # Assemble model components into a tuple.
+      model = Model(
+          placeholders=InputTargetValue(input=input_ph, target=target_ph),
+          loss_summary_op=TrainTestValue(
+              train=loss_summary_op_tr, test=loss_summary_op_ge),
+          step_op=step_op,
+          loss_op=TrainTestValue(train=loss_op_tr, test=loss_op_ge),
+          output_op=TrainTestValue(train=output_op_tr, test=output_op_ge),
+      )
 
-      cached_predictions_path = outdir / f'values/test_{i}.pkl'
-      if cached_predictions_path.is_file():
-        # Read the predictions made a previously trained model.
-        with open(cached_predictions_path, 'rb') as f:
-          predictions = pickle.load(f)
-      else:
-        # Create a new set of predictions.
+      # Split the data into independent train/test splits.
+      splits = utils.TrainTestSplitGenerator(
+          df, seed=FLAGS.seed, split_count=FLAGS.num_splits)
 
-        # Create the summary writers.
-        writer_base_path = f'{tensorboard_outdir}/{split.gpu_name}_{split.i}'
-        summary_writers = TrainTestValue(
-            train=tf.summary.FileWriter(f'{writer_base_path}_train',
-                                        sess.graph),
-            test=tf.summary.FileWriter(f'{writer_base_path}_test', sess.graph))
+      eval_data = []
+      for i, split in enumerate(splits):
+        # Experimental early exit using a flag. Use this for quickly running
+        # reduced-size experiments. This will be removed later.
+        if (FLAGS.experimental_maximum_split_count and
+            i >= FLAGS.experimental_maximum_split_count):
+          logging.warning("Terminating early because "
+                          "--experimental_maximum_split_count=%d reached",
+                          FLAGS.experimental_maximum_split_count)
+          break
 
-        # Reset TensorFlow seed at every split, since we train and test each
-        # split independently.
-        tf.set_random_seed(FLAGS.seed + i)
-        predictions = TrainAndEvaluateSplit(sess, split, model, seed,
-                                            summary_writers)
-        with open(outdir / f'values/test_{i}.pkl', 'wb') as f:
-          pickle.dump(predictions, f)
+        cached_predictions_path = outdir / f'values/test_{i}.pkl'
+        if cached_predictions_path.is_file():
+          # Read the predictions made a previously trained model.
+          with open(cached_predictions_path, 'rb') as f:
+            predictions = pickle.load(f)
+        else:
+          # Create a new set of predictions.
 
-      eval_data += utils.EvaluatePredictions(lda, split, predictions)
+          # Create the summary writers.
+          writer_base_path = f'{tensorboard_outdir}/{split.gpu_name}_{split.i}'
+          summary_writers = TrainTestValue(
+              train=tf.summary.FileWriter(f'{writer_base_path}_train',
+                                          sess.graph),
+              test=tf.summary.FileWriter(f'{writer_base_path}_test', sess.graph))
+
+          # Reset TensorFlow seed at every split, since we train and test each
+          # split independently.
+          tf.set_random_seed(FLAGS.seed + i)
+          predictions = TrainAndEvaluateSplit(
+              sess, split, model, seed, summary_writers, outdir / 'json_logs')
+          with open(outdir / f'values/test_{i}.pkl', 'wb') as f:
+            pickle.dump(predictions, f)
+
+        eval_data += utils.EvaluatePredictions(lda, split, predictions)
+  # End of TensorFlow session scope.
 
   df = utils.PredictionEvaluationsToTable(eval_data)
   with open(outdir / 'results.pkl', 'wb') as f:
