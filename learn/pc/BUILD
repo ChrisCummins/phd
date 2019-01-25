@@ -70,6 +70,14 @@ py_test(
 )
 
 py_test(
+    name = "cons_car_cdr_test",
+    srcs = ["cons_car_cdr_test.py"],
+    deps = [
+        "//labm8:test",
+    ],
+)
+
+py_test(
     name = "serialize_binary_tree",
     srcs = ["serialize_binary_tree.py"],
 )
