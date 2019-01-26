@@ -287,8 +287,8 @@ class MLPGraphNetwork(snt.AbstractModule):
     with self._enter_variable_scope():
       self._network = modules.GraphNetwork(
           edge_model_fn=MakeMlpModel,
-          edge_model_fn=MakeMlpModel,
-          edge_model_fn=MakeMlpModel)
+          node_model_fn=MakeMlpModel,
+          global_model_fn=MakeMlpModel)
 
   def _build(self, inputs):
     return self._network(inputs)
