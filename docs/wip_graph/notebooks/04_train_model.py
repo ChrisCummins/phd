@@ -212,7 +212,7 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
 
           # Although it prints test loss for every step, it is only evaluated
           # and updated every 10 batches.
-          logging.info('Step %02d / %02d in %.3fs (%02d graphs/sec), '
+          logging.info('Split %02d / %02d in %.3fs (%02d graphs/sec), '
                        'epoch %02d / %02d, batch %02d / %02d, '
                        'training loss: %.4f, test loss: %.4f',
                        split.global_step, 2 * FLAGS.num_splits,
@@ -255,19 +255,22 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
         ]
         test_start_time = time.time()
       graphs_per_second = num_graphs_processed / test_runtime
-      logging.info('test split in %.3f seconds (%02d graphs/sec)',
-                   test_runtime, graphs_per_second)
 
       predictions = [int(np.argmax(output)) for output in outputs]
 
       # Record the raw model output predictions, and the accuracy of those
       # predictions.
       log['test_outputs'] = outputs
-      log['test_accuracy'] = sum(
+      accuracy = sum(
           np.array(ground_truth) == np.array(predictions)) / len(predictions)
+      log['test_accuracy'] = accuracy
+
+      logging.info('test split in %.3f seconds (%02d graphs/sec), '
+                   '%.3f%% accuracy', test_runtime, graphs_per_second,
+                   accuracy * 100)
 
       # Dump epoch log to file.
-      log_name = f'step_{split.global_step}.epoch_{e+1}.json'
+      log_name = f'step_{split.global_step:02d}.epoch_{e+1:03d}.json'
       with open(outdir / log_name, 'w') as f:
         json.dump(log, f)
 
