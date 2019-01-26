@@ -54,6 +54,13 @@ flags.DEFINE_integer(
 flags.DEFINE_bool(
     'profile_tensorflow', False,
     'Enable profiling of tensorflow.')
+flags.DEFINE_float(
+    'initial_learning_rate', 1e-3,
+    'The initial Adam learning rate.')
+flags.DEFINE_float(
+    'learning_rate_decay', 0.95,
+    'The rate at which learning decays. If 1.0, the learning rate does not '
+    'decay.')
 
 # Experimental flags.
 
@@ -97,7 +104,20 @@ Model = collections.namedtuple('Model', [
   'step_op',
   'loss_op',
   'output_op',
+  'learning_rate',
 ])
+
+
+def GetLearningRate(epoch_num: int) -> float:
+  """Compute the learning rate.
+
+  Args:
+    epoch_num: The (zero-based) epoch number.
+
+  Returns:
+     A learning rate, in range (0,inf).
+  """
+  return FLAGS.initial_learning_rate * FLAGS.learning_rate_decay ** epoch_num
 
 
 def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
@@ -120,19 +140,23 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
     # Make a copy of the training data that we can shuffle.
     train_df = split.train_df.copy()
 
-    # Per-epoch log to be written to file.
-    log = {
-      'batch_runtime_ms': [],
-      'num_graphs_processed_in_batch': [],
-      'training_losses': [],
-      'test_losses': [],
-      'training_graph_count': len(split.train_df),
-      'test_predictions': [],
-      'test_accuracy': 0,
-    }
-
     for e in range(FLAGS.num_epochs):
       with prof.Profile('train epoch'):
+        # Per-epoch log to be written to file.
+        log = {
+          'batch_runtime_ms': [],
+          'num_graphs_processed_in_batch': [],
+          'training_losses': [],
+          'test_losses': [],
+          'training_graph_count': len(split.train_df),
+          'test_outputs': [],
+          'test_accuracy': 0,
+          'learning_rate': GetLearningRate(e),
+        }
+
+        # Set the new learning rate.
+        sess.run(tf.assign(model.learning_rate, GetLearningRate(e)))
+
         # Iterate over all training data in batches.
         for j, b in enumerate(batches):
           batch_start_time = time.time()
@@ -198,7 +222,7 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
           tensorboard_step += 1
 
       # End of epoch. Get predictions for the test set.
-      predictions, ground_truth = [], []
+      outputs, predictions, ground_truth = [], [], []
       test_start_time = time.time()
       test_runtime = 0
       num_graphs_processed = 0
@@ -223,16 +247,19 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
         ground_truth += [
           int(np.argmax(d.graph['features'])) for d in target_graphs
         ]
-        predictions += [
-          int(np.argmax(d['globals'])) for d in
+        outputs += [
+          d['globals'] for d in
           utils_np.graphs_tuple_to_data_dicts(test_values["output"])
         ]
+        predictions += [int(np.argmax(output)) for output in outputs]
         test_start_time = time.time()
       graphs_per_second = num_graphs_processed / test_runtime
       logging.info('test split in %.3f seconds (%02d graphs/sec)',
                    test_runtime, graphs_per_second)
 
-      log['test_predictions'] = predictions
+      # Record the raw model output predictions, and the accuracy of those
+      # predictions.
+      log['test_outputs'] = outputs
       log['test_accuracy'] = sum(
           np.array(ground_truth) == np.array(predictions)) / len(predictions)
 
@@ -346,7 +373,6 @@ class EncodeProcessDecode(snt.AbstractModule):
   def _build(self, input_op, num_processing_steps):
     latent = self._encoder(input_op)
     latent0 = latent
-    output_ops = []
     for _ in range(num_processing_steps):
       core_input = utils_tf.concat([latent0, latent], axis=1)
       latent = self._core(core_input)
@@ -450,7 +476,8 @@ def main(argv):
 
   # Optimizer and training step.
   with prof.Profile('create optimizer'), tf.name_scope('optimizer'):
-    learning_rate = 1e-3
+    # Learning rate is a variable so that we can adjust it during training.
+    learning_rate = tf.Variable(0.0, trainable=False)
     optimizer = tf.train.AdamOptimizer(learning_rate)
     step_op = optimizer.minimize(loss_op_tr)
 
@@ -485,6 +512,7 @@ def main(argv):
         step_op=step_op,
         loss_op=TrainTestValue(train=loss_op_tr, test=loss_op_ge),
         output_op=TrainTestValue(train=output_op_tr, test=output_op_ge),
+        learning_rate=learning_rate,
     )
 
     # Split the data into independent train/test splits.
