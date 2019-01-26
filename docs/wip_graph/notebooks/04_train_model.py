@@ -222,7 +222,7 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
           tensorboard_step += 1
 
       # End of epoch. Get predictions for the test set.
-      outputs, predictions, ground_truth = [], [], []
+      outputs, ground_truth = [], []
       test_start_time = time.time()
       test_runtime = 0
       num_graphs_processed = 0
@@ -248,14 +248,17 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
           int(np.argmax(d.graph['features'])) for d in target_graphs
         ]
         outputs += [
-          d['globals'] for d in
+          # Convert from np.array of float32 to a list of floats for JSON
+          # serialization.
+          d['globals'].astype(float).tolist() for d in
           utils_np.graphs_tuple_to_data_dicts(test_values["output"])
         ]
-        predictions += [int(np.argmax(output)) for output in outputs]
         test_start_time = time.time()
       graphs_per_second = num_graphs_processed / test_runtime
       logging.info('test split in %.3f seconds (%02d graphs/sec)',
                    test_runtime, graphs_per_second)
+
+      predictions = [int(np.argmax(output)) for output in outputs]
 
       # Record the raw model output predictions, and the accuracy of those
       # predictions.
