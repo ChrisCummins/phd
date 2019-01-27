@@ -47,10 +47,6 @@ flags.DEFINE_integer(
 flags.DEFINE_integer(
     'batch_size', 64,
     'Batch size.')
-flags.DEFINE_integer(
-    'num_splits', 10,
-    'The number of train/test splits per device. There are two devices, so '
-    'the total number of splits evaluated will be 2 * num_splits.')
 flags.DEFINE_bool(
     'profile_tensorflow', False,
     'Enable profiling of tensorflow.')
@@ -127,9 +123,9 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
   # Reset the model at the start of each split - each split must be evaluated
   # independently of other splits since they contain overlapping information.
   sess.run(tf.global_variables_initializer())
-  logging.info("Split %d / %d with %d train graphs, %d test graphs",
-               split.global_step, 2 * FLAGS.num_splits, len(split.train_df),
-               len(split.test_df))
+  logging.info("%d split with %d train graphs, %d validation graphs, "
+               "%d test graphs", split.gpu_name, len(split.train_df),
+               len(split.valid_df), len(split.test_df))
 
   with prof.Profile('train split'):
     batches = list(range(0, len(split.train_df), FLAGS.batch_size))
@@ -144,12 +140,24 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
       with prof.Profile('train epoch'):
         # Per-epoch log to be written to file.
         log = {
+          'epoch': e + 1,
+          'gpu_name': split.gpu_name,
           'batch_runtime_ms': [],
-          'num_graphs_processed_in_batch': [],
-          'training_losses': [],
-          'test_losses': [],
+          'validation_runtime_ms': 0,
+          'test_runtime_ms': 0,
+          'training_graphs_per_second': 0,
+          'validation_graphs_per_second': 0,
+          'test_graphs_per_second': 0,
           'training_graph_count': len(split.train_df),
+          'validation_graph_count': len(split.valid_df),
+          'test_graph_count': len(split.test_df),
+          'training_losses': [],
+          # Average loss over all batches in validation and test sets.
+          'validation_loss': 0,
+          'test_loss': 0,
+          # Each model output on the test set.
           'test_outputs': [],
+          'validation_accuracy': 0,
           'test_accuracy': 0,
           'learning_rate': GetLearningRate(e),
         }
@@ -158,6 +166,7 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
         sess.run(tf.assign(model.learning_rate, GetLearningRate(e)))
 
         # Iterate over all training data in batches.
+        graphs_per_seconds = []
         for j, b in enumerate(batches):
           batch_start_time = time.time()
 
@@ -180,49 +189,74 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
           summary_writers.train.add_summary(
               train_values['summary'], tensorboard_step)
 
-          if not j % 10:
-            # Feed a single batch of the testing set through so that we can log
-            # testing loss to tensorboard. These aren't the values we will be
-            # using to return the actual predictions, we do that at the end of
-            # training.
-            input_graphs = split.test_df['lda:input_graph'].iloc[
-                           :FLAGS.batch_size]
-            target_graphs = split.test_df['lda:target_graph'].iloc[
-                            :FLAGS.batch_size]
-            num_graphs_processed += len(input_graphs)
-            feed_dict = models.Lda.CreateFeedDict(
-                input_graphs, target_graphs,
-                model.placeholders.input, model.placeholders.target)
-            test_values = sess.run({
-              "summary": model.loss_summary_op.test,
-              "target": model.placeholders.target,
-              "loss": model.loss_op.test,
-              "output": model.output_op.test,
-            }, feed_dict=feed_dict)
-            summary_writers.test.add_summary(
-                test_values['summary'], tensorboard_step)
-            log['test_losses'].append(float(test_values['loss']))
-
           batch_runtime = time.time() - batch_start_time
           graphs_per_second = num_graphs_processed / batch_runtime
+          graphs_per_seconds.append(graphs_per_second)
 
           log['batch_runtime_ms'].append(int(batch_runtime * 1000))
-          log['num_graphs_processed_in_batch'].append(num_graphs_processed)
           log['training_losses'].append(float(train_values['loss']))
 
-          # Although it prints test loss for every step, it is only evaluated
-          # and updated every 10 batches.
-          logging.info('Split %02d / %02d in %.3fs (%02d graphs/sec), '
+          logging.info('Split %s in %.3fs (%02d graphs/sec), '
                        'epoch %02d / %02d, batch %02d / %02d, '
-                       'training loss: %.4f, test loss: %.4f',
-                       split.global_step, 2 * FLAGS.num_splits,
-                       batch_runtime, int(graphs_per_second),
+                       'training loss: %.4f',
+                       split.gpu_name, batch_runtime, int(graphs_per_second),
                        e + 1, FLAGS.num_epochs, j + 1, len(batches),
-                       train_values['loss'], test_values['loss'])
+                       train_values['loss'])
           tensorboard_step += 1
 
-      # End of epoch. Get predictions for the test set.
-      outputs, ground_truth = [], []
+      log['training_graphs_per_second'] = sum(graphs_per_seconds) / len(
+          graphs_per_seconds)
+
+      # End of epoch. Get predictions for the validation and test sets.
+
+      # Validation set first.
+      outputs, ground_truth, losses = [], [], []
+      validation_start_time = time.time()
+      validation_runtime = 0
+      num_graphs_processed = 0
+
+      for j, b in enumerate(range(0, len(split.valid_df), FLAGS.batch_size)):
+        input_graphs = split.valid_df['lda:input_graph'].iloc[
+                       b:b + FLAGS.batch_size]
+        target_graphs = split.valid_df['lda:target_graph'].iloc[
+                        b:b + FLAGS.batch_size]
+        num_graphs_processed += len(input_graphs)
+        feed_dict = models.Lda.CreateFeedDict(
+            input_graphs, target_graphs,
+            model.placeholders.input, model.placeholders.target)
+        validation_values = sess.run({
+          "target": model.placeholders.target,
+          "loss": model.loss_op.test,
+          "output": model.output_op.test,
+        }, feed_dict=feed_dict)
+        losses.append(float(validation_values['loss']))
+
+        # Exclude data wrangling from prediction time - we're only interested
+        # in measuring inference rate, not the rate of the python util code.
+        validation_runtime += time.time() - validation_start_time
+        ground_truth += [
+          int(np.argmax(d.graph['features'])) for d in target_graphs
+        ]
+        outputs += [
+          d['globals'] for d in
+          utils_np.graphs_tuple_to_data_dicts(validation_values["output"])
+        ]
+        validation_start_time = time.time()
+      graphs_per_second = num_graphs_processed / validation_runtime
+      log['validation_graphs_per_second'] = graphs_per_second
+
+      predictions = [int(np.argmax(output)) for output in outputs]
+      accuracy = sum(
+          np.array(ground_truth) == np.array(predictions)) / len(predictions)
+      log['validation_accuracy'] = accuracy
+      log['validation_loss'] = sum(losses) / len(losses)
+
+      logging.info('validation set in %.3f seconds (%02d graphs/sec), '
+                   '%.3f%% accuracy', validation_runtime, graphs_per_second,
+                   accuracy * 100)
+
+      # Now the test set.
+      outputs, ground_truth, losses = [], [], []
       test_start_time = time.time()
       test_runtime = 0
       num_graphs_processed = 0
@@ -237,9 +271,14 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
             input_graphs, target_graphs,
             model.placeholders.input, model.placeholders.target)
         test_values = sess.run({
+          "summary": model.loss_summary_op.test,
           "target": model.placeholders.target,
+          "loss": model.loss_op.test,
           "output": model.output_op.test,
         }, feed_dict=feed_dict)
+        summary_writers.test.add_summary(
+            test_values['summary'], tensorboard_step)
+        losses.append(float(validation_values['loss']))
 
         # Exclude data wrangling from prediction time - we're only interested
         # in measuring inference rate, not the rate of the python util code.
@@ -255,6 +294,7 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
         ]
         test_start_time = time.time()
       graphs_per_second = num_graphs_processed / test_runtime
+      log['test_graphs_per_second'] = graphs_per_second
 
       predictions = [int(np.argmax(output)) for output in outputs]
 
@@ -264,13 +304,14 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
       accuracy = sum(
           np.array(ground_truth) == np.array(predictions)) / len(predictions)
       log['test_accuracy'] = accuracy
+      log['test_loss'] = sum(losses) / len(losses)
 
       logging.info('test split in %.3f seconds (%02d graphs/sec), '
                    '%.3f%% accuracy', test_runtime, graphs_per_second,
                    accuracy * 100)
 
       # Dump epoch log to file.
-      log_name = f'step_{split.global_step:02d}.epoch_{e+1:03d}.json'
+      log_name = f'{split.gpu_name}.epoch_{e+1:03d}.json'
       with open(outdir / log_name, 'w') as f:
         json.dump(log, f)
 
@@ -522,8 +563,8 @@ def main(argv):
     )
 
     # Split the data into independent train/test splits.
-    splits = utils.TrainTestSplitGenerator(
-        df, seed=FLAGS.seed, split_count=FLAGS.num_splits)
+    splits = utils.TrainValidationTestSplits(
+        df, seed=np.random.RandomState(FLAGS.seed))
 
     eval_data = []
     for i, split in enumerate(splits):
@@ -545,10 +586,10 @@ def main(argv):
         # Create a new set of predictions.
 
         # Create the summary writers.
-        writer_base_path = f'{tensorboard_outdir}/{split.gpu_name}_{split.i}'
+        writer_base_path = f'{tensorboard_outdir}/{split.gpu_name}'
         summary_writers = TrainTestValue(
-            train=tf.summary.FileWriter(f'{writer_base_path}_train',
-                                        sess.graph),
+            train=tf.summary.FileWriter(
+                f'{writer_base_path}_train', sess.graph),
             test=tf.summary.FileWriter(f'{writer_base_path}_test', sess.graph))
 
         # Reset TensorFlow seed at every split, since we train and test each
