@@ -65,6 +65,10 @@ def AddClassificationTargetToDataFrame(
 TrainTestSplit = collections.namedtuple(
     'TrainTestSplit', ['i', 'train_df', 'test_df', 'gpu_name', 'global_step'])
 
+# A train+val+test data batch for evaluation.
+TrainValTestSplit = collections.namedtuple(
+    'TrainValTestSplit', ['gpu_name', 'train_df', 'valid_df', 'test_df'])
+
 
 def TrainTestSplitGenerator(df: pd.DataFrame, seed: int, split_count: int = 10):
   for gpu_name in ["amd_tahiti_7970", "nvidia_gtx_960"]:
@@ -82,6 +86,70 @@ def TrainTestSplitGenerator(df: pd.DataFrame, seed: int, split_count: int = 10):
       yield TrainTestSplit(i=i + 1, train_df=df.iloc[train_index, :].copy(),
                            test_df=df.iloc[test_index, :].copy(),
                            gpu_name=gpu_name, global_step=global_step)
+
+
+def TrainValidationTestSplits(df: pd.DataFrame, rand: np.random.RandomState,
+                              train_val_test_ratios=(0.6, 0.3, 0.1)):
+  """Split a dataframe into train/validation/test splits.
+
+  This is stratified across class counts.
+
+  Args:
+    df: The dataframe to split.
+    rand: A random state.
+    train_val_test_ratios: The ratio of train/validation/test data. Must add to
+      1.
+
+  Returns:
+    An iterator of TrainValTestSplit splits.
+
+  Raises:
+    ValueError: If train_val_test_ratios don't sum to 1, or if any of the splits
+      contain no elements.
+  """
+  if abs(sum(train_val_test_ratios) - 1) > 1e-6:
+    raise ValueError("Train/validation/test ratios must sum to one")
+
+  for gpu_name in ["amd_tahiti_7970", "nvidia_gtx_960"]:
+    # Add the classification target columns `y` and `y_1hot`.
+    df = AddClassificationTargetToDataFrame(df, gpu_name).reset_index()
+
+    # Split dataset into two classes.
+    gpu_df = df[df['y'] == 1]
+    cpu_df = df[df['y'] == 0]
+
+    # Shuffle the separated CPU and GPU data.
+    gpu_df = gpu_df.sample(frac=1, random_state=rand)
+    cpu_df = cpu_df.sample(frac=1, random_state=rand)
+
+    # Split the two datasets into train / val / test splits.
+    gpu_train, gpu_val, gpu_test = np.split(gpu_df, [
+      int(train_val_test_ratios[0] * len(gpu_df)),
+      int((train_val_test_ratios[0] + train_val_test_ratios[1]) * len(gpu_df))])
+
+    cpu_train, cpu_val, cpu_test = np.split(cpu_df, [
+      int(train_val_test_ratios[0] * len(cpu_df)),
+      int((train_val_test_ratios[0] + train_val_test_ratios[1]) * len(cpu_df))])
+
+    # Concatenate the CPU and GPU data splits.
+    train = pd.concat((gpu_train, cpu_train))
+    val = pd.concat((gpu_val, cpu_val))
+    test = pd.concat((gpu_test, cpu_test))
+
+    if not len(train) or not len(val) or not len(test):
+      # Sanity check that each split contains elements.
+      raise ValueError(
+          "Datasets splits must each contain one or more elements. Actual "
+          f"element: counts train={len(train)}, val={len(validation)}, "
+          f"test={len(test)}")
+
+    # Shuffle the concatenated CPU and GPU data.
+    train = train.sample(frac=1, random_state=rand)
+    val = val.sample(frac=1, random_state=rand)
+    test = test.sample(frac=1, random_state=rand)
+
+    yield TrainValTestSplit(
+        gpu_name=gpu_name, train_df=train, valid_df=val, test_df=test)
 
 
 def LoadPredictionsFromFile(predictions_path: pathlib.Path):

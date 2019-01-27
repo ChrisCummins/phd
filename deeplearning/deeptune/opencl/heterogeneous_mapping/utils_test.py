@@ -1,5 +1,6 @@
 """Unit tests for //deeplearning/deeptune/opencl/heterogeneous_mapping:utils."""
 
+import numpy as np
 import pandas as pd
 import pytest
 from absl import flags
@@ -54,6 +55,27 @@ def test_TrainTestSplitGenerator_custom_split_count(full_df: pd.DataFrame):
   # there are two devices.
   splits = utils.TrainTestSplitGenerator(full_df, 0, split_count=5)
   assert len(list(splits)) == 10
+
+
+def test_TrainValidationTestSplits_num_splits(full_df: pd.DataFrame):
+  """Train/val/test splitter returns 2 splits."""
+  assert len(list(
+      utils.TrainValidationTestSplits(
+          full_df, np.random.RandomState(0)))) == 2
+
+
+def test_TrainValidationTestSplits_table_sizes(full_df: pd.DataFrame):
+  """Train/va/test splits have expected element counts."""
+  splits = list(
+      utils.TrainValidationTestSplits(
+          full_df, np.random.RandomState(0)))
+  assert len(splits[0].train_df) == 408
+  assert len(splits[0].valid_df) == 202
+  assert len(splits[0].test_df) == 70
+
+  assert len(splits[1].train_df) == 407
+  assert len(splits[1].valid_df) == 204
+  assert len(splits[1].test_df) == 69
 
 
 if __name__ == '__main__':
