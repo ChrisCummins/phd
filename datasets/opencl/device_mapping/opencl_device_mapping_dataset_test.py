@@ -127,6 +127,7 @@ def test_df_nan(
   assert not df.isnull().values.any()
 
 
+@pytest.mark.slow(reason="AugementWithDeadcodeMutations is slow, should switch to a smaller dataset")
 def test_AugmentWithDeadcodeMutations_num_output_rows(
     dataset: ocl_dataset.OpenClDeviceMappingsDataset):
   """Test the number of rows in generated table."""
@@ -136,6 +137,7 @@ def test_AugmentWithDeadcodeMutations_num_output_rows(
   assert len(df) == len(dataset.df) * (3 + 1)
 
 
+@pytest.mark.slow(reason="AugementWithDeadcodeMutations is slow, should switch to a smaller dataset")
 def test_AugmentWithDeadcodeMutations_identical_columns(
     dataset: ocl_dataset.OpenClDeviceMappingsDataset):
   """Test the number of unique values in columns."""
