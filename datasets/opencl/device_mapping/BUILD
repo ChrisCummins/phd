@@ -27,7 +27,6 @@ py_library(
 
 py_test(
     name = "opencl_device_mapping_dataset_test",
-    timeout = "long",
     srcs = ["opencl_device_mapping_dataset_test.py"],
     deps = [
         ":opencl_device_mapping_dataset",
