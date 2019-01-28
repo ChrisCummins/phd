@@ -326,13 +326,6 @@ class Lda(base.HeterogeneousMappingModel):
 
     return src_path_to_graph
 
-  @staticmethod
-  def GetNumberOfMessagePassingSteps(
-      input_graphs: typing.List[nx.DiGraph],
-      target_graphs: typing.List[nx.DiGraph]) -> int:
-    del target_graphs
-    return max([g.number_of_edges() for g in input_graphs])
-
   @classmethod
   def ExtractGraphs(
       cls, df: pd.DataFrame
@@ -436,25 +429,6 @@ class Lda(base.HeterogeneousMappingModel):
   def MakeRunnableInSession(*args):
     """Lets an iterable of TF graphs be output from a session as NP graphs."""
     return [graph_net_utils_tf.make_runnable_in_session(a) for a in args]
-
-  @staticmethod
-  def CreatePlaceholdersFromGraphs(input_graphs: typing.List[nx.DiGraph],
-                                   target_graphs: typing.List[nx.DiGraph]):
-    """Creates placeholders for the model training and evaluation.
-
-    Args:
-      input_graphs: A list of input graphs.
-      target_graphs: A list of input graphs.
-
-    Returns:
-      A tuple of the input graph's and target graph's placeholders, as a
-      graph namedtuple.
-    """
-    input_ph = graph_net_utils_tf.placeholders_from_networkxs(
-        input_graphs, force_dynamic_num_graphs=True)
-    target_ph = graph_net_utils_tf.placeholders_from_networkxs(
-        target_graphs, force_dynamic_num_graphs=True)
-    return InputTargetValue(input_ph, target_ph)
 
   @staticmethod
   def CreateFeedDict(input_graphs, target_graphs, input_ph, target_ph):

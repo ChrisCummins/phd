@@ -107,6 +107,16 @@ py_binary(
 )
 
 py_library(
+    name = "graph_model",
+    srcs = ["graph_model.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//third_party/py/absl",
+        "//third_party/py/numpy",
+    ],
+)
+
+py_library(
     name = "llvm_util",
     srcs = ["llvm_util.py"],
     visibility = ["//visibility:public"],
