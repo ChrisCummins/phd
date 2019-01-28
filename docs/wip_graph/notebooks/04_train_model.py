@@ -123,7 +123,7 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
   # Reset the model at the start of each split - each split must be evaluated
   # independently of other splits since they contain overlapping information.
   sess.run(tf.global_variables_initializer())
-  logging.info("%d split with %d train graphs, %d validation graphs, "
+  logging.info("%s split with %d train graphs, %d validation graphs, "
                "%d test graphs", split.gpu_name, len(split.train_df),
                len(split.valid_df), len(split.test_df))
 
@@ -158,6 +158,7 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
           # Each model output on the test set.
           'test_outputs': [],
           'validation_accuracy': 0,
+          'training_accuracy': 0,
           'test_accuracy': 0,
           'learning_rate': GetLearningRate(e),
         }
@@ -167,6 +168,7 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
 
         # Iterate over all training data in batches.
         graphs_per_seconds = []
+        correct = []
         for j, b in enumerate(batches):
           batch_start_time = time.time()
 
@@ -196,6 +198,15 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
           log['batch_runtime_ms'].append(int(batch_runtime * 1000))
           log['training_losses'].append(float(train_values['loss']))
 
+          ground_truth = np.array([
+              np.argmax(d.graph['features']) for d in target_graphs
+          ])
+          predictions = np.array([
+              np.argmax(d['globals']) for d in
+              utils_np.graphs_tuple_to_data_dicts(train_values["output"])
+          ])
+          correct += (ground_truth == predictions).tolist()
+
           logging.info('Split %s in %.3fs (%02d graphs/sec), '
                        'epoch %02d / %02d, batch %02d / %02d, '
                        'training loss: %.4f',
@@ -204,13 +215,14 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
                        train_values['loss'])
           tensorboard_step += 1
 
+      log['training_accuracy'] = sum(correct) / len(correct)
       log['training_graphs_per_second'] = sum(graphs_per_seconds) / len(
           graphs_per_seconds)
 
       # End of epoch. Get predictions for the validation and test sets.
 
       # Validation set first.
-      outputs, ground_truth, losses = [], [], []
+      correct, losses = [], []
       validation_start_time = time.time()
       validation_runtime = 0
       num_graphs_processed = 0
@@ -234,22 +246,22 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
         # Exclude data wrangling from prediction time - we're only interested
         # in measuring inference rate, not the rate of the python util code.
         validation_runtime += time.time() - validation_start_time
-        ground_truth += [
-          int(np.argmax(d.graph['features'])) for d in target_graphs
-        ]
-        outputs += [
-          d['globals'] for d in
+        ground_truth = np.array([
+          np.argmax(d.graph['features']) for d in target_graphs
+        ])
+        predictions = np.array([
+          np.argmax(d['globals']) for d in
           utils_np.graphs_tuple_to_data_dicts(validation_values["output"])
-        ]
+        ])
+        correct += (ground_truth == predictions).tolist()
         validation_start_time = time.time()
       graphs_per_second = num_graphs_processed / validation_runtime
       log['validation_graphs_per_second'] = graphs_per_second
 
-      predictions = [int(np.argmax(output)) for output in outputs]
-      accuracy = sum(
-          np.array(ground_truth) == np.array(predictions)) / len(predictions)
+      accuracy = sum(correct) / len(correct)
       log['validation_accuracy'] = accuracy
       log['validation_loss'] = sum(losses) / len(losses)
+      log['validation_runtime_ms'] = validation_runtime * 1000
 
       logging.info('validation set in %.3f seconds (%02d graphs/sec), '
                    '%.3f%% accuracy', validation_runtime, graphs_per_second,
@@ -305,6 +317,7 @@ def TrainAndEvaluateSplit(sess: tf.Session, split: utils.TrainTestSplit,
           np.array(ground_truth) == np.array(predictions)) / len(predictions)
       log['test_accuracy'] = accuracy
       log['test_loss'] = sum(losses) / len(losses)
+      log['test_runtime_ms'] = test_runtime * 1000
 
       logging.info('test split in %.3f seconds (%02d graphs/sec), '
                    '%.3f%% accuracy', test_runtime, graphs_per_second,
@@ -564,7 +577,7 @@ def main(argv):
 
     # Split the data into independent train/test splits.
     splits = utils.TrainValidationTestSplits(
-        df, seed=np.random.RandomState(FLAGS.seed))
+        df, rand=np.random.RandomState(FLAGS.seed))
 
     eval_data = []
     for i, split in enumerate(splits):

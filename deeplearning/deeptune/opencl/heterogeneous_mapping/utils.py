@@ -66,8 +66,13 @@ TrainTestSplit = collections.namedtuple(
     'TrainTestSplit', ['i', 'train_df', 'test_df', 'gpu_name', 'global_step'])
 
 # A train+val+test data batch for evaluation.
-TrainValTestSplit = collections.namedtuple(
-    'TrainValTestSplit', ['gpu_name', 'train_df', 'valid_df', 'test_df'])
+TrainValTestSplit = collections.namedtuple('TrainValTestSplit', [
+  'gpu_name',
+  'train_df',
+  'valid_df',
+  'test_df',
+  'global_step',
+])
 
 
 def TrainTestSplitGenerator(df: pd.DataFrame, seed: int, split_count: int = 10):
@@ -110,7 +115,7 @@ def TrainValidationTestSplits(df: pd.DataFrame, rand: np.random.RandomState,
   if abs(sum(train_val_test_ratios) - 1) > 1e-6:
     raise ValueError("Train/validation/test ratios must sum to one")
 
-  for gpu_name in ["amd_tahiti_7970", "nvidia_gtx_960"]:
+  for i, gpu_name in enumerate(["amd_tahiti_7970", "nvidia_gtx_960"]):
     # Add the classification target columns `y` and `y_1hot`.
     df = AddClassificationTargetToDataFrame(df, gpu_name).reset_index()
 
@@ -149,7 +154,8 @@ def TrainValidationTestSplits(df: pd.DataFrame, rand: np.random.RandomState,
     test = test.sample(frac=1, random_state=rand)
 
     yield TrainValTestSplit(
-        gpu_name=gpu_name, train_df=train, valid_df=val, test_df=test)
+        gpu_name=gpu_name, train_df=train, valid_df=val, test_df=test,
+        global_step=i)
 
 
 def LoadPredictionsFromFile(predictions_path: pathlib.Path):
@@ -321,7 +327,7 @@ def EvaluatePredictions(
 
   logging.info('Results: model=%s, platform=%s, split=%s, n=%d, '
                'predictions=(cpu=%d,gpu=%d) accuracy=%.2f%%, speedup=%.2fx',
-               model.__basename__, split.gpu_name, split.i,
+               model.__basename__, split.gpu_name, split.global_step,
                len(split.test_df), cpu_predicted_count, gpu_predicted_count,
                np.mean([r['Correct?'] for r in split_data]) * 100,
                np.mean([r['Speedup'] for r in split_data]))
