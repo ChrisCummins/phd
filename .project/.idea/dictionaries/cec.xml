@@ -69,10 +69,12 @@
       <w>mtime</w>
       <w>multichar</w>
       <w>ness</w>
+      <w>networkx</w>
       <w>nvidia</w>
       <w>oclgrind</w>
       <w>opencl</w>
       <w>ostream</w>
+      <w>outdir</w>
       <w>parallelized</w>
       <w>pavlos</w>
       <w>pbtxt</w>
@@ -101,12 +103,14 @@
       <w>sandboxed</w>
       <w>sandboxing</w>
       <w>shimfile</w>
+      <w>softmax</w>
       <w>srcs</w>
       <w>stderrs</w>
       <w>stdin</w>
       <w>strcat</w>
       <w>subdirs</w>
       <w>subsamples</w>
+      <w>tensorboard</w>
       <w>tensorflow</w>
       <w>testcase</w>
       <w>testcases</w>
