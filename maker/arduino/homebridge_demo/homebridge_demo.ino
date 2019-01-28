@@ -202,14 +202,13 @@ void loop() {
   Serial.print("` -> ");
   client.flush();
 
-  // Process request and return response.
+  // Process request and send the response to client.
   auto response = HandleRequest(req);
+  response.SendToClient(client);
+  Serial.println(response.response_line);
 
-  // Smoothly transition between brightnesses. This is blocking - the HTTP
-  // reponse won't be transmitted until this has completed. I'm unsure whether
-  // that's the right way to do it, or whether we should instead send the
-  // response first, or whether this loop should be integrated into the outer
-  // loop().
+  // Smoothly transition between brightnesses. This is blocking - no HTTP
+  // requests will be served until this has completed.
   while (current_brightness != target_brightness) {
     // Update brightness value.
     if (current_brightness < target_brightness) {
@@ -228,7 +227,4 @@ void loop() {
     analogWrite(led_pin, current_brightness);
     delay(step_duration_ms);
   }
-
-  Serial.println(response.response_line);
-  response.SendToClient(client);
 }
