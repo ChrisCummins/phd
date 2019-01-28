@@ -1,12 +1,12 @@
-// This sketch connects to a network over WiFi, create a server with a static
-// IP, and exposes GET requests to control an LED:
+// This sketch connects to a network over WiFi, creates a server with a static
+// IP, and exposes GET requests to control an LED using PWM:
 //
 //     http://<server>/led/on
 //     http://<server>/led/off
 //     http://<server>/led/brightness/<0-255>
 //
 // The server responds with a simple JSON response. Invalid URLs return 404.
-// Example:
+// For example, to set the LED to approximate half brightness:
 //
 //     $ curl http://<server>/led/brightness/128
 //     { "message": "LED on" }
@@ -29,7 +29,8 @@
 //     Tools-->Port--> (whatever it is)
 //
 // To interface this sketch with HomeKit for "Hey Siri" support, install
-// Homebridge and the homebridge-http package:
+// Homebridge and the homebridge-http package on an always-on server that will
+// act as your "bridge":
 //
 //     $ sudo apt-get install libavahi-compat-libdnssd-dev
 //     $ npm install -g homebridge homebridge-http
