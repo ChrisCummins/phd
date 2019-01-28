@@ -23,6 +23,19 @@ def tempdir() -> pathlib.Path:
     yield pathlib.Path(d)
 
 
+@pytest.fixture(scope='module')
+def module_tempdir() -> pathlib.Path:
+  """A test fixture which yields a temporary directory.
+
+  This is the same as tempdir(), except that the directory yielded is the same
+  for all tests in a module. Use this when composing a module-level fixture
+  which requires a tempdir. For all other uses, the regular tempdir() should
+  be suitable.
+  """
+  with tempfile.TemporaryDirectory(prefix='phd_test_') as d:
+    yield pathlib.Path(d)
+
+
 # Pytest configuration.
 
 # The names of platforms which can be used to mark tests.
