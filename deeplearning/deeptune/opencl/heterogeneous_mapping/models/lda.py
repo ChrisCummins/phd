@@ -10,8 +10,6 @@ import pandas as pd
 import tensorflow as tf
 from absl import flags
 from absl import logging
-from graph_nets import utils_np as graph_net_utils_np
-from graph_nets import utils_tf as graph_net_utils_tf
 from graph_nets.demos import models as gn_models
 
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import base
@@ -424,26 +422,3 @@ class Lda(base.HeterogeneousMappingModel):
       tf.losses.softmax_cross_entropy(target_op.globals, output_op.globals)
       for output_op in output_ops
     ]
-
-  @staticmethod
-  def MakeRunnableInSession(*args):
-    """Lets an iterable of TF graphs be output from a session as NP graphs."""
-    return [graph_net_utils_tf.make_runnable_in_session(a) for a in args]
-
-  @staticmethod
-  def CreateFeedDict(input_graphs, target_graphs, input_ph, target_ph):
-    """Creates placeholders for the model training and evaluation.
-
-    Args:
-        graphs: A list of graphs that will be inspected for vector sizes.
-
-    Returns:
-        The feed `dict` of input and target placeholders and data.
-    """
-    input_graphs = graph_net_utils_np.networkxs_to_graphs_tuple(input_graphs)
-    target_graphs = graph_net_utils_np.networkxs_to_graphs_tuple(target_graphs)
-    feed_dict = {
-      input_ph: input_graphs,
-      target_ph: target_graphs
-    }
-    return feed_dict

@@ -21,6 +21,7 @@ py_binary(
     deps = [
         "//deeplearning/deeptune/opencl/heterogeneous_mapping",
         "//deeplearning/deeptune/opencl/heterogeneous_mapping/models",
+        "//experimental/compilers/reachability:graph_model",
         "//labm8:prof",
         "//third_party/py/absl",
         "//third_party/py/graph_nets",

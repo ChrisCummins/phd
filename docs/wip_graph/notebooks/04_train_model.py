@@ -20,7 +20,8 @@ from absl import logging
 from deeplearning.deeptune.opencl.heterogeneous_mapping import \
   heterogeneous_mapping
 from deeplearning.deeptune.opencl.heterogeneous_mapping import utils
-from deeplearning.deeptune.opencl.heterogeneous_mapping.models import models
+from deeplearning.deeptune.opencl.heterogeneous_mapping.models import lda
+from experimental.compilers.reachability import graph_model
 from labm8 import prof
 
 
@@ -35,41 +36,6 @@ flags.DEFINE_string(
 flags.DEFINE_bool(
     'profile_tensorflow', False,
     'Enable profiling of tensorflow.')
-
-# Experimental flags.
-
-flags.DEFINE_integer('experimental_maximum_split_count', 0,
-                     'If > 0, sets the number of splits before stopping.')
-
-
-def GraphsTupleToStr(graph_tuple):
-  """Format and print a GraphTuple"""
-  return '\n'.join(
-      [f'    {k:10s} {v}' for k, v in graph_tuple._asdict().items()])
-
-
-def CreateVariableSummaries(var):
-  """Attach a lot of summaries to a Tensor (for TensorBoard visualization)."""
-  mean = tf.reduce_mean(var)
-  tf.summary.scalar('mean', mean)
-  with tf.name_scope('stddev'):
-    stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
-  tf.summary.scalar('stddev', stddev)
-  tf.summary.scalar('max', tf.reduce_max(var))
-  tf.summary.scalar('min', tf.reduce_min(var))
-  tf.summary.histogram('histogram', var)
-
-
-def GetLearningRate(epoch_num: int) -> float:
-  """Compute the learning rate.
-
-  Args:
-    epoch_num: The (zero-based) epoch number.
-
-  Returns:
-     A learning rate, in range (0,inf).
-  """
-  return FLAGS.initial_learning_rate * FLAGS.learning_rate_decay ** epoch_num
 
 
 class NoOpProfileContext():
@@ -110,7 +76,6 @@ def main(argv):
   outdir = pathlib.Path(FLAGS.outdir)
   # Make the output directories.
   (outdir / 'values').mkdir(exist_ok=True, parents=True)
-  (outdir / 'json_logs').mkdir(exist_ok=True, parents=True)
 
   tensorboard_outdir = outdir / 'tensorboard'
 
@@ -119,11 +84,7 @@ def main(argv):
 
   logging.info('Loaded %s dataframe from %s', df.shape, df_path)
 
-  # Graph Model.
-  lda = models.Lda()
-
   # Reset Session.
-  seed = np.random.RandomState(FLAGS.seed)
 
   builder = tf.profiler.ProfileOptionBuilder
   opts = builder(builder.time_and_memory()).order_by('micros').build()
@@ -131,62 +92,30 @@ def main(argv):
   profile_context = GetProfileContext(
       outdir / 'profile', FLAGS.profile_tensorflow)
 
+  model = graph_model.CompilerGraphNeuralNetwork(
+      df, outdir, graph_model.LossOps.GlobalsSoftmaxCrossEntropy,
+      graph_model.AccuracyEvaluators.OneHotGlobals)
+
   with profile_context as pctx, tf.Session() as sess:
     # Set up profiling. Note that if not FLAGS.profile_tensorflow, these
     # methods are no-ops.
     pctx.add_auto_profiling('op', opts, [15, 50, 100])
     pctx.add_auto_profiling('scope', opts2, [14, 49, 99])
 
-    # Assemble model components into a tuple.
-    model = Model(
-        placeholders=InputTargetValue(input=input_ph, target=target_ph),
-        loss_summary_op=TrainTestValue(
-            train=loss_summary_op_tr, test=loss_summary_op_ge),
-        step_op=step_op,
-        loss_op=TrainTestValue(train=loss_op_tr, test=loss_op_ge),
-        output_op=TrainTestValue(train=output_op_tr, test=output_op_ge),
-        learning_rate=learning_rate, num_processing_steps=num_processing_steps,
-    )
+    cached_predictions_path = outdir / f'values/test_{i}.pkl'
+    if cached_predictions_path.is_file():
+      # Read the predictions made a previously trained model.
+      with open(cached_predictions_path, 'rb') as f:
+        predictions = pickle.load(f)
+    else:
+      outputs = model.TrainAndEvaluate(sess)
+      predictions = np.array([
+        np.argmax(d['globals']) for d in outputs
+      ])
+      with open(outdir / f'values/test_{i}.pkl', 'wb') as f:
+        pickle.dump(predictions, f)
 
-    # Split the data into independent train/test splits.
-    splits = utils.TrainValidationTestSplits(
-        df, rand=np.random.RandomState(FLAGS.seed))
-
-    eval_data = []
-    for i, split in enumerate(splits):
-      # Experimental early exit using a flag. Use this for quickly running
-      # reduced-size experiments. This will be removed later.
-      if (FLAGS.experimental_maximum_split_count and
-          i >= FLAGS.experimental_maximum_split_count):
-        logging.warning("Terminating early because "
-                        "--experimental_maximum_split_count=%d reached",
-                        FLAGS.experimental_maximum_split_count)
-        break
-
-      cached_predictions_path = outdir / f'values/test_{i}.pkl'
-      if cached_predictions_path.is_file():
-        # Read the predictions made a previously trained model.
-        with open(cached_predictions_path, 'rb') as f:
-          predictions = pickle.load(f)
-      else:
-        # Create a new set of predictions.
-
-        # Create the summary writers.
-        writer_base_path = f'{tensorboard_outdir}/{split.gpu_name}'
-        summary_writers = TrainTestValue(
-            train=tf.summary.FileWriter(
-                f'{writer_base_path}_train', sess.graph),
-            test=tf.summary.FileWriter(f'{writer_base_path}_test', sess.graph))
-
-        # Reset TensorFlow seed at every split, since we train and test each
-        # split independently.
-        tf.set_random_seed(FLAGS.seed + i)
-        predictions = TrainAndEvaluate(sess, df, model, seed, summary_writers,
-                                       outdir / 'json_logs')
-        with open(outdir / f'values/test_{i}.pkl', 'wb') as f:
-          pickle.dump(predictions, f)
-
-      eval_data += utils.EvaluatePredictions(lda, split, predictions)
+    eval_data = utils.EvaluatePredictions(lda.Lda(), df, predictions)
   # End of TensorFlow session scope.
 
   df = utils.PredictionEvaluationsToTable(eval_data)
