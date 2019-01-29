@@ -65,7 +65,6 @@ class SpecGenerator(object):
 
 def InputGraphNodeFeatures(spec: TargetGraphSpec, node_index: int) -> np.array:
   """Extract node features for an input graph."""
-  node = spec.graph.nodes[node_index]
   # If the node is the target node, the features are [0, 1]. Else, the features
   # are [1, 0].
   return np.array([
@@ -77,6 +76,8 @@ def InputGraphNodeFeatures(spec: TargetGraphSpec, node_index: int) -> np.array:
 def InputGraphEdgeFeatures(spec: TargetGraphSpec,
                            edge_index: typing.Tuple[int, int]):
   """Extract edge features for an input graph."""
+  del spec
+  del edge_index
   return np.ones(1, dtype=np.float32)
 
 
