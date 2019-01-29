@@ -5,6 +5,8 @@ py_binary(
     srcs = ["graph_model.py"],
     visibility = ["//visibility:public"],
     deps = [
+        # Needed to resolve classes in pickled datasets.
+        "//experimental/compilers/reachability:llvm_util",  # keep
         "//labm8:labdate",
         "//labm8:prof",
         "//third_party/py/absl",
