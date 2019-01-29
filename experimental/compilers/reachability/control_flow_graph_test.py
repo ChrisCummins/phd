@@ -80,6 +80,133 @@ def test_ControlFlowGraph_Reachables_back_edge():
   assert list(g.Reachables(2)) == [False, False, False]
 
 
+def test_ToSuccessorsString_straight_line_graph():
+  """Test successors list with a back edge in the graph."""
+  g = control_flow_graph.ControlFlowGraph()
+  # Graph:
+  #
+  #      A --> B --> C
+  g.add_node(0, name='A', entry=True)
+  g.add_node(1, name='B')
+  g.add_node(2, name='C', exit=True)
+  g.add_edge(0, 1)
+  g.add_edge(1, 2)
+  assert g.ToSuccessorsString() == """\
+A: B C
+B: C
+C: """
+
+
+def test_ControlFlowGraph_ToSuccessorsString_if_else_loop():
+  """Test successors of an if-else loop graph."""
+  g = control_flow_graph.ControlFlowGraph()
+  # Graph:
+  #
+  #     +----> B -----+
+  #     |             |
+  #     |             v
+  #     A             D
+  #     |             ^
+  #     |             |
+  #     +----> C -----+
+  g.add_node(0, name='A', entry=True)
+  g.add_node(1, name='B')
+  g.add_node(2, name='C')
+  g.add_node(3, name='D', exit=True)
+  g.add_edge(0, 1)
+  g.add_edge(0, 2)
+  g.add_edge(1, 3)
+  g.add_edge(2, 3)
+  assert g.ToSuccessorsString() == """\
+A: B C D
+B: D
+C: D
+D: """
+
+
+def test_ControlFlowGraph_ToSuccessorsString_while_loop():
+  """Test successors of a while loop graph."""
+  g = control_flow_graph.ControlFlowGraph()
+  # Graph:
+  #
+  #     +--------+
+  #     |        |
+  #     v        |
+  #     A+------>B       C
+  #     |                ^
+  #     |                |
+  #     +----------------+
+  g.add_node(0, name='A', entry=True)
+  g.add_node(1, name='B')
+  g.add_node(2, name='C', exit=True)
+  g.add_edge(0, 1)
+  g.add_edge(1, 0)
+  g.add_edge(0, 2)
+  # TODO(cec): I don't beleive these. Why isn't self included?
+  assert g.ToSuccessorsString() == """\
+A: B C
+B: A C
+C: """
+
+
+def test_ControlFlowGraph_ToSuccessorsString_while_loop_with_exit():
+  """Test successors of a while loop with an if branch exit."""
+  g = control_flow_graph.ControlFlowGraph()
+  # Graph:
+  #
+  #     +----------------+
+  #     |                |
+  #     v                |
+  #     A+------>B+----->C       D
+  #     |        |               ^
+  #     |        |               |
+  #     +------->+---------------+
+  g.add_node(0, name='A', entry=True)
+  g.add_node(1, name='B')
+  g.add_node(2, name='C')
+  g.add_node(3, name='D', exit=True)
+  g.add_edge(0, 1)
+  g.add_edge(1, 2)
+  g.add_edge(2, 0)
+  g.add_edge(0, 3)
+  g.add_edge(1, 3)
+  # TODO(cec): I don't beleive these. Why isn't self included?
+  assert g.ToSuccessorsString() == """\
+A: B C D
+B: A C D
+C: A B D
+D: """
+
+
+def test_ControlFlowGraph_ToSuccessorsString_irreducible_loop():
+  """Test successors of an irreducible graph."""
+  g = control_flow_graph.ControlFlowGraph()
+  # Graph:
+  #              +-------+
+  #              |       |
+  #              v       |
+  #     A------->B+----->C
+  #     |        |       ^
+  #     |        |       |
+  #     |        v       |
+  #     |        D       |
+  #     |                |
+  #     +----------------+
+  g.add_node(0, name='A', entry=True)
+  g.add_node(1, name='B')
+  g.add_node(2, name='C')
+  g.add_node(3, name='D', exit=True)
+  g.add_edge(0, 1)
+  g.add_edge(1, 2)
+  g.add_edge(2, 1)
+  g.add_edge(1, 3)
+  assert g.ToSuccessorsString() == """\
+A: B C D
+B: C D
+C: B D
+D: """
+
+
 def test_ControlFlowGraph_validate_empty_graph():
   """Test that empty graph is invalid."""
   g = control_flow_graph.ControlFlowGraph()

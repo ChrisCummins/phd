@@ -79,6 +79,15 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
     """Return whether each node is reachable from the src node."""
     return (self.IsReachable(src, dst) for dst in self.nodes)
 
+  def ToSuccessorsString(self) -> str:
+    """Format graph as a sequence of descendants lists."""
+    ret = []
+    nodes = sorted(self.nodes(data=True), key=lambda n: n[1]['name'])
+    for index, node in nodes:
+      descendants = [self.nodes[n]['name'] for n in nx.descendants(self, index)]
+      ret.append(f"{node['name']}: {' '.join(sorted(descendants))}")
+    return '\n'.join(ret)
+
   def ValidateControlFlowGraph(self, strict: bool = True) -> 'ControlFlowGraph':
     """Return true if the graph is a valid control flow graph.
 
