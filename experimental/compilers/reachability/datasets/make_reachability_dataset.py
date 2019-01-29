@@ -51,13 +51,19 @@ class SpecGenerator(object):
         n: The maximum number of spec to generatte. If zero, enumerate
             all graphs.
     """
-    i = 0
+    yield_count = 0
     for g in self._graphs:
-      for nn in range(g.number_of_nodes()):
-        i += 1
-        if n and i > n:
+      # Only yield graphs which contain at least one edge.
+      if not g.edges:
+        continue
+
+      for node in g.node:
+        # Stop if we have produced enough graphs.
+        yield_count += 1
+        if n and yield_count > n:
           return
-        yield TargetGraphSpec(graph=g, target_node_index=nn)
+
+        yield TargetGraphSpec(graph=g, target_node_index=int(node))
 
 
 # Functions to generate feature vectors. Features vectors are np.arrays of
@@ -211,6 +217,7 @@ def main(argv):
 
     ocl_df = SpecsToDataFrame(
         SpecGenerator(ocl_dataset['cfg:graph'].values).Generate(), 'test')
+    del ocl_dataset
 
     # Set the program name column.
     ocl_df['program:source'] = 'OpenCL'
@@ -234,6 +241,7 @@ def main(argv):
     linux_df = SpecsToDataFrame(
         SpecGenerator(linux_dataset['cfg:graph'].values).Generate(),
         'test')
+    del linux_dataset
 
     # Set the program name column.
     linux_df['program:source'] = 'Linux'
