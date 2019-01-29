@@ -198,31 +198,46 @@ def main(argv):
   PickleDataFrame(synthetic_df, outdir / 'synthetic.pkl')
 
   # OpenCL dataset.
-  ocl_dataset = datasets.OpenClDeviceMappingsDataset()
-  ocl_df = SpecsToDataFrame(
-      SpecGenerator(ocl_dataset.cfgs_df['cfg:graph'].values).Generate(),
-      'test')
+  with prof.Profile('opencl dataset'):
+    ocl_dataset = datasets.OpenClDeviceMappingsDataset().cfgs_df.reset_index()
 
-  # Set the program name column.
-  ocl_df['program:source'] = 'OpenCL'
-  ocl_df['program:name'] = [':'.join([
-    r['program:benchmark_suite_name'],
-    r['program:benchmark_name'],
-    r['program:opencl_kernel_name'],
-  ]) for _, r in ocl_dataset.cfgs_df.reset_index().iterrows()]
+    # Set the program names on the networkx graph instances.
+    for _, row in ocl_dataset.iterrows():
+      row['cfg:graph'].graph['name'] = ':'.join([
+        row['program:benchmark_suite_name'],
+        row['program:benchmark_name'],
+        row['program:opencl_kernel_name'],
+      ])
+
+    ocl_df = SpecsToDataFrame(
+        SpecGenerator(ocl_dataset['cfg:graph'].values).Generate(),
+        'test')
+
+    # Set the program name column.
+    ocl_df['program:source'] = 'OpenCL'
+    ocl_df['program:name'] = [
+        r['cfg:graph'].graph['name'] for _, r in ocl_df.iterrows()
+    ]
 
   PickleDataFrame(pd.concat((synthetic_df, ocl_df)), outdir / 'ocl.pkl')
 
   # Linux dataset.
-  linux_dataset = datasets.LinuxSourcesDataset()
-  linux_df = SpecsToDataFrame(
-      SpecGenerator(linux_dataset.cfgs_df['cfg:graph'].values).Generate(),
-      'test')
+  with prof.Profile('linux dataset'):
+    linux_dataset = datasets.LinuxSourcesDataset().cfgs_df.reset_index()
 
-  # Set the program name column.
-  linux_df['program:source'] = 'Linux'
-  linux_df['program:name'] = (
-    linux_dataset.cfgs_df.reset_index()['program:src_relpath'])
+    # Set the program names on the networkx graph instances.
+    for _, row in linux_dataset.iterrows():
+      row['cfg:graph'].graph['name'] = row['program:src_relpath'].replace('/', '.')
+
+    linux_df = SpecsToDataFrame(
+        SpecGenerator(linux_dataset['cfg:graph'].values).Generate(),
+        'test')
+
+    # Set the program name column.
+    linux_df['program:source'] = 'Linux'
+    linux_df['program:name'] = [
+        r['cfg:graph'].graph['name'] for _, r in linux_df.iterrows()
+    ]
 
   PickleDataFrame(pd.concat((synthetic_df, linux_df)), outdir / 'linux.pkl')
 
