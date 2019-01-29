@@ -351,6 +351,12 @@ class LossOps(object):
     """Softmax cross entropy loss of graph globals."""
     return tf.losses.softmax_cross_entropy(target_ph.globals, output_op.globals)
 
+  @staticmethod
+  def NodesSoftmaxCrossEntropy(target_ph: graphs.GraphsTuple,
+                               output_op: graphs.GraphsTuple) -> tf.Tensor:
+    """Softmax cross entropy loss of graph nodes."""
+    return tf.losses.softmax_cross_entropy(target_ph.nodes, output_op.nodes)
+
 
 class AccuracyEvaluators(object):
   """Methods to compute the accuracy of a model's outputs."""
@@ -369,6 +375,30 @@ class AccuracyEvaluators(object):
       np.argmax(d['globals']) for d in output_graphs
     ])
     return (targets == outputs).mean()
+
+  @staticmethod
+  def OneHotNodes(
+      target_graphs: typing.List[nx.DiGraph],
+      output_graphs: typing.List[typing.Dict[str, typing.Any]]) -> float:
+    """Return accuracy of one-hot globals features."""
+    cs = []
+    ss = []
+
+    predicted_reachabilities = [
+      np.argmax(d['nodes'], axis=-1) for d in output_graphs
+    ]
+
+    for target, predicted in zip(target_graphs, predicted_reachabilities):
+      reachables = np.vstack([n['feature'] for _, n in target.nodes(data=True)])
+      c = [reachables == predicted]
+      c = np.concatenate(c, axis=0)
+      s = np.all(c)
+      cs.append(c)
+      ss.append(s)
+
+    correct = np.mean(np.concatenate(cs, axis=0))
+    solved = np.mean(np.stack(ss))
+    return {'nodes': correct, 'graphs': solved}
 
 
 class CompilerGraphNeuralNetwork(object):
