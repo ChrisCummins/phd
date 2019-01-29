@@ -14,18 +14,3 @@ py_binary(
         "//gpu/portable_mapping_of_data_parallel_programs_to_opencl:feature_extractor",
     ],
 )
-
-py_binary(
-    name = "04_train_model",
-    srcs = ["04_train_model.py"],
-    deps = [
-        "//deeplearning/deeptune/opencl/heterogeneous_mapping",
-        "//deeplearning/deeptune/opencl/heterogeneous_mapping/models",
-        "//experimental/compilers/reachability:graph_model",
-        "//labm8:prof",
-        "//third_party/py/absl",
-        "//third_party/py/graph_nets",
-        "//third_party/py/pandas",
-        "//third_party/py/tensorflow",
-    ],
-)
