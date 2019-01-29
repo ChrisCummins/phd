@@ -102,7 +102,7 @@ def main(argv):
     pctx.add_auto_profiling('op', opts, [15, 50, 100])
     pctx.add_auto_profiling('scope', opts2, [14, 49, 99])
 
-    cached_predictions_path = outdir / f'values/test_{i}.pkl'
+    cached_predictions_path = outdir / 'predictions.pkl'
     if cached_predictions_path.is_file():
       # Read the predictions made a previously trained model.
       with open(cached_predictions_path, 'rb') as f:
@@ -112,21 +112,21 @@ def main(argv):
       predictions = np.array([
         np.argmax(d['globals']) for d in outputs
       ])
-      with open(outdir / f'values/test_{i}.pkl', 'wb') as f:
+      with open(outdir / 'predictions.pkl', 'wb') as f:
         pickle.dump(predictions, f)
 
-    eval_data = utils.EvaluatePredictions(lda.Lda(), df, predictions)
+    # eval_data = utils.EvaluatePredictions(lda.Lda(), df, predictions)
   # End of TensorFlow session scope.
 
-  df = utils.PredictionEvaluationsToTable(eval_data)
-  with open(outdir / 'results.pkl', 'wb') as f:
-    pickle.dump(df, f)
-    logging.info("Results written to %s", outdir / 'results.pkl')
+  # df = utils.PredictionEvaluationsToTable(eval_data)
+  # with open(outdir / 'results.pkl', 'wb') as f:
+  #   pickle.dump(df, f)
+  #   logging.info("Results written to %s", outdir / 'results.pkl')
 
-  heterogeneous_mapping.HeterogeneousMappingExperiment.PrintResultsSummary(df)
+  # heterogeneous_mapping.HeterogeneousMappingExperiment.PrintResultsSummary(df)
 
-  gpu_predicted_count = sum(df['Predicted Mapping'])
-  cpu_predicted_count = len(df) - gpu_predicted_count
+  gpu_predicted_count = sum(predictions)
+  cpu_predicted_count = len(predictions) - gpu_predicted_count
 
   logging.info("Final predictions count: cpu=%d, gpu=%d", cpu_predicted_count,
                gpu_predicted_count)
