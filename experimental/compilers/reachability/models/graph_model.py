@@ -41,6 +41,9 @@ flags.DEFINE_integer(
     'num_epochs', 3,
     'The number of epochs to train for.')
 flags.DEFINE_integer(
+    'core_steps', 10,
+    'The number of processing steps in the graph core.')
+flags.DEFINE_integer(
     'batch_size', 64,
     'Batch size.')
 flags.DEFINE_float(
@@ -68,6 +71,9 @@ TrainingValidationTestValue = collections.namedtuple(
 InputTargetValue = collections.namedtuple(
     'InputTargetValue', ['input', 'target'])
 
+InputLatentTargetValue = collections.namedtuple(
+    'InputLatentTargetValue', ['input', 'latent', 'target'])
+
 
 def GetNumberOfMessagePassingSteps(df: pd.DataFrame) -> int:
   """Get the number of message passing steps for a dataframe of graphs.
@@ -89,7 +95,7 @@ def GetNumberOfMessagePassingSteps(df: pd.DataFrame) -> int:
 
 def CreatePlaceholdersFromGraphs(
     input_graphs: typing.List[nx.DiGraph],
-    target_graphs: typing.List[nx.DiGraph]) -> InputTargetValue:
+    target_graphs: typing.List[nx.DiGraph]) -> InputLatentTargetValue:
   """Creates placeholders for the model training and evaluation.
 
   Args:
@@ -102,9 +108,11 @@ def CreatePlaceholdersFromGraphs(
   """
   input_ph = utils_tf.placeholders_from_networkxs(
       input_graphs, force_dynamic_num_graphs=True, name="input_ph")
+  latent_ph = utils_tf.placeholders_from_networkxs(
+      input_graphs, force_dynamic_num_graphs=True, name="latent_ph")
   target_ph = utils_tf.placeholders_from_networkxs(
       target_graphs, force_dynamic_num_graphs=True, name="target_ph")
-  return InputTargetValue(input_ph, target_ph)
+  return InputLatentTargetValue(input_ph, latent_ph, target_ph)
 
 
 def MakeRunnableInSession(*args):
@@ -118,7 +126,7 @@ def GraphTupleToString(graph_tuple):
       [f'    {k:10s} {v}' for k, v in graph_tuple._asdict().items()])
 
 
-def CreateFeedDict(input_graphs, target_graphs, input_ph, target_ph):
+def CreateFeedDict(input_graphs, target_graphs, placeholders):
   """Creates placeholders for the model training and evaluation.
 
   Args:
@@ -130,8 +138,9 @@ def CreateFeedDict(input_graphs, target_graphs, input_ph, target_ph):
   input_graphs = utils_np.networkxs_to_graphs_tuple(input_graphs)
   target_graphs = utils_np.networkxs_to_graphs_tuple(target_graphs)
   feed_dict = {
-    input_ph: input_graphs,
-    target_ph: target_graphs
+    placeholders.input: input_graphs,
+    placeholders.latent: input_graphs,
+    placeholders.target: target_graphs
   }
   return feed_dict
 
@@ -272,10 +281,10 @@ class EncodeProcessDecode(snt.AbstractModule):
       self._output_transform = modules.GraphIndependent(
           edge_fn, node_fn, global_fn, name="output_transform")
 
-  def _build(self, input_op, num_processing_steps):
-    latent = self._encoder(input_op)
-    latent0 = latent
-    for _ in range(num_processing_steps):
+  def _build(self, input_op, latent_op, num_core_steps):
+    latent = latent_op
+    latent0 = self._encoder(input_op)
+    for _ in range(num_core_steps):
       core_input = utils_tf.concat([latent0, latent], axis=1)
       latent = self._core(core_input)
 
@@ -284,7 +293,7 @@ class EncodeProcessDecode(snt.AbstractModule):
     # each step of message passing.
     decoded_op = self._decoder(latent)
     output_op = self._output_transform(decoded_op)
-    return output_op
+    return latent, output_op
 
 
 def DataDictsToJsonSerializable(
@@ -403,10 +412,11 @@ class CompilerGraphNeuralNetwork(object):
     logging.info('Number of processing steps: %d', num_processing_steps)
 
     with prof.Profile('create placeholders'):
-      input_ph, target_ph = CreatePlaceholdersFromGraphs(
+      input_ph, latent_ph, target_ph = CreatePlaceholdersFromGraphs(
           df['networkx:input_graph'], df['networkx:target_graph'])
 
     logging.debug("Input placeholders:\n%s", GraphTupleToString(input_ph))
+    logging.debug("Latent placeholders:\n%s", GraphTupleToString(latent_ph))
     logging.debug("Target placeholders:\n%s", GraphTupleToString(target_ph))
 
     # Instantiate the model.
@@ -415,7 +425,7 @@ class CompilerGraphNeuralNetwork(object):
 
       # Create loss ops.
       with prof.Profile('create output op'):
-        output_op = model(input_ph, num_processing_steps)
+        latent_op, output_op = model(input_ph, latent_ph, FLAGS.core_steps)
       with prof.Profile('create training loss'):
         loss_op = make_loss_op(target_ph, output_op)
         loss_summary_op = tf.summary.scalar("loss", loss_op)
@@ -431,10 +441,12 @@ class CompilerGraphNeuralNetwork(object):
     input_ph, target_ph = MakeRunnableInSession(input_ph, target_ph)
 
     self.df = df
-    self.placeholders = InputTargetValue(input=input_ph, target=target_ph)
+    self.placeholders = InputLatentTargetValue(
+        input=input_ph, latent=latent_ph, target=target_ph)
     self.loss_summary_op = loss_summary_op
     self.step_op = step_op
     self.loss_op = loss_op
+    self.latent_op = latent_op
     self.output_op = output_op
     self.learning_rate = learning_rate
     self.num_processing_steps = num_processing_steps
@@ -486,6 +498,7 @@ class CompilerGraphNeuralNetwork(object):
             # Model attributes. These are constant across epochs.
             'batch_size': FLAGS.batch_size,
             'num_processing_steps': self.num_processing_steps,
+            'core_steps': FLAGS.core_steps,
             'initial_learning_rate': FLAGS.initial_learning_rate,
             'learning_rate_exponential_decay': FLAGS.learning_rate_exponential_decay,
             # Dataset attributes. These are constant across epochs.
@@ -531,16 +544,21 @@ class CompilerGraphNeuralNetwork(object):
             target_graphs = train_df['networkx:target_graph'].iloc[
                             b:b + FLAGS.batch_size]
             num_graphs_processed = len(input_graphs)
-            feed_dict = CreateFeedDict(
-                input_graphs, target_graphs,
-                self.placeholders.input, self.placeholders.target)
-            train_values = sess.run({
-              "summary": self.loss_summary_op,
-              "step": self.step_op,
-              "target": self.placeholders.target,
-              "loss": self.loss_op,
-              "output": self.output_op,
-            }, feed_dict=feed_dict)
+
+            latent = utils_np.networkxs_to_graphs_tuple(input_graphs)
+            for s in range(0, self.num_processing_steps, FLAGS.core_steps):
+              feed_dict = CreateFeedDict(
+                  input_graphs, latent, target_graphs, self.placeholders)
+              train_values = sess.run({
+                "summary": self.loss_summary_op,
+                "step": self.step_op,
+                "target": self.placeholders.target,
+                "loss": self.loss_op,
+                "latent": self.latent_op,
+                "output": self.output_op,
+              }, feed_dict=feed_dict)
+              latent = train_values['latent']
+
             output_graphs += utils_np.graphs_tuple_to_data_dicts(
                 train_values["output"])
             summary_writers.training.add_summary(
@@ -567,6 +585,8 @@ class CompilerGraphNeuralNetwork(object):
             graphs_per_seconds)
 
         # End of epoch. Evaluate model on the validation and test set.
+        # TODO(cec): Update remaining code for new latent.
+        continue
 
         # Validation set first.
         output_graphs, losses = [], []
@@ -580,8 +600,7 @@ class CompilerGraphNeuralNetwork(object):
                           b:b + FLAGS.batch_size]
           num_graphs_processed += len(input_graphs)
           feed_dict = CreateFeedDict(
-              input_graphs, target_graphs,
-              self.placeholders.input, self.placeholders.target)
+              input_graphs, target_graphs, self.placeholders)
           validation_values = sess.run({
             "target": self.placeholders.target,
             "loss": self.loss_op,
@@ -617,8 +636,7 @@ class CompilerGraphNeuralNetwork(object):
                           b:b + FLAGS.batch_size]
           num_graphs_processed += len(input_graphs)
           feed_dict = CreateFeedDict(
-              input_graphs, target_graphs,
-              self.placeholders.input, self.placeholders.target)
+              input_graphs, target_graphs, self.placeholders)
           test_values = sess.run({
             "summary": self.loss_summary_op,
             "target": self.placeholders.target,
