@@ -205,7 +205,7 @@ def main(argv):
     r['program:benchmark_suite_name'],
     r['program:benchmark_name'],
     r['program:opencl_kernel_name'],
-  ]) for _, r in ocl_dataset.cfgs_df.iterrows()]
+  ]) for _, r in ocl_dataset.cfgs_df.reset_index().iterrows()]
 
   PickleDataFrame(pd.concat((synthetic_df, ocl_df)), outdir / 'ocl.pkl')
 
@@ -217,7 +217,8 @@ def main(argv):
 
   # Set the program name column.
   linux_df['program:source'] = 'Linux'
-  linux_df['program:name'] = linux_dataset.cfgs_df['program:src_relpath']
+  linux_df['program:name'] = (
+    linux_dataset.cfgs_df.reset_index()['program:src_relpath'])
 
   PickleDataFrame(pd.concat((synthetic_df, linux_df)), outdir / 'linux.pkl')
 
