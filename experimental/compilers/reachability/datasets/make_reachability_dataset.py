@@ -154,6 +154,8 @@ def SpecsToDataFrame(specs: typing.Iterator[TargetGraphSpec], split_type):
       'networkx:input_graph': input_graph,
       'networkx:target_graph': target_graph,
       'split:type': split_type,
+      'graphnet:loss_op': 'NodesSoftmaxCrossEntropy',
+      'graphnet:accuracy_evaluator': 'OneHotNodes',
     }
 
   return pd.DataFrame([SpecToRow(s) for s in specs])
