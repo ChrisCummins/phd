@@ -35,7 +35,7 @@ flags.DEFINE_float(
     'initial_learning_rate', 1e-3,
     'The initial Adam learning rate.')
 flags.DEFINE_float(
-    'learning_rate_decay', 0.95,
+    'learning_rate_exponential_decay', 0.99,
     'The rate at which learning decays. If 1.0, the learning rate does not '
     'decay.')
 
@@ -131,7 +131,7 @@ def GetLearningRate(epoch_num: int) -> float:
   Returns:
      A learning rate, in range (0,inf).
   """
-  return FLAGS.initial_learning_rate * FLAGS.learning_rate_decay ** epoch_num
+  return FLAGS.initial_learning_rate * FLAGS.learning_rate_exponential_decay ** epoch_num
 
 
 def AssertDataFrameIsValidOrDie(df: pd.DataFrame) -> None:
@@ -422,7 +422,7 @@ class CompilerGraphNeuralNetwork(object):
             'batch_size': FLAGS.batch_size,
             'num_processing_steps': self.num_processing_steps,
             'initial_learning_rate': FLAGS.initial_learning_rate,
-            'learning_rate_decay': FLAGS.learning_rate_decay,
+            'learning_rate_exponential_decay': FLAGS.learning_rate_exponential_decay,
             # Dataset attributes. These are constant across epochs.
             'training_graph_count': len(train_df),
             'validation_graph_count': len(validation_df),
