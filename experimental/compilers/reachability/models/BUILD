@@ -28,3 +28,17 @@ py_test(
         "//third_party/py/pytest",
     ],
 )
+
+py_binary(
+    name = "lstm_model",
+    srcs = ["lstm_model.py"],
+    deps = [
+        "//deeplearning/clgen:telemetry",
+        "//deeplearning/clgen/corpuses:atomizers",
+        "//labm8:pbutil",
+        "//third_party/py/absl",
+        "//third_party/py/humanize",
+        "//third_party/py/keras",
+        "//third_party/py/numpy",
+    ]
+)

@@ -1,4 +1,4 @@
-"""Train a reachability classifier."""
+"""Implementation of LSTM networks for compilers."""
 import pathlib
 import pickle
 import random
@@ -7,30 +7,26 @@ import typing
 import humanize
 import keras
 import numpy as np
+import pandas as pd
 from absl import app
 from absl import flags
 from absl import logging
-from experimental.compilers.reachability.proto import reachability_pb2
 from keras.preprocessing import sequence
 
 from deeplearning.clgen import telemetry
 from deeplearning.clgen.corpuses import atomizers
 from experimental.compilers.reachability import control_flow_graph
-from labm8 import pbutil
+from labm8 import prof
 
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_integer(
-    'reachability_num_training_graphs', 10000,
-    'The number of training graphs to generate.')
-flags.DEFINE_integer(
-    'reachability_num_testing_graphs', 1000,
-    'The number of testing graphs to generate.')
 flags.DEFINE_string(
-    'reachability_model_dir',
-    '/var/phd/experimental/compilers/reachability/model',
-    'Directory to save model files to.')
+    'df', '/tmp/phd/docs/wip_graph/lda_opencl_device_mapping_dataset.pkl',
+    'Path of the dataframe to load')
+flags.DEFINE_string(
+    'outdir', '/tmp/phd/docs/wip_graph/model_files',
+    'Path of directory to generate files')
 flags.DEFINE_integer(
     'lstm_size', 64,
     'The number of neurons in each LSTM layer.')
@@ -46,29 +42,6 @@ flags.DEFINE_integer(
 flags.DEFINE_integer(
     'batch_size', 64,
     'The training batch size.')
-flags.DEFINE_integer(
-    'reachability_model_seed', None,
-    'Random seed value.')
-
-
-def MakeReachabilityDataset(
-    num_data_points: int) -> reachability_pb2.ReachabilityDataset:
-  """Generate a training data proto of unique CFGs."""
-  seqs = set()
-  data = reachability_pb2.ReachabilityDataset()
-  seed = 0
-  while len(data.entry) < num_data_points:
-    graph = control_flow_graph.ControlFlowGraph.GenerateRandom(
-        FLAGS.reachability_num_nodes, seed=seed,
-        connections_scaling_param=FLAGS.reachability_scaling_param)
-    seed += 1
-    seq = graph.ToSuccessorsListString()
-    if seq not in seqs:
-      seqs.add(seq)
-      proto = data.entry.add()
-      graph.SetProto(proto)
-      proto.seed = seed
-  return data
 
 
 def EncodeAndPad(srcs: typing.List[str], padded_length: int,
@@ -119,57 +92,27 @@ def BuildKerasModel(
   return model
 
 
-def GetSequenceLength(num_nodes: int) -> int:
-  """Get the sequence length for a given number of nodes.
-
-  Maximum sequence length for successor lists is a fully connected graph,
-  e.g. for a three node CFG:
-      A: B C
-      B: A C
-      C: A B
-  Each line is 3 + (n-1) * 2 characters long.
-  """
-  return num_nodes * (3 + (num_nodes - 1) * 2)
-
-
-def ProtosToModelData(data: reachability_pb2.ReachabilityDataset,
-                      sequence_length: int,
-                      atomizer: atomizers.AtomizerBase
-                      ) -> typing.Tuple[np.ndarray, typing.List[np.ndarray]]:
+def GraphsAndSrcsToModelData(
+    graphs_and_src: typing.List[
+      typing.Tuple[control_flow_graph.ControlFlowGraph, int]],
+    sequence_length: int,
+    atomizer: atomizers.AtomizerBase
+) -> typing.Tuple[np.ndarray, typing.List[np.ndarray]]:
   """Convert proto dataset into x,y data for model.
 
   Args:
-    data: The dataset proto.
+    graphs_and_src: A list of <graph,node> tuples, where the node is a src node
+      for computing reachabilities of nodes in graph.
     sequence_length: The length of encoded sequences.
     atomizer: The encoding atomizer.
 
   Returns:
     x,y data for feeding into keras model.
   """
-  x = EncodeAndPad(
-      [ControlFlowGraphToSequence(entry.graph) for entry in data.entry],
-      sequence_length, atomizer).astype(np.int32)
-  y = [
-    np.array([[entry.reachable[i]] for entry in data.entry]).astype(np.int32)
-    for i in range(len(data.entry[0].reachable))
-  ]
+  x = EncodeAndPad([g[0].ToSuccessorsString() for g in graphs_and_src],
+                   sequence_length, atomizer).astype(np.int32)
+  y = np.array([g[0].Reachables(g[1]) for g in graphs_and_src])
   return x, y
-
-
-def ControlFlowGraphToSequence(graph: reachability_pb2.ControlFlowGraph) -> str:
-  """Encode control flow graph as text sequence.
-
-  Args:
-    graph: A graph instance.
-
-  Returns:
-    The string representation.
-  """
-  s = []
-  for node in graph.node:
-    successors = ' '.join(sorted(node.child))
-    s.append(f'{node.name}: {successors}\n')
-  return ''.join(s)
 
 
 def FlattenModelOutputs(outs: np.ndarray) -> np.ndarray:
@@ -184,50 +127,68 @@ def FlattenModelData(y, i):
   return outs
 
 
+def DataFrameToModelData(
+    df: pd.DataFrame, sequence_length: int, atomizer: atomizers.AtomizerBase
+) -> typing.List[typing.Tuple[control_flow_graph.ControlFlowGraph]]:
+  graphs_and_srcs = list(zip(
+      df['cfg:graph'].values,
+      [row['reachability:target_node_index'] for _, row in df.iterrows()]))
+  return GraphsAndSrcsToModelData(graphs_and_srcs, sequence_length, atomizer)
+
+
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
-  model_dir = pathlib.Path(FLAGS.reachability_model_dir)
-  model_dir.mkdir(parents=True, exist_ok=True)
-  (model_dir / 'logs').mkdir(exist_ok=True)
-  (model_dir / 'checkpoints').mkdir(exist_ok=True)
+  logging.info('Starting evaluating LSTM model')
 
-  logging.info('Generating graphs dataset ...')
-  data = MakeReachabilityDataset(
-      FLAGS.reachability_num_training_graphs +
-      FLAGS.reachability_num_testing_graphs)
-  training_data = reachability_pb2.ReachabilityDataset()
-  training_data.entry.extend(
-      data.entry[:FLAGS.reachability_num_training_graphs])
-  pbutil.ToFile(training_data, model_dir / 'training_data.pbtxt')
-  testing_data = reachability_pb2.ReachabilityDataset()
-  testing_data.entry.extend(
-      data.entry[FLAGS.reachability_num_training_graphs:])
-  pbutil.ToFile(testing_data, model_dir / 'testing_data.pbtxt')
+  # Load graphs from file.
+  df_path = pathlib.Path(FLAGS.df)
+  assert df_path.is_file()
 
-  logging.info('Number of training examples: %s.',
-               humanize.intcomma(len(training_data.entry)))
-  logging.info('Number of testing examples: %s.',
-               humanize.intcomma(len(testing_data.entry)))
+  assert FLAGS.outdir
+  outdir = pathlib.Path(FLAGS.outdir)
+  # Make the output directories.
+  outdir.mkdir(parents=True, exist_ok=True)
+  (outdir / 'logs').mkdir(exist_ok=True)
+  (outdir / 'checkpoints').mkdir(exist_ok=True)
 
-  n = FLAGS.reachability_num_nodes
-  sequence_length = GetSequenceLength(FLAGS.reachability_num_nodes)
-  logging.info('Using sequence length %s.', humanize.intcomma(sequence_length))
-  seqs = [ControlFlowGraphToSequence(entry.graph) for entry in data.entry]
+  with prof.Profile('load dataframe'):
+    df = pd.read_pickle(df_path)
+  logging.info('Loaded %s dataframe from %s', df.shape, df_path)
+
+  seqs = np.array(
+      [row['cfg:graph'].ToSuccessorList() for _, row in df.iterrows()])
   text = '\n'.join(seqs)
-  logging.info('Deriving atomizer from %s chars.', humanize.intcomma(len(text)))
-  atomizer = atomizers.AsciiCharacterAtomizer.FromText(text)
-  logging.info('Vocabulary size: %s.', humanize.intcomma(len(atomizer.vocab)))
-  with open(model_dir / 'atomizer.pkl', 'wb') as f:
-    pickle.dump(atomizer, f)
-  logging.info('Pickled atomizer to %s.', model_dir / 'atomizer.pkl')
 
-  x, y = ProtosToModelData(training_data, sequence_length, atomizer)
+  sequence_length = max(len(s) for s in seqs)
+  logging.info("Sequence length: %d", sequence_length)
+
+  # Create the model.
+  if (outdir / 'atomizer.pkl').is_file():
+    with open(outdir / 'atomizer.pkl', 'rb') as f:
+      atomizer = pickle.load(f)
+  else:
+    logging.info('Deriving atomizer from %s chars.',
+                 humanize.intcomma(len(text)))
+    atomizer = atomizers.AsciiCharacterAtomizer.FromText(text)
+    logging.info('Vocabulary size: %s.', humanize.intcomma(len(atomizer.vocab)))
+    with open(outdir / 'atomizer.pkl', 'wb') as f:
+      pickle.dump(atomizer, f)
+    logging.info('Pickled atomizer to %s.', outdir / 'atomizer.pkl')
+
+  train_df = df[df['split:type'] == 'training']
+  x, y = DataFrameToModelData(train_df, sequence_length, atomizer)
   logging.info('Training data: x %s, y[%s] %s', x.shape, len(y), y[0].shape)
 
-  test_x, test_y = ProtosToModelData(testing_data, sequence_length, atomizer)
+  valid_df = df[df['split:type'] == 'training']
+  valid_x, valid_y = DataFrameToModelData(valid_df, sequence_length, atomizer)
+  logging.info('Validation data: x %s, y[%s] %s', valid_x.shape, len(valid_y),
+               valid_y[0].shape)
+
+  test_df = df[df['split:type'] == 'training']
+  test_x, test_y = DataFrameToModelData(test_df, sequence_length, atomizer)
   logging.info('Testing data: x %s, y[%s] %s', test_x.shape, len(test_y),
                test_y[0].shape)
 
@@ -235,12 +196,9 @@ def main(argv):
   logging.info('Unique sequences: %s of %s (%.2f %%)',
                humanize.intcomma(num_uniq_seqs),
                humanize.intcomma(len(seqs)), (num_uniq_seqs / len(seqs)) * 100)
-  num_uniq_labels = len(
-      set([''.join(str(x) for x in e.reachable) for e in data.entry]))
-  logging.info('Unique labels: %s of %s (%.2f %%)',
-               humanize.intcomma(num_uniq_labels),
-               humanize.intcomma(len(seqs)),
-               (num_uniq_labels / len(seqs)) * 100)
+
+  return
+  n = 10  # TODO
 
   np.random.seed(FLAGS.reachability_model_seed)
   random.seed(FLAGS.reachability_model_seed)
@@ -251,9 +209,9 @@ def main(argv):
       dnn_size=FLAGS.dnn_size, atomizer=atomizer)
 
   model_json = model.to_json()
-  with open(model_dir / 'model.json', 'w') as f:
+  with open(outdir / 'model.json', 'w') as f:
     f.write(model_json)
-  logging.info('Wrote model to %s', model_dir / 'model.json')
+  logging.info('Wrote model to %s', outdir / 'model.json')
 
   logging.info('Training model ...')
 
@@ -268,12 +226,12 @@ def main(argv):
     logging.info('Accuracy (excluding first class): %.2f %%',
                  (sum(accuracies[1:]) / len(accuracies[1:])) * 100)
 
-  logger = telemetry.TrainingLogger(logdir=model_dir / 'logs')
+  logger = telemetry.TrainingLogger(logdir=outdir / 'logs')
   model.fit(x, y, epochs=FLAGS.num_epochs,
             batch_size=FLAGS.batch_size, verbose=True, shuffle=True,
             callbacks=[
               keras.callbacks.ModelCheckpoint(
-                  str(model_dir / 'checkpoints') + '/weights_{epoch:03d}.hdf5',
+                  str(outdir / 'checkpoints') + '/weights_{epoch:03d}.hdf5',
                   verbose=1, mode="min", save_best_only=False),
               keras.callbacks.LambdaCallback(on_epoch_end=OnEpochEnd),
               logger.KerasCallback(keras),

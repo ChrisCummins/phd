@@ -90,12 +90,12 @@ py_library(
     ],
 )
 
+# TODO(cec): Merge into //experimental/compilers/reachability/models:lstm_model
 py_binary(
     name = "eval_model",
     srcs = ["eval_model.py"],
     deps = [
         ":reachability_py_pb2",
-        ":train_model",
         "//deeplearning/clgen:telemetry",
         "//deeplearning/clgen/corpuses:atomizers",
         "//labm8:pbutil",
@@ -135,20 +135,4 @@ py_proto_library(
     protos = ["reachability.proto"],
     visibility = ["//visibility:public"],
     deps = ["//third_party/py/protobuf"],
-)
-
-py_binary(
-    name = "train_model",
-    srcs = ["train_model.py"],
-    deps = [
-        ":control_flow_graph",
-        ":reachability_py_pb2",
-        "//deeplearning/clgen:telemetry",
-        "//deeplearning/clgen/corpuses:atomizers",
-        "//labm8:pbutil",
-        "//third_party/py/absl",
-        "//third_party/py/humanize",
-        "//third_party/py/keras",
-        "//third_party/py/numpy",
-    ],
 )
