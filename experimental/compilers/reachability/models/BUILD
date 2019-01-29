@@ -40,5 +40,5 @@ py_binary(
         "//third_party/py/humanize",
         "//third_party/py/keras",
         "//third_party/py/numpy",
-    ]
+    ],
 )
