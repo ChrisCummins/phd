@@ -31,8 +31,8 @@ flags.DEFINE_integer(
     'lstm_size', 64,
     'The number of neurons in each LSTM layer.')
 flags.DEFINE_integer(
-    'num_layers', 2,
-    'The number of LSTM layers.')
+    'num_classes', 15,
+    'The number of classes')
 flags.DEFINE_integer(
     'dnn_size', 32,
     'The number of neurons in the DNN layer.')
@@ -64,24 +64,34 @@ def Encode1HotLabels(y: np.array) -> np.array:
 
 
 def BuildKerasModel(
-    sequence_length: int, num_classes: int, lstm_size: int, num_layers: int,
+    sequence_length: int, num_classes: int, lstm_size: int,
     dnn_size: int, atomizer: atomizers.AtomizerBase):
   """Instantiate reachability classifier model."""
   code_in = keras.layers.Input(
       shape=(sequence_length,), dtype='int32', name='code_in')
-  x = keras.layers.Embedding(
+  lang_model = keras.layers.Embedding(
       # Note the +1 on atomizer.vocab_size to accommodate the padding character.
       input_dim=atomizer.vocab_size + 1, input_length=sequence_length,
       output_dim=lstm_size, name='embedding')(code_in)
-  for i in range(num_layers):
-    x = keras.layers.LSTM(
-        lstm_size, implementation=1, return_sequences=True,
-        go_backwards=not i)(x)
-  x = keras.layers.LSTM(lstm_size, implementation=1)(x)
-  x = keras.layers.Dense(dnn_size, activation='relu')(x)
+
+  # LSTM model.
+  lang_model = keras.layers.LSTM(
+      lstm_size, implementation=1, return_sequences=True)(lang_model)
+  lang_model = keras.layers.LSTM(lstm_size, implementation=1)(lang_model)
+
+  # Auxiliary inputs. wgsize and dsize.
+  auxiliary_inputs = keras.layers.Input(shape=(num_classes,), name="src_node")
+
+  # Heuristic model. Takes as inputs a concatenation of the language model
+  # and auxiliary inputs, outputs 1-hot encoded device mapping.
+  heuristic_model = keras.layers.Concatenate()([auxiliary_inputs, lang_model])
+  heuristic_model = keras.layers.BatchNormalization()(heuristic_model)
+
+  heuristic_model = keras.layers.Dense(dnn_size, activation='relu')(
+      heuristic_model)
   outs = [
-    keras.layers.Dense(1, activation='sigmoid',
-                       name=control_flow_graph.NumberToLetters(i))(x)
+    # One one-hot encoded output for each node.
+    keras.layers.Dense(2, activation='sigmoid')(heuristic_model)
     for i in range(num_classes)
   ]
 
@@ -117,6 +127,7 @@ def GraphsAndSrcsToModelData(
 
 def FlattenModelOutputs(outs: np.ndarray) -> np.ndarray:
   """Flatten the model output to a 1D vector of predictions."""
+  # TODO(cec): This should be an argmax.
   outs = np.array([x[0][0] for x in outs])
   return outs
 
@@ -158,6 +169,10 @@ def main(argv):
     df = pd.read_pickle(df_path)
   logging.info('Loaded %s dataframe from %s', df.shape, df_path)
 
+  df = df[df['cfg:block_count'] == FLAGS.num_classes].copy()
+  logging.info('Filtered dataframe to %d graphs with %d blocks in each',
+               len(df), FLAGS.num_classes)
+
   seqs = np.array(
       [row['cfg:graph'].ToSuccessorList() for _, row in df.iterrows()])
   text = '\n'.join(seqs)
@@ -197,16 +212,12 @@ def main(argv):
                humanize.intcomma(num_uniq_seqs),
                humanize.intcomma(len(seqs)), (num_uniq_seqs / len(seqs)) * 100)
 
-  return
-  n = 10  # TODO
-
   np.random.seed(FLAGS.reachability_model_seed)
   random.seed(FLAGS.reachability_model_seed)
   logging.info('Building Keras model ...')
   model = BuildKerasModel(
-      sequence_length=sequence_length, num_classes=n,
-      lstm_size=FLAGS.lstm_size, num_layers=FLAGS.num_layers,
-      dnn_size=FLAGS.dnn_size, atomizer=atomizer)
+      sequence_length=sequence_length, num_classes=FLAGS.num_classes,
+      lstm_size=FLAGS.lstm_size, dnn_size=FLAGS.dnn_size, atomizer=atomizer)
 
   model_json = model.to_json()
   with open(outdir / 'model.json', 'w') as f:
@@ -222,7 +233,8 @@ def main(argv):
     # score, accuracy
     row = model.evaluate(
         test_x, test_y, batch_size=FLAGS.batch_size, verbose=0)
-    overall_loss, losses, accuracies = row[0], row[1:1 + n], row[n + 1:]
+    overall_loss, losses, accuracies = (row[0], row[1:1 + FLAGS.num_classes],
+                                        row[FLAGS.num_classes + 1:])
     logging.info('Accuracy (excluding first class): %.2f %%',
                  (sum(accuracies[1:]) / len(accuracies[1:])) * 100)
 
@@ -231,7 +243,7 @@ def main(argv):
             batch_size=FLAGS.batch_size, verbose=True, shuffle=True,
             callbacks=[
               keras.callbacks.ModelCheckpoint(
-                  str(outdir / 'checkpoints') + '/weights_{epoch:03d}.hdf5',
+                  str(outdir / 'checkpoints/weights_{epoch:03d}.hdf5'),
                   verbose=1, mode="min", save_best_only=False),
               keras.callbacks.LambdaCallback(on_epoch_end=OnEpochEnd),
               logger.KerasCallback(keras),
