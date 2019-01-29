@@ -82,7 +82,9 @@ def GetNumberOfMessagePassingSteps(df: pd.DataFrame) -> int:
   """
   if FLAGS.experimental_force_num_processing_steps:
     return FLAGS.experimental_force_num_processing_steps
-  return max([g.number_of_edges() for g in df['networkx:input_graph']])
+  # Consider only the training graphs when determining step count.
+  train_df = df[df['split:type'] == 'training']
+  return max([g.number_of_edges() for g in train_df['networkx:input_graph']])
 
 
 def CreatePlaceholdersFromGraphs(
