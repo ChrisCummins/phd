@@ -170,6 +170,7 @@ def main(argv):
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
   outdir = pathlib.Path(FLAGS.outdir)
+  outdir.mkdir(exist_ok=True, parents=True)
 
   random_state = np.random.RandomState(FLAGS.synthetic_generator_seed)
 
