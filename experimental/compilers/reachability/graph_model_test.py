@@ -105,6 +105,16 @@ def test_CompilerGraphNeuralNetwork_TrainAndEvaluate_telemetry_files(
       telemetry = json.load(f)
       assert telemetry
 
+      # Check for some (NOT ALL!) of the expected valyes.
+      assert 'test_outputs' in telemetry
+      assert 'test_accuracy' in telemetry
+      assert 'training_accuracy' in telemetry
+      assert 'validation_accuracy' in telemetry
+      assert 'epoch' in telemetry
+      assert 'test_loss' in telemetry
+      assert 'training_losses' in telemetry
+      assert 'validation_loss' in telemetry
+
 
 if __name__ == '__main__':
   test.Main()

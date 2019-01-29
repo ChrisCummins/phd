@@ -256,11 +256,26 @@ class EncodeProcessDecode(snt.AbstractModule):
 
 
 def DataDictsToJsonSerializable(
-    data_dicts: typing.List[typing.Dict[str, typing.Any]]):
+    data_dicts: typing.List[typing.Dict[str, typing.Any]]
+) -> typing.List[typing.Dict[str, typing.Any]]:
   """Make data dicts JSON serializable."""
+
+  def RewriteNumpyTypes(data: typing.Dict[str, typing.Any]):
+    """Rewrite numpy dict keys."""
+    for key, val in data.items():
+      if isinstance(val, np.ndarray):
+        # Rewrite arrays as lists.
+        data[key] = val.tolist()
+      elif isinstance(val, np.int32):
+        # Rewrite int32s as ints.
+        data[key] = int(val)
+      elif isinstance(val, dict):
+        RewriteNumpyTypes(val)
+
   for data_dict in data_dicts:
-    if 'globals' in data_dict:
-      data_dict['globals'] = data_dict['globals'].tolist()
+    RewriteNumpyTypes(data_dict)
+
+  return data_dicts
 
 
 class LossOps(object):
