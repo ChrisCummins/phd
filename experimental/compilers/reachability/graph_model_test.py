@@ -35,16 +35,22 @@ def df(graph: nx.DiGraph) -> pd.DataFrame:
       'networkx:input_graph': graph.copy(),
       'networkx:target_graph': graph.copy(),
       'split:type': 'training',
+      'graphnet:loss_op': 'GlobalsSoftmaxCrossEntropy',
+      'graphnet:accuracy_evaluator': 'OneHotGlobals',
     },
     {
       'networkx:input_graph': graph.copy(),
       'networkx:target_graph': graph.copy(),
       'split:type': 'validation',
+      'graphnet:loss_op': 'GlobalsSoftmaxCrossEntropy',
+      'graphnet:accuracy_evaluator': 'OneHotGlobals',
     },
     {
       'networkx:input_graph': graph.copy(),
       'networkx:target_graph': graph.copy(),
       'split:type': 'test',
+      'graphnet:loss_op': 'GlobalsSoftmaxCrossEntropy',
+      'graphnet:accuracy_evaluator': 'OneHotGlobals',
     },
   ])
 
@@ -57,9 +63,7 @@ TrainedModel = collections.namedtuple('TrainedModel', ['model', 'outputs'])
 def trained_model(df: pd.DataFrame,
                   module_tempdir: pathlib.Path) -> TrainedModel:
   """Test fixture which yields a trained model and its outputs.'"""
-  model = graph_model.CompilerGraphNeuralNetwork(
-      df, module_tempdir, graph_model.LossOps.GlobalsSoftmaxCrossEntropy,
-      graph_model.AccuracyEvaluators.OneHotGlobals)
+  model = graph_model.CompilerGraphNeuralNetwork(df, module_tempdir)
   with tf.Session() as sess:
     outputs = model.TrainAndEvaluate(sess)
   yield TrainedModel(model, outputs)

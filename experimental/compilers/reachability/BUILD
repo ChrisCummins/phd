@@ -106,7 +106,7 @@ py_binary(
     ],
 )
 
-py_library(
+py_binary(
     name = "graph_model",
     srcs = ["graph_model.py"],
     visibility = ["//visibility:public"],

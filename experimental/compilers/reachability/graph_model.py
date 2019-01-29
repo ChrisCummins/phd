@@ -136,9 +136,15 @@ def GetLearningRate(epoch_num: int) -> float:
 
 def AssertDataFrameIsValidOrDie(df: pd.DataFrame) -> None:
   """Assert that the dataframe is valid else die."""
-  for column in ['networkx:input_graph', 'networkx:target_graph', 'split:type']:
+  for column in [
+    'networkx:input_graph', 'networkx:target_graph', 'split:type',
+    'graphnet:loss_op', 'graphnet:accuracy_evaluator',
+  ]:
     assert column in df.columns.values
   assert set(df['split:type']) == {'training', 'validation', 'test'}
+
+  assert len(set(df['graphnet:loss_op'])) == 1
+  assert len(set(df['graphnet:accuracy_evaluator'])) == 1
 
 
 def MakeMultilayerPerceptron() -> snt.Sequential:
@@ -311,9 +317,7 @@ class AccuracyEvaluators(object):
 
 class CompilerGraphNeuralNetwork(object):
 
-  def __init__(self, df: pd.DataFrame, outdir: pathlib.Path,
-               make_loss_op: LossOps.Type,
-               evaluate_outputs: AccuracyEvaluators.Type):
+  def __init__(self, df: pd.DataFrame, outdir: pathlib.Path):
     """Instantiate a compiler graph neural network for the given dataset.
 
     DataFrame columns:
@@ -328,6 +332,11 @@ class CompilerGraphNeuralNetwork(object):
       make_loss_op: A function that generates the loss op.
     """
     AssertDataFrameIsValidOrDie(df)
+
+    # Lookup the loss op and evaluator functions from the table.
+    make_loss_op = getattr(LossOps, df['graphnet:loss_op'].values[0])
+    evaluate_outputs = getattr(
+        AccuracyEvaluators, df['graphnet:accuracy_evaluator'].values[0])
 
     # Create output directories.
     (outdir / 'telemetry').mkdir(exist_ok=True, parents=True)
