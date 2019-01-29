@@ -18,7 +18,17 @@ FLAGS = flags.FLAGS
 
 
 @pytest.fixture(scope='module')
-def graph() -> nx.DiGraph:
+def input_graph() -> nx.DiGraph:
+  """Test fixture which returns a simple graph for use as input or target."""
+  g = nx.DiGraph(features=np.ones(1))
+  g.add_node(0, features=np.ones(2))
+  g.add_node(1, features=np.ones(2))
+  g.add_edge(0, 1, features=np.ones(1))
+  yield g
+
+
+@pytest.fixture(scope='module')
+def target_graph() -> nx.DiGraph:
   """Test fixture which returns a simple graph for use as input or target."""
   g = nx.DiGraph(features=np.ones(2))
   g.add_node(0, features=np.ones(1))
@@ -28,26 +38,26 @@ def graph() -> nx.DiGraph:
 
 
 @pytest.fixture(scope='module')
-def df(graph: nx.DiGraph) -> pd.DataFrame:
+def df(input_graph: nx.DiGraph, target_graph) -> pd.DataFrame:
   """Dataframe containing a single training, validation, and test entry."""
   return pd.DataFrame([
     {
-      'networkx:input_graph': graph.copy(),
-      'networkx:target_graph': graph.copy(),
+      'networkx:input_graph': input_graph.copy(),
+      'networkx:target_graph': target_graph.copy(),
       'split:type': 'training',
       'graphnet:loss_op': 'GlobalsSoftmaxCrossEntropy',
       'graphnet:accuracy_evaluator': 'OneHotGlobals',
     },
     {
-      'networkx:input_graph': graph.copy(),
-      'networkx:target_graph': graph.copy(),
+      'networkx:input_graph': input_graph.copy(),
+      'networkx:target_graph': target_graph.copy(),
       'split:type': 'validation',
       'graphnet:loss_op': 'GlobalsSoftmaxCrossEntropy',
       'graphnet:accuracy_evaluator': 'OneHotGlobals',
     },
     {
-      'networkx:input_graph': graph.copy(),
-      'networkx:target_graph': graph.copy(),
+      'networkx:input_graph': input_graph.copy(),
+      'networkx:target_graph': target_graph.copy(),
       'split:type': 'test',
       'graphnet:loss_op': 'GlobalsSoftmaxCrossEntropy',
       'graphnet:accuracy_evaluator': 'OneHotGlobals',
