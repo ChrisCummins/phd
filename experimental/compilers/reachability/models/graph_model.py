@@ -210,6 +210,50 @@ class MLPGraphNetwork(snt.AbstractModule):
     return self._network(inputs)
 
 
+class RecurrentGraphNet(snt.AbstractModule):
+  """Recurrent graph net module."""
+
+  # TODO(cec): Implement!
+
+  def __init__(self,
+               edge_output_size=None,
+               node_output_size=None,
+               global_output_size=None,
+               name="RecurrentGraphNet"):
+    super(RecurrentGraphNet, self).__init__(name=name)
+    # Transform the outputs into the appropriate shapes.
+    if edge_output_size is None:
+      edge_fn = None
+    else:
+      edge_fn = lambda: snt.Linear(edge_output_size, name="edge_output")
+    if node_output_size is None:
+      node_fn = None
+    else:
+      node_fn = lambda: snt.Linear(node_output_size, name="node_output")
+    if global_output_size is None:
+      global_fn = None
+    else:
+      global_fn = lambda: snt.Linear(global_output_size, name="global_output")
+
+    with self._enter_variable_scope():
+      self._encoder = MLPGraphIndependent(name="encoder")
+      self._core = MLPGraphNetwork(name="core")
+      self._decoder = MLPGraphIndependent(name="decoder")
+      self._output_transform = modules.GraphIndependent(
+          edge_fn, node_fn, global_fn, name="output_transform")
+
+  def _build(self, input_op, num_processing_steps):
+    latent = self._encoder(input_op)
+    latent0 = latent
+    for _ in range(num_processing_steps):
+      core_input = utils_tf.concat([latent0, latent], axis=1)
+      latent = self._core(core_input)
+
+    decoded_op = self._decoder(latent)
+    output_op = self._output_transform(decoded_op)
+    return output_op
+
+
 class EncodeProcessDecode(snt.AbstractModule):
   """Full encode-process-decode model.
 

@@ -1,30 +1,9 @@
 # Experiments in Compiler Reachability Analysis
 
-**To generate a control flow graph:**
+Code structure:
 
-```sh
-$ bazel run //experimental/compilers/reachability -- \
-    --reachability_scaling_param=.57 \
-    --reachability_num_nodes=5 \
-    --reachability_seed=1
-```
-
-The output is a list of node names and successors.
-
-**To train a model:**
-
-```sh
-$ bazel run //experimental/compilers/reachability:train_model -- \
-    --reachability_model_dir=/var/phd/experimental/compilers/reachability/model \
-    --reachability_num_training_graphs=10000 \
-    --reachability_num_testing_graphs=1000 \
-    --reachability_scaling_param=.57 \
-    --reachability_num_nodes=5
-```
-
-**To evaluate a model:**
-
-```sh
-$ bazel run //experimental/compilers/reachability:eval_model -- \
-    --reachability_model_dir=/var/phd/experimental/compilers/reachability/model
-```
+* `datasets/` a set of scripts that produce pandas DataFrames containing CFG
+  problem datasets for use with ML tasks, such as reachabilitiy, OpenCL device
+  mapping, etc.
+* `models/` a set of scripts for training and evaluating ML models on CFG 
+  problems.
