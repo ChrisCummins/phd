@@ -254,7 +254,7 @@ def main(argv):
                   outdir / 'synthetic_linux.pkl')
 
   PickleDataFrame(pd.concat((synthetic_df, ocl_df, linux_df)),
-                  outdir / 'synthetic_linux_opencl.pkl')
+                  outdir / 'synthetic_linux_ocl.pkl')
 
 
 if __name__ == '__main__':
