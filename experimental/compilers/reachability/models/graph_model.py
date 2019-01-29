@@ -20,7 +20,6 @@ from graph_nets import modules
 from graph_nets import utils_np
 from graph_nets import utils_tf
 
-from experimental.compilers.reachability import graph_model
 from labm8 import labdate
 from labm8 import prof
 
@@ -713,7 +712,7 @@ def main(argv):
       outdir / 'profile', FLAGS.profile_tensorflow)
 
   # Create the model.
-  model = graph_model.CompilerGraphNeuralNetwork(df, outdir)
+  model = CompilerGraphNeuralNetwork(df, outdir)
 
   with profile_context as pctx, tf.Session() as sess:
     # Set up profiling. Note that if not FLAGS.profile_tensorflow, these
