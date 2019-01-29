@@ -129,8 +129,8 @@ def SpecToInputTarget(spec: TargetGraphSpec):
         *edge_index, features=TargetGraphEdgeFeatures(spec, edge_index))
 
   # Set global (graph) features.
-  input_graph.graph['features'] = np.array([0.0])
-  target_graph.graph['features'] = np.array([0.0])
+  input_graph.graph['features'] = np.array([0.0], dtype=np.float32)
+  target_graph.graph['features'] = np.array([0.0], dtype=np.float32)
 
   return input_graph, target_graph
 
