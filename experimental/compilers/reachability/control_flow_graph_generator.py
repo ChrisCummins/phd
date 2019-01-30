@@ -118,8 +118,8 @@ class ControlFlowGraphGenerator(object):
     #   * Non-terminating while loops when we can't match the expected edge
     #     density.
     #   * Parallel edges being created.
-    #   * In "real" CFGs, does outgree(n) ever exceed 2? If not, this should be
-    #     reflected here.
+    #   * In "real" CFGs, does outdegree(n) ever exceed 2? If not, this should
+    #     be reflected here.
 
     # Sample the number of nodes to put in the graph, unless min == max.
     if self._num_nodes_min_max[0] == self._num_nodes_min_max[1]:
