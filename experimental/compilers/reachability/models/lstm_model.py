@@ -1,4 +1,5 @@
 """Implementation of LSTM networks for compilers."""
+import json
 import pathlib
 import pickle
 import random
@@ -12,10 +13,12 @@ from absl import app
 from absl import flags
 from absl import logging
 from keras import layers
+from keras import metrics
 from keras.preprocessing import sequence
 
 from deeplearning.clgen.corpuses import atomizers
 from experimental.compilers.reachability import control_flow_graph
+from labm8 import labdate
 from labm8 import prof
 
 
@@ -58,14 +61,6 @@ def EncodeAndPad(srcs: typing.List[str], padded_length: int,
   return np.vstack([np.expand_dims(x, axis=0) for x in encoded])
 
 
-def Encode1HotLabels(y: np.array) -> np.array:
-  """1-hot encode labels."""
-  labels = np.vstack([np.expand_dims(x, axis=0) for x in y])
-  l2 = [x[0] for x in labels]
-  l1 = [not x for x in l2]
-  return np.array(list(zip(l1, l2)), dtype=np.int32)
-
-
 def BuildKerasModel(
     sequence_length: int, num_classes: int, lstm_size: int,
     dnn_size: int, atomizer: atomizers.AtomizerBase) -> keras.models.Model:
@@ -81,8 +76,6 @@ def BuildKerasModel(
   language_model = layers.LSTM(
       lstm_size, implementation=1, return_sequences=True)(language_model)
   language_model = layers.LSTM(lstm_size, implementation=1)(language_model)
-  language_model_output = layers.Dense(
-      num_classes, activation="sigmoid")(language_model)
 
   # Node selector, a 1-hot vector which selects a node in the graph to predict
   # reachability for.
@@ -95,29 +88,17 @@ def BuildKerasModel(
 
   heuristic_model = layers.Dense(dnn_size, activation='relu')(
       heuristic_model)
-  heuristic_model_output = layers.Dense(
-      num_classes, activation="sigmoid")(heuristic_model)
+  heuristic_model_outputs = [
+    layers.Dense(2, activation="sigmoid", name=f"node_{i}")(heuristic_model)
+    for i in range(num_classes)
+  ]
 
   model = keras.models.Model(
       inputs=[node_selector, code_in],
-      outputs=[heuristic_model_output, language_model_output])
-  model.compile(optimizer="adam", metrics=['accuracy'],
-                loss=["categorical_crossentropy", "categorical_crossentropy"],
-                loss_weights=[1., .2])
+      outputs=heuristic_model_outputs)
+  model.compile(optimizer="adam", metrics=["accuracy"],
+                loss=["categorical_crossentropy"] * num_classes)
   return model
-
-
-def FlattenModelOutputs(outs: np.ndarray) -> np.ndarray:
-  """Flatten the model output to a 1D vector of predictions."""
-  # TODO(cec): This should be an argmax.
-  outs = np.array([x[0][0] for x in outs])
-  return outs
-
-
-def FlattenModelData(y, i):
-  """Extract labels row 'i' from labels 'y'."""
-  outs = np.array([y[j][i][0] for j in range(len(y))])
-  return outs
 
 
 def DataFrameToModelData(
@@ -130,14 +111,20 @@ def DataFrameToModelData(
   node_selectors = np.vstack(df['reachability:node_selector'])
   x = [node_selectors, sequences]
   # The `reachability:reachble_nodes` column contains a bool array of size
-  # num_class, where each element represents whether a node is reachable from
-  # the source node indicated by `reachability:node_selector`.
-  reachables = np.vstack(df['reachability:reachable_nodes'])
-  y = [reachables, reachables]
+  # num_class, where each element is a one-hot encoding of whether a node is
+  # reachable from the source node indicated by `reachability:node_selector`.
+  outputs = []
+  # Slice the data into vertical columns, so that we have one output for each
+  # node.
+  for col in range(len(df['reachability:reachable_nodes'].iloc[0])):
+    column = np.vstack([r[col] for r in df['reachability:reachable_nodes']])
+    outputs.append(column)
+  y = outputs
   return x, y
 
 
 def OneHot(i: typing.Union[int, bool], n: int = 2):
+  """One-hot encode value 'i' with dimensionality 'n'."""
   out = np.zeros(n, dtype=np.int32)
   out[int(i)] = 1
   return out
@@ -154,10 +141,10 @@ def ExpandToClassificationDataset(df: pd.DataFrame, num_classes: int):
       row = row.copy()
       graph: control_flow_graph.ControlFlowGraph = row['cfg:graph']
       row['reachability:node_selector'] = OneHot(i, num_classes)
-      row['reachability:reachable_nodes'] = [
-        True if graph.IsReachable(i, j) else False
-        for j in range(num_classes)
-      ]
+      # Array of shape: (num_classes, 2).
+      row['reachability:reachable_nodes'] = np.array([
+        OneHot(graph.IsReachable(i, j)) for j in range(num_classes)
+      ], dtype=np.int32)
       rows.append(row)
   return pd.DataFrame(rows)
 
@@ -166,8 +153,8 @@ class LstmReachabilityModel(object):
 
   def __init__(self, df: pd.DataFrame, outdir: pathlib.Path, num_classes: int,
                lstm_size: int = None, dnn_size: int = None):
-    lstm_size = lstm_size or FLAGS.lstm_size
-    dnn_size = dnn_size or FLAGS.dnn_size
+    self.lstm_size = lstm_size or FLAGS.lstm_size
+    self.dnn_size = dnn_size or FLAGS.dnn_size
 
     df = df[df['cfg:block_count'] == num_classes].copy()
     logging.info('Filtered dataframe to %d graphs with %d blocks in each',
@@ -175,7 +162,7 @@ class LstmReachabilityModel(object):
 
     # Make the output directories.
     outdir.mkdir(parents=True, exist_ok=True)
-    (outdir / 'logs').mkdir(exist_ok=True)
+    (outdir / 'telemetry').mkdir(exist_ok=True)
     (outdir / 'checkpoints').mkdir(exist_ok=True)
 
     self.num_classes = num_classes
@@ -216,27 +203,27 @@ class LstmReachabilityModel(object):
       raise ValueError("No training graphs!")
     self.train_x, self.train_y = DataFrameToModelData(
         train_df, sequence_length, atomizer)
-    logging.info('Training data: x=[%s, %s], y=[%s, %s]',
+    logging.info('Training data: x=[%s, %s], y=[15x %s]',
                  self.train_x[0].shape, self.train_x[1].shape,
-                 self.train_y[0].shape, self.train_y[1].shape)
+                 self.train_y[0].shape)
 
     valid_df = df[df['split:type'] == 'validation']
     if not len(valid_df):
       raise ValueError("No validation graphs!")
     self.valid_x, self.valid_y = DataFrameToModelData(
         valid_df, sequence_length, atomizer)
-    logging.info('Validation data: x=[%s, %s], y=[%s, %s]',
+    logging.info('Validation data: x=[%s, %s], y=[15x %s]',
                  self.valid_x[0].shape, self.valid_x[1].shape,
-                 self.valid_y[0].shape, self.valid_y[1].shape)
+                 self.valid_y[0].shape)
 
     test_df = df[df['split:type'] == 'test']
     if not len(test_df):
       raise ValueError("No test graphs!")
     self.test_x, self.test_y = DataFrameToModelData(
         test_df, sequence_length, atomizer)
-    logging.info('Testing data: x=[%s, %s], y=[%s, %s]',
+    logging.info('Testing data: x=[%s, %s], y=[15x %s]',
                  self.test_x[0].shape, self.test_x[1].shape,
-                 self.test_y[0].shape, self.test_y[1].shape)
+                 self.test_y[0].shape)
 
     num_uniq_seqs = len(set(df['text:successors']))
     logging.info('Unique sequences: %s of %s (%.2f %%)',
@@ -249,7 +236,9 @@ class LstmReachabilityModel(object):
     logging.info('Building Keras model ...')
     self.model = BuildKerasModel(
         sequence_length=sequence_length, num_classes=num_classes,
-        lstm_size=lstm_size, dnn_size=dnn_size, atomizer=atomizer)
+        lstm_size=self.lstm_size, dnn_size=self.dnn_size, atomizer=atomizer)
+
+    self.num_classes = num_classes
 
     with open(outdir / 'model.json', 'w') as f:
       f.write(self.model.to_json())
@@ -258,20 +247,67 @@ class LstmReachabilityModel(object):
   def TrainAndEvaluate(self, num_epochs: int):
     def OnEpochEnd(epoch, logs):
       """End-of-epoch model evaluate."""
-      del logs
-      logging.info('Evaluating model at epoch %d', epoch)
-      # score, accuracy
-      # TODO(cec): validation data
-      row = self.model.evaluate(
-          self.test_x, self.test_y, batch_size=FLAGS.batch_size, verbose=0)
-      overall_loss, losses, accuracies = (row[0], row[1:1 + FLAGS.num_classes],
-                                          row[FLAGS.num_classes + 1:])
-      logging.info('overal loss: %s', overall_loss)
-      logging.info('losses: %s', losses)
-      logging.info('accuracies: %s', accuracies)
+      logging.info('Evaluating model at epoch %d', epoch + 1)
+
+      with prof.Profile('test set'):
+        test_logs = dict(zip(
+          self.model.metrics_names,
+          self.model.evaluate(
+            self.test_x, self.test_y, batch_size=FLAGS.batch_size, verbose=0)))
+        outputs = self.model.predict(
+          self.test_x, batch_size=FLAGS.batch_size)
+
+        accuracies = []
+        solutions = []
+        for col in range(self.num_classes):
+          predictions = outputs[col]
+          ground_truth = self.test_y[col]
+
+          # Flatten 1-hot encoding to lists.
+          predictions = np.array([np.argmax(x) for x in predictions])
+          ground_truth = np.array([np.argmax(x) for x in ground_truth])
+
+          # Compare lists.
+          correct = ground_truth == predictions
+          solutions.append(correct)
+          accuracies.append(correct.mean())
+
+        accuracy = np.mean(accuracies)
+
+        # Transpose to make a (num_rows, num_classes) shape tensor.
+        solutions = np.array(solutions).T
+        solved = np.mean([row.all() for row in solutions])
+
+      logging.info("Evaluated test set at epoch %s, accuracy: %.2f%%, "
+                   "solved: %.2f%%", epoch + 1, accuracy * 100, solved * 100)
+
+      validation_accuracy = np.mean([
+        logs[f'val_node_{i}_acc'] for i in range(self.num_classes)
+      ])
+
+      telemetry = {
+        'epoch': epoch_num,
+        'lstm_size': self.lstm_size,
+        'dnn_size': self.dnn_size,
+        'batch_size': FLAGS.batch_size,
+        # Dataset attributes. These are constant across epochs.
+        'training_graph_count': len(self.train_x[0]),
+        'validation_graph_count': len(self.valid_x[0]),
+        'test_graph_count': len(self.train_x[0]),
+        'training_loss': logs['loss'],
+        'validation_loss': logs['val_loss'],
+        'validation_accuracy': validation_accuracy,
+        'test_loss': test_logs['loss'],
+        'test_accuracy': accuracy,
+        'test_solved': solved,
+      }
+      with open(f'{self.outdir}/telemetry/epoch_{epoch+1:03d}.'
+                f'T{labdate.MillisecondsTimestamp()}.json', 'w') as f:
+        json.dump(telemetry, f)
 
     self.model.fit(
         self.train_x, self.train_y, epochs=num_epochs,
+        validation_data=(self.valid_x, self.valid_y),
         batch_size=FLAGS.batch_size, verbose=True, shuffle=True,
         callbacks=[
           keras.callbacks.ModelCheckpoint(

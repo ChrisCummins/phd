@@ -39,6 +39,7 @@ py_binary(
         "//experimental/compilers/reachability:control_flow_graph",
         # Needed to resolve classes in pickled datasets.
         "//experimental/compilers/reachability:llvm_util",  # keep
+        "//labm8:labdate",
         "//labm8:pbutil",
         "//labm8:prof",
         "//third_party/py/absl",
