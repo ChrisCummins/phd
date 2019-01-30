@@ -197,6 +197,7 @@ def test_ControlFlowGraph_ToSuccessorsString_irreducible_loop():
   g.add_node(2, name='C')
   g.add_node(3, name='D', exit=True)
   g.add_edge(0, 1)
+  g.add_edge(0, 2)
   g.add_edge(1, 2)
   g.add_edge(2, 1)
   g.add_edge(1, 3)
@@ -204,6 +205,132 @@ def test_ControlFlowGraph_ToSuccessorsString_irreducible_loop():
 A: B C D
 B: C D
 C: B D
+D: """
+
+
+def test_ToNeighborsString_straight_line_graph():
+  """Test neighbors list with a back edge in the graph."""
+  g = control_flow_graph.ControlFlowGraph()
+  # Graph:
+  #
+  #      A --> B --> C
+  g.add_node(0, name='A', entry=True)
+  g.add_node(1, name='B')
+  g.add_node(2, name='C', exit=True)
+  g.add_edge(0, 1)
+  g.add_edge(1, 2)
+  assert g.ToNeighborsString() == """\
+A: B
+B: C
+C: """
+
+
+def test_ControlFlowGraph_ToNeighborsString_if_else_loop():
+  """Test neighbors of an if-else loop graph."""
+  g = control_flow_graph.ControlFlowGraph()
+  # Graph:
+  #
+  #     +----> B -----+
+  #     |             |
+  #     |             v
+  #     A             D
+  #     |             ^
+  #     |             |
+  #     +----> C -----+
+  g.add_node(0, name='A', entry=True)
+  g.add_node(1, name='B')
+  g.add_node(2, name='C')
+  g.add_node(3, name='D', exit=True)
+  g.add_edge(0, 1)
+  g.add_edge(0, 2)
+  g.add_edge(1, 3)
+  g.add_edge(2, 3)
+  assert g.ToNeighborsString() == """\
+A: B C
+B: D
+C: D
+D: """
+
+
+def test_ControlFlowGraph_ToNeighborsString_while_loop():
+  """Test neighbors of a while loop graph."""
+  g = control_flow_graph.ControlFlowGraph()
+  # Graph:
+  #
+  #     +--------+
+  #     |        |
+  #     v        |
+  #     A+------>B       C
+  #     |                ^
+  #     |                |
+  #     +----------------+
+  g.add_node(0, name='A', entry=True)
+  g.add_node(1, name='B')
+  g.add_node(2, name='C', exit=True)
+  g.add_edge(0, 1)
+  g.add_edge(1, 0)
+  g.add_edge(0, 2)
+  assert g.ToNeighborsString() == """\
+A: B C
+B: A
+C: """
+
+
+def test_ControlFlowGraph_ToNeighborsString_while_loop_with_exit():
+  """Test neighbors of a while loop with an if branch exit."""
+  g = control_flow_graph.ControlFlowGraph()
+  # Graph:
+  #
+  #     +----------------+
+  #     |                |
+  #     v                |
+  #     A+------>B+----->C       D
+  #     |        |               ^
+  #     |        |               |
+  #     +------->+---------------+
+  g.add_node(0, name='A', entry=True)
+  g.add_node(1, name='B')
+  g.add_node(2, name='C')
+  g.add_node(3, name='D', exit=True)
+  g.add_edge(0, 1)
+  g.add_edge(1, 2)
+  g.add_edge(2, 0)
+  g.add_edge(0, 3)
+  g.add_edge(1, 3)
+  assert g.ToNeighborsString() == """\
+A: B D
+B: C D
+C: A
+D: """
+
+
+def test_ControlFlowGraph_ToNeighborsString_irreducible_loop():
+  """Test neighbors of an irreducible graph."""
+  g = control_flow_graph.ControlFlowGraph()
+  # Graph:
+  #              +-------+
+  #              |       |
+  #              v       |
+  #     A------->B+----->C
+  #     |        |       ^
+  #     |        |       |
+  #     |        v       |
+  #     |        D       |
+  #     |                |
+  #     +----------------+
+  g.add_node(0, name='A', entry=True)
+  g.add_node(1, name='B')
+  g.add_node(2, name='C')
+  g.add_node(3, name='D', exit=True)
+  g.add_edge(0, 1)
+  g.add_edge(0, 2)
+  g.add_edge(1, 2)
+  g.add_edge(2, 1)
+  g.add_edge(1, 3)
+  assert g.ToNeighborsString() == """\
+A: B C
+B: C D
+C: B
 D: """
 
 
@@ -420,6 +547,7 @@ def test_ControlFlowGraph_IsValidControlFlowGraph_irreducible_loop():
   g.add_node(2, name='C')
   g.add_node(3, name='D', exit=True)
   g.add_edge(0, 1)
+  g.add_edge(0, 2)
   g.add_edge(1, 2)
   g.add_edge(2, 1)
   g.add_edge(1, 3)
