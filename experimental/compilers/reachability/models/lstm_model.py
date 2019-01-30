@@ -48,6 +48,10 @@ flags.DEFINE_integer(
 flags.DEFINE_integer(
     'reachability_model_seed', 0,
     'Random seed for the model.')
+flags.DEFINE_boolean(
+    'neighbors_only', False,
+    'If true, generate lists of only immediate neighbors for each node, not '
+    'all successor nodes.')
 
 
 def EncodeAndPad(srcs: typing.List[str], padded_length: int,
@@ -170,9 +174,17 @@ class LstmReachabilityModel(object):
 
     # Derive atomizer and sequence length.
 
-    df['text:successors'] = [
-      row['cfg:graph'].ToSuccessorsString() for _, row in df.iterrows()
-    ]
+    # If --neighbours_only, train on list of immediate neighbor nodes. Else,
+    # train on a list of all successors. Immediate neighbors is a much more
+    # difficult problem.
+    if FLAGS.neighbors_only:
+      df['text:successors'] = [
+        row['cfg:graph'].ToNeighborsString() for _, row in df.iterrows()
+      ]
+    else:
+      df['text:successors'] = [
+        row['cfg:graph'].ToSuccessorsString() for _, row in df.iterrows()
+      ]
 
     text = '\n'.join(df['text:successors'])
 
