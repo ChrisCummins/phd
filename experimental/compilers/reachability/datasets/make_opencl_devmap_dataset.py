@@ -54,9 +54,22 @@ def main(argv):
   logging.info(f'{unknowns.mean():.1%} of statements are unknown '
                f'(min={unknowns.min():.1%}, max={unknowns.max():.1%})')
 
+  # Set CFG properties columns.
+  graphs = [x[1] for x in encoded_graphs]
+  df['cfg:graph'] = graphs
+  df['cfg:block_count'] = [graph.number_of_nodes() for graph in graphs]
+  df['cfg:edge_count'] = [graph.number_of_edges() for graph in graphs]
+  df['cfg:edge_density'] = [graph.edge_density for graph in graphs]
+  df['cfg:is_valid'] = [
+    graph.IsValidControlFlowGraph(strict=False) for graph in graphs
+  ]
+  df['cfg:is_strict_valid'] = [
+    graph.IsValidControlFlowGraph(strict=True) for graph in graphs
+  ]
+
   with prof.Profile('input target graphs'):
-    input_target_graphs = list(model.GraphsToInputTargets(encoded_graphs))
-    input_graphs, target_graphs = zip(*input_target_graphs)
+    input_graphs, target_graphs = zip(
+        *list(model.GraphsToInputTargets(encoded_graphs))
 
   # Add the graph representations to the dataframe they were extracted from.
   df['networkx:graph'] = [x[1] for x in encoded_graphs]
