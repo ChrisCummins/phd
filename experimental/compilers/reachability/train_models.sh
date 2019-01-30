@@ -6,7 +6,7 @@ set -eux
 
 # Path of input datasets. THIS SCRIPT DOES NOT GENERATE THESE FILES. Check the
 # commands below to see what files it expects.
-DATASETS_DIR="/var/phd/shared/docs/wip_graph/datasets/"
+DATASETS_DIR="/var/phd/shared/docs/wip_graph/datasets"
 # Path for output data.
 OUTDIR_BASE="/var/phd/shared/docs/wip_graph/$(date +%s).$(hostname)"
 
