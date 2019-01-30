@@ -298,7 +298,7 @@ class LstmReachabilityModel(object):
       ])
 
       telemetry = {
-        'epoch': epoch_num,
+        'epoch': epoch + 1,
         'lstm_size': self.lstm_size,
         'dnn_size': self.dnn_size,
         'batch_size': FLAGS.batch_size,
