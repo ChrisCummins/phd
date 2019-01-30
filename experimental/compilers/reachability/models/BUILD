@@ -35,12 +35,24 @@ py_binary(
     name = "lstm_model",
     srcs = ["lstm_model.py"],
     deps = [
-        "//deeplearning/clgen:telemetry",
+        "//experimental/compilers/reachability:control_flow_graph",
+        "//labm8:prof",
         "//deeplearning/clgen/corpuses:atomizers",
         "//labm8:pbutil",
         "//third_party/py/absl",
         "//third_party/py/humanize",
         "//third_party/py/keras",
         "//third_party/py/numpy",
+    ],
+)
+
+py_test(
+    name = "lstm_model_test",
+    srcs = ["lstm_model_test.py"],
+    deps = [
+        ":lstm_model",
+        "//labm8:test",
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
