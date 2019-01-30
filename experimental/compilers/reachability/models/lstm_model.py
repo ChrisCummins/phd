@@ -163,9 +163,8 @@ class LstmReachabilityModel(object):
     self.lstm_size = lstm_size or FLAGS.lstm_size
     self.dnn_size = dnn_size or FLAGS.dnn_size
 
-    df = df[df['cfg:block_count'] == num_classes].copy()
-    logging.info('Filtered dataframe to %d graphs with %d blocks in each',
-                 len(df), num_classes)
+    if set(df['cfg:block_count']) != {num_classes}:
+      raise ValueError(f"All graphs must have {num_classes} blocks")
 
     # Make the output directories.
     outdir.mkdir(parents=True, exist_ok=True)
@@ -376,8 +375,16 @@ def main(argv):
             FLAGS.num_synthetic_validation_graphs),
         'validation')
 
-  df = df[df['split:type'] == 'test']
-  df = pd.concat((df, valid_df, train_df))
+  # Keep only the test set.
+  test_df = df[df['split:type'] == 'test']
+  old_len = len(test_df)
+  # Filter the test set to match the num classes we want.
+  test_df = test_df[test_df['cfg:block_count'] == FLAGS.num_classes]
+  logging.info('Filtered test set from %d to %d graphs with %d blocks in each',
+               old_len, len(test_df), num_classes)
+
+  # Assemble the new dataset.
+  df = pd.concat((train_df, valid_df, test_df))
 
   model = LstmReachabilityModel(df, outdir, FLAGS.num_classes)
   model.TrainAndEvaluate(num_epochs=FLAGS.num_epochs)
