@@ -69,7 +69,7 @@ def main(argv):
 
   with prof.Profile('input target graphs'):
     input_graphs, target_graphs = zip(
-        *list(model.GraphsToInputTargets(encoded_graphs))
+        *list(model.GraphsToInputTargets(encoded_graphs)))
 
   # Add the graph representations to the dataframe they were extracted from.
   df['networkx:graph'] = [x[1] for x in encoded_graphs]
