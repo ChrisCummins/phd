@@ -35,10 +35,12 @@ py_binary(
     name = "lstm_model",
     srcs = ["lstm_model.py"],
     deps = [
-        "//experimental/compilers/reachability:control_flow_graph",
-        "//labm8:prof",
         "//deeplearning/clgen/corpuses:atomizers",
+        "//experimental/compilers/reachability:control_flow_graph",
+        # Needed to resolve classes in pickled datasets.
+        "//experimental/compilers/reachability:llvm_util",  # keep
         "//labm8:pbutil",
+        "//labm8:prof",
         "//third_party/py/absl",
         "//third_party/py/humanize",
         "//third_party/py/keras",
