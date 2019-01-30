@@ -33,6 +33,7 @@ py_binary(
 py_binary(
     name = "make_reachability_dataset",
     srcs = ["make_reachability_dataset.py"],
+    visibility = ["//experimental/compilers/reachability:__subpackages__"],
     deps = [
         "//experimental/compilers/reachability:cfg_datasets",
         "//experimental/compilers/reachability:control_flow_graph",

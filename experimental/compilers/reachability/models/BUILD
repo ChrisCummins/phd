@@ -37,6 +37,8 @@ py_binary(
     deps = [
         "//deeplearning/clgen/corpuses:atomizers",
         "//experimental/compilers/reachability:control_flow_graph",
+        "//experimental/compilers/reachability/datasets:make_reachability_dataset",
+        "//experimental/compilers/reachability:control_flow_graph_generator",
         # Needed to resolve classes in pickled datasets.
         "//experimental/compilers/reachability:llvm_util",  # keep
         "//labm8:labdate",

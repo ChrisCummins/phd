@@ -13,11 +13,14 @@ from absl import app
 from absl import flags
 from absl import logging
 from keras import layers
-from keras import metrics
 from keras.preprocessing import sequence
 
 from deeplearning.clgen.corpuses import atomizers
 from experimental.compilers.reachability import control_flow_graph
+from experimental.compilers.reachability import \
+  control_flow_graph_generator as cfg_generator
+from experimental.compilers.reachability.datasets import \
+  make_reachability_dataset as dataset
 from labm8 import labdate
 from labm8 import prof
 
@@ -263,11 +266,12 @@ class LstmReachabilityModel(object):
 
       with prof.Profile('test set'):
         test_logs = dict(zip(
-          self.model.metrics_names,
-          self.model.evaluate(
-            self.test_x, self.test_y, batch_size=FLAGS.batch_size, verbose=0)))
+            self.model.metrics_names,
+            self.model.evaluate(
+                self.test_x, self.test_y, batch_size=FLAGS.batch_size,
+                verbose=0)))
         outputs = self.model.predict(
-          self.test_x, batch_size=FLAGS.batch_size)
+            self.test_x, batch_size=FLAGS.batch_size)
 
         accuracies = []
         solutions = []
@@ -348,6 +352,32 @@ def main(argv):
   with prof.Profile('load dataframe'):
     df = pd.read_pickle(df_path)
   logging.info('Loaded %s dataframe from %s', df.shape, df_path)
+
+  # Replace the training and validation data in the loaded dataset with our own
+  # that we generate now.
+  random_state = np.random.RandomState(FLAGS.synthetic_generator_seed)
+
+  with prof.Profile('synthetic training graphs'):
+    training_graph_generator = dataset.SpecGenerator(
+        cfg_generator.ControlFlowGraphGenerator(
+            random_state, (FLAGS.num_classes, FLAGS.num_classes),
+            dataset.edge_density_tr, strict=False))
+    train_df = dataset.SpecsToDataFrame(
+        training_graph_generator.Generate(FLAGS.num_synthetic_training_graphs),
+        'training')
+
+  with prof.Profile('synthetic validation graphs'):
+    validation_graph_generator = dataset.SpecGenerator(
+        cfg_generator.ControlFlowGraphGenerator(
+            random_state, (FLAGS.num_classes, FLAGS.num_classes),
+            dataset.edge_density_ge, strict=False))
+    valid_df = SpecsToDataFrame(
+        validation_graph_generator.Generate(
+            FLAGS.num_synthetic_validation_graphs),
+        'validation')
+
+  df = df[df['split:type'] == 'test']
+  df = pd.concat((df, valid_df, train_df))
 
   model = LstmReachabilityModel(df, outdir, FLAGS.num_classes)
   model.TrainAndEvaluate(num_epochs=FLAGS.num_epochs)
