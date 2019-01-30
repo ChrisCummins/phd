@@ -50,7 +50,7 @@ flags.DEFINE_float(
     'initial_learning_rate', 1e-3,
     'The initial Adam learning rate.')
 flags.DEFINE_float(
-    'learning_rate_exponential_decay', 0.99,
+    'learning_rate_exponential_decay', 0.1,
     'The rate at which learning decays. If 1.0, the learning rate does not '
     'decay.')
 
@@ -90,7 +90,7 @@ def GetNumberOfMessagePassingSteps(df: pd.DataFrame) -> int:
     return FLAGS.experimental_force_num_processing_steps
   # Consider only the training graphs when determining step count.
   train_df = df[df['split:type'] == 'training']
-  return max([g.number_of_edges() for g in train_df['networkx:input_graph']])
+  return int(train_df['cfg:block_count'].max())
 
 
 def CreatePlaceholdersFromGraphs(
@@ -154,7 +154,8 @@ def GetLearningRate(epoch_num: int) -> float:
   Returns:
      A learning rate, in range (0,inf).
   """
-  return FLAGS.initial_learning_rate * FLAGS.learning_rate_exponential_decay ** epoch_num
+  return FLAGS.initial_learning_rate / (
+      1 + FLAGS.learning_rate_exponential_decay * epoch_num)
 
 
 def AssertDataFrameIsValidOrDie(df: pd.DataFrame) -> None:
@@ -310,6 +311,9 @@ def DataDictsToJsonSerializable(
       elif isinstance(val, np.int32):
         # Rewrite int32s as ints.
         data[key] = int(val)
+      elif isinstance(val, np.int64):
+        # Rewrite int64s as ints.
+        data[key] = int(val)
       elif isinstance(val, dict):
         RewriteNumpyTypes(val)
 
@@ -337,15 +341,21 @@ class LossOps(object):
     return tf.losses.softmax_cross_entropy(target_ph.nodes, output_op.nodes)
 
 
+EvaluationResult = collections.namedtuple(
+    'EvaluationResult', ['accuracy', 'solved'])
+
+
 class AccuracyEvaluators(object):
   """Methods to compute the accuracy of a model's outputs."""
   Type = typing.Callable[
-    [typing.List[nx.DiGraph], typing.List[typing.Dict[str, typing.Any]]], float]
+    [typing.List[nx.DiGraph], typing.List[typing.Dict[str, typing.Any]]],
+     EvaluationResult]
 
   @staticmethod
   def OneHotGlobals(
       target_graphs: typing.List[nx.DiGraph],
-      output_graphs: typing.List[typing.Dict[str, typing.Any]]) -> float:
+      output_graphs: typing.List[typing.Dict[str, typing.Any]]
+) -> EvaluationResult:
     """Return accuracy of one-hot globals features."""
     targets = np.array([
       np.argmax(d.graph['features']) for d in target_graphs
@@ -353,12 +363,14 @@ class AccuracyEvaluators(object):
     outputs = np.array([
       np.argmax(d['globals']) for d in output_graphs
     ])
-    return (targets == outputs).mean()
+    accuracy = (targets == outputs).mean()
+    return EvaluationResult(float(accuracy), float(accuracy))
 
   @staticmethod
   def OneHotNodes(
       target_graphs: typing.List[nx.DiGraph],
-      output_graphs: typing.List[typing.Dict[str, typing.Any]]) -> float:
+      output_graphs: typing.List[typing.Dict[str, typing.Any]]
+) -> EvaluationResult:
     """Return accuracy of one-hot globals features."""
     cs = []
     ss = []
@@ -368,16 +380,37 @@ class AccuracyEvaluators(object):
     ]
 
     for target, predicted in zip(target_graphs, predicted_reachabilities):
-      reachables = np.vstack([n['feature'] for _, n in target.nodes(data=True)])
+      reachables = np.array(
+        [np.argmax(n['features']) for _, n in target.nodes(data=True)])
       c = [reachables == predicted]
       c = np.concatenate(c, axis=0)
       s = np.all(c)
       cs.append(c)
       ss.append(s)
 
-    correct = np.mean(np.concatenate(cs, axis=0))
-    solved = np.mean(np.stack(ss))
-    return {'nodes': correct, 'graphs': solved}
+    accuracy = np.concatenate(cs, axis=0).mean()
+    solved = np.stack(ss).mean()
+    return EvaluationResult(float(accuracy), float(solved))
+
+
+def GuessOutputSizesFromTargetGraph(
+    graph: nx.DiGraph) -> typing.Dict[str, int]:
+  global_features = graph.graph['features']
+  for _, node in graph.nodes(data=True):
+    node_features = node['features']
+    break
+  for _, _, edge in graph.edges(data=True):
+    edge_features = edge['features']
+    break
+
+  def GuessOutputSize(features: np.ndarray) -> typing.Optional[int]:
+    return len(features) if len(features) > 1 else None
+
+  return {
+    'global_output_size': GuessOutputSize(global_features),
+    'node_output_size': GuessOutputSize(node_features),
+    'edge_output_size': GuessOutputSize(edge_features),
+  }
 
 
 class CompilerGraphNeuralNetwork(object):
@@ -400,12 +433,15 @@ class CompilerGraphNeuralNetwork(object):
 
     # Lookup the loss op and evaluator functions from the table.
     make_loss_op = getattr(LossOps, df['graphnet:loss_op'].values[0])
+    logging.info('Using loss op %s', make_loss_op.__name__)
     evaluate_outputs = getattr(
         AccuracyEvaluators, df['graphnet:accuracy_evaluator'].values[0])
+    logging.info('Using evaluator %s', evaluate_outputs.__name__)
 
     # Create output directories.
     (outdir / 'telemetry').mkdir(exist_ok=True, parents=True)
     (outdir / 'tensorboard').mkdir(exist_ok=True, parents=True)
+    (outdir / 'test_outputs').mkdir(exist_ok=True, parents=True)
 
     # Get the number of message passing steps.
     num_processing_steps = GetNumberOfMessagePassingSteps(df)
@@ -421,7 +457,8 @@ class CompilerGraphNeuralNetwork(object):
 
     # Instantiate the model.
     with tf.name_scope('model'):
-      model = EncodeProcessDecode(global_output_size=2)
+      model = EncodeProcessDecode(**GuessOutputSizesFromTargetGraph(
+          df['networkx:target_graph'].values[0]))
 
       # Create loss ops.
       with prof.Profile('create output op'):
@@ -523,10 +560,11 @@ class CompilerGraphNeuralNetwork(object):
             'test_loss': 0,
             # Accuracies of model on training / validation / test data.
             'training_accuracy': 0,
+            'training_solved': 0,
             'validation_accuracy': 0,
+            'validation_solved': 0,
             'test_accuracy': 0,
-            # Each model output on the test set.
-            'test_outputs': [],
+            'test_solved': 0,
           }
 
           # Set the learning rate based on the epoch number.
@@ -572,15 +610,15 @@ class CompilerGraphNeuralNetwork(object):
             log['training_losses'].append(float(train_values['loss']))
 
             logging.info(
-                'Batch %d in %.3fs (%02d graphs/sec), epoch %02d / %02d, '
-                'batch %02d / %02d, training loss: %.4f',
-                tensorboard_step, batch_runtime, int(graphs_per_second),
-                epoch_num + 1, FLAGS.num_epochs, j + 1, len(batches),
+                'Epoch %02d / %02d, batch %02d / %02d in %.3fs (%02d graphs/sec), '
+                'training loss: %.4f', epoch_num + 1, FLAGS.num_epochs,
+                j + 1, len(batches), batch_runtime, int(graphs_per_second),
                 train_values['loss'])
             tensorboard_step += 1
 
-        log['training_accuracy'] = self.evaluate_outputs(
-            train_df['networkx:target_graph'], output_graphs)
+        log['training_accuracy'], log['training_solved'] = (
+          self.evaluate_outputs(train_df['networkx:target_graph'],
+                                output_graphs))
         log['training_graphs_per_second'] = sum(graphs_per_seconds) / len(
             graphs_per_seconds)
 
@@ -602,27 +640,32 @@ class CompilerGraphNeuralNetwork(object):
           feed_dict = CreateFeedDict(
               input_graphs, target_graphs, self.placeholders)
           validation_values = sess.run({
+            "summary": self.loss_summary_op,
             "target": self.placeholders.target,
             "loss": self.loss_op,
             "output": self.output_op,
           }, feed_dict=feed_dict)
           output_graphs += utils_np.graphs_tuple_to_data_dicts(
               validation_values["output"])
+          summary_writers.validation.add_summary(
+              validation_values['summary'], tensorboard_step)
           losses.append(float(validation_values['loss']))
 
         validation_runtime = time.time() - validation_start_time
         graphs_per_second = num_graphs_processed / validation_runtime
         log['validation_graphs_per_second'] = graphs_per_second
 
-        accuracy = self.evaluate_outputs(
+        eval_result = self.evaluate_outputs(
             validation_df['networkx:target_graph'], output_graphs)
-        log['validation_accuracy'] = accuracy
+        log['validation_accuracy'], log['validation_solved'] = eval_result
         log['validation_loss'] = sum(losses) / len(losses)
         log['validation_runtime_ms'] = validation_runtime * 1000
 
-        logging.info('validation set in %.3f seconds (%02d graphs/sec), '
-                     '%.3f%% accuracy', validation_runtime, graphs_per_second,
-                     accuracy * 100)
+        logging.info('Validation set in %.3f seconds (%02d graphs/sec), '
+                     'loss: %.4f, %.2f%% accuracy, %.2f%% solved',
+                     validation_runtime, graphs_per_second,
+                     log['validation_loss'], eval_result.accuracy * 100,
+                     eval_result.solved * 100)
 
         # Now the test set.
         output_graphs, losses = [], []
@@ -654,16 +697,16 @@ class CompilerGraphNeuralNetwork(object):
         log['test_graphs_per_second'] = graphs_per_second
 
         # Record the output graphs as JSON, and the accuracy of those outputs.
-        log['test_outputs'] = DataDictsToJsonSerializable(output_graphs)
-        accuracy = self.evaluate_outputs(
+        eval_result = self.evaluate_outputs(
             test_df['networkx:target_graph'], output_graphs)
-        log['test_accuracy'] = accuracy
+        log['test_accuracy'], log['test_solved'] = eval_result
         log['test_loss'] = sum(losses) / len(losses)
         log['test_runtime_ms'] = test_runtime * 1000
 
-        logging.info('test split in %.3f seconds (%02d graphs/sec), '
-                     '%.3f%% accuracy', test_runtime, graphs_per_second,
-                     accuracy * 100)
+        logging.info('Test set in %.3f seconds (%02d graphs/sec), '
+                     'loss: %.4f, %.2f%% accuracy, %.2f%% solved',
+                     test_runtime, graphs_per_second, log['test_loss'],
+                     eval_result.accuracy * 100, eval_result.solved * 100)
 
         # Dump epoch log to file.
         logpath = (f'{self.outdir}/telemetry/epoch_{epoch_num+1:03d}.'
@@ -671,6 +714,12 @@ class CompilerGraphNeuralNetwork(object):
         with open(logpath, 'w') as f:
           json.dump(log, f)
         logging.info("Wrote %s", logpath)
+
+        test_outputs_path = (
+            f'{self.outdir}/test_outputs/epoch_{epoch_num+1:03d}.'
+            f'T{labdate.MillisecondsTimestamp()}.pkl')
+        with open(test_outputs_path, 'wb') as f:
+          pickle.dump(output_graphs, f)
 
         # Shuffle the training data at the end of each epoch.
         train_df = train_df.sample(
