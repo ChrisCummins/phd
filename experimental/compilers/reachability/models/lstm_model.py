@@ -305,7 +305,7 @@ class LstmReachabilityModel(object):
         # Dataset attributes. These are constant across epochs.
         'training_graph_count': len(self.train_x[0]),
         'validation_graph_count': len(self.valid_x[0]),
-        'test_graph_count': len(self.train_x[0]),
+        'test_graph_count': len(self.test_x[0]),
         'training_loss': logs['loss'],
         'validation_loss': logs['val_loss'],
         'validation_accuracy': validation_accuracy,
