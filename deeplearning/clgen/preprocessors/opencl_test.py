@@ -19,13 +19,14 @@ SHIMFILE = bazelutil.DataPath(
     'phd/deeplearning/clgen/data/include/opencl-shim.h')
 
 
-class MockProcess():
+class MockProcess(object):
   """Mock class for subprocess.Popen() return."""
 
   def __init__(self, returncode):
     self.returncode = returncode
 
   def communicate(self, *args):
+    del args
     return '', ''
 
 
