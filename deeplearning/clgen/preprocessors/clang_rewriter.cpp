@@ -170,6 +170,10 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
   rewrite_table_t _global_vars;
   std::map<std::string, rewrite_table_t> _local_vars;
 
+  // The set of rewritten source locations, used to prevent multiple edits
+  // to the same location.
+  std::set<clang::SourceLocation> _visited;
+
   // accepts a function name, and returns the rewritten name.
   //
   std::string get_fn_rewrite(const std::string& name) {
@@ -228,6 +232,8 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
   }
 
   virtual ~RewriterVisitor() {}
+
+  bool shouldTraversePostOrder() const { return true; }
 
   void rewrite_fn_name(clang::FunctionDecl *const func,
                        const std::string& replacement) {
@@ -340,8 +346,18 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
   // rewrite variable refs
   //
   bool VisitDeclRefExpr(clang::DeclRefExpr* ref) {
-    if (isMainFile(ref->getLocStart())) {
+    const clang::SourceLocation loc = ref->getLocStart();
+
+    if (isMainFile(loc)) {
       const auto name = ref->getNameInfo().getName().getAsString();
+      // We may visit references multiple times. Only rewrite it the first time.
+      if (_visited.find(loc) != _visited.end()) {
+        DEBUG_OUT("Already visited " << name << '\n');
+        return true;
+      }
+
+      _visited.insert(loc);
+
       const auto d = ref->getDecl();
 
       const auto* parent = d->getParentFunctionOrMethod();
