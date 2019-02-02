@@ -184,6 +184,98 @@ void kernel foo(global int* bar) {
 """)
 
 
+def test_NormalizeIdentifiers_global_variable():
+  """Test that global variable is renamed."""
+  assert opencl.NormalizeIdentifiers("""
+sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
+const int foo = 0;
+""") == """
+sampler_t Ga = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
+const int Gb = 0;
+"""
+
+
+def test_NormalizeIdentifiers_global_variable_reference():
+  """Test that global variable reference is renamed."""
+  assert opencl.NormalizeIdentifiers("""
+const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
+
+kernel void A() {
+  sampler_t a = sampler;
+}
+""") == """
+const sampler_t Ga = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
+
+kernel void A() {
+  sampler_t a = Ga;
+}
+"""
+
+@pytest.mark.xfail(
+    reason='FIXME: Global sampler variable references are not visited.'
+)
+def test_NormalizeIdentifiers_opencl_global_sampler_reference():
+  """Test that global sampler variable references are rewritten."""
+  assert opencl.NormalizeIdentifiers("""
+constant sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
+constant float2 vec = (float2)(0, 0);
+
+float interpolate(read_only image2d_t image) {
+  return read_imageui(image, sampler, vec).x;
+}
+""") == """
+constant sampler_t Ga = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
+constant float2 Gb = (float2)(0, 0);
+
+float A(read_only image2d_t a) {
+  return read_imageui(a, Ga, Gb).x;
+}
+"""
+
+@pytest.mark.xfail(
+    reason='FIXME: Global sampler variable references are not visited.'
+)
+def test_NormalizeIdentifiers_opencl_regression_test():
+  """An input file which triggered a rewrite failure in an earlier version."""
+  assert opencl.NormalizeIdentifiers("""
+constant sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
+
+inline int interpolate(const float x, const float y, read_only image2d_t image) {
+  const float ix = floor(x);
+  const float dx = x - ix;
+
+  const float iy = floor(y);
+  const float dy = y - iy;
+
+  const float intensity =
+      read_imageui(image, sampler, (float2)(ix, iy)).x * (1 - dx) * (1 - dy)
+      + read_imageui(image, sampler, (float2)(ix+1, iy)).x * dx * (1 - dy)
+      + read_imageui(image, sampler, (float2)(ix, iy+1)).x * (1 - dx) * dy
+      + read_imageui(image, sampler, (float2)(ix+1, iy+1)).x * dx * dy;
+
+  return intensity;
+}
+""") == """
+constant sampler_t Ga = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
+
+inline int A(const float a, const float b, read_only image2d_t c) {
+  const float d = floor(a);
+  const float e = a - d;
+
+  const float f = floor(b);
+  const float g = b - f;
+
+  const float h =
+      read_imageui(c, Ga, (float2)(d, f)).x * (1 - e) * (1 - g)
+      + read_imageui(c, Ga, (float2)(d+1, f)).x * e * (1 - g)
+      + read_imageui(c, Ga, (float2)(d, f+1)).x * (1 - e) * g
+      + read_imageui(c, Ga, (float2)(d+1, f+1)).x * e * g;
+
+  return h;
+}
+"""
+
+
 # SanitizeKernelPrototype() tests.
 
 def test_SanitizeKernelPrototype_empty_input():
