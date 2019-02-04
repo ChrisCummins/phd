@@ -17,7 +17,7 @@ from labm8 import prof
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string('outdir', '/tmp/phd/docs/wip_graph/datasets/reachability',
+flags.DEFINE_string('dataset_outdir', '/tmp/phd/docs/wip_graph/datasets/reachability',
                     'The directory to write the output dataframes to.')
 flags.DEFINE_integer(
     'synthetic_generator_seed', 0xCEC,
@@ -178,7 +178,7 @@ def main(argv):
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
-  outdir = pathlib.Path(FLAGS.outdir)
+  outdir = pathlib.Path(FLAGS.dataset_outdir)
   outdir.mkdir(exist_ok=True, parents=True)
 
   random_state = np.random.RandomState(FLAGS.synthetic_generator_seed)

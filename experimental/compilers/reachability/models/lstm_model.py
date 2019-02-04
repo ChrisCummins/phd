@@ -304,6 +304,7 @@ class LstmReachabilityModel(object):
         'epoch': epoch + 1,
         'lstm_size': self.lstm_size,
         'dnn_size': self.dnn_size,
+        'num_classes': self.num_classes,
         'batch_size': FLAGS.batch_size,
         # Dataset attributes. These are constant across epochs.
         'training_graph_count': len(self.train_x[0]),
@@ -351,6 +352,14 @@ def main(argv):
   with prof.Profile('load dataframe'):
     df = pd.read_pickle(df_path)
   logging.info('Loaded %s dataframe from %s', df.shape, df_path)
+  # Keep only the test set.
+  test_df = df[df['split:type'] == 'test']
+  old_len = len(test_df)
+  # Filter the test set to match the num classes we want.
+  test_df = test_df[test_df['cfg:block_count'] == FLAGS.num_classes]
+  logging.info('Filtered test set from %d to %d graphs with %d blocks in each',
+               old_len, len(test_df), FLAGS.num_classes)
+  del df
 
   # Replace the training and validation data in the loaded dataset with our own
   # that we generate now.
@@ -370,18 +379,10 @@ def main(argv):
         cfg_generator.ControlFlowGraphGenerator(
             random_state, (FLAGS.num_classes, FLAGS.num_classes),
             dataset.edge_density_ge, strict=False))
-    valid_df = SpecsToDataFrame(
+    valid_df = dataset.SpecsToDataFrame(
         validation_graph_generator.Generate(
             FLAGS.num_synthetic_validation_graphs),
         'validation')
-
-  # Keep only the test set.
-  test_df = df[df['split:type'] == 'test']
-  old_len = len(test_df)
-  # Filter the test set to match the num classes we want.
-  test_df = test_df[test_df['cfg:block_count'] == FLAGS.num_classes]
-  logging.info('Filtered test set from %d to %d graphs with %d blocks in each',
-               old_len, len(test_df), num_classes)
 
   # Assemble the new dataset.
   df = pd.concat((train_df, valid_df, test_df))
