@@ -32,8 +32,8 @@ py_test(
 )
 
 py_binary(
-    name = "lstm_model",
-    srcs = ["lstm_model.py"],
+    name = "lstm_reachability_model",
+    srcs = ["lstm_reachability_model.py"],
     deps = [
         "//deeplearning/clgen/corpuses:atomizers",
         "//experimental/compilers/reachability:control_flow_graph",
@@ -52,10 +52,10 @@ py_binary(
 )
 
 py_test(
-    name = "lstm_model_test",
-    srcs = ["lstm_model_test.py"],
+    name = "lstm_reachability_model_test",
+    srcs = ["lstm_reachability_model_test.py"],
     deps = [
-        ":lstm_model",
+        ":lstm_reachability_model",
         "//labm8:test",
         "//third_party/py/absl",
         "//third_party/py/pytest",
