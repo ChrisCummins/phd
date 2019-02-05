@@ -55,6 +55,9 @@ flags.DEFINE_float(
 
 flags.DEFINE_integer('experimental_force_num_processing_steps', 0,
                      'If > 0, sets the number of processing steps.')
+flags.DEFINE_bool('experimental_graph_diameter_processing_steps', True,
+                  'Use the undirected CFG diameter to derive the number of '
+                  'processing steps.')
 flags.DEFINE_integer('experimental_mlp_model_latent_size', 16,
                      'Latent layer size in edge/node/global models.')
 flags.DEFINE_integer('experimental_mlp_model_layer_count', 2,
@@ -85,8 +88,13 @@ def GetNumberOfMessagePassingSteps(df: pd.DataFrame) -> int:
   """
   if FLAGS.experimental_force_num_processing_steps:
     return FLAGS.experimental_force_num_processing_steps
+
   # Consider only the training graphs when determining step count.
   train_df = df[df['split:type'] == 'training']
+
+  if FLAGS.experimental_graph_diameter_processing_steps:
+    return int(train_df['cfg:diameter'].max())
+
   return int(train_df['cfg:block_count'].max())
 
 

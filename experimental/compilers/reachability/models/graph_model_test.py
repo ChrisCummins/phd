@@ -44,6 +44,7 @@ def df(input_graph: nx.DiGraph, target_graph) -> pd.DataFrame:
   return pd.DataFrame([
     {
       'cfg:block_count': 3,
+      'cfg:diameter': 1,
       'networkx:input_graph': input_graph.copy(),
       'networkx:target_graph': target_graph.copy(),
       'split:type': 'training',
@@ -52,6 +53,7 @@ def df(input_graph: nx.DiGraph, target_graph) -> pd.DataFrame:
     },
     {
       'cfg:block_count': 3,
+      'cfg:diameter': 1,
       'networkx:input_graph': input_graph.copy(),
       'networkx:target_graph': target_graph.copy(),
       'split:type': 'validation',
@@ -60,6 +62,7 @@ def df(input_graph: nx.DiGraph, target_graph) -> pd.DataFrame:
     },
     {
       'cfg:block_count': 3,
+      'cfg:diameter': 1,
       'networkx:input_graph': input_graph.copy(),
       'networkx:target_graph': target_graph.copy(),
       'split:type': 'test',
