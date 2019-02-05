@@ -119,7 +119,8 @@ class ControlFlowGraphGenerator(object):
     #     density.
     #   * Parallel edges being created.
     #   * In "real" CFGs, does outdegree(n) ever exceed 2? If not, this should
-    #     be reflected here.
+    #     be reflected here. Possible sources for increased outdegree > 2 could
+    #     be exceptions and indirect jumps.
 
     # Sample the number of nodes to put in the graph, unless min == max.
     if self._num_nodes_min_max[0] == self._num_nodes_min_max[1]:
