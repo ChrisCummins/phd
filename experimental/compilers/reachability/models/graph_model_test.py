@@ -2,6 +2,7 @@
 import collections
 import json
 import pathlib
+import pickle
 
 import networkx as nx
 import numpy as np
@@ -42,6 +43,7 @@ def df(input_graph: nx.DiGraph, target_graph) -> pd.DataFrame:
   """Dataframe containing a single training, validation, and test entry."""
   return pd.DataFrame([
     {
+      'cfg:block_count': 3,
       'networkx:input_graph': input_graph.copy(),
       'networkx:target_graph': target_graph.copy(),
       'split:type': 'training',
@@ -49,6 +51,7 @@ def df(input_graph: nx.DiGraph, target_graph) -> pd.DataFrame:
       'graphnet:accuracy_evaluator': 'OneHotGlobals',
     },
     {
+      'cfg:block_count': 3,
       'networkx:input_graph': input_graph.copy(),
       'networkx:target_graph': target_graph.copy(),
       'split:type': 'validation',
@@ -56,6 +59,7 @@ def df(input_graph: nx.DiGraph, target_graph) -> pd.DataFrame:
       'graphnet:accuracy_evaluator': 'OneHotGlobals',
     },
     {
+      'cfg:block_count': 3,
       'networkx:input_graph': input_graph.copy(),
       'networkx:target_graph': target_graph.copy(),
       'split:type': 'test',
@@ -65,7 +69,9 @@ def df(input_graph: nx.DiGraph, target_graph) -> pd.DataFrame:
   ])
 
 
-# A model which has been evaluated.
+# A model which has been evaluated. Running even a small GraphNet still takes
+# a few seconds, so we cache the results of running one network and use it as
+# a shared test fixture.
 TrainedModel = collections.namedtuple('TrainedModel', ['model', 'outputs'])
 
 
@@ -119,8 +125,7 @@ def test_CompilerGraphNeuralNetwork_TrainAndEvaluate_telemetry_files(
       telemetry = json.load(f)
       assert telemetry
 
-      # Check for some (NOT ALL!) of the expected valyes.
-      assert 'test_outputs' in telemetry
+      # Check for some (NOT ALL!) of the expected values.
       assert 'test_accuracy' in telemetry
       assert 'training_accuracy' in telemetry
       assert 'validation_accuracy' in telemetry
@@ -128,6 +133,25 @@ def test_CompilerGraphNeuralNetwork_TrainAndEvaluate_telemetry_files(
       assert 'test_loss' in telemetry
       assert 'training_losses' in telemetry
       assert 'validation_loss' in telemetry
+
+
+def test_CompilerGraphNeuralNetwork_TrainAndEvaluate_test_output_files(
+    trained_model: TrainedModel):
+  """Test that pickled test output files are produced."""
+
+  assert (trained_model.model.outdir / 'test_outputs').is_dir()
+  output_files = list((trained_model.model.outdir / 'test_outputs').iterdir())
+  # There should be one outputs file per epoch.
+  # FIXME(cec): A test shouldn't depend on a flag value!
+  assert len(output_files) == FLAGS.num_epochs
+
+  # Verify output files.
+  for path in output_files:
+    assert path.name.startswith('epoch_')
+    assert path.name.endswith('.pkl')
+    # Check that file can be read.
+    with open(path, 'rb') as f:
+      assert pickle.load(f)
 
 
 if __name__ == '__main__':
