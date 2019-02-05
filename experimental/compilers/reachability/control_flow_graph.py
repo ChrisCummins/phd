@@ -119,9 +119,15 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
     out_degrees = [self.out_degree(n) for n in self.nodes]
     in_degrees = [self.in_degree(n) for n in self.nodes]
 
-    if number_of_nodes > 1 and entry_node == exit_node:
-      raise InvalidSpecialBlock(f"Exit and entry nodes are the same: "
-                                f"'{self.nodes[entry_node]['name']}'")
+    if number_of_nodes > 1:
+      if entry_node == exit_node:
+        raise InvalidSpecialBlock(f"Exit and entry nodes are the same: "
+                                  f"'{self.nodes[entry_node]['name']}'")
+
+      if not nx.has_path(self, entry_node, exit_node):
+        raise MalformedControlFlowGraphError(
+            f"No path from entry node '{self.nodes[entry_node]['name']}' to "
+            f"exit node '{self.nodes[exit_node]['name']}'")
 
     # Validate node attributes.
     node_names = set()

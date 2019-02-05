@@ -355,9 +355,27 @@ def test_ControlFlowGraph_IsValidControlFlowGraph_disconnected_graph():
   g = control_flow_graph.ControlFlowGraph()
   g.add_node(0, name='A', entry=True)
   g.add_node(1, name='B', exit=True)
+  g.add_node(2, name='C')
+  g.add_edge(0, 1)
   with pytest.raises(control_flow_graph.UnconnectedNode) as e_ctx:
     g.ValidateControlFlowGraph()
-  assert str(e_ctx.value) == "Unconnected node 'A'"
+  assert str(e_ctx.value) == "Unconnected node 'C'"
+  assert not g.IsValidControlFlowGraph()
+
+
+def test_ControlFlowGraph_IsValidControlFlowGraph_no_path_from_entry_to_exit():
+  """A disconnected graph is not valid."""
+  # Graph: A -> B <- C
+  g = control_flow_graph.ControlFlowGraph()
+  g.add_node(0, name='A', entry=True)
+  g.add_node(1, name='B')
+  g.add_node(2, name='C', exit=True)
+  g.add_edge(0, 1)
+  g.add_edge(2, 1)
+  with pytest.raises(
+      control_flow_graph.MalformedControlFlowGraphError) as e_ctx:
+    g.ValidateControlFlowGraph()
+  assert str(e_ctx.value) == "No path from entry node 'A' to exit node 'C'"
   assert not g.IsValidControlFlowGraph()
 
 
