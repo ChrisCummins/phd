@@ -66,6 +66,25 @@ class SpecGenerator(object):
 
         yield TargetGraphSpec(graph=g, target_node_index=int(node))
 
+  def GenerateAlt(self, n: int = 0):
+    """Generate specs without looping over the target node parameter.
+
+    Args:
+        n: The maximum number of spec to generatte. If zero, enumerate
+            all graphs.
+    """
+    yield_count = 0
+    for g in self._graphs:
+      # Only yield graphs which contain at least one edge.
+      if not g.edges:
+        continue
+
+      # Stop if we have produced enough graphs.
+      yield_count += 1
+      if n and yield_count > n:
+        return
+
+      yield TargetGraphSpec(graph=g, target_node_index=0)
 
 # Functions to generate feature vectors. Features vectors are np.arrays of
 # floating point values.

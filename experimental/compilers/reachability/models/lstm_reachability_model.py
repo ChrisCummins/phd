@@ -371,7 +371,7 @@ def main(argv):
             random_state, (FLAGS.num_classes, FLAGS.num_classes),
             dataset.edge_density_tr, strict=False))
     train_df = dataset.SpecsToDataFrame(
-        training_graph_generator.Generate(FLAGS.num_synthetic_training_graphs),
+        training_graph_generator.GenerateAlt(FLAGS.num_synthetic_training_graphs),
         'training')
 
   with prof.Profile('synthetic validation graphs'):
@@ -380,7 +380,7 @@ def main(argv):
             random_state, (FLAGS.num_classes, FLAGS.num_classes),
             dataset.edge_density_ge, strict=False))
     valid_df = dataset.SpecsToDataFrame(
-        validation_graph_generator.Generate(
+        validation_graph_generator.GenerateAlt(
             FLAGS.num_synthetic_validation_graphs),
         'validation')
 
