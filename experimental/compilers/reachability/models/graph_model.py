@@ -498,6 +498,8 @@ class CompilerGraphNeuralNetwork(object):
         test=tf.summary.FileWriter(
             f'{self.outdir}/tensorboard/test', sess.graph))
 
+    random_state = np.random.RandomState(FLAGS.model_seed)
+
     # Seed tensorflow and initialize model.
     tf.set_random_seed(FLAGS.model_seed)
     sess.run(tf.global_variables_initializer())
@@ -609,7 +611,6 @@ class CompilerGraphNeuralNetwork(object):
             graphs_per_seconds)
 
         # End of epoch. Evaluate model on the validation and test set.
-        continue
 
         # Validation set first.
         output_graphs, losses = [], []
