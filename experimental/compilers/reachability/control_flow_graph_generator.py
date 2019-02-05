@@ -1,6 +1,7 @@
 """A generator for control flow graphs."""
 import typing
 
+import networkx as nx
 import numpy as np
 from absl import flags
 
@@ -210,6 +211,14 @@ class ControlFlowGraphGenerator(object):
     # Make sure the exit block has at least one incoming edge.
     if not graph.in_degree(exit_block):
       AddRandomIncomingEdge(exit_block)
+
+    # Ensure that there is a path from the entry to exit nodes. If not, chose a
+    # random successor of the entry block and connect the exit block to it. If
+    # there are no successors, connect the entry and exit blocks directly.
+    if not nx.has_path(graph, entry_block, exit_block):
+      successors = list(graph.successors(entry_block))
+      dst = self._rand.choice(successors) if successors else entry_block
+      graph.add_edge(dst, exit_block)
 
     # Continue adding random edges until we reach the target edge density.
     while graph.edge_density < self._edge_density:
