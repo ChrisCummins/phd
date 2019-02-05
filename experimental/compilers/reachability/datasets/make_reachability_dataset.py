@@ -17,7 +17,8 @@ from labm8 import prof
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string('dataset_outdir', '/tmp/phd/docs/wip_graph/datasets/reachability',
+flags.DEFINE_string('dataset_outdir',
+                    '/tmp/phd/docs/wip_graph/datasets/reachability',
                     'The directory to write the output dataframes to.')
 flags.DEFINE_integer(
     'synthetic_generator_seed', 0xCEC,
