@@ -204,6 +204,18 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
     return self.number_of_edges() / (
         self.number_of_nodes() * self.number_of_nodes())
 
+  @property
+  def undirected_diameter(self) -> int:
+    """Get the diameter of the CFG as an undirected graph.
+
+    The diameter of the graph is the maximum eccentricity, where eccentricity
+    is the maximum distance from one node to all other nodes.
+
+    A CFG can never be strongly connected, since the exit node always has an
+    outdegree of 0.
+    """
+    return nx.diameter(self.to_undirected())
+
   def SetProto(self, proto: ProtocolBuffer) -> None:
     # Ensure that graph is valid. This will raise exception if graph is not
     # valid.

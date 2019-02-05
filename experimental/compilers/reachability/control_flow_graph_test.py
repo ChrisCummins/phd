@@ -737,11 +737,42 @@ def test_ControlFlowGraph_edge_density():
   g.add_edge(0, 1)
   g.add_edge(0, 2)
   g.add_edge(1, 3)
-
-  assert g.edge_density == pytest.approx(3 / 16)
-
   g.add_edge(2, 3)
-  assert g.edge_density == pytest.approx(4 / 16)
+
+  assert g.edge_density == pytest.approx(1 / 4)
+
+  # Add A -> D path.
+  g.add_edge(0, 3)
+  assert g.edge_density == pytest.approx(5 / 16)
+
+
+def test_ControlFlowGraph_undirected_diameter():
+  """Test undirected_diameter property."""
+  # Graph:
+  #
+  #     +----> B -----+
+  #     |             |
+  #     |             v
+  #     A             D
+  #     |             ^
+  #     |             |
+  #     +----> C -----+
+  g = control_flow_graph.ControlFlowGraph()
+  g.add_node(0, name='A', entry=True)
+  g.add_node(1, name='B')
+  g.add_node(2, name='C')
+  g.add_node(3, name='D', exit=True)
+  g.add_edge(0, 1)
+  g.add_edge(0, 2)
+  g.add_edge(1, 3)
+  g.add_edge(2, 3)
+
+  assert g.undirected_diameter == 2
+
+  # Increase the diameter by adding a new E node and D -> E path.
+  g.add_node(4, name='E')
+  g.add_edge(3, 4)
+  assert g.undirected_diameter == 3
 
 
 def test_ControlFlowGraph_equivalent_hashes():
