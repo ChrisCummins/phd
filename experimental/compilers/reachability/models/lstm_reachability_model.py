@@ -55,6 +55,9 @@ flags.DEFINE_boolean(
     'neighbors_only', False,
     'If true, generate lists of only immediate neighbors for each node, not '
     'all successor nodes.')
+flags.DEFINE_boolean(
+    'zero_r', False,
+    'If true, train and evaluate a ZeroR model, not an LSTM model.')
 
 
 def EncodeAndPad(srcs: typing.List[str], padded_length: int,
@@ -126,6 +129,7 @@ def DataFrameToModelData(
   for col in range(len(df['reachability:reachable_nodes'].iloc[0])):
     column = np.vstack([r[col] for r in df['reachability:reachable_nodes']])
     outputs.append(column)
+  # A list of numpy arrays, with shape (num_classes,len(df)).
   y = outputs
   return x, y
 
@@ -335,6 +339,83 @@ class LstmReachabilityModel(object):
         ])
 
 
+class ZeroRReachabilityModel(LstmReachabilityModel):
+
+  def __init__(self, df: pd.DataFrame, outdir: pathlib.Path, num_classes: int,
+               lstm_size: int = None, dnn_size: int = None):
+    if set(df['cfg:block_count']) != {num_classes}:
+      raise ValueError(f"All graphs must have {num_classes} blocks")
+
+    # Make the output directories.
+    outdir.mkdir(parents=True, exist_ok=True)
+    (outdir / 'telemetry').mkdir(exist_ok=True)
+
+    self.num_classes = num_classes
+    self.outdir = outdir
+
+    # Derive atomizer and sequence length.
+
+    df['text:successors'] = [
+      row['cfg:graph'].ToNeighborsString() for _, row in df.iterrows()
+    ]
+
+    text = '\n'.join(df['text:successors'])
+
+    sequence_length = max(len(s) for s in df['text:successors'])
+    logging.info("Sequence length: %d", sequence_length)
+
+    df = ExpandToClassificationDataset(df, self.num_classes)
+    if not len(df):
+      raise ValueError("Empty dataframe!")
+    logging.info('Expanded dataframe to %s classification data points', len(df))
+
+    # Create the model.
+    if (outdir / 'atomizer.pkl').is_file():
+      with open(outdir / 'atomizer.pkl', 'rb') as f:
+        atomizer = pickle.load(f)
+    else:
+      logging.info('Deriving atomizer from %s charss',
+                   humanize.intcomma(len(text)))
+      atomizer = atomizers.AsciiCharacterAtomizer.FromText(text)
+      logging.info('Vocabulary size: %s',
+                   humanize.intcomma(len(atomizer.vocab)))
+      with open(outdir / 'atomizer.pkl', 'wb') as f:
+        pickle.dump(atomizer, f)
+      logging.info('Pickled atomizer to %s', outdir / 'atomizer.pkl')
+
+    train_df = df[df['split:type'] == 'training']
+    if not len(train_df):
+      raise ValueError("No training graphs!")
+    self.train_x, self.train_y = DataFrameToModelData(
+        train_df, sequence_length, atomizer)
+    logging.info('Training data: x=[%s, %s], y=[15x %s]',
+                 self.train_x[0].shape, self.train_x[1].shape,
+                 self.train_y[0].shape)
+
+    test_df = df[df['split:type'] == 'test']
+    if not len(test_df):
+      raise ValueError("No test graphs!")
+    self.test_x, self.test_y = DataFrameToModelData(
+        test_df, sequence_length, atomizer)
+    logging.info('Testing data: x=[%s, %s], y=[15x %s]',
+                 self.test_x[0].shape, self.test_x[1].shape,
+                 self.test_y[0].shape)
+
+  def TrainAndEvaluate(self, num_epochs: int):
+    del num_epochs
+
+    avg = np.array(self.train_y).mean()
+    rule = np.ones if avg > .5 else np.zeros
+    y = rule(np.array(self.test_y).shape)
+
+    correct = y == self.test_y
+    accuracy = correct.mean()
+    solved = np.mean([row.all() for row in correct])
+    logging.info('Rule: %s, Accuracy: %s, Solved: %s', avg, accuracy, solved)
+
+    return accuracy, solved
+
+
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:
@@ -387,7 +468,10 @@ def main(argv):
   # Assemble the new dataset.
   df = pd.concat((train_df, valid_df, test_df))
 
-  model = LstmReachabilityModel(df, outdir, FLAGS.num_classes)
+  if FLAGS.zero_r:
+    model = ZeroRReachabilityModel(df, outdir, FLAGS.num_classes)
+  else:
+    model = LstmReachabilityModel(df, outdir, FLAGS.num_classes)
   model.TrainAndEvaluate(num_epochs=FLAGS.num_epochs)
 
 
