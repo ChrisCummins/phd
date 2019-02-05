@@ -125,5 +125,23 @@ def test_ControlFlowGraphGenerator_GenerateUnique():
   assert len(set(uniq_graphs)) == 100
 
 
+@pytest.mark.parametrize('i', range(10))
+def test_ControlFlowGraphGenerator_fuzz_test_batch(i: int):
+  """Randomly parametrize and test CFG generator."""
+  seed = i + np.random.randint(int(1e9))
+  print(f"seed={seed}")
+
+  # Randomly parametrize the fuzz tester.
+  rand = np.random.RandomState(seed=seed)
+  num_nodes_min = rand.randint(2, 20)
+  num_nodes_max = num_nodes_min + rand.randint(0, 10)
+  edge_density = rand.rand() * .5
+
+  generator = control_flow_graph_generator.ControlFlowGraphGenerator(
+      rand, (num_nodes_min, num_nodes_max), edge_density, strict=True)
+  for _, _ in zip(generator, range(100)):
+    pass
+
+
 if __name__ == '__main__':
   test.Main()
