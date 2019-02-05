@@ -141,8 +141,7 @@ class ControlFlowGraphGenerator(object):
     graph.nodes[exit_block]['exit'] = True
 
     # Generate an adjacency matrix of random binary values.
-    adjacency_matrix = self._rand.rand(num_nodes, num_nodes)
-    adjacency_matrix = np.rint(adjacency_matrix).astype(np.int32)
+    adjacency_matrix = self._rand.choice([False, True], size=(num_nodes, num_nodes), p=(0.9, 0.1))
 
     # Helper methods.
 
@@ -174,11 +173,10 @@ class ControlFlowGraphGenerator(object):
       graph.add_edge(src, dst)
 
     # Add the edges to the graph, subject to the constraints of CFGs.
-    for j, row in enumerate(adjacency_matrix):
-      for i in row:
-        # CFG nodes cannot be connected to themselves.
-        if NotSelfLoop(i, j) and NotExitNodeOutput(i, j) and IsEdge(i, j):
-          graph.add_edge(i, j)
+    for i, j in np.argwhere(adjacency_matrix):
+      # CFG nodes cannot be connected to themselves.
+      if NotSelfLoop(i, j) and NotExitNodeOutput(i, j):
+        graph.add_edge(i, j)
 
     # Make sure that every node has one output. This ensures that the graph is
     # fully connected, but does not ensure that each node has an incoming
