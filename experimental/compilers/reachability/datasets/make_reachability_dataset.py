@@ -155,6 +155,7 @@ def SpecsToDataFrame(specs: typing.Iterator[TargetGraphSpec], split_type):
       'cfg:block_count': spec.graph.number_of_nodes(),
       'cfg:edge_count': spec.graph.number_of_edges(),
       'cfg:edge_density': spec.graph.edge_density,
+      'cfg:diameter': spec.graph.undirected_diameter,
       'cfg:is_valid': spec.graph.IsValidControlFlowGraph(strict=False),
       'cfg:is_strict_valid': spec.graph.IsValidControlFlowGraph(strict=True),
       'networkx:input_graph': input_graph,

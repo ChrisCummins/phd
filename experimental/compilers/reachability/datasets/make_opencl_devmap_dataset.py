@@ -60,6 +60,7 @@ def main(argv):
   df['cfg:block_count'] = [graph.number_of_nodes() for graph in graphs]
   df['cfg:edge_count'] = [graph.number_of_edges() for graph in graphs]
   df['cfg:edge_density'] = [graph.edge_density for graph in graphs]
+  df['cfg:diameter'] = [graph.undirected_diameter for graph in graphs]
   df['cfg:is_valid'] = [
     graph.IsValidControlFlowGraph(strict=False) for graph in graphs
   ]
