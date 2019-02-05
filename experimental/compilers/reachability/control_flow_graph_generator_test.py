@@ -42,7 +42,7 @@ def test_UniqueNameSequence_StringInSequence_prefix():
   assert g.StringInSequence(0) == 'prefix_a'
 
 
-def test_UniqueNameSequence_StringInSequence_prefix():
+def test_UniqueNameSequence_StringInSequence_suffix():
   """Test suffix."""
   g = control_flow_graph_generator.UniqueNameSequence('a', suffix='_suffix')
   assert g.StringInSequence(0) == 'a_suffix'
