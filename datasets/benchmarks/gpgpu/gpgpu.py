@@ -36,7 +36,17 @@ _BENCHMARK_SUITE_NAMES = [
   'polybench-gpu-1.0',
   'rodinia-3.1',
   'shoc-1.1.5',
+  'dummy_just_for_testing',
 ]
+
+flags.DEFINE_list('gpgpu_benchmark_suites', _BENCHMARK_SUITE_NAMES,
+                  'The names of benchmark suites to run. Defaults to all '
+                  'benchmark suites.')
+flags.DEFINE_list('gpgpu_device_types', ['oclgrind'],
+                  'The device types to execute benchmark suites on. One or '
+                  'more of {cpu,gpu,oclgrind}.')
+flags.DEFINE_string('gpgpu_outdir', '/tmp/datasets/benchmarks/gpgpu',
+                    'The directory to write log files to.')
 
 # The path of libcecl directory, containing the libcecl header, library, and
 # run script.
@@ -47,6 +57,9 @@ _LIBCECL_HEADER = bazelutil.DataPath('phd/gpu/libcecl/libcecl.h')
 _OPENCL_HEADERS_DIR = bazelutil.DataPath('opencl_120_headers')
 if system.is_linux():
   _LIBOPENCL_DIR = bazelutil.DataPath('libopencl')
+
+_DUMMY_BENCHMARK = bazelutil.DataPath(
+    'phd/datasets/benchmarks/gpgpu/dummy_just_for_testing/dummy_benchmark')
 
 
 def CheckCall(command: typing.Union[str, typing.List[str]],
@@ -240,6 +253,29 @@ class _BenchmarkSuite(object):
     raise NotImplementedError("abstract method")
 
 
+class DummyJustForTesting(_BenchmarkSuite):
+  """A dummy benchmark suite for testing purposes.
+
+  It sill behaves like a real benchmark suite, but without running any expensive
+  binaries.
+  """
+
+  @property
+  def name(self) -> str:
+    return "dummy_just_for_testing"
+
+  @property
+  def benchmarks(self) -> typing.List[str]:
+    return ["dummy_benchmark"]
+
+  def _ForceDeviceType(self, device_type: str):
+    logging.info("Dummy benchmarks switching to %s", device_type)
+
+  def _Run(self):
+    logging.info("Executing dummy benchmarks!")
+    self._ExecToLogFile(_DUMMY_BENCHMARK, 'dummy_benchmark')
+
+
 class AmdAppSdkBenchmarkSuite(_BenchmarkSuite):
   """The AMD App SDK benchmarks."""
 
@@ -285,6 +321,32 @@ class PolybenchGpuBenchmarkSuite(_BenchmarkSuite):
       RunCeclToLogFile(executable, logdir, self.device_type, benchmark)
 
 
-BENCHMARK_SUITES = [
-  # TODO(cec): Populate list with classes.
-]
+# A map of benchmark suite names to classes.
+BENCHMARK_SUITES = {
+  bs().name: bs for bs in labtypes.AllSubclassesOfClass(_BenchmarkSuite)
+}
+
+
+def main(argv: typing.List[str]):
+  """Main entry point."""
+  if len(argv) > 1:
+    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
+
+  # Run the requested benchmark suites on the requested devices.
+  outdir = pathlib.Path(FLAGS.gpgpu_outdir)
+  for benchmark_suite_name in FLAGS.gpgpu_benchmark_suites:
+    benchmark_suite_class = BENCHMARK_SUITES.get(benchmark_suite_name)
+    if not benchmark_suite_class:
+      logging.fatal(
+          f'Unknown benchmark suite. Legal values: {BENCHMARK_SUITES.keys()}')
+
+    with benchmark_suite_class() as benchmark_suite:
+      for device_type in FLAGS.gpgpu_device_types:
+        logging.info('Building and running %s on %s', benchmark_suite.name,
+                     device_type)
+        benchmark_suite.ForceDeviceType(device_type)
+        benchmark_suite.Run(outdir)
+
+
+if __name__ == '__main__':
+  app.run(main)
