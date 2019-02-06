@@ -43,6 +43,21 @@ bazel run //experimental/compilers/reachability/models:graph_model \
     --num_epochs=50 --v=1 \
     --experimental_force_num_processing_steps=50
 
+bazel run //experimental/compilers/reachability/models:lstm_reachability_model \
+    -- --df="$DATASETS_DIR/reachability/synthetic_linux_ocl.pkl" \
+    --outdir="$OUTDIR_BASE/reachability/lstm/linux_ocl" \
+    ---v=1
+
+bazel run //experimental/compilers/reachability/models:lstm_reachability_model \
+    -- --df="$DATASETS_DIR/reachability/synthetic_linux_ocl.pkl" \
+    --outdir="$OUTDIR_BASE/reachability/lstm_neighbors_only/linux_ocl" \
+    --neighbors_only --v=1
+
+bazel run //experimental/compilers/reachability/models:lstm_reachability_model \
+    -- --df="$DATASETS_DIR/reachability/synthetic_linux_ocl.pkl" \
+    --outdir="$OUTDIR_BASE/reachability/zero_r/linux_ocl" \
+    --zero_r --v=1
+
 touch "$OUTDIR_BASE/done.txt"
 
 echo "Finished all models" | lmk -
