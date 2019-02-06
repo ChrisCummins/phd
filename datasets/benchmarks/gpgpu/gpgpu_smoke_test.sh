@@ -9,7 +9,7 @@ TMP_LOGDIR="/tmp/phd/gpgpu"
 datasets/benchmarks/gpgpu/gpgpu \
     --gpgpu_benchmark_suites=dummy_just_for_testing \
     --gpgpu_device_types=oclgrind \
-    --gpgpu_outdir="$TMP_LOGDIR"
+    --gpgpu_logdir="$TMP_LOGDIR"
 
 ls "$TMP_LOGDIR"
 
