@@ -57,6 +57,10 @@ flags.DEFINE_list('gpgpu_device_types', ['oclgrind'],
                   'more of {cpu,gpu,oclgrind}.')
 flags.DEFINE_string('gpgpu_outdir', '/tmp/datasets/benchmarks/gpgpu',
                     'The directory to write log files to.')
+flags.DEFINE_integer('gpgpu_build_process_count', multiprocessing.cpu_count(),
+                     'The number of parallel threads to use when building '
+                     'GPGPU benchmark suites. Defaults to the number of '
+                     'processors on your system.')
 
 # The path of libcecl directory, containing the libcecl header, library, and
 # run script.
@@ -134,7 +138,7 @@ def Make(target: str, make_dir: pathlib.Path) -> None:
   # because some of the source codes have hard-coded relative paths.
   with MakeEnv(make_dir) as env:
     logging.debug('Running make %s in %s', target, make_dir)
-    CheckCall(['make', target, '-j', multiprocessing.cpu_count()], env=env)
+    CheckCall(['make', target, '-j', FLAGS.gpgpu_build_process_count], env=env)
 
 
 def FindExecutableInDir(path: pathlib.Path) -> pathlib.Path:
