@@ -12,7 +12,7 @@ from labm8 import test
 FLAGS = flags.FLAGS
 
 BENCHMARK_SUITES_TO_TEST = [
-  gpgpu.PolybenchGpuBenchmarkSuite
+  gpgpu.DummyJustForTesting,
 ]
 
 
@@ -48,14 +48,12 @@ def test_BenchmarkSuite_integration_test(benchmark_suite: typing.Callable,
   with benchmark_suite() as bs:
     bs.ForceDeviceType('oclgrind')
     bs.Run(tempdir)
-    logfiles = list(tempdir.listdir())
 
+    logs = list(bs.logs)
     for benchmark in bs.benchmarks:
-      # Check that a file starting with the expected name was created.
-      assert any([f.name.startswith(f'{benchmark}.oclgrind.')
-                 for f in logfiles])
+      assert any(log.benchmark_name == benchmark for log in logs)
 
-    assert len(logfiles) == len(bs.benchmarks)
+    assert len(logs) == len(bs.benchmarks)
 
 
 if __name__ == '__main__':

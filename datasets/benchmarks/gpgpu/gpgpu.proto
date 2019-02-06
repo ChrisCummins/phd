@@ -1,0 +1,14 @@
+syntax = "proto2";
+
+package gpgpu_benchmarks;
+
+// Recording of a single GPGPU benchmark execution.
+message GpgpuBenchmarkRun {
+  required int64 ms_since_unix_epoch = 1;
+  required string benchmark_suite = 2;
+  required string benchmark_name = 3;
+  required int32 returncode = 4;
+  required string cecl_log = 5;
+  required string stdout = 6;
+  required string stderr = 7;
+}

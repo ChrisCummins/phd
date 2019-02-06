@@ -1,3 +1,7 @@
+# GPGPU benchmark suites.
+
+load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
+
 filegroup(
     name = "amd-app-sdk-3.0_files",
     srcs = glob(["amd-app-sdk-3.0/**"]),
@@ -35,6 +39,12 @@ filegroup(
     srcs = glob(["shoc-1.1.5/**"]),
 )
 
+py_proto_library(
+    name = "gpgpu_py_pb2",
+    protos = ["gpgpu.proto"],
+    deps = ["//third_party/py/protobuf"],
+)
+
 py_binary(
     name = "gpgpu",
     srcs = ["gpgpu.py"],
@@ -56,10 +66,12 @@ py_binary(
     }),
     visibility = ["//visibility:public"],
     deps = [
+        ":gpgpu_py_pb2",
         "//gpu/oclgrind",
         "//labm8:bazelutil",
         "//labm8:fs",
         "//labm8:labdate",
+        "//labm8:pbutil",
         "//labm8:system",
         "//third_party/py/absl",
     ],

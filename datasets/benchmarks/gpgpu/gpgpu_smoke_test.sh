@@ -11,8 +11,6 @@ datasets/benchmarks/gpgpu/gpgpu \
     --gpgpu_device_types=oclgrind \
     --gpgpu_outdir="$TMP_LOGDIR"
 
-for f in $(ls "$TMP_LOGDIR"); do
-  cat "$TMP_LOGDIR/$f"
-done
+ls "$TMP_LOGDIR"
 
 rm -rf "$TMP_LOGDIR"

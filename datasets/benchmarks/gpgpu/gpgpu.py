@@ -27,11 +27,13 @@ from absl import app
 from absl import flags
 from absl import logging
 
+from datasets.benchmarks.gpgpu import gpgpu_pb2
 from gpu.oclgrind import oclgrind
 from labm8 import bazelutil
 from labm8 import fs
 from labm8 import labdate
 from labm8 import labtypes
+from labm8 import pbutil
 from labm8 import system
 
 
@@ -186,6 +188,7 @@ class _BenchmarkSuite(object):
         f'phd/datasets/benchmarks/gpgpu/{self.name}')
     self._mutable_location = None
     self._logdir = None
+    self._log_paths: typing.List[pathlib.Path] = []
 
   def __enter__(self) -> pathlib.Path:
     prefix = f'phd_datasets_benchmarks_gpgpu_{self.name}'
@@ -203,6 +206,12 @@ class _BenchmarkSuite(object):
     if self._mutable_location is None:
       raise TypeError("Must be used as a context manager")
     return self._mutable_location
+
+  @property
+  def logs(self) -> typing.Iterable[gpgpu_pb2.GpgpuBenchmarkRun]:
+    """Return an iterator of log protos."""
+    return (pbutil.FromFile(log, gpgpu_pb2.GpgpuBenchmarkRun())
+            for log in self._log_paths)
 
   def ForceDeviceType(self, device_type: str) -> None:
     """Force benchmarks to execute with the given device type."""
@@ -234,13 +243,13 @@ class _BenchmarkSuite(object):
 
     # Create the name of the logfile now, so that is timestamped to the start of
     # execution.
+    timestamp = labdate.MillisecondsTimestamp()
     log_name = '.'.join([
       self.name,
       benchmark_name,
       self.device_type,
       system.HOSTNAME,
-      str(labdate.MillisecondsTimestamp()),
-      'txt'
+      str(timestamp)
     ])
 
     # Assemble the command to run.
@@ -249,26 +258,36 @@ class _BenchmarkSuite(object):
       command = [str(oclgrind.OCLGRIND_PATH)] + command
 
     with RunEnv(executable.parent) as env:
-      process = subprocess.Popen(command, env=env, stderr=subprocess.PIPE,
-                                 universal_newlines=True)
-      _, stderr = process.communicate()
+      process = subprocess.Popen(
+          command, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+          universal_newlines=True)
+      stdout, stderr = process.communicate()
+
+      # Split libcecl logs out from stderr.
+      cecl_lines, stderr_lines = [], []
+      for line in stderr.split('\n'):
+        if line.startswith('[CECL] '):
+          cecl_lines.append(line)
+        else:
+          stderr_lines.append(line)
 
       if process.returncode:
-        # TODO(cec): Decide whether errors should be fatal or not.
-        # raise OSError(
-        #     f'Process failed with returncode {process.returncode} and '
-        #     f'stderr: `{stderr}`')
-        log_produced = self._logdir / f'{log_name}.ERROR'
-        with open(log_produced, 'w') as f:
-          f.write(stderr)
+        log_produced = self._logdir / f'{log_name}.ERROR.pb'
       else:
-        log_produced = self._logdir / log_name
-        with open(log_produced, 'w') as f:
-          for line in stderr.split('\n'):
-            if line.startswith('[CECL] '):
-              print(line[len('[CECL] '):], file=f)
+        log_produced = self._logdir / f'{log_name}.pb'
 
-      logging.info('Wrote %s', log_produced)
+      pbutil.ToFile(gpgpu_pb2.GpgpuBenchmarkRun(
+          ms_since_unix_epoch=timestamp,
+          benchmark_suite=self.name,
+          benchmark_name=benchmark_name,
+          returncode=process.returncode,
+          stdout=stdout,
+          stderr='\n'.join(stderr_lines),
+          cecl_log='\n'.join(cecl_lines),
+      ), log_produced)
+
+    logging.info('Wrote %s', log_produced)
+    self._log_paths.append(log_produced)
 
   # Abstract attributes that must be provided by subclasses.
 
