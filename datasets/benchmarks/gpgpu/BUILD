@@ -25,7 +25,9 @@ filegroup(
 
 filegroup(
     name = "rodinia-3.1_files",
-    srcs = glob(["rodinia-3.1/**"]),
+    srcs = glob(["rodinia-3.1/**"]) + [
+        "@rodinia_data//:data_files",
+    ],
 )
 
 filegroup(
