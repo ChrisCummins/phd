@@ -53,12 +53,12 @@ py_library(
     }),
     visibility = ["//visibility:public"],
     deps = [
+        "//gpu/oclgrind",
         "//labm8:bazelutil",
         "//labm8:fs",
         "//labm8:labdate",
         "//labm8:system",
         "//third_party/py/absl",
-        "//gpu/oclgrind",
     ],
 )
 

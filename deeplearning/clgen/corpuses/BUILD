@@ -103,6 +103,7 @@ py_test(
 py_library(
     name = "preprocessed",
     srcs = ["preprocessed.py"],
+    visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen/preprocessors",
@@ -114,5 +115,4 @@ py_library(
         "//third_party/py/progressbar",
         "//third_party/py/sqlalchemy",
     ],
-    visibility = ["//visibility:public"],
 )
