@@ -23,6 +23,7 @@ import subprocess
 import tempfile
 import typing
 
+from absl import app
 from absl import flags
 from absl import logging
 
@@ -30,6 +31,7 @@ from gpu.oclgrind import oclgrind
 from labm8 import bazelutil
 from labm8 import fs
 from labm8 import labdate
+from labm8 import labtypes
 from labm8 import system
 
 
