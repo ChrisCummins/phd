@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+set -eu
+
+ROOT="$(pwd)"
+
+run() {
+    local benchmark=$1
+    local dataset=$2
+
+    echo -n "$(tput bold)parboil-0.2 $benchmark $dataset$(tput sgr0) ... "
+    set +e
+    runcecl ./parboil run $benchmark opencl_base $dataset > "$ROOT/log.txt"
+    ret=$?
+    set -e
+
+    if [[ $ret -ne 0 ]]; then
+        mv "$ROOT/log.txt" "$ROOT/logs/bad/$benchmark-$dataset"
+        echo "fail"
+    else
+        mv "$ROOT/log.txt" "$ROOT/logs/good/$benchmark-$dataset"
+        echo "good"
+    fi
+}
+
+rm -rf "$ROOT/logs"
+mkdir -p "$ROOT/logs/bad" "$ROOT/logs/good"
+
+run bfs 1M
+run bfs NY
+run bfs SF
+run bfs UT
+run cutcp large
+run cutcp small
+run histo default
+run histo large
+run lbm long
+run lbm short
+run mri-gridding small
+run mri-q large
+run mri-q small
+run sad default
+run sad large
+run sgemm medium
+run sgemm small
+run spmv large
+run spmv medium
+run spmv small
+run stencil default
+run stencil small
+run tpacf large
+run tpacf medium
+run tpacf small

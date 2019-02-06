@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -eu
+
+ROOT="$(pwd)"
+
+rm -rf "$ROOT/logs"
+mkdir -p "$ROOT/logs/good"
+
+cd bin
+if [[ $DEVTYPE == "CPU" ]];then
+    ./run_ocl_cpu.sh
+    for f in log/*.cpu.out; do
+        base=$(basename $f)
+        cp -v $f $ROOT/logs/good/${base%.*.*}
+    done
+else
+    ./run_ocl_gpu.sh
+    for f in log/*.gpu.out; do
+        base=$(basename $f)
+        cp -v $f $ROOT/logs/good/${base%.*.*}
+    done
+fi

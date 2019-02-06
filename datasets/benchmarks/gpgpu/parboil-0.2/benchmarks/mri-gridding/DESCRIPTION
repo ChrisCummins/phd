@@ -1,0 +1,4 @@
+MRI-Gridding maps a non-uniform input data in 3-D space onto a regular 3-D grid of the same space by computing the contribution of every data point onto its neighboring grid points. The contributions are computed using the Kaiser-Bessel function on the distance between the input-output point pair.
+
+Original code written by Nady Obeid <nady.obeid@gmail.com>
+Maintain by Daniel Liu <gengliu2@illinois.edu>

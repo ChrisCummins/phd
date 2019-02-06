@@ -1,0 +1,2 @@
+Implementation of a Sparse-Matrix Dense-Vector Product.  
+The input file is a sparse matrix in coordinate format. The output is a dense vector.

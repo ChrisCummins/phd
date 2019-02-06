@@ -1,0 +1,55 @@
+This is an OpenCL version of the NPB code for a single device. It consists of 
+8 applications - BT, CG, EP, FT, IS, LU, MG, and SP. This OpenCL version is 
+derived from the OpenMP code in "NPB3.3-OMP" developed by NAS. This version 
+runs with a single OpenCL compute device.
+
+
+******************************************************************************
+* Compilation
+******************************************************************************
+To build applications, you need to configure the 'config/make.def' file with 
+your compilation environment. After setting variables,
+1) If you want to build an individual application, type
+ $ make <benchmark-name> CLASS=<class>
+
+2) Otherwise, to make a set of applications, create the 'config/suite.def'
+file and type
+ $ make suite
+
+
+******************************************************************************
+* Execution
+******************************************************************************
+All executables are located in the 'bin' directory. To execute an application,
+type the executable name and the directory name where kernel files exist.
+For example, when we run BT with Class A, type as the following:
+ $ ./bin/bt.A.x BT
+
+Currently, the default OpenCL compute device is set with 'CPU'.
+If you want to use a GPU as the compute device, set the environment variable
+'OPENCL_DEVICE_TYPE' as 'gpu'. The 'OPENCL_DEVICE_TYPE' variable takes two
+values: 'cpu' and 'gpu'. For example, if you execute BT (Class A) on a GPU,
+ $ OPENCL_DEVICE_TYPE=gpu ./bin/bt.A.x BT
+
+On the other hand, you can set 'OPENCL_DEVICE_TYPE' globally using
+ $ export OPENCL_DEVICE_TYPE=gpu
+
+
+******************************************************************************
+* Tested Platforms 
+******************************************************************************
+--------------------------------------------------------------------------------------------------------------------------------------
+Host Processor        | OS           | Host Compiler | Compute Device                        | Max. Class Supported                  |
+                      |              |               |---------------------------------------+---------------------------------------|
+                      |              |               | Type | Name                  | Memory | BT | CG | EP | FT | IS | LU | MG | SP |
+----------------------+--------------+---------------+------+-----------------------+--------+----+----+----+----+----+----+----+----|
+Intel Xeon X5660      | RHEL 5.5     | gcc 4.1.2     | CPU  | Intel Xeon X5660      | 48 GB  | D  | D  | E  | C  | C  | D  | D  | D  |
+Intel Core2Quad Q9450 | Ubuntu 10.04 | gcc 4.4.3     | CPU  | Intel Core2Quad Q9450 | 4 GB   | C  | C  | E  | B  | C  | C  | C  | C  | 
+Intel Xeon E5620      | RHEL 6.0     | gcc 4.4.4     | CPU  | Intel Xeon E5620      | 32 GB  | D  | D  | E  | C  | C  | D  | C  | D  | 
+Intel Xeon X5660      | RHEL 5.5     | gcc 4.1.2     | GPU  | NVIDIA GTX 480        | 1.5 GB | B  | C  | E  | B  | C  | C  | B  | C  |
+Intel Core2Quad Q9450 | Ubuntu 10.04 | gcc 4.4.3     | GPU  | NVIDIA GTX 295        | 0.9 GB | A  | B  | D  | A  | B  | C  | B  | B  |
+Intel Core2Quad Q9450 | Ubuntu 10.04 | gcc 4.4.3     | GPU  | NVIDIA Tesla C1060    | 4 GB   | B  | C  | D  | A  | C  | C  | B  | C  |
+Intel Xeon E5620      | RHEL 6.0     | gcc 4.4.4     | GPU  | AMD Radeon HD6970     | 1 GB   | A  | B  | D  | A  | B  | C  | B  | B  |
+Intel Xeon E5620      | RHEL 6.0     | gcc 4.4.4     | GPU  | AMD Radeon HD5870     | 512 MB | W  | B  | D  | W  | B  | B  | W  | B  |
+--------------------------------------------------------------------------------------------------------------------------------------
+- AMD-APP-SDK-v2.5 (684.213) was used for CPU devices and AMD GPUs and CUDA Toolkit 4.0 with driver 285.05.09 was used for NVIDIA GPUs.

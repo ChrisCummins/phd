@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+set -eu
+
+ROOT=$(pwd)
+
+rm -rf logs
+mkdir -p logs/bad logs/good
+
+benchmarks=(
+    2DCONV
+    2MM
+    3DCONV
+    3MM
+    ATAX
+    BICG
+    CORR
+    COVAR
+    FDTD-2D # BAD
+    GEMM
+    GESUMMV
+    GRAMSCHM
+    MVT
+    SYR2K
+    SYRK
+)
+
+cd OpenCL
+
+for benchmark in ${benchmarks[@]}; do
+    echo -n "$(tput bold)polyben-gpu-1.0 $benchmark$(tput sgr0) ..."
+    cd $benchmark
+    set +e
+    benchmark=$(find . -executable -type f)
+    runcecl $benchmark > $ROOT/log.txt
+    ret=$?
+    set -e
+
+    if [[ $ret -ne 0 ]]; then
+        echo fail
+        mv $ROOT/log.txt $ROOT/logs/bad/$(basename ${benchmark%.*})
+    else
+        echo ok
+        mv $ROOT/log.txt $ROOT/logs/good/$(basename ${benchmark%.*})
+    fi
+    cd ..
+done

@@ -1,0 +1,89 @@
+How the Parboil build system works
+----------------------------------
+
+When the driver needs to build a benchmark implementation, either because the 
+user specified the "compile" or "run" command, it will invoke the build 
+procedures for that implementation.  For the remainder of this tutorial, we 
+assume the user entered the following command:
+
+  parboil compile BENCHMARK VERSION [PLATFORM]
+
+PLATFORM is an optional last argument to both the "compile" and "run" commands, 
+and if left unspecified will be set to "default".
+
+The driver will first set some environment variables that will be active when 
+"make" is called.
+  SRCDIR - the source directory of the benchmark version being compiled
+  BUILDDIR - the build directory for this compilation
+  BIN - the executable target for this compilation
+  PLATFORM - the platform the implementation is being compiled for
+  PARBOIL_ROOT - the root directory of the parboil benchmark tree
+  BUILD - the name of the benchmark implementation being compiled
+
+Then, the driver invokes "make" for the top-level Makefile: 
+$PARBOIL_ROOT/common/mk/Makefile.  This Makefile is a skeleton that includes 
+the following makefiles:
+
+  ${PARBOIL_ROOT}/common/Makefile.conf
+    *Users of the Parboil benchmarks should only need to worry about this file!
+
+    This file, which the user must create, is primarily intended to be an easy 
+    way to configure certain paths for the main languages supported by Parboil.
+    If you only want to compile the C and C++ implementations of the benchmarks,
+    this file may be empty.  For accelerated languages, this file points to 
+    default installation directories for accelerated langauges.  See the 
+    common/Makefile.conf.example* for examples.  
+
+  ${SRCDIR}/Makefile
+    This file is intended for properties and flags for the specific 
+    implementation.  The most important property is:
+    LANGUAGE=[c/cuda/opencl/etc.]
+      The top-level Makefile uses this property to locate the makefile for 
+      the appropriate language.
+
+    SRCDIR_OBJS=foo.o bar.o
+      A list of object files that will be linked into the benchmark program.
+      Normally, there is one object file for each source file in the directory.
+      Source files are identified by replacing the .o extension with another
+      language extension (.c, .cu, etcetera).
+
+    APP_CFLAGS
+    APP_CXXFLAGS
+    APP_CUDACFLAGS
+    ..
+      Application-specific command-line flags for different programs used in
+      building the application.
+
+  ${PARBOIL_ROOT}/common/platform/LANGUAGE.PLATFORM.mk
+    LANGUAGE is set by the benchmark implementation Makefile mentioned above.
+    This file contains makefile definitions particular to the given 
+    language/platform combination, including paths to compilers, implicit 
+    library dependencies, and compilation flags.
+
+  ${PARBOIL_ROOT}/common/mk/LANGUAGE.mk
+    LANGUAGE is set by the benchmark implementation Makefile mentioned above.
+    This file contains rules for building applications written in a 
+    particular language.  It will typically rely on definitions and flags 
+    set in a platform makefile and an application makefile to get the job done.
+
+The command line for any given build step is built using variables that come
+from several sources.  Program names, such as the name of the C compiler, are
+set in the PLATFORM makefile.  Application-specific command line parameters,
+language-specific command line parameters, and platform-specific command line
+parameters are set in the three makefiles listed above, and these are combined
+to create a shell command.  The variables follow a common naming convention: a
+variable name starts with APP_, LANG_, or PLATFORM_, followed by the relevant
+program, followed by FLAGS.  For instance, ${CUDACC} is the CUDA C compiler and
+${APP_CUDACFLAGS} is the application-specific flags that will be passed
+whenever it is invoked.
+
+If you simply want to create new benchmark implementations for already
+supported languages, you should be able to look at examples from other
+implementations in that language.  Similarly, if you want to customize a
+platform for all benchmark implementations in a particular language, check
+other platforms for that language.  If you are interested in defining a new
+"language", even if that langauge is simply an extention of C/C++ (like CUDA
+and OpenCL both are), then you will need to create a new language-level
+makefile with build rules.  That language rule file may, of course, include
+rule files for other languages if that is helpful.
+

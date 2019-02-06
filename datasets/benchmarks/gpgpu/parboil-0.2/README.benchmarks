@@ -1,0 +1,109 @@
+How to Set Up a Benchmark Directory
+-----------------------------------
+
+1) Directory setup
+2) Makefiles
+3) How the driver invokes benchmarks
+4) Benchmark descriptions
+
+
+1. DIRECTORY SETUP
+
+Each benchmark resides in a separate, self-contained folder in the benchmarks/
+subdirectory of the parboil root directory.  This subdirectory may be a
+regular directory, a symbolic link to another directory, or a directory full
+of symbolic links to other directories.  Once a benchmark is set up, the
+driver will automatically scan the benchmark and allow users to run it.
+
+The following files and subdirectories should be present in a benchmark
+directory:
+ DESCRIPTION
+    An optional file.  This file's contents will be displayed by the driver's 
+    'describe' command in addition to the list of implementations and datasets.
+
+ src/
+    Source code of the benchmark.  There should be one subdirectory for
+    each version of the source code.  The subdirectory should contain a
+    makefile and source code as specified in section MAKEFILES.
+
+ tools/
+    Tools used in testing a benchmark.
+
+    An executable named 'compare-output' should be put in this directory.
+    This executable is used for deciding whether two separate output files
+    produced by different runs of the program are equivalent, within 
+    benchmark-specific tolerances if applicable.
+
+The following subdirectories may be created and/or deleted by the driver:
+
+ build/
+    Compiled code is put in this directory.
+
+ run/
+    Ouptut files are put here.
+
+In addition, each benchmark's datasets reside in self-contained folders in the 
+datasets/ directory.  The directories inside benchmarks/ and datasets/ are 
+matched by name in the driver to associate implementations and datasets. Each 
+subdirectory of the benchmark's dataset directory should itself contain one 
+subdirectory for every distinct input dataset.  The subdirectory for a single
+dataset should contain these two subdirectories:
+ input/
+    Input files for when the benchmark is run with this dataset.  
+
+    This subdirectory may optionally contain a 'DESCRIPTION' file, which
+    specifies command-line parameters to the benchmark when invoked with this 
+    dataset, as described in section 3.  If a description file is absent, the 
+    driver will attempt to create a list of command-line parameters based on 
+    the names of the files in this directory.
+
+ output/
+    Reference output files for the benchmark.  This directory should contain 
+    one file.  That file is compared against the actual benchmark output to 
+    validate the benchmark's output.
+
+2. MAKEFILES
+
+The benchmark directories are set up to leave benchmark sources in the src/
+directory, and put object and executable code in the build/ directory.
+Makefiles should generally follow this pattern:
+
+ # Specify language of the implementation.  Currently available options are
+ # "cuda", "opencl", and "c" (for C or C++ applications) 
+ LANGUAGE=cuda
+ # Direct compilation and linking
+ SRCDIR_OBJS=parser.o partition.o parts.o parent.o
+ # Optionally specify application-specific compiler flags
+ # Recommended variables include APP_CUDACFLAGS, APP_LDFLAGS, APP_CFLAGS, 
+ #     and APP_CXXFLAGS.
+ APP_LDFLAGS= -lm
+
+See the file README.buildsystem for more details on the Parboil makefiles.
+
+3. HOW THE DRIVER INVOKES BENCHMARKS
+
+The driver will invoke a benchmark in the benchmark's root directory.
+It will pass a number of parameters on the command line.  Input files
+are passed using the "-i" switch followed by a comma-separated list of
+input files.  The output file name is passed using the "-o" switch followed
+by a single filename.  The benchmark should write its output to that file.
+If no filename is passed, no output should be written.
+
+The DESCRIPTION file in an input data set directory, if present, controls
+the parameters passed to the benchmark.  If a line like the following is
+present:
+
+Parameters: --produce-correct-output
+
+then everything after the colon will be passed as additional parameters to
+the benchmark.  If a line like the following is present:
+
+Inputs: partial.txt parameters.txt
+
+Then the file names will be joined into a comma-separated string
+and passed as the argument to the "-i" flag when the benchmark is invoked.
+
+4. BENCHMARK DESCRIPTIONS
+
+A description file can be put in the benchmark directory.  Its contents are
+displayed by the driver's 'describe' command.

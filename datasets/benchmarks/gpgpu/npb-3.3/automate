@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+set -eu
+
+rm -rf results
+mkdir -pv results
+
+./compile &>/dev/null
+
+for i in $(seq 1 10); do
+    echo "$(date)   run $i ..."
+    cd bin
+    rm -rf log
+    mkdir -p log
+    ./run_ocl_gpu.sh &>/dev/null
+    ./run_ocl_cpu.sh &>/dev/null
+    cd ..
+    mv bin/log results/$i
+done
