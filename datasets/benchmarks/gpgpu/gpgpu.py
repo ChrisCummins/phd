@@ -254,9 +254,12 @@ class _BenchmarkSuite(object):
       _, stderr = process.communicate()
 
       if process.returncode:
-        raise OSError(
-            f'Process failed with returncode {process.returncode} and '
-            f'stderr: `{stderr}`')
+        # TODO(cec): Decide whether errors should be fatal or not.
+        # raise OSError(
+        #     f'Process failed with returncode {process.returncode} and '
+        #     f'stderr: `{stderr}`')
+        with open(self._logdir / f'{log_name}.ERROR', 'w') as f:
+          f.write(stderr)
 
       with open(self._logdir / log_name, 'w') as f:
         for line in stderr.split('\n'):
