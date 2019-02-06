@@ -71,6 +71,8 @@ LSIZE_GSIZE_PAIRS = [
 
 
 def OpenClSourceToTestCases(src: str) -> typing.List[deepsmith_pb2.Testcase]:
+  """Generate DeepSmith testcases for each of the combination of gsize and
+  lsize used in CGO'17 synthetic kernels."""
   return [
     deepsmith_pb2.Testcase(
         toolchain='opencl',
@@ -83,8 +85,11 @@ def OpenClSourceToTestCases(src: str) -> typing.List[deepsmith_pb2.Testcase]:
   ]
 
 
-def RunTestCasesOrDie(driver, testcases) -> typing.Iterable[
-  deepsmith_pb2.Result]:
+def RunTestCasesOrDie(
+      driver: cldrive.CldriveHarness,
+      testcases: typing.List[deepsmith_pb2.Testcase]
+) -> typing.Iterable[deepsmith_pb2.Result]:
+  """Run the test cases and return their results."""
   response = driver.RunTestcases(harness_pb2.RunTestcasesRequest(
       testbed=driver.testbeds[0],
       testcases=testcases,
@@ -99,17 +104,55 @@ def RunTestCasesOrDie(driver, testcases) -> typing.Iterable[
   return response.results
 
 
-def GetResultOutcome(result: deepsmith_pb2.Result,
-                     driver: cldrive.CldriveHarness) -> str:
+def GetOutcomeWithDynamicChecks(result: deepsmith_pb2.Result,
+                                driver: cldrive.CldriveHarness) -> str:
+  """Get the outcome name of a result, including running additional dynamic
+  checks as required."""
   outcome = deepsmith_pb2.Result.Outcome.Name(result.outcome)
   if outcome != 'PASS':
     return outcome
 
+  # Check that the kernel was executed.
   if result.testcase.invariant_opts['driver_type'] != 'compile_and_run':
     return 'DRIVER_FAILED'
 
-  else:
-    return 'PASS'
+  # TODO(cec): Check that outputs are different from inputs.
+
+  print(result)
+  import sys
+  sys.exit(0)
+
+  # Run the kernel again to check that it's output is stable.
+  repeat_result = RunTestCasesOrDie(driver, [result.testcase])
+  outcome = deepsmith_pb2.Result.Outcome.Name(result.outcome)
+  if repeat_outcome != 'PASS':
+    return 'DIFFTEST_FAIL'
+
+  # The output should be the same when run twice with the same input.
+  if len(set(r.outputs['stdout'] for r in [result, repeat_result]) != 1):
+    return 'DIFFTEST_NONDETERMINISM_FAIL'
+
+  # Run kernel twice more, with a pair of identical inputs.
+  different_inputs_testcase = result.testcase
+  different_inputs_testcase.inputs['data_generator'] = 'ones'
+  different_input_results = RunTestCasesOrDie(
+      driver, [different_inputs_testcase, different_inputs_testcase])
+
+  outcomes = [deepsmith_pb2.Result.Outcome.Name(r.outcome) for r in
+              different_input_results]
+  if not set(outcomes) == {'PASS'}:
+    return 'DIFFTEST_FAIL'
+
+  # The output should be the same when run twice with the same input.
+  if len(set(r.outputs['stdout'] for r in different_input_results)) != 1:
+    return 'DIFFTEST_NONDETERMINISM_FAIL'
+
+  # The outputs must be different when run twice with the same inputs.
+  if len(set(r.outputs['stdout'] for r in
+             [result, different_input_results[0]])) != 2:
+    return 'INPUT_INSENSITIVE'
+
+  return 'PASS'
 
 
 def main(argv: typing.List[str]):
@@ -184,7 +227,7 @@ def main(argv: typing.List[str]):
         results = RunTestCasesOrDie(driver, testcases)
 
         outcomes = [
-          GetResultOutcome(result, driver) for result in results
+          GetOutcomeWithDynamicChecks(result, driver) for result in results
         ]
         with open(cached_results_path, 'wb') as f:
           pickle.dump(outcomes, f)
