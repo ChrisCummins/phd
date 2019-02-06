@@ -7,11 +7,6 @@ SRC = bfs.cpp timer.cc
 
 CC_FLAGS = -g -O3
 
-# $(OPENMP) isn't supported on macOS.
-ifeq ($(shell uname), Linux)
-OPENMP = $(OPENMP)
-endif
-
 EXE = bfs
 
 release:$(SRC)
