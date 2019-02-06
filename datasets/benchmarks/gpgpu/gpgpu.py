@@ -21,11 +21,13 @@ import os
 import pathlib
 import subprocess
 import tempfile
+import time
 import typing
 
 from absl import app
 from absl import flags
 from absl import logging
+import humanize
 
 from datasets.benchmarks.gpgpu import gpgpu_pb2
 from gpu.oclgrind import oclgrind
@@ -164,7 +166,7 @@ def RunEnv(path: pathlib.Path) -> typing.Dict[str, str]:
 
 
 def KernelInvocationsFromCeclLog(
-    log: gpgpu_pb2.GpgpuBenchmarkRun
+    cecl_log: typing.List[str], device_type: str
 ) -> typing.List[gpgpu_pb2.OpenClKernelInvocation]:
   """Interpret and parse the output of a libcecl instrumented application.
 
@@ -178,8 +180,13 @@ def KernelInvocationsFromCeclLog(
 
   kernel_invocations = []
 
+  expected_devtype = {
+    'oclgrind': 'CPU'
+  }.get(device_type, device_type.upper())
+
   # Iterate over each line in the cec log.
-  for line in log.cecl_log.split('\n'):
+  logging.debug('Processing %d lines of libcecl logs', len(cecl_log))
+  for line in cecl_log:
     # Split line based on ; delimiter into opcode and operands.
     components = [x.strip() for x in line.strip().split(';')]
     opcode, operands = components[0], components[1:]
@@ -189,11 +196,7 @@ def KernelInvocationsFromCeclLog(
       continue
 
     if opcode == "clCreateCommandQueue":
-      expected_devtype = {
-        'oclgrind': 'CPU'
-      }.get(log.device_type, log.device_type.upper())
-      actual_devtype = operands[0]
-      if expected_devtype != actual_devtype:
+      if expected_devtype != operands[0]:
         raise ValueError(
             f"Expected device type {actual_devtype} does not match actual "
             f"device type {actual_devtype}")
@@ -208,6 +211,7 @@ def KernelInvocationsFromCeclLog(
               global_size=global_size,
               local_size=local_size,
               runtime_ms=elapsed))
+      logging.debug('Extracted clEnqueueNDRangeKernel from log')
     elif opcode == "clEnqueueTask":
       kernel_name, elapsed = operands
       elapsed = float(elapsed)
@@ -216,6 +220,7 @@ def KernelInvocationsFromCeclLog(
               kernel_name=kernel_name,
               global_size=1, local_size=1,
               runtime_ms=elapsed))
+      logging.debug('Extracted clEnqueueTask from log')
     elif opcode == "clCreateBuffer":
       size, _, flags = operands
       size = int(size)
@@ -226,6 +231,7 @@ def KernelInvocationsFromCeclLog(
       else:
         # Host -> Device, or Device -> host.
         total_transferred_bytes += size
+      logging.debug('Extracted clCreateBuffer from log')
     elif (opcode == "clEnqueueReadBuffer" or
           opcode == "clEnqueueWriteBuffer" or
           opcode == "clEnqueueMapBuffer"):
@@ -294,6 +300,11 @@ class _BenchmarkSuite(object):
     return (pbutil.FromFile(log, gpgpu_pb2.GpgpuBenchmarkRun())
             for log in self._log_paths)
 
+  @property
+  def log_count(self):
+      return len(self._log_paths)
+
+
   def ForceDeviceType(self, device_type: str) -> None:
     """Force benchmarks to execute with the given device type."""
     if device_type not in {'cpu', 'gpu', 'oclgrind'}:
@@ -340,16 +351,18 @@ class _BenchmarkSuite(object):
       command = [str(oclgrind.OCLGRIND_PATH)] + command
 
     with RunEnv(executable.parent) as env:
+      start_time = time.time()
       process = subprocess.Popen(
           command, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
           universal_newlines=True)
       stdout, stderr = process.communicate()
+      elapsed = time.time() - start_time
 
       # Split libcecl logs out from stderr.
       cecl_lines, stderr_lines = [], []
       for line in stderr.split('\n'):
         if line.startswith('[CECL] '):
-          cecl_lines.append(line)
+          cecl_lines.append(line[len('[CECL] '):])
         else:
           stderr_lines.append(line)
 
@@ -357,8 +370,6 @@ class _BenchmarkSuite(object):
         log_produced = self._logdir / f'{log_name}.ERROR.pb'
       else:
         log_produced = self._logdir / f'{log_name}.pb'
-
-      cecl_log = '\n'.join(cecl_lines)
 
       pbutil.ToFile(gpgpu_pb2.GpgpuBenchmarkRun(
           ms_since_unix_epoch=timestamp,
@@ -368,10 +379,12 @@ class _BenchmarkSuite(object):
           returncode=process.returncode,
           stdout=stdout,
           stderr='\n'.join(stderr_lines),
-          cecl_log=cecl_log,
+          cecl_log='\n'.join(cecl_lines),
           device_type=self.device_type,
           hostname=system.HOSTNAME,
-          kernel_invocation=KernelInvocationsFromCeclLog(cecl_log)
+          kernel_invocation=KernelInvocationsFromCeclLog(
+              cecl_lines, self.device_type),
+          elapsed_time_ms=int(elapsed * 1000),
       ), log_produced)
 
     logging.info('Wrote %s', log_produced)
@@ -567,6 +580,12 @@ def main(argv: typing.List[str]):
                      device_type)
         benchmark_suite.ForceDeviceType(device_type)
         benchmark_suite.Run(outdir)
+
+      kernel_invocation_count = sum(
+          len(log.kernel_invocation) for log in benchmark_suite.logs)
+      logging.info('Extracted %s kernel invocations from %s logs',
+                   humanize.intcomma(kernel_invocation_count),
+                   humanize.intcomma(benchmark_suite.log_count))
 
 
 if __name__ == '__main__':

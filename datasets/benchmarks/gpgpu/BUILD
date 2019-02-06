@@ -74,6 +74,7 @@ py_binary(
         "//labm8:pbutil",
         "//labm8:system",
         "//third_party/py/absl",
+        "//third_party/py/humanize",
     ],
 )
 
