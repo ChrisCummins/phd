@@ -1,6 +1,4 @@
-ifndef CC
-	CC = gcc
-endif
+CC ?= gcc
 
 OUTPUT = *.out
 
