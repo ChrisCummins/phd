@@ -27,7 +27,7 @@ py_test(
 py_library(
     name = "corpuses",
     srcs = ["corpuses.py"],
-    visibility = ["//deeplearning/clgen:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         ":atomizers",
         ":encoded",
@@ -71,6 +71,7 @@ py_test(
 py_library(
     name = "encoded",
     srcs = ["encoded.py"],
+    visibility = ["//visibility:public"],
     deps = [
         ":preprocessed",
         "//deeplearning/clgen:errors",
@@ -113,4 +114,5 @@ py_library(
         "//third_party/py/progressbar",
         "//third_party/py/sqlalchemy",
     ],
+    visibility = ["//visibility:public"],
 )

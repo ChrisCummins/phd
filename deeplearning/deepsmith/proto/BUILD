@@ -49,6 +49,6 @@ py_proto_library(
 py_proto_library(
     name = "service_py_pb2",
     protos = ["service.proto"],
-    visibility = ["//deeplearning/deepsmith:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = ["//third_party/py/protobuf"],
 )
