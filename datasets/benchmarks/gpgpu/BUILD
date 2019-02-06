@@ -78,7 +78,7 @@ py_test(
     ],
 )
 
-sh_binary(
+sh_test(
     name = "gpgpu_smoke_test",
     srcs = ["gpgpu_smoke_test.sh"],
     data = [":gpgpu"],
