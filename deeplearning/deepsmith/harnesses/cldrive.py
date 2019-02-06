@@ -235,6 +235,19 @@ def MakeDriver(testcase: deepsmith_pb2.Testcase,
       *[int(x) for x in testcase.inputs['lsize'].split(',')])
   size = max(gsize.product * 2, 256)
   src = testcase.inputs['src']
+
+  # Optionally support custom data generators.
+  data_generator = data.Generator.ARANGE
+  if 'data_generator' in testcase.inputs:
+    data_generator = {
+      'arange': data.Generator.ARANGE,
+      'ones': data.Generator.ONES,
+    }.get(testcase.inputs['data_generator'])
+    if not data_generator:
+      raise ValueError(
+          "Unknown value for 'Testcase.inputs[\"data_generator\"]': "
+          f"'{testcase.inputs['data_generator']}'")
+
   try:
     # Generate a compile-and-execute test harness.
     inputs = data.MakeData(
