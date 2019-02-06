@@ -55,7 +55,7 @@ flags.DEFINE_list('gpgpu_benchmark_suites', _BENCHMARK_SUITE_NAMES,
 flags.DEFINE_list('gpgpu_device_types', ['oclgrind'],
                   'The device types to execute benchmark suites on. One or '
                   'more of {cpu,gpu,oclgrind}.')
-flags.DEFINE_string('gpgpu_outdir', '/tmp/datasets/benchmarks/gpgpu',
+flags.DEFINE_string('gpgpu_outdir', '/tmp/phd/datasets/benchmarks/gpgpu',
                     'The directory to write log files to.')
 flags.DEFINE_integer('gpgpu_build_process_count', multiprocessing.cpu_count(),
                      'The number of parallel threads to use when building '
