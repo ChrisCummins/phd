@@ -3,15 +3,9 @@ ifndef CC
 endif
 
 OUTPUT = *.out
-CCFLAGS=-O3 -lm 
 
-LIBS = -lOpenCL 
-OPENCL_DIR = /if10/kw5na/Packages/AMD-APP-SDK-v2.8-RC-lnx64
-OPENCL_INC = $(OPENCL_DIR)/include/ 
-OPENCL_LIB = $(OPENCL_DIR)/lib/x86_64/ -lOpenCL
-
-3D: 3D.c CL_helper.c
-	$(CC) $^ $(CCFLAGS) $(LIBS) $(CFLAGS) $(LDFLAGS) -o $@
+hotspot3D: 3D.c CL_helper.c CL_helper.h
+	$(CC) 3D.c CL_helper.c -O3 -lm $(LIBS) $(CFLAGS) $(LDFLAGS) -o hotspot3D
 
 clean:
-	rm -f 3D $(OUTPUT) 
+	rm -f hotspot3D $(OUTPUT)
