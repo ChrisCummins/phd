@@ -258,13 +258,17 @@ class _BenchmarkSuite(object):
         # raise OSError(
         #     f'Process failed with returncode {process.returncode} and '
         #     f'stderr: `{stderr}`')
-        with open(self._logdir / f'{log_name}.ERROR', 'w') as f:
+        log_produced = self._logdir / f'{log_name}.ERROR'
+        with open(log_produced, 'w') as f:
           f.write(stderr)
+      else:
+        log_produced = self._logdir / log_name
+        with open(log_produced, 'w') as f:
+          for line in stderr.split('\n'):
+            if line.startswith('[CECL] '):
+              print(line[len('[CECL] '):], file=f)
 
-      with open(self._logdir / log_name, 'w') as f:
-        for line in stderr.split('\n'):
-          if line.startswith('[CECL] '):
-            print(line[len('[CECL] '):], file=f)
+      logging.info('Wrote %s', log_produced)
 
   # Abstract attributes that must be provided by subclasses.
 
