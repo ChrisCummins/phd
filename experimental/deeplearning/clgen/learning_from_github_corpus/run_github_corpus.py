@@ -139,15 +139,16 @@ def main(argv: typing.List[str]):
     all_outcomes = []
     for i, start_idx in enumerate(range(0, len(srcs), batch_size)):
       cached_results_path = cache_dir / f'{i}.pkl'
-      logging.info('batch %d of %d', i + 1, max_batch)
 
       if cached_results_path.is_file():
+        logging.info('batch %d of %d', i + 1, max_batch)
         # Read cached results.
         with open(cached_results_path, 'rb') as f:
           outcomes = pickle.load(f)
       elif FLAGS.summarize_only:
         continue
       else:
+        logging.info('batch %d of %d', i + 1, max_batch)
         # Evaluate OpenCL kernels and cache results.
         batch = srcs[start_idx:start_idx + batch_size]
         testcases = labtypes.flatten(
@@ -171,10 +172,19 @@ def main(argv: typing.List[str]):
           pickle.dump(outcomes, f)
 
       all_outcomes += outcomes
-
-    df = pd.DataFrame(list(zip(all_outcomes, np.ones(len(all_outcomes)))),
-                      columns=['outcome', 'count'])
-    print(df.groupby('outcome').count())
+      df = pd.DataFrame(list(zip(all_outcomes, np.ones(len(all_outcomes)))) +
+                        [('Total', len(all_outcomes))],
+                        columns=['outcome', 'count'])
+      summary = df.groupby('outcome').sum().reset_index()
+      summary['ratio'] = [
+          f'{x:.2%}' for x in
+          # Double the "ratio" values because the 'count' column contains a
+          # grand total row.
+          2 * summary['count'].values / summary['count'].sum()
+      ]
+      print(summary)
+      del df
+      del summary
 
 
 if __name__ == '__main__':
