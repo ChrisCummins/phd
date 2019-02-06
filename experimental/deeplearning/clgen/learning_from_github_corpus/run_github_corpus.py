@@ -42,6 +42,9 @@ flags.DEFINE_string(
 flags.DEFINE_boolean(
     'opencl_opt', True,
     'If true, enable OpenCL optimizations.')
+flags.DEFINE_boolean(
+    'summarize_only', False,
+    'If true, only summarize cached results, do not run new experiments.')
 
 # All the combinations of local and global sizes used for synthetic kernels in
 # the CGO'17 experiments. These are the first dimension values, the other two
@@ -142,6 +145,8 @@ def main(argv: typing.List[str]):
         # Read cached results.
         with open(cached_results_path, 'rb') as f:
           outcomes = pickle.load(f)
+      elif FLAGS.summarize_only:
+        continue
       else:
         # Evaluate OpenCL kernels and cache results.
         batch = srcs[start_idx:start_idx + batch_size]
