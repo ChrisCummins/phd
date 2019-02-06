@@ -1,1 +1,1 @@
-./kmeans -o -i ../../../../../rodinia_data/kmeans/kdd_cup
+./kmeans -o -i @RODINIA_DATA_ROOT@/kmeans/kdd_cup

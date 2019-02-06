@@ -1,1 +1,1 @@
-./leukocyte ../../../../../../rodinia_data/leukocyte/testfile.avi 10
+./leukocyte @RODINIA_DATA_ROOT@/leukocyte/testfile.avi 10

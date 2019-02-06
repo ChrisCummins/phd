@@ -75,6 +75,8 @@ if system.is_linux():
 _DUMMY_BENCHMARK = bazelutil.DataPath(
     'phd/datasets/benchmarks/gpgpu/dummy_just_for_testing/dummy_benchmark')
 
+_RODINIA_DATA_ROOT = bazelutil.DataPath('rodinia_data')
+
 
 def CheckCall(command: typing.Union[str, typing.List[str]],
               shell: bool = False, env: typing.Dict[str, str] = None):
@@ -409,6 +411,15 @@ class RodiniaBenchmarkSuite(_BenchmarkSuite):
     Make('OPENCL', self.path)
     # TODO(cec): Original script then deleted the opencl/hotspot3D/3D file. Is
     # it not working?
+
+    # Replace all of the @RODINIA_DATA_ROOT@ placeholders with the real path.
+    CheckCall(f"""\
+for f in $(find '{self.path}' -type f); do
+  grep '@RODINIA_DATA_ROOT@' $f &>/dev/null && {{
+    sed -E -i 's,@RODINIA_DATA_ROOT@,{_RODINIA_DATA_ROOT},g' $f
+    echo Set @RODINIA_DATA_ROOT@ in $f
+  }}
+done""", shell=True)
 
   def _Run(self):
     for benchmark in self.benchmarks:

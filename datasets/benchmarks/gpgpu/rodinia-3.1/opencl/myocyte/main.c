@@ -247,7 +247,7 @@ main(	int argc,
 
 		// y
 		for(i=0; i<workload; i++){
-			read_file( "../../../../../rodinia_data/myocyte/y.txt",
+			read_file( "@RODINIA_DATA_ROOT@/myocyte/y.txt",
 						y[i][0],
 						EQUATIONS,
 						1,
@@ -256,7 +256,7 @@ main(	int argc,
 
 		// params
 		for(i=0; i<workload; i++){
-			read_file("../../../../../rodinia_data/myocyte/params.txt",
+			read_file("@RODINIA_DATA_ROOT@/myocyte/params.txt",
 						params[i],
 						PARAMETERS,
 						1,

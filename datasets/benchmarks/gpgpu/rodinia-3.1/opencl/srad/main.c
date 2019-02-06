@@ -130,7 +130,7 @@ main(	int argc,
 
 	image_ori = (fp*)malloc(sizeof(fp) * image_ori_elem);
 
-	read_graphics(	"../../../../../rodinia_data/srad/image.pgm",
+	read_graphics(	"@RODINIA_DATA_ROOT@/srad/image.pgm",
 					image_ori,
 					image_ori_rows,
 					image_ori_cols,

@@ -1,5 +1,5 @@
-../../../../../rodinia_data/nn/cane4_0.db
-../../../../../rodinia_data/nn/cane4_1.db
-../../../../../rodinia_data/nn/cane4_2.db
-../../../../../rodinia_data/nn/cane4_3.db
+@RODINIA_DATA_ROOT@/nn/cane4_0.db
+@RODINIA_DATA_ROOT@/nn/cane4_1.db
+@RODINIA_DATA_ROOT@/nn/cane4_2.db
+@RODINIA_DATA_ROOT@/nn/cane4_3.db
 
