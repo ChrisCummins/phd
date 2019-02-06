@@ -33,11 +33,17 @@ filegroup(
     srcs = glob(["shoc-1.1.5/**"]),
 )
 
-py_library(
+cc_binary(
+    name = "dummy_benchmark",
+    srcs = ["dummy_benchmark.cc"],
+)
+
+py_binary(
     name = "gpgpu",
     srcs = ["gpgpu.py"],
     data = [
         "@opencl_120_headers//:opencl_headers",
+        ":dummy_benchmark",
         ":amd-app-sdk-3.0_files",
         ":npb-3.3_files",
         ":nvidia-4.2_files",
@@ -70,4 +76,10 @@ py_test(
         "//labm8:test",
         "//third_party/py/absl",
     ],
+)
+
+sh_binary(
+    name = "gpgpu_smoke_test",
+    srcs = ["gpgpu_smoke_test.sh"],
+    data = [":gpgpu"],
 )
