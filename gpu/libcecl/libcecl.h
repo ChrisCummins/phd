@@ -17,8 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with libcecl.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef GPU_LIBCECL_CECL_H
-#define GPU_LIBCECL_CECL_H
+#pragma once
 
 #ifdef __APPLE__
 #include <OpenCL/opencl.h>
@@ -214,5 +213,3 @@ void* cecl_map_buffer(cl_command_queue command_queue,
 #ifdef __cplusplus
 }  /* extern "C" */
 #endif  /* __cplusplus */
-
-#endif  /* GPU_LIBCECL_CECL_H */
