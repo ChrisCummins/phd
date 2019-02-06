@@ -252,7 +252,7 @@ def MakeDriver(testcase: deepsmith_pb2.Testcase,
     # Generate a compile-and-execute test harness.
     inputs = data.MakeData(
         src=src, size=size,
-        data_generator=data.Generator.ARANGE,
+        data_generator=data_generator,
         scalar_val=size)
     src = cgen.emit_c(
         src=src, inputs=inputs, gsize=gsize, lsize=lsize,
