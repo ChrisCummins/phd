@@ -163,6 +163,87 @@ def RunEnv(path: pathlib.Path) -> typing.Dict[str, str]:
     yield env
 
 
+def KernelInvocationsFromCeclLog(
+    log: gpgpu_pb2.GpgpuBenchmarkRun
+) -> typing.List[gpgpu_pb2.OpenClKernelInvocation]:
+  """Interpret and parse the output of a libcecl instrumented application.
+
+  This is an updated and adapted implementation of
+  kernel_invocations_from_cecl_log() from:
+    //docs/2017_02_cgo/code/benchmarks:cecl2features
+  """
+  # Per-benchmark data transfer size and time.
+  total_transferred_bytes = 0
+  total_transfer_time = 0
+
+  kernel_invocations = []
+
+  # Iterate over each line in the cec log.
+  for line in log.cecl_log.split('\n'):
+    # Split line based on ; delimiter into opcode and operands.
+    components = [x.strip() for x in line.strip().split(';')]
+    opcode, operands = components[0], components[1:]
+
+    # Skip empty lines.
+    if not opcode:
+      continue
+
+    if opcode == "clCreateCommandQueue":
+      expected_devtype = {
+        'oclgrind': 'CPU'
+      }.get(log.device_type, log.device_type.upper())
+      actual_devtype = operands[0]
+      if expected_devtype != actual_devtype:
+        raise ValueError(
+            f"Expected device type {actual_devtype} does not match actual "
+            f"device type {actual_devtype}")
+    elif opcode == "clEnqueueNDRangeKernel":
+      kernel_name, global_size, local_size, elapsed = operands
+      global_size = int(global_size)
+      local_size = int(local_size)
+      elapsed = float(elapsed)
+      kernel_invocations.append(
+          gpgpu_pb2.OpenClKernelInvocation(
+              kernel_name=kernel_name,
+              global_size=global_size,
+              local_size=local_size,
+              runtime_ms=elapsed))
+    elif opcode == "clEnqueueTask":
+      kernel_name, elapsed = operands
+      elapsed = float(elapsed)
+      kernel_invocations.append(
+          gpgpu_pb2.OpenClKernelInvocation(
+              kernel_name=kernel_name,
+              global_size=1, local_size=1,
+              runtime_ms=elapsed))
+    elif opcode == "clCreateBuffer":
+      size, _, flags = operands
+      size = int(size)
+      flags = flags.split("|")
+      if "CL_MEM_COPY_HOST_PTR" in flags and "CL_MEM_READ_ONLY" not in flags:
+        # Device <-> host.
+        total_transferred_bytes += size * 2
+      else:
+        # Host -> Device, or Device -> host.
+        total_transferred_bytes += size
+    elif (opcode == "clEnqueueReadBuffer" or
+          opcode == "clEnqueueWriteBuffer" or
+          opcode == "clEnqueueMapBuffer"):
+      _, size, elapsed = operands
+      elapsed = float(elapsed)
+      total_transfer_time += elapsed
+    else:
+      # Not a line that we're interested in.
+      pass
+
+  # Defer transfer overhead until we have computed it.
+  for ki in kernel_invocations:
+    ki.transferred_bytes = total_transferred_bytes
+    ki.runtime_ms += total_transfer_time
+
+  return kernel_invocations
+
+
 class _BenchmarkSuite(object):
   """Abstract base class for a GPGPU benchmark suite.
 
@@ -236,7 +317,8 @@ class _BenchmarkSuite(object):
 
   def _ExecToLogFile(self, executable: pathlib.Path,
                      benchmark_name: str,
-                     command: typing.Optional[typing.List[str]] = None) -> None:
+                     command: typing.Optional[typing.List[str]] = None,
+                     dataset_name: str = 'default') -> None:
     """Run executable using runcecl script and log output."""
     logging.info('Executing benchmark %s', benchmark_name)
     self._logdir.mkdir(exist_ok=True, parents=True)
@@ -276,14 +358,20 @@ class _BenchmarkSuite(object):
       else:
         log_produced = self._logdir / f'{log_name}.pb'
 
+      cecl_log = '\n'.join(cecl_lines)
+
       pbutil.ToFile(gpgpu_pb2.GpgpuBenchmarkRun(
           ms_since_unix_epoch=timestamp,
           benchmark_suite=self.name,
           benchmark_name=benchmark_name,
+          dataset_name=dataset_name,
           returncode=process.returncode,
           stdout=stdout,
           stderr='\n'.join(stderr_lines),
-          cecl_log='\n'.join(cecl_lines),
+          cecl_log=cecl_log,
+          device_type=self.device_type,
+          hostname=system.HOSTNAME,
+          kernel_invocation=KernelInvocationsFromCeclLog(cecl_log)
       ), log_produced)
 
     logging.info('Wrote %s', log_produced)

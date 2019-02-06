@@ -7,8 +7,21 @@ message GpgpuBenchmarkRun {
   required int64 ms_since_unix_epoch = 1;
   required string benchmark_suite = 2;
   required string benchmark_name = 3;
-  required int32 returncode = 4;
-  required string cecl_log = 5;
-  required string stdout = 6;
-  required string stderr = 7;
+  required string dataset_name = 4;
+  required int32 returncode = 5;
+  required string cecl_log = 6;
+  required string stdout = 7;
+  required string stderr = 8;
+  required string device_type = 9;
+  required string hostname = 10;
+  repeated OpenClKernelInvocation kernel_invocation = 11;
+}
+
+// A single kernel invocation event.
+message OpenClKernelInvocation {
+  required string kernel_name = 1;
+  required int64 global_size = 2;
+  required int64 local_size = 3;
+  required double runtime_ms = 4;
+  required int64 transferred_bytes = 5;
 }
