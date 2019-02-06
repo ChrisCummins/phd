@@ -112,6 +112,9 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
     Returns:
       A new LlvmControlFlowGraph in which every node contains a single
       instruction.
+
+    Raises:
+      MalformedControlFlowGraphError: In case the CFG is not valid.
     """
     self.ValidateControlFlowGraph(strict=False)
 
