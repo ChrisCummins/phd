@@ -124,7 +124,7 @@ def main(argv: typing.List[str]):
                  humanize.intcomma(num_files))
 
     srcs = [x[0] for x in q]
-    batch_size = 64
+    batch_size = 16
     max_batch = math.ceil(len(srcs) / batch_size)
 
     all_outcomes = []
@@ -160,9 +160,7 @@ def main(argv: typing.List[str]):
           pickle.dump(outcomes, f)
 
       all_outcomes += outcomes
-      for j, outcome in enumerate(outcomes):
-        logging.info('Result %s = %s', humanize.intcomma(start_idx + j),
-                     outcome)
+
 
     df = pd.DataFrame(list(zip(all_outcomes, np.ones(len(all_outcomes)))),
                       columns=['outcome', 'count'])
