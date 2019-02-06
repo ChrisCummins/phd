@@ -1,0 +1,4 @@
+#!/bin/sh
+
+perl SHOC_LIBEXEC_DIR/driver.pl -bindir SHOC_BIN_DIR $*
+

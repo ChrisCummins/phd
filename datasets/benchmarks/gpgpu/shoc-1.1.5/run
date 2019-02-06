@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -eu
+
+ROOT=$(pwd)
+
+rm -rf logs
+mkdir -p logs/bad logs/good
+
+cd src/opencl
+for f in $(find . -type f -executable | grep -v level0 | sort); do
+    echo -n "$(tput bold)shoc-1.1.5 $(basename $f)$(tput sgr0) ... "
+
+    set +e
+    runcecl ./$f > $ROOT/log.txt
+    ret=$?
+    set -e
+
+    if [[ $ret -ne 0 ]]; then
+      echo fail
+      mv $ROOT/log.txt $ROOT/logs/bad/$(basename $f)
+    else
+        echo ok
+        mv $ROOT/log.txt $ROOT/logs/good/$(basename $f)
+    fi
+done
+cd ../../

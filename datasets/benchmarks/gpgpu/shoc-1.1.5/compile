@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+echo "cleaning up ..."
+make -j$(nproc) distclean &>/dev/null
+
+./configure
+make -j$(nproc)
