@@ -5,20 +5,20 @@ CC = g++
 
 
 FLAGS = -O3
-SRC = streamcluster.cpp
+SRC = streamcluster.cpp darwin_pthread_workaround.cc
 EXE = streamcluster
 
 release:$(SRC)
-	$(CC) -lOpenCL  $(SRC) -o $(EXE) -I$(OPENCL_INC) -L$(OPENCL_LIB)	$(FLAGS)
+	$(CC)  $(SRC) -o $(EXE) $(CFLAGS) $(LDFLAGS) -lpthread $(FLAGS)
 
 errmsg:$(SRC)
-	$(CC) -lOpenCL $(SRC) -o $(EXE) -I$(OPENCL_INC) -L$(OPENCL_LIB) -D ERRMSG $(FLAGS)
+	$(CC) $(SRC) -o $(EXE) $(CFLAGS) $(LDFLAGS) -lpthread -D ERRMSG $(FLAGS)
 	
 ptx:$(SRC)
-	$(CC) -lOpenCL $(SRC) -o $(EXE) -I$(OPENCL_INC) -L$(OPENCL_LIB) -D PTX_MSG $(FLAGS)
+	$(CC) $(SRC) -o $(EXE) $(CFLAGS) $(LDFLAGS) -lpthread -D PTX_MSG $(FLAGS)
 	
 res:$(SRC)
-	$(CC) -lOpenCL $(SRC) -o $(EXE) -I$(OPENCL_INC) -L$(OPENCL_LIB) -D RES_MSG $(FLAGS)
+	$(CC) $(SRC) -o $(EXE) $(CFLAGS) $(LDFLAGS) -lpthread -D RES_MSG $(FLAGS)
 	
 clean: $(SRC)
 	rm -f $(EXE) $(EXE).linkinfo result*

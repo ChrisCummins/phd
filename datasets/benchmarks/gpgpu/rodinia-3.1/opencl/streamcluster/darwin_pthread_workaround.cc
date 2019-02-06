@@ -1,6 +1,9 @@
-#include "third_party/pthread/darwin_pthread_workaround.h"
+#include "./darwin_pthread_workaround.h"
 
-#ifdef THIRD_PARTY_PTHREAD_DARWIN_PTHREAD_WORKAROUND_NEEDED
+#ifdef DARWIN_PTHREAD_WORKAROUND_NEEDED
+
+#include <errno.h>
+#include <assert.h>
 
 int pthread_barrier_init(pthread_barrier_t* barrier, const pthread_barrierattr_t* attr, unsigned count) {
  if (count == 0) {
@@ -52,4 +55,4 @@ int pthread_barrier_wait(pthread_barrier_t* barrier)
  return rc;
 }
 
-#endif // THIRD_PARTY_PTHREAD_DARWIN_PTHREAD_WORKAROUND_NEEDED
+#endif // DARWIN_PTHREAD_WORKAROUND_NEEDED

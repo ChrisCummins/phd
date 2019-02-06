@@ -1,7 +1,6 @@
 include ../../common/make.config
 
 C_C = gcc
-OCL_LIB = -lOpenCL
 
 # ====================================================================================================100
 #	NVCC
@@ -32,7 +31,7 @@ OCL_LIB = -lOpenCL
 #	EXECUTABLES (LINK OBJECTS TOGETHER INTO BINARY)
 # ========================================================================================================================================================================================================200
 
-b+tree.out:	./main.o \
+b_tree:	./main.o \
 		./kernel/kernel_gpu_opencl_wrapper.o \
 		./kernel/kernel_gpu_opencl_wrapper_2.o \
 		./util/timer/timer.o \
@@ -45,9 +44,8 @@ b+tree.out:	./main.o \
 			./util/num/num.o \
 			./util/opencl/opencl.o \
 			-lm \
-			-L$(OPENCL_LIB) \
-			-lOpenCL \
-	                -o b+tree.out
+			$(CFLAGS) $(LDFLAGS) \
+	                -o b_tree
 # ========================================================================================================================================================================================================200
 #	OBJECTS (COMPILE SOURCE FILES INTO OBJECTS)
 # ========================================================================================================================================================================================================200
@@ -75,7 +73,7 @@ main.o:	./common.h \
 			-c \
 			-o ./kernel/kernel_gpu_opencl_wrapper.o \
 			-O3 \
-			-I$(OPENCL_INC)
+			 $(CFLAGS) $(LDFLAGS)
 
 ./kernel/kernel_gpu_opencl_wrapper_2.o:	./common.h \
 										./kernel/kernel_gpu_opencl_wrapper_2.h \
@@ -84,7 +82,7 @@ main.o:	./common.h \
 			-c \
 			-o ./kernel/kernel_gpu_opencl_wrapper_2.o \
 			-O3 \
-			-I$(OPENCL_INC)
+			 $(CFLAGS) $(LDFLAGS)
 
 # ======================================================================================================================================================150
 #	UTILITIES
@@ -113,7 +111,7 @@ main.o:	./common.h \
 			-c \
 			-o ./util/opencl/opencl.o \
 			-O3 \
-			-I$(OPENCL_INC)
+			 $(CFLAGS) $(LDFLAGS)
 
 # ======================================================================================================================================================150
 #	END

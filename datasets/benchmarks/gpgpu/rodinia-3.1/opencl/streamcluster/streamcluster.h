@@ -32,6 +32,9 @@
 #include <math.h>
 #include <sys/resource.h>
 #include <limits.h>
+#include <pthread.h>
+
+#include "./darwin_pthread_workaround.h"
 
 
 #ifdef ENABLE_PARSEC_HOOKS

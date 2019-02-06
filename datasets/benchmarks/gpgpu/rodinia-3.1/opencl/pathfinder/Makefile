@@ -4,8 +4,8 @@ DEBUGFLAGS = -g
 # You will need to modify the following 2 lines
 # by inserting the correct path to the OpenCL
 # lib and inc directories.
-CXXFLAGS = -I$(OPENCL_INC) -c $(DEBUGFLAGS)
-LINKFLAGS = -L$(OPENCL_LIB)
+CXXFLAGS = $(CFLAGS) -c $(DEBUGFLAGS)
+LINKFLAGS = $(LDFLAGS)
 
 # link objects(binaries) together
 a.out: main.o OpenCL.o

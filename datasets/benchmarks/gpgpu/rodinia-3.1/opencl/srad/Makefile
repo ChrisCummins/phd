@@ -1,12 +1,9 @@
 include ../../common/make.config
 
-OCL_INC_DIR = -I$(OPENCL_INC)
-OCL_LIB_DIR = -L$(OPENCL_LIB)
 
 C_C = gcc
-OCL_LIB = -lOpenCL
 
-./a.out:	./main.o \
+srad:	./main.o \
 			./kernel/kernel_gpu_opencl_wrapper.o \
 			./util/opencl/opencl.o \
 			./util/graphics/graphics.o \
@@ -19,8 +16,7 @@ OCL_LIB = -lOpenCL
 			./util/graphics/resize.o \
 			./util/timer/timer.o \
 			-lm \
-			$(OCL_LIB_DIR) \
-			$(OCL_LIB) -o srad
+			$(CFLAGS) $(LDFLAGS) -o srad
 
 # ======================================================================================================================================================150
 #	MAIN FUNCTION
@@ -43,7 +39,7 @@ OCL_LIB = -lOpenCL
 			-c \
 			-o ./kernel/kernel_gpu_opencl_wrapper.o \
 			-O3 \
-			$(OCL_INC_DIR)
+			$(CFLAGS) $(LDFLAGS)
 
 # ======================================================================================================================================================150
 #	UTILITIES
@@ -76,7 +72,7 @@ OCL_LIB = -lOpenCL
 			-c \
 			-o ./util/opencl/opencl.o \
 			-O3 \
-			$(OCL_INC_DIR)
+			$(CFLAGS) $(LDFLAGS)
 
 clean:
 	rm	./*.o srad\

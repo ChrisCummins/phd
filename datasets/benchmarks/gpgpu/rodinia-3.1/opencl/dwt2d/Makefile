@@ -13,20 +13,18 @@ endif
 OUTPUT = -DOUTPUT
 
 C_C = g++
-OCL_LIB = -lOpenCL
-OCL_INC = -I$(OPENCL_PATH)/include 
 
 default:	dwt2d
 
 components:
-	$(C_C) -o components.o $(OCL_INC) -c components.cpp 
+	$(C_C) -o components.o -c components.cpp $(CFLAGS) $(LDFLAGS)
 
 dwt2d:
-	$(C_C) -o dwt2d $(OCL_INC) \
+	$(C_C) -o dwt2d \
 		main.cpp \
 		$(components) \
 		$(OUTPUT) \
-		$(OCL_LIB)
+		$(OCL_LIB) $(CFLAGS) $(LDFLAGS)
 
 clean:	
 	rm -rf *.o dwt2d

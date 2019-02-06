@@ -11,7 +11,7 @@ OPENCL_INC = $(OPENCL_DIR)/include/
 OPENCL_LIB = $(OPENCL_DIR)/lib/x86_64/ -lOpenCL
 
 3D: 3D.c CL_helper.c
-	$(CC) $^ $(CCFLAGS) $(LIBS) -I$(OPENCL_INC) -L$(OPENCL_LIB) -o $@
+	$(CC) $^ $(CCFLAGS) $(LIBS) $(CFLAGS) $(LDFLAGS) -o $@
 
 clean:
 	rm -f 3D $(OUTPUT) 

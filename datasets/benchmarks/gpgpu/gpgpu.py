@@ -111,11 +111,11 @@ def OpenClCompileAndLinkFlags() -> typing.Tuple[str, str]:
 
 
 @contextlib.contextmanager
-def MakeEnv(path: pathlib.Path) -> typing.Dict[str, str]:
+def MakeEnv(make_dir: pathlib.Path) -> typing.Dict[str, str]:
   """Return a build environment for GPGPU benchmarks."""
   cflags, ldflags = OpenClCompileAndLinkFlags()
 
-  with fs.chdir(path):
+  with fs.chdir(make_dir):
     with tempfile.TemporaryDirectory(prefix='phd_gpu_libcecl_header_') as d:
       fs.cp(_LIBCECL_HEADER, pathlib.Path(d) / 'cecl.h')
 
@@ -125,12 +125,16 @@ def MakeEnv(path: pathlib.Path) -> typing.Dict[str, str]:
       yield env
 
 
-def Make(target: str, path: pathlib.Path) -> None:
+def Make(target: str, make_dir: pathlib.Path) -> None:
   """Run make target in the given path."""
+  if not (make_dir / 'Makefile').is_file():
+    raise EnvironmentError(f"Cannot find Makefile in {make_dir}")
+
   # Build relative to the path, rather than using `make -c <path>`. This is
   # because some of the source codes have hard-coded relative paths.
-  with MakeEnv(path) as env:
-      CheckCall(['make', '-j', multiprocessing.cpu_count(), target], env=env)
+  with MakeEnv(make_dir) as env:
+    logging.debug('Running make %s in %s', target, make_dir)
+    CheckCall(['make', target, '-j', multiprocessing.cpu_count()], env=env)
 
 
 def FindExecutableInDir(path: pathlib.Path) -> pathlib.Path:
@@ -151,41 +155,6 @@ def RunEnv(path: pathlib.Path) -> typing.Dict[str, str]:
     yield env
 
 
-def RunCeclToLogFile(executable: pathlib.Path, logdir: pathlib.Path,
-                     device_type: str, benchmark_name: str):
-  """Run executable using runcecl script and log output."""
-  logging.info('Executing benchmark %s', executable.name)
-  logdir.mkdir(exist_ok=True, parents=True)
-
-  # Create the name of the logfile now, so that is timestamped to the start of
-  # execution.
-  log_name = '.'.join([
-    benchmark_name,
-    device_type,
-    system.HOSTNAME,
-    str(labdate.MillisecondsTimestamp()),
-    'txt'
-  ])
-
-  with RunEnv(executable.parent) as env:
-    if device_type == 'oclgrind':
-      command = [str(oclgrind.OCLGRIND_PATH), executable]
-    else:
-      command = [executable]
-    process = subprocess.Popen(command, env=env, stderr=subprocess.PIPE,
-                               universal_newlines=True)
-    _, stderr = process.communicate()
-
-    if process.returncode:
-      raise OSError(f'Process failed with returncode {process.returncode} and '
-                    f'stderr: `{stderr}`')
-
-    with open(logdir / log_name, 'w') as f:
-      for line in stderr.split('\n'):
-        if line.startswith('[CECL] '):
-          print(line[len('[CECL] '):], file=f)
-
-
 class _BenchmarkSuite(object):
   """Abstract base class for a GPGPU benchmark suite.
 
@@ -202,18 +171,18 @@ class _BenchmarkSuite(object):
       bs.Run('/tmp/logs/cpu/2')
   """
 
-  def __init__(self, name: str):
-    if name not in _BENCHMARK_SUITE_NAMES:
-      raise ValueError(f"Unknown benchmark suite: {name}")
+  def __init__(self):
+    if self.name not in _BENCHMARK_SUITE_NAMES:
+      raise ValueError(f"Unknown benchmark suite: {self.name}")
 
-    self._name = name
     self._device_type = None
     self._input_files = bazelutil.DataPath(
-        f'phd/datasets/benchmarks/gpgpu/{name}')
+        f'phd/datasets/benchmarks/gpgpu/{self.name}')
     self._mutable_location = None
+    self._logdir = None
 
   def __enter__(self) -> pathlib.Path:
-    prefix = f'phd_datasets_benchmarks_gpgpu_{self._name}'
+    prefix = f'phd_datasets_benchmarks_gpgpu_{self.name}'
     self._mutable_location = pathlib.Path(tempfile.mkdtemp(prefix=prefix))
     fs.cp(self._input_files, self._mutable_location)
     return self
@@ -245,9 +214,54 @@ class _BenchmarkSuite(object):
     logdir.mkdir(parents=True, exist_ok=True)
     if self.device_type is None:
       raise TypeError("Must call ForceDeviceType() before Run()")
-    return self._Run(logdir)
+    self._logdir = logdir
+    ret = self._Run()
+    self._logdir = None
+    return ret
+
+  def _ExecToLogFile(self, executable: pathlib.Path,
+                     benchmark_name: str,
+                     command: typing.Optional[typing.List[str]] = None) -> None:
+    """Run executable using runcecl script and log output."""
+    logging.info('Executing benchmark %s', benchmark_name)
+    self._logdir.mkdir(exist_ok=True, parents=True)
+
+    # Create the name of the logfile now, so that is timestamped to the start of
+    # execution.
+    log_name = '.'.join([
+      self.name,
+      benchmark_name,
+      self.device_type,
+      system.HOSTNAME,
+      str(labdate.MillisecondsTimestamp()),
+      'txt'
+    ])
+
+    # Assemble the command to run.
+    command = command or [executable]
+    if self.device_type == 'oclgrind':
+      command = [str(oclgrind.OCLGRIND_PATH)] + command
+
+    with RunEnv(executable.parent) as env:
+      process = subprocess.Popen(command, env=env, stderr=subprocess.PIPE,
+                                 universal_newlines=True)
+      _, stderr = process.communicate()
+
+      if process.returncode:
+        raise OSError(
+            f'Process failed with returncode {process.returncode} and '
+            f'stderr: `{stderr}`')
+
+      with open(self._logdir / log_name, 'w') as f:
+        for line in stderr.split('\n'):
+          if line.startswith('[CECL] '):
+            print(line[len('[CECL] '):], file=f)
 
   # Abstract attributes that must be provided by subclasses.
+
+  @property
+  def name(self) -> str:
+    raise NotImplementedError("abstract property")
 
   @property
   def benchmarks(self) -> typing.List[str]:
@@ -258,7 +272,7 @@ class _BenchmarkSuite(object):
     """Set the given device type."""
     raise NotImplementedError("abstract method")
 
-  def _Run(self, logdir: pathlib.Path) -> None:
+  def _Run(self) -> None:
     """Run the benchmarks and produce output log files."""
     raise NotImplementedError("abstract method")
 
@@ -289,14 +303,17 @@ class DummyJustForTesting(_BenchmarkSuite):
 class AmdAppSdkBenchmarkSuite(_BenchmarkSuite):
   """The AMD App SDK benchmarks."""
 
-  def __init__(self):
-    super(AmdAppSdkBenchmarkSuite, self).__init__('amd-app-sdk-3.0')
+  @property
+  def name(self):
+    return 'amd-app-sdk-3.0'
 
 
 class PolybenchGpuBenchmarkSuite(_BenchmarkSuite):
+  """PolyBench/GPU 1.0 Benchmarks."""
 
-  def __init__(self):
-    super(PolybenchGpuBenchmarkSuite, self).__init__('polybench-gpu-1.0')
+  @property
+  def name(self):
+    return 'polybench-gpu-1.0'
 
   @property
   def benchmarks(self) -> typing.List[str]:
@@ -325,10 +342,74 @@ class PolybenchGpuBenchmarkSuite(_BenchmarkSuite):
       Make('clean', self.path / 'OpenCL' / benchmark)
       Make('all', self.path / 'OpenCL' / benchmark)
 
-  def _Run(self, logdir: pathlib.Path):
+  def _Run(self):
     for benchmark in self.benchmarks:
       executable = FindExecutableInDir(self.path / 'OpenCL' / benchmark)
-      RunCeclToLogFile(executable, logdir, self.device_type, benchmark)
+      self._ExecToLogFile(executable, benchmark)
+
+
+class RodiniaBenchmarkSuite(_BenchmarkSuite):
+  """Rodinia Benchmark Suite 3.1.
+
+  The University of Virginia Rodinia Benchmark Suite is a collection of parallel
+  programs which targets heterogeneous computing platforms with both multicore
+  CPUs and GPUs.
+
+  Copyright (c)2008-2011 University of Virginia.
+
+  For further details, see:
+
+      S. Che, M. Boyer, J. Meng, D. Tarjan, J. W. Sheaffer, Sang-Ha Lee and
+      K. Skadron. "Rodinia: A Benchmark Suite for Heterogeneous Computing".
+      IISWC, 2009.
+  """
+
+  @property
+  def name(self) -> str:
+    return 'rodinia-3.1'
+
+  @property
+  def benchmarks(self) -> typing.List[str]:
+    return [
+      'b_tree',
+      'backprop',
+      'bfs',
+      'cfd',
+      'dwt2d',
+      'gaussian',
+      'heartwall',
+      'hotspot',
+      'hotspot3D',
+      'hybridsort',
+      'kmeans',
+      'lavaMD',
+      'leukocyte',
+      'lud',
+      'myocyte',
+      'nn',
+      'nw',
+      'particlefilter',
+      'pathfinder',
+      'srad',
+      'streamcluster',
+    ]
+
+  def _ForceDeviceType(self, device_type: str):
+    RewriteClDeviceType(device_type, self.path / 'opencl')
+    logging.info("Building Rodinia benchmarks")
+
+    # This directory is not generated by the Makefile, but is needed by it.
+    (self.path / 'bin/linux/opencl').mkdir(parents=True, exist_ok=True)
+
+    Make('OCL_clean', self.path)
+    Make('OPENCL', self.path)
+    # TODO(cec): Original script then deleted the opencl/hotspot3D/3D file. Is
+    # it not working?
+
+  def _Run(self):
+    for benchmark in self.benchmarks:
+      executable = self.path / 'opencl' / benchmark / 'run'
+      self._ExecToLogFile(executable, benchmark, command=['bash', './run'])
 
 
 # A map of benchmark suite names to classes.

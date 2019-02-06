@@ -17,11 +17,6 @@ LIBS =  -lm
 RANLIB = ranlib
 
 
-# CFLAGS = -O -g
-# CFLAGS = -pg -g
-CFLAGS = -O
-
-
 .c.o:
 	$(CC) -c $(CFLAGS) $(DEFS) $<
 

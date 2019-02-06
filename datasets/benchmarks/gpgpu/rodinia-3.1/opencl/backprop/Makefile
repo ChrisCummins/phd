@@ -5,10 +5,10 @@ CC = g++
 CC_FLAGS = -g -O2
 
 backprop: backprop.o imagenet.o facetrain.o backprop_ocl.o
-	$(CC) $(CC_FLAGS) backprop_ocl.o backprop.o imagenet.o facetrain.o -o backprop -I$(OPENCL_INC) -L$(OPENCL_LIB) -lOpenCL -lcecl
+	$(CC) $(CC_FLAGS) backprop_ocl.o backprop.o imagenet.o facetrain.o -o backprop $(CFLAGS) $(LDFLAGS)
 
 backprop_ocl.o: backprop_ocl.cpp
-	$(CC) $(CC_FLAGS) $< -c
+	$(CC) $(CC_FLAGS) $< -c $(CFLAGS) $(LDFLAGS)
 
 %.o: %.[ch]
 	$(CC) $(CC_FLAGS) $< -c

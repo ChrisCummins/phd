@@ -41,7 +41,8 @@
 /* if the system has malloc.h */
 #ifdef HAVE_MALLOC_H
 #define	MALLOCDECL	1
-#include	<malloc.h>
+// Chris edit: Replaced malloc.h with stdlib.h.
+#include	<stdlib.h>
 #endif
 
 /* any compiler should have this header */

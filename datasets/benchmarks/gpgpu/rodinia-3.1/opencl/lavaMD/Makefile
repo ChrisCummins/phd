@@ -13,11 +13,6 @@ override OUTPUT = -DOUTPUT
 endif
 
 C_C = gcc
-OMP_LIB = -lgomp
-OMP_FLAG = -fopenmp
-OCL_LIB =	-L$(OPENCL_LIB) \
-			-lOpenCL
-OCL_INC = -I$(OPENCL_INC)
 
 # link objects together
 a.out:		main.o \
@@ -31,7 +26,7 @@ a.out:		main.o \
 			./util/timer/timer.o \
 			./util/opencl/opencl.o \
 			-lm \
-			$(OCL_LIB) \
+			$(LDFLAGS) \
 			-o lavaMD
 
 # compile function files into objects
@@ -48,12 +43,12 @@ main.o:		main.h \
 	$(C_C)	$(OUTPUT) $(KERNEL_DIM) main.c \
 			-c \
 			-o main.o \
-			-O3
+			-O3 $(CFLAGS)
 
 ./kernel/kernel_gpu_opencl_wrapper.o:	./kernel/kernel_gpu_opencl_wrapper.h \
 										./kernel/kernel_gpu_opencl_wrapper.c
 	$(C_C)	$(KERNEL_DIM)						./kernel/kernel_gpu_opencl_wrapper.c \
-										$(OCL_INC) \
+										$(CFLAGS) \
 										-c \
 										-o ./kernel/kernel_gpu_opencl_wrapper.o \
 										-O3
@@ -75,7 +70,7 @@ main.o:		main.h \
 ./util/opencl/opencl.o:	./util/opencl/opencl.h \
 						./util/opencl/opencl.c
 	$(C_C)				./util/opencl/opencl.c \
-						$(OCL_INC) \
+						$(CFLAGS) \
 						-c \
 						-o ./util/opencl/opencl.o \
 						-O3

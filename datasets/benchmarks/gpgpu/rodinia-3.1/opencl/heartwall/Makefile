@@ -4,13 +4,13 @@ ifdef OUTPUT
 override OUTPUT = -DOUTPUT
 endif
 
-OCL_INC_DIR = -I$(OPENCL_INC)
-OCL_LIB_DIR = -L$(OPENCL_LIB)
+OCL_INC_DIR = $(CFLAGS)
+OCL_LIB_DIR = $(LDFLAGS)
 
 C_C = gcc
-OCL_LIB = -lOpenCL
+OCL_LIB = $(LDFLAGS)
 
-./a.out:	./main.o \
+heartwall:	./main.o \
 			./kernel/kernel_gpu_opencl_wrapper.o \
 			./util/avi/avilib.o \
 			./util/avi/avimod.o \

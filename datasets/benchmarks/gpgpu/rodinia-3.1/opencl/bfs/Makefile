@@ -7,25 +7,30 @@ SRC = bfs.cpp timer.cc
 
 CC_FLAGS = -g -O3
 
+# $(OPENMP) isn't supported on macOS.
+ifeq ($(shell uname), Linux)
+OPENMP = $(OPENMP)
+endif
+
 EXE = bfs
 
 release:$(SRC)
-	$(CC) $(CC_FLAGS)  -fopenmp $(SRC) -o $(EXE) -I$(OPENCL_INC) -L$(OPENCL_LIB) -lOpenCL -lcecl
+	$(CC) $(CC_FLAGS) $(OPENMP) $(SRC) -o $(EXE) $(CFLAGS) $(LDFLAGS)
 
 errmsg:$(SRC)
-	$(CC) $(CC_FLAGS)  -fopenmp $(SRC) -o $(EXE) -I$(OPENCL_INC) -L$(OPENCL_LIB) -lOpenCL -D ERRMSG PTX_MSG
+	$(CC) $(CC_FLAGS) $(OPENMP) $(SRC) -o $(EXE) $(CFLAGS) $(LDFLAGS) -D ERRMSG PTX_MSG
 
 ptx:$(SRC)
-	$(CC) $(CC_FLAGS) -fopenmp $(SRC) -o $(EXE) -I$(OPENCL_INC) -L$(OPENCL_LIB) -lOpenCL -D PTX_MSG
+	$(CC) $(CC_FLAGS) $(OPENMP) $(SRC) -o $(EXE) $(CFLAGS) $(LDFLAGS) -D PTX_MSG
 
 profile:$(SRC)
-	$(CC) $(CC_FLAGS) -fopenmp $(SRC) -o $(EXE) -I$(OPENCL_INC) -L$(OPENCL_LIB) -lOpenCL -D PROFILING
+	$(CC) $(CC_FLAGS) $(OPENMP) $(SRC) -o $(EXE) $(CFLAGS) $(LDFLAGS) -D PROFILING
 
 res:$(SRC)
-	$(CC) $(CC_FLAGS) -fopenmp $(SRC) -o $(EXE) -I$(OPENCL_INC) -L$(OPENCL_LIB) -lOpenCL -D RES_MSG
+	$(CC) $(CC_FLAGS) $(OPENMP) $(SRC) -o $(EXE) $(CFLAGS) $(LDFLAGS) -D RES_MSG
 
 debug: $(SRC)
-	$(CC) $(CC_FLAGS) $(SRC) -o $(EXE) -I$(OPENCL_INC) -L$(OPENCL_LIB) -lOpenCL
+	$(CC) $(CC_FLAGS) $(SRC) -o $(EXE) $(CFLAGS) $(LDFLAGS)
 
 run:
 	./$(EXE)
