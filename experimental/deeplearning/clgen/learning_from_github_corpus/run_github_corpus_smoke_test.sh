@@ -4,16 +4,26 @@ set -eux
 TMP_CORPUS="/tmp/phd/corpus"
 TMP_CACHED_RESULTS="/tmp/phd/cache"
 
+rm -rf "$TMP_CORPUS"
+rm -rf "$TMP_CACHED_RESULTS"
+rm -f "$TMP_CORPUS.sha1.txt"
+
 mkdir -pv "$TMP_CORPUS"
 
-echo <<EOF > "$TMP_CORPUS/good.txt"
+cat <<EOF > "$TMP_CORPUS/good.txt"
 kernel void A(global int* a) {
-  a[get_global_id(0)] = 0;
+  if (get_global_id(0) < 1000000) {
+    a[get_global_id(0)] = 0;
+  }
 }
 EOF
 
-echo <<EOF > "$TMP_CORPUS/bad.txt"
-Syntax error!
+cat <<EOF > "$TMP_CORPUS/bad.txt"
+This
+file
+contains
+invalid
+syntax!
 EOF
 
 experimental/deeplearning/clgen/learning_from_github_corpus/run_github_corpus \
@@ -22,3 +32,4 @@ experimental/deeplearning/clgen/learning_from_github_corpus/run_github_corpus \
 # TODO(cec): Put in an exit handler.
 rm -rf "$TMP_CORPUS"
 rm -rf "$TMP_CACHED_RESULTS"
+rm -f "$TMP_CORPUS.sha1.txt"

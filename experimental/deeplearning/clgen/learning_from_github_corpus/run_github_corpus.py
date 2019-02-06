@@ -10,6 +10,7 @@ import pickle
 import typing
 
 import humanize
+import numpy as np
 import pandas as pd
 from absl import app
 from absl import flags
@@ -22,6 +23,7 @@ from deeplearning.deepsmith.harnesses import cldrive
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import harness_pb2
 from deeplearning.deepsmith.proto import service_pb2
+from gpu.oclgrind import oclgrind
 from labm8 import labtypes
 
 
@@ -79,7 +81,7 @@ def main(argv: typing.List[str]):
 
   # An OpenCL corpus, configured as described in CGO'17.
   corpus = corpuses.Corpus(corpus_pb2.Corpus(
-      local_directory="/var/phd/datasets/github/corpuses/opencl",
+      local_directory=FLAGS.github_kernels_dir,
       ascii_character_atomizer=True,
       contentfile_separator="\n\n",
       preprocessor=[
@@ -98,10 +100,11 @@ def main(argv: typing.List[str]):
   corpus.Create()
 
   cache_dir = pathlib.Path(FLAGS.result_cache_dir) / corpus.hash
+  cache_dir.mkdir(parents=True, exist_ok=True)
 
   # An OpenCL corpus, configured as described in CGO'17.
   driver = cldrive.CldriveHarness(harness_pb2.CldriveHarness(
-      opencl_env=[gpu.cldrive.env.OclgrindOpenCLEnvironment().name],
+      opencl_env=[oclgrind.CLINFO_DESCRIPTION.name],
       opencl_opt=[True],
   ))
 
@@ -143,19 +146,27 @@ def main(argv: typing.List[str]):
             testcases=testcases,
         ), None)
 
-        assert response.status == service_pb2.ServiceStatus.SUCCESS
+        # Harness returned correct number of results without complaining.
+        if response.status.returncode != service_pb2.ServiceStatus.SUCCESS:
+          raise OSError(service_pb2.ServiceStatus.ReturnCode.Name(
+              response.status.returncode))
         assert len(response.results) == len(testcases)
-        outcomes = [result.outcome for result in response.results]
+
+        outcomes = [
+            deepsmith_pb2.Result.Outcome.Name(result.outcome)
+            for result in response.results
+        ]
         with open(cached_results_path, 'wb') as f:
           pickle.dump(outcomes, f)
 
       all_outcomes += outcomes
       for j, outcome in enumerate(outcomes):
         logging.info('Result %s = %s', humanize.intcomma(start_idx + j),
-                     deepsmith_pb2.Result.Outcome.Name(outcome))
+                     outcome)
 
-    df = pd.DataFrame(all_outcomes, columns=['outcome'])
-    print(df.groupby(['outcome']))
+    df = pd.DataFrame(list(zip(all_outcomes, np.ones(len(all_outcomes)))),
+                      columns=['outcome', 'count'])
+    print(df.groupby('outcome').count())
 
 
 if __name__ == '__main__':
