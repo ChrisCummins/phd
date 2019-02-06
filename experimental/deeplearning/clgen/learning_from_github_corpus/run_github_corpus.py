@@ -36,6 +36,12 @@ flags.DEFINE_string(
     'result_cache_dir',
     '/tmp/phd/experimental/deeplearning/clgen/learning_from_github_corpus/run_github_corpus',
     'Path to cache experimental results in.')
+flags.DEFINE_string(
+    'opencl_env', oclgrind.CLINFO_DESCRIPTION.name,
+    'The OpenCL environment to execute programs on.')
+flags.DEFINE_boolean(
+    'opencl_opt', True,
+    'If true, enable OpenCL optimizations.')
 
 # All the combinations of local and global sizes used for synthetic kernels in
 # the CGO'17 experiments. These are the first dimension values, the other two
@@ -104,8 +110,8 @@ def main(argv: typing.List[str]):
 
   # An OpenCL corpus, configured as described in CGO'17.
   driver = cldrive.CldriveHarness(harness_pb2.CldriveHarness(
-      opencl_env=[oclgrind.CLINFO_DESCRIPTION.name],
-      opencl_opt=[True],
+      opencl_env=[FLAGS.opencl_env],
+      opencl_opt=[FLAGS.opencl_opt],
   ))
 
   with corpus.preprocessed.Session() as session:
@@ -153,14 +159,13 @@ def main(argv: typing.List[str]):
         assert len(response.results) == len(testcases)
 
         outcomes = [
-            deepsmith_pb2.Result.Outcome.Name(result.outcome)
-            for result in response.results
+          deepsmith_pb2.Result.Outcome.Name(result.outcome)
+          for result in response.results
         ]
         with open(cached_results_path, 'wb') as f:
           pickle.dump(outcomes, f)
 
       all_outcomes += outcomes
-
 
     df = pd.DataFrame(list(zip(all_outcomes, np.ones(len(all_outcomes)))),
                       columns=['outcome', 'count'])
