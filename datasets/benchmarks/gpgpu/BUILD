@@ -33,17 +33,12 @@ filegroup(
     srcs = glob(["shoc-1.1.5/**"]),
 )
 
-cc_binary(
-    name = "dummy_benchmark",
-    srcs = ["dummy_benchmark.cc"],
-)
-
 py_binary(
     name = "gpgpu",
     srcs = ["gpgpu.py"],
     data = [
         "@opencl_120_headers//:opencl_headers",
-        ":dummy_benchmark",
+        "//datasets/benchmarks/gpgpu/dummy_just_for_testing:dummy_benchmark",
         ":amd-app-sdk-3.0_files",
         ":npb-3.3_files",
         ":nvidia-4.2_files",
