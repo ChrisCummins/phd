@@ -25,7 +25,7 @@ main() {
     set -o pipefail
 
     if [[ $# > 0 ]]; then
-        stdbuf -oL -eL $@ 2>&1 > /dev/null | grep -E '^\[CECL\]' | sed 's/^\[CECL\] //'
+        stdbuf -oL -eL 2>&1 > /dev/null | grep -E '^\[CECL\]' | sed 's/^\[CECL\] //'
     else
         stdbuf -oL -eL less <&0 | grep -E '^\[CECL\]' | sed 's/^\[CECL\] //'
     fi
