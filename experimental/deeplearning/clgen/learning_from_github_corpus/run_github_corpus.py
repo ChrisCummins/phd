@@ -83,6 +83,35 @@ def OpenClSourceToTestCases(src: str) -> typing.List[deepsmith_pb2.Testcase]:
   ]
 
 
+def RunTestCasesOrDie(driver, testcases) -> typing.Iterable[
+  deepsmith_pb2.Result]:
+  response = driver.RunTestcases(harness_pb2.RunTestcasesRequest(
+      testbed=driver.testbeds[0],
+      testcases=testcases,
+  ), None)
+
+  # Harness returned correct number of results without complaining.
+  if response.status.returncode != service_pb2.ServiceStatus.SUCCESS:
+    logging.fatal(
+        'Driver failed with return code %s',
+        service_pb2.ServiceStatus.ReturnCode.Name(response.status.returncode))
+  assert len(response.results) == len(testcases)
+  return response.results
+
+
+def GetResultOutcome(result: deepsmith_pb2.Result,
+                     driver: cldrive.CldriveHarness) -> str:
+  outcome = deepsmith_pb2.Result.Outcome.Name(result.outcome)
+  if outcome != 'PASS':
+    return outcome
+
+  if result.testcase.invariant_opts['driver_type'] != 'compile_and_run':
+    return 'DRIVER_FAILED'
+
+  else:
+    return 'PASS'
+
+
 def main(argv: typing.List[str]):
   """Main entry point."""
   if len(argv) > 1:
@@ -111,7 +140,6 @@ def main(argv: typing.List[str]):
   cache_dir = pathlib.Path(FLAGS.result_cache_dir) / corpus.hash
   cache_dir.mkdir(parents=True, exist_ok=True)
 
-  # An OpenCL corpus, configured as described in CGO'17.
   driver = cldrive.CldriveHarness(harness_pb2.CldriveHarness(
       opencl_env=[FLAGS.opencl_env],
       opencl_opt=[FLAGS.opencl_opt],
@@ -153,20 +181,10 @@ def main(argv: typing.List[str]):
         batch = srcs[start_idx:start_idx + batch_size]
         testcases = labtypes.flatten(
             [OpenClSourceToTestCases(src) for src in batch])
-        response = driver.RunTestcases(harness_pb2.RunTestcasesRequest(
-            testbed=driver.testbeds[0],
-            testcases=testcases,
-        ), None)
-
-        # Harness returned correct number of results without complaining.
-        if response.status.returncode != service_pb2.ServiceStatus.SUCCESS:
-          raise OSError(service_pb2.ServiceStatus.ReturnCode.Name(
-              response.status.returncode))
-        assert len(response.results) == len(testcases)
+        results = RunTestCasesOrDie(driver, testcases)
 
         outcomes = [
-          deepsmith_pb2.Result.Outcome.Name(result.outcome)
-          for result in response.results
+          GetResultOutcome(result, driver) for result in results
         ]
         with open(cached_results_path, 'wb') as f:
           pickle.dump(outcomes, f)
