@@ -116,20 +116,19 @@ def GetOutcomeWithDynamicChecks(result: deepsmith_pb2.Result,
   if result.testcase.invariant_opts['driver_type'] != 'compile_and_run':
     return 'DRIVER_FAILED'
 
-  # TODO(cec): Check that outputs are different from inputs.
-
-  print(result)
-  import sys
-  sys.exit(0)
+  # TODO(cec): Check that outputs are different from inputs, i.e. that the
+  # kernel is input sensitive.
 
   # Run the kernel again to check that it's output is stable.
-  repeat_result = RunTestCasesOrDie(driver, [result.testcase])
-  outcome = deepsmith_pb2.Result.Outcome.Name(result.outcome)
+  repeat_result = RunTestCasesOrDie(driver, [result.testcase])[0]
+  repeat_outcome = deepsmith_pb2.Result.Outcome.Name(result.outcome)
   if repeat_outcome != 'PASS':
+    logging.info('Kernel failed when run a second time: %s', repeat_outcome)
     return 'DIFFTEST_FAIL'
 
   # The output should be the same when run twice with the same input.
-  if len(set(r.outputs['stdout'] for r in [result, repeat_result]) != 1):
+  if len(set(r.outputs['stdout'] for r in [result, repeat_result])) != 1:
+    logging.info('Kernel failed nondeterminism test on first input')
     return 'DIFFTEST_NONDETERMINISM_FAIL'
 
   # Run kernel twice more, with a pair of identical inputs.
@@ -141,15 +140,18 @@ def GetOutcomeWithDynamicChecks(result: deepsmith_pb2.Result,
   outcomes = [deepsmith_pb2.Result.Outcome.Name(r.outcome) for r in
               different_input_results]
   if not set(outcomes) == {'PASS'}:
+    logging.info('Kernel failed when run on second inputs')
     return 'DIFFTEST_FAIL'
 
   # The output should be the same when run twice with the same input.
   if len(set(r.outputs['stdout'] for r in different_input_results)) != 1:
+    logging.info('Kernel failed nondeterminism test on seocnd inputs')
     return 'DIFFTEST_NONDETERMINISM_FAIL'
 
   # The outputs must be different when run twice with the same inputs.
   if len(set(r.outputs['stdout'] for r in
-             [result, different_input_results[0]])) != 2:
+             [result, different_input_results[0]])) == 1:
+    logging.info('Kernel produced identicial outputs with differnet inputs')
     return 'INPUT_INSENSITIVE'
 
   return 'PASS'
@@ -204,7 +206,7 @@ def main(argv: typing.List[str]):
                  humanize.intcomma(num_files))
 
     srcs = [x[0] for x in q]
-    batch_size = 16
+    batch_size = 8
     max_batch = math.ceil(len(srcs) / batch_size)
 
     all_outcomes = []
@@ -243,6 +245,7 @@ def main(argv: typing.List[str]):
           # grand total row.
           2 * summary['count'].values / summary['count'].sum()
       ]
+      summary['count'] = [humanize.intcomma(int(x)) for x in summary['count']]
       print(summary)
       del df
       del summary
