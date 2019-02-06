@@ -47,7 +47,6 @@ py_library(
         ":shoc-1.1.5_files",
         "//gpu/libcecl:libcecl.so",
         "//gpu/libcecl:libcecl_header",
-        "//gpu/libcecl:runcecl",
     ] + select({
         "//:darwin": [],
         "//conditions:default": ["@libopencl//:libOpenCL.so"],
@@ -56,8 +55,10 @@ py_library(
     deps = [
         "//labm8:bazelutil",
         "//labm8:fs",
+        "//labm8:labdate",
         "//labm8:system",
         "//third_party/py/absl",
+        "//gpu/oclgrind",
     ],
 )
 

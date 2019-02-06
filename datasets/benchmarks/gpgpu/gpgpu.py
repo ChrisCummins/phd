@@ -6,6 +6,7 @@ in 25 top tier conference papers. For more details, see:
   ﻿Cummins, C., Petoumenos, P., Zang, W., & Leather, H. (2017). Synthesizing
   Benchmarks for Predictive Modeling. In CGO. IEEE.
 """
+import contextlib
 import functools
 import multiprocessing
 import os
@@ -17,8 +18,10 @@ import typing
 from absl import flags
 from absl import logging
 
+from gpu.oclgrind import oclgrind
 from labm8 import bazelutil
 from labm8 import fs
+from labm8 import labdate
 from labm8 import system
 
 
@@ -39,7 +42,6 @@ _BENCHMARK_SUITE_NAMES = [
 # run script.
 _LIBCECL = bazelutil.DataPath('phd/gpu/libcecl/libcecl.so')
 _LIBCECL_HEADER = bazelutil.DataPath('phd/gpu/libcecl/libcecl.h')
-_RUNCECL = bazelutil.DataPath('phd/gpu/libcecl/runcecl')
 
 # Path to OpenCL headers and library.
 _OPENCL_HEADERS_DIR = bazelutil.DataPath('opencl_120_headers')
@@ -61,12 +63,16 @@ def CheckCall(command: typing.Union[str, typing.List[str]],
 
 def RewriteClDeviceType(device_type: str, path: pathlib.Path):
   """Rewrite all instances of CL_DEVICE_TYPE_XXX in the given path."""
-  device_type = device_type.upper()
+  cl_device_type = {
+    'cpu': 'CL_DEVICE_TYPE_CPU',
+    'gpu': 'CL_DEVICE_TYPE_GPU',
+    'oclgrind': 'CL_DEVICE_TYPE_CPU',
+  }[device_type]
   CheckCall(f"""\
 for f in $(find '{path}' -type f); do
   grep CL_DEVICE_TYPE_ $f &>/dev/null && {{
-    sed -E -i 's/CL_DEVICE_TYPE_[A-Z]+/CL_DEVICE_TYPE_{device_type}/g' $f
-    echo set CL_DEVICE_TYPE_{device_type} in $f
+    sed -E -i 's/CL_DEVICE_TYPE_[A-Z]+/{cl_device_type}/g' $f
+    echo Set {cl_device_type} in $f
   }}
 done""", shell=True)
 
@@ -81,20 +87,27 @@ def OpenClCompileAndLinkFlags() -> typing.Tuple[str, str]:
     return f'-isystem {_OPENCL_HEADERS_DIR}', '-framework OpenCL'
 
 
-def Make(target: str, path: pathlib.Path) -> None:
-  """Run make target in the given path."""
+@contextlib.contextmanager
+def MakeEnv(path: pathlib.Path) -> typing.Dict[str, str]:
+  """Return a build environment for GPGPU benchmarks."""
   cflags, ldflags = OpenClCompileAndLinkFlags()
 
+  with fs.chdir(path):
+    with tempfile.TemporaryDirectory(prefix='phd_gpu_libcecl_header_') as d:
+      fs.cp(_LIBCECL_HEADER, pathlib.Path(d) / 'cecl.h')
+
+      env = os.environ.copy()
+      env['CFLAGS'] = f'-isystem {d} {cflags}'
+      env['LDFLAGS'] = f'-lcecl -L{_LIBCECL.parent} {ldflags}'
+      yield env
+
+
+def Make(target: str, path: pathlib.Path) -> None:
+  """Run make target in the given path."""
   # Build relative to the path, rather than using `make -c <path>`. This is
   # because some of the source codes have hard-coded relative paths.
-  with fs.chdir(path):
-    with tempfile.TemporaryDirectory(prefix='phd_') as d:
-      fs.cp(_LIBCECL_HEADER, pathlib.Path(d) / 'cecl.h')
-      CheckCall(['make', '-j', multiprocessing.cpu_count(), target],
-                env={
-                  'CFLAGS': f'-isystem {d} {cflags}',
-                  'LDFLAGS': f'-lcecl -L {_LIBCECL.parent} {ldflags}'
-                })
+  with MakeEnv(path) as env:
+      CheckCall(['make', '-j', multiprocessing.cpu_count(), target], env=env)
 
 
 def FindExecutableInDir(path: pathlib.Path) -> pathlib.Path:
@@ -105,15 +118,49 @@ def FindExecutableInDir(path: pathlib.Path) -> pathlib.Path:
   return exes[0]
 
 
-def RunCeclToLogFile(executable: pathlib.Path, output_path: pathlib.Path):
+@contextlib.contextmanager
+def RunEnv(path: pathlib.Path) -> typing.Dict[str, str]:
+  """Return an execution environment for a GPGPU benchmark."""
+  with fs.chdir(path):
+    env = os.environ.copy()
+    env['LD_LIBRARY_PATH'] = _LIBCECL.parent
+    env['DYLD_LIBRARY_PATH'] = _LIBCECL.parent
+    yield env
+
+
+def RunCeclToLogFile(executable: pathlib.Path, logdir: pathlib.Path,
+                     device_type: str, benchmark_name: str):
   """Run executable using runcecl script and log output."""
-  del output_path
-  # TODO(cec): Run using _RUNCECL and pipe output to output_path.
-  CheckCall([executable],
-            env={
-              'LD_LIBRARY_PATH': _LIBCECL.parent,
-              'DYLD_LIBRARY_PATH': _LIBCECL.parent
-            })
+  logging.info('Executing benchmark %s', executable.name)
+  logdir.mkdir(exist_ok=True, parents=True)
+
+  # Create the name of the logfile now, so that is timestamped to the start of
+  # execution.
+  log_name = '.'.join([
+    benchmark_name,
+    device_type,
+    system.HOSTNAME,
+    str(labdate.MillisecondsTimestamp()),
+    'txt'
+  ])
+
+  with RunEnv(executable.parent) as env:
+    if device_type == 'oclgrind':
+      command = [str(oclgrind.OCLGRIND_PATH), executable]
+    else:
+      command = [executable]
+    process = subprocess.Popen(command, env=env, stderr=subprocess.PIPE,
+                               universal_newlines=True)
+    _, stderr = process.communicate()
+
+    if process.returncode:
+      raise OSError(f'Process failed with returncode {process.returncode} and '
+                    f'stderr: `{stderr}`')
+
+    with open(logdir / log_name, 'w') as f:
+      for line in stderr.split('\n'):
+        if line.startswith('[CECL] '):
+          print(line[len('[CECL] '):], file=f)
 
 
 class _BenchmarkSuite(object):
@@ -161,15 +208,19 @@ class _BenchmarkSuite(object):
 
   def ForceDeviceType(self, device_type: str) -> None:
     """Force benchmarks to execute with the given device type."""
-    if device_type not in {'cpu', 'gpu'}:
+    if device_type not in {'cpu', 'gpu', 'oclgrind'}:
       raise ValueError(f"Unknown device type: {device_type}")
     self._device_type = device_type
     return self._ForceDeviceType(device_type)
 
+  @property
+  def device_type(self) -> str:
+    return self._device_type
+
   def Run(self, logdir: pathlib.Path) -> None:
     """Run benchmarks and log results to directory."""
     logdir.mkdir(parents=True, exist_ok=True)
-    if self._device_type is None:
+    if self.device_type is None:
       raise TypeError("Must call ForceDeviceType() before Run()")
     return self._Run(logdir)
 
@@ -221,16 +272,17 @@ class PolybenchGpuBenchmarkSuite(_BenchmarkSuite):
       'SYRK',
     ]
 
-  def ForceDeviceType(self, device_type: str):
+  def _ForceDeviceType(self, device_type: str):
     RewriteClDeviceType(device_type, self.path / 'OpenCL')
     for benchmark in self.benchmarks:
+      logging.info('Building benchmark %s', benchmark)
       Make('clean', self.path / 'OpenCL' / benchmark)
       Make('all', self.path / 'OpenCL' / benchmark)
 
-  def Run(self, logdir: pathlib.Path):
+  def _Run(self, logdir: pathlib.Path):
     for benchmark in self.benchmarks:
       executable = FindExecutableInDir(self.path / 'OpenCL' / benchmark)
-      RunCeclToLogFile(executable, logdir / f'{benchmark}.cecl.txt')
+      RunCeclToLogFile(executable, logdir, self.device_type, benchmark)
 
 
 BENCHMARK_SUITES = [
