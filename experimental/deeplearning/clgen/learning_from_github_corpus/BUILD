@@ -16,7 +16,7 @@ py_binary(
     ],
 )
 
-sh_binary(
+sh_test(
     name = "run_github_corpus_smoke_test",
     srcs = ["run_github_corpus_smoke_test.sh"],
     data = [":run_github_corpus"],
