@@ -49,7 +49,7 @@ Run the cloner to download the repos scraped in the previous step:
 
 ```sh
 $ bazel run //datasets/github/scrape_repos:cloner -- \
-    --clone_list $PWD/clone_list.pbtxt
+    --cloner_clone_list $PWD/clone_list.pbtxt
 ```
 
 Extract individual source files from the cloned repos and import them into a
@@ -57,7 +57,7 @@ Extract individual source files from the cloned repos and import them into a
 
 ```sh
 $ bazel run //datasets/github/scrape_repos:importer -- \
-    --clone_list $PWD/clone_list.pbtxt
+    --importer_clone_list $PWD/clone_list.pbtxt
 ```
 
 Export the source files from the corpus database to a directory:

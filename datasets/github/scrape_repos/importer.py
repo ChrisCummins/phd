@@ -25,7 +25,8 @@ FLAGS = flags.FLAGS
 flags.DEFINE_integer('processes', os.cpu_count(),
                      'The number of simultaneous processes.')
 
-flags.DEFINE_string('clone_list', None, 'The path to a LanguageCloneList file.')
+flags.DEFINE_string('importer_clone_list', None,
+                    'The path to a LanguageCloneList file.')
 
 
 def ShouldImportRepo(session: orm.session.Session,
@@ -154,7 +155,7 @@ def main(argv):
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments '{}'".format(', '.join(argv[1:])))
 
-  clone_list_path = pathlib.Path(FLAGS.clone_list or "")
+  clone_list_path = pathlib.Path(FLAGS.importer_clone_list or "")
   if not clone_list_path.is_file():
     raise app.UsageError('--clone_list is not a file.')
   clone_list = pbutil.FromFile(clone_list_path,

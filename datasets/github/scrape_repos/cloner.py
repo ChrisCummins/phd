@@ -22,7 +22,8 @@ from labm8 import pbutil
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string('clone_list', None, 'The path to a LanguageCloneList file.')
+flags.DEFINE_string('cloner_clone_list', None,
+                    'The path to a LanguageCloneList file.')
 flags.DEFINE_integer('repository_clone_timeout_minutes', 30,
                      'The maximum number of minutes to attempt to clone a '
                      'repository before '
@@ -93,7 +94,7 @@ def main(argv) -> None:
   if len(argv) > 1:
     raise app.UsageError('Too many command-line arguments.')
 
-  clone_list_path = pathlib.Path(FLAGS.clone_list or "")
+  clone_list_path = pathlib.Path(FLAGS.cloner_clone_list or "")
   if not clone_list_path.is_file():
     raise app.UsageError('--clone_list is not a file.')
   clone_list = pbutil.FromFile(clone_list_path,

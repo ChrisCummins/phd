@@ -100,7 +100,7 @@ java_binary(
 py_library(
     name = "preprocessors",
     srcs = ["preprocessors.py"],
-    visibility = ["//datasets/github/scrape_repos:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         # This target should depend on every target defining preprocessors, so
         # that the runfiles can be resolved.

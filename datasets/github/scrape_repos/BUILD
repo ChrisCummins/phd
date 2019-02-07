@@ -5,6 +5,7 @@ py_binary(
     srcs = ["cloner.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
+    visibility = ["//visibility:public"],
     deps = [
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
         "//labm8:fs",
@@ -73,6 +74,7 @@ py_binary(
     srcs = ["importer.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
+    visibility = ["//visibility:public"],
     deps = [
         ":contentfiles",
         "//datasets/github/scrape_repos/preprocessors",
@@ -104,6 +106,7 @@ py_binary(
     srcs = ["indexer.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
+    visibility = ["//visibility:public"],
     deps = [
         ":github_repo",
         "//datasets/github/scrape_repos/preprocessors",
@@ -135,6 +138,7 @@ py_binary(
     srcs = ["scraper.py"],
     default_python_version = "PY3",
     srcs_version = "PY3",
+    visibility = ["//visibility:public"],
     deps = [
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
         "//labm8:fs",
