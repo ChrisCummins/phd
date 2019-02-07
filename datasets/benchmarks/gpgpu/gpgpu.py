@@ -24,10 +24,10 @@ import tempfile
 import time
 import typing
 
+import humanize
 from absl import app
 from absl import flags
 from absl import logging
-import humanize
 
 from datasets.benchmarks.gpgpu import gpgpu_pb2
 from gpu.oclgrind import oclgrind
@@ -127,15 +127,47 @@ def MakeEnv(make_dir: pathlib.Path) -> typing.Dict[str, str]:
 
   with fs.chdir(make_dir):
     with tempfile.TemporaryDirectory(prefix='phd_gpu_libcecl_header_') as d:
-      fs.cp(_LIBCECL_HEADER, pathlib.Path(d) / 'cecl.h')
+      d = pathlib.Path(d)
+      fs.cp(_LIBCECL_HEADER, d / 'cecl.h')
+      # Many of the benchmarks include Linux-dependent headers. Spoof them here
+      # so that we can build.
+      if system.is_mac():
+        with open(d / 'malloc.h', 'w') as f:
+          f.write('#include <stdlib.h>')
+        (d / 'linux').mkdir()
+        with open(d / 'linux/limits.h', 'w') as f:
+          f.write("""
+#ifndef _LINUX_LIMITS_H
+#define _LINUX_LIMITS_H
+
+#define NR_OPEN	        1024
+
+#define NGROUPS_MAX    65536	/* supplemental group IDs are available */
+#define ARG_MAX       131072	/* # bytes of args + environ for exec() */
+#define LINK_MAX         127	/* # links a file may have */
+#define MAX_CANON        255	/* size of the canonical input queue */
+#define MAX_INPUT        255	/* size of the type-ahead buffer */
+#define NAME_MAX         255	/* # chars in a file name */
+#define PATH_MAX        4096	/* # chars in a path name including nul */
+#define PIPE_BUF        4096	/* # bytes in atomic write to a pipe */
+#define XATTR_NAME_MAX   255	/* # chars in an extended attribute name */
+#define XATTR_SIZE_MAX 65536	/* size of an extended attribute value (64k) */
+#define XATTR_LIST_MAX 65536	/* size of extended attribute namelist (64k) */
+
+#define RTSIG_MAX	  32
+
+#endif
+""")
 
       env = os.environ.copy()
       env['CFLAGS'] = f'-isystem {d} {cflags}'
+      env['CXXFLAGS'] = f'-isystem {d} {cflags}'
       env['LDFLAGS'] = f'-lcecl -L{_LIBCECL.parent} {ldflags}'
       yield env
 
 
-def Make(target: str, make_dir: pathlib.Path) -> None:
+def Make(target: str, make_dir: pathlib.Path,
+         extra_make_args: typing.Optional[typing.List[str]] = None) -> None:
   """Run make target in the given path."""
   if not (make_dir / 'Makefile').is_file():
     raise EnvironmentError(f"Cannot find Makefile in {make_dir}")
@@ -144,7 +176,25 @@ def Make(target: str, make_dir: pathlib.Path) -> None:
   # because some of the source codes have hard-coded relative paths.
   with MakeEnv(make_dir) as env:
     logging.debug('Running make %s in %s', target, make_dir)
-    CheckCall(['make', target, '-j', FLAGS.gpgpu_build_process_count], env=env)
+    CheckCall(['make', target, '-j', FLAGS.gpgpu_build_process_count] +
+              (extra_make_args or []), env=env)
+
+
+def CMake(target: str, make_dir: pathlib.Path,
+          extra_cflags: str = '') -> None:
+  """Run make target in the given path."""
+  if not (make_dir / 'CMakeLists.txt').is_file():
+    raise EnvironmentError(f"Cannot find CMakeLists.txt in {make_dir}")
+
+  # Build relative to the path, rather than using `make -c <path>`. This is
+  # because some of the source codes have hard-coded relative paths.
+  with MakeEnv(make_dir) as env:
+    logging.debug('Running make %s in %s', target, make_dir)
+    env['CFLAGS'] = f'{env["CFLAGS"]} {extra_cflags}'
+    env['CXXFLAGS'] = f'{env["CXXFLAGS"]} {extra_cflags}'
+    CheckCall(['cmake', '.'], env=env)
+    CheckCall(['make', target, '-j', FLAGS.gpgpu_build_process_count,
+               'VERBOSE=1'], env=env)
 
 
 def FindExecutableInDir(path: pathlib.Path) -> pathlib.Path:
@@ -302,8 +352,7 @@ class _BenchmarkSuite(object):
 
   @property
   def log_count(self):
-      return len(self._log_paths)
-
+    return len(self._log_paths)
 
   def ForceDeviceType(self, device_type: str) -> None:
     """Force benchmarks to execute with the given device type."""
@@ -439,6 +488,53 @@ class AmdAppSdkBenchmarkSuite(_BenchmarkSuite):
   @property
   def name(self):
     return 'amd-app-sdk-3.0'
+
+  @property
+  def benchmarks(self) -> typing.List[str]:
+    return [
+      'AdvancedConvolution',
+      'BinomialOption',
+      'BitonicSort',
+      'BlackScholes',
+      'FastWalshTransform',
+      'FloydWarshall',
+      'Histogram',
+      'MatrixMultiplication',
+      'MatrixTranspose',
+      'MonteCarloAsian',
+      'NBody',
+      'PrefixSum',
+      'Reduction',
+      'ScanLargeArrays',
+      'SimpleConvolution',
+      'SobelFilter',
+    ]
+
+  def _ForceDeviceType(self, device_type: str):
+    RewriteClDeviceType(device_type, self.path / 'samples/opencl/cl/1.x')
+
+    for benchmark in self.benchmarks:
+      # Clean any existing builds.
+      if (self.path / f'samples/opencl/cl/1.x/{benchmark}/Makefile').is_file():
+        Make('clean', self.path / 'samples/opencl/cl/1.x' / benchmark)
+
+    # Delete all CMake generated files.
+    CheckCall(['find', self.path / 'samples/opencl/cl/1.x', '-iwholename',
+               '*cmake*', '-not', '-name', 'CMakeLists.txt', '-delete'])
+
+    for benchmark in self.benchmarks:
+      CMake('all', self.path / 'samples/opencl/cl/1.x' / benchmark,
+            extra_cflags=' '.join([
+              f'-isystem {self.path}/include',
+              f'-include {self.path}/include/CL/cl_ext.h',
+              f'-include {self.path}/include/CL/cl_gl.h'
+            ]))
+
+  def _Run(self):
+    for benchmark in self.benchmarks:
+      executable = (self.path / 'samples/opencl/cl/1.x' / benchmark /
+                    'bin/x86_64/Release' / benchmark)
+      self._ExecToLogFile(executable, benchmark)
 
 
 class PolybenchGpuBenchmarkSuite(_BenchmarkSuite):
