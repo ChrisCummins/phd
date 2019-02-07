@@ -425,9 +425,11 @@ class _BenchmarkSuite(object):
       cecl_lines, stderr_lines = [], []
       for line in stderr.split('\n'):
         if line.startswith('[CECL] '):
-          cecl_lines.append(line[len('[CECL] '):])
-        else:
-          stderr_lines.append(line)
+          stripped_line = line[len('[CECL] '):].strip()
+          if stripped_line:
+            cecl_lines.append(stripped_line)
+        elif line.strip():
+          stderr_lines.append(line.strip())
 
       if process.returncode:
         log_produced = self._logdir / f'{log_name}.ERROR.pb'
