@@ -2,13 +2,13 @@
 
 # Default language wide options
 
-LANG_CFLAGS=-I$(PARBOIL_ROOT)/common/include -I$(OPENCL_PATH)/include
-LANG_CXXFLAGS=$(LANG_CFLAGS)
-LANG_LDFLAGS=-lOpenCL -L$(OPENCL_LIB_PATH) -lcecl
+LANG_CFLAGS=-I$(PARBOIL_ROOT)/common/include $(EXTRA_CFLAGS)
+LANG_CXXFLAGS=$(LANG_CFLAGS) $(EXTRA_CXXFLAGS)
+LANG_LDFLAGS=$(EXTRA_LDLAGS)
 
-CFLAGS=$(LANG_CFLAGS) $(PLATFORM_CFLAGS) $(APP_CFLAGS)
-CXXFLAGS=$(LANG_CXXFLAGS) $(PLATFORM_CXXFLAGS) $(APP_CXXFLAGS)
-LDFLAGS=$(LANG_LDFLAGS) $(PLATFORM_LDFLAGS) $(APP_LDFLAGS)
+CFLAGS=$(LANG_CFLAGS) $(PLATFORM_CFLAGS) $(APP_CFLAGS) $(EXTRA_CFLAGS)
+CXXFLAGS=$(LANG_CXXFLAGS) $(PLATFORM_CXXFLAGS) $(APP_CXXFLAGS) $(EXTRA_CXXFLAGS)
+LDFLAGS=$(LANG_LDFLAGS) $(PLATFORM_LDFLAGS) $(APP_LDFLAGS) $(EXTRA_LDLAGS)
 
 # Rules common to all makefiles
 
@@ -42,7 +42,7 @@ endif
 
 ifeq ($(OPENCL_PATH),)
 FAILSAFE=no_opencl
-else 
+else
 FAILSAFE=
 endif
 
@@ -64,8 +64,8 @@ default: $(FAILSAFE) $(BUILDDIR) $(BIN)
 
 run:
 	@echo "Resolving OpenCL library..."
-	@$(shell echo $(RUNTIME_ENV)) LD_LIBRARY_PATH=$(OPENCL_LIB_PATH) ldd $(BIN) | grep OpenCL
-	@$(shell echo $(RUNTIME_ENV)) LD_LIBRARY_PATH=$(OPENCL_LIB_PATH) $(BIN) $(ARGS)
+	$(shell echo $(RUNTIME_ENV)) LD_LIBRARY_PATH=$(OPENCL_LIB_PATH):$(LD_LIBRARY_PATH) ldd $(BIN) | grep OpenCL
+	$(shell echo $(RUNTIME_ENV)) LD_LIBRARY_PATH=$(OPENCL_LIB_PATH):$(LD_LIBRARY_PATH) $(BIN) $(ARGS)
 
 debug:
 	@echo "Resolving OpenCL library..."
@@ -98,4 +98,3 @@ no_opencl:
 	@echo "OPENCL_PATH is not set. Open $(PARBOIL_ROOT)/common/Makefile.conf to set default value."
 	@echo "You may use $(PLATFORM_MK) if you want a platform specific configurations."
 	@exit 1
-

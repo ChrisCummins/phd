@@ -7,11 +7,10 @@
 
 # gcc (default)
 CC = gcc
-PLATFORM_CFLAGS = 
-  
-CXX = g++
-PLATFORM_CXXFLAGS = 
-  
-LINKER = g++
-PLATFORM_LDFLAGS = -lm -lpthread
+PLATFORM_CFLAGS =
 
+CXX = g++
+PLATFORM_CXXFLAGS =
+
+LINKER = g++
+PLATFORM_LDFLAGS = -lm -lpthread $(EXTRA_LDFLAGS)

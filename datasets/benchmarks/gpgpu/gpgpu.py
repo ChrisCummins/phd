@@ -214,8 +214,8 @@ def RunEnv(path: pathlib.Path) -> typing.Dict[str, str]:
   """Return an execution environment for a GPGPU benchmark."""
   with fs.chdir(path):
     env = os.environ.copy()
-    env['LD_LIBRARY_PATH'] = _LIBCECL.parent
-    env['DYLD_LIBRARY_PATH'] = _LIBCECL.parent
+    env['LD_LIBRARY_PATH'] = str(_LIBCECL.parent)
+    env['DYLD_LIBRARY_PATH'] = str(_LIBCECL.parent)
     yield env
 
 
@@ -416,8 +416,8 @@ class _BenchmarkSuite(object):
 
       start_time = time.time()
       process = subprocess.Popen(
-          command, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-          universal_newlines=True)
+          command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+          env=env, universal_newlines=True)
       stdout, stderr = process.communicate()
       elapsed = time.time() - start_time
 
@@ -626,11 +626,79 @@ class NvidiaBenchmarkSuite(_BenchmarkSuite):
     Make(None, self.path / 'OpenCL')
 
   def _Run(self):
-    for file in sorted(list((self.path / 'OpenCL/bin/linux/release').iterdir())):
-      print("BENCHMARK: ", file)
     for benchmark in self.benchmarks:
       executable = self.path / f'OpenCL/bin/linux/release/ocl{benchmark}'
       self._ExecToLogFile(executable, benchmark)
+
+
+class ParboilBenchmarkSuite(_BenchmarkSuite):
+  """Parboil benchmark suite."""
+
+  @property
+  def name(self):
+    return 'parboil-0.2'
+
+  @property
+  def benchmarks(self) -> typing.List[str]:
+    return [
+        'bfs',
+        'cutcp',
+        'histo',
+        'lbm',
+        'mri-gridding',
+        'mri-q',
+        'sad',
+        'sgemm',
+        'spmv',
+        'stencil',
+        'tpacf',
+    ]
+
+  @property
+  def benchmarks_and_datasets(self):
+    return [
+        ('bfs', '1M'),
+        ('bfs', 'NY'),
+        ('bfs', 'SF'),
+        ('bfs', 'UT'),
+        ('cutcp', 'large'),
+        ('cutcp', 'small'),
+        ('histo', 'default'),
+        ('histo', 'large'),
+        ('lbm', 'long'),
+        ('lbm', 'short'),
+        ('mri-gridding', 'small'),
+        ('mri-q', 'large'),
+        ('mri-q', 'small'),
+        ('sad', 'default'),
+        ('sad', 'large'),
+        ('sgemm', 'medium'),
+        ('sgemm', 'small'),
+        ('spmv', 'large'),
+        ('spmv', 'medium'),
+        ('spmv', 'small'),
+        ('stencil', 'default'),
+        ('stencil', 'small'),
+        ('tpacf', 'large'),
+        ('tpacf', 'medium'),
+        ('tpacf', 'small'),
+    ]
+
+  def _ForceDeviceType(self, device_type: str):
+    RewriteClDeviceType(device_type, self.path / 'benchmarks')
+
+    CheckCall(['find', self.path, '-name', '*.o', '-delete'])
+    with MakeEnv(self.path) as env:
+      for benchmark in self.benchmarks:
+        CheckCall(['python2', './parboil', 'compile', benchmark,
+                   'opencl_base'], env=env)
+
+  def _Run(self):
+    for benchmark, dataset in self.benchmarks_and_datasets:
+      self._ExecToLogFile(
+          self.path / 'parboil', f'{benchmark}.{dataset}',
+          command=['python2', './parboil', 'run', benchmark, 'opencl_base',
+                   dataset])
 
 
 class PolybenchGpuBenchmarkSuite(_BenchmarkSuite):
