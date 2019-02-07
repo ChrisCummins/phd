@@ -432,9 +432,9 @@ class _BenchmarkSuite(object):
           stderr_lines.append(line.strip())
 
       if process.returncode:
-        log_produced = self._logdir / f'{log_name}.ERROR.pb'
+        log_produced = self._logdir / f'{log_name}.ERROR.pbtxt'
       else:
-        log_produced = self._logdir / f'{log_name}.pb'
+        log_produced = self._logdir / f'{log_name}.pbtxt'
 
       pbutil.ToFile(gpgpu_pb2.GpgpuBenchmarkRun(
           ms_since_unix_epoch=timestamp,
