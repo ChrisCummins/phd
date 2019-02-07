@@ -169,7 +169,7 @@ def MakeEnv(make_dir: pathlib.Path) -> typing.Dict[str, str]:
       yield env
 
 
-def Make(target: str, make_dir: pathlib.Path,
+def Make(target: typing.Optional[str], make_dir: pathlib.Path,
          extra_make_args: typing.Optional[typing.List[str]] = None,
          ) -> None:
   """Run make target in the given path."""
@@ -180,8 +180,8 @@ def Make(target: str, make_dir: pathlib.Path,
   # because some of the source codes have hard-coded relative paths.
   with MakeEnv(make_dir) as env:
     logging.debug('Running make %s in %s', target, make_dir)
-    CheckCall(['make', target, '-j', FLAGS.gpgpu_build_process_count] +
-              (extra_make_args or []), env=env)
+    CheckCall(['make', '-j', FLAGS.gpgpu_build_process_count] +
+              ([target] if target else []) + (extra_make_args or []), env=env)
 
 
 def CMake(target: str, make_dir: pathlib.Path,
@@ -592,6 +592,45 @@ class NasParallelBenchmarkSuite(_BenchmarkSuite):
                                      else 'CPU')
             },
             dataset_name=dataset, command=[executable, f'../{benchmark}'])
+
+
+class NvidiaBenchmarkSuite(_BenchmarkSuite):
+  """NVIDIA GPU SDK."""
+
+  @property
+  def name(self):
+    return 'nvidia-4.2'
+
+  @property
+  def benchmarks(self) -> typing.List[str]:
+    return [
+        'BlackScholes',
+        'ConvolutionSeparable',
+        'DCT8x8',
+        'DXTCompression',
+        'DotProduct',
+        'FDTD3d',
+        'HiddenMarkovModel',
+        'MatVecMul',
+        'MatrixMul',
+        'MersenneTwister',
+        'RadixSort',
+        'Reduction',
+        'Scan',
+        'VectorAdd',
+    ]
+
+  def _ForceDeviceType(self, device_type: str):
+    RewriteClDeviceType(device_type, self.path / 'OpenCL/src')
+    Make('clean', self.path / 'OpenCL')
+    Make(None, self.path / 'OpenCL')
+
+  def _Run(self):
+    for file in sorted(list((self.path / 'OpenCL/bin/linux/release').iterdir())):
+      print("BENCHMARK: ", file)
+    for benchmark in self.benchmarks:
+      executable = self.path / f'OpenCL/bin/linux/release/ocl{benchmark}'
+      self._ExecToLogFile(executable, benchmark)
 
 
 class PolybenchGpuBenchmarkSuite(_BenchmarkSuite):
