@@ -1,7 +1,11 @@
 #ifndef __TYPE_H__
 #define __TYPE_H__
 
-typedef enum { false, true } logical;
+#include <stdbool.h>
+
+// typedef enum { false, true } logical;
+typedef bool logical;
+
 typedef struct { 
   double real;
   double imag;
