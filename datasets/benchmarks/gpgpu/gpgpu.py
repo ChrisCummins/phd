@@ -580,12 +580,18 @@ class NasParallelBenchmarkSuite(_BenchmarkSuite):
   def _Run(self):
     for benchmark in self.benchmarks:
       for dataset in ['S', 'W', 'A', 'B', 'C']:
+        executable = self.path / f'bin/{benchmark.lower()}.{dataset}.x'
+        # TODO(cec): Fix a handful of build errors which prevent all
+        # executables from being compiled.
+        if not executable.is_file():
+          continue
         self._ExecToLogFile(
-            self.path / f'bin/{benchmark}', f'{benchmark}.{dataset}',
+            executable, f'{benchmark.lower()}.{dataset}',
             env={
-              'OPENCL_DEVICE_TYPE': 'GPU' if self.device_type == 'gpu' else 'CPU'
+              'OPENCL_DEVICE_TYPE': ('GPU' if self.device_type == 'gpu'
+                                     else 'CPU')
             },
-            dataset_name=dataset)
+            dataset_name=dataset, command=[executable, f'../{benchmark}'])
 
 
 class PolybenchGpuBenchmarkSuite(_BenchmarkSuite):
