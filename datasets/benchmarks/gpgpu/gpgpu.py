@@ -250,7 +250,10 @@ def KernelInvocationsFromCeclLog(
       continue
 
     if opcode == "clCreateCommandQueue":
-      if expected_devtype != operands[0]:
+      actual_devtype = {
+        'UNKNOWN': expected_devtype,
+      }.get(operands[0], operands[0])
+      if expected_devtype != actual_devtype:
         raise ValueError(
             f"Expected device type {expected_devtype} does not match actual "
             f"device type {operands[0]}")
