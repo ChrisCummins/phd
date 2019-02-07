@@ -406,6 +406,9 @@ def GetResultOutcome(
     return RuntimeCrashOrBuildFailure()
   elif result.returncode == 127:
     return RuntimeCrashOrBuildFailure()
+  elif (result.returncode == 3 and
+        "Undefined external function" in result.outputs['stderr']):
+    return deepsmith_pb2.Result.BUILD_FAILURE
   raise ValueError(f'Failed to output class of result: {result}')
 
 
