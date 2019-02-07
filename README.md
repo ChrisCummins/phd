@@ -231,7 +231,7 @@ Install the required packages:
 
 ```sh
 $ brew install bazel coreutils exempi findutils gnu-indent gnu-sed gnu-tar \
-    gnu-time gnu-which python cmake boost sdl2 wget ffmpeg
+    gnu-time gnu-which libomp python cmake boost sdl2 wget ffmpeg
 $ brew cask install julia mactex
 ```
 
