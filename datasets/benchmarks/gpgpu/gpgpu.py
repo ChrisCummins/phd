@@ -163,11 +163,15 @@ def MakeEnv(make_dir: pathlib.Path) -> typing.Dict[str, str]:
       env['CFLAGS'] = f'-isystem {d} {cflags}'
       env['CXXFLAGS'] = f'-isystem {d} {cflags}'
       env['LDFLAGS'] = f'-lcecl -L{_LIBCECL.parent} {ldflags}'
+
+      for flag in ['CFLAGS', 'CXXFLAGS', 'LDFLAGS']:
+        env[f'EXTRA_{flag}'] = env[flag]
       yield env
 
 
 def Make(target: str, make_dir: pathlib.Path,
-         extra_make_args: typing.Optional[typing.List[str]] = None) -> None:
+         extra_make_args: typing.Optional[typing.List[str]] = None,
+         ) -> None:
   """Run make target in the given path."""
   if not (make_dir / 'Makefile').is_file():
     raise EnvironmentError(f"Cannot find Makefile in {make_dir}")
@@ -375,10 +379,13 @@ class _BenchmarkSuite(object):
     self._logdir = None
     return ret
 
-  def _ExecToLogFile(self, executable: pathlib.Path,
-                     benchmark_name: str,
-                     command: typing.Optional[typing.List[str]] = None,
-                     dataset_name: str = 'default') -> None:
+  def _ExecToLogFile(
+      self, executable: pathlib.Path,
+      benchmark_name: str,
+      command: typing.Optional[typing.List[str]] = None,
+      dataset_name: str = 'default',
+      env: typing.Optional[typing.Dict[str, str]] = None
+  ) -> None:
     """Run executable using runcecl script and log output."""
     logging.info('Executing benchmark %s', benchmark_name)
     self._logdir.mkdir(exist_ok=True, parents=True)
@@ -399,7 +406,11 @@ class _BenchmarkSuite(object):
     if self.device_type == 'oclgrind':
       command = [str(oclgrind.OCLGRIND_PATH)] + command
 
+    extra_env = env or dict()
     with RunEnv(executable.parent) as env:
+      # Add the additional environment variables.
+      env.update(extra_env)
+
       start_time = time.time()
       process = subprocess.Popen(
           command, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
