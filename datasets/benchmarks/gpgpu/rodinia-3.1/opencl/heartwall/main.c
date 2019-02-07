@@ -81,7 +81,7 @@ main(	int argc,
 	char* video_file_name;
 
 	// open movie file
- 	video_file_name = (char *) "@RODINIA_DATA_ROOT@/heartwall/test.avi";
+ 	video_file_name = (char *) "../../data/heartwall/test.avi";
 	frames = (avi_t*)AVI_open_input_file(video_file_name, 1);														// added casting
 	if (frames == NULL)  {
 		   AVI_print_error((char *) "Error with AVI_open_input_file");
@@ -123,7 +123,7 @@ main(	int argc,
 	//	READ PARAMETERS FROM FILE
 	//====================================================================================================100
 
-	read_parameters(	"@RODINIA_DATA_ROOT@/heartwall/input.txt",
+	read_parameters(	"../../data/heartwall/input.txt",
 						&common.tSize,
 						&common.sSize,
 						&common.maxMove,
@@ -133,7 +133,7 @@ main(	int argc,
 	//	READ SIZE OF INPUTS FROM FILE
 	//====================================================================================================100
 
-	read_header(	"@RODINIA_DATA_ROOT@/heartwall/input.txt",
+	read_header(	"../../data/heartwall/input.txt",
 					&common.endoPoints,
 					&common.epiPoints);
 
@@ -177,7 +177,7 @@ main(	int argc,
 	//	READ DATA FROM FILE
 	//==================================================50
 
-	read_data(	"@RODINIA_DATA_ROOT@/heartwall/input.txt",
+	read_data(	"../../data/heartwall/input.txt",
 				common.endoPoints,
 				endoRow,
 				endoCol,

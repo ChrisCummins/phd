@@ -1,1 +1,1 @@
-./hotspot3D 512 8 100 @RODINIA_DATA_ROOT@/hotspot3D/power_512x8 @RODINIA_DATA_ROOT@/hotspot3D/temp_512x8 output.out
+./hotspot3D 512 8 100 ../../data/hotspot3D/power_512x8 ../../data/hotspot3D/temp_512x8 output.out

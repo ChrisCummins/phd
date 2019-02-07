@@ -1,1 +1,1 @@
-./bfs @RODINIA_DATA_ROOT@/bfs/graph1MW_6.txt
+./bfs ../../data/bfs/graph1MW_6.txt

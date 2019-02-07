@@ -1,1 +1,1 @@
-./b_tree file @RODINIA_DATA_ROOT@/b+tree/mil.txt command @RODINIA_DATA_ROOT@/b+tree/command.txt
+./b_tree file ../../data/b+tree/mil.txt command ../../data/b+tree/command.txt
