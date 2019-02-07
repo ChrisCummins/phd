@@ -14,6 +14,12 @@ FLAGS = flags.FLAGS
 Base = declarative.declarative_base()
 
 
+class Meta(Base, sqlutil.TablenameFromClassNameMixin):
+  """Key-value database metadata store."""
+  key: str = sql.Column(sql.String(64), primary_key=True)
+  value: str = sql.Column(sql.String(64), nullable=False)
+
+
 class LlvmBytecode(Base, sqlutil.ProtoBackedMixin,
                    sqlutil.TablenameFromClassNameMixin):
   """A table of Llvm bytecodes."""

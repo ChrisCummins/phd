@@ -1,9 +1,12 @@
-"""Reachability analysis datasets."""
+"""Make the Very Big Compilers Dataset."""
+import datetime
 import multiprocessing
 import pathlib
+import tempfile
 import time
 import typing
 
+import humanize
 import pandas as pd
 import progressbar
 import pyparsing
@@ -13,6 +16,12 @@ from absl import logging
 
 from compilers.llvm import clang
 from compilers.llvm import opt
+from datasets.github.scrape_repos import cloner
+from datasets.github.scrape_repos import contentfiles
+from datasets.github.scrape_repos import importer
+from datasets.github.scrape_repos import scraper
+from datasets.github.scrape_repos.preprocessors import preprocessors
+from datasets.github.scrape_repos.proto import scrape_repos_pb2
 from datasets.linux import linux
 from datasets.opencl.device_mapping import \
   opencl_device_mapping_dataset as ocl_dataset
@@ -21,13 +30,21 @@ from experimental.compilers.reachability import control_flow_graph as cfg
 from experimental.compilers.reachability import database
 from experimental.compilers.reachability import llvm_util
 from experimental.compilers.reachability import reachability_pb2
+from experimental.compilers.reachability.datasets import import_from_github
 from labm8 import decorators
 from labm8 import pbutil
 
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string('db', None, 'Path of database to populate.')
+flags.DEFINE_string(
+    'vbcd',
+    'sqlite:////tmp/phd/experimental/compilers/reachability/datasets/vbcd.db',
+    'Path of database to populate.')
+
+flags.DEFINE_integer('vbcd_process_count', multiprocessing.cpu_count(),
+                     'The number of parallel processes to use when creating '
+                     'the dataset.')
 
 
 def BytecodeFromOpenClString(opencl_string: str,
@@ -184,7 +201,7 @@ class OpenClDeviceMappingsDataset(ocl_dataset.OpenClDeviceMappingsDataset):
     bar.max_value = len(programs_df)
 
     # Process each row of the table in parallel.
-    pool = multiprocessing.Pool()
+    pool = multiprocessing.Pool(FLAGS.vbcd_process_count)
     with db.Session(commit=True) as s:
       for i, proto in enumerate(pool.imap_unordered(
           ProcessOpenClProgramDfBytecode,
@@ -199,7 +216,7 @@ class OpenClDeviceMappingsDataset(ocl_dataset.OpenClDeviceMappingsDataset):
     programs_df = self.programs_df.reset_index()
 
     # Process each row of the table in parallel.
-    pool = multiprocessing.Pool()
+    pool = multiprocessing.Pool(FLAGS.vbcd_process_count)
     rows = []
     for row in pool.imap_unordered(
         ProcessProgramDfIterItem, [d for i, d in programs_df.iterrows()]):
@@ -397,7 +414,7 @@ class LinuxSourcesDataset(linux.LinuxSourcesDataset):
     bar.max_value = len(self.all_srcs)
 
     # Process each row of the table in parallel.
-    pool = multiprocessing.Pool()
+    pool = multiprocessing.Pool(FLAGS.vbcd_process_count)
     with db.Session(commit=True) as s:
       for i, proto in enumerate(
           pool.imap_unordered(ProcessLinuxSrcToBytecode, self.all_srcs)):
@@ -409,7 +426,7 @@ class LinuxSourcesDataset(linux.LinuxSourcesDataset):
   @decorators.memoized_property
   def cfgs_df(self) -> pd.DataFrame:
     # Process each row of the table in parallel.
-    pool = multiprocessing.Pool()
+    pool = multiprocessing.Pool(FLAGS.vbcd_process_count)
     rows = []
     for row_batch in pool.imap_unordered(ProcessLinuxSrc, self.kernel_srcs):
       if row_batch:
@@ -504,7 +521,7 @@ def PopulateControlFlowGraphTable(db: database.Database):
     bar.max_value = todo.count()
 
     # Process bytecodes in parallel.
-    pool = multiprocessing.Pool()
+    pool = multiprocessing.Pool(FLAGS.vbcd_process_count)
     last_commit_time = time.time()
     for i, protos in enumerate(pool.imap_unordered(
         CreateControlFlowGraphsFromLlvmBytecode, todo)):
@@ -578,7 +595,7 @@ def PopulateFullFlowGraphTable(db: database.Database):
     bar.max_value = todo.count()
 
     # Process CFGs in parallel.
-    pool = multiprocessing.Pool()
+    pool = multiprocessing.Pool(FLAGS.vbcd_process_count)
     last_commit_time = time.time()
     for i, proto in enumerate(pool.imap_unordered(
         CreateFullFlowGraphFromCfg, todo)):
@@ -594,22 +611,120 @@ def PopulateFullFlowGraphTable(db: database.Database):
         last_commit_time = the_time
 
 
+def PopulateBytecodeTableFromGithubCSources(db: database.Database,
+                                            tempdir: pathlib.Path):
+  language_to_clone = scrape_repos_pb2.LanguageToClone(
+      language='c',
+      query=[
+        scrape_repos_pb2.GitHubRepositoryQuery(
+            string="language:c sort:stars fork:false",
+            max_results=100),
+      ],
+      destination_directory=str(tempdir),
+      importer=[
+        scrape_repos_pb2.ContentFilesImporterConfig(
+            source_code_pattern=".*\\.c",
+            preprocessor=[
+              "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown",
+            ]),
+        scrape_repos_pb2.ContentFilesImporterConfig(
+            source_code_pattern=".*\\.cpp",
+            preprocessor=[
+              "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown",
+            ]),
+        scrape_repos_pb2.ContentFilesImporterConfig(
+            source_code_pattern=".*\\.cc",
+            preprocessor=[
+              "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown",
+            ]),
+        scrape_repos_pb2.ContentFilesImporterConfig(
+            source_code_pattern=".*\\.cxx",
+            preprocessor=[
+              "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown",
+            ]),
+      ])
+
+  logging.info("Scraping repos ...")
+  for query in language_to_clone.query:
+    scraper.RunQuery(scraper.QueryScraper(language_to_clone, query))
+
+  # Clone repos.
+  directory = pathlib.Path(language_to_clone.destination_directory)
+  meta_files = [pathlib.Path(directory / f) for f in directory.iterdir() if
+                cloner.IsRepoMetaFile(f)]
+  worker = cloner.AsyncWorker(meta_files)
+  logging.info('Cloning %s repos from GitHub ...',
+               humanize.intcomma(worker.max))
+  bar = progressbar.ProgressBar(max_value=worker.max, redirect_stderr=True)
+  worker.start()
+  while worker.is_alive():
+    bar.update(worker.i)
+    worker.join(.5)
+  bar.update(worker.i)
+
+  logging.info("Importing repos to contentfiles database ...")
+  for imp in language_to_clone.importer:
+    [preprocessors.GetPreprocessorFunction(p) for p in imp.preprocessor]
+
+  pool = multiprocessing.Pool(FLAGS.processes)
+  d = pathlib.Path(language_to_clone.destination_directory)
+  d = d.parent / (str(d.name) + '.db')
+  contentfiles_db = contentfiles.ContentFiles(f'sqlite:///{d}')
+  if pathlib.Path(language_to_clone.destination_directory).is_dir():
+    importer.ImportFromLanguage(contentfiles_db, language_to_clone, pool)
+
+  logging.info("Populating bytecode table ...")
+  import_from_github.PopulateBytecodeTable(
+      contentfiles_db, language_to_clone, db)
+
+
+def NowString() -> str:
+  return str(datetime.datetime.now())
+
+
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
-  db = database.Database(FLAGS.db)
-  logging.info("Processing OpenCL dataset ...")
-  OpenClDeviceMappingsDataset().PopulateBytecodeTable(db)
-  logging.info("Processing Linux dataset ...")
-  LinuxSourcesDataset().PopulateBytecodeTable(db)
+  db = database.Database(FLAGS.vbcd)
 
-  logging.info("Processing CFGs ...")
-  PopulateControlFlowGraphTable(db)
+  with db.Session() as session:
+    opencl_dataset_imported = session.query(database.Meta) \
+      .filter(database.Meta.key == 'opencl_dataset_imported').first()
+  if not opencl_dataset_imported:
+    logging.info("Importing OpenCL dataset ...")
+    OpenClDeviceMappingsDataset().PopulateBytecodeTable(db)
+    with db.Session(commit=True) as session:
+      session.add(
+          database.Meta(key='opencl_dataset_imported', value=NowString()))
 
-  logging.info("Processing full flow graphs ...")
-  PopulateFullFlowGraphTable(db)
+  with db.Session() as session:
+    linux_sources_imported = session.query(database.Meta) \
+      .filter(database.Meta.key == 'linux_sources_imported').first()
+  if not linux_sources_imported:
+    logging.info("Processing Linux dataset ...")
+    LinuxSourcesDataset().PopulateBytecodeTable(db)
+    with db.Session(commit=True) as session:
+      session.add(
+          database.Meta(key='linux_sources_imported', value=NowString()))
+
+  with db.Session() as session:
+    github_c_sources_imported = session.query(database.Meta) \
+      .filter(database.Meta.key == 'github_c_sources_imported').first()
+  if not github_c_sources_imported:
+    logging.info('Processing GitHub C sources ...')
+    with tempfile.TemporaryDirectory(prefix='phd_') as d:
+      PopulateBytecodeTableFromGithubCSources(db, pathlib.Path(d))
+    with db.Session(commit=True) as session:
+      session.add(
+          database.Meta(key='github_c_sources_imported', value=NowString()))
+
+  # logging.info("Processing CFGs ...")
+  # PopulateControlFlowGraphTable(db)
+  #
+  # logging.info("Processing full flow graphs ...")
+  # PopulateFullFlowGraphTable(db)
 
 
 if __name__ == '__main__':

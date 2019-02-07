@@ -48,36 +48,6 @@ py_test(
     ],
 )
 
-py_binary(
-    name = "cfg_datasets",
-    srcs = ["cfg_datasets.py"],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":database",
-        ":llvm_util",
-        ":reachability_py_pb2",
-        "//compilers/llvm:clang",
-        "//datasets/linux",
-        "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
-        "//deeplearning/clgen/preprocessors:opencl",
-        "//labm8:decorators",
-        "//third_party/py/absl",
-        "//third_party/py/pandas",
-        "//third_party/py/progressbar",
-    ],
-)
-
-py_test(
-    name = "cfg_datasets_test",
-    srcs = ["cfg_datasets_test.py"],
-    deps = [
-        ":cfg_datasets",
-        "//labm8:system",
-        "//labm8:test",
-        "//third_party/py/absl",
-    ],
-)
-
 py_library(
     name = "database",
     srcs = ["database.py"],
