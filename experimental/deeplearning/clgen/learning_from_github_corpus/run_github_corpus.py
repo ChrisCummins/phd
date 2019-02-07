@@ -79,8 +79,8 @@ def OpenClSourceToTestCases(src: str) -> typing.List[deepsmith_pb2.Testcase]:
         harness=deepsmith_pb2.Harness(name='cldrive'),
         inputs={
           'src': src,
-          'gsize': f'{lsize},1,1',
-          'lsize': f'{gsize},1,1',
+          'gsize': f'{gsize},1,1',
+          'lsize': f'{lsize},1,1',
         }) for lsize, gsize in LSIZE_GSIZE_PAIRS
   ]
 
