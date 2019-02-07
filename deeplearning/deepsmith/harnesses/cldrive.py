@@ -355,9 +355,9 @@ def GetResultOutcome(
 
   def RuntimeCrashOrBuildFailure():
     if "[cldrive] Kernel: " in result.outputs['stderr']:
-      return deepsmith_pb2.Result.BUILD_CRASH
-    else:
       return deepsmith_pb2.Result.BUILD_FAILURE
+    else:
+      return deepsmith_pb2.Result.BUILD_CRASH
 
   def RuntimeCrashOrBuildCrash():
     if "[cldrive] Kernel: " in result.outputs['stderr']:
