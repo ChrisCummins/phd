@@ -88,7 +88,7 @@ CLINK	= $(CC)
 #---------------------------------------------------------------------------
 # These macros are passed to the linker
 #---------------------------------------------------------------------------
-C_LIB  = -lm -lOpenCL -lcecl
+C_LIB  = -lm $(LDFLAGS)
 
 #---------------------------------------------------------------------------
 # These macros are passed to the compiler
@@ -110,7 +110,7 @@ C_INC = -I../common
 # _LARGEFILE64_SOURCE - are standard compiler flags which allow to work with
 # files larger than 2GB.
 #---------------------------------------------------------------------------
-CFLAGS	= -g -Wall -O3 -mcmodel=medium -I/usr/local/include
+CFLAGS	= -g -Wall -O3 -mcmodel=medium $(EXTRA_CFLAGS)
 
 #---------------------------------------------------------------------------
 # Global *link time* flags. Flags for increasing maximum executable

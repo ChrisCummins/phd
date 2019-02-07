@@ -548,6 +548,41 @@ class AmdAppSdkBenchmarkSuite(_BenchmarkSuite):
       self._ExecToLogFile(executable, benchmark)
 
 
+class NasParallelBenchmarkSuite(_BenchmarkSuite):
+  """The NAS benchmark suite."""
+
+  @property
+  def name(self):
+    return 'npb-3.3'
+
+  @property
+  def benchmarks(self) -> typing.List[str]:
+    return [
+      'BT',
+      'CG',
+      'EP',
+      'FT',
+      'IS',
+      'LU',
+      'MG',
+      'SP',
+    ]
+
+  def _ForceDeviceType(self, device_type: str):
+    Make('clean', self.path)
+    Make('suite', self.path)
+
+  def _Run(self):
+    for benchmark in self.benchmarks:
+      for dataset in ['S', 'W', 'A', 'B', 'C']:
+        self._ExecToLogFile(
+            self.path / f'bin/{benchmark}', f'{benchmark}.{dataset}',
+            env={
+              'OPENCL_DEVICE_TYPE': 'GPU' if self.device_type == 'gpu' else 'CPU'
+            },
+            dataset_name=dataset)
+
+
 class PolybenchGpuBenchmarkSuite(_BenchmarkSuite):
   """PolyBench/GPU 1.0 Benchmarks."""
 
