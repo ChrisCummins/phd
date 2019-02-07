@@ -248,7 +248,7 @@ def KernelInvocationsFromCeclLog(
     if opcode == "clCreateCommandQueue":
       if expected_devtype != operands[0]:
         raise ValueError(
-            f"Expected device type {actual_devtype} does not match actual "
+            f"Expected device type {device_type} does not match actual "
             f"device type {actual_devtype}")
     elif opcode == "clEnqueueNDRangeKernel":
       kernel_name, global_size, local_size, elapsed = operands
