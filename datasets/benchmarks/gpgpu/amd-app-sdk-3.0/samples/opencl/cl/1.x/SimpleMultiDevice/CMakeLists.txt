@@ -115,7 +115,7 @@ set( LINKER_FLAGS " " )
 set( ADDITIONAL_LIBRARIES "-lcecl" )
 
 file(GLOB INCLUDE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp" "${CMAKE_CURRENT_SOURCE_DIR}/*.h" )
-include_directories( ${OPENCL_INCLUDE_DIRS} ../../../../../include/SDKUtil $ENV{AMDAPPSDKROOT}/include/SDKUtil )
+include_directories( ${OPENCL_INCLUDE_DIRS} ../../../../../include/SDKUtil ../../../../../include $ENV{AMDAPPSDKROOT}/include/SDKUtil )
 
 add_executable( ${SAMPLE_NAME} ${SOURCE_FILES} ${INCLUDE_FILES} ${EXTRA_FILES})
 
