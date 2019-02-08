@@ -628,33 +628,21 @@ std::string getexepath() {
 // End platform specific code.
 
 
-// Return path to OpenCL platform header.
-// WARNING this path is hardcoded to the current location of these two files:
-//
-//   //gpu/portable_mapping_of_data_parallel_programs_to_opencl:feature_extractor.cc
-//   //third_party/opencl/inlined/include/cl.h
-//
-// If either of these files is moved, this path must be updated!
-// TODO(cec): Fix this to match runfiles tree on Linux.
-std::string cl_header() {
-  return dirname(getexepath()) + "/../../third_party/opencl/inlined/include/cl.h";
-}
-
-
 //
 // Extract features from kernels in an OpenCL program.
 //
 // @param path Path to OpenCL program.
 // @param out Stream to print features to.
 //
-void extract_features(std::string path, std::ostream &out,
+void extract_features(std::string path, std::string cl_header_path,
+                      std::ostream &out,
                       const std::vector<std::string>& extra_args
                         = std::vector<std::string>{}) {
   clang::CompilerInstance compiler;
   clang::DiagnosticOptions diagnosticOptions;
   compiler.createDiagnostics();
 
-  std::vector<std::string> args{{"-x", "cl", "-include", cl_header()}};
+  std::vector<std::string> args{{"-x", "cl", "-include", cl_header_path}};
   for (auto& arg : extra_args)
     args.push_back(arg);
   std::vector<const char*> argv;
@@ -739,7 +727,8 @@ void usage(const std::string& progname, std::ostream& out = std::cout) {
 
 
 int main(int argc, char** argv) {
-  const std::vector<std::string> args{argv + 1, argv + argc};
+  auto cl_header_path = std::string(argv[1]);
+  const std::vector<std::string> args{argv + 2, argv + argc};
   std::vector<std::string> paths, compiler_args;
 
   for (const auto& arg : args) {
@@ -759,7 +748,7 @@ int main(int argc, char** argv) {
   int ret = 0;
   for (const std::string& path : paths) {
     if (file_exists(path)) {
-      extract_features(path, std::cout, compiler_args);
+      extract_features(path, cl_header_path, std::cout, compiler_args);
     } else {
       std::cerr << "error: file not found: " << path << '\n';
       ret = 1;

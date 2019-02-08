@@ -22,6 +22,9 @@ FEATURE_EXTRACTOR_BINARY = bazelutil.DataPath(
     'phd/gpu/portable_mapping_of_data_parallel_programs_to_opencl/'
     'feature_extractor_binary')
 
+INLINED_OPENCL_HEADER = bazelutil.DataPath(
+    'phd/third_party/opencl/inlined/include/cl.h')
+
 # On Linux we must preload the LLVM shared libraries.
 FEATURE_EXTRACTOR_ENV = os.environ.copy()
 _LIBCLANG_SO = bazelutil.DataPath(
@@ -97,8 +100,8 @@ def ExtractFeaturesFromPath(
   if not path.is_file():
     raise FileNotFoundError(f"File not found: {path}")
 
-  cmd = [str(FEATURE_EXTRACTOR_BINARY), str(path)] + [
-    f'-extra_arg={arg}' for arg in extra_args]
+  cmd = [str(FEATURE_EXTRACTOR_BINARY), str(INLINED_OPENCL_HEADER),
+         str(path)] + [f'-extra_arg={arg}' for arg in extra_args]
   logging.debug('$ %s', ' '.join(cmd))
   process = subprocess.Popen(
       cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
