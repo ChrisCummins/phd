@@ -21,6 +21,12 @@ experimental/deeplearning/clgen/closeness_to_grewe_features/import_from_director
     --kernels_dir="$TMPDIR/kernels" \
     --origin=clgen
 
+# Run it again to see if it fails when processing duplicate data.
+experimental/deeplearning/clgen/closeness_to_grewe_features/import_from_directory \
+    --db="sqlite:///$TMPDIR/db" \
+    --kernels_dir="$TMPDIR/kernels" \
+    --origin=clgen
+
 test -f "$TMPDIR/db"
 
 rm -rf "$TMPDIR"
