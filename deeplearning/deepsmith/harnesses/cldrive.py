@@ -409,7 +409,7 @@ def GetResultOutcome(
   elif (result.returncode == 3 and
         "Undefined external function" in result.outputs['stderr']):
     return deepsmith_pb2.Result.BUILD_FAILURE
-  raise ValueError(f'Failed to output class of result: {result}')
+  raise ValueError(f'Failed to output class of result: {str(result)[:1024]}')
 
 
 def main(argv):
