@@ -44,6 +44,11 @@ class OpenCLKernelWithRawGreweFeatures(
       sql.UnicodeText().with_variant(sql.UnicodeText(2 ** 31), 'mysql'),
       nullable=False)
 
+  __table_args__ = (
+    # <src,origin> pairs must be unique.
+    sql.UniqueConstraint('src_sha256', 'origin', name='unique_src_for_origin'),
+  )
+
   @classmethod
   def FromSrcOriginAndFeatures(
       cls, src: str, origin: str, features: grewe_features.GreweEtAlFeatures
