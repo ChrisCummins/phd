@@ -73,6 +73,7 @@ py_binary(
         "//labm8:labdate",
         "//labm8:pbutil",
         "//labm8:system",
+        "//labm8:text",
         "//third_party/py/absl",
         "//third_party/py/humanize",
     ],

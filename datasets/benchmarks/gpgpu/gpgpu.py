@@ -17,6 +17,7 @@ Usage:
 import contextlib
 import functools
 import multiprocessing
+import networkx as nx
 import os
 import pathlib
 import subprocess
@@ -37,6 +38,7 @@ from labm8 import labdate
 from labm8 import labtypes
 from labm8 import pbutil
 from labm8 import system
+from labm8 import text
 
 
 FLAGS = flags.FLAGS
@@ -811,10 +813,71 @@ class RodiniaBenchmarkSuite(_BenchmarkSuite):
       self._ExecToLogFile(executable, benchmark, command=['bash', './run'])
 
 
+class ShocBenchmarkSuite(_BenchmarkSuite):
+  """SHOC Benchmarks."""
+
+  @property
+  def name(self):
+    return 'shoc-1.1.5'
+
+  @property
+  def benchmarks(self) -> typing.List[str]:
+    return [
+      '2DCONV',
+      '2MM',
+      '3DCONV',
+      '3MM',
+      'ATAX',
+      'BICG',
+      'CORR',
+      'COVAR',
+      # Bad: 'FDTD-2D',
+      'GEMM',
+      'GESUMMV',
+      'GRAMSCHM',
+      'MVT',
+      'SYR2K',
+      'SYRK',
+    ]
+
+  def _ForceDeviceType(self, device_type: str):
+    RewriteClDeviceType(device_type, self.path / 'src/opencl')
+    if (self.path / 'Makefile').is_file():
+      Make('distclean', self.path)
+
+    with fs.chdir(self.path):
+      CheckCall(['./configure'])
+
+    Make('all', self.path)
+
+  def _Run(self):
+    CheckCall(f'find {self.path} -type f -executable | grep -v level0 | sort', shell=True)
+
+
 # A map of benchmark suite names to classes.
 BENCHMARK_SUITES = {
   bs().name: bs for bs in labtypes.AllSubclassesOfClass(_BenchmarkSuite)
 }
+
+
+def ResolveBenchmarkSuiteClassesFromNames(names: typing.List[str]):
+  trie = text.BuildPrefixTree(_BENCHMARK_SUITE_NAMES)
+  benchmark_suite_classes = []
+
+  for name in names:
+    try:
+      options = list(text.AutoCompletePrefix(name, trie))
+    except KeyError:
+      raise app.UsageError(f"Unknown benchmark suite: '{name}'. "
+                           f"Legal values: {BENCHMARK_SUITES.keys()}")
+
+    if len(options) > 1:
+      raise app.UsageError(f"Ambiguous benchmark suite: '{name}'. "
+                           f"Candidates: {options}")
+
+    benchmark_suite_classes.append(BENCHMARK_SUITES[options[0]])
+
+  return benchmark_suite_classes
 
 
 def main(argv: typing.List[str]):
@@ -824,12 +887,8 @@ def main(argv: typing.List[str]):
 
   # Run the requested benchmark suites on the requested devices.
   outdir = pathlib.Path(FLAGS.gpgpu_logdir)
-  for benchmark_suite_name in FLAGS.gpgpu_benchmark_suites:
-    benchmark_suite_class = BENCHMARK_SUITES.get(benchmark_suite_name)
-    if not benchmark_suite_class:
-      logging.fatal(
-          f'Unknown benchmark suite. Legal values: {BENCHMARK_SUITES.keys()}')
-
+  for benchmark_suite_class in ResolveBenchmarkSuiteClassesFromNames(
+        FLAGS.gpgpu_benchmark_suites):
     with benchmark_suite_class() as benchmark_suite:
       for device_type in FLAGS.gpgpu_device_types:
         logging.info('Building and running %s on %s', benchmark_suite.name,

@@ -23,9 +23,9 @@ USE_MPI         = @USE_MPI@
 MPICXX          = @MPICXX@
 MPI_CPPFLAGS	= -DPARALLEL
 
-OCL_CPPFLAGS    = -I$(top_srcdir)/src/opencl/common
-OCL_LDFLAGS		= -L$(top_builddir)/src/opencl/common
-OCL_LIBS        = -lSHOCCommonOpenCL -lSHOCCommon @OPENCL_LIBS@ -lcecl
+OCL_CPPFLAGS    = -I$(top_srcdir)/src/opencl/common $(EXTRA_CFLAGS)
+OCL_LDFLAGS   = -L$(top_builddir)/src/opencl/common $(EXTRA_LDFLAGS)
+OCL_LIBS        = -lSHOCCommonOpenCL -lSHOCCommon @OPENCL_LIBS@ $(EXTRA_LDFLAGS)
 
 NVCC            = @NVCC@
 CUDA_CXX        = @NVCC@
