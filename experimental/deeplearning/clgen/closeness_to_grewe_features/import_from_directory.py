@@ -43,8 +43,9 @@ def _ProcessPath(path: pathlib.Path) -> typing.Optional[
     with open(path) as f:
       src = f.read()
     return src, features
-  except grewe_features.FeatureExtractionError:
-    return None
+  except grewe_features.FeatureExtractionError as e:
+    print(e)
+    return None, None
 
 
 class AsyncWorker(threading.Thread):
@@ -61,8 +62,11 @@ class AsyncWorker(threading.Thread):
   def run(self):
     pool = multiprocessing.Pool(FLAGS.num_processes)
     with self.db.Session() as session:
-      for i, (src, features) in enumerate(pool.imap_unordered(
-          _ProcessPath, self.paths_to_import)):
+      for self.i, (src, features) in enumerate(pool.imap_unordered(
+            _ProcessPath, self.paths_to_import)):
+        # None type return if feature extraction failed.
+        if not src:
+          continue
         session.add(
             grewe_features_db.OpenCLKernelWithRawGreweFeatures.FromSrcOriginAndFeatures(
                 src, FLAGS.origin, features))
@@ -95,7 +99,7 @@ def main(argv: typing.List[str]):
   worker.start()
   while worker.is_alive():
     bar.update(worker.i)
-    worker.join(.5)
+    worker.join(.1)
   bar.update(worker.i)
   logging.info('done')
 

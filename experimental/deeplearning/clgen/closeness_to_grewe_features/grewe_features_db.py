@@ -4,6 +4,7 @@ import hashlib
 
 import sqlalchemy as sql
 from absl import flags
+from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
 from gpu.portable_mapping_of_data_parallel_programs_to_opencl import \
@@ -21,7 +22,9 @@ class OpenCLKernelWithRawGreweFeatures(
   """A table of OpenCL kernels and their Grewe et. al. feature values."""
   id: int = sql.Column(sql.Integer, primary_key=True)
   # The checksum of the 'src' column.
-  src_sha256: str = sql.Column(sql.Binary(32), nullable=False, unique=True)
+  src_sha256: str = sql.Column(
+    sql.Binary(32).with_variant(mysql.BINARY(32), 'mysql'),
+    nullable=False, unique=True)
   # The origin of the opencl kernel, e.g. "clgen" for a clgen-generated
   # benchmark.
   origin: str = sql.Column(sql.String(32), nullable=False)
