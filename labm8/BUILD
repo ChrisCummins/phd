@@ -597,6 +597,7 @@ py_library(
     deps = [
         ":fs",
         ":system",
+        "//third_party/py/networkx",
     ],
 )
 

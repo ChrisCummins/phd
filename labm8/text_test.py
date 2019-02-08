@@ -50,5 +50,57 @@ def test_diff():
   assert (1 / 3) == text.diff("123", "1 3")
 
 
+# Prefix tree operations.
+
+def test_BuildPrefixTree_empty():
+  """Test that an empty prefix tree has a single node (the root)."""
+  trie = text.BuildPrefixTree(set())
+  assert trie.number_of_nodes() == 1
+
+
+def test_BuildPrefixTree_abc():
+  """Test that a single-world prefix tree has expected graph."""
+  trie = text.BuildPrefixTree({'abc', })
+  assert trie.number_of_nodes() == 4
+  assert trie.number_of_edges() == 3
+
+
+def test_PrefixTreeWords_abc():
+  """Test that a single-world prefix tree has expected graph."""
+  trie = text.BuildPrefixTree({'abc'})
+  assert text.PrefixTreeWords(trie) == {'abc'}
+
+
+def test_PrefixTreeWords_subwords():
+  """Test that a single-world prefix tree has expected graph."""
+  trie = text.BuildPrefixTree({'abc', 'abcd'})
+  assert text.PrefixTreeWords(trie) == {'abc', 'abcd'}
+
+
+def test_AutoCompletePrefix_whole_string_match():
+  """Test that autocomplete matches whole word."""
+  trie = text.BuildPrefixTree({'abc'})
+  assert text.AutoCompletePrefix('abc', trie) == {'abc'}
+
+
+def test_AutoCompletePrefix_single_substring_match():
+  """Test that autocomplete matches a single substring."""
+  trie = text.BuildPrefixTree({'abc'})
+  assert text.AutoCompletePrefix('a', trie) == {'abc'}
+
+
+def test_AutoCompletePrefix_multiple_substring_match():
+  """Test that autocomplete matches multiple substrings."""
+  trie = text.BuildPrefixTree({'abc', 'abcd'})
+  assert text.AutoCompletePrefix('ab', trie) == {'abc', 'abcd'}
+
+
+def test_AutoCompletePrefix_not_wound():
+  """Test that autocomplete raises error for non-matching substring."""
+  trie = text.BuildPrefixTree({'abc'})
+  with pytest.raises(KeyError):
+    text.AutoCompletePrefix('d', trie)
+
+
 if __name__ == '__main__':
   test.Main()

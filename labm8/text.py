@@ -3,6 +3,9 @@
 from __future__ import division
 
 import re
+import typing
+
+import networkx as nx
 
 
 class Error(Exception):
@@ -147,3 +150,101 @@ def diff(s1, s2):
       float: Normalised distance between the two strings.
   """
   return levenshtein(s1, s2) / max(len(s1), len(s2))
+
+
+def AddWordToPrefixTree(trie: nx.DiGraph, word: str) -> None:
+  """Add the given word to a prefix tree.
+
+  Args:
+    trie: The prefix tree.
+    word: The word to add to the prefix tree.
+  """
+  current_node = 0
+  for char in word:
+    for neighbour_id in trie[current_node]:
+      if trie.nodes[neighbour_id]['char'] == char:
+        current_node = neighbour_id
+        break
+    else:
+      new_node_id = max(trie.nodes) + 1
+      trie.add_node(new_node_id, char=char)
+      trie.add_edge(current_node, new_node_id)
+      current_node = new_node_id
+
+  trie.nodes[current_node]['word'] = word
+
+
+def BuildPrefixTree(words: typing.Set[str]):
+  """Construct a prefix tree from the given words.
+
+  A prefix tree can be used for providing autocomplete results for a prefix,
+  see AutoCompletePrefix(). This implementation uses a networkx directed graph
+  to represent the tree, with a 'char' attribute attached to nodes, and a 'word'
+  attribute containing whole-word sequences on terminal nodes.
+
+  This implementation favors clarity over efficiency.
+
+  Args:
+    words: The words to construct a prefix tree from.
+
+  Returns:
+    A prefix tree.
+  """
+  trie = nx.DiGraph()
+  trie.add_node(0)
+  for word in words:
+    AddWordToPrefixTree(trie, word)
+  return trie
+
+
+def PrefixTreeWords(trie: nx.DiGraph, root_node: int = 0) -> typing.List[str]:
+  """Return all words in prefix tree.
+
+  Args:
+    trie: A prefix tree, constructed using BuildPrefixTree().
+    root_node: The root node to get words from.
+
+  Returns:
+    The set of words in the prefix tree.
+  """
+  ret = set()
+  word = trie.nodes[root_node].get('word')
+  if word:
+    ret.add(word)
+  for neighbor_node in trie[root_node]:
+    ret = ret.union(PrefixTreeWords(trie, root_node=neighbor_node))
+  return ret
+
+
+def AutoCompletePrefix(prefix: str, trie: nx.DiGraph) -> typing.Set[str]:
+  """Return all words in prefix tree which start with the given prefix.
+
+  Args:
+    prefix: The prefix to match.
+    trie: A prefix tree, constructed using BuildPrefixTree().
+
+  Returns:
+    The set of words in the prefix tree that begin with the prefix.
+
+  Raises:
+    ValueError: If prefix is not given.
+    KeyError: If the prefix is not found.
+  """
+  if not prefix:
+    raise ValueError("Prefix cannot be empty")
+
+  ret = set()
+
+  current_node = 0
+  for char in prefix:
+    for neighbour_id in trie[current_node]:
+      if trie.nodes[neighbour_id]['char'] == char:
+        current_node = neighbour_id
+        node_word = trie.nodes[current_node].get('word')
+        if node_word:
+          ret.add(node_word)
+        break
+    else:
+      raise KeyError(f"Prefix not found: '{prefix}'")
+
+  return ret.union(PrefixTreeWords(trie, root_node=current_node))
