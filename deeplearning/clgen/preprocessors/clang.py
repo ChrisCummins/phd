@@ -121,8 +121,9 @@ def CompileLlvmBytecode(src: str, suffix: str, cflags: typing.List[str],
     ClangTimeout: If clang does not complete before timeout_seconds.
   """
   builtin_cflags = ['-S', '-emit-llvm', '-o', '-']
-  with tempfile.NamedTemporaryFile('w', prefix='clgen_clang_',
-                                   suffix=suffix) as f:
+  with tempfile.NamedTemporaryFile(
+      'w', prefix='phd_deeplearning_clgen_preprocessors_clang_',
+      suffix=suffix) as f:
     f.write(src)
     f.flush()
     cmd = ['timeout', '-s9', str(timeout_seconds), str(CLANG),
