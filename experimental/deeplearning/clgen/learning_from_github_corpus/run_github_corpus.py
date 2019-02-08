@@ -86,8 +86,8 @@ def OpenClSourceToTestCases(src: str) -> typing.List[deepsmith_pb2.Testcase]:
 
 
 def RunTestCasesOrDie(
-      driver: cldrive.CldriveHarness,
-      testcases: typing.List[deepsmith_pb2.Testcase]
+    driver: cldrive.CldriveHarness,
+    testcases: typing.List[deepsmith_pb2.Testcase]
 ) -> typing.Iterable[deepsmith_pb2.Result]:
   """Run the test cases and return their results."""
   response = driver.RunTestcases(harness_pb2.RunTestcasesRequest(
@@ -240,10 +240,10 @@ def main(argv: typing.List[str]):
                         columns=['outcome', 'count'])
       summary = df.groupby('outcome').sum().reset_index()
       summary['ratio'] = [
-          f'{x:.2%}' for x in
-          # Double the "ratio" values because the 'count' column contains a
-          # grand total row.
-          2 * summary['count'].values / summary['count'].sum()
+        f'{x:.2%}' for x in
+        # Double the "ratio" values because the 'count' column contains a
+        # grand total row.
+        2 * summary['count'].values / summary['count'].sum()
       ]
       summary['count'] = [humanize.intcomma(int(x)) for x in summary['count']]
       print(summary)
