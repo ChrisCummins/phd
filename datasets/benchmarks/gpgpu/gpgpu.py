@@ -392,7 +392,7 @@ class _BenchmarkSuite(object):
       env: typing.Optional[typing.Dict[str, str]] = None
   ) -> None:
     """Run executable using runcecl script and log output."""
-    logging.info('Executing benchmark %s', benchmark_name)
+    logging.info('Executing %s:%s', self.name, benchmark_name)
     self._logdir.mkdir(exist_ok=True, parents=True)
 
     # Create the name of the logfile now, so that is timestamped to the start of
@@ -823,21 +823,18 @@ class ShocBenchmarkSuite(_BenchmarkSuite):
   @property
   def benchmarks(self) -> typing.List[str]:
     return [
-      '2DCONV',
-      '2MM',
-      '3DCONV',
-      '3MM',
-      'ATAX',
-      'BICG',
-      'CORR',
-      'COVAR',
-      # Bad: 'FDTD-2D',
-      'GEMM',
-      'GESUMMV',
-      'GRAMSCHM',
-      'MVT',
-      'SYR2K',
-      'SYRK',
+        'BFS',
+        'FFT',
+        'GEMM',
+        'MD',
+        'MD5Hash',
+        'Reduction',
+        'Scan',
+        'Sort',
+        'Spmv',
+        'Stencil2D',
+        'Triad',
+        'S3D',
     ]
 
   def _ForceDeviceType(self, device_type: str):
@@ -848,10 +845,18 @@ class ShocBenchmarkSuite(_BenchmarkSuite):
     with fs.chdir(self.path):
       CheckCall(['./configure'])
 
-    Make('all', self.path)
+    Make(None, self.path / 'src/common')
+    Make(None, self.path / 'src/opencl')
 
   def _Run(self):
-    CheckCall(f'find {self.path} -type f -executable | grep -v level0 | sort', shell=True)
+    for benchmark in self.benchmarks:
+      level1 = self.path / f'src/opencl/level1/{benchmark.lower()}/{benchmark}'
+      level2 = self.path / f'src/opencl/level2/{benchmark.lower()}/{benchmark}'
+      if level1.is_file():
+        executable = level1
+      else:
+        executable = level2
+      self._ExecToLogFile(executable, benchmark)
 
 
 # A map of benchmark suite names to classes.

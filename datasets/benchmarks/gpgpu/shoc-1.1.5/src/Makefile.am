@@ -1,5 +1,1 @@
-if BUILD_OPENCL
-    MAYBE_OPENCL = opencl
-endif
-
-SUBDIRS=common $(MAYBE_OPENCL) $(MAYBE_CUDA) $(MAYBE_MPI) $(MAYBE_STABILITY)
+SUBDIRS=common opencl
