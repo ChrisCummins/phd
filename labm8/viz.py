@@ -1,31 +1,28 @@
-"""Graphing helper.
-"""
-from labm8 import io
+"""Plotting and visualization utilities."""
+import pathlib
+import typing
+
+from absl import flags
+from absl import logging
+from matplotlib import axes
+from matplotlib import pyplot as plt
 
 
-class Error(Exception):
-  """
-  Visualisation module base error class.
-  """
-  pass
+FLAGS = flags.FLAGS
 
 
-def finalise(output=None, figsize=None, tight=True, **kwargs):
-  """
-  Finalise a plot.
+def Finalize(output: typing.Optional[typing.Union[str, pathlib.Path]] = None,
+             figsize=None, tight=True, **savefig_opts):
+  """Finalise a plot.
 
   Display or show the plot, then close it.
 
-  Arguments:
-
-      output (str, optional): Path to save figure to. If not given,
-        show plot.
-      figsize ((float, float), optional): Figure size in inches.
-      **kwargs: Any additional arguments to pass to
-        plt.savefig(). Only required if output is not None.
+  Args:
+    output: Path to save figure to. If not given, plot is shown.
+    figsize: Figure size in inches.
+    **savefig_opts: Any additional arguments to pass to
+      plt.savefig(). Only required if output is not None.
   """
-  import matplotlib.pyplot as plt
-
   # Set figure size.
   if figsize is not None:
     plt.gcf().set_size_inches(*figsize)
@@ -37,18 +34,42 @@ def finalise(output=None, figsize=None, tight=True, **kwargs):
   if output is None:
     plt.show()
   else:
-    plt.savefig(output, **kwargs)
-    io.info("Wrote", output)
+    output = pathlib.Path(output)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    plt.savefig(str(output), **savefig_opts)
+    logging.info("Wrote '%s'", output)
   plt.close()
 
 
-def ShowErrorBarCaps(ax):
+def ShowErrorBarCaps(ax: axes.Axes):
   """Show error bar caps.
   
   Seaborn paper style hides error bar caps. Call this function on an axes
   object to make them visible again.
   """
-  for ch in ax.get_children():
-    if str(ch).startswith('Line2D'):
-      ch.set_markeredgewidth(1)
-      ch.set_markersize(8)
+  for child in ax.get_children():
+    if str(child).startswith('Line2D'):
+      child.set_markeredgewidth(1)
+      child.set_markersize(8)
+
+
+def RotateXLabels(rotation: int = 90, ax: axes.Axes = None) -> None:
+  """Rotate plot X labels anti-clockwise.
+
+  Args:
+    rotation: The number of degrees to rotate the labels by.
+    ax: The plot axis.
+  """
+  ax = ax or plt.gca()
+  plt.setp(ax.get_xticklabels(), rotation=rotation)
+
+
+def RotateYLabels(rotation: int = 90, ax: axes.Axes = None):
+  """Rotate plot Y labels anti-clockwise.
+
+  Args:
+    rotation: The number of degrees to rotate the labels by.
+    ax: The plot axis.
+  """
+  ax = ax or plt.gca()
+  plt.setp(ax.get_yticklabels(), rotation=rotation)

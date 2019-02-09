@@ -618,7 +618,10 @@ py_library(
     name = "viz",
     srcs = ["viz.py"],
     visibility = ["//visibility:public"],
-    deps = [":io"],
+    deps = [
+        "//third_party/py/absl",
+        "//third_party/py/matplotlib",
+    ],
 )
 
 py_test(
@@ -628,10 +631,11 @@ py_test(
     default_python_version = "PY3",
     srcs_version = "PY3",
     deps = [
-        ":fs",
         ":test",
         ":viz",
         "//third_party/py/absl",
         "//third_party/py/matplotlib",
+        "//third_party/py/numpy",
+        "//third_party/py/pytest",
     ],
 )
