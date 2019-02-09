@@ -6,6 +6,7 @@ import pytest
 from absl import flags
 
 from datasets.benchmarks.gpgpu import gpgpu
+from gpu.cldrive import env as cldrive_env
 from labm8 import test
 
 
@@ -20,7 +21,7 @@ def test_RewriteClDeviceType_rewrites_file(tempdir: pathlib.Path):
   """Test that CL_DEVICE_TYPE is rewritten in file."""
   with open(tempdir / 'foo', 'w') as f:
     f.write("Hello world! The device type is: CL_DEVICE_TYPE_GPU.")
-  gpgpu.RewriteClDeviceType('oclgrind', tempdir)
+  gpgpu.RewriteClDeviceType(cldrive_env.OclgrindOpenCLEnvironment(), tempdir)
   with open(tempdir / 'foo') as f:
     assert f.read() == "Hello world! The device type is: CL_DEVICE_TYPE_CPU."
 
@@ -38,7 +39,7 @@ def test_BenchmarkSuite_invalid_path_access(benchmark_suite: typing.Callable):
   """Path cannot be accessed except when used as a context manager."""
   bs = benchmark_suite()
   with pytest.raises(TypeError):
-    bs.path
+    _ = bs.path
 
 
 @pytest.mark.parametrize('benchmark_suite', BENCHMARK_SUITES_TO_TEST)
@@ -46,7 +47,7 @@ def test_BenchmarkSuite_integration_test(benchmark_suite: typing.Callable,
                                          tempdir: pathlib.Path):
   """Test compilation and execution of benchmark suite using oclgrind."""
   with benchmark_suite() as bs:
-    bs.ForceDeviceType('oclgrind')
+    bs.ForceOpenCLEnvironment(cldrive_env.OclgrindOpenCLEnvironment())
     bs.Run(tempdir)
 
     logs = list(bs.logs)

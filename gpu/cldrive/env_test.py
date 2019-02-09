@@ -1,5 +1,6 @@
 """Unit tests for //gpu/cldrive/env.py."""
 
+import pytest
 from absl import flags
 
 from gpu.cldrive import env
@@ -28,6 +29,19 @@ def test_OclgrindOpenCLEnvironment_name():
   env_ = env.OclgrindOpenCLEnvironment()
   # This test will of course fail if the @oclgrind package is updated.
   assert 'Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2' == env_.name
+
+
+def test_OcldringOpenCLEnvironment_FromName_found():
+  """Test name that can be found."""
+  env_ = env.OclgrindOpenCLEnvironment.FromName(
+      'Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2')
+  assert env_.name == 'Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2'
+
+
+def test_OcldringOpenCLEnvironment_FromName_not_found():
+  """Test name that can't be found."""
+  with pytest.raises(LookupError):
+    env.OclgrindOpenCLEnvironment.FromName('Not a real environment')
 
 
 if __name__ == "__main__":

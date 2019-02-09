@@ -41,6 +41,9 @@ filegroup(
 
 py_proto_library(
     name = "gpgpu_py_pb2",
+    proto_deps = [
+        "//gpu/clinfo/proto:clinfo_py_pb2",
+    ],
     protos = ["gpgpu.proto"],
     visibility = ["//visibility:public"],
     deps = ["//third_party/py/protobuf"],
@@ -68,6 +71,7 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":gpgpu_py_pb2",
+        "//gpu/cldrive:env",
         "//gpu/oclgrind",
         "//labm8:bazelutil",
         "//labm8:fs",

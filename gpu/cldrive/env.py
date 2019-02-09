@@ -16,15 +16,47 @@ CLINFO = bazelutil.DataPath('phd/gpu/clinfo/clinfo')
 class OpenCLEnvironment(object):
 
   def __init__(self, device: clinfo_pb2.OpenClDevice):
-    self.name = device.name
-    self.platform_name = device.platform_name
-    self.device_name = device.device_name
-    self.driver_version = device.driver_version
-    self.opencl_version = device.opencl_version
-    self.device_type = device.device_type
-    self.platform_id = device.platform_id
-    self.device_id = device.device_id
-    self.opencl_opt = device.opencl_opt
+    self._proto = device
+
+  @property
+  def name(self) -> str:
+    return self._proto.name
+
+  @property
+  def platform_name(self) -> str:
+    return self._proto.platform_name
+
+  @property
+  def device_name(self) -> str:
+    return self._proto.device_name
+
+  @property
+  def driver_version(self) -> str:
+    return self._proto.driver_version
+
+  @property
+  def opencl_version(self) -> str:
+    return self._proto.opencl_version
+
+  @property
+  def device_type(self) -> str:
+    return self._proto.device_type
+
+  @property
+  def platform_id(self) -> int:
+    return self._proto.platform_id
+
+  @property
+  def device_id(self) -> int:
+    return self._proto.device_id
+
+  @property
+  def opencl_opt(self) -> str:
+    return self._proto.opencl_opt
+
+  @property
+  def proto(self) -> clinfo_pb2.OpenClDevice:
+    return self._proto
 
   def ids(self) -> typing.Tuple[int, int]:
     """Return platform and device ID numbers.
@@ -61,6 +93,28 @@ class OpenCLEnvironment(object):
     stdout, stderr = process.communicate()
     process.stdout, process.stderr = stdout, stderr
     return process
+
+  @classmethod
+  def FromName(cls, env_name: str) -> 'OpenCLEnvironment':
+    """Look up OpenCL environment from name.
+
+    Args:
+      env_name: The name of the environment.
+
+    Returns:
+      An OpenCLEnvironment instance.
+
+    Raises:
+      LookupError: If the name is not found.
+    """
+    all_envs = {env.name: env for env in GetOpenClEnvironments()}
+    if env_name in all_envs:
+      return all_envs[env_name]
+    else:
+      available = '\n'.join(f'    {n}' for n in sorted(all_envs.keys()))
+      raise LookupError(
+          f"Requested OpenCL environment not available: '{env_name}'.\n"
+          f"Available OpenCL devices:\n{available}")
 
 
 class OclgrindOpenCLEnvironment(OpenCLEnvironment):

@@ -1,6 +1,8 @@
 syntax = "proto2";
 
-package gpgpu_benchmarks;
+import "gpu/clinfo/proto/clinfo.proto";
+
+package datasets.benchmarks.gpgpu;
 
 // Recording of a single GPGPU benchmark execution.
 message GpgpuBenchmarkRun {
@@ -12,7 +14,7 @@ message GpgpuBenchmarkRun {
   required string cecl_log = 6;
   required string stdout = 7;
   required string stderr = 8;
-  required string device_type = 9;
+  required gpu.clinfo.OpenClDevice device = 9;
   required string hostname = 10;
   repeated OpenClKernelInvocation kernel_invocation = 11;
   required int64 elapsed_time_ms = 12;
