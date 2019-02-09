@@ -7,6 +7,7 @@ import sqlalchemy as sql
 from absl import flags
 from absl import logging
 from sqlalchemy import orm
+from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
 from labm8 import pbutil
@@ -472,3 +473,33 @@ def OffsetLimitBatchedQuery(
       i += len(batch)
     else:
       break
+
+
+class ColumnTypes(object):
+  """Abstract class containing methods for generating column types."""
+
+  def __init__(self):
+    raise TypeError('abstract class')
+
+  @staticmethod
+  def BinaryArray(length: int):
+    """Return a fixed size binary array column type.
+
+    Args:
+      length: The length of the column.
+
+    Returns:
+      A column type.
+    """
+    return sql.Binary(length).with_variant(mysql.BINARY(length), 'mysql')
+
+  @staticmethod
+  def UnboundedUnicodeText():
+    """Return an unbounded unicode text column type.
+
+    This isn't truly unbounded, but 2^32 chars should be enough!
+
+    Returns:
+       A column type.
+    """
+    return sql.UnicodeText().with_variant(sql.UnicodeText(2 ** 31), 'mysql')

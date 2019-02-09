@@ -175,5 +175,33 @@ def test_ProtoBackedMixin_FromFile(tempdir: pathlib.Path):
   assert row.number == 42
 
 
+def test_ColumnTypes_BinaryArray():
+  """Test that column type can be instantiated."""
+  base = declarative.declarative_base()
+
+  class Table(base):
+    __tablename__ = 'test'
+    primary_key = sql.Column(sql.Integer, primary_key=True)
+    col = sql.Column(sqlutil.ColumnTypes.BinaryArray(16))
+
+  db = sqlutil.Database(f'sqlite://', base)
+  with db.Session(commit=True) as s:
+    s.add(Table(col='abc'.encode('utf-8')))
+
+
+def test_ColumnTypes_UnboundedUnicodeText():
+  """Test that column type can be instantiated."""
+  base = declarative.declarative_base()
+
+  class Table(base):
+    __tablename__ = 'test'
+    primary_key = sql.Column(sql.Integer, primary_key=True)
+    col = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText())
+
+  db = sqlutil.Database(f'sqlite://', base)
+  with db.Session(commit=True) as s:
+    s.add(Table(col='abc'))
+
+
 if __name__ == '__main__':
   test.Main()
