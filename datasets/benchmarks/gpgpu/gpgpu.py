@@ -123,9 +123,12 @@ def OpenClCompileAndLinkFlags() -> typing.Tuple[str, str]:
 
 
 @contextlib.contextmanager
-def MakeEnv(make_dir: pathlib.Path) -> typing.Dict[str, str]:
+def MakeEnv(make_dir: pathlib.Path,
+            opencl_headers: bool = True) -> typing.Dict[str, str]:
   """Return a build environment for GPGPU benchmarks."""
   cflags, ldflags = OpenClCompileAndLinkFlags()
+  if not opencl_headers:
+    cflags = ''
 
   with fs.chdir(make_dir):
     with tempfile.TemporaryDirectory(prefix='phd_gpu_libcecl_header_') as d:
@@ -184,23 +187,6 @@ def Make(target: typing.Optional[str], make_dir: pathlib.Path,
     logging.debug('Running make %s in %s', target, make_dir)
     CheckCall(['make', '-j', FLAGS.gpgpu_build_process_count] +
               ([target] if target else []) + (extra_make_args or []), env=env)
-
-
-def CMake(target: str, make_dir: pathlib.Path,
-          extra_cflags: str = '') -> None:
-  """Run make target in the given path."""
-  if not (make_dir / 'CMakeLists.txt').is_file():
-    raise EnvironmentError(f"Cannot find CMakeLists.txt in {make_dir}")
-
-  # Build relative to the path, rather than using `make -c <path>`. This is
-  # because some of the source codes have hard-coded relative paths.
-  with MakeEnv(make_dir) as env:
-    logging.debug('Running make %s in %s', target, make_dir)
-    env['CFLAGS'] = f'{env["CFLAGS"]} {extra_cflags}'
-    env['CXXFLAGS'] = f'{env["CXXFLAGS"]} {extra_cflags}'
-    CheckCall(['cmake', '.'], env=env)
-    CheckCall(['make', target, '-j', FLAGS.gpgpu_build_process_count,
-               'VERBOSE=1'], env=env)
 
 
 def FindExecutableInDir(path: pathlib.Path) -> pathlib.Path:
@@ -501,7 +487,13 @@ class DummyJustForTesting(_BenchmarkSuite):
 
 
 class AmdAppSdkBenchmarkSuite(_BenchmarkSuite):
-  """The AMD App SDK benchmarks."""
+  """The AMD App SDK benchmarks.
+
+  This is a subset of the App SDK example programs. They use a CMake build
+  system. One caveat is that we have to use the OpenCL headers provided as
+  part of the package, rather than the phd versions. The Ubunutu libglew-dev
+  package is a build requirement.
+  """
 
   @property
   def name(self):
@@ -541,12 +533,16 @@ class AmdAppSdkBenchmarkSuite(_BenchmarkSuite):
                '*cmake*', '-not', '-name', 'CMakeLists.txt', '-delete'])
 
     for benchmark in self.benchmarks:
-      CMake('all', self.path / 'samples/opencl/cl/1.x' / benchmark,
-            extra_cflags=' '.join([
-              f'-isystem {self.path}/include',
-              f'-include {self.path}/include/CL/cl_ext.h',
-              f'-include {self.path}/include/CL/cl_gl.h'
-            ]))
+      with MakeEnv(self.path / f'samples/opencl/cl/1.x/{benchmark}',
+                   opencl_headers=False) as env:
+        env['CFLAGS'] = f'{env["CFLAGS"]} -isystem {self.path}/include'
+        env['CXXFLAGS'] = f'{env["CXXFLAGS"]} -isystem {self.path}/include'
+
+        logging.debug('Building %s:%s in %s', self.name, benchmark)
+        CheckCall(['cmake', '.'], env=env)
+        CheckCall(['make', '-j', FLAGS.gpgpu_build_process_count,
+                   'VERBOSE=1'], env=env)
+
 
   def _Run(self):
     for benchmark in self.benchmarks:
