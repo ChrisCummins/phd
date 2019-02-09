@@ -23,8 +23,8 @@ class OpenCLKernelWithRawGreweFeatures(
   id: int = sql.Column(sql.Integer, primary_key=True)
   # The checksum of the 'src' column.
   src_sha256: str = sql.Column(
-    sql.Binary(32).with_variant(mysql.BINARY(32), 'mysql'),
-    nullable=False, unique=True)
+      sql.Binary(32).with_variant(mysql.BINARY(32), 'mysql'),
+      nullable=False)
   # The origin of the opencl kernel, e.g. "clgen" for a clgen-generated
   # benchmark.
   origin: str = sql.Column(sql.String(32), nullable=False)
