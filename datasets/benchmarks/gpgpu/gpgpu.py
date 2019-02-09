@@ -255,7 +255,7 @@ def KernelInvocationsFromCeclLog(
       # not all drivers report device type correctly, e.g. POCL returns a
       # non-standard device type value.
       if devtype == 'UNKNOWN':
-        devtype == expected_devtype
+        devtype = expected_devtype
 
       if devtype != expected_devtype:
         raise ValueError(
