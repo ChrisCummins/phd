@@ -359,10 +359,58 @@ cl_command_queue CECL_CREATE_COMMAND_QUEUE(cl_context context,
                                            cl_command_queue_properties props,
                                            cl_int* err) {
     cl_int local_err;
-    cl_command_queue q = clCreateCommandQueue(context,
-                                              device,
-                                              props | CL_QUEUE_PROFILING_ENABLE,
-                                              &local_err);
+    // TODO(cec): Ignore device argument.
+    const char* target_platform = getenv("LIBCECL_PLATFORM")
+    const char* target_device = getenv("LIBCECL_DEVICE")
+
+    cl_uint platform_count;
+    local_err = clGetPlatformIds(0, NULL, &platform_count);
+    if (local_err != CL_SUCCESS) {
+      if (local_err == CL_INVALID_VALUE) {
+        fprintf(stderr, "num_entries is zero and platforms is not null\n");
+        exit(E_CL_FAILURE);
+      } else {
+        fprint(stderr, "unknown error!\n");
+        exit(E_CL_FAILURE);
+      }
+    }
+
+    cl_platform_id platforms[platform_count];
+    local_err = clGetPlatformIds(platform_count, platforms, NULL);
+    if (local_err != CL_SUCCESS) {
+      fprintf(stderr, "Cannot get the list of OpenCL platforms\n");
+      exit(E_CL_FAILURE);
+    }
+
+    for (size_t i = 0; i < num_platforms; ++i) {
+      size_t buffer_size;
+      local_err = clGetPlatformInfo(
+          platforms[i], CL_PLATFORM_NAME, 0, NULL, &buffer_size);
+      if (local_err != CL_SUCCESS) {
+        fprintf(stderr, "Cannot get the size of the CL_PLATFORM_NAME "
+                        "parameter\n");
+        exit(E_CL_FAILURE);
+      }
+
+      char* buffer = malloc(buffer_size);
+      local_err = clGetPlatformInfo(platforms[i], CL_PLATFORM_NAME, buffer_size,
+                                    buffer, NULL);
+      if (local_err != CL_SUCCESS) {
+        fprintf(stderr, "Cannot get the CL_PLATFORM_NAME parameter\n");
+        exit(E_CL_FAILURE);
+      }
+
+      if (!strcmp(buffer, target_platform)) {
+        fprintf(stderr, "[CECL] Found matching platform %s\n", buffer);
+      }
+
+      free(buffer);
+    }
+
+    // TODO(cec): Continue from here.
+
+    cl_command_queue q = clCreateCommandQueue(
+        context, device, props | CL_QUEUE_PROFILING_ENABLE, &local_err);
     if (local_err == CL_SUCCESS) {
         cl_device_type devtype;
         char devname[100];
