@@ -699,15 +699,9 @@ class ParboilBenchmarkSuite(_BenchmarkSuite):
   def _ForceOpenCLEnvironment(self, env: cldrive_env.OpenCLEnvironment):
     RewriteClDeviceType(env, self.path / 'benchmarks')
 
-    CheckCall(['find', self.path, '-name', '*.o', '-delete'])
-    with MakeEnv(self.path) as env:
-      for benchmark in self.benchmarks:
-        CheckCall(['python2', './parboil', 'compile', benchmark,
-                   'opencl_base'], env=env)
-
     # Due to the large size of parboil benchmarks (> 900 MB uncompressed), we
     # ship compressed archives with per-benchmark datasets. These must be
-    # decompressed.
+    # decompressed. This must be done prior to building.
     with fs.chdir(self.path / f'datasets'):
       for benchmark in self.benchmarks:
         dataset_archive = self.path / f'datasets/{benchmark}.tar.bz2'
@@ -723,6 +717,12 @@ class ParboilBenchmarkSuite(_BenchmarkSuite):
           CheckCall(['tar', 'xjvf', dataset_archive])
 
         dataset_archive.unlink()
+
+    CheckCall(['find', self.path, '-name', '*.o', '-delete'])
+    with MakeEnv(self.path) as env:
+      for benchmark in self.benchmarks:
+        CheckCall(['python2', './parboil', 'compile', benchmark,
+                   'opencl_base'], env=env)
 
   def _Run(self):
     for benchmark, dataset in self.benchmarks_and_datasets:
