@@ -42,6 +42,7 @@ filegroup(
 py_proto_library(
     name = "gpgpu_py_pb2",
     protos = ["gpgpu.proto"],
+    visibility = ["//visibility:public"],
     deps = ["//third_party/py/protobuf"],
 )
 
