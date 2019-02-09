@@ -711,7 +711,15 @@ class ParboilBenchmarkSuite(_BenchmarkSuite):
         if dataset_archive.is_file():
           logging.info('Unpacking datasets for %s:%s', self.name, benchmark)
           CheckCall(['tar', 'xjvf', dataset_archive])
-          dataset_archive.unlink()
+        elif pathlib.Path(f'{dataset_archive}.part1').is_file():
+          logging.info('Unpacking datasets for %s:%s', self.name, benchmark)
+          CheckCall(f'cat {dataset_archive}.part1 {dataset_archive}.part2 '
+                    f'> {dataset_archive}', shell=True)
+          pathlib.Path(f'{dataset_archive}.part1').unlink()
+          pathlib.Path(f'{dataset_archive}.part2').unlink()
+          CheckCall(['tar', 'xjvf', dataset_archive])
+
+        dataset_archive.unlink()
 
   def _Run(self):
     for benchmark, dataset in self.benchmarks_and_datasets:
