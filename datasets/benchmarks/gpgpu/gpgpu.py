@@ -705,6 +705,14 @@ class ParboilBenchmarkSuite(_BenchmarkSuite):
         CheckCall(['python2', './parboil', 'compile', benchmark,
                    'opencl_base'], env=env)
 
+    with fs.chdir(self.path / f'datasets')
+      for benchmark in self.benchmarks:
+        dataset_archive = self.path / f'datasets/{benchmark}.tar.bz2'
+        if dataset_archive.is_file():
+          logging.info('Unpacking datasets for %s:%s', self.name, benchmark)
+          CheckCall(['tar', 'xjvf', dataset_archive])
+          dataset_archive.unlink()
+
   def _Run(self):
     for benchmark, dataset in self.benchmarks_and_datasets:
       self._ExecToLogFile(
