@@ -67,6 +67,8 @@ flags.DEFINE_integer('gpgpu_build_process_count', multiprocessing.cpu_count(),
                      'The number of parallel threads to use when building '
                      'GPGPU benchmark suites. Defaults to the number of '
                      'processors on your system.')
+flags.DEFINE_integer('gpgpu_benchmark_run_count', 1,
+                     'The number of times to execute each benchmark suite.')
 
 # The path of libcecl directory, containing the libcecl header, library, and
 # run script.
@@ -895,7 +897,9 @@ def main(argv: typing.List[str]):
         logging.info('Building and running %s on %s', benchmark_suite.name,
                      device_type)
         benchmark_suite.ForceDeviceType(device_type)
-        benchmark_suite.Run(outdir)
+        for i in range(FLAGS.gpgpu_benchmark_run_count):
+          logging.info('Starting run %d of %s', i, benchmark_suite.name)
+          benchmark_suite.Run(outdir)
 
       kernel_invocation_count = sum(
           len(log.kernel_invocation) for log in benchmark_suite.logs)
