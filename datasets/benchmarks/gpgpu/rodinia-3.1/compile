@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-set -eu
-
-make clean
-rm -fv opencl/hotspot3D/3D
-make OPENCL -j$(nproc)
