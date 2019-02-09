@@ -69,6 +69,10 @@ flags.DEFINE_integer('gpgpu_build_process_count', multiprocessing.cpu_count(),
                      'processors on your system.')
 flags.DEFINE_integer('gpgpu_benchmark_run_count', 1,
                      'The number of times to execute each benchmark suite.')
+flags.DEFINE_boolean('gpgpu_record_outputs', True,
+                     "Record each benchmark's stdout and stderr. This "
+                     "information is not needed to get performance data, and "
+                     "can be quite large.")
 
 # The path of libcecl directory, containing the libcecl header, library, and
 # run script.
@@ -432,9 +436,9 @@ class _BenchmarkSuite(object):
           benchmark_name=benchmark_name,
           dataset_name=dataset_name,
           returncode=process.returncode,
-          stdout=stdout,
-          stderr='\n'.join(stderr_lines),
-          cecl_log='\n'.join(cecl_lines),
+          stdout=stdout if FLAGS.gpgpu_record_outputs else '',
+          stderr='\n'.join(stderr_lines) if FLAGS.gpgpu_record_outputs else '',
+          cecl_log='\n'.join(cecl_lines) if FLAGS.gpgpu_record_outputs else '',
           device_type=self.device_type,
           hostname=system.HOSTNAME,
           kernel_invocation=KernelInvocationsFromCeclLog(
