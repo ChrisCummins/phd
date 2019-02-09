@@ -63,7 +63,7 @@ flags.DEFINE_list('gpgpu_envs',
                   ['Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2'],
                   'The OpenCL environment names to execute benchmark suites '
                   'on. To list the available environments, run '
-                  '`bazel run //gpu/cldrive -- --ls_env`.')
+                  '`bazel run //gpu/clinfo`.')
 flags.DEFINE_string('gpgpu_logdir', '/tmp/phd/datasets/benchmarks/gpgpu',
                     'The directory to write log files to.')
 flags.DEFINE_integer('gpgpu_build_process_count', multiprocessing.cpu_count(),
