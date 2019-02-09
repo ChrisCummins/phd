@@ -705,7 +705,10 @@ class ParboilBenchmarkSuite(_BenchmarkSuite):
         CheckCall(['python2', './parboil', 'compile', benchmark,
                    'opencl_base'], env=env)
 
-    with fs.chdir(self.path / f'datasets')
+    # Due to the large size of parboil benchmarks (> 900 MB uncompressed), we
+    # ship compressed archives with per-benchmark datasets. These must be
+    # decompressed.
+    with fs.chdir(self.path / f'datasets'):
       for benchmark in self.benchmarks:
         dataset_archive = self.path / f'datasets/{benchmark}.tar.bz2'
         if dataset_archive.is_file():
