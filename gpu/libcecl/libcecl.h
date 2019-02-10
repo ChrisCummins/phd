@@ -30,6 +30,17 @@ extern "C" {
 #endif  /* __cplusplus */
 
 
+cl_context CECL_CREATE_CONTEXT(cl_context_properties *properties,
+                               cl_uint num_devices,
+                               const cl_device_id *devices,
+                               void *pfn_notify (const char *errinfo,
+                                                 const void *private_info,
+                                                 size_t cb,
+                                                 void *user_data),
+                               void *user_data,
+                               cl_int *errcode_ret);
+
+
 cl_command_queue CECL_CREATE_COMMAND_QUEUE(cl_context context,
                                            cl_device_id device,
                                            cl_command_queue_properties props,
@@ -41,6 +52,13 @@ cl_program CECL_PROGRAM_WITH_SOURCE(cl_context context,
                                     const char** strings,
                                     const size_t* lengths,
                                     cl_int* err);
+
+cl_int CECL_GET_KERNEL_WORK_GROUP_INFO(cl_kernel kernel,
+                                       cl_device_id unused_device,
+                                       cl_kernel_work_group_info param_name,
+                                       size_t param_value_size,
+                                       void *param_value,
+                                       size_t *param_value_size_ret);
 
 #define CECL_PROGRAM(program, num_devices, device_list, options, \
                      pfn_notify, user_data) \

@@ -44,6 +44,7 @@ cc_binary(
 sh_binary(
     name = "mkcecl",
     srcs = ["mkcecl.sh"],
+    visibility = ["//visibility:public"],
 )
 
 sh_binary(

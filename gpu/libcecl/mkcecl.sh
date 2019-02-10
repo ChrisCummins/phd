@@ -66,6 +66,8 @@ rewritefile() {
     sed -i 's/clEnqueueTask/CECL_TASK/g' "$tmp"
     sed -i 's/clEnqueueWriteBuffer/CECL_WRITE_BUFFER/g' "$tmp"
     sed -i 's/clSetKernelArg/CECL_SET_KERNEL_ARG/g' "$tmp"
+    sed -i 's/clCreateContext/CECL_CREATE_CONTEXT/g' "$tmp"
+    sed -i 's/clGetKernelWorkGroupInfo/CECL_GET_KERNEL_WORK_GROUP_INFO/g' "$tmp"
 
     local end_checksum=$(md5sum "$tmp" | awk '{print $1}')
 

@@ -355,8 +355,14 @@ cl_int cecl_task(cl_command_queue command_queue,
 }
 
 
-// Return the platform ID with the given name, else fail.
-static cl_platform_id cecGetPlatformIdFromNameOrDie(const char* platform_name) {
+static cl_platform_id cecGetForcedPlatformIdOrDie() {
+  const char* target_platform = getenv("LIBCECL_PLATFORM");
+  if (target_platform == NULL) {
+    fprintf(stderr, "[CECL] Required environment variable "
+                    "LIBCECL_PLATFORM not set!\n");
+    exit(E_CL_FAILURE);
+  }
+
   cl_uint platform_count;
   cl_int local_err = clGetPlatformIDs(0, NULL, &platform_count);
   if (local_err != CL_SUCCESS) {
@@ -389,8 +395,7 @@ static cl_platform_id cecGetPlatformIdFromNameOrDie(const char* platform_name) {
       exit(E_CL_FAILURE);
     }
 
-    if (!strcmp(buffer, platform_name)) {
-      fprintf(stderr, "[CECL] Found matching platform %s\n", buffer);
+    if (!strcmp(buffer, target_platform)) {
       free(buffer);
       return platforms[i];
     }
@@ -398,13 +403,23 @@ static cl_platform_id cecGetPlatformIdFromNameOrDie(const char* platform_name) {
     free(buffer);
   }
 
-  fprintf(stderr, "Failed to get a platform with matching name %s\n", platform_name);
+  fprintf(stderr, "Failed to get a platform with matching name %s\n",
+          target_platform);
   exit(E_CL_FAILURE);
 }
 
 
-static cl_device_id cecGetDeviceIdFromNameOrDie(const char* device_name, const cl_platform_id platform) {
+static cl_device_id cecGetForcedDeviceIdOrDie() {
+  cl_platform_id platform = cecGetForcedPlatformIdOrDie();
+
   cl_uint device_count;
+  const char* target_device = getenv("LIBCECL_DEVICE");
+  if (target_device == NULL) {
+      fprintf(stderr, "[CECL] Required environment variable LIBCECL_DEVICE "
+                      "not set!\n");
+      exit(E_CL_FAILURE);
+  }
+
   cl_int local_err = clGetDeviceIDs(platform, CL_DEVICE_TYPE_ALL, 0, NULL, &device_count);
   if (local_err != CL_SUCCESS) {
     fprintf(stderr, "Cannot get the number of devices\n");
@@ -425,8 +440,7 @@ static cl_device_id cecGetDeviceIdFromNameOrDie(const char* device_name, const c
     char* buffer = malloc(buffer_size);
     cecl_get_device_info(devices[i], CL_DEVICE_NAME, buffer_size, buffer, NULL);
 
-    if (!strcmp(buffer, device_name)) {
-      fprintf(stderr, "[CECL] Found matching device %s\n", buffer);
+    if (!strcmp(buffer, target_device)) {
       free(buffer);
       return devices[i];
     }
@@ -434,8 +448,43 @@ static cl_device_id cecGetDeviceIdFromNameOrDie(const char* device_name, const c
     free(buffer);
   }
 
-  fprintf(stderr, "Failed to get a device with matching name %s\n", device_name);
+  fprintf(stderr, "Failed to get a device with matching name %s\n",
+          target_device);
   exit(E_CL_FAILURE);
+}
+
+cl_context CECL_CREATE_CONTEXT(cl_context_properties *properties,
+                               cl_uint num_devices,
+                               const cl_device_id *unused_devices,
+                               void *unused_pfn_notify(const char *errinfo,
+                                                       const void *private_info,
+                                                       size_t cb,
+                                                       void *user_data),
+                               void *user_data,
+                               cl_int *errcode_ret) {
+  if (num_devices != 1) {
+    fprintf(stderr, "[CECL] libcecl only supports OpenCL contexts for 1 "
+            "device!");
+    exit(E_CL_FAILURE);
+  }
+
+  const cl_device_id device_id = cecGetForcedDeviceIdOrDie();
+
+  return clCreateContext(
+      properties, 1, &device_id, NULL, user_data, errcode_ret);
+}
+
+
+static cl_context cecGetForcedContextOrDie() {
+  cl_int err;
+  const cl_device_id device_id = cecGetForcedDeviceIdOrDie();
+  cl_context ctx = clCreateContext(NULL, 1, &device_id, NULL, NULL, &err);
+  if (err != CL_SUCCESS) {
+    fprintf(stderr, "[CEC] Failed to create forced context\n");
+    exit(E_CL_FAILURE);
+  }
+
+  return ctx;
 }
 
 
@@ -447,12 +496,10 @@ cl_command_queue CECL_CREATE_COMMAND_QUEUE(cl_context context,
                                            cl_command_queue_properties props,
                                            cl_int* err) {
     cl_int local_err;
-    const char* target_platform = getenv("LIBCECL_PLATFORM");
-    const char* target_device = getenv("LIBCECL_DEVICE");
 
-    cl_platform_id platform_id = cecGetPlatformIdFromNameOrDie(target_platform);
-    cl_device_id device_id = cecGetDeviceIdFromNameOrDie(target_device, platform_id);
+    // cl_context context = cecGetForcedContextOrDie();
 
+    cl_device_id device_id = cecGetForcedDeviceIdOrDie();
     cl_command_queue q = clCreateCommandQueue(
         context, device_id, props | CL_QUEUE_PROFILING_ENABLE, &local_err);
     if (local_err == CL_SUCCESS) {
@@ -501,11 +548,26 @@ cl_command_queue CECL_CREATE_COMMAND_QUEUE(cl_context context,
 }
 
 
+cl_int CECL_GET_KERNEL_WORK_GROUP_INFO(cl_kernel kernel,
+                                       cl_device_id unused_device,
+                                       cl_kernel_work_group_info param_name,
+                                       size_t param_value_size,
+                                       void *param_value,
+                                       size_t *param_value_size_ret) {
+  cl_device_id device_id = cecGetForcedDeviceIdOrDie();
+  return clGetKernelWorkGroupInfo(kernel, device_id, param_name,
+                                  param_value_size, param_value,
+                                  param_value_size_ret);
+}
+
+
 cl_program CECL_PROGRAM_WITH_SOURCE(cl_context context,
                                     cl_uint count,
                                     const char** strings,
                                     const size_t* lengths,
                                     cl_int* err) {
+    // cl_context context = cecGetForcedContextOrDie();
+
     cl_int local_err;
     cl_uint i;
     cl_program p = clCreateProgramWithSource(context,
