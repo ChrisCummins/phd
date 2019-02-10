@@ -27,7 +27,7 @@ def test_plot():
   plt.plot(t, s)
 
 
-@pytest.mark.parametrize('extension', ('.png', '.jpg', '.pdf'))
+@pytest.mark.parametrize('extension', ('.png', '.pdf'))
 def test_Finalize_produces_a_file(test_plot, tempdir: pathlib.Path,
                                   extension: str):
   """"""
@@ -36,14 +36,14 @@ def test_Finalize_produces_a_file(test_plot, tempdir: pathlib.Path,
   assert (tempdir / f'plot{extension}').is_file()
 
 
-@pytest.mark.parametrize('extension', ('.png', '.jpg', '.pdf'))
+@pytest.mark.parametrize('extension', ('.png', '.pdf'))
 def test_Finalize_tight(test_plot, tempdir: pathlib.Path, extension: str):
   del test_plot
   viz.Finalize(tempdir / f'plot{extension}', tight=True)
   assert (tempdir / f'plot{extension}').is_file()
 
 
-@pytest.mark.parametrize('extension', ('.png', '.jpg', '.pdf'))
+@pytest.mark.parametrize('extension', ('.png', '.pdf'))
 def test_Finalize_figsize(test_plot, tempdir: pathlib.Path, extension: str):
   del test_plot
   viz.Finalize(tempdir / f'plot{extension}', figsize=(10, 5))
