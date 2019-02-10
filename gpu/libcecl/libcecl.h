@@ -41,6 +41,16 @@ cl_context CECL_CREATE_CONTEXT(cl_context_properties *properties,
                                cl_int *errcode_ret);
 
 
+cl_context CECL_CREATE_CONTEXT_FROM_TYPE(cl_context_properties *properties,
+                                         cl_device_type device_type_unused,
+                                         void *pfn_notify (const char *errinfo,
+                                                           const void *private_info,
+                                                           size_t cb,
+                                                           void *user_data),
+                                         void *user_data,
+                                         cl_int *errcode_ret);
+
+
 cl_command_queue CECL_CREATE_COMMAND_QUEUE(cl_context context,
                                            cl_device_id device,
                                            cl_command_queue_properties props,

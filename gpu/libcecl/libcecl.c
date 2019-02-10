@@ -475,6 +475,18 @@ cl_context CECL_CREATE_CONTEXT(cl_context_properties *properties,
 }
 
 
+cl_context CECL_CREATE_CONTEXT_FROM_TYPE(cl_context_properties *properties,
+                                         cl_device_type device_type_unused,
+                                         void *pfn_notify (const char *errinfo,
+                                                           const void *private_info,
+                                                           size_t cb,
+                                                           void *user_data),
+                                         void *user_data,
+                                         cl_int *errcode_ret) {
+    return CECL_CREATE_CONTEXT(properties, 1, NULL, NULL, NULL, errcode_ret);
+}
+
+
 static cl_context cecGetForcedContextOrDie() {
   cl_int err;
   const cl_device_id device_id = cecGetForcedDeviceIdOrDie();
