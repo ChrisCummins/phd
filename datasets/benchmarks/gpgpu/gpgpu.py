@@ -139,7 +139,8 @@ def MakeEnv(make_dir: pathlib.Path,
   with fs.chdir(make_dir):
     with tempfile.TemporaryDirectory(prefix='phd_gpu_libcecl_header_') as d:
       d = pathlib.Path(d)
-      fs.cp(_LIBCECL_HEADER, d / 'cecl.h')
+      os.symlink(_LIBCECL_HEADER, d / 'cecl.h')
+      os.symlink(_LIBCECL_HEADER, d / 'libcecl.h')
       # Many of the benchmarks include Linux-dependent headers. Spoof them here
       # so that we can build.
       if system.is_mac():
@@ -201,16 +202,6 @@ def FindExecutableInDir(path: pathlib.Path) -> pathlib.Path:
   if len(exes) != 1:
     raise EnvironmentError(f"Expected a single executable, found {len(exes)}")
   return exes[0]
-
-
-@contextlib.contextmanager
-def RunEnv(path: pathlib.Path) -> typing.Dict[str, str]:
-  """Return an execution environment for a GPGPU benchmark."""
-  with fs.chdir(path):
-    env = os.environ.copy()
-    env['LD_LIBRARY_PATH'] = str(_LIBCECL.parent)
-    env['DYLD_LIBRARY_PATH'] = str(_LIBCECL.parent)
-    yield env
 
 
 def KernelInvocationsFromCeclLog(
@@ -382,6 +373,17 @@ class _BenchmarkSuite(object):
     self._logdir = None
     return ret
 
+  @contextlib.contextmanager
+  def RunEnv(self, path: pathlib.Path) -> typing.Dict[str, str]:
+    """Return an execution environment for a GPGPU benchmark."""
+    with fs.chdir(path):
+      env = os.environ.copy()
+      env['LD_LIBRARY_PATH'] = str(_LIBCECL.parent)
+      env['DYLD_LIBRARY_PATH'] = str(_LIBCECL.parent)
+      env['LIBCECL_DEVICE'] = self.env.device_name
+      env['LIBCECL_PLATFORM'] = self.env.platform_name
+      yield env
+
   def _ExecToLogFile(
       self, executable: pathlib.Path,
       benchmark_name: str,
@@ -412,7 +414,7 @@ class _BenchmarkSuite(object):
       command = [str(oclgrind.OCLGRIND_PATH)] + command
 
     extra_env = env or dict()
-    with RunEnv(executable.parent) as env:
+    with self.RunEnv(executable.parent) as env:
       # Add the additional environment variables.
       env.update(extra_env)
 
@@ -423,20 +425,36 @@ class _BenchmarkSuite(object):
       stdout, stderr = process.communicate()
       elapsed = time.time() - start_time
 
+      # Record OpenCL kernel sources.
+      program_sources = []
+      current_program_source: typing.Optional[typing.List[str]] = None
+
       # Split libcecl logs out from stderr.
       cecl_lines, stderr_lines = [], []
+      in_program_source = False
       for line in stderr.split('\n'):
-        if line.startswith('[CECL] '):
+        if line == '[CECL] BEGIN PROGRAM SOURCE':
+          assert not in_program_source
+          in_program_source = True
+          current_program_source = []
+        elif line == '[CECL] END PROGRAM SOURCE':
+          assert in_program_source
+          in_program_source = False
+          program_sources.append('\n'.join(current_program_source).strip())
+          current_program_source = None
+        elif line.startswith('[CECL] '):
           stripped_line = line[len('[CECL] '):].strip()
-          if stripped_line:
+          if in_program_source:
+            current_program_source.append(stripped_line)
+          elif stripped_line:
             cecl_lines.append(stripped_line)
         elif line.strip():
           stderr_lines.append(line.strip())
 
       if process.returncode:
-        log_produced = self._logdir / f'{log_name}.ERROR.pb'
+        log_produced = self._logdir / f'{log_name}.ERROR.pbtxt'
       else:
-        log_produced = self._logdir / f'{log_name}.pb'
+        log_produced = self._logdir / f'{log_name}.pbtxt'
 
       pbutil.ToFile(gpgpu_pb2.GpgpuBenchmarkRun(
           ms_since_unix_epoch=timestamp,
@@ -452,6 +470,7 @@ class _BenchmarkSuite(object):
           kernel_invocation=KernelInvocationsFromCeclLog(
               cecl_lines, self.env),
           elapsed_time_ms=int(elapsed * 1000),
+          opencl_program_source=program_sources,
       ), log_produced)
 
     logging.info('Wrote %s', log_produced)

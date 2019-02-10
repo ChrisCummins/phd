@@ -18,6 +18,7 @@ message GpgpuBenchmarkRun {
   required string hostname = 10;
   repeated OpenClKernelInvocation kernel_invocation = 11;
   required int64 elapsed_time_ms = 12;
+  repeated string opencl_program_source = 13;
 }
 
 // A single kernel invocation event.
