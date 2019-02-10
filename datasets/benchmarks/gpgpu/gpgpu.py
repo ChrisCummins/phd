@@ -139,6 +139,7 @@ def MakeEnv(make_dir: pathlib.Path,
   with fs.chdir(make_dir):
     with tempfile.TemporaryDirectory(prefix='phd_gpu_libcecl_header_') as d:
       d = pathlib.Path(d)
+      os.symlink(_LIBCECL_HEADER, d / 'cecl.h')
       os.symlink(_LIBCECL_HEADER, d / 'libcecl.h')
       # Many of the benchmarks include Linux-dependent headers. Spoof them here
       # so that we can build.

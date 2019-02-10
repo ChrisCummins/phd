@@ -482,7 +482,7 @@ CECL_CREATE_CONTEXT(const cl_context_properties * /* properties */,
                 cl_int *                      /* errcode_ret */) CL_API_SUFFIX__VERSION_1_0;
 
 extern CL_API_ENTRY cl_context CL_API_CALL
-CECL_CREATE_CONTEXT_FROM_TYPE(const cl_context_properties * /* properties */,
+CECL_CREATE_CONTEXTFromType(const cl_context_properties * /* properties */,
                         cl_device_type                /* device_type */,
                         void (CL_CALLBACK *     /* pfn_notify*/ )(const char *, const void *, size_t, void *),
                         void *                        /* user_data */,

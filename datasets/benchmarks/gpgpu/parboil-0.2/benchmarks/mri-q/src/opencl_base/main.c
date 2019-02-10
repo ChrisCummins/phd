@@ -124,8 +124,8 @@ main (int argc, char *argv[]) {
   clStatus = clGetDeviceIDs(cpPlatform,CL_DEVICE_TYPE_GPU,1,&cdDevice,NULL);
   CHECK_ERROR("clGetDeviceIDs")
 
-  clPrm.clContext = CECL_CREATE_CONTEXT_FROM_TYPE(cps,CL_DEVICE_TYPE_GPU,NULL,NULL,&clStatus);
-  CHECK_ERROR("CECL_CREATE_CONTEXT_FROM_TYPE")
+  clPrm.clContext = CECL_CREATE_CONTEXTFromType(cps,CL_DEVICE_TYPE_GPU,NULL,NULL,&clStatus);
+  CHECK_ERROR("CECL_CREATE_CONTEXTFromType")
 
   clPrm.clCommandQueue = CECL_CREATE_COMMAND_QUEUE(clPrm.clContext,cdDevice,CL_QUEUE_PROFILING_ENABLE,&clStatus);
   CHECK_ERROR("CECL_CREATE_COMMAND_QUEUE")

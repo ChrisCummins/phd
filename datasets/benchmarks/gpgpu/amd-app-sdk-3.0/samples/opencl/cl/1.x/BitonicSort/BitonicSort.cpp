@@ -158,13 +158,13 @@ BitonicSort::setupCL(void)
         0
     };
 
-    context = CECL_CREATE_CONTEXT_FROM_TYPE(
+    context = CECL_CREATE_CONTEXTFromType(
                   cps,
                   dType,
                   NULL,
                   NULL,
                   &status);
-    CHECK_OPENCL_ERROR(status, "CECL_CREATE_CONTEXT_FROM_TYPE failed.");
+    CHECK_OPENCL_ERROR(status, "CECL_CREATE_CONTEXTFromType failed.");
 
     retValue = getDevices(context, &devices, sampleArgs->deviceId,
                           sampleArgs->isDeviceIdEnabled());

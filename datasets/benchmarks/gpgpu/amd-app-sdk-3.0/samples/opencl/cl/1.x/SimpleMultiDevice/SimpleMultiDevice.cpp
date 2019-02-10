@@ -383,7 +383,7 @@ int runMultiGPU()
     std::cout << sep << "\nMulti GPU Test 1 : Single context Single Thread\n" <<
               sep << std::endl;
 
-    cl_context context = CECL_CREATE_CONTEXT_FROM_TYPE(cprops,
+    cl_context context = CECL_CREATE_CONTEXTFromType(cprops,
                          CL_DEVICE_TYPE_GPU,
                          0,
                          0,

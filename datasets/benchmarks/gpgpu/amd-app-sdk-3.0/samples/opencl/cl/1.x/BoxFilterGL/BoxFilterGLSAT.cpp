@@ -717,13 +717,13 @@ BoxFilterGLSAT::enableGLAndGetGLContext(HWND hWnd, HDC &hDC, HGLRC &hRC,
     }
     else
     {
-        context = CECL_CREATE_CONTEXT_FROM_TYPE(
+        context = CECL_CREATE_CONTEXTFromType(
                       properties,
                       CL_DEVICE_TYPE_GPU,
                       NULL,
                       NULL,
                       &status);
-        CHECK_OPENCL_ERROR(status, "CECL_CREATE_CONTEXT_FROM_TYPE failed!!");
+        CHECK_OPENCL_ERROR(status, "CECL_CREATE_CONTEXTFromType failed!!");
     }
 
     // OpenGL animation code goes here
@@ -1829,12 +1829,12 @@ int BoxFilterGLSAT::initializeGLAndGetCLContext(cl_platform_id platform,
     }
     else
     {
-        context = CECL_CREATE_CONTEXT_FROM_TYPE(cpsGL,
+        context = CECL_CREATE_CONTEXTFromType(cpsGL,
                                           CL_DEVICE_TYPE_GPU,
                                           NULL,
                                           NULL,
                                           &status);
-        CHECK_OPENCL_ERROR(status, "CECL_CREATE_CONTEXT_FROM_TYPE failed!!");
+        CHECK_OPENCL_ERROR(status, "CECL_CREATE_CONTEXTFromType failed!!");
     }
     // OpenGL animation code goes here
     // GL init

@@ -95,13 +95,13 @@ DeviceFission::setupCLPlatform()
         0
     };
 
-    rContext = CECL_CREATE_CONTEXT_FROM_TYPE(
+    rContext = CECL_CREATE_CONTEXTFromType(
                    cps,
                    dType,
                    NULL,
                    NULL,
                    &status);
-    CHECK_OPENCL_ERROR( status, "CECL_CREATE_CONTEXT_FROM_TYPE failed.");
+    CHECK_OPENCL_ERROR( status, "CECL_CREATE_CONTEXTFromType failed.");
 
     // getting device on which to run the sample
     status = getDevices(rContext, &rootDevices, sampleArgs->deviceId,

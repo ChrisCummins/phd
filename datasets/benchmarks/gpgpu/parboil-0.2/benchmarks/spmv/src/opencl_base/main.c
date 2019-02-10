@@ -60,8 +60,8 @@ int main(int argc, char** argv) {
 	clStatus = clGetDeviceIDs(clPlatform,MY_DEVICE_TYPE,1,&clDevice,NULL);
 	CHECK_ERROR("clGetDeviceIDs")
 
-	cl_context clContext = CECL_CREATE_CONTEXT_FROM_TYPE(clCps,MY_DEVICE_TYPE,NULL,NULL,&clStatus);
-	CHECK_ERROR("CECL_CREATE_CONTEXT_FROM_TYPE")
+	cl_context clContext = CECL_CREATE_CONTEXTFromType(clCps,MY_DEVICE_TYPE,NULL,NULL,&clStatus);
+	CHECK_ERROR("CECL_CREATE_CONTEXTFromType")
 
 	cl_command_queue clCommandQueue = CECL_CREATE_COMMAND_QUEUE(clContext,clDevice,CL_QUEUE_PROFILING_ENABLE,&clStatus);
 	CHECK_ERROR("CECL_CREATE_COMMAND_QUEUE")

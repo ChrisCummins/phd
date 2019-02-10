@@ -156,13 +156,13 @@ URNG::setupCL()
         0
     };
 
-    context = CECL_CREATE_CONTEXT_FROM_TYPE(
+    context = CECL_CREATE_CONTEXTFromType(
                   cps,
                   dType,
                   NULL,
                   NULL,
                   &status);
-    CHECK_OPENCL_ERROR( status, "CECL_CREATE_CONTEXT_FROM_TYPE failed.");
+    CHECK_OPENCL_ERROR( status, "CECL_CREATE_CONTEXTFromType failed.");
 
     // getting device on which to run the sample
     status = getDevices(context, &devices, sampleArgs->deviceId,

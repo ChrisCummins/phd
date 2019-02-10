@@ -458,7 +458,7 @@ void _clInit(string device_type, int device_id)throw(string){
                                         &resultCL);
 
     if ((resultCL != CL_SUCCESS) || (oclHandles.context == NULL))
-        throw (string("InitCL()::Error: Creating Context (CECL_CREATE_CONTEXT_FROM_TYPE)"));
+        throw (string("InitCL()::Error: Creating Context (CECL_CREATE_CONTEXTFromType)"));
 #ifdef	DEV_INFO
 	std::cout<<"--cambine: create OCL context successfully!"<<std::endl;
 #endif
