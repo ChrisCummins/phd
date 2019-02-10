@@ -87,10 +87,9 @@ _OPENCL_HEADERS_DIR = bazelutil.DataPath('opencl_120_headers')
 if system.is_linux():
   _LIBOPENCL_DIR = bazelutil.DataPath('libopencl')
 
-_DUMMY_BENCHMARK = bazelutil.DataPath(
-    'phd/datasets/benchmarks/gpgpu/dummy_just_for_testing/dummy_benchmark')
-
 _RODINIA_DATA_ROOT = bazelutil.DataPath('rodinia_data')
+
+_MKCECL = bazelutil.DataPath('phd/gpu/libcecl/mkcecl')
 
 
 def CheckCall(command: typing.Union[str, typing.List[str]],
@@ -496,9 +495,16 @@ class DummyJustForTesting(_BenchmarkSuite):
   def _ForceOpenCLEnvironment(self, env: cldrive_env.OpenCLEnvironment):
     logging.info("Dummy benchmark running on %s", env.name)
 
+    CheckCall([_MKCECL, self.path / 'hello.cc'])
+
+    with MakeEnv(self.path) as env:
+      CheckCall(
+          f'gcc {self.path}/hello.cc -o {self.path}/hello {env["CFLAGS"]} '
+          f'{env["LDFLAGS"]}', shell=True)
+
   def _Run(self):
     logging.info("Executing dummy benchmarks!")
-    self._ExecToLogFile(_DUMMY_BENCHMARK, 'dummy_benchmark')
+    self._ExecToLogFile(self.path / 'hello', 'hello')
 
 
 class AmdAppSdkBenchmarkSuite(_BenchmarkSuite):

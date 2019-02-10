@@ -54,7 +54,7 @@ py_binary(
     srcs = ["gpgpu.py"],
     data = [
         "@opencl_120_headers//:opencl_headers",
-        "//datasets/benchmarks/gpgpu/dummy_just_for_testing:dummy_benchmark",
+        "//datasets/benchmarks/gpgpu/dummy_just_for_testing:hello_sources",
         ":amd-app-sdk-3.0_files",
         ":npb-3.3_files",
         ":nvidia-4.2_files",
@@ -63,6 +63,7 @@ py_binary(
         ":rodinia-3.1_files",
         ":shoc-1.1.5_files",
         "//gpu/libcecl:libcecl.so",
+        "//gpu/libcecl:mkcecl",
         "//gpu/libcecl:libcecl_header",
     ] + select({
         "//:darwin": [],

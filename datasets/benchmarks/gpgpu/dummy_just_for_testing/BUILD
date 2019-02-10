@@ -1,7 +1,20 @@
 # A dummy benchmark suite for testing.
 
-cc_binary(
-    name = "dummy_benchmark",
-    srcs = ["dummy_benchmark.cc"],
+filegroup(
+    name = "hello_sources",
+    srcs = ["hello.cc"],
     visibility = ["//datasets/benchmarks/gpgpu:__subpackages__"],
+)
+
+cc_binary(
+    name = "hello",
+    srcs = ["hello.cc"],
+    copts = [
+        "-Ilearn/hoocl/include",
+        "-Ithird_party/opencl/include",
+    ],
+    linkopts = select({
+        "//:darwin": ["-framework OpenCL"],
+        "//conditions:default": ["-lOpenCL"],
+    }),
 )
