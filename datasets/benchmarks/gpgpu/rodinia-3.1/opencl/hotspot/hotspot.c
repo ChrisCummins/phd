@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 #include "hotspot.h"
 
 
@@ -167,7 +167,7 @@ int main(int argc, char** argv) {
 	
 	// Create a GPU context
 	cl_context_properties context_properties[3] = { CL_CONTEXT_PLATFORM, (cl_context_properties) platform, 0};
-    context = clCreateContextFromType(context_properties, CL_DEVICE_TYPE_GPU, NULL, NULL, &error);
+    context = CECL_CREATE_CONTEXTFromType(context_properties, CL_DEVICE_TYPE_GPU, NULL, NULL, &error);
     if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
 	
 	// Get and print the chosen device (if there are multiple devices, choose the first one)

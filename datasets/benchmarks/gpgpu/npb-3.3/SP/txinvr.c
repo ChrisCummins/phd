@@ -1,4 +1,3 @@
-#include <cecl.h>
 //-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB SP code. This OpenCL    //

@@ -1,4 +1,3 @@
-#include <cecl.h>
 #include <stdio.h>
 #include <assert.h>
 #include "OpenCLDeviceInfo.h"

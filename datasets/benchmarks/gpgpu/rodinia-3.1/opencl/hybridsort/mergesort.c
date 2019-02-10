@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 ////////////////////////////////////////////////////////////////////////////////
 // Includes
 ////////////////////////////////////////////////////////////////////////////////
@@ -68,7 +68,7 @@ void init_mergesort(int listsize){
     
     clGetDeviceInfo(devices[0],CL_DEVICE_NAME,128,name,NULL);
     
-    mergeContext = clCreateContext(0, 1, &devices[0], NULL, NULL, &err);
+    mergeContext = CECL_CREATE_CONTEXT(0, 1, &devices[0], NULL, NULL, &err);
     
     mergeCommands = CECL_CREATE_COMMAND_QUEUE(mergeContext, devices[0], CL_QUEUE_PROFILING_ENABLE, &err);
     

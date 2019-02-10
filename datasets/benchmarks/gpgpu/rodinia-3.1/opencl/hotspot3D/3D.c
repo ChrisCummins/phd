@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -142,7 +142,7 @@ int main(int argc, char** argv)
 
   err = output_device_info(device_id);
 
-  context = clCreateContext(0, 1, &device_id, NULL, NULL, &err);
+  context = CECL_CREATE_CONTEXT(0, 1, &device_id, NULL, NULL, &err);
   if (!context)
     {
       printf("Error: Failed to create a compute context!\n%s\n", err_code(err));

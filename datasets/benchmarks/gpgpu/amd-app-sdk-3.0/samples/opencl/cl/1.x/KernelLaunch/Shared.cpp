@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 /**********************************************************************
 Copyright ©2015 Advanced Micro Devices, Inc. All rights reserved.
 
@@ -251,7 +251,7 @@ void initCL( char *kernel_file )
 		return;
     }
 
-    context = clCreateContext( NULL,
+    context = CECL_CREATE_CONTEXT( NULL,
                                1,
                                &device,
                                NULL, NULL, NULL );

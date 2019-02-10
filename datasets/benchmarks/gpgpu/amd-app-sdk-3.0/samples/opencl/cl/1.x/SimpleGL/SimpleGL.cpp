@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 /**********************************************************************
 Copyright ©2015 Advanced Micro Devices, Inc. All rights reserved.
 
@@ -374,24 +374,24 @@ SimpleGLSample::enableGLAndGetGLContext(HWND hWnd, HDC &hDC, HGLRC &hRC,
         CHECK_OPENCL_ERROR(status, "clGetGLContextInfoKHR failed!!");
 
         // Create OpenCL context from device's id
-        context = clCreateContext(properties,
+        context = CECL_CREATE_CONTEXT(properties,
                                   1,
                                   &interopDevice,
                                   0,
                                   0,
                                   &status);
-        CHECK_OPENCL_ERROR(status, "clCreateContext failed!!");
+        CHECK_OPENCL_ERROR(status, "CECL_CREATE_CONTEXT failed!!");
         std::cout<<"Interop Device Id "<<interopDevice<<std::endl;
     }
     else
     {
-        context = clCreateContextFromType(
+        context = CECL_CREATE_CONTEXTFromType(
                       properties,
                       CL_DEVICE_TYPE_GPU,
                       NULL,
                       NULL,
                       &status);
-        CHECK_OPENCL_ERROR(status, "clCreateContextFromType failed!!");
+        CHECK_OPENCL_ERROR(status, "CECL_CREATE_CONTEXTFromType failed!!");
     }
 
     // OpenGL animation code goes here
@@ -601,22 +601,22 @@ int SimpleGLSample::initializeGLAndGetCLContext(cl_platform_id platform,
         std::cout<<"Interop Device ID is "<<interopDeviceId<<std::endl;
 
         // Create OpenCL context from device's id
-        context = clCreateContext(cpsGL,
+        context = CECL_CREATE_CONTEXT(cpsGL,
                                   1,
                                   &interopDeviceId,
                                   0,
                                   0,
                                   &status);
-        CHECK_OPENCL_ERROR(status, "clCreateContext failed.");
+        CHECK_OPENCL_ERROR(status, "CECL_CREATE_CONTEXT failed.");
     }
     else
     {
-        context = clCreateContextFromType(cpsGL,
+        context = CECL_CREATE_CONTEXTFromType(cpsGL,
                                           CL_DEVICE_TYPE_GPU,
                                           NULL,
                                           NULL,
                                           &status);
-        CHECK_OPENCL_ERROR(status, "clCreateContextFromType failed!!");
+        CHECK_OPENCL_ERROR(status, "CECL_CREATE_CONTEXTFromType failed!!");
     }
     // GL init
     glewInit();
@@ -831,7 +831,7 @@ SimpleGLSample::setupCLKernels()
 
     // Check group size against group size returned by kernel
     status = kernelInfo.setKernelWorkGroupInfo(kernel, interopDeviceId);
-    /*clGetKernelWorkGroupInfo(kernel,
+    /*CECL_GET_KERNEL_WORK_GROUP_INFO(kernel,
     interopDeviceId,
     CL_KERNEL_WORK_GROUP_SIZE,
     sizeof(size_t),

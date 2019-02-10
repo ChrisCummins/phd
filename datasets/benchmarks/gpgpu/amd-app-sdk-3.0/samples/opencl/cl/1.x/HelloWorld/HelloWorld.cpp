@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 /**********************************************************************
 Copyright ©2015 Advanced Micro Devices, Inc. All rights reserved.
 
@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
 	
 
 	/*Step 3: Create context.*/
-	cl_context context = clCreateContext(NULL,1, devices,NULL,NULL,NULL);
+	cl_context context = CECL_CREATE_CONTEXT(NULL,1, devices,NULL,NULL,NULL);
 	
 	/*Step 4: Creating command queue associate with the context.*/
 	cl_command_queue commandQueue = CECL_CREATE_COMMAND_QUEUE(context, devices[0], 0, NULL);

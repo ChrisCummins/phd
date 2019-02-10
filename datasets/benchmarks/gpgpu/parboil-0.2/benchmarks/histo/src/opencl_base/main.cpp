@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 /***************************************************************************
  *
  *            (C) Copyright 2010 The Board of Trustees of the
@@ -144,7 +144,7 @@ int main(int argc, char* argv[]) {
   }
   
   cl_context_properties cps[3] = { CL_CONTEXT_PLATFORM, (cl_context_properties) clPlatform, 0};
-  clContext = clCreateContextFromType(cps, deviceType, NULL, NULL, &ciErrNum);
+  clContext = CECL_CREATE_CONTEXTFromType(cps, deviceType, NULL, NULL, &ciErrNum);
   OCL_ERRCK_VAR(ciErrNum);
   
   clCommandQueue = CECL_CREATE_COMMAND_QUEUE(clContext, clDevice, CL_QUEUE_PROFILING_ENABLE, &ciErrNum);

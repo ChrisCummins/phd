@@ -1,3 +1,4 @@
+#include <libcecl.h>
 /***************************************************************************
  *cr
  *cr            (C) Copyright 2007 The Board of Trustees of the
@@ -31,8 +32,8 @@ void initBinB( struct pb_TimerSet *timers, cl_mem dev_binb, cl_command_queue clC
   pb_SwitchToTimer( timers, pb_TimerID_COPY );
 
   cl_int clStatus;
-  clStatus = clEnqueueWriteBuffer(clCommandQueue,dev_binb,CL_TRUE,0,(NUM_BINS+1)*sizeof(float),binb,0,NULL,NULL);
-  CHECK_ERROR("clEnqueueWriteBuffer")
+  clStatus = CECL_WRITE_BUFFER(clCommandQueue,dev_binb,CL_TRUE,0,(NUM_BINS+1)*sizeof(float),binb,0,NULL,NULL);
+  CHECK_ERROR("CECL_WRITE_BUFFER")
 
   pb_SwitchToTimer( timers, pb_TimerID_COMPUTE );
   free(binb);
@@ -46,16 +47,16 @@ void TPACF(cl_mem histograms, cl_mem d_x_data,
   size_t dimGrid = (NUM_SETS*2 + 1)*dimBlock;
   
   cl_int clStatus;
-  clStatus = clSetKernelArg(clKernel,0,sizeof(cl_mem),&histograms);
-  clStatus = clSetKernelArg(clKernel,1,sizeof(cl_mem),&d_x_data);
-  clStatus = clSetKernelArg(clKernel,2,sizeof(cl_mem),&dev_binb);
-  clStatus = clSetKernelArg(clKernel,3,sizeof(int),&NUM_SETS);
-  clStatus = clSetKernelArg(clKernel,4,sizeof(int),&NUM_ELEMENTS);
+  clStatus = CECL_SET_KERNEL_ARG(clKernel,0,sizeof(cl_mem),&histograms);
+  clStatus = CECL_SET_KERNEL_ARG(clKernel,1,sizeof(cl_mem),&d_x_data);
+  clStatus = CECL_SET_KERNEL_ARG(clKernel,2,sizeof(cl_mem),&dev_binb);
+  clStatus = CECL_SET_KERNEL_ARG(clKernel,3,sizeof(int),&NUM_SETS);
+  clStatus = CECL_SET_KERNEL_ARG(clKernel,4,sizeof(int),&NUM_ELEMENTS);
   
-  CHECK_ERROR("clSetKernelArg")
+  CHECK_ERROR("CECL_SET_KERNEL_ARG")
 
-  clStatus = clEnqueueNDRangeKernel(clCommandQueue,clKernel,1,NULL,&dimGrid,&dimBlock,0,NULL,NULL);
-  CHECK_ERROR("clEnqueueNDRangeKernel")
+  clStatus = CECL_ND_RANGE_KERNEL(clCommandQueue,clKernel,1,NULL,&dimGrid,&dimBlock,0,NULL,NULL);
+  CHECK_ERROR("CECL_ND_RANGE_KERNEL")
 
   clStatus = clFinish(clCommandQueue);
   CHECK_ERROR("clFinish")
@@ -137,46 +138,46 @@ main( int argc, char** argv)
   CHECK_ERROR("clGetPlatformIDs")
 
   cl_context_properties clCps[3] = {CL_CONTEXT_PLATFORM,(cl_context_properties)clPlatform,0};
-  cl_context clContext = clCreateContextFromType(clCps,CL_DEVICE_TYPE_GPU,NULL,NULL,&clStatus);
-  CHECK_ERROR("clCreateContextFromType")
+  cl_context clContext = CECL_CREATE_CONTEXTFromType(clCps,CL_DEVICE_TYPE_GPU,NULL,NULL,&clStatus);
+  CHECK_ERROR("CECL_CREATE_CONTEXTFromType")
    
   cl_device_id clDevice;
   clStatus = clGetDeviceIDs(clPlatform,CL_DEVICE_TYPE_GPU,1,&clDevice,NULL);
   CHECK_ERROR("clGetDeviceIDs")
 
-  cl_command_queue clCommandQueue = clCreateCommandQueue(clContext,clDevice,CL_QUEUE_PROFILING_ENABLE,&clStatus);
-  CHECK_ERROR("clCreateCommandQueue")
+  cl_command_queue clCommandQueue = CECL_CREATE_COMMAND_QUEUE(clContext,clDevice,CL_QUEUE_PROFILING_ENABLE,&clStatus);
+  CHECK_ERROR("CECL_CREATE_COMMAND_QUEUE")
 
   pb_SetOpenCL(&clContext, &clCommandQueue);
 
   const char* clSource[] = {readFile("src/opencl_base/kernel.cl")};
-  cl_program clProgram = clCreateProgramWithSource(clContext,1,clSource,NULL,&clStatus);
-  CHECK_ERROR("clCreateProgramWithSource")
+  cl_program clProgram = CECL_PROGRAM_WITH_SOURCE(clContext,1,clSource,NULL,&clStatus);
+  CHECK_ERROR("CECL_PROGRAM_WITH_SOURCE")
 
   char clOptions[50];
   sprintf(clOptions,"-I src/opencl_base");
 
-  clStatus = clBuildProgram(clProgram,1,&clDevice,clOptions,NULL,NULL);
-  CHECK_ERROR("clBuildProgram")
+  clStatus = CECL_PROGRAM(clProgram,1,&clDevice,clOptions,NULL,NULL);
+  CHECK_ERROR("CECL_PROGRAM")
 
-  cl_kernel clKernel = clCreateKernel(clProgram,"gen_hists",&clStatus);
-  CHECK_ERROR("clCreateKernel")
+  cl_kernel clKernel = CECL_KERNEL(clProgram,"gen_hists",&clStatus);
+  CHECK_ERROR("CECL_KERNEL")
   
   // allocate OpenCL memory to hold all points
   //Sub-buffers are not defined in OpenCL 1.0
   cl_mem d_x_data;
-  d_x_data = clCreateBuffer(clContext,CL_MEM_READ_ONLY,3*f_mem_size,NULL,&clStatus);
-  CHECK_ERROR("clCreateBuffer")
+  d_x_data = CECL_BUFFER(clContext,CL_MEM_READ_ONLY,3*f_mem_size,NULL,&clStatus);
+  CHECK_ERROR("CECL_BUFFER")
 
   // allocate OpenCL memory to hold final histograms
   // (1 for dd, and NUM_SETS for dr and rr apiece)
   cl_mem d_hists;
-  d_hists = clCreateBuffer(clContext,CL_MEM_WRITE_ONLY,NUM_BINS*(NUM_SETS*2+1)*sizeof(hist_t),NULL,&clStatus);
-  CHECK_ERROR("clCreateBuffer")
+  d_hists = CECL_BUFFER(clContext,CL_MEM_WRITE_ONLY,NUM_BINS*(NUM_SETS*2+1)*sizeof(hist_t),NULL,&clStatus);
+  CHECK_ERROR("CECL_BUFFER")
 
   cl_mem dev_binb;
-  dev_binb = clCreateBuffer(clContext,CL_MEM_READ_ONLY,(NUM_BINS+1)*sizeof(float),NULL,&clStatus);
-  CHECK_ERROR("clCreateBuffer")
+  dev_binb = CECL_BUFFER(clContext,CL_MEM_READ_ONLY,(NUM_BINS+1)*sizeof(float),NULL,&clStatus);
+  CHECK_ERROR("CECL_BUFFER")
   
   pb_SwitchToTimer( &timers, pb_TimerID_COMPUTE );
 
@@ -189,16 +190,16 @@ main( int argc, char** argv)
 
   // **===------------------ Kick off TPACF on OpenCL------------------===**
   pb_SwitchToTimer( &timers, pb_TimerID_COPY );
-  clStatus = clEnqueueWriteBuffer(clCommandQueue,d_x_data,CL_TRUE,0,3*f_mem_size,h_x_data,0,NULL,NULL);
-  CHECK_ERROR("clEnqueueWriteBuffer")
+  clStatus = CECL_WRITE_BUFFER(clCommandQueue,d_x_data,CL_TRUE,0,3*f_mem_size,h_x_data,0,NULL,NULL);
+  CHECK_ERROR("CECL_WRITE_BUFFER")
 
   pb_SwitchToTimer( &timers, pb_TimerID_KERNEL );
 
   TPACF(d_hists,d_x_data,dev_binb,clCommandQueue,clKernel);
 
   pb_SwitchToTimer( &timers, pb_TimerID_COPY );
-  clStatus = clEnqueueReadBuffer(clCommandQueue,d_hists,CL_TRUE,0,NUM_BINS*(NUM_SETS*2+1)*sizeof(hist_t),new_hists,0,NULL,NULL);
-  CHECK_ERROR("clEnqueueReadBuffer")
+  clStatus = CECL_READ_BUFFER(clCommandQueue,d_hists,CL_TRUE,0,NUM_BINS*(NUM_SETS*2+1)*sizeof(hist_t),new_hists,0,NULL,NULL);
+  CHECK_ERROR("CECL_READ_BUFFER")
 
   pb_SwitchToTimer( &timers, pb_TimerID_COMPUTE );
   // **===-------------------------------------------------------------===**

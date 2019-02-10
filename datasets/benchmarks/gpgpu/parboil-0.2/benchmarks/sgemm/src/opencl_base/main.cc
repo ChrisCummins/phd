@@ -1,3 +1,4 @@
+#include <libcecl.h>
 /***************************************************************************
  *cr
  *cr            (C) Copyright 2010 The Board of Trustees of the
@@ -60,19 +61,19 @@ void basicSgemm( char transa, char transb, int m, int n, int k, float alpha, cl_
 
   cl_int clStatus;
  
-  clStatus = clSetKernelArg(clKernel,0,sizeof(cl_mem),(void*)&A);
-  clStatus = clSetKernelArg(clKernel,1,sizeof(int),(void*)&lda);
-  clStatus = clSetKernelArg(clKernel,2,sizeof(cl_mem),(void*)&B);
-  clStatus = clSetKernelArg(clKernel,3,sizeof(int),(void*)&ldb);
-  clStatus = clSetKernelArg(clKernel,4,sizeof(cl_mem),(void*)&C);
-  clStatus = clSetKernelArg(clKernel,5,sizeof(int),(void*)&ldc);
-  clStatus = clSetKernelArg(clKernel,6,sizeof(int),(void*)&k);
-  clStatus = clSetKernelArg(clKernel,7,sizeof(float),(void*)&alpha);
-  clStatus = clSetKernelArg(clKernel,8,sizeof(float),(void*)&beta);
-  CHECK_ERROR("clSetKernelArg")
+  clStatus = CECL_SET_KERNEL_ARG(clKernel,0,sizeof(cl_mem),(void*)&A);
+  clStatus = CECL_SET_KERNEL_ARG(clKernel,1,sizeof(int),(void*)&lda);
+  clStatus = CECL_SET_KERNEL_ARG(clKernel,2,sizeof(cl_mem),(void*)&B);
+  clStatus = CECL_SET_KERNEL_ARG(clKernel,3,sizeof(int),(void*)&ldb);
+  clStatus = CECL_SET_KERNEL_ARG(clKernel,4,sizeof(cl_mem),(void*)&C);
+  clStatus = CECL_SET_KERNEL_ARG(clKernel,5,sizeof(int),(void*)&ldc);
+  clStatus = CECL_SET_KERNEL_ARG(clKernel,6,sizeof(int),(void*)&k);
+  clStatus = CECL_SET_KERNEL_ARG(clKernel,7,sizeof(float),(void*)&alpha);
+  clStatus = CECL_SET_KERNEL_ARG(clKernel,8,sizeof(float),(void*)&beta);
+  CHECK_ERROR("CECL_SET_KERNEL_ARG")
 
-  clStatus = clEnqueueNDRangeKernel(clCommandQueue,clKernel,2,NULL,dg,db,0,NULL,NULL);
-  CHECK_ERROR("clEnqueueNDRangeKernel")
+  clStatus = CECL_ND_RANGE_KERNEL(clCommandQueue,clKernel,2,NULL,dg,db,0,NULL,NULL);
+  CHECK_ERROR("CECL_ND_RANGE_KERNEL")
 
   clStatus = clFinish(clCommandQueue); 
   CHECK_ERROR("clFinish")
@@ -108,30 +109,30 @@ main (int argc, char *argv[]) {
   CHECK_ERROR("clGetPlatformIDs")
 
   cl_context_properties clCps[3] = {CL_CONTEXT_PLATFORM,(cl_context_properties)clPlatform,0};
-  cl_context clContext = clCreateContextFromType(clCps,CL_DEVICE_TYPE_GPU,NULL,NULL,&clStatus);
-  CHECK_ERROR("clCreateContextFromType")
+  cl_context clContext = CECL_CREATE_CONTEXTFromType(clCps,CL_DEVICE_TYPE_GPU,NULL,NULL,&clStatus);
+  CHECK_ERROR("CECL_CREATE_CONTEXTFromType")
    
   cl_device_id clDevice;
   clStatus = clGetDeviceIDs(clPlatform,CL_DEVICE_TYPE_GPU,1,&clDevice,NULL);
   CHECK_ERROR("clGetDeviceIDs")
 
-  cl_command_queue clCommandQueue = clCreateCommandQueue(clContext,clDevice,CL_QUEUE_PROFILING_ENABLE,&clStatus);
-  CHECK_ERROR("clCreateCommandQueue")
+  cl_command_queue clCommandQueue = CECL_CREATE_COMMAND_QUEUE(clContext,clDevice,CL_QUEUE_PROFILING_ENABLE,&clStatus);
+  CHECK_ERROR("CECL_CREATE_COMMAND_QUEUE")
 
   pb_SetOpenCL(&clContext, &clCommandQueue);
 
   const char* clSource[] = {readFile("src/opencl_base/kernel.cl")};
-  cl_program clProgram = clCreateProgramWithSource(clContext,1,clSource,NULL,&clStatus);
-  CHECK_ERROR("clCreateProgramWithSource")
+  cl_program clProgram = CECL_PROGRAM_WITH_SOURCE(clContext,1,clSource,NULL,&clStatus);
+  CHECK_ERROR("CECL_PROGRAM_WITH_SOURCE")
 
   char clOptions[50];
   sprintf(clOptions,"");
 
-  clStatus = clBuildProgram(clProgram,1,&clDevice,clOptions,NULL,NULL);
-  CHECK_ERROR("clBuildProgram")
+  clStatus = CECL_PROGRAM(clProgram,1,&clDevice,clOptions,NULL,NULL);
+  CHECK_ERROR("CECL_PROGRAM")
 
-  cl_kernel clKernel = clCreateKernel(clProgram,"mysgemmNT",&clStatus);
-  CHECK_ERROR("clCreateKernel")
+  cl_kernel clKernel = CECL_KERNEL(clProgram,"mysgemmNT",&clStatus);
+  CHECK_ERROR("CECL_KERNEL")
 
   /* Read in data */
   pb_SwitchToTimer(&timers, pb_TimerID_IO);
@@ -154,25 +155,25 @@ main (int argc, char *argv[]) {
 
   // OpenCL memory allocation
   std::vector<float> matC(matArow*matBcol);
-  cl_mem dA = clCreateBuffer(clContext,CL_MEM_READ_ONLY,A_sz,NULL,&clStatus);
-  CHECK_ERROR("clCreateBuffer")
-  cl_mem dB = clCreateBuffer(clContext,CL_MEM_READ_ONLY,B_sz,NULL,&clStatus);
-  CHECK_ERROR("clCreateBuffer")
-  cl_mem dC = clCreateBuffer(clContext,CL_MEM_WRITE_ONLY,C_sz,NULL,&clStatus);
-  CHECK_ERROR("clCreateBuffer")
+  cl_mem dA = CECL_BUFFER(clContext,CL_MEM_READ_ONLY,A_sz,NULL,&clStatus);
+  CHECK_ERROR("CECL_BUFFER")
+  cl_mem dB = CECL_BUFFER(clContext,CL_MEM_READ_ONLY,B_sz,NULL,&clStatus);
+  CHECK_ERROR("CECL_BUFFER")
+  cl_mem dC = CECL_BUFFER(clContext,CL_MEM_WRITE_ONLY,C_sz,NULL,&clStatus);
+  CHECK_ERROR("CECL_BUFFER")
 
   // Copy A and B^T into device memory
   pb_SwitchToTimer( &timers, pb_TimerID_COPY );
-  clStatus = clEnqueueWriteBuffer(clCommandQueue,dA,CL_FALSE,0,A_sz,&matA.front(),0,NULL,NULL);
-  CHECK_ERROR("clEnqueueWriteBuffer")
-  clStatus = clEnqueueWriteBuffer(clCommandQueue,dB,CL_FALSE,0,B_sz,&matBT.front(),0,NULL,NULL);
-  CHECK_ERROR("clEnqueueWriteBuffer")
+  clStatus = CECL_WRITE_BUFFER(clCommandQueue,dA,CL_FALSE,0,A_sz,&matA.front(),0,NULL,NULL);
+  CHECK_ERROR("CECL_WRITE_BUFFER")
+  clStatus = CECL_WRITE_BUFFER(clCommandQueue,dB,CL_FALSE,0,B_sz,&matBT.front(),0,NULL,NULL);
+  CHECK_ERROR("CECL_WRITE_BUFFER")
 
   for(int i=0;i<matC.size();i++)
 	matC[i] = 0.0f;
 
-  clStatus = clEnqueueWriteBuffer(clCommandQueue,dC,CL_TRUE,0,C_sz,&matC.front(),0,NULL,NULL);
-  CHECK_ERROR("clEnqueueWriteBuffer")
+  clStatus = CECL_WRITE_BUFFER(clCommandQueue,dC,CL_TRUE,0,C_sz,&matC.front(),0,NULL,NULL);
+  CHECK_ERROR("CECL_WRITE_BUFFER")
 
   pb_SwitchToTimer( &timers, pb_TimerID_KERNEL );
 
@@ -182,7 +183,7 @@ main (int argc, char *argv[]) {
 
   if (params->outFile) {
     pb_SwitchToTimer( &timers, pb_TimerID_COPY );
-    clEnqueueReadBuffer(clCommandQueue,dC,CL_TRUE,0,C_sz,&matC.front(),0,NULL,NULL);
+    CECL_READ_BUFFER(clCommandQueue,dC,CL_TRUE,0,C_sz,&matC.front(),0,NULL,NULL);
    
     /* Write C to file */
     pb_SwitchToTimer(&timers, pb_TimerID_IO);

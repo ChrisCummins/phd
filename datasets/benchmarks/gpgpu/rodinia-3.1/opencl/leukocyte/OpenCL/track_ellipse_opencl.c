@@ -1,4 +1,3 @@
-#include <cecl.h>
 #include "find_ellipse.h"
 #include "track_ellipse_opencl.h"
 #include "OpenCL_helper_library.h"

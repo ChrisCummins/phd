@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 /**********************************************************************
 Copyright ©2015 Advanced Micro Devices, Inc. All rights reserved.
 
@@ -177,12 +177,12 @@ BinomialOptionMultiGPU::setupCL()
         0
     };
 
-    context = clCreateContextFromType(cps,
+    context = CECL_CREATE_CONTEXTFromType(cps,
                                       dType,
                                       NULL,
                                       NULL,
                                       &status);
-    CHECK_OPENCL_ERROR(status, "clCreateContextFromType failed");
+    CHECK_OPENCL_ERROR(status, "CECL_CREATE_CONTEXTFromType failed");
 
     // getting device on which to run the sample
     status = getDevices(context, &devices, sampleArgs->deviceId,
@@ -374,13 +374,13 @@ BinomialOptionMultiGPU::setupCL()
             CHECK_OPENCL_ERROR(status, "CECL_KERNEL failed.");
 
             // Check group-size against what is returned by kernel
-            status = clGetKernelWorkGroupInfo(kernels[i],
+            status = CECL_GET_KERNEL_WORK_GROUP_INFO(kernels[i],
                                               gpuDeviceIDs[i],
                                               CL_KERNEL_WORK_GROUP_SIZE,
                                               sizeof(size_t),
                                               &kernelWorkGroupSize,
                                               0);
-            CHECK_OPENCL_ERROR(status, "clGetKernelWorkGroupInfo failed.");
+            CHECK_OPENCL_ERROR(status, "CECL_GET_KERNEL_WORK_GROUP_INFO failed.");
 
             // If group-size is greater than maximum supported on kernel
             if((size_t)(numSteps + 1) > kernelWorkGroupSize)
@@ -427,13 +427,13 @@ BinomialOptionMultiGPU::setupCL()
         CHECK_OPENCL_ERROR(status, "CECL_KERNEL failed.");
 
         // Get kernel work group size
-        status = clGetKernelWorkGroupInfo(kernel,
+        status = CECL_GET_KERNEL_WORK_GROUP_INFO(kernel,
                                           devices[sampleArgs->deviceId],
                                           CL_KERNEL_WORK_GROUP_SIZE,
                                           sizeof(size_t),
                                           &kernelWorkGroupSize,
                                           0);
-        CHECK_OPENCL_ERROR(status, "clGetKernelWorkGroupInfo failed.");
+        CHECK_OPENCL_ERROR(status, "CECL_GET_KERNEL_WORK_GROUP_INFO failed.");
         // If group-size is greater than maximum supported on kernel
         if((size_t)(numSteps + 1) > kernelWorkGroupSize)
         {
@@ -543,14 +543,14 @@ BinomialOptionMultiGPU::runCLKernels()
         return SDK_FAILURE;
     }
 
-    status = clGetKernelWorkGroupInfo(kernel,
+    status = CECL_GET_KERNEL_WORK_GROUP_INFO(kernel,
                                       devices[sampleArgs->deviceId],
                                       CL_KERNEL_LOCAL_MEM_SIZE,
                                       sizeof(cl_ulong),
                                       &usedLocalMemory,
                                       NULL);
     CHECK_OPENCL_ERROR(status,
-                       "clGetKernelWorkGroupInfo(CL_KERNEL_LOCAL_MEM_SIZE) failed.");
+                       "CECL_GET_KERNEL_WORK_GROUP_INFO(CL_KERNEL_LOCAL_MEM_SIZE) failed.");
 
     if(usedLocalMemory > totalLocalMemory)
     {
@@ -1005,13 +1005,13 @@ void* threadFuncPerGPU(void *data1)
         return NULL;
     }
 
-    status = clGetKernelWorkGroupInfo(boObj->kernels[deviceNumber],
+    status = CECL_GET_KERNEL_WORK_GROUP_INFO(boObj->kernels[deviceNumber],
                                       boObj->gpuDeviceIDs[deviceNumber],
                                       CL_KERNEL_LOCAL_MEM_SIZE,
                                       sizeof(cl_ulong),
                                       &boObj->usedLocalMemory,
                                       NULL);
-    CHECK_OPENCL_ERROR_RETURN_NULL(status, "clGetKernelWorkGroupInfo failed !!");
+    CHECK_OPENCL_ERROR_RETURN_NULL(status, "CECL_GET_KERNEL_WORK_GROUP_INFO failed !!");
 
     if(boObj->usedLocalMemory > boObj->totalLocalMemory)
     {

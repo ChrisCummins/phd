@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 /**********************************************************************
 Copyright ©2015 Advanced Micro Devices, Inc. All rights reserved.
 
@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
 	clGetDeviceIDs(platform,CL_DEVICE_TYPE_GPU,numDevice,devices,NULL);
 
 	/* Create Context using the platform selected above */   
-	cl_context context=clCreateContext(NULL,numDevice,devices,NULL,NULL,NULL);
+	cl_context context=CECL_CREATE_CONTEXT(NULL,numDevice,devices,NULL,NULL,NULL);
 	
 	if (status != CL_SUCCESS)
 	{

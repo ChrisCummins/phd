@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 /**********************************************************************
 Copyright ©2015 Advanced Micro Devices, Inc. All rights reserved.
 
@@ -123,12 +123,12 @@ TransferOverlap::setupCL(void)
     CHECK_ERROR(retValue, SDK_SUCCESS, "displayDevices() failed");
 
     cl_context_properties cps[3] = {CL_CONTEXT_PLATFORM, (cl_context_properties)platform, 0};
-    context = clCreateContextFromType(cps,
+    context = CECL_CREATE_CONTEXTFromType(cps,
                                       dType,
                                       NULL,
                                       NULL,
                                       &status);
-    CHECK_OPENCL_ERROR(status, "clCreateContextFromType failed.");
+    CHECK_OPENCL_ERROR(status, "CECL_CREATE_CONTEXTFromType failed.");
 
     // First, get the size of device list data
     status = clGetContextInfo(context,
@@ -248,13 +248,13 @@ TransferOverlap::setupCL(void)
     size_t kernelWorkGroupSize = 0;
 
     /* Check whether specified local group size is possible on current kernel */
-    status = clGetKernelWorkGroupInfo(readKernel,
+    status = CECL_GET_KERNEL_WORK_GROUP_INFO(readKernel,
                                       devices[sampleArgs->deviceId],
                                       CL_KERNEL_WORK_GROUP_SIZE,
                                       sizeof(size_t),
                                       &kernelWorkGroupSize,
                                       0);
-    CHECK_OPENCL_ERROR(status, "clGetKernelWorkGroupInfo() failed.");
+    CHECK_OPENCL_ERROR(status, "CECL_GET_KERNEL_WORK_GROUP_INFO() failed.");
 
     // If local groupSize exceeds the maximum supported on kernel  fall back
     if(MAX_WAVEFRONT_SIZE > kernelWorkGroupSize)
@@ -274,14 +274,14 @@ TransferOverlap::setupCL(void)
     CHECK_OPENCL_ERROR(status, "CECL_KERNEL() failed.(writeKernel)");
 
     // Check whether specified local group size is possible on current kernel
-    status = clGetKernelWorkGroupInfo(
+    status = CECL_GET_KERNEL_WORK_GROUP_INFO(
                  writeKernel,
                  devices[sampleArgs->deviceId],
                  CL_KERNEL_WORK_GROUP_SIZE,
                  sizeof(size_t),
                  &kernelWorkGroupSize,
                  NULL);
-    CHECK_OPENCL_ERROR(status, "clGetKernelWorkGroupInfo() failed.");
+    CHECK_OPENCL_ERROR(status, "CECL_GET_KERNEL_WORK_GROUP_INFO() failed.");
 
     // If local group size exceeds the maximum supported on kernel fall back
     if(MAX_WAVEFRONT_SIZE > kernelWorkGroupSize)

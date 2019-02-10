@@ -1,3 +1,4 @@
+#include <libcecl.h>
 #ifndef SUPPORT_H
 #define SUPPORT_H
 
@@ -179,7 +180,7 @@ getMaxWorkGroupSize (cl_context &ctx, cl_kernel &ker)
     CL_CHECK_ERROR(err);
     if (retSize < sizeof(devid))  // we did not get any device, pass 0 to the function
        devid = 0;
-    err = clGetKernelWorkGroupInfo (ker, devid, CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t),
+    err = CECL_GET_KERNEL_WORK_GROUP_INFO (ker, devid, CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t),
                 &maxGroupSize, &retSize);
     CL_CHECK_ERROR(err);
     return (maxGroupSize);
@@ -214,7 +215,7 @@ getPreferredWorkGroupSizeMultiple (cl_context &ctx, cl_kernel &ker)
     CL_CHECK_ERROR(err);
     if (retSize < sizeof(devid))  // we did not get any device, pass 0 to the function
        devid = 0;
-    err = clGetKernelWorkGroupInfo (ker, devid, CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, 
+    err = CECL_GET_KERNEL_WORK_GROUP_INFO (ker, devid, CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, 
                 sizeof(size_t), &prefGroupSize, &retSize);
     CL_CHECK_ERROR(err);
     return (prefGroupSize);

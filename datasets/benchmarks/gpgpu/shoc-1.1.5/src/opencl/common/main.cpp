@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 #ifdef PARALLEL
 // When using MPICH and MPICH-derived MPI implementations, there is a
 // naming conflict between stdio.h and MPI's C++ binding.
@@ -196,7 +196,7 @@ int main(int argc, char *argv[])
         if (verbose) cout << ">> initializing\n";
         cl_device_id devID = ListDevicesAndGetDevice(platform, deviceIdx);
         cl_int clErr;
-        cl_context ctx = clCreateContext( NULL,     // properties
+        cl_context ctx = CECL_CREATE_CONTEXT( NULL,     // properties
                                             1,      // number of devices
                                             &devID, // device
                                             NULL,   // notification function

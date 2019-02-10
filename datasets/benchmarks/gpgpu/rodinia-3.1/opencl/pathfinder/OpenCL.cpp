@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 #include <cstdlib>
 #include "OpenCL.h"
 
@@ -77,10 +77,10 @@ void OpenCL::createKernel(string kernelName)
 	kernelArray[kernelName] = kernel;
 	
 	// Get the kernel work group size.
-	clGetKernelWorkGroupInfo(kernelArray[kernelName], device_id[0], CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &lwsize, NULL);
+	CECL_GET_KERNEL_WORK_GROUP_INFO(kernelArray[kernelName], device_id[0], CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &lwsize, NULL);
 	if (lwsize == 0)
 	{
-		cout << "Error: clGetKernelWorkGroupInfo() returned a max work group size of zero!" << endl;
+		cout << "Error: CECL_GET_KERNEL_WORK_GROUP_INFO() returned a max work group size of zero!" << endl;
 		exit(1);
 	}
 	
@@ -267,10 +267,10 @@ void OpenCL::getDevices(cl_device_type deviceType)
 	}
 	
 	// Create an OpenCL context.
-	context = clCreateContext(NULL, devices_n, device_id, NULL, NULL, &ret);
+	context = CECL_CREATE_CONTEXT(NULL, devices_n, device_id, NULL, NULL, &ret);
 	if (ret != CL_SUCCESS)
 	{
-		printf("\nError at clCreateContext! Error code %i\n\n", ret);
+		printf("\nError at CECL_CREATE_CONTEXT! Error code %i\n\n", ret);
 		exit(1);
 	}
  

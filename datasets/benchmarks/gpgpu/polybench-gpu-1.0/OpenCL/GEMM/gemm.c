@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 /**
  * gemm.c: This file is part of the PolyBench/GPU 1.0 test suite.
  *
@@ -160,7 +160,7 @@ void cl_initialization()
 	else printf("Error getting device name\n");
 	
 	// Create an OpenCL context
-	clGPUContext = clCreateContext( NULL, 1, &device_id, NULL, NULL, &errcode);
+	clGPUContext = CECL_CREATE_CONTEXT( NULL, 1, &device_id, NULL, NULL, &errcode);
 	if(errcode != CL_SUCCESS) printf("Error in creating context\n");
  
 	//Create a command-queue

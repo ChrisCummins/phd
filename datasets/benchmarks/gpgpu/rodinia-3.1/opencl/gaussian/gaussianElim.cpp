@@ -1,4 +1,3 @@
-#include <cecl.h>
 #ifndef __GAUSSIAN_ELIMINATION__
 #define __GAUSSIAN_ELIMINATION__
 

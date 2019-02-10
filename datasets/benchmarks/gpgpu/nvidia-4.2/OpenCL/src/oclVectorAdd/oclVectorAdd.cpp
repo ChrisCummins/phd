@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -113,11 +113,11 @@ int main(int argc, char **argv)
     }
 
     //Create the context
-    cxGPUContext = clCreateContext(0, 1, &cdDevice, NULL, NULL, &ciErr1);
-    shrLog("clCreateContext...\n"); 
+    cxGPUContext = CECL_CREATE_CONTEXT(0, 1, &cdDevice, NULL, NULL, &ciErr1);
+    shrLog("CECL_CREATE_CONTEXT...\n"); 
     if (ciErr1 != CL_SUCCESS)
     {
-        shrLog("Error in clCreateContext, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
+        shrLog("Error in CECL_CREATE_CONTEXT, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
         Cleanup(argc, argv, EXIT_FAILURE);
     }
 

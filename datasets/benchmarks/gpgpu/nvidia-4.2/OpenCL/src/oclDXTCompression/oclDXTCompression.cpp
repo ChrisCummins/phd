@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -103,7 +103,7 @@ int main(int argc, char** argv)
     oclCheckError(ciErrNum, CL_SUCCESS);
 
     // Create the context
-    cxGPUContext = clCreateContext(0, uiNumDevices, cdDevices, NULL, NULL, &ciErrNum);
+    cxGPUContext = CECL_CREATE_CONTEXT(0, uiNumDevices, cdDevices, NULL, NULL, &ciErrNum);
     oclCheckError(ciErrNum, CL_SUCCESS);
 
     // get and log device

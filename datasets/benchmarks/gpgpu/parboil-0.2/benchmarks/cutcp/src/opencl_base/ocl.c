@@ -1,4 +1,3 @@
-#include <cecl.h>
 #include <CL/cl.h>
 #include <stdio.h>
 #include <string.h>

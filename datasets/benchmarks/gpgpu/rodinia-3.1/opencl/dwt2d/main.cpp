@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 #include <unistd.h>
 #include <error.h>
 #include <stdio.h>
@@ -74,12 +74,12 @@ cl_context CreateContext()
         (cl_context_properties)platformIds[1],
         0
     };
-    context = clCreateContextFromType(contextProperties, CL_DEVICE_TYPE_GPU,
+    context = CECL_CREATE_CONTEXTFromType(contextProperties, CL_DEVICE_TYPE_GPU,
                                       NULL, NULL, &errNum);
     if (errNum != CL_SUCCESS)
     {
         std::cout << "Could not create GPU context, trying CPU..." << std::endl;
-        context = clCreateContextFromType(contextProperties, CL_DEVICE_TYPE_GPU,
+        context = CECL_CREATE_CONTEXTFromType(contextProperties, CL_DEVICE_TYPE_GPU,
                                           NULL, NULL, &errNum);
         if (errNum != CL_SUCCESS)
         {

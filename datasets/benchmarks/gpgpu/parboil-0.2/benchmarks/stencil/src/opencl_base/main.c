@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 
 /***************************************************************************
  *cr
@@ -95,8 +95,8 @@ int main(int argc, char** argv) {
 	clStatus = clGetDeviceIDs(clPlatform,CL_DEVICE_TYPE_GPU,1,&clDevice,NULL);
 	CHECK_ERROR("clGetDeviceIDs")
 
-	cl_context clContext = clCreateContextFromType(clCps,CL_DEVICE_TYPE_GPU,NULL,NULL,&clStatus);
-	CHECK_ERROR("clCreateContextFromType")
+	cl_context clContext = CECL_CREATE_CONTEXTFromType(clCps,CL_DEVICE_TYPE_GPU,NULL,NULL,&clStatus);
+	CHECK_ERROR("CECL_CREATE_CONTEXTFromType")
 
 	cl_command_queue clCommandQueue = CECL_CREATE_COMMAND_QUEUE(clContext,clDevice,CL_QUEUE_PROFILING_ENABLE,&clStatus);
 	CHECK_ERROR("CECL_CREATE_COMMAND_QUEUE")

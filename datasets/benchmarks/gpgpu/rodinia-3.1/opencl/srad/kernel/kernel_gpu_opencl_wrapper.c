@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 //========================================================================================================================================================================================================200
 //	DEFINE/INCLUDE
 //========================================================================================================================================================================================================200
@@ -115,7 +115,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 
 	// Create context for selected platform being GPU
 	cl_context context;
-	context = clCreateContextFromType(	context_properties, 
+	context = CECL_CREATE_CONTEXTFromType(	context_properties, 
 										CL_DEVICE_TYPE_GPU, 
 										NULL, 
 										NULL, 

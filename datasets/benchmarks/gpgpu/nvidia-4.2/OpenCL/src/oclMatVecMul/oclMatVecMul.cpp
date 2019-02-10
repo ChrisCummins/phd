@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -137,8 +137,8 @@ int main(int argc, char** argv)
     shrLog("\n # of Compute Units = %u\n\n", num_compute_units); 
 
     //Create the context
-    shrLog("clCreateContext...\n"); 
-    cxGPUContext = clCreateContext(0, uiNumDevsUsed, &cdDevices[targetDevice], NULL, NULL, &ciErrNum);
+    shrLog("CECL_CREATE_CONTEXT...\n"); 
+    cxGPUContext = CECL_CREATE_CONTEXT(0, uiNumDevsUsed, &cdDevices[targetDevice], NULL, NULL, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
     // Create a command-queue
@@ -361,11 +361,11 @@ bool getTargetDeviceGlobalMemSize(memsize_t* result, const int argc, const char 
     // Create the OpenCL context
     if (ok)
     {
-        shrLog(" clCreateContext...\n");
-        context = clCreateContext(0, deviceCount, devices, NULL, NULL, &errnum);
+        shrLog(" CECL_CREATE_CONTEXT...\n");
+        context = CECL_CREATE_CONTEXT(0, deviceCount, devices, NULL, NULL, &errnum);
         if (context == (cl_context)0) 
         {
-            shrLogEx(LOGBOTH | ERRORMSG, errnum, "clCreateContext (returned %d).\n", errnum);
+            shrLogEx(LOGBOTH | ERRORMSG, errnum, "CECL_CREATE_CONTEXT (returned %d).\n", errnum);
             ok = false;
         }
     }

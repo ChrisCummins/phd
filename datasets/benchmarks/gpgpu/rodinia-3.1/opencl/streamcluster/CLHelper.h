@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 /********************************************************************
 //--cambine:helper function for OpenCL
 //--programmer:	Jianbin Fang
@@ -421,7 +421,7 @@ void _clInit(string device_type, int device_id)throw(string){
 	std::cout<<"--cambine: before creating context"<<std::endl;
 #endif
     cl_context_properties cprops[3] = { CL_CONTEXT_PLATFORM, (cl_context_properties)targetPlatform, 0 };
-    oclHandles.context = clCreateContext(0, 
+    oclHandles.context = CECL_CREATE_CONTEXT(0, 
                                         deviceListSize, 
                                         oclHandles.devices, 
                                         NULL,
@@ -429,7 +429,7 @@ void _clInit(string device_type, int device_id)throw(string){
                                         &resultCL);
 
     if ((resultCL != CL_SUCCESS) || (oclHandles.context == NULL))
-        throw (string("InitCL()::Error: Creating Context (clCreateContextFromType)"));
+        throw (string("InitCL()::Error: Creating Context (CECL_CREATE_CONTEXTFromType)"));
 #ifdef	DEV_INFO
 	std::cout<<"--cambine: create OCL context successfully!"<<std::endl;
 #endif

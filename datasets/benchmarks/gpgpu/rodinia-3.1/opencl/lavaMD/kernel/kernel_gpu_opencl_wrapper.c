@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -117,7 +117,7 @@ kernel_gpu_opencl_wrapper(	par_str par_cpu,
 
 	// Create context for selected platform being GPU
 	cl_context context;
-	context = clCreateContextFromType(	context_properties, 
+	context = CECL_CREATE_CONTEXTFromType(	context_properties, 
 										CL_DEVICE_TYPE_GPU, 
 										NULL, 
 										NULL, 

@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 /**********************************************************************
 Copyright ©2015 Advanced Micro Devices, Inc. All rights reserved.
 
@@ -182,14 +182,14 @@ initializeCL(void)
      */
     cl_context_properties cps[3] = { CL_CONTEXT_PLATFORM, (cl_context_properties)platform, 0 };
 
-    context = clCreateContextFromType(cps, 
+    context = CECL_CREATE_CONTEXTFromType(cps, 
                                       CL_DEVICE_TYPE_GPU, 
                                       NULL, 
                                       NULL, 
                                       &status);
     if(status != CL_SUCCESS) 
     {  
-        std::cout << "Error: Creating Context. (clCreateContextFromType)\n";
+        std::cout << "Error: Creating Context. (CECL_CREATE_CONTEXTFromType)\n";
         return SDK_FAILURE; 
     }
 

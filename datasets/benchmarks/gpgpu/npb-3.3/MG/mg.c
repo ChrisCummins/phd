@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 //-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB MG code. This OpenCL    //
@@ -2028,8 +2028,8 @@ static void setup_opencl(int argc, char *argv[])
   //-----------------------------------------------------------------------
   // 2. Create a context for the specified device
   //-----------------------------------------------------------------------
-  context = clCreateContext(NULL, 1, &device, NULL, NULL, &ecode);
-  clu_CheckError(ecode, "clCreateContext()");
+  context = CECL_CREATE_CONTEXT(NULL, 1, &device, NULL, NULL, &ecode);
+  clu_CheckError(ecode, "CECL_CREATE_CONTEXT()");
 
   //-----------------------------------------------------------------------
   // 3. Create a command queue

@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 #include "find_ellipse.h"
 #include "find_ellipse_opencl.h"
 #include "OpenCL_helper_library.h"
@@ -240,7 +240,7 @@ void select_device() {
 	
 		// Create an OpenCL context
 		cl_context_properties ctxprop[] = { CL_CONTEXT_PLATFORM, (cl_context_properties) platform_ids[i], 0};
-		context = clCreateContextFromType(ctxprop, CL_DEVICE_TYPE_GPU, NULL, NULL, &error);
+		context = CECL_CREATE_CONTEXTFromType(ctxprop, CL_DEVICE_TYPE_GPU, NULL, NULL, &error);
 		// If this platform has no GPU, try the next one
 		if (error == CL_DEVICE_NOT_FOUND) continue;
 		check_error(error, __FILE__, __LINE__);

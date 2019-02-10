@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 /**********************************************************************
 Copyright ©2015 Advanced Micro Devices, Inc. All rights reserved.
 
@@ -90,12 +90,12 @@ DeviceFission::setupCLPlatform()
         0
     };
 
-    rContext = clCreateContextFromType(platform ? cps : NULL,
+    rContext = CECL_CREATE_CONTEXTFromType(platform ? cps : NULL,
                                        CL_DEVICE_TYPE_GPU,
                                        NULL,
                                        NULL,
                                        &status);
-    CHECK_OPENCL_ERROR( status, "clCreateContextFromType failed.");
+    CHECK_OPENCL_ERROR( status, "CECL_CREATE_CONTEXTFromType failed.");
 
     // getting devices on which to run the sample
     status = getDevices(rContext, &Devices, 0, sampleArgs->isDeviceIdEnabled());

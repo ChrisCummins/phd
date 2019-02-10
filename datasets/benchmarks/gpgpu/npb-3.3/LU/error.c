@@ -1,4 +1,3 @@
-#include <cecl.h>
 #//-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB LU code. This OpenCL    //

@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 /**********************************************************************
 Copyright ©2015 Advanced Micro Devices, Inc. All rights reserved.
 
@@ -95,13 +95,13 @@ DeviceFission::setupCLPlatform()
         0
     };
 
-    rContext = clCreateContextFromType(
+    rContext = CECL_CREATE_CONTEXTFromType(
                    cps,
                    dType,
                    NULL,
                    NULL,
                    &status);
-    CHECK_OPENCL_ERROR( status, "clCreateContextFromType failed.");
+    CHECK_OPENCL_ERROR( status, "CECL_CREATE_CONTEXTFromType failed.");
 
     // getting device on which to run the sample
     status = getDevices(rContext, &rootDevices, sampleArgs->deviceId,
@@ -150,13 +150,13 @@ DeviceFission::setupCLPlatform()
     CHECK_OPENCL_ERROR(status, "clCreateSubDevicesEXT failed.");
 
     // Create context for sub-devices
-    subContext = clCreateContext(cps,
+    subContext = CECL_CREATE_CONTEXT(cps,
                                  numSubDevices,
                                  subDevices,
                                  NULL,
                                  NULL,
                                  &status);
-    CHECK_OPENCL_ERROR(status, "clCreateContext failed.");
+    CHECK_OPENCL_ERROR(status, "CECL_CREATE_CONTEXT failed.");
 
     return SDK_SUCCESS;
 }
@@ -233,13 +233,13 @@ DeviceFission::setupCLRuntime()
     CHECK_OPENCL_ERROR(status, "CECL_KERNEL failed.");
 
     // Check whether specified groupSize is plausible on current kernel
-    status = clGetKernelWorkGroupInfo(rKernel,
+    status = CECL_GET_KERNEL_WORK_GROUP_INFO(rKernel,
                                       rootDevices[sampleArgs->deviceId],
                                       CL_KERNEL_WORK_GROUP_SIZE,
                                       sizeof(size_t),
                                       &kernelWorkGroupSize,
                                       0);
-    CHECK_OPENCL_ERROR(status, "clGetKernelWorkGroupInfo failed.");
+    CHECK_OPENCL_ERROR(status, "CECL_GET_KERNEL_WORK_GROUP_INFO failed.");
 
     // If groupSize exceeds the maximum supported on kernel, fall back
     if(groupSize > kernelWorkGroupSize)

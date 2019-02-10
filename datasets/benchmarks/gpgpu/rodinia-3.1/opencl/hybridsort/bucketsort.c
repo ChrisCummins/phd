@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 #define BUCKET_WARP_LOG_SIZE	5
 #define BUCKET_WARP_N			1
 
@@ -108,7 +108,7 @@ void init_bucketsort(int listsize)
     clGetDeviceInfo(devices[0],CL_DEVICE_NAME,128,name,NULL);
 
     
-    bucketContext = clCreateContext(0, 1, &devices[0], NULL, NULL, &err);
+    bucketContext = CECL_CREATE_CONTEXT(0, 1, &devices[0], NULL, NULL, &err);
 
     bucketCommands = CECL_CREATE_COMMAND_QUEUE(bucketContext, devices[0], CL_QUEUE_PROFILING_ENABLE, &err);
     
@@ -229,7 +229,7 @@ void histogramInit(int listsize) {
         0
     };
     
-    histoContext = clCreateContext(contextProperties, 1, &devices[0], NULL, NULL, &err);
+    histoContext = CECL_CREATE_CONTEXT(contextProperties, 1, &devices[0], NULL, NULL, &err);
     
     histoCommands = CECL_CREATE_COMMAND_QUEUE(histoContext, devices[0], CL_QUEUE_PROFILING_ENABLE, &err);
     histoInput = CECL_BUFFER(histoContext,  CL_MEM_READ_ONLY,  listsize*(sizeof(float)), NULL, NULL);

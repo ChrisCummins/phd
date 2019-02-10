@@ -1,4 +1,3 @@
-#include <cecl.h>
 #include <cassert>
 #include <cfloat>
 #include <list>

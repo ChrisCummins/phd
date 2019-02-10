@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 /**********************************************************************
 Copyright ©2015 Advanced Micro Devices, Inc. All rights reserved.
 
@@ -149,13 +149,13 @@ SimpleImage::setupCL()
         0
     };
 
-    context = clCreateContextFromType(
+    context = CECL_CREATE_CONTEXTFromType(
                   cps,
                   dType,
                   NULL,
                   NULL,
                   &status);
-    CHECK_OPENCL_ERROR(status, "clCreateContextFromType failed.");
+    CHECK_OPENCL_ERROR(status, "CECL_CREATE_CONTEXTFromType failed.");
 
     // getting device on which to run the sample
     status = getDevices(context, &devices, sampleArgs->deviceId,
@@ -255,22 +255,22 @@ SimpleImage::setupCL()
     CHECK_OPENCL_ERROR(status,"CECL_KERNEL failed.(kernel3D)");
 
     // Check group size against group size returned by kernel
-    status = clGetKernelWorkGroupInfo(kernel2D,
+    status = CECL_GET_KERNEL_WORK_GROUP_INFO(kernel2D,
                                       devices[sampleArgs->deviceId],
                                       CL_KERNEL_WORK_GROUP_SIZE,
                                       sizeof(size_t),
                                       &kernel2DWorkGroupSize,
                                       0);
-    CHECK_OPENCL_ERROR(status,"clGetKernelWorkGroupInfo  failed.");
+    CHECK_OPENCL_ERROR(status,"CECL_GET_KERNEL_WORK_GROUP_INFO  failed.");
 
     // Check group size against group size returned by kernel
-    status = clGetKernelWorkGroupInfo(kernel3D,
+    status = CECL_GET_KERNEL_WORK_GROUP_INFO(kernel3D,
                                       devices[sampleArgs->deviceId],
                                       CL_KERNEL_WORK_GROUP_SIZE,
                                       sizeof(size_t),
                                       &kernel3DWorkGroupSize,
                                       0);
-    CHECK_OPENCL_ERROR(status,"clGetKernelWorkGroupInfo  failed.");
+    CHECK_OPENCL_ERROR(status,"CECL_GET_KERNEL_WORK_GROUP_INFO  failed.");
 
     cl_uint temp = (cl_uint)min(kernel2DWorkGroupSize, kernel3DWorkGroupSize);
 

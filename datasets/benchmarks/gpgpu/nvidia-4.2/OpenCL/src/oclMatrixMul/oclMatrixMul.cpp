@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -248,7 +248,7 @@ int runTest(int argc, const char** argv)
     }
 
     //Create the context
-    cxGPUContext = clCreateContext(0, ciDeviceCount, cdDevices, NULL, NULL, &ciErrNum);
+    cxGPUContext = CECL_CREATE_CONTEXT(0, ciDeviceCount, cdDevices, NULL, NULL, &ciErrNum);
     if (ciErrNum != CL_SUCCESS)
     {
         shrLog("Error: Failed to create OpenCL context!\n");

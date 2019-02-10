@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 /**
  * @file ex_particle_OPENMP_seq.c
  * @author Michael Trotter & Matt Goodrum
@@ -93,9 +93,9 @@ static int initialize(int use_gpu) {
     }
     cl_context_properties ctxprop[] = {CL_CONTEXT_PLATFORM, (cl_context_properties) platform_id, 0};
     device_type = use_gpu ? CL_DEVICE_TYPE_GPU : CL_DEVICE_TYPE_GPU;
-    context = clCreateContextFromType(ctxprop, device_type, NULL, NULL, NULL);
+    context = CECL_CREATE_CONTEXTFromType(ctxprop, device_type, NULL, NULL, NULL);
     if (!context) {
-        printf("ERROR: clCreateContextFromType(%s) failed\n", use_gpu ? "GPU" : "CPU");
+        printf("ERROR: CECL_CREATE_CONTEXTFromType(%s) failed\n", use_gpu ? "GPU" : "CPU");
         return -1;
     }
 

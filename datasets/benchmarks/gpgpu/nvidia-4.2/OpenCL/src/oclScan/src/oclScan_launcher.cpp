@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -68,9 +68,9 @@ extern "C" void initScan(cl_context cxGPUContext, cl_command_queue cqParamComman
         size_t szScanExclusiveLocal1, szScanExclusiveLocal2, szUniformUpdate;
 
         ciErrNum  = clGetCommandQueueInfo(cqParamCommandQue, CL_QUEUE_DEVICE, sizeof(cl_device_id), &device, NULL);
-        ciErrNum |= clGetKernelWorkGroupInfo(ckScanExclusiveLocal1,  device, CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &szScanExclusiveLocal1, NULL);
-        ciErrNum |= clGetKernelWorkGroupInfo(ckScanExclusiveLocal2, device, CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &szScanExclusiveLocal2, NULL);
-        ciErrNum |= clGetKernelWorkGroupInfo(ckUniformUpdate, device, CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &szUniformUpdate, NULL);
+        ciErrNum |= CECL_GET_KERNEL_WORK_GROUP_INFO(ckScanExclusiveLocal1,  device, CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &szScanExclusiveLocal1, NULL);
+        ciErrNum |= CECL_GET_KERNEL_WORK_GROUP_INFO(ckScanExclusiveLocal2, device, CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &szScanExclusiveLocal2, NULL);
+        ciErrNum |= CECL_GET_KERNEL_WORK_GROUP_INFO(ckUniformUpdate, device, CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &szUniformUpdate, NULL);
         oclCheckError(ciErrNum, CL_SUCCESS);
 
         if( (szScanExclusiveLocal1 < WORKGROUP_SIZE) || (szScanExclusiveLocal2 < WORKGROUP_SIZE) || (szUniformUpdate < WORKGROUP_SIZE) ){

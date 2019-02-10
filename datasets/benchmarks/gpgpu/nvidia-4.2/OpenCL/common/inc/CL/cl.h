@@ -1,3 +1,4 @@
+#include <libcecl.h>
 /*******************************************************************************
  * Copyright (c) 2008-2009 The Khronos Group Inc.
  *
@@ -473,7 +474,7 @@ clGetDeviceInfo(cl_device_id    /* device */,
 
 /* Context APIs  */
 extern CL_API_ENTRY cl_context CL_API_CALL
-clCreateContext(const cl_context_properties * /* properties */,
+CECL_CREATE_CONTEXT(const cl_context_properties * /* properties */,
                 cl_uint                       /* num_devices */,
                 const cl_device_id *          /* devices */,
                 void (CL_CALLBACK * /* pfn_notify */)(const char *, const void *, size_t, void *),
@@ -481,7 +482,7 @@ clCreateContext(const cl_context_properties * /* properties */,
                 cl_int *                      /* errcode_ret */) CL_API_SUFFIX__VERSION_1_0;
 
 extern CL_API_ENTRY cl_context CL_API_CALL
-clCreateContextFromType(const cl_context_properties * /* properties */,
+CECL_CREATE_CONTEXTFromType(const cl_context_properties * /* properties */,
                         cl_device_type                /* device_type */,
                         void (CL_CALLBACK *     /* pfn_notify*/ )(const char *, const void *, size_t, void *),
                         void *                        /* user_data */,
@@ -502,7 +503,7 @@ clGetContextInfo(cl_context         /* context */,
 
 /* Command Queue APIs */
 extern CL_API_ENTRY cl_command_queue CL_API_CALL
-clCreateCommandQueue(cl_context                     /* context */, 
+CECL_CREATE_COMMAND_QUEUE(cl_context                     /* context */, 
                      cl_device_id                   /* device */, 
                      cl_command_queue_properties    /* properties */,
                      cl_int *                       /* errcode_ret */) CL_API_SUFFIX__VERSION_1_0;
@@ -541,7 +542,7 @@ clSetCommandQueueProperty(cl_command_queue              /* command_queue */,
 
 /* Memory Object APIs */
 extern CL_API_ENTRY cl_mem CL_API_CALL
-clCreateBuffer(cl_context   /* context */,
+CECL_BUFFER(cl_context   /* context */,
                cl_mem_flags /* flags */,
                size_t       /* size */,
                void *       /* host_ptr */,
@@ -632,7 +633,7 @@ clGetSamplerInfo(cl_sampler         /* sampler */,
                             
 /* Program Object APIs  */
 extern CL_API_ENTRY cl_program CL_API_CALL
-clCreateProgramWithSource(cl_context        /* context */,
+CECL_PROGRAM_WITH_SOURCE(cl_context        /* context */,
                           cl_uint           /* count */,
                           const char **     /* strings */,
                           const size_t *    /* lengths */,
@@ -654,7 +655,7 @@ extern CL_API_ENTRY cl_int CL_API_CALL
 clReleaseProgram(cl_program /* program */) CL_API_SUFFIX__VERSION_1_0;
 
 extern CL_API_ENTRY cl_int CL_API_CALL
-clBuildProgram(cl_program           /* program */,
+CECL_PROGRAM(cl_program           /* program */,
                cl_uint              /* num_devices */,
                const cl_device_id * /* device_list */,
                const char *         /* options */, 
@@ -681,12 +682,12 @@ clGetProgramBuildInfo(cl_program            /* program */,
                             
 /* Kernel Object APIs */
 extern CL_API_ENTRY cl_kernel CL_API_CALL
-clCreateKernel(cl_program      /* program */,
+CECL_KERNEL(cl_program      /* program */,
                const char *    /* kernel_name */,
                cl_int *        /* errcode_ret */) CL_API_SUFFIX__VERSION_1_0;
 
 extern CL_API_ENTRY cl_int CL_API_CALL
-clCreateKernelsInProgram(cl_program     /* program */,
+CECL_KERNELsInProgram(cl_program     /* program */,
                          cl_uint        /* num_kernels */,
                          cl_kernel *    /* kernels */,
                          cl_uint *      /* num_kernels_ret */) CL_API_SUFFIX__VERSION_1_0;
@@ -698,7 +699,7 @@ extern CL_API_ENTRY cl_int CL_API_CALL
 clReleaseKernel(cl_kernel   /* kernel */) CL_API_SUFFIX__VERSION_1_0;
 
 extern CL_API_ENTRY cl_int CL_API_CALL
-clSetKernelArg(cl_kernel    /* kernel */,
+CECL_SET_KERNEL_ARG(cl_kernel    /* kernel */,
                cl_uint      /* arg_index */,
                size_t       /* arg_size */,
                const void * /* arg_value */) CL_API_SUFFIX__VERSION_1_0;
@@ -711,7 +712,7 @@ clGetKernelInfo(cl_kernel       /* kernel */,
                 size_t *        /* param_value_size_ret */) CL_API_SUFFIX__VERSION_1_0;
 
 extern CL_API_ENTRY cl_int CL_API_CALL
-clGetKernelWorkGroupInfo(cl_kernel                  /* kernel */,
+CECL_GET_KERNEL_WORK_GROUP_INFO(cl_kernel                  /* kernel */,
                          cl_device_id               /* device */,
                          cl_kernel_work_group_info  /* param_name */,
                          size_t                     /* param_value_size */,
@@ -767,7 +768,7 @@ clFinish(cl_command_queue /* command_queue */) CL_API_SUFFIX__VERSION_1_0;
 
 /* Enqueued Commands APIs */
 extern CL_API_ENTRY cl_int CL_API_CALL
-clEnqueueReadBuffer(cl_command_queue    /* command_queue */,
+CECL_READ_BUFFER(cl_command_queue    /* command_queue */,
                     cl_mem              /* buffer */,
                     cl_bool             /* blocking_read */,
                     size_t              /* offset */,
@@ -778,7 +779,7 @@ clEnqueueReadBuffer(cl_command_queue    /* command_queue */,
                     cl_event *          /* event */) CL_API_SUFFIX__VERSION_1_0;
                             
 extern CL_API_ENTRY cl_int CL_API_CALL
-clEnqueueReadBufferRect(cl_command_queue    /* command_queue */,
+CECL_READ_BUFFERRect(cl_command_queue    /* command_queue */,
                         cl_mem              /* buffer */,
                         cl_bool             /* blocking_read */,
                         const size_t *      /* buffer_offset */,
@@ -794,7 +795,7 @@ clEnqueueReadBufferRect(cl_command_queue    /* command_queue */,
                         cl_event *          /* event */) CL_API_SUFFIX__VERSION_1_1;
                             
 extern CL_API_ENTRY cl_int CL_API_CALL
-clEnqueueWriteBuffer(cl_command_queue   /* command_queue */, 
+CECL_WRITE_BUFFER(cl_command_queue   /* command_queue */, 
                      cl_mem             /* buffer */, 
                      cl_bool            /* blocking_write */, 
                      size_t             /* offset */, 
@@ -805,7 +806,7 @@ clEnqueueWriteBuffer(cl_command_queue   /* command_queue */,
                      cl_event *         /* event */) CL_API_SUFFIX__VERSION_1_0;
                             
 extern CL_API_ENTRY cl_int CL_API_CALL
-clEnqueueWriteBufferRect(cl_command_queue    /* command_queue */,
+CECL_WRITE_BUFFERRect(cl_command_queue    /* command_queue */,
                          cl_mem              /* buffer */,
                          cl_bool             /* blocking_read */,
                          const size_t *      /* buffer_offset */,
@@ -906,7 +907,7 @@ clEnqueueCopyBufferToImage(cl_command_queue /* command_queue */,
                            cl_event *       /* event */) CL_API_SUFFIX__VERSION_1_0;
 
 extern CL_API_ENTRY void * CL_API_CALL
-clEnqueueMapBuffer(cl_command_queue /* command_queue */,
+CECL_MAP_BUFFER(cl_command_queue /* command_queue */,
                    cl_mem           /* buffer */,
                    cl_bool          /* blocking_map */, 
                    cl_map_flags     /* map_flags */,
@@ -940,7 +941,7 @@ clEnqueueUnmapMemObject(cl_command_queue /* command_queue */,
                         cl_event *        /* event */) CL_API_SUFFIX__VERSION_1_0;
 
 extern CL_API_ENTRY cl_int CL_API_CALL
-clEnqueueNDRangeKernel(cl_command_queue /* command_queue */,
+CECL_ND_RANGE_KERNEL(cl_command_queue /* command_queue */,
                        cl_kernel        /* kernel */,
                        cl_uint          /* work_dim */,
                        const size_t *   /* global_work_offset */,
@@ -951,7 +952,7 @@ clEnqueueNDRangeKernel(cl_command_queue /* command_queue */,
                        cl_event *       /* event */) CL_API_SUFFIX__VERSION_1_0;
 
 extern CL_API_ENTRY cl_int CL_API_CALL
-clEnqueueTask(cl_command_queue  /* command_queue */,
+CECL_TASK(cl_command_queue  /* command_queue */,
               cl_kernel         /* kernel */,
               cl_uint           /* num_events_in_wait_list */,
               const cl_event *  /* event_wait_list */,

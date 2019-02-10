@@ -1,4 +1,3 @@
-#include <cecl.h>
 /**********************************************************************
 Copyright ©2015 Advanced Micro Devices, Inc. All rights reserved.
 

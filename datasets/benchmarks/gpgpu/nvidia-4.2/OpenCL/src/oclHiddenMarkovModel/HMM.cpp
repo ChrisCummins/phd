@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -69,7 +69,7 @@ HMM::HMM(cl_context GPUContext,
     err = clGetCommandQueueInfo(cqCommandQue, CL_QUEUE_DEVICE, sizeof(cl_device_id), &device, NULL);
     oclCheckErrorEX(err, CL_SUCCESS, NULL);
     size_t maxWgSize;
-    err = clGetKernelWorkGroupInfo(ckViterbiOneStep, device, CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &maxWgSize, NULL);
+    err = CECL_GET_KERNEL_WORK_GROUP_INFO(ckViterbiOneStep, device, CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &maxWgSize, NULL);
     oclCheckErrorEX(err, CL_SUCCESS, NULL);
     if (maxWgSize == 64) smallBlock = true;
     else smallBlock = false;

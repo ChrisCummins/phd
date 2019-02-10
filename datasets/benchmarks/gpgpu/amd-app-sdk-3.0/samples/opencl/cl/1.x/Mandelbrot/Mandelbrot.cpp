@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 /**********************************************************************
 Copyright ©2015 Advanced Micro Devices, Inc. All rights reserved.
 
@@ -363,13 +363,13 @@ Mandelbrot::setupCL(void)
     // Use NULL for backward compatibility
     cl_context_properties* cprops = (NULL == platform) ? NULL : cps;
 
-    context = clCreateContextFromType(
+    context = CECL_CREATE_CONTEXTFromType(
                   cprops,
                   dType,
                   NULL,
                   NULL,
                   &status);
-    CHECK_OPENCL_ERROR(status, "clCreateContextFromType failed.");
+    CHECK_OPENCL_ERROR(status, "CECL_CREATE_CONTEXTFromType failed.");
 
     // First, get the size of device list data
     status = clGetContextInfo(
@@ -679,13 +679,13 @@ Mandelbrot::runCLKernels(void)
         kernel = kernel_vector[i];
 
         // Check group size against kernelWorkGroupSize
-        status = clGetKernelWorkGroupInfo(kernel,
+        status = CECL_GET_KERNEL_WORK_GROUP_INFO(kernel,
                                           devices[i],
                                           CL_KERNEL_WORK_GROUP_SIZE,
                                           sizeof(size_t),
                                           &kernelWorkGroupSize,
                                           0);
-        CHECK_OPENCL_ERROR(status, "clGetKernelWorkGroupInfo failed.");
+        CHECK_OPENCL_ERROR(status, "CECL_GET_KERNEL_WORK_GROUP_INFO failed.");
 
         if((cl_uint)(localThreads[0]) > kernelWorkGroupSize)
         {

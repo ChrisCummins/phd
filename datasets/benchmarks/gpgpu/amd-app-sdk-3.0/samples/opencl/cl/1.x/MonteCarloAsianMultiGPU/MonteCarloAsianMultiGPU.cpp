@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 /**********************************************************************
 Copyright ©2015 Advanced Micro Devices, Inc. All rights reserved.
 
@@ -363,12 +363,12 @@ MonteCarloAsianMultiGPU::setupCL(void)
         0
     };
 
-    context = clCreateContextFromType(cps,
+    context = CECL_CREATE_CONTEXTFromType(cps,
                                       dType,
                                       NULL,
                                       NULL,
                                       &status);
-    CHECK_OPENCL_ERROR(status, "clCreateContextFromType() failed.");
+    CHECK_OPENCL_ERROR(status, "CECL_CREATE_CONTEXTFromType() failed.");
 
     // getting device on which to run the sample
     status = getDevices(context, &devices, sampleArgs->deviceId,
@@ -584,13 +584,13 @@ MonteCarloAsianMultiGPU::setupCL(void)
             CHECK_OPENCL_ERROR(status, "CECL_KERNEL failed.");
 
             // Check group-size against what is returned by kernel
-            status = clGetKernelWorkGroupInfo(kernels[i],
+            status = CECL_GET_KERNEL_WORK_GROUP_INFO(kernels[i],
                                               gpuDeviceIDs[i],
                                               CL_KERNEL_WORK_GROUP_SIZE,
                                               sizeof(size_t),
                                               &kernelWorkGroupSize,
                                               0);
-            CHECK_OPENCL_ERROR(status, "clGetKernelWorkGroupInfo failed.");
+            CHECK_OPENCL_ERROR(status, "CECL_GET_KERNEL_WORK_GROUP_INFO failed.");
 
             if((blockSizeX * blockSizeY) > kernelWorkGroupSize)
             {
@@ -646,14 +646,14 @@ MonteCarloAsianMultiGPU::setupCL(void)
         CHECK_OPENCL_ERROR(status, "CECL_KERNEL(calPriceVega) failed.");
 
         // Check group-size against what is returned by kernel
-        status = clGetKernelWorkGroupInfo(kernel,
+        status = CECL_GET_KERNEL_WORK_GROUP_INFO(kernel,
                                           devices[sampleArgs->deviceId],
                                           CL_KERNEL_WORK_GROUP_SIZE,
                                           sizeof(size_t),
                                           &kernelWorkGroupSize,
                                           0);
         CHECK_OPENCL_ERROR(status,
-                           "clGetKernelWorkGroupInfo(CL_KERNEL_WORK_GROUP_SIZE) failed.");
+                           "CECL_GET_KERNEL_WORK_GROUP_INFO(CL_KERNEL_WORK_GROUP_SIZE) failed.");
         if((blockSizeX * blockSizeY) > kernelWorkGroupSize)
         {
             if(!sampleArgs->quiet)

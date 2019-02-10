@@ -1,4 +1,3 @@
-#include <cecl.h>
 #ifndef _S3D_H
 #define _S3D_H
 

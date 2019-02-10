@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -58,12 +58,12 @@ bool getTargetDeviceGlobalMemSize(memsize_t *result, const int argc, const char 
     // Create the OpenCL context
     if (ok)
     {
-        shrLog(" clCreateContext\n");
-        context = clCreateContext(0, deviceCount, devices, NULL, NULL, &errnum);
+        shrLog(" CECL_CREATE_CONTEXT\n");
+        context = CECL_CREATE_CONTEXT(0, deviceCount, devices, NULL, NULL, &errnum);
         if (errnum != CL_SUCCESS)
         {
             shrLogEx(LOGBOTH | ERRORMSG, errnum, STDERROR);
-            shrLog("clCreateContext (returned %d).\n", errnum);
+            shrLog("CECL_CREATE_CONTEXT (returned %d).\n", errnum);
             ok = false;
         }
     }
@@ -197,12 +197,12 @@ bool fdtdGPU(float *output, const float *input, const float *coeff, const int di
     // Create the OpenCL context
     if (ok)
     {
-        shrLog(" clCreateContext...\n");
-        context = clCreateContext(0, deviceCount, devices, NULL, NULL, &errnum);
+        shrLog(" CECL_CREATE_CONTEXT...\n");
+        context = CECL_CREATE_CONTEXT(0, deviceCount, devices, NULL, NULL, &errnum);
         if (errnum != CL_SUCCESS)
         {
             shrLogEx(LOGBOTH | ERRORMSG, errnum, STDERROR);
-            shrLog("clCreateContext (returned %d).\n", errnum);
+            shrLog("CECL_CREATE_CONTEXT (returned %d).\n", errnum);
             ok = false;
         }
     }
@@ -395,12 +395,12 @@ bool fdtdGPU(float *output, const float *input, const float *coeff, const int di
     size_t maxWorkSize;
     if (ok)
     {
-        shrLog(" clGetKernelWorkGroupInfo\n");
-        errnum = clGetKernelWorkGroupInfo(kernel, devices[targetDevice], CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &maxWorkSize, NULL);
+        shrLog(" CECL_GET_KERNEL_WORK_GROUP_INFO\n");
+        errnum = CECL_GET_KERNEL_WORK_GROUP_INFO(kernel, devices[targetDevice], CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &maxWorkSize, NULL);
         if (errnum != CL_SUCCESS)
         {
             shrLogEx(LOGBOTH | ERRORMSG, errnum, STDERROR);
-            shrLog("clGetKernelWorkGroupInfo (returned %d).\n", errnum);
+            shrLog("CECL_GET_KERNEL_WORK_GROUP_INFO (returned %d).\n", errnum);
             ok = false;
         }
     }

@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 //------------------------------------------
 //--cambine:helper function for OpenCL
 //--programmer:	Jianbin Fang
@@ -183,14 +183,14 @@ void _clInit()
     //-----------------------------------------------
     //--cambine-2: create an OpenCL context
     cl_context_properties cprops[3] = { CL_CONTEXT_PLATFORM, (cl_context_properties)targetPlatform, 0 };
-    oclHandles.context = clCreateContextFromType(cprops, 
+    oclHandles.context = CECL_CREATE_CONTEXTFromType(cprops, 
                                                 CL_DEVICE_TYPE_GPU, 
                                                 NULL, 
                                                 NULL, 
                                                 &resultCL);
 
     if ((resultCL != CL_SUCCESS) || (oclHandles.context == NULL))
-        throw (string("InitCL()::Error: Creating Context (clCreateContextFromType)"));
+        throw (string("InitCL()::Error: Creating Context (CECL_CREATE_CONTEXTFromType)"));
     //-----------------------------------------------
     //--cambine-3: detect OpenCL devices	
     /* First, get the size of device list */

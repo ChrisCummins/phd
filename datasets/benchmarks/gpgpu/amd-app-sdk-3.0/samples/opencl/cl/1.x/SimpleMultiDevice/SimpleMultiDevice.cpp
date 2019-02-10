@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 /**********************************************************************
 Copyright ©2015 Advanced Micro Devices, Inc. All rights reserved.
 
@@ -20,13 +20,13 @@ int
 Device::createContext()
 {
     //Create context using current device's ID
-    context = clCreateContext(cprops,
+    context = CECL_CREATE_CONTEXT(cprops,
                               1,
                               &deviceId,
                               0,
                               0,
                               &status);
-    CHECK_OPENCL_ERROR(status, "clCreateContext failed.");
+    CHECK_OPENCL_ERROR(status, "CECL_CREATE_CONTEXT failed.");
 
     return SDK_SUCCESS;
 }
@@ -383,12 +383,12 @@ int runMultiGPU()
     std::cout << sep << "\nMulti GPU Test 1 : Single context Single Thread\n" <<
               sep << std::endl;
 
-    cl_context context = clCreateContextFromType(cprops,
+    cl_context context = CECL_CREATE_CONTEXTFromType(cprops,
                          CL_DEVICE_TYPE_GPU,
                          0,
                          0,
                          &status);
-    CHECK_OPENCL_ERROR(status, "clCreateContext failed.");
+    CHECK_OPENCL_ERROR(status, "CECL_CREATE_CONTEXT failed.");
 
     size_t sourceSize = strlen(source);
     cl_program program  = CECL_PROGRAM_WITH_SOURCE(context,
@@ -511,7 +511,7 @@ int runMultiGPU()
     //Release the resources on all devices
     //Release context
     status = clReleaseContext(context);
-    CHECK_OPENCL_ERROR(status, "clCreateContext failed.");
+    CHECK_OPENCL_ERROR(status, "CECL_CREATE_CONTEXT failed.");
 
     //Release memory buffers
     status = clReleaseMemObject(inputBuffer);
@@ -768,8 +768,8 @@ int runMultiDevice()
     devices[0] = cpu[0].deviceId;
     devices[1] = gpu[0].deviceId;
 
-    cl_context context = clCreateContext(cprops, 2, devices, 0, 0, &status);
-    CHECK_OPENCL_ERROR(status, "clCreateContext failed.");
+    cl_context context = CECL_CREATE_CONTEXT(cprops, 2, devices, 0, 0, &status);
+    CHECK_OPENCL_ERROR(status, "CECL_CREATE_CONTEXT failed.");
 
     size_t sourceSize = strlen(source);
     cl_program program  = CECL_PROGRAM_WITH_SOURCE(context,
@@ -905,7 +905,7 @@ int runMultiDevice()
 
     //Release context
     status = clReleaseContext(context);
-    CHECK_OPENCL_ERROR(status, "clCreateContext failed.(context)");
+    CHECK_OPENCL_ERROR(status, "CECL_CREATE_CONTEXT failed.(context)");
 
 
     //Release memory buffers

@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 /*
 * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
 *
@@ -125,7 +125,7 @@ int main( int argc, const char** argv)
     oclCheckError(ciErrNum, CL_SUCCESS);
 
     //Create the context
-    cxGPUContext = clCreateContext(0, uiNumDevices, cdDevices, NULL, NULL, &ciErrNum);
+    cxGPUContext = CECL_CREATE_CONTEXT(0, uiNumDevices, cdDevices, NULL, NULL, &ciErrNum);
     oclCheckError(ciErrNum, CL_SUCCESS);
 
     // get and log the device info
@@ -625,7 +625,7 @@ cl_kernel getReductionKernel(ReduceType datatype, int whichKernel, int blockSize
     oclCheckError(ciErrNum, CL_SUCCESS);
 
     size_t wgSize;
-    ciErrNum = clGetKernelWorkGroupInfo(ckKernel, device, CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &wgSize, NULL);
+    ciErrNum = CECL_GET_KERNEL_WORK_GROUP_INFO(ckKernel, device, CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &wgSize, NULL);
     if (wgSize == 64) 
       smallBlock = true;
     else smallBlock = false;

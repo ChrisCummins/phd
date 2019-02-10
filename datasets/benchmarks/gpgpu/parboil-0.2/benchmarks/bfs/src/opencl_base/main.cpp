@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 /***************************************************************************
  *cr
  *cr            (C) Copyright 2010 The Board of Trustees of the
@@ -160,7 +160,7 @@ int main( int argc, char** argv)
     exit(1);
   }
 
-  cl_context clContext = clCreateContextFromType(clCps,CL_DEVICE_TYPE_GPU,NULL,NULL,&clStatus);
+  cl_context clContext = CECL_CREATE_CONTEXTFromType(clCps,CL_DEVICE_TYPE_GPU,NULL,NULL,&clStatus);
   OCL_ERRCK_VAR(clStatus);
   cl_command_queue clCommandQueue = CECL_CREATE_COMMAND_QUEUE(clContext,clDevice,CL_QUEUE_PROFILING_ENABLE,&clStatus);
   OCL_ERRCK_VAR(clStatus);

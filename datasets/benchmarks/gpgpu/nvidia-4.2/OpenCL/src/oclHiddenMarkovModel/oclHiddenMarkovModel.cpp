@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -84,8 +84,8 @@ int main(int argc, const char **argv)
     ciErrNum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_GPU, nDevice, cdDevices, NULL);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, NULL);
 
-    shrLog("clCreateContext\n");
-    cxGPUContext = clCreateContext(0, nDevice, cdDevices, NULL, NULL, &ciErrNum);
+    shrLog("CECL_CREATE_CONTEXT\n");
+    cxGPUContext = CECL_CREATE_CONTEXT(0, nDevice, cdDevices, NULL, NULL, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, NULL);
 
     shrLog("CECL_CREATE_COMMAND_QUEUE\n"); 

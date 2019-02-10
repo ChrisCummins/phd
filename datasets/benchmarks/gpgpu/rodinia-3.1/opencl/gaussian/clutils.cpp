@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 /****************************************************************************\ 
  * Copyright (c) 2011, Advanced Micro Devices, Inc.                           *
  * All rights reserved.                                                       *
@@ -217,7 +217,7 @@ cl_context cl_init(char devicePreference)
     // Create the context
     cl_context_properties cps[3] = {CL_CONTEXT_PLATFORM, 
         (cl_context_properties)(platform), 0};
-    context = clCreateContext(cps, 1, &device, NULL, NULL, &status);    
+    context = CECL_CREATE_CONTEXT(cps, 1, &device, NULL, NULL, &status);    
     cl_errChk(status, "Creating context", true);
  
     // Create the command queue
@@ -366,7 +366,7 @@ cl_context cl_init_context(int platform, int dev,int quiet) {
 
 	cl_context_properties *cprops = cps;
 
-	context = clCreateContextFromType(
+	context = CECL_CREATE_CONTEXTFromType(
 					cprops, (cl_device_type)dtype,
 					NULL, NULL, &status);
 	if(cl_errChk(status, "creating Context",true)) {

@@ -1,4 +1,4 @@
-#include <cecl.h>
+#include <libcecl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -95,26 +95,26 @@ static int initialize(int use_gpu) {
 
     cl_context_properties ctxprop[] = {CL_CONTEXT_PLATFORM, (cl_context_properties) platform_id[0], 0};
     device_type = use_gpu ? CL_DEVICE_TYPE_GPU : CL_DEVICE_TYPE_GPU;
-    context = clCreateContextFromType(ctxprop, device_type, NULL, NULL, &err);
+    context = CECL_CREATE_CONTEXTFromType(ctxprop, device_type, NULL, NULL, &err);
 
     if (!context) {
         if (CL_INVALID_PLATFORM == err)
-            printf("CL_INVALID_PLATFORM returned by clCreateContextFromType()\n");
+            printf("CL_INVALID_PLATFORM returned by CECL_CREATE_CONTEXTFromType()\n");
         else if (CL_INVALID_VALUE == err)
-            printf("CL_INVALID_VALUE returned by clCreateContextFromType()\n");
+            printf("CL_INVALID_VALUE returned by CECL_CREATE_CONTEXTFromType()\n");
         else if (CL_INVALID_DEVICE_TYPE == err)
-            printf("CL_INVALID_DEVICE_TYPE returned by clCreateContextFromType()\n");
+            printf("CL_INVALID_DEVICE_TYPE returned by CECL_CREATE_CONTEXTFromType()\n");
         else if (CL_INVALID_OPERATION == err)
-            printf("CL_INVALID_OPERATION returned by clCreateContextFromType()\n");
+            printf("CL_INVALID_OPERATION returned by CECL_CREATE_CONTEXTFromType()\n");
         else if (CL_DEVICE_NOT_AVAILABLE == err)
-            printf("CL_DEVICE_NOT_AVAILABLE returned by clCreateContextFromType()\n");
+            printf("CL_DEVICE_NOT_AVAILABLE returned by CECL_CREATE_CONTEXTFromType()\n");
         else if (CL_DEVICE_NOT_FOUND == err)
-            printf("CL_DEVICE_NOT_FOUND returned by clCreateContextFromType()\n");
+            printf("CL_DEVICE_NOT_FOUND returned by CECL_CREATE_CONTEXTFromType()\n");
         else if (CL_OUT_OF_RESOURCES == err)
-            printf("CL_OUT_OF_RESOURCES returned by clCreateContextFromType()\n");
+            printf("CL_OUT_OF_RESOURCES returned by CECL_CREATE_CONTEXTFromType()\n");
 
 
-        printf("ERROR: clCreateContextFromType(%s) failed\n", use_gpu ? "GPU" : "CPU");
+        printf("ERROR: CECL_CREATE_CONTEXTFromType(%s) failed\n", use_gpu ? "GPU" : "CPU");
         return -1;
     }
 

@@ -1,4 +1,3 @@
-#include <cecl.h>
 #include "mpi.h"
 #include <sstream>
 #include <iomanip>
