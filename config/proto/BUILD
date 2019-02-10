@@ -2,9 +2,10 @@
 
 load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
 
+package(default_visibility = ["//visibility:public"])
+
 py_proto_library(
     name = "config",
     protos = ["config.proto"],
-    visibility = ["//visibility:public"],
     deps = ["//labm8:crypto"],
 )
