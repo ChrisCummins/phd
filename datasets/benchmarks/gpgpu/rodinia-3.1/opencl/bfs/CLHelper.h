@@ -183,14 +183,14 @@ void _clInit()
     //-----------------------------------------------
     //--cambine-2: create an OpenCL context
     cl_context_properties cprops[3] = { CL_CONTEXT_PLATFORM, (cl_context_properties)targetPlatform, 0 };
-    oclHandles.context = CECL_CREATE_CONTEXTFromType(cprops, 
+    oclHandles.context = CECL_CREATE_CONTEXT_FROM_TYPE(cprops, 
                                                 CL_DEVICE_TYPE_GPU, 
                                                 NULL, 
                                                 NULL, 
                                                 &resultCL);
 
     if ((resultCL != CL_SUCCESS) || (oclHandles.context == NULL))
-        throw (string("InitCL()::Error: Creating Context (CECL_CREATE_CONTEXTFromType)"));
+        throw (string("InitCL()::Error: Creating Context (CECL_CREATE_CONTEXT_FROM_TYPE)"));
     //-----------------------------------------------
     //--cambine-3: detect OpenCL devices	
     /* First, get the size of device list */

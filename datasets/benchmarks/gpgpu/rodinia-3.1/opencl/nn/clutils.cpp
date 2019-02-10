@@ -365,7 +365,7 @@ cl_context cl_init_context(int platform, int dev,int quiet) {
 
 	cl_context_properties *cprops = cps;
 
-	context = CECL_CREATE_CONTEXTFromType(
+	context = CECL_CREATE_CONTEXT_FROM_TYPE(
 					cprops, (cl_device_type)dtype,
 					NULL, NULL, &status);
 	if(cl_errChk(status, "creating Context",true)) {

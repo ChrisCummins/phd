@@ -129,13 +129,13 @@ ImageOverlap::setupCL()
         0
     };
 
-    context = CECL_CREATE_CONTEXTFromType(
+    context = CECL_CREATE_CONTEXT_FROM_TYPE(
                   cps,
                   dType,
                   NULL,
                   NULL,
                   &status);
-    CHECK_OPENCL_ERROR(status, "CECL_CREATE_CONTEXTFromType failed.");
+    CHECK_OPENCL_ERROR(status, "CECL_CREATE_CONTEXT_FROM_TYPE failed.");
 
     // getting device on which to run the sample
     status = getDevices(context, &devices, sampleArgs->deviceId,

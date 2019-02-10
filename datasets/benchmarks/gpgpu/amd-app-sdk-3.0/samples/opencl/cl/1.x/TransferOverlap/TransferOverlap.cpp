@@ -123,12 +123,12 @@ TransferOverlap::setupCL(void)
     CHECK_ERROR(retValue, SDK_SUCCESS, "displayDevices() failed");
 
     cl_context_properties cps[3] = {CL_CONTEXT_PLATFORM, (cl_context_properties)platform, 0};
-    context = CECL_CREATE_CONTEXTFromType(cps,
+    context = CECL_CREATE_CONTEXT_FROM_TYPE(cps,
                                       dType,
                                       NULL,
                                       NULL,
                                       &status);
-    CHECK_OPENCL_ERROR(status, "CECL_CREATE_CONTEXTFromType failed.");
+    CHECK_OPENCL_ERROR(status, "CECL_CREATE_CONTEXT_FROM_TYPE failed.");
 
     // First, get the size of device list data
     status = clGetContextInfo(context,
