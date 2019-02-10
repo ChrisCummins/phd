@@ -45,9 +45,9 @@ py_library(
     name = "libcecl_rewriter",
     srcs = ["libcecl_rewriter.py"],
     deps = [
-        "//third_party/py/absl",
         "//labm8:fs",
-    ]
+        "//third_party/py/absl",
+    ],
 )
 
 py_test(
@@ -56,7 +56,7 @@ py_test(
     deps = [
         ":libcecl_rewriter",
         "//labm8:test",
-    ]
+    ],
 )
 
 sh_binary(
