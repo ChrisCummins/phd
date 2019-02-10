@@ -30,6 +30,10 @@ file_is_source() {
 
     if [[ "$path" == *.cpp ]]; then
         return 0
+    elif [[ "$path" == *.cc ]]; then
+        return 0
+    elif [[ "$path" == *.cxx ]]; then
+        return 0
     elif [[ "$path" == *.c ]]; then
         return 0
     elif [[ "$path" == *.h ]]; then
