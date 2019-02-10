@@ -29,8 +29,6 @@ py_library(
 py_binary(
     name = "clgen",
     srcs = ["clgen.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":errors",
@@ -69,8 +67,6 @@ py_test(
         "//deeplearning/clgen/tests/data:tiny",
         "//deeplearning/clgen/tests/data/tiny",
     ],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":clgen",
         "//deeplearning/clgen:conftest",
@@ -108,8 +104,6 @@ py_library(
 py_binary(
     name = "ls_models",
     srcs = ["ls_models.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/clgen/models",
@@ -151,8 +145,6 @@ py_library(
 py_test(
     name = "samplers_test",
     srcs = ["samplers_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":conftest",
         ":errors",
@@ -178,8 +170,6 @@ py_library(
 py_test(
     name = "telemetry_test",
     srcs = ["telemetry_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":telemetry",
         "//labm8:test",

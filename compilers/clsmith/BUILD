@@ -4,8 +4,6 @@ py_binary(
     name = "clsmith",
     srcs = ["clsmith.py"],
     data = ["@CLSmith"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         "//labm8:bazelutil",
@@ -17,8 +15,6 @@ py_binary(
 py_test(
     name = "clsmith_test",
     srcs = ["clsmith_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":clsmith",
         "//labm8:test",
@@ -40,8 +36,6 @@ py_binary(
             "@libopencl//:libOpenCL.so",
         ],
     }),
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         "//gpu/cldrive:driver",
@@ -56,8 +50,6 @@ py_binary(
 py_test(
     name = "cl_launcher_test",
     srcs = ["cl_launcher_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":cl_launcher",
         "//gpu/cldrive:env",

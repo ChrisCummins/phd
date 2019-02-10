@@ -13,8 +13,6 @@ py_test(
     name = "config_test",
     srcs = ["config_test.py"],
     data = [":tiny"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         "//deeplearning/clgen",
         "//deeplearning/clgen/proto:clgen_py_pb2",

@@ -14,8 +14,6 @@ py_library(
 py_test(
     name = "getconfig_test",
     srcs = ["getconfig_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":getconfig",
         "//labm8:test",

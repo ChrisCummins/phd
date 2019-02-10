@@ -29,8 +29,6 @@ py_test(
     name = "extractors_test",
     size = "small",
     srcs = ["extractors_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":conftest",
         ":extractors",
@@ -63,8 +61,6 @@ py_test(
     name = "inliners_test",
     size = "small",
     srcs = ["inliners_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":conftest",
         ":inliners",
@@ -115,8 +111,6 @@ py_test(
     name = "preprocessors_test",
     size = "small",
     srcs = ["preprocessors_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":conftest",
         ":preprocessors",
@@ -140,8 +134,6 @@ py_test(
     name = "public_test",
     size = "small",
     srcs = ["public_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":conftest",
         ":public",

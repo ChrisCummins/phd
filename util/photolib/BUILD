@@ -10,8 +10,6 @@ exports_files([
 py_binary(
     name = "photolint",
     srcs = ["photolint.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":common",
         ":lintercache",
@@ -76,8 +74,6 @@ py_test(
     name = "tests/linters_test",
     size = "small",
     srcs = ["tests/linters_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":linters",
         "//labm8:test",
@@ -89,8 +85,6 @@ py_test(
     name = "tests/workspace_test",
     size = "small",
     srcs = ["tests/workspace_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":workspace",
         "//labm8:test",

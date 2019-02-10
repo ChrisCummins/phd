@@ -11,8 +11,6 @@ exports_files([
 py_binary(
     name = "lmk",
     srcs = ["lmk.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         "//third_party/py/humanize",
     ],

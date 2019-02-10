@@ -39,8 +39,6 @@ py3_image(
 py_test(
     name = "opencl_fuzz_test",
     srcs = ["opencl_fuzz_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":opencl_fuzz",
         "//labm8:pbutil",

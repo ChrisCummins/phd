@@ -8,8 +8,6 @@ py_binary(
         "//:darwin": ["@oclgrind_mac//:oclgrind"],
         "//conditions:default": ["@oclgrind_linux//:oclgrind"],
     }),
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         "//gpu/clinfo/proto:clinfo_py_pb2",
@@ -22,8 +20,6 @@ py_binary(
 py_test(
     name = "oclgrind_test",
     srcs = ["oclgrind_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":oclgrind",
         "//labm8:test",

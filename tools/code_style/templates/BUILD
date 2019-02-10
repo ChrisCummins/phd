@@ -20,8 +20,6 @@ py_test(
     name = "python_test",
     size = "small",
     srcs = ["python_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         "//labm8:test",
         "//third_party/py/absl",

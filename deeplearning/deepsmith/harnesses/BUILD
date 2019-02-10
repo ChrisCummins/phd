@@ -18,8 +18,6 @@ py_binary(
             "@libopencl//:libOpenCL.so",
         ],
     }),
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":harness",
@@ -43,8 +41,6 @@ py_binary(
 py_test(
     name = "cldrive_test",
     srcs = ["cldrive_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":cldrive",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
@@ -82,8 +78,6 @@ py3_image(
 py_binary(
     name = "cl_launcher",
     srcs = ["cl_launcher.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":harness",
@@ -101,8 +95,6 @@ py_binary(
 py_test(
     name = "cl_launcher_test",
     srcs = ["cl_launcher_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":cl_launcher",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",

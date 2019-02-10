@@ -14,8 +14,6 @@ py_binary(
         "data/clgen.pbtxt",
         "//deeplearning/clgen/tests/data:tiny",
     ],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         "//deeplearning/deepsmith/generators:clgen",
         "//deeplearning/deepsmith/proto:generator_py_pb2",
@@ -29,8 +27,6 @@ py_binary(
 py_test(
     name = "01_evaluate_generator_test",
     srcs = ["01_evaluate_generator_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":01_evaluate_generator",
         "//deeplearning/clgen:conftest",
@@ -46,8 +42,6 @@ py_binary(
     name = "02_evaluate_harness",
     srcs = ["02_evaluate_harness.py"],
     data = glob(["data/testcases/*.pbtxt"]),
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         "//deeplearning/deepsmith/harnesses:cldrive",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
@@ -69,8 +63,6 @@ py_binary(
         "data/datastore.pbtxt",
         "data/our_results/*.pbtxt",
     ]),
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         "//deeplearning/deepsmith:datastore",
         "//deeplearning/deepsmith:db",

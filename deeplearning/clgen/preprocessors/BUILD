@@ -28,8 +28,6 @@ py_library(
 py_test(
     name = "clang_test",
     srcs = ["clang_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":clang",
         "//labm8:test",
@@ -276,8 +274,6 @@ py_library(
 py_test(
     name = "common_test",
     srcs = ["common_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":common",
         "//deeplearning/clgen:errors",
@@ -311,8 +307,6 @@ py_library(
 py_test(
     name = "cxx_test",
     srcs = ["cxx_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":cxx",
         "//deeplearning/clgen:errors",
@@ -353,8 +347,6 @@ py_library(
 py_test(
     name = "java_test",
     srcs = ["java_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":java",
         "//deeplearning/clgen:errors",
@@ -403,8 +395,6 @@ py_library(
 py_test(
     name = "normalizer_test",
     srcs = ["normalizer_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":normalizer",
         "//deeplearning/clgen:errors",
@@ -434,8 +424,6 @@ py_test(
     name = "opencl_test",
     srcs = ["opencl_test.py"],
     data = ["//deeplearning/clgen/data/include:opencl-shim"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":clang",
         ":opencl",
@@ -472,8 +460,6 @@ py_library(
 py_test(
     name = "preprocessors_test",
     srcs = ["preprocessors_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":preprocessors",
         ":public",
@@ -496,8 +482,6 @@ py_library(
 py_test(
     name = "public_test",
     srcs = ["public_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":public",
         "//deeplearning/clgen:errors",

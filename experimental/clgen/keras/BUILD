@@ -3,8 +3,6 @@
 py_test(
     name = "benchmark_module_import_test",
     srcs = ["benchmark_module_import_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         "//labm8:test",
         "//third_party/py/absl",
@@ -16,8 +14,6 @@ py_test(
 py_test(
     name = "benchmark_model_init_test",
     srcs = ["benchmark_model_init_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         "//labm8:test",
         "//third_party/py/absl",
@@ -29,8 +25,6 @@ py_test(
 py_test(
     name = "benchmark_string_concatenation_test",
     srcs = ["benchmark_string_concatenation_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         "//labm8:test",
         "//third_party/py/absl",
@@ -40,8 +34,6 @@ py_test(
 py_test(
     name = "log_to_file_test",
     srcs = ["log_to_file_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         "//labm8:test",
         "//third_party/py/absl",
@@ -55,8 +47,6 @@ py_binary(
         "opencl_baseline_a.pbtxt",
         "opencl_baseline_b.pbtxt",
     ],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         "//deeplearning/clgen",
         "//labm8:bazelutil",

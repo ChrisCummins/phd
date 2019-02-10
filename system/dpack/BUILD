@@ -18,8 +18,6 @@ py_test(
     name = "dpack_test",
     size = "small",
     srcs = ["dpack_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":dpack",
         "//labm8:test",

@@ -21,8 +21,6 @@ py_test(
 py_binary(
     name = "pack",
     srcs = ["pack.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":shutterbug",
         "//third_party/py/absl",
@@ -32,8 +30,6 @@ py_binary(
 py_binary(
     name = "unpack",
     srcs = ["unpack.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":shutterbug",
         "//third_party/py/absl",

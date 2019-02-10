@@ -15,8 +15,6 @@ py_library(
 py_test(
     name = "atomizers_test",
     srcs = ["atomizers_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":atomizers",
         "//labm8:test",
@@ -52,8 +50,6 @@ py_library(
 py_test(
     name = "corpuses_test",
     srcs = ["corpuses_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":corpuses",
         "//deeplearning/clgen:conftest",
@@ -88,8 +84,6 @@ py_library(
 py_test(
     name = "encoded_test",
     srcs = ["encoded_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":atomizers",
         ":encoded",

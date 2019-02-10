@@ -29,8 +29,6 @@ py_library(
 py_test(
     name = "builders_test",
     srcs = ["builders_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":builders",
         "//deeplearning/clgen:conftest",
@@ -55,8 +53,6 @@ py_library(
 py_test(
     name = "data_generators_test",
     srcs = ["data_generators_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":data_generators",
         "//deeplearning/clgen:conftest",
@@ -94,8 +90,6 @@ py_test(
     name = "keras_backend_test",
     size = "enormous",
     srcs = ["keras_backend_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":keras_backend",
         ":models",
@@ -161,8 +155,6 @@ py_library(
 py_test(
     name = "models_test",
     srcs = ["models_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":models",
         "//deeplearning/clgen:conftest",
@@ -204,8 +196,6 @@ py_test(
     name = "tensorflow_backend_test",
     size = "enormous",
     srcs = ["tensorflow_backend_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":models",
         ":tensorflow_backend",

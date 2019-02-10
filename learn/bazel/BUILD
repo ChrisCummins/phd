@@ -7,8 +7,6 @@ py_test(
         ":data_binary",
         ":data_file",
     ],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         "//labm8:bazelutil",
         "//third_party/py/absl",

@@ -42,8 +42,6 @@ py_test(
     size = "small",
     srcs = ["bazelutil_test.py"],
     data = ["data/test/hello_world"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":bazelutil",
         ":fs",
@@ -68,8 +66,6 @@ py_test(
     size = "small",
     srcs = ["cache_test.py"],
     data = ["data/test/jsoncache.json"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":cache",
         ":fs",
@@ -92,8 +88,6 @@ py_test(
         "data/test/empty_file",
         "data/test/hello_world",
     ],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":crypto",
         ":test",
@@ -130,8 +124,6 @@ py_test(
     name = "hashcache_test",
     size = "small",
     srcs = ["hashcache_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":hashcache",
         ":test",
@@ -186,8 +178,6 @@ py_test(
         "data/test/hello_world",
         "data/test/testdir/**",
     ]),
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":fs",
         ":system",
@@ -211,8 +201,6 @@ py_test(
     name = "fmt_test",
     size = "small",
     srcs = ["fmt_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":fmt",
         ":test",
@@ -234,8 +222,6 @@ py_test(
     name = "io_test",
     size = "small",
     srcs = ["io_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":io",
         ":system",
@@ -255,8 +241,6 @@ py_test(
     name = "jsonutil_test",
     size = "small",
     srcs = ["jsonutil_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":fs",
         ":jsonutil",
@@ -276,8 +260,6 @@ py_test(
     name = "labdate_test",
     size = "small",
     srcs = ["labdate_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":labdate",
         ":test",
@@ -300,8 +282,6 @@ py_test(
     name = "labmath_test",
     size = "small",
     srcs = ["labmath_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":labmath",
         ":test",
@@ -319,8 +299,6 @@ py_test(
     name = "labtypes_test",
     size = "small",
     srcs = ["labtypes_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":labtypes",
         ":test",
@@ -342,8 +320,6 @@ py_test(
     name = "latex_test",
     size = "small",
     srcs = ["latex_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":latex",
         ":test",
@@ -369,8 +345,6 @@ py_test(
     name = "lockfile_test",
     size = "small",
     srcs = ["lockfile_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":lockfile",
         ":pbutil",
@@ -395,8 +369,6 @@ py_test(
     name = "logutil_test",
     size = "small",
     srcs = ["logutil_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":logutil",
         ":test",
@@ -419,8 +391,6 @@ py_test(
     size = "small",
     srcs = ["make_test.py"],
     data = glob(["data/test/makeproj/**"]),
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":fs",
         ":make",
@@ -442,8 +412,6 @@ py_library(
 py_test(
     name = "pbutil_test",
     srcs = ["pbutil_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":pbutil",
         ":test",
@@ -497,8 +465,6 @@ py_test(
     name = "prof_test",
     size = "small",
     srcs = ["prof_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":prof",
         ":system",
@@ -531,8 +497,6 @@ py_test(
     name = "sqlutil_test",
     size = "small",
     srcs = ["sqlutil_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":sqlutil",
         ":test",
@@ -553,8 +517,6 @@ py_test(
     size = "small",
     srcs = ["system_test.py"],
     data = ["data/test/bin/scp"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":fs",
         ":system",
@@ -605,8 +567,6 @@ py_test(
     name = "text_test",
     size = "small",
     srcs = ["text_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":test",
         ":text",
@@ -628,8 +588,6 @@ py_test(
     name = "viz_test",
     size = "small",
     srcs = ["viz_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         ":test",
         ":viz",

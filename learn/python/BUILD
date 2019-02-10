@@ -6,8 +6,6 @@ load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
 py_test(
     name = "ascii_chart_test",
     srcs = ["ascii_chart_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         "//labm8:test",
         "//third_party/py/absl",

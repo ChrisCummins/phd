@@ -7,8 +7,6 @@ package(default_visibility = ["//experimental:__subpackages__"])
 py_binary(
     name = "datastore",
     srcs = ["datastore.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     visibility = [
         "//deeplearning/deepsmith/cli:__subpackages__",
         "//experimental:__subpackages__",

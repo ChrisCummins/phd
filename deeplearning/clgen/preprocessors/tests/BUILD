@@ -3,8 +3,6 @@
 py_test(
     name = "benchmark_test",
     srcs = ["benchmark_test.py"],
-    default_python_version = "PY3",
-    srcs_version = "PY3",
     deps = [
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen/preprocessors",
