@@ -483,7 +483,7 @@ cl_context CECL_CREATE_CONTEXT_FROM_TYPE(cl_context_properties *properties_unuse
                                                            void *user_data),
                                          void *user_data,
                                          cl_int *errcode_ret) {
-  return CECL_CREATE_CONTEXT(properties, 1, NULL, NULL, NULL, errcode_ret);
+  return CECL_CREATE_CONTEXT(NULL, 1, NULL, NULL, NULL, errcode_ret);
 }
 
 
