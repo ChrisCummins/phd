@@ -11,7 +11,7 @@ package phd;
 message LedgerEntry {
   // A numeric counter of this entry in the ledger. >= 1.
   optional int64 id = 1;
-  
+
   optional ExecHost exec_host = 2;
   // The start time, in milliseconds since the epoch, UTC time zone.
   optional int64 start_utc_epoch_ms = 4;
@@ -45,7 +45,7 @@ message ExecHost {
 
 service ExecService {
   rpc Run (RunRequest) returns (RunResponse);
-  rpc Status (Null) returns (ExecServiceStatus)
+  rpc Status (Null) returns (ExecServiceStatus);
 }
 
 message RepoState {
