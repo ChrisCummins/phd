@@ -41,6 +41,24 @@ cc_binary(
     visibility = ["//visibility:public"],
 )
 
+py_library(
+    name = "libcecl_rewriter",
+    srcs = ["libcecl_rewriter.py"],
+    deps = [
+        "//third_party/py/absl",
+        "//labm8:fs",
+    ]
+)
+
+py_test(
+    name = "libcecl_rewriter_test",
+    srcs = ["libcecl_rewriter_test.py"],
+    deps = [
+        ":libcecl_rewriter",
+        "//labm8:test",
+    ]
+)
+
 sh_binary(
     name = "mkcecl",
     srcs = ["mkcecl.sh"],
