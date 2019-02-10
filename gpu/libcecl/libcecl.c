@@ -22,6 +22,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define E_CL_FAILURE 101
 
@@ -354,87 +355,130 @@ cl_int cecl_task(cl_command_queue command_queue,
 }
 
 
-cl_command_queue CECL_CREATE_COMMAND_QUEUE(cl_context context,
-                                           cl_device_id device,
-                                           cl_command_queue_properties props,
-                                           cl_int* err) {
-    cl_int local_err;
-    // TODO(cec): Ignore device argument.
-    const char* target_platform = getenv("LIBCECL_PLATFORM")
-    const char* target_device = getenv("LIBCECL_DEVICE")
+// Return the platform ID with the given name, else fail.
+static cl_platform_id cecGetPlatformIdFromNameOrDie(const char* platform_name) {
+  cl_uint platform_count;
+  cl_int local_err = clGetPlatformIDs(0, NULL, &platform_count);
+  if (local_err != CL_SUCCESS) {
+    fprintf(stderr, "Cannot get platform IDs!\n");
+    exit(E_CL_FAILURE);
+  }
 
-    cl_uint platform_count;
-    local_err = clGetPlatformIds(0, NULL, &platform_count);
-    if (local_err != CL_SUCCESS) {
-      if (local_err == CL_INVALID_VALUE) {
-        fprintf(stderr, "num_entries is zero and platforms is not null\n");
-        exit(E_CL_FAILURE);
-      } else {
-        fprint(stderr, "unknown error!\n");
-        exit(E_CL_FAILURE);
-      }
-    }
+  cl_platform_id platforms[platform_count];
+  local_err = clGetPlatformIDs(platform_count, platforms, NULL);
+  if (local_err != CL_SUCCESS) {
+    fprintf(stderr, "Cannot get the list of OpenCL platforms\n");
+    exit(E_CL_FAILURE);
+  }
 
-    cl_platform_id platforms[platform_count];
-    local_err = clGetPlatformIds(platform_count, platforms, NULL);
+  for (size_t i = 0; i < platform_count; ++i) {
+    size_t buffer_size;
+    local_err = clGetPlatformInfo(
+        platforms[i], CL_PLATFORM_NAME, 0, NULL, &buffer_size);
     if (local_err != CL_SUCCESS) {
-      fprintf(stderr, "Cannot get the list of OpenCL platforms\n");
+      fprintf(stderr, "Cannot get the size of the CL_PLATFORM_NAME "
+                      "parameter\n");
       exit(E_CL_FAILURE);
     }
 
-    for (size_t i = 0; i < num_platforms; ++i) {
-      size_t buffer_size;
-      local_err = clGetPlatformInfo(
-          platforms[i], CL_PLATFORM_NAME, 0, NULL, &buffer_size);
-      if (local_err != CL_SUCCESS) {
-        fprintf(stderr, "Cannot get the size of the CL_PLATFORM_NAME "
-                        "parameter\n");
-        exit(E_CL_FAILURE);
-      }
-
-      char* buffer = malloc(buffer_size);
-      local_err = clGetPlatformInfo(platforms[i], CL_PLATFORM_NAME, buffer_size,
-                                    buffer, NULL);
-      if (local_err != CL_SUCCESS) {
-        fprintf(stderr, "Cannot get the CL_PLATFORM_NAME parameter\n");
-        exit(E_CL_FAILURE);
-      }
-
-      if (!strcmp(buffer, target_platform)) {
-        fprintf(stderr, "[CECL] Found matching platform %s\n", buffer);
-      }
-
-      free(buffer);
+    char* buffer = malloc(buffer_size);
+    local_err = clGetPlatformInfo(platforms[i], CL_PLATFORM_NAME, buffer_size,
+                                  buffer, NULL);
+    if (local_err != CL_SUCCESS) {
+      fprintf(stderr, "Cannot get the CL_PLATFORM_NAME parameter\n");
+      exit(E_CL_FAILURE);
     }
 
-    // TODO(cec): Continue from here.
+    if (!strcmp(buffer, platform_name)) {
+      fprintf(stderr, "[CECL] Found matching platform %s\n", buffer);
+      free(buffer);
+      return platforms[i];
+    }
+
+    free(buffer);
+  }
+
+  fprintf(stderr, "Failed to get a platform with matching name %s\n", platform_name);
+  exit(E_CL_FAILURE);
+}
+
+
+static cl_device_id cecGetDeviceIdFromNameOrDie(const char* device_name, const cl_platform_id platform) {
+  cl_uint device_count;
+  cl_int local_err = clGetDeviceIDs(platform, CL_DEVICE_TYPE_ALL, 0, NULL, &device_count);
+  if (local_err != CL_SUCCESS) {
+    fprintf(stderr, "Cannot get the number of devices\n");
+    exit(E_CL_FAILURE);
+  }
+
+  cl_device_id devices[device_count];
+  local_err = clGetDeviceIDs(platform, CL_DEVICE_TYPE_ALL, device_count, devices, NULL);
+  if (local_err != CL_SUCCESS) {
+    fprintf(stderr, "Cannot get device IDs\n");
+    exit(E_CL_FAILURE);
+  }
+
+  for (size_t i = 0; i < device_count; ++i) {
+    size_t buffer_size;
+    cecl_get_device_info(devices[i], CL_DEVICE_NAME, 0, NULL, &buffer_size);
+
+    char* buffer = malloc(buffer_size);
+    cecl_get_device_info(devices[i], CL_DEVICE_NAME, buffer_size, buffer, NULL);
+
+    if (!strcmp(buffer, device_name)) {
+      fprintf(stderr, "[CECL] Found matching device %s\n", buffer);
+      free(buffer);
+      return devices[i];
+    }
+
+    free(buffer);
+  }
+
+  fprintf(stderr, "Failed to get a device with matching name %s\n", device_name);
+  exit(E_CL_FAILURE);
+}
+
+
+// Create a command queue. The device argument is ignored, instead, the
+// LICECL_PLATFORM and LIBCECL_DEVICE arguments are used to identify the
+// device to create the command queue for.
+cl_command_queue CECL_CREATE_COMMAND_QUEUE(cl_context context,
+                                           cl_device_id device_unused,
+                                           cl_command_queue_properties props,
+                                           cl_int* err) {
+    cl_int local_err;
+    const char* target_platform = getenv("LIBCECL_PLATFORM");
+    const char* target_device = getenv("LIBCECL_DEVICE");
+
+    cl_platform_id platform_id = cecGetPlatformIdFromNameOrDie(target_platform);
+    cl_device_id device_id = cecGetDeviceIdFromNameOrDie(target_device, platform_id);
 
     cl_command_queue q = clCreateCommandQueue(
-        context, device, props | CL_QUEUE_PROFILING_ENABLE, &local_err);
+        context, device_id, props | CL_QUEUE_PROFILING_ENABLE, &local_err);
     if (local_err == CL_SUCCESS) {
-        cl_device_type devtype;
-        char devname[100];
+      cl_device_type devtype;
+      char devname[100];
 
-        cecl_get_device_info(device, CL_DEVICE_TYPE, sizeof(devtype),
-                             &devtype, NULL);
-        cecl_get_device_info(device, CL_DEVICE_NAME, sizeof(devname),
-                             devname, NULL);
+      cecl_get_device_info(device_id, CL_DEVICE_TYPE, sizeof(devtype),
+                           &devtype, NULL);
+      cecl_get_device_info(device_id, CL_DEVICE_NAME, sizeof(devname),
+                           devname, NULL);
 
-        fprintf(stderr, "\n[CECL] clCreateCommandQueue ; ");
-        if (devtype == CL_DEVICE_TYPE_CPU) {
-            fprintf(stderr, "CPU");
-        } else if (devtype == CL_DEVICE_TYPE_GPU) {
-            fprintf(stderr, "GPU");
-        } else {
-            fprintf(stderr, "UNKNOWN");
-        }
-        fprintf(stderr, " ; %s\n", devname);
+      fprintf(stderr, "\n[CECL] clCreateCommandQueue ; ");
+      if (devtype == CL_DEVICE_TYPE_CPU) {
+          fprintf(stderr, "CPU");
+      } else if (devtype == CL_DEVICE_TYPE_GPU) {
+          fprintf(stderr, "GPU");
+      } else {
+          fprintf(stderr, "UNKNOWN");
+      }
+      fprintf(stderr, " ; %s\n", devname);
 
-        if (err) {
-            *err = local_err;
-        }
+      if (err) {
+          *err = local_err;
+      }
 
-        return q;
+      return q;
     }
     /* error: fatal */
     fprintf(stderr, "\n[CECL] ERROR: clCreateCommandQueue() failed! Cause: ");

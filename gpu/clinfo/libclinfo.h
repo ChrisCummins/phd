@@ -32,6 +32,7 @@ void SetOpenClDevice(const cl::Platform &platform, const cl::Device &device,
 ::gpu::clinfo::OpenClDevice GetOpenClDevice(const int platform_id,
                                             const int device_id);
 
+
 }  // namespace clinfo
 
 }  // namespace gpu
