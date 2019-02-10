@@ -1,3 +1,4 @@
+#include <libcecl.h>
 /***************************************************************************
  *cr
  *cr            (C) Copyright 2007 The Board of Trustees of the

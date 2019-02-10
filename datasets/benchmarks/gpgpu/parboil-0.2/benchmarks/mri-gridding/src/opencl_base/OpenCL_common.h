@@ -1,3 +1,4 @@
+#include <libcecl.h>
 
 #ifndef __OPENCL_COMMON_H_
 #define __OPENCL_COMMON_H_

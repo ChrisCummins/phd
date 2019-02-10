@@ -1,6 +1,7 @@
-
 #ifndef __OPENCL_COMMON_H_
 #define __OPENCL_COMMON_H_
+
+#include <libcecl.h>
 
 #include <stdio.h>
 #include <stdarg.h>

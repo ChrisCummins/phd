@@ -1,6 +1,8 @@
 #ifndef __OCLH__
 #define __OCLH__
 
+#include <libcecl.h>
+
 void clMemSet(cl_command_queue, cl_mem, int, size_t);
 char* readFile(const char*);
 

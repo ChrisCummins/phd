@@ -1,3 +1,4 @@
+#include <libcecl.h>
 #ifndef __OCLH__
 #define __OCLH__
 
