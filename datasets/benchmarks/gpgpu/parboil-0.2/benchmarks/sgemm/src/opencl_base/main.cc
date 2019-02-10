@@ -109,8 +109,8 @@ main (int argc, char *argv[]) {
   CHECK_ERROR("clGetPlatformIDs")
 
   cl_context_properties clCps[3] = {CL_CONTEXT_PLATFORM,(cl_context_properties)clPlatform,0};
-  cl_context clContext = CECL_CREATE_CONTEXTFromType(clCps,CL_DEVICE_TYPE_GPU,NULL,NULL,&clStatus);
-  CHECK_ERROR("CECL_CREATE_CONTEXTFromType")
+  cl_context clContext = CECL_CREATE_CONTEXT_FROM_TYPE(clCps,CL_DEVICE_TYPE_GPU,NULL,NULL,&clStatus);
+  CHECK_ERROR("CECL_CREATE_CONTEXT_FROM_TYPE")
    
   cl_device_id clDevice;
   clStatus = clGetDeviceIDs(clPlatform,CL_DEVICE_TYPE_GPU,1,&clDevice,NULL);

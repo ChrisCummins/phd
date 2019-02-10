@@ -33,8 +33,8 @@ static int initialize(int use_gpu)
 	if (clGetPlatformIDs(1, &platform_id, NULL) != CL_SUCCESS) { printf("ERROR: clGetPlatformIDs(1,*,0) failed\n"); return -1; }
 	cl_context_properties ctxprop[] = { CL_CONTEXT_PLATFORM, (cl_context_properties)platform_id, 0};
 	device_type = use_gpu ? CL_DEVICE_TYPE_GPU : CL_DEVICE_TYPE_GPU;
-	context = CECL_CREATE_CONTEXTFromType( ctxprop, device_type, NULL, NULL, NULL );
-	if( !context ) { printf("ERROR: CECL_CREATE_CONTEXTFromType(%s) failed\n", use_gpu ? "GPU" : "CPU"); return -1; }
+	context = CECL_CREATE_CONTEXT_FROM_TYPE( ctxprop, device_type, NULL, NULL, NULL );
+	if( !context ) { printf("ERROR: CECL_CREATE_CONTEXT_FROM_TYPE(%s) failed\n", use_gpu ? "GPU" : "CPU"); return -1; }
 
 	// get the list of GPUs
 	result = clGetContextInfo( context, CL_CONTEXT_DEVICES, 0, NULL, &size );

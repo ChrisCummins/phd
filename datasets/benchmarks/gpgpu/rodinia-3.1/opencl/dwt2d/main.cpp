@@ -74,12 +74,12 @@ cl_context CreateContext()
         (cl_context_properties)platformIds[1],
         0
     };
-    context = CECL_CREATE_CONTEXTFromType(contextProperties, CL_DEVICE_TYPE_GPU,
+    context = CECL_CREATE_CONTEXT_FROM_TYPE(contextProperties, CL_DEVICE_TYPE_GPU,
                                       NULL, NULL, &errNum);
     if (errNum != CL_SUCCESS)
     {
         std::cout << "Could not create GPU context, trying CPU..." << std::endl;
-        context = CECL_CREATE_CONTEXTFromType(contextProperties, CL_DEVICE_TYPE_GPU,
+        context = CECL_CREATE_CONTEXT_FROM_TYPE(contextProperties, CL_DEVICE_TYPE_GPU,
                                           NULL, NULL, &errNum);
         if (errNum != CL_SUCCESS)
         {

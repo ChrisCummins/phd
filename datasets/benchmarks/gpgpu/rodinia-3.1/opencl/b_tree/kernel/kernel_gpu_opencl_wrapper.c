@@ -131,7 +131,7 @@ kernel_gpu_opencl_wrapper(	record *records,
 
 	// Create context for selected platform being GPU
 	cl_context context;
-	context = CECL_CREATE_CONTEXTFromType(	context_properties, 
+	context = CECL_CREATE_CONTEXT_FROM_TYPE(	context_properties, 
 										CL_DEVICE_TYPE_GPU, 
 										NULL, 
 										NULL, 

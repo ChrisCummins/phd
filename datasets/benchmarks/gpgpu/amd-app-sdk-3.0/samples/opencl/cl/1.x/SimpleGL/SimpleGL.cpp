@@ -385,13 +385,13 @@ SimpleGLSample::enableGLAndGetGLContext(HWND hWnd, HDC &hDC, HGLRC &hRC,
     }
     else
     {
-        context = CECL_CREATE_CONTEXTFromType(
+        context = CECL_CREATE_CONTEXT_FROM_TYPE(
                       properties,
                       CL_DEVICE_TYPE_GPU,
                       NULL,
                       NULL,
                       &status);
-        CHECK_OPENCL_ERROR(status, "CECL_CREATE_CONTEXTFromType failed!!");
+        CHECK_OPENCL_ERROR(status, "CECL_CREATE_CONTEXT_FROM_TYPE failed!!");
     }
 
     // OpenGL animation code goes here
@@ -611,12 +611,12 @@ int SimpleGLSample::initializeGLAndGetCLContext(cl_platform_id platform,
     }
     else
     {
-        context = CECL_CREATE_CONTEXTFromType(cpsGL,
+        context = CECL_CREATE_CONTEXT_FROM_TYPE(cpsGL,
                                           CL_DEVICE_TYPE_GPU,
                                           NULL,
                                           NULL,
                                           &status);
-        CHECK_OPENCL_ERROR(status, "CECL_CREATE_CONTEXTFromType failed!!");
+        CHECK_OPENCL_ERROR(status, "CECL_CREATE_CONTEXT_FROM_TYPE failed!!");
     }
     // GL init
     glewInit();

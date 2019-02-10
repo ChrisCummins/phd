@@ -187,7 +187,7 @@ int main (int argc, char* argv[]){
   }
   
   cl_context_properties cps[3] = { CL_CONTEXT_PLATFORM, (cl_context_properties) clPlatform, 0};
-  clContext = CECL_CREATE_CONTEXTFromType(cps, deviceType, NULL, NULL, &ciErrNum);
+  clContext = CECL_CREATE_CONTEXT_FROM_TYPE(cps, deviceType, NULL, NULL, &ciErrNum);
   OCL_ERRCK_VAR(ciErrNum);
 
   cl_command_queue clCommandQueue = CECL_CREATE_COMMAND_QUEUE(clContext, clDevice, CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
