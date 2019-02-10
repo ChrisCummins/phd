@@ -76,6 +76,8 @@ flags.DEFINE_boolean('gpgpu_record_outputs', True,
                      "Record each benchmark's stdout and stderr. This "
                      "information is not needed to get performance data, and "
                      "can be quite large.")
+flags.DEFINE_string('gpgpu_log_extension', '.pb',
+                    'The file extension for generated log files.')
 
 # The path of libcecl directory, containing the libcecl header, library, and
 # run script.
@@ -451,9 +453,10 @@ class _BenchmarkSuite(object):
           stderr_lines.append(line.strip())
 
       if process.returncode:
-        log_produced = self._logdir / f'{log_name}.ERROR.pbtxt'
+        log_produced = (
+            self._logdir / f'{log_name}.ERROR{FLAGS.gpgpu_log_extension}')
       else:
-        log_produced = self._logdir / f'{log_name}.pbtxt'
+        log_produced = self._logdir / f'{log_name}{FLAGS.gpgpu_log_extension}'
 
       pbutil.ToFile(gpgpu_pb2.GpgpuBenchmarkRun(
           ms_since_unix_epoch=timestamp,
