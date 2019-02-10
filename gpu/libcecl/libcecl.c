@@ -487,19 +487,6 @@ cl_context CECL_CREATE_CONTEXT_FROM_TYPE(cl_context_properties *properties_unuse
 }
 
 
-static cl_context cecGetForcedContextOrDie() {
-  cl_int err;
-  const cl_device_id device_id = cecGetForcedDeviceIdOrDie();
-  cl_context ctx = clCreateContext(NULL, 1, &device_id, NULL, NULL, &err);
-  if (err != CL_SUCCESS) {
-    fprintf(stderr, "[CEC] Failed to create forced context\n");
-    exit(E_CL_FAILURE);
-  }
-
-  return ctx;
-}
-
-
 // Create a command queue. The device argument is ignored, instead, the
 // LICECL_PLATFORM and LIBCECL_DEVICE arguments are used to identify the
 // device to create the command queue for.
@@ -508,8 +495,6 @@ cl_command_queue CECL_CREATE_COMMAND_QUEUE(cl_context context,
                                            cl_command_queue_properties props,
                                            cl_int* err) {
     cl_int local_err;
-
-    // cl_context context = cecGetForcedContextOrDie();
 
     cl_device_id device_id = cecGetForcedDeviceIdOrDie();
     cl_command_queue q = clCreateCommandQueue(
@@ -578,8 +563,6 @@ cl_program CECL_PROGRAM_WITH_SOURCE(cl_context context,
                                     const char** strings,
                                     const size_t* lengths,
                                     cl_int* err) {
-    // cl_context context = cecGetForcedContextOrDie();
-
     cl_int local_err;
     cl_uint i;
     cl_program p = clCreateProgramWithSource(context,
