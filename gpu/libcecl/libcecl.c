@@ -453,7 +453,7 @@ static cl_device_id cecGetForcedDeviceIdOrDie() {
   exit(E_CL_FAILURE);
 }
 
-cl_context CECL_CREATE_CONTEXT(cl_context_properties *properties,
+cl_context CECL_CREATE_CONTEXT(cl_context_properties *properties_unused,
                                cl_uint num_devices,
                                const cl_device_id *unused_devices,
                                void *unused_pfn_notify(const char *errinfo,
@@ -471,11 +471,11 @@ cl_context CECL_CREATE_CONTEXT(cl_context_properties *properties,
   const cl_device_id device_id = cecGetForcedDeviceIdOrDie();
 
   return clCreateContext(
-      properties, 1, &device_id, NULL, user_data, errcode_ret);
+      NULL, 1, &device_id, NULL, user_data, errcode_ret);
 }
 
 
-cl_context CECL_CREATE_CONTEXT_FROM_TYPE(cl_context_properties *properties,
+cl_context CECL_CREATE_CONTEXT_FROM_TYPE(cl_context_properties *properties_unused,
                                          cl_device_type device_type_unused,
                                          void *pfn_notify (const char *errinfo,
                                                            const void *private_info,
@@ -483,7 +483,7 @@ cl_context CECL_CREATE_CONTEXT_FROM_TYPE(cl_context_properties *properties,
                                                            void *user_data),
                                          void *user_data,
                                          cl_int *errcode_ret) {
-    return CECL_CREATE_CONTEXT(properties, 1, NULL, NULL, NULL, errcode_ret);
+  return CECL_CREATE_CONTEXT(properties, 1, NULL, NULL, NULL, errcode_ret);
 }
 
 
