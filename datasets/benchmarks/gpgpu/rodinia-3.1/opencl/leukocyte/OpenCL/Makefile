@@ -4,7 +4,7 @@ ifdef OUTPUT
 override OUTPUT = -DOUTPUT
 endif
 
-# OpenCL SDK installation path      
+# OpenCL SDK installation path
 #AMD_OPENCL_DIR = /home/mwb7w/AMD-APP-SDK-v2.5-TC1-lnx64/
 
 # OpenCL include and library paths
@@ -16,7 +16,7 @@ MATRIX_DIR = ../meschach_lib
 
 # C compiler
 CC = gcc
-CC_FLAGS = -g -O3 -Wall -I$(MATRIX_DIR) $(CFLAGS)
+CC_FLAGS = -g -O3 -Wall -I$(MATRIX_DIR) $(CFLAGS) $(EXTRA_CFLAGS)
 
 
 leukocyte: detect_main.o avilib.o find_ellipse.o find_ellipse_opencl.o track_ellipse.o track_ellipse_opencl.o misc_math.o OpenCL_helper_library.o $(MATRIX_DIR)/meschach.a

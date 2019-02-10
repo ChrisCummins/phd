@@ -1,3 +1,4 @@
+#include <libcecl.h>
 #include "find_ellipse.h"
 #include "track_ellipse_opencl.h"
 #include "OpenCL_helper_library.h"
@@ -26,10 +27,10 @@ cl_kernel IMGVF_kernel;
 void IMGVF_OpenCL(MAT **I, MAT **IMGVF, double vx, double vy, double e, int max_iterations, double cutoff, int num_cells) {
 
 	cl_int error;
-	
+
 	// Initialize the data on the GPU
 	IMGVF_OpenCL_init(I, num_cells);
-	
+
 	if (! compiled) {
 		// Load the kernel source from the file
 		const char *source = load_kernel_source("track_ellipse_kernel.cl");
@@ -52,17 +53,17 @@ void IMGVF_OpenCL(MAT **I, MAT **IMGVF, double vx, double vy, double e, int max_
 		// Record that compiling has already completed
 		compiled = TRUE;
 	}
-	
+
 	// Setup execution parameters
 	size_t num_work_groups = num_cells;
 	size_t global_work_size = num_work_groups * local_work_size;
-	
+
 	// Convert double-precision parameters to single-precision
 	float vx_float = (float) vx;
 	float vy_float = (float) vy;
 	float e_float = (float) e;
 	float cutoff_float = (float) cutoff;
-	
+
 	// Set the kernel arguments
 	CECL_SET_KERNEL_ARG(IMGVF_kernel, 0, sizeof(cl_mem), (void *) &device_IMGVF_all);
 	CECL_SET_KERNEL_ARG(IMGVF_kernel, 1, sizeof(cl_mem), (void *) &device_I_all);
@@ -74,15 +75,15 @@ void IMGVF_OpenCL(MAT **I, MAT **IMGVF, double vx, double vy, double e, int max_
 	CECL_SET_KERNEL_ARG(IMGVF_kernel, 7, sizeof(cl_float), (void *) &e_float);
 	CECL_SET_KERNEL_ARG(IMGVF_kernel, 8, sizeof(cl_int), (void *) &max_iterations);
 	CECL_SET_KERNEL_ARG(IMGVF_kernel, 9, sizeof(cl_float), (void *) &cutoff_float);
-	
+
 	// Compute the MGVF on the GPU
 	error = CECL_ND_RANGE_KERNEL(command_queue, IMGVF_kernel, 1, NULL, &global_work_size, &local_work_size, 0, NULL, NULL);
 	check_error(error, __FILE__, __LINE__);
-	
+
 	// Check for kernel errors
 	error = clFinish(command_queue);
 	check_error(error, __FILE__, __LINE__);
-	
+
 	// Copy back the final results from the GPU
 	IMGVF_OpenCL_cleanup(IMGVF, num_cells);
 }
@@ -91,13 +92,13 @@ void IMGVF_OpenCL(MAT **I, MAT **IMGVF, double vx, double vy, double e, int max_
 // Initializes data on the GPU for the MGVF kernel
 void IMGVF_OpenCL_init(MAT **IE, int num_cells) {
 	cl_int error;
-	
+
 	// Allocate array of offsets to each cell's image
 	size_t mem_size = sizeof(int) * num_cells;
 	host_I_offsets = (int *) malloc(mem_size);
 	device_I_offsets = CECL_BUFFER(context, CL_MEM_READ_ONLY, mem_size, NULL, &error);
 	check_error(error, __FILE__, __LINE__);
-	
+
 	// Allocate arrays to hold the dimensions of each cell's image
 	host_m_array = (int *) malloc(mem_size);
 	host_n_array = (int *) malloc(mem_size);
@@ -105,7 +106,7 @@ void IMGVF_OpenCL_init(MAT **IE, int num_cells) {
 	check_error(error, __FILE__, __LINE__);
 	device_n_array = CECL_BUFFER(context, CL_MEM_READ_ONLY, mem_size, NULL, &error);
 	check_error(error, __FILE__, __LINE__);
-	
+
 	// Figure out the size of all of the matrices combined
 	int i, j, cell_num;
 	size_t total_size = 0;
@@ -115,50 +116,50 @@ void IMGVF_OpenCL_init(MAT **IE, int num_cells) {
 		total_size += size;
 	}
 	total_mem_size = total_size * sizeof(float);
-	
+
 	// Allocate host memory just once for all cells
 	host_I_all = (float *) malloc(total_mem_size);
-	
+
 	// Allocate device memory just once for all cells
 	device_I_all = CECL_BUFFER(context, CL_MEM_READ_ONLY, total_mem_size, NULL, &error);
 	check_error(error, __FILE__, __LINE__);
 	device_IMGVF_all = CECL_BUFFER(context, CL_MEM_READ_WRITE, total_mem_size, NULL, &error);
 	check_error(error, __FILE__, __LINE__);
-	
+
 	// Copy each initial matrix into the allocated host memory
 	int offset = 0;
 	for (cell_num = 0; cell_num < num_cells; cell_num++) {
 		MAT *I = IE[cell_num];
-		
+
 		// Determine the size of the matrix
 		int m = I->m, n = I->n;
 		int size = m * n;
-		
+
 		// Store memory dimensions
 		host_m_array[cell_num] = m;
 		host_n_array[cell_num] = n;
-		
+
 		// Store offsets to this cell's image
 		host_I_offsets[cell_num] = offset;
-		
+
 		// Copy matrix I (which is also the initial IMGVF matrix) into the overall array
 		for (i = 0; i < m; i++)
 			for (j = 0; j < n; j++)
 				host_I_all[offset + (i * n) + j] = (float) m_get_val(I, i, j);
-		
+
 		offset += size;
 	}
-	
+
 	// Copy I matrices (which are also the initial IMGVF matrices) to device
 	error = CECL_WRITE_BUFFER(command_queue, device_I_all, CL_TRUE, 0, total_mem_size, (void *) host_I_all, 0, NULL, NULL);
 	check_error(error, __FILE__, __LINE__);
 	error = CECL_WRITE_BUFFER(command_queue, device_IMGVF_all, CL_TRUE, 0, total_mem_size, (void *) host_I_all, 0, NULL, NULL);
 	check_error(error, __FILE__, __LINE__);
-	
+
 	// Copy offsets array to device
 	error = CECL_WRITE_BUFFER(command_queue, device_I_offsets, CL_TRUE, 0, mem_size, (void *) host_I_offsets, 0, NULL, NULL);
 	check_error(error, __FILE__, __LINE__);
-	
+
 	// Copy memory dimension arrays to device
 	error = CECL_WRITE_BUFFER(command_queue, device_m_array, CL_TRUE, 0, mem_size, (void *) host_m_array, 0, NULL, NULL);
 	check_error(error, __FILE__, __LINE__);
@@ -170,37 +171,37 @@ void IMGVF_OpenCL_init(MAT **IE, int num_cells) {
 // Copies the results of the MGVF kernel back to the host
 void IMGVF_OpenCL_cleanup(MAT **IMGVF_out_array, int num_cells) {
 	cl_int error;
-	
+
 	// Copy the result matrices from the device to the host
 	float *host_IMGVF_all = (cl_float *) CECL_MAP_BUFFER(command_queue, device_IMGVF_all, CL_TRUE, CL_MAP_READ, 0, total_mem_size, 0, NULL, NULL, &error);
 	check_error(error, __FILE__, __LINE__);
-	
+
 	// Copy each result matrix into its appropriate host matrix
-	int cell_num, offset = 0;	
+	int cell_num, offset = 0;
 	for (cell_num = 0; cell_num < num_cells; cell_num++) {
 		MAT *IMGVF_out = IMGVF_out_array[cell_num];
-		
+
 		// Determine the size of the matrix
 		int m = IMGVF_out->m, n = IMGVF_out->n, i, j;
 		// Pack the result into the matrix
 		for (i = 0; i < m; i++)
 			for (j = 0; j < n; j++)
 				m_set_val(IMGVF_out, i, j, (double) host_IMGVF_all[offset + (i * n) + j]);
-		
+
 		offset += (m * n);
 	}
-	
+
 	// Unmap results buffer
 	error = clEnqueueUnmapMemObject(command_queue, device_IMGVF_all, (void *) host_IMGVF_all, 0, NULL, NULL);
 	check_error(error, __FILE__, __LINE__);
-	
+
 	// Free device memory
 	clReleaseMemObject(device_m_array);
 	clReleaseMemObject(device_n_array);
 	clReleaseMemObject(device_IMGVF_all);
 	clReleaseMemObject(device_I_all);
 	clReleaseMemObject(device_I_offsets);
-	
+
 	// Free host memory
 	free(host_m_array);
 	free(host_n_array);

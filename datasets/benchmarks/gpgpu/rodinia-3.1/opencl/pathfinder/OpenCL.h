@@ -1,3 +1,4 @@
+#include <libcecl.h>
 #include <iostream>
 #include <stdio.h>
 #include <map>
@@ -32,7 +33,7 @@ public:
 	cl_command_queue q();
 	void launch(string toLaunch);
 	size_t localSize();
-	
+
 private:
 	int                     VERBOSE;           // Display output text from various functions?
 	size_t                  lwsize;            // Local work size.
@@ -44,7 +45,7 @@ private:
 	cl_context              context;
 	cl_command_queue        command_queue;
 	cl_program              program;
-	
+
 	void getDevices(cl_device_type deviceType);
 	void buildKernel();
 };

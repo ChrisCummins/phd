@@ -1,3 +1,4 @@
+#include <libcecl.h>
 #ifndef _GAUSSIANELIM
 #define _GAUSSIANELIM
 
@@ -16,7 +17,7 @@
     #include <OpenCL/opencl.h>
 #else
     #include <CL/opencl.h>
-#endif 
+#endif
 
 float *OpenClGaussianElimination(
 	cl_context context,
@@ -25,7 +26,7 @@ float *OpenClGaussianElimination(
 void printUsage();
 int parseCommandline(int argc, char *argv[], char* filename,
                      int *q, int *t, int *p, int *d, int *size);
-                     
+
 void InitPerRun(int size,float *m);
 void ForwardSub(cl_context context, float *a, float *b, float *m, int size,int timing);
 void BackSub(float *a, float *b, float *finalVec, int size);
