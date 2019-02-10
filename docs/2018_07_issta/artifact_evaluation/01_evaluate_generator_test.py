@@ -7,6 +7,7 @@ import importlib
 from deeplearning.clgen.conftest import *
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
+from labm8 import test
 
 
 # We must use importlib.import_module() since the package and module names start
