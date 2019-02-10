@@ -125,7 +125,7 @@ python-utils==2.3.0
 python-xmp-toolkit==2.0.1
 pytools==2018.1
 pytz==2018.3
-pyyaml==3.12
+PyYAML==4.2b4
 pyzmq==17.0.0
 qtconsole==4.3.1
 requests==2.20.1
@@ -149,10 +149,9 @@ tornado==5.0
 traitlets==4.3.2
 trash-cli==0.17.1.14
 umap==0.1.1
-urllib3==1.22
+urllib3==1.24.1
 virtualenv==15.1.0
-# FIXME(cec): Missing dependencies on ubuntu build.
-# vizdoom==1.1.6
+vizdoom==1.1.6
 wcwidth==0.1.7
 webencodings==0.5.1
 wget==3.2
