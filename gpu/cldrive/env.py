@@ -54,6 +54,10 @@ class OpenCLEnvironment(object):
   def opencl_opt(self) -> str:
     return self._proto.opencl_opt
 
+  @opencl_opt.setter
+  def opencl_opt(self, opt: bool):
+    self._proto.opencl_opt = opt
+
   @property
   def proto(self) -> clinfo_pb2.OpenClDevice:
     return self._proto
