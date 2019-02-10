@@ -1,3 +1,4 @@
+#include <libcecl.h>
 /***************************************************************************
  *cr
  *cr            (C) Copyright 2010 The Board of Trustees of the
@@ -25,7 +26,7 @@
 /******************************************************************************/
 
 void OpenCL_LBM_performStreamCollide( const OpenCL_Param* prm, cl_mem srcGrid, cl_mem dstGrid ) {
-	 
+
 	cl_int clStatus;
 
 	clStatus = CECL_SET_KERNEL_ARG(prm->clKernel,0,sizeof(cl_mem),(void*)&srcGrid);
@@ -36,9 +37,9 @@ void OpenCL_LBM_performStreamCollide( const OpenCL_Param* prm, cl_mem srcGrid, c
 
 	size_t dimBlock[3] = {SIZE_X,1,1};
 	size_t dimGrid[3] = {SIZE_X*SIZE_Y,SIZE_Z,1};
-	clStatus = CECL_ND_RANGE_KERNEL(prm->clCommandQueue,prm->clKernel,3,NULL,dimGrid,dimBlock,0,NULL,NULL); 
-	CHECK_ERROR("CECL_ND_RANGE_KERNEL") 	
-	
+	clStatus = CECL_ND_RANGE_KERNEL(prm->clCommandQueue,prm->clKernel,3,NULL,dimGrid,dimBlock,0,NULL,NULL);
+	CHECK_ERROR("CECL_ND_RANGE_KERNEL")
+
 	clStatus = clFinish(prm->clCommandQueue);
 	CHECK_ERROR("clFinish")
 }
@@ -58,7 +59,7 @@ void LBM_allocateGrid( float** ptr ) {
 
 	printf( "LBM_allocateGrid: allocated %.1f MByte\n",
 			size / (1024.0*1024.0) );
-	
+
 	*ptr += MARGIN;
 }
 
@@ -68,7 +69,7 @@ void OpenCL_LBM_allocateGrid( const OpenCL_Param* prm, cl_mem* ptr ) {
 	const size_t size = TOTAL_PADDED_CELLS*N_CELL_ENTRIES*sizeof( float );
 	cl_int clStatus;
   size_t max_alloc_size = 0;
-	clGetDeviceInfo(prm->clDevice, CL_DEVICE_MAX_MEM_ALLOC_SIZE, 
+	clGetDeviceInfo(prm->clDevice, CL_DEVICE_MAX_MEM_ALLOC_SIZE,
                   sizeof(max_alloc_size), &max_alloc_size, NULL);
   if (max_alloc_size < size) {
     fprintf(stderr, "Can't allocate buffer: max alloc size is %dMB\n",
@@ -117,7 +118,7 @@ void LBM_initializeGrid( LBM_Grid grid ) {
 	SRC_EB( grid ) = DFL3;
 	SRC_WT( grid ) = DFL3;
 	SRC_WB( grid ) = DFL3;
-	
+
 	CLEAR_ALL_FLAGS_SWEEP( grid );
 	SWEEP_END
 }
@@ -125,7 +126,7 @@ void LBM_initializeGrid( LBM_Grid grid ) {
 /******************************************************************************/
 
 void OpenCL_LBM_initializeGrid( const OpenCL_Param* prm, cl_mem d_grid, LBM_Grid h_grid ) {
-	const size_t size = TOTAL_PADDED_CELLS*N_CELL_ENTRIES*sizeof( float ); 
+	const size_t size = TOTAL_PADDED_CELLS*N_CELL_ENTRIES*sizeof( float );
 	cl_int clStatus;
 	clStatus = CECL_WRITE_BUFFER(prm->clCommandQueue,d_grid,CL_TRUE,0,size,h_grid-MARGIN,0,NULL,NULL);
 	CHECK_ERROR("CECL_WRITE_BUFFER")
@@ -318,20 +319,20 @@ void LBM_storeVelocityField( LBM_Grid grid, const char* filename,
 					+ SRC_SB( grid ) + SRC_ET( grid )
 					+ SRC_EB( grid ) + SRC_WT( grid )
 					+ SRC_WB( grid );
-				ux = + SRC_E( grid ) - SRC_W( grid ) 
-					+ SRC_NE( grid ) - SRC_NW( grid ) 
-					+ SRC_SE( grid ) - SRC_SW( grid ) 
-					+ SRC_ET( grid ) + SRC_EB( grid ) 
+				ux = + SRC_E( grid ) - SRC_W( grid )
+					+ SRC_NE( grid ) - SRC_NW( grid )
+					+ SRC_SE( grid ) - SRC_SW( grid )
+					+ SRC_ET( grid ) + SRC_EB( grid )
 					- SRC_WT( grid ) - SRC_WB( grid );
-				uy = + SRC_N( grid ) - SRC_S( grid ) 
-					+ SRC_NE( grid ) + SRC_NW( grid ) 
-					- SRC_SE( grid ) - SRC_SW( grid ) 
-					+ SRC_NT( grid ) + SRC_NB( grid ) 
+				uy = + SRC_N( grid ) - SRC_S( grid )
+					+ SRC_NE( grid ) + SRC_NW( grid )
+					- SRC_SE( grid ) - SRC_SW( grid )
+					+ SRC_NT( grid ) + SRC_NB( grid )
 					- SRC_ST( grid ) - SRC_SB( grid );
-				uz = + SRC_T( grid ) - SRC_B( grid ) 
-					+ SRC_NT( grid ) - SRC_NB( grid ) 
-					+ SRC_ST( grid ) - SRC_SB( grid ) 
-					+ SRC_ET( grid ) - SRC_EB( grid ) 
+				uz = + SRC_T( grid ) - SRC_B( grid )
+					+ SRC_NT( grid ) - SRC_NB( grid )
+					+ SRC_ST( grid ) - SRC_SB( grid )
+					+ SRC_ET( grid ) - SRC_EB( grid )
 					+ SRC_WT( grid ) - SRC_WB( grid );
 				ux /= rho;
 				uy /= rho;

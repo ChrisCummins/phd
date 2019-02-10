@@ -1,3 +1,4 @@
+#include <libcecl.h>
 /***************************************************************************
  *
  *            (C) Copyright 2010 The Board of Trustees of the
@@ -30,7 +31,7 @@
  * implementation uses compact binning to distribute input elements
  * into unit-cubed sized bins. The bins are then visited by GPU
  * threads, where every thread computes the value of one (or small set)
- * of output elements by computing the contributions of elements in 
+ * of output elements by computing the contributions of elements in
  * neighboring bins to these output elements.
  *
  * The bins have a limited bin size and everything beyond that bin size
@@ -42,7 +43,7 @@ void OpenCL_interface (
   unsigned int n,       // Number of input elements
   parameters params,    // Parameter struct which defines output gridSize, cutoff distance, etc.
   ReconstructionSample* sample, // Array of input elements
-  float* LUT,           // Precomputed LUT table of Kaiser-Bessel function. 
+  float* LUT,           // Precomputed LUT table of Kaiser-Bessel function.
                           // Used for computation on CPU instead of using the function every time
   int sizeLUT,          // Size of LUT
   cmplx* gridData,      // Array of output grid points. Each element has a real and imaginary component
@@ -65,7 +66,7 @@ void OpenCL_interface (
   int size_xy = size_y*size_x;
 
   int gridNumElems = size_x * size_y * size_z;  // Total number of grid points
-  
+
   float beta = PI * sqrt(4*params.kernelWidth*params.kernelWidth/(params.oversample*params.oversample) * (params.oversample-.5)*(params.oversample-.5)-.8);
 
   float cutoff = float(params.kernelWidth)/2.0; // cutoff radius
@@ -76,7 +77,7 @@ void OpenCL_interface (
   cl_int ciErrNum;
   cl_mem sample_d;    // Device array for original input array
   cl_mem sortedSample_d;             // Device array of the sorted (into bins) input elements.
-  
+
                                             // This array is accessed by sortedSampleSoA_d in a structure
                                             //   of arrays manner.
   cl_mem gridData_d;                // Device array for output grid
@@ -93,10 +94,10 @@ void OpenCL_interface (
                                             //   put in each bin. Based on this array, we determine which
                                             //   elements get offloaded to the CPU
   cl_mem binStartAddr_d;      // Array of start offset of each of the compact bins
-  
+
   cl_mem *idxValue_dPtr;
   cl_mem *idxKey_dPtr;
-  
+
   cl_program gpu_kernels;
   cl_kernel binning_kernel;
   cl_kernel reorder_kernel;
@@ -104,13 +105,13 @@ void OpenCL_interface (
 
   /* Allocating device memory */
   pb_SwitchToTimer(timers, pb_TimerID_COPY);
-  
+
   unsigned int *zeroData = NULL, *maxIntData = NULL;
-  
+
   size_t sizeZeroData = sizeof(float)* 2 * gridNumElems;
   if ( n*sizeof(ReconstructionSample) > sizeZeroData) {
     sizeZeroData = n*sizeof(ReconstructionSample);
-  }    
+  }
   if ( (sizeof(unsigned int) * (gridNumElems+1)) > sizeZeroData) {
     // Not going to be taken, but included just in case since this is used for multiple variables
     sizeZeroData = sizeof(unsigned int) * (gridNumElems+1);
@@ -118,12 +119,12 @@ void OpenCL_interface (
   if ( (((n+3)/4)*4)*sizeof(unsigned int) > sizeZeroData) {
     sizeZeroData = (((n+3)/4)*4)*sizeof(unsigned int);
   }
-  
+
   zeroData = (unsigned int *) malloc(sizeZeroData);
   if (zeroData == NULL) { fprintf(stderr, "Could not allocate dummy memset memory\n"); exit(1); }
   maxIntData = (unsigned int *) malloc((((n+3)/4)*4)*sizeof(unsigned int));
   if (maxIntData == NULL) { fprintf(stderr, "Could not allocate dummy memset memory\n"); exit(1); }
-  
+
   memset(zeroData, 0, sizeZeroData);
   // Initialize padding to max integer value, so that when sorted,
   // these elements get pushed to the end of the array.
@@ -132,12 +133,12 @@ void OpenCL_interface (
   sortedSample_d = CECL_BUFFER(clContext, CL_MEM_COPY_HOST_PTR, n*sizeof(ReconstructionSample), zeroData, &ciErrNum);  OCL_ERRCK_VAR(ciErrNum);
   binStartAddr_d = CECL_BUFFER(clContext, CL_MEM_COPY_HOST_PTR, (gridNumElems+1)*sizeof(unsigned int), zeroData, &ciErrNum);  OCL_ERRCK_VAR(ciErrNum);
   sample_d = CECL_BUFFER(clContext, CL_MEM_COPY_HOST_PTR, n*sizeof(ReconstructionSample), sample, &ciErrNum);  OCL_ERRCK_VAR(ciErrNum);
-  idxKey_d = CECL_BUFFER(clContext, CL_MEM_COPY_HOST_PTR, (((n+3)/4)*4)*sizeof(unsigned int), maxIntData, &ciErrNum);  OCL_ERRCK_VAR(ciErrNum); //Pad to nearest multiple of 4 to 
+  idxKey_d = CECL_BUFFER(clContext, CL_MEM_COPY_HOST_PTR, (((n+3)/4)*4)*sizeof(unsigned int), maxIntData, &ciErrNum);  OCL_ERRCK_VAR(ciErrNum); //Pad to nearest multiple of 4 to
   idxValue_d = CECL_BUFFER(clContext, CL_MEM_COPY_HOST_PTR, (((n+3)/4)*4)*sizeof(unsigned int), zeroData, &ciErrNum);  OCL_ERRCK_VAR(ciErrNum); //satisfy a property of the sorting kernel.
-  
+
   idxKey_dPtr = &idxKey_d;
   idxValue_dPtr = &idxValue_d;
-  
+
   pb_SwitchToTimer(timers, pb_TimerID_DRIVER);
 
   char compileOptions[1024];
@@ -151,7 +152,7 @@ void OpenCL_interface (
                 params.gridSize[0], params.gridSize[1], params.gridSize[2],
                 size_xy, _1overCutoff2
             );
-  
+
   size_t program_length;
   const char *source_path = "src/opencl_base/GPU_kernels.cl";
   char *source;
@@ -161,14 +162,14 @@ void OpenCL_interface (
   if(!source) {
     fprintf(stderr, "Could not load program source (%s) \n", __FILE__); exit(1);
   }
-  	
+
   gpu_kernels = CECL_PROGRAM_WITH_SOURCE(clContext, 1, (const char **)&source, &program_length, &ciErrNum);
   OCL_ERRCK_VAR(ciErrNum);
-  	  	
+
   free(source);
-  
+
   OCL_ERRCK_RETVAL ( CECL_PROGRAM(gpu_kernels, 1, &clDevice, compileOptions, NULL, NULL) );
-  
+
   /*
   // Uncomment to view build log from compiler for debugging
   char *build_log;
@@ -177,33 +178,33 @@ void OpenCL_interface (
   build_log = (char *)malloc(ret_val_size+1);
   ciErrNum = clGetProgramBuildInfo(gpu_kernels, clDevice, CL_PROGRAM_BUILD_LOG, ret_val_size, build_log, NULL);
   OCL_ERRCK_VAR(ciErrNum);
-       	
+
   // to be carefully, terminate with \0
   // there's no information in the reference whether the string is 0 terminated or not
   build_log[ret_val_size] = '\0';
 
   fprintf(stderr, "%s\n", build_log );
   */
-  
-  
+
+
   binning_kernel = CECL_KERNEL(gpu_kernels, "binning_kernel", &ciErrNum);
   OCL_ERRCK_VAR(ciErrNum);
-  
+
   reorder_kernel = CECL_KERNEL(gpu_kernels, "reorder_kernel", &ciErrNum);
   OCL_ERRCK_VAR(ciErrNum);
-  
+
   gridding_GPU = CECL_KERNEL(gpu_kernels, "gridding_GPU", &ciErrNum);
   OCL_ERRCK_VAR(ciErrNum);
-  
+
   pb_SwitchToTimer(timers, pb_TimerID_COPY);
-                     
-  free(maxIntData);  
-  
+
+  free(maxIntData);
+
   pb_SwitchToTimer(timers, pb_TimerID_DRIVER);
-  
+
   size_t block1[1] = { blockSize };
   size_t grid1[1] = { ((n+blockSize-1)/blockSize)*block1[0] };
-  
+
   OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(binning_kernel, 0, sizeof(unsigned int), &n) );
   OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(binning_kernel, 1, sizeof(cl_mem), (void *)&sample_d) );
   OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(binning_kernel, 2, sizeof(cl_mem), (void *)idxKey_dPtr) );
@@ -211,11 +212,11 @@ void OpenCL_interface (
   OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(binning_kernel, 4, sizeof(cl_mem), (void *)&binStartAddr_d) );
   OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(binning_kernel, 5, sizeof(int), &(params.binsize)) );
   OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(binning_kernel, 6, sizeof(unsigned int), &gridNumElems) );
-  
+
   OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(reorder_kernel, 0, sizeof(unsigned int), &n) );
   OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(reorder_kernel, 2, sizeof(cl_mem), (void *)&sample_d) );
   OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(reorder_kernel, 3, sizeof(cl_mem), (void *)&sortedSample_d) );
-  
+
   pb_SwitchToTimer(timers, pb_TimerID_KERNEL);
 
   /* STEP 1: Perform binning. This kernel determines which output bin each input element
@@ -227,10 +228,10 @@ void OpenCL_interface (
   /* STEP 2: Sort the index-value pair generate in the binning kernel */
   cl_mem dkeys_o = CECL_BUFFER(clContext, CL_MEM_READ_WRITE, n*sizeof(unsigned int), NULL, &ciErrNum); OCL_ERRCK_VAR(ciErrNum);
   cl_mem dvalues_o = CECL_BUFFER(clContext, CL_MEM_READ_WRITE, n*sizeof(unsigned int), NULL, &ciErrNum); OCL_ERRCK_VAR(ciErrNum);
-  
+
   cl_mem *dkeys_oPtr = &dkeys_o;
   cl_mem *dvalues_oPtr = &dvalues_o;
-  
+
   cl_mem *beforePointer = idxKey_dPtr;
 
   sort(n, gridNumElems+1, idxKey_dPtr, idxValue_dPtr, dkeys_oPtr, dvalues_oPtr, &clContext, clCommandQueue, clDevice, workItemSizes);
@@ -238,7 +239,7 @@ void OpenCL_interface (
   /* STEP 3: Reorder the input data, based on the sorted values from Step 2.
    * this step also involves changing the data from array of structs to a struct
    * of arrays. Also in this kernel, we populate an array with the starting index
-   * of every output bin features in the input array, based on the sorted indices 
+   * of every output bin features in the input array, based on the sorted indices
    * from Step 2.
    * At the end of this step, we copy the start address and list of input elements
    * that will be computed on the CPU.
@@ -260,25 +261,25 @@ void OpenCL_interface (
    * every output bin.
    */
   scanLargeArray(gridNumElems+1, binStartAddr_d, clContext, clCommandQueue, clDevice, workItemSizes);
-  
+
   pb_SwitchToTimer(timers, pb_TimerID_COPY);
 
   // Copy back to the CPU the indices of the input elements that will be processed on the CPU
   unsigned int cpuStart;
-  OCL_ERRCK_RETVAL( CECL_READ_BUFFER(clCommandQueue, binStartAddr_d, CL_TRUE, 
+  OCL_ERRCK_RETVAL( CECL_READ_BUFFER(clCommandQueue, binStartAddr_d, CL_TRUE,
                           gridNumElems*sizeof(unsigned int), // Offset in bytes
                           sizeof(unsigned int), // Size of data to read
                           &cpuStart, // Host Source
                           0, NULL, NULL) );
 
   int CPUbin_size = int(n)-int(cpuStart);
-  
+
   ReconstructionSample* CPUbin;
 
   CPUbin = (ReconstructionSample *) malloc ( CPUbin_size*sizeof(ReconstructionSample) );
   if (CPUbin == NULL) { fprintf(stderr, "Could not allocate memory on host! (%s: %d)\n", __FILE__, __LINE__); exit(1); }
-  
-  OCL_ERRCK_RETVAL( CECL_READ_BUFFER(clCommandQueue, sortedSample_d, CL_TRUE, 
+
+  OCL_ERRCK_RETVAL( CECL_READ_BUFFER(clCommandQueue, sortedSample_d, CL_TRUE,
                           cpuStart*sizeof(ReconstructionSample), // Offset in bytes
                           CPUbin_size*sizeof(ReconstructionSample), // Size of data to read
                           CPUbin, // Host Source
@@ -290,11 +291,11 @@ void OpenCL_interface (
    */
   gridData_d = CECL_BUFFER(clContext, CL_MEM_COPY_HOST_PTR, gridNumElems*sizeof(cmplx), zeroData, &ciErrNum);  OCL_ERRCK_VAR(ciErrNum);
   sampleDensity_d = CECL_BUFFER(clContext, CL_MEM_COPY_HOST_PTR, gridNumElems*sizeof(float), zeroData, &ciErrNum);  OCL_ERRCK_VAR(ciErrNum);
-  
+
   free(zeroData);
 
   pb_SwitchToTimer(timers, pb_TimerID_KERNEL);
-  
+
   size_t block2[3] = {dims[0], dims[1], dims[2]};
   size_t grid2[3] = { (size_x/dims[0]) * block2[0], ((size_y*size_z)/(dims[1]*dims[2])) * block2[1], 1 * block2[2] };
 
@@ -303,26 +304,26 @@ void OpenCL_interface (
   OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(gridding_GPU, 2, sizeof(cl_mem), (void *)&gridData_d) );
   OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(gridding_GPU, 3, sizeof(cl_mem), (void *)&sampleDensity_d) );
   OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(gridding_GPU, 4, sizeof(float), &beta) );
-  
+
   OCL_ERRCK_RETVAL ( CECL_ND_RANGE_KERNEL(clCommandQueue, gridding_GPU, 3, 0,
                             grid2, block2, 0, 0, 0) );
-                                
+
   OCL_ERRCK_RETVAL ( clReleaseMemObject(binStartAddr_d) );
-  
+
   pb_SwitchToTimer(timers, pb_TimerID_COPY);
-                       
+
   /* Copying the results from the Device to the Host */
-  OCL_ERRCK_RETVAL( CECL_READ_BUFFER(clCommandQueue, sampleDensity_d, CL_FALSE, 
+  OCL_ERRCK_RETVAL( CECL_READ_BUFFER(clCommandQueue, sampleDensity_d, CL_FALSE,
                           0, // Offset in bytes
                           gridNumElems*sizeof(float), // Size of data to write
                           sampleDensity, // Host Source
                           0, NULL, NULL) );
-                          
-  OCL_ERRCK_RETVAL( CECL_READ_BUFFER(clCommandQueue, gridData_d, CL_TRUE, 
+
+  OCL_ERRCK_RETVAL( CECL_READ_BUFFER(clCommandQueue, gridData_d, CL_TRUE,
                           0, // Offset in bytes
                           gridNumElems*sizeof(cmplx), // Size of data to write
                           gridData, // Host Source
-                          0, NULL, NULL) );                          
+                          0, NULL, NULL) );
 
   pb_SwitchToTimer(timers, pb_TimerID_COMPUTE);
 
@@ -338,7 +339,7 @@ void OpenCL_interface (
   OCL_ERRCK_RETVAL ( clReleaseMemObject(gridData_d) );
   OCL_ERRCK_RETVAL ( clReleaseMemObject(sampleDensity_d) );
   OCL_ERRCK_RETVAL ( clReleaseMemObject(sortedSample_d) );
-  
+
   pb_SwitchToTimer(timers, pb_TimerID_NONE);
 
   return;
