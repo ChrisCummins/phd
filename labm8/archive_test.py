@@ -1,6 +1,7 @@
 """Unit tests for //labm8:archive."""
 import pathlib
 import re
+import tarfile
 import zipfile
 
 import pytest
@@ -11,6 +12,28 @@ from labm8 import test
 
 
 FLAGS = flags.FLAGS
+
+
+@pytest.fixture(
+    scope='function',
+    params=[
+      # Parameterized by tuple:
+      #   <file_extension>, <open_function>, <add_function>
+      ('.zip', lambda f: zipfile.ZipFile(f, 'w'), lambda a: a.write),
+      ('.tar.bz2', lambda f: tarfile.open(f, 'w:bz2'), lambda a: a.add),
+    ],
+    # Parameter tuple names.
+    ids=['zip', 'tar.bz2'])
+def test_archive(request, tempdir: pathlib.Path) -> pathlib.Path:
+  """Yield path to an archive containing a single 'a.txt' file."""
+  extension, open_fn, write_fn = request.param
+  path = tempdir / f'a{extension}'
+  with open(tempdir / 'a.txt', 'w') as f:
+    f.write("Hello, world!")
+  with open_fn(path) as a:
+    write_fn(a)(tempdir / 'a.txt', arcname='a.txt')
+  (tempdir / 'a.txt').unlink()
+  yield path
 
 
 def Touch(path: pathlib.Path) -> pathlib.Path:
@@ -53,33 +76,22 @@ def test_Archive_unsupported_suffixes(tempdir: pathlib.Path, suffix: str):
                   str(e_ctx.value))
 
 
-def test_Archive_single_file_zip(tempdir: pathlib.Path):
+def test_Archive_as_context_manager(test_archive: pathlib.Path):
   """Test context manager for a single file zip."""
-  # Create an archive with a single file.
-  path = tempdir / 'a.zip'
-  with zipfile.ZipFile(path, "w") as a:
-    with a.open('a.txt', 'w') as f:
-      f.write("Hello, world!".encode("utf-8"))
-
   # Open the archive and check the contents.
-  with archive.Archive(path) as d:
+  with archive.Archive(test_archive) as d:
     assert (d / 'a.txt').is_file()
     assert len(list(d.iterdir())) == 1
     with open(d / 'a.txt') as f:
       assert f.read() == "Hello, world!"
 
 
-def test_Archive_single_file_zip_ExtractAll(tempdir: pathlib.Path):
+def test_Archive_ExtractAll(test_archive: pathlib.Path,
+                            tempdir: pathlib.Path):
   """Test ExtractAll for a single file zip."""
-  # Create an archive with a single file.
-  path = tempdir / 'a.zip'
-  with zipfile.ZipFile(path, "w") as a:
-    with a.open('a.txt', 'w') as f:
-      f.write("Hello, world!".encode("utf-8"))
-
   # Open the archive and check that it still exists.
-  archive.Archive(path).ExtractAll(tempdir)
-  assert (tempdir / 'a.zip').is_file()
+  archive.Archive(test_archive).ExtractAll(tempdir)
+  assert test_archive.is_file()
 
   # Check the archive contents.
   assert (tempdir / 'a.txt').is_file()
@@ -88,17 +100,12 @@ def test_Archive_single_file_zip_ExtractAll(tempdir: pathlib.Path):
     assert f.read() == "Hello, world!"
 
 
-def test_Archive_single_file_zip_ExtractAll_parents(tempdir: pathlib.Path):
+def test_Archive_ExtractAll_parents(test_archive: pathlib.Path,
+                                    tempdir: pathlib.Path):
   """Test that ExtractAll creates necessary parent directories"""
-  # Create an archive with a single file.
-  path = tempdir / 'a.zip'
-  with zipfile.ZipFile(path, "w") as a:
-    with a.open('a.txt', 'w') as f:
-      f.write("Hello, world!".encode("utf-8"))
-
   # Open the archive and check that it still exists.
-  archive.Archive(path).ExtractAll(tempdir / 'foo/bar/car')
-  assert (tempdir / 'a.zip').is_file()
+  archive.Archive(test_archive).ExtractAll(tempdir / 'foo/bar/car')
+  assert test_archive.is_file()
 
   # Check the archive contents.
   assert (tempdir / 'foo/bar/car/a.txt').is_file()

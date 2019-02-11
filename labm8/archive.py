@@ -1,6 +1,7 @@
 """Module for handling archive files."""
 import pathlib
 import shutil
+import tarfile
 import tempfile
 import typing
 import zipfile
@@ -63,7 +64,9 @@ class Archive(object):
 
     if suffixes[-1] == '.zip':
       self._open_function = zipfile.ZipFile
-      # TODO(cec): Add support for .tar.bz2, .tar, and .tar.gz.
+    elif suffixes[-2:] == ['.tar', '.bz2']:
+      self._open_function = lambda f: tarfile.open(f, "r:bz2")
+      # TODO(cec): Add support for .tar, and .tar.gz.
     else:
       raise UnsupportedArchiveFormat(
           f"Unsupported file extension '{suffixes[-1]}' for archive "
