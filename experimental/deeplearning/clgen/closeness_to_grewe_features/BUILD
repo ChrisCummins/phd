@@ -29,8 +29,10 @@ py_binary(
     srcs = ["import_from_deepsmith_datastore.py"],
     deps = [
         ":grewe_features_db",
-        "//deeplearning/deepsmith:db",
+        "//deeplearning/deepsmith:datastore",
+        "//deeplearning/deepsmith:generator",
         "//deeplearning/deepsmith:testcase",
+        "//deeplearning/deepsmith:toolchain",
         "//labm8:pbutil",
         "//labm8:sqlutil",
         "//third_party/py/absl",
