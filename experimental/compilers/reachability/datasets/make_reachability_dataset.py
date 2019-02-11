@@ -8,10 +8,10 @@ import pandas as pd
 from absl import app
 from absl import flags
 
-from experimental.compilers.reachability import cfg_datasets as datasets
 from experimental.compilers.reachability import control_flow_graph as cfg
 from experimental.compilers.reachability import \
   control_flow_graph_generator as cfg_generator
+from experimental.compilers.reachability.datasets import datasets
 from labm8 import prof
 
 
@@ -85,6 +85,7 @@ class SpecGenerator(object):
         return
 
       yield TargetGraphSpec(graph=g, target_node_index=0)
+
 
 # Functions to generate feature vectors. Features vectors are np.arrays of
 # floating point values.

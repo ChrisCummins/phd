@@ -1,10 +1,10 @@
-"""Unit tests for //experimental/compilers/reachability:datasets."""
+"""Unit tests for //experimental/compilers/reachability/datasets."""
 
 import pytest
 from absl import flags
 
 from datasets.linux import linux
-from experimental.compilers.reachability import cfg_datasets as datasets
+from experimental.compilers.reachability.datasets import datasets
 from labm8 import system
 from labm8 import test
 
