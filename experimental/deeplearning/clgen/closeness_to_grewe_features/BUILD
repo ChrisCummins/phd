@@ -51,3 +51,15 @@ sh_test(
     srcs = ["import_from_directory_smoke_test.sh"],
     data = [":import_from_directory"],
 )
+
+py_binary(
+    name = "import_from_gpgpu_benchmarks",
+    srcs = ["import_from_gpgpu_benchmarks.py"],
+    deps = [
+        ":grewe_features_db",
+        "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
+        "//deeplearning/deeptune/opencl/heterogeneous_mapping/models:ncc",
+        "//third_party/py/absl",
+        "//third_party/py/progressbar",
+    ],
+)
