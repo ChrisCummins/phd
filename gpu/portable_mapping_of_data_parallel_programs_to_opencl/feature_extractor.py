@@ -129,7 +129,8 @@ def main(argv):
 
   try:
     features = list(
-        ExtractFeaturesFromPath(FLAGS.feature_extractor_opencl_src_path))
+        ExtractFeaturesFromPath(
+            pathlib.Path(FLAGS.feature_extractor_opencl_src_path)))
 
     if features:
       print(*features[0]._fields, sep=',')

@@ -22,9 +22,7 @@ class OpenCLKernelWithRawGreweFeatures(
   """A table of OpenCL kernels and their Grewe et. al. feature values."""
   id: int = sql.Column(sql.Integer, primary_key=True)
   # The checksum of the 'src' column.
-  src_sha256: str = sql.Column(
-      sql.Binary(32).with_variant(mysql.BINARY(32), 'mysql'),
-      nullable=False)
+  src_sha256: str = sql.Column(sql.String(64), nullable=False, unique=True)
   # The origin of the opencl kernel, e.g. "clgen" for a clgen-generated
   # benchmark.
   origin: str = sql.Column(sql.String(32), nullable=False)
@@ -55,7 +53,7 @@ class OpenCLKernelWithRawGreweFeatures(
   ) -> 'OpenCLKernelWithRawGreweFeatures':
     """Instantiate a PreprocessedContentFile."""
     return cls(
-        src_sha256=hashlib.sha256(src).digest(),
+        src_sha256=hashlib.sha256(src.encode('utf-8')).hexdigest(),
         origin=origin,
         grewe_compute_operation_count=features.compute_operation_count,
         grewe_rational_operation_count=features.rational_operation_count,
