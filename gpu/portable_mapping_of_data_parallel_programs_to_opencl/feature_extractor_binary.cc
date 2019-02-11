@@ -97,15 +97,15 @@ class FuncInfo {
   bool isOCLKernel;
 
  public:
-  FuncInfo() {
-    resetCounters();
-    isOCLKernel = false;
-  }
+  FuncInfo() :
+    global_mem_ls(0), comp_inst_count(0),
+    rational_inst_count(0), barrier_count(0), cols_mem_access_count(0),
+    local_mem_ls_count(0), atomic_op_count(0), isOCLKernel(false) {}
 
-  explicit FuncInfo(std::string _kernelName) : isOCLKernel(false) {
-    FuncInfo();
-    kernelName = _kernelName;
-  }
+  explicit FuncInfo(std::string _kernelName) :
+   kernelName(_kernelName), global_mem_ls(0), comp_inst_count(0),
+   rational_inst_count(0), barrier_count(0), cols_mem_access_count(0),
+   local_mem_ls_count(0), atomic_op_count(0), isOCLKernel(false) {}
 
   void setAsOclKernel() { isOCLKernel = true; }
 
