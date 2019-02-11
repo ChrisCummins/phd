@@ -1,3 +1,4 @@
+#include <libcecl.h>
 #ifndef OPENCL_DEVICE_INFO_H
 #define OPENCL_DEVICE_INFO_H
 

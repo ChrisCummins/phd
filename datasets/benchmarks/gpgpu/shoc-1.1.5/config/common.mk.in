@@ -10,13 +10,13 @@
 # generated as part of the configuration, so we want to find them in the
 # build tree - hence we do not use $(srcdir) for that -I specification.
 #CPPFLAGS += -I$(top_srcdir)/src/common -I$(top_builddir)/config @CPPFLAGS@
-CPPFLAGS += -I$(top_srcdir)/src/common -I$(top_builddir)/config
+CPPFLAGS += -I$(top_srcdir)/src/common -I$(top_builddir)/config $(EXTRA_CXXFLAGS)
 #CFLAGS   += @CFLAGS@
 #CXXFLAGS += @CXXFLAGS@
 NVCXXFLAGS = @NVCXXFLAGS@
 #ARFLAGS  = rcv
 #LDFLAGS  = @LDFLAGS@ -L$(top_builddir)/src/common
-LDFLAGS  += -L$(top_builddir)/src/common
+LDFLAGS  += -L$(top_builddir)/src/common $(EXTRA_LDFLAGS)
 LIBS     = @LIBS@
 
 USE_MPI         = @USE_MPI@

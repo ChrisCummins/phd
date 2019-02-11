@@ -1,3 +1,4 @@
+#include <libcecl.h>
 #ifndef OPENCL_NODE_PLATFORM_CONTAINER_H
 #define OPENCL_NODE_PLATFORM_CONTAINER_H
 
