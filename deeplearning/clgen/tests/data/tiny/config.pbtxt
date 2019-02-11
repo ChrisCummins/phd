@@ -1,9 +1,8 @@
 # A tiny corpus of OpenCL kernels and a correspondingly small model.
-# It should take around 30 minutes to train on a reasonably powerful GPU,
-# and maybe around an hour on a CPU.
+# It should take a few minutes to train on a reasonably powerful GPU.
 # File: //deeplearning/deepsmith/proto/clgen.proto
 # Proto: clgen.Instance
-working_dir: "/var/phd/clgen/tiny"
+working_dir: "/tmp/phd/deeplearning/clgen/tiny"
 model {
   corpus {
     local_tar_archive: "$PWD/corpus.tar.bz2"
