@@ -65,7 +65,12 @@ flags.DEFINE_integer('experimental_mlp_model_layer_count', 2,
 flags.DEFINE_bool('experimental_use_encode_process_decode_with_loop', False,
                   'Use an experimental encode-process-decode model which '
                   'uses a TensorFlow while loop rather than being unrolled '
-                  'for each time step.')
+                  'for each time step')
+flags.DEFINE_integer('experimental_while_loop_sequence_length', 10,
+                     'The number of unrolled steps inside while loop '
+                     'sequences. Only matters is '
+                     '--experimental_use_encode_process_decode_with_loop is '
+                     'set')
 
 # A value which has different values for training, validation, and testing.
 TrainingValidationTestValue = collections.namedtuple(
@@ -315,16 +320,22 @@ class EncodeProcessDecodeUsingLoop(EncodeProcessDecode):
   def _build(self, input_op, num_processing_steps):
     LoopVars = collections.namedtuple('LoopVars', ['i', 'latent', 'latent0'])
 
+    imax = tf.constant(num_processing_steps)
+
     def Condition(v: LoopVars):
       """The while loop condition."""
-      return tf.less(v.i, num_processing_steps)
+      return tf.less(v.i, imax)
 
     def Body(v: LoopVars):
       """The while loop body."""
-      core_input = utils_tf.concat([v.latent0, v.latent], axis=1)
-      return [LoopVars(i=tf.add(i, 1),
-                       latent=self._core(core_input),
-                       latent0=latent0), ]
+      # Partially unrolled core units.
+      for i in range(FLAGS.experimental_while_loop_sequence_length):
+        core_input = utils_tf.concat([v.latent0, v.latent], axis=1)
+        v.latent = self._core(core_input)
+
+      return [LoopVars(
+          i=tf.add(v.i, FLAGS.experimental_while_loop_sequence_length),
+          latent=v.latent, latent0=v.latent0)]
 
     init_latent = self._encoder(input_op)
 
