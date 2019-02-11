@@ -18,8 +18,8 @@ py_binary(
     data = ["//docs/2017_02_cgo/data:clgen_1000_tar"],
     deps = [
         ":grewe_features_db",
-        "//third_party/py/absl",
         "//labm8:bazelutil",
+        "//third_party/py/absl",
         "//third_party/py/progressbar",
     ],
 )
