@@ -25,6 +25,19 @@ py_binary(
 )
 
 py_binary(
+    name = "import_from_deepsmith_datastore",
+    srcs = ["import_from_deepsmith_datastore.py"],
+    deps = [
+        ":grewe_features_db",
+        "//deeplearning/deepsmith:db",
+        "//deeplearning/deepsmith:testcase",
+        "//labm8:pbutil",
+        "//labm8:sqlutil",
+        "//third_party/py/absl",
+    ],
+)
+
+py_binary(
     name = "import_from_directory",
     srcs = ["import_from_directory.py"],
     deps = [
