@@ -3,8 +3,8 @@
 import pytest
 from absl import flags
 
-import experimental.compilers.reachability.datasets import linux
 from datasets.linux import linux
+from experimental.compilers.reachability.datasets import linux
 from labm8 import test
 
 
@@ -21,8 +21,7 @@ def test_BytecodeFromLinuxSrc_known_file():
   path = linux.LinuxSourcesDataset().src_tree_root / 'kernel' / 'kmod.c'
   assert path.is_file()  # If this fails, the linux source tree is broken.
 
-  bytecode = linux.BytecodeFromLinuxSrc(
-      path, '-O0')
+  bytecode = linux.BytecodeFromLinuxSrc(path, '-O0')
   assert bytecode
 
 
