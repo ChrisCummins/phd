@@ -70,20 +70,20 @@ def main(argv):
   export_path.mkdir(parents=True, exist_ok=True)
 
   # To export from contentfiles database.
-  # for language in clone_list.language:
-  #   d = pathlib.Path(language.destination_directory)
-  #   d = d.parent / (str(d.name) + '.db')
-  #   db = contentfiles.ContentFiles(d)
-  #   with db.Session() as session:
-  #     (export_path / language.language).mkdir(exist_ok=True)
-  #     ExportDatabase(session, export_path / language.language)
-
-  # To export from index directory.
   for language in clone_list.language:
-    index_path = pathlib.Path(language.destination_directory + '.index')
-    if index_path.is_dir():
+    d = pathlib.Path(language.destination_directory)
+    d = d.parent / (str(d.name) + '.db')
+    db = contentfiles.ContentFiles(f'sqlite:///{d}')
+    with db.Session() as session:
       (export_path / language.language).mkdir(exist_ok=True)
-      ExportIndex(index_path, export_path / language.language)
+      ExportDatabase(session, export_path / language.language)
+
+  # # To export from index directory.
+  # for language in clone_list.language:
+  #   index_path = pathlib.Path(language.destination_directory + '.index')
+  #   if index_path.is_dir():
+  #     (export_path / language.language).mkdir(exist_ok=True)
+  #     ExportIndex(index_path, export_path / language.language)
 
 
 if __name__ == '__main__':
