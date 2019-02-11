@@ -24,8 +24,9 @@ from experimental.compilers.reachability import control_flow_graph as cfg
 from experimental.compilers.reachability import database
 from experimental.compilers.reachability import llvm_util
 from experimental.compilers.reachability import reachability_pb2
-from experimental.compilers.reachability.datasets import datasets
 from experimental.compilers.reachability.datasets import import_from_github
+from experimental.compilers.reachability.datasets import linux
+from experimental.compilers.reachability.datasets import opencl
 from labm8 import pbutil
 
 
@@ -285,7 +286,8 @@ def main(argv):
       .filter(database.Meta.key == 'opencl_dataset_imported').first()
   if not opencl_dataset_imported:
     logging.info("Importing OpenCL dataset ...")
-    datasets.OpenClDeviceMappingsDataset().PopulateBytecodeTable(db)
+    opencl.OpenClDeviceMappingsDataset().PopulateBytecodeTable(
+        db)
     with db.Session(commit=True) as session:
       session.add(
           database.Meta(key='opencl_dataset_imported', value=NowString()))
@@ -295,7 +297,8 @@ def main(argv):
       .filter(database.Meta.key == 'linux_sources_imported').first()
   if not linux_sources_imported:
     logging.info("Processing Linux dataset ...")
-    datasets.LinuxSourcesDataset().PopulateBytecodeTable(db)
+    linux.LinuxSourcesDataset().PopulateBytecodeTable(
+        db)
     with db.Session(commit=True) as session:
       session.add(
           database.Meta(key='linux_sources_imported', value=NowString()))

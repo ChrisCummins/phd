@@ -1,24 +1,5 @@
 # Datasets for compiler CFG problems.
 
-py_library(
-    name = "datasets",
-    srcs = ["datasets.py"],
-    deps = [
-        "//third_party/py/absl",
-        "//third_party/py/pandas",
-        "//third_party/py/progressbar",
-        "//compilers/llvm:clang",
-        "//compilers/llvm:opt",
-        "//datasets/linux",
-        "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
-        "//deeplearning/clgen/preprocessors:opencl",
-        "//experimental/compilers/reachability:control_flow_graph",
-        "//experimental/compilers/reachability:database",
-        "//experimental/compilers/reachability:llvm_util",
-        "//labm8:decorators",
-    ]
-)
-
 py_binary(
     name = "import_from_github",
     srcs = ["import_from_github.py"],
@@ -32,6 +13,38 @@ py_binary(
         "//labm8:ppar",
         "//third_party/py/absl",
         "//third_party/py/sqlalchemy",
+    ],
+)
+
+py_library(
+    name = "linux",
+    srcs = ["linux.py"],
+    deps = [
+        ":opencl",
+        "//compilers/llvm:clang",
+        "//compilers/llvm:opt",
+        "//datasets/linux",
+        "//experimental/compilers/reachability:control_flow_graph",
+        "//experimental/compilers/reachability:database",
+        "//experimental/compilers/reachability:llvm_util",
+        "//experimental/compilers/reachability:reachability_py_pb2",
+        "//labm8:decorators",
+        "//third_party/py/absl",
+        "//third_party/py/pandas",
+        "//third_party/py/progressbar",
+    ],
+)
+
+py_test(
+    name = "linux_test",
+    srcs = ["linux_test.py"],
+    deps = [
+        ":linux",
+        "//datasets/linux",
+        "//labm8:system",
+        "//labm8:test",
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
@@ -54,7 +67,8 @@ py_binary(
     srcs = ["make_reachability_dataset.py"],
     visibility = ["//experimental/compilers/reachability:__subpackages__"],
     deps = [
-        ":datasets",
+        ":linux",
+        ":opencl",
         "//experimental/compilers/reachability:control_flow_graph",
         "//experimental/compilers/reachability:control_flow_graph_generator",
         "//labm8:prof",
@@ -69,8 +83,9 @@ py_binary(
     srcs = ["make_vbcd.py"],
     visibility = ["//visibility:public"],
     deps = [
-        ":datasets",
         ":import_from_github",
+        ":linux",
+        ":opencl",
         "//compilers/llvm:opt",
         "//datasets/github/scrape_repos:cloner",
         "//datasets/github/scrape_repos:contentfiles",
@@ -90,15 +105,32 @@ py_binary(
     ],
 )
 
-py_test(
-    name = "datasets_test",
-    srcs = ["datasets_test.py"],
+py_library(
+    name = "opencl",
+    srcs = ["opencl.py"],
     deps = [
-        ":datasets",
+        "//compilers/llvm:clang",
+        "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
+        "//deeplearning/clgen/preprocessors:opencl",
+        "//experimental/compilers/reachability:control_flow_graph",
+        "//experimental/compilers/reachability:database",
+        "//experimental/compilers/reachability:llvm_util",
+        "//experimental/compilers/reachability:reachability_py_pb2",
+        "//labm8:decorators",
+        "//third_party/py/absl",
+        "//third_party/py/pandas",
+        "//third_party/py/progressbar",
+    ],
+)
+
+py_test(
+    name = "opencl_test",
+    srcs = ["opencl_test.py"],
+    deps = [
+        ":opencl",
         "//labm8:system",
         "//labm8:test",
         "//third_party/py/absl",
         "//third_party/py/pytest",
-        "//datasets/linux",
     ],
 )

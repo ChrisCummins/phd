@@ -11,7 +11,8 @@ from absl import flags
 from experimental.compilers.reachability import control_flow_graph as cfg
 from experimental.compilers.reachability import \
   control_flow_graph_generator as cfg_generator
-from experimental.compilers.reachability.datasets import datasets
+from experimental.compilers.reachability.datasets import linux
+from experimental.compilers.reachability.datasets import opencl
 from labm8 import prof
 
 
@@ -227,7 +228,7 @@ def main(argv):
 
   # OpenCL dataset.
   with prof.Profile('opencl dataset'):
-    ocl_dataset = datasets.OpenClDeviceMappingsDataset().cfgs_df.reset_index()
+    ocl_dataset = opencl.OpenClDeviceMappingsDataset().cfgs_df.reset_index()
 
     # Set the program names on the networkx graph instances.
     for _, row in ocl_dataset.iterrows():
@@ -253,7 +254,7 @@ def main(argv):
 
   # Linux dataset.
   with prof.Profile('linux dataset'):
-    linux_dataset = datasets.LinuxSourcesDataset().cfgs_df.reset_index()
+    linux_dataset = linux.LinuxSourcesDataset().cfgs_df.reset_index()
 
     # Set the program names on the networkx graph instances.
     for _, row in linux_dataset.iterrows():

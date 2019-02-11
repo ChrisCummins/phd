@@ -36,6 +36,7 @@ py_binary(
     srcs = ["lstm_reachability_model.py"],
     deps = [
         "//deeplearning/clgen/corpuses:atomizers",
+        "//experimental/compilers/reachability:reachability_py_pb2",
         "//experimental/compilers/reachability:control_flow_graph",
         "//experimental/compilers/reachability/datasets:make_reachability_dataset",
         "//experimental/compilers/reachability:control_flow_graph_generator",
