@@ -140,6 +140,7 @@ py_library(
         "//third_party/py/pandas",
         "//third_party/py/tensorflow",
     ],
+    visibility = ["//visibility:public"],
 )
 
 py_test(
