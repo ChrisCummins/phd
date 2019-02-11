@@ -55,7 +55,7 @@ way in which models are trained, and how new programs are generated,
 respectively. You will probably want to assemble a large corpus of source code 
 to train a new model on - I have [tools](/datasets/github/scrape_repos) which 
 may help with that. You may also want a means to execute arbitrary generated 
-code - as it happens I have [tools](gpu/cldrive) for that too. :-) Thought of a 
+code - as it happens I have [tools](/gpu/cldrive) for that too. :-) Thought of a 
 new use case? I'd love to hear about it!
 
 
