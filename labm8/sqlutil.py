@@ -1,4 +1,5 @@
 """Utility code for working with sqlalchemy."""
+import collections
 import contextlib
 import pathlib
 import typing
@@ -443,9 +444,18 @@ class ProtoBackedMixin(object):
     return cls.FromProto(proto)
 
 
+# The results of an offset-limit batched query. The batch num is the current
+# batch number. The offset is the offset into the results set, the limit is the
+# last row in the results set, max_rows is the total number of rows in the query
+# (only set if compute_max_rows, else None), and rows it the results.
+OffsetLimitQueryResultsBatch = collections.namedtuple(
+    'QueryResultsBatch', ['batch_num', 'offset', 'limit', 'max_rows', 'rows'])
+
+
 def OffsetLimitBatchedQuery(
     query: Query, batch_size: int = 1000,
-    start_at: int = 0) -> typing.Iterator[typing.List[typing.Any]]:
+    start_at: int = 0, compute_max_rows: bool = False) -> typing.Iterator[
+  OffsetLimitQueryResultsBatch]:
   """Split and return the rows resulting from a query in to batches.
 
   This iteratively runs the query `SELECT * FROM * OFFSET i LIMIT batch_size;`
@@ -460,16 +470,25 @@ def OffsetLimitBatchedQuery(
     query: The query to run.
     batch_size: The number of rows to return per batch.
     start_at: The initial offset into the table.
+    compute_max_rows: If true
 
   Returns:
-    A generator of lists of rows, where the number of rows in each batch is
-    `batch_size`, or <= `batch_size` and >= 1 for the last iteration.
+    A generator of OffsetLimitQueryResultsBatch tuples, where each tuple
+    contains between 1 <= x <= `batch_size` rows.
   """
+  max_rows = None
+  if compute_max_rows:
+    max_rows = query.count()
+
+  batch_num = 0
   i = start_at
   while True:
+    batch_num += 1
     batch = query.offset(i).limit(batch_size).all()
     if batch:
-      yield batch
+      yield OffsetLimitQueryResultsBatch(
+          batch_num=batch_num, offset=i, limit=i + batch_size,
+          max_rows=max_rows, rows=batch)
       i += len(batch)
     else:
       break

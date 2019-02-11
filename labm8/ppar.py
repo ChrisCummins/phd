@@ -7,7 +7,6 @@ import multiprocessing
 import subprocess
 import typing
 
-import humanize
 from absl import flags
 
 from labm8 import bazelutil
@@ -292,7 +291,8 @@ def MapDatabaseRowBatchProcessor(
   i = start_at
   row_batches = sqlutil.OffsetLimitBatchedQuery(query, batch_size=batch_size)
 
-  for rows_batch in row_batches:
+  for batch in row_batches:
+    rows_batch = batch.rows
     start_of_batch_callback(i)
 
     work_unit_args = [
