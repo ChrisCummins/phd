@@ -79,7 +79,7 @@ def DataPath(path: typing.Union[str, pathlib.Path],
 
 
 class DataArchive(archive.Archive):
-  """A compressed zip file.
+  """A compressed archive file.
 
   TODO: data=[...] attribute of target.
 
