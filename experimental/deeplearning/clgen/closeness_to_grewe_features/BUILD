@@ -65,3 +65,12 @@ py_binary(
         "//third_party/py/progressbar",
     ],
 )
+
+py_binary(
+    name = "import_from_legacy_clgen",
+    srcs = ["import_from_legacy_clgen.py"],
+    deps = [
+        ":grewe_features_db",
+        "//third_party/py/absl",
+    ],
+)
