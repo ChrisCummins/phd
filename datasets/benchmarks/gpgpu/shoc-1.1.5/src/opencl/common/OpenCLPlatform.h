@@ -1,3 +1,4 @@
+#include <libcecl.h>
 #ifndef OPENCL_PLATFORM_H
 #define OPENCL_PLATFORM_H
 
