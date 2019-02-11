@@ -43,6 +43,51 @@ kernel void foobar(global int* a, const int nelem) {
   assert len(features) == 1
 
 
+def test_ExtractFeaturesFromPath_integer_index_accces(tempdir: pathlib.Path):
+  """An integer-indexed access to global memory is considered coaslesced."""
+  with open(tempdir / 'foo.cl', 'w') as f:
+    f.write("""
+kernel void A(global int* a) {
+  a[0] = 0;
+}
+""")
+  features = \
+    list(feature_extractor.ExtractFeaturesFromPath(tempdir / 'foo.cl'))[0]
+  assert features.coalesced_memory_access_count == 1
+
+
+def test_ExtractFeaturesFromPath_function_accces(tempdir: pathlib.Path):
+  """An function-indexed access to memory is not considered coaslesced.
+
+  NOTE: This is not always correct!
+  """
+  with open(tempdir / 'foo.cl', 'w') as f:
+    f.write("""
+kernel void A(global int* a) {
+  a[get_global_id(0)] = 0;
+}
+""")
+  features = \
+    list(feature_extractor.ExtractFeaturesFromPath(tempdir / 'foo.cl'))[0]
+  assert features.coalesced_memory_access_count == 0
+
+
+def test_ExtractFeaturesFromPath_pointer_offset(tempdir: pathlib.Path):
+  """A pointer-arithmetic access to memory is not considered coaslesced.
+
+  NOTE: This is not always correct!
+  """
+  with open(tempdir / 'foo.cl', 'w') as f:
+    f.write("""
+kernel void A(global int* a) {
+  *(a + 0) = 0;
+}
+""")
+  features = \
+    list(feature_extractor.ExtractFeaturesFromPath(tempdir / 'foo.cl'))[0]
+  assert features.coalesced_memory_access_count == 0
+
+
 def test_ExtractFeaturesFromPath_single_kernel_features_values(
     tempdir: pathlib.Path):
   """Test feature values returned from a single kernel."""
@@ -107,7 +152,7 @@ def test_ExtractFeaturesFromPath_syntax_error(tempdir: pathlib.Path):
     f.write("/@*! Invalid syntax!")
   with pytest.raises(feature_extractor.FeatureExtractionError) as e_ctx:
     feature_extractor.ExtractFeaturesFromPath(tempdir / 'kernel.cl')
-    
+
   assert "error: expected identifier or '('" in str(e_ctx.value)
 
 

@@ -193,21 +193,22 @@ class RecursiveASTVisitor
   FuncInfo *pCurKI;
 
 
-  //
-  // Return a boolean value to indicate if the array acess is colescated
+  // Return a boolean value to indicate if the array access is coalescaed.
   bool processArrayIndices(clang::ArraySubscriptExpr *Node) {
     clang::Expr *tExpr = Node->getRHS();
 
-    // Check if this is a binaryoperator
+    // Check if this is a binary operator
     clang::BinaryOperator *bo = clang::dyn_cast<clang::BinaryOperator>(tExpr);
-    if (bo)
+    if (bo) {
       return processArrayIdxBinaryOperator(bo);
+    }
 
     // If the array index is determined by a function call, assume it is
-    // not colescate accessing
+    // not a coalesced access.
     clang::CallExpr *ce = clang::dyn_cast<clang::CallExpr>(tExpr);
-    if (ce)
+    if (ce) {
       return false;
+    }
 
     clang::ImplicitCastExpr *iCE =
         clang::dyn_cast<clang::ImplicitCastExpr>(tExpr);
@@ -382,11 +383,14 @@ class RecursiveASTVisitor
       std::string tStr = T.getAsString();
 
       ParameterInfo::VarType vT = ParameterInfo::OTHER;
-      // FIXME: Ugly tricks
-      if (tStr.find("__global") != std::string::npos) {
+      // Pattern match the string representation of parameter qualifiers. This
+      // is an ugly hack, which I would prefer a better solution for.
+      if (tStr.find("__global") != std::string::npos &&
+          tStr.find("global") != std::string::npos) {
         pCurKI->setAsOclKernel();
         vT = ParameterInfo::GLOBAL;
-      } else if (tStr.find("__local") != std::string::npos) {
+      } else if (tStr.find("__local") != std::string::npos &&
+                 tStr.find("local") != std::string::npos) {
         vT = ParameterInfo::LOCAL;
       }
 
@@ -400,7 +404,8 @@ class RecursiveASTVisitor
       FuncInfoVec.push_back(pCurKI);
     }
 
-    return true;  // returning false aborts the traversal
+    // Returning True to abort the traversal.
+    return true;
   }
 
 
