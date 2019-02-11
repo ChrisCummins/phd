@@ -38,17 +38,23 @@ def ComputeGreweFeaturesForGpu(gpu: str, df: pd.DataFrame) -> pd.DataFrame:
     A table with the feature values.
   """
   transfer = df[f'feature:{gpu}:transfer'].values
-  comp = df['feature:comp'].values
-  mem = df['feature:mem'].values
-  localmem = df['feature:localmem'].values
-  coalesced = df['feature:coalesced'].values
+  compute_operation_count = df['feature:comp'].values
+  global_memory_access_count = df['feature:mem'].values
+  local_memory_access_count = df['feature:localmem'].values
+  coalesced_memory_access_count = df['feature:coalesced'].values
   wgsize = df[f'param:{gpu}:wgsize'].values
 
   df = pd.DataFrame({
-    'feature:grewe1': transfer / (comp + mem),
-    'feature:grewe2': coalesced / mem,
-    'feature:grewe3': (localmem / mem) * wgsize,
-    'feature:grewe4': comp / mem,
+    'feature:grewe1': transfer / (
+        compute_operation_count + global_memory_access_count),
+    'feature:grewe2': (
+        coalesced_memory_access_count / global_memory_access_count),
+    # static
+    'feature:grewe3': wgsize * (
+        local_memory_access_count / global_memory_access_count),
+    # dynamic
+    'feature:grewe4': compute_operation_count / global_memory_access_count,
+    # static
   })
 
   return df
