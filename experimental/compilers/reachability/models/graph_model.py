@@ -62,6 +62,10 @@ flags.DEFINE_integer('experimental_mlp_model_latent_size', 16,
                      'Latent layer size in edge/node/global models.')
 flags.DEFINE_integer('experimental_mlp_model_layer_count', 2,
                      'Number of layers in edge/node/global models.')
+flags.DEFINE_bool('experimental_use_encode_process_decode_with_loop', False,
+                  'Use an experimental encode-process-decode model which '
+                  'uses a TensorFlow while loop rather than being unrolled '
+                  'for each time step.')
 
 # A value which has different values for training, validation, and testing.
 TrainingValidationTestValue = collections.namedtuple(
@@ -299,6 +303,39 @@ class EncodeProcessDecode(snt.AbstractModule):
     return output_op
 
 
+class EncodeProcessDecodeUsingLoop(EncodeProcessDecode):
+  """An implementation of an encode-process-decode architecture that uses
+  a while loop to update the core recurrently, rather than the fully unrolled
+  core of the example implementation.
+
+  Based on @alvarosg's suggestion in:
+      https://github.com/deepmind/graph_nets/issues/44
+  """
+
+  def _build(self, input_op, num_processing_steps):
+    LoopVars = collections.namedtuple('LoopVars', ['i', 'latent', 'latent0'])
+
+    def Condition(v: LoopVars):
+      """The while loop condition."""
+      return tf.less(v.i, num_processing_steps)
+
+    def Body(v: LoopVars):
+      """The while loop body."""
+      core_input = utils_tf.concat([v.latent0, v.latent], axis=1)
+      return [LoopVars(i=tf.add(i, 1),
+                       latent=self._core(core_input),
+                       latent0=latent0), ]
+
+    init_latent = self._encoder(input_op)
+
+    init_vars = LoopVars(i=0, latent=init_latent, latent0=init_latent)
+    final_vars, = tf.while_loop(Condition, Body, [init_vars, ])
+
+    decoded_op = self._decoder(final_vars.latent)
+    output_op = self._output_transform(decoded_op)
+    return output_op
+
+
 def DataDictsToJsonSerializable(
     data_dicts: typing.List[typing.Dict[str, typing.Any]]
 ) -> typing.List[typing.Dict[str, typing.Any]]:
@@ -458,8 +495,14 @@ class CompilerGraphNeuralNetwork(object):
 
     # Instantiate the model.
     with tf.name_scope('model'):
-      model = EncodeProcessDecode(**GuessOutputSizesFromTargetGraph(
-          df['networkx:target_graph'].values[0]))
+      init_args = GuessOutputSizesFromTargetGraph(
+          df['networkx:target_graph'].values[0])
+
+      # Enable support for experimental while-loop model architecture.
+      if FLAGS.experimental_use_encode_process_decode_with_loop:
+        model = EncodeProcessDecodeUsingLoop(**init_args)
+      else:
+        model = EncodeProcessDecode(**init_args)
 
       # Create loss ops.
       with prof.Profile('create output op'):
