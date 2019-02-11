@@ -19,3 +19,13 @@ py_test(
         "//third_party/py/absl",
     ],
 )
+
+py_test(
+    name = "conditionals_and_loops_test",
+    srcs = ["conditionals_and_loops_test.py"],
+    deps = [
+        "//third_party/py/absl",
+        "//labm8:test",
+        "//third_party/py/tensorflow",
+    ],
+)
