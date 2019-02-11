@@ -13,14 +13,23 @@ py_library(
 )
 
 py_binary(
+    name = "import_cgo17_clgen_1000",
+    srcs = ["import_cgo17_clgen_1000.py"],
+    data = ["//docs/2017_02_cgo/data:clgen_1000_tar"],
+    deps = [
+        ":grewe_features_db",
+        "//third_party/py/absl",
+        "//labm8:bazelutil",
+        "//third_party/py/progressbar",
+    ],
+)
+
+py_binary(
     name = "import_from_directory",
     srcs = ["import_from_directory.py"],
     deps = [
         ":grewe_features_db",
-        "//gpu/portable_mapping_of_data_parallel_programs_to_opencl:feature_extractor",
         "//third_party/py/absl",
-        "//third_party/py/humanize",
-        "//third_party/py/progressbar",
     ],
 )
 

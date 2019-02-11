@@ -1,10 +1,16 @@
 """A database of OpenCL kernels and their Grewe et al features."""
 
 import hashlib
+import multiprocessing
+import pathlib
+import random
+import typing
 
+import humanize
+import progressbar
 import sqlalchemy as sql
 from absl import flags
-from sqlalchemy.dialects import mysql
+from absl import logging
 from sqlalchemy.ext import declarative
 
 from gpu.portable_mapping_of_data_parallel_programs_to_opencl import \
@@ -13,6 +19,10 @@ from labm8 import sqlutil
 
 
 FLAGS = flags.FLAGS
+
+flags.DEFINE_integer(
+    'grewe_db_import_process_count', multiprocessing.cpu_count(),
+    'The number of processes to spawn when importing files to database.')
 
 Base = declarative.declarative_base()
 
@@ -65,7 +75,71 @@ class OpenCLKernelWithRawGreweFeatures(
     )
 
 
+def _DatabaseImporterWorker(
+    path: pathlib.Path
+) -> typing.Tuple[typing.Optional[str],
+                  typing.Optional[grewe_features.GreweEtAlFeatures]]:
+  """Worker function for multi-processed database import."""
+  try:
+    features = list(grewe_features.ExtractFeaturesFromPath(path))
+  except grewe_features.FeatureExtractionError as e:
+    logging.debug("Feature extraction failed with message: %s", e)
+    return None, None
+
+  if len(features) != 1:
+    logging.debug("Expected 1 feature vector in %s, found %d",
+                  path, len(features))
+    return None, None
+
+  try:
+    with open(path) as f:
+      src = f.read()
+  except UnicodeEncodeError:
+    logging.debug("Failed to encode %s", src)
+    return None, None
+
+  return src, features[0]
+
+
 class Database(sqlutil.Database):
+  """Database of kernels."""
 
   def __init__(self, url: str):
     super(Database, self).__init__(url, Base)
+
+  def ImportFromPaths(
+      self, paths_to_import: typing.Iterable[pathlib.Path],
+      origin: str) -> None:
+    """Import a sequence of paths into the database.
+
+    Each path should point to a file containing a single OpenCL kernel.
+
+    Args:
+      paths_to_import: The paths to import.
+      origin: The origin of the kernels. 
+    """
+    paths_to_import = list(paths_to_import)
+    random.shuffle(paths_to_import)
+    logging.info('Importing %s files ...',
+                 humanize.intcomma(len(paths_to_import)))
+    bar = progressbar.ProgressBar(max_value=len(paths_to_import),
+                                  redirect_stderr=True)
+    pool = multiprocessing.Pool(FLAGS.grewe_db_import_process_count)
+    for i, (src, features) in enumerate(pool.imap_unordered(
+        _DatabaseImporterWorker, paths_to_import)):
+      bar.update(i)
+      # None type return if feature extraction failed.
+      if src:
+        with self.Session(commit=False) as session:
+          obj = OpenCLKernelWithRawGreweFeatures.FromSrcOriginAndFeatures(
+              src, origin, features)
+          # Check if it already exists in the database.
+          exists = session.query(
+              OpenCLKernelWithRawGreweFeatures) \
+            .filter_by(src_sha256=obj.src_sha256).first()
+          if not exists:
+            session.add(obj)
+            try:
+              session.commit()
+            except (sql.exc.OperationalError, sql.exc.DataError) as e:
+              logging.warning('Failed to commit database entry: %s', e)
