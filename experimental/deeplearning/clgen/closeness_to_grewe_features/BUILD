@@ -3,6 +3,7 @@
 py_library(
     name = "grewe_features_db",
     srcs = ["grewe_features_db.py"],
+    visibility = ["//experimental/deeplearning/clgen:__subpackages__"],
     deps = [
         "//gpu/portable_mapping_of_data_parallel_programs_to_opencl:feature_extractor",
         "//labm8:sqlutil",
