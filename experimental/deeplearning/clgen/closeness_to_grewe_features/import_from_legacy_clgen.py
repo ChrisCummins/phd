@@ -22,7 +22,7 @@ flags.DEFINE_string(
     'legacy_clgen_db', None,
     'Path of the legacy CLgen sqlite database.')
 flags.DEFINE_string(
-    'origin', None,
+    'origin', 'clgen_legacy',
     'Name of the origin of the kernels, e.g. "github".')
 flags.DEFINE_integer(
     'batch_size', 256,
@@ -39,6 +39,7 @@ def BatchQueryResults(query):
     if i >= FLAGS.batch_size:
       yield batch
       batch = []
+      i = 0
 
 
 def CreateTempFileFromTestcase(
@@ -64,13 +65,13 @@ def main(argv: typing.List[str]):
 
   prefix = 'phd_experimental_deeplearning_clgen_'
   for i, batch in enumerate(batches):
-    with tempfile.TemporaryDirectory(prefi=prefix) as d:
+    with tempfile.TemporaryDirectory(prefix=prefix) as d:
       logging.info('Batch %03d', i)
       d = pathlib.Path(d)
       paths_to_import = [
         CreateTempFileFromTestcase(d, src, i) for i, (src,) in enumerate(batch)
       ]
-      db.ImportFromPaths(paths_to_import)
+      db.ImportFromPaths(paths_to_import, FLAGS.origin)
 
 
 if __name__ == '__main__':
