@@ -1,22 +1,26 @@
-#!/usr/bin/env python3
-#
-# Softmax regression over MNIST dataset, with a Nelder-Mead
-# optimization across training hyperparameters.
-#
-# Uses TensorFlow, scipy, numpy. On Ubuntu install with:
-#
-#    sudo pip3 install --upgrade scipy numpy https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-0.10.0rc0-cp34-cp34m-linux_x86_64.whl
-#
-import sys
+"""MNIST regression with TensorFlow.
+
+Softmax regression over MNIST dataset, with a Nelder-Mead optimization across
+training hyperparameters.
+"""
+import typing
 
 import numpy as np
 import tensorflow as tf
+from absl import app
+from absl import flags
+from absl import logging
 from scipy.optimize import minimize
 from tensorflow.examples.tutorials.mnist import input_data
 
 
-def softmax_regressor(tensor_size):
-  """ Build the regressor: y = Wx + b. """
+FLAGS = flags.FLAGS
+flags.DEFINE_integer('maxiter', 10,
+                     'Maximum number of steps when sweeping hyperparms.')
+
+
+def SoftmaxRegressor(tensor_size):
+  """Build the regressor: y = Wx + b."""
   # Our tensor shape is N * flattened image size, where N is the
   # number of images:
   x = tf.placeholder(tf.float32, [None, tensor_size])
@@ -57,14 +61,9 @@ def softmax_regressor(tensor_size):
   }
 
 
-def train_and_test(session, model, training_data, test_data,
-                   batch_size=100, num_iterations=1000):
-  """ Train and test regression model. """
-
-  print("training with batch size {} for {} iterations ... "
-        .format(batch_size, num_iterations), end="")
-  sys.stdout.flush()
-
+def TrainAndTest(session, model, training_data, test_data,
+                 batch_size=100, num_iterations=1000) -> float:
+  """Train and test regression model."""
   # Initialize variables:
   init = tf.initialize_all_variables()
 
@@ -77,45 +76,54 @@ def train_and_test(session, model, training_data, test_data,
   # Evaluate on test set:
   feed_dict = dict(zip(model["inputs"], [test_data.images, test_data.labels]))
   error = 1 - session(model["eval"], feed_dict=feed_dict)
-  print("{:.2f}% classification error".format(error * 100))
+
+  logging.info("MNIST with batch size %d for %d iterations: %.3f %% error ",
+               batch_size, num_iterations, error * 100)
   return error
 
 
-def denormalize(inputs):
-  """ Scale hypeparameters to "real" values. """
+def Denormalize(inputs):
+  """Scale hyperparameters to "real" values."""
   batch_size, num_iterations = inputs
   return int(round(batch_size * 100)), int(round(num_iterations * 1000))
 
 
-def main():
-  # Load training data
-  print("loading dataset ... ")
+def HyperParamSweep(maxiter: int = 50) -> typing.Dict[str, int]:
+  """Perform a hyper-parameter sweep to find the best batch size and numiter."""
+  logging.info("loading dataset ... ")
   mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
   image_width = 28  # MNIST image dimensions
   tensor_size = image_width * image_width  # Flatten image to 1D
 
   # Build model:
   session = tf.Session()
-  model = softmax_regressor(tensor_size)
+  model = SoftmaxRegressor(tensor_size)
 
   def f(X):
     """
     Optimization function to train and evaluate model with
     hyperparameters.
     """
-    batch_size, num_iterations = denormalize(X)
-    return train_and_test(session.run, model, mnist.train,
-                          mnist.test, batch_size=batch_size,
-                          num_iterations=num_iterations)
+    batch_size, num_iterations = Denormalize(X)
+    return TrainAndTest(session.run, model, mnist.train,
+                        mnist.test, batch_size=batch_size,
+                        num_iterations=num_iterations)
 
   # Hyper-parameter search over batch size and training iterations.
-  maxiter = 50
   x0 = np.array([1, 1])
   res = minimize(f, x0, method="nelder-mead", options={"maxiter": maxiter})
 
-  print("done. batch size: {}, number of iterations: {}"
-        .format(*denormalize(res.x)))
+  batch_size, numiter = Denormalize(res.x)
+  return {'batch_size': batch_size, 'numiter': numiter}
+
+
+def main(argv):
+  del argv
+
+  params = HyperParamSweep(FLAGS.maxiter)
+  logging.info("batch size: %d, nuber of iterations: %d", params['batch_size'],
+               params['numiter'])
 
 
 if __name__ == "__main__":
-  main()
+  app.run(main)
