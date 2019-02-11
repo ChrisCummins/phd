@@ -127,6 +127,7 @@ py_library(
         "//deeplearning/ncc/published_results:task_devmap_kernels",
         "//deeplearning/ncc/published_results:vocabulary",
     ],
+    visibility = ["//visibility:public"],
     deps = [
         ":base",
         ":deeptune",
@@ -140,7 +141,6 @@ py_library(
         "//third_party/py/pandas",
         "//third_party/py/tensorflow",
     ],
-    visibility = ["//visibility:public"],
 )
 
 py_test(
