@@ -1,5 +1,7 @@
 """Import kernels from GPGPU benchmark suites."""
 import hashlib
+import pathlib
+import progressbar
 import typing
 
 from absl import app
@@ -27,8 +29,8 @@ def RowToOpenCLKernelWithRawGreweFeatures(
   src = src.encode('ascii', 'ignore').decode('ascii')
 
   return grewe_features_db.OpenCLKernelWithRawGreweFeatures(
-      src_sha256=hashlib.sha256(src).hexdigest(),
-      origin=f'benchmarks_{row["program:benchmark_suite_name"]}',
+      src_sha256=hashlib.sha256(src.encode('utf-8')).hexdigest(),
+      origin=f'benchmarks',
       grewe_compute_operation_count=row["feature:comp"],
       grewe_rational_operation_count=row["feature:rational"],
       grewe_global_memory_access_count=row["feature:mem"],
@@ -48,9 +50,14 @@ def main(argv: typing.List[str]):
   df = opencl_device_mapping_dataset.OpenClDeviceMappingsDataset().df
 
   with ncc.DEEPTUNE_INST2VEC_DATA_ARCHIVE as datafolder:
-    with db.Session(commit=True) as sess:
-      for _, row in df.iterrows():
-        sess.GetOrAdd(RowToOpenCLKernelWithRawGreweFeatures(row, datafolder))
+    for _, row in progressbar.progressbar(list(df.iterrows())):
+      with db.Session(commit=True) as session:
+        obj = RowToOpenCLKernelWithRawGreweFeatures(row, datafolder)
+        # Check if it already exists in the database.
+        exists = session.query(grewe_features_db.OpenCLKernelWithRawGreweFeatures) \
+            .filter_by(src_sha256=obj.src_sha256).first()
+        if not exists:
+          session.add(obj)
 
 
 if __name__ == '__main__':
