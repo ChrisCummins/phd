@@ -3,6 +3,7 @@
 TODO: Detailed explanation of the file.
 """
 import datetime
+import random
 import time
 import typing
 from concurrent import futures
@@ -126,13 +127,15 @@ class LedgerService(alice_pb2_grpc.LedgerServicer):
   def db(self) -> Database:
     return self._db
 
-  def AvailableWorkers(self):
-    pass
-
   def SelectWorkerIdForRunRequest(
-      self, session: sqlutil.Session,
-      run_requeest: alice_pb2.RunRequest) -> str:
-    pass
+      self, run_request: alice_pb2.RunRequest) -> alice_pb2_grpc.WorkerBeeStub:
+    if not self.worker_bees:
+      raise ValueError('No worker bees available')
+
+    if run_request.worker_id:
+      return self.worker_bees[run_request.worker_id]
+    else:
+      return random.choice(self.worker_bees.values())
 
   def RegisterWorkerBee(self, request: alice_pb2.String,
                         context) -> alice_pb2.Null:
@@ -149,7 +152,8 @@ class LedgerService(alice_pb2_grpc.LedgerServicer):
     del context
 
     logging.info('Removing worker bee: %s', request.string)
-    del self.worker_bees[request.string]
+    if request.string in self.worker_bees:
+      del self.worker_bees[request.string]
     return alice_pb2.Null()
 
   def Add(self, request: alice_pb2.LedgerEntry, context) -> alice_pb2.LedgerId:
@@ -164,6 +168,9 @@ class LedgerService(alice_pb2_grpc.LedgerServicer):
 
       entry_id = entry.id
       logging.info('Created new ledger entry %s', entry_id)
+
+    worker_bee = self.SelectWorkerIdForRunRequest(request)
+    worker_bee.Run(request, None)
 
     return alice_pb2.LedgerId(id=entry_id)
 

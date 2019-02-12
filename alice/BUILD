@@ -18,6 +18,7 @@ py_library(
     srcs = ["bazel.py"],
     visibility = ["//alice:__subpackages__"],
     deps = [
+        ":alice_py_pb2",
         "//labm8:fs",
         "//third_party/py/absl",
     ],
@@ -28,6 +29,7 @@ py_test(
     srcs = ["bazel_test.py"],
     data = ["//alice/test:dummy_target"],
     deps = [
+        ":alice_py_pb2",
         ":bazel",
         "//labm8:test",
         "//third_party/py/pytest",

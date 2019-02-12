@@ -36,24 +36,44 @@ class BazelRunProcess(multiprocessing.Process):
         target=_BazelRunRequest,
         args=(run_request, bazel_repo_dir, workdir))
 
+  @property
+  def returncode(self) -> int:
+    with open(self.workdir / 'returncode.txt') as f:
+      return int(f.read())
+
+  @property
+  def stdout(self) -> str:
+    with open(self.workdir / 'stdout.txt') as f:
+      return f.read()
+
+  @property
+  def stderr(self) -> str:
+    with open(self.workdir / 'stderr.txt') as f:
+      return f.read()
+
 
 class BazelClient(object):
 
-  def __init__(self, root_dir: pathlib.Path):
+  def __init__(self, root_dir: pathlib.Path,
+               workdir: pathlib.Path):
     if not root_dir.is_dir():
       raise FileNotFoundError(f"Directory not found: {root_dir}")
     if not (root_dir / 'WORKSPACE').is_file():
       raise BazelError(f"Workspace not found: {root_dir}/WORKSPACE")
 
     self._root_dir = root_dir
+    self._workdir = workdir
 
   @property
   def root_dir(self) -> pathlib.Path:
     return self._root_dir
 
-  def Run(self, run_request: alice_pb2.RunRequest,
-          workdir: pathlib.Path) -> BazelRunProcess:
-    process = BazelRunProcess(run_request, self.root_dir, workdir)
+  @property
+  def workdir(self) -> pathlib.Path:
+    return self._workdir
+
+  def Run(self, run_request: alice_pb2.RunRequest) -> BazelRunProcess:
+    process = BazelRunProcess(run_request, self.root_dir, self.workdir)
     process.start()
     return process
 
