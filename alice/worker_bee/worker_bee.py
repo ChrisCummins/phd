@@ -45,9 +45,8 @@ class WorkerBee(alice_pb2_grpc.WorkerBeeServicer):
                repo: git_repo.PhdRepo, output_dir: pathlib.Path):
     self._ledger = ledger
     self._repo = repo
-    self._bazel = bazel.BazelClient(repo.path)
+    self._bazel = bazel.BazelClient(repo.path, output_dir)
     self._processes: typing.List[bazel.BazelRunProcess] = []
-    self._output_dir = output_dir
 
     self.ledger.RegisterWorkerBee(
         alice_pb2.String(string=f'{self.hostname}:{FLAGS.worker_bee_port}'))
@@ -103,10 +102,7 @@ class WorkerBee(alice_pb2_grpc.WorkerBeeServicer):
     del context
 
     # TODO: self.repo.FromRepoState(request.repo_state)
-    workdir = self.output_dir / str(request.ledger_id)
-    assert not workdir.is_dir()
-    workdir.mkdir()
-    process = self.bazel.Run(request, workdir)
+    process = self.bazel.Run(request)
     self._processes.append(process)
 
     return alice_pb2.Null()

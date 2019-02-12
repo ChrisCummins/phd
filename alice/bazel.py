@@ -73,7 +73,10 @@ class BazelClient(object):
     return self._workdir
 
   def Run(self, run_request: alice_pb2.RunRequest) -> BazelRunProcess:
-    process = BazelRunProcess(run_request, self.root_dir, self.workdir)
+    assert run_request.ledger_id
+    workdir = self.workdir / str(run_request.ledger_id)
+    workdir.mkdir()
+    process = BazelRunProcess(run_request, self.root_dir, workdir)
     process.start()
     return process
 

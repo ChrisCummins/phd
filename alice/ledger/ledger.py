@@ -135,15 +135,17 @@ class LedgerService(alice_pb2_grpc.LedgerServicer):
     if run_request.worker_id:
       return self.worker_bees[run_request.worker_id]
     else:
-      return random.choice(self.worker_bees.values())
+      return random.choice(list(self.worker_bees.values()))
 
   def RegisterWorkerBee(self, request: alice_pb2.String,
                         context) -> alice_pb2.Null:
     del context
 
-    logging.info('New worker bee: %s', request.string)
+    logging.info('Worker bee %s registered', request.string)
     channel = grpc.insecure_channel(request.string)
     worker_bee = alice_pb2_grpc.WorkerBeeStub(channel)
+    if request.string in self.worker_bees:
+      del self.worker_bees[request.string]
     self.worker_bees[request.string] = worker_bee
     return alice_pb2.Null()
 
@@ -151,7 +153,7 @@ class LedgerService(alice_pb2_grpc.LedgerServicer):
                           context) -> alice_pb2.Null:
     del context
 
-    logging.info('Removing worker bee: %s', request.string)
+    logging.info('Worker bee %s unregistered', request.string)
     if request.string in self.worker_bees:
       del self.worker_bees[request.string]
     return alice_pb2.Null()
