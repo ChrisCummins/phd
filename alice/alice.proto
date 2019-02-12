@@ -9,49 +9,65 @@ package phd;
 // A ledger entry records the invocation and outcome of a single command.
 // A command is a bazel target and a set of arguments.
 message LedgerEntry {
+
+  enum JobStatus {
+    WAITING = 0; // Currently not used.
+    BUILDING = 1;
+    RUNNING = 2;
+    COMPLETE = 3;
+  };
+
+  enum JobOutcome {
+    RUN_SUCCEEDED = 0;
+    BUILD_FAILED = 1;
+    RUN_FAILED = 2;
+  };
+
   // A numeric counter of this entry in the ledger. >= 1.
   optional int64 id = 1;
-
-  optional ExecHost exec_host = 2;
-  // The start time, in milliseconds since the epoch, UTC time zone.
-  optional int64 start_utc_epoch_ms = 4;
-
-  optional RepoState repo_state = 5;
-
-  // The target which is to be built and executed.
-  optional string target = 8;
-  repeated string bazel_args = 9;
-  // The list of arguments passed to the binary target.
-  repeated string bin_args = 10;
-
-  // The command end time, in milliseconds since the epoch, UTC time zone.
-  optional int64 end_utc_epoch_ms = 11;
+  optional string worker_id = 2;
+  optional phd.GlobalConfig repo_config = 4;
+  optional RunRequest run_request = 5;
+  optional JobStatus job_status = 6;
+  optional JobOutcome job_outcome = 7;
+  // The build start time, in milliseconds since the UNIX epoch.
+  optional int64 build_start_unix_epoch_ms = 8;
+  // The execution start time, in milliseconds since the epoch, UTC time zone.
+  optional int64 run_start_unix_epoch_ms = 9;
+  // The command end time, in milliseconds since the UNIX epoch.
+  optional int64 run_end_unix_epoch_ms = 10;
   // The integer returncode of the command. In the range 0-255.
-  optional int32 returncode = 12;
+  optional int32 returncode = 11;
   // The output of the command.
-  optional string stdout_and_stderr = 13;
+  optional string stdout_and_stderr = 12;
 }
 
-// A ledger is a list of entries.
-message Ledger {
-  repeated LedgerEntry entries = 1;
+message LedgerId {
+  optional int64 id = 1;
 }
 
-message ExecHost {
-  optional string hostname = 1;
-  optional string user = 2;
-  optional RepoState repo_state_at_service_launch = 3;
+service Ledger {
+  // Client methods.
+  rpc Add (LedgerEntry) returns (LedgerId);
+  rpc Get (LedgerId) returns (LedgerEntry);
+
+  // Worker bee methods.
+  rpc Update (LedgerEntry) returns (LedgerId);
+  rpc RegisterWorkerBee (String) returns (Null);
+  rpc UnRegisterWorkerBee (String) returns (Null);
 }
 
-service ExecService {
-  rpc Run (RunRequest) returns (RunResponse);
-  rpc Status (Null) returns (ExecServiceStatus);
+service WorkerBee {
+  rpc Run (RunRequest) returns (Null);
+  rpc Ping (Null) returns (Null);
 }
 
 message RepoState {
+  optional string remote_url = 1;
+  optional string tracking_branch = 2;
   // The hash of the current git HEAD. Created using:
   //   $ git rev-parse HEAD
-  optional string git_head_id = 1;
+  optional string head_id = 3;
   // Created by concatenating the output of these commands, which show the
   // staged changes, unstaged changes, and untracked files, respectively:
   //   $ git --no-pager diff --cached
@@ -59,33 +75,26 @@ message RepoState {
   //   $ for f in $(git ls-files --others --exclude-standard); do \
   //         git --no-pager diff /dev/null $f; \
   //     done
-  optional string git_diff = 2;
-  optional phd.GlobalConfig config = 3;
+  optional string git_diff = 4;
 }
 
 message RunRequest {
-  repeated RepoState repo_state = 1;
-
+  optional RepoState repo_state = 1;
   // The target which is to be built and executed.
   optional string target = 2;
-
+  // The list of arguments to be passed to bazel.
   repeated string bazel_args = 3;
-
   // The list of arguments to be passed to the built target.
   repeated string bin_args = 4;
-
   // The number of seconds to allow for execution.
   optional int64 timeout_seconds = 5;
+  // This is set only when used as an argument to WorkerBee.Run().
+  optional int64 ledger_id = 6;
 }
 
-message RunResponse {
-  // TODO(cec): Error if git checkout fails.
-  // TODO(cec): Error if bazel build fails.
+message String {
+  optional string string = 1;
 }
 
 message Null {
-}
-
-message ExecServiceStatus {
-  // TODO(cec): Currently active jobs.
 }

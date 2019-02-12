@@ -35,6 +35,7 @@ flask-cors==3.0.6
 funcsigs==1.0.2
 futures==3.1.1
 fuzzywuzzy==0.16.0
+GitPython==2.1.11
 graph_nets==1.0.2
 graphviz==0.9
 grpcio-tools==1.15.0
