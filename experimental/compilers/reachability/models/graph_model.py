@@ -329,13 +329,14 @@ class EncodeProcessDecodeUsingLoop(EncodeProcessDecode):
     def Body(v: LoopVars):
       """The while loop body."""
       # Partially unrolled core units.
+      latent = v.latent
       for i in range(FLAGS.experimental_while_loop_sequence_length):
-        core_input = utils_tf.concat([v.latent0, v.latent], axis=1)
-        v.latent = self._core(core_input)
+        core_input = utils_tf.concat([v.latent0, latent], axis=1)
+        latent = self._core(core_input)
 
       return [LoopVars(
           i=tf.add(v.i, FLAGS.experimental_while_loop_sequence_length),
-          latent=v.latent, latent0=v.latent0)]
+          latent=latent, latent0=v.latent0)]
 
     init_latent = self._encoder(input_op)
 
