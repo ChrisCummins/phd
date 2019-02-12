@@ -25,6 +25,20 @@ py_binary(
 )
 
 py_binary(
+    name = "import_from_clgen",
+    srcs = ["import_from_clgen.py"],
+    deps = [
+        ":grewe_features_db",
+        "//deeplearning/clgen",
+        "//deeplearning/clgen/proto:clgen_py_pb2",
+        "//deeplearning/clgen/proto:corpus_py_pb2",
+        "//deeplearning/clgen/proto:model_py_pb2",
+        "//deeplearning/clgen/proto:sampler_py_pb2",
+        "//third_party/py/absl",
+    ],
+)
+
+py_binary(
     name = "import_from_deepsmith_datastore",
     srcs = ["import_from_deepsmith_datastore.py"],
     deps = [
