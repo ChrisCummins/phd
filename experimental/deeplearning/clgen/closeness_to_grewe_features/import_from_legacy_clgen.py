@@ -56,12 +56,10 @@ def main(argv: typing.List[str]):
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
-  db = grewe_features_db.Database(FLAGS.db)
-
   conn = sqlite3.connect(FLAGS.legacy_clgen_db)
   c = conn.cursor()
 
-  batches = BatchQueryResults(c.execute('SELECT contents FROM ContentFiles'))
+  batches = BatchQueryResults(c.execute('SELECT kernel FROM PreprocessedKernels'))
 
   prefix = 'phd_experimental_deeplearning_clgen_'
   for i, batch in enumerate(batches):
@@ -71,6 +69,7 @@ def main(argv: typing.List[str]):
       paths_to_import = [
         CreateTempFileFromTestcase(d, src, i) for i, (src,) in enumerate(batch)
       ]
+      db = grewe_features_db.Database(FLAGS.db)
       db.ImportFromPaths(paths_to_import, FLAGS.origin)
 
 
