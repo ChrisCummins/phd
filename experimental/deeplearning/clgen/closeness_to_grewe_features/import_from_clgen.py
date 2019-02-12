@@ -60,7 +60,7 @@ def main(argv: typing.List[str]):
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
-  instance = clgen.Instance.FromFile(clgen_pb2.Instance(
+  instance = clgen.Instance(clgen_pb2.Instance(
       working_dir=FLAGS.clgen_dir,
       model=model_pb2.Model(
           corpus=corpus_pb2.Corpus(
@@ -112,7 +112,7 @@ def main(argv: typing.List[str]):
                     depth_decrease_token="}",
                 )),
             sampler_pb2.SampleTerminationCriterion(
-                symtok=sampler_pb2.MaxTokenLength(
+                maxlen=sampler_pb2.MaxTokenLength(
                     maximum_tokens_in_sample=1000,
                 )),
           ],
