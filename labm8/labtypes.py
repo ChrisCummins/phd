@@ -50,7 +50,7 @@ def update(dst, src):
   """
   Recursively update values in dst from src.
 
-  Unlike the builtin dict.update() function, this method will decend into
+  Unlike the builtin dict.update() function, this method will descend into
   nested dicts, updating all nested values.
 
   Arguments:
