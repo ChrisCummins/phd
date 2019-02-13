@@ -114,7 +114,7 @@ def main(argv: typing.List[str]):
                 )),
             sampler_pb2.SampleTerminationCriterion(
                 maxlen=sampler_pb2.MaxTokenLength(
-                    maximum_tokens_in_sample=1000,
+                    maximum_tokens_in_sample=10000,
                 )),
           ],
       )))
