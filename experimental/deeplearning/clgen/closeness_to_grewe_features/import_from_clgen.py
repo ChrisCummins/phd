@@ -50,7 +50,8 @@ def Sample(instance: clgen.Instance, db: grewe_features_db.Database):
   with tempfile.TemporaryDirectory(prefix=prefix) as d:
     d = pathlib.Path(d)
     paths_to_import = [
-      CreateTempFileFromSample(d, src, i) for i, (src,) in enumerate(samples)
+      CreateTempFileFromSample(d, sample, i)
+      for i, sample in enumerate(samples)
     ]
     db.ImportFromPaths(paths_to_import, FLAGS.origin)
 
