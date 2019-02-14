@@ -39,7 +39,8 @@ message LedgerEntry {
   // The integer returncode of the command. In the range 0-255.
   optional int32 returncode = 11;
   // The output of the command.
-  optional string stdout_and_stderr = 12;
+  optional string stdout = 12;
+  optional string stderr = 13;
 }
 
 message LedgerId {

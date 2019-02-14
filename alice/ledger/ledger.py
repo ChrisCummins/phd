@@ -68,24 +68,25 @@ class LedgerEntry(Base, sqlutil.TablenameFromClassNameMixin,
   # TODO(cec): Add references to stderr and assets tables.
 
   @classmethod
-  def FromProto(cls, proto: alice_pb2.LedgerEntry) -> 'LedgerEntry':
-    return cls(
-        id=proto.id if proto.id else None,
-        worker_id=proto.worker_id,
-        uname=proto.repo_config.uname,
-        configure_id=proto.repo_config.configure_id,
-        with_cuda=proto.repo_config.with_cuda,
-        repo_root=proto.repo_config.paths.repo_root,
-        repo_remote_url=proto.run_request.repo_state.remote_url,
-        repo_tracking_branch=proto.run_request.repo_state.tracking_branch,
-        repo_head_id=proto.run_request.repo_state.head_id,
-        target=proto.run_request.target,
-        bazel_args=' '.join(proto.run_request.bazel_args),
-        bin_args=' '.join(proto.run_request.bin_args),
-        timeout_seconds=proto.run_request.timeout_seconds,
-        job_status=proto.job_status,
-        job_outcome=proto.job_outcome,
-    )
+  def FromProto(cls,
+                proto: alice_pb2.LedgerEntry) -> typing.Dict[str, typing.Any]:
+    return {
+      'id': proto.id if proto.id else None,
+      'worker_id': proto.worker_id,
+      'uname': proto.repo_config.uname,
+      'configure_id': proto.repo_config.configure_id,
+      'with_cuda': proto.repo_config.with_cuda,
+      'repo_root': proto.repo_config.paths.repo_root,
+      'repo_remote_url': proto.run_request.repo_state.remote_url,
+      'repo_tracking_branch': proto.run_request.repo_state.tracking_branch,
+      'repo_head_id': proto.run_request.repo_state.head_id,
+      'target': proto.run_request.target,
+      'bazel_args': ' '.join(proto.run_request.bazel_args),
+      'bin_args': ' '.join(proto.run_request.bin_args),
+      'timeout_seconds': proto.run_request.timeout_seconds,
+      'job_status': proto.job_status,
+      'job_outcome': proto.job_outcome,
+    }
 
   def ToProto(self) -> alice_pb2.LedgerEntry:
     return alice_pb2.LedgerEntry(
@@ -164,7 +165,7 @@ class LedgerService(alice_pb2_grpc.LedgerServicer):
     request.job_status = alice_pb2.LedgerEntry.BUILDING
 
     with self.db.Session(commit=True) as s:
-      entry = LedgerEntry.FromProto(request)
+      entry = LedgerEntry(**LedgerEntry.FromProto(request))
       s.add(entry)
       s.flush()
 
@@ -175,6 +176,25 @@ class LedgerService(alice_pb2_grpc.LedgerServicer):
     worker_bee.Run(request, None)
 
     return alice_pb2.LedgerId(id=entry_id)
+
+  def Update(self, request: alice_pb2.LedgerEntry, context) -> alice_pb2.Null:
+    update_dict = LedgerEntry.FromProto(request)
+
+    with self.db.Session(commit=True) as session:
+      ledger_entry = session.query(LedgerEntry) \
+        .filter(LedgerEntry.id == request.id) \
+        .one()
+
+      for key, value in update_dict.items():
+        setattr(ledger_entry, key, value)
+
+      if request.HasField('stdout'):
+        stdout = session.GetOrAdd(StdoutString, ledger_id=ledger_entry.id)
+        stdout.string = request.stdout
+
+      if request.HasField('stderr'):
+        stderr = session.GetOrAdd(StderrString, ledger_id=ledger_entry.id)
+        stderr.string = request.stderr
 
   def Get(self, request: alice_pb2.LedgerId, context) -> alice_pb2.LedgerId:
     del context
