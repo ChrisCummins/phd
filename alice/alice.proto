@@ -49,11 +49,11 @@ message LedgerId {
 
 service Ledger {
   // Client methods.
-  rpc Add (LedgerEntry) returns (LedgerId);
+  rpc Add (RunRequest) returns (LedgerId);
   rpc Get (LedgerId) returns (LedgerEntry);
 
   // Worker bee methods.
-  rpc Update (LedgerEntry) returns (LedgerId);
+  rpc Update (LedgerEntry) returns (Null);
   rpc RegisterWorkerBee (String) returns (Null);
   rpc UnRegisterWorkerBee (String) returns (Null);
 }
@@ -91,6 +91,8 @@ message RunRequest {
   optional int64 timeout_seconds = 5;
   // This is set only when used as an argument to WorkerBee.Run().
   optional int64 ledger_id = 6;
+  // Optionally specify the ID of the worker bee to run on.
+  optional string force_worker_id = 7;
 }
 
 message String {

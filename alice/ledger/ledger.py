@@ -18,6 +18,7 @@ from sqlalchemy.ext import declarative
 from alice import alice_pb2
 from alice import alice_pb2_grpc
 from config.proto import config_pb2
+from labm8 import labdate
 from labm8 import sqlutil
 
 
@@ -25,13 +26,14 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_string('ledger_db', 'sqlite:////tmp/ledger.db', 'Ledger database.')
 flags.DEFINE_integer('ledger_port', 5088, 'Port to service.')
+flags.DEFINE_integer('ledger_service_thread_count', 10, 'Number of threads.')
 
 Base = declarative.declarative_base()
 
 
-class LedgerEntry(Base, sqlutil.TablenameFromClassNameMixin,
+class LedgerEntry(Base, sqlutil.TablenameFromCamelCapsClassNameMixin,
                   sqlutil.ProtoBackedMixin):
-  """Key-value database metadata store."""
+  """Ledger store."""
   proto_t = alice_pb2.LedgerEntry
 
   # A numeric counter of this entry in the ledger. >= 1.
@@ -86,6 +88,7 @@ class LedgerEntry(Base, sqlutil.TablenameFromClassNameMixin,
       'timeout_seconds': proto.run_request.timeout_seconds,
       'job_status': proto.job_status,
       'job_outcome': proto.job_outcome,
+      'returncode': proto.returncode,
     }
 
   def ToProto(self) -> alice_pb2.LedgerEntry:
@@ -109,7 +112,30 @@ class LedgerEntry(Base, sqlutil.TablenameFromClassNameMixin,
         # TODO: Run request?
         job_status=self.job_status,
         job_outcome=self.job_outcome,
+        build_start_unix_epoch_ms=labdate.MillisecondsTimestamp(
+            self.build_started),
+        run_start_unix_epoch_ms=labdate.MillisecondsTimestamp(self.run_started),
+        run_end_unix_epoch_ms=labdate.MillisecondsTimestamp(self.run_end),
+        returncode=self.returncode,
     )
+
+
+class StdoutString(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
+  """Ledger outputs."""
+  ledger_id: int = sql.Column(
+      sql.Integer, sql.ForeignKey(LedgerEntry.id), nullable=False,
+      primary_key=True)
+  string: str = sql.Column(
+      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
+
+
+class StderrString(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
+  """Ledger outputs."""
+  ledger_id: int = sql.Column(
+      sql.Integer, sql.ForeignKey(LedgerEntry.id), nullable=False,
+      primary_key=True)
+  string: str = sql.Column(
+      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
 
 
 class Database(sqlutil.Database):
@@ -120,8 +146,8 @@ class Database(sqlutil.Database):
 
 class LedgerService(alice_pb2_grpc.LedgerServicer):
 
-  def __init__(self, url: str):
-    self._db = Database(url)
+  def __init__(self, db: Database):
+    self._db = db
     self.worker_bees: typing.Dict[str, alice_pb2_grpc.WorkerBeeStub] = {}
 
   @property
@@ -133,8 +159,8 @@ class LedgerService(alice_pb2_grpc.LedgerServicer):
     if not self.worker_bees:
       raise ValueError('No worker bees available')
 
-    if run_request.worker_id:
-      return self.worker_bees[run_request.worker_id]
+    if run_request.force_worker_id:
+      return self.worker_bees[run_request.force_worker_id]
     else:
       return random.choice(list(self.worker_bees.values()))
 
@@ -159,13 +185,15 @@ class LedgerService(alice_pb2_grpc.LedgerServicer):
       del self.worker_bees[request.string]
     return alice_pb2.Null()
 
-  def Add(self, request: alice_pb2.LedgerEntry, context) -> alice_pb2.LedgerId:
+  def Add(self, request: alice_pb2.RunRequest, context) -> alice_pb2.LedgerId:
     del context
 
-    request.job_status = alice_pb2.LedgerEntry.BUILDING
-
     with self.db.Session(commit=True) as s:
-      entry = LedgerEntry(**LedgerEntry.FromProto(request))
+      entry = LedgerEntry(**LedgerEntry.FromProto(alice_pb2.LedgerEntry(
+          job_status=alice_pb2.LedgerEntry.BUILDING,
+          run_request=request,
+      )))
+
       s.add(entry)
       s.flush()
 
@@ -178,16 +206,16 @@ class LedgerService(alice_pb2_grpc.LedgerServicer):
     return alice_pb2.LedgerId(id=entry_id)
 
   def Update(self, request: alice_pb2.LedgerEntry, context) -> alice_pb2.Null:
-    update_dict = LedgerEntry.FromProto(request)
-
     with self.db.Session(commit=True) as session:
       ledger_entry = session.query(LedgerEntry) \
         .filter(LedgerEntry.id == request.id) \
         .one()
 
+      update_dict = LedgerEntry.FromProto(request)
       for key, value in update_dict.items():
         setattr(ledger_entry, key, value)
 
+      # Update stdout and stderr.
       if request.HasField('stdout'):
         stdout = session.GetOrAdd(StdoutString, ledger_id=ledger_entry.id)
         stdout.string = request.stdout
@@ -195,6 +223,8 @@ class LedgerService(alice_pb2_grpc.LedgerServicer):
       if request.HasField('stderr'):
         stderr = session.GetOrAdd(StderrString, ledger_id=ledger_entry.id)
         stderr.string = request.stderr
+
+    return alice_pb2.Null()
 
   def Get(self, request: alice_pb2.LedgerId, context) -> alice_pb2.LedgerId:
     del context
@@ -204,6 +234,19 @@ class LedgerService(alice_pb2_grpc.LedgerServicer):
         .filter(LedgerEntry.id == request.id) \
         .one()
       proto = ledger_entry.ToProto()
+
+      # Add joined stdout and stderr.
+      stdout = session.query(StdoutString) \
+        .filter(StdoutString.ledger_id == request.id) \
+        .first()
+      if stdout:
+        proto.stdout = stdout.string
+
+      stderr = session.query(StderrString) \
+        .filter(StderrString.ledger_id == request.id) \
+        .first()
+      if stderr:
+        proto.stderr = stderr.string
 
     return proto
 
@@ -217,12 +260,15 @@ class LedgerService(alice_pb2_grpc.LedgerServicer):
     if len(argv) > 1:
       raise app.UsageError('Unrecognized arguments')
 
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    service = cls(FLAGS.ledger_db)
+    thread_pool = futures.ThreadPoolExecutor(
+        max_workers=FLAGS.ledger_service_thread_count)
+    server = grpc.server(
+        thread_pool, options=(('grpc.so_reuseport', 0),))
+    service = cls(Database(FLAGS.ledger_db))
     alice_pb2_grpc.add_LedgerServicer_to_server(service, server)
 
     port = FLAGS.ledger_port
-    server.add_insecure_port(f'[::]:{port}')
+    port = server.add_insecure_port(f'[::]:{port}')
     logging.info('📜  Listening for commands on %s ...', port)
     server.start()
     try:
