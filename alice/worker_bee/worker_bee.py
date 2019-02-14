@@ -45,7 +45,7 @@ class WorkerBee(alice_pb2_grpc.WorkerBeeServicer):
     self._ledger = ledger
     self._repo = repo
     self._bazel = bazel.BazelClient(repo.path, output_dir)
-    self._processes: typing.Dict[int, bazel.BazelRunProcess] = []
+    self._processes: typing.Dict[int, bazel.BazelRunProcess] = {}
 
     self.ledger.RegisterWorkerBee(
         alice_pb2.String(string=f'{self.hostname}:{FLAGS.worker_bee_port}'))
