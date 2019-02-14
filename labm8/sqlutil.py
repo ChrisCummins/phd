@@ -2,6 +2,7 @@
 import collections
 import contextlib
 import pathlib
+import re
 import typing
 
 import sqlalchemy as sql
@@ -369,6 +370,23 @@ class TablenameFromClassNameMixin(object):
   @declarative.declared_attr
   def __tablename__(self):
     return self.__name__.lower()
+
+
+class TablenameFromCamelCapsClassNameMixin(object):
+  """A class mixin which derives __tablename__ from the class name.
+
+  Add this mixin to a mapped table class to automatically set the set the
+  __tablename__ property of a class to the name of the Python class with camel
+  caps converted to underscores, e.g.
+
+    class FooBar -> table "foo_bar".
+  """
+
+  @declarative.declared_attr
+  def __tablename__(self):
+    components = re.findall('[A-Z][^A-Z]*', self.__name__)
+    assert components
+    return '_'.join(x.lower() for x in components)
 
 
 class ProtoBackedMixin(object):
