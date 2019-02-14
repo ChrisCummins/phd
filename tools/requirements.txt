@@ -38,8 +38,8 @@ fuzzywuzzy==0.16.0
 GitPython==2.1.11
 graph_nets==1.0.2
 graphviz==0.9
-grpcio-tools==1.15.0
-grpcio==1.15.0
+grpcio-tools==1.18.0
+grpcio==1.18.0
 gspread==3.0.1
 gym==0.10.5
 h5py==2.7.1
