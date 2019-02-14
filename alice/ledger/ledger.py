@@ -74,7 +74,7 @@ class LedgerEntry(Base, sqlutil.TablenameFromCamelCapsClassNameMixin,
                 proto: alice_pb2.LedgerEntry) -> typing.Dict[str, typing.Any]:
     return {
       'id': proto.id if proto.id else None,
-      'worker_id': proto.worker_id,
+      'worker_id': proto.worker_id if proto.worker_id else None,
       'uname': proto.repo_config.uname,
       'configure_id': proto.repo_config.configure_id,
       'with_cuda': proto.repo_config.with_cuda,
@@ -171,6 +171,7 @@ class LedgerService(alice_pb2_grpc.LedgerServicer):
     logging.info('Worker bee %s registered', request.string)
     channel = grpc.insecure_channel(request.string)
     worker_bee = alice_pb2_grpc.WorkerBeeStub(channel)
+    worker_bee.id = request.string
     if request.string in self.worker_bees:
       del self.worker_bees[request.string]
     self.worker_bees[request.string] = worker_bee
@@ -200,8 +201,9 @@ class LedgerService(alice_pb2_grpc.LedgerServicer):
       entry_id = entry.id
       logging.info('Created new ledger entry %s', entry_id)
 
-    worker_bee = self.SelectWorkerIdForRunRequest(request)
-    worker_bee.Run(request, None)
+      worker_bee = self.SelectWorkerIdForRunRequest(request)
+      entry.worker_id = worker_bee.id
+      worker_bee.Run(request, None)
 
     return alice_pb2.LedgerId(id=entry_id)
 
@@ -213,7 +215,8 @@ class LedgerService(alice_pb2_grpc.LedgerServicer):
 
       update_dict = LedgerEntry.FromProto(request)
       for key, value in update_dict.items():
-        setattr(ledger_entry, key, value)
+        if value:
+          setattr(ledger_entry, key, value)
 
       # Update stdout and stderr.
       if request.HasField('stdout'):
@@ -233,6 +236,16 @@ class LedgerService(alice_pb2_grpc.LedgerServicer):
       ledger_entry = session.query(LedgerEntry) \
         .filter(LedgerEntry.id == request.id) \
         .one()
+
+      if ledger_entry != alice_pb2.LedgerEntry.COMPLETE:
+        # Ping for an update.
+        update = self.worker_bees[ledger_entry.worker_id].Get(
+            alice_pb2.LedgerId(id=ledger_entry.id))
+        update_dict = LedgerEntry.FromProto(update)
+        for key, value in update_dict.items():
+          if value:
+            setattr(ledger_entry, key, value)
+
       proto = ledger_entry.ToProto()
 
       # Add joined stdout and stderr.

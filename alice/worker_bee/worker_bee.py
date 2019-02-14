@@ -3,7 +3,6 @@
 TODO: Detailed explanation of the file.
 """
 import pathlib
-import shutil
 import time
 import typing
 from concurrent import futures
@@ -46,7 +45,7 @@ class WorkerBee(alice_pb2_grpc.WorkerBeeServicer):
     self._ledger = ledger
     self._repo = repo
     self._bazel = bazel.BazelClient(repo.path, output_dir)
-    self._processes: typing.List[bazel.BazelRunProcess] = []
+    self._processes: typing.Dict[int, bazel.BazelRunProcess] = []
 
     self.ledger.RegisterWorkerBee(
         alice_pb2.String(string=f'{self.hostname}:{FLAGS.worker_bee_port}'))
@@ -55,27 +54,29 @@ class WorkerBee(alice_pb2_grpc.WorkerBeeServicer):
     self.ledger.UnRegisterWorkerBee(
         alice_pb2.String(string=f'{self.hostname}:{FLAGS.worker_bee_port}'))
 
-    for process in self._processes:
+    for ledger_id, process in self._processes.items():
       if process.is_alive():
-        logging.info('Waiting on job before finishing %d', process.id)
+        logging.info('Waiting on job %d (process=%d) to finish',
+                     ledger_id, process.pid)
         process.join()
       else:
-        self.EndProcess(process)
+        self.EndProcess(ledger_id)
 
   def PruneCompletedProcesses(self) -> None:
-    alive_processes = []
-    for process in self._processes:
+    alive_processes = {}
+    for ledger_id, process in self._processes:
       if process.is_alive():
-        alive_processes.append(process)
+        alive_processes[ledger_id] = process
       else:
-        self.EndProcess(process)
+        self.EndProcess(ledger_id)
     self._processes = alive_processes
 
-  def EndProcess(self, process: bazel.BazelRunProcess) -> None:
-    assert (process.workdir / 'stdout.txt').is_file()
-    assert (process.workdir / 'stderr.txt').is_file()
-    assert (process.workdir / 'returncode.txt').is_file()
-    shutil.rmtree(process.workdir)
+  def EndProcess(self, ledger_id: int) -> None:
+    process = self._processes[ledger_id]
+    process.join(timeout=1)
+    if process.is_alive():
+      raise TypeError("EndProcess() called on process that is still alive.")
+    self.ledger.Update(self.Get(alice_pb2.LedgerEntry(id=ledger_id), None))
 
   @property
   def hostname(self) -> str:
@@ -106,6 +107,21 @@ class WorkerBee(alice_pb2_grpc.WorkerBeeServicer):
     self._processes.append(process)
 
     return alice_pb2.Null()
+
+  def Get(self, request: alice_pb2.LedgerId,
+          context) -> alice_pb2.LedgerEntry:
+    process = self._processes[request.id]
+    returncode = process.returncode
+    return alice_pb2.LedgerEntry(
+        id=request.id,
+        jobstatus=(alice_pb2.LedgerEntry.RUNNING if process.is_alive() else
+                   alice_pb2.LedgerEntry.COMPLETE),
+        joboutcome=(alice_pb2.LedgerEntry.RUN_SUCCEEDED if returncode == 0 else
+                    alice_pb2.LedgerEntry.RUN_FAILED),
+        stdout=process.stdout,
+        stderr=process.stderr,
+        returncode=returncode,
+    )
 
   @classmethod
   def Main(cls, argv) -> None:

@@ -57,6 +57,13 @@ def mock_worker_bee() -> alice_pb2.String:
       del context
       return alice_pb2.Null()
 
+    def Get(self, request: alice_pb2.LedgerId,
+            context) -> alice_pb2.Null:
+      """Mock Run() which does nothing."""
+      del request
+      del context
+      return alice_pb2.LedgerEntry()
+
   server = grpc.server(futures.ThreadPoolExecutor(max_workers=1))
   alice_pb2_grpc.add_WorkerBeeServicer_to_server(MockWorkerBee(), server)
 

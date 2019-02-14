@@ -61,6 +61,7 @@ service Ledger {
 service WorkerBee {
   rpc Run (RunRequest) returns (Null);
   rpc Ping (Null) returns (Null);
+  rpc Get (LedgerId) returns (LedgerEntry);
 }
 
 message RepoState {

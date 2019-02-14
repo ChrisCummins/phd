@@ -8,6 +8,7 @@ import multiprocessing
 import pathlib
 import subprocess
 import sys
+import typing
 
 from absl import flags
 
@@ -42,9 +43,12 @@ class BazelRunProcess(multiprocessing.Process):
       return int(f.read())
 
   @property
-  def returncode(self) -> int:
-    with open(self.workdir / 'returncode.txt') as f:
-      return int(f.read())
+  def returncode(self) -> typing.Optional[int]:
+    if (self.workdir / 'returncode.txt').is_file():
+      with open(self.workdir / 'returncode.txt') as f:
+        return int(f.read())
+    else:
+      return None
 
   @property
   def stdout(self) -> str:
