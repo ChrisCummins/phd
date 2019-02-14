@@ -206,7 +206,7 @@ class LedgerService(alice_pb2_grpc.LedgerServicer):
       request.ledger_id = entry_id
       worker_bee.Run(request, None)
 
-    return alice_pb2.LedgerId(id=entry.id)
+    return alice_pb2.LedgerId(id=entry_id)
 
   def Update(self, request: alice_pb2.LedgerEntry, context) -> alice_pb2.Null:
     with self.db.Session(commit=True) as session:
