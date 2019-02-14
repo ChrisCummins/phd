@@ -48,14 +48,13 @@ def main(argv):
   bin_args = FLAGS.bin_args
   timeout_seconds = FLAGS.timeout_seconds
 
-  job_id = stub.Add(alice_pb2.LedgerEntry(
-      run_request=alice_pb2.RunRequest(
-          repo_state=repo.ToRepoState(),
-          target=target,
-          bazel_args=bazel_args,
-          bin_args=bin_args,
-          timeout_seconds=timeout_seconds,
-      )))
+  job_id = stub.Add(alice_pb2.RunRequest(
+      repo_state=repo.ToRepoState(),
+      target=target,
+      bazel_args=bazel_args,
+      bin_args=bin_args,
+      timeout_seconds=timeout_seconds,
+  ))
 
   print(f'Started job {job_id.id}')
   while True:
