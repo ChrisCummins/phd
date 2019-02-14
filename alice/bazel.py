@@ -37,6 +37,11 @@ class BazelRunProcess(multiprocessing.Process):
         args=(run_request, bazel_repo_dir, workdir))
 
   @property
+  def pid(self) -> int:
+    with open(self.workdir / 'pid.txt') as f:
+      return int(f.read())
+
+  @property
   def returncode(self) -> int:
     with open(self.workdir / 'returncode.txt') as f:
       return int(f.read())
@@ -94,6 +99,10 @@ def _BazelRunRequest(run_request: alice_pb2.RunRequest,
   with fs.chdir(bazel_repo_dir):
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
+
+  # Record the ID of the current process.
+  with open(workdir / 'pid.txt', 'w') as f:
+    f.write(str(process.pid))
 
   with open(workdir / 'stdout.txt', 'wb') as stdout_log:
     with open(workdir / 'stderr.txt', 'wb') as stderr_log:

@@ -20,6 +20,7 @@ py_library(
     deps = [
         ":alice_py_pb2",
         "//labm8:fs",
+        "//labm8:system",
         "//third_party/py/absl",
     ],
 )

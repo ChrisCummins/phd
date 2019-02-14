@@ -1,10 +1,14 @@
 """Unit tests for //alice:bazel.py."""
+import os
 import pathlib
+import signal
+import time
 
 import pytest
 
 from alice import alice_pb2
 from alice import bazel
+from labm8 import system
 from labm8 import test
 
 
@@ -60,8 +64,6 @@ def test_BazelClient_Run_returncode(
   client = bazel.BazelClient(workspace, tempdir)
   process = client.Run(alice_pb2.RunRequest(
       target='//:hello',
-      bazel_args=[],
-      bin_args=[],
       ledger_id=1,
   ))
 
@@ -75,13 +77,25 @@ def test_BazelClient_Run_stdout(
   client = bazel.BazelClient(workspace, tempdir)
   process = client.Run(alice_pb2.RunRequest(
       target='//:hello',
-      bazel_args=[],
-      bin_args=[],
       ledger_id=1,
   ))
 
   process.join()
   assert process.stdout == 'Hello, stdout!\n'
+
+
+def test_BazelClient_Run_process_id(
+    workspace: pathlib.Path, tempdir: pathlib.Path):
+  """Check that process ID is set."""
+  client = bazel.BazelClient(workspace, tempdir)
+  process = client.Run(alice_pb2.RunRequest(
+      target='//:hello',
+      ledger_id=1,
+  ))
+
+  process.join()
+  assert process.pid
+  assert process.pid != system.PID
 
 
 @pytest.mark.xfail(reason='FIXME')
@@ -91,8 +105,6 @@ def test_BazelClient_Run_stderr(
   client = bazel.BazelClient(workspace, tempdir)
   process = client.Run(alice_pb2.RunRequest(
       target='//:hello',
-      bazel_args=[],
-      bin_args=[],
       ledger_id=1,
   ))
 
@@ -107,8 +119,6 @@ def test_BazelClient_Run_workdir_files(
   client = bazel.BazelClient(workspace, tempdir)
   process = client.Run(alice_pb2.RunRequest(
       target='//:hello',
-      bazel_args=[],
-      bin_args=[],
       ledger_id=1,
   ))
 
@@ -124,13 +134,68 @@ def test_BazeClient_run_missing_target(
   client = bazel.BazelClient(workspace, tempdir)
   process = client.Run(alice_pb2.RunRequest(
       target='//:not_a_target',
-      bazel_args=[],
-      bin_args=[],
       ledger_id=1,
   ))
 
   process.join()
   assert process.returncode
+
+
+def test_BazelClient_Run_process_isnt_running(
+    workspace: pathlib.Path, tempdir: pathlib.Path):
+  """Check that process isn't running after completed."""
+  client = bazel.BazelClient(workspace, tempdir)
+  process = client.Run(alice_pb2.RunRequest(
+      target='//:hello',
+      ledger_id=1,
+  ))
+
+  process.join()
+  try:
+    os.kill(process.pid, 0)
+    pytest.fail("os.kill() didn't fail, that means the process is still "
+                "running")
+  except ProcessLookupError:
+    pass
+
+
+def test_BazelClient_kill_process(
+    workspace: pathlib.Path, tempdir: pathlib.Path):
+  """Test that process can be killed."""
+  # Create a binary which will never terminate once launched.
+  with open(workspace / 'BUILD', 'a') as f:
+    f.write("""
+cc_binary(
+    name = "nonterminating",
+    srcs = ["nonterminating.cc"],
+)
+""")
+
+  with open(workspace / 'nonterminating.cc', 'w') as f:
+    f.write("""
+int main() {
+  while (1) {}
+}
+""")
+
+  client = bazel.BazelClient(workspace, tempdir)
+  process = client.Run(alice_pb2.RunRequest(
+      target='//:nonterminating',
+      ledger_id=1,
+  ))
+
+  # Sleep for luck ;-)
+  time.sleep(3)
+
+  # Send the non-terminating process a kill signal.
+  os.kill(process.pid, signal.SIGTERM)
+  process.join()
+  try:
+    os.kill(process.pid, 0)
+    pytest.fail("os.kill() didn't fail, that means the process is still "
+                "running")
+  except ProcessLookupError:
+    pass
 
 
 if __name__ == '__main__':
