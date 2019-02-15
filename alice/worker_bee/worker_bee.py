@@ -102,9 +102,11 @@ class WorkerBee(alice_pb2_grpc.WorkerBeeServicer):
           context) -> alice_pb2.Null:
     del context
 
+    assert request.ledger_id not in self._processes
+
     # TODO: self.repo.FromRepoState(request.repo_state)
     process = self.bazel.Run(request)
-    self._processes.append(process)
+    self._processes[request.ledger_id] = process
 
     return alice_pb2.Null()
 
@@ -112,12 +114,17 @@ class WorkerBee(alice_pb2_grpc.WorkerBeeServicer):
           context) -> alice_pb2.LedgerEntry:
     process = self._processes[request.id]
     returncode = process.returncode
+    if returncode is None:
+      outcome = alice_pb2.LedgerEntry.UNKNOWN
+    elif returncode == 0:
+      outcome = alice_pb2.LedgerEntry.RUN_SUCCEEDED
+    else:
+      outcome = alice_pb2.LedgerEntry.RUN_FAILED
     return alice_pb2.LedgerEntry(
         id=request.id,
-        jobstatus=(alice_pb2.LedgerEntry.RUNNING if process.is_alive() else
-                   alice_pb2.LedgerEntry.COMPLETE),
-        joboutcome=(alice_pb2.LedgerEntry.RUN_SUCCEEDED if returncode == 0 else
-                    alice_pb2.LedgerEntry.RUN_FAILED),
+        job_status=(alice_pb2.LedgerEntry.RUNNING if process.is_alive() else
+                    alice_pb2.LedgerEntry.COMPLETE),
+        job_outcome=outcome,
         stdout=process.stdout,
         stderr=process.stderr,
         returncode=returncode,

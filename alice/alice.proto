@@ -18,9 +18,10 @@ message LedgerEntry {
   };
 
   enum JobOutcome {
-    RUN_SUCCEEDED = 0;
-    BUILD_FAILED = 1;
-    RUN_FAILED = 2;
+    UNKNOWN = 0;
+    RUN_SUCCEEDED = 1;
+    BUILD_FAILED = 2;
+    RUN_FAILED = 3;
   };
 
   // A numeric counter of this entry in the ledger. >= 1.

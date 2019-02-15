@@ -28,7 +28,7 @@ flags.DEFINE_integer('timeout_seconds', None, 'Timeout.')
 def SummarizeJobStatus(ledger: alice_pb2.LedgerEntry):
   if ledger.HasField('job_outcome'):
     print(alice_pb2.LedgerEntry.JobStatus.Name(ledger.job_status),
-          alice_pb2.LedgerEntry.JobStatus.Name(ledger.job_outcome))
+          alice_pb2.LedgerEntry.JobOutcome.Name(ledger.job_outcome))
 
 
 def main(argv):
@@ -62,7 +62,7 @@ def main(argv):
     SummarizeJobStatus(status)
     time.sleep(1)
     if status.job_status == alice_pb2.LedgerEntry.COMPLETE:
-      sys.exit(status.job_outcome)
+      sys.exit(status.returncode)
 
 
 if __name__ == '__main__':

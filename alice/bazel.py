@@ -104,29 +104,20 @@ def _BazelRunRequest(run_request: alice_pb2.RunRequest,
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
 
+
+  stdout = subprocess.Popen(['tee', str(workdir / 'stdout.txt')],
+                            stdin=process.stdout)
+  stderr = subprocess.Popen(['tee', str(workdir / 'stderr.txt')],
+                            stdin=process.stderr)
+
   # Record the ID of the current process.
   with open(workdir / 'pid.txt', 'w') as f:
     f.write(str(process.pid))
 
-  with open(workdir / 'stdout.txt', 'wb') as stdout_log:
-    with open(workdir / 'stderr.txt', 'wb') as stderr_log:
-      while process.poll() is None:
-        stdout_line = process.stderr.readline()
-        if stdout_line:
-          try:
-            sys.stderr.write(stdout_line.decode('utf-8'))
-          except UnicodeDecodeError:
-            pass
-          stderr_log.write(stdout_line)
-        stderr_line = process.stdout.readline()
-        if stderr_line:
-          try:
-            sys.stdout.write(stderr_line.decode('utf-8'))
-          except UnicodeDecodeError:
-            pass
-          stdout_log.write(stderr_line)
-
   process.communicate()
+  stdout.communicate()
+  stderr.communicate()
   returncode = process.returncode
+  logging.info("Process completed with returncode %d", returncode)
   with open(workdir / f'returncode.txt', 'w') as f:
     f.write(str(returncode))
