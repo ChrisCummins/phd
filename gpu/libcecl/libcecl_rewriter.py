@@ -12,9 +12,9 @@ from labm8 import fs
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_list('opencl_rewrite_paths', None,
+flags.DEFINE_list('opencl_rewrite_paths', [],
                   'A list of paths to rewrite using libcecl.')
-flags.DEFINE_list('libcecl_rewrite_paths', None,
+flags.DEFINE_list('libcecl_rewrite_paths', [],
                   'A list of paths to rewrite using OpenCL.')
 
 Rewrite = collections.namedtuple('Rewrite', ('opencl', 'libcecl'))
