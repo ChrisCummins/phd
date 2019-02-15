@@ -109,14 +109,15 @@ class Database(sqlutil.Database):
 
   def ImportFromPaths(
       self, paths_to_import: typing.Iterable[pathlib.Path],
-      origin: str) -> None:
+      origin: str, multiprocess: bool = True) -> None:
     """Import a sequence of paths into the database.
 
     Each path should point to a file containing a single OpenCL kernel.
 
     Args:
       paths_to_import: The paths to import.
-      origin: The origin of the kernels. 
+      origin: The origin of the kernels.
+      multiprocess: If true, process each file in parallel.
     """
     paths_to_import = list(paths_to_import)
     random.shuffle(paths_to_import)
@@ -124,9 +125,16 @@ class Database(sqlutil.Database):
                  humanize.intcomma(len(paths_to_import)))
     bar = progressbar.ProgressBar(max_value=len(paths_to_import),
                                   redirect_stderr=True)
-    pool = multiprocessing.Pool(FLAGS.grewe_db_import_process_count)
-    for i, (src, features) in enumerate(pool.imap_unordered(
-        _DatabaseImporterWorker, paths_to_import)):
+
+    # Optionally multiprocess.
+    if multiprocess:
+      pool = multiprocessing.Pool(FLAGS.grewe_db_import_process_count)
+      to_import = pool.imap_unordered(
+          _DatabaseImporterWorker, paths_to_import)
+    else:
+      to_import = (_DatabaseImporterWorker(p) for p in paths_to_import)
+
+    for i, (src, features) in enumerate(to_import):
       bar.update(i)
       # None type return if feature extraction failed.
       if src:
