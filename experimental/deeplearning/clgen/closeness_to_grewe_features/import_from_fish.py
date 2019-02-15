@@ -6,7 +6,7 @@ import typing
 from absl import app
 from absl import flags
 from absl import logging
-from experimental.deeplearning.fish.protos import fish_pb2
+from experimental.deeplearning.fish.proto import fish_pb2
 
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
@@ -60,9 +60,9 @@ def main(argv: typing.List[str]):
   for stride in range(0, len(paths_to_import), FLAGS.batch_size):
     with tempfile.TemporaryDirectory(prefix='phd_fish_') as d:
       d = pathlib.Path(d)
-      paths_to_import = [CreateTempFileFromProto(d, p) for p in
-                         paths_to_import[stride:stride + FLAGS.batch_size]]
-      db.ImportFromPaths(paths_to_import, FLAGS.origin)
+      srcs = [CreateTempFileFromProto(d, p) for p in
+              paths_to_import[stride:stride + FLAGS.batch_size]]
+      db.ImportFromPaths(srcs, FLAGS.origin)
   logging.info('done')
 
 
