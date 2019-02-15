@@ -41,7 +41,7 @@ cc_binary(
     visibility = ["//visibility:public"],
 )
 
-py_library(
+py_binary(
     name = "libcecl_rewriter",
     srcs = ["libcecl_rewriter.py"],
     deps = [
