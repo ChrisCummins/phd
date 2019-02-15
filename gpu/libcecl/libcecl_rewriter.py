@@ -70,7 +70,7 @@ def RewriteLibceclFileInPlace(path: pathlib.Path) -> None:
   """Re-write a file using libcecl in-place."""
   with open(path) as f:
     src = f.read()
-  with open(path, 'f') as f:
+  with open(path, 'w') as f:
     f.write(RewriteLibceclSource(src))
 
 
