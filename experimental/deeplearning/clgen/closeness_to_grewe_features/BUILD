@@ -54,6 +54,17 @@ py_binary(
 )
 
 py_binary(
+    name = "import_from_fish",
+    srcs = ["import_from_fish.py"],
+    deps = [
+        ":grewe_features_db",
+        "//experimental/deeplearning/fish/proto:fish_py_pb2",
+        "//labm8:pbutil",
+        "//third_party/py/absl",
+    ],
+)
+
+py_binary(
     name = "import_from_directory",
     srcs = ["import_from_directory.py"],
     deps = [
