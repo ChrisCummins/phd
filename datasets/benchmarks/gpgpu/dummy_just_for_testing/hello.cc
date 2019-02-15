@@ -1,4 +1,3 @@
-#include <libcecl.h>
 //
 // File:       hello.c
 //
@@ -64,7 +63,7 @@
 #include <OpenCL/cl.h>
 #else
 #include <CL/cl.h>
-#endift
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -126,7 +125,7 @@ int main(int argc, char** argv) {
 
     // Create a compute context
     //
-    context = CECL_CREATE_CONTEXT(0, 1, &device_id, NULL, NULL, &err);
+    context = clCreateContext(0, 1, &device_id, NULL, NULL, &err);
     if (!context) {
         printf("Error: Failed to create a compute context!\n");
         return EXIT_FAILURE;
@@ -134,7 +133,7 @@ int main(int argc, char** argv) {
 
     // Create a command commands
     //
-    commands = CECL_CREATE_COMMAND_QUEUE(context, device_id, 0, &err);
+    commands = clCreateCommandQueue(context, device_id, 0, &err);
     if (!commands) {
         printf("Error: Failed to create a command commands!\n");
         return EXIT_FAILURE;
@@ -142,7 +141,7 @@ int main(int argc, char** argv) {
 
     // Create the compute program from the source buffer
     //
-    program = CECL_PROGRAM_WITH_SOURCE(context, 1, (const char **) & KernelSource, NULL, &err);
+    program = clCreateProgramWithSource(context, 1, (const char **) & KernelSource, NULL, &err);
     if (!program) {
         printf("Error: Failed to create compute program!\n");
         return EXIT_FAILURE;
@@ -150,7 +149,7 @@ int main(int argc, char** argv) {
 
     // Build the program executable
     //
-    err = CECL_PROGRAM(program, 0, NULL, NULL, NULL, NULL);
+    err = clBuildProgram(program, 0, NULL, NULL, NULL, NULL);
     if (err != CL_SUCCESS) {
         size_t len;
         char buffer[2048];
@@ -163,7 +162,7 @@ int main(int argc, char** argv) {
 
     // Create the compute kernel in the program we wish to run
     //
-    kernel = CECL_KERNEL(program, "square", &err);
+    kernel = clCreateKernel(program, "square", &err);
     if (!kernel || err != CL_SUCCESS) {
         printf("Error: Failed to create compute kernel!\n");
         exit(1);
@@ -171,8 +170,8 @@ int main(int argc, char** argv) {
 
     // Create the input and output arrays in device memory for our calculation
     //
-    input = CECL_BUFFER(context,  CL_MEM_READ_ONLY,  sizeof(float) * count, NULL, NULL);
-    output = CECL_BUFFER(context, CL_MEM_WRITE_ONLY, sizeof(float) * count, NULL, NULL);
+    input = clCreateBuffer(context,  CL_MEM_READ_ONLY,  sizeof(float) * count, NULL, NULL);
+    output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(float) * count, NULL, NULL);
     if (!input || !output) {
         printf("Error: Failed to allocate device memory!\n");
         exit(1);
@@ -180,7 +179,7 @@ int main(int argc, char** argv) {
 
     // Write our data set into the input array in device memory
     //
-    err = CECL_WRITE_BUFFER(commands, input, CL_TRUE, 0, sizeof(float) * count, data, 0, NULL, NULL);
+    err = clEnqueueWriteBuffer(commands, input, CL_TRUE, 0, sizeof(float) * count, data, 0, NULL, NULL);
     if (err != CL_SUCCESS) {
         printf("Error: Failed to write to source array!\n");
         exit(1);
@@ -189,9 +188,9 @@ int main(int argc, char** argv) {
     // Set the arguments to our compute kernel
     //
     err = 0;
-    err  = CECL_SET_KERNEL_ARG(kernel, 0, sizeof(cl_mem), &input);
-    err |= CECL_SET_KERNEL_ARG(kernel, 1, sizeof(cl_mem), &output);
-    err |= CECL_SET_KERNEL_ARG(kernel, 2, sizeof(unsigned int), &count);
+    err  = clSetKernelArg(kernel, 0, sizeof(cl_mem), &input);
+    err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &output);
+    err |= clSetKernelArg(kernel, 2, sizeof(unsigned int), &count);
     if (err != CL_SUCCESS) {
         printf("Error: Failed to set kernel arguments! %d\n", err);
         exit(1);
@@ -199,7 +198,7 @@ int main(int argc, char** argv) {
 
     // Get the maximum work group size for executing the kernel on the device
     //
-    err = CECL_GET_KERNEL_WORK_GROUP_INFO(kernel, device_id, CL_KERNEL_WORK_GROUP_SIZE, sizeof(local), &local, NULL);
+    err = clGetKernelWorkGroupInfo(kernel, device_id, CL_KERNEL_WORK_GROUP_SIZE, sizeof(local), &local, NULL);
     if (err != CL_SUCCESS) {
         printf("Error: Failed to retrieve kernel work group info! %d\n", err);
         exit(1);
@@ -209,7 +208,7 @@ int main(int argc, char** argv) {
     // using the maximum number of work group items for this device
     //
     global = count;
-    err = CECL_ND_RANGE_KERNEL(commands, kernel, 1, NULL, &global, &local, 0, NULL, NULL);
+    err = clEnqueueNDRangeKernel(commands, kernel, 1, NULL, &global, &local, 0, NULL, NULL);
     if (err) {
         printf("Error: Failed to execute kernel!\n");
         return EXIT_FAILURE;
@@ -221,7 +220,7 @@ int main(int argc, char** argv) {
 
     // Read back the results from the device to verify the output
     //
-    err = CECL_READ_BUFFER( commands, output, CL_TRUE, 0, sizeof(float) * count, results, 0, NULL, NULL );
+    err = clEnqueueReadBuffer( commands, output, CL_TRUE, 0, sizeof(float) * count, results, 0, NULL, NULL );
     if (err != CL_SUCCESS) {
         printf("Error: Failed to read output array! %d\n", err);
         exit(1);
