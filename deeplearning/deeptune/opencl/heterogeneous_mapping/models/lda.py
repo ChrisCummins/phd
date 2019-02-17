@@ -134,8 +134,11 @@ def _ExtractGraphBatchOrDie(
   return batch
 
 
-def NoramlizedColumn(df: pd.DataFrame, column: str) -> np.array:
+def NormalizedColumn(df: pd.DataFrame, column: str) -> np.array:
   """Return the values of a column normalized to range [-0.5,0.5]."""
+  if column not in df.columns.values:
+    raise TypeError(f"Dataframe missing expected column: {column}. Actual "
+                    f"columns: {df.columns.values}")
   return (df[column] / df[column].max()) - .5
 
 
@@ -149,10 +152,12 @@ def SetNormalizedColumns(df: pd.DataFrame) -> pd.DataFrame:
     df: The dataframe, with additional '_norm' suffix columns set.
   """
   for gpu_name in ['amd_tahiti_7970', 'nvidia_gtx_960']:
-    df[f'feature:{gpu_name}:transfer_norm'] = NormalizedColumn(
-        df, f'feature:{gpu_name}:transfer')
-    df[f'feature:{gpu_name}:wgsize_norm'] = NormalizedColumn(
-        df, f'feature:{gpu_name}:wgsize')
+    columns_to_normalize = [
+      f'feature:{gpu_name}:transfer',
+      f'param:{gpu_name}:wgsize'
+    ]
+    for column in columns_to_normalize:
+      df[f'{column}_norm'] = NormalizedColumn(df, column)
   return df
 
 
