@@ -139,16 +139,16 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
 
       # Split a block into a list of instructions and create a new destination
       # node for each instruction.
-      for instruction_count, instruction in enumerate(instructions):
+      for block_instruction_count, instruction in enumerate(instructions):
         # The ID of the new node is the global node count, plus the offset into
         # the basic block instructions.
-        new_node_id = sig_node_count + instruction_count
+        new_node_id = sig_node_count + block_instruction_count
         # The new node name is a concatenation of the basic block name and the
         # instruction count.
-        new_node_name = f"{data['name']}.{instruction_count}"
+        new_node_name = f"{data['name']}.{block_instruction_count}"
 
         # Add a new node to the graph for the instruction.
-        if (instruction_count == last_instruction and
+        if (block_instruction_count == last_instruction and
             instruction.startswith('br ')):
           # Branches can either be conditional, e.g.
           #     br il %6, label %7, label %8
@@ -156,31 +156,31 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
           #     br label %9
           # Unconditional branches can be skipped - they contain no useful
           # information. Conditional branches can have the labels stripped.
-          instruction_components = instruction.split(', ')
-          if len(instruction_components) == 1:
+          branch_instruction_components = instruction.split(', ')
+          if len(branch_instruction_components) == 1:
             # Unconditional branches are ignored - they provide no meaningful
             # information beyond what the edge already includes.
-            instruction_count -= 1
+            block_instruction_count -= 1
           else:
             # TODO(cec): Do we want to preserve the "true" "false" information
             # for outgoing edges? We currently throw it away.
             sig.add_node(new_node_id, name=new_node_name,
-                         text=instruction_components[0])
+                         text=branch_instruction_components[0])
         else:
           sig.add_node(new_node_id, name=new_node_name, text=instruction)
 
       # Add an entry to the node translation map for the start and end nodes
       # of this basic block.
       node_translation_map[node] = NodeTranslationMapValue(
-          start=sig_node_count, end=sig_node_count + instruction_count)
+          start=sig_node_count, end=sig_node_count + block_instruction_count)
 
       # Create edges between the sequential instruction nodes we just added
       # to the graph.
       [sig.add_edge(i, i + 1) for i in
-       range(sig_node_count, sig_node_count + instruction_count)]
+       range(sig_node_count, sig_node_count + block_instruction_count)]
 
       # Update the global node count to be the value of the next unused node ID.
-      sig_node_count += instruction_count + 1
+      sig_node_count += block_instruction_count + 1
 
     # Iterate through the edges in the source graph, translating their IDs to
     # IDs in the new graph using the node_translation_map.
