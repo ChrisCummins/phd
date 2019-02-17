@@ -164,6 +164,20 @@ def RunAsHomebrewUser(cmd, subprocess_fn=subprocess.check_call):
     return subprocess_fn(cmd)
 
 
+def Symlink(src, dst):
+  """Create symlink if it doesn't already exist."""
+  if not os.path.islink(src):
+    print('Symlink {} -> {}'.format(src, dst))
+    os.symlink(src, dst)
+
+def SymlinkGitHook(name):
+  """Symlink a git hook script."""
+  src = os.path.join(PHD_ROOT, 'tools', 'git', name + '.sh')
+  dst = os.path.join(PHD_ROOT, '.git', 'hooks', name)
+  assert os.path.isfile(src)
+  Symlink(src, dst)
+
+
 def GetConfigurationOptions(argv):
   """Parse command line arguments and ask yes/no questions.
 
@@ -220,6 +234,18 @@ def GetConfigurationOptions(argv):
       action='store_false', help='Do not checkout and update git submodules.')
   parser.set_defaults(update_git_submodules=True)
   yes_no_prompts.append(('update_git_submodules', 'Update git submodules?'))
+
+  # --[no]install_git_hooks.
+  parser.add_argument(
+      '--install_git_hooks', dest='install_git_hooks',
+      action='store_true', help='Install my custom workflow git hooks.')
+  parser.add_argument(
+      '--noinstall_git_hooks', dest='install_git_hooks',
+      action='store_false', help='Install my custom workflow git hooks.')
+  parser.set_defaults(install_git_hooks=False)
+  yes_no_prompts.append(('install_git_hooks',
+                         "Install git hooks? (If you don't know what these "
+                         "are, you don't need them)"))
 
   # --[no]symlink_python.
   parser.add_argument(
@@ -280,6 +306,12 @@ def main(argv):
     subprocess.check_call(
         ['git', '-C', PHD_ROOT, 'submodule', 'update', '--init', '--recursive'],
         stdout=DEVNULL)
+
+  if args.install_git_hooks:
+    SymlinkGitHook('post-commit')
+    SymlinkGitHook('post-rebase')
+    SymlinkGitHook('pre-commit')
+    SymlinkGitHook('pre-push')
 
   # Find the path of a supported python binary.
   # TODO(cec): Add 'python3.7' to list once this issue is fixed:
