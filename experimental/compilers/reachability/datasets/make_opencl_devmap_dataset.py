@@ -36,7 +36,7 @@ def MakeOpenClDevmapDataset(df: pd.DataFrame, outdir: pathlib.Path):
   model.init(seed=0, atomizer=None)
 
   with prof.Profile('extracted graphs'):
-    extracted_graphs = list(model.ExtractGraphs(df))
+    extracted_graphs = list(model.ExtractGraphs(lda.SetNormalizedColumns(df)))
 
   with prof.Profile('encoded graphs'):
     encoded_graphs = list(model.EncodeGraphs(extracted_graphs))

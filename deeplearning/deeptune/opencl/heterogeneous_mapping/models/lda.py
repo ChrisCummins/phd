@@ -61,6 +61,28 @@ def _ExtractGraphBatchOrDie(
   return batch
 
 
+def NoramlizedColumn(df: pd.DataFrame, column: str) -> np.array:
+  """Return the values of a column normalized to range [-0.5,0.5]."""
+  return (df[column] / df[column].max()) - .5
+
+
+def SetNormalizedColumns(df: pd.DataFrame) -> pd.DataFrame:
+  """Set the required normalized columns for encoded graphs.
+
+  Args:
+    df: The dataframe.
+
+  Returns:
+    df: The dataframe, with additional '_norm' suffix columns set.
+  """
+  for gpu_name in ['amd_tahiti_7970', 'nvidia_gtx_960']:
+    df[f'feature:{gpu_name}:transfer_norm'] = NormalizedColumn(
+        df, f'feature:{gpu_name}:transfer')
+    df[f'feature:{gpu_name}:wgsize_norm'] = NormalizedColumn(
+        df, f'feature:{gpu_name}:wgsize')
+  return df
+
+
 class Lda(base.HeterogeneousMappingModel):
   """Work in progress."""
   __name__ = "lda"
@@ -407,8 +429,8 @@ class Lda(base.HeterogeneousMappingModel):
     # not captured by code).
     gpu_name = row['target_gpu_name']
     input_graph.graph['features'] = np.array([
-      row[f"feature:{gpu_name}:transfer"],
-      row[f"param:{gpu_name}:wgsize"],
+      row[f"feature:{gpu_name}:transfer_norm"],
+      row[f"param:{gpu_name}:wgsize_norm"],
     ], dtype=np.float32)
 
     # The target graph's features is the optimization target.

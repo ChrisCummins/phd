@@ -99,7 +99,7 @@ def test_Lda_GraphToInputTarget_input_graph_node_features(
   """Test input graph node features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
       {'y_1hot': np.array([0, 1]), 'target_gpu_name': 'a',
-       'feature:a:transfer': 128, 'param:a:wgsize': 64}, g)
+       'feature:a:transfer_norm': .1, 'param:a:wgsize_norm': 0.5}, g)
 
   # Each feature vector is a concatenation of [entry, exit, inst2vec]
   np.testing.assert_array_almost_equal(
@@ -115,7 +115,7 @@ def test_Lda_GraphToInputTarget_target_graph_node_features(
   """Test target graph node features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
       {'y_1hot': np.array([0, 1]), 'target_gpu_name': 'a',
-       'feature:a:transfer': 128, 'param:a:wgsize': 64}, g)
+       'feature:a:transfer_norm': .1, 'param:a:wgsize_norm': 0.5}, g)
 
   np.testing.assert_array_almost_equal(
       target_graph.nodes[0]['features'], np.ones(1))
@@ -130,7 +130,7 @@ def test_Lda_GraphToInputTarget_input_graph_edge_features(
   """Test input graph edge features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
       {'y_1hot': np.array([0, 1]), 'target_gpu_name': 'a',
-       'feature:a:transfer': 128, 'param:a:wgsize': 64}, g)
+       'feature:a:transfer_norm': .1, 'param:a:wgsize_norm': 0.5}, g)
 
   np.testing.assert_array_almost_equal(
       input_graph.edges[0, 1]['features'], np.ones(1))
@@ -143,7 +143,7 @@ def test_Lda_GraphToInputTarget_target_graph_edge_features(
   """Test target graph edge features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
       {'y_1hot': np.array([0, 1]), 'target_gpu_name': 'a',
-       'feature:a:transfer': 128, 'param:a:wgsize': 64}, g)
+       'feature:a:transfer_norm': .1, 'param:a:wgsize_norm': 0.5}, g)
 
   np.testing.assert_array_almost_equal(
       target_graph.edges[0, 1]['features'], np.ones(1))
@@ -156,10 +156,10 @@ def test_Lda_GraphToInputTarget_input_graph_global_features(
   """Test input graph global features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
       {'y_1hot': np.array([0, 1]), 'target_gpu_name': 'a',
-       'feature:a:transfer': 128, 'param:a:wgsize': 64}, g)
+       'feature:a:transfer_norm': .1, 'param:a:wgsize_norm': 0.5}, g)
 
   np.testing.assert_array_almost_equal(
-      input_graph.graph['features'], [128, 64])
+      input_graph.graph['features'], [.1, .5])
 
 
 def test_Lda_GraphToInputTarget_target_graph_global_features(
@@ -167,7 +167,7 @@ def test_Lda_GraphToInputTarget_target_graph_global_features(
   """Test target graph global features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
       {'y_1hot': np.array([0, 1]), 'target_gpu_name': 'a',
-       'feature:a:transfer': 128, 'param:a:wgsize': 64}, g)
+       'feature:a:transfer_norm': .1, 'param:a:wgsize_norm': 0.5}, g)
 
   np.testing.assert_array_almost_equal(
       target_graph.graph['features'], np.array([0, 1]))
