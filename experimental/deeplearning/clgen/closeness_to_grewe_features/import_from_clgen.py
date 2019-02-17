@@ -53,7 +53,7 @@ def Sample(instance: clgen.Instance, db: grewe_features_db.Database):
       CreateTempFileFromSample(d, sample, i)
       for i, sample in enumerate(samples)
     ]
-    db.ImportFromPaths(paths_to_import, FLAGS.origin)
+    db.ImportFromPaths(paths_to_import, FLAGS.origin, multiprocess=False)
 
 
 def main(argv: typing.List[str]):
