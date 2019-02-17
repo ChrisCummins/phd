@@ -511,7 +511,7 @@ class DummyJustForTesting(_BenchmarkSuite):
 
   @property
   def benchmarks(self) -> typing.List[str]:
-    return ["dummy_benchmark"]
+    return ['hello']
 
   def _ForceOpenCLEnvironment(self, env: cldrive_env.OpenCLEnvironment):
     logging.info("Dummy benchmark running on %s", env.name)
