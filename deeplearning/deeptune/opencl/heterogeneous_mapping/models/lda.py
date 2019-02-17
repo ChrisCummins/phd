@@ -29,6 +29,79 @@ InputTargetValue = collections.namedtuple('InputTargetValue',
                                           ['input', 'target'])
 
 
+def EncodeGraph(graph: llvm_util.LlvmControlFlowGraph,
+                vocab: inst2vec_vocabulary.VocabularyZipFile,
+                session: tf.Session,
+                embedding_lookup_op,
+                embedding_lookup_input_ph) -> llvm_util.LlvmControlFlowGraph:
+  """Encode inst2vec attributes on an LLVM control flow graph.
+
+  For every node in the graph, this adds to keys to the data dictionary:
+  'inst2vec_encoded' containing the index into the vocabulary of the node,
+  and 'inst2vec' which contains the numpy embedding array.
+
+  Args:
+    graph: The graph to encode.
+    vocab: The vocabulary to encode.
+    embedding_matrix: The embedding matrix.
+
+  Returns:
+    The graph.
+  """
+  # Encode the entire file with debugging options set. We need to process
+  # the entire file so that we can get the struct_dict, which we will need
+  # when encoding individual nodes. This could be made faster by simply
+  # calling `vocab.GetStructDict(graph.graph['llvm_bytecode'].split('\n'))`,
+  # but the extra debug information is useful.
+  result = vocab.EncodeLlvmBytecode(
+      graph.graph['llvm_bytecode'],
+      inst2vec_pb2.EncodeBytecodeOptions(
+          set_bytecode_after_preprocessing=True,
+          set_unknown_statements=True,
+          set_struct_dict=True,
+      ))
+
+  # if len(result.encoded) != graph.number_of_nodes():
+  #   raise ValueError(
+  #       f"Encoded bytecode file contains {len(result.encoded)} statements, "
+  #       f"but full flow graph contains {graph.number_of_nodes()} nodes. The "
+  #       "two should be equal")
+
+  # Protocol buffer maps aren't true dicts and have differing semantics.
+  struct_dict = dict(result.struct_dict)
+
+  # Set debug info as global graph attributes.
+  graph.graph['num_unknown_statements'] = len(result.unknown_statements)
+  graph.graph['struct_dict'] = struct_dict
+  graph.graph[
+    'llvm_bytecode_preprocessed'] = result.bytecode_after_preprocessing
+
+  for _, data in graph.nodes(data=True):
+    bytecode = data['text']
+
+    # Encode the node's bytecode using the struct dict we derived from the
+    # entire file. Since this is a full-flow graph, each instruction's
+    # bytecode is a single statement.
+    encoded = vocab.EncodeLlvmBytecode(
+        bytecode, struct_dict=struct_dict).encoded
+    if len(encoded) != 1:
+      raise ValueError(
+          f"Encoded line `{bytecode}` to {len(encoded)} statements")
+    data['inst2vec_encoded'] = encoded[0]
+
+    # Lookup the encoded value in the embedding matrix.
+    # TODO(cec): This is a very slow way of doing it. Better would be to
+    # collect the encoded values into an array and perform the embedding
+    # lookup once.
+    sequences = np.array(encoded, dtype=np.int32).reshape((1, 1))
+    embedding_vector = session.run(
+        embedding_lookup_op,
+        feed_dict={embedding_lookup_input_ph: sequences})
+    data['inst2vec'] = embedding_vector[0][0]
+
+  return graph
+
+
 def _ExtractGraphBatchOrDie(
     src_file_paths: typing.List[pathlib.Path], headers_dir: pathlib.Path
 ) -> typing.List[typing.Tuple[pathlib.Path, llvm_util.LlvmControlFlowGraph]]:
@@ -239,77 +312,9 @@ class Lda(base.HeterogeneousMappingModel):
       with tf.Session() as session:
         for i, (row, graph) in enumerate(data):
           logging.info('Encoding graph %d %s', i, row['program:benchmark_name'])
-          yield row, self.EncodeGraph(
+          yield row, EncodeGraph(
               graph, vocab, session, embedding_lookup_op,
               embedding_lookup_input_ph)
-
-  @staticmethod
-  def EncodeGraph(graph: llvm_util.LlvmControlFlowGraph,
-                  vocab: inst2vec_vocabulary.VocabularyZipFile,
-                  session: tf.Session,
-                  embedding_lookup_op,
-                  embedding_lookup_input_ph) -> llvm_util.LlvmControlFlowGraph:
-    """Encode inst2vec attributes on a graph.
-
-    Args:
-      graph: The graph to encode.
-      vocab: The vocabulary to encode.
-      embedding_matrix: The embedding matrix.
-
-    Returns:
-      The graph.
-    """
-    # Encode the entire file with debugging options set. We need to process
-    # the entire file so that we can get the struct_dict, which we will need
-    # when encoding individual nodes. This could be made faster by simply
-    # calling `vocab.GetStructDict(graph.graph['llvm_bytecode'].split('\n'))`,
-    # but the extra debug information is useful.
-    result = vocab.EncodeLlvmBytecode(
-        graph.graph['llvm_bytecode'],
-        inst2vec_pb2.EncodeBytecodeOptions(
-            set_bytecode_after_preprocessing=True,
-            set_unknown_statements=True,
-            set_struct_dict=True,
-        ))
-
-    # if len(result.encoded) != graph.number_of_nodes():
-    #   raise ValueError(
-    #       f"Encoded bytecode file contains {len(result.encoded)} statements, "
-    #       f"but full flow graph contains {graph.number_of_nodes()} nodes. The "
-    #       "two should be equal")
-
-    struct_dict = dict(result.struct_dict)
-
-    # Set debug info as global graph attributes.
-    graph.graph['num_unknown_statements'] = len(result.unknown_statements)
-    graph.graph['struct_dict'] = struct_dict
-    graph.graph[
-      'llvm_bytecode_preprocessed'] = result.bytecode_after_preprocessing
-
-    for _, data in graph.nodes(data=True):
-      bytecode = data['text']
-
-      # Encode the node's bytecode using the struct dict we derived from the
-      # entire file. Since this is a full-flow graph, each instruction's
-      # bytecode is a single statement.
-      encoded = vocab.EncodeLlvmBytecode(
-          bytecode, struct_dict=struct_dict).encoded
-      if len(encoded) != 1:
-        raise ValueError(
-            f"Encoded line `{bytecode}` to {len(encoded)} statements")
-      data['inst2vec_encoded'] = encoded[0]
-
-      # Lookup the encoded value in the embedding matrix.
-      # TODO(cec): This is a very slow way of doing it. Better would be to
-      # collect the encoded values into an array and perform the embedding
-      # lookup once.
-      sequences = np.array(encoded, dtype=np.int32).reshape((1, 1))
-      embedding_vector = session.run(
-          embedding_lookup_op,
-          feed_dict={embedding_lookup_input_ph: sequences})
-      data['inst2vec'] = embedding_vector[0][0]
-
-    return graph
 
   @staticmethod
   def BuildSrcPathToGraphMap(
@@ -407,7 +412,8 @@ class Lda(base.HeterogeneousMappingModel):
     target_graph = graph.copy()
 
     # Set node features.
-    # The input graph's features are a concatenation: [entry,exit,embedding...].
+    # The input graph's node features are a concatenation:
+    #    [entry,exit,embedding...].
     for node, data in input_graph.nodes(data=True):
       data['features'] = np.concatenate(
           ([graph.IsEntryBlock(node), graph.IsExitBlock(node)],
