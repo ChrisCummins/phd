@@ -34,7 +34,7 @@ if [[ -x $(which lesspipe.sh) ]]; then
 fi
 [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 
-export EDITOR='vim'
+export EDITOR='subl -n --wait'
 # sublime for local shell, rsub if on a remote machine
 # arguments: --wait block until closed, -n open a new window
 # if [[ -f /usr/local/bin/subl ]]; then
