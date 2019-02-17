@@ -170,6 +170,7 @@ def Symlink(src, dst):
     print('Symlink {} -> {}'.format(src, dst))
     os.symlink(src, dst)
 
+
 def SymlinkGitHook(name):
   """Symlink a git hook script."""
   src = os.path.join(PHD_ROOT, 'tools', 'git', name + '.sh')
