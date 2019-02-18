@@ -103,6 +103,7 @@ class LedgerEntry(Base, sqlutil.TablenameFromCamelCapsClassNameMixin,
                 with_cuda=False,
                 update_git_submodules=False,
                 symlink_python=False,
+                install_git_hooks=False,
             ),
             paths=config_pb2.GlobalConfigPaths(
                 repo_root=self.repo_root,
