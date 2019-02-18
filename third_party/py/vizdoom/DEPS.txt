@@ -1,0 +1,3 @@
+macos: brew cask install julia
+linux: sudo apt install -y --no-install-recommends julia
+all: julia -e 'Pkg.add("CxxWrap")'

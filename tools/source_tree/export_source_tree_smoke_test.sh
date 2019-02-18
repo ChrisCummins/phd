@@ -23,6 +23,7 @@ test -f "$TMPDIR/tools/source_tree/export_source_tree.py"
 cd "$TMPDIR"
 # Build the exported source tree.
 ./configure --noninteractive
+test -f bootstrap.sh
 ./bazel_wrapper.py build //tools/source_tree:export_source_tree
 
 # Tidy up.

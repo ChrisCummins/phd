@@ -146,6 +146,7 @@ def GetAuxiliaryExportFiles(paths: typing.List[pathlib.Path]):
 
   auxiliary_exports = []
   for path in paths:
+    auxiliary_exports += GlobToPaths(f'{path.parent}/DEPS.txt')
     auxiliary_exports += GlobToPaths(f'{path.parent}/README*')
     auxiliary_exports += GlobToPaths(f'{path.parent}/LICENSE*')
 

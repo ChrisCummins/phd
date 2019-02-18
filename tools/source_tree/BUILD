@@ -17,6 +17,7 @@ py_binary(
 
 sh_test(
     name = "export_source_tree_smoke_test",
+    timeout = "long",
     srcs = ["export_source_tree_smoke_test.sh"],
     data = [":export_source_tree"],
 )
