@@ -9,8 +9,8 @@
 #         --test_flag=--me_db_acceptance_tests_inbox=/path/to/inbox
 
 py_test(
-    name = "acceptance_tests",
-    srcs = ["acceptance_tests.py"],
+    name = "acceptance_test",
+    srcs = ["acceptance_test.py"],
     data = ["//datasets/me_db/tests:test_inbox_files"],
     deps = [
         ":flags",
