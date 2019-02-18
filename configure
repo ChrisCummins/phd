@@ -479,6 +479,10 @@ export PYTHON="{python_path}"
 
 export PYTHONPATH={phd_root}:{phd_root}/lib:{phd_root}/bazel-genfiles
 
+# TODO(cec): Remove this workaround once the underlying issue is fixed.
+# See: https://github.com/bazelbuild/rules_docker/issues/293
+export BAZEL_PYTHON=$PHD/tools/py3_wrapper.sh
+
 # TODO(cec): Remove whatever is setting $CC to clang, rather than unset here.
 unset CC
 unset CXX
