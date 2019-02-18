@@ -188,6 +188,8 @@ def GetConfigurationOptions(argv):
   Returns:
      The arguments namespace.
   """
+  is_git_repo = os.path.isdir('.git')
+
   yes_no_prompts = []
   parser = argparse.ArgumentParser(
       description='Configure this project for building.',
@@ -233,8 +235,9 @@ def GetConfigurationOptions(argv):
   parser.add_argument(
       '--noupdate_git_submodules', dest='update_git_submodules',
       action='store_false', help='Do not checkout and update git submodules.')
-  parser.set_defaults(update_git_submodules=True)
-  yes_no_prompts.append(('update_git_submodules', 'Update git submodules?'))
+  parser.set_defaults(update_git_submodules=is_git_repo)
+  if is_git_repo:
+    yes_no_prompts.append(('update_git_submodules', 'Update git submodules?'))
 
   # --[no]install_git_hooks.
   parser.add_argument(
@@ -244,9 +247,10 @@ def GetConfigurationOptions(argv):
       '--noinstall_git_hooks', dest='install_git_hooks',
       action='store_false', help='Install my custom workflow git hooks.')
   parser.set_defaults(install_git_hooks=False)
-  yes_no_prompts.append(('install_git_hooks',
-                         "Install git hooks? (If you don't know what these "
-                         "are, you don't need them)"))
+  if is_git_repo and os.path.isdir('tools/git'):
+    yes_no_prompts.append(('install_git_hooks',
+                           "Install git hooks? (If you don't know what these "
+                           "are, you don't need them)"))
 
   # --[no]symlink_python.
   parser.add_argument(
