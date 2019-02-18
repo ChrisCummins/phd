@@ -256,19 +256,67 @@ def test_MakeDriver_optimizations_off():
 
 # CldriveHarness() tests.
 
-def test_CldriveHarness_oclgrind_testbed():
-  """Test that harness can be made from project-local oclgrind."""
+def test_CldriveHarness_oclgrind_testbed_uneven_name_and_opt():
+  """Error is raised if number of opt_opt != number of opencl_env."""
+  oclgrind_env_name = gpu.cldrive.env.OclgrindOpenCLEnvironment().name
+
   config = harness_pb2.CldriveHarness()
-  config.opencl_env.extend([gpu.cldrive.env.OclgrindOpenCLEnvironment().name,
-                            gpu.cldrive.env.OclgrindOpenCLEnvironment().name])
+  config.opencl_env.extend([oclgrind_env_name, oclgrind_env_name])
+  config.opencl_opt.extend([True])
+
+  with pytest.raises(ValueError) as e_ctx:
+    cldrive.CldriveHarness(config, default_to_all_environments=False)
+  assert ('CldriveHarness.opencl_env and CldriveHarness.opencl_opt lists are '
+          'not the same length') in str(e_ctx.value)
+
+
+def test_CldriveHarness_oclgrind_testbed_count_one():
+  """Test that correct number of testbeds are instantiated."""
+  oclgrind_env_name = gpu.cldrive.env.OclgrindOpenCLEnvironment().name
+
+  config = harness_pb2.CldriveHarness()
+  config.opencl_env.extend([oclgrind_env_name])
+  config.opencl_opt.extend([True])
+
+  harness = cldrive.CldriveHarness(config, default_to_all_environments=False)
+  assert len(harness.testbeds) == 1
+
+
+def test_CldriveHarness_oclgrind_testbed_count_two():
+  """Test that correct number of testbeds are instantiated."""
+  oclgrind_env_name = gpu.cldrive.env.OclgrindOpenCLEnvironment().name
+
+  config = harness_pb2.CldriveHarness()
+  config.opencl_env.extend([oclgrind_env_name, oclgrind_env_name])
   config.opencl_opt.extend([True, False])
+
   harness = cldrive.CldriveHarness(config)
   assert len(harness.testbeds) == 2
-  assert harness.testbeds[
-           0].name == gpu.cldrive.env.OclgrindOpenCLEnvironment().name
+
+
+def test_CldriveHarness_oclgrind_testbed_names():
+  """Test that correct names set on testbeds."""
+  oclgrind_env_name = gpu.cldrive.env.OclgrindOpenCLEnvironment().name
+
+  config = harness_pb2.CldriveHarness()
+  config.opencl_env.extend([oclgrind_env_name, oclgrind_env_name])
+  config.opencl_opt.extend([True, False])
+
+  harness = cldrive.CldriveHarness(config)
+  assert harness.testbeds[0].name == oclgrind_env_name
+  assert harness.testbeds[1].name == oclgrind_env_name
+
+
+def test_CldriveHarness_oclgrind_testbed_opts():
+  """Test that opencl_opt option set on testbeds."""
+  oclgrind_env_name = gpu.cldrive.env.OclgrindOpenCLEnvironment().name
+
+  config = harness_pb2.CldriveHarness()
+  config.opencl_env.extend([oclgrind_env_name, oclgrind_env_name])
+  config.opencl_opt.extend([True, False])
+
+  harness = cldrive.CldriveHarness(config)
   assert harness.testbeds[0].opts['opencl_opt'] == 'enabled'
-  assert harness.testbeds[
-           1].name == gpu.cldrive.env.OclgrindOpenCLEnvironment().name
   assert harness.testbeds[1].opts['opencl_opt'] == 'disabled'
 
 
