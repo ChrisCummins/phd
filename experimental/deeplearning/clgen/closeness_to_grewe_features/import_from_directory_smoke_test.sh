@@ -4,7 +4,13 @@
 #
 set -eux
 
-TMPDIR="/tmp/phd/clgen"
+TMPDIR="$(mktemp -d)"
+
+# Tidy up.
+cleanup() {
+  rm -rf "$TMPDIR"
+}
+trap cleanup EXIT
 
 mkdir -pv $TMPDIR/kernels
 
@@ -28,5 +34,3 @@ experimental/deeplearning/clgen/closeness_to_grewe_features/import_from_director
     --origin=clgen
 
 test -f "$TMPDIR/db"
-
-rm -rf "$TMPDIR"
