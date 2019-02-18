@@ -49,7 +49,8 @@ class CldriveHarness(harness.HarnessBase,
                      harness_pb2_grpc.HarnessServiceServicer):
   """A harness for running OpenCL testcases using cldrive."""
 
-  def __init__(self, config: harness_pb2.CldriveHarness):
+  def __init__(self, config: harness_pb2.CldriveHarness,
+               default_to_all_environments: bool = True):
     """Instantiate a CLdrive harness service.
 
     Args:
@@ -99,8 +100,8 @@ class CldriveHarness(harness.HarnessBase,
       raise EnvironmentError('No OpenCL environments available')
 
     self.envs = envs
-    self.testbeds = [OpenClEnvironmentToTestbed(e) for e in envs]
-    self.ids = [e.ids() for e in envs]
+    self.testbeds = [OpenClEnvironmentToTestbed(e) for e in self.envs]
+    self.ids = [e.ids() for e in self.envs]
 
     # Logging output.
     for testbed in self.testbeds:
