@@ -16,6 +16,7 @@ py_test(
     srcs = ["mnist_regression_test.py"],
     deps = [
         ":mnist_regression",
+        "//labm8:test",
         "//third_party/py/absl",
     ],
 )
