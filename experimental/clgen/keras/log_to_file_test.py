@@ -1,24 +1,16 @@
 """Test absl logging to file."""
 import pathlib
-import sys
-import tempfile
 
-import pytest
-from absl import app
 from absl import flags
 from absl import logging
+
+from labm8 import test
 
 
 FLAGS = flags.FLAGS
 
 
-@pytest.fixture(scope='function')
-def tempdir():
-  with tempfile.TemporaryDirectory() as d:
-    yield d
-
-
-def test_log_to_file(tempdir):
+def test_log_to_file(tempdir: pathlib.Path):
   """Benchmark instantiation of a one layer LSTM network without compiling."""
   logging.set_verbosity(logging.DEBUG)
   logging.set_stderrthreshold(logging.INFO)
@@ -54,12 +46,5 @@ def test_log_to_file(tempdir):
   assert lines[5] == 'multiline!'
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments '{}'".format(', '.join(argv[1:])))
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  app.run(main)
+  test.Main()
