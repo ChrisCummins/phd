@@ -87,6 +87,7 @@ py_binary(
         ":linux",
         ":opencl",
         "//compilers/llvm:opt",
+        "//datasets/github:api",
         "//datasets/github/scrape_repos:cloner",
         "//datasets/github/scrape_repos:contentfiles",
         "//datasets/github/scrape_repos:importer",

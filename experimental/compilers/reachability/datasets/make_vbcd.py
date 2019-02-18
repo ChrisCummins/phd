@@ -14,6 +14,7 @@ from absl import flags
 from absl import logging
 
 from compilers.llvm import opt
+from datasets.github import api as github_api
 from datasets.github.scrape_repos import cloner
 from datasets.github.scrape_repos import contentfiles
 from datasets.github.scrape_repos import importer
@@ -237,8 +238,9 @@ def PopulateBytecodeTableFromGithubCSources(db: database.Database,
       ])
 
   logging.info("Scraping repos ...")
+  connection = github_api.GetGithubConectionFromFlagsOrDie()
   for query in language_to_clone.query:
-    scraper.RunQuery(scraper.QueryScraper(language_to_clone, query))
+    scraper.RunQuery(scraper.QueryScraper(language_to_clone, query, connection))
 
   # Clone repos.
   directory = pathlib.Path(language_to_clone.destination_directory)

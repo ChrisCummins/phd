@@ -130,6 +130,7 @@ py_binary(
     srcs = ["scraper.py"],
     visibility = ["//visibility:public"],
     deps = [
+        "//datasets/github:api",
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
         "//labm8:fs",
         "//labm8:labdate",

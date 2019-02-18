@@ -5,13 +5,6 @@ package scrape_repos;
 option java_package = "datasets.github.scrape_repos";
 option java_outer_classname = "ScrapeReposProtos";
 
-// A GitHub user's credentials and API token, used for authenticating API calls.
-message GitHubCredentials {
-  optional string username = 1;
-  optional string password = 2;
-  optional string token = 3;
-}
-
 // The schema for "clone lists", which are used to determine the GitHub queries
 // to run and repos to clone.
 message LanguageCloneList {

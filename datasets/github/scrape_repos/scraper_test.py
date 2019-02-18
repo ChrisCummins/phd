@@ -1,6 +1,4 @@
 """Tests for //datasets/github/scrape_repos:scraper."""
-import pathlib
-import tempfile
 
 import pytest
 from absl import app
@@ -30,28 +28,6 @@ class MockRepository(object):
     self.forks_count = 2
     self.stargazers_count = 3
     self.clone_url = 'url'
-
-
-@pytest.fixture(scope='function')
-def credentials_file() -> pathlib.Path:
-  """A test fixture to yield a GitHub credentials file."""
-  with tempfile.TemporaryDirectory() as d:
-    with open(pathlib.Path(d) / 'credentials', 'w') as f:
-      f.write("""
-[User]
-Username = foo
-Password = bar
-""")
-    yield pathlib.Path(d) / 'credentials'
-
-
-def test_ReadGitHubCredentials(credentials_file: pathlib.Path):
-  """Test that GitHub credentials are read from the filesystem."""
-  credentials = scraper.ReadGitHubCredentials(credentials_file)
-  assert credentials.HasField('username')
-  assert credentials.username == 'foo'
-  assert credentials.HasField('password')
-  assert credentials.password == 'bar'
 
 
 def test_GetRepositoryMetadata():

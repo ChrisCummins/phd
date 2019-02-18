@@ -5,13 +5,8 @@ GitHub.
 
 ## Pre-requisites
 
-Create a file `~/.githubrc`:
-
-```ini
-[User]
-Username = your-github-username
-Password = your-github-password
-```
+See [//datasets/github](/datasets/github) for instructions on how to 
+set up your GitHub credentials.
 
 
 ## Usage

@@ -4,7 +4,6 @@ This program reads a LanguageCloneList input, where each LanguageToClone entry
 in the LanguageCloneList specifies a programming language on GitHub and a number
 of repositories of this language to clone.
 """
-import configparser
 import pathlib
 import sys
 import threading
@@ -19,6 +18,7 @@ from absl import flags
 from absl import logging
 from github import Repository
 
+from datasets.github import api as github_api
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
 from labm8 import labdate
 from labm8 import pbutil
@@ -29,25 +29,6 @@ FLAGS = flags.FLAGS
 flags.DEFINE_string(
     'clone_list', None,
     'The path to a LanguageCloneList file.')
-flags.DEFINE_string(
-    'github_credentials_path', '~/.githubrc',
-    'The path to a file containing GitHub login credentials. See '
-    '//datasets/github/scrape_repos/README.md for details.')
-
-
-def ReadGitHubCredentials(
-    path: pathlib.Path) -> scrape_repos_pb2.GitHubCredentials:
-  """Read user GitHub credentials from the local file system.
-
-  Returns:
-    A GitHubCredentials instance.
-  """
-  cfg = configparser.ConfigParser()
-  cfg.read(path)
-  credentials = scrape_repos_pb2.GitHubCredentials()
-  credentials.username = cfg["User"]["Username"]
-  credentials.password = cfg["User"]["Password"]
-  return credentials
 
 
 class QueryScraper(threading.Thread):
@@ -58,24 +39,18 @@ class QueryScraper(threading.Thread):
 
   def __init__(self, language: scrape_repos_pb2.LanguageToClone,
                query: scrape_repos_pb2.GitHubRepositoryQuery,
-               github_credentials_path: typing.Optional[pathlib.Path] = None):
+               github_connection: github.Github):
     """Instantiate a QueryScraper.
 
     Args:
       language: A LanguageToClone instance.
       query: The query to run.
-      github_credentials_path: The path of to a GitHub credentials file.
+      github_connection: A connection to GitHub API.
     """
-    github_credentials_path = (
-        github_credentials_path or
-        pathlib.Path(FLAGS.github_credentials_path).expanduser())
     self.language = language
     self.repo_query = query
     self.destination_directory = pathlib.Path(language.destination_directory)
     self.i = 0
-    credentials = ReadGitHubCredentials(github_credentials_path)
-    github_connection = github.Github(credentials.username,
-                                      credentials.password)
     # Any access to the query properties can cause the rate limit to be
     # exceeded.
     while True:
@@ -225,6 +200,8 @@ def main(argv) -> None:
   if len(argv) > 1:
     raise app.UsageError('Too many command-line arguments.')
 
+  connection = github_api.GetGithubConectionFromFlagsOrDie()
+
   clone_list_path = pathlib.Path(FLAGS.clone_list or "")
   if not clone_list_path.is_file():
     raise app.UsageError('--clone_list is not a file.')
@@ -236,7 +213,7 @@ def main(argv) -> None:
     logging.info('Scraping %s repos using %s queries ...',
                  language.language, humanize.intcomma(len(language.query)))
     for query in language.query:
-      RunQuery(QueryScraper(language, query))
+      RunQuery(QueryScraper(language, query, connection))
 
   logging.info('Finished scraping. Indexed repository counts:')
   for language in clone_list.language:
