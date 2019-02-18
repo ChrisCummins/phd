@@ -5,6 +5,7 @@ cldrive DeepSmith harness to attempt to run all of the successfully preprocessed
 files.
 """
 import math
+import os
 import pathlib
 import pickle
 import typing
@@ -162,6 +163,7 @@ def main(argv: typing.List[str]):
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
+  os.environ['CLGEN_CACHE'] = f'{FLAGS.result_cache_dir}/clgen'
   # An OpenCL corpus, configured as described in CGO'17.
   corpus = corpuses.Corpus(corpus_pb2.Corpus(
       local_directory=FLAGS.github_kernels_dir,
