@@ -12,18 +12,16 @@ Usage:
 """
 import datetime
 import pathlib
-import sys
 import tempfile
-import typing
 
 import pandas as pd
 import pytest
-from absl import app
 from sqlalchemy.sql.expression import func
 
 from datasets.me_db import me_db
 from datasets.me_db.tests.acceptance_tests import flags
 from labm8 import bazelutil
+from labm8 import test
 
 
 FLAGS = flags.FLAGS
@@ -151,16 +149,5 @@ def test_life_cycle_dates_are_unique(db: me_db.Database):
     assert num_distinct_life_cycle_dates == num_life_cycle_dates
 
 
-def main(argv: typing.List[str]):
-  """Main entry point."""
-  import pytest
-
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-
-  sys.exit(pytest.main([__file__, '-vv']))
-
-
 if __name__ == '__main__':
-  flags.FLAGS(['argv[0]', '-v=1'])
-  app.run(main)
+  test.Main()
