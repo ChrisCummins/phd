@@ -6,17 +6,15 @@ TMP_CACHED_RESULTS="$(mktemp -d)"
 
 # Tidy up.
 cleanup() {
-  rm -rf "$TMP_CORPUS"
-  rm -rf "$TMP_CACHED_RESULTS"
-  rm -f "$TMP_CORPUS.sha1.txt"
+  rm -rvf "$TMP_CORPUS"
+  rm -rvf "$TMP_CACHED_RESULTS"
+  rm -fv "$TMP_CORPUS.sha1.txt"
 }
 trap cleanup EXIT
 
-mkdir -pv "$TMP_CORPUS"
-
 cat <<EOF > "$TMP_CORPUS/good.txt"
 kernel void A(global int* a) {
-  if (get_global_id(0) < 1000000) {
+  if (get_global_id(0) < 10000) {
     a[get_global_id(0)] = 0;
   }
 }
