@@ -37,14 +37,15 @@ def ReadGitHubCredentials(
   return credentials
 
 
-def GetGithubConectionFromFlagsOrDie():
+def GetGithubConectionFromFlagsOrDie() -> github.Github:
   """Get a GitHub API connection or die.
 
   Returns:
     A PyGithub Github instance.
   """
   try:
-    credentials = ReadGitHubCredentials(FLAGS.github_credentials_path)
+    credentials = ReadGitHubCredentials(
+        pathlib.Path(FLAGS.github_credentials_path).expanduser())
     return github.Github(credentials.username, credentials.password)
   except Exception as e:  # Deliberately broad catch-all.
     logging.fatal('Failed to create GitHub API connection: %s', e)
