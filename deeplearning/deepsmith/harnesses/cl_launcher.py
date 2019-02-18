@@ -56,7 +56,7 @@ class ClLauncherHarness(harness.HarnessBase,
       for opencl_env, opt in zip(
           self.config.opencl_env, self.config.opencl_opt):
         if opencl_env in all_envs:
-          env_ = copy.copy(all_envs[opencl_env])
+          env_ = copy.deepcopy(all_envs[opencl_env])
           env_.opencl_opt = opt
           envs.append(env_)
         else:
