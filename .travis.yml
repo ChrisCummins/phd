@@ -21,6 +21,13 @@ language: java
 git:
   submodules: false
 
+before_install:
+  # Install python3.6 on macOS. Note that an outdated brew python package is
+  # already installed, so we must use the upgrade command.
+  - if [[ "$(uname)" == "Darwin" ]]; then export OSX=1; else export LINUX=1; fi
+  - test -z $OSX || brew update
+  - test -z $OSX || brew upgrade python
+
 script:
   - ./configure --noninteractive
   - test -f bootstrap.sh
