@@ -14,12 +14,12 @@ py_binary(
     name = "import_from_clgen",
     srcs = ["import_from_clgen.py"],
     deps = [
-        "//experimental/deeplearning/clgen/closeness_to_grewe_features:grewe_features_db",
         "//deeplearning/clgen",
         "//deeplearning/clgen/proto:clgen_py_pb2",
         "//deeplearning/clgen/proto:corpus_py_pb2",
         "//deeplearning/clgen/proto:model_py_pb2",
         "//deeplearning/clgen/proto:sampler_py_pb2",
+        "//experimental/deeplearning/clgen/closeness_to_grewe_features:grewe_features_db",
         "//third_party/py/absl",
     ],
 )
@@ -28,11 +28,11 @@ py_binary(
     name = "import_from_deepsmith_datastore",
     srcs = ["import_from_deepsmith_datastore.py"],
     deps = [
-        "//experimental/deeplearning/clgen/closeness_to_grewe_features:grewe_features_db",
         "//deeplearning/deepsmith:datastore",
         "//deeplearning/deepsmith:generator",
         "//deeplearning/deepsmith:testcase",
         "//deeplearning/deepsmith:toolchain",
+        "//experimental/deeplearning/clgen/closeness_to_grewe_features:grewe_features_db",
         "//labm8:pbutil",
         "//labm8:sqlutil",
         "//third_party/py/absl",
@@ -69,9 +69,9 @@ py_binary(
     name = "import_from_gpgpu_benchmarks",
     srcs = ["import_from_gpgpu_benchmarks.py"],
     deps = [
-        "//experimental/deeplearning/clgen/closeness_to_grewe_features:grewe_features_db",
         "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
         "//deeplearning/deeptune/opencl/heterogeneous_mapping/models:ncc",
+        "//experimental/deeplearning/clgen/closeness_to_grewe_features:grewe_features_db",
         "//third_party/py/absl",
         "//third_party/py/progressbar",
     ],
