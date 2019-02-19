@@ -79,6 +79,10 @@ cl_int CECL_GET_KERNEL_WORK_GROUP_INFO(cl_kernel kernel,
     cecl_kernel(program, #program, kernel_name, err)
 
 
+#define CECL_CREATE_KERNELS_IN_PROGRAM(program, num_kernels, kernels, num_kernels_ret) \
+    cecl_create_kernels_in_program(program, #program, num_kernels, kernels, #kernels, num_kernels_ret)
+
+
 #define CECL_MAP_BUFFER(command_queue, \
                         buffer, \
                         blocking_map__UNUSED__, \
@@ -166,6 +170,13 @@ cl_kernel cecl_kernel(cl_program  program,
                       const char* program_name,
                       const char* kernel_name,
                       cl_int* err);
+
+cl_int cecl_create_kernels_in_program(cl_program  program,
+                                      const char* program_name,
+                                      cl_uint num_kernels,
+                                      cl_kernel *kernels,
+                                      const char* kernels_name,
+                                      cl_uint *num_kernels_ret);
 
 cl_int cecl_program(cl_program program,
                     cl_uint num_devices,

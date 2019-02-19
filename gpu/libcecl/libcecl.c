@@ -708,6 +708,39 @@ cl_kernel cecl_kernel(cl_program  program,
 }
 
 
+cl_int cecl_create_kernels_in_program(cl_program  program,
+                                      const char* program_name,
+                                      cl_uint num_kernels,
+                                      cl_kernel *kernels,
+                                      const char* kernels_name,
+                                      cl_uint *num_kernels_ret) {
+    cl_int local_err = clCreateKernelsInProgram(program, num_kernels, kernels,
+                                                num_kernels_ret);
+
+    fprintf(stderr, "\n[CECL] clCreateKernelsInProgram ; %s ; %s\n",
+            program_name, kernels_name);
+
+    if (local_err == CL_SUCCESS) {
+        return local_err;
+    }
+    /* error: fatal */
+    fprintf(stderr, "\n[CECL] ERROR: clCreateKernelsInProgram() failed! Cause: ");
+    if (local_err == CL_INVALID_PROGRAM)
+        fprintf(stderr, "program is not a valid program object.\n");
+    else if (local_err == CL_INVALID_PROGRAM_EXECUTABLE)
+        fprintf(stderr, "there is no successfully built executable for "
+                "program.\n");
+    else if (local_err == CL_INVALID_VALUE)
+        fprintf(stderr, "kernels is not NULL and num_kernels is less than the "
+                "number of kernels in program.\n");
+    else if (local_err == CL_OUT_OF_HOST_MEMORY)
+        fprintf(stderr, "there is a failure to allocate resources required by "
+                "the OpenCL implementation on the host.\n");
+    else
+        fprintf(stderr, "unknown error!\n");
+    exit(E_CL_FAILURE);
+}
+
 
 cl_int cecl_write_buffer(cl_command_queue command_queue,
                          cl_mem buffer,

@@ -42,6 +42,7 @@ OPENCL_TO_LIBCECL_REWRITES = [
   Rewrite('clBuildProgram', 'CECL_PROGRAM'),
   Rewrite('clCreateBuffer', 'CECL_BUFFER'),
   Rewrite('clCreateCommandQueue', 'CECL_CREATE_COMMAND_QUEUE'),
+  Rewrite('clCreateKernelsInProgram', 'CECL_CREATE_KERNELS_IN_PROGRAM'),
   Rewrite('clCreateKernel', 'CECL_KERNEL'),
   Rewrite('clCreateProgramWithSource', 'CECL_PROGRAM_WITH_SOURCE'),
   Rewrite('clEnqueueMapBuffer', 'CECL_MAP_BUFFER'),
