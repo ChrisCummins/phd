@@ -127,8 +127,8 @@ def Drive(opencl_kernel: str, lsize_x: int, gsize_x: int,
 
     def CompileDriver(libcecl_src: str, binary_path: pathlib.Path):
       proc = clang.Exec(
-          ['-x', 'c++', '-', '-o', str(binary_path)] + cflags + ldflags,
-          stdin=libcecl_src)
+          ['-x', 'c', '-std=c99', '-', '-o', str(binary_path)] + cflags +
+          ldflags, stdin=libcecl_src)
       if proc.returncode:
         raise DriverCompilationFailed(proc.stderr[:1024])
       assert binary_path.is_file()
