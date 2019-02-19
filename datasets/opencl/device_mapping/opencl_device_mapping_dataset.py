@@ -1,6 +1,5 @@
 """A dataset of OpenCL Device Mappings."""
 
-import functools
 import typing
 
 import numpy as np
@@ -183,7 +182,6 @@ class OpenClDeviceMappingsDataset(object):
   def df(self) -> pd.DataFrame:
     return self._df
 
-  @functools.lru_cache()
   def ComputeGreweFeaturesForGpu(
       self, gpu: str, df: pd.DataFrame = None) -> pd.DataFrame:
     """Return the Grewe et al. features as a table.
@@ -197,6 +195,7 @@ class OpenClDeviceMappingsDataset(object):
     Args:
       gpu: The name of the GPU platform to compute the features for: one of
         {amd_tahiti_7970,nvidia_gtx_960}.
+      df: The dataframe to extract the features for.
 
     Returns:
       A table with the feature values.
@@ -226,7 +225,6 @@ class OpenClDeviceMappingsDataset(object):
     df.sort_index(inplace=True)
     return df
 
-  @functools.lru_cache()
   def AugmentWithDeadcodeMutations(
       self, rand: np.random.RandomState,
       num_permutations_of_kernel: int = 5,

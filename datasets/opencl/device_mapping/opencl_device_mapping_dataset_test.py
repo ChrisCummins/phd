@@ -14,9 +14,18 @@ from labm8 import test
 FLAGS = flags.FLAGS
 
 
+# Use the session scope so that cached properties on the instance are shared
+# across tests.
 @pytest.fixture(scope='session')
 def dataset() -> ocl_dataset.OpenClDeviceMappingsDataset:
+  """Test fixture which yields the dataset."""
   yield ocl_dataset.OpenClDeviceMappingsDataset()
+
+
+@pytest.fixture(scope='session')
+def mini_df(dataset: ocl_dataset.OpenClDeviceMappingsDataset) -> pd.DataFrame:
+  """Test fixture which yields a miniature version of the full dataframe."""
+  return dataset.df[:10].copy()
 
 
 def test_programs_df_row_count(
@@ -116,7 +125,7 @@ def test_df_gpu_runtimes_not_equal(
         lambda x: x.df,
         lambda x: x.ComputeGreweFeaturesForGpu('amd_tahiti_7970'),
         lambda x: x.ComputeGreweFeaturesForGpu('nvidia_gtx_960'),
-        lambda x: x.AugmentWithDeadcodeMutations(np.random.RandomState(0)),
+        lambda x: x.AugmentWithDeadcodeMutations(np.random.RandomState(0), df=x.df[:10].copy()),
     ))
 def test_df_nan(
     dataset: ocl_dataset.OpenClDeviceMappingsDataset,
@@ -129,20 +138,20 @@ def test_df_nan(
 
 @pytest.mark.slow(reason="AugementWithDeadcodeMutations is slow, should switch to a smaller dataset")
 def test_AugmentWithDeadcodeMutations_num_output_rows(
-    dataset: ocl_dataset.OpenClDeviceMappingsDataset):
+    dataset: ocl_dataset.OpenClDeviceMappingsDataset, mini_df: pd.DataFrame):
   """Test the number of rows in generated table."""
   df = dataset.AugmentWithDeadcodeMutations(
-      np.random.RandomState(0), num_permutations_of_kernel=3)
+      np.random.RandomState(0), num_permutations_of_kernel=3,  df=mini_df)
   # the original kernel + 3 mutations
   assert len(df) == len(dataset.df) * (3 + 1)
 
 
 @pytest.mark.slow(reason="AugementWithDeadcodeMutations is slow, should switch to a smaller dataset")
 def test_AugmentWithDeadcodeMutations_identical_columns(
-    dataset: ocl_dataset.OpenClDeviceMappingsDataset):
+    dataset: ocl_dataset.OpenClDeviceMappingsDataset, mini_df: pd.DataFrame):
   """Test the number of unique values in columns."""
   df = dataset.AugmentWithDeadcodeMutations(
-      np.random.RandomState(0), num_permutations_of_kernel=3)
+      np.random.RandomState(0), num_permutations_of_kernel=3, df=mini_df)
   # Iterate through dataset columns, not the new dataframe's columns. The new
   # dataframe has a 'program:is_mutation' column.
   for column in dataset.df.columns.values:
