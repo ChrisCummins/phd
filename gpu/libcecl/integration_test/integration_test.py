@@ -41,16 +41,19 @@ def test_rewrite_compile_link_execute(tempdir: pathlib.Path, hello_src: str):
   assert not proc.returncode
   assert bytecode_path.is_file()
 
+  # Compile bytecode to executable annd link.
   bin_path = tempdir / 'a.out'
   proc = clang.Exec(['-o', str(bin_path), str(bytecode_path)] + ldflags,
                     stdout=None, stderr=None)
   assert not proc.returncode
   assert bin_path.is_file()
 
+  # Run executable on oclgrind.
   log = libcecl_runtime.RunLibceclExecutable(
       [oclgrind.OCLGRIND_PATH, bin_path],
       cldrive_env.OclgrindOpenCLEnvironment())
 
+  # Check values in log.
   assert log.ms_since_unix_epoch
   assert log.returncode == 0
   assert log.device == cldrive_env.OclgrindOpenCLEnvironment().proto
