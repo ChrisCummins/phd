@@ -87,6 +87,7 @@ def DriveBatchAndRecordResults(
         logs = opencl_kernel_driver.Drive(
             opencl_kernel, lsize_x=lsize, gsize_x=gsize, opencl_env=env,
             num_runs=FLAGS.num_runs)
+        logging.info('%d:%s PASS', static_features_id, dataset)
         assert len(logs) == FLAGS.num_runs
         with db.Session(commit=True) as session:
           session.add(grewe_features_db.DriverResult(
@@ -112,6 +113,7 @@ def DriveBatchAndRecordResults(
       except opencl_kernel_driver.DriverFailure as e:
         with db.Session(commit=True) as session:
           failure_name = text.CamelCapsToUnderscoreSeparated(type(e).__name__)
+          logging.info('%d:%s %s', static_features_id, dataset, failure_name)
           session.add(grewe_features_db.DriverResult(
               static_features_id=static_features_id,
               opencl_env=env.name,
@@ -129,7 +131,10 @@ def main(argv: typing.List[str]):
   db = grewe_features_db.Database(FLAGS.db)
   env = cldrive_env.OpenCLEnvironment.FromName(FLAGS.env)
 
+  batch_num = 0
   while True:
+    batch_num += 1
+    logging.info('Batch %d', batch_num)
     batch = GetBatchOfKernelsToDrive(db, env)
     if not batch:
       logging.info('Done. Nothing more to run!')
