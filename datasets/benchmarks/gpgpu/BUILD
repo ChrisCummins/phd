@@ -42,7 +42,7 @@ filegroup(
 py_proto_library(
     name = "gpgpu_py_pb2",
     proto_deps = [
-        "//gpu/clinfo/proto:clinfo_py_pb2",
+        "//gpu/libcecl/proto:libcecl_py_pb2",
     ],
     protos = ["gpgpu.proto"],
     visibility = ["//visibility:public"],
@@ -53,8 +53,6 @@ py_binary(
     name = "gpgpu",
     srcs = ["gpgpu.py"],
     data = [
-        "@opencl_120_headers//:opencl_headers",
-        "//datasets/benchmarks/gpgpu/dummy_just_for_testing:hello_sources",
         ":amd-app-sdk-3.0_files",
         ":npb-3.3_files",
         ":nvidia-4.2_files",
@@ -62,17 +60,14 @@ py_binary(
         ":polybench-gpu-1.0_files",
         ":rodinia-3.1_files",
         ":shoc-1.1.5_files",
-        "//gpu/libcecl:libcecl.so",
+        "//datasets/benchmarks/gpgpu/dummy_just_for_testing:hello_sources",
         "//gpu/libcecl:mkcecl",
-        "//gpu/libcecl:libcecl_header",
-    ] + select({
-        "//:darwin": [],
-        "//conditions:default": ["@libopencl//:libOpenCL.so"],
-    }),
+    ],
     visibility = ["//visibility:public"],
     deps = [
         ":gpgpu_py_pb2",
         "//gpu/cldrive:env",
+        "//gpu/libcecl:libcecl_runtime",
         "//gpu/oclgrind",
         "//labm8:bazelutil",
         "//labm8:fs",

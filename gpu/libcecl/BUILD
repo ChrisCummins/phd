@@ -44,6 +44,7 @@ cc_binary(
 py_binary(
     name = "libcecl_rewriter",
     srcs = ["libcecl_rewriter.py"],
+    visibility = ["//visibility:public"],
     deps = [
         "//labm8:fs",
         "//third_party/py/absl",
@@ -56,6 +57,38 @@ py_test(
     deps = [
         ":libcecl_rewriter",
         "//labm8:test",
+    ],
+)
+
+py_library(
+    name = "libcecl_compile",
+    srcs = ["libcecl_compile.py"],
+    data = [
+        "@opencl_120_headers//:opencl_headers",
+        "//gpu/libcecl:libcecl.so",
+        "//gpu/libcecl:libcecl_header",
+    ] + select({
+        "//:darwin": [],
+        "//conditions:default": ["@libopencl//:libOpenCL.so"],
+    }),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//labm8:bazelutil",
+        "//labm8:system",
+        "//third_party/py/absl",
+    ],
+)
+
+py_library(
+    name = "libcecl_runtime",
+    srcs = ["libcecl_runtime.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":libcecl_compile",
+        "//gpu/cldrive:env",
+        "//gpu/libcecl/proto:libcecl_py_pb2",
+        "//labm8:labdate",
+        "//third_party/py/absl",
     ],
 )
 

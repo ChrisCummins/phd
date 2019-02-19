@@ -1,24 +1,16 @@
 syntax = "proto2";
 
-import "gpu/clinfo/proto/clinfo.proto";
+import "gpu/libcecl/proto/libcecl.proto";
 
 package datasets.benchmarks.gpgpu;
 
 // Recording of a single GPGPU benchmark execution.
 message GpgpuBenchmarkRun {
-  required int64 ms_since_unix_epoch = 1;
-  required string benchmark_suite = 2;
-  required string benchmark_name = 3;
-  required string dataset_name = 4;
-  required int32 returncode = 5;
-  required string cecl_log = 6;
-  required string stdout = 7;
-  required string stderr = 8;
-  required gpu.clinfo.OpenClDevice device = 9;
-  required string hostname = 10;
-  repeated OpenClKernelInvocation kernel_invocation = 11;
-  required int64 elapsed_time_ms = 12;
-  repeated string opencl_program_source = 13;
+  required string benchmark_suite = 1;
+  required string benchmark_name = 2;
+  required string dataset_name = 3;
+  required string hostname = 4;
+  required gpu.libcecl.LibceclExecutableRun run = 5;
 }
 
 // A single kernel invocation event.

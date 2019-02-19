@@ -16,13 +16,11 @@ Usage:
       --gpgpu_benchmarks_suites=amd,npb --gpgpu_logdir=/tmp/logs
 """
 import contextlib
-import functools
 import multiprocessing
 import os
 import pathlib
 import subprocess
 import tempfile
-import time
 import typing
 
 import humanize
@@ -32,6 +30,8 @@ from absl import logging
 
 from datasets.benchmarks.gpgpu import gpgpu_pb2
 from gpu.cldrive import env as cldrive_env
+from gpu.libcecl import libcecl_compile
+from gpu.libcecl import libcecl_runtime
 from gpu.oclgrind import oclgrind
 from labm8 import bazelutil
 from labm8 import fs
@@ -72,22 +72,8 @@ flags.DEFINE_integer('gpgpu_build_process_count', multiprocessing.cpu_count(),
                      'processors on your system.')
 flags.DEFINE_integer('gpgpu_benchmark_run_count', 1,
                      'The number of times to execute each benchmark suite.')
-flags.DEFINE_boolean('gpgpu_record_outputs', True,
-                     "Record each benchmark's stdout and stderr. This "
-                     "information is not needed to get performance data, and "
-                     "can be quite large.")
 flags.DEFINE_string('gpgpu_log_extension', '.pb',
                     'The file extension for generated log files.')
-
-# The path of libcecl directory, containing the libcecl header, library, and
-# run script.
-_LIBCECL = bazelutil.DataPath('phd/gpu/libcecl/libcecl.so')
-_LIBCECL_HEADER = bazelutil.DataPath('phd/gpu/libcecl/libcecl.h')
-
-# Path to OpenCL headers and library.
-_OPENCL_HEADERS_DIR = bazelutil.DataPath('opencl_120_headers')
-if system.is_linux():
-  _LIBOPENCL_DIR = bazelutil.DataPath('libopencl')
 
 _RODINIA_DATA_ROOT = bazelutil.DataPath('rodinia_data')
 
@@ -120,28 +106,14 @@ for f in $(find '{path}' -type f); do
 done""", shell=True)
 
 
-@functools.lru_cache(maxsize=1)
-def OpenClCompileAndLinkFlags() -> typing.Tuple[str, str]:
-  """Get device-specific OpenCL compile and link flags."""
-  if system.is_linux():
-    return (f'-isystem {_OPENCL_HEADERS_DIR}',
-            f'-L{_LIBOPENCL_DIR} -Wl,-rpath,{_LIBOPENCL_DIR} -lOpenCL')
-  else:
-    return f'-isystem {_OPENCL_HEADERS_DIR}', '-framework OpenCL'
-
-
 @contextlib.contextmanager
 def MakeEnv(make_dir: pathlib.Path,
             opencl_headers: bool = True) -> typing.Dict[str, str]:
   """Return a build environment for GPGPU benchmarks."""
-  cflags, ldflags = OpenClCompileAndLinkFlags()
-  if not opencl_headers:
-    cflags = ''
-
   with fs.chdir(make_dir):
     with tempfile.TemporaryDirectory(prefix='phd_gpu_libcecl_header_') as d:
       d = pathlib.Path(d)
-      os.symlink(_LIBCECL_HEADER, d / 'libcecl.h')
+      os.symlink(gpu.libcecl.libcecl_compile.LIBCECL_HEADER, d / 'libcecl.h')
       # Many of the benchmarks include Linux-dependent headers. Spoof them here
       # so that we can build.
       if system.is_mac():
@@ -173,9 +145,11 @@ def MakeEnv(make_dir: pathlib.Path,
 """)
 
       env = os.environ.copy()
-      env['CFLAGS'] = f'-isystem {d} {cflags}'
-      env['CXXFLAGS'] = f'-isystem {d} {cflags}'
-      env['LDFLAGS'] = f'-lcecl -L{_LIBCECL.parent} {ldflags}'
+      cflags, ldflags = libcecl_compile.LibCeclCompileAndLinkFlags(
+          opencl_headers=opencl_headers)
+      env['CFLAGS'] = ' '.join(cflags)
+      env['CXXFLAGS'] = ' '.join(cflags)
+      env['LDFLAGS'] = ' '.join(ldflags)
 
       for flag in ['CFLAGS', 'CXXFLAGS', 'LDFLAGS']:
         env[f'EXTRA_{flag}'] = env[flag]
@@ -203,103 +177,6 @@ def FindExecutableInDir(path: pathlib.Path) -> pathlib.Path:
   if len(exes) != 1:
     raise EnvironmentError(f"Expected a single executable, found {len(exes)}")
   return exes[0]
-
-
-def KernelInvocationsFromCeclLog(
-    cecl_log: typing.List[str], env: cldrive_env.OclgrindOpenCLEnvironment
-) -> typing.List[gpgpu_pb2.OpenClKernelInvocation]:
-  """Interpret and parse the output of a libcecl instrumented application.
-
-  This is an updated and adapted implementation of
-  kernel_invocations_from_cecl_log() from:
-    //docs/2017_02_cgo/code/benchmarks:cecl2features
-  """
-  # Per-benchmark data transfer size and time.
-  total_transferred_bytes = 0
-  total_transfer_time = 0
-
-  kernel_invocations = []
-
-  expected_devtype = 'GPU' if env.device_type.lower() == 'gpu' else 'CPU'
-  expected_device_name = env.device_name
-
-  # Iterate over each line in the cec log.
-  logging.debug('Processing %d lines of libcecl logs', len(cecl_log))
-  for line in cecl_log:
-    # Split line based on ; delimiter into opcode and operands.
-    components = [x.strip() for x in line.strip().split(';')]
-    opcode, operands = components[0], components[1:]
-
-    # Skip empty lines.
-    if not opcode:
-      continue
-
-    if opcode == "clCreateCommandQueue":
-      devtype, devname = operands
-
-      if devname != expected_device_name:
-        raise ValueError(
-            f"Expected device name '{expected_device_name}' does not match "
-            f"actual device name '{devname}'")
-
-      # If we don't know the device type, don't check it. This isn't a problem -
-      # not all drivers report device type correctly, e.g. POCL returns a
-      # non-standard device type value.
-      if devtype == 'UNKNOWN':
-        devtype = expected_devtype
-
-      if devtype != expected_devtype:
-        raise ValueError(
-            f"Expected device type {expected_devtype} does not match actual "
-            f"device type {devtype}")
-    elif opcode == "clEnqueueNDRangeKernel":
-      kernel_name, global_size, local_size, elapsed = operands
-      global_size = int(global_size)
-      local_size = int(local_size)
-      elapsed = float(elapsed)
-      kernel_invocations.append(
-          gpgpu_pb2.OpenClKernelInvocation(
-              kernel_name=kernel_name,
-              global_size=global_size,
-              local_size=local_size,
-              runtime_ms=elapsed))
-      logging.debug('Extracted clEnqueueNDRangeKernel from log')
-    elif opcode == "clEnqueueTask":
-      kernel_name, elapsed = operands
-      elapsed = float(elapsed)
-      kernel_invocations.append(
-          gpgpu_pb2.OpenClKernelInvocation(
-              kernel_name=kernel_name,
-              global_size=1, local_size=1,
-              runtime_ms=elapsed))
-      logging.debug('Extracted clEnqueueTask from log')
-    elif opcode == "clCreateBuffer":
-      size, _, flags = operands
-      size = int(size)
-      flags = flags.split("|")
-      if "CL_MEM_COPY_HOST_PTR" in flags and "CL_MEM_READ_ONLY" not in flags:
-        # Device <-> host.
-        total_transferred_bytes += size * 2
-      else:
-        # Host -> Device, or Device -> host.
-        total_transferred_bytes += size
-      logging.debug('Extracted clCreateBuffer from log')
-    elif (opcode == "clEnqueueReadBuffer" or
-          opcode == "clEnqueueWriteBuffer" or
-          opcode == "clEnqueueMapBuffer"):
-      _, size, elapsed = operands
-      elapsed = float(elapsed)
-      total_transfer_time += elapsed
-    else:
-      # Not a line that we're interested in.
-      pass
-
-  # Defer transfer overhead until we have computed it.
-  for ki in kernel_invocations:
-    ki.transferred_bytes = total_transferred_bytes
-    ki.runtime_ms += total_transfer_time
-
-  return kernel_invocations
 
 
 class _BenchmarkSuite(object):
@@ -361,7 +238,7 @@ class _BenchmarkSuite(object):
     return self._ForceOpenCLEnvironment(env)
 
   @property
-  def env(self) -> str:
+  def env(self) -> cldrive_env.OpenCLEnvironment:
     return self._env
 
   def Run(self, logdir: pathlib.Path) -> None:
@@ -378,20 +255,14 @@ class _BenchmarkSuite(object):
   def RunEnv(self, path: pathlib.Path) -> typing.Dict[str, str]:
     """Return an execution environment for a GPGPU benchmark."""
     with fs.chdir(path):
-      env = os.environ.copy()
-      env['LD_LIBRARY_PATH'] = str(_LIBCECL.parent)
-      env['DYLD_LIBRARY_PATH'] = str(_LIBCECL.parent)
-      env['LIBCECL_DEVICE'] = self.env.device_name
-      env['LIBCECL_PLATFORM'] = self.env.platform_name
-      yield env
+      yield libcecl_runtime.RunEnv(self.env)
 
   def _ExecToLogFile(
       self, executable: pathlib.Path,
       benchmark_name: str,
       command: typing.Optional[typing.List[str]] = None,
       dataset_name: str = 'default',
-      env: typing.Optional[typing.Dict[str, str]] = None
-  ) -> None:
+      env: typing.Optional[typing.Dict[str, str]] = None) -> None:
     """Run executable using runcecl script and log output."""
     logging.info('Executing %s:%s', self.name, benchmark_name)
     self._logdir.mkdir(exist_ok=True, parents=True)
@@ -415,65 +286,26 @@ class _BenchmarkSuite(object):
       command = [str(oclgrind.OCLGRIND_PATH)] + command
 
     extra_env = env or dict()
-    with self.RunEnv(executable.parent) as env:
+    with self.RunEnv(executable.parent) as os_env:
       # Add the additional environment variables.
-      env.update(extra_env)
+      os_env.update(extra_env)
 
-      start_time = time.time()
-      process = subprocess.Popen(
-          command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-          env=env, universal_newlines=True)
-      stdout, stderr = process.communicate()
-      elapsed = time.time() - start_time
+      libcecl_log = libcecl_runtime.RunLibceclExecutable(
+          command, self.env, os_env)
 
-      # Record OpenCL kernel sources.
-      program_sources = []
-      current_program_source: typing.Optional[typing.List[str]] = None
+    if libcecl_log.returncode:
+      log_produced = (
+          self._logdir / f'{log_name}.ERROR{FLAGS.gpgpu_log_extension}')
+    else:
+      log_produced = self._logdir / f'{log_name}{FLAGS.gpgpu_log_extension}'
 
-      # Split libcecl logs out from stderr.
-      cecl_lines, stderr_lines = [], []
-      in_program_source = False
-      for line in stderr.split('\n'):
-        if line == '[CECL] BEGIN PROGRAM SOURCE':
-          assert not in_program_source
-          in_program_source = True
-          current_program_source = []
-        elif line == '[CECL] END PROGRAM SOURCE':
-          assert in_program_source
-          in_program_source = False
-          program_sources.append('\n'.join(current_program_source).strip())
-          current_program_source = None
-        elif line.startswith('[CECL] '):
-          stripped_line = line[len('[CECL] '):].strip()
-          if in_program_source:
-            current_program_source.append(stripped_line)
-          elif stripped_line:
-            cecl_lines.append(stripped_line)
-        elif line.strip():
-          stderr_lines.append(line.strip())
-
-      if process.returncode:
-        log_produced = (
-            self._logdir / f'{log_name}.ERROR{FLAGS.gpgpu_log_extension}')
-      else:
-        log_produced = self._logdir / f'{log_name}{FLAGS.gpgpu_log_extension}'
-
-      pbutil.ToFile(gpgpu_pb2.GpgpuBenchmarkRun(
-          ms_since_unix_epoch=timestamp,
-          benchmark_suite=self.name,
-          benchmark_name=benchmark_name,
-          dataset_name=dataset_name,
-          returncode=process.returncode,
-          stdout=stdout if FLAGS.gpgpu_record_outputs else '',
-          stderr='\n'.join(stderr_lines) if FLAGS.gpgpu_record_outputs else '',
-          cecl_log='\n'.join(cecl_lines) if FLAGS.gpgpu_record_outputs else '',
-          device=self.env.proto,
-          hostname=system.HOSTNAME,
-          kernel_invocation=KernelInvocationsFromCeclLog(
-              cecl_lines, self.env),
-          elapsed_time_ms=int(elapsed * 1000),
-          opencl_program_source=program_sources,
-      ), log_produced)
+    pbutil.ToFile(gpgpu_pb2.GpgpuBenchmarkRun(
+        benchmark_suite=self.name,
+        benchmark_name=benchmark_name,
+        dataset_name=dataset_name,
+        hostname=system.HOSTNAME,
+        run=libcecl_log,
+    ), log_produced)
 
     logging.info('Wrote %s', log_produced)
     self._log_paths.append(log_produced)
@@ -964,7 +796,7 @@ def main(argv: typing.List[str]):
           benchmark_suite.Run(outdir)
 
       kernel_invocation_count = sum(
-          len(log.kernel_invocation) for log in benchmark_suite.logs)
+          len(log.run.kernel_invocation) for log in benchmark_suite.logs)
       logging.info('Extracted %s kernel invocations from %s logs',
                    humanize.intcomma(kernel_invocation_count),
                    humanize.intcomma(benchmark_suite.log_count))

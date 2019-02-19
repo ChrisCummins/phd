@@ -65,7 +65,8 @@ def ValidateOptimizationLevel(opt: str) -> str:
 def Exec(args: typing.List[str],
          stdin: typing.Optional[str] = None,
          timeout_seconds: int = 60,
-         log: bool=True) -> subprocess.Popen:
+         log: bool = True, stdout=subprocess.PIPE,
+         stderr=subprocess.PIPE) -> subprocess.Popen:
   """Run clang.
 
   Args:
@@ -84,7 +85,7 @@ def Exec(args: typing.List[str],
   if log:
     logging.debug('$ %s', ' '.join(cmd))
   process = subprocess.Popen(
-      cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+      cmd, stdout=stdout, stderr=stderr,
       stdin=subprocess.PIPE if stdin else None, universal_newlines=True)
   if stdin:
     stdout, stderr = process.communicate(stdin)
