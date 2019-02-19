@@ -13,9 +13,8 @@ from absl import flags
 from absl import logging
 from sqlalchemy.ext import declarative
 
-from gpu.portable_mapping_of_data_parallel_programs_to_opencl import \
-  feature_extractor as grewe_features
 from labm8 import sqlutil
+from research.grewe_2013_cgo import feature_extractor as grewe_features
 
 
 FLAGS = flags.FLAGS

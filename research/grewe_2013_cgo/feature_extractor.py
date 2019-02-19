@@ -2,7 +2,7 @@
 
 Example usage:
 
-    $ bazel run //gpu/portable_mapping_of_data_parallel_programs_to_opencl:feature_extractor
+    $ bazel run //research/grewe_2013_cgo:feature_extractor
         -- --feature_extractor_opencl_src_path=/tmp/foo.cl
 """
 import collections
@@ -19,7 +19,7 @@ from labm8 import bazelutil
 
 
 FEATURE_EXTRACTOR_BINARY = bazelutil.DataPath(
-    'phd/gpu/portable_mapping_of_data_parallel_programs_to_opencl/'
+    'phd/research/grewe_2013_cgo/'
     'feature_extractor_binary')
 
 INLINED_OPENCL_HEADER = bazelutil.DataPath(

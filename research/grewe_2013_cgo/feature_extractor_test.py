@@ -1,12 +1,11 @@
-"""Unit tests for //gpu/portable_mapping_of_data_parallel_programs_to_opencl:feature_extractor."""
+"""Unit tests for //research/grewe_2013_cgo:feature_extractor."""
 import pathlib
 
 import pytest
 from absl import flags
 
-from gpu.portable_mapping_of_data_parallel_programs_to_opencl import \
-  feature_extractor
 from labm8 import test
+from research.grewe_2013_cgo import feature_extractor
 
 
 FLAGS = flags.FLAGS
