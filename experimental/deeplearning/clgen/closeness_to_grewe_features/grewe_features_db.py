@@ -77,10 +77,10 @@ class DriverResult(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   static_features_id: int = sql.Column(sql.Integer,
                                        sql.ForeignKey(StaticFeatures.id),
                                        nullable=False)
-  opencl_env: str = sql.Column(sql.String(64), nullable=False)
+  opencl_env: str = sql.Column(sql.String(256), nullable=False)
   hostname: str = sql.Column(sql.String(32), nullable=False)
   dataset: str = sql.Column(sql.String(32), nullable=False)
-  result: str = sql.Column(sql.String(16), nullable=False)
+  result: str = sql.Column(sql.String(32), nullable=False)
 
   __table_args__ = (
     # <src,origin> pairs must be unique.
@@ -94,7 +94,7 @@ class DynamicFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   static_features_id: int = sql.Column(sql.Integer,
                                        sql.ForeignKey(StaticFeatures.id),
                                        nullable=False)
-  opencl_env: str = sql.Column(sql.String(64), nullable=False)
+  opencl_env: str = sql.Column(sql.String(256), nullable=False)
   hostname: str = sql.Column(sql.String(32), nullable=False)
   dataset: str = sql.Column(sql.String(32), nullable=False)
   gsize: int = sql.Column(sql.Integer, nullable=False)
