@@ -41,7 +41,7 @@ CLINFO_DESCRIPTION = clinfo_pb2.OpenClDevice(
 )
 
 
-def Exec(argv: typing.List[str],
+def Exec(argv: typing.List[str], stdin: typing.Optional[str] = None,
          env: typing.Dict[str, str] = None) -> subprocess.Popen:
   """Execute a command using oclgrind.
 
@@ -58,9 +58,13 @@ def Exec(argv: typing.List[str],
   cmd = [str(OCLGRIND_PATH)] + argv
   # logging.debug('$ %s', ' '.join(cmd))
   process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                             stdin=subprocess.PIPE if stdin else None,
                              stderr=subprocess.PIPE, universal_newlines=True,
                              env=env)
-  stdout, stderr = process.communicate()
+  if stdin:
+    stdout, stderr = process.communicate(stdin)
+  else:
+    stdout, stderr = process.communicate()
   process.stdout, process.stderr = stdout, stderr
   return process
 

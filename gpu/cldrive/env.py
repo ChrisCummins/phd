@@ -72,7 +72,7 @@ class OpenCLEnvironment(object):
     """
     return self.platform_id, self.device_id
 
-  def Exec(self, argv: typing.List[str],
+  def Exec(self, argv: typing.List[str], stdin: typing.Optional[str] = None,
            env: typing.Dict[str, str] = None) -> subprocess.Popen:
     """Execute a command in an environment for the OpenCL device.
 
@@ -92,9 +92,13 @@ class OpenCLEnvironment(object):
     """
     # logging.debug('$ %s', ' '.join(argv))
     process = subprocess.Popen(argv, stdout=subprocess.PIPE,
+                               stdin=subprocess.PIPE if stdin else None,
                                stderr=subprocess.PIPE, universal_newlines=True,
                                env=env)
-    stdout, stderr = process.communicate()
+    if stdin:
+      stdout, stderr = process.communicate(stdin)
+    else:
+      stdout, stderr = process.communicate()
     process.stdout, process.stderr = stdout, stderr
     return process
 
@@ -129,11 +133,12 @@ class OclgrindOpenCLEnvironment(OpenCLEnvironment):
         oclgrind.CLINFO_DESCRIPTION)
 
   def Exec(self, argv: typing.List[str],
+           stdin: typing.Optional[str] = None,
            env: typing.Dict[str, str] = None) -> subprocess.Popen:
     """Execute a command in the device environment."""
     return oclgrind.Exec(
         ['--max-errors', '1', '--uninitialized', '--data-races',
-         '--uniform-writes', '--uniform-writes'] + argv, env=env)
+         '--uniform-writes', '--uniform-writes'] + argv, stdin=stdin, env=env)
 
 
 def host_os() -> str:

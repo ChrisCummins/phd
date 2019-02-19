@@ -16,7 +16,6 @@
 # along with libcecl.  If not, see <https://www.gnu.org/licenses/>.
 """Runtime utility code for libcecl binaries."""
 import os
-import subprocess
 import time
 import typing
 
@@ -152,10 +151,7 @@ def RunLibceclExecutable(
 
   os_env = RunEnv(env, os_env)
   start_time = time.time()
-  process = subprocess.Popen(
-      command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os_env,
-      universal_newlines=True)
-  stdout, stderr = process.communicate()
+  process = env.Exec(command, env=os_env)
   elapsed = time.time() - start_time
 
   # Record OpenCL kernel sources.
@@ -165,7 +161,7 @@ def RunLibceclExecutable(
   # Split libcecl logs out from stderr.
   cecl_lines, stderr_lines = [], []
   in_program_source = False
-  for line in stderr.split('\n'):
+  for line in process.stderr.split('\n'):
     if line == '[CECL] BEGIN PROGRAM SOURCE':
       assert not in_program_source
       in_program_source = True
