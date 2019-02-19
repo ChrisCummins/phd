@@ -139,7 +139,7 @@ def Drive(opencl_kernel: str, lsize_x: int, gsize_x: int,
     def Run(binary_path: pathlib.Path):
       log = libcecl_runtime.RunLibceclExecutable([str(binary_path)], opencl_env)
       if log.returncode:
-        raise DriverExecutionFailed(run1.stderr[:1024])
+        raise DriverExecutionFailed(log.stderr[:1024])
       if len(log.kernel_invocation) != 1:
         raise DriverExecutionFailed("Expected 1 OpenCL kernel invocation. "
                                     f"Found {len(log.kernel_invocation)}")
