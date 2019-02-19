@@ -26,7 +26,7 @@ flags.DEFINE_integer(
 Base = declarative.declarative_base()
 
 
-class StaticFeatures(Base, sqlutil.TablenameFromClassNameMixin):
+class StaticFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   """A table of OpenCL kernels and their Grewe et. al. static values."""
   id: int = sql.Column(sql.Integer, primary_key=True)
   # The checksum of the 'src' column.
