@@ -36,6 +36,6 @@ main() {
   set -x
   # The --run_under argument runs the Jupyter server from the current directory
   # rather than the root of the build tree.
-  bazel run -c opt --run_under="cd\"$this_dir\"; " "//$this_dir_relpath" -- $@
+  bazel run -c opt --run_under="cd \"$this_dir\"; " "//$this_dir_relpath" -- $@
 }
 main $@
