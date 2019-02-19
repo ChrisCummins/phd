@@ -488,6 +488,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":pbutil",
+        ":text",
         "//third_party/py/absl",
         "//third_party/py/sqlalchemy",
     ],

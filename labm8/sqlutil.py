@@ -2,7 +2,6 @@
 import collections
 import contextlib
 import pathlib
-import re
 import typing
 
 import sqlalchemy as sql
@@ -13,6 +12,7 @@ from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
 from labm8 import pbutil
+from labm8 import text
 
 
 FLAGS = flags.FLAGS
@@ -384,9 +384,7 @@ class TablenameFromCamelCapsClassNameMixin(object):
 
   @declarative.declared_attr
   def __tablename__(self):
-    components = re.findall('[A-Z][^A-Z]*', self.__name__)
-    assert components
-    return '_'.join(x.lower() for x in components)
+    return text.CamelCapsToUnderscoreSeparated(self.__name__)
 
 
 class ProtoBackedMixin(object):
