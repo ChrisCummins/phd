@@ -9,7 +9,7 @@ FROM  (
 		CHAR_LENGTH(src) as len, 
         origin 
 	FROM 
-		openclkernelwithrawgrewefeatures
+		static_features
 ) t 
 GROUP BY origin 
 ORDER BY origin DESC;

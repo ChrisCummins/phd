@@ -40,7 +40,7 @@ def main(argv: typing.List[str]):
   if not all(x.is_file() for x in paths_to_import):
     raise app.UsageError('Non-file input found')
 
-  db.ImportFromPaths(paths_to_import, FLAGS.origin)
+  db.ImportStaticFeaturesFromPaths(paths_to_import, FLAGS.origin)
   logging.info('done')
 
 

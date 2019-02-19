@@ -6,10 +6,10 @@ import typing
 from absl import app
 from absl import flags
 from absl import logging
-from experimental.deeplearning.fish.proto import fish_pb2
 
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
+from experimental.deeplearning.fish.proto import fish_pb2
 from labm8 import pbutil
 
 
@@ -62,7 +62,7 @@ def main(argv: typing.List[str]):
       d = pathlib.Path(d)
       srcs = [CreateTempFileFromProto(d, p) for p in
               paths_to_import[stride:stride + FLAGS.batch_size]]
-      db.ImportFromPaths(srcs, FLAGS.origin)
+      db.ImportStaticFeaturesFromPaths(srcs, FLAGS.origin)
   logging.info('done')
 
 

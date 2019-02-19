@@ -1,9 +1,8 @@
 """Import kernels from GPGPU benchmark suites."""
 import hashlib
-import pathlib
-import progressbar
 import typing
 
+import progressbar
 from absl import app
 from absl import flags
 
@@ -20,15 +19,15 @@ flags.DEFINE_string(
     'URL of the database to import OpenCL kernels to.')
 
 
-def RowToOpenCLKernelWithRawGreweFeatures(
+def RowToStaticFeatures(
     row: typing.Dict[str, typing.Any], datafolder
-) -> grewe_features_db.OpenCLKernelWithRawGreweFeatures:
+) -> grewe_features_db.StaticFeatures:
   path = ncc.DataFrameRowToKernelSrcPath(row, datafolder)
   with open(path, 'rb') as f:
     src = f.read().decode('unicode_escape')
   src = src.encode('ascii', 'ignore').decode('ascii')
 
-  return grewe_features_db.OpenCLKernelWithRawGreweFeatures(
+  return grewe_features_db.StaticFeatures(
       src_sha256=hashlib.sha256(src.encode('utf-8')).hexdigest(),
       origin=f'benchmarks',
       grewe_compute_operation_count=row["feature:comp"],
@@ -52,10 +51,10 @@ def main(argv: typing.List[str]):
   with ncc.DEEPTUNE_INST2VEC_DATA_ARCHIVE as datafolder:
     for _, row in progressbar.progressbar(list(df.iterrows())):
       with db.Session(commit=True) as session:
-        obj = RowToOpenCLKernelWithRawGreweFeatures(row, datafolder)
+        obj = RowToStaticFeatures(row, datafolder)
         # Check if it already exists in the database.
-        exists = session.query(grewe_features_db.OpenCLKernelWithRawGreweFeatures) \
-            .filter_by(src_sha256=obj.src_sha256).first()
+        exists = session.query(grewe_features_db.StaticFeatures) \
+          .filter_by(src_sha256=obj.src_sha256).first()
         if not exists:
           session.add(obj)
 

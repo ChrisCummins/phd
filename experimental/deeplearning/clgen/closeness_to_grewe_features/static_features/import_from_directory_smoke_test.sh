@@ -22,13 +22,13 @@ kernel void A(global int* a) {
 }
 EOF
 
-experimental/deeplearning/clgen/closeness_to_grewe_features/import_from_directory \
+experimental/deeplearning/clgen/closeness_to_grewe_features/static_features/import_from_directory \
     --db="sqlite:///$TMPDIR/db" \
     --kernels_dir="$TMPDIR/kernels" \
     --origin=clgen
 
 # Run it again to see if it fails when processing duplicate data.
-experimental/deeplearning/clgen/closeness_to_grewe_features/import_from_directory \
+experimental/deeplearning/clgen/closeness_to_grewe_features/static_features/import_from_directory \
     --db="sqlite:///$TMPDIR/db" \
     --kernels_dir="$TMPDIR/kernels" \
     --origin=clgen

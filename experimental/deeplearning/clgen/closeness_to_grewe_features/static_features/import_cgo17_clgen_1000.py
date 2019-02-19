@@ -30,7 +30,7 @@ def main(argv: typing.List[str]):
   with _CLGEN_1000_TAR as kernels_dir:
     paths_to_import = list((kernels_dir / 'clgen-1000/kernels').iterdir())
     assert len(paths_to_import) == 1000
-    db.ImportFromPaths(paths_to_import, 'clgen_1000')
+    db.ImportStaticFeaturesFromPaths(paths_to_import, 'clgen_1000')
 
   logging.info('done')
 

@@ -8,13 +8,12 @@ from absl import app
 from absl import flags
 from absl import logging
 
-from deeplearning.deepsmith import generator
-from deeplearning.deepsmith import toolchain
 from deeplearning.deepsmith import datastore
+from deeplearning.deepsmith import generator
 from deeplearning.deepsmith import testcase
+from deeplearning.deepsmith import toolchain
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
-from labm8 import pbutil
 from labm8 import sqlutil
 
 
@@ -33,7 +32,7 @@ flags.DEFINE_integer('start_at', 0,
 
 
 def CreateTempFileFromTestcase(
-      tempdir: pathlib.Path, tc: testcase.Testcase) -> pathlib.Path:
+    tempdir: pathlib.Path, tc: testcase.Testcase) -> pathlib.Path:
   """Write testcase to a file in directory."""
   path = tempdir / f'{tc.id}.cl'
   with open(path, 'w') as f:
@@ -53,18 +52,20 @@ def main(argv: typing.List[str]):
   ds = datastore.DataStore.FromFile(pathlib.Path(FLAGS.datastore))
 
   with ds.Session(commit=False) as session:
-    generator_id = session.query(generator.Generator.id).filter(generator.Generator.name == 'clgen').first()
+    generator_id = session.query(generator.Generator.id).filter(
+      generator.Generator.name == 'clgen').first()
     if not generator_id:
       raise app.UsageError('Datastore contains no CLgen generator')
 
-    toolchain_id = session.query(toolchain.Toolchain.id).filter(toolchain.Toolchain.string == 'opencl').first()
+    toolchain_id = session.query(toolchain.Toolchain.id).filter(
+      toolchain.Toolchain.string == 'opencl').first()
     if not toolchain_id:
       raise app.UsageError('Datastore contains no opencl toolchain')
 
     q = session.query(testcase.Testcase) \
-        .filter(testcase.Testcase.generator_id == generator_id[0]) \
-        .filter(testcase.Testcase.toolchain_id == toolchain_id[0]) \
-        .order_by(testcase.Testcase.id)
+      .filter(testcase.Testcase.generator_id == generator_id[0]) \
+      .filter(testcase.Testcase.toolchain_id == toolchain_id[0]) \
+      .order_by(testcase.Testcase.id)
 
     batches = sqlutil.OffsetLimitBatchedQuery(
         q, batch_size=FLAGS.batch_size, start_at=FLAGS.start_at,
@@ -79,8 +80,8 @@ def main(argv: typing.List[str]):
       with tempfile.TemporaryDirectory(prefix=prefix) as d:
         d = pathlib.Path(d)
         paths_to_import = [
-            CreateTempFileFromTestcase(d, r) for r in batch.rows]
-        db.ImportFromPaths(paths_to_import, 'clgen_dsmith')
+          CreateTempFileFromTestcase(d, r) for r in batch.rows]
+        db.ImportStaticFeaturesFromPaths(paths_to_import, 'clgen_dsmith')
   logging.info('done')
 
 

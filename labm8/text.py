@@ -248,3 +248,9 @@ def AutoCompletePrefix(prefix: str, trie: nx.DiGraph) -> typing.Set[str]:
       raise KeyError(f"Prefix not found: '{prefix}'")
 
   return ret.union(PrefixTreeWords(trie, root_node=current_node))
+
+
+def CamelCapsToUnderscoreSeparated(camel_caps_str: str):
+  components = re.findall('[A-Z][^A-Z]*', camel_caps_str)
+  assert components
+  return '_'.join(x.lower() for x in components)

@@ -1,4 +1,4 @@
-"""A database of OpenCL kernels and their Grewe et al features."""
+"""A database of static and dynamic Grewe et al features."""
 
 import hashlib
 import multiprocessing
@@ -26,12 +26,11 @@ flags.DEFINE_integer(
 Base = declarative.declarative_base()
 
 
-class OpenCLKernelWithRawGreweFeatures(
-    Base, sqlutil.TablenameFromClassNameMixin):
-  """A table of OpenCL kernels and their Grewe et. al. feature values."""
+class StaticFeatures(Base, sqlutil.TablenameFromClassNameMixin):
+  """A table of OpenCL kernels and their Grewe et. al. static values."""
   id: int = sql.Column(sql.Integer, primary_key=True)
   # The checksum of the 'src' column.
-  src_sha256: str = sql.Column(sql.String(64), nullable=False, unique=True)
+  src_sha256: str = sql.Column(sql.String(64), nullable=False)
   # The origin of the opencl kernel, e.g. "clgen" for a clgen-generated
   # benchmark.
   origin: str = sql.Column(sql.String(32), nullable=False)
@@ -59,7 +58,7 @@ class OpenCLKernelWithRawGreweFeatures(
   @classmethod
   def FromSrcOriginAndFeatures(
       cls, src: str, origin: str, features: grewe_features.GreweEtAlFeatures
-  ) -> 'OpenCLKernelWithRawGreweFeatures':
+  ) -> 'StaticFeatures':
     """Instantiate a PreprocessedContentFile."""
     return cls(
         src_sha256=hashlib.sha256(src.encode('utf-8')).hexdigest(),
@@ -72,6 +71,36 @@ class OpenCLKernelWithRawGreweFeatures(
         grewe_atomic_operation_count=features.atomic_operation_count,
         src=src,
     )
+
+
+class DriverResult(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
+  static_features_id: int = sql.Column(sql.Integer,
+                                       sql.ForeignKey(StaticFeatures.id),
+                                       nullable=False)
+  opencl_env: str = sql.Column(sql.String(64), nullable=False)
+  hostname: str = sql.Column(sql.String(32), nullable=False)
+  dataset: str = sql.Column(sql.String(32), nullable=False)
+  result: str = sql.Column(sql.String(16), nullable=False)
+
+  __table_args__ = (
+    # <src,origin> pairs must be unique.
+    sql.PrimaryKeyConstraint('static_features_id', 'opencl_env', 'hostname',
+                             'dataset', name='id_device_dataset'),
+  )
+
+
+class DynamicFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
+  id: int = sql.Column(sql.Integer, primary_key=True)
+  static_features_id: int = sql.Column(sql.Integer,
+                                       sql.ForeignKey(StaticFeatures.id),
+                                       nullable=False)
+  opencl_env: str = sql.Column(sql.String(64), nullable=False)
+  hostname: str = sql.Column(sql.String(32), nullable=False)
+  dataset: str = sql.Column(sql.String(32), nullable=False)
+  gsize: int = sql.Column(sql.Integer, nullable=False)
+  wgsize: int = sql.Column(sql.Integer, nullable=False)
+  transferred_bytes: int = sql.Column(sql.Integer, nullable=False)
+  runtime_ms: float = sql.Column(sql.Float, nullable=False)
 
 
 def _DatabaseImporterWorker(
@@ -106,7 +135,7 @@ class Database(sqlutil.Database):
   def __init__(self, url: str):
     super(Database, self).__init__(url, Base)
 
-  def ImportFromPaths(
+  def ImportStaticFeaturesFromPaths(
       self, paths_to_import: typing.Iterable[pathlib.Path],
       origin: str, multiprocess: bool = True) -> None:
     """Import a sequence of paths into the database.
@@ -138,11 +167,11 @@ class Database(sqlutil.Database):
       # None type return if feature extraction failed.
       if src:
         with self.Session(commit=False) as session:
-          obj = OpenCLKernelWithRawGreweFeatures.FromSrcOriginAndFeatures(
+          obj = StaticFeatures.FromSrcOriginAndFeatures(
               src, origin, features)
           # Check if it already exists in the database.
           exists = session.query(
-              OpenCLKernelWithRawGreweFeatures) \
+              StaticFeatures) \
             .filter_by(src_sha256=obj.src_sha256).first()
           if not exists:
             session.add(obj)

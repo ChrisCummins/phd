@@ -26,7 +26,7 @@ py_test(
     deps = [
         ":opencl_kernel_driver",
         "//gpu/cldrive:env",
-        "//third_party/py/pytest",
         "//labm8:test",
-    ]
+        "//third_party/py/pytest",
+    ],
 )

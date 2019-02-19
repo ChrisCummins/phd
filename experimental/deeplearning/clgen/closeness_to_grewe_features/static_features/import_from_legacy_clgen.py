@@ -59,7 +59,8 @@ def main(argv: typing.List[str]):
   conn = sqlite3.connect(FLAGS.legacy_clgen_db)
   c = conn.cursor()
 
-  batches = BatchQueryResults(c.execute('SELECT kernel FROM PreprocessedKernels'))
+  batches = BatchQueryResults(
+    c.execute('SELECT kernel FROM PreprocessedKernels'))
 
   prefix = 'phd_experimental_deeplearning_clgen_'
   for i, batch in enumerate(batches):
@@ -70,7 +71,7 @@ def main(argv: typing.List[str]):
         CreateTempFileFromTestcase(d, src, i) for i, (src,) in enumerate(batch)
       ]
       db = grewe_features_db.Database(FLAGS.db)
-      db.ImportFromPaths(paths_to_import, FLAGS.origin)
+      db.ImportStaticFeaturesFromPaths(paths_to_import, FLAGS.origin)
 
 
 if __name__ == '__main__':
