@@ -31,11 +31,6 @@ from labm8 import labdate
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_boolean('libcecl_record_outputs', True,
-                     "Record each benchmark's stdout and stderr. This "
-                     "information is not needed to get performance data, and "
-                     "can be quite large.")
-
 
 def KernelInvocationsFromCeclLog(
     cecl_log: typing.List[str], env: cldrive_env.OclgrindOpenCLEnvironment
@@ -149,7 +144,8 @@ def RunEnv(
 
 def RunLibceclExecutable(
     command: typing.List[str], env: cldrive_env.OpenCLEnvironment,
-    os_env: typing.Optional[typing.Dict[str, str]] = None
+    os_env: typing.Optional[typing.Dict[str, str]] = None,
+    record_outputs: bool = True
 ) -> libcecl_pb2.LibceclExecutableRun:
   """Run executable using libcecl and log output."""
   timestamp = labdate.MillisecondsTimestamp()
@@ -193,9 +189,9 @@ def RunLibceclExecutable(
   return libcecl_pb2.LibceclExecutableRun(
       ms_since_unix_epoch=timestamp,
       returncode=process.returncode,
-      stdout=stdout if FLAGS.libcecl_record_outputs else '',
-      stderr='\n'.join(stderr_lines) if FLAGS.libcecl_record_outputs else '',
-      cecl_log='\n'.join(cecl_lines) if FLAGS.libcecl_record_outputs else '',
+      stdout=process.stdout if record_outputs else '',
+      stderr='\n'.join(stderr_lines) if record_outputs else '',
+      cecl_log='\n'.join(cecl_lines) if record_outputs else '',
       device=env.proto,
       kernel_invocation=KernelInvocationsFromCeclLog(cecl_lines, env),
       elapsed_time_ms=int(elapsed * 1000),

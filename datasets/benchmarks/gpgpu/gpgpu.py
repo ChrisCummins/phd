@@ -74,6 +74,10 @@ flags.DEFINE_integer('gpgpu_benchmark_run_count', 1,
                      'The number of times to execute each benchmark suite.')
 flags.DEFINE_string('gpgpu_log_extension', '.pb',
                     'The file extension for generated log files.')
+flags.DEFINE_boolean('gpgpu_record_outputs', True,
+                     "Record each benchmark's stdout and stderr. This "
+                     "information is not needed to get performance data, and "
+                     "can be quite large.")
 
 _RODINIA_DATA_ROOT = bazelutil.DataPath('rodinia_data')
 
@@ -290,7 +294,7 @@ class _BenchmarkSuite(object):
       os_env.update(extra_env)
 
       libcecl_log = libcecl_runtime.RunLibceclExecutable(
-          command, self.env, os_env)
+          command, self.env, os_env, record_outputs=FLAGS.gpgpu_record_outputs)
 
     if libcecl_log.returncode:
       log_produced = (
