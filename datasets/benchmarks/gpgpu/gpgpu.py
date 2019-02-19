@@ -113,7 +113,6 @@ def MakeEnv(make_dir: pathlib.Path,
   with fs.chdir(make_dir):
     with tempfile.TemporaryDirectory(prefix='phd_gpu_libcecl_header_') as d:
       d = pathlib.Path(d)
-      os.symlink(gpu.libcecl.libcecl_compile.LIBCECL_HEADER, d / 'libcecl.h')
       # Many of the benchmarks include Linux-dependent headers. Spoof them here
       # so that we can build.
       if system.is_mac():
@@ -147,8 +146,8 @@ def MakeEnv(make_dir: pathlib.Path,
       env = os.environ.copy()
       cflags, ldflags = libcecl_compile.LibCeclCompileAndLinkFlags(
           opencl_headers=opencl_headers)
-      env['CFLAGS'] = ' '.join(cflags)
-      env['CXXFLAGS'] = ' '.join(cflags)
+      env['CFLAGS'] = ' '.join(cflags) + f' -isystem {d}'
+      env['CXXFLAGS'] = ' '.join(cflags) + f' -isystem {d}'
       env['LDFLAGS'] = ' '.join(ldflags)
 
       for flag in ['CFLAGS', 'CXXFLAGS', 'LDFLAGS']:
