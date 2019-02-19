@@ -1,6 +1,6 @@
 licenses(["restricted"])  # GPL v3
 
-exports_files(["LICENSE"])
+exports_files(["LICENSE", "README.md"])
 
 filegroup(
     name = "libcecl_header",
