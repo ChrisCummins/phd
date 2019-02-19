@@ -24,7 +24,7 @@ flags.DEFINE_string(
     'env', 'Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2',
     'The OpenCL environment to execute benchmark suites on. To list the '
     'available environments, run `bazel run //gpu/clinfo`.')
-flags.DEFINE_boolean('num_runs', 30, 'The number of runs for each benchmark.')
+flags.DEFINE_integer('num_runs', 30, 'The number of runs for each benchmark.')
 flags.DEFINE_integer('batch_size', 16,
                      'The number of kernels to process at a time.')
 
