@@ -295,7 +295,7 @@ int main(int argc, char** argv) {{
         long fsize = ftell(infile);
         fseek(infile, 0, SEEK_SET);
 
-        char *buf = malloc(fsize + 1);
+        char *buf = (char *)malloc(fsize + 1);
         fread(buf, fsize, 1, infile);
         fclose(infile);
         buf[fsize] = 0;
