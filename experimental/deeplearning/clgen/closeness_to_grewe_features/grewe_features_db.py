@@ -170,8 +170,7 @@ class Database(sqlutil.Database):
           obj = StaticFeatures.FromSrcOriginAndFeatures(
               src, origin, features)
           # Check if it already exists in the database.
-          exists = session.query(
-              StaticFeatures) \
+          exists = session.query(StaticFeatures) \
             .filter_by(src_sha256=obj.src_sha256).first()
           if not exists:
             session.add(obj)
