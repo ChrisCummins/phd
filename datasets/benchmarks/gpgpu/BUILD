@@ -80,6 +80,19 @@ py_binary(
     ],
 )
 
+py_binary(
+    name = "gpgpu_verify",
+    srcs = ["gpgpu_verify.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":gpgpu_py_pb2",
+        "//labm8:bazelutil",
+        "//labm8:fs",
+        "//labm8:pbutil",
+        "//third_party/py/absl",
+    ],
+)
+
 py_test(
     name = "gpgpu_test",
     srcs = ["gpgpu_test.py"],
