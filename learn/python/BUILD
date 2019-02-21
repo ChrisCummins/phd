@@ -30,7 +30,7 @@ cc_binary(
     ],
     deps = [
         ":cpp_interop_proto_cc",
-        "//phd:macros",
+        "//phd:logging",
         "//phd:pbutil",
     ],
 )
@@ -42,7 +42,7 @@ cc_binary(
     ],
     deps = [
         ":cpp_interop_proto_cc",
-        "//phd:macros",
+        "//phd:logging",
         "//phd:pbutil",
     ],
 )

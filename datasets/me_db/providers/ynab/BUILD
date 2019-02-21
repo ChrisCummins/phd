@@ -5,7 +5,7 @@ cc_binary(
     srcs = ["json_budget_worker.cc"],
     deps = [
         "//datasets/me_db:me_proto_cc",
-        "//phd:macros",
+        "//phd:logging",
         "//phd:pbutil",
         "//phd:string",
         "@boost//:filesystem",

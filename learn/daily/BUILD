@@ -29,7 +29,7 @@ cc_library(
     srcs = ["d181213_kruskal_spanning_tree.cc"],
     hdrs = ["d181213_kruskal_spanning_tree.h"],
     deps = [
-        "//phd:macros",
+        "//phd:logging",
         "@boost//:numeric",
         "@com_google_absl//absl/container:flat_hash_map",
     ],

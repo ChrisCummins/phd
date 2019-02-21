@@ -1,7 +1,7 @@
 #include "learn/daily/d181213_kruskal_spanning_tree.h"
 
 #include "phd/test.h"
-#include "phd/macros.h" // TODO
+#include "phd/logging.h"
 
 namespace phd {
 namespace learn {
@@ -173,7 +173,7 @@ TEST(KruskalMinimumSpanningTree, ExampleGraph) {
     int source = boost::source(*i, mst);
     int target = boost::target(*i, mst);
 
-    INFO("MST edge %d -> %d", source, target);
+    LOG(INFO) << "MST edge " << source << "-> " << target);
   }
 
   auto edge_sa = FindEdge(mst, S, A);

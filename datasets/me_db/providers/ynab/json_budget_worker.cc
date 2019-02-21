@@ -1,6 +1,6 @@
 // Protocol buffer processing binary for extracting me.Series protos from a
 // YNAB JSON file.
-#include "phd/macros.h"
+#include "phd/logging.h"
 #include "phd/pbutil.h"
 #include "phd/string.h"
 
@@ -76,7 +76,7 @@ string GetBudgetNameFromPathOrDie(const boost::filesystem::path& path) {
   const auto directory_name = (
       path.parent_path().parent_path().parent_path().filename().string());
 
-  DEBUG("Directory: %s", directory_name);
+  LOG(DEBUG) << "Directory: " << directory_name;
   CHECK(phd::EndsWith(directory_name, ".ynab4"));
 
   // <budget-dir> has the format '$NAME~<stuff>.ynab4'. Split at the ~ and
@@ -201,7 +201,7 @@ void ProcessJsonBudgetFile(SeriesCollection* proto) {
   const string budget_name = GetBudgetNameFromPathOrDie(json_path);
 
   CHECK(boost::filesystem::is_regular_file(json_path));
-  INFO("Reading from JSON file %s", json_path.string());
+  LOG(INFO) << "Reading from JSON file " << json_path.string();
 
   boost::filesystem::ifstream json(json_path);
   CHECK(json.is_open());

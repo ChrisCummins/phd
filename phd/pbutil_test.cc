@@ -1,11 +1,11 @@
 #include "phd/pbutil.h"
 
-#include "phd/test/protos.pb.h"
 #include "phd/test.h"
+#include "phd/test/protos.pb.h"
 
 #include <sstream>
 
-void AddXandYInPlaceCallback(AddXandY* message) {
+void AddXandYInPlaceCallback(AddXandY *message) {
   message->set_result(message->x() + message->y());
 }
 
@@ -22,9 +22,11 @@ TEST(ProcessMessageInPlace, SetAField) {
 
   // In the process function.
   message.SerializeToOstream(&istream);
-  ProcessMessageInPlace<AddXandY>([](AddXandY* message) {
-    message->set_result(message->x() + message->y());
-  }, &istream, &ostream);
+  ProcessMessageInPlace<AddXandY>(
+      [](AddXandY *message) {
+        message->set_result(message->x() + message->y());
+      },
+      &istream, &ostream);
   message.ParseFromIstream(&ostream);
 
   // Check the values produced.
@@ -43,9 +45,8 @@ TEST(ProcessMessageInPlace, MutateAField) {
 
   // In the process function.
   message.SerializeToOstream(&istream);
-  ProcessMessageInPlace<AddXandY>([](AddXandY* message) {
-    message->set_x(5);
-  }, &istream, &ostream);
+  ProcessMessageInPlace<AddXandY>([](AddXandY *message) { message->set_x(5); },
+                                  &istream, &ostream);
   message.ParseFromIstream(&ostream);
 
   // Check the values produced.
@@ -66,9 +67,10 @@ TEST(ProcessMessage, AddXandY) {
   // In the process function.
   message.SerializeToOstream(&istream);
   ProcessMessage<AddXandY, AddXandY>(
-      [](const AddXandY& input, AddXandY* output) {
+      [](const AddXandY &input, AddXandY *output) {
         output->set_result(input.x() + input.y());
-      }, &istream, &ostream);
+      },
+      &istream, &ostream);
   message.ParseFromIstream(&ostream);
 
   // Check the values produced.
@@ -77,35 +79,35 @@ TEST(ProcessMessage, AddXandY) {
   EXPECT_EQ(message.result(), 4);
 }
 
-void BM_ProcessMessageInPlace(benchmark::State& state) {
+void BM_ProcessMessageInPlace(benchmark::State &state) {
   std::stringstream istream;
   std::stringstream ostream;
 
   while (state.KeepRunning()) {
     std::stringstream istream;
     std::stringstream ostream;
-    ProcessMessageInPlace<AddXandY>([](AddXandY* message) {
-        message->set_x(5);
-    }, &istream, &ostream);
+    ProcessMessageInPlace<AddXandY>(
+        [](AddXandY *message) { message->set_x(5); }, &istream, &ostream);
   }
 }
 BENCHMARK(BM_ProcessMessageInPlace);
 
-void BM_ProcessMessage(benchmark::State& state) {
+void BM_ProcessMessage(benchmark::State &state) {
   std::stringstream istream;
   std::stringstream ostream;
 
   while (state.KeepRunning()) {
     std::stringstream istream;
     std::stringstream ostream;
-    ProcessMessage<AddXandY, AddXandY>([](const AddXandY& input,
-                                          AddXandY* output) {
-        output->set_result(input.x() + input.y());
-    }, &istream, &ostream);
+    ProcessMessage<AddXandY, AddXandY>(
+        [](const AddXandY &input, AddXandY *output) {
+          output->set_result(input.x() + input.y());
+        },
+        &istream, &ostream);
   }
 }
 BENCHMARK(BM_ProcessMessage);
 
-}  // namespace pbutil
+} // namespace pbutil
 
 TEST_MAIN();

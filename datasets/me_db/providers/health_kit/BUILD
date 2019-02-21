@@ -20,7 +20,7 @@ cc_library(
     hdrs = ["health_kit_lib.h"],
     deps = [
         "//datasets/me_db:me_proto_cc",
-        "//phd:macros",
+        "//phd:loggging",
         "//phd:string",
         "@boost//:filesystem",
         "@com_google_absl//absl/container:flat_hash_map",

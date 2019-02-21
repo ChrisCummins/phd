@@ -2,7 +2,6 @@
 
 #include "phd/test.h"
 
-
 namespace phd {
 namespace {
 
@@ -72,9 +71,7 @@ TEST(CopyAndTrimTest, LeadingAndTrailingWhitespace) {
   EXPECT_EQ(CopyAndTrim(s), "hello");
 }
 
-TEST(ToCamelCase, EmptyString) {
-  EXPECT_EQ(ToCamelCase(""), "");
-}
+TEST(ToCamelCase, EmptyString) { EXPECT_EQ(ToCamelCase(""), ""); }
 
 TEST(ToCamelCase, Hello) {
   EXPECT_EQ(ToCamelCase("hello"), "Hello");
@@ -170,7 +167,7 @@ TEST(CopyAndReplaceSubstr, NoOccurrences) {
   EXPECT_EQ(CopyAndReplaceSubstr("bcdebc", "a", "b"), "bcdebc");
 }
 
-}  // namespace
-}  // namespace phd
+} // namespace
+} // namespace phd
 
 TEST_MAIN();

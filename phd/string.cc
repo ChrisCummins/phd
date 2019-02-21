@@ -11,60 +11,60 @@ namespace phd {
 
 // Trim a string from the left in-place.
 void TrimLeft(string &s) {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) {
-        return !std::isspace(ch);
-    }));
+  s.erase(s.begin(), std::find_if(s.begin(), s.end(),
+                                  [](int ch) { return !std::isspace(ch); }));
 }
 
 // Trim a string from the end in-place.
 void TrimRight(string &s) {
-    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
-        return !std::isspace(ch);
-    }).base(), s.end());
+  s.erase(std::find_if(s.rbegin(), s.rend(),
+                       [](int ch) { return !std::isspace(ch); })
+              .base(),
+          s.end());
 }
 
 // Trim a string from both ends in-place.
-string& Trim(string &s) {
-    TrimLeft(s);
-    TrimRight(s);
-    return s;
+string &Trim(string &s) {
+  TrimLeft(s);
+  TrimRight(s);
+  return s;
 }
 
 // Trim a string from the left.
 string CopyAndTrimLeft(string s) {
-    TrimLeft(s);
-    return s;
+  TrimLeft(s);
+  return s;
 }
 
 // Trim a string from the right.
 string CopyAndTrimRight(string s) {
-    TrimRight(s);
-    return s;
+  TrimRight(s);
+  return s;
 }
 
 // Trim a string from both ends.
 string CopyAndTrim(string s) {
-    Trim(s);
-    return s;
+  Trim(s);
+  return s;
 }
 
 // Returns whether full_string ends with suffix.
-bool EndsWith(const string& full_string, const string& suffix) {
+bool EndsWith(const string &full_string, const string &suffix) {
   if (full_string.length() >= suffix.length()) {
-    return full_string.compare(
-        full_string.length() - suffix.length(), suffix.length(), suffix) == 0;
+    return full_string.compare(full_string.length() - suffix.length(),
+                               suffix.length(), suffix) == 0;
   } else {
     return false;
   }
 }
 
 // Convert a string to CamelCase. E.g. "hello world" -> "HelloWorld".
-string ToCamelCase(const string& full_string) {
+string ToCamelCase(const string &full_string) {
   // Split string into a vector of space separated components.
-  auto split_on_whitespace = absl::StrSplit(
-      full_string, ' ');
-  std::vector<string> space_separated_components(
-      split_on_whitespace.begin(), split_on_whitespace.end());
+  auto split_on_whitespace = absl::StrSplit(full_string, ' ');
+  std::vector<string> space_separated_components;
+  for (auto &s : split_on_whitespace)
+    space_separated_components.push_back(string(s));
 
   string camel_case = "";
   for (auto component : space_separated_components) {
@@ -81,23 +81,24 @@ string ToCamelCase(const string& full_string) {
   return camel_case;
 }
 
-string ReplaceChar(string& s, const char src, const char dst) {
+string ReplaceChar(string &s, const char src, const char dst) {
   std::replace(s.begin(), s.end(), src, dst);
   return s;
 }
 
-string CopyAndReplaceChar(const string& s, const char src, const char dst) {
+string CopyAndReplaceChar(const string &s, const char src, const char dst) {
   string output_string(s);
   return ReplaceChar(output_string, src, dst);
 }
 
-string ReplaceSubstr(string& s, const string& src, const string& dst) {
+string ReplaceSubstr(string &s, const string &src, const string &dst) {
   boost::replace_all(s, src, dst);
   return s;
 }
 
-string CopyAndReplaceSubstr(const string& s, const string& src, const string& dst) {
+string CopyAndReplaceSubstr(const string &s, const string &src,
+                            const string &dst) {
   return boost::replace_all_copy(s, src, dst);
 }
 
-}  // namespace phd
+} // namespace phd

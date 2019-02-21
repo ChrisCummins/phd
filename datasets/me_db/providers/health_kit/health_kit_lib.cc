@@ -1,6 +1,6 @@
 #include "datasets/me_db/providers/health_kit/health_kit_lib.h"
 
-#include "phd/macros.h"
+#include "phd/logging.h"
 
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"
@@ -383,7 +383,7 @@ void ProcessHealthKitXmlExportOrDie(SeriesCollection* series_collection) {
   const boost::filesystem::path xml_path(series_collection->source());
 
   CHECK(boost::filesystem::is_regular_file(xml_path));
-  INFO("Reading from XML file %s", xml_path.string());
+  LOG(INFO) << "Reading from XML file " << xml_path.string();
 
   boost::filesystem::ifstream xml(xml_path);
   CHECK(xml.is_open());
