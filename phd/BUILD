@@ -79,6 +79,8 @@ cc_library(
         ":port",
         ":string",
         ":stringpiece",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_absl//absl/time",
     ],
 )
 
@@ -88,7 +90,6 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":port",
-        "//phd/private:macros_impl",
     ],
 )
 
