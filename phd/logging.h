@@ -32,7 +32,7 @@
 
 #include "phd/macros.h"
 #include "phd/port.h"
-// #include "phd/status.h"
+#include "phd/stringpiece.h"
 
 // ===================================================================
 // emulates google3/base/logging.h
@@ -40,8 +40,8 @@
 namespace phd {
 
 enum LogLevel {
-  LOGLEVEL_INFO,    // Informational.  This is never actually used by
-                    // libprotobuf.
+  LOGLEVEL_DEBUG,   // Debugging information.
+  LOGLEVEL_INFO,    // Informational.
   LOGLEVEL_WARNING, // Warns about issues that, although not technically a
                     // problem now, could cause problems in the future.  For
                     // example, a // warning will be printed when parsing a

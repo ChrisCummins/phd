@@ -71,11 +71,14 @@ cc_test(
 
 cc_library(
     name = "logging",
+    srcs = ["logging.cc"],
     hdrs = ["logging.h"],
     visibility = ["//visibility:public"],
     deps = [
         ":macros",
         ":port",
+        ":string",
+        ":stringpiece",
     ],
 )
 
@@ -156,9 +159,11 @@ cc_test(
 
 cc_library(
     name = "statusor",
+    srcs = ["statusor.cc"],
     hdrs = ["statusor.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":logging",
         ":status",
     ],
 )
@@ -195,7 +200,6 @@ cc_library(
     hdrs = ["stringpiece.h"],
     visibility = ["//visibility:public"],
     deps = [
-        ":logging",
         ":string",
     ],
 )
