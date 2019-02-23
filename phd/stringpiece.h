@@ -142,6 +142,7 @@
 #pragma once
 
 #include <assert.h>
+#include <cstring>
 #include <iosfwd>
 #include <limits>
 #include <stddef.h>
