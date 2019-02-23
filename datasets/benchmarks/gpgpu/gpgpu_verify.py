@@ -54,11 +54,11 @@ def main(argv: typing.List[str]):
 
     # Parse protobuf file to object
     benchmark_run = pbutil.FromFile(filename_abs, gpgpu_pb2.GpgpuBenchmarkRun())
-    
+
     # Parse domain data
     benchmark_suite = benchmark_run.benchmark_suite
     benchmark_name = benchmark_run.benchmark_name
-    device_type = benchmark_run.device.device_type
+    device_type = benchmark_run.run.device.device_type
 
     if '.' in benchmark_name:
       dataset_name = benchmark_name.split(".")[1]
@@ -66,7 +66,7 @@ def main(argv: typing.List[str]):
       dataset_name = benchmark_run.dataset_name
 
     kernel_names = set()
-    for kernel_invocation in benchmark_run.kernel_invocation:
+    for kernel_invocation in benchmark_run.run.kernel_invocation:
       kernel_names.add(kernel_invocation.kernel_name)
 
     for kernel_name in kernel_names:
