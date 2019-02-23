@@ -169,6 +169,15 @@ cc_library(
     ],
 )
 
+cc_test(
+    name = "statusor_test",
+    srcs = ["statusor_test.cc"],
+    deps = [
+        ":statusor",
+        "//phd:test",
+    ],
+)
+
 cc_library(
     name = "stl_util",
     hdrs = ["stl_util.h"],
