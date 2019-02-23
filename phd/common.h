@@ -63,61 +63,23 @@
 #include <TargetConditionals.h> // for TARGET_OS_IPHONE
 #endif
 
-#if defined(__ANDROID__) || defined(GOOGLE_PROTOBUF_OS_ANDROID) ||             \
-    (defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE) ||                         \
-    defined(GOOGLE_PROTOBUF_OS_IPHONE)
-#include <pthread.h>
+#ifdef __GNUC__
+// Provided at least since GCC 3.0.
+#define PREDICT_TRUE(x) (__builtin_expect(!!(x), 1))
+#else
+#define PREDICT_TRUE(x) (x)
+#endif
+
+#ifdef __GNUC__
+// Provided at least since GCC 3.0.
+#define PREDICT_FALSE(x) (__builtin_expect(x, 0))
+#else
+#define PREDICT_FALSE(x) (x)
 #endif
 
 namespace std {}
 
 namespace phd {
-namespace internal {
-
-// Some of these constants are macros rather than const ints so that they can
-// be used in #if directives.
-
-// The current version, represented as a single integer to make comparison
-// easier:  major * 10^6 + minor * 10^3 + micro
-#define GOOGLE_PROTOBUF_VERSION 3006001
-
-// A suffix string for alpha, beta or rc releases. Empty for stable releases.
-#define GOOGLE_PROTOBUF_VERSION_SUFFIX ""
-
-// The minimum library version which works with the current version of the
-// headers.
-#define GOOGLE_PROTOBUF_MIN_LIBRARY_VERSION 3006001
-
-// The minimum header version which works with the current version of
-// the library.  This constant should only be used by protoc's C++ code
-// generator.
-static const int kMinHeaderVersionForLibrary = 3006001;
-
-// The minimum protoc version which works with the current version of the
-// headers.
-#define GOOGLE_PROTOBUF_MIN_PROTOC_VERSION 3006001
-
-// The minimum header version which works with the current version of
-// protoc.  This constant should only be used in VerifyVersion().
-static const int kMinHeaderVersionForProtoc = 3006001;
-
-// Verifies that the headers and libraries are compatible.  Use the macro
-// below to call this.
-void VerifyVersion(int headerVersion, int minLibraryVersion,
-                   const char *filename);
-
-// Converts a numeric version number to a string.
-std::string VersionString(int version);
-
-} // namespace internal
-
-// Place this macro in your main() function (or somewhere before you attempt
-// to use the protobuf library) to verify that the version you link against
-// matches the headers you compiled against.  If a version mismatch is
-// detected, the process will abort.
-#define GOOGLE_PROTOBUF_VERIFY_VERSION                                         \
-  ::phd::internal::VerifyVersion(                                              \
-      GOOGLE_PROTOBUF_VERSION, GOOGLE_PROTOBUF_MIN_LIBRARY_VERSION, __FILE__)
 
 // ===================================================================
 // from google3/util/utf8/public/unilib.h
