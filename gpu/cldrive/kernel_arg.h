@@ -11,30 +11,38 @@ namespace cldrive {
 
 class KernelArg {
  public:
-  KernelArg(const cl::Context &context, cl::Kernel *kernel, size_t arg_index);
+  KernelArg(cl::Kernel *kernel, size_t arg_index);
 
   phd::Status Init();
 
-  std::unique_ptr<KernelArgValue> CreateRandom(
-      const DynamicParams &dynamic_params);
+  // Create a random value for this argument. If the argument is not supported,
+  // returns nullptr.
+  std::unique_ptr<KernelArgValue> MaybeCreateRandomValue(
+     const cl::Context& context, const DynamicParams &dynamic_params);
 
-  std::unique_ptr<KernelArgValue> CreateOnes(
-      const DynamicParams &dynamic_params);
+  // Create a "ones" value for this argument. If the argument is not supported,
+  // returns nullptr.
+  std::unique_ptr<KernelArgValue> MaybeCreateOnesValue(
+     const cl::Context& context, const DynamicParams &dynamic_params);
 
-  bool IsMutable() const;
+  // Address qualifier accessors.
+
+  bool IsGlobal() const;
+
+  bool IsLocal() const;
+
+  bool IsConstant() const;
+
+  bool IsPrivate() const;
 
   bool IsPointer() const;
 
+  const string& type_name() const;
+
  private:
-  cl::Context context_;
   cl::Kernel *kernel_;
   size_t arg_index_;
 
-  // One of:
-  //   CL_KERNEL_ARG_ADDRESS_GLOBAL
-  //   CL_KERNEL_ARG_ADDRESS_LOCAL
-  //   CL_KERNEL_ARG_ADDRESS_CONSTANT
-  //   CL_KERNEL_ARG_ADDRESS_PRIVATE
   cl_kernel_arg_address_qualifier address_;
   string type_name_;
   bool is_pointer_;

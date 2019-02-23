@@ -183,6 +183,7 @@ cc_test(
     deps = [
         ":kernel_arg",
         "//phd:test",
+        "//third_party/opencl",
         "//third_party/opencl:libOpenCL.so",
     ],
 )

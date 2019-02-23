@@ -26,12 +26,12 @@ CldriveKernelInstance::KernelInstanceOutcome KernelArgSet::Init() {
   // Create args.
   int num_mutable_args = 0;
   for (size_t i = 0; i < num_args; ++i) {
-    auto arg_driver = KernelArg(context_, kernel_, i);
+    auto arg_driver = KernelArg(kernel_, i);
     if (!arg_driver.Init().ok()) {
       // Early exit if argument is not supported.
       return LogErrorOutcome(CldriveKernelInstance::UNSUPPORTED_ARGUMENTS);
     }
-    if (arg_driver.IsMutable()) {
+    if (arg_driver.IsGlobal()) {
       ++num_mutable_args;
     }
     args_.push_back(std::move(arg_driver));
@@ -49,11 +49,11 @@ phd::Status KernelArgSet::SetRandom(const DynamicParams& dynamic_params,
                                     KernelArgValuesSet* values) {
   values->Clear();
   for (auto& arg : args_) {
-    auto value = arg.CreateRandom(dynamic_params);
+    auto value = arg.MaybeCreateRandomValue(context_, dynamic_params);
     if (value) {
       values->AddKernelArgValue(std::move(value));
     } else {
-      // CreateRandom() returns nullptr if the argument is not supported.
+      // MaybeCreateRandomValue() returns nullptr if the argument is not supported.
       return phd::Status::UNKNOWN;
     }
   }
@@ -64,11 +64,11 @@ phd::Status KernelArgSet::SetOnes(const DynamicParams& dynamic_params,
                                   KernelArgValuesSet* values) {
   values->Clear();
   for (auto& arg : args_) {
-    auto value = arg.CreateOnes(dynamic_params);
+    auto value = arg.MaybeCreateOnesValue(context_, dynamic_params);
     if (value) {
       values->AddKernelArgValue(std::move(value));
     } else {
-      // CreateRandom() returns nullptr if the argument is not supported.
+      // MaybeCreateRandomValue() returns nullptr if the argument is not supported.
       return phd::Status::UNKNOWN;
     }
   }

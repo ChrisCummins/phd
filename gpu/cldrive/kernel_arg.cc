@@ -6,11 +6,8 @@
 namespace gpu {
 namespace cldrive {
 
-KernelArg::KernelArg(const cl::Context &context, cl::Kernel *kernel,
-                     size_t arg_index)
-    : context_(context),
-      kernel_(kernel),
-      arg_index_(arg_index),
+KernelArg::KernelArg(cl::Kernel *kernel, size_t arg_index)
+    : kernel_(kernel), arg_index_(arg_index),
       address_(kernel->getArgInfo<CL_KERNEL_ARG_ADDRESS_QUALIFIER>(arg_index)) {
   string full_type_name =
       kernel->getArgInfo<CL_KERNEL_ARG_TYPE_NAME>(arg_index);
@@ -23,6 +20,8 @@ KernelArg::KernelArg(const cl::Context &context, cl::Kernel *kernel,
   } else {
     type_name_ = full_type_name;
   }
+
+  CHECK(IsGlobal() || IsLocal() || IsConstant() || IsPrivate());
 }
 
 phd::Status KernelArg::Init() {
@@ -45,11 +44,11 @@ phd::Status KernelArg::Init() {
   return phd::Status::OK;
 }
 
-std::unique_ptr<KernelArgValue> KernelArg::CreateRandom(
-    const DynamicParams &dynamic_params) {
-  if (IsMutable()) {
+std::unique_ptr<KernelArgValue> KernelArg::MaybeCreateRandomValue(
+const cl::Context& context, const DynamicParams &dynamic_params) {
+  if (IsGlobal()) {
     auto arg_buffer = std::make_unique<ArrayKernelArgValueWithBuffer<int>>(
-        context_, dynamic_params.global_size_x());
+        context, dynamic_params.global_size_x());
     for (size_t i = 0; i < dynamic_params.global_size_x(); ++i) {
       arg_buffer->vector()[i] = rand();
     }
@@ -61,15 +60,15 @@ std::unique_ptr<KernelArgValue> KernelArg::CreateRandom(
   }
 }
 
-std::unique_ptr<KernelArgValue> KernelArg::CreateOnes(
-    const DynamicParams &dynamic_params) {
-  if (IsMutable()) {
+std::unique_ptr<KernelArgValue> KernelArg::MaybeCreateOnesValue(
+  const cl::Context& context, const DynamicParams &dynamic_params) {
+  if (IsGlobal()) {
     if (type_name_.compare("int")) {
       return std::make_unique<ArrayKernelArgValueWithBuffer<int>>(
-          context_, dynamic_params.global_size_x(), 1);
+          context, dynamic_params.global_size_x(), 1);
     } else if (type_name_.compare("float")) {
       return std::make_unique<ArrayKernelArgValueWithBuffer<float>>(
-          context_, dynamic_params.global_size_x(), 1);
+          context, dynamic_params.global_size_x(), 1);
     } else {
     }
   } else {
@@ -78,8 +77,25 @@ std::unique_ptr<KernelArgValue> KernelArg::CreateOnes(
   }
 }
 
-bool KernelArg::IsMutable() const {
+bool KernelArg::IsGlobal() const {
   return address_ == CL_KERNEL_ARG_ADDRESS_GLOBAL;
+}
+
+bool KernelArg::IsLocal() const {
+  return address_ == CL_KERNEL_ARG_ADDRESS_LOCAL;
+}
+
+bool KernelArg::IsConstant() const {
+  return address_ == CL_KERNEL_ARG_ADDRESS_CONSTANT;
+}
+
+bool KernelArg::IsPrivate() const {
+  return address_ == CL_KERNEL_ARG_ADDRESS_PRIVATE;
+}
+
+
+const string& KernelArg::type_name() const {
+  return type_name_;
 }
 
 bool KernelArg::IsPointer() const { return is_pointer_; }
