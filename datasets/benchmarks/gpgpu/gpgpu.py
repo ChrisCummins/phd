@@ -563,7 +563,9 @@ class ParboilBenchmarkSuite(_BenchmarkSuite):
 
     # Due to the large size of parboil benchmarks (> 900 MB uncompressed), we
     # ship compressed archives with per-benchmark datasets. These must be
-    # decompressed. This must be done prior to building.
+    # decompressed. This must be done prior to building. Once decompressed,
+    # we remove the compressed archives so that the unpacked archives are
+    # re-used for the lifetime of this object.
     with fs.chdir(self.path / f'datasets'):
       for benchmark in self.benchmarks:
         dataset_archive = self.path / f'datasets/{benchmark}.tar.bz2'
@@ -578,7 +580,8 @@ class ParboilBenchmarkSuite(_BenchmarkSuite):
           pathlib.Path(f'{dataset_archive}.part2').unlink()
           CheckCall(['tar', 'xjvf', dataset_archive])
 
-        dataset_archive.unlink()
+        if dataset_archive.is_file():
+          dataset_archive.unlink()
 
     CheckCall(['find', self.path, '-name', '*.o', '-delete'])
     with MakeEnv(self.path) as env:
