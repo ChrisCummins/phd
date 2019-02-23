@@ -1,26 +1,26 @@
 #pragma once
 
-#include "gpu/cldrive/kernel_values.h"
+#include "gpu/cldrive/kernel_arg_value.h"
 
 #include "third_party/opencl/include/cl.hpp"
 
 namespace gpu {
 namespace cldrive {
 
-class KernelValuesSet {
+class KernelArgValuesSet {
  public:
-  bool operator==(const KernelValuesSet &rhs) const;
+  bool operator==(const KernelArgValuesSet &rhs) const;
 
-  bool operator!=(const KernelValuesSet &rhs) const;
+  bool operator!=(const KernelArgValuesSet &rhs) const;
 
   void CopyToDevice(const cl::CommandQueue &queue,
                     ProfilingData *profiling) const;
 
   void CopyFromDeviceToNewValueSet(const cl::CommandQueue &queue,
-                                   KernelValuesSet *new_values,
+                                   KernelArgValuesSet *new_values,
                                    ProfilingData *profiling) const;
 
-  void AddKernelValue(std::unique_ptr<KernelValue> value);
+  void AddKernelArgValue(std::unique_ptr<KernelArgValue> value);
 
   void SetAsArgs(cl::Kernel *kernel);
 
@@ -29,7 +29,7 @@ class KernelValuesSet {
   string ToString() const;
 
  private:
-  std::vector<std::unique_ptr<KernelValue>> values_;
+  std::vector<std::unique_ptr<KernelArgValue>> values_;
 };
 
 }  // namespace cldrive

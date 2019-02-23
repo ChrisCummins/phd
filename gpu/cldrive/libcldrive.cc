@@ -4,8 +4,8 @@
 
 #include "gpu/cldrive/libcldrive.h"
 
+#include "gpu/cldrive/kernel_arg_value.h"
 #include "gpu/cldrive/kernel_driver.h"
-#include "gpu/cldrive/kernel_values.h"
 #include "gpu/clinfo/libclinfo.h"
 
 #include "phd/logging.h"

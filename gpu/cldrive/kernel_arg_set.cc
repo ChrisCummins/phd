@@ -1,6 +1,7 @@
 #include "gpu/cldrive/kernel_arg_set.h"
 
 #include "phd/logging.h"
+#include "phd/status_macros.h"
 
 namespace gpu {
 namespace cldrive {
@@ -44,20 +45,34 @@ CldriveKernelInstance::KernelInstanceOutcome KernelArgSet::Init() {
   return CldriveKernelInstance::PASS;
 }
 
-void KernelArgSet::SetRandom(const DynamicParams& dynamic_params,
-                             KernelValuesSet* values) {
+phd::Status KernelArgSet::SetRandom(const DynamicParams& dynamic_params,
+                                    KernelArgValuesSet* values) {
   values->Clear();
   for (auto& arg : args_) {
-    values->AddKernelValue(arg.CreateRandom(dynamic_params));
+    auto value = arg.CreateRandom(dynamic_params);
+    if (value) {
+      values->AddKernelArgValue(std::move(value));
+    } else {
+      // CreateRandom() returns nullptr if the argument is not supported.
+      return phd::Status::UNKNOWN;
+    }
   }
+  return phd::Status::OK;
 }
 
-void KernelArgSet::SetOnes(const DynamicParams& dynamic_params,
-                           KernelValuesSet* values) {
+phd::Status KernelArgSet::SetOnes(const DynamicParams& dynamic_params,
+                                  KernelArgValuesSet* values) {
   values->Clear();
   for (auto& arg : args_) {
-    values->AddKernelValue(arg.CreateOnes(dynamic_params));
+    auto value = arg.CreateOnes(dynamic_params);
+    if (value) {
+      values->AddKernelArgValue(std::move(value));
+    } else {
+      // CreateRandom() returns nullptr if the argument is not supported.
+      return phd::Status::UNKNOWN;
+    }
   }
+  return phd::Status::OK;
 }
 
 }  // namespace cldrive

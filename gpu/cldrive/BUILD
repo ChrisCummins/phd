@@ -9,6 +9,27 @@ exports_files([
     "LICENSE",
 ])
 
+cc_library(
+    name = "array_kernel_arg_value",
+    hdrs = ["array_kernel_arg_value.h"],
+    deps = [
+        ":kernel_arg_value",
+        "//phd:logging",
+        "//phd:string",
+        "//third_party/opencl",
+    ],
+)
+
+cc_test(
+    name = "array_kernel_arg_value_test",
+    srcs = ["array_kernel_arg_value_test.cc"],
+    deps = [
+        ":array_kernel_arg_value",
+        "//phd:test",
+        "//third_party/opencl:libOpenCL.so",
+    ],
+)
+
 py_binary(
     name = "cldrive",
     srcs = ["cldrive.py"],
@@ -24,13 +45,13 @@ py_binary(
     ],
 )
 
-py3_image(
-    name = "cldrive_image",
-    srcs = ["cldrive.py"],
-    base = "@base//image",
-    main = "cldrive.py",
-    deps = [":cldrive"],
-)
+# py3_image(
+#     name = "cldrive_image",
+#     srcs = ["cldrive.py"],
+#     base = "@base//image",
+#     main = "cldrive.py",
+#     deps = [":cldrive"],
+# )
 
 py_library(
     name = "args",
@@ -146,10 +167,23 @@ cc_library(
     srcs = ["kernel_arg.cc"],
     hdrs = ["kernel_arg.h"],
     deps = [
-        ":kernel_values",
+        ":array_kernel_arg_value",
+        ":kernel_arg_value",
+        ":scalar_kernel_arg_value",
         "//gpu/cldrive/proto:cldrive_cc_pb2",
         "//phd:status",
+        "//phd:statusor",
         "//third_party/opencl",
+    ],
+)
+
+cc_test(
+    name = "kernel_arg_test",
+    srcs = ["kernel_arg_test.cc"],
+    deps = [
+        ":kernel_arg",
+        "//phd:test",
+        "//third_party/opencl:libOpenCL.so",
     ],
 )
 
@@ -159,10 +193,22 @@ cc_library(
     hdrs = ["kernel_arg_set.h"],
     deps = [
         ":kernel_arg",
-        ":kernel_values_set",
+        ":kernel_arg_values_set",
         "//gpu/cldrive/proto:cldrive_cc_pb2",
         "//phd:logging",
+        "//phd:status",
+        "//phd:status_macros",
         "//third_party/opencl",
+    ],
+)
+
+cc_test(
+    name = "kernel_arg_set_test",
+    srcs = ["kernel_arg_set_test.cc"],
+    deps = [
+        ":kernel_arg_set",
+        "//phd:test",
+        "//third_party/opencl:libOpenCL.so",
     ],
 )
 
@@ -173,15 +219,28 @@ cc_library(
     deps = [
         ":kernel_arg_set",
         "//gpu/cldrive/proto:cldrive_cc_pb2",
+        "//phd:logging",
+        "//phd:status_macros",
+        "//phd:statusor",
         "//phd:string",
         "//third_party/opencl",
     ],
 )
 
+cc_test(
+    name = "kernel_driver_test",
+    srcs = ["kernel_driver_test.cc"],
+    deps = [
+        ":kernel_driver",
+        "//phd:test",
+        "//third_party/opencl:libOpenCL.so",
+    ],
+)
+
 cc_library(
-    name = "kernel_values",
-    srcs = ["kernel_values.cc"],
-    hdrs = ["kernel_values.h"],
+    name = "kernel_arg_value",
+    srcs = ["kernel_arg_value.cc"],
+    hdrs = ["kernel_arg_value.h"],
     deps = [
         ":opencl_util",
         ":profiling_data",
@@ -194,24 +253,36 @@ cc_library(
 )
 
 cc_test(
-    name = "kernel_values_test",
-    srcs = ["kernel_values_test.cc"],
+    name = "kernel_arg_values_test",
+    srcs = ["kernel_arg_values_test.cc"],
     deps = [
-        ":kernel_values",
+        ":kernel_arg_value",
+        "//phd:port",
         "//phd:test",
         "//third_party/opencl:libOpenCL.so",
     ],
 )
 
 cc_library(
-    name = "kernel_values_set",
-    srcs = ["kernel_values_set.cc"],
-    hdrs = ["kernel_values_set.h"],
+    name = "kernel_arg_values_set",
+    srcs = ["kernel_arg_values_set.cc"],
+    hdrs = ["kernel_arg_values_set.h"],
     deps = [
-        ":kernel_values",
+        ":kernel_arg_value",
+        "//phd:logging",
         "//third_party/opencl",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
+    ],
+)
+
+cc_test(
+    name = "kernel_arg_values_set_test",
+    srcs = ["kernel_arg_values_set_test.cc"],
+    deps = [
+        ":kernel_arg_values_set",
+        "//phd:test",
+        "//third_party/opencl:libOpenCL.so",
     ],
 )
 
@@ -221,9 +292,9 @@ cc_library(
     hdrs = ["libcldrive.h"],
     deps = [
         ":kernel_arg_set",
+        ":kernel_arg_value",
+        ":kernel_arg_values_set",
         ":kernel_driver",
-        ":kernel_values",
-        ":kernel_values_set",
         "//gpu/cldrive/proto:cldrive_cc_pb2",
         "//gpu/clinfo:libclinfo",
         "//phd:common",
@@ -233,6 +304,38 @@ cc_library(
         "//third_party/opencl",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
+    ],
+)
+
+cc_test(
+    name = "libcldrive_test",
+    srcs = ["libcldrive_test.cc"],
+    deps = [
+        ":libcldrive",
+        "//phd:test",
+        "//third_party/opencl:libOpenCL.so",
+    ],
+)
+
+cc_library(
+    name = "scalar_kernel_arg_value",
+    srcs = ["scalar_kernel_arg_value.cc"],
+    hdrs = ["scalar_kernel_arg_value.h"],
+    deps = [
+        ":kernel_arg_value",
+        "//phd:logging",
+        "//phd:string",
+        "//third_party/opencl",
+    ],
+)
+
+cc_test(
+    name = "scalar_kernel_arg_value_test",
+    srcs = ["scalar_kernel_arg_value_test.cc"],
+    deps = [
+        ":scalar_kernel_arg_value",
+        "//phd:test",
+        "//third_party/opencl:libOpenCL.so",
     ],
 )
 
@@ -264,6 +367,16 @@ cc_library(
     ],
 )
 
+cc_test(
+    name = "opencl_util_test",
+    srcs = ["opencl_util_test.cc"],
+    deps = [
+        ":opencl_util",
+        "//phd:test",
+        "//third_party/opencl:libOpenCL.so",
+    ],
+)
+
 cc_library(
     name = "profiling_data",
     srcs = ["profiling_data.cc"],
@@ -271,5 +384,15 @@ cc_library(
     deps = [
         "//phd:port",
         "//third_party/opencl",
+    ],
+)
+
+cc_test(
+    name = "profiling_data_test",
+    srcs = ["profiling_data_test.cc"],
+    deps = [
+        ":profiling_data",
+        "//phd:test",
+        "//third_party/opencl:libOpenCL.so",
     ],
 )

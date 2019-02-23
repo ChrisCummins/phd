@@ -1,5 +1,8 @@
 #include "gpu/cldrive/kernel_driver.h"
 
+#include "phd/logging.h"
+#include "phd/status_macros.h"
+
 namespace gpu {
 namespace cldrive {
 
@@ -28,13 +31,19 @@ void KernelDriver::RunOrDie() {
   }
 
   for (size_t i = 0; i < instance_->dynamic_params_size(); ++i) {
-    *kernel_instance_->add_run() =
-        CreateRunForParamsOrDie(instance_->dynamic_params(i),
-                                /*output_checks=*/!i);
+    auto run = CreateRunForParamsOrDie(instance_->dynamic_params(i),
+                                       /*output_checks=*/!i);
+    if (run.ok()) {
+      *kernel_instance_->add_run() = run.ValueOrDie();
+    } else {
+      kernel_instance_->clear_run();
+      kernel_instance_->set_outcome(
+          CldriveKernelInstance::UNSUPPORTED_ARGUMENTS);
+    }
   }
 }
 
-CldriveKernelRun KernelDriver::CreateRunForParamsOrDie(
+phd::StatusOr<CldriveKernelRun> KernelDriver::CreateRunForParamsOrDie(
     const DynamicParams& dynamic_params, const bool output_checks) {
   CldriveKernelRun run;
 
@@ -45,11 +54,11 @@ CldriveKernelRun KernelDriver::CreateRunForParamsOrDie(
     return run;
   }
 
-  KernelValuesSet inputs;
-  args_set_.SetOnes(dynamic_params, &inputs);
+  KernelArgValuesSet inputs;
+  RETURN_IF_ERROR(args_set_.SetOnes(dynamic_params, &inputs));
   inputs.SetAsArgs(&kernel_);
 
-  KernelValuesSet output_a, output_b;
+  KernelArgValuesSet output_a, output_b;
 
   *run.add_log() = RunOnceOrDie(dynamic_params, inputs, &output_a);
   *run.add_log() = RunOnceOrDie(dynamic_params, inputs, &output_b);
@@ -62,7 +71,7 @@ CldriveKernelRun KernelDriver::CreateRunForParamsOrDie(
 
   bool maybe_no_output = output_a == inputs;
 
-  args_set_.SetRandom(dynamic_params, &inputs);
+  CHECK(args_set_.SetRandom(dynamic_params, &inputs).ok());
   inputs.SetAsArgs(&kernel_);
   *run.add_log() = RunOnceOrDie(dynamic_params, inputs, &output_b);
 
@@ -87,8 +96,8 @@ CldriveKernelRun KernelDriver::CreateRunForParamsOrDie(
 }
 
 gpu::libcecl::OpenClKernelInvocation KernelDriver::RunOnceOrDie(
-    const DynamicParams& dynamic_params, const KernelValuesSet& inputs,
-    KernelValuesSet* outputs) {
+    const DynamicParams& dynamic_params, const KernelArgValuesSet& inputs,
+    KernelArgValuesSet* outputs) {
   LOG(INFO) << "KernelDriver::RunOnceOrDie(" << dynamic_params.local_size_x()
             << "," << dynamic_params.global_size_x() << ")";
   gpu::libcecl::OpenClKernelInvocation log;

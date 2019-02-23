@@ -1,5 +1,8 @@
 #include "gpu/cldrive/kernel_arg.h"
 
+#include "gpu/cldrive/array_kernel_arg_value.h"
+#include "gpu/cldrive/scalar_kernel_arg_value.h"
+
 namespace gpu {
 namespace cldrive {
 
@@ -42,10 +45,10 @@ phd::Status KernelArg::Init() {
   return phd::Status::OK;
 }
 
-std::unique_ptr<KernelValue> KernelArg::CreateRandom(
+std::unique_ptr<KernelArgValue> KernelArg::CreateRandom(
     const DynamicParams &dynamic_params) {
   if (IsMutable()) {
-    auto arg_buffer = std::make_unique<ArrayValueWithBuffer<int>>(
+    auto arg_buffer = std::make_unique<ArrayKernelArgValueWithBuffer<int>>(
         context_, dynamic_params.global_size_x());
     for (size_t i = 0; i < dynamic_params.global_size_x(); ++i) {
       arg_buffer->vector()[i] = rand();
@@ -53,19 +56,24 @@ std::unique_ptr<KernelValue> KernelArg::CreateRandom(
     // TODO(cec): Populate with random values.
     return std::move(arg_buffer);
   } else {
-    return std::make_unique<ScalarKernelArg<int>>(
+    return std::make_unique<ScalarKernelArgValue<int>>(
         dynamic_params.global_size_x());
   }
 }
 
-std::unique_ptr<KernelValue> KernelArg::CreateOnes(
+std::unique_ptr<KernelArgValue> KernelArg::CreateOnes(
     const DynamicParams &dynamic_params) {
   if (IsMutable()) {
-    auto arg_buffer = std::make_unique<ArrayValueWithBuffer<int>>(
-        context_, dynamic_params.global_size_x(), 1);
-    return std::move(arg_buffer);
+    if (type_name_.compare("int")) {
+      return std::make_unique<ArrayKernelArgValueWithBuffer<int>>(
+          context_, dynamic_params.global_size_x(), 1);
+    } else if (type_name_.compare("float")) {
+      return std::make_unique<ArrayKernelArgValueWithBuffer<float>>(
+          context_, dynamic_params.global_size_x(), 1);
+    } else {
+    }
   } else {
-    return std::make_unique<ScalarKernelArg<int>>(
+    return std::make_unique<ScalarKernelArgValue<int>>(
         dynamic_params.global_size_x());
   }
 }

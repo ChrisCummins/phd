@@ -1,8 +1,9 @@
 #pragma once
 
-#include "gpu/cldrive/kernel_values.h"
+#include "gpu/cldrive/kernel_arg_value.h"
 #include "gpu/cldrive/proto/cldrive.pb.h"
 #include "phd/status.h"
+#include "phd/statusor.h"
 #include "third_party/opencl/include/cl.hpp"
 
 namespace gpu {
@@ -14,10 +15,11 @@ class KernelArg {
 
   phd::Status Init();
 
-  std::unique_ptr<KernelValue> CreateRandom(
+  std::unique_ptr<KernelArgValue> CreateRandom(
       const DynamicParams &dynamic_params);
 
-  std::unique_ptr<KernelValue> CreateOnes(const DynamicParams &dynamic_params);
+  std::unique_ptr<KernelArgValue> CreateOnes(
+      const DynamicParams &dynamic_params);
 
   bool IsMutable() const;
 

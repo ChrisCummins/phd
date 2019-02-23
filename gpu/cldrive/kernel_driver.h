@@ -2,6 +2,7 @@
 
 #include "gpu/cldrive/kernel_arg_set.h"
 #include "gpu/cldrive/proto/cldrive.pb.h"
+#include "phd/statusor.h"
 #include "phd/string.h"
 #include "third_party/opencl/include/cl.hpp"
 
@@ -15,12 +16,12 @@ class KernelDriver {
 
   void RunOrDie();
 
-  CldriveKernelRun CreateRunForParamsOrDie(const DynamicParams& dynamic_params,
-                                           const bool output_checks);
+  phd::StatusOr<CldriveKernelRun> CreateRunForParamsOrDie(
+      const DynamicParams& dynamic_params, const bool output_checks);
 
   gpu::libcecl::OpenClKernelInvocation RunOnceOrDie(
-      const DynamicParams& dynamic_params, const KernelValuesSet& inputs,
-      KernelValuesSet* outputs);
+      const DynamicParams& dynamic_params, const KernelArgValuesSet& inputs,
+      KernelArgValuesSet* outputs);
 
  private:
   cl::Context context_;

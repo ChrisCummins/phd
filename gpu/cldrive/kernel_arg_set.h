@@ -1,8 +1,9 @@
 #pragma once
 
 #include "gpu/cldrive/kernel_arg.h"
-#include "gpu/cldrive/kernel_values_set.h"
+#include "gpu/cldrive/kernel_arg_values_set.h"
 #include "gpu/cldrive/proto/cldrive.pb.h"
+#include "phd/status.h"
 #include "third_party/opencl/include/cl.hpp"
 
 namespace gpu {
@@ -17,9 +18,11 @@ class KernelArgSet {
 
   CldriveKernelInstance::KernelInstanceOutcome Init();
 
-  void SetRandom(const DynamicParams& dynamic_params, KernelValuesSet* values);
+  phd::Status SetRandom(const DynamicParams& dynamic_params,
+                        KernelArgValuesSet* values);
 
-  void SetOnes(const DynamicParams& dynamic_params, KernelValuesSet* values);
+  phd::Status SetOnes(const DynamicParams& dynamic_params,
+                      KernelArgValuesSet* values);
 
  private:
   cl::Context context_;
