@@ -3,8 +3,8 @@ py_binary(
     srcs = ["drive_with_cldrive.py"],
     deps = [
         "//experimental/deeplearning/clgen/closeness_to_grewe_features:grewe_features_db",
-        "//gpu/cldrive:env",
         "//gpu/cldrive:driver",
+        "//gpu/cldrive:env",
         "//labm8:system",
         "//labm8:text",
         "//research/cummins_2017_cgo:opencl_kernel_driver",
