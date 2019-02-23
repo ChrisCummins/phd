@@ -1,4 +1,4 @@
-#include "gpu/cldrive/native_driver_lib.h"
+#include "gpu/cldrive/libcldrive.h"
 #include "gpu/cldrive/proto/cldrive.pb.h"
 
 #include "phd/pbutil.h"

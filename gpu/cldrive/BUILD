@@ -204,6 +204,27 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "libcldrive",
+    srcs = ["libcldrive.cc"],
+    hdrs = ["libcldrive.h"],
+    deps = [
+        ":kernel_arg_set",
+        ":kernel_driver",
+        ":kernel_values",
+        ":kernel_values_set",
+        "//gpu/cldrive/proto:cldrive_cc_pb2",
+        "//gpu/clinfo:libclinfo",
+        "//phd:common",
+        "//phd:logging",
+        "//phd:macros",
+        "//phd:statusor",
+        "//third_party/opencl",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
+    ],
+)
+
 py_library(
     name = "testlib",
     testonly = 1,
@@ -217,38 +238,18 @@ cc_binary(
     name = "native_driver",
     srcs = ["native_driver.cc"],
     deps = [
-        ":native_driver_lib",
+        ":libcldrive",
         "//gpu/cldrive/proto:cldrive_cc_pb2",
         "//phd:pbutil",
     ],
 )
 
 cc_library(
-    name = "native_driver_lib",
-    srcs = ["native_driver_lib.cc"],
-    hdrs = ["native_driver_lib.h"],
-    deps = [
-        ":kernel_arg_set",
-        ":kernel_driver",
-        ":kernel_values",
-        ":kernel_values_set",
-        "//gpu/cldrive/proto:cldrive_cc_pb2",
-        "//gpu/clinfo:libclinfo",
-        "//phd:common",
-        "//phd:logging",
-        "//phd:macros",
-        "//phd:statusor",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/strings:str_format",
-    ],
-)
-
-cc_library(
     name = "profiling_data",
-    hdrs = ["profiling_data.h"],
     srcs = ["profiling_data.cc"],
+    hdrs = ["profiling_data.h"],
     deps = [
-        "//third_party/opencl",
         "//phd:port",
+        "//third_party/opencl",
     ],
 )

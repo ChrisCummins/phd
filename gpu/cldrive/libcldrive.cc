@@ -1,15 +1,19 @@
 // TODO(cec): A VERY work-in-progress re-implementation of cldrive in C++.
 
-#include "gpu/cldrive/native_driver_lib.h"
+#define __CL_ENABLE_EXCEPTIONS
+
+#include "gpu/cldrive/libcldrive.h"
 
 #include "gpu/cldrive/kernel_driver.h"
 #include "gpu/cldrive/kernel_values.h"
+#include "gpu/clinfo/libclinfo.h"
 
 #include "phd/logging.h"
 #include "phd/status.h"
 #include "phd/statusor.h"
 
 #include "absl/strings/str_format.h"
+#include "third_party/opencl/include/cl.hpp"
 
 #define LOG_CL_ERROR(level, error)                                  \
   LOG(level) << "OpenCL exception: " << error.what() << ", error: " \
@@ -41,7 +45,7 @@ class Cldrive {
       : instance_(instance),
         device_(phd::gpu::clinfo::GetOpenClDeviceOrDie(instance->device())),
         context_(device_),
-        queue_(context_, context_.getInfo<CL_CONTEXT_DEVICES>()[0],
+        queue_(context_, /*devices=*/context_.getInfo<CL_CONTEXT_DEVICES>()[0],
                /*properties=*/CL_QUEUE_PROFILING_ENABLE) {}
 
   void RunOrDie() {
