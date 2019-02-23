@@ -192,6 +192,16 @@ cc_library(
     ],
 )
 
+cc_test(
+    name = "kernel_values_test",
+    srcs = ["kernel_values_test.cc"],
+    deps = [
+        ":kernel_values",
+        "//phd:test",
+        "//third_party/opencl:libOpenCL.so",
+    ],
+)
+
 cc_library(
     name = "kernel_values_set",
     srcs = ["kernel_values_set.cc"],
