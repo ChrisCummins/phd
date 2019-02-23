@@ -13,7 +13,6 @@ from gpu.cldrive import env as cldrive_env
 from gpu.cldrive import driver
 from labm8 import system
 from labm8 import text
-from labm8 import labtypes
 from research.cummins_2017_cgo import opencl_kernel_driver
 
 
@@ -85,18 +84,44 @@ def GetBatchOfKernelsToDrive(db: grewe_features_db.Database,
         return [KernelToDrive(*row) for row in q]
 
 
-def ExperimentalNativeDriver(opencl_kernel, lsize=lsize, gsize=gsize,
+def ExperimentalNativeDriver(opencl_kernel,
                              env: cldrive_env.OpenCLEnvironment,
                              num_runs: int):
-  """ """
-  instance = driver.Drive(cldrive_pb2.CldriveInstance(
+  instance = driver.DriveInstance(cldrive_pb2.CldriveInstance(
       device=env.proto,
       opencl_src=opencl_kernel,
       min_runs_per_kernel=num_runs,
       dynamic_params=LSIZE_GSIZE_PROTO_PAIRS,
   ))
-  return labtypes.flatten(
-      run.log for run in (kernel for kernel in instance.kernel))
+  for kernel in instance.kernel:
+    for run in kernel.run:
+      for log in run.log:
+        yield log
+
+
+def ExperimentalNativeDriveBatchAndRecordResults(db: grewe_features_db.Database,
+    batch: typing.List[KernelToDrive],
+    env: cldrive_env.OpenCLEnvironment) -> None:
+  """Work in progress port to native cldrive implementation."""
+  for static_features_id, opencl_kernel in batch:
+    logs = list(ExperimentalNativeDriver(
+        opencl_kernel, env=env,
+        num_runs=FLAGS.num_runs))
+    logging.info('%d logs', len(logs))
+    if logs:
+      with db.Session(commit=True) as session:
+        session.add_all([
+          grewe_features_db.DynamicFeatures(
+              static_features_id=static_features_id,
+              opencl_env=env.name,
+              hostname=system.HOSTNAME,
+              dataset=f'{log.kernel_invocation[0].global_size},{log.kernel_invocation[0].local_size}',
+              gsize=log.kernel_invocation[0].global_size,
+              wgsize=log.kernel_invocation[0].local_size,
+              transferred_bytes=log.kernel_invocation[0].transferred_bytes,
+              runtime_ms=log.kernel_invocation[0].runtime_ms,
+          ) for log in logs
+        ])
 
 
 def DriveBatchAndRecordResults(
@@ -108,15 +133,11 @@ def DriveBatchAndRecordResults(
       dataset = f'{lsize},{gsize}'
 
       try:
-        if FLAGS.experimental_native_opencl_driver:
-          ExperimentalNativeDriver(opencl_kernel, lsize=lsize, gsize=gsize,
-                                   env=env, num_runs=FLAGS.num_runs)
-        else:
-          logs = opencl_kernel_driver.Drive(
-              opencl_kernel, lsize_x=lsize, gsize_x=gsize, opencl_env=env,
-              num_runs=FLAGS.num_runs)
-        logging.info('%d:%s PASS', static_features_id, dataset)
+        logs = opencl_kernel_driver.Drive(
+            opencl_kernel, lsize_x=lsize, gsize_x=gsize, opencl_env=env,
+            num_runs=FLAGS.num_runs)
         assert len(logs) == FLAGS.num_runs
+        logging.info('%d:%s PASS', static_features_id, dataset)
         with db.Session(commit=True) as session:
           session.add(grewe_features_db.DriverResult(
               static_features_id=static_features_id,
@@ -168,7 +189,10 @@ def main(argv: typing.List[str]):
       logging.info('Done. Nothing more to run!')
       return
 
-    DriveBatchAndRecordResults(db, batch, env)
+    if FLAGS.experimental_native_opencl_driver:
+      ExperimentalNativeDriveBatchAndRecordResults(db, batch, env)
+    else:
+      DriveBatchAndRecordResults(db, batch, env)
 
 
 if __name__ == '__main__':
