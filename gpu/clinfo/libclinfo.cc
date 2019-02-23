@@ -9,6 +9,7 @@
 #include <stdexcept>
 
 #include "gpu/clinfo/libclinfo.h"
+#include "phd/logging.h"
 
 namespace phd {
 
@@ -160,9 +161,9 @@ const char *OpenClErrorString(cl_int err) {
   }
 }
 
-void OpenClCheckError(const char *api_call, cl_int err) {
+void OpenClCheckError(const string& api_call, cl_int err) {
   if (err != CL_SUCCESS) {
-    fprintf(stderr, "%s %s\\n", api_call, OpenClErrorString(err));
+    fprintf(stderr, "%s %s\\n", api_call.c_str(), OpenClErrorString(err));
     exit(1);
   }
 }
@@ -272,7 +273,7 @@ void SetOpenClDevice(const cl::Platform &platform, const cl::Device &device,
 ::gpu::clinfo::OpenClDevice GetOpenClDevice(const int platform_id,
                                             const int device_id) {
   ::gpu::clinfo::OpenClDevice message;
-  std::vector <cl::Platform> platforms;
+  std::vector<cl::Platform> platforms;
   cl::Platform::get(&platforms);
   std::vector <cl::Device> devices;
   int cur_platform = 0;
@@ -292,6 +293,43 @@ void SetOpenClDevice(const cl::Platform &platform, const cl::Device &device,
     ++cur_platform;
   }
   throw std::invalid_argument("Platform and device ID not found");
+}
+
+cl::Device GetOpenClDevice(const ::gpu::clinfo::OpenClDevice& device_proto) {
+  string platform_name, device_name, driver_version, opencl_version;
+
+  std::vector<cl::Platform> platforms;
+  cl::Platform::get(&platforms);
+  for (const auto& platform : platforms) {
+    platform.getInfo(CL_PLATFORM_NAME, &platform_name);
+    if (!platform_name.compare(device_proto.platform_name())) {
+      LOG(DEBUG) << "Platform " << platform_name << " != "
+                 << device_proto.platform_name();
+      continue;
+    }
+
+    std::vector<cl::Device> devices;
+    platform.getDevices(CL_DEVICE_TYPE_ALL, &devices);
+    for (const auto& device : devices) {
+      device.getInfo(CL_DEVICE_NAME, &device_name);
+      if (!device_name.compare(device_proto.device_name())) {
+        LOG(DEBUG) << "Device " << device_name << " != "
+                   << device_proto.device_name();
+        continue;
+      }
+
+      device.getInfo(CL_DRIVER_VERSION, &driver_version);
+      if (!driver_version.compare(device_proto.driver_version())) {
+        LOG(DEBUG) << "Driver " << driver_version << " != "
+                   << device_proto.driver_version();
+        continue;
+      }
+
+      return device;
+    }
+  }
+
+  throw std::invalid_argument("Device not found");
 }
 
 }  // namespace clinfo

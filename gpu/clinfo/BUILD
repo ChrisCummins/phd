@@ -17,9 +17,12 @@ cc_library(
         "//:darwin": ["-framework OpenCL"],
         "//conditions:default": [],
     }),
+    visibility = ["//visibility:public"],
     deps = [
         "//gpu/clinfo/proto:clinfo_cc_pb2",
         "//third_party/opencl",
+        "//phd:string",
+        "//phd:logging",
     ] + select({
         "//:darwin": [],
         "//conditions:default": ["@libopencl//:libOpenCL"],

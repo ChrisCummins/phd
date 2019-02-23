@@ -84,13 +84,16 @@ py_test(
     ],
 )
 
-py_library(
+py_binary(
     name = "driver",
     srcs = ["driver.py"],
+    data = [":native_driver"],
     visibility = ["//visibility:public"],
     deps = [
         ":args",
         ":env",
+        "//gpu/cldrive/proto:cldrive_py_pb2",
+        "//labm8:bazelutil",
         "//labm8:err",
         "//third_party/py/numpy",
     ],
@@ -141,5 +144,31 @@ py_library(
     srcs = ["testlib.py"],
     deps = [
         "//third_party/py/numpy",
+    ],
+)
+
+cc_binary(
+    name = "native_driver",
+    srcs = ["native_driver.cc"],
+    deps = [
+        ":native_driver_lib",
+        "//gpu/cldrive/proto:cldrive_cc_pb2",
+        "//phd:pbutil",
+    ],
+)
+
+cc_library(
+    name = "native_driver_lib",
+    srcs = ["native_driver_lib.cc"],
+    hdrs = ["native_driver_lib.h"],
+    deps = [
+        "//gpu/cldrive/proto:cldrive_cc_pb2",
+        "//gpu/clinfo:libclinfo",
+        "//phd:common",
+        "//phd:logging",
+        "//phd:macros",
+        "//phd:statusor",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
     ],
 )

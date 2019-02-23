@@ -8,9 +8,12 @@ from absl import logging
 
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
+from gpu.cldrive.proto import cldrive_pb2
 from gpu.cldrive import env as cldrive_env
+from gpu.cldrive import driver
 from labm8 import system
 from labm8 import text
+from labm8 import labtypes
 from research.cummins_2017_cgo import opencl_kernel_driver
 
 
@@ -27,6 +30,8 @@ flags.DEFINE_string(
 flags.DEFINE_integer('num_runs', 30, 'The number of runs for each benchmark.')
 flags.DEFINE_integer('batch_size', 16,
                      'The number of kernels to process at a time.')
+flags.DEFINE_boolean('experimental_native_opencl_driver', False,
+                     'Use experimental native OpenCL driver.')
 
 KernelToDrive = collections.namedtuple('KernelToDrive', ['id', 'src'])
 
@@ -53,6 +58,11 @@ LSIZE_GSIZE_PAIRS = [
   (256, 4194304),
 ]
 
+LSIZE_GSIZE_PROTO_PAIRS = [
+  cldrive_pb2.DynamicParams(global_size_x=x, local_size_x=y)
+  for x, y in LSIZE_GSIZE_PAIRS
+]
+
 
 def GetBatchOfKernelsToDrive(db: grewe_features_db.Database,
                              env: cldrive_env.OpenCLEnvironment):
@@ -75,6 +85,20 @@ def GetBatchOfKernelsToDrive(db: grewe_features_db.Database,
         return [KernelToDrive(*row) for row in q]
 
 
+def ExperimentalNativeDriver(opencl_kernel, lsize=lsize, gsize=gsize,
+                             env: cldrive_env.OpenCLEnvironment,
+                             num_runs: int):
+  """ """
+  instance = driver.Drive(cldrive_pb2.CldriveInstance(
+      device=env.proto,
+      opencl_src=opencl_kernel,
+      min_runs_per_kernel=num_runs,
+      dynamic_params=LSIZE_GSIZE_PROTO_PAIRS,
+  ))
+  return labtypes.flatten(
+      run.log for run in (kernel for kernel in instance.kernel))
+
+
 def DriveBatchAndRecordResults(
     db: grewe_features_db.Database,
     batch: typing.List[KernelToDrive],
@@ -84,9 +108,13 @@ def DriveBatchAndRecordResults(
       dataset = f'{lsize},{gsize}'
 
       try:
-        logs = opencl_kernel_driver.Drive(
-            opencl_kernel, lsize_x=lsize, gsize_x=gsize, opencl_env=env,
-            num_runs=FLAGS.num_runs)
+        if FLAGS.experimental_native_opencl_driver:
+          ExperimentalNativeDriver(opencl_kernel, lsize=lsize, gsize=gsize,
+                                   env=env, num_runs=FLAGS.num_runs)
+        else:
+          logs = opencl_kernel_driver.Drive(
+              opencl_kernel, lsize_x=lsize, gsize_x=gsize, opencl_env=env,
+              num_runs=FLAGS.num_runs)
         logging.info('%d:%s PASS', static_features_id, dataset)
         assert len(logs) == FLAGS.num_runs
         with db.Session(commit=True) as session:

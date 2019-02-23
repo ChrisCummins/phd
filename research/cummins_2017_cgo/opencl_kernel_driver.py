@@ -14,8 +14,8 @@ from absl import flags
 
 from compilers.llvm import clang
 from deeplearning.deepsmith.harnesses import cldrive as cldrive_harness
-from deeplearning.deepsmith.proto import deepsmith_pb2
 from gpu.cldrive import env as cldrive_env
+from deeplearning.deepsmith.proto import deepsmith_pb2
 from gpu.libcecl import libcecl_compile
 from gpu.libcecl import libcecl_rewriter
 from gpu.libcecl import libcecl_runtime
@@ -23,6 +23,7 @@ from gpu.libcecl.proto import libcecl_pb2
 
 
 FLAGS = flags.FLAGS
+
 
 # All the combinations of local and global sizes used for synthetic kernels in
 # the CGO'17 experiments. These are the first dimension values, the other two
@@ -93,6 +94,34 @@ def Drive(opencl_kernel: str, lsize_x: int, gsize_x: int,
   Returns:
     A list of LibceclExecutableRun messages.
   """
+
+  cldrive_pb2.CldriveInstance(
+      device=_env.OclgrindOpenCLEnvironment().proto,
+      opencl_src="""
+kernel void A(global int* a, global float* b, const int c) {
+if (get_global_id(0) < c) { 
+  a[get_global_id(0)] = get_global_id(0);
+  b[get_global_id(0)] *= 2.0;
+}
+}""",
+      min_runs_per_kernel=30,
+      dynamic_params=[
+        cldrive_pb2.DynamicParams(
+            global_size_x=16,
+            local_size_x=16,
+        ),
+        cldrive_pb2.DynamicParams(
+            global_size_x=1024,
+            local_size_x=64,
+        ),
+        cldrive_pb2.DynamicParams(
+            global_size_x=128,
+            local_size_x=64,
+        ),
+      ],
+  )
+
+
 
   # Create a pair of driver sources.
   def MakeDriverSrc(data_generator: str) -> str:

@@ -12,6 +12,7 @@
 #include "third_party/opencl/include/cl.hpp"
 
 #include "gpu/clinfo/proto/clinfo.pb.h"
+#include "phd/string.h"
 
 namespace phd {
 
@@ -21,7 +22,7 @@ namespace clinfo {
 
 const char *OpenClErrorString(cl_int err);
 
-void OpenClCheckError(const char *api_call, cl_int err);
+void OpenClCheckError(const string& api_call, cl_int err);
 
 void SetOpenClDevice(const cl::Platform &platform, const cl::Device &device,
                      const int platform_id, const int device_id,
@@ -32,6 +33,9 @@ void SetOpenClDevice(const cl::Platform &platform, const cl::Device &device,
 ::gpu::clinfo::OpenClDevice GetOpenClDevice(const int platform_id,
                                             const int device_id);
 
+// Lookup an OpenCL device by it's proto representation. Raises
+// std::invalid_argument if not found.
+cl::Device GetOpenClDevice(const ::gpu::clinfo::OpenClDevice& device);
 
 }  // namespace clinfo
 
