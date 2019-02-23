@@ -5,7 +5,10 @@ load("@io_bazel_rules_docker//python3:image.bzl", "py3_image")
 py_binary(
     name = "cldrive",
     srcs = ["cldrive.py"],
-    data = ["@opencl_120_headers//:opencl_headers"] + select({
+    data = [
+        "@opencl_120_headers//:opencl_headers",
+        "//third_party/opencl:libOpenCL.so",
+    ] + select({
         "//:darwin": [
             "@llvm_mac//:clang",
             "@llvm_mac//:libcxx_headers",
@@ -15,7 +18,6 @@ py_binary(
             "@llvm_linux//:clang",
             "@llvm_linux//:libcxx_headers",
             "@llvm_linux//:libcxx_libs",
-            "@libopencl//:libOpenCL.so",
         ],
     }),
     visibility = ["//visibility:public"],
