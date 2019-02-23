@@ -183,6 +183,7 @@ cc_library(
     srcs = ["kernel_values.cc"],
     hdrs = ["kernel_values.h"],
     deps = [
+        ":opencl_util",
         ":profiling_data",
         "//phd:logging",
         "//phd:string",
@@ -251,6 +252,15 @@ cc_binary(
         ":libcldrive",
         "//gpu/cldrive/proto:cldrive_cc_pb2",
         "//phd:pbutil",
+    ],
+)
+
+cc_library(
+    name = "opencl_util",
+    hdrs = ["opencl_util.h"],
+    deps = [
+        ":profiling_data",
+        "//third_party/opencl",
     ],
 )
 
