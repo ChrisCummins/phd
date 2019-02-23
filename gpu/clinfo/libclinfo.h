@@ -37,6 +37,9 @@ void SetOpenClDevice(const cl::Platform &platform, const cl::Device &device,
 // std::invalid_argument if not found.
 cl::Device GetOpenClDevice(const ::gpu::clinfo::OpenClDevice& device);
 
+// Same as above, but abort if device is not available.
+cl::Device GetOpenClDeviceOrDie(const ::gpu::clinfo::OpenClDevice& device);
+
 }  // namespace clinfo
 
 }  // namespace gpu

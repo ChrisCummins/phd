@@ -332,6 +332,15 @@ cl::Device GetOpenClDevice(const ::gpu::clinfo::OpenClDevice& device_proto) {
   throw std::invalid_argument("Device not found");
 }
 
+// Lookup an OpenCL device by proto or die.
+cl::Device GetOpenClDeviceOrDie(const ::gpu::clinfo::OpenClDevice& device) {
+  try {
+    return GetOpenClDevice(device);
+  } catch (std::invalid_argument e) {
+    LOG(FATAL) << "Could not find device '" << device.name() << "'";
+  }
+}
+
 }  // namespace clinfo
 
 }  // namespace gpu
