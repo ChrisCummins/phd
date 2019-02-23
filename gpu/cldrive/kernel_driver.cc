@@ -31,8 +31,7 @@ void KernelDriver::RunOrDie() {
   }
 
   for (size_t i = 0; i < instance_->dynamic_params_size(); ++i) {
-    auto run = CreateRunForParamsOrDie(instance_->dynamic_params(i),
-                                       /*output_checks=*/!i);
+    auto run = RunDynamicParams(instance_->dynamic_params(i));
     if (run.ok()) {
       *kernel_instance_->add_run() = run.ValueOrDie();
     } else {
@@ -43,8 +42,8 @@ void KernelDriver::RunOrDie() {
   }
 }
 
-phd::StatusOr<CldriveKernelRun> KernelDriver::CreateRunForParamsOrDie(
-    const DynamicParams& dynamic_params, const bool output_checks) {
+phd::StatusOr<CldriveKernelRun> KernelDriver::RunDynamicParams(
+    const DynamicParams& dynamic_params) {
   CldriveKernelRun run;
 
   // Check that the dynamic params are within legal range.

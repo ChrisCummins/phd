@@ -16,8 +16,8 @@ class KernelDriver {
 
   void RunOrDie();
 
-  phd::StatusOr<CldriveKernelRun> CreateRunForParamsOrDie(
-      const DynamicParams& dynamic_params, const bool output_checks);
+  phd::StatusOr<CldriveKernelRun> RunDynamicParams(
+      const DynamicParams& dynamic_params);
 
   gpu::libcecl::OpenClKernelInvocation RunOnceOrDie(
       const DynamicParams& dynamic_params, const KernelArgValuesSet& inputs,
