@@ -38,7 +38,7 @@ BuildOpenClProgram(const std::string &opencl_kernel,
                    const std::vector<cl::Device> &devices) {
   try {
     cl::Program program(opencl_kernel);
-    program.build(devices);
+    program.build(devices, "-cl-kernel-arg-info");
     return program;
   } catch (cl::Error e) {
     LOG_CL_ERROR(ERROR, e);
