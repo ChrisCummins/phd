@@ -159,6 +159,17 @@ cc_test(
 )
 
 cc_library(
+    name = "status_macros",
+    hdrs = ["status_macros.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":common",
+        ":status",
+        ":statusor",
+    ],
+)
+
+cc_library(
     name = "statusor",
     srcs = ["statusor.cc"],
     hdrs = ["statusor.h"],
