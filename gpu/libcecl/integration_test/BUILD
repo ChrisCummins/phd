@@ -6,6 +6,19 @@ filegroup(
 cc_binary(
     name = "hello",
     srcs = [":hello_sources"],
+    linkopts = [
+        "-ldl",
+        "-lpthread",
+    ] + select({
+        "//:darwin": ["-framework OpenCL"],
+        "//conditions:default": [],
+    }),
+    deps = [
+        "//third_party/opencl",
+    ] + select({
+        "//:darwin": [],
+        "//conditions:default": ["@libopencl//:libOpenCL"],
+    }),
 )
 
 py_test(
