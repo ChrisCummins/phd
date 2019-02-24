@@ -4,7 +4,7 @@
 // If the input AddXandY.x == 10, the program crashes.
 
 #include "labm8/data/test/ppar/protos.pb.h"
-#include "phd/macros.h"
+#include "phd/logging.h"
 #include "phd/pbutil.h"
 
 void ProcessProtobuf(const AddXandY& input_proto,
@@ -14,7 +14,8 @@ void ProcessProtobuf(const AddXandY& input_proto,
 
   CHECK(x != 10);
 
-  INFO("Adding %d and %d and storing the result in a new message", x, y);
+  LOG(INFO) << "Adding " << x << " and " << y
+            << " and storing the result in a new message";
   output_proto->set_result(x + y);
 }
 

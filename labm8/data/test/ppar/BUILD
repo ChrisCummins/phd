@@ -20,7 +20,7 @@ cc_binary(
     srcs = ["proto_worker.cc"],
     deps = [
         ":protos_cc",
-        "//phd:macros",
+        "//phd:logging",
         "//phd:pbutil",
     ],
 )
@@ -29,7 +29,7 @@ cc_binary(
     name = "proto_worker_requires_args",
     srcs = ["proto_worker_requires_args.cc"],
     deps = [
-        "//phd:macros",
+        "//phd:logging",
     ],
 )
 
@@ -38,6 +38,6 @@ cc_binary(
     srcs = ["unexpected_output_proto_worker.cc"],
     deps = [
         ":protos_cc",
-        "//phd:macros",
+        "//phd:logging",
     ],
 )
