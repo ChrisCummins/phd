@@ -1,6 +1,6 @@
 #include "learn/daily/d181213_kruskal_spanning_tree.h"
 
-#include "phd/macros.h"
+#include "phd/logging.h"
 
 #include "absl/container/flat_hash_map.h"
 
@@ -36,7 +36,7 @@ bool HasCycle(
 
   auto vertex_index = vertex_index_map[vertex];
   if (visited->find(vertex_index) == visited->end()) {
-    DEBUG("Visiting new vertex %d", vertex_index);
+    LOG(DEBUG) << "Visiting new vertex " << vertex_index;
     // Mark the current node as visited and part of recursion stack.
     visited->insert(vertex_index);
     recursion_stack->insert(vertex_index);
@@ -56,15 +56,16 @@ bool HasCycle(
       // D 2018-12-14 17:46:08 [learn/daily/d181213_kruskal_spanning_tree.cc:56] Adjacent vertex 1 -> 0 in recursion stack
       // D 2018-12-14 17:46:08 [learn/daily/d181213_kruskal_spanning_tree.cc:52] Adjacent vertex 0 -> 1 has cycle
       unsigned long adjacent_index = vertex_index_map[*i];
-      DEBUG("Visiting adjacent vertex %d -> %d", vertex_index, adjacent_index);
+      LOG(DEBUG) << "Visiting adjacent vertex " << vertex_index
+                 << " -> " << adjacent_index;
       if (visited->find(adjacent_index) == visited->end() &&
           HasCycle(graph, vertex_index_map, *i, visited, recursion_stack)) {
-        DEBUG("Adjacent vertex %d -> %d has cycle",
-              vertex_index, adjacent_index);
+        LOG(DEBUG) << "Adjacent vertex " << vertex_index
+                   << " -> " << adjacent_index;
         return true;
       } else if (recursion_stack->find(adjacent_index) != recursion_stack->end()) {
-        DEBUG("Adjacent vertex %d -> %d in recursion stack",
-              vertex_index, adjacent_index);
+        LOG(DEBUG) << "Adjacent vertex " << vertex_index
+                   << " -> " << adjacent_index << " in recursion stack";
         return true;
       }
     }
@@ -132,7 +133,8 @@ Graph KruskalMinimumSpanningTree(Graph* graph) {
 
     // Remove self loop.
     if (source_index == target_index) {
-      DEBUG("Removing self loop %d -> %d", source_index, target_index);
+      LOG(DEBUG) << "Removing self loop " << source_index
+                 << " -> " << target_index;
       boost::remove_edge(*i, *graph);
       continue;
     }
@@ -140,8 +142,8 @@ Graph KruskalMinimumSpanningTree(Graph* graph) {
     int weight = get(boost::edge_weight, *graph, *i);
     decltype(visited_edges_map)::key_type map_key(source_index, target_index);
     decltype(visited_edges_map)::mapped_type map_value(weight, i);
-    DEBUG("Visiting edge %d -> %d with weight %d",
-          source_index, target_index, weight);
+    LOG(DEBUG) << "Visiting edge " << source_index << " -> " << target_index
+               << " with weight " << weight;
 
     auto map_it = visited_edges_map.find(map_key);
     if (map_it == visited_edges_map.end()) {
@@ -151,15 +153,17 @@ Graph KruskalMinimumSpanningTree(Graph* graph) {
       boost::graph_traits<Graph>::edge_iterator visited_edge =
           map_it->second.second;
       if (weight < visited_weight) {
-        DEBUG("Removing previous parallel edge %d -> %d with weight %d "
-              "(new parallel edge has lower weight %d)",
-              source_index, target_index, visited_weight, weight);
+        LOG(DEBUG) << "Removing previous parallel edge " << source_index
+                   << " -> " << target_index << " with weight "
+                   << visited_weight << " (new parallel edge has lower weight "
+                   << weight << ")";
         boost::remove_edge(*visited_edge, *graph);
         visited_edges_map.insert(std::make_pair(map_key, map_value));
       } else {
-        DEBUG("Removing parallel edge %d -> %d with weight %d "
-              "(already visited parallel edge with weight %d)",
-              source_index, target_index, weight, visited_weight);
+        LOG(DEBUG) << "Removing parallel edge " << source_index << " -> "
+                   << target_index << " with weight " << weight
+                   << " (already visited parallel edge with weight "
+                   << visited_weight << ")";
         boost::remove_edge(*i, *graph);
       }
     }
@@ -193,7 +197,7 @@ Graph KruskalMinimumSpanningTree(Graph* graph) {
   for (auto element : sorted_edges) {
     int weight = element.first;
     boost::graph_traits<Graph>::edge_iterator edge = element.second;
-    DEBUG("Trying to add edge with weight %d", weight);
+    LOG(DEBUG) << "Trying to add edge with weight " << weight;
 
     int source_index = boost::source(*edge, *graph);
     int target_index = boost::target(*edge, *graph);
@@ -201,13 +205,13 @@ Graph KruskalMinimumSpanningTree(Graph* graph) {
     std::pair<boost::graph_traits<Graph>::edge_descriptor, bool> new_edge =
         boost::add_edge(source_index, target_index, weight, mst);
     CHECK(new_edge.second);
-    DEBUG("Added MST edge %d -> %d", source_index, target_index);
+    LOG(DEBUG) << "Added MST edge " << source_index << " -> " << target_index;
 
     // If the new edge introduces a cycle, it breaks the MST properties. Remove
     // it and move onto the next edge.
     if (HasCycle(mst)) {
-      DEBUG("Edge %d -> %d introduced cycle, removing",
-            source_index, target_index);
+      LOG(DEBUG) << "Edge " << source_index << " -> " << target_index
+                 << " introduced cycle, removing";
       boost::remove_edge(new_edge.first, mst);
     }
   }

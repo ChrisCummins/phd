@@ -1,6 +1,6 @@
 #include "learn/daily/d181211_matrix_multiplication.h"
 
-#include "phd/macros.h"
+#include "phd/logging.h"
 
 #include <boost/thread/thread.hpp>
 

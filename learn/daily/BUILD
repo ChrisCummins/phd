@@ -9,7 +9,7 @@ cc_library(
     srcs = ["d181211_matrix_multiplication.cc"],
     hdrs = ["d181211_matrix_multiplication.h"],
     deps = [
-        "//phd:macros",
+        "//phd:logging",
         "@boost//:numeric",
         "@boost//:thread",
     ],
