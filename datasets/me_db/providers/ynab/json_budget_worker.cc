@@ -7,6 +7,7 @@
 #include "datasets/me_db/me.pb.h"
 
 #include "absl/strings/str_cat.h"
+#include "absl/strings/str_format.h"
 #include "absl/strings/str_split.h"
 #include "absl/time/time.h"
 #include "absl/container/flat_hash_map.h"
@@ -99,13 +100,14 @@ void TryAddTransactionMeasurementToSeries(
   CHECK(!category_id.empty());
 
   if (!TryGetCategory(category_id, category_id_to_name, category)) {
-    LOG(WARN) << "Failed to get category for id `" << category_id << "`";
+    LOG(WARNING) << "Failed to get category for id `" << category_id << "`";
     return;
   }
 
   const float amount = transaction.get<double>("amount", 0);
   if (amount == 0.0) {
-    WARN("Ignoring transaction with zero amount: %s at %d", *category, date);
+    LOG(WARNING) << "Ignoring transaction with zero amount: " << *category
+                 << " at " << date;
     return;
   }
 
@@ -177,7 +179,8 @@ Series CreateBudgetSeries(
       CHECK(!category_id.empty());
 
       if (!TryGetCategory(category_id, category_id_to_name, &category)) {
-        LOG(WARN) << "Failed to get category for id `" << category_id << "`";
+        LOG(WARNING) << "Failed to get category for id `"
+                     << category_id << "`";
         continue;
       }
 
