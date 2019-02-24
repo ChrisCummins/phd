@@ -10,7 +10,7 @@ void inplace_reverse_string(std::string& str) {
 }
 
 
-std::string reverse_sring(const std::string& str) {
+std::string reverse_string(const std::string& str) {
   return std::string(str.rbegin(), str.rend());
 }
 
@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
   std::cout << a << std::endl;
 
   assert(reverse_string("abca") == "cba");
-  std::cout << reverse_sring("abc") << std::endl;
+  std::cout << reverse_string("abc") << std::endl;
 
   return 0;
 }
