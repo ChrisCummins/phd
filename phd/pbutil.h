@@ -3,6 +3,7 @@
 
 #include "phd/logging.h"
 
+#include <functional>
 #include <iostream>
 
 namespace pbutil {
