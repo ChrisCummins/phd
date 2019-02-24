@@ -3,6 +3,7 @@
 #include "phd/logging.h"
 
 #include "absl/strings/str_cat.h"
+#include "absl/strings/str_format.h"
 #include "absl/strings/str_split.h"
 #include "absl/time/time.h"
 
@@ -15,7 +16,8 @@ int64_t ParseHealthKitDatetimeOrDie(const string& date) {
   std::string err;
   bool succeeded = absl::ParseTime("%Y-%m-%d %H:%M:%S %z", date, &time, &err);
   if (!succeeded) {
-    FATAL("Failed to parse HealthKit datetime '%s': %s", date, err);
+    LOG(FATAL) << "Failed to parse HealthKit datetime '" << date << "': "
+               << err;
   }
   absl::Duration d = time - absl::UnixEpoch();
   return d / absl::Milliseconds(1);
@@ -36,7 +38,7 @@ int64_t ParseIntOrDie(const string& integer_string) {
   int64_t number = std::strtol(integer_string.c_str(), &endptr, 10);
   if (endptr == integer_string.c_str() || *endptr != '\0') {
     // Not a valid number at all
-    FATAL("Failed to parse integer '%s'", integer_string);
+    LOG(FATAL) << "Failed to parse integer '" << integer_string << "'";
   }
   return number;
 }
@@ -45,7 +47,7 @@ double ParseDoubleOrDie(const string& double_string) {
   char* endptr;
   double number = std::strtod(double_string.c_str(), &endptr);
   if (endptr == double_string.c_str() || *endptr != '\0') {
-    FATAL("Failed to parse double '%s'", double_string);
+    LOG(FATAL)  << "Failed to parse double '" << double_string << "'";
   }
   return number;
 }
@@ -83,8 +85,8 @@ void HealthKitRecordImporter::InitFromRecordOrDie(
   // over all attributes without finding these values.
   if (!(attribute_count == 5 && unit_.empty()) &&
       !(attribute_count == 4 && unit_.empty() && value_.empty())) {
-    FATAL("Failed to parse necessary attributes from Record: %s",
-          DebugString());
+    LOG(FATAL) << "Failed to parse necessary attributes from Record: "
+               << DebugString();
   }
 }
 
@@ -181,7 +183,8 @@ void HealthKitRecordImporter::AddMeasurementsOrDie(
   } else if (type_ == "HKQuantityTypeIdentifierDietaryPotassium") {
     ConsumeMilligramsOrDie("Diet", "PotassiumConsumed");
   } else {
-    FATAL("Unhandled type '%s' for HealthKit record: %s", type_, DebugString());
+    LOG(FATAL) << "Unhandled type '" << type_ << "' for HealthKit record: "
+               << DebugString();
   }
 }
 
@@ -214,7 +217,7 @@ void HealthKitRecordImporter::ConsumeBodyMassIndexOrDie(
 void HealthKitRecordImporter::ConsumePercentageOrDie(
     const string& family, const string& name, const string& group) {
   if (unit_ != "%") {
-    FATAL("Expected unit %%, received unit %s", unit_);
+    LOG(FATAL) << "Expected unit %, received unit " << unit_;
   }
   *series_->add_measurement() = CreateMeasurement(
       family, name, group, "percentage_millis",
@@ -323,8 +326,8 @@ void HealthKitRecordImporter::ConsumeSleepAnalysisOrDie(
   } else if (value_ == "HKCategoryValueSleepAnalysisAwake") {
     name = "AwakeTime";
   } else {
-    FATAL("Could not handle the value field of "
-              "sleep analysis Record: %s", DebugString());
+    LOG(FATAL) << "Could not handle the value field of sleep analysis Record: "
+               << DebugString();
   }
   int64_t duration_ms = ParseHealthKitDatetimeOrDie(endDate_)
       - ParseHealthKitDatetimeOrDie(startDate_);
@@ -341,8 +344,8 @@ void HealthKitRecordImporter::ConsumeStandHourOrDie(
   } else if (value_ == "HKCategoryValueAppleStandHourStood") {
     name = "StandHours";
   } else {
-    FATAL("Could not handle the value field of "
-              "stand hour Record: %s", DebugString());
+    LOG(FATAL) << "Could not handle the value field of stand hour Record: "
+               << DebugString();
   }
   *series_->add_measurement() = CreateMeasurement(
       family, name, group, "count", 1);

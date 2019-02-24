@@ -82,24 +82,21 @@ TEST(ParseDoubleOrDie, Double) {
   EXPECT_EQ(ParseDoubleOrDie("1.53"), 1.53);
 }
 
-TEST(SetAttributeIfMatch, EmptyString) {
-  boost::property_tree::ptree::value_type value;
-  string s;
-  SetAttributeIfMatch(value, "KEY", &s);
-  EXPECT_TRUE(s.empty());
-}
-
 TEST(SetAttributeIfMatch, NoMatch) {
-  boost::property_tree::ptree::value_type value("KEY", "VALUE");
+  boost::property_tree::ptree ptree;
+  ptree.put("KEY", "VALUE");
+
   string s;
-  SetAttributeIfMatch(value, "not a match", &s);
+  SetAttributeIfMatch(ptree.front(), "not a match", &s);
   EXPECT_TRUE(s.empty());
 }
 
 TEST(SetAttributeIfMatch, Match) {
-  boost::property_tree::ptree::value_type value("KEY", "VALUE");
+  boost::property_tree::ptree ptree;
+  ptree.put("KEY", "VALUE");
+
   string s;
-  SetAttributeIfMatch(value, "KEY", &s);
+  SetAttributeIfMatch(ptree.front(), "KEY", &s);
   EXPECT_EQ(s, "VALUE");
 }
 
