@@ -22,7 +22,7 @@ ryan_gosling_have_my_music() {
 ryan_gosling_have_my_movies() {
   (cd ~/phd && bazel run //system/machines:machine -- \
      --machine=$HOME/phd/system/machines/ryangosling/ryangosling.pbtxt \
-     --push movies,tv --nodelete --nodry_run $@)
+     --push movies,tv --nodelete --nodry_run --progress $@)
 }
 
 ryan_gosling_have_my_files() {
