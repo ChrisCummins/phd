@@ -26,7 +26,7 @@ void InsertOrDie(absl::flat_hash_map<K, V>* map, const K& key, const V& value) {
   if (it == map->end()) {
     map->insert(std::make_pair(key, value));
   } else {
-    FATAL("Duplicate key in map: %s", key);
+    LOG(FATAL) << "Duplicate key in map: " << key;
   }
 }
 
@@ -35,7 +35,7 @@ V FindOrDie(const absl::flat_hash_map<K, V>& map, const K& key) {
   auto it = map.find(key);
 
   if (it == map.end()) {
-    FATAL("Key not found in map: %s", key);
+    LOG(FATAL) << "Key not found in map: " << key;
   } else {
     return it->second;
   }
@@ -46,7 +46,7 @@ int64_t ParseDateOrDie(const string& date) {
   std::string err;
   bool succeeded = absl::ParseTime("%Y-%m-%d", date, &time, &err);
   if (!succeeded) {
-    FATAL("Failed to parse '%s': %s", date, err);
+    LOG(FATAL) << "Failed to parse '" << date << "': " << err;
   }
   absl::Duration d = time - absl::UnixEpoch();
   return d / absl::Milliseconds(1);
@@ -99,7 +99,7 @@ void TryAddTransactionMeasurementToSeries(
   CHECK(!category_id.empty());
 
   if (!TryGetCategory(category_id, category_id_to_name, category)) {
-    WARN("Failed to get category for id `%s`", category_id);
+    LOG(WARN) << "Failed to get category for id `" << category_id << "`";
     return;
   }
 
@@ -177,7 +177,7 @@ Series CreateBudgetSeries(
       CHECK(!category_id.empty());
 
       if (!TryGetCategory(category_id, category_id_to_name, &category)) {
-        WARN("Failed to get category for id `%s`", category_id);
+        LOG(WARN) << "Failed to get category for id `" << category_id << "`";
         continue;
       }
 

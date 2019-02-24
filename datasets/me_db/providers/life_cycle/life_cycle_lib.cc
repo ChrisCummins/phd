@@ -2,7 +2,7 @@
 
 #include "datasets/me_db/me.pb.h"
 
-#include "phd/macros.h"
+#include "phd/logging.h"
 #include "phd/string.h"
 
 #include "absl/strings/str_cat.h"
@@ -36,7 +36,7 @@ absl::Time ParseLifeCycleDatetimeOrDie(const string& date) {
   std::string err;
   bool succeeded = absl::ParseTime("%Y-%m-%d %H:%M:%S", date, &time, &err);
   if (!succeeded) {
-    FATAL("Failed to parse '%s': %s", date, err);
+    LOG(FATAL) << "Failed to parse '" << date << "': " << err;
   }
   return time;
 }
@@ -88,8 +88,8 @@ void ProcessLineOrDie(
   // Split the comma separated line.
   std::vector<absl::string_view> components = absl::StrSplit(line, ',');
   if (components.size() < 8) {
-    FATAL("Line %d of `%s` does not have 8 columns: '%s'",
-          line_num, csv_path.string(), line);
+    LOG(FATAL) << "Line " << line_num << " of `" << csv_path.string()
+               << "` does not have 8 columns: '" << line << "'";
   }
 
   // Split out and parse the components from the row.
@@ -130,7 +130,7 @@ void ProcessSeriesCollectionOrDie(SeriesCollection* proto) {
   const boost::filesystem::path csv_path(proto->source());
 
   CHECK(boost::filesystem::is_regular_file(csv_path));
-  INFO("Reading from CSV file %s", csv_path.string());
+  LOG(INFO) << "Reading from CSV file " << csv_path.string();
 
   boost::filesystem::ifstream csv(csv_path);
   CHECK(csv.is_open());
@@ -140,15 +140,16 @@ void ProcessSeriesCollectionOrDie(SeriesCollection* proto) {
   std::getline(csv, line);
   if (line != ("START DATE(UTC), END DATE(UTC), START TIME(LOCAL), "
                "END TIME(LOCAL), DURATION, NAME, LOCATION, NOTE")) {
-    FATAL("Expected first line of `%s` to contain column names. Actual "
-          "value: `%s`.", csv_path.string(), line);
+    LOG(FATAL) << "Expected first line of `" << csv_path.string()
+               << "` to contain column names. Actual value: `"
+               << line << "`.";
   }
 
   // Process the second line of the header.
   std::getline(csv, line);
   if (line == "\n") {
-    FATAL("Expected second line of `%s` to be empty. Actual value: `%s`",
-          csv_path.string(), line);
+    LOG(FATAL) << "Expected second line of `" << csv_path.string()
+               << "` to be empty. Actual value: `" << line << "`";
   }
 
   // Keep a map from name columns to series. Measurements are assigned to named
