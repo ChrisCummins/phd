@@ -183,6 +183,8 @@ cc_test(
     deps = [
         ":kernel_arg",
         "//phd:test",
+        ":array_kernel_arg_value",
+        "//gpu/cldrive/proto:cldrive_cc_pb2",
         "//third_party/opencl",
         "//third_party/opencl:libOpenCL.so",
     ],

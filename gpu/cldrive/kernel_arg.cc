@@ -44,7 +44,7 @@ phd::Status KernelArg::Init() {
   return phd::Status::OK;
 }
 
-std::unique_ptr<KernelArgValue> KernelArg::MaybeCreateRandomValue(
+std::unique_ptr<KernelArgValue> KernelArg::TryToCreateRandomValue(
 const cl::Context& context, const DynamicParams &dynamic_params) {
   if (IsGlobal()) {
     auto arg_buffer = std::make_unique<ArrayKernelArgValueWithBuffer<int>>(
@@ -60,7 +60,7 @@ const cl::Context& context, const DynamicParams &dynamic_params) {
   }
 }
 
-std::unique_ptr<KernelArgValue> KernelArg::MaybeCreateOnesValue(
+std::unique_ptr<KernelArgValue> KernelArg::TryToCreateOnesValue(
   const cl::Context& context, const DynamicParams &dynamic_params) {
   if (IsGlobal()) {
     if (type_name_.compare("int")) {

@@ -49,11 +49,12 @@ phd::Status KernelArgSet::SetRandom(const DynamicParams& dynamic_params,
                                     KernelArgValuesSet* values) {
   values->Clear();
   for (auto& arg : args_) {
-    auto value = arg.MaybeCreateRandomValue(context_, dynamic_params);
+    auto value = arg.TryToCreateRandomValue(context_, dynamic_params);
     if (value) {
       values->AddKernelArgValue(std::move(value));
     } else {
-      // MaybeCreateRandomValue() returns nullptr if the argument is not supported.
+      // TryToCreateRandomValue() returns nullptr if the argument is not
+      // supported.
       return phd::Status::UNKNOWN;
     }
   }
@@ -64,11 +65,12 @@ phd::Status KernelArgSet::SetOnes(const DynamicParams& dynamic_params,
                                   KernelArgValuesSet* values) {
   values->Clear();
   for (auto& arg : args_) {
-    auto value = arg.MaybeCreateOnesValue(context_, dynamic_params);
+    auto value = arg.TryToCreateOnesValue(context_, dynamic_params);
     if (value) {
       values->AddKernelArgValue(std::move(value));
     } else {
-      // MaybeCreateRandomValue() returns nullptr if the argument is not supported.
+      // TryToCreateRandomValue() returns nullptr if the argument is not
+      // supported.
       return phd::Status::UNKNOWN;
     }
   }

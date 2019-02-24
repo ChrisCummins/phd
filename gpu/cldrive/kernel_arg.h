@@ -17,12 +17,12 @@ class KernelArg {
 
   // Create a random value for this argument. If the argument is not supported,
   // returns nullptr.
-  std::unique_ptr<KernelArgValue> MaybeCreateRandomValue(
+  std::unique_ptr<KernelArgValue> TryToCreateRandomValue(
      const cl::Context& context, const DynamicParams &dynamic_params);
 
   // Create a "ones" value for this argument. If the argument is not supported,
   // returns nullptr.
-  std::unique_ptr<KernelArgValue> MaybeCreateOnesValue(
+  std::unique_ptr<KernelArgValue> TryToCreateOnesValue(
      const cl::Context& context, const DynamicParams &dynamic_params);
 
   // Address qualifier accessors.
