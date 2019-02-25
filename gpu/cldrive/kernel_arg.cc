@@ -151,9 +151,9 @@ std::unique_ptr<KernelArgValue> CreateArrayArgValue(
   }
 }
 
-template <typename T>
-std::unique_ptr<KernelArgValue> CreateScalarArgValue(const T& value) {
-  return std::make_unique<ScalarKernelArgValue<T>>(value);
+template <typename T, typename Y>
+std::unique_ptr<KernelArgValue> CreateScalarArgValue(const Y& value) {
+  return std::make_unique<ScalarKernelArgValue<T>>(static_cast<T>(value));
 }
 
 std::unique_ptr<KernelArgValue> CreateScalarArgValue(const OpenClArgType& type,
