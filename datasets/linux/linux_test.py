@@ -6,7 +6,6 @@ from absl import flags
 from datasets.linux import linux
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -18,6 +17,7 @@ def dataset() -> linux.LinuxSourcesDataset:
 # The following tests are all hardcoded to the current version of @linux_srcs
 # that is defined the WORKSPACE file. Changing the linux version will require
 # updating these tests.
+
 
 def test_version(dataset: linux.LinuxSourcesDataset):
   assert dataset.version == '4.19'

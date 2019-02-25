@@ -6,11 +6,10 @@ from absl import flags
 from datasets.github.scrape_repos.preprocessors import public
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
-
 # GetAllFilesRelativePaths() tests.
+
 
 def test_GetAllFilesRelativePaths_empty_dir(tempdir: pathlib.Path):
   """Test that an empty directory returns an empty list."""

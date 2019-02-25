@@ -14,7 +14,6 @@ from datasets.me_db import me_pb2
 from labm8 import bazelutil
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('life_cycle_inbox', None, 'Inbox to process.')
@@ -35,11 +34,11 @@ def ProcessCsvFile(path: pathlib.Path) -> me_pb2.SeriesCollection:
   if not path.is_file():
     raise FileNotFoundError(str(path))
   try:
-    return pbutil.RunProcessMessageInPlace(
-        [str(
+    return pbutil.RunProcessMessageInPlace([
+        str(
             bazelutil.DataPath(
-                'phd/datasets/me_db/providers/life_cycle/lc_export_csv_worker'))],
-        me_pb2.SeriesCollection(source=str(path)))
+                'phd/datasets/me_db/providers/life_cycle/lc_export_csv_worker'))
+    ], me_pb2.SeriesCollection(source=str(path)))
   except subprocess.CalledProcessError as e:
     raise importers.ImporterError('LifeCycle', path, str(e)) from e
 

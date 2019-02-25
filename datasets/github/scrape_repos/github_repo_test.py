@@ -11,11 +11,10 @@ from labm8 import fs
 from labm8 import pbutil
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
-
 # Test fixtures.
+
 
 def _CreateTestRepo(root_dir: pathlib.Path, owner: str,
                     name: str) -> github_repo.GitHubRepo:
@@ -23,8 +22,9 @@ def _CreateTestRepo(root_dir: pathlib.Path, owner: str,
   owner_name = f'{owner}_{name}'
   (root_dir / owner_name / '.git').mkdir(parents=True)
   (root_dir / owner_name / 'src').mkdir(parents=True)
-  pbutil.ToFile(scrape_repos_pb2.GitHubRepoMetadata(owner=owner, name=name),
-                root_dir / f'{owner_name}.pbtxt')
+  pbutil.ToFile(
+      scrape_repos_pb2.GitHubRepoMetadata(owner=owner, name=name),
+      root_dir / f'{owner_name}.pbtxt')
   return github_repo.GitHubRepo(root_dir / f'{owner_name}.pbtxt')
 
 
@@ -35,6 +35,7 @@ def test_repo(tempdir: pathlib.Path) -> github_repo.GitHubRepo:
 
 
 # GitHubRepo tests.
+
 
 def test_GitHubRepo_IsCloned(test_repo: github_repo.GitHubRepo):
   """Test for IsCloned()."""
@@ -56,10 +57,12 @@ def test_GitHubRepo_Index_not_cloned(test_repo: github_repo.GitHubRepo):
   fs.rm(test_repo.clone_dir)
   assert not test_repo.IsIndexed()
   test_repo.Index([
-    scrape_repos_pb2.ContentFilesImporterConfig(
-        source_code_pattern='.*\\.java',
-        preprocessor=["datasets.github.scrape_repos.preprocessors."
-                      "extractors:JavaMethods"]),
+      scrape_repos_pb2.ContentFilesImporterConfig(
+          source_code_pattern='.*\\.java',
+          preprocessor=[
+              "datasets.github.scrape_repos.preprocessors."
+              "extractors:JavaMethods"
+          ]),
   ], multiprocessing.Pool(1))
   assert not test_repo.IsIndexed()
 
@@ -87,10 +90,12 @@ public class B {
   assert not test_repo.index_dir.is_dir()
   assert not list(test_repo.ContentFiles())
   test_repo.Index([
-    scrape_repos_pb2.ContentFilesImporterConfig(
-        source_code_pattern='.*\\.java',
-        preprocessor=["datasets.github.scrape_repos.preprocessors."
-                      "extractors:JavaMethods"]),
+      scrape_repos_pb2.ContentFilesImporterConfig(
+          source_code_pattern='.*\\.java',
+          preprocessor=[
+              "datasets.github.scrape_repos.preprocessors."
+              "extractors:JavaMethods"
+          ]),
   ], multiprocessing.Pool(1))
   assert test_repo.index_dir.is_dir()
 
@@ -100,9 +105,9 @@ public class B {
   assert len(contentfiles) == 2
 
   assert set([cf.text for cf in contentfiles]) == {
-    ('public static void helloWorld(){\n'
-     '  System.out.println("Hello, world!");\n}\n'),
-    'private static int foo(){\n  return 5;\n}\n',
+      ('public static void helloWorld(){\n'
+       '  System.out.println("Hello, world!");\n}\n'),
+      'private static int foo(){\n  return 5;\n}\n',
   }
 
 
@@ -110,10 +115,12 @@ def test_GitHubRepo_Index_index_dir_paths(tempdir: pathlib.Path):
   """Test that index directories are produced in the correct location."""
   repo = _CreateTestRepo(tempdir / 'java', 'Foo', 'Bar')
   repo.Index([
-    scrape_repos_pb2.ContentFilesImporterConfig(
-        source_code_pattern='.*\\.java',
-        preprocessor=["datasets.github.scrape_repos.preprocessors."
-                      "extractors:JavaMethods"]),
+      scrape_repos_pb2.ContentFilesImporterConfig(
+          source_code_pattern='.*\\.java',
+          preprocessor=[
+              "datasets.github.scrape_repos.preprocessors."
+              "extractors:JavaMethods"
+          ]),
   ], multiprocessing.Pool(1))
   assert (tempdir / 'java.index').is_dir()
   assert (tempdir / 'java.index' / 'Foo_Bar').is_dir()

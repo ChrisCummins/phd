@@ -5,7 +5,6 @@ from absl import flags
 from datasets.benchmarks import bzip2
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 

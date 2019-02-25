@@ -11,39 +11,39 @@ import parboilfile
 import process
 import benchmark
 
+
 def run():
-    # Print a banner message
-    print "Parboil parallel benchmark suite, version 0.2"
-    print
-    
-    # Global variable setup
-    if not globals.root:
-      globals.root = os.getcwd()
+  # Print a banner message
+  print "Parboil parallel benchmark suite, version 0.2"
+  print
 
-    python_path = (os.path.join(globals.root,'common','python') +
-                   ":" +
-                   os.environ.get('PYTHONPATH',""))
+  # Global variable setup
+  if not globals.root:
+    globals.root = os.getcwd()
 
-    bmks = parboilfile.Directory(os.path.join(globals.root,'benchmarks'), 
-                     [], benchmark.benchmark_scanner())
+  python_path = (os.path.join(globals.root, 'common', 'python') + ":" +
+                 os.environ.get('PYTHONPATH', ""))
 
+  bmks = parboilfile.Directory(
+      os.path.join(globals.root, 'benchmarks'), [],
+      benchmark.benchmark_scanner())
 
-    globals.benchdir = bmks
+  globals.benchdir = bmks
 
-    globals.datadir =  parboilfile.Directory(
-                         os.path.join(globals.root, 'datasets'), [], 
-                         benchmark.dataset_repo_scanner())
+  globals.datadir = parboilfile.Directory(
+      os.path.join(globals.root, 'datasets'), [],
+      benchmark.dataset_repo_scanner())
 
-    globals.benchmarks = benchmark.find_benchmarks()
+  globals.benchmarks = benchmark.find_benchmarks()
 
-    globals.program_env = {'PARBOIL_ROOT':globals.root,
-                           'PYTHONPATH':python_path,
-                           }
+  globals.program_env = {
+      'PARBOIL_ROOT': globals.root,
+      'PYTHONPATH': python_path,
+  }
 
-    # Parse options
-    act = options.parse_options(sys.argv)
+  # Parse options
+  act = options.parse_options(sys.argv)
 
-    # Perform the specified action
-    if act:
-        return act()
-
+  # Perform the specified action
+  if act:
+    return act()

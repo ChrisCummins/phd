@@ -23,7 +23,6 @@ from datasets.me_db.tests.acceptance_tests import flags
 from labm8 import bazelutil
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 TEST_INBOX_PATH = bazelutil.DataPath('phd/datasets/me_db/tests/test_inbox')
@@ -124,9 +123,7 @@ def test_life_cycle_dates_do_not_overflow(db: me_db.Database):
         continue
       # The only case where the end date is allowed to differ from the start
       # date is when we have overflowed to midnight (00:00:00) the next day.
-      if not (day_diff == 1 and
-              end_date.hour == 0 and
-              end_date.minute == 0 and
+      if not (day_diff == 1 and end_date.hour == 0 and end_date.minute == 0 and
               end_date.second == 0):
         pytest.fail(
             f'Date {start_date} overflows when adding measurement {value} ms '

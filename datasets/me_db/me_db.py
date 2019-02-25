@@ -28,7 +28,6 @@ from datasets.me_db.providers.ynab import ynab
 from labm8 import labdate
 from labm8 import sqlutil
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('inbox', None, 'Path to inbox.')
@@ -42,10 +41,10 @@ Base = declarative.declarative_base()
 # path to a directory (the inbox) and a Queue. The function, when called, must
 # place a single SeriesCollection proto on the queue.
 INBOX_IMPORTERS: typing.List[importers.InboxImporter] = [
-  health_kit.ProcessInboxToQueue,
-  life_cycle.ProcessInboxToQueue,
-  timing.ProcessInboxToQueue,
-  ynab.ProcessInboxToQueue,
+    health_kit.ProcessInboxToQueue,
+    life_cycle.ProcessInboxToQueue,
+    timing.ProcessInboxToQueue,
+    ynab.ProcessInboxToQueue,
 ]
 
 
@@ -76,15 +75,15 @@ class Measurement(Base):
 def MeasurementsFromSeries(series: me_pb2.Series) -> typing.List[Measurement]:
   """Create a list of measurements from a me.Series proto."""
   return [
-    Measurement(series=series.name,
-                date=labdate.DatetimeFromMillisecondsTimestamp(
-                    m.ms_since_unix_epoch),
-                family=series.family,
-                group=m.group,
-                value=m.value,
-                unit=series.unit,
-                source=m.source)
-    for m in series.measurement]
+      Measurement(
+          series=series.name,
+          date=labdate.DatetimeFromMillisecondsTimestamp(m.ms_since_unix_epoch),
+          family=series.family,
+          group=m.group,
+          value=m.value,
+          unit=series.unit,
+          source=m.source) for m in series.measurement
+  ]
 
 
 class Database(sqlutil.Database):
@@ -106,8 +105,10 @@ class Database(sqlutil.Database):
     return num_measurements
 
   def ImportMeasurementsFromInboxImporters(
-      self, inbox: pathlib.Path, inbox_importers: typing.Iterator[
-        importers.InboxImporter] = INBOX_IMPORTERS):
+      self,
+      inbox: pathlib.Path,
+      inbox_importers: typing.Iterator[
+          importers.InboxImporter] = INBOX_IMPORTERS):
     """Import and commit measurements from inbox directory."""
     start_time = time.time()
     queue = multiprocessing.Queue()
@@ -125,8 +126,8 @@ class Database(sqlutil.Database):
     for _ in range(len(processes)):
       series_collections = queue.get()
       with self.Session(commit=True) as session:
-        num_measurements += self.AddSeriesCollection(
-            session, series_collections)
+        num_measurements += self.AddSeriesCollection(session,
+                                                     series_collections)
 
     duration_seconds = time.time() - start_time
     logging.info('Processed %s records in %.3f seconds (%.2f rows per second)',

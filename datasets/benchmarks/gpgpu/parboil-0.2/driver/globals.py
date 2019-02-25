@@ -20,4 +20,3 @@ program_env = None
 # True if verbose output is desired.  This may be set during
 # option parsing.
 verbose = False
-

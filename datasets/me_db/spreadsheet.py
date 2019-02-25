@@ -42,8 +42,10 @@ def get_or_create_worksheet(sh, name):
 
 
 def get_connection(keypath):
-  scope = ['https://spreadsheets.google.com/feeds',
-           'https://www.googleapis.com/auth/drive']
+  scope = [
+      'https://spreadsheets.google.com/feeds',
+      'https://www.googleapis.com/auth/drive'
+  ]
 
   credentials = ServiceAccountCredentials.from_json_keyfile_name(
       os.path.expanduser(keypath), scope)

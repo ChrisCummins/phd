@@ -9,7 +9,6 @@ from absl import flags
 from datasets.benchmarks.proto import benchmarks_pb2
 from labm8 import bazelutil
 
-
 FLAGS = flags.FLAGS
 
 
@@ -18,11 +17,13 @@ class _SingleSource_Benchmarks_McGill(object):
   queens = benchmarks_pb2.Benchmark(
       name='queens',
       usage='queens [-ac] <n>',
-      binary=str(bazelutil.DataPath(
-          'llvm_test_suite/SingleSource_Benchmarks_McGill_queens')),
+      binary=str(
+          bazelutil.DataPath(
+              'llvm_test_suite/SingleSource_Benchmarks_McGill_queens')),
       srcs=[
-        str(bazelutil.DataPath(
-            'llvm_test_suite/SingleSource/Benchmarks/McGill/queens.c')),
+          str(
+              bazelutil.DataPath(
+                  'llvm_test_suite/SingleSource/Benchmarks/McGill/queens.c')),
       ],
   )
 
@@ -31,133 +32,167 @@ class _SingleSource_Benchmarks_Shootout(object):
   """The Programming Language Shootout benchmarks."""
   ackermann = benchmarks_pb2.Benchmark(
       name='ackermann',
-      binary=str(bazelutil.DataPath(
-          'llvm_test_suite/SingleSource_Benchmarks_Shootout_ackermann')),
+      binary=str(
+          bazelutil.DataPath(
+              'llvm_test_suite/SingleSource_Benchmarks_Shootout_ackermann')),
       srcs=[
-        str(bazelutil.DataPath(
-            'llvm_test_suite/SingleSource/Benchmarks/Shootout/ackermann.c')),
+          str(
+              bazelutil.DataPath(
+                  'llvm_test_suite/SingleSource/Benchmarks/Shootout/ackermann.c'
+              )),
       ],
   )
   ary3 = benchmarks_pb2.Benchmark(
       name='ary3',
-      binary=str(bazelutil.DataPath(
-          'llvm_test_suite/SingleSource_Benchmarks_Shootout_ary3')),
+      binary=str(
+          bazelutil.DataPath(
+              'llvm_test_suite/SingleSource_Benchmarks_Shootout_ary3')),
       srcs=[
-        str(bazelutil.DataPath(
-            'llvm_test_suite/SingleSource/Benchmarks/Shootout/ary3.c')),
+          str(
+              bazelutil.DataPath(
+                  'llvm_test_suite/SingleSource/Benchmarks/Shootout/ary3.c')),
       ],
   )
   fib2 = benchmarks_pb2.Benchmark(
       name='fib2',
-      binary=str(bazelutil.DataPath(
-          'llvm_test_suite/SingleSource_Benchmarks_Shootout_fib2')),
+      binary=str(
+          bazelutil.DataPath(
+              'llvm_test_suite/SingleSource_Benchmarks_Shootout_fib2')),
       srcs=[
-        str(bazelutil.DataPath(
-            'llvm_test_suite/SingleSource/Benchmarks/Shootout/fib2.c')),
+          str(
+              bazelutil.DataPath(
+                  'llvm_test_suite/SingleSource/Benchmarks/Shootout/fib2.c')),
       ],
   )
   hash = benchmarks_pb2.Benchmark(
       name='hash',
-      binary=str(bazelutil.DataPath(
-          'llvm_test_suite/SingleSource_Benchmarks_Shootout_hash')),
+      binary=str(
+          bazelutil.DataPath(
+              'llvm_test_suite/SingleSource_Benchmarks_Shootout_hash')),
       srcs=[
-        str(bazelutil.DataPath(
-            'llvm_test_suite/SingleSource/Benchmarks/Shootout/hash.c')),
+          str(
+              bazelutil.DataPath(
+                  'llvm_test_suite/SingleSource/Benchmarks/Shootout/hash.c')),
       ],
       hdrs=[
-        str(bazelutil.DataPath(
-            'llvm_test_suite/SingleSource/Benchmarks/Shootout/simple_hash.h')),
+          str(
+              bazelutil.DataPath(
+                  'llvm_test_suite/SingleSource/Benchmarks/Shootout/simple_hash.h'
+              )),
       ],
   )
   heapsort = benchmarks_pb2.Benchmark(
       name='heapsort',
-      binary=str(bazelutil.DataPath(
-          'llvm_test_suite/SingleSource_Benchmarks_Shootout_heapsort')),
+      binary=str(
+          bazelutil.DataPath(
+              'llvm_test_suite/SingleSource_Benchmarks_Shootout_heapsort')),
       srcs=[
-        str(bazelutil.DataPath(
-            'llvm_test_suite/SingleSource/Benchmarks/Shootout/heapsort.c')),
+          str(
+              bazelutil.DataPath(
+                  'llvm_test_suite/SingleSource/Benchmarks/Shootout/heapsort.c')
+          ),
       ],
   )
   hello = benchmarks_pb2.Benchmark(
       name='hello',
-      binary=str(bazelutil.DataPath(
-          'llvm_test_suite/SingleSource_Benchmarks_Shootout_hello')),
+      binary=str(
+          bazelutil.DataPath(
+              'llvm_test_suite/SingleSource_Benchmarks_Shootout_hello')),
       srcs=[
-        str(bazelutil.DataPath(
-            'llvm_test_suite/SingleSource/Benchmarks/Shootout/hello.c')),
+          str(
+              bazelutil.DataPath(
+                  'llvm_test_suite/SingleSource/Benchmarks/Shootout/hello.c')),
       ],
   )
   lists = benchmarks_pb2.Benchmark(
       name='lists',
-      binary=str(bazelutil.DataPath(
-          'llvm_test_suite/SingleSource_Benchmarks_Shootout_lists')),
+      binary=str(
+          bazelutil.DataPath(
+              'llvm_test_suite/SingleSource_Benchmarks_Shootout_lists')),
       srcs=[
-        str(bazelutil.DataPath(
-            'llvm_test_suite/SingleSource/Benchmarks/Shootout/lists.c')),
+          str(
+              bazelutil.DataPath(
+                  'llvm_test_suite/SingleSource/Benchmarks/Shootout/lists.c')),
       ],
   )
   matrix = benchmarks_pb2.Benchmark(
       name='matrix',
-      binary=str(bazelutil.DataPath(
-          'llvm_test_suite/SingleSource_Benchmarks_Shootout_matrix')),
+      binary=str(
+          bazelutil.DataPath(
+              'llvm_test_suite/SingleSource_Benchmarks_Shootout_matrix')),
       srcs=[
-        str(bazelutil.DataPath(
-            'llvm_test_suite/SingleSource/Benchmarks/Shootout/matrix.c')),
+          str(
+              bazelutil.DataPath(
+                  'llvm_test_suite/SingleSource/Benchmarks/Shootout/matrix.c')),
       ],
   )
   methcall = benchmarks_pb2.Benchmark(
       name='methcall',
-      binary=str(bazelutil.DataPath(
-          'llvm_test_suite/SingleSource_Benchmarks_Shootout_methcall')),
+      binary=str(
+          bazelutil.DataPath(
+              'llvm_test_suite/SingleSource_Benchmarks_Shootout_methcall')),
       srcs=[
-        str(bazelutil.DataPath(
-            'llvm_test_suite/SingleSource/Benchmarks/Shootout/methcall.c')),
+          str(
+              bazelutil.DataPath(
+                  'llvm_test_suite/SingleSource/Benchmarks/Shootout/methcall.c')
+          ),
       ],
   )
   nestedloop = benchmarks_pb2.Benchmark(
       name='nestedloop',
-      binary=str(bazelutil.DataPath(
-          'llvm_test_suite/SingleSource_Benchmarks_Shootout_nestedloop')),
+      binary=str(
+          bazelutil.DataPath(
+              'llvm_test_suite/SingleSource_Benchmarks_Shootout_nestedloop')),
       srcs=[
-        str(bazelutil.DataPath(
-            'llvm_test_suite/SingleSource/Benchmarks/Shootout/nestedloop.c')),
+          str(
+              bazelutil.DataPath(
+                  'llvm_test_suite/SingleSource/Benchmarks/Shootout/nestedloop.c'
+              )),
       ],
-
   )
   objinst = benchmarks_pb2.Benchmark(
       name='objinst',
-      binary=str(bazelutil.DataPath(
-          'llvm_test_suite/SingleSource_Benchmarks_Shootout_objinst')),
+      binary=str(
+          bazelutil.DataPath(
+              'llvm_test_suite/SingleSource_Benchmarks_Shootout_objinst')),
       srcs=[
-        str(bazelutil.DataPath(
-            'llvm_test_suite/SingleSource/Benchmarks/Shootout/objinst.c')),
+          str(
+              bazelutil.DataPath(
+                  'llvm_test_suite/SingleSource/Benchmarks/Shootout/objinst.c')
+          ),
       ],
   )
   random = benchmarks_pb2.Benchmark(
       name='random',
-      binary=str(bazelutil.DataPath(
-          'llvm_test_suite/SingleSource_Benchmarks_Shootout_random')),
+      binary=str(
+          bazelutil.DataPath(
+              'llvm_test_suite/SingleSource_Benchmarks_Shootout_random')),
       srcs=[
-        str(bazelutil.DataPath(
-            'llvm_test_suite/SingleSource/Benchmarks/Shootout/random.c')),
+          str(
+              bazelutil.DataPath(
+                  'llvm_test_suite/SingleSource/Benchmarks/Shootout/random.c')),
       ],
   )
   sieve = benchmarks_pb2.Benchmark(
       name='sieve',
-      binary=str(bazelutil.DataPath(
-          'llvm_test_suite/SingleSource_Benchmarks_Shootout_sieve')),
+      binary=str(
+          bazelutil.DataPath(
+              'llvm_test_suite/SingleSource_Benchmarks_Shootout_sieve')),
       srcs=[
-        str(bazelutil.DataPath(
-            'llvm_test_suite/SingleSource/Benchmarks/Shootout/sieve.c')),
+          str(
+              bazelutil.DataPath(
+                  'llvm_test_suite/SingleSource/Benchmarks/Shootout/sieve.c')),
       ],
   )
   strcat = benchmarks_pb2.Benchmark(
       name='strcat',
-      binary=str(bazelutil.DataPath(
-          'llvm_test_suite/SingleSource_Benchmarks_Shootout_strcat')),
+      binary=str(
+          bazelutil.DataPath(
+              'llvm_test_suite/SingleSource_Benchmarks_Shootout_strcat')),
       srcs=[
-        str(bazelutil.DataPath(
-            'llvm_test_suite/SingleSource/Benchmarks/Shootout/strcat.c')),
+          str(
+              bazelutil.DataPath(
+                  'llvm_test_suite/SingleSource/Benchmarks/Shootout/strcat.c')),
       ],
   )
 
@@ -177,19 +212,19 @@ SingleSource = _SingleSource()
 
 # A list of all benchmarks defined in this file.
 BENCHMARKS: typing.List[benchmarks_pb2.Benchmark] = [
-  SingleSource.Benchmarks.McGill.queens,
-  SingleSource.Benchmarks.Shootout.ackermann,
-  SingleSource.Benchmarks.Shootout.ary3,
-  SingleSource.Benchmarks.Shootout.fib2,
-  SingleSource.Benchmarks.Shootout.hash,
-  SingleSource.Benchmarks.Shootout.heapsort,
-  SingleSource.Benchmarks.Shootout.hello,
-  SingleSource.Benchmarks.Shootout.lists,
-  SingleSource.Benchmarks.Shootout.matrix,
-  SingleSource.Benchmarks.Shootout.methcall,
-  SingleSource.Benchmarks.Shootout.nestedloop,
-  SingleSource.Benchmarks.Shootout.objinst,
-  SingleSource.Benchmarks.Shootout.random,
-  SingleSource.Benchmarks.Shootout.sieve,
-  SingleSource.Benchmarks.Shootout.strcat,
+    SingleSource.Benchmarks.McGill.queens,
+    SingleSource.Benchmarks.Shootout.ackermann,
+    SingleSource.Benchmarks.Shootout.ary3,
+    SingleSource.Benchmarks.Shootout.fib2,
+    SingleSource.Benchmarks.Shootout.hash,
+    SingleSource.Benchmarks.Shootout.heapsort,
+    SingleSource.Benchmarks.Shootout.hello,
+    SingleSource.Benchmarks.Shootout.lists,
+    SingleSource.Benchmarks.Shootout.matrix,
+    SingleSource.Benchmarks.Shootout.methcall,
+    SingleSource.Benchmarks.Shootout.nestedloop,
+    SingleSource.Benchmarks.Shootout.objinst,
+    SingleSource.Benchmarks.Shootout.random,
+    SingleSource.Benchmarks.Shootout.sieve,
+    SingleSource.Benchmarks.Shootout.strcat,
 ]

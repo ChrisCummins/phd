@@ -12,7 +12,6 @@ from datasets.me_db.providers.life_cycle import life_cycle
 from datasets.me_db.providers.life_cycle import make_dataset
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -25,14 +24,16 @@ def temp_dir() -> pathlib.Path:
 @pytest.fixture(scope='function')
 def temp_inbox(temp_dir: pathlib.Path) -> pathlib.Path:
   (temp_dir / 'life_cycle').mkdir()
-  generator = make_dataset.RandomDatasetGenerator(time.mktime(
-      time.strptime('1/1/2018', '%m/%d/%Y')), locations=[
-    'My House',
-    'The Office',
-  ], names=[
-    'Work',
-    'Home',
-  ])
+  generator = make_dataset.RandomDatasetGenerator(
+      time.mktime(time.strptime('1/1/2018', '%m/%d/%Y')),
+      locations=[
+          'My House',
+          'The Office',
+      ],
+      names=[
+          'Work',
+          'Home',
+      ])
   generator.SampleZip(temp_dir / 'life_cycle' / 'LC_export.zip', 100)
   yield temp_dir
 

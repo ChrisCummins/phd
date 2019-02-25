@@ -11,7 +11,6 @@ from absl import flags
 from datasets.me_db.providers.life_cycle import make_dataset
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -28,18 +27,18 @@ def test_RandomDatasetGenerator_SampleFile(temp_dir: pathlib.Path):
       start_time_seconds_since_epoch=time.mktime(
           time.strptime('1/1/2018', '%m/%d/%Y')),
       locations=[
-        'My House',
-        'The Office',
-        'A Restaurant',
-      ], names=[
-        'Work',
-        'Home',
-        'Sleep',
-        'Fun',
-        'Commute to work',
-        'Commute to home',
-      ]
-  )
+          'My House',
+          'The Office',
+          'A Restaurant',
+      ],
+      names=[
+          'Work',
+          'Home',
+          'Sleep',
+          'Fun',
+          'Commute to work',
+          'Commute to home',
+      ])
 
   generator.SampleFile(temp_dir / 'LC_export.csv', 100)
 
@@ -62,18 +61,18 @@ def test_RandomDatasetGenerator_SampleZip(temp_dir: pathlib.Path):
       start_time_seconds_since_epoch=time.mktime(
           time.strptime('1/1/2018', '%m/%d/%Y')),
       locations=[
-        'My House',
-        'The Office',
-        'A Restaurant',
-      ], names=[
-        'Work',
-        'Home',
-        'Sleep',
-        'Fun',
-        'Commute to work',
-        'Commute to home',
-      ]
-  )
+          'My House',
+          'The Office',
+          'A Restaurant',
+      ],
+      names=[
+          'Work',
+          'Home',
+          'Sleep',
+          'Fun',
+          'Commute to work',
+          'Commute to home',
+      ])
 
   generator.SampleZip(temp_dir / 'LC_export.zip', 100)
 

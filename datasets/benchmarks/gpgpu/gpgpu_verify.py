@@ -18,7 +18,6 @@ from labm8 import bazelutil
 from labm8 import fs
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('cgo17_features_csv', '',
@@ -26,16 +25,19 @@ flags.DEFINE_string('cgo17_features_csv', '',
 flags.DEFINE_string('gpgpu_log_dir', '',
                     'The directory containing the libcecl event logs.')
 
+
 def print_df(df):
   """Print a dataframe to stdout"""
   with pd.option_context('display.max_rows', None, 'display.max_columns', None):
     print(df)
+
 
 def print_df_stats(df):
   """Print statistics of a datafra to stdout"""
   sums = df.sum()
   print('CPU: %f percent of values true' % (sums['CPU'] / len(df) * 100))
   print('GPU: %f percent of values true' % (sums['GPU'] / len(df) * 100))
+
 
 def main(argv: typing.List[str]):
   """Main entry point."""
@@ -79,6 +81,7 @@ def main(argv: typing.List[str]):
   # Print
   print_df(df)
   print_df_stats(df)
+
 
 if __name__ == '__main__':
   app.run(main)

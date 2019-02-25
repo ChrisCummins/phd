@@ -14,7 +14,6 @@ from absl import logging
 from datasets.me_db import importers
 from datasets.me_db import me_pb2
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('timing_inbox', None, 'Inbox to process.')
@@ -33,9 +32,7 @@ def _ReadDatabaseToSeriesCollection(db) -> me_pb2.SeriesCollection:
 
   # Construct a map from distinct Task.title columns to Series protos.
   cursor.execute('SELECT DISTINCT(title) FROM TASK')
-  title_series_map = {
-    row[0]: me_pb2.Series() for row in cursor.fetchall()
-  }
+  title_series_map = {row[0]: me_pb2.Series() for row in cursor.fetchall()}
 
   # Process data from each title separately.
   for title, series in title_series_map.items():
@@ -51,7 +48,8 @@ def _ReadDatabaseToSeriesCollection(db) -> me_pb2.SeriesCollection:
     # lifting, with the only processing of data required being the conversion of
     # Application.title to CamelCaps.
     # TODO(cec): What time zone does Timing.app store results in?
-    cursor.execute("""
+    cursor.execute(
+        """
 SELECT
   CAST(ROUND(AppActivity.startDate * 1000.0) AS int) as date,
   CAST(ROUND((AppActivity.endDate - AppActivity.startDate) * 1000.0) AS int) as value,
@@ -68,15 +66,17 @@ WHERE
 """, (title,))
     # Create Measurement protos for each of the returned rows.
     series.measurement.extend([
-      me_pb2.Measurement(
-          ms_since_unix_epoch=date,
-          value=value,
-          group="".join(group.title().split()) if group else "default",
-          source='Timing.app',
-      ) for date, value, group in cursor])
+        me_pb2.Measurement(
+            ms_since_unix_epoch=date,
+            value=value,
+            group="".join(group.title().split()) if group else "default",
+            source='Timing.app',
+        ) for date, value, group in cursor
+    ])
     logging.info('Processed %s %s:%s measurements in %.3f seconds',
                  humanize.intcomma(len(series.measurement)), series.family,
-                 series.name, time.time() - start_time)
+                 series.name,
+                 time.time() - start_time)
 
   return me_pb2.SeriesCollection(series=title_series_map.values())
 

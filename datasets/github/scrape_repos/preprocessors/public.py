@@ -7,7 +7,6 @@ from absl import flags
 
 from labm8 import fs
 
-
 FLAGS = flags.FLAGS
 
 # Type hint for a preprocessor function. See @clgen_preprocess for details.
@@ -35,19 +34,18 @@ def dataset_preprocessor(func: PreprocessorFunction) -> PreprocessorFunction:
       'def func(text: str) -> str:'.
   """
   expected_type_hints = {
-    'import_root': pathlib.Path,
-    'file_relpath': str,
-    'all_file_relpaths': typing.List[str],
-    'text': str,
-    'return': typing.List[str],
+      'import_root': pathlib.Path,
+      'file_relpath': str,
+      'all_file_relpaths': typing.List[str],
+      'text': str,
+      'return': typing.List[str],
   }
   if typing.get_type_hints(func) != expected_type_hints:
     return_type = expected_type_hints.pop('return').__name__
     expected_args = ', '.join(
         [f'{k}: {v.__name__}' for k, v in expected_type_hints.items()])
-    raise TypeError(
-        f'Preprocessor {func.__name__} does not have signature '
-        f'"def {func.__name__}({expected_args}) -> {return_type}".')
+    raise TypeError(f'Preprocessor {func.__name__} does not have signature '
+                    f'"def {func.__name__}({expected_args}) -> {return_type}".')
   func.__dict__['is_dataset_preprocessor'] = True
   return func
 

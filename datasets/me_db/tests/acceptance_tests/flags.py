@@ -8,10 +8,10 @@ have already been defined.
 
 from absl import flags
 
-
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string('me_db_acceptance_tests_inbox', None,
-                    'If set, this sets the inbox path to be used by the '
-                    'acceptance test suite. This overrides the default path of '
-                    '//datasets/me_db/tests/test_inbox.')
+flags.DEFINE_string(
+    'me_db_acceptance_tests_inbox', None,
+    'If set, this sets the inbox path to be used by the '
+    'acceptance test suite. This overrides the default path of '
+    '//datasets/me_db/tests/test_inbox.')

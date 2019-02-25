@@ -16,7 +16,7 @@
 # 3. copy this script file into the directory (NOT THE ENTIRE REPOSITORY)
 # 4. run the script by typing: "python sanity_check.py"
 # 5. wait (hours, maybe a day, not a week long though)
-# 6. you will get the result. 
+# 6. you will get the result.
 #
 # questions? kim868@illinois.edu
 #
@@ -29,26 +29,27 @@ import subprocess
 import socket
 
 err_string = {
-  0: 'success',
-  1: 'compile error',
-  2: 'runtime error',
-  3: 'output mismatch',
-  4: 'cannot find version',
-  5: 'cannot find data set',
-  6: 'killed by user'
+    0: 'success',
+    1: 'compile error',
+    2: 'runtime error',
+    3: 'output mismatch',
+    4: 'cannot find version',
+    5: 'cannot find data set',
+    6: 'killed by user'
 }
+
 
 class benchmark:
   pbTimerCats = [
-    "IO        : ",
-    "GPU       : ",
-    "Copy      : ",
-    "Driver    : ",
-    "Copy Async: ",
-    "Compute   : ",
-    "CPU/GPU Overlap: ",
-    "Timer Wall Time:",
-    ]
+      "IO        : ",
+      "GPU       : ",
+      "Copy      : ",
+      "Driver    : ",
+      "Copy Async: ",
+      "Compute   : ",
+      "CPU/GPU Overlap: ",
+      "Timer Wall Time:",
+  ]
 
   def __init__(self, name, platforms):
     self.name = name
@@ -66,13 +67,13 @@ class benchmark:
 
   def scan_versions(self):
     for ver in os.listdir('benchmarks' + os.sep + self.name + os.sep + 'src'):
-      self.vers.append(ver) 
+      self.vers.append(ver)
 
   def scan_inputs(self):
     for datum in os.listdir('datasets' + os.sep + self.name):
-      self.data.append(datum) 
+      self.data.append(datum)
 
-  def run(self, ver, datum, pl, fake=False): 
+  def run(self, ver, datum, pl, fake=False):
     cmd = 'python parboil run %s %s %s %s' % (self.name, ver, datum, pl)
     print cmd
 
@@ -102,7 +103,7 @@ class benchmark:
 
   def run_all(self, fake=False):
     for ver in self.vers:
-      if ver in [ 'cpu', 'base' ]:
+      if ver in ['cpu', 'base']:
         continue
 
       else:
@@ -117,7 +118,7 @@ class benchmark:
 
             self.results.append((ver, datum, platform, ret, timing))
 
-  def get_results(self): 
+  def get_results(self):
     return self.results
 
   def get_result_string(self):
@@ -160,6 +161,7 @@ class benchmark:
         pl = val.split('#')[0].strip()
         return self.platforms[pl]
 
+
 def checkout():
   parboil_repos = '/afs/crhc.illinois.edu/project/hwuligans/parboil/parboil'
   bmks_repos = '/afs/crhc.illinois.edu/project/hwuligans/parboil/benchmarks'
@@ -170,10 +172,13 @@ def checkout():
   os.system('darcs get %s _parboil/benchmarks' % bmks_repos)
   os.system('cd _parboil && ln -s %s' % datasets_path)
 
+
 def prepare():
   os.system('PARBOIL_ROOT=$PWD/_parboil && cd _parboil/common/src/ && make')
-  os.system('cd _parboil && find . -name "compare-output" -exec chmod +x {} \\;')
+  os.system(
+      'cd _parboil && find . -name "compare-output" -exec chmod +x {} \\;')
   os.system('chmod +x _parboil/parboil')
+
 
 def init():
   out = get_output_file()
@@ -184,15 +189,17 @@ def init():
 
   return pwd, out
 
+
 def get_benchmarks(platform):
   platforms = scan_platforms(platform)
 
   bmks = []
   for d in os.listdir('benchmarks'):
-    if d in [ '.', '_darcs' ]:
-     continue
+    if d in ['.', '_darcs']:
+      continue
     bmks.append(benchmark(d, platforms))
   return bmks
+
 
 def scan_platforms(platform):
   path = 'common/platform'
@@ -208,15 +215,18 @@ def scan_platforms(platform):
       lang = tokens[0]
       if lang not in platforms.keys():
         platforms[lang] = []
-      platforms[lang].append(reduce(lambda x, y: x+y, tokens[1:-1]))
+      platforms[lang].append(reduce(lambda x, y: x + y, tokens[1:-1]))
   return platforms
+
 
 def get_output_file():
   fname = 'result-%s.txt' % time.strftime('%Y-%m-%d', time.gmtime())
   return open(fname, 'w')
 
+
 def run(platform):
-  shutil.copy('_parboil/common/Makefile.conf.example-%s' % platform, '_parboil/common/Makefile.conf')
+  shutil.copy('_parboil/common/Makefile.conf.example-%s' % platform,
+              '_parboil/common/Makefile.conf')
 
   pwd, out = init()
   bmks = get_benchmarks(platform)
@@ -228,6 +238,7 @@ def run(platform):
   out.close()
   os.chdir(pwd)
 
+
 ###########################################
 
 checkout()
@@ -236,4 +247,3 @@ if socket.gethostname().startswith('cyclone'):
   run('nvidia')
 elif socket.gethostname().startswith('ati'):
   run('ati')
-

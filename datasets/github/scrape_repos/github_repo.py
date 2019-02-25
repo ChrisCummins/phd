@@ -17,7 +17,6 @@ from datasets.github.scrape_repos.preprocessors import public
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 
 IndexProgress = collections.namedtuple('IndexProgress', ['i', 'n'])
@@ -43,8 +42,7 @@ class GitHubRepo(object):
       raise ValueError(f"Failed to read metafile '{self.metafile}' {e}")
     self.name: str = f'{self.meta.owner}_{self.meta.name}'
     self.clone_dir: pathlib.Path = metafile.parent / self.name
-    self.index_dir = (
-        pathlib.Path(str(metafile.parent) + '.index') / self.name)
+    self.index_dir = (pathlib.Path(str(metafile.parent) + '.index') / self.name)
 
   def IsCloned(self) -> bool:
     """Return whether the repo has been cloned."""
@@ -79,10 +77,12 @@ class GitHubRepo(object):
     """Index the repo."""
     pattern = indexer.source_code_pattern
     pattern = (f'{self.clone_dir}/{pattern[1:]}'
-               if pattern[0] == '^' else
-               f'{self.clone_dir}/{pattern}')
-    cmd = ['find', str(self.clone_dir), '-type', 'f', '-regex', pattern, '-not',
-           '-path', '*/.git/*']
+               if pattern[0] == '^' else f'{self.clone_dir}/{pattern}')
+    cmd = [
+        'find',
+        str(self.clone_dir), '-type', 'f', '-regex', pattern, '-not', '-path',
+        '*/.git/*'
+    ]
     logging.debug('$ %s', ' '.join(cmd))
     paths = subprocess.check_output(
         cmd, universal_newlines=True).rstrip().split('\n')
@@ -90,22 +90,20 @@ class GitHubRepo(object):
       logging.debug('No files to import from %s', self.clone_dir)
       return self
     if i:
-      logging.info("[%s / %s] Importing %s files from %s ...",
-                   i.i, i.n, humanize.intcomma(len(paths)), self.name)
+      logging.info("[%s / %s] Importing %s files from %s ...", i.i, i.n,
+                   humanize.intcomma(len(paths)), self.name)
     else:
       logging.info("Importing %s files from %s ...",
                    humanize.intcomma(len(paths)), self.name)
     all_files_relpaths = public.GetAllFilesRelativePaths(self.clone_dir)
-    jobs = (
-      scrape_repos_pb2.ImportWorker(
-          clone_from_url=self.meta.clone_from_url,
-          clone_dir=str(self.clone_dir),
-          abspath=p,
-          all_files_relpaths=all_files_relpaths,
-          preprocessors=indexer.preprocessor,
-          index_dir=str(self.index_dir),
-      ) for p in paths
-    )
+    jobs = (scrape_repos_pb2.ImportWorker(
+        clone_from_url=self.meta.clone_from_url,
+        clone_dir=str(self.clone_dir),
+        abspath=p,
+        all_files_relpaths=all_files_relpaths,
+        preprocessors=indexer.preprocessor,
+        index_dir=str(self.index_dir),
+    ) for p in paths)
     progress_bar = progressbar.ProgressBar(max_value=len(paths))
     for _ in progress_bar(pool.imap_unordered(IndexContentFiles, jobs)):
       pass
@@ -114,7 +112,8 @@ class GitHubRepo(object):
     """Return an iterator over all contentfiles in the repo."""
     if self.IsIndexed():
       return (pbutil.FromFile(f, scrape_repos_pb2.ContentFile())
-              for f in self.index_dir.iterdir() if f.name != 'DONE.txt')
+              for f in self.index_dir.iterdir()
+              if f.name != 'DONE.txt')
     else:
       return []
 
@@ -123,8 +122,9 @@ def IndexContentFiles(job: scrape_repos_pb2.ImportWorker) -> None:
   """Index content files."""
   relpath = job.abspath[len(str(job.clone_dir)) + 1:]
   try:
-    texts = preprocessors.Preprocess(pathlib.Path(job.clone_dir), relpath,
-                                     job.all_files_relpaths, job.preprocessors)
+    texts = preprocessors.Preprocess(
+        pathlib.Path(job.clone_dir), relpath, job.all_files_relpaths,
+        job.preprocessors)
     for i, text in enumerate(texts):
       sha256 = hashlib.sha256(text.encode('utf-8'))
       proto = scrape_repos_pb2.ContentFile(

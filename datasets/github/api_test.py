@@ -8,7 +8,6 @@ from absl import flags
 from datasets.github import api
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 

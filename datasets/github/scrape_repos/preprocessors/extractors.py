@@ -12,7 +12,6 @@ from datasets.github.scrape_repos.proto import scrape_repos_pb2
 from labm8 import bazelutil
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 
 # The path to the methods extractor binary.
@@ -38,8 +37,10 @@ def ExtractJavaMethods(text: str, static_only: bool = True) -> typing.List[str]:
     ValueError: In case method extraction fails.
   """
   logging.debug('$ %s', JAVA_METHODS_EXTRACTOR)
-  process = subprocess.Popen([JAVA_METHODS_EXTRACTOR], stdin=subprocess.PIPE,
-                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+  process = subprocess.Popen([JAVA_METHODS_EXTRACTOR],
+                             stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE,
                              universal_newlines=True,
                              env=STATIC_ONLY_ENV if static_only else None)
   stdout, stderr = process.communicate(text)

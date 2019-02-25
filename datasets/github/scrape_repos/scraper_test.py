@@ -9,7 +9,6 @@ from datasets.github.scrape_repos.proto import scrape_repos_pb2
 from labm8 import labdate
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 

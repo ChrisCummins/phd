@@ -10,7 +10,6 @@ from datasets.me_db.providers.ynab import make_dataset
 from datasets.me_db.providers.ynab import ynab
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -26,8 +25,8 @@ def test_ProcessDirectory(temp_dir: pathlib.Path):
       start_date_seconds_since_epoch=time.mktime(
           time.strptime('1/1/2018', '%m/%d/%Y')),
       categories={
-        'Rainy Day': ['Savings', 'Pension'],
-        'Everyday Expenses': ['Groceries', 'Clothes'],
+          'Rainy Day': ['Savings', 'Pension'],
+          'Everyday Expenses': ['Groceries', 'Clothes'],
       })
   dir = (temp_dir / 'ynab' / 'Personal Finances~B0DA25C7.ynab4' /
          'data1~8E111055' / '12345D63-B6C2-CD11-6666-C7D8733E20AB')

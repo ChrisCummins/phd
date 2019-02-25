@@ -23,12 +23,9 @@ from datasets.github.scrape_repos.proto import scrape_repos_pb2
 from labm8 import labdate
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string(
-    'clone_list', None,
-    'The path to a LanguageCloneList file.')
+flags.DEFINE_string('clone_list', None, 'The path to a LanguageCloneList file.')
 
 
 class QueryScraper(threading.Thread):
@@ -148,8 +145,8 @@ def RunQuery(worker: QueryScraper) -> None:
                worker.repo_query.string,
                humanize.intcomma(worker.total_result_count),
                humanize.intcomma(worker.repo_query.max_results))
-  bar = progressbar.ProgressBar(max_value=worker.repo_query.max_results,
-                                redirect_stderr=True)
+  bar = progressbar.ProgressBar(
+      max_value=worker.repo_query.max_results, redirect_stderr=True)
   worker.start()
   while worker.is_alive():
     bar.update(worker.GetNumberOfResultsProcessed())
@@ -210,8 +207,8 @@ def main(argv) -> None:
                                scrape_repos_pb2.LanguageCloneList())
 
   for language in clone_list.language:
-    logging.info('Scraping %s repos using %s queries ...',
-                 language.language, humanize.intcomma(len(language.query)))
+    logging.info('Scraping %s repos using %s queries ...', language.language,
+                 humanize.intcomma(len(language.query)))
     for query in language.query:
       RunQuery(QueryScraper(language, query, connection))
 

@@ -95,11 +95,13 @@ def export_csvs(outpath, keypath, workspace_name, start_date):
 
   toggl = get_toggl(keypath)
   workspace = get_workspace(toggl, workspace_name)
-  records = get_report(toggl, {
-    'workspace_id': workspace['id'],
-    'since': start_date,
-    'until': str(datetime.datetime.now().date()),  # today
-  })
+  records = get_report(
+      toggl,
+      {
+          'workspace_id': workspace['id'],
+          'since': start_date,
+          'until': str(datetime.datetime.now().date()),  # today
+      })
 
   # Created a sorted list of tuples by date:
   tuples = sorted([parse_record(x) for x in records], key=lambda x: x[0])

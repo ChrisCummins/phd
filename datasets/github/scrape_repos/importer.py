@@ -20,7 +20,6 @@ from datasets.github.scrape_repos.preprocessors import public
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 flags.DEFINE_integer('processes', os.cpu_count(),
                      'The number of simultaneous processes.')
@@ -48,22 +47,26 @@ def ShouldImportRepo(session: orm.session.Session,
   return not contentfiles.GitHubRepository.IsInDatabase(session, meta)
 
 
-def ImportWorker(
-    job: scrape_repos_pb2.ImportWorker
-) -> typing.List[contentfiles.ContentFile]:
+def ImportWorker(job: scrape_repos_pb2.ImportWorker
+                ) -> typing.List[contentfiles.ContentFile]:
   """Import a content file."""
   relpath = job.abspath[len(str(job.clone_dir)) + 1:]
   outputs: typing.List[contentfiles.ContentFile] = []
   try:
-    texts = preprocessors.Preprocess(pathlib.Path(job.clone_dir), relpath,
-                                     job.all_files_relpaths, job.preprocessors)
+    texts = preprocessors.Preprocess(
+        pathlib.Path(job.clone_dir), relpath, job.all_files_relpaths,
+        job.preprocessors)
     for i, text in enumerate(texts):
       sha256 = hashlib.sha256(text.encode('utf-8'))
-      outputs.append(contentfiles.ContentFile(
-          clone_from_url=job.clone_from_url,
-          relpath=relpath, artifact_index=i,
-          sha256=sha256.digest(), charcount=len(text),
-          linecount=len(text.split('\n')), text=text))
+      outputs.append(
+          contentfiles.ContentFile(
+              clone_from_url=job.clone_from_url,
+              relpath=relpath,
+              artifact_index=i,
+              sha256=sha256.digest(),
+              charcount=len(text),
+              linecount=len(text.split('\n')),
+              text=text))
   except UnicodeDecodeError:
     logging.warning('Failed to decode %s', relpath)
   return outputs
@@ -71,8 +74,7 @@ def ImportWorker(
 
 def ImportRepo(session: orm.session.Session,
                language: scrape_repos_pb2.LanguageToClone,
-               metafile: pathlib.Path,
-               pool: multiprocessing.Pool) -> None:
+               metafile: pathlib.Path, pool: multiprocessing.Pool) -> None:
   """Import contentfiles from repository.
 
   Args:
@@ -93,8 +95,10 @@ def ImportRepo(session: orm.session.Session,
 
     pat = importer.source_code_pattern
     pat = f'{clone_dir}/{pat[1:]}' if pat[0] == '^' else f'{clone_dir}/{pat}'
-    cmd = ['find', str(clone_dir), '-type', 'f', '-regex', pat, '-not',
-           '-path', '*/.git/*']
+    cmd = [
+        'find',
+        str(clone_dir), '-type', 'f', '-regex', pat, '-not', '-path', '*/.git/*'
+    ]
     logging.debug('$ %s', ' '.join(cmd))
     paths = subprocess.check_output(
         cmd, universal_newlines=True).rstrip().split('\n')
@@ -102,17 +106,17 @@ def ImportRepo(session: orm.session.Session,
       logging.debug('No files to import from %s', clone_dir)
       return
     logging.info("Importing %s '%s' files from %s ...",
-                 humanize.intcomma(len(paths)),
-                 importer.source_code_pattern, clone_dir)
+                 humanize.intcomma(len(paths)), importer.source_code_pattern,
+                 clone_dir)
     all_files_relpaths = public.GetAllFilesRelativePaths(clone_dir)
     jobs = [
-      scrape_repos_pb2.ImportWorker(
-          clone_from_url=meta.clone_from_url,
-          clone_dir=str(clone_dir),
-          abspath=p,
-          all_files_relpaths=all_files_relpaths,
-          preprocessors=importer.preprocessor,
-      ) for p in paths
+        scrape_repos_pb2.ImportWorker(
+            clone_from_url=meta.clone_from_url,
+            clone_dir=str(clone_dir),
+            abspath=p,
+            all_files_relpaths=all_files_relpaths,
+            preprocessors=importer.preprocessor,
+        ) for p in paths
     ]
     bar = progressbar.ProgressBar(max_value=len(jobs))
     for outputs in bar(pool.imap_unordered(ImportWorker, jobs)):
@@ -137,10 +141,12 @@ def ImportFromLanguage(db: contentfiles.ContentFiles,
     raise ValueError('LanguageToClone.importer field not set')
 
   with db.Session() as session:
-    repos_to_import = [pathlib.Path(language.destination_directory / f) for f in
-                       pathlib.Path(language.destination_directory).iterdir() if
-                       ShouldImportRepo(session, pathlib.Path(
-                           language.destination_directory / f))]
+    repos_to_import = [
+        pathlib.Path(language.destination_directory / f)
+        for f in pathlib.Path(language.destination_directory).iterdir()
+        if ShouldImportRepo(session,
+                            pathlib.Path(language.destination_directory / f))
+    ]
   random.shuffle(repos_to_import)
   logging.info('Importing %s %s repos ...',
                humanize.intcomma(len(repos_to_import)),

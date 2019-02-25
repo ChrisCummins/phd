@@ -12,7 +12,6 @@ from absl import flags
 from labm8 import bazelutil
 from labm8 import decorators
 
-
 FLAGS = flags.FLAGS
 
 
@@ -28,15 +27,16 @@ class LinuxSourcesDataset(object):
 
   def __init__(self):
     self._src_tree_root = pathlib.Path(bazelutil.DataPath("linux_srcs"))
-    self.generated_hdrs_root = pathlib.Path(bazelutil.DataPath(
-        "phd/datasets/linux/generated_headers"))
+    self.generated_hdrs_root = pathlib.Path(
+        bazelutil.DataPath("phd/datasets/linux/generated_headers"))
 
   @property
   def src_tree_root(self) -> pathlib.Path:
     """Get the root of the source tree."""
     return self._src_tree_root
 
-  def ListFiles(self, subpath: typing.Union[pathlib.Path, str],
+  def ListFiles(self,
+                subpath: typing.Union[pathlib.Path, str],
                 filename_pattern: str = None):
     """Return a list of paths to files within the source tree.
 

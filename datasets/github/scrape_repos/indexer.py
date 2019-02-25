@@ -14,14 +14,10 @@ from datasets.github.scrape_repos.preprocessors import preprocessors
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
-flags.DEFINE_integer(
-    'indexer_processes', os.cpu_count(),
-    'The number of indexer processes to run.')
-flags.DEFINE_string(
-    'clone_list', None,
-    'The path to a LanguageCloneList file.')
+flags.DEFINE_integer('indexer_processes', os.cpu_count(),
+                     'The number of indexer processes to run.')
+flags.DEFINE_string('clone_list', None, 'The path to a LanguageCloneList file.')
 
 
 def ImportFromLanguage(language: scrape_repos_pb2.LanguageToClone,
@@ -40,22 +36,22 @@ def ImportFromLanguage(language: scrape_repos_pb2.LanguageToClone,
 
   logging.info('Enumerating all repos ...')
   all_repos = [
-    github_repo.GitHubRepo(pathlib.Path(language.destination_directory / f))
-    for f in pathlib.Path(language.destination_directory).iterdir()
-    if f.name.endswith('.pbtxt')]
+      github_repo.GitHubRepo(pathlib.Path(language.destination_directory / f))
+      for f in pathlib.Path(language.destination_directory).iterdir()
+      if f.name.endswith('.pbtxt')
+  ]
   logging.info('Pruning indexed repos ...')
   num_repos = len(all_repos)
   repos_to_import = [repo for repo in all_repos if not repo.IsIndexed()]
   num_todo = len(repos_to_import)
   num_pruned = num_repos - num_todo
   random.shuffle(repos_to_import)
-  logging.info('Importing %s of %s %s repos ...',
-               humanize.intcomma(num_todo),
-               humanize.intcomma(num_repos),
-               language.language.capitalize())
+  logging.info('Importing %s of %s %s repos ...', humanize.intcomma(num_todo),
+               humanize.intcomma(num_repos), language.language.capitalize())
   for i, repo in enumerate(repos_to_import):
-    repo.Index(list(language.importer), pool,
-               github_repo.IndexProgress(num_pruned + i, num_repos))
+    repo.Index(
+        list(language.importer), pool,
+        github_repo.IndexProgress(num_pruned + i, num_repos))
 
 
 def main(argv):

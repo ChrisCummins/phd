@@ -6,7 +6,6 @@ import os
 from absl import flags
 from absl import logging
 
-
 FLAGS = flags.FLAGS
 
 

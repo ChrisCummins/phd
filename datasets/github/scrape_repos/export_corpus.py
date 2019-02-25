@@ -13,11 +13,9 @@ from datasets.github.scrape_repos import contentfiles
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string('clone_list', None,
-                    'The path to a LanguageCloneList file.')
+flags.DEFINE_string('clone_list', None, 'The path to a LanguageCloneList file.')
 flags.DEFINE_string('export_path', None,
                     'The root directory to export files to.')
 

@@ -5,11 +5,10 @@ from absl import flags
 from datasets.me_db import me_db
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
-
 # These tests have been hardcoded to the values in the test_inbox dataset.
+
 
 def test_measurements_count(db: me_db.Database):
   """Test the number of measurements."""

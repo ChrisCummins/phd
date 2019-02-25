@@ -11,22 +11,23 @@ from datasets.github.scrape_repos.proto import scrape_repos_pb2
 from labm8 import pbutil
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
-
 # Test fixtures.
+
 
 def _CreateTestRepo(root_dir: pathlib.Path, owner: str, name: str) -> None:
   """Create an empty repo for testing indexers."""
   owner_name = f'{owner}_{name}'
   (root_dir / owner_name / '.git').mkdir(parents=True)
   (root_dir / owner_name / 'src').mkdir(parents=True)
-  pbutil.ToFile(scrape_repos_pb2.GitHubRepoMetadata(owner=owner, name=name),
-                root_dir / f'{owner_name}.pbtxt')
+  pbutil.ToFile(
+      scrape_repos_pb2.GitHubRepoMetadata(owner=owner, name=name),
+      root_dir / f'{owner_name}.pbtxt')
 
 
 # ShouldIndexRepo() tests.
+
 
 def test_ImportFromLanguage_no_importer(tempdir: pathlib.Path):
   """Test that error is raised if no importer specified."""
@@ -46,9 +47,8 @@ def test_ImportFromLanguage_Java_repo(tempdir: pathlib.Path):
   (tempdir / 'src' / 'Owner_Name' / 'src').mkdir(parents=True)
 
   # A repo will only be imported if there is a repo meta file.
-  pbutil.ToFile(scrape_repos_pb2.GitHubRepoMetadata(
-      owner='Owner',
-      name='Name'),
+  pbutil.ToFile(
+      scrape_repos_pb2.GitHubRepoMetadata(owner='Owner', name='Name'),
       tempdir / 'src' / 'Owner_Name.pbtxt')
 
   # Create some files in our test repo.
@@ -74,12 +74,13 @@ public class B {
       query=[],
       destination_directory=str(tempdir / 'src'),
       importer=[
-        scrape_repos_pb2.ContentFilesImporterConfig(
-            source_code_pattern='.*\\.java',
-            preprocessor=["datasets.github.scrape_repos.preprocessors."
-                          "extractors:JavaMethods"]),
-      ]
-  )
+          scrape_repos_pb2.ContentFilesImporterConfig(
+              source_code_pattern='.*\\.java',
+              preprocessor=[
+                  "datasets.github.scrape_repos.preprocessors."
+                  "extractors:JavaMethods"
+              ]),
+      ])
   indexer.ImportFromLanguage(language, multiprocessing.Pool(1))
 
   test_repo = github_repo.GitHubRepo(tempdir / 'src' / 'Owner_Name.pbtxt')
@@ -88,9 +89,9 @@ public class B {
   contentfiles = list(test_repo.ContentFiles())
   assert len(contentfiles) == 2
   assert set([cf.text for cf in contentfiles]) == {
-    ('public static void helloWorld(){\n'
-     '  System.out.println("Hello, world!");\n}\n'),
-    'private static int foo(){\n  return 5;\n}\n',
+      ('public static void helloWorld(){\n'
+       '  System.out.println("Hello, world!");\n}\n'),
+      'private static int foo(){\n  return 5;\n}\n',
   }
 
 

@@ -8,12 +8,12 @@ from absl import flags
 from datasets.me_db import me_db
 from labm8 import bazelutil
 
-
 FLAGS = flags.FLAGS
-flags.DEFINE_string('integration_tests_inbox', None,
-                    'If set, this sets the inbox path to be used by the '
-                    'integration tests. This overrides the default in '
-                    '//datasets/me_db/integration_tests/inbox.')
+flags.DEFINE_string(
+    'integration_tests_inbox', None,
+    'If set, this sets the inbox path to be used by the '
+    'integration tests. This overrides the default in '
+    '//datasets/me_db/integration_tests/inbox.')
 
 TEST_INBOX_PATH = bazelutil.DataPath('phd/datasets/me_db/tests/test_inbox')
 

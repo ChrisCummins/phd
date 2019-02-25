@@ -9,14 +9,13 @@ from absl import flags
 from datasets.me_db import me_pb2
 from labm8 import labtypes
 
-
 FLAGS = flags.FLAGS
 
 # An inbox importer is a function that takes a path to a directory (the inbox)
 # and a Queue. When called, the function places a SeriesCollection proto on the
 # queue.
-InboxImporter = typing.Callable[
-  [pathlib.Path, multiprocessing.Queue], me_pb2.SeriesCollection]
+InboxImporter = typing.Callable[[pathlib.Path, multiprocessing.Queue], me_pb2.
+                                SeriesCollection]
 
 
 class ImporterError(EnvironmentError):
@@ -51,8 +50,8 @@ class ImporterError(EnvironmentError):
     return repr(self)
 
 
-def ConcatenateSeries(series: typing.Iterator[
-  me_pb2.SeriesCollection]) -> me_pb2.SeriesCollection:
+def ConcatenateSeries(series: typing.Iterator[me_pb2.SeriesCollection]
+                     ) -> me_pb2.SeriesCollection:
   if len({s.name for s in series}) != 1:
     raise ValueError("Multiple names")
   if len({s.family for s in series}) != 1:
@@ -67,9 +66,8 @@ def ConcatenateSeries(series: typing.Iterator[
   return concat_series
 
 
-def MergeSeriesCollections(
-    series: typing.Iterator[
-      me_pb2.SeriesCollection]) -> me_pb2.SeriesCollection:
+def MergeSeriesCollections(series: typing.Iterator[me_pb2.SeriesCollection]
+                          ) -> me_pb2.SeriesCollection:
   """Merge the given series collections into a single SeriesCollection.
 
   Args:
@@ -88,8 +86,6 @@ def MergeSeriesCollections(
   [names_to_series[s.name].append(s) for s in series]
 
   # Concatenate each list of series with the same name.
-  concatenated_series = [
-    ConcatenateSeries(s) for s in names_to_series.values()
-  ]
+  concatenated_series = [ConcatenateSeries(s) for s in names_to_series.values()]
   return me_pb2.SeriesCollection(
       series=sorted(concatenated_series, key=lambda s: s.name))

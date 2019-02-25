@@ -79,8 +79,10 @@ def process_json(infile, outpath):
     writer = csv.writer(outfile, delimiter=",", quoting=csv.QUOTE_MINIMAL)
 
     # Write header
-    writer.writerow(["Date", "Incomplete Tasks", "Complete Tasks",
-                     "Tasks Added", "Tasks Completed", "Tasks Delta"])
+    writer.writerow([
+        "Date", "Incomplete Tasks", "Complete Tasks", "Tasks Added",
+        "Tasks Completed", "Tasks Delta"
+    ])
 
     last_incomplete, last_complete = 0, 0
 
@@ -90,8 +92,8 @@ def process_json(infile, outpath):
       delta_added = incomplete - last_incomplete
       delta_completed = complete - last_complete
       delta = delta_added - delta_completed
-      writer.writerow([date, incomplete, complete,
-                       delta_added, delta_completed, delta])
+      writer.writerow(
+          [date, incomplete, complete, delta_added, delta_completed, delta])
       last_incomplete = incomplete
       last_complete = complete
 

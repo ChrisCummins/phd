@@ -12,7 +12,6 @@ from datasets.github.scrape_repos.proto import scrape_repos_pb2
 from labm8 import labdate
 from labm8 import sqlutil
 
-
 FLAGS = flags.FLAGS
 
 Base = declarative.declarative_base()
@@ -40,15 +39,19 @@ class GitHubRepository(Base):
   language: str = sql.Column(sql.String(16), nullable=False)
 
   @staticmethod
-  def _GetArgsFromProto(
-      proto: scrape_repos_pb2.GitHubRepoMetadata
-  ) -> typing.Dict[str, typing.Any]:
+  def _GetArgsFromProto(proto: scrape_repos_pb2.GitHubRepoMetadata
+                       ) -> typing.Dict[str, typing.Any]:
     date_scraped = labdate.DatetimeFromMillisecondsTimestamp(
         proto.scraped_utc_epoch_ms)
-    return {"clone_from_url": proto.clone_from_url, "owner": proto.owner,
-            "name": proto.name, "num_stars": proto.num_stars,
-            "num_forks": proto.num_forks, "num_watchers": proto.num_watchers,
-            "date_scraped": date_scraped, }
+    return {
+        "clone_from_url": proto.clone_from_url,
+        "owner": proto.owner,
+        "name": proto.name,
+        "num_stars": proto.num_stars,
+        "num_forks": proto.num_forks,
+        "num_watchers": proto.num_watchers,
+        "date_scraped": date_scraped,
+    }
 
   @classmethod
   def FromProto(cls,
@@ -75,8 +78,8 @@ class ContentFile(Base):
   __tablename__ = 'contentfiles'
 
   id: int = sql.Column(sql.Integer, primary_key=True)
-  clone_from_url: str = sql.Column(sql.String(1024), sql.ForeignKey(
-      'repositories.clone_from_url'))
+  clone_from_url: str = sql.Column(
+      sql.String(1024), sql.ForeignKey('repositories.clone_from_url'))
   # Relative path within the repository. This can be a duplicate.
   relpath: str = sql.Column(sql.String(1024), nullable=False)
   # Index into the content file. Use this to differentiate multiple content
@@ -86,11 +89,10 @@ class ContentFile(Base):
   charcount = sql.Column(sql.Integer, nullable=False)
   linecount = sql.Column(sql.Integer, nullable=False)
   text: str = sql.Column(sql.UnicodeText(), nullable=False)
-  date_added: datetime.datetime = sql.Column(sql.DateTime, nullable=False,
-                                             default=datetime.datetime.utcnow)
-  __table_args__ = (
-    sql.UniqueConstraint('clone_from_url', 'relpath', 'artifact_index',
-                         name='uniq_contentfile'),)
+  date_added: datetime.datetime = sql.Column(
+      sql.DateTime, nullable=False, default=datetime.datetime.utcnow)
+  __table_args__ = (sql.UniqueConstraint(
+      'clone_from_url', 'relpath', 'artifact_index', name='uniq_contentfile'),)
 
   @property
   def sha256_hex(self) -> str:
@@ -100,14 +102,18 @@ class ContentFile(Base):
   @staticmethod
   def _GetArgsFromProto(
       proto: scrape_repos_pb2.ContentFile) -> typing.Dict[str, typing.Any]:
-    return {"clone_from_url": proto.clone_from_url, "relpath": proto.relpath,
-            'artifact_index': proto.artifact_index, 'sha256': proto.sha256,
-            'charcount': proto.charcount, 'linecount': proto.linecount,
-            'text': proto.text}
+    return {
+        "clone_from_url": proto.clone_from_url,
+        "relpath": proto.relpath,
+        'artifact_index': proto.artifact_index,
+        'sha256': proto.sha256,
+        'charcount': proto.charcount,
+        'linecount': proto.linecount,
+        'text': proto.text
+    }
 
   @classmethod
-  def FromProto(cls,
-                proto: scrape_repos_pb2.ContentFile) -> 'ContentFile':
+  def FromProto(cls, proto: scrape_repos_pb2.ContentFile) -> 'ContentFile':
     """Instantiate a record from a proto buffer.
 
     Args:
@@ -118,9 +124,8 @@ class ContentFile(Base):
     """
     return cls(**cls._GetArgsFromProto(proto))
 
-  def SetProto(
-      self,
-      proto: scrape_repos_pb2.ContentFile) -> scrape_repos_pb2.ContentFile:
+  def SetProto(self, proto: scrape_repos_pb2.ContentFile
+              ) -> scrape_repos_pb2.ContentFile:
     """Set fields of a protocol buffer representation.
 
     Returns:

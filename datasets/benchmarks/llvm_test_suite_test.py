@@ -10,7 +10,6 @@ from datasets.benchmarks import llvm_test_suite
 from datasets.benchmarks.proto import benchmarks_pb2
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 

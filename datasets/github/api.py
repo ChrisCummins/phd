@@ -13,7 +13,6 @@ from absl import logging
 
 from datasets.github import github_pb2
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
@@ -22,8 +21,7 @@ flags.DEFINE_string(
     '//datasets/github/scrape_repos/README.md for details.')
 
 
-def ReadGitHubCredentials(
-    path: pathlib.Path) -> github_pb2.GitHubCredentials:
+def ReadGitHubCredentials(path: pathlib.Path) -> github_pb2.GitHubCredentials:
   """Read user GitHub credentials from the local file system.
 
   Returns:

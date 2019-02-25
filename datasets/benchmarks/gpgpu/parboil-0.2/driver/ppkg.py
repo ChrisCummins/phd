@@ -8,7 +8,9 @@ import tarfile
 import os
 from os.path import join, getsize
 
+
 class Archiver:
+
   def __init__(self, name, dont_run=False):
     self.filters = []
     self.benchmarks = set([])
@@ -18,7 +20,7 @@ class Archiver:
 
   def readFilter(self):
     try:
-      f = open('ppkg.ignore', 'r') 
+      f = open('ppkg.ignore', 'r')
     except:
       "No filters."
       return
@@ -59,7 +61,7 @@ class Archiver:
     self.top = top
     os.chdir(path)
     if (len(self.benchmarks) == 0):
-    	self.walk(dir)
+      self.walk(dir)
     else:
       self.walk_benchmarks(dir)
     self.close()
@@ -77,10 +79,10 @@ class Archiver:
 
   def walk_benchmarks(self, top):
     for entry in os.listdir(top):
-    	if entry in self.benchmarks:
-    		self.walk(os.path.join(top, entry))
-    	else:
-    		print "Ignoring %s" % entry
+      if entry in self.benchmarks:
+        self.walk(os.path.join(top, entry))
+      else:
+        print "Ignoring %s" % entry
 
   def add(self, path):
     print "Adding %s ..." % path
@@ -91,6 +93,7 @@ class Archiver:
     if not self.dont_run:
       self.tarfile.close()
 
+
 if len(sys.argv) != 3:
   print "Usage: ./ppkg.py <output filename WITH extension: XXX.tar.gz> <input directory>"
   print "       add your own ignore list in pkg.ignore file in the current directory"
@@ -99,4 +102,3 @@ a = Archiver(sys.argv[1], False)
 a.readFilter()
 a.readBenchmarks()
 a.run(sys.argv[2])
-

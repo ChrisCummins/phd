@@ -12,16 +12,39 @@ from fuzzywuzzy import process
 from datasets.github.scrape_repos.preprocessors import public
 from labm8 import bazelutil
 
-
 FLAGS = flags.FLAGS
 
 # The set of standard headers available in C99.
 C99_HEADERS = {
-  'assert.h', 'complex.h', 'ctype.h', 'errno.h', 'fenv.h', 'float.h',
-  'inttypes.h', 'iso646.h', 'limits.h', 'locale.h', 'math.h', 'setjmp.h',
-  'signal.h', 'stdalign.h', 'stdarg.h', 'stdatomic.h', 'stdbool.h', 'stddef.h',
-  'stdint.h', 'stdio.h', 'stdlib.h', 'stdnoreturn.h', 'string.h', 'tgmath.h',
-  'threads.h', 'time.h', 'uchar.h', 'wchar.h', 'wctype.h',
+    'assert.h',
+    'complex.h',
+    'ctype.h',
+    'errno.h',
+    'fenv.h',
+    'float.h',
+    'inttypes.h',
+    'iso646.h',
+    'limits.h',
+    'locale.h',
+    'math.h',
+    'setjmp.h',
+    'signal.h',
+    'stdalign.h',
+    'stdarg.h',
+    'stdatomic.h',
+    'stdbool.h',
+    'stddef.h',
+    'stdint.h',
+    'stdio.h',
+    'stdlib.h',
+    'stdnoreturn.h',
+    'string.h',
+    'tgmath.h',
+    'threads.h',
+    'time.h',
+    'uchar.h',
+    'wchar.h',
+    'wctype.h',
 }
 
 # The set of headers in the C++ standard library.
@@ -29,11 +52,9 @@ _UNAME = 'mac' if sys.platform == 'darwin' else 'linux'
 CXX_HEADERS = set(
     public.GetAllFilesRelativePaths(
         bazelutil.DataPath(f'libcxx_{_UNAME}/include/c++/v1'),
-        follow_symlinks=True) +
-    public.GetAllFilesRelativePaths(
-        bazelutil.DataPath(f'libcxx_{_UNAME}/lib/clang/6.0.0/include'),
-        follow_symlinks=True)
-)
+        follow_symlinks=True) + public.GetAllFilesRelativePaths(
+            bazelutil.DataPath(f'libcxx_{_UNAME}/lib/clang/6.0.0/include'),
+            follow_symlinks=True))
 
 
 @public.dataset_preprocessor
@@ -56,14 +77,15 @@ def CxxHeaders(import_root: pathlib.Path, file_relpath: str, text: str,
   Returns:
     The contents of the file file_relpath, with included headers inlined.
   """
-  return [_InlineCSyntax(import_root, file_relpath, text, all_file_relpaths,
-                         False, GetLibCxxHeaders().union(C99_HEADERS))]
+  return [
+      _InlineCSyntax(import_root, file_relpath, text, all_file_relpaths, False,
+                     GetLibCxxHeaders().union(C99_HEADERS))
+  ]
 
 
 @public.dataset_preprocessor
 def CxxHeadersDiscardUnknown(
-    import_root: pathlib.Path,
-    file_relpath: str, text: str,
+    import_root: pathlib.Path, file_relpath: str, text: str,
     all_file_relpaths: typing.List[str]) -> typing.List[str]:
   """Inline C++ includes, but discard include directives that were not found.
 
@@ -81,13 +103,15 @@ def CxxHeadersDiscardUnknown(
   Returns:
     The contents of the file file_relpath, with included headers inlined.
   """
-  return [_InlineCSyntax(import_root, file_relpath, text, all_file_relpaths,
-                         True, GetLibCxxHeaders().union(C99_HEADERS))]
+  return [
+      _InlineCSyntax(import_root, file_relpath, text, all_file_relpaths, True,
+                     GetLibCxxHeaders().union(C99_HEADERS))
+  ]
 
 
-def _InlineCSyntax(import_root: pathlib.Path, file_relpath: str,
-                   text: str, all_file_relpaths: typing.List[str],
-                   discard_unknown: bool, blacklist: typing.Set[str]):
+def _InlineCSyntax(import_root: pathlib.Path, file_relpath: str, text: str,
+                   all_file_relpaths: typing.List[str], discard_unknown: bool,
+                   blacklist: typing.Set[str]):
   """Private helper function to inline C preprocessor '#include' directives.
 
   One known caveat is that this approaches loses whether or not the include
@@ -107,7 +131,9 @@ def _InlineCSyntax(import_root: pathlib.Path, file_relpath: str,
       return []
 
   return InlineHeaders(
-      import_root, file_relpath, text,
+      import_root,
+      file_relpath,
+      text,
       inline_candidate_relpaths=set(all_file_relpaths),
       already_inlined_relpaths=set(),
       blacklist=blacklist,
@@ -117,9 +143,7 @@ def _InlineCSyntax(import_root: pathlib.Path, file_relpath: str,
       discard_unmatched_headers=discard_unknown)
 
 
-def InlineHeaders(import_root: pathlib.Path,
-                  file_relpath: str,
-                  text: str,
+def InlineHeaders(import_root: pathlib.Path, file_relpath: str, text: str,
                   inline_candidate_relpaths: typing.Set[str],
                   already_inlined_relpaths: typing.Set[str],
                   blacklist: typing.Set[str],
@@ -167,57 +191,61 @@ def InlineHeaders(import_root: pathlib.Path,
 
     for include in includes:
       already_inlined_match = FindCandidateInclude(
-          include, file_relpath, already_inlined_relpaths,
+          include,
+          file_relpath,
+          already_inlined_relpaths,
           exact_matches_only=True)
       if already_inlined_match.confidence == 100:
-        output.append(format_line_comment(
-            f"Skipping already inlined file: '{already_inlined_match}'."))
+        output.append(
+            format_line_comment(
+                f"Skipping already inlined file: '{already_inlined_match}'."))
         continue
 
-      blacklist_match = FindCandidateInclude(include, file_relpath, blacklist,
-                                             exact_matches_only=True)
+      blacklist_match = FindCandidateInclude(
+          include, file_relpath, blacklist, exact_matches_only=True)
       if blacklist_match.confidence == 100:
-        output.append(format_line_comment(
-            f"Preserving blacklisted include: '{include}'."))
+        output.append(
+            format_line_comment(
+                f"Preserving blacklisted include: '{include}'."))
         output.append(format_include(include))
         continue
 
-      candidate_match = FindCandidateInclude(
-          include, file_relpath, inline_candidate_relpaths)
+      candidate_match = FindCandidateInclude(include, file_relpath,
+                                             inline_candidate_relpaths)
       if candidate_match.confidence:
-        output.append(format_line_comment(
-            f"Found candidate include for: "
-            f"'{include}' -> '{candidate_match.path}' "
-            f'({candidate_match.confidence}% confidence).'))
+        output.append(
+            format_line_comment(f"Found candidate include for: "
+                                f"'{include}' -> '{candidate_match.path}' "
+                                f'({candidate_match.confidence}% confidence).'))
         with open(import_root / candidate_match.path) as f:
           candidate_text = f.read()
-        output.append(InlineHeaders(
-            import_root, candidate_match.path, candidate_text,
-            inline_candidate_relpaths,
-            already_inlined_relpaths, blacklist, find_includes, format_include,
-            format_line_comment, discard_unmatched_headers))
+        output.append(
+            InlineHeaders(import_root, candidate_match.path, candidate_text,
+                          inline_candidate_relpaths, already_inlined_relpaths,
+                          blacklist, find_includes, format_include,
+                          format_line_comment, discard_unmatched_headers))
         continue
 
       # No match found :(
       if discard_unmatched_headers:
-        output.append(format_line_comment(
-            f"Discarding unmatched include: '{include}'."))
+        output.append(
+            format_line_comment(f"Discarding unmatched include: '{include}'."))
       else:
-        output.append(format_line_comment(
-            f"Preserving unmatched include: '{include}'."))
+        output.append(
+            format_line_comment(f"Preserving unmatched include: '{include}'."))
         output.append(format_include(include))
 
   return '\n'.join(output)
 
 
-FuzzyIncludeMatch = collections.namedtuple(
-    'FuzzyIncludeMatch', ['path', 'confidence'])
+FuzzyIncludeMatch = collections.namedtuple('FuzzyIncludeMatch',
+                                           ['path', 'confidence'])
 
 
-def FindCandidateInclude(
-    include_match: str, current_file_relpath: str,
-    candidate_relpaths: typing.Set[str],
-    exact_matches_only: bool = False) -> FuzzyIncludeMatch:
+def FindCandidateInclude(include_match: str,
+                         current_file_relpath: str,
+                         candidate_relpaths: typing.Set[str],
+                         exact_matches_only: bool = False) -> FuzzyIncludeMatch:
   """Find and return the most likely included file.
 
   Args:
@@ -238,14 +266,13 @@ def FindCandidateInclude(
 
   # A list of files with the same basename as include match's basename
   candidate_matches = [
-    x for x in candidate_relpaths if x.endswith(include_match)]
+      x for x in candidate_relpaths if x.endswith(include_match)
+  ]
   if candidate_matches and not exact_matches_only:
     # Fuzzy match to find the most likely include.
     choices = (
-        process.extract(include_match, candidate_matches) +
-        process.extract(pathlib.Path(current_file_relpath).name,
-                        candidate_matches)
-    )
+        process.extract(include_match, candidate_matches) + process.extract(
+            pathlib.Path(current_file_relpath).name, candidate_matches))
     return FuzzyIncludeMatch(*max(choices, key=lambda x: x[1]))
   else:
     return FuzzyIncludeMatch('', 0)
