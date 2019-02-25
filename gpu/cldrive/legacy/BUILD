@@ -134,16 +134,11 @@ py_test(
     ],
 )
 
-cc_library(
-    name = "testutil",
+py_library(
+    name = "testlib",
     testonly = 1,
-    srcs = ["testutil.cc"],
-    hdrs = ["testutil.h"],
+    srcs = ["testlib.py"],
     deps = [
-        ":array_kernel_arg_value",
-        ":kernel_arg_value",
-        ":scalar_kernel_arg_value",
-        "//gpu/cldrive/proto:cldrive_cc_pb2",
-        "//third_party/opencl",
+        "//third_party/py/numpy",
     ],
 )

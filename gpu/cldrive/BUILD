@@ -259,3 +259,17 @@ cc_test(
         "//third_party/opencl:libOpenCL.so",
     ],
 )
+
+cc_library(
+    name = "testutil",
+    testonly = 1,
+    srcs = ["testutil.cc"],
+    hdrs = ["testutil.h"],
+    deps = [
+        ":array_kernel_arg_value",
+        ":kernel_arg_value",
+        ":scalar_kernel_arg_value",
+        "//gpu/cldrive/proto:cldrive_cc_pb2",
+        "//third_party/opencl",
+    ],
+)
