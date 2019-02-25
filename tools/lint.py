@@ -2,10 +2,10 @@
 """Run linters on source files in this repository.
 
 Usage:
-  $ ./tools/lint.py [--all]
+  $ ./tools/lint.py [path ...]
 
-By default, only modified files will be linted. If --all argument is provided,
-all git tracked files will be linted.
+By default, only modified files will be linted. If one or more paths are
+provided, all git tracked files in those directories will be linted.
 """
 from __future__ import print_function
 
@@ -38,13 +38,13 @@ def main(argv):
   os.chdir(_PHD_ROOT)
 
   parser = argparse.ArgumentParser()
-  parser.add_argument('--all', action='store_true')
+  parser.add_argument('paths', action="store", nargs='*')
 
   args = parser.parse_args(argv)
 
-  if args.all:
-    lint_candidates = linters_lib.ExecOrDie(['git',
-                                             'ls-files']).rstrip().split('\n')
+  if args.paths:
+    lint_candidates = linters_lib.ExecOrDie(['git', 'ls-files'] +
+                                            args.paths).rstrip().split('\n')
   else:
     lint_candidates = set(
         linters_lib.GetGitDiffFilesOrDie(staged=False) +
