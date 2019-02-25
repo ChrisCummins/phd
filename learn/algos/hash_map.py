@@ -3,6 +3,7 @@ def hash(key: str) -> int:
 
 
 class HashMap:
+
   def __init__(self, nbuckets=10):
     self.buckets = dict((k, []) for k in range(nbuckets))
 
@@ -11,5 +12,3 @@ class HashMap:
     if hash_ in self.buckets[hash_]:
       raise KeyError
     self.buckets[hash_].append((key, value))
-
-  def get(self, key: str)

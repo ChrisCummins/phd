@@ -28,12 +28,13 @@ def set_id(node: Node, counter: int):
 
 
 def serialize_dfs(node: Node, s: typing.List[str]):
-  s.append(' '.join(str(x) for x in [
-    len(node.val),
-    node.val,
-    node.left.id if node.left else -1,
-    node.right.id if node.right else -1,
-  ]))
+  s.append(' '.join(
+      str(x) for x in [
+          len(node.val),
+          node.val,
+          node.left.id if node.left else -1,
+          node.right.id if node.right else -1,
+      ]))
   if node.left:
     s = serialize_dfs(node.left, s)
   if node.right:
@@ -57,6 +58,7 @@ def read_line(s: str):
 
 
 # Serialize and deserialize functions.
+
 
 def serialize(node: Node):
   set_id(node, 0)

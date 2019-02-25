@@ -20,7 +20,7 @@ def count_2s(n):
 
 if __name__ == "__main__":
   examples = [
-    (25, 9),
+      (25, 9),
   ]
 
   for ins, outs in examples:

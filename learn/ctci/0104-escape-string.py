@@ -54,8 +54,8 @@ def main(argv):
   del argv
   assert escape_spaces_regexp("Hello, the World!",
                               17) == "Hello,%20the%20World!"
-  assert (''.join(escape_spaces(list("Hello, the World!        "), 17)) ==
-          "Hello,%20the%20World!    ")
+  assert (''.join(escape_spaces(list("Hello, the World!        "),
+                                17)) == "Hello,%20the%20World!    ")
 
 
 if __name__ == "__main__":

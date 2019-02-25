@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+
 def bts(arr, val, left, right):
   if right < left:
     return -1
@@ -44,9 +45,9 @@ def bts_rotated(arr, val):
 
 def main():
   tests = [
-    ([5, 6, 7, 8, 9, 10, 1, 2, 3], 3, 8),
-    ([5, 6, 7, 8, 9, 10, 1, 2, 3], 30, -1),
-    ([30, 40, 50, 10, 20], 10, 3),
+      ([5, 6, 7, 8, 9, 10, 1, 2, 3], 3, 8),
+      ([5, 6, 7, 8, 9, 10, 1, 2, 3], 30, -1),
+      ([30, 40, 50, 10, 20], 10, 3),
   ]
 
   for test in tests:

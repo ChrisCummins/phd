@@ -8,7 +8,6 @@ from absl import flags
 
 from labm8 import bazelutil
 
-
 FLAGS = flags.FLAGS
 
 DATA_FILE = bazelutil.DataPath('phd/learn/bazel/data_file.txt')
@@ -25,7 +24,8 @@ def main(argv):
   print('Current working directory:', os.getcwd())
   with open(DATA_FILE) as f:
     print('Data file:', f.read().rstrip())
-  p = subprocess.Popen([DATA_BINARY], stdout=subprocess.PIPE,
+  p = subprocess.Popen([DATA_BINARY],
+                       stdout=subprocess.PIPE,
                        universal_newlines=True)
   stdout, _ = p.communicate()
   print('Data binary:', stdout.rstrip())

@@ -5,6 +5,7 @@ from typing import List
 
 
 class Node(object):
+
   def __init__(self, data):
     self.data = data
     self.left = None
@@ -27,6 +28,7 @@ class Node(object):
 
 
 class Graph(object):
+
   def __init__(self, root=None):
     self.root = root
 

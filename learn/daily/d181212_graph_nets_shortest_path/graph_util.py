@@ -9,7 +9,6 @@ from scipy import spatial
 
 from labm8 import labtypes
 
-
 FLAGS = flags.FLAGS
 
 
@@ -72,8 +71,8 @@ class GraphGenerator(object):
     # Create geographic threshold graph.
     pos_array = self.rand.uniform(size=(num_nodes, self.options.dimensions))
     pos = dict(enumerate(pos_array))
-    weight = dict(enumerate(self.rand.exponential(
-        self.options.rate, size=num_nodes)))
+    weight = dict(
+        enumerate(self.rand.exponential(self.options.rate, size=num_nodes)))
     geo_graph = nx.geographical_threshold_graph(
         num_nodes, self.options.theta, pos=pos, weight=weight)
 
@@ -94,8 +93,8 @@ class GraphGenerator(object):
     combined_graph = nx.compose_all([mst_graph, geo_graph.copy()])
     # Put all distance weights into edge attributes.
     for i, j in combined_graph.edges():
-      combined_graph.get_edge_data(i, j).setdefault(
-          self.options.weight_name, distances[i, j])
+      combined_graph.get_edge_data(i, j).setdefault(self.options.weight_name,
+                                                    distances[i, j])
     return combined_graph
 
   def AddShortestPath(self, graph: nx.Graph) -> nx.DiGraph:
@@ -131,14 +130,13 @@ class GraphGenerator(object):
     counts = collections.Counter(pair_to_length_dict.values())
     prob_per_length = 1.0 / len(counts)
     probabilities = [
-      prob_per_length / counts[pair_to_length_dict[x]] for x in node_pairs
+        prob_per_length / counts[pair_to_length_dict[x]] for x in node_pairs
     ]
 
     # Choose the start and end points.
     i = self.rand.choice(len(node_pairs), p=probabilities)
     start, end = node_pairs[i]
-    path = nx.shortest_path(
-        graph, source=start, target=end, weight=weight_name)
+    path = nx.shortest_path(graph, source=start, target=end, weight=weight_name)
 
     # Creates a directed graph, to store the directed path from start to end.
     directed_graph = graph.to_directed()
@@ -166,8 +164,9 @@ class GraphGenerator(object):
   @staticmethod
   def CreateFeature(data_dict: typing.Dict[str, typing.Any],
                     feature_names: typing.List[str]):
-    return np.hstack([np.array(data_dict[feature], dtype=float) for feature in
-                      feature_names])
+    return np.hstack([
+        np.array(data_dict[feature], dtype=float) for feature in feature_names
+    ])
 
   @staticmethod
   def ToOneHot(indices: typing.Iterator[int], max_value: int, axis: int = -1):
@@ -202,8 +201,9 @@ class GraphGenerator(object):
     solution_length = 0
     # Set node features.
     for node_index, node_feature in graph.nodes(data=True):
-      input_graph.add_node(node_index, features=cls.CreateFeature(
-          node_feature, input_node_fields))
+      input_graph.add_node(
+          node_index,
+          features=cls.CreateFeature(node_feature, input_node_fields))
       target_node = cls.ToOneHot(
           cls.CreateFeature(node_feature, target_node_fields).astype(int), 2)[0]
       target_graph.add_node(node_index, features=target_node)
@@ -212,8 +212,10 @@ class GraphGenerator(object):
 
     # Set edge features.
     for receiver, sender, features in graph.edges(data=True):
-      input_graph.add_edge(sender, receiver, features=cls.CreateFeature(
-          features, input_edge_fields))
+      input_graph.add_edge(
+          sender,
+          receiver,
+          features=cls.CreateFeature(features, input_edge_fields))
       target_edge = cls.ToOneHot(
           cls.CreateFeature(features, target_edge_fields).astype(int), 2)[0]
       target_graph.add_edge(sender, receiver, features=target_edge)
@@ -224,8 +226,9 @@ class GraphGenerator(object):
 
     return input_graph, target_graph
 
-  def GenerateGraphs(self, n: int) -> typing.Tuple[
-    typing.List[nx.DiGraph], typing.List[nx.DiGraph], typing.List[nx.DiGraph]]:
+  def GenerateGraphs(
+      self, n: int) -> typing.Tuple[typing.List[nx.DiGraph], typing.
+                                    List[nx.DiGraph], typing.List[nx.DiGraph]]:
     """Generate graphs for training.
 
     Args:
@@ -250,10 +253,12 @@ class GraphGenerator(object):
     return input_graphs, target_graphs, graphs
 
 
-def GenerateGraph(
-    rand: np.random.RandomState, num_nodes_min_max, dimensions: int = 2,
-    theta: float = 1000.0, rate: float = 1.0,
-    weight_name: str = "distance") -> nx.Graph:
+def GenerateGraph(rand: np.random.RandomState,
+                  num_nodes_min_max,
+                  dimensions: int = 2,
+                  theta: float = 1000.0,
+                  rate: float = 1.0,
+                  weight_name: str = "distance") -> nx.Graph:
   """Creates a connected graph.
 
   The graphs are geographic threshold graphs, but with added edges via a
@@ -299,12 +304,12 @@ def GenerateGraph(
   combined_graph = nx.compose_all((mst_graph, geo_graph.copy()))
   # Put all distance weights into edge attributes.
   for i, j in combined_graph.edges():
-    combined_graph.get_edge_data(i, j).setdefault(weight_name,
-                                                  distances[i, j])
+    combined_graph.get_edge_data(i, j).setdefault(weight_name, distances[i, j])
   return combined_graph
 
 
-def AddShortestPath(rand: np.random.RandomState, graph: nx.Graph,
+def AddShortestPath(rand: np.random.RandomState,
+                    graph: nx.Graph,
                     min_length: int = 1,
                     weight_name: str = "distance") -> nx.DiGraph:
   """Samples a shortest path from A to B and adds attributes to indicate it.
@@ -339,14 +344,13 @@ def AddShortestPath(rand: np.random.RandomState, graph: nx.Graph,
   counts = collections.Counter(pair_to_length_dict.values())
   prob_per_length = 1.0 / len(counts)
   probabilities = [
-    prob_per_length / counts[pair_to_length_dict[x]] for x in node_pairs
+      prob_per_length / counts[pair_to_length_dict[x]] for x in node_pairs
   ]
 
   # Choose the start and end points.
   i = rand.choice(len(node_pairs), p=probabilities)
   start, end = node_pairs[i]
-  path = nx.shortest_path(
-      graph, source=start, target=end, weight=weight_name)
+  path = nx.shortest_path(graph, source=start, target=end, weight=weight_name)
 
   # Creates a directed graph, to store the directed path from start to end.
   directed_graph = graph.to_directed()
@@ -389,8 +393,9 @@ def GraphToInputTarget(
 
   def CreateFeature(data_dict: typing.Dict[str, typing.Any],
                     feature_names: typing.List[str]):
-    return np.hstack([np.array(data_dict[feature], dtype=float) for feature in
-                      feature_names])
+    return np.hstack([
+        np.array(data_dict[feature], dtype=float) for feature in feature_names
+    ])
 
   def ToOneHot(indices: typing.Iterator[int], max_value: int, axis: int = -1):
     one_hot = np.eye(max_value)[indices]
@@ -432,11 +437,10 @@ def GraphToInputTarget(
   return input_graph, target_graph
 
 
-def GenerateGraphs(
-    rand: np.random.RandomState, n: int,
-    num_nodes_min_max: typing.Tuple[int, int],
-    theta: float) -> typing.Tuple[
-  typing.List[nx.DiGraph], typing.List[nx.DiGraph], typing.List[nx.DiGraph]]:
+def GenerateGraphs(rand: np.random.RandomState, n: int,
+                   num_nodes_min_max: typing.Tuple[int, int], theta: float
+                  ) -> typing.Tuple[typing.List[nx.DiGraph], typing.
+                                    List[nx.DiGraph], typing.List[nx.DiGraph]]:
   """Generate graphs for training.
 
   Args:

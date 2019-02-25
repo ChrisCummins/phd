@@ -8,12 +8,17 @@ from labm8 import test
 
 # Given this implementation of cons:
 
+
 def cons(a, b):
-    def pair(f):
-        return f(a, b)
-    return pair
+
+  def pair(f):
+    return f(a, b)
+
+  return pair
+
 
 # Implement car and cdr.
+
 
 def car(pair):
   return pair(lambda a, b: a)
@@ -32,13 +37,16 @@ def test_cons():
   """Test that cons returns a function that takes a pair."""
   assert cons(3, 4)(identity) == (3, 4)
 
+
 def test_car():
   """Test that car returns the first element of a pair."""
   assert car(cons(3, 4)) == 3
 
+
 def test_cdr():
   """Test that car returns the last element of a pair."""
   assert cdr(cons(3, 4)) == 4
+
 
 if __name__ == '__main__':
   test.Main()

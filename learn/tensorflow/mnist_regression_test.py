@@ -4,7 +4,6 @@ from absl import flags
 from labm8 import test
 from learn.tensorflow import mnist_regression
 
-
 FLAGS = flags.FLAGS
 
 

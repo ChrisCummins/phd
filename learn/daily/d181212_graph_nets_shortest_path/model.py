@@ -1,7 +1,6 @@
 """A model for predicting the shortest path in a graph."""
 from absl import flags
 
-
 FLAGS = flags.FLAGS
 
 

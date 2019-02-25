@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+
 def approach1(str1: str, str2: str) -> str:
   """
   my first, naive approach
@@ -20,8 +21,8 @@ def approach1(str1: str, str2: str) -> str:
         right_start += 1
 
       buf = []
-      for left, right in zip(range(left_start, len(str1)),
-                             range(right_start, len(str2))):
+      for left, right in zip(
+          range(left_start, len(str1)), range(right_start, len(str2))):
         if str1[left] == str2[right]:
           buf.append(str1[left])
         else:
@@ -79,11 +80,11 @@ def approach2(str1: str, str2: str) -> str:
 
 def test_longest_substring(longest_substring) -> None:
   examples = [
-    (('', ''), ''),
-    (('a', 'a'), 'a'),
-    (('abcdefghijk', 'dabc2'), 'abc'),
-    (('abc', 'abc'), 'abc'),
-    (('abc', 'ab'), 'ab'),
+      (('', ''), ''),
+      (('a', 'a'), 'a'),
+      (('abcdefghijk', 'dabc2'), 'abc'),
+      (('abc', 'abc'), 'abc'),
+      (('abc', 'ab'), 'ab'),
   ]
 
   try:

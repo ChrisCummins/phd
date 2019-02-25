@@ -6,14 +6,13 @@ from absl import flags
 
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
 def ConditionalLessThan(x, y: int):
-  return tf.cond(tf.less(x, tf.constant(y)),
-                 lambda: tf.constant(True),
-                 lambda: tf.constant(False))
+  return tf.cond(
+      tf.less(x, tf.constant(
+          y)), lambda: tf.constant(True), lambda: tf.constant(False))
 
 
 def test_ConditionalLessThan_interger_input():
@@ -42,11 +41,17 @@ def WhileLoopFactorial(n: int):
 
   def Body(vars: LoopVars):
     """The while loop body."""
-    return [LoopVars(i=tf.add(vars.i, 1), imax=vars.imax,
-                     acc=tf.multiply(vars.acc, vars.i)), ]
+    return [
+        LoopVars(
+            i=tf.add(vars.i, 1),
+            imax=vars.imax,
+            acc=tf.multiply(vars.acc, vars.i)),
+    ]
 
   init_vars = LoopVars(i=1, imax=n + 1, acc=1)
-  while_loop = tf.while_loop(Condition, Body, [init_vars, ])
+  while_loop = tf.while_loop(Condition, Body, [
+      init_vars,
+  ])
   return while_loop
 
 
@@ -65,9 +70,9 @@ def WhileLoopFactorialIsEqualTo(x: int, y: int):
   # Use the while loop output as input to the conditional.
   final_vars, = WhileLoopFactorial(x)
 
-  cond = tf.cond(tf.equal(final_vars.acc, tf.constant(y)),
-                 lambda: tf.constant(True),
-                 lambda: tf.constant(False))
+  cond = tf.cond(
+      tf.equal(final_vars.acc, tf.constant(
+          y)), lambda: tf.constant(True), lambda: tf.constant(False))
   return cond
 
 

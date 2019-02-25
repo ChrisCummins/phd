@@ -13,7 +13,6 @@ from absl import logging
 from scipy.optimize import minimize
 from tensorflow.examples.tutorials.mnist import input_data
 
-
 FLAGS = flags.FLAGS
 flags.DEFINE_integer('maxiter', 10,
                      'Maximum number of steps when sweeping hyperparms.')
@@ -55,14 +54,18 @@ def SoftmaxRegressor(tensor_size):
 
   # Return model:
   return {
-    "inputs": [x, y_],
-    "train": optimizer.minimize(cross_entropy),
-    "eval": tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+      "inputs": [x, y_],
+      "train": optimizer.minimize(cross_entropy),
+      "eval": tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
   }
 
 
-def TrainAndTest(session, model, training_data, test_data,
-                 batch_size=100, num_iterations=1000) -> float:
+def TrainAndTest(session,
+                 model,
+                 training_data,
+                 test_data,
+                 batch_size=100,
+                 num_iterations=1000) -> float:
   """Train and test regression model."""
   # Initialize variables:
   init = tf.initialize_all_variables()
@@ -105,9 +108,13 @@ def HyperParamSweep(maxiter: int = 50) -> typing.Dict[str, int]:
     hyperparameters.
     """
     batch_size, num_iterations = Denormalize(X)
-    return TrainAndTest(session.run, model, mnist.train,
-                        mnist.test, batch_size=batch_size,
-                        num_iterations=num_iterations)
+    return TrainAndTest(
+        session.run,
+        model,
+        mnist.train,
+        mnist.test,
+        batch_size=batch_size,
+        num_iterations=num_iterations)
 
   # Hyper-parameter search over batch size and training iterations.
   x0 = np.array([1, 1])

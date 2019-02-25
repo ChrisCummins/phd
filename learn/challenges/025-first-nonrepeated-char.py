@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+
 def first_nonrepeated_char(s: str) -> str:
   d = dict()
   for c in s:

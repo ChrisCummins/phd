@@ -10,7 +10,6 @@ from labm8 import bazelutil
 from labm8 import test
 from learn.python import cpp_interop_pb2
 
-
 FLAGS = flags.FLAGS
 
 # Paths of the C++ binaries to be tested.
@@ -26,7 +25,8 @@ def test_AddXandY():
 
   # Run the C++ binary, passing the proto as input and capturing it's output.
   process = subprocess.Popen([str(CPP_INTEROP_BIN)],
-                             stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+                             stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE)
   stdout, _ = process.communicate(input_proto.SerializeToString())
   assert not process.returncode
 
@@ -51,7 +51,8 @@ def test_AddXandY_in_place():
 
   # Run the C++ binary, passing the proto as input and capturing it's output.
   process = subprocess.Popen([str(CPP_INTEROP_IN_PLACE_BIN)],
-                             stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+                             stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE)
   stdout, _ = process.communicate(proto.SerializeToString())
   assert not process.returncode
 

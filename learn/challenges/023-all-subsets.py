@@ -1,6 +1,8 @@
 #!/usr/bin/env python3.6
 
+
 def all_subsets(arr):
+
   def all_subset_helper(msk, i, n):
     if i == n:
       print([arr[i] for i in range(len(msk)) if msk[i]])
@@ -16,6 +18,7 @@ def all_subsets(arr):
 
 
 def all_permutations(a):
+
   def permutor(a, i, n):
     if i == n:
       print(''.join(a))

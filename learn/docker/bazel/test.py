@@ -8,7 +8,6 @@ from absl import logging
 
 from labm8 import bazelutil
 
-
 FLAGS = flags.FLAGS
 
 

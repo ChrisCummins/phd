@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+
 def to_string(i: int) -> str:
   """ stringify a number, without spaces. 1 <= n <= 1000 """
   s = ""
@@ -10,58 +11,58 @@ def to_string(i: int) -> str:
 
   if i >= 100:
     s += [
-           "one",
-           "two",
-           "three",
-           "four",
-           "five",
-           "six",
-           "seven",
-           "eight",
-           "nine",
-         ][(i // 100) - 1] + "hundred"
+        "one",
+        "two",
+        "three",
+        "four",
+        "five",
+        "six",
+        "seven",
+        "eight",
+        "nine",
+    ][(i // 100) - 1] + "hundred"
     i = i % 100
     if i:
       s += "and"
 
   if i >= 20:
     s += [
-      "twenty",
-      "thirty",
-      "forty",
-      "fifty",
-      "sixty",
-      "seventy",
-      "eighty",
-      "ninety",
+        "twenty",
+        "thirty",
+        "forty",
+        "fifty",
+        "sixty",
+        "seventy",
+        "eighty",
+        "ninety",
     ][(i // 10) - 2]
     i = i % 10
   elif i > 10:
     s += [
-      "eleven",
-      "twelve",
-      "thirteen",
-      "fourteen",
-      "fifteen",
-      "sixteen",
-      "seventeen",
-      "eighteen",
-      "nineteen",
+        "eleven",
+        "twelve",
+        "thirteen",
+        "fourteen",
+        "fifteen",
+        "sixteen",
+        "seventeen",
+        "eighteen",
+        "nineteen",
     ][(i % 10) - 1]
     i = 0
 
   if i:
     s += [
-      "one",
-      "two",
-      "three",
-      "four",
-      "five",
-      "six",
-      "seven",
-      "eight",
-      "nine",
-      "ten",
+        "one",
+        "two",
+        "three",
+        "four",
+        "five",
+        "six",
+        "seven",
+        "eight",
+        "nine",
+        "ten",
     ][i - 1]
 
   return s

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+
 def trinum(n):
   return n * (n + 1) // 2
 

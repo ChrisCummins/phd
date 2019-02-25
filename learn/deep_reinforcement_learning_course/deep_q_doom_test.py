@@ -7,7 +7,6 @@ from absl import flags
 from labm8 import test
 from learn.deep_reinforcement_learning_course import deep_q_doom
 
-
 FLAGS = flags.FLAGS
 
 

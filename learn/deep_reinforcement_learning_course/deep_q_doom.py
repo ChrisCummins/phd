@@ -14,26 +14,26 @@ from absl import logging
 
 from labm8 import bazelutil
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
     'doom_config',
-    str(bazelutil.DataPath(
-        'phd/learn/deep_reinforcement_learning_course/data/doom_config.cfg')),
-    'Path to Doom config file.')
+    str(
+        bazelutil.DataPath(
+            'phd/learn/deep_reinforcement_learning_course/data/doom_config.cfg')
+    ), 'Path to Doom config file.')
 
 flags.DEFINE_string(
     'doom_scenario',
-    str(bazelutil.DataPath(
-        'phd/learn/deep_reinforcement_learning_course/data/doom_scenario.wad')),
-    'Path to Doom scenario file.')
+    str(
+        bazelutil.DataPath(
+            'phd/learn/deep_reinforcement_learning_course/data/doom_scenario.wad'
+        )), 'Path to Doom scenario file.')
 
 
-def CreateEnvironment(
-    config_path: typing.Optional[pathlib.Path] = None,
-    scenario_path: typing.Optional[pathlib.Path] = None
-) -> typing.Tuple[None, typing.List[typing.List[int]]]:
+def CreateEnvironment(config_path: typing.Optional[pathlib.Path] = None,
+                      scenario_path: typing.Optional[pathlib.Path] = None
+                     ) -> typing.Tuple[None, typing.List[typing.List[int]]]:
   """Create the Doom game environment.
 
   Returns:

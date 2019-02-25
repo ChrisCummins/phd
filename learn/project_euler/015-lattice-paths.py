@@ -50,10 +50,10 @@ def routes_through_grid_dfs(start: Tuple[int, int],
 
 
 examples = [
-  ((0, 0), (1, 1)),
-  ((0, 0), (2, 2)),
-  ((0, 0), (3, 3)),
-  ((0, 0), (20, 20)),
+    ((0, 0), (1, 1)),
+    ((0, 0), (2, 2)),
+    ((0, 0), (3, 3)),
+    ((0, 0), (20, 20)),
 ]
 
 for example in examples:

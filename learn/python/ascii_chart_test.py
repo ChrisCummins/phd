@@ -5,7 +5,6 @@ from absl import flags
 
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -17,15 +16,12 @@ def MultiLineRightStrip(s):
 def test_Chart():
   """Test that Chart produces text."""
   data = [
-    5.2,
-    2.1,
-    2.3,
-    -10,
+      5.2,
+      2.1,
+      2.3,
+      -10,
   ]
-  c = ascii_art.Chart(
-      data,
-      width=30, height=20, padding=2, axis_char=u'|'
-  )
+  c = ascii_art.Chart(data, width=30, height=20, padding=2, axis_char=u'|')
 
   assert MultiLineRightStrip(c.render()) == """
   5.2 |       ░

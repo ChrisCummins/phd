@@ -7,6 +7,7 @@ from absl import app
 # Interview, Chapter 2, page 77.
 #
 class Node:
+
   def __init__(self, key):
     self.key = key
     self.next = None

@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from github import Github
 
-
 sns.set(color_codes=True)
 
 
@@ -20,7 +19,10 @@ def get_github_token(username, password):
   response = requests.post(
       'https://api.github.com/authorizations',
       auth=(username, password),
-      data=json.dumps({'scopes': ['repo'], 'note': 'phd auth'}),
+      data=json.dumps({
+          'scopes': ['repo'],
+          'note': 'phd auth'
+      }),
   )
   return response.json()['token']
 
@@ -37,8 +39,7 @@ def main():
   g = Github(github_username, github_pw)
 
   # Get sorted list of public, non-forked repos
-  repos = [x for x in g.get_user().get_repos()
-           if not x.fork and not x.private]
+  repos = [x for x in g.get_user().get_repos() if not x.fork and not x.private]
   repos.sort(key=lambda x: x.name.lower())
 
   # Read cache
@@ -74,9 +75,10 @@ def main():
           wc.append(len(message.split()))
 
       data = {
-        'name': repo.name,
-        'updated_at': str(repo.updated_at),
-        'lc': lc, 'wc': wc
+          'name': repo.name,
+          'updated_at': str(repo.updated_at),
+          'lc': lc,
+          'wc': wc
       }
       # update cache
       cache[repo.name] = data

@@ -11,12 +11,9 @@ from absl import app
 from absl import flags
 from absl import logging
 
-
 FLAGS = flags.FLAGS
 
-flags.DEFINE_integer(
-    'num_episodes', 10000,
-    'The number of episodes to run.')
+flags.DEFINE_integer('num_episodes', 10000, 'The number of episodes to run.')
 flags.DEFINE_bool(
     'casino_blackjack_reward', True,
     'If True, the reward for a natural hand (an Ace and a 10 or face card) is '
@@ -35,8 +32,7 @@ action_t = bool
 
 # A single step includes the observation, the selected action, and its reward.
 step_t = typing.Tuple[Observation, action_t, float]
-Step = collections.namedtuple(
-    'Step', ['observation', 'action', 'reward'])
+Step = collections.namedtuple('Step', ['observation', 'action', 'reward'])
 
 
 class MonteCarloControlBlackjack(object):
@@ -91,11 +87,9 @@ class MonteCarloControlBlackjack(object):
     started = False
     while not done:
       if started:
-        action = self.pi[
-          steps[-1].observation.player_score - 1,
-          steps[-1].observation.dealer_score - 1,
-          1 if steps[-1].observation.usable_ace else 0,
-        ]
+        action = self.pi[steps[-1].observation.player_score -
+                         1, steps[-1].observation.dealer_score -
+                         1, 1 if steps[-1].observation.usable_ace else 0,]
       else:
         action = np.random.randint(0, 2, dtype=np.bool)
         started = True
@@ -109,15 +103,13 @@ class MonteCarloControlBlackjack(object):
       self.num_episodes += 1
       episode = self.GetAnEpisode()
       logging.debug(
-          'Episode %d, steps = %d, final_score = %02d:%02d, reward = %.1f',
-          i, len(episode), episode[-1].observation.player_score,
+          'Episode %d, steps = %d, final_score = %02d:%02d, reward = %.1f', i,
+          len(episode), episode[-1].observation.player_score,
           episode[-1].observation.dealer_score, episode[-1].reward)
       for j in range(1, len(episode)):
         state = episode[j - 1].observation
-        indices = (state.player_score - 1,
-                   state.dealer_score - 1,
-                   1 if state.usable_ace else 0,
-                   1 if episode[j].action else 0)
+        indices = (state.player_score - 1, state.dealer_score - 1,
+                   1 if state.usable_ace else 0, 1 if episode[j].action else 0)
         self.N[indices] += 1
         self.S[indices] += sum(
             episode[k].reward for k in range(j, len(episode)))
@@ -125,11 +117,10 @@ class MonteCarloControlBlackjack(object):
 
       for j in range(0, len(episode) - 1):
         state = episode[j].observation
-        indices = (state.player_score - 1,
-                   state.dealer_score - 1,
+        indices = (state.player_score - 1, state.dealer_score - 1,
                    1 if state.usable_ace else 0)
         self.pi[indices] = (
-          True if self.Q[(*indices, 1)] > self.Q[(*indices, 0)] else False)
+            True if self.Q[(*indices, 1)] > self.Q[(*indices, 0)] else False)
 
       if episode[-1].reward > 0:
         self.num_wins += 1
@@ -145,8 +136,7 @@ def main(argv):
   del argv
   agent = MonteCarloControlBlackjack(
       casino_blackjack_reward=FLAGS.casino_blackjack_reward,
-      policy=lambda obs: obs.player_score < 17
-  )
+      policy=lambda obs: obs.player_score < 17)
   agent.Run(FLAGS.num_episodes)
   print('Policy (no usable ace):')
   print(agent.pi[10:, :, 0])

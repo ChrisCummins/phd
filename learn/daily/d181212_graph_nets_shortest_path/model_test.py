@@ -5,7 +5,6 @@ from absl import flags
 from labm8 import test
 from learn.daily.d181212_graph_nets_shortest_path import model
 
-
 FLAGS = flags.FLAGS
 
 

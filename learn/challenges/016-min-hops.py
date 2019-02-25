@@ -132,16 +132,16 @@ def approach_3(filein: Iterator[str], start: str, end: str) -> int:
 #
 def test_algo(fn):
   tests = [
-    ((['abc'], 'abc', 'abc'), 0),
-    ((['abc', 'abd'], 'abc', 'abd'), 1),
-    ((['abc', 'abd'], 'abd', 'abc'), 1),
-    ((['abc', 'abde'], 'abc', 'abde'), -1),  # not found
-    ((['ABC', 'abcd'], 'abc', 'abcd'), 1),  # case insensitive
-    ((['abc', 'abcd', 'abcde'], 'abc', 'abcde'), 2),  # add letters
-    ((['abc', 'abcd', 'abcde'], 'abcde', 'abc'), 2),  # remove letters
-    ((['abcde', 'abcee', 'abeee'], 'abcde', 'abeee'), 2),  # remove letters
-    ((['abcdef', 'abcdefg', 'abcde', 'abcdeg', 'abc', 'abcd'], 'abcdef', 'abc'),
-     3),  # remove letters
+      ((['abc'], 'abc', 'abc'), 0),
+      ((['abc', 'abd'], 'abc', 'abd'), 1),
+      ((['abc', 'abd'], 'abd', 'abc'), 1),
+      ((['abc', 'abde'], 'abc', 'abde'), -1),  # not found
+      ((['ABC', 'abcd'], 'abc', 'abcd'), 1),  # case insensitive
+      ((['abc', 'abcd', 'abcde'], 'abc', 'abcde'), 2),  # add letters
+      ((['abc', 'abcd', 'abcde'], 'abcde', 'abc'), 2),  # remove letters
+      ((['abcde', 'abcee', 'abeee'], 'abcde', 'abeee'), 2),  # remove letters
+      ((['abcdef', 'abcdefg', 'abcde', 'abcdeg', 'abc', 'abcd'], 'abcdef',
+        'abc'), 3),  # remove letters
   ]
   for ins, outs in tests:
     if fn(*ins) != outs:

@@ -13,7 +13,7 @@ def regression(data):
 
   def cost(h0, h1, data):
     """cost function of h for data"""
-    return sum([(h0 + h1 * d[0] - d[1]) ** 2 for d in data]) / 2 * len(data)
+    return sum([(h0 + h1 * d[0] - d[1])**2 for d in data]) / 2 * len(data)
 
   def gradient(h, a, data):
     """compute gradients of h with learning rate a for data"""

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+
 def reverse_string(string):
   """
   T(n) = O(n)
