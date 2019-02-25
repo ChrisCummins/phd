@@ -173,7 +173,7 @@ TEST(KruskalMinimumSpanningTree, ExampleGraph) {
     int source = boost::source(*i, mst);
     int target = boost::target(*i, mst);
 
-    LOG(INFO) << "MST edge " << source << "-> " << target);
+    LOG(INFO) << "MST edge " << source << "-> " << target;
   }
 
   auto edge_sa = FindEdge(mst, S, A);
