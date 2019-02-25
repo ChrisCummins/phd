@@ -6,7 +6,6 @@ from absl import flags
 from labm8 import labdate
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 

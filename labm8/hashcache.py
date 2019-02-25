@@ -23,15 +23,14 @@ from labm8 import crypto
 from labm8 import fs
 from labm8 import sqlutil
 
-
 FLAGS = flags.FLAGS
 
 Base = declarative.declarative_base()
 
 # An in-memory cache which is optionally shared amongst all HashCache instances.
 # The in-memory cache omits timestamps from records.
-InMemoryCacheKey = collections.namedtuple(
-    'InMemoryCacheKey', ['hash_fn', 'path'])
+InMemoryCacheKey = collections.namedtuple('InMemoryCacheKey',
+                                          ['hash_fn', 'path'])
 IN_MEMORY_CACHE: typing.Dict[InMemoryCacheKey, str] = {}
 
 
@@ -72,13 +71,17 @@ def GetDirectoryMTime(path: pathlib.Path) -> int:
   #    /usr/local/opt/findutils/libexec/gnubin
   output = subprocess.check_output(
       f"find '{path}' -type f | xargs -d'\n' stat -c '%Y:%n' | sort -t: -n | "
-      "tail -1 | cut -d: -f1", universal_newlines=True, shell=True)
+      "tail -1 | cut -d: -f1",
+      universal_newlines=True,
+      shell=True)
   return int(output)
 
 
 class HashCache(sqlutil.Database):
 
-  def __init__(self, path: pathlib.Path, hash_fn: str,
+  def __init__(self,
+               path: pathlib.Path,
+               hash_fn: str,
                keep_in_memory: bool = False):
     """Instantiate a hash cache.
 
@@ -151,8 +154,8 @@ class HashCache(sqlutil.Database):
     else:
       last_modified_fn = lambda path: GetDirectoryMTime(path)
     return self._InMemoryWrapper(
-        absolute_path, last_modified_fn,
-        lambda x: checksumdir.dirhash(x, self.hash_fn_name))
+        absolute_path,
+        last_modified_fn, lambda x: checksumdir.dirhash(x, self.hash_fn_name))
 
   def _HashFile(self, absolute_path: pathlib.Path) -> str:
     return self._InMemoryWrapper(
@@ -168,14 +171,13 @@ class HashCache(sqlutil.Database):
       if in_memory_key in IN_MEMORY_CACHE:
         logging.debug("In-memory cache hit: '%s'", absolute_path)
         return IN_MEMORY_CACHE[in_memory_key]
-    hash_ = self._DoHash(
-        absolute_path, last_modified_fn(absolute_path), hash_fn)
+    hash_ = self._DoHash(absolute_path, last_modified_fn(absolute_path),
+                         hash_fn)
     if self.keep_in_memory:
       IN_MEMORY_CACHE[in_memory_key] = hash_
     return hash_
 
-  def _DoHash(self, absolute_path: pathlib.Path,
-              last_modified: int,
+  def _DoHash(self, absolute_path: pathlib.Path, last_modified: int,
               hash_fn: typing.Callable[[pathlib.Path], str]) -> str:
     with self.Session() as session:
       cached_entry = session.query(HashCacheRecord).filter(

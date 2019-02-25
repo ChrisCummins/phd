@@ -13,7 +13,6 @@ from labm8 import fs
 from labm8 import system
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -155,8 +154,11 @@ def test_scp():
   fs.rm("/tmp/labm8.tmp.copy")
   assert not fs.exists("/tmp/labm8.tmp.copy")
   # Perform scp.
-  system.scp("localhost", "/tmp/labm8.tmp", "/tmp/labm8.tmp.copy",
-             path="labm8/data/test/bin")
+  system.scp(
+      "localhost",
+      "/tmp/labm8.tmp",
+      "/tmp/labm8.tmp.copy",
+      path="labm8/data/test/bin")
   assert fs.read("/tmp/labm8.tmp") == fs.read("/tmp/labm8.tmp.copy")
 
 
@@ -167,30 +169,43 @@ def test_scp_user():
   fs.rm("/tmp/labm8.tmp.copy")
   assert not fs.exists("/tmp/labm8.tmp.copy")
   # Perform scp.
-  system.scp("localhost", "/tmp/labm8.tmp", "/tmp/labm8.tmp.copy",
-             path="labm8/data/test/bin", user="test")
+  system.scp(
+      "localhost",
+      "/tmp/labm8.tmp",
+      "/tmp/labm8.tmp.copy",
+      path="labm8/data/test/bin",
+      user="test")
   assert fs.read("/tmp/labm8.tmp") == fs.read("/tmp/labm8.tmp.copy")
 
 
 def test_scp_bad_path():
   # Error is raised if scp binary cannot be found.
   with pytest.raises(system.CommandNotFoundError):
-    system.scp("localhost", "/not/a/real/path", "/tmp/labm8.tmp.copy",
-               path="not/a/real/path")
+    system.scp(
+        "localhost",
+        "/not/a/real/path",
+        "/tmp/labm8.tmp.copy",
+        path="not/a/real/path")
 
 
 def test_scp_no_scp():
   # Error is raised if scp binary cannot be found.
   with pytest.raises(system.CommandNotFoundError):
-    system.scp("localhost", "/not/a/real/path", "/tmp/labm8.tmp.copy",
-               path="labm8/data/test")
+    system.scp(
+        "localhost",
+        "/not/a/real/path",
+        "/tmp/labm8.tmp.copy",
+        path="labm8/data/test")
 
 
 def test_scp_bad_src():
   # Error is raised if source file cannot be found.
   with pytest.raises(system.ScpError):
-    system.scp("localhost", "/not/a/real/path", "/tmp/labm8.tmp.copy",
-               path="labm8/data/test/bin")
+    system.scp(
+        "localhost",
+        "/not/a/real/path",
+        "/tmp/labm8.tmp.copy",
+        path="labm8/data/test/bin")
 
 
 def test_scp_bad_dst():
@@ -198,8 +213,11 @@ def test_scp_bad_dst():
   assert ["Hello, world!"] == fs.read("/tmp/labm8.tmp")
   # Error is raised if destination file cannot be written.
   with pytest.raises(system.ScpError):
-    system.scp("localhost", "/tmp/labm8.tmp", "/not/a/valid/path",
-               path="labm8/data/test/bin")
+    system.scp(
+        "localhost",
+        "/tmp/labm8.tmp",
+        "/not/a/valid/path",
+        path="labm8/data/test/bin")
 
 
 def test_scp_bad_dst_permission():
@@ -207,15 +225,18 @@ def test_scp_bad_dst_permission():
   assert ["Hello, world!"] == fs.read("/tmp/labm8.tmp")
   # Error is raised if no write permission for destination.
   with pytest.raises(system.ScpError):
-    system.scp("localhost", "/tmp/labm8.tmp", "/dev",
-               path="labm8/data/test/bin")
+    system.scp(
+        "localhost", "/tmp/labm8.tmp", "/dev", path="labm8/data/test/bin")
 
 
 def test_scp_bad_host():
   # Error is raised if host cannot be found.
   with pytest.raises(system.ScpError):
-    system.scp("not-a-real-host", "/not/a/real/path",
-               "/tmp/labm8.tmp.copy", path="labm8/data/test/bin")
+    system.scp(
+        "not-a-real-host",
+        "/not/a/real/path",
+        "/tmp/labm8.tmp.copy",
+        path="labm8/data/test/bin")
 
 
 def test_isprocess():

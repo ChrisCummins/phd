@@ -8,7 +8,6 @@ from labm8 import jsonutil
 from labm8 import system
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -20,10 +19,7 @@ def test_loads():
       // begin with comment
       """
   a = jsonutil.loads(a_str)
-  assert a == {
-    'a': 1,
-    'b': [1, 2, 3]
-  }
+  assert a == {'a': 1, 'b': [1, 2, 3]}
 
 
 def test_loads_malformed():
@@ -41,10 +37,7 @@ def test_read_file():
       """
   system.echo(a_str, "/tmp/labm8.loaf.json")
   a = jsonutil.read_file("/tmp/labm8.loaf.json")
-  assert a == {
-    'a': 1,
-    'b': [1, 2, 3]
-  }
+  assert a == {'a': 1, 'b': [1, 2, 3]}
 
 
 def test_read_file_bad_path():
@@ -54,10 +47,7 @@ def test_read_file_bad_path():
 
 
 def test_write_file():
-  d1 = {
-    "a": "1",
-    "b": "2"
-  }
+  d1 = {"a": "1", "b": "2"}
   jsonutil.write_file("/tmp/labm8.write_file.json", d1)
   d2 = jsonutil.read_file("/tmp/labm8.write_file.json")
   fs.rm("/tmp/labm8.write_file.json")

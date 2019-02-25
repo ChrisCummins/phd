@@ -9,7 +9,6 @@ from labm8 import prof
 from labm8 import system
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 if system.is_python3():
@@ -85,6 +84,7 @@ def test_stop_bad_name_error(profiling_env):
 
 
 def test_profile(profiling_env):
+
   def test_fn(x, y):
     return x + y
 

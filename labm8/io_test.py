@@ -8,14 +8,13 @@ from absl import flags
 from labm8 import io
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
 # colourise()
 def test_colourise():
-  assert ("\033[91mHello, World!\033[0m" ==
-          io.colourise(io.Colours.RED, "Hello, World!"))
+  assert ("\033[91mHello, World!\033[0m" == io.colourise(
+      io.Colours.RED, "Hello, World!"))
 
 
 # printf()

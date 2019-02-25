@@ -25,9 +25,14 @@ def wrap_bold(text):
   return "\\textbf{" + text + "}"
 
 
-def write_table_body(data, output=None, headers=None,
-                     header_fmt=wrap_bold, hline_after_header=True,
-                     hline_before=False, hline_after=False):
+def write_table_body(data,
+                     output=None,
+                     headers=None,
+                     header_fmt=wrap_bold,
+                     hline_after_header=True,
+                     hline_before=False,
+                     hline_after=False):
+
   def _write_row(row):
     output.write(" & ".join(escape(column) for column in row) + "\\\\\n")
 
@@ -107,15 +112,15 @@ def table(rows, columns=None, output=None, data_args={}, **kwargs):
   for i, row in enumerate(rows[1:]):
     if len(row) != num_columns:
       raise Error("Number of columns in row {i_row} ({c_row}) "
-                  "does not match number of columns in row 0 ({z_row})"
-                  .format(i_row=i, c_row=len(row), z_row=num_columns))
+                  "does not match number of columns in row 0 ({z_row})".format(
+                      i_row=i, c_row=len(row), z_row=num_columns))
 
   # Check that (if supplied), number of columns matches number of
   # columns in rows.
   if columns is not None and len(columns) != num_columns:
     raise Error("Number of columns in header ({c_header}) does not "
-                "match the number of columns in the data ({c_rows})"
-                .format(c_header=len(columns), c_rows=num_columns))
+                "match the number of columns in the data ({c_rows})".format(
+                    c_header=len(columns), c_rows=num_columns))
 
   # Default arguments.
   if "index" not in kwargs:

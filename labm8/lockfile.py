@@ -20,12 +20,12 @@ from labm8 import pbutil
 from labm8 import system
 from labm8.proto import lockfile_pb2
 
-
 FLAGS = flags.FLAGS
 
-flags.DEFINE_float('lockfile_block_seconds', 10.0,
-                   'The number of seconds to block for when waiting for a lock '
-                   'files.')
+flags.DEFINE_float(
+    'lockfile_block_seconds', 10.0,
+    'The number of seconds to block for when waiting for a lock '
+    'files.')
 
 
 class Error(Exception):
@@ -133,8 +133,11 @@ class LockFile:
     """
     return self.hostname == system.HOSTNAME and self.pid == os.getpid()
 
-  def acquire(self, replace_stale: bool = False, force: bool = False,
-              pid: int = None, block: bool = False) -> 'LockFile':
+  def acquire(self,
+              replace_stale: bool = False,
+              force: bool = False,
+              pid: int = None,
+              block: bool = False) -> 'LockFile':
     """Acquire the lock.
 
     A lock can be claimed if any of these conditions are true:
@@ -301,8 +304,7 @@ class AutoLockFile(LockFile):
     elif granularity == 'module':
       path = root / f'{module_name}.pbtxt'
     else:
-      raise TypeError(
-          f"Invalid granularity '{granularity}'. Must be one of: "
-          f"{{line,function,module}}")
+      raise TypeError(f"Invalid granularity '{granularity}'. Must be one of: "
+                      f"{{line,function,module}}")
 
     super(AutoLockFile, self).__init__(path)

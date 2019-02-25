@@ -34,8 +34,7 @@ class NoTargetError(Error):
   pass
 
 
-_BAD_TARGET_RE = re.compile(r"No rule to make target "
-                            "'.+'.  Stop.")
+_BAD_TARGET_RE = re.compile(r"No rule to make target " "'.+'.  Stop.")
 
 
 def make(target="all", dir=".", **kwargs):
@@ -77,8 +76,7 @@ def make(target="all", dir=".", **kwargs):
 
   if ret > 0:
     if re.search(_BAD_TARGET_RE, err):
-      raise NoTargetError("No rule for target '{}'"
-                          .format(target))
+      raise NoTargetError("No rule for target '{}'".format(target))
     else:
       raise MakeError("Target '{}' failed".format(target))
 

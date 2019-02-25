@@ -182,7 +182,8 @@ def isdir(*components):
     return False
 
 
-def ls(root: typing.Union[str, pathlib.Path] = ".", abspaths=False,
+def ls(root: typing.Union[str, pathlib.Path] = ".",
+       abspaths=False,
        recursive=False):
   """
   Return a list of files in directory.
@@ -218,8 +219,8 @@ def ls(root: typing.Union[str, pathlib.Path] = ".", abspaths=False,
 
   def _expand_subdirs(file):
     if isdir(path(root, file)):
-      return [file] + [path(file, x) for x in
-                       ls(path(root, file), recursive=True)]
+      return [file
+             ] + [path(file, x) for x in ls(path(root, file), recursive=True)]
     else:
       return [file]
 
@@ -439,12 +440,18 @@ def read(*components, **kwargs):
 
     if rstrip:
       # Ignore comments, and right strip results.
-      return [re.match(not_comment_re, line).group(0).rstrip() for line in lines
-              if not re.match(comment_line_re, line)]
+      return [
+          re.match(not_comment_re, line).group(0).rstrip()
+          for line in lines
+          if not re.match(comment_line_re, line)
+      ]
     else:
       # Ignore comments, and don't strip results.
-      return [re.match(not_comment_re, line).group(0) for line in lines if
-              not re.match(comment_line_re, line)]
+      return [
+          re.match(not_comment_re, line).group(0)
+          for line in lines
+          if not re.match(comment_line_re, line)
+      ]
   elif rstrip:
     # No comments, and right strip results.
     return [line.rstrip() for line in lines]

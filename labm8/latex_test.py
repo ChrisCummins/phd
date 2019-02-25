@@ -6,7 +6,6 @@ from absl import flags
 from labm8 import latex
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -22,49 +21,43 @@ def test_escape():
 # write_table_body()
 def test_write_table_body():
   assert ("1 & foo\\\\\n"
-          "2 & bar\\\\\n" ==
-          latex.write_table_body(((1, "foo"), (2, "bar"))))
+          "2 & bar\\\\\n" == latex.write_table_body(((1, "foo"), (2, "bar"))))
 
 
 def test_write_table_body_headers():
   assert ("\\textbf{A} & \\textbf{B}\\\\\n"
           "\\hline\n"
           "1 & foo\\\\\n"
-          "2 & bar\\\\\n" ==
-          latex.write_table_body(((1, "foo"), (2, "bar")),
-                                 headers=("A", "B")))
+          "2 & bar\\\\\n" == latex.write_table_body(((1, "foo"), (2, "bar")),
+                                                    headers=("A", "B")))
 
 
 def test_write_table_body_headers_no_hline():
   assert ("\\textbf{A} & \\textbf{B}\\\\\n"
           "1 & foo\\\\\n"
-          "2 & bar\\\\\n" ==
-          latex.write_table_body(((1, "foo"), (2, "bar")),
-                                 headers=("A", "B"),
-                                 hline_after_header=False))
+          "2 & bar\\\\\n" == latex.write_table_body(((1, "foo"), (2, "bar")),
+                                                    headers=("A", "B"),
+                                                    hline_after_header=False))
 
 
 def test_write_table_body_headers_no_fmt():
   assert ("A & B\\\\\n"
           "\\hline\n"
           "1 & foo\\\\\n"
-          "2 & bar\\\\\n" ==
-          latex.write_table_body(((1, "foo"), (2, "bar")),
-                                 headers=("A", "B"),
-                                 header_fmt=lambda x: x))
+          "2 & bar\\\\\n" == latex.write_table_body(((1, "foo"), (2, "bar")),
+                                                    headers=("A", "B"),
+                                                    header_fmt=lambda x: x))
 
 
 def test_write_table_body_hlines():
   assert ("\\hline\n"
           "1 & foo\\\\\n"
-          "2 & bar\\\\\n" ==
-          latex.write_table_body(((1, "foo"), (2, "bar")),
-                                 hline_before=True))
+          "2 & bar\\\\\n" == latex.write_table_body(((1, "foo"), (2, "bar")),
+                                                    hline_before=True))
   assert ("1 & foo\\\\\n"
           "2 & bar\\\\\n"
-          "\\hline\n" ==
-          latex.write_table_body(((1, "foo"), (2, "bar")),
-                                 hline_after=True))
+          "\\hline\n" == latex.write_table_body(((1, "foo"), (2, "bar")),
+                                                hline_after=True))
 
 
 # table()
@@ -76,8 +69,7 @@ def test_table():
           " foo &  1 \\\\\n"
           " bar &  2 \\\\\n"
           "\\bottomrule\n"
-          "\\end{tabular}\n" ==
-          latex.table((("foo", 1), ("bar", 2))))
+          "\\end{tabular}\n" == latex.table((("foo", 1), ("bar", 2))))
 
 
 def test_table_columns():
@@ -88,9 +80,8 @@ def test_table_columns():
           " foo &      1 \\\\\n"
           " bar &      2 \\\\\n"
           "\\bottomrule\n"
-          "\\end{tabular}\n" ==
-          latex.table((("foo", 1), ("bar", 2)),
-                      columns=("type", "value")))
+          "\\end{tabular}\n" == latex.table((("foo", 1), ("bar", 2)),
+                                            columns=("type", "value")))
 
 
 def test_table_bad_columns():

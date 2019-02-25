@@ -13,22 +13,17 @@ from absl import app
 from absl import flags
 from absl import logging
 
-
 FLAGS = flags.FLAGS
 
-flags.DEFINE_boolean(
-    'test_color', False,
-    'Colorize pytest output.')
-flags.DEFINE_boolean(
-    'test_skip_slow', True,
-    'Skip tests that have been marked slow.')
+flags.DEFINE_boolean('test_color', False, 'Colorize pytest output.')
+flags.DEFINE_boolean('test_skip_slow', True,
+                     'Skip tests that have been marked slow.')
 flags.DEFINE_integer(
     'test_maxfail', 1,
     'The maximum number of tests that can fail before execution terminates. '
     'If --test_maxfail=0, all tests will execute.')
-flags.DEFINE_boolean(
-    'test_capture_output', True,
-    'Capture stdout and stderr during test execution.')
+flags.DEFINE_boolean('test_capture_output', True,
+                     'Capture stdout and stderr during test execution.')
 flags.DEFINE_boolean(
     'test_print_durations', True,
     'Print the duration of the slowest tests at the end of execution. Use '
@@ -62,9 +57,9 @@ def RunPytestOnFileAndExit(file_path: str, argv: typing.List[str]):
   # Assemble the arguments to run pytest with. Note that the //:conftest file
   # performs some additional configuration not captured here.
   pytest_args = [
-    file_path,
-    # Run pytest verbosely.
-    '-vv',
+      file_path,
+      # Run pytest verbosely.
+      '-vv',
   ]
 
   if FLAGS.test_color:

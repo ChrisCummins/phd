@@ -11,7 +11,6 @@ from labm8 import pbutil
 from labm8 import test
 from labm8.proto import lockfile_pb2
 
-
 FLAGS = flags.FLAGS
 
 

@@ -6,7 +6,6 @@ import typing
 
 from labm8 import fs
 
-
 # A type alias for annotating methods which take or return JSON.
 JSON = typing.Union[typing.List[typing.Any], typing.Dict[str, typing.Any]]
 
@@ -52,8 +51,8 @@ def read_file(*components, **kwargs):
       return loads(infile.read())
   except ValueError as e:
     raise ValueError(
-        "malformed JSON file '{path}'. Message from parser: {err}"
-          .format(path=fs.basename(path), err=str(e)))
+        "malformed JSON file '{path}'. Message from parser: {err}".format(
+            path=fs.basename(path), err=str(e)))
   except IOError as e:
     if not must_exist:
       return {}

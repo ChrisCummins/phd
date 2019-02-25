@@ -20,7 +20,6 @@ from sys import platform
 
 from labm8 import fs
 
-
 HOSTNAME = socket.gethostname()
 USERNAME = getpass.getuser()
 UID = os.getuid()
@@ -81,7 +80,9 @@ class Subprocess(object):
   force a timeout after a number of seconds have elapsed.
   """
 
-  def __init__(self, cmd, shell=False,
+  def __init__(self,
+               cmd,
+               shell=False,
                stdout=subprocess.PIPE,
                stderr=subprocess.PIPE,
                decode_out=True):
@@ -112,10 +113,11 @@ class Subprocess(object):
     """
 
     def target():
-      self.process = subprocess.Popen(self.cmd,
-                                      stdout=self.stdout_dest,
-                                      stderr=self.stderr_dest,
-                                      shell=self.shell)
+      self.process = subprocess.Popen(
+          self.cmd,
+          stdout=self.stdout_dest,
+          stderr=self.stderr_dest,
+          shell=self.shell)
       stdout, stderr = self.process.communicate()
 
       # Decode output if the user wants, and if there is any.
@@ -133,8 +135,8 @@ class Subprocess(object):
       if thread.is_alive():
         self.process.terminate()
         thread.join()
-        raise SubprocessError(("Reached timeout after {t} seconds"
-                               .format(t=timeout)))
+        raise SubprocessError(
+            ("Reached timeout after {t} seconds".format(t=timeout)))
     else:
       thread.join()
 
@@ -305,10 +307,10 @@ def scp(host, src, dst, user=None, path=None):
     raise CommandNotFoundError("Could not find scp in '{0}'".format(path))
 
   # Run system "scp" command.
-  ret, out, err = run([scp_bin,
-                       "-o", "StrictHostKeyChecking=no",
-                       "-o", "UserKnownHostsFile=/dev/null",
-                       arg, dst])
+  ret, out, err = run([
+      scp_bin, "-o", "StrictHostKeyChecking=no", "-o",
+      "UserKnownHostsFile=/dev/null", arg, dst
+  ])
 
   # Check return code for error.
   if ret:
@@ -388,9 +390,7 @@ def ProcessFileAndReplace(
     tempfile_suffix: An optional name suffix for the temporary file.
   """
   with tempfile.NamedTemporaryFile(
-      prefix=tempfile_prefix,
-      suffix=tempfile_suffix,
-      delete=False) as f:
+      prefix=tempfile_prefix, suffix=tempfile_suffix, delete=False) as f:
     tmp_path = f.name
     try:
       process_file_callback(path, tmp_path)

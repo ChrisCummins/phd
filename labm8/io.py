@@ -17,8 +17,9 @@ def printf(colour, *args, **kwargs):
 
 
 def pprint(data, **kwargs):
-  print(json.dumps(data, sort_keys=True, indent=2, separators=(",", ": ")),
-        **kwargs)
+  print(
+      json.dumps(data, sort_keys=True, indent=2, separators=(",", ": ")),
+      **kwargs)
 
 
 def info(*args, **kwargs):

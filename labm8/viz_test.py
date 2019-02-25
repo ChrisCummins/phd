@@ -5,7 +5,6 @@ import pathlib
 import matplotlib
 import pandas as pd
 
-
 matplotlib.use('Agg')
 
 import numpy as np
@@ -15,7 +14,6 @@ from matplotlib import pyplot as plt
 
 from labm8 import test
 from labm8 import viz
-
 
 FLAGS = flags.FLAGS
 

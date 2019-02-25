@@ -14,7 +14,6 @@ from sqlalchemy.ext import declarative
 from labm8 import pbutil
 from labm8 import text
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_bool(
@@ -44,8 +43,10 @@ class DatabaseNotFound(FileNotFoundError):
     return repr(self)
 
 
-def GetOrAdd(session: sql.orm.session.Session, model,
-             defaults: typing.Dict[str, object] = None, **kwargs):
+def GetOrAdd(session: sql.orm.session.Session,
+             model,
+             defaults: typing.Dict[str, object] = None,
+             **kwargs):
   """Instantiate a mapped database object.
 
   If the object is not in the database,
@@ -63,8 +64,11 @@ def GetOrAdd(session: sql.orm.session.Session, model,
   """
   instance = session.query(model).filter_by(**kwargs).first()
   if not instance:
-    params = {k: v for k, v in kwargs.items() if
-              not isinstance(v, sql.sql.expression.ClauseElement)}
+    params = {
+        k: v
+        for k, v in kwargs.items()
+        if not isinstance(v, sql.sql.expression.ClauseElement)
+    }
     params.update(defaults or {})
     instance = model(**params)
     session.add(instance)
@@ -74,8 +78,10 @@ def GetOrAdd(session: sql.orm.session.Session, model,
   return instance
 
 
-def Get(session: sql.orm.session.Session, model,
-        defaults: typing.Dict[str, object] = None, **kwargs):
+def Get(session: sql.orm.session.Session,
+        model,
+        defaults: typing.Dict[str, object] = None,
+        **kwargs):
   """Determine if a database object exists.
 
   Args:
@@ -152,10 +158,11 @@ def CreateEngine(url: str, must_exist: bool = False) -> sql.engine.Engine:
     # database exists.
     engine = sql.create_engine('/'.join(url.split('/')[:-1]))
     database = url.split('/')[-1].split('?')[0]
-    query = engine.execute(sql.text('SELECT SCHEMA_NAME FROM '
-                                    'INFORMATION_SCHEMA.SCHEMATA WHERE '
-                                    'SCHEMA_NAME = :database'),
-                           database=database)
+    query = engine.execute(
+        sql.text('SELECT SCHEMA_NAME FROM '
+                 'INFORMATION_SCHEMA.SCHEMATA WHERE '
+                 'SCHEMA_NAME = :database'),
+        database=database)
     if not query.first():
       if must_exist:
         raise DatabaseNotFound(url)
@@ -224,9 +231,8 @@ def CreateEngine(url: str, must_exist: bool = False) -> sql.engine.Engine:
 
     # Read the contents of the file, ignoring lines starting with '#'.
     with open(path) as f:
-      file_url = '\n'.join(
-          x for x in f.read().split('\n')
-          if not x.lstrip().startswith('#')).strip()
+      file_url = '\n'.join(x for x in f.read().split('\n')
+                           if not x.lstrip().startswith('#')).strip()
 
     # Append the suffix.
     file_url += suffix
@@ -274,8 +280,7 @@ class Session(orm.session.Session):
 class Database(object):
   """A base class for implementing databases."""
 
-  def __init__(self, url: str, declarative_base,
-               must_exist: bool = False):
+  def __init__(self, url: str, declarative_base, must_exist: bool = False):
     """Instantiate a database object.
 
     Example:
@@ -320,8 +325,8 @@ class Database(object):
     if self.url.startswith('mysql://'):
       engine = sql.create_engine('/'.join(self.url.split('/')[:-1]))
       database = self.url.split('/')[-1].split('?')[0]
-      engine.execute(sql.text('DROP DATABASE IF EXISTS :database'),
-                     database=database)
+      engine.execute(
+          sql.text('DROP DATABASE IF EXISTS :database'), database=database)
     elif self.url.startswith('sqlite://'):
       path = pathlib.Path(self.url[len('sqlite:///'):])
       assert path.is_file()
@@ -418,8 +423,8 @@ class ProtoBackedMixin(object):
     return proto
 
   @classmethod
-  def FromProto(cls, proto: pbutil.ProtocolBuffer) -> typing.Dict[
-    str, typing.Any]:
+  def FromProto(cls,
+                proto: pbutil.ProtocolBuffer) -> typing.Dict[str, typing.Any]:
     """Return a dictionary of instance constructor args from proto.
 
     Examples:
@@ -439,8 +444,7 @@ class ProtoBackedMixin(object):
         f'{type(self).__name__}.FromProto() not implemented')
 
   @classmethod
-  def FromFile(cls, path: pathlib.Path) -> typing.Dict[
-    str, typing.Any]:
+  def FromFile(cls, path: pathlib.Path) -> typing.Dict[str, typing.Any]:
     """Return a dictionary of instance constructor args from proto file.
 
     Examples:
@@ -468,10 +472,11 @@ OffsetLimitQueryResultsBatch = collections.namedtuple(
     'QueryResultsBatch', ['batch_num', 'offset', 'limit', 'max_rows', 'rows'])
 
 
-def OffsetLimitBatchedQuery(
-    query: Query, batch_size: int = 1000,
-    start_at: int = 0, compute_max_rows: bool = False) -> typing.Iterator[
-  OffsetLimitQueryResultsBatch]:
+def OffsetLimitBatchedQuery(query: Query,
+                            batch_size: int = 1000,
+                            start_at: int = 0,
+                            compute_max_rows: bool = False
+                           ) -> typing.Iterator[OffsetLimitQueryResultsBatch]:
   """Split and return the rows resulting from a query in to batches.
 
   This iteratively runs the query `SELECT * FROM * OFFSET i LIMIT batch_size;`
@@ -503,8 +508,11 @@ def OffsetLimitBatchedQuery(
     batch = query.offset(i).limit(batch_size).all()
     if batch:
       yield OffsetLimitQueryResultsBatch(
-          batch_num=batch_num, offset=i, limit=i + batch_size,
-          max_rows=max_rows, rows=batch)
+          batch_num=batch_num,
+          offset=i,
+          limit=i + batch_size,
+          max_rows=max_rows,
+          rows=batch)
       i += len(batch)
     else:
       break
@@ -537,4 +545,4 @@ class ColumnTypes(object):
     Returns:
        A column type.
     """
-    return sql.UnicodeText().with_variant(sql.UnicodeText(2 ** 31), 'mysql')
+    return sql.UnicodeText().with_variant(sql.UnicodeText(2**31), 'mysql')

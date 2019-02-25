@@ -7,7 +7,6 @@ from labm8 import fs
 from labm8 import make
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 

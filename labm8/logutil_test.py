@@ -12,7 +12,6 @@ from labm8 import logutil
 from labm8 import test
 from labm8.proto import logging_pb2
 
-
 FLAGS = flags.FLAGS
 
 
@@ -37,6 +36,7 @@ def test_ABSL_LOGGING_PREFIX_RE_not_match():
 
 # DatetimeFromAbslTimestamp() tests.
 
+
 def test_DatetimeFromAbslTimestamp():
   dt = logutil.DatetimeFromAbslTimestamp('0527 23:14:18.903151')
   assert dt.year == datetime.datetime.utcnow().year
@@ -49,6 +49,7 @@ def test_DatetimeFromAbslTimestamp():
 
 
 # ConvertAbslLogToProtos() tests.
+
 
 def test_ConvertAbslLogToProtos_empty_input():
   assert not logutil.ConertAbslLogToProtos('')
@@ -158,6 +159,7 @@ multiline!
 
 
 # StartTeeLogsToFile() and StopTeeLogsToFile() tests.
+
 
 def test_TeeLogsToFile_dir_not_found():
   """Test that FileNotFoundError is raised if log_dir does not exist"""

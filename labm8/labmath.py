@@ -132,7 +132,7 @@ def variance(array):
   if len(array) < 2:
     return 0
   u = mean(array)
-  return sum([(x - u) ** 2 for x in array]) / (len(array) - 1)
+  return sum([(x - u)**2 for x in array]) / (len(array) - 1)
 
 
 def stdev(array):
@@ -183,7 +183,10 @@ def filter_iqr(array, lower, upper):
   return new
 
 
-def confinterval(array, conf=0.95, normal_threshold=30, error_only=False,
+def confinterval(array,
+                 conf=0.95,
+                 normal_threshold=30,
+                 error_only=False,
                  array_mean=None):
   """
   Return the confidence interval of a list for a given confidence.
@@ -228,8 +231,7 @@ def confinterval(array, conf=0.95, normal_threshold=30, error_only=False,
       if n < normal_threshold:
         # We have a "small" number of datapoints, so use a
         # t-distribution.
-        c0, c1 = stats.t.interval(conf, n - 1, loc=array_mean,
-                                  scale=scale)
+        c0, c1 = stats.t.interval(conf, n - 1, loc=array_mean, scale=scale)
       else:
         # We have a "large" number of datapoints, so use a
         # normal distribution.

@@ -10,12 +10,13 @@ from matplotlib import axes
 from matplotlib import pyplot as plt
 from scipy import stats
 
-
 FLAGS = flags.FLAGS
 
 
 def Finalize(output: typing.Optional[typing.Union[str, pathlib.Path]] = None,
-             figsize=None, tight=True, **savefig_opts):
+             figsize=None,
+             tight=True,
+             **savefig_opts):
   """Finalise a plot.
 
   Display or show the plot, then close it.
@@ -78,8 +79,14 @@ def RotateYLabels(rotation: int = 90, ax: axes.Axes = None):
   plt.setp(ax.get_yticklabels(), rotation=rotation)
 
 
-def Distplot(x=None, hue=None, data=None, kde=False, bins=None,
-             norm_hist=False, hue_order=None, ax=None):
+def Distplot(x=None,
+             hue=None,
+             data=None,
+             kde=False,
+             bins=None,
+             norm_hist=False,
+             hue_order=None,
+             ax=None):
   """An extension of seaborn distribution plots for grouped data.
 
   Args:
@@ -143,7 +150,7 @@ def Distplot(x=None, hue=None, data=None, kde=False, bins=None,
     a = np.asarray(a)
     if len(a) < 2:
       return 1
-    h = 2 * iqr(a) / (len(a) ** (1 / 3))
+    h = 2 * iqr(a) / (len(a)**(1 / 3))
     # fall back to sqrt(a) bins if iqr is 0
     if h == 0:
       return int(np.sqrt(a.size))
@@ -160,14 +167,19 @@ def Distplot(x=None, hue=None, data=None, kde=False, bins=None,
     ax = plt.gca()
 
   if hue is None:
-    sns.distplot(data[x], kde=kde, bins=bins, label=x, norm_hist=norm_hist,
-                 ax=ax)
+    sns.distplot(
+        data[x], kde=kde, bins=bins, label=x, norm_hist=norm_hist, ax=ax)
   else:
     hue_order = hue_order or sorted(set(data[hue]))
 
     for h in hue_order:
-      sns.distplot(data[data[hue] == h][x], kde=kde, bins=bins, label=h,
-                   norm_hist=norm_hist, ax=ax)
+      sns.distplot(
+          data[data[hue] == h][x],
+          kde=kde,
+          bins=bins,
+          label=h,
+          norm_hist=norm_hist,
+          ax=ax)
 
   return ax
 

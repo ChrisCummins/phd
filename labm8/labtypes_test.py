@@ -6,7 +6,6 @@ from absl import flags
 from labm8 import labtypes
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -93,6 +92,7 @@ def test_flatten():
 
 # PairwiseIterator()
 
+
 def test_PairwiseIterator_empty_list():
   """Test that empty list produces no output."""
   assert list(labtypes.PairwiseIterator([])) == []
@@ -127,6 +127,7 @@ def test_PairwiseIterator_input_is_string():
 
 # SetDiff()
 
+
 def test_SetDiff_empty_inputs():
   """Test when inputs are empty."""
   assert labtypes.SetDiff([], []) == set()
@@ -159,6 +160,7 @@ def test_SetDiff_input_ranges():
 
 
 # AllSubclassesOfClass()
+
 
 class A(object):
   """Class for AllSubclassesOfClass() tests."""

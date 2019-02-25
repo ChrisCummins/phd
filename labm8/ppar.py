@@ -13,7 +13,6 @@ from labm8 import bazelutil
 from labm8 import pbutil
 from labm8 import sqlutil
 
-
 FLAGS = flags.FLAGS
 
 
@@ -158,7 +157,8 @@ def _RunNativeProtoProcessingWorker(map_worker: _MapWorker) -> _MapWorker:
 
 
 def MapNativeProtoProcessingBinary(
-    binary_data_path: str, input_protos: typing.List[pbutil.ProtocolBuffer],
+    binary_data_path: str,
+    input_protos: typing.List[pbutil.ProtocolBuffer],
     output_proto_class: typing.Type,
     binary_args: typing.Optional[typing.List[str]] = None,
     pool: typing.Optional[multiprocessing.Pool] = None,
@@ -188,12 +188,11 @@ def MapNativeProtoProcessingBinary(
   # Create the multiprocessing pool to use, if not provided.
   pool = pool or multiprocessing.Pool(processes=num_processes)
 
-  map_worker_iterator = (
-    _MapWorker(i, cmd, input_proto) for
-    i, input_proto in enumerate(input_protos))
+  map_worker_iterator = (_MapWorker(i, cmd, input_proto)
+                         for i, input_proto in enumerate(input_protos))
 
-  for map_worker in pool.imap_unordered(
-      _RunNativeProtoProcessingWorker, map_worker_iterator):
+  for map_worker in pool.imap_unordered(_RunNativeProtoProcessingWorker,
+                                        map_worker_iterator):
     map_worker.SetProtos(input_protos[map_worker.id], output_proto_class)
     yield map_worker
 
@@ -231,14 +230,15 @@ def MapNativeProcessingBinaries(
   # Create the multiprocessing pool to use, if not provided.
   pool = pool or multiprocessing.Pool(processes=num_processes)
 
-  map_worker_iterator = (
-    _MapWorker(id, cmd, input_proto) for
-    id, (cmd, input_proto) in enumerate(zip(cmds, input_protos)))
+  map_worker_iterator = (_MapWorker(
+      id, cmd,
+      input_proto) for id, (cmd,
+                            input_proto) in enumerate(zip(cmds, input_protos)))
 
-  for map_worker in pool.imap_unordered(
-      _RunNativeProtoProcessingWorker, map_worker_iterator):
-    map_worker.SetProtos(
-        input_protos[map_worker.id], output_proto_classes[map_worker.id])
+  for map_worker in pool.imap_unordered(_RunNativeProtoProcessingWorker,
+                                        map_worker_iterator):
+    map_worker.SetProtos(input_protos[map_worker.id],
+                         output_proto_classes[map_worker.id])
     yield map_worker
 
 
@@ -256,7 +256,8 @@ def MapDatabaseRowBatchProcessor(
     work_unit_result_callback: ResultCallback = lambda result: None,
     start_of_batch_callback: BatchCallback = lambda i: None,
     end_of_batch_callback: BatchCallback = lambda i: None,
-    batch_size: int = 256, rows_per_work_unit: int = 5,
+    batch_size: int = 256,
+    rows_per_work_unit: int = 5,
     start_at: int = 0,
     pool: typing.Optional[multiprocessing.Pool] = None) -> None:
   """Execute a database row-processesing function in parallel.
@@ -296,8 +297,8 @@ def MapDatabaseRowBatchProcessor(
     start_of_batch_callback(i)
 
     work_unit_args = [
-      generate_work_unit_args(rows_batch[i:i + rows_per_work_unit])
-      for i in range(0, len(rows_batch), rows_per_work_unit)
+        generate_work_unit_args(rows_batch[i:i + rows_per_work_unit])
+        for i in range(0, len(rows_batch), rows_per_work_unit)
     ]
 
     for result in pool.starmap(work_unit, work_unit_args):

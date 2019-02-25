@@ -6,7 +6,6 @@ from absl import flags
 from labm8 import test
 from labm8 import text
 
-
 FLAGS = flags.FLAGS
 
 
@@ -22,8 +21,9 @@ def test_truncate():
   assert "1234567890" == text.truncate("1234567890", 10)
   assert "12345..." == text.truncate("1234567890", 8)
   for i in range(10, 20):
-    assert i == len(text.truncate("The quick brown fox jumped "
-                                  "over the slow lazy dog", i))
+    assert i == len(
+        text.truncate("The quick brown fox jumped "
+                      "over the slow lazy dog", i))
 
 
 def test_truncate_bad_maxchar():
@@ -52,6 +52,7 @@ def test_diff():
 
 # Prefix tree operations.
 
+
 def test_BuildPrefixTree_empty():
   """Test that an empty prefix tree has a single node (the root)."""
   trie = text.BuildPrefixTree(set())
@@ -60,7 +61,9 @@ def test_BuildPrefixTree_empty():
 
 def test_BuildPrefixTree_abc():
   """Test that a single-world prefix tree has expected graph."""
-  trie = text.BuildPrefixTree({'abc', })
+  trie = text.BuildPrefixTree({
+      'abc',
+  })
   assert trie.number_of_nodes() == 4
   assert trie.number_of_edges() == 3
 

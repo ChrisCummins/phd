@@ -13,15 +13,14 @@ from labm8 import sqlutil
 from labm8 import test
 from labm8.proto import test_protos_pb2
 
-
 FLAGS = flags.FLAGS
 
 
 def test_CreateEngine_sqlite_not_found(tempdir: pathlib.Path):
   """Test DatabaseNotFound for non-existent SQLite database."""
   with pytest.raises(sqlutil.DatabaseNotFound) as e_ctx:
-    sqlutil.CreateEngine(f'sqlite:///{tempdir.absolute()}/db.db',
-                         must_exist=True)
+    sqlutil.CreateEngine(
+        f'sqlite:///{tempdir.absolute()}/db.db', must_exist=True)
   assert e_ctx.value.url == f'sqlite:///{tempdir.absolute()}/db.db'
   assert str(e_ctx.value) == (f"Database not found: "
                               f"'sqlite:///{tempdir.absolute()}/db.db'")
@@ -112,12 +111,11 @@ class AbstractTestMessage(sqlutil.ProtoBackedMixin,
     proto.number = self.number
 
   @staticmethod
-  def FromProto(proto) -> typing.Dict[
-    str, typing.Any]:
+  def FromProto(proto) -> typing.Dict[str, typing.Any]:
     """Instantiate an object from protocol buffer message."""
     return {
-      "string": proto.string,
-      "number": proto.number,
+        "string": proto.string,
+        "number": proto.number,
     }
 
 
@@ -167,8 +165,9 @@ def test_ProtoBackedMixin_FromFile(tempdir: pathlib.Path):
   class TestMessage(AbstractTestMessage, base):
     pass
 
-  pbutil.ToFile(test_protos_pb2.TestMessage(string="Hello, world!", number=42),
-                tempdir / 'proto.pb')
+  pbutil.ToFile(
+      test_protos_pb2.TestMessage(string="Hello, world!", number=42),
+      tempdir / 'proto.pb')
 
   row = TestMessage(**TestMessage.FromFile(tempdir / 'proto.pb'))
   assert row.string == "Hello, world!"

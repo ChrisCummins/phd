@@ -5,13 +5,13 @@ from absl import flags
 
 from labm8 import fmt
 
-
 FLAGS = flags.FLAGS
 
 
 class Graph(object):
 
-  def __init__(self, name: str,
+  def __init__(self,
+               name: str,
                children: typing.Optional[typing.List['Graph']] = None):
     self.name = name
     if children:

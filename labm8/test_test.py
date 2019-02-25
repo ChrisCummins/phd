@@ -10,7 +10,6 @@ from absl import logging
 
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -80,8 +79,9 @@ def test_captured_stdout():
 
 def test_captured_stderr():
   """A test which prints to stderr."""
-  print("This message is captured, unless run with --notest_capture_output",
-        file=sys.stderr)
+  print(
+      "This message is captured, unless run with --notest_capture_output",
+      file=sys.stderr)
 
 
 def test_captured_logging_info():

@@ -12,7 +12,6 @@ from absl import logging
 
 from labm8 import labtypes
 
-
 _TIMERS = {}
 
 

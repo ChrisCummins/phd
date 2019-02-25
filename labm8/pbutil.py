@@ -12,7 +12,6 @@ import google.protobuf.text_format
 
 from labm8 import jsonutil
 
-
 # A type alias for annotating methods which take or return protocol buffers.
 ProtocolBuffer = typing.Any
 
@@ -35,7 +34,8 @@ class DecodeError(ProtoValueError):
   pass
 
 
-def FromString(string: str, message: ProtocolBuffer,
+def FromString(string: str,
+               message: ProtocolBuffer,
                uninitialized_okay: bool = False) -> ProtocolBuffer:
   """Read a text format protocol buffer from a string.
 
@@ -64,10 +64,11 @@ def FromString(string: str, message: ProtocolBuffer,
   return message
 
 
-def FromFile(path: pathlib.Path, message: ProtocolBuffer,
-             assume_filename: typing.Optional[
-               typing.Union[str, pathlib.Path]] = None,
-             uninitialized_okay: bool = False) -> ProtocolBuffer:
+def FromFile(
+    path: pathlib.Path,
+    message: ProtocolBuffer,
+    assume_filename: typing.Optional[typing.Union[str, pathlib.Path]] = None,
+    uninitialized_okay: bool = False) -> ProtocolBuffer:
   """Read a protocol buffer from a file.
 
   This method uses attempts to guess the encoding from the path suffix,
@@ -137,10 +138,12 @@ def FromFile(path: pathlib.Path, message: ProtocolBuffer,
   return message
 
 
-def ToFile(message: ProtocolBuffer, path: pathlib.Path,
-           exist_ok: bool = True,
-           assume_filename: typing.Optional[
-             typing.Union[str, pathlib.Path]] = None) -> ProtocolBuffer:
+def ToFile(
+    message: ProtocolBuffer,
+    path: pathlib.Path,
+    exist_ok: bool = True,
+    assume_filename: typing.Optional[typing.Union[str, pathlib.Path]] = None
+) -> ProtocolBuffer:
   """Write a protocol buffer to a file.
 
   This method uses attempts to guess the encoding from the path suffix,
@@ -200,8 +203,9 @@ def ToFile(message: ProtocolBuffer, path: pathlib.Path,
     if suffix == '.txt' or suffix == '.pbtxt':
       f.write(google.protobuf.text_format.MessageToString(message))
     elif suffix == '.json':
-      f.write(google.protobuf.json_format.MessageToJson(
-          message, preserving_proto_field_name=True))
+      f.write(
+          google.protobuf.json_format.MessageToJson(
+              message, preserving_proto_field_name=True))
     else:
       f.write(message.SerializeToString())
 
@@ -237,8 +241,8 @@ def _TruncatedString(string: str, n: int = 80) -> str:
     return string
 
 
-def _TruncateDictionaryStringValues(
-    data: jsonutil.JSON, n: int = 62) -> jsonutil.JSON:
+def _TruncateDictionaryStringValues(data: jsonutil.JSON,
+                                    n: int = 62) -> jsonutil.JSON:
   """Truncate all string values in a nested dictionary.
 
   Args:
@@ -257,8 +261,7 @@ def _TruncateDictionaryStringValues(
   return data
 
 
-def PrettyPrintJson(message: ProtocolBuffer,
-                    truncate: int = 52) -> str:
+def PrettyPrintJson(message: ProtocolBuffer, truncate: int = 52) -> str:
   """Return a pretty printed JSON string representation of the message.
 
   Args:
@@ -270,8 +273,10 @@ def PrettyPrintJson(message: ProtocolBuffer,
     JSON string.
   """
   data = ToJson(message)
-  return json.dumps(_TruncateDictionaryStringValues(data) if truncate else data,
-                    indent=2, sort_keys=True)
+  return json.dumps(
+      _TruncateDictionaryStringValues(data) if truncate else data,
+      indent=2,
+      sort_keys=True)
 
 
 def RaiseIfNotSet(proto: ProtocolBuffer, field: str,
@@ -315,7 +320,8 @@ def ProtoIsReadable(path: typing.Union[str, pathlib.Path],
     return False
 
 
-def AssertFieldIsSet(proto: ProtocolBuffer, field_name: str,
+def AssertFieldIsSet(proto: ProtocolBuffer,
+                     field_name: str,
                      fail_message: str = None) -> typing.Optional[typing.Any]:
   """Assert that protocol buffer field is set.
 
@@ -337,15 +343,16 @@ def AssertFieldIsSet(proto: ProtocolBuffer, field_name: str,
   """
   if not proto.HasField(field_name):
     proto_class_name = type(proto).__name__
-    raise ProtoValueError(
-        fail_message or f"Field not set: '{proto_class_name}.{field_name}'")
+    raise ProtoValueError(fail_message or
+                          f"Field not set: '{proto_class_name}.{field_name}'")
   return getattr(proto, field_name) if hasattr(proto, field_name) else None
 
 
-def AssertFieldConstraint(proto: ProtocolBuffer, field_name: str,
-                          constraint: typing.Callable[
-                            [typing.Any], bool] = lambda x: True,
-                          fail_message: str = None) -> typing.Any:
+def AssertFieldConstraint(
+    proto: ProtocolBuffer,
+    field_name: str,
+    constraint: typing.Callable[[typing.Any], bool] = lambda x: True,
+    fail_message: str = None) -> typing.Any:
   """Assert a constraint on the value of a protocol buffer field.
 
   Args:
@@ -379,8 +386,7 @@ def AssertFieldConstraint(proto: ProtocolBuffer, field_name: str,
 def RunProcessMessageBinary(cmd: typing.List[str], input_proto: ProtocolBuffer,
                             output_proto: ProtocolBuffer):
   # Run the C++ worker process, capturing it's output.
-  process = subprocess.Popen(
-      cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+  process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
   # Send the input proto to the C++ worker process.
   # TODO: Add timeout.
   stdout, _ = process.communicate(input_proto.SerializeToString())
@@ -396,8 +402,7 @@ def RunProcessMessageBinary(cmd: typing.List[str], input_proto: ProtocolBuffer,
 def RunProcessMessageInPlace(cmd: typing.List[str],
                              input_proto: ProtocolBuffer):
   # Run the C++ worker process, capturing it's output.
-  process = subprocess.Popen(
-      cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+  process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
   # Send the input proto to the C++ worker process.
   # TODO: Add timeout.
   stdout, _ = process.communicate(input_proto.SerializeToString())
