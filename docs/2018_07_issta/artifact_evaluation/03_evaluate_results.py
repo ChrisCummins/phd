@@ -24,21 +24,20 @@ from labm8 import fs
 from labm8 import labtypes
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
     'datastore',
-    str(bazelutil.DataPath(
-        'phd/docs/2018_07_issta/artifact_evaluation/data/datastore.pbtxt')),
+    str(
+        bazelutil.DataPath(
+            'phd/docs/2018_07_issta/artifact_evaluation/data/datastore.pbtxt')),
     'Path to datastore configuration file.')
-flags.DEFINE_list(
-    'input_directories', [
-      str(bazelutil.DataPath(
-          'phd/docs/2018_07_issta/artifact_evaluation/data/our_results')),
-      '/tmp/phd/docs/2018_07_issta/artifact_evaluation/results',
-    ],
-    'Directories to read results from.')
+flags.DEFINE_list('input_directories', [
+    str(
+        bazelutil.DataPath(
+            'phd/docs/2018_07_issta/artifact_evaluation/data/our_results')),
+    '/tmp/phd/docs/2018_07_issta/artifact_evaluation/results',
+], 'Directories to read results from.')
 flags.DEFINE_string(
     'output_directory',
     '/tmp/phd/docs/2018_07_issta/artifact_evaluation/difftest_classifications',
@@ -111,21 +110,19 @@ def GetResultOutputClass(r: result.Result) -> str:
 
 
 Majority = collections.namedtuple('Majority', [
-  'majority_outcome', 'outcome_majority_size',
-  'majority_stdout', 'stdout_majority_size'
+    'majority_outcome', 'outcome_majority_size', 'majority_stdout',
+    'stdout_majority_size'
 ])
 
 
 def GetMajorityOutput(results: typing.List[result.Result]) -> Majority:
   """Majority vote on testcase outcomes and outputs."""
-  majority_outcome, outcome_majority_size = collections.Counter([
-    r.output_class for r in results
-  ]).most_common(1)[0]
-  majority_stdout, stdout_majority_size = collections.Counter([
-    r.outputs['stdout'] for r in results
-  ]).most_common(1)[0]
-  return Majority(majority_outcome, outcome_majority_size,
-                  majority_stdout, stdout_majority_size)
+  majority_outcome, outcome_majority_size = collections.Counter(
+      [r.output_class for r in results]).most_common(1)[0]
+  majority_stdout, stdout_majority_size = collections.Counter(
+      [r.outputs['stdout'] for r in results]).most_common(1)[0]
+  return Majority(majority_outcome, outcome_majority_size, majority_stdout,
+                  stdout_majority_size)
 
 
 def DifftestTestcase(s: db.session_t, t: testcase.Testcase,
@@ -163,9 +160,8 @@ def DifftestTestcase(s: db.session_t, t: testcase.Testcase,
           r.output_class == 'Runtime crash'):
       pbutil.ToFile(r.ToProto(), OutputPath('arc'))
     elif (r.outputs['stdout'] != majority.majority_stdout and
-          majority.majority_outcome == 'Pass' and
-          majority.stdout_majority_size >= math.ceil(
-            2 * majority.outcome_majority_size / 3)):
+          majority.majority_outcome == 'Pass' and majority.stdout_majority_size
+          >= math.ceil(2 * majority.outcome_majority_size / 3)):
       pbutil.ToFile(r.ToProto(), OutputPath('awo'))
     else:
       pbutil.ToFile(r.ToProto(), OutputPath('pass'))
@@ -183,23 +179,23 @@ def ReadClassificationsToTable(output_dir: pathlib.Path) -> pd.DataFrame:
     counters[t][result_class] += 1
   for t, result_classes in counters.items():
     rows.append([
-      t,
-      result_classes['bc'],
-      result_classes['bto'],
-      result_classes['abf'],
-      result_classes['arc'],
-      result_classes['awo'],
-      sum(result_classes.values()),
+        t,
+        result_classes['bc'],
+        result_classes['bto'],
+        result_classes['abf'],
+        result_classes['arc'],
+        result_classes['awo'],
+        sum(result_classes.values()),
     ])
   rows = sorted(rows, key=lambda x: (int(x[0][:-1]), x[0][-1]))
   rows.append([
-    'Total',
-    len(fs.lsfiles(output_dir / 'bc', recursive=True)),
-    len(fs.lsfiles(output_dir / 'bto', recursive=True)),
-    len(fs.lsfiles(output_dir / 'abf', recursive=True)),
-    len(fs.lsfiles(output_dir / 'arc', recursive=True)),
-    len(fs.lsfiles(output_dir / 'awo', recursive=True)),
-    len(fs.lsfiles(output_dir / 'pass', recursive=True)),
+      'Total',
+      len(fs.lsfiles(output_dir / 'bc', recursive=True)),
+      len(fs.lsfiles(output_dir / 'bto', recursive=True)),
+      len(fs.lsfiles(output_dir / 'abf', recursive=True)),
+      len(fs.lsfiles(output_dir / 'arc', recursive=True)),
+      len(fs.lsfiles(output_dir / 'awo', recursive=True)),
+      len(fs.lsfiles(output_dir / 'pass', recursive=True)),
   ])
   df = pd.DataFrame(
       rows, columns=['Testbed', 'bc', 'bto', 'abf', 'arc', 'awo', 'pass'])
@@ -228,10 +224,14 @@ def main(argv):
   (output_dir / 'arc').mkdir(exist_ok=True)
   (output_dir / 'awo').mkdir(exist_ok=True)
   (output_dir / 'pass').mkdir(exist_ok=True)
-  result_dirs = [pathlib.Path(x) for x in FLAGS.input_directories
-                 if pathlib.Path(x).is_dir()]
+  result_dirs = [
+      pathlib.Path(x)
+      for x in FLAGS.input_directories
+      if pathlib.Path(x).is_dir()
+  ]
   results_paths = labtypes.flatten(
-      [pathlib.Path(x) for x in fs.lsfiles(x, recursive=True, abspaths=True)]
+      [pathlib.Path(x)
+       for x in fs.lsfiles(x, recursive=True, abspaths=True)]
       for x in result_dirs)
   logging.info('Importing %d results into datastore ...', len(results_paths))
   with ds.Session(commit=True) as s:

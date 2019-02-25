@@ -11,20 +11,18 @@ from labm8 import bazelutil
 from labm8 import crypto
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
-    'generator', str(
+    'generator',
+    str(
         bazelutil.DataPath('phd/docs/2018_07_issta/artifact_evaluation/'
                            'data/clgen.pbtxt')),
     'The path of the generator config proto.')
-flags.DEFINE_integer(
-    'num_testcases', 1024,
-    'The number of testcases to generate.')
+flags.DEFINE_integer('num_testcases', 1024,
+                     'The number of testcases to generate.')
 flags.DEFINE_string(
-    'output_directory',
-    '/tmp/phd/docs/2018_07_issta/artifact_evaluation',
+    'output_directory', '/tmp/phd/docs/2018_07_issta/artifact_evaluation',
     'The directory to write generated programs and testcases to.')
 
 
@@ -60,8 +58,9 @@ def GenerateTestcases(generator_config: generator_pb2.ClgenGenerator,
 
   logging.info('%d testcases written to %s', num_testcases,
                output_directory / 'generated_testcases')
-  generation_times = [testcase.profiling_events[0].duration_ms
-                      for testcase in res.testcases]
+  generation_times = [
+      testcase.profiling_events[0].duration_ms for testcase in res.testcases
+  ]
   logging.info('Average time to generate testcase: %.2f ms',
                sum(generation_times) / len(generation_times))
 
