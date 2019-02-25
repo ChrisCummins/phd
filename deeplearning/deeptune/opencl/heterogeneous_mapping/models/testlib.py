@@ -4,7 +4,6 @@ import tempfile
 
 from absl import flags
 
-
 FLAGS = flags.FLAGS
 
 

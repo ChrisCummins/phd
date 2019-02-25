@@ -43,7 +43,6 @@ from labm8 import hashcache
 from labm8 import lockfile
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
@@ -129,8 +128,8 @@ class Corpus(object):
     preprocessed_id = ResolvePreprocessedId(self.content_id, self.config)
     cache.cachepath('corpus', 'preprocessed', preprocessed_id).mkdir(
         exist_ok=True, parents=True)
-    preprocessed_db_path = cache.cachepath(
-        'corpus', 'preprocessed', preprocessed_id, 'preprocessed.db')
+    preprocessed_db_path = cache.cachepath('corpus', 'preprocessed',
+                                           preprocessed_id, 'preprocessed.db')
     if (self.config.HasField('content_id') and
         not preprocessed_db_path.is_file()):
       raise errors.UserError(f"Content ID not found: '{self.content_id}'")
@@ -141,28 +140,34 @@ class Corpus(object):
         self.preprocessed.url[len('sqlite:///'):]).parent / 'contentfiles'
     if not symlink.is_symlink():
       if config.HasField('local_directory'):
-        os.symlink(str(ExpandConfigPath(
-            config.local_directory, path_prefix=FLAGS.clgen_local_path_prefix)),
-            symlink)
+        os.symlink(
+            str(
+                ExpandConfigPath(
+                    config.local_directory,
+                    path_prefix=FLAGS.clgen_local_path_prefix)), symlink)
       elif config.HasField('local_tar_archive'):
-        os.symlink(str(ExpandConfigPath(
-            config.local_tar_archive,
-            path_prefix=FLAGS.clgen_local_path_prefix)), symlink)
+        os.symlink(
+            str(
+                ExpandConfigPath(
+                    config.local_tar_archive,
+                    path_prefix=FLAGS.clgen_local_path_prefix)), symlink)
     # Data of encoded pre-preprocessed files.
     encoded_id = ResolveEncodedId(self.content_id, self.config)
     cache.cachepath('corpus', 'encoded', encoded_id).mkdir(
         exist_ok=True, parents=True)
-    self.encoded = encoded.EncodedContentFiles(cache.cachepath(
-        'corpus', 'encoded', encoded_id, 'encoded.db'))
-    self.atomizer_path = cache.cachepath(
-        'corpus', 'encoded', encoded_id, 'atomizer.pkl')
+    self.encoded = encoded.EncodedContentFiles(
+        cache.cachepath('corpus', 'encoded', encoded_id, 'encoded.db'))
+    self.atomizer_path = cache.cachepath('corpus', 'encoded', encoded_id,
+                                         'atomizer.pkl')
     # Create symlink to preprocessed files.
     symlink = pathlib.Path(
         self.encoded.url[len('sqlite:///'):]).parent / 'preprocessed'
     if not symlink.is_symlink():
-      os.symlink(os.path.relpath(
-          pathlib.Path(self.preprocessed.url[len('sqlite:///'):]).parent,
-          pathlib.Path(self.encoded.url[len('sqlite:///'):]).parent), symlink)
+      os.symlink(
+          os.path.relpath(
+              pathlib.Path(self.preprocessed.url[len('sqlite:///'):]).parent,
+              pathlib.Path(self.encoded.url[len('sqlite:///'):]).parent),
+          symlink)
     self.hash = encoded_id
     self.cache = cache.mkcache('corpus', 'encoded', encoded_id)
 
@@ -189,7 +194,8 @@ class Corpus(object):
         replace_stale=True, block=True):
       start_time = time.time()
       atomizer = self.atomizer
-      logging.info('%s: %s tokens in %s ms', type(atomizer).__name__,
+      logging.info('%s: %s tokens in %s ms',
+                   type(atomizer).__name__,
                    humanize.intcomma(atomizer.vocab_size),
                    humanize.intcomma(int((time.time() - start_time) * 1000)))
       self.encoded.Create(self.preprocessed, atomizer,
@@ -250,8 +256,8 @@ class Corpus(object):
     """The number of succesfully pre-processed content files."""
     with self.preprocessed.Session() as session:
       return session.query(preprocessed.PreprocessedContentFile.text).filter(
-          preprocessed.PreprocessedContentFile.preprocessing_succeeded == True
-      ).count()
+          preprocessed.PreprocessedContentFile.preprocessing_succeeded ==
+          True).count()
 
   @property
   def atomizer(self) -> atomizers.AtomizerBase:
@@ -300,8 +306,7 @@ class Corpus(object):
     return not self.__eq__(rhs)
 
 
-def ExpandConfigPath(path: str,
-                     path_prefix: str = None) -> pathlib.Path:
+def ExpandConfigPath(path: str, path_prefix: str = None) -> pathlib.Path:
   """Resolve an absolute path from a config proto string field.
 
   This performs shell-style expansion of $VARS, and prefixes the
@@ -318,8 +323,8 @@ def ExpandConfigPath(path: str,
   if 'HOME' not in os.environ:
     os.environ['HOME'] = str(pathlib.Path('~').expanduser())
   os.environ['BAZEL_RUNFILES'] = str(bazelutil.DataPath('.'))
-  return pathlib.Path(os.path.expandvars(
-      (path_prefix or '') + path)).expanduser().absolute()
+  return pathlib.Path(
+      os.path.expandvars((path_prefix or '') + path)).expanduser().absolute()
 
 
 def ResolveContentId(config: corpus_pb2.Corpus, hc: hashcache.HashCache) -> str:
@@ -372,8 +377,9 @@ def ResolveContentId(config: corpus_pb2.Corpus, hc: hashcache.HashCache) -> str:
     # to maintain a cache which maps the mtime of tarballs to their content ID,
     # similart to how local_directory is implemented.
     content_id = GetHashOfArchiveContents(
-        ExpandConfigPath(config.local_tar_archive,
-                         path_prefix=FLAGS.clgen_local_path_prefix))
+        ExpandConfigPath(
+            config.local_tar_archive,
+            path_prefix=FLAGS.clgen_local_path_prefix))
   else:
     raise NotImplementedError('Unsupported Corpus.contentfiles field value')
   logging.debug('Resolved Content ID %s in %s ms.', content_id,
@@ -403,8 +409,8 @@ def ResolveEncodedId(content_id: str, config: corpus_pb2.Corpus) -> str:
   # files delivered through different means (e.g. two separate but identical
   # directories) have the same hash.
   config_without_contentfiles.ClearField('contentfiles')
-  return crypto.sha1_list(
-      content_id, config_without_contentfiles.SerializeToString())
+  return crypto.sha1_list(content_id,
+                          config_without_contentfiles.SerializeToString())
 
 
 def GetHashOfArchiveContents(archive: pathlib.Path) -> str:

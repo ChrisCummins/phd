@@ -23,12 +23,11 @@ from deeplearning.clgen.models import models
 from deeplearning.clgen.proto import internal_pb2
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string(
-    'working_dir', str(pathlib.Path('~/.cache/clgen').expanduser()),
-    'The path to the CLgen working directory.')
+flags.DEFINE_string('working_dir',
+                    str(pathlib.Path('~/.cache/clgen').expanduser()),
+                    'The path to the CLgen working directory.')
 
 
 def LsModels(cache_root: pathlib.Path) -> None:

@@ -24,7 +24,6 @@ from absl import logging
 from deeplearning.clgen import errors
 from labm8 import bazelutil
 
-
 FLAGS = flags.FLAGS
 
 CLGEN_REWRITER = bazelutil.DataPath(
@@ -39,7 +38,9 @@ if bazelutil.DataPath('llvm_linux', must_exist=False).is_dir():
   CLGEN_REWRITER_ENV['LD_PRELOAD'] = f'{libclang}:{liblto}'
 
 
-def NormalizeIdentifiers(text: str, suffix: str, cflags: typing.List[str],
+def NormalizeIdentifiers(text: str,
+                         suffix: str,
+                         cflags: typing.List[str],
                          timeout_seconds: int = 60) -> str:
   """Normalize identifiers in source code.
 
@@ -67,15 +68,20 @@ def NormalizeIdentifiers(text: str, suffix: str, cflags: typing.List[str],
   with tempfile.NamedTemporaryFile('w', suffix=suffix) as f:
     f.write(text)
     f.flush()
-    cmd = ["timeout", "-s9", str(timeout_seconds), str(CLGEN_REWRITER),
-           f.name] + ['-extra-arg=' + x for x in cflags] + ['--']
+    cmd = ["timeout", "-s9",
+           str(timeout_seconds),
+           str(CLGEN_REWRITER), f.name] + ['-extra-arg=' + x for x in cflags
+                                          ] + ['--']
     logging.debug(
-        '$ %s%s',
-        f'LD_PRELOAD={CLGEN_REWRITER_ENV["LD_PRELOAD"]} '
+        '$ %s%s', f'LD_PRELOAD={CLGEN_REWRITER_ENV["LD_PRELOAD"]} '
         if 'LD_PRELOAD' in CLGEN_REWRITER_ENV else '', ' '.join(cmd))
-    process = subprocess.Popen(cmd, stdin=subprocess.PIPE,
-                               stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                               universal_newlines=True, env=CLGEN_REWRITER_ENV)
+    process = subprocess.Popen(
+        cmd,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+        env=CLGEN_REWRITER_ENV)
     stdout, stderr = process.communicate()
     logging.debug(stderr)
   # If there was nothing to rewrite, rewriter exits with error code:

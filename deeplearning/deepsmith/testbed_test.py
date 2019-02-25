@@ -9,7 +9,6 @@ import deeplearning.deepsmith.toolchain
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -18,16 +17,17 @@ def test_Testbed_ToProto():
       toolchain=deeplearning.deepsmith.toolchain.Toolchain(string='cpp'),
       name='clang',
       optset=[
-        deeplearning.deepsmith.testbed.TestbedOpt(
-            name=deeplearning.deepsmith.testbed.TestbedOptName(string='arch'),
-            value=deeplearning.deepsmith.testbed.TestbedOptValue(
-                string='x86_64'),
-        ),
-        deeplearning.deepsmith.testbed.TestbedOpt(
-            name=deeplearning.deepsmith.testbed.TestbedOptName(string='build'),
-            value=deeplearning.deepsmith.testbed.TestbedOptValue(
-                string='debug+assert'),
-        ),
+          deeplearning.deepsmith.testbed.TestbedOpt(
+              name=deeplearning.deepsmith.testbed.TestbedOptName(string='arch'),
+              value=deeplearning.deepsmith.testbed.TestbedOptValue(
+                  string='x86_64'),
+          ),
+          deeplearning.deepsmith.testbed.TestbedOpt(
+              name=deeplearning.deepsmith.testbed.TestbedOptName(
+                  string='build'),
+              value=deeplearning.deepsmith.testbed.TestbedOptValue(
+                  string='debug+assert'),
+          ),
       ],
   )
   proto = testbed.ToProto()
@@ -43,13 +43,11 @@ def test_Testbed_GetOrAdd(session):
       toolchain='cpp',
       name='clang',
       opts={
-        'arch': 'x86_64',
-        'build': 'debug+assert'
+          'arch': 'x86_64',
+          'build': 'debug+assert'
       },
   )
-  testbed = deeplearning.deepsmith.testbed.Testbed.GetOrAdd(
-      session, proto
-  )
+  testbed = deeplearning.deepsmith.testbed.Testbed.GetOrAdd(session, proto)
   assert session.query(
       deeplearning.deepsmith.testbed.TestbedOptSet).count() == 2
   assert session.query(deeplearning.deepsmith.testbed.TestbedOpt).count() == 2
@@ -80,24 +78,24 @@ def test_Testbed_GetOrAdd_duplicates(session):
       toolchain='cpp',
       name='clang',
       opts={
-        'arch': 'x86_64',
-        'build': 'debug+assert',
+          'arch': 'x86_64',
+          'build': 'debug+assert',
       },
   )
   proto_a2 = deepsmith_pb2.Testbed(
       toolchain='cpp',
       name='clang',
       opts={
-        'arch': 'x86_64',
-        'build': 'debug+assert',
+          'arch': 'x86_64',
+          'build': 'debug+assert',
       },
   )
   proto_b = deepsmith_pb2.Testbed(
       toolchain='cpp',
       name='gcc',
       opts={
-        'arch': 'x86_64',
-        'build': 'opt',
+          'arch': 'x86_64',
+          'build': 'opt',
       },
   )
   assert proto_a1 == proto_a2  # Sanity check.
@@ -141,8 +139,8 @@ def test_Testbed_GetOrAdd_ToProto_equivalence(session):
       toolchain='cpp',
       name='clang',
       opts={
-        'arch': 'x86_64',
-        'build': 'debug+assert'
+          'arch': 'x86_64',
+          'build': 'debug+assert'
       },
   )
   testbed = deeplearning.deepsmith.testbed.Testbed.GetOrAdd(session, proto_in)
@@ -159,12 +157,12 @@ def test_Testbed_GetOrAdd_ToProto_equivalence(session):
 
 def test_Testbed_GetOrAdd_no_opts(session):
   testbed = deeplearning.deepsmith.testbed.Testbed.GetOrAdd(
-      session, deepsmith_pb2.Testbed(
+      session,
+      deepsmith_pb2.Testbed(
           toolchain='toolchain',
           name='name',
           opts={},
-      )
-  )
+      ))
   empty_md5 = hashlib.md5().digest()
   assert testbed.optset_id == empty_md5
   assert session.query(deeplearning.deepsmith.testbed.Testbed).count() == 1
@@ -179,32 +177,32 @@ def test_Testbed_GetOrAdd_no_opts(session):
 
 def test_Testbed_GetOrAdd_only_different_optset(session):
   testbed_a = deeplearning.deepsmith.testbed.Testbed.GetOrAdd(
-      session, deepsmith_pb2.Testbed(
+      session,
+      deepsmith_pb2.Testbed(
           toolchain='toolchain',
           name='name',
           opts={
-            'a': 'A',
-            'b': 'B',
-            'c': 'C',
+              'a': 'A',
+              'b': 'B',
+              'c': 'C',
           },
-      )
-  )
+      ))
   testbed_b = deeplearning.deepsmith.testbed.Testbed.GetOrAdd(
-      session, deepsmith_pb2.Testbed(
+      session,
+      deepsmith_pb2.Testbed(
           toolchain='toolchain',
           name='name',
           opts={
-            'd': 'D',
+              'd': 'D',
           },
-      )
-  )
+      ))
   testbed_c = deeplearning.deepsmith.testbed.Testbed.GetOrAdd(
-      session, deepsmith_pb2.Testbed(
+      session,
+      deepsmith_pb2.Testbed(
           toolchain='toolchain',
           name='name',
           opts={},
-      )
-  )
+      ))
   assert session.query(deeplearning.deepsmith.testbed.Testbed).count() == 3
   assert session.query(deeplearning.deepsmith.testbed.TestbedOpt).count() == 4
   assert session.query(
@@ -225,11 +223,10 @@ def test_Testbed_GetOrAdd_rollback(session):
           toolchain='opencl',
           name='nvidia',
           opts={
-            'opencl': '1.2',
-            'devtype': 'GPU',
+              'opencl': '1.2',
+              'devtype': 'GPU',
           },
-      )
-  )
+      ))
   assert session.query(deeplearning.deepsmith.testbed.Testbed).count() == 1
   assert session.query(deeplearning.deepsmith.testbed.TestbedOpt).count() == 2
   assert session.query(
@@ -256,12 +253,11 @@ def _AddRandomNewTestbed(session):
           toolchain=str(random.random()),
           name=str(random.random()),
           opts={
-            str(random.random()): str(random.random()),
-            str(random.random()): str(random.random()),
-            str(random.random()): str(random.random()),
+              str(random.random()): str(random.random()),
+              str(random.random()): str(random.random()),
+              str(random.random()): str(random.random()),
           },
-      )
-  )
+      ))
   session.flush()
 
 
@@ -276,12 +272,11 @@ def _AddExistingTestbed(session):
           toolchain='toolchain',
           name='name',
           opts={
-            'a': 'a',
-            'b': 'b',
-            'c': 'c',
+              'a': 'a',
+              'b': 'b',
+              'c': 'c',
           },
-      )
-  )
+      ))
   session.flush()
 
 

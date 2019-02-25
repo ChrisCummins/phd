@@ -21,11 +21,10 @@ from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import common
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
-
 # MinimumLineCount3() tests.
+
 
 def test_MinimumLineCount3_empty_input():
   """Test that MinimumLineCount3 rejects an empty input."""
@@ -53,6 +52,7 @@ int main(int argc, char** argv) {
 
 
 # StripDuplicateEmptyLines() tests.
+
 
 def test_StripDuplicateEmptyLines_empty_input():
   """Test StripDuplicateEmptyLines accepts an empty input."""

@@ -16,7 +16,6 @@ from deeplearning.ncc import task_utils as inst2vec_utils
 from deeplearning.ncc import vocabulary as inst2vec_vocabulary
 from labm8 import bazelutil
 
-
 # The pre-trained embeddings used by default by DeepTuneInst2Vec models.
 DEEPTUNE_INST2VEC_EMBEDDINGS = bazelutil.DataPath(
     'phd/deeplearning/ncc/published_results/emb.p')
@@ -42,14 +41,22 @@ def ExtractLlvmByteCodeOrDie(src_file_path: pathlib.Path,
 
   # Compile src to bytecode.
   clang_args = opencl.GetClangArgs(use_shim=True) + [
-    '-O0', '-S', '-emit-llvm', '-o', '-', '-i', '-',
-    # No warnings, and fail immediately on error.
-    '-Wno-everything', '-ferror-limit=1',
-    # Kernels have headers.
-    '-I', str(datafolder / 'kernels_cl'),
-    # We don't need the full shim header, just the common constants:
-    '-DCLGEN_OPENCL_SHIM_NO_COMMON_TYPES',
-    '-DCLGEN_OPENCL_SHIM_NO_UNSUPPORTED_STORAGE_CLASSES_AND_QUALIFIERS',
+      '-O0',
+      '-S',
+      '-emit-llvm',
+      '-o',
+      '-',
+      '-i',
+      '-',
+      # No warnings, and fail immediately on error.
+      '-Wno-everything',
+      '-ferror-limit=1',
+      # Kernels have headers.
+      '-I',
+      str(datafolder / 'kernels_cl'),
+      # We don't need the full shim header, just the common constants:
+      '-DCLGEN_OPENCL_SHIM_NO_COMMON_TYPES',
+      '-DCLGEN_OPENCL_SHIM_NO_UNSUPPORTED_STORAGE_CLASSES_AND_QUALIFIERS',
   ]
   process = clang.Exec(clang_args, stdin=src, log=False)
   if process.returncode:
@@ -71,8 +78,10 @@ def _EncodeSourceBatchOrDie(src_file_paths, datafolder):
 
 
 def EncodeAndPadSourcesWithInst2Vec(
-    df: pd.DataFrame, vocab: inst2vec_vocabulary.VocabularyZipFile,
-    datafolder: pathlib.Path, max_sequence_len: typing.Optional[int] = None
+    df: pd.DataFrame,
+    vocab: inst2vec_vocabulary.VocabularyZipFile,
+    datafolder: pathlib.Path,
+    max_sequence_len: typing.Optional[int] = None
 ) -> typing.Tuple[np.array, int]:
   """Encode and pad source code using inst2vec translation."""
   sequence_lengths = []
@@ -82,15 +91,15 @@ def EncodeAndPadSourcesWithInst2Vec(
   # entries in the dataframe using the same sequence.
   src_path_to_sequence = {}
 
-  src_paths = list(set(
-      DataFrameRowToKernelSrcPath(row, datafolder) for _, row in df.iterrows()))
+  src_paths = list(
+      set(
+          DataFrameRowToKernelSrcPath(row, datafolder)
+          for _, row in df.iterrows()))
 
   # Chunk the srcs and process in parallel.
   srcs_per_process = 16
-  encode_args = [
-    (src_paths[i:i + srcs_per_process], datafolder)
-    for i in range(0, len(src_paths), srcs_per_process)
-  ]
+  encode_args = [(src_paths[i:i + srcs_per_process], datafolder)
+                 for i in range(0, len(src_paths), srcs_per_process)]
   batches = multiprocessing.Pool().starmap(_EncodeSourceBatchOrDie, encode_args)
   for batch in batches:
     for src_file_path, bytecode in batch:
@@ -111,8 +120,9 @@ def EncodeAndPadSourcesWithInst2Vec(
                 min(sequence_lengths), np.mean(sequence_lengths),
                 max_sequence_len)
 
-  encoded = np.array(keras_sequence.pad_sequences(
-      sequences, maxlen=max_sequence_len, value=vocab.unknown_token_index))
+  encoded = np.array(
+      keras_sequence.pad_sequences(
+          sequences, maxlen=max_sequence_len, value=vocab.unknown_token_index))
   encoded = np.vstack([np.expand_dims(x, axis=0) for x in encoded])
 
   return encoded, max_sequence_len
@@ -130,7 +140,8 @@ class DeepTuneInst2Vec(deeptune.DeepTune):
   __name__ = "DeepTuneInst2Vec"
   __basename__ = "deeptune_inst2vec"
 
-  def __init__(self, embedding_matrix: np.ndarray = None,
+  def __init__(self,
+               embedding_matrix: np.ndarray = None,
                input_shape: typing.List[int] = (4075,),
                vocabulary_file: typing.Optional[pathlib.Path] = None,
                **deeptune_opts):
@@ -162,9 +173,10 @@ class DeepTuneInst2Vec(deeptune.DeepTune):
 
     super(DeepTuneInst2Vec, self).__init__(**deeptune_opts)
 
-  def EncodeAndPadSources(
-      self, df: pd.DataFrame,
-      maxlen: typing.Optional[int] = None) -> typing.Tuple[np.array, int]:
+  def EncodeAndPadSources(self,
+                          df: pd.DataFrame,
+                          maxlen: typing.Optional[int] = None
+                         ) -> typing.Tuple[np.array, int]:
     """Encode and pad source sequences."""
     # TODO(cec): This is hardcoded to OpenClDeviceMappingsDataset, and is
     # mighty slow.
@@ -184,8 +196,8 @@ class DeepTuneInst2Vec(deeptune.DeepTune):
     sequence_ph = tf.placeholder(dtype=tf.int32)
     normalized_embedding_matrix = tf.nn.l2_normalize(
         self.embedding_matrix, axis=1)
-    embedding_input_op = tf.nn.embedding_lookup(
-        normalized_embedding_matrix, sequence_ph)
+    embedding_input_op = tf.nn.embedding_lookup(normalized_embedding_matrix,
+                                                sequence_ph)
 
     with tf.Session() as sess:
       # Tensor of shape (len(df), sequence length, embedding dimension).
@@ -194,8 +206,8 @@ class DeepTuneInst2Vec(deeptune.DeepTune):
 
     # Get the auxiliary inputs.
     aux_in = np.array([
-      df[f"feature:{gpu_name}:transfer"].values,
-      df[f"param:{gpu_name}:wgsize"].values,
+        df[f"feature:{gpu_name}:transfer"].values,
+        df[f"param:{gpu_name}:wgsize"].values,
     ]).T
 
     return [aux_in, embedding_input]
@@ -207,8 +219,8 @@ def DataFrameRowToKernelSrcPath(row: typing.Dict[str, typing.Any],
   # TODO(cec): This won't be necessary once we add the original OpenCL srcs to
   # the dataframe.
   file_name_stub = '-'.join([
-    row['program:benchmark_suite_name'], row['program:benchmark_name'],
-    row['program:opencl_kernel_name']
+      row['program:benchmark_suite_name'], row['program:benchmark_name'],
+      row['program:opencl_kernel_name']
   ])
 
   opencl_src_path = datafolder / 'kernels_cl' / (file_name_stub + '.cl')
@@ -217,9 +229,8 @@ def DataFrameRowToKernelSrcPath(row: typing.Dict[str, typing.Any],
 
   # Some of the benchmark sources are dataset dependent. This is reflected by
   # the dataset name being concatenated to the path.
-  opencl_src_path = (
-      datafolder / 'kernels_cl' /
-      (file_name_stub + '_' + str(row['data:dataset_name']) + '.cl'))
+  opencl_src_path = (datafolder / 'kernels_cl' / (
+      file_name_stub + '_' + str(row['data:dataset_name']) + '.cl'))
   if opencl_src_path.is_file():
     return opencl_src_path
 

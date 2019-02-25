@@ -26,7 +26,6 @@ from deeplearning.clgen.corpuses import encoded
 from deeplearning.clgen.corpuses import preprocessed
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -51,8 +50,8 @@ def temp_db() -> encoded.EncodedContentFiles:
 
 # EncodedContentFile.FromPreprocessed() tests.
 
-def test_EncodedContentFile_FromPreprocessed_id(
-    abc_atomizer, abc_preprocessed):
+
+def test_EncodedContentFile_FromPreprocessed_id(abc_atomizer, abc_preprocessed):
   """Test that id is the same as the preprocessed content file."""
   enc = encoded.EncodedContentFile.FromPreprocessed(
       abc_preprocessed, abc_atomizer, eof='a')
@@ -69,8 +68,8 @@ def test_EncodedContentFile_FromPreprocessed_indices_array(
       enc.indices_array)
 
 
-def test_EncodedContentFile_FromPreprocessed_tokencount(
-    abc_atomizer, abc_preprocessed):
+def test_EncodedContentFile_FromPreprocessed_tokencount(abc_atomizer,
+                                                        abc_preprocessed):
   """Test that tokencount is the length of the array (minus EOF marker)."""
   enc = encoded.EncodedContentFile.FromPreprocessed(
       abc_preprocessed, abc_atomizer, eof='a')
@@ -86,8 +85,8 @@ def test_EncodedContentFile_FromPreprocessed_encoding_time_ms(
   assert enc.encoding_time_ms is not None
 
 
-def test_EncodedContentFile_FromPreprocessed_date_added(
-    abc_atomizer, abc_preprocessed):
+def test_EncodedContentFile_FromPreprocessed_date_added(abc_atomizer,
+                                                        abc_preprocessed):
   """Test that date_added is set."""
   enc = encoded.EncodedContentFile.FromPreprocessed(
       abc_preprocessed, abc_atomizer, eof='a')
@@ -96,14 +95,15 @@ def test_EncodedContentFile_FromPreprocessed_date_added(
 
 # EncodedContentFiles tests.
 
+
 def test_EncodedContentFiles_indices_array_equivalence(
     temp_db: encoded.EncodedContentFiles,
     abc_preprocessed: preprocessed.PreprocessedContentFile,
     abc_atomizer: atomizers.AsciiCharacterAtomizer):
   """Test that indices_array is equivalent across db sessions."""
   # Session 1: Add encoded file.
-  enc = encoded.EncodedContentFile.FromPreprocessed(
-      abc_preprocessed, abc_atomizer, 'a')
+  enc = encoded.EncodedContentFile.FromPreprocessed(abc_preprocessed,
+                                                    abc_atomizer, 'a')
   with temp_db.Session(commit=True) as session:
     array_in = enc.indices_array
     session.add(enc)
@@ -123,11 +123,11 @@ def test_EncodedContentFiles_token_count(
     abc_preprocessed: preprocessed.PreprocessedContentFile,
     abc_atomizer: atomizers.AsciiCharacterAtomizer):
   """Test that token_count property returns sum of token_count column."""
-  enc1 = encoded.EncodedContentFile.FromPreprocessed(
-      abc_preprocessed, abc_atomizer, 'a')
+  enc1 = encoded.EncodedContentFile.FromPreprocessed(abc_preprocessed,
+                                                     abc_atomizer, 'a')
   abc_preprocessed.id += 1
-  enc2 = encoded.EncodedContentFile.FromPreprocessed(
-      abc_preprocessed, abc_atomizer, 'a')
+  enc2 = encoded.EncodedContentFile.FromPreprocessed(abc_preprocessed,
+                                                     abc_atomizer, 'a')
   with temp_db.Session(commit=True) as session:
     session.add(enc1)
     session.add(enc2)

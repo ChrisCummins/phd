@@ -27,7 +27,6 @@ from deeplearning.clgen.proto import sampler_pb2
 from labm8 import crypto
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 
 

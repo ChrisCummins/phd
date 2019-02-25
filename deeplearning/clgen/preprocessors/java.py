@@ -28,7 +28,6 @@ from deeplearning.clgen.preprocessors import clang
 from deeplearning.clgen.preprocessors import public
 from labm8 import bazelutil
 
-
 FLAGS = flags.FLAGS
 
 CLASS_NAME_RE = re.compile(r'public\s+class\s+(\w+)')
@@ -55,7 +54,9 @@ def ClangFormat(text: str) -> str:
   return clang.ClangFormat(text, '.java')
 
 
-def Javac(text: str, class_name: str, cflags: typing.List[str],
+def Javac(text: str,
+          class_name: str,
+          cflags: typing.List[str],
           timeout_seconds: int = 60) -> str:
   """Run code through javac.
 
@@ -74,8 +75,11 @@ def Javac(text: str, class_name: str, cflags: typing.List[str],
       f.write(text)
     cmd = ['timeout', '-s9', str(timeout_seconds), 'javac', f.name] + cflags
     logging.debug('$ %s', ' '.join(cmd))
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE, universal_newlines=True)
+    process = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True)
     stdout, stderr = process.communicate()
   if process.returncode == 9:
     raise errors.BadCodeException(f'Javac timed out after {timeout_seconds}s')
@@ -154,9 +158,12 @@ def JavaRewrite(text: str) -> str:
     ClangTimeout: If rewriter fails to complete within timeout_seconds.
   """
   cmd = ['timeout', '-s9', '60', str(JAVA_REWRITER)]
-  process = subprocess.Popen(cmd, stdin=subprocess.PIPE,
-                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                             universal_newlines=True)
+  process = subprocess.Popen(
+      cmd,
+      stdin=subprocess.PIPE,
+      stdout=subprocess.PIPE,
+      stderr=subprocess.PIPE,
+      universal_newlines=True)
   logging.debug('$ %s', ' '.join(cmd))
   stdout, stderr = process.communicate(text)
   if process.returncode == 9:

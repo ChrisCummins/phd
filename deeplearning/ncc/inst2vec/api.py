@@ -6,7 +6,6 @@ from absl import flags
 
 from deeplearning.ncc import vocabulary
 
-
 FLAGS = flags.FLAGS
 
 
@@ -15,8 +14,8 @@ def PreprocessLlvmBytecode(bytecode: str) -> str:
   raise NotImplementedError
 
 
-def EncodeLlvmBytecode(
-    bytecode: str, vocab: vocabulary.VocabularyZipFile) -> typing.List[int]:
+def EncodeLlvmBytecode(bytecode: str,
+                       vocab: vocabulary.VocabularyZipFile) -> typing.List[int]:
   """Encode an LLVM bytecode to an array of vocabulary indices."""
   raise NotImplementedError
 

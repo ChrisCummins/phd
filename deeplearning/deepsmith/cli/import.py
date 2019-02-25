@@ -12,7 +12,6 @@ import deeplearning.deepsmith.testcase
 from deeplearning.deepsmith import datastore
 from deeplearning.deepsmith import db
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_list('results', [], 'Result proto paths to import')
@@ -97,8 +96,8 @@ def main(argv):
     if FLAGS.results_dir:
       ImportResultsFromDirectory(session, pathlib.Path(FLAGS.results_dir))
     for path in FLAGS.testcases:
-      deeplearning.deepsmith.testcase.Testcase.FromFile(
-          session, pathlib.Path(path))
+      deeplearning.deepsmith.testcase.Testcase.FromFile(session,
+                                                        pathlib.Path(path))
     session.commit()
     if FLAGS.testcases_dir:
       ImportTestcasesFromDirectory(session, pathlib.Path(FLAGS.testcases_dir))

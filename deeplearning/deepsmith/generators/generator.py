@@ -14,7 +14,6 @@ from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import generator_pb2_grpc
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 
 
@@ -63,7 +62,7 @@ class GeneratorServiceBase(services.ServiceBase):
 
   @classmethod
   def Main(cls, config_proto_class: pbutil.ProtocolBuffer
-           ) -> typing.Callable[[typing.List[str]], None]:
+          ) -> typing.Callable[[typing.List[str]], None]:
     """Return a main method for running this service.
 
     Args:
@@ -76,15 +75,15 @@ class GeneratorServiceBase(services.ServiceBase):
     def RunMain(argv: typing.List[str]) -> None:
       if len(argv) > 1:
         raise app.UsageError('Unrecognized arguments')
-      generator_config = services.ServiceConfigFromFlag(
-          'generator_config', config_proto_class())
+      generator_config = services.ServiceConfigFromFlag('generator_config',
+                                                        config_proto_class())
       server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
       services.AssertLocalServiceHostname(generator_config.service)
       service = cls(generator_config)
       generator_pb2_grpc.add_GeneratorServiceServicer_to_server(service, server)
       server.add_insecure_port(f'[::]:{generator_config.service.port}')
-      logging.info('%s listening on %s:%s', type(service).__name__,
-                   generator_config.service.hostname,
+      logging.info('%s listening on %s:%s',
+                   type(service).__name__, generator_config.service.hostname,
                    generator_config.service.port)
       server.start()
       try:

@@ -15,7 +15,6 @@ from deeplearning.deeptune.opencl.heterogeneous_mapping import utils
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import models
 from labm8 import prof
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
@@ -84,8 +83,9 @@ def main(argv: typing.List[str]):
 
   logging.info('Augmented dataframe: %s', augmented_df.shape)
   logging.info('Atomizer: %s', experiment.atomizer)
-  longest_seq = max(len(experiment.atomizer.AtomizeString(src))
-                    for src in augmented_df['program:opencl_src'])
+  longest_seq = max(
+      len(experiment.atomizer.AtomizeString(src))
+      for src in augmented_df['program:opencl_src'])
   logging.info('Longest sequence: %d', longest_seq)
 
   results_path = cache_directory / 'adversarial_results.pkl'
@@ -95,9 +95,12 @@ def main(argv: typing.List[str]):
     logging.info('Model: %s', model)
 
     logging.info('Evaluating model ...')
-    results = utils.evaluate(model, df=augmented_df,
-                             atomizer=experiment.atomizer,
-                             workdir=experiment.cache_dir, seed=0x204)
+    results = utils.evaluate(
+        model,
+        df=augmented_df,
+        atomizer=experiment.atomizer,
+        workdir=experiment.cache_dir,
+        seed=0x204)
 
     logging.info('Writing %s', cache_directory / 'adversarial_results.pkl')
     results.to_pickle(str(cache_directory / 'adversarial_results.pkl'))

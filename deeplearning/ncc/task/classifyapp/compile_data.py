@@ -31,11 +31,12 @@ from absl import app, flags
 
 
 class CompilerArgumentGenerator(object):
+
   def __init__(self):
-    self.compiler = template_vars.ValueListVar(
-        [
-          'g++ -fplugin=dragonegg.so -S -fplugin-arg-dragonegg-emit-ir -std=c++11',
-          'clang++ -S -emit-llvm -std=c++11'])
+    self.compiler = template_vars.ValueListVar([
+        'g++ -fplugin=dragonegg.so -S -fplugin-arg-dragonegg-emit-ir -std=c++11',
+        'clang++ -S -emit-llvm -std=c++11'
+    ])
     self.optimization = template_vars.ValueListVar(['-O0', '-O1', '-O2', '-O3'])
     self.fastmath = template_vars.ValueListVar(['', '-ffast-math'])
     self.native = template_vars.ValueListVar(['', '-march=native'])
@@ -43,13 +44,13 @@ class CompilerArgumentGenerator(object):
   # Returns a tuple (cmdline, output_filename) -- for indexing purposes
   def get_cmdline(self, input_path, input_filename, additional_flags):
     # file.cpp -> file_RANDOM.ll
-    output_filename = (input_filename[:-4] + '_' +
-                       template_vars.RandomStrVar()[0] + '.ll')
+    output_filename = (
+        input_filename[:-4] + '_' + template_vars.RandomStrVar()[0] + '.ll')
 
     args = [self.compiler, self.optimization, self.fastmath, self.native]
     arg_strs = [str(random.choice(arg)) for arg in args]
-    return (' '.join(arg_strs) + ' ' + input_path + '/' + input_filename +
-            ' ' + additional_flags + ' -o ', output_filename)
+    return (' '.join(arg_strs) + ' ' + input_path + '/' + input_filename + ' ' +
+            additional_flags + ' -o ', output_filename)
 
 
 flags.DEFINE_string('input_path', None, 'Input path of rendered .cpp files')

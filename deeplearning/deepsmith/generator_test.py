@@ -8,7 +8,6 @@ import deeplearning.deepsmith.generator
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -16,18 +15,18 @@ def test_Generator_ToProto():
   generator = deeplearning.deepsmith.generator.Generator(
       name='name',
       optset=[
-        deeplearning.deepsmith.generator.GeneratorOpt(
-            name=deeplearning.deepsmith.generator.GeneratorOptName(
-                string='version'),
-            value=deeplearning.deepsmith.generator.GeneratorOptValue(
-                string='1.0.0'),
-        ),
-        deeplearning.deepsmith.generator.GeneratorOpt(
-            name=deeplearning.deepsmith.generator.GeneratorOptName(
-                string='build'),
-            value=deeplearning.deepsmith.generator.GeneratorOptValue(
-                string='debug+assert'),
-        ),
+          deeplearning.deepsmith.generator.GeneratorOpt(
+              name=deeplearning.deepsmith.generator.GeneratorOptName(
+                  string='version'),
+              value=deeplearning.deepsmith.generator.GeneratorOptValue(
+                  string='1.0.0'),
+          ),
+          deeplearning.deepsmith.generator.GeneratorOpt(
+              name=deeplearning.deepsmith.generator.GeneratorOptName(
+                  string='build'),
+              value=deeplearning.deepsmith.generator.GeneratorOptValue(
+                  string='debug+assert'),
+          ),
       ],
   )
   proto = generator.ToProto()
@@ -39,15 +38,12 @@ def test_Generator_ToProto():
 
 def test_Generator_GetOrAdd(session):
   proto = deepsmith_pb2.Generator(
-      name='name',
-      opts={
-        'version': '1.0.0',
-        'build': 'debug+assert',
-      }
-  )
+      name='name', opts={
+          'version': '1.0.0',
+          'build': 'debug+assert',
+      })
   generator = deeplearning.deepsmith.generator.Generator.GetOrAdd(
-      session, proto
-  )
+      session, proto)
 
   assert session.query(
       deeplearning.deepsmith.generator.GeneratorOptSet).count() == 2
@@ -78,22 +74,22 @@ def test_Generator_duplicates(session):
   proto_a1 = deepsmith_pb2.Generator(
       name='a',
       opts={
-        'arch': 'x86_64',
-        'build': 'debug+assert',
+          'arch': 'x86_64',
+          'build': 'debug+assert',
       },
   )
   proto_a2 = deepsmith_pb2.Generator(  # proto_a1 == proto_a2
       name='a',
       opts={
-        'arch': 'x86_64',
-        'build': 'debug+assert',
+          'arch': 'x86_64',
+          'build': 'debug+assert',
       },
   )
   proto_b = deepsmith_pb2.Generator(
       name='b',
       opts={
-        'arch': 'x86_64',
-        'build': 'opt',
+          'arch': 'x86_64',
+          'build': 'opt',
       },
   )
   assert proto_a1 == proto_a2  # Sanity check.
@@ -136,13 +132,12 @@ def test_Generator_GetOrAdd_ToProto_equivalence(session):
   proto_in = deepsmith_pb2.Generator(
       name='a',
       opts={
-        'arch': 'x86_64',
-        'build': 'debug+assert'
+          'arch': 'x86_64',
+          'build': 'debug+assert'
       },
   )
   generator = deeplearning.deepsmith.generator.Generator.GetOrAdd(
-      session, proto_in
-  )
+      session, proto_in)
   # NOTE: We have to flush before constructing a proto so that SQLAlchemy
   # resolves all of the object IDs.
   session.flush()
@@ -158,8 +153,7 @@ def test_Generator_GetOrAdd_no_opts(session):
       session, deepsmith_pb2.Generator(
           name='name',
           opts={},
-      )
-  )
+      ))
   empty_md5 = hashlib.md5().digest()
   assert generator.optset_id == empty_md5
   assert session.query(deeplearning.deepsmith.generator.Generator).count() == 1
@@ -175,29 +169,27 @@ def test_Generator_GetOrAdd_no_opts(session):
 
 def test_Generator_GetOrAdd_only_different_optset(session):
   generator_a = deeplearning.deepsmith.generator.Generator.GetOrAdd(
-      session, deepsmith_pb2.Generator(
+      session,
+      deepsmith_pb2.Generator(
           name='name',
           opts={
-            'a': 'A',
-            'b': 'B',
-            'c': 'C',
+              'a': 'A',
+              'b': 'B',
+              'c': 'C',
           },
-      )
-  )
+      ))
   generator_b = deeplearning.deepsmith.generator.Generator.GetOrAdd(
       session, deepsmith_pb2.Generator(
           name='name',
           opts={
-            'd': 'D',
+              'd': 'D',
           },
-      )
-  )
+      ))
   generator_c = deeplearning.deepsmith.generator.Generator.GetOrAdd(
       session, deepsmith_pb2.Generator(
           name='name',
           opts={},
-      )
-  )
+      ))
   assert session.query(deeplearning.deepsmith.generator.Generator).count() == 3
   assert session.query(
       deeplearning.deepsmith.generator.GeneratorOpt).count() == 4
@@ -214,15 +206,13 @@ def test_Generator_GetOrAdd_only_different_optset(session):
 
 def test_Generator_GetOrAdd_rollback(session):
   deeplearning.deepsmith.generator.Generator.GetOrAdd(
-      session,
-      deepsmith_pb2.Generator(
+      session, deepsmith_pb2.Generator(
           name='name',
           opts={
-            'a': '1',
-            'b': '2',
+              'a': '1',
+              'b': '2',
           },
-      )
-  )
+      ))
   assert session.query(deeplearning.deepsmith.generator.Generator).count() == 1
   assert session.query(
       deeplearning.deepsmith.generator.GeneratorOpt).count() == 2
@@ -250,12 +240,11 @@ def _AddRandomNewGenerator(session):
       deepsmith_pb2.Generator(
           name=str(random.random()),
           opts={
-            str(random.random()): str(random.random()),
-            str(random.random()): str(random.random()),
-            str(random.random()): str(random.random()),
+              str(random.random()): str(random.random()),
+              str(random.random()): str(random.random()),
+              str(random.random()): str(random.random()),
           },
-      )
-  )
+      ))
   session.flush()
 
 
@@ -269,12 +258,11 @@ def _AddExistingGenerator(session):
       deepsmith_pb2.Generator(
           name='name',
           opts={
-            'a': 'a',
-            'b': 'b',
-            'c': 'c',
+              'a': 'a',
+              'b': 'b',
+              'c': 'c',
           },
-      )
-  )
+      ))
   session.flush()
 
 

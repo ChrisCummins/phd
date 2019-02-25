@@ -21,18 +21,16 @@ from keras.preprocessing import sequence as keras_sequence
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import base
 
-
 FLAGS = flags.FLAGS
 
 
 def EncodeAndPadSources(atomizer: atomizers.AtomizerBase,
-                        srcs: typing.List[str],
-                        maxlen: int) -> np.array:
+                        srcs: typing.List[str], maxlen: int) -> np.array:
   """Encode and pad source code for learning."""
   seqs = [atomizer.AtomizeString(src) for src in srcs]
   pad_val = atomizer.vocab_size
-  encoded = np.array(keras_sequence.pad_sequences(
-      seqs, maxlen=maxlen, value=pad_val))
+  encoded = np.array(
+      keras_sequence.pad_sequences(seqs, maxlen=maxlen, value=pad_val))
   return np.vstack([np.expand_dims(x, axis=0) for x in encoded])
 
 
@@ -51,8 +49,11 @@ class DeepTune(base.HeterogeneousMappingModel):
   __name__ = "DeepTune"
   __basename__ = "deeptune"
 
-  def __init__(self, lstm_layer_size: int = 64, dense_layer_size: int = 32,
-               num_epochs: int = 50, batch_size: int = 64,
+  def __init__(self,
+               lstm_layer_size: int = 64,
+               dense_layer_size: int = 32,
+               num_epochs: int = 50,
+               batch_size: int = 64,
                input_shape: typing.List[int] = (1024,),
                input_type: str = 'int32',
                with_embedding_layer: bool = True):
@@ -97,11 +98,16 @@ class DeepTune(base.HeterogeneousMappingModel):
     if self.with_embedding_layer:
       embedding_dim = atomizer.vocab_size + 1
       lstm_input = Embedding(
-          input_dim=embedding_dim, input_length=self.input_shape[0],
-          output_dim=self.lstm_layer_size, name="embedding")(input_layer)
+          input_dim=embedding_dim,
+          input_length=self.input_shape[0],
+          output_dim=self.lstm_layer_size,
+          name="embedding")(input_layer)
 
-    x = LSTM(self.lstm_layer_size, implementation=1, return_sequences=True,
-             name="lstm_1")(lstm_input)
+    x = LSTM(
+        self.lstm_layer_size,
+        implementation=1,
+        return_sequences=True,
+        name="lstm_1")(lstm_input)
     x = LSTM(self.lstm_layer_size, implementation=1, name="lstm_2")(x)
     langmodel_out = Dense(2, activation="sigmoid")(x)
 
@@ -115,10 +121,11 @@ class DeepTune(base.HeterogeneousMappingModel):
     x = Dense(self.dense_layer_size, activation="relu")(x)
     out = Dense(2, activation="sigmoid")(x)
 
-    self.model = Model(inputs=[auxiliary_inputs, input_layer],
-                       outputs=[out, langmodel_out])
+    self.model = Model(
+        inputs=[auxiliary_inputs, input_layer], outputs=[out, langmodel_out])
     self.model.compile(
-        optimizer="adam", metrics=['accuracy'],
+        optimizer="adam",
+        metrics=['accuracy'],
         loss=["categorical_crossentropy", "categorical_crossentropy"],
         loss_weights=[1., .2])
 
@@ -161,35 +168,37 @@ class DeepTune(base.HeterogeneousMappingModel):
       with open(d / 'atomizer.pkl', 'rb') as f:
         self._atomizer = pickle.load(f)
 
-  def train(self, df: pd.DataFrame, platform_name: str,
-            verbose: bool = False):
-    self.model.fit(self.DataFrameToModelInputs(df, platform_name),
-                   self.DataFrameToModelTargets(df),
-                   epochs=self.num_epochs, batch_size=self.batch_size,
-                   verbose=verbose, shuffle=True)
+  def train(self, df: pd.DataFrame, platform_name: str, verbose: bool = False):
+    self.model.fit(
+        self.DataFrameToModelInputs(df, platform_name),
+        self.DataFrameToModelTargets(df),
+        epochs=self.num_epochs,
+        batch_size=self.batch_size,
+        verbose=verbose,
+        shuffle=True)
 
   def predict(self, df: pd.DataFrame, platform_name: str,
               verbose: bool = False):
-    p = np.array(self.model.predict(
-        self.DataFrameToModelInputs(df, platform_name),
-        batch_size=self.batch_size, verbose=verbose))
+    p = np.array(
+        self.model.predict(
+            self.DataFrameToModelInputs(df, platform_name),
+            batch_size=self.batch_size,
+            verbose=verbose))
     indices = [np.argmax(x) for x in p[0]]
     return indices
 
-  def DataFrameToModelInputs(
-      self, df: pd.DataFrame,
-      gpu_name: str) -> typing.List[np.ndarray]:
+  def DataFrameToModelInputs(self, df: pd.DataFrame,
+                             gpu_name: str) -> typing.List[np.ndarray]:
     """Convert a pandas table to a list of model inputs."""
-    sequences = EncodeAndPadSources(
-        self.atomizer, df['program:opencl_src'], self.input_shape[0])
+    sequences = EncodeAndPadSources(self.atomizer, df['program:opencl_src'],
+                                    self.input_shape[0])
     aux_in = np.array([
-      df[f"feature:{gpu_name}:transfer"].values,
-      df[f"param:{gpu_name}:wgsize"].values,
+        df[f"feature:{gpu_name}:transfer"].values,
+        df[f"param:{gpu_name}:wgsize"].values,
     ]).T
     return [aux_in, sequences]
 
   @staticmethod
-  def DataFrameToModelTargets(
-      df: pd.DataFrame) -> typing.List[np.ndarray]:
+  def DataFrameToModelTargets(df: pd.DataFrame) -> typing.List[np.ndarray]:
     """Convert a pandas table to a list of model targets."""
     return [np.vstack(df['y_1hot'].values), np.vstack(df['y_1hot'].values)]

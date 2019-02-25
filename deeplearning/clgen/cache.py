@@ -21,7 +21,6 @@ from absl import flags
 from labm8 import cache
 from labm8 import fs
 
-
 FLAGS = flags.FLAGS
 
 
@@ -50,5 +49,5 @@ def mkcache(*relative_path_components: str) -> cache.FSCache:
   Returns:
     A filesystem cache instance.
   """
-  return cache.FSCache(cachepath(*relative_path_components),
-                       escape_key=cache.escape_path)
+  return cache.FSCache(
+      cachepath(*relative_path_components), escape_key=cache.escape_path)

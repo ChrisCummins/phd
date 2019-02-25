@@ -22,11 +22,10 @@ from deeplearning.clgen.models import builders
 from deeplearning.clgen.proto import model_pb2
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
-
 # AssertIsBuildable() tests.
+
 
 def test_AssertIsBuildable_returns_config(abc_model_config):
   """Test that the original config is returned."""
@@ -64,13 +63,11 @@ def test_AssertIsBuildable_architecture_embedding_size(abc_model_config):
   abc_model_config.architecture.ClearField('embedding_size')
   with pytest.raises(errors.UserError) as e_info:
     builders.AssertIsBuildable(abc_model_config)
-  assert "NetworkArchitecture.embedding_size must be > 0" == str(
-      e_info.value)
+  assert "NetworkArchitecture.embedding_size must be > 0" == str(e_info.value)
   abc_model_config.architecture.embedding_size = -1
   with pytest.raises(errors.UserError) as e_info:
     builders.AssertIsBuildable(abc_model_config)
-  assert "NetworkArchitecture.embedding_size must be > 0" == str(
-      e_info.value)
+  assert "NetworkArchitecture.embedding_size must be > 0" == str(e_info.value)
 
 
 def test_AssertIsBuildable_architecture_neuron_type(abc_model_config):
@@ -183,11 +180,9 @@ def test_AssertIsBuildable_adam_optimizer_learning_rate_decay_per_epoch_micros(
           "must be >= 0") == str(e_info.value)
 
 
-def test_AssertIsBuildable_adam_optimizer_beta_1_micros(
-    abc_model_config):
+def test_AssertIsBuildable_adam_optimizer_beta_1_micros(abc_model_config):
   """UserError if beta_1_micros field is invalid."""
-  abc_model_config.training.adam_optimizer.ClearField(
-      'beta_1_micros')
+  abc_model_config.training.adam_optimizer.ClearField('beta_1_micros')
   with pytest.raises(errors.UserError) as e_info:
     builders.AssertIsBuildable(abc_model_config)
   assert "AdamOptimizer.beta_1_micros must be >= 0 and <= 1000000" == str(
@@ -204,11 +199,9 @@ def test_AssertIsBuildable_adam_optimizer_beta_1_micros(
       e_info.value)
 
 
-def test_AssertIsBuildable_adam_optimizer_beta_2_micros(
-    abc_model_config):
+def test_AssertIsBuildable_adam_optimizer_beta_2_micros(abc_model_config):
   """UserError if beta_2_micros field is invalid."""
-  abc_model_config.training.adam_optimizer.ClearField(
-      'beta_2_micros')
+  abc_model_config.training.adam_optimizer.ClearField('beta_2_micros')
   with pytest.raises(errors.UserError) as e_info:
     builders.AssertIsBuildable(abc_model_config)
   assert "AdamOptimizer.beta_2_micros must be >= 0 and <= 1000000" == str(
@@ -242,6 +235,7 @@ def test_AssertIsBuildable_adam_optimizer_normalized_gradient_clip_micros(
 
 
 # BuildOptimizer() tests.
+
 
 def test_BuildOptimizer_adam():
   """Test AdamOptimizer proto value conversion to Keras config."""

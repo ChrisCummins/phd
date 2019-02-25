@@ -15,7 +15,6 @@ from deeplearning.deepsmith.proto import generator_pb2_grpc
 from deeplearning.deepsmith.proto import service_pb2
 from labm8 import labdate
 
-
 FLAGS = flags.FLAGS
 
 
@@ -43,8 +42,8 @@ class ClsmithGenerator(generator.GeneratorServiceBase,
   def GenerateTestcases(self, request: generator_pb2.GenerateTestcasesRequest,
                         context) -> generator_pb2.GenerateTestcasesResponse:
     del context
-    num_programs = int(math.ceil(
-        request.num_testcases / len(self.config.testcase_skeleton)))
+    num_programs = int(
+        math.ceil(request.num_testcases / len(self.config.testcase_skeleton)))
     response = services.BuildDefaultResponse(
         generator_pb2.GenerateTestcasesResponse)
     try:
@@ -69,10 +68,9 @@ class ClsmithGenerator(generator.GeneratorServiceBase,
     wall_time_ms = labdate.MillisecondsTimestamp() - start_epoch_ms_utc
     return src, wall_time_ms, start_epoch_ms_utc
 
-  def SourceToTestcases(self, src: str,
-                        wall_time_ms: int,
-                        start_epoch_ms_utc: int) -> typing.List[
-    deepsmith_pb2.Testcase]:
+  def SourceToTestcases(
+      self, src: str, wall_time_ms: int,
+      start_epoch_ms_utc: int) -> typing.List[deepsmith_pb2.Testcase]:
     """Make testcases from a CLSmith generated source."""
     testcases = []
     for skeleton in self.config.testcase_skeleton:

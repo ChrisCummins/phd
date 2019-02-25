@@ -7,7 +7,6 @@ from deeplearning.deepsmith import db
 from deeplearning.deepsmith import toolchain
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -79,8 +78,8 @@ def test_Table_repr():
 def test_StringTable_GetOrAdd_StringTooLongError(session):
   toolchain.Toolchain.GetOrAdd(session, 'a' * toolchain.Toolchain.maxlen)
   with pytest.raises(db.StringTooLongError):
-    toolchain.Toolchain.GetOrAdd(
-        session, 'a' * (toolchain.Toolchain.maxlen + 1))
+    toolchain.Toolchain.GetOrAdd(session,
+                                 'a' * (toolchain.Toolchain.maxlen + 1))
 
 
 def test_StringTable_TruncatedString(session):

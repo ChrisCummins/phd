@@ -15,10 +15,9 @@ from deeplearning.deeptune.opencl.heterogeneous_mapping.models import \
   static_mapping
 from labm8 import labtypes
 
-
 FLAGS = flags.FLAGS
 
-# Import all models into the module namespace. This is for convenience of 
+# Import all models into the module namespace. This is for convenience of
 # calling code, but is also required for ALL_MODELS to find the subclass.
 DeepTune = deeptune.DeepTune
 DeepTuneInst2Vec = ncc.DeepTuneInst2Vec

@@ -7,7 +7,6 @@ import deeplearning.deepsmith.difftests.difftests
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 DiffTest = deepsmith_pb2.DifferentialTest
@@ -19,33 +18,19 @@ def test_GoldStandardDiffTester_DiffTestOne_gs_unknown():
   dt = deeplearning.deepsmith.difftests.difftests.GoldStandardDiffTester(
       deeplearning.deepsmith.difftests.difftests.NamedOutputIsEqual('stdout'))
   assert DiffTest.UNKNOWN == dt.DiffTestOne(
-      Result(outcome=Result.UNKNOWN),
-      Result(outcome=Result.UNKNOWN)
-  )
+      Result(outcome=Result.UNKNOWN), Result(outcome=Result.UNKNOWN))
   assert DiffTest.UNKNOWN == dt.DiffTestOne(
-      Result(outcome=Result.UNKNOWN),
-      Result(outcome=Result.BUILD_FAILURE)
-  )
+      Result(outcome=Result.UNKNOWN), Result(outcome=Result.BUILD_FAILURE))
   assert DiffTest.ANOMALOUS_BUILD_FAILURE == dt.DiffTestOne(
-      Result(outcome=Result.UNKNOWN),
-      Result(outcome=Result.BUILD_CRASH)
-  )
+      Result(outcome=Result.UNKNOWN), Result(outcome=Result.BUILD_CRASH))
   assert DiffTest.ANOMALOUS_BUILD_FAILURE == dt.DiffTestOne(
-      Result(outcome=Result.UNKNOWN),
-      Result(outcome=Result.BUILD_TIMEOUT)
-  )
+      Result(outcome=Result.UNKNOWN), Result(outcome=Result.BUILD_TIMEOUT))
   assert DiffTest.UNKNOWN == dt.DiffTestOne(
-      Result(outcome=Result.UNKNOWN),
-      Result(outcome=Result.RUNTIME_CRASH)
-  )
+      Result(outcome=Result.UNKNOWN), Result(outcome=Result.RUNTIME_CRASH))
   assert DiffTest.UNKNOWN == dt.DiffTestOne(
-      Result(outcome=Result.UNKNOWN),
-      Result(outcome=Result.RUNTIME_TIMEOUT)
-  )
+      Result(outcome=Result.UNKNOWN), Result(outcome=Result.RUNTIME_TIMEOUT))
   assert DiffTest.UNKNOWN == dt.DiffTestOne(
-      Result(outcome=Result.UNKNOWN),
-      Result(outcome=Result.PASS)
-  )
+      Result(outcome=Result.UNKNOWN), Result(outcome=Result.PASS))
 
 
 def test_GoldStandardDiffTester_DiffTestOne_gs_build_failure():
@@ -53,33 +38,23 @@ def test_GoldStandardDiffTester_DiffTestOne_gs_build_failure():
   dt = deeplearning.deepsmith.difftests.difftests.GoldStandardDiffTester(
       deeplearning.deepsmith.difftests.difftests.NamedOutputIsEqual('stdout'))
   assert DiffTest.UNKNOWN == dt.DiffTestOne(
-      Result(outcome=Result.BUILD_FAILURE),
-      Result(outcome=Result.UNKNOWN)
-  )
+      Result(outcome=Result.BUILD_FAILURE), Result(outcome=Result.UNKNOWN))
   assert DiffTest.PASS == dt.DiffTestOne(
       Result(outcome=Result.BUILD_FAILURE),
-      Result(outcome=Result.BUILD_FAILURE)
-  )
+      Result(outcome=Result.BUILD_FAILURE))
+  assert DiffTest.ANOMALOUS_BUILD_FAILURE == dt.DiffTestOne(
+      Result(outcome=Result.BUILD_FAILURE), Result(outcome=Result.BUILD_CRASH))
   assert DiffTest.ANOMALOUS_BUILD_FAILURE == dt.DiffTestOne(
       Result(outcome=Result.BUILD_FAILURE),
-      Result(outcome=Result.BUILD_CRASH)
-  )
-  assert DiffTest.ANOMALOUS_BUILD_FAILURE == dt.DiffTestOne(
-      Result(outcome=Result.BUILD_FAILURE),
-      Result(outcome=Result.BUILD_TIMEOUT)
-  )
+      Result(outcome=Result.BUILD_TIMEOUT))
   assert DiffTest.ANOMALOUS_BUILD_PASS == dt.DiffTestOne(
       Result(outcome=Result.BUILD_FAILURE),
-      Result(outcome=Result.RUNTIME_CRASH)
-  )
+      Result(outcome=Result.RUNTIME_CRASH))
   assert DiffTest.ANOMALOUS_BUILD_PASS == dt.DiffTestOne(
       Result(outcome=Result.BUILD_FAILURE),
-      Result(outcome=Result.RUNTIME_TIMEOUT)
-  )
+      Result(outcome=Result.RUNTIME_TIMEOUT))
   assert DiffTest.ANOMALOUS_BUILD_PASS == dt.DiffTestOne(
-      Result(outcome=Result.BUILD_FAILURE),
-      Result(outcome=Result.PASS)
-  )
+      Result(outcome=Result.BUILD_FAILURE), Result(outcome=Result.PASS))
 
 
 def test_GoldStandardDiffTester_DiffTestOne_gs_build_crash():
@@ -87,29 +62,18 @@ def test_GoldStandardDiffTester_DiffTestOne_gs_build_crash():
   dt = deeplearning.deepsmith.difftests.difftests.GoldStandardDiffTester(
       deeplearning.deepsmith.difftests.difftests.NamedOutputIsEqual('stdout'))
   assert DiffTest.UNKNOWN == dt.DiffTestOne(
-      Result(outcome=Result.BUILD_CRASH),
-      Result(outcome=Result.UNKNOWN)
-  )
+      Result(outcome=Result.BUILD_CRASH), Result(outcome=Result.UNKNOWN))
   assert DiffTest.ANOMALOUS_BUILD_FAILURE == dt.DiffTestOne(
-      Result(outcome=Result.BUILD_CRASH),
-      Result(outcome=Result.BUILD_CRASH)
-  )
+      Result(outcome=Result.BUILD_CRASH), Result(outcome=Result.BUILD_CRASH))
   assert DiffTest.ANOMALOUS_BUILD_FAILURE == dt.DiffTestOne(
-      Result(outcome=Result.BUILD_CRASH),
-      Result(outcome=Result.BUILD_TIMEOUT)
-  )
+      Result(outcome=Result.BUILD_CRASH), Result(outcome=Result.BUILD_TIMEOUT))
+  assert DiffTest.UNKNOWN == dt.DiffTestOne(
+      Result(outcome=Result.BUILD_CRASH), Result(outcome=Result.RUNTIME_CRASH))
   assert DiffTest.UNKNOWN == dt.DiffTestOne(
       Result(outcome=Result.BUILD_CRASH),
-      Result(outcome=Result.RUNTIME_CRASH)
-  )
+      Result(outcome=Result.RUNTIME_TIMEOUT))
   assert DiffTest.UNKNOWN == dt.DiffTestOne(
-      Result(outcome=Result.BUILD_CRASH),
-      Result(outcome=Result.RUNTIME_TIMEOUT)
-  )
-  assert DiffTest.UNKNOWN == dt.DiffTestOne(
-      Result(outcome=Result.BUILD_CRASH),
-      Result(outcome=Result.PASS)
-  )
+      Result(outcome=Result.BUILD_CRASH), Result(outcome=Result.PASS))
 
 
 def test_GoldStandardDiffTester_DiffTestOne_gs_build_timeout():
@@ -117,29 +81,20 @@ def test_GoldStandardDiffTester_DiffTestOne_gs_build_timeout():
   dt = deeplearning.deepsmith.difftests.difftests.GoldStandardDiffTester(
       deeplearning.deepsmith.difftests.difftests.NamedOutputIsEqual('stdout'))
   assert DiffTest.UNKNOWN == dt.DiffTestOne(
-      Result(outcome=Result.BUILD_TIMEOUT),
-      Result(outcome=Result.UNKNOWN)
-  )
+      Result(outcome=Result.BUILD_TIMEOUT), Result(outcome=Result.UNKNOWN))
+  assert DiffTest.ANOMALOUS_BUILD_FAILURE == dt.DiffTestOne(
+      Result(outcome=Result.BUILD_TIMEOUT), Result(outcome=Result.BUILD_CRASH))
   assert DiffTest.ANOMALOUS_BUILD_FAILURE == dt.DiffTestOne(
       Result(outcome=Result.BUILD_TIMEOUT),
-      Result(outcome=Result.BUILD_CRASH)
-  )
-  assert DiffTest.ANOMALOUS_BUILD_FAILURE == dt.DiffTestOne(
-      Result(outcome=Result.BUILD_TIMEOUT),
-      Result(outcome=Result.BUILD_TIMEOUT)
-  )
+      Result(outcome=Result.BUILD_TIMEOUT))
   assert DiffTest.UNKNOWN == dt.DiffTestOne(
       Result(outcome=Result.BUILD_TIMEOUT),
-      Result(outcome=Result.RUNTIME_CRASH)
-  )
+      Result(outcome=Result.RUNTIME_CRASH))
   assert DiffTest.UNKNOWN == dt.DiffTestOne(
       Result(outcome=Result.BUILD_TIMEOUT),
-      Result(outcome=Result.RUNTIME_TIMEOUT)
-  )
+      Result(outcome=Result.RUNTIME_TIMEOUT))
   assert DiffTest.UNKNOWN == dt.DiffTestOne(
-      Result(outcome=Result.BUILD_TIMEOUT),
-      Result(outcome=Result.PASS)
-  )
+      Result(outcome=Result.BUILD_TIMEOUT), Result(outcome=Result.PASS))
 
 
 def test_GoldStandardDiffTester_DiffTestOne_gs_runtime_crash():
@@ -147,33 +102,23 @@ def test_GoldStandardDiffTester_DiffTestOne_gs_runtime_crash():
   dt = deeplearning.deepsmith.difftests.difftests.GoldStandardDiffTester(
       deeplearning.deepsmith.difftests.difftests.NamedOutputIsEqual('stdout'))
   assert DiffTest.UNKNOWN == dt.DiffTestOne(
-      Result(outcome=Result.RUNTIME_CRASH),
-      Result(outcome=Result.UNKNOWN)
-  )
+      Result(outcome=Result.RUNTIME_CRASH), Result(outcome=Result.UNKNOWN))
   assert DiffTest.ANOMALOUS_BUILD_FAILURE == dt.DiffTestOne(
       Result(outcome=Result.RUNTIME_CRASH),
-      Result(outcome=Result.BUILD_FAILURE)
-  )
+      Result(outcome=Result.BUILD_FAILURE))
+  assert DiffTest.ANOMALOUS_BUILD_FAILURE == dt.DiffTestOne(
+      Result(outcome=Result.RUNTIME_CRASH), Result(outcome=Result.BUILD_CRASH))
   assert DiffTest.ANOMALOUS_BUILD_FAILURE == dt.DiffTestOne(
       Result(outcome=Result.RUNTIME_CRASH),
-      Result(outcome=Result.BUILD_CRASH)
-  )
-  assert DiffTest.ANOMALOUS_BUILD_FAILURE == dt.DiffTestOne(
-      Result(outcome=Result.RUNTIME_CRASH),
-      Result(outcome=Result.BUILD_TIMEOUT)
-  )
+      Result(outcome=Result.BUILD_TIMEOUT))
   assert DiffTest.PASS == dt.DiffTestOne(
       Result(outcome=Result.RUNTIME_CRASH),
-      Result(outcome=Result.RUNTIME_CRASH)
-  )
+      Result(outcome=Result.RUNTIME_CRASH))
   assert DiffTest.PASS == dt.DiffTestOne(
       Result(outcome=Result.RUNTIME_CRASH),
-      Result(outcome=Result.RUNTIME_TIMEOUT)
-  )
+      Result(outcome=Result.RUNTIME_TIMEOUT))
   assert DiffTest.ANOMALOUS_RUNTIME_PASS == dt.DiffTestOne(
-      Result(outcome=Result.RUNTIME_CRASH),
-      Result(outcome=Result.PASS)
-  )
+      Result(outcome=Result.RUNTIME_CRASH), Result(outcome=Result.PASS))
 
 
 def test_GoldStandardDiffTester_DiffTestOne_gs_runtime_timeout():
@@ -181,33 +126,24 @@ def test_GoldStandardDiffTester_DiffTestOne_gs_runtime_timeout():
   dt = deeplearning.deepsmith.difftests.difftests.GoldStandardDiffTester(
       deeplearning.deepsmith.difftests.difftests.NamedOutputIsEqual('stdout'))
   assert DiffTest.UNKNOWN == dt.DiffTestOne(
-      Result(outcome=Result.RUNTIME_TIMEOUT),
-      Result(outcome=Result.UNKNOWN)
-  )
+      Result(outcome=Result.RUNTIME_TIMEOUT), Result(outcome=Result.UNKNOWN))
   assert DiffTest.ANOMALOUS_BUILD_FAILURE == dt.DiffTestOne(
       Result(outcome=Result.RUNTIME_TIMEOUT),
-      Result(outcome=Result.BUILD_FAILURE)
-  )
+      Result(outcome=Result.BUILD_FAILURE))
   assert DiffTest.ANOMALOUS_BUILD_FAILURE == dt.DiffTestOne(
       Result(outcome=Result.RUNTIME_TIMEOUT),
-      Result(outcome=Result.BUILD_CRASH)
-  )
+      Result(outcome=Result.BUILD_CRASH))
   assert DiffTest.ANOMALOUS_BUILD_FAILURE == dt.DiffTestOne(
       Result(outcome=Result.RUNTIME_TIMEOUT),
-      Result(outcome=Result.BUILD_TIMEOUT)
-  )
+      Result(outcome=Result.BUILD_TIMEOUT))
   assert DiffTest.PASS == dt.DiffTestOne(
       Result(outcome=Result.RUNTIME_TIMEOUT),
-      Result(outcome=Result.RUNTIME_CRASH)
-  )
+      Result(outcome=Result.RUNTIME_CRASH))
   assert DiffTest.PASS == dt.DiffTestOne(
       Result(outcome=Result.RUNTIME_TIMEOUT),
-      Result(outcome=Result.RUNTIME_TIMEOUT)
-  )
+      Result(outcome=Result.RUNTIME_TIMEOUT))
   assert DiffTest.ANOMALOUS_RUNTIME_PASS == dt.DiffTestOne(
-      Result(outcome=Result.RUNTIME_TIMEOUT),
-      Result(outcome=Result.PASS)
-  )
+      Result(outcome=Result.RUNTIME_TIMEOUT), Result(outcome=Result.PASS))
 
 
 def test_GoldStandardDiffTester_DiffTestOne_gs_pass():
@@ -215,45 +151,28 @@ def test_GoldStandardDiffTester_DiffTestOne_gs_pass():
   dt = deeplearning.deepsmith.difftests.difftests.GoldStandardDiffTester(
       deeplearning.deepsmith.difftests.difftests.NamedOutputIsEqual('stdout'))
   assert DiffTest.UNKNOWN == dt.DiffTestOne(
-      Result(outcome=Result.PASS),
-      Result(outcome=Result.UNKNOWN)
-  )
+      Result(outcome=Result.PASS), Result(outcome=Result.UNKNOWN))
   assert DiffTest.ANOMALOUS_BUILD_FAILURE == dt.DiffTestOne(
-      Result(outcome=Result.PASS),
-      Result(outcome=Result.BUILD_FAILURE)
-  )
+      Result(outcome=Result.PASS), Result(outcome=Result.BUILD_FAILURE))
   assert DiffTest.ANOMALOUS_BUILD_FAILURE == dt.DiffTestOne(
-      Result(outcome=Result.PASS),
-      Result(outcome=Result.BUILD_CRASH)
-  )
+      Result(outcome=Result.PASS), Result(outcome=Result.BUILD_CRASH))
   assert DiffTest.ANOMALOUS_BUILD_FAILURE == dt.DiffTestOne(
-      Result(outcome=Result.PASS),
-      Result(outcome=Result.BUILD_TIMEOUT)
-  )
+      Result(outcome=Result.PASS), Result(outcome=Result.BUILD_TIMEOUT))
   assert DiffTest.ANOMALOUS_RUNTIME_CRASH == dt.DiffTestOne(
-      Result(outcome=Result.PASS),
-      Result(outcome=Result.RUNTIME_CRASH)
-  )
+      Result(outcome=Result.PASS), Result(outcome=Result.RUNTIME_CRASH))
   assert DiffTest.ANOMALOUS_RUNTIME_TIMEOUT == dt.DiffTestOne(
-      Result(outcome=Result.PASS),
-      Result(outcome=Result.RUNTIME_TIMEOUT)
-  )
+      Result(outcome=Result.PASS), Result(outcome=Result.RUNTIME_TIMEOUT))
   assert DiffTest.PASS == dt.DiffTestOne(
-      Result(outcome=Result.PASS,
-             outputs={'stdout': 'abc'}),
-      Result(outcome=Result.PASS,
-             outputs={'stdout': 'abc'})
-  )
+      Result(outcome=Result.PASS, outputs={'stdout': 'abc'}),
+      Result(outcome=Result.PASS, outputs={'stdout': 'abc'}))
   assert DiffTest.ANOMALOUS_WRONG_OUTPUT == dt.DiffTestOne(
       Result(
           outcome=Result.PASS,
           outputs={'stdout': ''},
-      ),
-      Result(
+      ), Result(
           outcome=Result.PASS,
           outputs={'stdout': 'abc'},
-      )
-  )
+      ))
 
 
 def test_GoldStandardDiffTester_DiffTestOne_both_pass_no_stdout():
@@ -261,10 +180,7 @@ def test_GoldStandardDiffTester_DiffTestOne_both_pass_no_stdout():
   dt = deeplearning.deepsmith.difftests.difftests.GoldStandardDiffTester(
       deeplearning.deepsmith.difftests.difftests.NamedOutputIsEqual('stdout'))
   with pytest.raises(ValueError) as e_ctx:
-    dt.DiffTestOne(
-        Result(outcome=Result.PASS),
-        Result(outcome=Result.PASS)
-    )
+    dt.DiffTestOne(Result(outcome=Result.PASS), Result(outcome=Result.PASS))
   assert "'stdout' missing in one or more results." == str(e_ctx.value)
 
 

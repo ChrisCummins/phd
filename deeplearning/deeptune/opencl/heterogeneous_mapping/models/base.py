@@ -7,7 +7,6 @@ from absl import flags
 
 from deeplearning.clgen.corpuses import atomizers
 
-
 FLAGS = flags.FLAGS
 
 

@@ -12,7 +12,6 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 from labm8 import labdate
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -24,46 +23,43 @@ def test_Testcase_ToProto():
       generator=deeplearning.deepsmith.generator.Generator(name='generator'),
       harness=deeplearning.deepsmith.harness.Harness(name='harness'),
       inputset=[
-        deeplearning.deepsmith.testcase.TestcaseInput(
-            name=deeplearning.deepsmith.testcase.TestcaseInputName(
-                string='src'),
-            value=deeplearning.deepsmith.testcase.TestcaseInputValue(
-                string='void main() {}'),
-        ),
-        deeplearning.deepsmith.testcase.TestcaseInput(
-            name=deeplearning.deepsmith.testcase.TestcaseInputName(
-                string='data'),
-            value=deeplearning.deepsmith.testcase.TestcaseInputValue(
-                string='[1,2]'),
-        ),
+          deeplearning.deepsmith.testcase.TestcaseInput(
+              name=deeplearning.deepsmith.testcase.TestcaseInputName(
+                  string='src'),
+              value=deeplearning.deepsmith.testcase.TestcaseInputValue(
+                  string='void main() {}'),
+          ),
+          deeplearning.deepsmith.testcase.TestcaseInput(
+              name=deeplearning.deepsmith.testcase.TestcaseInputName(
+                  string='data'),
+              value=deeplearning.deepsmith.testcase.TestcaseInputValue(
+                  string='[1,2]'),
+          ),
       ],
       invariant_optset=[
-        deeplearning.deepsmith.testcase.TestcaseInvariantOpt(
-            name=deeplearning.deepsmith.testcase.TestcaseInvariantOptName(
-                string='config'),
-            value=deeplearning.deepsmith.testcase.TestcaseInvariantOptValue(
-                string='opt'),
-        ),
+          deeplearning.deepsmith.testcase.TestcaseInvariantOpt(
+              name=deeplearning.deepsmith.testcase.TestcaseInvariantOptName(
+                  string='config'),
+              value=deeplearning.deepsmith.testcase.TestcaseInvariantOptValue(
+                  string='opt'),
+          ),
       ],
       profiling_events=[
-        deeplearning.deepsmith.profiling_event.TestcaseProfilingEvent(
-            client=deeplearning.deepsmith.client.Client(string='localhost'),
-            type=deeplearning.deepsmith.profiling_event.ProfilingEventType(
-                string='generate',
-            ),
-            duration_ms=100,
-            event_start=now,
-        ),
-        deeplearning.deepsmith.profiling_event.TestcaseProfilingEvent(
-            client=deeplearning.deepsmith.client.Client(string='localhost'),
-            type=deeplearning.deepsmith.profiling_event.ProfilingEventType(
-                string='foo',
-            ),
-            duration_ms=100,
-            event_start=now,
-        ),
-      ]
-  )
+          deeplearning.deepsmith.profiling_event.TestcaseProfilingEvent(
+              client=deeplearning.deepsmith.client.Client(string='localhost'),
+              type=deeplearning.deepsmith.profiling_event.ProfilingEventType(
+                  string='generate',),
+              duration_ms=100,
+              event_start=now,
+          ),
+          deeplearning.deepsmith.profiling_event.TestcaseProfilingEvent(
+              client=deeplearning.deepsmith.client.Client(string='localhost'),
+              type=deeplearning.deepsmith.profiling_event.ProfilingEventType(
+                  string='foo',),
+              duration_ms=100,
+              event_start=now,
+          ),
+      ])
   proto = testcase.ToProto()
   assert proto.toolchain == 'cpp'
   assert proto.generator.name == 'generator'
@@ -84,37 +80,28 @@ def test_Testcase_ToProto():
 def test_Testcase_GetOrAdd(session):
   proto = deepsmith_pb2.Testcase(
       toolchain='cpp',
-      generator=deepsmith_pb2.Generator(
-          name='generator',
-      ),
-      harness=deepsmith_pb2.Harness(
-          name='harness',
-      ),
+      generator=deepsmith_pb2.Generator(name='generator',),
+      harness=deepsmith_pb2.Harness(name='harness',),
       inputs={
-        'src': 'void main() {}',
-        'data': '[1,2]'
+          'src': 'void main() {}',
+          'data': '[1,2]'
       },
-      invariant_opts={
-        'config': 'opt'
-      },
+      invariant_opts={'config': 'opt'},
       profiling_events=[
-        deepsmith_pb2.ProfilingEvent(
-            client='localhost',
-            type='generate',
-            duration_ms=100,
-            event_start_epoch_ms=1021312312,
-        ),
-        deepsmith_pb2.ProfilingEvent(
-            client='localhost',
-            type='foo',
-            duration_ms=100,
-            event_start_epoch_ms=1230812312,
-        ),
-      ]
-  )
-  testcase = deeplearning.deepsmith.testcase.Testcase.GetOrAdd(
-      session, proto
-  )
+          deepsmith_pb2.ProfilingEvent(
+              client='localhost',
+              type='generate',
+              duration_ms=100,
+              event_start_epoch_ms=1021312312,
+          ),
+          deepsmith_pb2.ProfilingEvent(
+              client='localhost',
+              type='foo',
+              duration_ms=100,
+              event_start_epoch_ms=1230812312,
+          ),
+      ])
+  testcase = deeplearning.deepsmith.testcase.Testcase.GetOrAdd(session, proto)
 
   # NOTE: We have to flush so that SQLAlchemy resolves all of the object IDs.
   session.flush()
@@ -143,31 +130,23 @@ def test_Testcase_GetOrAdd(session):
 def test_Generator_GetOrAdd_ToProto_equivalence(session):
   proto_in = deepsmith_pb2.Testcase(
       toolchain='cpp',
-      generator=deepsmith_pb2.Generator(
-          name='generator',
-      ),
-      harness=deepsmith_pb2.Harness(
-          name='harness',
-      ),
+      generator=deepsmith_pb2.Generator(name='generator',),
+      harness=deepsmith_pb2.Harness(name='harness',),
       inputs={
-        'src': 'void main() {}',
-        'data': '[1,2]'
+          'src': 'void main() {}',
+          'data': '[1,2]'
       },
-      invariant_opts={
-        'config': 'opt'
-      },
+      invariant_opts={'config': 'opt'},
       profiling_events=[
-        deepsmith_pb2.ProfilingEvent(
-            client='localhost',
-            type='generate',
-            duration_ms=100,
-            event_start_epoch_ms=101231231,
-        ),
-      ]
-  )
+          deepsmith_pb2.ProfilingEvent(
+              client='localhost',
+              type='generate',
+              duration_ms=100,
+              event_start_epoch_ms=101231231,
+          ),
+      ])
   testcase = deeplearning.deepsmith.testcase.Testcase.GetOrAdd(
-      session, proto_in
-  )
+      session, proto_in)
 
   # NOTE: We have to flush so that SQLAlchemy resolves all of the object IDs.
   session.flush()
@@ -183,23 +162,25 @@ def test_duplicate_testcases_ignored(session):
       toolchain='cpp',
       generator=deepsmith_pb2.Generator(name='generator'),
       harness=deepsmith_pb2.Harness(name='harness'),
-      inputs={'src': 'void main() {}', 'data': '[1,2]'},
+      inputs={
+          'src': 'void main() {}',
+          'data': '[1,2]'
+      },
       invariant_opts={'config': 'opt'},
       profiling_events=[
-        deepsmith_pb2.ProfilingEvent(
-            client='localhost',
-            type='generate',
-            duration_ms=100,
-            event_start_epoch_ms=1021312312,
-        ),
-        deepsmith_pb2.ProfilingEvent(
-            client='localhost',
-            type='foo',
-            duration_ms=100,
-            event_start_epoch_ms=1230812312,
-        ),
-      ]
-  )
+          deepsmith_pb2.ProfilingEvent(
+              client='localhost',
+              type='generate',
+              duration_ms=100,
+              event_start_epoch_ms=1021312312,
+          ),
+          deepsmith_pb2.ProfilingEvent(
+              client='localhost',
+              type='foo',
+              duration_ms=100,
+              event_start_epoch_ms=1230812312,
+          ),
+      ])
   t1 = deeplearning.deepsmith.testcase.Testcase.GetOrAdd(session, proto)
   session.add(t1)
   session.flush()
@@ -231,39 +212,37 @@ def _AddRandomNewTestcase(session):
           generator=deepsmith_pb2.Generator(
               name=str(random.random()),
               opts={
-                str(random.random()): str(random.random()),
-                str(random.random()): str(random.random()),
-                str(random.random()): str(random.random()),
+                  str(random.random()): str(random.random()),
+                  str(random.random()): str(random.random()),
+                  str(random.random()): str(random.random()),
               },
           ),
           harness=deepsmith_pb2.Harness(
               name=str(random.random()),
               opts={
-                str(random.random()): str(random.random()),
-                str(random.random()): str(random.random()),
-                str(random.random()): str(random.random()),
+                  str(random.random()): str(random.random()),
+                  str(random.random()): str(random.random()),
+                  str(random.random()): str(random.random()),
               },
           ),
           inputs={
-            str(random.random()): str(random.random()),
-            str(random.random()): str(random.random()),
-            str(random.random()): str(random.random()),
+              str(random.random()): str(random.random()),
+              str(random.random()): str(random.random()),
+              str(random.random()): str(random.random()),
           },
           invariant_opts={
-            str(random.random()): str(random.random()),
-            str(random.random()): str(random.random()),
-            str(random.random()): str(random.random()),
+              str(random.random()): str(random.random()),
+              str(random.random()): str(random.random()),
+              str(random.random()): str(random.random()),
           },
           profiling_events=[
-            deepsmith_pb2.ProfilingEvent(
-                client=str(random.random()),
-                type=str(random.random()),
-                duration_ms=int(random.random() * 1000),
-                event_start_epoch_ms=int(random.random() * 1000000),
-            ),
-          ]
-      )
-  )
+              deepsmith_pb2.ProfilingEvent(
+                  client=str(random.random()),
+                  type=str(random.random()),
+                  duration_ms=int(random.random() * 1000),
+                  event_start_epoch_ms=int(random.random() * 1000000),
+              ),
+          ]))
   session.flush()
 
 
@@ -279,39 +258,37 @@ def _AddExistingTestcase(session):
           generator=deepsmith_pb2.Generator(
               name='name',
               opts={
-                'a': 'a',
-                'b': 'b',
-                'c': 'c',
+                  'a': 'a',
+                  'b': 'b',
+                  'c': 'c',
               },
           ),
           harness=deepsmith_pb2.Harness(
               name='name',
               opts={
-                'a': 'a',
-                'b': 'b',
-                'c': 'c',
+                  'a': 'a',
+                  'b': 'b',
+                  'c': 'c',
               },
           ),
           inputs={
-            'src': 'void main() {}',
-            'data': '[1,2]',
-            'copt': '-DNDEBUG',
+              'src': 'void main() {}',
+              'data': '[1,2]',
+              'copt': '-DNDEBUG',
           },
           invariant_opts={
-            'config': 'opt',
-            'working_dir': '/tmp',
-            'units': 'nanoseconds',
+              'config': 'opt',
+              'working_dir': '/tmp',
+              'units': 'nanoseconds',
           },
           profiling_events=[
-            deepsmith_pb2.ProfilingEvent(
-                client='localhost',
-                type='generate',
-                duration_ms=100,
-                event_start_epoch_ms=101231231,
-            ),
-          ]
-      )
-  )
+              deepsmith_pb2.ProfilingEvent(
+                  client='localhost',
+                  type='generate',
+                  duration_ms=100,
+                  event_start_epoch_ms=101231231,
+              ),
+          ]))
   session.flush()
 
 

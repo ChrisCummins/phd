@@ -25,7 +25,6 @@ from deeplearning.clgen.proto import model_pb2
 from labm8 import pbutil
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 # The Model.hash for an instance of abc_model_config.
@@ -151,8 +150,8 @@ def test_Model_atomizer_symlink(clgen_cache_dir, abc_model_config):
 
 # TODO(cec): Add test where batch_size is larger than corpus.
 
-
 # Benchmarks.
+
 
 def test_benchmark_Model_instantiation(clgen_cache_dir, abc_model_config,
                                        benchmark):

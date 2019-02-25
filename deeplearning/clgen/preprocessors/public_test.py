@@ -21,7 +21,6 @@ from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import public
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -39,6 +38,7 @@ def test_clgen_preprocessor_good():
 def test_clgen_preprocessor_missing_return_type():
   """Test clgen_preprocessor on a function missing a return type hint."""
   with pytest.raises(errors.InternalError):
+
     @public.clgen_preprocessor
     def MockPreprocessor(test: str):
       """Mock preprocessor with a missing return type hint."""
@@ -48,6 +48,7 @@ def test_clgen_preprocessor_missing_return_type():
 def test_clgen_preprocessor_missing_argument_type():
   """Test clgen_preprocessor on a function missing an argument type hint."""
   with pytest.raises(errors.InternalError):
+
     @public.clgen_preprocessor
     def MockPreprocessor(test) -> str:
       """Mock preprocessor with a missing argument type hint."""
@@ -57,6 +58,7 @@ def test_clgen_preprocessor_missing_argument_type():
 def test_clgen_preprocessor_incorrect_argument_name():
   """Test clgen_preprocessor on a function missing an argument type hint."""
   with pytest.raises(errors.InternalError):
+
     @public.clgen_preprocessor
     def MockPreprocessor(foo: str) -> str:
       """Mock preprocessor with a mis-named argument."""

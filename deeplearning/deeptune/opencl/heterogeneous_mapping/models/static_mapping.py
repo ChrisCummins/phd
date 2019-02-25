@@ -8,7 +8,6 @@ from absl import flags
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import base
 
-
 FLAGS = flags.FLAGS
 
 
@@ -30,8 +29,7 @@ class StaticMapping(base.HeterogeneousMappingModel):
     with open(inpath, "rb") as infile:
       self.model = pickle.load(infile)
 
-  def train(self, df: pd.DataFrame, platform_name: str,
-            verbose: bool = False):
+  def train(self, df: pd.DataFrame, platform_name: str, verbose: bool = False):
     del verbose
 
     if np.mean(df['y']) >= 0.5:

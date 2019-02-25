@@ -24,7 +24,6 @@ from deeplearning.clgen.preprocessors import opencl
 from labm8 import bazelutil
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 SHIMFILE = bazelutil.DataPath(
@@ -43,6 +42,7 @@ class MockProcess():
 
 # GetClangArgs() tests.
 
+
 def test_GetClangArgs_no_shim():
   args = opencl.GetClangArgs(use_shim=False)
   assert str(SHIMFILE) not in args
@@ -54,6 +54,7 @@ def test_GetClangArgs_with_shim():
 
 
 # ClangPreprocess() tests.
+
 
 def test_ClangPreprocess_small_program():
   """Test that a small program without preprocessor directives is unchanged."""
@@ -89,6 +90,7 @@ kernel void A(global FLOAT_T* a) {}
 
 # ClangPreprocessWithShim() tests.
 
+
 def test_ClangPreprocessWithShim_compiler_args(mocker):
   """Test that shimfile is in comand which is run."""
   mock_Popen = mocker.patch('subprocess.Popen')
@@ -111,6 +113,7 @@ kernel void A(global float* a) {}
 
 
 # Compile() tests.
+
 
 def test_Compile_empty_input():
   """Test that Compile accepts an empty input."""
@@ -180,6 +183,7 @@ kernel void A(global int* a) {
 
 # NormalizeIdentifiers() tests.
 
+
 def test_NormalizeIdentifiers_small_opencl_program():
   """Test that rewriter performs as expected for a small OpenCL program."""
   assert """
@@ -196,6 +200,7 @@ void kernel foo(global int* bar) {
 
 
 # SanitizeKernelPrototype() tests.
+
 
 def test_SanitizeKernelPrototype_empty_input():
   """Test SanitizeKernelPrototype on an empty input."""
@@ -221,6 +226,7 @@ kernel void A(global float* a) {}
 
 
 # StripDoubleUnderscorePrefixes() tests.
+
 
 def test_StripDoubleUnderscorePrefixes_empty_input():
   assert opencl.StripDoubleUnderscorePrefixes('') == ''

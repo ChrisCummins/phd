@@ -24,7 +24,6 @@ from deeplearning.clgen import samplers
 from deeplearning.clgen.proto import sampler_pb2
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -45,6 +44,7 @@ class AtomizerMock(object):
 
 
 # AssertConfigIsValid() tests.
+
 
 def test_AssertConfigIsValid_no_start_text(clgen_cache_dir, abc_sampler_config):
   """Test that an error is thrown if start_text field is not set."""
@@ -96,6 +96,7 @@ def test_AssertConfigIsValid_invalid_temperature_micros(abc_sampler_config):
 
 # MaxlenTerminationCriterion tests.
 
+
 def test_MaxlenTerminationCriterion_invalid_maximum_tokens_in_sample():
   """Test that error is raised if maximum_tokens_in_sample is invalid."""
   config = sampler_pb2.MaxTokenLength()
@@ -114,8 +115,8 @@ def test_MaxlenTerminationCriterion_invalid_maximum_tokens_in_sample():
 
 def test_MaxlenTerminationCriterion_SampleIsComplete():
   """Test SampleIsComplete() returns expected values."""
-  t = samplers.MaxlenTerminationCriterion(sampler_pb2.MaxTokenLength(
-      maximum_tokens_in_sample=3))
+  t = samplers.MaxlenTerminationCriterion(
+      sampler_pb2.MaxTokenLength(maximum_tokens_in_sample=3))
   assert not t.SampleIsComplete([])
   assert not t.SampleIsComplete(['a'])
   assert not t.SampleIsComplete(['a', 'b'])
@@ -125,6 +126,7 @@ def test_MaxlenTerminationCriterion_SampleIsComplete():
 
 
 # SymmetricalTokenDepthCriterion tests.
+
 
 def test_SymmetricalTokenDepthCriterion_depth_increase_token():
   """Test that error is raised if depth_increase_token is invalid."""
@@ -169,8 +171,9 @@ def test_SymmetricalTokenDepthCriterion_same_tokens():
 
 def test_SymmetricalTokenDepthCriterion_SampleIsComplete():
   """Test SampleIsComplete() returns expected values."""
-  t = samplers.SymmetricalTokenDepthCriterion(sampler_pb2.SymmetricalTokenDepth(
-      depth_increase_token='+', depth_decrease_token='-'))
+  t = samplers.SymmetricalTokenDepthCriterion(
+      sampler_pb2.SymmetricalTokenDepth(
+          depth_increase_token='+', depth_decrease_token='-'))
   # Depth 0, incomplete.
   assert not t.SampleIsComplete([])
   # Depth 1, incomplete.
@@ -189,14 +192,16 @@ def test_SymmetricalTokenDepthCriterion_SampleIsComplete():
 
 def test_SymmetrcalTokenDepthCriterion_SampleIsComplete_reverse_order():
   """Test that sample is not complete if right token appears before left."""
-  t = samplers.SymmetricalTokenDepthCriterion(sampler_pb2.SymmetricalTokenDepth(
-      depth_increase_token='+', depth_decrease_token='-'))
+  t = samplers.SymmetricalTokenDepthCriterion(
+      sampler_pb2.SymmetricalTokenDepth(
+          depth_increase_token='+', depth_decrease_token='-'))
   assert not t.SampleIsComplete(['-', '+'])
   assert not t.SampleIsComplete(['-', 'a', 'b', 'c', '+'])
   assert t.SampleIsComplete(['-', 'a', 'b', 'c', '+', '+', '-'])
 
 
 # Sampler tests.
+
 
 def test_Sampler_config_type_error():
   """Test that a TypeError is raised if config is not a Sampler proto."""
@@ -226,6 +231,7 @@ def test_Sampler_batch_size(abc_sampler_config: sampler_pb2.Sampler):
 
 
 # Sampler.Specialize() tests.
+
 
 def test_Sampler_Specialize_invalid_depth_tokens(
     abc_sampler_config: sampler_pb2.Sampler):

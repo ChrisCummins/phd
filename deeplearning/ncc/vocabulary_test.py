@@ -8,7 +8,6 @@ from deeplearning.ncc import vocabulary
 from labm8 import bazelutil
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 VOCABULARY_PATH = bazelutil.DataPath(
@@ -75,14 +74,12 @@ def vocab() -> vocabulary.VocabularyZipFile:
     yield v
 
 
-def test_VocabularyZipFile_dictionary_type(
-    vocab: vocabulary.VocabularyZipFile):
+def test_VocabularyZipFile_dictionary_type(vocab: vocabulary.VocabularyZipFile):
   """Test that dictionary is a dict."""
   assert isinstance(vocab.dictionary, dict)
 
 
-def test_VocabularyZipFile_dictionary_size(
-    vocab: vocabulary.VocabularyZipFile):
+def test_VocabularyZipFile_dictionary_size(vocab: vocabulary.VocabularyZipFile):
   """Test that dictionary contains at least 2 values (1 for !UNK, +1 other)."""
   assert len(vocab.dictionary) >= 2
 
@@ -131,8 +128,7 @@ def test_VocabularyZipFile_EncodeLlvmBytecode_preprocessing(
   """Test output of pre-processing bytecode."""
   options = inst2vec_pb2.EncodeBytecodeOptions(
       set_bytecode_after_preprocessing=True)
-  result = vocab.EncodeLlvmBytecode(
-      FIZZBUZZ_IR, options)
+  result = vocab.EncodeLlvmBytecode(FIZZBUZZ_IR, options)
 
   assert result.bytecode_after_preprocessing == """\
 define i32 <@ID>(i32)
@@ -206,13 +202,10 @@ attributes #0 = { nounwind ssp uwtable "disable-tail-calls"="false" "less-precis
 def test_VocabularyZipFile_EncodeLlvmBytecode_struct_dict(
     vocab: vocabulary.VocabularyZipFile):
   """Test that struct appears in struct_dict."""
-  options = inst2vec_pb2.EncodeBytecodeOptions(
-      set_struct_dict=True)
+  options = inst2vec_pb2.EncodeBytecodeOptions(set_struct_dict=True)
   result = vocab.EncodeLlvmBytecode(BYTECODE_WITH_STRUCT, options)
 
-  assert dict(result.struct_dict) == {
-    '%struct.Foo': '{ i32, i32 }'
-  }
+  assert dict(result.struct_dict) == {'%struct.Foo': '{ i32, i32 }'}
 
 
 def test_VocabularyZipFile_EncodeLlvmBytecode_struct_not_in_preprocessed(
@@ -244,11 +237,8 @@ def test_VocabularyZipFile_EncodeLlvmBytecode_encode_single_line(
   result = vocab.EncodeLlvmBytecode(
       "store %struct.Foo* %0, %struct.Foo** %2, align 8",
       options=inst2vec_pb2.EncodeBytecodeOptions(
-          set_bytecode_after_preprocessing=True,
-      ),
-      struct_dict={
-        '%struct.Foo': '{ i32, i32 }'
-      })
+          set_bytecode_after_preprocessing=True,),
+      struct_dict={'%struct.Foo': '{ i32, i32 }'})
 
   assert (result.bytecode_after_preprocessing ==
           "store { i32, i32 }* <%ID>, { i32, i32 }** <%ID>, align 8")

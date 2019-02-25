@@ -36,7 +36,6 @@ from deeplearning.clgen.corpuses import preprocessed
 from deeplearning.clgen.proto import internal_pb2
 from labm8 import sqlutil
 
-
 FLAGS = flags.FLAGS
 
 Base = declarative.declarative_base()
@@ -128,8 +127,8 @@ class EncodedContentFiles(sqlutil.Database):
   """A database of encoded pre-processed contentfiles."""
 
   def __init__(self, path: pathlib.Path):
-    super(EncodedContentFiles, self).__init__(
-        f'sqlite:///{path.absolute()}', Base)
+    super(EncodedContentFiles, self).__init__(f'sqlite:///{path.absolute()}',
+                                              Base)
 
   def Create(self, p: preprocessed.PreprocessedContentFiles,
              atomizer: atomizers.AtomizerBase,
@@ -163,8 +162,7 @@ class EncodedContentFiles(sqlutil.Database):
       ).first()
     logging.info('Encoded %s files in %s ms (%.2fx speedup).',
                  humanize.intcomma(num_files),
-                 humanize.intcomma(total_walltime),
-                 total_time / total_walltime)
+                 humanize.intcomma(total_walltime), total_time / total_walltime)
     logging.info('Encoded corpus: %s tokens, %s files.',
                  humanize.intcomma(token_count), humanize.intcomma(num_files))
 
@@ -202,21 +200,24 @@ class EncodedContentFiles(sqlutil.Database):
           ~preprocessed.PreprocessedContentFile.id.in_(
               session.query(EncodedContentFile.id).all()))
       jobs = [
-        internal_pb2.EncoderWorker(
-            id=x.id, text=x.text, contentfile_separator=contentfile_separator,
-            pickled_atomizer=pickle.dumps(atomizer))
-        for x in query
+          internal_pb2.EncoderWorker(
+              id=x.id,
+              text=x.text,
+              contentfile_separator=contentfile_separator,
+              pickled_atomizer=pickle.dumps(atomizer)) for x in query
       ]
       if not jobs:
         raise errors.EmptyCorpusException(
             "Pre-processed corpus contains no files: "
             f"'{preprocessed_db.url}'")
 
-      logging.info('Encoding %s of %s preprocessed files',
-                   humanize.intcomma(query.count()),
-                   humanize.intcomma(p_session.query(
-                       preprocessed.PreprocessedContentFile).filter(
-                       preprocessed.PreprocessedContentFile.preprocessing_succeeded == True).count()))
+      logging.info(
+          'Encoding %s of %s preprocessed files',
+          humanize.intcomma(query.count()),
+          humanize.intcomma(
+              p_session.query(preprocessed.PreprocessedContentFile).filter(
+                  preprocessed.PreprocessedContentFile.preprocessing_succeeded
+                  == True).count()))
       pool = multiprocessing.Pool()
       bar = progressbar.ProgressBar(max_value=len(jobs))
       last_commit = time.time()

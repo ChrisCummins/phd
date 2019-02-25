@@ -22,7 +22,6 @@ from deeplearning.clgen import errors
 from deeplearning.clgen.models import data_generators
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -63,6 +62,7 @@ def test_BatchGenerator_batch_size_too_large(abc_model_config):
 
 
 # OneHotEncode() tests.
+
 
 def test_OneHotEncode_empty_input():
   """Test that OneHotEncode() rejects an empty input."""

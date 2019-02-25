@@ -12,29 +12,120 @@ from sklearn import model_selection
 
 from deeplearning.clgen.corpuses import atomizers
 
-
 FLAGS = flags.FLAGS
 
 # Taken from the C99 spec, OpenCL spec 1.2, and bag-of-words analysis of
 # GitHub corpus:
-OPENCL_ATOMS = set(
-    ['  ', '__assert', '__attribute', '__builtin_astype', '__clc_fabs',
-     '__clc_fma', '__constant', '__global', '__inline', '__kernel', '__local',
-     '__private', '__read_only', '__read_write', '__write_only', '*/', '/*',
-     '//', 'abs', 'alignas', 'alignof', 'atomic_add', 'auto', 'barrier', 'bool',
-     'break', 'case', 'char', 'clamp', 'complex', 'const', 'constant',
-     'continue', 'default', 'define', 'defined', 'do', 'double', 'elif', 'else',
-     'endif', 'enum', 'error', 'event_t', 'extern', 'fabs', 'false', 'float',
-     'for', 'get_global_id', 'get_global_size', 'get_local_id',
-     'get_local_size', 'get_num_groups', 'global', 'goto', 'half', 'if',
-     'ifdef', 'ifndef', 'image1d_array_t', 'image1d_buffer_t', 'image1d_t',
-     'image2d_array_t', 'image2d_t', 'image3d_t', 'imaginary', 'include',
-     'inline', 'int', 'into', 'kernel', 'line', 'local', 'long', 'noreturn',
-     'pragma', 'private', 'quad', 'read_only', 'read_write', 'register',
-     'restrict', 'return', 'sampler_t', 'short', 'shuffle', 'signed', 'size_t',
-     'sizeof', 'sqrt', 'static', 'struct', 'switch', 'true', 'typedef', 'u32',
-     'uchar', 'uint', 'ulong', 'undef', 'union', 'unsigned', 'void', 'volatile',
-     'while', 'wide', 'write_only', ])
+OPENCL_ATOMS = set([
+    '  ',
+    '__assert',
+    '__attribute',
+    '__builtin_astype',
+    '__clc_fabs',
+    '__clc_fma',
+    '__constant',
+    '__global',
+    '__inline',
+    '__kernel',
+    '__local',
+    '__private',
+    '__read_only',
+    '__read_write',
+    '__write_only',
+    '*/',
+    '/*',
+    '//',
+    'abs',
+    'alignas',
+    'alignof',
+    'atomic_add',
+    'auto',
+    'barrier',
+    'bool',
+    'break',
+    'case',
+    'char',
+    'clamp',
+    'complex',
+    'const',
+    'constant',
+    'continue',
+    'default',
+    'define',
+    'defined',
+    'do',
+    'double',
+    'elif',
+    'else',
+    'endif',
+    'enum',
+    'error',
+    'event_t',
+    'extern',
+    'fabs',
+    'false',
+    'float',
+    'for',
+    'get_global_id',
+    'get_global_size',
+    'get_local_id',
+    'get_local_size',
+    'get_num_groups',
+    'global',
+    'goto',
+    'half',
+    'if',
+    'ifdef',
+    'ifndef',
+    'image1d_array_t',
+    'image1d_buffer_t',
+    'image1d_t',
+    'image2d_array_t',
+    'image2d_t',
+    'image3d_t',
+    'imaginary',
+    'include',
+    'inline',
+    'int',
+    'into',
+    'kernel',
+    'line',
+    'local',
+    'long',
+    'noreturn',
+    'pragma',
+    'private',
+    'quad',
+    'read_only',
+    'read_write',
+    'register',
+    'restrict',
+    'return',
+    'sampler_t',
+    'short',
+    'shuffle',
+    'signed',
+    'size_t',
+    'sizeof',
+    'sqrt',
+    'static',
+    'struct',
+    'switch',
+    'true',
+    'typedef',
+    'u32',
+    'uchar',
+    'uint',
+    'ulong',
+    'undef',
+    'union',
+    'unsigned',
+    'void',
+    'volatile',
+    'while',
+    'wide',
+    'write_only',
+])
 
 
 def GetAtomizerFromOpenClSources(
@@ -44,13 +135,13 @@ def GetAtomizerFromOpenClSources(
   return atomizers.GreedyAtomizer.FromText(srcs, OPENCL_ATOMS)
 
 
-def AddClassificationTargetToDataFrame(
-    df: pd.DataFrame, gpu_name: str) -> pd.DataFrame:
+def AddClassificationTargetToDataFrame(df: pd.DataFrame,
+                                       gpu_name: str) -> pd.DataFrame:
   # Determine the array of optimal mappings 'y'. If y_i is 1, that means that
   # the GPU was faster than the CPU for result i.
   cpu_gpu_runtimes = df[[
-    'runtime:intel_core_i7_3820',
-    f'runtime:{gpu_name}',
+      'runtime:intel_core_i7_3820',
+      f'runtime:{gpu_name}',
   ]].values
   y = [1 if gpu < cpu else 0 for cpu, gpu in cpu_gpu_runtimes]
   df['target_gpu_name'] = [gpu_name] * len(df)
@@ -67,11 +158,11 @@ TrainTestSplit = collections.namedtuple(
 
 # A train+val+test data batch for evaluation.
 TrainValTestSplit = collections.namedtuple('TrainValTestSplit', [
-  'gpu_name',
-  'train_df',
-  'valid_df',
-  'test_df',
-  'global_step',
+    'gpu_name',
+    'train_df',
+    'valid_df',
+    'test_df',
+    'global_step',
 ])
 
 
@@ -88,12 +179,16 @@ def TrainTestSplitGenerator(df: pd.DataFrame, seed: int, split_count: int = 10):
     global_step = 0
     for i, (train_index, test_index) in enumerate(dataset_splits):
       global_step += 1
-      yield TrainTestSplit(i=i + 1, train_df=df.iloc[train_index, :].copy(),
-                           test_df=df.iloc[test_index, :].copy(),
-                           gpu_name=gpu_name, global_step=global_step)
+      yield TrainTestSplit(
+          i=i + 1,
+          train_df=df.iloc[train_index, :].copy(),
+          test_df=df.iloc[test_index, :].copy(),
+          gpu_name=gpu_name,
+          global_step=global_step)
 
 
-def TrainValidationTestSplits(df: pd.DataFrame, rand: np.random.RandomState,
+def TrainValidationTestSplits(df: pd.DataFrame,
+                              rand: np.random.RandomState,
                               train_val_test_ratios=(0.6, 0.3, 0.1)):
   """Split a dataframe into train/validation/test splits.
 
@@ -129,12 +224,14 @@ def TrainValidationTestSplits(df: pd.DataFrame, rand: np.random.RandomState,
 
     # Split the two datasets into train / val / test splits.
     gpu_train, gpu_val, gpu_test = np.split(gpu_df, [
-      int(train_val_test_ratios[0] * len(gpu_df)),
-      int((train_val_test_ratios[0] + train_val_test_ratios[1]) * len(gpu_df))])
+        int(train_val_test_ratios[0] * len(gpu_df)),
+        int((train_val_test_ratios[0] + train_val_test_ratios[1]) * len(gpu_df))
+    ])
 
     cpu_train, cpu_val, cpu_test = np.split(cpu_df, [
-      int(train_val_test_ratios[0] * len(cpu_df)),
-      int((train_val_test_ratios[0] + train_val_test_ratios[1]) * len(cpu_df))])
+        int(train_val_test_ratios[0] * len(cpu_df)),
+        int((train_val_test_ratios[0] + train_val_test_ratios[1]) * len(cpu_df))
+    ])
 
     # Concatenate the CPU and GPU data splits.
     train = pd.concat((gpu_train, cpu_train))
@@ -154,7 +251,10 @@ def TrainValidationTestSplits(df: pd.DataFrame, rand: np.random.RandomState,
     test = test.sample(frac=1, random_state=rand)
 
     yield TrainValTestSplit(
-        gpu_name=gpu_name, train_df=train, valid_df=val, test_df=test,
+        gpu_name=gpu_name,
+        train_df=train,
+        valid_df=val,
+        test_df=test,
         global_step=i)
 
 
@@ -188,10 +288,9 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
   data = []
 
   for split in TrainTestSplitGenerator(df, seed):
-    logging.info(
-        'Evaluating %s on %s, split %d with train=%d/test=%d programs',
-        model.__name__, split.gpu_name, split.i, len(split.train_df),
-        len(split.test_df))
+    logging.info('Evaluating %s on %s, split %d with train=%d/test=%d programs',
+                 model.__name__, split.gpu_name, split.i, len(split.train_df),
+                 len(split.test_df))
 
     # Path of cached model and predictions.
     model_path = (
@@ -218,7 +317,8 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
         # Train and cache a model.
         model.init(seed=seed, atomizer=atomizer)
         model.train(
-            df=split.train_df, platform_name=split.gpu_name,
+            df=split.train_df,
+            platform_name=split.gpu_name,
             verbose=FLAGS.verbosity)
         model.save(model_path)
 
@@ -226,7 +326,8 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
       logging.info("Predicting %d %s mappings for device %s",
                    len(split.test_df), model.__name__, split.gpu_name)
       predictions = model.predict(
-          df=split.test_df, platform_name=split.gpu_name,
+          df=split.test_df,
+          platform_name=split.gpu_name,
           verbose=FLAGS.verbosity)
       logging.info('Writing %s', predictions_path)
       SavePredictionsToFile(predictions, predictions_path)
@@ -241,22 +342,17 @@ def PredictionEvaluationsToTable(
 ) -> pd.DataFrame:
   """Create a table from the results of EvaluatePredictions()."""
   return pd.DataFrame(
-      data, index=range(1, len(data) + 1), columns=[
-        "Model",
-        "Platform",
-        "Benchmark Suite",
-        "Benchmark",
-        "Dataset",
-        "Oracle Mapping",
-        "Predicted Mapping",
-        "Correct?",
-        "Speedup"
+      data,
+      index=range(1,
+                  len(data) + 1),
+      columns=[
+          "Model", "Platform", "Benchmark Suite", "Benchmark", "Dataset",
+          "Oracle Mapping", "Predicted Mapping", "Correct?", "Speedup"
       ])
 
 
 def EvaluatePredictions(
-    model: 'HeterogeneousMappingModel',
-    split: TrainTestSplit,
+    model: 'HeterogeneousMappingModel', split: TrainTestSplit,
     predictions: typing.Iterable[int]
 ) -> typing.List[typing.Dict[str, typing.Union[str, float, int]]]:
   """Get dictionaries of prediction results.
@@ -288,13 +384,12 @@ def EvaluatePredictions(
 
   # speedups of predictions
   cpu_gpu_runtimes = split.test_df[[
-    'runtime:intel_core_i7_3820',
-    f'runtime:{split.gpu_name}'
+      'runtime:intel_core_i7_3820', f'runtime:{split.gpu_name}'
   ]].values
   p_runtimes = [
-    cpu_gpu_runtime_row[prections_row]
-    for prections_row, cpu_gpu_runtime_row in
-    zip(predictions, cpu_gpu_runtimes)]
+      cpu_gpu_runtime_row[prections_row] for prections_row, cpu_gpu_runtime_row
+      in zip(predictions, cpu_gpu_runtimes)
+  ]
   p_speedup = zero_r_runtimes / p_runtimes
 
   # sanity check
@@ -305,30 +400,30 @@ def EvaluatePredictions(
   split_data = []
   for (benchmark, benchmark_suite, dataset, oracle_device_mapping, predicted,
        is_correct, predicted_speedup) in zip(
-      split.test_df['program:opencl_kernel_name'].values,
-      split.test_df['program:benchmark_suite_name'].values,
-      split.test_df['data:dataset_name'].values,
-      oracle_device_mappings,
-      predictions, predicted_is_correct, p_speedup):
+           split.test_df['program:opencl_kernel_name'].values,
+           split.test_df['program:benchmark_suite_name'].values,
+           split.test_df['data:dataset_name'].values, oracle_device_mappings,
+           predictions, predicted_is_correct, p_speedup):
     split_data.append({
-      "Model": model.__name__,
-      "Platform": split.gpu_name,
-      'Benchmark Suite': benchmark_suite,
-      'Benchmark': benchmark,
-      'Dataset': dataset,
-      "Oracle Mapping": oracle_device_mapping,
-      "Predicted Mapping": predicted,
-      "Correct?": is_correct,
-      "Speedup": predicted_speedup,
+        "Model": model.__name__,
+        "Platform": split.gpu_name,
+        'Benchmark Suite': benchmark_suite,
+        'Benchmark': benchmark,
+        'Dataset': dataset,
+        "Oracle Mapping": oracle_device_mapping,
+        "Predicted Mapping": predicted,
+        "Correct?": is_correct,
+        "Speedup": predicted_speedup,
     })
 
   gpu_predicted_count = sum(d['Predicted Mapping'] for d in split_data)
   cpu_predicted_count = len(split_data) - gpu_predicted_count
 
-  logging.info('Results: model=%s, platform=%s, split=%s, n=%d, '
-               'predictions=(cpu=%d,gpu=%d) accuracy=%.2f%%, speedup=%.2fx',
-               model.__basename__, split.gpu_name, split.global_step,
-               len(split.test_df), cpu_predicted_count, gpu_predicted_count,
-               np.mean([r['Correct?'] for r in split_data]) * 100,
-               np.mean([r['Speedup'] for r in split_data]))
+  logging.info(
+      'Results: model=%s, platform=%s, split=%s, n=%d, '
+      'predictions=(cpu=%d,gpu=%d) accuracy=%.2f%%, speedup=%.2fx',
+      model.__basename__, split.gpu_name, split.global_step, len(split.test_df),
+      cpu_predicted_count, gpu_predicted_count,
+      np.mean([r['Correct?'] for r in split_data]) * 100,
+      np.mean([r['Speedup'] for r in split_data]))
   return split_data

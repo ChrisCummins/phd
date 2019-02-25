@@ -23,7 +23,6 @@ from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.proto import model_pb2
 from labm8 import cache
 
-
 FLAGS = flags.FLAGS
 
 
@@ -43,7 +42,8 @@ class BackendBase(object):
     """Train the backend."""
     raise NotImplementedError
 
-  def InitSampling(self, sampler: samplers.Sampler,
+  def InitSampling(self,
+                   sampler: samplers.Sampler,
                    seed: typing.Optional[int] = None) -> int:
     """Initialize backend for sampling."""
     raise NotImplementedError

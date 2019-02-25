@@ -39,17 +39,18 @@ from deeplearning.ncc import vocabulary
 from labm8 import bazelutil
 from labm8 import fs
 
-
 flags.DEFINE_string('input_data',
                     '/tmp/phd/deeplearning/ncc/task/threadcoarsening',
                     'Path to input data')
-flags.DEFINE_string('out', '/tmp/phd/deeplearning/ncc/task/threadcoarsening',
-                    'Path to folder in which to write saved Keras models and predictions')
+flags.DEFINE_string(
+    'out', '/tmp/phd/deeplearning/ncc/task/threadcoarsening',
+    'Path to folder in which to write saved Keras models and predictions')
 flags.DEFINE_string(
     'vocabulary_zip_path', None,
     'Path to the vocabulary zip file associated with those embeddings')
-flags.DEFINE_string('device', 'all',
-                    'Device to evaluate model on. Options: all, Cypress, Tahiti, Fermi, Kepler')
+flags.DEFINE_string(
+    'device', 'all',
+    'Device to evaluate model on. Options: all, Cypress, Tahiti, Fermi, Kepler')
 flags.DEFINE_integer('num_epochs', 50, 'number of training epochs')
 flags.DEFINE_integer('batch_size', 64, 'training batch size')
 flags.DEFINE_integer('dense_layer', 32, 'dense layer size')
@@ -58,10 +59,10 @@ flags.DEFINE_bool('print_summary', False, 'Print summary of Keras model')
 FLAGS = flags.FLAGS
 
 _FLAG_TO_DEVICE_NAME = {
-  'Cypress': 'AMD Radeon HD 5900',
-  'Tahiti': 'AMD Tahiti 7970',
-  'Fermi': 'NVIDIA GTX 480',
-  'Kepler': 'NVIDIA Tesla K20c'
+    'Cypress': 'AMD Radeon HD 5900',
+    'Tahiti': 'AMD Tahiti 7970',
+    'Fermi': 'NVIDIA GTX 480',
+    'Kepler': 'NVIDIA Tesla K20c'
 }
 
 ########################################################################################################################
@@ -83,18 +84,17 @@ def get_magni_features(df, oracles, platform):
   for kernel in sorted(set(df["kernel"])):
     _df = df[df["kernel"] == kernel]
 
-    oracle_cf = int(
-        oracles[oracles["kernel"] == kernel]["cf_{}".format(platform)].values[
-          0])
+    oracle_cf = int(oracles[oracles["kernel"] == kernel]["cf_{}".format(
+        platform)].values[0])
 
     feature_vectors = np.asarray([
-      _df['PCA1'].values,
-      _df['PCA2'].values,
-      _df['PCA3'].values,
-      _df['PCA4'].values,
-      _df['PCA5'].values,
-      _df['PCA6'].values,
-      _df['PCA7'].values,
+        _df['PCA1'].values,
+        _df['PCA2'].values,
+        _df['PCA3'].values,
+        _df['PCA4'].values,
+        _df['PCA5'].values,
+        _df['PCA6'].values,
+        _df['PCA7'].values,
     ]).T
 
     X_cc.append(feature_vectors)
@@ -185,18 +185,21 @@ class NCC_threadcoarsening:
     np.random.seed(seed)
 
     # Model
-    inp = Input(shape=(maxlen, embedding_dim,), dtype="float32", name="code_in")
-    x = LSTM(embedding_dim, implementation=1, return_sequences=True,
-             name="lstm_1")(inp)
+    inp = Input(
+        shape=(
+            maxlen,
+            embedding_dim,
+        ), dtype="float32", name="code_in")
+    x = LSTM(
+        embedding_dim, implementation=1, return_sequences=True,
+        name="lstm_1")(inp)
     x = LSTM(embedding_dim, implementation=1, name="lstm_2")(x)
     x = BatchNormalization()(x)
     x = Dense(dense_layer_size, activation="relu")(x)
     outputs = Dense(6, activation="sigmoid")(x)
     self.model = Model(inputs=inp, outputs=outputs)
     self.model.compile(
-        optimizer="adam",
-        loss="categorical_crossentropy",
-        metrics=['accuracy'])
+        optimizer="adam", loss="categorical_crossentropy", metrics=['accuracy'])
     print('\tbuilt Keras model')
 
   def save(self, outpath: str):
@@ -208,8 +211,13 @@ class NCC_threadcoarsening:
 
   def train(self, sequences: np.array, y_1hot: np.array, verbose: bool,
             epochs: int, batch_size: int) -> None:
-    self.model.fit(sequences, y_1hot, epochs=epochs, batch_size=batch_size,
-                   verbose=verbose, shuffle=True)
+    self.model.fit(
+        sequences,
+        y_1hot,
+        epochs=epochs,
+        batch_size=batch_size,
+        verbose=verbose,
+        shuffle=True)
 
   def predict(self, sequences: np.array, batch_size: int) -> np.array:
     # directly predict optimal thread coarsening factor from source sequences:
@@ -227,8 +235,7 @@ seed = 204
 
 
 def evaluate(model, device, data_folder, out_folder, embeddings,
-             dense_layer_size, print_summary, num_epochs,
-             batch_size):
+             dense_layer_size, print_summary, num_epochs, batch_size):
   data = []
 
   # Create device list
@@ -282,14 +289,13 @@ def evaluate(model, device, data_folder, out_folder, embeddings,
       model_name = model.__name__
       model_basename = model.__basename__
 
-      model_path = os.path.join(out_folder,
-                                "models/{model_basename}-{platform}-{j}.model".format(
-                                    model_basename=model_basename,
-                                    platform=platform, j=j))
-      predictions_path = os.path.join(out_folder,
-                                      "predictions/{model_basename}-{platform}-{j}.result".format(
-                                          model_basename=model_basename,
-                                          platform=platform, j=j))
+      model_path = os.path.join(
+          out_folder, "models/{model_basename}-{platform}-{j}.model".format(
+              model_basename=model_basename, platform=platform, j=j))
+      predictions_path = os.path.join(
+          out_folder,
+          "predictions/{model_basename}-{platform}-{j}.result".format(
+              model_basename=model_basename, platform=platform, j=j))
 
       if fs.exists(predictions_path):
         # load result from cache
@@ -311,11 +317,12 @@ def evaluate(model, device, data_folder, out_folder, embeddings,
             model.model.summary()
 
           # Train and cache a model
-          model.train(sequences=embedding_input[train_index, :, :],
-                      verbose=True,
-                      y_1hot=y_1hot[train_index],
-                      epochs=num_epochs,
-                      batch_size=batch_size)
+          model.train(
+              sequences=embedding_input[train_index, :, :],
+              verbose=True,
+              y_1hot=y_1hot[train_index],
+              epochs=num_epochs,
+              batch_size=batch_size)
 
           # cache the model
           fs.mkdir(fs.dirname(model_path))
@@ -324,12 +331,13 @@ def evaluate(model, device, data_folder, out_folder, embeddings,
 
         # test model
         print('\n--- Testing model...')
-        p = model.predict(sequences=embedding_input[test_index, :, :],
-                          batch_size=batch_size)[0]
+        p = model.predict(
+            sequences=embedding_input[test_index, :, :],
+            batch_size=batch_size)[0]
 
         # The runtimes of some coarsening factors are not recorded in the data table. If that is the case for
         # the predicted cf, clamp it down to the highest cf for which the runtime is recorded
-        p = min(p, 2 ** (len(X_cc[test_index[0]]) - 1))
+        p = min(p, 2**(len(X_cc[test_index[0]]) - 1))
 
         # cache the prediction
         fs.mkdir(fs.dirname(predictions_path))
@@ -360,18 +368,21 @@ def evaluate(model, device, data_folder, out_folder, embeddings,
 
       # record result
       data.append({
-        "Model": model_name,
-        "Platform": platform_name,
-        "Kernel": kernel,
-        "Oracle-CF": o,
-        "Predicted-CF": p,
-        "Speedup": p_speedup,
-        "Oracle": p_oracle
+          "Model": model_name,
+          "Platform": platform_name,
+          "Kernel": kernel,
+          "Oracle-CF": o,
+          "Predicted-CF": p,
+          "Speedup": p_speedup,
+          "Oracle": p_oracle
       })
 
-  return pd.DataFrame(data, columns=[
-    "Model", "Platform", "Kernel", "Oracle-CF", "Predicted-CF", "Speedup",
-    "Oracle"])
+  return pd.DataFrame(
+      data,
+      columns=[
+          "Model", "Platform", "Kernel", "Oracle-CF", "Predicted-CF", "Speedup",
+          "Oracle"
+      ])
 
 
 ########################################################################################################################
@@ -426,11 +437,15 @@ def main(argv):
 
   ####################################################################################################################
   # Print results
-  print('\n', ncc_threadcoarsening.groupby('Platform')[
-    'Platform', 'Speedup', 'Oracle'].mean())
+  print(
+      '\n',
+      ncc_threadcoarsening.groupby('Platform')
+      ['Platform', 'Speedup', 'Oracle'].mean())
   d = np.array([ncc_threadcoarsening[['Speedup', 'Oracle']].mean()]).T
-  print('\n', pd.DataFrame(d, columns=["DeepTuneInst2Vec"],
-                           index=["Speedup", "Oracle"]))
+  print(
+      '\n',
+      pd.DataFrame(
+          d, columns=["DeepTuneInst2Vec"], index=["Speedup", "Oracle"]))
 
   # Model comparison: speedups
   print('\nModel comparison: speedups')
@@ -438,18 +453,27 @@ def main(argv):
   d.append(np.append(magni_pl_sp_vals, magni_sp_mean))
   d.append(np.append(deeptune_pl_sp_vals, deeptune_sp_mean))
   d.append(np.append(deeptuneTL_pl_sp_vals, deeptuneTL_sp_mean))
-  d.append(np.append(
-      ncc_threadcoarsening.groupby(['Platform'])['Speedup'].mean().values,
-      ncc_threadcoarsening['Speedup'].mean()))
+  d.append(
+      np.append(
+          ncc_threadcoarsening.groupby(['Platform'])['Speedup'].mean().values,
+          ncc_threadcoarsening['Speedup'].mean()))
   if FLAGS.device == 'all':
     d = np.array(d).T.reshape(5, 4)
-    devs = ['AMD Radeon HD 5900', 'AMD Tahiti 7970',
-            'NVIDIA GTX 480', 'NVIDIA Tesla K20c', 'Average']
+    devs = [
+        'AMD Radeon HD 5900', 'AMD Tahiti 7970', 'NVIDIA GTX 480',
+        'NVIDIA Tesla K20c', 'Average'
+    ]
   else:
     d = np.array(d).T.reshape(1, 4)
     devs = [_FLAG_TO_DEVICE_NAME[FLAGS.device]]
-  print('\n', pd.DataFrame(d, columns=['Magni et al.', 'DeepTune', 'DeepTuneTL',
-                                       'DeepTuneInst2Vec'], index=devs))
+  print(
+      '\n',
+      pd.DataFrame(
+          d,
+          columns=[
+              'Magni et al.', 'DeepTune', 'DeepTuneTL', 'DeepTuneInst2Vec'
+          ],
+          index=devs))
 
 
 if __name__ == '__main__':

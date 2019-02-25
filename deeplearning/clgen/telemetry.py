@@ -24,7 +24,6 @@ from labm8 import jsonutil
 from labm8 import labdate
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 
 
@@ -75,7 +74,7 @@ class TrainingLogger(object):
   def EpochTelemetry(self) -> typing.List[telemetry_pb2.ModelEpochTelemetry]:
     """Return the epoch telemetry files."""
     return [
-      pbutil.FromFile(self.logdir / p, telemetry_pb2.ModelEpochTelemetry())
-      for p in sorted(self.logdir.iterdir())
-      if re.match(r'epoch_\d\d+_telemetry\.pbtxt', str(p.name))
+        pbutil.FromFile(self.logdir / p, telemetry_pb2.ModelEpochTelemetry())
+        for p in sorted(self.logdir.iterdir())
+        if re.match(r'epoch_\d\d+_telemetry\.pbtxt', str(p.name))
     ]

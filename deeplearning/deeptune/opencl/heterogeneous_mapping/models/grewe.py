@@ -9,7 +9,6 @@ from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import base
 
-
 FLAGS = flags.FLAGS
 
 
@@ -31,8 +30,10 @@ class Grewe(base.HeterogeneousMappingModel):
 
   def init(self, seed: int, atomizer: atomizers.AtomizerBase):
     self.model = sktree.DecisionTreeClassifier(
-        random_state=seed, splitter="best",
-        criterion="entropy", max_depth=5,
+        random_state=seed,
+        splitter="best",
+        criterion="entropy",
+        max_depth=5,
         min_samples_leaf=5)
     return self
 
@@ -44,8 +45,7 @@ class Grewe(base.HeterogeneousMappingModel):
     with open(inpath, "rb") as infile:
       self.model = pickle.load(infile)
 
-  def train(self, df: pd.DataFrame, platform_name: str,
-            verbose: bool = False):
+  def train(self, df: pd.DataFrame, platform_name: str, verbose: bool = False):
     del verbose
     features = opencl_device_mapping_dataset.ComputeGreweFeaturesForGpu(
         platform_name, df).values

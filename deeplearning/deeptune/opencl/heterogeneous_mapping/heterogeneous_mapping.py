@@ -23,7 +23,6 @@ from deeplearning.deeptune.opencl.heterogeneous_mapping import utils
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import models
 from labm8 import decorators
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
@@ -51,7 +50,8 @@ class HeterogeneousMappingExperiment(object):
         self.dataset.programs_df['program:opencl_src'].values)
     return atomizer
 
-  def ResultsDataFrame(self, model_class: typing.Type,
+  def ResultsDataFrame(self,
+                       model_class: typing.Type,
                        df: typing.Optional[pd.DataFrame] = None):
     """Run experiment on model.
 
@@ -91,11 +91,12 @@ class HeterogeneousMappingExperiment(object):
 
     print(f'\n=== {model_name} ==========================================')
     print("Results by benchmark suite ...")
-    print(df.groupby(['Platform', 'Benchmark Suite'])[
-            'Platform', 'Correct?', 'Speedup'].mean())
+    print(
+        df.groupby(
+            ['Platform',
+             'Benchmark Suite'])['Platform', 'Correct?', 'Speedup'].mean())
     print("Results by platform ...")
-    print(df.groupby(['Platform'])[
-            'Platform', 'Correct?', 'Speedup'].mean())
+    print(df.groupby(['Platform'])['Platform', 'Correct?', 'Speedup'].mean())
     print("Results ...")
     print(df[['Platform', 'Correct?', 'Speedup']].mean())
     print(f'=== END {model_name} ======================================\n')
@@ -149,7 +150,6 @@ def main(argv: typing.List[str]):
     accuracy = df[df['Model'] == model]['Correct?'].mean()
     speedup = df[df['Model'] == model]['Speedup'].mean()
     print(f"{model:20s} {accuracy:8.3%} {speedup:8.3f}x")
-
 
 
 if __name__ == '__main__':

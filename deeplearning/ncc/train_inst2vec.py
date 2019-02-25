@@ -36,15 +36,13 @@ from deeplearning.ncc.inst2vec import inst2vec_evaluate as i2v_eval
 from deeplearning.ncc.inst2vec import inst2vec_preprocess as i2v_prep
 from deeplearning.ncc.inst2vec import inst2vec_vocabulary as i2v_vocab
 
-
 # Get the app flags from a file.
 FLAGS = inst2vec_appflags.FLAGS
 
 # Data set parameters.
 flags.DEFINE_string('data_folder', '/tmp/phd/deeplearning/ncc/inst2vec/data',
                     'Dataset folder path.')
-flags.DEFINE_bool('download_datasets', True,
-                  'Whether to use default dataset.')
+flags.DEFINE_bool('download_datasets', True, 'Whether to use default dataset.')
 flags.DEFINE_list(
     'dataset_urls', [],
     'URLs of datasets to download. If not provided, all datasets will be used.')
@@ -77,8 +75,8 @@ def main(argv):
     i2v_vocab.construct_vocabulary(data_folder, data_folders)
 
     # Train embeddings
-    embedding_matrix, embeddings_file = i2v_emb.train_embeddings(data_folder,
-                                                                 data_folders)
+    embedding_matrix, embeddings_file = i2v_emb.train_embeddings(
+        data_folder, data_folders)
 
   else:
 

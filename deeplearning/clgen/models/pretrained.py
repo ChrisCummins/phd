@@ -33,7 +33,6 @@ from labm8 import cache
 from labm8 import labdate
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 
 
@@ -44,12 +43,13 @@ class PreTrainedModel(object):
     self.path = path.absolute()
     self.cache = cache.FSCache(self.path)
     self.corpus = NullCorpus()
-    self.config = pbutil.FromFile(
-        self.path / 'META.pbtxt', internal_pb2.ModelMeta()).config
+    self.config = pbutil.FromFile(self.path / 'META.pbtxt',
+                                  internal_pb2.ModelMeta()).config
     self.atomizer = atomizers.AtomizerBase.FromFile(self.path / 'atomizer')
     self.backend = {
-      model_pb2.NetworkArchitecture.TENSORFLOW: tensorflow_backend.TensorFlowBackend,
-      model_pb2.NetworkArchitecture.KERAS: keras_backend.KerasBackend,
+        model_pb2.NetworkArchitecture.TENSORFLOW:
+        tensorflow_backend.TensorFlowBackend,
+        model_pb2.NetworkArchitecture.KERAS: keras_backend.KerasBackend,
     }[self.config.architecture.backend](self.config, self.cache, self.atomizer)
 
   def Train(self):
@@ -60,9 +60,10 @@ class PreTrainedModel(object):
     """Get the training telemetry data."""
     return telemetry.TrainingLogger(self.cache.path / 'logs').EpochTelemetry()
 
-  def Sample(
-      self, sampler: samplers.Sampler, min_num_samples: int,
-      seed: int = None) -> typing.Iterable[model_pb2.Sample]:
+  def Sample(self,
+             sampler: samplers.Sampler,
+             min_num_samples: int,
+             seed: int = None) -> typing.Iterable[model_pb2.Sample]:
     """Sample a model.
 
     If the model is not already trained, calling Sample() first trains the
@@ -99,8 +100,8 @@ class PreTrainedModel(object):
     # as we want.
     while True:
       samples_in_progress = [
-        sampler.tokenized_start_text.copy()
-        for _ in range(batch_size)]
+          sampler.tokenized_start_text.copy() for _ in range(batch_size)
+      ]
       done = np.zeros(batch_size, dtype=np.bool)
       start_time = labdate.MillisecondsTimestamp()
       wall_time_start = start_time

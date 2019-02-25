@@ -27,13 +27,16 @@ class TestcaseProfilingEvent(db.Table):
       sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
       nullable=False,
       default=labdate.GetUtcMillisecondsNow)
-  testcase_id: int = sql.Column(sql.Integer, sql.ForeignKey('testcases.id'),
-                                nullable=False)
-  client_id: int = sql.Column(deeplearning.deepsmith.client.Client.id_t,
-                              sql.ForeignKey('clients.id'), nullable=False)
-  type_id: int = sql.Column(ProfilingEventType.id_t,
-                            sql.ForeignKey('proviling_event_types.id'),
-                            nullable=False)
+  testcase_id: int = sql.Column(
+      sql.Integer, sql.ForeignKey('testcases.id'), nullable=False)
+  client_id: int = sql.Column(
+      deeplearning.deepsmith.client.Client.id_t,
+      sql.ForeignKey('clients.id'),
+      nullable=False)
+  type_id: int = sql.Column(
+      ProfilingEventType.id_t,
+      sql.ForeignKey('proviling_event_types.id'),
+      nullable=False)
   duration_ms: int = sql.Column(sql.Integer, nullable=False)
   event_start: datetime.datetime = sql.Column(
       sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
@@ -46,11 +49,11 @@ class TestcaseProfilingEvent(db.Table):
   type: ProfilingEventType = orm.relationship('ProfilingEventType')
 
   # Constraints:
-  __table_args__ = (
-    sql.UniqueConstraint(
-        'testcase_id', 'client_id', 'type_id',
-        name='unique_testcase_profiling_event'),
-  )
+  __table_args__ = (sql.UniqueConstraint(
+      'testcase_id',
+      'client_id',
+      'type_id',
+      name='unique_testcase_profiling_event'),)
 
   def SetProto(self,
                proto: deepsmith_pb2.ProfilingEvent) -> \
@@ -79,11 +82,11 @@ class TestcaseProfilingEvent(db.Table):
     return self.SetProto(proto)
 
   @classmethod
-  def GetOrAdd(cls, session: db.session_t,
-               proto: deepsmith_pb2.ProfilingEvent,
+  def GetOrAdd(cls, session: db.session_t, proto: deepsmith_pb2.ProfilingEvent,
                testcase: 'testcase.Testcase') -> 'ProfilingEvent':
     return sqlutil.GetOrAdd(
-        session, cls,
+        session,
+        cls,
         testcase=testcase,
         client=deeplearning.deepsmith.client.Client.GetOrAdd(
             session, proto.client),
@@ -101,14 +104,17 @@ class ResultProfilingEvent(db.Table):
   id: int = sql.Column(id_t, primary_key=True)
   date_added: datetime.datetime = sql.Column(
       sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-      nullable=False, default=labdate.GetUtcMillisecondsNow)
+      nullable=False,
+      default=labdate.GetUtcMillisecondsNow)
   result_id: int = sql.Column(
       sql.Integer, sql.ForeignKey('results.id'), nullable=False)
   client_id: int = sql.Column(
-      deeplearning.deepsmith.client.Client.id_t, sql.ForeignKey('clients.id'),
+      deeplearning.deepsmith.client.Client.id_t,
+      sql.ForeignKey('clients.id'),
       nullable=False)
   type_id: int = sql.Column(
-      ProfilingEventType.id_t, sql.ForeignKey('proviling_event_types.id'),
+      ProfilingEventType.id_t,
+      sql.ForeignKey('proviling_event_types.id'),
       nullable=False)
   duration_ms: int = sql.Column(sql.Integer, nullable=False)
   event_start: datetime.datetime = sql.Column(
@@ -122,11 +128,9 @@ class ResultProfilingEvent(db.Table):
   type: ProfilingEventType = orm.relationship('ProfilingEventType')
 
   # Constraints:
-  __table_args__ = (
-    sql.UniqueConstraint(
-        'result_id', 'client_id', 'type_id',
-        name='unique_result_profiling_event'),
-  )
+  __table_args__ = (sql.UniqueConstraint(
+      'result_id', 'client_id', 'type_id',
+      name='unique_result_profiling_event'),)
 
   def SetProto(self,
                proto: deepsmith_pb2.ProfilingEvent) -> \
@@ -158,12 +162,12 @@ class ResultProfilingEvent(db.Table):
   def GetOrAdd(cls, session: db.session_t, proto: deepsmith_pb2.ProfilingEvent,
                result: 'result.Result') -> 'ProfilingEvent':
     return sqlutil.GetOrAdd(
-        session, cls,
+        session,
+        cls,
         result=result,
         client=deeplearning.deepsmith.client.Client.GetOrAdd(
             session, proto.client),
-        type=ProfilingEventType.GetOrAdd(session,
-                                         proto.type),
+        type=ProfilingEventType.GetOrAdd(session, proto.type),
         duration_ms=proto.duration_ms,
         event_start=labdate.DatetimeFromMillisecondsTimestamp(
             proto.event_start_epoch_ms))

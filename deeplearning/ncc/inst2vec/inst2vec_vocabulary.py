@@ -39,7 +39,6 @@ from scipy import sparse
 from deeplearning.ncc import rgx_utils as rgx
 from deeplearning.ncc.inst2vec import inst2vec_utils as i2v_utils
 
-
 FLAGS = flags.FLAGS
 
 
@@ -112,15 +111,16 @@ def print_vocabulary(mylist_freq, filename):
   mylist_families_l1 = rgx.get_list_tag_level_1()
   to_iterate1 = list()
   for i in range(len(mylist_families_l1)):
-    to_iterate1.append([mylist_families_l1[i],
-                        rgx.get_count(mylist_freq, mylist_families_l1[i], 1)])
+    to_iterate1.append([
+        mylist_families_l1[i],
+        rgx.get_count(mylist_freq, mylist_families_l1[i], 1)
+    ])
   to_iterate1.sort(key=lambda tup: tup[1], reverse=True)
 
   # Print statistics
   with open(filename + '_class.txt', 'w') as f:
-    f.write(
-        '{:>6}   {:<30}{:<25}{}\n'.format('# occ', 'tag level 1', 'tag level 2',
-                                          'tag level 3'))
+    f.write('{:>6}   {:<30}{:<25}{}\n'.format('# occ', 'tag level 1',
+                                              'tag level 2', 'tag level 3'))
 
     # Print all level 1
     for tag1 in to_iterate1:
@@ -130,32 +130,32 @@ def print_vocabulary(mylist_freq, filename):
       mylist_families_l2 = rgx.get_list_tag_level_2(tag1[0])
       to_iterate2 = list()
       for i in range(len(mylist_families_l2)):
-        to_iterate2.append([mylist_families_l2[i],
-                            rgx.get_count(mylist_freq, mylist_families_l2[i],
-                                          2)])
+        to_iterate2.append([
+            mylist_families_l2[i],
+            rgx.get_count(mylist_freq, mylist_families_l2[i], 2)
+        ])
       to_iterate2.sort(key=lambda tup: tup[1], reverse=True)
 
       # Print all level 2
       for tag2 in to_iterate2:
-        f.write('{:>6}   {:<30}{:<25}\n'.format(str(tag2[1]),
-                                                '----------------------------',
-                                                tag2[0]))
+        f.write('{:>6}   {:<30}{:<25}\n'.format(
+            str(tag2[1]), '----------------------------', tag2[0]))
 
         # Get stats l3
         mylist_families_l3 = rgx.get_list_tag_level_3(tag2[0])
         to_iterate3 = list()
         for i in range(len(mylist_families_l3)):
-          to_iterate3.append([mylist_families_l3[i],
-                              rgx.get_count(mylist_freq, mylist_families_l3[i],
-                                            3)])
+          to_iterate3.append([
+              mylist_families_l3[i],
+              rgx.get_count(mylist_freq, mylist_families_l3[i], 3)
+          ])
         to_iterate3.sort(key=lambda tup: tup[1], reverse=True)
 
         # Print all level 3
         for tag3 in to_iterate3:
-          f.write('{:>6}   {:<30}{:<25}{}\n'.format(str(tag3[1]),
-                                                    '----------------------------',
-                                                    '-----------------------',
-                                                    tag3[0]))
+          f.write('{:>6}   {:<30}{:<25}{}\n'.format(
+              str(tag3[1]), '----------------------------',
+              '-----------------------', tag3[0]))
 
 
 def make_one_line_stmt(stmt):
@@ -183,17 +183,16 @@ def print_vocabulary_metadata(reverse_dictionary, source_data_freq, filename):
   print('Printing metadata information to file ', filename)
   with open(filename, 'w') as f:
     # Write file header
-    f.write(
-        '{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format('stmt', 'count', 'tag1', 'tag2',
-                                              'tag3', 'newtagA', 'newtagB'))
+    f.write('{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(
+        'stmt', 'count', 'tag1', 'tag2', 'tag3', 'newtagA', 'newtagB'))
 
     # Loop over all words in dictionary
     vocabulary_size = len(reverse_dictionary)
     for i in range(vocabulary_size):
 
       if i % 100 == 0:
-        print('Processed {:>6,d} words out of {:>6,d} ...'.format(i,
-                                                                  vocabulary_size))
+        print('Processed {:>6,d} words out of {:>6,d} ...'.format(
+            i, vocabulary_size))
 
       word = reverse_dictionary[i]
       count = source_data_freq[word]
@@ -225,9 +224,8 @@ def print_vocabulary_metadata(reverse_dictionary, source_data_freq, filename):
       # Write the line containing all information pertaining to this word
       if '\n' in word:
         word = make_one_line_stmt(word)
-      f.write(
-          '{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(word, count, t1, t2, t3, tnA,
-                                                tnB))
+      f.write('{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(word, count, t1, t2, t3,
+                                                    tnA, tnB))
 
 
 ########################################################################################################################
@@ -409,7 +407,8 @@ def build_H_dictionary(D, skip_window, folder, filename, dictionary,
             context = rgx.unknown_token
 
           # target-context index pair
-          if target not in dictionary.keys() or context not in dictionary.keys():
+          if target not in dictionary.keys() or context not in dictionary.keys(
+          ):
             if target not in dictionary.keys():
               print('WARNING, not in dictionary:', target)
             if context not in dictionary.keys():
@@ -511,7 +510,8 @@ def construct_vocabulary(data_folder, folders):
     # Combine the source data lists
     print('\n--- Combining', len(folders),
           'folders into one data set from which we build a vocabulary')
-    source_data_list_combined = dict()  # keys: statements as strings, values: number of occurences
+    source_data_list_combined = dict(
+    )  # keys: statements as strings, values: number of occurences
     num_statements_total = 0
 
     for folder in folders:
@@ -550,8 +550,8 @@ def construct_vocabulary(data_folder, folders):
 
     # Get statistics of the combined list before pruning
     print('\n--- Compute some statistics on the combined data')
-    vocabulary_statistics(source_data_list_combined,
-                          descr="combining data folders")
+    vocabulary_statistics(
+        source_data_list_combined, descr="combining data folders")
 
     # Prune data
     source_data_list_combined, stmts_cut_off = prune_vocabulary(
@@ -559,8 +559,8 @@ def construct_vocabulary(data_folder, folders):
 
     # Get statistics of the combined list after pruning
     print('\n--- Compute some statistics on the combined data')
-    vocabulary_statistics(source_data_list_combined,
-                          descr="pruning combined data")
+    vocabulary_statistics(
+        source_data_list_combined, descr="pruning combined data")
 
     # Build the vocabulary
     print('\n--- Building the vocabulary and indices')
@@ -591,8 +591,10 @@ def construct_vocabulary(data_folder, folders):
       fieldnames = ['#statement', 'index']
       writer = csv.DictWriter(f, fieldnames=fieldnames)
       writer.writeheader()
-      data = [dict(zip(fieldnames, [k.replace('\n ', '\\n '), v])) for k, v in
-              dictionary.items()]
+      data = [
+          dict(zip(fieldnames, [k.replace('\n ', '\\n '), v]))
+          for k, v in dictionary.items()
+      ]
       writer.writerows(data)
 
     # Print cut off statements
@@ -630,7 +632,8 @@ def construct_vocabulary(data_folder, folders):
 
   # Generate
   print(
-      '\n--- Generating data pair dictionary from dual graphs and dump to files')
+      '\n--- Generating data pair dictionary from dual graphs and dump to files'
+  )
 
   for folder in folders:
 
@@ -651,8 +654,8 @@ def construct_vocabulary(data_folder, folders):
       # "In-context" dictionary
       base_filename = D_file[:-2]
       D_file_open = os.path.join(folder_Dfiles, D_file)
-      to_dump = os.path.join(folder_H, base_filename + "_H_dic_cw_" + str(
-          context_width) + '.p')
+      to_dump = os.path.join(
+          folder_H, base_filename + "_H_dic_cw_" + str(context_width) + '.p')
       if not os.path.exists(to_dump):
 
         # Load dual graph
@@ -681,8 +684,10 @@ def construct_vocabulary(data_folder, folders):
     # H dic dump files
     folder_H = folder + '_datasetprep_cw_' + str(context_width)
     H_files_ = os.listdir(folder_H + '/')
-    H_files = [Hf for Hf in H_files_ if
-               "_H_dic_cw_" + str(context_width) in Hf and Hf[-2:] == '.p']
+    H_files = [
+        Hf for Hf in H_files_
+        if "_H_dic_cw_" + str(context_width) in Hf and Hf[-2:] == '.p'
+    ]
     num_H_files = len(H_files)
 
     # Record files
@@ -709,8 +714,8 @@ def construct_vocabulary(data_folder, folders):
           H_dic = pickle.load(f)
 
         # Get pairs [target, context] from graph and write them to file
-        data_pairs = generate_data_pairs_from_H_dictionary(H_dic,
-                                                           subsample_threshold)
+        data_pairs = generate_data_pairs_from_H_dictionary(
+            H_dic, subsample_threshold)
         data_pairs_in_folder += len(data_pairs)
 
         print('writing to fixed-length file: ', file_rec)
@@ -725,8 +730,8 @@ def construct_vocabulary(data_folder, folders):
 
             # Print progress ever so often
             if counter % 10e5 == 0 and counter != 0:
-              print('wrote pairs: {:>10,d} / {:>10,d} ...'.format(counter,
-                                                                  num_pairs))
+              print('wrote pairs: {:>10,d} / {:>10,d} ...'.format(
+                  counter, num_pairs))
 
             # Write and increment counter
             rec.write(struct.pack('II', int(p[0]), int(p[1])))

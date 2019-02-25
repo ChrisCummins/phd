@@ -20,7 +20,6 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import generator_pb2_grpc
 
-
 FLAGS = flags.FLAGS
 
 
@@ -37,7 +36,8 @@ def ClgenInstanceToGenerator(
 class ClgenGenerator(generator.GeneratorServiceBase,
                      generator_pb2_grpc.GeneratorServiceServicer):
 
-  def __init__(self, config: generator_pb2.ClgenGenerator,
+  def __init__(self,
+               config: generator_pb2.ClgenGenerator,
                no_init: bool = False):
     """
 
@@ -73,8 +73,8 @@ class ClgenGenerator(generator.GeneratorServiceBase,
     with self.instance.Session():
       num_programs = math.ceil(
           request.num_testcases / len(self.config.testcase_skeleton))
-      for i, sample_ in enumerate(self.instance.model.Sample(
-          self.instance.sampler, num_programs)):
+      for i, sample_ in enumerate(
+          self.instance.model.Sample(self.instance.sampler, num_programs)):
         logging.info('Generated sample %d.', i + 1)
         response.testcases.extend(self.SampleToTestcases(sample_))
 
@@ -82,8 +82,8 @@ class ClgenGenerator(generator.GeneratorServiceBase,
     sys.stdout.flush()
     return response
 
-  def SampleToTestcases(self, sample_: model_pb2.Sample) -> typing.List[
-    deepsmith_pb2.Testcase]:
+  def SampleToTestcases(
+      self, sample_: model_pb2.Sample) -> typing.List[deepsmith_pb2.Testcase]:
     """Convert a CLgen sample to a list of DeepSmith testcase protos."""
     testcases = []
     for skeleton in self.config.testcase_skeleton:

@@ -15,7 +15,6 @@ from deeplearning.deeptune.opencl.adversary import \
 from gpu.oclgrind import oclgrind
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 # The number of tests to run.
@@ -23,26 +22,21 @@ FLAGS = flags.FLAGS
 FUZZ_TEST_COUNT = 10
 
 KERNELS = np.array([
-  """\
+    """\
 kernel void A(const int a) { 
   int b = a; 
-}""",
-  """\
+}""", """\
 kernel void A(global int * a) {
-}""",
-  """\
+}""", """\
 kernel void C(global int * a, const float b) {
-}""",
-  """\
+}""", """\
 kernel void AA() {
-}""",
-  """\
+}""", """\
 kernel void A(const int a, global int * b) {
   if (get_global_id(0) < a) {
     b[get_global_id(0)] += 1;
   }
-}""",
-  """\
+}""", """\
 kernel void A(int a, const __global float4* b, __global float4* c, __global float4* d, __global float4* e) {
   unsigned int f = get_local_id(0);
   unsigned int g = get_group_id(0);
@@ -86,8 +80,7 @@ kernel void A(int a, const __global float4* b, __global float4* c, __global floa
   
   if (f == 0)
     c[g] = d[0];
-}""",
-  """\
+}""", """\
 __kernel void A(__global float* a, __global float* b, __global float* c, int d, int e, int f) {
   int g = get_global_id(0);
   int h = get_global_id(1);
@@ -116,15 +109,15 @@ def test_GenerateDeadcodeMutations_fuzz_test_batch(i: int):
   del i  # unused
 
   # Select random parameters for test.
-  kernels = [random.choice(KERNELS)] + [
-    k for k in KERNELS if random.random() < .5]
+  kernels = [random.choice(KERNELS)
+            ] + [k for k in KERNELS if random.random() < .5]
   seed = random.randint(0, 1e9)
   num_permutations_of_kernel = random.randint(1, 5)
   num_mutations_per_kernel_min = random.randint(1, 5)
   num_mutations_per_kernel_max = (
       num_mutations_per_kernel_min + random.randint(1, 5))
-  num_mutations_per_kernel = (
-    num_mutations_per_kernel_min, num_mutations_per_kernel_max)
+  num_mutations_per_kernel = (num_mutations_per_kernel_min,
+                              num_mutations_per_kernel_max)
 
   logging.info(
       'num_kernels=%d, seed=%d, num_permutations_of_kernel=%d, '
@@ -133,7 +126,8 @@ def test_GenerateDeadcodeMutations_fuzz_test_batch(i: int):
 
   # Generate a batch of mutations.
   generator = dci.GenerateDeadcodeMutations(
-      kernels=kernels, rand=np.random.RandomState(seed),
+      kernels=kernels,
+      rand=np.random.RandomState(seed),
       num_permutations_of_kernel=num_permutations_of_kernel,
       num_mutations_per_kernel=num_mutations_per_kernel)
 
@@ -142,9 +136,9 @@ def test_GenerateDeadcodeMutations_fuzz_test_batch(i: int):
 
     # Create a DeepSmith testcase for the mutated kernel.
     testcase = deepsmith_pb2.Testcase(inputs={
-      'lsize': '1,1,1',
-      'gsize': '1,1,1',
-      'src': mutated_kernel,
+        'lsize': '1,1,1',
+        'gsize': '1,1,1',
+        'src': mutated_kernel,
     })
 
     # Make a driver for the testcase.

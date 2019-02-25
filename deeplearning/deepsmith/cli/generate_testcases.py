@@ -11,23 +11,18 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import generator_pb2_grpc
 
-
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string(
-    'datastore_config', None,
-    'Path to a DataStore message.')
-flags.DEFINE_string(
-    'generator_config', None,
-    'Path to a ClgenGenerator message.')
+flags.DEFINE_string('datastore_config', None, 'Path to a DataStore message.')
+flags.DEFINE_string('generator_config', None,
+                    'Path to a ClgenGenerator message.')
 flags.DEFINE_integer(
     'target_total_testcases', -1,
     'The number of testcases to generate. Testcases already in the datastore '
     'contribute towards this total. If --target_total_testcases is negative, '
     'testcases are generated indefinitely.')
-flags.DEFINE_integer(
-    'generator_batch_size', 1000,
-    'The number of testcases to generate in each batch.')
+flags.DEFINE_integer('generator_batch_size', 1000,
+                     'The number of testcases to generate in each batch.')
 
 
 def GetGeneratorCapabilities(
@@ -69,9 +64,8 @@ def GenerateTestcases(
   return response.testcases
 
 
-def SubmitTestcases(
-    datastore_stub: datastore_pb2_grpc.DataStoreServiceStub,
-    testcases: typing.List[deepsmith_pb2.Testcase]) -> None:
+def SubmitTestcases(datastore_stub: datastore_pb2_grpc.DataStoreServiceStub,
+                    testcases: typing.List[deepsmith_pb2.Testcase]) -> None:
   request = services.BuildDefaultRequest(datastore_pb2.SubmitTestcasesRequest)
   request.testcases.extend(testcases)
   response = datastore_stub.SubmitTestcases(request)
@@ -83,8 +77,8 @@ def main(argv):
     raise app.UsageError('Unrecognized arguments')
   if FLAGS.generator_batch_size <= 0:
     raise app.UsageError('--generator_batch_size must be positive')
-  datastore_config = services.ServiceConfigFromFlag(
-      'datastore_config', datastore_pb2.DataStore())
+  datastore_config = services.ServiceConfigFromFlag('datastore_config',
+                                                    datastore_pb2.DataStore())
   generator_config = services.ServiceConfigFromFlag(
       'generator_config', generator_pb2.ClgenGenerator())
 
@@ -98,8 +92,8 @@ def main(argv):
   capabilities = GetGeneratorCapabilities(generator_stub)
 
   while True:
-    num_testcases = GetNumberOfTestcasesInDataStore(
-        datastore_stub, capabilities)
+    num_testcases = GetNumberOfTestcasesInDataStore(datastore_stub,
+                                                    capabilities)
     logging.info(f'Number of testcases in datastore: %d', num_testcases)
     if 0 <= target_total_testcases <= num_testcases:
       logging.info('Stopping generation with %d testcases in the DataStore.',
@@ -108,8 +102,8 @@ def main(argv):
 
     num_to_generate = generator_batch_size
     if target_total_testcases >= 0:
-      num_to_generate = min(
-          generator_batch_size, target_total_testcases - num_testcases)
+      num_to_generate = min(generator_batch_size,
+                            target_total_testcases - num_testcases)
 
     testcases = GenerateTestcases(generator_stub, num_to_generate)
     SubmitTestcases(datastore_stub, testcases)

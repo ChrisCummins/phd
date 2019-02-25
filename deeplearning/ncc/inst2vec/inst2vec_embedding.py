@@ -40,7 +40,6 @@ from tensorflow.python.client import timeline
 from deeplearning.ncc.inst2vec import inst2vec_evaluate as i2v_eval
 from deeplearning.ncc.inst2vec import inst2vec_utils as i2v_utils
 
-
 FLAGS = flags.FLAGS
 
 
@@ -104,11 +103,9 @@ def print_neighbors(op, examples, top_k, reverse_dictionary):
 # Training embeddings
 ########################################################################################################################
 def train_skip_gram(V, data_folder, data_folders, dataset_size,
-                    reverse_dictionary,
-                    param, valid_examples, log_dir, vocab_metada_file,
-                    embeddings_pickle,
-                    ckpt_saver_file, ckpt_saver_file_init,
-                    ckpt_saver_file_final,
+                    reverse_dictionary, param, valid_examples, log_dir,
+                    vocab_metada_file, embeddings_pickle, ckpt_saver_file,
+                    ckpt_saver_file_init, ckpt_saver_file_final,
                     restore_variables):
   """
   Train embeddings (Skip-Gram model)
@@ -166,8 +163,9 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
   with tf.name_scope("Reader") as scope:
 
     random.shuffle(data_files)
-    dataset_raw = tf.data.FixedLengthRecordDataset(filenames=data_files,
-                                                   record_bytes=8)  # <TFRecordDataset shapes: (), types: tf.string>
+    dataset_raw = tf.data.FixedLengthRecordDataset(
+        filenames=data_files,
+        record_bytes=8)  # <TFRecordDataset shapes: (), types: tf.string>
     dataset = dataset_raw.map(record_parser)
     dataset = dataset.shuffle(int(1e5))
     dataset_batched = dataset.apply(
@@ -175,29 +173,30 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
     dataset_batched = dataset_batched.prefetch(int(100000000))
     iterator = dataset_batched.make_initializable_iterator()
     saveable_iterator = tf.contrib.data.make_saveable_from_iterator(iterator)
-    next_batch = iterator.get_next()  # Tensor("Shape:0", shape=(2,), dtype=int32)
+    next_batch = iterator.get_next(
+    )  # Tensor("Shape:0", shape=(2,), dtype=int32)
 
   ####################################################################################################################
   # Tensorflow computational graph
   # Placeholders for inputs
   with tf.name_scope("Input_Data") as scope:
     train_inputs = next_batch[:, 0]
-    train_labels = tf.reshape(next_batch[:, 1], shape=[mini_batch_size, 1],
-                              name="training_labels")
+    train_labels = tf.reshape(
+        next_batch[:, 1], shape=[mini_batch_size, 1], name="training_labels")
 
   # (input) Embedding matrix
   with tf.name_scope("Input_Layer") as scope:
-    W_in = tf.Variable(tf.random_uniform([V, N], -1.0, 1.0),
-                       name="input-embeddings")
+    W_in = tf.Variable(
+        tf.random_uniform([V, N], -1.0, 1.0), name="input-embeddings")
 
     # Look up the vector representing each source word in the batch (fetches rows of the embedding matrix)
-    h = tf.nn.embedding_lookup(W_in, train_inputs,
-                               name="input_embedding_vectors")
+    h = tf.nn.embedding_lookup(
+        W_in, train_inputs, name="input_embedding_vectors")
 
   # Normalized embedding matrix
   with tf.name_scope("Embeddings_Normalized") as scope:
-    normalized_embeddings = tf.nn.l2_normalize(W_in,
-                                               name="embeddings_normalized")
+    normalized_embeddings = tf.nn.l2_normalize(
+        W_in, name="embeddings_normalized")
 
   # (output) Embedding matrix ("output weights")
   with tf.name_scope("Output_Layer") as scope:
@@ -219,15 +218,16 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
     if FLAGS.softmax:
       logits = tf.layers.dense(inputs=h, units=V)
       onehot = tf.one_hot(train_labels, V)
-      loss_tensor = tf.nn.softmax_cross_entropy_with_logits_v2(labels=onehot,
-                                                               logits=logits)
+      loss_tensor = tf.nn.softmax_cross_entropy_with_logits_v2(
+          labels=onehot, logits=logits)
     else:
-      loss_tensor = tf.nn.nce_loss(weights=W_out,
-                                   biases=b_out,
-                                   labels=train_labels,
-                                   inputs=h,
-                                   num_sampled=num_sampled,
-                                   num_classes=V)
+      loss_tensor = tf.nn.nce_loss(
+          weights=W_out,
+          biases=b_out,
+          labels=train_labels,
+          inputs=h,
+          num_sampled=num_sampled,
+          num_classes=V)
     train_loss = tf.reduce_mean(loss_tensor, name="nce_loss")
 
     # Regularization (optional)
@@ -244,35 +244,33 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
 
     # Optimizer
     if FLAGS.optimizer == 'adam':
-      optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(
-          loss)
+      optimizer = tf.train.AdamOptimizer(
+          learning_rate=learning_rate).minimize(loss)
     elif FLAGS.optimizer == 'nadam':
       optimizer = tf.contrib.opt.NadamOptimizer(
           learning_rate=learning_rate).minimize(loss)
     elif FLAGS.optimizer == 'momentum':
-      global_train_step = tf.Variable(0, trainable=False, dtype=tf.int32,
-                                      name="global_step")
+      global_train_step = tf.Variable(
+          0, trainable=False, dtype=tf.int32, name="global_step")
       # Passing global_step to minimize() will increment it at each step.
-      optimizer = (
-        tf.train.MomentumOptimizer(learning_rate, 0.9).minimize(loss,
-                                                                global_step=global_train_step)
-      )
+      optimizer = (tf.train.MomentumOptimizer(learning_rate, 0.9).minimize(
+          loss, global_step=global_train_step))
     else:
       raise ValueError('Unrecognized optimizer ' + FLAGS.optimizer)
 
   if FLAGS.optimizer != 'momentum':
-    global_train_step = tf.Variable(0, trainable=False, dtype=tf.int32,
-                                    name="global_step")
+    global_train_step = tf.Variable(
+        0, trainable=False, dtype=tf.int32, name="global_step")
 
   ####################################################################################################################
   # Validation block
   with tf.name_scope("Validation_Block") as scope:
-    valid_dataset = tf.constant(valid_examples, dtype=tf.int32,
-                                name="validation_data_size")
+    valid_dataset = tf.constant(
+        valid_examples, dtype=tf.int32, name="validation_data_size")
     valid_embeddings = tf.nn.embedding_lookup(normalized_embeddings,
                                               valid_dataset)
-    cosine_similarity = tf.matmul(valid_embeddings, normalized_embeddings,
-                                  transpose_b=True)
+    cosine_similarity = tf.matmul(
+        valid_embeddings, normalized_embeddings, transpose_b=True)
 
   ####################################################################################################################
   # Summaries
@@ -282,8 +280,8 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
     tf.summary.histogram("output_embeddings", W_out)
     tf.summary.scalar("nce_loss", loss)
 
-    analogy_score_tensor = tf.Variable(0, trainable=False, dtype=tf.int32,
-                                       name="analogy_score")
+    analogy_score_tensor = tf.Variable(
+        0, trainable=False, dtype=tf.int32, name="analogy_score")
     tf.summary.scalar("analogy_score", analogy_score_tensor)
 
   ####################################################################################################################
@@ -299,8 +297,10 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
     # Add TensorBoard components
     writer = tf.summary.FileWriter(log_dir)  # create summary writer
     writer.add_graph(sess.graph)
-    gvars = [gvar for gvar in tf.global_variables() if
-             'analogy_score' not in gvar.name]
+    gvars = [
+        gvar for gvar in tf.global_variables()
+        if 'analogy_score' not in gvar.name
+    ]
     saver = tf.train.Saver(gvars, max_to_keep=5)  # create checkpoint saver
     config = projector.ProjectorConfig()  # create projector config
     embedding = config.embeddings.add()  # add embeddings visualizer
@@ -323,8 +323,8 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
 
       graph_saver = tf.train.Saver(allow_empty=True)
       init.run()
-      graph_saver.save(sess, ckpt_saver_file_init, global_step=0,
-                       write_meta_graph=True)
+      graph_saver.save(
+          sess, ckpt_saver_file_init, global_step=0, write_meta_graph=True)
       tf.add_to_collection(tf.GraphKeys.SAVEABLE_OBJECTS, saveable_iterator)
       print("\tVariables initialized in TensorFlow")
 
@@ -344,8 +344,9 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
 
       # If restoring a previous training session, set the right training epoch
       if restore_variables and not restore_completed:
-        epoch = int(math.floor(
-            global_train_step.eval() / (dataset_size / mini_batch_size)))
+        epoch = int(
+            math.floor(
+                global_train_step.eval() / (dataset_size / mini_batch_size)))
         global_step = global_train_step.eval()
         print('Starting from epoch', epoch)
 
@@ -375,22 +376,23 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
                 [optimizer, loss, train_loss, global_train_step],
                 options=options,
                 run_metadata=metadata)
-            assert not np.isnan(loss_val), "Loss at step " + str(
-                step) + " is nan"
-            assert not np.isinf(loss_val), "Loss at step " + str(
-                step) + " is inf"
+            assert not np.isnan(
+                loss_val), "Loss at step " + str(step) + " is nan"
+            assert not np.isinf(
+                loss_val), "Loss at step " + str(step) + " is inf"
             avg_loss += loss_val
 
             if step > 0:
               avg_loss /= step_print_loss
 
-            analogy_score = i2v_eval.evaluate_analogies(W_in.eval(),
-                                                        reverse_dictionary,
-                                                        analogies,
-                                                        analogy_types,
-                                                        analogy_evaluation_file,
-                                                        session=sess,
-                                                        print=i2v_eval.nop)
+            analogy_score = i2v_eval.evaluate_analogies(
+                W_in.eval(),
+                reverse_dictionary,
+                analogies,
+                analogy_types,
+                analogy_evaluation_file,
+                session=sess,
+                print=i2v_eval.nop)
             total_analogy_score = sum([a[0] for a in analogy_score])
             analogy_score_tensor.assign(
                 total_analogy_score).eval()  # for tf.summary
@@ -400,15 +402,16 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
             if FLAGS.savebest is not None:
               filelist = [f for f in os.listdir(FLAGS.savebest)]
               scorelist = [int(s.split('-')[1]) for s in filelist]
-              if len(scorelist) == 0 or total_analogy_score > sorted(scorelist)[
-                -1]:
-                i2v_utils.safe_pickle(W_in_val,
-                                      FLAGS.savebest + '/' + 'score-' +
-                                      str(total_analogy_score) + '-w.p')
+              if len(scorelist
+                    ) == 0 or total_analogy_score > sorted(scorelist)[-1]:
+                i2v_utils.safe_pickle(
+                    W_in_val, FLAGS.savebest + '/' + 'score-' +
+                    str(total_analogy_score) + '-w.p')
 
             # Display average loss
             print(
-                '{} Avg. loss at epoch {:>6,d}, step {:>12,d} of {:>12,d}, global step {:>15} : {:>12.3f}, analogies: {})'.format(
+                '{} Avg. loss at epoch {:>6,d}, step {:>12,d} of {:>12,d}, global step {:>15} : {:>12.3f}, analogies: {})'
+                .format(
                     str(datetime.now()), epoch, step, num_steps, global_step,
                     avg_loss, str(analogy_score)))
             avg_loss = 0
@@ -417,8 +420,11 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
             i2v_utils.safe_pickle(W_in_val, embeddings_pickle)
 
             # Write to TensorBoard
-            saver.save(sess, ckpt_saver_file, global_step=global_step,
-                       write_meta_graph=False)
+            saver.save(
+                sess,
+                ckpt_saver_file,
+                global_step=global_step,
+                write_meta_graph=False)
             writer.add_summary(summary, global_step=global_step)
 
             if FLAGS.profile:
@@ -436,9 +442,11 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
 
           # Compute and print nearest neighbors every x steps
           if step_print_neighbors > 0 and step % int(step_print_neighbors) == 0:
-            print_neighbors(op=cosine_similarity, examples=valid_examples,
-                            top_k=6,
-                            reverse_dictionary=reverse_dictionary)
+            print_neighbors(
+                op=cosine_similarity,
+                examples=valid_examples,
+                top_k=6,
+                reverse_dictionary=reverse_dictionary)
 
           # Update loop index (steps in epoch)
           step += 1
@@ -456,8 +464,11 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
     # End of training:
     # Print the nearest neighbors at the end of the run
     if step_print_neighbors == -1:
-      print_neighbors(op=cosine_similarity, examples=valid_examples, top_k=6,
-                      reverse_dictionary=reverse_dictionary)
+      print_neighbors(
+          op=cosine_similarity,
+          examples=valid_examples,
+          top_k=6,
+          reverse_dictionary=reverse_dictionary)
 
     # Save state of training and close the TensorBoard summary writer
     save_path = saver.save(sess, ckpt_saver_file_final, global_step)
@@ -499,7 +510,8 @@ def train_embeddings(data_folder, data_folders):
   data_pair_files = get_data_pair_files(data_folders, context_width)
   for data_pair_file in data_pair_files:
     filesize_bytes = os.path.getsize(
-        data_pair_file)  # num pairs = filesize_bytes / 2 (pairs) / 4 (32-bit integers)
+        data_pair_file
+    )  # num pairs = filesize_bytes / 2 (pairs) / 4 (32-bit integers)
     file_pairs = int(filesize_bytes / 8)
     num_data_pairs += file_pairs
     out_ = '\t{:<60}: {:>12,d} pairs'.format(data_pair_file, file_pairs)
@@ -580,24 +592,22 @@ def train_embeddings(data_folder, data_folders):
   ckpt_saver_file_init = os.path.join(log_dir, "inst2vec-init.ckpt")
   ckpt_saver_file_final = os.path.join(log_dir, "inst2vec-final.ckpt")
   os.makedirs(os.path.dirname(vocab_metada_file), exist_ok=True)
-  subprocess.call('cp ' + vocab_metada_file_ + ' ' + vocab_metada_file,
-                  shell=True)
+  subprocess.call(
+      'cp ' + vocab_metada_file_ + ' ' + vocab_metada_file, shell=True)
 
   # Train the embeddings (Skip-Gram model)
   print('\n--- Setup completed, starting to train the embeddings')
-  folder_embeddings = os.path.join(outfolder, 'emb_cw_' + str(
-      context_width) + '_embeddings')
+  folder_embeddings = os.path.join(
+      outfolder, 'emb_cw_' + str(context_width) + '_embeddings')
   if not os.path.exists(folder_embeddings):
     os.makedirs(folder_embeddings)
   embeddings_pickle = os.path.join(folder_embeddings,
                                    "emb_" + file_signature + ".p")
-  embeddings = train_skip_gram(vocabulary_size, data_folder, data_folders,
-                               num_data_pairs, reverse_dictionary,
-                               param, valid_examples, log_dir,
-                               v_metadata_file_name, embeddings_pickle,
-                               ckpt_saver_file, ckpt_saver_file_init,
-                               ckpt_saver_file_final,
-                               restore_tf_variables_from_ckpt)
+  embeddings = train_skip_gram(
+      vocabulary_size, data_folder, data_folders, num_data_pairs,
+      reverse_dictionary, param, valid_examples, log_dir, v_metadata_file_name,
+      embeddings_pickle, ckpt_saver_file, ckpt_saver_file_init,
+      ckpt_saver_file_final, restore_tf_variables_from_ckpt)
 
   # Save the embeddings and dictionaries in an external file to be reused later
   print('\n\tWriting embeddings to file', embeddings_pickle)
@@ -607,7 +617,12 @@ def train_embeddings(data_folder, data_folders):
   embeddings_csv = os.path.join(folder_embeddings,
                                 "emb_" + file_signature + ".csv")
   print('\t Writing embeddings to file ', embeddings_csv)
-  np.savetxt(embeddings_csv, embeddings, delimiter=',',
-             header='Embeddings matrix, rows correspond to the embedding vector of statements')
+  np.savetxt(
+      embeddings_csv,
+      embeddings,
+      delimiter=',',
+      header=
+      'Embeddings matrix, rows correspond to the embedding vector of statements'
+  )
 
   return embeddings, embeddings_pickle

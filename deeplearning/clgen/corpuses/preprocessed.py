@@ -40,7 +40,6 @@ from deeplearning.clgen.proto import internal_pb2
 from labm8 import fs
 from labm8 import sqlutil
 
-
 FLAGS = flags.FLAGS
 
 Base = declarative.declarative_base()
@@ -79,8 +78,8 @@ class PreprocessedContentFile(Base):
   # is that summing this column provides an accurate total of the actual time
   # spent pre-processing an entire corpus. Will be <= preprocess_time_ms.
   wall_time_ms: int = sql.Column(sql.Integer, nullable=False)
-  date_added: datetime.datetime = sql.Column(sql.DateTime, nullable=False,
-                                             default=datetime.datetime.utcnow)
+  date_added: datetime.datetime = sql.Column(
+      sql.DateTime, nullable=False, default=datetime.datetime.utcnow)
 
   @property
   def input_sha256_hex(self) -> str:
@@ -163,8 +162,7 @@ class PreprocessedContentFiles(sqlutil.Database):
           func.sum(PreprocessedContentFile.linecount),
       ).filter(PreprocessedContentFile.preprocessing_succeeded == True).first()
     logging.info('Content files: %s chars, %s lines, %s files.',
-                 humanize.intcomma(input_chars),
-                 humanize.intcomma(input_lines),
+                 humanize.intcomma(input_chars), humanize.intcomma(input_lines),
                  humanize.intcomma(num_input_files))
     logging.info('Pre-processed %s files in %s ms (%.2fx speedup).',
                  num_input_files, humanize.intcomma(total_walltime),
@@ -185,29 +183,29 @@ class PreprocessedContentFiles(sqlutil.Database):
   def SetDone(self, session: sqlutil.Session):
     session.add(Meta(key='done', value='yes'))
 
-  def Import(self, session: sqlutil.Session,
-             config: corpus_pb2.Corpus) -> None:
+  def Import(self, session: sqlutil.Session, config: corpus_pb2.Corpus) -> None:
     with self.GetContentFileRoot(config) as contentfile_root:
       relpaths = set(self.GetImportRelpaths(contentfile_root))
       done = set(
           [x[0] for x in session.query(PreprocessedContentFile.input_relpath)])
       todo = relpaths - done
       logging.info('Preprocessing %s of %s content files',
-                   humanize.intcomma(len(todo)),
-                   humanize.intcomma(len(relpaths)))
+                   humanize.intcomma(len(todo)), humanize.intcomma(
+                       len(relpaths)))
       jobs = [
-        internal_pb2.PreprocessorWorker(
-            contentfile_root=str(contentfile_root),
-            relpath=t, preprocessors=config.preprocessor)
-        for t in todo]
+          internal_pb2.PreprocessorWorker(
+              contentfile_root=str(contentfile_root),
+              relpath=t,
+              preprocessors=config.preprocessor) for t in todo
+      ]
       pool = multiprocessing.Pool()
       bar = progressbar.ProgressBar(max_value=len(jobs))
       last_commit = time.time()
       wall_time_start = time.time()
       for preprocessed_cf in bar(pool.imap_unordered(PreprocessorWorker, jobs)):
         wall_time_end = time.time()
-        preprocessed_cf.wall_time_ms = (
-          int((wall_time_end - wall_time_start) * 1000))
+        preprocessed_cf.wall_time_ms = (int(
+            (wall_time_end - wall_time_start) * 1000))
         wall_time_start = wall_time_end
         session.add(preprocessed_cf)
         if wall_time_end - last_commit > 10:
@@ -233,8 +231,10 @@ class PreprocessedContentFiles(sqlutil.Database):
     elif config.HasField('local_tar_archive'):
       with tempfile.TemporaryDirectory(prefix='clgen_corpus_') as d:
         start_time = time.time()
-        cmd = ['tar', '-xf', str(ExpandConfigPath(config.local_tar_archive)),
-               '-C', d]
+        cmd = [
+            'tar', '-xf',
+            str(ExpandConfigPath(config.local_tar_archive)), '-C', d
+        ]
         subprocess.check_call(cmd)
         logging.info('Unpacked %s in %s ms',
                      ExpandConfigPath(config.local_tar_archive).name,
@@ -251,8 +251,7 @@ class PreprocessedContentFiles(sqlutil.Database):
     """
     with self.Session() as session:
       return session.query(PreprocessedContentFile).filter(
-          PreprocessedContentFile.preprocessing_succeeded == True
-      ).count()
+          PreprocessedContentFile.preprocessing_succeeded == True).count()
 
   @property
   def input_size(self) -> int:
@@ -271,8 +270,7 @@ class PreprocessedContentFiles(sqlutil.Database):
     """
     with self.Session() as session:
       return session.query(func.sum(PreprocessedContentFile.charcount)).filter(
-          PreprocessedContentFile.preprocessing_succeeded == True
-      ).scalar()
+          PreprocessedContentFile.preprocessing_succeeded == True).scalar()
 
   @property
   def line_count(self) -> int:
@@ -282,25 +280,24 @@ class PreprocessedContentFiles(sqlutil.Database):
     """
     with self.Session() as session:
       return session.query(func.sum(PreprocessedContentFile.linecount)).filter(
-          PreprocessedContentFile.preprocessing_succeeded == True
-      ).scalar()
+          PreprocessedContentFile.preprocessing_succeeded == True).scalar()
 
   @property
   def input_char_count(self) -> int:
     """Get the total number of characters in the input content files."""
     with self.Session() as session:
-      return session.query(
-          func.sum(PreprocessedContentFile.input_charcount)).scalar()
+      return session.query(func.sum(
+          PreprocessedContentFile.input_charcount)).scalar()
 
   @property
   def input_line_count(self) -> int:
     """Get the total number of characters in the input content files."""
     with self.Session() as session:
-      return session.query(
-          func.sum(PreprocessedContentFile.input_linecount)).scalar()
+      return session.query(func.sum(
+          PreprocessedContentFile.input_linecount)).scalar()
 
-  def GetImportRelpaths(
-      self, contentfile_root: pathlib.Path) -> typing.List[str]:
+  def GetImportRelpaths(self,
+                        contentfile_root: pathlib.Path) -> typing.List[str]:
     """Get relative paths to all files in the content files directory.
 
     Args:
@@ -313,8 +310,8 @@ class PreprocessedContentFiles(sqlutil.Database):
       EmptyCorpusException: If the content files directory is empty.
     """
     with fs.chdir(contentfile_root):
-      find_output = subprocess.check_output(['find', '.', '-type', 'f']).decode(
-          'utf-8').strip()
+      find_output = subprocess.check_output(['find', '.', '-type',
+                                             'f']).decode('utf-8').strip()
       if not find_output:
         raise errors.EmptyCorpusException(
             f"Empty content files directory: '{contentfile_root}'")

@@ -26,7 +26,6 @@ from deeplearning.clgen.preprocessors import normalizer
 from deeplearning.clgen.preprocessors import public
 from labm8 import bazelutil
 
-
 FLAGS = flags.FLAGS
 
 _UNAME = 'mac' if sys.platform == 'darwin' else 'linux'
@@ -42,16 +41,16 @@ C_COMMENT_RE = re.compile(
 #   bazel-phd/bazel-out/*-py3-opt/bin/deeplearning/clgen/preprocessors/\
 #     cxx_test.runfiles/llvm_mac/bin/clang -xc++ -E - -v
 CLANG_ARGS = [
-  '-xc++', '-isystem', str(LIBCXX_HEADERS), '-isystem', '/usr/local/include',
-  '-isystem', str(CLANG_HEADERS), '-isystem', '/usr/include',
-  '-Wno-ignored-pragmas', '-ferror-limit=1',
-  '-Wno-implicit-function-declaration',
-  '-Wno-incompatible-library-redeclaration', '-Wno-macro-redefined',
-  '-Wno-unused-parameter', '-Wno-long-long', '-Wcovered-switch-default',
-  '-Wdelete-non-virtual-dtor', '-Wstring-conversion',
-  '-DLLVM_BUILD_GLOBAL_ISEL', '-D__STDC_CONSTANT_MACROS',
-  '-D__STDC_FORMAT_MACROS', '-D__STDC_LIMIT_MACROS',
-  '-D_LIBCPP_HAS_C_ATOMIC_IMP'
+    '-xc++', '-isystem',
+    str(LIBCXX_HEADERS), '-isystem', '/usr/local/include', '-isystem',
+    str(CLANG_HEADERS), '-isystem', '/usr/include', '-Wno-ignored-pragmas',
+    '-ferror-limit=1', '-Wno-implicit-function-declaration',
+    '-Wno-incompatible-library-redeclaration', '-Wno-macro-redefined',
+    '-Wno-unused-parameter', '-Wno-long-long', '-Wcovered-switch-default',
+    '-Wdelete-non-virtual-dtor', '-Wstring-conversion',
+    '-DLLVM_BUILD_GLOBAL_ISEL', '-D__STDC_CONSTANT_MACROS',
+    '-D__STDC_FORMAT_MACROS', '-D__STDC_LIMIT_MACROS',
+    '-D_LIBCPP_HAS_C_ATOMIC_IMP'
 ]
 
 

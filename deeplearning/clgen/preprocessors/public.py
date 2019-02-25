@@ -19,7 +19,6 @@ from absl import flags
 
 from deeplearning.clgen import errors
 
-
 FLAGS = flags.FLAGS
 
 # Type hint for a preprocessor function. See @clgen_preprocess for details.

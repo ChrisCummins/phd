@@ -22,32 +22,34 @@ from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import preprocessors
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 # A full preprocessing pipeline for the C++ programming language.
-CXX_PREPROCESSORS = ['deeplearning.clgen.preprocessors.cxx:ClangPreprocess',
-                     'deeplearning.clgen.preprocessors.cxx:Compile',
-                     'deeplearning.clgen.preprocessors.cxx'
-                     ':NormalizeIdentifiers',
-                     'deeplearning.clgen.preprocessors.common'
-                     ':StripDuplicateEmptyLines',
-                     'deeplearning.clgen.preprocessors.common'
-                     ':MinimumLineCount3',
-                     'deeplearning.clgen.preprocessors.common'
-                     ':StripTrailingWhitespace',
-                     'deeplearning.clgen.preprocessors.cxx:ClangFormat', ]
+CXX_PREPROCESSORS = [
+    'deeplearning.clgen.preprocessors.cxx:ClangPreprocess',
+    'deeplearning.clgen.preprocessors.cxx:Compile',
+    'deeplearning.clgen.preprocessors.cxx'
+    ':NormalizeIdentifiers',
+    'deeplearning.clgen.preprocessors.common'
+    ':StripDuplicateEmptyLines',
+    'deeplearning.clgen.preprocessors.common'
+    ':MinimumLineCount3',
+    'deeplearning.clgen.preprocessors.common'
+    ':StripTrailingWhitespace',
+    'deeplearning.clgen.preprocessors.cxx:ClangFormat',
+]
 # A full preprocessing pipeline for the OpenCL programming language.
 OPENCL_PREPROCESSORS = [
-  'deeplearning.clgen.preprocessors.opencl:ClangPreprocessWithShim',
-  'deeplearning.clgen.preprocessors.opencl:Compile',
-  'deeplearning.clgen.preprocessors.opencl:NormalizeIdentifiers',
-  'deeplearning.clgen.preprocessors.opencl:StripDoubleUnderscorePrefixes',
-  'deeplearning.clgen.preprocessors.common:StripDuplicateEmptyLines',
-  'deeplearning.clgen.preprocessors.opencl:SanitizeKernelPrototype',
-  'deeplearning.clgen.preprocessors.common:StripTrailingWhitespace',
-  'deeplearning.clgen.preprocessors.opencl:ClangFormat',
-  'deeplearning.clgen.preprocessors.common:MinimumLineCount3', ]
+    'deeplearning.clgen.preprocessors.opencl:ClangPreprocessWithShim',
+    'deeplearning.clgen.preprocessors.opencl:Compile',
+    'deeplearning.clgen.preprocessors.opencl:NormalizeIdentifiers',
+    'deeplearning.clgen.preprocessors.opencl:StripDoubleUnderscorePrefixes',
+    'deeplearning.clgen.preprocessors.common:StripDuplicateEmptyLines',
+    'deeplearning.clgen.preprocessors.opencl:SanitizeKernelPrototype',
+    'deeplearning.clgen.preprocessors.common:StripTrailingWhitespace',
+    'deeplearning.clgen.preprocessors.opencl:ClangFormat',
+    'deeplearning.clgen.preprocessors.common:MinimumLineCount3',
+]
 
 
 def _PreprocessBenchmarkInnerLoop(preprocessors_: typing.List[str],

@@ -6,7 +6,6 @@ from deeplearning.deepsmith.generators import clgen_pretrained
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 
-
 FLAGS = flags.FLAGS
 
 

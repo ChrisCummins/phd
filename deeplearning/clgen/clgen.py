@@ -51,15 +51,11 @@ from deeplearning.clgen.proto import model_pb2
 from labm8 import pbutil
 from labm8 import prof
 
-
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string(
-    'config', None,
-    'Path to a clgen.Instance proto file.')
-flags.DEFINE_integer(
-    'min_samples', -1,
-    'The minimum number of samples to make.')
+flags.DEFINE_string('config', None, 'Path to a clgen.Instance proto file.')
+flags.DEFINE_integer('min_samples', -1,
+                     'The minimum number of samples to make.')
 flags.DEFINE_string(
     'stop_after', None,
     'Stop CLgen early. Valid options are: "corpus", or "train".')
@@ -67,9 +63,8 @@ flags.DEFINE_string(
     'print_cache_path', None,
     'Print the directory of a cache and exit. Valid options are: "corpus", '
     '"model", or "sampler".')
-flags.DEFINE_bool(
-    'print_preprocessed', False,
-    'Print the pre-processed corpus to stdout and exit.')
+flags.DEFINE_bool('print_preprocessed', False,
+                  'Print the pre-processed corpus to stdout and exit.')
 flags.DEFINE_string(
     'export_model', None,
     'Path to export a trained TensorFlow model to. This exports all of the '
@@ -79,9 +74,8 @@ flags.DEFINE_bool(
     'clgen_debug', False,
     'Enable a debugging mode of CLgen python runtime. When enabled, errors '
     'which may otherwise be caught lead to program crashes and stack traces.')
-flags.DEFINE_bool(
-    'clgen_profiling', False,
-    'Enable CLgen self profiling. Profiling results be logged.')
+flags.DEFINE_bool('clgen_profiling', False,
+                  'Enable CLgen self profiling. Profiling results be logged.')
 
 
 class Instance(object):
@@ -157,11 +151,13 @@ def Flush():
 
 def LogException(exception: Exception):
   """Log an error."""
-  logging.error(f"""\
+  logging.error(
+      f"""\
 %s (%s)
 
 Please report bugs at <https://github.com/ChrisCummins/phd/issues>\
-""", exception, type(exception).__name__)
+""", exception,
+      type(exception).__name__)
   sys.exit(1)
 
 
@@ -180,14 +176,16 @@ def LogExceptionWithStackTrace(exception: Exception):
   NUM_ROWS = 5  # number of rows in traceback
   trace = reversed(traceback.extract_tb(tb, limit=NUM_ROWS + 1)[1:])
   message = "\n".join(_msg(*r) for r in enumerate(trace))
-  logging.error("""\
+  logging.error(
+      """\
 %s (%s)
 
   stacktrace:
 %s
 
 Please report bugs at <https://github.com/ChrisCummins/phd/issues>\
-""", exception, type(exception).__name__, message)
+""", exception,
+      type(exception).__name__, message)
   sys.exit(1)
 
 
@@ -214,6 +212,7 @@ def RunWithErrorHandling(function_to_run: typing.Callable, *args,
     return function_to_run(*args, **kwargs)
 
   try:
+
     def RunContext():
       """Run the function with arguments."""
       return function_to_run(*args, **kwargs)
@@ -298,8 +297,8 @@ def DoFlagsAction():
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:
-    raise app.UsageError(
-        "Unrecognized command line options: '{}'".format(' '.join(argv[1:])))
+    raise app.UsageError("Unrecognized command line options: '{}'".format(
+        ' '.join(argv[1:])))
 
   RunWithErrorHandling(DoFlagsAction)
 

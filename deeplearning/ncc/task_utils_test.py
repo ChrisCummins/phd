@@ -9,7 +9,6 @@ from deeplearning.ncc import vocabulary
 from labm8 import bazelutil
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 VOCABULARY_PATH = bazelutil.DataPath(

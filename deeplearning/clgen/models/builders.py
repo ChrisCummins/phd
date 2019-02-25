@@ -19,7 +19,6 @@ from deeplearning.clgen import errors
 from deeplearning.clgen.proto import model_pb2
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 
 
@@ -51,27 +50,25 @@ def AssertIsBuildable(config: model_pb2.Model) -> model_pb2.Model:
     pbutil.AssertFieldConstraint(
         config.architecture, 'neurons_per_layer', lambda x: 0 < x,
         'NetworkArchitecture.neurons_per_layer must be > 0')
+    pbutil.AssertFieldConstraint(config.architecture,
+                                 'num_layers', lambda x: 0 < x,
+                                 'NetworkArchitecture.num_layers must be > 0')
     pbutil.AssertFieldConstraint(
-        config.architecture, 'num_layers', lambda x: 0 < x,
-        'NetworkArchitecture.num_layers must be > 0')
-    pbutil.AssertFieldConstraint(
-        config.architecture, 'post_layer_dropout_micros',
-        lambda x: 0 <= x <= 1000000,
+        config.architecture,
+        'post_layer_dropout_micros', lambda x: 0 <= x <= 1000000,
         'NetworkArchitecture.post_layer_dropout_micros '
         'must be >= 0 and <= 1000000')
-    pbutil.AssertFieldConstraint(
-        config.training, 'num_epochs', lambda x: 0 < x,
-        'TrainingOptions.num_epochs must be > 0')
-    pbutil.AssertFieldIsSet(
-        config.training, 'shuffle_corpus_contentfiles_between_epochs')
-    pbutil.AssertFieldConstraint(
-        config.training, 'batch_size', lambda x: 0 < x,
-        'TrainingOptions.batch_size must be > 0')
+    pbutil.AssertFieldConstraint(config.training, 'num_epochs', lambda x: 0 < x,
+                                 'TrainingOptions.num_epochs must be > 0')
+    pbutil.AssertFieldIsSet(config.training,
+                            'shuffle_corpus_contentfiles_between_epochs')
+    pbutil.AssertFieldConstraint(config.training, 'batch_size', lambda x: 0 < x,
+                                 'TrainingOptions.batch_size must be > 0')
     pbutil.AssertFieldIsSet(config.training, 'optimizer')
     if config.training.HasField('adam_optimizer'):
       pbutil.AssertFieldConstraint(
-          config.training.adam_optimizer, 'initial_learning_rate_micros',
-          lambda x: 0 <= x,
+          config.training.adam_optimizer,
+          'initial_learning_rate_micros', lambda x: 0 <= x,
           'AdamOptimizer.initial_learning_rate_micros must be >= 0')
       pbutil.AssertFieldConstraint(
           config.training.adam_optimizer,
@@ -91,8 +88,8 @@ def AssertIsBuildable(config: model_pb2.Model) -> model_pb2.Model:
           'AdamOptimizer.normalized_gradient_clip_micros must be >= 0')
     elif config.training.HasField('rmsprop_optimizer'):
       pbutil.AssertFieldConstraint(
-          config.training.rmsprop_optimizer, 'initial_learning_rate_micros',
-          lambda x: 0 <= x,
+          config.training.rmsprop_optimizer,
+          'initial_learning_rate_micros', lambda x: 0 <= x,
           'RmsPropOptimizer.initial_learning_rate_micros must be >= 0')
       pbutil.AssertFieldConstraint(
           config.training.rmsprop_optimizer,
@@ -140,7 +137,8 @@ def BuildOptimizer(config: model_pb2.Model) -> 'keras.optimizers.Optimizer':
     return keras.optimizers.RMSprop(
         lr=opt.initial_learning_rate_micros / 1e6,
         decay=opt.initial_learning_rate_micros / 1e6,
-        rho=0.9, epsilon=None,
+        rho=0.9,
+        epsilon=None,
     )
   else:
     raise errors.InternalError(
@@ -165,23 +163,29 @@ def BuildKerasModel(config: model_pb2.Model,
   dropout = (config.architecture.post_layer_dropout_micros or 0) / 1e6
   model = keras.models.Sequential()
   layer = {
-    model_pb2.NetworkArchitecture.LSTM: keras.layers.LSTM,
-    model_pb2.NetworkArchitecture.RNN: keras.layers.RNN,
-    model_pb2.NetworkArchitecture.GRU: keras.layers.GRU,
+      model_pb2.NetworkArchitecture.LSTM: keras.layers.LSTM,
+      model_pb2.NetworkArchitecture.RNN: keras.layers.RNN,
+      model_pb2.NetworkArchitecture.GRU: keras.layers.GRU,
   }[config.architecture.neuron_type]
 
   # The input layer.
-  model.add(keras.layers.Embedding(
-      vocabulary_size, config.architecture.embedding_size,
-      batch_input_shape=(config.training.batch_size,
-                         config.training.sequence_length)))
+  model.add(
+      keras.layers.Embedding(
+          vocabulary_size,
+          config.architecture.embedding_size,
+          batch_input_shape=(config.training.batch_size,
+                             config.training.sequence_length)))
   model.add(keras.layers.Dropout(dropout))
   # The recurrent network layers.
   for _ in range(config.architecture.num_layers):
-    model.add(layer(config.architecture.neurons_per_layer,
-                    return_sequences=True, stateful=True))
+    model.add(
+        layer(
+            config.architecture.neurons_per_layer,
+            return_sequences=True,
+            stateful=True))
     model.add(keras.layers.Dropout(dropout))
   # The output layer.
-  model.add(keras.layers.TimeDistributed(
-      keras.layers.Dense(vocabulary_size, activation='softmax')))
+  model.add(
+      keras.layers.TimeDistributed(
+          keras.layers.Dense(vocabulary_size, activation='softmax')))
   return model

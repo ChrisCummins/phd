@@ -36,11 +36,8 @@ from absl import logging
 
 from deeplearning.ncc import vocabulary
 
-
 # Embedding and vocabulary file paths
-flags.DEFINE_string(
-    'embeddings_file', None,
-    'Path to the embeddings file')
+flags.DEFINE_string('embeddings_file', None, 'Path to the embeddings file')
 
 FLAGS = flags.FLAGS
 
@@ -70,14 +67,14 @@ def download_and_unzip(url, dataset_name, data_folder):
 def ReadEmbeddingFile(path: pathlib.Path) -> np.ndarray:
   """Load embedding matrix from file"""
   if not path.is_file():
-    raise app.UsageError(
-        f"Embedding file not found: '{path}'")
+    raise app.UsageError(f"Embedding file not found: '{path}'")
   logging.info('Loading pre-trained embeddings from %s', path)
   with open(path, 'rb') as f:
     embedding_matrix = pickle.load(f)
   vocabulary_size, embedding_dimension = embedding_matrix.shape
-  logging.info('Loaded pre-trained embeddings with vocabulary size: %d and '
-               'embedding dimension: %d', vocabulary_size, embedding_dimension)
+  logging.info(
+      'Loaded pre-trained embeddings with vocabulary size: %d and '
+      'embedding dimension: %d', vocabulary_size, embedding_dimension)
   return embedding_matrix
 
 
@@ -171,10 +168,10 @@ def CreateSeqDirFromIr(folder_ir: str,
         result = vocab.EncodeLlvmBytecode(file)
 
         # Write to csv
-        file_name_csv = os.path.join(
-            seq_folder, file_names[i][:-3] + '_seq.csv')
-        file_name_rec = os.path.join(
-            seq_folder, file_names[i][:-3] + '_seq.rec')
+        file_name_csv = os.path.join(seq_folder,
+                                     file_names[i][:-3] + '_seq.csv')
+        file_name_rec = os.path.join(seq_folder,
+                                     file_names[i][:-3] + '_seq.rec')
         with open(file_name_csv, 'w') as csv, open(file_name_rec, 'wb') as rec:
           for ind in result.encoded:
             csv.write(str(ind) + '\n')

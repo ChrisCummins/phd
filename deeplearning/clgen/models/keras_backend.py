@@ -29,7 +29,6 @@ from deeplearning.clgen.models import builders
 from deeplearning.clgen.models import data_generators
 from labm8 import logutil
 
-
 FLAGS = flags.FLAGS
 
 
@@ -80,8 +79,9 @@ class KerasBackend(backends.BackendBase):
     model = builders.BuildKerasModel(self.config, self.atomizer.vocab_size)
     with open(self.cache.keypath('model.yaml'), 'w') as f:
       f.write(model.to_yaml())
-    model.compile(loss='categorical_crossentropy',
-                  optimizer=builders.BuildOptimizer(self.config))
+    model.compile(
+        loss='categorical_crossentropy',
+        optimizer=builders.BuildOptimizer(self.config))
 
     # Print a model summary.
     buf = io.StringIO()
@@ -103,8 +103,8 @@ class KerasBackend(backends.BackendBase):
 
     if not (self.cache.path / 'embeddings' / 'metadata.tsv').is_file():
       with open(self.cache.path / 'embeddings' / 'metadata.tsv', 'w') as f:
-        for _, token in sorted(self.atomizer.decoder.items(),
-                               key=lambda x: x[0]):
+        for _, token in sorted(
+            self.atomizer.decoder.items(), key=lambda x: x[0]):
           f.write(Escape(token) + '\n')
 
     target_num_epochs = self.config.training.num_epochs
@@ -133,30 +133,39 @@ class KerasBackend(backends.BackendBase):
         model.load_weights(epoch_checkpoints[-1])
 
       callbacks = [
-        keras.callbacks.ModelCheckpoint(
-            str(self.cache.path / 'checkpoints' / '{epoch:03d}.hdf5'),
-            verbose=1, mode="min", save_best_only=False),
-        keras.callbacks.TensorBoard(
-            str(self.cache.path / 'embeddings'), write_graph=True,
-            embeddings_freq=1, embeddings_metadata={
-              'embedding_1': str(
-                  self.cache.path / 'embeddings' / 'metadata.tsv'),
-            }),
-        telemetry.TrainingLogger(self.cache.path / 'logs').KerasCallback(keras),
+          keras.callbacks.ModelCheckpoint(
+              str(self.cache.path / 'checkpoints' / '{epoch:03d}.hdf5'),
+              verbose=1,
+              mode="min",
+              save_best_only=False),
+          keras.callbacks.TensorBoard(
+              str(self.cache.path / 'embeddings'),
+              write_graph=True,
+              embeddings_freq=1,
+              embeddings_metadata={
+                  'embedding_1':
+                  str(self.cache.path / 'embeddings' / 'metadata.tsv'),
+              }),
+          telemetry.TrainingLogger(
+              self.cache.path / 'logs').KerasCallback(keras),
       ]
 
       generator = data_generators.AutoGenerator(corpus, self.config.training)
       steps_per_epoch = (corpus.encoded.token_count - 1) // (
           self.config.training.batch_size *
           self.config.training.sequence_length)
-      logging.info('Step counts: %s per epoch, %s left to do, %s total',
-                   humanize.intcomma(steps_per_epoch),
-                   humanize.intcomma((target_num_epochs - starting_epoch) *
-                                     steps_per_epoch),
-                   humanize.intcomma(target_num_epochs * steps_per_epoch))
+      logging.info(
+          'Step counts: %s per epoch, %s left to do, %s total',
+          humanize.intcomma(steps_per_epoch),
+          humanize.intcomma(
+              (target_num_epochs - starting_epoch) * steps_per_epoch),
+          humanize.intcomma(target_num_epochs * steps_per_epoch))
       model.fit_generator(
-          generator, steps_per_epoch=steps_per_epoch, callbacks=callbacks,
-          initial_epoch=starting_epoch, epochs=target_num_epochs)
+          generator,
+          steps_per_epoch=steps_per_epoch,
+          callbacks=callbacks,
+          initial_epoch=starting_epoch,
+          epochs=target_num_epochs)
     return model
 
   def GetInferenceModel(self) -> typing.Tuple['keras.models.Sequential', int]:
@@ -187,7 +196,8 @@ class KerasBackend(backends.BackendBase):
     self._inference_batch_size = batch_size
     return inference_model, batch_size
 
-  def InitSampling(self, sampler: samplers.Sampler,
+  def InitSampling(self,
+                   sampler: samplers.Sampler,
                    seed: typing.Optional[int] = None) -> int:
     self.inference_model, batch_size = self.GetInferenceModel()
     if seed is not None:
@@ -211,8 +221,7 @@ class KerasBackend(backends.BackendBase):
     probabilities = self.inference_model.predict(x)
     # Output shape: (batch_size, 1, vocab_size).
     self.inference_indices = [
-      WeightedPick(p.squeeze(), sampler.temperature)
-      for p in probabilities
+        WeightedPick(p.squeeze(), sampler.temperature) for p in probabilities
     ]
     return self.inference_indices
 
@@ -236,8 +245,10 @@ class KerasBackend(backends.BackendBase):
       A list of paths.
     """
     checkpoint_dir = pathlib.Path(self.cache.path) / 'checkpoints'
-    return [checkpoint_dir / x for x in
-            sorted(pathlib.Path(self.cache['checkpoints']).iterdir())]
+    return [
+        checkpoint_dir / x
+        for x in sorted(pathlib.Path(self.cache['checkpoints']).iterdir())
+    ]
 
   @property
   def is_trained(self) -> bool:

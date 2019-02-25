@@ -22,7 +22,6 @@ from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import normalizer
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -76,7 +75,8 @@ def test_NormalizeIdentifiers_empty_c_file():
 
 def test_NormalizeIdentifiers_small_c_program():
   """Test the output of a small program."""
-  assert normalizer.NormalizeIdentifiers("""
+  assert normalizer.NormalizeIdentifiers(
+      """
 int main(int argc, char** argv) {}
 """, '.c', []) == """
 int A(int a, char** b) {}
@@ -85,7 +85,8 @@ int A(int a, char** b) {}
 
 def test_NormalizeIdentifiers_variable_names_function_scope():
   """Test that variable name sequence reset for each function."""
-  assert normalizer.NormalizeIdentifiers("""
+  assert normalizer.NormalizeIdentifiers(
+      """
 int foo(int bar, int car) { int blah = bar; }
 int foobar(int hello, int bar) { int test = bar; }
 """, '.c', []) == """
@@ -96,7 +97,8 @@ int B(int a, int b) { int c = b; }
 
 def test_NormalizeIdentifiers_small_cl_program():
   """Test the output of a small OpenCL program."""
-  assert normalizer.NormalizeIdentifiers("""
+  assert normalizer.NormalizeIdentifiers(
+      """
 kernel void foo(global int* bar) {}
 """, '.cl', []) == """
 kernel void A(global int* a) {}
@@ -110,7 +112,8 @@ def test_NormalizeIdentifiers_c_syntax_error():
 
 def test_NormalizeIdentifiers_printf_not_rewritten():
   """Test that a call to printf is not rewritten."""
-  assert normalizer.NormalizeIdentifiers("""
+  assert normalizer.NormalizeIdentifiers(
+      """
 #include <stdio.h>
 
 int main(int argc, char** argv) {
@@ -129,7 +132,8 @@ int A(int a, char** b) {
 
 def test_NormalizeIdentifiers_undefined_not_rewritten():
   """Test that undefined functions and variables are not rewritten."""
-  assert normalizer.NormalizeIdentifiers("""
+  assert normalizer.NormalizeIdentifiers(
+      """
 void main(int argc, char** argv) {
   undefined_function(undefined_variable);
 }
@@ -142,9 +146,11 @@ void A(int a, char** b) {
 
 # Benchmarks.
 
+
 def test_benchmark_NormalizeIdentifiers_c_hello_world(benchmark):
   """Benchmark NormalizeIdentifiers for a "hello world" C program."""
-  benchmark(normalizer.NormalizeIdentifiers, """
+  benchmark(
+      normalizer.NormalizeIdentifiers, """
 #include <stdio.h>
 
 int main(int argc, char** argv) {

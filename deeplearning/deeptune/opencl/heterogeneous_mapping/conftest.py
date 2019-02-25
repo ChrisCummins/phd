@@ -30,8 +30,8 @@ def classify_df(full_df: pd.DataFrame) -> pd.DataFrame:
 @pytest.fixture(scope='function')
 def classify_df_atomizer(classify_df: pd.DataFrame) -> pd.DataFrame:
   """A test fixture which yields an atomizer for the entire dataset."""
-  yield atomizers.AsciiCharacterAtomizer.FromText(
-      '\n'.join(classify_df['program:opencl_src'].values))
+  yield atomizers.AsciiCharacterAtomizer.FromText('\n'.join(
+      classify_df['program:opencl_src'].values))
 
 
 @pytest.fixture(scope='function')

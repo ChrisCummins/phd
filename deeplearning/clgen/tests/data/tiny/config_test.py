@@ -31,8 +31,9 @@ def test_config_is_valid():
         clgen_pb2.Instance())
     # Change the working directory and corpus path to our bazel run dir.
     config.working_dir = d
-    config.model.corpus.local_directory = str(bazelutil.DataPath(
-        'phd/deeplearning/clgen/tests/data/tiny/corpus.tar.bz2'))
+    config.model.corpus.local_directory = str(
+        bazelutil.DataPath(
+            'phd/deeplearning/clgen/tests/data/tiny/corpus.tar.bz2'))
     clgen.Instance(config)
 
 

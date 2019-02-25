@@ -31,25 +31,28 @@ import zipfile
 import wget
 from absl import logging
 
-
 # Datasets and their URLs.
 DATASETS = {
-  'AMD': 'https://polybox.ethz.ch/index.php/s/SaKQ9L7dGs9zJXK/download',
-  'BLAS': 'https://polybox.ethz.ch/index.php/s/5ASMNv6dYsPKjyQ/download',
-  'Eigen': 'https://polybox.ethz.ch/index.php/s/52wWiK5fjRGHLJR/download',
-  'gemm_synthetic': 'https://polybox.ethz.ch/index.php/s/Bm6cwAY3eVkR6v3/download',
-  'linux': 'https://polybox.ethz.ch/index.php/s/uxAAONROj1Id65y/download',
-  'opencv': 'https://polybox.ethz.ch/index.php/s/KnWjolzAL2xxKWN/download',
-  'polybenchGPU': 'https://polybox.ethz.ch/index.php/s/nomO17gdAfHjqFQ/download',
-  'rodinia_3': 'https://polybox.ethz.ch/index.php/s/J93jGpevs0lHsHM/download',
-  'shoc': 'https://polybox.ethz.ch/index.php/s/7KGEq1Q45Xg0IeL/download',
-  'stencil_synthetic': 'https://polybox.ethz.ch/index.php/s/OOmylxGcBxQM1D3/download',
-  'tensorflow': 'https://polybox.ethz.ch/index.php/s/ojd0RPFOtUTPPRr/download',
+    'AMD': 'https://polybox.ethz.ch/index.php/s/SaKQ9L7dGs9zJXK/download',
+    'BLAS': 'https://polybox.ethz.ch/index.php/s/5ASMNv6dYsPKjyQ/download',
+    'Eigen': 'https://polybox.ethz.ch/index.php/s/52wWiK5fjRGHLJR/download',
+    'gemm_synthetic':
+    'https://polybox.ethz.ch/index.php/s/Bm6cwAY3eVkR6v3/download',
+    'linux': 'https://polybox.ethz.ch/index.php/s/uxAAONROj1Id65y/download',
+    'opencv': 'https://polybox.ethz.ch/index.php/s/KnWjolzAL2xxKWN/download',
+    'polybenchGPU':
+    'https://polybox.ethz.ch/index.php/s/nomO17gdAfHjqFQ/download',
+    'rodinia_3': 'https://polybox.ethz.ch/index.php/s/J93jGpevs0lHsHM/download',
+    'shoc': 'https://polybox.ethz.ch/index.php/s/7KGEq1Q45Xg0IeL/download',
+    'stencil_synthetic':
+    'https://polybox.ethz.ch/index.php/s/OOmylxGcBxQM1D3/download',
+    'tensorflow':
+    'https://polybox.ethz.ch/index.php/s/ojd0RPFOtUTPPRr/download',
 }
 
 
-def DownloadDatasets(
-    data_folder, urls: typing.Optional[typing.List[str]] = None):
+def DownloadDatasets(data_folder,
+                     urls: typing.Optional[typing.List[str]] = None):
   """Download and unzip training data for inst2vec
 
   Args:
@@ -67,8 +70,7 @@ def DownloadDatasets(
     shutil.rmtree(os.path.join(data_folder, '__MACOSX'))
 
 
-def DownloadAndUnzip(url, data_folder,
-                     delete_after_download: bool = True):
+def DownloadAndUnzip(url, data_folder, delete_after_download: bool = True):
   """Download and unzip data set folder from url.
 
   Args:

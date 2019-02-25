@@ -9,7 +9,6 @@ from deeplearning.deepsmith import datastore
 from deeplearning.deepsmith import db
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 
 

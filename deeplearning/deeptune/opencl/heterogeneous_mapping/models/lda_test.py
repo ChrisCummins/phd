@@ -9,7 +9,6 @@ from deeplearning.deeptune.opencl.heterogeneous_mapping.models import testlib
 from experimental.compilers.reachability import llvm_util
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -99,79 +98,102 @@ def test_Lda_GraphToInputTarget_input_graph_node_features(
     g: llvm_util.LlvmControlFlowGraph):
   """Test input graph node features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
-      {'y_1hot': np.array([0, 1]), 'target_gpu_name': 'a',
-       'feature:a:transfer_norm': .1, 'param:a:wgsize_norm': 0.5}, g)
+      {
+          'y_1hot': np.array([0, 1]),
+          'target_gpu_name': 'a',
+          'feature:a:transfer_norm': .1,
+          'param:a:wgsize_norm': 0.5
+      }, g)
 
   # Each feature vector is a concatenation of [entry, exit, inst2vec]
-  np.testing.assert_array_almost_equal(
-      input_graph.nodes[0]['features'], np.array([1, 0, 1, 2, 3]))
-  np.testing.assert_array_almost_equal(
-      input_graph.nodes[1]['features'], np.array([0, 0, 4, 5, 6]))
-  np.testing.assert_array_almost_equal(
-      input_graph.nodes[2]['features'], np.array([0, 1, 7, 8, 9]))
+  np.testing.assert_array_almost_equal(input_graph.nodes[0]['features'],
+                                       np.array([1, 0, 1, 2, 3]))
+  np.testing.assert_array_almost_equal(input_graph.nodes[1]['features'],
+                                       np.array([0, 0, 4, 5, 6]))
+  np.testing.assert_array_almost_equal(input_graph.nodes[2]['features'],
+                                       np.array([0, 1, 7, 8, 9]))
 
 
 def test_Lda_GraphToInputTarget_target_graph_node_features(
     g: llvm_util.LlvmControlFlowGraph):
   """Test target graph node features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
-      {'y_1hot': np.array([0, 1]), 'target_gpu_name': 'a',
-       'feature:a:transfer_norm': .1, 'param:a:wgsize_norm': 0.5}, g)
+      {
+          'y_1hot': np.array([0, 1]),
+          'target_gpu_name': 'a',
+          'feature:a:transfer_norm': .1,
+          'param:a:wgsize_norm': 0.5
+      }, g)
 
-  np.testing.assert_array_almost_equal(
-      target_graph.nodes[0]['features'], np.ones(1))
-  np.testing.assert_array_almost_equal(
-      target_graph.nodes[1]['features'], np.ones(1))
-  np.testing.assert_array_almost_equal(
-      target_graph.nodes[2]['features'], np.ones(1))
+  np.testing.assert_array_almost_equal(target_graph.nodes[0]['features'],
+                                       np.ones(1))
+  np.testing.assert_array_almost_equal(target_graph.nodes[1]['features'],
+                                       np.ones(1))
+  np.testing.assert_array_almost_equal(target_graph.nodes[2]['features'],
+                                       np.ones(1))
 
 
 def test_Lda_GraphToInputTarget_input_graph_edge_features(
     g: llvm_util.LlvmControlFlowGraph):
   """Test input graph edge features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
-      {'y_1hot': np.array([0, 1]), 'target_gpu_name': 'a',
-       'feature:a:transfer_norm': .1, 'param:a:wgsize_norm': 0.5}, g)
+      {
+          'y_1hot': np.array([0, 1]),
+          'target_gpu_name': 'a',
+          'feature:a:transfer_norm': .1,
+          'param:a:wgsize_norm': 0.5
+      }, g)
 
-  np.testing.assert_array_almost_equal(
-      input_graph.edges[0, 1]['features'], np.ones(1))
-  np.testing.assert_array_almost_equal(
-      input_graph.edges[1, 2]['features'], np.ones(1))
+  np.testing.assert_array_almost_equal(input_graph.edges[0, 1]['features'],
+                                       np.ones(1))
+  np.testing.assert_array_almost_equal(input_graph.edges[1, 2]['features'],
+                                       np.ones(1))
 
 
 def test_Lda_GraphToInputTarget_target_graph_edge_features(
     g: llvm_util.LlvmControlFlowGraph):
   """Test target graph edge features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
-      {'y_1hot': np.array([0, 1]), 'target_gpu_name': 'a',
-       'feature:a:transfer_norm': .1, 'param:a:wgsize_norm': 0.5}, g)
+      {
+          'y_1hot': np.array([0, 1]),
+          'target_gpu_name': 'a',
+          'feature:a:transfer_norm': .1,
+          'param:a:wgsize_norm': 0.5
+      }, g)
 
-  np.testing.assert_array_almost_equal(
-      target_graph.edges[0, 1]['features'], np.ones(1))
-  np.testing.assert_array_almost_equal(
-      target_graph.edges[1, 2]['features'], np.ones(1))
+  np.testing.assert_array_almost_equal(target_graph.edges[0, 1]['features'],
+                                       np.ones(1))
+  np.testing.assert_array_almost_equal(target_graph.edges[1, 2]['features'],
+                                       np.ones(1))
 
 
 def test_Lda_GraphToInputTarget_input_graph_global_features(
     g: llvm_util.LlvmControlFlowGraph):
   """Test input graph global features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
-      {'y_1hot': np.array([0, 1]), 'target_gpu_name': 'a',
-       'feature:a:transfer_norm': .1, 'param:a:wgsize_norm': 0.5}, g)
+      {
+          'y_1hot': np.array([0, 1]),
+          'target_gpu_name': 'a',
+          'feature:a:transfer_norm': .1,
+          'param:a:wgsize_norm': 0.5
+      }, g)
 
-  np.testing.assert_array_almost_equal(
-      input_graph.graph['features'], [.1, .5])
+  np.testing.assert_array_almost_equal(input_graph.graph['features'], [.1, .5])
 
 
 def test_Lda_GraphToInputTarget_target_graph_global_features(
     g: llvm_util.LlvmControlFlowGraph):
   """Test target graph global features."""
   input_graph, target_graph = lda.Lda.GraphToInputTarget(
-      {'y_1hot': np.array([0, 1]), 'target_gpu_name': 'a',
-       'feature:a:transfer_norm': .1, 'param:a:wgsize_norm': 0.5}, g)
+      {
+          'y_1hot': np.array([0, 1]),
+          'target_gpu_name': 'a',
+          'feature:a:transfer_norm': .1,
+          'param:a:wgsize_norm': 0.5
+      }, g)
 
-  np.testing.assert_array_almost_equal(
-      target_graph.graph['features'], np.array([0, 1]))
+  np.testing.assert_array_almost_equal(target_graph.graph['features'],
+                                       np.array([0, 1]))
 
 
 def test_Lda_GraphsToInputTargets_node_features_shape(
@@ -183,7 +205,7 @@ def test_Lda_GraphsToInputTargets_node_features_shape(
           model.ExtractGraphs(lda.SetNormalizedColumns(single_program_df)))))
   assert len(input_graphs) == 1
   assert input_graphs[0].nodes[0]['features'].shape == (
-    model.embedding_dim + 2,)
+      model.embedding_dim + 2,)
   assert target_graphs[0].nodes[0]['features'].shape == (1,)
 
 
@@ -241,8 +263,8 @@ def test_Lda_GraphsToInputTargets_global_features_dtype(
 
 def test_model(classify_df, classify_df_atomizer):
   """Run common model tests."""
-  testlib.HeterogeneousMappingModelTest(
-      lda.Lda, classify_df, classify_df_atomizer, {})
+  testlib.HeterogeneousMappingModelTest(lda.Lda, classify_df,
+                                        classify_df_atomizer, {})
 
 
 if __name__ == '__main__':

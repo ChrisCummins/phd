@@ -22,7 +22,6 @@ from deeplearning.clgen.preprocessors import preprocessors
 from deeplearning.clgen.preprocessors import public
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -53,6 +52,7 @@ def MockUndecoratedPreprocessor(text: str) -> str:
 
 
 # GetPreprocessFunction() tests.
+
 
 def test_GetPreprocessFunction_empty_string():
   """Test that an UserError is raised if no preprocessor is given."""
@@ -111,25 +111,29 @@ def test_Preprocess_mock_preprocessor_bad_code():
   """Test that BadCodeException is propagated."""
   with pytest.raises(errors.BadCodeException):
     preprocessors.Preprocess('', [
-      'deeplearning.clgen.preprocessors.preprocessors_test'
-      ':MockPreprocessorBadCode'])
+        'deeplearning.clgen.preprocessors.preprocessors_test'
+        ':MockPreprocessorBadCode'
+    ])
 
 
 def test_Preprocess_mock_preprocessor_internal_error():
   """Test that InternalError is propagated."""
   with pytest.raises(errors.InternalError):
     preprocessors.Preprocess('', [
-      'deeplearning.clgen.preprocessors.preprocessors_test'
-      ':MockPreprocessorInternalError'])
+        'deeplearning.clgen.preprocessors.preprocessors_test'
+        ':MockPreprocessorInternalError'
+    ])
 
 
 # Benchmarks.
 
+
 def test_benchmark_GetPreprocessFunction_mock(benchmark):
   """Benchmark GetPreprocessFunction."""
-  benchmark(preprocessors.GetPreprocessorFunction,
-            'deeplearning.clgen.preprocessors.preprocessors_test'
-            ':MockPreprocessor')
+  benchmark(
+      preprocessors.GetPreprocessorFunction,
+      'deeplearning.clgen.preprocessors.preprocessors_test'
+      ':MockPreprocessor')
 
 
 if __name__ == '__main__':

@@ -14,7 +14,6 @@ from labm8 import labdate
 from labm8 import pbutil
 from labm8.sqlutil import GetOrAdd
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_bool('sql_echo', None, 'Print all executed SQL statements')
@@ -49,6 +48,7 @@ class InvalidInputError(ValueError):
 
 
 class StringTooLongError(ValueError):
+
   def __init__(self, column_name: str, string: str, max_len: int):
     self.column_name = column_name
     self.string = string
@@ -58,8 +58,8 @@ class StringTooLongError(ValueError):
     n = len(self.max_len)
     s = self.string[:20]
     return (f'String "{s}..." too long for "{self.column_name}". ' + f'Max '
-                                                                     f'length: '
-                                                                     f'{self.max_len}, actual length: {n}. ')
+            f'length: '
+            f'{self.max_len}, actual length: {n}. ')
 
 
 class Table(Base):
@@ -183,7 +183,8 @@ class StringTable(Table):
   # MySQL maximum key length is 3072 bytes, with 3 bytes per character.
   string: str = sql.Column(
       sql.String(4096).with_variant(sql.String(3072 // 3), 'mysql'),
-      nullable=False, unique=True)
+      nullable=False,
+      unique=True)
 
   # The maximum number of characters in the string column.
   maxlen = string.type.length
@@ -248,8 +249,9 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
     if config.sqlite.inmemory:
       url = 'sqlite://'
     else:
-      path = pathlib.Path(pbutil.RaiseIfNotSet(config.sqlite, 'path',
-                                               InvalidDatabaseConfig)).absolute()
+      path = pathlib.Path(
+          pbutil.RaiseIfNotSet(config.sqlite, 'path',
+                               InvalidDatabaseConfig)).absolute()
       if not config.create_database_if_not_exist and not path.is_file():
         raise DatabaseDoesNotExist()
       path.parent.mkdir(parents=True, exist_ok=True)
@@ -272,7 +274,8 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
     engine = sql.create_engine(url_base)
     query = engine.execute(
         sql.text('SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE '
-                 'SCHEMA_NAME = :database'), database=database)
+                 'SCHEMA_NAME = :database'),
+        database=database)
     if not query.first():
       if config.create_database_if_not_exist:
         # We can't use sql.text() escaping here becuase it uses singlequotes

@@ -40,7 +40,6 @@ from labm8 import lockfile
 from labm8 import logutil
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_bool(
@@ -89,9 +88,10 @@ class Model(object):
     # Create symlink to encoded corpus.
     symlink = self.cache.path / 'corpus'
     if not symlink.is_symlink():
-      os.symlink(os.path.relpath(
-          pathlib.Path(self.corpus.encoded.url[len('sqlite:///'):]).parent,
-          self.cache.path), symlink)
+      os.symlink(
+          os.path.relpath(
+              pathlib.Path(self.corpus.encoded.url[len('sqlite:///'):]).parent,
+              self.cache.path), symlink)
 
     # Create symlink to the atomizer.
     symlink = self.cache.path / 'atomizer'
@@ -101,8 +101,8 @@ class Model(object):
 
     # Validate metadata against cache.
     if self.cache.get('META.pbtxt'):
-      cached_meta = pbutil.FromFile(pathlib.Path(self.cache['META.pbtxt']),
-                                    internal_pb2.ModelMeta())
+      cached_meta = pbutil.FromFile(
+          pathlib.Path(self.cache['META.pbtxt']), internal_pb2.ModelMeta())
       # Exclude num_epochs and corpus location from metadata comparison.
       config_to_compare = model_pb2.Model()
       config_to_compare.CopyFrom(self.config)
@@ -124,8 +124,9 @@ class Model(object):
       self._WriteMetafile()
 
     self.backend = {
-      model_pb2.NetworkArchitecture.TENSORFLOW: tensorflow_backend.TensorFlowBackend,
-      model_pb2.NetworkArchitecture.KERAS: keras_backend.KerasBackend,
+        model_pb2.NetworkArchitecture.TENSORFLOW:
+        tensorflow_backend.TensorFlowBackend,
+        model_pb2.NetworkArchitecture.KERAS: keras_backend.KerasBackend,
     }[config.architecture.backend](self.config, self.cache, self.corpus)
 
   @staticmethod
@@ -150,8 +151,7 @@ class Model(object):
     config_to_hash.CopyFrom(config)
     config_to_hash.ClearField('corpus')
     config_to_hash.training.ClearField('num_epochs')
-    return crypto.sha1_list(corpus_.hash,
-                            config_to_hash.SerializeToString())
+    return crypto.sha1_list(corpus_.hash, config_to_hash.SerializeToString())
 
   def Train(self) -> 'Model':
     """Train the model.
@@ -175,9 +175,10 @@ class Model(object):
                  humanize.naturaldelta(total_time_ms / 1000))
     return self
 
-  def Sample(
-      self, sampler: samplers.Sampler, min_num_samples: int,
-      seed: int = None) -> typing.List[model_pb2.Sample]:
+  def Sample(self,
+             sampler: samplers.Sampler,
+             min_num_samples: int,
+             seed: int = None) -> typing.List[model_pb2.Sample]:
     """Sample a model.
 
     If the model is not already trained, calling Sample() first trains the
@@ -209,8 +210,8 @@ class Model(object):
 
     sample_count = 1
     self.SamplerCache(sampler).mkdir(exist_ok=True)
-    with logutil.TeeLogsToFile(
-        f'sampler_{sampler.hash}', self.cache.path / 'logs'):
+    with logutil.TeeLogsToFile(f'sampler_{sampler.hash}',
+                               self.cache.path / 'logs'):
       logging.info("Sampling: '%s'", sampler.start_text)
       if min_num_samples < 0:
         logging.warning(
@@ -228,8 +229,8 @@ class Model(object):
       # as we want.
       while True:
         samples_in_progress = [
-          sampler.tokenized_start_text.copy()
-          for _ in range(batch_size)]
+            sampler.tokenized_start_text.copy() for _ in range(batch_size)
+        ]
         done = np.zeros(batch_size, dtype=np.bool)
         start_time = labdate.MillisecondsTimestamp()
         wall_time_start = start_time
@@ -283,9 +284,10 @@ class Model(object):
 
     return samples
 
-  def SampleFast(
-      self, sampler: samplers.Sampler, min_num_samples: int,
-      seed: int = None) -> typing.List[model_pb2.Sample]:
+  def SampleFast(self,
+                 sampler: samplers.Sampler,
+                 min_num_samples: int,
+                 seed: int = None) -> typing.List[model_pb2.Sample]:
     """Sample a model.
 
     Same as Sample(), but without printing or caching samples. Because samples
@@ -316,8 +318,8 @@ class Model(object):
     self.Train()
 
     sample_count = 1
-    with logutil.TeeLogsToFile(
-        f'sampler_{sampler.hash}', self.cache.path / 'logs'):
+    with logutil.TeeLogsToFile(f'sampler_{sampler.hash}',
+                               self.cache.path / 'logs'):
       logging.info("Sampling: '%s'", sampler.start_text)
       sample_start_time = labdate.MillisecondsTimestamp()
       atomizer = self.corpus.atomizer
@@ -329,8 +331,8 @@ class Model(object):
       # as we want.
       while True:
         samples_in_progress = [
-          sampler.tokenized_start_text.copy()
-          for _ in range(batch_size)]
+            sampler.tokenized_start_text.copy() for _ in range(batch_size)
+        ]
         done = np.zeros(batch_size, dtype=np.bool)
         start_time = labdate.MillisecondsTimestamp()
         wall_time_start = start_time
@@ -372,8 +374,7 @@ class Model(object):
           logging.info(
               'Produced %s samples at a rate of %s ms / sample.',
               humanize.intcomma(len(samples)),
-              humanize.intcomma(
-                  int((now - sample_start_time) / len(samples))))
+              humanize.intcomma(int((now - sample_start_time) / len(samples))))
           break
 
     return samples
@@ -404,9 +405,9 @@ class Model(object):
       A list of absolute paths.
     """
     return sorted([
-                    self.cache.path / 'atomizer',
-                    self.cache.path / 'META.pbtxt',
-                  ] + self.backend.InferenceManifest())
+        self.cache.path / 'atomizer',
+        self.cache.path / 'META.pbtxt',
+    ] + self.backend.InferenceManifest())
 
   @property
   def atomizer(self) -> atomizers.AtomizerBase:

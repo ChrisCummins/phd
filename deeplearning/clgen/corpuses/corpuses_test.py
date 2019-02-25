@@ -26,35 +26,35 @@ from deeplearning.clgen.corpuses import preprocessed
 from deeplearning.clgen.proto import corpus_pb2
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 # The Corpus.hash for an OpenCL corpus of the abc_corpus.
 ABC_CORPUS_HASH = 'cb7c7a23c433a1f628c9b120378759f1723fdf42'
 
-
 # ExpandConfigPath() tests.
+
 
 def test_ExpandConfigPath_pwd_var_expansion():
   assert corpuses.ExpandConfigPath('$PWD/') == pathlib.Path(os.getcwd())
 
 
 def test_ExpandConfigPath_home_var_expansion():
-  assert (corpuses.ExpandConfigPath('$HOME/foo') ==
-          pathlib.Path('~/foo').expanduser())
+  assert (corpuses.ExpandConfigPath('$HOME/foo') == pathlib.Path(
+      '~/foo').expanduser())
 
 
 def test_ExpandConfigPath_tilde_expansion():
-  assert (corpuses.ExpandConfigPath('~/foo') ==
-          pathlib.Path('~/foo').expanduser())
+  assert (
+      corpuses.ExpandConfigPath('~/foo') == pathlib.Path('~/foo').expanduser())
 
 
 def test_ExpandConfigPath_path_prefix():
-  assert (corpuses.ExpandConfigPath('foo/bar', path_prefix='/tmp/') ==
-          pathlib.Path('/tmp/foo/bar'))
+  assert (corpuses.ExpandConfigPath(
+      'foo/bar', path_prefix='/tmp/') == pathlib.Path('/tmp/foo/bar'))
 
 
 # Corpus() tests.
+
 
 def test_Corpus_config_type_error():
   """Test that a TypeError is raised if config is not a Sampler proto."""
@@ -275,15 +275,15 @@ kernel void foo(global int* a) {
 }
 """)
   abc_corpus_config.preprocessor[:] = [
-    'deeplearning.clgen.preprocessors.opencl:ClangPreprocessWithShim',
-    'deeplearning.clgen.preprocessors.opencl:Compile',
-    'deeplearning.clgen.preprocessors.opencl:NormalizeIdentifiers',
-    'deeplearning.clgen.preprocessors.opencl:StripDoubleUnderscorePrefixes',
-    'deeplearning.clgen.preprocessors.common:StripDuplicateEmptyLines',
-    'deeplearning.clgen.preprocessors.opencl:SanitizeKernelPrototype',
-    'deeplearning.clgen.preprocessors.common:StripTrailingWhitespace',
-    'deeplearning.clgen.preprocessors.cxx:ClangFormat',
-    'deeplearning.clgen.preprocessors.common:MinimumLineCount3',
+      'deeplearning.clgen.preprocessors.opencl:ClangPreprocessWithShim',
+      'deeplearning.clgen.preprocessors.opencl:Compile',
+      'deeplearning.clgen.preprocessors.opencl:NormalizeIdentifiers',
+      'deeplearning.clgen.preprocessors.opencl:StripDoubleUnderscorePrefixes',
+      'deeplearning.clgen.preprocessors.common:StripDuplicateEmptyLines',
+      'deeplearning.clgen.preprocessors.opencl:SanitizeKernelPrototype',
+      'deeplearning.clgen.preprocessors.common:StripTrailingWhitespace',
+      'deeplearning.clgen.preprocessors.cxx:ClangFormat',
+      'deeplearning.clgen.preprocessors.common:MinimumLineCount3',
   ]
   c = corpuses.Corpus(abc_corpus_config)
   assert c.GetNumContentFiles() == 0
@@ -309,9 +309,11 @@ def test_Corpus_GetTextCorpus_no_shuffle(clgen_cache_dir, abc_corpus_config):
 def test_Corpus_GetTextCorpus_separator(clgen_cache_dir, abc_corpus):
   """Test the concatenation of the abc corpus with a custom separator."""
   del clgen_cache_dir
-  c = corpuses.Corpus(corpus_pb2.Corpus(local_directory=abc_corpus,
-                                        ascii_character_atomizer=True,
-                                        contentfile_separator='\n!!\n'))
+  c = corpuses.Corpus(
+      corpus_pb2.Corpus(
+          local_directory=abc_corpus,
+          ascii_character_atomizer=True,
+          contentfile_separator='\n!!\n'))
   c.Create()
   # We don't know the ordering of the text corpus.
   assert 'The cat sat on the mat.' in c.GetTextCorpus(shuffle=False)
@@ -340,9 +342,11 @@ def test_Corpus_GetTextCorpus_random_order(clgen_cache_dir, abc_corpus_config):
 def test_Corpus_GetTrainingData_decode(clgen_cache_dir, abc_corpus):
   """Test the decoded output of GetTrainingData()."""
   del clgen_cache_dir
-  c = corpuses.Corpus(corpus_pb2.Corpus(local_directory=abc_corpus,
-                                        ascii_character_atomizer=True,
-                                        contentfile_separator='\n!!\n'))
+  c = corpuses.Corpus(
+      corpus_pb2.Corpus(
+          local_directory=abc_corpus,
+          ascii_character_atomizer=True,
+          contentfile_separator='\n!!\n'))
   c.Create()
   decoded = c.atomizer.DeatomizeIndices(c.GetTrainingData(shuffle=False))
   # Test that each content file (plus contentfile separator) is in corpus.
@@ -350,8 +354,7 @@ def test_Corpus_GetTrainingData_decode(clgen_cache_dir, abc_corpus):
   assert 'Hello, world!\n!!\n' in decoded
   assert 'The cat sat on the mat.\n!!\n' in decoded
   # Test the total length of the corpus.
-  assert len('\nSuch corpus.\nVery wow.\n!!\n' +
-             'Hello, world!\n!!\n' +
+  assert len('\nSuch corpus.\nVery wow.\n!!\n' + 'Hello, world!\n!!\n' +
              'The cat sat on the mat.\n!!\n') == len(decoded)
 
 
@@ -360,10 +363,10 @@ def test_Corpus_preprocessed_symlink(clgen_cache_dir, abc_corpus_config):
   del clgen_cache_dir
   c = corpuses.Corpus(abc_corpus_config)
   c.Create()
-  assert (pathlib.Path(
-      c.encoded.url[len('sqlite:///'):]).parent / 'preprocessed').is_symlink()
-  path = (pathlib.Path(
-      c.encoded.url[len('sqlite:///'):]).parent / 'preprocessed').resolve()
+  assert (pathlib.Path(c.encoded.url[len('sqlite:///'):]).parent /
+          'preprocessed').is_symlink()
+  path = (pathlib.Path(c.encoded.url[len('sqlite:///'):]).parent /
+          'preprocessed').resolve()
   # We can't do a literal comparison because of bazel sandboxing.
   assert str(path).endswith(
       str(pathlib.Path(c.preprocessed.url[len('sqlite:///'):]).parent))

@@ -10,32 +10,27 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
 @pytest.fixture(scope='function')
 def abc_config() -> generator_pb2.ClsmithGenerator:
-  return generator_pb2.ClsmithGenerator(
-      testcase_skeleton=[
-        deepsmith_pb2.Testcase(
-            toolchain='opencl',
-            inputs={
+  return generator_pb2.ClsmithGenerator(testcase_skeleton=[
+      deepsmith_pb2.Testcase(
+          toolchain='opencl',
+          inputs={
               'gsize': '1,1,1',
               'lsize': '1,1,1',
-            },
-            harness=deepsmith_pb2.Harness(name='cl_launcher')
-        ),
-        deepsmith_pb2.Testcase(
-            toolchain='opencl',
-            inputs={
+          },
+          harness=deepsmith_pb2.Harness(name='cl_launcher')),
+      deepsmith_pb2.Testcase(
+          toolchain='opencl',
+          inputs={
               'gsize': '128,16,1',
               'lsize': '8,4,1',
-            },
-            harness=deepsmith_pb2.Harness(name='cl_launcher')
-        ),
-      ]
-  )
+          },
+          harness=deepsmith_pb2.Harness(name='cl_launcher')),
+  ])
 
 
 @pytest.fixture(scope='function')
@@ -74,10 +69,8 @@ def test_ClsmithGenerator_GenerateTestcases(
     assert res.testcases[i].inputs['src'] == res.testcases[i + 1].inputs['src']
   # It is unlikely that the same program is generated 10 times, but this is
   # technically flaky.
-  assert (res.testcases[0].inputs['src'] !=
-          res.testcases[2].inputs['src'] !=
-          res.testcases[4].inputs['src'] !=
-          res.testcases[6].inputs['src'] !=
+  assert (res.testcases[0].inputs['src'] != res.testcases[2].inputs['src'] !=
+          res.testcases[4].inputs['src'] != res.testcases[6].inputs['src'] !=
           res.testcases[8].inputs['src'])
 
 

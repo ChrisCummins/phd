@@ -21,11 +21,10 @@ from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import cxx
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
-
 # ClangPreprocess() tests.
+
 
 def test_ClangPreprocess_empty_input():
   """Test that ClangPreprocess accepts an empty input."""
@@ -57,6 +56,7 @@ def test_ClangPreprocess_missing_include():
 
 
 # Compile() tests.
+
 
 def test_Compile_empty_input():
   """Test that Compile accepts an empty input."""
@@ -140,6 +140,7 @@ int main(int argc, char** argv) { return 0; }
 
 # ClangFormat() tests.
 
+
 def test_ClangFormat_simple_c_program():
   """Test that a simple C program is unchanged."""
   assert cxx.ClangFormat("""
@@ -208,6 +209,7 @@ int main(int argc, char** argv) {
 
 # NormalizeIdentifiers() tests.
 
+
 def test_NormalizeIdentifiers_small_cxx_program():
   """Test that rewriter performs as expected for a small C++ program."""
   assert """
@@ -228,6 +230,7 @@ int main(int argc, char** argv) {
 
 
 # StripComments() tests.
+
 
 def test_StripComments_empty_input():
   """Test StripComments on an empty input."""

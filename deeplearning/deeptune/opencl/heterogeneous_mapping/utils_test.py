@@ -8,7 +8,6 @@ from absl import flags
 from deeplearning.deeptune.opencl.heterogeneous_mapping import utils
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -18,7 +17,10 @@ def test_GetAtomizerFromOpenClSources_abc():
   assert atomizer.vocab_size == 4  # a, b, c, \n
 
 
-@pytest.mark.parametrize('gpu_name', ("amd_tahiti_7970", "nvidia_gtx_960",))
+@pytest.mark.parametrize('gpu_name', (
+    "amd_tahiti_7970",
+    "nvidia_gtx_960",
+))
 def test_AddClassificationTargetToDataFrame_ocl_dataset_columns(
     full_df: pd.DataFrame, gpu_name: str):
   """Test that expected columns are added to dataframe."""
@@ -28,7 +30,10 @@ def test_AddClassificationTargetToDataFrame_ocl_dataset_columns(
   assert 'y_1hot' in full_df.columns.values
 
 
-@pytest.mark.parametrize('gpu_name', ("amd_tahiti_7970", "nvidia_gtx_960",))
+@pytest.mark.parametrize('gpu_name', (
+    "amd_tahiti_7970",
+    "nvidia_gtx_960",
+))
 def test_AddClassificationTargetToDataFrame_ocl_dataset_1hot(
     full_df: pd.DataFrame, gpu_name: str):
   """Test that only a single value in the one hot array is set."""
@@ -59,16 +64,15 @@ def test_TrainTestSplitGenerator_custom_split_count(full_df: pd.DataFrame):
 
 def test_TrainValidationTestSplits_num_splits(full_df: pd.DataFrame):
   """Train/val/test splitter returns 2 splits."""
-  assert len(list(
-      utils.TrainValidationTestSplits(
-          full_df, np.random.RandomState(0)))) == 2
+  assert len(
+      list(utils.TrainValidationTestSplits(full_df,
+                                           np.random.RandomState(0)))) == 2
 
 
 def test_TrainValidationTestSplits_table_sizes(full_df: pd.DataFrame):
   """Train/va/test splits have expected element counts."""
   splits = list(
-      utils.TrainValidationTestSplits(
-          full_df, np.random.RandomState(0)))
+      utils.TrainValidationTestSplits(full_df, np.random.RandomState(0)))
   assert len(splits[0].train_df) == 408
   assert len(splits[0].valid_df) == 202
   assert len(splits[0].test_df) == 70

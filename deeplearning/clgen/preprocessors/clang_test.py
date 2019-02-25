@@ -22,7 +22,6 @@ from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import clang
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -37,6 +36,7 @@ class MockProcess():
 
 
 # StripPreprocessorLines() tests.
+
 
 def test_StripPreprocessorLines_empty_input():
   assert clang.StripPreprocessorLines('') == ''
@@ -72,6 +72,7 @@ This will # not be stripped."""
 
 
 # Preprocess() tests.
+
 
 def test_Preprocess_process_command(mocker):
   """Test the process comand which is run."""
@@ -119,7 +120,8 @@ int main(int argc, char** argv) { return 0; }
 
 def test_Preprocess_inlined_cflag():
   """Test pre-processing with a custom define in the command line."""
-  assert clang.Preprocess("""
+  assert clang.Preprocess(
+      """
 int main(MY_TYPE argc, char** argv) { return 0; }
 """, ['-DMY_TYPE=int']) == """
 int main(int argc, char** argv) { return 0; }
@@ -128,7 +130,8 @@ int main(int argc, char** argv) { return 0; }
 
 def test_Preprocess_inlined_define():
   """Test pre-processing with a #define in the source code."""
-  assert clang.Preprocess("""
+  assert clang.Preprocess(
+      """
 #define MY_TYPE int
 int main(MY_TYPE argc, char** argv) { return 0; }
 """, ['-DMY_TYPE=int']) == """
@@ -139,7 +142,8 @@ int main(int argc, char** argv) { return 0; }
 
 def test_Preprocess_undefined_data_type():
   """Test that an undefined data type does not cause an error."""
-  assert clang.Preprocess("""
+  assert clang.Preprocess(
+      """
 int main(MY_TYPE argc, char** argv) { return 0; }
 """, []) == """
 int main(MY_TYPE argc, char** argv) { return 0; }
@@ -148,7 +152,8 @@ int main(MY_TYPE argc, char** argv) { return 0; }
 
 def test_Preprocess_undefined_variable():
   """Test that an undefined variable does not cause an error."""
-  assert clang.Preprocess("""
+  assert clang.Preprocess(
+      """
 int main(int argc, char** argv) { return UNDEFINED_VARIABLE; }
 """, []) == """
 int main(int argc, char** argv) { return UNDEFINED_VARIABLE; }
@@ -157,7 +162,8 @@ int main(int argc, char** argv) { return UNDEFINED_VARIABLE; }
 
 def test_Preprocess_undefined_function():
   """Test that an undefined function does not cause an error."""
-  assert clang.Preprocess("""
+  assert clang.Preprocess(
+      """
 int main(int argc, char** argv) { return UNDEFINED_FUNCTION(0); }
 """, []) == """
 int main(int argc, char** argv) { return UNDEFINED_FUNCTION(0); }
@@ -167,7 +173,8 @@ int main(int argc, char** argv) { return UNDEFINED_FUNCTION(0); }
 def test_Preprocess_invalid_preprocessor_directive():
   """Test that an invalid preprocessor directive raises an error."""
   with pytest.raises(errors.ClangException) as e_info:
-    clang.Preprocess("""
+    clang.Preprocess(
+        """
 #this_is_not_a_valid_directive
 int main(int argc, char** argv) { return 0; }
 """, [])
@@ -176,14 +183,17 @@ int main(int argc, char** argv) { return 0; }
 
 def test_Preprocess_no_strip_processor_lines():
   """Test that stdin marker is preserved if no strip_preprocessor_lines."""
-  assert '# 1 "<stdin>" 2' in clang.Preprocess("""
+  assert '# 1 "<stdin>" 2' in clang.Preprocess(
+      """
 int main(int argc, char** argv) { return 0; }
-""", [], strip_preprocessor_lines=False)
+""", [],
+      strip_preprocessor_lines=False)
 
 
 def test_Preprocess_include_stdio_strip():
   """Test that an included file is stripped."""
-  out = clang.Preprocess("""
+  out = clang.Preprocess(
+      """
 #include <stdio.h>
 int main(int argc, char** argv) { return NULL; }
 """, [])
@@ -196,6 +206,7 @@ int main(int argc, char** argv) { return ((void*)0); }
 
 
 # ClangFormat() tests.
+
 
 def test_ClangFormat_process_command(mocker):
   """Test the clang-format comand which is run."""
@@ -232,6 +243,7 @@ def test_ClangFormat_empty_file():
 
 
 # CompileLlvmBytecode() tests.
+
 
 def test_CompileLlvmBytecode_command(mocker):
   """Test the clang comand which is run."""

@@ -13,7 +13,6 @@ from deeplearning.deepsmith.proto import generator_pb2_grpc
 from labm8 import labdate
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 
 
@@ -26,15 +25,20 @@ class RandCharGenerator(generator.GeneratorServiceBase,
     self.generator = deepsmith_pb2.Generator(
         name='randchar',
         opts={
-          'toolchain': str(pbutil.AssertFieldConstraint(
-              self.config, 'toolchain', lambda x: len(x))),
-          'min_len': str(pbutil.AssertFieldConstraint(
-              self.config, 'string_min_len', lambda x: x > 0)),
-          'max_len': str(pbutil.AssertFieldConstraint(
-              self.config, 'string_max_len',
-              lambda x: x > 0 and x >= self.config.string_min_len)),
-        }
-    )
+            'toolchain':
+            str(
+                pbutil.AssertFieldConstraint(self.config,
+                                             'toolchain', lambda x: len(x))),
+            'min_len':
+            str(
+                pbutil.AssertFieldConstraint(
+                    self.config, 'string_min_len', lambda x: x > 0)),
+            'max_len':
+            str(
+                pbutil.AssertFieldConstraint(
+                    self.config, 'string_max_len', lambda x: x > 0 and x >= self
+                    .config.string_min_len)),
+        })
 
   def GenerateTestcases(self, request: generator_pb2.GenerateTestcasesRequest,
                         context) -> generator_pb2.GenerateTestcasesResponse:

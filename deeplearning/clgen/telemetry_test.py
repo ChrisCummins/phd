@@ -21,11 +21,10 @@ from absl import flags
 from deeplearning.clgen import telemetry
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
-
 # TrainingLogger tests.
+
 
 def test_TrainingLogger_create_file():
   """Test that EpochEndCallback() produces a file."""

@@ -38,7 +38,6 @@ from deeplearning.ncc import rgx_utils as rgx
 from deeplearning.ncc.inst2vec import inst2vec_analogygen as analogygen
 from deeplearning.ncc.inst2vec import inst2vec_utils as i2v_utils
 
-
 FLAGS = flags.FLAGS
 
 
@@ -137,13 +136,13 @@ def load_analogy_questions(analogy_questions_file, dictionary):
 
         # a new analogy question element
         n_questions += 1
-        word_A = line.strip();
+        word_A = line.strip()
         assert len(word_A) > 0, "Malformed question at line " + str(i)
-        word_B = raw_data[i + 1].strip();
+        word_B = raw_data[i + 1].strip()
         assert len(word_A) > 0, "Malformed question at line " + str(i)
-        word_X = raw_data[i + 2].strip();
+        word_X = raw_data[i + 2].strip()
         assert len(word_A) > 0, "Malformed question at line " + str(i)
-        word_Y = raw_data[i + 3].strip();
+        word_Y = raw_data[i + 3].strip()
         assert len(word_A) > 0, "Malformed question at line " + str(i)
         words = [word_A, word_B, word_X, word_Y]
 
@@ -159,8 +158,10 @@ def load_analogy_questions(analogy_questions_file, dictionary):
 
         # add this analogy question when appropriate
         if add:
-          arr.append([dictionary[words[0]], dictionary[words[1]],
-                      dictionary[words[2]], dictionary[words[3]]])
+          arr.append([
+              dictionary[words[0]], dictionary[words[1]], dictionary[words[2]],
+              dictionary[words[3]]
+          ])
 
         if n_questions % 1000 == 0:
           print('\t\tprocessed', n_questions, 'analogies')
@@ -252,8 +253,13 @@ def load_analogies(data_folder):
   return analogies, analogy_types, n_questions_total, n_questions_relevant
 
 
-def evaluate_analogies(W, reverse_dictionary, analogies, analogy_types,
-                       results_filename, session=None, print=print):
+def evaluate_analogies(W,
+                       reverse_dictionary,
+                       analogies,
+                       analogy_types,
+                       results_filename,
+                       session=None,
+                       print=print):
   """
   Build evaluation graph and evaluate the representation of analogies in the embeddings
   :param W: embeddings (not normalized)
@@ -334,18 +340,19 @@ def evaluate_analogies(W, reverse_dictionary, analogies, analogy_types,
 
       # Compute answers
       sub = analogies[
-        i]  # subset of "analogies": the questions corresponding to this analogy type
+          i]  # subset of "analogies": the questions corresponding to this analogy type
 
       dist, idx = sess.run([pred_dist, pred_idx], {
-        analogy_a: sub[:, 0],
-        analogy_b: sub[:, 1],
-        analogy_c: sub[:, 2]
+          analogy_a: sub[:, 0],
+          analogy_b: sub[:, 1],
+          analogy_c: sub[:, 2]
       })
 
       # Compute score
       correct_answers_q_ = list()  # list of correctly answered questions
       # (temporary array, elements are np array of dim [1, 4])
-      correct_answers_a_ = list()  # list of top 5 answers to correctly answered questions
+      correct_answers_a_ = list(
+      )  # list of top 5 answers to correctly answered questions
       # (temporary array, elements are np array of dim [1, 4])
       incorrect_answers_q_ = list()  #
       incorrect_answers_a_ = list()  #
@@ -403,8 +410,8 @@ def evaluate_analogies(W, reverse_dictionary, analogies, analogy_types,
     # Write file header
     f.write('-' * int(w) + '\n' + 'Score summary' + '\n' + '-' * int(w) + '\n')
     f.write('{:<85}\t{:<18}\t{:<12}\t{:<20}\n'.format(
-        'Analogy type',
-        '#correct answers', '#questions', 'correct answers [%]'))
+        'Analogy type', '#correct answers', '#questions',
+        'correct answers [%]'))
 
     # Summary
     # Loop over analogy types
@@ -416,8 +423,8 @@ def evaluate_analogies(W, reverse_dictionary, analogies, analogy_types,
       perc_ = score_ * 100.0 / n_q_
 
       # Write the line containing all information pertaining to this analogy type
-      f.write('{:<85}\t{:>18}\t{:>12}\t{:>20}\n'.format(
-          anal_type_, score_, n_q_, perc_))
+      f.write('{:<85}\t{:>18}\t{:>12}\t{:>20}\n'.format(anal_type_, score_,
+                                                        n_q_, perc_))
 
     # Write file header
     f.write('\n\n')
@@ -432,15 +439,17 @@ def evaluate_analogies(W, reverse_dictionary, analogies, analogy_types,
       if len(correct_answers_q[i]) > 0:
         f.write('\n')
         for q in range(len(correct_answers_q[i])):
-          f.write(line_q.format(reverse_dictionary[correct_answers_q[i][q][0]],
-                                reverse_dictionary[correct_answers_q[i][q][1]],
-                                reverse_dictionary[correct_answers_q[i][q][2]],
-                                reverse_dictionary[correct_answers_q[i][q][3]]))
-          f.write(line_a.format(reverse_dictionary[correct_answers_a[i][q][0]],
-                                reverse_dictionary[correct_answers_a[i][q][1]],
-                                reverse_dictionary[correct_answers_a[i][q][2]],
-                                reverse_dictionary[correct_answers_a[i][q][3]],
-                                reverse_dictionary[correct_answers_a[i][q][4]]))
+          f.write(
+              line_q.format(reverse_dictionary[correct_answers_q[i][q][0]],
+                            reverse_dictionary[correct_answers_q[i][q][1]],
+                            reverse_dictionary[correct_answers_q[i][q][2]],
+                            reverse_dictionary[correct_answers_q[i][q][3]]))
+          f.write(
+              line_a.format(reverse_dictionary[correct_answers_a[i][q][0]],
+                            reverse_dictionary[correct_answers_a[i][q][1]],
+                            reverse_dictionary[correct_answers_a[i][q][2]],
+                            reverse_dictionary[correct_answers_a[i][q][3]],
+                            reverse_dictionary[correct_answers_a[i][q][4]]))
       else:
         f.write('None')
 
@@ -521,9 +530,9 @@ def analogies(eval_folder, embeddings, embeddings_file, dictionary,
   score_list = list()
 
   # Evaluate analogies in the embedding space
-  analogy_eval_file = os.path.join(folder_analogies,
-                                   'res_' + embeddings_file[:-2].replace('/',
-                                                                         '_') + '.txt')
+  analogy_eval_file = os.path.join(
+      folder_analogies,
+      'res_' + embeddings_file[:-2].replace('/', '_') + '.txt')
   print('\n--- Starting analogy evaluation')
 
   # List of pairs (number of correctly answered questions in category, number of questions in category)
@@ -540,17 +549,17 @@ def analogies(eval_folder, embeddings, embeddings_file, dictionary,
 # Semantic tests: helper variables and functions
 ########################################################################################################################
 semantic_categories = {
-  'add': ['<%ID> = add'],
-  'fadd': ['<%ID> = fadd'],
-  'sub': ['<%ID> = sub'],
-  'fsub': ['<%ID> = fsub'],
-  'mul': ['<%ID> = mul'],
-  'fmul': ['<%ID> = fmul'],
-  'ret': ['ret '],
-  'fdiv': ['<%ID> = fdiv'],
-  'udiv': ['<%ID> = udiv'],
-  'sdiv': ['<%ID> = sdiv'],
-  'bitwise binary': ['<%ID> = (shl|lshr|ashr|and|or|xor)']
+    'add': ['<%ID> = add'],
+    'fadd': ['<%ID> = fadd'],
+    'sub': ['<%ID> = sub'],
+    'fsub': ['<%ID> = fsub'],
+    'mul': ['<%ID> = mul'],
+    'fmul': ['<%ID> = fmul'],
+    'ret': ['ret '],
+    'fdiv': ['<%ID> = fdiv'],
+    'udiv': ['<%ID> = udiv'],
+    'sdiv': ['<%ID> = sdiv'],
+    'bitwise binary': ['<%ID> = (shl|lshr|ashr|and|or|xor)']
 }
 
 
@@ -648,9 +657,8 @@ def semantic_test(eval_folder, embeddings, embeddings_file, dictionary):
     os.makedirs(folder_semtests)
 
   # Print results to file
-  res_file = os.path.join(folder_semtests,
-                          'res_' + embeddings_file[:-2].replace('/',
-                                                                '_') + '.txt')
+  res_file = os.path.join(
+      folder_semtests, 'res_' + embeddings_file[:-2].replace('/', '_') + '.txt')
   with open(res_file, 'w') as f:
     f.write(out)
 
@@ -719,43 +727,48 @@ def plot_clustering(eval_folder, embeddings, embeddings_file,
     pickle.dump([targets, labels], open(flags_file, 'wb'))
 
   if FLAGS.tsne:
-    embedding = TSNE(metric=FLAGS.metric, verbose=FLAGS.verbose).fit_transform(
-        embeddings)
-    np_file = os.path.join(folder_clusterplot,
-                           'tsne_' + embeddings_file[:-2].replace('/',
-                                                                  '_') + '.np')
-    html_file = os.path.join(folder_clusterplot,
-                             'tsne_' + embeddings_file[:-2].replace('/',
-                                                                    '_') + '.html')
+    embedding = TSNE(
+        metric=FLAGS.metric, verbose=FLAGS.verbose).fit_transform(embeddings)
+    np_file = os.path.join(
+        folder_clusterplot,
+        'tsne_' + embeddings_file[:-2].replace('/', '_') + '.np')
+    html_file = os.path.join(
+        folder_clusterplot,
+        'tsne_' + embeddings_file[:-2].replace('/', '_') + '.html')
   else:
-    embedding = umap.UMAP(metric=FLAGS.metric,
-                          verbose=FLAGS.verbose).fit_transform(embeddings)
-    np_file = os.path.join(folder_clusterplot,
-                           'umap_' + embeddings_file[:-2].replace('/',
-                                                                  '_') + '.np')
-    html_file = os.path.join(folder_clusterplot,
-                             'umap_' + embeddings_file[:-2].replace('/',
-                                                                    '_') + '.html')
+    embedding = umap.UMAP(
+        metric=FLAGS.metric, verbose=FLAGS.verbose).fit_transform(embeddings)
+    np_file = os.path.join(
+        folder_clusterplot,
+        'umap_' + embeddings_file[:-2].replace('/', '_') + '.np')
+    html_file = os.path.join(
+        folder_clusterplot,
+        'umap_' + embeddings_file[:-2].replace('/', '_') + '.html')
 
   # Save plots to file
   embedding.tofile(np_file)
   output_file(html_file)
   print('Plotting')
 
-  source = ColumnDataSource(dict(
-      x=[e[0] for e in embedding],
-      y=[e[1] for e in embedding],
-      label=labels))
+  source = ColumnDataSource(
+      dict(
+          x=[e[0] for e in embedding],
+          y=[e[1] for e in embedding],
+          label=labels))
 
-  cmap = CategoricalColorMapper(factors=targets,
-                                palette=Category20[len(targets)])
+  cmap = CategoricalColorMapper(
+      factors=targets, palette=Category20[len(targets)])
 
   p = figure(title="test umap")
-  p.circle(x='x',
-           y='y',
-           source=source,
-           color={"field": 'label', "transform": cmap},
-           legend='label')
+  p.circle(
+      x='x',
+      y='y',
+      source=source,
+      color={
+          "field": 'label',
+          "transform": cmap
+      },
+      legend='label')
   show(p)
 
 

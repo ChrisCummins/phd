@@ -21,11 +21,10 @@ from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import java
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
-
 # ClangFormat() tests.
+
 
 def test_ClangFormat_hello_world():
   """Test formatting of a "hello world" Java program."""
@@ -56,6 +55,7 @@ extends VeryVeryLongNameeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeBase {}
 
 
 # Compile() tests.
+
 
 def test_Compile_empty_input():
   """That an empty file is rejected."""
@@ -101,9 +101,11 @@ class     HelloWorld {
 
 # WrapMethodInClass() tests.
 
+
 def test_Compile_WrapMethodInClass_hello_world():
   """Test output of wrapping a method in a class."""
-  assert java.Compile(java.WrapMethodInClass("""\
+  assert java.Compile(
+      java.WrapMethodInClass("""\
 private static void Hello() {
   System.out.println("Hello, world!");
 }""")) == """\
@@ -124,7 +126,8 @@ def test_Compile_WrapMethodInClass_syntax_error():
 def test_Compile_WrapMethodInClass_undefined_symbol():
   """Test that error is raised if method has undefined symbols."""
   with pytest.raises(errors.BadCodeException):
-    java.Compile(java.WrapMethodInClass("""
+    java.Compile(
+        java.WrapMethodInClass("""
 private static void Hello() {
   UndefinedMethod(5);
 }
@@ -141,7 +144,9 @@ private static void Hello() {
   ArrayList<Object> a = new ArrayList<>();
   System.out.println("Hello, world!");
 }
-""" in java.Compile(java.InsertShimImports(java.WrapMethodInClass("""\
+""" in java.Compile(
+      java.InsertShimImports(
+          java.WrapMethodInClass("""\
 private static void Hello() {
   ArrayList<Object> a = new ArrayList<>();
   System.out.println("Hello, world!");
@@ -150,6 +155,7 @@ private static void Hello() {
 
 
 # JavaRewrite() tests.
+
 
 def test_JavaRewrite_hello_world():
   """Java rewriter returns unmodified input for bad code."""
@@ -223,7 +229,6 @@ public class A {
 \t}
 }
 """
-
   """
 private static boolean slowEquals(byte[] a,byte[] b){
   int diff=a.length ^ b.length;

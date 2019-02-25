@@ -9,7 +9,6 @@ from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import generator_pb2_grpc
 from labm8 import labdate
 
-
 FLAGS = flags.FLAGS
 
 

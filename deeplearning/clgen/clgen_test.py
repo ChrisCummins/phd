@@ -27,9 +27,7 @@ from deeplearning.clgen.proto import clgen_pb2
 from labm8 import pbutil
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
-
 
 # Instance tests.
 
@@ -97,6 +95,7 @@ def test_Instance_ToProto_equality(abc_instance_config):
 
 # RunWithErrorHandling() tests.
 
+
 def test_RunWithErrorHandling_return_value(clgen_cache_dir):
   """Test that RunWithErrorHandling() returns correct value for function."""
   del clgen_cache_dir
@@ -119,6 +118,7 @@ def test_RunWithErrorHandling_exception_debug(clgen_cache_dir):
 
 
 # main tests.
+
 
 def test_main_unrecognized_arguments():
   """Test that UsageError is raised if arguments are not recognized."""

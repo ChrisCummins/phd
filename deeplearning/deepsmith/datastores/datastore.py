@@ -10,12 +10,9 @@ from deeplearning.deepsmith import services
 from deeplearning.deepsmith.proto import datastore_pb2
 from deeplearning.deepsmith.proto import datastore_pb2_grpc
 
-
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string(
-    'datastore_config', None,
-    'Path to a DataStore message.')
+flags.DEFINE_string('datastore_config', None, 'Path to a DataStore message.')
 
 
 class DataStore(services.ServiceBase,
@@ -54,15 +51,15 @@ class DataStore(services.ServiceBase,
 def main(argv):
   if len(argv) > 1:
     raise app.UsageError('Unrecognized arguments')
-  datastore_config = services.ServiceConfigFromFlag(
-      'datastore_config', datastore_pb2.DataStore())
+  datastore_config = services.ServiceConfigFromFlag('datastore_config',
+                                                    datastore_pb2.DataStore())
   server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
   services.AssertLocalServiceHostname(datastore_config.service)
   service = DataStore(datastore_config)
   datastore_pb2_grpc.add_DataStoreServiceServicer_to_server(service, server)
   server.add_insecure_port(f'[::]:{datastore_config.service.port}')
-  logging.info('%s listening on %s:%s', type(service).__name__,
-               datastore_config.service.hostname,
+  logging.info('%s listening on %s:%s',
+               type(service).__name__, datastore_config.service.hostname,
                datastore_config.service.port)
   server.start()
   try:

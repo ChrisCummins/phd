@@ -27,7 +27,6 @@ from labm8 import crypto
 from labm8 import pbutil
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -64,8 +63,9 @@ def abc_tensorflow_model_config(abc_model_config: model_pb2.Model):
 
 # TensorFlowBackend.Train() tests.
 
-def test_TensorFlowBackend_Train_telemetry(
-    clgen_cache_dir, abc_tensorflow_model_config):
+
+def test_TensorFlowBackend_Train_telemetry(clgen_cache_dir,
+                                           abc_tensorflow_model_config):
   """Test that model training produced telemetry files."""
   del clgen_cache_dir
   abc_tensorflow_model_config.training.num_epochs = 2
@@ -77,8 +77,8 @@ def test_TensorFlowBackend_Train_telemetry(
     assert isinstance(telemetry, telemetry_pb2.ModelEpochTelemetry)
 
 
-def test_TensorFlowBackend_Train_twice(
-    clgen_cache_dir, abc_tensorflow_model_config):
+def test_TensorFlowBackend_Train_twice(clgen_cache_dir,
+                                       abc_tensorflow_model_config):
   """Test that TensorFlow checkpoint does not change after training twice."""
   del clgen_cache_dir
   abc_tensorflow_model_config.training.num_epochs = 1
@@ -93,8 +93,8 @@ def test_TensorFlowBackend_Train_twice(
   assert f1b == f2b
 
 
-def test_TensorFlowBackend_Train_epoch_checkpoints(
-    clgen_cache_dir, abc_tensorflow_model_config):
+def test_TensorFlowBackend_Train_epoch_checkpoints(clgen_cache_dir,
+                                                   abc_tensorflow_model_config):
   """Test that epoch_checkpoints returns a <int, str> dict."""
   del clgen_cache_dir
   abc_tensorflow_model_config.training.num_epochs = 2
@@ -120,8 +120,8 @@ def test_TensorFlowBackend_Train_missing_intermediate_checkpoints(
   for path in checkpoints_dir.iterdir():
     # Remove all files which are not either the checkpoints list, or the most
     # recent checkpoint.
-    if (not path.name == 'checkpoint' and not
-    path.name.startswith('checkpoint-2')):
+    if (not path.name == 'checkpoint' and
+        not path.name.startswith('checkpoint-2')):
       path.unlink()
   f1a = checksumdir.dirhash(checkpoints_dir)
 
@@ -136,8 +136,8 @@ def test_TensorFlowBackend_Train_missing_intermediate_checkpoints(
   assert f1a == f1b
 
 
-def test_TensorFlowBackend_Train_is_trained(
-    clgen_cache_dir, abc_tensorflow_model_config):
+def test_TensorFlowBackend_Train_is_trained(clgen_cache_dir,
+                                            abc_tensorflow_model_config):
   """Test that is_trained is initially false until trained."""
   del clgen_cache_dir
   m = models.Model(abc_tensorflow_model_config)
@@ -148,11 +148,10 @@ def test_TensorFlowBackend_Train_is_trained(
 
 # TODO(cec): Add test for InferenceManifest() contents of a simple model.
 
-
 # TODO(cec): Add tests on incrementally trained model predictions and losses.
 
-
 # TensorFlowBackend.Sample() tests.
+
 
 def test_TensorFlowBackend_Sample_implicit_train(clgen_cache_dir,
                                                  abc_tensorflow_model_config):
@@ -165,8 +164,7 @@ def test_TensorFlowBackend_Sample_implicit_train(clgen_cache_dir,
 
 
 def test_TensorFlowBackend_Sample_return_value_matches_cached_sample(
-    clgen_cache_dir,
-    abc_tensorflow_model_config):
+    clgen_cache_dir, abc_tensorflow_model_config):
   """Test that Sample() returns Sample protos."""
   del clgen_cache_dir
   abc_tensorflow_model_config.training.batch_size = 1
@@ -174,19 +172,18 @@ def test_TensorFlowBackend_Sample_return_value_matches_cached_sample(
   samples = m.Sample(MockSampler(hash='hash'), 1)
   assert len(samples) == 1
   assert len(list((m.cache.path / 'samples' / 'hash').iterdir())) == 1
-  cached_sample_path = (m.cache.path / 'samples' / 'hash' /
-                        list((m.cache.path / 'samples' / 'hash').iterdir())[0])
+  cached_sample_path = (m.cache.path / 'samples' / 'hash' / list(
+      (m.cache.path / 'samples' / 'hash').iterdir())[0])
   assert cached_sample_path.is_file()
   cached_sample = pbutil.FromFile(cached_sample_path, model_pb2.Sample())
   assert samples[0].text == cached_sample.text
   assert samples[0].sample_time_ms == cached_sample.sample_time_ms
   assert samples[
-           0].sample_start_epoch_ms_utc == cached_sample.sample_start_epoch_ms_utc
+      0].sample_start_epoch_ms_utc == cached_sample.sample_start_epoch_ms_utc
 
 
 def test_TensorFlowBackend_Sample_exact_multiple_of_batch_size(
-    clgen_cache_dir,
-    abc_tensorflow_model_config):
+    clgen_cache_dir, abc_tensorflow_model_config):
   """Test that min_num_samples are returned when a multiple of batch_size."""
   del clgen_cache_dir
   abc_tensorflow_model_config.training.batch_size = 2
@@ -196,8 +193,7 @@ def test_TensorFlowBackend_Sample_exact_multiple_of_batch_size(
 
 
 def test_TensorFlowBackend_Sample_inexact_multiple_of_batch_size(
-    clgen_cache_dir,
-    abc_tensorflow_model_config):
+    clgen_cache_dir, abc_tensorflow_model_config):
   """Test that min_num_samples are returned when a multiple of batch_size."""
   del clgen_cache_dir
   abc_tensorflow_model_config.training.batch_size = 3
@@ -210,6 +206,7 @@ def test_TensorFlowBackend_Sample_inexact_multiple_of_batch_size(
 
 # WeightedPick() tests.
 
+
 @pytest.mark.skip(reason='TODO(cec): Update for new WeightedPick().')
 def test_WeightedPick_output_range():
   """Test that WeightedPick() returns an integer index into array"""
@@ -218,6 +215,7 @@ def test_WeightedPick_output_range():
 
 
 # Benchmarks.
+
 
 def test_benchmark_TensorFlowModel_Train_already_trained(
     clgen_cache_dir, abc_tensorflow_model_config, benchmark):

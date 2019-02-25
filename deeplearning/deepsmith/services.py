@@ -9,7 +9,6 @@ from absl import logging
 from deeplearning.deepsmith.proto import service_pb2
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 
 
@@ -27,8 +26,7 @@ class ServiceBase(object):
 def AssertLocalServiceHostname(service_config: service_pb2.ServiceConfig):
   hostname = socket.gethostname()
   service_hostname = service_config.hostname
-  if (service_hostname and
-      service_hostname != 'localhost' and
+  if (service_hostname and service_hostname != 'localhost' and
       service_hostname != hostname):
     raise app.UsageError(
         f'System hostname {hostname} does not match service hostname '
@@ -54,9 +52,8 @@ def BuildDefaultResponse(cls) -> pbutil.ProtocolBuffer:
   return message
 
 
-def ServiceConfigFromFlag(
-    flag_name: str,
-    service_config: pbutil.ProtocolBuffer) -> pbutil.ProtocolBuffer:
+def ServiceConfigFromFlag(flag_name: str, service_config: pbutil.ProtocolBuffer
+                         ) -> pbutil.ProtocolBuffer:
   if not getattr(FLAGS, flag_name):
     raise app.UsageError(f'--{flag_name} not set.')
   config_path = pathlib.Path(getattr(FLAGS, flag_name))
@@ -64,12 +61,10 @@ def ServiceConfigFromFlag(
     cls_name = type(service_config).__name__
     raise app.UsageError(f"{cls_name} file not found: '{config_path}'.")
 
-  return pbutil.FromFile(
-      config_path, service_config)
+  return pbutil.FromFile(config_path, service_config)
 
 
-def GetServiceStub(service_config: service_pb2.ServiceConfig,
-                   service_stub_cls):
+def GetServiceStub(service_config: service_pb2.ServiceConfig, service_stub_cls):
   address = (f'{service_config.service.hostname}:'
              f'{service_config.service.port}')
   channel = grpc.insecure_channel(address)

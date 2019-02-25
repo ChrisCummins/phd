@@ -18,7 +18,6 @@ from absl import flags
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import public
 
-
 FLAGS = flags.FLAGS
 
 

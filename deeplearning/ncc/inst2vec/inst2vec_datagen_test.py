@@ -6,7 +6,6 @@ from absl import flags
 from deeplearning.ncc.inst2vec import inst2vec_datagen
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 

@@ -39,13 +39,13 @@ from deeplearning.ncc import task_utils
 from deeplearning.ncc import vocabulary
 from labm8 import fs
 
-
 # Parameters of classifyapp
 flags.DEFINE_string('input_data',
                     '/tmp/phd/deeplearning/ncc/task/classifyapp/ir',
                     'Path to input data')
-flags.DEFINE_string('out', '/tmp/phd/deeplearning/ncc/task/classifyapp',
-                    'Path to folder in which to write saved Keras models and predictions')
+flags.DEFINE_string(
+    'out', '/tmp/phd/deeplearning/ncc/task/classifyapp',
+    'Path to folder in which to write saved Keras models and predictions')
 flags.DEFINE_string(
     'vocabulary_zip_path', None,
     'Path to the vocabulary zip file associated with those embeddings')
@@ -129,6 +129,7 @@ def pad_src(seqs, maxlen, unk_index):
 
 
 class EmbeddingSequence(utils.Sequence):
+
   def __init__(self, batch_size, x_seq, y_1hot, embedding_mat):
     self.batch_size = batch_size
     self.num_samples = np.shape(x_seq)[0]
@@ -161,6 +162,7 @@ class EmbeddingSequence(utils.Sequence):
 
 
 class EmbeddingPredictionSequence(utils.Sequence):
+
   def __init__(self, batch_size, x_seq, embedding_mat):
     self.batch_size = batch_size
     self.x_seq = x_seq
@@ -179,6 +181,7 @@ class EmbeddingPredictionSequence(utils.Sequence):
 
 
 class WeightsSaver(Callback):
+
   def __init__(self, model, save_every, ring_size):
     self.model = model
     self.save_every = save_every
@@ -210,9 +213,14 @@ class NCC_classifyapp(object):
     np.random.seed(seed)
 
     # Keras model
-    inp = Input(shape=(maxlen, embedding_dim,), dtype="float32", name="code_in")
-    x = LSTM(embedding_dim, implementation=1, return_sequences=True,
-             name="lstm_1")(inp)
+    inp = Input(
+        shape=(
+            maxlen,
+            embedding_dim,
+        ), dtype="float32", name="code_in")
+    x = LSTM(
+        embedding_dim, implementation=1, return_sequences=True,
+        name="lstm_1")(inp)
     x = LSTM(embedding_dim, implementation=1, name="lstm_2")(x)
 
     # Heuristic model: outputs 1-of-num_classes prediction
@@ -222,9 +230,7 @@ class NCC_classifyapp(object):
 
     self.model = Model(inputs=inp, outputs=outputs)
     self.model.compile(
-        optimizer="adam",
-        loss="categorical_crossentropy",
-        metrics=['accuracy'])
+        optimizer="adam", loss="categorical_crossentropy", metrics=['accuracy'])
     print('\tbuilt Keras model')
 
   def save(self, outpath: str):
@@ -235,48 +241,57 @@ class NCC_classifyapp(object):
     self.model = load_model(inpath)
 
   def train(self, sequences: np.array, y_1hot: np.array,
-            sequences_val: np.array, y_1hot_val: np.array,
-            verbose: bool, epochs: int, batch_size: int) -> None:
-    self.model.fit(x=sequences, y=y_1hot, epochs=epochs, batch_size=batch_size,
-                   verbose=verbose, shuffle=True,
-                   validation_data=(sequences_val, y_1hot_val))
+            sequences_val: np.array, y_1hot_val: np.array, verbose: bool,
+            epochs: int, batch_size: int) -> None:
+    self.model.fit(
+        x=sequences,
+        y=y_1hot,
+        epochs=epochs,
+        batch_size=batch_size,
+        verbose=verbose,
+        shuffle=True,
+        validation_data=(sequences_val, y_1hot_val))
 
   def train_gen(self, train_generator: EmbeddingSequence,
-                validation_generator: EmbeddingSequence,
-                verbose: bool, epochs: int) -> None:
+                validation_generator: EmbeddingSequence, verbose: bool,
+                epochs: int) -> None:
     checkpoint = WeightsSaver(self.model, FLAGS.save_every, FLAGS.ring_size)
 
     try:
-      self.model.fit_generator(train_generator, epochs=epochs, verbose=verbose,
-                               validation_data=validation_generator,
-                               shuffle=True, callbacks=[checkpoint])
+      self.model.fit_generator(
+          train_generator,
+          epochs=epochs,
+          verbose=verbose,
+          validation_data=validation_generator,
+          shuffle=True,
+          callbacks=[checkpoint])
     except KeyboardInterrupt:
       print('Ctrl-C detected, saving weights to file')
       self.model.save_weights('weights-kill.h5')
 
   def predict(self, sequences: np.array, batch_size: int) -> np.array:
     # directly predict application class from source sequences:
-    p = np.array(self.model.predict(sequences, batch_size=batch_size,
-                                    verbose=0))  # one-hot(range([0, 103]))
+    p = np.array(
+        self.model.predict(sequences, batch_size=batch_size,
+                           verbose=0))  # one-hot(range([0, 103]))
     indices = [np.argmax(x) for x in p]
-    return [i + 1 for i in
-            indices]  # range(y): [1, 104], range(indices): [0, 103]
+    return [i + 1 for i in indices
+           ]  # range(y): [1, 104], range(indices): [0, 103]
 
   def predict_gen(self, generator: EmbeddingSequence) -> np.array:
     # directly predict application class from source sequences:
-    p = np.array(self.model.predict_generator(generator,
-                                              verbose=0))  # one-hot(range([0, 103]))
+    p = np.array(self.model.predict_generator(
+        generator, verbose=0))  # one-hot(range([0, 103]))
     indices = [np.argmax(x) for x in p]
-    return [i + 1 for i in
-            indices]  # range(y): [1, 104], range(indices): [0, 103]
+    return [i + 1 for i in indices
+           ]  # range(y): [1, 104], range(indices): [0, 103]
 
 
 ########################################################################################################################
 # Evaluate
 ########################################################################################################################
 def evaluate(model, embeddings, folder_data, samples_per_class, folder_results,
-             dense_layer_size, print_summary,
-             num_epochs, batch_size):
+             dense_layer_size, print_summary, num_epochs, batch_size):
   # Set seed for reproducibility
   seed = 204
 
@@ -311,11 +326,15 @@ def evaluate(model, embeddings, folder_data, samples_per_class, folder_results,
     # training: Randomly pick programs
     assert len(seq_files) >= samples_per_class, "Cannot sample " + str(
         samples_per_class) + " from " + str(
-        len(seq_files)) + " files found in " + folder
-    X_train += resample(seq_files, replace=False, n_samples=samples_per_class,
-                        random_state=seed)
+            len(seq_files)) + " files found in " + folder
+    X_train += resample(
+        seq_files,
+        replace=False,
+        n_samples=samples_per_class,
+        random_state=seed)
     y_train = np.concatenate(
-        [y_train, np.array([int(i)] * samples_per_class, dtype=np.int32)])
+        [y_train,
+         np.array([int(i)] * samples_per_class, dtype=np.int32)])
 
     # validation: Read data file names
     folder = os.path.join(folder_data_val, str(i))
@@ -328,11 +347,15 @@ def evaluate(model, embeddings, folder_data, samples_per_class, folder_results,
     if vsamples_per_class > 0:
       assert len(seq_files) >= vsamples_per_class, "Cannot sample " + str(
           vsamples_per_class) + " from " + str(
-          len(seq_files)) + " files found in " + folder
-      X_val += resample(seq_files, replace=False, n_samples=vsamples_per_class,
-                        random_state=seed)
+              len(seq_files)) + " files found in " + folder
+      X_val += resample(
+          seq_files,
+          replace=False,
+          n_samples=vsamples_per_class,
+          random_state=seed)
       y_val = np.concatenate(
-          [y_val, np.array([int(i)] * vsamples_per_class, dtype=np.int32)])
+          [y_val,
+           np.array([int(i)] * vsamples_per_class, dtype=np.int32)])
     else:
       assert len(seq_files) > 0, "No .rec files found in" + folder
       X_val += seq_files
@@ -377,9 +400,8 @@ def evaluate(model, embeddings, folder_data, samples_per_class, folder_results,
   model_name = model.__name__
   model_path = os.path.join(folder_results,
                             "classifyapp/models/{}.model".format(model_name))
-  predictions_path = os.path.join(folder_results,
-                                  "classifyapp/predictions/{}.result".format(
-                                      model_name))
+  predictions_path = os.path.join(
+      folder_results, "classifyapp/predictions/{}.result".format(model_name))
 
   # If predictions have already been made with these embeddings, load them
   if fs.exists(predictions_path):
@@ -416,18 +438,20 @@ def evaluate(model, embeddings, folder_data, samples_per_class, folder_results,
 
       # Create a new model and train it
       print('\n--- Initializing model...')
-      model.init(seed=seed,
-                 maxlen=maxlen,
-                 embedding_dim=int(embedding_dimension),
-                 num_classes=num_classes,
-                 dense_layer_size=dense_layer_size)
+      model.init(
+          seed=seed,
+          maxlen=maxlen,
+          embedding_dim=int(embedding_dimension),
+          num_classes=num_classes,
+          dense_layer_size=dense_layer_size)
       if print_summary:
         model.model.summary()
       print('\n--- Training model...')
-      model.train_gen(train_generator=gen_train,
-                      validation_generator=gen_val,
-                      verbose=True,
-                      epochs=num_epochs)
+      model.train_gen(
+          train_generator=gen_train,
+          validation_generator=gen_val,
+          verbose=True,
+          epochs=num_epochs)
 
       # Save the model
       fs.mkdir(fs.dirname(model_path))
@@ -466,7 +490,8 @@ def main(argv):
   embeddings = task_utils.ReadEmbeddingFileFromFlags()
   folder_results = FLAGS.out
   assert len(
-      folder_results) > 0, "Please specify a path to the results folder using --folder_results"
+      folder_results
+  ) > 0, "Please specify a path to the results folder using --folder_results"
   folder_data = FLAGS.input_data
   dense_layer_size = FLAGS.dense_layer
   print_summary = FLAGS.print_summary
@@ -485,11 +510,11 @@ def main(argv):
 
   with vocabulary.VocabularyZipFile(FLAGS.vocabulary_zip_path) as vocab:
     task_utils.CreateSeqDirFromIr(folder_data + '_train', vocab)
-    assert os.path.exists(
-        folder_data + '_val'), "Folder not found: " + folder_data + '_val'
+    assert os.path.exists(folder_data +
+                          '_val'), "Folder not found: " + folder_data + '_val'
     task_utils.CreateSeqDirFromIr(folder_data + '_val', vocab)
-    assert os.path.exists(
-        folder_data + '_test'), "Folder not found: " + folder_data + '_test'
+    assert os.path.exists(folder_data +
+                          '_test'), "Folder not found: " + folder_data + '_test'
     task_utils.CreateSeqDirFromIr(folder_data + '_test', vocab)
 
   # Create directories if they do not exist
@@ -504,10 +529,9 @@ def main(argv):
   # Train model
   # Evaluate Classifyapp
   print("\nEvaluating ClassifyappInst2Vec ...")
-  classifyapp_accuracy = evaluate(NCC_classifyapp(), embeddings, folder_data,
-                                  train_samples, folder_results,
-                                  dense_layer_size, print_summary, num_epochs,
-                                  batch_size)
+  classifyapp_accuracy = evaluate(
+      NCC_classifyapp(), embeddings, folder_data, train_samples, folder_results,
+      dense_layer_size, print_summary, num_epochs, batch_size)
 
   ####################################################################################################################
   # Print results

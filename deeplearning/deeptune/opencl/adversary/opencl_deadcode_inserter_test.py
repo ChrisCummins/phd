@@ -8,7 +8,6 @@ from deeplearning.deeptune.opencl.adversary import \
   opencl_deadcode_inserter as dci
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 

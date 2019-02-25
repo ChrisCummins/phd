@@ -26,7 +26,6 @@ from deeplearning.clgen.models import pretrained
 from deeplearning.clgen.proto import clgen_pb2
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 
 

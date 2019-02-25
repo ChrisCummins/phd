@@ -33,17 +33,15 @@ from absl import logging
 from deeplearning.clgen import errors
 from deeplearning.clgen.proto import model_pb2
 
-
 FLAGS = flags.FLAGS
 
 # An <X,y> data tuple used for training one batch.
 DataBatch = collections.namedtuple('DataBatch', ['X', 'y'])
 
 
-def AutoGenerator(
-    corpus: 'corpuses.Corpus',
-    training_opts: model_pb2.TrainingOptions) -> typing.Generator[
-  DataBatch, typing.Any, None]:
+def AutoGenerator(corpus: 'corpuses.Corpus',
+                  training_opts: model_pb2.TrainingOptions
+                 ) -> typing.Generator[DataBatch, typing.Any, None]:
   """Determine and construct what we believe to be the best data generator.
 
   The optimum generator will depend on the corpus, the amount of memory
@@ -59,10 +57,9 @@ def AutoGenerator(
   return BatchGenerator(corpus, training_opts)
 
 
-def BatchGenerator(
-    corpus: 'corpuses.Corpus',
-    training_opts: model_pb2.TrainingOptions) -> typing.Generator[
-  DataBatch, typing.Any, None]:
+def BatchGenerator(corpus: 'corpuses.Corpus',
+                   training_opts: model_pb2.TrainingOptions
+                  ) -> typing.Generator[DataBatch, typing.Any, None]:
   """A batch generator which lazily one-hot encodes the y vectors.
 
   This reduces the memory overhead by only one-hot encoding the y vectors on a
@@ -102,6 +99,7 @@ def BatchGenerator(
 
 
 class TensorflowBatchGenerator(object):
+
   def __init__(self, corpus: 'corpuses.Corpus',
                training_opts: model_pb2.TrainingOptions):
     self.corpus = corpus
@@ -113,8 +111,8 @@ class TensorflowBatchGenerator(object):
     self.batches = None
     self.CreateBatches()
 
-    LogBatchTelemetry(
-        self.batches[0], self.num_batches, self.training_opts.num_epochs)
+    LogBatchTelemetry(self.batches[0], self.num_batches,
+                      self.training_opts.num_epochs)
 
   def CreateBatches(self) -> None:
     start_time = time.time()
@@ -130,8 +128,8 @@ class TensorflowBatchGenerator(object):
     sequence_length = self.training_opts.sequence_length
 
     # set corpus size and number of batches
-    self.num_batches = int(len(self.encoded_corpus) / (
-        batch_size * sequence_length))
+    self.num_batches = int(
+        len(self.encoded_corpus) / (batch_size * sequence_length))
     if self.num_batches == 0:
       raise errors.UserError(
           "Not enough data. Use a smaller sequence_length and batch_size")
@@ -146,10 +144,9 @@ class TensorflowBatchGenerator(object):
     ydata[:-1] = xdata[1:]
     ydata[-1] = xdata[0]
     self.batches = [
-      DataBatch(x, y) for x, y in zip(
-          np.split(xdata.reshape(batch_size, -1), self.num_batches, 1),
-          np.split(ydata.reshape(batch_size, -1), self.num_batches, 1)
-      )
+        DataBatch(x, y) for x, y in zip(
+            np.split(xdata.reshape(batch_size, -1), self.num_batches, 1),
+            np.split(ydata.reshape(batch_size, -1), self.num_batches, 1))
     ]
     logging.info(
         'Encoded corpus of %s tokens (clipped last %s tokens) in %s ms.',
@@ -169,10 +166,9 @@ class TensorflowBatchGenerator(object):
     return batch
 
 
-def GetTrainingCorpus(
-    corpus: 'corpuses.Corpus',
-    training_opts: model_pb2.TrainingOptions) -> typing.Tuple[
-  np.ndarray, np.ndarray, int]:
+def GetTrainingCorpus(corpus: 'corpuses.Corpus',
+                      training_opts: model_pb2.TrainingOptions
+                     ) -> typing.Tuple[np.ndarray, np.ndarray, int]:
   """Get the corpus to train over.
 
   Args:
@@ -198,24 +194,20 @@ def GetTrainingCorpus(
         f'sequence length ({training_opts.sequence_length}) are too large for '
         f'corpus of size {corpus_length}.')
 
-  clipped_corpus_length = (
-      steps_per_epoch * training_opts.batch_size *
-      training_opts.sequence_length)
+  clipped_corpus_length = (steps_per_epoch * training_opts.batch_size *
+                           training_opts.sequence_length)
 
-  x = np.reshape(
-      encoded_corpus[:clipped_corpus_length],
-      [training_opts.batch_size,
-       steps_per_epoch * training_opts.sequence_length])
-  y = np.reshape(
-      encoded_corpus[1:clipped_corpus_length + 1],
-      [training_opts.batch_size,
-       steps_per_epoch * training_opts.sequence_length])
+  x = np.reshape(encoded_corpus[:clipped_corpus_length], [
+      training_opts.batch_size, steps_per_epoch * training_opts.sequence_length
+  ])
+  y = np.reshape(encoded_corpus[1:clipped_corpus_length + 1], [
+      training_opts.batch_size, steps_per_epoch * training_opts.sequence_length
+  ])
 
-  logging.info(
-      'Encoded corpus of %s tokens (clipped last %s tokens) in %s ms.',
-      humanize.intcomma(clipped_corpus_length),
-      humanize.intcomma(corpus_length - clipped_corpus_length),
-      humanize.intcomma(int((time.time() - start_time) * 1000)))
+  logging.info('Encoded corpus of %s tokens (clipped last %s tokens) in %s ms.',
+               humanize.intcomma(clipped_corpus_length),
+               humanize.intcomma(corpus_length - clipped_corpus_length),
+               humanize.intcomma(int((time.time() - start_time) * 1000)))
   return x, y, steps_per_epoch
 
 
@@ -235,13 +227,11 @@ def OneHotEncode(indices: np.ndarray, vocabulary_size: int):
 def LogBatchTelemetry(batch: DataBatch, steps_per_epoch: int,
                       num_epochs: int) -> None:
   """Log analytics about the batch."""
-  logging.info("Step shape: X: %s, y"
-               ": %s.", batch.X.shape, batch.y.shape)
+  logging.info("Step shape: X: %s, y" ": %s.", batch.X.shape, batch.y.shape)
   # sys.getsizeof() includes only the memory required for an object, not any
   # objects it refernces, so we must manually sum the X and y arrays.
   batch_size = sys.getsizeof(batch) + batch.X.nbytes + batch.y.nbytes
-  logging.info(
-      'Memory: %s per batch, %s per epoch, %s total.',
-      humanize.naturalsize(batch_size),
-      humanize.naturalsize(batch_size * steps_per_epoch),
-      humanize.naturalsize(batch_size * steps_per_epoch * num_epochs))
+  logging.info('Memory: %s per batch, %s per epoch, %s total.',
+               humanize.naturalsize(batch_size),
+               humanize.naturalsize(batch_size * steps_per_epoch),
+               humanize.naturalsize(batch_size * steps_per_epoch * num_epochs))

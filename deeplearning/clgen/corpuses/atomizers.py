@@ -27,7 +27,6 @@ from absl import flags
 from deeplearning.clgen import errors
 from labm8 import labdate
 
-
 FLAGS = flags.FLAGS
 
 
