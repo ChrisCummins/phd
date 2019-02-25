@@ -171,10 +171,10 @@ def Symlink(src, dst):
     os.symlink(src, dst)
 
 
-def SymlinkGitHook(name):
+def SymlinkGitHook(src_basename, dst_basename):
   """Symlink a git hook script."""
-  src = os.path.join(PHD_ROOT, 'tools', 'git', name + '.sh')
-  dst = os.path.join(PHD_ROOT, '.git', 'hooks', name)
+  src = os.path.join(PHD_ROOT, 'tools', 'git', src_basename)
+  dst = os.path.join(PHD_ROOT, '.git', 'hooks', dst_basename)
   assert os.path.isfile(src)
   Symlink(src, dst)
 
@@ -366,10 +366,10 @@ def main(argv):
         stdout=DEVNULL)
 
   if args.install_git_hooks:
-    SymlinkGitHook('post-commit')
-    SymlinkGitHook('post-rebase')
-    SymlinkGitHook('pre-commit')
-    SymlinkGitHook('pre-push')
+    SymlinkGitHook('post_commit.py', 'post-commit')
+    SymlinkGitHook('post_rebase.py', 'post-rebase')
+    SymlinkGitHook('pre_commit.py', 'pre-commit')
+    SymlinkGitHook('pre_push.sh', 'pre-push')
 
   # Find the path of a supported python binary.
   # TODO(cec): Add 'python3.7' to list once this issue is fixed:
