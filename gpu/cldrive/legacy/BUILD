@@ -83,7 +83,6 @@ py_test(
 py_binary(
     name = "driver",
     srcs = ["driver.py"],
-    data = ["//gpu/cldrive:native_driver"],
     visibility = ["//visibility:public"],
     deps = [
         ":args",

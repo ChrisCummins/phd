@@ -7,6 +7,20 @@ exports_files([
     "LICENSE",
 ])
 
+py_library(
+    name = "api",
+    srcs = ["api.py"],
+    data = [":native_driver"],
+    deps = [
+        "//gpu/cldrive/legacy:env",
+        "//gpu/cldrive/proto:cldrive_py_pb2",
+        "//gpu/oclgrind",
+        "//labm8:bazelutil",
+        "//labm8:pbutil",
+        "//third_party/py/absl",
+    ],
+)
+
 cc_library(
     name = "array_kernel_arg_value",
     hdrs = ["array_kernel_arg_value.h"],
@@ -25,6 +39,17 @@ cc_test(
         ":array_kernel_arg_value",
         "//phd:test",
         "//third_party/opencl:libOpenCL.so",
+    ],
+)
+
+py_binary(
+    name = "cldrive",
+    srcs = ["cldrive.py"],
+    deps = [
+        ":api",
+        "//gpu/cldrive/legacy:env",
+        "//gpu/cldrive/proto:cldrive_py_pb2",
+        "//third_party/py/absl",
     ],
 )
 

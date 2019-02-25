@@ -6,9 +6,9 @@ from absl import app
 from absl import flags
 from absl import logging
 
+from gpu.cldrive import api as cldrive
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
-from gpu.cldrive.legacy import driver
 from gpu.cldrive.legacy import env as cldrive_env
 from gpu.cldrive.proto import cldrive_pb2
 from labm8 import system
@@ -85,7 +85,7 @@ def GetBatchOfKernelsToDrive(db: grewe_features_db.Database,
 
 def ExperimentalNativeDriver(opencl_kernel, env: cldrive_env.OpenCLEnvironment,
                              num_runs: int):
-  instance = driver.DriveInstance(
+  instance = cldrive.Drive(
       cldrive_pb2.CldriveInstance(
           device=env.proto,
           opencl_src=opencl_kernel,
