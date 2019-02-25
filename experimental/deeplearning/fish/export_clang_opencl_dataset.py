@@ -13,15 +13,14 @@ from experimental.deeplearning.fish.proto import fish_pb2
 from labm8 import fs
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string(
-    'export_path', None,
-    'Directory to write training dataset to.')
+flags.DEFINE_string('export_path', None,
+                    'Directory to write training dataset to.')
 
 
-def _SetIf(out: typing.Dict[str, typing.Any], key: typing.Any,
+def _SetIf(out: typing.Dict[str, typing.Any],
+           key: typing.Any,
            value: typing.Any,
            setvalue: typing.Any = None) -> typing.Dict[str, typing.Any]:
   if value:
@@ -38,7 +37,8 @@ def ExportOpenCLResults(cursor, start_id, proto_dir):
   result_id = start_id
   while True:
     logging.info('Exporting batch of %s results', humanize.intcomma(batch_size))
-    cursor.execute("""
+    cursor.execute(
+        """
 SELECT
   results.id,
   assertions.assertion,
@@ -67,10 +67,10 @@ LIMIT %s
     for row in cursor:
       i += 1
       (
-        result_id,
-        assertion_text,
-        outcome_num,
-        program_src,
+          result_id,
+          assertion_text,
+          outcome_num,
+          program_src,
       ) = row
 
       outcome = fish_pb2.CompilerCrashDiscriminatorTrainingExample.Outcome.Name(
@@ -80,8 +80,7 @@ LIMIT %s
           outcome=outcome_num,
           raised_assertion=True if assertion_text else False,
           assertion_name=(GetClangAssertionStub(assertion_text)
-                          if assertion_text else '')
-      )
+                          if assertion_text else ''))
       pbutil.ToFile(proto, proto_dir / outcome / (str(result_id) + '.pbtxt'))
 
     # If we received fewer results than the requested batch size, then we have
@@ -114,21 +113,24 @@ def main(argv):
 
   logging.info('Connecting to MySQL database')
   credentials = GetMySqlCredentials()
-  cnx = MySQLdb.connect(database='dsmith_04_opencl', host='cc1',
-                        user=credentials[0], password=credentials[1])
+  cnx = MySQLdb.connect(
+      database='dsmith_04_opencl',
+      host='cc1',
+      user=credentials[0],
+      password=credentials[1])
   cursor = cnx.cursor()
   logging.info('Determining last export ID')
   ids = sorted([
-    int(pathlib.Path(f).stem) for f in fs.lsfiles(
-        export_path, recursive=True, abspaths=True)])
+      int(pathlib.Path(f).stem)
+      for f in fs.lsfiles(export_path, recursive=True, abspaths=True)
+  ])
   last_export_id = ids[-1] if ids else 0
   logging.info('Exporting results from ID %s', last_export_id)
   ExportOpenCLResults(cursor, last_export_id, export_path)
   cursor.close()
   cnx.close()
   logging.info('Exported training set of %s files to %s',
-               humanize.intcomma(len(list(export_path.iterdir()))),
-               export_path)
+               humanize.intcomma(len(list(export_path.iterdir()))), export_path)
 
 
 if __name__ == '__main__':

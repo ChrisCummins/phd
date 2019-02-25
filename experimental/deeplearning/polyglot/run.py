@@ -19,20 +19,19 @@ from labm8 import crypto
 from labm8 import lockfile
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 
-flags.DEFINE_integer('output_corpus_size', 10000,
-                     'The minimum number of samples to generate in the output'
-                     'corpus.')
-flags.DEFINE_string('instances', None,
-                    'Path to a clgen.Instances proto')
+flags.DEFINE_integer(
+    'output_corpus_size', 10000,
+    'The minimum number of samples to generate in the output'
+    'corpus.')
+flags.DEFINE_string('instances', None, 'Path to a clgen.Instances proto')
 
 # A mapping from language name to a list of CLgen pre-processor functions.
 # These pre-processors are used as rejection samplers on the sample corpuses.
 POSTPROCESSORS = {
-  'opencl': ['deeplearning.clgen.preprocessors.opencl:Compile'],
-  'java': ['deeplearning.clgen.preprocessors.java:Compile'],
+    'opencl': ['deeplearning.clgen.preprocessors.opencl:Compile'],
+    'java': ['deeplearning.clgen.preprocessors.java:Compile'],
 }
 
 
@@ -66,8 +65,8 @@ def SampleModel(instance: clgen.Instance) -> None:
     with sample_lock.acquire(replace_stale=True, block=True):
       num_samples = len(list(sample_dir.iterdir()))
       while num_samples < target_samples:
-        samples = instance.model.SampleFast(
-            instance.sampler, target_samples - num_samples)
+        samples = instance.model.SampleFast(instance.sampler,
+                                            target_samples - num_samples)
         for sample in samples:
           sample_id = crypto.sha256_str(sample.text)
           pbutil.ToFile(sample, sample_dir / f'{sample_id}.pbtxt')
@@ -95,8 +94,8 @@ def PostprocessSampleCorpus(instance: clgen.Instance):
   # We derive the programming language name from the input corpus directory.
   # This depends on corpuses being in directories named after their language,
   # e.g. ~/corpuses/opencl, or ~/corpuses/java.A
-  preprocessed_dir = instance.model.corpus.preprocessed.url[
-                     len('sqlite:///'):].parent
+  preprocessed_dir = instance.model.corpus.preprocessed.url[len('sqlite:///'
+                                                               ):].parent
   language = (preprocessed_dir / 'contentfiles').resolve().name
   output_corpus_config.preprocessor[:] = POSTPROCESSORS[language]
   output_corpus = corpuses.Corpus(output_corpus_config)
@@ -114,9 +113,9 @@ def main(argv):
 
   start_time = time.time()
   instances = [
-    clgen.Instance(p) for p in
-    pbutil.FromFile(pathlib.Path(FLAGS.instances),
-                    clgen_pb2.Instances()).instance]
+      clgen.Instance(p) for p in pbutil.FromFile(
+          pathlib.Path(FLAGS.instances), clgen_pb2.Instances()).instance
+  ]
   random.shuffle(instances)
   candidate_instances = collections.deque(instances)
   logging.info('Loaded %d instances in %s ms', len(candidate_instances),

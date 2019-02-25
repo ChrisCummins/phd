@@ -16,12 +16,10 @@ from compilers.llvm import opt
 from experimental.compilers.reachability import control_flow_graph as cfg
 from labm8 import fs
 
-
 FLAGS = flags.FLAGS
 
 
-def DotCfgsFromBytecode(
-    bytecode: str) -> typing.Iterator[str]:
+def DotCfgsFromBytecode(bytecode: str) -> typing.Iterator[str]:
   """Create a control flow graph from an LLVM bytecode file.
 
   Args:
@@ -42,8 +40,10 @@ def DotCfgsFromBytecode(
       # We run with universal_newlines=False because the stdout of opt is the
       # binary bitcode, which we completely ignore (we're only interested in
       # stderr). This means we must encode stdin and decode stderr ourselves.
-      process = opt.Exec(['-dot-cfg'], stdin=bytecode.encode('utf-8'),
-                         universal_newlines=False, log=False)
+      process = opt.Exec(['-dot-cfg'],
+                         stdin=bytecode.encode('utf-8'),
+                         universal_newlines=False,
+                         log=False)
       stderr = process.stderr.decode('utf-8')
 
       # Propagate failures from opt as OptExceptions.
@@ -84,10 +84,10 @@ def NodeAttributesToBasicBlock(
   # Lines are separated using '\l' in the dot label.
   lines = label.split('\l')
   return {
-    # The name is in the first line.
-    'name': lines[0][len('"{'):].split(':')[0],
-    # All other lines except the last are either blank or contain instructions.
-    'text': '\n'.join(x.lstrip() for x in lines[1:-1] if x.lstrip()),
+      # The name is in the first line.
+      'name': lines[0][len('"{'):].split(':')[0],
+      # All other lines except the last are either blank or contain instructions.
+      'text': '\n'.join(x.lstrip() for x in lines[1:-1] if x.lstrip()),
   }
 
 
@@ -128,8 +128,8 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
     # replace a single node with a contiguous run of nodes. We construct a map
     # of self.node IDs to (start,end) tuples of g.node IDs, allowing us to
     # translate node IDs for adding edges.
-    NodeTranslationMapValue = collections.namedtuple(
-        'NodeTranslationMapValue', ['start', 'end'])
+    NodeTranslationMapValue = collections.namedtuple('NodeTranslationMapValue',
+                                                     ['start', 'end'])
     node_translation_map: typing.Dict[int, NodeTranslationMapValue] = {}
 
     # Iterate through all blocks in the source graph.
@@ -164,8 +164,10 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
           else:
             # TODO(cec): Do we want to preserve the "true" "false" information
             # for outgoing edges? We currently throw it away.
-            sig.add_node(new_node_id, name=new_node_name,
-                         text=branch_instruction_components[0])
+            sig.add_node(
+                new_node_id,
+                name=new_node_name,
+                text=branch_instruction_components[0])
         else:
           sig.add_node(new_node_id, name=new_node_name, text=instruction)
 
@@ -176,8 +178,11 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
 
       # Create edges between the sequential instruction nodes we just added
       # to the graph.
-      [sig.add_edge(i, i + 1) for i in
-       range(sig_node_count, sig_node_count + block_instruction_count)]
+      [
+          sig.add_edge(i, i + 1)
+          for i in range(sig_node_count, sig_node_count +
+                         block_instruction_count)
+      ]
 
       # Update the global node count to be the value of the next unused node ID.
       sig_node_count += block_instruction_count + 1
@@ -198,8 +203,8 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
 
     return sig.ValidateControlFlowGraph(strict=False)
 
-  def ValidateControlFlowGraph(
-      self, strict: bool = True) -> 'LlvmControlFlowGraph':
+  def ValidateControlFlowGraph(self,
+                               strict: bool = True) -> 'LlvmControlFlowGraph':
     """Validate the control flow graph."""
     super(LlvmControlFlowGraph, self).ValidateControlFlowGraph(strict=strict)
 
@@ -212,8 +217,7 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
     return self
 
 
-def ControlFlowGraphFromDotSource(
-    dot_source: str) -> LlvmControlFlowGraph:
+def ControlFlowGraphFromDotSource(dot_source: str) -> LlvmControlFlowGraph:
   """Create a control flow graph from an LLVM-generated dot file.
 
   The control flow graph generated from the dot source is not guaranteed to
@@ -347,8 +351,8 @@ def ControlFlowGraphsFromBytecodes(
   dot_processes = []
   dot_queue = multiprocessing.Queue()
   for bytecode in bytecodes:
-    process = multiprocessing.Process(target=_DotCfgsFromBytecodeToQueue,
-                                      args=(bytecode, dot_queue))
+    process = multiprocessing.Process(
+        target=_DotCfgsFromBytecodeToQueue, args=(bytecode, dot_queue))
     process.start()
     dot_processes.append(process)
 

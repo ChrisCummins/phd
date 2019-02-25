@@ -30,7 +30,6 @@ from experimental import dsmith
 from experimental.dsmith import Colors
 from labm8 import fs
 
-
 runtime_t = NewType('runtime_t', float)
 status_t = NewType('status_t', int)
 return_t = namedtuple('return_t', ['runtime', 'status', 'stdout', 'stderr'])
@@ -67,16 +66,20 @@ def clsmith(*args, exec_path=exec_path) -> return_t:
   runtime = runtime_t(time() - start_time)
 
   return return_t(
-      runtime=runtime, status=status_t(process.returncode),
-      stdout=stdout.decode('utf-8'), stderr=stderr.decode('utf-8'))
+      runtime=runtime,
+      status=status_t(process.returncode),
+      stdout=stdout.decode('utf-8'),
+      stderr=stderr.decode('utf-8'))
 
 
 def cl_launcher_cli(program_path: str, platform_id: int, device_id: int,
                     optimizations: bool, timeout: int) -> str:
   cmd = ["timeout", "--signal=9", str(timeout)] if timeout else []
-  cmd += [cl_launcher_path, '---debug', '-f', program_path,
-          '-p', str(platform_id), '-d', str(device_id),
-          '--include_path', include_path]
+  cmd += [
+      cl_launcher_path, '---debug', '-f', program_path, '-p',
+      str(platform_id), '-d',
+      str(device_id), '--include_path', include_path
+  ]
   if not optimizations:
     cmd += ['---disable_opts']
   return cmd
@@ -98,8 +101,10 @@ def cl_launcher(*args, **kwargs) -> return_t:
   runtime = runtime_t(time() - start_time)
 
   return return_t(
-      runtime=runtime, status=status_t(process.returncode),
-      stdout=stdout.decode('utf-8'), stderr=stderr.decode('utf-8'))
+      runtime=runtime,
+      status=status_t(process.returncode),
+      stdout=stdout.decode('utf-8'),
+      stderr=stderr.decode('utf-8'))
 
 
 def cl_launcher_str(src: str, *args, **kwargs) -> Tuple[float, int, str, str]:
@@ -142,8 +147,8 @@ def verify_cl_launcher_run(platform: str, device: str, optimizations: bool,
     # global size
     match = re.match('^3-D global size \d+ = \[(\d+), (\d+), (\d+)\]', line)
     if match:
-      actual_global_size = (
-        int(match.group(1)), int(match.group(2)), int(match.group(3)))
+      actual_global_size = (int(match.group(1)), int(match.group(2)),
+                            int(match.group(3)))
     match = re.match('^2-D global size \d+ = \[(\d+), (\d+)\]', line)
     if match:
       actual_global_size = (int(match.group(1)), int(match.group(2)), 0)
@@ -154,8 +159,8 @@ def verify_cl_launcher_run(platform: str, device: str, optimizations: bool,
     # local size
     match = re.match('^3-D local size \d+ = \[(\d+), (\d+), (\d+)\]', line)
     if match:
-      actual_local_size = (
-        int(match.group(1)), int(match.group(2)), int(match.group(3)))
+      actual_local_size = (int(match.group(1)), int(match.group(2)),
+                           int(match.group(3)))
     match = re.match('^2-D local size \d+ = \[(\d+), (\d+)\]', line)
     if match:
       actual_local_size = (int(match.group(1)), int(match.group(2)), 0)

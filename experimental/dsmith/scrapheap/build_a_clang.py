@@ -61,8 +61,11 @@ def build_with_clang(program: Union[CLgenProgram, CLSmithProgram],
     cmd = ['timeout', '-s9', '60s', clang, '-cc1', '-xcl', src_path]
 
     start_time = time()
-    process = subprocess.Popen(cmd, universal_newlines=True,
-                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    process = subprocess.Popen(
+        cmd,
+        universal_newlines=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE)
     _, stderr = process.communicate()
 
     return process.returncode, time() - start_time, stderr.strip()
@@ -74,15 +77,18 @@ def build_with_clang(program: Union[CLgenProgram, CLSmithProgram],
 if __name__ == "__main__":
   parser = ArgumentParser()
   parser.add_argument(
-      "-H", "--hostname", type=str, default="cc1",
+      "-H",
+      "--hostname",
+      type=str,
+      default="cc1",
       help="MySQL database hostname")
   parser.add_argument("clang", type=str, help="clang version")
-  parser.add_argument("--clsmith", action="store_true",
-                      help="Only reduce CLSmith results")
-  parser.add_argument("--clgen", action="store_true",
-                      help="Only reduce CLgen results")
-  parser.add_argument("--recheck", action="store_true",
-                      help="Re-check existing errors")
+  parser.add_argument(
+      "--clsmith", action="store_true", help="Only reduce CLSmith results")
+  parser.add_argument(
+      "--clgen", action="store_true", help="Only reduce CLgen results")
+  parser.add_argument(
+      "--recheck", action="store_true", help="Re-check existing errors")
   args = parser.parse_args()
 
   db.init(args.hostname)  # initialize db engine
@@ -126,7 +132,6 @@ if __name__ == "__main__":
 
       for program in todo:
         inbox.append(program)
-
 
     for tables in tablesets:
       if args.recheck:

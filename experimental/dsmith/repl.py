@@ -38,7 +38,6 @@ from experimental.dsmith import Colors
 from experimental.dsmith.langs import Generator, Language, mklang
 from labm8 import fs
 
-
 _lang_str = f"{Colors.RED}<lang>{Colors.END}{Colors.BOLD}"
 _generator_str = f"{Colors.GREEN}<generator>{Colors.END}{Colors.BOLD}"
 _harness_str = f"{Colors.YELLOW}<harness>{Colors.END}{Colors.BOLD}"
@@ -121,41 +120,45 @@ def _exit(*args, **kwargs):
   file = kwargs.pop("file", sys.stdout)
 
   farewell = random.choice([
-    "Have a nice day!",
-    "Over and out.",
-    "God speed.",
-    "See ya!",
-    "See you later alligator.",
+      "Have a nice day!",
+      "Over and out.",
+      "God speed.",
+      "See ya!",
+      "See you later alligator.",
   ])
   print(f"{Colors.END}{farewell}", file=file)
   sys.exit()
 
 
 def _describe_generators(lang: Language, file=sys.stdout):
-  gen = ", ".join(f"{Colors.BOLD}{generator}{Colors.END}"
-                  for generator in lang.generators)
-  print(f"The following {lang} generators are available: {gen}.",
-        file=file)
+  gen = ", ".join(
+      f"{Colors.BOLD}{generator}{Colors.END}" for generator in lang.generators)
+  print(f"The following {lang} generators are available: {gen}.", file=file)
 
 
 def _describe_programs(lang: Language, file=sys.stdout):
   for generator in lang.generators:
     num = humanize.intcomma(generator.num_programs())
     sloc = humanize.intcomma(generator.sloc_total())
-    print(f"You have {Colors.BOLD}{num} {generator}{Colors.END} "
-          f"programs, total {Colors.BOLD}{sloc}{Colors.END} SLOC.",
-          file=file)
+    print(
+        f"You have {Colors.BOLD}{num} {generator}{Colors.END} "
+        f"programs, total {Colors.BOLD}{sloc}{Colors.END} SLOC.",
+        file=file)
 
 
 def _describe_testcases(lang: Language, generator: Generator, file=sys.stdout):
   for harness in generator.harnesses:
     num = humanize.intcomma(generator.num_testcases())
     print(f"There are {Colors.BOLD}{num} {generator}:{harness} "
-          "testcases.", file=file)
+          "testcases.",
+          file=file)
 
 
-def _make_programs(lang: Language, generator: Generator,
-                   n: int, up_to: bool = False, file=sys.stdout):
+def _make_programs(lang: Language,
+                   generator: Generator,
+                   n: int,
+                   up_to: bool = False,
+                   file=sys.stdout):
   up_to_val = n if up_to else math.inf
   n = math.inf if up_to else n
   generator.generate(n=n, up_to=up_to_val)
@@ -210,8 +213,7 @@ def _execute(statement: str, file=sys.stdout) -> None:
         statement)
     programs_match = re.match(r'describe (?P<lang>\w+) programs$', statement)
     testcases_match = re.match(
-        r'describe (?P<lang>\w+) ((?P<generator>\w+) )?testcases$',
-        statement)
+        r'describe (?P<lang>\w+) ((?P<generator>\w+) )?testcases$', statement)
     results_match = re.match(r'describe (?P<lang>\w+) results$', statement)
 
     if generators_match:
@@ -243,8 +245,7 @@ def _execute(statement: str, file=sys.stdout) -> None:
   if components[0] == "make":
     programs_match = re.match(
         r'make ((?P<up_to>up to )?(?P<number>\d+) )?(?P<lang>\w+) program(s)?( using ('
-        r'?P<generator>\w+))?$',
-        statement)
+        r'?P<generator>\w+))?$', statement)
     testcases_match = re.match(
         r'make (?P<lang>\w+) ((?P<harness>\w+):(?P<generator>\w+)? )?testcases$',
         statement)
@@ -255,7 +256,9 @@ def _execute(statement: str, file=sys.stdout) -> None:
       generator = lang.mkgenerator(programs_match.group("generator"))
 
       return _make_programs(
-          lang=lang, generator=generator, n=number,
+          lang=lang,
+          generator=generator,
+          n=number,
           up_to=True if programs_match.group("up_to") else False,
           file=file)
 
@@ -299,8 +302,7 @@ def _execute(statement: str, file=sys.stdout) -> None:
   if components[0] == "run":
     match = re.match(
         r'run (?P<lang>\w+) ((?P<harness>\w+):(?P<generator>\w+)? )?testcases( on (?P<testbed>['
-        r'\w+-±]+))?$',
-        statement)
+        r'\w+-±]+))?$', statement)
     if match:
       lang = mklang(match.group("lang"))
 
@@ -359,7 +361,8 @@ def _user_message_with_stacktrace(exception):
   stack_trace = "\n".join(_msg(*r) for r in enumerate(trace))
   typename = type(exception).__name__
 
-  print(f"""
+  print(
+      f"""
 ======================================================================
 💩  Fatal error!
 {exception} ({typename})
@@ -368,7 +371,8 @@ def _user_message_with_stacktrace(exception):
 {stack_trace}
 
 Please report bugs at <https://github.com/ChrisCummins/dsmith/issues>\
-""", file=sys.stderr)
+""",
+      file=sys.stderr)
 
 
 def run_command(command: str, file=sys.stdout) -> None:
@@ -379,7 +383,8 @@ def run_command(command: str, file=sys.stdout) -> None:
     _execute(command, file=file)
   except UnrecognizedInput as e:
     print("😕  I don't understand. "
-          "Type 'help' for available commands.", file=file)
+          "Type 'help' for available commands.",
+          file=file)
     if os.environ.get("DEBUG"):
       raise e
   except NotImplementedError as e:

@@ -15,21 +15,17 @@ from experimental.compilers.reachability.datasets import linux
 from experimental.compilers.reachability.datasets import opencl
 from labm8 import prof
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('dataset_outdir',
                     '/tmp/phd/docs/wip_graph/datasets/reachability',
                     'The directory to write the output dataframes to.')
-flags.DEFINE_integer(
-    'synthetic_generator_seed', 0xCEC,
-    'Random seed for synthetic training graph generator.')
-flags.DEFINE_integer(
-    'num_synthetic_training_graphs', 2000,
-    'The number of training graphs to generate.')
-flags.DEFINE_integer(
-    'num_synthetic_validation_graphs', 850,
-    'The number of validation graphs to generate.')
+flags.DEFINE_integer('synthetic_generator_seed', 0xCEC,
+                     'Random seed for synthetic training graph generator.')
+flags.DEFINE_integer('num_synthetic_training_graphs', 2000,
+                     'The number of training graphs to generate.')
+flags.DEFINE_integer('num_synthetic_validation_graphs', 850,
+                     'The number of validation graphs to generate.')
 
 # Synthetic graph properties.
 num_nodes_min_max_tr = (5, 20)
@@ -37,8 +33,8 @@ num_nodes_min_max_ge = (15, 25)
 edge_density_tr = .01
 edge_density_ge = .01
 
-TargetGraphSpec = collections.namedtuple(
-    'TargetGraphSpec', ['graph', 'target_node_index'])
+TargetGraphSpec = collections.namedtuple('TargetGraphSpec',
+                                         ['graph', 'target_node_index'])
 
 
 class SpecGenerator(object):
@@ -91,14 +87,16 @@ class SpecGenerator(object):
 # Functions to generate feature vectors. Features vectors are np.arrays of
 # floating point values.
 
+
 def InputGraphNodeFeatures(spec: TargetGraphSpec, node_index: int) -> np.array:
   """Extract node features for an input graph."""
   # If the node is the target node, the features are [0, 1]. Else, the features
   # are [1, 0].
   return np.array([
-    0 if node_index == spec.target_node_index else 1,
-    1 if node_index == spec.target_node_index else 0,
-  ], dtype=np.float32)
+      0 if node_index == spec.target_node_index else 1,
+      1 if node_index == spec.target_node_index else 0,
+  ],
+                  dtype=np.float32)
 
 
 def InputGraphEdgeFeatures(spec: TargetGraphSpec,
@@ -115,9 +113,10 @@ def TargetGraphNodeFeatures(spec: TargetGraphSpec, node_index: int):
   # If the node is reachable, the features are [0, 1]. Else, the features are
   # [1, 0].
   return np.array([
-    0 if reachable else 1,
-    1 if reachable else 0,
-  ], dtype=np.float32)
+      0 if reachable else 1,
+      1 if reachable else 0,
+  ],
+                  dtype=np.float32)
 
 
 def TargetGraphEdgeFeatures(spec: TargetGraphSpec,
@@ -170,21 +169,21 @@ def SpecsToDataFrame(specs: typing.Iterator[TargetGraphSpec], split_type):
     """Compute a single row in dataframe as a dict."""
     input_graph, target_graph = SpecToInputTarget(spec)
     return {
-      'program:source': 'Synthetic',
-      'program:name': 'Synthetic',
-      'reachability:target_node_index': spec.target_node_index,
-      'cfg:graph': spec.graph,
-      'cfg:block_count': spec.graph.number_of_nodes(),
-      'cfg:edge_count': spec.graph.number_of_edges(),
-      'cfg:edge_density': spec.graph.edge_density,
-      'cfg:diameter': spec.graph.undirected_diameter,
-      'cfg:is_valid': spec.graph.IsValidControlFlowGraph(strict=False),
-      'cfg:is_strict_valid': spec.graph.IsValidControlFlowGraph(strict=True),
-      'networkx:input_graph': input_graph,
-      'networkx:target_graph': target_graph,
-      'split:type': split_type,
-      'graphnet:loss_op': 'NodesSoftmaxCrossEntropy',
-      'graphnet:accuracy_evaluator': 'OneHotNodes',
+        'program:source': 'Synthetic',
+        'program:name': 'Synthetic',
+        'reachability:target_node_index': spec.target_node_index,
+        'cfg:graph': spec.graph,
+        'cfg:block_count': spec.graph.number_of_nodes(),
+        'cfg:edge_count': spec.graph.number_of_edges(),
+        'cfg:edge_density': spec.graph.edge_density,
+        'cfg:diameter': spec.graph.undirected_diameter,
+        'cfg:is_valid': spec.graph.IsValidControlFlowGraph(strict=False),
+        'cfg:is_strict_valid': spec.graph.IsValidControlFlowGraph(strict=True),
+        'networkx:input_graph': input_graph,
+        'networkx:target_graph': target_graph,
+        'split:type': split_type,
+        'graphnet:loss_op': 'NodesSoftmaxCrossEntropy',
+        'graphnet:accuracy_evaluator': 'OneHotNodes',
     }
 
   return pd.DataFrame([SpecToRow(s) for s in specs])
@@ -220,8 +219,7 @@ def main(argv):
             random_state, num_nodes_min_max_ge, edge_density_ge, strict=False))
     valid_df = SpecsToDataFrame(
         validation_graph_generator.Generate(
-            FLAGS.num_synthetic_validation_graphs),
-        'validation')
+            FLAGS.num_synthetic_validation_graphs), 'validation')
 
   synthetic_df = pd.concat((train_df, valid_df))
   PickleDataFrame(synthetic_df, outdir / 'synthetic.pkl')
@@ -233,9 +231,9 @@ def main(argv):
     # Set the program names on the networkx graph instances.
     for _, row in ocl_dataset.iterrows():
       row['cfg:graph'].graph['name'] = ':'.join([
-        row['program:benchmark_suite_name'],
-        row['program:benchmark_name'],
-        row['program:opencl_kernel_name'],
+          row['program:benchmark_suite_name'],
+          row['program:benchmark_name'],
+          row['program:opencl_kernel_name'],
       ])
 
     ocl_df = SpecsToDataFrame(
@@ -245,12 +243,12 @@ def main(argv):
     # Set the program name column.
     ocl_df['program:source'] = 'OpenCL'
     ocl_df['program:name'] = [
-      r['cfg:graph'].graph['name'] for _, r in ocl_df.iterrows()
+        r['cfg:graph'].graph['name'] for _, r in ocl_df.iterrows()
     ]
 
   PickleDataFrame(ocl_df, outdir / 'ocl.pkl')
-  PickleDataFrame(pd.concat((synthetic_df, ocl_df)),
-                  outdir / 'synthetic_ocl.pkl')
+  PickleDataFrame(
+      pd.concat((synthetic_df, ocl_df)), outdir / 'synthetic_ocl.pkl')
 
   # Linux dataset.
   with prof.Profile('linux dataset'):
@@ -262,22 +260,22 @@ def main(argv):
           '/', '.')
 
     linux_df = SpecsToDataFrame(
-        SpecGenerator(linux_dataset['cfg:graph'].values).Generate(),
-        'test')
+        SpecGenerator(linux_dataset['cfg:graph'].values).Generate(), 'test')
     del linux_dataset
 
     # Set the program name column.
     linux_df['program:source'] = 'Linux'
     linux_df['program:name'] = [
-      r['cfg:graph'].graph['name'] for _, r in linux_df.iterrows()
+        r['cfg:graph'].graph['name'] for _, r in linux_df.iterrows()
     ]
 
   PickleDataFrame(linux_df, outdir / 'linux.pkl')
-  PickleDataFrame(pd.concat((synthetic_df, linux_df)),
-                  outdir / 'synthetic_linux.pkl')
+  PickleDataFrame(
+      pd.concat((synthetic_df, linux_df)), outdir / 'synthetic_linux.pkl')
 
-  PickleDataFrame(pd.concat((synthetic_df, ocl_df, linux_df)),
-                  outdir / 'synthetic_linux_ocl.pkl')
+  PickleDataFrame(
+      pd.concat((synthetic_df, ocl_df, linux_df)),
+      outdir / 'synthetic_linux_ocl.pkl')
 
 
 if __name__ == '__main__':

@@ -9,7 +9,6 @@ from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
 from labm8 import bazelutil
 
-
 FLAGS = flags.FLAGS
 flags.DEFINE_string(
     'db',

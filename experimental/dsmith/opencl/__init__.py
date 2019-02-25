@@ -33,17 +33,17 @@ class OpenCL(Language):
   __name__ = "opencl"
 
   __generators__ = {
-    None: DSmith,  # default
-    "dsmith": DSmith,
-    "clsmith": CLSmith,
-    "randchar": RandChar,
-    "randtok": RandTok,
+      None: DSmith,  # default
+      "dsmith": DSmith,
+      "clsmith": CLSmith,
+      "randchar": RandChar,
+      "randtok": RandTok,
   }
 
   __harnesses__ = {
-    "cldrive": Cldrive,
-    "cl_launcher": Cl_launcher,
-    "clang": Clang,
+      "cldrive": Cldrive,
+      "cl_launcher": Cl_launcher,
+      "clang": Clang,
   }
 
   def __init__(self):
@@ -53,8 +53,10 @@ class OpenCL(Language):
   def mktestbeds(self, string: str) -> List[Testbed]:
     """ Instantiate testbed(s) by name """
     with Session() as s:
-      return [TestbedProxy(testbed) for testbed in
-              Testbed.from_str(string, session=s)]
+      return [
+          TestbedProxy(testbed)
+          for testbed in Testbed.from_str(string, session=s)
+      ]
 
   def run_testcases(self, testbeds: List[str],
                     pairs: List[Tuple[Generator, Harness]]) -> None:
@@ -68,8 +70,8 @@ class OpenCL(Language):
                         file=sys.stdout) -> None:
     with Session() as s:
       if not available_only:
-        print(f"The following {self} testbeds are in the data store:",
-              file=file)
+        print(
+            f"The following {self} testbeds are in the data store:", file=file)
         for harness in sorted(self.harnesses):
           for testbed in sorted(harness.testbeds()):
             print(
@@ -77,8 +79,9 @@ class OpenCL(Language):
                 file=file)
         print(file=file)
 
-      print(f"The following {self} testbeds are available on this machine:",
-            file=file)
+      print(
+          f"The following {self} testbeds are available on this machine:",
+          file=file)
       for harness in sorted(self.harnesses):
         for testbed in sorted(harness.available_testbeds()):
           print(f"    {harness} {testbed} {testbed.platform}", file=file)
@@ -92,9 +95,11 @@ class OpenCL(Language):
             num_results = harness.num_results(generator, testbed)
             if num_results:
               word_num = humanize.intcomma(num_results)
-              print(f"There are {Colors.BOLD}{word_num}{Colors.END} "
-                    f"{generator}:{harness} "
-                    f"results on {testbed}.", file=file)
+              print(
+                  f"There are {Colors.BOLD}{word_num}{Colors.END} "
+                  f"{generator}:{harness} "
+                  f"results on {testbed}.",
+                  file=file)
 
   def difftest(self) -> None:
     difftest.difftest()

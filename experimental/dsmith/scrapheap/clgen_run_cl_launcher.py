@@ -39,13 +39,16 @@ def cl_launcher(src: str, platform_id: int, device_id: int,
     tmp.write(src.encode('utf-8'))
     tmp.flush()
 
-    return clsmith.cl_launcher(tmp.name, platform_id, device_id, *args,
-                               timeout=os.environ.get("TIMEOUT", 60))
+    return clsmith.cl_launcher(
+        tmp.name,
+        platform_id,
+        device_id,
+        *args,
+        timeout=os.environ.get("TIMEOUT", 60))
 
 
 def verify_params(platform: str, device: str, optimizations: bool,
-                  global_size: tuple, local_size: tuple,
-                  stderr: str) -> None:
+                  global_size: tuple, local_size: tuple, stderr: str) -> None:
   """ verify that expected params match actual as reported by cl_launcher """
   optimizations = "on" if optimizations else "off"
 
@@ -66,8 +69,8 @@ def verify_params(platform: str, device: str, optimizations: bool,
     # global size
     match = re.match('^3-D global size \d+ = \[(\d+), (\d+), (\d+)\]', line)
     if match:
-      actual_global_size = (
-        int(match.group(1)), int(match.group(2)), int(match.group(3)))
+      actual_global_size = (int(match.group(1)), int(match.group(2)),
+                            int(match.group(3)))
     match = re.match('^2-D global size \d+ = \[(\d+), (\d+)\]', line)
     if match:
       actual_global_size = (int(match.group(1)), int(match.group(2)), 0)
@@ -78,8 +81,8 @@ def verify_params(platform: str, device: str, optimizations: bool,
     # local size
     match = re.match('^3-D local size \d+ = \[(\d+), (\d+), (\d+)\]', line)
     if match:
-      actual_local_size = (
-        int(match.group(1)), int(match.group(2)), int(match.group(3)))
+      actual_local_size = (int(match.group(1)), int(match.group(2)),
+                           int(match.group(3)))
     match = re.match('^2-D local size \d+ = \[(\d+), (\d+)\]', line)
     if match:
       actual_local_size = (int(match.group(1)), int(match.group(2)), 0)
@@ -114,21 +117,37 @@ def parse_ndrange(ndrange: str) -> Tuple[int, int, int]:
 #         CLgenProgram.cl_launchable == 1).count()
 #     return num_ran, total
 
-
 if __name__ == "__main__":
   parser = ArgumentParser()
-  parser.add_argument("-H", "--hostname", type=str, default="cc1",
-                      help="MySQL database hostname")
-  parser.add_argument("platform_id", metavar="<platform-id>", type=int,
-                      help="OpenCL platform ID")
-  parser.add_argument("device_id", metavar="<device-id>", type=int,
-                      help="OpenCL device ID")
-  parser.add_argument("--no-opts", action="store_true",
-                      help="Disable OpenCL optimizations (on by default)")
-  parser.add_argument("-g", "--gsize", type=str, default="128,16,1",
-                      help="Comma separated global sizes (default: 128,16,1)")
-  parser.add_argument("-l", "--lsize", type=str, default="32,1,1",
-                      help="Comma separated global sizes (default: 32,1,1)")
+  parser.add_argument(
+      "-H",
+      "--hostname",
+      type=str,
+      default="cc1",
+      help="MySQL database hostname")
+  parser.add_argument(
+      "platform_id",
+      metavar="<platform-id>",
+      type=int,
+      help="OpenCL platform ID")
+  parser.add_argument(
+      "device_id", metavar="<device-id>", type=int, help="OpenCL device ID")
+  parser.add_argument(
+      "--no-opts",
+      action="store_true",
+      help="Disable OpenCL optimizations (on by default)")
+  parser.add_argument(
+      "-g",
+      "--gsize",
+      type=str,
+      default="128,16,1",
+      help="Comma separated global sizes (default: 128,16,1)")
+  parser.add_argument(
+      "-l",
+      "--lsize",
+      type=str,
+      default="32,1,1",
+      help="Comma separated global sizes (default: 32,1,1)")
   args = parser.parse_args()
 
   # Parse command line options
@@ -149,11 +168,15 @@ if __name__ == "__main__":
   with Session() as session:
     testbed = get_testbed(session, platform_name, device_name)
 
-    params = db.get_or_create(session, threads_id,
-                              gsize_x=gsize[0], gsize_y=gsize[1],
-                              gsize_z=gsize[2],
-                              lsize_x=lsize[0], lsize_y=lsize[1],
-                              lsize_z=lsize[2])
+    params = db.get_or_create(
+        session,
+        threads_id,
+        gsize_x=gsize[0],
+        gsize_y=gsize[1],
+        gsize_z=gsize[2],
+        lsize_x=lsize[0],
+        lsize_y=lsize[1],
+        lsize_z=lsize[2])
     flags = params.to_flags()
 
     print(testbed)
@@ -171,27 +194,34 @@ if __name__ == "__main__":
           cl_launcherCLgenResult.params_id == params.id)
       program = session.query(CLgenProgram).filter(
           ~CLgenProgram.id.in_(subquery),
-          CLgenProgram.cl_launchable == 1
-      ).order_by(CLgenProgram.id).first()
+          CLgenProgram.cl_launchable == 1).order_by(CLgenProgram.id).first()
 
       # we have no program to run
       if not program:
         break
 
-      runtime, status, stdout, stderr = cl_launcher(
-          program.src, platform_id, device_id, *flags)
+      runtime, status, stdout, stderr = cl_launcher(program.src, platform_id,
+                                                    device_id, *flags)
 
       # assert that executed params match expected
-      verify_params(platform=platform_name, device=device_name,
-                    optimizations=params.optimizations,
-                    global_size=params.gsize, local_size=params.lsize,
-                    stderr=stderr)
+      verify_params(
+          platform=platform_name,
+          device=device_name,
+          optimizations=params.optimizations,
+          global_size=params.gsize,
+          local_size=params.lsize,
+          stderr=stderr)
 
       # create new result
       result = cl_launcherCLgenResult(
-          program=program, params=params, testbed=testbed,
-          flags=" ".join(flags), status=status, runtime=runtime,
-          stdout=stdout, stderr=stderr)
+          program=program,
+          params=params,
+          testbed=testbed,
+          flags=" ".join(flags),
+          status=status,
+          runtime=runtime,
+          stdout=stdout,
+          stderr=stderr)
 
       # record result
       session.add(result)

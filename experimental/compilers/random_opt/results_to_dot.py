@@ -10,14 +10,12 @@ from experimental.compilers.random_opt.proto import random_opt_pb2
 from labm8 import graph
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
     'delayed_reward_experiment_path',
     '/tmp/phd/experimental/compilers/random_opt/random_opt.pbtxt',
-    'Path to a DelayedRewardExperiment proto.'
-)
+    'Path to a DelayedRewardExperiment proto.')
 
 
 def _SanitizeName(name):
@@ -32,8 +30,7 @@ def DelayedRewardExperimentToDot(data: random_opt_pb2.DelayedRewardExperiment):
   return dot
 
 
-def AddStepsToDot(dot,
-                  steps: typing.List[random_opt_pb2.DelayedRewardStep],
+def AddStepsToDot(dot, steps: typing.List[random_opt_pb2.DelayedRewardStep],
                   uid: str):
   if not steps:
     return
@@ -45,8 +42,8 @@ def AddStepsToDot(dot,
   AddStepsToDot(dot, steps[1:], new_uid)
 
 
-def DelayedRewardExperimentToGraph(data: random_opt_pb2.DelayedRewardExperiment
-                                   ) -> graph.Graph:
+def DelayedRewardExperimentToGraph(
+    data: random_opt_pb2.DelayedRewardExperiment) -> graph.Graph:
   root = graph.Graph('START')
   root.rewards = []
   for episode in data.episode:

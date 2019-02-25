@@ -40,14 +40,17 @@ def main():
   results_dir = '.'
   filter_modules = list(AllFilterModules())
   all_result_paths = [
-    os.path.join(results_dir, x) for x in os.listdir(results_dir)]
+      os.path.join(results_dir, x) for x in os.listdir(results_dir)
+  ]
 
   for result_path in all_result_paths:
     try:
       result = LoadResultProto(result_path)
     except google.protobuf.text_format.ParseError as e:
-      print("Failed to read result: '{result_path}'.\n{e}"
-            .format(result_path=result_path, e=e), file=sys.stderr)
+      print(
+          "Failed to read result: '{result_path}'.\n{e}".format(
+              result_path=result_path, e=e),
+          file=sys.stderr)
       continue
 
     for module in filter_modules:

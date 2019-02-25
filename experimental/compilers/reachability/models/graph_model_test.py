@@ -14,7 +14,6 @@ from absl import flags
 from experimental.compilers.reachability.models import graph_model
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -42,33 +41,33 @@ def target_graph() -> nx.DiGraph:
 def df(input_graph: nx.DiGraph, target_graph) -> pd.DataFrame:
   """Dataframe containing a single training, validation, and test entry."""
   return pd.DataFrame([
-    {
-      'cfg:block_count': 3,
-      'cfg:diameter': 1,
-      'networkx:input_graph': input_graph.copy(),
-      'networkx:target_graph': target_graph.copy(),
-      'split:type': 'training',
-      'graphnet:loss_op': 'GlobalsSoftmaxCrossEntropy',
-      'graphnet:accuracy_evaluator': 'OneHotGlobals',
-    },
-    {
-      'cfg:block_count': 3,
-      'cfg:diameter': 1,
-      'networkx:input_graph': input_graph.copy(),
-      'networkx:target_graph': target_graph.copy(),
-      'split:type': 'validation',
-      'graphnet:loss_op': 'GlobalsSoftmaxCrossEntropy',
-      'graphnet:accuracy_evaluator': 'OneHotGlobals',
-    },
-    {
-      'cfg:block_count': 3,
-      'cfg:diameter': 1,
-      'networkx:input_graph': input_graph.copy(),
-      'networkx:target_graph': target_graph.copy(),
-      'split:type': 'test',
-      'graphnet:loss_op': 'GlobalsSoftmaxCrossEntropy',
-      'graphnet:accuracy_evaluator': 'OneHotGlobals',
-    },
+      {
+          'cfg:block_count': 3,
+          'cfg:diameter': 1,
+          'networkx:input_graph': input_graph.copy(),
+          'networkx:target_graph': target_graph.copy(),
+          'split:type': 'training',
+          'graphnet:loss_op': 'GlobalsSoftmaxCrossEntropy',
+          'graphnet:accuracy_evaluator': 'OneHotGlobals',
+      },
+      {
+          'cfg:block_count': 3,
+          'cfg:diameter': 1,
+          'networkx:input_graph': input_graph.copy(),
+          'networkx:target_graph': target_graph.copy(),
+          'split:type': 'validation',
+          'graphnet:loss_op': 'GlobalsSoftmaxCrossEntropy',
+          'graphnet:accuracy_evaluator': 'OneHotGlobals',
+      },
+      {
+          'cfg:block_count': 3,
+          'cfg:diameter': 1,
+          'networkx:input_graph': input_graph.copy(),
+          'networkx:target_graph': target_graph.copy(),
+          'split:type': 'test',
+          'graphnet:loss_op': 'GlobalsSoftmaxCrossEntropy',
+          'graphnet:accuracy_evaluator': 'OneHotGlobals',
+      },
   ])
 
 

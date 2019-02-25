@@ -34,22 +34,22 @@ def evaluate(model, sampler):
   ugly_rate = 1 - (num_ugly_kernels / num_kernels)
 
   total_charcount = dbutil.cc(sample_db, "ContentFiles")
-  good_charcount = dbutil.cc(sample_db, "PreprocessedFiles",
-                             condition="WHERE status=0")
+  good_charcount = dbutil.cc(
+      sample_db, "PreprocessedFiles", condition="WHERE status=0")
 
   return {
-    "argspec": sampler.kernel_opts["args"],
-    "host": system.HOSTNAME,
-    "date": time.nowstr(),
-    "num_kernels": num_kernels,
-    "num_good_kernels": num_good_kernels,
-    "discard_rate": discard_rate,
-    "ugly_rate": ugly_rate,
-    "total_charcount": total_charcount,
-    "good_charcount": good_charcount,
-    "corpus_dir": model.corpus.cache.path,
-    "model_dir": model.cache.path,
-    "sampler_dir": sampler.cache(model).path,
+      "argspec": sampler.kernel_opts["args"],
+      "host": system.HOSTNAME,
+      "date": time.nowstr(),
+      "num_kernels": num_kernels,
+      "num_good_kernels": num_good_kernels,
+      "discard_rate": discard_rate,
+      "ugly_rate": ugly_rate,
+      "total_charcount": total_charcount,
+      "good_charcount": good_charcount,
+      "corpus_dir": model.corpus.cache.path,
+      "model_dir": model.cache.path,
+      "sampler_dir": sampler.cache(model).path,
   }
 
 
@@ -77,16 +77,16 @@ def main():
     argspec = [' '.join(x.split()[:-1]) for x in prototype.split(',')]
     print("argspec", ','.join([str(x) for x in argspec]))
     s = sampler.from_json({
-      "kernels": {
-        "args": argspec,
-        "max_length": 5000
-      },
-      "sampler": {
-        "batch_size": 2000,
-        "max_batches": 1,
-        "static_checker": False,
-        "dynamic_checker": False
-      }
+        "kernels": {
+            "args": argspec,
+            "max_length": 5000
+        },
+        "sampler": {
+            "batch_size": 2000,
+            "max_batches": 1,
+            "static_checker": False,
+            "dynamic_checker": False
+        }
     })
 
     info = evaluate(m, s)

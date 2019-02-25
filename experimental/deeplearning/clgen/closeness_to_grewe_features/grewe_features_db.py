@@ -16,7 +16,6 @@ from sqlalchemy.ext import declarative
 from labm8 import sqlutil
 from research.grewe_2013_cgo import feature_extractor as grewe_features
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_integer(
@@ -47,18 +46,18 @@ class StaticFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
 
   # The kernel source.
   src: str = sql.Column(
-      sql.UnicodeText().with_variant(sql.UnicodeText(2 ** 31), 'mysql'),
+      sql.UnicodeText().with_variant(sql.UnicodeText(2**31), 'mysql'),
       nullable=False)
 
   __table_args__ = (
-    # <src,origin> pairs must be unique.
-    sql.UniqueConstraint('src_sha256', 'origin', name='unique_src_for_origin'),
-  )
+      # <src,origin> pairs must be unique.
+      sql.UniqueConstraint(
+          'src_sha256', 'origin', name='unique_src_for_origin'),)
 
   @classmethod
   def FromSrcOriginAndFeatures(
-      cls, src: str, origin: str, features: grewe_features.GreweEtAlFeatures
-  ) -> 'StaticFeatures':
+      cls, src: str, origin: str,
+      features: grewe_features.GreweEtAlFeatures) -> 'StaticFeatures':
     """Instantiate a PreprocessedContentFile."""
     return cls(
         src_sha256=hashlib.sha256(src.encode('utf-8')).hexdigest(),
@@ -67,33 +66,35 @@ class StaticFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
         grewe_rational_operation_count=features.rational_operation_count,
         grewe_global_memory_access_count=features.global_memory_access_count,
         grewe_local_memory_access_count=features.local_memory_access_count,
-        grewe_coalesced_memory_access_count=features.coalesced_memory_access_count,
+        grewe_coalesced_memory_access_count=features.
+        coalesced_memory_access_count,
         grewe_atomic_operation_count=features.atomic_operation_count,
         src=src,
     )
 
 
 class DriverResult(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
-  static_features_id: int = sql.Column(sql.Integer,
-                                       sql.ForeignKey(StaticFeatures.id),
-                                       nullable=False)
+  static_features_id: int = sql.Column(
+      sql.Integer, sql.ForeignKey(StaticFeatures.id), nullable=False)
   opencl_env: str = sql.Column(sql.String(256), nullable=False)
   hostname: str = sql.Column(sql.String(32), nullable=False)
   dataset: str = sql.Column(sql.String(32), nullable=False)
   result: str = sql.Column(sql.String(32), nullable=False)
 
   __table_args__ = (
-    # <src,origin> pairs must be unique.
-    sql.PrimaryKeyConstraint('static_features_id', 'opencl_env', 'hostname',
-                             'dataset', name='id_device_dataset'),
-  )
+      # <src,origin> pairs must be unique.
+      sql.PrimaryKeyConstraint(
+          'static_features_id',
+          'opencl_env',
+          'hostname',
+          'dataset',
+          name='id_device_dataset'),)
 
 
 class DynamicFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   id: int = sql.Column(sql.Integer, primary_key=True)
-  static_features_id: int = sql.Column(sql.Integer,
-                                       sql.ForeignKey(StaticFeatures.id),
-                                       nullable=False)
+  static_features_id: int = sql.Column(
+      sql.Integer, sql.ForeignKey(StaticFeatures.id), nullable=False)
   opencl_env: str = sql.Column(sql.String(256), nullable=False)
   hostname: str = sql.Column(sql.String(32), nullable=False)
   dataset: str = sql.Column(sql.String(32), nullable=False)
@@ -105,8 +106,8 @@ class DynamicFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
 
 def _DatabaseImporterWorker(
     path: pathlib.Path
-) -> typing.Tuple[typing.Optional[str],
-                  typing.Optional[grewe_features.GreweEtAlFeatures]]:
+) -> typing.Tuple[typing.Optional[str], typing.Optional[grewe_features.
+                                                        GreweEtAlFeatures]]:
   """Worker function for multi-processed database import."""
   try:
     features = list(grewe_features.ExtractFeaturesFromPath(path))
@@ -115,8 +116,8 @@ def _DatabaseImporterWorker(
     return None, None
 
   if len(features) != 1:
-    logging.debug("Expected 1 feature vector in %s, found %d",
-                  path, len(features))
+    logging.debug("Expected 1 feature vector in %s, found %d", path,
+                  len(features))
     return None, None
 
   try:
@@ -136,8 +137,10 @@ class Database(sqlutil.Database):
     super(Database, self).__init__(url, Base)
 
   def ImportStaticFeaturesFromPaths(
-      self, paths_to_import: typing.Iterable[pathlib.Path],
-      origin: str, multiprocess: bool = True) -> None:
+      self,
+      paths_to_import: typing.Iterable[pathlib.Path],
+      origin: str,
+      multiprocess: bool = True) -> None:
     """Import a sequence of paths into the database.
 
     Each path should point to a file containing a single OpenCL kernel.
@@ -151,14 +154,13 @@ class Database(sqlutil.Database):
     random.shuffle(paths_to_import)
     logging.info('Importing %s files ...',
                  humanize.intcomma(len(paths_to_import)))
-    bar = progressbar.ProgressBar(max_value=len(paths_to_import),
-                                  redirect_stderr=True)
+    bar = progressbar.ProgressBar(
+        max_value=len(paths_to_import), redirect_stderr=True)
 
     # Optionally multiprocess.
     if multiprocess:
       pool = multiprocessing.Pool(FLAGS.grewe_db_import_process_count)
-      to_import = pool.imap_unordered(
-          _DatabaseImporterWorker, paths_to_import)
+      to_import = pool.imap_unordered(_DatabaseImporterWorker, paths_to_import)
     else:
       to_import = (_DatabaseImporterWorker(p) for p in paths_to_import)
 
@@ -167,8 +169,7 @@ class Database(sqlutil.Database):
       # None type return if feature extraction failed.
       if src:
         with self.Session(commit=False) as session:
-          obj = StaticFeatures.FromSrcOriginAndFeatures(
-              src, origin, features)
+          obj = StaticFeatures.FromSrcOriginAndFeatures(src, origin, features)
           # Check if it already exists in the database.
           exists = session.query(StaticFeatures) \
             .filter_by(src_sha256=obj.src_sha256).first()

@@ -8,12 +8,10 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 from labm8 import fmt
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string(
-    'interesting_results_dir', '/tmp/',
-    'Directory to write interesting results to.')
+flags.DEFINE_string('interesting_results_dir', '/tmp/',
+                    'Directory to write interesting results to.')
 
 
 def main(argv):

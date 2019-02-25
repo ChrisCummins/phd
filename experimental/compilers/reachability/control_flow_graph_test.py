@@ -7,7 +7,6 @@ from absl import flags
 from experimental.compilers.reachability import control_flow_graph
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 

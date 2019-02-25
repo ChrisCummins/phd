@@ -39,7 +39,6 @@ from experimental.dsmith import Colors
 from experimental.dsmith import db_base
 from labm8 import crypto, fs
 
-
 # Global state to manage database connections. Must call init() before
 # creating sessions.
 Base = declarative_base()
@@ -125,17 +124,16 @@ class Program(Base):
   id = sql.Column(id_t, primary_key=True)
   generator = sql.Column(Generators.column_t, nullable=False)
   sha1 = sql.Column(sql.String(40), nullable=False)
-  date = sql.Column(sql.DateTime, nullable=False,
-                    default=datetime.datetime.utcnow)
+  date = sql.Column(
+      sql.DateTime, nullable=False, default=datetime.datetime.utcnow)
   generation_time = sql.Column(sql.Float, nullable=False)
   linecount = sql.Column(sql.Integer, nullable=False)
   charcount = sql.Column(sql.Integer, nullable=False)
-  src = sql.Column(sql.UnicodeText(length=2 ** 31), nullable=False)
+  src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
   # Constraints
-  __table_args__ = (
-    sql.UniqueConstraint('generator', 'sha1', name='uniq_program'),
-  )
+  __table_args__ = (sql.UniqueConstraint(
+      'generator', 'sha1', name='uniq_program'),)
 
   # Relationships
   testcases = sql.orm.relationship("Testcase", back_populates="program")
@@ -184,7 +182,7 @@ class Harnesses(object):
   @staticmethod
   def to_str(harness: 'Harnesses.value_t') -> str:
     return {
-      Harnesses.GLSLANG_FRAG: "glslang_frag",
+        Harnesses.GLSLANG_FRAG: "glslang_frag",
     }[harness]
 
 
@@ -194,16 +192,14 @@ class Testcase(Base):
 
   # Fields
   id = sql.Column(id_t, primary_key=True)
-  program_id = sql.Column(Program.id_t, sql.ForeignKey("programs.id"),
-                          nullable=False)
+  program_id = sql.Column(
+      Program.id_t, sql.ForeignKey("programs.id"), nullable=False)
   harness = sql.Column(Harnesses.column_t, nullable=False)
   timeout = sql.Column(sql.Integer, nullable=False)
 
   # Constraints
-  __table_args__ = (
-    sql.UniqueConstraint("program_id", "harness", "timeout",
-                         name="unique_testcase"),
-  )
+  __table_args__ = (sql.UniqueConstraint(
+      "program_id", "harness", "timeout", name="unique_testcase"),)
 
   # Relationships
   program = sql.orm.relationship("Program", back_populates="testcases")
@@ -228,10 +224,8 @@ class Platform(Base):
   host = sql.Column(sql.String(255), nullable=False)
 
   # Constraints
-  __table_args__ = (
-    sql.UniqueConstraint('platform', 'version', 'host',
-                         name='unique_platform'),
-  )
+  __table_args__ = (sql.UniqueConstraint(
+      'platform', 'version', 'host', name='unique_platform'),)
 
   # Relationships
   testbeds = sql.orm.relationship("Testbed", back_populates="platform")
@@ -241,20 +235,18 @@ class Platform(Base):
 
   @property
   def platform_name(self):
-    return {
-    }.get(self.platform.strip(), self.platform.strip())
+    return {}.get(self.platform.strip(), self.platform.strip())
 
   @property
   def version_name(self):
-    return {
-    }.get(self.version.strip(), self.version.strip())
+    return {}.get(self.version.strip(), self.version.strip())
 
   @property
   def host_name(self):
     return {
-      "CentOS Linux 7.1.1503 64bit": "CentOS 7.1 x64",
-      "openSUSE  13.1 64bit": "openSUSE 13.1 x64",
-      "Ubuntu 16.04 64bit": "Ubuntu 16.04 x64",
+        "CentOS Linux 7.1.1503 64bit": "CentOS 7.1 x64",
+        "openSUSE  13.1 64bit": "openSUSE 13.1 x64",
+        "Ubuntu 16.04 64bit": "Ubuntu 16.04 x64",
     }.get(self.host.strip(), self.host.strip())
 
 
@@ -264,14 +256,13 @@ class Testbed(Base):
 
   # Fields
   id = sql.Column(id_t, primary_key=True)
-  platform_id = sql.Column(Platform.id_t, sql.ForeignKey("platforms.id"),
-                           nullable=False)
+  platform_id = sql.Column(
+      Platform.id_t, sql.ForeignKey("platforms.id"), nullable=False)
   optimizations = sql.Column(sql.Boolean, nullable=False)
 
   # Constraints
-  __table_args__ = (
-    sql.UniqueConstraint('platform_id', 'optimizations', name='unique_testbed'),
-  )
+  __table_args__ = (sql.UniqueConstraint(
+      'platform_id', 'optimizations', name='unique_testbed'),)
 
   # Relationships
   platform = sql.orm.relationship("Platform", back_populates="testbeds")
@@ -325,10 +316,9 @@ class Testbed(Base):
             .filter(Testbed.id == self.testbed_id) \
             .scalar()
 
-          already_done = testbed._testcase_ids_ran(
-              s, self.harness, self.generator)
-          todo = testbed._testcases_to_run(
-              s, self.harness, self.generator)
+          already_done = testbed._testcase_ids_ran(s, self.harness,
+                                                   self.generator)
+          todo = testbed._testcases_to_run(s, self.harness, self.generator)
 
           self.ndone = already_done.count()
           ntodo = todo.count()
@@ -356,7 +346,8 @@ class Testbed(Base):
       ntodo = todo.count()
 
       logging.debug(
-          f"run {ntodo} {harness}:{generator} testcases on {self}, {ndone} done")
+          f"run {ntodo} {harness}:{generator} testcases on {self}, {ndone} done"
+      )
 
       # Break early if we have nothing to do
       if not ntodo:
@@ -379,9 +370,8 @@ class Testbed(Base):
             f"Estimated runtime is {Colors.BOLD}{eta}{Colors.END}.")
 
       # asynchronously run testcases, updating progress bar
-      bar = progressbar.ProgressBar(initial_value=ndone,
-                                    max_value=ndone + ntodo,
-                                    redirect_stdout=True)
+      bar = progressbar.ProgressBar(
+          initial_value=ndone, max_value=ndone + ntodo, redirect_stdout=True)
       worker = Worker(harness, generator, self.id)
       worker.start()
       while worker.is_alive():
@@ -411,45 +401,52 @@ class Testbed(Base):
     return re.sub(r'^Glslang Version: +', '', line)
 
   @staticmethod
-  def from_bin(path: Path = "gslang", session: session_t = None) -> List[
-    'Testbed']:
+  def from_bin(path: Path = "gslang",
+               session: session_t = None) -> List['Testbed']:
     import cldrive
 
     with ReuseSession(session) as s:
       basename = fs.basename(path)
       version = Testbed._get_version(path)
-      platform = get_or_add(s, Platform, platform=basename, version=version,
-                            host=cldrive.host_os())
+      platform = get_or_add(
+          s,
+          Platform,
+          platform=basename,
+          version=version,
+          host=cldrive.host_os())
       s.flush()
       return [
-        get_or_add(s, Testbed, platform_id=platform.id, optimizations=True),
+          get_or_add(s, Testbed, platform_id=platform.id, optimizations=True),
       ]
 
   @staticmethod
   def from_str(string: str, session: session_t = None) -> List['Testbed']:
     """ instantiate testbed(s) from shorthand string, e.g. '1+', '5±', etc. """
 
-    def try_and_match(string: str, testbeds: Iterable[Testbed]) -> Union[
-      None, List[Testbed]]:
+    def try_and_match(
+        string: str, testbeds: Iterable[Testbed]) -> Union[None, List[Testbed]]:
       for testbed in testbeds:
         if str(testbed.platform.platform) == string[:-1]:
           if string[-1] == "±":
             return [
-              get_or_add(
-                  s, Testbed,
-                  platform_id=testbed.platform.id,
-                  optimizations=True),
-              get_or_add(
-                  s, Testbed,
-                  platform_id=testbed.platform.id,
-                  optimizations=False)
+                get_or_add(
+                    s,
+                    Testbed,
+                    platform_id=testbed.platform.id,
+                    optimizations=True),
+                get_or_add(
+                    s,
+                    Testbed,
+                    platform_id=testbed.platform.id,
+                    optimizations=False)
             ]
           else:
             return [
-              get_or_add(
-                  s, Testbed,
-                  platform_id=testbed.platform.id,
-                  optimizations=True if string[-1] == "+" else False)
+                get_or_add(
+                    s,
+                    Testbed,
+                    platform_id=testbed.platform.id,
+                    optimizations=True if string[-1] == "+" else False)
             ]
 
     # Strip shell formatting
@@ -509,15 +506,15 @@ class Stdout(Base):
   # Fields
   id = sql.Column(id_t, primary_key=True)
   sha1 = sql.Column(sql.String(40), nullable=False, unique=True, index=True)
-  stdout = sql.Column(sql.UnicodeText(length=2 ** 31), nullable=False)
+  stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
   @staticmethod
   def _escape(string: str) -> str:
     """ filter noise from test harness stdout """
-    return '\n'.join(line for line in string.split('\n')
-                     if line != "ADL Escape failed."
-                     and line != "WARNING:endless loop detected!"
-                     and line != "One module without kernel function!")
+    return '\n'.join(
+        line for line in string.split('\n') if line != "ADL Escape failed." and
+        line != "WARNING:endless loop detected!" and
+        line != "One module without kernel function!")
 
   @staticmethod
   def from_str(session: session_t, string: str) -> str:
@@ -528,9 +525,7 @@ class Stdout(Base):
     string = Stdout._escape(string)
 
     stdout = get_or_add(
-        session, Stdout,
-        sha1=crypto.sha1_str(string),
-        stdout=string)
+        session, Stdout, sha1=crypto.sha1_str(string), stdout=string)
     return stdout
 
 
@@ -555,7 +550,7 @@ class Stderr(Base):
   linecount = sql.Column(sql.Integer, nullable=False)
   charcount = sql.Column(sql.Integer, nullable=False)
   truncated = sql.Column(sql.Boolean, nullable=False)
-  stderr = sql.Column(sql.UnicodeText(length=2 ** 31), nullable=False)
+  stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
   def __repr__(self):
     return self.sha1
@@ -571,7 +566,8 @@ class Stderr(Base):
     sha1 = crypto.sha1_str(string)
 
     stderr = get_or_add(
-        session, Stderr,
+        session,
+        Stderr,
         sha1=sha1,
         linecount=len(string.split("\n")),
         charcount=len(string),
@@ -598,11 +594,11 @@ class Outcomes:
   def to_str(outcomes: 'Outcomes.value_t') -> str:
     """ convert to long-form string """
     return {
-      Outcomes.TODO: "unknown",
-      Outcomes.BF: "build failure",
-      Outcomes.BC: "build crash",
-      Outcomes.BTO: "build timeout",
-      Outcomes.PASS: "pass",
+        Outcomes.TODO: "unknown",
+        Outcomes.BF: "build failure",
+        Outcomes.BC: "build crash",
+        Outcomes.BTO: "build timeout",
+        Outcomes.PASS: "pass",
     }[outcomes]
 
 
@@ -615,26 +611,26 @@ class Result(Base):
 
   # Fields
   id = sql.Column(id_t, primary_key=True)
-  testbed_id = sql.Column(Testbed.id_t, sql.ForeignKey("testbeds.id"),
-                          nullable=False, index=True)
-  testcase_id = sql.Column(Testcase.id_t, sql.ForeignKey("testcases.id"),
-                           nullable=False,
-                           index=True)
-  date = sql.Column(sql.DateTime, nullable=False, index=True,
-                    default=datetime.datetime.utcnow)
+  testbed_id = sql.Column(
+      Testbed.id_t, sql.ForeignKey("testbeds.id"), nullable=False, index=True)
+  testcase_id = sql.Column(
+      Testcase.id_t, sql.ForeignKey("testcases.id"), nullable=False, index=True)
+  date = sql.Column(
+      sql.DateTime,
+      nullable=False,
+      index=True,
+      default=datetime.datetime.utcnow)
   returncode = sql.Column(sql.SmallInteger, nullable=False)
   outcome = sql.Column(Outcomes.column_t, nullable=False, index=True)
   runtime = sql.Column(sql.Float, nullable=False)
-  stdout_id = sql.Column(Stdout.id_t, sql.ForeignKey("stdouts.id"),
-                         nullable=False)
-  stderr_id = sql.Column(Stderr.id_t, sql.ForeignKey("stderrs.id"),
-                         nullable=False)
+  stdout_id = sql.Column(
+      Stdout.id_t, sql.ForeignKey("stdouts.id"), nullable=False)
+  stderr_id = sql.Column(
+      Stderr.id_t, sql.ForeignKey("stderrs.id"), nullable=False)
 
   # Constraints
-  __table_args__ = (
-    sql.UniqueConstraint('testbed_id', 'testcase_id',
-                         name='unique_result_triple'),
-  )
+  __table_args__ = (sql.UniqueConstraint(
+      'testbed_id', 'testcase_id', name='unique_result_triple'),)
 
   # Relationships
   meta = sql.orm.relation("ResultMeta", back_populates="result")
@@ -684,6 +680,7 @@ class ResultProxy(object):
 
 
 class GlslResult(Result):
+
   @staticmethod
   def get_outcome(returncode: int, stderr: str, runtime: float,
                   timeout: int) -> Outcomes.type:
@@ -710,10 +707,10 @@ class ResultMeta(Base):
 
   # Fields
   id = sql.Column(id_t, sql.ForeignKey("results.id"), primary_key=True)
-  total_time = sql.Column(sql.Float,
-                          nullable=False)  # time to generate and run test case
-  cumtime = sql.Column(sql.Float,
-                       nullable=False)  # culumative time for this testbed time
+  total_time = sql.Column(
+      sql.Float, nullable=False)  # time to generate and run test case
+  cumtime = sql.Column(
+      sql.Float, nullable=False)  # culumative time for this testbed time
 
   # Relationships
   result = sql.orm.relationship("Result", back_populates="meta")
@@ -735,9 +732,9 @@ class Classifications:
   @staticmethod
   def to_str(outcomes: 'Classifications.value_t') -> str:
     return {
-      Classifications.BC: "build crash",
-      Classifications.BTO: "build timeout",
-      Classifications.ABF: "anomylous build failure",
+        Classifications.BC: "build crash",
+        Classifications.BTO: "build timeout",
+        Classifications.ABF: "anomylous build failure",
     }[outcomes]
 
 

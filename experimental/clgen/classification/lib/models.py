@@ -8,11 +8,14 @@ from sklearn.tree import DecisionTreeClassifier
 
 
 def cgo13():
+
   def create_model(seed=None, **kwargs):
     """ instantiate a model """
     return DecisionTreeClassifier(
-        random_state=seed, splitter="best",
-        max_depth=5, min_samples_leaf=5,
+        random_state=seed,
+        splitter="best",
+        max_depth=5,
+        min_samples_leaf=5,
         criterion="entropy")
 
   def train_fn(model, train, *args, seed=None, **kwargs):
@@ -38,12 +41,12 @@ def cgo13():
     return model
 
   return {
-    "name": "cgo13",
-    "create_model": create_model,
-    "train_fn": train_fn,
-    "test_fn": test_fn,
-    "save_fn": save_fn,
-    "load_fn": load_fn
+      "name": "cgo13",
+      "create_model": create_model,
+      "train_fn": train_fn,
+      "test_fn": test_fn,
+      "save_fn": save_fn,
+      "load_fn": load_fn
   }
 
 
@@ -62,8 +65,10 @@ def harry():
     left = BatchNormalization(name="dynprop_norm")(dyn_inputs)
 
     seq_inputs = Input(shape=(seq_length,), dtype="int32", name="code_in")
-    right = Embedding(output_dim=embedding_vector_length, input_dim=vocab_size,
-                      input_length=seq_length)(seq_inputs)
+    right = Embedding(
+        output_dim=embedding_vector_length,
+        input_dim=vocab_size,
+        input_length=seq_length)(seq_inputs)
     right = LSTM(16, consume_less="mem")(right)
     right = BatchNormalization(input_shape=(32,), name="lstm_norm")(right)
 
@@ -74,17 +79,28 @@ def harry():
     out = Dense(2, activation="sigmoid", name="out")(x)
 
     model = Model(input=[dyn_inputs, seq_inputs], output=[out, aux_out])
-    model.compile(optimizer="adam",
-                  loss={"out": "categorical_crossentropy",
-                        "aux_out": "categorical_crossentropy"},
-                  loss_weights={"out": 1., "aux_out": .2},
-                  metrics=['accuracy'])
+    model.compile(
+        optimizer="adam",
+        loss={
+            "out": "categorical_crossentropy",
+            "aux_out": "categorical_crossentropy"
+        },
+        loss_weights={
+            "out": 1.,
+            "aux_out": .2
+        },
+        metrics=['accuracy'])
     return model
 
   def train_fn(model, train, *args, **kwargs):
     """ train a model """
-    model.fit({"data_in": train["x_2"], "code_in": train["x_seq"]},
-              {"out": train["y_2"], "aux_out": train["y_2"]},
+    model.fit({
+        "data_in": train["x_2"],
+        "code_in": train["x_seq"]
+    }, {
+        "out": train["y_2"],
+        "aux_out": train["y_2"]
+    },
               nb_epoch=50,
               batch_size=batch_size,
               verbose=1,
@@ -93,8 +109,12 @@ def harry():
   def test_fn(model, test, seed, *args, **kwargs):
     """ make predictions for test data """
     predictions = np.array(
-        model.predict({"data_in": test["x_2"], "code_in": test["x_seq"]},
-                      batch_size=batch_size, verbose=0))
+        model.predict({
+            "data_in": test["x_2"],
+            "code_in": test["x_seq"]
+        },
+                      batch_size=batch_size,
+                      verbose=0))
     clipped = [np.argmax(x) for x in predictions[0]]
     return clipped
 
@@ -107,12 +127,12 @@ def harry():
     return load_model(inpath)
 
   return {
-    "name": "harry",
-    "create_model": create_model,
-    "train_fn": train_fn,
-    "test_fn": test_fn,
-    "save_fn": save_fn,
-    "load_fn": load_fn
+      "name": "harry",
+      "create_model": create_model,
+      "train_fn": train_fn,
+      "test_fn": test_fn,
+      "save_fn": save_fn,
+      "load_fn": load_fn
   }
 
 
@@ -129,8 +149,10 @@ def karl():
     data_in = Input(shape=(2,), name="data_in")
 
     code_in = Input(shape=(seq_length,), dtype="int32", name="code_in")
-    right = Embedding(output_dim=EMBEDDING_VECTOR_LEN, input_dim=vocab_size,
-                      input_length=seq_length)(code_in)
+    right = Embedding(
+        output_dim=EMBEDDING_VECTOR_LEN,
+        input_dim=vocab_size,
+        input_length=seq_length)(code_in)
     right = LSTM(16, consume_less="mem")(right)
 
     aux_out = Dense(2, activation="sigmoid", name="aux_out")(right)
@@ -141,17 +163,28 @@ def karl():
     out = Dense(2, activation="sigmoid", name="out")(x)
 
     model = Model(input=[data_in, code_in], output=[out, aux_out])
-    model.compile(optimizer="adam",
-                  loss={"out": "categorical_crossentropy",
-                        "aux_out": "categorical_crossentropy"},
-                  loss_weights={"out": 1., "aux_out": .2},
-                  metrics=['accuracy'])
+    model.compile(
+        optimizer="adam",
+        loss={
+            "out": "categorical_crossentropy",
+            "aux_out": "categorical_crossentropy"
+        },
+        loss_weights={
+            "out": 1.,
+            "aux_out": .2
+        },
+        metrics=['accuracy'])
     return model
 
   def train_fn(model, train, *args, **kwargs):
     """ train a model """
-    model.fit({"data_in": train["x_2"], "code_in": train["x_seq"]},
-              {"out": train["y_2"], "aux_out": train["y_2"]},
+    model.fit({
+        "data_in": train["x_2"],
+        "code_in": train["x_seq"]
+    }, {
+        "out": train["y_2"],
+        "aux_out": train["y_2"]
+    },
               nb_epoch=50,
               batch_size=BATCH_SIZE,
               verbose=1,
@@ -160,8 +193,12 @@ def karl():
   def test_fn(model, test, seed, *args, **kwargs):
     """ make predictions for test data """
     predictions = np.array(
-        model.predict({"data_in": test["x_2"], "code_in": test["x_seq"]},
-                      batch_size=BATCH_SIZE, verbose=0))
+        model.predict({
+            "data_in": test["x_2"],
+            "code_in": test["x_seq"]
+        },
+                      batch_size=BATCH_SIZE,
+                      verbose=0))
     clipped = [np.argmax(x) for x in predictions[0]]
     return clipped
 
@@ -174,16 +211,17 @@ def karl():
     return load_model(inpath)
 
   return {
-    "name": "karl",
-    "create_model": create_model,
-    "train_fn": train_fn,
-    "test_fn": test_fn,
-    "save_fn": save_fn,
-    "load_fn": load_fn
+      "name": "karl",
+      "create_model": create_model,
+      "train_fn": train_fn,
+      "test_fn": test_fn,
+      "save_fn": save_fn,
+      "load_fn": load_fn
   }
 
 
 def zero_r():
+
   def train_fn(model, train, *args, platform=None, **kwargs):
     """ train a model """
     if platform == "amd":
@@ -207,11 +245,11 @@ def zero_r():
     return model
 
   return {
-    "name": "zero_r",
-    "train_fn": train_fn,
-    "test_fn": test_fn,
-    "save_fn": save_fn,
-    "load_fn": load_fn
+      "name": "zero_r",
+      "train_fn": train_fn,
+      "test_fn": test_fn,
+      "save_fn": save_fn,
+      "load_fn": load_fn
   }
 
 
@@ -230,8 +268,10 @@ def sally():
     dyn_inputs = Input(shape=(2,), name="data_in")
 
     seq_inputs = Input(shape=(seq_length,), dtype="int32", name="code_in")
-    right = Embedding(output_dim=embedding_vector_length, input_dim=vocab_size,
-                      input_length=seq_length)(seq_inputs)
+    right = Embedding(
+        output_dim=embedding_vector_length,
+        input_dim=vocab_size,
+        input_length=seq_length)(seq_inputs)
     right = LSTM(16, consume_less="mem", return_sequences=True)(right)
     right = LSTM(16, consume_less="mem")(right)
 
@@ -244,17 +284,28 @@ def sally():
     out = Dense(2, activation="sigmoid", name="out")(x)
 
     model = Model(input=[dyn_inputs, seq_inputs], output=[out, aux_out])
-    model.compile(optimizer="adam",
-                  loss={"out": "categorical_crossentropy",
-                        "aux_out": "categorical_crossentropy"},
-                  loss_weights={"out": 1., "aux_out": .2},
-                  metrics=['accuracy'])
+    model.compile(
+        optimizer="adam",
+        loss={
+            "out": "categorical_crossentropy",
+            "aux_out": "categorical_crossentropy"
+        },
+        loss_weights={
+            "out": 1.,
+            "aux_out": .2
+        },
+        metrics=['accuracy'])
     return model
 
   def train_fn(model, train, *args, **kwargs):
     """ train a model """
-    model.fit({"data_in": train["x_2"], "code_in": train["x_seq"]},
-              {"out": train["y_2"], "aux_out": train["y_2"]},
+    model.fit({
+        "data_in": train["x_2"],
+        "code_in": train["x_seq"]
+    }, {
+        "out": train["y_2"],
+        "aux_out": train["y_2"]
+    },
               nb_epoch=50,
               batch_size=batch_size,
               verbose=1,
@@ -263,8 +314,12 @@ def sally():
   def test_fn(model, test, seed, *args, **kwargs):
     """ make predictions for test data """
     predictions = np.array(
-        model.predict({"data_in": test["x_2"], "code_in": test["x_seq"]},
-                      batch_size=batch_size, verbose=0))
+        model.predict({
+            "data_in": test["x_2"],
+            "code_in": test["x_seq"]
+        },
+                      batch_size=batch_size,
+                      verbose=0))
     clipped = [np.argmax(x) for x in predictions[0]]
     return clipped
 
@@ -277,12 +332,12 @@ def sally():
     return load_model(inpath)
 
   return {
-    "name": "sally",
-    "create_model": create_model,
-    "train_fn": train_fn,
-    "test_fn": test_fn,
-    "save_fn": save_fn,
-    "load_fn": load_fn
+      "name": "sally",
+      "create_model": create_model,
+      "train_fn": train_fn,
+      "test_fn": test_fn,
+      "save_fn": save_fn,
+      "load_fn": load_fn
   }
 
 
@@ -301,8 +356,10 @@ def donald():
     dyn_inputs = Input(shape=(2,), name="data_in")
 
     seq_inputs = Input(shape=(seq_length,), dtype="int32", name="code_in")
-    right = Embedding(output_dim=embedding_vector_length, input_dim=vocab_size,
-                      input_length=seq_length)(seq_inputs)
+    right = Embedding(
+        output_dim=embedding_vector_length,
+        input_dim=vocab_size,
+        input_length=seq_length)(seq_inputs)
     right = LSTM(16, consume_less="mem", return_sequences=True)(right)
     right = LSTM(16, consume_less="mem")(right)
 
@@ -314,17 +371,28 @@ def donald():
     out = Dense(2, activation="sigmoid", name="out")(x)
 
     model = Model(input=[dyn_inputs, seq_inputs], output=[out, aux_out])
-    model.compile(optimizer="adam",
-                  loss={"out": "categorical_crossentropy",
-                        "aux_out": "categorical_crossentropy"},
-                  loss_weights={"out": 1., "aux_out": .2},
-                  metrics=['accuracy'])
+    model.compile(
+        optimizer="adam",
+        loss={
+            "out": "categorical_crossentropy",
+            "aux_out": "categorical_crossentropy"
+        },
+        loss_weights={
+            "out": 1.,
+            "aux_out": .2
+        },
+        metrics=['accuracy'])
     return model
 
   def train_fn(model, train, *args, **kwargs):
     """ train a model """
-    model.fit({"data_in": train["x_2"], "code_in": train["x_seq"]},
-              {"out": train["y_2"], "aux_out": train["y_2"]},
+    model.fit({
+        "data_in": train["x_2"],
+        "code_in": train["x_seq"]
+    }, {
+        "out": train["y_2"],
+        "aux_out": train["y_2"]
+    },
               nb_epoch=50,
               batch_size=batch_size,
               verbose=1,
@@ -333,8 +401,12 @@ def donald():
   def test_fn(model, test, seed, *args, **kwargs):
     """ make predictions for test data """
     predictions = np.array(
-        model.predict({"data_in": test["x_2"], "code_in": test["x_seq"]},
-                      batch_size=batch_size, verbose=0))
+        model.predict({
+            "data_in": test["x_2"],
+            "code_in": test["x_seq"]
+        },
+                      batch_size=batch_size,
+                      verbose=0))
     clipped = [np.argmax(x) for x in predictions[0]]
     return clipped
 
@@ -347,12 +419,12 @@ def donald():
     return load_model(inpath)
 
   return {
-    "name": "donald",
-    "create_model": create_model,
-    "train_fn": train_fn,
-    "test_fn": test_fn,
-    "save_fn": save_fn,
-    "load_fn": load_fn
+      "name": "donald",
+      "create_model": create_model,
+      "train_fn": train_fn,
+      "test_fn": test_fn,
+      "save_fn": save_fn,
+      "load_fn": load_fn
   }
 
 
@@ -371,15 +443,15 @@ def rupert():
     out = Dense(2, activation="sigmoid", name="out")(x)
 
     model = Model(input=dyn_inputs, output=out)
-    model.compile(optimizer="adam",
-                  loss={"out": "categorical_crossentropy"},
-                  metrics=['accuracy'])
+    model.compile(
+        optimizer="adam",
+        loss={"out": "categorical_crossentropy"},
+        metrics=['accuracy'])
     return model
 
   def train_fn(model, train, *args, **kwargs):
     """ train a model """
-    model.fit({"data_in": train["x_2"]},
-              {"out": train["y_2"]},
+    model.fit({"data_in": train["x_2"]}, {"out": train["y_2"]},
               nb_epoch=50,
               batch_size=batch_size,
               verbose=1,
@@ -388,8 +460,12 @@ def rupert():
   def test_fn(model, test, seed, *args, **kwargs):
     """ make predictions for test data """
     predictions = np.array(
-        model.predict({"data_in": test["x_2"], "code_in": test["x_seq"]},
-                      batch_size=batch_size, verbose=0))
+        model.predict({
+            "data_in": test["x_2"],
+            "code_in": test["x_seq"]
+        },
+                      batch_size=batch_size,
+                      verbose=0))
     clipped = [np.argmax(x) for x in predictions]
     return clipped
 
@@ -402,12 +478,12 @@ def rupert():
     return load_model(inpath)
 
   return {
-    "name": "rupert",
-    "create_model": create_model,
-    "train_fn": train_fn,
-    "test_fn": test_fn,
-    "save_fn": save_fn,
-    "load_fn": load_fn
+      "name": "rupert",
+      "create_model": create_model,
+      "train_fn": train_fn,
+      "test_fn": test_fn,
+      "save_fn": save_fn,
+      "load_fn": load_fn
   }
 
 
@@ -424,8 +500,10 @@ def fred():
     data_in = Input(shape=(2,), name="data_in")
 
     code_in = Input(shape=(seq_length,), dtype="int32", name="code_in")
-    right = Embedding(output_dim=EMBEDDING_VECTOR_LEN, input_dim=vocab_size,
-                      input_length=seq_length)(code_in)
+    right = Embedding(
+        output_dim=EMBEDDING_VECTOR_LEN,
+        input_dim=vocab_size,
+        input_length=seq_length)(code_in)
     right = LSTM(16, consume_less="mem", return_sequences=True)(right)
     right = LSTM(16, consume_less="mem")(right)
 
@@ -437,17 +515,28 @@ def fred():
     out = Dense(2, activation="sigmoid", name="out")(x)
 
     model = Model(input=[data_in, code_in], output=[out, aux_out])
-    model.compile(optimizer="adam",
-                  loss={"out": "categorical_crossentropy",
-                        "aux_out": "categorical_crossentropy"},
-                  loss_weights={"out": 1., "aux_out": .2},
-                  metrics=['accuracy'])
+    model.compile(
+        optimizer="adam",
+        loss={
+            "out": "categorical_crossentropy",
+            "aux_out": "categorical_crossentropy"
+        },
+        loss_weights={
+            "out": 1.,
+            "aux_out": .2
+        },
+        metrics=['accuracy'])
     return model
 
   def train_fn(model, train, *args, **kwargs):
     """ train a model """
-    model.fit({"data_in": train["x_2"], "code_in": train["x_seq"]},
-              {"out": train["y_2"], "aux_out": train["y_2"]},
+    model.fit({
+        "data_in": train["x_2"],
+        "code_in": train["x_seq"]
+    }, {
+        "out": train["y_2"],
+        "aux_out": train["y_2"]
+    },
               nb_epoch=50,
               batch_size=BATCH_SIZE,
               verbose=1,
@@ -456,8 +545,12 @@ def fred():
   def test_fn(model, test, seed, *args, **kwargs):
     """ make predictions for test data """
     predictions = np.array(
-        model.predict({"data_in": test["x_2"], "code_in": test["x_seq"]},
-                      batch_size=BATCH_SIZE, verbose=0))
+        model.predict({
+            "data_in": test["x_2"],
+            "code_in": test["x_seq"]
+        },
+                      batch_size=BATCH_SIZE,
+                      verbose=0))
     clipped = [np.argmax(x) for x in predictions[0]]
     return clipped
 
@@ -470,12 +563,12 @@ def fred():
     return load_model(inpath)
 
   return {
-    "name": "fred",
-    "create_model": create_model,
-    "train_fn": train_fn,
-    "test_fn": test_fn,
-    "save_fn": save_fn,
-    "load_fn": load_fn
+      "name": "fred",
+      "create_model": create_model,
+      "train_fn": train_fn,
+      "test_fn": test_fn,
+      "save_fn": save_fn,
+      "load_fn": load_fn
   }
 
 
@@ -492,8 +585,10 @@ def barry():
     data_in = Input(shape=(2,), name="data_in")
 
     code_in = Input(shape=(seq_length,), dtype="int32", name="code_in")
-    right = Embedding(output_dim=EMBEDDING_VECTOR_LEN, input_dim=vocab_size,
-                      input_length=seq_length)(code_in)
+    right = Embedding(
+        output_dim=EMBEDDING_VECTOR_LEN,
+        input_dim=vocab_size,
+        input_length=seq_length)(code_in)
     right = LSTM(16, consume_less="mem")(right)
 
     aux_out = Dense(2, activation="sigmoid", name="aux_out")(right)
@@ -505,17 +600,28 @@ def barry():
     out = Dense(2, activation="sigmoid", name="out")(x)
 
     model = Model(input=[data_in, code_in], output=[out, aux_out])
-    model.compile(optimizer="adam",
-                  loss={"out": "categorical_crossentropy",
-                        "aux_out": "categorical_crossentropy"},
-                  loss_weights={"out": 1., "aux_out": .2},
-                  metrics=['accuracy'])
+    model.compile(
+        optimizer="adam",
+        loss={
+            "out": "categorical_crossentropy",
+            "aux_out": "categorical_crossentropy"
+        },
+        loss_weights={
+            "out": 1.,
+            "aux_out": .2
+        },
+        metrics=['accuracy'])
     return model
 
   def train_fn(model, train, *args, **kwargs):
     """ train a model """
-    model.fit({"data_in": train["x_2"], "code_in": train["x_seq"]},
-              {"out": train["y_2"], "aux_out": train["y_2"]},
+    model.fit({
+        "data_in": train["x_2"],
+        "code_in": train["x_seq"]
+    }, {
+        "out": train["y_2"],
+        "aux_out": train["y_2"]
+    },
               nb_epoch=50,
               batch_size=BATCH_SIZE,
               verbose=1,
@@ -524,8 +630,12 @@ def barry():
   def test_fn(model, test, seed, *args, **kwargs):
     """ make predictions for test data """
     predictions = np.array(
-        model.predict({"data_in": test["x_2"], "code_in": test["x_seq"]},
-                      batch_size=BATCH_SIZE, verbose=0))
+        model.predict({
+            "data_in": test["x_2"],
+            "code_in": test["x_seq"]
+        },
+                      batch_size=BATCH_SIZE,
+                      verbose=0))
     clipped = [np.argmax(x) for x in predictions[0]]
     return clipped
 
@@ -538,12 +648,12 @@ def barry():
     return load_model(inpath)
 
   return {
-    "name": "barry",
-    "create_model": create_model,
-    "train_fn": train_fn,
-    "test_fn": test_fn,
-    "save_fn": save_fn,
-    "load_fn": load_fn
+      "name": "barry",
+      "create_model": create_model,
+      "train_fn": train_fn,
+      "test_fn": test_fn,
+      "save_fn": save_fn,
+      "load_fn": load_fn
   }
 
 
@@ -560,8 +670,10 @@ def turner():
     data_in = Input(shape=(2,), name="data_in")
 
     code_in = Input(shape=(seq_length,), dtype="int32", name="code_in")
-    right = Embedding(output_dim=EMBEDDING_VECTOR_LEN, input_dim=vocab_size,
-                      input_length=seq_length)(code_in)
+    right = Embedding(
+        output_dim=EMBEDDING_VECTOR_LEN,
+        input_dim=vocab_size,
+        input_length=seq_length)(code_in)
     right = LSTM(16, consume_less="mem")(right)
 
     aux_out = Dense(2, activation="sigmoid", name="aux_out")(right)
@@ -572,17 +684,28 @@ def turner():
     out = Dense(2, activation="sigmoid", name="out")(x)
 
     model = Model(input=[data_in, code_in], output=[out, aux_out])
-    model.compile(optimizer="adam",
-                  loss={"out": "categorical_crossentropy",
-                        "aux_out": "categorical_crossentropy"},
-                  loss_weights={"out": 1., "aux_out": .2},
-                  metrics=['accuracy'])
+    model.compile(
+        optimizer="adam",
+        loss={
+            "out": "categorical_crossentropy",
+            "aux_out": "categorical_crossentropy"
+        },
+        loss_weights={
+            "out": 1.,
+            "aux_out": .2
+        },
+        metrics=['accuracy'])
     return model
 
   def train_fn(model, train, *args, **kwargs):
     """ train a model """
-    model.fit({"data_in": train["x_2"], "code_in": train["x_seq"]},
-              {"out": train["y_2"], "aux_out": train["y_2"]},
+    model.fit({
+        "data_in": train["x_2"],
+        "code_in": train["x_seq"]
+    }, {
+        "out": train["y_2"],
+        "aux_out": train["y_2"]
+    },
               nb_epoch=50,
               batch_size=BATCH_SIZE,
               verbose=1,
@@ -591,8 +714,12 @@ def turner():
   def test_fn(model, test, seed, *args, **kwargs):
     """ make predictions for test data """
     predictions = np.array(
-        model.predict({"data_in": test["x_2"], "code_in": test["x_seq"]},
-                      batch_size=BATCH_SIZE, verbose=0))
+        model.predict({
+            "data_in": test["x_2"],
+            "code_in": test["x_seq"]
+        },
+                      batch_size=BATCH_SIZE,
+                      verbose=0))
     clipped = [np.argmax(x) for x in predictions[0]]
     return clipped
 
@@ -605,12 +732,12 @@ def turner():
     return load_model(inpath)
 
   return {
-    "name": "turner",
-    "create_model": create_model,
-    "train_fn": train_fn,
-    "test_fn": test_fn,
-    "save_fn": save_fn,
-    "load_fn": load_fn
+      "name": "turner",
+      "create_model": create_model,
+      "train_fn": train_fn,
+      "test_fn": test_fn,
+      "save_fn": save_fn,
+      "load_fn": load_fn
   }
 
 
@@ -627,8 +754,10 @@ def fife():
     data_in = Input(shape=(2,), name="data_in")
 
     code_in = Input(shape=(seq_length,), dtype="int32", name="code_in")
-    right = Embedding(output_dim=EMBEDDING_VECTOR_LEN, input_dim=vocab_size,
-                      input_length=seq_length)(code_in)
+    right = Embedding(
+        output_dim=EMBEDDING_VECTOR_LEN,
+        input_dim=vocab_size,
+        input_length=seq_length)(code_in)
     right = LSTM(16, consume_less="mem")(right)
 
     aux_out = Dense(2, activation="sigmoid", name="aux_out")(right)
@@ -638,17 +767,28 @@ def fife():
     out = Dense(2, activation="sigmoid", name="out")(x)
 
     model = Model(input=[data_in, code_in], output=[out, aux_out])
-    model.compile(optimizer="adam",
-                  loss={"out": "categorical_crossentropy",
-                        "aux_out": "categorical_crossentropy"},
-                  loss_weights={"out": 1., "aux_out": .2},
-                  metrics=['accuracy'])
+    model.compile(
+        optimizer="adam",
+        loss={
+            "out": "categorical_crossentropy",
+            "aux_out": "categorical_crossentropy"
+        },
+        loss_weights={
+            "out": 1.,
+            "aux_out": .2
+        },
+        metrics=['accuracy'])
     return model
 
   def train_fn(model, train, *args, **kwargs):
     """ train a model """
-    model.fit({"data_in": train["x_2"], "code_in": train["x_seq"]},
-              {"out": train["y_2"], "aux_out": train["y_2"]},
+    model.fit({
+        "data_in": train["x_2"],
+        "code_in": train["x_seq"]
+    }, {
+        "out": train["y_2"],
+        "aux_out": train["y_2"]
+    },
               nb_epoch=50,
               batch_size=BATCH_SIZE,
               verbose=1,
@@ -657,8 +797,12 @@ def fife():
   def test_fn(model, test, seed, *args, **kwargs):
     """ make predictions for test data """
     predictions = np.array(
-        model.predict({"data_in": test["x_2"], "code_in": test["x_seq"]},
-                      batch_size=BATCH_SIZE, verbose=0))
+        model.predict({
+            "data_in": test["x_2"],
+            "code_in": test["x_seq"]
+        },
+                      batch_size=BATCH_SIZE,
+                      verbose=0))
     clipped = [np.argmax(x) for x in predictions[0]]
     return clipped
 
@@ -671,12 +815,12 @@ def fife():
     return load_model(inpath)
 
   return {
-    "name": "fife",
-    "create_model": create_model,
-    "train_fn": train_fn,
-    "test_fn": test_fn,
-    "save_fn": save_fn,
-    "load_fn": load_fn
+      "name": "fife",
+      "create_model": create_model,
+      "train_fn": train_fn,
+      "test_fn": test_fn,
+      "save_fn": save_fn,
+      "load_fn": load_fn
   }
 
 
@@ -693,8 +837,10 @@ def bruno():
     data_in = Input(shape=(2,), name="data_in")
 
     code_in = Input(shape=(seq_length,), dtype="int32", name="code_in")
-    right = Embedding(output_dim=EMBEDDING_VECTOR_LEN, input_dim=vocab_size,
-                      input_length=seq_length)(code_in)
+    right = Embedding(
+        output_dim=EMBEDDING_VECTOR_LEN,
+        input_dim=vocab_size,
+        input_length=seq_length)(code_in)
     right = LSTM(64, consume_less="mem", return_sequences=True)(right)
     right = LSTM(64, consume_less="mem")(right)
 
@@ -706,17 +852,28 @@ def bruno():
     out = Dense(2, activation="sigmoid", name="out")(x)
 
     model = Model(input=[data_in, code_in], output=[out, aux_out])
-    model.compile(optimizer="adam",
-                  loss={"out": "categorical_crossentropy",
-                        "aux_out": "categorical_crossentropy"},
-                  loss_weights={"out": 1., "aux_out": .2},
-                  metrics=['accuracy'])
+    model.compile(
+        optimizer="adam",
+        loss={
+            "out": "categorical_crossentropy",
+            "aux_out": "categorical_crossentropy"
+        },
+        loss_weights={
+            "out": 1.,
+            "aux_out": .2
+        },
+        metrics=['accuracy'])
     return model
 
   def train_fn(model, train, *args, **kwargs):
     """ train a model """
-    model.fit({"data_in": train["x_2"], "code_in": train["x_seq"]},
-              {"out": train["y_2"], "aux_out": train["y_2"]},
+    model.fit({
+        "data_in": train["x_2"],
+        "code_in": train["x_seq"]
+    }, {
+        "out": train["y_2"],
+        "aux_out": train["y_2"]
+    },
               nb_epoch=50,
               batch_size=BATCH_SIZE,
               verbose=1,
@@ -725,8 +882,12 @@ def bruno():
   def test_fn(model, test, seed, *args, **kwargs):
     """ make predictions for test data """
     predictions = np.array(
-        model.predict({"data_in": test["x_2"], "code_in": test["x_seq"]},
-                      batch_size=BATCH_SIZE, verbose=0))
+        model.predict({
+            "data_in": test["x_2"],
+            "code_in": test["x_seq"]
+        },
+                      batch_size=BATCH_SIZE,
+                      verbose=0))
     clipped = [np.argmax(x) for x in predictions[0]]
     return clipped
 
@@ -739,12 +900,12 @@ def bruno():
     return load_model(inpath)
 
   return {
-    "name": "bruno",
-    "create_model": create_model,
-    "train_fn": train_fn,
-    "test_fn": test_fn,
-    "save_fn": save_fn,
-    "load_fn": load_fn
+      "name": "bruno",
+      "create_model": create_model,
+      "train_fn": train_fn,
+      "test_fn": test_fn,
+      "save_fn": save_fn,
+      "load_fn": load_fn
   }
 
 
@@ -761,8 +922,10 @@ def brandon():
     data_in = Input(shape=(2,), name="data_in")
 
     code_in = Input(shape=(seq_length,), dtype="int32", name="code_in")
-    right = Embedding(output_dim=EMBEDDING_VECTOR_LEN, input_dim=vocab_size,
-                      input_length=seq_length)(code_in)
+    right = Embedding(
+        output_dim=EMBEDDING_VECTOR_LEN,
+        input_dim=vocab_size,
+        input_length=seq_length)(code_in)
     right = LSTM(64, consume_less="mem", return_sequences=True)(right)
     right = Dropout(0.1)(right)
     right = LSTM(64, consume_less="mem")(right)
@@ -776,17 +939,28 @@ def brandon():
     out = Dense(2, activation="sigmoid", name="out")(x)
 
     model = Model(input=[data_in, code_in], output=[out, aux_out])
-    model.compile(optimizer="adam",
-                  loss={"out": "categorical_crossentropy",
-                        "aux_out": "categorical_crossentropy"},
-                  loss_weights={"out": 1., "aux_out": .2},
-                  metrics=['accuracy'])
+    model.compile(
+        optimizer="adam",
+        loss={
+            "out": "categorical_crossentropy",
+            "aux_out": "categorical_crossentropy"
+        },
+        loss_weights={
+            "out": 1.,
+            "aux_out": .2
+        },
+        metrics=['accuracy'])
     return model
 
   def train_fn(model, train, *args, **kwargs):
     """ train a model """
-    model.fit({"data_in": train["x_2"], "code_in": train["x_seq"]},
-              {"out": train["y_2"], "aux_out": train["y_2"]},
+    model.fit({
+        "data_in": train["x_2"],
+        "code_in": train["x_seq"]
+    }, {
+        "out": train["y_2"],
+        "aux_out": train["y_2"]
+    },
               nb_epoch=50,
               batch_size=BATCH_SIZE,
               verbose=1,
@@ -795,8 +969,12 @@ def brandon():
   def test_fn(model, test, seed, *args, **kwargs):
     """ make predictions for test data """
     predictions = np.array(
-        model.predict({"data_in": test["x_2"], "code_in": test["x_seq"]},
-                      batch_size=BATCH_SIZE, verbose=0))
+        model.predict({
+            "data_in": test["x_2"],
+            "code_in": test["x_seq"]
+        },
+                      batch_size=BATCH_SIZE,
+                      verbose=0))
     clipped = [np.argmax(x) for x in predictions[0]]
     return clipped
 
@@ -809,12 +987,12 @@ def brandon():
     return load_model(inpath)
 
   return {
-    "name": "brandon",
-    "create_model": create_model,
-    "train_fn": train_fn,
-    "test_fn": test_fn,
-    "save_fn": save_fn,
-    "load_fn": load_fn
+      "name": "brandon",
+      "create_model": create_model,
+      "train_fn": train_fn,
+      "test_fn": test_fn,
+      "save_fn": save_fn,
+      "load_fn": load_fn
   }
 
 
@@ -831,8 +1009,10 @@ def janet():
     data_in = Input(shape=(2,), name="data_in")
 
     code_in = Input(shape=(seq_length,), dtype="int32", name="code_in")
-    right = Embedding(output_dim=EMBEDDING_VECTOR_LEN, input_dim=vocab_size,
-                      input_length=seq_length)(code_in)
+    right = Embedding(
+        output_dim=EMBEDDING_VECTOR_LEN,
+        input_dim=vocab_size,
+        input_length=seq_length)(code_in)
     right = LSTM(128, consume_less="mem", return_sequences=True)(right)
     right = LSTM(128, consume_less="mem")(right)
 
@@ -844,17 +1024,28 @@ def janet():
     out = Dense(2, activation="sigmoid", name="out")(x)
 
     model = Model(input=[data_in, code_in], output=[out, aux_out])
-    model.compile(optimizer="adam",
-                  loss={"out": "categorical_crossentropy",
-                        "aux_out": "categorical_crossentropy"},
-                  loss_weights={"out": 1., "aux_out": .2},
-                  metrics=['accuracy'])
+    model.compile(
+        optimizer="adam",
+        loss={
+            "out": "categorical_crossentropy",
+            "aux_out": "categorical_crossentropy"
+        },
+        loss_weights={
+            "out": 1.,
+            "aux_out": .2
+        },
+        metrics=['accuracy'])
     return model
 
   def train_fn(model, train, *args, **kwargs):
     """ train a model """
-    model.fit({"data_in": train["x_2"], "code_in": train["x_seq"]},
-              {"out": train["y_2"], "aux_out": train["y_2"]},
+    model.fit({
+        "data_in": train["x_2"],
+        "code_in": train["x_seq"]
+    }, {
+        "out": train["y_2"],
+        "aux_out": train["y_2"]
+    },
               nb_epoch=50,
               batch_size=BATCH_SIZE,
               verbose=1,
@@ -863,8 +1054,12 @@ def janet():
   def test_fn(model, test, seed, *args, **kwargs):
     """ make predictions for test data """
     predictions = np.array(
-        model.predict({"data_in": test["x_2"], "code_in": test["x_seq"]},
-                      batch_size=BATCH_SIZE, verbose=0))
+        model.predict({
+            "data_in": test["x_2"],
+            "code_in": test["x_seq"]
+        },
+                      batch_size=BATCH_SIZE,
+                      verbose=0))
     clipped = [np.argmax(x) for x in predictions[0]]
     return clipped
 
@@ -877,10 +1072,10 @@ def janet():
     return load_model(inpath)
 
   return {
-    "name": "janet",
-    "create_model": create_model,
-    "train_fn": train_fn,
-    "test_fn": test_fn,
-    "save_fn": save_fn,
-    "load_fn": load_fn
+      "name": "janet",
+      "create_model": create_model,
+      "train_fn": train_fn,
+      "test_fn": test_fn,
+      "save_fn": save_fn,
+      "load_fn": load_fn
   }

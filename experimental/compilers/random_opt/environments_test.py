@@ -7,7 +7,6 @@ from absl import flags
 from experimental.compilers.random_opt import environments
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 

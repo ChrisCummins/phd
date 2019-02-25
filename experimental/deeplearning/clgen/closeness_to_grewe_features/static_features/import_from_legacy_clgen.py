@@ -11,22 +11,18 @@ from absl import logging
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
     'db',
     'sqlite:///tmp/phd/experimental/deplearning/clgen/closeness_to_grewe_features/db.db',
     'URL of the database to import OpenCL kernels to.')
-flags.DEFINE_string(
-    'legacy_clgen_db', None,
-    'Path of the legacy CLgen sqlite database.')
-flags.DEFINE_string(
-    'origin', 'clgen_legacy',
-    'Name of the origin of the kernels, e.g. "github".')
-flags.DEFINE_integer(
-    'batch_size', 256,
-    'The number of kernels to process in a batch.')
+flags.DEFINE_string('legacy_clgen_db', None,
+                    'Path of the legacy CLgen sqlite database.')
+flags.DEFINE_string('origin', 'clgen_legacy',
+                    'Name of the origin of the kernels, e.g. "github".')
+flags.DEFINE_integer('batch_size', 256,
+                     'The number of kernels to process in a batch.')
 
 
 def BatchQueryResults(query):
@@ -42,8 +38,8 @@ def BatchQueryResults(query):
       i = 0
 
 
-def CreateTempFileFromTestcase(
-    tempdir: pathlib.Path, src: str, number: int) -> pathlib.Path:
+def CreateTempFileFromTestcase(tempdir: pathlib.Path, src: str,
+                               number: int) -> pathlib.Path:
   """Write testcase to a file in directory."""
   path = tempdir / f'{number}.cl'
   with open(path, 'w') as f:
@@ -60,7 +56,7 @@ def main(argv: typing.List[str]):
   c = conn.cursor()
 
   batches = BatchQueryResults(
-    c.execute('SELECT kernel FROM PreprocessedKernels'))
+      c.execute('SELECT kernel FROM PreprocessedKernels'))
 
   prefix = 'phd_experimental_deeplearning_clgen_'
   for i, batch in enumerate(batches):
@@ -68,7 +64,8 @@ def main(argv: typing.List[str]):
       logging.info('Batch %03d', i)
       d = pathlib.Path(d)
       paths_to_import = [
-        CreateTempFileFromTestcase(d, src, i) for i, (src,) in enumerate(batch)
+          CreateTempFileFromTestcase(d, src, i)
+          for i, (src,) in enumerate(batch)
       ]
       db = grewe_features_db.Database(FLAGS.db)
       db.ImportStaticFeaturesFromPaths(paths_to_import, FLAGS.origin)

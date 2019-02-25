@@ -21,9 +21,8 @@ def DirContainsProtos(data_path: str, proto_class) -> None:
 
 def test_clone_lists_are_valid():
   """Test that clone_lists are valid."""
-  DirContainsProtos(
-      'phd/experimental/deeplearning/polyglot/clone_lists',
-      scrape_repos_pb2.LanguageCloneList)
+  DirContainsProtos('phd/experimental/deeplearning/polyglot/clone_lists',
+                    scrape_repos_pb2.LanguageCloneList)
 
 
 def test_corpuses_are_valid():

@@ -27,22 +27,19 @@ from deeplearning.deepsmith.proto import service_pb2
 from gpu.oclgrind import oclgrind
 from labm8 import labtypes
 
-
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string(
-    'github_kernels_dir', '/var/phd/datasets/github/corpuses/opencl',
-    'Directory containing OpenCL github kernels.')
+flags.DEFINE_string('github_kernels_dir',
+                    '/var/phd/datasets/github/corpuses/opencl',
+                    'Directory containing OpenCL github kernels.')
 flags.DEFINE_string(
     'result_cache_dir',
     '/tmp/phd/experimental/deeplearning/clgen/learning_from_github_corpus/run_github_corpus',
     'Path to cache experimental results in.')
-flags.DEFINE_string(
-    'opencl_env', oclgrind.CLINFO_DESCRIPTION.name,
-    'The OpenCL environment to execute programs on.')
-flags.DEFINE_boolean(
-    'opencl_opt', True,
-    'If true, enable OpenCL optimizations.')
+flags.DEFINE_string('opencl_env', oclgrind.CLINFO_DESCRIPTION.name,
+                    'The OpenCL environment to execute programs on.')
+flags.DEFINE_boolean('opencl_opt', True,
+                     'If true, enable OpenCL optimizations.')
 flags.DEFINE_boolean(
     'summarize_only', False,
     'If true, only summarize cached results, do not run new experiments.')
@@ -52,22 +49,22 @@ flags.DEFINE_boolean(
 # dimensions are ones. E.g. the first row (64, 64) means local (workgroup) size
 # of (64, 1, 1), and a global size of (64, 1, 1).
 LSIZE_GSIZE_PAIRS = [
-  (64, 64),
-  (128, 128),
-  (256, 256),
-  (256, 512),
-  (256, 1024),
-  (256, 2048),
-  (256, 4096),
-  (256, 8192),
-  (256, 16384),
-  (256, 65536),
-  (256, 131072),
-  (256, 262144),
-  (256, 524288),
-  (256, 1048576),
-  (256, 2097152),
-  (256, 4194304),
+    (64, 64),
+    (128, 128),
+    (256, 256),
+    (256, 512),
+    (256, 1024),
+    (256, 2048),
+    (256, 4096),
+    (256, 8192),
+    (256, 16384),
+    (256, 65536),
+    (256, 131072),
+    (256, 262144),
+    (256, 524288),
+    (256, 1048576),
+    (256, 2097152),
+    (256, 4194304),
 ]
 
 
@@ -75,26 +72,26 @@ def OpenClSourceToTestCases(src: str) -> typing.List[deepsmith_pb2.Testcase]:
   """Generate DeepSmith testcases for each of the combination of gsize and
   lsize used in CGO'17 synthetic kernels."""
   return [
-    deepsmith_pb2.Testcase(
-        toolchain='opencl',
-        harness=deepsmith_pb2.Harness(name='cldrive'),
-        inputs={
-          'src': src,
-          'gsize': f'{gsize},1,1',
-          'lsize': f'{lsize},1,1',
-        }) for lsize, gsize in LSIZE_GSIZE_PAIRS
+      deepsmith_pb2.Testcase(
+          toolchain='opencl',
+          harness=deepsmith_pb2.Harness(name='cldrive'),
+          inputs={
+              'src': src,
+              'gsize': f'{gsize},1,1',
+              'lsize': f'{lsize},1,1',
+          }) for lsize, gsize in LSIZE_GSIZE_PAIRS
   ]
 
 
-def RunTestCasesOrDie(
-    driver: cldrive.CldriveHarness,
-    testcases: typing.List[deepsmith_pb2.Testcase]
-) -> typing.Iterable[deepsmith_pb2.Result]:
+def RunTestCasesOrDie(driver: cldrive.CldriveHarness,
+                      testcases: typing.List[deepsmith_pb2.Testcase]
+                     ) -> typing.Iterable[deepsmith_pb2.Result]:
   """Run the test cases and return their results."""
-  response = driver.RunTestcases(harness_pb2.RunTestcasesRequest(
-      testbed=driver.testbeds[0],
-      testcases=testcases,
-  ), None)
+  response = driver.RunTestcases(
+      harness_pb2.RunTestcasesRequest(
+          testbed=driver.testbeds[0],
+          testcases=testcases,
+      ), None)
 
   # Harness returned correct number of results without complaining.
   if response.status.returncode != service_pb2.ServiceStatus.SUCCESS:
@@ -138,8 +135,10 @@ def GetOutcomeWithDynamicChecks(result: deepsmith_pb2.Result,
   different_input_results = RunTestCasesOrDie(
       driver, [different_inputs_testcase, different_inputs_testcase])
 
-  outcomes = [deepsmith_pb2.Result.Outcome.Name(r.outcome) for r in
-              different_input_results]
+  outcomes = [
+      deepsmith_pb2.Result.Outcome.Name(r.outcome)
+      for r in different_input_results
+  ]
   if not set(outcomes) == {'PASS'}:
     logging.info('Kernel failed when run on second inputs')
     return 'DIFFTEST_FAIL'
@@ -150,8 +149,9 @@ def GetOutcomeWithDynamicChecks(result: deepsmith_pb2.Result,
     return 'DIFFTEST_NONDETERMINISM_FAIL'
 
   # The outputs must be different when run twice with the same inputs.
-  if len(set(r.outputs['stdout'] for r in
-             [result, different_input_results[0]])) == 1:
+  if len(
+      set(r.outputs['stdout']
+          for r in [result, different_input_results[0]])) == 1:
     logging.info('Kernel produced identicial outputs with differnet inputs')
     return 'INPUT_INSENSITIVE'
 
@@ -165,32 +165,33 @@ def main(argv: typing.List[str]):
 
   os.environ['CLGEN_CACHE'] = f'{FLAGS.result_cache_dir}/clgen'
   # An OpenCL corpus, configured as described in CGO'17.
-  corpus = corpuses.Corpus(corpus_pb2.Corpus(
-      local_directory=FLAGS.github_kernels_dir,
-      ascii_character_atomizer=True,
-      contentfile_separator="\n\n",
-      preprocessor=[
-        "deeplearning.clgen.preprocessors.opencl:ClangPreprocessWithShim",
-        "deeplearning.clgen.preprocessors.opencl:Compile",
-        "deeplearning.clgen.preprocessors.opencl:NormalizeIdentifiers",
-        "deeplearning.clgen.preprocessors.opencl:StripDoubleUnderscorePrefixes",
-        "deeplearning.clgen.preprocessors.common:StripDuplicateEmptyLines",
-        "deeplearning.clgen.preprocessors.opencl:SanitizeKernelPrototype",
-        "deeplearning.clgen.preprocessors.common:StripTrailingWhitespace",
-        "deeplearning.clgen.preprocessors.opencl:ClangFormat",
-        "deeplearning.clgen.preprocessors.common:MinimumLineCount3",
-        "deeplearning.clgen.preprocessors.opencl:Compile",
-      ]
-  ))
+  corpus = corpuses.Corpus(
+      corpus_pb2.Corpus(
+          local_directory=FLAGS.github_kernels_dir,
+          ascii_character_atomizer=True,
+          contentfile_separator="\n\n",
+          preprocessor=[
+              "deeplearning.clgen.preprocessors.opencl:ClangPreprocessWithShim",
+              "deeplearning.clgen.preprocessors.opencl:Compile",
+              "deeplearning.clgen.preprocessors.opencl:NormalizeIdentifiers",
+              "deeplearning.clgen.preprocessors.opencl:StripDoubleUnderscorePrefixes",
+              "deeplearning.clgen.preprocessors.common:StripDuplicateEmptyLines",
+              "deeplearning.clgen.preprocessors.opencl:SanitizeKernelPrototype",
+              "deeplearning.clgen.preprocessors.common:StripTrailingWhitespace",
+              "deeplearning.clgen.preprocessors.opencl:ClangFormat",
+              "deeplearning.clgen.preprocessors.common:MinimumLineCount3",
+              "deeplearning.clgen.preprocessors.opencl:Compile",
+          ]))
   corpus.Create()
 
   cache_dir = pathlib.Path(FLAGS.result_cache_dir) / corpus.hash
   cache_dir.mkdir(parents=True, exist_ok=True)
 
-  driver = cldrive.CldriveHarness(harness_pb2.CldriveHarness(
-      opencl_env=[FLAGS.opencl_env],
-      opencl_opt=[FLAGS.opencl_opt],
-  ))
+  driver = cldrive.CldriveHarness(
+      harness_pb2.CldriveHarness(
+          opencl_env=[FLAGS.opencl_env],
+          opencl_opt=[FLAGS.opencl_opt],
+      ))
 
   with corpus.preprocessed.Session() as session:
     # Query to return all successfully preprocessed OpenCL kernels in a stable
@@ -231,21 +232,22 @@ def main(argv: typing.List[str]):
         results = RunTestCasesOrDie(driver, testcases)
 
         outcomes = [
-          GetOutcomeWithDynamicChecks(result, driver) for result in results
+            GetOutcomeWithDynamicChecks(result, driver) for result in results
         ]
         with open(cached_results_path, 'wb') as f:
           pickle.dump(outcomes, f)
 
       all_outcomes += outcomes
-      df = pd.DataFrame(list(zip(all_outcomes, np.ones(len(all_outcomes)))) +
-                        [('Total', len(all_outcomes))],
-                        columns=['outcome', 'count'])
+      df = pd.DataFrame(
+          list(zip(all_outcomes, np.ones(len(all_outcomes)))) +
+          [('Total', len(all_outcomes))],
+          columns=['outcome', 'count'])
       summary = df.groupby('outcome').sum().reset_index()
       summary['ratio'] = [
-        f'{x:.2%}' for x in
-        # Double the "ratio" values because the 'count' column contains a
-        # grand total row.
-        2 * summary['count'].values / summary['count'].sum()
+          f'{x:.2%}' for x in
+          # Double the "ratio" values because the 'count' column contains a
+          # grand total row.
+          2 * summary['count'].values / summary['count'].sum()
       ]
       summary['count'] = [humanize.intcomma(int(x)) for x in summary['count']]
       print(summary)

@@ -12,37 +12,37 @@ from absl import logging
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from labm8 import dateutil
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('proto_dir', None, 'Directory to export protos to.')
 
 OPENCL_DEVTYPE_MAP = {
-  '3': 'CPU',
+    '3': 'CPU',
 }
 
 HOSTS_MAP = {
-  'openSUSE  13.1 64bit': 'openSUSE 13.1 64bit',
+    'openSUSE  13.1 64bit': 'openSUSE 13.1 64bit',
 }
 
 OPENCL_DEVICE_MAP = {
-  'pthread-Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz': 'pocl_cpu_e5-2620',
-  'Oclgrind 16.10': 'oclgrind_cpu',
-  'GeForce GTX 780': 'nvidia_gpu_gtx780',
-  'GeForce GTX 1080': 'nvidia_gpu_gtx1080',
-  'GeForce GTX 1080': 'nvidia_gpu_gtx1080',
-  'Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz': 'intel_cpu_e5-2620v4',
-  'Intel(R) Many Integrated Core Acceleration Card': 'intel_xeon_phi',
-  'Intel(R) Core(TM) i5-4570 CPU @ 3.20GHz': 'intel_cpu_i5-4570',
-  '      Intel(R) Xeon(R) CPU E5-2650 v2 @ 2.60GHz': 'intel_cpu_e5-2650v2',
-  'Intel(R) HD Graphics Haswell GT2 Desktop': 'intel_gpu_gt2',
-  'Codeplay Software Ltd. - host CPU': 'codeplay_cpu',
-  'Oclgrind Simulator': 'oclgrind_cpu',
-  '': 'clang',
+    'pthread-Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz': 'pocl_cpu_e5-2620',
+    'Oclgrind 16.10': 'oclgrind_cpu',
+    'GeForce GTX 780': 'nvidia_gpu_gtx780',
+    'GeForce GTX 1080': 'nvidia_gpu_gtx1080',
+    'GeForce GTX 1080': 'nvidia_gpu_gtx1080',
+    'Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz': 'intel_cpu_e5-2620v4',
+    'Intel(R) Many Integrated Core Acceleration Card': 'intel_xeon_phi',
+    'Intel(R) Core(TM) i5-4570 CPU @ 3.20GHz': 'intel_cpu_i5-4570',
+    '      Intel(R) Xeon(R) CPU E5-2650 v2 @ 2.60GHz': 'intel_cpu_e5-2650v2',
+    'Intel(R) HD Graphics Haswell GT2 Desktop': 'intel_gpu_gt2',
+    'Codeplay Software Ltd. - host CPU': 'codeplay_cpu',
+    'Oclgrind Simulator': 'oclgrind_cpu',
+    '': 'clang',
 }
 
 
-def _SetIf(out: typing.Dict[str, typing.Any], key: typing.Any,
+def _SetIf(out: typing.Dict[str, typing.Any],
+           key: typing.Any,
            value: typing.Any,
            setvalue: typing.Any = None) -> typing.Dict[str, typing.Any]:
   if value:
@@ -55,26 +55,24 @@ def _GetOpenCLGenerator(generator_id) -> deepsmith_pb2.Generator:
     return deepsmith_pb2.Generator(
         name="clsmith",
         opts={
-          "git_commit": "b637b31c31e0f90ef199ca492af05172400df050",
-          "git_remote": "https://github.com/ChrisCummins/CLSmith.git",
-        }
-    )
+            "git_commit": "b637b31c31e0f90ef199ca492af05172400df050",
+            "git_remote": "https://github.com/ChrisCummins/CLSmith.git",
+        })
   elif generator_id == 1:
     return deepsmith_pb2.Generator(
         name="clgen",
         opts={
-          "git_commit": "9556e7112ba2bd6f79ee59eef74f0a2304efa007",
-          "git_remote": "https://github.com/ChrisCummins/clgen.git",
-          "version": "0.4.0.dev0",
-        }
-    )
+            "git_commit": "9556e7112ba2bd6f79ee59eef74f0a2304efa007",
+            "git_remote": "https://github.com/ChrisCummins/clgen.git",
+            "version": "0.4.0.dev0",
+        })
   elif generator_id == 2:
     return deepsmith_pb2.Generator(
         name="randchar",
         opts={
-          "url": "https://github.com/ChrisCummins/dsmith/blob/fd986a36a23b2a398f33d5b5852d930b462401b1/dsmith/opencl/generators.py#L175",
-        }
-    )
+            "url":
+            "https://github.com/ChrisCummins/dsmith/blob/fd986a36a23b2a398f33d5b5852d930b462401b1/dsmith/opencl/generators.py#L175",
+        })
   else:
     raise LookupError
 
@@ -84,29 +82,28 @@ def _GetOpenCLHarness(harness_id, timeout) -> deepsmith_pb2.Harness:
     return deepsmith_pb2.Harness(
         name="clang",
         opts={
-          "timeout_seconds": str(int(timeout)),
-          "url": "https://github.com/ChrisCummins/dsmith/blob/fd986a36a23b2a398f33d5b5852d930b462401b1/dsmith/opencl/harnesses.py#L292",
-        }
-    )
+            "timeout_seconds":
+            str(int(timeout)),
+            "url":
+            "https://github.com/ChrisCummins/dsmith/blob/fd986a36a23b2a398f33d5b5852d930b462401b1/dsmith/opencl/harnesses.py#L292",
+        })
   elif harness_id == 0:
     return deepsmith_pb2.Harness(
         name="cl_launcher",
         opts={
-          "timeout_seconds": str(int(timeout)),
-          "git_commit": "b637b31c31e0f90ef199ca492af05172400df050",
-          "git_remote": "https://github.com/ChrisCummins/CLSmith.git",
-        }
-    )
+            "timeout_seconds": str(int(timeout)),
+            "git_commit": "b637b31c31e0f90ef199ca492af05172400df050",
+            "git_remote": "https://github.com/ChrisCummins/CLSmith.git",
+        })
   elif harness_id == 1:
     return deepsmith_pb2.Harness(
         name="cldrive",
         opts={
-          "timeout_seconds": str(int(timeout)),
-          "git_commit": "9556e7112ba2bd6f79ee59eef74f0a2304efa007",
-          "git_remote": "https://github.com/ChrisCummins/clgen.git",
-          "version": "0.4.0.dev0",
-        }
-    )
+            "timeout_seconds": str(int(timeout)),
+            "git_commit": "9556e7112ba2bd6f79ee59eef74f0a2304efa007",
+            "git_remote": "https://github.com/ChrisCummins/clgen.git",
+            "version": "0.4.0.dev0",
+        })
   else:
     raise LookupError
 
@@ -115,7 +112,8 @@ def _ExportOpenCLTestcases(cursor, start_id, proto_dir):
   batch_size = 1000
   testcase_id = start_id
   while True:
-    cursor.execute("""
+    cursor.execute(
+        """
 SELECT
   testcases.id,
   programs.generator,
@@ -153,29 +151,13 @@ LIMIT %s
     i = 0
     for row in cursor:
       i += 1
-      (
-        testcase_id,
-        generator_id,
-        program_date,
-        program_generation_time,
-        program_src,
-        harness_id,
-        harness_timeout,
-        gsize_x,
-        gsize_y,
-        gsize_z,
-        lsize_x,
-        lsize_y,
-        lsize_z,
-        clsmith_oclverified,
-        dsmith_gpuverified,
-        dsmith_oclverified,
-        dsmith_program_contains_floats,
-        dsmith_program_vector_inputs,
-        dsmith_program_compiler_warnings
-      ) = row
+      (testcase_id, generator_id, program_date, program_generation_time,
+       program_src, harness_id, harness_timeout, gsize_x, gsize_y, gsize_z,
+       lsize_x, lsize_y, lsize_z, clsmith_oclverified, dsmith_gpuverified,
+       dsmith_oclverified, dsmith_program_contains_floats,
+       dsmith_program_vector_inputs, dsmith_program_compiler_warnings) = row
       inputs = {
-        "src": program_src,
+          "src": program_src,
       }
       if harness_id != -1:
         inputs["gsize"] = f"{gsize_x},{gsize_y},{gsize_z}"
@@ -212,15 +194,14 @@ LIMIT %s
           inputs=inputs,
           invariant_opts=invariant_opts,
           profiling_events=[
-            deepsmith_pb2.ProfilingEvent(
-                client="cc1",
-                type="generation",
-                duration_ms=int(program_generation_time * 1000),
-                event_start_epoch_ms=dateutil.MillisecondsTimestamp(
-                    program_date),
-            ),
-          ]
-      )
+              deepsmith_pb2.ProfilingEvent(
+                  client="cc1",
+                  type="generation",
+                  duration_ms=int(program_generation_time * 1000),
+                  event_start_epoch_ms=dateutil.MillisecondsTimestamp(
+                      program_date),
+              ),
+          ])
       with open(proto_dir / 'opencl' / 'testcases' / str(testcase_id),
                 'wb') as f:
         f.write(proto.SerializeToString())
@@ -232,7 +213,8 @@ def _ExportOpenCLResults(cursor, start_id, proto_dir):
   batch_size = 1000
   result_id = start_id
   while True:
-    cursor.execute("""
+    cursor.execute(
+        """
 SELECT
   results.id,
   platforms.platform,
@@ -285,42 +267,16 @@ LIMIT %s
     i = 0
     for row in cursor:
       i += 1
-      (
-        result_id,
-        platform_name,
-        device_name,
-        driver_version,
-        opencl_version,
-        devtype,
-        host_os,
-        cl_opt,
-        generator_id,
-        program_date,
-        program_generation_time,
-        program_src,
-        harness_id,
-        harness_timeout,
-        result_date,
-        returncode,
-        runtime,
-        stdout,
-        stderr,
-        truncated_stderr,
-        gsize_x,
-        gsize_y,
-        gsize_z,
-        lsize_x,
-        lsize_y,
-        lsize_z,
-        clsmith_oclverified,
-        dsmith_gpuverified,
-        dsmith_oclverified,
-        dsmith_program_contains_floats,
-        dsmith_program_vector_inputs,
-        dsmith_program_compiler_warnings
-      ) = row
+      (result_id, platform_name, device_name, driver_version, opencl_version,
+       devtype, host_os, cl_opt, generator_id, program_date,
+       program_generation_time, program_src, harness_id, harness_timeout,
+       result_date, returncode, runtime, stdout, stderr, truncated_stderr,
+       gsize_x, gsize_y, gsize_z, lsize_x, lsize_y, lsize_z,
+       clsmith_oclverified, dsmith_gpuverified, dsmith_oclverified,
+       dsmith_program_contains_floats, dsmith_program_vector_inputs,
+       dsmith_program_compiler_warnings) = row
       inputs = {
-        'src': program_src,
+          'src': program_src,
       }
       if harness_id != -1:
         inputs['gsize'] = f'{gsize_x},{gsize_y},{gsize_z}'
@@ -377,33 +333,32 @@ LIMIT %s
               inputs=inputs,
               invariant_opts=invariant_opts,
               profiling_events=[
-                deepsmith_pb2.ProfilingEvent(
-                    client="cc1",
-                    type="generation",
-                    duration_ms=int(program_generation_time * 1000),
-                    event_start_epoch_ms=dateutil.MillisecondsTimestamp(
-                        program_date),
-                ),
-              ]
-          ),
+                  deepsmith_pb2.ProfilingEvent(
+                      client="cc1",
+                      type="generation",
+                      duration_ms=int(program_generation_time * 1000),
+                      event_start_epoch_ms=dateutil.MillisecondsTimestamp(
+                          program_date),
+                  ),
+              ]),
           testbed=testbed,
           returncode=returncode,
           outputs={
-            "stdout": stdout,
-            "stderr": stderr,
+              "stdout": stdout,
+              "stderr": stderr,
           },
           profiling_events=[
-            deepsmith_pb2.ProfilingEvent(
-                client={
-                  'Ubuntu 16.04 64bit': 'cc1',
-                  'CentOS Linux 7.1.1503 64bit': 'fuji',
-                  'openSUSE  13.1 64bit': 'kobol',
-                }[host_os],
-                type="runtime",
-                duration_ms=int(runtime * 1000),
-                event_start_epoch_ms=dateutil.MillisecondsTimestamp(
-                    result_date),
-            ),
+              deepsmith_pb2.ProfilingEvent(
+                  client={
+                      'Ubuntu 16.04 64bit': 'cc1',
+                      'CentOS Linux 7.1.1503 64bit': 'fuji',
+                      'openSUSE  13.1 64bit': 'kobol',
+                  }[host_os],
+                  type="runtime",
+                  duration_ms=int(runtime * 1000),
+                  event_start_epoch_ms=dateutil.MillisecondsTimestamp(
+                      result_date),
+              ),
           ],
       )
       with open(proto_dir / 'opencl' / 'results' / str(result_id), 'wb') as f:
@@ -416,7 +371,8 @@ def _ExportSolidityTestcases(cursor, start_id, proto_dir):
   batch_size = 1000
   testcase_id = start_id
   while True:
-    cursor.execute("""
+    cursor.execute(
+        """
 SELECT
   testcases.id,
   programs.generator,
@@ -438,39 +394,33 @@ LIMIT %s
     i = 0
     for row in cursor:
       i += 1
-      (
-        testcase_id,
-        generator_id,
-        program_date,
-        program_generation_time,
-        program_src,
-        harness_id,
-        harness_timeout
-      ) = row
+      (testcase_id, generator_id, program_date, program_generation_time,
+       program_src, harness_id, harness_timeout) = row
       proto = deepsmith_pb2.Testcase(
           toolchain='solidity',
           generator=_GetSolidityGenerator(generator_id),
           harness=deepsmith_pb2.Harness(
               name='solc',
               opts={
-                'timeout_seconds': str(int(harness_timeout)),
-                'url': 'https://github.com/ChrisCummins/dsmith/blob/5181c7c95575d428b5144a25549e5a5a55a3da31/dsmith/sol/harnesses.py#L117',
+                  'timeout_seconds':
+                  str(int(harness_timeout)),
+                  'url':
+                  'https://github.com/ChrisCummins/dsmith/blob/5181c7c95575d428b5144a25549e5a5a55a3da31/dsmith/sol/harnesses.py#L117',
               },
           ),
           inputs={
-            "src": program_src,
+              "src": program_src,
           },
           invariant_opts={},
           profiling_events=[
-            deepsmith_pb2.ProfilingEvent(
-                client="cc1",
-                type="generation",
-                duration_ms=int(program_generation_time * 1000),
-                event_start_epoch_ms=dateutil.MillisecondsTimestamp(
-                    program_date),
-            ),
-          ]
-      )
+              deepsmith_pb2.ProfilingEvent(
+                  client="cc1",
+                  type="generation",
+                  duration_ms=int(program_generation_time * 1000),
+                  event_start_epoch_ms=dateutil.MillisecondsTimestamp(
+                      program_date),
+              ),
+          ])
       with open(proto_dir / 'sol' / 'testcases' / str(testcase_id), 'wb') as f:
         f.write(proto.SerializeToString())
     if i < batch_size:
@@ -479,26 +429,22 @@ LIMIT %s
 
 def _GetSolidityGenerator(generator_id) -> deepsmith_pb2.Generator:
   if generator_id == -1:
-    return deepsmith_pb2.Generator(
-        name="github",
-        opts={}
-    )
+    return deepsmith_pb2.Generator(name="github", opts={})
   elif generator_id == 1:
     return deepsmith_pb2.Generator(
         name="clgen",
         opts={
-          "git_commit": "9556e7112ba2bd6f79ee59eef74f0a2304efa007",
-          "git_remote": "https://github.com/ChrisCummins/clgen.git",
-          "version": "0.4.0.dev0",
-        }
-    )
+            "git_commit": "9556e7112ba2bd6f79ee59eef74f0a2304efa007",
+            "git_remote": "https://github.com/ChrisCummins/clgen.git",
+            "version": "0.4.0.dev0",
+        })
   elif generator_id == 2:
     return deepsmith_pb2.Generator(
         name="randchar",
         opts={
-          "url": "https://github.com/ChrisCummins/dsmith/blob/5181c7c95575d428b5144a25549e5a5a55a3da31/dsmith/sol/generators.py#L203",
-        }
-    )
+            "url":
+            "https://github.com/ChrisCummins/dsmith/blob/5181c7c95575d428b5144a25549e5a5a55a3da31/dsmith/sol/generators.py#L203",
+        })
   else:
     raise LookupError
 
@@ -507,7 +453,8 @@ def _ExportSolidityResults(cursor, start_id, proto_dir):
   batch_size = 1000
   result_id = start_id
   while True:
-    cursor.execute("""
+    cursor.execute(
+        """
 SELECT
   results.id,
   platforms.platform,
@@ -539,24 +486,10 @@ LIMIT %s
     i = 0
     for row in cursor:
       i += 1
-      (
-        result_id,
-        platform_name,
-        platform_version,
-        host_os,
-        optimizations,
-        generator_id,
-        program_date,
-        program_generation_time,
-        program_src,
-        harness_id,
-        harness_timeout,
-        result_date,
-        returncode,
-        runtime,
-        stdout,
-        stderr
-      ) = row
+      (result_id, platform_name, platform_version, host_os, optimizations,
+       generator_id, program_date, program_generation_time, program_src,
+       harness_id, harness_timeout, result_date, returncode, runtime, stdout,
+       stderr) = row
       assert harness_id == 2
       proto = deepsmith_pb2.Result(
           testcase=deepsmith_pb2.Testcase(
@@ -565,45 +498,46 @@ LIMIT %s
               harness=deepsmith_pb2.Harness(
                   name='solc',
                   opts={
-                    'timeout_seconds': str(int(harness_timeout)),
-                    'url': 'https://github.com/ChrisCummins/dsmith/blob/5181c7c95575d428b5144a25549e5a5a55a3da31/dsmith/sol/harnesses.py#L117',
+                      'timeout_seconds':
+                      str(int(harness_timeout)),
+                      'url':
+                      'https://github.com/ChrisCummins/dsmith/blob/5181c7c95575d428b5144a25549e5a5a55a3da31/dsmith/sol/harnesses.py#L117',
                   },
               ),
               inputs={
-                "src": program_src,
+                  "src": program_src,
               },
               invariant_opts={},
               profiling_events=[
-                deepsmith_pb2.ProfilingEvent(
-                    client="cc1",
-                    type="generation",
-                    duration_ms=int(program_generation_time * 1000),
-                    event_start_epoch_ms=dateutil.MillisecondsTimestamp(
-                        program_date),
-                ),
-              ]
-          ),
+                  deepsmith_pb2.ProfilingEvent(
+                      client="cc1",
+                      type="generation",
+                      duration_ms=int(program_generation_time * 1000),
+                      event_start_epoch_ms=dateutil.MillisecondsTimestamp(
+                          program_date),
+                  ),
+              ]),
           testbed=deepsmith_pb2.Testbed(
               toolchain='solidity',
               name=platform_name,
               opts={
-                'version': platform_version,
-                'optimizations': 'enabled' if optimizations else 'disabled',
+                  'version': platform_version,
+                  'optimizations': 'enabled' if optimizations else 'disabled',
               },
           ),
           returncode=returncode,
           outputs={
-            "stdout": stdout,
-            "stderr": stderr,
+              "stdout": stdout,
+              "stderr": stderr,
           },
           profiling_events=[
-            deepsmith_pb2.ProfilingEvent(
-                client='cc1',
-                type="runtime",
-                duration_ms=int(runtime * 1000),
-                event_start_epoch_ms=dateutil.MillisecondsTimestamp(
-                    result_date),
-            ),
+              deepsmith_pb2.ProfilingEvent(
+                  client='cc1',
+                  type="runtime",
+                  duration_ms=int(runtime * 1000),
+                  event_start_epoch_ms=dateutil.MillisecondsTimestamp(
+                      result_date),
+              ),
           ],
       )
       with open(proto_dir / 'sol' / 'results' / str(result_id), 'wb') as f:
@@ -624,8 +558,8 @@ def _ExportProtos() -> None:
   assert proto_dir
 
   credentials = _GetMySqlCredentials()
-  cnx = MySQLdb.connect(database='dsmith_04_opencl',
-                        user=credentials[0], password=credentials[1])
+  cnx = MySQLdb.connect(
+      database='dsmith_04_opencl', user=credentials[0], password=credentials[1])
   cursor = cnx.cursor()
 
   # Get the last exported result.
@@ -645,8 +579,8 @@ def _ExportProtos() -> None:
   cursor.close()
   cnx.close()
 
-  cnx = MySQLdb.connect(database='dsmith_04_sol',
-                        user=credentials[0], password=credentials[1])
+  cnx = MySQLdb.connect(
+      database='dsmith_04_sol', user=credentials[0], password=credentials[1])
   cursor = cnx.cursor()
 
   # Get the last exported result.

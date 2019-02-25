@@ -10,7 +10,6 @@ from experimental.compilers.reachability import control_flow_graph
 from experimental.compilers.reachability.models import lstm_reachability_model
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -29,28 +28,31 @@ def df() -> pd.DataFrame:
   g.add_edge(0, 1)
 
   return pd.DataFrame([
-    {
-      'cfg:block_count': 2,
-      'cfg:graph': g.copy(),
-      'split:type': 'training',
-    },
-    {
-      'cfg:block_count': 2,
-      'cfg:graph': g.copy(),
-      'split:type': 'validation',
-    },
-    {
-      'cfg:block_count': 2,
-      'cfg:graph': g.copy(),
-      'split:type': 'test',
-    },
+      {
+          'cfg:block_count': 2,
+          'cfg:graph': g.copy(),
+          'split:type': 'training',
+      },
+      {
+          'cfg:block_count': 2,
+          'cfg:graph': g.copy(),
+          'split:type': 'validation',
+      },
+      {
+          'cfg:block_count': 2,
+          'cfg:graph': g.copy(),
+          'split:type': 'test',
+      },
   ])
 
 
 def test_BuildKerasModel_smoke_test(atomizer: atomizers.AtomizerBase):
   """Test that BuildKerasModel() doesn't blow up."""
   assert lstm_reachability_model.BuildKerasModel(
-      sequence_length=10, num_classes=3, lstm_size=16, dnn_size=4,
+      sequence_length=10,
+      num_classes=3,
+      lstm_size=16,
+      dnn_size=4,
       atomizer=atomizer)
 
 

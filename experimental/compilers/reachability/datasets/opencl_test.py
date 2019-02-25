@@ -5,7 +5,6 @@ from absl import flags
 from experimental.compilers.reachability.datasets import opencl
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 

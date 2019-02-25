@@ -39,7 +39,6 @@ from experimental.dsmith import db_base
 from experimental.dsmith.opencl import oclgrind
 from labm8 import crypto, prof
 
-
 # Global state to manage database connections. Must call init() before
 # creating sessions.
 Base = declarative_base()
@@ -127,17 +126,16 @@ class Program(Base):
   id = sql.Column(id_t, primary_key=True)
   generator = sql.Column(Generators.column_t, nullable=False)
   sha1 = sql.Column(sql.String(40), nullable=False)
-  date = sql.Column(sql.DateTime, nullable=False,
-                    default=datetime.datetime.utcnow)
+  date = sql.Column(
+      sql.DateTime, nullable=False, default=datetime.datetime.utcnow)
   generation_time = sql.Column(sql.Float, nullable=False)
   linecount = sql.Column(sql.Integer, nullable=False)
   charcount = sql.Column(sql.Integer, nullable=False)
-  src = sql.Column(sql.UnicodeText(length=2 ** 31), nullable=False)
+  src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
   # Constraints
-  __table_args__ = (
-    sql.UniqueConstraint('generator', 'sha1', name='uniq_program'),
-  )
+  __table_args__ = (sql.UniqueConstraint(
+      'generator', 'sha1', name='uniq_program'),)
 
   # Relationships
   testcases = sql.orm.relationship("Testcase", back_populates="program")
@@ -262,12 +260,14 @@ class Threads(Base):
   lsize_z = sql.Column(sql.Integer, nullable=False)
 
   # Constraints
-  __table_args__ = (
-    sql.UniqueConstraint(
-        'gsize_x', 'gsize_y', 'gsize_z',
-        'lsize_x', 'lsize_y', 'lsize_z',
-        name='unique_thread_size'),
-  )
+  __table_args__ = (sql.UniqueConstraint(
+      'gsize_x',
+      'gsize_y',
+      'gsize_z',
+      'lsize_x',
+      'lsize_y',
+      'lsize_z',
+      name='unique_thread_size'),)
 
   # Relationships
   testcases = sql.orm.relationship("Testcase", back_populates="threads")
@@ -285,8 +285,10 @@ class Threads(Base):
 
   def to_flags(self) -> List[str]:
     return [
-      "-g", f"{self.gsize_x},{self.gsize_y},{self.gsize_z}",
-      "-l", f"{self.lsize_x},{self.lsize_y},{self.lsize_z}",
+        "-g",
+        f"{self.gsize_x},{self.gsize_y},{self.gsize_z}",
+        "-l",
+        f"{self.lsize_x},{self.lsize_y},{self.lsize_z}",
     ]
 
 
@@ -305,18 +307,18 @@ class Harnesses(object):
   @staticmethod
   def to_str(harness: 'Harnesses.value_t') -> str:
     return {
-      Harnesses.CLDRIVE: "cldrive",
-      Harnesses.CL_LAUNCHER: "cl_launcher",
-      Harnesses.CLANG: "clang",
+        Harnesses.CLDRIVE: "cldrive",
+        Harnesses.CL_LAUNCHER: "cl_launcher",
+        Harnesses.CLANG: "clang",
     }[harness]
 
   @staticmethod
-  def result_t(harness: "Harnesses.value_t") -> Union[
-    "Cl_launcherResult", "CldriveResult"]:
+  def result_t(harness: "Harnesses.value_t"
+              ) -> Union["Cl_launcherResult", "CldriveResult"]:
     return {
-      Harnesses.CLDRIVE: CldriveResult,
-      Harnesses.CL_LAUNCHER: Cl_launcherResult,
-      Harnesses.CLANG: ClangResult,
+        Harnesses.CLDRIVE: CldriveResult,
+        Harnesses.CL_LAUNCHER: Cl_launcherResult,
+        Harnesses.CLANG: ClangResult,
     }[harness]
 
 
@@ -326,29 +328,32 @@ class Testcase(Base):
 
   # Fields
   id = sql.Column(id_t, primary_key=True)
-  program_id = sql.Column(Program.id_t, sql.ForeignKey("programs.id"),
-                          nullable=False)
-  threads_id = sql.Column(Threads.id_t, sql.ForeignKey("threads.id"),
-                          nullable=False)
+  program_id = sql.Column(
+      Program.id_t, sql.ForeignKey("programs.id"), nullable=False)
+  threads_id = sql.Column(
+      Threads.id_t, sql.ForeignKey("threads.id"), nullable=False)
   harness = sql.Column(Harnesses.column_t, nullable=False)
   input_seed = sql.Column(sql.Integer)
   timeout = sql.Column(sql.Integer, nullable=False)
 
   # Constraints
-  __table_args__ = (
-    sql.UniqueConstraint("program_id", "threads_id", "harness",
-                         "input_seed", "timeout", name="unique_testcase"),
-  )
+  __table_args__ = (sql.UniqueConstraint(
+      "program_id",
+      "threads_id",
+      "harness",
+      "input_seed",
+      "timeout",
+      name="unique_testcase"),)
 
   # Relationships
   program = sql.orm.relationship("Program", back_populates="testcases")
   threads = sql.orm.relationship("Threads", back_populates="testcases")
   results = sql.orm.relationship("Result", back_populates="testcase")
   majority = sql.orm.relationship("Majority", back_populates="testcase")
-  clsmith_meta = sql.orm.relationship("ClsmithTestcaseMeta",
-                                      back_populates="testcase")
-  dsmith_meta = sql.orm.relationship("DsmithTestcaseMeta",
-                                     back_populates="testcase")
+  clsmith_meta = sql.orm.relationship(
+      "ClsmithTestcaseMeta", back_populates="testcase")
+  dsmith_meta = sql.orm.relationship(
+      "DsmithTestcaseMeta", back_populates="testcase")
 
   def __repr__(self):
     return f"testcase {self.id} = {{program: {self.program_id}, threads: {self.threads} }}"
@@ -380,8 +385,8 @@ class Testcase(Base):
     """
     return self.meta(s).verify_awo(s)
 
-  def retract_classifications(self, s: session_t,
-                              classification: "Classifications.value_t") -> None:
+  def retract_classifications(
+      self, s: session_t, classification: "Classifications.value_t") -> None:
     """
     Remove classifications for the testcase.
     """
@@ -455,8 +460,8 @@ class DsmithTestcaseMeta(Base):
       .filter(DsmithProgramMeta.id == self.testcase.program_id) \
       .scalar()
     if not program_meta:
-      program_meta = get_or_add(s, DsmithProgramMeta,
-                                id=self.testcase.program_id)
+      program_meta = get_or_add(
+          s, DsmithProgramMeta, id=self.testcase.program_id)
       s.flush()
 
     return program_meta
@@ -535,10 +540,14 @@ class Platform(Base):
   host = sql.Column(sql.String(255), nullable=False)
 
   # Constraints
-  __table_args__ = (
-    sql.UniqueConstraint('platform', 'device', 'driver', 'opencl',
-                         'devtype', 'host', name='unique_platform'),
-  )
+  __table_args__ = (sql.UniqueConstraint(
+      'platform',
+      'device',
+      'driver',
+      'opencl',
+      'devtype',
+      'host',
+      name='unique_platform'),)
 
   # Relationships
   testbeds = sql.orm.relationship("Testbed", back_populates="platform")
@@ -580,57 +589,58 @@ class Platform(Base):
       return f"clang-{self.driver}"
 
     return {
-      "ComputeAorta (Intel E5-2620)": 9,
-      "GeForce GTX 1080": 1,
-      "GeForce GTX 780": 2,
-      "Intel E5-2620 v4": 4,
-      "Intel E5-2650 v2": 5,
-      "Intel HD Haswell GT2": 3,
-      "Intel i5-4570": 6,
-      "Intel Xeon Phi": 7,
-      "Oclgrind Simulator": 10,
-      "POCL (Intel E5-2620)": 8,
+        "ComputeAorta (Intel E5-2620)": 9,
+        "GeForce GTX 1080": 1,
+        "GeForce GTX 780": 2,
+        "Intel E5-2620 v4": 4,
+        "Intel E5-2650 v2": 5,
+        "Intel HD Haswell GT2": 3,
+        "Intel i5-4570": 6,
+        "Intel Xeon Phi": 7,
+        "Oclgrind Simulator": 10,
+        "POCL (Intel E5-2620)": 8,
     }.get(self.device_name, -1)
 
   @property
   def platform_name(self):
     return {
-      "Intel Gen OCL Driver": "Beignet",
-      "Intel(R) OpenCL": "Intel OpenCL",
-      "Portable Computing Language": "POCL",
+        "Intel Gen OCL Driver": "Beignet",
+        "Intel(R) OpenCL": "Intel OpenCL",
+        "Portable Computing Language": "POCL",
     }.get(self.platform.strip(), self.platform.strip())
 
   @property
   def device_name(self):
     return {
-      "Codeplay Software Ltd. - host CPU": "ComputeAorta (Intel E5-2620)",
-      "Intel(R) Core(TM) i5-4570 CPU @ 3.20GHz": "Intel i5-4570",
-      "Intel(R) HD Graphics Haswell GT2 Desktop": "Intel HD Haswell GT2",
-      "Intel(R) Many Integrated Core Acceleration Card": "Intel Xeon Phi",
-      "Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz": "Intel E5-2620 v4",
-      "Intel(R) Xeon(R) CPU E5-2650 v2 @ 2.60GHz": "Intel E5-2650 v2",
-      "pthread-Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz": "POCL (Intel E5-2620)",
+        "Codeplay Software Ltd. - host CPU": "ComputeAorta (Intel E5-2620)",
+        "Intel(R) Core(TM) i5-4570 CPU @ 3.20GHz": "Intel i5-4570",
+        "Intel(R) HD Graphics Haswell GT2 Desktop": "Intel HD Haswell GT2",
+        "Intel(R) Many Integrated Core Acceleration Card": "Intel Xeon Phi",
+        "Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz": "Intel E5-2620 v4",
+        "Intel(R) Xeon(R) CPU E5-2650 v2 @ 2.60GHz": "Intel E5-2650 v2",
+        "pthread-Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz":
+        "POCL (Intel E5-2620)",
     }.get(self.device.strip(), self.device.strip())
 
   @property
   def driver_name(self):
     return {
-      "Oclgrind 16.10": "16.10",
+        "Oclgrind 16.10": "16.10",
     }.get(self.driver.strip(), self.driver.strip())
 
   @property
   def devtype_name(self):
     return {
-      "3": "CPU",
-      "ACCELERATOR": "Accelerator",
+        "3": "CPU",
+        "ACCELERATOR": "Accelerator",
     }.get(self.devtype.strip(), self.devtype.strip())
 
   @property
   def host_name(self):
     return {
-      "CentOS Linux 7.1.1503 64bit": "CentOS 7.1 x64",
-      "openSUSE  13.1 64bit": "openSUSE 13.1 x64",
-      "Ubuntu 16.04 64bit": "Ubuntu 16.04 x64",
+        "CentOS Linux 7.1.1503 64bit": "CentOS 7.1 x64",
+        "openSUSE  13.1 64bit": "openSUSE 13.1 x64",
+        "Ubuntu 16.04 64bit": "Ubuntu 16.04 x64",
     }.get(self.host.strip(), self.host.strip())
 
   @staticmethod
@@ -638,7 +648,8 @@ class Platform(Base):
                session: session_t = None) -> 'Testbed':
     with ReuseSession(session) as s:
       return get_or_add(
-          s, Platform,
+          s,
+          Platform,
           platform=env.platform,
           device=env.device,
           driver=env.driver_version,
@@ -664,8 +675,7 @@ class Platform(Base):
           logging.debug(f"trying to match '{device} "
                         f"{driver}' to '{device_name} "
                         f"{device_driver}'")
-          if (device_name == device
-              and device_driver == driver):
+          if (device_name == device and device_driver == driver):
             logging.debug(f"matched device '{device_name}'")
             return j, i
 
@@ -680,14 +690,13 @@ class Testbed(Base):
 
   # Fields
   id = sql.Column(id_t, primary_key=True)
-  platform_id = sql.Column(Platform.id_t, sql.ForeignKey("platforms.id"),
-                           nullable=False)
+  platform_id = sql.Column(
+      Platform.id_t, sql.ForeignKey("platforms.id"), nullable=False)
   optimizations = sql.Column(sql.Boolean, nullable=False)
 
   # Constraints
-  __table_args__ = (
-    sql.UniqueConstraint('platform_id', 'optimizations', name='unique_testbed'),
-  )
+  __table_args__ = (sql.UniqueConstraint(
+      'platform_id', 'optimizations', name='unique_testbed'),)
 
   # Relationships
   platform = sql.orm.relationship("Platform", back_populates="testbeds")
@@ -741,10 +750,9 @@ class Testbed(Base):
         with Session() as s:
           testbed = Testbed.from_id(s, self.testbed_id)
 
-          already_done = testbed._testcase_ids_ran(
-              s, self.harness, self.generator)
-          todo = testbed._testcases_to_run(
-              s, self.harness, self.generator)
+          already_done = testbed._testcase_ids_ran(s, self.harness,
+                                                   self.generator)
+          todo = testbed._testcases_to_run(s, self.harness, self.generator)
 
           self.ndone = already_done.count()
           ntodo = todo.count()
@@ -772,7 +780,8 @@ class Testbed(Base):
       ntodo = todo.count()
 
       logging.debug(
-          f"run {ntodo} {harness}:{generator} testcases on {self}, {ndone} done")
+          f"run {ntodo} {harness}:{generator} testcases on {self}, {ndone} done"
+      )
 
       # Break early if we have nothing to do
       if not ntodo:
@@ -795,9 +804,8 @@ class Testbed(Base):
             f"Estimated runtime is {Colors.BOLD}{eta}{Colors.END}.")
 
       # asynchronously run testcases, updating progress bar
-      bar = progressbar.ProgressBar(initial_value=ndone,
-                                    max_value=ndone + ntodo,
-                                    redirect_stdout=True)
+      bar = progressbar.ProgressBar(
+          initial_value=ndone, max_value=ndone + ntodo, redirect_stdout=True)
       worker = Worker(harness, generator, self.id)
       worker.start()
       while worker.is_alive():
@@ -819,8 +827,7 @@ class Testbed(Base):
       return self._ids
     except AttributeError:
       self._ids = Platform._get_ids(self.platform.platform,
-                                    self.platform.device,
-                                    self.platform.driver)
+                                    self.platform.device, self.platform.driver)
       return self._ids
 
   @property
@@ -843,35 +850,38 @@ class Testbed(Base):
       s.flush()
 
       return [
-        get_or_add(s, Testbed, platform_id=platform.id, optimizations=False),
-        get_or_add(s, Testbed, platform_id=platform.id, optimizations=True)
+          get_or_add(s, Testbed, platform_id=platform.id, optimizations=False),
+          get_or_add(s, Testbed, platform_id=platform.id, optimizations=True)
       ]
 
   @staticmethod
   def from_str(string: str, session: session_t = None) -> List['Testbed']:
     """ instantiate testbed(s) from shorthand string, e.g. '1+', '5±', etc. """
 
-    def try_and_match(string: str, testbeds: Iterable[Testbed]) -> Union[
-      None, List[Testbed]]:
+    def try_and_match(
+        string: str, testbeds: Iterable[Testbed]) -> Union[None, List[Testbed]]:
       for testbed in testbeds:
         if str(testbed.platform.num) == string[:-1]:
           if string[-1] == "±":
             return [
-              get_or_add(
-                  s, Testbed,
-                  platform_id=testbed.platform.id,
-                  optimizations=True),
-              get_or_add(
-                  s, Testbed,
-                  platform_id=testbed.platform.id,
-                  optimizations=False)
+                get_or_add(
+                    s,
+                    Testbed,
+                    platform_id=testbed.platform.id,
+                    optimizations=True),
+                get_or_add(
+                    s,
+                    Testbed,
+                    platform_id=testbed.platform.id,
+                    optimizations=False)
             ]
           else:
             return [
-              get_or_add(
-                  s, Testbed,
-                  platform_id=testbed.platform.id,
-                  optimizations=True if string[-1] == "+" else False)
+                get_or_add(
+                    s,
+                    Testbed,
+                    platform_id=testbed.platform.id,
+                    optimizations=True if string[-1] == "+" else False)
             ]
 
     # Strip shell formatting
@@ -929,9 +939,11 @@ class TestbedProxy(Proxy, dsmith.ReprComparable):
     env = cldrive.make_env(self._platform, self._device)
     platform = Platform.from_env(env, session=session)
     session.flush()
-    testbed = get_or_add(session, Testbed,
-                         platform_id=platform.id,
-                         optimizations=self._optimizations)
+    testbed = get_or_add(
+        session,
+        Testbed,
+        platform_id=platform.id,
+        optimizations=self._optimizations)
     session.commit()
     logging.debug(f"Added new Testbed {testbed}")
     return testbed
@@ -952,15 +964,15 @@ class Stdout(Base):
   # Fields
   id = sql.Column(id_t, primary_key=True)
   sha1 = sql.Column(sql.String(40), nullable=False, unique=True, index=True)
-  stdout = sql.Column(sql.UnicodeText(length=2 ** 31), nullable=False)
+  stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
   @staticmethod
   def _escape(string: str) -> str:
     """ filter noise from test harness stdout """
-    return '\n'.join(line for line in string.split('\n')
-                     if line != "ADL Escape failed."
-                     and line != "WARNING:endless loop detected!"
-                     and line != "One module without kernel function!")
+    return '\n'.join(
+        line for line in string.split('\n') if line != "ADL Escape failed." and
+        line != "WARNING:endless loop detected!" and
+        line != "One module without kernel function!")
 
   @staticmethod
   def from_str(session: session_t, string: str) -> str:
@@ -971,9 +983,7 @@ class Stdout(Base):
     string = Stdout._escape(string)
 
     stdout = get_or_add(
-        session, Stdout,
-        sha1=crypto.sha1_str(string),
-        stdout=string)
+        session, Stdout, sha1=crypto.sha1_str(string), stdout=string)
     return stdout
 
 
@@ -1028,7 +1038,7 @@ class Stderr(Base):
   linecount = sql.Column(sql.Integer, nullable=False)
   charcount = sql.Column(sql.Integer, nullable=False)
   truncated = sql.Column(sql.Boolean, nullable=False)
-  stderr = sql.Column(sql.UnicodeText(length=2 ** 31), nullable=False)
+  stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
   # Relationships
   assertion = sql.orm.relationship("Assertion")
@@ -1041,12 +1051,13 @@ class Stderr(Base):
   @staticmethod
   def _escape(string: str) -> str:
     """ filter noise from test harness stderr """
-    return '\n'.join(line for line in string.split('\n')
-                     if "no version information available" not in line)
+    return '\n'.join(
+        line for line in string.split('\n')
+        if "no version information available" not in line)
 
   @staticmethod
-  def _get_assertion(session: session_t, lines: Iterable[str]) -> Union[
-    None, Assertion]:
+  def _get_assertion(session: session_t,
+                     lines: Iterable[str]) -> Union[None, Assertion]:
     clang_assertion = False
     strip = False
 
@@ -1070,23 +1081,21 @@ class Stderr(Base):
           msg = line
 
         assertion = get_or_add(
-            session, Assertion,
-            sha1=crypto.sha1_str(msg), assertion=msg)
+            session, Assertion, sha1=crypto.sha1_str(msg), assertion=msg)
         return assertion
 
   @staticmethod
-  def _get_unreachable(session: session_t, lines: Iterable[str]) -> Union[
-    None, Unreachable]:
+  def _get_unreachable(session: session_t,
+                       lines: Iterable[str]) -> Union[None, Unreachable]:
     for line in lines:
       if "unreachable" in line.lower():
         unreachable = get_or_add(
-            session, Unreachable,
-            sha1=crypto.sha1_str(line), unreachable=line)
+            session, Unreachable, sha1=crypto.sha1_str(line), unreachable=line)
         return unreachable
 
   @staticmethod
-  def _get_stackdump(session: session_t, lines: Iterable[str]) -> Union[
-    None, StackDump]:
+  def _get_stackdump(session: session_t,
+                     lines: Iterable[str]) -> Union[None, StackDump]:
     in_stackdump = False
     stackdump = []
     for line in lines:
@@ -1096,8 +1105,10 @@ class Stderr(Base):
         else:
           stackdump_ = "\n".join(stackdump)
           stackdump = get_or_add(
-              session, StackDump,
-              sha1=crypto.sha1_str(stackdump_), stackdump=stackdump_)
+              session,
+              StackDump,
+              sha1=crypto.sha1_str(stackdump_),
+              stackdump=stackdump_)
           return stackdump
       elif "stack dump:" in line.lower():
         in_stackdump = True
@@ -1137,7 +1148,8 @@ class Stderr(Base):
                         f"Stackdump: {stackdump}")
 
     stderr = get_or_add(
-        session, Stderr,
+        session,
+        Stderr,
         sha1=crypto.sha1_str(string),
         assertion=assertion,
         unreachable=unreachable,
@@ -1169,13 +1181,13 @@ class Outcomes:
   def to_str(outcomes: 'Outcomes.value_t') -> str:
     """ convert to long-form string """
     return {
-      Outcomes.TODO: "unknown",
-      Outcomes.BF: "build failure",
-      Outcomes.BC: "build crash",
-      Outcomes.BTO: "build timeout",
-      Outcomes.RC: "runtime crash",
-      Outcomes.TO: "timeout",
-      Outcomes.PASS: "pass",
+        Outcomes.TODO: "unknown",
+        Outcomes.BF: "build failure",
+        Outcomes.BC: "build crash",
+        Outcomes.BTO: "build timeout",
+        Outcomes.RC: "runtime crash",
+        Outcomes.TO: "timeout",
+        Outcomes.PASS: "pass",
     }[outcomes]
 
 
@@ -1188,26 +1200,26 @@ class Result(Base):
 
   # Fields
   id = sql.Column(id_t, primary_key=True)
-  testbed_id = sql.Column(Testbed.id_t, sql.ForeignKey("testbeds.id"),
-                          nullable=False, index=True)
-  testcase_id = sql.Column(Testcase.id_t, sql.ForeignKey("testcases.id"),
-                           nullable=False,
-                           index=True)
-  date = sql.Column(sql.DateTime, nullable=False, index=True,
-                    default=datetime.datetime.utcnow)
+  testbed_id = sql.Column(
+      Testbed.id_t, sql.ForeignKey("testbeds.id"), nullable=False, index=True)
+  testcase_id = sql.Column(
+      Testcase.id_t, sql.ForeignKey("testcases.id"), nullable=False, index=True)
+  date = sql.Column(
+      sql.DateTime,
+      nullable=False,
+      index=True,
+      default=datetime.datetime.utcnow)
   returncode = sql.Column(sql.SmallInteger, nullable=False)
   outcome = sql.Column(Outcomes.column_t, nullable=False, index=True)
   runtime = sql.Column(sql.Float, nullable=False)
-  stdout_id = sql.Column(Stdout.id_t, sql.ForeignKey("stdouts.id"),
-                         nullable=False)
-  stderr_id = sql.Column(Stderr.id_t, sql.ForeignKey("stderrs.id"),
-                         nullable=False)
+  stdout_id = sql.Column(
+      Stdout.id_t, sql.ForeignKey("stdouts.id"), nullable=False)
+  stderr_id = sql.Column(
+      Stderr.id_t, sql.ForeignKey("stderrs.id"), nullable=False)
 
   # Constraints
-  __table_args__ = (
-    sql.UniqueConstraint('testbed_id', 'testcase_id',
-                         name='unique_result_triple'),
-  )
+  __table_args__ = (sql.UniqueConstraint(
+      'testbed_id', 'testcase_id', name='unique_result_triple'),)
 
   # Relationships
   meta = sql.orm.relation("ResultMeta", back_populates="result")
@@ -1258,6 +1270,7 @@ class ResultProxy(object):
 
 
 class Cl_launcherResult(Result):
+
   @staticmethod
   def get_outcome(returncode: int, stderr: str, runtime: float,
                   timeout: int) -> Outcomes.type:
@@ -1316,6 +1329,7 @@ class Cl_launcherResult(Result):
 
 
 class CldriveResult(Result):
+
   @staticmethod
   def get_outcome(returncode: int, stderr: str, runtime: float,
                   timeout: int) -> Outcomes.type:
@@ -1379,6 +1393,7 @@ class CldriveResult(Result):
 
 
 class ClangResult(Result):
+
   @staticmethod
   def get_outcome(returncode: int, stderr: str, runtime: float,
                   timeout: int) -> Outcomes.type:
@@ -1413,10 +1428,10 @@ class ResultMeta(Base):
 
   # Fields
   id = sql.Column(id_t, sql.ForeignKey("results.id"), primary_key=True)
-  total_time = sql.Column(sql.Float,
-                          nullable=False)  # time to generate and run test case
-  cumtime = sql.Column(sql.Float,
-                       nullable=False)  # culumative time for this testbed time
+  total_time = sql.Column(
+      sql.Float, nullable=False)  # time to generate and run test case
+  cumtime = sql.Column(
+      sql.Float, nullable=False)  # culumative time for this testbed time
 
   # Relationships
   result = sql.orm.relationship("Result", back_populates="meta")
@@ -1440,11 +1455,11 @@ class Classifications:
   @staticmethod
   def to_str(outcomes: 'Classifications.value_t') -> str:
     return {
-      Classifications.BC: "build crash",
-      Classifications.BTO: "build timeout",
-      Classifications.ABF: "anomylous build failure",
-      Classifications.ARC: "anomylous runtime crash",
-      Classifications.AWO: "anomylous wrong output",
+        Classifications.BC: "build crash",
+        Classifications.BTO: "build timeout",
+        Classifications.ABF: "anomylous build failure",
+        Classifications.ARC: "anomylous runtime crash",
+        Classifications.AWO: "anomylous wrong output",
     }[outcomes]
 
 
@@ -1469,8 +1484,8 @@ class Majority(Base):
   num_results = sql.Column(sql.SmallInteger, nullable=False)
   maj_outcome = sql.Column(Outcomes.column_t, nullable=False)
   outcome_majsize = sql.Column(sql.SmallInteger, nullable=False)
-  maj_stdout_id = sql.Column(Stdout.id_t, sql.ForeignKey("stdouts.id"),
-                             nullable=False)
+  maj_stdout_id = sql.Column(
+      Stdout.id_t, sql.ForeignKey("stdouts.id"), nullable=False)
   stdout_majsize = sql.Column(sql.SmallInteger, nullable=False)
 
   # Relationships
@@ -1484,13 +1499,13 @@ class Reduction(Base):
 
   # Fields
   id = sql.Column(id_t, sql.ForeignKey("results.id"), primary_key=True)
-  date = sql.Column(sql.DateTime, nullable=False,
-                    default=datetime.datetime.utcnow)
+  date = sql.Column(
+      sql.DateTime, nullable=False, default=datetime.datetime.utcnow)
   status = sql.Column(sql.Integer, nullable=False)
   runtime = sql.Column(sql.Float, nullable=False)
-  reduced_src = sql.Column(sql.UnicodeText(length=2 ** 31), nullable=False)
+  reduced_src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
   linecount = sql.Column(sql.Integer, nullable=False)
-  log = sql.Column(sql.UnicodeText(length=2 ** 31), nullable=False)
+  log = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
   # Relationships
   result = sql.orm.relationship("Result", back_populates="reduction")

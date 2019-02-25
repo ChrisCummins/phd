@@ -8,12 +8,12 @@ import threading
 
 from dsmith import clsmith
 
-
 LAUNCHER = clsmith.cl_launcher_path
 LAUNCHER_OPTS = ["-l", "1,1,1", "-g", "1,1,1"]
 OCLGRIND = "oclgrind"
-OCLGRIND_OPTS = ["--max-errors", "16", "--build-options", "-O0", "-Wall",
-                 "--uninitialized"]
+OCLGRIND_OPTS = [
+    "--max-errors", "16", "--build-options", "-O0", "-Wall", "--uninitialized"
+]
 
 reference_platforms = ["AMD", "Intel"]
 device = 0
@@ -45,9 +45,11 @@ class RunInThread:
 
   def __run(self, command):
     # Start the process
-    self.process = subprocess.Popen(command, stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE,
-                                    universal_newlines=True)
+    self.process = subprocess.Popen(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True)
     # Get its output (blocking call)
     self.stdout, self.stderr = self.process.communicate()
 
@@ -55,8 +57,8 @@ class RunInThread:
 def verify_with_oclgrind(clprogram):
   # Execute Oclgrind in a separate thread
   run = RunInThread(
-      [OCLGRIND] + OCLGRIND_OPTS + [LAUNCHER, "-f", clprogram, "-p",
-                                    "0", "-d", "0"] + LAUNCHER_OPTS,
+      [OCLGRIND] + OCLGRIND_OPTS +
+      [LAUNCHER, "-f", clprogram, "-p", "0", "-d", "0"] + LAUNCHER_OPTS,
       timeout * 30)
 
   # Check to see if Oclgrind actually completed successfully
@@ -90,9 +92,10 @@ def get_reference_run(clprogram):
     platform_name = reference_platforms[platform]
     result[platform_name] = None
 
-    run = RunInThread([LAUNCHER, "-f", clprogram, "-p",
-                       str(platform + 1), "-d", str(device)] + LAUNCHER_OPTS,
-                      timeout)
+    run = RunInThread(
+        [LAUNCHER, "-f", clprogram, "-p",
+         str(platform + 1), "-d",
+         str(device)] + LAUNCHER_OPTS, timeout)
 
     stdout, stderr = run.stdout, run.stderr
     logging.debug("Reference[%s]:\nOut: %r\nErr: %r\n", platform_name, stdout,
@@ -141,9 +144,9 @@ def get_reference_run(clprogram):
 def get_ocl_run(clprogram):
   result = None
   platform_name = "OCL"
-  run = RunInThread([LAUNCHER, "-f", clprogram, "-p",
-                     str(0), "-d", str(device)] + LAUNCHER_OPTS,
-                    timeout)
+  run = RunInThread(
+      [LAUNCHER, "-f", clprogram, "-p",
+       str(0), "-d", str(device)] + LAUNCHER_OPTS, timeout)
 
   out, err = run.stdout, run.stderr
   logging.debug("OCL:\nOut: %r\nErr: %r\n", out, err)
@@ -187,9 +190,12 @@ def main(argv):
   argparser.add_argument('--loglevel', action='store')
   argparser.add_argument('--vectors', action='store', default=True)
   argparser.add_argument('--no-oclgrind', action='store_true')
-  argparser.add_argument('clprogram', metavar="KERNEL", nargs='?',
-                         default="CLProgram.cl",
-                         help="The kernel file to run (CLProgram.cl by default)")
+  argparser.add_argument(
+      'clprogram',
+      metavar="KERNEL",
+      nargs='?',
+      default="CLProgram.cl",
+      help="The kernel file to run (CLProgram.cl by default)")
   args = argparser.parse_args(argv[1:])
 
   if args.loglevel or args.logfile:

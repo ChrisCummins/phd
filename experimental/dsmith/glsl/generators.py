@@ -97,8 +97,8 @@ class GlslGenerator(Generator):
       # Print a preamble message:
       num_to_generate = max_value - num_progs
       if num_to_generate < math.inf:
-        estimated_time = (self.generation_time(s) / max(num_progs,
-                                                        1)) * num_to_generate
+        estimated_time = (
+            self.generation_time(s) / max(num_progs, 1)) * num_to_generate
         eta = humanize.naturaldelta(datetime.timedelta(seconds=estimated_time))
         print(f"{Colors.BOLD}{num_to_generate}{Colors.END} programs are "
               "to be generated. Estimated generation time is " +
@@ -106,9 +106,8 @@ class GlslGenerator(Generator):
       else:
         print(f"Generating programs {Colors.BOLD}forever{Colors.END} ...")
 
-      bar = progressbar.ProgressBar(initial_value=num_progs,
-                                    max_value=bar_max,
-                                    redirect_stdout=True)
+      bar = progressbar.ProgressBar(
+          initial_value=num_progs, max_value=bar_max, redirect_stdout=True)
 
       # The actual generation loop:
       buf = []
@@ -187,8 +186,8 @@ class GlslGenerator(Generator):
           f"{Colors.BOLD}{num_progs}{Colors.END} {self} programs in the "
           "database")
 
-  def import_from_file(self, session: session_t, path: Path) -> Union[
-    None, ProgramProxy]:
+  def import_from_file(self, session: session_t,
+                       path: Path) -> Union[None, ProgramProxy]:
     """ Import a program from a file. """
     # logging.debug(f"importing '{path}'")
     # Simply ignore non-ASCII chars:
@@ -215,8 +214,7 @@ class RandChar(GlslGenerator):
     src = ''.join(random.choices(string.printable, k=charcount))
     runtime = time() - start_time
 
-    return ProgramProxy(generator=self.id, generation_time=runtime,
-                        src=src)
+    return ProgramProxy(generator=self.id, generation_time=runtime, src=src)
 
 
 class GitHub(GlslGenerator):

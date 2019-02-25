@@ -23,29 +23,20 @@ from graph_nets import utils_tf
 from labm8 import labdate
 from labm8 import prof
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
     'df', '/tmp/phd/docs/wip_graph/lda_opencl_device_mapping_dataset.pkl',
     'Path of the dataframe to load')
-flags.DEFINE_string(
-    'outdir', '/tmp/phd/docs/wip_graph/model_files',
-    'Path of directory to generate files')
-flags.DEFINE_bool(
-    'profile_tensorflow', False,
-    'Enable profiling of tensorflow.')
-flags.DEFINE_integer(
-    'model_seed', 0, 'Seed to use for reproducible results')
-flags.DEFINE_integer(
-    'num_epochs', 3,
-    'The number of epochs to train for.')
-flags.DEFINE_integer(
-    'batch_size', 64,
-    'Batch size.')
-flags.DEFINE_float(
-    'initial_learning_rate', 1e-3,
-    'The initial Adam learning rate.')
+flags.DEFINE_string('outdir', '/tmp/phd/docs/wip_graph/model_files',
+                    'Path of directory to generate files')
+flags.DEFINE_bool('profile_tensorflow', False,
+                  'Enable profiling of tensorflow.')
+flags.DEFINE_integer('model_seed', 0, 'Seed to use for reproducible results')
+flags.DEFINE_integer('num_epochs', 3, 'The number of epochs to train for.')
+flags.DEFINE_integer('batch_size', 64, 'Batch size.')
+flags.DEFINE_float('initial_learning_rate', 1e-3,
+                   'The initial Adam learning rate.')
 flags.DEFINE_float(
     'learning_rate_exponential_decay', 0.1,
     'The rate at which learning decays. If 1.0, the learning rate does not '
@@ -55,33 +46,36 @@ flags.DEFINE_float(
 
 flags.DEFINE_integer('experimental_force_num_processing_steps', 0,
                      'If > 0, sets the number of processing steps.')
-flags.DEFINE_bool('experimental_graph_diameter_processing_steps', True,
-                  'Use the undirected CFG diameter to derive the number of '
-                  'processing steps.')
+flags.DEFINE_bool(
+    'experimental_graph_diameter_processing_steps', True,
+    'Use the undirected CFG diameter to derive the number of '
+    'processing steps.')
 flags.DEFINE_integer('experimental_mlp_model_latent_size', 16,
                      'Latent layer size in edge/node/global models.')
 flags.DEFINE_integer('experimental_mlp_model_layer_count', 2,
                      'Number of layers in edge/node/global models.')
-flags.DEFINE_bool('experimental_use_encode_process_decode_with_loop', False,
-                  'Use an experimental encode-process-decode model which '
-                  'uses a TensorFlow while loop rather than being unrolled '
-                  'for each time step')
-flags.DEFINE_integer('experimental_while_loop_sequence_length', 10,
-                     'The number of unrolled steps inside while loop '
-                     'sequences. Only matters is '
-                     '--experimental_use_encode_process_decode_with_loop is '
-                     'set')
+flags.DEFINE_bool(
+    'experimental_use_encode_process_decode_with_loop', False,
+    'Use an experimental encode-process-decode model which '
+    'uses a TensorFlow while loop rather than being unrolled '
+    'for each time step')
+flags.DEFINE_integer(
+    'experimental_while_loop_sequence_length', 10,
+    'The number of unrolled steps inside while loop '
+    'sequences. Only matters is '
+    '--experimental_use_encode_process_decode_with_loop is '
+    'set')
 
 # A value which has different values for training, validation, and testing.
 TrainingValidationTestValue = collections.namedtuple(
     'TrainingValidationTestValue', ['training', 'validation', 'test'])
 
 # A value which has an input and target pair.
-InputTargetValue = collections.namedtuple(
-    'InputTargetValue', ['input', 'target'])
+InputTargetValue = collections.namedtuple('InputTargetValue',
+                                          ['input', 'target'])
 
-InputLatentTargetValue = collections.namedtuple(
-    'InputLatentTargetValue', ['input', 'latent', 'target'])
+InputLatentTargetValue = collections.namedtuple('InputLatentTargetValue',
+                                                ['input', 'latent', 'target'])
 
 
 def GetNumberOfMessagePassingSteps(df: pd.DataFrame) -> int:
@@ -150,8 +144,8 @@ def CreateFeedDict(input_graphs, target_graphs, placeholders):
   input_graphs = utils_np.networkxs_to_graphs_tuple(input_graphs)
   target_graphs = utils_np.networkxs_to_graphs_tuple(target_graphs)
   feed_dict = {
-    placeholders.input: input_graphs,
-    placeholders.target: target_graphs
+      placeholders.input: input_graphs,
+      placeholders.target: target_graphs
   }
   return feed_dict
 
@@ -172,8 +166,11 @@ def GetLearningRate(epoch_num: int) -> float:
 def AssertDataFrameIsValidOrDie(df: pd.DataFrame) -> None:
   """Assert that the dataframe is valid else die."""
   for column in [
-    'networkx:input_graph', 'networkx:target_graph', 'split:type',
-    'graphnet:loss_op', 'graphnet:accuracy_evaluator',
+      'networkx:input_graph',
+      'networkx:target_graph',
+      'split:type',
+      'graphnet:loss_op',
+      'graphnet:accuracy_evaluator',
   ]:
     assert column in df.columns.values
   assert set(df['split:type']) == {'training', 'validation', 'test'}
@@ -195,10 +192,11 @@ def MakeMultilayerPerceptron() -> snt.Sequential:
     A Sonnet module which contains the MLP and LayerNorm.
   """
   return snt.Sequential([
-    snt.nets.MLP([FLAGS.experimental_mlp_model_latent_size] *
-                 FLAGS.experimental_mlp_model_layer_count,
-                 activate_final=True),
-    snt.LayerNorm()
+      snt.nets.MLP(
+          [FLAGS.experimental_mlp_model_latent_size] *
+          FLAGS.experimental_mlp_model_layer_count,
+          activate_final=True),
+      snt.LayerNorm()
   ])
 
 
@@ -334,14 +332,19 @@ class EncodeProcessDecodeUsingLoop(EncodeProcessDecode):
         core_input = utils_tf.concat([v.latent0, latent], axis=1)
         latent = self._core(core_input)
 
-      return [LoopVars(
-          i=tf.add(v.i, FLAGS.experimental_while_loop_sequence_length),
-          latent=latent, latent0=v.latent0)]
+      return [
+          LoopVars(
+              i=tf.add(v.i, FLAGS.experimental_while_loop_sequence_length),
+              latent=latent,
+              latent0=v.latent0)
+      ]
 
     init_latent = self._encoder(input_op)
 
     init_vars = LoopVars(i=0, latent=init_latent, latent0=init_latent)
-    final_vars, = tf.while_loop(Condition, Body, [init_vars, ])
+    final_vars, = tf.while_loop(Condition, Body, [
+        init_vars,
+    ])
 
     decoded_op = self._decoder(final_vars.latent)
     output_op = self._output_transform(decoded_op)
@@ -379,9 +382,8 @@ class LossOps(object):
   Type = typing.Callable[[graphs.GraphsTuple, graphs.GraphsTuple], tf.Tensor]
 
   @staticmethod
-  def GlobalsSoftmaxCrossEntropy(
-      target_ph: graphs.GraphsTuple,
-      output_op: graphs.GraphsTuple) -> tf.Tensor:
+  def GlobalsSoftmaxCrossEntropy(target_ph: graphs.GraphsTuple,
+                                 output_op: graphs.GraphsTuple) -> tf.Tensor:
     """Softmax cross entropy loss of graph globals."""
     return tf.losses.softmax_cross_entropy(target_ph.globals, output_op.globals)
 
@@ -392,42 +394,36 @@ class LossOps(object):
     return tf.losses.softmax_cross_entropy(target_ph.nodes, output_op.nodes)
 
 
-EvaluationResult = collections.namedtuple(
-    'EvaluationResult', ['accuracy', 'solved'])
+EvaluationResult = collections.namedtuple('EvaluationResult',
+                                          ['accuracy', 'solved'])
 
 
 class AccuracyEvaluators(object):
   """Methods to compute the accuracy of a model's outputs."""
   Type = typing.Callable[
-    [typing.List[nx.DiGraph], typing.List[typing.Dict[str, typing.Any]]],
-    EvaluationResult]
+      [typing.List[nx.DiGraph], typing.
+       List[typing.Dict[str, typing.Any]]], EvaluationResult]
 
   @staticmethod
-  def OneHotGlobals(
-      target_graphs: typing.List[nx.DiGraph],
-      output_graphs: typing.List[typing.Dict[str, typing.Any]]
-  ) -> EvaluationResult:
+  def OneHotGlobals(target_graphs: typing.List[nx.DiGraph],
+                    output_graphs: typing.List[typing.Dict[str, typing.Any]]
+                   ) -> EvaluationResult:
     """Return accuracy of one-hot globals features."""
-    targets = np.array([
-      np.argmax(d.graph['features']) for d in target_graphs
-    ])
-    outputs = np.array([
-      np.argmax(d['globals']) for d in output_graphs
-    ])
+    targets = np.array([np.argmax(d.graph['features']) for d in target_graphs])
+    outputs = np.array([np.argmax(d['globals']) for d in output_graphs])
     accuracy = (targets == outputs).mean()
     return EvaluationResult(float(accuracy), float(accuracy))
 
   @staticmethod
-  def OneHotNodes(
-      target_graphs: typing.List[nx.DiGraph],
-      output_graphs: typing.List[typing.Dict[str, typing.Any]]
-  ) -> EvaluationResult:
+  def OneHotNodes(target_graphs: typing.List[nx.DiGraph],
+                  output_graphs: typing.List[typing.Dict[str, typing.Any]]
+                 ) -> EvaluationResult:
     """Return accuracy of one-hot globals features."""
     cs = []
     ss = []
 
     predicted_reachabilities = [
-      np.argmax(d['nodes'], axis=-1) for d in output_graphs
+        np.argmax(d['nodes'], axis=-1) for d in output_graphs
     ]
 
     for target, predicted in zip(target_graphs, predicted_reachabilities):
@@ -444,8 +440,7 @@ class AccuracyEvaluators(object):
     return EvaluationResult(float(accuracy), float(solved))
 
 
-def GuessOutputSizesFromTargetGraph(
-    graph: nx.DiGraph) -> typing.Dict[str, int]:
+def GuessOutputSizesFromTargetGraph(graph: nx.DiGraph) -> typing.Dict[str, int]:
   global_features = graph.graph['features']
   for _, node in graph.nodes(data=True):
     node_features = node['features']
@@ -458,9 +453,9 @@ def GuessOutputSizesFromTargetGraph(
     return len(features) if len(features) > 1 else None
 
   return {
-    'global_output_size': GuessOutputSize(global_features),
-    'node_output_size': GuessOutputSize(node_features),
-    'edge_output_size': GuessOutputSize(edge_features),
+      'global_output_size': GuessOutputSize(global_features),
+      'node_output_size': GuessOutputSize(node_features),
+      'edge_output_size': GuessOutputSize(edge_features),
   }
 
 
@@ -485,8 +480,8 @@ class CompilerGraphNeuralNetwork(object):
     # Lookup the loss op and evaluator functions from the table.
     make_loss_op = getattr(LossOps, df['graphnet:loss_op'].values[0])
     logging.info('Using loss op %s', make_loss_op.__name__)
-    evaluate_outputs = getattr(
-        AccuracyEvaluators, df['graphnet:accuracy_evaluator'].values[0])
+    evaluate_outputs = getattr(AccuracyEvaluators,
+                               df['graphnet:accuracy_evaluator'].values[0])
     logging.info('Using evaluator %s', evaluate_outputs.__name__)
 
     # Create output directories.
@@ -554,12 +549,12 @@ class CompilerGraphNeuralNetwork(object):
       A list of output graphs, one for each graph in the test set.
     """
     summary_writers = TrainingValidationTestValue(
-        training=tf.summary.FileWriter(
-            f'{self.outdir}/tensorboard/training', sess.graph),
+        training=tf.summary.FileWriter(f'{self.outdir}/tensorboard/training',
+                                       sess.graph),
         validation=tf.summary.FileWriter(
             f'{self.outdir}/tensorboard/validation', sess.graph),
-        test=tf.summary.FileWriter(
-            f'{self.outdir}/tensorboard/test', sess.graph))
+        test=tf.summary.FileWriter(f'{self.outdir}/tensorboard/test',
+                                   sess.graph))
 
     random_state = np.random.RandomState(FLAGS.model_seed)
 
@@ -586,38 +581,39 @@ class CompilerGraphNeuralNetwork(object):
         with prof.Profile('train epoch'):
           # Per-epoch log to be written to file.
           log = {
-            # Model attributes. These are constant across epochs.
-            'batch_size': FLAGS.batch_size,
-            'num_processing_steps': self.num_processing_steps,
-            'initial_learning_rate': FLAGS.initial_learning_rate,
-            'learning_rate_exponential_decay': FLAGS.learning_rate_exponential_decay,
-            # Dataset attributes. These are constant across epochs.
-            'training_graph_count': len(train_df),
-            'validation_graph_count': len(validation_df),
-            'test_graph_count': len(test_df),
-            # Per-epoch attributes.
-            'epoch': epoch_num + 1,
-            'learning_rate': GetLearningRate(epoch_num),
-            # Runtime metrics.
-            'batch_runtime_ms': [],
-            'validation_runtime_ms': 0,
-            'test_runtime_ms': 0,
-            # Throughput metrics.
-            'training_graphs_per_second': 0,
-            'validation_graphs_per_second': 0,
-            'test_graphs_per_second': 0,
-            # Model losses. Record all training losses. Average validation and
-            # test losses across batches.
-            'training_losses': [],
-            'validation_loss': 0,
-            'test_loss': 0,
-            # Accuracies of model on training / validation / test data.
-            'training_accuracy': 0,
-            'training_solved': 0,
-            'validation_accuracy': 0,
-            'validation_solved': 0,
-            'test_accuracy': 0,
-            'test_solved': 0,
+              # Model attributes. These are constant across epochs.
+              'batch_size': FLAGS.batch_size,
+              'num_processing_steps': self.num_processing_steps,
+              'initial_learning_rate': FLAGS.initial_learning_rate,
+              'learning_rate_exponential_decay':
+              FLAGS.learning_rate_exponential_decay,
+              # Dataset attributes. These are constant across epochs.
+              'training_graph_count': len(train_df),
+              'validation_graph_count': len(validation_df),
+              'test_graph_count': len(test_df),
+              # Per-epoch attributes.
+              'epoch': epoch_num + 1,
+              'learning_rate': GetLearningRate(epoch_num),
+              # Runtime metrics.
+              'batch_runtime_ms': [],
+              'validation_runtime_ms': 0,
+              'test_runtime_ms': 0,
+              # Throughput metrics.
+              'training_graphs_per_second': 0,
+              'validation_graphs_per_second': 0,
+              'test_graphs_per_second': 0,
+              # Model losses. Record all training losses. Average validation and
+              # test losses across batches.
+              'training_losses': [],
+              'validation_loss': 0,
+              'test_loss': 0,
+              # Accuracies of model on training / validation / test data.
+              'training_accuracy': 0,
+              'training_solved': 0,
+              'validation_accuracy': 0,
+              'validation_solved': 0,
+              'test_accuracy': 0,
+              'test_solved': 0,
           }
 
           # Set the learning rate based on the epoch number.
@@ -630,27 +626,28 @@ class CompilerGraphNeuralNetwork(object):
             batch_start_time = time.time()
 
             # Run a training set.
-            input_graphs = train_df['networkx:input_graph'].iloc[
-                           b:b + FLAGS.batch_size]
-            target_graphs = train_df['networkx:target_graph'].iloc[
-                            b:b + FLAGS.batch_size]
+            input_graphs = train_df['networkx:input_graph'].iloc[b:b + FLAGS.
+                                                                 batch_size]
+            target_graphs = train_df['networkx:target_graph'].iloc[b:b + FLAGS.
+                                                                   batch_size]
             num_graphs_processed = len(input_graphs)
 
             for s in range(0, self.num_processing_steps):
-              feed_dict = CreateFeedDict(
-                  input_graphs, target_graphs, self.placeholders)
+              feed_dict = CreateFeedDict(input_graphs, target_graphs,
+                                         self.placeholders)
               train_values = sess.run({
-                "summary": self.loss_summary_op,
-                "step": self.step_op,
-                "target": self.placeholders.target,
-                "loss": self.loss_op,
-                "output": self.output_op,
-              }, feed_dict=feed_dict)
+                  "summary": self.loss_summary_op,
+                  "step": self.step_op,
+                  "target": self.placeholders.target,
+                  "loss": self.loss_op,
+                  "output": self.output_op,
+              },
+                                      feed_dict=feed_dict)
 
             output_graphs += utils_np.graphs_tuple_to_data_dicts(
                 train_values["output"])
-            summary_writers.training.add_summary(
-                train_values['summary'], tensorboard_step)
+            summary_writers.training.add_summary(train_values['summary'],
+                                                 tensorboard_step)
 
             batch_runtime = time.time() - batch_start_time
             graphs_per_second = num_graphs_processed / batch_runtime
@@ -661,15 +658,14 @@ class CompilerGraphNeuralNetwork(object):
 
             logging.info(
                 'Epoch %02d / %02d, batch %02d / %02d in %.3fs (%02d graphs/sec), '
-                'training loss: %.4f', epoch_num + 1, FLAGS.num_epochs,
-                                       j + 1, len(batches), batch_runtime,
-                int(graphs_per_second),
+                'training loss: %.4f', epoch_num + 1, FLAGS.num_epochs, j + 1,
+                len(batches), batch_runtime, int(graphs_per_second),
                 train_values['loss'])
             tensorboard_step += 1
 
         log['training_accuracy'], log['training_solved'] = (
-          self.evaluate_outputs(train_df['networkx:target_graph'],
-                                output_graphs))
+            self.evaluate_outputs(train_df['networkx:target_graph'],
+                                  output_graphs))
         log['training_graphs_per_second'] = sum(graphs_per_seconds) / len(
             graphs_per_seconds)
 
@@ -681,23 +677,24 @@ class CompilerGraphNeuralNetwork(object):
         num_graphs_processed = 0
 
         for j, b in enumerate(range(0, len(validation_df), FLAGS.batch_size)):
-          input_graphs = validation_df['networkx:input_graph'].iloc[
-                         b:b + FLAGS.batch_size]
+          input_graphs = validation_df['networkx:input_graph'].iloc[b:b + FLAGS.
+                                                                    batch_size]
           target_graphs = validation_df['networkx:target_graph'].iloc[
-                          b:b + FLAGS.batch_size]
+              b:b + FLAGS.batch_size]
           num_graphs_processed += len(input_graphs)
-          feed_dict = CreateFeedDict(
-              input_graphs, target_graphs, self.placeholders)
+          feed_dict = CreateFeedDict(input_graphs, target_graphs,
+                                     self.placeholders)
           validation_values = sess.run({
-            "summary": self.loss_summary_op,
-            "target": self.placeholders.target,
-            "loss": self.loss_op,
-            "output": self.output_op,
-          }, feed_dict=feed_dict)
+              "summary": self.loss_summary_op,
+              "target": self.placeholders.target,
+              "loss": self.loss_op,
+              "output": self.output_op,
+          },
+                                       feed_dict=feed_dict)
           output_graphs += utils_np.graphs_tuple_to_data_dicts(
               validation_values["output"])
-          summary_writers.validation.add_summary(
-              validation_values['summary'], tensorboard_step)
+          summary_writers.validation.add_summary(validation_values['summary'],
+                                                 tensorboard_step)
           losses.append(float(validation_values['loss']))
 
         validation_runtime = time.time() - validation_start_time
@@ -710,11 +707,11 @@ class CompilerGraphNeuralNetwork(object):
         log['validation_loss'] = sum(losses) / len(losses)
         log['validation_runtime_ms'] = validation_runtime * 1000
 
-        logging.info('Validation set in %.3f seconds (%02d graphs/sec), '
-                     'loss: %.4f, %.2f%% accuracy, %.2f%% solved',
-                     validation_runtime, graphs_per_second,
-                     log['validation_loss'], eval_result.accuracy * 100,
-                     eval_result.solved * 100)
+        logging.info(
+            'Validation set in %.3f seconds (%02d graphs/sec), '
+            'loss: %.4f, %.2f%% accuracy, %.2f%% solved', validation_runtime,
+            graphs_per_second, log['validation_loss'],
+            eval_result.accuracy * 100, eval_result.solved * 100)
 
         # Now the test set.
         output_graphs, losses = [], []
@@ -722,23 +719,24 @@ class CompilerGraphNeuralNetwork(object):
         num_graphs_processed = 0
 
         for j, b in enumerate(range(0, len(test_df), FLAGS.batch_size)):
-          input_graphs = test_df['networkx:input_graph'].iloc[
-                         b:b + FLAGS.batch_size]
-          target_graphs = test_df['networkx:target_graph'].iloc[
-                          b:b + FLAGS.batch_size]
+          input_graphs = test_df['networkx:input_graph'].iloc[b:b +
+                                                              FLAGS.batch_size]
+          target_graphs = test_df['networkx:target_graph'].iloc[b:b + FLAGS.
+                                                                batch_size]
           num_graphs_processed += len(input_graphs)
-          feed_dict = CreateFeedDict(
-              input_graphs, target_graphs, self.placeholders)
+          feed_dict = CreateFeedDict(input_graphs, target_graphs,
+                                     self.placeholders)
           test_values = sess.run({
-            "summary": self.loss_summary_op,
-            "target": self.placeholders.target,
-            "loss": self.loss_op,
-            "output": self.output_op,
-          }, feed_dict=feed_dict)
+              "summary": self.loss_summary_op,
+              "target": self.placeholders.target,
+              "loss": self.loss_op,
+              "output": self.output_op,
+          },
+                                 feed_dict=feed_dict)
           output_graphs += utils_np.graphs_tuple_to_data_dicts(
               test_values["output"])
-          summary_writers.test.add_summary(
-              test_values['summary'], tensorboard_step)
+          summary_writers.test.add_summary(test_values['summary'],
+                                           tensorboard_step)
           losses.append(float(test_values['loss']))
 
         test_runtime = time.time() - test_start_time
@@ -746,16 +744,17 @@ class CompilerGraphNeuralNetwork(object):
         log['test_graphs_per_second'] = graphs_per_second
 
         # Record the output graphs as JSON, and the accuracy of those outputs.
-        eval_result = self.evaluate_outputs(
-            test_df['networkx:target_graph'], output_graphs)
+        eval_result = self.evaluate_outputs(test_df['networkx:target_graph'],
+                                            output_graphs)
         log['test_accuracy'], log['test_solved'] = eval_result
         log['test_loss'] = sum(losses) / len(losses)
         log['test_runtime_ms'] = test_runtime * 1000
 
-        logging.info('Test set in %.3f seconds (%02d graphs/sec), '
-                     'loss: %.4f, %.2f%% accuracy, %.2f%% solved',
-                     test_runtime, graphs_per_second, log['test_loss'],
-                     eval_result.accuracy * 100, eval_result.solved * 100)
+        logging.info(
+            'Test set in %.3f seconds (%02d graphs/sec), '
+            'loss: %.4f, %.2f%% accuracy, %.2f%% solved', test_runtime,
+            graphs_per_second, log['test_loss'], eval_result.accuracy * 100,
+            eval_result.solved * 100)
 
         # Dump epoch log to file.
         logpath = (f'{self.outdir}/telemetry/epoch_{epoch_num+1:03d}.'
@@ -765,8 +764,8 @@ class CompilerGraphNeuralNetwork(object):
         logging.info("Wrote %s", logpath)
 
         test_outputs_path = (
-          f'{self.outdir}/test_outputs/epoch_{epoch_num+1:03d}.'
-          f'T{labdate.MillisecondsTimestamp()}.pkl')
+            f'{self.outdir}/test_outputs/epoch_{epoch_num+1:03d}.'
+            f'T{labdate.MillisecondsTimestamp()}.pkl')
         with open(test_outputs_path, 'wb') as f:
           pickle.dump(output_graphs, f)
 
@@ -824,8 +823,8 @@ def main(argv):
   builder = tf.profiler.ProfileOptionBuilder
   opts = builder(builder.time_and_memory()).order_by('micros').build()
   opts2 = tf.profiler.ProfileOptionBuilder.trainable_variables_parameter()
-  profile_context = GetProfileContext(
-      outdir / 'profile', FLAGS.profile_tensorflow)
+  profile_context = GetProfileContext(outdir / 'profile',
+                                      FLAGS.profile_tensorflow)
 
   # Create the model.
   model = CompilerGraphNeuralNetwork(df, outdir)

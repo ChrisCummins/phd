@@ -7,7 +7,6 @@ from datasets.linux import linux
 from experimental.compilers.reachability.datasets import linux
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -43,8 +42,7 @@ def test_TryToCreateControlFlowGraphsFromLinuxSrc_graphs_are_valid():
     assert graph.IsValidControlFlowGraph(strict=False)
 
 
-def test_LinuxSourcesDataset_df_count(
-    linux_dataset: linux.LinuxSourcesDataset):
+def test_LinuxSourcesDataset_df_count(linux_dataset: linux.LinuxSourcesDataset):
   """Test that dataset has expected number of rows."""
   # TODO(cec): This doesn't seem to be deterministic.
   assert len(linux_dataset.cfgs_df) >= 1600

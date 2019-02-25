@@ -41,7 +41,6 @@ from pkg_resources import require, resource_filename
 
 from labm8 import fs
 
-
 __author__ = "Chris Cummins"
 __copyright__ = "Copyright 2017, 2018 Chris Cummins"
 __license__ = "GPL v3"
@@ -55,10 +54,10 @@ __version_str__ = (f"dsmith {__version__} made with \033[1;31m♥\033[0;0m by "
 
 # version_info tuple
 _major = int(__version__.split(".")[0])
-_minor = int(__version__.split('.')[1]) if len(
-    __version__.split('.')) > 1 else 0
-_micro = int(__version__.split('.')[2]) if len(
-    __version__.split('.')) > 2 else 0
+_minor = int(
+    __version__.split('.')[1]) if len(__version__.split('.')) > 1 else 0
+_micro = int(
+    __version__.split('.')[2]) if len(__version__.split('.')) > 2 else 0
 _releaselevel = __version__.split('.')[3] if len(
     __version__.split('.')) > 3 else 'final'
 

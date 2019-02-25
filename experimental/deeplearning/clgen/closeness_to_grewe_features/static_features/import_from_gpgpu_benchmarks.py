@@ -11,7 +11,6 @@ from deeplearning.deeptune.opencl.heterogeneous_mapping.models import ncc
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
 
-
 FLAGS = flags.FLAGS
 flags.DEFINE_string(
     'db',
@@ -19,9 +18,8 @@ flags.DEFINE_string(
     'URL of the database to import OpenCL kernels to.')
 
 
-def RowToStaticFeatures(
-    row: typing.Dict[str, typing.Any], datafolder
-) -> grewe_features_db.StaticFeatures:
+def RowToStaticFeatures(row: typing.Dict[str, typing.Any],
+                        datafolder) -> grewe_features_db.StaticFeatures:
   path = ncc.DataFrameRowToKernelSrcPath(row, datafolder)
   with open(path, 'rb') as f:
     src = f.read().decode('unicode_escape')

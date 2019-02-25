@@ -9,14 +9,11 @@ from absl import logging
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
 
-
 FLAGS = flags.FLAGS
-flags.DEFINE_string(
-    'kernels_dir', None,
-    'Path to directory containing kernels to import.')
-flags.DEFINE_string(
-    'origin', None,
-    'Name of the origin of the kernels, e.g. "github".')
+flags.DEFINE_string('kernels_dir', None,
+                    'Path to directory containing kernels to import.')
+flags.DEFINE_string('origin', None,
+                    'Name of the origin of the kernels, e.g. "github".')
 flags.DEFINE_string(
     'db',
     'sqlite:///tmp/phd/experimental/deplearning/clgen/closeness_to_grewe_features/db.db',

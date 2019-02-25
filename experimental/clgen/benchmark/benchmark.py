@@ -44,26 +44,26 @@ def evaluate(model, sampler):
   ugly_rate = 1 - (num_ugly_kernels / num_kernels)
 
   total_charcount = dbutil.cc(sample_db, "ContentFiles")
-  good_charcount = dbutil.cc(sample_db, "PreprocessedFiles",
-                             condition="WHERE status=0")
+  good_charcount = dbutil.cc(
+      sample_db, "PreprocessedFiles", condition="WHERE status=0")
 
   efficiency = good_charcount / total_charcount
   throughput = good_charcount / elapsed
 
   return {
-    "training_time": training_time,
-    "sampling_time": elapsed,
-    "num_kernels": num_kernels,
-    "num_good_kernels": num_good_kernels,
-    "discard_rate": discard_rate,
-    "ugly_rate": ugly_rate,
-    "total_charcount": total_charcount,
-    "good_charcount": good_charcount,
-    "efficiency": efficiency,  # good_chars / total_chars
-    "throughput": throughput,  # good_chars / second
-    "corpus_dir": model.corpus.cache.path,
-    "model_dir": model.cache.path,
-    "sampler_dir": sampler.cache(model).path,
+      "training_time": training_time,
+      "sampling_time": elapsed,
+      "num_kernels": num_kernels,
+      "num_good_kernels": num_good_kernels,
+      "discard_rate": discard_rate,
+      "ugly_rate": ugly_rate,
+      "total_charcount": total_charcount,
+      "good_charcount": good_charcount,
+      "efficiency": efficiency,  # good_chars / total_chars
+      "throughput": throughput,  # good_chars / second
+      "corpus_dir": model.corpus.cache.path,
+      "model_dir": model.cache.path,
+      "sampler_dir": sampler.cache(model).path,
   }
 
 
@@ -73,22 +73,22 @@ def main():
   log.init(verbose=True)
   m = model.from_json(clgen.load_json_file(sys.argv[1]))
   s = sampler.from_json({
-    "kernels": {
-      "args": [
-        "__global float*",
-        "__global float*",
-        "__global float*",
-        "const int"
-      ],
-      "max_length": 5000,
-      "temperature": 1
-    },
-    "sampler": {
-      "batch_size": 1000,
-      "max_batches": 1,
-      "static_checker": False,
-      "dynamic_checker": False
-    }
+      "kernels": {
+          "args": [
+              "__global float*", "__global float*", "__global float*",
+              "const int"
+          ],
+          "max_length":
+          5000,
+          "temperature":
+          1
+      },
+      "sampler": {
+          "batch_size": 1000,
+          "max_batches": 1,
+          "static_checker": False,
+          "dynamic_checker": False
+      }
   })
 
   print("Corpus size:", m.corpus.size)

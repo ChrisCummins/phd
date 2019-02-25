@@ -13,7 +13,6 @@ from datasets.benchmarks import llvm_test_suite
 from experimental.compilers.random_opt.proto import random_opt_pb2
 from labm8 import labtypes
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_integer(
@@ -22,14 +21,14 @@ flags.DEFINE_integer(
 
 # A list of all environments registered in this file.
 ENVIRONMENTS = [
-  'LLVM-bzip2-512K-v0',
-  'LLVM-bzip2-1M-v0',
-  'LLVM-queens-8x8-v0',
-  'LLVM-queens-14x14-v0',
-  'LLVM-delayed-reward-bzip2-512K-v0',
-  'LLVM-delayed-reward-bzip2-1M-v0',
-  'LLVM-delayed-reward-queens-8x8-v0',
-  'LLVM-delayed-reward-queens-14x14-v0',
+    'LLVM-bzip2-512K-v0',
+    'LLVM-bzip2-1M-v0',
+    'LLVM-queens-8x8-v0',
+    'LLVM-queens-14x14-v0',
+    'LLVM-delayed-reward-bzip2-512K-v0',
+    'LLVM-delayed-reward-bzip2-1M-v0',
+    'LLVM-delayed-reward-queens-8x8-v0',
+    'LLVM-delayed-reward-queens-14x14-v0',
 ]
 
 # A default environment name, registered below.
@@ -38,7 +37,6 @@ DEFAULT_ENV_ID = 'LLVM-delayed-reward-queens-14x14-v0'
 # The list of opt passes which defines the action space.
 DEFAULT_PASS_LIST = list(
     sorted(set(labtypes.flatten(llvm_util.GetOptArgs(['-O3'])))))
-
 
 # Environment generator functions.
 
@@ -53,36 +51,39 @@ def _GetEntryPoint(delayed_reward: bool) -> str:
 
 def _GetBzip2EnvironmentArgs(dataset_size: str, delayed_reward: bool):
   return {
-    'entry_point': _GetEntryPoint(delayed_reward),
-    'kwargs': {
-      'config': random_opt_pb2.Environment(
-          input_src=bzip2.Bzip2.srcs,
-          # Create random data for bzip to compress.
-          setup_cmd=f'head -c {dataset_size} </dev/urandom > @D/input.dat',
-          # Compress and deflate the input data.
-          exec_cmd=('$@ -z < @D/input.dat > @D/input.dat.bz2 && '
-                    '$@ -d < @D/input.dat.bz2 > @D/output.dat'),
-          eval_cmd='cmp --silent @D/input.dat @D/output.dat',
-          candidate_pass=DEFAULT_PASS_LIST,
-      )
-    }
+      'entry_point': _GetEntryPoint(delayed_reward),
+      'kwargs': {
+          'config':
+          random_opt_pb2.Environment(
+              input_src=bzip2.Bzip2.srcs,
+              # Create random data for bzip to compress.
+              setup_cmd=f'head -c {dataset_size} </dev/urandom > @D/input.dat',
+              # Compress and deflate the input data.
+              exec_cmd=('$@ -z < @D/input.dat > @D/input.dat.bz2 && '
+                        '$@ -d < @D/input.dat.bz2 > @D/output.dat'),
+              eval_cmd='cmp --silent @D/input.dat @D/output.dat',
+              candidate_pass=DEFAULT_PASS_LIST,
+          )
+      }
   }
 
 
 def _GetQueensEnvironmentArgs(n: int, delayed_reward: bool):
   return {
-    'entry_point': _GetEntryPoint(delayed_reward),
-    'kwargs': {
-      'config': random_opt_pb2.Environment(
-          input_src=llvm_test_suite.SingleSource.Benchmarks.McGill.queens.srcs,
-          # Generate a gold standard using the binary. The assumes that the base
-          # build (before any opt passes have been run) is correct.
-          setup_cmd=f'$@ {n} > @D/gold_standard_output.txt',
-          exec_cmd=f'$@ {n} > @D/output.txt',
-          eval_cmd='cmp --silent @D/gold_standard_output.txt @D/output.txt',
-          candidate_pass=DEFAULT_PASS_LIST,
-      )
-    }
+      'entry_point': _GetEntryPoint(delayed_reward),
+      'kwargs': {
+          'config':
+          random_opt_pb2.Environment(
+              input_src=llvm_test_suite.SingleSource.Benchmarks.McGill.queens.
+              srcs,
+              # Generate a gold standard using the binary. The assumes that the base
+              # build (before any opt passes have been run) is correct.
+              setup_cmd=f'$@ {n} > @D/gold_standard_output.txt',
+              exec_cmd=f'$@ {n} > @D/output.txt',
+              eval_cmd='cmp --silent @D/gold_standard_output.txt @D/output.txt',
+              candidate_pass=DEFAULT_PASS_LIST,
+          )
+      }
   }
 
 

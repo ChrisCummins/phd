@@ -10,12 +10,12 @@ from progressbar import ProgressBar
 
 from labm8 import crypto, fs
 
-
 # Benchmarked CLgen inference rate (characters per second):
 CLGEN_INFERENCE_CPS = 465
 
 
-def import_clgen_sample(session: session_t, path: Path,
+def import_clgen_sample(session: session_t,
+                        path: Path,
                         cl_launchable: bool = False,
                         harnesses: List[cldriveParams] = [],
                         delete: bool = False) -> None:
@@ -53,17 +53,29 @@ def import_clgen_sample(session: session_t, path: Path,
 
 if __name__ == "__main__":
   parser = ArgumentParser()
-  parser.add_argument("-H", "--hostname", type=str, default="cc1",
-                      help="MySQL database hostname")
+  parser.add_argument(
+      "-H",
+      "--hostname",
+      type=str,
+      default="cc1",
+      help="MySQL database hostname")
   parser.add_argument("directory", help="directory containing kernels")
-  parser.add_argument("--cl_launchable", action="store_true",
-                      help="kernels have signature '__kernel void entry(...)'")
-  parser.add_argument("-n", "--num", type=int, default=-1,
-                      help="max programs to import, no max if < 0")
-  parser.add_argument("--no-harness", action="store_true",
-                      help="don't generate cldrive harnesses")
-  parser.add_argument("--delete", action="store_true",
-                      help="delete file after import")
+  parser.add_argument(
+      "--cl_launchable",
+      action="store_true",
+      help="kernels have signature '__kernel void entry(...)'")
+  parser.add_argument(
+      "-n",
+      "--num",
+      type=int,
+      default=-1,
+      help="max programs to import, no max if < 0")
+  parser.add_argument(
+      "--no-harness",
+      action="store_true",
+      help="don't generate cldrive harnesses")
+  parser.add_argument(
+      "--delete", action="store_true", help="delete file after import")
   args = parser.parse_args()
 
   db.init(args.hostname)
@@ -79,7 +91,10 @@ if __name__ == "__main__":
 
     for path in ProgressBar()(paths):
       import_clgen_sample(
-          s, path, harnesses=params,
-          cl_launchable=args.cl_launchable, delete=args.delete)
+          s,
+          path,
+          harnesses=params,
+          cl_launchable=args.cl_launchable,
+          delete=args.delete)
 
   print("done.")

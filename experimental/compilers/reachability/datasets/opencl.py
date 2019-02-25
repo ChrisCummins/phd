@@ -16,7 +16,6 @@ from experimental.compilers.reachability import llvm_util
 from experimental.compilers.reachability import reachability_pb2
 from labm8 import decorators
 
-
 FLAGS = flags.FLAGS
 
 
@@ -37,14 +36,21 @@ def BytecodeFromOpenClString(opencl_string: str,
   """
   # Use -O3 to reduce CFGs.
   clang_args = opencl.GetClangArgs(use_shim=False) + [
-    clang.ValidateOptimizationLevel(optimization_level),
-    '-S', '-emit-llvm', '-o', '-', '-i', '-',
-    '-Wno-everything',  # No warnings please.
+      clang.ValidateOptimizationLevel(optimization_level),
+      '-S',
+      '-emit-llvm',
+      '-o',
+      '-',
+      '-i',
+      '-',
+      '-Wno-everything',  # No warnings please.
   ]
   process = clang.Exec(clang_args, stdin=opencl_string)
   if process.returncode:
     raise clang.ClangException(
-        "clang failed", returncode=process.returncode, stderr=process.stderr,
+        "clang failed",
+        returncode=process.returncode,
+        stderr=process.stderr,
         command=clang_args)
   return process.stdout, clang_args
 
@@ -87,9 +93,8 @@ def CreateControlFlowGraphFromOpenClKernel(
   return graph
 
 
-def ProcessProgramDfIterItem(
-    row: typing.Dict[str, str]
-) -> typing.Optional[typing.Dict[str, typing.Any]]:
+def ProcessProgramDfIterItem(row: typing.Dict[str, str]
+                            ) -> typing.Optional[typing.Dict[str, typing.Any]]:
   benchmark_suite_name = row['program:benchmark_suite_name']
   benchmark_name = row['program:benchmark_name']
   kernel_name = row['program:opencl_kernel_name']
@@ -103,9 +108,9 @@ def ProcessProgramDfIterItem(
 
   row = CfgDfRowFromControlFlowGraph(graph)
   row.update({
-    'program:benchmark_suite_name': benchmark_suite_name,
-    'program:benchmark_name': benchmark_name,
-    'program:opencl_kernel_name': kernel_name,
+      'program:benchmark_suite_name': benchmark_suite_name,
+      'program:benchmark_name': benchmark_name,
+      'program:opencl_kernel_name': kernel_name,
   })
   return row
 
@@ -113,18 +118,17 @@ def ProcessProgramDfIterItem(
 def CfgDfRowFromControlFlowGraph(
     graph: cfg.ControlFlowGraph) -> typing.Dict[str, typing.Any]:
   return {
-    'cfg:graph': graph,
-    'cfg:block_count': graph.number_of_nodes(),
-    'cfg:edge_count': graph.number_of_edges(),
-    'cfg:edge_density': graph.edge_density,
-    'cfg:is_valid': graph.IsValidControlFlowGraph(strict=False),
-    'cfg:is_strict_valid': graph.IsValidControlFlowGraph(strict=True),
+      'cfg:graph': graph,
+      'cfg:block_count': graph.number_of_nodes(),
+      'cfg:edge_count': graph.number_of_edges(),
+      'cfg:edge_density': graph.edge_density,
+      'cfg:is_valid': graph.IsValidControlFlowGraph(strict=False),
+      'cfg:is_strict_valid': graph.IsValidControlFlowGraph(strict=True),
   }
 
 
 def ProcessOpenClProgramDfBytecode(
-    row: typing.Dict[str, str]
-) -> reachability_pb2.LlvmBytecode:
+    row: typing.Dict[str, str]) -> reachability_pb2.LlvmBytecode:
   benchmark_suite_name = row['program:benchmark_suite_name']
   benchmark_name = row['program:benchmark_name']
   kernel_name = row['program:opencl_kernel_name']
@@ -167,8 +171,9 @@ class OpenClDeviceMappingsDataset(ocl_dataset.OpenClDeviceMappingsDataset):
     cfg:is_strict_valid (bool): Whether the CFG is valid when strict.
   """
 
-  def PopulateBytecodeTable(
-      self, db: database.Database, commit_every: int = 1000):
+  def PopulateBytecodeTable(self,
+                            db: database.Database,
+                            commit_every: int = 1000):
     programs_df = self.programs_df.reset_index()
     bar = progressbar.ProgressBar()
     bar.max_value = len(programs_df)
@@ -176,9 +181,9 @@ class OpenClDeviceMappingsDataset(ocl_dataset.OpenClDeviceMappingsDataset):
     # Process each row of the table in parallel.
     pool = multiprocessing.Pool()
     with db.Session(commit=True) as s:
-      for i, proto in enumerate(pool.imap_unordered(
-          ProcessOpenClProgramDfBytecode,
-          [d for _, d in programs_df.iterrows()])):
+      for i, proto in enumerate(
+          pool.imap_unordered(ProcessOpenClProgramDfBytecode,
+                              [d for _, d in programs_df.iterrows()])):
         bar.update(i)
         s.add(database.LlvmBytecode(**database.LlvmBytecode.FromProto(proto)))
         if not (i % commit_every):
@@ -191,28 +196,31 @@ class OpenClDeviceMappingsDataset(ocl_dataset.OpenClDeviceMappingsDataset):
     # Process each row of the table in parallel.
     pool = multiprocessing.Pool()
     rows = []
-    for row in pool.imap_unordered(
-        ProcessProgramDfIterItem, [d for i, d in programs_df.iterrows()]):
+    for row in pool.imap_unordered(ProcessProgramDfIterItem,
+                                   [d for i, d in programs_df.iterrows()]):
       if row:
         rows.append(row)
 
     # Create the output table.
-    df = pd.DataFrame(rows, columns=[
-      'program:benchmark_suite_name',
-      'program:benchmark_name',
-      'program:opencl_kernel_name',
-      'cfg:graph',
-      'cfg:block_count',
-      'cfg:edge_count',
-      'cfg:edge_density',
-      'cfg:is_valid',
-      'cfg:is_strict_valid',
-    ])
+    df = pd.DataFrame(
+        rows,
+        columns=[
+            'program:benchmark_suite_name',
+            'program:benchmark_name',
+            'program:opencl_kernel_name',
+            'cfg:graph',
+            'cfg:block_count',
+            'cfg:edge_count',
+            'cfg:edge_density',
+            'cfg:is_valid',
+            'cfg:is_strict_valid',
+        ])
 
     df.set_index([
-      'program:benchmark_suite_name',
-      'program:benchmark_name',
-      'program:opencl_kernel_name',
-    ], inplace=True)
+        'program:benchmark_suite_name',
+        'program:benchmark_name',
+        'program:opencl_kernel_name',
+    ],
+                 inplace=True)
     df.sort_index(inplace=True)
     return df

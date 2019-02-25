@@ -12,28 +12,23 @@ from experimental.deeplearning.clgen.closeness_to_grewe_features import \
 from experimental.deeplearning.fish.proto import fish_pb2
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
-flags.DEFINE_string(
-    'protos_dir', None,
-    'Path to directory containing kernels to import.')
-flags.DEFINE_string(
-    'origin', None,
-    'Name of the origin of the kernels, e.g. "github".')
+flags.DEFINE_string('protos_dir', None,
+                    'Path to directory containing kernels to import.')
+flags.DEFINE_string('origin', None,
+                    'Name of the origin of the kernels, e.g. "github".')
 flags.DEFINE_string(
     'db',
     'sqlite:///tmp/phd/experimental/deplearning/clgen/closeness_to_grewe_features/db.db',
     'URL of the database to import OpenCL kernels to.')
-flags.DEFINE_integer(
-    'batch_size', 512, 'Number of protos to process at once.')
+flags.DEFINE_integer('batch_size', 512, 'Number of protos to process at once.')
 
 
-def CreateTempFileFromProto(
-    tempdir: pathlib.Path,
-    proto_path: pathlib.Path) -> pathlib.Path:
+def CreateTempFileFromProto(tempdir: pathlib.Path,
+                            proto_path: pathlib.Path) -> pathlib.Path:
   """Write testcase to a file in directory."""
-  proto = pbutil.FromFile(
-      proto_path, fish_pb2.CompilerCrashDiscriminatorTrainingExample())
+  proto = pbutil.FromFile(proto_path,
+                          fish_pb2.CompilerCrashDiscriminatorTrainingExample())
   path = tempdir / proto_path.name
   with open(path, 'w') as f:
     f.write(proto.src)
@@ -60,8 +55,10 @@ def main(argv: typing.List[str]):
   for stride in range(0, len(paths_to_import), FLAGS.batch_size):
     with tempfile.TemporaryDirectory(prefix='phd_fish_') as d:
       d = pathlib.Path(d)
-      srcs = [CreateTempFileFromProto(d, p) for p in
-              paths_to_import[stride:stride + FLAGS.batch_size]]
+      srcs = [
+          CreateTempFileFromProto(d, p)
+          for p in paths_to_import[stride:stride + FLAGS.batch_size]
+      ]
       db.ImportStaticFeaturesFromPaths(srcs, FLAGS.origin)
   logging.info('done')
 

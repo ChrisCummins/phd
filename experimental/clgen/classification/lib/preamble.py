@@ -15,25 +15,19 @@ from sklearn.model_selection import StratifiedKFold
 
 from labm8 import fs
 
-
 # plotting config:
 sns.set(style="ticks", color_codes=True)
 plt.style.use(["seaborn-white", "seaborn-paper"])
 
-
 # methods for data wrangling:
+
 
 def escape_suite_name(g):
   """format benchmark suite name for display"""
   c = g.split('-')
-  if (c[0] == "amd" or
-      c[0] == "npb" or
-      c[0] == "nvidia" or
-      c[0] == "shoc"):
+  if (c[0] == "amd" or c[0] == "npb" or c[0] == "nvidia" or c[0] == "shoc"):
     return c[0].upper()
-  elif (c[0] == "parboil" or
-        c[0] == "polybench" or
-        c[0] == "rodinia"):
+  elif (c[0] == "parboil" or c[0] == "polybench" or c[0] == "rodinia"):
     return c[0].capitalize()
   else:
     return "CLgen"
@@ -52,35 +46,35 @@ def escape_benchmark_name(g):
 def get_2(D):
   """ return np array of shape (len(D), nb_features)"""
   return np.array([
-    D["transfer"].values,
-    D["wgsize"].values,
+      D["transfer"].values,
+      D["wgsize"].values,
   ]).T
 
 
 def get_4(D):
   """ return np array of shape (len(D), nb_features)"""
   return np.array([
-    (D["transfer"].values / (D["comp"].values + D["mem"].values)),  # F1
-    (D["coalesced"].values / D["mem"].values),  # F2
-    ((D["localmem"].values / D["mem"].values) * D["wgsize"].values),  # F3
-    (D["comp"].values / D["mem"].values),  # F4
+      (D["transfer"].values / (D["comp"].values + D["mem"].values)),  # F1
+      (D["coalesced"].values / D["mem"].values),  # F2
+      ((D["localmem"].values / D["mem"].values) * D["wgsize"].values),  # F3
+      (D["comp"].values / D["mem"].values),  # F4
   ]).T
 
 
 def get_11(D):
   """ return np array of shape (len(D), nb_features)"""
   return np.array([
-    D["comp"].values,
-    D["rational"].values,
-    D["mem"].values,
-    D["localmem"].values,
-    D["coalesced"].values,
-    D["transfer"].values,
-    D["wgsize"].values,
-    (D["transfer"].values / (D["comp"].values + D["mem"].values)),  # F1
-    (D["coalesced"].values / D["mem"].values),  # F2
-    ((D["localmem"].values / D["mem"].values) * D["wgsize"].values),  # F3
-    (D["comp"].values / D["mem"].values),  # F4
+      D["comp"].values,
+      D["rational"].values,
+      D["mem"].values,
+      D["localmem"].values,
+      D["coalesced"].values,
+      D["transfer"].values,
+      D["wgsize"].values,
+      (D["transfer"].values / (D["comp"].values + D["mem"].values)),  # F1
+      (D["coalesced"].values / D["mem"].values),  # F2
+      ((D["localmem"].values / D["mem"].values) * D["wgsize"].values),  # F3
+      (D["comp"].values / D["mem"].values),  # F4
   ]).T
 
 
@@ -121,8 +115,10 @@ def get_train_test_splits(D, n_splits=10, seed=1):
   return T
 
 
-def load_data_desc(platform, source="B",
-                   max_seq_len=1000, atomizer=CharacterAtomizer,
+def load_data_desc(platform,
+                   source="B",
+                   max_seq_len=1000,
+                   atomizer=CharacterAtomizer,
                    quiet=False):
   """ load experimental results """
 
@@ -153,15 +149,17 @@ def load_data_desc(platform, source="B",
   elif source == "N":
     dataframe = get_npb_benchmarks(platform)
   elif source == "NS":
-    dataframe = pd.concat(
-        (get_npb_benchmarks(platform), get_synthetics(platform)))
+    dataframe = pd.concat((get_npb_benchmarks(platform),
+                           get_synthetics(platform)))
   else:
     raise Exception
 
-  dataframe["oracle_enc"] = [1 if x == "GPU" else 0 for x in
-                             dataframe["oracle"].values]
-  dataframe["benchmark_name"] = [escape_benchmark_name(b) for b in
-                                 dataframe["benchmark"].values]
+  dataframe["oracle_enc"] = [
+      1 if x == "GPU" else 0 for x in dataframe["oracle"].values
+  ]
+  dataframe["benchmark_name"] = [
+      escape_benchmark_name(b) for b in dataframe["benchmark"].values
+  ]
 
   # load source code:
   source_dir = fs.path("kernels")
@@ -179,8 +177,7 @@ def load_data_desc(platform, source="B",
 
   if not quiet:
     print("num instances {} ({} synthetic, {} benchmarks)".format(
-        len(dataframe),
-        sum(dataframe["synthetic"].values),
+        len(dataframe), sum(dataframe["synthetic"].values),
         len(dataframe) - sum(dataframe["synthetic"].values)))
     print("unique kernels", len(set(srcs)))
 
@@ -199,13 +196,17 @@ def load_data_desc(platform, source="B",
     print("padded seq length", seq_length)
 
   return {
-    "dataframe": dataframe,
-    "seq_length": seq_length,
-    "atomizer": atomizer
+      "dataframe": dataframe,
+      "seq_length": seq_length,
+      "atomizer": atomizer
   }
 
 
-def get_training_data(data_desc, *args, seed=204, n_splits=10, split_i=0,
+def get_training_data(data_desc,
+                      *args,
+                      seed=204,
+                      n_splits=10,
+                      split_i=0,
                       **kwargs):
   dataframe = data_desc["dataframe"]
   seq_length = data_desc["seq_length"]
@@ -227,12 +228,24 @@ def get_training_data(data_desc, *args, seed=204, n_splits=10, split_i=0,
   y2_test = get_y2(test)
 
   return (
-    {"dataframe": train, "x_2": x_train_2, "x_4": x_train_4, "x_11": x_train_11,
-     "x_seq": x_train_seq, "y": y_train,
-     "y_2": y2_train},
-    {"dataframe": test, "x_2": x_test_2, "x_4": x_test_4, "x_11": x_test_11,
-     "x_seq": x_test_seq, "y": y_test,
-     "y_2": y2_test},
+      {
+          "dataframe": train,
+          "x_2": x_train_2,
+          "x_4": x_train_4,
+          "x_11": x_train_11,
+          "x_seq": x_train_seq,
+          "y": y_train,
+          "y_2": y2_train
+      },
+      {
+          "dataframe": test,
+          "x_2": x_test_2,
+          "x_4": x_test_4,
+          "x_11": x_test_11,
+          "x_seq": x_test_seq,
+          "y": y_test,
+          "y_2": y2_test
+      },
   )
 
 
@@ -252,9 +265,11 @@ def analyze(predictions, test):
   zero_r = Counter(oracle).most_common(1)[0][0]
   zero_r_key = enc2key(zero_r)
 
-  speedups = np.array([min(d["runtime_cpu"], d["runtime_gpu"]) / d[enc2key(p)]
-                       for p, d in
-                       zip(predictions, frame.T.to_dict().values())])
+  speedups = np.array([
+      min(d["runtime_cpu"], d["runtime_gpu"]) / d[enc2key(p)]
+      for p, d in zip(predictions,
+                      frame.T.to_dict().values())
+  ])
   speedup_avg = speedups.mean()
   speedup_geo = gmean(speedups)
 
@@ -276,14 +291,14 @@ def analyze(predictions, test):
   print(confusion_matrix)
 
   return {
-    "accuracy": accuracy,
-    "correct": correct,
-    "confusion_matrix": confusion_matrix,
-    "speedups": speedups,
-    "speedup_min": min(speedups),
-    "speedup_max": max(speedups),
-    "speedup_avg": speedup_avg,
-    "speedup_geo": speedup_geo,
+      "accuracy": accuracy,
+      "correct": correct,
+      "confusion_matrix": confusion_matrix,
+      "speedups": speedups,
+      "speedup_min": min(speedups),
+      "speedup_max": max(speedups),
+      "speedup_avg": speedup_avg,
+      "speedup_geo": speedup_geo,
   }
 
 
@@ -299,9 +314,15 @@ def _nop(*args, **kwargs):
 #     name = model_desc["name"]
 #     return "models/{name}/{platform}-{source}-{atomizer}:{maxlen}-{seed}-{n_splits}-{split_i}.model".format(**vars())
 
-def train_and_save(model_desc, platform, source,
-                   atomizer="CharacterAtomizer", maxlen=1024,
-                   n_splits=10, split_i=0, seed=204):
+
+def train_and_save(model_desc,
+                   platform,
+                   source,
+                   atomizer="CharacterAtomizer",
+                   maxlen=1024,
+                   n_splits=10,
+                   split_i=0,
+                   seed=204):
   np.random.seed(seed)
 
   name = model_desc["name"]
@@ -314,31 +335,45 @@ def train_and_save(model_desc, platform, source,
     _atomizer = globals().get(atomizer)
 
     # load training data
-    data_desc = load_data_desc(platform=platform, source=source,
-                               max_seq_len=maxlen, atomizer=_atomizer)
-    train, test = get_training_data(data_desc, seed=seed, split_i=split_i,
-                                    n_splits=n_splits)
+    data_desc = load_data_desc(
+        platform=platform,
+        source=source,
+        max_seq_len=maxlen,
+        atomizer=_atomizer)
+    train, test = get_training_data(
+        data_desc, seed=seed, split_i=split_i, n_splits=n_splits)
 
     # create model
     model = create_fn(seed=seed, data_desc=data_desc)
 
     # train model
-    train_fn(model=model, train=train, seed=seed, platform=platform,
-             source=source)
+    train_fn(
+        model=model, train=train, seed=seed, platform=platform, source=source)
 
     fs.mkdir("models/{name}".format(**vars()))
     save_fn(outpath, model)
     print("model saved as", outpath)
 
   # evaluate model
-  return load_and_test(model_desc, platform, source, n_splits=n_splits,
-                       split_i=split_i, atomizer=atomizer, maxlen=maxlen,
-                       seed=seed)
+  return load_and_test(
+      model_desc,
+      platform,
+      source,
+      n_splits=n_splits,
+      split_i=split_i,
+      atomizer=atomizer,
+      maxlen=maxlen,
+      seed=seed)
 
 
-def load_and_test(model_desc, platform, source,
-                  atomizer="CharacterAtomizer", maxlen=1024, n_splits=10,
-                  split_i=0, seed=204):
+def load_and_test(model_desc,
+                  platform,
+                  source,
+                  atomizer="CharacterAtomizer",
+                  maxlen=1024,
+                  n_splits=10,
+                  split_i=0,
+                  seed=204):
   np.random.seed(seed)
 
   name = model_desc["name"]
@@ -348,9 +383,15 @@ def load_and_test(model_desc, platform, source,
       **vars())
 
   if fs.exists(outpath):
-    return load_result(model_desc, platform, source, n_splits=n_splits,
-                       split_i=split_i, atomizer=atomizer, maxlen=maxlen,
-                       seed=seed)
+    return load_result(
+        model_desc,
+        platform,
+        source,
+        n_splits=n_splits,
+        split_i=split_i,
+        atomizer=atomizer,
+        maxlen=maxlen,
+        seed=seed)
   if not fs.exists(inpath):
     return False
 
@@ -359,9 +400,12 @@ def load_and_test(model_desc, platform, source,
 
   # load training data
   _atomizer = globals().get(atomizer)
-  data_desc = load_data_desc(platform=platform, source=source,
-                             max_seq_len=maxlen, atomizer=_atomizer,
-                             quiet=True)
+  data_desc = load_data_desc(
+      platform=platform,
+      source=source,
+      max_seq_len=maxlen,
+      atomizer=_atomizer,
+      quiet=True)
   train, test = get_training_data(
       data_desc, seed=seed, split_i=split_i, n_splits=n_splits)
 
@@ -382,9 +426,15 @@ def load_and_test(model_desc, platform, source,
   return test
 
 
-def benchmark_inference(model_desc, platform, source,
-                        atomizer="CharacterAtomizer", maxlen=1024, n_splits=10,
-                        split_i=0, seed=204, n_runtimes=100):
+def benchmark_inference(model_desc,
+                        platform,
+                        source,
+                        atomizer="CharacterAtomizer",
+                        maxlen=1024,
+                        n_splits=10,
+                        split_i=0,
+                        seed=204,
+                        n_runtimes=100):
   np.random.seed(seed)
 
   name = model_desc["name"]
@@ -401,9 +451,12 @@ def benchmark_inference(model_desc, platform, source,
 
   # load training data
   _atomizer = globals().get(atomizer)
-  data_desc = load_data_desc(platform=platform, source=source,
-                             max_seq_len=maxlen, atomizer=_atomizer,
-                             quiet=True)
+  data_desc = load_data_desc(
+      platform=platform,
+      source=source,
+      max_seq_len=maxlen,
+      atomizer=_atomizer,
+      quiet=True)
   train, test = get_training_data(
       data_desc, seed=seed, split_i=split_i, n_splits=n_splits)
 
@@ -442,9 +495,14 @@ def platform2str(p):
     raise Exception
 
 
-def load_result(model_desc, platform, source,
-                atomizer="CharacterAtomizer", maxlen=1024,
-                n_splits=10, split_i=0, seed=204):
+def load_result(model_desc,
+                platform,
+                source,
+                atomizer="CharacterAtomizer",
+                maxlen=1024,
+                n_splits=10,
+                split_i=0,
+                seed=204):
   name = model_desc["name"]
   inpath = "models/{name}/{platform}-{source}-{atomizer}:{maxlen}-{seed}-{n_splits}-{split_i}.result".format(
       **vars())

@@ -12,7 +12,6 @@ from deeplearning.deeptune.opencl.heterogeneous_mapping import utils
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import models
 from labm8 import prof
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('outdir', '/tmp/phd/docs/wip_graph/datasets/opencl_devmap',
@@ -41,9 +40,10 @@ def MakeOpenClDevmapDataset(df: pd.DataFrame, outdir: pathlib.Path):
   with prof.Profile('encoded graphs'):
     encoded_graphs = list(model.EncodeGraphs(extracted_graphs))
 
-  unknowns = np.array(
-      [g.graph['num_unknown_statements'] / g.number_of_nodes() for _, g in
-       encoded_graphs])
+  unknowns = np.array([
+      g.graph['num_unknown_statements'] / g.number_of_nodes()
+      for _, g in encoded_graphs
+  ])
 
   logging.info(f'{unknowns.mean():.1%} of statements are unknown '
                f'(min={unknowns.min():.1%}, max={unknowns.max():.1%})')
@@ -56,10 +56,10 @@ def MakeOpenClDevmapDataset(df: pd.DataFrame, outdir: pathlib.Path):
   df['cfg:edge_density'] = [graph.edge_density for graph in graphs]
   df['cfg:diameter'] = [graph.undirected_diameter for graph in graphs]
   df['cfg:is_valid'] = [
-    graph.IsValidControlFlowGraph(strict=False) for graph in graphs
+      graph.IsValidControlFlowGraph(strict=False) for graph in graphs
   ]
   df['cfg:is_strict_valid'] = [
-    graph.IsValidControlFlowGraph(strict=True) for graph in graphs
+      graph.IsValidControlFlowGraph(strict=True) for graph in graphs
   ]
 
   with prof.Profile('input target graphs'):

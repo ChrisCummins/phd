@@ -33,7 +33,8 @@ def mkharness(testcase: 'Testcase') -> harness_t:
     start_time = time()
     # TODO: use testcase.input_seed to set start of ARANGE
     inputs = cldrive.make_data(
-        src=src, size=size,
+        src=src,
+        size=size,
         data_generator=cldrive.Generator.ARANGE,
         scalar_val=size)
     src = cldrive.emit_c(
@@ -44,26 +45,37 @@ def mkharness(testcase: 'Testcase') -> harness_t:
     try:
       start_time = time()
       src = cldrive.emit_c(
-          src=program.src, inputs=None, gsize=gsize, lsize=lsize,
+          src=program.src,
+          inputs=None,
+          gsize=gsize,
+          lsize=lsize,
           compile_only=True)
     except Exception:
       # create a compiler-only stub without creating kernel
       start_time = time()
       src = cldrive.emit_c(
-          src=program.src, inputs=None, gsize=gsize, lsize=lsize,
-          compile_only=True, create_kernel=False)
+          src=program.src,
+          inputs=None,
+          gsize=gsize,
+          lsize=lsize,
+          compile_only=True,
+          create_kernel=False)
 
   generation_time = time() - start_time
 
   return harness_t(generation_time, compile_only, src)
 
 
-def compile_harness(src: str, path: str = 'a.out', platform_id=None,
-                    device_id=None, cc: str = 'gcc',
+def compile_harness(src: str,
+                    path: str = 'a.out',
+                    platform_id=None,
+                    device_id=None,
+                    cc: str = 'gcc',
                     flags: List[str] = default_cflags,
                     timeout: int = 60) -> None:
   """ compile harness binary from source """
-  cmd = ['timeout', '-s9', str(timeout), cc, '-xc', '-', '-o',
+  cmd = ['timeout', '-s9',
+         str(timeout), cc, '-xc', '-', '-o',
          str(path)] + flags
   if platform_id is not None:
     cmd.append(f'-DPLATFORM_ID={platform_id}')

@@ -30,7 +30,6 @@ from experimental.compilers.reachability.datasets import linux
 from experimental.compilers.reachability.datasets import opencl
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
@@ -38,9 +37,10 @@ flags.DEFINE_string(
     'sqlite:////tmp/phd/experimental/compilers/reachability/datasets/vbcd.db',
     'Path of database to populate.')
 
-flags.DEFINE_integer('vbcd_process_count', multiprocessing.cpu_count(),
-                     'The number of parallel processes to use when creating '
-                     'the dataset.')
+flags.DEFINE_integer(
+    'vbcd_process_count', multiprocessing.cpu_count(),
+    'The number of parallel processes to use when creating '
+    'the dataset.')
 
 
 def CreateControlFlowGraphsFromLlvmBytecode(
@@ -64,28 +64,29 @@ def CreateControlFlowGraphsFromLlvmBytecode(
       # Instantiate a CFG from the dot source.
       graph = llvm_util.ControlFlowGraphFromDotSource(dot)
       graph.ValidateControlFlowGraph(strict=False)
-      protos.append(reachability_pb2.ControlFlowGraphFromLlvmBytecode(
-          bytecode_id=bytecode_id,
-          cfg_id=cfg_id,
-          control_flow_graph=graph.ToProto(),
-          status=0,
-          error_message='',
-          block_count=graph.number_of_nodes(),
-          edge_count=graph.number_of_edges(),
-          is_strict_valid=graph.IsValidControlFlowGraph(strict=True)
-      ))
-    except (UnicodeDecodeError, cfg.MalformedControlFlowGraphError,
-            ValueError, opt.OptException, pyparsing.ParseException) as e:
-      protos.append(reachability_pb2.ControlFlowGraphFromLlvmBytecode(
-          bytecode_id=bytecode_id,
-          cfg_id=cfg_id,
-          control_flow_graph=reachability_pb2.ControlFlowGraph(),
-          status=1,
-          error_message=str(e),
-          block_count=0,
-          edge_count=0,
-          is_strict_valid=False,
-      ))
+      protos.append(
+          reachability_pb2.ControlFlowGraphFromLlvmBytecode(
+              bytecode_id=bytecode_id,
+              cfg_id=cfg_id,
+              control_flow_graph=graph.ToProto(),
+              status=0,
+              error_message='',
+              block_count=graph.number_of_nodes(),
+              edge_count=graph.number_of_edges(),
+              is_strict_valid=graph.IsValidControlFlowGraph(strict=True)))
+    except (UnicodeDecodeError, cfg.MalformedControlFlowGraphError, ValueError,
+            opt.OptException, pyparsing.ParseException) as e:
+      protos.append(
+          reachability_pb2.ControlFlowGraphFromLlvmBytecode(
+              bytecode_id=bytecode_id,
+              cfg_id=cfg_id,
+              control_flow_graph=reachability_pb2.ControlFlowGraph(),
+              status=1,
+              error_message=str(e),
+              block_count=0,
+              edge_count=0,
+              is_strict_valid=False,
+          ))
     except StopIteration:
       # Stop once the dot generator has nothing more to give.
       break
@@ -116,17 +117,17 @@ def PopulateControlFlowGraphTable(db: database.Database):
     # Process bytecodes in parallel.
     pool = multiprocessing.Pool(FLAGS.vbcd_process_count)
     last_commit_time = time.time()
-    for i, protos in enumerate(pool.imap_unordered(
-        CreateControlFlowGraphsFromLlvmBytecode, todo)):
+    for i, protos in enumerate(
+        pool.imap_unordered(CreateControlFlowGraphsFromLlvmBytecode, todo)):
       the_time = time.time()
       bar.update(i)
 
       # Each bytecode file can produce multiple CFGs. Construct table rows from
       # the protos returned.
       rows = [
-        database.ControlFlowGraphProto(
-            **database.ControlFlowGraphProto.FromProto(proto))
-        for proto in protos
+          database.ControlFlowGraphProto(
+              **database.ControlFlowGraphProto.FromProto(proto))
+          for proto in protos
       ]
 
       # Add the rows in a batch.
@@ -159,8 +160,7 @@ def CreateFullFlowGraphFromCfg(
         error_message='',
         block_count=graph.number_of_nodes(),
         edge_count=graph.number_of_edges(),
-        is_strict_valid=graph.IsValidControlFlowGraph(strict=True)
-    )
+        is_strict_valid=graph.IsValidControlFlowGraph(strict=True))
   except Exception as e:
     return reachability_pb2.ControlFlowGraphFromLlvmBytecode(
         bytecode_id=bytecode_id,
@@ -190,13 +190,14 @@ def PopulateFullFlowGraphTable(db: database.Database):
     # Process CFGs in parallel.
     pool = multiprocessing.Pool(FLAGS.vbcd_process_count)
     last_commit_time = time.time()
-    for i, proto in enumerate(pool.imap_unordered(
-        CreateFullFlowGraphFromCfg, todo)):
+    for i, proto in enumerate(
+        pool.imap_unordered(CreateFullFlowGraphFromCfg, todo)):
       the_time = time.time()
       bar.update(i)
 
-      s.add(database.FullFlowGraphProto(
-          **database.FullFlowGraphProto.FromProto(proto)))
+      s.add(
+          database.FullFlowGraphProto(
+              **database.FullFlowGraphProto.FromProto(proto)))
 
       # Commit every 10 seconds.
       if the_time - last_commit_time > 10:
@@ -209,32 +210,31 @@ def PopulateBytecodeTableFromGithubCSources(db: database.Database,
   language_to_clone = scrape_repos_pb2.LanguageToClone(
       language='c',
       query=[
-        scrape_repos_pb2.GitHubRepositoryQuery(
-            string="language:c sort:stars fork:false",
-            max_results=100),
+          scrape_repos_pb2.GitHubRepositoryQuery(
+              string="language:c sort:stars fork:false", max_results=100),
       ],
       destination_directory=str(tempdir),
       importer=[
-        scrape_repos_pb2.ContentFilesImporterConfig(
-            source_code_pattern=".*\\.c",
-            preprocessor=[
-              "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown",
-            ]),
-        scrape_repos_pb2.ContentFilesImporterConfig(
-            source_code_pattern=".*\\.cpp",
-            preprocessor=[
-              "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown",
-            ]),
-        scrape_repos_pb2.ContentFilesImporterConfig(
-            source_code_pattern=".*\\.cc",
-            preprocessor=[
-              "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown",
-            ]),
-        scrape_repos_pb2.ContentFilesImporterConfig(
-            source_code_pattern=".*\\.cxx",
-            preprocessor=[
-              "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown",
-            ]),
+          scrape_repos_pb2.ContentFilesImporterConfig(
+              source_code_pattern=".*\\.c",
+              preprocessor=[
+                  "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown",
+              ]),
+          scrape_repos_pb2.ContentFilesImporterConfig(
+              source_code_pattern=".*\\.cpp",
+              preprocessor=[
+                  "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown",
+              ]),
+          scrape_repos_pb2.ContentFilesImporterConfig(
+              source_code_pattern=".*\\.cc",
+              preprocessor=[
+                  "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown",
+              ]),
+          scrape_repos_pb2.ContentFilesImporterConfig(
+              source_code_pattern=".*\\.cxx",
+              preprocessor=[
+                  "datasets.github.scrape_repos.preprocessors.inliners:CxxHeadersDiscardUnknown",
+              ]),
       ])
 
   logging.info("Scraping repos ...")
@@ -244,8 +244,11 @@ def PopulateBytecodeTableFromGithubCSources(db: database.Database,
 
   # Clone repos.
   directory = pathlib.Path(language_to_clone.destination_directory)
-  meta_files = [pathlib.Path(directory / f) for f in directory.iterdir() if
-                cloner.IsRepoMetaFile(f)]
+  meta_files = [
+      pathlib.Path(directory / f)
+      for f in directory.iterdir()
+      if cloner.IsRepoMetaFile(f)
+  ]
   worker = cloner.AsyncWorker(meta_files)
   logging.info('Cloning %s repos from GitHub ...',
                humanize.intcomma(worker.max))
@@ -268,8 +271,8 @@ def PopulateBytecodeTableFromGithubCSources(db: database.Database,
     importer.ImportFromLanguage(contentfiles_db, language_to_clone, pool)
 
   logging.info("Populating bytecode table ...")
-  import_from_github.PopulateBytecodeTable(
-      contentfiles_db, language_to_clone, db)
+  import_from_github.PopulateBytecodeTable(contentfiles_db, language_to_clone,
+                                           db)
 
 
 def NowString() -> str:
@@ -288,8 +291,7 @@ def main(argv):
       .filter(database.Meta.key == 'opencl_dataset_imported').first()
   if not opencl_dataset_imported:
     logging.info("Importing OpenCL dataset ...")
-    opencl.OpenClDeviceMappingsDataset().PopulateBytecodeTable(
-        db)
+    opencl.OpenClDeviceMappingsDataset().PopulateBytecodeTable(db)
     with db.Session(commit=True) as session:
       session.add(
           database.Meta(key='opencl_dataset_imported', value=NowString()))
@@ -299,8 +301,7 @@ def main(argv):
       .filter(database.Meta.key == 'linux_sources_imported').first()
   if not linux_sources_imported:
     logging.info("Processing Linux dataset ...")
-    linux.LinuxSourcesDataset().PopulateBytecodeTable(
-        db)
+    linux.LinuxSourcesDataset().PopulateBytecodeTable(db)
     with db.Session(commit=True) as session:
       session.add(
           database.Meta(key='linux_sources_imported', value=NowString()))

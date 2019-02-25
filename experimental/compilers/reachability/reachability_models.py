@@ -9,24 +9,24 @@ from graph_nets import utils_tf as graph_net_utils_tf
 
 from experimental.compilers.reachability import control_flow_graph as cfg
 
-
 FLAGS = flags.FLAGS
 
-TargetGraphSpec = collections.namedtuple(
-    'TargetGraphSpec', ['graph', 'target_node_index'])
-
+TargetGraphSpec = collections.namedtuple('TargetGraphSpec',
+                                         ['graph', 'target_node_index'])
 
 # Functions to generate feature vectors. Features vectors are np.arrays of
 # floating point values.
+
 
 def InputGraphNodeFeatures(spec: TargetGraphSpec, node_index: int) -> np.array:
   """Extract node features for an input graph."""
   # If the node is the target node, the features are [0, 1]. Else, the features
   # are [1, 0].
   return np.array([
-    0 if node_index == spec.target_node_index else 1,
-    1 if node_index == spec.target_node_index else 0,
-  ], dtype=float)
+      0 if node_index == spec.target_node_index else 1,
+      1 if node_index == spec.target_node_index else 0,
+  ],
+                  dtype=float)
 
 
 def InputGraphEdgeFeatures(spec: TargetGraphSpec,
@@ -43,8 +43,8 @@ def TargetGraphNodeFeatures(spec: TargetGraphSpec, node_index: int):
   # If the node is reachable, the features are [0, 1]. Else, the features
   # are [1, 0].
   return np.array([
-    0 if reachable else 1,
-    1 if reachable else 0,
+      0 if reachable else 1,
+      1 if reachable else 0,
   ], dtype=float)
 
 
@@ -68,21 +68,21 @@ def GraphToInputTarget(spec: TargetGraphSpec):
 
   # Set node features.
   for node_index in input_graph.nodes():
-    input_graph.add_node(node_index,
-                         features=InputGraphNodeFeatures(spec, node_index))
+    input_graph.add_node(
+        node_index, features=InputGraphNodeFeatures(spec, node_index))
 
   for node_index in target_graph.nodes():
-    target_graph.add_node(node_index,
-                          features=TargetGraphNodeFeatures(spec, node_index))
+    target_graph.add_node(
+        node_index, features=TargetGraphNodeFeatures(spec, node_index))
 
   # Set edge features.
   for edge_index in input_graph.edges():
-    input_graph.add_edge(*edge_index,
-                         features=InputGraphEdgeFeatures(spec, edge_index))
+    input_graph.add_edge(
+        *edge_index, features=InputGraphEdgeFeatures(spec, edge_index))
 
   for edge_index in target_graph.edges():
-    target_graph.add_edge(*edge_index,
-                          features=TargetGraphEdgeFeatures(spec, edge_index))
+    target_graph.add_edge(
+        *edge_index, features=TargetGraphEdgeFeatures(spec, edge_index))
 
   # Set global (graph) features.
   input_graph.graph['features'] = np.array([0.0])

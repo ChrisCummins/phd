@@ -8,7 +8,6 @@ from sqlalchemy.ext import declarative
 from experimental.compilers.reachability import reachability_pb2
 from labm8 import sqlutil
 
-
 FLAGS = flags.FLAGS
 
 Base = declarative.declarative_base()
@@ -35,11 +34,11 @@ class LlvmBytecode(Base, sqlutil.ProtoBackedMixin,
   charcount: int = sql.Column(sql.Integer, nullable=False)
   linecount: int = sql.Column(sql.Integer, nullable=False)
   bytecode: str = sql.Column(
-      sql.UnicodeText().with_variant(sql.UnicodeText(2 ** 31), 'mysql'),
+      sql.UnicodeText().with_variant(sql.UnicodeText(2**31), 'mysql'),
       nullable=False)
   clang_returncode: int = sql.Column(sql.Integer, nullable=False)
   error_message: str = sql.Column(
-      sql.UnicodeText().with_variant(sql.UnicodeText(2 ** 31), 'mysql'),
+      sql.UnicodeText().with_variant(sql.UnicodeText(2**31), 'mysql'),
       nullable=False)
 
   # TODO(cec): Add unique constraint on source_name and relpath.
@@ -48,15 +47,15 @@ class LlvmBytecode(Base, sqlutil.ProtoBackedMixin,
   def FromProto(cls, proto: proto_t) -> typing.Dict[str, typing.Any]:
     """Return a dictionary of instance constructor args from proto."""
     return {
-      'source_name': proto.source_name,
-      'relpath': proto.relpath,
-      'language': proto.lang,
-      'cflags': proto.cflags,
-      'charcount': len(proto.bytecode),
-      'linecount': len(proto.bytecode.split('\n')),
-      'bytecode': proto.bytecode,
-      'clang_returncode': proto.clang_returncode,
-      'error_message': proto.error_message,
+        'source_name': proto.source_name,
+        'relpath': proto.relpath,
+        'language': proto.lang,
+        'cflags': proto.cflags,
+        'charcount': len(proto.bytecode),
+        'linecount': len(proto.bytecode.split('\n')),
+        'bytecode': proto.bytecode,
+        'clang_returncode': proto.clang_returncode,
+        'error_message': proto.error_message,
     }
 
 
@@ -68,20 +67,18 @@ class ControlFlowGraphProto(Base, sqlutil.ProtoBackedMixin,
 
   bytecode_id: int = sql.Column(
       sql.Integer, sql.ForeignKey(LlvmBytecode.id), nullable=False)
-  cfg_id: int = sql.Column(
-      sql.Integer, nullable=False)
+  cfg_id: int = sql.Column(sql.Integer, nullable=False)
 
   # Composite primary key.
-  __table_args__ = (
-    sql.PrimaryKeyConstraint('bytecode_id', 'cfg_id', name='unique_id'),
-  )
+  __table_args__ = (sql.PrimaryKeyConstraint(
+      'bytecode_id', 'cfg_id', name='unique_id'),)
 
   status: int = sql.Column(sql.Integer, nullable=False)
   proto: str = sql.Column(
-      sql.UnicodeText().with_variant(sql.UnicodeText(2 ** 31), 'mysql'),
+      sql.UnicodeText().with_variant(sql.UnicodeText(2**31), 'mysql'),
       nullable=False)
   error_message: str = sql.Column(
-      sql.UnicodeText().with_variant(sql.UnicodeText(2 ** 31), 'mysql'),
+      sql.UnicodeText().with_variant(sql.UnicodeText(2**31), 'mysql'),
       nullable=False)
   block_count: int = sql.Column(sql.Integer, nullable=False)
   edge_count: int = sql.Column(sql.Integer, nullable=False)
@@ -91,14 +88,14 @@ class ControlFlowGraphProto(Base, sqlutil.ProtoBackedMixin,
   def FromProto(cls, proto: proto_t) -> typing.Dict[str, typing.Any]:
     """Return a dictionary of instance constructor args from proto."""
     return {
-      'bytecode_id': proto.bytecode_id,
-      'cfg_id': proto.cfg_id,
-      'proto': proto.control_flow_graph,
-      'status': proto.status,
-      'error_message': proto.error_message,
-      'block_count': proto.block_count,
-      'edge_count': proto.edge_count,
-      'is_strict_valid': proto.is_strict_valid,
+        'bytecode_id': proto.bytecode_id,
+        'cfg_id': proto.cfg_id,
+        'proto': proto.control_flow_graph,
+        'status': proto.status,
+        'error_message': proto.error_message,
+        'block_count': proto.block_count,
+        'edge_count': proto.edge_count,
+        'is_strict_valid': proto.is_strict_valid,
     }
 
 
@@ -108,25 +105,23 @@ class FullFlowGraphProto(Base, sqlutil.ProtoBackedMixin,
 
   proto_t = reachability_pb2.ControlFlowGraphFromLlvmBytecode
 
-  bytecode_id: int = sql.Column(
-      sql.Integer, nullable=False)
-  cfg_id: int = sql.Column(
-      sql.Integer, nullable=False)
+  bytecode_id: int = sql.Column(sql.Integer, nullable=False)
+  cfg_id: int = sql.Column(sql.Integer, nullable=False)
 
   # Composite primary key.
   __table_args__ = (
-    sql.ForeignKeyConstraint(
-        ['bytecode_id', 'cfg_id'],
-        [ControlFlowGraphProto.bytecode_id, ControlFlowGraphProto.cfg_id]),
-    sql.PrimaryKeyConstraint('bytecode_id', 'cfg_id', name='unique_id'),
+      sql.ForeignKeyConstraint(
+          ['bytecode_id', 'cfg_id'],
+          [ControlFlowGraphProto.bytecode_id, ControlFlowGraphProto.cfg_id]),
+      sql.PrimaryKeyConstraint('bytecode_id', 'cfg_id', name='unique_id'),
   )
 
   status: int = sql.Column(sql.Integer, nullable=False)
   serialized_proto: str = sql.Column(
-      sql.LargeBinary().with_variant(sql.LargeBinary(2 ** 31), 'mysql'),
+      sql.LargeBinary().with_variant(sql.LargeBinary(2**31), 'mysql'),
       nullable=False)
   error_message: str = sql.Column(
-      sql.UnicodeText().with_variant(sql.UnicodeText(2 ** 31), 'mysql'),
+      sql.UnicodeText().with_variant(sql.UnicodeText(2**31), 'mysql'),
       nullable=False)
   block_count: int = sql.Column(sql.Integer, nullable=False)
   edge_count: int = sql.Column(sql.Integer, nullable=False)
@@ -136,14 +131,14 @@ class FullFlowGraphProto(Base, sqlutil.ProtoBackedMixin,
   def FromProto(cls, proto: proto_t) -> typing.Dict[str, typing.Any]:
     """Return a dictionary of instance constructor args from proto."""
     return {
-      'bytecode_id': proto.bytecode_id,
-      'cfg_id': proto.cfg_id,
-      'serialized_proto': proto.control_flow_graph.SerializeToString(),
-      'status': proto.status,
-      'error_message': proto.error_message,
-      'block_count': proto.block_count,
-      'edge_count': proto.edge_count,
-      'is_strict_valid': proto.is_strict_valid,
+        'bytecode_id': proto.bytecode_id,
+        'cfg_id': proto.cfg_id,
+        'serialized_proto': proto.control_flow_graph.SerializeToString(),
+        'status': proto.status,
+        'error_message': proto.error_message,
+        'block_count': proto.block_count,
+        'edge_count': proto.edge_count,
+        'is_strict_valid': proto.is_strict_valid,
     }
 
 

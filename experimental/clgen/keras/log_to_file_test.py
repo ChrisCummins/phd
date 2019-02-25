@@ -6,7 +6,6 @@ from absl import logging
 
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 

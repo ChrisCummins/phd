@@ -11,21 +11,14 @@ from experimental.compilers.random_opt import environments
 from experimental.compilers.random_opt import implementation as implementation
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string(
-    'env', environments.DEFAULT_ENV_ID,
-    'The name of the environment to use.')
-flags.DEFINE_integer(
-    'num_episodes', 10,
-    'The number of episodes to run for.')
-flags.DEFINE_integer(
-    'max_steps', 200,
-    'The maximum number of steps per episode.')
-flags.DEFINE_boolean(
-    'render', True,
-    'Render the environment after every step.')
+flags.DEFINE_string('env', environments.DEFAULT_ENV_ID,
+                    'The name of the environment to use.')
+flags.DEFINE_integer('num_episodes', 10, 'The number of episodes to run for.')
+flags.DEFINE_integer('max_steps', 200,
+                     'The maximum number of steps per episode.')
+flags.DEFINE_boolean('render', True, 'Render the environment after every step.')
 flags.DEFINE_string(
     'proto_out', '/tmp/phd/experimental/compilers/random_opt/random_opt.pbtxt',
     'The output path to write experiment proto to.')

@@ -14,7 +14,6 @@ from keras import models
 
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 

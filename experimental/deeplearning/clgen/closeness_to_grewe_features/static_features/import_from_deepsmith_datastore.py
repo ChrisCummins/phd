@@ -16,7 +16,6 @@ from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
 from labm8 import sqlutil
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
@@ -27,12 +26,11 @@ flags.DEFINE_string('datastore', None,
                     'Path of the datastore config to import form')
 flags.DEFINE_integer('batch_size', 256,
                      'The number of testcases to process in a batch.')
-flags.DEFINE_integer('start_at', 0,
-                     'The initial offset into the results set.')
+flags.DEFINE_integer('start_at', 0, 'The initial offset into the results set.')
 
 
-def CreateTempFileFromTestcase(
-    tempdir: pathlib.Path, tc: testcase.Testcase) -> pathlib.Path:
+def CreateTempFileFromTestcase(tempdir: pathlib.Path,
+                               tc: testcase.Testcase) -> pathlib.Path:
   """Write testcase to a file in directory."""
   path = tempdir / f'{tc.id}.cl'
   with open(path, 'w') as f:
@@ -53,12 +51,12 @@ def main(argv: typing.List[str]):
 
   with ds.Session(commit=False) as session:
     generator_id = session.query(generator.Generator.id).filter(
-      generator.Generator.name == 'clgen').first()
+        generator.Generator.name == 'clgen').first()
     if not generator_id:
       raise app.UsageError('Datastore contains no CLgen generator')
 
     toolchain_id = session.query(toolchain.Toolchain.id).filter(
-      toolchain.Toolchain.string == 'opencl').first()
+        toolchain.Toolchain.string == 'opencl').first()
     if not toolchain_id:
       raise app.UsageError('Datastore contains no opencl toolchain')
 
@@ -68,7 +66,9 @@ def main(argv: typing.List[str]):
       .order_by(testcase.Testcase.id)
 
     batches = sqlutil.OffsetLimitBatchedQuery(
-        q, batch_size=FLAGS.batch_size, start_at=FLAGS.start_at,
+        q,
+        batch_size=FLAGS.batch_size,
+        start_at=FLAGS.start_at,
         compute_max_rows=True)
 
     for batch in batches:
@@ -79,8 +79,7 @@ def main(argv: typing.List[str]):
       prefix = 'phd_experimental_deeplearning_clgen_'
       with tempfile.TemporaryDirectory(prefix=prefix) as d:
         d = pathlib.Path(d)
-        paths_to_import = [
-          CreateTempFileFromTestcase(d, r) for r in batch.rows]
+        paths_to_import = [CreateTempFileFromTestcase(d, r) for r in batch.rows]
         db.ImportStaticFeaturesFromPaths(paths_to_import, 'clgen_dsmith')
   logging.info('done')
 

@@ -3,7 +3,6 @@ from absl import app
 from absl import flags
 from absl import logging
 
-
 FLAGS = flags.FLAGS
 
 
@@ -45,9 +44,9 @@ class Loop(Statement):
 
   def __repr__(self) -> str:
     return '\n'.join([
-      f'for (int {self.iterator} = 0; {self.iterator} < {self.max_iter}; ++{self.iterator}) {{',
-      '\n'.join(f'  {l}' for l in str(self.loop_body).split('\n')),
-      '}',
+        f'for (int {self.iterator} = 0; {self.iterator} < {self.max_iter}; ++{self.iterator}) {{',
+        '\n'.join(f'  {l}' for l in str(self.loop_body).split('\n')),
+        '}',
     ])
 
   def Finalize(self, ctx: Context):

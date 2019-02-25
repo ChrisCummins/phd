@@ -41,8 +41,9 @@ def create_results_metas(s: session_t):
   class Worker(threading.Thread):
     """ worker thread to run testcases asynchronously """
 
-    def __init__(self, testbeds_harnesses: List[
-      Tuple['Testbed.id_t', 'Harnesses.column_t']]):
+    def __init__(
+        self,
+        testbeds_harnesses: List[Tuple['Testbed.id_t', 'Harnesses.column_t']]):
       self.ndone = 0
       self.testbeds_harnesses = testbeds_harnesses
       super(Worker, self).__init__()
@@ -83,9 +84,8 @@ ORDER BY programs.date, testcases.threads_id""")
     .order_by(Testcase.harness, Result.testbed_id) \
     .all()
 
-  bar = progressbar.ProgressBar(initial_value=0,
-                                max_value=len(testbeds_harnesses),
-                                redirect_stdout=True)
+  bar = progressbar.ProgressBar(
+      initial_value=0, max_value=len(testbeds_harnesses), redirect_stdout=True)
   worker = Worker(testbeds_harnesses)
   worker.start()
   while worker.is_alive():
@@ -225,6 +225,7 @@ AND stdout_id <> maj_stdout_id
 
 
 def prune_awo_classifications(s: session_t) -> None:
+
   def testcases_to_verify(session: session_t) -> query_t:
     q = session.query(Result.testcase_id) \
       .join(Classification) \
@@ -252,8 +253,8 @@ def prune_awo_classifications(s: session_t) -> None:
 
   print("Verifying awo-classified testcases ...")
   ntodo = testcases_to_verify(s).count()
-  bar = progressbar.ProgressBar(initial_value=0, max_value=ntodo,
-                                redirect_stdout=True)
+  bar = progressbar.ProgressBar(
+      initial_value=0, max_value=ntodo, redirect_stdout=True)
   worker = Worker()
   worker.start()
   while worker.is_alive():
@@ -293,6 +294,7 @@ def verify_opencl_version(s: session_t, testcase: Testcase) -> None:
 
 
 def prune_abf_classifications(s: session_t) -> None:
+
   def prune_stderr_like(like):
     q = s.query(Result.id) \
       .join(Classification) \
@@ -350,8 +352,8 @@ def prune_abf_classifications(s: session_t) -> None:
   # Verify results
   print("Verifying abf-classified testcases ...")
   ntodo = testcases_to_verify(s).count()
-  bar = progressbar.ProgressBar(initial_value=0, max_value=ntodo,
-                                redirect_stdout=True)
+  bar = progressbar.ProgressBar(
+      initial_value=0, max_value=ntodo, redirect_stdout=True)
   worker = Worker()
   worker.start()
   while worker.is_alive():
@@ -360,6 +362,7 @@ def prune_abf_classifications(s: session_t) -> None:
 
 
 def prune_arc_classifications(s: session_t) -> None:
+
   def prune_stderr_like(like):
     q = s.query(Result.id) \
       .join(Classification) \
@@ -405,8 +408,8 @@ def prune_arc_classifications(s: session_t) -> None:
   # Verify testcases
   print("Verifying arc-classified testcases ...")
   ntodo = testcases_to_verify(s).count()
-  bar = progressbar.ProgressBar(initial_value=0, max_value=ntodo,
-                                redirect_stdout=True)
+  bar = progressbar.ProgressBar(
+      initial_value=0, max_value=ntodo, redirect_stdout=True)
   worker = Worker()
   worker.start()
   while worker.is_alive():

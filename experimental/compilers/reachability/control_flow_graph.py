@@ -8,7 +8,6 @@ from experimental.compilers.reachability import reachability_pb2
 from labm8 import pbutil
 from labm8.pbutil import ProtocolBuffer
 
-
 FLAGS = flags.FLAGS
 
 
@@ -17,37 +16,48 @@ class MalformedControlFlowGraphError(ValueError):
   pass
 
 
-class NotEnoughNodes(MalformedControlFlowGraphError): pass
+class NotEnoughNodes(MalformedControlFlowGraphError):
+  pass
 
 
-class GraphContainsSelfLoops(MalformedControlFlowGraphError): pass
+class GraphContainsSelfLoops(MalformedControlFlowGraphError):
+  pass
 
 
-class UnconnectedNode(MalformedControlFlowGraphError): pass
+class UnconnectedNode(MalformedControlFlowGraphError):
+  pass
 
 
-class InvalidNodeDegree(MalformedControlFlowGraphError): pass
+class InvalidNodeDegree(MalformedControlFlowGraphError):
+  pass
 
 
-class MissingNodeName(MalformedControlFlowGraphError): pass
+class MissingNodeName(MalformedControlFlowGraphError):
+  pass
 
 
-class DuplicateNodeName(MalformedControlFlowGraphError): pass
+class DuplicateNodeName(MalformedControlFlowGraphError):
+  pass
 
 
-class InvalidSpecialBlock(MalformedControlFlowGraphError): pass
+class InvalidSpecialBlock(MalformedControlFlowGraphError):
+  pass
 
 
-class NoEntryBlock(InvalidSpecialBlock): pass
+class NoEntryBlock(InvalidSpecialBlock):
+  pass
 
 
-class MultipleEntryBlocks(InvalidSpecialBlock): pass
+class MultipleEntryBlocks(InvalidSpecialBlock):
+  pass
 
 
-class NoExitBlock(InvalidSpecialBlock): pass
+class NoExitBlock(InvalidSpecialBlock):
+  pass
 
 
-class MultipleExitBlocks(InvalidSpecialBlock): pass
+class MultipleExitBlocks(InvalidSpecialBlock):
+  pass
 
 
 class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):

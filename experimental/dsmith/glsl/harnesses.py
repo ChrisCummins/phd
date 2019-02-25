@@ -73,11 +73,12 @@ class GlslHarness(Harness):
             f"{self}:{generator} testcases")
 
       # Bulk insert new testcases:
-      s.add_all(Testcase(
-          program_id=program.id,
-          harness=self.id,
-          timeout=self.default_timeout,
-      ) for program in todo)
+      s.add_all(
+          Testcase(
+              program_id=program.id,
+              harness=self.id,
+              timeout=self.default_timeout,
+          ) for program in todo)
       s.commit()
 
   def testbeds(self, session: session_t = None) -> List[TestbedProxy]:
@@ -93,7 +94,9 @@ class GlslHarness(Harness):
       s.commit()
       return sorted(TestbedProxy(testbed) for testbed in testbeds)
 
-  def num_results(self, generator: Generator, testbed: str,
+  def num_results(self,
+                  generator: Generator,
+                  testbed: str,
                   session: session_t = None):
     with ReuseSession(session) as s:
       testbed_ = Testbed.from_str(testbed, session=s)[0]
@@ -113,9 +116,9 @@ class GlslFrag(GlslHarness):
   """
   __name__ = "glsl_frag"
   __generators__ = {
-    "randchar": generators.RandChar,
-    "github": generators.GitHub,
-    "dsmith": generators.DSmith,
+      "randchar": generators.RandChar,
+      "github": generators.GitHub,
+      "dsmith": generators.DSmith,
   }
 
   id = Harnesses.GLSLANG_FRAG
@@ -125,21 +128,25 @@ class GlslFrag(GlslHarness):
           testbed: Testbed) -> ResultProxy:
     """ execute a testcase """
 
-    with NamedTemporaryFile(prefix='dsmith-glsl-', suffix='.frag',
-                            delete=False) as tmp:
+    with NamedTemporaryFile(
+        prefix='dsmith-glsl-', suffix='.frag', delete=False) as tmp:
       tmp.write(testcase.program.src.encode("utf-8"))
       tmp.flush()
       path = tmp.name
 
-    cmd = [testbed.platform.platform,
-           dsmith.root_path("third_party", "glsl", "my.conf"), path]
+    cmd = [
+        testbed.platform.platform,
+        dsmith.root_path("third_party", "glsl", "my.conf"), path
+    ]
     # TODO: testbed.optimizations
     logging.debug(f"{Colors.BOLD}${Colors.END} " + " ".join(cmd))
 
     try:
       start_time = time()
       process = subprocess.Popen(
-          cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+          cmd,
+          stdout=subprocess.PIPE,
+          stderr=subprocess.PIPE,
           universal_newlines=True)
       stdout, stderr = process.communicate()
       runtime = time() - start_time

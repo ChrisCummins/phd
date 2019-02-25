@@ -7,7 +7,6 @@ from absl import flags
 
 from experimental.compilers.reachability import control_flow_graph as cfg
 
-
 FLAGS = flags.FLAGS
 
 
@@ -76,8 +75,8 @@ class ControlFlowGraphGenerator(object):
   """A generator for control flow graphs."""
 
   def __init__(self, rand: np.random.RandomState,
-               num_nodes_min_max: typing.Tuple[int, int],
-               edge_density: float, strict: bool):
+               num_nodes_min_max: typing.Tuple[int, int], edge_density: float,
+               strict: bool):
     """Instantiate a control flow graph generator.
 
     Args:
@@ -141,7 +140,9 @@ class ControlFlowGraphGenerator(object):
     graph.nodes[exit_block]['exit'] = True
 
     # Generate an adjacency matrix of random binary values.
-    adjacency_matrix = self._rand.choice([False, True], size=(num_nodes, num_nodes), p=(0.9, 0.1))
+    adjacency_matrix = self._rand.choice([False, True],
+                                         size=(num_nodes, num_nodes),
+                                         p=(0.9, 0.1))
 
     # Helper methods.
 

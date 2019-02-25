@@ -32,14 +32,14 @@ class Glsl(Language):
   __name__ = "glsl"
 
   __generators__ = {
-    None: RandChar,
-    "randchar": RandChar,
-    "dsmith": DSmith,
-    "github": GitHub,
+      None: RandChar,
+      "randchar": RandChar,
+      "dsmith": DSmith,
+      "github": GitHub,
   }
 
   __harnesses__ = {
-    "glsl_frag": GlslFrag,
+      "glsl_frag": GlslFrag,
   }
 
   def __init__(self):
@@ -49,12 +49,14 @@ class Glsl(Language):
   def mktestbeds(self, string: str) -> List[Testbed]:
     """ Instantiate testbed(s) by name """
     with Session() as s:
-      return [TestbedProxy(testbed) for testbed in
-              Testbed.from_str(string, session=s)]
+      return [
+          TestbedProxy(testbed)
+          for testbed in Testbed.from_str(string, session=s)
+      ]
 
-  def run_testcases(self, testbeds: List[str],
-                    pairs: typing.List[
-                      typing.Tuple[Generator, Harness]]) -> None:
+  def run_testcases(
+      self, testbeds: List[str],
+      pairs: typing.List[typing.Tuple[Generator, Harness]]) -> None:
     with Session() as s:
       for generator, harness in pairs:
         for testbed_name in testbeds:
@@ -65,8 +67,8 @@ class Glsl(Language):
                         file=sys.stdout) -> None:
     with Session() as s:
       if not available_only:
-        print(f"The following {self} testbeds are in the data store:",
-              file=file)
+        print(
+            f"The following {self} testbeds are in the data store:", file=file)
         for harness in sorted(self.harnesses):
           for testbed in sorted(harness.testbeds()):
             print(
@@ -74,8 +76,9 @@ class Glsl(Language):
                 file=file)
         print(file=file)
 
-      print(f"The following {self} testbeds are available on this machine:",
-            file=file)
+      print(
+          f"The following {self} testbeds are available on this machine:",
+          file=file)
       for harness in sorted(self.harnesses):
         for testbed in sorted(harness.available_testbeds()):
           print(f"    {harness} {testbed} {testbed.platform}", file=file)

@@ -13,7 +13,6 @@ from deeplearning.clgen.corpuses import atomizers
 from experimental.compilers.reachability import train_model
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 
 
@@ -38,8 +37,8 @@ def main(argv):
   with open(model_dir / 'model.json') as f:
     model: keras.models.Model = keras.models.model_from_json(f.read())
 
-  model.compile(loss='binary_crossentropy', metrics=['accuracy'],
-                optimizer='adam')
+  model.compile(
+      loss='binary_crossentropy', metrics=['accuracy'], optimizer='adam')
   model.summary()
   print(f'Total training time: {training_time_natural} '
         f'({time_per_epoch_natural} per epoch).')
@@ -64,18 +63,20 @@ def main(argv):
         f'{num_nodes_natural} nodes each.')
 
   num_connections_training = sum(
-      sum(len(n.child) for n in entry.graph.node)
+      sum(len(n.child)
+          for n in entry.graph.node)
       for entry in training_data.entry)
   num_connections_testing = sum(
-      sum(len(n.child) for n in entry.graph.node)
+      sum(len(n.child)
+          for n in entry.graph.node)
       for entry in testing_data.entry)
 
   print('Average graph connections: {:.1f} training ({:.1f} per node), '
         '{:.1f} testing ({:.1f} per node).'.format(
-      num_connections_training / len(training_data.entry),
-      num_connections_training / (len(training_data.entry) * num_nodes),
-      num_connections_testing / len(testing_data.entry),
-      num_connections_testing / (len(testing_data.entry) * num_nodes)))
+            num_connections_training / len(training_data.entry),
+            num_connections_training / (len(training_data.entry) * num_nodes),
+            num_connections_testing / len(testing_data.entry),
+            num_connections_testing / (len(testing_data.entry) * num_nodes)))
 
   sequence_length = train_model.GetSequenceLength(
       len(training_data.entry[0].graph.node))
@@ -86,30 +87,30 @@ def main(argv):
 
   print('Vocabulary size:', atomizer.vocab_size)
 
-  seqs = [train_model.ControlFlowGraphToSequence(entry.graph) for entry in
-          data.entry]
+  seqs = [
+      train_model.ControlFlowGraphToSequence(entry.graph)
+      for entry in data.entry
+  ]
   num_uniq_seqs = len(set(seqs))
   print('Unique sequences: {} of {} ({:.2f}%)'.format(
-      humanize.intcomma(num_uniq_seqs),
-      humanize.intcomma(len(seqs)), (num_uniq_seqs / len(seqs)) * 100))
+      humanize.intcomma(num_uniq_seqs), humanize.intcomma(len(seqs)),
+      (num_uniq_seqs / len(seqs)) * 100))
   num_uniq_labels = len(
       set([''.join(str(x) for x in e.reachable) for e in data.entry]))
   print('Unique labels: {} of {} ({:.2f}%)'.format(
-      humanize.intcomma(num_uniq_labels),
-      humanize.intcomma(len(seqs)),
+      humanize.intcomma(num_uniq_labels), humanize.intcomma(len(seqs)),
       (num_uniq_labels / len(seqs)) * 100))
 
-  test_x, test_y = train_model.ProtosToModelData(
-      testing_data, sequence_length, atomizer)
+  test_x, test_y = train_model.ProtosToModelData(testing_data, sequence_length,
+                                                 atomizer)
 
   zero_r_acc = sum(sum(x) for x in test_y) / len(testing_data.entry) / num_nodes
   zero_r_acc = max(zero_r_acc[0], 1 - zero_r_acc[0])
   print('Zero-R accuracy: {:.2%}'.format(zero_r_acc))
 
-  row = model.evaluate(
-      test_x, test_y, batch_size=FLAGS.batch_size, verbose=0)
-  overall_loss, losses, accuracies = (
-    row[0], row[1:1 + num_nodes], row[num_nodes + 1:])
+  row = model.evaluate(test_x, test_y, batch_size=FLAGS.batch_size, verbose=0)
+  overall_loss, losses, accuracies = (row[0], row[1:1 + num_nodes],
+                                      row[num_nodes + 1:])
   print('Accuracy: {:.2%}'.format(sum(accuracies) / len(accuracies)))
   print('Accuracy (excluding first class): {:.2%}'.format(
       sum(accuracies[1:]) / len(accuracies[1:])))

@@ -26,7 +26,6 @@ from absl import flags
 
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 

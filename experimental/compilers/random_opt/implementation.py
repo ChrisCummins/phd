@@ -27,7 +27,6 @@ from labm8 import labdate
 from labm8 import pbutil
 from labm8 import text
 
-
 # WARNING: No flags can be defined in this file, because it is loaded at runtime
 # by gym to resolve string entry points.
 FLAGS = flags.FLAGS
@@ -161,9 +160,9 @@ class Environment(gym.Env):
   def _MakeVariableSubstitution(self, cmd: str) -> str:
     """Perform make variable substitution on the given string."""
     substitutions = {
-      '$@': str(self.binary_path),
-      '$<': str(self.working_bytecode_path),
-      '@D': str(self.working_dir),
+        '$@': str(self.binary_path),
+        '$<': str(self.working_bytecode_path),
+        '@D': str(self.working_dir),
     }
     for src, dst in substitutions.items():
       cmd = cmd.replace(src, dst)
@@ -199,17 +198,18 @@ class LlvmOptEnv(Environment):
     self.RunBinary()
     if not self.BinaryIsValid():
       raise ValueError(f"Failed to validate base binary.")
-    self.episodes.append(random_opt_pb2.Episode(step=[
-      random_opt_pb2.Step(
-          start_time_epoch_ms=start_time,
-          status=random_opt_pb2.Step.PASS,
-          binary_runtime_ms=self.GetRuntimes(),
-          reward=0,
-          total_reward=0,
-          speedup=1.0,
-          total_speedup=1.0,
-      )
-    ]))
+    self.episodes.append(
+        random_opt_pb2.Episode(step=[
+            random_opt_pb2.Step(
+                start_time_epoch_ms=start_time,
+                status=random_opt_pb2.Step.PASS,
+                binary_runtime_ms=self.GetRuntimes(),
+                reward=0,
+                total_reward=0,
+                speedup=1.0,
+                total_speedup=1.0,
+            )
+        ]))
     self.episodes[-1].step[0].total_step_runtime_ms = (
         labdate.MillisecondsTimestamp() - start_time)
 
@@ -222,10 +222,10 @@ class LlvmOptEnv(Environment):
     Returns:
       The outfile.
     """
-    bin_changed = (
-      'changed' if self.episodes[-1].step[-1].binary_changed else 'unchanged')
-    bytecode_changed = (
-      'changed' if self.episodes[-1].step[-1].bytecode_changed else 'unchanged')
+    bin_changed = ('changed' if self.episodes[-1].step[-1].binary_changed else
+                   'unchanged')
+    bytecode_changed = ('changed' if self.episodes[-1].step[-1].bytecode_changed
+                        else 'unchanged')
     outfile.write(f'''\
 ==================================================
 EPISODE #{len(self.episodes)}, STEP #{len(self.episodes[-1].step) - 1}:
@@ -298,8 +298,8 @@ EPISODE #{len(self.episodes)}, STEP #{len(self.episodes[-1].step) - 1}:
             (sum(step.binary_runtime_ms) / len(step.binary_runtime_ms)))
         step.total_speedup = (
             (sum(self.episodes[-1].step[0].binary_runtime_ms) / len(
-                self.episodes[-1].step[0].binary_runtime_ms)) / (
-                sum(step.binary_runtime_ms) / len(step.binary_runtime_ms)))
+                self.episodes[-1].step[0].binary_runtime_ms)) /
+            (sum(step.binary_runtime_ms) / len(step.binary_runtime_ms)))
       else:
         step.status = random_opt_pb2.Step.EVAL_FAILED
 
@@ -323,9 +323,7 @@ EPISODE #{len(self.episodes)}, STEP #{len(self.episodes[-1].step) - 1}:
 
   def ToProto(self) -> random_opt_pb2.Experiment:
     """Return proto representation of environment."""
-    return random_opt_pb2.Experiment(
-        env=self.config,
-        episode=self.episodes)
+    return random_opt_pb2.Experiment(env=self.config, episode=self.episodes)
 
   @staticmethod
   def Reward(status: pbutil.Enum, speedup: typing.Optional[float]) -> float:
@@ -390,11 +388,11 @@ class LlvmOptDelayedRewardEnv(LlvmOptEnv):
     shutil.copyfile(self.bytecode_path, self.working_bytecode_path)
     clang.Compile([self.bytecode_path], self.binary_path, copts=['-O0'])
     self.RunSetupCommand()
-    self.episodes.append(random_opt_pb2.DelayedRewardEpisode(
-        step=[random_opt_pb2.DelayedRewardStep(
-            start_time_epoch_ms=labdate.MillisecondsTimestamp(),
-        )]
-    ))
+    self.episodes.append(
+        random_opt_pb2.DelayedRewardEpisode(step=[
+            random_opt_pb2.DelayedRewardStep(
+                start_time_epoch_ms=labdate.MillisecondsTimestamp(),)
+        ]))
 
   def step(self, action: int) -> Environment.step_t:
     """Perform the given action and return a step_t."""
@@ -436,11 +434,10 @@ class LlvmOptDelayedRewardEnv(LlvmOptEnv):
 
   def EndEpisodeStep(self) -> random_opt_pb2.DelayedRewardStep:
     start_ms = labdate.MillisecondsTimestamp()
-    step = random_opt_pb2.DelayedRewardStep(
-        start_time_epoch_ms=start_ms,
-    )
+    step = random_opt_pb2.DelayedRewardStep(start_time_epoch_ms=start_ms,)
     try:
-      clang.Compile([self.working_bytecode_path], self.binary_path,
+      clang.Compile([self.working_bytecode_path],
+                    self.binary_path,
                     copts=['-O0'])
       try:
         runtimes = self.GetRuntimes()
@@ -449,7 +446,7 @@ class LlvmOptDelayedRewardEnv(LlvmOptEnv):
           step.reward = self.runtime_reward(sum(runtimes) / len(runtimes))
         else:
           self.episodes[-1].outcome = (
-            random_opt_pb2.DelayedRewardEpisode.EVAL_FAILED)
+              random_opt_pb2.DelayedRewardEpisode.EVAL_FAILED)
           step.reward = self.eval_failed_reward
       except ValueError as e:
         self.episodes[-1].outcome = random_opt_pb2.Step.EXEC_FAILED
@@ -457,7 +454,7 @@ class LlvmOptDelayedRewardEnv(LlvmOptEnv):
         step.reward = self.exec_failed_reward
     except clang.ClangException as e:
       self.episodes[-1].outcome = (
-        random_opt_pb2.DelayedRewardEpisode.COMPILE_FAILED)
+          random_opt_pb2.DelayedRewardEpisode.COMPILE_FAILED)
       self.episodes[-1].outcome_error_msg = text.truncate(str(e), 255)
       step.reward = self.compile_failed_reward
 
@@ -469,14 +466,12 @@ class LlvmOptDelayedRewardEnv(LlvmOptEnv):
   def ToProto(self) -> random_opt_pb2.DelayedRewardExperiment:
     """Return proto representation of environment."""
     return random_opt_pb2.DelayedRewardExperiment(
-        env=self.config,
-        episode=self.episodes)
+        env=self.config, episode=self.episodes)
 
   def render(self, outfile=sys.stdout):
     """Render text representation of environment."""
     episode, step = self.episodes[-1], self.episodes[-1].step[-1]
-    bytecode_changed = (
-      'changed' if step.bytecode_changed else 'unchanged')
+    bytecode_changed = ('changed' if step.bytecode_changed else 'unchanged')
     outfile.write(f'''\
 ==================================================
 EPISODE #{len(self.episodes)}, STEP #{len(episode.step) - 1}:
@@ -486,14 +481,12 @@ EPISODE #{len(self.episodes)}, STEP #{len(episode.step) - 1}:
   Reward: {step.reward}.
 ''')
     if step.opt_error_msg:
-      outfile.write(
-          f'  Opt error: {step.opt_error_msg}\n')
+      outfile.write(f'  Opt error: {step.opt_error_msg}\n')
     if len(episode.step) and not step.opt_pass:
       outcome = random_opt_pb2.DelayedRewardEpisode.Outcome.Name(
           episode.outcome)
       total_reward = sum(step.reward for step in episode.step)
-      outfile.write(
-          f'''\
+      outfile.write(f'''\
   Runtimes: {episode.binary_runtime_ms}
   Outcome: {outcome}
   Total reward: {total_reward}
@@ -528,14 +521,16 @@ def ProduceBytecodeFromSources(
   with tempfile.TemporaryDirectory() as d:
     d = pathlib.Path(d)
     input_srcs = [
-      d / (crypto.sha256_str(str(src)) + '.l') for src in input_paths]
+        d / (crypto.sha256_str(str(src)) + '.l') for src in input_paths
+    ]
     for src, input_src in zip(input_paths, input_srcs):
-      clang.Compile([src], input_src,
+      clang.Compile([src],
+                    input_src,
                     copts=copts + ['-O0', '-emit-llvm', '-S', '-c'],
                     timeout_seconds=timeout_seconds)
     # Link the separate bytecode files.
-    llvm_link.LinkBitcodeFilesToBytecode(input_srcs, output_path, linkopts,
-                                         timeout_seconds=timeout_seconds)
+    llvm_link.LinkBitcodeFilesToBytecode(
+        input_srcs, output_path, linkopts, timeout_seconds=timeout_seconds)
   return output_path
 
 

@@ -24,7 +24,6 @@ from clgen import log
 
 from labm8 import fs
 
-
 __description__ = """
 Merge kernel datasets.
 """

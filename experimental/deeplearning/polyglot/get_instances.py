@@ -13,23 +13,22 @@ from deeplearning.clgen.proto import sampler_pb2
 from labm8 import bazelutil
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string(
-    'working_dir', '/mnt/cc/data/experimental/deeplearning/polyglot/clgen',
-    'Path to CLgen working directory')
+flags.DEFINE_string('working_dir',
+                    '/mnt/cc/data/experimental/deeplearning/polyglot/clgen',
+                    'Path to CLgen working directory')
 
 # Paths to protos within //experimental/polyglot/baselines.
 LANGUAGES = {
-  'opencl': {
-    'corpuses': ['opencl-char', 'opencl-tok'],
-    'samplers': ['opencl-1.0', 'opencl-0.5'],
-  },
-  'java': {
-    'corpuses': ['java-char', 'java-tok'],
-    'samplers': ['java-1.0', 'java-0.5'],
-  }
+    'opencl': {
+        'corpuses': ['opencl-char', 'opencl-tok'],
+        'samplers': ['opencl-1.0', 'opencl-0.5'],
+    },
+    'java': {
+        'corpuses': ['java-char', 'java-tok'],
+        'samplers': ['java-1.0', 'java-0.5'],
+    }
 }
 
 # The CLgen model to base all permutations off, and the permutation options.
@@ -75,21 +74,26 @@ def EnumerateModels() -> typing.List[model_pb2.Model]:
 
 
 def EnumerateLanguageInstanceConfigs(
-    language: typing.Dict[str, typing.List[str]]) -> typing.List[
-  clgen_pb2.Instance]:
+    language: typing.Dict[str, typing.List[str]]
+) -> typing.List[clgen_pb2.Instance]:
   """Enumerate the options for a language."""
   configs = []
-  for corpus, model, sampler in itertools.product(
-      language['corpuses'], EnumerateModels(), language['samplers']):
+  for corpus, model, sampler in itertools.product(language['corpuses'],
+                                                  EnumerateModels(),
+                                                  language['samplers']):
     instance_config = clgen_pb2.Instance()
     instance_config.working_dir = FLAGS.working_dir
     instance_config.model.CopyFrom(model)
-    instance_config.model.corpus.CopyFrom(pbutil.FromFile(bazelutil.DataPath(
-        f'phd/experimental/deeplearning/polyglot/corpuses/{corpus}.pbtxt'),
-        corpus_pb2.Corpus()))
-    instance_config.sampler.CopyFrom(pbutil.FromFile(bazelutil.DataPath(
-        f'phd/experimental/deeplearning/polyglot/samplers/{sampler}.pbtxt'),
-        sampler_pb2.Sampler()))
+    instance_config.model.corpus.CopyFrom(
+        pbutil.FromFile(
+            bazelutil.DataPath(
+                f'phd/experimental/deeplearning/polyglot/corpuses/{corpus}.pbtxt'
+            ), corpus_pb2.Corpus()))
+    instance_config.sampler.CopyFrom(
+        pbutil.FromFile(
+            bazelutil.DataPath(
+                f'phd/experimental/deeplearning/polyglot/samplers/{sampler}.pbtxt'
+            ), sampler_pb2.Sampler()))
     configs.append(instance_config)
   return configs
 
