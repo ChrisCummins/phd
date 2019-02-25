@@ -7,7 +7,6 @@ from absl import flags
 from compilers.llvm import clang
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -16,6 +15,7 @@ def _StripPreprocessorLines(out: str):
 
 
 # Exec() tests.
+
 
 def test_Exec_compile_bytecode(tempdir: pathlib.Path):
   """Test bytecode generation."""
@@ -28,8 +28,10 @@ int main() {
   return 0;
 }
 """)
-  p = clang.Exec([str(tempdir / 'foo.cc'), '-xc++', '-S', '-emit-llvm', '-c',
-                  '-o', str(tempdir / 'foo.ll')])
+  p = clang.Exec([
+      str(tempdir / 'foo.cc'), '-xc++', '-S', '-emit-llvm', '-c', '-o',
+      str(tempdir / 'foo.ll')
+  ])
   assert not p.returncode
   assert not p.stderr
   assert not p.stdout
@@ -38,8 +40,10 @@ int main() {
 
 def test_Exec_compile_bytecode_stdin(tempdir: pathlib.Path):
   """Test bytecode generation."""
-  p = clang.Exec(['-xc++', '-S', '-emit-llvm', '-c',
-                  '-o', str(tempdir / 'foo.ll'), '-'], stdin="""
+  p = clang.Exec(
+      ['-xc++', '-S', '-emit-llvm', '-c', '-o',
+       str(tempdir / 'foo.ll'), '-'],
+      stdin="""
 #include <iostream>
 
 int main() {
@@ -54,17 +58,19 @@ int main() {
   assert (tempdir / 'foo.ll').is_file()
 
 
-@pytest.mark.parametrize(
-    "opt", ("-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os", "-Oz"))
+@pytest.mark.parametrize("opt",
+                         ("-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os", "-Oz"))
 def test_ValidateOptimizationLevel_valid(opt: str):
   """Test that valid optimization levels are returned."""
   assert clang.ValidateOptimizationLevel(opt) == opt
 
 
 @pytest.mark.parametrize(
-    "opt", ("O0",  # missing leading '-'
-            "-O4",  # not a real value
-            "foo"))  # not a real value
+    "opt",
+    (
+        "O0",  # missing leading '-'
+        "-O4",  # not a real value
+        "foo"))  # not a real value
 def test_ValidateOptimizationLevel_invalid(opt: str):
   """Test that invalid optimization levels raise an error."""
   with pytest.raises(ValueError) as e_ctx:
@@ -74,6 +80,7 @@ def test_ValidateOptimizationLevel_invalid(opt: str):
 
 # Preprocess() tests.
 
+
 def test_Preprocess_empty_input():
   """Test that Preprocess accepts an empty input."""
   assert _StripPreprocessorLines(clang.Preprocess('')) == '\n'
@@ -81,13 +88,15 @@ def test_Preprocess_empty_input():
 
 def test_Preprocess_small_cxx_program():
   """Test pre-processing a small C++ program."""
-  assert clang.Preprocess("""
+  assert clang.Preprocess(
+      """
 #define FOO T
 template<typename FOO>
 FOO foobar(const T& a) {return a;}
 
 int foo() { return foobar<int>(10); }
-""", copts=['-xc++']).endswith("""
+""",
+      copts=['-xc++']).endswith("""
 
 template<typename T>
 T foobar(const T& a) {return a;}

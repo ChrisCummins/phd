@@ -6,22 +6,22 @@ from absl import flags
 from compilers.llvm import opt
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
-@pytest.mark.parametrize(
-    "o", ("-O0", "-O1", "-O2", "-O3", "-Os", "-Oz"))
+@pytest.mark.parametrize("o", ("-O0", "-O1", "-O2", "-O3", "-Os", "-Oz"))
 def test_ValidateOptimizationLevel_valid(o: str):
   """Test that valid optimization levels are returned."""
   assert opt.ValidateOptimizationLevel(o) == o
 
 
 @pytest.mark.parametrize(
-    "o", ("O0",  # missing leading '-'
-          "-Ofast",  # valid for clang, not for opt
-          "-O4",  # not a real value
-          "foo"))  # not a real value
+    "o",
+    (
+        "O0",  # missing leading '-'
+        "-Ofast",  # valid for clang, not for opt
+        "-O4",  # not a real value
+        "foo"))  # not a real value
 def test_ValidateOptimizationLevel_invalid(o: str):
   """Test that invalid optimization levels raise an error."""
   with pytest.raises(ValueError) as e_ctx:

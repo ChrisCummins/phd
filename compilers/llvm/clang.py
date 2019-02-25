@@ -23,12 +23,10 @@ from compilers.llvm import llvm
 from labm8 import bazelutil
 from labm8 import system
 
-
 FLAGS = flags.FLAGS
 
-flags.DEFINE_integer(
-    'clang_timeout_seconds', 60,
-    'The maximum number of seconds to allow process to run.')
+flags.DEFINE_integer('clang_timeout_seconds', 60,
+                     'The maximum number of seconds to allow process to run.')
 
 _LLVM_REPO = 'llvm_linux' if system.is_linux() else 'llvm_mac'
 
@@ -65,7 +63,8 @@ def ValidateOptimizationLevel(opt: str) -> str:
 def Exec(args: typing.List[str],
          stdin: typing.Optional[str] = None,
          timeout_seconds: int = 60,
-         log: bool = True, stdout=subprocess.PIPE,
+         log: bool = True,
+         stdout=subprocess.PIPE,
          stderr=subprocess.PIPE) -> subprocess.Popen:
   """Run clang.
 
@@ -85,8 +84,11 @@ def Exec(args: typing.List[str],
   if log:
     logging.debug('$ %s', ' '.join(cmd))
   process = subprocess.Popen(
-      cmd, stdout=stdout, stderr=stderr,
-      stdin=subprocess.PIPE if stdin else None, universal_newlines=True)
+      cmd,
+      stdout=stdout,
+      stderr=stderr,
+      stdin=subprocess.PIPE if stdin else None,
+      universal_newlines=True)
   if stdin:
     stdout, stderr = process.communicate(stdin)
   else:
@@ -130,8 +132,9 @@ def Compile(srcs: typing.List[pathlib.Path],
   # Ensure the output directory exists.
   out.parent.mkdir(parents=True, exist_ok=True)
 
-  proc = Exec([str(x) for x in srcs] + ['-o', str(out)] + copts,
-              timeout_seconds=timeout_seconds)
+  proc = Exec(
+      [str(x) for x in srcs] + ['-o', str(out)] + copts,
+      timeout_seconds=timeout_seconds)
   if proc.returncode == 9:
     raise llvm.LlvmTimeout(f'clang timed out after {timeout_seconds} seconds')
   elif proc.returncode:
@@ -142,7 +145,8 @@ def Compile(srcs: typing.List[pathlib.Path],
   return out
 
 
-def Preprocess(src: str, copts: typing.Optional[typing.List[str]] = None,
+def Preprocess(src: str,
+               copts: typing.Optional[typing.List[str]] = None,
                timeout_seconds: int = 60):
   """Run input code through the compiler frontend to inline macros.
 
@@ -167,10 +171,10 @@ def Preprocess(src: str, copts: typing.Optional[typing.List[str]] = None,
   return process.stdout
 
 
-def GetOptPasses(cflags: typing.Optional[typing.List[str]] = None,
-                 language: typing.Optional[str] = 'c',
-                 stubfile: typing.Optional[str] = 'int main() {}'
-                 ) -> typing.List[str]:
+def GetOptPasses(
+    cflags: typing.Optional[typing.List[str]] = None,
+    language: typing.Optional[str] = 'c',
+    stubfile: typing.Optional[str] = 'int main() {}') -> typing.List[str]:
   """Get the list of passes run by opt.
 
   Args:

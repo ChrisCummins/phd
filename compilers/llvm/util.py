@@ -8,12 +8,11 @@ from compilers.llvm import llvm
 from compilers.llvm import llvm_as
 from compilers.llvm import opt
 
-
 FLAGS = flags.FLAGS
 
 
 def GetOptArgs(cflags: typing.Optional[typing.List[str]] = None
-               ) -> typing.List[typing.List[str]]:
+              ) -> typing.List[typing.List[str]]:
   """Get the arguments passed to opt.
 
   Args:
@@ -23,11 +22,14 @@ def GetOptArgs(cflags: typing.Optional[typing.List[str]] = None
     A list of invocation arguments.
   """
   cflags = cflags or ['-O0']
-  p1 = subprocess.Popen([llvm_as.LLVM_AS], stdin=subprocess.DEVNULL,
+  p1 = subprocess.Popen([llvm_as.LLVM_AS],
+                        stdin=subprocess.DEVNULL,
                         stdout=subprocess.PIPE)
   p2 = subprocess.Popen(
       [opt.OPT, '-disable-output', '-debug-pass=Arguments'] + cflags,
-      stdin=p1.stdout, stderr=subprocess.PIPE, universal_newlines=True)
+      stdin=p1.stdout,
+      stderr=subprocess.PIPE,
+      universal_newlines=True)
   _, stderr = p2.communicate()
   if p2.returncode:
     raise llvm.LlvmError(stderr)

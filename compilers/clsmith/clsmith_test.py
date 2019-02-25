@@ -6,7 +6,6 @@ from absl import flags
 from compilers.clsmith import clsmith
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 

@@ -8,7 +8,6 @@ from compilers.llvm import clang_format
 from compilers.llvm import llvm
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -24,6 +23,7 @@ class MockProcess():
 
 
 # Exec() tests.
+
 
 def test_Exec_process_command(mocker):
   """Test the clang-format command which is run."""

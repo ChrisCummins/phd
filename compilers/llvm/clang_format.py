@@ -24,15 +24,12 @@ from compilers.llvm import llvm
 from labm8 import bazelutil
 from labm8 import system
 
-
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string(
-    'clang_format_file_suffix', '.c',
-    'The file name suffix to assume for files.')
-flags.DEFINE_integer(
-    'clang_format_timeout_seconds', 60,
-    'The maximum number of seconds to allow process to run.')
+flags.DEFINE_string('clang_format_file_suffix', '.c',
+                    'The file name suffix to assume for files.')
+flags.DEFINE_integer('clang_format_timeout_seconds', 60,
+                     'The maximum number of seconds to allow process to run.')
 
 _LLVM_REPO = 'llvm_linux' if system.is_linux() else 'llvm_mac'
 
@@ -45,7 +42,9 @@ class ClangFormatException(llvm.LlvmError):
   pass
 
 
-def Exec(text: str, suffix: str, args: typing.List[str],
+def Exec(text: str,
+         suffix: str,
+         args: typing.List[str],
          timeout_seconds: int = 60) -> str:
   """Run clang-format on a source.
 
@@ -63,11 +62,18 @@ def Exec(text: str, suffix: str, args: typing.List[str],
     ClangFormatException: In case of an error.
     LlvmTimeout: If clang-format does not complete before timeout_seconds.
   """
-  cmd = ['timeout', '-s9', str(timeout_seconds), str(CLANG_FORMAT),
-         '-assume-filename', f'input{suffix}'] + args
+  cmd = [
+      'timeout', '-s9',
+      str(timeout_seconds),
+      str(CLANG_FORMAT), '-assume-filename', f'input{suffix}'
+  ] + args
   logging.debug('$ %s', ' '.join(cmd))
-  process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE, universal_newlines=True)
+  process = subprocess.Popen(
+      cmd,
+      stdin=subprocess.PIPE,
+      stdout=subprocess.PIPE,
+      stderr=subprocess.PIPE,
+      universal_newlines=True)
   stdout, stderr = process.communicate(text)
   if process.returncode == 9:
     raise llvm.LlvmTimeout(f'clang-format timed out after {timeout_seconds}s')
@@ -79,8 +85,12 @@ def Exec(text: str, suffix: str, args: typing.List[str],
 def main(argv):
   """Main entry point."""
   try:
-    print(Exec(fileinput.input(), FLAGS.clang_format_file_suffix, argv[1:],
-               timeout_seconds=FLAGS.clang_format_timeout_seconds))
+    print(
+        Exec(
+            fileinput.input(),
+            FLAGS.clang_format_file_suffix,
+            argv[1:],
+            timeout_seconds=FLAGS.clang_format_timeout_seconds))
   except (llvm.LlvmTimeout, ClangFormatException) as e:
     print(e, file=sys.stderr)
     sys.exit(1)

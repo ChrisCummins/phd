@@ -8,7 +8,6 @@ from compilers.llvm import clang
 from compilers.llvm import opt
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -28,16 +27,19 @@ int main() {
 """)
 
   # Generate bytecode.
-  p = clang.Exec([str(tempdir / 'foo.c'), '-o', str(tempdir / 'foo.ll'),
-                  '-S', '-xc++', '-emit-llvm', '-c', '-O0'])
+  p = clang.Exec([
+      str(tempdir / 'foo.c'), '-o',
+      str(tempdir / 'foo.ll'), '-S', '-xc++', '-emit-llvm', '-c', '-O0'
+  ])
   assert not p.stderr
   assert not p.stdout
   assert not p.returncode
   assert (tempdir / 'foo.ll').is_file()
 
   # Run an optimization pass.
-  p = opt.Exec([str(tempdir / 'foo.ll'), '-o', str(tempdir / 'foo2.ll'),
-                '-S', '-dce'])
+  p = opt.Exec(
+      [str(tempdir / 'foo.ll'), '-o',
+       str(tempdir / 'foo2.ll'), '-S', '-dce'])
   assert not p.stderr
   assert not p.stdout
   assert not p.returncode

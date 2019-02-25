@@ -8,7 +8,6 @@ from compilers.llvm import llvm
 from compilers.llvm import util
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 

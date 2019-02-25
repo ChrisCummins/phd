@@ -20,7 +20,6 @@ from absl import flags
 from labm8 import bazelutil
 from labm8 import fs
 
-
 FLAGS = flags.FLAGS
 
 CLSMITH = bazelutil.DataPath('CLSmith/CLSmith')
@@ -47,8 +46,8 @@ def Exec(*opts) -> str:
     The generated source code as a string.
   """
   with fs.TemporaryWorkingDir(prefix='clsmith_') as d:
-    proc = subprocess.Popen([CLSMITH] + list(opts), stderr=subprocess.PIPE,
-                            universal_newlines=True)
+    proc = subprocess.Popen(
+        [CLSMITH] + list(opts), stderr=subprocess.PIPE, universal_newlines=True)
     _, stderr = proc.communicate()
     if proc.returncode:
       raise CLSmithError(msg=stderr, returncode=proc.returncode)

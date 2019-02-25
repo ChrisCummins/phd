@@ -23,12 +23,10 @@ from compilers.llvm import llvm
 from labm8 import bazelutil
 from labm8 import system
 
-
 FLAGS = flags.FLAGS
 
-flags.DEFINE_integer(
-    'llvm_link_timeout_seconds', 60,
-    'The maximum number of seconds to allow process to run.')
+flags.DEFINE_integer('llvm_link_timeout_seconds', 60,
+                     'The maximum number of seconds to allow process to run.')
 
 _LLVM_REPO = 'llvm_linux' if system.is_linux() else 'llvm_mac'
 
@@ -49,7 +47,9 @@ def Exec(args: typing.List[str], timeout_seconds: int = 60) -> subprocess.Popen:
   cmd = ['timeout', '-s9', str(timeout_seconds), str(LLVM_LINK)] + args
   logging.debug('$ %s', ' '.join(cmd))
   process = subprocess.Popen(
-      cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+      cmd,
+      stdout=subprocess.PIPE,
+      stderr=subprocess.PIPE,
       universal_newlines=True)
   stdout, stderr = process.communicate()
   if process.returncode == 9:
