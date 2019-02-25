@@ -1,0 +1,30 @@
+"""Unit tests for //tools/code_style/linters:linters_lib."""
+import os
+import pathlib
+
+import pytest
+from absl import flags
+
+from labm8 import test
+from tools.code_style.linters import linters_lib
+
+FLAGS = flags.FLAGS
+
+
+def test_WhichOrDie_file_exists(tempdir: pathlib.Path):
+  """Test that file can be found in PATH."""
+  os.env['PATH'] = str(tempdir)
+  (tempdir / 'a').touch()
+  assert linters_lib.WhichOrDie('a')
+
+
+def test_WhichOrDie_file_doesnt_exist(tempdir: pathlib.Path):
+  """Test that error raised when file not in PATH."""
+  os.env['PATH'] = str(tempdir)
+  (tempdir / 'a').touch()
+  with pytest.raises(SystemExit):
+    linters_lib.WhichOrDie('a')
+
+
+if __name__ == '__main__':
+  test.Main()

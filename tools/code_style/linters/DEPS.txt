@@ -1,0 +1,10 @@
+# System dependencies for linters:
+# For linting bazel files.
+linux: sudo apt install -y --no-install-recommends golang-go
+linux: go get github.com/bazelbuild/buildtools/buildifier
+macos: brew install buildifier
+# For linting C++ files.
+linux: sudo apt install -y --no-install-recommends clang-format
+macos: brew install clang-format
+# For linting Python files.
+all: pip install yapf
