@@ -25,35 +25,5 @@
 namespace gpu {
 namespace cldrive {
 
-template <>
-/*virtual*/ string ScalarKernelArgValue<phd::int32>::ToString() const
-/*override*/ {
-  string s = "";
-  absl::StrAppend(&s, value());
-  return s;
-}
-
-template <>
-/*virtual*/ string ScalarKernelArgValue<phd::int64>::ToString() const
-/*override*/ {
-  string s = "";
-  absl::StrAppend(&s, value());
-  return s;
-}
-
-template <>
-/*virtual*/ string ScalarKernelArgValue<float>::ToString() const /*override*/ {
-  string s = "";
-  absl::StrAppend(&s, value());
-  return s;
-}
-
-template <>
-/*virtual*/ string ScalarKernelArgValue<double>::ToString() const /*override*/ {
-  string s = "";
-  absl::StrAppend(&s, value());
-  return s;
-}
-
 }  // namespace cldrive
 }  // namespace gpu

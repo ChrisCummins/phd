@@ -59,7 +59,11 @@ class ScalarKernelArgValue : public KernelArgValue {
   const T &value() const { return value_; }
   T &value() { return value_; }
 
-  virtual string ToString() const override;
+  virtual string ToString() const override {
+    string s = "";
+    absl::StrAppend(&s, value());
+    return s;
+  }
 
  private:
   T value_;
