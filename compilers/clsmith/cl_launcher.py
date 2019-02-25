@@ -19,12 +19,11 @@ import typing
 from absl import app
 from absl import flags
 
-from gpu.cldrive import driver
-from gpu.cldrive import env
+from gpu.cldrive.legacy import driver
+from gpu.cldrive.legacy import env
 from labm8 import bazelutil
 from labm8 import fs
 from labm8 import system
-
 
 FLAGS = flags.FLAGS
 
@@ -33,23 +32,23 @@ CL_LAUNCHER = bazelutil.DataPath('CLSmith/cl_launcher')
 
 # The header files required by generated CLProg.c files.
 CL_LAUNCHER_RUN_FILES = [
-  bazelutil.DataPath('CLSmith/cl_safe_math_macros.h'),
-  bazelutil.DataPath('CLSmith/safe_math_macros.h'),
-  bazelutil.DataPath('CLSmith/runtime/CLSmith.h'),
-  bazelutil.DataPath('CLSmith/runtime/csmith.h'),
-  bazelutil.DataPath('CLSmith/runtime/csmith_minimal.h'),
-  bazelutil.DataPath('CLSmith/runtime/custom_limits.h'),
-  bazelutil.DataPath('CLSmith/runtime/custom_stdint_x86.h'),
-  bazelutil.DataPath('CLSmith/runtime/platform_avr.h'),
-  bazelutil.DataPath('CLSmith/runtime/platform_generic.h'),
-  bazelutil.DataPath('CLSmith/runtime/platform_msp430.h'),
-  bazelutil.DataPath('CLSmith/runtime/random_inc.h'),
-  bazelutil.DataPath('CLSmith/runtime/safe_abbrev.h'),
-  bazelutil.DataPath('CLSmith/runtime/stdint_avr.h'),
-  bazelutil.DataPath('CLSmith/runtime/stdint_ia32.h'),
-  bazelutil.DataPath('CLSmith/runtime/stdint_ia64.h'),
-  bazelutil.DataPath('CLSmith/runtime/stdint_msp430.h'),
-  bazelutil.DataPath('CLSmith/runtime/volatile_runtime.h')
+    bazelutil.DataPath('CLSmith/cl_safe_math_macros.h'),
+    bazelutil.DataPath('CLSmith/safe_math_macros.h'),
+    bazelutil.DataPath('CLSmith/runtime/CLSmith.h'),
+    bazelutil.DataPath('CLSmith/runtime/csmith.h'),
+    bazelutil.DataPath('CLSmith/runtime/csmith_minimal.h'),
+    bazelutil.DataPath('CLSmith/runtime/custom_limits.h'),
+    bazelutil.DataPath('CLSmith/runtime/custom_stdint_x86.h'),
+    bazelutil.DataPath('CLSmith/runtime/platform_avr.h'),
+    bazelutil.DataPath('CLSmith/runtime/platform_generic.h'),
+    bazelutil.DataPath('CLSmith/runtime/platform_msp430.h'),
+    bazelutil.DataPath('CLSmith/runtime/random_inc.h'),
+    bazelutil.DataPath('CLSmith/runtime/safe_abbrev.h'),
+    bazelutil.DataPath('CLSmith/runtime/stdint_avr.h'),
+    bazelutil.DataPath('CLSmith/runtime/stdint_ia32.h'),
+    bazelutil.DataPath('CLSmith/runtime/stdint_ia64.h'),
+    bazelutil.DataPath('CLSmith/runtime/stdint_msp430.h'),
+    bazelutil.DataPath('CLSmith/runtime/volatile_runtime.h')
 ]
 
 # The path to libOpenCL.so, needed on Linux.
@@ -75,7 +74,8 @@ def PrependToPath(path_to_prepend: str, path: typing.Optional[str]) -> str:
     return path_to_prepend
 
 
-def Exec(opencl_environment: env.OpenCLEnvironment, *opts,
+def Exec(opencl_environment: env.OpenCLEnvironment,
+         *opts,
          timeout_seconds: int = 60,
          env: typing.Dict[str, str] = None) -> subprocess.Popen:
   """Execute cl_launcher.
@@ -98,16 +98,23 @@ def Exec(opencl_environment: env.OpenCLEnvironment, *opts,
   with fs.TemporaryWorkingDir(prefix='cl_launcher_') as d:
     for src in CL_LAUNCHER_RUN_FILES:
       os.symlink(src, str(d / src.name))
-    cmd = ['timeout', '-s9', str(timeout_seconds), str(CL_LAUNCHER),
-           '-i', str(d)] + list(opts)
+    cmd = [
+        'timeout', '-s9',
+        str(timeout_seconds),
+        str(CL_LAUNCHER), '-i',
+        str(d)
+    ] + list(opts)
     process = opencl_environment.Exec(cmd, env=env)
   return process
 
 
-def ExecClsmithSource(
-    opencl_environment: env.OpenCLEnvironment, src: str, gsize: driver.NDRange,
-    lsize: driver.NDRange, *opts, timeout_seconds: int = 60,
-    env: typing.Dict[str, str] = None) -> subprocess.Popen:
+def ExecClsmithSource(opencl_environment: env.OpenCLEnvironment,
+                      src: str,
+                      gsize: driver.NDRange,
+                      lsize: driver.NDRange,
+                      *opts,
+                      timeout_seconds: int = 60,
+                      env: typing.Dict[str, str] = None) -> subprocess.Popen:
   """Execute a CLsmith source program using cl_launcher.
 
   This creates a Popen process, executes it, and sets the stdout and stderr
@@ -129,10 +136,21 @@ def ExecClsmithSource(
   with fs.TemporaryWorkingDir(prefix='cl_launcher_') as d:
     with open(d / 'CLProg.c', 'w') as f:
       f.write(src)
-    proc = Exec(opencl_environment, '-f', str(d / 'CLProg.c'),
-                '-g', gsize.ToString(), '-l', lsize.ToString(),
-                '-p', str(platform_id), '-d', str(device_id),
-                *opts, timeout_seconds=timeout_seconds, env=env)
+    proc = Exec(
+        opencl_environment,
+        '-f',
+        str(d / 'CLProg.c'),
+        '-g',
+        gsize.ToString(),
+        '-l',
+        lsize.ToString(),
+        '-p',
+        str(platform_id),
+        '-d',
+        str(device_id),
+        *opts,
+        timeout_seconds=timeout_seconds,
+        env=env)
   return proc
 
 

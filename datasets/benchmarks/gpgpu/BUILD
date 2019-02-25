@@ -66,7 +66,7 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":gpgpu_py_pb2",
-        "//gpu/cldrive:env",
+        "//gpu/cldrive/legacy:env",
         "//gpu/libcecl:libcecl_runtime",
         "//gpu/oclgrind",
         "//labm8:bazelutil",

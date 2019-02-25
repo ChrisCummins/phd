@@ -18,9 +18,8 @@ from absl import logging
 
 from deeplearning.clgen.preprocessors import opencl
 from experimental.compilers.reachability import control_flow_graph_generator
-from gpu.cldrive import args
+from gpu.cldrive.legacy import args
 from labm8 import fmt
-
 
 FLAGS = flags.FLAGS
 
@@ -46,11 +45,11 @@ class OpenClFunction(object):
       ValueError: If the name could not be set.
     """
     if self.is_kernel:
-      self.src, num_replacements = re.subn(
-          r'^kernel void ([A-Z]+)\(', f'kernel void {new_name}(', self.src)
+      self.src, num_replacements = re.subn(r'^kernel void ([A-Z]+)\(',
+                                           f'kernel void {new_name}(', self.src)
     else:
-      self.src, num_replacements = re.subn(
-          r'^void ([A-Z]+)\(', f'void {new_name}(', self.src)
+      self.src, num_replacements = re.subn(r'^void ([A-Z]+)\(',
+                                           f'void {new_name}(', self.src)
     if num_replacements != 1:
       raise ValueError(f"{num_replacements} substitutions made when trying to "
                        f"set function name to '{new_name}'")
@@ -79,8 +78,9 @@ class OpenClFunction(object):
         # can insert the block here.
         break
       else:
-        logging.debug('Previous line "%s" not valid as a code block insertion '
-                      'point', previous_line)
+        logging.debug(
+            'Previous line "%s" not valid as a code block insertion '
+            'point', previous_line)
     else:
       raise ValueError(
           f"Failed to find a position to insert block in function '{self.src}'")
@@ -102,9 +102,8 @@ class OpenClFunction(object):
       indendation_at_point_of_insertion += 2
 
     if indendation_at_point_of_insertion < 2:
-      raise ValueError(
-          "Line has insufficient indentation "
-          f"({indendation_at_point_of_insertion}): '{pre[-1]}'")
+      raise ValueError("Line has insufficient indentation "
+                       f"({indendation_at_point_of_insertion}): '{pre[-1]}'")
 
     block = fmt.Indent(indendation_at_point_of_insertion, block_to_insert)
 
@@ -168,8 +167,7 @@ def KernelArgumentToVariableDeclaration(arg: args.KernelArg) -> str:
 def KernelToDeadCodeBlock(kernel: str) -> str:
   # Convert arguments to variable declarations.
   declarations = [
-    KernelArgumentToVariableDeclaration(a) for a in
-    GetKernelArguments(kernel)
+      KernelArgumentToVariableDeclaration(a) for a in GetKernelArguments(kernel)
   ]
   # The block header is the list of argument variable declarations.
   header = '\n'.join(fmt.IndentList(2, declarations))
@@ -214,7 +212,8 @@ class OpenClDeadcodeInserter(object):
     # A list of code blocks, where each code block is a function definition or
     # declaration.
     self._functions = [
-      OpenClFunction(_PreprocessKernel(kernel), is_kernel=True)]
+        OpenClFunction(_PreprocessKernel(kernel), is_kernel=True)
+    ]
 
     if not len(candidate_kernels):
       raise ValueError("Must have one or more candidate kernels.")
@@ -233,25 +232,22 @@ class OpenClDeadcodeInserter(object):
   def Mutate(self) -> None:
     """Run a random mutation."""
     mutator = self._rand.choice([
-      self.PrependUnusedFunction,
-      self.AppendUnusedFunction,
-      self.PrependUnusedFunctionDeclaration,
-      self.AppendUnusedFunctionDeclaration,
-      self.InsertBlockIntoKernel
+        self.PrependUnusedFunction, self.AppendUnusedFunction,
+        self.PrependUnusedFunctionDeclaration,
+        self.AppendUnusedFunctionDeclaration, self.InsertBlockIntoKernel
     ])
     mutator()
 
   def PrependUnusedFunctionDeclaration(self) -> None:
     # Select a random function to declare.
     to_prepend = self._rand.choice(self._candidates)
-    self._functions = [KernelToFunctionDeclaration(
-        to_prepend)] + self._functions
+    self._functions = [KernelToFunctionDeclaration(to_prepend)
+                      ] + self._functions
 
   def AppendUnusedFunctionDeclaration(self) -> None:
     # Select a random function to declare.
     to_append = self._rand.choice(self._candidates)
-    self._functions.append(
-        KernelToFunctionDeclaration(to_append))
+    self._functions.append(KernelToFunctionDeclaration(to_append))
 
   def PrependUnusedFunction(self) -> None:
     to_prepend = self._rand.choice(self._candidates)
@@ -264,8 +260,8 @@ class OpenClDeadcodeInserter(object):
   def InsertBlockIntoKernel(self) -> None:
     to_modify = self._rand.choice([f for f in self._functions if f.is_kernel])
     to_insert = self._rand.choice(self._candidates)
-    to_modify.InsertBlockIntoKernel(
-        self._rand, KernelToDeadCodeBlock(to_insert))
+    to_modify.InsertBlockIntoKernel(self._rand,
+                                    KernelToDeadCodeBlock(to_insert))
 
 
 def GenerateDeadcodeMutations(
@@ -295,9 +291,8 @@ def GenerateDeadcodeMutations(
 
       # RandomState.randint() is in range [low,high), hence add one to max to
       # make it inclusive.
-      num_mutations = rand.randint(
-          num_mutations_per_kernel[0],
-          num_mutations_per_kernel[1] + 1)
+      num_mutations = rand.randint(num_mutations_per_kernel[0],
+                                   num_mutations_per_kernel[1] + 1)
 
       for _ in range(num_mutations):
         dci.Mutate()

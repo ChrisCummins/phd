@@ -4,7 +4,7 @@ from enum import Enum
 
 import numpy as np
 
-from gpu.cldrive import args as _args
+from gpu.cldrive.legacy import args as _args
 from labm8 import err
 
 
@@ -35,7 +35,9 @@ class Generator(Enum):
       raise ValueError(f"Unknown generator name: '{string}'")
 
 
-def MakeData(src: str, size: int, data_generator: Generator,
+def MakeData(src: str,
+             size: int,
+             data_generator: Generator,
              scalar_val: float = None) -> np.array:
   """Generate data for OpenCL kernels.
 
@@ -70,8 +72,9 @@ def MakeData(src: str, size: int, data_generator: Generator,
   """
   # check the input types
   err.assert_or_raise(isinstance(src, str), TypeError)
-  err.assert_or_raise(isinstance(data_generator, Generator), TypeError,
-                      "invalid argument type for enum data_generator")
+  err.assert_or_raise(
+      isinstance(data_generator, Generator), TypeError,
+      "invalid argument type for enum data_generator")
 
   if scalar_val is None:
     scalar_val = size

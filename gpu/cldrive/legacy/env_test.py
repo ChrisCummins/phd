@@ -1,11 +1,10 @@
-"""Unit tests for //gpu/cldrive/env.py."""
+"""Unit tests for //gpu/cldrive/legacy/env.py."""
 
 import pytest
 from absl import flags
 
-from gpu.cldrive import env
+from gpu.cldrive.legacy import env
 from labm8 import test
-
 
 FLAGS = flags.FLAGS
 

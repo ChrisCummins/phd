@@ -34,8 +34,8 @@ py_binary(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "//gpu/cldrive:driver",
-        "//gpu/cldrive:env",
+        "//gpu/cldrive/legacy:driver",
+        "//gpu/cldrive/legacy:env",
         "//labm8:bazelutil",
         "//labm8:fs",
         "//labm8:system",
@@ -48,7 +48,7 @@ py_test(
     srcs = ["cl_launcher_test.py"],
     deps = [
         ":cl_launcher",
-        "//gpu/cldrive:env",
+        "//gpu/cldrive/legacy:env",
         "//labm8:test",
         "//third_party/py/absl",
     ],

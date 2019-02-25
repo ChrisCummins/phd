@@ -2,14 +2,15 @@ import typing
 
 import numpy as np
 
-from gpu.cldrive import args as _args
-from gpu.cldrive import driver
+from gpu.cldrive.legacy import args as _args
+from gpu.cldrive.legacy import driver
 
 
 def escape_c_string(s: str) -> str:
   """ quote and return the given string """
   return '\n'.join('"{}"'.format(line.replace('"', '\\"'))
-                   for line in s.split('\n') if len(line.strip()))
+                   for line in s.split('\n')
+                   if len(line.strip()))
 
 
 def to_array_str(array):
@@ -70,17 +71,19 @@ def gen_data_blocks(kernel_args: typing.List[_args.KernelArg],
     check_error("clSetKernelArg", err);
 """)
 
-  return (
-    '\n'.join(setup_c).rstrip(),
-    '\n'.join(teardown_c).rstrip(),
-    '\n'.join(print_c).rstrip()
-  )
+  return ('\n'.join(setup_c).rstrip(), '\n'.join(teardown_c).rstrip(),
+          '\n'.join(print_c).rstrip())
 
 
-def emit_c(src: str, inputs: np.array, gsize: typing.Optional[driver.NDRange],
-           lsize: typing.Optional[driver.NDRange], timeout: int = -1,
-           optimizations: bool = True, profiling: bool = False,
-           debug: bool = False, compile_only: bool = False,
+def emit_c(src: str,
+           inputs: np.array,
+           gsize: typing.Optional[driver.NDRange],
+           lsize: typing.Optional[driver.NDRange],
+           timeout: int = -1,
+           optimizations: bool = True,
+           profiling: bool = False,
+           debug: bool = False,
+           compile_only: bool = False,
            create_kernel: bool = True) -> np.array:
   """
   Generate C code to drive kernel.

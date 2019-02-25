@@ -46,7 +46,7 @@ py_binary(
         "//deeplearning/deepsmith/harnesses:cldrive",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//deeplearning/deepsmith/proto:harness_py_pb2",
-        "//gpu/cldrive:env",
+        "//gpu/cldrive/legacy:env",
         "//labm8:bazelutil",
         "//labm8:crypto",
         "//labm8:fs",

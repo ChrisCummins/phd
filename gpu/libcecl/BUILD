@@ -102,7 +102,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":libcecl_compile",
-        "//gpu/cldrive:env",
+        "//gpu/cldrive/legacy:env",
         "//gpu/libcecl/proto:libcecl_py_pb2",
         "//labm8:labdate",
         "//third_party/py/absl",

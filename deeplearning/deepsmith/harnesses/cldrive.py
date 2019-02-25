@@ -17,15 +17,14 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import harness_pb2
 from deeplearning.deepsmith.proto import harness_pb2_grpc
 from deeplearning.deepsmith.proto import service_pb2
-from gpu.cldrive import cgen
-from gpu.cldrive import data
-from gpu.cldrive import driver
-from gpu.cldrive import env
+from gpu.cldrive.legacy import cgen
+from gpu.cldrive.legacy import data
+from gpu.cldrive.legacy import driver
+from gpu.cldrive.legacy import env
 from labm8 import bazelutil
 from labm8 import fs
 from labm8 import labdate
 from labm8 import system
-
 
 FLAGS = flags.FLAGS
 
@@ -49,7 +48,8 @@ class CldriveHarness(harness.HarnessBase,
                      harness_pb2_grpc.HarnessServiceServicer):
   """A harness for running OpenCL testcases using cldrive."""
 
-  def __init__(self, config: harness_pb2.CldriveHarness,
+  def __init__(self,
+               config: harness_pb2.CldriveHarness,
                default_to_all_environments: bool = True):
     """Instantiate a CLdrive harness service.
 
@@ -74,8 +74,8 @@ class CldriveHarness(harness.HarnessBase,
     all_envs = {env.name: env for env in env.GetOpenClEnvironments()}
     envs = []
     if self.config.opencl_env:
-      for opencl_env, opt in zip(
-          self.config.opencl_env, self.config.opencl_opt):
+      for opencl_env, opt in zip(self.config.opencl_env,
+                                 self.config.opencl_opt):
         if opencl_env in all_envs:
           env_ = copy.deepcopy(all_envs[opencl_env])
           env_.opencl_opt = opt
@@ -107,9 +107,9 @@ class CldriveHarness(harness.HarnessBase,
     for testbed in self.testbeds:
       logging.info('OpenCL testbed:\n%s', testbed)
 
-  def GetHarnessCapabilities(self,
-                             request: harness_pb2.GetHarnessCapabilitiesRequest,
-                             context) -> harness_pb2.GetHarnessCapabilitiesResponse:
+  def GetHarnessCapabilities(
+      self, request: harness_pb2.GetHarnessCapabilitiesRequest,
+      context) -> harness_pb2.GetHarnessCapabilitiesResponse:
     """Get the harness capabilities."""
     del context
     response = services.BuildDefaultResponse(
@@ -129,9 +129,8 @@ class CldriveHarness(harness.HarnessBase,
 
     testbed_idx = self.testbeds.index(request.testbed)
     for i, testcase in enumerate(request.testcases):
-      result = RunTestcase(
-          self.envs[testbed_idx], self.testbeds[testbed_idx], testcase,
-          self.config.driver_cflag)
+      result = RunTestcase(self.envs[testbed_idx], self.testbeds[testbed_idx],
+                           testcase, self.config.driver_cflag)
       logging.info('Testcase %d: %s.', i + 1,
                    deepsmith_pb2.Result.Outcome.Name(result.outcome))
       response.results.extend([result])
@@ -157,8 +156,8 @@ def OpenClEnvironmentToTestbed(
   testbed.opts['driver'] = opencl_environment.driver_version
   testbed.opts['device_type'] = opencl_environment.device_type
   testbed.opts['opencl_version'] = opencl_environment.opencl_version
-  testbed.opts['opencl_opt'] = ('enabled' if opencl_environment.opencl_opt
-                                else 'disabled')
+  testbed.opts['opencl_opt'] = ('enabled' if opencl_environment.opencl_opt else
+                                'disabled')
   return testbed
 
 
@@ -196,8 +195,8 @@ def RunTestcase(opencl_environment: env.OpenCLEnvironment,
     runtime = result.profiling_events.add()
     runtime.client = system.HOSTNAME
     runtime.type = 'runtime'
-    runtime.duration_ms = int(round(
-        (end_time - start_time).total_seconds() * 1000))
+    runtime.duration_ms = int(
+        round((end_time - start_time).total_seconds() * 1000))
     runtime.event_start_epoch_ms = labdate.MillisecondsTimestamp(start_time)
     result.outcome = GetResultOutcome(result)
   except DriverCompilationError as e:
@@ -208,8 +207,7 @@ def RunTestcase(opencl_environment: env.OpenCLEnvironment,
   return result
 
 
-def MakeDriver(testcase: deepsmith_pb2.Testcase,
-               optimizations: bool) -> str:
+def MakeDriver(testcase: deepsmith_pb2.Testcase, optimizations: bool) -> str:
   """Generate a self-contained C program for the given test case.
 
   Args:
@@ -230,10 +228,8 @@ def MakeDriver(testcase: deepsmith_pb2.Testcase,
   if 'src' not in testcase.inputs:
     raise ValueError("Field not set: 'Testcase.inputs[\"src\"]'")
 
-  gsize = driver.NDRange(
-      *[int(x) for x in testcase.inputs['gsize'].split(',')])
-  lsize = driver.NDRange(
-      *[int(x) for x in testcase.inputs['lsize'].split(',')])
+  gsize = driver.NDRange(*[int(x) for x in testcase.inputs['gsize'].split(',')])
+  lsize = driver.NDRange(*[int(x) for x in testcase.inputs['lsize'].split(',')])
   size = max(gsize.product * 2, 256)
   src = testcase.inputs['src']
 
@@ -241,8 +237,8 @@ def MakeDriver(testcase: deepsmith_pb2.Testcase,
   data_generator = data.Generator.ARANGE
   if 'data_generator' in testcase.inputs:
     data_generator = {
-      'arange': data.Generator.ARANGE,
-      'ones': data.Generator.ONES,
+        'arange': data.Generator.ARANGE,
+        'ones': data.Generator.ONES,
     }.get(testcase.inputs['data_generator'])
     if not data_generator:
       raise ValueError(
@@ -252,31 +248,43 @@ def MakeDriver(testcase: deepsmith_pb2.Testcase,
   try:
     # Generate a compile-and-execute test harness.
     inputs = data.MakeData(
-        src=src, size=size,
-        data_generator=data_generator,
-        scalar_val=size)
+        src=src, size=size, data_generator=data_generator, scalar_val=size)
     src = cgen.emit_c(
-        src=src, inputs=inputs, gsize=gsize, lsize=lsize,
+        src=src,
+        inputs=inputs,
+        gsize=gsize,
+        lsize=lsize,
         optimizations=optimizations)
     testcase.invariant_opts['driver_type'] = 'compile_and_run'
   except Exception:
     # Create a compile-only stub if not possible.
     try:
       src = cgen.emit_c(
-          src=src, inputs=None, gsize=None, lsize=None,
-          compile_only=True, optimizations=optimizations)
+          src=src,
+          inputs=None,
+          gsize=None,
+          lsize=None,
+          compile_only=True,
+          optimizations=optimizations)
       testcase.invariant_opts['driver_type'] = 'compile_and_create_kernel'
     except Exception:
       # Create a compiler-only stub without creating kernel.
       src = cgen.emit_c(
-          src=src, inputs=None, gsize=None, lsize=None,
-          compile_only=True, create_kernel=False, optimizations=optimizations)
+          src=src,
+          inputs=None,
+          gsize=None,
+          lsize=None,
+          compile_only=True,
+          create_kernel=False,
+          optimizations=optimizations)
       testcase.invariant_opts['driver_type'] = 'compile_only'
   return src
 
 
-def CompileDriver(src: str, output_path: pathlib.Path,
-                  platform_id: int, device_id: int,
+def CompileDriver(src: str,
+                  output_path: pathlib.Path,
+                  platform_id: int,
+                  device_id: int,
                   timeout_seconds: int = 60,
                   cflags: typing.List[str] = None) -> pathlib.Path:
   """Compile driver binary from source.
@@ -295,22 +303,43 @@ def CompileDriver(src: str, output_path: pathlib.Path,
     DriverCompilationError: In case compilation fails.
   """
   cmd = [
-    'timeout', '-s9', str(timeout_seconds),
-    str(CLANG_PATH), '-xc', '-', '-o', str(output_path),
-    f'-DPLATFORM_ID={platform_id}', f'-DDEVICE_ID={device_id}',
-    '-ferror-limit=1', '-std=c99', '-Wno-deprecated-declarations',
-    # Add OpenCL headers.
-    '-isystem', str(OPENCL_HEADERS_DIR),
-    # Link against libcxx.
-    f'-L{LIBCXX_LIB_DIR}', f'-Wl,-rpath,{LIBCXX_LIB_DIR}',
-    '-nodefaultlibs', '-stdlib=libc++', '-lc++', '-lc++abi', '-lm', '-lc',
+      'timeout',
+      '-s9',
+      str(timeout_seconds),
+      str(CLANG_PATH),
+      '-xc',
+      '-',
+      '-o',
+      str(output_path),
+      f'-DPLATFORM_ID={platform_id}',
+      f'-DDEVICE_ID={device_id}',
+      '-ferror-limit=1',
+      '-std=c99',
+      '-Wno-deprecated-declarations',
+      # Add OpenCL headers.
+      '-isystem',
+      str(OPENCL_HEADERS_DIR),
+      # Link against libcxx.
+      f'-L{LIBCXX_LIB_DIR}',
+      f'-Wl,-rpath,{LIBCXX_LIB_DIR}',
+      '-nodefaultlibs',
+      '-stdlib=libc++',
+      '-lc++',
+      '-lc++abi',
+      '-lm',
+      '-lc',
   ]
   if system.is_linux():
     cmd += [
-      # Additional libraries required to link against libcxxx.
-      '-lgcc_s', '-lgcc', '-ldl', '-lpthread',
-      # Link against libOpenCL.
-      f'-L{LIBOPENCL_DIR}', f'-Wl,-rpath,{LIBOPENCL_DIR}', '-lOpenCL'
+        # Additional libraries required to link against libcxxx.
+        '-lgcc_s',
+        '-lgcc',
+        '-ldl',
+        '-lpthread',
+        # Link against libOpenCL.
+        f'-L{LIBOPENCL_DIR}',
+        f'-Wl,-rpath,{LIBOPENCL_DIR}',
+        '-lOpenCL'
     ]
   elif system.is_mac():
     cmd += ['-framework', 'OpenCL']
@@ -319,8 +348,12 @@ def CompileDriver(src: str, output_path: pathlib.Path,
     cmd += cflags
 
   # logging.debug('$ %s', ' '.join(cmd))
-  proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                          stderr=subprocess.PIPE, universal_newlines=True)
+  proc = subprocess.Popen(
+      cmd,
+      stdin=subprocess.PIPE,
+      stdout=subprocess.PIPE,
+      stderr=subprocess.PIPE,
+      universal_newlines=True)
   stdout, stderr = proc.communicate(src)
   if not proc.returncode == 0:
     argv = ' '.join(cmd)
@@ -373,8 +406,8 @@ def GetResultOutcome(
       return deepsmith_pb2.Result.BUILD_TIMEOUT
 
   runtime_ms = GetResultRuntimeMs(result)
-  timeout_ms = int(
-      result.testcase.harness.opts.get('timeout_seconds', 60)) * 1000
+  timeout_ms = int(result.testcase.harness.opts.get('timeout_seconds',
+                                                    60)) * 1000
 
   if result.returncode == 0:
     return deepsmith_pb2.Result.PASS
@@ -416,15 +449,15 @@ def GetResultOutcome(
 def main(argv):
   if len(argv) > 1:
     raise app.UsageError('Unrecognized arguments')
-  harness_config = services.ServiceConfigFromFlag(
-      'harness_config', harness_pb2.CldriveHarness())
+  harness_config = services.ServiceConfigFromFlag('harness_config',
+                                                  harness_pb2.CldriveHarness())
   server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
   services.AssertLocalServiceHostname(harness_config.service)
   service = CldriveHarness(harness_config)
   harness_pb2_grpc.add_HarnessServiceServicer_to_server(service, server)
   server.add_insecure_port(f'[::]:{harness_config.service.port}')
-  logging.info('%s listening on %s:%s', type(service).__name__,
-               harness_config.service.hostname,
+  logging.info('%s listening on %s:%s',
+               type(service).__name__, harness_config.service.hostname,
                harness_config.service.port)
   server.start()
   try:

@@ -11,27 +11,26 @@ from pycparser.c_ast import Struct
 from pycparser.plyparser import ParseError
 from pycparserext.ext_c_parser import OpenCLCParser
 
-
 # A lookup table mapping OpenCL data type names to the corresponding numpy data
 # type.
 NUMPY_TYPES = {
-  "bool": np.dtype("bool"),
-  "char": np.dtype("int8"),
-  "double": np.dtype("float64"),
-  "float": np.dtype("float32"),
-  "half": np.dtype("uint8"),
-  "int": np.dtype("int32"),
-  "long": np.dtype("int64"),
-  "short": np.dtype("int16"),
-  "uchar": np.dtype("uint8"),
-  "uint": np.dtype("uint32"),
-  "ulong": np.dtype("uint64"),
-  "unsigned": np.dtype("uint32"),
-  "unsigned char": np.dtype("uint8"),
-  "unsigned int": np.dtype("uint32"),
-  "unsigned long": np.dtype("uint64"),
-  "unsigned short": np.dtype("uint16"),
-  "ushort": np.dtype("uint16"),
+    "bool": np.dtype("bool"),
+    "char": np.dtype("int8"),
+    "double": np.dtype("float64"),
+    "float": np.dtype("float32"),
+    "half": np.dtype("uint8"),
+    "int": np.dtype("int32"),
+    "long": np.dtype("int64"),
+    "short": np.dtype("int16"),
+    "uchar": np.dtype("uint8"),
+    "uint": np.dtype("uint32"),
+    "ulong": np.dtype("uint64"),
+    "unsigned": np.dtype("uint32"),
+    "unsigned char": np.dtype("uint8"),
+    "unsigned int": np.dtype("uint32"),
+    "unsigned long": np.dtype("uint64"),
+    "unsigned short": np.dtype("uint16"),
+    "ushort": np.dtype("uint16"),
 }
 
 # The inverse lookup table of NUMPY_TYPES.
@@ -39,17 +38,17 @@ OPENCL_TYPES = dict((v, k) for k, v in NUMPY_TYPES.items())
 
 # C printf() function format specifiers for numpy types.
 FORMAT_SPECIFIERS = {
-  np.dtype("bool"): "%d",
-  np.dtype("float32"): "%.3f",
-  np.dtype("float64"): "%.3f",
-  np.dtype("int16"): "%hd",
-  np.dtype("int32"): "%d",
-  np.dtype("int64"): "%ld",
-  np.dtype("int8"): "%hd",
-  np.dtype("uint16"): "%hu",
-  np.dtype("uint32"): "%u",
-  np.dtype("uint64"): "%lu",
-  np.dtype("uint8"): "%hd",
+    np.dtype("bool"): "%d",
+    np.dtype("float32"): "%.3f",
+    np.dtype("float64"): "%.3f",
+    np.dtype("int16"): "%hd",
+    np.dtype("int32"): "%d",
+    np.dtype("int64"): "%ld",
+    np.dtype("int8"): "%hd",
+    np.dtype("uint16"): "%hu",
+    np.dtype("uint32"): "%u",
+    np.dtype("uint64"): "%lu",
+    np.dtype("uint8"): "%hd",
 }
 
 # Private OpenCL parser instance.
@@ -155,8 +154,7 @@ class KernelArg(object):
         raise OpenCLValueError(
             f"{err_prefix} has multiple address space qualifiers")
       else:
-        raise OpenCLValueError(
-            f"{err_prefix} has no address space qualifier")
+        raise OpenCLValueError(f"{err_prefix} has no address space qualifier")
 
     self.is_vector = self.typename[-1].isdigit()
     self.is_const = "const" in self.quals or self.address_space == "constant"
@@ -214,8 +212,7 @@ class ArgumentExtractor(NodeVisitor):
 
   def visit_FuncDef(self, node):
     # Only visit kernels, not all functions.
-    if ("kernel" in node.decl.funcspec or
-        "__kernel" in node.decl.funcspec):
+    if ("kernel" in node.decl.funcspec or "__kernel" in node.decl.funcspec):
       self.kernel_count += 1
       self.name = node.decl.name
     else:

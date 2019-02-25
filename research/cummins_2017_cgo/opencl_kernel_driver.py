@@ -14,38 +14,36 @@ from absl import flags
 
 from compilers.llvm import clang
 from deeplearning.deepsmith.harnesses import cldrive as cldrive_harness
-from gpu.cldrive import env as cldrive_env
 from deeplearning.deepsmith.proto import deepsmith_pb2
+from gpu.cldrive.legacy import env as cldrive_env
 from gpu.libcecl import libcecl_compile
 from gpu.libcecl import libcecl_rewriter
 from gpu.libcecl import libcecl_runtime
 from gpu.libcecl.proto import libcecl_pb2
 
-
 FLAGS = flags.FLAGS
-
 
 # All the combinations of local and global sizes used for synthetic kernels in
 # the CGO'17 experiments. These are the first dimension values, the other two
 # dimensions are ones. E.g. the tuple (64, 128) means a local (workgroup) size
 # of (64, 1, 1), and a global size of (128, 1, 1).
 LSIZE_GSIZE_PAIRS = [
-  (64, 64),
-  (128, 128),
-  (256, 256),
-  (256, 512),
-  (256, 1024),
-  (256, 2048),
-  (256, 4096),
-  (256, 8192),
-  (256, 16384),
-  (256, 65536),
-  (256, 131072),
-  (256, 262144),
-  (256, 524288),
-  (256, 1048576),
-  (256, 2097152),
-  (256, 4194304),
+    (64, 64),
+    (128, 128),
+    (256, 256),
+    (256, 512),
+    (256, 1024),
+    (256, 2048),
+    (256, 4096),
+    (256, 8192),
+    (256, 16384),
+    (256, 65536),
+    (256, 131072),
+    (256, 262144),
+    (256, 524288),
+    (256, 1048576),
+    (256, 2097152),
+    (256, 4194304),
 ]
 
 
@@ -67,6 +65,7 @@ class DriverExecutionFailed(DriverFailure):
 
 
 class KernelIsNondeterministic(DriverFailure):
+
   def __init__(self, output1: str, output2: str):
     self.output1, self.output2 = output1, output2
 
@@ -79,7 +78,9 @@ class KernelProducesNoOutput(DriverFailure):
   pass
 
 
-def Drive(opencl_kernel: str, lsize_x: int, gsize_x: int,
+def Drive(opencl_kernel: str,
+          lsize_x: int,
+          gsize_x: int,
           opencl_env: cldrive_env.OpenCLEnvironment,
           num_runs: int = 30) -> typing.List[libcecl_pb2.LibceclExecutableRun]:
   """Drive an OpenCL kernel and return the execution logs.
@@ -106,37 +107,34 @@ if (get_global_id(0) < c) {
 }""",
       min_runs_per_kernel=30,
       dynamic_params=[
-        cldrive_pb2.DynamicParams(
-            global_size_x=16,
-            local_size_x=16,
-        ),
-        cldrive_pb2.DynamicParams(
-            global_size_x=1024,
-            local_size_x=64,
-        ),
-        cldrive_pb2.DynamicParams(
-            global_size_x=128,
-            local_size_x=64,
-        ),
+          cldrive_pb2.DynamicParams(
+              global_size_x=16,
+              local_size_x=16,
+          ),
+          cldrive_pb2.DynamicParams(
+              global_size_x=1024,
+              local_size_x=64,
+          ),
+          cldrive_pb2.DynamicParams(
+              global_size_x=128,
+              local_size_x=64,
+          ),
       ],
   )
-
-
 
   # Create a pair of driver sources.
   def MakeDriverSrc(data_generator: str) -> str:
     testcase = deepsmith_pb2.Testcase(
         inputs={
-          'gsize': f'{gsize_x},1,1',
-          'lsize': f'{lsize_x},1,1',
-          'data_generator': data_generator,
-          'src': opencl_kernel,
-        }
-    )
+            'gsize': f'{gsize_x},1,1',
+            'lsize': f'{lsize_x},1,1',
+            'data_generator': data_generator,
+            'src': opencl_kernel,
+        })
     src = cldrive_harness.MakeDriver(testcase, optimizations=True)
     if testcase.invariant_opts['driver_type'] != 'compile_and_run':
-      raise DriverConstructionFailed("Expected compile-and-run driver, found "
-                                     + testcase.invariant_opts['driver_type'])
+      raise DriverConstructionFailed("Expected compile-and-run driver, found " +
+                                     testcase.invariant_opts['driver_type'])
     return src
 
   src1 = MakeDriverSrc('ones')
@@ -156,8 +154,9 @@ if (get_global_id(0) < c) {
 
     def CompileDriver(libcecl_src: str, binary_path: pathlib.Path):
       proc = clang.Exec(
-          ['-x', 'c', '-std=c99', '-', '-o', str(binary_path)] + cflags +
-          ldflags, stdin=libcecl_src)
+          ['-x', 'c', '-std=c99', '-', '-o',
+           str(binary_path)] + cflags + ldflags,
+          stdin=libcecl_src)
       if proc.returncode:
         raise DriverCompilationFailed(proc.stderr[:1024])
       assert binary_path.is_file()

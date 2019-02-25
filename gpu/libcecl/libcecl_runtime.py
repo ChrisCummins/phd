@@ -22,11 +22,10 @@ import typing
 from absl import flags
 from absl import logging
 
-from gpu.cldrive import env as cldrive_env
+from gpu.cldrive.legacy import env as cldrive_env
 from gpu.libcecl import libcecl_compile
 from gpu.libcecl.proto import libcecl_pb2
 from labm8 import labdate
-
 
 FLAGS = flags.FLAGS
 
@@ -96,7 +95,8 @@ def KernelInvocationsFromCeclLog(
       kernel_invocations.append(
           libcecl_pb2.OpenClKernelInvocation(
               kernel_name=kernel_name,
-              global_size=1, local_size=1,
+              global_size=1,
+              local_size=1,
               runtime_ms=elapsed))
       logging.debug('Extracted clEnqueueTask from log')
     elif opcode == "clCreateBuffer":
@@ -110,8 +110,7 @@ def KernelInvocationsFromCeclLog(
         # Host -> Device, or Device -> host.
         total_transferred_bytes += size
       logging.debug('Extracted clCreateBuffer from log')
-    elif (opcode == "clEnqueueReadBuffer" or
-          opcode == "clEnqueueWriteBuffer" or
+    elif (opcode == "clEnqueueReadBuffer" or opcode == "clEnqueueWriteBuffer" or
           opcode == "clEnqueueMapBuffer"):
       _, size, elapsed = operands
       elapsed = float(elapsed)
@@ -128,10 +127,9 @@ def KernelInvocationsFromCeclLog(
   return kernel_invocations
 
 
-def RunEnv(
-    cldrive_environment: cldrive_env.OpenCLEnvironment,
-    os_env: typing.Optional[typing.Dict[str, str]] = None
-) -> typing.Dict[str, str]:
+def RunEnv(cldrive_environment: cldrive_env.OpenCLEnvironment,
+           os_env: typing.Optional[typing.Dict[str, str]] = None
+          ) -> typing.Dict[str, str]:
   """Return an execution environment for a libcecl benchmark."""
   env = (os_env or os.environ).copy()
   env['LD_LIBRARY_PATH'] = str(libcecl_compile.LIBCECL_SO.parent)
@@ -142,10 +140,10 @@ def RunEnv(
 
 
 def RunLibceclExecutable(
-    command: typing.List[str], env: cldrive_env.OpenCLEnvironment,
+    command: typing.List[str],
+    env: cldrive_env.OpenCLEnvironment,
     os_env: typing.Optional[typing.Dict[str, str]] = None,
-    record_outputs: bool = True
-) -> libcecl_pb2.LibceclExecutableRun:
+    record_outputs: bool = True) -> libcecl_pb2.LibceclExecutableRun:
   """Run executable using libcecl and log output."""
   timestamp = labdate.MillisecondsTimestamp()
 

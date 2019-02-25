@@ -8,13 +8,12 @@ from absl import logging
 
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
+from gpu.cldrive.legacy import driver
+from gpu.cldrive.legacy import env as cldrive_env
 from gpu.cldrive.proto import cldrive_pb2
-from gpu.cldrive import env as cldrive_env
-from gpu.cldrive import driver
 from labm8 import system
 from labm8 import text
 from research.cummins_2017_cgo import opencl_kernel_driver
-
 
 FLAGS = flags.FLAGS
 
@@ -39,27 +38,27 @@ KernelToDrive = collections.namedtuple('KernelToDrive', ['id', 'src'])
 # dimensions are ones. E.g. the tuple (64, 128) means a local (workgroup) size
 # of (64, 1, 1), and a global size of (128, 1, 1).
 LSIZE_GSIZE_PAIRS = [
-  (64, 64),
-  (128, 128),
-  (256, 256),
-  (256, 512),
-  (256, 1024),
-  (256, 2048),
-  (256, 4096),
-  (256, 8192),
-  (256, 16384),
-  (256, 65536),
-  (256, 131072),
-  (256, 262144),
-  (256, 524288),
-  (256, 1048576),
-  (256, 2097152),
-  (256, 4194304),
+    (64, 64),
+    (128, 128),
+    (256, 256),
+    (256, 512),
+    (256, 1024),
+    (256, 2048),
+    (256, 4096),
+    (256, 8192),
+    (256, 16384),
+    (256, 65536),
+    (256, 131072),
+    (256, 262144),
+    (256, 524288),
+    (256, 1048576),
+    (256, 2097152),
+    (256, 4194304),
 ]
 
 LSIZE_GSIZE_PROTO_PAIRS = [
-  cldrive_pb2.DynamicParams(global_size_x=x, local_size_x=y)
-  for x, y in LSIZE_GSIZE_PAIRS
+    cldrive_pb2.DynamicParams(global_size_x=x, local_size_x=y)
+    for x, y in LSIZE_GSIZE_PAIRS
 ]
 
 
@@ -84,92 +83,97 @@ def GetBatchOfKernelsToDrive(db: grewe_features_db.Database,
         return [KernelToDrive(*row) for row in q]
 
 
-def ExperimentalNativeDriver(opencl_kernel,
-                             env: cldrive_env.OpenCLEnvironment,
+def ExperimentalNativeDriver(opencl_kernel, env: cldrive_env.OpenCLEnvironment,
                              num_runs: int):
-  instance = driver.DriveInstance(cldrive_pb2.CldriveInstance(
-      device=env.proto,
-      opencl_src=opencl_kernel,
-      min_runs_per_kernel=num_runs,
-      dynamic_params=LSIZE_GSIZE_PROTO_PAIRS,
-  ))
+  instance = driver.DriveInstance(
+      cldrive_pb2.CldriveInstance(
+          device=env.proto,
+          opencl_src=opencl_kernel,
+          min_runs_per_kernel=num_runs,
+          dynamic_params=LSIZE_GSIZE_PROTO_PAIRS,
+      ))
   for kernel in instance.kernel:
     for run in kernel.run:
       for log in run.log:
         yield log
 
 
-def ExperimentalNativeDriveBatchAndRecordResults(db: grewe_features_db.Database,
-    batch: typing.List[KernelToDrive],
+def ExperimentalNativeDriveBatchAndRecordResults(
+    db: grewe_features_db.Database, batch: typing.List[KernelToDrive],
     env: cldrive_env.OpenCLEnvironment) -> None:
   """Work in progress port to native cldrive implementation."""
   for static_features_id, opencl_kernel in batch:
-    logs = list(ExperimentalNativeDriver(
-        opencl_kernel, env=env,
-        num_runs=FLAGS.num_runs))
+    logs = list(
+        ExperimentalNativeDriver(
+            opencl_kernel, env=env, num_runs=FLAGS.num_runs))
     logging.info('%d logs', len(logs))
     if logs:
       with db.Session(commit=True) as session:
         session.add_all([
-          grewe_features_db.DynamicFeatures(
-              static_features_id=static_features_id,
-              opencl_env=env.name,
-              hostname=system.HOSTNAME,
-              dataset=f'{log.kernel_invocation[0].global_size},{log.kernel_invocation[0].local_size}',
-              gsize=log.kernel_invocation[0].global_size,
-              wgsize=log.kernel_invocation[0].local_size,
-              transferred_bytes=log.kernel_invocation[0].transferred_bytes,
-              runtime_ms=log.kernel_invocation[0].runtime_ms,
-          ) for log in logs
+            grewe_features_db.DynamicFeatures(
+                static_features_id=static_features_id,
+                opencl_env=env.name,
+                hostname=system.HOSTNAME,
+                dataset=
+                f'{log.kernel_invocation[0].global_size},{log.kernel_invocation[0].local_size}',
+                gsize=log.kernel_invocation[0].global_size,
+                wgsize=log.kernel_invocation[0].local_size,
+                transferred_bytes=log.kernel_invocation[0].transferred_bytes,
+                runtime_ms=log.kernel_invocation[0].runtime_ms,
+            ) for log in logs
         ])
 
 
-def DriveBatchAndRecordResults(
-    db: grewe_features_db.Database,
-    batch: typing.List[KernelToDrive],
-    env: cldrive_env.OpenCLEnvironment) -> None:
+def DriveBatchAndRecordResults(db: grewe_features_db.Database,
+                               batch: typing.List[KernelToDrive],
+                               env: cldrive_env.OpenCLEnvironment) -> None:
   for static_features_id, opencl_kernel in batch:
     for lsize, gsize in LSIZE_GSIZE_PAIRS:
       dataset = f'{lsize},{gsize}'
 
       try:
         logs = opencl_kernel_driver.Drive(
-            opencl_kernel, lsize_x=lsize, gsize_x=gsize, opencl_env=env,
+            opencl_kernel,
+            lsize_x=lsize,
+            gsize_x=gsize,
+            opencl_env=env,
             num_runs=FLAGS.num_runs)
         assert len(logs) == FLAGS.num_runs
         logging.info('%d:%s PASS', static_features_id, dataset)
         with db.Session(commit=True) as session:
-          session.add(grewe_features_db.DriverResult(
-              static_features_id=static_features_id,
-              opencl_env=env.name,
-              hostname=system.HOSTNAME,
-              dataset=dataset,
-              result='PASS',
-          ))
+          session.add(
+              grewe_features_db.DriverResult(
+                  static_features_id=static_features_id,
+                  opencl_env=env.name,
+                  hostname=system.HOSTNAME,
+                  dataset=dataset,
+                  result='PASS',
+              ))
           dynamic_features = [
-            grewe_features_db.DynamicFeatures(
-                static_features_id=static_features_id,
-                opencl_env=env.name,
-                hostname=system.HOSTNAME,
-                dataset=dataset,
-                gsize=log.kernel_invocation[0].global_size,
-                wgsize=log.kernel_invocation[0].local_size,
-                transferred_bytes=log.kernel_invocation[0].transferred_bytes,
-                runtime_ms=log.kernel_invocation[0].runtime_ms,
-            ) for log in logs
+              grewe_features_db.DynamicFeatures(
+                  static_features_id=static_features_id,
+                  opencl_env=env.name,
+                  hostname=system.HOSTNAME,
+                  dataset=dataset,
+                  gsize=log.kernel_invocation[0].global_size,
+                  wgsize=log.kernel_invocation[0].local_size,
+                  transferred_bytes=log.kernel_invocation[0].transferred_bytes,
+                  runtime_ms=log.kernel_invocation[0].runtime_ms,
+              ) for log in logs
           ]
           session.add_all(dynamic_features)
       except opencl_kernel_driver.DriverFailure as e:
         with db.Session(commit=True) as session:
           failure_name = text.CamelCapsToUnderscoreSeparated(type(e).__name__)
           logging.info('%d:%s %s', static_features_id, dataset, failure_name)
-          session.add(grewe_features_db.DriverResult(
-              static_features_id=static_features_id,
-              opencl_env=env.name,
-              hostname=system.HOSTNAME,
-              dataset=dataset,
-              result=failure_name.upper(),
-          ))
+          session.add(
+              grewe_features_db.DriverResult(
+                  static_features_id=static_features_id,
+                  opencl_env=env.name,
+                  hostname=system.HOSTNAME,
+                  dataset=dataset,
+                  result=failure_name.upper(),
+              ))
 
 
 def main(argv: typing.List[str]):

@@ -2,10 +2,9 @@
 import pytest
 from absl import flags
 
-from gpu.cldrive import env as cldrive_env
+from gpu.cldrive.legacy import env as cldrive_env
 from labm8 import test
 from research.cummins_2017_cgo import opencl_kernel_driver
-
 
 FLAGS = flags.FLAGS
 
@@ -25,7 +24,8 @@ def test_Drive_invalid_opencl_kernel(opencl_env: cldrive_env.OpenCLEnvironment):
 def test_Drive_no_output(opencl_env: cldrive_env.OpenCLEnvironment):
   """Test that the correct number of logs are returned."""
   with pytest.raises(opencl_kernel_driver.KernelProducesNoOutput):
-    opencl_kernel_driver.Drive("""
+    opencl_kernel_driver.Drive(
+        """
 kernel void A(global int* a, global int* b) {
 }
 """, 16, 16, opencl_env, 5)
@@ -40,7 +40,8 @@ def test_Drive_maybe_non_deterministic(
   out of bounds and dividing by zero.
   """
   with pytest.raises(opencl_kernel_driver.KernelIsNondeterministic):
-    opencl_kernel_driver.Drive("""
+    opencl_kernel_driver.Drive(
+        """
 kernel void A(global float* a, global float* b) {
   a[get_global_id(0)] = b[-get_global_id(0)] / (get_global_id(0) == 0 ? 0 : 1);
 }
@@ -49,7 +50,8 @@ kernel void A(global float* a, global float* b) {
 
 def test_Drive_log_count(opencl_env: cldrive_env.OpenCLEnvironment):
   """Test that the correct number of logs are returned."""
-  logs = opencl_kernel_driver.Drive("""
+  logs = opencl_kernel_driver.Drive(
+      """
 kernel void A(global int* a, global int* b) {
   a[get_global_id(0)] += b[get_global_id(0)];
 }

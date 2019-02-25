@@ -17,10 +17,9 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import harness_pb2
 from deeplearning.deepsmith.proto import harness_pb2_grpc
 from deeplearning.deepsmith.proto import service_pb2
-from gpu.cldrive import driver
-from gpu.cldrive import env
+from gpu.cldrive.legacy import driver
+from gpu.cldrive.legacy import env
 from labm8 import labdate
-
 
 FLAGS = flags.FLAGS
 
@@ -53,8 +52,8 @@ class ClLauncherHarness(harness.HarnessBase,
     all_envs = {env_.name: env_ for env_ in env.GetOpenClEnvironments()}
     envs = []
     if self.config.opencl_env:
-      for opencl_env, opt in zip(
-          self.config.opencl_env, self.config.opencl_opt):
+      for opencl_env, opt in zip(self.config.opencl_env,
+                                 self.config.opencl_opt):
         if opencl_env in all_envs:
           env_ = copy.deepcopy(all_envs[opencl_env])
           env_.opencl_opt = opt
@@ -86,9 +85,9 @@ class ClLauncherHarness(harness.HarnessBase,
     for testbed in self.testbeds:
       logging.info('OpenCL testbed:\n%s', testbed)
 
-  def GetHarnessCapabilities(self,
-                             request: harness_pb2.GetHarnessCapabilitiesRequest,
-                             context) -> harness_pb2.GetHarnessCapabilitiesResponse:
+  def GetHarnessCapabilities(
+      self, request: harness_pb2.GetHarnessCapabilitiesRequest,
+      context) -> harness_pb2.GetHarnessCapabilitiesResponse:
     """Get the harness capabilities."""
     del context
     response = services.BuildDefaultResponse(
@@ -103,15 +102,14 @@ class ClLauncherHarness(harness.HarnessBase,
     response = services.BuildDefaultResponse(harness_pb2.RunTestcasesResponse)
     if request.testbed not in self.testbeds:
       response.status.returncode = (
-        service_pb2.ServiceStatus.INVALID_REQUEST_PARAMETERS)
+          service_pb2.ServiceStatus.INVALID_REQUEST_PARAMETERS)
       response.status.error_message = 'Requested testbed not found.'
       return response
 
     testbed_idx = self.testbeds.index(request.testbed)
     for i, testcase in enumerate(request.testcases):
-      result = RunTestcase(
-          self.envs[testbed_idx], self.testbeds[testbed_idx], testcase,
-          list(self.config.opts))
+      result = RunTestcase(self.envs[testbed_idx], self.testbeds[testbed_idx],
+                           testcase, list(self.config.opts))
       logging.info('Testcase %d: %s.', i + 1,
                    deepsmith_pb2.Result.Outcome.Name(result.outcome))
       response.results.extend([result])
@@ -137,8 +135,8 @@ def OpenClEnvironmentToTestbed(
   testbed.opts['driver'] = opencl_environment.driver_version
   testbed.opts['device_type'] = opencl_environment.device_type
   testbed.opts['opencl_version'] = opencl_environment.opencl_version
-  testbed.opts['opencl_opt'] = (
-    'enabled' if opencl_environment.opencl_opt else 'disabled')
+  testbed.opts['opencl_opt'] = ('enabled' if opencl_environment.opencl_opt else
+                                'disabled')
   return testbed
 
 
@@ -163,10 +161,12 @@ def RunTestcase(opencl_environment: env.OpenCLEnvironment,
 
   start_time_epoch_ms = labdate.MillisecondsTimestamp()
   process = cl_launcher.ExecClsmithSource(
-      opencl_environment, testcase.inputs['src'],
+      opencl_environment,
+      testcase.inputs['src'],
       driver.NDRange.FromString(testcase.inputs['gsize']),
       driver.NDRange.FromString(testcase.inputs['lsize']),
-      *opts, timeout_seconds=testcase.harness.opts.get('timeout_seconds', '60'))
+      *opts,
+      timeout_seconds=testcase.harness.opts.get('timeout_seconds', '60'))
 
   wall_time = labdate.MillisecondsTimestamp() - start_time_epoch_ms
   result = deepsmith_pb2.Result()
@@ -218,8 +218,8 @@ def GetResultOutcome(
       return deepsmith_pb2.Result.BUILD_TIMEOUT
 
   runtime_ms = GetResultRuntimeMs(result)
-  timeout_ms = int(
-      result.testcase.harness.opts.get('timeout_seconds', 60)) * 1000
+  timeout_ms = int(result.testcase.harness.opts.get('timeout_seconds',
+                                                    60)) * 1000
 
   if result.returncode == 0:
     return deepsmith_pb2.Result.PASS
@@ -261,15 +261,16 @@ def main(argv):
   """Main entry point."""
   if len(argv) > 1:
     raise app.UsageError('Unrecognized arguments')
-  config = services.ServiceConfigFromFlag(
-      'harness_config', harness_pb2.ClLauncherHarness())
+  config = services.ServiceConfigFromFlag('harness_config',
+                                          harness_pb2.ClLauncherHarness())
   server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
   services.AssertLocalServiceHostname(config.service)
   service = ClLauncherHarness(config)
   harness_pb2_grpc.add_HarnessServiceServicer_to_server(service, server)
   server.add_insecure_port(f'[::]:{config.service.port}')
-  logging.info('%s listening on %s:%s', type(service).__name__,
-               config.service.hostname, config.service.port)
+  logging.info('%s listening on %s:%s',
+               type(service).__name__, config.service.hostname,
+               config.service.port)
   server.start()
   try:
     while True:

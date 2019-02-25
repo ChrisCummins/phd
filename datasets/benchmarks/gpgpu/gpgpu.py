@@ -29,7 +29,7 @@ from absl import flags
 from absl import logging
 
 from datasets.benchmarks.gpgpu import gpgpu_pb2
-from gpu.cldrive import env as cldrive_env
+from gpu.cldrive.legacy import env as cldrive_env
 from gpu.libcecl import libcecl_compile
 from gpu.libcecl import libcecl_runtime
 from gpu.oclgrind import oclgrind
@@ -41,43 +41,45 @@ from labm8 import pbutil
 from labm8 import system
 from labm8 import text
 
-
 FLAGS = flags.FLAGS
 
 # The list of all GPGPU benchmark suites.
 _BENCHMARK_SUITE_NAMES = [
-  'amd-app-sdk-3.0',
-  'npb-3.3',
-  'nvidia-4.2',
-  'parboil-0.2',
-  'polybench-gpu-1.0',
-  'rodinia-3.1',
-  'shoc-1.1.5',
-  'dummy_just_for_testing',
+    'amd-app-sdk-3.0',
+    'npb-3.3',
+    'nvidia-4.2',
+    'parboil-0.2',
+    'polybench-gpu-1.0',
+    'rodinia-3.1',
+    'shoc-1.1.5',
+    'dummy_just_for_testing',
 ]
 
-flags.DEFINE_list('gpgpu_benchmark_suites', _BENCHMARK_SUITE_NAMES,
-                  'The names of benchmark suites to run. Defaults to all '
-                  'benchmark suites.')
-flags.DEFINE_list('gpgpu_envs',
-                  ['Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2'],
-                  'The OpenCL environment names to execute benchmark suites '
-                  'on. To list the available environments, run '
-                  '`bazel run //gpu/clinfo`.')
+flags.DEFINE_list(
+    'gpgpu_benchmark_suites', _BENCHMARK_SUITE_NAMES,
+    'The names of benchmark suites to run. Defaults to all '
+    'benchmark suites.')
+flags.DEFINE_list(
+    'gpgpu_envs', ['Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2'],
+    'The OpenCL environment names to execute benchmark suites '
+    'on. To list the available environments, run '
+    '`bazel run //gpu/clinfo`.')
 flags.DEFINE_string('gpgpu_logdir', '/tmp/phd/datasets/benchmarks/gpgpu',
                     'The directory to write log files to.')
-flags.DEFINE_integer('gpgpu_build_process_count', multiprocessing.cpu_count(),
-                     'The number of parallel threads to use when building '
-                     'GPGPU benchmark suites. Defaults to the number of '
-                     'processors on your system.')
+flags.DEFINE_integer(
+    'gpgpu_build_process_count', multiprocessing.cpu_count(),
+    'The number of parallel threads to use when building '
+    'GPGPU benchmark suites. Defaults to the number of '
+    'processors on your system.')
 flags.DEFINE_integer('gpgpu_benchmark_run_count', 1,
                      'The number of times to execute each benchmark suite.')
 flags.DEFINE_string('gpgpu_log_extension', '.pb',
                     'The file extension for generated log files.')
-flags.DEFINE_boolean('gpgpu_record_outputs', True,
-                     "Record each benchmark's stdout and stderr. This "
-                     "information is not needed to get performance data, and "
-                     "can be quite large.")
+flags.DEFINE_boolean(
+    'gpgpu_record_outputs', True,
+    "Record each benchmark's stdout and stderr. This "
+    "information is not needed to get performance data, and "
+    "can be quite large.")
 
 _RODINIA_DATA_ROOT = bazelutil.DataPath('rodinia_data')
 
@@ -85,7 +87,8 @@ _MKCECL = bazelutil.DataPath('phd/gpu/libcecl/mkcecl')
 
 
 def CheckCall(command: typing.Union[str, typing.List[str]],
-              shell: bool = False, env: typing.Dict[str, str] = None):
+              shell: bool = False,
+              env: typing.Dict[str, str] = None):
   """Wrapper around subprocess.check_call() to log executed commands."""
   if shell:
     logging.debug('$ %s', command)
@@ -101,13 +104,15 @@ def RewriteClDeviceType(env: cldrive_env.OclgrindOpenCLEnvironment,
   """Rewrite all instances of CL_DEVICE_TYPE_XXX in the given path."""
   cl_device_type = ('CL_DEVICE_TYPE_GPU' if env.device_type.lower() == 'gpu'
                     else 'CL_DEVICE_TYPE_CPU')
-  CheckCall(f"""\
+  CheckCall(
+      f"""\
 for f in $(find '{path}' -type f); do
   grep CL_DEVICE_TYPE_ $f &>/dev/null && {{
     sed -E -i 's/CL_DEVICE_TYPE_[A-Z]+/{cl_device_type}/g' $f
     echo Set {cl_device_type} in $f
   }} || true
-done""", shell=True)
+done""",
+      shell=True)
 
 
 @contextlib.contextmanager
@@ -159,9 +164,11 @@ def MakeEnv(make_dir: pathlib.Path,
       yield env
 
 
-def Make(target: typing.Optional[str], make_dir: pathlib.Path,
-         extra_make_args: typing.Optional[typing.List[str]] = None,
-         ) -> None:
+def Make(
+    target: typing.Optional[str],
+    make_dir: pathlib.Path,
+    extra_make_args: typing.Optional[typing.List[str]] = None,
+) -> None:
   """Run make target in the given path."""
   if not (make_dir / 'Makefile').is_file():
     raise EnvironmentError(f"Cannot find Makefile in {make_dir}")
@@ -170,8 +177,10 @@ def Make(target: typing.Optional[str], make_dir: pathlib.Path,
   # because some of the source codes have hard-coded relative paths.
   with MakeEnv(make_dir) as env:
     logging.debug('Running make %s in %s', target, make_dir)
-    CheckCall(['make', '-j', FLAGS.gpgpu_build_process_count] +
-              ([target] if target else []) + (extra_make_args or []), env=env)
+    CheckCall(
+        ['make', '-j', FLAGS.gpgpu_build_process_count] +
+        ([target] if target else []) + (extra_make_args or []),
+        env=env)
 
 
 def FindExecutableInDir(path: pathlib.Path) -> pathlib.Path:
@@ -261,7 +270,8 @@ class _BenchmarkSuite(object):
       yield libcecl_runtime.RunEnv(self.env)
 
   def _ExecToLogFile(
-      self, executable: pathlib.Path,
+      self,
+      executable: pathlib.Path,
       benchmark_name: str,
       command: typing.Optional[typing.List[str]] = None,
       dataset_name: str = 'default',
@@ -276,11 +286,8 @@ class _BenchmarkSuite(object):
     # execution.
     timestamp = labdate.MillisecondsTimestamp()
     log_name = '.'.join([
-      self.name,
-      benchmark_name,
-      device_name,
-      system.HOSTNAME,
-      str(timestamp)
+        self.name, benchmark_name, device_name, system.HOSTNAME,
+        str(timestamp)
     ])
 
     # Assemble the command to run.
@@ -302,13 +309,14 @@ class _BenchmarkSuite(object):
     else:
       log_produced = self._logdir / f'{log_name}{FLAGS.gpgpu_log_extension}'
 
-    pbutil.ToFile(gpgpu_pb2.GpgpuBenchmarkRun(
-        benchmark_suite=self.name,
-        benchmark_name=benchmark_name,
-        dataset_name=dataset_name,
-        hostname=system.HOSTNAME,
-        run=libcecl_log,
-    ), log_produced)
+    pbutil.ToFile(
+        gpgpu_pb2.GpgpuBenchmarkRun(
+            benchmark_suite=self.name,
+            benchmark_name=benchmark_name,
+            dataset_name=dataset_name,
+            hostname=system.HOSTNAME,
+            run=libcecl_log,
+        ), log_produced)
 
     logging.info('Wrote %s', log_produced)
     self._log_paths.append(log_produced)
@@ -356,7 +364,8 @@ class DummyJustForTesting(_BenchmarkSuite):
     with MakeEnv(self.path) as env:
       CheckCall(
           f'gcc {self.path}/hello.cc -o {self.path}/hello {env["CFLAGS"]} '
-          f'{env["LDFLAGS"]}', shell=True)
+          f'{env["LDFLAGS"]}',
+          shell=True)
 
   def _Run(self):
     logging.info("Executing dummy benchmarks!")
@@ -379,22 +388,22 @@ class AmdAppSdkBenchmarkSuite(_BenchmarkSuite):
   @property
   def benchmarks(self) -> typing.List[str]:
     return [
-      'AdvancedConvolution',
-      'BinomialOption',
-      'BitonicSort',
-      'BlackScholes',
-      'FastWalshTransform',
-      'FloydWarshall',
-      'Histogram',
-      'MatrixMultiplication',
-      'MatrixTranspose',
-      'MonteCarloAsian',
-      'NBody',
-      'PrefixSum',
-      'Reduction',
-      'ScanLargeArrays',
-      'SimpleConvolution',
-      'SobelFilter',
+        'AdvancedConvolution',
+        'BinomialOption',
+        'BitonicSort',
+        'BlackScholes',
+        'FastWalshTransform',
+        'FloydWarshall',
+        'Histogram',
+        'MatrixMultiplication',
+        'MatrixTranspose',
+        'MonteCarloAsian',
+        'NBody',
+        'PrefixSum',
+        'Reduction',
+        'ScanLargeArrays',
+        'SimpleConvolution',
+        'SobelFilter',
     ]
 
   def _ForceOpenCLEnvironment(self, env: cldrive_env.OpenCLEnvironment):
@@ -406,19 +415,22 @@ class AmdAppSdkBenchmarkSuite(_BenchmarkSuite):
         Make('clean', self.path / 'samples/opencl/cl/1.x' / benchmark)
 
     # Delete all CMake generated files.
-    CheckCall(['find', self.path / 'samples/opencl/cl/1.x', '-iwholename',
-               '*cmake*', '-not', '-name', 'CMakeLists.txt', '-delete'])
+    CheckCall([
+        'find', self.path / 'samples/opencl/cl/1.x', '-iwholename', '*cmake*',
+        '-not', '-name', 'CMakeLists.txt', '-delete'
+    ])
 
     for benchmark in self.benchmarks:
-      with MakeEnv(self.path / f'samples/opencl/cl/1.x/{benchmark}',
-                   opencl_headers=False) as env:
+      with MakeEnv(
+          self.path / f'samples/opencl/cl/1.x/{benchmark}',
+          opencl_headers=False) as env:
         env['CFLAGS'] = f'{env["CFLAGS"]} -isystem {self.path}/include'
         env['CXXFLAGS'] = f'{env["CXXFLAGS"]} -isystem {self.path}/include'
 
         logging.debug('Building %s:%s in %s', self.name, benchmark)
         CheckCall(['cmake', '.'], env=env)
-        CheckCall(['make', '-j', FLAGS.gpgpu_build_process_count,
-                   'VERBOSE=1'], env=env)
+        CheckCall(['make', '-j', FLAGS.gpgpu_build_process_count, 'VERBOSE=1'],
+                  env=env)
 
   def _Run(self):
     for benchmark in self.benchmarks:
@@ -437,14 +449,14 @@ class NasParallelBenchmarkSuite(_BenchmarkSuite):
   @property
   def benchmarks(self) -> typing.List[str]:
     return [
-      'BT',
-      'CG',
-      'EP',
-      'FT',
-      'IS',
-      'LU',
-      'MG',
-      'SP',
+        'BT',
+        'CG',
+        'EP',
+        'FT',
+        'IS',
+        'LU',
+        'MG',
+        'SP',
     ]
 
   def _ForceOpenCLEnvironment(self, env: cldrive_env.OpenCLEnvironment):
@@ -460,12 +472,14 @@ class NasParallelBenchmarkSuite(_BenchmarkSuite):
         if not executable.is_file():
           continue
         self._ExecToLogFile(
-            executable, f'{benchmark.lower()}.{dataset}',
+            executable,
+            f'{benchmark.lower()}.{dataset}',
             env={
-              'OPENCL_DEVICE_TYPE': (
-                'GPU' if self.env.device_type.lower() == 'gpu' else 'CPU')
+                'OPENCL_DEVICE_TYPE':
+                ('GPU' if self.env.device_type.lower() == 'gpu' else 'CPU')
             },
-            dataset_name=dataset, command=[executable, f'../{benchmark}'])
+            dataset_name=dataset,
+            command=[executable, f'../{benchmark}'])
 
 
 class NvidiaBenchmarkSuite(_BenchmarkSuite):
@@ -478,20 +492,20 @@ class NvidiaBenchmarkSuite(_BenchmarkSuite):
   @property
   def benchmarks(self) -> typing.List[str]:
     return [
-      'BlackScholes',
-      'ConvolutionSeparable',
-      'DCT8x8',
-      'DXTCompression',
-      'DotProduct',
-      'FDTD3d',
-      'HiddenMarkovModel',
-      'MatVecMul',
-      'MatrixMul',
-      'MersenneTwister',
-      'RadixSort',
-      'Reduction',
-      'Scan',
-      'VectorAdd',
+        'BlackScholes',
+        'ConvolutionSeparable',
+        'DCT8x8',
+        'DXTCompression',
+        'DotProduct',
+        'FDTD3d',
+        'HiddenMarkovModel',
+        'MatVecMul',
+        'MatrixMul',
+        'MersenneTwister',
+        'RadixSort',
+        'Reduction',
+        'Scan',
+        'VectorAdd',
     ]
 
   def _ForceOpenCLEnvironment(self, env: cldrive_env.OpenCLEnvironment):
@@ -515,47 +529,47 @@ class ParboilBenchmarkSuite(_BenchmarkSuite):
   @property
   def benchmarks(self) -> typing.List[str]:
     return [
-      'bfs',
-      'cutcp',
-      'histo',
-      'lbm',
-      'mri-gridding',
-      'mri-q',
-      'sad',
-      'sgemm',
-      'spmv',
-      'stencil',
-      'tpacf',
+        'bfs',
+        'cutcp',
+        'histo',
+        'lbm',
+        'mri-gridding',
+        'mri-q',
+        'sad',
+        'sgemm',
+        'spmv',
+        'stencil',
+        'tpacf',
     ]
 
   @property
   def benchmarks_and_datasets(self):
     return [
-      ('bfs', '1M'),
-      ('bfs', 'NY'),
-      ('bfs', 'SF'),
-      ('bfs', 'UT'),
-      ('cutcp', 'large'),
-      ('cutcp', 'small'),
-      ('histo', 'default'),
-      ('histo', 'large'),
-      ('lbm', 'long'),
-      ('lbm', 'short'),
-      ('mri-gridding', 'small'),
-      ('mri-q', 'large'),
-      ('mri-q', 'small'),
-      ('sad', 'default'),
-      ('sad', 'large'),
-      ('sgemm', 'medium'),
-      ('sgemm', 'small'),
-      ('spmv', 'large'),
-      ('spmv', 'medium'),
-      ('spmv', 'small'),
-      ('stencil', 'default'),
-      ('stencil', 'small'),
-      ('tpacf', 'large'),
-      ('tpacf', 'medium'),
-      ('tpacf', 'small'),
+        ('bfs', '1M'),
+        ('bfs', 'NY'),
+        ('bfs', 'SF'),
+        ('bfs', 'UT'),
+        ('cutcp', 'large'),
+        ('cutcp', 'small'),
+        ('histo', 'default'),
+        ('histo', 'large'),
+        ('lbm', 'long'),
+        ('lbm', 'short'),
+        ('mri-gridding', 'small'),
+        ('mri-q', 'large'),
+        ('mri-q', 'small'),
+        ('sad', 'default'),
+        ('sad', 'large'),
+        ('sgemm', 'medium'),
+        ('sgemm', 'small'),
+        ('spmv', 'large'),
+        ('spmv', 'medium'),
+        ('spmv', 'small'),
+        ('stencil', 'default'),
+        ('stencil', 'small'),
+        ('tpacf', 'large'),
+        ('tpacf', 'medium'),
+        ('tpacf', 'small'),
     ]
 
   def _ForceOpenCLEnvironment(self, env: cldrive_env.OpenCLEnvironment):
@@ -574,8 +588,10 @@ class ParboilBenchmarkSuite(_BenchmarkSuite):
           CheckCall(['tar', 'xjvf', dataset_archive])
         elif pathlib.Path(f'{dataset_archive}.part1').is_file():
           logging.info('Unpacking datasets for %s:%s', self.name, benchmark)
-          CheckCall(f'cat {dataset_archive}.part1 {dataset_archive}.part2 '
-                    f'> {dataset_archive}', shell=True)
+          CheckCall(
+              f'cat {dataset_archive}.part1 {dataset_archive}.part2 '
+              f'> {dataset_archive}',
+              shell=True)
           pathlib.Path(f'{dataset_archive}.part1').unlink()
           pathlib.Path(f'{dataset_archive}.part2').unlink()
           CheckCall(['tar', 'xjvf', dataset_archive])
@@ -586,15 +602,17 @@ class ParboilBenchmarkSuite(_BenchmarkSuite):
     CheckCall(['find', self.path, '-name', '*.o', '-delete'])
     with MakeEnv(self.path) as env:
       for benchmark in self.benchmarks:
-        CheckCall(['python2', './parboil', 'compile', benchmark,
-                   'opencl_base'], env=env)
+        CheckCall(['python2', './parboil', 'compile', benchmark, 'opencl_base'],
+                  env=env)
 
   def _Run(self):
     for benchmark, dataset in self.benchmarks_and_datasets:
       self._ExecToLogFile(
-          self.path / 'parboil', f'{benchmark}.{dataset}',
-          command=['python2', './parboil', 'run', benchmark, 'opencl_base',
-                   dataset])
+          self.path / 'parboil',
+          f'{benchmark}.{dataset}',
+          command=[
+              'python2', './parboil', 'run', benchmark, 'opencl_base', dataset
+          ])
 
 
 class PolybenchGpuBenchmarkSuite(_BenchmarkSuite):
@@ -607,21 +625,21 @@ class PolybenchGpuBenchmarkSuite(_BenchmarkSuite):
   @property
   def benchmarks(self) -> typing.List[str]:
     return [
-      '2DCONV',
-      '2MM',
-      '3DCONV',
-      '3MM',
-      'ATAX',
-      'BICG',
-      'CORR',
-      'COVAR',
-      # Bad: 'FDTD-2D',
-      'GEMM',
-      'GESUMMV',
-      'GRAMSCHM',
-      'MVT',
-      'SYR2K',
-      'SYRK',
+        '2DCONV',
+        '2MM',
+        '3DCONV',
+        '3MM',
+        'ATAX',
+        'BICG',
+        'CORR',
+        'COVAR',
+        # Bad: 'FDTD-2D',
+        'GEMM',
+        'GESUMMV',
+        'GRAMSCHM',
+        'MVT',
+        'SYR2K',
+        'SYRK',
     ]
 
   def _ForceOpenCLEnvironment(self, env: cldrive_env.OpenCLEnvironment):
@@ -660,27 +678,27 @@ class RodiniaBenchmarkSuite(_BenchmarkSuite):
   @property
   def benchmarks(self) -> typing.List[str]:
     return [
-      'b_tree',
-      'backprop',
-      'bfs',
-      'cfd',
-      'dwt2d',
-      'gaussian',
-      'heartwall',
-      'hotspot',
-      'hotspot3D',
-      'hybridsort',
-      'kmeans',
-      'lavaMD',
-      'leukocyte',
-      'lud',
-      'myocyte',
-      'nn',
-      'nw',
-      'particlefilter',
-      'pathfinder',
-      'srad',
-      'streamcluster',
+        'b_tree',
+        'backprop',
+        'bfs',
+        'cfd',
+        'dwt2d',
+        'gaussian',
+        'heartwall',
+        'hotspot',
+        'hotspot3D',
+        'hybridsort',
+        'kmeans',
+        'lavaMD',
+        'leukocyte',
+        'lud',
+        'myocyte',
+        'nn',
+        'nw',
+        'particlefilter',
+        'pathfinder',
+        'srad',
+        'streamcluster',
     ]
 
   def _ForceOpenCLEnvironment(self, env: cldrive_env.OpenCLEnvironment):
@@ -717,18 +735,18 @@ class ShocBenchmarkSuite(_BenchmarkSuite):
   @property
   def benchmarks(self) -> typing.List[str]:
     return [
-      'BFS',
-      'FFT',
-      'GEMM',
-      'MD',
-      'MD5Hash',
-      'Reduction',
-      'Scan',
-      'Sort',
-      'Spmv',
-      'Stencil2D',
-      'Triad',
-      'S3D',
+        'BFS',
+        'FFT',
+        'GEMM',
+        'MD',
+        'MD5Hash',
+        'Reduction',
+        'Scan',
+        'Sort',
+        'Spmv',
+        'Stencil2D',
+        'Triad',
+        'S3D',
     ]
 
   def _ForceOpenCLEnvironment(self, env: cldrive_env.OpenCLEnvironment):
@@ -755,7 +773,7 @@ class ShocBenchmarkSuite(_BenchmarkSuite):
 
 # A map of benchmark suite names to classes.
 BENCHMARK_SUITES = {
-  bs().name: bs for bs in labtypes.AllSubclassesOfClass(_BenchmarkSuite)
+    bs().name: bs for bs in labtypes.AllSubclassesOfClass(_BenchmarkSuite)
 }
 
 
@@ -785,8 +803,9 @@ def main(argv: typing.List[str]):
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
   # Get the OpenCL environments.
-  envs = [cldrive_env.OpenCLEnvironment.FromName(env)
-          for env in FLAGS.gpgpu_envs]
+  envs = [
+      cldrive_env.OpenCLEnvironment.FromName(env) for env in FLAGS.gpgpu_envs
+  ]
 
   # Run the requested benchmark suites on the requested devices.
   outdir = pathlib.Path(FLAGS.gpgpu_logdir)

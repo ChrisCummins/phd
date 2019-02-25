@@ -5,14 +5,13 @@ import pytest
 from absl import flags
 
 from compilers.llvm import clang
-from gpu.cldrive import env as cldrive_env
+from gpu.cldrive.legacy import env as cldrive_env
 from gpu.libcecl import libcecl_compile
 from gpu.libcecl import libcecl_rewriter
 from gpu.libcecl import libcecl_runtime
 from gpu.oclgrind import oclgrind
 from labm8 import bazelutil
 from labm8 import test
-
 
 FLAGS = flags.FLAGS
 
@@ -35,16 +34,21 @@ def test_rewrite_compile_link_execute(tempdir: pathlib.Path, hello_src: str):
   bytecode_path = tempdir / 'a.ll'
   cflags, ldflags = libcecl_compile.LibCeclCompileAndLinkFlags()
 
-  proc = clang.Exec(['-x', 'c++', '-', '-S', '-emit-llvm',
-                     '-o', str(bytecode_path)] + cflags, stdin=libcecl_src,
-                    stdout=None, stderr=None)
+  proc = clang.Exec(
+      ['-x', 'c++', '-', '-S', '-emit-llvm', '-o',
+       str(bytecode_path)] + cflags,
+      stdin=libcecl_src,
+      stdout=None,
+      stderr=None)
   assert not proc.returncode
   assert bytecode_path.is_file()
 
   # Compile bytecode to executable annd link.
   bin_path = tempdir / 'a.out'
-  proc = clang.Exec(['-o', str(bin_path), str(bytecode_path)] + ldflags,
-                    stdout=None, stderr=None)
+  proc = clang.Exec(
+      ['-o', str(bin_path), str(bytecode_path)] + ldflags,
+      stdout=None,
+      stderr=None)
   assert not proc.returncode
   assert bin_path.is_file()
 

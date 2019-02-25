@@ -1,16 +1,15 @@
-"""Unit tests for //gpu/cldrive/args.py."""
+"""Unit tests for //gpu/cldrive/legacy/args.py."""
 
 import pytest
 from absl import flags
 
-from gpu.cldrive import args
+from gpu.cldrive.legacy import args
 from labm8 import test
-
 
 FLAGS = flags.FLAGS
 
-
 # GetKernelArguments() tests.
+
 
 def test_GetKernelArguments_hello_world():
   """Simple hello world argument type test."""
@@ -92,9 +91,9 @@ def test_GetKernelArguments_no_args():
 def test_GetKernelArguments_address_spaces():
   """Test address space types."""
   args_ = args.GetKernelArguments("""
-kernel void A(global int* a, 
+kernel void A(global int* a,
               local int* b,
-              constant int* c, 
+              constant int* c,
               const int d) {}
 """)
   assert len(args_) == 4
@@ -162,6 +161,7 @@ def test_ParseSource_syntax_error():
 
 # GetKernelName() tests.
 
+
 def test_GetKernelName_hello_world():
   """Test name extraction from a simple kernel."""
   assert 'hello_world' == args.GetKernelName('kernel void hello_world() {}')
@@ -173,7 +173,7 @@ def test_GetKernelName_hello_world_with_distractions():
 int A() {}
 
 kernel
-  void 
+  void
 hello_world(global int* a, const int c) {
   a[0] = 0;
 }
@@ -196,7 +196,7 @@ def test_GetKernelName_multiple_kernels():
   with pytest.raises(args.MultipleKernelsError) as e_ctx:
     args.GetKernelName("""
 kernel void A() {}
-kernel void B() {}  
+kernel void B() {}
 """)
   assert 'Source contains more than one kernel definition' == str(e_ctx.value)
 

@@ -12,30 +12,26 @@ from absl import logging
 from deeplearning.deepsmith.harnesses import cldrive
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import harness_pb2
-from gpu.cldrive import env
+from gpu.cldrive.legacy import env
 from labm8 import bazelutil
 from labm8 import crypto
 from labm8 import fs
 from labm8 import labtypes
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 
-flags.DEFINE_list(
-    'input_directories', [
-      str(bazelutil.DataPath(
-          'phd/docs/2018_07_issta/artifact_evaluation/data/testcases')),
-      '/tmp/phd/docs/2018_07_issta/artifact_evaluation/generated_testcases',
-    ],
-    'Directories to read testcases from.')
-flags.DEFINE_string(
-    'output_directory',
-    '/tmp/phd/docs/2018_07_issta/artifact_evaluation/results',
-    'Directory to write results to.')
-flags.DEFINE_bool(
-    'opencl_opt', True,
-    'If --noopencl_opt is set, disable OpenCL optimizations.')
+flags.DEFINE_list('input_directories', [
+    str(
+        bazelutil.DataPath(
+            'phd/docs/2018_07_issta/artifact_evaluation/data/testcases')),
+    '/tmp/phd/docs/2018_07_issta/artifact_evaluation/generated_testcases',
+], 'Directories to read testcases from.')
+flags.DEFINE_string('output_directory',
+                    '/tmp/phd/docs/2018_07_issta/artifact_evaluation/results',
+                    'Directory to write results to.')
+flags.DEFINE_bool('opencl_opt', True,
+                  'If --noopencl_opt is set, disable OpenCL optimizations.')
 
 
 def main(argv):
@@ -59,15 +55,16 @@ def main(argv):
 
   # Load testcases.
   testcase_dirs = [
-    pathlib.Path(x) for x in input_directories if
-    pathlib.Path(x).is_dir()]
+      pathlib.Path(x) for x in input_directories if pathlib.Path(x).is_dir()
+  ]
   if not testcase_dirs:
     raise app.UsageError('No --input_directories found.')
-  testcase_paths = labtypes.flatten(
-      [[pathlib.Path(y) for y in fs.ls(x, abspaths=True)]
-       for x in testcase_dirs])
+  testcase_paths = labtypes.flatten([
+      [pathlib.Path(y) for y in fs.ls(x, abspaths=True)] for x in testcase_dirs
+  ])
   testcases = [
-    pbutil.FromFile(path, deepsmith_pb2.Testcase()) for path in testcase_paths]
+      pbutil.FromFile(path, deepsmith_pb2.Testcase()) for path in testcase_paths
+  ]
   logging.info('Read %d testcases.', len(testcases))
   if not len(testcases):
     raise app.UsageError("No testcases found: '%s'",
@@ -87,7 +84,8 @@ def main(argv):
   logging.info('Executed %d testcases and wrote results to %s',
                len(res.results), output_directory)
   execution_times = [
-    result.profiling_events[0].duration_ms for result in res.results]
+      result.profiling_events[0].duration_ms for result in res.results
+  ]
   logging.info('Average time to evaluate testcase: %.2f ms',
                sum(execution_times) / len(execution_times))
 

@@ -20,7 +20,7 @@ py_library(
     deps = [
         "//deeplearning/clgen/preprocessors:opencl",
         "//experimental/compilers/reachability:control_flow_graph_generator",
-        "//gpu/cldrive:args",
+        "//gpu/cldrive/legacy:args",
         "//labm8:fmt",
         "//third_party/py/absl",
         "//third_party/py/numpy",

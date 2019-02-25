@@ -11,7 +11,7 @@ py_library(
         "//compilers/llvm:clang",
         "//deeplearning/deepsmith/harnesses:cldrive",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
-        "//gpu/cldrive:env",
+        "//gpu/cldrive/legacy:env",
         "//gpu/libcecl:libcecl_compile",
         "//gpu/libcecl:libcecl_rewriter",
         "//gpu/libcecl:libcecl_runtime",
@@ -25,7 +25,7 @@ py_test(
     srcs = ["opencl_kernel_driver_test.py"],
     deps = [
         ":opencl_kernel_driver",
-        "//gpu/cldrive:env",
+        "//gpu/cldrive/legacy:env",
         "//labm8:test",
         "//third_party/py/pytest",
     ],

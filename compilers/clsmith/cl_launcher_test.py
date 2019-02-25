@@ -3,10 +3,9 @@
 from absl import flags
 
 from compilers.clsmith import cl_launcher
-from gpu.cldrive import driver
-from gpu.cldrive import env
+from gpu.cldrive.legacy import driver
+from gpu.cldrive.legacy import env
 from labm8 import test
-
 
 FLAGS = flags.FLAGS
 
@@ -74,9 +73,9 @@ __kernel void entry(__global ulong *result) {
 def test_ExecClsmithSource_pass():
   """And end-to-end test of executing a CLSmith source."""
   env_ = env.OclgrindOpenCLEnvironment()
-  proc = cl_launcher.ExecClsmithSource(
-      env_, CLSMITH_EXAMPLE_SRC,
-      driver.NDRange(1, 1, 1), driver.NDRange(1, 1, 1), '---debug')
+  proc = cl_launcher.ExecClsmithSource(env_, CLSMITH_EXAMPLE_SRC,
+                                       driver.NDRange(1, 1, 1),
+                                       driver.NDRange(1, 1, 1), '---debug')
 
   assert not proc.returncode
   assert '3-D global size 1 = [1, 1, 1]' in proc.stderr
@@ -91,9 +90,9 @@ def test_ExecClsmithSource_pass():
 def test_ExecClsmithSource_syntax_error():
   """Test outcome of kernel with syntax error."""
   env_ = env.OclgrindOpenCLEnvironment()
-  proc = cl_launcher.ExecClsmithSource(
-      env_, "!@!###syntax error!",
-      driver.NDRange(1, 1, 1), driver.NDRange(1, 1, 1), '---debug')
+  proc = cl_launcher.ExecClsmithSource(env_, "!@!###syntax error!",
+                                       driver.NDRange(1, 1, 1),
+                                       driver.NDRange(1, 1, 1), '---debug')
 
   assert proc.returncode == 1
   assert proc.stdout == ''

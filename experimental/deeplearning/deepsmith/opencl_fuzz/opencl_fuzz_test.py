@@ -15,15 +15,14 @@ from deeplearning.deepsmith.harnesses import harness
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import harness_pb2
 from experimental.deeplearning.deepsmith.opencl_fuzz import opencl_fuzz
-from gpu.cldrive import env
+from gpu.cldrive.legacy import env
 from labm8 import pbutil
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
-
 # Test fixtures.
+
 
 @pytest.fixture(scope='function')
 def cldrive_harness_config() -> harness_pb2.CldriveHarness:
@@ -36,7 +35,7 @@ def cldrive_harness_config() -> harness_pb2.CldriveHarness:
 
 @pytest.fixture(scope='function')
 def cldrive_harness(cldrive_harness_config: harness_pb2.CldriveHarness
-                    ) -> cldrive.CldriveHarness:
+                   ) -> cldrive.CldriveHarness:
   """Test fixture to return an Cldrive test harness."""
   return cldrive.CldriveHarness(cldrive_harness_config)
 
@@ -65,16 +64,14 @@ def dummy_result() -> deepsmith_pb2.Result:
       testcase=deepsmith_pb2.Testcase(
           harness=deepsmith_pb2.Harness(name='name'),
           inputs={
-            'src': 'Kernel source.',
-            'gsize': '1,1,1',
-            'lsize': '2,2,2',
-          }
-      ),
+              'src': 'Kernel source.',
+              'gsize': '1,1,1',
+              'lsize': '2,2,2',
+          }),
       outputs={
-        'stdout': 'Standard output.',
-        'stderr': 'Standard error.',
-      }
-  )
+          'stdout': 'Standard output.',
+          'stderr': 'Standard error.',
+      })
 
 
 @pytest.fixture(scope='function')
@@ -88,6 +85,7 @@ def clsmith_result(dummy_result: deepsmith_pb2.Result) -> pathlib.Path:
 
 # Mock classes.
 
+
 class MockFilters(difftests.FiltersBase):
   """A mock class for simple filters."""
 
@@ -100,22 +98,22 @@ class MockFilters(difftests.FiltersBase):
     self.PostDifftest_call_args = []
 
   def PreExec(self, testcase: deepsmith_pb2.Testcase
-              ) -> typing.Optional[deepsmith_pb2.Testcase]:
+             ) -> typing.Optional[deepsmith_pb2.Testcase]:
     self.PreExec_call_args.append(testcase)
     return testcase if self.return_val else None
 
   def PostExec(self, result: deepsmith_pb2.Result
-               ) -> typing.Optional[deepsmith_pb2.Result]:
+              ) -> typing.Optional[deepsmith_pb2.Result]:
     self.PostExec_call_args.append(result)
     return result if self.return_val else None
 
   def PreDifftest(self, difftest: deepsmith_pb2.DifferentialTest
-                  ) -> typing.Optional[deepsmith_pb2.DifferentialTest]:
+                 ) -> typing.Optional[deepsmith_pb2.DifferentialTest]:
     self.PreDifftest_call_args.append(difftest)
     return difftest if self.return_val else None
 
   def PostDifftest(self, difftest: deepsmith_pb2.DifferentialTest
-                   ) -> typing.Optional[deepsmith_pb2.DifferentialTest]:
+                  ) -> typing.Optional[deepsmith_pb2.DifferentialTest]:
     self.PostDifftest_call_args.append(difftest)
     return difftest if self.return_val else None
 
@@ -138,8 +136,8 @@ class MockGoldStandardDiffTester(difftests.GoldStandardDiffTester):
   """A mock gold standard difftester."""
 
   def __init__(self, return_val: typing.List[int] = None):
-    super(MockGoldStandardDiffTester, self).__init__(
-        difftests.OutputsEqualityTest())
+    super(MockGoldStandardDiffTester,
+          self).__init__(difftests.OutputsEqualityTest())
     self.call_args = []
     self.return_val = return_val
 
@@ -167,6 +165,7 @@ class MockHarness(harness.HarnessBase):
 
 # RunTestcases() tests.
 
+
 @pytest.mark.parametrize("opencl_opt", [True, False])
 def test_RunTestcases_cldrive_pass(
     cldrive_harness_config: harness_pb2.CldriveHarness, opencl_opt: bool):
@@ -174,15 +173,15 @@ def test_RunTestcases_cldrive_pass(
   cldrive_harness_config.opencl_opt[0] = opencl_opt
   harness = cldrive.CldriveHarness(cldrive_harness_config)
   testcases = [
-    deepsmith_pb2.Testcase(
-        toolchain="opencl",
-        harness=deepsmith_pb2.Harness(name="cldrive"),
-        inputs={
-          'src': 'kernel void A(global int* a) {a[get_global_id(0)] = 10;}',
-          'gsize': '1,1,1',
-          'lsize': '1,1,1',
-          'timeout_seconds': '60',
-        })
+      deepsmith_pb2.Testcase(
+          toolchain="opencl",
+          harness=deepsmith_pb2.Harness(name="cldrive"),
+          inputs={
+              'src': 'kernel void A(global int* a) {a[get_global_id(0)] = 10;}',
+              'gsize': '1,1,1',
+              'lsize': '1,1,1',
+              'timeout_seconds': '60',
+          })
   ]
   results = opencl_fuzz.RunTestcases(harness, testcases)
   assert len(results) == 1
@@ -193,19 +192,19 @@ def test_RunTestcases_cldrive_pass(
       harness.envs[0])
   assert results[0].outcome == deepsmith_pb2.Result.PASS
   assert results[0].outputs['stdout'] == (
-    'global int * a: 10 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 '
-    '22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 '
-    '46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 '
-    '70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 '
-    '94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 '
-    '114 115 116 117 118 119 120 121 122 123 124 125 126 127 128 129 130 131 '
-    '132 133 134 135 136 137 138 139 140 141 142 143 144 145 146 147 148 149 '
-    '150 151 152 153 154 155 156 157 158 159 160 161 162 163 164 165 166 167 '
-    '168 169 170 171 172 173 174 175 176 177 178 179 180 181 182 183 184 185 '
-    '186 187 188 189 190 191 192 193 194 195 196 197 198 199 200 201 202 203 '
-    '204 205 206 207 208 209 210 211 212 213 214 215 216 217 218 219 220 221 '
-    '222 223 224 225 226 227 228 229 230 231 232 233 234 235 236 237 238 239 '
-    '240 241 242 243 244 245 246 247 248 249 250 251 252 253 254 255\n')
+      'global int * a: 10 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 '
+      '22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 '
+      '46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 '
+      '70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 '
+      '94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 '
+      '114 115 116 117 118 119 120 121 122 123 124 125 126 127 128 129 130 131 '
+      '132 133 134 135 136 137 138 139 140 141 142 143 144 145 146 147 148 149 '
+      '150 151 152 153 154 155 156 157 158 159 160 161 162 163 164 165 166 167 '
+      '168 169 170 171 172 173 174 175 176 177 178 179 180 181 182 183 184 185 '
+      '186 187 188 189 190 191 192 193 194 195 196 197 198 199 200 201 202 203 '
+      '204 205 206 207 208 209 210 211 212 213 214 215 216 217 218 219 220 221 '
+      '222 223 224 225 226 227 228 229 230 231 232 233 234 235 236 237 238 239 '
+      '240 241 242 243 244 245 246 247 248 249 250 251 252 253 254 255\n')
   opt_str = 'on' if opencl_opt else 'off'
   assert results[0].outputs['stderr'] == f"""\
 [cldrive] Platform: Oclgrind
@@ -223,15 +222,15 @@ def test_RunTestcases_cldrive_syntax_error(
   cldrive_harness_config.opencl_opt[0] = opencl_opt
   harness = cldrive.CldriveHarness(cldrive_harness_config)
   testcases = [
-    deepsmith_pb2.Testcase(
-        toolchain='opencl',
-        harness=deepsmith_pb2.Harness(name='cldrive'),
-        inputs={
-          'src': 'kernel void A(global int* a) {\n!11@invalid syntax!',
-          'gsize': '1,1,1',
-          'lsize': '1,1,1',
-          'timeout_seconds': '60',
-        })
+      deepsmith_pb2.Testcase(
+          toolchain='opencl',
+          harness=deepsmith_pb2.Harness(name='cldrive'),
+          inputs={
+              'src': 'kernel void A(global int* a) {\n!11@invalid syntax!',
+              'gsize': '1,1,1',
+              'lsize': '1,1,1',
+              'timeout_seconds': '60',
+          })
   ]
   results = opencl_fuzz.RunTestcases(harness, testcases)
   assert len(results) == 1
@@ -275,11 +274,11 @@ def test_RunTestcases_cl_launcher_pass(
   cl_launcher_harness_config.opencl_opt[0] = opencl_opt
   harness = cl_launcher.ClLauncherHarness(cl_launcher_harness_config)
   testcases = [
-    deepsmith_pb2.Testcase(
-        toolchain='opencl',
-        harness=deepsmith_pb2.Harness(name='cl_launcher'),
-        inputs={
-          'src': """\
+      deepsmith_pb2.Testcase(
+          toolchain='opencl',
+          harness=deepsmith_pb2.Harness(name='cl_launcher'),
+          inputs={
+              'src': """\
 // -g 1,1,1 -l 1,1,1
 #define int64_t long
 #define uint64_t ulong
@@ -336,10 +335,10 @@ __kernel void entry(__global ulong *result) {
     uint64_t crc64_context = 0xFFFFFFFFFFFFFFFFUL;
     result[get_linear_global_id()] = crc64_context ^ 0xFFFFFFFFFFFFFFFFUL;
 }""",
-          'gsize': '1,1,1',
-          'lsize': '1,1,1',
-          'timeout_seconds': '60',
-        })
+              'gsize': '1,1,1',
+              'lsize': '1,1,1',
+              'timeout_seconds': '60',
+          })
   ]
   results = opencl_fuzz.RunTestcases(harness, testcases)
   assert len(results) == 1
@@ -368,15 +367,15 @@ def test_RunTestcases_cl_launcher_syntax_error(
   cl_launcher_harness_config.opencl_opt[0] = opencl_opt
   harness = cl_launcher.ClLauncherHarness(cl_launcher_harness_config)
   testcases = [
-    deepsmith_pb2.Testcase(
-        toolchain='opencl',
-        harness=deepsmith_pb2.Harness(name='cl_launcher'),
-        inputs={
-          'src': '__kernel void entry(\n!11@invalid syntax!',
-          'gsize': '1,1,1',
-          'lsize': '1,1,1',
-          'timeout_seconds': '60',
-        })
+      deepsmith_pb2.Testcase(
+          toolchain='opencl',
+          harness=deepsmith_pb2.Harness(name='cl_launcher'),
+          inputs={
+              'src': '__kernel void entry(\n!11@invalid syntax!',
+              'gsize': '1,1,1',
+              'lsize': '1,1,1',
+              'timeout_seconds': '60',
+          })
   ]
   results = opencl_fuzz.RunTestcases(harness, testcases)
   assert len(results) == 1
@@ -425,8 +424,7 @@ def test_ResultIsInteresting_unknown():
       deepsmith_pb2.Result(outcome=deepsmith_pb2.Result.UNKNOWN),
       difftests.UnaryTester(),
       difftests.GoldStandardDiffTester(difftests.NamedOutputIsEqual('stdout')),
-      gs_harness,
-      filters)
+      gs_harness, filters)
   assert not result
   # Only the unary tester was called, no differential test was required.
   assert not gs_harness.RunTestcases_call_requests
@@ -441,8 +439,7 @@ def test_ResultIsInteresting_build_crash():
       deepsmith_pb2.Result(outcome=deepsmith_pb2.Result.BUILD_CRASH),
       difftests.UnaryTester(),
       difftests.GoldStandardDiffTester(difftests.NamedOutputIsEqual('stdout')),
-      gs_harness,
-      filters)
+      gs_harness, filters)
   assert result
   assert result.outputs['difftest_outcome'] == 'ANOMALOUS_BUILD_FAILURE'
   # Only the unary tester was called, no differential test was required.
@@ -458,8 +455,7 @@ def test_ResultIsInteresting_build_timeout():
       deepsmith_pb2.Result(outcome=deepsmith_pb2.Result.BUILD_TIMEOUT),
       difftests.UnaryTester(),
       difftests.GoldStandardDiffTester(difftests.NamedOutputIsEqual('stdout')),
-      gs_harness,
-      filters)
+      gs_harness, filters)
   assert result
   assert result.outputs['difftest_outcome'] == 'ANOMALOUS_BUILD_FAILURE'
   # Only the unary tester was called, no differential test was required.

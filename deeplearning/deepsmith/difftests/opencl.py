@@ -6,8 +6,7 @@ from absl import logging
 
 from deeplearning.deepsmith.difftests import difftests
 from deeplearning.deepsmith.proto import deepsmith_pb2
-from gpu.cldrive import args
-
+from gpu.cldrive.legacy import args
 
 FLAGS = flags.FLAGS
 
@@ -16,7 +15,7 @@ class ClgenOpenClFilters(difftests.FiltersBase):
   """A set of filters for pruning testcases and results of CLgen tests."""
 
   def PreDifftest(self, difftest: deepsmith_pb2.DifferentialTest
-                  ) -> typing.Optional[deepsmith_pb2.DifferentialTest]:
+                 ) -> typing.Optional[deepsmith_pb2.DifferentialTest]:
     """Determine whether a difftest should be discarded."""
     # We cannot difftest the output of OpenCL kernels which contain vector
     # inputs or floating points. We *can* still difftest these kernels if we're
@@ -32,7 +31,7 @@ class ClgenOpenClFilters(difftests.FiltersBase):
     return difftest
 
   def PostDifftest(self, difftest: deepsmith_pb2.DifferentialTest
-                   ) -> typing.Optional[deepsmith_pb2.DifferentialTest]:
+                  ) -> typing.Optional[deepsmith_pb2.DifferentialTest]:
     """Determine whether a difftest should be discarded."""
     for result, outcome in zip(difftest.result, difftest.outcome):
       # An OpenCL kernel which legitimately failed to build on any testbed
@@ -67,13 +66,11 @@ class ClgenOpenClFilters(difftests.FiltersBase):
 def RedFlagCompilerWarnings(result: deepsmith_pb2.Result) -> bool:
   return ('clFinish CL_INVALID_COMMAND_QUEUE' or
           'incompatible pointer to integer conversion' or
-          'comparison between pointer and integer' or
-          'warning: incompatible' or
+          'comparison between pointer and integer' or 'warning: incompatible' or
           'warning: division by zero is undefined' or
           'warning: comparison of distinct pointer types' or
           'is past the end of the array' or
-          'warning: comparison between pointer and' or
-          'warning: array index' or
+          'warning: comparison between pointer and' or 'warning: array index' or
           'warning: implicit conversion from' or
           'array index -1 is before the beginning of the array' or
           'incompatible pointer' or
@@ -84,8 +81,7 @@ def LegitimateBuildFailure(result: deepsmith_pb2.Result) -> bool:
   return ("use of type 'double' requires cl_khr_fp64 extension" or
           'implicit declaration of function' or
           ('function cannot have argument whose type is, or '
-           'contains, type size_t') or
-          'unresolved extern function' or
+           'contains, type size_t') or 'unresolved extern function' or
           'error: cannot increment value of type' or
           'subscripted access is not allowed for OpenCL vectors' or
           'Images are not supported on given device' or

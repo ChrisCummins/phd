@@ -12,12 +12,12 @@ import sys
 import time
 import typing
 
+import gpu.cldrive.env
 import humanize
 from absl import app
 from absl import flags
 from absl import logging
 
-import gpu.cldrive.env
 from deeplearning.deepsmith.difftests import difftests
 from deeplearning.deepsmith.difftests import opencl as opencl_filters
 from deeplearning.deepsmith.generators import clgen_pretrained
@@ -29,20 +29,17 @@ from deeplearning.deepsmith.harnesses import harness as base_harness
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import harness_pb2
-from gpu.cldrive import env
+from gpu.cldrive.legacy import env
 from labm8 import bazelutil
 from labm8 import labdate
 from labm8 import pbutil
 
-
 FLAGS = flags.FLAGS
 
-flags.DEFINE_boolean(
-    'ls_env', False,
-    'List the available OpenCL devices and exit.')
-flags.DEFINE_string(
-    'generator', 'clgen',
-    'The type of generator to use. One of: {clgen,clsmith}.')
+flags.DEFINE_boolean('ls_env', False,
+                     'List the available OpenCL devices and exit.')
+flags.DEFINE_string('generator', 'clgen',
+                    'The type of generator to use. One of: {clgen,clsmith}.')
 flags.DEFINE_string(
     'generator_config', None,
     'The path of the generator config proto. If --generator=clgen, this must '
@@ -58,14 +55,12 @@ flags.DEFINE_string(
     'dut', 'Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2',
     'The name of the device under test, as described by cldrive. Run '
     '//gpu/cldrive --ls_env to see a list of available devices.')
-flags.DEFINE_bool(
-    'opencl_opt', True,
-    'If --noopencl_opt, OpenCL optimizations are disabled.')
+flags.DEFINE_bool('opencl_opt', True,
+                  'If --noopencl_opt, OpenCL optimizations are disabled.')
 flags.DEFINE_string(
     'interesting_results_dir',
     '/tmp/phd/experimental/deeplearning/deepsmith/opencl_fuzz/'
-    'interesting_results',
-    'Directory to write interesting results to.')
+    'interesting_results', 'Directory to write interesting results to.')
 flags.DEFINE_bool(
     'all_results_are_interesting', False,
     'If set, all results are written to interesting_results_dir.')
@@ -129,8 +124,9 @@ def RunBatch(generator: base_generator.GeneratorServiceBase,
   req = generator_pb2.GenerateTestcasesRequest()
   req.num_testcases = batch_size
   res = generator.GenerateTestcases(req, None)
-  testcases = [testcase for testcase in res.testcases if
-               filters.PreExec(testcase)]
+  testcases = [
+      testcase for testcase in res.testcases if filters.PreExec(testcase)
+  ]
   if len(res.testcases) - len(testcases):
     logging.info('Discarded %d testcases prior to execution.',
                  len(res.testcases) - len(testcases))
@@ -139,15 +135,16 @@ def RunBatch(generator: base_generator.GeneratorServiceBase,
   logging.info('Evaluating %d testcases on %s ...', len(testcases),
                dut_harness.testbeds[0].opts['platform'][:12])
   unfiltered_results = RunTestcases(dut_harness, testcases)
-  results = [result for result in unfiltered_results
-             if filters.PostExec(result)]
+  results = [
+      result for result in unfiltered_results if filters.PostExec(result)
+  ]
   if len(unfiltered_results) - len(results):
     logging.info('Discarded %d results.',
                  len(unfiltered_results) - len(results))
 
   for i, result in enumerate(results):
-    interesting_result = ResultIsInteresting(
-        result, unary_difftester, gs_difftester, gs_harness, filters)
+    interesting_result = ResultIsInteresting(result, unary_difftester,
+                                             gs_difftester, gs_harness, filters)
     if interesting_result:
       interesting_results.append(interesting_result)
 
@@ -170,12 +167,11 @@ def NotInteresting(
     return None
 
 
-def ResultIsInteresting(result: deepsmith_pb2.Result,
-                        unary_difftester: difftests.UnaryTester,
-                        gs_difftester: difftests.GoldStandardDiffTester,
-                        gs_harness: base_harness.HarnessBase,
-                        filters: difftests.FiltersBase
-                        ) -> typing.Optional[deepsmith_pb2.Result]:
+def ResultIsInteresting(
+    result: deepsmith_pb2.Result, unary_difftester: difftests.UnaryTester,
+    gs_difftester: difftests.GoldStandardDiffTester,
+    gs_harness: base_harness.HarnessBase,
+    filters: difftests.FiltersBase) -> typing.Optional[deepsmith_pb2.Result]:
   """Determine if a result is interesting, and return it if it is.
 
   Args:
@@ -194,7 +190,7 @@ def ResultIsInteresting(result: deepsmith_pb2.Result,
   if (unary_dt_outcome != deepsmith_pb2.DifferentialTest.PASS and
       unary_dt_outcome != deepsmith_pb2.DifferentialTest.UNKNOWN):
     result.outputs['difftest_outcome'] = (
-      deepsmith_pb2.DifferentialTest.Outcome.Name(unary_dt_outcome))
+        deepsmith_pb2.DifferentialTest.Outcome.Name(unary_dt_outcome))
     return result
 
   if not (unary_dt_outcome == deepsmith_pb2.DifferentialTest.PASS and
@@ -216,9 +212,9 @@ def ResultIsInteresting(result: deepsmith_pb2.Result,
                deepsmith_pb2.DifferentialTest.Outcome.Name(dt_outcome))
 
   # Determine whether we can use the difftest result.
-  dt = filters.PostDifftest(deepsmith_pb2.DifferentialTest(
-      result=[gs_result, result],
-      outcome=dt_outcomes))
+  dt = filters.PostDifftest(
+      deepsmith_pb2.DifferentialTest(
+          result=[gs_result, result], outcome=dt_outcomes))
   if not dt:
     logging.info('Cannot use gold standard difftest result.')
     return NotInteresting(result)
@@ -227,8 +223,8 @@ def ResultIsInteresting(result: deepsmith_pb2.Result,
   if dt_outcome != deepsmith_pb2.DifferentialTest.PASS:
     # Add the differential test outcome to the result.
     result.outputs[
-      'difftest_outcome'] = deepsmith_pb2.DifferentialTest.Outcome.Name(
-        dt_outcome)
+        'difftest_outcome'] = deepsmith_pb2.DifferentialTest.Outcome.Name(
+            dt_outcome)
     result.outputs['gs_stdout'] = dt.result[0].outputs['stdout']
     result.outputs['gs_stderr'] = dt.result[0].outputs['stderr']
     return result
@@ -238,7 +234,7 @@ def ResultIsInteresting(result: deepsmith_pb2.Result,
 
 def RunTestcases(harness: base_harness.HarnessBase,
                  testcases: typing.List[deepsmith_pb2.Testcase]
-                 ) -> typing.List[deepsmith_pb2.Result]:
+                ) -> typing.List[deepsmith_pb2.Result]:
   """Run a set of testcases on a harness.
 
   Args:
@@ -255,8 +251,10 @@ def RunTestcases(harness: base_harness.HarnessBase,
   return res.results
 
 
-def TestingLoop(min_interesting_results: int, max_testing_time_seconds: int,
-                batch_size: int, generator: base_generator.GeneratorServiceBase,
+def TestingLoop(min_interesting_results: int,
+                max_testing_time_seconds: int,
+                batch_size: int,
+                generator: base_generator.GeneratorServiceBase,
                 dut_harness: base_harness.HarnessBase,
                 gs_harness: base_harness.HarnessBase,
                 filters: difftests.FiltersBase,
@@ -287,18 +285,18 @@ def TestingLoop(min_interesting_results: int, max_testing_time_seconds: int,
          time.time() < start_time + max_testing_time_seconds):
     batch_num += 1
     logging.info('Starting generate / test / eval batch %d ...', batch_num)
-    interesting_results = RunBatch(
-        generator, dut_harness, gs_harness, filters, batch_size)
+    interesting_results = RunBatch(generator, dut_harness, gs_harness, filters,
+                                   batch_size)
     num_interesting_results += len(interesting_results)
     for result in interesting_results:
-      pbutil.ToFile(result,
-                    interesting_results_dir /
-                    (str(labdate.MillisecondsTimestamp()) + '.pbtxt'))
+      pbutil.ToFile(
+          result, interesting_results_dir /
+          (str(labdate.MillisecondsTimestamp()) + '.pbtxt'))
 
   logging.info(
       'Stopping after %.2f seconds and %s batches (%.0fms / testcase).\n'
-      'Found %s interesting results.', time.time() - start_time,
-      humanize.intcomma(batch_num),
+      'Found %s interesting results.',
+      time.time() - start_time, humanize.intcomma(batch_num),
       (((time.time() - start_time) / (batch_num * batch_size)) * 1000),
       num_interesting_results)
   logging.flush()
@@ -328,8 +326,7 @@ def GeneratorFromFlag(config_class,
   if not pbutil.ProtoIsReadable(FLAGS.generator_config, config_class()):
     raise app.UsageError(
         f'--generator_config is not a {config_class.__name__} proto')
-  config = pbutil.FromFile(pathlib.Path(FLAGS.generator_config),
-                           config_class())
+  config = pbutil.FromFile(pathlib.Path(FLAGS.generator_config), config_class())
   return generator_class(config)
 
 
@@ -537,16 +534,22 @@ def main(argv):
   interesting_results_dir = pathlib.Path(FLAGS.interesting_results_dir)
   if interesting_results_dir.exists() and not interesting_results_dir.is_dir():
     raise app.UsageError('--interesting_results_dir must be a directory')
-  logging.info('Recording interesting results in %s.',
-               interesting_results_dir)
+  logging.info('Recording interesting results in %s.', interesting_results_dir)
 
   generator = GetGenerator()
   filters = GetFilters()
   dut_harness = GetDeviceUnderTestHarness()
   gs_harness = GetGoldStandardTestHarness()
-  TestingLoop(FLAGS.min_interesting_results, FLAGS.max_testing_time_seconds,
-              FLAGS.batch_size, generator, dut_harness, gs_harness,
-              filters, interesting_results_dir, start_time=start_time)
+  TestingLoop(
+      FLAGS.min_interesting_results,
+      FLAGS.max_testing_time_seconds,
+      FLAGS.batch_size,
+      generator,
+      dut_harness,
+      gs_harness,
+      filters,
+      interesting_results_dir,
+      start_time=start_time)
 
 
 if __name__ == '__main__':

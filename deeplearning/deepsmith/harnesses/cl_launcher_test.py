@@ -7,9 +7,8 @@ from deeplearning.deepsmith.harnesses import cl_launcher
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import harness_pb2
 from deeplearning.deepsmith.proto import service_pb2
-from gpu.cldrive import env
+from gpu.cldrive.legacy import env
 from labm8 import test
-
 
 FLAGS = flags.FLAGS
 
@@ -73,8 +72,8 @@ __kernel void entry(__global ulong *result) {
 }
 """
 
-
 # Test fixtures.
+
 
 @pytest.fixture(scope='function')
 def abc_testcase() -> deepsmith_pb2.Testcase():
@@ -83,11 +82,10 @@ def abc_testcase() -> deepsmith_pb2.Testcase():
       toolchain='opencl',
       harness=deepsmith_pb2.Harness(name='cl_launcher'),
       inputs={
-        'src': CLSMITH_EXAMPLE_SRC,
-        'gsize': '1,1,1',
-        'lsize': '1,1,1',
-      }
-  )
+          'src': CLSMITH_EXAMPLE_SRC,
+          'gsize': '1,1,1',
+          'lsize': '1,1,1',
+      })
 
 
 @pytest.fixture(scope='function')
@@ -106,8 +104,8 @@ def abc_harness(abc_harness_config) -> cl_launcher.ClLauncherHarness:
 
 
 @pytest.fixture(scope='function')
-def abc_run_testcases_request(
-    abc_testcase, abc_harness) -> harness_pb2.RunTestcasesRequest:
+def abc_run_testcases_request(abc_testcase,
+                              abc_harness) -> harness_pb2.RunTestcasesRequest:
   """A test fixture which returns a RunTestcasesRequest for the abc_testcase."""
   return harness_pb2.RunTestcasesRequest(
       testbed=abc_harness.testbeds[0], testcases=[abc_testcase])
@@ -115,14 +113,16 @@ def abc_run_testcases_request(
 
 # Unit tests.
 
-
 # ClLauncherHarness() tests.
+
 
 def test_ClLauncherHarness_oclgrind_testbed():
   """Test that harness can be made from project-local oclgrind."""
   config = harness_pb2.ClLauncherHarness()
-  config.opencl_env.extend([env.OclgrindOpenCLEnvironment().name,
-                            env.OclgrindOpenCLEnvironment().name])
+  config.opencl_env.extend([
+      env.OclgrindOpenCLEnvironment().name,
+      env.OclgrindOpenCLEnvironment().name
+  ])
   config.opencl_opt.extend([True, False])
   harness = cl_launcher.ClLauncherHarness(config)
   assert len(harness.testbeds) == 2

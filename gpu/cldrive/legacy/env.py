@@ -9,7 +9,6 @@ from gpu.oclgrind import oclgrind
 from labm8 import bazelutil
 from labm8 import pbutil
 
-
 CLINFO = bazelutil.DataPath('phd/gpu/clinfo/clinfo')
 
 
@@ -72,7 +71,9 @@ class OpenCLEnvironment(object):
     """
     return self.platform_id, self.device_id
 
-  def Exec(self, argv: typing.List[str], stdin: typing.Optional[str] = None,
+  def Exec(self,
+           argv: typing.List[str],
+           stdin: typing.Optional[str] = None,
            env: typing.Dict[str, str] = None) -> subprocess.Popen:
     """Execute a command in an environment for the OpenCL device.
 
@@ -91,10 +92,13 @@ class OpenCLEnvironment(object):
       A Popen instance, with string stdout and stderr attributes set.
     """
     # logging.debug('$ %s', ' '.join(argv))
-    process = subprocess.Popen(argv, stdout=subprocess.PIPE,
-                               stdin=subprocess.PIPE if stdin else None,
-                               stderr=subprocess.PIPE, universal_newlines=True,
-                               env=env)
+    process = subprocess.Popen(
+        argv,
+        stdout=subprocess.PIPE,
+        stdin=subprocess.PIPE if stdin else None,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+        env=env)
     if stdin:
       stdout, stderr = process.communicate(stdin)
     else:
@@ -129,16 +133,20 @@ class OclgrindOpenCLEnvironment(OpenCLEnvironment):
   """A mock OpenCLEnvironment for oclgrind."""
 
   def __init__(self):
-    super(OclgrindOpenCLEnvironment, self).__init__(
-        oclgrind.CLINFO_DESCRIPTION)
+    super(OclgrindOpenCLEnvironment, self).__init__(oclgrind.CLINFO_DESCRIPTION)
 
-  def Exec(self, argv: typing.List[str],
+  def Exec(self,
+           argv: typing.List[str],
            stdin: typing.Optional[str] = None,
            env: typing.Dict[str, str] = None) -> subprocess.Popen:
     """Execute a command in the device environment."""
     return oclgrind.Exec(
-        ['--max-errors', '1', '--uninitialized', '--data-races',
-         '--uniform-writes', '--uniform-writes'] + argv, stdin=stdin, env=env)
+        [
+            '--max-errors', '1', '--uninitialized', '--data-races',
+            '--uniform-writes', '--uniform-writes'
+        ] + argv,
+        stdin=stdin,
+        env=env)
 
 
 def host_os() -> str:
@@ -215,8 +223,8 @@ def GetOpenClEnvironments() -> typing.List[OpenCLEnvironment]:
   Returns:
     A list of OpenCLEnvironment instances.
   """
-  return sorted(list(all_envs()) + [OclgrindOpenCLEnvironment()],
-                key=lambda x: x.name)
+  return sorted(
+      list(all_envs()) + [OclgrindOpenCLEnvironment()], key=lambda x: x.name)
 
 
 def GetTestbedNames() -> typing.List[str]:

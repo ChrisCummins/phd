@@ -12,12 +12,12 @@ import numpy as np
 from absl import app
 from absl import flags
 
+from gpu.cldrive.legacy import args as _args
+from gpu.cldrive.legacy import env as _env
 from gpu.cldrive.proto import cldrive_pb2
-from gpu.cldrive import args as _args
-from gpu.cldrive import env as _env
+from gpu.oclgrind import oclgrind
 from labm8 import bazelutil
 from labm8 import err
-from gpu.oclgrind import oclgrind
 from labm8 import pbutil
 
 FLAGS = flags.FLAGS
@@ -79,8 +79,8 @@ class NDRange(collections.namedtuple('NDRange', ['x', 'y', 'z'])):
     return self.x == rhs.x and self.y == rhs.y and self.z == rhs.z
 
   def __gt__(self, rhs: 'NDRange') -> bool:
-    return (self.product > rhs.product and
-            self.x >= rhs.x and self.y >= rhs.y and self.z >= rhs.z)
+    return (self.product > rhs.product and self.x >= rhs.x and
+            self.y >= rhs.y and self.z >= rhs.z)
 
   def __ge__(self, rhs: 'NDRange') -> bool:
     return self == rhs or self > rhs
@@ -117,11 +117,15 @@ class NDRange(collections.namedtuple('NDRange', ['x', 'y', 'z'])):
     return NDRange(x, y, z)
 
 
-def DriveKernel(env: _env.OpenCLEnvironment, src: str, inputs: np.array,
+def DriveKernel(env: _env.OpenCLEnvironment,
+                src: str,
+                inputs: np.array,
                 gsize: typing.Union[typing.Tuple[int, int, int], NDRange],
                 lsize: typing.Union[typing.Tuple[int, int, int], NDRange],
-                timeout: int = -1, optimizations: bool = True,
-                profiling: bool = False, debug: bool = False) -> np.array:
+                timeout: int = -1,
+                optimizations: bool = True,
+                profiling: bool = False,
+                debug: bool = False) -> np.array:
   """Drive an OpenCL kernel.
 
   Executes an OpenCL kernel on the given environment, over the given inputs.
@@ -164,10 +168,11 @@ def DriveKernel(env: _env.OpenCLEnvironment, src: str, inputs: np.array,
       print(*args, **kwargs, file=sys.stderr)
 
   # Assert input types.
-  err.assert_or_raise(isinstance(env, _env.OpenCLEnvironment), ValueError,
-                      "env argument is of incorrect type")
-  err.assert_or_raise(isinstance(src, str), ValueError,
-                      "source is not a string")
+  err.assert_or_raise(
+      isinstance(env, _env.OpenCLEnvironment), ValueError,
+      "env argument is of incorrect type")
+  err.assert_or_raise(
+      isinstance(src, str), ValueError, "source is not a string")
 
   # Validate global and local sizes.
   err.assert_or_raise(len(gsize) == 3, TypeError)
@@ -187,29 +192,31 @@ def DriveKernel(env: _env.OpenCLEnvironment, src: str, inputs: np.array,
   args = _args.GetKernelArguments(src)
 
   # Check that the number of inputs is correct.
-  args_with_inputs = [i for i, arg in enumerate(args)
-                      if not arg.address_space == 'local']
-  err.assert_or_raise(len(args_with_inputs) == len(inputs), ValueError,
-                      "Kernel expects {} inputs, but {} were provided".format(
-                          len(args_with_inputs), len(inputs)))
+  args_with_inputs = [
+      i for i, arg in enumerate(args) if not arg.address_space == 'local'
+  ]
+  err.assert_or_raise(
+      len(args_with_inputs) == len(inputs), ValueError,
+      "Kernel expects {} inputs, but {} were provided".format(
+          len(args_with_inputs), len(inputs)))
 
   # All inputs must have some length.
   for i, x in enumerate(inputs):
     err.assert_or_raise(len(x), ValueError, f"Input {i} has size zero")
 
   # Copy inputs into the expected data types.
-  data = np.array([np.array(d).astype(a.numpy_type)
-                   for d, a in zip(inputs, args)])
+  data = np.array(
+      [np.array(d).astype(a.numpy_type) for d, a in zip(inputs, args)])
 
   job = {
-    "env": env,
-    "src": src,
-    "args": args,
-    "data": data,
-    "gsize": gsize,
-    "lsize": lsize,
-    "optimizations": optimizations,
-    "profiling": profiling
+      "env": env,
+      "src": src,
+      "args": args,
+      "data": data,
+      "gsize": gsize,
+      "lsize": lsize,
+      "optimizations": optimizations,
+      "profiling": profiling
   }
 
   with NamedTemporaryFile('rb+', prefix='cldrive-', suffix='.job') as tmp_file:
@@ -272,7 +279,8 @@ def DriveKernel(env: _env.OpenCLEnvironment, src: str, inputs: np.array,
       return outputs
 
 
-def DriveInstance(instance: cldrive_pb2.CldriveInstance) -> cldrive_pb2.CldriveInstance:
+def DriveInstance(
+    instance: cldrive_pb2.CldriveInstance) -> cldrive_pb2.CldriveInstance:
   if instance.device.name == _env.OclgrindOpenCLEnvironment().name:
     command = [str(oclgrind.OCLGRIND_PATH), str(_NATIVE_DRIVER)]
   else:
@@ -285,31 +293,33 @@ def DriveInstance(instance: cldrive_pb2.CldriveInstance) -> cldrive_pb2.CldriveI
 def main(argv):
   assert not argv[1:]
   # TODO(cec): Temporary hacky code for testing.
-  print(DriveInstance(cldrive_pb2.CldriveInstance(
-      device=_env.OclgrindOpenCLEnvironment().proto,
-      opencl_src="""
+  print(
+      DriveInstance(
+          cldrive_pb2.CldriveInstance(
+              device=_env.OclgrindOpenCLEnvironment().proto,
+              opencl_src="""
 kernel void A(global int* a, global float* b, const int c) {
 if (get_global_id(0) < c) { 
   a[get_global_id(0)] = get_global_id(0);
   b[get_global_id(0)] *= 2.0;
 }
 }""",
-      min_runs_per_kernel=10,
-      dynamic_params=[
-        cldrive_pb2.DynamicParams(
-            global_size_x=16,
-            local_size_x=16,
-        ),
-        cldrive_pb2.DynamicParams(
-            global_size_x=1024,
-            local_size_x=64,
-        ),
-        cldrive_pb2.DynamicParams(
-            global_size_x=128,
-            local_size_x=64,
-        ),
-      ],
-  )))
+              min_runs_per_kernel=10,
+              dynamic_params=[
+                  cldrive_pb2.DynamicParams(
+                      global_size_x=16,
+                      local_size_x=16,
+                  ),
+                  cldrive_pb2.DynamicParams(
+                      global_size_x=1024,
+                      local_size_x=64,
+                  ),
+                  cldrive_pb2.DynamicParams(
+                      global_size_x=128,
+                      local_size_x=64,
+                  ),
+              ],
+          )))
 
 
 if __name__ == '__main__':
