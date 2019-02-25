@@ -24,7 +24,6 @@ from zipfile import BadZipfile, LargeZipFile, ZipFile
 
 from util import hash_file, resolve_url
 
-
 GERRIT_HOME = path.expanduser('~/.gerritcodereview')
 CACHE_DIR = path.join(GERRIT_HOME, 'bazel-cache', 'downloaded-artifacts')
 LOCAL_PROPERTIES = 'local.properties'
@@ -93,15 +92,15 @@ if not path.exists(cache_ent):
   try:
     safe_mkdirs(path.dirname(cache_ent))
   except OSError as err:
-    print('error creating directory %s: %s' %
-          (path.dirname(cache_ent), err), file=stderr)
+    print(
+        'error creating directory %s: %s' % (path.dirname(cache_ent), err),
+        file=stderr)
     exit(1)
   print('Download %s' % src_url, file=stderr)
   try:
     check_call(['curl', '--proxy-anyauth', '-ksSfLo', cache_ent, src_url])
   except OSError as err:
-    print('could not invoke curl: %s\nis curl installed?' % err,
-          file=stderr)
+    print('could not invoke curl: %s\nis curl installed?' % err, file=stderr)
     exit(1)
   except CalledProcessError as err:
     print('error using curl: %s' % err, file=stderr)
@@ -109,10 +108,9 @@ if not path.exists(cache_ent):
 if args.v:
   have = hash_file(sha1(), cache_ent).hexdigest()
   if args.v != have:
-    print((
-              '%s:\n' +
-              'expected %s\n' +
-              'received %s\n') % (src_url, args.v, have), file=stderr)
+    print(
+        ('%s:\n' + 'expected %s\n' + 'received %s\n') % (src_url, args.v, have),
+        file=stderr)
     try:
       remove(cache_ent)
     except OSError as err:
@@ -135,9 +133,7 @@ if args.unsign:
   try:
     with ZipFile(cache_ent, 'r') as zf:
       for n in zf.namelist():
-        if (n.endswith('.RSA')
-            or n.endswith('.SF')
-            or n.endswith('.LIST')):
+        if (n.endswith('.RSA') or n.endswith('.SF') or n.endswith('.LIST')):
           exclude.append(n)
   except (BadZipfile, LargeZipFile) as err:
     print('error opening %s: %s' % (cache_ent, err), file=stderr)

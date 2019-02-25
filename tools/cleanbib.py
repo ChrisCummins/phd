@@ -21,7 +21,8 @@ import bibtexparser
 from bibtexparser.bparser import BibTexParser
 
 
-class EmptyBibtexError(Exception): pass
+class EmptyBibtexError(Exception):
+  pass
 
 
 # Unwanted keys.
@@ -48,8 +49,9 @@ def readbibfile(path):
     print("fatal: file '{file}' not found.".format(file=path), file=stderr)
     exit(1)
   except EmptyBibtexError:
-    print("warning: file '{file}' contains no BibTeX entries"
-          .format(file=path), file=stderr)
+    print(
+        "warning: file '{file}' contains no BibTeX entries".format(file=path),
+        file=stderr)
     print("To be on the safe side, I'm going to exit now.", file=stderr)
     exit(0)
 

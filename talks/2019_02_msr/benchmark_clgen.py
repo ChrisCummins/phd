@@ -13,12 +13,12 @@ from deeplearning.clgen.proto import clgen_pb2
 from labm8 import pbutil
 from labm8 import prof
 
-
 FLAGS = flags.FLAGS
 
 # The CLgen instance to benchmark. This is a multichar token model with a 512x2
 # TensorFlow LSTM.
-INSTANCE_TO_BENCHMARK = pbutil.FromString("""
+INSTANCE_TO_BENCHMARK = pbutil.FromString(
+    """
 # File: //deeplearning/clgen/proto/clgen.proto
 # Proto: clgen.Instance
 working_dir: "/tmp/phd/deeplearning/clgen/working_dir"

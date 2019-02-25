@@ -13,15 +13,12 @@
 # limitations under the License.
 from os import path
 
-
 REPO_ROOTS = {
-  'GERRIT': 'http://gerrit-maven.storage.googleapis.com',
-  'GERRIT_API':
-    'https://gerrit-api.commondatastorage.googleapis.com/release',
-  'MAVEN_CENTRAL': 'http://central.maven.org/maven2',
-  'MAVEN_LOCAL': 'file://' + path.expanduser('~/.m2/repository'),
-  'MAVEN_SNAPSHOT':
-    'https://oss.sonatype.org/content/repositories/snapshots',
+    'GERRIT': 'http://gerrit-maven.storage.googleapis.com',
+    'GERRIT_API': 'https://gerrit-api.commondatastorage.googleapis.com/release',
+    'MAVEN_CENTRAL': 'http://central.maven.org/maven2',
+    'MAVEN_LOCAL': 'file://' + path.expanduser('~/.m2/repository'),
+    'MAVEN_SNAPSHOT': 'https://oss.sonatype.org/content/repositories/snapshots',
 }
 
 

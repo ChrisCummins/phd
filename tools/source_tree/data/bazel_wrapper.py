@@ -7,17 +7,18 @@ import os
 import subprocess
 import sys
 
-
 # The subset of bazel targets that are supported in this WORKSPACE.
 EXPORTED_TARGETS = [
-  # @EXPORTED_TARGETS@ #
+    # @EXPORTED_TARGETS@ #
 ]
 
 
 def main():
   if not os.path.isfile('config.pbtxt'):
-    print('[bazel_wrapper.py] fatal: config.pbtxt not found. '
-          'Must run ./configure first', file=sys.stderr)
+    print(
+        '[bazel_wrapper.py] fatal: config.pbtxt not found. '
+        'Must run ./configure first',
+        file=sys.stderr)
     sys.exit(1)
 
   # For each argument, attempt to determine if it is a bazel target, and if it
@@ -27,8 +28,10 @@ def main():
       if not arg.startswith('//'):
         arg = '//' + arg
       if arg not in EXPORTED_TARGETS:
-        print("Target {} not available. Available targets:\n  {}"
-              .format(arg, '\n  '.join(EXPORTED_TARGETS)), file=sys.stderr)
+        print(
+            "Target {} not available. Available targets:\n  {}".format(
+                arg, '\n  '.join(EXPORTED_TARGETS)),
+            file=sys.stderr)
         sys.exit(1)
   print('[bazel_wrapper.py] Args are safe', file=sys.stderr)
 

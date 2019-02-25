@@ -57,7 +57,6 @@ from sys import stdin, stdout
 
 from labm8 import fmt
 
-
 _FILE_RE = compile("^File: (.+)")
 _WORDS_IN_TEXT_RE = compile("^Words in text: (\d+)")
 
@@ -110,8 +109,8 @@ def table(rows, columns=None, output=None, data_args={}, **kwargs):
   for i, row in enumerate(rows[1:]):
     if len(row) != num_columns:
       raise Exception("Number of columns in row {i_row} ({c_row}) does "
-                      "not match number of columns in row 0 ({z_row})"
-                      .format(i_row=i, c_row=len(row), z_row=num_columns))
+                      "not match number of columns in row 0 ({z_row})".format(
+                          i_row=i, c_row=len(row), z_row=num_columns))
 
   if columns is None:
     # Default parameters.
@@ -121,8 +120,8 @@ def table(rows, columns=None, output=None, data_args={}, **kwargs):
     # Check that number of columns matches number of columns in
     # rows.
     raise Exception("Number of columns in header ({c_header}) does not "
-                    "match the number of columns in the data ({c_rows})"
-                    .format(c_header=len(columns), c_rows=num_columns))
+                    "match the number of columns in the data ({c_rows})".format(
+                        c_header=len(columns), c_rows=num_columns))
 
   # Default arguments.
   if "index" not in kwargs:
