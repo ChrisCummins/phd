@@ -29,10 +29,10 @@ cl::Kernel CreateClKernel(const string& opencl_kernel) {
   return kernels[0];
 }
 
-DynamicParams MakeParams(size_t global_size, size_t local_size = 1) {
+DynamicParams MakeParams(size_t global_size, size_t local_size) {
   DynamicParams params;
   params.set_global_size_x(global_size);
-  params.set_global_size_x(local_size);
+  params.set_local_size_x(local_size);
   return params;
 }
 

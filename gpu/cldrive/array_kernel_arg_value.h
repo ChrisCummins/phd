@@ -115,7 +115,7 @@ class ArrayKernelArgValueWithBuffer : public ArrayKernelArgValue<T> {
   virtual std::unique_ptr<KernelArgValue> CopyFromDevice(
       const cl::CommandQueue &queue, ProfilingData *profiling) override {
     auto new_arg =
-        std::make_unique<ArrayKernelArgValue<T>>(this->vector().size());
+        std::make_unique<ArrayKernelArgValue<T>>(this->size());
     CopyDeviceToHost(queue, buffer(), new_arg->vector().begin(),
                      new_arg->vector().end(), profiling);
     return std::move(new_arg);

@@ -93,10 +93,7 @@ phd::Status KernelArg::Init() {
     type_name = full_type_name.substr(0, full_type_name.size() - 2);
   }
 
-  LOG(INFO) << "FULL TYPE NAME " << full_type_name;
-  LOG(INFO) << "TYPE NAME " << type_name;
   ASSIGN_OR_RETURN(type_, OpenClArgTypeFromString(type_name));
-  LOG(INFO) << "TYPE " << type_;
 
   return phd::Status::OK;
 }
@@ -107,7 +104,7 @@ template <typename T>
 std::unique_ptr<ArrayKernelArgValueWithBuffer<T>> CreateArrayArgValue(
     size_t size, bool rand_values, const cl::Context& context) {
   auto arg_value =
-      std::make_unique<ArrayKernelArgValueWithBuffer<T>>(context, size, 1);
+      std::make_unique<ArrayKernelArgValueWithBuffer<T>>(context, size, /*value=*/static_cast<T>(1));
   if (rand_values) {
     for (size_t i = 0; i < size; ++i) {
       arg_value->vector()[i] = rand();
@@ -227,7 +224,7 @@ std::unique_ptr<KernelArgValue> KernelArg::TryToCreateKernelArgValue(
   CHECK(type_ != OpenClArgType::DEFAULT_UNKNOWN) << "Init() not called";
   if (IsPointer() && IsGlobal()) {
     return CreateArrayArgValue(type_, dynamic_params.global_size_x(),
-                               /*rand_values=*/true, context);
+                               rand_values, context);
   } else if (!IsPointer()) {
     return CreateScalarArgValue(type_, dynamic_params.global_size_x());
   } else {
