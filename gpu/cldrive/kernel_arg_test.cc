@@ -46,6 +46,8 @@ TEST(KernelArg, TryToCreateOnesValueGlobalInt) {
   dynamic_params.set_global_size_x(50);
 
   KernelArg arg(&kernel, 0);
+  ASSERT_TRUE(arg.Init().ok());
+
   auto value = arg.TryToCreateOnesValue(context, dynamic_params);
   ASSERT_TRUE(value);
 

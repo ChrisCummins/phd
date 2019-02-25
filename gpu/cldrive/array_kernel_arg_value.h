@@ -54,6 +54,7 @@ class ArrayKernelArgValue : public KernelArgValue {
   virtual std::unique_ptr<KernelArgValue> CopyFromDevice(
       const cl::CommandQueue &queue, ProfilingData *profiling) override {
     CHECK(false);
+    return std::unique_ptr<KernelArgValue>(nullptr);
   }
 
   virtual void SetAsArg(cl::Kernel *kernel, size_t arg_index) override {
