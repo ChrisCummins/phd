@@ -1,7 +1,7 @@
 #include "gpu/cldrive/kernel_arg.h"
 
-#include "gpu/cldrive/kernel_arg_value.h"
 #include "gpu/cldrive/array_kernel_arg_value.h"
+#include "gpu/cldrive/kernel_arg_value.h"
 #include "gpu/cldrive/proto/cldrive.pb.h"
 
 #include "third_party/opencl/include/cl.hpp"
@@ -23,7 +23,7 @@ cl::Kernel KernelFromString(const string& opencl_kernel) {
   return kernels[0];
 }
 
-template<typename T>
+template <typename T>
 ArrayKernelArgValue<T>* DowncastOrDie(KernelArgValue* t) {
   return dynamic_cast<ArrayKernelArgValue<T>*>(t);
 }

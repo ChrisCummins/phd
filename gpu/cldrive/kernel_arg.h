@@ -9,7 +9,8 @@
 namespace gpu {
 namespace cldrive {
 
-// See: https://www.khronos.org/registry/OpenCL/sdk/1.2/docs/man/xhtml/scalarDataTypes.html
+// See:
+// https://www.khronos.org/registry/OpenCL/sdk/1.2/docs/man/xhtml/scalarDataTypes.html
 enum OpenClArgType {
   DEFAULT_UNKNOWN,
   BOOL,
@@ -26,7 +27,7 @@ enum OpenClArgType {
   HALF
 };
 
-phd::StatusOr<OpenClArgType> OpenClArgTypeFromString(const string& type_name);
+phd::StatusOr<OpenClArgType> OpenClArgTypeFromString(const string &type_name);
 
 class KernelArg {
  public:
@@ -37,12 +38,12 @@ class KernelArg {
   // Create a random value for this argument. If the argument is not supported,
   // returns nullptr.
   std::unique_ptr<KernelArgValue> TryToCreateRandomValue(
-     const cl::Context& context, const DynamicParams &dynamic_params);
+      const cl::Context &context, const DynamicParams &dynamic_params);
 
   // Create a "ones" value for this argument. If the argument is not supported,
   // returns nullptr.
   std::unique_ptr<KernelArgValue> TryToCreateOnesValue(
-     const cl::Context& context, const DynamicParams &dynamic_params);
+      const cl::Context &context, const DynamicParams &dynamic_params);
 
   // Address qualifier accessors.
 
@@ -57,9 +58,8 @@ class KernelArg {
   bool IsPointer() const;
 
  private:
-
   std::unique_ptr<KernelArgValue> TryToCreateKernelArgValue(
-      const cl::Context& context, const DynamicParams &dynamic_params,
+      const cl::Context &context, const DynamicParams &dynamic_params,
       bool rand_values);
 
   cl::Kernel *kernel_;

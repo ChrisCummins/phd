@@ -23,8 +23,7 @@ phd::StatusOr<OpenClArgType> OpenClArgTypeFromString(const string& type_name) {
     return OpenClArgType::USHORT;
   } else if (!type_name.compare("int")) {
     return OpenClArgType::INT;
-  } else if (!type_name.compare("unsigned int") ||
-             !type_name.compare("uint")) {
+  } else if (!type_name.compare("unsigned int") || !type_name.compare("uint")) {
     return OpenClArgType::UINT;
   } else if (!type_name.compare("long")) {
     return OpenClArgType::LONG;
@@ -42,8 +41,9 @@ phd::StatusOr<OpenClArgType> OpenClArgTypeFromString(const string& type_name) {
   }
 }
 
-KernelArg::KernelArg(cl::Kernel *kernel, size_t arg_index)
-    : kernel_(kernel), arg_index_(arg_index),
+KernelArg::KernelArg(cl::Kernel* kernel, size_t arg_index)
+    : kernel_(kernel),
+      arg_index_(arg_index),
       address_(kernel->getArgInfo<CL_KERNEL_ARG_ADDRESS_QUALIFIER>(arg_index)),
       type_(OpenClArgType::DEFAULT_UNKNOWN) {
   CHECK(IsGlobal() || IsLocal() || IsConstant() || IsPrivate());
@@ -66,7 +66,8 @@ phd::Status KernelArg::Init() {
     return phd::Status::UNKNOWN;
   }
 
-  string full_type_name = kernel_->getArgInfo<CL_KERNEL_ARG_TYPE_NAME>(arg_index_);
+  string full_type_name =
+      kernel_->getArgInfo<CL_KERNEL_ARG_TYPE_NAME>(arg_index_);
   CHECK(full_type_name.size());
 
   is_pointer_ = full_type_name[full_type_name.size() - 2] == '*';
@@ -87,12 +88,11 @@ phd::Status KernelArg::Init() {
 
 namespace {
 
-template<typename T>
-std::unique_ptr<ArrayKernelArgValueWithBuffer<T>>
-CreateArrayArgValue(size_t size, bool rand_values,
-                    const cl::Context& context) {
-  auto arg_value = std::make_unique<ArrayKernelArgValueWithBuffer<T>>(
-      context, size, 1);
+template <typename T>
+std::unique_ptr<ArrayKernelArgValueWithBuffer<T>> CreateArrayArgValue(
+    size_t size, bool rand_values, const cl::Context& context) {
+  auto arg_value =
+      std::make_unique<ArrayKernelArgValueWithBuffer<T>>(context, size, 1);
   if (rand_values) {
     for (size_t i = 0; i < size; ++i) {
       arg_value->vector()[i] = rand();
@@ -101,9 +101,9 @@ CreateArrayArgValue(size_t size, bool rand_values,
   return arg_value;
 }
 
-std::unique_ptr<KernelArgValue>
-CreateArrayArgValue(const OpenClArgType& type, size_t size, bool rand_values,
-                    const cl::Context& context) {
+std::unique_ptr<KernelArgValue> CreateArrayArgValue(
+    const OpenClArgType& type, size_t size, bool rand_values,
+    const cl::Context& context) {
   switch (type) {
     // TODO(cec): Fix compilation when bool enabled:
     // case OpenClArgType::BOOL: {
@@ -151,9 +151,8 @@ CreateArrayArgValue(const OpenClArgType& type, size_t size, bool rand_values,
 
 }  // anonymous namespace
 
-std::unique_ptr<KernelArgValue>
-KernelArg::TryToCreateKernelArgValue(
-    const cl::Context& context, const DynamicParams &dynamic_params,
+std::unique_ptr<KernelArgValue> KernelArg::TryToCreateKernelArgValue(
+    const cl::Context& context, const DynamicParams& dynamic_params,
     bool rand_values) {
   CHECK(type_ != OpenClArgType::DEFAULT_UNKNOWN) << "Init() not called";
   if (IsPointer() && IsGlobal()) {
@@ -168,13 +167,13 @@ KernelArg::TryToCreateKernelArgValue(
 }
 
 std::unique_ptr<KernelArgValue> KernelArg::TryToCreateRandomValue(
-const cl::Context& context, const DynamicParams &dynamic_params) {
+    const cl::Context& context, const DynamicParams& dynamic_params) {
   return TryToCreateKernelArgValue(context, dynamic_params,
                                    /*rand_values=*/true);
 }
 
 std::unique_ptr<KernelArgValue> KernelArg::TryToCreateOnesValue(
-  const cl::Context& context, const DynamicParams &dynamic_params) {
+    const cl::Context& context, const DynamicParams& dynamic_params) {
   return TryToCreateKernelArgValue(context, dynamic_params,
                                    /*rand_values=*/false);
 }
