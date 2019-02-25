@@ -11,6 +11,7 @@ py_library(
     name = "api",
     srcs = ["api.py"],
     data = [":native_driver"],
+    visibility = ["//visibility:public"],
     deps = [
         "//gpu/cldrive/legacy:env",
         "//gpu/cldrive/proto:cldrive_py_pb2",
@@ -45,6 +46,7 @@ cc_test(
 py_binary(
     name = "cldrive",
     srcs = ["cldrive.py"],
+    visibility = ["//visibility:public"],
     deps = [
         ":api",
         "//gpu/cldrive/legacy:env",
@@ -216,7 +218,6 @@ cc_test(
 cc_binary(
     name = "native_driver",
     srcs = ["native_driver.cc"],
-    visibility = ["//gpu/cldrive:__subpackages__"],  # visible in legacy package
     deps = [
         ":libcldrive",
         "//gpu/cldrive/proto:cldrive_cc_pb2",
