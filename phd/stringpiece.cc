@@ -94,7 +94,7 @@ stringpiece_ssize_type StringPiece::copy(char *buf, size_type n,
   return ret;
 }
 
-bool StringPiece::contains(StringPiece s) const { return find(s, 0) != npos; }
+bool StringPiece::contains(StringPiece s) const { return find(s, 0) != static_cast<int>(npos); }
 
 stringpiece_ssize_type StringPiece::find(StringPiece s, size_type pos) const {
   if (length_ <= 0 || pos > static_cast<size_type>(length_)) {
@@ -271,7 +271,7 @@ stringpiece_ssize_type StringPiece::find_last_not_of(char c,
 }
 
 StringPiece StringPiece::substr(size_type pos, size_type n) const {
-  if (pos > length_)
+  if (static_cast<int>(pos) > length_)
     pos = length_;
   if (n > length_ - pos)
     n = length_ - pos;
