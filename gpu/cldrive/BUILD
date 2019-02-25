@@ -50,8 +50,10 @@ cc_test(
     deps = [
         ":array_kernel_arg_value",
         "//phd:test",
-        "//third_party/opencl:libOpenCL.so",
-    ],
+    ] + select({
+        "//:darwin": [],
+        "//conditions:default": ["@libopencl//:libOpenCL"],
+    }),
 )
 
 py_binary(
@@ -92,8 +94,10 @@ cc_test(
         "//gpu/cldrive/proto:cldrive_cc_pb2",
         "//phd:test",
         "//third_party/opencl",
-        "//third_party/opencl:libOpenCL.so",
-    ],
+    ] + select({
+        "//:darwin": [],
+        "//conditions:default": ["@libopencl//:libOpenCL"],
+    }),
 )
 
 cc_library(
@@ -117,8 +121,10 @@ cc_test(
     deps = [
         ":kernel_arg_set",
         "//phd:test",
-        "//third_party/opencl:libOpenCL.so",
-    ],
+    ] + select({
+        "//:darwin": [],
+        "//conditions:default": ["@libopencl//:libOpenCL"],
+    }),
 )
 
 cc_library(
@@ -143,8 +149,10 @@ cc_test(
         ":kernel_arg_value",
         "//phd:port",
         "//phd:test",
-        "//third_party/opencl:libOpenCL.so",
-    ],
+    ] + select({
+        "//:darwin": [],
+        "//conditions:default": ["@libopencl//:libOpenCL"],
+    }),
 )
 
 cc_library(
@@ -166,8 +174,10 @@ cc_test(
     deps = [
         ":kernel_arg_values_set",
         "//phd:test",
-        "//third_party/opencl:libOpenCL.so",
-    ],
+    ] + select({
+        "//:darwin": [],
+        "//conditions:default": ["@libopencl//:libOpenCL"],
+    }),
 )
 
 cc_library(
@@ -191,8 +201,10 @@ cc_test(
     deps = [
         ":kernel_driver",
         "//phd:test",
-        "//third_party/opencl:libOpenCL.so",
-    ],
+    ] + select({
+        "//:darwin": [],
+        "//conditions:default": ["@libopencl//:libOpenCL"],
+    }),
 )
 
 cc_library(
@@ -222,8 +234,10 @@ cc_test(
     deps = [
         ":libcldrive",
         "//phd:test",
-        "//third_party/opencl:libOpenCL.so",
-    ],
+    ] + select({
+        "//:darwin": [],
+        "//conditions:default": ["@libopencl//:libOpenCL"],
+    }),
 )
 
 cc_binary(
@@ -251,8 +265,10 @@ cc_test(
     deps = [
         ":opencl_util",
         "//phd:test",
-        "//third_party/opencl:libOpenCL.so",
-    ],
+    ] + select({
+        "//:darwin": [],
+        "//conditions:default": ["@libopencl//:libOpenCL"],
+    }),
 )
 
 cc_library(
@@ -271,8 +287,10 @@ cc_test(
     deps = [
         ":profiling_data",
         "//phd:test",
-        "//third_party/opencl:libOpenCL.so",
-    ],
+    ] + select({
+        "//:darwin": [],
+        "//conditions:default": ["@libopencl//:libOpenCL"],
+    }),
 )
 
 cc_library(
@@ -293,8 +311,10 @@ cc_test(
     deps = [
         ":scalar_kernel_arg_value",
         "//phd:test",
-        "//third_party/opencl:libOpenCL.so",
-    ],
+    ] + select({
+        "//:darwin": [],
+        "//conditions:default": ["@libopencl//:libOpenCL"],
+    }),
 )
 
 cc_library(
