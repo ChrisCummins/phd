@@ -2,7 +2,6 @@ import dbus.service
 
 from labm8 import fs
 
-
 LOCAL_DIR = fs.path("~/.omnitune")
 
 

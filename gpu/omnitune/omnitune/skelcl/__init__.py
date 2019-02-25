@@ -77,7 +77,9 @@ def hash_classifier(classifier):
   """
   Returns the hash of a classifier.
   """
-  string = " ".join([classifier.classname, ] + classifier.options)
+  string = " ".join([
+      classifier.classname,
+  ] + classifier.options)
   return re.sub(r"[ -\.]+", "-", string)
 
 
@@ -148,13 +150,9 @@ def get_kernel_name_and_type(source):
       # If we've got as far as the user function, then print
       # what we have.
       if re.search("^(\w+) USR_FUNC", line):
-        return "\n".join([
-                           lines[north],
-                           lines[south],
-                           lines[east],
-                           lines[west],
-                           ""
-                         ] + lines[i:])
+        return "\n".join(
+            [lines[north], lines[south], lines[east], lines[west], ""] +
+            lines[i:])
 
     # Fall through, just print the whole bloody lot.
     return "\n".join(lines)

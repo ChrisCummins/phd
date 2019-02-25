@@ -130,18 +130,18 @@ class Dataset(ml.Dataset):
   @staticmethod
   def load(path, db):
     nominals = [
-      49,  # dev_double_fp_config
-      50,  # dev_endian_little
-      51,  # dev_execution_capabilities
-      52,  # dev_extensions
-      54,  # dev_global_mem_cache_type
-      57,  # dev_host_unified_memory
-      63,  # dev_image_support
-      65,  # dev_local_mem_type
-      96,  # dev_queue_properties
-      97,  # dev_single_fp_config
-      98,  # dev_type
-      100,  # dev_vendor_id
+        49,  # dev_double_fp_config
+        50,  # dev_endian_little
+        51,  # dev_execution_capabilities
+        52,  # dev_extensions
+        54,  # dev_global_mem_cache_type
+        57,  # dev_host_unified_memory
+        63,  # dev_image_support
+        65,  # dev_local_mem_type
+        96,  # dev_queue_properties
+        97,  # dev_single_fp_config
+        98,  # dev_type
+        100,  # dev_vendor_id
     ]
     nominal_indices = ",".join([str(index) for index in nominals])
     force_nominal = ["-N", nominal_indices]
@@ -156,9 +156,10 @@ class Dataset(ml.Dataset):
 
     # Create string->nominal type attribute filter, ignoring the first
     # attribute (scenario ID), since we're not classifying with it.
-    string_to_nominal = WekaFilter(classname=("weka.filters.unsupervised."
-                                              "attribute.StringToNominal"),
-                                   options=["-R", "2-last"])
+    string_to_nominal = WekaFilter(
+        classname=("weka.filters.unsupervised."
+                   "attribute.StringToNominal"),
+        options=["-R", "2-last"])
     string_to_nominal.inputformat(dataset.instances)
 
     # Create filtered dataset, and swap data around.
@@ -169,14 +170,15 @@ class Dataset(ml.Dataset):
 
 
 class RegressionDataset(Dataset):
+
   @staticmethod
   def load(path, db):
     nominals = [
-      49,  # dev_global_mem_cache_type
-      52,  # dev_host_unified_memory
-      54,  # dev_local_mem_type
-      56,  # dev_type
-      57,  # dev_vendor
+        49,  # dev_global_mem_cache_type
+        52,  # dev_host_unified_memory
+        54,  # dev_local_mem_type
+        56,  # dev_type
+        57,  # dev_vendor
     ]
     nominal_indices = ",".join([str(index) for index in nominals])
     force_nominal = ["-N", nominal_indices]
@@ -191,9 +193,10 @@ class RegressionDataset(Dataset):
 
     # Create string->nominal type attribute filter, ignoring the first
     # attribute (scenario ID), since we're not classifying with it.
-    string_to_nominal = WekaFilter(classname=("weka.filters.unsupervised."
-                                              "attribute.StringToNominal"),
-                                   options=["-R", "2-last"])
+    string_to_nominal = WekaFilter(
+        classname=("weka.filters.unsupervised."
+                   "attribute.StringToNominal"),
+        options=["-R", "2-last"])
     string_to_nominal.inputformat(dataset.instances)
 
     # Create filtered dataset, and swap data around.

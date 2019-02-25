@@ -23,8 +23,7 @@ def migrate_0_to_1(old):
     return query.fetchone()[0]
 
   def get_device_attr(device_id, name, count):
-    query = old.execute("SELECT * FROM devices WHERE name = ?",
-                        (name,))
+    query = old.execute("SELECT * FROM devices WHERE name = ?", (name,))
     attr = query.fetchone()
 
     # Splice into the new
@@ -98,109 +97,77 @@ def migrate_0_to_1(old):
   io.debug("Migration: creating tables ...")
 
   # Create table: kernels
-  tmp.create_table("version",
-                   (("version", "integer"),))
+  tmp.create_table("version", (("version", "integer"),))
 
   # Set database version
   tmp.execute("INSERT INTO version VALUES (1)")
 
   # Create table: kernels
-  tmp.create_table("kernels",
-                   (("id", "text primary key"),
-                    ("north", "integer"),
-                    ("south", "integer"),
-                    ("east", "integer"),
-                    ("west", "integer"),
-                    ("max_wg_size", "integer"),
-                    ("source", "text")))
+  tmp.create_table("kernels", (("id", "text primary key"), ("north", "integer"),
+                               ("south", "integer"), ("east", "integer"),
+                               ("west", "integer"), ("max_wg_size", "integer"),
+                               ("source", "text")))
 
   # Create table: devices
-  tmp.create_table("devices",
-                   (("id", "text primary key"),
-                    ("name", "text"),
-                    ("count", "integer"),
-                    ("address_bits", "integer"),
-                    ("double_fp_config", "integer"),
-                    ("endian_little", "integer"),
-                    ("execution_capabilities", "integer"),
-                    ("extensions", "text"),
-                    ("global_mem_cache_size", "integer"),
-                    ("global_mem_cache_type", "integer"),
-                    ("global_mem_cacheline_size", "integer"),
-                    ("global_mem_size", "integer"),
-                    ("host_unified_memory", "integer"),
-                    ("image2d_max_height", "integer"),
-                    ("image2d_max_width", "integer"),
-                    ("image3d_max_depth", "integer"),
-                    ("image3d_max_height", "integer"),
-                    ("image3d_max_width", "integer"),
-                    ("image_support", "integer"),
-                    ("local_mem_size", "integer"),
-                    ("local_mem_type", "integer"),
-                    ("max_clock_frequency", "integer"),
-                    ("max_compute_units", "integer"),
-                    ("max_constant_args", "integer"),
-                    ("max_constant_buffer_size", "integer"),
-                    ("max_mem_alloc_size", "integer"),
-                    ("max_parameter_size", "integer"),
-                    ("max_read_image_args", "integer"),
-                    ("max_samplers", "integer"),
-                    ("max_work_group_size", "integer"),
-                    ("max_work_item_dimensions", "integer"),
-                    ("max_work_item_sizes_0", "integer"),
-                    ("max_work_item_sizes_1", "integer"),
-                    ("max_work_item_sizes_2", "integer"),
-                    ("max_write_image_args", "integer"),
-                    ("mem_base_addr_align", "integer"),
-                    ("min_data_type_align_size", "integer"),
-                    ("native_vector_width_char", "integer"),
-                    ("native_vector_width_double", "integer"),
-                    ("native_vector_width_float", "integer"),
-                    ("native_vector_width_half", "integer"),
-                    ("native_vector_width_int", "integer"),
-                    ("native_vector_width_long", "integer"),
-                    ("native_vector_width_short", "integer"),
-                    ("preferred_vector_width_char", "integer"),
-                    ("preferred_vector_width_double", "integer"),
-                    ("preferred_vector_width_float", "integer"),
-                    ("preferred_vector_width_half", "integer"),
-                    ("preferred_vector_width_int", "integer"),
-                    ("preferred_vector_width_long", "integer"),
-                    ("preferred_vector_width_short", "integer"),
-                    ("queue_properties", "integer"),
-                    ("single_fp_config", "integer"),
-                    ("type", "integer"),
-                    ("vendor", "text"),
-                    ("vendor_id", "text"),
-                    ("version", "text")))
+  tmp.create_table(
+      "devices",
+      (("id", "text primary key"), ("name", "text"), ("count", "integer"),
+       ("address_bits", "integer"), ("double_fp_config", "integer"),
+       ("endian_little", "integer"), ("execution_capabilities", "integer"),
+       ("extensions", "text"), ("global_mem_cache_size", "integer"),
+       ("global_mem_cache_type", "integer"),
+       ("global_mem_cacheline_size", "integer"), ("global_mem_size", "integer"),
+       ("host_unified_memory", "integer"), ("image2d_max_height", "integer"),
+       ("image2d_max_width", "integer"), ("image3d_max_depth", "integer"),
+       ("image3d_max_height", "integer"), ("image3d_max_width", "integer"),
+       ("image_support", "integer"), ("local_mem_size", "integer"),
+       ("local_mem_type", "integer"), ("max_clock_frequency", "integer"),
+       ("max_compute_units", "integer"), ("max_constant_args", "integer"),
+       ("max_constant_buffer_size", "integer"),
+       ("max_mem_alloc_size", "integer"), ("max_parameter_size", "integer"),
+       ("max_read_image_args", "integer"), ("max_samplers", "integer"),
+       ("max_work_group_size", "integer"),
+       ("max_work_item_dimensions", "integer"), ("max_work_item_sizes_0",
+                                                 "integer"),
+       ("max_work_item_sizes_1", "integer"), ("max_work_item_sizes_2",
+                                              "integer"),
+       ("max_write_image_args", "integer"), ("mem_base_addr_align", "integer"),
+       ("min_data_type_align_size",
+        "integer"), ("native_vector_width_char",
+                     "integer"), ("native_vector_width_double", "integer"),
+       ("native_vector_width_float",
+        "integer"), ("native_vector_width_half",
+                     "integer"), ("native_vector_width_int", "integer"),
+       ("native_vector_width_long",
+        "integer"), ("native_vector_width_short",
+                     "integer"), ("preferred_vector_width_char", "integer"),
+       ("preferred_vector_width_double",
+        "integer"), ("preferred_vector_width_float",
+                     "integer"), ("preferred_vector_width_half", "integer"),
+       ("preferred_vector_width_int",
+        "integer"), ("preferred_vector_width_long",
+                     "integer"), ("preferred_vector_width_short", "integer"),
+       ("queue_properties", "integer"), ("single_fp_config", "integer"),
+       ("type", "integer"), ("vendor", "text"), ("vendor_id",
+                                                 "text"), ("version", "text")))
 
   # Create table: data
   tmp.create_table("data",
-                   (("id", "text primary key"),
-                    ("width", "integer"),
-                    ("height", "integer"),
-                    ("tin", "text"),
-                    ("tout", "text")))
+                   (("id", "text primary key"), ("width", "integer"),
+                    ("height", "integer"), ("tin", "text"), ("tout", "text")))
 
   # Create table: params
-  tmp.create_table("params",
-                   (("id", "text primary key"),
-                    ("wg_c", "integer"),
-                    ("wg_r", "integer")))
+  tmp.create_table("params", (("id", "text primary key"), ("wg_c", "integer"),
+                              ("wg_r", "integer")))
 
   # Create table: scenarios
   tmp.create_table("scenarios",
-                   (("id", "text primary key"),
-                    ("host", "text"),
-                    ("device", "text"),
-                    ("kernel", "text"),
-                    ("data", "text")))
+                   (("id", "text primary key"), ("host", "text"),
+                    ("device", "text"), ("kernel", "text"), ("data", "text")))
 
   # Create table: runtimes
-  tmp.create_table("runtimes",
-                   (("scenario", "text"),
-                    ("params", "text"),
-                    ("runtime", "real")))
+  tmp.create_table("runtimes", (("scenario", "text"), ("params", "text"),
+                                ("runtime", "real")))
 
   i = 0
   for row in old.execute("SELECT * from runtimes"):
@@ -245,28 +212,21 @@ def migrate_1_to_2(old):
 
   # Update database version
   tmp.drop_table("version")
-  tmp.create_table("version",
-                   (("version", "integer"),))
+  tmp.create_table("version", (("version", "integer"),))
   tmp.execute("INSERT INTO version VALUES (2)")
 
   # Rename table "data" to "datasets"
   tmp.create_table("datasets",
-                   (("id", "text primary key"),
-                    ("width", "integer"),
-                    ("height", "integer"),
-                    ("tin", "text"),
-                    ("tout", "text")))
+                   (("id", "text primary key"), ("width", "integer"),
+                    ("height", "integer"), ("tin", "text"), ("tout", "text")))
   tmp.execute("INSERT INTO datasets SELECT * FROM data")
   tmp.drop_table("data")
 
   # Rename column "scenarios.data" to "scenarios.dataset"
   tmp.execute("ALTER TABLE scenarios RENAME TO old_scenarios")
-  tmp.create_table("scenarios",
-                   (("id", "text primary key"),
-                    ("host", "text"),
-                    ("device", "text"),
-                    ("kernel", "text"),
-                    ("dataset", "text")))
+  tmp.create_table("scenarios", (("id", "text primary key"), ("host", "text"),
+                                 ("device", "text"), ("kernel", "text"),
+                                 ("dataset", "text")))
   tmp.execute("INSERT INTO scenarios SELECT * FROM old_scenarios")
   tmp.drop_table("old_scenarios")
 
@@ -294,16 +254,16 @@ def migrate_2_to_3(old):
   """
 
   def _old_kernel2new(old_id):
-    kernel = old.execute("SELECT north,south,east,west,max_wg_size,source "
-                         "FROM kernels WHERE id=?",
-                         (old_id,)).fetchone()
+    kernel = old.execute(
+        "SELECT north,south,east,west,max_wg_size,source "
+        "FROM kernels WHERE id=?", (old_id,)).fetchone()
     if kernel:
       return tmp.kernel_id(*kernel)
 
   def _old_scenario2new(old_id):
-    device, old_kernel, dataset = old.execute("SELECT device,kernel,dataset "
-                                              "FROM scenarios WHERE id=?",
-                                              (old_id,)).fetchone()
+    device, old_kernel, dataset = old.execute(
+        "SELECT device,kernel,dataset "
+        "FROM scenarios WHERE id=?", (old_id,)).fetchone()
     kernel = _old_kernel2new(old_kernel)
     return tmp.scenario_id(device, kernel, dataset)
 
@@ -331,12 +291,10 @@ def migrate_2_to_3(old):
     id = hash_device(*features)
     io.debug("Features extracted for device", id)
     row = (id,) + features
-    tmp.execute("INSERT INTO devices VALUES " +
-                placeholders(*row), row)
+    tmp.execute("INSERT INTO devices VALUES " + placeholders(*row), row)
 
     row = (features[0], features[1], id)
-    tmp.execute("INSERT INTO device_lookup VALUES " +
-                placeholders(*row), row)
+    tmp.execute("INSERT INTO device_lookup VALUES " + placeholders(*row), row)
     tmp.commit()
 
   for row in old.execute("SELECT * FROM kernels"):
@@ -348,12 +306,10 @@ def migrate_2_to_3(old):
     id = hash_dataset(*features)
     io.debug("Features extracted for dataset", id)
     row = (id,) + features
-    tmp.execute("INSERT INTO datasets VALUES " +
-                placeholders(*row), row)
+    tmp.execute("INSERT INTO datasets VALUES " + placeholders(*row), row)
 
     row = features + (id,)
-    tmp.execute("INSERT INTO dataset_lookup VALUES " +
-                placeholders(*row), row)
+    tmp.execute("INSERT INTO dataset_lookup VALUES " + placeholders(*row), row)
     tmp.commit()
 
   # Populate kernel_names table.
@@ -364,8 +320,9 @@ def migrate_2_to_3(old):
     kernel = _old_kernel2new(old_id)
     if kernel:
       row = (kernel, synthetic, name)
-      tmp.execute("INSERT OR IGNORE INTO kernel_names VALUES " +
-                  placeholders(*row), row)
+      tmp.execute(
+          "INSERT OR IGNORE INTO kernel_names VALUES " + placeholders(*row),
+          row)
   tmp.commit()
 
   # Populate scenarios table.
@@ -375,8 +332,8 @@ def migrate_2_to_3(old):
     new_id = hash_scenario(device, kernel, dataset)
 
     row = (new_id, device, kernel, dataset)
-    tmp.execute("INSERT OR IGNORE INTO scenarios VALUES " +
-                placeholders(*row), row)
+    tmp.execute("INSERT OR IGNORE INTO scenarios VALUES " + placeholders(*row),
+                row)
   tmp.commit()
 
   # Populate params table.
@@ -384,8 +341,8 @@ def migrate_2_to_3(old):
   tmp.commit()
 
   scenario_replacements = {
-    row[0]: _old_scenario2new(row[0])
-    for row in old.execute("SELECT * FROM scenarios")
+      row[0]: _old_scenario2new(row[0])
+      for row in old.execute("SELECT * FROM scenarios")
   }
 
   tmp.execute("INSERT INTO runtimes SELECT * from rhs.runtimes")
@@ -438,18 +395,9 @@ def migrate_3_to_4(old):
   fs.cp(old.path, backup_path)
 
   tables = [
-    "kernels",
-    "kernel_lookup",
-    "kernel_names",
-    "devices",
-    "device_lookup",
-    "datasets",
-    "dataset_lookup",
-    "scenarios",
-    "params",
-    "runtimes",
-    "runtime_stats",
-    "oracle_params"
+      "kernels", "kernel_lookup", "kernel_names", "devices", "device_lookup",
+      "datasets", "dataset_lookup", "scenarios", "params", "runtimes",
+      "runtime_stats", "oracle_params"
   ]
 
   for table in tables:

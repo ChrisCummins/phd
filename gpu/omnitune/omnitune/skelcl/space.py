@@ -54,11 +54,17 @@ class ParamSpace(object):
 
   def inspace(self, param):
     c, r = unhash_params(param)
-    return (c >= min(self.c) and c <= max(self.c) and
-            r >= min(self.r) and r <= max(self.r))
+    return (c >= min(self.c) and c <= max(self.c) and r >= min(self.r) and
+            r <= max(self.r))
 
-  def heatmap(self, output=None, title=None, figsize=(5, 4),
-              xlabels=True, ylabels=True, cbar=True, **kwargs):
+  def heatmap(self,
+              output=None,
+              title=None,
+              figsize=(5, 4),
+              xlabels=True,
+              ylabels=True,
+              cbar=True,
+              **kwargs):
     import matplotlib.pyplot as plt
     import seaborn as sns
 
@@ -69,20 +75,21 @@ class ParamSpace(object):
       kwargs["square"] = True
 
     if xlabels == True:
-      xticklabels = ["" if x % 20 else str(x)
-                     for x in self.c]
+      xticklabels = ["" if x % 20 else str(x) for x in self.c]
     else:
       xticklabels = xlabels
     if ylabels == True:
-      yticklabels = ["" if x % 20 else str(x)
-                     for x in list(reversed(self.r))]
+      yticklabels = ["" if x % 20 else str(x) for x in list(reversed(self.r))]
     else:
       yticklabels = ylabels
 
     _, ax = plt.subplots(figsize=figsize)
-    sns.heatmap(data,
-                xticklabels=xticklabels, yticklabels=yticklabels,
-                cbar=cbar, **kwargs)
+    sns.heatmap(
+        data,
+        xticklabels=xticklabels,
+        yticklabels=yticklabels,
+        cbar=cbar,
+        **kwargs)
 
     # Set labels.
     ax.set_ylabel("Rows")
@@ -95,8 +102,14 @@ class ParamSpace(object):
 
     viz.finalise(output)
 
-  def trisurf(self, output=None, title=None, figsize=(5, 4), zlabel=None,
-              zticklabels=None, rotation=None, **kwargs):
+  def trisurf(self,
+              output=None,
+              title=None,
+              figsize=(5, 4),
+              zlabel=None,
+              zticklabels=None,
+              rotation=None,
+              **kwargs):
     import matplotlib.pyplot as plt
     import matplotlib.cm as cm
 
@@ -110,8 +123,8 @@ class ParamSpace(object):
     Z = np.zeros((num_vals,))
 
     # Iterate over every point in space.
-    for j, i in product(range(self.matrix.shape[0]),
-                        range(self.matrix.shape[1])):
+    for j, i in product(
+        range(self.matrix.shape[0]), range(self.matrix.shape[1])):
       # Convert point to list index.
       index = j * self.matrix.shape[1] + i
       X[index] = i
@@ -159,15 +172,21 @@ class ParamSpace(object):
     plt.gcf().set_size_inches(*figsize, dpi=300)
     viz.finalise(output)
 
-  def bar3d(self, output=None, title=None, figsize=(5, 4), zlabel=None,
-            zticklabels=None, rotation=None, **kwargs):
+  def bar3d(self,
+            output=None,
+            title=None,
+            figsize=(5, 4),
+            zlabel=None,
+            zticklabels=None,
+            rotation=None,
+            **kwargs):
     import matplotlib.pyplot as plt
 
     X, Y, dZ = [], [], []
 
     # Iterate over every point in space.
-    for j, i in product(range(self.matrix.shape[0]),
-                        range(self.matrix.shape[1])):
+    for j, i in product(
+        range(self.matrix.shape[0]), range(self.matrix.shape[1])):
       if self.matrix[j][i] > 0:
         X.append(i)
         Y.append(j)
@@ -280,9 +299,8 @@ class ParamSpace(object):
 
 def enumerate_wlegal_params(maxwgsize):
   return [
-    hash_params(j, i) for j, i in
-    product(
-        range(2, maxwgsize / 2 + 1, 2),
-        range(2, maxwgsize / 2 + 1, 2)
-    ) if j * i < maxwgsize
+      hash_params(j, i)
+      for j, i in product(
+          range(2, maxwgsize / 2 + 1, 2), range(2, maxwgsize / 2 + 1, 2))
+      if j * i < maxwgsize
   ]

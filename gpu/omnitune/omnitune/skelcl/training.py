@@ -154,8 +154,8 @@ def escape_kernel(kernel):
   return 'R"(' + kernel + ')";'
 
 
-def make_synthetic_benchmark(complexity, north, south, east, west,
-                             width, height):
+def make_synthetic_benchmark(complexity, north, south, east, west, width,
+                             height):
   program = [common_header]
 
   program.append(define("HEIGHT", height))
@@ -165,7 +165,7 @@ def make_synthetic_benchmark(complexity, north, south, east, west,
   program.append(define("EAST", east))
   program.append(define("WEST", west))
 
-  program.append("const char *KERNEL = ");
+  program.append("const char *KERNEL = ")
 
   if complexity > .5:
     program.append(escape_kernel(complex_kernel))
@@ -175,6 +175,7 @@ def make_synthetic_benchmark(complexity, north, south, east, west,
   program.append(main)
 
   return "\n".join(program)
+
 
 # sizes = (512, 1024, 2048, 4096)
 # stencil_direction_values(1, 5, 10, 20, 30)

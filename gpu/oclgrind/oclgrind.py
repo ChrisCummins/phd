@@ -22,7 +22,6 @@ from gpu.clinfo.proto import clinfo_pb2
 from labm8 import bazelutil
 from labm8 import system
 
-
 FLAGS = flags.FLAGS
 
 _OCLGRIND_PKG = 'oclgrind_linux' if system.is_linux() else 'oclgrind_mac'
@@ -41,7 +40,8 @@ CLINFO_DESCRIPTION = clinfo_pb2.OpenClDevice(
 )
 
 
-def Exec(argv: typing.List[str], stdin: typing.Optional[str] = None,
+def Exec(argv: typing.List[str],
+         stdin: typing.Optional[str] = None,
          env: typing.Dict[str, str] = None) -> subprocess.Popen:
   """Execute a command using oclgrind.
 
@@ -57,10 +57,13 @@ def Exec(argv: typing.List[str], stdin: typing.Optional[str] = None,
   """
   cmd = [str(OCLGRIND_PATH)] + argv
   # logging.debug('$ %s', ' '.join(cmd))
-  process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                             stdin=subprocess.PIPE if stdin else None,
-                             stderr=subprocess.PIPE, universal_newlines=True,
-                             env=env)
+  process = subprocess.Popen(
+      cmd,
+      stdout=subprocess.PIPE,
+      stdin=subprocess.PIPE if stdin else None,
+      stderr=subprocess.PIPE,
+      universal_newlines=True,
+      env=env)
   if stdin:
     stdout, stderr = process.communicate(stdin)
   else:

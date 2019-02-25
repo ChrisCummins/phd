@@ -1,10 +1,10 @@
-DEVINFOS = [
-  {
+DEVINFOS = [{
     "address_bits": 32,
     "double_fp_config": 63,
     "endian_little": 1,
     "execution_capabilities": 1,
-    "extensions": "cl_khr_byte_addressable_store cl_khr_icd cl_khr_gl_sharing cl_nv_compiler_options cl_nv_device_attribute_query cl_nv_pragma_unroll  cl_khr_global_int32_base_atomics cl_khr_global_int32_extended_atomics cl_khr_local_int32_base_atomics cl_khr_local_int32_extended_atomics cl_khr_fp64",
+    "extensions":
+    "cl_khr_byte_addressable_store cl_khr_icd cl_khr_gl_sharing cl_nv_compiler_options cl_nv_device_attribute_query cl_nv_pragma_unroll  cl_khr_global_int32_base_atomics cl_khr_global_int32_extended_atomics cl_khr_local_int32_base_atomics cl_khr_local_int32_extended_atomics cl_khr_fp64",
     "global_mem_cache_size": 262144,
     "global_mem_cache_type": 2,
     "global_mem_cacheline_size": 128,
@@ -55,8 +55,7 @@ DEVINFOS = [
     "vendor": "nvidia corporation",
     "vendor_id": "10deh",
     "version": "opencl 1.1 cuda",
-  }
-]
+}]
 
 
 def get_devinfos():

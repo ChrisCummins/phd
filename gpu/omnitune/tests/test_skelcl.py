@@ -17,12 +17,8 @@ class TestSkelCL(TestCase):
 
   # hash_dataset()
   def test_hash_dataset(self):
-    vals = [
-      [1024, 1024, "int", "float"],
-      [1024, 2048, "int", "float"],
-      [1024, 1024, "float", "float"],
-      [1024, 1024, "int", "int"]
-    ]
+    vals = [[1024, 1024, "int", "float"], [1024, 2048, "int", "float"],
+            [1024, 1024, "float", "float"], [1024, 1024, "int", "int"]]
     checksums = [skelcl.hash_dataset(*val) for val in vals]
     print(checksums)
     self._test(len(checksums), len(set(checksums)))

@@ -22,7 +22,6 @@ from absl import flags
 
 from labm8 import bazelutil, system
 
-
 FLAGS = flags.FLAGS
 
 OPENCL_HEADERS_DIR = bazelutil.DataPath('opencl_120_headers')

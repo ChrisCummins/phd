@@ -25,7 +25,6 @@ from absl import logging
 
 from labm8 import fs
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_list('opencl_rewrite_paths', [],
@@ -39,21 +38,21 @@ Rewrite = collections.namedtuple('Rewrite', ('opencl', 'libcecl'))
 # a list of rewrites rather than a map since the order that they are applied
 # is significant.
 OPENCL_TO_LIBCECL_REWRITES = [
-  Rewrite('clBuildProgram', 'CECL_PROGRAM'),
-  Rewrite('clCreateBuffer', 'CECL_BUFFER'),
-  Rewrite('clCreateCommandQueue', 'CECL_CREATE_COMMAND_QUEUE'),
-  Rewrite('clCreateKernelsInProgram', 'CECL_CREATE_KERNELS_IN_PROGRAM'),
-  Rewrite('clCreateKernel', 'CECL_KERNEL'),
-  Rewrite('clCreateProgramWithSource', 'CECL_PROGRAM_WITH_SOURCE'),
-  Rewrite('clEnqueueMapBuffer', 'CECL_MAP_BUFFER'),
-  Rewrite('clEnqueueNDRangeKernel', 'CECL_ND_RANGE_KERNEL'),
-  Rewrite('clEnqueueReadBuffer', 'CECL_READ_BUFFER'),
-  Rewrite('clEnqueueTask', 'CECL_TASK'),
-  Rewrite('clEnqueueWriteBuffer', 'CECL_WRITE_BUFFER'),
-  Rewrite('clSetKernelArg', 'CECL_SET_KERNEL_ARG'),
-  Rewrite('clCreateContextFromType', 'CECL_CREATE_CONTEXT_FROM_TYPE'),
-  Rewrite('clCreateContext', 'CECL_CREATE_CONTEXT'),
-  Rewrite('clGetKernelWorkGroupInfo', 'CECL_GET_KERNEL_WORK_GROUP_INFO'),
+    Rewrite('clBuildProgram', 'CECL_PROGRAM'),
+    Rewrite('clCreateBuffer', 'CECL_BUFFER'),
+    Rewrite('clCreateCommandQueue', 'CECL_CREATE_COMMAND_QUEUE'),
+    Rewrite('clCreateKernelsInProgram', 'CECL_CREATE_KERNELS_IN_PROGRAM'),
+    Rewrite('clCreateKernel', 'CECL_KERNEL'),
+    Rewrite('clCreateProgramWithSource', 'CECL_PROGRAM_WITH_SOURCE'),
+    Rewrite('clEnqueueMapBuffer', 'CECL_MAP_BUFFER'),
+    Rewrite('clEnqueueNDRangeKernel', 'CECL_ND_RANGE_KERNEL'),
+    Rewrite('clEnqueueReadBuffer', 'CECL_READ_BUFFER'),
+    Rewrite('clEnqueueTask', 'CECL_TASK'),
+    Rewrite('clEnqueueWriteBuffer', 'CECL_WRITE_BUFFER'),
+    Rewrite('clSetKernelArg', 'CECL_SET_KERNEL_ARG'),
+    Rewrite('clCreateContextFromType', 'CECL_CREATE_CONTEXT_FROM_TYPE'),
+    Rewrite('clCreateContext', 'CECL_CREATE_CONTEXT'),
+    Rewrite('clGetKernelWorkGroupInfo', 'CECL_GET_KERNEL_WORK_GROUP_INFO'),
 ]
 
 
@@ -97,8 +96,7 @@ def FileShouldBeRewritten(path: pathlib.Path) -> bool:
 
 
 def GetFilesToRewriteFromPath(
-    path: pathlib.Path) -> typing.Iterable[
-  pathlib.Path]:
+    path: pathlib.Path) -> typing.Iterable[pathlib.Path]:
   """Get an iterator of files to rewrite."""
 
   def _EnumerateFiles():
