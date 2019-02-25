@@ -143,6 +143,61 @@ std::unique_ptr<KernelArgValue> CreateArrayArgValue(
       return CreateArrayArgValue<cl_half>(size, rand_values, context);
     }
     default: {
+      // This condition should never occur as KernelArg::Init() will return an
+      // error status.
+      LOG(FATAL) << "Unsupported OpenClArgType enum type: " << type;
+      return std::unique_ptr<KernelArgValue>(nullptr);
+    }
+  }
+}
+
+template <typename T>
+std::unique_ptr<KernelArgValue> CreateScalarArgValue(const T& value) {
+  return std::make_unique<ScalarKernelArgValue<T>>(value);
+}
+
+std::unique_ptr<KernelArgValue> CreateScalarArgValue(const OpenClArgType& type,
+                                                     const size_t value) {
+  switch (type) {
+    case OpenClArgType::BOOL: {
+      return CreateScalarArgValue<bool>(value);
+    }
+    case OpenClArgType::CHAR: {
+      return CreateScalarArgValue<cl_char>(value);
+    }
+    case OpenClArgType::UCHAR: {
+      return CreateScalarArgValue<cl_uchar>(value);
+    }
+    case OpenClArgType::SHORT: {
+      return CreateScalarArgValue<cl_short>(value);
+    }
+    case OpenClArgType::USHORT: {
+      return CreateScalarArgValue<cl_ushort>(value);
+    }
+    case OpenClArgType::INT: {
+      return CreateScalarArgValue<cl_int>(value);
+    }
+    case OpenClArgType::UINT: {
+      return CreateScalarArgValue<cl_uint>(value);
+    }
+    case OpenClArgType::LONG: {
+      return CreateScalarArgValue<cl_long>(value);
+    }
+    case OpenClArgType::ULONG: {
+      return CreateScalarArgValue<cl_ulong>(value);
+    }
+    case OpenClArgType::FLOAT: {
+      return CreateScalarArgValue<cl_float>(value);
+    }
+    case OpenClArgType::DOUBLE: {
+      return CreateScalarArgValue<cl_double>(value);
+    }
+    case OpenClArgType::HALF: {
+      return CreateScalarArgValue<cl_half>(value);
+    }
+    default: {
+      // This condition should never occur as KernelArg::Init() will return an
+      // error status.
       LOG(FATAL) << "Unsupported OpenClArgType enum type: " << type;
       return std::unique_ptr<KernelArgValue>(nullptr);
     }
@@ -159,8 +214,7 @@ std::unique_ptr<KernelArgValue> KernelArg::TryToCreateKernelArgValue(
     return CreateArrayArgValue(type_, dynamic_params.global_size_x(),
                                /*rand_values=*/true, context);
   } else if (!IsPointer()) {
-    return std::make_unique<ScalarKernelArgValue<int>>(
-        dynamic_params.global_size_x());
+    return CreateScalarArgValue(type_, dynamic_params.global_size_x());
   } else {
     return std::unique_ptr<KernelArgValue>(nullptr);
   }

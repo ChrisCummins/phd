@@ -28,6 +28,16 @@ ArrayKernelArgValue<T>* DowncastOrDie(KernelArgValue* t) {
   return dynamic_cast<ArrayKernelArgValue<T>*>(t);
 }
 
+TEST(OpenClArgTypeFromString, Int) {
+  auto arg_type = OpenClArgTypeFromString("int");
+  ASSERT_TRUE(arg_type.ok());
+  EXPECT_EQ(arg_type.ValueOrDie(), OpenClArgType::INT);
+}
+
+TEST(OpenClArgTypeFromString, Unknown) {
+  EXPECT_FALSE(OpenClArgTypeFromString("unknown").ok());
+}
+
 TEST(KernelArg, GlobalPointerIsGlobal) {
   cl::Kernel kernel = KernelFromString("kernel void A(global int* a) {}");
 

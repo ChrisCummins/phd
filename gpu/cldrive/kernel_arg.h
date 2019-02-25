@@ -9,10 +9,10 @@
 namespace gpu {
 namespace cldrive {
 
-// See:
+// A list of OpenCL types. Each item corresponds to an element in the table at:
 // https://www.khronos.org/registry/OpenCL/sdk/1.2/docs/man/xhtml/scalarDataTypes.html
 enum OpenClArgType {
-  DEFAULT_UNKNOWN,
+  DEFAULT_UNKNOWN,  // Used as default constructor value.
   BOOL,
   CHAR,
   UCHAR,
@@ -27,6 +27,8 @@ enum OpenClArgType {
   HALF
 };
 
+// Look up a string type name and return the OpenClArgType. If not found,
+// an error status is returned.
 phd::StatusOr<OpenClArgType> OpenClArgTypeFromString(const string &type_name);
 
 class KernelArg {
