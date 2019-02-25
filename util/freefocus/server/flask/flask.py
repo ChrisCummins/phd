@@ -12,7 +12,6 @@ from flask import abort, request
 from util.freefocus import freefocus
 from util.freefocus import sql
 
-
 app = flask.Flask(__name__)
 flask_cors.CORS(app)
 app.config.from_object('config')
@@ -40,6 +39,7 @@ URL_STUB = 'http://' + app.config.get('SERVER_NAME', '') + API_BASE
 
 
 def active_task_graph():
+
   def build_graph(session, task: sql.Task):
     return {
       "id": task.id,
@@ -64,16 +64,17 @@ def active_task_graph():
 @app.route('/')
 def index():
   data = {
-    "freefocus": {
-      "version": f"{freefocus.SPEC_MAJOR}.{freefocus.SPEC_MINOR}.{freefocus.SPEC_MICRO}",
-    },
-    "assets": {
-      "cache_tag": 1,
-      "bootstrap_css": flask.url_for('static', filename='bootstrap.css'),
-      "styles_css": flask.url_for('static', filename='styles.css'),
-      "site_js": flask.url_for('static', filename='site.js'),
-    },
-    "tasks": active_task_graph(),
+      "freefocus": {
+          "version":
+          f"{freefocus.SPEC_MAJOR}.{freefocus.SPEC_MINOR}.{freefocus.SPEC_MICRO}",
+      },
+      "assets": {
+          "cache_tag": 1,
+          "bootstrap_css": flask.url_for('static', filename='bootstrap.css'),
+          "styles_css": flask.url_for('static', filename='styles.css'),
+          "site_js": flask.url_for('static', filename='site.js'),
+      },
+      "tasks": active_task_graph(),
   }
 
   return flask.render_template("lists.html", **data)
@@ -158,6 +159,7 @@ def get_person_groups(person_uid: int):
 
 @app.route(API_BASE + '/tasks', methods=["GET"])
 def get_tasks():
+
   def build_graph(session, task: sql.Task = None):
     parent = None if task is None else task.id
     q = session.query(sql.Task) \
@@ -180,11 +182,11 @@ def get_tasks():
       return children
     else:
       return {
-        "url": task_url(task),
-        "body": truncate(task.body),
-        "status": task.status,
-        "assigned": [g.id for g in task.assigned],
-        "children": children,
+          "url": task_url(task),
+          "body": truncate(task.body),
+          "status": task.status,
+          "assigned": [g.id for g in task.assigned],
+          "children": children,
       }
 
   with Session() as session:
@@ -198,19 +200,19 @@ def get_task(task_id: int):
     if not t:
       abort(404)
     return response({
-      "body": t.body,
-      "assigned": t.is_assigned,
-      "blocked": t.is_blocked,
-      "defer_until": date(t.defer_until),
-      "start_on": date(t.start_on),
-      "estimated_duration": t.duration,
-      "due": date(t.due),
-      "started": date(t.started),
-      "completed": date(t.completed),
-      "created": {
-        "at": date(t.created),
-        "by": group_url(t.created_by),
-      }
+        "body": t.body,
+        "assigned": t.is_assigned,
+        "blocked": t.is_blocked,
+        "defer_until": date(t.defer_until),
+        "start_on": date(t.start_on),
+        "estimated_duration": t.duration,
+        "due": date(t.due),
+        "started": date(t.started),
+        "completed": date(t.completed),
+        "created": {
+            "at": date(t.created),
+            "by": group_url(t.created_by),
+        }
     })
 
 

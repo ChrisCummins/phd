@@ -23,7 +23,6 @@ from labm8 import shell
 from util.photolib import common
 from util.photolib import linters
 
-
 FLAGS = flags.FLAGS
 
 Base = declarative.declarative_base()  # pylint: disable=invalid-name
@@ -63,8 +62,8 @@ class CachedError(Base):
   __tablename__ = "errors"
 
   id: int = Column(Integer, primary_key=True)
-  dir: str = Column(Binary(16), ForeignKey("directories.relpath_md5"),
-                    nullable=False)
+  dir: str = Column(
+      Binary(16), ForeignKey("directories.relpath_md5"), nullable=False)
   relpath: str = Column(String(1024), nullable=False)
   category: str = Column(String(512), nullable=False)
   message: str = Column(String(512), nullable=False)
@@ -145,21 +144,21 @@ class CacheLookupResult(object):
     self.errors = errors
 
 
-def AddLinterErrors(entry: CacheLookupResult,
-                    errors: typing.List[str]) -> None:
+def AddLinterErrors(entry: CacheLookupResult, errors: typing.List[str]) -> None:
   """Record linter errors in the cache."""
   # Create a directory cache entry.
   directory = Directory(relpath_md5=entry.relpath_md5, checksum=entry.checksum)
   SESSION.add(directory)
 
   # Create entries for the errors.
-  errors_ = [CachedError(
-      dir=directory.relpath_md5,
-      relpath=e.relpath,
-      category=e.category,
-      message=e.message,
-      fix_it=e.fix_it or ""
-  ) for e in errors]
+  errors_ = [
+      CachedError(
+          dir=directory.relpath_md5,
+          relpath=e.relpath,
+          category=e.category,
+          message=e.message,
+          fix_it=e.fix_it or "") for e in errors
+  ]
   if errors_:
     SESSION.bulk_save_objects(errors_)
   SESSION.commit()
@@ -215,8 +214,7 @@ def GetLinterErrors(abspath: str, relpath: str) -> CacheLookupResult:
       checksum=checksum,
       relpath=relpath,
       relpath_md5=relpath_md5,
-      errors=[]
-  )
+      errors=[])
 
   directory = SESSION \
     .query(Directory) \

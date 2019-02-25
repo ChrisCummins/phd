@@ -18,7 +18,6 @@ from sqlalchemy.ext import declarative
 
 from util.photolib import common
 
-
 FLAGS = flags.FLAGS
 
 Base = declarative.declarative_base()  # pylint: disable=invalid-name
@@ -82,7 +81,9 @@ def InitializeKeywordsCache(workspace_abspath: str) -> None:
   SESSION = MAKE_SESSION()
 
 
-def GetOrAdd(session, model, defaults: typing.Dict[str, typing.Any] = None,
+def GetOrAdd(session,
+             model,
+             defaults: typing.Dict[str, typing.Any] = None,
              **kwargs) -> object:
   """
   Instantiate a mapped database object. If the object is not in the database,
@@ -93,7 +94,8 @@ def GetOrAdd(session, model, defaults: typing.Dict[str, typing.Any] = None,
   """
   instance = session.query(model).filter_by(**kwargs).first()
   if not instance:
-    params = dict((k, v) for k, v in kwargs.items()
+    params = dict((k, v)
+                  for k, v in kwargs.items()
                   if not isinstance(v, sql.sql.expression.ClauseElement))
     params.update(defaults or {})
     instance = model(**params)

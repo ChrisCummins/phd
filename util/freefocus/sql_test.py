@@ -9,7 +9,6 @@ from labm8 import test
 from util.freefocus import freefocus_pb2
 from util.freefocus import sql
 
-
 FLAGS = flags.FLAGS
 
 
@@ -31,10 +30,9 @@ def test_Person_CreateFromProto(session: sqlutil.Session):
       name=['Chris', 'Chris Cummins'],
       email=['foo@bar.com'],
       workspace_groups=[
-        freefocus_pb2.Person.WorkspaceGroups(
-            workspace_id='workspace', group_id=['cec', 'global'])
-      ]
-  )
+          freefocus_pb2.Person.WorkspaceGroups(
+              workspace_id='workspace', group_id=['cec', 'global'])
+      ])
   person = sql.Person.CreateFromProto(session, proto)
   print(person.ToProto())
   assert True

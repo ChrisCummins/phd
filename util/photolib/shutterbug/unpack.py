@@ -6,7 +6,6 @@ from absl import flags
 
 from util.photolib.shutterbug import shutterbug
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(

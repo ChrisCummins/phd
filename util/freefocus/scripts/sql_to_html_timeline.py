@@ -46,13 +46,12 @@ if __name__ == "__main__":
 
   workspace = session.query(Workspace).one()
 
-
   def add_event(item, type):
     event = {
-      'id': len(timeline) + 1,
-      'content': make_id(item, type),
-      'start': item.created.isoformat(),
-      'group': type,
+        'id': len(timeline) + 1,
+        'content': make_id(item, type),
+        'start': item.created.isoformat(),
+        'group': type,
     }
 
     if hasattr(item, 'completed'):
@@ -60,7 +59,6 @@ if __name__ == "__main__":
         event['end'] = item.completed.isoformat()
 
     timeline.append(event)
-
 
   add_event(workspace, 'workspace')
   for person in session.query(Person):
@@ -73,8 +71,9 @@ if __name__ == "__main__":
     add_event(tag, 'tag')
   for asset in session.query(Asset):
     add_event(asset, 'asset')
-  for table in [WorkspaceComment, GroupComment, TagComment, TaskComment,
-                AssetComment]:
+  for table in [
+      WorkspaceComment, GroupComment, TagComment, TaskComment, AssetComment
+  ]:
     for comment in session.query(table):
       add_event(comment, 'comment')
 

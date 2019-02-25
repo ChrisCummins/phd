@@ -16,8 +16,9 @@ def find_workspace_rootpath(start_path: str) -> typing.Optional[str]:
   Returns:
       The path of the workspace root, or None if not found.
   """
-  if all(os.path.isdir(os.path.join(start_path, tld))
-         for tld in common.TOP_LEVEL_DIRS):
+  if all(
+      os.path.isdir(os.path.join(start_path, tld))
+      for tld in common.TOP_LEVEL_DIRS):
     return os.path.abspath(start_path)
 
   if os.path.ismount(start_path):

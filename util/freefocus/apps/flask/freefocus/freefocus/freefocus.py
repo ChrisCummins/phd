@@ -16,18 +16,17 @@ from sqlite3 import dbapi2 as sqlite3
 from flask import Flask, abort, flash, g, redirect, render_template, request, \
   session, url_for
 
-
 # create our little application :)
 app = Flask(__name__)
 
 # Load default config and override config from an environment variable
-app.config.update(dict(
-    DATABASE=os.path.join(app.root_path, 'freefocus.db'),
-    DEBUG=True,
-    SECRET_KEY='development key',
-    USERNAME='admin',
-    PASSWORD='default'
-))
+app.config.update(
+    dict(
+        DATABASE=os.path.join(app.root_path, 'freefocus.db'),
+        DEBUG=True,
+        SECRET_KEY='development key',
+        USERNAME='admin',
+        PASSWORD='default'))
 app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 
 

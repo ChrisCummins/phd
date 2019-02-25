@@ -8,7 +8,6 @@ from github import Github
 
 from util.freefocus.sql import *
 
-
 if __name__ == "__main__":
   parser = ArgumentParser(description=__doc__)
   parser.add_argument("owner")
@@ -25,8 +24,8 @@ if __name__ == "__main__":
     github_username = config['User']['Username']
     github_pw = config['User']['Password']
   except KeyError as e:
-    print(f'config variable {e} not set. Check {args.githubrc}',
-          file=sys.stderr)
+    print(
+        f'config variable {e} not set. Check {args.githubrc}', file=sys.stderr)
     sys.exit(1)
 
   g = Github(github_username, github_pw)
@@ -40,7 +39,6 @@ if __name__ == "__main__":
 
   session = make_session()
 
-
   def get_or_create_usergroup(p: Person) -> Group:
     q = session.query(Group) \
       .filter(Group.body == p.name,
@@ -53,7 +51,6 @@ if __name__ == "__main__":
       usergroup.members.append(p)
       session.add(usergroup)
       return usergroup
-
 
   def get_or_create_user(github_user) -> Person:
     q = session.query(Person).filter(Person.name == github_user.login,
@@ -75,7 +72,6 @@ if __name__ == "__main__":
 
       return p
 
-
   # Create repo owner
   p = get_or_create_user(g.get_user(args.owner))
   usergroup = get_or_create_usergroup(p)
@@ -86,40 +82,37 @@ if __name__ == "__main__":
   session.add(workspace)
 
   # Import labels as Tags
-  tagtree = Tag(
-      body=args.owner, created_by=usergroup, created=r.created_at)
+  tagtree = Tag(body=args.owner, created_by=usergroup, created=r.created_at)
   tagtree.owners.append(usergroup)
 
-  repo_tagtree = Tag(
-      body=args.repo, created_by=usergroup, created=r.created_at)
+  repo_tagtree = Tag(body=args.repo, created_by=usergroup, created=r.created_at)
   tagtree.children.append(repo_tagtree)
 
   for label in r.get_labels():
-    tag = Tag(
-        body=label.name, created_by=usergroup, created=r.created_at)
+    tag = Tag(body=label.name, created_by=usergroup, created=r.created_at)
     # TODO: tag.color
     repo_tagtree.children.append(tag)
 
   session.add(tagtree)
   session.commit()
 
-  tasktree = Task(
-      body=args.owner, created_by=usergroup, created=r.created_at)
+  tasktree = Task(body=args.owner, created_by=usergroup, created=r.created_at)
   tasktree.owners.append(usergroup)
 
-  repo_tasktree = tasktree.add_subtask(Task(
-      body=r.name, created_by=usergroup, created=r.created_at))
+  repo_tasktree = tasktree.add_subtask(
+      Task(body=r.name, created_by=usergroup, created=r.created_at))
 
   # Import Milestones as Tasks
   for milestone in r.get_milestones(state='all'):
     a = get_or_create_usergroup(get_or_create_user(milestone.creator))
-    m = repo_tasktree.add_subtask(Task(
-        body=(f"{milestone.title}\n\n{milestone.description}").rstrip(),
-        created_by=a,
-        created=milestone.created_at,
-        due=milestone.due_on,
-        modified=milestone.updated_at,
-    ))
+    m = repo_tasktree.add_subtask(
+        Task(
+            body=(f"{milestone.title}\n\n{milestone.description}").rstrip(),
+            created_by=a,
+            created=milestone.created_at,
+            due=milestone.due_on,
+            modified=milestone.updated_at,
+        ))
 
     for label in milestone.get_labels():
       # lookup tag

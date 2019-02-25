@@ -7,12 +7,10 @@ from absl import logging
 
 from util.freefocus import sql
 
-
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string(
-    'database_path', '/tmp/phd/util/freefocus/freefocus.db',
-    'Path to database.')
+flags.DEFINE_string('database_path', '/tmp/phd/util/freefocus/freefocus.db',
+                    'Path to database.')
 
 SPEC_MAJOR = 1
 SPEC_MINOR = 0

@@ -34,10 +34,10 @@ def client(request):
 
 
 def login(client, username, password):
-  return client.post('/login', data=dict(
-      username=username,
-      password=password
-  ), follow_redirects=True)
+  return client.post(
+      '/login',
+      data=dict(username=username, password=password),
+      follow_redirects=True)
 
 
 def logout(client):
@@ -69,10 +69,10 @@ def test_messages(client):
   """Test that messages work"""
   login(client, freefocus.app.config['USERNAME'],
         freefocus.app.config['PASSWORD'])
-  rv = client.post('/add', data=dict(
-      title='<Hello>',
-      text='<strong>HTML</strong> allowed here'
-  ), follow_redirects=True)
+  rv = client.post(
+      '/add',
+      data=dict(title='<Hello>', text='<strong>HTML</strong> allowed here'),
+      follow_redirects=True)
   assert b'No entries here so far' not in rv.data
   assert b'&lt;Hello&gt;' in rv.data
   assert b'<strong>HTML</strong> allowed here' in rv.data

@@ -8,11 +8,10 @@ from absl import flags
 from labm8 import test
 from util.photolib.shutterbug import shutterbug
 
-
 FLAGS = flags.FLAGS
 
-
 # Test fixtures.
+
 
 @pytest.fixture(scope='function')
 def photodir(tempdir: pathlib.Path) -> pathlib.Path:
@@ -47,8 +46,9 @@ def _AssertIsPhotoDir(path: pathlib.Path) -> None:
 
 # PathTuplesToChunk() tests.
 
-def test_PathTuplesToChunk_directory_not_found(
-    tempdir: pathlib.Path, photodir: pathlib.Path):
+
+def test_PathTuplesToChunk_directory_not_found(tempdir: pathlib.Path,
+                                               photodir: pathlib.Path):
   """A ValueError is raised if any of the source directories do not exist."""
   with pytest.raises(ValueError) as e_ctx:
     shutterbug.PathTuplesToChunk([photodir, tempdir / 'foo'])
@@ -60,13 +60,14 @@ def test_PathTuplesToChunk_photodir(photodir: pathlib.Path):
   files = sorted(shutterbug.PathTuplesToChunk([photodir]))
   print('FILES', files)
   assert files == [
-    (str(photodir / 'a.jpg'), str(photodir)),
-    (str(photodir / 'b.jpg'), str(photodir)),
-    (str(photodir / 'c.jpg'), str(photodir)),
+      (str(photodir / 'a.jpg'), str(photodir)),
+      (str(photodir / 'b.jpg'), str(photodir)),
+      (str(photodir / 'c.jpg'), str(photodir)),
   ]
 
 
 # Integration tests.
+
 
 def test_end_to_end(tempdir: pathlib.Path, photodir: pathlib.Path):
   """Test end to end packing and unpacking a photo directory."""

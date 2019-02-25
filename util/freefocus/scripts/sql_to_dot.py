@@ -12,8 +12,8 @@ def build_graph(
     session, make_id: 'lambda item: object, type: str',
     add_node: 'lambda id: str, item: object, type: str',
     add_edge: 'lambda from_id: str, to_id: str, type: Tuple[str, str]'):
-  def plot_items(parent_label, items: List[Base],
-                 node_type, edge_type):
+
+  def plot_items(parent_label, items: List[Base], node_type, edge_type):
     for item in items:
       label = make_id(item, type=node_type)
       if not add_node(label, item, type=node_type):
@@ -21,28 +21,33 @@ def build_graph(
       add_edge(parent_label, label, type=edge_type)
 
       if hasattr(item, 'created_by') and item.created_by:
-        add_edge(make_id(item.created_by, type='group'), label,
-                 type=("person", edge_type[1]))
+        add_edge(
+            make_id(item.created_by, type='group'),
+            label,
+            type=("person", edge_type[1]))
 
       if hasattr(item, 'members'):
         plot_items(
-            label, item.members,
-            node_type="person", edge_type=("group", "person"))
+            label,
+            item.members,
+            node_type="person",
+            edge_type=("group", "person"))
 
       if hasattr(item, 'comments'):
         plot_items(
-            label, item.comments,
-            node_type="comment", edge_type=(edge_type[1], "comment"))
+            label,
+            item.comments,
+            node_type="comment",
+            edge_type=(edge_type[1], "comment"))
 
       if hasattr(item, 'tags'):
         for tag in item.tags:
-          add_edge(make_id(tag, type='tag'),
-                   label, type=("tag", edge_type[1]))
+          add_edge(make_id(tag, type='tag'), label, type=("tag", edge_type[1]))
 
       if hasattr(item, 'assets'):
         for asset in item.assets:
-          add_edge(make_id(asset, type='asset'), label,
-                   type=("asset", edge_type[1]))
+          add_edge(
+              make_id(asset, type='asset'), label, type=("asset", edge_type[1]))
 
       if hasattr(item, 'children'):
         plot_items(label, item.children, node_type,
@@ -55,22 +60,26 @@ def build_graph(
   plot_items(  # groups
       workspace_label,
       session.query(Group).filter(Group.parent == None).all(),
-      node_type="group", edge_type=("workspace", "group"))
+      node_type="group",
+      edge_type=("workspace", "group"))
 
   plot_items(  # assets
       workspace_label,
       session.query(Asset).filter(Asset.parent == None).all(),
-      node_type="asset", edge_type=("workspace", "asset"))
+      node_type="asset",
+      edge_type=("workspace", "asset"))
 
   plot_items(  # tags
       workspace_label,
       session.query(Tag).filter(Tag.parent == None).all(),
-      node_type="tag", edge_type=("workspace", "tag"))
+      node_type="tag",
+      edge_type=("workspace", "tag"))
 
   plot_items(  # tasks
       workspace_label,
       session.query(Task).filter(Task.parent == None).all(),
-      node_type="task", edge_type=("workspace", "task"))
+      node_type="task",
+      edge_type=("workspace", "task"))
 
 
 if __name__ == "__main__":
@@ -90,7 +99,6 @@ if __name__ == "__main__":
   make_session = sql.orm.sessionmaker(bind=engine)
 
   session = make_session()
-
 
   def build_html():
     graph = {'nodes': [], 'links': []}
@@ -126,13 +134,13 @@ if __name__ == "__main__":
           return False
 
       groups = {
-        'workspace': 1,
-        'person': 2,
-        'group': 3,
-        'asset': 4,
-        'tag': 5,
-        'task': 6,
-        'comment': 7,
+          'workspace': 1,
+          'person': 2,
+          'group': 3,
+          'asset': 4,
+          'tag': 5,
+          'task': 6,
+          'comment': 7,
       }
 
       graph['nodes'].append({'id': id, 'group': groups[type]})
@@ -140,13 +148,13 @@ if __name__ == "__main__":
 
     def add_edge(from_id, to_id, type):
       values = {
-        'workspace': 7,
-        'person': 6,
-        'group': 5,
-        'asset': 4,
-        'tag': 3,
-        'task': 2,
-        'comment': 1,
+          'workspace': 7,
+          'person': 6,
+          'group': 5,
+          'asset': 4,
+          'tag': 3,
+          'task': 2,
+          'comment': 1,
       }
 
       if type[0] == "person" and not args.created_by:
@@ -156,8 +164,11 @@ if __name__ == "__main__":
       if type[0] == "asset" and type[1] == "task" and not args.asset_refs:
         return
 
-      graph['links'].append(
-          {'source': from_id, "target": to_id, "value": values[type[1]]})
+      graph['links'].append({
+          'source': from_id,
+          "target": to_id,
+          "value": values[type[1]]
+      })
 
     build_graph(session, make_id, add_node, add_edge)
 
@@ -265,7 +276,6 @@ redraw();
 <button onclick="redraw()">Redraw</button>
 """ % json.dumps(graph, indent=2, separators=(',', ': ')))
 
-
   def build_dot():
     dot = Digraph(comment="FreeFocus")
     dot.graph_attr['rankdir'] = 'LR'
@@ -341,7 +351,6 @@ redraw();
     build_graph(session, make_id, add_node, add_edge)
 
     print(dot.source)
-
 
   if args.html:
     build_html()

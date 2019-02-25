@@ -30,8 +30,8 @@ if __name__ == "__main__":
     github_username = config['User']['Username']
     github_pw = config['User']['Password']
   except KeyError as e:
-    print(f'config variable {e} not set. Check {args.githubrc}',
-          file=sys.stderr)
+    print(
+        f'config variable {e} not set. Check {args.githubrc}', file=sys.stderr)
     sys.exit(1)
 
   g = Github(github_username, github_pw)
@@ -91,7 +91,8 @@ if __name__ == "__main__":
         milestone = repo_subtree.children.add()
         milestone.id = milestone_id
         milestone.body = (
-          f"{issue.milestone.title}\n\n{issue.milestone.description}").rstrip()
+            f"{issue.milestone.title}\n\n{issue.milestone.description}"
+        ).rstrip()
         milestone.status = freefocus_pb2.Task.ACTIVE
 
         milestone.parent.type = freefocus_pb2.Task.Parent.TASK

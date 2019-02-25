@@ -13,6 +13,7 @@ def escape(string):
 
 
 def plot_groups(dot, parent_id, nodes):
+
   def plot_group_members(parent_id, members):
     for member in members:
       if member.type == freefocus_pb2.Group.Member.GROUP:

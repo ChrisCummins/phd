@@ -14,7 +14,6 @@ from util.photolib import lintercache
 from util.photolib import linters
 from util.photolib import workspace
 
-
 FLAGS = flags.FLAGS
 flags.DEFINE_string("workspace", os.getcwd(), "Path to workspace root")
 flags.DEFINE_boolean("profile", False, "Print profiling timers on completion.")
@@ -45,12 +44,11 @@ class ToplevelLinter(linters.Linter):
 
     linter_names = list(
         type(lin).__name__ for lin in self.dirlinters + self.filelinters)
-    logging.debug("Running //%s linters: %s",
-                  self.toplevel_dir, ", ".join(linter_names))
+    logging.debug("Running //%s linters: %s", self.toplevel_dir,
+                  ", ".join(linter_names))
 
   def _LintThisDirectory(
-      self, abspath: str, relpath: str,
-      dirnames: typing.List[str],
+      self, abspath: str, relpath: str, dirnames: typing.List[str],
       filenames: typing.List[str]) -> typing.List[linters.Error]:
     """Run linters in this directory."""
     errors = []
@@ -91,8 +89,7 @@ class ToplevelLinter(linters.Linter):
 
         TIMERS.cached_seconds += time.time() - _start
       else:
-        errors = self._LintThisDirectory(
-            abspath, relpath, dirnames, filenames)
+        errors = self._LintThisDirectory(abspath, relpath, dirnames, filenames)
         lintercache.AddLinterErrors(cache_entry, errors)
         TIMERS.linting_seconds += time.time() - _start
 
@@ -108,12 +105,12 @@ class WorkspaceLinter(linters.Linter):
     self.workspace = abspath
 
   def __call__(self, *args, **kwargs):
-    photolib_linter = ToplevelLinter(
-        self.workspace, "photos",
-        linters.PhotolibDirLinter, linters.PhotolibFileLinter)
-    gallery_linter = ToplevelLinter(
-        self.workspace, "gallery",
-        linters.GalleryDirLinter, linters.GalleryFileLinter)
+    photolib_linter = ToplevelLinter(self.workspace, "photos",
+                                     linters.PhotolibDirLinter,
+                                     linters.PhotolibFileLinter)
+    gallery_linter = ToplevelLinter(self.workspace, "gallery",
+                                    linters.GalleryDirLinter,
+                                    linters.GalleryFileLinter)
 
     photolib_linter()
     gallery_linter()
@@ -143,9 +140,10 @@ def main(argv):  # pylint: disable=missing-docstring
     cached_time = TIMERS.cached_seconds
     overhead = total_time - linting_time - cached_time
 
-    print(f'linting={linting_time:.3f}s, cached={cached_time:.3f}s, '
-          f'overhead={overhead:.3f}s, total={total_time:.3f}s',
-          file=sys.stderr)
+    print(
+        f'linting={linting_time:.3f}s, cached={cached_time:.3f}s, '
+        f'overhead={overhead:.3f}s, total={total_time:.3f}s',
+        file=sys.stderr)
 
 
 if __name__ == "__main__":

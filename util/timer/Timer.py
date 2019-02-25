@@ -5,7 +5,6 @@ import requests
 import rumps
 from pync import Notifier
 
-
 # Read global configuration file
 with open(path.expanduser("~/.config/toggl.json")) as infile:
   config = json.load(infile)
@@ -68,6 +67,7 @@ def get_active_timer() -> str:
 
 
 class TimerMenubar(rumps.App):
+
   @rumps.clicked("Update Title")
   def update_title(self, _):
     self.title = get_active_timer()

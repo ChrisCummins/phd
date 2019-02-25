@@ -13,7 +13,6 @@ from util.photolib import common
 from util.photolib import lightroom
 from util.photolib.proto import photolint_pb2
 
-
 FLAGS = flags.FLAGS
 flags.DEFINE_boolean("counts", False, "Show only the counts of errors.")
 flags.DEFINE_boolean("fix_it", False, "Show how to fix it.")
@@ -21,17 +20,17 @@ flags.DEFINE_boolean("fix_it", False, "Show how to fix it.")
 # A global list of all error categories. Every time you add a new linter rule, add it
 # here!
 ERROR_CATEGORIES = set([
-  "dir/empty",
-  "dir/not_empty",
-  "dir/hierarchy",
-  "file/name",
-  "extension/lowercase",
-  "extension/bad",
-  "extension/unknown",
-  "keywords/third_party",
-  "keywords/film_format",
-  "keywords/panorama",
-  "keywords/events",
+    "dir/empty",
+    "dir/not_empty",
+    "dir/hierarchy",
+    "file/name",
+    "extension/lowercase",
+    "extension/bad",
+    "extension/unknown",
+    "keywords/third_party",
+    "keywords/film_format",
+    "keywords/panorama",
+    "keywords/events",
 ])
 
 # A map of error categories to error counts.
@@ -48,7 +47,10 @@ def PrintErrorCounts() -> None:
 class Error(object):
   """A linter error."""
 
-  def __init__(self, relpath: str, category: str, message: str,
+  def __init__(self,
+               relpath: str,
+               category: str,
+               message: str,
                fix_it: str = None):
     """Report an error.
 
@@ -66,9 +68,11 @@ class Error(object):
     ERROR_COUNTS[category] += 1
 
     if not FLAGS.counts:
-      print(f'{relpath}:  '
-            f'{shell.ShellEscapeCodes.YELLOW}{message}'
-            f'{shell.ShellEscapeCodes.END}  [{category}]', file=sys.stderr)
+      print(
+          f'{relpath}:  '
+          f'{shell.ShellEscapeCodes.YELLOW}{message}'
+          f'{shell.ShellEscapeCodes.END}  [{category}]',
+          file=sys.stderr)
       sys.stderr.flush()
 
     if FLAGS.fix_it and fix_it:
@@ -116,11 +120,15 @@ def GetLinters(base_linter: Linter) -> typing.List[Linter]:
 
 # File linters.
 
+
 class FileLinter(Linter):
   """Lint a file."""
 
-  def __call__(self, abspath: str,  # pylint: disable=arguments-differ
-               workspace_relpath: str, filename: str) -> None:
+  def __call__(
+      self,
+      abspath: str,  # pylint: disable=arguments-differ
+      workspace_relpath: str,
+      filename: str) -> None:
     """
 
     Args:
@@ -168,8 +176,9 @@ class GalleryFilename(GalleryFileLinter):
     components = filename_noext.split("-")
     if len(components) == 2:
       if components[0] != topdir:
-        errors.append(Error(workspace_relpath, "file/name",
-                            f"'{components[0]}' should be '{topdir}'"))
+        errors.append(
+            Error(workspace_relpath, "file/name",
+                  f"'{components[0]}' should be '{topdir}'"))
       try:
         seq = int(components[1])
         if seq > 1:
@@ -181,8 +190,9 @@ class GalleryFilename(GalleryFileLinter):
           filename = f"{components[0]}-{prev:0{seq_len}d}{ext}"
           prev_path = os.path.join(os.path.dirname(abspath), filename)
           if not os.path.isfile(prev_path):
-            errors.append(Error(workspace_relpath, "file/name",
-                                f"filename is out-of-sequence"))
+            errors.append(
+                Error(workspace_relpath, "file/name",
+                      f"filename is out-of-sequence"))
       except ValueError:
         errors.append(
             Error(workspace_relpath, "file/name", f"'{seq}' not a number"))
@@ -203,23 +213,31 @@ class FileExtension(PhotolibFileLinter, GalleryFileLinter):
 
     if lext != ext:
       labspath = abspath[:-len(ext)] + lext
-      errors.append(Error(workspace_relpath, "extension/lowercase",
-                          "file extension should be lowercase",
-                          fix_it=f"mv -v '{abspath}' '{labspath}'"))
+      errors.append(
+          Error(
+              workspace_relpath,
+              "extension/lowercase",
+              "file extension should be lowercase",
+              fix_it=f"mv -v '{abspath}' '{labspath}'"))
 
     if lext not in common.KNOWN_FILE_EXTENSIONS:
       if lext == ".jpeg":
         jabspath = abspath[:-len(ext)] + ".jpg"
-        errors.append(Error(workspace_relpath, "extension/bad",
-                            f"convert {lext} file to .jpg",
-                            fix_it=f"mv -v '{abspath}' '{jabspath}'"))
+        errors.append(
+            Error(
+                workspace_relpath,
+                "extension/bad",
+                f"convert {lext} file to .jpg",
+                fix_it=f"mv -v '{abspath}' '{jabspath}'"))
       if lext in common.FILE_EXTENSION_SUGGESTIONS:
         suggestion = common.FILE_EXTENSION_SUGGESTIONS[lext]
-        errors.append(Error(workspace_relpath, "extension/bad",
-                            f"convert {lext} file to {suggestion}"))
+        errors.append(
+            Error(workspace_relpath, "extension/bad",
+                  f"convert {lext} file to {suggestion}"))
       else:
-        errors.append(Error(workspace_relpath, "extension/unknown",
-                            "unknown file extension"))
+        errors.append(
+            Error(workspace_relpath, "extension/unknown",
+                  "unknown file extension"))
 
     return errors
 
@@ -235,12 +253,14 @@ class PanoramaKeyword(PhotolibFileLinter, GalleryFileLinter):
 
     keywords = lightroom.GetLightroomKeywords(abspath, workspace_relpath)
     if "ATTR|PanoPart" not in keywords:
-      errors.append(Error(workspace_relpath, "keywords/panorama",
-                          "keyword 'ATTR >> PanoPart' not set on suspected panorama"))
+      errors.append(
+          Error(workspace_relpath, "keywords/panorama",
+                "keyword 'ATTR >> PanoPart' not set on suspected panorama"))
 
     if "ATTR|Panorama" not in keywords:
-      errors.append(Error(workspace_relpath, "keywords/panorama",
-                          "keyword 'ATTR >> Panorama' not set on suspected panorama"))
+      errors.append(
+          Error(workspace_relpath, "keywords/panorama",
+                "keyword 'ATTR >> Panorama' not set on suspected panorama"))
 
     return errors
 
@@ -255,8 +275,10 @@ class FilmFormat(PhotolibFileLinter):
 
     keywords = lightroom.GetLightroomKeywords(abspath, workspace_relpath)
     if not any(k.startswith("ATTR|Film Format") for k in keywords):
-      return [Error(workspace_relpath, "keywords/film_format",
-                    "keyword 'ATTR >> Film Format' not set on film scan")]
+      return [
+          Error(workspace_relpath, "keywords/film_format",
+                "keyword 'ATTR >> Film Format' not set on film scan")
+      ]
     return []
 
 
@@ -266,8 +288,10 @@ class ThirdPartyInPhotolib(PhotolibFileLinter):
   def __call__(self, abspath: str, workspace_relpath: str, filename: str):
     keywords = lightroom.GetLightroomKeywords(abspath, workspace_relpath)
     if "ATTR|third_party" in keywords:
-      return [Error(workspace_relpath, "keywords/third_party",
-                    "third_party file should be in //gallery")]
+      return [
+          Error(workspace_relpath, "keywords/third_party",
+                "third_party file should be in //gallery")
+      ]
     return []
 
 
@@ -277,8 +301,10 @@ class ThirdPartyInGallery(GalleryFileLinter):
   def __call__(self, abspath: str, workspace_relpath: str, filename: str):
     keywords = lightroom.GetLightroomKeywords(abspath, workspace_relpath)
     if "ATTR|third_party" not in keywords:
-      return [Error(workspace_relpath, "keywords/third_party",
-                    "files in //gallery should have third_party keyword set")]
+      return [
+          Error(workspace_relpath, "keywords/third_party",
+                "files in //gallery should have third_party keyword set")
+      ]
     return []
 
 
@@ -291,19 +317,25 @@ class SingularEvents(PhotolibFileLinter):
 
     if num_events > 1:
       events = ", ".join([f"'{k}'" for k in keywords if k.startswith("EVENT|")])
-      return [Error(workspace_relpath, "keywords/events",
-                    f"mutually exclusive keywords = {events}")]
+      return [
+          Error(workspace_relpath, "keywords/events",
+                f"mutually exclusive keywords = {events}")
+      ]
     return []
 
 
 # Directory linters.
 
+
 class DirLinter(Linter):
   """Lint a directory."""
 
-  def __call__(self, abspath: str,  # pylint: disable=arguments-differ
-               workspace_relpath: str, dirnames: typing.List[str],
-               filenames: typing.List[str]) -> None:
+  def __call__(
+      self,
+      abspath: str,  # pylint: disable=arguments-differ
+      workspace_relpath: str,
+      dirnames: typing.List[str],
+      filenames: typing.List[str]) -> None:
     """Lint a directory.
 
     Args:
@@ -332,9 +364,13 @@ class DirEmpty(PhotolibDirLinter, GalleryDirLinter):
   def __call__(self, abspath: str, workspace_relpath: str,
                dirnames: typing.List[str], filenames: typing.List[str]):
     if not filenames and not dirnames:
-      return [Error(workspace_relpath, "dir/empty",
-                    "directory is empty, remove it",
-                    fix_it=f"rm -rv '{abspath}'")]
+      return [
+          Error(
+              workspace_relpath,
+              "dir/empty",
+              "directory is empty, remove it",
+              fix_it=f"rm -rv '{abspath}'")
+      ]
     return []
 
 
@@ -362,16 +398,20 @@ class DirShouldNotHaveFiles(PhotolibDirLinter):
       return []
 
     filelist = " ".join([f"'{abspath}{f}'" for f in filenames])
-    return [Error(workspace_relpath, "dir/not_empty",
-                  "directory should be empty but contains files",
-                  fix_it=f"rm -rv '{filelist}'")]
+    return [
+        Error(
+            workspace_relpath,
+            "dir/not_empty",
+            "directory should be empty but contains files",
+            fix_it=f"rm -rv '{filelist}'")
+    ]
 
 
 class DirHierachy(PhotolibDirLinter):
   """Check that directory hierarchy is correct."""
 
-  def __call__(self, abspath: str, workspace_relpath: str,
-               dirnames: str, filenames: str):
+  def __call__(self, abspath: str, workspace_relpath: str, dirnames: str,
+               filenames: str):
     errors = []
 
     def get_yyyy(string: str) -> typing.Optional[int]:
@@ -379,11 +419,13 @@ class DirHierachy(PhotolibDirLinter):
       try:
         if 1900 <= int(string) <= 2100:
           return int(string)
-        errors.append(Error(workspace_relpath, "dir/hiearchy",
-                            f"year '{string}' out of range"))
+        errors.append(
+            Error(workspace_relpath, "dir/hiearchy",
+                  f"year '{string}' out of range"))
       except ValueError:
-        errors.append(Error(workspace_relpath, "dir/hierarchy",
-                            "'{string}' should be a four digit year"))
+        errors.append(
+            Error(workspace_relpath, "dir/hierarchy",
+                  "'{string}' should be a four digit year"))
       return None
 
     def get_mm(string: str) -> typing.Optional[int]:
@@ -391,11 +433,13 @@ class DirHierachy(PhotolibDirLinter):
       try:
         if 1 <= int(string) <= 12:
           return int(string)
-        errors.append(Error(workspace_relpath, "dir/hierarchy",
-                            f"month '{string}' out of range"))
+        errors.append(
+            Error(workspace_relpath, "dir/hierarchy",
+                  f"month '{string}' out of range"))
       except ValueError:
-        errors.append(Error(workspace_relpath, "dir/hierarchy",
-                            f"'{string}' should be a two digit month"))
+        errors.append(
+            Error(workspace_relpath, "dir/hierarchy",
+                  f"'{string}' should be a two digit month"))
       return None
 
     def get_dd(string: str) -> typing.Optional[int]:
@@ -403,15 +447,18 @@ class DirHierachy(PhotolibDirLinter):
       try:
         if 1 <= int(string) <= 31:
           return int(string)
-        errors.append(Error(workspace_relpath, "dir/hierarchy",
-                            f"day '{string}' out of range"))
+        errors.append(
+            Error(workspace_relpath, "dir/hierarchy",
+                  f"day '{string}' out of range"))
       except ValueError:
-        errors.append(Error(workspace_relpath, "dir/hierarchy",
-                            f"'{string}' should be a two digit day"))
+        errors.append(
+            Error(workspace_relpath, "dir/hierarchy",
+                  f"'{string}' should be a two digit day"))
       return None
 
-    def get_yyyy_mm(string: str) -> typing.Tuple[typing.Optional[int],
-                                                 typing.Optional[int]]:
+    def get_yyyy_mm(
+        string: str
+    ) -> typing.Tuple[typing.Optional[int], typing.Optional[int]]:
       """Parse string or show error. Returns None in case of error."""
       string_components = string.split("-")
       if len(string_components) == 2:
@@ -420,13 +467,14 @@ class DirHierachy(PhotolibDirLinter):
         if year and month:
           return year, month
       else:
-        errors.append(Error(workspace_relpath, "dir/hierarchy",
-                            f"'{string}' should be YYYY-MM"))
+        errors.append(
+            Error(workspace_relpath, "dir/hierarchy",
+                  f"'{string}' should be YYYY-MM"))
       return None, None
 
-    def get_yyyy_mm_dd(string: str) -> typing.Tuple[typing.Optional[int],
-                                                    typing.Optional[int],
-                                                    typing.Optional[int]]:
+    def get_yyyy_mm_dd(
+        string: str) -> typing.Tuple[typing.Optional[int], typing.
+                                     Optional[int], typing.Optional[int]]:
       """Parse string or show error. Returns None in case of error."""
       string_components = string.split("-")
       if len(string_components) == 3:
@@ -436,8 +484,9 @@ class DirHierachy(PhotolibDirLinter):
         if year and month and day:
           return year, month, day
       else:
-        errors.append(Error(workspace_relpath, "dir/hierarchy",
-                            f"'{string}' should be YYYY-MM-DD"))
+        errors.append(
+            Error(workspace_relpath, "dir/hierarchy",
+                  f"'{string}' should be YYYY-MM-DD"))
       return None, None
 
     components = os.path.normpath(workspace_relpath[2:]).split(os.sep)[1:]
@@ -452,19 +501,22 @@ class DirHierachy(PhotolibDirLinter):
       if not year_2:
         return errors
       if year_1 != year_2:
-        errors.append(Error(workspace_relpath, "dir/hierarchy",
-                            f"years {year_1} and {year_2} do not match"))
+        errors.append(
+            Error(workspace_relpath, "dir/hierarchy",
+                  f"years {year_1} and {year_2} do not match"))
 
     if len(components) >= 3:
       year_3, month_2, _ = get_yyyy_mm_dd(components[2])
       if not year_3:
         return errors
       if year_2 != year_3:
-        errors.append(Error(workspace_relpath, "dir/hierarchy",
-                            f"years {year_2} and {year_3} do not match"))
+        errors.append(
+            Error(workspace_relpath, "dir/hierarchy",
+                  f"years {year_2} and {year_3} do not match"))
       if month_1 != month_2:
-        errors.append(Error(workspace_relpath, "dir/hierarchy",
-                            f"years {month_1} and {month_2} do not match"))
+        errors.append(
+            Error(workspace_relpath, "dir/hierarchy",
+                  f"years {month_1} and {month_2} do not match"))
 
     return errors
 
@@ -472,7 +524,7 @@ class DirHierachy(PhotolibDirLinter):
 class ModifiedKeywords(PhotolibDirLinter):
   """Check that keywords are equal on -{HDR,Pano,Edit} files (except pano)."""
 
-  def __call__(self, abspath: str, workspace_relpath: str,
-               dirnames: str, filenames: str):
+  def __call__(self, abspath: str, workspace_relpath: str, dirnames: str,
+               filenames: str):
     # TODO(cec): Check that keywords are equal on -{HDR,Pano,Editr} files.
     return []

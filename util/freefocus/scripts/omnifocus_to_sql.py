@@ -4,14 +4,13 @@ from argparse import ArgumentParser
 
 from util.freefocus.sql import *
 
-
 OMNIFOCUS_DB_PATH = (
-  "~/Library/Containers/com.omnigroup.OmniFocus2/Data/Library/Caches/"
-  "com.omnigroup.OmniFocus2/OmniFocusDatabase2"
-)
+    "~/Library/Containers/com.omnigroup.OmniFocus2/Data/Library/Caches/"
+    "com.omnigroup.OmniFocus2/OmniFocusDatabase2")
 
 
-class Task(object): pass
+class Task(object):
+  pass
 
 
 def load_of_session(path):

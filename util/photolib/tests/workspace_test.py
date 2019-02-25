@@ -7,7 +7,6 @@ from absl import flags
 from labm8 import test
 from util.photolib import workspace
 
-
 FLAGS = flags.FLAGS
 
 
@@ -26,18 +25,18 @@ def test_find_workspace_rootpath():
     assert workspace.find_workspace_rootpath(tmpdir) == tmpdir
 
     # It can find the workspace in subdirectories.
-    assert workspace.find_workspace_rootpath(
-        os.path.join(tmpdir, "photos")) == tmpdir
-    assert workspace.find_workspace_rootpath(
-        os.path.join(tmpdir, "gallery")) == tmpdir
-    assert workspace.find_workspace_rootpath(
-        os.path.join(tmpdir, "lightroom")) == tmpdir
+    assert workspace.find_workspace_rootpath(os.path.join(tmpdir,
+                                                          "photos")) == tmpdir
+    assert workspace.find_workspace_rootpath(os.path.join(tmpdir,
+                                                          "gallery")) == tmpdir
+    assert workspace.find_workspace_rootpath(os.path.join(
+        tmpdir, "lightroom")) == tmpdir
     assert workspace.find_workspace_rootpath(
         os.path.join(tmpdir, "photos", "2018", "2018-01")) == tmpdir
 
     # It can find the workspace even if the subdir is non-existent.
-    assert workspace.find_workspace_rootpath(
-        os.path.join(tmpdir, "nondir")) == tmpdir
+    assert workspace.find_workspace_rootpath(os.path.join(tmpdir,
+                                                          "nondir")) == tmpdir
     assert workspace.find_workspace_rootpath(
         os.path.join(tmpdir, "nondir", "nondir")) == tmpdir
 

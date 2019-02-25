@@ -6,7 +6,6 @@ from absl import flags
 from labm8 import test
 from util.photolib import linters
 
-
 FLAGS = flags.FLAGS
 
 

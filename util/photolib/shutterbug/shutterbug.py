@@ -14,7 +14,6 @@ from shutil import copy, copyfileobj
 
 from absl import flags
 
-
 FLAGS = flags.FLAGS
 
 # Metadata used in README.txt files.
@@ -30,8 +29,13 @@ def md5sum(path):
   return m.hexdigest()
 
 
-def chunk_files(paths, outdir, maxsize, prefix='chunk_', shuffle=True,
-                seed=None, gzip=False):
+def chunk_files(paths,
+                outdir,
+                maxsize,
+                prefix='chunk_',
+                shuffle=True,
+                seed=None,
+                gzip=False):
   """Create chunk files.
 
   Split a set of file paths into chunks, whereby the cumulative size of files
@@ -55,8 +59,7 @@ def chunk_files(paths, outdir, maxsize, prefix='chunk_', shuffle=True,
   def chunk_meta(chunk_path, chunk, chunksize, maxsize):
     manifestpath = os.path.join(chunk_path, 'MANIFEST.txt')
     with open(manifestpath, 'w') as outfile:
-      for outpath, path, size, checksum in sorted(chunk,
-                                                  key=lambda x: x[0]):
+      for outpath, path, size, checksum in sorted(chunk, key=lambda x: x[0]):
         print(outpath, checksum, size, path, file=outfile, sep='\t')
     print('Wrote', manifestpath)
 
@@ -65,7 +68,8 @@ def chunk_files(paths, outdir, maxsize, prefix='chunk_', shuffle=True,
     author, email = __author__, __email__
     date = datetime.now()
     with open(readmepath, 'w') as outfile:
-      print("""\
+      print(
+          """\
 Created by: {progpath}
 Author: {author} <{email}>
 Version: {version}
@@ -78,10 +82,11 @@ line in the manifest file:
      the output file path in the fourth column.
   2. Compare the output file md5sum against the checksum in the second column.
   3. Compare the output file size against the file size of the third column.\
-""".format(**vars()), file=outfile)
+""".format(**vars()),
+          file=outfile)
     print('Wrote', readmepath)
 
-    chunksize_mb = chunksize / 1000 ** 2
+    chunksize_mb = chunksize / 1000**2
     nfiles = len(chunk)
     chunksize_perc = (chunksize / maxsize) * 100
     print('{chunk_path} has {nfiles} files, size {chunksize_mb:.2f} MB '
@@ -115,7 +120,7 @@ line in the manifest file:
     checksum, outpath = get_outpath(chunk_path, path)
 
     copy(path, outpath)
-    print(outpath, '{:.2f}MB'.format(size / 1000 ** 2))
+    print(outpath, '{:.2f}MB'.format(size / 1000**2))
     return os.path.basename(outpath), checksum
 
   def gz(path, size, chunk_path):
@@ -128,9 +133,8 @@ line in the manifest file:
 
     if outsize <= size:
       # see if compressed file size is smaller than starting size
-      print(outpath,
-            '{:.2f}MB -> {:.2f}MB'.format(size / 1000 ** 2,
-                                          outsize / 1000 ** 2))
+      print(outpath, '{:.2f}MB -> {:.2f}MB'.format(size / 1000**2,
+                                                   outsize / 1000**2))
       return os.path.basename(outpath), checksum
     else:
       # if not, replace it with the original file
@@ -138,8 +142,7 @@ line in the manifest file:
       return cp(path, size, chunk_path)
 
   def _init_chunk(outdir, prefix, chunk_count):
-    chunk_path = os.path.join(
-        outdir, prefix + '{:03}'.format(chunk_count + 1))
+    chunk_path = os.path.join(outdir, prefix + '{:03}'.format(chunk_count + 1))
 
     if os.path.exists(chunk_path):
       print('fatal: refusing to overwrite', chunk_path, file=sys.stderr)
@@ -215,16 +218,15 @@ def PathTuplesToChunk(src_dirs: typing.List[pathlib.Path]):
       raise ValueError(f'{directory} not found')
 
     for dirpath, _, filenames in os.walk(directory):
-      files += [
-        (os.path.join(dirpath, filename), dirpath) for filename in filenames
-        if not filename.startswith('._') and not filename == '.DS_Store'
-      ]
+      files += [(os.path.join(dirpath, filename), dirpath)
+                for filename in filenames
+                if not filename.startswith('._') and not filename == '.DS_Store'
+               ]
   return files
 
 
-def MakeChunks(src_dirs: typing.List[pathlib.Path],
-               chunks_dir: pathlib.Path, chunk_size_in_bytes: int,
-               **kwargs) -> None:
+def MakeChunks(src_dirs: typing.List[pathlib.Path], chunks_dir: pathlib.Path,
+               chunk_size_in_bytes: int, **kwargs) -> None:
   """Create chunk directories.
 
   Args:
@@ -241,7 +243,7 @@ def MakeChunks(src_dirs: typing.List[pathlib.Path],
 
   chunks = chunk_files(files, chunks_dir, chunk_size_in_bytes, **kwargs)
 
-  chunksizes_mb = [chunk[1] / 1000 ** 2 for chunk in chunks]
+  chunksizes_mb = [chunk[1] / 1000**2 for chunk in chunks]
   totalsize_mb = sum(chunksizes_mb)
   avgchunksize_mb = totalsize_mb / len(chunks)
   minchunksize_mb, maxchunksize_mb = min(chunksizes_mb), max(chunksizes_mb)
@@ -253,6 +255,7 @@ def MakeChunks(src_dirs: typing.List[pathlib.Path],
 
 
 def unchunk_file(chunk_path, outdir, manifest_entry, lineno):
+
   def deflate(src, dst):
     print(src, '->', dst)
     with gzip.open(src, 'rb') as infile:
@@ -289,18 +292,24 @@ def unchunk_file(chunk_path, outdir, manifest_entry, lineno):
     size = int(size)
     actualsize = os.stat(outpath).st_size
     if size != actualsize:
-      print('warning[{lineno}]: expected file size {size} does not match'
-            'actual size {actualsize}. File is corrupt', outpath,
-            file=sys.stderr)
+      print(
+          'warning[{lineno}]: expected file size {size} does not match'
+          'actual size {actualsize}. File is corrupt',
+          outpath,
+          file=sys.stderr)
   except ValueError:
-    print('warning[{lineno}]: could not read file size in manifest'
-          .format(**vars()), file=sys.stderr)
+    print(
+        'warning[{lineno}]: could not read file size in manifest'.format(
+            **vars()),
+        file=sys.stderr)
 
   # validate checksum
   actualchecksum = md5sum(outpath)
   if checksum != actualchecksum:
-    print('warning[{lineno}]: checksum validation failed. File is corrupt',
-          outpath, file=sys.stderr)
+    print(
+        'warning[{lineno}]: checksum validation failed. File is corrupt',
+        outpath,
+        file=sys.stderr)
 
 
 def read_manifest(manifestpath):
@@ -320,8 +329,7 @@ def unchunk_chunk(chunk_path, out_path):
       lineno = i + 1
       unchunk_file(chunk_path, out_path, row, lineno)
     except Exception as e:
-      print('error[{lineno}]: {e}'.format(**vars()),
-            file=sys.stderr)
+      print('error[{lineno}]: {e}'.format(**vars()), file=sys.stderr)
 
 
 def unchunk(chunks_dir: pathlib.Path, out_dir: pathlib.Path):

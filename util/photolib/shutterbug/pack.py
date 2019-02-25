@@ -6,7 +6,6 @@ from absl import flags
 
 from util.photolib.shutterbug import shutterbug
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
@@ -21,9 +20,8 @@ flags.DEFINE_integer(
     'size_mb', 4695,
     'The smaximum size of each chunk in megabytes. This excludes the MANIFEST '
     'and README files which are generated.')
-flags.DEFINE_string(
-    'chunk_prefix', 'chunk_',
-    'The name to prepend to generated chunks.')
+flags.DEFINE_string('chunk_prefix', 'chunk_',
+                    'The name to prepend to generated chunks.')
 flags.DEFINE_bool(
     'random_ordering', True,
     'Whether to randomize the ordering of files across and within chunks. If '
@@ -55,7 +53,7 @@ def main(argv):
   if not chunks_dir.is_dir():
     raise app.UsageError('--chunks_dir not found')
 
-  size_in_bytes = FLAGS.size_mb * 1000 ** 2
+  size_in_bytes = FLAGS.size_mb * 1000**2
   if FLAGS.size_mb < 1:
     raise app.UsageError('--size_mb must be greater than or equal to one.')
 
@@ -63,10 +61,13 @@ def main(argv):
   if '/' in chunk_prefix:
     raise app.UsageError("--chunk_prefix cannot contain '/' character.")
 
-  shutterbug.MakeChunks(
-      [src_dir], chunks_dir, size_in_bytes, prefix=chunk_prefix,
-      shuffle=FLAGS.random_ordering, seed=FLAGS.random_ordering_seed,
-      gzip=FLAGS.gzip_files)
+  shutterbug.MakeChunks([src_dir],
+                        chunks_dir,
+                        size_in_bytes,
+                        prefix=chunk_prefix,
+                        shuffle=FLAGS.random_ordering,
+                        seed=FLAGS.random_ordering_seed,
+                        gzip=FLAGS.gzip_files)
 
 
 if __name__ == '__main__':
