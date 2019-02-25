@@ -26,7 +26,7 @@
 #include "phd/statusor.h"
 
 #include "absl/strings/str_format.h"
-#include "third_party/opencl/include/cl.hpp"
+#include "third_party/opencl/cl.hpp"
 
 #define LOG_CL_ERROR(level, error)                                  \
   LOG(level) << "OpenCL exception: " << error.what() << ", error: " \

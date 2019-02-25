@@ -51,7 +51,6 @@ cc_test(
     name = "011-big-mandelbrot",
     size = "small",
     srcs = ["011-big-mandelbrot.cc"],
-    copts = ["-Ithird_party/opencl/include"],
     linkopts = select({
         "//:darwin": ["-framework OpenCL"],
         "//conditions:default": ["-lOpenCL"],

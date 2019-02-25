@@ -9,7 +9,7 @@
 // This must be defined before including the OpenCL header.
 #define __CL_ENABLE_EXCEPTIONS
 
-#include "third_party/opencl/include/cl.hpp"
+#include "third_party/opencl/cl.hpp"
 
 #include "gpu/clinfo/proto/clinfo.pb.h"
 #include "phd/string.h"

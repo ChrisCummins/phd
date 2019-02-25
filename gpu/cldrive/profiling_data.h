@@ -17,7 +17,7 @@
 
 #include "phd/port.h"
 
-#include "third_party/opencl/include/cl.hpp"
+#include "third_party/opencl/cl.hpp"
 
 namespace gpu {
 namespace cldrive {

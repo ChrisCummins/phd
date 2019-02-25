@@ -7,7 +7,6 @@ cc_library(
     ]),
     copts = [
         "-Ilearn/hoocl/include",
-        "-Ithird_party/opencl/include",
     ],
     deps = ["//third_party/opencl"],
 )
@@ -17,7 +16,6 @@ cc_binary(
     srcs = ["001-dev-info.cc"],
     copts = [
         "-Ilearn/hoocl/include",
-        "-Ithird_party/opencl/include",
     ],
     linkopts = select({
         "//:darwin": ["-framework OpenCL"],
@@ -31,7 +29,6 @@ cc_binary(
     srcs = ["002-vadd.c"],
     copts = [
         "-Ilearn/hoocl/include",
-        "-Ithird_party/opencl/include",
     ],
     linkopts = select({
         "//:darwin": ["-framework OpenCL"],
@@ -45,7 +42,6 @@ cc_binary(
     srcs = ["003-vadd_cpp.cc"],
     copts = [
         "-Ilearn/hoocl/include",
-        "-Ithird_party/opencl/include",
     ],
     linkopts = select({
         "//:darwin": ["-framework OpenCL"],

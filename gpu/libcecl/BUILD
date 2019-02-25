@@ -36,7 +36,7 @@ cc_library(
     name = "libcecl",
     srcs = ["libcecl.c"],
     hdrs = ["libcecl.h"],
-    copts = ["-Ithird_party/opencl/include"],
+    copts = [],
     linkopts = select({
         "//:darwin": ["-framework OpenCL"],
         "//conditions:default": ["-lOpenCL"],
@@ -50,7 +50,7 @@ cc_binary(
         "libcecl.c",
         "libcecl.h",
     ],
-    copts = ["-Ithird_party/opencl/include"],
+    copts = [],
     linkopts = select({
         "//:darwin": ["-framework OpenCL"],
         "//conditions:default": ["-lOpenCL"],

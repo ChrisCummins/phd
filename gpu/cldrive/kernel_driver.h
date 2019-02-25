@@ -19,7 +19,7 @@
 #include "gpu/cldrive/proto/cldrive.pb.h"
 #include "phd/statusor.h"
 #include "phd/string.h"
-#include "third_party/opencl/include/cl.hpp"
+#include "third_party/opencl/cl.hpp"
 
 namespace gpu {
 namespace cldrive {

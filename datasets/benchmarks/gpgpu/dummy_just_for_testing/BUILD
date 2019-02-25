@@ -11,7 +11,6 @@ cc_binary(
     srcs = ["hello.cc"],
     copts = [
         "-Ilearn/hoocl/include",
-        "-Ithird_party/opencl/include",
     ],
     linkopts = select({
         "//:darwin": ["-framework OpenCL"],

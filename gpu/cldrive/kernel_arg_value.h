@@ -17,7 +17,7 @@
 
 #include "gpu/cldrive/opencl_util.h"
 #include "gpu/cldrive/profiling_data.h"
-#include "third_party/opencl/include/cl.hpp"
+#include "third_party/opencl/cl.hpp"
 
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"

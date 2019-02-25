@@ -20,7 +20,7 @@
 #include "gpu/cldrive/scalar_kernel_arg_value.h"
 #include "gpu/cldrive/proto/cldrive.pb.h"
 
-#include "third_party/opencl/include/cl.hpp"
+#include "third_party/opencl/cl.hpp"
 
 namespace gpu {
 namespace cldrive {
