@@ -83,11 +83,13 @@ py_library(
     name = "libcecl_compile",
     srcs = ["libcecl_compile.py"],
     data = [
+        "@opencl_120_headers//:opencl_headers",
         "//gpu/libcecl:libcecl.so",
         "//gpu/libcecl:libcecl_header",
-        "//third_party/opencl:libOpenCL.so",
-        "@opencl_120_headers//:opencl_headers",
-    ],
+    ] + select({
+        "//:darwin": [],
+        "//conditions:default": ["@libopencl//:libOpenCL.so"],
+    }),
     visibility = ["//visibility:public"],
     deps = [
         "//labm8:bazelutil",

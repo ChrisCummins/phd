@@ -26,12 +26,16 @@ py_binary(
     name = "cl_launcher",
     srcs = ["cl_launcher.py"],
     data = [
-        "//third_party/opencl:libOpenCL.so",
         "@CLSmith//:cl_launcher",
         "@CLSmith//:cl_safe_math_macros",
         "@CLSmith//:runtime_headers",
         "@CLSmith//:safe_math_macros",
-    ],
+    ] + select({
+        "//:darwin": [],
+        "//conditions:default": [
+            "@libopencl//:libOpenCL.so",
+        ],
+    }),
     visibility = ["//visibility:public"],
     deps = [
         "//gpu/cldrive/legacy:driver",
