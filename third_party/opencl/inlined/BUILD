@@ -3,7 +3,7 @@
 licenses(["notice"])  # MIT.
 
 filegroup(
-    name = "opencl",
+    name = "inlined",
     srcs = ["cl.h"],
     visibility = ["//visibility:public"],
 )

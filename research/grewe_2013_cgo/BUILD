@@ -9,6 +9,7 @@ py_binary(
     srcs = ["feature_extractor.py"],
     data = [
         ":feature_extractor_binary",
+        "//third_party/opencl/inlined",
     ],
     visibility = ["//visibility:public"],
     deps = [
@@ -62,9 +63,7 @@ cc_binary(
         "-D__STDC_FORMAT_MACROS",
         "-D__STDC_LIMIT_MACROS",
     ],
-    data = [
-        "//third_party/opencl/inlined/include:opencl",
-    ] + select({
+    data = select({
         "//:darwin": ["@llvm_mac//:libdir"],
         "//conditions:default": ["@llvm_linux//:libdir"],
     }),
