@@ -289,15 +289,23 @@ def GetPlatformNameOrDie():
 
 def EmitDependencyCommandsFromPathOrDie(path, visited_set, platform, file):
   """Read the dependency file and write out the commadns to execute."""
+  def Emit(line, linenum):
+    print(line, ' # from:', path + ':' + str(linenum), file=file)
+
   with open(path) as f:
-    for line in f.read().rstrip().split('\n'):
+    for i, line in enumerate(f.read().rstrip().split('\n')):
       if line.startswith('#'):
-        continue
+        Emit(line, i + 1)
+      elif line.startswith('all: '):
+        cmd = line[len('all: '):]
+        if cmd not in visited_set:
+          visited_set.add(cmd)
+          Emit(cmd, i + 1)
       elif line.startswith('{}: '.format(platform)):
         cmd = line[len(platform) + 2:]
         if cmd not in visited_set:
           visited_set.add(cmd)
-          print(cmd, file=file)
+          Emit(cmd, i + 1)
 
 
 def CreateBootstrapScriptOrDie(platform):
