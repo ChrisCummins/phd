@@ -147,7 +147,6 @@ class YapfThread(LinterThread):
 class LinterActions(object):
 
   def __init__(self, paths):
-    assert paths
     self._paths = paths
     self._buildifier = []
     self._clang_format = []
