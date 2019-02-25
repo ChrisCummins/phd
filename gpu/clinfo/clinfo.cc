@@ -13,7 +13,7 @@ int PrintHelp(char **argv) {
 
 
 int main(int argc, char **argv) {
-  int platform_id, device_id = -1;
+  int platform_id = -1, device_id = -1;
   for (int i = 1; i < argc; i++) {
     if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help"))
       return PrintHelp(argv);
