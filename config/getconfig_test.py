@@ -8,7 +8,6 @@ from absl import flags
 from config import getconfig
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 

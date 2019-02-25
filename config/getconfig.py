@@ -11,10 +11,10 @@ import pathlib
 from config.proto import config_pb2
 from labm8 import pbutil
 
-
 # The path of the generated config file, which is //config.pbtxt.
-GLOBAL_CONFIG_PATH = pathlib.Path(pathlib.Path(
-    os.path.dirname(os.path.realpath(__file__))) / '../config.pbtxt').absolute()
+GLOBAL_CONFIG_PATH = pathlib.Path(
+    pathlib.Path(os.path.dirname(os.path.realpath(__file__))) /
+    '../config.pbtxt').absolute()
 
 
 class ConfigNotFound(EnvironmentError):
