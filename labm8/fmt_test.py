@@ -6,7 +6,6 @@ from absl import flags
 from labm8 import fmt
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -31,14 +30,13 @@ def test_Indent_two():
 
 
 def test_table():
-  assert (["foo", "1", "bar", "2"] ==
-          fmt.table((("foo", 1), ("bar", 2))).split())
+  assert (["foo", "1", "bar", "2"] == fmt.table((("foo", 1), ("bar",
+                                                              2))).split())
 
 
 def test_table_columns():
-  assert ((["type", "value", "foo", "1", "bar", "2"]) ==
-          fmt.table((("foo", 1), ("bar", 2)),
-                    columns=("type", "value")).split())
+  assert ((["type", "value", "foo", "1", "bar", "2"]) == fmt.table(
+      (("foo", 1), ("bar", 2)), columns=("type", "value")).split())
 
 
 def test_table_bad_columns():

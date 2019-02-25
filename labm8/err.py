@@ -2,8 +2,8 @@
 """
 
 
-def assert_or_raise(stmt: bool, exception: Exception,
-                    *exception_args, **exception_kwargs) -> None:
+def assert_or_raise(stmt: bool, exception: Exception, *exception_args,
+                    **exception_kwargs) -> None:
   """
   If the statement is false, raise the given exception.
   """

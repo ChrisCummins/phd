@@ -9,11 +9,10 @@ from labm8 import bazelutil
 from labm8 import fs
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
-
 # IsBazelSandbox() tests.
+
 
 def test_IsBazelSandbox_different_working_directories():
   """Test IsBazelSandboxed() returns the same result from different dirs."""
@@ -28,6 +27,7 @@ def test_IsBazelSandbox_different_working_directories():
 
 
 # DataPath() tests.
+
 
 def test_DataPath_path_not_found():
   """Test that FileNotFoundError is raised if the file is not found."""
@@ -66,8 +66,8 @@ def test_DataPath_read_file():
 
 def test_DataPath_directory():
   """Test that DataPath returns the path to a directory."""
-  assert str(bazelutil.DataPath('phd/labm8/data/test')).endswith(
-      'phd/labm8/data/test')
+  assert str(
+      bazelutil.DataPath('phd/labm8/data/test')).endswith('phd/labm8/data/test')
 
 
 def test_DataPath_different_working_dir():

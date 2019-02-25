@@ -11,7 +11,6 @@ import typing
 from config import getconfig
 from labm8 import archive
 
-
 # Regular expression to everything in a path up until the '*.runfiles'
 # directory, e.g. for the path '/private/var/bazel/foo/bar.runfiles/a/b/c',
 # this regex will match '/private/var/bazel/foo/bar.runfiles'

@@ -194,8 +194,8 @@ class JsonCache(TransientCache):
     """
     io.debug("Storing cache '{0}'".format(self.path))
     with open(self.path, "w") as file:
-      json.dump(self._data, file, sort_keys=True, indent=2,
-                separators=(',', ': '))
+      json.dump(
+          self._data, file, sort_keys=True, indent=2, separators=(',', ': '))
 
 
 def hash_key(key):

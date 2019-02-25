@@ -10,17 +10,16 @@ from absl import flags
 from labm8 import archive
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
 @pytest.fixture(
     scope='function',
     params=[
-      # Parameterized by tuple:
-      #   <file_extension>, <open_function>, <add_function>
-      ('.zip', lambda f: zipfile.ZipFile(f, 'w'), lambda a: a.write),
-      ('.tar.bz2', lambda f: tarfile.open(f, 'w:bz2'), lambda a: a.add),
+        # Parameterized by tuple:
+        #   <file_extension>, <open_function>, <add_function>
+        ('.zip', lambda f: zipfile.ZipFile(f, 'w'), lambda a: a.write),
+        ('.tar.bz2', lambda f: tarfile.open(f, 'w:bz2'), lambda a: a.add),
     ],
     # Parameter tuple names.
     ids=['zip', 'tar.bz2'])
@@ -86,8 +85,7 @@ def test_Archive_as_context_manager(test_archive: pathlib.Path):
       assert f.read() == "Hello, world!"
 
 
-def test_Archive_ExtractAll(test_archive: pathlib.Path,
-                            tempdir: pathlib.Path):
+def test_Archive_ExtractAll(test_archive: pathlib.Path, tempdir: pathlib.Path):
   """Test ExtractAll for a single file zip."""
   # Open the archive and check that it still exists.
   archive.Archive(test_archive).ExtractAll(tempdir)

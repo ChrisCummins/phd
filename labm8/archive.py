@@ -8,7 +8,6 @@ import zipfile
 
 from absl import flags
 
-
 FLAGS = flags.FLAGS
 
 
@@ -32,9 +31,10 @@ class Archive(object):
   labm8.bazelutil.DataArchive to resolve the absolute path.
   """
 
-  def __init__(self, path: typing.Union[str, pathlib.Path],
-               assume_filename: typing.Optional[
-                 typing.Union[str, pathlib.Path]] = None):
+  def __init__(
+      self,
+      path: typing.Union[str, pathlib.Path],
+      assume_filename: typing.Optional[typing.Union[str, pathlib.Path]] = None):
     """Create an archive.
 
     Will determine the type of the archive from the suffix, e.g. if path is

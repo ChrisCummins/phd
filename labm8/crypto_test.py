@@ -5,78 +5,70 @@ from absl import flags
 from labm8 import crypto
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
 # sha1()
 def test_sha1_empty_str():
-  assert ("da39a3ee5e6b4b0d3255bfef95601890afd80709" ==
-          crypto.sha1_str(""))
+  assert ("da39a3ee5e6b4b0d3255bfef95601890afd80709" == crypto.sha1_str(""))
 
 
 def test_sha1_hello_world():
-  assert ("0a0a9f2a6772942557ab5355d76af442f8f65e01" ==
-          crypto.sha1_str("Hello, World!"))
+  assert ("0a0a9f2a6772942557ab5355d76af442f8f65e01" == crypto.sha1_str(
+      "Hello, World!"))
 
 
 # sha1_list()
 def test_sha1_empty_list():
-  assert ("da39a3ee5e6b4b0d3255bfef95601890afd80709" ==
-          crypto.sha1_list())
-  assert ("97d170e1550eee4afc0af065b78cda302a97674c" ==
-          crypto.sha1_list([]))
+  assert ("da39a3ee5e6b4b0d3255bfef95601890afd80709" == crypto.sha1_list())
+  assert ("97d170e1550eee4afc0af065b78cda302a97674c" == crypto.sha1_list([]))
 
 
 def test_sha1_list():
-  assert ("06bf71070d31b2ebe4bdae828fc76a70e4b56f00" ==
-          crypto.sha1_list(["hello", "world"]))
+  assert ("06bf71070d31b2ebe4bdae828fc76a70e4b56f00" == crypto.sha1_list(
+      ["hello", "world"]))
 
 
 # sha1_file()
 def test_sha1_file_empty():
-  assert ("da39a3ee5e6b4b0d3255bfef95601890afd80709" ==
-          crypto.sha1_file("labm8/data/test/empty_file"))
+  assert ("da39a3ee5e6b4b0d3255bfef95601890afd80709" == crypto.sha1_file(
+      "labm8/data/test/empty_file"))
 
 
 def test_sha1_file_hello_world():
-  assert ("09fac8dbfd27bd9b4d23a00eb648aa751789536d" ==
-          crypto.sha1_file("labm8/data/test/hello_world"))
+  assert ("09fac8dbfd27bd9b4d23a00eb648aa751789536d" == crypto.sha1_file(
+      "labm8/data/test/hello_world"))
 
 
 # md5()
 def test_md5_empty_str():
-  assert ("d41d8cd98f00b204e9800998ecf8427e" ==
-          crypto.md5_str(""))
+  assert ("d41d8cd98f00b204e9800998ecf8427e" == crypto.md5_str(""))
 
 
 def test_md5_hello_world():
-  assert ("65a8e27d8879283831b664bd8b7f0ad4" ==
-          crypto.md5_str("Hello, World!"))
+  assert ("65a8e27d8879283831b664bd8b7f0ad4" == crypto.md5_str("Hello, World!"))
 
 
 # md5_list()
 def test_md5_empty_list():
-  assert ("d41d8cd98f00b204e9800998ecf8427e" ==
-          crypto.md5_list())
-  assert ("d751713988987e9331980363e24189ce" ==
-          crypto.md5_list([]))
+  assert ("d41d8cd98f00b204e9800998ecf8427e" == crypto.md5_list())
+  assert ("d751713988987e9331980363e24189ce" == crypto.md5_list([]))
 
 
 def test_md5_list():
-  assert ("6ded24f0b2f43dd31e601a27fcecb7e8" ==
-          crypto.md5_list(["hello", "world"]))
+  assert ("6ded24f0b2f43dd31e601a27fcecb7e8" == crypto.md5_list(
+      ["hello", "world"]))
 
 
 # md5_file()
 def test_md5_file_empty():
-  assert ("d41d8cd98f00b204e9800998ecf8427e" ==
-          crypto.md5_file("labm8/data/test/empty_file"))
+  assert ("d41d8cd98f00b204e9800998ecf8427e" == crypto.md5_file(
+      "labm8/data/test/empty_file"))
 
 
 def test_md5_file_hello_world():
-  assert ("746308829575e17c3331bbcb00c0898b" ==
-          crypto.md5_file("labm8/data/test/hello_world"))
+  assert ("746308829575e17c3331bbcb00c0898b" == crypto.md5_file(
+      "labm8/data/test/hello_world"))
 
 
 # sha256()

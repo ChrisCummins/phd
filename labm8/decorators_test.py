@@ -5,7 +5,6 @@ from absl import flags
 from labm8 import decorators
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 

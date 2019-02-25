@@ -4,7 +4,6 @@ import typing
 
 from absl import flags
 
-
 FLAGS = flags.FLAGS
 
 # A type hint that specifies a callable function with any number of arguments

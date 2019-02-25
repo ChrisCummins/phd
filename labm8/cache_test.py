@@ -9,7 +9,6 @@ from labm8 import fs
 from labm8 import system
 from labm8 import test
 
-
 FLAGS = flags.FLAGS
 
 
@@ -184,8 +183,7 @@ def test_FSCache_missing_key():
 
 
 def test_FSCache_iter_len():
-  c = cache.FSCache("/tmp/labm8-fscache-iter",
-                    escape_key=cache.escape_path)
+  c = cache.FSCache("/tmp/labm8-fscache-iter", escape_key=cache.escape_path)
   c.clear()
   system.echo("Hello, world!", "/tmp/labm8.testfile.txt")
   c["foo"] = "/tmp/labm8.testfile.txt"
