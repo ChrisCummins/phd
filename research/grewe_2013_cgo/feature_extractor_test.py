@@ -7,7 +7,6 @@ from absl import flags
 from labm8 import test
 from research.grewe_2013_cgo import feature_extractor
 
-
 FLAGS = flags.FLAGS
 
 

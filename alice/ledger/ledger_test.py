@@ -50,15 +50,13 @@ def mock_worker_bee() -> alice_pb2.String:
   class MockWorkerBee(alice_pb2_grpc.WorkerBeeServicer):
     """This mock service does nothing."""
 
-    def Run(self, request: alice_pb2.RunRequest,
-            context) -> alice_pb2.Null:
+    def Run(self, request: alice_pb2.RunRequest, context) -> alice_pb2.Null:
       """Mock Run() which does nothing."""
       del request
       del context
       return alice_pb2.Null()
 
-    def Get(self, request: alice_pb2.LedgerId,
-            context) -> alice_pb2.Null:
+    def Get(self, request: alice_pb2.LedgerId, context) -> alice_pb2.Null:
       """Mock Run() which does nothing."""
       del request
       del context
@@ -106,9 +104,9 @@ def test_LedgerService_Add_sequential_ids(
   assert ledger_id.id == 3
 
 
-def test_LedgerSerivce_Get_id(
-    stub: alice_pb2_grpc.LedgerStub, mock_worker_bee: alice_pb2.String,
-    mock_run_request: alice_pb2.RunRequest):
+def test_LedgerSerivce_Get_id(stub: alice_pb2_grpc.LedgerStub,
+                              mock_worker_bee: alice_pb2.String,
+                              mock_run_request: alice_pb2.RunRequest):
   stub.RegisterWorkerBee(mock_worker_bee)
   ledger_id = stub.Add(mock_run_request)
 
@@ -116,38 +114,34 @@ def test_LedgerSerivce_Get_id(
   assert ledger_id.id == entry.id
 
 
-def test_LedgerSerivce_Update_stdout(
-    stub: alice_pb2_grpc.LedgerStub, mock_worker_bee: alice_pb2.String,
-    mock_run_request: alice_pb2.RunRequest):
+def test_LedgerSerivce_Update_stdout(stub: alice_pb2_grpc.LedgerStub,
+                                     mock_worker_bee: alice_pb2.String,
+                                     mock_run_request: alice_pb2.RunRequest):
   """Check that stdout can be set and got."""
   stub.RegisterWorkerBee(mock_worker_bee)
   ledger_id = stub.Add(mock_run_request)
 
-  stub.Update(alice_pb2.LedgerEntry(
-      id=ledger_id.id, stdout='Hello, stdout!'))
+  stub.Update(alice_pb2.LedgerEntry(id=ledger_id.id, stdout='Hello, stdout!'))
   entry = stub.Get(ledger_id)
   assert entry.stdout == 'Hello, stdout!'
 
-  stub.Update(alice_pb2.LedgerEntry(
-      id=ledger_id.id, stdout='abcd'))
+  stub.Update(alice_pb2.LedgerEntry(id=ledger_id.id, stdout='abcd'))
   entry = stub.Get(ledger_id)
   assert entry.stdout == 'abcd'
 
 
-def test_LedgerSerivce_Update_stderr(
-    stub: alice_pb2_grpc.LedgerStub, mock_worker_bee: alice_pb2.String,
-    mock_run_request: alice_pb2.RunRequest):
+def test_LedgerSerivce_Update_stderr(stub: alice_pb2_grpc.LedgerStub,
+                                     mock_worker_bee: alice_pb2.String,
+                                     mock_run_request: alice_pb2.RunRequest):
   """Check that stderr can be set and got."""
   stub.RegisterWorkerBee(mock_worker_bee)
   ledger_id = stub.Add(mock_run_request)
 
-  stub.Update(alice_pb2.LedgerEntry(
-      id=ledger_id.id, stderr='Hello, stderr!'))
+  stub.Update(alice_pb2.LedgerEntry(id=ledger_id.id, stderr='Hello, stderr!'))
   entry = stub.Get(ledger_id)
   assert entry.stderr == 'Hello, stderr!'
 
-  stub.Update(alice_pb2.LedgerEntry(
-      id=ledger_id.id, stderr='abcd'))
+  stub.Update(alice_pb2.LedgerEntry(id=ledger_id.id, stderr='abcd'))
   entry = stub.Get(ledger_id)
   assert entry.stderr == 'abcd'
 
@@ -159,8 +153,7 @@ def test_LedgerSerivce_Update_returncode(
   stub.RegisterWorkerBee(mock_worker_bee)
   ledger_id = stub.Add(mock_run_request)
 
-  stub.Update(alice_pb2.LedgerEntry(
-      id=ledger_id.id, returncode=123))
+  stub.Update(alice_pb2.LedgerEntry(id=ledger_id.id, returncode=123))
   entry = stub.Get(ledger_id)
   assert entry.returncode == 123
 

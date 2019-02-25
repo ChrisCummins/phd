@@ -18,30 +18,23 @@ from alice import bazel
 from alice import git_repo
 from labm8 import system
 
-
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string(
-    'worker_bee_hostname', None,
-    'The hostname.')
-flags.DEFINE_integer(
-    'worker_bee_port', 5087,
-    'Port to listen for commands on.')
-flags.DEFINE_string(
-    'worker_bee_repo_root', str(pathlib.Path('~/phd').expanduser()),
-    'Path of worker bee root.')
-flags.DEFINE_string(
-    'worker_bee_output_root', '/var/phd/alice/outputs/',
-    'Path of worker bee root.')
-flags.DEFINE_string(
-    'ledger', 'localhost:5088',
-    'The path of the ledger service.')
+flags.DEFINE_string('worker_bee_hostname', None, 'The hostname.')
+flags.DEFINE_integer('worker_bee_port', 5087, 'Port to listen for commands on.')
+flags.DEFINE_string('worker_bee_repo_root',
+                    str(pathlib.Path('~/phd').expanduser()),
+                    'Path of worker bee root.')
+flags.DEFINE_string('worker_bee_output_root', '/var/phd/alice/outputs/',
+                    'Path of worker bee root.')
+flags.DEFINE_string('ledger', 'localhost:5088',
+                    'The path of the ledger service.')
 
 
 class WorkerBee(alice_pb2_grpc.WorkerBeeServicer):
 
-  def __init__(self, ledger: alice_pb2_grpc.LedgerStub,
-               repo: git_repo.PhdRepo, output_dir: pathlib.Path):
+  def __init__(self, ledger: alice_pb2_grpc.LedgerStub, repo: git_repo.PhdRepo,
+               output_dir: pathlib.Path):
     self._ledger = ledger
     self._repo = repo
     self._bazel = bazel.BazelClient(repo.path, output_dir)
@@ -56,8 +49,8 @@ class WorkerBee(alice_pb2_grpc.WorkerBeeServicer):
 
     for ledger_id, process in self._processes.items():
       if process.is_alive():
-        logging.info('Waiting on job %d (process=%d) to finish',
-                     ledger_id, process.pid)
+        logging.info('Waiting on job %d (process=%d) to finish', ledger_id,
+                     process.pid)
         process.join()
       else:
         self.EndProcess(ledger_id)
@@ -98,8 +91,7 @@ class WorkerBee(alice_pb2_grpc.WorkerBeeServicer):
   def bazel(self) -> bazel.BazelClient:
     return self._bazel
 
-  def Run(self, request: alice_pb2.RunRequest,
-          context) -> alice_pb2.Null:
+  def Run(self, request: alice_pb2.RunRequest, context) -> alice_pb2.Null:
     del context
 
     assert request.ledger_id not in self._processes
@@ -110,8 +102,7 @@ class WorkerBee(alice_pb2_grpc.WorkerBeeServicer):
 
     return alice_pb2.Null()
 
-  def Get(self, request: alice_pb2.LedgerId,
-          context) -> alice_pb2.LedgerEntry:
+  def Get(self, request: alice_pb2.LedgerId, context) -> alice_pb2.LedgerEntry:
     process = self._processes[request.id]
     returncode = process.returncode
     if returncode is None:
@@ -122,8 +113,8 @@ class WorkerBee(alice_pb2_grpc.WorkerBeeServicer):
       outcome = alice_pb2.LedgerEntry.RUN_FAILED
     return alice_pb2.LedgerEntry(
         id=request.id,
-        job_status=(alice_pb2.LedgerEntry.RUNNING if process.is_alive() else
-                    alice_pb2.LedgerEntry.COMPLETE),
+        job_status=(alice_pb2.LedgerEntry.RUNNING
+                    if process.is_alive() else alice_pb2.LedgerEntry.COMPLETE),
         job_outcome=outcome,
         stdout=process.stdout,
         stderr=process.stderr,

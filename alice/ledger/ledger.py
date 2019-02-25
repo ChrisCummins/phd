@@ -21,7 +21,6 @@ from config.proto import config_pb2
 from labm8 import labdate
 from labm8 import sqlutil
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('ledger_db', 'sqlite:////tmp/ledger.db', 'Ledger database.')
@@ -73,22 +72,22 @@ class LedgerEntry(Base, sqlutil.TablenameFromCamelCapsClassNameMixin,
   def FromProto(cls,
                 proto: alice_pb2.LedgerEntry) -> typing.Dict[str, typing.Any]:
     return {
-      'id': proto.id if proto.id else None,
-      'worker_id': proto.worker_id if proto.worker_id else None,
-      'uname': proto.repo_config.uname,
-      'configure_id': proto.repo_config.configure_id,
-      'with_cuda': proto.repo_config.with_cuda,
-      'repo_root': proto.repo_config.paths.repo_root,
-      'repo_remote_url': proto.run_request.repo_state.remote_url,
-      'repo_tracking_branch': proto.run_request.repo_state.tracking_branch,
-      'repo_head_id': proto.run_request.repo_state.head_id,
-      'target': proto.run_request.target,
-      'bazel_args': ' '.join(proto.run_request.bazel_args),
-      'bin_args': ' '.join(proto.run_request.bin_args),
-      'timeout_seconds': proto.run_request.timeout_seconds,
-      'job_status': proto.job_status,
-      'job_outcome': proto.job_outcome,
-      'returncode': proto.returncode,
+        'id': proto.id if proto.id else None,
+        'worker_id': proto.worker_id if proto.worker_id else None,
+        'uname': proto.repo_config.uname,
+        'configure_id': proto.repo_config.configure_id,
+        'with_cuda': proto.repo_config.with_cuda,
+        'repo_root': proto.repo_config.paths.repo_root,
+        'repo_remote_url': proto.run_request.repo_state.remote_url,
+        'repo_tracking_branch': proto.run_request.repo_state.tracking_branch,
+        'repo_head_id': proto.run_request.repo_state.head_id,
+        'target': proto.run_request.target,
+        'bazel_args': ' '.join(proto.run_request.bazel_args),
+        'bin_args': ' '.join(proto.run_request.bin_args),
+        'timeout_seconds': proto.run_request.timeout_seconds,
+        'job_status': proto.job_status,
+        'job_outcome': proto.job_outcome,
+        'returncode': proto.returncode,
     }
 
   def ToProto(self) -> alice_pb2.LedgerEntry:
@@ -124,7 +123,9 @@ class LedgerEntry(Base, sqlutil.TablenameFromCamelCapsClassNameMixin,
 class StdoutString(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   """Ledger outputs."""
   ledger_id: int = sql.Column(
-      sql.Integer, sql.ForeignKey(LedgerEntry.id), nullable=False,
+      sql.Integer,
+      sql.ForeignKey(LedgerEntry.id),
+      nullable=False,
       primary_key=True)
   string: str = sql.Column(
       sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
@@ -133,7 +134,9 @@ class StdoutString(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
 class StderrString(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   """Ledger outputs."""
   ledger_id: int = sql.Column(
-      sql.Integer, sql.ForeignKey(LedgerEntry.id), nullable=False,
+      sql.Integer,
+      sql.ForeignKey(LedgerEntry.id),
+      nullable=False,
       primary_key=True)
   string: str = sql.Column(
       sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
@@ -191,10 +194,11 @@ class LedgerService(alice_pb2_grpc.LedgerServicer):
     del context
 
     with self.db.Session(commit=True) as s:
-      entry = LedgerEntry(**LedgerEntry.FromProto(alice_pb2.LedgerEntry(
-          job_status=alice_pb2.LedgerEntry.BUILDING,
-          run_request=request,
-      )))
+      entry = LedgerEntry(**LedgerEntry.FromProto(
+          alice_pb2.LedgerEntry(
+              job_status=alice_pb2.LedgerEntry.BUILDING,
+              run_request=request,
+          )))
 
       s.add(entry)
       s.flush()
@@ -277,8 +281,7 @@ class LedgerService(alice_pb2_grpc.LedgerServicer):
 
     thread_pool = futures.ThreadPoolExecutor(
         max_workers=FLAGS.ledger_service_thread_count)
-    server = grpc.server(
-        thread_pool, options=(('grpc.so_reuseport', 0),))
+    server = grpc.server(thread_pool, options=(('grpc.so_reuseport', 0),))
     service = cls(Database(FLAGS.ledger_db))
     alice_pb2_grpc.add_LedgerServicer_to_server(service, server)
 

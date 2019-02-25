@@ -9,7 +9,6 @@ from absl import flags
 
 from alice import alice_pb2
 
-
 FLAGS = flags.FLAGS
 
 

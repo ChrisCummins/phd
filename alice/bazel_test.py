@@ -11,7 +11,6 @@ from alice import bazel
 from labm8 import system
 from labm8 import test
 
-
 DUMMY_TARGET = '//alice/test:dummy_target'
 
 
@@ -58,8 +57,8 @@ def test_BazelClient_workspace_not_found(tempdir: pathlib.Path):
     bazel.BazelClient(tempdir / 'repo', tempdir / 'work')
 
 
-def test_BazelClient_Run_returncode(
-    workspace: pathlib.Path, tempdir: pathlib.Path):
+def test_BazelClient_Run_returncode(workspace: pathlib.Path,
+                                    tempdir: pathlib.Path):
   """Check returncode of test target."""
   client = bazel.BazelClient(workspace, tempdir)
   process = client.Run(alice_pb2.RunRequest(
@@ -71,8 +70,7 @@ def test_BazelClient_Run_returncode(
   assert process.returncode == 0
 
 
-def test_BazelClient_Run_stdout(
-    workspace: pathlib.Path, tempdir: pathlib.Path):
+def test_BazelClient_Run_stdout(workspace: pathlib.Path, tempdir: pathlib.Path):
   """Check stdout of test target."""
   client = bazel.BazelClient(workspace, tempdir)
   process = client.Run(alice_pb2.RunRequest(
@@ -84,8 +82,8 @@ def test_BazelClient_Run_stdout(
   assert process.stdout == 'Hello, stdout!\n'
 
 
-def test_BazelClient_Run_process_id(
-    workspace: pathlib.Path, tempdir: pathlib.Path):
+def test_BazelClient_Run_process_id(workspace: pathlib.Path,
+                                    tempdir: pathlib.Path):
   """Check that process ID is set."""
   client = bazel.BazelClient(workspace, tempdir)
   process = client.Run(alice_pb2.RunRequest(
@@ -99,8 +97,7 @@ def test_BazelClient_Run_process_id(
 
 
 @pytest.mark.xfail(reason='FIXME')
-def test_BazelClient_Run_stderr(
-    workspace: pathlib.Path, tempdir: pathlib.Path):
+def test_BazelClient_Run_stderr(workspace: pathlib.Path, tempdir: pathlib.Path):
   """Check stderr of test target."""
   client = bazel.BazelClient(workspace, tempdir)
   process = client.Run(alice_pb2.RunRequest(
@@ -113,8 +110,8 @@ def test_BazelClient_Run_stderr(
   assert process.stderr.endswith('Hello, stderr!\n')
 
 
-def test_BazelClient_Run_workdir_files(
-    workspace: pathlib.Path, tempdir: pathlib.Path):
+def test_BazelClient_Run_workdir_files(workspace: pathlib.Path,
+                                       tempdir: pathlib.Path):
   """Check that output files are generated."""
   client = bazel.BazelClient(workspace, tempdir)
   process = client.Run(alice_pb2.RunRequest(
@@ -128,21 +125,22 @@ def test_BazelClient_Run_workdir_files(
   assert (process.workdir / 'returncode.txt').is_file()
 
 
-def test_BazeClient_run_missing_target(
-    workspace: pathlib.Path, tempdir: pathlib.Path):
+def test_BazeClient_run_missing_target(workspace: pathlib.Path,
+                                       tempdir: pathlib.Path):
   """Check error for missing target."""
   client = bazel.BazelClient(workspace, tempdir)
-  process = client.Run(alice_pb2.RunRequest(
-      target='//:not_a_target',
-      ledger_id=1,
-  ))
+  process = client.Run(
+      alice_pb2.RunRequest(
+          target='//:not_a_target',
+          ledger_id=1,
+      ))
 
   process.join()
   assert process.returncode
 
 
-def test_BazelClient_Run_process_isnt_running(
-    workspace: pathlib.Path, tempdir: pathlib.Path):
+def test_BazelClient_Run_process_isnt_running(workspace: pathlib.Path,
+                                              tempdir: pathlib.Path):
   """Check that process isn't running after completed."""
   client = bazel.BazelClient(workspace, tempdir)
   process = client.Run(alice_pb2.RunRequest(
@@ -159,8 +157,8 @@ def test_BazelClient_Run_process_isnt_running(
     pass
 
 
-def test_BazelClient_kill_process(
-    workspace: pathlib.Path, tempdir: pathlib.Path):
+def test_BazelClient_kill_process(workspace: pathlib.Path,
+                                  tempdir: pathlib.Path):
   """Test that process can be killed."""
   # Create a binary which will never terminate once launched.
   with open(workspace / 'BUILD', 'a') as f:
@@ -179,10 +177,11 @@ int main() {
 """)
 
   client = bazel.BazelClient(workspace, tempdir)
-  process = client.Run(alice_pb2.RunRequest(
-      target='//:nonterminating',
-      ledger_id=1,
-  ))
+  process = client.Run(
+      alice_pb2.RunRequest(
+          target='//:nonterminating',
+          ledger_id=1,
+      ))
 
   # Sleep for luck ;-)
   time.sleep(3)

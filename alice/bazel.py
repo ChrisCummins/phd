@@ -15,7 +15,6 @@ from absl import flags
 from alice import alice_pb2
 from labm8 import fs
 
-
 FLAGS = flags.FLAGS
 
 RunContext = collections.namedtuple('RunContext', ['process'])
@@ -28,14 +27,12 @@ class BazelError(OSError):
 class BazelRunProcess(multiprocessing.Process):
 
   def __init__(self, run_request: alice_pb2.RunRequest,
-               bazel_repo_dir: pathlib.Path,
-               workdir: pathlib.Path):
+               bazel_repo_dir: pathlib.Path, workdir: pathlib.Path):
     self.id = run_request.ledger_id
     self.bazel_repo_dir = bazel_repo_dir
     self.workdir = workdir
     super(BazelRunProcess, self).__init__(
-        target=_BazelRunRequest,
-        args=(run_request, bazel_repo_dir, workdir))
+        target=_BazelRunRequest, args=(run_request, bazel_repo_dir, workdir))
 
   @property
   def pid(self) -> int:
@@ -63,8 +60,7 @@ class BazelRunProcess(multiprocessing.Process):
 
 class BazelClient(object):
 
-  def __init__(self, root_dir: pathlib.Path,
-               workdir: pathlib.Path):
+  def __init__(self, root_dir: pathlib.Path, workdir: pathlib.Path):
     if not root_dir.is_dir():
       raise FileNotFoundError(f"Directory not found: {root_dir}")
     if not (root_dir / 'WORKSPACE').is_file():
@@ -93,17 +89,15 @@ class BazelClient(object):
 def _BazelRunRequest(run_request: alice_pb2.RunRequest,
                      bazel_repo_dir: pathlib.Path,
                      workdir: pathlib.Path) -> None:
-  cmd = (['bazel', 'run', run_request.target] +
-         list(run_request.bazel_args) + ['--'] +
-         list(run_request.bin_args))
+  cmd = (['bazel', 'run', run_request.target] + list(run_request.bazel_args) +
+         ['--'] + list(run_request.bin_args))
   if run_request.timeout_seconds:
     cmd = ['timeout', '-s9', str(run_request.timeout_seconds)] + cmd
 
   logging.info('$ %s', ' '.join(cmd))
   with fs.chdir(bazel_repo_dir):
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE)
-
+    process = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
   stdout = subprocess.Popen(['tee', str(workdir / 'stdout.txt')],
                             stdin=process.stdout)

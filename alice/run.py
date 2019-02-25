@@ -14,7 +14,6 @@ from alice import alice_pb2
 from alice import alice_pb2_grpc
 from alice import git_repo
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('phd', str(pathlib.Path("~/phd").expanduser()), 'Path.')
@@ -27,8 +26,9 @@ flags.DEFINE_integer('timeout_seconds', None, 'Timeout.')
 
 def SummarizeJobStatus(ledger: alice_pb2.LedgerEntry):
   if ledger.HasField('job_outcome'):
-    print(alice_pb2.LedgerEntry.JobStatus.Name(ledger.job_status),
-          alice_pb2.LedgerEntry.JobOutcome.Name(ledger.job_outcome))
+    print(
+        alice_pb2.LedgerEntry.JobStatus.Name(ledger.job_status),
+        alice_pb2.LedgerEntry.JobOutcome.Name(ledger.job_outcome))
 
 
 def main(argv):
@@ -48,13 +48,14 @@ def main(argv):
   bin_args = FLAGS.bin_args
   timeout_seconds = FLAGS.timeout_seconds
 
-  job_id = stub.Add(alice_pb2.RunRequest(
-      repo_state=repo.ToRepoState(),
-      target=target,
-      bazel_args=bazel_args,
-      bin_args=bin_args,
-      timeout_seconds=timeout_seconds,
-  ))
+  job_id = stub.Add(
+      alice_pb2.RunRequest(
+          repo_state=repo.ToRepoState(),
+          target=target,
+          bazel_args=bazel_args,
+          bin_args=bin_args,
+          timeout_seconds=timeout_seconds,
+      ))
 
   print(f'Started job {job_id.id}')
   while True:
