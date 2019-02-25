@@ -31,12 +31,6 @@ def main(argv):
   if len(argv) > 1:
     logging.warning("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
-  if FLAGS.ls_env:
-    env.PrintOpenClEnvironments()
-
-  # Read kernel source.
-  src = sys.stdin.read()
-
   try:
     opencl_environment = env.OpenCLEnvironment.FromName(FLAGS.env)
   except KeyError as e:
@@ -50,16 +44,16 @@ def main(argv):
   with open(src_path) as f:
     opencl_kernel = f.read()
 
-  print(
-      api.Drive(
-          cldrive_pb2.Drive(
-              device=opencl_environment,
-              opencl_src=opencl_kernel,
-              min_runs_per_kernel=FLAGS.num_runs,
-              dynamic_params=[
-                  cldrive_pb2.DynamicParams(
-                      global_size_x=FLAGS.gsize, local_size_x=FLAGS.lsize)
-              ])))
+  instance = cldrive_pb2.CldriveInstance(
+      device=opencl_environment.proto,
+      opencl_src=opencl_kernel,
+      min_runs_per_kernel=FLAGS.num_runs,
+      dynamic_params=[
+          cldrive_pb2.DynamicParams(
+              global_size_x=FLAGS.gsize, local_size_x=FLAGS.lsize)
+      ])
+
+  print(api.Drive(instance))
 
 
 if __name__ == '__main__':
