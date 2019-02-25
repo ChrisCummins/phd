@@ -22,6 +22,17 @@ py_library(
     ],
 )
 
+py_test(
+    name = "api_test",
+    srcs = ["api_test.py"],
+    deps = [
+        ":api",
+        "//labm8:test",
+        "//third_party/py/absl",
+        "//third_party/py/pytest",
+    ],
+)
+
 cc_library(
     name = "array_kernel_arg_value",
     hdrs = ["array_kernel_arg_value.h"],
