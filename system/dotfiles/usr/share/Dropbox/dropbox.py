@@ -40,7 +40,6 @@ import StringIO
 import thread
 import urllib2
 
-
 try:
   import gpgme
 except ImportError:
@@ -48,7 +47,6 @@ except ImportError:
 
 from contextlib import closing, contextmanager
 from posixpath import curdir, sep, pardir, join, abspath, commonprefix
-
 
 INFO = u"Dropbox is the easiest way to share and store your files online. Want to learn more? Head to"
 LINK = u"https://www.dropbox.com/"
@@ -90,10 +88,11 @@ JkvAvge2WFk3c6tAwZT/tKxspFy4M/tNbDKeyvr685XKJw9ei6GcOGHD
 -----END PGP PUBLIC KEY BLOCK-----
 """
 
-
 # Futures
 
+
 def methodcaller(name, *args, **kwargs):
+
   def caller(obj):
     return getattr(obj, name)(*args, **kwargs)
 
@@ -156,9 +155,7 @@ def yes_no_question(question):
 def plat():
   if sys.platform.lower().startswith('linux'):
     arch = platform.machine()
-    if (arch[0] == 'i' and
-        arch[1].isdigit() and
-        arch[2:4] == '86'):
+    if (arch[0] == 'i' and arch[1].isdigit() and arch[2:4] == '86'):
       plat = "x86"
     elif arch == 'x86_64':
       plat = arch
@@ -255,6 +252,7 @@ def download_file_chunk(url, buf):
 
 
 class DownloadState(object):
+
   def __init__(self):
     self.local_file = StringIO.StringIO()
 
@@ -270,8 +268,8 @@ class DownloadState(object):
     self.local_file.seek(0)
 
     if gpgme:
-      if not verify_signature(StringIO.StringIO(DROPBOX_PUBLIC_KEY), signature,
-                              self.local_file):
+      if not verify_signature(
+          StringIO.StringIO(DROPBOX_PUBLIC_KEY), signature, self.local_file):
         raise SignatureVerifyError()
 
     self.local_file.seek(0)
@@ -301,6 +299,7 @@ def load_serialized_images():
 GUI_AVAILABLE = os.environ.get("DISPLAY", '')
 
 if GUI_AVAILABLE:
+
   def download():
     import pygtk
     pygtk.require("2.0")
@@ -316,18 +315,23 @@ if GUI_AVAILABLE:
     global FatalVisibleError
 
     def FatalVisibleError(s):
-      error = gtk.MessageDialog(parent=None,
-                                flags=gtk.DIALOG_MODAL,
-                                type=gtk.MESSAGE_ERROR,
-                                buttons=gtk.BUTTONS_OK,
-                                message_format=s)
+      error = gtk.MessageDialog(
+          parent=None,
+          flags=gtk.DIALOG_MODAL,
+          type=gtk.MESSAGE_ERROR,
+          buttons=gtk.BUTTONS_OK,
+          message_format=s)
       error.set_title("Error")
       error.run()
       gtk.main_quit()
       sys.exit(-1)
 
     class GeneratorTask(object):
-      def __init__(self, generator, loop_callback, on_done=None,
+
+      def __init__(self,
+                   generator,
+                   loop_callback,
+                   on_done=None,
                    on_exception=None):
         self.generator = generator
         self.loop_callback = loop_callback
@@ -364,6 +368,7 @@ if GUI_AVAILABLE:
         self._stopped = True
 
     class DownloadDialog(gtk.Dialog):
+
       def handle_delete_event(self, wid, ev, data=None):
         self.handle_cancel(wid)
 
@@ -401,8 +406,7 @@ if GUI_AVAILABLE:
           FatalVisibleError(ERROR_CONNECTING)
 
         self.update_progress(DOWNLOADING, 0)
-        self.task = GeneratorTask(self.download.copy_data,
-                                  download_progress,
+        self.task = GeneratorTask(self.download.copy_data, download_progress,
                                   finished, error).start()
 
       def update_progress(self, text, fraction):
@@ -410,6 +414,7 @@ if GUI_AVAILABLE:
         self.progress.set_fraction(fraction)
 
       def unpack_dropbox(self):
+
         def unpack_progress(name, i, total):
           self.update_progress(UNPACKING, float(i) / total)
 
@@ -423,8 +428,7 @@ if GUI_AVAILABLE:
           else:
             FatalVisibleError(ERROR_CONNECTING)
 
-        self.task = GeneratorTask(self.download.unpack,
-                                  unpack_progress,
+        self.task = GeneratorTask(self.download.unpack, unpack_progress,
                                   finished, error).start()
 
       def mouse_down(self, widget, event):
@@ -439,8 +443,9 @@ if GUI_AVAILABLE:
       def label_motion(self, widget, event):
         offx, offy = self.label.get_layout_offsets()
         layout = self.label.get_layout()
-        index = layout.xy_to_index(int((offx + event.x) * pango.SCALE),
-                                   int((offy + event.y) * pango.SCALE))[0]
+        index = layout.xy_to_index(
+            int((offx + event.x) * pango.SCALE),
+            int((offy + event.y) * pango.SCALE))[0]
         link_index = layout.get_text().find(LINK)
         if index >= link_index and index < link_index + len(LINK):
           self.hovering = True
@@ -450,8 +455,8 @@ if GUI_AVAILABLE:
           self.label_box.window.set_cursor(gtk.gdk.Cursor(gtk.gdk.ARROW))
 
       def __init__(self):
-        super(DownloadDialog, self).__init__(parent=None,
-                                             title="Dropbox Installation")
+        super(DownloadDialog, self).__init__(
+            parent=None, title="Dropbox Installation")
 
         self.download = None
         self.hovering = False
@@ -482,8 +487,8 @@ if GUI_AVAILABLE:
         self.label = gtk.Label()
         GPG_WARNING_MSG = (u"\n\n" + GPG_WARNING) if not gpgme else u""
         self.label.set_markup(
-            '%s <span foreground="#000099" underline="single" weight="bold">%s</span>\n\n%s%s' % (
-              INFO, LINK, WARNING, GPG_WARNING_MSG))
+            '%s <span foreground="#000099" underline="single" weight="bold">%s</span>\n\n%s%s'
+            % (INFO, LINK, WARNING, GPG_WARNING_MSG))
         self.label.set_line_wrap(True)
         self.label.set_property('width-request', 300)
         self.label.show()
@@ -518,8 +523,8 @@ if GUI_AVAILABLE:
             dont_show_again.connect('toggled', self.handle_dont_show_toggle)
             dont_show_again.show()
 
-            self.dont_show_again_align = gtk.Alignment(xalign=1.0, yalign=0.0,
-                                                       xscale=0.0, yscale=0.0)
+            self.dont_show_again_align = gtk.Alignment(
+                xalign=1.0, yalign=0.0, xscale=0.0, yscale=0.0)
             self.dont_show_again_align.add(dont_show_again)
             self.dont_show_again_align.show()
 
@@ -542,6 +547,7 @@ if GUI_AVAILABLE:
     if dialog.user_cancelled:
       raise Exception("user cancelled download!!!")
 else:
+
   def download():
     global FatalVisibleError
 
@@ -608,6 +614,7 @@ else:
 
 
 class CommandTicker(threading.Thread):
+
   def __init__(self):
     threading.Thread.__init__(self)
     self.stop_event = threading.Event()
@@ -633,6 +640,7 @@ class CommandTicker(threading.Thread):
 
 
 class DropboxCommand(object):
+
   class CouldntConnectError(Exception):
     pass
 
@@ -672,10 +680,9 @@ class DropboxCommand(object):
   def send_command(self, name, args):
     self.f.write(name.encode('utf8'))
     self.f.write(u"\n".encode('utf8'))
-    self.f.writelines((u"\t".join([k] + (list(v)
-                                         if hasattr(v, '__iter__') else
-                                         [v])) + u"\n").encode('utf8')
-                      for k, v in args.iteritems())
+    self.f.writelines(
+        (u"\t".join([k] + (list(v) if hasattr(v, '__iter__') else [v])) +
+         u"\n").encode('utf8') for k, v in args.iteritems())
     self.f.write(u"done\n".encode('utf8'))
 
     self.f.flush()
@@ -727,6 +734,7 @@ class DropboxCommand(object):
     try:
       return super(DropboxCommand, self).__getattr__(name)
     except:
+
       def __spec_command(**kw):
         return self.send_command(unicode(name), kw)
 
@@ -744,14 +752,18 @@ def command(meth):
   if hasattr(meth, 'im_func'):  # bound method, if we ever have one
     meth = meth.im_func
   commands[meth.func_name] = meth
-  meth_aliases = [unicode(alias) for alias in aliases.iterkeys() if
-                  aliases[alias].func_name == meth.func_name]
+  meth_aliases = [
+      unicode(alias)
+      for alias in aliases.iterkeys()
+      if aliases[alias].func_name == meth.func_name
+  ]
   if meth_aliases:
     meth.__doc__ += u"\nAliases: %s" % ",".join(meth_aliases)
   return meth
 
 
 def alias(name):
+
   def decorator(meth):
     global commands, aliases
     assert name not in commands, "This alias is the name of a command."
@@ -762,6 +774,7 @@ def alias(name):
 
 
 def requires_dropbox_running(meth):
+
   def newmeth(*n, **kw):
     if is_dropbox_running():
       return meth(*n, **kw)
@@ -779,9 +792,12 @@ def start_dropbox():
   if os.access(db_path, os.X_OK):
     f = open("/dev/null", "w")
     # we don't reap the child because we're gonna die anyway, let init do it
-    a = subprocess.Popen([db_path], preexec_fn=os.setsid,
+    a = subprocess.Popen([db_path],
+                         preexec_fn=os.setsid,
                          cwd=os.path.expanduser("~"),
-                         stderr=sys.stderr, stdout=f, close_fds=True)
+                         stderr=sys.stderr,
+                         stdout=f,
+                         close_fds=True)
 
     # in seconds
     interval = 0.5
@@ -803,11 +819,12 @@ def columnize(list, display_list=None, display_width=None):
     console_print(u"<empty>")
     return
 
-  non_unicode = [i for i in range(len(list)) if
-                 not (isinstance(list[i], unicode))]
+  non_unicode = [
+      i for i in range(len(list)) if not (isinstance(list[i], unicode))
+  ]
   if non_unicode:
-    raise TypeError, ("list[i] not a string for i in %s" %
-                      ", ".join(map(unicode, non_unicode)))
+    raise TypeError, ("list[i] not a string for i in %s" % ", ".join(
+        map(unicode, non_unicode)))
 
   if not display_width:
     d = os.popen('stty size', 'r').read().split()
@@ -933,13 +950,10 @@ options:
             return (path, path)
 
           env_term = os.environ.get('TERM', '')
-          supports_color = (sys.stderr.isatty() and (
-              env_term.startswith('vt') or
-              env_term.startswith('linux') or
-              'xterm' in env_term or
-              'color' in env_term
-          )
-                            )
+          supports_color = (sys.stderr.isatty() and
+                            (env_term.startswith('vt') or
+                             env_term.startswith('linux') or
+                             'xterm' in env_term or 'color' in env_term))
 
           # TODO: Test when you don't support color.
           if not supports_color:
@@ -1014,9 +1028,11 @@ options:
           console_print(u"Dropbox isn't responding!")
       else:
         if len(args) == 0:
-          args = [name for name in
-                  sorted(os.listdir(u"."), key=methodcaller('lower')) if
-                  type(name) == unicode]
+          args = [
+              name
+              for name in sorted(os.listdir(u"."), key=methodcaller('lower'))
+              if type(name) == unicode
+          ]
         if len(args) == 0:
           # Bail early if there's nothing to list to avoid crashing on indent below
           console_print(u"<empty>")
@@ -1072,9 +1088,11 @@ Prints out a public url for FILE (which must be in your public folder).
   try:
     with closing(DropboxCommand()) as dc:
       try:
-        console_print(dc.get_public_link(path=unicode_abspath(
-            args[0].decode(sys.getfilesystemencoding()))).get(u'link',
-                                                              [u'No Link'])[0])
+        console_print(
+            dc.get_public_link(
+                path=unicode_abspath(
+                    args[0].decode(sys.getfilesystemencoding()))).get(
+                        u'link', [u'No Link'])[0])
       except DropboxCommand.CommandError, e:
         console_print(u"Couldn't get public url: " + str(e))
       except DropboxCommand.BadConnectionError, e:
@@ -1135,8 +1153,7 @@ PASSWORD - (optional) proxy password (only valid with "manual" mode)
   if len(args) >= 2:
     type_ = args[1].decode(sys.getfilesystemencoding()).lower()
 
-  if (len(args) == 0 or
-      mode not in [u'none', u'auto', u'manual'] or
+  if (len(args) == 0 or mode not in [u'none', u'auto', u'manual'] or
       (mode == 'manual' and len(args) not in (4, 6)) or
       (mode != 'manual' and len(args) != 1) or
       (mode == 'manual' and type_ not in [u'http', u'socks4', u'socks5'])):
@@ -1213,8 +1230,8 @@ UPLOAD - one of "unlimited", "auto", or a manual limit in KB/s
       return
 
   kwargs = {
-    u'download_mode': download_mode,
-    u'upload_mode': upload_mode,
+      u'download_mode': download_mode,
+      u'upload_mode': upload_mode,
   }
   if download_limit:
     kwargs[u'download_limit'] = unicode(download_limit)
@@ -1307,8 +1324,8 @@ def grab_link_url_if_necessary():
         link_url = dc.needs_link().get(u"link_url", None)
         if link_url is not None:
           console_print(
-              u"To link this computer to a dropbox account, visit the following url:\n%s" %
-              link_url[0])
+              u"To link this computer to a dropbox account, visit the following url:\n%s"
+              % link_url[0])
           return True
         else:
           return False
@@ -1396,8 +1413,10 @@ Any specified path must be within Dropbox.
   elif len(args) >= 2:
     sub_command = args[0]
     paths = args[1:]
-    absolute_paths = [unicode_abspath(path.decode(sys.getfilesystemencoding()))
-                      for path in paths]
+    absolute_paths = [
+        unicode_abspath(path.decode(sys.getfilesystemencoding()))
+        for path in paths
+    ]
     if sub_command == u"add":
       try:
         with closing(DropboxCommand(timeout=None)) as dc:
@@ -1575,7 +1594,8 @@ def usage(argv):
   console_print(u"Dropbox command-line interface\n")
   console_print(u"commands:\n")
   console_print(
-      u"Note: use dropbox help <command> to view usage for a specific command.\n")
+      u"Note: use dropbox help <command> to view usage for a specific command.\n"
+  )
   out = []
   for command in commands:
     out.append((command, commands[command].__doc__.splitlines()[0]))

@@ -21,25 +21,22 @@ from labm8 import labdate
 from labm8 import pbutil
 from system.dpack.proto import dpack_pb2
 
-
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string('package', None,
-                    'The path of the target package.')
-flags.DEFINE_string('sidecar', None,
-                    'The path of the archive sidecar.')
-flags.DEFINE_list('exclude', [],
-                  'A list of patterns to exclude from the package. Supports '
-                  'UNIX-style globbing: *,?,[],[!].')
-flags.DEFINE_bool('init', False,
-                  'If set, create the package MANIFEST.pbtxt file. This will '
-                  'not overwrite an existing manifest file.')
-flags.DEFINE_bool('update', False,
-                  'If set, update the file attributes in MANIFEST.pbtxt file. '
-                  'This can only be used in conjunction with --init flag. '
-                  'If no MANIFEST.pbtxt exists, it is created.')
-flags.DEFINE_bool('pack', False,
-                  'If set, create the package archive.')
+flags.DEFINE_string('package', None, 'The path of the target package.')
+flags.DEFINE_string('sidecar', None, 'The path of the archive sidecar.')
+flags.DEFINE_list(
+    'exclude', [], 'A list of patterns to exclude from the package. Supports '
+    'UNIX-style globbing: *,?,[],[!].')
+flags.DEFINE_bool(
+    'init', False, 'If set, create the package MANIFEST.pbtxt file. This will '
+    'not overwrite an existing manifest file.')
+flags.DEFINE_bool(
+    'update', False,
+    'If set, update the file attributes in MANIFEST.pbtxt file. '
+    'This can only be used in conjunction with --init flag. '
+    'If no MANIFEST.pbtxt exists, it is created.')
+flags.DEFINE_bool('pack', False, 'If set, create the package archive.')
 
 
 def _IsPackage(path: pathlib.Path) -> bool:
@@ -73,15 +70,15 @@ flags.register_validator(
 
 # A list of filename patterns to exclude from all data packages.
 ALWAYS_EXCLUDE_PATTERNS = [
-  'MANIFEST.pbtxt',  # No self-reference.
-  '.DS_Store',
-  '._.DS_Store',
-  '*/.DS_Store',
-  '*/._.DS_Store',
-  '.com.apple.timemachine.supported',
-  '*/.com.apple.timemachine.supported',
-  '.sync.ffs_db',
-  '*/.sync.ffs_db',
+    'MANIFEST.pbtxt',  # No self-reference.
+    '.DS_Store',
+    '._.DS_Store',
+    '*/.DS_Store',
+    '*/._.DS_Store',
+    '.com.apple.timemachine.supported',
+    '*/.com.apple.timemachine.supported',
+    '.sync.ffs_db',
+    '*/.sync.ffs_db',
 ]
 
 
@@ -161,8 +158,9 @@ def DataPackageFileAttributesAreValid(package_root: pathlib.Path,
 
   checksum = checksum_fn(abspath)
   if f.checksum != checksum:
-    logging.warning("the contents of '%s' have changed but the size remains "
-                    "the same", f.relative_path)
+    logging.warning(
+        "the contents of '%s' have changed but the size remains "
+        "the same", f.relative_path)
     return False
 
   return True
@@ -221,8 +219,8 @@ def PackageManifestIsValid(package_root: pathlib.Path,
   Returns:
     True if the manifest matches the contents of the file system, else False.
   """
-  return all(DataPackageFileAttributesAreValid(package_root, f)
-             for f in manifest.file)
+  return all(
+      DataPackageFileAttributesAreValid(package_root, f) for f in manifest.file)
 
 
 def CreatePackageArchive(package_dir: pathlib.Path,
@@ -290,8 +288,8 @@ def CreatePackageArchiveSidecar(archive_path: pathlib.Path,
 
 def PackDataPackage(package_dir: pathlib.Path) -> None:
   """Create an archive and sidecar of a package."""
-  manifest = pbutil.FromFile(
-      package_dir / 'MANIFEST.pbtxt', dpack_pb2.DataPackage())
+  manifest = pbutil.FromFile(package_dir / 'MANIFEST.pbtxt',
+                             dpack_pb2.DataPackage())
   PackageManifestIsValid(package_dir, manifest)
   archive_path = (
       package_dir / f'../{package_dir.name}.dpack.tar.bz2').resolve()
@@ -319,8 +317,8 @@ def VerifyManifest(package_dir: pathlib.Path) -> bool:
   if not (package_dir / 'MANIFEST.pbtxt').is_file():
     logging.info('%s/MANIFEST.pbtxt missing, nothing to do.', package_dir)
     return False
-  manifest = pbutil.FromFile(
-      package_dir / 'MANIFEST.pbtxt', dpack_pb2.DataPackage())
+  manifest = pbutil.FromFile(package_dir / 'MANIFEST.pbtxt',
+                             dpack_pb2.DataPackage())
   if not PackageManifestIsValid(package_dir, manifest):
     logging.error('Package %s contains errors.', package_dir)
     return False

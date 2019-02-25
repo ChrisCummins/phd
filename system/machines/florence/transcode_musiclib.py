@@ -17,7 +17,6 @@ from absl import logging
 from labm8 import fs
 from labm8 import system
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('root_dir', fs.path('~/Music/Music Library'),
@@ -25,30 +24,35 @@ flags.DEFINE_string('root_dir', fs.path('~/Music/Music Library'),
 flags.DEFINE_string('csv_log_path',
                     fs.path('~/Music/Music Library/transcode_mp3s.csv'),
                     'Path to CSV log file.')
-flags.DEFINE_string('find_bin', 'find',
-                    'Path of `find` binary. Set this flag is find is not '
-                    'in the system $PATH.')
-flags.DEFINE_string('ffmpeg_bin', 'ffmpeg',
-                    'Path of `ffmpeg` binary. Set this flag is ffmpeg is not '
-                    'in the system $PATH.')
+flags.DEFINE_string(
+    'find_bin', 'find', 'Path of `find` binary. Set this flag is find is not '
+    'in the system $PATH.')
+flags.DEFINE_string(
+    'ffmpeg_bin', 'ffmpeg',
+    'Path of `ffmpeg` binary. Set this flag is ffmpeg is not '
+    'in the system $PATH.')
 
 
 def FindMp3Files(dir: str) -> typing.List[str]:
   """List mp3 files in a directory and subdirectories."""
   cmd = [FLAGS.find_bin, dir, '-type', 'f', '-name', '*.mp3']
-  output = subprocess.check_output(
-      cmd, universal_newlines=True)
+  output = subprocess.check_output(cmd, universal_newlines=True)
   return output.rstrip().split('\n')
 
 
 def TranscodeMp3(in_path: str, out_path: str, lame_option: int) -> None:
   """Overwrite output files."""
-  cmd = [FLAGS.ffmpeg_bin, '-y', '-loglevel', 'panic', '-i', in_path,
-         '-codec:a', 'libmp3lame', '-qscale:a', str(lame_option), out_path]
+  cmd = [
+      FLAGS.ffmpeg_bin, '-y', '-loglevel', 'panic', '-i', in_path, '-codec:a',
+      'libmp3lame', '-qscale:a',
+      str(lame_option), out_path
+  ]
   subprocess.check_call(cmd)
 
 
-def MaybeTranscodeMp3(path: str, out_csv: csv.writer, max_bitrate: int = 192,
+def MaybeTranscodeMp3(path: str,
+                      out_csv: csv.writer,
+                      max_bitrate: int = 192,
                       lame_option: int = 3) -> bool:
   """
 

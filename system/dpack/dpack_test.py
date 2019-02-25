@@ -8,12 +8,11 @@ from labm8 import test
 from system.dpack import dpack
 from system.dpack.proto import dpack_pb2
 
-
 FLAGS = flags.FLAGS
 
 # The sha256sum of an empty file.
 SHA256_EMPTY_FILE = (
-  'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
+    'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
 
 
 def test_IsPackage_files():
@@ -42,18 +41,19 @@ def test_GetFilesInDirectory_leaf_files(tempdir: pathlib.Path):
   """Test that files in the directory are returned."""
   # Start with one file.
   (tempdir / 'a').touch()
-  assert set(dpack.GetFilesInDirectory(tempdir, [])) == {
-    pathlib.Path('a')
-  }
+  assert set(dpack.GetFilesInDirectory(tempdir, [])) == {pathlib.Path('a')}
   # Add a second file.
   (tempdir / 'b').touch()
   assert set(dpack.GetFilesInDirectory(tempdir, [])) == {
-    pathlib.Path('a'), pathlib.Path('b'),
+      pathlib.Path('a'),
+      pathlib.Path('b'),
   }
   # Add a third file.
   (tempdir / 'c').touch()
   assert set(dpack.GetFilesInDirectory(tempdir, [])) == {
-    pathlib.Path('a'), pathlib.Path('b'), pathlib.Path('c'),
+      pathlib.Path('a'),
+      pathlib.Path('b'),
+      pathlib.Path('c'),
   }
 
 
@@ -64,9 +64,9 @@ def test_GetFilesInDirectory_subdir_relpath(tempdir: pathlib.Path):
   (tempdir / 'sub' / 'a').touch()
   (tempdir / 'sub' / 'sub').mkdir()
   (tempdir / 'sub' / 'sub' / 'b').touch()
-  assert set(dpack.GetFilesInDirectory(tempdir, [])) == {
-    pathlib.Path('sub/a'), pathlib.Path('sub/sub/b')
-  }
+  assert set(dpack.GetFilesInDirectory(
+      tempdir, [])) == {pathlib.Path('sub/a'),
+                        pathlib.Path('sub/sub/b')}
 
 
 def test_GetFilesInDirectory_exclude_by_name(tempdir: pathlib.Path):
@@ -77,9 +77,9 @@ def test_GetFilesInDirectory_exclude_by_name(tempdir: pathlib.Path):
   (tempdir / 'sub').mkdir()
   (tempdir / 'sub' / 'foo').touch()
   # Exclude pattern 'foo' does not exclude subdir 'foo'.
-  assert set(dpack.GetFilesInDirectory(tempdir, ['foo'])) == {
-    pathlib.Path('a'), pathlib.Path('sub/foo')
-  }
+  assert set(dpack.GetFilesInDirectory(
+      tempdir, ['foo'])) == {pathlib.Path('a'),
+                             pathlib.Path('sub/foo')}
 
 
 def test_GetFilesInDirectory_exclude_subdir(tempdir: pathlib.Path):
@@ -92,14 +92,16 @@ def test_GetFilesInDirectory_exclude_subdir(tempdir: pathlib.Path):
   (tempdir / 'sub' / 'sub').mkdir()
   (tempdir / 'sub' / 'sub' / 'foo').touch()
   assert set(dpack.GetFilesInDirectory(tempdir, ['sub/foo'])) == {
-    pathlib.Path('a'), pathlib.Path('foo'), pathlib.Path('sub/sub/foo')
+      pathlib.Path('a'),
+      pathlib.Path('foo'),
+      pathlib.Path('sub/sub/foo')
   }
-  assert set(dpack.GetFilesInDirectory(tempdir, ['*/foo'])) == {
-    pathlib.Path('a'), pathlib.Path('foo')
-  }
-  assert set(dpack.GetFilesInDirectory(tempdir, ['*/foo*'])) == {
-    pathlib.Path('a'), pathlib.Path('foo')
-  }
+  assert set(dpack.GetFilesInDirectory(
+      tempdir, ['*/foo'])) == {pathlib.Path('a'),
+                               pathlib.Path('foo')}
+  assert set(dpack.GetFilesInDirectory(
+      tempdir, ['*/foo*'])) == {pathlib.Path('a'),
+                                pathlib.Path('foo')}
 
 
 def test_SetDataPackageFileAttributes_empty_file(tempdir: pathlib.Path):

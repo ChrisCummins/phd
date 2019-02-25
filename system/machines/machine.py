@@ -15,7 +15,6 @@ from labm8 import pbutil
 from system.machines.mirrored_directory import MirroredDirectory
 from system.machines.proto import machine_spec_pb2
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('machine', None, 'Path to MachineSpec proto.')
@@ -23,7 +22,7 @@ flags.DEFINE_list('push', [], 'Mirrored directories to push.')
 flags.DEFINE_list('pull', [], 'Mirrored directories to push.')
 flags.DEFINE_bool('dry_run', True, 'Whether to run ops without making changes.')
 flags.DEFINE_bool('delete', False, 'Whether to delete files during push/pull'
-                                   'mirroring.')
+                  'mirroring.')
 flags.DEFINE_bool('progress', False, 'Show progress during file transfers.')
 
 
@@ -88,8 +87,9 @@ class Machine(object):
   @property
   def mirrored_directories(self) -> typing.List[MirroredDirectory]:
     """Return a list of mirrored directories."""
-    return [MirroredDirectory(self.host, m) for m in
-            self._proto.mirrored_directory]
+    return [
+        MirroredDirectory(self.host, m) for m in self._proto.mirrored_directory
+    ]
 
   def MirroredDirectory(self, name: str) -> MirroredDirectory:
     """Lookup a mirrored directory by name."""
@@ -121,13 +121,17 @@ def main(argv):
   for mirrored_dir_name in FLAGS.pull:
     mirrored_dir = machine.MirroredDirectory(mirrored_dir_name)
     mirrored_dir.PullFromRemoteToLocal(
-        dry_run=FLAGS.dry_run, verbose=True, delete=FLAGS.delete,
+        dry_run=FLAGS.dry_run,
+        verbose=True,
+        delete=FLAGS.delete,
         progress=FLAGS.progress)
 
   for mirrored_dir_name in FLAGS.push:
     mirrored_dir = machine.MirroredDirectory(mirrored_dir_name)
     mirrored_dir.PushFromLocalToRemote(
-        dry_run=FLAGS.dry_run, verbose=True, delete=FLAGS.delete,
+        dry_run=FLAGS.dry_run,
+        verbose=True,
+        delete=FLAGS.delete,
         progress=FLAGS.progress)
 
 

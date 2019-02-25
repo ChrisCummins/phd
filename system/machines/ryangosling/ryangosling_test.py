@@ -12,7 +12,6 @@ from labm8 import test
 from system.machines import machine
 from system.machines import mirrored_directory
 
-
 FLAGS = flags.FLAGS
 
 _MACHINE_SPEC_PATH = bazelutil.DataPath(
@@ -33,8 +32,8 @@ def test_Ryangosling_mirrored_directories(ryangosling: machine.Machine):
 
 @pytest.mark.diana
 @pytest.mark.florence
-@pytest.mark.skipif(not os.path.isdir('/Volumes/Orange'),
-                    reason='Orange drive not found')
+@pytest.mark.skipif(
+    not os.path.isdir('/Volumes/Orange'), reason='Orange drive not found')
 def test_Ryangosling_photos(ryangosling: machine.Machine):
   """Test that mirrored directory exists."""
   d = ryangosling.MirroredDirectory('photos')
@@ -55,8 +54,8 @@ def test_Ryangosling_photos(ryangosling: machine.Machine):
 @pytest.mark.diana
 @pytest.mark.florence
 @pytest.mark.parametrize('dir', ('music', 'movies', 'tv'))
-def test_Ryangosling_mirrored_directory_exists(
-    ryangosling: machine.Machine, dir: str):
+def test_Ryangosling_mirrored_directory_exists(ryangosling: machine.Machine,
+                                               dir: str):
   """Test that mirrored directory exists."""
   d = ryangosling.MirroredDirectory(dir)
   assert isinstance(d, mirrored_directory.MirroredDirectory)

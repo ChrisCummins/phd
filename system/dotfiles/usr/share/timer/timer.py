@@ -10,7 +10,6 @@ from typing import List
 
 import requests
 
-
 # Read global configuration file
 with open(path.expanduser("~/.config/toggl.json")) as infile:
   config = json.load(infile)
@@ -37,6 +36,7 @@ class Colors:
 
 
 class _getch_unix:
+
   def __init__(self):
     pass
 
@@ -53,6 +53,7 @@ class _getch_unix:
 
 
 class _getch_windows:
+
   def __init__(self):
     pass
 
@@ -62,6 +63,7 @@ class _getch_windows:
 
 
 class getch:
+
   def __init__(self):
     try:
       self.impl = _getch_windows()
@@ -144,15 +146,16 @@ def stop_timer() -> None:
 def start_timer(pid: int, tags: List[str]) -> None:
   stop_timer()
   payload = {
-    "time_entry": {
-      "pid": pid,
-      "created_with": "Command Line",
-      "tags": tags,
-    }
+      "time_entry": {
+          "pid": pid,
+          "created_with": "Command Line",
+          "tags": tags,
+      }
   }
-  POST("https://www.toggl.com/api/v8/time_entries/start",
-       headers={"Content-Type": "application/json"},
-       data=json.dumps(payload))
+  POST(
+      "https://www.toggl.com/api/v8/time_entries/start",
+      headers={"Content-Type": "application/json"},
+      data=json.dumps(payload))
 
 
 def prompt_for_project():
@@ -178,14 +181,15 @@ def prompt_for_project():
     project_name = input("Name new project: ").strip()
 
     project = {
-      "name": project_name,
-      "wid": config["workspace"],
-      "is_private": False,
+        "name": project_name,
+        "wid": config["workspace"],
+        "is_private": False,
     }
 
-    r = POST("https://www.toggl.com/api/v8/projects",
-             headers={"Content-Type": "application/json"},
-             data=json.dumps({"project": project}))
+    r = POST(
+        "https://www.toggl.com/api/v8/projects",
+        headers={"Content-Type": "application/json"},
+        data=json.dumps({"project": project}))
     pid = r.json()["data"]["id"]
   else:
     project_name = choices[choice_index]
@@ -236,8 +240,8 @@ def tui():
   choices = []
   if timer != "🚫 No Timer":
     choices += [
-      (f"[{Colors.BOLD}S{Colors.END}]top timer", "s"),
-      (f"[{Colors.BOLD}D{Colors.END}]elete timer", "d"),
+        (f"[{Colors.BOLD}S{Colors.END}]top timer", "s"),
+        (f"[{Colors.BOLD}D{Colors.END}]elete timer", "d"),
     ]
   choices.append((f"[{Colors.BOLD}N{Colors.END}]ew timer", "n"))
 

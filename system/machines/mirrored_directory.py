@@ -12,7 +12,6 @@ from absl import logging
 from labm8 import labtypes
 from system.machines.proto import machine_spec_pb2
 
-
 FLAGS = flags.FLAGS
 
 
@@ -56,8 +55,11 @@ class MirroredDirectory(object):
   def RemoteExists(self) -> bool:
     """Test if remote directory exists."""
     try:
-      subprocess.check_output(['ssh', '-p', str(self.host.port), self.host.host,
-                               '-t', f'test -d "{self.remote_path}"'])
+      subprocess.check_output([
+          'ssh', '-p',
+          str(self.host.port), self.host.host, '-t',
+          f'test -d "{self.remote_path}"'
+      ])
       return True
     except subprocess.SubprocessError:
       return False
@@ -66,18 +68,21 @@ class MirroredDirectory(object):
     """Test if local path exists."""
     return pathlib.Path(self.local_path).is_dir()
 
-  def PushFromLocalToRemote(self, dry_run: bool = False,
-                            verbose: bool = False, delete: bool = True,
+  def PushFromLocalToRemote(self,
+                            dry_run: bool = False,
+                            verbose: bool = False,
+                            delete: bool = True,
                             progress: bool = False) -> None:
     """Push from local to remote paths."""
     if self.spec.pull_only:
       raise InvalidOperation("Mirrored directory has been marked 'pull_only'")
-    self.Rsync(self.local_path,
-               self.rsync_remote_path, self.host.port, self.spec.rsync_exclude,
-               dry_run, verbose, delete, progress)
+    self.Rsync(self.local_path, self.rsync_remote_path, self.host.port,
+               self.spec.rsync_exclude, dry_run, verbose, delete, progress)
 
-  def PullFromRemoteToLocal(self, dry_run: bool = False,
-                            verbose: bool = False, delete: bool = True,
+  def PullFromRemoteToLocal(self,
+                            dry_run: bool = False,
+                            verbose: bool = False,
+                            delete: bool = True,
                             progress: bool = False) -> None:
     """Pull from remote to local paths."""
     if self.spec.push_only:
@@ -97,8 +102,13 @@ class MirroredDirectory(object):
             dry_run: bool, verbose: bool, delete: bool, progress: bool):
     """Private helper method to invoke rsync with appropriate arguments."""
     cmd = [
-            'rsync', '-ah', str(src), str(dst), '-e', f'ssh -p {host_port}',
-          ] + labtypes.flatten([['--exclude', p] for p in excludes])
+        'rsync',
+        '-ah',
+        str(src),
+        str(dst),
+        '-e',
+        f'ssh -p {host_port}',
+    ] + labtypes.flatten([['--exclude', p] for p in excludes])
     if dry_run:
       cmd.append('--dry-run')
     if verbose:

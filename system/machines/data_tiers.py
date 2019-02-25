@@ -17,11 +17,9 @@ from absl import logging
 from labm8 import pbutil
 from system.machines.proto import data_tiers_pb2
 
-
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string('data_tiers', None,
-                    'The path of the directory to package.')
+flags.DEFINE_string('data_tiers', None, 'The path of the directory to package.')
 flags.DEFINE_bool('summary', False, 'TODO')
 
 flags.register_validator(
@@ -37,8 +35,9 @@ def _SetDirectorySize(tier: data_tiers_pb2.Directory):
     return
 
   os.chdir(path)
-  excludes = ['--exclude={}'.format(pathlib.Path(e).expanduser())
-              for e in tier.exclude]
+  excludes = [
+      '--exclude={}'.format(pathlib.Path(e).expanduser()) for e in tier.exclude
+  ]
   cmd = ['du', '-b', '-s', '.'] + excludes
   logging.info('$ cd %s && %s', path, ' '.join(cmd))
   proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
@@ -55,29 +54,28 @@ def main(argv) -> None:
   if len(argv) > 1:
     raise app.UsageError('Too many command-line arguments.')
 
-  tiers = pbutil.FromFile(pathlib.Path(FLAGS.data_tiers),
-                          data_tiers_pb2.DataTiers())
+  tiers = pbutil.FromFile(
+      pathlib.Path(FLAGS.data_tiers), data_tiers_pb2.DataTiers())
   for tier in tiers.directory:
     logging.info('Processing %s', tier.path)
     _SetDirectorySize(tier)
 
   if FLAGS.summary:
     # Print the size per directory.
-    df = pd.DataFrame([
-      {
+    df = pd.DataFrame([{
         'Path': d.path,
         'Tier': d.tier,
         'Size': humanize.naturalsize(d.size_bytes),
         'Size (bytes)': d.size_bytes
-      } for d in tiers.directory if d.size_bytes
-    ])
+    } for d in tiers.directory if d.size_bytes])
     df = df.sort_values(['Tier', 'Size (bytes)'], ascending=[True, False])
     print(df[['Path', 'Tier', 'Size']].to_string(index=False))
 
     # Print the total size per tier.
     df2 = df.groupby('Tier').sum()
-    df2['Size'] = [humanize.naturalsize(d['Size (bytes)'])
-                   for _, d in df2.iterrows()]
+    df2['Size'] = [
+        humanize.naturalsize(d['Size (bytes)']) for _, d in df2.iterrows()
+    ]
     df2 = df2.reset_index()
     df2 = df2.sort_values('Tier')
     print()

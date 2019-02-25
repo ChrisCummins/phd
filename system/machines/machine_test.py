@@ -8,7 +8,6 @@ from labm8 import test
 from system.machines import machine
 from system.machines.proto import machine_spec_pb2
 
-
 FLAGS = flags.FLAGS
 
 
@@ -16,19 +15,16 @@ FLAGS = flags.FLAGS
 def test_machine() -> machine.Machine:
   """A test fixture that returns a Machine instance."""
   with tempfile.TemporaryDirectory(prefix='tmp_system_machines_') as d:
-    yield machine.Machine.FromProto(machine_spec_pb2.MachineSpec(
-        name="test",
-        host=[
-          machine_spec_pb2.Host(host='localhost', port=22),
-        ],
-        mirrored_directory=[
-          machine_spec_pb2.MirroredDirectory(
-              name='foo',
-              local_path=d,
-              remote_path='notused'
-          )
-        ])
-    )
+    yield machine.Machine.FromProto(
+        machine_spec_pb2.MachineSpec(
+            name="test",
+            host=[
+                machine_spec_pb2.Host(host='localhost', port=22),
+            ],
+            mirrored_directory=[
+                machine_spec_pb2.MirroredDirectory(
+                    name='foo', local_path=d, remote_path='notused')
+            ]))
 
 
 def test_host(test_machine: machine.Machine):

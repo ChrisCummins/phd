@@ -14,7 +14,6 @@ from labm8 import test
 from system.machines import mirrored_directory
 from system.machines.proto import machine_spec_pb2
 
-
 FLAGS = flags.FLAGS
 
 
@@ -30,9 +29,7 @@ def test_mirrored_directory() -> machine_spec_pb2.MirroredDirectory:
     with tempfile.TemporaryDirectory(
         prefix='phd_mirrored_directory_local_path_') as d2:
       yield machine_spec_pb2.MirroredDirectory(
-          name='test_mirrored_directory',
-          remote_path=d1,
-          local_path=d2)
+          name='test_mirrored_directory', remote_path=d1, local_path=d2)
 
 
 class LocalMirroredDirectory(mirrored_directory.MirroredDirectory):
@@ -64,6 +61,7 @@ class LocalMirroredDirectory(mirrored_directory.MirroredDirectory):
 
 
 # rsync_exclude
+
 
 def test_PushLocalToRemote(
     test_host: machine_spec_pb2.Host,

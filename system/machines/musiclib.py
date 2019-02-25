@@ -9,11 +9,9 @@ from absl import flags
 from labm8 import fs
 from system.dpack import dpack
 
-
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string('musiclib', None,
-                    'The path of the music library.')
+flags.DEFINE_string('musiclib', None, 'The path of the music library.')
 flags.DEFINE_bool('update_musiclib_manifests', False, '')
 
 # The --package argument points to either a directory or an archive file.
@@ -27,7 +25,7 @@ flags.register_validator(
 
 # A list of filename patterns to exclude from all data packages.
 ALWAYS_EXCLUDE_PATTERNS = [
-  '.*',
+    '.*',
 ]
 
 

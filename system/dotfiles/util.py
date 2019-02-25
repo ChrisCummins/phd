@@ -38,11 +38,11 @@ def get_platform():
   distro = platform.linux_distribution()
   if not distro[0]:
     return {
-      "darwin": "osx",
+        "darwin": "osx",
     }.get(sys.platform, sys.platform)
   else:
     return {
-      "debian": "ubuntu",
+        "debian": "ubuntu",
     }.get(distro[0].lower(), distro[0].lower())
 
 
@@ -65,8 +65,12 @@ def shell(*args):
   """ run a shell command and return its output. Raises CalledProcessError
       if fails """
   _log_shell(*args)
-  p = subprocess.Popen(*args, shell=True, stdout=subprocess.PIPE,
-                       stderr=subprocess.STDOUT, universal_newlines=True)
+  p = subprocess.Popen(
+      *args,
+      shell=True,
+      stdout=subprocess.PIPE,
+      stderr=subprocess.STDOUT,
+      universal_newlines=True)
   stdout, _ = p.communicate()
 
   stdout = stdout.rstrip()
@@ -86,8 +90,8 @@ def shell_ok(cmd):
   """ run a shell command and return False if error """
   _log_shell(cmd)
   try:
-    subprocess.check_call(cmd, shell=True, stdout=subprocess.PIPE,
-                          stderr=subprocess.PIPE)
+    subprocess.check_call(
+        cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     _log_shell_output("-> 0")
     return True
   except subprocess.CalledProcessError as e:
@@ -219,12 +223,13 @@ class Task(object):
     if hasattr(task, "__versions__"):
       _versions = merge_dicts(_versions, getattr(task, "__versions__"))
     if hasattr(task, "__" + get_platform() + "_version__"):
-      _versions = merge_dicts(_versions, getattr(task,
-                                                 "__" + get_platform() + "_version__"))
+      _versions = merge_dicts(
+          _versions, getattr(task, "__" + get_platform() + "_version__"))
     return versions
 
 
-class InvalidTaskError(Exception): pass
+class InvalidTaskError(Exception):
+  pass
 
 
 class Colors:
@@ -337,7 +342,10 @@ def copy_file(src, dst):
     shutil.copyfile(src, dst)
 
 
-def clone_git_repo(url, destination, version=None, shallow=False,
+def clone_git_repo(url,
+                   destination,
+                   version=None,
+                   shallow=False,
                    recursive=True):
   """ clone a git repo, returns True if cloned """
   # Cannot set the version of a shallow clone.
