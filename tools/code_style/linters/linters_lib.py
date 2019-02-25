@@ -206,5 +206,4 @@ def GetGitDiffFilesOrDie(staged):
   output = ExecOrDie(cmd)
   lines = output.split('\n')
   staged_file_relpaths = lines[:-1]  # Last line is blank.
-  assert staged_file_relpaths
   return staged_file_relpaths
