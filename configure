@@ -166,7 +166,7 @@ def RunAsHomebrewUser(cmd, subprocess_fn=subprocess.check_call):
 
 def Symlink(src, dst):
   """Create symlink if it doesn't already exist."""
-  if not os.path.islink(src):
+  if not os.path.islink(dst):
     print('Symlink {} -> {}'.format(src, dst))
     os.symlink(src, dst)
 
