@@ -98,9 +98,9 @@ py==1.5.2
 # At the time of writing (2018-05-10), the most recent version of pycparser is
 # version 2.18, however, it breaks cldrive with error:
 #   Traceback (most recent call last):
-#     File "<snip>/phd/gpu/cldrive/__init__.py", line 7, in <module>
+#     File "<snip>/phd/gpu/cldrive/legacy/__init__.py", line 7, in <module>
 #       from gpu.cldrive.args import *
-#     File "<snip>/phd/gpu/cldrive/args.py", line 242, in <module>
+#     File "<snip>/phd/gpu/cldrive/legacy/args.py", line 242, in <module>
 #       __parser = OpenCLCParser()
 #     File "<snip>/site-packages/pycparserext/ext_c_parser.py", line 47, in __init__
 #       debug=yacc_debug, write_tables=False)
