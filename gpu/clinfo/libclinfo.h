@@ -47,7 +47,6 @@ cl::Device GetOpenClDevice(const string& name);
 // Same as above, but abort if device is not available.
 cl::Device GetOpenClDeviceOrDie(const string& name);
 
-
 }  // namespace clinfo
 
 }  // namespace gpu

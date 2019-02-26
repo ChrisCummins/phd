@@ -23,6 +23,8 @@ cc_library(
         "//third_party/opencl",
         "//phd:string",
         "//phd:logging",
+        "//phd:statusor",
+        "@com_google_absl//absl/strings",
     ] + select({
         "//:darwin": [],
         "//conditions:default": ["@libopencl//:libOpenCL"],

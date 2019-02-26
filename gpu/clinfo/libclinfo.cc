@@ -11,6 +11,9 @@
 #include "gpu/clinfo/libclinfo.h"
 #include "phd/logging.h"
 
+#include "absl/strings/str_replace.h"
+#include "absl/strings/strip.h"
+
 namespace phd {
 
 namespace gpu {
@@ -173,12 +176,6 @@ bool BothAre(char lhs, char rhs) {
   return lhs == rhs && lhs == Remove;
 }
 
-void EscapeOpenCLString(std::string &string) {
-  std::replace(string.begin(), string.end(), ' ', '_');
-  string.erase(std::unique(string.begin(), string.end(), BothAre<'_'>),
-               string.end());
-}
-
 std::string GetOpenClDeviceType(const cl::Device &device) {
   cl_device_type num = (cl_device_type) device.getInfo<CL_DEVICE_TYPE>();
   switch (num) {
@@ -199,6 +196,30 @@ std::string GetOpenClDeviceType(const cl::Device &device) {
   }
 }
 
+std::vector<std::pair<string, string>> kSubstitutions = {
+  {"Intel(R)", "Intel"},
+  {"Xeon(R)", "Xeon"},
+};
+
+std::vector<string> kSuffixes = {
+  " CUDA",
+  " OpenCL",
+};
+
+string FormatOpenClString(const std::string& str) {
+  string simplified = absl::StrReplaceAll(str, kSubstitutions);
+  absl::string_view trimmed_view(simplified);
+  for (auto suffix : kSuffixes) {
+    absl::ConsumeSuffix(&trimmed_view, suffix);
+  }
+  string trimmed(trimmed_view);
+  std::replace(trimmed.begin(), trimmed.end(), ' ', '_');
+  // Strip duplicate double underscores.
+  trimmed.erase(std::unique(trimmed.begin(), trimmed.end(), BothAre<'_'>),
+                trimmed.end());
+  return trimmed;
+}
+
 void SetOpenClDevice(const cl::Platform &platform, const cl::Device &device,
                      const int platform_id, const int device_id,
                      ::gpu::clinfo::OpenClDevice *const message) {
@@ -206,6 +227,7 @@ void SetOpenClDevice(const cl::Platform &platform, const cl::Device &device,
   int major, minor = -1;
 
   platform.getInfo(CL_PLATFORM_NAME, &platform_name);
+
   message->set_platform_name(platform_name.c_str());
 
   device.getInfo(CL_DEVICE_NAME, &device_name);
@@ -222,15 +244,11 @@ void SetOpenClDevice(const cl::Platform &platform, const cl::Device &device,
   std::string device_type = GetOpenClDeviceType(device);
   message->set_device_type(device_type.c_str());
 
-  EscapeOpenCLString(platform_name);
-  EscapeOpenCLString(device_name);
-  EscapeOpenCLString(driver_version);
-
   std::stringstream name;
-  name << device_type.c_str() << "|"
-       << platform_name.c_str() << "|"
-       << device_name.c_str() << "|"
-       << driver_version.c_str() << "|"
+  name << FormatOpenClString(device_type.c_str()) << "|"
+       << FormatOpenClString(platform_name.c_str()) << "|"
+       << FormatOpenClString(device_name.c_str()) << "|"
+       << FormatOpenClString(driver_version.c_str()) << "|"
        << opencl_version.c_str();
   message->set_name(name.str());
 
