@@ -15,18 +15,14 @@ namespace gpu {
 namespace cldrive {
 
 template <typename T>
-T MakeScalar(const int& value) {
-  return T(value);
-}
-
-template <typename T>
 std::unique_ptr<ArrayKernelArgValueWithBuffer<T>> CreateArrayArgValue(
-    size_t size, bool rand_values, const cl::Context& context) {
+    const cl::Context& context, size_t size, const int& value,
+    bool rand_values) {
   auto arg_value = std::make_unique<ArrayKernelArgValueWithBuffer<T>>(
-      context, size, /*value=*/MakeScalar<T>(1));
+      context, size, /*value=*/opencl_type::MakeScalar<T>(value));
   if (rand_values) {
     for (size_t i = 0; i < size; ++i) {
-      arg_value->vector()[i] = MakeScalar<T>(rand());
+      arg_value->vector()[i] = opencl_type::MakeScalar<T>(rand());
     }
   }
   return arg_value;
@@ -37,11 +33,11 @@ std::unique_ptr<ArrayKernelArgValueWithBuffer<T>> CreateArrayArgValue(
 // std::unique_ptr<ArrayKernelArgValueWithBuffer<cl_char2>> CreateArrayArgValue(
 //    size_t size, bool rand_values, const cl::Context& context) {
 //  auto arg_value = std::make_unique<ArrayKernelArgValueWithBuffer<cl_char2>>(
-//      context, size  //, /*value=*/MakeScalar(1)
+//      context, size  //, /*value=*/opencl_type::MakeScalar(1)
 //  );
 //  // if (rand_values) {
 //  // for (size_t i = 0; i < size; ++i) {
-//  // arg_value->vector()[i] = MakeScalar<T>(rand());
+//  // arg_value->vector()[i] = opencl_type::MakeScalar<T>(rand());
 //  //}
 //  //}
 //  return arg_value;
@@ -56,218 +52,269 @@ std::unique_ptr<KernelArgValue> CreateArrayArgValue(
     //   return CreateArrayArgValue<bool>(size, rand_values, context);
     // }
     case OpenClType::CHAR: {
-      return CreateArrayArgValue<cl_char>(size, rand_values, context);
+      return CreateArrayArgValue<cl_char>(context, size, /*value=*/1,
+                                          rand_values);
     }
     case OpenClType::UCHAR: {
-      return CreateArrayArgValue<cl_uchar>(size, rand_values, context);
+      return CreateArrayArgValue<cl_uchar>(context, size, /*value=*/1,
+                                           rand_values);
     }
     case OpenClType::SHORT: {
-      return CreateArrayArgValue<cl_short>(size, rand_values, context);
+      return CreateArrayArgValue<cl_short>(context, size, /*value=*/1,
+                                           rand_values);
     }
     case OpenClType::USHORT: {
-      return CreateArrayArgValue<cl_ushort>(size, rand_values, context);
+      return CreateArrayArgValue<cl_ushort>(context, size, /*value=*/1,
+                                            rand_values);
     }
     case OpenClType::INT: {
-      return CreateArrayArgValue<cl_int>(size, rand_values, context);
+      return CreateArrayArgValue<cl_int>(context, size, /*value=*/1,
+                                         rand_values);
     }
     case OpenClType::UINT: {
-      return CreateArrayArgValue<cl_uint>(size, rand_values, context);
+      return CreateArrayArgValue<cl_uint>(context, size, /*value=*/1,
+                                          rand_values);
     }
     case OpenClType::LONG: {
-      return CreateArrayArgValue<cl_long>(size, rand_values, context);
+      return CreateArrayArgValue<cl_long>(context, size, /*value=*/1,
+                                          rand_values);
     }
     case OpenClType::ULONG: {
-      return CreateArrayArgValue<cl_ulong>(size, rand_values, context);
+      return CreateArrayArgValue<cl_ulong>(context, size, /*value=*/1,
+                                           rand_values);
     }
     case OpenClType::FLOAT: {
-      return CreateArrayArgValue<cl_float>(size, rand_values, context);
+      return CreateArrayArgValue<cl_float>(context, size, /*value=*/1,
+                                           rand_values);
     }
     case OpenClType::DOUBLE: {
-      return CreateArrayArgValue<cl_double>(size, rand_values, context);
+      return CreateArrayArgValue<cl_double>(context, size, /*value=*/1,
+                                            rand_values);
     }
     case OpenClType::HALF: {
-      return CreateArrayArgValue<cl_half>(size, rand_values, context);
+      return CreateArrayArgValue<cl_half>(context, size, /*value=*/1,
+                                          rand_values);
     }
-    //    case OpenClType::CHAR2: {
-    //      return CreateArrayArgValue<cl_char2>(size, rand_values, context);
-    //    }
-
-    //    case OpenClType::CHAR3: {
-    //      return CreateArrayArgValue<cl_char3>(size, rand_values, context);
-    //    }
-    //    case OpenClType::CHAR4: {
-    //      return CreateArrayArgValue<cl_char4>(size, rand_values, context);
-    //    }
-    //    case OpenClType::CHAR8: {
-    //      return CreateArrayArgValue<cl_char8>(size, rand_values, context);
-    //    }
-    //    case OpenClType::CHAR16: {
-    //      return CreateArrayArgValue<cl_char16>(size, rand_values, context);
-    //    }
-    //    case OpenClType::UCHAR2: {
-    //      return CreateArrayArgValue<cl_uchar2>(size, rand_values, context);
-    //    }
-    //    case OpenClType::UCHAR3: {
-    //      return CreateArrayArgValue<cl_uchar3>(size, rand_values, context);
-    //    }
-    //    case OpenClType::UCHAR4: {
-    //      return CreateArrayArgValue<cl_uchar4>(size, rand_values, context);
-    //    }
-    //    case OpenClType::UCHAR8: {
-    //      return CreateArrayArgValue<cl_uchar8>(size, rand_values, context);
-    //    }
-    //    case OpenClType::UCHAR16: {
-    //      return CreateArrayArgValue<cl_uchar16>(size, rand_values,
-    //      context);
-    //    }
-    //    case OpenClType::SHORT2: {
-    //      return CreateArrayArgValue<cl_short2>(size, rand_values, context);
-    //    }
-    //    case OpenClType::SHORT3: {
-    //      return CreateArrayArgValue<cl_short3>(size, rand_values, context);
-    //    }
-    //    case OpenClType::SHORT4: {
-    //      return CreateArrayArgValue<cl_short4>(size, rand_values, context);
-    //    }
-    //    case OpenClType::SHORT8: {
-    //      return CreateArrayArgValue<cl_short8>(size, rand_values, context);
-    //    }
-    //    case OpenClType::SHORT16: {
-    //      return CreateArrayArgValue<cl_short16>(size, rand_values,
-    //      context);
-    //    }
-    //    case OpenClType::USHORT2: {
-    //      return CreateArrayArgValue<cl_ushort2>(size, rand_values,
-    //      context);
-    //    }
-    //    case OpenClType::USHORT3: {
-    //      return CreateArrayArgValue<cl_ushort3>(size, rand_values,
-    //      context);
-    //    }
-    //    case OpenClType::USHORT4: {
-    //      return CreateArrayArgValue<cl_ushort4>(size, rand_values,
-    //      context);
-    //    }
-    //    case OpenClType::USHORT8: {
-    //      return CreateArrayArgValue<cl_ushort8>(size, rand_values,
-    //      context);
-    //    }
-    //    case OpenClType::USHORT16: {
-    //      return CreateArrayArgValue<cl_ushort16>(size, rand_values,
-    //      context);
-    //    }
-    //    case OpenClType::INT2: {
-    //      return CreateArrayArgValue<cl_int2>(size, rand_values, context);
-    //    }
-    //    case OpenClType::INT3: {
-    //      return CreateArrayArgValue<cl_int3>(size, rand_values, context);
-    //    }
-    //    case OpenClType::INT4: {
-    //      return CreateArrayArgValue<cl_int4>(size, rand_values, context);
-    //    }
-    //    case OpenClType::INT8: {
-    //      return CreateArrayArgValue<cl_int8>(size, rand_values, context);
-    //    }
-    //    case OpenClType::INT16: {
-    //      return CreateArrayArgValue<cl_int16>(size, rand_values, context);
-    //    }
-    //    case OpenClType::UINT2: {
-    //      return CreateArrayArgValue<cl_uint2>(size, rand_values, context);
-    //    }
-    //    case OpenClType::UINT3: {
-    //      return CreateArrayArgValue<cl_uint3>(size, rand_values, context);
-    //    }
-    //    case OpenClType::UINT4: {
-    //      return CreateArrayArgValue<cl_uint4>(size, rand_values, context);
-    //    }
-    //    case OpenClType::UINT8: {
-    //      return CreateArrayArgValue<cl_uint8>(size, rand_values, context);
-    //    }
-    //    case OpenClType::UINT16: {
-    //      return CreateArrayArgValue<cl_uint16>(size, rand_values, context);
-    //    }
-    //    case OpenClType::LONG2: {
-    //      return CreateArrayArgValue<cl_long2>(size, rand_values, context);
-    //    }
-    //    case OpenClType::LONG3: {
-    //      return CreateArrayArgValue<cl_long3>(size, rand_values, context);
-    //    }
-    //    case OpenClType::LONG4: {
-    //      return CreateArrayArgValue<cl_long4>(size, rand_values, context);
-    //    }
-    //    case OpenClType::LONG8: {
-    //      return CreateArrayArgValue<cl_long8>(size, rand_values, context);
-    //    }
-    //    case OpenClType::LONG16: {
-    //      return CreateArrayArgValue<cl_long16>(size, rand_values, context);
-    //    }
-    //    case OpenClType::ULONG2: {
-    //      return CreateArrayArgValue<cl_ulong2>(size, rand_values, context);
-    //    }
-    //    case OpenClType::ULONG3: {
-    //      return CreateArrayArgValue<cl_ulong3>(size, rand_values, context);
-    //    }
-    //    case OpenClType::ULONG4: {
-    //      return CreateArrayArgValue<cl_ulong4>(size, rand_values, context);
-    //    }
-    //    case OpenClType::ULONG8: {
-    //      return CreateArrayArgValue<cl_ulong8>(size, rand_values, context);
-    //    }
-    //    case OpenClType::ULONG16: {
-    //      return CreateArrayArgValue<cl_ulong16>(size, rand_values,
-    //      context);
-    //    }
-    //    case OpenClType::FLOAT2: {
-    //      return CreateArrayArgValue<cl_float2>(size, rand_values, context);
-    //    }
-    //    case OpenClType::FLOAT3: {
-    //      return CreateArrayArgValue<cl_float3>(size, rand_values, context);
-    //    }
-    //    case OpenClType::FLOAT4: {
-    //      return CreateArrayArgValue<cl_float4>(size, rand_values, context);
-    //    }
-    //    case OpenClType::FLOAT8: {
-    //      return CreateArrayArgValue<cl_float8>(size, rand_values, context);
-    //    }
-    //    case OpenClType::FLOAT16: {
-    //      return CreateArrayArgValue<cl_float16>(size, rand_values,
-    //      context);
-    //    }
-    //    case OpenClType::DOUBLE2: {
-    //      return CreateArrayArgValue<cl_double2>(size, rand_values,
-    //      context);
-    //    }
-    //    case OpenClType::DOUBLE3: {
-    //      return CreateArrayArgValue<cl_double3>(size, rand_values,
-    //      context);
-    //    }
-    //    case OpenClType::DOUBLE4: {
-    //      return CreateArrayArgValue<cl_double4>(size, rand_values,
-    //      context);
-    //    }
-    //    case OpenClType::DOUBLE8: {
-    //      return CreateArrayArgValue<cl_double8>(size, rand_values,
-    //      context);
-    //    }
-    //    case OpenClType::DOUBLE16: {
-    //      return CreateArrayArgValue<cl_double16>(size, rand_values,
-    //      context);
-    //    }
-    //    case OpenClType::HALF2: {
-    //      return CreateArrayArgValue<cl_half2>(size, rand_values, context);
-    //    }
-    //    case OpenClType::HALF3: {
-    //      return CreateArrayArgValue<cl_half3>(size, rand_values, context);
-    //    }
-    //    case OpenClType::HALF4: {
-    //      return CreateArrayArgValue<cl_half4>(size, rand_values, context);
-    //    }
-    //    case OpenClType::HALF8: {
-    //      return CreateArrayArgValue<cl_half8>(size, rand_values, context);
-    //    }
-    //    case OpenClType::HALF16: {
-    //      return CreateArrayArgValue<cl_half16>(size, rand_values, context);
-    //    }
+      //    case OpenClType::CHAR2: {
+      //      return CreateArrayArgValue<cl_char2>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::CHAR3: {
+      //      return CreateArrayArgValue<cl_char3>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::CHAR4: {
+      //      return CreateArrayArgValue<cl_char4>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::CHAR8: {
+      //      return CreateArrayArgValue<cl_char8>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::CHAR16: {
+      //      return CreateArrayArgValue<cl_char16>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::UCHAR2: {
+      //      return CreateArrayArgValue<cl_uchar2>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::UCHAR3: {
+      //      return CreateArrayArgValue<cl_uchar3>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::UCHAR4: {
+      //      return CreateArrayArgValue<cl_uchar4>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::UCHAR8: {
+      //      return CreateArrayArgValue<cl_uchar8>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::UCHAR16: {
+      //      return CreateArrayArgValue<cl_uchar16>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::SHORT2: {
+      //      return CreateArrayArgValue<cl_short2>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::SHORT3: {
+      //      return CreateArrayArgValue<cl_short3>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::SHORT4: {
+      //      return CreateArrayArgValue<cl_short4>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::SHORT8: {
+      //      return CreateArrayArgValue<cl_short8>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::SHORT16: {
+      //      return CreateArrayArgValue<cl_short16>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::USHORT2: {
+      //      return CreateArrayArgValue<cl_ushort2>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::USHORT3: {
+      //      return CreateArrayArgValue<cl_ushort3>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::USHORT4: {
+      //      return CreateArrayArgValue<cl_ushort4>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::USHORT8: {
+      //      return CreateArrayArgValue<cl_ushort8>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::USHORT16: {
+      //      return CreateArrayArgValue<cl_ushort16>(context, size,
+      //      /*value=*/1, rand_values);
+      //    }
+      //    case OpenClType::INT2: {
+      //      return CreateArrayArgValue<cl_int2>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::INT3: {
+      //      return CreateArrayArgValue<cl_int3>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::INT4: {
+      //      return CreateArrayArgValue<cl_int4>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::INT8: {
+      //      return CreateArrayArgValue<cl_int8>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::INT16: {
+      //      return CreateArrayArgValue<cl_int16>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::UINT2: {
+      //      return CreateArrayArgValue<cl_uint2>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::UINT3: {
+      //      return CreateArrayArgValue<cl_uint3>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::UINT4: {
+      //      return CreateArrayArgValue<cl_uint4>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::UINT8: {
+      //      return CreateArrayArgValue<cl_uint8>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::UINT16: {
+      //      return CreateArrayArgValue<cl_uint16>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::LONG2: {
+      //      return CreateArrayArgValue<cl_long2>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::LONG3: {
+      //      return CreateArrayArgValue<cl_long3>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::LONG4: {
+      //      return CreateArrayArgValue<cl_long4>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::LONG8: {
+      //      return CreateArrayArgValue<cl_long8>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::LONG16: {
+      //      return CreateArrayArgValue<cl_long16>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::ULONG2: {
+      //      return CreateArrayArgValue<cl_ulong2>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::ULONG3: {
+      //      return CreateArrayArgValue<cl_ulong3>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::ULONG4: {
+      //      return CreateArrayArgValue<cl_ulong4>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::ULONG8: {
+      //      return CreateArrayArgValue<cl_ulong8>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::ULONG16: {
+      //      return CreateArrayArgValue<cl_ulong16>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::FLOAT2: {
+      //      return CreateArrayArgValue<cl_float2>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::FLOAT3: {
+      //      return CreateArrayArgValue<cl_float3>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::FLOAT4: {
+      //      return CreateArrayArgValue<cl_float4>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::FLOAT8: {
+      //      return CreateArrayArgValue<cl_float8>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::FLOAT16: {
+      //      return CreateArrayArgValue<cl_float16>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::DOUBLE2: {
+      //      return CreateArrayArgValue<cl_double2>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::DOUBLE3: {
+      //      return CreateArrayArgValue<cl_double3>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::DOUBLE4: {
+      //      return CreateArrayArgValue<cl_double4>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::DOUBLE8: {
+      //      return CreateArrayArgValue<cl_double8>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::DOUBLE16: {
+      //      return CreateArrayArgValue<cl_double16>(context, size,
+      //      /*value=*/1, rand_values);
+      //    }
+      //    case OpenClType::HALF2: {
+      //      return CreateArrayArgValue<cl_half2>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::HALF3: {
+      //      return CreateArrayArgValue<cl_half3>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::HALF4: {
+      //      return CreateArrayArgValue<cl_half4>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::HALF8: {
+      //      return CreateArrayArgValue<cl_half8>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
+      //    case OpenClType::HALF16: {
+      //      return CreateArrayArgValue<cl_half16>(context, size, /*value=*/1,
+      //      rand_values);
+      //    }
     default: {
       // This condition should never occur as KernelArg::Init() will return an
       // error status.
@@ -279,7 +326,8 @@ std::unique_ptr<KernelArgValue> CreateArrayArgValue(
 
 template <typename T>
 std::unique_ptr<KernelArgValue> CreateScalarArgValue(const int& value) {
-  return std::make_unique<ScalarKernelArgValue<T>>(MakeScalar<T>(value));
+  return std::make_unique<ScalarKernelArgValue<T>>(
+      opencl_type::MakeScalar<T>(value));
 }
 
 std::unique_ptr<KernelArgValue> CreateScalarArgValue(const OpenClType& type,
@@ -492,6 +540,20 @@ std::unique_ptr<KernelArgValue> CreateScalarArgValue(const OpenClType& type,
       LOG(FATAL) << "Unsupported OpenClType enum type: " << type;
       return std::unique_ptr<KernelArgValue>(nullptr);
     }
+  }
+}
+
+std::unique_ptr<KernelArgValue> TryToCreateKernelArgValue(
+    const OpenClType& type, const cl::Context& context,
+    const DynamicParams& dynamic_params, bool rand_values) const {
+  CHECK(type != OpenClType::DEFAULT_UNKNOWN);
+  if (IsPointer() && IsGlobal()) {
+    return CreateArrayArgValue(context, /*size=*/dynamic_params.global_size_x(),
+                               /*value=*/1, rand_values);
+  } else if (!IsPointer()) {
+    return CreateScalarArgValue(type, /*value=*/dynamic_params.global_size_x());
+  } else {
+    return std::unique_ptr<KernelArgValue>(nullptr);
   }
 }
 

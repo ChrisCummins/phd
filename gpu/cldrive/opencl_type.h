@@ -105,6 +105,11 @@ string ToString(const T& t) {
   return s;
 }
 
+template <typename T>
+T MakeScalar(const int& value) {
+  return T(value);
+}
+
 }  // namespace opencl_type
 
 }  // namespace cldrive

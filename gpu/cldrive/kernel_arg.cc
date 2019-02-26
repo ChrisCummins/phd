@@ -20,8 +20,8 @@
 
 #include <cstdlib>
 
-#include "array_kernel_arg_value.h"
-#include "opencl_type.h"
+#include "gpu/cldrive/array_kernel_arg_value.h"
+#include "gpu/cldrive/opencl_type.h"
 #include "phd/status_macros.h"
 
 namespace gpu {
@@ -30,6 +30,7 @@ namespace cldrive {
 KernelArg::KernelArg(cl::Kernel* kernel, size_t arg_index)
     : kernel_(kernel),
       arg_index_(arg_index),
+      type_(OpenClType::DEFAULT_UNKNOWN),
       address_(kernel->getArgInfo<CL_KERNEL_ARG_ADDRESS_QUALIFIER>(arg_index)) {
   CHECK(IsGlobal() || IsLocal() || IsConstant() || IsPrivate());
 }
@@ -66,7 +67,7 @@ phd::Status KernelArg::Init() {
     type_name = full_type_name.substr(0, full_type_name.size() - 1);
   }
 
-  auto type_or = OpenClType::FromString(type_name);
+  auto type_or = OpenClTypeFromString(type_name);
   if (!type_or.ok()) {
     LOG(ERROR) << "Argument " << arg_index_ << " of kernel '"
                << kernel_->getInfo<CL_KERNEL_FUNCTION_NAME>()
@@ -76,50 +77,6 @@ phd::Status KernelArg::Init() {
   type_ = type_or.ValueOrDie();
 
   return phd::Status::OK;
-}
-
-namespace {
-
-template <typename T>
-std::unique_ptr<KernelArgValue> CreateArrayArgValue(const OpenClType& type,
-                                                    size_t size,
-                                                    const cl::Context& context,
-                                                    int value,
-                                                    bool rand_values) {
-  auto arg_value = std::make_unique<ArrayKernelArgValueWithBuffer>(
-      type, context, size, /*value=*/CreateScalar(value));
-  if (rand_values) {
-    for (size_t i = 0; i < size; ++i) {
-      arg_value->vector()[i] = type.Create(rand());
-    }
-  }
-  return arg_value;
-}
-
-std::unique_ptr<KernelArgValue> CreateScalarArgValue(const OpenClType& type,
-                                                     int value) {
-  // TODO:
-  // return std::make_unique<ScalarKernelArgValue<T>>(type,
-  // /*value=*/type.Create(value));
-  return std::unique_ptr<ArrayKernelArgValue>(nullptr);
-}
-
-}  // anonymous namespace
-
-std::unique_ptr<KernelArgValue> KernelArg::TryToCreateKernelArgValue(
-    const cl::Context& context, const DynamicParams& dynamic_params,
-    bool rand_values) {
-  CHECK(type().type_num() != OpenClTypeEnum::DEFAULT_UNKNOWN)
-      << "Init() not called";
-  if (IsPointer() && IsGlobal()) {
-    return CreateArrayArgValue(type(), /*size=*/dynamic_params.global_size_x(),
-                               context, /*value=*/1, rand_values);
-  } else if (!IsPointer()) {
-    return CreateScalarArgValue(type(),
-                                /*value=*/dynamic_params.global_size_x());
-  } else {
-    return std::unique_ptr<KernelArgValue>(nullptr);
-  }
 }
 
 const OpenClType& KernelArg::type() const { return type_; }
